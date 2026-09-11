@@ -352,14 +352,14 @@ abstract final class GameGuides {
       title: 'CRAFT',
       body:
           'MORE → CRAFT.\n\n'
-          '• Tap a party goal first — that sets who and which slot you craft.\n'
-          '• Recipe + CRAFT sit under the goal. Tap a recipe mat to lock the farm target.\n'
+          '• Tap a party hero, then a slot — recipe and CRAFT / UPGRADE sit under that.\n'
+          '• Tap a recipe mat to lock the farm target (meter sits on the recipe).\n'
           '• Zone Shards are a pool: any dungeon boss shard pays the recipe '
           '(KEY / Rift / late zones count).\n'
-          '• Materials bag and Change goal stay collapsed until you need them.\n'
+          '• Materials and vault stay collapsed. OTHER CLASS is only for kits not in the party.\n'
           '• Target meter: every boss clear builds toward a guaranteed mat '
           '(PUSH faster than FARM). Farm any zone — the meter grants what you need.\n'
-          '• Craft weapon R1 first, then armor; upgrade rows show the real R2/R3 cost.\n'
+          '• Craft weapon R1 first, then armor; the button shows CRAFT R1 or the real upgrade rank.\n'
           '• Crafted gear and materials survive Ascend.',
     ),
     GuideTopic(

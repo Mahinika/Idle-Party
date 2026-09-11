@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.140**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.141**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -327,7 +327,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Real-money SHOP catalog | `lib/core/shop_catalog.dart` · `lib/ui/shell/shop_dock.dart` · `docs/SHOP_MONETIZATION.md` |
 | Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
 | POWER Essence rates | `lib/ui/shell/income_overlay.dart` (`CampRatesSection`) |
-| Apex hub (craft / vault / target meter) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) — POWER → Craft |
+| Apex hub (craft / vault / farm meter) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) — MORE → CRAFT |
 | Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
 | Guides copy | `lib/core/game_guides.dart` |
 | Keystone | `lib/core/keystone.dart` |

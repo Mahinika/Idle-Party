@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../apex_forge_panel.dart';
 
-/// POWER → Craft — lasting gear station (was Gold → APEX).
+/// MORE → CRAFT — lasting Apex station.
 class CraftOverlay extends StatelessWidget {
   const CraftOverlay({super.key, required this.director});
   final GameDirector director;

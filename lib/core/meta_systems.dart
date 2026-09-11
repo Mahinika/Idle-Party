@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.140';
+  static const String currentVersion = '1.12.141';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.141',
+      bullets: <String>[
+        'CRAFT is hero → slot → one CRAFT / UPGRADE button. Farm meter sits on the recipe; vault stays folded. Same MORE → CRAFT door.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). TODAY still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.140',
       bullets: <String>[
