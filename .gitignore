@@ -117,6 +117,7 @@ IdleSword*
 /tool/store_listing/out/
 /tool/store_listing/upload/
 /tool/store_listing/preview/
+/tool/store_listing/youtube/
 
 # One-off emulator dumps / gear audits (keep MCP, playtest scripts, art pipeline)
 /tool/_*.py

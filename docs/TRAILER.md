@@ -87,8 +87,13 @@ The 16:9 render puts the real phone capture beside the English promise; 9:16
 keeps the whole phone UI visible.
 
 - Play listing uses a **YouTube URL only** (not direct MP4). Live unlisted on
-  **Cognifox Studio**: `https://www.youtube.com/watch?v=OMWXbgGBFMA`
+  **Cognifox Studio** (`@CognifoxStudio`):
+  `https://www.youtube.com/watch?v=OMWXbgGBFMA`
   (relinked **2026-09-11**; old personal upload `fiZjJ9S9l4A` superseded).
+- Channel art helper:
+  `py -3 tool/store_listing/build_youtube_channel_art.py`
+  → `tool/store_listing/youtube/channel_avatar_800.png` +
+  `channel_banner_2560x1440.jpg` (gitignored; upload in Studio → Anpassning).
 - Rebuild from local 16:9 if the clip changes, then replace the YT upload and
   update the Console field. Keep 9:16 for ads tests (`docs/PLAY_GROWTH.md`).
 - YT must stay public/unlisted, **ads off**, embeddable, not age-restricted.
