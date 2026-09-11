@@ -1,35 +1,38 @@
 # Class & combat audit — Cataclysm reference
 
-**Date:** 2026-08-22  
+**Original date:** 2026-08-22  
+**Re-audit:** 2026-09-11  
 **Auditor:** Cursor agent (senior combat/class pass)  
-**Depth:** full (systems) + quick (27 specs) + deep (4 stickprov)  
+**Depth:** full (systems) + quick (31 specs) + deep (4 stickprov)  
 **Specs in scope:** all 31 `HeroSpecId`  
-**Playtest:** no (code + public Cata facts only)  
-**Build / branch:** working tree ~1.12.41  
+**Playtest:** no (code + public Cata facts + `cata_combat_v2_test`)  
+**Build / branch:** `main` @ **1.12.136**
 
 **Reference expansion:** **Cataclysm 4.0–4.3** (patch 4.0.1 stat overhaul, Mastery, block redesign).  
-**Product note:** Idle Party **lore/copy** still reads Wrath (zones, AGENTS). This audit compares **combat mechanics** to Cata — not a zone rebrand request.
+**Product note:** Idle Party **lore/copy** still reads Wrath (zones, AGENTS). Combat layer is **Cata-shaped since v2 (Aug 2026)**; this doc tracks **honest gaps** vs full Cata fidelity.
 
 **Legal:** Wowhead / wiki used for **structure + identity** only. No tooltip coefficients, talent point spreads, or BiS pasted here (`AGENTS.md`).
 
+**Implementation companion:** [2026-08-22-class-combat-cata-implementation.md](2026-08-22-class-combat-cata-implementation.md) (slice checklist, updated 2026-09-11).
+
 ---
 
-## Executive summary
+## Executive summary (2026-09-11)
 
-Idle Party ships **31 Wrath-named specs** with a **pre-Cata combat motor**: one unified `attack` pool, instant AI-driven abilities, percent-armor mitigation, and timed defensive windows. Kit **identity** (Hot Streak, Shield Block + Revenge, Penance bolts, etc.) is often strong; **stat/combat systems** lag Cataclysm on almost every axis the owner asked about.
+Idle Party now runs a **Cata v2 combat motor** on top of the same auto-AI kit layer. The August audit’s **P0 systems shipped** (`combat_ratings.dart`, `combat_avoidance.dart`, `spec_mastery.dart`, Aug 2026). Since then: **Druid form pass (1.12.134)**, **kit/balance polish (1.12.135)**, ongoing fairness gate.
 
-| Question | Cata had it? | Idle today | Verdict |
-|----------|--------------|------------|---------|
-| Spells (named + schools) | Yes | Named yes; **melee/spell split no** | **Add pipeline split**, not 200 new rows |
-| Cast time | Yes (+ haste on cast) | Instant + projectile stagger | **Add signature cast delays + haste** |
-| Diminishing returns | Yes (dodge/parry + CC) | DR CDs only; no avoidance/CC DR | **Add for tanks + CC** |
-| Mastery | **Yes (Cata core)** | `kitOutMul` passives only | **P0 — 31 spec hooks + gear secondary** |
-| Ability damage formula | AP / SP × coeff | `attack × coeff × kitMul` | **P0 split pools** |
-| Tank avoidance | Dodge/parry/block via mastery | Armor + timed block window | **P0 mastery block + dodge/parry** |
+| Question | Cata had it? | Idle today (1.12.136) | Verdict |
+|----------|--------------|------------------------|---------|
+| Spells (named + schools) | Yes | Named yes; **physicalAttack / spellPower split** | **Shipped** — expand `inferUsesSpellPower` coverage |
+| Cast time | Yes (+ haste on cast) | **10** abilities with `castDelaySeconds`; haste shrinks delay | **Partial** — not all signatures tagged |
+| Diminishing returns | Yes (dodge/parry + CC) | Dodge/parry rating DR + **CC root DR stacks** | **Shipped** (idle-tuned) |
+| Mastery | **Yes (Cata core)** | **31 kinds** + gear secondary + combat hooks | **Shipped** — tune magnitudes; some procs thin |
+| Ability damage formula | AP / SP × coeff | `_abilityPower` × coeff × mastery shape | **Shipped** |
+| Tank avoidance | Dodge/parry/block via mastery | Uncrittable + dodge/parry + mastery block **−30%** + Shield Block CD | **Shipped** — no separate “crit block” proc |
 
-**Biggest gap:** no **Mastery** layer and no **proc avoidance** — tanks are armor + cooldown sponges, not Cata Prot profiles.
+**Biggest remaining gaps:** **Mp5 still on healer loot** (Cata removed it), **Elemental Overload** (and a few proc masteries) not fully wired in sim, **ability crit from rating** still mostly auto-only, **no hit/expertise/reforge**.
 
-**Biggest strength:** `ClassAbilityDef` + `AbilityEffectRunner` + gates already mirror Cata **rotation shape** as auto-AI — good foundation for Cata mechanics without manual cast bars.
+**Biggest strength:** SpatialCombat stays single authority; mastery changes **shape** (DoT amp, Deep Healing, block %) without breaking fairness gate; DODGE / PARRY / BLOCK floaters on tanks.
 
 ---
 
@@ -39,9 +42,52 @@ Idle Party ships **31 Wrath-named specs** with a **pre-Cata combat motor**: one 
 - [x] Idle combat path documented with file references
 - [x] Six owner questions answered (Ja/Nej/Alternativ)
 - [x] Four stickprov specs: Protection Warrior, Protection Paladin, Fire Mage, Restoration Shaman
-- [x] 27-spec quick table (Cata mastery name + identity score + top gap)
-- [x] P0/P1/P2 roadmap (implementation deferred — report only)
+- [x] 31-spec quick table (Cata mastery name + identity score + top gap)
+- [x] P0/P1/P2 roadmap + **re-audit status (2026-09-11)**
 - [x] Medveten Wrath-lore vs Cata-mechanics avgränsning
+
+---
+
+## Re-audit snapshot — 2026-09-11
+
+### Shipped since original audit (Aug 2026 → now)
+
+| System | Evidence | Notes |
+|--------|----------|-------|
+| **S1** Sheet split | `CombatRatings.physicalAttack`, `spellPower`, `masteryPoints`, dodge/parry % | Tanks skip Agi→DEF crumb |
+| **S2** Spell vs melee | `ClassAbilityDef.inferUsesSpellPower`, `ability_effects._abilityPower` | Casters use SP pool in combat |
+| **S3** Tank avoidance | `combat_avoidance.dart`, `spatial_combat._applyHeroIncomingDamage` | DODGE / PARRY / BLOCK floaters |
+| **S4–S5** Mastery 31 | `spec_mastery.dart` — damage/heal/dot/block/proc hooks | Labels in GEAR + party HUD |
+| **S6** Cast delay | `castDelaySeconds` on 10 defs; `_castDelaySeconds` ÷ haste | Fireball, Pyro, Healing Wave, Penance, … |
+| **S7** CC DR | `CombatAvoidance.ccRootDuration`, `ccRootDrLevel` on enemies | Frost Nova spam shortens |
+| **S8** Spirit 5SR | `spiritManaRegenPerSec(inCombat, recentlyDamaged)`, `spiritRegenPaused` on hit | **Mp5 still rolls on new healer loot** |
+| **Gear mastery** | `loot.masteryBonus`, `equipment_factory` secondary pool | Not in `itemBudgetScore` upgrade path |
+| **Kit polish** | 1.12.134–135 | Druid forms + Eclipse; Subtlety Shadow Dance; share trims |
+
+**Verify (2026-09-11):** `cata_combat_v2_test` 8/8, `combat_ratings_test` 9/9, `class_balance_gate_test` green on `main`.
+
+### Still open vs Cata 4.0–4.3
+
+| Gap | Priority | Detail |
+|-----|----------|--------|
+| Mp5 on healer drops | **P1** | Cata Spirit-only; `GEAR_BUDGET.md` + `equip_stat_weights` still weight Mp5 |
+| Cast delays on all signatures | **P1** | Only ~10 abilities tagged; most casts still instant |
+| Elemental Overload duplicate cast | **P1** | Enum + label exist; **no spatial proc hook** |
+| Hunter vs Wild stamina link | **P2** | Generic mastery damage crumb only |
+| Ability crit from rating | **P2** | Fireball still proc-driven Hot Streak; sheet crit mostly autos |
+| Hit / Expertise | **P2** | Not modeled |
+| Reforge-like meta | **P2** | Not modeled |
+| Critical Block “crit block” double | **P2** | Block −30% yes; separate crit-block proc no |
+| Mastery in upgrade score | **P2** | Intentionally combat-only per v2 design |
+| Full cast bar / interrupts | **Skip** | Phone idle product lock |
+
+### Post–Cata v2 kit work (not in Aug audit)
+
+| Batch | Version | Cata relevance |
+|-------|---------|----------------|
+| Druid forms + Eclipse mastery buffs | 1.12.134 | Balance `SpecMasteryKind.eclipse` now has arcane/nature window hooks |
+| Subtlety Shadow Dance | 1.12.135 | Kit identity; Executioner mastery unchanged |
+| Combat / Demo / melee plate share | 1.12.135 | Fairness trim — not Cata systems |
 
 ---
 
@@ -68,146 +114,143 @@ Sources: [Blizzard Stat Changes 4.0.1](https://www.bluetracker.gg/wow/topic/us-e
 
 ---
 
-## Part 2 — Idle Party combat path (today)
+## Part 2 — Idle Party combat path (1.12.136)
 
 ### Data flow
 
 ```
 PartyHero + gear
-  → CombatRatings.fromHeroSheet (lib/models/combat_ratings.dart)
-  → GameState.effectiveHeroAttack / ratingsFor (lib/core/game_state.dart)
-  → SpatialCombat.build → SpatialActor (attack, defense, blockValue, spirit regen)
-  → AbilityEffectRunner._tickSpecKit (lib/spatial/ability_effects.dart)
-  → _castDamage: attack × coeff × kitOutMul × casterTax
-  → CombatRatings.mitigateByArmor (both directions)
-  → _applyHeroIncomingDamage (DR timers, block window, absorb)
+  → CombatRatings.fromHeroSheet (physicalAttack, spellPower, mastery, dodge/parry)
+  → GameState.effectiveHeroAttack / ratingsFor
+  → SpatialCombat.build → SpatialActor (+ uncrittable, blockChance, masteryPoints)
+  → AbilityEffectRunner._tickSpecKit
+  → _castDamage: _abilityPower × coeff × kitOutMul × SpecMastery.damageMul
+  → DoT ticks: SpecMastery.dotTickMul
+  → Heals: SpecMastery.healMul (Deep Healing missing-HP scale)
+  → CombatRatings.mitigateByArmor
+  → _applyHeroIncomingDamage → CombatAvoidance.resolveIncomingMelee (dodge/parry/block −30%)
+  → DR CDs + absorb overlays
 ```
 
 ### Ability damage (authoritative)
 
 ```dart
-// ability_effects.dart ~1012–1014
-raw = max(2, (hero.attack * def.coeff * _abilityOutScale(hero)).round());
+// ability_effects.dart — power split + mastery shape
+raw = max(2, (_abilityPower(hero, def) * def.coeff * _abilityOutScale(hero)).round());
+// × SpecMastery.damageMul(...) in _castDamage path
 ```
 
-- Caster tax: `SpatialCombat.casterAbilityTax` (0.92) for `SpecRoleTag.caster`.
-- White hits: separate path in `spatial_combat.dart` ~3437+ with crit roll on autos only.
-- Fireball: **hardcoded 28% crit** in `kit_migrated_casts.dart` — not sheet spell crit.
+- Caster tax: `SpatialCombat.casterAbilityTax` (0.92) for casters.
+- White hits: `spatial_combat.dart` swing path; Arms/MM/Combat mastery procs → **SWING** floaters.
+- Fireball: cast delay 1.8s (haste-scaled); Hot Streak proc chain — sheet spell crit still **P2**.
 
 ### Sheet stats vs combat
 
 | Stat | On sheet | Combat use today |
 |------|----------|------------------|
-| Str / Agi | Yes | AP → physical `attack` |
-| Int / SP | Yes | Caster `attack` (~Int full + gear Int/SP ÷3) — **unified pool** |
+| Str / Agi | Yes | `physicalAttack` (plate 2 AP/Str; rogue-family 1+2 Agi) |
+| Int / SP | Yes | `spellPower` — level Int + gear Int/SP ÷3 in combat |
 | Armor | Yes → DEF | Percent mitigation |
-| Agi | Yes | **DEF crumb** (`agi/8`), not dodge % |
-| Crit / Haste | Gear + forge | Crit mostly **auto-attacks**; haste **swing speed only** |
-| Spirit | Yes | Flat regen `1.25 + Spirit×0.06`/s — **no 5SR** (`combat_ratings.dart` ~263–268) |
-| Mp5 | Gear | `mp5/5` mana/s — **Cata removed Mp5 from gear** |
-| Mastery | **No** | Approximated by per-spec `kitOutMul` / `kitHealMul` passives |
+| Agi | Yes | Tanks: **dodge %**; non-tanks: small DEF crumb |
+| Crit / Haste | Gear + forge | Crit mostly **autos**; haste on **swing + cast delay** |
+| Spirit | Yes | `spiritManaRegenPerSec` with **5SR pause** on damage |
+| Mp5 | Gear | Still on healer loot + `mp5/5` regen — **Cata mismatch** |
+| Mastery | Yes | `masteryRating` → `masteryPoints` → `SpecMastery.*` hooks |
 
 ### Cast / resource model
 
-- **No GCD, no cast bar, no interrupts.**
-- Cooldowns: wall-clock seconds per ability id.
-- Resources: single `SpatialActor.rage` 0–100 holds rage/mana/energy/runic.
-- “Channels”: projectile delay only (Penance, Chain Lightning hops).
-- AI priority: emergency → taunt → signature → filler (`ability_effects.dart` ~324–430).
+- **No GCD, no cast bar, no interrupts** (unchanged product choice).
+- **Cast delay:** 10 abilities with `castDelaySeconds`; `_castingUntil` gate in ability tick.
+- Resources: single `SpatialActor.rage` 0–100 (rage/mana/energy/runic).
+- Channels: Penance bolts, Chain Lightning hops, projectile stagger.
+- AI priority: emergency → taunt → signature → filler.
 
 ### Incoming damage (tanks)
 
 ```dart
-// spatial_combat.dart ~1322–1339 — no dodge/parry roll
-mul = kitInMul;
-if (shieldWallTimer) mul *= 0.45;
-if (painSuppressionTimer) mul *= 0.55;
-if (shieldBlockTimer) { mul *= 0.55; blocked = true; }
-dealt = max(1, (rawDamage * mul).round());
-if (blocked) dealt = max(1, dealt - blockValue); // Str/20
+// spatial_combat.dart — melee path via CombatAvoidance
+avoid = resolveIncomingMelee(
+  dodgePercent: hero.dodgePercent,
+  parryPercent: hero.parryPercent,
+  blockChance: hero.blockChance + SpecMastery.blockChance(...),
+  shieldBlockActive: hero.shieldBlockTimer > 0,
+);
+// blocked hits: −30% then flat blockValue; floaters DODGE / PARRY / BLOCK
 ```
 
-- Block is **active window**, not mastery proc chance.
-- No crits vs tanks modeled (Cata: uncrittable by role — **partial match**).
+- Passive mastery block + active Shield Block / Holy Shield window.
+- `uncrittable` on tank specs (Cata stance analogue).
 
 ### CC
 
-- Single `rootTimer` — refresh without category DR.
-- “DR” in ability names = **damage reduction**, not CC diminishing.
+- Root duration scales with `ccRootDrLevel` (100% → 50% → 25% → immune).
+- Ability-name “DR” = damage reduction cooldowns (separate from CC DR).
 
 ---
 
-## Part 3 — Answers to six questions (Cata-tung)
+## Part 3 — Answers to six questions (status 2026-09-11)
 
 ### 1. Ska vi lägga till spells?
 
-| | Recommendation |
-|--|----------------|
-| **Ja** | Split **physical vs spell** damage; tag `damageSchool` on `ClassAbilityDef`. |
-| **Ja** | Keep named abilities — Cata removed **ranks**, not identities. |
-| **Nej** | Don't add hundreds of manual spell rows. |
-| **Behåll** | Auto-AI rotation — Cata priority as gates, not player cast bar. |
+| | Aug 2026 rec | Status |
+|--|--------------|--------|
+| Split physical vs spell | **Ja** | **Done** — `_abilityPower` + `inferUsesSpellPower` |
+| Keep named abilities | **Ja** | **Done** |
+| No manual cast bar | **Behåll** | **Done** |
+| `damageSchool` tags | Optional | **Open P2** — not required for split to work |
 
 ### 2. Cast time?
 
-| | Recommendation |
-|--|----------------|
-| **Ja** | Signature delays (Fireball, Healing Wave, Pyro) 0.8–2.5s + “Casting…” chip. |
-| **Ja** | **Haste reduces cast delay** (Cata gap — haste today = autos only). |
-| **Nej** | Boss interrupt / pushback PvE on phone idle. |
-| **Bevis** | Penance stagger already works (`kit_migrated_casts.dart`). |
+| | Aug 2026 rec | Status |
+|--|--------------|--------|
+| Signature delays | **Ja** | **Partial** — 10 abilities (Fireball, Pyro, Healing Wave, Penance, …) |
+| Haste on cast | **Ja** | **Done** — `_castDelaySeconds` ÷ haste |
+| Interrupt / pushback | **Nej** | **Skipped** (product) |
+| Casting UI chip | Nice | **Open** — delay is sim-only |
 
 ### 3. Diminishing returns?
 
-| Type | Recommendation |
-|------|----------------|
-| Dodge/Parry rating → % | **Ja** (with DR curve) |
-| Mastery rating → effect | **Ja** |
-| Crit/Haste high stacks | **P2** — keep 75% crit cap as idle simplification if needed |
-| CC (root/stun) | **Ja** per category |
-| DR cooldowns | Document current multiplicative windows; tune later |
+| Type | Status |
+|------|--------|
+| Dodge/Parry rating → % | **Done** — `CombatAvoidance.ratingToPercent` |
+| Mastery rating → points | **Done** — `SpecMastery.masteryPointsFrom` |
+| Crit/Haste high stacks | **Open P2** — 75% crit cap on sheet |
+| CC root DR | **Done** — `ccRootDrLevel` |
+| DR cooldowns | **Done** — Shield Wall, etc. (multiplicative) |
 
 ### 4. Stats som Mastery?
 
-| | Recommendation |
-|--|----------------|
-| **Ja — P0** | One **Mastery effect per spec** (31), combat hook + name in UI. |
-| **Ja** | Secondary **Mastery budget** on gear (like Crit/Haste), not BiS score crumb. |
-| **Nej** | Same % bonus for all specs. |
-| **Bridge** | Today’s `kitOutMul` passives = **baseline mastery**; rating adds scaling on top. |
+| | Status |
+|--|--------|
+| 31 spec hooks | **Done** — `spec_mastery.dart` |
+| Gear secondary | **Done** — `masteryBonus` on loot |
+| UI label | **Done** — GEAR panel + party HUD chip |
+| `kitOutMul` baseline | **Kept** — mastery adds shape on top |
 
-**Important:** Mastery is **Cataclysm**, not Wrath. Adding it aligns with **this audit**, not with current AGENTS “WotLK fantasy” wording — product should pick “Cata mechanics / Wrath skin” explicitly.
+**Product:** mechanics are **Cata-shaped**; zones/copy remain Wrath-named.
 
 ### 5. Hur bestäms ability damage?
 
-**Today:** `attack × coeff × kitMul`.
-
-**Cata target:**
+**Shipped:**
 
 ```
-melee  = f(AP, coeff, mastery?)
-spell  = f(spellPower_from_Int, spellCoeff, mastery?)
-heal   = f(SP, coeff, DeepHealing?, kitHealMul)
-DoT    = snapshot/refresh rules; Fire mastery amplifies periodic portion
+melee  = physicalAttack × coeff × kitOutMul × SpecMastery.damageMul
+spell  = spellPower × coeff × kitOutMul × SpecMastery.damageMul
+heal   = spellPower × coeff × SpecMastery.healMul(missing HP)
+DoT    = tick × SpecMastery.dotTickMul (Ignite, Affliction, …)
 ```
-
-**P0:** Split pools in `combat_ratings.dart`; extend `_castDamage` inputs — keep SpatialCombat sole authority.
 
 ### 6. Avoidance för tanks?
 
-| Layer | Cata | Idle | Rec |
-|-------|------|------|-----|
-| Uncrittable | Stance/presence | Implicit | **Formalize tank flag** |
-| Armor | Yes | Yes | Keep |
-| Dodge/Parry | Rating + DR | Missing | **Add** |
-| Block | Mastery chance, −30% dmg | Timed Shield Block only | **Add passive proc + keep CD** |
-| Active DR | Yes | Yes | Keep overlay |
+| Layer | Status |
+|-------|--------|
+| Uncrittable | **Done** |
+| Armor | **Done** |
+| Dodge/Parry | **Done** |
+| Block mastery + −30% | **Done** + Shield Block CD |
+| Active DR | **Done** |
 
-```
-incomingMelee → crit? → dodge/parry? → block(−30%)? → armor → DR CDs → absorb
-```
-
-**Agi:** should feed **dodge**, not DEF crumb — avoid double dip.
+**Agi:** tanks use dodge %, not DEF crumb — **done**.
 
 ---
 
@@ -217,9 +260,9 @@ Wowhead reference family: **Cataclysm Classic** class guides (structure only).
 
 ### `HeroSpecId.protection` — Protection Warrior
 
-**Verdict:** tune (identity strong, Cata tank motor weak)  
+**Verdict:** **ship** (Cata tank motor wired; tune magnitudes on phone)  
 **Cata Mastery:** Critical Block (+ block chance + critical block chance)  
-**Idle equivalent:** `shieldBlockTimer` + `blockValue` + Revenge on block — **no passive block %**
+**Idle equivalent:** `SpecMastery.blockChance` + `CombatAvoidance` + Shield Block CD + Revenge
 
 | Bucket | Cata fantasy | Idle ability | Wired? |
 |--------|--------------|--------------|--------|
@@ -230,22 +273,20 @@ Wowhead reference family: **Cataclysm Classic** class guides (structure only).
 | Signature | Shockwave cone | Shockwave | yes |
 | Passive stance | Defensive Stance | Defensive Stance | yes — `kitInMul` |
 
-**Mastery gap:** no Critical Block scaling; no crit-block; block not −30% Cata rule.
-
-**Avoidance gap:** no dodge/parry tables.
+**Mastery gap:** no separate **critical block** double-size proc (block −30% is correct).
 
 **WotLK identity score (kit names):** 4/5  
-**Cata mechanics score:** 2/5  
+**Cata mechanics score:** **4/5** (was 2/5)
 
-**Player pitch:** “Hold the pack, clap slows, block then revenge” — **matches feel**; **doesn’t match Cata mitigation math**.
+**Player pitch:** “Hold the pack, clap slows, block then revenge” — **matches feel and mitigation math** on melee trash (watch DODGE/PARRY/BLOCK floaters).
 
 ---
 
 ### `HeroSpecId.protPaladin` — Protection Paladin
 
-**Verdict:** tune  
+**Verdict:** **ship**  
 **Cata Mastery:** Divine Bulwark (+ block chance)  
-**Idle equivalent:** Holy Shield → `AbilitySelfBuffKind.block` sets block timer (`ability_effects.dart`)
+**Idle equivalent:** `SpecMastery.divineBulwark` passive block + Holy Shield active window
 
 | Bucket | Cata | Idle |
 |--------|------|------|
@@ -256,19 +297,17 @@ Wowhead reference family: **Cataclysm Classic** class guides (structure only).
 | Taunt | Hand of Reckoning | HoR | yes |
 | Passive | Righteous Fury | Righteous Fury | yes — threat + `kitInMul` |
 
-**Mastery gap:** Divine Bulwark should raise **passive block chance**, not only Holy Shield window.
+**Mastery gap:** Consecration standing DR (Cata flavor) — optional P2.
 
-**Cata note:** Consecration + mastery reduced damage while standing in it (later expansions changed) — optional P2 flavor.
-
-**Cata mechanics score:** 2/5  
+**Cata mechanics score:** **4/5** (was 2/5)  
 
 ---
 
 ### `HeroSpecId.fire` — Fire Mage
 
-**Verdict:** tune (best Cata proc analog in repo)  
+**Verdict:** **ship** (best Cata proc analog in repo)  
 **Cata Mastery:** Increases **periodic fire damage** (Ignite / DoT theme)  
-**Idle equivalent:** Living Bomb + Combustion amp; **no mastery scaling on DoT ticks**
+**Idle equivalent:** `SpecMastery.ignite` on DoT ticks + Living Bomb + Hot Streak
 
 | Bucket | Cata | Idle |
 |--------|------|------|
@@ -279,19 +318,19 @@ Wowhead reference family: **Cataclysm Classic** class guides (structure only).
 | CD | Combustion | Combustion | yes — `combustionTimer` ×1.22 |
 | Control | Frost Nova | Frost Nova | yes — **no CC DR** |
 
-**Cast gap:** Fireball/Pyro should have cast delay; haste should shrink it.
+**Cast gap:** delay shipped; expand to more fire spells optional.
 
-**Damage gap:** all fire uses unified `attack`; Cata wants SP + **DoT mastery**.
+**Damage gap:** SP pool + DoT mastery **shipped**; sheet crit on spells still P2.
 
-**Cata mechanics score:** 3/5 (best of stickprov)  
+**Cata mechanics score:** **4/5** (was 3/5)  
 
 ---
 
 ### `HeroSpecId.restorationShaman` — Restoration Shaman
 
-**Verdict:** tune  
+**Verdict:** tune (mana model)  
 **Cata Mastery:** Deep Healing (+ healing to low-HP targets)  
-**Idle equivalent:** `ancestralAwakening` passive → flat `kitHealMul × 1.32` — **not missing-HP scaling**
+**Idle equivalent:** `SpecMastery.deepHealing` in `healMul` — scales with target missing HP %
 
 | Bucket | Cata | Idle |
 |--------|------|------|
@@ -303,78 +342,75 @@ Wowhead reference family: **Cataclysm Classic** class guides (structure only).
 | Signature | Spirit Link | Spirit Link | yes |
 | Passive amp | Ancestral Awakening | Ancestral Awakening | flat mul only |
 
-**Mana gap:** Spirit flat regen + **Mp5 still on Idle gear** — opposite of Cata (Spirit-only).
+**Mana gap:** Spirit 5SR **shipped**; **Mp5 still on new healer loot** — opposite of Cata.
 
-**Mastery gap:** Deep Healing should scale heal coeff by target missing HP %.
-
-**Cata mechanics score:** 2/5  
+**Cata mechanics score:** **3/5** (was 2/5)  
 
 ---
 
-## Part 5 — All 31 specs (quick pass)
+## Part 5 — All 31 specs (quick pass, re-audit 2026-09-11)
 
-Identity score = **Cata mechanics + kit names** (1 wrong · 3 recognizable · 5 nails).  
-Top gap = single highest-impact missing Cata system for that spec.
+Score = **Cata mechanics + kit names** (1 wrong · 3 recognizable · 5 nails).  
+Top gap = highest-impact **remaining** gap vs Cata 4.0–4.3.
 
-| Spec | Cata Mastery (reference name) | Idle passive / analog | Score | Top gap |
-|------|------------------------------|------------------------|-------|---------|
-| arms | Strikes of Opportunity | `armsStance` kitOutMul | 3 | No extra attack proc |
-| fury | Unshackled Fury | `berserkerStance` | 3 | Enrage mastery shape |
-| protection | Critical Block | Shield Block window | 2 | Passive block + crit block |
-| holyPaladin | Illuminated Healing | heal passives | 2 | Absorb-on-heal mastery |
-| protPaladin | Divine Bulwark | Holy Shield block buff | 2 | Passive block chance |
-| retribution | Hand of Light | `sealOfCommand` | 3 | Holy strike bonus split |
-| beastMastery | Master of Beasts | pet + `aspectOfHawk` | 3 | Pet damage mastery scale |
-| marksmanship | Wild Quiver | `trueshotAura` | 3 | Extra shot proc |
-| survival | Hunter vs Wild | `trapMastery` | 3 | Stamina/pet link |
-| assassination | Master Poisoner | `improvedPoisons` | 3 | Poison dmg mastery |
-| combat | Main Gauche | `masterOfSubtlety`/combo | 3 | Off-hand proc |
-| subtlety | Executioner | stealth passives | 3 | Execute-phase mastery |
-| discipline | Shield Discipline | absorb kit | 2 | Shield strength mastery |
-| holyPriest | Echo of Light | `spiritOfRedemption` | 2 | HoT-on-heal mastery |
-| shadow | Empowered Shadow | dot passives | 3 | Periodic shadow mastery |
-| blood | Blood Shield | `bloodPresence` | 2 | DS absorb mastery |
-| frostDk | Frozen Power | `frostPresence` | 3 | Frozen target bonus |
-| unholy | Dreadblade | `unholyPresence` + ghoul | 3 | Shadow dmg mastery |
-| elemental | Elemental Overload | overload-ish procs | 3 | Duplicate cast proc |
-| enhancement | Enhanced Elements | `enhancementWeapons` | 3 | Elemental dmg mastery |
-| restorationShaman | Deep Healing | `ancestralAwakening` | 2 | Missing-HP heal scale |
-| arcane | Mana Adept | arcane charge kit | 3 | Mana→dmg mastery |
-| fire | Fire periodic dmg | Hot Streak + Bomb | 3 | DoT mastery on ticks |
-| frostMage | Frostburn | shatter on root | 3 | Frozen dmg mastery |
-| affliction | Potent Afflictions | dot stack kit | 3 | DoT dmg mastery |
-| demonology | Master Demonologist | pet/meta | 3 | Demon dmg mastery |
-| destruction | Flashburn | chaos bolt tier | 3 | Direct fire mastery |
-| balance | Eclipse | eclipse-style buffs | 3 | Arcane/nature swap mastery |
-| feral | Razor Claws | `catForm` | 3 | Bleed mastery |
-| guardian | Savage Defense | `bearForm` | 2 | Absorb on hit mastery |
-| restorationDruid | Harmony | `treeOfLife` | 2 | HoT amp mastery |
+| Spec | Cata Mastery | Idle hook | Score | Top gap |
+|------|--------------|-----------|-------|---------|
+| arms | Strikes of Opportunity | `extraSwingProcChance` + SWING floaters | 4 | Tune proc rate |
+| fury | Unshackled Fury | rage-high `damageMul` | 4 | Enrage window clarity |
+| protection | Critical Block | `blockChance` + avoidance | 4 | Crit-block double |
+| holyPaladin | Illuminated Healing | `healMul` + absorb mul | 3 | Absorb-on-heal rider |
+| protPaladin | Divine Bulwark | passive block + Holy Shield | 4 | Consecration DR zone |
+| retribution | Hand of Light | holy strike `damageMul` | 4 | — |
+| beastMastery | Master of Beasts | Kill Command `damageMul` | 4 | Pet AP mastery scale |
+| marksmanship | Wild Quiver | `extraAutoShotProcChance` | 4 | — |
+| survival | Hunter vs Wild | generic mastery crumb | 3 | Stamina/pet link |
+| assassination | Master Poisoner | `dotTickMul` | 4 | — |
+| combat | Main Gauche | `mainGaucheProcChance` | 4 | Share band (tuned 1.12.135) |
+| subtlety | Executioner | execute-threshold `damageMul` + Shadow Dance | 4 | — |
+| discipline | Shield Discipline | `absorbStrengthMul` | 3 | Shield strength UI |
+| holyPriest | Echo of Light | `healMul` bump | 3 | HoT-on-heal rider |
+| shadow | Empowered Shadow | `dotTickMul` + shadow form art | 4 | — |
+| blood | Blood Shield | `absorbStrengthMul` | 3 | DS overheal → absorb sim |
+| frostDk | Frozen Power | rooted `damageMul` | 4 | — |
+| unholy | Dreadblade | `dotTickMul` | 4 | — |
+| elemental | Elemental Overload | **label only** | 2 | **Duplicate cast proc** |
+| enhancement | Enhanced Elements | elemental `damageMul` | 4 | — |
+| restorationShaman | Deep Healing | missing-HP `healMul` | 3 | **Mp5 on loot** |
+| arcane | Mana Adept | mana% `damageMul` | 4 | — |
+| fire | Ignite | `dotTickMul` + cast delay | 4 | Spell crit from rating |
+| frostMage | Frostburn | rooted `damageMul` | 4 | — |
+| affliction | Potent Afflictions | `dotTickMul` | 4 | — |
+| demonology | Master Demonologist | demon spell `damageMul` | 4 | Pet lean (trimmed 1.12.135) |
+| destruction | Flashburn | direct fire `damageMul` | 4 | — |
+| balance | Eclipse | eclipse buff `damageMul` + forms | 4 | — |
+| feral | Razor Claws | `dotTickMul` + cat form | 4 | — |
+| guardian | Savage Defense | `absorbStrengthMul` + bear form | 3 | Absorb-on-hit proc feel |
+| restorationDruid | Harmony | `healMul` | 3 | HoT-after-direct rider |
 
-**Pattern:** melee/caster DPS score **3** (passives approximate shape); **tanks/healers 2** (avoidance + mastery + mana model gaps).
+**Pattern:** most DPS **4**; healers/tanks **3–4**; **elemental 2** (overload not wired); healer **Mp5** is cross-spec mana gap.
 
 ---
 
-## Part 6 — Recommended roadmap (if building Cata layer)
+## Part 6 — Roadmap status (2026-09-11)
 
-Report-only — no implementation in this batch.
+| Prio | System | Aug rec | Status |
+|------|--------|---------|--------|
+| **P0** | Mastery per spec + gear | Yes | **Shipped** Aug 2026 |
+| **P0** | Melee vs spell + Int→SP | Yes | **Shipped** |
+| **P0** | Tank dodge/parry + block −30% | Yes | **Shipped** |
+| **P1** | Cast delay + haste-on-cast | Yes | **Partial** (10 abilities) |
+| **P1** | CC diminishing | Yes | **Shipped** |
+| **P1** | Spirit 5SR; remove Mp5 from new loot | Yes | **Half** — 5SR yes, Mp5 still on drops |
+| **P1** | Elemental Overload proc | — | **Open** |
+| **P2** | Hit/expertise | Yes | **Open** |
+| **P2** | Ability crit from rating | Yes | **Open** |
+| **P2** | Reforge-like hub meta | Yes | **Open** |
+| **P2** | Expand cast delays to all signatures | — | **Open** |
+| **Skip** | Full GCD + interrupt | Yes | **Skipped** |
+| **Skip** | Defense rating | Yes | **Skipped** |
+| **Skip** | MoP+ systems | Yes | **Skipped** |
 
-| Prio | System | Why |
-|------|--------|-----|
-| **P0** | Mastery per spec (hook + gear secondary) | Defines Cata identity |
-| **P0** | Melee vs spell + Int→SP sheet | Caster/tank split |
-| **P0** | Tank dodge/parry + mastery block (−30%) + uncrittable | Prot fantasy |
-| **P1** | Cast delay + haste-on-cast | Caster/healer gear meaning |
-| **P1** | CC diminishing | Multi-chamber fairness |
-| **P1** | Spirit 5SR; remove Mp5 from new loot | Healer Cata mana |
-| **P2** | Hit/expertise (simplified PvE) | Gear chase |
-| **P2** | Ability crit from rating | Hot Streak honesty |
-| **P2** | Reforge-like hub meta | Stat targeting without NPC |
-| **Skip** | Full GCD + interrupt | Phone idle |
-| **Skip** | Defense rating | Not Cata |
-| **Skip** | Resilience | PvE irrelevant |
-| **Skip** | MoP+ talent/prune systems | Scope |
-
-**Fairness:** every P0 batch runs `class_balance_gate_test` — mastery must change **shape**, not +50% raw ATK.
+**Fairness:** `class_balance_gate_test` green after v2 tune + 1.12.135 share trim.
 
 ---
 
@@ -506,4 +542,4 @@ Skip in v2: Defense rating, full GCD/interrupt, Resilience, raw reforge UI.
 
 ---
 
-*End of audit — 2026-08-22. Re-run when implementing Cata combat v2 (see Part 10 slices) or after major kit refactors.*
+*Original audit 2026-08-22. Re-audit 2026-09-11 @ 1.12.136. Next re-run after Mp5 migration, Elemental Overload wiring, or major kit refactors.*
