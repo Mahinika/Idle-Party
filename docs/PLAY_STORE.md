@@ -18,6 +18,7 @@ Package id: **`com.idleparty.app`**
 | Store listing copy (EN) | ⏳ review | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md`. **2026-09-11:** idle RPG short/full pasted in Console and **submitted for review** (Publiceringsöversikt → Ändringarna granskas). |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ✅ review | **2026-09-10:** 8 phone shots = chase card + combat/gear/zone UI + party/AFK/KEY/Ascend cards (`tool/store_listing/upload/`). Feature graphic + icon unchanged. Submitted with listing copy. |
+| Preview video (YouTube) | ⏳ review | **2026-09-11:** unlisted YT `https://www.youtube.com/watch?v=fiZjJ9S9l4A` linked on main store listing; Publiceringsöversikt → **Ändringarna granskas** (Ändra Video). Confirm YT: ads off, embeddable, not age-restricted. |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
 

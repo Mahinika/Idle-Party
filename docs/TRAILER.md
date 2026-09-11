@@ -86,8 +86,11 @@ AL3 showcase save, **Zoom · Close**, and restore the emulator save afterward.
 The 16:9 render puts the real phone capture beside the English promise; 9:16
 keeps the whole phone UI visible.
 
-- Landscape **YouTube** link Play accepts, or Console upload of the 16:9 file.
-- Keep the vertical 9:16 cut for ads tests later (`docs/PLAY_GROWTH.md`).
+- Play listing uses a **YouTube URL only** (not direct MP4). Live unlisted:
+  `https://www.youtube.com/watch?v=fiZjJ9S9l4A` (submitted **2026-09-11**).
+- Rebuild from local 16:9 if the clip changes, then replace the YT upload and
+  update the Console field. Keep 9:16 for ads tests (`docs/PLAY_GROWTH.md`).
+- YT must stay public/unlisted, **ads off**, embeddable, not age-restricted.
 
 ### Do not
 

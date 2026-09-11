@@ -30,11 +30,10 @@ Do these in Console when you have 20 minutes:
    **Clicker-rollspel** + **Rollspel**. Max 5. No Idle/Incremental names in
    SV picker — do not invent tags; AFK / Party / Dungeon / Ascend belong in
    description only. Keep Clicker-spel / Rogue-liknande off (dishonest).
-3. **Upload preview video** when you have a 15–30s clip (brief in `TRAILER.md`).
-   Build: `py -3 tool/store_listing/build_preview_video.py` →
-   `tool/store_listing/preview/idle_party_preview_16x9.mp4` (YouTube / Console)
-   + `…_9x16.mp4` for ads. Current local render uses real A56 hub, dungeon,
-   God Hand, and GEAR gameplay (2026-09-11).
+3. **Preview video** — done **2026-09-11**: unlisted YT
+   `https://www.youtube.com/watch?v=fiZjJ9S9l4A` on main listing (in review).
+   Rebuild: `py -3 tool/store_listing/build_preview_video.py` → 16:9 + 9:16
+   (brief in `TRAILER.md`). Confirm YT ads stay off.
 4. **Reply to reviews** (templates below) — especially 1–2★.
 5. **Store listing experiments** (if available): A/B short description vs previous.
 6. Optional: **Google App campaigns** — see ads test plan below (start tiny).

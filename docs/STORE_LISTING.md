@@ -157,6 +157,7 @@ Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshot
 - Growth ops (reviews / video / ads): see [`PLAY_GROWTH.md`](PLAY_GROWTH.md).
 - Preview video: `py -3 tool/store_listing/build_preview_video.py` →
   `tool/store_listing/preview/idle_party_preview_16x9.mp4` (+ 9x16). Built
-  **2026-09-11** with real A56 hub/combat/GEAR gameplay; upload to Play /
-  YouTube when owner OK.
+  **2026-09-11** with real A56 hub/combat/GEAR gameplay. Live Play link
+  (unlisted): `https://www.youtube.com/watch?v=fiZjJ9S9l4A` — submitted for
+  review **2026-09-11** (listing field + Publiceringsöversikt).
 - Closed Alpha remains for early builds. Do not advertise GitHub Releases to players.
