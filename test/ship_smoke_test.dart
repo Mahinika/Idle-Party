@@ -62,8 +62,17 @@ void main() {
     }
   });
 
-  test('endgame act is four hunts, not a 16th dungeon', () {
+  test('endgame map is four hunts on a separate board', () {
     expect(HubEndgameAct.nodes.length, 4);
+    expect(HubScreen.endgameMapMarkerCount, 4);
+    expect(HubScreen.endgameMapMarkerCount, HubEndgameAct.nodes.length);
+    final ys = HubScreen.endgameMapMarkerNorm.map((o) => o.dy).toList()
+      ..sort();
+    expect(
+      ys.last - ys.first,
+      greaterThan(0.4),
+      reason: 'ENDGAME nodes spread on their own map, not a footer row',
+    );
     expect(
       HubEndgameAct.nodes.map((n) => n.hunt).toSet(),
       {
@@ -139,6 +148,7 @@ void main() {
     expect(world.body.toLowerCase(), contains('brassvault'));
     expect(world.body.toLowerCase(), contains('mothveil'));
     expect(world.body.toLowerCase(), contains('endgame'));
+    expect(world.body.toLowerCase(), contains('tab'));
     expect(world.body.toLowerCase(), contains('party mean level'));
     expect(world.body.toLowerCase(), contains('gold does not unlock'));
     expect(world.body.toLowerCase(), isNot(contains('lifetime gold')));

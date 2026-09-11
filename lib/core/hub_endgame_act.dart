@@ -1,10 +1,11 @@
 import 'game_logic.dart';
 import 'hub_chase.dart';
 
-/// World Path act that unlocks when the active party is all Lv100.
+/// Hub ENDGAME tab map that unlocks when the active party is all Lv100.
 ///
-/// Not dungeon #16 — the four hunts reuse Crystal Spire / Mothveil /
-/// Stormwake / Ashen Vault staging. KEY dials stay on the KEY tab.
+/// Not dungeon #16 and not a footer under the 15-zone path — a separate
+/// board. Hunts reuse Crystal Spire / Mothveil / Stormwake / Ashen Vault
+/// staging. KEY dials stay on the KEY tab.
 enum HubEndgameHunt { gauntlet, rankedGr, farmRift, ashen }
 
 class HubEndgameNode {
@@ -16,6 +17,8 @@ class HubEndgameNode {
     required this.portraitDungeonId,
     required this.enterLabel,
     required this.chaseKind,
+    required this.mapX,
+    required this.mapY,
   });
 
   final HubEndgameHunt hunt;
@@ -27,10 +30,15 @@ class HubEndgameNode {
   final String portraitDungeonId;
   final String enterLabel;
   final HubChaseKind chaseKind;
+
+  /// Normalized center on the ENDGAME board (not the 15-zone path).
+  final double mapX;
+  final double mapY;
 }
 
 abstract final class HubEndgameAct {
   static const String mapTitle = 'ENDGAME';
+  static const String pathTabLabel = 'PATH';
 
   static String get mapUnlockLine =>
       'Party Lv${GameLogic.maxHeroLevel} · tap a hunt, then ENTER';
@@ -44,24 +52,30 @@ abstract final class HubEndgameAct {
       portraitDungeonId: 'crystal',
       enterLabel: 'GAUNTLET',
       chaseKind: HubChaseKind.gauntletMilestone,
+      mapX: 0.50,
+      mapY: 0.24,
     ),
     HubEndgameNode(
       hunt: HubEndgameHunt.rankedGr,
-      shortLabel: 'GR',
+      shortLabel: 'RANKED GR',
       title: 'Ranked GR',
       blurb: 'Mothveil timer · no mid-run gear · ranks on KEY · BOARDS',
       portraitDungeonId: 'veil',
       enterLabel: 'RANKED GR',
       chaseKind: HubChaseKind.greaterRiftMilestone,
+      mapX: 0.78,
+      mapY: 0.52,
     ),
     HubEndgameNode(
       hunt: HubEndgameHunt.farmRift,
-      shortLabel: 'RIFT',
+      shortLabel: 'FARM RIFT',
       title: 'Farm Rift',
       blurb: 'Stormwake timed farm · gold and gear mid-run',
       portraitDungeonId: 'storm',
       enterLabel: 'FARM RIFT',
       chaseKind: HubChaseKind.riftMilestone,
+      mapX: 0.22,
+      mapY: 0.52,
     ),
     HubEndgameNode(
       hunt: HubEndgameHunt.ashen,
@@ -71,6 +85,8 @@ abstract final class HubEndgameAct {
       portraitDungeonId: 'ember',
       enterLabel: 'ASHEN CROWN',
       chaseKind: HubChaseKind.ashenCrown,
+      mapX: 0.50,
+      mapY: 0.80,
     ),
   ];
 

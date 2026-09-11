@@ -62,7 +62,7 @@ void main() {
     expect(find.textContaining('Bosses'), findsNothing);
   });
 
-  testWidgets('hub shows ENDGAME act after party max unlock', (WidgetTester tester) async {
+  testWidgets('hub shows ENDGAME tab map after party max unlock', (WidgetTester tester) async {
     final base = GameLogic.createInitialState().copyWith(
       ascensionLevel: GameLogic.maxAscensionLevel,
       highestDungeonCleared: 14,
@@ -100,9 +100,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(GameLogic.showKeystoneJargon(director.state), isTrue);
-    expect(find.text('ENDGAME'), findsOneWidget);
+    expect(find.text('PATH'), findsOneWidget);
+    expect(find.text('ENDGAME'), findsWidgets);
+
+    await tester.tap(find.text('ENDGAME').first);
+    await tester.pump();
     expect(find.textContaining('RANKED GR'), findsWidgets);
     expect(find.textContaining('RIFT'), findsWidgets);
+    expect(find.textContaining('GAUNTLET'), findsWidgets);
+
+    await tester.tap(find.text('PATH'));
+    await tester.pump();
+    expect(find.bySemanticsLabel(RegExp(r'Mothveil Hollow')), findsWidgets);
   });
 
   testWidgets('entering dungeon shows mobile shell chrome', (WidgetTester tester) async {

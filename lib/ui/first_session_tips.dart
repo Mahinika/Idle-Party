@@ -109,7 +109,8 @@ class FirstSessionTips extends StatelessWidget {
           'Ascension cap (AL20) is not endgame. KEY, Gauntlet, Ranked GR, and Farm Rift '
           'unlock when every active hero hits Lv${GameLogic.maxHeroLevel}. '
           'TODAY will say Level the party until then. '
-          'When they hit max level, a new ENDGAME act appears on the World Path past Mothveil. '
+          'When they hit max level, open the hub ENDGAME tab for its own map '
+          '(not under the 15 zones). '
           'MORE → INFO → AL20 VS ENDGAME explains the split.',
     ),
     (
@@ -128,7 +129,7 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'At party level ${GameLogic.maxHeroLevel}, under KEY pick a key level before you enter. Affixes lock in, '
           'a generous timer runs (AFK counts), and beating the boss under par upgrades your key. '
-          'Gauntlet, Ranked GR, Farm Rift, and Ashen Crown sit on the World Path ENDGAME act past Mothveil.',
+          'Gauntlet, Ranked GR, Farm Rift, and Ashen Crown sit on the hub ENDGAME tab.',
     ),
     (
       id: 'weekly',
@@ -146,10 +147,11 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'endgame_act',
-      title: 'ENDGAME ACT',
+      title: 'ENDGAME MAP',
       body:
-          'Party level ${GameLogic.maxHeroLevel} opened a new act on the World Path. '
-          'Scroll past Mothveil — tap Gauntlet, Ranked GR, Farm Rift, or Ashen Crown, then ENTER. '
+          'Party level ${GameLogic.maxHeroLevel} opened the hub ENDGAME tab — '
+          'a separate map from the 15 zones. '
+          'Tap Gauntlet, Ranked GR, Farm Rift, or Ashen Crown, then ENTER. '
           'KEY still holds the dials.',
     ),
     (
@@ -157,14 +159,14 @@ class FirstSessionTips extends StatelessWidget {
       title: 'INFINITY GAUNTLET',
       body:
           'At party level ${GameLogic.maxHeroLevel}, Infinity Gauntlet is an endless Crystal Spire climb. '
-          'Tap it on the World Path ENDGAME act past Mothveil, or under KEY. Best floor survives Ascend.',
+          'Tap it on the hub ENDGAME tab, or under KEY. Best floor survives Ascend.',
     ),
     (
       id: 'rift',
       title: 'FARM RIFT',
       body:
           'At party Lv${GameLogic.maxHeroLevel}, Farm Rift is Stormwake loot farming — '
-          'gold + gear mid-run. Tap RIFT on the World Path ENDGAME act, or KEY · FARM RIFT. '
+          'gold + gear mid-run. Tap FARM RIFT on the hub ENDGAME tab, or KEY · FARM RIFT. '
           'TODAY chases it after Ranked GR. Not Spire climb.',
     ),
     (
@@ -173,14 +175,14 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'At party Lv${GameLogic.maxHeroLevel}, Ranked GR is the Mothveil prestige timer — '
           'harder packs, no mid-run gear, season ranks on KEY · BOARDS. '
-          'Tap GR on the World Path ENDGAME act. TODAY chases GR before Farm Rift.',
+          'Tap RANKED GR on the hub ENDGAME tab. TODAY chases GR before Farm Rift.',
     ),
     (
       id: 'ashen_crown',
       title: 'ASHEN CROWN',
       body:
           'At party level ${GameLogic.maxHeroLevel}, Ashen Crown is a weekly ticket boss. '
-          'Tap ASHEN on the World Path ENDGAME act, or KEY. First ticket clear pays essence; PRACTICE is free after.',
+          'Tap ASHEN on the hub ENDGAME tab, or KEY. First ticket clear pays essence; PRACTICE is free after.',
     ),
     (
       id: 'powerups',

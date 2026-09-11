@@ -18,7 +18,7 @@ class AshenCrownHubPanel extends StatelessWidget {
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
         '${AshenCrown.name} unlocks at party level ${GameLogic.maxHeroLevel} — '
-        'weekly ticket boss (enter from the World Path ENDGAME act too).',
+        'weekly ticket boss (enter from the hub ENDGAME tab too).',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
       );

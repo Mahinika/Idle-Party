@@ -89,7 +89,7 @@ void main() {
     );
     expect(
       FirstSessionTips.tips.firstWhere((t) => t.id == 'endgame_act').body.toLowerCase(),
-      contains('mothveil'),
+      contains('tab'),
     );
   });
 

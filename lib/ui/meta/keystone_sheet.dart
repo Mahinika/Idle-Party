@@ -15,7 +15,7 @@ import 'rift_hub_panel.dart';
 /// KEY sheet (hub tab + dungeon HUD Meta entry).
 ///
 /// One scroll of named hunts — no inner FARM/RANKED tabs hiding Rifts.
-/// World Path ENDGAME act is the other door to the same hunts.
+/// Hub ENDGAME tab is the other door to the same hunts.
 class KeystoneSheet extends StatelessWidget {
   const KeystoneSheet({super.key, required this.director});
   final GameDirector director;
@@ -48,7 +48,7 @@ class KeystoneSheet extends StatelessWidget {
           const SizedBox(height: 4),
         ],
         Text(
-          'Hunts also sit on the World Path past Mothveil (ENDGAME act). '
+          'Hunts also sit on the hub ENDGAME tab (its own map). '
           'KEY · Gauntlet · Ranked GR · Farm Rift · Ashen Crown.',
           maxLines: 3,
           overflow: TextOverflow.ellipsis,

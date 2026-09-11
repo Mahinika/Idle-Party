@@ -24,6 +24,7 @@ import 'meta/offline_welcome.dart';
 import '../core/menu_router.dart';
 import 'shell/discord_thanks_overlay.dart';
 import 'shell/whats_new_overlay.dart';
+import 'hub/hub_endgame_map.dart';
 import 'hub/hub_header.dart';
 import 'hub/hub_powerups.dart';
 import 'hub/hub_today_card.dart';
@@ -47,6 +48,8 @@ class HubScreen extends StatefulWidget {
   /// Honesty helpers for ship_smoke (World Path marker ↔ catalog).
   static List<Offset> get worldPathMarkerNorm => ZonePathMap.markerNorm;
   static int get worldPathMarkerCount => ZonePathMap.markerNorm.length;
+  static List<Offset> get endgameMapMarkerNorm => HubEndgameMap.markerNorm;
+  static int get endgameMapMarkerCount => HubEndgameMap.markerNorm.length;
 
   @override
   State<HubScreen> createState() => _HubScreenState();
@@ -61,6 +64,7 @@ class _HubScreenState extends State<HubScreen>
   bool _offeredWhatsNew = false;
   bool _offeredDiscordThanks = false;
   bool _userPickedZone = false;
+  bool _showEndgameMap = false;
   int? _trackedAscension;
   int? _trackedHighestCleared;
 
@@ -87,6 +91,7 @@ class _HubScreenState extends State<HubScreen>
       _selectedId = _selectedHunt != null
           ? HubEndgameAct.nodeFor(_selectedHunt!).portraitDungeonId
           : preferred;
+      _showEndgameMap = _selectedHunt != null;
       return;
     }
     if (_userPickedZone) {
@@ -96,12 +101,14 @@ class _HubScreenState extends State<HubScreen>
     // KEY night: HERE follows chase zone, not frontier recommended.
     if (chaseZone != null) {
       _selectedHunt = null;
+      _showEndgameMap = false;
       if (_selectedId != chaseZone) _selectedId = chaseZone;
       return;
     }
     final hunt = HubEndgameAct.huntForChase(HubChase.forState(state).kind);
     if (hunt != null) {
       _selectedHunt = hunt;
+      _showEndgameMap = true;
       _selectedId = HubEndgameAct.nodeFor(hunt).portraitDungeonId;
       return;
     }
@@ -205,6 +212,8 @@ class _HubScreenState extends State<HubScreen>
         onEnterDungeon: widget.onEnterDungeon,
         onPickZone: (id) => setState(() {
           _userPickedZone = true;
+          _showEndgameMap = false;
+          _selectedHunt = null;
           _selectedId = id;
         }),
       ),
@@ -262,6 +271,7 @@ class _HubScreenState extends State<HubScreen>
         !_userPickedZone &&
         _selectedId != chase.zoneId) {
       _selectedHunt = null;
+      _showEndgameMap = false;
       _selectedId = chase.zoneId!;
     }
     final (actionLabel, onAction) = _chaseAction(context, chase);
@@ -583,33 +593,62 @@ class _HubScreenState extends State<HubScreen>
                                 ),
                               ],
                               SizedBox(height: short ? 4 : 6),
-                              // World Path: static map; only HERE-ring listens to torch.
+                              if (GameLogic.endgameUnlocked(state)) ...[
+                                HubMapModeTabs(
+                                  showEndgame: _showEndgameMap,
+                                  onSelectPath: () => setState(() {
+                                    _userPickedZone = true;
+                                    _showEndgameMap = false;
+                                    _selectedHunt = null;
+                                  }),
+                                  onSelectEndgame: () => setState(() {
+                                    _userPickedZone = true;
+                                    _showEndgameMap = true;
+                                    _selectedHunt ??=
+                                        HubEndgameAct.huntForChase(
+                                          chase.kind,
+                                        ) ??
+                                        HubEndgameHunt.gauntlet;
+                                    _selectedId = HubEndgameAct.nodeFor(
+                                      _selectedHunt!,
+                                    ).portraitDungeonId;
+                                  }),
+                                ),
+                                SizedBox(height: short ? 4 : 6),
+                              ],
+                              // PATH or ENDGAME board; only HERE-ring listens to torch.
                               Expanded(
                                 flex: short ? 7 : 1,
                                 child: RepaintBoundary(
-                                  child: ZonePathMap(
-                                    dungeons: DungeonCatalog.all,
-                                    selectedId: _selectedId,
-                                    selectedHunt: _selectedHunt,
-                                    endgameUnlocked:
-                                        GameLogic.endgameUnlocked(state),
-                                    partyLevel:
-                                        GameLogic.partyMeanLevel(state),
-                                    highestCleared:
-                                        state.highestDungeonCleared,
-                                    pulse: _torch,
-                                    onSelect: (id) => setState(() {
-                                      _userPickedZone = true;
-                                      _selectedHunt = null;
-                                      _selectedId = id;
-                                    }),
-                                    onSelectHunt: (hunt) => setState(() {
-                                      _userPickedZone = true;
-                                      _selectedHunt = hunt;
-                                      _selectedId = HubEndgameAct.nodeFor(hunt)
-                                          .portraitDungeonId;
-                                    }),
-                                  ),
+                                  child: _showEndgameMap &&
+                                          GameLogic.endgameUnlocked(state)
+                                      ? HubEndgameMap(
+                                          selectedHunt: _selectedHunt,
+                                          pulse: _torch,
+                                          onSelectHunt: (hunt) => setState(() {
+                                            _userPickedZone = true;
+                                            _showEndgameMap = true;
+                                            _selectedHunt = hunt;
+                                            _selectedId = HubEndgameAct
+                                                .nodeFor(hunt)
+                                                .portraitDungeonId;
+                                          }),
+                                        )
+                                      : ZonePathMap(
+                                          dungeons: DungeonCatalog.all,
+                                          selectedId: _selectedId,
+                                          partyLevel:
+                                              GameLogic.partyMeanLevel(state),
+                                          highestCleared:
+                                              state.highestDungeonCleared,
+                                          pulse: _torch,
+                                          onSelect: (id) => setState(() {
+                                            _userPickedZone = true;
+                                            _showEndgameMap = false;
+                                            _selectedHunt = null;
+                                            _selectedId = id;
+                                          }),
+                                        ),
                                 ),
                               ),
                               if (!short) ...[

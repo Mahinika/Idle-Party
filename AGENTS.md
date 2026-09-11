@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.139**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.140**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -217,8 +217,10 @@ vault-start / kit teasers until after the first boss
 (`GameLogic.showDailyChase`). **KEY habit** (`ENTER KEY +N`), KEY tab,
 week-affix jargon, and KEYSTONE tips wait until the **active party is all
 Lv100** (`GameLogic.showKeystoneJargon` → `endgameUnlocked`). At endgame,
-the World Path grows an **ENDGAME act** past Mothveil (Gauntlet, Ranked GR,
-Farm Rift, Ashen Crown) — tap a disc then ENTER; KEY still holds the dials.
+the hub grows a **PATH | ENDGAME** switch: PATH is the 15-zone World Path;
+**ENDGAME** is its own map (Gauntlet, Ranked GR, Farm Rift, Ashen Crown) —
+not a footer under Mothveil, not dungeon #16. Tap a hunt then ENTER; KEY
+still holds the dials.
 TODAY prefers KEY then Gauntlet → Greater Rift → Rift → Ashen Crown before
 Daily grind; Meet-kit backlog stays on PARTY badge. New unlocks queue
 `metaDepth.pendingHeroReveals` until PARTY opens. Ascend confirm/toast + chase

@@ -87,9 +87,10 @@ abstract final class GameGuides {
           '• Zones unlock by party mean level or prior clear — gold does not unlock them.\n'
           '• Locked zones dim on the map; the caption under the map shows '
           'party level progress (have / need).\n'
-          '• At party Lv${GameLogic.maxHeroLevel}, a new ENDGAME act appears past Mothveil '
-          '(Gauntlet, Ranked GR, Farm Rift, Ashen Crown). Same 15 zones — not a 16th dungeon. '
-          'Tap a hunt disc, then ENTER. KEY still holds the dials.\n'
+          '• At party Lv${GameLogic.maxHeroLevel}, hub PATH and ENDGAME tabs open. '
+          'ENDGAME is its own map (Gauntlet, Ranked GR, Farm Rift, Ashen Crown) — '
+          'not under Mothveil, not a 16th dungeon. Tap a hunt, then ENTER. '
+          'KEY still holds the dials.\n'
           "• Goblin's Hideout: stolen-stash chests pay better gold but wake ambush guards.\n"
           '• Boss floor is shown under your party name (Boss on F n).',
     ),
@@ -272,7 +273,7 @@ abstract final class GameGuides {
           '• Play Games month — ranked KEY / Gauntlet / GR boards (opt-in).\n\n'
           'Endgame ladder on TODAY (party Lv${GameLogic.maxHeroLevel}): '
           'KEY habit → Gauntlet → Ranked GR → Farm Rift → Ashen Crown.\n'
-          'Those hunts also appear as an ENDGAME act on the World Path past Mothveil.',
+          'Those hunts live on the hub ENDGAME tab (its own map, not under the 15 zones).',
     ),
     GuideTopic(
       id: 'classes',
@@ -317,7 +318,7 @@ abstract final class GameGuides {
           '• Endless Crystal Spire climb — each floor gets harder.\n'
           '• Gold and essence scale with floor; boss every 5 floors.\n'
           '• Wipe or leave returns to hub; best floor is saved.\n'
-          '• Enter from the World Path ENDGAME act past Mothveil, KEY, or TODAY.\n'
+          '• Enter from the hub ENDGAME tab, KEY, or TODAY.\n'
           '• Does not count toward Ascend boss requirements.',
     ),
     GuideTopic(
@@ -331,7 +332,7 @@ abstract final class GameGuides {
           '• Wipe or timeout ends the run with a small consolation.\n'
           '• Not ranked on Play Games — clear Ranked GR first; TODAY chases '
           'Farm Rift after GR milestones quiet.\n'
-          '• Set tier under KEY · FARM RIFT (Stormwake), on the World Path ENDGAME act, or follow TODAY.',
+          '• Set tier under KEY · FARM RIFT (Stormwake), on the hub ENDGAME tab, or follow TODAY.',
     ),
     GuideTopic(
       id: 'greater_rift',
@@ -344,7 +345,7 @@ abstract final class GameGuides {
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
           'Ranked GR board wires when the Console ID is pasted.\n'
-          '• TODAY chases Ranked GR before Farm Rift. Set tier under KEY · RANKED GR or tap GR on the World Path ENDGAME act.',
+          '• TODAY chases Ranked GR before Farm Rift. Set tier under KEY · RANKED GR or tap RANKED GR on the hub ENDGAME tab.',
     ),
     GuideTopic(
       id: 'apex',
@@ -475,7 +476,7 @@ abstract final class GameGuides {
       id: 'ashen_crown',
       title: 'ASHEN CROWN',
       body:
-          'Weekly ticket boss (party Lv${GameLogic.maxHeroLevel}). Hub TODAY, World Path ENDGAME act, or KEY.\n\n'
+          'Weekly ticket boss (party Lv${GameLogic.maxHeroLevel}). Hub TODAY, ENDGAME tab, or KEY.\n\n'
           '• ${AshenCrown.ticketsPerWeek} tickets each ISO week. The first ticket clear '
           'pays +${AshenCrown.essenceReward}e and a title.\n'
           '• After that clear, further tickets do not pay — use PRACTICE (free, no ticket) '
@@ -501,7 +502,7 @@ abstract final class GameGuides {
           '• Higher keys drop higher iLvl gear (KEY +10 is +20 iLvl) and pay '
           'gold in line with the harder packs — not a gold tax.\n'
           '• At party Lv${GameLogic.maxHeroLevel}, hub TODAY may chase KEY until your preferred key is at the cap.\n'
-          '• Ashen Crown tickets and PRACTICE live under KEY and on the World Path ENDGAME act past Mothveil.',
+          '• Ashen Crown tickets and PRACTICE live under KEY and on the hub ENDGAME tab.',
     ),
     GuideTopic(
       id: 'ascend',
