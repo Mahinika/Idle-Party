@@ -1,14 +1,20 @@
-"""Build Cognifox Studio YouTube avatar + banner from owned store art."""
+"""Build Cognifox Studio YouTube avatar + banner.
+
+Avatar defaults to the owner's GitHub profile photo (Mahinika), matching
+the git/GitHub identity — not the Idle Party app icon.
+"""
 
 from __future__ import annotations
 
+import urllib.request
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(__file__).resolve().parent / "youtube"
-ICON = ROOT / "tool" / "art_backups" / "app_icon.png"
+# Same photo as https://github.com/Mahinika
+GITHUB_AVATAR_URL = "https://avatars.githubusercontent.com/u/217390085?s=800&v=4"
 FEATURE = (
     ROOT
     / "tool"
@@ -18,17 +24,25 @@ FEATURE = (
 )
 
 
+def _square_800(src: Image.Image) -> Image.Image:
+    rgba = src.convert("RGBA")
+    w, h = rgba.size
+    side = min(w, h)
+    left = (w - side) // 2
+    top = (h - side) // 2
+    sq = rgba.crop((left, top, left + side, top + side))
+    return sq.resize((800, 800), Image.Resampling.LANCZOS)
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    icon = Image.open(ICON).convert("RGBA")
+    raw_path = OUT / "github_avatar_src.png"
+    urllib.request.urlretrieve(GITHUB_AVATAR_URL, raw_path)
+    avatar = _square_800(Image.open(raw_path))
     feat = Image.open(FEATURE).convert("RGBA")
 
-    prof = Image.new("RGBA", (800, 800), (18, 14, 28, 255))
-    ic = icon.copy()
-    ic.thumbnail((720, 720), Image.Resampling.LANCZOS)
-    prof.paste(ic, ((800 - ic.width) // 2, (800 - ic.height) // 2), ic)
     avatar_path = OUT / "channel_avatar_800.png"
-    prof.convert("RGB").save(avatar_path, quality=95)
+    avatar.convert("RGB").save(avatar_path, quality=95)
 
     banner = Image.new("RGBA", (2560, 1440), (12, 10, 22, 255))
     draw = ImageDraw.Draw(banner)
