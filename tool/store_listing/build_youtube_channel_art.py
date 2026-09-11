@@ -24,21 +24,29 @@ FEATURE = (
 )
 
 
-def _square_800(src: Image.Image) -> Image.Image:
+def _avatar_800_for_yt_circle(src: Image.Image) -> Image.Image:
+    """Pad logo so the full art stays inside YouTube's circular crop."""
     rgba = src.convert("RGBA")
+    bbox = rgba.getbbox()
+    if bbox:
+        rgba = rgba.crop(bbox)
+    size = 800
+    # ~68% of canvas so ears + STUDIO clear YouTube's circular crop
+    safe = int(size * 0.68)
+    canvas = Image.new("RGBA", (size, size), (10, 12, 28, 255))
     w, h = rgba.size
-    side = min(w, h)
-    left = (w - side) // 2
-    top = (h - side) // 2
-    sq = rgba.crop((left, top, left + side, top + side))
-    return sq.resize((800, 800), Image.Resampling.LANCZOS)
+    scale = min(safe / w, safe / h)
+    nw, nh = max(1, int(w * scale)), max(1, int(h * scale))
+    logo = rgba.resize((nw, nh), Image.Resampling.LANCZOS)
+    canvas.paste(logo, ((size - nw) // 2, (size - nh) // 2), logo)
+    return canvas
 
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     raw_path = OUT / "github_avatar_src.png"
     urllib.request.urlretrieve(GITHUB_AVATAR_URL, raw_path)
-    avatar = _square_800(Image.open(raw_path))
+    avatar = _avatar_800_for_yt_circle(Image.open(raw_path))
     feat = Image.open(FEATURE).convert("RGBA")
 
     avatar_path = OUT / "channel_avatar_800.png"
