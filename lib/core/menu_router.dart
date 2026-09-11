@@ -336,7 +336,7 @@ class MenuRouter extends ChangeNotifier {
 
     },
 
-    MenuRoute.key => 'KEY dial · Gauntlet · Ranked GR · Farm Rift',
+    MenuRoute.key => 'KEY dial · Gauntlet · Ranked GR · Farm Rift · Ashen',
 
     MenuRoute.more => switch (_moreSection) {
 

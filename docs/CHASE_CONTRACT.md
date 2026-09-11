@@ -21,7 +21,7 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 
 ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats Daily and KEY. Zone unlock is TODAY only when party level is **ALMOST** (or prior clear opens the path). Never invent a second priority list in UI.
 
-**Endgame unlock:** active party all at [`GameLogic.maxHeroLevel`](../lib/core/game_logic.dart) (**100**) via `endgameUnlocked` — not AL20 alone. AL20 remains the Ascend cap. KEY, Infinity Gauntlet, Rifts, Greater Rifts, and Ashen Crown share the hub once unlocked. At AL20 + party max, TODAY prefers the endgame ladder before Daily, then one actionable fallback (not a multi-line stats dump).
+**Endgame unlock:** active party all at [`GameLogic.maxHeroLevel`](../lib/core/game_logic.dart) (**100**) via `endgameUnlocked` — not AL20 alone. AL20 remains the Ascend cap. KEY, Infinity Gauntlet, Rifts, Greater Rifts, and Ashen Crown share the hub once unlocked. At party max level the World Path grows an **ENDGAME act** past Mothveil (same four hunts — not dungeon #16). At AL20 + party max, TODAY prefers the endgame ladder before Daily, then one actionable fallback (not a multi-line stats dump).
 
 **AL20 vs party Lv100:** Ascend / Blessing / Star Nodes / REBORN are AL gates. KEY, Gauntlet, Ranked GR, Farm Rift, and Ashen Crown are party-Lv100 gates. At AL20 with heroes below 100, `_partyLevelChase` owns TODAY until every active hero hits 100.
 

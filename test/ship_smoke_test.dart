@@ -3,6 +3,7 @@ import 'package:idle_party/core/ascend_roadmap.dart';
 import 'package:idle_party/core/game_guides.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
+import 'package:idle_party/core/hub_endgame_act.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_def.dart';
@@ -59,6 +60,25 @@ void main() {
         reason: 'markers must descend sandy→veil',
       );
     }
+  });
+
+  test('endgame act is four hunts, not a 16th dungeon', () {
+    expect(HubEndgameAct.nodes.length, 4);
+    expect(
+      HubEndgameAct.nodes.map((n) => n.hunt).toSet(),
+      {
+        HubEndgameHunt.gauntlet,
+        HubEndgameHunt.rankedGr,
+        HubEndgameHunt.farmRift,
+        HubEndgameHunt.ashen,
+      },
+    );
+    expect(
+      HubEndgameAct.nodes.map((n) => n.portraitDungeonId).toSet(),
+      {'crystal', 'veil', 'storm', 'ember'},
+    );
+    expect(HubEndgameAct.huntForChase(HubChaseKind.riftMilestone), HubEndgameHunt.farmRift);
+    expect(HubEndgameAct.huntForChase(HubChaseKind.keystone), isNull);
   });
 
   test('zone unlock uses party level or prior clear', () {
@@ -118,6 +138,7 @@ void main() {
     expect(world.body.toLowerCase(), contains('blightfen'));
     expect(world.body.toLowerCase(), contains('brassvault'));
     expect(world.body.toLowerCase(), contains('mothveil'));
+    expect(world.body.toLowerCase(), contains('endgame'));
     expect(world.body.toLowerCase(), contains('party mean level'));
     expect(world.body.toLowerCase(), contains('gold does not unlock'));
     expect(world.body.toLowerCase(), isNot(contains('lifetime gold')));

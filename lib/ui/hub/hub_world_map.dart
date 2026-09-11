@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../core/hub_endgame_act.dart';
 import '../../models/dungeon_def.dart';
 import '../../assets/custom_assets.dart';
 import '../game_theme.dart';
@@ -73,6 +74,35 @@ class SelectedZoneCaption extends StatelessWidget {
   }
 }
 
+class SelectedHuntCaption extends StatelessWidget {
+  const SelectedHuntCaption({super.key, required this.hunt});
+
+  final HubEndgameHunt hunt;
+
+  @override
+  Widget build(BuildContext context) {
+    final node = HubEndgameAct.nodeFor(hunt);
+    return Column(
+      children: [
+        Text(
+          '${node.title} · ENDGAME',
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+        ),
+        Text(
+          node.blurb,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+      ],
+    );
+  }
+}
+
 class ZonePathMap extends StatefulWidget {
   const ZonePathMap({
     super.key,
@@ -82,6 +112,9 @@ class ZonePathMap extends StatefulWidget {
     required this.highestCleared,
     required this.onSelect,
     this.pulse,
+    this.endgameUnlocked = false,
+    this.selectedHunt,
+    this.onSelectHunt,
   });
 
   final List<DungeonDef> dungeons;
@@ -91,6 +124,9 @@ class ZonePathMap extends StatefulWidget {
   /// HERE-ring torch only — not a full-map rebuild every tick.
   final Animation<double>? pulse;
   final ValueChanged<String> onSelect;
+  final bool endgameUnlocked;
+  final HubEndgameHunt? selectedHunt;
+  final ValueChanged<HubEndgameHunt>? onSelectHunt;
 
   /// Marker centers on painted gold rings (zone 0…14 top→bottom).
   /// Upper path from Stormwake base; endgame rings detected on rebuilt footer.
@@ -128,7 +164,8 @@ class _ZonePathMapState extends State<ZonePathMap> {
   @override
   void didUpdateWidget(covariant ZonePathMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedId != widget.selectedId) {
+    if (oldWidget.selectedId != widget.selectedId ||
+        oldWidget.selectedHunt != widget.selectedHunt) {
       _scrolledTo = null;
     }
   }
@@ -143,24 +180,30 @@ class _ZonePathMapState extends State<ZonePathMap> {
 
   void _ensureSelectedVisible(double mapH, double viewH) {
     if (!_scroll.hasClients) return;
+    final scrollKey = widget.selectedHunt?.name ?? widget.selectedId;
     if (_userPanAt != null &&
         DateTime.now().difference(_userPanAt!) <
             const Duration(seconds: 2)) {
       return;
     }
-    if (_scrolledTo == widget.selectedId &&
+    if (_scrolledTo == scrollKey &&
         _lastMapH == mapH &&
         _lastViewH == viewH) {
       return;
     }
-    final idx = widget.dungeons.indexWhere((d) => d.id == widget.selectedId);
-    if (idx < 0 || idx >= ZonePathMap.markerNorm.length) return;
-    final y = ZonePathMap.markerNorm[idx].dy * mapH;
+    final double y;
+    if (widget.selectedHunt != null) {
+      y = mapH + 8;
+    } else {
+      final idx = widget.dungeons.indexWhere((d) => d.id == widget.selectedId);
+      if (idx < 0 || idx >= ZonePathMap.markerNorm.length) return;
+      y = ZonePathMap.markerNorm[idx].dy * mapH;
+    }
     // Keep HERE near vertical center of the path viewport.
     final target = (y - viewH * 0.45)
         .clamp(0.0, math.max(0.0, mapH - viewH))
         .toDouble();
-    _scrolledTo = widget.selectedId;
+    _scrolledTo = scrollKey;
     _lastMapH = mapH;
     _lastViewH = viewH;
     if (!_didInitialJump) {
@@ -205,7 +248,7 @@ class _ZonePathMapState extends State<ZonePathMap> {
         const statusH = 15.0;
 
         final needsScroll =
-            _scrolledTo != widget.selectedId ||
+            _scrolledTo != (widget.selectedHunt?.name ?? widget.selectedId) ||
             _lastMapH != mapH ||
             _lastViewH != viewH;
         if (needsScroll) {
@@ -269,7 +312,7 @@ class _ZonePathMapState extends State<ZonePathMap> {
             widget.highestCleared,
           );
           final cleared = widget.highestCleared >= d.number;
-          final selected = d.id == widget.selectedId;
+          final selected = widget.selectedHunt == null && d.id == widget.selectedId;
           // Frontier = lowest uncleared unlocked zone (what to push next).
           final frontier =
               unlocked && !cleared && d.number == widget.highestCleared + 1;
@@ -293,7 +336,8 @@ class _ZonePathMapState extends State<ZonePathMap> {
               width: hitSize,
               height: hitSize + labelH,
               child: MapZoneMarker(
-                def: d,
+                name: d.name,
+                portraitDungeonId: d.id,
                 discSize: discSize,
                 hitSize: hitSize,
                 unlocked: unlocked,
@@ -307,13 +351,32 @@ class _ZonePathMapState extends State<ZonePathMap> {
           );
         }
 
+        final footerH = widget.endgameUnlocked ? _endgameFooterHeight(mapW) : 0.0;
+        if (widget.endgameUnlocked) {
+          pathChildren.add(
+            Positioned(
+              left: 0,
+              right: 0,
+              top: mapH,
+              height: footerH,
+              child: _EndgameActStrip(
+                discSize: discSize,
+                hitSize: hitSize,
+                selectedHunt: widget.selectedHunt,
+                pulse: widget.pulse,
+                onSelect: widget.onSelectHunt,
+              ),
+            ),
+          );
+        }
+
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: SingleChildScrollView(
             controller: _scroll,
             child: SizedBox(
               width: mapW,
-              height: mapH,
+              height: mapH + footerH,
               child: Stack(clipBehavior: Clip.none, children: pathChildren),
             ),
           ),
@@ -321,12 +384,19 @@ class _ZonePathMapState extends State<ZonePathMap> {
       },
     );
   }
+
+  static double _endgameFooterHeight(double mapW) {
+    final disc = (mapW * 0.092).clamp(34.0, 40.0);
+    final hit = math.max(disc, GameTheme.minTouch);
+    return hit + 56;
+  }
 }
 
 class MapZoneMarker extends StatelessWidget {
   const MapZoneMarker({
     super.key,
-    required this.def,
+    required this.name,
+    required this.portraitDungeonId,
     required this.discSize,
     required this.hitSize,
     required this.unlocked,
@@ -337,7 +407,8 @@ class MapZoneMarker extends StatelessWidget {
     this.pulse,
   });
 
-  final DungeonDef def;
+  final String name;
+  final String portraitDungeonId;
   final double discSize;
   final double hitSize;
   final bool unlocked;
@@ -366,11 +437,11 @@ class MapZoneMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final semanticsLabel =
-        '${def.name}, $statusWord${selected ? ', selected' : ''}';
+        '$name, $statusWord${selected ? ', selected' : ''}';
     final iconSize = discSize * 0.82;
 
     Widget portrait = KenneySprite(
-      asset: KenneyAssets.dungeonPortraitFor(def.id),
+      asset: KenneyAssets.dungeonPortraitFor(portraitDungeonId),
       size: iconSize,
     );
     if (!unlocked) {
@@ -469,6 +540,85 @@ class MapZoneMarker extends StatelessWidget {
               : null,
         ),
         child: Center(child: child),
+      ),
+    );
+  }
+}
+
+class _EndgameActStrip extends StatelessWidget {
+  const _EndgameActStrip({
+    required this.discSize,
+    required this.hitSize,
+    required this.selectedHunt,
+    required this.onSelect,
+    this.pulse,
+  });
+
+  final double discSize;
+  final double hitSize;
+  final HubEndgameHunt? selectedHunt;
+  final Animation<double>? pulse;
+  final ValueChanged<HubEndgameHunt>? onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            GameTheme.ink.withValues(alpha: 0.15),
+            GameTheme.stoneDeep,
+            GameTheme.ink,
+          ],
+        ),
+        border: Border(
+          top: BorderSide(color: GameTheme.borderLit.withValues(alpha: 0.55)),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
+        child: Column(
+          children: [
+            Text(
+              HubEndgameAct.mapTitle,
+              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            ),
+            Text(
+              HubEndgameAct.mapUnlockLine,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+            ),
+            const SizedBox(height: 6),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final node in HubEndgameAct.nodes)
+                    Expanded(
+                      child: Center(
+                        child: MapZoneMarker(
+                          name: node.shortLabel,
+                          portraitDungeonId: node.portraitDungeonId,
+                          discSize: discSize,
+                          hitSize: hitSize,
+                          unlocked: true,
+                          cleared: false,
+                          selected: selectedHunt == node.hunt,
+                          pulse: selectedHunt == node.hunt ? pulse : null,
+                          statusWord: node.shortLabel,
+                          onTap: () => onSelect?.call(node.hunt),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

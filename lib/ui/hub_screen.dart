@@ -8,6 +8,7 @@ import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/gold_income.dart';
 import '../core/hub_chase.dart';
+import '../core/hub_endgame_act.dart';
 import '../core/hub_primary_cta.dart';
 import '../core/keystone.dart';
 import '../core/meta_systems.dart';
@@ -54,6 +55,7 @@ class HubScreen extends StatefulWidget {
 class _HubScreenState extends State<HubScreen>
     with SingleTickerProviderStateMixin {
   late String _selectedId;
+  HubEndgameHunt? _selectedHunt;
   late final AnimationController _torch;
   bool _offlineDialogShown = false;
   bool _offeredWhatsNew = false;
@@ -81,7 +83,10 @@ class _HubScreenState extends State<HubScreen>
         chaseZone ?? GameLogic.recommendedDungeonId(state);
     if (force) {
       _userPickedZone = false;
-      _selectedId = preferred;
+      _selectedHunt = HubEndgameAct.huntForChase(HubChase.forState(state).kind);
+      _selectedId = _selectedHunt != null
+          ? HubEndgameAct.nodeFor(_selectedHunt!).portraitDungeonId
+          : preferred;
       return;
     }
     if (_userPickedZone) {
@@ -90,10 +95,17 @@ class _HubScreenState extends State<HubScreen>
     }
     // KEY night: HERE follows chase zone, not frontier recommended.
     if (chaseZone != null) {
+      _selectedHunt = null;
       if (_selectedId != chaseZone) _selectedId = chaseZone;
       return;
     }
-    // Spire / GR / Rift nights: leave HERE alone (no auto-jump).
+    final hunt = HubEndgameAct.huntForChase(HubChase.forState(state).kind);
+    if (hunt != null) {
+      _selectedHunt = hunt;
+      _selectedId = HubEndgameAct.nodeFor(hunt).portraitDungeonId;
+      return;
+    }
+    // Spire / GR / Rift nights handled above; leftover endgame leaves HERE.
     if (hubChaseOwnsEndgameRow(HubChase.forState(state).kind)) {
       return;
     }
@@ -249,6 +261,7 @@ class _HubScreenState extends State<HubScreen>
         chase.zoneId != null &&
         !_userPickedZone &&
         _selectedId != chase.zoneId) {
+      _selectedHunt = null;
       _selectedId = chase.zoneId!;
     }
     final (actionLabel, onAction) = _chaseAction(context, chase);
@@ -262,16 +275,37 @@ class _HubScreenState extends State<HubScreen>
       hardmodeLevel: state.hardmodeLevel,
       showKeystoneJargon: GameLogic.showKeystoneJargon(state),
       endgameUnlocked: GameLogic.endgameUnlocked(state),
+      mapHunt: _userPickedZone ? _selectedHunt : null,
     );
     final enterAction =
         unlockedSelected ? () => widget.onEnterDungeon(_selectedId) : null;
-    final primaryLabel = cta.primaryLabel;
-    final VoidCallback? primaryAction;
-    if (onAction != null && cta.hideInlineChaseAction) {
-      primaryAction = onAction;
-    } else {
-      primaryAction = enterAction;
+    VoidCallback? huntAction(HubEndgameHunt hunt) {
+      switch (hunt) {
+        case HubEndgameHunt.gauntlet:
+          return () => confirmGauntletRun(context, director);
+        case HubEndgameHunt.farmRift:
+          return () => confirmRiftRun(context, director);
+        case HubEndgameHunt.rankedGr:
+          return () => confirmGreaterRiftRun(context, director);
+        case HubEndgameHunt.ashen:
+          return () => confirmAshenCrown(context, director, practice: false);
+      }
     }
+
+    VoidCallback? actionFor(String? label) {
+      if (label == null) return null;
+      for (final node in HubEndgameAct.nodes) {
+        if (node.enterLabel == label) return huntAction(node.hunt);
+      }
+      if (HubPrimaryCta.isEnterFamilyLabel(label)) {
+        return enterAction;
+      }
+      return onAction;
+    }
+
+    final primaryLabel = cta.primaryLabel;
+    final primaryAction = actionFor(primaryLabel) ??
+        (cta.hideInlineChaseAction ? onAction : enterAction);
     final String? secondaryLabel = cta.secondaryLabel;
     final VoidCallback? secondaryAction;
     if (secondaryLabel == null) {
@@ -283,7 +317,7 @@ class _HubScreenState extends State<HubScreen>
             practice: true,
           );
     } else {
-      secondaryAction = enterAction;
+      secondaryAction = actionFor(secondaryLabel) ?? enterAction;
     }
     final showMetaKeyLink = cta.showKeyDial;
     final endgameHunt =
@@ -343,7 +377,7 @@ class _HubScreenState extends State<HubScreen>
           ),
           child: GameButton(
             label: primaryLabel,
-            tip: chase.kind == HubChaseKind.keystone
+            tip: chase.kind == HubChaseKind.keystone && _selectedHunt == null
                 ? 'Starts your preferred KEY on this zone'
                 : (ready || cta.hideInlineChaseAction)
                 ? 'TODAY — do this first'
@@ -446,11 +480,13 @@ class _HubScreenState extends State<HubScreen>
     }
     final canAscend = GameLogic.canAscend(state);
     final bossFloor = GameLogic.bossFloorFor(state);
-    final unlockedSelected = DungeonCatalog.isUnlocked(
-      _selectedId,
-      GameLogic.partyMeanLevel(state),
-      state.highestDungeonCleared,
-    );
+    final unlockedSelected = _selectedHunt != null
+        ? GameLogic.endgameUnlocked(state)
+        : DungeonCatalog.isUnlocked(
+            _selectedId,
+            GameLogic.partyMeanLevel(state),
+            state.highestDungeonCleared,
+          );
     final short = GameTheme.isShortHeight(context);
     final selectedDungeon = DungeonCatalog.byId(_selectedId);
     final chase = HubChase.forState(state);
@@ -554,6 +590,9 @@ class _HubScreenState extends State<HubScreen>
                                   child: ZonePathMap(
                                     dungeons: DungeonCatalog.all,
                                     selectedId: _selectedId,
+                                    selectedHunt: _selectedHunt,
+                                    endgameUnlocked:
+                                        GameLogic.endgameUnlocked(state),
                                     partyLevel:
                                         GameLogic.partyMeanLevel(state),
                                     highestCleared:
@@ -561,30 +600,40 @@ class _HubScreenState extends State<HubScreen>
                                     pulse: _torch,
                                     onSelect: (id) => setState(() {
                                       _userPickedZone = true;
+                                      _selectedHunt = null;
                                       _selectedId = id;
+                                    }),
+                                    onSelectHunt: (hunt) => setState(() {
+                                      _userPickedZone = true;
+                                      _selectedHunt = hunt;
+                                      _selectedId = HubEndgameAct.nodeFor(hunt)
+                                          .portraitDungeonId;
                                     }),
                                   ),
                                 ),
                               ),
                               if (!short) ...[
                                 const SizedBox(height: 4),
-                                SelectedZoneCaption(
-                                  dungeon: selectedDungeon,
-                                  unlocked: unlockedSelected,
-                                  partyLevel: GameLogic.partyMeanLevel(state),
-                                  // KEY chase detail already lists affixes · par.
-                                  keyLevel: chase.kind == HubChaseKind.keystone
-                                      ? 0
-                                      : state.hardmodeLevel,
-                                  keyAffixLine:
-                                      chase.kind == HubChaseKind.keystone ||
-                                              state.hardmodeLevel <= 0
-                                          ? null
-                                          : Keystone.previewAffixes(state)
-                                              .take(2)
-                                              .map(Keystone.label)
-                                              .join(' · '),
-                                ),
+                                if (_selectedHunt != null)
+                                  SelectedHuntCaption(hunt: _selectedHunt!)
+                                else
+                                  SelectedZoneCaption(
+                                    dungeon: selectedDungeon,
+                                    unlocked: unlockedSelected,
+                                    partyLevel: GameLogic.partyMeanLevel(state),
+                                    // KEY chase detail already lists affixes · par.
+                                    keyLevel: chase.kind == HubChaseKind.keystone
+                                        ? 0
+                                        : state.hardmodeLevel,
+                                    keyAffixLine:
+                                        chase.kind == HubChaseKind.keystone ||
+                                                state.hardmodeLevel <= 0
+                                            ? null
+                                            : Keystone.previewAffixes(state)
+                                                .take(2)
+                                                .map(Keystone.label)
+                                                .join(' · '),
+                                  ),
                               ],
                               if (short)
                                 Expanded(

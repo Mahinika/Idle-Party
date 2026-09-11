@@ -1,4 +1,5 @@
 import 'hub_chase.dart';
+import 'hub_endgame_act.dart';
 
 /// Resolves hub brown/grey CTAs so TODAY chase owns the primary button.
 ///
@@ -67,6 +68,22 @@ class HubPrimaryCta {
     return int.tryParse(m.group(1)!);
   }
 
+  static bool isReadyClaim(HubChase chase) {
+    if (chase.urgency != HubChaseUrgency.ready) return false;
+    switch (chase.kind) {
+      case HubChaseKind.claimDailyVault:
+      case HubChaseKind.claimMissions:
+      case HubChaseKind.monthGoal:
+      case HubChaseKind.meetHero:
+      case HubChaseKind.equipBag:
+      case HubChaseKind.weekGoal:
+      case HubChaseKind.ascend:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   static HubPrimaryCta resolve({
     required HubChase chase,
     required String? chaseActionLabel,
@@ -75,6 +92,7 @@ class HubPrimaryCta {
     required int hardmodeLevel,
     required bool showKeystoneJargon,
     required bool endgameUnlocked,
+    HubEndgameHunt? mapHunt,
   }) {
     final enterLabel = enterDungeonLabel(
       chase: chase,
@@ -83,6 +101,26 @@ class HubPrimaryCta {
     );
     final canEnter = unlockedSelected;
     final label = hasChaseAction ? chaseActionLabel : null;
+
+    if (mapHunt != null && endgameUnlocked) {
+      final huntLabel = HubEndgameAct.nodeFor(mapHunt).enterLabel;
+      if (label != null && isReadyClaim(chase)) {
+        return HubPrimaryCta(
+          primaryLabel: label,
+          secondaryLabel: huntLabel,
+          hideInlineChaseAction: true,
+          showKeyDial: false,
+        );
+      }
+      final ashen = mapHunt == HubEndgameHunt.ashen;
+      return HubPrimaryCta(
+        primaryLabel: huntLabel,
+        secondaryLabel: ashen ? 'PRACTICE' : null,
+        hideInlineChaseAction: true,
+        showKeyDial: false,
+        ashenPracticeSecondary: ashen,
+      );
+    }
 
     if (chase.kind == HubChaseKind.doneForToday && label != null) {
       return HubPrimaryCta(

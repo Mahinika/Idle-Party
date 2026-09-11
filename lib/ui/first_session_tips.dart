@@ -109,6 +109,7 @@ class FirstSessionTips extends StatelessWidget {
           'Ascension cap (AL20) is not endgame. KEY, Gauntlet, Ranked GR, and Farm Rift '
           'unlock when every active hero hits Lv${GameLogic.maxHeroLevel}. '
           'TODAY will say Level the party until then. '
+          'When they hit max level, a new ENDGAME act appears on the World Path past Mothveil. '
           'MORE → INFO → AL20 VS ENDGAME explains the split.',
     ),
     (
@@ -126,7 +127,8 @@ class FirstSessionTips extends StatelessWidget {
       title: 'KEY',
       body:
           'At party level ${GameLogic.maxHeroLevel}, under KEY pick a key level before you enter. Affixes lock in, '
-          'a generous timer runs (AFK counts), and beating the boss under par upgrades your key.',
+          'a generous timer runs (AFK counts), and beating the boss under par upgrades your key. '
+          'Gauntlet, Ranked GR, Farm Rift, and Ashen Crown sit on the World Path ENDGAME act past Mothveil.',
     ),
     (
       id: 'weekly',
@@ -143,30 +145,42 @@ class FirstSessionTips extends StatelessWidget {
           'Apex slag from Gauntlet/Crystal crafts class Apex gear in MORE → CRAFT. Ranks persist through Ascend.',
     ),
     (
+      id: 'endgame_act',
+      title: 'ENDGAME ACT',
+      body:
+          'Party level ${GameLogic.maxHeroLevel} opened a new act on the World Path. '
+          'Scroll past Mothveil — tap Gauntlet, Ranked GR, Farm Rift, or Ashen Crown, then ENTER. '
+          'KEY still holds the dials.',
+    ),
+    (
       id: 'gauntlet',
       title: 'INFINITY GAUNTLET',
       body:
-          'At party level ${GameLogic.maxHeroLevel}, Infinity Gauntlet is an endless Crystal Spire climb from the hub. Best floor survives Ascend.',
+          'At party level ${GameLogic.maxHeroLevel}, Infinity Gauntlet is an endless Crystal Spire climb. '
+          'Tap it on the World Path ENDGAME act past Mothveil, or under KEY. Best floor survives Ascend.',
     ),
     (
       id: 'rift',
       title: 'FARM RIFT',
       body:
           'At party Lv${GameLogic.maxHeroLevel}, Farm Rift is Stormwake loot farming — '
-          'gold + gear mid-run. TODAY chases it after Ranked GR. Not Spire climb.',
+          'gold + gear mid-run. Tap RIFT on the World Path ENDGAME act, or KEY · FARM RIFT. '
+          'TODAY chases it after Ranked GR. Not Spire climb.',
     ),
     (
       id: 'greater_rift',
       title: 'RANKED GR',
       body:
           'At party Lv${GameLogic.maxHeroLevel}, Ranked GR is the Mothveil prestige timer — '
-          'harder packs, no mid-run gear, season ranks on KEY · BOARDS. TODAY chases GR before Farm Rift.',
+          'harder packs, no mid-run gear, season ranks on KEY · BOARDS. '
+          'Tap GR on the World Path ENDGAME act. TODAY chases GR before Farm Rift.',
     ),
     (
       id: 'ashen_crown',
       title: 'ASHEN CROWN',
       body:
-          'At party level ${GameLogic.maxHeroLevel}, Ashen Crown is a weekly ticket boss under KEY. First ticket clear pays essence; PRACTICE is free after.',
+          'At party level ${GameLogic.maxHeroLevel}, Ashen Crown is a weekly ticket boss. '
+          'Tap ASHEN on the World Path ENDGAME act, or KEY. First ticket clear pays essence; PRACTICE is free after.',
     ),
     (
       id: 'powerups',
@@ -233,7 +247,10 @@ class FirstSessionTips extends StatelessWidget {
               tip.id == 'al20_endgame' ||
               tip.id == 'apex' ||
               tip.id == 'gauntlet' ||
+              tip.id == 'rift' ||
+              tip.id == 'greater_rift' ||
               tip.id == 'ashen_crown' ||
+              tip.id == 'endgame_act' ||
               tip.id == 'powerups' ||
               tip.id == 'prestige') &&
           (inDungeon || !porch)) {
@@ -279,6 +296,9 @@ class FirstSessionTips extends StatelessWidget {
           s.ascensionLevel < 1 &&
           s.craftMaterials.isEmpty &&
           s.apexVault.isEmpty) {
+        continue;
+      }
+      if (tip.id == 'endgame_act' && !GameLogic.endgameUnlocked(s)) {
         continue;
       }
       if (tip.id == 'gauntlet' &&

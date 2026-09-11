@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/chase_dispatcher.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
+import 'package:idle_party/core/hub_endgame_act.dart';
 import 'package:idle_party/core/hub_primary_cta.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
 
@@ -32,6 +33,51 @@ void main() {
     expect(cta.primaryLabel, 'GAUNTLET');
     expect(cta.secondaryLabel, 'ENTER DUNGEON');
     expect(cta.hideInlineChaseAction, isTrue);
+    expect(cta.showKeyDial, isFalse);
+  });
+
+  test('map Farm Rift pick owns primary even when TODAY is KEY', () {
+    const chase = HubChase(
+      kind: HubChaseKind.keystone,
+      title: 'Run KEY +12',
+      detail: 'Affixes · par',
+      keyLevel: 12,
+      urgency: HubChaseUrgency.normal,
+    );
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: 'ENTER KEY +12',
+      hasChaseAction: true,
+      unlockedSelected: true,
+      hardmodeLevel: 12,
+      showKeystoneJargon: true,
+      endgameUnlocked: true,
+      mapHunt: HubEndgameHunt.farmRift,
+    );
+    expect(cta.primaryLabel, 'FARM RIFT');
+    expect(cta.secondaryLabel, isNull);
+    expect(cta.showKeyDial, isFalse);
+  });
+
+  test('READY vault still owns primary when a map hunt is selected', () {
+    const chase = HubChase(
+      kind: HubChaseKind.claimDailyVault,
+      title: 'Claim Daily Vault',
+      detail: 'Claim +e.',
+      urgency: HubChaseUrgency.ready,
+    );
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: 'CLAIM VAULT',
+      hasChaseAction: true,
+      unlockedSelected: true,
+      hardmodeLevel: 10,
+      showKeystoneJargon: true,
+      endgameUnlocked: true,
+      mapHunt: HubEndgameHunt.rankedGr,
+    );
+    expect(cta.primaryLabel, 'CLAIM VAULT');
+    expect(cta.secondaryLabel, 'RANKED GR');
     expect(cta.showKeyDial, isFalse);
   });
 

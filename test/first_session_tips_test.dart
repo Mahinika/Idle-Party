@@ -68,6 +68,31 @@ void main() {
     );
   });
 
+  test('party max level queues ENDGAME ACT map tip', () {
+    final base = GameLogic.createInitialState(now: now);
+    final state = base.copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
+      bossVictories: 99,
+      highestFloorCleared: 50,
+      seenTips: [
+        for (final t in FirstSessionTips.tips)
+          if (t.id != 'endgame_act') t.id,
+      ],
+      heroRoster: [
+        for (final h in base.heroRoster) h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );
+    expect(GameLogic.endgameUnlocked(state), isTrue);
+    expect(
+      FirstSessionTips.nextTipId(state, inDungeon: false),
+      'endgame_act',
+    );
+    expect(
+      FirstSessionTips.tips.firstWhere((t) => t.id == 'endgame_act').body.toLowerCase(),
+      contains('mothveil'),
+    );
+  });
+
   test('three dailies tip waits for showDailyChase', () {
     final early = GameLogic.createInitialState(now: now).copyWith(
       seenTips: [

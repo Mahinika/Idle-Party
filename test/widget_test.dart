@@ -62,7 +62,7 @@ void main() {
     expect(find.textContaining('Bosses'), findsNothing);
   });
 
-  testWidgets('hub shows KEYSTONE after party Lv60 unlock', (WidgetTester tester) async {
+  testWidgets('hub shows ENDGAME act after party max unlock', (WidgetTester tester) async {
     final base = GameLogic.createInitialState().copyWith(
       ascensionLevel: GameLogic.maxAscensionLevel,
       highestDungeonCleared: 14,
@@ -100,7 +100,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(GameLogic.showKeystoneJargon(director.state), isTrue);
-    expect(find.textContaining('KEY DIAL'), findsOneWidget);
+    expect(find.text('ENDGAME'), findsOneWidget);
+    expect(find.textContaining('RANKED GR'), findsWidgets);
     expect(find.textContaining('RIFT'), findsWidgets);
   });
 

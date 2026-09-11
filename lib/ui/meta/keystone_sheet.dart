@@ -2,55 +2,27 @@ import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
 import '../../core/hub_chase.dart';
+import '../../core/hub_endgame_act.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
+import 'ashen_crown_hub_panel.dart';
 import 'challenge_toggles.dart';
 import 'gauntlet_hub_panel.dart';
 import 'greater_rift_hub_panel.dart';
 import 'play_games_section.dart';
 import 'rift_hub_panel.dart';
 
-/// KEYSTONE sheet (hub tab + dungeon HUD Meta entry).
+/// KEY sheet (hub tab + dungeon HUD Meta entry).
 ///
-/// Phone-friendly sections: Keystone / Gauntlet / Rift / GR / Boards —
-/// one hunt visible at a time instead of a long scroll stack.
-class KeystoneSheet extends StatefulWidget {
+/// One scroll of named hunts — no inner FARM/RANKED tabs hiding Rifts.
+/// World Path ENDGAME act is the other door to the same hunts.
+class KeystoneSheet extends StatelessWidget {
   const KeystoneSheet({super.key, required this.director});
   final GameDirector director;
 
   @override
-  State<KeystoneSheet> createState() => _KeystoneSheetState();
-}
-
-class _KeystoneSheetState extends State<KeystoneSheet>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
-
-  @override
-  void initState() {
-    super.initState();
-    final chase = HubChase.forState(widget.director.state);
-    final initial = switch (chase.kind) {
-      HubChaseKind.gauntletMilestone => 1,
-      HubChaseKind.riftMilestone => 2,
-      HubChaseKind.greaterRiftMilestone => 3,
-      HubChaseKind.doneForToday => 4,
-      HubChaseKind.ashenCrown => 0,
-      HubChaseKind.keystone => 0,
-      _ => 0,
-    };
-    _tabs = TabController(length: 5, vsync: this, initialIndex: initial);
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final d = widget.director;
+    final d = director;
     final chase = HubChase.forState(d.state);
     final huntHint = switch (chase.kind) {
       HubChaseKind.keystone =>
@@ -59,9 +31,10 @@ class _KeystoneSheetState extends State<KeystoneSheet>
       HubChaseKind.riftMilestone => 'TODAY · Farm Rift',
       HubChaseKind.greaterRiftMilestone => 'TODAY · Ranked GR',
       HubChaseKind.doneForToday => 'TODAY · soft rest · BOARDS',
-      HubChaseKind.ashenCrown => 'TODAY · Ashen Crown (enter from hub)',
+      HubChaseKind.ashenCrown => 'TODAY · Ashen Crown',
       _ => '',
     };
+    final hunt = HubEndgameAct.huntForChase(chase.kind);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -73,48 +46,24 @@ class _KeystoneSheetState extends State<KeystoneSheet>
             style: GameTheme.body(size: 12, color: GameTheme.torchHot),
           ),
           const SizedBox(height: 4),
-          Text(
-            'Endgame ladder: KEY → Gauntlet → Ranked GR → Farm Rift → Crown. '
-            'Vault / Daily Run / Quests are separate dailies on the hub.',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 6),
         ],
-        MenuChrome.tabRail(
-          controller: _tabs,
-          tabs: [
-            MenuChrome.bridgedTab(
-              'KEY',
-              onSelect: () => _tabs.animateTo(0),
-            ),
-            MenuChrome.bridgedTab(
-              'GAUNTLET',
-              onSelect: () => _tabs.animateTo(1),
-            ),
-            MenuChrome.bridgedTab(
-              'FARM',
-              onSelect: () => _tabs.animateTo(2),
-            ),
-            MenuChrome.bridgedTab(
-              'RANKED',
-              onSelect: () => _tabs.animateTo(3),
-            ),
-            MenuChrome.bridgedTab(
-              'BOARDS',
-              onSelect: () => _tabs.animateTo(4),
-            ),
-          ],
+        Text(
+          'Hunts also sit on the World Path past Mothveil (ENDGAME act). '
+          'KEY · Gauntlet · Ranked GR · Farm Rift · Ashen Crown.',
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         Expanded(
-          child: TabBarView(
-            controller: _tabs,
-            children: [
-              SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MenuChrome.fold(
+                  title: 'KEY',
+                  subtitle: 'Timed keys on a zone — dial then ENTER on the hub',
+                  initiallyExpanded: hunt == null,
                   children: [
                     MenuChrome.sectionLabelScoped(
                       'KEY',
@@ -123,56 +72,48 @@ class _KeystoneSheetState extends State<KeystoneSheet>
                     ChallengeToggles(director: d, lockExpanded: true),
                   ],
                 ),
-              ),
-              SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                MenuChrome.fold(
+                  title: 'GAUNTLET',
+                  subtitle: 'Endless Crystal Spire climb',
+                  initiallyExpanded: hunt == HubEndgameHunt.gauntlet,
                   children: [
-                    MenuChrome.sectionLabelScoped(
-                      'GAUNTLET',
-                      scope: MenuScope.run,
-                    ),
                     GauntletHubPanel(director: d),
                   ],
                 ),
-              ),
-              SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                MenuChrome.fold(
+                  title: 'RANKED GR',
+                  subtitle: 'Mothveil timer · no mid-run gear',
+                  initiallyExpanded: hunt == HubEndgameHunt.rankedGr,
                   children: [
-                    MenuChrome.sectionLabelScoped(
-                      'FARM RIFT',
-                      scope: MenuScope.run,
-                    ),
-                    RiftHubPanel(director: d),
-                  ],
-                ),
-              ),
-              SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    MenuChrome.sectionLabelScoped(
-                      'RANKED GR',
-                      scope: MenuScope.run,
-                    ),
                     GreaterRiftHubPanel(director: d),
                   ],
                 ),
-              ),
-              SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                MenuChrome.fold(
+                  title: 'FARM RIFT',
+                  subtitle: 'Stormwake loot farm',
+                  initiallyExpanded: hunt == HubEndgameHunt.farmRift,
                   children: [
-                    MenuChrome.sectionLabelScoped(
-                      'BOARDS',
-                      scope: MenuScope.account,
-                    ),
+                    RiftHubPanel(director: d),
+                  ],
+                ),
+                MenuChrome.fold(
+                  title: 'ASHEN CROWN',
+                  subtitle: 'Weekly ticket boss',
+                  initiallyExpanded: hunt == HubEndgameHunt.ashen,
+                  children: [
+                    AshenCrownHubPanel(director: d),
+                  ],
+                ),
+                MenuChrome.fold(
+                  title: 'BOARDS',
+                  subtitle: 'Play Games ranks',
+                  initiallyExpanded: chase.kind == HubChaseKind.doneForToday,
+                  children: [
                     PlayGamesBoardsSection(director: d),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
