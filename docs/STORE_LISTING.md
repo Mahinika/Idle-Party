@@ -29,8 +29,13 @@ fairness, cheap convenience SHOP).
    catalog exist (`docs/SHOP_MONETIZATION.md`).
 6. **English only on the store page** — default locale **en-US**. Do not add
    translated Play listings (sv-SE or otherwise). Screenshot captions stay English.
-7. **Genre honesty** — Category **Role Playing**. Keywords: idle RPG, AFK,
-   party, dungeon, Ascend. Never puzzle / battle royale / sandbox UGC framing.
+7. **Genre honesty** — Category stays **Role Playing** (one only). Play tags
+   are a **fixed list**, max **5** — not free keywords. Honest tags:
+   **Idle role-playing**, **Role-playing**; optional **Incremental**.
+   Keywords in short/full copy: idle RPG, AFK, party, dungeon, Ascend.
+   Never puzzle / battle royale / sandbox UGC framing. Never Casual / Action
+   / Arcade as category. Never fake tags (AFK, Party, Dungeon, Ascend are
+   not Console tags).
 
 ### Idle Party pitch (one line)
 

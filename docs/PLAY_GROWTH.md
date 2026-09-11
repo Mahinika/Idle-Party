@@ -26,10 +26,13 @@ Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
 Do these in Console when you have 20 minutes:
 
 1. **Paste listing** from `STORE_LISTING.md` (short + full) → submit for review.
-2. **Upload preview video** when you have a 15–30s clip (brief in `TRAILER.md`).
-3. **Reply to reviews** (templates below) — especially 1–2★.
-4. **Store listing experiments** (if available): A/B short description vs previous.
-5. Optional: **Google App campaigns** — see ads test plan below (start tiny).
+2. **Tags** (Grow users → Store presence → Store settings → Manage tags):
+   **Idle role-playing** + **Role-playing**; optional **Incremental**. Max 5.
+   Do not invent tags (AFK / Party / Dungeon / Ascend are description words).
+3. **Upload preview video** when you have a 15–30s clip (brief in `TRAILER.md`).
+4. **Reply to reviews** (templates below) — especially 1–2★.
+5. **Store listing experiments** (if available): A/B short description vs previous.
+6. Optional: **Google App campaigns** — see ads test plan below (start tiny).
 
 Never point players at GitHub Releases.
 
