@@ -76,8 +76,8 @@ players = Play AAB after owner play OK — not public GitHub APK links.
 
 **Growth:** paste listing from [`STORE_LISTING.md`](STORE_LISTING.md); owner
 checklist + review templates in [`PLAY_GROWTH.md`](PLAY_GROWTH.md). Category
-stays Role Playing. Tags (max 5, Console list): **Idle role-playing**,
-**Role-playing**; optional **Incremental**.
+stays Role Playing. Tags (2026-09-11 Console): **Clicker-rollspel**,
+**Rollspel** (no Idle/Incremental picker names in SV UI).
 
 ## Signing
 

@@ -26,9 +26,10 @@ Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
 Do these in Console when you have 20 minutes:
 
 1. **Paste listing** from `STORE_LISTING.md` (short + full) → submit for review.
-2. **Tags** (Grow users → Store presence → Store settings → Manage tags):
-   **Idle role-playing** + **Role-playing**; optional **Incremental**. Max 5.
-   Do not invent tags (AFK / Party / Dungeon / Ascend are description words).
+2. **Tags** (Butiksinställningar → Hantera taggar): live set is
+   **Clicker-rollspel** + **Rollspel**. Max 5. No Idle/Incremental names in
+   SV picker — do not invent tags; AFK / Party / Dungeon / Ascend belong in
+   description only. Keep Clicker-spel / Rogue-liknande off (dishonest).
 3. **Upload preview video** when you have a 15–30s clip (brief in `TRAILER.md`).
 4. **Reply to reviews** (templates below) — especially 1–2★.
 5. **Store listing experiments** (if available): A/B short description vs previous.
