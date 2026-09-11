@@ -1,0 +1,90 @@
+# Idle Party — Play growth (what we can do)
+
+**Updated:** 2026-09-11 · Category stays **Role Playing** (idle fantasy RPG).  
+Do **not** chase Casual / Battle Royale / sandbox search volume.
+
+Honest growth order: **retention → listing clarity → reviews → preview video → tiny paid test**.
+
+Paste-ready listing copy: [`STORE_LISTING.md`](STORE_LISTING.md).  
+Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
+
+---
+
+## Already in the repo (agent-owned)
+
+| Lever | Where |
+|-------|--------|
+| ASO short + full (idle RPG keywords, fair SHOP line) | `docs/STORE_LISTING.md` |
+| Screenshot / feature graphic plan | `docs/STORE_LISTING.md` |
+| Play preview video brief | `docs/TRAILER.md` § Play preview |
+| TODAY chase clarity (claim / equip / rebuild / short phones) | `lib/core/hub_chase.dart`, `chase_dispatcher.dart`, `hub_screen.dart` |
+
+---
+
+## Owner-only (Play Console — cannot automate)
+
+Do these in Console when you have 20 minutes:
+
+1. **Paste listing** from `STORE_LISTING.md` (short + full) → submit for review.
+2. **Upload preview video** when you have a 15–30s clip (brief in `TRAILER.md`).
+3. **Reply to reviews** (templates below) — especially 1–2★.
+4. **Store listing experiments** (if available): A/B short description vs previous.
+5. Optional: **Google App campaigns** — see ads test plan below (start tiny).
+
+Never point players at GitHub Releases.
+
+---
+
+## Review reply templates (en-US)
+
+Keep replies short, English, no defensiveness. Fix bugs in-app when real.
+
+**Thanks (4–5★)**
+```
+Thanks for playing Idle Party — glad the party crawl is landing. If something feels unclear on TODAY or KEY, tell us and we’ll tighten it.
+```
+
+**Confused / “what do I do?” (2–3★)**
+```
+Sorry the next step felt fuzzy. On the hub, TODAY is the one goal to chase first — claim, equip, or enter. Tap MORE → INFO if you want a short guide. Thanks for the note; we’re polishing that path.
+```
+
+**Bug / crash (1–2★)**
+```
+Sorry that broke your run. Please update to the latest version from Play if you haven’t. If it still happens, reply with what you tapped (hub / dungeon / GEAR) and your phone model — we’ll dig in.
+```
+
+**Ads complaint**
+```
+Ads are optional: hub POWERUPS only when you choose a boost. SETTINGS → AD PRIVACY covers consent. SHOP has a cheap ad-free option if you prefer that path. Thanks for saying so.
+```
+
+**Pay-to-win worry**
+```
+Idle Party stays single-player and fair — SHOP is convenience (boosts / QoL), not best-in-slot for cash. Combat power still comes from play, gear, and Ascend. Appreciate you checking.
+```
+
+---
+
+## Tiny ads test plan (optional)
+
+Only if you want paid installs after listing + retention feel OK.
+
+| Field | Start value |
+|-------|-------------|
+| Budget | Cap **€5–10/day** for 7 days, then stop and read |
+| Goal | Installs → then optimize toward **D1 open** / retention if Console allows |
+| Keywords / audiences | idle RPG, AFK RPG, idle adventure, party RPG — **not** puzzle / BR / Roblox |
+| Creative | Feature graphic + first 2 screenshots + preview video if ready |
+| Kill rule | Stop if D1 retention is junk or CPI >> value of a curious idle player |
+
+Do **not** scale spend until organic D1 feels good on your AL20 save.
+
+---
+
+## Skip for now
+
+- Re-tagging as Casual / Action / Arcade  
+- Mass locale listings before EN listing + retention sit  
+- Chasing Play editorial featuring (Google picks)  
+- GitHub Releases as a player funnel  

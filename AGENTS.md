@@ -117,7 +117,9 @@ Cadence: `docs/CONTENT_CADENCE.md` (decision table + tag rhythm; 90d M1–M3
 shipped). Background (optional): `docs/TOP_GAMES_RESEARCH.md`. Chase contract
 (hub TODAY ↔ offline Up next): `docs/CHASE_CONTRACT.md`. Gear budget:
 `docs/GEAR_BUDGET.md`. Floor blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`.
-Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`.
+Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`. Growth / ASO /
+reviews / tiny ads plan: `docs/PLAY_GROWTH.md` + listing copy in
+`docs/STORE_LISTING.md`.
 
 ### Cursor automation
 

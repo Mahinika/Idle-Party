@@ -45,7 +45,7 @@ void main() {
     expect(chase.progressLabel, isNull);
   });
 
-  test('season bonus surfaces on claimable vault', () {
+  test('claimable vault stays on payday copy (season pays silently)', () {
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.ensureWeeklyContract(state, now: now);
     state = state.copyWith(
@@ -59,7 +59,8 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.claimDailyVault);
     expect(chase.title.toLowerCase(), contains('vault'));
-    expect(chase.detail.toLowerCase(), contains('season'));
+    expect(chase.detail.toLowerCase(), contains('claim'));
+    expect(chase.detail.toLowerCase(), isNot(contains('season')));
   });
 
   test('complete missions surface as claim chase', () {
@@ -222,7 +223,7 @@ void main() {
     expect(chase.title, contains('Rebuild your bag'));
     expect(chase.kind, isNot(HubChaseKind.keystone));
     expect(chase.title.toUpperCase(), isNot(contains('REBORN')));
-    expect(chase.progressLabel, contains('% kit'));
+    expect(chase.progressLabel, contains('% geared'));
   });
 
   test('AL20 KEY chase stays when bag is not a fresh prestige wipe', () {
@@ -720,7 +721,7 @@ void main() {
     expect(chase.detail.toLowerCase(), contains('par'));
   });
 
-  test('Rebuild bag chase shows kit-pressure progress', () {
+  test('Rebuild bag chase uses plain gear-farm copy', () {
     var state = _withPartyMaxLevel(
       GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel,
@@ -736,8 +737,9 @@ void main() {
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.title, contains('Rebuild your bag'));
-    expect(chase.progressLabel, contains('% kit'));
-    expect(chase.detail.toLowerCase(), contains('kit pressure'));
+    expect(chase.progressLabel, contains('% geared'));
+    expect(chase.detail.toLowerCase(), contains('farm early'));
+    expect(chase.detail.toLowerCase(), isNot(contains('kit pressure')));
   });
 
   group('session 2–5 chase matrix', () {

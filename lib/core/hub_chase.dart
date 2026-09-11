@@ -2,6 +2,7 @@ import 'dart:math';
 
 import '../models/dungeon_def.dart';
 import '../models/hero_spec.dart';
+import '../models/loot.dart';
 import '../models/meta_depth.dart';
 import 'ascend_roadmap.dart';
 import 'encounter_factory.dart';
@@ -121,23 +122,17 @@ class HubChase {
 
     if (!firstHourQuiet && GameLogic.canClaimDailyVault(state)) {
       final best = md.dailyBestTimedKey;
-      final month = GameLogic.isoMonthKey(clock);
-      final seasonPending = !md.claimedSeasonRewards.contains(month);
       final plain = GameLogic.plainPlayerChrome(state);
       final preview = GameLogic.dailyVaultClaimPreviewEssence(state);
       final pay = plain ? '+$preview Permanent' : '+${preview}e';
-      final seasonBit = seasonPending
-          ? (plain
-              ? ' · season +${GameLogic.seasonWeeklyBonusEssence} Permanent'
-              : ' · season bonus +${GameLogic.seasonWeeklyBonusEssence}e')
-          : '';
+      // Season bonus still pays on claim — keep TODAY copy to the vault payday.
       final keyTalk = GameLogic.showKeystoneJargon(state);
       return HubChase(
         kind: HubChaseKind.claimDailyVault,
         title: 'Claim Daily Vault',
         detail: best >= 2 && keyTalk
-            ? 'Claim $pay$seasonBit (KEY +$best timed today).'
-            : 'Claim $pay$seasonBit.',
+            ? 'Claim $pay (KEY +$best timed today).'
+            : 'Claim $pay.',
         // READY chip owns urgency — no "N ready" progress echo.
         progressLabel: null,
         urgency: HubChaseUrgency.ready,
@@ -233,11 +228,9 @@ class HubChase {
         kind: HubChaseKind.clearFloors,
         title: 'Rebuild your bag',
         detail:
-            'Zones stay open. Farm early floors in $zoneName to re-kit — '
-            'bag, wallet gold, and GOLD tracks wiped (floor height back to starter). '
-            'Kit pressure ${pressure.toStringAsFixed(2)} / '
-            '${exitAt.toStringAsFixed(2)} ends rebuild.',
-        progressLabel: '$pct% kit',
+            'Farm early floors in $zoneName and re-equip the party. '
+            'Zones stay open — bag and GOLD tracks reset on Ascend.',
+        progressLabel: '$pct% geared',
         zoneId: zoneId,
       );
     }
@@ -459,6 +452,7 @@ class HubChase {
     final plan = GameLogic.planBiSAssignments(state);
     String? itemName;
     String? heroBit;
+    String? slotBit;
     if (plan.isNotEmpty) {
       final step = plan.first;
       for (final item in state.gearStash) {
@@ -470,10 +464,15 @@ class HubChase {
       if (step.heroIndex >= 0 && step.heroIndex < state.heroes.length) {
         heroBit = state.heroes[step.heroIndex].name;
       }
+      slotBit = _equipSlotLabel(step.slot);
     }
     final named = itemName == null
         ? null
-        : (heroBit == null ? itemName : '$itemName → $heroBit');
+        : (heroBit == null
+            ? (slotBit == null ? itemName : '$itemName ($slotBit)')
+            : (slotBit == null
+                ? '$itemName → $heroBit'
+                : '$itemName → $heroBit ($slotBit)'));
     return HubChase(
       kind: HubChaseKind.equipBag,
       title: upgrades == 1
@@ -481,15 +480,27 @@ class HubChase {
           : '$upgrades better items waiting',
       detail: upgrades == 1
           ? (named != null
-              ? '$named is in BAG — open BAG and tap EQUIP 1.'
-              : 'Open BAG and tap EQUIP 1 before you go deeper.')
+              ? '$named is in BAG — tap EQUIP 1.'
+              : 'Tap EQUIP 1 before you go deeper.')
           : (named != null
-              ? 'Open BAG — tap EQUIP $upgrades (first: $named).'
-              : 'Open BAG and tap EQUIP $upgrades — upgrades waiting.'),
+              ? 'Tap EQUIP $upgrades (first: $named).'
+              : 'Tap EQUIP $upgrades — upgrades waiting.'),
       progressLabel: upgrades == 1 ? 'EQUIP 1' : 'EQUIP $upgrades',
       urgency: HubChaseUrgency.ready,
     );
   }
+
+  static String _equipSlotLabel(EquipmentSlot slot) => switch (slot) {
+        EquipmentSlot.weapon => 'weapon',
+        EquipmentSlot.offHand => 'off-hand',
+        EquipmentSlot.ranged => 'ranged',
+        EquipmentSlot.head => 'helm',
+        EquipmentSlot.chest => 'chest',
+        EquipmentSlot.boots => 'boots',
+        EquipmentSlot.ring || EquipmentSlot.ring2 => 'ring',
+        EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'trinket',
+        _ => slot.name,
+      };
 
   static HubChase? _marketUpgradeChase(GameState state) {
     final listing = MarketListingsService.bestAffordableUpgradeListing(state);

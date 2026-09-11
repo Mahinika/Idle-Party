@@ -7,11 +7,11 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 
 ## Priority (high → low)
 
-1. **Claimables (READY)** — daily vault, finished **QUESTS**, Meet new kit, **equip BAG upgrade**
+1. **Claimables (READY)** — daily vault (payday copy only; season bonus still pays on claim), finished **QUESTS**, Meet new kit, **equip BAG upgrade** (`EQUIP N` CTA + slot when known)
 2. **Market ALMOST** — affordable UPGRADE on GOLD → MARKET (after bag equip). **Pre-endgame only** before KEY nights; at party Lv100 market waits until after KEY habit / endgame ladder / zone.
 3. **Ascend READY** — can Ascend now (blocked at AL20 cap). **Exception:** on **AL0** after the first boss, TODAY stays Daily / farming; Ascend shows on the urgent row only (not the sole big button). Confirm copy: party stays; bag, gold, forge, and floors reset.
 4. **ALMOST** — one boss from Ascend, then KEY+1 vault cliff (endgame only), then zone. **Month ALMOST** and Will / early week ALMOST: pre–Lv100 only before KEY. **At party Lv100:** Month ALMOST sits **after** the endgame ladder so Spire/KEY nights stay clear; Gauntlet/Rift/GR ALMOST still apply.
-5. **Fresh prestige re-kit** — after Ascend or optional AL20 Reborn (`metaDepth.freshPrestige` and low gear pressure): TODAY says **Rebuild your bag** with kit-pressure progress / farm floor 1. Skip KEY / Gauntlet / Rift until real drops land. **Reborn is never a TODAY chase.**
+5. **Fresh prestige re-kit** — after Ascend or optional AL20 Reborn (`metaDepth.freshPrestige` and low gear pressure): TODAY says **Rebuild your bag** with plain farm/re-equip copy + geared % progress. Skip KEY / Gauntlet / Rift until real drops land. **Reborn is never a TODAY chase.**
 6. **Level the party** — before endgame unlock, chase active party toward **Lv100** when that is the gate
 7. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list. Skip kit teasers until after the first boss.
 8. **KEY habit (endgame only)** — chase the next KEY until preferred key is at the dial cap (TODAY detail includes affixes + par). Does **not** wait on unpaid Daily.

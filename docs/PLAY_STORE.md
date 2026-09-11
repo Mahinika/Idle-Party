@@ -65,14 +65,18 @@ Agent skill: `.cursor/skills/play-store-prep/`. Update this table when a row cha
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
-## Current decision (2026-09-09)
+## Current decision (2026-09-11)
 
 **Primary distribution: Google Play.**  
 Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
-(production **1.12.133 / 163** in review; live until then **1.12.117 / 146**). Closed opt-in for early builds. Do **not**
+(production track live; keep Operator status honest above). Closed opt-in for early builds. Do **not**
 point players at GitHub Releases (repo may be private). Day-to-day: prefer
 content/feel over Play ops unless the owner asks about Play. Ship path for
 players = Play AAB after owner play OK — not public GitHub APK links.
+
+**Growth:** paste listing from [`STORE_LISTING.md`](STORE_LISTING.md); owner
+checklist + review templates in [`PLAY_GROWTH.md`](PLAY_GROWTH.md). Category
+stays Role Playing.
 
 ## Signing
 

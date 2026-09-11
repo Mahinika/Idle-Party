@@ -1,6 +1,7 @@
 # Idle Party — store listing (research + copy)
 
-**Updated:** 2026-09-10 · Target: Google Play (en-US) · Honesty first.
+**Updated:** 2026-09-11 · Target: Google Play (en-US) · Honesty first.  
+Growth checklist / review templates: [`PLAY_GROWTH.md`](PLAY_GROWTH.md).
 
 ## Research: what makes people tap Install
 
@@ -15,7 +16,7 @@ fairness, cheap convenience SHOP).
 | 3 | **Short description** (≤80 chars) | Under the title in search; one sentence of genre + hook. |
 | 4 | **Feature graphic** | Top of the listing page (not always search). Atmosphere + readable title. |
 | 5 | **Full description** | For people who already almost decided; keywords + honesty. |
-| 6 | **Preview video** | Strong for games when available; optional for Alpha. |
+| 6 | **Preview video** | Strong for games when available — see `docs/TRAILER.md` § Play preview. |
 
 ### Rules we follow for Idle Party
 
@@ -25,9 +26,11 @@ fairness, cheap convenience SHOP).
 4. **Phone portrait** 9:16, ≥1080 px wide (Play featuring bar).
 5. **Copy matches ship** — 15 zones, 31 specs, KEYSTONE (not invented systems).
    Do **not** promise “no ads forever” — rewarded POWERUPS and a cheap SHOP
-   catalog exist; billing may land later (`docs/SHOP_MONETIZATION.md`).
+   catalog exist (`docs/SHOP_MONETIZATION.md`).
 6. **English only on the store page** — default locale **en-US**. Do not add
    translated Play listings (sv-SE or otherwise). Screenshot captions stay English.
+7. **Genre honesty** — Category **Role Playing**. Keywords: idle RPG, AFK,
+   party, dungeon, Ascend. Never puzzle / battle royale / sandbox UGC framing.
 
 ### Idle Party pitch (one line)
 
@@ -40,15 +43,15 @@ fairness, cheap convenience SHOP).
 ### Short description (80 chars max)
 
 ```
-Build a fantasy party, fight while away, and return to real progress.
+Idle RPG: grow a fantasy party that fights AFK — always know today's chase.
 ```
 
-(69 characters)
+(75 characters)
 
 ### Full description
 
 ```
-Build a fantasy party that keeps fighting while you are away. Return to loot, progress, and one clear goal for what to do next.
+Idle fantasy RPG for phones. Build a party that keeps fighting while you are away. Return to loot, progress, and one clear TODAY goal.
 
 BUILD YOUR PARTY
 • Choose classic fantasy roles: tanks, healers, melee fighters, ranged heroes, and spellcasters.
@@ -57,10 +60,9 @@ BUILD YOUR PARTY
 • Battle through 15 dungeon zones filled with room chests, enemies, and bosses.
 
 IDLE PROGRESS, REAL COMBAT
-• Watch your heroes move, fight, heal, and use their own abilities.
-• Come back to AFK progress powered by the same dungeon combat.
+• Watch your heroes move, fight, heal, and use their own abilities — the same combat when you AFK.
 • Leave a dungeon whenever you want and continue when you are ready.
-• TODAY puts your next useful goal directly on the main button.
+• TODAY puts your next useful goal on the main button: claim, equip, or enter.
 
 KEEP GROWING
 • Ascend to unlock more heroes and permanent upgrades.
@@ -70,7 +72,8 @@ KEEP GROWING
 
 FAIR PLAY
 • Single-player — no Idle Party account required.
-• Optional rewarded ads grant timed boosts and never interrupt a fight.
+• Optional rewarded ads (hub POWERUPS) grant timed boosts and never interrupt a fight.
+• Optional SHOP sells cheap convenience only (boosts, ad-free, small QoL) — not pay-to-win gear.
 • Privacy policy covers optional Play Games, ads, and analytics.
 • Designed for portrait phones.
 
@@ -79,18 +82,17 @@ Start your party and take one more floor.
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.133+163** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
+Working ship: **1.12.138+168** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
 
 ```
-• SETTINGS now splits into Sound, Display, Bag, and Account tabs.
-• Loading splash cycles dungeon stills; clearer leather and mail helms.
-• Fairness and kit HUD polish; wipe tip only when POWER can prove a deficit.
+• TODAY chase is clearer: vault payday, EQUIP N, rebuild-bag tips, short-phone detail.
+• Listing pitch sharpened for idle RPG search (Role Playing category unchanged).
 ```
 
 ### Full description honesty (SHOP)
 
-Full description may mention optional cheap SHOP convenience (boosts / ad-free) once
-Play Console products are active. Do **not** imply whale packs, gacha, or BiS-for-cash.
+SHOP convenience (boosts / ad-free / QoL) is live in Console — the FAIR PLAY
+line above is accurate. Do **not** imply whale packs, gacha, or BiS-for-cash.
 POWERUPS ads remain the free path to the same boost power.
 
 ### Screenshot plan (Play phone carousel, 2026-09-10)
@@ -140,12 +142,11 @@ Hard-won rules:
 
 Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
 
-## Play Console status (2026-09-10)
+## Play Console status (2026-09-11)
 
-- Short + full description: en-US only (this file). Clearer pitch + feature sections.
+- Short + full description: en-US only (this file) — **idle RPG ASO refresh ready to paste**.
 - Phone screenshots (8): mixed branded cards + real combat/gear/zone UI from
   `tool/store_listing/upload/`.
-- Developer name: **Cognifox Studio** (was Stuido) pending Google approval.
-- **Listing changes submitted for review** 2026-09-10 (short + full + phone shots).
-- **Production live until publish:** **1.12.110 (139)**; Production **1.12.117 (146)** also in review.
+- Developer name: **Cognifox Studio**.
+- Growth ops (reviews / video / ads): see [`PLAY_GROWTH.md`](PLAY_GROWTH.md).
 - Closed Alpha remains for early builds. Do not advertise GitHub Releases to players.

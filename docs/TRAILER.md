@@ -41,3 +41,39 @@ call to action.
 ## End
 
 The party enters the cave. Silence. The game begins.
+
+---
+
+## Play Store preview video (15–30 s)
+
+Separate from the boot cinematic. This clip sits on the **Google Play listing**
+(search carousel + store page). English on-screen text only. Owned Idle Party
+art + real UI — no fake #1 badges, no other-game footage.
+
+### Goal
+
+In one glance: **idle fantasy RPG** · party fights · AFK progress · TODAY chase.
+
+### Shot list (keep this order)
+
+| Sec | Shot | On-screen (≤6 words) |
+|-----|------|----------------------|
+| 0–4 | Hub TODAY card (READY / clear goal) | Always know today's chase |
+| 4–12 | Dungeon: party walks, fights, abilities | Your party keeps fighting |
+| 12–18 | Leave / Welcome Back AFK summary (or AFK marketing card) | Progress while you're away |
+| 18–24 | GEAR / party / Ascend beat (pick one) | Grow stronger. Ascend. |
+| 24–30 | Title lockup + feature graphic feel | Idle Party |
+
+Music: soft dungeon / parchment mood. No voice-over required. End on title —
+no “Download now” hard sell if it fights the tone.
+
+### Export
+
+- Landscape **YouTube** link Play accepts, or Console upload.
+- Also keep a vertical 9:16 cut from the same beats for ads tests later
+  (`docs/PLAY_GROWTH.md`).
+
+### Do not
+
+Puzzle / BR / Roblox framing. Class-spec jargon. Zone-count brag walls.
+Engine / ads / GitHub mentions.

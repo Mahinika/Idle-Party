@@ -323,7 +323,8 @@ class _HubScreenState extends State<HubScreen>
         HubTodayCard(
           chase: chase,
           compact: true,
-          hideDetail: short,
+          // Short phones still keep READY / ALMOST detail — that is the hunt.
+          hideDetail: short && chase.urgency == HubChaseUrgency.normal,
           actionLabel: cta.hideInlineChaseAction ? null : chaseActionLabel,
           onAction: cta.hideInlineChaseAction ? null : onAction,
         ),

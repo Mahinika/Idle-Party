@@ -72,7 +72,9 @@ abstract final class ChaseDispatcher {
       case HubChaseKind.meetHero:
         return const ChasePlan(label: 'OPEN GEAR', op: ChaseOp.navMeetHero);
       case HubChaseKind.equipBag:
-        return const ChasePlan(label: 'OPEN BAG', op: ChaseOp.navEquipBag);
+        final n = MenuAlerts.bagUpgradeCount(state);
+        final label = n <= 1 ? 'EQUIP 1' : 'EQUIP $n';
+        return ChasePlan(label: label, op: ChaseOp.navEquipBag);
       case HubChaseKind.marketUpgrade:
         return const ChasePlan(label: 'GOLD', op: ChaseOp.navMarket);
       case HubChaseKind.ascend:

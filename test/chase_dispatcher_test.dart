@@ -56,7 +56,7 @@ void main() {
       ),
       state: state,
     );
-    expect(bag.label, 'OPEN BAG');
+    expect(bag.label, contains('EQUIP'));
     expect(ChaseDispatcher.navIntent(bag, state)?.gear, GearPanel.bag);
   });
 
