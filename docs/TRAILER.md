@@ -59,9 +59,9 @@ In one glance: **idle fantasy RPG** · party fights · AFK progress · TODAY cha
 | Sec | Shot | On-screen (≤6 words) |
 |-----|------|----------------------|
 | 0–4 | Hub TODAY card (READY / clear goal) | Always know today's chase |
-| 4–12 | Dungeon: party walks, fights, abilities | Your party keeps fighting |
-| 12–18 | Leave / Welcome Back AFK summary (or AFK marketing card) | Progress while you're away |
-| 18–24 | GEAR / party / Ascend beat (pick one) | Grow stronger. Ascend. |
+| 4–14 | A56 gameplay: party walks, fights, abilities | Your party keeps fighting |
+| 14–19 | Welcome Back / AFK marketing card | Progress while you're away |
+| 19–24 | A56 gameplay: switch heroes in GEAR | Build and equip your party |
 | 24–30 | Title lockup + feature graphic feel | Idle Party |
 
 Music: soft dungeon / parchment mood. No voice-over required. End on title —
@@ -76,9 +76,15 @@ py -3 tool/store_listing/build_preview_video.py
 # → tool/store_listing/preview/idle_party_preview_9x16.mp4  (~30s, ads tests)
 ```
 
-Music: owned `assets/custom/audio/music/hub.ogg`. Stills: tracked
-`tool/store_listing/marketing/` cards (TRAILER shot order). Preview MP4s are
-gitignored — regenerate locally before Console upload.
+Music: owned `assets/custom/audio/music/hub.ogg`. A56 gameplay recordings:
+`preview/gameplay_{hub,combat,gear}_raw.mp4`; if missing, the builder falls
+back to tracked `tool/store_listing/marketing/` cards. Raw clips and preview
+MP4s are gitignored — regenerate locally before Console upload.
+
+Capture gameplay on A56 at 1080×2340 with `adb shell screenrecord`; use the
+AL3 showcase save, **Zoom · Close**, and restore the emulator save afterward.
+The 16:9 render puts the real phone capture beside the English promise; 9:16
+keeps the whole phone UI visible.
 
 - Landscape **YouTube** link Play accepts, or Console upload of the 16:9 file.
 - Keep the vertical 9:16 cut for ads tests later (`docs/PLAY_GROWTH.md`).

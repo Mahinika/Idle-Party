@@ -33,7 +33,8 @@ Do these in Console when you have 20 minutes:
 3. **Upload preview video** when you have a 15–30s clip (brief in `TRAILER.md`).
    Build: `py -3 tool/store_listing/build_preview_video.py` →
    `tool/store_listing/preview/idle_party_preview_16x9.mp4` (YouTube / Console)
-   + `…_9x16.mp4` for ads.
+   + `…_9x16.mp4` for ads. Current local render uses real A56 hub, dungeon,
+   God Hand, and GEAR gameplay (2026-09-11).
 4. **Reply to reviews** (templates below) — especially 1–2★.
 5. **Store listing experiments** (if available): A/B short description vs previous.
 6. Optional: **Google App campaigns** — see ads test plan below (start tiny).

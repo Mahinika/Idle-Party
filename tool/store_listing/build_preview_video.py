@@ -18,20 +18,52 @@ import sys
 import tempfile
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
 LISTING = Path(__file__).resolve().parent
 OUT = LISTING / "preview"
 MUSIC = ROOT / "assets" / "custom" / "audio" / "music" / "hub.ogg"
 
-# Prefer tracked marketing cards so the build works without regenerating out/.
-BEATS: list[tuple[float, str, str]] = [
-    (4.0, "marketing/02_todays_chase_1080x1920.png", "Always know today's chase"),
-    (8.0, "marketing/03_party_fights_1080x1920.png", "Your party keeps fighting"),
-    (6.0, "marketing/07_afk_progress_1080x1920.png", "Progress while you're away"),
-    (6.0, "marketing/09_ascend_1080x1920.png", "Grow stronger. Ascend."),
-    (6.0, "marketing/01_feature_graphic_1024x500.png", "Idle Party"),
+# Gameplay clips are A56 screen recordings in preview/ (gitignored). If they
+# are absent, tracked marketing cards keep the builder reproducible.
+# duration, gameplay, fallback still, caption, source trim start
+BEATS: list[tuple[float, str | None, str, str, float]] = [
+    (
+        4.0,
+        "preview/gameplay_hub_raw.mp4",
+        "marketing/02_todays_chase_1080x1920.png",
+        "Always know today's chase",
+        0.0,
+    ),
+    (
+        10.0,
+        "preview/gameplay_combat_raw.mp4",
+        "marketing/03_party_fights_1080x1920.png",
+        "Your party keeps fighting",
+        0.6,
+    ),
+    (
+        5.0,
+        None,
+        "marketing/07_afk_progress_1080x1920.png",
+        "Progress while you're away",
+        0.0,
+    ),
+    (
+        5.0,
+        "preview/gameplay_gear_raw.mp4",
+        "marketing/09_ascend_1080x1920.png",
+        "Build and equip your party",
+        0.0,
+    ),
+    (
+        6.0,
+        None,
+        "marketing/01_feature_graphic_1024x500.png",
+        "Idle Party",
+        0.0,
+    ),
 ]
 
 FPS = 30
@@ -77,8 +109,19 @@ def load_font(size: int) -> ImageFont.ImageFont:
 
 
 def fit_canvas(src: Image.Image, width: int, height: int) -> Image.Image:
-    canvas = Image.new("RGB", (width, height), BG_RGB)
     img = src.convert("RGB")
+    cover_scale = max(width / img.width, height / img.height)
+    cover_size = (
+        max(1, int(img.width * cover_scale)),
+        max(1, int(img.height * cover_scale)),
+    )
+    backdrop = img.resize(cover_size, Image.Resampling.LANCZOS)
+    left = max(0, (backdrop.width - width) // 2)
+    top = max(0, (backdrop.height - height) // 2)
+    backdrop = backdrop.crop((left, top, left + width, top + height))
+    backdrop = backdrop.filter(ImageFilter.GaussianBlur(radius=28))
+    backdrop = ImageEnhance.Brightness(backdrop).enhance(0.35)
+    canvas = backdrop.convert("RGB")
     scale = min(width / img.width, height / img.height)
     nw, nh = max(1, int(img.width * scale)), max(1, int(img.height * scale))
     img = img.resize((nw, nh), Image.Resampling.LANCZOS)
@@ -111,6 +154,95 @@ def prepare_frame(
     if burn:
         return burn_caption(canvas, caption)
     return canvas
+
+
+def make_video_caption(
+    path: Path, *, width: int, height: int, caption: str
+) -> None:
+    overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay, "RGBA")
+    if width > height:
+        box = (70, 330, 1070, 720)
+        font = load_font(64)
+        small = load_font(30)
+        draw.rounded_rectangle(box, radius=30, fill=(20, 16, 13, 205))
+        draw.text((130, 400), "IDLE PARTY", font=small, fill=(220, 181, 102, 255))
+        bbox = draw.textbbox((0, 0), caption, font=font)
+        text_y = 515 - (bbox[3] - bbox[1]) / 2
+        draw.text((130, text_y), caption, font=font, fill=(*CAPTION_FG, 255))
+    else:
+        box = (70, height - 145, width - 70, height - 25)
+        font = load_font(40)
+        draw.rounded_rectangle(box, radius=24, fill=(20, 16, 13, 220))
+        bbox = draw.textbbox((0, 0), caption, font=font)
+        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        draw.text(
+            ((width - tw) / 2, height - 88 - th / 2),
+            caption,
+            font=font,
+            fill=(*CAPTION_FG, 255),
+        )
+    overlay.save(path)
+
+
+def make_gameplay_mp4(
+    ffmpeg: str,
+    src: Path,
+    caption_png: Path,
+    dest: Path,
+    *,
+    width: int,
+    height: int,
+    duration: float,
+    start: float,
+) -> None:
+    if width > height:
+        fg_h = 980
+        fg_w = 452
+        fg_x = 1320
+        fg_y = (height - fg_h) // 2
+    else:
+        fg_h = 1760
+        fg_w = 812
+        fg_x = (width - fg_w) // 2
+        fg_y = 0
+    fc = (
+        f"[0:v]trim=start={start}:duration={duration},setpts=PTS-STARTPTS,"
+        f"fps={FPS},tpad=stop_mode=clone:stop_duration=1,split=2[bg][fg];"
+        f"[bg]scale={width}:{height}:force_original_aspect_ratio=increase,"
+        f"crop={width}:{height},gblur=sigma=24,eq=brightness=-0.25:saturation=0.65[bg2];"
+        f"[fg]scale={fg_w}:{fg_h}:force_original_aspect_ratio=decrease[fg2];"
+        f"[bg2][fg2]overlay={fg_x}:{fg_y}[base];"
+        f"[base][1:v]overlay=0:0:shortest=1,format=yuv420p[vout]"
+    )
+    cmd = [
+        ffmpeg,
+        "-y",
+        "-i",
+        str(src),
+        "-loop",
+        "1",
+        "-i",
+        str(caption_png),
+        "-filter_complex",
+        fc,
+        "-map",
+        "[vout]",
+        "-t",
+        f"{duration:.3f}",
+        "-r",
+        str(FPS),
+        "-c:v",
+        "libx264",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "20",
+        "-an",
+        str(dest),
+    ]
+    print("+ gameplay", src.name)
+    subprocess.run(cmd, check=True, capture_output=True)
 
 
 def make_still_mp4(
@@ -236,21 +368,44 @@ def build_aspect(ffmpeg: str, *, width: int, height: int, label: str) -> Path:
         tmp_path = Path(tmp)
         clips: list[Path] = []
         durs: list[float] = []
-        for i, (dur, rel, caption) in enumerate(BEATS):
-            src = LISTING / rel
-            if not src.exists():
-                raise SystemExit(f"missing still: {src}")
-            # Marketing cards already carry the TRAILER caption; only burn on
-            # the feature-graphic end card (no shot caption in the art).
-            burn = "feature_graphic" in rel
-            framed = prepare_frame(
-                src, width=width, height=height, caption=caption, burn=burn
-            )
-            png = tmp_path / f"beat_{i:02d}.png"
-            framed.save(png, optimize=True)
+        sources: list[dict[str, object]] = []
+        for i, (dur, video_rel, fallback_rel, caption, start) in enumerate(BEATS):
             clip_dur = dur + (XFADE if i < len(BEATS) - 1 else 0)
             dest = tmp_path / f"beat_{i:02d}.mp4"
-            make_still_mp4(ffmpeg, png, dest, duration=clip_dur)
+            video = LISTING / video_rel if video_rel else None
+            if video is not None and video.exists():
+                caption_png = tmp_path / f"caption_{i:02d}.png"
+                make_video_caption(
+                    caption_png, width=width, height=height, caption=caption
+                )
+                make_gameplay_mp4(
+                    ffmpeg,
+                    video,
+                    caption_png,
+                    dest,
+                    width=width,
+                    height=height,
+                    duration=clip_dur,
+                    start=start,
+                )
+                sources.append(
+                    {"kind": "gameplay", "src": video_rel, "caption": caption}
+                )
+            else:
+                src = LISTING / fallback_rel
+                if not src.exists():
+                    raise SystemExit(f"missing still: {src}")
+                # Marketing cards carry captions; feature graphic does not.
+                burn = "feature_graphic" in fallback_rel
+                framed = prepare_frame(
+                    src, width=width, height=height, caption=caption, burn=burn
+                )
+                png = tmp_path / f"beat_{i:02d}.png"
+                framed.save(png, optimize=True)
+                make_still_mp4(ffmpeg, png, dest, duration=clip_dur)
+                sources.append(
+                    {"kind": "still", "src": fallback_rel, "caption": caption}
+                )
             clips.append(dest)
             durs.append(clip_dur)
 
@@ -269,10 +424,7 @@ def build_aspect(ffmpeg: str, *, width: int, height: int, label: str) -> Path:
             "width": width,
             "height": height,
             "approx_seconds": round(total, 2),
-            "beats": [
-                {"duration": d, "src": rel, "caption": cap}
-                for d, rel, cap in BEATS
-            ],
+            "beats": sources,
             "music": str(MUSIC.relative_to(ROOT)) if MUSIC.exists() else None,
             "bytes": final.stat().st_size,
         }
