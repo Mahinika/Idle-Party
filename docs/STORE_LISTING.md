@@ -144,9 +144,9 @@ Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshot
 
 ## Play Console status (2026-09-11)
 
-- Short + full description: en-US only (this file) — **idle RPG ASO refresh ready to paste**.
+- Short + full description: en-US only (this file) — **idle RPG ASO pasted + submitted for review 2026-09-11**.
 - Phone screenshots (8): mixed branded cards + real combat/gear/zone UI from
-  `tool/store_listing/upload/`.
+  `tool/store_listing/upload/` (live assets unchanged this submit — copy only).
 - Developer name: **Cognifox Studio**.
 - Growth ops (reviews / video / ads): see [`PLAY_GROWTH.md`](PLAY_GROWTH.md).
 - Closed Alpha remains for early builds. Do not advertise GitHub Releases to players.
