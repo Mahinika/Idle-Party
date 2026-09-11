@@ -109,6 +109,19 @@ bool _touchesChase(String dirtyText) {
   return false;
 }
 
+Map<String, String> _processEnv() {
+  final env = Map<String, String>.from(Platform.environment);
+  if (!Platform.isWindows) return env;
+  // flutter.bat / cmd expand %PROGRAMFILES(X86)%. Cursor's hook env
+  // sometimes omits it, which fails the process before tests run.
+  final x86 = env['PROGRAMFILES(X86)'] ??
+      env['ProgramFiles(x86)'] ??
+      r'C:\Program Files (x86)';
+  env['PROGRAMFILES(X86)'] = x86;
+  env['ProgramFiles(x86)'] = x86;
+  return env;
+}
+
 Future<({int exitCode, String combined})> _run(
   String exe,
   List<String> args,
@@ -118,6 +131,7 @@ Future<({int exitCode, String combined})> _run(
     args,
     runInShell: true,
     workingDirectory: Directory.current.path,
+    environment: _processEnv(),
   );
   final out = StringBuffer()
     ..write(result.stdout)
