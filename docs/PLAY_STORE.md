@@ -43,9 +43,7 @@ Track closed testers who **install from Play** and stay opted in:
 From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 
 ```
-• SETTINGS now splits into Sound, Display, Bag, and Account tabs.
-• Loading splash cycles dungeon stills; clearer leather and mail helms.
-• Fairness and kit HUD polish; wipe tip only when POWER can prove a deficit.
+• Your party fights on its own. Day-one menus stay GEAR and MORE until gold, the shop, and essence mean something. Shield, Healer, and Damage kits show their job in the fight.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys

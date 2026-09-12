@@ -58,22 +58,28 @@ Idle RPG: grow a fantasy party that fights AFK — always know today's chase.
 
 ### Full description
 
+Match the itch.io page (`tool/store_listing/itch/PAGE.md`) so search and
+community say the same game. Play still hides KEY in the first hour in-app;
+full description may name endgame after party level 100.
+
 ```
 Idle fantasy RPG for phones. Build a party that keeps fighting while you are away. Return to loot, progress, and one clear TODAY goal.
 
+Idle Party is a portrait idle RPG. Your heroes move, fight, heal, and use their own abilities — the same combat when you AFK. Free to play, single-player, no Idle Party account. Combat is on screen in about a minute.
+
 BUILD YOUR PARTY
-• Choose classic fantasy roles: tanks, healers, melee fighters, ranged heroes, and spellcasters.
+• Choose classic fantasy roles: Shield, Healer, and Damage to start, then tanks, healers, melee fighters, ranged heroes, and spellcasters.
 • Discover 10 classes and 31 distinct hero specs.
 • Equip, merge, and craft gear to make the whole party stronger.
 • Battle through 15 dungeon zones filled with room chests, enemies, and bosses.
 
 IDLE PROGRESS, REAL COMBAT
-• Watch your heroes move, fight, heal, and use their own abilities — the same combat when you AFK.
-• Leave a dungeon whenever you want and continue when you are ready.
+• Watch the party fight on its own. Tap the fight to help. Leave a dungeon whenever you want and continue when you are ready.
 • TODAY puts your next useful goal on the main button: claim, equip, or enter.
+• Day-one menus stay small until gold, the shop, and essence mean something.
 
 KEEP GROWING
-• Ascend to unlock more heroes and permanent upgrades.
+• Ascend to unlock more heroes and permanent upgrades. Your party stays; the run bag resets.
 • Reach level 100 to open challenging endgame modes: KEYSTONE, Infinity Gauntlet, Rifts, and Greater Rifts.
 • Take on daily, weekly, and long-term quests.
 • Optional Google Play Games adds cloud save and seasonal leaderboards.
@@ -86,6 +92,9 @@ FAIR PLAY
 • Designed for portrait phones.
 
 Start your party and take one more floor.
+
+Cognifox Studio · cognifoxstudio@gmail.com
+Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 ```
 
 ### Release notes — Alpha / Production ship line (en-US)
@@ -93,7 +102,7 @@ Start your party and take one more floor.
 Working ship: **1.12.157+187** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
 
 ```
-• Your party fights on its own. Day-one menus stay GEAR and MORE until gold, the shop, and essence mean something.
+• Your party fights on its own. Day-one menus stay GEAR and MORE until gold, the shop, and essence mean something. Shield, Healer, and Damage kits show their job in the fight.
 ```
 
 ### Full description honesty (SHOP)
@@ -168,12 +177,11 @@ Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshot
 
 ## Play Console status (2026-09-12)
 
-- Short + full description: en-US only (this file) — **idle RPG ASO pasted + submitted for review 2026-09-11**.
-- Phone screenshots **1–2** (live first-minute Sandy combat) **submitted for
-  review 2026-09-12** (`Ändringarna granskas`). Play listing currently has
-  those two phone slots only (minimum 2). Listing **icon** swapped to
-  `play_icon_512.png` (1∶1 512) and **submitted 2026-09-12** (row **Ändra
-  appikon**). Carousel 3–8 not attached this submit. Preview video still
+- Short + full description: en-US only (this file) — itch-parity copy (party /
+  TODAY / 10 classes · 31 specs · 15 zones / fair SHOP) ready to paste.
+- Phone carousel plan: **8 shots** (1–2 live first-minute Sandy combat, then
+  TODAY / GEAR / classes / World Path / AFK / Ascend — same story as the itch
+  page). Icon `play_icon_512.png`. Preview video still
   `https://www.youtube.com/watch?v=OMWXbgGBFMA`.
 - Developer name: **Cognifox Studio**.
 - Growth ops (reviews / video / ads): see [`PLAY_GROWTH.md`](PLAY_GROWTH.md).

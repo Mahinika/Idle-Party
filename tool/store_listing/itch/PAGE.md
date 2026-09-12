@@ -93,21 +93,21 @@ Idle fantasy RPG for phones. Build a party that keeps fighting while you are awa
 **Play on Android (Google Play)**
 https://play.google.com/store/apps/details?id=com.idleparty.app
 
-Idle Party is a portrait phone game. Install from Play — this page is the itch.io home, not a PC/web build.
+Idle Party is a portrait idle RPG. Your heroes move, fight, heal, and use their own abilities — the same combat when you AFK. Install from Play — this page is the itch.io home, not a PC/web build. Combat is on screen in about a minute.
 
 ## Build your party
-- Choose classic fantasy roles: tanks, healers, melee fighters, ranged heroes, and spellcasters.
+- Choose classic fantasy roles: Shield, Healer, and Damage to start, then tanks, healers, melee fighters, ranged heroes, and spellcasters.
 - Discover 10 classes and 31 distinct hero specs.
 - Equip, merge, and craft gear to make the whole party stronger.
 - Battle through 15 dungeon zones filled with room chests, enemies, and bosses.
 
 ## Idle progress, real combat
-- Watch your heroes move, fight, heal, and use their own abilities — the same combat when you AFK.
-- Leave a dungeon whenever you want and continue when you are ready.
+- Watch the party fight on its own. Tap the fight to help. Leave a dungeon whenever you want and continue when you are ready.
 - TODAY puts your next useful goal on the main button: claim, equip, or enter.
+- Day-one menus stay small until gold, the shop, and essence mean something.
 
 ## Keep growing
-- Ascend to unlock more heroes and permanent upgrades.
+- Ascend to unlock more heroes and permanent upgrades. Your party stays; the run bag resets.
 - Reach level 100 to open challenging endgame modes: KEYSTONE, Infinity Gauntlet, Rifts, and Greater Rifts.
 - Take on daily, weekly, and long-term quests.
 - Optional Google Play Games adds cloud save and seasonal leaderboards.
