@@ -26,7 +26,8 @@ architecture facts; keep the growth program as default work.
 1. **Snapshot truth (read, don’t guess)**
    - `pubspec.yaml` version ↔ `MetaSystems.currentVersion` / What’s New
    - `AGENTS.md` (architecture, meta, combat authority, build/test, MCP/skills)
-   - `.cursor/rules/` (`growth-mandate`, `expert-council`, `product-locks`, `vibe-coder-autopilot`, `owner-preferences`, `definition-of-done`, others)
+   - `.cursor/rules/` (`growth-mandate`, `studio-seats`, `product-locks`, `vibe-coder-autopilot`, `owner-preferences`, `definition-of-done`, others)
+   - **Keep** six studio seats; do not restore a 40-role org or AL20 expert panel
    - Key systems: `GameDirector`, `GameLogic`, `SpatialCombat`, hub/dungeon UI, `DungeonCatalog`, `metaDepth`, Ascend keep/reset
    - Docs that claim “current”: `docs/PLAY_STORE.md`, `docs/CONTENT_CADENCE.md`,
      `docs/GROWTH_MANDATE.md` (keep mandate until done bar is complete)

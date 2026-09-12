@@ -41,7 +41,7 @@ slice. No new zones or classes (soft lock).
 | Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
 | Stor rewrite vs small ship | Small ship + synlig What’s New a new player can read |
 | Vagt “gör bättre” vs explicit bredare mål | Följ `GROWTH_MANDATE.md` done bar |
-| Två experter oense | `.cursor/rules/expert-council.mdc` — tillväxt + ny spelare vinner; legal/fairness/krasch veto |
+| Två stolar oense | `.cursor/rules/studio-seats.mdc` — EP + UX + Marketing vinner; Game/Tech/Art veto enligt stolen |
 
 ## Non-goals (unless owner asks)
 

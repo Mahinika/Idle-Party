@@ -9,7 +9,7 @@ North star: **främlingar på Play blir spelare.** AL20 is a quality gate
 
 Live listing ops: [PLAY_GROWTH.md](PLAY_GROWTH.md) ·
 [STORE_LISTING.md](STORE_LISTING.md) · [PLAY_STORE.md](PLAY_STORE.md).
-Decision policy: [`.cursor/rules/expert-council.mdc`](../.cursor/rules/expert-council.mdc).
+Decision policy: [`.cursor/rules/studio-seats.mdc`](../.cursor/rules/studio-seats.mdc).
 
 ## Time-to-value (do not treat “15 min” as the hook)
 
@@ -112,9 +112,9 @@ Agent cannot mark D1 “good” without owner numbers.
 `flutter analyze` / matching tests / live-light DPS gate. Fairness first.
 SpatialCombat remains the only fight sim.
 
-## Expert council
+## Studio seats
 
-Silent **decision policy**, not a theatrical expert panel (persona prompts
-change tone more than accuracy). See `.cursor/rules/expert-council.mdc`.
-Growth + new-player + UX pick *what to build*. Combat vetoes a broken fight
-or DPS HIGH. AL20 is lightest unless endgame is actually broken.
+Six chairs only — `.cursor/rules/studio-seats.mdc`. Not a theatrical panel.
+**EP + UX + Marketing** pick *what to build* while this mandate is open.
+Game Director vetoes a broken fight or DPS HIGH. Tech vetoes red
+analyze / crash. AL20 is not a chair.

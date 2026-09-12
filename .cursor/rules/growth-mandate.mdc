@@ -41,5 +41,6 @@ Never early. Never paraphrase. `/init` must not restore the old AL20 default.
 
 ## Decision policy
 
-`.cursor/rules/expert-council.mdc` — veto table + weights, not a persona play.
-Growth + new-player + UX outweigh AL20. Legal / fairness / one sim / crashes veto.
+`.cursor/rules/studio-seats.mdc` — six chairs, not a persona play.
+EP + UX + Marketing pick *what to build*. Game Director vetoes a broken fight.
+Tech vetoes red analyze / crash. Legal/fairness sit on Art + Game + EP.

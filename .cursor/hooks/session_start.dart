@@ -9,7 +9,7 @@ void main() {
       'Do that unless the owner named something else. '
       'Program: docs/GROWTH_MANDATE.md — time-to-combat <=90s + Play listing/funnel. '
       'AL20 is a quality gate, not the batch. '
-      'Forks: silent decision policy (.cursor/rules/expert-council.mdc) — not a persona play; Growth + new-player outweigh AL20. '
+      'Forks: six studio seats (.cursor/rules/studio-seats.mdc) — EP + UX + Marketing outweigh AL20. '
       'Do not start /init or repo cleanup unprompted. '
       'Play listing/docs ARE in mandate (play-store-prep); do not treat Play as background chores. '
       'If they paste play notes, prefer a new save / first 90s to combat; AL20 notes block ship if endgame is broken. '
