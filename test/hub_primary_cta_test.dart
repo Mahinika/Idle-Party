@@ -173,7 +173,7 @@ void main() {
     expect(find.text('Claim Daily Vault'), findsOneWidget);
   });
 
-  testWidgets('large text scale keeps TODAY title visible', (tester) async {
+  testWidgets('large text scale keeps hub hunt title visible', (tester) async {
     const chase = HubChase(
       kind: HubChaseKind.clearFloors,
       title: 'Grow the party in Sandy Caverns',
@@ -193,7 +193,7 @@ void main() {
         ),
       ),
     );
-    expect(find.text('TODAY'), findsOneWidget);
+    expect(find.text('TODAY'), findsNothing);
     expect(find.textContaining('Grow the party'), findsOneWidget);
   });
 

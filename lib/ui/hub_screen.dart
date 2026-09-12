@@ -83,8 +83,7 @@ class _HubScreenState extends State<HubScreen>
 
   void _syncSelection({required bool force}) {
     final chaseZone = _chaseMapZoneId();
-    final preferred =
-        chaseZone ?? GameLogic.recommendedDungeonId(state);
+    final preferred = chaseZone ?? GameLogic.recommendedDungeonId(state);
     if (force) {
       _userPickedZone = false;
       _selectedHunt = HubEndgameAct.huntForChase(HubChase.forState(state).kind);
@@ -287,8 +286,9 @@ class _HubScreenState extends State<HubScreen>
       endgameUnlocked: GameLogic.endgameUnlocked(state),
       mapHunt: _userPickedZone ? _selectedHunt : null,
     );
-    final enterAction =
-        unlockedSelected ? () => widget.onEnterDungeon(_selectedId) : null;
+    final enterAction = unlockedSelected
+        ? () => widget.onEnterDungeon(_selectedId)
+        : null;
     VoidCallback? huntAction(HubEndgameHunt hunt) {
       switch (hunt) {
         case HubEndgameHunt.gauntlet:
@@ -314,18 +314,16 @@ class _HubScreenState extends State<HubScreen>
     }
 
     final primaryLabel = cta.primaryLabel;
-    final primaryAction = actionFor(primaryLabel) ??
+    final primaryAction =
+        actionFor(primaryLabel) ??
         (cta.hideInlineChaseAction ? onAction : enterAction);
     final String? secondaryLabel = cta.secondaryLabel;
     final VoidCallback? secondaryAction;
     if (secondaryLabel == null) {
       secondaryAction = null;
     } else if (cta.ashenPracticeSecondary) {
-      secondaryAction = () => confirmAshenCrown(
-            context,
-            director,
-            practice: true,
-          );
+      secondaryAction = () =>
+          confirmAshenCrown(context, director, practice: true);
     } else {
       secondaryAction = actionFor(secondaryLabel) ?? enterAction;
     }
@@ -348,8 +346,7 @@ class _HubScreenState extends State<HubScreen>
         chase.kind == HubChaseKind.claimDailyVault ||
         chase.kind == HubChaseKind.dailyVaultProgress;
     final showUrgentRow =
-        chase.urgency != HubChaseUrgency.ready &&
-        !(endgameHunt && !canAscend);
+        chase.urgency != HubChaseUrgency.ready && !(endgameHunt && !canAscend);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -390,7 +387,7 @@ class _HubScreenState extends State<HubScreen>
             tip: chase.kind == HubChaseKind.keystone && _selectedHunt == null
                 ? 'Starts your preferred KEY on this zone'
                 : (ready || cta.hideInlineChaseAction)
-                ? 'TODAY — do this first'
+                ? 'Do this first'
                 : 'Enter the selected dungeon',
             style: GameButtonStyle.brown,
             primary: true,
@@ -401,7 +398,8 @@ class _HubScreenState extends State<HubScreen>
           const SizedBox(height: 4),
           GameButton(
             label: secondaryLabel,
-            tip: secondaryLabel.startsWith('ENTER') ||
+            tip:
+                secondaryLabel.startsWith('ENTER') ||
                     secondaryLabel == 'DAILY RUN'
                 ? 'Farm the selected zone'
                 : 'Also available',
@@ -551,17 +549,14 @@ class _HubScreenState extends State<HubScreen>
                                   more: MoreSection.settings,
                                 ),
                                 incomeLine: GoldIncome.hubRateLine(state),
-                                multiplierLine:
-                                    GoldIncome.multiplierLine(state),
-                                partyName: state.partyName,
-                                plainChrome:
-                                    GameLogic.plainPlayerChrome(state),
-                                dimIncome: hubChaseOwnsEndgameRow(
-                                  chase.kind,
+                                multiplierLine: GoldIncome.multiplierLine(
+                                  state,
                                 ),
+                                partyName: state.partyName,
+                                plainChrome: GameLogic.plainPlayerChrome(state),
+                                dimIncome: hubChaseOwnsEndgameRow(chase.kind),
                                 huntHint: _shortHuntHint(chase),
-                                blessingStacks:
-                                    state.metaDepth.ascendBlessings,
+                                blessingStacks: state.metaDepth.ascendBlessings,
                                 powerupsFab: _showPowerupsFab()
                                     ? HubPowerupsFab(
                                         state: state,
@@ -620,7 +615,8 @@ class _HubScreenState extends State<HubScreen>
                               Expanded(
                                 flex: short ? 7 : 1,
                                 child: RepaintBoundary(
-                                  child: _showEndgameMap &&
+                                  child:
+                                      _showEndgameMap &&
                                           GameLogic.endgameUnlocked(state)
                                       ? HubEndgameMap(
                                           selectedHunt: _selectedHunt,
@@ -629,16 +625,17 @@ class _HubScreenState extends State<HubScreen>
                                             _userPickedZone = true;
                                             _showEndgameMap = true;
                                             _selectedHunt = hunt;
-                                            _selectedId = HubEndgameAct
-                                                .nodeFor(hunt)
-                                                .portraitDungeonId;
+                                            _selectedId = HubEndgameAct.nodeFor(
+                                              hunt,
+                                            ).portraitDungeonId;
                                           }),
                                         )
                                       : ZonePathMap(
                                           dungeons: DungeonCatalog.all,
                                           selectedId: _selectedId,
-                                          partyLevel:
-                                              GameLogic.partyMeanLevel(state),
+                                          partyLevel: GameLogic.partyMeanLevel(
+                                            state,
+                                          ),
                                           highestCleared:
                                               state.highestDungeonCleared,
                                           pulse: _torch,
@@ -661,17 +658,18 @@ class _HubScreenState extends State<HubScreen>
                                     unlocked: unlockedSelected,
                                     partyLevel: GameLogic.partyMeanLevel(state),
                                     // KEY chase detail already lists affixes · par.
-                                    keyLevel: chase.kind == HubChaseKind.keystone
+                                    keyLevel:
+                                        chase.kind == HubChaseKind.keystone
                                         ? 0
                                         : state.hardmodeLevel,
                                     keyAffixLine:
                                         chase.kind == HubChaseKind.keystone ||
-                                                state.hardmodeLevel <= 0
-                                            ? null
-                                            : Keystone.previewAffixes(state)
-                                                .take(2)
-                                                .map(Keystone.label)
-                                                .join(' · '),
+                                            state.hardmodeLevel <= 0
+                                        ? null
+                                        : Keystone.previewAffixes(state)
+                                              .take(2)
+                                              .map(Keystone.label)
+                                              .join(' · '),
                                   ),
                               ],
                               if (short)

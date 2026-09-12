@@ -34,6 +34,7 @@ ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats
 **Power shelves:** GOLD tracks (run, wipe on Ascend) · Ascend Blessing (forever) · ESSENCE tracks/relics/pets (forever). Guide: MORE → INFO → POWER SHELVES.
 
 **Naming (player-facing):**
+- Hub hunt line: **READY / ALMOST** + the job (not a TODAY stamp)
 - Bar / sheet / dial: **KEY** (not KEYSTONE)
 - Endgame: **Gauntlet** · **Ranked GR** · **Farm Rift** · **Ashen Crown**
 - Run power: **GOLD tracks** (not forge / POWER)

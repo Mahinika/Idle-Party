@@ -5,14 +5,15 @@ import 'package:idle_party/ui/first_session_tips.dart';
 void main() {
   final now = DateTime.utc(2026, 8, 8, 12);
 
-  test('fresh hub tip is TODAY chase, not a menu dictionary', () {
+  test('fresh hub tip is the next job, not a menu dictionary', () {
     final state = GameLogic.createInitialState(now: now);
     expect(
       FirstSessionTips.nextTipId(state, inDungeon: false),
       'first_run',
     );
-    expect(FirstSessionTips.tips.first.title, 'TODAY');
+    expect(FirstSessionTips.tips.first.title, 'NEXT JOB');
     expect(FirstSessionTips.tips.first.body.toLowerCase(), contains('enter'));
+    expect(FirstSessionTips.tips.first.body.toUpperCase(), isNot(contains('TODAY')));
   });
 
   test('GOLD and APEX tips name live GOLD / MORE paths', () {

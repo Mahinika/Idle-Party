@@ -29,9 +29,9 @@ flutter test test/ship_smoke_test.dart test/changelog_sync_test.dart
 | # | Check | How |
 |---|--------|-----|
 | 1 | Hub loads | World Path nodes visible; `ENTER DUNGEON` present |
-| 2 | TODAY chase | Hub shows a **TODAY** card (also on short/phone heights) with READY/ALMOST when close |
-| 2b | Week affix | Line above TODAY: `Week · …` when `weeklyModifier` is set |
-| 2c | Daily CTA | When TODAY is Daily, only TODAY’s **DAILY** button (no duplicate **DAILY RUN**) |
+| 2 | Hub hunt | Hunt line under the map (READY/ALMOST when close); no TODAY stamp |
+| 2b | Week affix | Line above the hunt: `Week · …` when `weeklyModifier` is set |
+| 2c | Daily CTA | When the hunt is Daily, only the hunt **DAILY** button (no duplicate **DAILY RUN**) |
 | 3 | Daily vault claim | Vault filled (1 clear or timed KEY +2): `CLAIM VAULT`; toast says **Daily vault claimed** |
 | 4 | MORE badge | Unseen changelog → `★` on **MORE** (`MenuAlerts.more.star`); claimable quests → count badge on **MORE** |
 | 5 | What’s New | Open MORE → INFO → WHAT'S NEW; bullets match `MetaSystems.currentVersion` |

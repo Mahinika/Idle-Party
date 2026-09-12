@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.142**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.143**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -204,11 +204,11 @@ prior zone clear. Zone 0 (Sandy) from Lv1. Lifetime gold no longer unlocks zones
 **QUESTS** (MORE row; was bottom-tab JOBS/contracts): **5-slot** board —
 **Daily** (UTC kill), **Bounty** (ladder; endgame 100…25k), **Side** (non-kill),
 **Week** (ISO-week goal), **Contract** (big goal; endgame KEY / Gauntlet /
-Rift / Ranked GR / Ashen). Claim via TODAY **CLAIM QUESTS** or MORE · QUESTS.
+Rift / Ranked GR / Ashen). Claim via the hub hunt **CLAIM QUESTS** or MORE · QUESTS.
 
-**Hub TODAY** — selection in `HubChase.forState`; every surface reads the same
+**Hub hunt** (code: TODAY / `HubChase.forState`) — every surface reads the same
 words via **`ChaseContract`** (`lib/core/chase_contract.dart` + hub / offline Up
-next). One chase card — claimables first (vault / quests / **Meet new kit** /
+next). Player-facing stamp is **READY / ALMOST** + the job, not the word TODAY. One chase card — claimables first (vault / quests / **Meet new kit** /
 **equip BAG** / **Shop upgrade**), then Ascend / progress. Urgency **READY** /
 **ALMOST** (zone/Will/Gauntlet/Ascend-near beat Daily grind; also KEY +1 vault,
 etc.). Local-season **week goal** can surface as a chase. **First hour** (no

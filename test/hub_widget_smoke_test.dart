@@ -37,6 +37,7 @@ void main() {
 
     expect(find.text('READY'), findsOneWidget);
     expect(find.text('CLAIM VAULT'), findsOneWidget);
+    expect(find.text('TODAY'), findsNothing);
   });
 
   testWidgets('HubTodayCard shows detail when chase is not READY', (

@@ -17,9 +17,9 @@ class FirstSessionTips extends StatelessWidget {
   static final tips = <({String id, String title, String body})>[
     (
       id: 'first_run',
-      title: 'TODAY',
+      title: 'NEXT JOB',
       body:
-          'This line is your next job. Tap ENTER DUNGEON. Your party fights on '
+          'This line on the hub is your next job. Tap ENTER DUNGEON. Your party fights on '
           'its own — watch them, pick up loot, get stronger, beat the first boss.',
     ),
     (
@@ -97,7 +97,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'post_ascend',
       title: 'AFTER ASCEND',
       body:
-          'New kits land in GEAR → ROSTER — TODAY shows Meet … when something unlocked. '
+          'New kits land in GEAR → ROSTER — the hub hunt shows Meet … when something unlocked. '
           'Spend essence under ESSENCE (TRACKS + KEEP for God Hand). '
           'Relics are ESSENCE → RELICS. '
           'Apex stays.',
@@ -108,7 +108,7 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'Ascension cap (AL20) is not endgame. KEY, Gauntlet, Ranked GR, and Farm Rift '
           'unlock when every active hero hits Lv${GameLogic.maxHeroLevel}. '
-          'TODAY will say Level the party until then. '
+          'The hub hunt will say Level the party until then. '
           'When they hit max level, open the hub ENDGAME tab for its own map '
           '(not under the 15 zones). '
           'MORE → INFO → AL20 VS ENDGAME explains the split.',
@@ -121,7 +121,7 @@ class FirstSessionTips extends StatelessWidget {
           '• Daily Vault — fill 1/1, then CLAIM VAULT for essence.\n'
           '• Daily Run — one free floor for +25e.\n'
           '• Quests Daily — MORE · QUESTS board; CLAIM QUESTS when ready.\n'
-          'TODAY picks one hunt at a time.',
+          'The hub hunt picks one job at a time.',
     ),
     (
       id: 'hardmode',
@@ -167,7 +167,7 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'At party Lv${GameLogic.maxHeroLevel}, Farm Rift is Stormwake loot farming — '
           'gold + gear mid-run. Tap FARM RIFT on the hub ENDGAME tab, or KEY · FARM RIFT. '
-          'TODAY chases it after Ranked GR. Not Spire climb.',
+          'The hub hunt chases it after Ranked GR. Not Spire climb.',
     ),
     (
       id: 'greater_rift',
@@ -175,7 +175,7 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'At party Lv${GameLogic.maxHeroLevel}, Ranked GR is the Mothveil prestige timer — '
           'harder packs, no mid-run gear, season ranks on KEY · BOARDS. '
-          'Tap RANKED GR on the hub ENDGAME tab. TODAY chases GR before Farm Rift.',
+          'Tap RANKED GR on the hub ENDGAME tab. The hub hunt chases GR before Farm Rift.',
     ),
     (
       id: 'ashen_crown',
@@ -284,8 +284,7 @@ class FirstSessionTips extends StatelessWidget {
       }
       // KEYSTONE tip waits for party-max-level endgame unlock.
       if (tip.id == 'hardmode' &&
-          (!GameLogic.showKeystoneJargon(s) ||
-              s.effectiveMaxHardmode <= 0)) {
+          (!GameLogic.showKeystoneJargon(s) || s.effectiveMaxHardmode <= 0)) {
         continue;
       }
       if (tip.id == 'weekly' &&
@@ -343,8 +342,7 @@ class FirstSessionTips extends StatelessWidget {
     final title = switch (tip.id) {
       'farm_push' when !GameLogic.plainPlayerChrome(director.state) =>
         'FARM / PUSH',
-      'godhand' when !GameLogic.plainPlayerChrome(director.state) =>
-        'GOD HAND',
+      'godhand' when !GameLogic.plainPlayerChrome(director.state) => 'GOD HAND',
       _ => tip.title,
     };
     final body = switch (tip.id) {

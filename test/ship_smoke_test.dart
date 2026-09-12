@@ -181,7 +181,7 @@ void main() {
 
     final market = GameGuides.topics.firstWhere((t) => t.id == 'market');
     expect(market.body.toLowerCase(), contains('listings'));
-    expect(market.body.toLowerCase(), contains('today'));
+    expect(market.body.toLowerCase(), contains('hub hunt'));
     expect(market.body.toLowerCase(), contains('no separate sell junk'));
   });
 
@@ -216,7 +216,7 @@ void main() {
   test('guides and Ascend roadmap stay honest for TODAY chase', () {
     final vault = GameGuides.topics.firstWhere((t) => t.id == 'weekly');
     expect(vault.title.toUpperCase(), contains('DAILY'));
-    expect(vault.body.toUpperCase(), contains('TODAY'));
+    expect(vault.body.toUpperCase(), contains('HUB HUNT'));
     expect(vault.body.toUpperCase(), contains('READY'));
 
     expect(AscendRoadmap.unlockAtAl(1), contains('Combat Rogue'));

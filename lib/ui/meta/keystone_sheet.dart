@@ -26,12 +26,12 @@ class KeystoneSheet extends StatelessWidget {
     final chase = HubChase.forState(d.state);
     final huntHint = switch (chase.kind) {
       HubChaseKind.keystone =>
-        'TODAY · KEY +${chase.keyLevel ?? d.state.hardmodeLevel}',
-      HubChaseKind.gauntletMilestone => 'TODAY · Gauntlet',
-      HubChaseKind.riftMilestone => 'TODAY · Farm Rift',
-      HubChaseKind.greaterRiftMilestone => 'TODAY · Ranked GR',
-      HubChaseKind.doneForToday => 'TODAY · soft rest · BOARDS',
-      HubChaseKind.ashenCrown => 'TODAY · Ashen Crown',
+        'Hub hunt · KEY +${chase.keyLevel ?? d.state.hardmodeLevel}',
+      HubChaseKind.gauntletMilestone => 'Hub hunt · Gauntlet',
+      HubChaseKind.riftMilestone => 'Hub hunt · Farm Rift',
+      HubChaseKind.greaterRiftMilestone => 'Hub hunt · Ranked GR',
+      HubChaseKind.doneForToday => 'Hub hunt · soft rest · BOARDS',
+      HubChaseKind.ashenCrown => 'Hub hunt · Ashen Crown',
       _ => '',
     };
     final hunt = HubEndgameAct.huntForChase(chase.kind);

@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.142';
+  static const String currentVersion = '1.12.143';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.143',
+      bullets: <String>[
+        'The hub hunt line dropped the TODAY stamp. READY / ALMOST and the job stay. Same PATH | ENDGAME map.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). The hub hunt still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.142',
       bullets: <String>[
@@ -1025,7 +1032,8 @@ abstract final class MetaSystems {
         'Weapons are the same kind of hard gate: a Paladin will not take a dagger, a Priest will not take a sword, and Paladin / DK / Shaman / Druid leave the ranged slot empty.',
         'Balance Druid Moonkin Form thickens the hide, and Barkskin is ready before the floor gets nasty.',
         'Fury Warrior Rampage dumps mid-fight, Recklessness is an all-in damage window, and Death Wish hits harder — not a haste snack.',
-        'Every kit now shows its signature dump and panic button on a typical floor — Templar''s Verdict, Trueshot, Ice Block, Shield Wall, and the rest no longer wait until 15.',
+        'Every kit now shows its signature dump and panic button on a typical floor — Templar'
+            's Verdict, Trueshot, Ice Block, Shield Wall, and the rest no longer wait until 15.',
         'POWER → FORGE gold buys match each other again: DEF is a real armor chunk, STA is HP, and CRIT steps with HASTE. CAMP Life Well HP matches War Altar ATK. KEEP relics, Blessing, and Ascend flats use the same ATK / armor / HP split.',
         'World Path still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],

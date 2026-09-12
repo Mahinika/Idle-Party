@@ -29,7 +29,7 @@ abstract final class GameGuides {
           'You have a small party of heroes. They fight on their own.\n\n'
           '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
           '• Watch them clear rooms. Tap the fight when you want to help.\n'
-          '• TODAY on the hub always names the next job — start there.\n'
+          '• The hunt line on the hub always names the next job — start there.\n'
           '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (tracks + '
           'market), SHOP (real-money convenience store), ESSENCE (tracks / '
           'essence / KEEP / relics / pets), MORE. QUESTS and Craft live as rows '
@@ -50,14 +50,14 @@ abstract final class GameGuides {
       title: 'THREE DAILIES',
       body:
           'Three different systems — not the same button:\n\n'
-          '• Daily Vault — UTC day on TODAY. Fill with 1 dungeon clear '
+          '• Daily Vault — UTC day on the hub hunt. Fill with 1 dungeon clear '
           '(or timed KEY +2), then CLAIM VAULT for essence.\n'
           '• Daily Run — one free seeded floor from the hub (DAILY RUN) for +25e. '
           'Separate from the vault.\n'
           '• Quests — MORE · QUESTS board (Daily / Bounty / Side / Week / Contract). '
-          'CLAIM QUESTS on TODAY when rewards are ready.\n\n'
-          'TODAY always picks one hunt. Vault reset and Daily Run reset at UTC midnight. '
-          'Before your first boss, TODAY stays on Grow the party — these three wait.',
+          'CLAIM QUESTS on the hub hunt when rewards are ready.\n\n'
+          'The hub hunt always picks one job. Vault reset and Daily Run reset at UTC midnight. '
+          'Before your first boss, the hub hunt stays on Grow the party — these three wait.',
     ),
     GuideTopic(
       id: 'powerups',
@@ -260,18 +260,18 @@ abstract final class GameGuides {
           '• Party Lv${GameLogic.maxHeroLevel} (endgame): every active hero at max level '
           'unlocks KEY, Infinity Gauntlet, Ranked GR, Farm Rifts, '
           'and Ashen Crown. AL20 alone is not enough.\n'
-          '• At AL20 with heroes below ${GameLogic.maxHeroLevel}, TODAY may say '
+          '• At AL20 with heroes below ${GameLogic.maxHeroLevel}, the hub hunt may say '
           '"Level the party" — that is the bridge into endgame.\n\n'
           'Three different "dailies" (not the same button):\n'
           '• Daily Vault — UTC day; 1 clear or timed KEY +2, then CLAIM VAULT.\n'
           '• Daily Run — one free seeded floor for +25e.\n'
           '• Quests Daily — MORE · QUESTS kill board; CLAIM QUESTS when ready.\n\n'
-          'Four season clocks (all optional — TODAY picks one hunt):\n'
+          'Four season clocks (all optional — the hub hunt picks one job):\n'
           '• UTC midnight — vault + Daily Run reset.\n'
           '• ISO week — KEY affix rotation + local week goal.\n'
           '• Calendar month — first vault claim season bonus.\n'
           '• Play Games month — ranked KEY / Gauntlet / GR boards (opt-in).\n\n'
-          'Endgame ladder on TODAY (party Lv${GameLogic.maxHeroLevel}): '
+          'Endgame ladder on the hub hunt (party Lv${GameLogic.maxHeroLevel}): '
           'KEY habit → Gauntlet → Ranked GR → Farm Rift → Ashen Crown.\n'
           'Those hunts live on the hub ENDGAME tab (its own map, not under the 15 zones).',
     ),
@@ -279,7 +279,7 @@ abstract final class GameGuides {
       id: 'classes',
       title: 'CLASS UNLOCKS',
       body:
-          'Ascend grows your roster — TODAY and Ascend teasers name the next kits '
+          'Ascend grows your roster — the hub hunt and Ascend teasers name the next kits '
           'with a short fantasy line plus a Watch… combat hook.\n\n'
           '• AL1: Combat Rogue, Arms, Holy Paladin\n'
           '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot '
@@ -318,7 +318,7 @@ abstract final class GameGuides {
           '• Endless Crystal Spire climb — each floor gets harder.\n'
           '• Gold and essence scale with floor; boss every 5 floors.\n'
           '• Wipe or leave returns to hub; best floor is saved.\n'
-          '• Enter from the hub ENDGAME tab, KEY, or TODAY.\n'
+          '• Enter from the hub ENDGAME tab, KEY, or the hub hunt line.\n'
           '• Does not count toward Ascend boss requirements.',
     ),
     GuideTopic(
@@ -330,9 +330,9 @@ abstract final class GameGuides {
           '• Gold and gear drop during the run; success also pays essence + gold.\n'
           '• Higher tiers: tougher packs and less time; fast clears unlock +2.\n'
           '• Wipe or timeout ends the run with a small consolation.\n'
-          '• Not ranked on Play Games — clear Ranked GR first; TODAY chases '
+          '• Not ranked on Play Games — clear Ranked GR first; the hub hunt chases '
           'Farm Rift after GR milestones quiet.\n'
-          '• Set tier under KEY · FARM RIFT (Stormwake), on the hub ENDGAME tab, or follow TODAY.',
+          '• Set tier under KEY · FARM RIFT (Stormwake), on the hub ENDGAME tab, or follow the hub hunt.',
     ),
     GuideTopic(
       id: 'greater_rift',
@@ -345,7 +345,7 @@ abstract final class GameGuides {
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
           'Ranked GR board wires when the Console ID is pasted.\n'
-          '• TODAY chases Ranked GR before Farm Rift. Set tier under KEY · RANKED GR or tap RANKED GR on the hub ENDGAME tab.',
+          '• The hub hunt chases Ranked GR before Farm Rift. Set tier under KEY · RANKED GR or tap RANKED GR on the hub ENDGAME tab.',
     ),
     GuideTopic(
       id: 'apex',
@@ -369,7 +369,7 @@ abstract final class GameGuides {
           'GOLD → MARKET.\n\n'
           '• GEAR: opens on Upgrades. Tap a row to buy. Switch to All gear if you want '
           'the full stock. Free refresh every 6 hours, or pay gold to reroll.\n'
-          '• Hub TODAY can chase Market when an affordable listing beats your gear.\n'
+          '• The hub hunt can chase Market when an affordable listing beats your gear.\n'
           '• Wipe advice may point at GOLD when listings beat GOLD tracks for the same gap.\n'
           '• Buy flasks and bandages with gold.\n'
           '• Clear a full bag with BAG → CLEAN BAG, MERGE, or SETTINGS auto-sell / '
@@ -420,7 +420,7 @@ abstract final class GameGuides {
           '(smaller rungs earlier); top rung repeats.\n'
           '• Claim 3 in a row for a +5e chain bonus.\n'
           '• MORE · QUESTS (or the badge on MORE) when claims are ready.\n'
-          '• TODAY CLAIM QUESTS claims ready rewards from the hub.\n'
+          '• Hub CLAIM QUESTS claims ready rewards from the hub hunt line.\n'
           '• The dungeon top CLAIM chip claims all ready quests at once '
           '(visible in combat too; long-press opens the list).',
     ),
@@ -434,20 +434,20 @@ abstract final class GameGuides {
           '• Quests — Daily / Bounty / Side / Week / Contract board; '
           'CLAIM QUESTS when ready.\n\n'
           'Keystone affixes still rotate each ISO week, but the vault is daily.\n\n'
-          '• Early on: TODAY tells you to grow the party in the starter zone. '
+          '• Early on: the hub hunt tells you to grow the party in the starter zone. '
           'Daily Run and vault-start wait until you have beaten a boss (or Ascended).\n'
           '• Fill today’s Daily Vault with 1 dungeon clear, then claim essence.\n'
           '• At party Lv${GameLogic.maxHeroLevel}: KEY unlocks — time a KEY +2 (or higher) for a bigger '
-          'vault claim. TODAY may chase KEY / Gauntlet / Ranked GR / Farm Rift.\n'
-          '• Hub TODAY and offline Up next share one chase (claim → READY → '
+          'vault claim. The hub hunt may chase KEY / Gauntlet / Ranked GR / Farm Rift.\n'
+          '• The hub hunt and offline Up next share one chase (claim → READY → '
           'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
           '• Welcome-back says where you were: hub = sanctuary gold only; '
           'mid-dungeon = party kept fighting with AFK assist. Then one wow line, '
           'a few highlights, then Up next.\n'
-          '• TODAY flashes READY / ALMOST when a claim or Ascend is close.\n'
+          '• The hub hunt flashes READY / ALMOST when a claim or Ascend is close.\n'
           '• First vault claim of each calendar month also pays a season bonus.\n'
           '• Each ISO week has a named local season beat (KEY +2 or Gauntlet floor) '
-          '— TODAY may chase it after party Lv${GameLogic.maxHeroLevel}; claim pays essence + title.\n'
+          '— the hub hunt may chase it after party Lv${GameLogic.maxHeroLevel}; claim pays essence + title.\n'
           '• See AL20 VS ENDGAME for all four season clocks (UTC day / ISO week / '
           'calendar month / Play month).\n'
           '• Progress resets at UTC midnight.\n'
@@ -476,7 +476,7 @@ abstract final class GameGuides {
       id: 'ashen_crown',
       title: 'ASHEN CROWN',
       body:
-          'Weekly ticket boss (party Lv${GameLogic.maxHeroLevel}). Hub TODAY, ENDGAME tab, or KEY.\n\n'
+          'Weekly ticket boss (party Lv${GameLogic.maxHeroLevel}). Hub hunt, ENDGAME tab, or KEY.\n\n'
           '• ${AshenCrown.ticketsPerWeek} tickets each ISO week. The first ticket clear '
           'pays +${AshenCrown.essenceReward}e and a title.\n'
           '• After that clear, further tickets do not pay — use PRACTICE (free, no ticket) '
@@ -501,7 +501,7 @@ abstract final class GameGuides {
           '• Optional Boss Rush / No Flask / Tiny add extra challenge + essence.\n'
           '• Higher keys drop higher iLvl gear (KEY +10 is +20 iLvl) and pay '
           'gold in line with the harder packs — not a gold tax.\n'
-          '• At party Lv${GameLogic.maxHeroLevel}, hub TODAY may chase KEY until your preferred key is at the cap.\n'
+          '• At party Lv${GameLogic.maxHeroLevel}, the hub hunt may chase KEY until your preferred key is at the cap.\n'
           '• Ashen Crown tickets and PRACTICE live under KEY and on the hub ENDGAME tab.',
     ),
     GuideTopic(
@@ -523,18 +523,18 @@ abstract final class GameGuides {
           '(starter gear back on).\n'
           '• Boss victories toward the next Ascend clear.\n'
           '• At AL20, ESSENCE → KEEP offers optional REBORN (same bag wipe, AL stays 20, '
-          'no extra Ascend Blessing). TODAY never nags you to press it.',
+          'no extra Ascend Blessing). The hub hunt never nags you to press it.',
     ),
     GuideTopic(
       id: 'daily',
       title: 'DAILY RUN',
       body:
           'A free one-floor Daily Run on the hub — separate from Daily Vault and Quests.\n\n'
-          '• Early (before first boss): TODAY focuses on growing the party — Daily Run '
+          '• Early (before first boss): the hub hunt focuses on growing the party — Daily Run '
           'may wait.\n'
-          '• After the first hour, TODAY may chase Ascend, zones, Daily Vault, Daily Run, or '
+          '• After the first hour, the hub hunt may chase Ascend, zones, Daily Vault, Daily Run, or '
           '(at party Lv${GameLogic.maxHeroLevel}) KEY / Gauntlet / Rifts — one hunt at a time.\n'
-          '• When KEY is below dial cap, KEY often wins TODAY; Daily Run is still free '
+          '• When KEY is below dial cap, KEY often wins the hub hunt; Daily Run is still free '
           'essence from the hub or Urgent row.\n'
           '• Clear the floor for +25e, then return to hub.\n'
           '• May let you visit a locked zone for the day.\n'

@@ -32,7 +32,9 @@ class HubMetaPulse extends StatelessWidget {
         chaseKind != HubChaseKind.dailyVaultProgress &&
         chaseKind != HubChaseKind.claimDailyVault) {
       bits.add(
-        state.hardmodeLevel <= 0 ? 'KEY +0 · dial on KEY' : 'KEY +${state.hardmodeLevel}',
+        state.hardmodeLevel <= 0
+            ? 'KEY +0 · dial on KEY'
+            : 'KEY +${state.hardmodeLevel}',
       );
     }
 
@@ -128,8 +130,9 @@ class HubTodayCard extends StatelessWidget {
     final titleMaxLines = textScale > 1.2 ? 1 : 2;
     // Text strip only — no fill box under ENTER.
     return Semantics(
-      label: 'TODAY chase: ${chase.title}. ${chase.detail}',
-      button: chase.urgency == HubChaseUrgency.ready ||
+      label: 'Next job: ${chase.title}. ${chase.detail}',
+      button:
+          chase.urgency == HubChaseUrgency.ready ||
           chase.urgency == HubChaseUrgency.almost,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
@@ -140,16 +143,10 @@ class HubTodayCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                GameIcon.asset(UiIcon.star, size: 14),
-                const SizedBox(width: 6),
-                // Explicit TODAY token for TalkBack / playtest dumps.
                 Semantics(
-                  label: 'TODAY',
+                  label: 'Next job',
                   excludeSemantics: true,
-                  child: Text(
-                    'TODAY',
-                    style: GameTheme.body(size: 12, color: accent),
-                  ),
+                  child: GameIcon.asset(UiIcon.star, size: 14),
                 ),
                 if (chip != null) ...[
                   const SizedBox(width: 6),
@@ -161,10 +158,7 @@ class HubTodayCard extends StatelessWidget {
                     _todayHeadline(chase, ready: ready),
                     maxLines: titleMaxLines,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchment,
-                    ),
+                    style: GameTheme.body(size: 13, color: GameTheme.parchment),
                   ),
                 ),
                 if (actionLabel != null && onAction != null) ...[
@@ -288,8 +282,7 @@ class HubUrgentRow extends StatelessWidget {
         ],
         if (showVault) ...[
           GameButton(
-            label:
-                'CLAIM VAULT  +${vaultClaimEssence}e',
+            label: 'CLAIM VAULT  +${vaultClaimEssence}e',
             style: GameButtonStyle.brown,
             primary: true,
             onPressed: onClaimDailyVault,

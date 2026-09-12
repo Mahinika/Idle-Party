@@ -62,7 +62,7 @@ class EssenceKeepPanel extends StatelessWidget {
         ),
         if (GameLogic.canAscend(state))
           Text(
-            'Ascend is on the hub TODAY card — not a buy here.',
+            'Ascend is the red button on the hub — not a buy here.',
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
 
@@ -160,7 +160,7 @@ class EssenceKeepPanel extends StatelessWidget {
               state.metaDepth.constellationNodes.length <
                   BlessingConstellation.maxLit)
             Text(
-              'Unspent Star points — optional forever nodes (not on TODAY).',
+              'Unspent Star points — optional forever nodes (not a hub hunt).',
               style: GameTheme.body(size: 11, color: GameTheme.mossLit),
             ),
           for (final n in BlessingConstellation.nodes)

@@ -322,7 +322,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           if (GameLogic.endgameUnlocked(state)) ...[
             const SizedBox(height: 6),
             Text(
-              'TODAY · ${chase.title}',
+              'Hub hunt · ${chase.title}',
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
