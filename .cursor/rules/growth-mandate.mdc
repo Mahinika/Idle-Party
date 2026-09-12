@@ -38,6 +38,7 @@ the next user-facing message starts with **exactly**:
 `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`
 
 Never early. Never paraphrase. `/init` must not restore the old AL20 default.
+Why: `docs/LEARNINGS.md`.
 
 ## Decision policy
 

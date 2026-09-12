@@ -30,7 +30,7 @@ architecture facts; keep the growth program as default work.
    - **Keep** six studio seats; do not restore a 40-role org or AL20 expert panel
    - Key systems: `GameDirector`, `GameLogic`, `SpatialCombat`, hub/dungeon UI, `DungeonCatalog`, `metaDepth`, Ascend keep/reset
    - Docs that claim “current”: `docs/PLAY_STORE.md`, `docs/CONTENT_CADENCE.md`,
-     `docs/GROWTH_MANDATE.md` (keep mandate until done bar is complete)
+     `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md` (keep mandate until done bar is complete)
    - Optional fast honesty: `flutter test test/ship_smoke_test.dart` and/or MCP `changelog_check` / `zone_identity` if helpful
 
 2. **Diff claims vs code**

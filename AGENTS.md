@@ -119,7 +119,8 @@ Slash: `/init` resyncs AGENTS/rules; `/repo auditandcleaning` runs a read-only
 full-repo audit (see `.cursor/commands/repo-auditandcleaning.md`).
 
 Cadence: **`docs/GROWTH_MANDATE.md`** (active 2026-09-12) then
-`docs/CONTENT_CADENCE.md` (tag rhythm). Background (optional):
+`docs/CONTENT_CADENCE.md` (tag rhythm). Why we flipped:
+[`docs/LEARNINGS.md`](docs/LEARNINGS.md). Background (optional):
 `docs/TOP_GAMES_RESEARCH.md`. Chase contract (hub TODAY ↔ offline Up next):
 `docs/CHASE_CONTRACT.md`. Gear budget: `docs/GEAR_BUDGET.md`. Floor blueprint
 (shipped): `docs/FLOOR_BLUEPRINT.md`. Play listing: `docs/PLAY_STORE.md` +

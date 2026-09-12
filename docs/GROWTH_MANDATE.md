@@ -3,6 +3,7 @@
 **Locked:** 2026-09-12 by owner. **Research-checked:** 2026-09-12
 (GameAnalytics 2025–26, Play ASO experiments, idle FTUE, persona-prompt papers).
 This is the **only** default work program until the done bar below is complete.
+Why: [LEARNINGS.md](LEARNINGS.md).
 
 North star: **främlingar på Play blir spelare.** AL20 is a quality gate
 (do not ship a broken endgame). It is **not** the batch driver.
