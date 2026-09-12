@@ -26,8 +26,9 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   is CPI/creative smoke only.
 - **Notifications:** after a milestone, ~1–2/day, never first-launch permission,
   never mid-combat. In-game card after first loot (YES / NOT NOW); SETTINGS
-  toggle afterwards. OS permission only on YES. Inexact alarms — no exact-alarm
-  Play policy. Cap is UTC-day of *fire* time.
+  toggle afterwards. OS permission only on YES. Close the card *before* the
+  OS grant sheet — a modal over that sheet traps the hub. Inexact alarms —
+  no exact-alarm Play policy. Cap is UTC-day of *fire* time.
 - **Persona panels don’t make better calls.** “Act as expert” changes tone.
   Six chairs + vetoes beat a 40-role org chart. Chairs: EP, Game, UX, Tech,
   Art, Marketing. No Scrum/Network/UA department.

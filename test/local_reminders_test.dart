@@ -151,4 +151,24 @@ void main() {
     expect(director.state.metaDepth.notifyPrompted, isTrue);
     expect(director.state.metaDepth.notifyOptIn, isFalse);
   });
+
+  testWidgets('YES closes the card before OS permission returns', (tester) async {
+    final director = GameDirector.preview(initialState: _afterFirstLoot());
+    addTearDown(director.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => NotifyOptInOverlay.show(ctx, director),
+            child: const Text('go'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('YES'));
+    await tester.pumpAndSettle();
+    expect(find.text(LocalReminders.optInTitle), findsNothing);
+  });
 }

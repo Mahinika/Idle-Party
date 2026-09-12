@@ -45,8 +45,15 @@ Future<bool> requestPermission() async {
         AndroidFlutterLocalNotificationsPlugin
       >();
   if (android == null) return false;
-  final ok = await android.requestNotificationsPermission();
-  return ok ?? false;
+  try {
+    final already = await android.areNotificationsEnabled();
+    if (already == true) return true;
+    final ok = await android.requestNotificationsPermission();
+    return ok ?? false;
+  } catch (e, st) {
+    debugPrint('notify permission: $e\n$st');
+    return false;
+  }
 }
 
 Future<void> schedule(List<LocalPing> pings) async {

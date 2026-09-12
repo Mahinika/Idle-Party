@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -22,38 +23,39 @@ class NotifyOptInOverlay extends StatelessWidget {
     WebClickBridge.pushLayer();
     return showDialog<void>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) {
         final size = MediaQuery.sizeOf(ctx);
         final maxW = math.min(380.0, size.width - 32);
-        return PopScope(
-          canPop: false,
-          child: Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 24,
-            ),
-            child: DecoratedBox(
-              decoration: MenuChrome.panel(),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: SizedBox(
-                  width: maxW,
-                  child: NotifyOptInOverlay(director: director),
-                ),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          child: DecoratedBox(
+            decoration: MenuChrome.panel(),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: maxW,
+                child: NotifyOptInOverlay(director: director),
               ),
             ),
           ),
         );
       },
-    ).whenComplete(WebClickBridge.popLayer);
+    ).then((_) {
+      if (!director.state.metaDepth.notifyPrompted) {
+        director.declineNotifyOptIn();
+      }
+    }).whenComplete(WebClickBridge.popLayer);
   }
 
-  Future<void> _yes(BuildContext context) async {
-    await director.acceptNotifyOptIn();
-    if (context.mounted) Navigator.of(context).maybePop();
+  void _yes(BuildContext context) {
+    unawaited(director.acceptNotifyOptIn());
+    Navigator.of(context).pop();
   }
 
   void _no(BuildContext context) {

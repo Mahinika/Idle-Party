@@ -1991,6 +1991,8 @@ class GameDirector extends ChangeNotifier {
   }
 
   Future<void> acceptNotifyOptIn() async {
+    _applyNotify(LocalReminders.setOptIn(_state, enabled: true));
+    unawaited(AppAnalytics.logEvent('notify_opt_in', {'source': 'card'}));
     final granted = await LocalNotify.requestPermission();
     if (!granted) {
       _applyNotify(LocalReminders.setOptIn(_state, enabled: false));
@@ -2000,10 +2002,7 @@ class GameDirector extends ChangeNotifier {
           'reason': 'os',
         }),
       );
-      return;
     }
-    _applyNotify(LocalReminders.setOptIn(_state, enabled: true));
-    unawaited(AppAnalytics.logEvent('notify_opt_in', {'source': 'card'}));
   }
 
   void declineNotifyOptIn() {
