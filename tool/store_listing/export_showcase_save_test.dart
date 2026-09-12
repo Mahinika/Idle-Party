@@ -12,6 +12,7 @@ import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
+import 'package:idle_party/models/dungeon_zoom.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
@@ -71,6 +72,7 @@ GameState showcaseState() {
     highestFloorCleared: 12,
     dungeonId: 'ember',
     dungeonMode: DungeonMode.farm,
+    dungeonZoom: DungeonZoom.close,
     hardmodeLevel: 4,
     ascensionLevel: 3,
     gearStash: stash,
@@ -97,6 +99,17 @@ void main() {
     expect(roundTrip.gold, 18420);
     expect(roundTrip.ascensionLevel, 3);
     expect(GameLogic.importSaveJson(out.readAsStringSync()), isNotNull);
+    // ignore: avoid_print
+    print('wrote ${out.path} (${out.lengthSync()} bytes)');
+  });
+
+  test('export showcase mid-dungeon save json', () {
+    final out = File('tool/store_listing/preview/showcase_entered.json');
+    out.parent.createSync(recursive: true);
+    final state = GameLogic.enterDungeon(showcaseState(), dungeonId: 'ember');
+    expect(state.inDungeon, isTrue);
+    expect(state.dungeonZoom, DungeonZoom.close);
+    out.writeAsStringSync(jsonEncode(state.toJson()));
     // ignore: avoid_print
     print('wrote ${out.path} (${out.lengthSync()} bytes)');
   });

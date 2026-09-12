@@ -109,3 +109,33 @@ keeps the whole phone UI visible.
 
 Puzzle / BR / Roblox framing. Class-spec jargon. Zone-count brag walls.
 Engine / ads / GitHub mentions.
+
+---
+
+## Feed Short (combat first — not the Play trailer)
+
+Separate clip for the **Shorts feed**. Do **not** reuse
+`build_preview_video.py` or the Play shot list (hub → AFK card → logo). That
+listing 9:16 file puts the phone in a blur frame; a feed Short wants
+**full-bleed combat in frame one**.
+
+| | Play preview | Feed Short |
+|--|--------------|------------|
+| Builder | `build_preview_video.py` | `build_shorts_feed.py` |
+| First frame | Hub TODAY | Party in combat |
+| Picture | 16:9 listing + 9:16 phone-in-frame | 1080×1920 crop of 1080×2340 |
+| On-screen | Chase / AFK / lockup beats | `They fight without you` → `Idle Party` |
+| Music | owned `hub.ogg` | same — no trending audio |
+
+```powershell
+# A56: showcase save, Zoom · Close, screenrecord 1080x2340
+# → tool/store_listing/preview/gameplay_shorts_raw.mp4  (gitignored)
+# Restore the emulator save afterward.
+
+py -3 tool/store_listing/build_shorts_feed.py
+# → tool/store_listing/preview/idle_party_shorts_feed.mp4  (~15s, gitignored)
+# Optional trim lives in gitignored preview/shorts_feed.json (`start` / `duration`).
+```
+
+Do not upload until the owner has watched the local file. Play listing video
+`OMWXbgGBFMA` stays the related-video target if this later goes public.
