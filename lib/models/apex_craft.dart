@@ -641,6 +641,7 @@ abstract final class ApexCraft {
       case SpecRoleTag.caster:
         crit = 3 + rank * 2 + secTier ~/ 2;
     }
+    crit = EquipmentFactory.lootCritPercent(crit);
 
     return EquipmentItem(
       id: pieceId(classId: classId, role: role, slot: slot),

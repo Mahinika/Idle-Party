@@ -418,9 +418,9 @@ void main() {
       marketDiscountLevel: 5,
       filterSpanLevel: 5,
       offlineHighlightBonus: 3,
-      legacyPoints: 20,
-      dailyEssenceBonusLevel: 5,
-      gauntletGoldBonusLevel: 5,
+      legacyPoints: 30,
+      dailyEssenceBonusLevel: 10,
+      gauntletGoldBonusLevel: 10,
     );
     expect(PrestigeShopCatalog.ownedCount(capped, 'stash_slot'), 10);
     expect(PrestigeShopCatalog.atCap(capped, 'stash_slot'), isTrue);

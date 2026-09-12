@@ -140,11 +140,14 @@ class SpecMastery {
         SpecMasteryKind.harmony => 'Harmony',
       };
 
-  /// Rating → mastery points (Cata-like curve, idle-tuned).
+  /// Rating → mastery points.
+  ///
+  /// L100 mixed set (~60 rating) ≈ 6% generic damage via [damageMul]
+  /// (`1 + p * 0.002`). The old Cata `/ (90 + level×4)` made L100 mastery dust.
   static double masteryPointsFrom(int rating, int level) {
     if (rating <= 0) return 0;
     final lvl = level.clamp(1, 100);
-    return rating / (90.0 + lvl * 4.0);
+    return rating / (1.5 + lvl * 0.005);
   }
 
   static double _pt(MasteryCombatant hero) => hero.masteryPoints;

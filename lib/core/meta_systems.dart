@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.152';
+  static const String currentVersion = '1.12.153';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.153',
+      bullets: <String>[
+        'New drops sit under the 75% crit cap — Crit on gear is smaller, Mastery at level 100 actually matters. GOLD adds a MASTERY track; ESSENCE CAMP adds Aegis (DEF). Relics upgrade to T6.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). The hub hunt still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.152',
       bullets: <String>[
@@ -1611,6 +1618,7 @@ abstract final class MetaSystems {
             s.sanctuaryGoldLevel >= 12 ||
             s.sanctuaryPowerLevel >= 12 ||
             s.sanctuaryVitalityLevel >= 12 ||
+            s.sanctuaryDefenseLevel >= 12 ||
             s.metaDepth.sanctuaryXpLevel >= 12,
         'god_hand_5': (s) => s.godHandLevel >= 5,
         'weekly_clear': (s) => s.metaDepth.dailyVaultClaimed,

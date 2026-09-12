@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.152**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.153**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -196,7 +196,7 @@ returns the ticket; PRACTICE free after the paid clear. Tickets /
 Rifts) unlocks when the **active party is all Lv100**, not at AL20 alone.
 **Hero level cap:** `GameLogic.maxHeroLevel` = **100**; combat XP only (no gold
 Train +1 level). Endgame (KEY / Gauntlet / Rifts) when every active hero is
-Lv100. Gold tracks (ATK/DEF/STA/MOVE/HASTE/CRIT) still buyable (wipe on
+Lv100. Gold tracks (ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY) still buyable (wipe on
 Ascend).
 
 **Zone unlock:** party **mean level** (even steps 1…100 across 15 zones) **or**

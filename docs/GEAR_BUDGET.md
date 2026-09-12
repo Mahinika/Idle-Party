@@ -31,16 +31,17 @@ Configured in `EquipStatWeights.lootShares` / `forSpec` (`lib/models/equip_stat_
 
 | Role bucket | Primaries (typical) | Secondaries |
 |-------------|---------------------|-------------|
-| Tank | Sta + Str (+ Armor carve) | Crit / Haste sparingly |
-| Str melee | Str + Sta | Crit, Haste |
-| Agi melee / hunter | Agi + Sta (+ some Str) | Crit, Haste |
-| Caster | Int + Sta + Spell Power | Crit, Haste |
-| Healer | Int + Sta + SP + Spirit | **Mp5, Crit** (Haste last — heals ignore haste) |
+| Tank | Sta + Str (+ Armor carve) | Mastery / Crit |
+| Str melee | Str + Sta | Crit, Mastery |
+| Agi melee / hunter | Agi + Sta (+ some Str) | Crit, Mastery |
+| Caster | Int + Sta + Spell Power | Crit, Mastery |
+| Healer | Int + Sta + SP + Spirit | **Mp5, Crit** (Mastery leftover) |
 
 Rules:
 
 - At most **two** secondaries on new loot.
-- Healer loot fills **Mp5 then Crit** (weapons/gloves do not haste-first). Haste is the leftover line.
+- Healer loot fills **Mp5 then Crit** (weapons/gloves do not haste-first). Haste is affix-only, not the default secondary pool.
+- Loot Crit is **half** the raw secondary amount (`lootCritPercent`) so a full endgame set sits under the **75%** combat cap (Auto Equip still fades Crit from sheet 70→75).
 - **No Move** on loot budget.
 - Affinity on an item is **drop bias / tooltip flavour**, not equip-score.
 - **Armor type is a hard `canEquip` gate** (plate / mail / leather / cloth per class). Auto Equip never scores a Paladin into leather.

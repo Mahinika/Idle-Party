@@ -15,6 +15,7 @@ GameState _applyPrestigeRunWipe(GameState state) {
     moveSpeedBonus: 0,
     attackSpeedBonus: 0,
     critBonus: 0,
+    masteryBonus: 0,
     gearStash: const <EquipmentItem>[],
     marketListings: const <MarketListing>[],
     loadouts: const <GearLoadout>[],

@@ -27,6 +27,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     PartyUpgradeType.moveSpeed => GameTheme.torchHot,
     PartyUpgradeType.attackSpeed => GameTheme.torch,
     PartyUpgradeType.crit => GameTheme.bloodLit,
+    PartyUpgradeType.mastery => GameTheme.tooltipEpic,
   };
 
   String _forgeName(PartyUpgradeType type) => switch (type) {
@@ -36,6 +37,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     PartyUpgradeType.moveSpeed => 'MOVE',
     PartyUpgradeType.attackSpeed => 'HASTE',
     PartyUpgradeType.crit => 'CRIT',
+    PartyUpgradeType.mastery => 'MASTERY',
   };
 
   String _forgeBonus(GameState state, PartyUpgradeType type) => switch (type) {
@@ -43,11 +45,15 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     PartyUpgradeType.defense => '+${state.defenseBonus}',
     PartyUpgradeType.vitality => '+${state.vitalityBonus}',
     PartyUpgradeType.moveSpeed =>
-      '+${GameState.softForgePercent(state.moveSpeedBonus).round()}%',
+      '+${GameState.softForgePercent(state.moveSpeedBonus).round()}%'
+      '${state.moveSpeedBonus >= 40 ? ' · SOFT' : ''}',
     PartyUpgradeType.attackSpeed =>
-      '+${GameState.softForgePercent(state.attackSpeedBonus).round()}%',
+      '+${GameState.softForgePercent(state.attackSpeedBonus).round()}%'
+      '${state.attackSpeedBonus >= 40 ? ' · SOFT' : ''}',
     PartyUpgradeType.crit =>
-      '+${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
+      '+${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%'
+      '${state.critBonus >= 25 ? ' · SOFT' : ''}',
+    PartyUpgradeType.mastery => '+${state.masteryBonus}',
   };
 
   Widget _upgradeRow({
@@ -117,7 +123,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                   'STA +${state.vitalityBonus}  '
                   'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%  '
                   'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
-                  'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
+                  'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%  '
+                  'MASTERY +${state.masteryBonus}',
           style: GameTheme.body(size: 12, color: GameTheme.parchment),
         ),
         Text(

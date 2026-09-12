@@ -811,4 +811,11 @@ void main() {
     expect(sum, lessThanOrEqualTo((budget * 1.25).round()));
     expect(chest.armorBonus, greaterThan(0));
   });
+
+  test('loot crit percent is half the secondary amount', () {
+    expect(EquipmentFactory.lootCritPercent(0), 0);
+    expect(EquipmentFactory.lootCritPercent(1), 1);
+    expect(EquipmentFactory.lootCritPercent(7), 4);
+    expect(EquipmentFactory.lootCritPercent(8), 4);
+  });
 }

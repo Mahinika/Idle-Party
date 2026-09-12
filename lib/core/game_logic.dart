@@ -180,6 +180,7 @@ class GameLogic {
       moveSpeedBonus: 0,
       attackSpeedBonus: 0,
       critBonus: 0,
+      masteryBonus: 0,
       recentLoot: <LootDrop>[],
       unlockedRelics: <String>[],
       currentRoom: firstRoom,
@@ -196,6 +197,7 @@ class GameLogic {
       sanctuaryGoldLevel: 0,
       sanctuaryPowerLevel: 0,
       sanctuaryVitalityLevel: 0,
+      sanctuaryDefenseLevel: 0,
       metaDepth: MetaDepthState(
         unlockedSpecs: [for (final s in specs) s.name],
         dailyQuestDate: MetaSystems.dailyDateKey(
@@ -580,6 +582,7 @@ class GameLogic {
     'gold': 'Gold Find',
     'power': 'War Altar',
     'vitality': 'Life Well (STA)',
+    'defense': 'Aegis (DEF)',
     'xp': 'Lore Font',
   };
 
@@ -594,6 +597,7 @@ class GameLogic {
     'xp' => 2,
     'power' => sanctuaryPowerPerLevel,
     'vitality' => sanctuaryVitalityPerLevel,
+    'defense' => sanctuaryDefensePerLevel,
     _ => 0,
   };
 
@@ -602,6 +606,7 @@ class GameLogic {
     'gold' => '+3% gold',
     'power' => '+$sanctuaryPowerPerLevel ATK',
     'vitality' => '+$sanctuaryVitalityPerLevel STA',
+    'defense' => '+$sanctuaryDefensePerLevel DEF',
     'xp' => '+2% XP',
     _ => '',
   };
@@ -625,6 +630,10 @@ class GameLogic {
         level * sanctuaryXpPctPerLevel,
         softAt: sanctuaryXpSoftAt,
       ).round(),
+      'defense' => GameState.softForgePercent(
+        level * sanctuaryDefensePerLevel,
+        softAt: sanctuaryDefenseSoftAt,
+      ).round(),
       _ => 0,
     };
   }
@@ -641,6 +650,7 @@ class GameLogic {
       'gold' => '% gold find',
       'power' => ' ATK',
       'vitality' => ' STA',
+      'defense' => ' DEF',
       'xp' => '% XP find',
       _ => '',
     };
@@ -655,6 +665,7 @@ class GameLogic {
       'gold' => state.sanctuaryGoldLevel,
       'power' => state.sanctuaryPowerLevel,
       'vitality' => state.sanctuaryVitalityLevel,
+      'defense' => state.sanctuaryDefenseLevel,
       'xp' => state.metaDepth.sanctuaryXpLevel,
       _ => -1,
     };
@@ -670,6 +681,7 @@ class GameLogic {
       'gold' => next.copyWith(sanctuaryGoldLevel: level + 1),
       'power' => next.copyWith(sanctuaryPowerLevel: level + 1),
       'vitality' => next.copyWith(sanctuaryVitalityLevel: level + 1),
+      'defense' => next.copyWith(sanctuaryDefenseLevel: level + 1),
       'xp' => next.copyWith(
         metaDepth: next.metaDepth.copyWith(sanctuaryXpLevel: level + 1),
       ),
@@ -705,6 +717,7 @@ class GameLogic {
       'gold' => state.sanctuaryGoldLevel,
       'power' => state.sanctuaryPowerLevel,
       'vitality' => state.sanctuaryVitalityLevel,
+      'defense' => state.sanctuaryDefenseLevel,
       'xp' => state.metaDepth.sanctuaryXpLevel,
       _ => -1,
     };
@@ -726,6 +739,7 @@ class GameLogic {
       'gold' => state.sanctuaryGoldLevel,
       'power' => state.sanctuaryPowerLevel,
       'vitality' => state.sanctuaryVitalityLevel,
+      'defense' => state.sanctuaryDefenseLevel,
       'xp' => state.metaDepth.sanctuaryXpLevel,
       _ => -1,
     };
@@ -760,6 +774,7 @@ class GameLogic {
       'gold' => state.sanctuaryGoldLevel,
       'power' => state.sanctuaryPowerLevel,
       'vitality' => state.sanctuaryVitalityLevel,
+      'defense' => state.sanctuaryDefenseLevel,
       'xp' => state.metaDepth.sanctuaryXpLevel,
       _ => -1,
     };
@@ -775,6 +790,9 @@ class GameLogic {
       ),
       'vitality' => md.copyWith(
         sanctuaryVitalityPrestige: md.sanctuaryVitalityPrestige + 1,
+      ),
+      'defense' => md.copyWith(
+        sanctuaryDefensePrestige: md.sanctuaryDefensePrestige + 1,
       ),
       'xp' => md.copyWith(
         sanctuaryXpLevel: 0,
@@ -795,6 +813,11 @@ class GameLogic {
       ),
       'vitality' => state.copyWith(
         sanctuaryVitalityLevel: 0,
+        essence: state.essence + essenceGain,
+        metaDepth: nextMd,
+      ),
+      'defense' => state.copyWith(
+        sanctuaryDefenseLevel: 0,
         essence: state.essence + essenceGain,
         metaDepth: nextMd,
       ),
@@ -948,6 +971,7 @@ class GameLogic {
   static const int relicDefensePerTier = 16;
   static const int relicVitalityPerTier = 48;
   static const int relicMitigatePerTier = 8;
+  static const int relicMaxTier = 6;
 
   /// Gold FORGE one-buy gains. Percent armor made +1 DEF / +6 HP a rounding
   /// error next to +2 ATK; CRIT was half of HASTE at the same gold.
@@ -957,6 +981,7 @@ class GameLogic {
   static const int forgeMoveGain = 2;
   static const int forgeHasteGain = 2;
   static const int forgeCritGain = 2;
+  static const int forgeMasteryGain = 4;
 
   /// CAMP (sanctuary) per-level gains. Same essence cost; Life Well HP must
   /// match War Altar ATK the way FORGE STA matches ATK.
@@ -968,6 +993,8 @@ class GameLogic {
   static const double sanctuaryVitalitySoftAt = 480; // 40 levels × 12 HP
   static const double sanctuaryGoldSoftAt = 100;
   static const double sanctuaryXpSoftAt = 80;
+  static const int sanctuaryDefensePerLevel = 4;
+  static const double sanctuaryDefenseSoftAt = 160; // 40 levels × 4 DEF
 
   /// Gold-find percent granted per Ascend Blessing stack.
   static const int ascendBlessingGoldPct = 8;
@@ -1376,6 +1403,7 @@ class GameLogic {
       PartyUpgradeType.moveSpeed => state.moveSpeedBonus ~/ forgeMoveGain,
       PartyUpgradeType.attackSpeed => state.attackSpeedBonus ~/ forgeHasteGain,
       PartyUpgradeType.crit => state.critBonus ~/ forgeCritGain,
+      PartyUpgradeType.mastery => state.masteryBonus ~/ forgeMasteryGain,
     };
   }
 
@@ -1494,7 +1522,7 @@ class GameLogic {
     return cur;
   }
 
-  /// Spend wallet gold round-robin across ATK/DEF/STA/MOVE/HASTE/CRIT.
+  /// Spend wallet gold round-robin across ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY.
   static GameState upgradeSpendAllEvenly(GameState state) {
     var cur = state;
     for (var round = 0; round < 10000; round++) {
@@ -1535,6 +1563,9 @@ class GameLogic {
 
   static GameState upgradeCrit(GameState state) =>
       _applyUpgrade(state, type: PartyUpgradeType.crit);
+
+  static GameState upgradeMastery(GameState state) =>
+      _applyUpgrade(state, type: PartyUpgradeType.mastery);
 
   static GameState _applyUpgrade(
     GameState state, {
@@ -1591,6 +1622,12 @@ class GameLogic {
           gold: state.gold - cost,
           lastUpdated: DateTime.now(),
         );
+      case PartyUpgradeType.mastery:
+        return state.copyWith(
+          masteryBonus: state.masteryBonus + forgeMasteryGain,
+          gold: state.gold - cost,
+          lastUpdated: DateTime.now(),
+        );
     }
   }
 
@@ -1635,7 +1672,7 @@ class GameLogic {
       return state;
     }
     final current = max(1, state.metaDepth.relicTierOf(relicId));
-    if (current >= 3) return state;
+    if (current >= relicMaxTier) return state;
     final nextTier = current + 1;
     final cost = relicTierUpgradeCost(nextTier);
     if (state.essence < cost) return state;
@@ -1698,22 +1735,7 @@ class GameLogic {
     if (state.essence < item.cost) return state;
 
     final md = state.metaDepth;
-    final atCap = switch (id) {
-      'stash_slot' => md.stashBonusSlots >= 20,
-      'combine_luck' => md.combinatorLuck >= 5,
-      'torch_keep' => md.torchKeepLevel >= 10,
-      'gh_cdr' => md.godHandCdLevel >= 8,
-      'roster_cap' => md.petRosterCapBonus >= 10,
-      'loadout_slot' => md.loadoutBonusSlots >= 2,
-      'flask_discount' => md.marketDiscountLevel >= 5,
-      'filter_span' => md.filterSpanLevel >= 5,
-      'offline_ledger' => md.offlineHighlightBonus >= 3,
-      'legacy_spark' => md.legacyPoints >= 20,
-      'daily_essence' => md.dailyEssenceBonusLevel >= 5,
-      'gauntlet_gold' => md.gauntletGoldBonusLevel >= 5,
-      _ => false,
-    };
-    if (atCap) return state;
+    if (PrestigeShopCatalog.atCap(md, id)) return state;
 
     var nextMd = switch (id) {
       'stash_slot' => md.copyWith(
@@ -1741,12 +1763,12 @@ class GameLogic {
       'offline_ledger' => md.copyWith(
         offlineHighlightBonus: min(3, md.offlineHighlightBonus + 1),
       ),
-      'legacy_spark' => md.copyWith(legacyPoints: min(20, md.legacyPoints + 1)),
+      'legacy_spark' => md.copyWith(legacyPoints: min(30, md.legacyPoints + 1)),
       'daily_essence' => md.copyWith(
-        dailyEssenceBonusLevel: min(5, md.dailyEssenceBonusLevel + 1),
+        dailyEssenceBonusLevel: min(10, md.dailyEssenceBonusLevel + 1),
       ),
       'gauntlet_gold' => md.copyWith(
-        gauntletGoldBonusLevel: min(5, md.gauntletGoldBonusLevel + 1),
+        gauntletGoldBonusLevel: min(10, md.gauntletGoldBonusLevel + 1),
       ),
       _ => md,
     };
@@ -1969,15 +1991,26 @@ class GameLogic {
 
   static int recommendedForgeUpgrade(GameState state) {
     // Pick the forge track most behind relative to cost (equal combat tiers).
+    // Skip CRIT once the party is at the Auto Equip fade (sheet 70+ / 75 cap).
+    final skipCrit = _partyMeanCritAtCap(state);
     final scores = <(int, double)>[
       for (final type in PartyUpgradeType.values)
-        (
-          type.index,
-          forgeTrackTier(state, type) / max(1, upgradeCostFor(state, type)),
-        ),
+        if (!(skipCrit && type == PartyUpgradeType.crit))
+          (
+            type.index,
+            forgeTrackTier(state, type) / max(1, upgradeCostFor(state, type)),
+          ),
     ];
     scores.sort((a, b) => a.$2.compareTo(b.$2));
     return scores.first.$1;
+  }
+
+  static bool _partyMeanCritAtCap(GameState state) {
+    if (state.heroes.isEmpty) return false;
+    final mean =
+        state.heroes.fold<int>(0, (s, h) => s + state.effectiveHeroCrit(h)) /
+        state.heroes.length;
+    return mean >= GearService.critScoreSoftSheet;
   }
 
   static int levelsUntilSoftcap(GameState state) {
@@ -3391,6 +3424,7 @@ enum PartyUpgradeType {
   moveSpeed,
   attackSpeed,
   crit,
+  mastery,
 }
 
 /// How much wallet gold a FORGE GOLD row spends when tapped.

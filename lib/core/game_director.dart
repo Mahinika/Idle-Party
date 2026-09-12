@@ -408,6 +408,7 @@ class GameDirector extends ChangeNotifier {
     PartyUpgradeType.moveSpeed => 'MOVE',
     PartyUpgradeType.attackSpeed => 'HASTE',
     PartyUpgradeType.crit => 'CRIT',
+    PartyUpgradeType.mastery => 'MASTERY',
   };
 
   Future<void> boot({bool deferCombatLoop = false}) async {
@@ -2770,6 +2771,7 @@ class GameDirector extends ChangeNotifier {
       'gold' => _state.sanctuaryGoldLevel,
       'power' => _state.sanctuaryPowerLevel,
       'vitality' => _state.sanctuaryVitalityLevel,
+      'defense' => _state.sanctuaryDefenseLevel,
       'xp' => _state.metaDepth.sanctuaryXpLevel,
       _ => -1,
     };
@@ -2778,6 +2780,7 @@ class GameDirector extends ChangeNotifier {
       'gold' => _state.sanctuaryGoldLevel,
       'power' => _state.sanctuaryPowerLevel,
       'vitality' => _state.sanctuaryVitalityLevel,
+      'defense' => _state.sanctuaryDefenseLevel,
       'xp' => _state.metaDepth.sanctuaryXpLevel,
       _ => -1,
     };
@@ -2787,6 +2790,7 @@ class GameDirector extends ChangeNotifier {
         'gold' => _state.metaDepth.sanctuaryGoldPrestige,
         'power' => _state.metaDepth.sanctuaryPowerPrestige,
         'vitality' => _state.metaDepth.sanctuaryVitalityPrestige,
+        'defense' => _state.metaDepth.sanctuaryDefensePrestige,
         'xp' => _state.metaDepth.sanctuaryXpPrestige,
         _ => 0,
       };
@@ -2827,6 +2831,7 @@ class GameDirector extends ChangeNotifier {
       'gold' => _state.sanctuaryGoldLevel,
       'power' => _state.sanctuaryPowerLevel,
       'vitality' => _state.sanctuaryVitalityLevel,
+      'defense' => _state.sanctuaryDefenseLevel,
       'xp' => _state.metaDepth.sanctuaryXpLevel,
       _ => -1,
     };
@@ -2843,6 +2848,7 @@ class GameDirector extends ChangeNotifier {
       'gold' => _state.sanctuaryGoldLevel,
       'power' => _state.sanctuaryPowerLevel,
       'vitality' => _state.sanctuaryVitalityLevel,
+      'defense' => _state.sanctuaryDefenseLevel,
       'xp' => _state.metaDepth.sanctuaryXpLevel,
       _ => beforeLevel,
     };
@@ -2926,23 +2932,7 @@ class GameDirector extends ChangeNotifier {
     final catalog = PrestigeShopCatalog.byId(id);
     if (catalog == null || !catalog.listedInShop) return;
     final before = _state.essence;
-    final md = _state.metaDepth;
-    final atCap = switch (id) {
-      'stash_slot' => md.stashBonusSlots >= 20,
-      'combine_luck' => md.combinatorLuck >= 5,
-      'torch_keep' => md.torchKeepLevel >= 10,
-      'gh_cdr' => md.godHandCdLevel >= 8,
-      'roster_cap' => md.petRosterCapBonus >= 10,
-      'loadout_slot' => md.loadoutBonusSlots >= 2,
-      'flask_discount' => md.marketDiscountLevel >= 5,
-      'filter_span' => md.filterSpanLevel >= 5,
-      'offline_ledger' => md.offlineHighlightBonus >= 3,
-      'legacy_spark' => md.legacyPoints >= 20,
-      'daily_essence' => md.dailyEssenceBonusLevel >= 5,
-      'gauntlet_gold' => md.gauntletGoldBonusLevel >= 5,
-      _ => false,
-    };
-    if (atCap) {
+    if (PrestigeShopCatalog.atCap(_state.metaDepth, id)) {
       showToast('At cap', life: 1.8);
       return;
     }

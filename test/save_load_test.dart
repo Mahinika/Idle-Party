@@ -24,6 +24,8 @@ void main() {
       attackBonus: 4,
       defenseBonus: 3,
       vitalityBonus: 12,
+      masteryBonus: 8,
+      sanctuaryDefenseLevel: 3,
       highestFloorCleared: 3,
       ascensionLevel: 1,
       godHandLevel: 2,
@@ -61,6 +63,8 @@ void main() {
     expect(decoded.attackBonus, 4);
     expect(decoded.defenseBonus, 3);
     expect(decoded.vitalityBonus, 12);
+    expect(decoded.masteryBonus, 8);
+    expect(decoded.sanctuaryDefenseLevel, 3);
     expect(decoded.highestFloorCleared, 3);
     expect(decoded.ascensionLevel, 1);
     expect(decoded.godHandLevel, 2);
@@ -89,6 +93,21 @@ void main() {
       !decoded.lastUpdated.isBefore(state.lastUpdated),
       isTrue,
     );
+  });
+
+  test('legacy saves default forge mastery and Aegis track to 0', () {
+    final json = GameLogic.createInitialState(
+      now: DateTime(2026, 9, 12),
+    ).toJson();
+    json.remove('masteryBonus');
+    json.remove('sanctuaryDefenseLevel');
+    final meta = Map<String, dynamic>.from(json['metaDepth'] as Map);
+    meta.remove('sanctuaryDefensePrestige');
+    json['metaDepth'] = meta;
+    final loaded = GameLogic.stateFromJson(json);
+    expect(loaded.masteryBonus, 0);
+    expect(loaded.sanctuaryDefenseLevel, 0);
+    expect(loaded.metaDepth.sanctuaryDefensePrestige, 0);
   });
 
   test('equipped gear and stash survive serialization', () {

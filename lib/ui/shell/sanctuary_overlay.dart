@@ -19,6 +19,7 @@ class SanctuaryOverlay extends StatelessWidget {
     'gold' => state.metaDepth.sanctuaryGoldPrestige,
     'power' => state.metaDepth.sanctuaryPowerPrestige,
     'vitality' => state.metaDepth.sanctuaryVitalityPrestige,
+    'defense' => state.metaDepth.sanctuaryDefensePrestige,
     'xp' => state.metaDepth.sanctuaryXpPrestige,
     _ => 0,
   };
@@ -27,6 +28,7 @@ class SanctuaryOverlay extends StatelessWidget {
     'gold' => state.sanctuaryGoldLevel,
     'power' => state.sanctuaryPowerLevel,
     'vitality' => state.sanctuaryVitalityLevel,
+    'defense' => state.sanctuaryDefenseLevel,
     'xp' => state.metaDepth.sanctuaryXpLevel,
     _ => 0,
   };
@@ -35,6 +37,7 @@ class SanctuaryOverlay extends StatelessWidget {
     'gold' => GameTheme.torch,
     'power' => GameTheme.hudHpDamage,
     'vitality' => GameTheme.mossLit,
+    'defense' => GameTheme.rarityRare,
     'xp' => GameTheme.rarityRare,
     _ => GameTheme.parchmentDim,
   };
@@ -54,11 +57,17 @@ class SanctuaryOverlay extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         if (campOpen)
-          for (final track in <String>['gold', 'power', 'vitality', 'xp'])
+          for (final track in <String>[
+            'gold',
+            'power',
+            'vitality',
+            'defense',
+            'xp',
+          ])
             _campTrackCard(context, state, track)
         else
           Text(
-            'War Altar, Life Well, and Lore Font appear here once Essence unlocks.',
+            'War Altar, Life Well, Aegis, and Lore Font appear here once Essence unlocks.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
         const SizedBox(height: 12),

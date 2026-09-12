@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/combat_ratings.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
+import 'package:idle_party/models/spec_mastery.dart';
 import 'package:idle_party/models/stats.dart';
 
 void main() {
@@ -148,5 +149,11 @@ void main() {
     );
     expect(combat, lessThan(full));
     expect(paused, lessThan(combat));
+  });
+
+  test('L100 mastery rating is not dust', () {
+    final p = SpecMastery.masteryPointsFrom(60, 100);
+    expect(p, greaterThan(20));
+    expect(1.0 + p * 0.002, closeTo(1.06, 0.01));
   });
 }

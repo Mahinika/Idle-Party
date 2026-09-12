@@ -262,6 +262,14 @@ class EquipmentFactory {
     );
   }
 
+  /// Crit % from a loot secondary / affix amount. 1:1 used to overshoot the
+  /// 75 combat cap on a full set; half keeps endgame sheet near ~70% before
+  /// GOLD CRIT.
+  static int lootCritPercent(int amount) {
+    if (amount <= 0) return 0;
+    return max(1, (amount + 1) ~/ 2);
+  }
+
   static ArmorType armorTypeFor(
     HeroRole bias,
     int level, {
@@ -976,7 +984,7 @@ class EquipmentFactory {
       intel += s.intel;
       spi += s.spi;
       sp += s.sp;
-      crit += s.crit;
+      crit += lootCritPercent(s.crit);
       aspd += s.aspd;
     }
 
@@ -1025,7 +1033,7 @@ class EquipmentFactory {
       final pick = pool.removeAt(0);
       switch (pick) {
         case 'crit':
-          if (crit <= 0) crit = secAmt;
+          if (crit <= 0) crit = lootCritPercent(secAmt);
         case 'mastery':
           if (mastery <= 0) mastery = secAmt;
         case 'haste':

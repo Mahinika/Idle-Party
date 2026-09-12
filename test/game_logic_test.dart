@@ -320,6 +320,7 @@ void main() {
         PartyUpgradeType.moveSpeed => GameLogic.upgradeMoveSpeed(state),
         PartyUpgradeType.attackSpeed => GameLogic.upgradeAttackSpeed(state),
         PartyUpgradeType.crit => GameLogic.upgradeCrit(state),
+        PartyUpgradeType.mastery => GameLogic.upgradeMastery(state),
       };
     }
     for (final type in PartyUpgradeType.values) {
@@ -336,6 +337,10 @@ void main() {
     expect(GameLogic.alVitalityPerLevel, GameLogic.alAttackPerLevel * 12);
     expect(GameLogic.ascendBlessingDef, GameLogic.ascendBlessingAtk * 4);
     expect(GameLogic.ascendBlessingVit, GameLogic.ascendBlessingAtk * 12);
+    expect(
+      GameLogic.sanctuaryDefensePerLevel,
+      GameLogic.sanctuaryPowerPerLevel * 4,
+    );
 
     final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 17));
     var state = seeded.copyWith(essence: 200);
@@ -384,12 +389,14 @@ void main() {
           moveSpeedBonus: 10,
           attackSpeedBonus: 8,
           critBonus: 5,
+          masteryBonus: 12,
         );
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 4));
     expect(ascended.attackBonus, 0);
     expect(ascended.moveSpeedBonus, 0);
     expect(ascended.attackSpeedBonus, 0);
     expect(ascended.critBonus, 0);
+    expect(ascended.masteryBonus, 0);
   });
 
   test('recommendedDungeonId prefers frontier; ascend updates dungeonId', () {
@@ -708,6 +715,7 @@ void main() {
     expect(ascended.moveSpeedBonus, 0);
     expect(ascended.attackSpeedBonus, 0);
     expect(ascended.critBonus, 0);
+    expect(ascended.masteryBonus, 0);
     expect(ascended.gold, 0);
   });
 
@@ -3691,6 +3699,69 @@ void main() {
       reason: 'BiS fill must not auto-sell on pickup',
     );
     expect(after.state.gearStash.any((g) => g.id == upgrade.id), isTrue);
+  });
+
+  test('relics upgrade to T6 then stop', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12))
+        .copyWith(essence: 2000);
+    state = GameLogic.unlockRelic(state, GameLogic.warBannerRelic);
+    expect(state.metaDepth.relicTierOf(GameLogic.warBannerRelic), 1);
+    for (var i = 0; i < GameLogic.relicMaxTier - 1; i++) {
+      state = GameLogic.upgradeRelicTier(state, GameLogic.warBannerRelic);
+    }
+    expect(
+      state.metaDepth.relicTierOf(GameLogic.warBannerRelic),
+      GameLogic.relicMaxTier,
+    );
+    expect(state.relicAttackBonus, GameLogic.relicAttackPerTier * 6);
+    final blocked = GameLogic.upgradeRelicTier(
+      state,
+      GameLogic.warBannerRelic,
+    );
+    expect(blocked.essence, state.essence);
+    expect(
+      blocked.metaDepth.relicTierOf(GameLogic.warBannerRelic),
+      GameLogic.relicMaxTier,
+    );
+  });
+
+  test('GOLD BEST skips CRIT when party sheet is at the 70 fade', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12))
+        .copyWith(gold: 500000);
+    state = GameLogic.upgradeSpendAllEvenly(state);
+    final meanCrit =
+        state.heroes.fold<int>(0, (s, h) => s + state.effectiveHeroCrit(h)) /
+        state.heroes.length;
+    expect(meanCrit, greaterThanOrEqualTo(70));
+    // Leave CRIT one buy behind the other tracks so BEST would pick it
+    // without the 70 fade skip.
+    state = state.copyWith(
+      attackBonus: state.attackBonus + GameLogic.forgeAttackGain,
+      defenseBonus: state.defenseBonus + GameLogic.forgeDefenseGain,
+      vitalityBonus: state.vitalityBonus + GameLogic.forgeVitalityGain,
+      moveSpeedBonus: state.moveSpeedBonus + GameLogic.forgeMoveGain,
+      attackSpeedBonus: state.attackSpeedBonus + GameLogic.forgeHasteGain,
+      masteryBonus: state.masteryBonus + GameLogic.forgeMasteryGain,
+    );
+    expect(
+      GameLogic.recommendedForgeUpgrade(state),
+      isNot(PartyUpgradeType.crit.index),
+    );
+  });
+
+  test('GOLD MASTERY track buys rating and CAMP Aegis buys DEF', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
+    final cost = GameLogic.upgradeCostFor(state, PartyUpgradeType.mastery);
+    state = state.copyWith(gold: cost, essence: 500);
+    final hero = state.heroes.first;
+    final beforeDef = state.effectiveHeroDefense(hero);
+    state = GameLogic.upgradeMastery(state);
+    expect(state.masteryBonus, GameLogic.forgeMasteryGain);
+    expect(state.gold, 0);
+
+    state = GameLogic.upgradeSanctuary(state, 'defense');
+    expect(state.sanctuaryDefenseLevel, 1);
+    expect(state.effectiveHeroDefense(hero), greaterThan(beforeDef));
   });
 }
 

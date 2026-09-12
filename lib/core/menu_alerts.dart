@@ -300,6 +300,7 @@ class MenuAlerts {
     for (final level in <int>[
       state.sanctuaryPowerLevel,
       state.sanctuaryVitalityLevel,
+      state.sanctuaryDefenseLevel,
       state.metaDepth.sanctuaryXpLevel,
     ]) {
       if (level < lowest) lowest = level;

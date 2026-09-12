@@ -64,6 +64,7 @@ class GameState {
     this.moveSpeedBonus = 0,
     this.attackSpeedBonus = 0,
     this.critBonus = 0,
+    this.masteryBonus = 0,
     required this.recentLoot,
     required this.unlockedRelics,
     required this.currentRoom,
@@ -83,6 +84,7 @@ class GameState {
     this.sanctuaryGoldLevel = 0,
     this.sanctuaryPowerLevel = 0,
     this.sanctuaryVitalityLevel = 0,
+    this.sanctuaryDefenseLevel = 0,
     this.metaDepth = MetaDepthState.empty,
     this.inDungeon = false,
     this.inGauntlet = false,
@@ -202,6 +204,9 @@ class GameState {
   /// Forge crit-chance points (≈% before soft-cap). Reset on Ascend.
   final int critBonus;
 
+  /// Forge mastery rating. Reset on Ascend.
+  final int masteryBonus;
+
   final List<LootDrop> recentLoot;
   final List<String> unlockedRelics;
   final DungeonRoom currentRoom;
@@ -249,6 +254,7 @@ class GameState {
   final int sanctuaryGoldLevel;
   final int sanctuaryPowerLevel;
   final int sanctuaryVitalityLevel;
+  final int sanctuaryDefenseLevel;
 
   /// Meta-depth prestige progress (survives Ascend).
   final MetaDepthState metaDepth;
@@ -532,6 +538,11 @@ class GameState {
       softForgePercent(sanctuaryPowerLevel, softAt: 40).round() +
       metaDepth.sanctuaryPowerPrestige;
 
+  /// Aegis: +4 DEF per level (matches War Altar +1 ATK), +4 DEF per prestige.
+  int get sanctuaryDefenseBonus =>
+      softForgePercent(sanctuaryDefenseLevel * 4, softAt: 160).round() +
+      metaDepth.sanctuaryDefensePrestige * 4;
+
   /// Life Well: +12 HP per level (matches War Altar +1 ATK), +12 HP per prestige.
   int get sanctuaryVitalityBonus =>
       softForgePercent(sanctuaryVitalityLevel * 12, softAt: 480).round() +
@@ -732,6 +743,7 @@ class GameState {
       defenseBonus +
       relicDefenseBonus +
       ascensionDefenseBonus +
+      sanctuaryDefenseBonus +
       soulboundDefenseBonus +
       soulboundRefineDefenseBonus +
       ascendBlessingDefenseBonus;
@@ -855,7 +867,8 @@ class GameState {
       gearSpellPower:
           apexOnly ? fold((i) => i.spellPowerBonus) : hero.gearSpellPowerBonus,
       gearMasteryRating:
-          apexOnly ? fold((i) => i.masteryBonus) : hero.gearMasteryBonus,
+          (apexOnly ? fold((i) => i.masteryBonus) : hero.gearMasteryBonus) +
+          masteryBonus,
       gearArmor: apexOnly ? fold((i) => i.resolvedArmor) : hero.gearArmorBonus,
       gearCrit: apexOnly ? fold((i) => i.critChanceBonus) : hero.gearCritChance,
       gearFlatAttack:
@@ -983,6 +996,7 @@ class GameState {
     int? moveSpeedBonus,
     int? attackSpeedBonus,
     int? critBonus,
+    int? masteryBonus,
     List<LootDrop>? recentLoot,
     List<String>? unlockedRelics,
     DungeonRoom? currentRoom,
@@ -1002,6 +1016,7 @@ class GameState {
     int? sanctuaryGoldLevel,
     int? sanctuaryPowerLevel,
     int? sanctuaryVitalityLevel,
+    int? sanctuaryDefenseLevel,
     MetaDepthState? metaDepth,
     bool? inDungeon,
     bool? inGauntlet,
@@ -1104,6 +1119,7 @@ class GameState {
       moveSpeedBonus: moveSpeedBonus ?? this.moveSpeedBonus,
       attackSpeedBonus: attackSpeedBonus ?? this.attackSpeedBonus,
       critBonus: critBonus ?? this.critBonus,
+      masteryBonus: masteryBonus ?? this.masteryBonus,
       recentLoot: recentLoot ?? this.recentLoot,
       unlockedRelics: unlockedRelics ?? this.unlockedRelics,
       currentRoom: currentRoom ?? this.currentRoom,
@@ -1128,6 +1144,8 @@ class GameState {
       sanctuaryPowerLevel: sanctuaryPowerLevel ?? this.sanctuaryPowerLevel,
       sanctuaryVitalityLevel:
           sanctuaryVitalityLevel ?? this.sanctuaryVitalityLevel,
+      sanctuaryDefenseLevel:
+          sanctuaryDefenseLevel ?? this.sanctuaryDefenseLevel,
       metaDepth: metaDepth ?? this.metaDepth,
       inDungeon: inDungeon ?? this.inDungeon,
       inGauntlet: inGauntlet ?? this.inGauntlet,
@@ -1269,6 +1287,7 @@ class GameState {
     'moveSpeedBonus': moveSpeedBonus,
     'attackSpeedBonus': attackSpeedBonus,
     'critBonus': critBonus,
+    'masteryBonus': masteryBonus,
     'recentLoot': recentLoot.map((loot) => loot.toJson()).toList(),
     'unlockedRelics': unlockedRelics,
     'currentRoom': currentRoom.toJson(),
@@ -1290,6 +1309,7 @@ class GameState {
     'sanctuaryGoldLevel': sanctuaryGoldLevel,
     'sanctuaryPowerLevel': sanctuaryPowerLevel,
     'sanctuaryVitalityLevel': sanctuaryVitalityLevel,
+    'sanctuaryDefenseLevel': sanctuaryDefenseLevel,
     'metaDepth': metaDepth.toJson(),
     'inDungeon': inDungeon,
     'inGauntlet': inGauntlet,
@@ -1482,6 +1502,7 @@ class GameState {
       moveSpeedBonus: _jsonInt(json['moveSpeedBonus']),
       attackSpeedBonus: _jsonInt(json['attackSpeedBonus']),
       critBonus: _jsonInt(json['critBonus']),
+      masteryBonus: _jsonInt(json['masteryBonus']),
       recentLoot: recentLootJson == null
           ? <LootDrop>[]
           : recentLootJson
@@ -1530,6 +1551,7 @@ class GameState {
       sanctuaryGoldLevel: _jsonInt(json['sanctuaryGoldLevel']),
       sanctuaryPowerLevel: _jsonInt(json['sanctuaryPowerLevel']),
       sanctuaryVitalityLevel: _jsonInt(json['sanctuaryVitalityLevel']),
+      sanctuaryDefenseLevel: _jsonInt(json['sanctuaryDefenseLevel']),
       metaDepth: metaDepth,
       inDungeon: (json['inDungeon'] as bool?) ?? false,
       inGauntlet: (json['inGauntlet'] as bool?) ?? false,

@@ -139,9 +139,9 @@ abstract final class PrestigeShopCatalog {
     'flask_discount' => meta.marketDiscountLevel >= 5,
     'filter_span' => meta.filterSpanLevel >= 5,
     'offline_ledger' => meta.offlineHighlightBonus >= 3,
-    'legacy_spark' => meta.legacyPoints >= 20,
-    'daily_essence' => meta.dailyEssenceBonusLevel >= 5,
-    'gauntlet_gold' => meta.gauntletGoldBonusLevel >= 5,
+    'legacy_spark' => meta.legacyPoints >= 30,
+    'daily_essence' => meta.dailyEssenceBonusLevel >= 10,
+    'gauntlet_gold' => meta.gauntletGoldBonusLevel >= 10,
     _ => false,
   };
 
@@ -217,6 +217,7 @@ class MetaDepthState {
     this.sanctuaryPowerPrestige = 0,
     this.sanctuaryVitalityPrestige = 0,
     this.sanctuaryXpPrestige = 0,
+    this.sanctuaryDefensePrestige = 0,
     this.stashBonusSlots = 0,
     this.combinatorLuck = 0,
     this.godHandCdLevel = 0,
@@ -337,6 +338,7 @@ class MetaDepthState {
   final int sanctuaryPowerPrestige;
   final int sanctuaryVitalityPrestige;
   final int sanctuaryXpPrestige;
+  final int sanctuaryDefensePrestige;
   final int stashBonusSlots;
   final int combinatorLuck;
   final int godHandCdLevel;
@@ -594,6 +596,7 @@ class MetaDepthState {
     int? sanctuaryPowerPrestige,
     int? sanctuaryVitalityPrestige,
     int? sanctuaryXpPrestige,
+    int? sanctuaryDefensePrestige,
     int? stashBonusSlots,
     int? combinatorLuck,
     int? godHandCdLevel,
@@ -716,6 +719,8 @@ class MetaDepthState {
       sanctuaryVitalityPrestige:
           sanctuaryVitalityPrestige ?? this.sanctuaryVitalityPrestige,
       sanctuaryXpPrestige: sanctuaryXpPrestige ?? this.sanctuaryXpPrestige,
+      sanctuaryDefensePrestige:
+          sanctuaryDefensePrestige ?? this.sanctuaryDefensePrestige,
       stashBonusSlots: stashBonusSlots ?? this.stashBonusSlots,
       combinatorLuck: combinatorLuck ?? this.combinatorLuck,
       godHandCdLevel: godHandCdLevel ?? this.godHandCdLevel,
@@ -854,6 +859,7 @@ class MetaDepthState {
     'sanctuaryPowerPrestige': sanctuaryPowerPrestige,
     'sanctuaryVitalityPrestige': sanctuaryVitalityPrestige,
     'sanctuaryXpPrestige': sanctuaryXpPrestige,
+    'sanctuaryDefensePrestige': sanctuaryDefensePrestige,
     'stashBonusSlots': stashBonusSlots,
     'combinatorLuck': combinatorLuck,
     'godHandCdLevel': godHandCdLevel,
@@ -987,6 +993,8 @@ class MetaDepthState {
       sanctuaryVitalityPrestige:
           (json['sanctuaryVitalityPrestige'] as num?)?.toInt() ?? 0,
       sanctuaryXpPrestige: (json['sanctuaryXpPrestige'] as num?)?.toInt() ?? 0,
+      sanctuaryDefensePrestige:
+          (json['sanctuaryDefensePrestige'] as num?)?.toInt() ?? 0,
       stashBonusSlots: (json['stashBonusSlots'] as num?)?.toInt() ?? 0,
       combinatorLuck: (json['combinatorLuck'] as num?)?.toInt() ?? 0,
       godHandCdLevel: (json['godHandCdLevel'] as num?)?.toInt() ?? 0,

@@ -108,7 +108,7 @@ class _RelicCard extends StatelessWidget {
                   ? null
                   : () => director.unlockRelic(relicId),
             ),
-          ] else if (tier < 3) ...[
+          ] else if (tier < GameLogic.relicMaxTier) ...[
             const SizedBox(height: 6),
             GameButton(
               label: nextPayout.isEmpty
@@ -123,7 +123,7 @@ class _RelicCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                'T3 · MAX',
+                'T${GameLogic.relicMaxTier} · MAX',
                 style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
               ),
             ),

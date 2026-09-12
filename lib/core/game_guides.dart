@@ -164,8 +164,8 @@ abstract final class GameGuides {
           '• BAG: view and equip stash gear. CLEAN BAG sells gold then scraps essence using FILTERS.\n'
           '• Stats: plate wants Strength, leather/mail damage wants Agility, '
           'casters want Intellect and Spell Power. Spirit is mana, not damage. '
-          'Secondaries are Crit / Haste / Mp5 — new drops keep ≤2 (no Move). '
-          'Healers roll Mp5 then Crit (Haste last — heals do not haste). '
+          'Secondaries are Crit / Mastery / Mp5 — new drops keep ≤2 (no Move). '
+          'Healers roll Mp5 then Crit (Haste is affix-only — heals do not haste). '
           'Near 75% crit, Auto Equip stops chasing more Crit.\n'
           '• Armor type is a hard gate: Warrior / Paladin / DK wear plate; '
           'Hunter starts leather then mail at 40; Shaman mail; Rogue leather; '
@@ -223,7 +223,7 @@ abstract final class GameGuides {
       title: 'GOLD',
       body:
           'GOLD tab — spend wallet gold on run power and the market.\n\n'
-          '• TRACKS: party ATK/DEF/STA/MOVE/HASTE/CRIT. '
+          '• TRACKS: party ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY. '
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
           'SPEND ALL · EVEN to split gold round-robin across every track. '
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}). '
@@ -302,12 +302,12 @@ abstract final class GameGuides {
       title: 'ESSENCE',
       body:
           'ESSENCE tab. Four places: TRACKS, KEEP, RELICS, PETS.\n\n'
-          '• TRACKS: Gold Find, War Altar, Life Well, Lore Font — spend essence '
+          '• TRACKS: Gold Find, War Altar, Life Well, Aegis, Lore Font — spend essence '
           'on lasting rates/power. Optional reset from Lv12 keeps a small forever bonus.\n'
           '• KEEP: God Hand damage/CD/style, Ascend Blessing readout, Star Nodes, permanent QoL buys '
           '(AL-gated), constellation at AL20, optional REBORN. '
           'Not the bottom-tab SHOP (real-money convenience).\n'
-          '• RELICS: party auras (ATK / DEF / STA / loot).\n'
+          '• RELICS: party auras (ATK / DEF / STA / loot), up to T6.\n'
           '• PETS: hatch and level pets when unlocked.\n'
           '• Everything here survives Ascend.\n'
           '• Invest early — tracks compound over many runs.',
