@@ -13,6 +13,13 @@ void main() {
     expect(GreaterRift.threatMul(10), greaterThan(Rift.threatMul(10)));
     expect(GreaterRift.successEssence(8), greaterThan(Rift.successEssence(8)));
     expect(GreaterRift.parTimeMs(12), lessThan(Rift.parTimeMs(12)));
+    expect(GreaterRift.parTimeMs(1), lessThan(Rift.parTimeMs(1)));
+    expect(GreaterRift.parTimeMs(20), greaterThanOrEqualTo(58000));
+    final grKps = GreaterRift.killTarget(20) /
+        (GreaterRift.parTimeMs(20) / 1000);
+    final farmKps =
+        Rift.killTarget(20) / (Rift.parTimeMs(20) / 1000);
+    expect(grKps, greaterThan(farmKps));
   });
 
   test('Greater Rift enter requires party Lv60', () {

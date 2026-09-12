@@ -342,6 +342,8 @@ abstract final class GameGuides {
           'Mothveil timer, harder than Farm Rift.\n\n'
           '• Timed kill quota on a tougher ladder (GR1–GR20).\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear.\n'
+          '• GR20 keeps about a minute on the clock — ranked is more kills and '
+          'tougher packs, not a shorter fuse.\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
           'Ranked GR board wires when the Console ID is pasted.\n'

@@ -3734,7 +3734,7 @@ class ClassKits {
       resourceCost: 24,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 1.05,
+      coeff: 0.98,
       boltStyle: SpellBoltStyle.lightning,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.lightning,

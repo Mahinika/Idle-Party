@@ -27,7 +27,9 @@ abstract final class GreaterRift {
 
   static int parTimeMs(int tier) {
     final t = clampTier(tier);
-    return max(40000, 110000 - t * 3200); // tighter than farm Rift
+    // Tighter than farm through mid tiers. GR20 keeps ~62s — ranked is extra
+    // kills + threat, not a 46s blender.
+    return max(58000, 112000 - t * 2500);
   }
 
   /// ~1.5× farm Rift threat at the same tier band.

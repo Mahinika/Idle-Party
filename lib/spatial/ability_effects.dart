@@ -599,7 +599,7 @@ abstract final class AbilityEffectRunner {
         hero.kitOutMul *= 1.16;
         hero.kitInMul *= 1.04;
       case AbilityId.elementalFocus:
-        hero.kitOutMul *= 1.20;
+        hero.kitOutMul *= 1.14;
         hero.kitHasteMul *= 1.10;
       case AbilityId.arcanePowerPassive:
         hero.kitOutMul *= 1.12;

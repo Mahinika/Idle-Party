@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.146**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.147**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -184,6 +184,7 @@ normal zone runs — dial under hub **KEY**. Before party max level there is no 
 
 **Greater Rifts** (same gate): harder timed ladder in **Mothveil Hollow**,
 no mid-run gear, larger clear payout; season PB on Play Games BOARDS.
+GR20 keeps ~62s on the clock (kills + threat, not a 46s fuse).
 `metaDepth.grBestTier` / `seasonBestGrTier` survive Ascend.
 
 **Ashen Crown** (same gate): weekly ticket solo boss (ember art); wipe/leave
