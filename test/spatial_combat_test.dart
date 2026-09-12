@@ -822,4 +822,59 @@ void main() {
     expect(world.awaitingExit, isTrue);
     // No "GO" floater — CLEAR corner + HOLD already say what's next.
   });
+
+  test('brass boss telegraphs WIND-UP then SLAM', () {
+    final seen = _bossTellTexts('brass');
+    expect(seen.contains('WIND-UP'), isTrue);
+    expect(seen.contains('SLAM'), isTrue);
+    expect(seen.contains('PULSE'), isFalse);
+  });
+
+  test('tide boss shouts WAVE instead of generic PULSE', () {
+    final seen = _bossTellTexts('tide');
+    expect(seen.contains('WAVE'), isTrue);
+    expect(seen.contains('PULSE'), isFalse);
+  });
+}
+
+Set<String> _bossTellTexts(String dungeonId) {
+  var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
+  final room = DungeonRoom(
+    floorNumber: 5,
+    roomIndex: 0,
+    type: RoomType.boss,
+    enemyLevel: 10,
+    enemyCount: 1,
+  );
+  final boss = GameLogic.createEnemyGroup(room, dungeonId: dungeonId).first;
+  expect(boss.role, EnemyRole.boss);
+  state = state.copyWith(
+    dungeonId: dungeonId,
+    currentRoom: room,
+    dungeonFloor: [room],
+    enemies: [boss],
+    inDungeon: true,
+  );
+  var world = SpatialCombat.build(state);
+  final body = world.enemies.first;
+  body
+    ..dormant = false
+    ..hp = 99999
+    ..maxHp = 99999;
+  for (final h in world.heroes) {
+    h
+      ..attack = 0
+      ..hp = 99999
+      ..maxHp = 99999
+      ..x = body.x
+      ..y = body.y;
+  }
+  final seen = <String>{};
+  for (var i = 0; i < 90; i++) {
+    final step = SpatialCombat.step(world, state, dt: 0.05);
+    world = step.world;
+    state = step.state;
+    seen.addAll(world.floaters.map((f) => f.text));
+  }
+  return seen;
 }

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../core/audio_assets.dart';
 import '../core/blessing_constellation.dart';
 import '../core/combat_feel.dart';
+import '../core/enemy_flavor.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/keystone.dart';
@@ -30,6 +31,7 @@ part 'hero_focus.dart';
 part 'combat_presence.dart';
 part 'spell_vfx.dart';
 part 'combat_pathing.dart';
+part 'enemy_specials.dart';
 
 enum SpatialTeam { hero, enemy }
 
@@ -378,6 +380,12 @@ class SpatialActor {
   /// Periodic boss/elite special ability cooldown.
   double specialCd = 0;
 
+  /// Boss wind-up remaining (Mainspring SLAM telegraph).
+  double telegraphTimer = 0;
+
+  /// When true, the next zero [telegraphTimer] fires the wound-up slam.
+  bool telegraphSlam = false;
+
   /// Sunder Armor stacks (max 5) while [sunderTimer] > 0.
   int sunderStacks = 0;
   double sunderTimer = 0;
@@ -704,6 +712,7 @@ class SpatialWorld {
     this.bossBannerTimer = 0,
     this.bossBannerName = '',
     this.afkAssist = false,
+    this.dungeonId = 'sandy',
     this.combatElapsed = 0,
     this.petMitigateFlat = 0,
     this.petHealBoost = 0,
@@ -740,6 +749,9 @@ class SpatialWorld {
 
   /// When true, enemy outgoing damage is softened (offline AFK sim).
   final bool afkAssist;
+
+  /// Zone id for unique boss tells (Sandy SLAM, Tide WAVE, Brass WIND-UP).
+  final String dungeonId;
 
   /// Mirrors [GameState.reducedVfx] for the current step (Full vs Lite/Minimal).
   bool reducedVfx = false;
@@ -1295,6 +1307,9 @@ abstract final class SpatialCombat {
     }
     if (a.specialCd > 0) {
       a.specialCd = math.max(0, a.specialCd - dt);
+    }
+    if (a.telegraphTimer > 0) {
+      a.telegraphTimer = math.max(0, a.telegraphTimer - dt);
     }
     if (a.sunderTimer > 0) {
       a.sunderTimer = math.max(0, a.sunderTimer - dt);
@@ -2144,6 +2159,7 @@ abstract final class SpatialCombat {
       clearedChambers: <int>{0},
       pets: pets,
       afkAssist: afkAssist ?? false,
+      dungeonId: state.dungeonId,
       petMitigateFlat: state.petMitigateFlat,
       petHealBoost: state.petHealBoost,
       bossBannerTimer: room.type == RoomType.boss ? 2.4 : 0,
@@ -2397,6 +2413,7 @@ abstract final class SpatialCombat {
       bossBannerTimer: world.bossBannerTimer,
       bossBannerName: world.bossBannerName,
       afkAssist: world.afkAssist,
+      dungeonId: world.dungeonId,
       combatElapsed: world.combatElapsed,
       petMitigateFlat: state.petMitigateFlat,
       petHealBoost: state.petHealBoost,
@@ -2475,6 +2492,10 @@ abstract final class SpatialCombat {
     to.focusEnemyId = from.focusEnemyId;
     to.focusLockTimer = from.focusLockTimer;
     to.attackSlowTimer = from.attackSlowTimer;
+    to.enrageTimer = from.enrageTimer;
+    to.specialCd = from.specialCd;
+    to.telegraphTimer = from.telegraphTimer;
+    to.telegraphSlam = from.telegraphSlam;
     to.sunderStacks = from.sunderStacks;
     to.sunderTimer = from.sunderTimer;
     to.demoShoutTimer = from.demoShoutTimer;
@@ -3558,8 +3579,14 @@ abstract final class SpatialCombat {
       final slowRate = enemy.attackSlowTimer > 0 ? 0.8 : 1.0;
       enemy.fireCooldown -= dt * slowRate;
 
-      // ?? Enemy specials (heal / enrage / slow / execute / boss pulse) ??
-      _tickEnemySpecials(world, enemy, target, dt, rng: rng, reducedVfx: reducedVfx);
+      // Enemy specials (heal / enrage / unique boss tell)
+      _tickEnemySpecials(
+        world,
+        enemy,
+        target,
+        rng: rng,
+        reducedVfx: reducedVfx,
+      );
 
       final afterDist = _dist(enemy, target);
       if (enemy.fireCooldown <= 0 && afterDist <= enemy.attackRange) {
@@ -5264,248 +5291,6 @@ abstract final class SpatialCombat {
     }
     if (map.spawnPoints.isNotEmpty) return map.spawnPoints.first;
     return (gx.clamp(0, map.cols - 1), gy.clamp(0, map.rows - 1));
-  }
-
-  static void _tickEnemySpecials(
-    SpatialWorld world,
-    SpatialActor enemy,
-    SpatialActor focus,
-    double dt, {
-    required math.Random rng,
-    required bool reducedVfx,
-  }) {
-    // Tank / boss: enrage under 40% HP.
-    if ((enemy.archetype == EnemyArchetype.tank ||
-            enemy.role == EnemyRole.boss) &&
-        enemy.hp < enemy.effectiveMaxHp * 0.4 &&
-        enemy.enrageTimer <= 0) {
-      enemy.enrageTimer = 5.0;
-      if (!reducedVfx || world.spawnPersistentVfx) {
-        _spawnFloater(
-          world,
-          x: enemy.x,
-          y: enemy.y - 0.45,
-          text: 'ENRAGE',
-          argb: 0xFFFF4040,
-          life: 0.9,
-          priority: 2,
-        );
-        if (world.spawnPersistentVfx) {
-          _spawnRing(
-            world,
-            x: enemy.x,
-            y: enemy.y,
-            argb: 0xAAFF4040,
-            radius: 1.1,
-            life: 0.55,
-          );
-        }
-      }
-    }
-
-    if (enemy.specialCd > 0) return;
-
-    if (enemy.archetype == EnemyArchetype.support) {
-      SpatialActor? lowest;
-      for (final ally in world.enemies) {
-        if (!ally.isAlive || ally.dormant) continue;
-        if (_dist(enemy, ally) > 5.0) continue;
-        if (lowest == null ||
-            ally.hp / ally.effectiveMaxHp < lowest.hp / lowest.effectiveMaxHp) {
-          lowest = ally;
-        }
-      }
-      if (lowest != null && lowest.hp < lowest.effectiveMaxHp) {
-        final healMul = world.afkAssist ? 0.4 : 1.0;
-        final heal = math.max(8, (enemy.attack * 1.4 * healMul).round());
-        lowest.hp = math.min(lowest.effectiveMaxHp, lowest.hp + heal);
-        enemy.specialCd = world.afkAssist ? 6.0 : 5.0;
-        if (!reducedVfx || world.spawnPersistentVfx) {
-          _spawnFloater(
-            world,
-            x: lowest.x,
-            y: lowest.y - 0.35,
-            text: '+$heal',
-            argb: _floaterHeal,
-            life: 0.7,
-            priority: reducedVfx ? 2 : 0,
-          );
-          if (world.spawnPersistentVfx) {
-            _spawnBurst(
-              world,
-              x: lowest.x,
-              y: lowest.y,
-              argb: 0xFF60E080,
-              radius: 0.65,
-              kind: SpatialBurstKind.cross,
-              life: 0.35,
-            );
-          }
-        }
-      }
-    } else if (enemy.archetype == EnemyArchetype.ranged) {
-      if (_dist(enemy, focus) <= 5.5) {
-        focus.attackSlowTimer = math.max(focus.attackSlowTimer, 2.2);
-        focus.demoShoutTimer = math.max(focus.demoShoutTimer, 2.0);
-        enemy.specialCd = 6.0;
-        if (!reducedVfx || world.spawnPersistentVfx) {
-          _spawnFloater(
-            world,
-            x: focus.x,
-            y: focus.y - 0.5,
-            text: 'HEX',
-            argb: 0xFFB060FF,
-            life: 0.75,
-            priority: reducedVfx ? 2 : 0,
-          );
-          if (world.spawnPersistentVfx) {
-            _spawnRing(
-              world,
-              x: focus.x,
-              y: focus.y,
-              argb: 0x88B060FF,
-              radius: 0.85,
-              life: 0.45,
-            );
-            _spawnBurst(
-              world,
-              x: focus.x,
-              y: focus.y,
-              argb: 0xFFB060E0,
-              radius: 0.5,
-              kind: SpatialBurstKind.skull,
-              life: 0.32,
-            );
-          }
-        }
-      }
-    } else if (enemy.archetype == EnemyArchetype.brute &&
-        (enemy.role == EnemyRole.elite || enemy.role == EnemyRole.boss)) {
-      var hit = false;
-      for (final h in world.heroes) {
-        if (!h.isAlive) continue;
-        if (_dist(enemy, h) > 2.6) continue;
-        var chip = math.max(2, (enemy.effectiveAttack * 0.35).round());
-        if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
-        _applyHeroIncomingDamage(
-          world,
-          h,
-          chip,
-          reducedVfx: reducedVfx,
-          rng: rng,
-          isMelee: true,
-        );
-        hit = true;
-      }
-      if (hit) {
-        enemy.specialCd = world.afkAssist ? 7.0 : 6.5;
-        if (!reducedVfx || world.spawnPersistentVfx) {
-          _spawnFloater(
-            world,
-            x: enemy.x,
-            y: enemy.y - 0.4,
-            text: 'CLEAVE',
-            argb: 0xFFFF8040,
-            life: 0.7,
-            priority: reducedVfx ? 2 : 0,
-          );
-          if (world.spawnPersistentVfx) {
-            _spawnBurst(
-              world,
-              x: enemy.x,
-              y: enemy.y,
-              argb: 0xFFFF8040,
-              radius: 1.2,
-              kind: SpatialBurstKind.slash,
-              angle: 0,
-              life: 0.38,
-            );
-          }
-        }
-      }
-    } else if (enemy.archetype == EnemyArchetype.tank &&
-        enemy.hp < enemy.effectiveMaxHp * 0.55 &&
-        enemy.bonusMaxHp <= 0) {
-      enemy.bonusMaxHp = math.max(20, (enemy.maxHp * 0.15).round());
-      enemy.hp = math.min(enemy.effectiveMaxHp, enemy.hp + enemy.bonusMaxHp);
-      enemy.specialCd = 8.0;
-      if (!reducedVfx || world.spawnPersistentVfx) {
-        _spawnFloater(
-          world,
-          x: enemy.x,
-          y: enemy.y - 0.4,
-          text: 'FORTIFY',
-          argb: 0xFF80C0FF,
-          life: 0.7,
-          priority: reducedVfx ? 2 : 0,
-        );
-        if (world.spawnPersistentVfx) {
-          _spawnRing(
-            world,
-            x: enemy.x,
-            y: enemy.y,
-            argb: 0xAA80C0FF,
-            radius: 1.0,
-            life: 0.5,
-          );
-        }
-      }
-    }
-
-    // Boss pulse AoE.
-    if (enemy.role == EnemyRole.boss && enemy.specialCd <= 0) {
-      var hit = false;
-      for (final h in world.heroes) {
-        if (!h.isAlive) continue;
-        if (_dist(enemy, h) > 3.4) continue;
-        var pulse = math.max(4, (enemy.effectiveAttack * 0.55).round());
-        if (world.afkAssist) pulse = math.max(1, (pulse * 0.35).round());
-        _applyHeroIncomingDamage(
-          world,
-          h,
-          pulse,
-          reducedVfx: reducedVfx,
-          rng: rng,
-          isMelee: true,
-        );
-        hit = true;
-      }
-      if (hit) {
-        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
-        if (!reducedVfx || world.spawnPersistentVfx) {
-          if (!reducedVfx) {
-            _spawnBurst(
-              world,
-              x: enemy.x,
-              y: enemy.y,
-              argb: 0xAAFF3030,
-              radius: 1.4,
-              kind: SpatialBurstKind.ring,
-              life: 0.45,
-            );
-          }
-          if (world.spawnPersistentVfx) {
-            _spawnRing(
-              world,
-              x: enemy.x,
-              y: enemy.y,
-              argb: 0xCCFF4040,
-              radius: 1.55,
-              life: 0.55,
-            );
-          }
-          _spawnFloater(
-            world,
-            x: enemy.x,
-            y: enemy.y - 0.55,
-            text: 'PULSE',
-            argb: 0xFFFF5050,
-            life: 0.85,
-            priority: 2,
-          );
-        }
-      }
-    }
   }
 
   /// First step toward goal via BFS when walls block a straight line.

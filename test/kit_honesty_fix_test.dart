@@ -657,9 +657,10 @@ void main() {
   test('Hungering Cold roots a pack', () {
     final state = _soloSpecParty(HeroSpecId.frostDk, level: 15);
     var world = SpatialCombat.build(state);
-    expect(world.enemies.length, greaterThanOrEqualTo(2));
+    expect(world.enemies.length, greaterThanOrEqualTo(3));
     final dk = world.heroes.firstWhere((h) => !h.isPet);
-    final pack = world.enemies.where((e) => e.hp > 0 && !e.dormant).take(3);
+    // Wake a 3-pack even if later chambers start dormant (floor jobs).
+    final pack = world.enemies.where((e) => e.hp > 0).take(3);
     final cx = pack.map((e) => e.x).reduce((a, b) => a + b) / pack.length;
     final cy = pack.map((e) => e.y).reduce((a, b) => a + b) / pack.length;
     dk

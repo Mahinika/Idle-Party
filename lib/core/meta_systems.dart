@@ -19,14 +19,14 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.150';
+  static const String currentVersion = '1.12.151';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
-      version: '1.12.150',
+      version: '1.12.151',
       bullets: <String>[
-        'Normal and elite floors run longer: three fight rooms after the staging hall, with bigger packs so each room has a job.',
+        'Zone packs have jobs: swarm, then backline, then elites. Each boss has its own tell — Tide WAVE, Brass WIND-UP, Fen SPIT. Trash names match the zone.',
         'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). The hub hunt still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
       ],
     ),

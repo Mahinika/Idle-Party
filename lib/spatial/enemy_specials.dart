@@ -1,0 +1,730 @@
+part of 'spatial_combat.dart';
+
+/// Trash specials (heal / hex / cleave / fortify) plus one unique boss tell
+/// per zone. Same [SpatialCombat.step] — not a second sim.
+void _tickEnemySpecials(
+  SpatialWorld world,
+  SpatialActor enemy,
+  SpatialActor focus, {
+  required math.Random rng,
+  required bool reducedVfx,
+}) {
+  // Tank / boss: enrage under 40% HP.
+  if ((enemy.archetype == EnemyArchetype.tank ||
+          enemy.role == EnemyRole.boss) &&
+      enemy.hp < enemy.effectiveMaxHp * 0.4 &&
+      enemy.enrageTimer <= 0) {
+    enemy.enrageTimer = 5.0;
+    if (!reducedVfx || world.spawnPersistentVfx) {
+      SpatialCombat._spawnFloater(
+        world,
+        x: enemy.x,
+        y: enemy.y - 0.45,
+        text: 'ENRAGE',
+        argb: 0xFFFF4040,
+        life: 0.9,
+        priority: 2,
+      );
+      if (world.spawnPersistentVfx) {
+        SpatialCombat._spawnRing(
+          world,
+          x: enemy.x,
+          y: enemy.y,
+          argb: 0xAAFF4040,
+          radius: 1.1,
+          life: 0.55,
+        );
+      }
+    }
+  }
+
+  if (enemy.role == EnemyRole.boss) {
+    _tickBossKit(
+      world,
+      enemy,
+      focus,
+      rng: rng,
+      reducedVfx: reducedVfx,
+    );
+    return;
+  }
+
+  if (enemy.specialCd > 0) return;
+
+  if (enemy.archetype == EnemyArchetype.support) {
+    SpatialActor? lowest;
+    for (final ally in world.enemies) {
+      if (!ally.isAlive || ally.dormant) continue;
+      if (SpatialCombat._dist(enemy, ally) > 5.0) continue;
+      if (lowest == null ||
+          ally.hp / ally.effectiveMaxHp < lowest.hp / lowest.effectiveMaxHp) {
+        lowest = ally;
+      }
+    }
+    if (lowest != null && lowest.hp < lowest.effectiveMaxHp) {
+      final healMul = world.afkAssist ? 0.4 : 1.0;
+      final heal = math.max(8, (enemy.attack * 1.4 * healMul).round());
+      lowest.hp = math.min(lowest.effectiveMaxHp, lowest.hp + heal);
+      enemy.specialCd = world.afkAssist ? 6.0 : 5.0;
+      if (!reducedVfx || world.spawnPersistentVfx) {
+        SpatialCombat._spawnFloater(
+          world,
+          x: lowest.x,
+          y: lowest.y - 0.35,
+          text: '+$heal',
+          argb: SpatialCombat._floaterHeal,
+          life: 0.7,
+          priority: reducedVfx ? 2 : 0,
+        );
+        if (world.spawnPersistentVfx) {
+          SpatialCombat._spawnBurst(
+            world,
+            x: lowest.x,
+            y: lowest.y,
+            argb: 0xFF60E080,
+            radius: 0.65,
+            kind: SpatialBurstKind.cross,
+            life: 0.35,
+          );
+        }
+      }
+    }
+  } else if (enemy.archetype == EnemyArchetype.ranged) {
+    if (SpatialCombat._dist(enemy, focus) <= 5.5) {
+      focus.attackSlowTimer = math.max(focus.attackSlowTimer, 2.2);
+      focus.demoShoutTimer = math.max(focus.demoShoutTimer, 2.0);
+      enemy.specialCd = 6.0;
+      if (!reducedVfx || world.spawnPersistentVfx) {
+        SpatialCombat._spawnFloater(
+          world,
+          x: focus.x,
+          y: focus.y - 0.5,
+          text: 'HEX',
+          argb: 0xFFB060FF,
+          life: 0.75,
+          priority: reducedVfx ? 2 : 0,
+        );
+        if (world.spawnPersistentVfx) {
+          SpatialCombat._spawnRing(
+            world,
+            x: focus.x,
+            y: focus.y,
+            argb: 0x88B060FF,
+            radius: 0.85,
+            life: 0.45,
+          );
+          SpatialCombat._spawnBurst(
+            world,
+            x: focus.x,
+            y: focus.y,
+            argb: 0xFFB060E0,
+            radius: 0.5,
+            kind: SpatialBurstKind.skull,
+            life: 0.32,
+          );
+        }
+      }
+    }
+  } else if (enemy.archetype == EnemyArchetype.brute &&
+      (enemy.role == EnemyRole.elite || enemy.role == EnemyRole.boss)) {
+    var hit = false;
+    for (final h in world.heroes) {
+      if (!h.isAlive) continue;
+      if (SpatialCombat._dist(enemy, h) > 2.6) continue;
+      var chip = math.max(2, (enemy.effectiveAttack * 0.35).round());
+      if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
+      SpatialCombat._applyHeroIncomingDamage(
+        world,
+        h,
+        chip,
+        reducedVfx: reducedVfx,
+        rng: rng,
+        isMelee: true,
+      );
+      hit = true;
+    }
+    if (hit) {
+      enemy.specialCd = world.afkAssist ? 7.0 : 6.5;
+      if (!reducedVfx || world.spawnPersistentVfx) {
+        SpatialCombat._spawnFloater(
+          world,
+          x: enemy.x,
+          y: enemy.y - 0.4,
+          text: 'CLEAVE',
+          argb: 0xFFFF8040,
+          life: 0.7,
+          priority: reducedVfx ? 2 : 0,
+        );
+        if (world.spawnPersistentVfx) {
+          SpatialCombat._spawnBurst(
+            world,
+            x: enemy.x,
+            y: enemy.y,
+            argb: 0xFFFF8040,
+            radius: 1.2,
+            kind: SpatialBurstKind.slash,
+            angle: 0,
+            life: 0.38,
+          );
+        }
+      }
+    }
+  } else if (enemy.archetype == EnemyArchetype.tank &&
+      enemy.hp < enemy.effectiveMaxHp * 0.55 &&
+      enemy.bonusMaxHp <= 0) {
+    enemy.bonusMaxHp = math.max(20, (enemy.maxHp * 0.15).round());
+    enemy.hp = math.min(enemy.effectiveMaxHp, enemy.hp + enemy.bonusMaxHp);
+    enemy.specialCd = 8.0;
+    if (!reducedVfx || world.spawnPersistentVfx) {
+      SpatialCombat._spawnFloater(
+        world,
+        x: enemy.x,
+        y: enemy.y - 0.4,
+        text: 'FORTIFY',
+        argb: 0xFF80C0FF,
+        life: 0.7,
+        priority: reducedVfx ? 2 : 0,
+      );
+      if (world.spawnPersistentVfx) {
+        SpatialCombat._spawnRing(
+          world,
+          x: enemy.x,
+          y: enemy.y,
+          argb: 0xAA80C0FF,
+          radius: 1.0,
+          life: 0.5,
+        );
+      }
+    }
+  }
+}
+
+void _tickBossKit(
+  SpatialWorld world,
+  SpatialActor enemy,
+  SpatialActor focus, {
+  required math.Random rng,
+  required bool reducedVfx,
+}) {
+  if (enemy.telegraphTimer > 0) return;
+
+  if (enemy.telegraphSlam) {
+    enemy.telegraphSlam = false;
+    final hit = _bossChipInRadius(
+      world,
+      enemy,
+      radius: 2.8,
+      atkMul: 0.8,
+      rng: rng,
+      reducedVfx: reducedVfx,
+    );
+    enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+    if (hit) {
+      _bossTell(
+        world,
+        enemy,
+        text: 'SLAM',
+        argb: 0xFFFFB040,
+        radius: 1.5,
+        reducedVfx: reducedVfx,
+      );
+    }
+    return;
+  }
+
+  if (enemy.specialCd > 0) return;
+
+  final id = world.dungeonId;
+  switch (id) {
+    case 'brass':
+      enemy.telegraphTimer = 1.4;
+      enemy.telegraphSlam = true;
+      _bossTell(
+        world,
+        enemy,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFFFFC060,
+        radius: 1.2,
+        reducedVfx: reducedVfx,
+      );
+      return;
+    case 'sandy':
+      _bossPulseLike(
+        world,
+        enemy,
+        radius: 2.8,
+        atkMul: 0.65,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFFC8A070,
+        rng: rng,
+        reducedVfx: reducedVfx,
+      );
+      return;
+    case 'goblin':
+      _bossRally(world, enemy, reducedVfx: reducedVfx);
+      return;
+    case 'king':
+      var any = false;
+      for (final h in world.heroes) {
+        if (!h.isAlive) continue;
+        h.attackSlowTimer = math.max(h.attackSlowTimer, 3.0);
+        h.demoShoutTimer = math.max(h.demoShoutTimer, 2.4);
+        any = true;
+      }
+      if (any) {
+        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+        _bossTell(
+          world,
+          enemy,
+          text: EnemyFlavor.bossTell(id),
+          argb: 0xFFE0C060,
+          radius: 1.6,
+          reducedVfx: reducedVfx,
+        );
+      } else {
+        enemy.specialCd = 1.2;
+      }
+      return;
+    case 'underworld':
+      if (SpatialCombat._dist(enemy, focus) > 5.8) {
+        enemy.specialCd = 1.0;
+        return;
+      }
+      _bossChipHero(
+        world,
+        enemy,
+        focus,
+        atkMul: 0.85,
+        rng: rng,
+        reducedVfx: reducedVfx,
+        isMelee: false,
+      );
+      enemy.specialCd = world.afkAssist ? 8.0 : 7.0;
+      _bossTell(
+        world,
+        enemy,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFF80FFA0,
+        radius: 0.9,
+        reducedVfx: reducedVfx,
+        at: focus,
+      );
+      return;
+    case 'dead':
+      final healMul = world.afkAssist ? 0.4 : 1.0;
+      final heal = math.max(
+        12,
+        (enemy.effectiveMaxHp * 0.08 * healMul).round(),
+      );
+      enemy.hp = math.min(enemy.effectiveMaxHp, enemy.hp + heal);
+      enemy.specialCd = world.afkAssist ? 10.0 : 9.0;
+      _bossTell(
+        world,
+        enemy,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFFC0C0D8,
+        radius: 1.2,
+        reducedVfx: reducedVfx,
+      );
+      return;
+    case 'hell':
+      _bossPulseLike(
+        world,
+        enemy,
+        radius: 3.2,
+        atkMul: 0.45,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFFFF6030,
+        rng: rng,
+        reducedVfx: reducedVfx,
+      );
+      return;
+    case 'crystal':
+      _bossPulseLike(
+        world,
+        enemy,
+        radius: 5.5,
+        atkMul: 0.4,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFF80D8FF,
+        rng: rng,
+        reducedVfx: reducedVfx,
+        isMelee: false,
+      );
+      return;
+    case 'tide':
+      var hit = _bossChipInRadius(
+        world,
+        enemy,
+        radius: 4.0,
+        atkMul: 0.4,
+        rng: rng,
+        reducedVfx: reducedVfx,
+      );
+      if (hit) {
+        for (final h in world.heroes) {
+          if (!h.isAlive) continue;
+          if (SpatialCombat._dist(enemy, h) > 4.0) continue;
+          h.attackSlowTimer = math.max(h.attackSlowTimer, 2.6);
+        }
+        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+        _bossTell(
+          world,
+          enemy,
+          text: EnemyFlavor.bossTell(id),
+          argb: 0xFF40A0E0,
+          radius: 1.7,
+          reducedVfx: reducedVfx,
+        );
+      } else {
+        enemy.specialCd = 1.2;
+      }
+      return;
+    case 'ember':
+      if (SpatialCombat._dist(enemy, focus) > 5.2) {
+        enemy.specialCd = 1.0;
+        return;
+      }
+      _bossChipHero(
+        world,
+        enemy,
+        focus,
+        atkMul: 0.4,
+        rng: rng,
+        reducedVfx: reducedVfx,
+        isMelee: false,
+      );
+      focus.attackSlowTimer = math.max(focus.attackSlowTimer, 3.0);
+      enemy.specialCd = world.afkAssist ? 8.0 : 7.0;
+      _bossTell(
+        world,
+        enemy,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFFFF7030,
+        radius: 0.95,
+        reducedVfx: reducedVfx,
+        at: focus,
+      );
+      return;
+    case 'grove':
+      if (SpatialCombat._dist(enemy, focus) > 4.8) {
+        enemy.specialCd = 1.0;
+        return;
+      }
+      focus.rootTimer = math.max(focus.rootTimer, 2.0);
+      enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+      _bossTell(
+        world,
+        enemy,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFF70C060,
+        radius: 1.0,
+        reducedVfx: reducedVfx,
+        at: focus,
+      );
+      return;
+    case 'storm':
+      _bossChipHero(
+        world,
+        enemy,
+        focus,
+        atkMul: 0.5,
+        rng: rng,
+        reducedVfx: reducedVfx,
+        isMelee: false,
+      );
+      SpatialActor? second;
+      var best = 99.0;
+      for (final h in world.heroes) {
+        if (!h.isAlive || h.id == focus.id) continue;
+        final d = SpatialCombat._dist(focus, h);
+        if (d < best && d < 3.2) {
+          best = d;
+          second = h;
+        }
+      }
+      if (second != null) {
+        _bossChipHero(
+          world,
+          enemy,
+          second,
+          atkMul: 0.35,
+          rng: rng,
+          reducedVfx: reducedVfx,
+          isMelee: false,
+        );
+      }
+      enemy.specialCd = world.afkAssist ? 8.0 : 7.0;
+      _bossTell(
+        world,
+        enemy,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFF90D0FF,
+        radius: 1.1,
+        reducedVfx: reducedVfx,
+        at: focus,
+      );
+      return;
+    case 'rime':
+      var any = false;
+      for (final h in world.heroes) {
+        if (!h.isAlive) continue;
+        h.attackSlowTimer = math.max(h.attackSlowTimer, 2.8);
+        _bossChipHero(
+          world,
+          enemy,
+          h,
+          atkMul: 0.28,
+          rng: rng,
+          reducedVfx: reducedVfx,
+        );
+        any = true;
+      }
+      if (any) {
+        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+        _bossTell(
+          world,
+          enemy,
+          text: EnemyFlavor.bossTell(id),
+          argb: 0xFFA0E0FF,
+          radius: 1.55,
+          reducedVfx: reducedVfx,
+        );
+      } else {
+        enemy.specialCd = 1.2;
+      }
+      return;
+    case 'fen':
+      if (SpatialCombat._dist(enemy, focus) > 5.5) {
+        enemy.specialCd = 1.0;
+        return;
+      }
+      _bossChipHero(
+        world,
+        enemy,
+        focus,
+        atkMul: 0.42,
+        rng: rng,
+        reducedVfx: reducedVfx,
+        isMelee: false,
+      );
+      focus.attackSlowTimer = math.max(focus.attackSlowTimer, 2.2);
+      enemy.specialCd = world.afkAssist ? 8.0 : 7.0;
+      _bossTell(
+        world,
+        enemy,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFF80C040,
+        radius: 0.9,
+        reducedVfx: reducedVfx,
+        at: focus,
+      );
+      return;
+    case 'veil':
+      var hit = _bossChipInRadius(
+        world,
+        enemy,
+        radius: 3.6,
+        atkMul: 0.32,
+        rng: rng,
+        reducedVfx: reducedVfx,
+      );
+      if (hit) {
+        for (final h in world.heroes) {
+          if (!h.isAlive) continue;
+          if (SpatialCombat._dist(enemy, h) > 3.6) continue;
+          h.attackSlowTimer = math.max(h.attackSlowTimer, 2.8);
+        }
+        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+        _bossTell(
+          world,
+          enemy,
+          text: EnemyFlavor.bossTell(id),
+          argb: 0xFFE8D0FF,
+          radius: 1.45,
+          reducedVfx: reducedVfx,
+        );
+      } else {
+        enemy.specialCd = 1.2;
+      }
+      return;
+    default:
+      _bossPulseLike(
+        world,
+        enemy,
+        radius: 3.4,
+        atkMul: 0.55,
+        text: 'PULSE',
+        argb: 0xFFFF5050,
+        rng: rng,
+        reducedVfx: reducedVfx,
+      );
+  }
+}
+
+void _bossPulseLike(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  required double radius,
+  required double atkMul,
+  required String text,
+  required int argb,
+  required math.Random rng,
+  required bool reducedVfx,
+  bool isMelee = true,
+}) {
+  final hit = _bossChipInRadius(
+    world,
+    enemy,
+    radius: radius,
+    atkMul: atkMul,
+    rng: rng,
+    reducedVfx: reducedVfx,
+    isMelee: isMelee,
+  );
+  if (hit) {
+    enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+    _bossTell(
+      world,
+      enemy,
+      text: text,
+      argb: argb,
+      radius: math.max(1.2, radius * 0.45),
+      reducedVfx: reducedVfx,
+    );
+  } else {
+    enemy.specialCd = 1.2;
+  }
+}
+
+bool _bossChipInRadius(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  required double radius,
+  required double atkMul,
+  required math.Random rng,
+  required bool reducedVfx,
+  bool isMelee = true,
+}) {
+  var hit = false;
+  for (final h in world.heroes) {
+    if (!h.isAlive) continue;
+    if (SpatialCombat._dist(enemy, h) > radius) continue;
+    _bossChipHero(
+      world,
+      enemy,
+      h,
+      atkMul: atkMul,
+      rng: rng,
+      reducedVfx: reducedVfx,
+      isMelee: isMelee,
+    );
+    hit = true;
+  }
+  return hit;
+}
+
+void _bossChipHero(
+  SpatialWorld world,
+  SpatialActor enemy,
+  SpatialActor hero, {
+  required double atkMul,
+  required math.Random rng,
+  required bool reducedVfx,
+  bool isMelee = true,
+}) {
+  var chip = math.max(2, (enemy.effectiveAttack * atkMul).round());
+  if (world.afkAssist) chip = math.max(1, (chip * 0.35).round());
+  SpatialCombat._applyHeroIncomingDamage(
+    world,
+    hero,
+    chip,
+    reducedVfx: reducedVfx,
+    rng: rng,
+    isMelee: isMelee,
+  );
+}
+
+void _bossRally(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  required bool reducedVfx,
+}) {
+  final healMul = world.afkAssist ? 0.4 : 1.0;
+  final heal = math.max(8, (enemy.attack * 0.9 * healMul).round());
+  var any = false;
+  for (final ally in world.enemies) {
+    if (!ally.isAlive || ally.dormant) continue;
+    if (ally.id == enemy.id) continue;
+    if (SpatialCombat._dist(enemy, ally) > 5.0) continue;
+    ally.hp = math.min(ally.effectiveMaxHp, ally.hp + heal);
+    any = true;
+  }
+  if (!any) {
+    enemy.hp = math.min(enemy.effectiveMaxHp, enemy.hp + heal);
+  }
+  enemy.specialCd = world.afkAssist ? 8.0 : 7.0;
+  _bossTell(
+    world,
+    enemy,
+    text: EnemyFlavor.bossTell('goblin'),
+    argb: 0xFFE0B040,
+    radius: 1.3,
+    reducedVfx: reducedVfx,
+  );
+}
+
+void _bossTell(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  required String text,
+  required int argb,
+  required double radius,
+  required bool reducedVfx,
+  SpatialActor? at,
+}) {
+  if (reducedVfx && !world.spawnPersistentVfx) {
+    SpatialCombat._spawnFloater(
+      world,
+      x: (at ?? enemy).x,
+      y: (at ?? enemy).y - 0.55,
+      text: text,
+      argb: argb,
+      life: 0.85,
+      priority: 2,
+    );
+    return;
+  }
+  if (!reducedVfx || world.spawnPersistentVfx) {
+    if (!reducedVfx) {
+      SpatialCombat._spawnBurst(
+        world,
+        x: enemy.x,
+        y: enemy.y,
+        argb: argb,
+        radius: radius,
+        kind: SpatialBurstKind.ring,
+        life: 0.45,
+      );
+    }
+    if (world.spawnPersistentVfx) {
+      SpatialCombat._spawnRing(
+        world,
+        x: enemy.x,
+        y: enemy.y,
+        argb: argb,
+        radius: radius + 0.15,
+        life: 0.55,
+      );
+    }
+    SpatialCombat._spawnFloater(
+      world,
+      x: (at ?? enemy).x,
+      y: (at ?? enemy).y - 0.55,
+      text: text,
+      argb: argb,
+      life: 0.85,
+      priority: 2,
+    );
+  }
+}

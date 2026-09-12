@@ -7,6 +7,7 @@ import '../models/hero.dart';
 import '../models/loot.dart';
 import '../models/stats.dart';
 import 'dungeon_generator.dart';
+import 'enemy_flavor.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'keystone.dart';
@@ -405,10 +406,20 @@ abstract final class EncounterFactory {
         rush && !(isBossRoom && i == 0)
             ? (i == 0
                   ? EnemyArchetype.tank
-                  : _pickArchetype(RoomType.elite, isBossUnit: false, rng: rng))
-            : _pickArchetype(
-                pickType,
+                  : EnemyFlavor.pickArchetype(
+                      type: RoomType.elite,
+                      isBossUnit: false,
+                      dungeonId: id,
+                      index: i,
+                      count: count,
+                      rng: rng,
+                    ))
+            : EnemyFlavor.pickArchetype(
+                type: pickType,
                 isBossUnit: isBossRoom && i == 0,
+                dungeonId: id,
+                index: i,
+                count: count,
                 rng: rng,
               ),
     ];
@@ -540,31 +551,6 @@ abstract final class EncounterFactory {
     return group;
   }
 
-  static EnemyArchetype _pickArchetype(
-    RoomType type, {
-    required bool isBossUnit,
-    required Random rng,
-  }) {
-    if (isBossUnit) return EnemyArchetype.tank;
-    if (type == RoomType.elite) {
-      return switch (rng.nextInt(5)) {
-        0 => EnemyArchetype.tank,
-        1 => EnemyArchetype.ranged,
-        2 => EnemyArchetype.glass,
-        3 => EnemyArchetype.support,
-        _ => EnemyArchetype.brute,
-      };
-    }
-    return switch (rng.nextInt(12)) {
-      0 || 1 => EnemyArchetype.swarm,
-      2 || 3 => EnemyArchetype.brute,
-      4 || 5 => EnemyArchetype.tank,
-      6 || 7 => EnemyArchetype.ranged,
-      8 || 9 => EnemyArchetype.glass,
-      _ => EnemyArchetype.support,
-    };
-  }
-
   static double _archetypeBudgetWeight(EnemyArchetype a) => switch (a) {
     EnemyArchetype.swarm => 0.55,
     EnemyArchetype.brute => 1.0,
@@ -593,188 +579,13 @@ abstract final class EncounterFactory {
     required String dungeonId,
     required int index,
   }) {
-    if (isBossUnit) {
-      return bossName;
-    }
+    if (isBossUnit) return bossName;
     if (type == RoomType.elite) {
-      if (dungeonId == 'goblin') {
-        return switch (archetype) {
-          EnemyArchetype.tank => 'Stash Bulwark',
-          EnemyArchetype.ranged => 'Raid Slinger',
-          EnemyArchetype.glass => 'Coin Cutter',
-          EnemyArchetype.support => 'Hex Hag',
-          EnemyArchetype.swarm => 'Raid Pack',
-          EnemyArchetype.brute => 'Club Champion',
-        };
-      }
-      return switch (archetype) {
-        EnemyArchetype.tank => 'Bulwark Golem',
-        EnemyArchetype.ranged => 'Hex Cultist',
-        EnemyArchetype.glass => 'Blood Stalker',
-        EnemyArchetype.support => 'Rift Adept',
-        EnemyArchetype.swarm => 'Pack Alpha',
-        EnemyArchetype.brute => 'Elite Brute',
-      };
+      return EnemyFlavor.eliteName(dungeonId, archetype);
     }
     if (type == RoomType.boss) {
-      if (dungeonId == 'goblin') {
-        return switch (archetype) {
-          EnemyArchetype.ranged => 'Lord Slinger',
-          EnemyArchetype.tank => 'Lord Guard',
-          EnemyArchetype.support => 'Lord Hexer',
-          EnemyArchetype.glass => 'Lord Blade',
-          EnemyArchetype.swarm => 'Lord Pack',
-          EnemyArchetype.brute => 'Lord Thug',
-        };
-      }
-      return switch (archetype) {
-        EnemyArchetype.ranged => 'Warden Archer',
-        EnemyArchetype.tank => 'Warden Shield',
-        EnemyArchetype.support => 'Warden Adept',
-        EnemyArchetype.glass => 'Warden Blade',
-        EnemyArchetype.swarm => 'Warden Pack',
-        EnemyArchetype.brute => 'Warden Guard',
-      };
+      return EnemyFlavor.addName(dungeonId, archetype);
     }
-    return _zoneArchetypeName(dungeonId, archetype, index);
-  }
-
-  static String _zoneArchetypeName(
-    String dungeonId,
-    EnemyArchetype archetype,
-    int index,
-  ) {
-    final table = switch (dungeonId) {
-      'sandy' => const {
-        EnemyArchetype.swarm: ['Cave Slime', 'Sand Mite', 'Drip Ooze'],
-        EnemyArchetype.brute: ['Cave Brute', 'Rock Crab'],
-        EnemyArchetype.tank: ['Shellback', 'Stone Maw'],
-        EnemyArchetype.ranged: ['Spit Bat', 'Cavern Spitter'],
-        EnemyArchetype.glass: ['Sand Skitter', 'Glass Skitter'],
-        EnemyArchetype.support: ['Mire Shaman', 'Glow Cultist'],
-      },
-      'goblin' => const {
-        EnemyArchetype.swarm: ['Goblin Scrapper', 'Hideout Runt', 'Pest'],
-        EnemyArchetype.brute: ['Goblin Thug', 'Clubber'],
-        EnemyArchetype.tank: ['Hideout Guard', 'Scrap Shield'],
-        EnemyArchetype.ranged: ['Goblin Slinger', 'Dart Rascal'],
-        EnemyArchetype.glass: ['Cutthroat', 'Knife Kin'],
-        EnemyArchetype.support: ['Hex Witch', 'Totem Caller'],
-      },
-      'king' => const {
-        EnemyArchetype.swarm: ['Fort Rat', 'Keep Gnawer'],
-        EnemyArchetype.brute: ['Fort Sentry', 'Hall Guard'],
-        EnemyArchetype.tank: ['Iron Ward', 'Gate Knight'],
-        EnemyArchetype.ranged: ['Crossbowman', 'Tower Archer'],
-        EnemyArchetype.glass: ['Royal Assassin', 'Blade Page'],
-        EnemyArchetype.support: ['Court Mage', 'Banner Cleric'],
-      },
-      'underworld' => const {
-        EnemyArchetype.swarm: ['Imp Swarm', 'Ash Tick'],
-        EnemyArchetype.brute: ['Underworld Imp', 'Bone Brute'],
-        EnemyArchetype.tank: ['Obsidian Golem', 'Pit Guard'],
-        EnemyArchetype.ranged: ['Soul Spitter', 'Hex Spider'],
-        EnemyArchetype.glass: ['Shade Stalker', 'Wisp Blade'],
-        EnemyArchetype.support: ['Cult Chanter', 'Rift Adept'],
-      },
-      'dead' => const {
-        EnemyArchetype.swarm: ['Risen Husk', 'Bone Swarm'],
-        EnemyArchetype.brute: ['Grave Knight', 'Crypt Brute'],
-        EnemyArchetype.tank: ['Tomb Shield', 'Ossuary Guard'],
-        EnemyArchetype.ranged: ['Wailing Ghost', 'Bone Archer'],
-        EnemyArchetype.glass: ['Specter Blade', 'Pale Reaper'],
-        EnemyArchetype.support: ['Necro Acolyte', 'Death Chanter'],
-      },
-      'hell' => const {
-        EnemyArchetype.swarm: ['Hellspawn', 'Cinder Rat'],
-        EnemyArchetype.brute: ['Infernal Brute', 'Flame Guard'],
-        EnemyArchetype.tank: ['Molten Golem', 'Ash Colossus'],
-        EnemyArchetype.ranged: ['Fire Cultist', 'Ember Archer'],
-        EnemyArchetype.glass: ['Flame Assassin', 'Cinder Blade'],
-        EnemyArchetype.support: ['Hell Chanter', 'Rift Priest'],
-      },
-      'crystal' => const {
-        EnemyArchetype.swarm: ['Frost Wisp', 'Rime Bat'],
-        EnemyArchetype.brute: ['Glacial Brute', 'Shard Brawler'],
-        EnemyArchetype.tank: ['Crystal Golem', 'Frozen Bulwark'],
-        EnemyArchetype.ranged: ['Ice Caster', 'Frost Slinger'],
-        EnemyArchetype.glass: ['Splinter Blade', 'Shatter Fang'],
-        EnemyArchetype.support: ['Rime Chanter', 'Frost Adept'],
-      },
-      'tide' => const {
-        EnemyArchetype.swarm: ['Brine Mite', 'Reef Tick'],
-        EnemyArchetype.brute: ['Tide Brute', 'Coral Crusher'],
-        EnemyArchetype.tank: ['Shell Leviathan', 'Barnacle Guard'],
-        EnemyArchetype.ranged: ['Spume Spitter', 'Salt Slinger'],
-        EnemyArchetype.glass: ['Razor Eel', 'Needle Urchin'],
-        EnemyArchetype.support: ['Depth Chanter', 'Tide Adept'],
-      },
-      'ember' => const {
-        EnemyArchetype.swarm: ['Ash Mite', 'Cinder Tick'],
-        EnemyArchetype.brute: ['Vault Brute', 'Slag Brawler'],
-        EnemyArchetype.tank: ['Basalt Golem', 'Ember Bulwark'],
-        EnemyArchetype.ranged: ['Spark Caster', 'Cinder Slinger'],
-        EnemyArchetype.glass: ['Char Blade', 'Soot Fang'],
-        EnemyArchetype.support: ['Ash Chanter', 'Ember Adept'],
-      },
-      'grove' => const {
-        EnemyArchetype.swarm: ['Moss Slime', 'Root Tick', 'Leaf Mite'],
-        EnemyArchetype.brute: ['Grove Brute', 'Timber Crusher'],
-        EnemyArchetype.tank: ['Hollow Guard', 'Bark Bulwark'],
-        EnemyArchetype.ranged: ['Spore Bat', 'Canopy Spitter'],
-        EnemyArchetype.glass: ['Thorn Skitter', 'Bramble Fang'],
-        EnemyArchetype.support: ['Wyrd Chanter', 'Grove Adept'],
-      },
-      'storm' => const {
-        EnemyArchetype.swarm: ['Gale Mite', 'Storm Tick', 'Spark Bat'],
-        EnemyArchetype.brute: ['Storm Brute', 'Thunder Crusher'],
-        EnemyArchetype.tank: ['Gale Bulwark', 'Storm Guard'],
-        EnemyArchetype.ranged: ['Volt Spitter', 'Gale Slinger'],
-        EnemyArchetype.glass: ['Lightning Fang', 'Zephyr Blade'],
-        EnemyArchetype.support: ['Storm Chanter', 'Tempest Adept'],
-      },
-      'rime' => const {
-        EnemyArchetype.swarm: ['Rime Mite', 'Frost Tick', 'Glass Flea'],
-        EnemyArchetype.brute: ['Rime Brute', 'Frost Crusher'],
-        EnemyArchetype.tank: ['Glass Bulwark', 'Rime Guard'],
-        EnemyArchetype.ranged: ['Shard Slinger', 'Rime Spitter'],
-        EnemyArchetype.glass: ['Glass Fang', 'Frost Blade'],
-        EnemyArchetype.support: ['Glacier Chanter', 'Stillfrost Adept'],
-      },
-      'fen' => const {
-        EnemyArchetype.swarm: ['Bile Slime', 'Fen Tick', 'Spore Flea'],
-        EnemyArchetype.brute: ['Fen Brute', 'Mire Crusher'],
-        EnemyArchetype.tank: ['Bog Bulwark', 'Fen Guard'],
-        EnemyArchetype.ranged: ['Bile Spitter', 'Fen Slinger'],
-        EnemyArchetype.glass: ['Rot Fang', 'Mire Blade'],
-        EnemyArchetype.support: ['Fen Chanter', 'Mire Adept'],
-      },
-      'brass' => const {
-        EnemyArchetype.swarm: ['Cog Mite', 'Rust Tick', 'Brass Flea'],
-        EnemyArchetype.brute: ['Vault Bruiser', 'Cog Crusher'],
-        EnemyArchetype.tank: ['Brass Bulwark', 'Cog Guard'],
-        EnemyArchetype.ranged: ['Spark Spitter', 'Coil Slinger'],
-        EnemyArchetype.glass: ['Razor Cog', 'Spring Fang'],
-        EnemyArchetype.support: ['Clock Chanter', 'Brass Adept'],
-      },
-      'veil' => const {
-        EnemyArchetype.swarm: ['Dust Moth', 'Veil Mite', 'Silk Flea'],
-        EnemyArchetype.brute: ['Silk Bruiser', 'Veil Crusher'],
-        EnemyArchetype.tank: ['Cocoon Guard', 'Veil Bulwark'],
-        EnemyArchetype.ranged: ['Dust Spitter', 'Silk Slinger'],
-        EnemyArchetype.glass: ['Wing Fang', 'Veil Blade'],
-        EnemyArchetype.support: ['Moth Chanter', 'Veil Adept'],
-      },
-      _ => const {
-        EnemyArchetype.swarm: ['Cave Slime', 'Sand Mite'],
-        EnemyArchetype.brute: ['Cave Brute', 'Rock Crab'],
-        EnemyArchetype.tank: ['Shellback', 'Stone Maw'],
-        EnemyArchetype.ranged: ['Spit Bat', 'Cavern Spitter'],
-        EnemyArchetype.glass: ['Needle Rat', 'Glass Skitter'],
-        EnemyArchetype.support: ['Mire Shaman', 'Glow Cultist'],
-      },
-    };
-    final names = table[archetype]!;
-    return names[index % names.length];
+    return EnemyFlavor.trashName(dungeonId, archetype, index);
   }
 }

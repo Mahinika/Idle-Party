@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.150**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.151**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -319,6 +319,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Dungeon catalog | `lib/models/dungeon_def.dart` |
 | Combat sheet | `lib/models/combat_ratings.dart` + `docs/GEAR_BUDGET.md` |
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
+| Zone packs / boss tells | `lib/core/enemy_flavor.dart` + `lib/spatial/enemy_specials.dart` |
 | Combat presence (idle/inertia/barks) | `lib/spatial/combat_presence.dart` |
 | Ability runtime | `lib/spatial/ability_effects.dart` + `kit_migrated_casts.dart` (`ClassAbilityDef.fireMode` / `gate` / `customId`) |
 | Tile maps | `lib/spatial/tile_map.dart` |
