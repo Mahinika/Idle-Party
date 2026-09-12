@@ -19,10 +19,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.156';
+  static const String currentVersion = '1.12.157';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.157',
+      bullets: <String>[
+        'Your party fights on its own. Day-one menus stay GEAR and MORE until gold, the shop, and essence mean something. Shield, Healer, and Damage kits show their job in the fight.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). The hub hunt still owns Gauntlet / GREATER / KEY hunts. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.156',
       bullets: <String>[

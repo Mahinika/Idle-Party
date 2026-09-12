@@ -1842,6 +1842,14 @@ class GameLogic {
   /// Plain-English chrome before first boss or Ascend — no RPG abbreviations yet.
   static bool plainPlayerChrome(GameState state) => !showDailyChase(state);
 
+  /// First combat gold / floor / boss — GOLD / ESSENCE / pets wait until then.
+  static bool earnedFirstReward(GameState state) =>
+      state.lifetimeGoldEarned > 0 ||
+      state.highestFloorCleared >= 1 ||
+      state.metaDepth.lifetimeFloorClears >= 1 ||
+      state.ascensionLevel >= 1 ||
+      state.bossVictories > 0;
+
   /// Dungeon mode chip label (Repeat/Next vs FARM/PUSH).
   static String dungeonModeChipLabel(DungeonMode mode, GameState state) =>
       _dungeonModeChipLabel(mode, state);

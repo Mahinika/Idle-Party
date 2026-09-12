@@ -2,8 +2,9 @@
 
 **Locked:** 2026-09-12 by owner. **Research-checked:** 2026-09-12
 (GameAnalytics 2025–26, Play ASO experiments, idle FTUE, persona-prompt papers).
-This is the **only** default work program until the done bar below is complete.
-Why: [LEARNINGS.md](LEARNINGS.md).
+**Program 1** (time-to-combat + Play funnel) shipped **2026-09-12**.
+**Default work now:** [Program 2](#program-2--hide-until-unlock--play-smoke)
+done bar below. Why: [LEARNINGS.md](LEARNINGS.md).
 
 North star: **främlingar på Play blir spelare.** AL20 is a quality gate
 (do not ship a broken endgame). It is **not** the batch driver.
@@ -93,14 +94,54 @@ Check boxes only when **shipped** (or owner confirmed for Console-only).
 - [x] Owner looked at Play conversion + crashes + reviews once after the in-repo bar
 - [x] Store Listing Experiment started **or** owner deferred (too little traffic)
 
-When **every** box above is `[x]`, the next user-facing message starts with
-**exactly**:
+Program 1 completed **2026-09-12**. The Robban line for *this* bar was said.
+Do not repeat it. Default work is **Program 2**.
+
+## Program 2 — hide-until-unlock + Play smoke
+
+**Locked:** 2026-09-12 (owner confirmed the plan). North star unchanged:
+strangers on Play become players. AL20 stays a quality gate, not the batch.
+Endgame copy and GEAR follow-up only when play notes say they lie.
+
+Check boxes only when **shipped** (or owner confirmed for Console-only).
+
+**In-repo**
+
+- [x] First-hour bottom bar: GOLD until first reward; SHOP after first boss;
+      ESSENCE when essence exists (or first Ascend). BAG Shop-chip off in the
+      first hour. Flat nav — tabs return at unlock; no second nav.
+- [x] TODAY: grow-the-party beats EQUIP / MARKET until the first boss
+      (claimables still win). `first_hour_plain_test`.
+- [x] First-hour MetaPulse stays empty — no “KEY off” crumbs.
+- [x] Starter kits (Protection / Discipline / Fire): HUD chips keep the job
+      (identity reserve + Shield/Healer/Damage line).
+- [x] Cadence: tag every 2–3 weeks; What’s New lead for a new player;
+      live-light balance gate stays the CI veto (`docs/CONTENT_CADENCE.md`).
+
+**Owner / Console**
+
+- [ ] Google publish complete (listing shows Updated + live version)
+- [ ] SHOP + POWERUPS smoked on a **Play-installed** build (AD PRIVACY path too)
+- [ ] D1 read when traffic exists; Store Listing Experiment when visitors
+      suffice. No scaled UA.
+
+When **every Program 2** box above is `[x]`, the next user-facing message
+starts with **exactly**:
 
 ```
 ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN
 ```
 
-Do not paraphrase. Do not say it early.
+Do not paraphrase. Do not say it early. Do not restore AL20 as the batch.
+
+**Quality gates (not the batch)**
+
+- Endgame copy (KEY loot line, Gauntlet wipe→hub, GR “no mid-run gear”) only
+  when an AL12 / AL20 save’s play notes say the hunt lies.
+- GEAR follow-up (BiS jargon in tips, Shop-chip, two EQUIP buttons) only
+  against play notes from the current save.
+- Tag cadence **2–3 weeks** — `docs/CONTENT_CADENCE.md`. Balance gate stays the
+  CI veto. No new zone / class.
 
 ## Metrics (owner / Console — do not fake)
 

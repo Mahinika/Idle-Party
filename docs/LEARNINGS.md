@@ -42,12 +42,14 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 - **Persona panels don’t make better calls.** “Act as expert” changes tone.
   Six chairs + vetoes beat a 40-role org chart. Chairs: EP, Game, UX, Tech,
   Art, Marketing. No Scrum/Network/UA department.
-- **`/init` must not restore AL20-default** while the growth done bar is open.
+- **`/init` must not restore AL20-default** while Program 2 is open.
 - **What’s New lead is for a stranger.** First bullet = party fights / tap ENTER.
   Keep KEY / GREATER / Mastery in later bullets. Do not teach removed
   LOADOUTS / Sell junk / Scrap buttons by naming them.
-- When that done bar is fully checked, say exactly:
-  `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`
+- Program 1 done bar complete **2026-09-12** (Robban line said). Program 2 is
+  the new default. Say exactly
+  `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN` only when **Program 2**
+  is fully checked.
 
 ## 2026-09-12 — funnel + first session (after shipping those boxes)
 

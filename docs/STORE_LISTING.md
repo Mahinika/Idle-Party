@@ -90,10 +90,10 @@ Start your party and take one more floor.
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.156+186** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
+Working ship: **1.12.157+187** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
 
 ```
-• Your party fights on its own. GEAR uses EQUIP; BAG keeps FILTERS on the sheet; compare leads with ATK / DEF / STA.
+• Your party fights on its own. Day-one menus stay GEAR and MORE until gold, the shop, and essence mean something.
 ```
 
 ### Full description honesty (SHOP)

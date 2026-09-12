@@ -331,7 +331,10 @@ class _InventoryDockState extends State<InventoryDock>
     final nearFull = GearService.isBagJammed(state);
     final upgrades = MenuAlerts.bagUpgradeCount(state);
     final showShopChip =
-        onOpenMarket != null && upgrades == 0 && !nearFull;
+        onOpenMarket != null &&
+        upgrades == 0 &&
+        !nearFull &&
+        MenuTabs.showShop(state);
     final mergeOpen = MenuTabs.showMerge(state);
     final filter = bagSlotFilter;
     final filterLabel = filter == null

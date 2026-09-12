@@ -4,9 +4,13 @@ import 'package:idle_party/core/game_guides.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/local_reminders.dart';
 import 'package:idle_party/core/hub_chase.dart';
+import 'package:idle_party/core/menu_alerts.dart';
+import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/models/hero_spec.dart';
+import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/ui/first_session_tips.dart';
+import 'package:idle_party/ui/hub/hub_today_card.dart';
 
 /// First-hour copy must make sense without WoW / RPG homework.
 void main() {
@@ -112,6 +116,55 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.clearFloors);
     expect(chase.title, contains('Grow the party'));
+  });
+
+  test('first-hour bag upgrades stay on the cave, not EQUIP', () {
+    final base = GameLogic.createInitialState(now: now);
+    final state = base.copyWith(
+      gearStash: [
+        EquipmentItem(
+          id: 'up_1',
+          name: 'Test Blade',
+          slot: EquipmentSlot.weapon,
+          rarity: LootRarity.epic,
+          attackBonus: 40,
+          strengthBonus: 30,
+          itemLevel: 90,
+        ),
+      ],
+    );
+    expect(MenuAlerts.bagUpgradeCount(state), greaterThan(0));
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.detail.toLowerCase(), contains('cave'));
+    expect(chase.kind, isNot(HubChaseKind.equipBag));
+    expect(chase.kind, isNot(HubChaseKind.marketUpgrade));
+  });
+
+  test('first-hour MetaPulse has no KEY crumbs', () {
+    final state = GameLogic.createInitialState(now: now);
+    final chase = HubChase.forState(state, now: now);
+    final crumbs = HubMetaPulse.crumbsFor(
+      state: state,
+      chaseKind: chase.kind,
+      chaseUrgency: chase.urgency,
+      now: now,
+    );
+    expect(crumbs, isEmpty);
+    expect(crumbs.join(' ').toUpperCase(), isNot(contains('KEY')));
+  });
+
+  test('first-hour bottom bar is GEAR and MORE until unlock', () {
+    final fresh = GameLogic.createInitialState(now: now);
+    expect(
+      MenuRouter.visibleHubTabs(fresh),
+      equals(const [MenuRoute.gear, MenuRoute.more]),
+    );
+    expect(MenuTabs.showShop(fresh), isFalse);
+    expect(MenuRouter.visibleHubTabs(fresh.copyWith(highestFloorCleared: 1)),
+      contains(MenuRoute.gold),
+    );
+    expect(MenuTabs.showShop(fresh.copyWith(bossVictories: 1)), isTrue);
   });
 
   test('after first boss INFO still hides KEY and endgame topics', () {

@@ -453,6 +453,7 @@ class _KitSidePanel extends StatelessWidget {
       maxChips: 4,
       world: world,
       heroHpFrac: frac,
+      spec: hero.specId,
     );
 
     return ConstrainedBox(
@@ -473,6 +474,18 @@ class _KitSidePanel extends StatelessWidget {
                 color: GameTheme.torchHot,
               ),
             ),
+            if (plainEnglish) ...[
+              const SizedBox(height: 1),
+              Text(
+                hero.spec.roleTag.plainJob,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.body(
+                  size: 9,
+                  color: GameTheme.parchmentDim,
+                ),
+              ),
+            ],
             const SizedBox(height: 3),
             Row(
               children: [
@@ -657,6 +670,7 @@ class _PartyRow extends StatelessWidget {
             maxChips: maxChips,
             world: world,
             heroHpFrac: maxHp <= 0 ? 1.0 : liveHp / maxHp,
+            spec: hero.specId,
           )
         : const <ClassAbilityDef>[];
 

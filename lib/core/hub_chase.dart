@@ -157,6 +157,21 @@ class HubChase {
     final monthReady = _monthPassChase(state, clock, readyOnly: true);
     if (monthReady != null) return monthReady;
 
+    // First hour: grow the party — EQUIP / MARKET / Meet kit wait until a boss.
+    if (firstHourQuiet) {
+      final bossesNeed = GameLogic.bossesRequiredForAscension(
+        state.ascensionLevel,
+      );
+      final bossesLeft =
+          (bossesNeed - state.bossVictories).clamp(0, bossesNeed);
+      return _ascendPushChase(
+        state,
+        bossesNeed: bossesNeed,
+        bossesLeft: bossesLeft,
+        urgency: HubChaseUrgency.normal,
+      );
+    }
+
     // Endgame (party Lv100): Meet-kit queue stays on PARTY badge, but TODAY
     // must chase Gauntlet / KEY / vault — not a +27 "Meet …" backlog.
     if (!GameLogic.endgameUnlocked(state)) {
@@ -290,17 +305,7 @@ class HubChase {
       if (weekAlmostEarly != null) return weekAlmostEarly;
     }
 
-    // First hour: grow the party in the starter zone. Daily / vault / Will
-    // / KEY grind wait until a boss (or first Ascend) so TODAY is not a meta list.
-    final firstHour = !GameLogic.showDailyChase(state);
-    if (firstHour) {
-      return _ascendPushChase(
-        state,
-        bossesNeed: bossesNeed,
-        bossesLeft: bossesLeft,
-        urgency: HubChaseUrgency.normal,
-      );
-    }
+    // First-hour grow-party already returned above.
 
     // Near endgame: level the party to max before KEY / Gauntlet / Rifts.
     final levelPush = _partyLevelChase(state);

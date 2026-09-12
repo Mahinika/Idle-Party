@@ -12,6 +12,7 @@ class WalletStrip extends StatelessWidget {
     required this.gold,
     required this.essence,
     this.dense = false,
+    this.showEssence = true,
   });
 
   final int gold;
@@ -20,6 +21,9 @@ class WalletStrip extends StatelessWidget {
   /// Tighter padding for the combat top HUD.
   final bool dense;
 
+  /// First-hour saves hide essence until the ESSENCE tab means something.
+  final bool showEssence;
+
   @override
   Widget build(BuildContext context) {
     // Match bottom-tab / button weight — thin body next to IDLE PARTY reads
@@ -27,9 +31,13 @@ class WalletStrip extends StatelessWidget {
     final gap = dense ? 6.0 : 8.0;
     final iconSize = dense ? 20.0 : 24.0;
     final textSize = dense ? 18.0 : 22.0;
+    final goldLabel = 'Gold ${formatCount(gold)}';
+    final label = showEssence
+        ? '$goldLabel, Essence ${formatCount(essence)}'
+        : goldLabel;
     return Semantics(
       container: true,
-      label: 'Gold ${formatCount(gold)}, Essence ${formatCount(essence)}',
+      label: label,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -41,15 +49,17 @@ class WalletStrip extends StatelessWidget {
             textSize: textSize,
             dense: dense,
           ),
-          SizedBox(width: gap),
-          _WalletChip(
-            icon: UiIcon.essence,
-            label: formatCount(essence),
-            tone: GameTheme.borderLit,
-            iconSize: iconSize,
-            textSize: textSize,
-            dense: dense,
-          ),
+          if (showEssence) ...[
+            SizedBox(width: gap),
+            _WalletChip(
+              icon: UiIcon.essence,
+              label: formatCount(essence),
+              tone: GameTheme.borderLit,
+              iconSize: iconSize,
+              textSize: textSize,
+              dense: dense,
+            ),
+          ],
         ],
       ),
     );

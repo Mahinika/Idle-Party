@@ -17,7 +17,8 @@ spelarförväntningar · idle-RPG-standarder.
 ## Flat navigation (hard)
 
 - One shared bottom bar: **GEAR · GOLD · SHOP · ESSENCE · MORE** (+ **KEY** when
-  endgame jargon unlocks; dungeon sixth slot = **LEAVE**).
+  endgame jargon unlocks; dungeon sixth slot = **LEAVE**). Hide GOLD / SHOP /
+  ESSENCE until unlock — do not keep empty destinations “for completeness.”
 - Wire via `MenuRouter` + `MenuSurface` + `AppBottomBar` — do not invent a second
   nav model or a parallel sheet stack.
 - **No nested menus that hide important actions.** Local pages use in-sheet

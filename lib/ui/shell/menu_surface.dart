@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
 import '../../core/nav_intent.dart';
 import 'essence_dock.dart';
@@ -156,6 +157,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
       heightFactor: 1,
       gold: state.gold,
       essence: state.essence,
+      showEssence: MenuTabs.showCamp(state),
       onClose: router.close,
       child: switch (router.route) {
         MenuRoute.gear => _inventoryDock(),

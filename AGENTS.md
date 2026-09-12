@@ -4,25 +4,24 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.156**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.157**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
 Owner describes goals in plain language; agents pick skills/tools/verify alone.
 **Rules (don’t duplicate here):**
-- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **done bar complete 2026-09-12**; next program TBD (do not restore AL20 as the batch)
+- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **Program 2** (hide-until-unlock + Play smoke). Program 1 done bar complete 2026-09-12. Do not restore AL20 as the batch
 - `.cursor/rules/studio-seats.mdc` — six chairs (EP, Game, UX, Tech, Art, Marketing)
 - `.cursor/rules/product-locks.mdc` — hard + soft locks (dated)
 - `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
 - `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff
 - `.cursor/rules/definition-of-done.mdc` — analyze / tests / commit locally
 
-Cadence: `docs/GROWTH_MANDATE.md` **done bar complete 2026-09-12**, then
-`docs/CONTENT_CADENCE.md`. **Default work** when vague: wait for the new plan
-(do not restore AL20 as the batch). The agent said
-`ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`. Chat Swedish; short test
-list (new save first) → wait. Commit locally when green; ask before push / PR /
-tag / Play.
+Cadence: `docs/GROWTH_MANDATE.md` **Program 2**, then
+`docs/CONTENT_CADENCE.md`. **Default work** when vague: next unchecked Program 2
+box (do not restore AL20 as the batch). The Robban line waits until Program 2
+is fully `[x]`. Chat Swedish; short test list (new save first) → wait. Commit
+locally when green; ask before push / PR / tag / Play.
 
 **UI target:** portrait phones (~360–430 px). Reference **Samsung A56**
 (1080×2340 → **360×780**). Live look: AVD `Samsung_A56` + `flutter run`
@@ -120,8 +119,8 @@ Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 Slash: `/init` resyncs AGENTS/rules; `/repo auditandcleaning` runs a read-only
 full-repo audit (see `.cursor/commands/repo-auditandcleaning.md`).
 
-Cadence: **`docs/GROWTH_MANDATE.md`** done bar complete **2026-09-12**, then
-`docs/CONTENT_CADENCE.md` (tag rhythm). Next program TBD — not AL20-as-batch. Why we flipped:
+Cadence: **`docs/GROWTH_MANDATE.md` Program 2**, then
+`docs/CONTENT_CADENCE.md` (tag rhythm). Not AL20-as-batch. Why we flipped:
 [`docs/LEARNINGS.md`](docs/LEARNINGS.md). Background (optional):
 `docs/TOP_GAMES_RESEARCH.md`. Chase contract (hub TODAY ↔ offline Up next):
 `docs/CHASE_CONTRACT.md`. Gear budget: `docs/GEAR_BUDGET.md`. Floor blueprint
@@ -156,7 +155,8 @@ main.dart
  │        ├─ SpatialDungeonView (camera follow, God Hand, farm/push)
  │        └─ chrome (FARM/PUSH, God Hand, party HUD + flask, target panel)
  │           + AppBottomBar GEAR / GOLD / SHOP / ESSENCE / MORE
- │             (hub endgame: + KEY as 6th after MORE; dungeon: + LEAVE = six slots)
+ │             (first hour: GEAR + MORE until unlock; hub endgame: + KEY after MORE;
+ │              dungeon: + LEAVE)
 
 Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
   (flat tabs; one shared bar always visible under sheets; dungeon LEAVE = hub)

@@ -71,14 +71,14 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 **Primary distribution: Google Play.**  
 Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
 (production track live; keep Operator status honest above). Closed opt-in for early builds. Do **not**
-point players at GitHub Releases (repo may be private). Day-to-day: **growth
-mandate** ([GROWTH_MANDATE.md](GROWTH_MANDATE.md)) — listing + time-to-combat are
-the work, not background chores. Ship path for players = Play AAB after owner
-play OK — not public GitHub APK links.
+point players at GitHub Releases (repo may be private). Day-to-day: **Program 2**
+([GROWTH_MANDATE.md](GROWTH_MANDATE.md)) — first-hour chrome + Play publish/smoke.
+Ship path for players = Play AAB after owner play OK — not public GitHub APK
+links.
 
 **Growth:** paste listing from [`STORE_LISTING.md`](STORE_LISTING.md); owner
-checklist + review templates in [`PLAY_GROWTH.md`](PLAY_GROWTH.md). Category
-stays Role Playing. Tags (2026-09-11 Console): **Clicker-rollspel**,
+Play-smoke checklist + review templates in [`PLAY_GROWTH.md`](PLAY_GROWTH.md).
+Category stays Role Playing. Tags (2026-09-11 Console): **Clicker-rollspel**,
 **Rollspel** (no Idle/Incremental picker names in SV UI).
 
 ## Signing

@@ -139,6 +139,7 @@ void main() {
     expect(MenuTabs.showMerge(fresh), isFalse);
     expect(MenuTabs.showRoster(fresh), isFalse);
     expect(MenuTabs.showCamp(fresh), isFalse);
+    expect(MenuTabs.showGold(fresh), isFalse);
     expect(MenuTabs.showShop(fresh), isFalse);
     expect(MenuTabs.showKey(fresh), isFalse);
     expect(MenuTabs.showCodex(fresh), isFalse);

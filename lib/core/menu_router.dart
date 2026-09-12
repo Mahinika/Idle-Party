@@ -606,19 +606,21 @@ class MenuRouter extends ChangeNotifier {
 
 
 
-  /// Hub bottom destinations (TT2-style). First five match dungeon; KEY is a
+  /// Hub bottom destinations (TT2-style). First slots match dungeon; KEY is a
 
   /// sixth hub-only slot after MORE when jargon unlocks (dungeon uses LEAVE).
+
+  /// GOLD / SHOP / ESSENCE hide until they mean something.
 
   static List<MenuRoute> visibleHubTabs(GameState s) => <MenuRoute>[
 
     MenuRoute.gear,
 
-    MenuRoute.gold,
+    if (MenuTabs.showGold(s)) MenuRoute.gold,
 
-    MenuRoute.shop,
+    if (MenuTabs.showShop(s)) MenuRoute.shop,
 
-    MenuRoute.essence,
+    if (MenuTabs.showCamp(s)) MenuRoute.essence,
 
     MenuRoute.more,
 
@@ -628,19 +630,19 @@ class MenuRouter extends ChangeNotifier {
 
 
 
-  /// Dungeon bar destinations (+ LEAVE in [AppBottomBar] = six slots).
+  /// Dungeon bar destinations (+ LEAVE in [AppBottomBar] = last slot).
 
-  /// Same five as hub; KEY stays hub / top-HUD mid-fight.
+  /// Same gated tabs as hub; KEY stays hub / top-HUD mid-fight.
 
-  static List<MenuRoute> visibleDungeonTabs(GameState s) => const <MenuRoute>[
+  static List<MenuRoute> visibleDungeonTabs(GameState s) => <MenuRoute>[
 
     MenuRoute.gear,
 
-    MenuRoute.gold,
+    if (MenuTabs.showGold(s)) MenuRoute.gold,
 
-    MenuRoute.shop,
+    if (MenuTabs.showShop(s)) MenuRoute.shop,
 
-    MenuRoute.essence,
+    if (MenuTabs.showCamp(s)) MenuRoute.essence,
 
     MenuRoute.more,
 

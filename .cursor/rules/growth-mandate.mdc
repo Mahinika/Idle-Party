@@ -1,6 +1,6 @@
 ---
 description: >-
-  Active growth mandate — time-to-combat + Play funnel until the done bar.
+  Program 2 — hide-until-unlock + Play smoke until that done bar.
   When complete, say the exact Robban line (never early, never paraphrased).
 alwaysApply: true
 ---
@@ -8,31 +8,33 @@ alwaysApply: true
 # Growth mandate (Idle Party)
 
 **Locked 2026-09-12.** Source: `docs/GROWTH_MANDATE.md` (research-checked).
+Program 1 (time-to-combat + funnel) shipped 2026-09-12.
 
-Default work is **grow players**, not AL20 polish. Vague “gör bättre / vad
-härnäst” → next **unchecked** box on that done bar. AL20 play notes are a
-**quality gate**. They are not the batch.
+Default work is **Program 2** — hide chrome until it means something + Play
+smoke. Vague “gör bättre / vad härnäst” → next **unchecked** box on
+**Program 2**. AL20 play notes are a **quality gate**. They are not the batch.
+Endgame copy / GEAR follow-up only when the owner’s notes say they lie.
 
 ## Do this
 
-- Time-to-combat **≤90 s** on a new save; first reward in the first session
-  (the 15 min line is an envelope, not the hook)
-- Funnel events including `app_ready` + `first_reward` + time-to-combat
-- One day-2–7 job; punchy Welcome Back
-- Notifications after a milestone, ~1–2/day, never install-prompt / combat
-- Listing: **icon** + shots 1–2 = live crawl
-- Hide dead chrome; gate KEY/endgame until unlock
+- First-hour bar: GOLD after first reward; SHOP after first boss; ESSENCE
+  when essence exists. BAG Shop-chip off until then.
+- TODAY grow-the-party beats EQUIP / MARKET until the first boss
+- Starter kit HUD (PROT / DISC / FIRE) stays readable
+- Cadence 2–3 weeks; new-player What’s New; DPS HIGH still fails CI
+- Owner: Play publish + SHOP/POWERUPS smoke on a Play install
 
-## Do not do (until the phrase is said)
+## Do not do
 
 - New zone / class / God Hand redesign / second sim / gacha / iOS / web product
 - AL20 chase/wipe polish as the default slice
 - God-object cleanup as the quarter’s story
 - Scaled paid UA before D1 is known (tiny spend ≠ a D1 study)
+- Repeat the Robban line for Program 1 (that bar is history)
 
 ## Phrase
 
-When **every** checkbox in `docs/GROWTH_MANDATE.md` → **Done bar** is `[x]`,
+When **every** checkbox in `docs/GROWTH_MANDATE.md` → **Program 2** is `[x]`,
 the next user-facing message starts with **exactly**:
 
 `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`

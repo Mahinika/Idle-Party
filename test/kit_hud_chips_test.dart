@@ -79,11 +79,21 @@ void main() {
       );
       expect(visible.length, 4, reason: '$spec');
       final ids = visible.map((d) => d.id).toSet();
+      final identityHit = ids.intersection(must);
       expect(
-        ids.intersection(must),
+        identityHit,
         isNotEmpty,
         reason: '$spec visible $ids missed identity $must',
       );
+      if (spec == HeroSpecId.protection ||
+          spec == HeroSpecId.discipline ||
+          spec == HeroSpecId.fire) {
+        expect(
+          identityHit.length,
+          greaterThanOrEqualTo(3),
+          reason: '$spec kept $identityHit of $must from $ids',
+        );
+      }
       // Catalog-order take(4) used to bury late unlocks — signatures must win a slot.
       final hasIdentityOrSignature = visible.any(
         (d) =>
@@ -112,5 +122,12 @@ void main() {
       isTrue,
     );
     expect(visible, isNot(equals(naive)));
+  });
+
+  test('starter kits reserve three identity chips', () {
+    expect(KitHudChips.identityReserveFor(HeroSpecId.protection), 3);
+    expect(KitHudChips.identityReserveFor(HeroSpecId.discipline), 3);
+    expect(KitHudChips.identityReserveFor(HeroSpecId.fire), 3);
+    expect(KitHudChips.identityReserveFor(HeroSpecId.combat), 2);
   });
 }

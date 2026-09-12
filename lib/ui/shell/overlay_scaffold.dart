@@ -16,6 +16,7 @@ class OverlayScrim extends StatelessWidget {
     this.heightFactor = 0.85,
     this.gold,
     this.essence,
+    this.showEssence = true,
   });
 
   final String title;
@@ -26,6 +27,7 @@ class OverlayScrim extends StatelessWidget {
   final double heightFactor;
   final int? gold;
   final int? essence;
+  final bool showEssence;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +58,7 @@ class OverlayScrim extends StatelessWidget {
                 heightFactor: heightFactor,
                 gold: gold,
                 essence: essence,
+                showEssence: showEssence,
                 child: child,
               ),
             ],
@@ -100,6 +103,7 @@ class _MobileSheet extends StatelessWidget {
     this.heightFactor = 0.85,
     this.gold,
     this.essence,
+    this.showEssence = true,
   });
 
   final String title;
@@ -109,6 +113,7 @@ class _MobileSheet extends StatelessWidget {
   final double heightFactor;
   final int? gold;
   final int? essence;
+  final bool showEssence;
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +133,7 @@ class _MobileSheet extends StatelessWidget {
         showHandle: !fullHeight,
         gold: gold,
         essence: essence,
+        showEssence: showEssence,
         child: child,
       ),
     );
@@ -166,6 +172,7 @@ class _OverlayPanel extends StatelessWidget {
     this.showHandle,
     this.gold,
     this.essence,
+    this.showEssence = true,
   });
 
   final String title;
@@ -177,6 +184,7 @@ class _OverlayPanel extends StatelessWidget {
   final bool? showHandle;
   final int? gold;
   final int? essence;
+  final bool showEssence;
 
   @override
   Widget build(BuildContext context) {
@@ -222,6 +230,7 @@ class _OverlayPanel extends StatelessWidget {
                 WalletStrip(
                   gold: gold!,
                   essence: essence!,
+                  showEssence: showEssence,
                 ),
                 const SizedBox(width: 6),
               ],

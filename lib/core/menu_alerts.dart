@@ -381,7 +381,10 @@ abstract final class MenuTabs {
       s.ascensionLevel >= 1 || s.metaDepth.pendingHeroReveals.isNotEmpty;
 
   static bool showCamp(GameState s) => s.ascensionLevel >= 1 || s.essence > 0;
-  static bool showShop(GameState s) => s.ascensionLevel >= 1;
+  /// GOLD tab — after the first reward (loot / floor / boss).
+  static bool showGold(GameState s) => GameLogic.earnedFirstReward(s);
+  /// Real-money SHOP — after the first boss (or first Ascend).
+  static bool showShop(GameState s) => GameLogic.showDailyChase(s);
   /// Blessing / God Hand / REBORN — after first-hour plain chrome.
   static bool showKeep(GameState s) => !GameLogic.plainPlayerChrome(s);
   /// Relics / Craft tabs — after first-hour plain chrome (same as old KEEP/APEX).

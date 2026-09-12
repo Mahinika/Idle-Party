@@ -207,7 +207,7 @@ class FirstSessionTips extends StatelessWidget {
 
   /// First combat gold / floor / boss — GOLD / ESSENCE / pets wait until then.
   static bool earnedFirstReward(GameState s) =>
-      s.lifetimeGoldEarned > 0 || leftPorch(s) || s.bossVictories > 0;
+      GameLogic.earnedFirstReward(s);
 
   /// Overlay tips allowed before the first reward (hub job + tap the fight).
   static const List<String> firstRunBeatIds = <String>['first_run', 'godhand'];

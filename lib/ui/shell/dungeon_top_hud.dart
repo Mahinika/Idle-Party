@@ -516,6 +516,7 @@ class DungeonTopHud extends StatelessWidget {
                 gold: state.gold,
                 essence: state.essence,
                 dense: true,
+                showEssence: MenuTabs.showCamp(state),
               ),
             ),
           ),

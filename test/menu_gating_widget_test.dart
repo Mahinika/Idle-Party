@@ -64,17 +64,15 @@ void main() {
     );
   });
 
-  test('fresh hub tabs are GEAR GOLD SHOP ESSENCE MORE; meta rows unlock later', () {
+  test('fresh hub tabs are GEAR MORE; GOLD SHOP ESSENCE unlock later', () {
     final early = GameLogic.createInitialState(now: now);
+    expect(MenuTabs.showGold(early), isFalse);
     expect(MenuTabs.showCamp(early), isFalse);
     expect(MenuTabs.showShop(early), isFalse);
     expect(
       MenuRouter.visibleHubTabs(early),
       equals(const [
         MenuRoute.gear,
-        MenuRoute.gold,
-        MenuRoute.shop,
-        MenuRoute.essence,
         MenuRoute.more,
       ]),
     );
@@ -85,15 +83,50 @@ void main() {
     expect(MenuTabs.showQuests(early), isFalse);
 
     final afterFloor = early.copyWith(highestFloorCleared: 1);
+    expect(MenuTabs.showGold(afterFloor), isTrue);
+    expect(MenuTabs.showShop(afterFloor), isFalse);
+    expect(MenuTabs.showCamp(afterFloor), isFalse);
+    expect(
+      MenuRouter.visibleHubTabs(afterFloor),
+      equals(const [
+        MenuRoute.gear,
+        MenuRoute.gold,
+        MenuRoute.more,
+      ]),
+    );
     expect(MenuTabs.showQuests(afterFloor), isTrue);
     expect(
       MenuRouter.visibleMoreMetaRows(afterFloor),
       equals(const [MoreSection.quests]),
     );
 
+    final afterBoss = early.copyWith(bossVictories: 1, highestFloorCleared: 1);
+    expect(MenuTabs.showShop(afterBoss), isTrue);
+    expect(MenuTabs.showCamp(afterBoss), isFalse);
+    expect(
+      MenuRouter.visibleHubTabs(afterBoss),
+      equals(const [
+        MenuRoute.gear,
+        MenuRoute.gold,
+        MenuRoute.shop,
+        MenuRoute.more,
+      ]),
+    );
+
     final afterAscend = early.copyWith(ascensionLevel: 1, essence: 10);
     expect(MenuTabs.showCamp(afterAscend), isTrue);
+    expect(MenuTabs.showShop(afterAscend), isTrue);
     expect(MenuTabs.showRelics(afterAscend), isTrue);
+    expect(
+      MenuRouter.visibleHubTabs(afterAscend),
+      equals(const [
+        MenuRoute.gear,
+        MenuRoute.gold,
+        MenuRoute.shop,
+        MenuRoute.essence,
+        MenuRoute.more,
+      ]),
+    );
     expect(
       MenuRouter.visibleMoreMetaRows(afterAscend),
       equals(const [
@@ -111,15 +144,12 @@ void main() {
     );
   });
 
-  test('dungeon tabs are GEAR GOLD SHOP ESSENCE MORE', () {
+  test('dungeon tabs match hub gating on a fresh save', () {
     final s = GameLogic.createInitialState(now: now);
     expect(
       MenuRouter.visibleDungeonTabs(s),
       equals(const [
         MenuRoute.gear,
-        MenuRoute.gold,
-        MenuRoute.shop,
-        MenuRoute.essence,
         MenuRoute.more,
       ]),
     );
@@ -127,7 +157,7 @@ void main() {
     expect(graph.destinations, MenuRouter.visibleDungeonTabs(s));
   });
 
-  test('hub and dungeon share the same first five tabs; KEY / LEAVE is sixth', () {
+  test('hub and dungeon share the same gated tabs; KEY / LEAVE is extra', () {
     final early = GameLogic.createInitialState(now: now);
     expect(
       MenuRouter.visibleHubTabs(early),

@@ -167,6 +167,7 @@ class HubHeader extends StatefulWidget {
     this.partyName = 'The Party',
     this.dimIncome = false,
     this.plainChrome = false,
+    this.showEssence = true,
     this.huntHint,
     this.blessingStacks = 0,
   });
@@ -184,6 +185,7 @@ class HubHeader extends StatefulWidget {
   final String partyName;
   final bool dimIncome;
   final bool plainChrome;
+  final bool showEssence;
 
   /// Short tonight-hunt tag (TODAY title) for AL-max pill.
   final String? huntHint;
@@ -227,6 +229,7 @@ class _HubHeaderState extends State<HubHeader> {
             WalletStrip(
               gold: widget.gold,
               essence: widget.essence,
+              showEssence: widget.showEssence,
             ),
             const SizedBox(width: 6),
             Expanded(

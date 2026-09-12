@@ -6,7 +6,8 @@ import '../game_theme.dart';
 import '../web_click_bridge.dart';
 
 /// TT2-style flat tab bar: equal color blocks with icon + label.
-/// Hub: GEAR · GOLD · SHOP · ESSENCE · MORE · (KEY). Dungeon: same five + LEAVE.
+/// Hub: GEAR · GOLD · SHOP · ESSENCE · MORE · (KEY). First-hour hides GOLD /
+/// SHOP / ESSENCE until unlock. Dungeon: same gated tabs + LEAVE.
 class AppBottomBar extends StatelessWidget {
   const AppBottomBar({
     super.key,

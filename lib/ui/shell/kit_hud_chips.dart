@@ -1,4 +1,5 @@
 import '../../models/class_ability.dart';
+import '../../models/hero_spec.dart';
 import '../../spatial/spatial_combat.dart';
 
 /// Party kit chip picks for the dungeon HUD.
@@ -78,6 +79,16 @@ abstract final class KitHudChips {
     };
   }
 
+  /// Specs whose HUD must keep more identity chips (new-game jobs).
+  static int identityReserveFor(HeroSpecId? spec) {
+    return switch (spec) {
+      HeroSpecId.protection ||
+      HeroSpecId.discipline ||
+      HeroSpecId.fire => 3,
+      _ => 2,
+    };
+  }
+
   /// Prefer ready / identity chips so a capped HUD still reads as the kit.
   static List<ClassAbilityDef> prioritize(
     List<ClassAbilityDef> abilities, {
@@ -87,6 +98,7 @@ abstract final class KitHudChips {
     required int maxChips,
     SpatialWorld? world,
     double heroHpFrac = 1.0,
+    HeroSpecId? spec,
   }) {
     if (abilities.length <= maxChips) return abilities;
 
@@ -135,7 +147,8 @@ abstract final class KitHudChips {
       };
     }
 
-    // Reserve up to 2 identity chips so CD fantasy never disappears entirely.
+    // Reserve identity chips so CD fantasy never disappears entirely.
+    // New-game jobs (PROT / DISC / FIRE) keep three; others keep two.
     final identity = [
       for (final a in abilities)
         if (identityIds.contains(a.id) || a.tier == AbilityCastTier.signature) a,
@@ -144,7 +157,8 @@ abstract final class KitHudChips {
         if (byReady != 0) return byReady;
         return fantasyBias(a).compareTo(fantasyBias(b));
       });
-    final reserved = identity.take(2).toList(growable: false);
+    final reserveN = identityReserveFor(spec ?? spatial.heroSpecId);
+    final reserved = identity.take(reserveN).toList(growable: false);
     final reservedIds = reserved.map((a) => a.id).toSet();
 
     final ranked = [

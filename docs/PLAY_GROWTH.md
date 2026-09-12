@@ -3,9 +3,9 @@
 **Updated:** 2026-09-12 · Category stays **Role Playing** (idle fantasy RPG).  
 Do **not** chase Casual / Battle Royale / sandbox search volume.
 
-**Active program:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) done bar complete
-**2026-09-12** (in-repo + Console look). Next plan is a new program — do not
-silently restore AL20 as the batch.
+**Active program:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) **Program 2**
+(hide-until-unlock + Play smoke). Program 1 done bar complete **2026-09-12**.
+Do not silently restore AL20 as the batch.
 
 Honest growth order: **crash-free → listing conversion → D1 → D7 → rating → tiny paid test**.
 
@@ -46,6 +46,24 @@ Do these in Console when you have 20 minutes:
 6. Optional: **Google App campaigns** — see ads test plan below (start tiny).
 
 Never point players at GitHub Releases.
+
+### Program 2 — owner Play smoke (do not skip)
+
+In-repo ship may be ahead of Play. **No new AAB until you played and asked.**
+
+On a **Play-installed** build (not sideload / emulator debug):
+
+1. Confirm listing **Updated** when Google publishes (live may still be older
+   than in-repo — see [`PLAY_STORE.md`](PLAY_STORE.md) Operator status).
+2. **SHOP** — open SHOP, see live SKUs (not “not in Play Console yet”), buy
+   nothing required; restore-purchases path if you already own a SKU.
+3. **POWERUPS** — hub camera → watch or skip; ticket grants; SETTINGS →
+   **AD PRIVACY** still opens UMP.
+4. Ads never start mid-fight.
+5. After smoke: paste notes here / in chat. Agent does not mark those Program 2
+   owner boxes without your yes.
+
+Tiny UA stays optional and capped — see ads test plan below.
 
 ### Console look (2026-09-12)
 

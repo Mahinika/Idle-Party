@@ -22,6 +22,7 @@ import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'meta/offline_welcome.dart';
 import 'meta/notify_opt_in.dart';
+import '../core/menu_alerts.dart';
 import '../core/menu_router.dart';
 import 'shell/discord_thanks_overlay.dart';
 import 'shell/whats_new_overlay.dart';
@@ -565,6 +566,7 @@ class _HubScreenState extends State<HubScreen>
                                 ),
                                 partyName: state.partyName,
                                 plainChrome: GameLogic.plainPlayerChrome(state),
+                                showEssence: MenuTabs.showCamp(state),
                                 dimIncome: hubChaseOwnsEndgameRow(chase.kind),
                                 huntHint: _shortHuntHint(chase),
                                 blessingStacks: state.metaDepth.ascendBlessings,
