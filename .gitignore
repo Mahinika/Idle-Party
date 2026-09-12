@@ -118,6 +118,9 @@ IdleSword*
 /tool/store_listing/upload/
 /tool/store_listing/preview/
 /tool/store_listing/youtube/
+# itch.io listing hops (keep PAGE.md + owned cover PNGs)
+/tool/store_listing/itch/upload/
+/tool/store_listing/itch/_cors_server.py
 
 # One-off emulator dumps / gear audits (keep MCP, playtest scripts, art pipeline)
 /tool/_*.py

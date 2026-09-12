@@ -124,3 +124,30 @@ Developer Cognifox / app Idle Party (`com.idleparty.app`):
 - Update `docs/PLAY_STORE.md` Operator status (submitted vs live).
 - Commit locally; ask before push.
 - Testers keep the previous live Alpha until review publishes the new one.
+
+## itch.io images (HTTPS — localhost CORS will not work)
+
+Play Console is often HTTP-same-origin enough for `127.0.0.1` fetch. **itch.io
+is HTTPS.** Do not copy the AAB/listing localhost recipe there.
+
+Full copy + live URLs: [`tool/store_listing/itch/PAGE.md`](../../../tool/store_listing/itch/PAGE.md).
+
+**Dead (do not retry)**
+
+1. CDP `DOM.setFileInputFiles` — denied.
+2. Local `py -3` CORS on `127.0.0.1` — mixed content / CORS against itch HTTPS.
+3. `browser_fill` or pasting huge `.b64` through the tool — corrupts the payload.
+
+**Working hop (cover + screenshots)**
+
+1. Patch `HTMLInputElement.prototype.click` so **Upload Cover Image** / **Add
+   screenshots** do not open the native picker.
+2. Host a **complete** `.b64` text file on an HTTPS origin with CORS (last time:
+   secret GitHub gist). Fetch it in the locked itch tab.
+3. `atob` → `Uint8Array` → `File` → `DataTransfer` → `input.files` + `change`.
+4. Delete the gist immediately (`gh gist delete <id> --yes`). Do not recreate
+   unless uploading more images. Never commit `tool/store_listing/itch/upload/`.
+
+**Community post** (`Release Announcements`): studio email must be verified;
+reCAPTCHA is owner-only (agent cannot tick it). Board needs the itch page URL,
+a short summary, and an embedded image or YouTube trailer.

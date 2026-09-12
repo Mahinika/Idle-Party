@@ -45,6 +45,7 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 | I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — that *is* the batch |
 | “gör spelet bättre” / vad härnäst (no other target) | Default slice in `owner-preferences` + `docs/CONTENT_CADENCE.md` — unless they name something broader (`product-locks` escape) |
 | Play Store / listing / privacy / AAB | `play-store-prep` (+ `docs/PLAY_STORE.md`) |
+| itch.io / itch listing | `play-store-prep` + `tool/store_listing/itch/PAGE.md` (no APK) |
 | **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules` |
 | **`/repo auditandcleaning`** | `repo-audit-and-cleaning` — report only, no code changes |
 | Ascend / “what am I chasing” | `hub_chase`, `ascend_roadmap`, Blessing in `metaDepth` |

@@ -3,8 +3,9 @@ name: play-store-prep
 description: >-
   Idle Party Play Console readiness (signing, privacy URL, screenshots, IARC,
   listing copy) and AAB upload to closed Alpha. Use when preparing Google Play,
-  store listing, release ops, uploading AAB, or when the owner says "lägg upp
-  på Play" / Play Store. Do not point players at GitHub Releases (product lock).
+  store listing, release ops, uploading AAB, itch.io listing, or when the owner
+  says "lägg upp på Play" / Play Store / itch. Do not upload an APK to itch or
+  point players at GitHub Releases (product lock).
 ---
 
 # Play Store prep (Idle Party)
@@ -17,6 +18,7 @@ remains for early builds. Source of truth:
 ## When to run this skill
 
 - Owner mentions Play, store listing, privacy, IARC, screenshots, AAB upload
+- Owner mentions itch.io listing / community post (PAGE.md — no APK)
 - Before tagging a release meant for Play closed testing
 - Agent notices store blockers while doing release polish
 
@@ -50,10 +52,17 @@ Play prep:
 - [ ] 7. Upload via reference.md recipe when ready
 ```
 
+## itch.io (discovery only)
+
+Play stays the install path. itch is a public page + Play button — **no APK**.
+Copy, live URLs, and image-upload gotchas:
+[`tool/store_listing/itch/PAGE.md`](../../../tool/store_listing/itch/PAGE.md).
+Read **[reference.md](reference.md)** § itch.io when attaching cover/screenshots.
+
 ## Upload recipes (read on demand)
 
-For screenshot capture, CORS listing upload, and AAB attach via Cursor browser,
-read **[reference.md](reference.md)** when you reach that step.
+For screenshot capture, CORS listing upload, AAB attach, and itch images via
+Cursor browser, read **[reference.md](reference.md)** when you reach that step.
 
 ## Agent do / don't
 
@@ -67,9 +76,11 @@ read **[reference.md](reference.md)** when you reach that step.
 
 - Pretend Play production is live when status says otherwise
 - Commit keystores, `key.properties`, or base64 secrets
+  (includes `tool/store_listing/itch/upload/`)
 - Rely on `python` on this Windows box — use `py -3`
 - Waste turns on `DOM.setFileInputFiles` (blocked)
-- Point players at GitHub Releases
+- Reuse Play Console localhost-CORS against itch.io (HTTPS page — mixed content)
+- Upload an APK to itch or point players at GitHub Releases
 - Block cozy-game features waiting on store chrome
 
 ## Related
@@ -78,3 +89,4 @@ read **[reference.md](reference.md)** when you reach that step.
 - Tag → APK/AAB: `.github/workflows/build-apk.yml`
 - Hub chrome before screenshots: `hub-smoke` / `screenshotting-changelog`
 - Browser phone metrics: `browser-playtest`
+- itch.io page + community post: `tool/store_listing/itch/PAGE.md`
