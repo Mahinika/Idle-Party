@@ -10,6 +10,8 @@ import 'package:idle_party/core/greater_rift.dart';
 import 'package:idle_party/core/rift.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
+const _gauntletMilestonesDone = <String>['f25', 'f50', 'f100', 'f150', 'f200'];
+
 void main() {
   final now = DateTime.utc(2026, 8, 8, 12);
 
@@ -398,8 +400,8 @@ void main() {
         dailyClaimed: true,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
               dailyVaultClaimed: true,
-              gauntletBestFloor: 100,
-              claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+              gauntletBestFloor: 200,
+              claimedGauntletMilestones: _gauntletMilestonesDone,
               riftBestTier: 20,
               claimedRiftMilestones: const ['r5', 'r10', 'r20'],
             ),
@@ -426,8 +428,8 @@ void main() {
         lastDailyDate: '',
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
               dailyVaultClaimed: true,
-              gauntletBestFloor: 100,
-              claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+              gauntletBestFloor: 200,
+              claimedGauntletMilestones: _gauntletMilestonesDone,
               riftBestTier: 20,
               claimedRiftMilestones: const ['r5', 'r10', 'r20'],
               grBestTier: 20,
@@ -466,8 +468,8 @@ void main() {
         hardmodeLevel: GameLogic.maxAscensionLevel,
         metaDepth: state.metaDepth.copyWith(
           dailyVaultClaimed: true,
-          gauntletBestFloor: 100,
-          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          gauntletBestFloor: 200,
+          claimedGauntletMilestones: _gauntletMilestonesDone,
           grBestTier: GreaterRift.maxTier,
           claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
           riftBestTier: 0,
@@ -495,8 +497,8 @@ void main() {
         dailyClaimed: true,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
           dailyVaultClaimed: true,
-          gauntletBestFloor: 100,
-          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          gauntletBestFloor: 200,
+          claimedGauntletMilestones: _gauntletMilestonesDone,
           grBestTier: 0,
           riftBestTier: 0,
         ),
@@ -555,8 +557,8 @@ void main() {
       dailyVaultClaimed: true,
       grBestTier: GreaterRift.maxTier,
       claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
-      gauntletBestFloor: 100,
-      claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+      gauntletBestFloor: 200,
+      claimedGauntletMilestones: _gauntletMilestonesDone,
       riftBestTier: Rift.maxTier,
       claimedRiftMilestones: const ['r5', 'r10', 'r20'],
       worldBossTickets: 2,
@@ -667,8 +669,8 @@ void main() {
           dailyVaultClaimed: true,
           grBestTier: GreaterRift.maxTier,
           claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
-          gauntletBestFloor: 100,
-          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          gauntletBestFloor: 200,
+          claimedGauntletMilestones: _gauntletMilestonesDone,
           riftBestTier: Rift.maxTier,
           claimedRiftMilestones: const ['r5', 'r10', 'r20'],
           worldBossTickets: 0,
@@ -700,6 +702,7 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.gauntletMilestone);
     expect(chase.title, contains('Push Gauntlet PB'));
+    expect(chase.detail, contains('PB F200'));
   });
 
   test('KEY chase detail names affixes and par', () {
@@ -719,6 +722,29 @@ void main() {
     expect(chase.kind, HubChaseKind.keystone);
     expect(chase.detail, contains('iLvl'));
     expect(chase.detail.toLowerCase(), contains('par'));
+  });
+
+  test('KEY roster hint surfaces for swarm affix week', () {
+    expect(
+      Keystone.rosterHintForAffixes(const ['swarm']),
+      contains('Shield'),
+    );
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 2,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+              weeklyModifier: 'swarm',
+            ),
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+      ),
+    );
+    final chase = HubChase.forState(state, now: now);
+    if (chase.kind == HubChaseKind.keystone) {
+      expect(chase.detail, contains('Shield'));
+    }
   });
 
   test('Rebuild bag chase uses plain gear-farm copy', () {
@@ -834,8 +860,8 @@ GameState _settledEndgameLadderState({required DateTime now}) =>
           dailyVaultClaimed: true,
           grBestTier: GreaterRift.maxTier,
           claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
-          gauntletBestFloor: 100,
-          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          gauntletBestFloor: 200,
+          claimedGauntletMilestones: _gauntletMilestonesDone,
           riftBestTier: Rift.maxTier,
           claimedRiftMilestones: const ['r5', 'r10', 'r20'],
           worldBossTickets: 0,

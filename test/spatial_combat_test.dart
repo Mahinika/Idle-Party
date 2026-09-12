@@ -835,9 +835,48 @@ void main() {
     expect(seen.contains('WAVE'), isTrue);
     expect(seen.contains('PULSE'), isFalse);
   });
+
+  test('ashen crown boss uses CROWN / SLAM / IGNITE kit', () {
+    final seen = _bossTellTexts(
+      'ember',
+      inWorldBoss: true,
+    );
+    expect(seen.contains('CROWN') || seen.contains('IGNITE'), isTrue);
+    expect(seen.contains('SLAM'), isTrue);
+  });
+
+  test('KEY swarm affix shows SWARM banner at fight start', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
+    final room = DungeonRoom(
+      floorNumber: 1,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 5,
+      enemyCount: 2,
+    );
+    state = state.copyWith(
+      dungeonId: 'sandy',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: GameLogic.createEnemyGroup(room, dungeonId: 'sandy'),
+      inDungeon: true,
+      keystoneRunActive: true,
+      keystoneRunAffixes: const ['swarm'],
+    );
+    var world = SpatialCombat.build(state);
+    for (final e in world.enemies) {
+      e.dormant = false;
+    }
+    final step = SpatialCombat.step(world, state, dt: 0.05);
+    final texts = step.world.floaters.map((f) => f.text).toSet();
+    expect(texts.contains('SWARM'), isTrue);
+  });
 }
 
-Set<String> _bossTellTexts(String dungeonId) {
+Set<String> _bossTellTexts(
+  String dungeonId, {
+  bool inWorldBoss = false,
+}) {
   var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
   final room = DungeonRoom(
     floorNumber: 5,
@@ -854,6 +893,7 @@ Set<String> _bossTellTexts(String dungeonId) {
     dungeonFloor: [room],
     enemies: [boss],
     inDungeon: true,
+    inWorldBoss: inWorldBoss,
   );
   var world = SpatialCombat.build(state);
   final body = world.enemies.first;

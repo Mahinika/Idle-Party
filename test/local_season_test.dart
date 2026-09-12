@@ -143,4 +143,48 @@ void main() {
     expect(state.metaDepth.titles, contains('Spire Climber'));
     expect(state.metaDepth.claimedGauntletMilestones, contains('f25'));
   });
+
+  test('GR week goal ready when grBestTier meets target', () {
+    const week = LocalSeasonWeek(
+      id: 'ranked_gr3',
+      name: 'Ranked GR Push',
+      blurb: 'Board week',
+      grTierTarget: 3,
+      essenceReward: 14,
+    );
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      metaDepth: const MetaDepthState(grBestTier: 3),
+    );
+    expect(LocalSeasonCatalog.weekGoalReady(state, week), isTrue);
+    expect(
+      LocalSeasonCatalog.weekProgressLabel(state, week),
+      contains('GR3'),
+    );
+  });
+
+  test('Ashen week goal ready when crown cleared this week', () {
+    const week = LocalSeasonWeek(
+      id: 'ashen_night',
+      name: 'Crown Night',
+      blurb: 'Boss week',
+      ashenClearTarget: true,
+      essenceReward: 16,
+    );
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      metaDepth: const MetaDepthState(worldBossClearedWeek: true),
+    );
+    expect(LocalSeasonCatalog.weekGoalReady(state, week), isTrue);
+  });
+
+  test('Gauntlet F150 milestone grants Spire Ascendant title', () {
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+            gauntletBestFloor: 150,
+            claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          ),
+    );
+    state = GameLogic.syncMetaPayoffs(state);
+    expect(state.metaDepth.titles, contains('Spire Ascendant'));
+    expect(state.metaDepth.claimedGauntletMilestones, contains('f150'));
+  });
 }

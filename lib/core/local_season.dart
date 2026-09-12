@@ -11,6 +11,8 @@ class LocalSeasonWeek {
     this.affixOverride,
     this.timedKeyTarget = 0,
     this.gauntletFloorTarget = 0,
+    this.grTierTarget = 0,
+    this.ashenClearTarget = false,
     this.essenceReward = 8,
     this.titleReward,
   });
@@ -32,12 +34,22 @@ class LocalSeasonWeek {
   /// Claim when [MetaDepthState.gauntletBestFloor] ≥ this (0 = ignore).
   final int gauntletFloorTarget;
 
+  /// Claim when [MetaDepthState.grBestTier] ≥ this (0 = ignore).
+  final int grTierTarget;
+
+  /// Claim when [MetaDepthState.worldBossClearedWeek] is true this ISO week.
+  final bool ashenClearTarget;
+
   final int essenceReward;
   final String? titleReward;
 
   String claimIdForWeek(String weekKey) => '$weekKey:$id';
 
-  bool get hasGoal => timedKeyTarget > 0 || gauntletFloorTarget > 0;
+  bool get hasGoal =>
+      timedKeyTarget > 0 ||
+      gauntletFloorTarget > 0 ||
+      grTierTarget > 0 ||
+      ashenClearTarget;
 }
 
 /// Calendar-month pass — KEY or Greater Rift PB (no permanent gold stamps).
@@ -182,7 +194,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'iron_week',
       name: 'Iron Week',
-      blurb: 'Harder, richer packs — time a KEY +2 under Iron.',
+      blurb: 'Harder, richer packs — time a timed KEY +2 under Iron.',
       affixOverride: 'iron',
       timedKeyTarget: 2,
       essenceReward: 12,
@@ -196,6 +208,33 @@ abstract final class LocalSeasonCatalog {
       timedKeyTarget: 2,
       essenceReward: 12,
       titleReward: 'Elite Tempo',
+    ),
+    LocalSeasonWeek(
+      id: 'ranked_gr3',
+      name: 'Ranked GR Push',
+      blurb: 'Board week — clear Ranked GR3 (no mid-run gear).',
+      affixOverride: 'tyrannical',
+      grTierTarget: 3,
+      essenceReward: 14,
+      titleReward: 'GR Boarder',
+    ),
+    LocalSeasonWeek(
+      id: 'ashen_night',
+      name: 'Crown Night',
+      blurb: 'Boss week — clear Ashen Crown once (ticket or PRACTICE after).',
+      affixOverride: 'boss_rush',
+      ashenClearTarget: true,
+      essenceReward: 16,
+      titleReward: 'Crown Night',
+    ),
+    LocalSeasonWeek(
+      id: 'ranked_gr5',
+      name: 'GR Ladder',
+      blurb: 'Mothveil ranked — reach GR5 on the board ladder.',
+      affixOverride: 'fortified',
+      grTierTarget: 5,
+      essenceReward: 16,
+      titleReward: 'GR Climber',
     ),
   ];
 
@@ -253,6 +292,8 @@ abstract final class LocalSeasonCatalog {
     25: 'Spire Climber',
     50: 'Crystal Warden',
     100: 'Infinity Bound',
+    150: 'Spire Ascendant',
+    200: 'Crystal Sovereign',
   };
 
   static LocalSeasonWeek forWeekKey(String weekKey) {
@@ -305,6 +346,13 @@ abstract final class LocalSeasonCatalog {
         state.metaDepth.gauntletBestFloor < week.gauntletFloorTarget) {
       return false;
     }
+    if (week.grTierTarget > 0 &&
+        state.metaDepth.grBestTier < week.grTierTarget) {
+      return false;
+    }
+    if (week.ashenClearTarget && !state.metaDepth.worldBossClearedWeek) {
+      return false;
+    }
     return true;
   }
 
@@ -324,6 +372,11 @@ abstract final class LocalSeasonCatalog {
       final need = week.gauntletFloorTarget - best;
       if (best > 0 && need > 0 && need <= 5) return true;
     }
+    if (week.grTierTarget > 0) {
+      final best = state.metaDepth.grBestTier;
+      final need = week.grTierTarget - best;
+      if (best > 0 && need > 0 && need <= 1) return true;
+    }
     return false;
   }
 
@@ -339,6 +392,17 @@ abstract final class LocalSeasonCatalog {
       final need = week.gauntletFloorTarget;
       if (best >= need) return 'Done · best F$best';
       return 'F$best → F$need';
+    }
+    if (week.grTierTarget > 0) {
+      final best = state.metaDepth.grBestTier;
+      final need = week.grTierTarget;
+      if (best >= need) return 'Done · GR$best';
+      return 'GR$best → GR$need';
+    }
+    if (week.ashenClearTarget) {
+      return state.metaDepth.worldBossClearedWeek
+          ? 'Done · Crown cleared'
+          : 'Ashen Crown';
     }
     return week.name;
   }

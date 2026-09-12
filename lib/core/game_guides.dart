@@ -318,6 +318,7 @@ abstract final class GameGuides {
       body:
           'Unlocks when every active hero reaches level ${GameLogic.maxHeroLevel} (endgame).\n\n'
           '• Endless Crystal Spire climb — each floor gets harder.\n'
+          '• Boss every 5 floors — SHARD tells scale past F100 (wider, faster).\n'
           '• Gold and essence scale with floor; boss every 5 floors.\n'
           '• Wipe or leave returns to hub; best floor is saved.\n'
           '• Enter from the hub ENDGAME tab, KEY, or the hub hunt line.\n'
@@ -332,8 +333,8 @@ abstract final class GameGuides {
           '• Gold and gear drop during the run; success also pays essence + gold.\n'
           '• Higher tiers: tougher packs and less time; fast clears unlock +2.\n'
           '• Wipe or timeout ends the run with a small consolation.\n'
-          '• Not ranked on Play Games — clear Ranked GR first; the hub hunt chases '
-          'Farm Rift after GR milestones quiet.\n'
+          '• Not ranked on Play Games — gear drops mid-run (Ranked GR does not). '
+          'The hub hunt chases Farm Rift after GR milestones quiet.\n'
           '• Set tier under KEY · FARM RIFT (Stormwake), on the hub ENDGAME tab, or follow the hub hunt.',
     ),
     GuideTopic(
@@ -343,7 +344,8 @@ abstract final class GameGuides {
           'Ranked GR at party level ${GameLogic.maxHeroLevel} — '
           'Mothveil timer, harder than Farm Rift.\n\n'
           '• Timed kill quota on a tougher ladder (GR1–GR20).\n'
-          '• Mid-run: gold OK, no gear drops — big essence + gold on clear.\n'
+          '• Mid-run: gold OK, no gear drops — big essence + gold on clear. '
+          'Farm Rift is the loot path; Ranked GR is the board path.\n'
           '• GR20 keeps about a minute on the clock — ranked is more kills and '
           'tougher packs, not a shorter fuse.\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
@@ -487,6 +489,7 @@ abstract final class GameGuides {
           'to rehearse the fight.\n'
           '• Confirm before a ticket run. Wipe or leave before the boss pays '
           'back the ticket — only a clear spends it. PRACTICE never spends a ticket.\n'
+          '• Boss kit: CROWN telegraph → SLAM → IGNITE chip (same in PRACTICE).\n'
           '• Uses Ashen Vault staging; leave or wipe returns you to the hub.',
     ),
     GuideTopic(
@@ -503,6 +506,8 @@ abstract final class GameGuides {
           '• Overtime = depleted (clear still counts, no key upgrade).\n'
           '• Daily vault: 1 clear or timed KEY +2 — claim once per day.\n'
           '• Optional Boss Rush / No Flask / Tiny add extra challenge + essence.\n'
+          '• Affixes show in the fight: SWARM / FORTIFIED / TYRANNICAL banners; '
+          'Glass packs execute low HP; Fortified trash stacks armor mid-fight.\n'
           '• Higher keys drop higher iLvl gear (KEY +10 is +20 iLvl) and pay '
           'gold in line with the harder packs — not a gold tax.\n'
           '• At party Lv${GameLogic.maxHeroLevel}, the hub hunt may chase KEY until your preferred key is at the cap.\n'

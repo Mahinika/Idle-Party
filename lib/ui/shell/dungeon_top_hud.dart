@@ -333,13 +333,15 @@ class DungeonTopHud extends StatelessWidget {
 
     Widget modeRow() {
       if (state.inGauntlet) {
+        final floor = state.currentRoom.floorNumber;
+        final nextBoss = ((floor ~/ 5) + 1) * 5;
         return DungeonModeChip(
-          label: 'GAUNTLET',
+          label: 'GAUNTLET F$floor',
           selected: true,
           dense: true,
           interactive: false,
           tip:
-              'Crystal Spire climb — boss every 5 floors. Wipe or leave → hub.',
+              'Crystal Spire climb — next boss F$nextBoss. No FARM. Wipe or leave → hub.',
           onTap: () {},
         );
       }

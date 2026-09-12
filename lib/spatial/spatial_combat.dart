@@ -713,6 +713,11 @@ class SpatialWorld {
     this.bossBannerName = '',
     this.afkAssist = false,
     this.dungeonId = 'sandy',
+    this.keystoneRunAffixes = const <String>[],
+    this.inWorldBoss = false,
+    this.inGauntlet = false,
+    this.combatFloor = 1,
+    this.affixBannerShown = false,
     this.combatElapsed = 0,
     this.petMitigateFlat = 0,
     this.petHealBoost = 0,
@@ -752,6 +757,21 @@ class SpatialWorld {
 
   /// Zone id for unique boss tells (Sandy SLAM, Tide WAVE, Brass WIND-UP).
   final String dungeonId;
+
+  /// Locked KEY affixes for live combat tells (fortified / tyrannical / swarm).
+  final List<String> keystoneRunAffixes;
+
+  /// Ashen Crown ticket or practice run.
+  final bool inWorldBoss;
+
+  /// Infinity Gauntlet — scales crystal boss tells by [combatFloor].
+  final bool inGauntlet;
+
+  /// Current floor number (Gauntlet climb / wipe advice).
+  final int combatFloor;
+
+  /// One-shot affix banner per floor (SWARM / FORTIFIED).
+  bool affixBannerShown;
 
   /// Mirrors [GameState.reducedVfx] for the current step (Full vs Lite/Minimal).
   bool reducedVfx = false;
@@ -2160,6 +2180,14 @@ abstract final class SpatialCombat {
       pets: pets,
       afkAssist: afkAssist ?? false,
       dungeonId: state.dungeonId,
+      keystoneRunAffixes: state.keystoneRunActive
+          ? List<String>.from(state.keystoneRunAffixes)
+          : const <String>[],
+      inWorldBoss: state.inWorldBoss,
+      inGauntlet: state.inGauntlet,
+      combatFloor:
+          state.inDungeon ? state.currentRoom.floorNumber : 1,
+      affixBannerShown: false,
       petMitigateFlat: state.petMitigateFlat,
       petHealBoost: state.petHealBoost,
       bossBannerTimer: room.type == RoomType.boss ? 2.4 : 0,
@@ -2414,6 +2442,11 @@ abstract final class SpatialCombat {
       bossBannerName: world.bossBannerName,
       afkAssist: world.afkAssist,
       dungeonId: world.dungeonId,
+      keystoneRunAffixes: world.keystoneRunAffixes,
+      inWorldBoss: world.inWorldBoss,
+      inGauntlet: world.inGauntlet,
+      combatFloor: world.combatFloor,
+      affixBannerShown: world.affixBannerShown,
       combatElapsed: world.combatElapsed,
       petMitigateFlat: state.petMitigateFlat,
       petHealBoost: state.petHealBoost,
@@ -3187,6 +3220,10 @@ abstract final class SpatialCombat {
         !world.isTreasure &&
         world.enemies.any((e) => e.hp > 0 && !e.dormant);
     if (inFight) {
+      if (!world.affixBannerShown) {
+        _showAffixBanners(world, reducedVfx: state.reducedVfx);
+        world.affixBannerShown = true;
+      }
       world.combatElapsed += dt;
     }
 
@@ -3598,9 +3635,23 @@ abstract final class SpatialCombat {
           attackerAttack: enemy.effectiveAttack,
         );
         // Glass execute: bonus damage vs low-HP heroes.
-        if (enemy.archetype == EnemyArchetype.glass &&
-            target.hp < target.effectiveMaxHp * 0.3) {
-          raw = math.max(1, (raw * 1.35).round());
+        final glassExecute = enemy.archetype == EnemyArchetype.glass &&
+            target.hp < target.effectiveMaxHp * 0.3;
+        final keyGlass = world.keystoneRunAffixes.contains('glass') &&
+            target.hp < target.effectiveMaxHp * 0.35;
+        if (glassExecute || keyGlass) {
+          raw = math.max(1, (raw * (glassExecute ? 1.35 : 1.2)).round());
+          if (!reducedVfx || world.spawnPersistentVfx) {
+            _spawnFloater(
+              world,
+              x: target.x,
+              y: target.y - 0.5,
+              text: 'GLASS',
+              argb: 0xFFB0E0FF,
+              life: 0.75,
+              priority: 2,
+            );
+          }
         }
         if (world.afkAssist) {
           raw = math.max(1, (raw * 0.45).round());

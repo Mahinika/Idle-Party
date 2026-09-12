@@ -206,6 +206,32 @@ abstract final class Keystone {
     return 'Hard';
   }
 
+  /// One-line roster hint for hub KEY / TODAY (existing party, not new specs).
+  static String? rosterHintForAffixes(List<String> affixes) {
+    if (affixes.contains('swarm')) {
+      return 'Swarm week — a Shield helps peel extras.';
+    }
+    if (affixes.contains('tyrannical')) {
+      return 'Tyrannical bosses — keep a Healer ready.';
+    }
+    if (affixes.contains('glass')) {
+      return 'Glass packs — burst before they execute low HP.';
+    }
+    if (affixes.contains('fortified')) {
+      return 'Fortified trash — steady damage beats armor stacks.';
+    }
+    if (affixes.contains('boss_rush')) {
+      return 'Boss Rush — focus elites before they stack.';
+    }
+    if (affixes.contains('no_flask')) {
+      return 'No Flask — upgrade STA in GOLD first.';
+    }
+    if (affixes.contains('iron')) {
+      return 'Iron packs — DEF in GOLD helps the longer fights.';
+    }
+    return null;
+  }
+
   static String formatTimer(int ms) {
     final totalSec = max(0, ms) ~/ 1000;
     final m = totalSec ~/ 60;

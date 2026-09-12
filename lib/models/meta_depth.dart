@@ -184,12 +184,14 @@ abstract final class WillRanks {
 
 /// Infinity Gauntlet floor milestones (one-time essence + achievements).
 abstract final class GauntletMilestones {
-  static const floors = <int>[25, 50, 100];
+  static const floors = <int>[25, 50, 100, 150, 200];
 
   static int essenceForFloor(int floor) => switch (floor) {
     25 => 22,
     50 => 45,
     100 => 90,
+    150 => 120,
+    200 => 150,
     _ => 10,
   };
 

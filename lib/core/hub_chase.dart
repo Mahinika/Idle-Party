@@ -439,8 +439,10 @@ class HubChase {
       kind: HubChaseKind.ashenCrown,
       title: 'Clear ${AshenCrown.name}',
       detail: tickets == 1
-          ? '1 ticket — first clear pays +${AshenCrown.essenceReward}e. PRACTICE is free after.'
-          : '$tickets tickets — one paid clear/week (+${AshenCrown.essenceReward}e); then PRACTICE is free.',
+          ? "This week's boss night — 1 ticket. First clear pays "
+              '+${AshenCrown.essenceReward}e. PRACTICE free after.'
+          : "This week's boss night — $tickets tickets. One paid clear/week "
+              '(+${AshenCrown.essenceReward}e); PRACTICE free after.',
       progressLabel: tickets == 1 ? '1 ticket' : '$tickets tickets',
       urgency: tickets <= 1 ? HubChaseUrgency.almost : HubChaseUrgency.normal,
     );
@@ -576,8 +578,14 @@ class HubChase {
     final week = LocalSeasonCatalog.forWeekKey(weekKey);
     if (!week.hasGoal) return null;
     // KEY-only weeks stay quiet until party-max-level endgame unlock.
+    if ((week.grTierTarget > 0 || week.ashenClearTarget) &&
+        !GameLogic.endgameUnlocked(state)) {
+      return null;
+    }
     if (week.timedKeyTarget > 0 &&
         week.gauntletFloorTarget <= 0 &&
+        week.grTierTarget <= 0 &&
+        !week.ashenClearTarget &&
         !GameLogic.endgameUnlocked(state)) {
       return null;
     }
@@ -599,7 +607,8 @@ class HubChase {
       return HubChase(
         kind: HubChaseKind.weekGoal,
         title: 'Almost · ${week.name}',
-        detail: '${week.blurb} · +${week.essenceReward}e',
+        detail:
+            '${_weekRhythmPrefix(state, clock)}${week.blurb} · +${week.essenceReward}e',
         progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
         urgency: HubChaseUrgency.almost,
       );
@@ -610,7 +619,8 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.weekGoal,
       title: week.name,
-      detail: '${week.blurb} · +${week.essenceReward}e',
+      detail:
+          '${_weekRhythmPrefix(state, clock)}${week.blurb} · +${week.essenceReward}e',
       progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
     );
   }
@@ -654,7 +664,19 @@ class HubChase {
     final lead = firstKey
         ? 'ENTER sets KEY +1 · +$ilvl iLvl'
         : '+$ilvl iLvl';
-    return '$lead · $affixBit · par $par';
+    final hint = Keystone.rosterHintForAffixes(affixes);
+    final base = '$lead · $affixBit · par $par';
+    if (hint == null) return base;
+    return '$base · $hint';
+  }
+
+  static String _weekRhythmPrefix(GameState state, DateTime clock) {
+    final weekKey = state.metaDepth.weeklyKey.isNotEmpty
+        ? state.metaDepth.weeklyKey
+        : GameLogic.isoWeekKey(clock);
+    final week = LocalSeasonCatalog.forWeekKey(weekKey);
+    if (!week.hasGoal) return '';
+    return "This week's beat · ${week.name} — ";
   }
 
   /// Level the party toward [GameLogic.maxHeroLevel] near Ascension cap.
@@ -824,13 +846,22 @@ class HubChase {
     final last = GauntletMilestones.floors.last;
     if (best < last) return null;
     final nextBoss = ((best ~/ 5) + 1) * 5;
+    final nextMilestone = GauntletMilestones.floors
+        .where((f) => f > best)
+        .cast<int?>()
+        .firstOrNull;
+    final milestoneBit = nextMilestone == null
+        ? ''
+        : ' · next title F$nextMilestone';
     return HubChase(
       kind: HubChaseKind.gauntletMilestone,
-      title: 'Fallback · Push Gauntlet PB',
+      title: nextMilestone == null
+          ? 'Fallback · Push Gauntlet PB'
+          : 'Push toward F$nextMilestone',
       detail:
-          'Endgame ladder quiet — optional climb past PB F$best '
-          '(next boss F$nextBoss). Boss every 5; wipe or leave → hub.',
-      progressLabel: 'PB F$best',
+          'Endgame ladder quiet — PB F$best · next boss F$nextBoss'
+          '$milestoneBit. Boss every 5; wipe or leave → hub.',
+      progressLabel: 'PB F$best → F$nextBoss',
       urgency: HubChaseUrgency.normal,
     );
   }

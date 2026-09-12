@@ -346,6 +346,20 @@ abstract final class AchievementCatalog {
       category: AchievementCategory.combat,
     ),
     AchievementDef(
+      id: 'gauntlet_150',
+      title: 'Ascendant Spire',
+      description: 'Clear floor 150 of the Infinity Gauntlet.',
+      essenceReward: 60,
+      category: AchievementCategory.combat,
+    ),
+    AchievementDef(
+      id: 'gauntlet_200',
+      title: 'Sovereign Spire',
+      description: 'Clear floor 200 of the Infinity Gauntlet.',
+      essenceReward: 75,
+      category: AchievementCategory.combat,
+    ),
+    AchievementDef(
       id: 'casts_100',
       title: 'Spellweaver',
       description: 'Cast 100 class abilities (lifetime).',

@@ -1,5 +1,67 @@
 part of 'spatial_combat.dart';
 
+bool _worldHasAffix(SpatialWorld world, String id) =>
+    world.keystoneRunAffixes.contains(id);
+
+/// Gauntlet boss tells scale past F100 (F5 = 1.0, F150 ≈ 1.5).
+double _gauntletBossScale(SpatialWorld world) {
+  if (!world.inGauntlet) return 1.0;
+  return 1.0 + (world.combatFloor / 100.0).clamp(0.0, 1.5);
+}
+
+double _bossCadenceMul(SpatialWorld world) {
+  var mul = 1.0;
+  if (_worldHasAffix(world, 'tyrannical')) mul *= 0.82;
+  if (world.inGauntlet) {
+    mul *= (1.0 - _gauntletBossScale(world) * 0.05).clamp(0.55, 1.0);
+  }
+  return mul;
+}
+
+double _bossCooldownSec(SpatialWorld world, double base) =>
+    base * _bossCadenceMul(world);
+
+void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
+  if (world.keystoneRunAffixes.isEmpty) return;
+  final leader = world.leader;
+  if (leader == null) return;
+  final x = leader.x;
+  final y = leader.y - 0.8;
+  if (_worldHasAffix(world, 'swarm')) {
+    SpatialCombat._spawnFloater(
+      world,
+      x: x,
+      y: y,
+      text: 'SWARM',
+      argb: 0xFFFFA040,
+      life: 1.1,
+      priority: 2,
+    );
+  }
+  if (_worldHasAffix(world, 'fortified')) {
+    SpatialCombat._spawnFloater(
+      world,
+      x: x,
+      y: y - 0.35,
+      text: 'FORTIFIED',
+      argb: 0xFF80C0FF,
+      life: 1.1,
+      priority: 2,
+    );
+  }
+  if (_worldHasAffix(world, 'tyrannical') && !reducedVfx) {
+    SpatialCombat._spawnFloater(
+      world,
+      x: x,
+      y: y - 0.7,
+      text: 'TYRANNICAL',
+      argb: 0xFFFF6060,
+      life: 1.0,
+      priority: 2,
+    );
+  }
+}
+
 /// Trash specials (heal / hex / cleave / fortify) plus one unique boss tell
 /// per zone. Same [SpatialCombat.step] — not a second sim.
 void _tickEnemySpecials(
@@ -170,9 +232,15 @@ void _tickEnemySpecials(
       }
     }
   } else if (enemy.archetype == EnemyArchetype.tank &&
-      enemy.hp < enemy.effectiveMaxHp * 0.55 &&
+      enemy.hp <
+          enemy.effectiveMaxHp *
+              (_worldHasAffix(world, 'fortified') ? 0.70 : 0.55) &&
       enemy.bonusMaxHp <= 0) {
-    enemy.bonusMaxHp = math.max(20, (enemy.maxHp * 0.15).round());
+    final fortified = _worldHasAffix(world, 'fortified');
+    enemy.bonusMaxHp = math.max(
+      20,
+      (enemy.maxHp * (fortified ? 0.22 : 0.15)).round(),
+    );
     enemy.hp = math.min(enemy.effectiveMaxHp, enemy.hp + enemy.bonusMaxHp);
     enemy.specialCd = 8.0;
     if (!reducedVfx || world.spawnPersistentVfx) {
@@ -206,6 +274,17 @@ void _tickBossKit(
   required math.Random rng,
   required bool reducedVfx,
 }) {
+  if (world.inWorldBoss) {
+    _tickAshenBossKit(
+      world,
+      enemy,
+      focus,
+      rng: rng,
+      reducedVfx: reducedVfx,
+    );
+    return;
+  }
+
   if (enemy.telegraphTimer > 0) return;
 
   if (enemy.telegraphSlam) {
@@ -218,7 +297,7 @@ void _tickBossKit(
       rng: rng,
       reducedVfx: reducedVfx,
     );
-    enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+    enemy.specialCd = _bossCooldownSec(world, world.afkAssist ? 9.0 : 8.0);
     if (hit) {
       _bossTell(
         world,
@@ -340,11 +419,12 @@ void _tickBossKit(
       );
       return;
     case 'crystal':
+      final gScale = world.inGauntlet ? _gauntletBossScale(world) : 1.0;
       _bossPulseLike(
         world,
         enemy,
-        radius: 5.5,
-        atkMul: 0.4,
+        radius: 5.5 * gScale,
+        atkMul: 0.4 * math.min(gScale, 1.35),
         text: EnemyFlavor.bossTell(id),
         argb: 0xFF80D8FF,
         rng: rng,
@@ -583,7 +663,7 @@ void _bossPulseLike(
     isMelee: isMelee,
   );
   if (hit) {
-    enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+    enemy.specialCd = _bossCooldownSec(world, world.afkAssist ? 9.0 : 8.0);
     _bossTell(
       world,
       enemy,
@@ -595,6 +675,77 @@ void _bossPulseLike(
   } else {
     enemy.specialCd = 1.2;
   }
+}
+
+/// Ashen Crown — telegraph slam + IGNITE chip (not generic ember boss only).
+void _tickAshenBossKit(
+  SpatialWorld world,
+  SpatialActor enemy,
+  SpatialActor focus, {
+  required math.Random rng,
+  required bool reducedVfx,
+}) {
+  if (enemy.telegraphTimer > 0) return;
+
+  if (enemy.telegraphSlam) {
+    enemy.telegraphSlam = false;
+    _bossChipInRadius(
+      world,
+      enemy,
+      radius: 3.2,
+      atkMul: 0.78,
+      rng: rng,
+      reducedVfx: reducedVfx,
+    );
+    enemy.specialCd = _bossCooldownSec(world, world.afkAssist ? 6.5 : 5.5);
+    _bossTell(
+      world,
+      enemy,
+      text: 'SLAM',
+      argb: 0xFFFFB040,
+      radius: 1.6,
+      reducedVfx: reducedVfx,
+    );
+    return;
+  }
+
+  if (enemy.specialCd > 0) return;
+
+  final far = SpatialCombat._dist(enemy, focus) > 5.0;
+  if (far || rng.nextDouble() < 0.42) {
+    enemy.telegraphTimer = 1.5;
+    enemy.telegraphSlam = true;
+    _bossTell(
+      world,
+      enemy,
+      text: 'CROWN',
+      argb: 0xFFFF9040,
+      radius: 1.35,
+      reducedVfx: reducedVfx,
+    );
+    return;
+  }
+
+  _bossChipHero(
+    world,
+    enemy,
+    focus,
+    atkMul: 0.52,
+    rng: rng,
+    reducedVfx: reducedVfx,
+    isMelee: false,
+  );
+  focus.attackSlowTimer = math.max(focus.attackSlowTimer, 3.5);
+  enemy.specialCd = _bossCooldownSec(world, world.afkAssist ? 7.5 : 6.5);
+  _bossTell(
+    world,
+    enemy,
+    text: 'IGNITE',
+    argb: 0xFFFF7030,
+    radius: 1.0,
+    reducedVfx: reducedVfx,
+    at: focus,
+  );
 }
 
 bool _bossChipInRadius(

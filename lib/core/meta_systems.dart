@@ -19,10 +19,18 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.151';
+  static const String currentVersion = '1.12.152';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.152',
+      bullets: <String>[
+        'Endgame fights read clearer: KEY affix banners in the dungeon, Ashen Crown CROWN → SLAM → IGNITE, Gauntlet SHARD scales past F100. Gauntlet milestones now F150 and F200.',
+        'ENDGAME map blurbs split Ranked GREATER GR (no gear) from Farm Rift (loot). Week goals mix KEY, Spire, GR, and Ashen Crown — not only KEY +2. TODAY adds roster hints for the weekly affix.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.151',
       bullets: <String>[
@@ -1608,6 +1616,8 @@ abstract final class MetaSystems {
         'gauntlet_25': (s) => s.metaDepth.gauntletBestFloor >= 25,
         'gauntlet_50': (s) => s.metaDepth.gauntletBestFloor >= 50,
         'gauntlet_100': (s) => s.metaDepth.gauntletBestFloor >= 100,
+        'gauntlet_150': (s) => s.metaDepth.gauntletBestFloor >= 150,
+        'gauntlet_200': (s) => s.metaDepth.gauntletBestFloor >= 200,
         'apex_first': (s) => _apexPieces(s).isNotEmpty,
         'apex_set_r1': (s) => _hasFullApexSetR1(s),
         'apex_r3': (s) => _apexPieces(s).any((i) => i.apexRank >= 3),

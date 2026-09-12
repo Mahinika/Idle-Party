@@ -48,7 +48,8 @@ abstract final class HubEndgameAct {
       hunt: HubEndgameHunt.gauntlet,
       shortLabel: 'GAUNTLET',
       title: 'Infinity Gauntlet',
-      blurb: 'Endless Crystal Spire climb · boss every 5 · wipe returns to hub',
+      blurb:
+          'Endless Spire climb · boss every 5 · no FARM · wipe or leave → hub',
       portraitDungeonId: 'crystal',
       enterLabel: 'GAUNTLET',
       chaseKind: HubChaseKind.gauntletMilestone,
@@ -59,7 +60,8 @@ abstract final class HubEndgameAct {
       hunt: HubEndgameHunt.rankedGr,
       shortLabel: 'RANKED GR',
       title: 'Ranked GR',
-      blurb: 'Mothveil timer · no mid-run gear · ranks on KEY · BOARDS',
+      blurb:
+          'Ranked board night · Mothveil timer · gold OK · no gear mid-run',
       portraitDungeonId: 'veil',
       enterLabel: 'RANKED GR',
       chaseKind: HubChaseKind.greaterRiftMilestone,
@@ -70,7 +72,8 @@ abstract final class HubEndgameAct {
       hunt: HubEndgameHunt.farmRift,
       shortLabel: 'FARM RIFT',
       title: 'Farm Rift',
-      blurb: 'Stormwake timed farm · gold and gear mid-run',
+      blurb:
+          'Stormwake farm · timed kills · gold + gear mid-run · not ranked',
       portraitDungeonId: 'storm',
       enterLabel: 'FARM RIFT',
       chaseKind: HubChaseKind.riftMilestone,
@@ -81,7 +84,8 @@ abstract final class HubEndgameAct {
       hunt: HubEndgameHunt.ashen,
       shortLabel: 'ASHEN',
       title: 'Ashen Crown',
-      blurb: 'Weekly ticket boss · PRACTICE is free after the paid clear',
+      blurb:
+          'Weekly boss night · ticket clear pays essence · PRACTICE free after',
       portraitDungeonId: 'ember',
       enterLabel: 'ASHEN CROWN',
       chaseKind: HubChaseKind.ashenCrown,

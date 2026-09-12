@@ -1,4 +1,5 @@
 import '../models/loot.dart';
+import '../models/meta_depth.dart';
 import '../spatial/spatial_combat.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
@@ -213,7 +214,19 @@ abstract final class WipeAdvice {
       return 'Bag nearly full — equip upgrades or CLEAN BAG';
     }
 
+    if (state.inWorldBoss && fight.leftover >= 0.20) {
+      return 'Ashen Crown hits hard — try PRACTICE free, then spend a ticket';
+    }
+
     if (state.inGauntlet && fight.leftover >= 0.35) {
+      final floor = state.currentRoom.floorNumber;
+      final nextMilestone = GauntletMilestones.floors
+          .where((f) => f > floor)
+          .cast<int?>()
+          .firstOrNull;
+      if (nextMilestone != null) {
+        return 'Spire climb is steep — PB F$floor; next milestone F$nextMilestone';
+      }
       return 'Spire climb is steep — leave and retry from hub (lower floors)';
     }
     if (state.inGreaterRift && fight.leftover >= 0.35) {
