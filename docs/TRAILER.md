@@ -123,18 +123,19 @@ listing 9:16 file puts the phone in a blur frame; a feed Short wants
 |--|--------------|------------|
 | Builder | `build_preview_video.py` | `build_shorts_feed.py` |
 | First frame | Hub TODAY | Party in combat |
-| Picture | 16:9 listing + 9:16 phone-in-frame | 1080×1920 crop of 1080×2340 |
+| Picture | 16:9 listing + 9:16 phone-in-frame | three hard-cut zones, 1080×1920 |
 | On-screen | Chase / AFK / lockup beats | `They fight without you` → `Idle Party` |
 | Music | owned `hub.ogg` | owned `dungeon.mp3` |
 
 ```powershell
-# A56: showcase save, Zoom · Close, screenrecord 1080x2340
-# → tool/store_listing/preview/gameplay_shorts_raw.mp4  (gitignored)
+# A56: three showcase combat saves (hell / crystal / mothveil), Zoom · Close
+# py -3 tool/store_listing/capture_shorts_shots.py
+# → preview/gameplay_shorts_{hell,crystal,veil}_raw.mp4  (gitignored)
 # Restore the emulator save afterward.
 
 py -3 tool/store_listing/build_shorts_feed.py
-# → tool/store_listing/preview/idle_party_shorts_feed.mp4  (~15s, gitignored)
-# Optional trim lives in gitignored preview/shorts_feed.json (`start` / `duration`).
+# → tool/store_listing/preview/idle_party_shorts_feed.mp4  (~11s, gitignored)
+# Shot trims live in gitignored preview/shorts_feed.json.
 ```
 
 Do not upload until the owner has watched the local file. Play listing video

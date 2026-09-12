@@ -88,6 +88,42 @@ GameState showcaseState() {
   );
 }
 
+GameState showcaseCombatState({
+  required String dungeonId,
+  int floorNumber = 16,
+  RoomType roomType = RoomType.boss,
+  int enemyCount = 10,
+}) {
+  final base = showcaseState();
+  var state = GameLogic.enterDungeon(
+    base.copyWith(
+      dungeonMode: DungeonMode.push,
+      highestDungeonCleared: 14,
+      godHandLevel: 8,
+      metaDepth: base.metaDepth.copyWith(godHandStyle: 2),
+    ),
+    dungeonId: dungeonId,
+  );
+  final room = DungeonGenerator.generateFloorRoom(
+    floorNumber: floorNumber,
+    ascensionLevel: state.ascensionLevel,
+    dungeonId: dungeonId,
+    layoutSeed: state.layoutSeed,
+  ).copyWith(type: roomType, enemyCount: enemyCount);
+  return state.copyWith(
+    dungeonMode: DungeonMode.push,
+    dungeonId: dungeonId,
+    highestFloorCleared: floorNumber - 1,
+    currentRoom: room,
+    dungeonFloor: [room],
+    enemies: GameLogic.createEnemyGroup(
+      room,
+      dungeonId: dungeonId,
+      fromState: state,
+    ),
+  );
+}
+
 void main() {
   test('export showcase save json', () {
     final out = File('tool/store_listing/showcase_save.json');
@@ -106,39 +142,25 @@ void main() {
   });
 
   test('export showcase mid-dungeon save json', () {
-    final out = File('tool/store_listing/preview/showcase_entered.json');
-    out.parent.createSync(recursive: true);
-    // PUSH + a dense later pack so a Short is fighting, not F1 CLEAR / walking.
-    var state = GameLogic.enterDungeon(
-      showcaseState().copyWith(dungeonMode: DungeonMode.push),
-      dungeonId: 'ember',
+    final shots = <(String, String)>[
+      ('hell', 'tool/store_listing/preview/showcase_entered_hell.json'),
+      ('crystal', 'tool/store_listing/preview/showcase_entered_crystal.json'),
+      ('veil', 'tool/store_listing/preview/showcase_entered_veil.json'),
+    ];
+    for (final (id, path) in shots) {
+      final out = File(path);
+      out.parent.createSync(recursive: true);
+      final state = showcaseCombatState(dungeonId: id);
+      expect(state.inDungeon, isTrue, reason: id);
+      expect(state.dungeonId, id);
+      expect(state.enemies.length, greaterThan(5), reason: id);
+      out.writeAsStringSync(jsonEncode(state.toJson()));
+      // ignore: avoid_print
+      print('wrote ${out.path} (${state.enemies.length} foes, $id)');
+    }
+    // Default name used by the single-clip capture helper.
+    File('tool/store_listing/preview/showcase_entered.json').writeAsStringSync(
+      File('tool/store_listing/preview/showcase_entered_hell.json').readAsStringSync(),
     );
-    final floorNumber = 16;
-    final room = DungeonGenerator.generateFloorRoom(
-      floorNumber: floorNumber,
-      ascensionLevel: state.ascensionLevel,
-      dungeonId: 'ember',
-      layoutSeed: state.layoutSeed,
-    ).copyWith(
-      type: RoomType.elite,
-      enemyCount: 12,
-    );
-    state = state.copyWith(
-      dungeonMode: DungeonMode.push,
-      highestFloorCleared: floorNumber - 1,
-      currentRoom: room,
-      dungeonFloor: [room],
-      enemies: GameLogic.createEnemyGroup(
-        room,
-        dungeonId: 'ember',
-        fromState: state,
-      ),
-    );
-    expect(state.inDungeon, isTrue);
-    expect(state.dungeonMode, DungeonMode.push);
-    expect(state.enemies.length, greaterThan(6));
-    out.writeAsStringSync(jsonEncode(state.toJson()));
-    // ignore: avoid_print
-    print('wrote ${out.path} (${out.lengthSync()} bytes, ${state.enemies.length} foes)');
   });
 }
