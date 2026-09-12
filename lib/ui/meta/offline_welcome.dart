@@ -6,7 +6,6 @@ import '../../core/chase_dispatcher.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/hub_chase.dart';
-import '../../core/logic_notices.dart';
 import '../chase_bind.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -14,8 +13,7 @@ import '../menu_chrome.dart';
 import '../shell/play_nav.dart';
 import '../web_click_bridge.dart';
 
-/// Rich offline progress breakdown — replaces the plain toast with a
-/// full-detail dialog the player must dismiss.
+/// Short Welcome Back: wow lead, ≤3 highlights, one Up next, dismiss.
 Future<void> showOfflineProgressDialog(
   BuildContext context,
   GameDirector director,
@@ -25,9 +23,6 @@ Future<void> showOfflineProgressDialog(
   final contract = ChaseContract.fromState(summary.state);
   final chase = contract.chase;
   final rows = summary.highlightRows;
-  final notices = List<String>.from(
-    LogicNotices.metaPayoffs,
-  ).take(2).toList(growable: false);
 
   final nav = PlayNav.maybeOf(context);
   final plan = ChaseDispatcher.plan(
@@ -98,11 +93,6 @@ Future<void> showOfflineProgressDialog(
                 'Away for ${OfflineProgressResult.formatOfflineDuration(summary.secondsApplied)}',
                 style: GameTheme.body(size: 16, color: GameTheme.parchment),
               ),
-              const SizedBox(height: 4),
-              Text(
-                summary.afkWhereLine,
-                style: GameTheme.body(size: 13, color: GameTheme.mossLit),
-              ),
               const SizedBox(height: 6),
               Text(
                 summary.welcomeLead,
@@ -112,15 +102,6 @@ Future<void> showOfflineProgressDialog(
                 const SizedBox(height: 10),
                 for (final row in rows)
                   MenuChrome.statRow(label: row.$1, value: row.$2),
-              ],
-              if (notices.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  notices.join(' · '),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 13, color: GameTheme.mossLit),
-                ),
               ],
               const SizedBox(height: 10),
               Text(
@@ -132,22 +113,6 @@ Future<void> showOfflineProgressDialog(
                       : GameTheme.accentWarn,
                 ),
               ),
-              Text(
-                chase.detail,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-              ),
-              if (contract.ascendTeaser != null &&
-                  contract.ascendTeaser!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  contract.ascendTeaser!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 13, color: GameTheme.torch),
-                ),
-              ],
             ],
           ),
         ),

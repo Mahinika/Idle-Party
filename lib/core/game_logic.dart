@@ -3314,17 +3314,11 @@ class OfflineProgressResult {
     }
     if (levelsGained > 0) return 'Party grew · Away $away';
     if (wasInDungeon) return 'Party fought · Away $away';
-    return 'Sanctuary earned · Away $away';
+    return 'Gold while away · Away $away';
   }
 
   /// Dialog lead — single feeling sentence (not a stat list).
-  String get welcomeLead {
-    final core = _welcomeLeadCore;
-    if (wasInDungeon && (foughtWhileAway || goldGained > 0 || gearFinds > 0)) {
-      return '$core Catch-up used AFK assist — softer than live.';
-    }
-    return core;
-  }
+  String get welcomeLead => _welcomeLeadCore;
 
   String get _welcomeLeadCore {
     if (bossDelta > 0) {
@@ -3371,7 +3365,7 @@ class OfflineProgressResult {
           : 'Your party found gear while you were away.';
     }
     if (goldGained > 0 || essenceGained > 0) {
-      return 'Sanctuary kept earning while you were away.';
+      return 'Gold kept coming in while you were away.';
     }
     return 'Welcome back.';
   }
@@ -3400,7 +3394,7 @@ class OfflineProgressResult {
     if (goldGained > 0) {
       ranked.add((
         6,
-        wasInDungeon ? 'Combat gold' : 'Sanctuary gold',
+        wasInDungeon ? 'Combat gold' : 'Gold',
         '+${goldGained}g',
       ));
     }

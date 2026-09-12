@@ -251,7 +251,7 @@ unlock after Ascend / first essence. **LOADOUTS** tab is hidden/removed
 (save fields may remain). PARTY badges mean bag upgrades (`MenuAlerts`).
 
 Offline return uses `OfflineProgressResult` (wow headline + ≤3 highlights +
-“Up next” = ChaseContract).
+“Up next” = ChaseContract title only — no chase-detail dump).
 
 Live look: `a56-playtest` (Samsung A56 emulator). Web fallback:
 `WebClickBridge` + Semantics (`browser-playtest`).

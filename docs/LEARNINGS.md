@@ -52,3 +52,5 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 - **One day-2–7 job = one cave today.** After the first boss, TODAY is Daily
   Vault (clear → claim). Daily Run as a second daily is churn — it waits
   until first Ascend, then only after today's vault is claimed.
+- **Welcome Back is a payday, not a syllabus.** Wow + ≤3 rows + Up next.
+  AFK-assist / sanctuary / chase-detail dumps on that card are churn.

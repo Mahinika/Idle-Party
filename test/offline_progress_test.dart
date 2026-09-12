@@ -1,8 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/chase_contract.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/offline_progress.dart';
+import 'package:idle_party/ui/meta/offline_welcome.dart';
 
 void main() {
   OfflineProgressResult result({
@@ -98,9 +101,10 @@ void main() {
     expect(r.foughtWhileAway, isFalse);
     expect(r.afkWhereLine.toLowerCase(), contains('hub'));
     expect(r.afkWhereLine.toLowerCase(), contains('no combat'));
-    expect(r.welcomeLead.toLowerCase(), contains('sanctuary'));
-    expect(r.headline, startsWith('Sanctuary earned'));
-    expect(r.highlightRows.map((e) => e.$1), contains('Sanctuary gold'));
+    expect(r.welcomeLead.toLowerCase(), contains('gold'));
+    expect(r.welcomeLead.toLowerCase(), isNot(contains('sanctuary')));
+    expect(r.headline, startsWith('Gold while away'));
+    expect(r.highlightRows.map((e) => e.$1), contains('Gold'));
   });
 
   test('dungeon AFK gold is never labeled sanctuary', () {
@@ -109,7 +113,19 @@ void main() {
     expect(r.headline, startsWith('Party fought'));
     expect(r.welcomeLead.toLowerCase(), contains('dungeon'));
     expect(r.welcomeLead.toLowerCase(), isNot(contains('sanctuary')));
+    expect(r.welcomeLead.toUpperCase(), isNot(contains('AFK')));
     expect(r.highlightRows.map((e) => e.$1), contains('Combat gold'));
+  });
+
+  test('welcomeLead never teaches AFK assist', () {
+    final r = result(
+      gold: 80,
+      rooms: 3,
+      floors: 1,
+      wasInDungeon: true,
+    );
+    expect(r.welcomeLead.toUpperCase(), isNot(contains('AFK')));
+    expect(r.welcomeLead.toLowerCase(), isNot(contains('assist')));
   });
 
   test('hub applyOfflineProgress sets wasInDungeon false', () {
@@ -122,7 +138,7 @@ void main() {
     expect(r.wasInDungeon, isFalse);
     expect(r.afkWhereLine.toLowerCase(), contains('hub'));
     if (r.goldGained > 0) {
-      expect(r.headline, startsWith('Sanctuary earned'));
+      expect(r.headline, startsWith('Gold while away'));
     }
   });
 
@@ -131,5 +147,29 @@ void main() {
     final contract = ChaseContract.fromState(r.state);
     expect(contract.kind, isNot(HubChaseKind.claimDailyVault));
     expect(contract.upNextLine, startsWith('Up next'));
+  });
+
+  testWidgets('Welcome Back is wow, highlights, Up next — not a syllabus', (
+    tester,
+  ) async {
+    final director = GameDirector.preview();
+    director.uiFeedback.presentOffline(result(gold: 40, essence: 2));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome back!'), findsOneWidget);
+    expect(find.textContaining('Up next:'), findsOneWidget);
+    expect(find.textContaining('AFK'), findsNothing);
+    expect(find.textContaining('Sanctuary'), findsNothing);
+    expect(find.text('NICE'), findsOneWidget);
   });
 }
