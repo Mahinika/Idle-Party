@@ -17,7 +17,7 @@ remains for early builds. Source of truth:
 
 ## When to run this skill
 
-- **Growth mandate** listing pack (screenshots 1–2 = new-save first two minutes)
+- **Growth mandate** listing pack (screenshots 1–2 = new-save first-minute combat)
 - Owner mentions Play, store listing, privacy, IARC, screenshots, AAB upload
 - Owner mentions itch.io listing / community post (PAGE.md — no APK)
 - Before tagging a release meant for Play closed testing
@@ -37,7 +37,7 @@ Never invent a public privacy host or Play listing URL.
 | Data safety | Form matches [PRIVACY.md](../../../docs/PRIVACY.md): local save, optional Play Games, optional rewarded ads |
 | IARC / rating | Questionnaire done; mild fantasy combat expectations |
 | Listing copy | Idle Party short + full description (English), no Flutter placeholders |
-| Screenshots | 4–6 current hub/dungeon shots + feature graphic; icon from custom app icon |
+| Screenshots | Shots 1–2 = new-save Sandy combat + 512 icon from owned `app_icon`; later carousel as in STORE_LISTING.md |
 | Closed Alpha | App `com.idleparty.app`, AAB on Alpha track, testers can install |
 
 ## Checklist

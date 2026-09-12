@@ -46,6 +46,7 @@ migrate_working_dir/
 /tool/art_backups/*
 # The launcher/store icon source stays tracked (README + Play listing use it).
 !/tool/art_backups/app_icon.png
+!/tool/art_backups/play_icon_512.png
 
 # Symbolication related
 app.*.symbols

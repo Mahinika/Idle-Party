@@ -12,6 +12,7 @@ import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/dungeon_zoom.dart';
@@ -88,6 +89,45 @@ GameState showcaseState() {
   );
 }
 
+/// Day-one Sandy floor 1 — listing shots 1–2 (not AL3 showcase / KEY).
+GameState firstMinuteCombatState() {
+  final tipIds = [for (final t in FirstSessionTips.tips) t.id];
+  final now = DateTime.utc(2026, 9, 12, 14);
+  final base = GameLogic.createInitialState(
+    now: now,
+    partySpecs: const [
+      HeroSpecId.protection,
+      HeroSpecId.discipline,
+      HeroSpecId.fire,
+    ],
+  );
+  final entered = GameLogic.enterDungeon(base, dungeonId: 'sandy');
+  const layoutSeed = 20260912;
+  final floor = DungeonGenerator.generateFloor(
+    1,
+    ascensionLevel: 0,
+    dungeonId: 'sandy',
+    layoutSeed: layoutSeed,
+  );
+  final room = floor.first;
+  return entered.copyWith(
+    layoutSeed: layoutSeed,
+    currentRoom: room,
+    dungeonFloor: floor,
+    enemies: GameLogic.createEnemyGroup(
+      room,
+      dungeonId: 'sandy',
+      fromState: entered,
+    ),
+    seenTips: [...tipIds, 'discord_thanks'],
+    soundMuted: true,
+    dungeonZoom: DungeonZoom.close,
+    seenChangelogVersion: MetaSystems.currentVersion,
+    lastUpdated: now,
+    metaDepth: entered.metaDepth.copyWith(notifyPrompted: true),
+  );
+}
+
 GameState showcaseCombatState({
   required String dungeonId,
   int floorNumber = 16,
@@ -139,6 +179,20 @@ void main() {
     expect(GameLogic.importSaveJson(out.readAsStringSync()), isNotNull);
     // ignore: avoid_print
     print('wrote ${out.path} (${out.lengthSync()} bytes)');
+  });
+
+  test('export first-minute combat save json', () {
+    final out = File('tool/store_listing/first_minute_save.json');
+    out.parent.createSync(recursive: true);
+    final state = firstMinuteCombatState();
+    expect(state.inDungeon, isTrue);
+    expect(state.dungeonId, 'sandy');
+    expect(state.ascensionLevel, 0);
+    expect(state.enemies, isNotEmpty);
+    out.writeAsStringSync(jsonEncode(state.toJson()));
+    expect(GameLogic.importSaveJson(out.readAsStringSync()), isNotNull);
+    // ignore: avoid_print
+    print('wrote ${out.path} (${state.enemies.length} foes)');
   });
 
   test('export showcase mid-dungeon save json', () {

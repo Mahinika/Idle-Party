@@ -10,32 +10,38 @@ Helpers: `tool/store_listing/`.
 ### Recipe (Windows)
 
 ```powershell
-# 1) Showcase save (AL3 / unlocked World Path — not empty day-one)
+# 1) First-minute combat save (Sandy F1) + optional AL3 showcase
 flutter test tool/store_listing/export_showcase_save_test.dart
 
 # 2) Listing shots still use Flutter web on :8080 (Playwright).
 #    Daily playtest is the A56 emulator — see a56-playtest.
-# 3) Capture raw 1080×2340 phone shots
-py -3 tool/store_listing/capture_playwright.py
+# 3) Capture raw 1080×2340 first-minute combat
+py -3 tool/store_listing/capture_first_minute.py
 
-# 4) Compose 1080×1920 with top caption band
+# 4) Compose 1080×1920 with top caption band + 512 icon
 py -3 tool/store_listing/compose_shots.py
-# → tool/store_listing/out/01_01_hub.png … 06_06_power.png
+py -3 tool/store_listing/make_listing_icon.py
+# → tool/store_listing/out/01_01_combat_a.png, 02_02_combat_b.png, play_icon_512.png
 ```
 
 ### Lessons (do not re-learn)
 
-1. **Showcase save, not AL0** — empty hub / LOCKED path / +0 forge looks dead in search.
-2. **SharedPreferences web encodes strings** — inject with
+1. **Shots 1–2 = live first-minute combat** — Sandy floor, starter party. Not
+   KEY, not empty hub, not a branded menu card.
+2. **Showcase save (AL3)** — later carousel slots (gear / path). Empty hub /
+   LOCKED path / +0 forge looks dead in search if used as shot 1.
+3. **SharedPreferences web encodes strings** — inject with
    `localStorage.setItem('flutter.idle_party_save_v2', JSON.stringify(raw))`
    (plain JSON → CONTINUE stays disabled / “No save yet”).
-3. **Prefer Playwright + `__idlePartyClick`** over widget-test `toImage` (Google Fonts)
+   First-minute combat: `add_init_script` *before* boot so autosave cannot
+   overwrite; bump `lastUpdated` or Welcome Back eats the first frame.
+4. **Prefer Playwright + `__idlePartyClick`** over widget-test `toImage` (Google Fonts)
    or Cursor CDP alone (harder file IO). Phone viewport **360×780 @ DPR 3**.
-4. **Material `TabBar` needs bridge** — wrap labels with `MenuChrome.bridgedTab`
+5. **Material `TabBar` needs bridge** — wrap labels with `MenuChrome.bridgedTab`
    (GEAR / GOLD / ESSENCE sub-tabs) or clicks never leave INCOME/BAG.
-5. **Compose captions on top** (~210px), smart vertical crop bias — do not stamp a
+6. **Compose captions on top** (~210px), smart vertical crop bias — do not stamp a
    fat bottom bar over the hero of the UI. Captions ≤ ~8 English words.
-6. **Play Console upload** — `DOM.setFileInputFiles` is denied. Serve `out/` with
+7. **Play Console upload** — `DOM.setFileInputFiles` is denied. Serve `out/` with
    CORS (`py -3` on e.g. `127.0.0.1:9877`), then CDP `fetch` → `DataTransfer` into
    the phone-screenshots file input. Delete old phone shots first (aria
    “Ta bort Skärmbilder för mobiler”). Paste short+full from `STORE_LISTING.md`

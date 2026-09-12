@@ -25,7 +25,10 @@ RAW = ROOT / "tool" / "store_listing" / "raw"
 OUT = ROOT / "tool" / "store_listing" / "out"
 
 # (raw_name, caption, crop_bias_y) — bias 0=top, 1=bottom of source.
+# Shots 1–2 = new-save first minute of combat (growth mandate listing pack).
 SHOTS = [
+    ("01_combat_a.png", "Your party fights on its own", 0.18),
+    ("02_combat_b.png", "Same fight while you are away", 0.20),
     ("01_hub.png", "Always know today’s chase", 0.28),
     ("02_combat.png", "Your party keeps fighting", 0.42),
     ("03_gear.png", "Build and equip your party", 0.08),

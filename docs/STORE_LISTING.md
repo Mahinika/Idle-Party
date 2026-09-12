@@ -21,7 +21,9 @@ fairness, cheap convenience SHOP).
 ### Rules we follow for Idle Party
 
 1. **Real UI only** — no fake chrome, no “#1 idle” badges, no borrowed art.
-2. **Benefit order** — screenshot 1 = chase / hub fantasy; 2 = combat feel; 3 = grow stronger; later = KEY / Ascend / keep gear.
+2. **Benefit order** — screenshots 1–2 = live first-minute combat (the crawl);
+   then chase / grow / classes; later = World Path / AFK / Ascend. Not KEY as
+   the search lead.
 3. **Captions short** (≤ ~8 words) if used; never cover critical HUD.
 4. **Phone portrait** 9:16, ≥1080 px wide (Play featuring bar).
 5. **Copy matches ship** — 15 zones, 31 specs, KEYSTONE (not invented systems).
@@ -101,48 +103,65 @@ SHOP convenience (boosts / ad-free / QoL) is live in Console — the FAIR PLAY
 line above is accurate. Do **not** imply whale packs, gacha, or BiS-for-cash.
 POWERUPS ads remain the free path to the same boost power.
 
-### Screenshot plan (Play phone carousel, 2026-09-10)
+### Screenshot plan (Play phone carousel)
 
-Lead with the promise, then prove it with real in-game UI. Promo cards live in
-`tool/store_listing/marketing/`; current UI captures live in
-`tool/store_listing/out/`. All are English, 1080×1920. Play max is **8** phone
-shots.
+Lead with the **live first minute of combat** (search carousel). Promo cards
+live in `tool/store_listing/marketing/`; first-minute captures in
+`tool/store_listing/out/`. All English, 1080×1920. Play max is **8** phone
+shots. High-res icon: `out/play_icon_512.png` (owned `app_icon`).
 
 | # | Source | Caption |
 |---|--------|---------|
+| Icon | `out/play_icon_512.png` | Owned cave-party mark (same as launcher) |
 | Feature | `marketing/01_feature_graphic_1024x500.png` | IDLE PARTY · Grow a party. Farm AFK. |
-| 1 | `marketing/02_todays_chase_1080x1920.png` | Always know today's chase |
-| 2 | `out/02_02_combat.png` | Your party keeps fighting |
-| 3 | `out/03_03_gear.png` | Build and equip your party |
-| 4 | `marketing/05_build_party_1080x1920.png` | 10 classes. 31 specs. |
-| 5 | `out/05_05_zone.png` | Explore the World Path |
-| 6 | `marketing/07_afk_progress_1080x1920.png` | Progress while you're away |
-| 7 | `marketing/08_keystone_1080x1920.png` | KEYSTONE. Beat the clock. |
+| 1 | `out/01_01_combat_a.png` | Your party fights on its own |
+| 2 | `out/02_02_combat_b.png` | Same fight while you are away |
+| 3 | `marketing/02_todays_chase_1080x1920.png` | Always know today's chase |
+| 4 | `out/03_03_gear.png` | Build and equip your party |
+| 5 | `marketing/05_build_party_1080x1920.png` | 10 classes. 31 specs. |
+| 6 | `out/05_05_zone.png` | Explore the World Path |
+| 7 | `marketing/07_afk_progress_1080x1920.png` | Progress while you're away |
 | 8 | `marketing/09_ascend_1080x1920.png` | Ascend. Keep your power. |
 
-The three UI shots are current game captures with a small caption band. The
-other five are branded explainers using owned Idle Party art.
+Shots **1–2** are a **new-save** Sandy floor (starter Shield / Healer / Damage),
+not KEY / Gauntlet / AL20 chrome. Capture:
+
+1. `flutter test tool/store_listing/export_showcase_save_test.dart`
+2. Flutter web on `:8080`
+3. `py -3 tool/store_listing/capture_first_minute.py`
+4. `py -3 tool/store_listing/compose_shots.py`
+5. `py -3 tool/store_listing/make_listing_icon.py`
+
+Console paste of those files is a **separate** owner box.
 
 ### Feature graphic note
 
-Current Play feature graphic is `01_feature_graphic_1024x500.png` (party + title). Icon stays owned `app_icon`.
+Current Play feature graphic is `01_feature_graphic_1024x500.png` (party + title).
+Listing **icon** is owned `app_icon` resized to 512 (`make_listing_icon.py`).
 
 ## How we capture screenshots (lessons)
 
-Do **not** start from a blank day-one save. Pipeline:
+Do **not** use an empty hub as shot 1. Growth mandate: shots **1–2** are
+**new-save first-minute combat** (`capture_first_minute.py`). The AL3 showcase
+save is still for later carousel slots (gear / world path), not the search
+lead.
 
-1. `flutter test tool/store_listing/export_showcase_save_test.dart` → `showcase_save.json`
-2. Flutter web on `:8080` + `py -3 tool/store_listing/capture_playwright.py`
-3. `py -3 tool/store_listing/compose_shots.py` → `out/` (1080×1920, caption on **top**)
+Pipeline:
+
+1. `flutter test tool/store_listing/export_showcase_save_test.dart` →
+   `first_minute_save.json` (+ `showcase_save.json` for later slots)
+2. Flutter web on `:8080` + `py -3 tool/store_listing/capture_first_minute.py`
+3. `py -3 tool/store_listing/compose_shots.py` + `make_listing_icon.py` → `out/`
 
 Hard-won rules:
 
 | Pitfall | Fix |
 |---------|-----|
 | CONTINUE disabled after inject | Web SharedPreferences JSON-encodes strings → `JSON.stringify(raw)` into `flutter.idle_party_save_v2` |
+| Injected save overwritten / Welcome Back | `add_init_script` before Flutter boots; bump `lastUpdated` so AFK cannot eat the first minute |
 | Tabs (FORGE / KEEP / GEAR) ignore clicks | `MenuChrome.bridgedTab` + `__idlePartyClick` (CanvasKit TabBar is not DOM) |
 | Widget-test screenshots look blank | Prefer Playwright; Google Fonts + `toImage` fights you |
-| AL0 / all LOCKED / forge +0 | Use showcase save (AL3+, clears on World Path, real rates) |
+| AL0 empty **hub** / all LOCKED / forge +0 | Do not use as shot 1. Shot 1–2 = in-dungeon Sandy. Showcase AL3 is for later slots |
 | Fat caption covering HUD | Top caption band in `compose_shots.py`, crop bias per shot |
 | Play Console file picker blocked | CORS-serve `out/`, CDP `fetch` + `DataTransfer` (same idea as AAB) |
 
@@ -153,6 +172,9 @@ Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshot
 - Short + full description: en-US only (this file) — **idle RPG ASO pasted + submitted for review 2026-09-11**.
 - Phone screenshots (8): mixed branded cards + real combat/gear/zone UI from
   `tool/store_listing/upload/` (live assets unchanged this submit — copy only).
+  **In-repo listing pack (2026-09-12):** shots 1–2 = new-save Sandy F1 combat
+  (`out/01_01_combat_a.png`, `out/02_02_combat_b.png`) + 512 icon
+  (`tool/art_backups/play_icon_512.png`). Console paste is still an owner box.
 - Developer name: **Cognifox Studio**.
 - Growth ops (reviews / video / ads): see [`PLAY_GROWTH.md`](PLAY_GROWTH.md).
 - Preview video: `py -3 tool/store_listing/build_preview_video.py` →
