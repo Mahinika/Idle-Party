@@ -19,8 +19,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'first_run',
       title: 'NEXT JOB',
       body:
-          'This line on the hub is your next job. Tap ENTER DUNGEON. Your party fights on '
-          'its own — watch them, pick up loot, get stronger, beat the first boss.',
+          'Tap ENTER DUNGEON. Your party fights on its own — watch them, pick up loot, get stronger.',
     ),
     (
       id: 'lore_descent',
@@ -207,11 +206,22 @@ class FirstSessionTips extends StatelessWidget {
       s.metaDepth.lifetimeFloorClears >= 1 ||
       s.ascensionLevel >= 1;
 
+  /// First combat gold / floor / boss — GOLD / ESSENCE / pets wait until then.
+  static bool earnedFirstReward(GameState s) =>
+      s.lifetimeGoldEarned > 0 || leftPorch(s) || s.bossVictories > 0;
+
+  /// Overlay tips allowed before the first reward (hub job + tap the fight).
+  static const List<String> firstRunBeatIds = <String>['first_run', 'godhand'];
+
   static String? nextTipId(GameState s, {required bool inDungeon}) {
     final seen = s.seenTips;
     final porch = leftPorch(s);
+    final rewarded = earnedFirstReward(s);
     for (final tip in tips) {
       if (seen.contains(tip.id)) continue;
+      if (!rewarded && !firstRunBeatIds.contains(tip.id)) {
+        continue;
+      }
       // Live combat: only God Hand + FARM/PUSH tips — avoid tip spam mid-fight.
       if (inDungeon && tip.id != 'godhand' && tip.id != 'farm_push') {
         continue;
@@ -233,6 +243,9 @@ class FirstSessionTips extends StatelessWidget {
         continue;
       }
       if ((tip.id == 'godhand' || tip.id == 'farm_push') && !inDungeon) {
+        continue;
+      }
+      if (tip.id == 'farm_push' && !porch) {
         continue;
       }
       if (tip.id == 'bag' && !inDungeon && s.gearStash.isEmpty && s.gold < 10) {
@@ -259,6 +272,13 @@ class FirstSessionTips extends StatelessWidget {
         continue;
       }
       if (tip.id == 'three_dailies' && !GameLogic.showDailyChase(s)) {
+        continue;
+      }
+      if (tip.id == 'sanctuary' && s.essence < 1 && s.ascensionLevel < 1) {
+        continue;
+      }
+      if ((tip.id == 'market' || tip.id == 'forge' || tip.id == 'powerups') &&
+          !GameLogic.showDailyChase(s)) {
         continue;
       }
       if (tip.id == 'al20_endgame') {
@@ -359,11 +379,14 @@ class FirstSessionTips extends StatelessWidget {
       _ => tip.body,
     };
 
+    final hubJob = tip.id == 'first_run';
+    final showSkipAll = earnedFirstReward(director.state);
+
     return Align(
-      alignment: Alignment.bottomCenter,
+      alignment: hubJob ? const Alignment(0, -0.08) : Alignment.bottomCenter,
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 72),
+          padding: EdgeInsets.fromLTRB(12, 0, 12, hubJob ? 12 : 72),
           child: LayoutBuilder(
             builder: (context, constraints) {
               final maxH = MediaQuery.sizeOf(context).height * 0.55;
@@ -397,13 +420,15 @@ class FirstSessionTips extends StatelessWidget {
                           onPressed: () => director.dismissTip(tip.id),
                           primary: true,
                         ),
-                        const SizedBox(height: 6),
-                        GameButton(
-                          label: 'SKIP ALL TIPS',
-                          onPressed: () =>
-                              director.dismissAllTips(tips.map((t) => t.id)),
-                          style: GameButtonStyle.brown,
-                        ),
+                        if (showSkipAll) ...[
+                          const SizedBox(height: 6),
+                          GameButton(
+                            label: 'SKIP ALL TIPS',
+                            onPressed: () =>
+                                director.dismissAllTips(tips.map((t) => t.id)),
+                            style: GameButtonStyle.brown,
+                          ),
+                        ],
                       ],
                     ),
                   ),

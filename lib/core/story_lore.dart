@@ -10,19 +10,16 @@ abstract final class StoryLore {
   static const String introSubline =
       'Tap to help. Grow stronger. No other game required.';
 
-  /// Cold-start beats before CONTINUE / NEW GAME. Short, skippable.
+  /// Cold-start beats before CONTINUE / NEW GAME. Two skippable beats.
   static const introBeats = <({String title, String body})>[
     (
       title: 'IDLE PARTY',
       body: 'A small party waits at the cave mouth. They fight without you.',
     ),
     (
-      title: 'THE CAVE',
-      body: 'Send them into a dungeon. They clear rooms and pick up loot.',
-    ),
-    (
       title: 'YOUR JOB',
-      body: 'Tap the map to help. Grow the party. Beat the first boss.',
+      body:
+          'Send them into the dungeon. Tap the fight to help. Beat the first boss.',
     ),
   ];
 

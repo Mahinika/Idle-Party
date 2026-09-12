@@ -47,7 +47,8 @@ void main() {
   });
 
   test('BASICS / PARTY guides skip WotLK and name the three jobs', () {
-    final basics = GameGuides.topics.firstWhere((t) => t.id == 'basics');
+    final state = GameLogic.createInitialState(now: now);
+    final basics = GameGuides.topicsFor(state).firstWhere((t) => t.id == 'basics');
     expect(basics.body.toUpperCase(), isNot(contains('WOTLK')));
     expect(basics.body.toLowerCase(), contains('shield'));
     expect(basics.body.toLowerCase(), contains('healer'));
@@ -55,6 +56,10 @@ void main() {
     expect(basics.body.toLowerCase(), contains('enter dungeon'));
     expect(basics.body.toLowerCase(), contains('tap the fight'));
     expect(basics.body.toUpperCase(), isNot(contains('FORGE')));
+    expect(basics.body.toUpperCase(), isNot(contains('MARKET')));
+    expect(basics.body.toUpperCase(), isNot(contains('ESSENCE')));
+    expect(basics.body.toUpperCase(), isNot(contains('PETS')));
+    expect(basics.body.toUpperCase(), isNot(contains('KEY')));
 
     final party = GameGuides.topics.firstWhere((t) => t.id == 'party');
     expect(party.body.toUpperCase(), isNot(contains('WOTLK')));
@@ -72,6 +77,10 @@ void main() {
     expect(ids, isNot(contains('powerups')));
     expect(ids, isNot(contains('combinator')));
     expect(ids, isNot(contains('gauntlet')));
+    final world = early.firstWhere((t) => t.id == 'world_path');
+    expect(world.body.toUpperCase(), isNot(contains('KEY')));
+    expect(world.body.toUpperCase(), isNot(contains('ENDGAME')));
+    expect(world.body.toUpperCase(), isNot(contains('GAUNTLET')));
   });
 
   test('first tip points at ENTER DUNGEON, not a menu dictionary', () {

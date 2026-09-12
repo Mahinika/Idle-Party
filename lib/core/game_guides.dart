@@ -17,9 +17,40 @@ abstract final class GameGuides {
     if (!GameLogic.plainPlayerChrome(state)) return topics;
     return [
       for (final t in topics)
-        if (firstHourTopicIds.contains(t.id)) t,
+        if (firstHourTopicIds.contains(t.id))
+          switch (t.id) {
+            'basics' => _firstHourBasics,
+            'world_path' => _firstHourWorldPath,
+            _ => t,
+          },
     ];
   }
+
+  /// Day-one BASICS: how to play, not the meta syllabus.
+  static const GuideTopic _firstHourBasics = GuideTopic(
+    id: 'basics',
+    title: 'BASICS',
+    body:
+        'You have a small party of heroes. They fight on their own.\n\n'
+        '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
+        '• Watch them clear rooms. Tap the fight when you want to help.\n'
+        '• The hunt line on the hub always names the next job — start there.\n'
+        '• A number on GEAR means better items wait in BAG.\n'
+        '• Starter jobs: Shield, Healer, Damage. You do not need another RPG.',
+  );
+
+  static const GuideTopic _firstHourWorldPath = GuideTopic(
+    id: 'world_path',
+    title: 'WORLD PATH',
+    body:
+        'The hub map is the World Path. Start at Sandy Caverns.\n\n'
+        '• Tap a cave, then ENTER DUNGEON.\n'
+        '• New caves open as the party grows (mean level) or when you clear '
+        'the one before. Gold does not unlock them.\n'
+        '• Locked caves sit dim. The caption under the map shows party level '
+        'progress (have / need).\n'
+        '• Boss floor is shown under your party name (Boss on F n).',
+  );
 
   static final topics = <GuideTopic>[
     GuideTopic(

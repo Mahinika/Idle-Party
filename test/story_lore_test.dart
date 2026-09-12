@@ -16,7 +16,7 @@ void main() {
   test('intro and ascend copy stay short and present', () {
     expect(StoryLore.introTagline, contains('party'));
     expect(StoryLore.introSubline.toLowerCase(), contains('help'));
-    expect(StoryLore.introBeats, hasLength(3));
+    expect(StoryLore.introBeats, hasLength(2));
     expect(StoryLore.introBeats.first.title, 'IDLE PARTY');
     expect(StoryLore.introBeats[1].body.toLowerCase(), contains('dungeon'));
     final body = StoryLore.ascendConfirmBody(

@@ -223,7 +223,9 @@ next). Player-facing stamp is **READY / ALMOST** + the job, not the word TODAY. 
 etc.). Local-season **week goal** can surface as a chase. **First hour** (no
 boss, no Ascend): grow the party in the starter zone — skip Daily /
 vault-start / kit teasers until after the first boss
-(`GameLogic.showDailyChase`). **KEY habit** (`ENTER KEY +N`), KEY tab,
+(`GameLogic.showDailyChase`). First-session overlay is **≤2 beats** before the
+first reward (`first_run` + tap-the-fight); GOLD / MARKET / ESSENCE / pets tips
+wait. **KEY habit** (`ENTER KEY +N`), KEY tab,
 week-affix jargon, and KEYSTONE tips wait until the **active party is all
 Lv100** (`GameLogic.showKeystoneJargon` → `endgameUnlocked`). At endgame,
 the hub grows a **PATH | ENDGAME** switch: PATH is the 15-zone World Path;

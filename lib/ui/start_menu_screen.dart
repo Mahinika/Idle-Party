@@ -54,7 +54,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
       vsync: this,
       duration: const Duration(milliseconds: 480),
     );
-    Future<void>.delayed(const Duration(milliseconds: 900), () {
+    Future<void>.delayed(const Duration(milliseconds: 400), () {
       if (!mounted || _finishing) return;
       setState(() => _inputUnlocked = true);
     });

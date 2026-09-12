@@ -21,7 +21,7 @@ Future<void> skipBootIntro(WidgetTester tester) async {
   expect(find.text('SKIP'), findsOneWidget);
   await tester.tap(find.text('SKIP'));
   await tester.pump();
-  // Start menu ignores taps for ~900ms.
+  // Start menu ignores taps for ~400ms.
   await tester.pump(const Duration(milliseconds: 950));
 }
 
@@ -107,7 +107,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     expect(find.byType(StartMenuScreen), findsOneWidget);
 
-    // Input lock unlocks after ~900ms (already passed above).
+    // Input lock unlocks after ~400ms (already passed above).
     await tester.tap(find.text('NEW GAME'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));

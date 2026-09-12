@@ -1299,7 +1299,10 @@ class GameDirector extends ChangeNotifier {
     if (_isLoading) return;
     _awaitingWipeChoice = false;
     _flushHubIdle();
-    _state = GameLogic.enterDungeon(_state, dungeonId: dungeonId);
+    _state = GameLogic.dismissTip(
+      GameLogic.enterDungeon(_state, dungeonId: dungeonId),
+      'first_run',
+    );
     _applyFunnelTick(
       FunnelAnalytics.onFirstEnter(
         _state,

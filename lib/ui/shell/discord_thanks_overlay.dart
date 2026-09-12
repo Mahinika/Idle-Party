@@ -6,6 +6,7 @@ import '../../core/community_links.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/hub_chase.dart';
+import '../first_session_tips.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -20,8 +21,12 @@ class DiscordThanksOverlay extends StatelessWidget {
 
   static bool shouldOffer(GameDirector director) {
     if (director.state.seenTips.contains(tipId)) return false;
-    // Never cover the first TODAY tip — wait until that tip is dismissed.
-    if (!director.state.seenTips.contains('first_run')) return false;
+    // Never cover the first ENTER tip — wait until that tip is dismissed
+    // or they have already entered a cave.
+    if (!director.state.seenTips.contains('first_run') &&
+        !FirstSessionTips.leftPorch(director.state)) {
+      return false;
+    }
     // Endgame / READY chase owns the hub — Discord stays under MORE · SETTINGS.
     if (GameLogic.endgameUnlocked(director.state)) return false;
     final chase = HubChase.forState(director.state);
