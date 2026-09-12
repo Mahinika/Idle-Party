@@ -11,9 +11,8 @@ description: >-
 
 Short visual QA after What’s New / daily vault / MORE / guides / God Hand style work.
 
-**Growth mandate:** start from **NEW GAME** (not AL20). First 15 min must match
-the listing hook — party enters and fights. Do not require KEY / ESSENCE /
-MARKET tips before the first boss.
+**Growth mandate:** start from **NEW GAME** (not AL20). Combat should be on
+screen in ≤90 s. Do not require KEY / ESSENCE / MARKET tips before the first reward.
 
 **Default setup:** [a56-playtest](../a56-playtest/SKILL.md) (Samsung A56
 emulator). Skip boot story → CONTINUE / NEW GAME → dismiss tips. Tap through

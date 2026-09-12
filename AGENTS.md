@@ -10,8 +10,8 @@ in sync (currently **1.12.153**). What’s New lives in `lib/core/meta_systems.d
 
 Owner describes goals in plain language; agents pick skills/tools/verify alone.
 **Rules (don’t duplicate here):**
-- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **active program** (first 15 min + Play funnel)
-- `.cursor/rules/expert-council.mdc` — role prompting: who to convene, veto vs weight
+- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **active program** (time-to-combat + Play funnel)
+- `.cursor/rules/expert-council.mdc` — decision policy (veto/weight), not theatrical role-play
 - `.cursor/rules/product-locks.mdc` — hard + soft locks (dated)
 - `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
 - `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff
@@ -19,7 +19,7 @@ Owner describes goals in plain language; agents pick skills/tools/verify alone.
 
 Cadence: `docs/GROWTH_MANDATE.md` (until its done bar is complete), then
 `docs/CONTENT_CADENCE.md`. **Default work** when vague: next unchecked growth
-box (funnel, first 15 min, listing). AL20 is a quality gate, not the batch.
+box (funnel, time-to-combat ≤90 s, listing). AL20 is a quality gate, not the batch.
 When the done bar is fully checked, the agent says exactly
 `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`. Chat Swedish; short test
 list (new save first) → wait. Commit locally when green; ask before push / PR /

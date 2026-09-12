@@ -1,24 +1,26 @@
 ---
 description: >-
-  Active growth mandate — first 15 min + Play funnel until the done bar.
+  Active growth mandate — time-to-combat + Play funnel until the done bar.
   When complete, say the exact Robban line (never early, never paraphrased).
 alwaysApply: true
 ---
 
 # Growth mandate (Idle Party)
 
-**Locked 2026-09-12.** Source: `docs/GROWTH_MANDATE.md`.
+**Locked 2026-09-12.** Source: `docs/GROWTH_MANDATE.md` (research-checked).
 
 Default work is **grow players**, not AL20 polish. Vague “gör bättre / vad
 härnäst” → next **unchecked** box on that done bar. AL20 play notes are a
-**quality gate** (don’t ship a broken endgame). They are not the batch.
+**quality gate**. They are not the batch.
 
 ## Do this
 
-- First 15 minutes + listing/funnel (events, day-1 TODAY, hide meta until unlock)
-- One day-2–7 job a new player can do; punchy Welcome Back
-- Opt-in idle notifications (never combat)
-- Play listing honesty: screenshots 1–2 = new-save first two minutes
+- Time-to-combat **≤90 s** on a new save; first reward in the first session
+  (the 15 min line is an envelope, not the hook)
+- Funnel events including `app_ready` + `first_reward` + time-to-combat
+- One day-2–7 job; punchy Welcome Back
+- Notifications after a milestone, ~1–2/day, never install-prompt / combat
+- Listing: **icon** + shots 1–2 = live crawl
 - Hide dead chrome; gate KEY/endgame until unlock
 
 ## Do not do (until the phrase is said)
@@ -26,7 +28,7 @@ härnäst” → next **unchecked** box on that done bar. AL20 play notes are a
 - New zone / class / God Hand redesign / second sim / gacha / iOS / web product
 - AL20 chase/wipe polish as the default slice
 - God-object cleanup as the quarter’s story
-- Paid UA scale before D1 is known
+- Scaled paid UA before D1 is known (tiny spend ≠ a D1 study)
 
 ## Phrase
 
@@ -37,8 +39,7 @@ the next user-facing message starts with **exactly**:
 
 Never early. Never paraphrase. `/init` must not restore the old AL20 default.
 
-## Experts
+## Decision policy
 
-Silent council: `.cursor/rules/expert-council.mdc`. While this mandate is
-open, Growth GM + new-player + UX outweigh AL20 polish. Vetoes (legal,
-fairness, one sim, crashes) still stop the ship.
+`.cursor/rules/expert-council.mdc` — veto table + weights, not a persona play.
+Growth + new-player + UX outweigh AL20. Legal / fairness / one sim / crashes veto.

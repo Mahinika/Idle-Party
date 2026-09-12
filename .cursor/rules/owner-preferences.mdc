@@ -10,19 +10,20 @@ alwaysApply: true
 Source: owner (vibe-coder). Last sync: **2026-09-12**.
 Locks: `.cursor/rules/product-locks.mdc`. Mandate: `docs/GROWTH_MANDATE.md`.
 
-**Now:** Growth mandate — first 15 min + Play listing/funnel (`docs/GROWTH_MANDATE.md`). AL20 is a quality gate, not the batch.
+**Now:** Growth mandate — time-to-combat ≤90s + Play funnel (`docs/GROWTH_MANDATE.md`). AL20 is a quality gate, not the batch.
 
 ## Default work (when goal is vague)
 
 Next **unchecked** box on `docs/GROWTH_MANDATE.md` done bar, in order:
-funnel events → first 15 min / day-1 TODAY → gate chrome → one day-2–7 job →
-Welcome Back → local notifications → listing pack → new-player What’s New.
+funnel events → time-to-combat / day-1 TODAY → gate chrome → one day-2–7 job →
+Welcome Back → milestone notifications → listing pack (icon + shots) →
+new-player What’s New.
 
 Not default: AL20 hub-chase polish, new zone/class, `/init`, repo cleanup,
 god-object refactors, iOS, scaled UA.
 
-**Play notes:** a **new save / first 15 min** is the batch signal. AL20 notes
-block ship if endgame is broken; they do not pick the next feature.
+**Play notes:** a **new save / first 90 seconds to combat** is the batch
+signal. AL20 notes block ship if endgame is broken; they do not pick the next feature.
 
 ## UI / distribution (facts)
 
@@ -54,7 +55,7 @@ block ship if endgame is broken; they do not pick the next feature.
 | A56 look / hub smoke after UI; listing *docs* | Delete save; publish store; Console paste | Invent a second combat sim |
 
 Ambiguous “two different games” (meny vs combat): silent expert council
-(`.cursor/rules/expert-council.mdc`) — prefer **first 15 min** over AL20 chrome.
+(`.cursor/rules/expert-council.mdc`) — prefer **time-to-combat ≤90 s** over AL20 chrome.
 Ask the owner only if the ask table still requires it.
 
 ## Feel reminders

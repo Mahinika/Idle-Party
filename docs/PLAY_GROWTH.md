@@ -4,7 +4,7 @@
 Do **not** chase Casual / Battle Royale / sandbox search volume.
 
 **Active program:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) (2026-09-12) —
-first 15 min + listing/funnel until that done bar is complete.
+time-to-combat ≤90 s + listing/funnel until that done bar is complete.
 
 Honest growth order: **crash-free → listing conversion → D1 → D7 → rating → tiny paid test**.
 

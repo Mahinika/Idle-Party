@@ -1,23 +1,23 @@
 ---
 description: >-
-  Role prompting — which experts to convene, who has veto, who weighs
-  heaviest during the growth mandate. Silent council; one decision.
+  Decision policy under the growth mandate — vetoes and weights.
+  Not a theatrical expert panel (persona prompts change tone, not accuracy).
 alwaysApply: true
 ---
 
-# Expert council (role prompting)
+# Decision policy (Idle Party)
 
-Do **not** role-play a panel in chat. Convene **silently** when the call is a
-fork, a mandate conflict, or a ship risk. Then **one** decision. Name the
-winner in at most one short sentence if the owner would otherwise be confused.
+Research (2025–26 persona/MDT papers): “act as expert” mostly changes
+**wording**, not decision quality. Do **not** role-play a panel in chat.
 
-Skip the council for routine implement / analyze / commit.
+Use this file as a **RACI / veto table**. Convene only on a fork or ship
+risk. Then **one** decision. Skip for routine implement / analyze / commit.
 
-## When to convene
+## When this applies
 
 - Two valid games (meny vs combat, AL20 vs new save, more systems vs hide)
-- Growth mandate vs old default slice
-- Listing/trailer vs live first two minutes
+- Mandate vs old default slice
+- Listing/trailer vs live first minute
 - First-session load vs teaching GOLD / ESSENCE / KEY
 - SHOP / ads / fairness
 - Combat feel vs DPS HIGH
@@ -25,8 +25,8 @@ Skip the council for routine implement / analyze / commit.
 
 ## Veto (always wins — stop)
 
-| Role | Stops |
-|------|--------|
+| Constraint | Stops |
+|------------|--------|
 | Legal / IP | Foreign art, dumps, copied game code |
 | Safety | Exploits, GitHub Releases as player funnel |
 | Combat authority | A second fight sim |
@@ -39,16 +39,17 @@ Owner still wins ask-table items (ny zon, ny klass, God Hand, whale, Play upload
 
 Heaviest → lightest for **what to build**:
 
-1. **Growth GM** — Play conversion, D1, funnel, listing hook
-2. **New-player advocate** — first 15 min; if a stranger is lost, cut chrome
-3. **Game UX Director** — placement, one job, no second nav (`game-ux-director`)
-4. **Store / ASO** — screenshots 1–2 + preview = new-save first two minutes
-5. **Combat designer** — fight *quality gate*; picks the batch only if the box is combat
+1. **Growth / Play funnel** — conversion, D1, listing honesty
+2. **New-player / time-to-value** — combat ≤90 s; first reward in first session
+3. **UX Director** — one job, no second nav, hide until unlock
+4. **Store / ASO** — **icon** first, then shots 1–2 = live crawl
+5. **Combat** — quality gate; batch owner only if the box is combat
 6. **Live economy** — SHOP/ads stay convenience
 7. **Staff engineer** — 20% hygiene; never picks the batch
-8. **AL20 core player** — lightest; **veto only** if endgame is actually broken
+8. **AL20 core** — lightest; veto only if endgame is actually broken
 
-If 1–4 disagree with 8: **1–4 win**. If 5 says HIGH or the sim is wrong: **5 vetoes ship**, not the roadmap.
+If 1–4 disagree with 8: **1–4 win**. If 5 says HIGH or the sim is wrong: **5
+vetoes ship**, not the roadmap.
 
 ## After the Robban phrase
 

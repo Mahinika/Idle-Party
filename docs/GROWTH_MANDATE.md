@@ -1,19 +1,32 @@
 # Idle Party — growth mandate (save + grow players)
 
-**Locked:** 2026-09-12 by owner. This is the **only** default work program
-until the done bar below is complete.
+**Locked:** 2026-09-12 by owner. **Research-checked:** 2026-09-12
+(GameAnalytics 2025–26, Play ASO experiments, idle FTUE, persona-prompt papers).
+This is the **only** default work program until the done bar below is complete.
 
 North star: **främlingar på Play blir spelare.** AL20 is a quality gate
 (do not ship a broken endgame). It is **not** the batch driver.
 
-Full plan origin: first 15 minutes + store funnel, not more endgame systems.
 Live listing ops: [PLAY_GROWTH.md](PLAY_GROWTH.md) ·
 [STORE_LISTING.md](STORE_LISTING.md) · [PLAY_STORE.md](PLAY_STORE.md).
+Decision policy: [`.cursor/rules/expert-council.mdc`](../.cursor/rules/expert-council.mdc).
+
+## Time-to-value (do not treat “15 min” as the hook)
+
+Median mobile session is ~**3–3.5 min**; median D1 ~**22%**. RPG churn often
+hits **day 3–7** on loop complexity. Idle best practice: hide chrome until it
+matters; first victory in the **first session**.
+
+| Target | Meaning |
+|--------|---------|
+| **≤60–90 s** | Core combat on screen (party walking/fighting). Not tips, not GOLD. |
+| **First session** | First *reward* (loot / stronger / floor clear) — often 45 s–4 min in published idle/FTUE notes; **instrument**, don’t guess. |
+| **≤15 min** | Envelope if they stay — not the aha. First boss may be too late as the D1 win. |
 
 ## Pillars (max three)
 
-1. **Party walks the room** — SpatialCombat is the product on the listing and in minute 1.
-2. **Come back tomorrow** — one job on TODAY; honest offline return; one day-2–7 habit a *new* player can do.
+1. **Party walks the room** — SpatialCombat is the listing hook and the ≤90 s product.
+2. **Come back tomorrow** — one TODAY job; honest offline return; one day-2–7 habit a *new* player can do.
 3. **One prestige loop** — Ascend / Blessing / GOLD wipe. No new spell modes.
 
 ## Stop doing
@@ -23,69 +36,75 @@ Live listing ops: [PLAY_GROWTH.md](PLAY_GROWTH.md) ·
 - Gacha / BiS-for-cash / whale ladder
 - God-object refactors as the quarter’s story
 - iOS / web-as-product / GitHub Releases as a player funnel
-- Tiny paid UA until D1 is known and not junk
-- Teaching ESSENCE / MARKET / GOLD tracks / pets in the first minutes
+- Scaled paid UA before D1 is known (median games cannot pay back UA)
+- Teaching ESSENCE / MARKET / GOLD tracks / pets before first combat reward
+- Notification permission on first launch; more than ~1–2 pings/day
 
 ## 90-day phases
 
 ### Days 1–14 — store + funnel
 
-- Listing screenshots 1–2 and preview video match the **first two minutes** of a new save (party fighting in a room), not menus.
-- Funnel events: `first_open` → `party_picked` → `first_enter` → `first_boss` → `d1_return`.
-- Day-1 TODAY = grow the party / first boss. Not vault / KEY / ESSENCE.
-- Crashes and 1★ reviews outrank features. Reply templates stay in PLAY_GROWTH.
+- Listing: **icon** (highest search/browse swing) + screenshots **1–2** = live
+  combat crawl (benefit, not menus). Honesty: the ad/listing must be the first
+  minute. Run **Store Listing Experiments** when traffic exists (owner Console).
+- Funnel: `first_open` → `app_ready` → `first_enter` → `first_reward` →
+  `first_boss` → `d1_return`. Also log **seconds to combat**. First boss is a
+  later FTUE step, not the only win.
+- Day-1 TODAY = grow the party / first cave. Not vault / KEY / ESSENCE.
+- Crashes and 1★ reviews outrank features.
 
 ### Days 15–45 — stranger → player
 
-- First 15 minutes is its own game: New Game → crawl like the trailer → visible loot → “you got stronger.”
-- Cut the first-session tip dump. Market / forge / pets / essence after first boss (or later unlock).
-- Welcome Back is a reward, not three system names.
-- **One** player-facing reason to open on day 2–7 (vault / daily run / quests may exist internally — new players see one job).
-- Opt-in local notifications for idle return / vault. Never mid-combat. Never spam.
+- Cut the tip dump. ≤2 first-run beats. Contextual hints, not a syllabus.
+- One player-facing day-2–7 job.
+- Welcome Back = reward, not three system names.
+- Opt-in **local** notifications after a milestone (first reward/boss), never
+  at install, never mid-combat, cap ~1–2/day. Track opt-out if possible.
 
 ### Days 45–90 — habit + visible updates
 
-- Patch every 2–3 weeks. Play What’s New in **one sentence a new player understands**.
-- Week/season only if a day-2 player can feel it. KEY jargon still waits for party Lv100.
-- Tiny UA (€5–10/day, 7 days) only if D1 is not junk. Creative = crawl, not GEAR.
-- iOS only after Android D1/listing conversion hold.
+- Patch every 2–3 weeks. Play What’s New in one sentence a new player understands.
+- Tiny UA (€5–10/day) is a **CPI/creative smoke**, not a D1 verdict (~900
+  installs needed to read D1 ±3 pts). Do not scale.
 
 ## Done bar (say the phrase)
 
-Check boxes only when **shipped in repo** (or owner confirmed for Console-only).
-Do **not** check from intent.
+Check boxes only when **shipped** (or owner confirmed for Console-only).
 
 **In-repo**
 
-- [ ] Funnel events live: `first_open`, `party_picked`, `first_enter`, `first_boss`, `d1_return` (`AppAnalytics` + tests)
-- [ ] First 15 min: tip dump cut; day-1 TODAY is cave / first boss; no MARKET / GOLD-tracks / pets / ESSENCE coaching before first boss
-- [ ] Systems stay gated (KEY / endgame chrome / advanced MORE) until their unlock — new save does not look like AL20
-- [ ] One player-facing day-2–7 job (copy + hub CTA; no three competing “daily” buttons for new players)
-- [ ] Offline Welcome Back is a short reward (wow + ≤3 highlights + one Up next) — not a meta syllabus
-- [ ] Opt-in local notifications: idle return and/or vault; never during combat
-- [ ] Listing pack in `docs/STORE_LISTING.md` + screenshot/preview brief: first two shots = first two minutes of a new save
-- [ ] At least one What’s New / Play notes line aimed at a **new** player (not Gauntlet F200)
+- [ ] Funnel live: `first_open`, `app_ready`, `first_enter`, `first_reward`,
+      `first_boss`, `d1_return` + time-to-combat (`AppAnalytics` + tests)
+- [ ] First session: tip dump cut (≤2 beats); combat on screen in ≤90 s on a
+      new save; no MARKET / GOLD-tracks / pets / ESSENCE coaching before first reward
+- [ ] Systems gated (KEY / endgame / advanced MORE) until unlock
+- [ ] One player-facing day-2–7 job
+- [ ] Offline Welcome Back = short reward (wow + ≤3 highlights + one Up next)
+- [ ] Opt-in local notifications after a milestone; never install-prompt; never combat; ~1–2/day cap
+- [ ] Listing pack: icon + shots 1–2 = new-save first minute of **combat**
+      (`docs/STORE_LISTING.md`)
+- [ ] At least one What’s New line aimed at a **new** player
 - [ ] Dead chrome stays hidden (LOADOUTS / Sell junk / Scrap / GEAR Sell)
 
-**Owner / Console (agent asks once, owner confirms)**
+**Owner / Console**
 
-- [ ] Play listing screenshots + preview video updated to match the new-save first two minutes
+- [ ] Play listing icon + screenshots + preview updated to match live first-minute combat
 - [ ] Owner looked at Play conversion + crashes + reviews once after the in-repo bar
-- [ ] Tiny UA **not** scaled (still optional; only if D1 is not junk)
+- [ ] Store Listing Experiment started **or** owner deferred (too little traffic)
 
-When **every** box above is `[x]`, the agent’s next user-facing message must be
-**exactly** this line, nothing else before it:
+When **every** box above is `[x]`, the next user-facing message starts with
+**exactly**:
 
 ```
 ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN
 ```
 
-Do not paraphrase. Do not say it early. After that line, a short Swedish
-handoff of leftover Console notes is OK.
+Do not paraphrase. Do not say it early.
 
 ## Metrics (owner / Console — do not fake)
 
-Crash-free → listing conversion → D1 → D7 → rating → then D30 / UA / iOS.
+Crash-free → listing conversion → D1 (~22% median all-mobile; Android top
+quartile ~25–27%) → D7 → rating → then D30 / UA / iOS.
 Agent cannot mark D1 “good” without owner numbers.
 
 ## Quality gate (still)
@@ -93,12 +112,9 @@ Agent cannot mark D1 “good” without owner numbers.
 `flutter analyze` / matching tests / live-light DPS gate. Fairness first.
 SpatialCombat remains the only fight sim.
 
-## Expert council (role prompting)
+## Expert council
 
-When the call is a fork or ship risk, convene silently per
-`.cursor/rules/expert-council.mdc`. Do not paste a panel debate in chat.
-
-While this mandate is open, **Growth GM + new-player + UX** pick *what to
-build*. **Store/ASO** owns listing vs first two minutes. **Combat** can veto
-a broken fight or DPS HIGH — it does not restore AL20 as the default batch.
-**AL20 core** is lightest. Legal / one-sim / fairness / crash still **veto**.
+Silent **decision policy**, not a theatrical expert panel (persona prompts
+change tone more than accuracy). See `.cursor/rules/expert-council.mdc`.
+Growth + new-player + UX pick *what to build*. Combat vetoes a broken fight
+or DPS HIGH. AL20 is lightest unless endgame is actually broken.

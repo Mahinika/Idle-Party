@@ -72,7 +72,7 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
 (production track live; keep Operator status honest above). Closed opt-in for early builds. Do **not**
 point players at GitHub Releases (repo may be private). Day-to-day: **growth
-mandate** ([GROWTH_MANDATE.md](GROWTH_MANDATE.md)) — listing + first 15 min are
+mandate** ([GROWTH_MANDATE.md](GROWTH_MANDATE.md)) — listing + time-to-combat are
 the work, not background chores. Ship path for players = Play AAB after owner
 play OK — not public GitHub APK links.
 

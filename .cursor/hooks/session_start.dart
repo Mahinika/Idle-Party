@@ -7,12 +7,12 @@ void main() {
   final context =
       'Idle Party default work this session: $now '
       'Do that unless the owner named something else. '
-      'Program: docs/GROWTH_MANDATE.md — first 15 min + Play listing/funnel. '
+      'Program: docs/GROWTH_MANDATE.md — time-to-combat <=90s + Play listing/funnel. '
       'AL20 is a quality gate, not the batch. '
-      'Forks: silent expert council (.cursor/rules/expert-council.mdc) — Growth GM + new-player outweigh AL20. '
+      'Forks: silent decision policy (.cursor/rules/expert-council.mdc) — not a persona play; Growth + new-player outweigh AL20. '
       'Do not start /init or repo cleanup unprompted. '
       'Play listing/docs ARE in mandate (play-store-prep); do not treat Play as background chores. '
-      'If they paste play notes, prefer a new save / first 15 min; AL20 notes block ship if endgame is broken. '
+      'If they paste play notes, prefer a new save / first 90s to combat; AL20 notes block ship if endgame is broken. '
       'After code: short phone test list (new save first), wait; no GitHub/Play upload before they play. '
       'When every GROWTH_MANDATE done-bar box is checked, start the user message with exactly: '
       'ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN '
@@ -30,7 +30,7 @@ void main() {
 String _nowLine() {
   final file = File('.cursor/rules/owner-preferences.mdc');
   if (!file.existsSync()) {
-    return 'growth mandate (first 15 min + Play funnel)';
+    return 'growth mandate (time-to-combat + Play funnel)';
   }
   for (final line in file.readAsLinesSync()) {
     final t = line.trim();
@@ -40,5 +40,5 @@ String _nowLine() {
       return t.substring(i + marker.length).trim();
     }
   }
-  return 'growth mandate (first 15 min + Play funnel)';
+  return 'growth mandate (time-to-combat + Play funnel)';
 }

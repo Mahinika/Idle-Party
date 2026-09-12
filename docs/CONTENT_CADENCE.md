@@ -1,7 +1,7 @@
 # Idle Party — monthly content cadence
 
 **Active program (2026-09-12):** [GROWTH_MANDATE.md](GROWTH_MANDATE.md) —
-first 15 minutes + Play funnel until that done bar is complete. This file is
+time-to-combat ≤90 s + Play funnel until that done bar is complete. This file is
 the **tag rhythm** (balance + What’s New) under that mandate.
 
 Optional background: [TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md). Live
@@ -14,7 +14,7 @@ contracts: [CHASE_CONTRACT.md](CHASE_CONTRACT.md) ·
 Each tagged `1.x.y` release should include:
 
 1. **One mandate slice** — next unchecked box on `GROWTH_MANDATE.md` (funnel,
-   first 15 min, day-2 job, Welcome Back, notifications, listing pack).
+   time-to-combat, day-2 job, Welcome Back, notifications, listing pack).
    Play What’s New in **one sentence a new player understands**.
 2. **Balance pass** — iterate with share-only, then gate:
    - Fast: `flutter test test/class_balance_share_fast_test.dart` (or `--focus=specA,specB` via harness args)
@@ -23,7 +23,7 @@ Each tagged `1.x.y` release should include:
 
 ### Success-spår (until mandate done)
 
-1. **Activation** — new save first 15 min matches listing/trailer (party walks the room).
+1. **Activation** — new save combat on screen in ≤90 s; listing/trailer match that crawl.
 2. **Habit** — one TODAY job a new player can do on day 1 and day 2–7.
 3. **Store** — screenshots 1–2 + preview = those first two minutes; funnel events honest.
 
@@ -34,7 +34,7 @@ slice. No new zones or classes (soft lock).
 
 | Om ni tvekar mellan … | Välj |
 |------------------------|------|
-| AL20 polish vs first 15 min | First 15 min (`GROWTH_MANDATE.md`) |
+| AL20 polish vs first session | Time-to-combat ≤90 s (`GROWTH_MANDATE.md`) |
 | Ny spec vs polisha kit | Trim HIGH only; no specs for the list |
 | Ny zon vs listing/onboarding | Listing + first session. Ny zon bara om ägaren ber |
 | Cool affinity-nudge vs budget | Budget |
