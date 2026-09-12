@@ -27,6 +27,7 @@ abstract final class MetaSystems {
       version: '1.12.152',
       bullets: <String>[
         'Endgame fights read clearer: KEY affix banners in the dungeon, Ashen Crown CROWN → SLAM → IGNITE, Gauntlet SHARD scales past F100. Gauntlet milestones now F150 and F200.',
+        'Ashen Crown enter builds the floor immediately — no stuck Loading floor… after CROWN.',
         'ENDGAME map blurbs split Ranked GREATER GR (no gear) from Farm Rift (loot). Week goals mix KEY, Spire, GR, and Ashen Crown — not only KEY +2. TODAY adds roster hints for the weekly affix.',
         'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
       ],

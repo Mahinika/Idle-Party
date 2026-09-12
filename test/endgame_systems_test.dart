@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/blessing_constellation.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/god_hand_mastery.dart';
 import 'package:idle_party/core/hub_chase.dart';
@@ -80,6 +81,28 @@ void main() {
     expect(state.inWorldBoss, isFalse);
     expect(state.metaDepth.worldBossTickets, AshenCrown.ticketsPerWeek);
     expect(state.metaDepth.worldBossClearedWeek, isFalse);
+  });
+
+  test('director Ashen enter builds a spatial floor (not null world)', () {
+    var state = GameLogic.createInitialState(now: DateTime.utc(2026, 9, 12));
+    state = state.copyWith(
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+      heroes: [
+        for (final h in state.heroes)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );
+    state = AshenCrown.ensureWeek(state, now: DateTime.utc(2026, 9, 12));
+    final director = GameDirector.preview(initialState: state);
+    director.enterAshenCrown(practice: true);
+    expect(director.state.inWorldBoss, isTrue);
+    expect(director.state.inDungeon, isTrue);
+    expect(director.spatial, isNotNull);
+    expect(director.spatial!.enemies, isNotEmpty);
+    expect(director.spatial!.inWorldBoss, isTrue);
   });
 
   test('god hand mastery smash milestone', () {

@@ -2015,14 +2015,24 @@ class GameDirector extends ChangeNotifier {
         return;
       }
     }
+    _flushHubIdle();
     _state = GameLogic.enterAshenCrown(_state, practice: practice);
-    notifyListeners();
+    _lastStashLen = _state.gearStash.length;
+    _autosaveAccum = 0;
+    _beginRunIncomeSession();
+    _rebuildSpatial();
+    if (enableSpatialLoop) {
+      _startSpatialLoop();
+    }
+    _syncHubIdleTimer();
     showToast(
       practice
           ? 'Practice · ${AshenCrown.name}'
           : '${AshenCrown.name} · ticket held (returned if you leave early)',
       life: 2.6,
     );
+    notifyListeners();
+    unawaited(_persistFlush());
   }
 
   void startApexTrial() {
