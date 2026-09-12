@@ -171,9 +171,10 @@ Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshot
 - Short + full description: en-US only (this file) — **idle RPG ASO pasted + submitted for review 2026-09-11**.
 - Phone screenshots **1–2** (live first-minute Sandy combat) **submitted for
   review 2026-09-12** (`Ändringarna granskas`). Play listing currently has
-  those two phone slots only (minimum 2). Carousel 3–8 and the listing **icon**
-  were not attached this submit (512 icon sits in the Console library as
-  `play_icon_512.png`). Preview video still `https://www.youtube.com/watch?v=OMWXbgGBFMA`.
+  those two phone slots only (minimum 2). Listing **icon** swapped to
+  `play_icon_512.png` (1∶1 512) and **submitted 2026-09-12** (row **Ändra
+  appikon**). Carousel 3–8 not attached this submit. Preview video still
+  `https://www.youtube.com/watch?v=OMWXbgGBFMA`.
 - Developer name: **Cognifox Studio**.
 - Growth ops (reviews / video / ads): see [`PLAY_GROWTH.md`](PLAY_GROWTH.md).
 - Preview video: `py -3 tool/store_listing/build_preview_video.py` →

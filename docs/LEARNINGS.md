@@ -28,7 +28,9 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   Play library dump-all sorts by recency/dedupe — attach **one shot at a
   time**. Assets tagged “Behöver beskäras” need **9:16 stående** → Spara som
   kopia → **Lägg till** (default crop is 16:9 landscape). CORS on **9888**,
-  not poisoned 9877.
+  not poisoned 9877. Appikon is **1/1**: attach the new 512 from the library
+  first, then **Ta bort** the old icon — never save with an empty icon slot.
+  Do not 9:16-crop a 1∶1 512 icon.
 - **Tiny UA is not a D1 study.** ~900 installs to read D1 ±3 pts. €5–10/day
   is CPI/creative smoke only.
 - **Notifications:** after a milestone, ~1–2/day, never first-launch permission,

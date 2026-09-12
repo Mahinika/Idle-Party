@@ -47,8 +47,10 @@ py -3 tool/store_listing/make_listing_icon.py
    `DataTransfer` into the phone-screenshots file input. Delete old phone
    shots first. Attach **one PNG at a time** (library recency/dedupe scrambles
    dump-all). If the library says “Behöver beskäras”: Beskär → **9:16 stående**
-   (not the default 16:9) → Spara som kopia → **Lägg till**. Paste short+full
-   from `STORE_LISTING.md`. Submit listing → update `PLAY_STORE.md`.
+   (not the default 16:9) → Spara som kopia → **Lägg till**. Appikon **1/1**:
+   attach the new 512 from the library, then remove the old icon (never save
+   empty). Do not 9:16-crop a 1∶1 icon. Paste short+full from
+   `STORE_LISTING.md`. Submit listing → update `PLAY_STORE.md`.
 
 ### Upload listing assets (Cursor browser)
 

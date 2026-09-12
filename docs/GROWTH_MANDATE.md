@@ -89,7 +89,7 @@ Check boxes only when **shipped** (or owner confirmed for Console-only).
 
 **Owner / Console**
 
-- [ ] Play listing icon + screenshots + preview updated to match live first-minute combat
+- [x] Play listing icon + screenshots + preview updated to match live first-minute combat
 - [ ] Owner looked at Play conversion + crashes + reviews once after the in-repo bar
 - [ ] Store Listing Experiment started **or** owner deferred (too little traffic)
 
