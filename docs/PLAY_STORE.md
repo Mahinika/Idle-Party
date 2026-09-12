@@ -8,16 +8,16 @@ Package id: **`com.idleparty.app`**
 |------|--------|-------|
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
-| Closed testing | ⏳ review | **1.12.133 (163)** submitted **2026-09-10** (full rollout; replaces live **135 / 1.12.106** when Google publishes). |
-| Production | ⏳ review | **1.12.133 (163)** submitted **2026-09-10** (full rollout; live until then **146 / 1.12.117**). |
+| Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
+| Production | ⏳ review | **Live 163 (1.12.133)** (published 2026-09-12). **1.12.157 (187)** submitted **2026-09-12** (full rollout + listing copy/shots). Publiceringsöversikt → Ändringarna granskas. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ✅ review | Ads / Play Games / Advertising ID + **Firebase Analytics** (App interactions, Diagnostics, Device IDs) submitted **2026-09-10** — under Google review (`Ändringarna granskas`). Matches [PRIVACY.md](PRIVACY.md). |
 | IARC / content rating | ⏳ review | New questionnaire submitted 2026-09-08: fantasy creature violence (often close-up, pixel, no blood), digital goods (SHOP) yes / no loot-boxes / no player trading, no fear/sex/gambling/language/drugs. Ads are **not** in this IARC form — covered by Ads declaration **Yes**. Ratings preview: ESRB 10+ fantasy violence, USK 12, PEGI 3 + IAP. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
-| Store listing copy (EN) | ⏳ review | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md`. **2026-09-11:** idle RPG short/full pasted in Console and **submitted for review** (Publiceringsöversikt → Ändringarna granskas). |
+| Store listing copy (EN) | ⏳ review | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md` (itch-parity: Day-one menus, Shield/Healer/Damage, Cognifox, privacy URL). **2026-09-12:** pasted + submitted with Production **187**. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
-| Screenshots + feature graphic | ⏳ review | **2026-09-12:** phone shots **1–2** = new-save Sandy F1 combat (submitted). Listing **icon** swapped to owned cave-party `play_icon_512.png` and **submitted** (Publiceringsöversikt → **Ändringarna granskas**, row **Ändra appikon**). Carousel 3–8 and feature graphic unchanged. Preview still `OMWXbgGBFMA`. Console look same day: **11** listing visitors / **8** install clicks / **73%** CTR (28d); **0** user-perceived crashes; **1** 5★ review. Store Listing Experiment **deferred** (too little traffic). |
+| Screenshots + feature graphic | ⏳ review | **2026-09-12:** **8** phone shots submitted (1–2 = new-save Sandy combat; then chase, gear, party, zone, AFK, ascend — same story as itch). Icon remains owned `play_icon_512.png`. Preview `OMWXbgGBFMA`. Console look earlier same day: **11** listing visitors / **8** install clicks / **73%** CTR (28d); **0** user-perceived crashes; **1** 5★ review. Store Listing Experiment **deferred**. |
 | Preview video (YouTube) | ⏳ review | **2026-09-11:** Cognifox Studio channel unlisted YT `https://www.youtube.com/watch?v=OMWXbgGBFMA` (replaces Robert personal `fiZjJ9S9l4A`). Relink + resubmit after Cognifox upload. Confirm YT: ads off, embeddable, not age-restricted. |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
@@ -32,10 +32,10 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Phone screenshots attached on listing (verified 2026-09-04 — slots filled, Save idle)
 - [x] IARC new questionnaire submitted 2026-09-08 (fantasy combat + digital goods; ads via Ads declaration)
 - [x] Production access granted by Google (seen on dashboard 2026-09-09)
-- [x] Signed Production candidate AAB built: **1.12.133+163** (`app-release.aab`)
-- [x] Owner asked upload Production (2026-09-10)
-- [x] Uploaded + submitted for review: Production **163 (1.12.133)** + Alpha **163** full rollout
-- [ ] Google review / publish complete → store listing shows Updated + new version
+- [x] Signed Production candidate AAB built: **1.12.157+187** (`app-release.aab`)
+- [x] Owner asked upload Production (2026-09-12)
+- [x] Uploaded + submitted for review: Production **187 (1.12.157)** + listing copy + 8 phone shots (2026-09-12)
+- [ ] Google review / publish complete → store listing shows Updated + **1.12.157**
 - [x] After production live: AdMob store-link Idle Party (**2026-09-09** — Play linked; AdMob app review 2–3 days)
 
 ### Production upload paste (en-US release notes)
@@ -175,7 +175,7 @@ Suggested Description (en-US):
 
 - [x] Content rating questionnaire (IARC): original 2026-08-08; **re-survey submitted 2026-09-08** — fantasy creature violence (often close-up, pixel, no blood), SHOP digital goods, no loot-boxes/trading/chat. Ads via Ads declaration (not in new IARC form). Preview: ESRB 10+ / USK 12 / PEGI 3 + IAP.
 - [x] Short + full description (en-US only — no extra listing locales) from `docs/STORE_LISTING.md` (refresh listing when ship copy changes).
-- [x] Phone screenshots + feature graphic: **shots 1–2 = live first-minute combat submitted 2026-09-12** (review). Icon still owned `app_icon` on the listing slot (512 file in Console library). Tablet shots unchanged.
+- [x] Phone screenshots + feature graphic: **8 phone shots submitted 2026-09-12** (1–2 combat; carousel matches itch). Icon owned `play_icon_512.png`. Tablet shots unchanged.
 - [x] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*` — **`v1.12.83`** tagged + pushed 2026-08-29 (CI `build-apk.yml`); Play Alpha **112** submitted 2026-08-29.
 
 ## Production listing
