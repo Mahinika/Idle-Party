@@ -6,6 +6,7 @@ import '../../core/ad_rewarded.dart';
 import '../../core/community_links.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/local_reminders.dart';
 import '../../core/game_state.dart';
 import '../../core/gear/gear_cleanup.dart';
 import '../game_theme.dart';
@@ -436,6 +437,22 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           value: state.sessionTelemetryOptIn,
           onChanged: director.setSessionTelemetryOptIn,
         ),
+        if (LocalReminders.showSettingsToggle(state)) ...[
+          const SizedBox(height: 16),
+          MenuChrome.sectionLabelScoped('REMINDERS', scope: MenuScope.account),
+          const SizedBox(height: 4),
+          Text(
+            'Quiet pings when gold is waiting or a cave is ready. '
+            'At most a couple a day. Never during a fight.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 8),
+          _SettingsToggle(
+            label: 'Away reminders',
+            value: state.metaDepth.notifyOptIn,
+            onChanged: (v) => director.setNotifyOptIn(v),
+          ),
+        ],
         if (state.sessionTelemetryOptIn) ...[
           const SizedBox(height: 8),
           GameButton(

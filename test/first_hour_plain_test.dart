@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/chase_contract.dart';
 import 'package:idle_party/core/game_guides.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/local_reminders.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/models/hero_spec.dart';
@@ -95,6 +96,7 @@ void main() {
     final state = GameLogic.createInitialState(now: now);
     expect(GameLogic.plainPlayerChrome(state), isTrue);
     expect(GameLogic.plainPlayerChrome(state.copyWith(bossVictories: 1)), isFalse);
+    expect(LocalReminders.shouldOfferOptIn(state), isFalse);
   });
 
   test('first-hour vault ready stays off TODAY until a boss', () {

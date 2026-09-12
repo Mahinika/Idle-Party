@@ -51,7 +51,8 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 present. UMP consent gates collection (same AD PRIVACY path as AdMob). Play
 funnel: `first_open` (Firebase auto + local stamp) → `app_ready` →
 `first_enter` (+ `time_to_combat` seconds) → `first_reward` → `first_boss` →
-`d1_return`. See `docs/PRIVACY.md` + setup in `docs/PLAY_STORE.md`.
+`d1_return`. Optional later: `notify_opt_in` / `notify_opt_out` (card or SETTINGS).
+See `docs/PRIVACY.md` + setup in `docs/PLAY_STORE.md`.
 
 ## Legal / IP policy (mandatory)
 
@@ -163,6 +164,7 @@ Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
   GOLD = forge tracks + market (flasks/listings) · SHOP = real-money convenience
   (boosts / ad-free; Play Billing on Play installs) · ESSENCE = TRACKS + KEEP (God Hand / buys) + relics + pets
   MORE rows = QUESTS (after first floor) / Craft (after first boss)
+  MORE → SETTINGS ACCOUNT = Play Games / AD PRIVACY / away reminders (after first loot)
   MORE → INFO uses `GameGuides.topicsFor` (first hour / mid-game / endgame)
   (Blessing / God Hand / REBORN under ESSENCE → KEEP)
   Hub POWERUPS rewarded ads stay on the hub (not under SHOP)
@@ -340,6 +342,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Hub | `lib/ui/hub_screen.dart` |
 | Hub TODAY chase | `lib/core/hub_chase.dart` |
 | Hub POWERUPS ads | `lib/core/ad_boost.dart`, `ad_rewarded.dart`, `ad_config.dart` · `lib/ui/hub/hub_powerups.dart` |
+| Away reminders | `lib/core/local_reminders.dart` + `local_notify.dart` · SETTINGS ACCOUNT + hub card |
 | Real-money SHOP catalog | `lib/core/shop_catalog.dart` · `lib/ui/shell/shop_dock.dart` · `docs/SHOP_MONETIZATION.md` |
 | Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
 | POWER Essence rates | `lib/ui/shell/income_overlay.dart` (`CampRatesSection`) |
@@ -389,11 +392,13 @@ saves may still have a legacy heirloom), `highestDungeonCleared`,
 full `metaDepth` (Gauntlet best, Will / Gauntlet claims, daily vault / weekly
 affix season, **prestige shop** purchases — Apothecary Writ / Junk Magnifier /
 Away Ledger / …; Loadout Folio is delisted but old slot-count purchases stay;
-Play funnel `funnelInstallMs` / `funnelLogged`),
+Play funnel `funnelInstallMs` / `funnelLogged`,
+**local reminders** `notifyOptIn` / `notifyPrompted` / `notifyPingMs`),
 unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY), party slot
 5, ascend streak/titles/trophies, **`ascendBlessings`**, **`adTickets`** /
 **`adAtkUntilMs`** / **`adGoldUntilMs`**,
-Play Games opt-in + season PBs, **`sessionTelemetryOptIn`** / log, …),
+Play Games opt-in + season PBs, **`sessionTelemetryOptIn`** / log,
+**away reminders** (SETTINGS ACCOUNT; card after first loot), …),
 **hero levels/XP**, craft mats/pity, keystone **dial** (`hardmodeLevel`,
 clamped) + challenge toggles, FARM/PUSH (`dungeonMode`), daily vault UI
 (`lastDailyDate` / `dailyClaimed`). **Does not keep** wallet gold, forge gold

@@ -18,6 +18,8 @@ Typical save data may include party progress, gear, gold/meta currency, settings
 
 **Optional local session notes:** in **MORE → SETTINGS** you may turn on a short on-device session log and copy it to the clipboard. That log is **not** uploaded to Idle Party or Firebase; it stays on your device until you clear app storage or uninstall.
 
+**Optional away reminders:** after your first combat loot, the app may ask if you want a quiet local ping when gold is waiting or a cave is ready (at most a couple a day, never during a fight). That uses the Android notification permission **only if you tap YES**. Reminders stay on the device; Idle Party does not send them through a server. Turn them off in **MORE → SETTINGS → ACCOUNT**. Declining or turning them off may log an anonymous `notify_opt_out` analytics event (same Firebase path as other optional events).
+
 ## Optional Play Games (leaderboards + cloud save)
 
 If you sign in with **Google Play Games**:
@@ -49,7 +51,7 @@ On **Android**, if you tap hub **POWERUPS** and watch an ad, Google AdMob may lo
 On **Android** builds that include Firebase configuration (`google-services.json`):
 
 - Google **Firebase Analytics** may receive **anonymous** app events (device/app identifiers under Google’s policies; not an Idle Party login).
-- The SDK may initialize when the app starts (not only when you open POWERUPS). Typical events: session start, first time the game is playable, first dungeon enter (including seconds until combat), first combat gold, first boss, first return on a later UTC day, enter/leave dungeon, Ascend, party wipe. Events do **not** include your save file or clipboard backups.
+- The SDK may initialize when the app starts (not only when you open POWERUPS). Typical events: session start, first time the game is playable, first dungeon enter (including seconds until combat), first combat gold, first boss, first return on a later UTC day, enter/leave dungeon, Ascend, party wipe, and (if you answer the reminder card) whether away reminders were turned on or off. Events do **not** include your save file or clipboard backups.
 - In the **EU/EEA**, the Google consent form (UMP) also gates analytics collection. You can change or withdraw that consent later in **SETTINGS → AD PRIVACY**.
 - Analytics is not sent from web playtest builds, Flutter tests, or Android builds that lack Firebase config.
 

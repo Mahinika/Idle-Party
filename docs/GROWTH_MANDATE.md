@@ -81,7 +81,7 @@ Check boxes only when **shipped** (or owner confirmed for Console-only).
 - [x] Systems gated (KEY / endgame / advanced MORE) until unlock
 - [x] One player-facing day-2–7 job
 - [x] Offline Welcome Back = short reward (wow + ≤3 highlights + one Up next)
-- [ ] Opt-in local notifications after a milestone; never install-prompt; never combat; ~1–2/day cap
+- [x] Opt-in local notifications after a milestone; never install-prompt; never combat; ~1–2/day cap
 - [ ] Listing pack: icon + shots 1–2 = new-save first minute of **combat**
       (`docs/STORE_LISTING.md`)
 - [ ] At least one What’s New line aimed at a **new** player

@@ -333,6 +333,9 @@ class MetaDepthState {
     this.freshPrestige = false,
     this.funnelInstallMs = 0,
     this.funnelLogged = const <String>[],
+    this.notifyOptIn = false,
+    this.notifyPrompted = false,
+    this.notifyPingMs = const <int>[],
   });
 
   final int sanctuaryXpLevel;
@@ -591,6 +594,15 @@ class MetaDepthState {
   /// Once-per-install Play funnel events already sent (`first_open`, …).
   final List<String> funnelLogged;
 
+  /// Opt-in local away reminders (SETTINGS). Survives Ascend. Default off.
+  final bool notifyOptIn;
+
+  /// True after the in-game ping card or SETTINGS toggle was answered.
+  final bool notifyPrompted;
+
+  /// Fire times (epoch ms) of recent pings — cap ~2 per UTC day.
+  final List<int> notifyPingMs;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -720,6 +732,9 @@ class MetaDepthState {
     bool? freshPrestige,
     int? funnelInstallMs,
     List<String>? funnelLogged,
+    bool? notifyOptIn,
+    bool? notifyPrompted,
+    List<int>? notifyPingMs,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -863,6 +878,9 @@ class MetaDepthState {
       freshPrestige: freshPrestige ?? this.freshPrestige,
       funnelInstallMs: funnelInstallMs ?? this.funnelInstallMs,
       funnelLogged: funnelLogged ?? this.funnelLogged,
+      notifyOptIn: notifyOptIn ?? this.notifyOptIn,
+      notifyPrompted: notifyPrompted ?? this.notifyPrompted,
+      notifyPingMs: notifyPingMs ?? this.notifyPingMs,
     );
   }
 
@@ -987,6 +1005,9 @@ class MetaDepthState {
     'freshPrestige': freshPrestige,
     'funnelInstallMs': funnelInstallMs,
     'funnelLogged': funnelLogged,
+    'notifyOptIn': notifyOptIn,
+    'notifyPrompted': notifyPrompted,
+    'notifyPingMs': notifyPingMs,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -1195,6 +1216,13 @@ class MetaDepthState {
       funnelLogged:
           (json['funnelLogged'] as List<dynamic>?)?.cast<String>() ??
           const <String>[],
+      notifyOptIn: (json['notifyOptIn'] as bool?) ?? false,
+      notifyPrompted: (json['notifyPrompted'] as bool?) ?? false,
+      notifyPingMs:
+          (json['notifyPingMs'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[],
     );
   }
 

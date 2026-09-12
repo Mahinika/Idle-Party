@@ -42,6 +42,8 @@ import 'story_lore.dart';
 import 'chase_contract.dart';
 import 'ui_feedback.dart';
 import 'session_telemetry.dart';
+import 'local_notify.dart';
+import 'local_reminders.dart';
 import 'wipe_advice.dart';
 import 'ashen_crown.dart';
 import 'blessing_constellation.dart';
@@ -260,6 +262,9 @@ class GameDirector extends ChangeNotifier {
     _appPaused = paused;
     if (paused) {
       unawaited(_persistFlush());
+      unawaited(_syncAwayReminders(backgrounded: true));
+    } else {
+      unawaited(_syncAwayReminders(backgrounded: false));
     }
   }
 
@@ -525,6 +530,7 @@ class GameDirector extends ChangeNotifier {
       notifyListeners();
       DebugPlayLog.event('boot', DebugPlayLog.bootDetail(_state));
       unawaited(refreshPlayUpdateNotice());
+      unawaited(LocalNotify.init());
       // Ads / billing after first hub frames — Binder + Play Services hitch cold start.
       unawaited(
         Future<void>.delayed(const Duration(seconds: 2), () async {
@@ -1982,6 +1988,78 @@ class GameDirector extends ChangeNotifier {
 
   void setSessionTelemetryOptIn(bool value) {
     _applyUpgrade(SessionTelemetry.setOptIn(_state, value));
+  }
+
+  Future<void> acceptNotifyOptIn() async {
+    final granted = await LocalNotify.requestPermission();
+    if (!granted) {
+      _applyNotify(LocalReminders.setOptIn(_state, enabled: false));
+      unawaited(
+        AppAnalytics.logEvent('notify_opt_out', {
+          'source': 'card',
+          'reason': 'os',
+        }),
+      );
+      return;
+    }
+    _applyNotify(LocalReminders.setOptIn(_state, enabled: true));
+    unawaited(AppAnalytics.logEvent('notify_opt_in', {'source': 'card'}));
+  }
+
+  void declineNotifyOptIn() {
+    _applyNotify(LocalReminders.setOptIn(_state, enabled: false));
+    unawaited(
+      AppAnalytics.logEvent('notify_opt_out', {
+        'source': 'card',
+        'reason': 'dismiss',
+      }),
+    );
+  }
+
+  Future<void> setNotifyOptIn(bool value) async {
+    if (value) {
+      final granted = await LocalNotify.requestPermission();
+      if (!granted) {
+        _applyNotify(LocalReminders.setOptIn(_state, enabled: false));
+        unawaited(
+          AppAnalytics.logEvent('notify_opt_out', {
+            'source': 'settings',
+            'reason': 'os',
+          }),
+        );
+        return;
+      }
+    } else {
+      unawaited(LocalNotify.cancelAll());
+    }
+    _applyNotify(LocalReminders.setOptIn(_state, enabled: value));
+    unawaited(
+      AppAnalytics.logEvent(value ? 'notify_opt_in' : 'notify_opt_out', {
+        'source': 'settings',
+      }),
+    );
+  }
+
+  /// Reminder flags must apply even on [GameDirector.preview] (still loading).
+  void _applyNotify(GameState updated) {
+    if (identical(updated, _state)) return;
+    _state = updated;
+    notifyListeners();
+    unawaited(_persistFlush());
+  }
+
+  Future<void> _syncAwayReminders({required bool backgrounded}) async {
+    if (backgrounded) {
+      final now = DateTime.now();
+      final pings = LocalReminders.plan(_state, now);
+      final next = LocalReminders.recordPlan(_state, pings, now: now);
+      if (!identical(next, _state)) _applyNotify(next);
+      await LocalNotify.schedule(pings);
+    } else {
+      await LocalNotify.cancelAll();
+      final next = LocalReminders.clearFuture(_state, DateTime.now());
+      if (!identical(next, _state)) _applyNotify(next);
+    }
   }
 
   void clearSessionTelemetry() {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/funnel_analytics.dart';
 import 'package:idle_party/core/game_director.dart';
+import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/ui/shell/settings_overlay.dart';
 
 void main() {
@@ -28,6 +30,7 @@ void main() {
     await tester.tap(_tab('ACCOUNT'));
     await tester.pumpAndSettle();
     expect(find.text('PLAY NOTES (LOCAL)'), findsOneWidget);
+    expect(find.text('Away reminders'), findsNothing);
     expect(find.text('AUTO-SELL · GOLD'), findsNothing);
   });
 
@@ -40,6 +43,27 @@ void main() {
 
     expect(find.text('AUTO-SELL · GOLD'), findsOneWidget);
     expect(find.text('Mute all sound'), findsNothing);
+  });
+
+  testWidgets('ACCOUNT shows away reminders after first loot', (tester) async {
+    final now = DateTime.utc(2026, 9, 12, 14);
+    var state = FunnelAnalytics.onNewInstall(
+      GameLogic.createInitialState(now: now),
+      now,
+    ).state;
+    state = FunnelAnalytics.onFirstEnter(
+      state,
+      now,
+      dungeonId: 'sandy',
+    ).state;
+    state = FunnelAnalytics.onFirstReward(state).state;
+    final director = GameDirector.preview(initialState: state);
+    addTearDown(director.dispose);
+
+    await tester.pumpWidget(_host(director));
+    await tester.tap(_tab('ACCOUNT'));
+    await tester.pumpAndSettle();
+    expect(find.text('Away reminders'), findsOneWidget);
   });
 }
 

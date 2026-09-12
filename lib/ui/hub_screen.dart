@@ -21,6 +21,7 @@ import 'dungeon_environment.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'meta/offline_welcome.dart';
+import 'meta/notify_opt_in.dart';
 import '../core/menu_router.dart';
 import 'shell/discord_thanks_overlay.dart';
 import 'shell/whats_new_overlay.dart';
@@ -63,6 +64,7 @@ class _HubScreenState extends State<HubScreen>
   bool _offlineDialogShown = false;
   bool _offeredWhatsNew = false;
   bool _offeredDiscordThanks = false;
+  bool _offeredNotifyOptIn = false;
   bool _userPickedZone = false;
   bool _showEndgameMap = false;
   int? _trackedAscension;
@@ -149,6 +151,7 @@ class _HubScreenState extends State<HubScreen>
       if (!mounted) return;
       await _maybeShowWhatsNew();
       await _maybeShowDiscordThanks();
+      await _maybeShowNotifyOptIn();
     });
   }
 
@@ -181,6 +184,14 @@ class _HubScreenState extends State<HubScreen>
     if (!DiscordThanksOverlay.shouldOffer(director)) return;
     _offeredDiscordThanks = true;
     await DiscordThanksOverlay.show(context, director);
+  }
+
+  Future<void> _maybeShowNotifyOptIn() async {
+    if (_offeredNotifyOptIn || !mounted) return;
+    if (director.state.inDungeon) return;
+    if (!NotifyOptInOverlay.shouldOffer(director)) return;
+    _offeredNotifyOptIn = true;
+    await NotifyOptInOverlay.show(context, director);
   }
 
   @override
