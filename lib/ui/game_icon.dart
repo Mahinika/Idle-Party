@@ -222,14 +222,15 @@ const _kNext = <String>[
 ];
 
 /// Side-view movie camera (hub POWERUPS overlay).
+/// Reels on the left, lens on the right — not two blobs over a mouth.
 const _kFilm = <String>[
-  '..##.##..',
-  '.#######.',
-  '#########',
-  '#.......#',
-  '#......##',
-  '#......##',
-  '#########',
+  '.##......',
+  '#####....',
+  '#...#.###',
+  '#...#.#.#',
+  '#...#.###',
+  '#####....',
   '.##......',
   '.##......',
+  '.........',
 ];

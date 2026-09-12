@@ -2050,7 +2050,8 @@ class GameLogic {
       drops = lootResult.resolved;
       lootReceipt = lootReceipt.merge(lootResult.receipt);
     }
-    final lootLine = lootReceipt.summaryLine();
+    // Wallet gold already lands on the F CLEAR banner; extras are gear / sold / essence.
+    final lootLine = lootReceipt.summaryLine(includeGold: false);
     if (lootLine.isNotEmpty) {
       LogicNotices.recordFloorLootLine(lootLine);
     }

@@ -55,7 +55,10 @@ class LootGrantResult {
   }
 
   /// Short player-facing line for floor-clear toasts.
-  String summaryLine() {
+  ///
+  /// [includeGold] is false when the CLEAR banner already shows the wallet
+  /// delta — otherwise gold prints twice (`+240g · +240 g`).
+  String summaryLine({bool includeGold = true}) {
     final bits = <String>[];
     if (itemLabels.isNotEmpty) {
       bits.add(itemLabels.take(3).join(', '));
@@ -64,7 +67,7 @@ class LootGrantResult {
     }
     if (gearAutoSold > 0) bits.add('$gearAutoSold sold');
     if (gearAutoDisassembled > 0) bits.add('$gearAutoDisassembled scrapped');
-    if (goldGained > 0) bits.add('+$goldGained g');
+    if (includeGold && goldGained > 0) bits.add('+$goldGained g');
     if (essenceGained > 0) bits.add('+$essenceGained e');
     if (overflowEssence > 0) bits.add('+$overflowEssence e overflow');
     if (bits.isEmpty) return '';

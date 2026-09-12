@@ -83,6 +83,15 @@ void main() {
     );
     expect(receipt.summaryLine(), contains('2 gear'));
     expect(receipt.summaryLine(), contains('+40 g'));
+    expect(receipt.summaryLine(includeGold: false), contains('2 gear'));
+    expect(receipt.summaryLine(includeGold: false), contains('+6 e'));
+    expect(receipt.summaryLine(includeGold: false), isNot(contains('+40 g')));
+  });
+
+  test('gold-only floor loot extra is empty so CLEAR does not double gold', () {
+    const receipt = LootGrantResult(goldGained: 240);
+    expect(receipt.summaryLine(), '+240 g');
+    expect(receipt.summaryLine(includeGold: false), isEmpty);
   });
 
   test('near-iLvl slot backup is kept in bag heuristics', () {
