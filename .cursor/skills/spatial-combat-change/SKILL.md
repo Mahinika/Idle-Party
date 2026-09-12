@@ -61,6 +61,7 @@ Do **not** add a second combat simulator for offline.
 
 - Double-awarding loot/gold on room clear (live banking vs `completeCurrentRoom`)
 - Mutating world outside `step` → desync with director `_rebuildSpatial`
+- **Hub → dungeon enter must start the floor.** `GameLogic.enterX` only sets `inDungeon`. Live play needs `GameDirector._rebuildSpatial()` + `_startSpatialLoop()` (same as `enterDungeon` / Gauntlet / Rift / GR). Skip that → `SpatialDungeonView` stays on **Loading floor…** (`spatial == null`) even if tells exist in a test `step`. Ashen Crown hit this in 1.12.152.
 - Gate/dormant bugs soft-lock AFK parties
 - Forking ability logic for offline
 - “Enemies feel the same” is fight identity, not missing sprites (`zone-art-identity` is the wrong skill). Fix pack jobs + zone mix/names + one boss tell in the same `step`
@@ -80,5 +81,6 @@ Spatial change:
 - [ ] Single authority preserved (no offline fork)
 - [ ] Chamber/gate wake still safe
 - [ ] Tests via preview + SpatialCombat.build/step
+- [ ] New hub enter (Ashen / Gauntlet / Rift / Daily) asserts `director.spatial != null`
 - [ ] flutter analyze + combat tests green
 ```
