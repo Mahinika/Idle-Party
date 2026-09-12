@@ -39,6 +39,7 @@ flutter test test/ship_smoke_test.dart test/changelog_sync_test.dart
 | 7 | God Hand tip | Enter dungeon once; tip mentions BAL/FOCUS/WIDE or ESSENCE → KEEP |
 | 8 | GEAR tabs | GEAR shows GEAR + BAG early; MERGE / ROSTER unlock later — no LOADOUTS tab |
 | 9 | Overlay hygiene | Open MORE/CODEX then ENTER: return to hub must not leave sheet stuck open |
+| 10 | POWERUPS camera | After first boss: film-camera overlay bottom-right on the map (not in the header). Tap → POWERUPS sheet |
 
 ## Bridge helpers (web fallback only)
 

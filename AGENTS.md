@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.147**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.148**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -249,9 +249,9 @@ Live look: `a56-playtest` (Samsung A56 emulator). Web fallback:
 **1 Ad Ticket**; spend tickets on Sharp Edge (+25% ATK 60m), Gold Rush (×2 gold
 60m), Full Boost (both 3h), or Away Bonus (next offline gold ×2). Timers stack
 per buff (max 24h) on `metaDepth.adAtkUntilMs` / `adGoldUntilMs`; tickets on
-`adTickets` (survives Ascend). Hub FAB opens the sheet. Web playtest grants a
-ticket. Ads never interrupt combat. SETTINGS **AD PRIVACY** withdraws AdMob
-GDPR consent. See `docs/AD_POWERUPS_DESIGN.md`.
+`adTickets` (survives Ascend). Camera overlay on the hub map opens the sheet.
+Web playtest grants a ticket. Ads never interrupt combat. SETTINGS **AD PRIVACY**
+withdraws AdMob GDPR consent. See `docs/AD_POWERUPS_DESIGN.md`.
 
 ## World path (15 zones)
 

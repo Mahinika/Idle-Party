@@ -188,7 +188,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'powerups',
       title: 'POWERUPS',
       body:
-          'Hub POWERUPS: watch an optional ad for 3 hours of ×2 gold and +25% ATK. Stack time up to 24h. Ads never interrupt combat.',
+          'Tap the camera on the World Path (POWERUPS). Watch an optional ad for an Ad Ticket, then spend on timed boosts. Ads never interrupt combat.',
     ),
     (
       id: 'prestige',

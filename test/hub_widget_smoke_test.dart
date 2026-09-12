@@ -5,6 +5,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/session_telemetry.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
+import 'package:idle_party/ui/hub/hub_powerups.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 22);
@@ -205,5 +206,39 @@ void main() {
     final contract = ChaseContract.fromState(state, now: now);
     expect(contract.title, hub.title);
     expect(contract.upNextLine.toLowerCase(), contains('up next'));
+  });
+
+  testWidgets('HubPowerupsFab is a camera overlay labeled POWERUPS', (
+    tester,
+  ) async {
+    final state = GameLogic.createInitialState(now: now);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: HubPowerupsFab(state: state, onOpen: () {}),
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('POWERUPS. WATCH'), findsOneWidget);
+    expect(find.text('WATCH'), findsOneWidget);
+  });
+
+  testWidgets('HubPowerupsFab shows ticket count when banked', (tester) async {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(adTickets: 3),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: HubPowerupsFab(state: state, onOpen: () {}),
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('POWERUPS. 3 TICKETS'), findsOneWidget);
+    expect(find.text('3 TICKETS'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
   });
 }

@@ -557,16 +557,6 @@ class _HubScreenState extends State<HubScreen>
                                 dimIncome: hubChaseOwnsEndgameRow(chase.kind),
                                 huntHint: _shortHuntHint(chase),
                                 blessingStacks: state.metaDepth.ascendBlessings,
-                                powerupsFab: _showPowerupsFab()
-                                    ? HubPowerupsFab(
-                                        state: state,
-                                        compact: true,
-                                        onOpen: () => openPowerupsSheet(
-                                          context,
-                                          director,
-                                        ),
-                                      )
-                                    : null,
                               ),
                               if (director.offlineSummary != null) ...[
                                 SizedBox(height: short ? 4 : 8),
@@ -614,38 +604,62 @@ class _HubScreenState extends State<HubScreen>
                               // PATH or ENDGAME board; only HERE-ring listens to torch.
                               Expanded(
                                 flex: short ? 7 : 1,
-                                child: RepaintBoundary(
-                                  child:
-                                      _showEndgameMap &&
-                                          GameLogic.endgameUnlocked(state)
-                                      ? HubEndgameMap(
-                                          selectedHunt: _selectedHunt,
-                                          pulse: _torch,
-                                          onSelectHunt: (hunt) => setState(() {
-                                            _userPickedZone = true;
-                                            _showEndgameMap = true;
-                                            _selectedHunt = hunt;
-                                            _selectedId = HubEndgameAct.nodeFor(
-                                              hunt,
-                                            ).portraitDungeonId;
-                                          }),
-                                        )
-                                      : ZonePathMap(
-                                          dungeons: DungeonCatalog.all,
-                                          selectedId: _selectedId,
-                                          partyLevel: GameLogic.partyMeanLevel(
-                                            state,
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Positioned.fill(
+                                      child: RepaintBoundary(
+                                        child:
+                                            _showEndgameMap &&
+                                                GameLogic.endgameUnlocked(
+                                                  state,
+                                                )
+                                            ? HubEndgameMap(
+                                                selectedHunt: _selectedHunt,
+                                                pulse: _torch,
+                                                onSelectHunt: (hunt) =>
+                                                    setState(() {
+                                                  _userPickedZone = true;
+                                                  _showEndgameMap = true;
+                                                  _selectedHunt = hunt;
+                                                  _selectedId =
+                                                      HubEndgameAct.nodeFor(
+                                                    hunt,
+                                                  ).portraitDungeonId;
+                                                }),
+                                              )
+                                            : ZonePathMap(
+                                                dungeons: DungeonCatalog.all,
+                                                selectedId: _selectedId,
+                                                partyLevel:
+                                                    GameLogic.partyMeanLevel(
+                                                  state,
+                                                ),
+                                                highestCleared: state
+                                                    .highestDungeonCleared,
+                                                pulse: _torch,
+                                                onSelect: (id) => setState(() {
+                                                  _userPickedZone = true;
+                                                  _showEndgameMap = false;
+                                                  _selectedHunt = null;
+                                                  _selectedId = id;
+                                                }),
+                                              ),
+                                      ),
+                                    ),
+                                    if (_showPowerupsFab())
+                                      Positioned(
+                                        right: 0,
+                                        bottom: 0,
+                                        child: HubPowerupsFab(
+                                          state: state,
+                                          onOpen: () => openPowerupsSheet(
+                                            context,
+                                            director,
                                           ),
-                                          highestCleared:
-                                              state.highestDungeonCleared,
-                                          pulse: _torch,
-                                          onSelect: (id) => setState(() {
-                                            _userPickedZone = true;
-                                            _showEndgameMap = false;
-                                            _selectedHunt = null;
-                                            _selectedId = id;
-                                          }),
                                         ),
+                                      ),
+                                  ],
                                 ),
                               ),
                               if (!short) ...[

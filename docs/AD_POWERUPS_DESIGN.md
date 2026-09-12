@@ -54,15 +54,13 @@ flowchart LR
 
 ## Hub entry (UX)
 
-- **Replace** the wide hub POWERUPS chip with a **compact floating FAB** on the
-  hub only (portrait, bottom-trailing above the bottom bar, clear of TODAY /
-  ENTER).
+- **Floating camera overlay** on the hub World Path (portrait, bottom-trailing
+  of the map, clear of the hunt card / ENTER and the header Settings cog).
 - FAB shows:
-  - Ticket count when idle.
-  - Short timer text when any buff is active (e.g. `ATK 42m`).
-  - Dim / no pulse when `adFree` and no tickets and no active buffs (or hide
-    entirely if `adFree` **and** zero tickets **and** no active buff — same
-    spirit as today’s hide rules).
+  - Film-camera glyph (`UiGlyph.film`) at 48dp.
+  - Ticket count badge when tickets > 0.
+  - Short status under the icon: `WATCH`, `N TICKETS`, or `ATK 42m`.
+  - Dim when idle; torch-lit when tickets or a buff is active.
 - **No dungeon FAB** in v1 (combat chrome stays clean; ads never mid-fight).
 - Tap FAB → bottom sheet with two blocks:
   1. **Earn** — WATCH AD · +1 Ticket (playtest: PREVIEW +1).
@@ -72,8 +70,7 @@ Visibility gates:
 
 - First hour (plain chrome): hide FAB unless a buff is active **or**
   tickets > 0 (so banked tickets stay reachable).
-- Otherwise always show on hub (phone, READY claims, endgame KEY hunts) —
-  compact star next to Settings.
+- Otherwise always show on hub (phone, READY claims, endgame KEY hunts).
 - `adFree`: hide WATCH; keep Spend + claim-without-video if we grant a free
   daily tap (see IAP). Hide FAB when nothing to claim and no tickets/buff.
 
@@ -181,7 +178,7 @@ match this doc.
 
 ## Acceptance (owner AL20 phone)
 
-1. Hub shows small POWERUPS control; TODAY still reads first.
+1. Hub shows a camera overlay on the World Path; hunt card / ENTER still read first.
 2. WATCH → +1 ticket; USE Sharp Edge → +25% ATK for ~60m visible in combat feel.
 3. USE Full Boost → both gold ×2 and +25% for ~3h (old “one ad” feel).
 4. No ad during an open dungeon fight.

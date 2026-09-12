@@ -63,8 +63,8 @@ abstract final class GameGuides {
       id: 'powerups',
       title: 'POWERUPS',
       body:
-          'Hub POWERUPS is optional. Watch a short ad for 1 Ad Ticket, then spend '
-          'tickets on timed boosts.\n\n'
+          'Tap the camera on the hub map (POWERUPS). Optional. Watch a short ad '
+          'for 1 Ad Ticket, then spend tickets on timed boosts.\n\n'
           '• Sharp Edge: +25% attack for 60 minutes (1 ticket).\n'
           '• Gold Rush: ×2 gold for 60 minutes (1 ticket).\n'
           '• Full Boost: both for 3 hours (2 tickets).\n'

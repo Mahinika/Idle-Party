@@ -12,37 +12,24 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 
-/// Compact floating POWERUPS control — ticket count / active buff timer.
+/// Floating POWERUPS overlay — film camera on the hub map, not in the header.
 class HubPowerupsFab extends StatelessWidget {
   const HubPowerupsFab({
     super.key,
     required this.state,
     required this.onOpen,
-    this.compact = false,
   });
 
   final GameState state;
   final VoidCallback onOpen;
 
-  /// Header icon — star only, no chip under action buttons.
-  final bool compact;
-
   @override
   Widget build(BuildContext context) {
     final md = state.metaDepth;
     final status = AdBoost.fabStatus(md);
-    final lit = AdBoost.anyBuffActive(md) || md.adTickets > 0;
-    final labelColor =
-        lit ? GameTheme.torchHot : GameTheme.parchmentDim;
-    if (compact) {
-      return GameIconButton(
-        label: 'POWERUPS. $status',
-        asset: UiIcon.star,
-        size: 18,
-        color: labelColor,
-        onPressed: onOpen,
-      );
-    }
+    final tickets = md.adTickets;
+    final lit = AdBoost.anyBuffActive(md) || tickets > 0;
+    final labelColor = lit ? GameTheme.torchHot : GameTheme.parchmentDim;
     return WebClickScope(
       label: 'POWERUPS',
       onPressed: onOpen,
@@ -55,39 +42,79 @@ class HubPowerupsFab extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onOpen,
-            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            child: Ink(
-              decoration: MenuChrome.hubPanel(selected: lit),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  minWidth: GameTheme.minTouch,
-                  minHeight: GameTheme.minTouch,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GameIcon.asset(
-                        UiIcon.star,
-                        size: 18,
-                        color: labelColor,
+            borderRadius: BorderRadius.circular(GameTheme.radiusMd),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minWidth: GameTheme.minTouch,
+                minHeight: GameTheme.minTouch,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4, top: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: GameTheme.primaryTouch,
+                      height: GameTheme.primaryTouch,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          DecoratedBox(
+                            decoration: MenuChrome.hubPanel(selected: lit),
+                            child: Center(
+                              child: GameIcon.glyph(
+                                UiGlyph.film,
+                                size: 22,
+                                color: labelColor,
+                              ),
+                            ),
+                          ),
+                          if (tickets > 0)
+                            Positioned(
+                              right: -3,
+                              top: -3,
+                              child: _TicketBadge(count: tickets),
+                            ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        status,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.body(size: 10, color: labelColor),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      status,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(size: 10, color: labelColor),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TicketBadge extends StatelessWidget {
+  const _TicketBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+      decoration: BoxDecoration(
+        color: GameTheme.torch,
+        borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+        border: Border.all(color: GameTheme.borderLit, width: 1),
+      ),
+      child: Text(
+        count > 9 ? '9+' : '$count',
+        textAlign: TextAlign.center,
+        style: GameTheme.pixel(size: 8, color: GameTheme.stone),
       ),
     );
   }
@@ -148,9 +175,19 @@ Future<void> openPowerupsSheet(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               MenuChrome.sheetHandle(),
-                              Text(
-                                'POWERUPS',
-                                style: GameTheme.menuTitle(size: 18),
+                              Row(
+                                children: [
+                                  GameIcon.glyph(
+                                    UiGlyph.film,
+                                    size: 18,
+                                    color: GameTheme.torch,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'POWERUPS',
+                                    style: GameTheme.menuTitle(size: 18),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 8),
                               Text(

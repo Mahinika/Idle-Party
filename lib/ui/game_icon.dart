@@ -7,7 +7,7 @@ import 'web_click_bridge.dart';
 
 /// Pixel chrome icons. Use these — never Material [Icons] or emoji.
 ///
-/// Sprites are owned custom art. Tiny marks (add/close/arrows) stay as
+/// Sprites are owned custom art. Tiny marks (add/close/arrows/film) stay as
 /// painted [UiGlyph]s; settings cog and KEY use PNG like the bottom tabs.
 abstract final class UiIcon {
   static const String gear = CustomAssets.iconHelm;
@@ -30,7 +30,7 @@ abstract final class UiIcon {
   static const String key = CustomAssets.iconKey;
 }
 
-enum UiGlyph { add, close, prev, next }
+enum UiGlyph { add, close, prev, next, film }
 
 /// Pixel mark: a [UiIcon] sprite or a [UiGlyph] painted in-theme.
 class GameIcon extends StatelessWidget {
@@ -76,6 +76,7 @@ class GameIcon extends StatelessWidget {
         UiGlyph.close => _kClose,
         UiGlyph.prev => _kPrev,
         UiGlyph.next => _kNext,
+        UiGlyph.film => _kFilm,
       };
 }
 
@@ -218,4 +219,17 @@ const _kNext = <String>[
   '.##..',
   '##...',
   '#....',
+];
+
+/// Side-view movie camera (hub POWERUPS overlay).
+const _kFilm = <String>[
+  '..##.##..',
+  '.#######.',
+  '#########',
+  '#.......#',
+  '#......##',
+  '#......##',
+  '#########',
+  '.##......',
+  '.##......',
 ];
