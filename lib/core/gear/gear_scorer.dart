@@ -121,6 +121,44 @@ abstract final class GearScorer {
     return (item: bestItem, score: best);
   }
 
+  /// Best one-hand main-hand in [stash] to pair with an empty weapon slot.
+  static ({EquipmentItem item, int score})? bestPairingOneHand(
+    PartyHero hero,
+    List<EquipmentItem> stash, {
+    String? excludeItemId,
+  }) {
+    EquipmentItem? bestItem;
+    var best = 0;
+    for (final raw in stash) {
+      if (excludeItemId != null && raw.id == excludeItemId) continue;
+      if (!GearEquip.equipTargetsFor(raw).contains(EquipmentSlot.weapon)) {
+        continue;
+      }
+      if (ClassProficiency.weaponBlocksOffHand(raw)) continue;
+      if (raw.isApex) {
+        final className = raw.apexClassId;
+        if (className != null && className != hero.spec.classId.name) {
+          continue;
+        }
+      }
+      if (!ClassProficiency.canEquip(
+        role: hero.gearAffinity,
+        level: hero.level,
+        item: raw,
+        specId: hero.specId,
+      )) {
+        continue;
+      }
+      final sc = specEquipScore(hero, raw);
+      if (sc > best) {
+        best = sc;
+        bestItem = raw;
+      }
+    }
+    if (bestItem == null || best <= 0) return null;
+    return (item: bestItem, score: best);
+  }
+
   static int specEquipScore(PartyHero hero, EquipmentItem item) {
     return itemBudgetScore(hero, item);
   }
@@ -188,8 +226,8 @@ abstract final class GearScorer {
       },
       GearEffectId.crit =>
         (switch (roleTag ?? _tagForRole(role)) {
-                  SpecRoleTag.meleeDps || SpecRoleTag.rangedDps =>
-                    item.effectValue * 4,
+                  SpecRoleTag.meleeDps ||
+                  SpecRoleTag.rangedDps => item.effectValue * 4,
                   SpecRoleTag.caster => item.effectValue * 3,
                   SpecRoleTag.healer => item.effectValue * 2,
                   _ => item.effectValue,

@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/starter_gear.dart';
 import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/hero.dart';
@@ -71,24 +73,66 @@ void main() {
   });
 
   test('dual wield and shields follow the WotLK lists', () {
-    expect(can(HeroSpecId.fury, oh(OffHandKind.weapon, weaponType: WeaponType.axe)), isTrue);
-    expect(can(HeroSpecId.arms, oh(OffHandKind.weapon, weaponType: WeaponType.axe)), isFalse);
+    expect(
+      can(HeroSpecId.fury, oh(OffHandKind.weapon, weaponType: WeaponType.axe)),
+      isTrue,
+    );
+    expect(
+      can(HeroSpecId.arms, oh(OffHandKind.weapon, weaponType: WeaponType.axe)),
+      isFalse,
+    );
     expect(can(HeroSpecId.protection, oh(OffHandKind.shield)), isTrue);
     expect(can(HeroSpecId.protPaladin, oh(OffHandKind.shield)), isTrue);
     expect(can(HeroSpecId.retribution, oh(OffHandKind.shield)), isTrue);
-    expect(can(HeroSpecId.retribution, oh(OffHandKind.weapon, weaponType: WeaponType.sword)), isFalse);
+    expect(
+      can(
+        HeroSpecId.retribution,
+        oh(OffHandKind.weapon, weaponType: WeaponType.sword),
+      ),
+      isFalse,
+    );
     expect(can(HeroSpecId.holyPaladin, oh(OffHandKind.shield)), isTrue);
     expect(can(HeroSpecId.elemental, oh(OffHandKind.shield)), isTrue);
     expect(can(HeroSpecId.enhancement, oh(OffHandKind.shield)), isTrue);
-    expect(can(HeroSpecId.frostDk, oh(OffHandKind.weapon, weaponType: WeaponType.axe)), isTrue);
+    expect(
+      can(
+        HeroSpecId.frostDk,
+        oh(OffHandKind.weapon, weaponType: WeaponType.axe),
+      ),
+      isTrue,
+    );
     expect(can(HeroSpecId.frostDk, oh(OffHandKind.shield)), isFalse);
     expect(can(HeroSpecId.blood, oh(OffHandKind.shield)), isFalse);
-    expect(can(HeroSpecId.enhancement, oh(OffHandKind.weapon, weaponType: WeaponType.axe)), isTrue);
+    expect(
+      can(
+        HeroSpecId.enhancement,
+        oh(OffHandKind.weapon, weaponType: WeaponType.axe),
+      ),
+      isTrue,
+    );
     expect(can(HeroSpecId.restorationShaman, oh(OffHandKind.shield)), isTrue);
-    expect(can(HeroSpecId.survival, oh(OffHandKind.weapon, weaponType: WeaponType.axe)), isTrue);
-    expect(can(HeroSpecId.beastMastery, oh(OffHandKind.weapon, weaponType: WeaponType.axe)), isFalse);
+    expect(
+      can(
+        HeroSpecId.survival,
+        oh(OffHandKind.weapon, weaponType: WeaponType.axe),
+      ),
+      isTrue,
+    );
+    expect(
+      can(
+        HeroSpecId.beastMastery,
+        oh(OffHandKind.weapon, weaponType: WeaponType.axe),
+      ),
+      isFalse,
+    );
     expect(can(HeroSpecId.guardian, oh(OffHandKind.shield)), isFalse);
-    expect(can(HeroSpecId.combat, oh(OffHandKind.weapon, weaponType: WeaponType.dagger)), isTrue);
+    expect(
+      can(
+        HeroSpecId.combat,
+        oh(OffHandKind.weapon, weaponType: WeaponType.dagger),
+      ),
+      isTrue,
+    );
   });
 
   test('ranged slot is empty for paladin DK shaman druid', () {
@@ -106,12 +150,36 @@ void main() {
     expect(can(HeroSpecId.fire, mh(WeaponType.sword)), isFalse);
     expect(can(HeroSpecId.arcane, mh(WeaponType.staff)), isTrue);
     expect(can(HeroSpecId.affliction, mh(WeaponType.sword)), isFalse);
-    expect(StarterGear.forSpec(HeroSpecId.holyPaladin).containsKey(EquipmentSlot.ranged), isFalse);
-    expect(StarterGear.forSpec(HeroSpecId.blood).containsKey(EquipmentSlot.ranged), isFalse);
-    expect(StarterGear.forSpec(HeroSpecId.restorationShaman).containsKey(EquipmentSlot.ranged), isFalse);
-    expect(StarterGear.forSpec(HeroSpecId.balance).containsKey(EquipmentSlot.ranged), isFalse);
-    expect(StarterGear.forSpec(HeroSpecId.protection)[EquipmentSlot.ranged]!.weaponType, WeaponType.thrown);
-    expect(StarterGear.forSpec(HeroSpecId.combat)[EquipmentSlot.ranged]!.weaponType, WeaponType.thrown);
+    expect(
+      StarterGear.forSpec(
+        HeroSpecId.holyPaladin,
+      ).containsKey(EquipmentSlot.ranged),
+      isFalse,
+    );
+    expect(
+      StarterGear.forSpec(HeroSpecId.blood).containsKey(EquipmentSlot.ranged),
+      isFalse,
+    );
+    expect(
+      StarterGear.forSpec(
+        HeroSpecId.restorationShaman,
+      ).containsKey(EquipmentSlot.ranged),
+      isFalse,
+    );
+    expect(
+      StarterGear.forSpec(HeroSpecId.balance).containsKey(EquipmentSlot.ranged),
+      isFalse,
+    );
+    expect(
+      StarterGear.forSpec(
+        HeroSpecId.protection,
+      )[EquipmentSlot.ranged]!.weaponType,
+      WeaponType.thrown,
+    );
+    expect(
+      StarterGear.forSpec(HeroSpecId.combat)[EquipmentSlot.ranged]!.weaponType,
+      WeaponType.thrown,
+    );
   });
 
   test('starters are legal weapons for every spec', () {
@@ -131,10 +199,15 @@ void main() {
             specId: id,
           ),
           isTrue,
-          reason: '$id cannot wear ${item.name} (${item.slot} ${item.typeLabel})',
+          reason:
+              '$id cannot wear ${item.name} (${item.slot} ${item.typeLabel})',
         );
       }
-      expect(kit.containsKey(EquipmentSlot.weapon), isTrue, reason: '$id missing MH');
+      expect(
+        kit.containsKey(EquipmentSlot.weapon),
+        isTrue,
+        reason: '$id missing MH',
+      );
     }
   });
 
@@ -164,7 +237,10 @@ void main() {
     final after = loaded.heroes.firstWhere(
       (h) => h.specId == HeroSpecId.holyPaladin,
     );
-    expect(after.itemIn(EquipmentSlot.weapon)?.weaponType, isNot(WeaponType.dagger));
+    expect(
+      after.itemIn(EquipmentSlot.weapon)?.weaponType,
+      isNot(WeaponType.dagger),
+    );
     expect(loaded.gearStash.any((g) => g.id == dagger.id), isTrue);
     expect(
       ClassProficiency.canEquip(
@@ -297,11 +373,10 @@ void main() {
       strengthBonus: 4,
       itemLevel: 30,
     );
-    final equipped = Map<EquipmentSlot, EquipmentItem>.from(
-      state.heroes[hi].equipped,
-    )
-      ..[EquipmentSlot.weapon] = twoH
-      ..remove(EquipmentSlot.offHand);
+    final equipped =
+        Map<EquipmentSlot, EquipmentItem>.from(state.heroes[hi].equipped)
+          ..[EquipmentSlot.weapon] = twoH
+          ..remove(EquipmentSlot.offHand);
     final heroes = [...state.heroes];
     heroes[hi] = heroes[hi].copyWith(equipped: equipped);
     state = state.copyWith(heroes: heroes, gearStash: <EquipmentItem>[shield]);
@@ -330,5 +405,90 @@ void main() {
       ),
       isFalse,
     );
+  });
+
+  test('arms tap 1H or off-hand off a two-hander wears the full set', () {
+    final twoH = EquipmentItem(
+      id: 'arms_2h',
+      name: 'Greatsword',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      weaponType: WeaponType.sword,
+      handed: WeaponHanded.twoHand,
+      strengthBonus: 16,
+      staminaBonus: 8,
+      itemLevel: 30,
+    );
+    final oneH = EquipmentItem(
+      id: 'arms_1h',
+      name: 'Arming Sword',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      weaponType: WeaponType.sword,
+      handed: WeaponHanded.oneHand,
+      strengthBonus: 12,
+      staminaBonus: 6,
+      itemLevel: 28,
+    );
+    final shield = EquipmentItem(
+      id: 'arms_sh',
+      name: 'Kite Shield',
+      slot: EquipmentSlot.offHand,
+      rarity: LootRarity.rare,
+      offHandKind: OffHandKind.shield,
+      strengthBonus: 6,
+      staminaBonus: 14,
+      armorBonus: 40,
+      itemLevel: 28,
+    );
+
+    GameState armed() {
+      var state = GameLogic.createInitialState(
+        now: DateTime(2026, 8, 20),
+        partySpecs: [HeroSpecId.arms, HeroSpecId.discipline, HeroSpecId.fire],
+      );
+      final hi = state.heroes.indexWhere((h) => h.specId == HeroSpecId.arms);
+      final equipped =
+          Map<EquipmentSlot, EquipmentItem>.from(state.heroes[hi].equipped)
+            ..[EquipmentSlot.weapon] = twoH
+            ..remove(EquipmentSlot.offHand);
+      final heroes = [...state.heroes];
+      heroes[hi] = heroes[hi].copyWith(equipped: equipped);
+      return state.copyWith(
+        heroes: heroes,
+        gearStash: <EquipmentItem>[oneH, shield],
+      );
+    }
+
+    expect(
+      ClassProficiency.prefersOneHandAndShield(HeroSpecs.def(HeroSpecId.arms)),
+      isFalse,
+    );
+
+    var fromMh = armed();
+    final hi = fromMh.heroes.indexWhere((h) => h.specId == HeroSpecId.arms);
+    expect(
+      GameLogic.canHeroReceive(
+        fromMh.heroes[hi],
+        shield,
+        slot: EquipmentSlot.offHand,
+      ),
+      isTrue,
+    );
+    expect(MenuAlerts.bagUpgradeCount(fromMh), 1);
+    expect(GameLogic.planBiSAssignments(fromMh).map((s) => s.itemId).toList(), [
+      oneH.id,
+    ]);
+
+    fromMh = GameLogic.equipFromStash(fromMh, oneH.id, heroIndex: hi);
+    expect(fromMh.heroes[hi].itemIn(EquipmentSlot.weapon)?.id, oneH.id);
+    expect(fromMh.heroes[hi].itemIn(EquipmentSlot.offHand)?.id, shield.id);
+    expect(fromMh.gearStash.any((g) => g.id == twoH.id), isTrue);
+
+    var fromOh = armed();
+    fromOh = GameLogic.equipFromStash(fromOh, shield.id, heroIndex: hi);
+    expect(fromOh.heroes[hi].itemIn(EquipmentSlot.offHand)?.id, shield.id);
+    expect(fromOh.heroes[hi].itemIn(EquipmentSlot.weapon)?.id, oneH.id);
+    expect(fromOh.gearStash.any((g) => g.id == twoH.id), isTrue);
   });
 }

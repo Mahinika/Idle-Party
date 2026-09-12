@@ -5,6 +5,7 @@ import '../../models/proficiency.dart';
 import '../game_state.dart';
 import 'gear_equip.dart';
 import 'gear_scorer.dart';
+import 'gear_weapon_set.dart';
 
 /// BiS assignment planning and Auto Equip passes.
 abstract final class GearBiSPlanner {
@@ -219,9 +220,9 @@ abstract final class GearBiSPlanner {
         plan.add(w);
         added++;
 
+        // 1H replacing a 2H already credits bag off-hand in the score.
+        // Reserve the pair so TODAY is one swap; equip attaches it.
         if (w.slot == EquipmentSlot.weapon) {
-          final heroNow = state.heroes[w.heroIndex];
-          final wornW = heroNow.itemIn(EquipmentSlot.weapon);
           EquipmentItem? incoming;
           for (final g in state.gearStash) {
             if (g.id == w.itemId) {
@@ -229,30 +230,20 @@ abstract final class GearBiSPlanner {
               break;
             }
           }
+          final heroNow = state.heroes[w.heroIndex];
           if (incoming != null &&
-              ClassProficiency.weaponBlocksOffHand(wornW) &&
-              !ClassProficiency.weaponBlocksOffHand(incoming)) {
-            final ohKey = slotKey(w.heroIndex, EquipmentSlot.offHand);
-            if (!filledSlots.contains(ohKey) &&
-                heroNow.itemIn(EquipmentSlot.offHand) == null) {
-              final paired = GearScorer.bestPairingOffHand(heroNow, [
-                for (final g in state.gearStash)
-                  if (!reserved.contains(g.id) &&
-                      !claimedThisRound.contains(g.id))
-                    g,
-              ], excludeItemId: w.itemId);
-              if (paired != null) {
-                reserved.add(paired.item.id);
-                claimedThisRound.add(paired.item.id);
-                filledSlots.add(ohKey);
-                plan.add((
-                  heroIndex: w.heroIndex,
-                  slot: EquipmentSlot.offHand,
-                  itemId: paired.item.id,
-                  delta: paired.score,
-                ));
-                added++;
-              }
+              !ClassProficiency.weaponBlocksOffHand(incoming) &&
+              heroNow.itemIn(EquipmentSlot.offHand) == null) {
+            final paired = GearScorer.bestPairingOffHand(heroNow, [
+              for (final g in state.gearStash)
+                if (!reserved.contains(g.id) &&
+                    !claimedThisRound.contains(g.id))
+                  g,
+            ], excludeItemId: w.itemId);
+            if (paired != null) {
+              reserved.add(paired.item.id);
+              claimedThisRound.add(paired.item.id);
+              filledSlots.add(slotKey(w.heroIndex, EquipmentSlot.offHand));
             }
           }
         }
@@ -314,10 +305,7 @@ abstract final class GearBiSPlanner {
       }
     }
     next = next.copyWith(lastUpdated: DateTime.now());
-    return (
-      state: next,
-      equipped: countNewlyWornFromStash(state, next),
-    );
+    return (state: next, equipped: countNewlyWornFromStash(state, next));
   }
 
   static GameState autoEquipPass(GameState state) {
@@ -346,11 +334,14 @@ abstract final class GearBiSPlanner {
         if (item == null) continue;
         if (!GearEquip.canHeroReceive(hero, item, slot: step.slot)) continue;
         final beforeLen = next.gearStash.length;
-        next = GearEquip.equipFromStash(
-          next,
-          step.itemId,
-          heroIndex: step.heroIndex,
-          intoSlot: step.slot,
+        next = GearWeaponSet.completeAfterEquip(
+          GearEquip.equipFromStash(
+            next,
+            step.itemId,
+            heroIndex: step.heroIndex,
+            intoSlot: step.slot,
+          ),
+          step.heroIndex,
         );
         if (next.gearStash.length >= beforeLen) {
           continue;

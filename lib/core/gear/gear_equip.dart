@@ -123,13 +123,6 @@ abstract final class GearEquip {
     )) {
       return false;
     }
-    if (slot == EquipmentSlot.offHand &&
-        ClassProficiency.weaponBlocksOffHand(
-          hero.itemIn(EquipmentSlot.weapon),
-        ) &&
-        !ClassProficiency.prefersOneHandAndShield(hero.spec)) {
-      return false;
-    }
     return true;
   }
 

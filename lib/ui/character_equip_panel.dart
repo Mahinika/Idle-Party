@@ -101,7 +101,10 @@ class CharacterEquipPanel extends StatelessWidget {
   };
 
   /// Paper-doll label for an empty or filled off-hand (shield / tome / weapon).
-  static String offHandLabel(OffHandKind? kind, {bool lockedByTwoHand = false}) {
+  static String offHandLabel(
+    OffHandKind? kind, {
+    bool lockedByTwoHand = false,
+  }) {
     if (lockedByTwoHand) return '2H';
     return switch (kind) {
       OffHandKind.shield => 'SHIELD',
@@ -174,8 +177,13 @@ class CharacterEquipPanel extends StatelessWidget {
             stashPiece,
             pairingStash: state.gearStash,
           );
-    final autoWear = stashPiece != null &&
-        GameLogic.autoEquipWouldWear(state, stashPiece.id, heroIndex: heroIndex);
+    final autoWear =
+        stashPiece != null &&
+        GameLogic.autoEquipWouldWear(
+          state,
+          stashPiece.id,
+          heroIndex: heroIndex,
+        );
 
     Widget slotFor(EquipmentSlot slot, {double? size}) {
       final item = hero.itemIn(slot);
@@ -371,7 +379,7 @@ class CharacterEquipPanel extends StatelessWidget {
                         return Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            'Two-hand weapon — off-hand locked',
+                            'Two-hand — swap 1H + off-hand from BAG',
                             textAlign: TextAlign.center,
                             style: GameTheme.body(
                               size: 11,
@@ -441,17 +449,11 @@ class CharacterEquipPanel extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: MenuChrome.chip(
-                label: 'ATK',
-                value: '$atk',
-              ),
+              child: MenuChrome.chip(label: 'ATK', value: '$atk'),
             ),
             const SizedBox(width: 6),
             Expanded(
-              child: MenuChrome.chip(
-                label: 'DEF',
-                value: '$def',
-              ),
+              child: MenuChrome.chip(label: 'DEF', value: '$def'),
             ),
           ],
         ),
@@ -505,10 +507,10 @@ class CharacterEquipPanel extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'vs worn  Score ${GameLogic.formatDelta(compare.powerDelta)}'
-                        '  A${GameLogic.formatDelta(compare.atkDelta)}'
-                        '  D${GameLogic.formatDelta(compare.defDelta)}'
-                        '  V${GameLogic.formatDelta(compare.vitDelta)}'
-                        '${autoWear ? '  UPGRADE' : ''}',
+                    '  A${GameLogic.formatDelta(compare.atkDelta)}'
+                    '  D${GameLogic.formatDelta(compare.defDelta)}'
+                    '  V${GameLogic.formatDelta(compare.vitDelta)}'
+                    '${autoWear ? '  UPGRADE' : ''}',
                     style: GameTheme.body(
                       size: 12,
                       color: autoWear
@@ -551,8 +553,14 @@ class CharacterEquipPanel extends StatelessWidget {
                 runSpacing: 6,
                 alignment: WrapAlignment.center,
                 children: [
-                  for (final entry
-                      in _heroStatChips(state, hero, ratings, atk, def, maxHp))
+                  for (final entry in _heroStatChips(
+                    state,
+                    hero,
+                    ratings,
+                    atk,
+                    def,
+                    maxHp,
+                  ))
                     MenuChrome.chip(
                       label: entry.$1,
                       value: entry.$2,
@@ -576,8 +584,14 @@ class CharacterEquipPanel extends StatelessWidget {
             runSpacing: 6,
             alignment: WrapAlignment.center,
             children: [
-              for (final entry
-                  in _heroStatChips(state, hero, ratings, atk, def, maxHp))
+              for (final entry in _heroStatChips(
+                state,
+                hero,
+                ratings,
+                atk,
+                def,
+                maxHp,
+              ))
                 MenuChrome.chip(
                   label: entry.$1,
                   value: entry.$2,
@@ -601,8 +615,9 @@ class CharacterEquipPanel extends StatelessWidget {
     int maxHp,
   ) {
     final kind = SpecMastery.kindFor(hero.specId);
-    final masteryLabel =
-        kind == null ? 'MASTERY' : SpecMastery.playerLabel(kind);
+    final masteryLabel = kind == null
+        ? 'MASTERY'
+        : SpecMastery.playerLabel(kind);
     return [
       ('STR', '${ratings.strength}'),
       ('AGI', '${ratings.agility}'),
@@ -717,7 +732,8 @@ class PaperDollSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final blockedOh = slot == EquipmentSlot.offHand &&
+    final blockedOh =
+        slot == EquipmentSlot.offHand &&
         hero != null &&
         ClassProficiency.weaponBlocksOffHand(
           hero!.itemIn(EquipmentSlot.weapon),
@@ -727,7 +743,8 @@ class PaperDollSlot extends StatelessWidget {
         : item == null
         ? GameTheme.border
         : itemRarityBorder(item!.rarity);
-    final ohKind = item?.offHandKind ??
+    final ohKind =
+        item?.offHandKind ??
         (hero != null
             ? ClassProficiency.preferredOffHandKind(hero!.spec)
             : null);
@@ -736,13 +753,10 @@ class PaperDollSlot extends StatelessWidget {
       offHandKind: slot == EquipmentSlot.offHand ? ohKind : null,
     );
     final short = slot == EquipmentSlot.offHand
-        ? CharacterEquipPanel.offHandLabel(
-            ohKind,
-            lockedByTwoHand: blockedOh,
-          )
+        ? CharacterEquipPanel.offHandLabel(ohKind, lockedByTwoHand: blockedOh)
         : (CharacterEquipPanel.slotLabels[slot] ?? slot.name);
     final a11y = blockedOh
-        ? 'Off-hand locked — two-hand weapon equipped'
+        ? 'Off-hand empty — two-hand weapon equipped. Tap bag to swap 1H and off-hand.'
         : item == null
         ? 'Empty $short — browse bag'
         : '${item!.name} ${item!.effectiveItemLevel}';
@@ -755,11 +769,7 @@ class PaperDollSlot extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(4),
-              child: EquipmentIcon(
-              item: item!,
-              size: size - 8,
-              hero: hero,
-            ),
+            child: EquipmentIcon(item: item!, size: size - 8, hero: hero),
           ),
           if (item!.effectiveItemLevel > 0)
             Positioned(
@@ -812,15 +822,15 @@ class PaperDollSlot extends StatelessWidget {
     }
 
     final body = Semantics(
-      button: !blockedOh && (onTap != null || onUnequip != null),
+      button: onTap != null || onUnequip != null,
       label: a11y,
-      onTap: blockedOh ? null : onTap,
+      onTap: onTap,
       excludeSemantics: true,
       child: SizedBox(
         width: hit,
         height: hit,
         child: InkWell(
-          onTap: blockedOh ? null : onTap,
+          onTap: onTap,
           child: Center(
             child: Opacity(
               opacity: blockedOh ? 0.45 : 1,
@@ -831,9 +841,7 @@ class PaperDollSlot extends StatelessWidget {
                   color: GameTheme.panelInset,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: selected && !blockedOh
-                        ? GameTheme.torchHot
-                        : border,
+                    color: selected && !blockedOh ? GameTheme.torchHot : border,
                     width: selected && !blockedOh ? 2 : 1.4,
                   ),
                   boxShadow: selected && !blockedOh
@@ -856,7 +864,7 @@ class PaperDollSlot extends StatelessWidget {
 
     if (blockedOh) {
       return Tooltip(
-        message: 'Off-hand locked — two-hand weapon equipped',
+        message: 'Two-hand equipped — tap BAG to wear 1H + off-hand',
         child: body,
       );
     }

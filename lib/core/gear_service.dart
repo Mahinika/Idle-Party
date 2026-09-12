@@ -7,6 +7,7 @@ import 'gear/gear_cleanup.dart';
 import 'gear/gear_equip.dart';
 import 'gear/gear_scorer.dart';
 import 'gear/gear_stash.dart';
+import 'gear/gear_weapon_set.dart';
 import 'gear/loot_resolver.dart';
 
 export 'gear/loot_resolver.dart' show LootGrantResult, LootResolver;
@@ -77,12 +78,15 @@ abstract final class GearService {
     String itemId, {
     int heroIndex = 0,
     EquipmentSlot? intoSlot,
-  }) => GearEquip.equipFromStash(
-    state,
-    itemId,
-    heroIndex: heroIndex,
-    intoSlot: intoSlot,
-  );
+  }) {
+    final next = GearEquip.equipFromStash(
+      state,
+      itemId,
+      heroIndex: heroIndex,
+      intoSlot: intoSlot,
+    );
+    return GearWeaponSet.completeAfterEquip(next, heroIndex);
+  }
 
   static GameState unequipSlot(
     GameState state,
@@ -120,11 +124,8 @@ abstract final class GearService {
     PartyHero hero,
     List<EquipmentItem> stash, {
     String? excludeItemId,
-  }) => GearScorer.bestPairingOffHand(
-    hero,
-    stash,
-    excludeItemId: excludeItemId,
-  );
+  }) =>
+      GearScorer.bestPairingOffHand(hero, stash, excludeItemId: excludeItemId);
 
   static int specEquipScore(PartyHero hero, EquipmentItem item) =>
       GearScorer.specEquipScore(hero, item);
@@ -218,11 +219,7 @@ abstract final class GearService {
     GameState state,
     String itemId, {
     int? heroIndex,
-  }) => GearBiSPlanner.autoEquipWouldWear(
-    state,
-    itemId,
-    heroIndex: heroIndex,
-  );
+  }) => GearBiSPlanner.autoEquipWouldWear(state, itemId, heroIndex: heroIndex);
 
   static bool isBestPlannedStashItem(GameState state, String itemId) =>
       GearBiSPlanner.isBestPlannedStashItem(state, itemId);
@@ -282,10 +279,8 @@ abstract final class GearService {
   }
 
   static ({GameState state, List<LootDrop> resolved, LootGrantResult receipt})
-  grantLoot(GameState state, List<LootDrop> drops) => LootResolver.grant(
-    state,
-    drops,
-  );
+  grantLoot(GameState state, List<LootDrop> drops) =>
+      LootResolver.grant(state, drops);
 
   static GameState unstickBagIfNeeded(GameState state) =>
       GearCleanup.unstickBagIfNeeded(state);
