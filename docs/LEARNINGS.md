@@ -32,3 +32,17 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 - **`/init` must not restore AL20-default** while the growth done bar is open.
 - When that done bar is fully checked, say exactly:
   `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`
+
+## 2026-09-12 — funnel + first session (after shipping those boxes)
+
+- **Instrument, don’t guess TTC.** `first_open` is Firebase-reserved (SDK
+  auto-logs it). We stamp install locally and send `app_ready` → `first_enter`
+  (+ `time_to_combat` seconds from this process start, including intro) →
+  `first_reward` / `first_boss` / `d1_return` (next UTC day). Pre-funnel
+  saves backfill flags with **no events** or veterans look like new D1.
+- **A bottom tip card covers ENTER.** First-run overlay must sit off the hub
+  CTA (or dismiss on enter). ≤2 beats = hub job + tap-the-fight *before*
+  first reward — not “delete GOLD tips forever.” Repeat/Next, GOLD tracks,
+  MARKET, ESSENCE, pets wait until they mean something.
+- **MORE → INFO uses `topicsFor`, not `GameGuides.topics`.** Full BASICS still
+  names GOLD/ESSENCE/KEY; a new save must not see that syllabus.
