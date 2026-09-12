@@ -8,6 +8,7 @@ import 'package:idle_party/main.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/ui/boot_intro_screen.dart';
 import 'package:idle_party/assets/custom_assets.dart';
+import 'package:idle_party/ui/cognifox_mark.dart';
 import 'package:idle_party/ui/new_game_party_picker.dart';
 import 'package:idle_party/ui/kenney_button.dart';
 import 'package:idle_party/ui/start_menu_screen.dart';
@@ -21,14 +22,14 @@ Future<void> skipBootIntro(WidgetTester tester) async {
   expect(find.text('SKIP'), findsOneWidget);
   await tester.tap(find.text('SKIP'));
   await tester.pump();
-  // Start menu ignores taps for ~400ms.
-  await tester.pump(const Duration(milliseconds: 950));
+  // Start menu ignores taps for ~400ms. Director.boot also holds a 2s timer.
+  await tester.pump(const Duration(seconds: 3));
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('boot intro plays before the start menu and can be skipped',
+  testWidgets('boot intro opens on Cognifox Studio and can be skipped',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     final director = GameDirector.preview();
@@ -43,23 +44,76 @@ void main() {
     await tester.pump(const Duration(milliseconds: 150));
 
     expect(find.byType(BootIntroScreen), findsOneWidget);
-    expect(find.text(StoryLore.introBeats.first.title), findsWidgets);
-    expect(find.text(StoryLore.introBeats.first.body), findsOneWidget);
+    expect(find.byType(CognifoxStudioMark), findsOneWidget);
+    expect(find.text(StoryLore.studioName.toUpperCase()), findsOneWidget);
+    expect(find.text(StoryLore.introBeats.first.body), findsNothing);
     expect(find.text('Tap to continue'), findsNothing);
     expect(find.byType(StartMenuScreen), findsNothing);
 
     await tester.pump(BootIntroScreen.inputUnlock);
     expect(find.text('Tap to continue'), findsOneWidget);
 
-    await tester.pump(BootIntroScreen.beatDuration);
-    await tester.pump(const Duration(milliseconds: 80));
-    expect(find.text(StoryLore.introBeats[1].title), findsOneWidget);
-
     await tester.tap(find.text('SKIP'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 950));
     expect(find.byType(StartMenuScreen), findsOneWidget);
     expect(find.byType(BootIntroScreen), findsNothing);
+    expect(director.state.seenTips, contains(BootIntroScreen.storyTipId));
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('returning save skips the cave beat after the studio card',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final director = GameDirector.preview();
+
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: true),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(director.hasExistingSave, isTrue);
+    expect(find.byType(CognifoxStudioMark), findsOneWidget);
+
+    await tester.pump(BootIntroScreen.studioDuration);
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(find.text(StoryLore.introBeats.first.body), findsNothing);
+    expect(find.byType(StartMenuScreen), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 950));
+  });
+
+  testWidgets('first launch plays the cave beat after Cognifox Studio',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final director = GameDirector(
+      InMemoryGameStorage(),
+      enableSpatialLoop: false,
+    );
+
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: true),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(director.hasExistingSave, isFalse);
+    expect(find.byType(CognifoxStudioMark), findsOneWidget);
+
+    await tester.pump(BootIntroScreen.studioDuration);
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(find.text(StoryLore.introBeats.first.title), findsOneWidget);
+    expect(find.text(StoryLore.introBeats.first.body), findsOneWidget);
+    expect(find.byType(StartMenuScreen), findsNothing);
+    await tester.tap(find.text('SKIP'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('boot intro stays on painted beats while cinematic is unbundled',
@@ -78,8 +132,12 @@ void main() {
 
     expect(CustomAssets.introVideoBundled, isFalse);
     expect(find.byType(BootIntroScreen), findsOneWidget);
-    expect(find.text(StoryLore.introBeats.first.body), findsOneWidget);
+    expect(find.byType(CognifoxStudioMark), findsOneWidget);
     expect(director.state.seenTips, isNot(contains(BootIntroScreen.cinematicTipId)));
+    await tester.pump(BootIntroScreen.inputUnlock);
+    await tester.tap(find.text('SKIP'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('start menu shows Continue and New Game', (tester) async {

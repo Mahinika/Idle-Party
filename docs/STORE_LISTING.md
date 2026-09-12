@@ -90,10 +90,10 @@ Start your party and take one more floor.
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.154+184** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
+Working ship: **1.12.155+185** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
 
 ```
-• Your party fights on its own. Tap ENTER, then tap the fight — combat in about a minute.
+• Your party fights on its own. Cold start opens on Cognifox Studio, then one cave beat the first time — tap the fight to help.
 ```
 
 ### Full description honesty (SHOP)

@@ -2,28 +2,33 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../assets/custom_assets.dart';
 import '../core/story_lore.dart';
 import 'boot_cinematic_layer.dart';
 import 'cave_atmosphere.dart';
-import '../assets/custom_assets.dart';
+import 'cognifox_mark.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
 
-/// Skippable story beats after the loading splash, before CONTINUE / NEW GAME.
+/// Skippable boot: Cognifox card, then (first launch) one cave beat.
 ///
 /// When [playCinematic] is true the optional RepoClip MP4 plays first (SKIP
-/// still works). Decode failure falls back to these beats.
+/// still works). Decode failure falls back to the painted path.
 class BootIntroScreen extends StatefulWidget {
   const BootIntroScreen({
     super.key,
     required this.onFinished,
+    this.showStory = true,
     this.playCinematic = false,
     this.muted = false,
     this.onCinematicConsumed,
   });
 
   final VoidCallback onFinished;
+
+  /// Cave beat after the studio card. False for returning saves.
+  final bool showStory;
 
   /// First-launch boot video when [CustomAssets.introVideoBundled].
   final bool playCinematic;
@@ -33,7 +38,9 @@ class BootIntroScreen extends StatefulWidget {
   final VoidCallback? onCinematicConsumed;
 
   static const String cinematicTipId = 'boot_cinematic';
+  static const String storyTipId = 'boot_story';
 
+  static const Duration studioDuration = Duration(milliseconds: 1600);
   static const Duration beatDuration = Duration(milliseconds: 2800);
   static const Duration inputUnlock = Duration(milliseconds: 400);
 
@@ -46,10 +53,13 @@ class BootIntroScreen extends StatefulWidget {
   State<BootIntroScreen> createState() => _BootIntroScreenState();
 }
 
+enum _IntroPhase { studio, story }
+
 class _BootIntroScreenState extends State<BootIntroScreen>
     with TickerProviderStateMixin {
   late final AnimationController _fade;
   late final AnimationController _glow;
+  _IntroPhase _phase = _IntroPhase.studio;
   int _beat = 0;
   bool _inputUnlocked = false;
   bool _finishing = false;
@@ -75,11 +85,11 @@ class _BootIntroScreenState extends State<BootIntroScreen>
       duration: const Duration(milliseconds: 2200),
     )..repeat(reverse: true);
     if (!_useCinematic) {
-      _armBeats();
+      _armPhase();
     }
   }
 
-  void _armBeats() {
+  void _armPhase() {
     _unlock?.cancel();
     _inputUnlocked = false;
     _unlock = Timer(BootIntroScreen.inputUnlock, () {
@@ -98,9 +108,13 @@ class _BootIntroScreenState extends State<BootIntroScreen>
     super.dispose();
   }
 
+  Duration get _phaseDuration => _phase == _IntroPhase.studio
+      ? BootIntroScreen.studioDuration
+      : BootIntroScreen.beatDuration;
+
   void _scheduleAdvance() {
     _advance?.cancel();
-    _advance = Timer(BootIntroScreen.beatDuration, () {
+    _advance = Timer(_phaseDuration, () {
       if (!mounted || _finishing) return;
       _next();
     });
@@ -108,6 +122,21 @@ class _BootIntroScreenState extends State<BootIntroScreen>
 
   void _next() {
     if (_finishing) return;
+    if (_phase == _IntroPhase.studio) {
+      if (!widget.showStory || StoryLore.introBeats.isEmpty) {
+        _finish();
+        return;
+      }
+      setState(() {
+        _phase = _IntroPhase.story;
+        _beat = 0;
+      });
+      _fade
+        ..value = 0
+        ..forward();
+      _scheduleAdvance();
+      return;
+    }
     if (_beat >= StoryLore.introBeats.length - 1) {
       _finish();
       return;
@@ -147,12 +176,44 @@ class _BootIntroScreenState extends State<BootIntroScreen>
         onDecodeFailed: () {
           if (!mounted || _finishing) return;
           setState(() => _cinematicFailed = true);
-          _armBeats();
+          _armPhase();
         },
       );
     }
+    if (_phase == _IntroPhase.studio) {
+      return _studioCard();
+    }
+    return _storyCard();
+  }
+
+  Widget _studioCard() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _onTap,
+      child: ColoredBox(
+        color: GameTheme.ink,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+            child: Column(
+              children: [
+                const Spacer(flex: 2),
+                FadeTransition(
+                  opacity: _fade,
+                  child: const CognifoxStudioMark(logoSize: 128, nameSize: 16),
+                ),
+                const Spacer(flex: 3),
+                _skipChrome(dimHint: true),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _storyCard() {
     final beat = StoryLore.introBeats[_beat];
-    final first = _beat == 0;
     return AnimatedBuilder(
       animation: Listenable.merge([_fade, _glow]),
       builder: (context, _) {
@@ -187,19 +248,15 @@ class _BootIntroScreenState extends State<BootIntroScreen>
                           label: '${beat.title}. ${beat.body}',
                           child: Column(
                             children: [
-                              if (first) ...[
-                                KenneySprite(
-                                  asset: CustomAssets.introLogo,
-                                  size: 88,
-                                ),
-                                const SizedBox(height: 16),
-                              ],
+                              KenneySprite(
+                                asset: CustomAssets.introLogo,
+                                size: 88,
+                              ),
+                              const SizedBox(height: 16),
                               Text(
                                 beat.title,
                                 textAlign: TextAlign.center,
-                                style: GameTheme.menuTitle(
-                                  size: first ? 22 : 20,
-                                ),
+                                style: GameTheme.menuTitle(size: 22),
                               ),
                               const SizedBox(height: 12),
                               Text(
@@ -215,27 +272,7 @@ class _BootIntroScreenState extends State<BootIntroScreen>
                         ),
                       ),
                       const Spacer(flex: 3),
-                      if (_inputUnlocked)
-                        Semantics(
-                          button: true,
-                          label: 'Tap to continue',
-                          child: Text(
-                            'Tap to continue',
-                            textAlign: TextAlign.center,
-                            style: GameTheme.body(
-                              size: 13,
-                              color: GameTheme.parchmentDim.withValues(
-                                alpha: 0.45 + _glow.value * 0.35,
-                              ),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 10),
-                      GameButton(
-                        label: 'SKIP',
-                        style: GameButtonStyle.grey,
-                        onPressed: _inputUnlocked ? _finish : null,
-                      ),
+                      _skipChrome(dimHint: false),
                     ],
                   ),
                 ),
@@ -244,6 +281,41 @@ class _BootIntroScreenState extends State<BootIntroScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _skipChrome({required bool dimHint}) {
+    return Column(
+      children: [
+        if (_inputUnlocked)
+          Semantics(
+            button: true,
+            label: 'Tap to continue',
+            child: AnimatedBuilder(
+              animation: _glow,
+              builder: (context, _) {
+                return Text(
+                  'Tap to continue',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(
+                    size: 13,
+                    color: GameTheme.parchmentDim.withValues(
+                      alpha: dimHint
+                          ? 0.35 + _glow.value * 0.25
+                          : 0.45 + _glow.value * 0.35,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        const SizedBox(height: 10),
+        GameButton(
+          label: 'SKIP',
+          style: GameButtonStyle.grey,
+          onPressed: _inputUnlocked ? _finish : null,
+        ),
+      ],
     );
   }
 }

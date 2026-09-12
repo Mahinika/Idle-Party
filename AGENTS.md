@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.154**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.155**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -149,7 +149,7 @@ tiny ads: `docs/PLAY_GROWTH.md` + listing copy in `docs/STORE_LISTING.md`.
 
 ```
 main.dart
- ├─ loading → boot intro (optional first-launch cinematic, else 3 beats) → startMenu → optional newGamePicker → play
+ ├─ loading (Cognifox) → boot intro (studio card; first-launch cave beat) → startMenu → optional newGamePicker → play
  ├─ PlayShell (one MenuSurface + toast; hub vs dungeon scenes)
  │   ├─ Hub (!inDungeon) → HubScreen + FirstSessionTips
  │   └─ Dungeon (inDungeon) → Is2Shell

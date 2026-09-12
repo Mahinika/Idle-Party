@@ -16,9 +16,11 @@ void main() {
   test('intro and ascend copy stay short and present', () {
     expect(StoryLore.introTagline, contains('party'));
     expect(StoryLore.introSubline.toLowerCase(), contains('help'));
-    expect(StoryLore.introBeats, hasLength(2));
+    expect(StoryLore.studioName, 'Cognifox Studio');
+    expect(StoryLore.introBeats, hasLength(1));
     expect(StoryLore.introBeats.first.title, 'IDLE PARTY');
-    expect(StoryLore.introBeats[1].body.toLowerCase(), contains('dungeon'));
+    expect(StoryLore.introBeats.first.body.toLowerCase(), contains('fight'));
+    expect(StoryLore.introBeats.first.body.toLowerCase(), isNot(contains('boss')));
     final body = StoryLore.ascendConfirmBody(
       rewardEssence: 7,
       nextAl: 1,

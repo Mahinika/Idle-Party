@@ -47,6 +47,7 @@ void main() {
       CustomAssets.portraitDead,
       CustomAssets.portraitHell,
       CustomAssets.introLogo,
+      CustomAssets.studioLogo,
       CustomAssets.enemySlime,
       CustomAssets.enemyRat,
       CustomAssets.enemyBat,

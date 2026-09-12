@@ -233,26 +233,19 @@ abstract final class CustomAssets {
   // —— Intro / hub / dungeon painted scenes ——
   static const String introLogo = '$_root/ui/intro_logo.png';
 
+  /// Cognifox Studio mark (boot + loading).
+  static const String studioLogo = '$_root/ui/cognifox_studio.png';
+
   /// Full-bleed cold-start scene (party facing into the cave).
   static const String introScene = '$_root/ui/intro_scene.png';
 
   /// Optional RepoClip boot cinematic. Flip [introVideoBundled] when the MP4
-  /// is in pubspec; until then the painted 3-beat intro plays.
+  /// is in pubspec; until then the painted studio + cave intro plays.
   static const String introVideo = 'assets/video/boot_intro.mp4';
   static const bool introVideoBundled = false;
 
   /// Hub keep / gate plaza behind translucent chrome.
   static const String hubScene = '$_root/ui/hub_scene.png';
-
-  /// Full-bleed stills cycled on [LoadingSplash] during cold boot.
-  static const List<String> splashStills = [
-    introScene,
-    hubScene,
-    backdropSandy,
-    backdropCrystal,
-    backdropEmber,
-    backdropTide,
-  ];
 
   /// Scrollable World Path campaign map (portrait).
   static const String worldPathMap = '$_root/ui/world_path_map.png';

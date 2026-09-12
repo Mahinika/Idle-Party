@@ -79,6 +79,7 @@ void main() {
       CustomAssets.portraitHell,
       CustomAssets.portraitCrystal,
       CustomAssets.introLogo,
+      CustomAssets.studioLogo,
       CustomAssets.introScene,
       CustomAssets.hubScene,
       CustomAssets.worldPathMap,

@@ -45,7 +45,7 @@ Do not ship a Free/Starter watermarked 720p file in the APK.
 Save the MP4 as `assets/video/boot_intro.mp4`, add that path under
 `flutter.assets` in `pubspec.yaml`, and set `CustomAssets.introVideoBundled`
 to `true`. The boot screen plays it on first cold start (skippable, respects
-mute) and falls back to the painted 3-beat intro if the file is missing or
+mute) and falls back to the painted studio + cave intro if the file is missing or
 decode fails.
 
 This cinematic is not a Google Play preview (Play wants real gameplay).

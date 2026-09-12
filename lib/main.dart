@@ -421,6 +421,9 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
       return Scaffold(
         body: BootIntroScreen(
           key: const ValueKey('boot-intro'),
+          showStory:
+              !_director.hasExistingSave &&
+              !_director.state.seenTips.contains(BootIntroScreen.storyTipId),
           playCinematic:
               CustomAssets.introVideoBundled &&
               !_director.state.seenTips.contains(
@@ -430,6 +433,7 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
           onCinematicConsumed: () =>
               _director.dismissTip(BootIntroScreen.cinematicTipId),
           onFinished: () {
+            _director.dismissTip(BootIntroScreen.storyTipId);
             if (!mounted) return;
             setState(() => _phase = _AppPhase.startMenu);
           },

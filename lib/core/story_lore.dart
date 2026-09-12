@@ -10,16 +10,13 @@ abstract final class StoryLore {
   static const String introSubline =
       'Tap to help. Grow stronger. No other game required.';
 
-  /// Cold-start beats before CONTINUE / NEW GAME. Two skippable beats.
+  static const String studioName = 'Cognifox Studio';
+
+  /// First-launch cave beat after the Cognifox card. Returning saves skip this.
   static const introBeats = <({String title, String body})>[
     (
       title: 'IDLE PARTY',
-      body: 'A small party waits at the cave mouth. They fight without you.',
-    ),
-    (
-      title: 'YOUR JOB',
-      body:
-          'Send them into the dungeon. Tap the fight to help. Beat the first boss.',
+      body: 'They fight without you. Send them in. Tap the fight to help.',
     ),
   ];
 
