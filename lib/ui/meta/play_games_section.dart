@@ -285,7 +285,9 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
         ),
         const SizedBox(height: 4),
         Text(
-          'Season $month · cloud backup. Boards: KEY.',
+          GameLogic.showKeystoneJargon(widget.director.state)
+              ? 'Season $month · cloud backup. Boards: KEY.'
+              : 'Season $month · cloud backup.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         if (lastBackup != null) ...[

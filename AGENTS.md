@@ -162,7 +162,8 @@ Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
   (flat tabs; one shared bar always visible under sheets; dungeon LEAVE = hub)
   GOLD = forge tracks + market (flasks/listings) · SHOP = real-money convenience
   (boosts / ad-free; Play Billing on Play installs) · ESSENCE = TRACKS + KEEP (God Hand / buys) + relics + pets
-  MORE rows = QUESTS / Craft
+  MORE rows = QUESTS (after first floor) / Craft (after first boss)
+  MORE → INFO uses `GameGuides.topicsFor` (first hour / mid-game / endgame)
   (Blessing / God Hand / REBORN under ESSENCE → KEEP)
   Hub POWERUPS rewarded ads stay on the hub (not under SHOP)
 ```

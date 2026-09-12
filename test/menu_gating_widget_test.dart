@@ -80,6 +80,14 @@ void main() {
     );
     expect(
       MenuRouter.visibleMoreMetaRows(early),
+      isEmpty,
+    );
+    expect(MenuTabs.showQuests(early), isFalse);
+
+    final afterFloor = early.copyWith(highestFloorCleared: 1);
+    expect(MenuTabs.showQuests(afterFloor), isTrue);
+    expect(
+      MenuRouter.visibleMoreMetaRows(afterFloor),
       equals(const [MoreSection.quests]),
     );
 

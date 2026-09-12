@@ -13,18 +13,72 @@ abstract final class GameGuides {
     'world_path',
   };
 
+  /// KEY / Gauntlet / Rift / Ashen — MORE → INFO hides these until party max.
+  static const Set<String> endgameTopicIds = {
+    'gauntlet',
+    'rift',
+    'greater_rift',
+    'ashen_crown',
+    'hardmode',
+  };
+
+  /// AL20 VS ENDGAME: only when the split actually matters.
+  static bool showEndgameBridgeGuides(GameState state) {
+    if (GameLogic.endgameUnlocked(state)) return true;
+    if (GameLogic.isMaxAscension(state)) return true;
+    final heroes = state.heroes;
+    if (heroes.isEmpty) return false;
+    var minLv = heroes.first.level;
+    for (final h in heroes) {
+      if (h.level < minLv) minLv = h.level;
+    }
+    return minLv >= GameLogic.maxHeroLevel - 20;
+  }
+
   static List<GuideTopic> topicsFor(GameState state) {
-    if (!GameLogic.plainPlayerChrome(state)) return topics;
+    if (GameLogic.plainPlayerChrome(state)) {
+      return [
+        for (final t in topics)
+          if (firstHourTopicIds.contains(t.id))
+            switch (t.id) {
+              'basics' => _firstHourBasics,
+              'world_path' => _firstHourWorldPath,
+              _ => t,
+            },
+      ];
+    }
+    if (GameLogic.endgameUnlocked(state)) return topics;
+    final bridge = showEndgameBridgeGuides(state);
     return [
       for (final t in topics)
-        if (firstHourTopicIds.contains(t.id))
-          switch (t.id) {
-            'basics' => _firstHourBasics,
-            'world_path' => _firstHourWorldPath,
-            _ => t,
-          },
+        if (_visibleMidgame(t.id, state: state, bridge: bridge)) _midgameCopy(t),
     ];
   }
+
+  static bool _visibleMidgame(
+    String id, {
+    required GameState state,
+    required bool bridge,
+  }) {
+    if (endgameTopicIds.contains(id)) return false;
+    if (id == 'gates') return bridge;
+    if (id == 'constellation') return GameLogic.isMaxAscension(state);
+    return true;
+  }
+
+  static GuideTopic _midgameCopy(GuideTopic t) => switch (t.id) {
+        'basics' => _midgameBasics,
+        'world_path' => _midgameWorldPath,
+        'dailies' => _midgameDailies,
+        'classes' => _midgameClasses,
+        'ascend' => _midgameAscend,
+        'weekly' => _midgameWeekly,
+        'jobs' => _midgameJobs,
+        'daily' => _midgameDaily,
+        'apex' => _midgameApex,
+        'constellation' => _midgameConstellation,
+        _ => t,
+      };
 
   /// Day-one BASICS: how to play, not the meta syllabus.
   static const GuideTopic _firstHourBasics = GuideTopic(
@@ -50,6 +104,178 @@ abstract final class GameGuides {
         '• Locked caves sit dim. The caption under the map shows party level '
         'progress (have / need).\n'
         '• Boss floor is shown under your party name (Boss on F n).',
+  );
+
+  /// After first boss, before party max level — no KEY / ENDGAME syllabus.
+  static const GuideTopic _midgameBasics = GuideTopic(
+    id: 'basics',
+    title: 'BASICS',
+    body:
+        'You have a small party of heroes. They fight on their own.\n\n'
+        '• Tap ENTER DUNGEON to start (or continue) a cave.\n'
+        '• Watch them clear rooms. Tap the fight when you want to help.\n'
+        '• The hunt line on the hub always names the next job — start there.\n'
+        '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (tracks + '
+        'market), SHOP (real-money convenience store), ESSENCE (tracks / '
+        'lasting buys / relics / pets), MORE. QUESTS and Craft live as rows '
+        'inside MORE when they unlock.\n'
+        '• In a dungeon the sixth slot is LEAVE (back to hub).\n'
+        '• Gold buys supplies and run power. Essence buys lasting power.\n'
+        '• A number on a button means something waits inside — GEAR 3 means '
+        '3 better items for the party. No number means nothing to do there.\n'
+        '• Menus stay small at the start; more tabs appear as you unlock them.\n'
+        '• You do not need to have played another RPG. Names like PROT / DISC / FIRE '
+        'are just the three starter jobs: Shield, Healer, Damage.',
+  );
+
+  static const GuideTopic _midgameWorldPath = GuideTopic(
+    id: 'world_path',
+    title: 'WORLD PATH',
+    body:
+        'The hub World Path is a painted map from Sandy Caverns through Mothveil Hollow '
+        '(Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault, and the rest along the road).\n\n'
+        '• Scroll the map and tap a zone portrait on a glowing ring to select it.\n'
+        '• The selected zone is HERE; the next unlocked uncleared zone is NEXT. Other rings stay unlabeled so the path stays readable.\n'
+        '• Unlock the next zone by clearing the previous boss, or when your '
+        'party mean level reaches that zone’s gate (even steps from Lv1 on '
+        'Sandy Caverns through Lv100 on Mothveil).\n'
+        '• Zones unlock by party mean level or prior clear — gold does not unlock them.\n'
+        '• Locked zones dim on the map; the caption under the map shows '
+        'party level progress (have / need).\n'
+        "• Goblin's Hideout: stolen-stash chests pay better gold but wake ambush guards.\n"
+        '• Boss floor is shown under your party name (Boss on F n).',
+  );
+
+  static const GuideTopic _midgameDailies = GuideTopic(
+    id: 'dailies',
+    title: 'THREE DAILIES',
+    body:
+        'Three different systems — not the same button:\n\n'
+        '• Daily Vault — UTC day on the hub hunt. Fill with 1 dungeon clear, '
+        'then CLAIM VAULT for essence.\n'
+        '• Daily Run — one free seeded floor from the hub (DAILY RUN) for +25e. '
+        'Separate from the vault.\n'
+        '• Quests — MORE · QUESTS board (Daily / Bounty / Side / Week / Contract). '
+        'CLAIM QUESTS on the hub hunt when rewards are ready.\n\n'
+        'The hub hunt always picks one job. Vault reset and Daily Run reset at UTC midnight. '
+        'Before your first boss, the hub hunt stays on Grow the party — these three wait.',
+  );
+
+  static const GuideTopic _midgameClasses = GuideTopic(
+    id: 'classes',
+    title: 'CLASS UNLOCKS',
+    body:
+        'Ascend grows your roster — the hub hunt and Ascend teasers name the next kits '
+        'with a short fantasy line plus a Watch… combat hook.\n\n'
+        '• AL1: Combat Rogue, Arms, Holy Paladin\n'
+        '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot '
+        '(ESSENCE lasting buys · 80e)\n'
+        '• AL3: Prot Paladin, Assassination, Resto Shaman, Frost Mage, Resto Druid\n'
+        '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
+        '• AL5: Blood DK, Frost DK, Guardian\n'
+        '• AL6: Affliction, Demonology\n\n'
+        'Some kits also unlock from zone clears or ESSENCE lasting buys — see each '
+        'spec’s unlock hint in GEAR → ROSTER.',
+  );
+
+  static const GuideTopic _midgameAscend = GuideTopic(
+    id: 'ascend',
+    title: 'ASCEND',
+    body:
+        'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
+        'stronger Ascend Blessing.\n\n'
+        '• AL20 is the Ascension cap. More content unlocks when every active hero '
+        'reaches level 100 — not from AL20 alone.\n'
+        '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
+        '+8% gold (stacks forever). See ESSENCE lasting buys. Separate from Star Nodes.\n'
+        '• Confirm / toast show the next unlock (Combat Rogue, 5th slot…).\n'
+        '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
+        '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
+        'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
+        '• Reset: wallet gold, GOLD tracks, bag and worn drops, market, floor height '
+        '(starter gear back on).\n'
+        '• Boss victories toward the next Ascend clear.\n'
+        '• At AL20, ESSENCE lasting buys offer optional REBORN (same bag wipe, AL stays 20, '
+        'no extra Ascend Blessing). The hub hunt never nags you to press it.',
+  );
+
+  static const GuideTopic _midgameWeekly = GuideTopic(
+    id: 'weekly',
+    title: 'DAILY VAULT',
+    body:
+        'Three different dailies:\n'
+        '• Daily Vault — fill with 1 dungeon clear, then CLAIM VAULT.\n'
+        '• Daily Run — one free seeded floor for +25e (hub DAILY RUN).\n'
+        '• Quests — Daily / Bounty / Side / Week / Contract board; '
+        'CLAIM QUESTS when ready.\n\n'
+        '• Early on: the hub hunt tells you to grow the party in the starter zone. '
+        'Daily Run and vault-start wait until you have beaten a boss (or Ascended).\n'
+        '• Fill today’s Daily Vault with 1 dungeon clear, then claim essence.\n'
+        '• The hub hunt and offline Up next share one chase (claim → READY → '
+        'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
+        '• Welcome-back says where you were: hub = sanctuary gold only; '
+        'mid-dungeon = party kept fighting with AFK assist. Then one wow line, '
+        'a few highlights, then Up next.\n'
+        '• The hub hunt flashes READY / ALMOST when a claim or Ascend is close.\n'
+        '• First vault claim of each calendar month also pays a season bonus.\n'
+        '• Progress resets at UTC midnight.',
+  );
+
+  static const GuideTopic _midgameJobs = GuideTopic(
+    id: 'jobs',
+    title: 'QUESTS',
+    body:
+        'QUESTS.\n\n'
+        '• Five slots: Daily (UTC kill), Bounty (kill ladder), Side '
+        '(bosses, elites, floors, or gold), Week (ISO-week goal), '
+        'Contract (big goal).\n'
+        '• Daily returns next UTC day after you claim; Week returns next ISO week.\n'
+        '• Bounty ladder climbs as you grow; top rung repeats.\n'
+        '• Claim 3 in a row for a +5e chain bonus.\n'
+        '• MORE · QUESTS (or the badge on MORE) when claims are ready.\n'
+        '• Hub CLAIM QUESTS claims ready rewards from the hub hunt line.\n'
+        '• The dungeon top CLAIM chip claims all ready quests at once '
+        '(visible in combat too; long-press opens the list).',
+  );
+
+  static const GuideTopic _midgameDaily = GuideTopic(
+    id: 'daily',
+    title: 'DAILY RUN',
+    body:
+        'A free one-floor Daily Run on the hub — separate from Daily Vault and Quests.\n\n'
+        '• Early (before first boss): the hub hunt focuses on growing the party — Daily Run '
+        'may wait.\n'
+        '• After the first hour, the hub hunt may chase Ascend, zones, Daily Vault, or '
+        'Daily Run — one hunt at a time.\n'
+        '• Clear the floor for +25e, then return to hub.\n'
+        '• May let you visit a locked zone for the day.\n'
+        '• Claim once per UTC day — not the same as CLAIM VAULT.',
+  );
+
+  static const GuideTopic _midgameApex = GuideTopic(
+    id: 'apex',
+    title: 'CRAFT',
+    body:
+        'MORE → CRAFT.\n\n'
+        '• Tap a party hero, then a slot — recipe and CRAFT / UPGRADE sit under that.\n'
+        '• Tap a recipe mat to lock the farm target (meter sits on the recipe).\n'
+        '• Zone Shards are a pool: any dungeon boss shard pays the recipe.\n'
+        '• Materials and vault stay collapsed. OTHER CLASS is only for kits not in the party.\n'
+        '• Target meter: every boss clear builds toward a guaranteed mat '
+        '(PUSH faster than FARM). Farm any zone — the meter grants what you need.\n'
+        '• Craft weapon R1 first, then armor; the button shows CRAFT R1 or the real upgrade rank.\n'
+        '• Crafted gear and materials survive Ascend.',
+  );
+
+  static const GuideTopic _midgameConstellation = GuideTopic(
+    id: 'constellation',
+    title: 'STAR NODES',
+    body:
+        'At AL20, ESSENCE lasting buys open Star Nodes (spend points).\n\n'
+        '• Not the same as Ascend Blessing stacks (+ATK/DEF/STA/gold each Ascend).\n'
+        '• Earn points from reaching AL20 and later challenges.\n'
+        '• Spend points on permanent nodes (crit, gold, block, …).\n'
+        '• Points and lit nodes survive Ascend / REBORN.',
   );
 
   static final topics = <GuideTopic>[

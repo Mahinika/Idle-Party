@@ -45,4 +45,7 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   first reward — not “delete GOLD tips forever.” Repeat/Next, GOLD tracks,
   MARKET, ESSENCE, pets wait until they mean something.
 - **MORE → INFO uses `topicsFor`, not `GameGuides.topics`.** Full BASICS still
-  names GOLD/ESSENCE/KEY; a new save must not see that syllabus.
+  names GOLD/ESSENCE/KEY; a new save must not see that syllabus. After the
+  first boss, `topicsFor` still hid KEY / Gauntlet / Rift / Ashen until party
+  max — dumping the full catalog at boss 1 taught locked meta. QUESTS is a
+  MORE row after the first floor, not on a fresh save.

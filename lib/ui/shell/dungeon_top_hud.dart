@@ -47,7 +47,7 @@ class DungeonTopHud extends StatelessWidget {
           (state.inGauntlet || state.inAnyRiftMode)
               ? 'Gauntlet — no floor jump'
               : 'Floor · F$floor'
-                  '${state.keystoneRunActive ? ' · KEY+${state.keystoneRunLevel}' : ''}',
+                  '${GameLogic.showKeystoneJargon(state) && state.keystoneRunActive ? ' · KEY+${state.keystoneRunLevel}' : ''}',
           style: GameTheme.pixel(
             size: GameTheme.hudPixel,
             color: GameTheme.torchHot,
@@ -163,7 +163,8 @@ class DungeonTopHud extends StatelessWidget {
       director.travelToFloor(target);
       return;
     }
-    final keyNote = state.hardmodeLevel > 0
+    final keyNote = GameLogic.showKeystoneJargon(state) &&
+            (state.keystoneRunActive || state.hardmodeLevel > 0)
         ? '\n\nKEY timer keeps running — a jump can burn the par.'
         : '';
     showDialog<bool>(
@@ -243,9 +244,12 @@ class DungeonTopHud extends StatelessWidget {
         !state.inGauntlet &&
         bagUpgrades < 5 &&
         (state.wipeStreakCount >= 1 || softcap >= 4);
-    final keyBit = state.keystoneRunActive
-        ? ' · KEY +${state.keystoneRunLevel}'
-        : (state.hardmodeLevel > 0 ? ' · KEY +${state.hardmodeLevel}' : '');
+    final jargon = GameLogic.showKeystoneJargon(state);
+    final keyBit = !jargon
+        ? ''
+        : state.keystoneRunActive
+            ? ' · KEY +${state.keystoneRunLevel}'
+            : (state.hardmodeLevel > 0 ? ' · KEY +${state.hardmodeLevel}' : '');
     // Timer is its own chip — never ellipsis behind zone/KEY in placeLine.
     final keyTimerLabel = state.keystoneRunActive
         ? Keystone.formatTimer(state.keystoneTimerMs)

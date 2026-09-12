@@ -75,10 +75,17 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final s = widget.director.state;
+    var section = widget.section;
+    if (section == MoreSection.quests && !MenuTabs.showQuests(s)) {
+      section = MoreSection.info;
+    }
+    if (section == MoreSection.craft && !MenuTabs.showCraft(s)) {
+      section = MoreSection.info;
+    }
     final alert = MenuAlerts.moreAlert(s);
-    final onMeta = widget.section.isMetaOverlay;
+    final onMeta = section.isMetaOverlay;
     if (!onMeta) {
-      _tabs.syncToId(_chromeSections, widget.section);
+      _tabs.syncToId(_chromeSections, section);
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -95,7 +102,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 8),
               Text(
-                widget.section.rowLabel,
+                section.rowLabel,
                 style: GameTheme.pixel(
                   size: GameTheme.hudPixel,
                   color: GameTheme.torchHot,
@@ -124,17 +131,17 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
                 ),
             ],
           ),
-        if (!alert.isQuiet && widget.section == MoreSection.info)
+        if (!alert.isQuiet && section == MoreSection.info)
           MenuChrome.tabBanner(alert.reason),
         const SizedBox(height: 8),
-        Expanded(child: _body(context)),
+        Expanded(child: _body(context, section)),
       ],
     );
   }
 
-  Widget _body(BuildContext context) {
+  Widget _body(BuildContext context, MoreSection section) {
     final d = widget.director;
-    return switch (widget.section) {
+    return switch (section) {
       MoreSection.info => _infoBody(d),
       MoreSection.settings => SettingsOverlay(
         director: d,

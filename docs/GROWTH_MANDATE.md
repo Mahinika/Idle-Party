@@ -78,7 +78,7 @@ Check boxes only when **shipped** (or owner confirmed for Console-only).
       `first_boss`, `d1_return` + time-to-combat (`AppAnalytics` + tests)
 - [x] First session: tip dump cut (≤2 beats); combat on screen in ≤90 s on a
       new save; no MARKET / GOLD-tracks / pets / ESSENCE coaching before first reward
-- [ ] Systems gated (KEY / endgame / advanced MORE) until unlock
+- [x] Systems gated (KEY / endgame / advanced MORE) until unlock
 - [ ] One player-facing day-2–7 job
 - [ ] Offline Welcome Back = short reward (wow + ≤3 highlights + one Up next)
 - [ ] Opt-in local notifications after a milestone; never install-prompt; never combat; ~1–2/day cap

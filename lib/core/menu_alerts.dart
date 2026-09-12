@@ -384,6 +384,11 @@ abstract final class MenuTabs {
   /// Relics / Craft tabs — after first-hour plain chrome (same as old KEEP/APEX).
   static bool showRelics(GameState s) => !GameLogic.plainPlayerChrome(s);
   static bool showCraft(GameState s) => !GameLogic.plainPlayerChrome(s);
+  /// QUESTS row — after first floor (or a claim is waiting).
+  static bool showQuests(GameState s) =>
+      _clearedAFloor(s) ||
+      GameLogic.showDailyChase(s) ||
+      s.missions.any((m) => m.canClaim);
 
   static bool showKey(GameState s) => GameLogic.showKeystoneJargon(s);
   static bool showBeast(GameState s) =>

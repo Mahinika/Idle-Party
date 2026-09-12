@@ -690,7 +690,7 @@ class MenuRouter extends ChangeNotifier {
 
   static List<MoreSection> visibleMoreMetaRows(GameState s) => <MoreSection>[
 
-    MoreSection.quests,
+    if (MenuTabs.showQuests(s)) MoreSection.quests,
 
     if (MenuTabs.showCraft(s)) MoreSection.craft,
 

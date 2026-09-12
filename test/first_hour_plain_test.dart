@@ -111,4 +111,59 @@ void main() {
     expect(chase.kind, HubChaseKind.clearFloors);
     expect(chase.title, contains('Grow the party'));
   });
+
+  test('after first boss INFO still hides KEY and endgame topics', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      bossVictories: 1,
+    );
+    expect(GameLogic.plainPlayerChrome(state), isFalse);
+    expect(GameLogic.endgameUnlocked(state), isFalse);
+    final early = GameGuides.topicsFor(state);
+    final ids = early.map((t) => t.id).toSet();
+    expect(ids, containsAll(['basics', 'world_path', 'ascend', 'dailies']));
+    expect(ids, isNot(contains('hardmode')));
+    expect(ids, isNot(contains('gauntlet')));
+    expect(ids, isNot(contains('rift')));
+    expect(ids, isNot(contains('greater_rift')));
+    expect(ids, isNot(contains('ashen_crown')));
+    expect(ids, isNot(contains('gates')));
+    final joined = early.map((t) => t.body).join('\n');
+    expect(RegExp(r'\bKEY\b').hasMatch(joined), isFalse);
+    expect(joined.toUpperCase(), isNot(contains('GAUNTLET')));
+    expect(joined.toUpperCase(), isNot(contains('ENDGAME')));
+    final world = early.firstWhere((t) => t.id == 'world_path');
+    expect(world.body.toLowerCase(), contains('tidehold'));
+    expect(world.body.toLowerCase(), contains('party mean level'));
+  });
+
+  test('AL20 INFO shows the endgame-bridge topic before KEY unlocks', () {
+    final base = GameLogic.createInitialState(now: now);
+    final state = base.copyWith(
+      bossVictories: 1,
+      ascensionLevel: GameLogic.maxAscensionLevel,
+      heroRoster: [
+        for (final h in base.heroRoster) h.copyWith(level: 88, xp: 0),
+      ],
+    );
+    expect(GameLogic.endgameUnlocked(state), isFalse);
+    expect(GameGuides.showEndgameBridgeGuides(state), isTrue);
+    final ids = GameGuides.topicsFor(state).map((t) => t.id).toSet();
+    expect(ids, contains('gates'));
+    expect(ids, isNot(contains('hardmode')));
+    expect(ids, isNot(contains('gauntlet')));
+  });
+
+  test('party max level INFO includes KEY and Gauntlet', () {
+    final base = GameLogic.createInitialState(now: now);
+    final state = base.copyWith(
+      bossVictories: 1,
+      heroRoster: [
+        for (final h in base.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );
+    expect(GameLogic.endgameUnlocked(state), isTrue);
+    final ids = GameGuides.topicsFor(state).map((t) => t.id).toSet();
+    expect(ids, containsAll(['hardmode', 'gauntlet', 'gates', 'ashen_crown']));
+  });
 }
