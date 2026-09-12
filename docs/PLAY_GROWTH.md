@@ -1,10 +1,11 @@
 # Idle Party — Play growth (what we can do)
 
-**Updated:** 2026-09-11 · Category stays **Role Playing** (idle fantasy RPG).  
+**Updated:** 2026-09-12 · Category stays **Role Playing** (idle fantasy RPG).  
 Do **not** chase Casual / Battle Royale / sandbox search volume.
 
-**Active program:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) (2026-09-12) —
-time-to-combat ≤90 s + listing/funnel until that done bar is complete.
+**Active program:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) done bar complete
+**2026-09-12** (in-repo + Console look). Next plan is a new program — do not
+silently restore AL20 as the batch.
 
 Honest growth order: **crash-free → listing conversion → D1 → D7 → rating → tiny paid test**.
 
@@ -45,6 +46,18 @@ Do these in Console when you have 20 minutes:
 6. Optional: **Google App campaigns** — see ads test plan below (start tiny).
 
 Never point players at GitHub Releases.
+
+### Console look (2026-09-12)
+
+Opened after the in-repo bar. Last **28 days** unless noted (listing window
+11 Aug–7 Sep). Numbers are too small to call D1 good or bad.
+
+| Surface | What we saw |
+|---------|-------------|
+| Listing conversion | **11** visitors, **8** unique install clicks, **73%** CTR. Default listing **9** visitors / **66.7%**. |
+| Crashes / ANR | User-perceived last 28 days: **none** (`Inga resultat`). |
+| Reviews | **5★**, 1 rating, 1 review (12 Sep, gear “beroendeframkallande”, already replied). No 1–2★. |
+| Store Listing Experiment | **Deferred** — ~10 listing visitors / 28 days. A/B would not finish. Revisit when traffic exists. |
 
 ---
 

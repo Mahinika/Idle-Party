@@ -10,17 +10,16 @@ in sync (currently **1.12.154**). What’s New lives in `lib/core/meta_systems.d
 
 Owner describes goals in plain language; agents pick skills/tools/verify alone.
 **Rules (don’t duplicate here):**
-- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **active program** (time-to-combat + Play funnel)
+- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **done bar complete 2026-09-12**; next program TBD (do not restore AL20 as the batch)
 - `.cursor/rules/studio-seats.mdc` — six chairs (EP, Game, UX, Tech, Art, Marketing)
 - `.cursor/rules/product-locks.mdc` — hard + soft locks (dated)
 - `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
 - `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff
 - `.cursor/rules/definition-of-done.mdc` — analyze / tests / commit locally
 
-Cadence: `docs/GROWTH_MANDATE.md` (until its done bar is complete), then
-`docs/CONTENT_CADENCE.md`. **Default work** when vague: next unchecked growth
-box (funnel, time-to-combat ≤90 s, listing). AL20 is a quality gate, not the batch.
-When the done bar is fully checked, the agent says exactly
+Cadence: `docs/GROWTH_MANDATE.md` **done bar complete 2026-09-12**, then
+`docs/CONTENT_CADENCE.md`. **Default work** when vague: wait for the new plan
+(do not restore AL20 as the batch). The agent said
 `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`. Chat Swedish; short test
 list (new save first) → wait. Commit locally when green; ask before push / PR /
 tag / Play.
@@ -121,8 +120,8 @@ Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 Slash: `/init` resyncs AGENTS/rules; `/repo auditandcleaning` runs a read-only
 full-repo audit (see `.cursor/commands/repo-auditandcleaning.md`).
 
-Cadence: **`docs/GROWTH_MANDATE.md`** (active 2026-09-12) then
-`docs/CONTENT_CADENCE.md` (tag rhythm). Why we flipped:
+Cadence: **`docs/GROWTH_MANDATE.md`** done bar complete **2026-09-12**, then
+`docs/CONTENT_CADENCE.md` (tag rhythm). Next program TBD — not AL20-as-batch. Why we flipped:
 [`docs/LEARNINGS.md`](docs/LEARNINGS.md). Background (optional):
 `docs/TOP_GAMES_RESEARCH.md`. Chase contract (hub TODAY ↔ offline Up next):
 `docs/CHASE_CONTRACT.md`. Gear budget: `docs/GEAR_BUDGET.md`. Floor blueprint
