@@ -125,7 +125,7 @@ listing 9:16 file puts the phone in a blur frame; a feed Short wants
 | First frame | Hub TODAY | Party in combat |
 | Picture | 16:9 listing + 9:16 phone-in-frame | 1080×1920 crop of 1080×2340 |
 | On-screen | Chase / AFK / lockup beats | `They fight without you` → `Idle Party` |
-| Music | owned `hub.ogg` | same — no trending audio |
+| Music | owned `hub.ogg` | owned `dungeon.mp3` |
 
 ```powershell
 # A56: showcase save, Zoom · Close, screenrecord 1080x2340

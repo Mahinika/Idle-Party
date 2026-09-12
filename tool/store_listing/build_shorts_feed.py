@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build a vertical feed Short from A56 combat (not the Play listing trailer).
 
-Full-bleed 1080x1920 crop of 1080x2340 gameplay. Frame one is combat.
-Owned hub.ogg only. Output is gitignored.
+Full-bleed 1080x1920 punch-in of 1080x2340 gameplay. Frame one is combat.
+Owned dungeon.mp3 only — no trending audio. Output is gitignored.
 
   py -3 tool/store_listing/build_shorts_feed.py
 """
@@ -36,36 +36,42 @@ from build_preview_video import (
 
 RAW = OUT / "gameplay_shorts_raw.mp4"
 DEST = OUT / "idle_party_shorts_feed.mp4"
+FEED_MUSIC = MUSIC.with_name("dungeon.mp3")
 
 WIDTH = 1080
 HEIGHT = 1920
 SRC_H = 2340
-DURATION = 15.0
-TRIM_START = 0.45
-# Keep combat / party; drop the bottom tab bar (420 px).
-CROP_Y = 0
+DURATION = 11.0
+TRIM_START = 0.8
+# Drop FARM/PUSH chrome; keep the party in the middle of the phone.
+CROP_Y = 240
+# Source window before scale-up (tighter than 1080×1920 so sprites fill the frame).
+PUNCH_W = 900
+PUNCH_H = 1600
 HOOK = "They fight without you"
 LOCKUP = "Idle Party"
+# First beats are combat only — text after the swipe decision.
+HOOK_FROM = 1.7
 
 
 def make_caption(path: Path, text: str, *, lockup: bool) -> None:
     img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img, "RGBA")
-    font = load_font(70 if not lockup else 84)
+    font = load_font(64 if not lockup else 80)
     bbox = draw.textbbox((0, 0), text, font=font)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-    pad_x, pad_y = 48, 26
+    pad_x, pad_y = 36, 18
     box_w = tw + pad_x * 2
     box_h = th + pad_y * 2
     box_x = (WIDTH - box_w) // 2
-    # Sit in the dungeon sky under FARM/PUSH, above the party.
-    box_y = 248
+    # Bottom of the stage — do not cover the party.
+    box_y = HEIGHT - 220
     draw.rounded_rectangle(
         (box_x, box_y, box_x + box_w, box_y + box_h),
-        radius=26,
-        fill=(*BG_RGB, 230),
-        outline=(220, 181, 102, 220),
-        width=3,
+        radius=22,
+        fill=(*BG_RGB, 210),
+        outline=(220, 181, 102, 200),
+        width=2,
     )
     tx = (WIDTH - tw) / 2
     ty = box_y + pad_y - bbox[1]
@@ -76,8 +82,8 @@ def make_caption(path: Path, text: str, *, lockup: bool) -> None:
 def mux_audio(ffmpeg: str, video: Path, dest: Path, total: float) -> None:
     fade_out_start = max(0.0, total - 1.4)
     af = (
-        f"afade=t=in:st=0:d=0.8,afade=t=out:st={fade_out_start:.2f}:d=1.4,"
-        f"volume=0.30"
+        f"afade=t=in:st=0:d=0.35,afade=t=out:st={fade_out_start:.2f}:d=1.1,"
+        f"volume=0.52"
     )
     cmd = [
         ffmpeg,
@@ -87,7 +93,7 @@ def mux_audio(ffmpeg: str, video: Path, dest: Path, total: float) -> None:
         "-stream_loop",
         "-1",
         "-i",
-        str(MUSIC),
+        str(FEED_MUSIC),
         "-filter_complex",
         f"[1:a]{af}[a]",
         "-map",
@@ -119,11 +125,13 @@ def build(
 ) -> None:
     if not raw.exists():
         raise SystemExit(f"missing {raw} — capture A56 combat first")
-    if not MUSIC.exists():
-        raise SystemExit(f"missing owned music {MUSIC}")
+    if not FEED_MUSIC.exists():
+        raise SystemExit(f"missing owned music {FEED_MUSIC}")
     ffmpeg = find_ffmpeg()
-    crop_y = max(0, min(crop_y, SRC_H - HEIGHT))
-    hook_until = max(duration - 1.8, duration * 0.85)
+    crop_y = max(0, min(crop_y, SRC_H - PUNCH_H))
+    punch_x = max(0, (1080 - PUNCH_W) // 2)
+    hook_until = max(duration - 1.5, duration * 0.86)
+    hook_from = min(HOOK_FROM, max(0.4, duration - 2.2))
     OUT.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="idle_shorts_") as tmp:
         tmp_path = Path(tmp)
@@ -135,8 +143,11 @@ def build(
         fc = (
             f"[0:v]trim=start={start:.3f}:duration={duration:.3f},"
             f"setpts=PTS-STARTPTS,fps={FPS},"
-            f"crop={WIDTH}:{HEIGHT}:0:{crop_y},format=yuv420p[base];"
-            f"[base][1:v]overlay=0:0:enable='lte(t,{hook_until:.2f})'[v1];"
+            f"crop={PUNCH_W}:{PUNCH_H}:{punch_x}:{crop_y},"
+            f"scale={WIDTH}:{HEIGHT}:flags=neighbor,"
+            f"eq=contrast=1.08:saturation=1.12:brightness=0.02,"
+            f"format=yuv420p[base];"
+            f"[base][1:v]overlay=0:0:enable='between(t,{hook_from:.2f},{hook_until:.2f})'[v1];"
             f"[v1][2:v]overlay=0:0:enable='gt(t,{hook_until:.2f})',"
             f"format=yuv420p[vout]"
         )

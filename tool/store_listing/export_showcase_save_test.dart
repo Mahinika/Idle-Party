@@ -8,10 +8,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
+import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/dungeon_zoom.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
@@ -106,11 +108,37 @@ void main() {
   test('export showcase mid-dungeon save json', () {
     final out = File('tool/store_listing/preview/showcase_entered.json');
     out.parent.createSync(recursive: true);
-    final state = GameLogic.enterDungeon(showcaseState(), dungeonId: 'ember');
+    // PUSH + a dense later pack so a Short is fighting, not F1 CLEAR / walking.
+    var state = GameLogic.enterDungeon(
+      showcaseState().copyWith(dungeonMode: DungeonMode.push),
+      dungeonId: 'ember',
+    );
+    final floorNumber = 16;
+    final room = DungeonGenerator.generateFloorRoom(
+      floorNumber: floorNumber,
+      ascensionLevel: state.ascensionLevel,
+      dungeonId: 'ember',
+      layoutSeed: state.layoutSeed,
+    ).copyWith(
+      type: RoomType.elite,
+      enemyCount: 12,
+    );
+    state = state.copyWith(
+      dungeonMode: DungeonMode.push,
+      highestFloorCleared: floorNumber - 1,
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: GameLogic.createEnemyGroup(
+        room,
+        dungeonId: 'ember',
+        fromState: state,
+      ),
+    );
     expect(state.inDungeon, isTrue);
-    expect(state.dungeonZoom, DungeonZoom.close);
+    expect(state.dungeonMode, DungeonMode.push);
+    expect(state.enemies.length, greaterThan(6));
     out.writeAsStringSync(jsonEncode(state.toJson()));
     // ignore: avoid_print
-    print('wrote ${out.path} (${out.lengthSync()} bytes)');
+    print('wrote ${out.path} (${out.lengthSync()} bytes, ${state.enemies.length} foes)');
   });
 }
