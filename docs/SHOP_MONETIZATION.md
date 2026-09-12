@@ -45,7 +45,7 @@ expensive power packs.
 | SKU id | Play type | Price | Offer | Notes |
 |--------|-----------|-------|--------|-------|
 | `starter_boost_6h` | Non-consumable | $0.99 | +6h Full Boost | One-time starter (~$0.17/h) |
-| `boost_12h` | Consumable | $1.49 | +12h Full Boost | Repeatable; ~$0.12/h |
+| `boost_12h` | Consumable | $1.99 | +12h Full Boost | Repeatable; ~$0.17/h. Day pack must stay cheaper per hour. |
 | `ad_free` | Non-consumable | $2.99 | Ad-free + +2 tickets once | Hide WATCH; daily CLAIM TICKET (UTC). Priced at/above a day boost so forever is not the cheap impulse next to timed packs. |
 | `day_boost_24h` | Consumable | $2.99 | +24h Full Boost | Best boost $/h (~$0.12/h) |
 | `supporter_qol` | Non-consumable | $4.99 | +4 bag slots + 12h + thank-you | Ceiling; **no extra combat class** |
@@ -74,6 +74,9 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as t
    Play Store app cache, fully close Idle Party, reopen SHOP. Ready when prices
    show local currency (e.g. SEK) instead of catalog `$0.99`.
 6. Data safety / Privacy already mention IAP — keep Console form honest.
+7. **Price change (2026-09-12):** set `boost_12h` default to **$1.99** (was $1.49)
+   so `day_boost_24h` is actually cheaper per hour. Phone SHOP shows Play’s
+   localized price, not the in-app fallback, until Console catches up.
 
 App code path: `ShopStore` → `ShopBilling.applyPurchase` → toast + save.
 SHOP UI: **BUY** / **OWNED** + **RESTORE PURCHASES**.

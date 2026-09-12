@@ -71,7 +71,7 @@ abstract final class ShopCatalog {
       description:
           '+12 hours Full Boost (×2 gold · +${AdBoost.attackPercent}% ATK). '
           'Stacks up to 24 hours, same as tickets.',
-      priceLabel: '\$1.49',
+      priceLabel: '\$1.99',
       kind: ShopOfferKind.boostHours,
       boostHours: 12,
     ),

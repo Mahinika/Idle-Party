@@ -54,6 +54,17 @@ void main() {
     expect(state.metaDepth.adTickets, 5);
   });
 
+  test('day pack beats 12h pack on dollars per Full Boost hour', () {
+    double usd(ShopCatalogItem item) =>
+        double.parse(item.priceLabel.replaceAll(r'$', ''));
+    double perHour(ShopCatalogItem item) => usd(item) / item.boostHours;
+    final mid = ShopCatalog.byId['boost_12h']!;
+    final day = ShopCatalog.byId['day_boost_24h']!;
+    expect(mid.boostHours, 12);
+    expect(day.boostHours, 24);
+    expect(perHour(day), lessThan(perHour(mid)));
+  });
+
   test('consumable boost packs are marked consumable', () {
     expect(ShopCatalog.byId['boost_12h']!.isConsumable, isTrue);
     expect(ShopCatalog.byId['day_boost_24h']!.isConsumable, isTrue);
