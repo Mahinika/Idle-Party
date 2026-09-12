@@ -7,27 +7,29 @@ alwaysApply: true
 
 # Owner preferences (Idle Party)
 
-Source: owner (vibe-coder). Last sync: **2026-09-09**.
-Locks: `.cursor/rules/product-locks.mdc`. Cadence: `docs/CONTENT_CADENCE.md`.
+Source: owner (vibe-coder). Last sync: **2026-09-12**.
+Locks: `.cursor/rules/product-locks.mdc`. Mandate: `docs/GROWTH_MANDATE.md`.
+
+**Now:** Growth mandate — first 15 min + Play listing/funnel (`docs/GROWTH_MANDATE.md`). AL20 is a quality gate, not the batch.
 
 ## Default work (when goal is vague)
 
-1. Hub TODAY / chase clarity on **AL20 save**
-2. In-dungeon wipe advice only when the sim can prove the deficit (GOLD / BAG / KEY, not a guess)
-3. Hide dead chrome (BAG Scrap, Sell junk, GEAR Sell, Loadouts) — don’t polish it
+Next **unchecked** box on `docs/GROWTH_MANDATE.md` done bar, in order:
+funnel events → first 15 min / day-1 TODAY → gate chrome → one day-2–7 job →
+Welcome Back → local notifications → listing pack → new-player What’s New.
 
-Not default: first-hour onboarding, new zone/class, `/init`, cleanup, Play-ops
-busywork. Prefer feel/content over store recruitment. Optional background:
-`docs/TOP_GAMES_RESEARCH.md`.
+Not default: AL20 hub-chase polish, new zone/class, `/init`, repo cleanup,
+god-object refactors, iOS, scaled UA.
 
-**Owner play notes win** — their AL20 phone session *is* the batch signal.
+**Play notes:** a **new save / first 15 min** is the batch signal. AL20 notes
+block ship if endgame is broken; they do not pick the next feature.
 
 ## UI / distribution (facts)
 
 - Phone ~360–430 CSS px; reference **Samsung A56** → **360×780**
 - Live look: AVD `Samsung_A56` + `flutter run` (`a56-playtest`); not Pixel_6; not stacked web-server tabs
 - Web = Playwright / `WebClickBridge` fallback only (forced 360×780)
-- Play primary: `com.idleparty.app` — see `docs/PLAY_STORE.md` / `AGENTS.md`
+- Play primary: `com.idleparty.app` — listing work is **in** the mandate (`play-store-prep`)
 - APK / AAB only after they OK play notes **and** ask for a build
 - Testers never before owner
 
@@ -47,14 +49,14 @@ busywork. Prefer feel/content over store recruitment. Optional background:
 
 | Decide alone | Ask first | Never |
 |--------------|-----------|--------|
-| Skills, files, analyze/tests, splits, dead non-save code | Fun/design fork; God Hand redesign; new zone/class; IAP/whale direction | Weaken hard locks in `product-locks` |
+| Skills, files, analyze/tests, splits, dead non-save code, mandate in-repo boxes | Fun/design fork; God Hand redesign; new zone/class; IAP/whale; scaled UA | Weaken hard locks in `product-locks` |
 | Commit locally when green | Push / PR / tag / Play AAB | Force-push; skip hooks; point players at GitHub Releases |
-| A56 look / hub smoke after UI | Delete save; publish store | Invent a second combat sim |
+| A56 look / hub smoke after UI; listing *docs* | Delete save; publish store; Console paste | Invent a second combat sim |
 
-Ambiguous “two different games” (meny vs combat): ask once.
+Ambiguous “two different games” (meny vs combat): ask once — prefer **first 15 min** over AL20 chrome.
 
 ## Feel reminders
 
-- Hub readable, low-panic; endgame may be grindy
-- Early calm for new players; polish lens is **AL20**
+- Hub readable, low-panic; day-one chrome small
+- Early calm for **new** players; AL20 may stay grindy
 - Fairness: if kit is fun but HIGH → trim (identity OK, numbers must line up)

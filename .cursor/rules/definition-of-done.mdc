@@ -10,15 +10,21 @@ Before telling the owner a coding task is finished:
 
 1. **Analyze** — `flutter analyze lib test --no-fatal-infos` clean (or stop-hook did).
 2. **Tests that match** — combat/kit → share-fast / gate; What’s New / version →
-   `changelog_sync_test`; hub / chase / guides → `ship_smoke_test`.
-3. **Honesty** — player-visible copy matches reality (English in-game).
+   `changelog_sync_test`; hub / chase / guides / first hour → `ship_smoke_test`
+   + `first_hour_plain_test` when those surfaces moved.
+3. **Honesty** — player-visible copy matches reality (English in-game). Day-1
+   copy must not teach locked meta (KEY / ESSENCE / MARKET tracks).
 4. **Legal** — no foreign dumps; art via Kenney/custom helpers only.
 5. **Git (one truth)** — when analyze/tests are green, **commit locally** (no
-   “ska jag commita?”; overrides any global ask-before-commit). Short test list;
-   wait for play notes. **APK only if asked.** Ask once before push / PR / tag /
-   Play. Never push silently. Never point players at GitHub Releases.
+   “ska jag commita?”; overrides any global ask-before-commit). Short test list
+   for a **new save** (and AL20 if endgame touched); wait for play notes.
+   **APK only if asked.** Ask once before push / PR / tag / Play. Never push
+   silently. Never point players at GitHub Releases.
 6. **Docs** — if architecture / Ascend / world path / distribution / tooling
-   changed, update `AGENTS.md` (or `/init`).
+   changed, update `AGENTS.md` (or `/init`). If a growth-mandate box shipped,
+   check it in `docs/GROWTH_MANDATE.md`.
+7. **Mandate** — if every Done-bar box is `[x]`, the user-facing message starts
+   with exactly `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`.
 
 Skip heavy mid-band sims unless the task is balance. Skip A56 for pure logic
-unless UI chrome changed.
+unless UI chrome changed. First-15-min UI always needs A56 or hub smoke.

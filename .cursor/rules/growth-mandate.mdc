@@ -1,0 +1,38 @@
+---
+description: >-
+  Active growth mandate — first 15 min + Play funnel until the done bar.
+  When complete, say the exact Robban line (never early, never paraphrased).
+alwaysApply: true
+---
+
+# Growth mandate (Idle Party)
+
+**Locked 2026-09-12.** Source: `docs/GROWTH_MANDATE.md`.
+
+Default work is **grow players**, not AL20 polish. Vague “gör bättre / vad
+härnäst” → next **unchecked** box on that done bar. AL20 play notes are a
+**quality gate** (don’t ship a broken endgame). They are not the batch.
+
+## Do this
+
+- First 15 minutes + listing/funnel (events, day-1 TODAY, hide meta until unlock)
+- One day-2–7 job a new player can do; punchy Welcome Back
+- Opt-in idle notifications (never combat)
+- Play listing honesty: screenshots 1–2 = new-save first two minutes
+- Hide dead chrome; gate KEY/endgame until unlock
+
+## Do not do (until the phrase is said)
+
+- New zone / class / God Hand redesign / second sim / gacha / iOS / web product
+- AL20 chase/wipe polish as the default slice
+- God-object cleanup as the quarter’s story
+- Paid UA scale before D1 is known
+
+## Phrase
+
+When **every** checkbox in `docs/GROWTH_MANDATE.md` → **Done bar** is `[x]`,
+the next user-facing message starts with **exactly**:
+
+`ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`
+
+Never early. Never paraphrase. `/init` must not restore the old AL20 default.

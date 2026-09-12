@@ -44,7 +44,13 @@ IA copy scopes (labels/guides, not colors): **RUN** · **TODAY** · **ACCOUNT**
 (`MenuChrome.scopeChip` / `sectionLabelScoped`).
 
 **Endgame** (KEY, Gauntlet, Rifts, GR, Ashen): direct from hub TODAY and/or **KEY**
-tab — **never** behind secondary MORE chrome.
+tab — **never** behind secondary MORE chrome. **Gate until unlock** — a new save
+must not show KEY / endgame map / jargon.
+
+**First 15 minutes (growth mandate):** one job on the hub (grow party / first
+boss). Do not teach ESSENCE, GOLD tracks, MARKET, pets, or KEY before the first
+boss. Tip dump is a bug. Hide systems until their unlock — don’t add chrome
+“for completeness.”
 
 ## Before proposing or shipping a UI feature
 
@@ -60,7 +66,8 @@ tab — **never** behind secondary MORE chrome.
 
 Stop and fix when you would: add a submenu for a primary habit · invent new
 colors/Material chips/emoji chrome · put KEY/Gauntlet/Rift only under MORE ·
-add a third visual style for the same sheet family · stack 3+ brown CTAs on hub.
+add a third visual style for the same sheet family · stack 3+ brown CTAs on hub ·
+teach locked meta in the first session · show endgame chrome before party Lv100.
 
 Visual tokens stay in `.cursor/rules/ui-theme.mdc` — this rule owns **IA +
 placement + consistency**.

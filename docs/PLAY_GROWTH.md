@@ -3,7 +3,10 @@
 **Updated:** 2026-09-11 · Category stays **Role Playing** (idle fantasy RPG).  
 Do **not** chase Casual / Battle Royale / sandbox search volume.
 
-Honest growth order: **retention → listing clarity → reviews → preview video → tiny paid test**.
+**Active program:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) (2026-09-12) —
+first 15 min + listing/funnel until that done bar is complete.
+
+Honest growth order: **crash-free → listing conversion → D1 → D7 → rating → tiny paid test**.
 
 Paste-ready listing copy: [`STORE_LISTING.md`](STORE_LISTING.md).  
 Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
@@ -88,7 +91,7 @@ Only if you want paid installs after listing + retention feel OK.
 | Creative | Feature graphic + first 2 screenshots + preview video if ready |
 | Kill rule | Stop if D1 retention is junk or CPI >> value of a curious idle player |
 
-Do **not** scale spend until organic D1 feels good on your AL20 save.
+Do **not** scale spend until organic D1 on a **new save** is known and not junk.
 
 ---
 

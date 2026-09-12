@@ -7,8 +7,11 @@ alwaysApply: true
 
 # Product locks (Idle Party)
 
-**Confirmed:** 2026-09-09. Soft locks lift when the owner clearly asks
+**Confirmed:** 2026-09-12. Soft locks lift when the owner clearly asks
 (e.g. “ny zon OK”, “gör om God Hand”). Hard locks do not.
+
+Work program until the done bar: `docs/GROWTH_MANDATE.md` +
+`.cursor/rules/growth-mandate.mdc`.
 
 ## Hard (never weaken from this file)
 
@@ -28,9 +31,10 @@ alwaysApply: true
 | Lock | Meaning |
 |------|---------|
 | No new zones | Polish existing 15; no dungeon #16 unless asked |
-| No new classes/specs | Polish kits first |
+| No new classes/specs | No specs “for the list”; kit trim only if HIGH or day-1 identity is broken |
 | God Hand direction | No philosophy redesign without asking |
-| Default work slice | AL20 hub chase + proven wipe advice + hide dead chrome |
+| Default work slice | **Growth mandate** — first 15 min + Play funnel (`docs/GROWTH_MANDATE.md`). AL20 is a quality gate, not the batch |
 
 **Escape:** if the owner names a broader goal this turn, follow that — do not
-force AL20-hub polish over an explicit request.
+force AL20-hub polish. Do not abandon the growth done bar unless they
+explicitly end the mandate.

@@ -10,15 +10,19 @@ in sync (currently **1.12.153**). What’s New lives in `lib/core/meta_systems.d
 
 Owner describes goals in plain language; agents pick skills/tools/verify alone.
 **Rules (don’t duplicate here):**
+- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **active program** (first 15 min + Play funnel)
 - `.cursor/rules/product-locks.mdc` — hard + soft locks (dated)
 - `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
 - `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff
 - `.cursor/rules/definition-of-done.mdc` — analyze / tests / commit locally
 
-Cadence: `docs/CONTENT_CADENCE.md`. **Default work** when vague: AL20 hub chase
-+ proven wipe advice + hide dead chrome — unless the owner names something
-broader. Chat Swedish; short test list → wait. Commit locally when green; ask
-before push / PR / tag / Play.
+Cadence: `docs/GROWTH_MANDATE.md` (until its done bar is complete), then
+`docs/CONTENT_CADENCE.md`. **Default work** when vague: next unchecked growth
+box (funnel, first 15 min, listing). AL20 is a quality gate, not the batch.
+When the done bar is fully checked, the agent says exactly
+`ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`. Chat Swedish; short test
+list (new save first) → wait. Commit locally when green; ask before push / PR /
+tag / Play.
 
 **UI target:** portrait phones (~360–430 px). Reference **Samsung A56**
 (1080×2340 → **360×780**). Live look: AVD `Samsung_A56` + `flutter run`
@@ -113,17 +117,17 @@ Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 Slash: `/init` resyncs AGENTS/rules; `/repo auditandcleaning` runs a read-only
 full-repo audit (see `.cursor/commands/repo-auditandcleaning.md`).
 
-Cadence: `docs/CONTENT_CADENCE.md` (decision table + tag rhythm; 90d M1–M3
-shipped). Background (optional): `docs/TOP_GAMES_RESEARCH.md`. Chase contract
-(hub TODAY ↔ offline Up next): `docs/CHASE_CONTRACT.md`. Gear budget:
-`docs/GEAR_BUDGET.md`. Floor blueprint (shipped): `docs/FLOOR_BLUEPRINT.md`.
-Play ops: `docs/PLAY_STORE.md` + skill `play-store-prep`. Growth / ASO /
-reviews / tiny ads plan: `docs/PLAY_GROWTH.md` + listing copy in
-`docs/STORE_LISTING.md`.
+Cadence: **`docs/GROWTH_MANDATE.md`** (active 2026-09-12) then
+`docs/CONTENT_CADENCE.md` (tag rhythm). Background (optional):
+`docs/TOP_GAMES_RESEARCH.md`. Chase contract (hub TODAY ↔ offline Up next):
+`docs/CHASE_CONTRACT.md`. Gear budget: `docs/GEAR_BUDGET.md`. Floor blueprint
+(shipped): `docs/FLOOR_BLUEPRINT.md`. Play listing: `docs/PLAY_STORE.md` +
+skill `play-store-prep` (in mandate, not background). Growth / ASO / reviews /
+tiny ads: `docs/PLAY_GROWTH.md` + listing copy in `docs/STORE_LISTING.md`.
 
 ### Cursor automation
 
-- Project hooks: `.cursor/hooks.json` — **sessionStart** injects cadence context;
+- Project hooks: `.cursor/hooks.json` — **sessionStart** injects growth-mandate context;
   **afterFileEdit** marks `.cursor/hooks/.verify-dirty` when `lib/` / `test/` /
   docs / rules change; **stop** verifies only if that flag exists
   (`flutter analyze lib test --no-fatal-infos`), plus `changelog_sync_test` when

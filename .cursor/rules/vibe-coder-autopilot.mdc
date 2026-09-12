@@ -20,6 +20,9 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 5. After UI/meta: verify (tests and/or `a56-playtest`). Web only if Android can’t run.
 6. After kit number tweaks: share-fast; grind gate green before done.
 7. Git: commit locally when green; ask before push/Play — `owner-preferences`.
+8. Vague goal → next unchecked `docs/GROWTH_MANDATE.md` box. When that done bar
+   is fully checked, start the user message with exactly
+   `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`.
 
 ## Skill map (silent)
 
@@ -37,23 +40,23 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 | What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
 | PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
 | review this diff / before merge | `reviewing-code` |
-| polish hub / weekly / tips | `hub-smoke` on A56 (`a56-playtest`) |
+| polish hub / weekly / tips / first hour | `hub-smoke` on A56 (`a56-playtest`) + `first_hour_plain_test` |
 | does it look ok? / UI verify | `a56-playtest` / `verifying-in-browser` |
 | a11y / labels / reduce motion | `accessibility-auditing` |
 | record web flow as test | `recording-browser-flow-as-test` |
 | same workflow 3× | `building-skills-from-patterns` |
 | ny meny / panel / var ska X ligga / UI-röd tråd | `game-ux-director` rule + `ui-theme` / `docs/UI_THEME.md` |
-| I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — that *is* the batch |
-| “gör spelet bättre” / vad härnäst (no other target) | Default slice in `owner-preferences` + `docs/CONTENT_CADENCE.md` — unless they name something broader (`product-locks` escape) |
-| Play Store / listing / privacy / AAB | `play-store-prep` (+ `docs/PLAY_STORE.md`) |
+| I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — **new-save first** |
+| “gör spelet bättre” / vad härnäst (no other target) | `docs/GROWTH_MANDATE.md` next box — not AL20 default |
+| Play Store / listing / privacy / AAB / screenshots | `play-store-prep` (+ `docs/PLAY_STORE.md` / `STORE_LISTING.md`) |
 | itch.io / itch listing | `play-store-prep` + `tool/store_listing/itch/PAGE.md` (no APK) |
-| **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules` |
+| **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules`; **keep growth mandate** |
 | **`/repo auditandcleaning`** | `repo-audit-and-cleaning` — report only, no code changes |
 | Ascend / “what am I chasing” | `hub_chase`, `ascend_roadmap`, Blessing in `metaDepth` |
-| strategi / 90 dagar / prioritering | `docs/CONTENT_CADENCE.md` (silently) |
+| strategi / 90 dagar / prioritering | `docs/GROWTH_MANDATE.md` then `docs/CONTENT_CADENCE.md` |
 | topplistor / varför bra spel | `docs/TOP_GAMES_RESEARCH.md` background only |
 
 ## Done looks like
 
-Short test list for their **AL20 phone save**. Wait. No tool-name essays unless
-they ask “hur gjorde du?”.
+Short test list for a **new save (first 15 min)** plus AL20 only if endgame
+touched. Wait. No tool-name essays unless they ask “hur gjorde du?”.

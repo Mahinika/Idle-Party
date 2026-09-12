@@ -9,4 +9,6 @@ If the user message is exactly **`/init`**, or clearly means that slash command,
 
 > Gå igenom spelet och uppdatera `AGENTS.md` + regler så de stämmer med hur spelet funkar nu.
 
-Do not ask which skill to use. Do not treat `/init` as a vague “start coding” request.
+Do not ask which skill to use. Do not treat `/init` as a vague “start coding”
+request. **`/init` must not restore AL20 as the default work slice** while
+`docs/GROWTH_MANDATE.md` done bar is incomplete.

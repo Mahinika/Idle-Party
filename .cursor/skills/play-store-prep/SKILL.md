@@ -17,6 +17,7 @@ remains for early builds. Source of truth:
 
 ## When to run this skill
 
+- **Growth mandate** listing pack (screenshots 1–2 = new-save first two minutes)
 - Owner mentions Play, store listing, privacy, IARC, screenshots, AAB upload
 - Owner mentions itch.io listing / community post (PAGE.md — no APK)
 - Before tagging a release meant for Play closed testing

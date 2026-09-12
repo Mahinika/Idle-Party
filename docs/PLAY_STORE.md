@@ -71,9 +71,10 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 **Primary distribution: Google Play.**  
 Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
 (production track live; keep Operator status honest above). Closed opt-in for early builds. Do **not**
-point players at GitHub Releases (repo may be private). Day-to-day: prefer
-content/feel over Play ops unless the owner asks about Play. Ship path for
-players = Play AAB after owner play OK — not public GitHub APK links.
+point players at GitHub Releases (repo may be private). Day-to-day: **growth
+mandate** ([GROWTH_MANDATE.md](GROWTH_MANDATE.md)) — listing + first 15 min are
+the work, not background chores. Ship path for players = Play AAB after owner
+play OK — not public GitHub APK links.
 
 **Growth:** paste listing from [`STORE_LISTING.md`](STORE_LISTING.md); owner
 checklist + review templates in [`PLAY_GROWTH.md`](PLAY_GROWTH.md). Category

@@ -1,73 +1,75 @@
 # Idle Party — monthly content cadence
 
-Operational rhythm after 90d M1–M3 shipped. Optional background:
-[TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md). Live contracts:
-[CHASE_CONTRACT.md](CHASE_CONTRACT.md) · [GEAR_BUDGET.md](GEAR_BUDGET.md) ·
-[FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md).
+**Active program (2026-09-12):** [GROWTH_MANDATE.md](GROWTH_MANDATE.md) —
+first 15 minutes + Play funnel until that done bar is complete. This file is
+the **tag rhythm** (balance + What’s New) under that mandate.
 
-## Cadence (every 2–4 weeks; aim monthly)
+Optional background: [TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md). Live
+contracts: [CHASE_CONTRACT.md](CHASE_CONTRACT.md) ·
+[GEAR_BUDGET.md](GEAR_BUDGET.md) · [FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md) ·
+[PLAY_GROWTH.md](PLAY_GROWTH.md).
+
+## Cadence (every 2–3 weeks under the mandate)
 
 Each tagged `1.x.y` release should include:
 
-1. **Balance pass** — iterate with share-only, then gate:
+1. **One mandate slice** — next unchecked box on `GROWTH_MANDATE.md` (funnel,
+   first 15 min, day-2 job, Welcome Back, notifications, listing pack).
+   Play What’s New in **one sentence a new player understands**.
+2. **Balance pass** — iterate with share-only, then gate:
    - Fast: `flutter test test/class_balance_share_fast_test.dart` (or `--focus=specA,specB` via harness args)
-   - Reads `tool/out/class_balance_share.json` + markdown board
    - CI: `test/class_balance_gate_test.dart` (live light, fails on DPS `**HIGH**`)
-   - Mid band still manual / long (`class_balance_mid_sim_test`) when casters feel spicy
-2. **Content slice** — one player-visible piece. Prefer **AL20 hub + dungeon
-   feel** (chase clarity, proven wipe advice, hide dead chrome) over new
-   zones/classes (owner lock).
 3. **Release notes** — What’s New in `lib/core/meta_systems.dart`; `test/changelog_sync_test.dart` keeps pubspec ↔ version ↔ zone tokens honest.
 
-### Success-spår (research-backed)
+### Success-spår (until mandate done)
 
-1. **Habit** — hub TODAY READY/ALMOST always visible on phone; claim/progress CTAs.
-2. **Local season** — `lib/core/local_season.dart` week/month rows (reuse SpatialCombat + vault/Gauntlet).
-3. **Feel / kits** — owner lock **2026-08-21:** no new zones or classes. Prefer
-   **AL20 hub + dungeon** (what to chase, wipe advice the sim can prove). Play 12×14 stays background.
+1. **Activation** — new save first 15 min matches listing/trailer (party walks the room).
+2. **Habit** — one TODAY job a new player can do on day 1 and day 2–7.
+3. **Store** — screenshots 1–2 + preview = those first two minutes; funnel events honest.
+
+AL20 chase / wipe advice / kit depth are **quality gates**, not the default
+slice. No new zones or classes (soft lock).
 
 ## Decision table (when unsure)
 
 | Om ni tvekar mellan … | Välj |
 |------------------------|------|
-| Ny spec vs polisha kit | Polisha kit (soft lock — lyfts om ägaren ber om ny spec) |
-| Ny zon vs mer hub-chrome | AL20 hub + dungeon feel först. Hub-chrome om chase ljuger. Ny zon bara om ägaren ber. |
+| AL20 polish vs first 15 min | First 15 min (`GROWTH_MANDATE.md`) |
+| Ny spec vs polisha kit | Trim HIGH only; no specs for the list |
+| Ny zon vs listing/onboarding | Listing + first session. Ny zon bara om ägaren ber |
 | Cool affinity-nudge vs budget | Budget |
 | Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
-| Stor rewrite vs small ship | Small ship + synlig What’s New |
-| Vagt “gör bättre” vs explicit bredare mål | Följ det ägaren namngav; annars default AL20-slice |
+| Stor rewrite vs small ship | Small ship + synlig What’s New a new player can read |
+| Vagt “gör bättre” vs explicit bredare mål | Följ `GROWTH_MANDATE.md` done bar |
 
 ## Non-goals (unless owner asks)
 
-- Play Billing wiring (catalog + SHOP UI exist; see `docs/SHOP_MONETIZATION.md`)
+- New zone #16 / new class
+- SpatialCombat rewrite / God Hand philosophy redesign
 - iOS or web-as-product
-- SpatialCombat rewrite
-- God Hand philosophy redesign
-- Play production as the main work track
-- Many new specs “for the list”
+- Gacha / whale ladder
+- Scaled paid UA before D1 is known
+- God-object cleanup as the quarter’s story
 
 ## Checklist before tagging
 
 - [ ] `flutter analyze` clean; `flutter test` green (CI on push).
 - [ ] Kit / combat changes exercised via SpatialCombat path (live + offline share the same step).
 - [ ] Changelog entry for this version; `seenChangelogVersion` will auto-prompt What’s New.
-- [ ] Hub smoke (optional but recommended): `.cursor/skills/hub-smoke` on the A56 emulator (`a56-playtest`).
-- [ ] If Android: AAB/APK from tag workflow or local `flutter build appbundle` (see [PLAY_STORE.md](PLAY_STORE.md)).
+- [ ] First-hour / hub: `first_hour_plain_test` + hub smoke on A56 when those surfaces moved.
+- [ ] If Android: AAB/APK only after owner play OK **and** they ask (see [PLAY_STORE.md](PLAY_STORE.md)).
 
 ## Agent tooling
 
 | Need | Path |
 |------|------|
+| Mandate | `docs/GROWTH_MANDATE.md` |
 | Share iterate | `tool/sim_class_balance.dart` `--share-only` / `--focus=` |
-| Share JSON | `tool/out/class_balance_share.json` (gitignored under `tool/out/`) |
 | Changelog sync | `test/changelog_sync_test.dart` |
-| Hub UX smoke | `.cursor/skills/hub-smoke` |
-| Zone identity | `.cursor/skills/zone-art-identity` |
-| Cursor MCP | `.cursor/mcp.json` → `idle-party` (`tool/mcp_idle_party/`; UI may show `user-idle-party`) |
-| Grind / PR babysit | `.cursor/skills/grinding-until-pass`, `babysitting-pr`, `parallel-ci-triage` |
-| Browser verify / a11y | `.cursor/skills/verifying-in-browser`, `accessibility-auditing` |
-| Suggest / author skills | `.cursor/skills/suggesting-skills`, `building-skills-from-patterns` |
+| Hub / first hour | `.cursor/skills/hub-smoke` + `test/first_hour_plain_test.dart` |
+| Play listing | `.cursor/skills/play-store-prep` |
+| Cursor MCP | `.cursor/mcp.json` → `idle-party` |
 
 ## Out of cadence
 
-Do not couple rewrites of SpatialCombat, new account servers, or commercial art dumps to the monthly train. Optional stretch (Windows zip, score-share image) only if the owner asks.
+Do not couple rewrites of SpatialCombat, new account servers, or commercial art dumps to the train. Optional stretch (Windows zip, score-share image) only if the owner asks.
