@@ -76,7 +76,19 @@ void main() {
     world = SpatialCombat.step(world, state, dt: 0.1).world;
     final rogue = world.heroes.firstWhere((h) => !h.isPet);
     // Sinister Strike passive — mild share lift; combo + 2 AP/Agi carry identity.
-    expect(rogue.kitOutMul, closeTo(1.30, 0.001));
+    expect(rogue.kitOutMul, closeTo(1.62, 0.001));
+  });
+
+  test('Combat rogue keeps Slice and Dice up in a pack', () {
+    var state = _soloSpecParty(HeroSpecId.combat, level: 12);
+    var world = SpatialCombat.build(state);
+    for (var i = 0; i < 50; i++) {
+      final r = SpatialCombat.step(world, state, dt: 0.2);
+      world = r.world;
+      state = r.state;
+    }
+    final rogue = world.heroes.firstWhere((h) => !h.isPet);
+    expect(rogue.sliceAndDiceTimer, greaterThan(1.0));
   });
 
   test('Moonkin Form thickens hide; Barkskin is ready at 11', () {

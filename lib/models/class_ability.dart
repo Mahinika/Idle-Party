@@ -1351,7 +1351,7 @@ class ClassKits {
       resourceCost: 0,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
-      coeff: 0.76,
+      coeff: 0.95,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,

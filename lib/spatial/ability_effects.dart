@@ -490,7 +490,7 @@ abstract final class AbilityEffectRunner {
       case HeroSpecId.fire:
         return 8.0;
       case HeroSpecId.combat:
-        return 10.0;
+        return 11.0;
       default:
         // Rage/mana bumped so mid-kit spenders can fire between openers.
         return switch (resource) {
@@ -634,8 +634,8 @@ abstract final class AbilityEffectRunner {
         hero.kitHealMul *= 1.36;
         hero.kitInMul *= 0.94;
       case AbilityId.sinisterStrike:
-        // Combo build rides white swings; lift for live-light share band.
-        hero.kitOutMul *= 1.30;
+        // Combo build rides white swings; lift so Combat sits in the melee share band.
+        hero.kitOutMul *= 1.62;
       case AbilityId.arcaneIntellect:
         // Personal spell power; party-wide Int is the GameState caster aura.
         hero.kitOutMul *= 1.24;

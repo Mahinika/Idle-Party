@@ -3916,7 +3916,7 @@ abstract final class SpatialCombat {
               if (_dist(hero, e) > 2.2) continue;
               // Dense packs: Arms Sweeping was 40% AA → blender; Combat stays lower.
               final frac = switch (hero.heroSpecId) {
-                HeroSpecId.combat => 0.14,
+                HeroSpecId.combat => 0.22,
                 HeroSpecId.arms => 0.28,
                 _ => 0.30,
               };
