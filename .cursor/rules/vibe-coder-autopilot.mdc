@@ -26,6 +26,7 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 | They say something like… | You use… |
 |--------------------------|----------|
 | combat feels wrong / abilities / AFK | `spatial-combat-change`, maybe `systematic-debugging` |
+| fiender tråkiga / samma PULSE / packs feel identical | `spatial-combat-change` (jobs + mix + boss tell) — not `zone-art-identity` |
 | new spell / kit broken | `add-ability` |
 | new dungeon / zone looks same | `new-dungeon`, `zone-art-identity`, `assets-legal` |
 | dockan / gear syns inte / hjälm / undertunic | `character-paper-doll` + `assets-legal` |

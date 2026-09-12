@@ -1,11 +1,12 @@
 ---
 name: spatial-combat-change
 description: >-
-  Guides combat, chamber, gate, AI, and offline changes where SpatialCombat
-  is the single authority. Use when combat feels wrong, AFK catch-up diverges,
-  chambers/gates misbehave, or editing spatial_combat / ability_effects /
-  tile maps. Do not use for a single broken cast (add-ability) or DPS-only
-  trim (grinding-until-pass).
+  Guides combat, chamber, gate, AI, enemy packs/tells, and offline changes
+  where SpatialCombat is the single authority. Use when combat feels wrong,
+  AFK catch-up diverges, chambers/gates misbehave, enemies feel the same
+  (fiender tråkiga / samma PULSE), or editing spatial_combat / ability_effects /
+  tile maps / enemy_flavor. Do not use for a single broken cast (add-ability),
+  zone sprite reskins (zone-art-identity), or DPS-only trim (grinding-until-pass).
 ---
 
 # Spatial combat changes (Idle Party)
@@ -49,6 +50,8 @@ Do **not** add a second combat simulator for offline.
 |--------|-------|
 | Kits / cast AI | `ability_effects.dart`, `spatial_combat.dart` |
 | Movement / focus / threat | `spatial_combat.dart` |
+| Zone packs / names / mix | `lib/core/enemy_flavor.dart` + `encounter_factory.dart` |
+| Enemy specials / boss tells | `lib/spatial/enemy_specials.dart` (`part` of SpatialCombat) |
 | Chambers / gates / blueprint | `floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart`, `tile_map.dart`, `spatial_combat.dart` |
 | Offline catch-up | `game_logic.dart` (call sites only) |
 | Live loop / rebuild | `game_director.dart` |
@@ -60,6 +63,10 @@ Do **not** add a second combat simulator for offline.
 - Mutating world outside `step` → desync with director `_rebuildSpatial`
 - Gate/dormant bugs soft-lock AFK parties
 - Forking ability logic for offline
+- “Enemies feel the same” is fight identity, not missing sprites (`zone-art-identity` is the wrong skill). Fix pack jobs + zone mix/names + one boss tell in the same `step`
+- Enemy list order **is** chamber order (spawns fill room 1 → 2 → 3). First third of `createEnemyGroup` = first fight room
+- Unique boss tells stay near old PULSE power; AFK uses the same soften. Do not spawn adds mid-fight
+- Signature kits hold on healthy trash unless **3** nearby are awake. Three-room floors hide later packs as dormant — kit tests that need a pack must wake dormant bodies, not only the first chamber
 
 ## Verify
 

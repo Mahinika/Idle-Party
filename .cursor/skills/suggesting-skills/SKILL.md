@@ -18,6 +18,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | User is doing… | You follow… |
 |----------------|-------------|
 | Combat / chambers / AFK / gates | `spatial-combat-change` |
+| Enemies feel the same / fiender tråkiga / same PULSE | `spatial-combat-change` (not `zone-art-identity`) |
 | New ability / kit wiring / HUD but no cast | `add-ability` |
 | New dungeon / zone / boss unlock | `new-dungeon` + `zone-art-identity` |
 | Save fields / Ascend keep-reset / migrate | `save-migrate` |
