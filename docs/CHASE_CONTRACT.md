@@ -17,7 +17,7 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 8. **KEY habit (endgame only)** — chase the next KEY until preferred key is at the dial cap (TODAY detail includes affixes + par). Does **not** wait on unpaid Daily.
 9. **Endgame ladder (party Lv100)** — after KEY at cap: week ALMOST (if any) → Gauntlet (PB after F100) → Greater Rift → Rift → Ashen Crown. Month ALMOST after ladder. One hunt — not Daily/Will shuffle.
 10. **Done for today** — when Vault + Daily + KEY dial are settled and the ladder is quiet (PB only): soft rest with KEY · BOARDS CTA; Spire PB stays optional in the detail. **Week ALMOST / READY** still beat this soft rest (normal week progress does not).
-11. **Progress grind** — daily run, vault start, Will (CODEX CTA), leftover endgame (pre–Lv100), Shop (endgame), week goal, then **one** endgame fallback (time KEY at dial / push GR — never a stats dump)
+11. **Progress grind** — **Daily Vault (one cave today)** is the day-2–7 job after the first boss. **Daily Run** waits until first Ascend, then follows a claimed vault. Then Will (CODEX CTA), leftover endgame (pre–Lv100), Shop (endgame), week goal, then **one** endgame fallback (time KEY at dial / push GR — never a stats dump)
 
 ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats Daily and KEY. Zone unlock is TODAY only when party level is **ALMOST** (or prior clear opens the path). Never invent a second priority list in UI.
 

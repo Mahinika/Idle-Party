@@ -134,9 +134,8 @@ class FirstSessionTips extends StatelessWidget {
       id: 'weekly',
       title: 'DAILY VAULT',
       body:
-          'Daily Vault (not Daily Run): clear 1 floor today, then CLAIM VAULT for essence. '
-          'First claim of each month also pays a season bonus. '
-          'Quests and Daily Run are separate — see THREE DAILIES tip.',
+          'Clear one cave today, then CLAIM VAULT for essence. '
+          'Come back tomorrow for another. That is the daily job.',
     ),
     (
       id: 'apex',
@@ -271,7 +270,7 @@ class FirstSessionTips extends StatelessWidget {
           (inDungeon || !porch)) {
         continue;
       }
-      if (tip.id == 'three_dailies' && !GameLogic.showDailyChase(s)) {
+      if (tip.id == 'three_dailies' && !GameLogic.showDailyRunOnHub(s)) {
         continue;
       }
       if (tip.id == 'sanctuary' && s.essence < 1 && s.ascensionLevel < 1) {

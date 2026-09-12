@@ -154,18 +154,17 @@ void main() {
     expect(chase.title.toLowerCase(), isNot(contains('unlock')));
   });
 
-  test('first boss on AL0 chases Daily not sole Ascend button', () {
+  test('first boss on AL0 chases the cave vault, not sole Ascend button', () {
     var state = GameLogic.createInitialState(now: now).copyWith(
       bossVictories: 1,
-      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-            dailyVaultClaimed: true,
-          ),
     );
     expect(GameLogic.canAscend(state), isTrue);
-    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+    expect(GameLogic.showDailyRunOnHub(state), isFalse);
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.dailyRun);
+    expect(chase.kind, HubChaseKind.dailyVaultProgress);
+    expect(chase.title.toLowerCase(), contains('cave'));
     expect(chase.kind, isNot(HubChaseKind.ascend));
+    expect(chase.kind, isNot(HubChaseKind.dailyRun));
   });
 
   test('claimables and Ascend mark READY urgency', () {
@@ -380,15 +379,17 @@ void main() {
     expect(state.metaDepth.pendingHeroReveals, isEmpty);
   });
 
-  test('after first Ascend, Daily is the hub chase (KEY waits for party Lv60)', () {
+  test('after first Ascend, one cave today is the hub chase (KEY waits for party max)', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
     );
     expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
     expect(GameLogic.showKeystoneJargon(state), isFalse);
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.dailyRun);
+    expect(chase.kind, HubChaseKind.dailyVaultProgress);
+    expect(chase.title.toLowerCase(), contains('cave'));
     expect(chase.kind, isNot(HubChaseKind.keystone));
+    expect(chase.kind, isNot(HubChaseKind.dailyRun));
   });
 
   test('KEY habit at party Lv60 when preferred key below cap', () {
@@ -450,14 +451,15 @@ void main() {
     expect(chase.keyLevel, 3);
   });
 
-  test('KEY at AL cap falls through to Daily before party Lv60', () {
+  test('KEY at AL cap falls through to today\'s cave before party max', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
       hardmodeLevel: 0,
     );
     expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.dailyRun);
+    expect(chase.kind, HubChaseKind.dailyVaultProgress);
+    expect(chase.kind, isNot(HubChaseKind.dailyRun));
   });
 
   test('Rift milestone chase at party Lv60', () {
@@ -769,16 +771,29 @@ void main() {
   });
 
   group('session 2–5 chase matrix', () {
-    test('S2 after first boss: Daily Run before Ascend button', () {
+    test('S2 after first boss: one cave today, not Daily Run', () {
+      final state = GameLogic.createInitialState(now: now).copyWith(
+        bossVictories: 1,
+      );
+      expect(GameLogic.showDailyChase(state), isTrue);
+      expect(GameLogic.showDailyRunOnHub(state), isFalse);
+      final chase = HubChase.forState(state, now: now);
+      expect(chase.kind, HubChaseKind.dailyVaultProgress);
+      expect(chase.title.toLowerCase(), contains('cave'));
+      expect(chase.detail.toUpperCase(), isNot(contains('DAILY RUN')));
+    });
+
+    test('S2 vault already claimed: push floors, not Daily Run or Ascend', () {
       final state = GameLogic.createInitialState(now: now).copyWith(
         bossVictories: 1,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
               dailyVaultClaimed: true,
             ),
       );
-      expect(GameLogic.showDailyChase(state), isTrue);
       final chase = HubChase.forState(state, now: now);
-      expect(chase.kind, HubChaseKind.dailyRun);
+      expect(chase.kind, HubChaseKind.clearFloors);
+      expect(chase.kind, isNot(HubChaseKind.dailyRun));
+      expect(chase.kind, isNot(HubChaseKind.ascend));
     });
 
     test('S3 Daily done, vault empty: fill Daily Vault', () {
@@ -794,8 +809,22 @@ void main() {
       );
       final chase = HubChase.forState(state, now: now);
       expect(chase.kind, HubChaseKind.dailyVaultProgress);
-      expect(chase.detail.toLowerCase(), contains('vault'));
-      expect(chase.detail.toLowerCase(), contains('daily run'));
+      expect(chase.detail.toLowerCase(), contains('claim'));
+      expect(chase.detail.toUpperCase(), isNot(contains('DAILY RUN')));
+    });
+
+    test('S3b after first Ascend and vault claimed, Daily Run can follow', () {
+      final state = GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: 1,
+        bossVictories: 0,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+            ),
+      );
+      expect(GameLogic.showDailyRunOnHub(state), isTrue);
+      expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+      final chase = HubChase.forState(state, now: now);
+      expect(chase.kind, HubChaseKind.dailyRun);
     });
 
     test('S4 vault + Daily claimed mid AL: push or Will claim', () {

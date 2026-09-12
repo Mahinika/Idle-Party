@@ -51,7 +51,8 @@ abstract final class GameGuides {
     final bridge = showEndgameBridgeGuides(state);
     return [
       for (final t in topics)
-        if (_visibleMidgame(t.id, state: state, bridge: bridge)) _midgameCopy(t),
+        if (_visibleMidgame(t.id, state: state, bridge: bridge))
+          _midgameCopy(t, state),
     ];
   }
 
@@ -63,16 +64,22 @@ abstract final class GameGuides {
     if (endgameTopicIds.contains(id)) return false;
     if (id == 'gates') return bridge;
     if (id == 'constellation') return GameLogic.isMaxAscension(state);
+    if (id == 'daily' && !GameLogic.showDailyRunOnHub(state)) return false;
     return true;
   }
 
-  static GuideTopic _midgameCopy(GuideTopic t) => switch (t.id) {
+  static GuideTopic _midgameCopy(GuideTopic t, GameState state) =>
+      switch (t.id) {
         'basics' => _midgameBasics,
         'world_path' => _midgameWorldPath,
-        'dailies' => _midgameDailies,
+        'dailies' => GameLogic.showDailyRunOnHub(state)
+            ? _midgameDailies
+            : _dayTwoDailies,
         'classes' => _midgameClasses,
         'ascend' => _midgameAscend,
-        'weekly' => _midgameWeekly,
+        'weekly' => GameLogic.showDailyRunOnHub(state)
+            ? _midgameWeekly
+            : _dayTwoWeekly,
         'jobs' => _midgameJobs,
         'daily' => _midgameDaily,
         'apex' => _midgameApex,
@@ -104,6 +111,29 @@ abstract final class GameGuides {
         '• Locked caves sit dim. The caption under the map shows party level '
         'progress (have / need).\n'
         '• Boss floor is shown under your party name (Boss on F n).',
+  );
+
+  /// After first boss, before first Ascend — one daily job, not three dailies.
+  static const GuideTopic _dayTwoDailies = GuideTopic(
+    id: 'dailies',
+    title: 'TODAY\'S CLEAR',
+    body:
+        'Come back each day and clear one cave.\n\n'
+        '• Tap ENTER DUNGEON and beat a floor.\n'
+        '• The hub hunt says Clear one cave today until the vault fills.\n'
+        '• Then CLAIM VAULT for essence.\n'
+        '• Progress resets at UTC midnight. That is the daily job.',
+  );
+
+  static const GuideTopic _dayTwoWeekly = GuideTopic(
+    id: 'weekly',
+    title: 'DAILY VAULT',
+    body:
+        'One dungeon clear fills today\'s vault, then CLAIM VAULT.\n\n'
+        '• The hub hunt names this job until you claim.\n'
+        '• First vault claim of each calendar month also pays a season bonus.\n'
+        '• Progress resets at UTC midnight.\n'
+        '• The hub hunt and offline Up next share the same job.',
   );
 
   /// After first boss, before party max level — no KEY / ENDGAME syllabus.

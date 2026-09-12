@@ -166,4 +166,15 @@ void main() {
     final ids = GameGuides.topicsFor(state).map((t) => t.id).toSet();
     expect(ids, containsAll(['hardmode', 'gauntlet', 'gates', 'ashen_crown']));
   });
+
+  test('after first boss TODAY is one cave today, not Daily Run', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      bossVictories: 1,
+    );
+    expect(GameLogic.showDailyRunOnHub(state), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.dailyVaultProgress);
+    expect(chase.title.toLowerCase(), contains('cave'));
+    expect(chase.detail.toUpperCase(), isNot(contains('DAILY RUN')));
+  });
 }

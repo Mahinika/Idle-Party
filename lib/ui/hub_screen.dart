@@ -436,7 +436,7 @@ class _HubScreenState extends State<HubScreen>
                 chase.kind == HubChaseKind.keystone ||
                 chase.kind == HubChaseKind.dailyVaultProgress ||
                 chase.kind == HubChaseKind.meetHero ||
-                !GameLogic.showDailyChase(state),
+                !GameLogic.showDailyRunOnHub(state),
             onContracts: () {
               director.claimAllReadyMissions();
             },

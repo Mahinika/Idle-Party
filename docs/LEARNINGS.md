@@ -49,3 +49,6 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   first boss, `topicsFor` still hid KEY / Gauntlet / Rift / Ashen until party
   max — dumping the full catalog at boss 1 taught locked meta. QUESTS is a
   MORE row after the first floor, not on a fresh save.
+- **One day-2–7 job = one cave today.** After the first boss, TODAY is Daily
+  Vault (clear → claim). Daily Run as a second daily is churn — it waits
+  until first Ascend, then only after today's vault is claimed.

@@ -1833,6 +1833,12 @@ class GameLogic {
   static bool showDailyChase(GameState state) =>
       state.ascensionLevel > 0 || state.bossVictories > 0;
 
+  /// Daily Run is extra — not the day-2–7 job. Hub hunt and DAILY RUN chrome
+  /// wait until first Ascend (or endgame). Until then TODAY is one cave clear.
+  static bool showDailyRunOnHub(GameState state) =>
+      showDailyChase(state) &&
+      (state.ascensionLevel >= 1 || endgameUnlocked(state));
+
   /// Plain-English chrome before first boss or Ascend — no RPG abbreviations yet.
   static bool plainPlayerChrome(GameState state) => !showDailyChase(state);
 

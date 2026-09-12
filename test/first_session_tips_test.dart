@@ -96,11 +96,11 @@ void main() {
     );
   });
 
-  test('three dailies tip waits for showDailyChase', () {
+  test('vault tip after first boss; three dailies wait for first Ascend', () {
     final early = GameLogic.createInitialState(now: now).copyWith(
       seenTips: [
         for (final t in FirstSessionTips.tips)
-          if (t.id != 'three_dailies') t.id,
+          if (t.id != 'three_dailies' && t.id != 'weekly') t.id,
       ],
     );
     expect(GameLogic.showDailyChase(early), isFalse);
@@ -110,9 +110,16 @@ void main() {
       bossVictories: 1,
       highestFloorCleared: 1,
     );
-    expect(GameLogic.showDailyChase(afterBoss), isTrue);
+    expect(GameLogic.showDailyRunOnHub(afterBoss), isFalse);
     expect(
       FirstSessionTips.nextTipId(afterBoss, inDungeon: false),
+      'weekly',
+    );
+
+    final afterAscend = afterBoss.copyWith(ascensionLevel: 1);
+    expect(GameLogic.showDailyRunOnHub(afterAscend), isTrue);
+    expect(
+      FirstSessionTips.nextTipId(afterAscend, inDungeon: false),
       'three_dailies',
     );
   });

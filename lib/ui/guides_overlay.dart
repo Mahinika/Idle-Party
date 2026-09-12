@@ -37,8 +37,10 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
             !GameLogic.plainPlayerChrome(widget.state!)) ...[
           const SizedBox(height: 6),
           Text(
-            'Dailies: Vault · Daily Run · Quests — three different buttons '
-            '(see THREE DAILIES).',
+            GameLogic.showDailyRunOnHub(widget.state!)
+                ? 'Dailies: Vault · Daily Run · Quests — three different buttons '
+                    '(see THREE DAILIES).'
+                : 'Today: clear one cave, then CLAIM VAULT.',
             style: GameTheme.body(size: 12, color: GameTheme.mossLit),
           ),
         ],

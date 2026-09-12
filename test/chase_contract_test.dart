@@ -69,12 +69,12 @@ void main() {
     expect(offline.kind, hub.kind);
   });
 
-  test('after first Ascend, Daily is Up next (KEY waits for party Lv60)', () {
+  test('after first Ascend, one cave today is Up next (KEY waits for party max)', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
     );
     final contract = ChaseContract.fromState(state, now: now);
-    expect(contract.kind, HubChaseKind.dailyRun);
+    expect(contract.kind, HubChaseKind.dailyVaultProgress);
     expect(contract.kind, isNot(HubChaseKind.keystone));
     expect(contract.upNextLine, startsWith('Up next:'));
   });

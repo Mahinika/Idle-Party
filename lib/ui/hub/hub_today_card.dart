@@ -42,26 +42,32 @@ class HubMetaPulse extends StatelessWidget {
       );
     }
 
-    if (chaseKind != HubChaseKind.claimDailyVault &&
+      if (chaseKind != HubChaseKind.claimDailyVault &&
         chaseKind != HubChaseKind.dailyVaultProgress &&
         chaseKind != HubChaseKind.dailyRun &&
         chaseKind != HubChaseKind.claimMissions) {
       final clears = state.metaDepth.dailyVaultClears;
       final target = GameLogic.dailyVaultClearTarget;
       if (!GameLogic.canClaimDailyVault(state)) {
-        bits.add('Vault $clears/$target · not Daily Run');
+        bits.add(
+          GameLogic.showDailyRunOnHub(state)
+              ? 'Vault $clears/$target · not Daily Run'
+              : 'Vault $clears/$target',
+        );
       }
     }
 
     // When the hunt is already a daily, name the other two so they
-    // don't collapse into "the daily".
-    if (chaseKind == HubChaseKind.dailyVaultProgress ||
-        chaseKind == HubChaseKind.claimDailyVault) {
-      bits.add('≠ Daily Run · ≠ Quests');
-    } else if (chaseKind == HubChaseKind.dailyRun) {
-      bits.add('≠ Vault · ≠ Quests');
-    } else if (chaseKind == HubChaseKind.claimMissions) {
-      bits.add('≠ Vault · ≠ Daily Run');
+    // don't collapse into "the daily" — skip until Daily Run exists.
+    if (GameLogic.showDailyRunOnHub(state)) {
+      if (chaseKind == HubChaseKind.dailyVaultProgress ||
+          chaseKind == HubChaseKind.claimDailyVault) {
+        bits.add('≠ Daily Run · ≠ Quests');
+      } else if (chaseKind == HubChaseKind.dailyRun) {
+        bits.add('≠ Vault · ≠ Quests');
+      } else if (chaseKind == HubChaseKind.claimMissions) {
+        bits.add('≠ Vault · ≠ Daily Run');
+      }
     }
 
     if (chaseKind != HubChaseKind.weekGoal &&

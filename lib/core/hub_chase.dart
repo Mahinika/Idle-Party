@@ -265,7 +265,8 @@ class HubChase {
     if (zoneAlmost != null && zoneAlmost.urgency == HubChaseUrgency.almost) {
       return zoneAlmost;
     }
-    if (!GameLogic.endgameUnlocked(state)) {
+    if (GameLogic.showDailyRunOnHub(state) &&
+        !GameLogic.endgameUnlocked(state)) {
       final willAlmost = _nextWillChase(state);
       if (willAlmost != null && willAlmost.urgency == HubChaseUrgency.almost) {
         return willAlmost;
@@ -324,32 +325,36 @@ class HubChase {
       if (monthAlmost != null) return monthAlmost;
     }
 
-    if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
-      return const HubChase(
-        kind: HubChaseKind.dailyRun,
-        title: 'Clear Daily Run',
-        detail:
-            'One free seeded floor for +25e — separate from Daily Vault '
-            'and Quests.',
-        progressLabel: 'Available',
-      );
-    }
-
-    if (!md.dailyVaultClaimed &&
+    // Day-2–7 job (pre-endgame): one cave clear fills Daily Vault.
+    // Daily Run waits until first Ascend so TODAY is not three dailies.
+    final wantVaultStart = !md.dailyVaultClaimed &&
         md.dailyVaultClears == 0 &&
-        md.dailyBestTimedKey < 2) {
-      final keyTalk = GameLogic.showKeystoneJargon(state);
-      return HubChase(
-        kind: HubChaseKind.dailyVaultProgress,
-        title: 'Start Daily Vault',
-        detail: keyTalk
-            ? 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for '
-                'Daily Vault essence, or time KEY +2 under par for a bigger '
-                'claim. Separate from Daily Run.'
-            : 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for '
-                'Daily Vault essence. Separate from Daily Run.',
-        progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
-      );
+        md.dailyBestTimedKey < 2;
+    if (!GameLogic.endgameUnlocked(state)) {
+      if (wantVaultStart) return _dailyVaultStartChase(state);
+      if (GameLogic.showDailyRunOnHub(state) &&
+          !MetaSystems.isDailyClaimedToday(state, now: clock)) {
+        return const HubChase(
+          kind: HubChaseKind.dailyRun,
+          title: 'Clear Daily Run',
+          detail:
+              'One free seeded floor for +25e — separate from Daily Vault '
+              'and Quests.',
+          progressLabel: 'Available',
+        );
+      }
+    } else {
+      if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
+        return const HubChase(
+          kind: HubChaseKind.dailyRun,
+          title: 'Clear Daily Run',
+          detail:
+              'One free seeded floor for +25e — separate from Daily Vault '
+              'and Quests.',
+          progressLabel: 'Available',
+        );
+      }
+      if (wantVaultStart) return _dailyVaultStartChase(state);
     }
 
     // Progress grind: zone / Shop (endgame) / Will / leftover endgame / week.
@@ -359,7 +364,7 @@ class HubChase {
     final marketLate = _marketUpgradeChase(state);
     if (marketLate != null) return marketLate;
 
-    final will = _nextWillChase(state);
+    final will = GameLogic.showDailyRunOnHub(state) ? _nextWillChase(state) : null;
     if (will != null) return will;
 
     if (!GameLogic.endgameUnlocked(state)) {
@@ -753,6 +758,20 @@ class HubChase {
           : 'Ascend ${state.bossVictories}/$bossesNeed',
       urgency: urgency,
       zoneId: dungeonId,
+    );
+  }
+
+  /// One player-facing daily habit: clear a cave, then claim on the hub.
+  static HubChase _dailyVaultStartChase(GameState state) {
+    final keyTalk = GameLogic.showKeystoneJargon(state);
+    return HubChase(
+      kind: HubChaseKind.dailyVaultProgress,
+      title: keyTalk ? 'Start Daily Vault' : 'Clear one cave today',
+      detail: keyTalk
+          ? 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for '
+              'Daily Vault essence, or time KEY +2 under par for a bigger claim.'
+          : 'One dungeon clear fills today\'s reward. Then claim on the hub.',
+      progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
     );
   }
 
