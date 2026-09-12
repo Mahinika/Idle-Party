@@ -1945,8 +1945,8 @@ class GameLogic {
   }
 
   /// Live wipe only. Stacks the same floor; writes [GameState.wipeAdviceLine]
-  /// from fight numbers after [WipeAdvice.streakNeeded] wipes (proven tips),
-  /// or [WipeAdvice.softGenericTip] when still silent at that streak.
+  /// from fight numbers. Bag / floor / early DEF can fire on wipe 1; GOLD
+  /// ATK/STA wait for [WipeAdvice.streakNeeded]. Stays quiet with no proven gap.
   static GameState notePartyWipe(GameState state, WipeFightSnapshot fight) {
     final key = wipeFloorKey(state);
     final count = state.wipeStreakKey == key ? state.wipeStreakCount + 1 : 1;

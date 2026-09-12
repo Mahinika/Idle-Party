@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.143**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.144**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -287,7 +287,7 @@ Unlock: prior clear **or** party **mean level** gate (even steps Lv1…Lv100).
   with kill loot when the floor clears (same bank path).
 - After all enemies die, ground loot is vacuumed immediately and the party
   walks to **stairs/exit** → `completeCurrentRoom`.
-- **Wipe advice** (in-dungeon panel only): POWER track tips after **2** wipes on
+- **Wipe advice** (in-dungeon panel only): GOLD ATK/STA after **2** wipes on
   the same floor (`WipeAdvice.streakNeeded`); bag / floor-too-far / early DEF /
   Shop can fire on wipe 1. Stay quiet if the sim cannot prove a deficit.
 

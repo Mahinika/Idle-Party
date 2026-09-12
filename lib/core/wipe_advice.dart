@@ -57,29 +57,22 @@ class WipeFightSnapshot {
 
 /// Player-facing wipe hint.
 ///
-/// Proven POWER / bag / floor tips only fire when the fight numbers support
-/// them. After [streakNeeded] wipes with no proven tip, [softGenericTip] is a
-/// calm fallback so the panel is not silent — it does not claim a deficit.
+/// GOLD / bag / KEY lines only fire when fight numbers (or bag state) prove a
+/// gap. Stay quiet otherwise — no guess after repeated wipes.
 abstract final class WipeAdvice {
-  /// GOLD track tips wait for two wipes on the same floor (was three).
+  /// GOLD ATK/STA track tips wait for two wipes on the same floor.
   static const int streakNeeded = 2;
 
-  /// Soft fallback when streak ≥ [streakNeeded] and no proven tip fires.
-  static const String softGenericTip =
-      'Try GOLD ATK/DEF, BAG upgrades, or an easier KEY / zone';
-
   /// High-confidence tips safe on the first wipe (bag, floor gap, early melt).
-  /// [softGenericTip] is never immediate — it waits for [streakNeeded].
   static bool isImmediate(String line) =>
-      line != softGenericTip &&
-      (line.startsWith('Equip') ||
-          line.contains('too far') ||
-          line == 'Upgrade DEF in GOLD' ||
-          line.contains('MARKET has an upgrade') ||
-          line.contains('Shop has an upgrade') ||
-          line.startsWith('MARKET:') ||
-          line.startsWith('GOLD:') ||
-          line.startsWith('SHOP:'));
+      line.startsWith('Equip') ||
+      line.contains('too far') ||
+      line == 'Upgrade DEF in GOLD' ||
+      line.contains('MARKET has an upgrade') ||
+      line.contains('Shop has an upgrade') ||
+      line.startsWith('MARKET:') ||
+      line.startsWith('GOLD:') ||
+      line.startsWith('SHOP:');
 
   /// Short nudge under the wipe advice when the fix lives in hub menus.
   static String? hubHintFor(String adviceLine) {
@@ -98,7 +91,6 @@ abstract final class WipeAdvice {
       return 'HUB → BAG to equip the upgrade';
     }
     if (adviceLine.contains(' in GOLD') ||
-        adviceLine.contains(' in FORGE') ||
         adviceLine.contains('Upgrade ATK') ||
         adviceLine.contains('Upgrade DEF') ||
         adviceLine.contains('Upgrade STA')) {
@@ -124,7 +116,6 @@ abstract final class WipeAdvice {
       return const NavIntent(route: MenuRoute.gear, gear: GearPanel.bag);
     }
     if (adviceLine.contains(' in GOLD') ||
-        adviceLine.contains(' in FORGE') ||
         adviceLine.contains('Upgrade ATK') ||
         adviceLine.contains('Upgrade DEF') ||
         adviceLine.contains('Upgrade STA')) {
@@ -144,9 +135,6 @@ abstract final class WipeAdvice {
     if (nav.route == MenuRoute.gold) return 'OPEN GOLD';
     return null;
   }
-
-  /// When bag vs GOLD tips appear (streakNeeded = 2 for forge tracks).
-  static String get timingFootnote => 'Bag · wipe 1  ·  GOLD · wipe 2';
 
   static String _forgeOrMarket(GameState state, String forgeLine) {
     final listing = MarketListingsService.bestAffordableUpgradeListing(state);
@@ -203,20 +191,14 @@ abstract final class WipeAdvice {
 
   /// English line for the dungeon wipe panel, or null if we must stay quiet.
   ///
-  /// Pass [wipeStreak] as the streak **after** this wipe (see
-  /// [GameLogic.notePartyWipe]). When omitted, uses [GameState.wipeStreakCount]
-  /// (already stored). Proven tips always win; [softGenericTip] only when
-  /// streak ≥ [streakNeeded] and nothing proven.
+  /// GOLD ATK/STA still wait for [streakNeeded] via [GameLogic.notePartyWipe].
   static String? lineFor({
     required GameState state,
     required WipeFightSnapshot fight,
     int? wipeStreak,
   }) {
-    final proven = _provenLineFor(state: state, fight: fight);
-    if (proven != null) return proven;
-    final streak = wipeStreak ?? state.wipeStreakCount;
-    if (streak >= streakNeeded) return softGenericTip;
-    return null;
+    assert(wipeStreak == null || wipeStreak >= 0);
+    return _provenLineFor(state: state, fight: fight);
   }
 
   /// Deficit-backed tips only. Null when fight numbers do not prove a gap.

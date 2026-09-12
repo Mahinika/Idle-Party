@@ -79,8 +79,6 @@ class DungeonWipePanel extends StatelessWidget {
                       color: GameTheme.parchmentDim,
                     ),
                   ),
-                  // Wipe advice already says equip/BAG — skip chips that restate
-                  // the same "better gear" noise when the line is bag/equip.
                   if (dailyEcho) ...[
                     const SizedBox(height: 6),
                     Text(
@@ -112,24 +110,6 @@ class DungeonWipePanel extends StatelessWidget {
                           size: 13,
                           color: GameTheme.parchmentDim,
                         ),
-                      ),
-                    ],
-                    if (!_wipeAdviceIsBagNoise(state.wipeAdviceLine)) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          MenuChrome.chip(
-                            label: 'Bag · wipe 1',
-                            tone: GameTheme.parchmentDim,
-                          ),
-                          MenuChrome.chip(
-                            label: 'GOLD · wipe 2',
-                            tone: GameTheme.parchmentDim,
-                          ),
-                        ],
                       ),
                     ],
                   ],
@@ -238,11 +218,4 @@ class DungeonWipePanel extends StatelessWidget {
       ),
     );
   }
-}
-
-bool _wipeAdviceIsBagNoise(String line) {
-  final lower = line.toLowerCase();
-  return lower.contains('bag') ||
-      lower.contains('equip') ||
-      lower.contains('better gear');
 }
