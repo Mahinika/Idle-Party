@@ -2,14 +2,14 @@
 
 Idle Party is a single-player idle RPG. This document describes how the app handles data and is suitable for Google Play Data safety disclosures.
 
-**Last updated:** 2026-09-10.
+**Last updated:** 2026-09-12.
 
 ## Summary
 
 - **No Idle Party account.** You do not create a username or password with us.
 - **Optional Google Play Games.** You may sign in with Play Games for seasonal leaderboards and cloud save. This is opt-in and not required to play.
 - **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **POWERUPS**) for an **Ad Ticket**. You spend tickets on timed boosts (Sharp Edge, Gold Rush, Full Boost, Away Bonus). Ads do not play unless you start them. Ad serving uses Google AdMob.
-- **Analytics (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, entering/leaving a dungeon, Ascend, party wipe). This helps Cognifox Studio understand what works. In the **EU/EEA**, collection follows the Google UMP consent prompt (same path as ads; **SETTINGS → AD PRIVACY**). Outside regions where that form is required, Google may allow collection without a separate prompt. Web playtest and builds without Firebase config do not send analytics.
+- **Analytics (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, first dungeon enter, first combat reward, first boss, returning the next day, entering/leaving a dungeon, Ascend, party wipe). This helps Cognifox Studio understand what works. In the **EU/EEA**, collection follows the Google UMP consent prompt (same path as ads; **SETTINGS → AD PRIVACY**). Outside regions where that form is required, Google may allow collection without a separate prompt. Web playtest and builds without Firebase config do not send analytics.
 - **Local save by default.** Progress is stored on your device (e.g. SharedPreferences / platform equivalent).
 
 ## Data the app stores locally
@@ -49,7 +49,7 @@ On **Android**, if you tap hub **POWERUPS** and watch an ad, Google AdMob may lo
 On **Android** builds that include Firebase configuration (`google-services.json`):
 
 - Google **Firebase Analytics** may receive **anonymous** app events (device/app identifiers under Google’s policies; not an Idle Party login).
-- The SDK may initialize when the app starts (not only when you open POWERUPS). Typical events: session start, enter/leave dungeon, Ascend, party wipe. Events do **not** include your save file or clipboard backups.
+- The SDK may initialize when the app starts (not only when you open POWERUPS). Typical events: session start, first time the game is playable, first dungeon enter (including seconds until combat), first combat gold, first boss, first return on a later UTC day, enter/leave dungeon, Ascend, party wipe. Events do **not** include your save file or clipboard backups.
 - In the **EU/EEA**, the Google consent form (UMP) also gates analytics collection. You can change or withdraw that consent later in **SETTINGS → AD PRIVACY**.
 - Analytics is not sent from web playtest builds, Flutter tests, or Android builds that lack Firebase config.
 

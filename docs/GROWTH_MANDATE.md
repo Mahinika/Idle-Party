@@ -74,7 +74,7 @@ Check boxes only when **shipped** (or owner confirmed for Console-only).
 
 **In-repo**
 
-- [ ] Funnel live: `first_open`, `app_ready`, `first_enter`, `first_reward`,
+- [x] Funnel live: `first_open`, `app_ready`, `first_enter`, `first_reward`,
       `first_boss`, `d1_return` + time-to-combat (`AppAnalytics` + tests)
 - [ ] First session: tip dump cut (≤2 beats); combat on screen in ≤90 s on a
       new save; no MARKET / GOLD-tracks / pets / ESSENCE coaching before first reward

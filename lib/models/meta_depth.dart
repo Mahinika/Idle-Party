@@ -331,6 +331,8 @@ class MetaDepthState {
     this.claimedGodHandMastery = const <String>[],
     this.rosterExhibition = false,
     this.freshPrestige = false,
+    this.funnelInstallMs = 0,
+    this.funnelLogged = const <String>[],
   });
 
   final int sanctuaryXpLevel;
@@ -582,6 +584,13 @@ class MetaDepthState {
   /// old saves.
   final bool freshPrestige;
 
+  /// UTC epoch ms of first New Game (funnel install). 0 on pre-funnel saves
+  /// until an existing-session backfill stamps it without sending events.
+  final int funnelInstallMs;
+
+  /// Once-per-install Play funnel events already sent (`first_open`, …).
+  final List<String> funnelLogged;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -709,6 +718,8 @@ class MetaDepthState {
     List<String>? claimedGodHandMastery,
     bool? rosterExhibition,
     bool? freshPrestige,
+    int? funnelInstallMs,
+    List<String>? funnelLogged,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -850,6 +861,8 @@ class MetaDepthState {
           claimedGodHandMastery ?? this.claimedGodHandMastery,
       rosterExhibition: rosterExhibition ?? this.rosterExhibition,
       freshPrestige: freshPrestige ?? this.freshPrestige,
+      funnelInstallMs: funnelInstallMs ?? this.funnelInstallMs,
+      funnelLogged: funnelLogged ?? this.funnelLogged,
     );
   }
 
@@ -972,6 +985,8 @@ class MetaDepthState {
     'claimedGodHandMastery': claimedGodHandMastery,
     'rosterExhibition': rosterExhibition,
     'freshPrestige': freshPrestige,
+    'funnelInstallMs': funnelInstallMs,
+    'funnelLogged': funnelLogged,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -1176,6 +1191,10 @@ class MetaDepthState {
           const [],
       rosterExhibition: (json['rosterExhibition'] as bool?) ?? false,
       freshPrestige: (json['freshPrestige'] as bool?) ?? false,
+      funnelInstallMs: (json['funnelInstallMs'] as num?)?.toInt() ?? 0,
+      funnelLogged:
+          (json['funnelLogged'] as List<dynamic>?)?.cast<String>() ??
+          const <String>[],
     );
   }
 

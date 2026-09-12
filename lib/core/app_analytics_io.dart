@@ -17,6 +17,9 @@ bool get _androidLive {
 bool _ready = false;
 FirebaseAnalytics? _analytics;
 
+/// Firebase auto-collects these; logging them manually is rejected.
+const Set<String> _reservedEventNames = <String>{'first_open'};
+
 Future<void> init() async {
   if (!_androidLive || _ready) return;
   try {
@@ -48,6 +51,7 @@ Future<void> syncConsent() async {
 }
 
 Future<void> logEvent(String name, [Map<String, Object>? params]) async {
+  if (_reservedEventNames.contains(name)) return;
   final analytics = _analytics;
   if (analytics == null) return;
   try {

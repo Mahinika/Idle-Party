@@ -48,8 +48,10 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
 **Optional Firebase Analytics** (Android): soft events via `AppAnalytics`
 (`lib/core/app_analytics.dart`) when `android/app/google-services.json` is
-present. UMP consent gates collection (same AD PRIVACY path as AdMob). See
-`docs/PRIVACY.md` + setup steps in `docs/PLAY_STORE.md`.
+present. UMP consent gates collection (same AD PRIVACY path as AdMob). Play
+funnel: `first_open` (Firebase auto + local stamp) → `app_ready` →
+`first_enter` (+ `time_to_combat` seconds) → `first_reward` → `first_boss` →
+`d1_return`. See `docs/PRIVACY.md` + setup in `docs/PLAY_STORE.md`.
 
 ## Legal / IP policy (mandatory)
 
@@ -382,7 +384,8 @@ saves may still have a legacy heirloom), `highestDungeonCleared`,
 (mute/VFX/colorblind/text scale/dungeon zoom/haptics/keep-awake/auto-sell/**auto-disassemble**),
 full `metaDepth` (Gauntlet best, Will / Gauntlet claims, daily vault / weekly
 affix season, **prestige shop** purchases — Apothecary Writ / Junk Magnifier /
-Away Ledger / …; Loadout Folio is delisted but old slot-count purchases stay),
+Away Ledger / …; Loadout Folio is delisted but old slot-count purchases stay;
+Play funnel `funnelInstallMs` / `funnelLogged`),
 unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY), party slot
 5, ascend streak/titles/trophies, **`ascendBlessings`**, **`adTickets`** /
 **`adAtkUntilMs`** / **`adGoldUntilMs`**,

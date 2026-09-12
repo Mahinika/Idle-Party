@@ -3,6 +3,9 @@ import 'app_analytics_stub.dart'
 
 /// Soft Firebase Analytics facade. No-op on web / tests / missing config.
 abstract final class AppAnalytics {
+  /// Test hook — records every [logEvent] (including reserved `first_open`).
+  static void Function(String name, Map<String, Object>? params)? debugSink;
+
   static Future<void> init() => impl.init();
 
   /// Re-read UMP after SETTINGS → AD PRIVACY.
@@ -11,8 +14,10 @@ abstract final class AppAnalytics {
   static Future<void> logEvent(
     String name, [
     Map<String, Object>? params,
-  ]) =>
-      impl.logEvent(name, params);
+  ]) async {
+    debugSink?.call(name, params);
+    await impl.logEvent(name, params);
+  }
 
   static Future<void> enterDungeon({
     required String dungeonId,

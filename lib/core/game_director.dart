@@ -19,6 +19,7 @@ import 'ad_boost.dart';
 import 'ad_rewarded.dart';
 import 'app_analytics.dart';
 import 'debug_play_log.dart';
+import 'funnel_analytics.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'game_storage.dart';
@@ -94,6 +95,9 @@ class GameDirector extends ChangeNotifier {
   int? _lastFloorClearSec;
   DateTime? _floorStartedAt;
 
+  /// This process's clock for seconds-to-combat (set on New Game / continue).
+  int _funnelSessionReadyMs = 0;
+
   /// Combat map + corner HUD; bumps every spatial tick (~60 Hz).
   final ValueNotifier<int> combatFrame = ValueNotifier(0);
   bool _awaitingWipeChoice = false;
@@ -159,6 +163,33 @@ class GameDirector extends ChangeNotifier {
   Future<void> debugTryPersist() {
     _persist();
     return _saveChain;
+  }
+
+  void _applyFunnelTick(FunnelTick tick, {bool persist = true}) {
+    if (identical(tick.state, _state) && tick.events.isEmpty) return;
+    _state = tick.state;
+    for (final hit in tick.events) {
+      unawaited(
+        AppAnalytics.logEvent(
+          hit.name,
+          hit.params.isEmpty ? null : hit.params,
+        ),
+      );
+    }
+    if (persist && _hasExistingSave) {
+      unawaited(_persistFlush());
+    }
+  }
+
+  void _noteFunnelSession({required bool newInstall, DateTime? now}) {
+    final clock = now ?? DateTime.now();
+    if (_funnelSessionReadyMs == 0) {
+      _funnelSessionReadyMs = clock.millisecondsSinceEpoch;
+    }
+    final tick = newInstall
+        ? FunnelAnalytics.onNewInstall(_state, clock)
+        : FunnelAnalytics.onExistingSession(_state, clock);
+    _applyFunnelTick(tick, persist: false);
   }
 
   GameState get state => _state;
@@ -412,6 +443,7 @@ class GameDirector extends ChangeNotifier {
   };
 
   Future<void> boot({bool deferCombatLoop = false}) async {
+    _funnelSessionReadyMs = DateTime.now().millisecondsSinceEpoch;
     try {
       final saved = await _storage.load();
       _hasExistingSave = saved != null;
@@ -476,6 +508,7 @@ class GameDirector extends ChangeNotifier {
       }
       // Only persist when continuing an existing save (offline catch-up).
       if (_hasExistingSave) {
+        _noteFunnelSession(newInstall: false);
         await _persistFlush();
       }
     } catch (e, st) {
@@ -516,6 +549,7 @@ class GameDirector extends ChangeNotifier {
       partyName: partyName,
     );
     _hasExistingSave = true;
+    _noteFunnelSession(newInstall: true);
     _syncDevicePrefs();
     _lastHighestDungeon = _state.highestDungeonCleared;
     _ensureUiTimer();
@@ -674,6 +708,7 @@ class GameDirector extends ChangeNotifier {
       // Credit kill gold immediately so wipe cannot erase floater "+Ng".
       if (result.goldFromKills > 0) {
         _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
+        _applyFunnelTick(FunnelAnalytics.onFirstReward(_state));
       }
       _noteLifetimeGold(before, _state);
       // Count casts live; defer achievement scan to room clear / discrete events.
@@ -850,6 +885,15 @@ class GameDirector extends ChangeNotifier {
           lastFloorClearSec: _lastFloorClearSec ?? _state.lastFloorClearSec,
         );
         _noteLifetimeGold(beforeClear, _state);
+        if (_state.lifetimeGoldEarned > beforeClear.lifetimeGoldEarned) {
+          _applyFunnelTick(
+            FunnelAnalytics.onFirstReward(_state),
+            persist: false,
+          );
+        }
+        if (wasBoss) {
+          _applyFunnelTick(FunnelAnalytics.onFirstBoss(_state), persist: false);
+        }
         // Level / achievement toasts wait — one clear banner owns the beat.
         final leveledHeroes = <int>[];
         for (var i = 0; i < _state.heroes.length; i++) {
@@ -1223,6 +1267,7 @@ class GameDirector extends ChangeNotifier {
     _state = GodHandMastery.noteSmash(_state);
     if (result.goldFromKills > 0) {
       _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
+      _applyFunnelTick(FunnelAnalytics.onFirstReward(_state));
     }
     _noteLifetimeGold(before, _state);
     GameAudio.crit();
@@ -1255,6 +1300,15 @@ class GameDirector extends ChangeNotifier {
     _awaitingWipeChoice = false;
     _flushHubIdle();
     _state = GameLogic.enterDungeon(_state, dungeonId: dungeonId);
+    _applyFunnelTick(
+      FunnelAnalytics.onFirstEnter(
+        _state,
+        DateTime.now(),
+        dungeonId: dungeonId,
+        sessionReadyMs: _funnelSessionReadyMs,
+      ),
+      persist: false,
+    );
     _lastStashLen = _state.gearStash.length;
     _autosaveAccum = 0;
     _beginRunIncomeSession();

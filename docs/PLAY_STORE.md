@@ -112,8 +112,10 @@ Phone product only (`com.idleparty.app`). Config file is in-repo:
 
 `android/app/google-services.json` (project `idle-party-4a2e9`)
 
-Soft events: enter/leave dungeon, Ascend, party wipe. UMP consent gates
-collection (SETTINGS → AD PRIVACY). Rebuild Android after pull.
+Soft events: Play funnel (`app_ready`, `first_enter` with seconds-to-combat,
+`first_reward`, `first_boss`, `d1_return`; Firebase auto-collects `first_open`),
+enter/leave dungeon, Ascend, party wipe. UMP consent gates collection
+(SETTINGS → AD PRIVACY). Rebuild Android after pull.
 
 **If you ever re-download the JSON:** Project settings → Your apps → Idle Party
 → **google-services.json** → save over `android/app/google-services.json`.
