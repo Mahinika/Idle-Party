@@ -90,9 +90,11 @@ keeps the whole phone UI visible.
   **Cognifox Studio** (`@CognifoxStudio`):
   `https://www.youtube.com/watch?v=OMWXbgGBFMA`
   (relinked **2026-09-11**; old personal upload `fiZjJ9S9l4A` superseded).
-- **Short** (public 9:16, Cognifox Studio **2026-09-12**):
-  `https://www.youtube.com/shorts/wdnrXCYLtZE`
+- **Feed Short** (public combat ad, Cognifox Studio **2026-09-12**):
+  `https://www.youtube.com/shorts/l9jWy29YwJM`
   Related video in Studio → unlisted Play preview `OMWXbgGBFMA`.
+- **Listing 9:16 Short** (older Play-trailer crop, still public):
+  `https://www.youtube.com/shorts/wdnrXCYLtZE`
   (The 2026-09-11 upload `0zKNQKg6kaQ` is 16:9, so YouTube treats it as a
   regular video — keep or unlist separately.)
 - Channel art helper:
@@ -144,5 +146,5 @@ py -3 tool/store_listing/build_shorts_feed.py
 # Shot trims live in gitignored preview/shorts_feed.json.
 ```
 
-Do not upload until the owner has watched the local file. Play listing video
-`OMWXbgGBFMA` stays the related-video target if this later goes public.
+Live public Short: `https://www.youtube.com/shorts/l9jWy29YwJM`.
+Related video in Studio → Play listing preview `OMWXbgGBFMA`.

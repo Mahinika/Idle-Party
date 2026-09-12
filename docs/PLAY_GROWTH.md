@@ -32,8 +32,9 @@ Do these in Console when you have 20 minutes:
    description only. Keep Clicker-spel / Rogue-liknande off (dishonest).
 3. **Preview video** — Cognifox Studio unlisted YT
    `https://www.youtube.com/watch?v=OMWXbgGBFMA` (relinked **2026-09-11**).
-   Short (public 9:16): `https://www.youtube.com/shorts/wdnrXCYLtZE`
+   Feed Short (public combat ad): `https://www.youtube.com/shorts/l9jWy29YwJM`
    (related video → Play preview; uploaded **2026-09-12**).
+   Older listing 9:16 Short: `https://www.youtube.com/shorts/wdnrXCYLtZE`.
    Rebuild: `py -3 tool/store_listing/build_preview_video.py` → 16:9 + 9:16
    (brief in `TRAILER.md`). Confirm YT ads stay off.
 4. **Reply to reviews** (templates below) — especially 1–2★.
