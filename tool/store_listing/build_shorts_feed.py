@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Build a vertical feed Short from A56 combat (not the Play listing trailer).
+"""Build a vertical feed ad from A56 combat (not the Play listing trailer).
 
-Ad shape: 1.8s hook card → three zone gameplay cuts → store CTA end card.
+Ad shape: fast motion hook → three benefit-led combat cuts → Play Store CTA.
 Owned marketing stills + dungeon.mp3. No trending audio.
 
   py -3 tool/store_listing/build_shorts_feed.py
@@ -32,7 +32,6 @@ from build_preview_video import (
     find_ffmpeg,
     fit_canvas,
     load_font,
-    make_still_mp4,
 )
 
 RAW = OUT / "gameplay_shorts_raw.mp4"
@@ -46,14 +45,76 @@ WIDTH = 1080
 HEIGHT = 1920
 SRC_H = 2340
 CROP_Y = 150
-INTRO_DUR = 1.8
-OUTRO_DUR = 2.6
+INTRO_DUR = 1.25
+OUTRO_DUR = 2.4
 GOLD = (220, 181, 102)
+SHOT_COPY = (
+    "BUILD YOUR PARTY",
+    "PUSH ONE MORE FLOOR",
+    "COME BACK STRONGER",
+)
 DEFAULT_SHOTS: list[dict[str, object]] = [
-    {"raw": "gameplay_shorts_hell_raw.mp4", "start": 1.2, "duration": 3.7},
-    {"raw": "gameplay_shorts_crystal_raw.mp4", "start": 1.2, "duration": 3.7},
-    {"raw": "gameplay_shorts_veil_raw.mp4", "start": 1.2, "duration": 3.7},
+    {"raw": "gameplay_shorts_hell_raw.mp4", "start": 1.2, "duration": 3.0},
+    {"raw": "gameplay_shorts_crystal_raw.mp4", "start": 1.2, "duration": 3.0},
+    {"raw": "gameplay_shorts_veil_raw.mp4", "start": 1.2, "duration": 3.0},
 ]
+
+
+def load_bold_font(size: int):
+    for path in (
+        Path(r"C:\Windows\Fonts\georgiab.ttf"),
+        Path(r"C:\Windows\Fonts\arialbd.ttf"),
+    ):
+        if path.exists():
+            from PIL import ImageFont
+
+            return ImageFont.truetype(path, size)
+    return load_font(size)
+
+
+def draw_centered(draw: ImageDraw.ImageDraw, text: str, font, y: int, fill) -> None:
+    bbox = draw.textbbox((0, 0), text, font=font)
+    width = bbox[2] - bbox[0]
+    draw.text(((WIDTH - width) / 2, y), text, font=font, fill=fill)
+
+
+def paint_intro(path: Path) -> None:
+    """Repair the source card's edge-clipped headline with ad-safe copy."""
+    src = Image.open(INTRO_STILL).convert("RGB")
+    if src.size != (WIDTH, HEIGHT):
+        src = fit_canvas(src, WIDTH, HEIGHT)
+    out = src.copy()
+    draw = ImageDraw.Draw(out, "RGBA")
+    draw.rectangle((0, 0, WIDTH, 420), fill=(*BG_RGB, 255))
+    draw.rectangle((0, 416, WIDTH, 424), fill=(*GOLD, 255))
+    draw_centered(draw, "IDLE RPG", load_bold_font(30), 52, (*GOLD, 255))
+    draw_centered(
+        draw, "YOUR PARTY FIGHTS", load_bold_font(70), 112, (*CAPTION_FG, 255)
+    )
+    draw_centered(
+        draw, "EVEN WHILE YOU'RE AWAY", load_bold_font(54), 218, (*GOLD, 255)
+    )
+    out.convert("RGB").save(path)
+
+
+def paint_shot_caption(path: Path, text: str) -> None:
+    img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img, "RGBA")
+    font = load_bold_font(46)
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_w = bbox[2] - bbox[0]
+    card_w = min(WIDTH - 96, text_w + 104)
+    left = (WIDTH - card_w) // 2
+    top, bottom = 350, 442
+    draw.rounded_rectangle(
+        (left, top, left + card_w, bottom),
+        radius=18,
+        fill=(*BG_RGB, 226),
+        outline=(*GOLD, 230),
+        width=3,
+    )
+    draw_centered(draw, text, font, top + 18, (*CAPTION_FG, 255))
+    img.save(path)
 
 
 def paint_outro(path: Path) -> None:
@@ -63,38 +124,81 @@ def paint_outro(path: Path) -> None:
         src = fit_canvas(src, WIDTH, HEIGHT)
     out = src.copy()
     draw = ImageDraw.Draw(out, "RGBA")
-    band_top = HEIGHT - 400
+    band_top = HEIGHT - 420
     draw.rectangle((0, band_top, WIDTH, HEIGHT), fill=(*BG_RGB, 255))
-    title = load_font(70)
-    cta = load_font(40)
-    hint = load_font(28)
+    draw.rectangle((0, band_top, WIDTH, band_top + 7), fill=(*GOLD, 255))
+    title = load_bold_font(66)
+    cta = load_bold_font(44)
+    hint = load_bold_font(28)
 
-    def center(text: str, font, y: int, fill) -> None:
-        bbox = draw.textbbox((0, 0), text, font=font)
-        tw = bbox[2] - bbox[0]
-        draw.text(((WIDTH - tw) / 2, y), text, font=font, fill=fill)
-
-    center("Idle Party", title, band_top + 36, (*CAPTION_FG, 255))
-    btn_w, btn_h = 720, 92
+    draw_centered(draw, "IDLE PARTY", title, band_top + 30, (*CAPTION_FG, 255))
+    btn_w, btn_h = 760, 102
     btn_x = (WIDTH - btn_w) // 2
-    btn_y = band_top + 132
+    btn_y = band_top + 126
     draw.rounded_rectangle(
         (btn_x, btn_y, btn_x + btn_w, btn_y + btn_h),
         radius=22,
-        fill=(159, 92, 28, 255),
+        fill=(175, 96, 20, 255),
         outline=GOLD,
-        width=3,
+        width=4,
     )
-    bbox = draw.textbbox((0, 0), "Free on Google Play", font=cta)
+    bbox = draw.textbbox((0, 0), "DOWNLOAD FREE", font=cta)
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
     draw.text(
         (btn_x + (btn_w - tw) / 2, btn_y + (btn_h - th) / 2 - 4),
-        "Free on Google Play",
+        "DOWNLOAD FREE",
         font=cta,
         fill=(*CAPTION_FG, 255),
     )
-    center("Open the store page to download", hint, band_top + 248, (220, 200, 170, 255))
+    draw_centered(draw, "ON GOOGLE PLAY", hint, band_top + 258, (*GOLD, 255))
+    draw_centered(
+        draw,
+        'Search "Idle Party"',
+        load_font(25),
+        band_top + 314,
+        (220, 200, 170, 255),
+    )
     out.convert("RGB").save(path)
+
+
+def make_motion_still(
+    ffmpeg: str, png: Path, dest: Path, *, duration: float, zoom: float
+) -> None:
+    """Add a restrained push-in so ad cards do not feel like slides."""
+    frames = max(1, round(duration * FPS))
+    zoom_step = max(0.0001, (zoom - 1.0) / frames)
+    vf = (
+        f"zoompan=z='min(zoom+{zoom_step:.7f},{zoom:.4f})':"
+        f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+        f"d=1:s={WIDTH}x{HEIGHT}:fps={FPS},"
+        f"trim=duration={duration:.3f},setpts=PTS-STARTPTS,format=yuv420p"
+    )
+    run_ffmpeg(
+        ffmpeg,
+        [
+            ffmpeg,
+            "-y",
+            "-loop",
+            "1",
+            "-i",
+            str(png),
+            "-vf",
+            vf,
+            "-t",
+            f"{duration:.3f}",
+            "-r",
+            str(FPS),
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "19",
+            "-an",
+            str(dest),
+        ],
+        f"motion still {png.name}",
+    )
 
 
 def mux_audio(ffmpeg: str, video: Path, dest: Path, total: float) -> None:
@@ -149,6 +253,7 @@ def crop_shot(
     start: float,
     duration: float,
     crop_y: int,
+    caption_png: Path,
 ) -> None:
     crop_y = max(0, min(crop_y, SRC_H - HEIGHT))
     fc = (
@@ -156,7 +261,11 @@ def crop_shot(
         f"setpts=PTS-STARTPTS,fps={FPS},"
         f"crop={WIDTH}:{HEIGHT}:0:{crop_y},"
         f"eq=contrast=1.1:saturation=1.18:brightness=0.03,"
-        f"format=yuv420p[vout]"
+        f"format=yuv420p[base];"
+        f"[1:v]format=rgba,"
+        f"fade=t=in:st=0:d=0.16:alpha=1,"
+        f"fade=t=out:st={max(0.0, duration - 0.25):.3f}:d=0.20:alpha=1[caption];"
+        f"[base][caption]overlay=0:0:shortest=1,format=yuv420p[vout]"
     )
     run_ffmpeg(
         ffmpeg,
@@ -165,6 +274,12 @@ def crop_shot(
             "-y",
             "-i",
             str(src),
+            "-loop",
+            "1",
+            "-framerate",
+            str(FPS),
+            "-i",
+            str(caption_png),
             "-filter_complex",
             fc,
             "-map",
@@ -264,7 +379,7 @@ def build() -> None:
         if not raw.exists():
             raise SystemExit(f"missing {raw} — capture that zone first")
         resolved.append(
-            (raw, float(shot.get("start", 1.0)), float(shot.get("duration", 3.7)))
+            (raw, float(shot.get("start", 1.0)), float(shot.get("duration", 3.0)))
         )
     if not INTRO_STILL.exists():
         raise SystemExit(f"missing intro still {INTRO_STILL}")
@@ -275,19 +390,34 @@ def build() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="idle_shorts_") as tmp:
         tmp_path = Path(tmp)
+        intro_png = tmp_path / "intro.png"
         intro_mp4 = tmp_path / "intro.mp4"
-        make_still_mp4(ffmpeg, INTRO_STILL, intro_mp4, duration=INTRO_DUR)
+        paint_intro(intro_png)
+        make_motion_still(
+            ffmpeg, intro_png, intro_mp4, duration=INTRO_DUR, zoom=1.025
+        )
         clips: list[Path] = [intro_mp4]
         for i, (raw, start, dur) in enumerate(resolved):
             dest = tmp_path / f"shot_{i:02d}.mp4"
+            caption_png = tmp_path / f"caption_{i:02d}.png"
+            copy = SHOT_COPY[min(i, len(SHOT_COPY) - 1)]
+            paint_shot_caption(caption_png, copy)
             crop_shot(
-                ffmpeg, raw, dest, start=start, duration=dur, crop_y=crop_y
+                ffmpeg,
+                raw,
+                dest,
+                start=start,
+                duration=dur,
+                crop_y=crop_y,
+                caption_png=caption_png,
             )
             clips.append(dest)
         outro_png = tmp_path / "outro.png"
         outro_mp4 = tmp_path / "outro.mp4"
         paint_outro(outro_png)
-        make_still_mp4(ffmpeg, outro_png, outro_mp4, duration=OUTRO_DUR)
+        make_motion_still(
+            ffmpeg, outro_png, outro_mp4, duration=OUTRO_DUR, zoom=1.015
+        )
         clips.append(outro_mp4)
         silent = tmp_path / "silent.mp4"
         concat_shots(ffmpeg, clips, silent)

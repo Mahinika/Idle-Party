@@ -120,17 +120,17 @@ listing 9:16 file puts the phone in a blur frame; a feed Short wants
 **full-bleed combat after a short hook card**.
 
 Mobile-game ads (10–15s) usually go **hook → mechanic → product + CTA**.
-This feed Short follows that: owned 03 hook still, three zone combat cuts
-(no caption burned over the fight), then 07 AFK still with a Play Store
+This feed Short follows that: a short moving 03 hook card, three brisk zone
+cuts with one benefit each, then a moving 07 AFK card with a Play Store
 end card. On-screen English. Text CTA only (no official Play badge PNG).
 Do not put a store CTA on the Play listing trailer.
 
 | | Play preview | Feed Short |
 |--|--------------|------------|
 | Builder | `build_preview_video.py` | `build_shorts_feed.py` |
-| First frame | Hub TODAY | Hook still: *Your party keeps fighting* |
+| First frame | Hub TODAY | Hook: *Your party fights even while you're away* |
 | Picture | 16:9 listing + 9:16 phone-in-frame | intro + three zones + outro, 1080×1920 |
-| On-screen | Chase / AFK / lockup beats | intro card → clean combat → *Free on Google Play* |
+| On-screen | Chase / AFK / lockup beats | away hook → build / push / return → *Download free* |
 | Music | owned `hub.ogg` | owned `dungeon.mp3` |
 
 ```powershell
@@ -140,7 +140,7 @@ Do not put a store CTA on the Play listing trailer.
 # Restore the emulator save afterward.
 
 py -3 tool/store_listing/build_shorts_feed.py
-# → tool/store_listing/preview/idle_party_shorts_feed.mp4  (~15s, gitignored)
+# → tool/store_listing/preview/idle_party_shorts_feed.mp4  (~13s, gitignored)
 # Shot trims live in gitignored preview/shorts_feed.json.
 ```
 
