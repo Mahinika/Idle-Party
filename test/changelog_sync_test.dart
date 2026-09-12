@@ -87,4 +87,13 @@ void main() {
       );
     }
   });
+
+  test('current What’s New leads with a new-player line', () {
+    final lead = MetaSystems.releases.first.bullets.first;
+    expect(lead.toLowerCase(), contains('party'));
+    expect(lead.toLowerCase(), contains('fight'));
+    expect(lead.toUpperCase(), isNot(contains('KEY')));
+    expect(lead.toUpperCase(), isNot(contains('GREATER')));
+    expect(lead.toUpperCase(), isNot(contains('MASTERY')));
+  });
 }

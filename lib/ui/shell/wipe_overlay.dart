@@ -154,7 +154,7 @@ class DungeonWipePanel extends StatelessWidget {
                           ? 'CLEAN BAG'
                           : 'CLEAN BAG (near full)',
                       tip:
-                          'Sells junk / scraps leftovers so new drops fit',
+                          'Clears weak drops so new loot can fit',
                       style: GameButtonStyle.grey,
                       onPressed: director.cleanBagJunk,
                     ),

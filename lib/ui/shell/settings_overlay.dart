@@ -334,7 +334,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         const SizedBox(height: 4),
         Text(
           'Near-full bag auto-rules (also BAG → AUTO-SELL FILTERS). '
-          'Auto-sell = gold · auto-scrap = essence. There is no Sell junk / Scrap button. '
+          'Auto-sell = gold · auto-scrap = essence. '
           'BiS / upgrades are never cleaned.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),

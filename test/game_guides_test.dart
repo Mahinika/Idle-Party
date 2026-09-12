@@ -39,6 +39,16 @@ void main() {
         isNot(contains('LOADOUTS')),
         reason: '${t.id} should not teach the hidden LOADOUTS tab',
       );
+      expect(
+        t.body.toUpperCase(),
+        isNot(contains('SELL JUNK')),
+        reason: '${t.id} should not teach a Sell junk button',
+      );
+      expect(
+        t.body.toUpperCase(),
+        isNot(contains('GEAR SELL')),
+        reason: '${t.id} should not teach GEAR Sell',
+      );
     }
     final basics = topics.firstWhere((t) => t.id == 'basics');
     expect(basics.body, contains('GEAR'));

@@ -28,7 +28,7 @@ class PrestigeShopOverlay extends StatelessWidget {
         'CD ${state.godHandCooldownSeconds.toStringAsFixed(1)}s · KEEP',
       'roster_cap' => 'Roster +${md.petRosterCapBonus}',
       'loadout_slot' =>
-        'Legacy purchase (LOADOUTS removed — slots unused)',
+        'Legacy purchase (unused extra slots)',
       'flask_discount' => 'Market −${md.marketDiscountLevel * 5}%',
       'filter_span' => 'Auto-sell iLvl ${GameLogic.maxAutoSellIlvlCap(state)}',
       'offline_ledger' => 'Welcome Back ${3 + md.offlineHighlightBonus} rows',

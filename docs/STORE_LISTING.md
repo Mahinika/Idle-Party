@@ -90,11 +90,10 @@ Start your party and take one more floor.
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.138+168** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
+Working ship: **1.12.154+184** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
 
 ```
-• TODAY chase is clearer: vault payday, EQUIP N, rebuild-bag tips, short-phone detail.
-• Listing pitch sharpened for idle RPG search (Role Playing category unchanged).
+• Your party fights on its own. Tap ENTER, then tap the fight — combat in about a minute.
 ```
 
 ### Full description honesty (SHOP)

@@ -84,8 +84,8 @@ Check boxes only when **shipped** (or owner confirmed for Console-only).
 - [x] Opt-in local notifications after a milestone; never install-prompt; never combat; ~1–2/day cap
 - [x] Listing pack: icon + shots 1–2 = new-save first minute of **combat**
       (`docs/STORE_LISTING.md`)
-- [ ] At least one What’s New line aimed at a **new** player
-- [ ] Dead chrome stays hidden (LOADOUTS / Sell junk / Scrap / GEAR Sell)
+- [x] At least one What’s New line aimed at a **new** player
+- [x] Dead chrome stays hidden (LOADOUTS / Sell junk / Scrap / GEAR Sell)
 
 **Owner / Console**
 

@@ -666,7 +666,7 @@ abstract final class GameGuides {
           '• Wipe advice may point at GOLD when listings beat GOLD tracks for the same gap.\n'
           '• Buy flasks and bandages with gold.\n'
           '• Clear a full bag with BAG → CLEAN BAG, MERGE, or SETTINGS auto-sell / '
-          'auto-disassemble — there is no separate Sell junk button.\n'
+          'auto-disassemble.\n'
           '• Keep at least one flask for tough floors and bosses.\n'
           '• Bottom-tab SHOP is the real-money store (cheap boosts / ad-free on '
           'Play installs) — not this market.',

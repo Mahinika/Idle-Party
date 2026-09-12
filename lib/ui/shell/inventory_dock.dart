@@ -404,7 +404,7 @@ class _InventoryDockState extends State<InventoryDock>
               final line = MenuAlerts.bagStatusLine(state);
               if (line.isNotEmpty) return line;
               if (nearFull && filled >= cap) {
-                return 'CLEAN: sell junk for gold, then scrap leftovers for essence';
+                return 'CLEAN BAG: gold first, then essence from leftovers';
               }
               return 'CLEAN BAG: sell for gold first, then scrap for essence';
             }(),

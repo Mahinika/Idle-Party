@@ -179,4 +179,11 @@ void main() {
     expect(chase.title.toLowerCase(), contains('cave'));
     expect(chase.detail.toUpperCase(), isNot(contains('DAILY RUN')));
   });
+
+  test('What’s New lead is a new-player sentence', () {
+    final lead = FirstSessionTips.tips.first.body.toLowerCase();
+    expect(lead, contains('fights'));
+    final market = FirstSessionTips.tips.firstWhere((t) => t.id == 'market');
+    expect(market.body.toUpperCase(), isNot(contains('SELL JUNK')));
+  });
 }
