@@ -19,16 +19,20 @@ class HubMetaPulse extends StatelessWidget {
   final HubChaseKind chaseKind;
   final HubChaseUrgency chaseUrgency;
 
-  @override
-  Widget build(BuildContext context) {
-    if (!GameLogic.showDailyChase(state)) {
-      return const SizedBox.shrink();
-    }
-    // Soft mute on READY/ALMOST: still show vault/KEY crumbs unless chase owns them.
+  /// KEY / Vault / Week crumbs. Empty when first-hour or the hunt is already
+  /// KEY / Gauntlet / Ranked GR / Farm Rift / Ashen / soft rest.
+  static List<String> crumbsFor({
+    required GameState state,
+    required HubChaseKind chaseKind,
+    HubChaseUrgency chaseUrgency = HubChaseUrgency.normal,
+    DateTime? now,
+  }) {
+    if (!GameLogic.showDailyChase(state)) return const [];
+    if (hubChaseOwnsEndgameRow(chaseKind)) return const [];
+
     final bits = <String>[];
     final showKey = GameLogic.showKeystoneJargon(state);
     if (showKey &&
-        chaseKind != HubChaseKind.keystone &&
         chaseKind != HubChaseKind.dailyVaultProgress &&
         chaseKind != HubChaseKind.claimDailyVault) {
       bits.add(
@@ -49,7 +53,7 @@ class HubMetaPulse extends StatelessWidget {
       }
     }
 
-    // When TODAY is not already a daily hunt, name the other two so they
+    // When the hunt is already a daily, name the other two so they
     // don't collapse into "the daily".
     if (chaseKind == HubChaseKind.dailyVaultProgress ||
         chaseKind == HubChaseKind.claimDailyVault) {
@@ -62,9 +66,10 @@ class HubMetaPulse extends StatelessWidget {
 
     if (chaseKind != HubChaseKind.weekGoal &&
         chaseUrgency != HubChaseUrgency.ready) {
+      final clock = now ?? DateTime.now().toUtc();
       final weekKey = state.metaDepth.weeklyKey.isNotEmpty
           ? state.metaDepth.weeklyKey
-          : GameLogic.isoWeekKey(DateTime.now().toUtc());
+          : GameLogic.isoWeekKey(clock);
       final week = LocalSeasonCatalog.forWeekKey(weekKey);
       if (week.hasGoal) {
         if (LocalSeasonCatalog.weekGoalReady(state, week)) {
@@ -76,6 +81,16 @@ class HubMetaPulse extends StatelessWidget {
         }
       }
     }
+    return bits;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bits = crumbsFor(
+      state: state,
+      chaseKind: chaseKind,
+      chaseUrgency: chaseUrgency,
+    );
 
     if (bits.isEmpty) return const SizedBox.shrink();
 

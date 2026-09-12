@@ -69,7 +69,85 @@ void main() {
   test('hubChaseOwnsEndgameRow marks endgame hunt kinds', () {
     expect(hubChaseOwnsEndgameRow(HubChaseKind.gauntletMilestone), isTrue);
     expect(hubChaseOwnsEndgameRow(HubChaseKind.keystone), isTrue);
+    expect(hubChaseOwnsEndgameRow(HubChaseKind.greaterRiftMilestone), isTrue);
+    expect(hubChaseOwnsEndgameRow(HubChaseKind.riftMilestone), isTrue);
+    expect(hubChaseOwnsEndgameRow(HubChaseKind.ashenCrown), isTrue);
     expect(hubChaseOwnsEndgameRow(HubChaseKind.dailyRun), isFalse);
+  });
+
+  test('HubMetaPulse stays quiet on KEY / Gauntlet / Ranked GR hunts', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      ascensionLevel: 20,
+      bossVictories: 3,
+      highestDungeonCleared: 14,
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );
+    expect(GameLogic.showDailyChase(state), isTrue);
+    expect(GameLogic.showKeystoneJargon(state), isTrue);
+    for (final kind in <HubChaseKind>[
+      HubChaseKind.keystone,
+      HubChaseKind.gauntletMilestone,
+      HubChaseKind.greaterRiftMilestone,
+      HubChaseKind.riftMilestone,
+      HubChaseKind.ashenCrown,
+      HubChaseKind.doneForToday,
+    ]) {
+      expect(
+        HubMetaPulse.crumbsFor(
+          state: state,
+          chaseKind: kind,
+          chaseUrgency: HubChaseUrgency.almost,
+          now: now,
+        ),
+        isEmpty,
+        reason: '$kind must not stack KEY / Vault / Week crumbs',
+      );
+    }
+  });
+
+  test('HubMetaPulse still names Vault on a non-endgame grind', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      ascensionLevel: 20,
+      bossVictories: 3,
+    );
+    final bits = HubMetaPulse.crumbsFor(
+      state: state,
+      chaseKind: HubChaseKind.clearFloors,
+      now: now,
+    );
+    expect(bits.join(' '), contains('Vault'));
+  });
+
+  testWidgets('HubMetaPulse has zero height on Ranked GR hunt', (tester) async {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      ascensionLevel: 20,
+      bossVictories: 3,
+      highestDungeonCleared: 14,
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: HubMetaPulse(
+            state: state,
+            chaseKind: HubChaseKind.greaterRiftMilestone,
+            chaseUrgency: HubChaseUrgency.almost,
+          ),
+        ),
+      ),
+    );
+    expect(tester.getSize(find.byType(HubMetaPulse)).height, 0);
+    expect(find.textContaining('Vault'), findsNothing);
+    expect(find.textContaining('KEY'), findsNothing);
   });
 
   testWidgets('HubMetaPulse hides crumbs when chase is READY', (tester) async {
