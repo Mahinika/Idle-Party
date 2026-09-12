@@ -435,6 +435,14 @@ class CharacterEquipPanel extends StatelessWidget {
                       color: GameTheme.parchmentDim,
                     ),
                   ),
+                  Text(
+                    'Flask heals the party in the dungeon',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: compact ? 10 : 11,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -506,10 +514,9 @@ class CharacterEquipPanel extends StatelessWidget {
                 if (compare != null) ...[
                   const SizedBox(height: 4),
                   Text(
-                    'vs worn  Score ${GameLogic.formatDelta(compare.powerDelta)}'
-                    '  A${GameLogic.formatDelta(compare.atkDelta)}'
-                    '  D${GameLogic.formatDelta(compare.defDelta)}'
-                    '  V${GameLogic.formatDelta(compare.vitDelta)}'
+                    'vs worn  ATK${GameLogic.formatDelta(compare.atkDelta)}'
+                    '  DEF${GameLogic.formatDelta(compare.defDelta)}'
+                    '  STA${GameLogic.formatDelta(compare.vitDelta)}'
                     '${autoWear ? '  UPGRADE' : ''}',
                     style: GameTheme.body(
                       size: 12,
@@ -518,6 +525,13 @@ class CharacterEquipPanel extends StatelessWidget {
                           : (compare.powerDelta < 0
                                 ? GameTheme.bloodLit
                                 : GameTheme.parchmentDim),
+                    ),
+                  ),
+                  Text(
+                    'Score ${GameLogic.formatDelta(compare.powerDelta)}',
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
                     ),
                   ),
                 ] else if (selectedWornHere)

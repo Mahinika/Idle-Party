@@ -135,7 +135,6 @@ class _MenuSurfaceState extends State<MenuSurface> {
         session.clearCombine();
       },
       onCleanBag: d.cleanBagJunk,
-      onOpenFilters: router.openBagFilters,
       onAutoMerge: () {
         d.autoMergeJunk();
         session.dropMissingIds(d.state.gearStash.map((g) => g.id).toSet());

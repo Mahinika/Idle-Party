@@ -60,7 +60,7 @@ class FirstSessionTips extends StatelessWidget {
       title: 'GOLD MARKET',
       body:
           'Buy flasks under GOLD → MARKET. When the bag is full, use BAG → CLEAN BAG, '
-          'MERGE, or SETTINGS auto-sell.',
+          'MERGE, or BAG → FILTERS.',
     ),
     (
       id: 'forge',

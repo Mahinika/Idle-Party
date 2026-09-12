@@ -48,6 +48,7 @@ void main() {
     final for0 = MenuAlerts.bagUpgradeCountForHero(state, 0);
     final hint0 = MenuAlerts.gearEquipHint(state, 0);
     expect(hint0.toUpperCase(), contains('EQUIP'));
+    expect(hint0.toLowerCase(), contains('tap'));
     if (for0 == 0) {
       expect(hint0.toLowerCase(), contains('other'));
     } else if (for0 == total) {

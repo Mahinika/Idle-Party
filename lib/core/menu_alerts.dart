@@ -329,7 +329,10 @@ class MenuAlerts {
   static String bagStatusLine(GameState state) {
     if (bagUpgradeCount(state) > 0) return '';
     if (GearService.isBagJammed(state) && !isBagFull(state)) {
-      return 'Nearly full — SETTINGS auto-sell may junk weak gear; CLEAN BAG or MERGE';
+      final mergeBit = MenuTabs.showMerge(state)
+          ? '; CLEAN BAG or MERGE'
+          : '; CLEAN BAG';
+      return 'Nearly full — FILTERS may junk weak gear$mergeBit';
     }
     if (!isBagFull(state)) return '';
     if (state.gearStash.isEmpty) return 'Bag is full — CLEAN BAG';
@@ -353,15 +356,15 @@ class MenuAlerts {
     final forHero = bagUpgradeCountForHero(state, heroIndex);
     if (forHero <= 0) {
       return total == 1
-          ? '1 better item for another hero — use EQUIP'
-          : '$total better items for other heroes — use EQUIP';
+          ? '1 better item for another hero — tap EQUIP'
+          : '$total better items for other heroes — tap EQUIP';
     }
     if (forHero == total) {
       return forHero == 1
-          ? '1 better item for this hero — use EQUIP'
-          : '$forHero better items for this hero — use EQUIP';
+          ? '1 better item for this hero — tap EQUIP'
+          : '$forHero better items for this hero — tap EQUIP';
     }
-    return '$forHero for this hero · $total party — use EQUIP';
+    return '$forHero for this hero · $total party — tap EQUIP';
   }
 }
 

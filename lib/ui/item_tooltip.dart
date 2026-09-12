@@ -65,6 +65,9 @@ class ItemTooltipCard extends StatelessWidget {
     EquipmentItem? worn;
     var intoSlot = item.slot;
     var powerDelta = 0;
+    var atkDelta = 0;
+    var defDelta = 0;
+    var vitDelta = 0;
     var isUpgrade = false;
     var statsUpgrade = false;
     var comparing = false;
@@ -77,6 +80,9 @@ class ItemTooltipCard extends StatelessWidget {
       );
       intoSlot = cmp.intoSlot;
       powerDelta = cmp.powerDelta;
+      atkDelta = cmp.atkDelta;
+      defDelta = cmp.defDelta;
+      vitDelta = cmp.vitDelta;
       statsUpgrade = cmp.isUpgrade;
       isUpgrade = statsUpgrade;
       worn = hero!.itemIn(intoSlot);
@@ -333,25 +339,40 @@ class ItemTooltipCard extends StatelessWidget {
                         width: 1,
                       ),
                     ),
-                    child: Text(
-                      isUpgrade
-                          ? 'UPGRADE  Score ${GameLogic.formatDelta(powerDelta)}'
-                          : (powerDelta > 0
-                                ? (statsUpgrade
-                                      ? 'SCORE +$powerDelta · AUTO EQUIP keeps another'
-                                      : (worn == null
-                                            ? 'SCORE +$powerDelta · too weak to fill'
-                                            : 'SCORE +$powerDelta · not enough to swap'))
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isUpgrade
+                              ? 'UPGRADE  ATK ${GameLogic.formatDelta(atkDelta)}  DEF ${GameLogic.formatDelta(defDelta)}  STA ${GameLogic.formatDelta(vitDelta)}'
+                              : (powerDelta > 0
+                                    ? (statsUpgrade
+                                          ? 'ATK ${GameLogic.formatDelta(atkDelta)} · EQUIP keeps another'
+                                          : (worn == null
+                                                ? 'ATK ${GameLogic.formatDelta(atkDelta)} · too weak to fill'
+                                                : 'ATK ${GameLogic.formatDelta(atkDelta)} · not enough to swap'))
+                                    : (powerDelta < 0
+                                          ? 'WEAKER  ATK ${GameLogic.formatDelta(atkDelta)}  DEF ${GameLogic.formatDelta(defDelta)}  STA ${GameLogic.formatDelta(vitDelta)}'
+                                          : 'SAME FIGHT STATS')),
+                          textAlign: TextAlign.center,
+                          style: GameTheme.body(
+                            size: 12,
+                            color: isUpgrade
+                                ? _green
                                 : (powerDelta < 0
-                                      ? 'WEAKER  Score ${GameLogic.formatDelta(powerDelta)}'
-                                      : 'SAME SCORE')),
-                      textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 12,
-                        color: isUpgrade
-                            ? _green
-                            : (powerDelta < 0 ? _red : GameTheme.parchmentDim),
-                      ),
+                                      ? _red
+                                      : GameTheme.parchmentDim),
+                          ),
+                        ),
+                        Text(
+                          'Score ${GameLogic.formatDelta(powerDelta)}',
+                          textAlign: TextAlign.center,
+                          style: GameTheme.body(
+                            size: 11,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

@@ -90,10 +90,10 @@ Start your party and take one more floor.
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.155+185** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
+Working ship: **1.12.156+186** (`pubspec.yaml`). Paste into Play **Release notes** (en-US) when uploading Production:
 
 ```
-• Your party fights on its own. Cold start opens on Cognifox Studio, then one cave beat the first time — tap the fight to help.
+• Your party fights on its own. GEAR uses EQUIP; BAG keeps FILTERS on the sheet; compare leads with ATK / DEF / STA.
 ```
 
 ### Full description honesty (SHOP)

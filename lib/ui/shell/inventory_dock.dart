@@ -17,6 +17,7 @@ import '../menu_chrome.dart';
 import '../meta/roster_panel.dart';
 import '../item_tooltip.dart';
 import '../web_click_bridge.dart';
+import 'bag_cleanup_filters.dart';
 import 'shell_common.dart';
 
 class InventoryDock extends StatefulWidget {
@@ -44,7 +45,6 @@ class InventoryDock extends StatefulWidget {
     required this.onClearCombineB,
     required this.onCombine,
     required this.onCleanBag,
-    required this.onOpenFilters,
     required this.onAutoMerge,
     this.onOpenMarket,
     this.flatChrome = false,
@@ -73,7 +73,6 @@ class InventoryDock extends StatefulWidget {
   final VoidCallback onClearCombineB;
   final VoidCallback onCombine;
   final VoidCallback onCleanBag;
-  final VoidCallback onOpenFilters;
   final VoidCallback onAutoMerge;
   final VoidCallback? onOpenMarket;
 
@@ -85,6 +84,7 @@ class _InventoryDockState extends State<InventoryDock>
     with TickerProviderStateMixin {
   late final FlexTabs _tabs;
   List<GearPanel> _visible = const [GearPanel.gear, GearPanel.bag];
+  bool _showFilters = false;
 
   GameState get state => widget.state;
   String? get selectedId => widget.selectedId;
@@ -106,7 +106,6 @@ class _InventoryDockState extends State<InventoryDock>
   VoidCallback get onClearCombineB => widget.onClearCombineB;
   VoidCallback get onCombine => widget.onCombine;
   VoidCallback get onCleanBag => widget.onCleanBag;
-  VoidCallback get onOpenFilters => widget.onOpenFilters;
   VoidCallback get onAutoMerge => widget.onAutoMerge;
   VoidCallback? get onOpenMarket => widget.onOpenMarket;
 
@@ -151,6 +150,14 @@ class _InventoryDockState extends State<InventoryDock>
   }
 
   @override
+  void didUpdateWidget(covariant InventoryDock oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.panel != GearPanel.bag && _showFilters) {
+      _showFilters = false;
+    }
+  }
+
+  @override
   void dispose() {
     _tabs.dispose();
     super.dispose();
@@ -160,12 +167,14 @@ class _InventoryDockState extends State<InventoryDock>
   Widget _autoEquipButton({bool dense = false, bool expanded = true}) {
     final upgrades = MenuAlerts.bagUpgradeCount(state);
     return GameButton(
-      label: upgrades > 0 ? 'EQUIP $upgrades' : 'AUTO EQUIP',
+      label: upgrades > 0 ? 'EQUIP $upgrades' : 'EQUIP',
       tip: upgrades > 0
           ? 'One tap: equip all $upgrades upgrades now'
           : (state.gearStash.isEmpty
               ? 'Bag empty — farm for drops'
-              : 'No BiS upgrades in bag — CLEAN BAG or MERGE junk'),
+              : (MenuTabs.showMerge(state)
+                  ? 'No BiS upgrades in bag — CLEAN BAG or MERGE junk'
+                  : 'No BiS upgrades in bag — CLEAN BAG')),
       onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
       primary: upgrades > 0 && !dense,
       dense: dense,
@@ -320,6 +329,10 @@ class _InventoryDockState extends State<InventoryDock>
     final cap = GameLogic.maxGearStashFor(state);
     final filled = state.gearStash.length;
     final nearFull = GearService.isBagJammed(state);
+    final upgrades = MenuAlerts.bagUpgradeCount(state);
+    final showShopChip =
+        onOpenMarket != null && upgrades == 0 && !nearFull;
+    final mergeOpen = MenuTabs.showMerge(state);
     final filter = bagSlotFilter;
     final filterLabel = filter == null
         ? null
@@ -411,16 +424,23 @@ class _InventoryDockState extends State<InventoryDock>
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         const SizedBox(height: 6),
-        if (onOpenMarket != null)
+        if (showShopChip)
           Center(
             child: MenuChrome.chip(
               label: 'Need gear? → Shop',
               onTap: onOpenMarket,
             ),
           ),
-        if (onOpenMarket != null) const SizedBox(height: 6),
+        if (showShopChip) const SizedBox(height: 6),
         Expanded(
-          child: filteredSlots.isEmpty && filter != null
+          child: _showFilters
+              ? SingleChildScrollView(
+                  child: BagCleanupFilters(
+                    director: widget.director,
+                    compact: true,
+                  ),
+                )
+              : filteredSlots.isEmpty && filter != null
               ? Center(
                   child: Text(
                     'No $filterLabel gear in BAG.\nLoot more, or CLEAR filter.',
@@ -474,6 +494,8 @@ class _InventoryDockState extends State<InventoryDock>
                 ),
         ),
         const SizedBox(height: 4),
+        _autoEquipButton(),
+        const SizedBox(height: 4),
         GameButton(
           label: 'CLEAN BAG',
           tip: 'Merge junk pairs → sell gold → scrap essence (BiS kept)',
@@ -482,26 +504,23 @@ class _InventoryDockState extends State<InventoryDock>
         ),
         const SizedBox(height: 4),
         GameButton(
-          label: 'AUTO-SELL FILTERS',
-          tip: 'When bag is near full: sell gold vs scrap essence rules',
-          onPressed: onOpenFilters,
-          style: GameButtonStyle.grey,
+          label: 'FILTERS',
+          tip: _showFilters
+              ? 'Hide auto-sell and scrap rules'
+              : 'When bag is near full: sell gold vs scrap essence',
+          onPressed: () => setState(() => _showFilters = !_showFilters),
+          style: _showFilters ? GameButtonStyle.brown : GameButtonStyle.grey,
         ),
-        const SizedBox(height: 4),
-        _autoEquipButton(),
-        const SizedBox(height: 4),
-        GameButton(
-          label: selectedId == null ? 'AUTO MERGE' : 'ADD TO MERGE',
-          tip: selectedId == null
-              ? 'Merge junk pairs — skips BiS and bag upgrades'
-              : null,
-          onPressed: selectedId != null
-              ? (GameLogic.findStashGear(state, selectedId!) == null
-                    ? null
-                    : () => onPutCombine(selectedId!))
-              : (state.gearStash.length < 2 ? null : onAutoMerge),
-          style: GameButtonStyle.grey,
-        ),
+        if (mergeOpen && selectedId != null) ...[
+          const SizedBox(height: 4),
+          GameButton(
+            label: 'ADD TO MERGE',
+            onPressed: GameLogic.findStashGear(state, selectedId!) == null
+                ? null
+                : () => onPutCombine(selectedId!),
+            style: GameButtonStyle.grey,
+          ),
+        ],
         if (selectedId != null) ...[
           const SizedBox(height: 4),
           Builder(
@@ -544,7 +563,9 @@ class _InventoryDockState extends State<InventoryDock>
           ),
         ] else
           Text(
-            'Tap item to select · long-press for tip · ADD TO MERGE for TOOLS.',
+            mergeOpen
+                ? 'Tap item to select · long-press for tip · ADD TO MERGE for MERGE tab.'
+                : 'Tap item to select · long-press for tip.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         if (state.gearStash.isEmpty)
@@ -723,7 +744,7 @@ class _InventoryDockState extends State<InventoryDock>
           ],
           const SizedBox(height: 10),
           Text(
-            'Flask: party HUD · Pets: ESSENCE → PETS · God Hand: ESSENCE → KEEP · Relics: ESSENCE → RELICS',
+            'Flask heals the party in the dungeon.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
@@ -964,23 +985,22 @@ class _EquipHeroChip extends StatelessWidget {
                 )
               else ...[
                 Text(
-                  'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
+                  'ATK${GameLogic.formatDelta(cmp.atkDelta)} '
+                  'DEF${GameLogic.formatDelta(cmp.defDelta)} '
+                  'STA${GameLogic.formatDelta(cmp.vitDelta)}',
                   style: GameTheme.body(size: 11, color: deltaColor),
+                ),
+                Text(
+                  'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
+                  style: GameTheme.body(
+                    size: 10,
+                    color: GameTheme.parchmentDim,
+                  ),
                 ),
                 if (plannedUpgrade)
                   Text(
                     'UPGRADE',
                     style: GameTheme.body(size: 10, color: GameTheme.clear),
-                  )
-                else
-                  Text(
-                    'power ${GameLogic.formatDelta(cmp.atkDelta)} '
-                    'D${GameLogic.formatDelta(cmp.defDelta)} '
-                    'STA${GameLogic.formatDelta(cmp.vitDelta)}',
-                    style: GameTheme.body(
-                      size: 10,
-                      color: GameTheme.parchmentDim,
-                    ),
                   ),
               ],
             ],
