@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build a vertical feed Short from A56 combat (not the Play listing trailer).
 
-Hard-cuts 3 zone shots (hell / crystal / mothveil) so the feed is not one
-gold corridor. Full-bleed 1080x1920. Owned dungeon.mp3 only.
+Ad shape: 1.8s hook card → three zone gameplay cuts → store CTA end card.
+Owned marketing stills + dungeon.mp3. No trending audio.
 
   py -3 tool/store_listing/build_shorts_feed.py
 """
@@ -30,21 +30,25 @@ from build_preview_video import (
     MUSIC,
     OUT,
     find_ffmpeg,
+    fit_canvas,
     load_font,
+    make_still_mp4,
 )
 
 RAW = OUT / "gameplay_shorts_raw.mp4"
 DEST = OUT / "idle_party_shorts_feed.mp4"
 FEED_MUSIC = MUSIC.with_name("dungeon.mp3")
+MARKETING = LISTING / "marketing"
+INTRO_STILL = MARKETING / "03_party_fights_1080x1920.png"
+OUTRO_STILL = MARKETING / "07_afk_progress_1080x1920.png"
 
 WIDTH = 1080
 HEIGHT = 1920
 SRC_H = 2340
-# Cut the FARM row; keep the chamber art (no punch-in on floor tiles).
 CROP_Y = 150
-HOOK = "They fight without you"
-LOCKUP = "Idle Party"
-HOOK_FROM = 1.4
+INTRO_DUR = 1.8
+OUTRO_DUR = 2.6
+GOLD = (220, 181, 102)
 DEFAULT_SHOTS: list[dict[str, object]] = [
     {"raw": "gameplay_shorts_hell_raw.mp4", "start": 1.2, "duration": 3.7},
     {"raw": "gameplay_shorts_crystal_raw.mp4", "start": 1.2, "duration": 3.7},
@@ -52,28 +56,45 @@ DEFAULT_SHOTS: list[dict[str, object]] = [
 ]
 
 
-def make_caption(path: Path, text: str, *, lockup: bool) -> None:
-    img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img, "RGBA")
-    font = load_font(64 if not lockup else 80)
-    bbox = draw.textbbox((0, 0), text, font=font)
-    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-    pad_x, pad_y = 36, 18
-    box_w = tw + pad_x * 2
-    box_h = th + pad_y * 2
-    box_x = (WIDTH - box_w) // 2
-    box_y = HEIGHT - 220
+def paint_outro(path: Path) -> None:
+    """Product shot + Play Store CTA — typical game-ad end card."""
+    src = Image.open(OUTRO_STILL).convert("RGB")
+    if src.size != (WIDTH, HEIGHT):
+        src = fit_canvas(src, WIDTH, HEIGHT)
+    out = src.copy()
+    draw = ImageDraw.Draw(out, "RGBA")
+    band_top = HEIGHT - 400
+    draw.rectangle((0, band_top, WIDTH, HEIGHT), fill=(*BG_RGB, 255))
+    title = load_font(70)
+    cta = load_font(40)
+    hint = load_font(28)
+
+    def center(text: str, font, y: int, fill) -> None:
+        bbox = draw.textbbox((0, 0), text, font=font)
+        tw = bbox[2] - bbox[0]
+        draw.text(((WIDTH - tw) / 2, y), text, font=font, fill=fill)
+
+    center("Idle Party", title, band_top + 36, (*CAPTION_FG, 255))
+    btn_w, btn_h = 720, 92
+    btn_x = (WIDTH - btn_w) // 2
+    btn_y = band_top + 132
     draw.rounded_rectangle(
-        (box_x, box_y, box_x + box_w, box_y + box_h),
+        (btn_x, btn_y, btn_x + btn_w, btn_y + btn_h),
         radius=22,
-        fill=(*BG_RGB, 210),
-        outline=(220, 181, 102, 200),
-        width=2,
+        fill=(159, 92, 28, 255),
+        outline=GOLD,
+        width=3,
     )
-    tx = (WIDTH - tw) / 2
-    ty = box_y + pad_y - bbox[1]
-    draw.text((tx, ty), text, font=font, fill=(*CAPTION_FG, 255))
-    img.save(path)
+    bbox = draw.textbbox((0, 0), "Free on Google Play", font=cta)
+    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    draw.text(
+        (btn_x + (btn_w - tw) / 2, btn_y + (btn_h - th) / 2 - 4),
+        "Free on Google Play",
+        font=cta,
+        fill=(*CAPTION_FG, 255),
+    )
+    center("Open the store page to download", hint, band_top + 248, (220, 200, 170, 255))
+    out.convert("RGB").save(path)
 
 
 def mux_audio(ffmpeg: str, video: Path, dest: Path, total: float) -> None:
@@ -199,58 +220,6 @@ def concat_shots(ffmpeg: str, clips: list[Path], dest: Path) -> None:
     )
 
 
-def overlay_captions(
-    ffmpeg: str,
-    video: Path,
-    dest: Path,
-    *,
-    total: float,
-    hook_png: Path,
-    lock_png: Path,
-) -> None:
-    hook_until = max(total - 1.5, total * 0.86)
-    hook_from = min(HOOK_FROM, max(0.4, total - 2.2))
-    fc = (
-        f"[0:v][1:v]overlay=0:0:enable='between(t,{hook_from:.2f},{hook_until:.2f})'[v1];"
-        f"[v1][2:v]overlay=0:0:enable='gt(t,{hook_until:.2f})',"
-        f"format=yuv420p[vout]"
-    )
-    run_ffmpeg(
-        ffmpeg,
-        [
-            ffmpeg,
-            "-y",
-            "-i",
-            str(video),
-            "-loop",
-            "1",
-            "-i",
-            str(hook_png),
-            "-loop",
-            "1",
-            "-i",
-            str(lock_png),
-            "-filter_complex",
-            fc,
-            "-map",
-            "[vout]",
-            "-t",
-            f"{total:.3f}",
-            "-r",
-            str(FPS),
-            "-c:v",
-            "libx264",
-            "-preset",
-            "veryfast",
-            "-crf",
-            "19",
-            "-an",
-            str(dest),
-        ],
-        "captions",
-    )
-
-
 def resolve_raw(name: str) -> Path:
     p = Path(name)
     if p.exists():
@@ -297,34 +266,39 @@ def build() -> None:
         resolved.append(
             (raw, float(shot.get("start", 1.0)), float(shot.get("duration", 3.7)))
         )
-    total = sum(d for _, _, d in resolved)
+    if not INTRO_STILL.exists():
+        raise SystemExit(f"missing intro still {INTRO_STILL}")
+    if not OUTRO_STILL.exists():
+        raise SystemExit(f"missing outro still {OUTRO_STILL}")
+    play_dur = sum(d for _, _, d in resolved)
+    total = INTRO_DUR + play_dur + OUTRO_DUR
     OUT.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="idle_shorts_") as tmp:
         tmp_path = Path(tmp)
-        clips: list[Path] = []
+        intro_mp4 = tmp_path / "intro.mp4"
+        make_still_mp4(ffmpeg, INTRO_STILL, intro_mp4, duration=INTRO_DUR)
+        clips: list[Path] = [intro_mp4]
         for i, (raw, start, dur) in enumerate(resolved):
             dest = tmp_path / f"shot_{i:02d}.mp4"
             crop_shot(
                 ffmpeg, raw, dest, start=start, duration=dur, crop_y=crop_y
             )
             clips.append(dest)
+        outro_png = tmp_path / "outro.png"
+        outro_mp4 = tmp_path / "outro.mp4"
+        paint_outro(outro_png)
+        make_still_mp4(ffmpeg, outro_png, outro_mp4, duration=OUTRO_DUR)
+        clips.append(outro_mp4)
         silent = tmp_path / "silent.mp4"
         concat_shots(ffmpeg, clips, silent)
-        hook_png = tmp_path / "hook.png"
-        lock_png = tmp_path / "lockup.png"
-        make_caption(hook_png, HOOK, lockup=False)
-        make_caption(lock_png, LOCKUP, lockup=True)
-        captioned = tmp_path / "captioned.mp4"
-        overlay_captions(
-            ffmpeg,
-            silent,
-            captioned,
-            total=total,
-            hook_png=hook_png,
-            lock_png=lock_png,
-        )
-        mux_audio(ffmpeg, captioned, DEST, total)
-    print("wrote", DEST, DEST.stat().st_size, f"~{total:.1f}s", len(resolved), "shots")
+        mux_audio(ffmpeg, silent, DEST, total)
+    print(
+        "wrote",
+        DEST,
+        DEST.stat().st_size,
+        f"~{total:.1f}s",
+        f"intro+{len(resolved)} shots+outro",
+    )
 
 
 def main() -> int:
