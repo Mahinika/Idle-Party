@@ -39,11 +39,14 @@ New field:
 
 Use `_jsonInt` / `as num?` for ints (web JSON). Bump `'version'` only for docs unless the shape breaks.
 
+**Gotchas:** `GameState` must not import `GameLogic` — duplicate per-level CAMP/forge constants on the getter if needed. KEEP shop caps live in `PrestigeShopCatalog.atCap` — do not re-list them in `GameDirector`. Equipping in tests: `copyWith(heroRoster: …)`, not `heroes:` (roster is source of truth).
+
 ## Ascend (trust `GameLogic.ascend`)
 
 **Prestige:** raise AL, stack Blessing, unlock kits, pay essence, **reset the
-run bag** (gold, forge ATK/DEF/STA/move/haste/crit, worn/stash drops, market,
+run bag** (gold, forge ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY, worn/stash drops, market,
 loadouts, `highestFloorCleared`, starter gear). Apex vault + worn Apex stay.
+CAMP / sanctuary levels **keep** (prestige-compress is a separate CAMP action).
 
 **Keeps:** hero levels/XP/roster, `highestDungeonCleared`, essence, relics,
 pets, sanctuary, metaDepth (plus `freshPrestige: true`), Apex, legacy heirloom

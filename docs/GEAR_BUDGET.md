@@ -124,3 +124,10 @@ Keep new gear features on the right side of this line:
 **Glossary:** **Roll** = what dropped (`LootPipeline`). **Grant** = where it went (`LootResolver.grant` → gold/essence/stash/auto-sell).
 
 **Rule:** if it creates item stats from iLvl → **Factory**. If it moves or scores existing items → **Service modules**. Never duplicate budget math in UI or `GameLogic` — delegate to one of the above.
+
+## Pitfalls (1.12.153)
+
+- **Loot Crit is not 1:1.** ~13 DPS slots × raw % overshoots the **75%** combat clamp and wastes budget. New drops / MERGE / Apex must use `EquipmentFactory.lootCritPercent`. Worn pre-1.12.153 gear stays fat until replaced; combat still clamps.
+- **`PartyHero.gearCritChance` hard-caps at 40** (`_softCapStat` 18/40). A 70% chest does not make sheet 70. GOLD BEST skip-CRIT (`critScoreSoftSheet`) needs forge CRIT. Tests: even-spend gold, then leave CRIT one buy behind.
+- **Mastery divisor:** `SpecMastery.masteryPointsFrom` — do not restore Cata `/ (90 + level×4)` (L100 = dust). Target ~6% generic damage from ~60 rating at L100 (`1 + p * 0.002`).
+- GOLD TRACKS have **no max**; MOVE/HASTE/CRIT use a soft knee (`· SOFT` in UI). “Essence is done” at AL20 was Relics T3 and KEEP caps, not forge.

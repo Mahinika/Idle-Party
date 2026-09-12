@@ -22,6 +22,7 @@ Must hold:
 - `MetaSystems.currentVersion` == `pubspec.yaml` versionName
 - Newest `releases` block == `currentVersion`
 - Shipped zones (tide/ember) mentioned in current bullets
+- Newest bullets joined uppercase contain `GREATER` (`ship_smoke_test` — World Path boilerplate is not enough)
 
 ## Visual capture
 
