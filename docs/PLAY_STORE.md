@@ -17,7 +17,7 @@ Package id: **`com.idleparty.app`**
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ⏳ review | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md`. **2026-09-11:** idle RPG short/full pasted in Console and **submitted for review** (Publiceringsöversikt → Ändringarna granskas). |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
-| Screenshots + feature graphic | ✅ review | **2026-09-10:** 8 phone shots = chase card + combat/gear/zone UI + party/AFK/KEY/Ascend cards (`tool/store_listing/upload/`). Feature graphic + icon unchanged. Submitted with listing copy. |
+| Screenshots + feature graphic | ⏳ review | **2026-09-12:** phone shots **1–2** = new-save Sandy F1 combat (submitted, Publiceringsöversikt → **Ändringarna granskas**). Carousel slots 3–8 and listing **icon** not swapped this submit (icon file is in the Console library). Feature graphic unchanged. Preview still `OMWXbgGBFMA`. |
 | Preview video (YouTube) | ⏳ review | **2026-09-11:** Cognifox Studio channel unlisted YT `https://www.youtube.com/watch?v=OMWXbgGBFMA` (replaces Robert personal `fiZjJ9S9l4A`). Relink + resubmit after Cognifox upload. Confirm YT: ads off, embeddable, not age-restricted. |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
@@ -177,7 +177,7 @@ Suggested Description (en-US):
 
 - [x] Content rating questionnaire (IARC): original 2026-08-08; **re-survey submitted 2026-09-08** — fantasy creature violence (often close-up, pixel, no blood), SHOP digital goods, no loot-boxes/trading/chat. Ads via Ads declaration (not in new IARC form). Preview: ESRB 10+ / USK 12 / PEGI 3 + IAP.
 - [x] Short + full description (en-US only — no extra listing locales) from `docs/STORE_LISTING.md` (refresh listing when ship copy changes).
-- [x] Phone screenshots + feature graphic refreshed 2026-08-21 (`tool/store_listing/marketing/`, 8×1080×1920 promo cards + 1024×500 banner). Submitted for review with listing graphics. Icon still from owned `app_icon` (refresh 2026-08-16). Tablet shots unchanged.
+- [x] Phone screenshots + feature graphic: **shots 1–2 = live first-minute combat submitted 2026-09-12** (review). Icon still owned `app_icon` on the listing slot (512 file in Console library). Tablet shots unchanged.
 - [x] Keep release name / versionName in sync with `pubspec.yaml` and git tags `v*` — **`v1.12.83`** tagged + pushed 2026-08-29 (CI `build-apk.yml`); Play Alpha **112** submitted 2026-08-29.
 
 ## Production listing

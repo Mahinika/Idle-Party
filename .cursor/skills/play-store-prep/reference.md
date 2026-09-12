@@ -41,17 +41,20 @@ py -3 tool/store_listing/make_listing_icon.py
    (GEAR / GOLD / ESSENCE sub-tabs) or clicks never leave INCOME/BAG.
 6. **Compose captions on top** (~210px), smart vertical crop bias — do not stamp a
    fat bottom bar over the hero of the UI. Captions ≤ ~8 English words.
-7. **Play Console upload** — `DOM.setFileInputFiles` is denied. Serve `out/` with
-   CORS (`py -3` on e.g. `127.0.0.1:9877`), then CDP `fetch` → `DataTransfer` into
-   the phone-screenshots file input. Delete old phone shots first (aria
-   “Ta bort Skärmbilder för mobiler”). Paste short+full from `STORE_LISTING.md`
-   (no forever-free / no-ads promises). Submit listing → update `PLAY_STORE.md`.
+7. **Play Console upload** — `DOM.setFileInputFiles` is denied. Serve
+   `tool/store_listing/` with `py -3 tool/store_listing/serve_upload_cors.py`
+   on **9888** (9877 is often poisoned on this box), then CDP `fetch` →
+   `DataTransfer` into the phone-screenshots file input. Delete old phone
+   shots first. Attach **one PNG at a time** (library recency/dedupe scrambles
+   dump-all). If the library says “Behöver beskäras”: Beskär → **9:16 stående**
+   (not the default 16:9) → Spara som kopia → **Lägg till**. Paste short+full
+   from `STORE_LISTING.md`. Submit listing → update `PLAY_STORE.md`.
 
 ### Upload listing assets (Cursor browser)
 
-1. Serve: `cd tool/store_listing/out` → CORS HTTP on **9877**
+1. Serve: `py -3 tool/store_listing/serve_upload_cors.py` → CORS HTTP on **9888**
 2. Open `…/main-store-listing` for `com.idleparty.app`
-3. Remove existing **Skärmbilder för mobiler**, then attach the six PNGs via fetch
+3. Remove existing **Skärmbilder för mobiler**, then attach PNGs **one-by-one** via fetch (combat 01 then 02 first)
 4. Set short + full description from `STORE_LISTING.md`
 5. Save → Publishing overview → submit for review
 6. Kill the local HTTP server

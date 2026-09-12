@@ -25,6 +25,10 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   Capture via Playwright + web `:8080` (`capture_first_minute.py`) — do not
   wipe the owner’s A56 save to get a new-save shot. Console paste is a
   separate owner box; in-repo pack is `STORE_LISTING.md` + `out/` / icon.
+  Play library dump-all sorts by recency/dedupe — attach **one shot at a
+  time**. Assets tagged “Behöver beskäras” need **9:16 stående** → Spara som
+  kopia → **Lägg till** (default crop is 16:9 landscape). CORS on **9888**,
+  not poisoned 9877.
 - **Tiny UA is not a D1 study.** ~900 installs to read D1 ±3 pts. €5–10/day
   is CPI/creative smoke only.
 - **Notifications:** after a milestone, ~1–2/day, never first-launch permission,

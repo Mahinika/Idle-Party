@@ -166,14 +166,14 @@ Hard-won rules:
 
 Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
 
-## Play Console status (2026-09-11)
+## Play Console status (2026-09-12)
 
 - Short + full description: en-US only (this file) — **idle RPG ASO pasted + submitted for review 2026-09-11**.
-- Phone screenshots (8): mixed branded cards + real combat/gear/zone UI from
-  `tool/store_listing/upload/` (live assets unchanged this submit — copy only).
-  **In-repo listing pack (2026-09-12):** shots 1–2 = new-save Sandy F1 combat
-  (`out/01_01_combat_a.png`, `out/02_02_combat_b.png`) + 512 icon
-  (`tool/art_backups/play_icon_512.png`). Console paste is still an owner box.
+- Phone screenshots **1–2** (live first-minute Sandy combat) **submitted for
+  review 2026-09-12** (`Ändringarna granskas`). Play listing currently has
+  those two phone slots only (minimum 2). Carousel 3–8 and the listing **icon**
+  were not attached this submit (512 icon sits in the Console library as
+  `play_icon_512.png`). Preview video still `https://www.youtube.com/watch?v=OMWXbgGBFMA`.
 - Developer name: **Cognifox Studio**.
 - Growth ops (reviews / video / ads): see [`PLAY_GROWTH.md`](PLAY_GROWTH.md).
 - Preview video: `py -3 tool/store_listing/build_preview_video.py` →
