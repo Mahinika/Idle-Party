@@ -72,15 +72,15 @@ class DungeonGenerator {
   static int _enemyCountForType(RoomType type, Random random, int floor) {
     final earlyCut = floor <= 3 ? 1 : 0;
     return switch (type) {
-      RoomType.boss => 6 + random.nextInt(2),
+      RoomType.boss => 7 + random.nextInt(2),
       RoomType.elite => max(
-        4,
-        6 + random.nextInt(2) + (floor ~/ 4).clamp(0, 2) - earlyCut,
+        5,
+        7 + random.nextInt(2) + (floor ~/ 4).clamp(0, 3) - earlyCut,
       ),
       RoomType.treasure => 0,
       RoomType.normal => max(
-        3,
-        5 + (floor ~/ 3).clamp(0, 4) + random.nextInt(2) - earlyCut,
+        4,
+        6 + (floor ~/ 3).clamp(0, 5) + random.nextInt(3) - earlyCut,
       ),
     };
   }

@@ -102,16 +102,8 @@ class FloorBlueprint {
           const FloorBeat(FloorBeatKind.exitHold),
         ]);
       case RoomType.elite:
-        final mid = max(1, budget ~/ 2);
         beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: 0));
-        beats.add(FloorBeat(FloorBeatKind.elite, enemyBudget: mid));
-        if (kit.preferChoke || rng.nextDouble() < 0.55) {
-          beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget - mid));
-        } else {
-          beats.add(
-            FloorBeat(FloorBeatKind.approach, enemyBudget: budget - mid),
-          );
-        }
+        _addEliteCombatSpine(beats, budget, kit, rng);
         beats.add(const FloorBeat(FloorBeatKind.exitHold));
       case RoomType.normal:
         _buildNormalBeats(beats, budget, kit, rng);
@@ -187,15 +179,9 @@ class FloorBlueprint {
       );
     }
 
-    if (remaining <= 0) remaining = budget;
+    if (remaining <= 0) return;
 
-    if (kit.preferChoke || rng.nextDouble() < 0.68) {
-      final a = max(1, remaining ~/ 2);
-      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: a));
-      beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: remaining - a));
-    } else {
-      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: remaining));
-    }
+    _addMainCombatSpine(beats, remaining, kit, rng);
   }
 
   static void _addClassicNormalSpine(
@@ -204,22 +190,84 @@ class FloorBlueprint {
     ZoneLayoutKit kit,
     Random rng,
   ) {
+    _addMainCombatSpine(beats, budget, kit, rng);
     final preferTreasure =
         kit.preferTreasureAlcove && rng.nextDouble() < kit.treasureAlcoveChance;
     if (preferTreasure && budget >= 4) {
-      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget));
       beats.add(
         const FloorBeat(
           FloorBeatKind.treasure,
           attach: FloorBeatAttach.sideMain,
         ),
       );
-    } else if (kit.preferChoke || rng.nextDouble() < 0.65) {
-      final a = max(1, budget ~/ 2);
-      beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: a));
-      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget - a));
-    } else {
-      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: budget));
+    }
+  }
+
+  /// How many fight rooms the main spine should carve (staging is separate).
+  static int _mainCombatRooms(int budget) {
+    if (budget >= 6) return 3;
+    if (budget >= 4) return 2;
+    return budget > 0 ? 1 : 0;
+  }
+
+  static List<int> _shareBudget(int budget, int rooms) {
+    if (rooms <= 0 || budget <= 0) return const [];
+    if (rooms == 1) return [budget];
+    final out = List<int>.filled(rooms, 0);
+    var left = budget;
+    for (var i = 0; i < rooms; i++) {
+      if (i == rooms - 1) {
+        out[i] = left;
+      } else {
+        final share = max(1, left ~/ (rooms - i));
+        out[i] = min(share, left - (rooms - i - 1));
+        left -= out[i];
+      }
+    }
+    return out;
+  }
+
+  /// Approach → choke → elite/choke, split across [budget] so each room has a pack.
+  static void _addMainCombatSpine(
+    List<FloorBeat> beats,
+    int budget,
+    ZoneLayoutKit kit,
+    Random rng,
+  ) {
+    final rooms = _mainCombatRooms(budget);
+    if (rooms == 0) return;
+    final shares = _shareBudget(budget, rooms);
+    final third = kit.preferChoke || rng.nextDouble() < 0.55
+        ? FloorBeatKind.choke
+        : FloorBeatKind.elite;
+    final kinds = <FloorBeatKind>[
+      FloorBeatKind.approach,
+      FloorBeatKind.choke,
+      if (rooms >= 3) third,
+    ];
+    for (var i = 0; i < rooms; i++) {
+      beats.add(FloorBeat(kinds[i], enemyBudget: shares[i]));
+    }
+  }
+
+  static void _addEliteCombatSpine(
+    List<FloorBeat> beats,
+    int budget,
+    ZoneLayoutKit kit,
+    Random rng,
+  ) {
+    final rooms = _mainCombatRooms(budget);
+    if (rooms == 0) return;
+    final shares = _shareBudget(budget, rooms);
+    beats.add(FloorBeat(FloorBeatKind.elite, enemyBudget: shares[0]));
+    if (rooms >= 2) {
+      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: shares[1]));
+    }
+    if (rooms >= 3) {
+      final last = kit.preferChoke || rng.nextDouble() < 0.5
+          ? FloorBeatKind.choke
+          : FloorBeatKind.approach;
+      beats.add(FloorBeat(last, enemyBudget: shares[2]));
     }
   }
 

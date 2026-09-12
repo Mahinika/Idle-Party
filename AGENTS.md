@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.149**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.150**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -282,7 +282,8 @@ Unlock: prior clear **or** party **mean level** gate (even steps Lv1…Lv100).
   chest sockets) → `RoomLayouts` / `SpatialCombat.build`, with per-zone
   **`ZoneLayoutKit`** (e.g. Brassvault treasure alcoves vs Mothveil silk chokes).
 - Maps are **multi-chamber** with corridor **gates** after a chamber clears.
-  Main path zigzags; treasure vaults branch off the stairs.
+  Main path zigzags; treasure vaults branch off the stairs. Normal/elite
+  floors with 6+ trash carve **three fight rooms** after a staging chamber.
 - Enemies in later chambers start **dormant**; wake when prior chambers clear
   (and can wake on **proximity** so soft-locks are rare).
 - **Room chests** on elite/treasure beats drop gold/gear pickups — vacuumed

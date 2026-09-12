@@ -78,8 +78,9 @@ class FloorBlueprint {
 
 | Floor | Beats |
 |-------|--------|
-| Normal F3 | approach → choke → exitHold |
-| Elite F6 | approach → elite → choke → exitHold |
+| Normal F3 (small pack) | staging approach → approach → choke → exitHold |
+| Normal F8+ | staging → approach → choke → elite/choke → exitHold (optional treasure alcove) |
+| Elite F6+ | approach → elite → choke → choke/approach → exitHold |
 | Treasure F6n | approach → treasure → exitHold |
 | Boss | approach → boss → exitHold |
 

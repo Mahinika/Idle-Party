@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/spatial/floor_blueprint.dart';
@@ -448,5 +449,44 @@ void main() {
           plan.isValid,
       isTrue,
     );
+  });
+
+  test('normal floors with 8 trash carve three fight rooms after staging', () {
+    final room = DungeonRoom(
+      floorNumber: 8,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 12,
+      enemyCount: 8,
+    );
+    var threeCombat = 0;
+    for (var seed = 0; seed < 40; seed++) {
+      final bp = FloorBlueprint.forRoom(
+        room,
+        dungeonId: seed.isEven ? 'fen' : 'sandy',
+        layoutSeed: seed,
+      );
+      expect(bp.combatEnemyBudget, room.enemyCount);
+      final combat = bp.storyChambers
+          .where((b) => !b.isSide && b.enemyBudget > 0)
+          .length;
+      if (combat >= 3) threeCombat++;
+    }
+    expect(threeCombat, greaterThanOrEqualTo(30));
+  });
+
+  test('later generated floors have packs big enough for three fight rooms', () {
+    var enough = 0;
+    for (var seed = 0; seed < 24; seed++) {
+      final room = DungeonGenerator.generateFloorRoom(
+        floorNumber: 10,
+        ascensionLevel: 11,
+        dungeonId: 'brass',
+        layoutSeed: seed,
+      );
+      if (room.type == RoomType.treasure) continue;
+      if (room.enemyCount >= 7) enough++;
+    }
+    expect(enough, greaterThanOrEqualTo(16));
   });
 }
