@@ -92,3 +92,13 @@ Agent cannot mark D1 “good” without owner numbers.
 
 `flutter analyze` / matching tests / live-light DPS gate. Fairness first.
 SpatialCombat remains the only fight sim.
+
+## Expert council (role prompting)
+
+When the call is a fork or ship risk, convene silently per
+`.cursor/rules/expert-council.mdc`. Do not paste a panel debate in chat.
+
+While this mandate is open, **Growth GM + new-player + UX** pick *what to
+build*. **Store/ASO** owns listing vs first two minutes. **Combat** can veto
+a broken fight or DPS HIGH — it does not restore AL20 as the default batch.
+**AL20 core** is lightest. Legal / one-sim / fairness / crash still **veto**.

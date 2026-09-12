@@ -11,6 +11,7 @@ in sync (currently **1.12.153**). What’s New lives in `lib/core/meta_systems.d
 Owner describes goals in plain language; agents pick skills/tools/verify alone.
 **Rules (don’t duplicate here):**
 - `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **active program** (first 15 min + Play funnel)
+- `.cursor/rules/expert-council.mdc` — role prompting: who to convene, veto vs weight
 - `.cursor/rules/product-locks.mdc` — hard + soft locks (dated)
 - `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
 - `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff

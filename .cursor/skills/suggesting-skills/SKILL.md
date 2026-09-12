@@ -44,6 +44,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | `/repo auditandcleaning` / full repo audit (no edits) | `repo-audit-and-cleaning` |
 | “gör spelet bättre” / vad härnäst | `docs/GROWTH_MANDATE.md` next unchecked box |
 | First hour / onboarding / listing / funnel | first-hour tests + `hub-smoke` + `play-store-prep` |
+| Fork / two games / whose call | silent `expert-council` |
 | Strategi / 90 dagar / prioritering | `docs/GROWTH_MANDATE.md` then `docs/CONTENT_CADENCE.md` |
 | Topplistor / varför bra spel | `docs/TOP_GAMES_RESEARCH.md` background only — don’t derail |
 

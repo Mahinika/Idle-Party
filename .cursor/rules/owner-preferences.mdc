@@ -53,7 +53,9 @@ block ship if endgame is broken; they do not pick the next feature.
 | Commit locally when green | Push / PR / tag / Play AAB | Force-push; skip hooks; point players at GitHub Releases |
 | A56 look / hub smoke after UI; listing *docs* | Delete save; publish store; Console paste | Invent a second combat sim |
 
-Ambiguous “two different games” (meny vs combat): ask once — prefer **first 15 min** over AL20 chrome.
+Ambiguous “two different games” (meny vs combat): silent expert council
+(`.cursor/rules/expert-council.mdc`) — prefer **first 15 min** over AL20 chrome.
+Ask the owner only if the ask table still requires it.
 
 ## Feel reminders
 
