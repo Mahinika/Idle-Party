@@ -3370,7 +3370,7 @@ void main() {
     expect(prestiged.sanctuaryGoldBonusPercent, 3);
   });
 
-  test('infinity gauntlet unlocks at party Lv60 and escalates', () {
+  test('infinity gauntlet unlocks at party max level and escalates', () {
     final locked = GameLogic.createInitialState(now: DateTime(2026, 8, 3));
     expect(GameLogic.canEnterGauntlet(locked), isFalse);
     expect(GameLogic.enterGauntlet(locked).inGauntlet, isFalse);

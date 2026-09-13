@@ -5,6 +5,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/hub_endgame_act.dart';
 import 'package:idle_party/core/keystone.dart';
+import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/zone_art.dart';
@@ -88,6 +89,16 @@ void main() {
     );
     expect(HubEndgameAct.huntForChase(HubChaseKind.riftMilestone), HubEndgameHunt.farmRift);
     expect(HubEndgameAct.huntForChase(HubChaseKind.keystone), isNull);
+    expect(HubEndgameAct.pathTabLabel, 'PATH');
+    expect(HubEndgameAct.mapTitle, 'ENDGAME');
+    expect(HubEndgameAct.mapUnlockLine.toUpperCase(), contains('PATH'));
+    expect(HubEndgameAct.mapUnlockLine.toUpperCase(), contains('KEY'));
+    expect(HubEndgameAct.mapUnlockLine.toLowerCase(), contains('harder'));
+    expect(HubEndgameAct.mapUnlockLine.toLowerCase(), contains('not a 16th cave'));
+    expect(
+      HubEndgameAct.nodeFor(HubEndgameHunt.gauntlet).blurb.toLowerCase(),
+      contains('not a 16th cave'),
+    );
   });
 
   test('zone unlock uses party level or prior clear', () {
@@ -189,6 +200,7 @@ void main() {
   test('Gauntlet / KEY / Rift gates use party max level and What’s New version is non-empty', () {
     expect(GameLogic.maxHeroLevel, 100);
     expect(GameLogic.endgameUnlocked(GameLogic.createInitialState()), isFalse);
+    expect(MenuTabs.showKey(GameLogic.createInitialState()), isFalse);
     final maxed = GameLogic.createInitialState().copyWith(
       heroRoster: [
         for (final h in GameLogic.createInitialState().heroRoster)
@@ -196,6 +208,7 @@ void main() {
       ],
     );
     expect(GameLogic.endgameUnlocked(maxed), isTrue);
+    expect(MenuTabs.showKey(maxed), isTrue);
     expect(Keystone.maxForState(maxed), Keystone.maxLevel);
     expect(MetaSystems.currentVersion, isNotEmpty);
     expect(MetaSystems.releases.first.version, MetaSystems.currentVersion);

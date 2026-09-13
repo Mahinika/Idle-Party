@@ -345,7 +345,7 @@ class DungeonTopHud extends StatelessWidget {
           dense: true,
           interactive: false,
           tip:
-              'Crystal Spire climb — next boss F$nextBoss. No FARM. Wipe or leave → hub.',
+              'Spire climb — not a 16th cave. Next boss F$nextBoss. No FARM. Wipe or leave → hub.',
           onTap: () {},
         );
       }

@@ -40,10 +40,14 @@ void main() {
     expect(intro.toLowerCase(), contains('fight'));
   });
 
-  test('fresh TODAY chase is the cave, not kit teasers', () {
+  test('first-hour TODAY stays grow-the-party with no KEY hunt', () {
     final state = GameLogic.createInitialState(now: now);
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.title, contains('Grow the party'));
+    expect(chase.title.toUpperCase(), isNot(contains('KEY')));
+    expect(chase.kind, isNot(HubChaseKind.keystone));
+    expect(GameLogic.showKeystoneJargon(state), isFalse);
     expect(chase.detail.toLowerCase(), contains('cave'));
     expect(chase.detail.toLowerCase(), contains('fights'));
     expect(chase.detail, isNot(contains('Combat Rogue')));

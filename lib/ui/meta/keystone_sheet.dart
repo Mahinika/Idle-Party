@@ -48,8 +48,8 @@ class KeystoneSheet extends StatelessWidget {
           const SizedBox(height: 4),
         ],
         Text(
-          'Hunts also sit on the hub ENDGAME tab (its own map). '
-          'KEY · Gauntlet · Ranked GR · Farm Rift · Ashen Crown.',
+          'PATH is the 15 caves. KEY is those caves with a timer and affixes. '
+          'ENDGAME is four other hunts — not a 16th cave.',
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
@@ -62,7 +62,7 @@ class KeystoneSheet extends StatelessWidget {
               children: [
                 MenuChrome.fold(
                   title: 'KEY',
-                  subtitle: 'Timed keys on a zone — dial then ENTER on the hub',
+                  subtitle: 'Timed keys on PATH caves — dial then ENTER',
                   initiallyExpanded: hunt == null,
                   children: [
                     MenuChrome.sectionLabelScoped(
@@ -74,7 +74,7 @@ class KeystoneSheet extends StatelessWidget {
                 ),
                 MenuChrome.fold(
                   title: 'GAUNTLET',
-                  subtitle: 'Endless Crystal Spire climb',
+                  subtitle: 'Endless Spire — not a 16th cave · wipe → hub',
                   initiallyExpanded: hunt == HubEndgameHunt.gauntlet,
                   children: [
                     GauntletHubPanel(director: d),
@@ -82,7 +82,7 @@ class KeystoneSheet extends StatelessWidget {
                 ),
                 MenuChrome.fold(
                   title: 'RANKED GR',
-                  subtitle: 'Mothveil timer · no mid-run gear',
+                  subtitle: 'Mothveil timer · no gear mid-run · ranked board',
                   initiallyExpanded: hunt == HubEndgameHunt.rankedGr,
                   children: [
                     GreaterRiftHubPanel(director: d),
@@ -90,7 +90,7 @@ class KeystoneSheet extends StatelessWidget {
                 ),
                 MenuChrome.fold(
                   title: 'FARM RIFT',
-                  subtitle: 'Stormwake loot farm',
+                  subtitle: 'Stormwake timer · gold + gear mid-run · not ranked',
                   initiallyExpanded: hunt == HubEndgameHunt.farmRift,
                   children: [
                     RiftHubPanel(director: d),
@@ -98,7 +98,7 @@ class KeystoneSheet extends StatelessWidget {
                 ),
                 MenuChrome.fold(
                   title: 'ASHEN CROWN',
-                  subtitle: 'Weekly ticket boss',
+                  subtitle: 'Weekly ticket boss · one clear',
                   initiallyExpanded: hunt == HubEndgameHunt.ashen,
                   children: [
                     AshenCrownHubPanel(director: d),

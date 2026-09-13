@@ -88,7 +88,7 @@ void main() {
     expect(chase.detail.toLowerCase(), isNot(contains('wait under')));
   });
 
-  test('Will chase shows next threshold gap', () {
+  test('Will ALMOST still beats midgame party-level', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
       ascensionLevel: 1,
@@ -96,18 +96,23 @@ void main() {
       metaDepth: state.metaDepth.copyWith(dailyVaultClaimed: true),
       lastDailyDate: MetaSystems.dailyDateKey(now),
       dailyClaimed: true,
-      achievements: const [],
+      // 11 ach × 2 = score 22 → 3 points to Kindled Will (ALMOST).
+      achievements: [
+        for (var i = 0; i < 11; i++) 'ach_$i',
+      ],
       lifetimeGoldEarned: 5_000_000,
       highestDungeonCleared: 8,
     );
+    expect(state.collectionScore, 22);
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.willRank);
+    expect(chase.urgency, HubChaseUrgency.almost);
     expect(chase.title, contains('Kindled Will'));
     expect(chase.progressLabel, contains('/25'));
     expect(chase.detail, contains('+${WillRanks.essenceForThreshold(25)}e'));
   });
 
-  test('Gauntlet milestone chase at party Lv60', () {
+  test('Gauntlet milestone chase at party max level', () {
     var state = GameLogic.createInitialState(now: now);
     state = _withPartyMaxLevel(
       state.copyWith(
@@ -165,6 +170,100 @@ void main() {
     expect(chase.title.toLowerCase(), contains('cave'));
     expect(chase.kind, isNot(HubChaseKind.ascend));
     expect(chase.kind, isNot(HubChaseKind.dailyRun));
+  });
+
+  test('AL5 Lv40 TODAY is one cave today, not KEY or Gauntlet', () {
+    final state = _withHeroLevels(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: 5,
+        bossVictories: 1,
+        highestDungeonCleared: 14,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClears: 0,
+              dailyVaultClaimed: false,
+              dailyBestTimedKey: 0,
+            ),
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+      ),
+      40,
+    );
+    expect(GameLogic.endgameUnlocked(state), isFalse);
+    expect(GameLogic.showKeystoneJargon(state), isFalse);
+    expect(GameLogic.canAscend(state), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.dailyVaultProgress);
+    expect(chase.title.toLowerCase(), contains('cave'));
+    expect(chase.kind, isNot(HubChaseKind.keystone));
+    expect(chase.kind, isNot(HubChaseKind.gauntletMilestone));
+    expect(chase.title.toUpperCase(), isNot(contains('KEY')));
+  });
+
+  test('AL5 Lv40 with vault claimed chases party levels, not KEY', () {
+    final state = _withHeroLevels(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: 5,
+        bossVictories: 1,
+        highestDungeonCleared: 14,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+            ),
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+      ),
+      40,
+    );
+    expect(GameLogic.endgameUnlocked(state), isFalse);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.title, contains('Level the party to ${GameLogic.maxHeroLevel}'));
+    expect(chase.urgency, HubChaseUrgency.normal);
+    expect(chase.detail.toUpperCase(), contains('KEY'));
+    expect(chase.detail, isNot(contains('AL20')));
+    expect(chase.kind, isNot(HubChaseKind.keystone));
+    expect(chase.kind, isNot(HubChaseKind.gauntletMilestone));
+  });
+
+  test('near Lv100 ALMOST party-level beats empty Daily vault', () {
+    final state = _withHeroLevels(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: 5,
+        bossVictories: 1,
+        highestDungeonCleared: 14,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClears: 0,
+              dailyVaultClaimed: false,
+              dailyBestTimedKey: 0,
+            ),
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+      ),
+      96,
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.title, contains('Almost party Lv${GameLogic.maxHeroLevel}'));
+    expect(chase.urgency, HubChaseUrgency.almost);
+    expect(chase.kind, isNot(HubChaseKind.dailyVaultProgress));
+  });
+
+  test('at party max KEY habit beats Ascend READY', () {
+    final state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: 5,
+        bossVictories: 6,
+        hardmodeLevel: 2,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              dailyVaultClaimed: true,
+            ),
+      ),
+    );
+    expect(GameLogic.endgameUnlocked(state), isTrue);
+    expect(GameLogic.canAscend(state), isTrue);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.keystone);
+    expect(chase.kind, isNot(HubChaseKind.ascend));
   });
 
   test('claimables and Ascend mark READY urgency', () {
@@ -269,6 +368,7 @@ void main() {
     // Goblin unlocks at party Lv8 — within 3 levels counts as ALMOST.
     final base = GameLogic.createInitialState(now: now);
     var state = base.copyWith(
+      bossVictories: 1,
       highestDungeonCleared: -1,
       heroes: [
         for (final h in base.heroes) h.copyWith(level: 6, xp: 0),
@@ -284,7 +384,7 @@ void main() {
     expect(chase.title, contains('Almost'));
   });
 
-  test('vault start before party Lv60 never uses KEY jargon', () {
+  test('vault start before party max never uses KEY jargon', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
       ascensionLevel: 1,
@@ -301,7 +401,7 @@ void main() {
     expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
   });
 
-  test('party Lv60 vault almost uses KEY jargon', () {
+  test('party max vault almost uses KEY jargon', () {
     var state = _withPartyMaxLevel(
       GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel,
@@ -324,6 +424,7 @@ void main() {
   test('pending hero reveal is READY meet chase', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
+      bossVictories: 1,
       metaDepth: state.metaDepth.copyWith(
         dailyVaultClaimed: true,
         pendingHeroReveals: const ['combat', 'arms'],
@@ -392,7 +493,7 @@ void main() {
     expect(chase.kind, isNot(HubChaseKind.dailyRun));
   });
 
-  test('KEY habit at party Lv60 when preferred key below cap', () {
+  test('KEY habit at party max when preferred key below cap', () {
     final state = _withPartyMaxLevel(
       GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel,
@@ -462,7 +563,7 @@ void main() {
     expect(chase.kind, isNot(HubChaseKind.dailyRun));
   });
 
-  test('Rift milestone chase at party Lv60', () {
+  test('Rift milestone chase at party max level', () {
     var state = GameLogic.createInitialState(now: now);
     state = _withPartyMaxLevel(
       state.copyWith(
@@ -512,7 +613,7 @@ void main() {
     expect(chase.kind, HubChaseKind.greaterRiftMilestone);
   });
 
-  test('AL20 sub-max party chase names both gates', () {
+  test('AL20 sub-max party chase names the Lv100 gate, not AL20', () {
     final base = GameLogic.createInitialState(now: now);
     final state = base.copyWith(
       ascensionLevel: GameLogic.maxAscensionLevel,
@@ -526,7 +627,8 @@ void main() {
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.title, contains('${GameLogic.maxHeroLevel}'));
-    expect(chase.detail, contains('AL20'));
+    expect(chase.detail.toUpperCase(), contains('KEY'));
+    expect(chase.detail, isNot(contains('AL20')));
   });
 
   test('AL20 party-max prefers endgame ladder over Daily', () {
@@ -783,7 +885,7 @@ void main() {
       expect(chase.detail.toUpperCase(), isNot(contains('DAILY RUN')));
     });
 
-    test('S2 vault already claimed: push floors, not Daily Run or Ascend', () {
+    test('S2 vault already claimed: level the party, not Daily Run or Ascend', () {
       final state = GameLogic.createInitialState(now: now).copyWith(
         bossVictories: 1,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
@@ -792,6 +894,7 @@ void main() {
       );
       final chase = HubChase.forState(state, now: now);
       expect(chase.kind, HubChaseKind.clearFloors);
+      expect(chase.title.toLowerCase(), contains('level the party'));
       expect(chase.kind, isNot(HubChaseKind.dailyRun));
       expect(chase.kind, isNot(HubChaseKind.ascend));
     });
@@ -827,7 +930,7 @@ void main() {
       expect(chase.kind, HubChaseKind.dailyRun);
     });
 
-    test('S4 vault + Daily claimed mid AL: push or Will claim', () {
+    test('S4 vault + Daily claimed mid AL: level the party', () {
       final state = GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: 1,
         bossVictories: 0,
@@ -841,16 +944,9 @@ void main() {
         ],
       );
       final chase = HubChase.forState(state, now: now);
-      // Will may claim first if collection is mid-threshold; otherwise push floors.
-      expect(
-        chase.kind == HubChaseKind.clearFloors ||
-            chase.kind == HubChaseKind.willRank,
-        isTrue,
-        reason: 'got ${chase.kind}',
-      );
-      if (chase.kind == HubChaseKind.clearFloors) {
-        expect(chase.title.toLowerCase(), contains('push'));
-      }
+      expect(chase.kind, HubChaseKind.clearFloors);
+      expect(chase.title.toLowerCase(), contains('level the party'));
+      expect(chase.kind, isNot(HubChaseKind.willRank));
     });
 
     test('S5 almost Ascend still beats open Daily Run', () {
@@ -870,12 +966,14 @@ void main() {
   });
 }
 
-GameState _withPartyMaxLevel(GameState state) => state.copyWith(
+GameState _withHeroLevels(GameState state, int level) => state.copyWith(
       heroRoster: [
-        for (final h in state.heroRoster)
-          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+        for (final h in state.heroRoster) h.copyWith(level: level, xp: 0),
       ],
     );
+
+GameState _withPartyMaxLevel(GameState state) =>
+    _withHeroLevels(state, GameLogic.maxHeroLevel);
 
 /// Ladder quiet: Vault/Daily/KEY settled candidates (week cliffs set by caller).
 GameState _settledEndgameLadderState({required DateTime now}) =>

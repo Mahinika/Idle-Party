@@ -209,7 +209,7 @@ void main() {
     expect(GameLogic.canUseConsumable(state), isFalse);
   });
 
-  test('legacy hardmodeLevel clamps to 0 before party Lv60', () {
+  test('legacy hardmodeLevel clamps to 0 before party max', () {
     final json = GameLogic.createInitialState()
         .copyWith(hardmodeLevel: 10)
         .toJson();

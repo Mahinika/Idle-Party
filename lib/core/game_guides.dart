@@ -642,7 +642,7 @@ abstract final class GameGuides {
       title: 'INFINITY GAUNTLET',
       body:
           'Unlocks when every active hero reaches level ${GameLogic.maxHeroLevel} (endgame).\n\n'
-          '• Endless Crystal Spire climb — each floor gets harder.\n'
+          '• Endless Crystal Spire climb — not a 16th PATH cave; each floor gets harder.\n'
           '• Boss every 5 floors — SHARD tells scale past F100 (wider, faster).\n'
           '• Gold and essence scale with floor; boss every 5 floors.\n'
           '• Wipe or leave returns to hub; best floor is saved.\n'

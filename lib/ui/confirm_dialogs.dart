@@ -270,7 +270,7 @@ Future<void> confirmGauntletRun(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Infinity Gauntlet?',
         content: Text(
-          'Endless Crystal Spire climb — not a timed kill Rift.\n\n'
+          'Endless Spire climb — not a 16th PATH cave, not a timed Rift.\n\n'
           'Floors escalate forever. Boss every 5 floors. '
           'Wipe or leave returns to hub.\n\n'
           'Best clear: F$best',

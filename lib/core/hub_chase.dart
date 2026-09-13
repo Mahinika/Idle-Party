@@ -110,8 +110,10 @@ class HubChase {
 
   /// Picks the single best "what should I chase now?" target.
   ///
-  /// Priority: claimables → Ascend → almost-Ascend → vault / KEY cliffs →
-  /// first hour → KEY habit → endgame ladder → daily → vault start → zone →
+  /// Priority: claimables → first hour → Meet/BAG/market (pre-endgame) →
+  /// Ascend READY (pre-endgame only) → almost-Ascend (pre-endgame) →
+  /// prestige re-kit → vault/KEY/zone ALMOST cliffs → party-level ALMOST →
+  /// KEY habit → endgame ladder → Daily vault start → party-level → zone →
   /// Will → keep clearing.
   static HubChase forState(GameState state, {DateTime? now}) {
     final md = state.metaDepth;
@@ -191,7 +193,10 @@ class HubChase {
     if (GameLogic.canAscend(state)) {
       // AL0 first Ascend is optional — keep TODAY on Daily / farming; Ascend
       // stays on the hub urgent row so new saves are not trapped on one button.
-      if (state.ascensionLevel > 0) {
+      // At party Lv100, KEY / the endgame ladder is the night's job; Ascend
+      // stays on the urgent row and KEEP as optional lasting power.
+      if (state.ascensionLevel > 0 &&
+          !GameLogic.endgameUnlocked(state)) {
         final reward =
             GameLogic.ascendEssenceReward(state.ascensionLevel + 1) +
             MetaSystems.ascendMilestoneReward(
@@ -223,7 +228,9 @@ class HubChase {
     // Only "almost" once you've banked progress (AL0 needs 1 boss total -
     // 0/1 is the start of the game, not a cliffhanger).
     final almostAscend = bossesLeft == 1 && state.bossVictories > 0;
-    if (almostAscend) {
+    if (almostAscend &&
+        !GameLogic.endgameUnlocked(state) &&
+        !GameLogic.isMaxAscension(state)) {
       return _ascendPushChase(
         state,
         bossesNeed: bossesNeed,
@@ -307,9 +314,11 @@ class HubChase {
 
     // First-hour grow-party already returned above.
 
-    // Near endgame: level the party to max before KEY / Gauntlet / Rifts.
+    // Near Lv100: ALMOST party-level beats Daily vault start.
     final levelPush = _partyLevelChase(state);
-    if (levelPush != null) return levelPush;
+    if (levelPush != null && levelPush.urgency == HubChaseUrgency.almost) {
+      return levelPush;
+    }
 
     // KEY habit at party max — do not wait on unpaid Daily.
     final keyPush = _keystonePushChase(state);
@@ -322,7 +331,7 @@ class HubChase {
     }
 
     // At party max level: ladder Gauntlet → GR → Rift → Ashen Crown before
-    // Daily/Will so AL20 TODAY is one clear hunt, not a meta shuffle.
+    // Daily/Will so TODAY is one hunt, not a meta shuffle.
     if (GameLogic.endgameUnlocked(state)) {
       final endgameLadder = _endgameLadderChase(state, clock);
       if (endgameLadder != null) return endgameLadder;
@@ -361,6 +370,9 @@ class HubChase {
       }
       if (wantVaultStart) return _dailyVaultStartChase(state);
     }
+
+    // Midgame: levels unlock KEY (under Daily when the vault is still empty).
+    if (levelPush != null) return levelPush;
 
     // Progress grind: zone / Shop (endgame) / Will / leftover endgame / week.
     final zone = _nextZoneChase(state);
@@ -689,33 +701,29 @@ class HubChase {
     return "This week's beat · ${week.name} — ";
   }
 
-  /// Level the party toward [GameLogic.maxHeroLevel] near Ascension cap.
+  /// Level the party toward [GameLogic.maxHeroLevel] after the first boss.
+  /// First hour stays "Grow the party"; Daily vault start still owns day 2–7
+  /// unless this chase is ALMOST (within 5 levels of the cap).
   static HubChase? _partyLevelChase(GameState state) {
     if (GameLogic.endgameUnlocked(state)) return null;
+    if (!GameLogic.showDailyChase(state)) return null;
     final heroes = state.heroes;
     if (heroes.isEmpty) return null;
     final minLv = heroes.fold<int>(heroes.first.level, (m, h) => min(m, h.level));
     final maxLv = heroes.fold<int>(heroes.first.level, (m, h) => max(m, h.level));
-    final near =
-        GameLogic.isMaxAscension(state) || minLv >= (GameLogic.maxHeroLevel - 15);
-    if (!near) return null;
     final need = GameLogic.maxHeroLevel - minLv;
-    final almost = need <= 5 && minLv > 0;
+    if (need <= 0) return null;
+    final almost = need <= 5;
     return HubChase(
       kind: HubChaseKind.clearFloors,
       title: almost
           ? 'Almost party Lv${GameLogic.maxHeroLevel}'
           : 'Level the party to ${GameLogic.maxHeroLevel}',
-      detail: GameLogic.isMaxAscension(state)
-          ? (almost
-              ? 'AL20 — lowest Lv$minLv. KEY, Gauntlet, and Ranked GR unlock when '
-                  'every hero hits ${GameLogic.maxHeroLevel}.'
-              : 'AL20 — heroes Lv$minLv–$maxLv. Combat XP to '
-                  '${GameLogic.maxHeroLevel} unlocks KEY and the endgame ladder.')
-          : (almost
-              ? 'Lowest hero Lv$minLv — a few more levels unlock KEY, Gauntlet, and Rifts.'
-              : 'Heroes Lv$minLv–$maxLv. Combat XP to ${GameLogic.maxHeroLevel} unlocks '
-                  'KEY, Gauntlet, and Rifts.'),
+      detail: almost
+          ? 'Lowest hero Lv$minLv — a few more combat levels unlock KEY, '
+              'Gauntlet, and Ranked GR.'
+          : 'Heroes Lv$minLv–$maxLv. Combat XP to '
+              '${GameLogic.maxHeroLevel} unlocks KEY, Gauntlet, and Ranked GR.',
       progressLabel: minLv == maxLv
           ? 'Lv$minLv/${GameLogic.maxHeroLevel}'
           : 'Lv$minLv–$maxLv/${GameLogic.maxHeroLevel}',

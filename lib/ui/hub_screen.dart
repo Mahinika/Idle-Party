@@ -436,7 +436,9 @@ class _HubScreenState extends State<HubScreen>
             claimable: state.missions.where((m) => m.canClaim).length,
             canAscend: canAscend,
             ascendLabel: canAscend
-                ? 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e'
+                ? (GameLogic.endgameUnlocked(state)
+                    ? 'ASCEND · optional'
+                    : 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e')
                 : null,
             hideAscend: // FEEL 050
                 chase.kind == HubChaseKind.ascend ||

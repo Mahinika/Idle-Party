@@ -1,4 +1,3 @@
-import 'game_logic.dart';
 import 'hub_chase.dart';
 
 /// Hub ENDGAME tab map that unlocks when the active party is all Lv100.
@@ -41,7 +40,7 @@ abstract final class HubEndgameAct {
   static const String pathTabLabel = 'PATH';
 
   static String get mapUnlockLine =>
-      'Party Lv${GameLogic.maxHeroLevel} · tap a hunt, then ENTER';
+      'PATH = 15 caves · KEY = harder PATH · these hunts are not a 16th cave';
 
   static const List<HubEndgameNode> nodes = <HubEndgameNode>[
     HubEndgameNode(
@@ -49,7 +48,7 @@ abstract final class HubEndgameAct {
       shortLabel: 'GAUNTLET',
       title: 'Infinity Gauntlet',
       blurb:
-          'Endless Spire climb · boss every 5 · no FARM · wipe or leave → hub',
+          'Endless Spire · not a 16th cave · boss every 5 · wipe or leave → hub',
       portraitDungeonId: 'crystal',
       enterLabel: 'GAUNTLET',
       chaseKind: HubChaseKind.gauntletMilestone,
@@ -61,7 +60,7 @@ abstract final class HubEndgameAct {
       shortLabel: 'RANKED GR',
       title: 'Ranked GR',
       blurb:
-          'Ranked board night · Mothveil timer · gold OK · no gear mid-run',
+          'Timer night · Mothveil · no gear mid-run · ranked board',
       portraitDungeonId: 'veil',
       enterLabel: 'RANKED GR',
       chaseKind: HubChaseKind.greaterRiftMilestone,
@@ -73,7 +72,7 @@ abstract final class HubEndgameAct {
       shortLabel: 'FARM RIFT',
       title: 'Farm Rift',
       blurb:
-          'Stormwake farm · timed kills · gold + gear mid-run · not ranked',
+          'Timer farm · Stormwake · gold + gear mid-run · not ranked',
       portraitDungeonId: 'storm',
       enterLabel: 'FARM RIFT',
       chaseKind: HubChaseKind.riftMilestone,
@@ -85,7 +84,7 @@ abstract final class HubEndgameAct {
       shortLabel: 'ASHEN',
       title: 'Ashen Crown',
       blurb:
-          'Weekly boss night · ticket clear pays essence · PRACTICE free after',
+          'Weekly ticket boss · one clear pays · PRACTICE free after',
       portraitDungeonId: 'ember',
       enterLabel: 'ASHEN CROWN',
       chaseKind: HubChaseKind.ashenCrown,

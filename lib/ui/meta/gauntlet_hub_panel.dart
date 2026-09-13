@@ -17,7 +17,7 @@ class GauntletHubPanel extends StatelessWidget {
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
         'INFINITY GAUNTLET unlocks at party level ${GameLogic.maxHeroLevel} — '
-        'endless Crystal Spire climb (boss every 5 floors).',
+        'endless Spire climb, not a 16th cave (boss every 5 floors).',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
       );
@@ -33,9 +33,9 @@ class GauntletHubPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           best <= 0
-              ? 'Endless Crystal Spire floors — not a timed kill quota. '
+              ? 'Endless Spire floors — not a 16th cave, not a timed Rift. '
                   'Boss every 5. Wipe or leave → hub. Best floor is your PB.'
-              : 'Crystal Spire climb · best F$best. Floors escalate forever — '
+              : 'Spire climb · best F$best. Not a 16th cave. Floors escalate forever — '
                   'boss every 5. Not a Rift timer.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),

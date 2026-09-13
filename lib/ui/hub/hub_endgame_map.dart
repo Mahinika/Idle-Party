@@ -178,7 +178,7 @@ class HubEndgameMap extends StatelessWidget {
                 child: Text(
                   HubEndgameAct.mapUnlockLine,
                   textAlign: TextAlign.center,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(
                     size: 11,

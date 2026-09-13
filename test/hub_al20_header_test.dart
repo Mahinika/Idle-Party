@@ -38,7 +38,8 @@ void main() {
       ],
     );
     final chase = HubChase.forState(state, now: now);
-    expect(chase.detail, contains('AL20'));
+    expect(chase.detail.toUpperCase(), contains('KEY'));
+    expect(chase.detail, isNot(contains('AL20')));
     expect(chase.detail.toLowerCase().contains('done'), isFalse);
     expect(chase.title, contains('${GameLogic.maxHeroLevel}'));
   });

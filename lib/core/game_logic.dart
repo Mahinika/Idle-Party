@@ -508,7 +508,8 @@ class GameLogic {
   }) =>
       _recordGauntletRun(state, reachedFloor: reachedFloor);
 
-  /// AL20 endless climb — Crystal Spire art, boss every 5 floors, no hub exit.
+  /// Endless Spire climb at party Lv100 — Crystal Spire art, boss every 5
+  /// floors. Wipe or leave returns to hub. Not a 16th PATH zone.
   static const int gauntletBossEvery = 5;
 
   static GameState enterGauntlet(GameState state) => _enterGauntlet(state);
@@ -516,7 +517,7 @@ class GameLogic {
   static bool canEnterRift(GameState state) =>
       endgameUnlocked(state) && !state.inDungeon;
 
-  /// Timed kill-quota run — Crystal Spire art, dense packs, hub exit on resolve.
+  /// Timed kill-quota farm — Stormwake Hollow, gold+gear mid-run, hub on resolve.
   static GameState enterRift(GameState state, {int? tier}) =>
       _enterRift(state, tier: tier);
 

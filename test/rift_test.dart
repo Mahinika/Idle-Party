@@ -54,7 +54,7 @@ void main() {
     );
   });
 
-  test('Rift enter requires party Lv60', () {
+  test('Rift enter requires party max level', () {
     final early = GameLogic.createInitialState(now: now);
     expect(GameLogic.canEnterRift(early), isFalse);
     expect(GameLogic.enterRift(early).inRift, isFalse);
@@ -75,7 +75,7 @@ void main() {
     expect(run.dungeonId, isNot('crystal'));
   });
 
-  test('KEY dial blocked before party Lv60 and clamped on load', () {
+  test('KEY dial blocked before party max and clamped on load', () {
     final early = GameLogic.createInitialState(now: now).copyWith(
       hardmodeLevel: 5,
     );

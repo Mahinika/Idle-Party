@@ -22,7 +22,7 @@ void main() {
     expect(grKps, greaterThan(farmKps));
   });
 
-  test('Greater Rift enter requires party Lv60', () {
+  test('Greater Rift enter requires party max level', () {
     final early = GameLogic.createInitialState(now: now);
     expect(GameLogic.canEnterGreaterRift(early), isFalse);
     expect(GameLogic.enterGreaterRift(early).inGreaterRift, isFalse);

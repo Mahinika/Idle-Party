@@ -62,7 +62,10 @@ class EssenceKeepPanel extends StatelessWidget {
         ),
         if (GameLogic.canAscend(state))
           Text(
-            'Ascend is the red button on the hub — not a buy here.',
+            GameLogic.endgameUnlocked(state)
+                ? 'Ascend is optional — tonight\'s job is KEY / ENDGAME. '
+                    'Red button on the hub, not a buy here.'
+                : 'Ascend is the red button on the hub — not a buy here.',
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
 
