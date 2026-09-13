@@ -187,8 +187,12 @@ Check boxes only when **shipped** (or owner confirmed for Console-only).
 **In-repo** (in order, skip a box only if the owner’s Play numbers already
 prove a later hole is bigger)
 
-- [ ] Play-install first hour still holds: combat ≤90 s; GOLD / SHOP / ESSENCE
+- [x] Play-install first hour still holds: combat ≤90 s; GOLD / SHOP / ESSENCE
       hide-until-unlock; TODAY grow-the-party until first boss
+      (in-repo **2026-09-13**: skippable boot → ENTER; GEAR+MORE until first
+      loot; TODAY grow-the-party. `first_hour_plain_test` + `ship_smoke_test`
+      green. Play-install wall-clock still needs owner notes — do not mark
+      Console boxes from this check.)
 - [ ] Day-2–7: one cave today + Welcome Back still honest on a **Play return**
       (not a sideload)
 - [ ] Week-1 crawl: packs / boss tells not identical if play notes say they
