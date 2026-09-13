@@ -7,14 +7,14 @@ void main() {
   final context =
       'Idle Party default work this session: $now '
       'Do that unless the owner named something else. '
-      'Program: docs/GROWTH_MANDATE.md Program 2 — hide-until-unlock + Play smoke. '
+      'Program: docs/GROWTH_MANDATE.md Program 3 — stranger stays (D1→D7). '
       'AL20 is a quality gate, not the batch. '
       'Forks: six studio seats (.cursor/rules/studio-seats.mdc) — EP + UX + Marketing outweigh AL20. '
       'Do not start /init or repo cleanup unprompted. '
       'Play listing/docs ARE in mandate (play-store-prep); do not treat Play as background chores. '
       'If they paste play notes, prefer a new save / first 90s to combat; AL20 notes block ship if endgame is broken. '
       'After code: short phone test list (new save first), wait; no GitHub/Play upload before they play. '
-      'When every GROWTH_MANDATE Program 2 box is checked, start the user message with exactly: '
+      'When every GROWTH_MANDATE Program 3 box is checked, start the user message with exactly: '
       'ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN '
       'Prefer git branch main for daily work; release/* only when cutting a tag. '
       'Do not stage windows/flutter/generated_* unless pubspec plugins changed. '
@@ -30,7 +30,7 @@ void main() {
 String _nowLine() {
   final file = File('.cursor/rules/owner-preferences.mdc');
   if (!file.existsSync()) {
-    return 'Program 2 (hide-until-unlock + Play smoke)';
+    return 'Program 3 (stranger stays)';
   }
   for (final line in file.readAsLinesSync()) {
     final t = line.trim();
@@ -40,5 +40,5 @@ String _nowLine() {
       return t.substring(i + marker.length).trim();
     }
   }
-  return 'Program 2 (hide-until-unlock + Play smoke)';
+  return 'Program 3 (stranger stays)';
 }

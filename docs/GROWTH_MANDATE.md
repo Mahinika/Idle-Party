@@ -3,8 +3,9 @@
 **Locked:** 2026-09-12 by owner. **Research-checked:** 2026-09-12
 (GameAnalytics 2025–26, Play ASO experiments, idle FTUE, persona-prompt papers).
 **Program 1** (time-to-combat + Play funnel) shipped **2026-09-12**.
-**Default work now:** [Program 2](#program-2--hide-until-unlock--play-smoke)
-done bar below. Why: [LEARNINGS.md](LEARNINGS.md).
+**Program 2** (hide-until-unlock + Play smoke) closed **2026-09-13**.
+**Default work now:** [Program 3](#program-3--stranger-stays).
+Why: [LEARNINGS.md](LEARNINGS.md).
 
 North star: **främlingar på Play blir spelare.** AL20 is a quality gate
 (do not ship a broken endgame). It is **not** the batch driver.
@@ -120,20 +121,16 @@ Check boxes only when **shipped** (or owner confirmed for Console-only).
 
 **Owner / Console**
 
-- [ ] Google publish complete (listing shows Updated + live version)
-- [ ] SHOP + POWERUPS smoked on a **Play-installed** build (AD PRIVACY path too)
-- [ ] D1 read when traffic exists; Store Listing Experiment when visitors
-      suffice. No scaled UA.
+- [x] Google publish complete (listing shows Updated + live version)
+      (owner **2026-09-13**)
+- [x] SHOP + POWERUPS smoked on a **Play-installed** build (AD PRIVACY path too)
+      (owner **2026-09-13**)
+- [x] D1 / Store Listing Experiment: looked **2026-09-12** — traffic too small;
+      deferred. No scaled UA. (Program 3 pastes D1 after smoke when numbers exist.)
 
-When **every Program 2** box above is `[x]`, the next user-facing message
-starts with **exactly**:
-
-```
-ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN
-```
-
-Do not paraphrase. Do not say it early. Do not restore AL20 as the batch.
-After that line, default work is **[Program 3](#program-3--stranger-stays)**.
+Program 2 completed **2026-09-13**. The Robban line for *this* bar is said
+in the same turn. Do not repeat it. Default work is **[Program 3](#program-3--stranger-stays)**.
+Do not restore AL20 as the batch.
 
 **Quality gates (not the batch)**
 
@@ -147,8 +144,7 @@ After that line, default work is **[Program 3](#program-3--stranger-stays)**.
 ## Program 3 — stranger stays
 
 **Drafted 2026-09-13** (owner asked for a future plan; six chairs, one
-decision). **Starts after** the Program 2 Robban line — not before.
-In-repo Program 2 is done; remaining P2 boxes are owner Console.
+decision). **Clock starts 2026-09-13** (Program 2 Robban line).
 
 North star unchanged: **främlingar på Play blir spelare.** Pillars unchanged
 (party walks the room · one TODAY job · one prestige loop). Endless KEY /
@@ -187,7 +183,6 @@ Marketing may run tiny UA only after D1 exists and the owner asks.
 ### Done bar (Program 3)
 
 Check boxes only when **shipped** (or owner confirmed for Console-only).
-Do not start this bar until Program 2 is fully `[x]`.
 
 **In-repo** (in order, skip a box only if the owner’s Play numbers already
 prove a later hole is bigger)
@@ -231,7 +226,7 @@ SpatialCombat remains the only fight sim.
 ## Studio seats
 
 Six chairs only — `.cursor/rules/studio-seats.mdc`. Not a theatrical panel.
-**EP + UX + Marketing** pick *what to build* while Program 2 or 3 is open.
+**EP + UX + Marketing** pick *what to build* while Program 3 is open.
 Game Director vetoes a broken fight or DPS HIGH. Tech vetoes red
-analyze / crash. AL20 is not a chair. After the Program 2 Robban line,
-re-seat on Program 3 (stranger stays) — not AL20 as the default voice.
+analyze / crash. AL20 is not a chair. After the Program 3 Robban line,
+re-seat on the next plan — not AL20 as the default voice.

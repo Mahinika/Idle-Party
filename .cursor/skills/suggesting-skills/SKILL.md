@@ -42,7 +42,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | itch.io listing / community post | `play-store-prep` + `tool/store_listing/itch/PAGE.md` (no APK) |
 | `/init` / resync AGENTS + rules | `init` |
 | `/repo auditandcleaning` / full repo audit (no edits) | `repo-audit-and-cleaning` |
-| “gör spelet bättre” / vad härnäst | `docs/GROWTH_MANDATE.md` Program 2 next unchecked box |
+| “gör spelet bättre” / vad härnäst | `docs/GROWTH_MANDATE.md` Program 3 next unchecked box |
 | First hour / onboarding / listing / funnel | first-hour tests + `hub-smoke` + `play-store-prep` |
 | Fork / two games / whose call | silent `studio-seats` |
 | Strategi / 90 dagar / prioritering | `docs/GROWTH_MANDATE.md` then `docs/CONTENT_CADENCE.md` |

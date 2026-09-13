@@ -1,28 +1,27 @@
 ---
 description: >-
-  Program 2 — hide-until-unlock + Play smoke until that done bar.
-  Program 3 (stranger stays) starts after the Robban line. Never early.
+  Program 3 — stranger stays (D1→D7) until that done bar.
+  When complete, say the exact Robban line (never early, never paraphrased).
 alwaysApply: true
 ---
 
 # Growth mandate (Idle Party)
 
 **Locked 2026-09-12.** Source: `docs/GROWTH_MANDATE.md` (research-checked).
-Program 1 (time-to-combat + funnel) shipped 2026-09-12.
+Program 1 shipped 2026-09-12. Program 2 (Play smoke) closed 2026-09-13.
 
-Default work is **Program 2** — hide chrome until it means something + Play
-smoke. Vague “gör bättre / vad härnäst” → next **unchecked** box on
-**Program 2**. AL20 play notes are a **quality gate**. They are not the batch.
+Default work is **Program 3** — stranger stays (D1→D7 on Play, no zone #16).
+Vague “gör bättre / vad härnäst” → next **unchecked** box on **Program 3**.
+AL20 play notes are a **quality gate**. They are not the batch.
 Endgame copy / GEAR follow-up only when the owner’s notes say they lie.
 
 ## Do this
 
-- First-hour bar: GOLD after first reward; SHOP after first boss; ESSENCE
-  when essence exists. BAG Shop-chip off until then.
-- TODAY grow-the-party beats EQUIP / MARKET until the first boss
-- Starter kit HUD (PROT / DISC / FIRE) stays readable
+- Play-install first hour still holds (combat ≤90 s; hide GOLD/SHOP/ESSENCE)
+- TODAY grow-the-party until the first boss; one cave today on day 2–7
+- Week-1 crawl identity only against play notes (packs / tells, not dungeon #16)
 - Cadence 2–3 weeks; new-player What’s New; DPS HIGH still fails CI
-- Owner: Play publish + SHOP/POWERUPS smoke on a Play install
+- Owner: paste D1 (and D7 if traffic exists); listing experiment or defer
 
 ## Do not do
 
@@ -30,17 +29,16 @@ Endgame copy / GEAR follow-up only when the owner’s notes say they lie.
 - AL20 chase/wipe polish as the default slice
 - God-object cleanup as the quarter’s story
 - Scaled paid UA before D1 is known (tiny spend ≠ a D1 study)
-- Repeat the Robban line for Program 1 (that bar is history)
+- Repeat the Robban line for Program 1 or Program 2 (those bars are history)
 
 ## Phrase
 
-When **every** checkbox in `docs/GROWTH_MANDATE.md` → **Program 2** is `[x]`,
+When **every** checkbox in `docs/GROWTH_MANDATE.md` → **Program 3** is `[x]`,
 the next user-facing message starts with **exactly**:
 
 `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`
 
-Never early. Never paraphrase. After that line, default work is **Program 3**
-(stranger stays) — not AL20. `/init` must not restore the old AL20 default.
+Never early. Never paraphrase. `/init` must not restore the old AL20 default.
 Why: `docs/LEARNINGS.md`.
 
 ## Decision policy

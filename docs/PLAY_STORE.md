@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ⏳ review | **Live 163 (1.12.133)** (published 2026-09-12). **1.12.157 (187)** submitted **2026-09-12** (full rollout + listing copy/shots). Publiceringsöversikt → Ändringarna granskas. |
+| Production | ✅ live | Owner confirmed Google publish **2026-09-13** (listing Updated). Submitted **1.12.157 (187)** 2026-09-12; in-repo working ship still **1.12.163 / 193**. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ✅ review | Ads / Play Games / Advertising ID + **Firebase Analytics** (App interactions, Diagnostics, Device IDs) submitted **2026-09-10** — under Google review (`Ändringarna granskas`). Matches [PRIVACY.md](PRIVACY.md). |
@@ -35,7 +35,7 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Signed Production candidate AAB built: **1.12.157+187** (`app-release.aab`)
 - [x] Owner asked upload Production (2026-09-12)
 - [x] Uploaded + submitted for review: Production **187 (1.12.157)** + listing copy + 8 phone shots (2026-09-12)
-- [ ] Google review / publish complete → store listing shows Updated + **1.12.157**
+- [x] Google review / publish complete → store listing shows Updated (owner **2026-09-13**)
 - [x] After production live: AdMob store-link Idle Party (**2026-09-09** — Play linked; AdMob app review 2–3 days)
 
 ### Production upload paste (en-US release notes)
@@ -69,8 +69,9 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 **Primary distribution: Google Play.**  
 Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
 (production track live; keep Operator status honest above). Closed opt-in for early builds. Do **not**
-point players at GitHub Releases (repo may be private). Day-to-day: **Program 2**
-([GROWTH_MANDATE.md](GROWTH_MANDATE.md)) — first-hour chrome + Play publish/smoke.
+point players at GitHub Releases (repo may be private). Day-to-day: **Program 3**
+([GROWTH_MANDATE.md](GROWTH_MANDATE.md)) — stranger stays (D1→D7). Program 2
+Play publish/smoke closed **2026-09-13**.
 Ship path for players = Play AAB after owner play OK — not public GitHub APK
 links.
 

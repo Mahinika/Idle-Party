@@ -10,17 +10,16 @@ in sync (currently **1.12.163**). What’s New lives in `lib/core/meta_systems.d
 
 Owner describes goals in plain language; agents pick skills/tools/verify alone.
 **Rules (don’t duplicate here):**
-- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **Program 2** (hide-until-unlock + Play smoke; Console still open). **Program 3** (stranger stays) is drafted; it starts after the Program 2 Robban line. Program 1 done 2026-09-12. Do not restore AL20 as the batch
+- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **Program 3** (stranger stays — D1→D7). Program 2 Play smoke closed 2026-09-13. Program 1 done 2026-09-12. Do not restore AL20 as the batch
 - `.cursor/rules/studio-seats.mdc` — six chairs (EP, Game, UX, Tech, Art, Marketing)
 - `.cursor/rules/product-locks.mdc` — hard + soft locks (dated)
 - `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
 - `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff
 - `.cursor/rules/definition-of-done.mdc` — analyze / tests / commit locally
 
-Cadence: `docs/GROWTH_MANDATE.md` **Program 2** (then Program 3), then
-`docs/CONTENT_CADENCE.md`. **Default work** when vague: next unchecked Program 2
-box (Console if in-repo is done). After the Program 2 Robban line: next
-Program 3 box. Do not restore AL20 as the batch. Chat Swedish; short test list
+Cadence: `docs/GROWTH_MANDATE.md` **Program 3**, then
+`docs/CONTENT_CADENCE.md`. **Default work** when vague: next unchecked Program 3
+box. Do not restore AL20 as the batch. Chat Swedish; short test list
 (new save first) → wait. Commit locally when green; ask before push / PR / tag / Play.
 
 **UI target:** portrait phones (~360–430 px). Reference **Samsung A56**
@@ -31,7 +30,7 @@ Program 3 box. Do not restore AL20 as the batch. Chat Swedish; short test list
 **Distribution today:** **Google Play is the primary install path**
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Store listing:
 `https://play.google.com/store/apps/details?id=com.idleparty.app` (production
-live **1.12.133 / 163**; **1.12.157 / 187** submitted 2026-09-12; working ship **1.12.163 / 193**). Closed opt-in remains for early builds.
+live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.163 / 193**). Closed opt-in remains for early builds.
 Do **not** link players to GitHub Releases (repo may be private). Working ship
 in-repo may be ahead of Play — wait for owner play before uploading a new AAB.
 
@@ -119,7 +118,7 @@ Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 Slash: `/init` resyncs AGENTS/rules; `/repo auditandcleaning` runs a read-only
 full-repo audit (see `.cursor/commands/repo-auditandcleaning.md`).
 
-Cadence: **`docs/GROWTH_MANDATE.md` Program 2**, then Program 3, then
+Cadence: **`docs/GROWTH_MANDATE.md` Program 3**, then
 `docs/CONTENT_CADENCE.md` (tag rhythm). Not AL20-as-batch. Why we flipped:
 [`docs/LEARNINGS.md`](docs/LEARNINGS.md). Background (optional):
 `docs/TOP_GAMES_RESEARCH.md`. Chase contract (hub TODAY ↔ offline Up next):

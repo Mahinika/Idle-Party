@@ -22,10 +22,10 @@ Before telling the owner a coding task is finished:
    silently. Never point players at GitHub Releases.
 6. **Docs** — if architecture / Ascend / world path / distribution / tooling
    changed, update `AGENTS.md` (or `/init`). If a growth-mandate box shipped,
-   check it in `docs/GROWTH_MANDATE.md` (active program).
-7. **Mandate** — if every **Program 2** Done-bar box is `[x]`, the user-facing
+   check it in `docs/GROWTH_MANDATE.md` (Program 3).
+7. **Mandate** — if every **Program 3** Done-bar box is `[x]`, the user-facing
    message starts with exactly `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`.
-   After that, the same line when every **Program 3** box is `[x]`. Never early.
+   Never early. Do not repeat the line for Program 1 or 2.
 
 Skip heavy mid-band sims unless the task is balance. Skip A56 for pure logic
 unless UI chrome changed. First-15-min UI always needs A56 or hub smoke.

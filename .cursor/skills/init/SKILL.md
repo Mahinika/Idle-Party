@@ -18,8 +18,8 @@ When the user runs **`/init`**, do this job (do not ask which files to touch):
 Make `AGENTS.md` and `.cursor/rules/*.mdc` accurate for **today’s** codebase and product decisions.
 
 **Do not revert** `docs/GROWTH_MANDATE.md` / `.cursor/rules/growth-mandate.mdc`
-to the old AL20-default slice while **Program 2** is incomplete. Sync
-architecture facts; keep Program 2 as default work.
+to the old AL20-default slice while **Program 3** is incomplete. Sync
+architecture facts; keep Program 3 as default work.
 
 ## Procedure
 
@@ -30,7 +30,7 @@ architecture facts; keep Program 2 as default work.
    - **Keep** six studio seats; do not restore a 40-role org or AL20 expert panel
    - Key systems: `GameDirector`, `GameLogic`, `SpatialCombat`, hub/dungeon UI, `DungeonCatalog`, `metaDepth`, Ascend keep/reset
    - Docs that claim “current”: `docs/PLAY_STORE.md`, `docs/CONTENT_CADENCE.md`,
-     `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md` (keep Program 2 until its done bar is complete)
+     `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md` (keep Program 3 until its done bar is complete)
    - Optional fast honesty: `flutter test test/ship_smoke_test.dart` and/or MCP `changelog_check` / `zone_identity` if helpful
 
 2. **Diff claims vs code**
@@ -40,7 +40,7 @@ architecture facts; keep Program 2 as default work.
    - Build/verify commands, MCP server name, skill list
    - Live look is `a56-playtest` (Samsung A56 emulator), not web-server tabs
    - Owner prefs (language, Play vs sideload, commit/propose behavior) — update only if product reality changed
-   - **Keep** Program 2 as default work until `docs/GROWTH_MANDATE.md` Program 2 is complete
+   - **Keep** Program 3 as default work until `docs/GROWTH_MANDATE.md` Program 3 is complete
 
 3. **Edit**
    - Update **`AGENTS.md`** so architecture + conventions + tooling match code

@@ -11,4 +11,4 @@ If the user message is exactly **`/init`**, or clearly means that slash command,
 
 Do not ask which skill to use. Do not treat `/init` as a vague “start coding”
 request. **`/init` must not restore AL20 as the default work slice** while
-`docs/GROWTH_MANDATE.md` Program 2 is incomplete.
+`docs/GROWTH_MANDATE.md` Program 3 is incomplete.
