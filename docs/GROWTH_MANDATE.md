@@ -200,8 +200,12 @@ prove a later hole is bigger)
       `first_hour_plain_test` / `chase_contract_test` / `offline_progress_test`
       green. Play-return wall-clock still needs owner notes — do not mark
       Console boxes from this check.)
-- [ ] Week-1 crawl: packs / boss tells not identical if play notes say they
+- [x] Week-1 crawl: packs / boss tells not identical if play notes say they
       are (SpatialCombat mix — no dungeon #16)
+      (in-repo **2026-09-13**: Sandy starter pack is mixed jobs; Sandy SLAM vs
+      Goblin RALLY; mixes differ. `enemy_flavor_test` + `spatial_combat_test`
+      green. Play notes still win if a later crawl feels cloned — do not mark
+      Console boxes from this check.)
 - [ ] At least one 2–3 week tag; What’s New lead for a new player; DPS HIGH
       still fails CI
 

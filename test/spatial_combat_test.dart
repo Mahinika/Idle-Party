@@ -836,6 +836,19 @@ void main() {
     expect(seen.contains('PULSE'), isFalse);
   });
 
+  test('week-1 Sandy boss shouts SLAM, not PULSE', () {
+    final seen = _bossTellTexts('sandy');
+    expect(seen.contains('SLAM'), isTrue);
+    expect(seen.contains('PULSE'), isFalse);
+  });
+
+  test('week-1 Goblin boss shouts RALLY, not PULSE', () {
+    final seen = _bossTellTexts('goblin');
+    expect(seen.contains('RALLY'), isTrue);
+    expect(seen.contains('PULSE'), isFalse);
+    expect(seen.contains('SLAM'), isFalse);
+  });
+
   test('ashen crown boss uses CROWN / SLAM / IGNITE kit', () {
     final seen = _bossTellTexts(
       'ember',

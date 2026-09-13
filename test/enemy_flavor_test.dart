@@ -104,4 +104,52 @@ void main() {
     expect(tells.length, DungeonCatalog.all.length);
     expect(tells.contains('PULSE'), isFalse);
   });
+
+  test('week-1 Sandy leans brawlers; Goblin leans glass and support', () {
+    var sandyBrawlers = 0;
+    var goblinBrawlers = 0;
+    var sandyGlassSupport = 0;
+    var goblinGlassSupport = 0;
+    const n = 240;
+    for (var i = 0; i < n; i++) {
+      final sandy = EnemyFlavor.pickArchetype(
+        type: RoomType.normal,
+        isBossUnit: false,
+        dungeonId: 'sandy',
+        index: i % 9,
+        count: 9,
+        rng: Random(i + 17),
+      );
+      final goblin = EnemyFlavor.pickArchetype(
+        type: RoomType.normal,
+        isBossUnit: false,
+        dungeonId: 'goblin',
+        index: i % 9,
+        count: 9,
+        rng: Random(i + 17),
+      );
+      bool brawler(EnemyArchetype a) =>
+          a == EnemyArchetype.brute || a == EnemyArchetype.tank;
+      bool glassSupport(EnemyArchetype a) =>
+          a == EnemyArchetype.glass || a == EnemyArchetype.support;
+      if (brawler(sandy)) sandyBrawlers++;
+      if (brawler(goblin)) goblinBrawlers++;
+      if (glassSupport(sandy)) sandyGlassSupport++;
+      if (glassSupport(goblin)) goblinGlassSupport++;
+    }
+    expect(sandyBrawlers, greaterThan(goblinBrawlers));
+    expect(goblinGlassSupport, greaterThan(sandyGlassSupport));
+  });
+
+  test('week-1 Sandy starter floor is not one cloned archetype', () {
+    final state = GameLogic.createInitialState(now: DateTime.utc(2026, 9, 13));
+    expect(state.dungeonId, 'sandy');
+    final types = state.enemies.map((e) => e.archetype).toSet();
+    expect(state.enemies.length, greaterThanOrEqualTo(3));
+    expect(types.length, greaterThan(1));
+    expect(
+      {for (final e in state.enemies) e.name}.length,
+      greaterThan(1),
+    );
+  });
 }
