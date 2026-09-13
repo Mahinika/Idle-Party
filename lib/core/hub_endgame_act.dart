@@ -1,10 +1,12 @@
+import 'greater_rift.dart';
 import 'hub_chase.dart';
 
 /// Hub ENDGAME tab map that unlocks when the active party is all Lv100.
 ///
 /// Not dungeon #16 and not a footer under the 15-zone path — a separate
 /// board. Hunts reuse Crystal Spire / Mothveil / Stormwake / Ashen Vault
-/// staging. KEY dials stay on the KEY tab.
+/// staging. KEY still holds KEY / Farm Rift dials; Ranked GR is next-rank
+/// on this map (no KEY stepper).
 enum HubEndgameHunt { gauntlet, rankedGr, farmRift, ashen }
 
 class HubEndgameNode {
@@ -60,7 +62,7 @@ abstract final class HubEndgameAct {
       shortLabel: 'RANKED GR',
       title: 'Ranked GR',
       blurb:
-          'Timer night · Mothveil · no gear mid-run · ranked board',
+          'Next rank after your best · Mothveil · no gear mid-run',
       portraitDungeonId: 'veil',
       enterLabel: 'RANKED GR',
       chaseKind: HubChaseKind.greaterRiftMilestone,
@@ -110,7 +112,29 @@ abstract final class HubEndgameAct {
     };
   }
 
+  static String enterLabelFor(HubEndgameHunt hunt, {int grBestTier = 0}) {
+    if (hunt == HubEndgameHunt.rankedGr) {
+      return GreaterRift.hubEnterLabel(grBestTier);
+    }
+    return nodeFor(hunt).enterLabel;
+  }
+
+  static String shortLabelFor(HubEndgameHunt hunt, {int grBestTier = 0}) {
+    if (hunt == HubEndgameHunt.rankedGr) {
+      return GreaterRift.hubShortLabel(grBestTier);
+    }
+    return nodeFor(hunt).shortLabel;
+  }
+
+  static String titleFor(HubEndgameHunt hunt, {int grBestTier = 0}) {
+    if (hunt == HubEndgameHunt.rankedGr) {
+      return GreaterRift.hubTitle(grBestTier);
+    }
+    return nodeFor(hunt).title;
+  }
+
   static bool isEnterLabel(String label) {
+    if (GreaterRift.isHubEnterLabel(label)) return true;
     for (final n in nodes) {
       if (n.enterLabel == label) return true;
     }

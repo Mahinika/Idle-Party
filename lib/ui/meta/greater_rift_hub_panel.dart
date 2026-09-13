@@ -6,9 +6,8 @@ import '../../core/greater_rift.dart';
 import '../confirm_dialogs.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
-import '../menu_chrome.dart';
 
-/// KEY tab: Greater Rift tier dial (party max-level prestige + boards).
+/// KEY tab: Greater Rift next-rank enter (no KEY stepper).
 class GreaterRiftHubPanel extends StatelessWidget {
   const GreaterRiftHubPanel({super.key, required this.director});
   final GameDirector director;
@@ -25,12 +24,9 @@ class GreaterRiftHubPanel extends StatelessWidget {
       );
     }
     final best = state.metaDepth.grBestTier;
-    final maxSel = GreaterRift.maxSelectableTier(best);
-    final pref = GreaterRift.clampTier(
-      state.metaDepth.grPreferredTier.clamp(GreaterRift.minTier, maxSel),
-    );
-    final kills = GreaterRift.killTarget(pref);
-    final par = GreaterRift.formatTimer(GreaterRift.parTimeMs(pref));
+    final next = GreaterRift.nextOfferTier(best);
+    final kills = GreaterRift.killTarget(next);
+    final par = GreaterRift.formatTimer(GreaterRift.parTimeMs(next));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -40,41 +36,15 @@ class GreaterRiftHubPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Mothveil prestige timer — harder packs, no mid-run gear, board score. '
-          'Not Gauntlet floors · not farm Rift loot. Endless after GR${GreaterRift.campaignCap}. '
-          'Best GR$best · kill $kills before $par · '
-          '+${GreaterRift.successEssence(pref)}e / +${GreaterRift.successGold(pref)}g',
+          'Next rank after your best — hub ENDGAME shows it. No KEY dial. '
+          'Mothveil · no mid-run gear. Endless after GR${GreaterRift.campaignCap}. '
+          'Best GR$best · next GR$next · kill $kills before $par · '
+          '+${GreaterRift.successEssence(next)}e / +${GreaterRift.successGold(next)}g',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            MenuChrome.stepperButton(
-              label: 'GR -',
-              sign: '-',
-              onPressed: pref > GreaterRift.minTier
-                  ? () => director.setGrPreferredTier(pref - 1)
-                  : null,
-            ),
-            Expanded(
-              child: Text(
-                'GR$pref',
-                textAlign: TextAlign.center,
-                style: GameTheme.body(size: 16, color: GameTheme.parchment),
-              ),
-            ),
-            MenuChrome.stepperButton(
-              label: 'GR +',
-              sign: '+',
-              onPressed: pref < maxSel
-                  ? () => director.setGrPreferredTier(pref + 1)
-                  : null,
-            ),
-          ],
         ),
         const SizedBox(height: 8),
         GameButton(
-          label: 'ENTER RANK GR$pref',
+          label: 'ENTER RANK GR$next',
           style: GameButtonStyle.red,
           onPressed: GameLogic.canEnterGreaterRift(state)
               ? () => confirmGreaterRiftRun(context, director)

@@ -75,17 +75,23 @@ class SelectedZoneCaption extends StatelessWidget {
 }
 
 class SelectedHuntCaption extends StatelessWidget {
-  const SelectedHuntCaption({super.key, required this.hunt});
+  const SelectedHuntCaption({
+    super.key,
+    required this.hunt,
+    this.grBestTier = 0,
+  });
 
   final HubEndgameHunt hunt;
+  final int grBestTier;
 
   @override
   Widget build(BuildContext context) {
     final node = HubEndgameAct.nodeFor(hunt);
+    final title = HubEndgameAct.titleFor(hunt, grBestTier: grBestTier);
     return Column(
       children: [
         Text(
-          '${node.title} · ENDGAME',
+          '$title · ENDGAME',
           textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

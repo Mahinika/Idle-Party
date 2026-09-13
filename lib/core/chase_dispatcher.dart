@@ -2,6 +2,7 @@ import '../models/dungeon_def.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'hub_chase.dart';
+import 'hub_endgame_act.dart';
 import 'keystone.dart';
 import 'local_season.dart';
 import 'menu_alerts.dart';
@@ -96,8 +97,11 @@ abstract final class ChaseDispatcher {
       case HubChaseKind.riftMilestone:
         return const ChasePlan(label: 'FARM RIFT', op: ChaseOp.confirmRift);
       case HubChaseKind.greaterRiftMilestone:
-        return const ChasePlan(
-          label: 'RANKED GR',
+        return ChasePlan(
+          label: HubEndgameAct.enterLabelFor(
+            HubEndgameHunt.rankedGr,
+            grBestTier: state.metaDepth.grBestTier,
+          ),
           op: ChaseOp.confirmGreaterRift,
         );
       case HubChaseKind.ashenCrown:
@@ -207,8 +211,11 @@ abstract final class ChaseDispatcher {
         : GameLogic.isoMonthKey(DateTime.now().toUtc());
     final month = LocalSeasonCatalog.forMonthKey(monthKey);
     if (month.grTierTarget > 0) {
-      return const ChasePlan(
-        label: 'RANKED GR',
+      return ChasePlan(
+        label: HubEndgameAct.enterLabelFor(
+          HubEndgameHunt.rankedGr,
+          grBestTier: state.metaDepth.grBestTier,
+        ),
         op: ChaseOp.confirmGreaterRift,
       );
     }

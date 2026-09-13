@@ -233,10 +233,10 @@ GameState _resolveRiftFail(GameState state) {
 
 GameState _enterGreaterRift(GameState state, {int? tier}) {
   if (!GameLogic.canEnterGreaterRift(state)) return state;
-  final preferred = tier ?? state.metaDepth.grPreferredTier;
   final maxSel = GreaterRift.maxSelectableTier(state.metaDepth.grBestTier);
+  // Default is always the next uncleared rank (best+1). Ignore KEY preferred.
   final t = GreaterRift.clampTier(
-    preferred.clamp(GreaterRift.minTier, maxSel),
+    (tier ?? maxSel).clamp(GreaterRift.minTier, maxSel),
   );
   final layoutSeed = GameLogic.newLayoutSeed();
   final floor = DungeonGenerator.generateFloor(

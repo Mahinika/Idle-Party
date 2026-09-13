@@ -676,7 +676,7 @@ abstract final class GameGuides {
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
           'Ranked GR board wires when the Console ID is pasted.\n'
-          '• The hub hunt chases Ranked GR before Farm Rift. Set tier under KEY · RANKED GR or tap RANKED GR on the hub ENDGAME tab.',
+          '• The hub hunt chases Ranked GR before Farm Rift. Hub ENDGAME shows the next rank after your best (GR34 → GR35) — no KEY dial.',
     ),
     GuideTopic(
       id: 'apex',

@@ -7,6 +7,7 @@ import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/gold_income.dart';
+import '../core/greater_rift.dart';
 import '../core/hub_chase.dart';
 import '../core/hub_endgame_act.dart';
 import '../core/hub_primary_cta.dart';
@@ -298,6 +299,7 @@ class _HubScreenState extends State<HubScreen>
       endgameUnlocked: GameLogic.endgameUnlocked(state),
       mapHunt: _userPickedZone ? _selectedHunt : null,
       showEndgameMap: _showEndgameMap,
+      grBestTier: state.metaDepth.grBestTier,
     );
     final enterAction = unlockedSelected
         ? () => widget.onEnterDungeon(_selectedId)
@@ -318,6 +320,17 @@ class _HubScreenState extends State<HubScreen>
     VoidCallback? actionFor(String? label) {
       if (label == null) return null;
       for (final node in HubEndgameAct.nodes) {
+        if (HubEndgameAct.enterLabelFor(
+              node.hunt,
+              grBestTier: state.metaDepth.grBestTier,
+            ) ==
+            label) {
+          return huntAction(node.hunt);
+        }
+        if (node.hunt == HubEndgameHunt.rankedGr &&
+            GreaterRift.isHubEnterLabel(label)) {
+          return huntAction(node.hunt);
+        }
         if (node.enterLabel == label) return huntAction(node.hunt);
       }
       if (HubPrimaryCta.isEnterFamilyLabel(label)) {
@@ -639,6 +652,8 @@ class _HubScreenState extends State<HubScreen>
                                             ? HubEndgameMap(
                                                 selectedHunt: _selectedHunt,
                                                 pulse: _torch,
+                                                grBestTier:
+                                                    state.metaDepth.grBestTier,
                                                 onSelectHunt: (hunt) =>
                                                     setState(() {
                                                   _userPickedZone = true;
@@ -687,7 +702,10 @@ class _HubScreenState extends State<HubScreen>
                               if (!short) ...[
                                 const SizedBox(height: 4),
                                 if (_selectedHunt != null)
-                                  SelectedHuntCaption(hunt: _selectedHunt!)
+                                  SelectedHuntCaption(
+                                    hunt: _selectedHunt!,
+                                    grBestTier: state.metaDepth.grBestTier,
+                                  )
                                 else
                                   SelectedZoneCaption(
                                     dungeon: selectedDungeon,

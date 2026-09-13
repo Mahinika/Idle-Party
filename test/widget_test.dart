@@ -105,7 +105,7 @@ void main() {
 
     await tester.tap(find.text('ENDGAME').first);
     await tester.pump();
-    expect(find.textContaining('RANKED GR'), findsWidgets);
+    expect(find.textContaining('GR1'), findsWidgets);
     expect(find.textContaining('RIFT'), findsWidgets);
     expect(find.textContaining('GAUNTLET'), findsWidgets);
 

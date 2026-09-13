@@ -173,7 +173,7 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'At party Lv${GameLogic.maxHeroLevel}, Ranked GR is the Mothveil prestige timer — '
           'harder packs, no mid-run gear, season ranks on KEY · BOARDS. '
-          'Tap RANKED GR on the hub ENDGAME tab. The hub hunt chases GR before Farm Rift.',
+          'Tap RANKED GR on the hub ENDGAME tab — it offers the next rank after your best. The hub hunt chases GR before Farm Rift.',
     ),
     (
       id: 'ashen_crown',

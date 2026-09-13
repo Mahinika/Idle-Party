@@ -98,11 +98,13 @@ class HubEndgameMap extends StatelessWidget {
     required this.selectedHunt,
     required this.onSelectHunt,
     this.pulse,
+    this.grBestTier = 0,
   });
 
   final HubEndgameHunt? selectedHunt;
   final ValueChanged<HubEndgameHunt> onSelectHunt;
   final Animation<double>? pulse;
+  final int grBestTier;
 
   /// Node centers (gauntlet / Ranked GR / Farm Rift / Ashen).
   static List<Offset> get markerNorm => [
@@ -211,7 +213,9 @@ class HubEndgameMap extends StatelessWidget {
     required double statusH,
   }) {
     final selected = selectedHunt == node.hunt;
-    final statusWord = selected ? 'HERE' : node.shortLabel;
+    final statusWord = selected
+        ? 'HERE'
+        : HubEndgameAct.shortLabelFor(node.hunt, grBestTier: grBestTier);
     final labelH = statusWord.isEmpty ? 0.0 : statusH;
     final cx = node.mapX * mapW;
     final cy = node.mapY * mapH;
@@ -225,7 +229,7 @@ class HubEndgameMap extends StatelessWidget {
       width: hitSize,
       height: hitSize + labelH,
       child: MapZoneMarker(
-        name: node.title,
+        name: HubEndgameAct.titleFor(node.hunt, grBestTier: grBestTier),
         portraitDungeonId: node.portraitDungeonId,
         discSize: discSize,
         hitSize: hitSize,

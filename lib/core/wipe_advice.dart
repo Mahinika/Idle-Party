@@ -246,7 +246,7 @@ abstract final class WipeAdvice {
     }
     if (state.inGreaterRift && fight.leftover >= 0.35) {
       final tier = state.grTier > 0 ? state.grTier : state.metaDepth.grBestTier;
-      return 'GR$tier may be high — dial down Ranked GR on KEY';
+      return 'GR$tier is steep — leave and retry from hub ENDGAME';
     }
     if (state.inRift && fight.leftover >= 0.35) {
       final tier = state.riftTier > 0 ? state.riftTier : state.metaDepth.riftBestTier;

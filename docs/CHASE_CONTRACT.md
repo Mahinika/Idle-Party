@@ -15,7 +15,7 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 6. **Fresh prestige re-kit** — after Ascend or optional AL20 Reborn (`metaDepth.freshPrestige` and low gear pressure): TODAY says **Rebuild your bag** with plain farm/re-equip copy + geared % progress. Skip KEY / Gauntlet / Rift until real drops land. **Reborn is never a TODAY chase.**
 7. **Level the party** — after the first boss and before endgame unlock, TODAY can say **Level the party to 100** (combat XP unlocks KEY / Gauntlet / Ranked GR — not AL20). Normal urgency sits **under** Daily vault start; ALMOST (near 100) sits above it.
 8. **KEY habit (endgame only)** — chase the next KEY until preferred key is at +20 (TODAY detail includes affixes + par). Higher keys stay on the KEY tab. Does **not** wait on unpaid Daily. Beats Ascend READY.
-9. **Endgame ladder (party Lv100)** — after KEY +20: week ALMOST (if any) → Gauntlet (PB after F100) → Greater Rift through GR20 → Farm Rift through R20 → Ashen Crown. KEY / Ranked GR / Farm Rift past 20 stay on the KEY tab / fallback so weekly Ashen is not buried. Month ALMOST after ladder. One hunt — not Daily/Will shuffle. Gauntlet is **not** a 16th PATH cave.
+9. **Endgame ladder (party Lv100)** — after KEY +20: week ALMOST (if any) → Gauntlet (PB after F100) → Greater Rift through GR20 → Farm Rift through R20 → Ashen Crown. KEY +21 stays on the KEY tab. Ranked GR past 20 shows the **next rank on hub ENDGAME** (GR34 → GR35, no KEY dial) so weekly Ashen is not buried on TODAY. Farm Rift past 20 stays on KEY. Month ALMOST after ladder. One hunt — not Daily/Will shuffle. Gauntlet is **not** a 16th PATH cave.
 10. **Done for today** — when Vault + Daily + KEY dial are settled and the ladder is quiet (PB only): soft rest with KEY · BOARDS CTA; Spire PB stays optional in the detail. **Week ALMOST / READY** still beat this soft rest (normal week progress does not).
 11. **Progress grind** — **Daily Vault (one cave today)** is the day-2–7 job after the first boss (beats normal party-level). **Daily Run** waits until first Ascend, then follows a claimed vault. Then Will (CODEX CTA), leftover endgame (pre–Lv100), Shop (endgame), week goal, then **one** endgame fallback (time KEY at dial / push GR — never a stats dump)
 
@@ -27,7 +27,7 @@ ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats
 
 **Daily ordlista (three systems):** Daily Vault (UTC claim) · Daily Run (+25e floor) · Quests Daily (MORE board). Never collapse them into one “daily” button.
 
-**Rift consolidation:** TODAY chases **Ranked GR** before **Farm Rift** (`_farmRiftChaseReady` — GR1 clear or GR milestones done). Both stay on KEY; Farm Rift is not deleted.
+**Rift consolidation:** TODAY chases **Ranked GR** before **Farm Rift** (`_farmRiftChaseReady` — GR1 clear or GR milestones done). Ranked GR next rank lives on hub ENDGAME; Farm Rift dial stays on KEY. Farm Rift is not deleted.
 
 **Season clocks:** UTC day (vault/run) · ISO week (KEY affix + week goal) · calendar month (vault bonus) · Play month (boards). Hub meta pulse crumbs (`KEY +N`, `Vault n/target · not Daily Run`, `Week · …`) stay off when the hunt is already KEY / Gauntlet / Ranked GR / Farm Rift / Ashen. One hunt still wins.
 

@@ -100,7 +100,29 @@ void main() {
       mapHunt: HubEndgameHunt.rankedGr,
     );
     expect(cta.primaryLabel, 'CLAIM VAULT');
-    expect(cta.secondaryLabel, 'RANKED GR');
+    expect(cta.secondaryLabel, 'RANKED GR1');
+    expect(cta.showKeyDial, isFalse);
+  });
+
+  test('map Ranked GR pick shows next rank after best', () {
+    const chase = HubChase(
+      kind: HubChaseKind.claimDailyVault,
+      title: 'Claim Daily Vault',
+      detail: 'Claim +e.',
+      urgency: HubChaseUrgency.ready,
+    );
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: 'CLAIM VAULT',
+      hasChaseAction: true,
+      unlockedSelected: true,
+      hardmodeLevel: 10,
+      showKeystoneJargon: true,
+      endgameUnlocked: true,
+      mapHunt: HubEndgameHunt.rankedGr,
+      grBestTier: 34,
+    );
+    expect(cta.secondaryLabel, 'RANKED GR35');
     expect(cta.showKeyDial, isFalse);
   });
 

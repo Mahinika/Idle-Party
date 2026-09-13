@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/greater_rift.dart';
 import '../../core/wipe_advice.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -55,7 +56,7 @@ class DungeonWipePanel extends StatelessWidget {
                     state.inGauntlet
                         ? 'Gauntlet climb ends. PB F${state.metaDepth.gauntletBestFloor}. Hub → climb Crystal Spire again.'
                         : state.inGreaterRift
-                        ? 'Ranked GR ends. Best GR${state.metaDepth.grBestTier}. Hub → retry Mothveil (no mid-run gear).'
+                        ? 'Ranked GR ends. Best GR${state.metaDepth.grBestTier}. Hub ENDGAME → next GR${GreaterRift.nextOfferTier(state.metaDepth.grBestTier)} (no mid-run gear).'
                         : state.inRift
                         ? 'Farm Rift ends. Best R${state.metaDepth.riftBestTier}. Hub → farm Stormwake again (loot mid-run).'
                         : dailyEcho

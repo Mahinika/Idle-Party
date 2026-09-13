@@ -362,12 +362,7 @@ Future<void> confirmGreaterRiftRun(
 ) async {
   final state = director.state;
   if (!GameLogic.canEnterGreaterRift(state)) return;
-  final tier = GreaterRift.clampTier(
-    state.metaDepth.grPreferredTier.clamp(
-      GreaterRift.minTier,
-      GreaterRift.maxSelectableTier(state.metaDepth.grBestTier),
-    ),
-  );
+  final tier = GreaterRift.nextOfferTier(state.metaDepth.grBestTier);
   final kills = GreaterRift.killTarget(tier);
   final par = GreaterRift.formatTimer(GreaterRift.parTimeMs(tier));
   final essence = GreaterRift.successEssence(tier);

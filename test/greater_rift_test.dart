@@ -94,6 +94,24 @@ void main() {
     expect(resolved.metaDepth.riftBestTier, greaterThan(0));
   });
 
+  test('enter without a tier is always best+1, not KEY preferred', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        metaDepth: const MetaDepthState(
+          grBestTier: 34,
+          grPreferredTier: 1,
+        ),
+      ),
+    );
+    expect(GreaterRift.nextOfferTier(34), 35);
+    expect(GreaterRift.hubEnterLabel(34), 'RANKED GR35');
+    expect(GreaterRift.hubShortLabel(34), 'GR35');
+    final run = GameLogic.enterGreaterRift(state);
+    expect(run.grTier, 35);
+    expect(run.inGreaterRift, isTrue);
+  });
+
   test('Ranked GR stays selectable past 20', () {
     expect(GreaterRift.maxSelectableTier(20), 21);
     expect(GreaterRift.killTarget(21), GreaterRift.killTarget(20));

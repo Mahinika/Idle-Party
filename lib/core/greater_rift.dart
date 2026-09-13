@@ -25,6 +25,21 @@ abstract final class GreaterRift {
   static int maxSelectableTier(int bestCleared) =>
       clampTier(max(minTier, bestCleared + 1));
 
+  /// Next uncleared rank — hub ENDGAME / enter use this, not a KEY dial.
+  static int nextOfferTier(int bestCleared) => maxSelectableTier(bestCleared);
+
+  static String hubEnterLabel(int bestCleared) =>
+      'RANKED GR${nextOfferTier(bestCleared)}';
+
+  static String hubShortLabel(int bestCleared) =>
+      'GR${nextOfferTier(bestCleared)}';
+
+  static String hubTitle(int bestCleared) =>
+      'Ranked GR${nextOfferTier(bestCleared)}';
+
+  static bool isHubEnterLabel(String label) =>
+      RegExp(r'^RANKED GR\d*$').hasMatch(label);
+
   static int killTarget(int tier) {
     final t = min(clampTier(tier), campaignCap);
     return 22 + t * 4; // GR1=26 … GR20+=102

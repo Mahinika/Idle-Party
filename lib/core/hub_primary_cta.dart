@@ -98,6 +98,7 @@ class HubPrimaryCta {
     required bool endgameUnlocked,
     HubEndgameHunt? mapHunt,
     bool showEndgameMap = true,
+    int grBestTier = 0,
   }) {
     final enterLabel = enterDungeonLabel(
       chase: chase,
@@ -108,7 +109,8 @@ class HubPrimaryCta {
     final label = hasChaseAction ? chaseActionLabel : null;
 
     if (mapHunt != null && endgameUnlocked) {
-      final huntLabel = HubEndgameAct.nodeFor(mapHunt).enterLabel;
+      final huntLabel =
+          HubEndgameAct.enterLabelFor(mapHunt, grBestTier: grBestTier);
       if (label != null && isReadyClaim(chase)) {
         return HubPrimaryCta(
           primaryLabel: label,

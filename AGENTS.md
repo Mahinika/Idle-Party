@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.164**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.165**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -30,7 +30,7 @@ box. Do not restore AL20 as the batch. Chat Swedish; short test list
 **Distribution today:** **Google Play is the primary install path**
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Store listing:
 `https://play.google.com/store/apps/details?id=com.idleparty.app` (production
-live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.164 / 194**). Closed opt-in remains for early builds.
+live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.165 / 195**). Closed opt-in remains for early builds.
 Do **not** link players to GitHub Releases (repo may be private). Working ship
 in-repo may be ahead of Play — wait for owner play before uploading a new AAB.
 
@@ -231,8 +231,9 @@ week-affix jargon, and KEYSTONE tips wait until the **active party is all
 Lv100** (`GameLogic.showKeystoneJargon` → `endgameUnlocked`). At endgame,
 the hub grows a **PATH | ENDGAME** switch: PATH is the 15-zone World Path;
 **ENDGAME** is its own map (Gauntlet, Ranked GR, Farm Rift, Ashen Crown) —
-not a footer under Mothveil, not dungeon #16. Tap a hunt then ENTER; KEY
-still holds the dials. Hub KEY / Vault / Week crumbs stay off while that
+not a footer under Mothveil, not dungeon #16. Tap a hunt then ENTER. KEY
+holds KEY / Farm Rift dials; Ranked GR shows the next rank on ENDGAME
+(GR34 → GR35) — no KEY stepper. Hub KEY / Vault / Week crumbs stay off while that
 hunt is KEY, Gauntlet, Ranked GR, Farm Rift, or Ashen.
 TODAY prefers KEY then Gauntlet → Greater Rift → Rift → Ashen Crown before
 Daily grind; Meet-kit backlog stays on PARTY badge. New unlocks queue
@@ -430,7 +431,7 @@ score); overtime → depleted. Loot iLvl bonus is `key * 2`
 **gold** scales with the same curve as threat (`Keystone.goldMul` — e.g. KEY +10
 ≈ gold ×5.5) so harder keys are not a gold/hour tax. At party max level, hub
 TODAY chases the next KEY until +20; then Gauntlet / GR / Rift /
-Ashen Crown / Daily / Will (ALMOST cliffs stay above). KEY +21 and Ranked GR past 20 stay on the KEY tab / ENDGAME map. **Daily vault** (UTC):
+Ashen Crown / Daily / Will (ALMOST cliffs stay above). KEY +21 stays on the KEY tab. Ranked GR past 20 shows the next rank on hub ENDGAME (no KEY dial) so weekly Ashen is not buried on TODAY. **Daily vault** (UTC):
 1 clear **or** timed KEY+2; claim once per day (scales with best timed key).
 Affixes still rotate weekly. See `lib/core/keystone.dart`.
 
