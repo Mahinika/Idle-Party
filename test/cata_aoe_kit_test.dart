@@ -20,6 +20,9 @@ void main() {
     expect(ClassKits.defFor(AbilityId.guardianThrash)!.specId, HeroSpecId.guardian);
     expect(ClassKits.defFor(AbilityId.multiShotMm)!.specId, HeroSpecId.marksmanship);
     expect(ClassKits.defFor(AbilityId.hellfire)!.specId, HeroSpecId.demonology);
+    expect(ClassKits.defFor(AbilityId.hellfire)!.gate.packMin, 2);
+    expect(ClassKits.defFor(AbilityId.hellfire)!.resourceCost, 14);
+    expect(ClassKits.defFor(AbilityId.howlingBlast)!.aoeShape, AbilityAoeShape.ground);
     expect(ClassKits.defFor(AbilityId.magmaTotem)!.specId, HeroSpecId.enhancement);
   });
 
@@ -268,6 +271,93 @@ void main() {
     }
     expect(fired, isTrue);
     expect(lock.abilityCd[AbilityId.chaosBolt.name] ?? 0, lessThan(0.05));
+    expect(pack.where((e) => e.hp < 2500).length, greaterThanOrEqualTo(3));
+  });
+
+  test('Assassination Fan of Knives hits a pack instead of Envenom', () {
+    final state = _soloSpecParty(HeroSpecId.assassination, level: 15);
+    var world = SpatialCombat.build(state);
+    final rogue = world.heroes.firstWhere((h) => !h.isPet);
+    final pack = world.enemies.take(4).toList();
+    for (final e in world.enemies) {
+      e
+        ..hp = 0
+        ..dormant = true;
+    }
+    for (var i = 0; i < pack.length; i++) {
+      pack[i]
+        ..dormant = false
+        ..hp = 2500
+        ..maxHp = 2500
+        ..x = rogue.x + 0.8
+        ..y = rogue.y + i * 0.12
+        ..moveSpeed = 0;
+    }
+    rogue
+      ..rage = 100
+      ..comboPoints = 5
+      ..x = pack.first.x - 1.0
+      ..y = pack.first.y
+      ..moveSpeed = 0
+      ..fireCooldown = 99;
+    _padAllCds(rogue, except: AbilityId.fanOfKnives);
+    rogue.abilityCd.remove(AbilityId.envenom.name);
+
+    var fired = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((rogue.abilityCd[AbilityId.fanOfKnives.name] ?? 0) > 0.05) {
+        fired = true;
+        break;
+      }
+      rogue
+        ..rage = 100
+        ..comboPoints = 5;
+    }
+    expect(fired, isTrue);
+    expect(rogue.abilityCd[AbilityId.envenom.name] ?? 0, lessThan(0.05));
+    expect(pack.where((e) => e.hp < 2500).length, greaterThanOrEqualTo(3));
+  });
+
+  test('Frost DK Howling Blast recasts on a pack with DoT already up', () {
+    final state = _soloSpecParty(HeroSpecId.frostDk, level: 15);
+    var world = SpatialCombat.build(state);
+    final dk = world.heroes.firstWhere((h) => !h.isPet);
+    final pack = world.enemies.take(4).toList();
+    for (final e in world.enemies) {
+      e
+        ..hp = 0
+        ..dormant = true;
+    }
+    for (var i = 0; i < pack.length; i++) {
+      pack[i]
+        ..dormant = false
+        ..hp = 2500
+        ..maxHp = 2500
+        ..x = dk.x + 0.8
+        ..y = dk.y + i * 0.12
+        ..moveSpeed = 0
+        ..bleedTimer = 8
+        ..bleedAbilityId = AbilityId.howlingBlast.name;
+    }
+    dk
+      ..rage = 100
+      ..x = pack.first.x - 1.0
+      ..y = pack.first.y
+      ..moveSpeed = 0
+      ..fireCooldown = 99;
+    _padAllCds(dk, except: AbilityId.howlingBlast);
+
+    var fired = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((dk.abilityCd[AbilityId.howlingBlast.name] ?? 0) > 0.05) {
+        fired = true;
+        break;
+      }
+      dk.rage = 100;
+    }
+    expect(fired, isTrue);
     expect(pack.where((e) => e.hp < 2500).length, greaterThanOrEqualTo(3));
   });
 }

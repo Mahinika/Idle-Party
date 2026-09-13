@@ -24,6 +24,9 @@ abstract final class AbilityEffectRunner {
     return g;
   }
 
+  /// Pack storms stop at this many bodies so a 20-clump does not 3× Combat.
+  static const int _aoeHitCap = 8;
+
   static int _abilityPower(SpatialActor hero, ClassAbilityDef def) {
     if (ClassAbilityDef.inferUsesSpellPower(def)) {
       return hero.spellPower > 0 ? hero.spellPower : hero.attack;
@@ -288,7 +291,10 @@ abstract final class AbilityEffectRunner {
           focus != null &&
           focus.bleedTimer > 3.5 &&
           focus.bleedAbilityId == d.id.name) {
-        return false;
+        // Pack dumps still recast Howling / Blood Boil; ST keeps the refresh skip.
+        if (pack < 3 || d.effect != AbilityEffectKind.aoe) {
+          return false;
+        }
       }
       if (g.skipIfBleedAbove != null &&
           focus != null &&
@@ -437,12 +443,17 @@ abstract final class AbilityEffectRunner {
               b.effect == AbilityEffectKind.absorb;
           if (aHeal != bHeal) return aHeal ? -1 : 1;
         }
-        // DoT maintain before fillers when the focus has no DoT.
-        if (focus != null && focus.bleedTimer < 2.0) {
+        // DoT maintain on ST. Packs dump AoE instead of refreshing one DoT.
+        if (pack < 3 && focus != null && focus.bleedTimer < 2.0) {
           final aDot = a.gate.maintainDot;
           final bDot = b.gate.maintainDot;
           if (aDot != bDot) return aDot ? -1 : 1;
         }
+        // Prefer AoE in packs, ST otherwise — before combo dumps / ST builders.
+        final aAoe = a.effect == AbilityEffectKind.aoe;
+        final bAoe = b.effect == AbilityEffectKind.aoe;
+        if (pack >= 2 && aAoe != bAoe) return aAoe ? -1 : 1;
+        if (pack < 2 && aAoe != bAoe) return aAoe ? 1 : -1;
         // Arcane: packs dump Explosion; ST builds Blast, then Missiles.
         if (hero.heroSpecId == HeroSpecId.arcane) {
           if (pack >= 2) {
@@ -475,24 +486,21 @@ abstract final class AbilityEffectRunner {
               b.id == AbilityId.shadowfury;
           if (aPack != bPack) return aPack ? -1 : 1;
         }
-        // Assassin: Envenom when combo is ready.
-        if (hero.heroSpecId == HeroSpecId.assassination &&
+        // Assassin / Feral finishers are ST — packs already picked AoE above.
+        if (pack < 2 &&
+            hero.heroSpecId == HeroSpecId.assassination &&
             hero.comboPoints >= 4) {
           final aEnv = a.id == AbilityId.envenom;
           final bEnv = b.id == AbilityId.envenom;
           if (aEnv != bEnv) return aEnv ? -1 : 1;
         }
-        // Feral: Ferocious Bite when combo is ready.
-        if (hero.heroSpecId == HeroSpecId.feral && hero.comboPoints >= 3) {
+        if (pack < 2 &&
+            hero.heroSpecId == HeroSpecId.feral &&
+            hero.comboPoints >= 3) {
           final aBite = a.id == AbilityId.ferociousBite;
           final bBite = b.id == AbilityId.ferociousBite;
           if (aBite != bBite) return aBite ? -1 : 1;
         }
-        // Prefer AoE in packs, ST otherwise.
-        final aAoe = a.effect == AbilityEffectKind.aoe;
-        final bAoe = b.effect == AbilityEffectKind.aoe;
-        if (pack >= 2 && aAoe != bAoe) return aAoe ? -1 : 1;
-        if (pack < 2 && aAoe != bAoe) return aAoe ? 1 : -1;
         final byCost = b.resourceCost.compareTo(a.resourceCost);
         if (byCost != 0) return byCost;
         final byCoeff = b.coeff.compareTo(a.coeff);
@@ -1414,7 +1422,7 @@ abstract final class AbilityEffectRunner {
           hops: switch (def.id) {
             AbilityId.multiShot ||
             AbilityId.multiShotMm ||
-            AbilityId.multiShotSurv => 12,
+            AbilityId.multiShotSurv => _aoeHitCap,
             _ => 4,
           },
           reducedVfx: reducedVfx,
@@ -1616,6 +1624,7 @@ abstract final class AbilityEffectRunner {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (SpatialCombat._dist(hero, e) > radius) continue;
+      if (i >= _aoeHitCap) break;
       // Cone of Cold / chill AoE: slow attack cadence.
       if (def.id == AbilityId.coneOfCold) {
         e.attackSlowTimer = math.max(e.attackSlowTimer, 3.0);
@@ -1743,7 +1752,7 @@ abstract final class AbilityEffectRunner {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (SpatialCombat._distPoint(ax, ay, e.x, e.y) > radius) continue;
-      if (i >= 12) break;
+      if (i >= _aoeHitCap) break;
       SpatialCombat._addProjectile(
         world,
         SpatialCombat.spellBoltBetween(
@@ -1897,12 +1906,7 @@ abstract final class AbilityEffectRunner {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (SpatialCombat._distPoint(ox, oy, e.x, e.y) > radius) continue;
-      if (hitCount >= 8 &&
-          (def.id == AbilityId.fanOfKnivesCombat ||
-              def.id == AbilityId.fanOfKnives ||
-              def.id == AbilityId.fanOfKnivesSub)) {
-        break;
-      }
+      if (hitCount >= _aoeHitCap) break;
       final wasAlive = e.hp > 0;
       final dealt = CombatRatings.mitigateByArmor(
         rawDamage: raw,

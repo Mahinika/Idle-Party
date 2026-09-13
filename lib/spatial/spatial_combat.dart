@@ -1872,6 +1872,23 @@ abstract final class SpatialCombat {
   /// Fresh-floor mana so a healer's first spell is not a 10s wait from 0.
   static const double healerOpeningMana = 55;
 
+  /// DPS mana / energy / runic so the first pack dump is not starved by a
+  /// cheaper ST filler while resource ticks up from 0.
+  static const double dpsOpeningResource = 28;
+
+  static void _seedOpeningResource(SpatialActor actor, HeroSpecDef spec) {
+    if (spec.isHealer) {
+      actor.rage = healerOpeningMana;
+      return;
+    }
+    if (spec.isTank) return;
+    if (spec.resource == SpecResource.mana ||
+        spec.resource == SpecResource.energy ||
+        spec.resource == SpecResource.runic) {
+      actor.rage = dpsOpeningResource;
+    }
+  }
+
   static SpatialWorld build(
     GameState state, {
     double threatScale = 1.0,
@@ -1942,9 +1959,7 @@ abstract final class SpatialCombat {
             : 0,
         mp5RegenBonus: mp5ManaRegenPerSec(hero.gearMp5Bonus),
       );
-      if (hero.spec.isHealer) {
-        actor.rage = healerOpeningMana;
-      }
+      _seedOpeningResource(actor, hero.spec);
       CombatPresence.seed(actor);
       _syncHeroCataStats(actor, hero, state);
       heroes.add(actor);
@@ -2319,9 +2334,7 @@ abstract final class SpatialCombat {
         _copyHeroRuntime(prev, actor);
       } else {
         CombatPresence.seed(actor);
-        if (hero.spec.isHealer) {
-          actor.rage = healerOpeningMana;
-        }
+        _seedOpeningResource(actor, hero.spec);
       }
       _syncHeroCataStats(actor, hero, state);
       final setProc = GearSets.fourPieceProc(hero.equipped);
