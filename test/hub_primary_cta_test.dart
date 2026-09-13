@@ -36,6 +36,29 @@ void main() {
     expect(cta.showKeyDial, isFalse);
   });
 
+  test('PATH board: ENTER DUNGEON owns primary when TODAY is Gauntlet', () {
+    const chase = HubChase(
+      kind: HubChaseKind.gauntletMilestone,
+      title: 'Climb Infinity Gauntlet',
+      detail: 'Boss every 5 floors.',
+      urgency: HubChaseUrgency.normal,
+    );
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: 'GAUNTLET',
+      hasChaseAction: true,
+      unlockedSelected: true,
+      hardmodeLevel: 10,
+      showKeystoneJargon: true,
+      endgameUnlocked: true,
+      showEndgameMap: false,
+    );
+    expect(cta.primaryLabel, 'ENTER DUNGEON');
+    expect(cta.secondaryLabel, 'GAUNTLET');
+    expect(cta.hideInlineChaseAction, isTrue);
+    expect(cta.showKeyDial, isFalse);
+  });
+
   test('map Farm Rift pick owns primary even when TODAY is KEY', () {
     const chase = HubChase(
       kind: HubChaseKind.keystone,

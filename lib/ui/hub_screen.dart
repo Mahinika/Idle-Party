@@ -297,6 +297,7 @@ class _HubScreenState extends State<HubScreen>
       showKeystoneJargon: GameLogic.showKeystoneJargon(state),
       endgameUnlocked: GameLogic.endgameUnlocked(state),
       mapHunt: _userPickedZone ? _selectedHunt : null,
+      showEndgameMap: _showEndgameMap,
     );
     final enterAction = unlockedSelected
         ? () => widget.onEnterDungeon(_selectedId)
@@ -597,6 +598,12 @@ class _HubScreenState extends State<HubScreen>
                                   onSelectPath: () => setState(() {
                                     _userPickedZone = true;
                                     _showEndgameMap = false;
+                                    if (_selectedHunt != null) {
+                                      _selectedId =
+                                          GameLogic.recommendedDungeonId(
+                                        state,
+                                      );
+                                    }
                                     _selectedHunt = null;
                                   }),
                                   onSelectEndgame: () => setState(() {

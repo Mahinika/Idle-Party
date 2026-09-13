@@ -4,7 +4,8 @@ import 'hub_endgame_act.dart';
 /// Resolves hub brown/grey CTAs so TODAY chase owns the primary button.
 ///
 /// Enter-family chases fold into ENTER / ENTER KEY / DAILY RUN.
-/// Hunt and claim chases (Gauntlet, vault, week→GAUNTLET, …) stay primary;
+/// Hunt and claim chases (Gauntlet, vault, week→GAUNTLET, …) stay primary
+/// on the ENDGAME board; on PATH the selected zone's ENTER is primary.
 /// plain ENTER becomes secondary when the zone is unlocked.
 class HubPrimaryCta {
   const HubPrimaryCta({
@@ -93,6 +94,7 @@ class HubPrimaryCta {
     required bool showKeystoneJargon,
     required bool endgameUnlocked,
     HubEndgameHunt? mapHunt,
+    bool showEndgameMap = true,
   }) {
     final enterLabel = enterDungeonLabel(
       chase: chase,
@@ -120,6 +122,28 @@ class HubPrimaryCta {
         showKeyDial: false,
         ashenPracticeSecondary: ashen,
       );
+    }
+
+    // PATH board: the selected zone owns the brown button. TODAY may still
+    // be Gauntlet/Rift — that hunt stays grey so a dungeon tap cannot
+    // start the Spire climb.
+    if (endgameUnlocked && !showEndgameMap && canEnter) {
+      if (label != null && isReadyClaim(chase)) {
+        return HubPrimaryCta(
+          primaryLabel: label,
+          secondaryLabel: enterLabel,
+          hideInlineChaseAction: true,
+          showKeyDial: showKeystoneJargon,
+        );
+      }
+      if (label != null && HubEndgameAct.isEnterLabel(label)) {
+        return HubPrimaryCta(
+          primaryLabel: enterLabel,
+          secondaryLabel: label,
+          hideInlineChaseAction: true,
+          showKeyDial: false,
+        );
+      }
     }
 
     if (chase.kind == HubChaseKind.doneForToday && label != null) {
