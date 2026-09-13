@@ -481,8 +481,11 @@ class GameLogic {
   static GameState claimMonthPass(GameState state, {DateTime? now}) =>
       _claimMonthPass(state, now: now);
 
-  static GameState enterAshenCrown(GameState state, {bool practice = false}) =>
-      _enterAshenCrown(state, practice: practice);
+  static GameState enterAshenCrown(
+    GameState state, {
+    bool practice = false,
+    DateTime? now,
+  }) => _enterAshenCrown(state, practice: practice, now: now);
 
   static GameState startApexTrial(GameState state) => _startApexTrial(state);
 

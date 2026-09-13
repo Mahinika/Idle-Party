@@ -26,10 +26,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.163';
+  static const String currentVersion = '1.12.164';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.164',
+      bullets: <String>[
+        'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
+        'Ashen Crown visits a different shipped cave each week — same tickets, not a 16th dungeon. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEY, Farm Rift, and Ranked GREATER Rifts keep going past 20. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.163',
       bullets: <String>[

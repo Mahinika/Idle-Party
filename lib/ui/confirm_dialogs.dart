@@ -467,19 +467,22 @@ Future<void> confirmAshenCrown(
     director.enterAshenCrown(practice: false); // toast via director
     return;
   }
+  final kit = AshenCrown.kitFor();
   WebClickBridge.pushLayer();
   try {
     final ok = await showDialog<bool>(
       context: context,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) => MenuChrome.dialog(
-        title: practice ? 'Practice Ashen Crown?' : 'Ashen Crown?',
+        title: practice ? 'Practice ${kit.title}?' : '${kit.title}?',
         content: Text(
           practice
               ? 'Free practice — no ticket spent, no essence reward.\n\n'
+                  '${kit.weekLine}\n\n'
                   'Wipe or leave returns to hub. Learn the fight safely.'
-              : 'Weekly ticket boss. First clear this week pays '
+              : 'Weekly ticket boss in ${kit.venueName}. First clear this week pays '
                   '+${AshenCrown.essenceReward}e.\n\n'
+                  '${kit.weekLine}\n\n'
                   'Tickets left: $tickets. Wipe or leave before the clear '
                   'returns the ticket. After the paid clear, use PRACTICE '
                   '(free) instead of spending more tickets.\n\n'

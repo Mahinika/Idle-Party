@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/ashen_crown.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
@@ -286,7 +287,7 @@ class DungeonTopHud extends StatelessWidget {
             tier: state.grTier,
           )
         : state.inWorldBoss
-        ? 'Ashen Crown'
+        ? AshenCrown.kitByDungeonId(state.dungeonId).title
         : '$zoneShort · F$floor$keyBit';
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);

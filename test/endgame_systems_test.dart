@@ -8,6 +8,7 @@ import 'package:idle_party/core/local_season.dart';
 import 'package:idle_party/core/mission_board.dart';
 import 'package:idle_party/core/party_power.dart';
 import 'package:idle_party/core/ashen_crown.dart';
+import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
@@ -103,6 +104,35 @@ void main() {
     expect(director.spatial, isNotNull);
     expect(director.spatial!.enemies, isNotEmpty);
     expect(director.spatial!.inWorldBoss, isTrue);
+  });
+
+  test('Ashen Crown week kit visits a shipped cave, not ember only', () {
+    final a = AshenCrown.kitFor(now: DateTime.utc(2026, 8, 24));
+    final b = AshenCrown.kitFor(now: DateTime.utc(2026, 8, 31));
+    expect(a.dungeonId, isNot(equals(b.dungeonId)));
+    expect(
+      DungeonCatalog.all.map((d) => d.id),
+      containsAll(AshenCrown.weekKits.map((k) => k.dungeonId)),
+    );
+    expect(
+      AshenCrown.weekKits.map((k) => k.telegraph).toSet().length,
+      AshenCrown.weekKits.length,
+    );
+    var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 24));
+    state = state.copyWith(
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+      heroes: [
+        for (final h in state.heroes)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );
+    final when = DateTime.utc(2026, 8, 24);
+    state = GameLogic.enterAshenCrown(state, practice: true, now: when);
+    expect(state.inWorldBoss, isTrue);
+    expect(state.dungeonId, AshenCrown.kitFor(now: when).dungeonId);
   });
 
   test('god hand mastery smash milestone', () {

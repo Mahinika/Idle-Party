@@ -36,8 +36,9 @@ class AshenCrownHubPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           cleared
-              ? 'Paid clear done this week. PRACTICE is free — no ticket, no essence.'
-              : 'Ticket boss in Ashen Vault. First clear pays '
+              ? 'Paid clear done this week. PRACTICE is free — no ticket, no essence.\n'
+                  '${AshenCrown.kitFor().weekLine}'
+              : '${AshenCrown.kitFor().weekLine} First clear pays '
                   '+${AshenCrown.essenceReward}e. Tickets left: $tickets. '
                   'Wipe or leave returns the ticket.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

@@ -813,8 +813,10 @@ abstract final class GameGuides {
           'to rehearse the fight.\n'
           '• Confirm before a ticket run. Wipe or leave before the boss pays '
           'back the ticket — only a clear spends it. PRACTICE never spends a ticket.\n'
-          '• Boss kit: CROWN telegraph → SLAM → IGNITE chip (same in PRACTICE).\n'
-          '• Uses Ashen Vault staging; leave or wipe returns you to the hub.',
+          '• Boss kit: the weekly telegraph (CROWN, WAVE, and others) then SLAM and IGNITE '
+          '(same in PRACTICE).\n'
+          '• Each ISO week the Crown visits a different shipped cave — not a 16th dungeon. '
+          'Leave or wipe returns you to the hub.',
     ),
     GuideTopic(
       id: 'hardmode',

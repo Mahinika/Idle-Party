@@ -248,9 +248,11 @@ Ashen weekly tickets + PRACTICE. The hole is **same-cave feel**.
 
 ### Slices (in order, one at a time)
 
-- [ ] Ashen Crown weekly kit — each ISO week a different tell/job at old
+- [x] Ashen Crown weekly kit — each ISO week a different tell/job at old
       PULSE power (not a new zone). Ember staging. Door = KEY tab + hub
       ENDGAME. PRACTICE uses this week’s kit.
+      (**2026-09-13 / 1.12.164**: Crown visits a shipped cave each week;
+      telegraph follows that cave. Same tickets.)
 - [ ] Gauntlet every-5 bosses cycle distinct tells (not the same SHARD
       forever). Same Spire climb.
 - [ ] KEY week affix only if play notes say KEY still feels like a Rift.

@@ -718,7 +718,7 @@ void _tickAshenBossKit(
     _bossTell(
       world,
       enemy,
-      text: 'CROWN',
+      text: AshenCrown.kitByDungeonId(world.dungeonId).telegraph,
       argb: 0xFFFF9040,
       radius: 1.35,
       reducedVfx: reducedVfx,

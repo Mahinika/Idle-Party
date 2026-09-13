@@ -84,7 +84,7 @@ abstract final class HubEndgameAct {
       shortLabel: 'ASHEN',
       title: 'Ashen Crown',
       blurb:
-          'Weekly ticket boss · one clear pays · PRACTICE free after',
+          'Weekly ticket · a different shipped cave each week · PRACTICE after',
       portraitDungeonId: 'ember',
       enterLabel: 'ASHEN CROWN',
       chaseKind: HubChaseKind.ashenCrown,

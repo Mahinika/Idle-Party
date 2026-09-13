@@ -692,7 +692,7 @@ void main() {
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.ashenCrown);
-    expect(chase.title, contains(AshenCrown.name));
+    expect(chase.title.toLowerCase(), contains('crown'));
   });
 
   test('endgame fallback is one KEY action not a stats dump', () {

@@ -858,6 +858,13 @@ void main() {
     expect(seen.contains('SLAM'), isTrue);
   });
 
+  test('ashen crown in Tidehold shouts WAVE then SLAM', () {
+    final seen = _bossTellTexts('tide', inWorldBoss: true);
+    expect(seen.contains('WAVE'), isTrue);
+    expect(seen.contains('SLAM'), isTrue);
+    expect(seen.contains('PULSE'), isFalse);
+  });
+
   test('KEY swarm affix shows SWARM banner at fight start', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
     final room = DungeonRoom(

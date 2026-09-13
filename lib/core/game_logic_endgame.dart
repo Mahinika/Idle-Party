@@ -27,22 +27,30 @@ GameState _claimMonthPass(GameState state, {DateTime? now}) {
   );
 }
 
-GameState _enterAshenCrown(GameState state, {required bool practice}) {
-  var next = AshenCrown.ensureWeek(state);
+GameState _enterAshenCrown(
+  GameState state, {
+  required bool practice,
+  DateTime? now,
+}) {
+  var next = AshenCrown.ensureWeek(state, now: now);
   if (!AshenCrown.canEnter(next)) return state;
   if (!practice) {
-    if (!AshenCrown.ticketRunAllowed(next)) return state;
+    if (next.metaDepth.worldBossTickets <= 0 ||
+        next.metaDepth.worldBossClearedWeek) {
+      return state;
+    }
     next = next.copyWith(
       metaDepth: next.metaDepth.copyWith(
         worldBossTickets: next.metaDepth.worldBossTickets - 1,
       ),
     );
   }
+  final kit = AshenCrown.kitFor(now: now);
   final layoutSeed = GameLogic.newLayoutSeed();
   final floor = DungeonGenerator.generateFloor(
     1,
     ascensionLevel: next.ascensionLevel,
-    dungeonId: AshenCrown.dungeonId,
+    dungeonId: kit.dungeonId,
     layoutSeed: layoutSeed,
     bossEvery: 1,
   );
@@ -64,13 +72,13 @@ GameState _enterAshenCrown(GameState state, {required bool practice}) {
       inGreaterRift: false,
       worldBossPractice: practice,
       apexTrialActive: false,
-      dungeonId: AshenCrown.dungeonId,
+      dungeonId: kit.dungeonId,
       dungeonMode: DungeonMode.push,
       currentRoom: room,
       dungeonFloor: [room],
       enemies: GameLogic.createEnemyGroup(
         room,
-        dungeonId: AshenCrown.dungeonId,
+        dungeonId: kit.dungeonId,
         fromState: cleared.copyWith(inWorldBoss: true),
       ),
       layoutSeed: layoutSeed,

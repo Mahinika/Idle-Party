@@ -418,7 +418,7 @@ class HubChase {
     if (greaterRift != null) return greaterRift;
     final rift = _nextRiftChase(state);
     if (rift != null) return rift;
-    final crown = _ashenCrownChase(state);
+    final crown = _ashenCrownChase(state, clock);
     if (crown != null) return crown;
     // F100 milestones done — PB push, or soft "Done for today" when loop settled.
     return _sessionRestOrPbChase(state, clock);
@@ -453,18 +453,19 @@ class HubChase {
     return pb;
   }
 
-  static HubChase? _ashenCrownChase(GameState state) {
+  static HubChase? _ashenCrownChase(GameState state, DateTime clock) {
     if (!AshenCrown.canEnter(state)) return null;
-    final tickets = AshenCrown.ensureWeek(state).metaDepth.worldBossTickets;
+    final tickets = AshenCrown.ensureWeek(state, now: clock).metaDepth.worldBossTickets;
     if (tickets <= 0) return null;
     if (state.metaDepth.worldBossClearedWeek) return null;
+    final kit = AshenCrown.kitFor(now: clock);
     return HubChase(
       kind: HubChaseKind.ashenCrown,
-      title: 'Clear ${AshenCrown.name}',
+      title: 'Clear ${kit.title}',
       detail: tickets == 1
-          ? "This week's boss night — 1 ticket. First clear pays "
+          ? '${kit.weekLine} 1 ticket. First clear pays '
               '+${AshenCrown.essenceReward}e. PRACTICE free after.'
-          : "This week's boss night — $tickets tickets. One paid clear/week "
+          : '${kit.weekLine} $tickets tickets. One paid clear/week '
               '(+${AshenCrown.essenceReward}e); PRACTICE free after.',
       progressLabel: tickets == 1 ? '1 ticket' : '$tickets tickets',
       urgency: tickets <= 1 ? HubChaseUrgency.almost : HubChaseUrgency.normal,

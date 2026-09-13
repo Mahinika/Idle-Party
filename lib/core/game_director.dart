@@ -2162,8 +2162,8 @@ class GameDirector extends ChangeNotifier {
     _syncHubIdleTimer();
     showToast(
       practice
-          ? 'Practice · ${AshenCrown.name}'
-          : '${AshenCrown.name} · ticket held (returned if you leave early)',
+          ? 'Practice · ${AshenCrown.kitFor().title}'
+          : '${AshenCrown.kitFor().title} · ticket held (returned if you leave early)',
       life: 2.6,
     );
     notifyListeners();

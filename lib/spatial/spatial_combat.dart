@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../core/ashen_crown.dart';
 import '../core/audio_assets.dart';
 import '../core/blessing_constellation.dart';
 import '../core/combat_feel.dart';
