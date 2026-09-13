@@ -3,6 +3,8 @@
 *.log
 *.pyc
 *.swp
+*.bak
+/size_check.png
 .DS_Store
 .atom/
 .build/

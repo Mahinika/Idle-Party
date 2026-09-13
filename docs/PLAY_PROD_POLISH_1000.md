@@ -5,6 +5,9 @@
 **Scope:** Google Play **production** readiness + AL20 feel. Player-visible only.
 **Not included:** SpatialCombat rewrite, new zones/classes, God Hand redesign, iOS/web product.
 
+**Distribution (2026-09):** Google Play is the player install path. Do not
+point players at GitHub Releases.
+
 Imports residual **~ Light** rows from [`FEEL_AUDIT_500.md`](FEEL_AUDIT_500.md) as bucket **M**.
 Production ships when **Fas 0 + Fas 1 + Top 40** are green — not when all 1000 are done.
 
@@ -217,7 +220,7 @@ Production ships when **Fas 0 + Fas 1 + Top 40** are green — not when all 1000
 | 055 | A | Open | P2 | CONSOLE | ANR-free hub enter dungeon leave | `docs/PLAY_STORE.md` |  |
 | 056 | A | Open | P2 | CONSOLE | Low-memory reopen restores save | `docs/PLAY_STORE.md` |  |
 | 057 | A | Open | P2 | CONSOLE | Airplane mode still plays local content | `docs/PLAY_STORE.md` |  |
-| 058 | A | Open | P2 | CONSOLE | SIDELINE: GitHub Releases remain valid until Play is primary | `docs/PLAY_STORE.md` |  |
+| 058 | A | ✅ Shipped | P2 | CONSOLE | Play is primary. Do not advertise GitHub Releases to players. | `docs/PLAY_STORE.md` |  |
 | 059 | A | Open | P2 | CONSOLE | Operator status table honest after each submit | `docs/PLAY_STORE.md` |  |
 | 060 | A | Open | P2 | CONSOLE | Agent play-store-prep skill matches Console UI paths | `docs/PLAY_STORE.md` |  |
 | 061 | A | Open | P2 | CONSOLE | CORS AAB upload recipe still works on Windows py -3 | `docs/PLAY_STORE.md` |  |
