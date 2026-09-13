@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/ad_boost.dart';
 import '../../core/game_director.dart';
+import '../../core/menu_alerts.dart';
 import '../../core/shop_billing.dart';
 import '../../core/shop_catalog.dart';
 import '../../core/shop_store.dart';
@@ -16,6 +17,14 @@ class ShopDock extends StatefulWidget {
   const ShopDock({super.key, required this.director});
 
   final GameDirector director;
+
+  /// SHOP blurb. ESSENCE is named only when that tab exists.
+  static String convenienceLine({required bool showEssence}) {
+    final essenceBit = showEssence ? ' · essence under ESSENCE' : '';
+    return 'Same Full Boost as POWERUPS tickets '
+        '(×2 gold · +${AdBoost.attackPercent}% ATK). '
+        'Watch ads for Ad Tickets on the hub · gold under GOLD$essenceBit.';
+  }
 
   @override
   State<ShopDock> createState() => _ShopDockState();
@@ -56,10 +65,7 @@ class _ShopDockState extends State<ShopDock> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Same Full Boost as POWERUPS tickets '
-                    '(×2 gold · +${AdBoost.attackPercent}% ATK). '
-                    'Watch ads for Ad Tickets on the hub · gold under GOLD · '
-                    'essence under ESSENCE.\n'
+                    '${ShopDock.convenienceLine(showEssence: MenuTabs.showCamp(state))}\n'
                     '${!storeOk ? 'Buys need a Play Store install of Idle Party (not sideload).' : catalogOk ? 'Prices come from Google Play.' : 'Waiting for Play catalog (can take a few hours after SKUs go live)…'}',
                     textAlign: TextAlign.center,
                     style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

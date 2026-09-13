@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/menu_alerts.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -10,6 +11,15 @@ import 'power_upgrade_row.dart';
 class ForgeOverlay extends StatefulWidget {
   const ForgeOverlay({super.key, required this.director});
   final GameDirector director;
+
+  /// GOLD footer. ESSENCE waits until that tab exists.
+  static String resetHint({required bool plain, required bool showCamp}) {
+    if (plain) return 'Resets when you start over. Tap BEST when unsure.';
+    if (showCamp) {
+      return 'Wallet gold · resets on Ascend. God Hand & Blessing live on ESSENCE.';
+    }
+    return 'Wallet gold · resets on Ascend.';
+  }
 
   @override
   State<ForgeOverlay> createState() => _ForgeOverlayState();
@@ -128,9 +138,10 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           style: GameTheme.body(size: 12, color: GameTheme.parchment),
         ),
         Text(
-          plain
-              ? 'Resets when you start over. Tap BEST when unsure.'
-              : 'Wallet gold · resets on Ascend. God Hand & Blessing live on ESSENCE.',
+          ForgeOverlay.resetHint(
+            plain: plain,
+            showCamp: MenuTabs.showCamp(state),
+          ),
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),

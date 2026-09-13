@@ -6,11 +6,17 @@ import 'package:idle_party/core/local_reminders.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/ui/first_session_tips.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
+import 'package:idle_party/ui/shell/forge_overlay.dart';
+import 'package:idle_party/ui/shell/settings_overlay.dart';
+import 'package:idle_party/ui/shell/shop_dock.dart';
+import 'package:idle_party/ui/shell/whats_new_overlay.dart';
+import 'package:idle_party/ui/spatial_dungeon_view.dart';
 
 /// First-hour copy must make sense without WoW / RPG homework.
 void main() {
@@ -248,6 +254,79 @@ void main() {
     expect(lead, contains('fights'));
     final market = FirstSessionTips.tips.firstWhere((t) => t.id == 'market');
     expect(market.body.toUpperCase(), isNot(contains('SELL JUNK')));
+  });
+
+  test('first-hour What’s New is the lead bullet, not KEY recap', () {
+    final fresh = GameLogic.createInitialState(now: now);
+    final focus = WhatsNewOverlay.visibleFocus(fresh);
+    expect(focus, isNotEmpty);
+    expect(focus.first.bullets, [MetaSystems.releases.first.bullets.first]);
+    final joined = focus.map((r) => r.bullets.join('\n')).join('\n');
+    expect(joined.toUpperCase(), isNot(contains('KEY')));
+    expect(joined.toUpperCase(), isNot(contains('GAUNTLET')));
+    expect(joined.toUpperCase(), isNot(contains('GREATER')));
+    expect(joined.toUpperCase(), isNot(contains('REBORN')));
+    expect(WhatsNewOverlay.showOlderVersions(fresh), isFalse);
+  });
+
+  test('after first boss What’s New may recap KEY and older versions', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      bossVictories: 1,
+    );
+    expect(WhatsNewOverlay.showOlderVersions(state), isTrue);
+    final joined = WhatsNewOverlay.visibleFocus(state)
+        .map((r) => r.bullets.join('\n'))
+        .join('\n');
+    expect(joined.toUpperCase(), contains('KEY'));
+  });
+
+  test('SHOP and GOLD name ESSENCE only when that tab exists', () {
+    final afterBoss = GameLogic.createInitialState(now: now).copyWith(
+      bossVictories: 1,
+    );
+    expect(MenuTabs.showShop(afterBoss), isTrue);
+    expect(MenuTabs.showCamp(afterBoss), isFalse);
+    expect(
+      ShopDock.convenienceLine(showEssence: MenuTabs.showCamp(afterBoss))
+          .toUpperCase(),
+      isNot(contains('ESSENCE')),
+    );
+    expect(
+      ForgeOverlay.resetHint(
+        plain: GameLogic.plainPlayerChrome(afterBoss),
+        showCamp: MenuTabs.showCamp(afterBoss),
+      ).toUpperCase(),
+      isNot(contains('ESSENCE')),
+    );
+    final withEssence = afterBoss.copyWith(essence: 3);
+    expect(
+      ShopDock.convenienceLine(showEssence: MenuTabs.showCamp(withEssence))
+          .toUpperCase(),
+      contains('ESSENCE'),
+    );
+    expect(
+      ForgeOverlay.resetHint(plain: false, showCamp: true).toUpperCase(),
+      contains('ESSENCE'),
+    );
+  });
+
+  test('first-hour SETTINGS and dungeon map skip God Hand jargon', () {
+    expect(
+      SettingsOverlay.sessionLogHint(plain: true).toUpperCase(),
+      isNot(contains('GOD HAND')),
+    );
+    expect(
+      SettingsOverlay.sessionLogHint(plain: false).toUpperCase(),
+      contains('GOD HAND'),
+    );
+    expect(
+      SpatialDungeonView.mapSemanticsLabel(plain: true).toUpperCase(),
+      isNot(contains('GOD HAND')),
+    );
+    expect(
+      SpatialDungeonView.mapSemanticsLabel(plain: false).toUpperCase(),
+      contains('GOD HAND'),
+    );
   });
 
   test('first-hour BAG idle copy does not teach ESSENCE', () {

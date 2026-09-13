@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
+import '../../core/game_logic.dart';
+import '../../core/game_state.dart';
 import '../../core/meta_systems.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -12,6 +14,27 @@ import '../menu_chrome.dart';
 class WhatsNewOverlay extends StatelessWidget {
   const WhatsNewOverlay({super.key, required this.director});
   final GameDirector director;
+
+  /// Current (or unseen) blocks. First hour: lead bullet only.
+  static List<ChangelogRelease> visibleFocus(GameState state) {
+    final unseen = MetaSystems.hasUnseenChangelog(state);
+    final current = MetaSystems.releases.isEmpty
+        ? null
+        : MetaSystems.releases.first;
+    final focus = unseen
+        ? MetaSystems.unseenReleases(state)
+        : (current == null
+              ? const <ChangelogRelease>[]
+              : <ChangelogRelease>[current]);
+    if (!GameLogic.plainPlayerChrome(state)) return focus;
+    return [for (final release in focus) release.leadOnly];
+  }
+
+  /// Older-version fold waits until first boss (KEY recap is not day-one).
+  static bool showOlderVersions(GameState state) =>
+      !MetaSystems.hasUnseenChangelog(state) &&
+      MetaSystems.releases.length > 1 &&
+      !GameLogic.plainPlayerChrome(state);
 
   /// Dialog host used by hub auto-show and Settings → What's New.
   static Future<void> show(BuildContext context, GameDirector director) {
@@ -47,18 +70,10 @@ class WhatsNewOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
-    final unseen = MetaSystems.hasUnseenChangelog(state);
-    final current = MetaSystems.releases.isEmpty
-        ? null
-        : MetaSystems.releases.first;
     final older = MetaSystems.releases.length <= 1
         ? const <ChangelogRelease>[]
         : MetaSystems.releases.sublist(1);
-    final focus = unseen
-        ? MetaSystems.unseenReleases(state)
-        : (current == null
-              ? const <ChangelogRelease>[]
-              : <ChangelogRelease>[current]);
+    final focus = visibleFocus(state);
 
     Widget releaseBlock(ChangelogRelease release) {
       return Column(
@@ -103,7 +118,7 @@ class WhatsNewOverlay extends StatelessWidget {
           child: ListView(
             children: [
               for (final release in focus) releaseBlock(release),
-              if (!unseen && older.isNotEmpty)
+              if (showOlderVersions(state) && older.isNotEmpty)
                 MenuChrome.fold(
                   title: 'Older versions',
                   children: [

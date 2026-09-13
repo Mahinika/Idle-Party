@@ -12,6 +12,12 @@ class ChangelogRelease {
   const ChangelogRelease({required this.version, required this.bullets});
   final String version;
   final List<String> bullets;
+
+  /// First-hour What’s New: the new-player lead, not KEY / endgame recap.
+  ChangelogRelease get leadOnly {
+    if (bullets.length <= 1) return this;
+    return ChangelogRelease(version: version, bullets: [bullets.first]);
+  }
 }
 
 /// Free, offline meta systems: daily run seeding, local achievements,

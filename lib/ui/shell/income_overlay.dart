@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
-import '../../core/menu_alerts.dart';
 import '../../core/gold_income.dart';
 import '../game_theme.dart';
 
@@ -31,13 +30,6 @@ class CampRatesSection extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        if (!MenuTabs.showCamp(state)) ...[
-          const SizedBox(height: 6),
-          Text(
-            'Tracks unlock after Ascend or when you earn essence.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-        ],
       ],
     );
   }

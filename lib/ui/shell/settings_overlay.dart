@@ -27,6 +27,13 @@ class SettingsOverlay extends StatefulWidget {
   final VoidCallback onClose;
   final int bagFiltersScrollNonce;
 
+  /// ACCOUNT session-log hint. God Hand waits until first-hour chrome lifts.
+  static String sessionLogHint({required bool plain}) => plain
+      ? 'Optional session log on this device only — chase and wipes. '
+          'Never uploaded. Copy to clipboard for your own notes.'
+      : 'Optional session log on this device only — chase, wipes, God Hand. '
+          'Never uploaded. Copy to clipboard for your own notes.';
+
   @override
   State<SettingsOverlay> createState() => _SettingsOverlayState();
 }
@@ -350,8 +357,9 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         ),
         const SizedBox(height: 4),
         Text(
-          'Optional session log on this device only — chase, wipes, God Hand. '
-          'Never uploaded. Copy to clipboard for your own notes.',
+          SettingsOverlay.sessionLogHint(
+            plain: GameLogic.plainPlayerChrome(state),
+          ),
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),

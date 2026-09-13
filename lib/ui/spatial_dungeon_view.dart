@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
+import '../core/game_logic.dart';
 import '../core/hero_identity.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_mode.dart';
@@ -38,6 +39,13 @@ class SpatialDungeonView extends StatefulWidget {
   const SpatialDungeonView({super.key, required this.director});
 
   final GameDirector director;
+
+  /// Map TalkBack. First hour matches the fist chip (tap the fight).
+  static String mapSemanticsLabel({required bool plain}) => plain
+      ? 'Dungeon map — tap to pin target while fighting; '
+          'long-press to smash and steer; fist button also works'
+      : 'Dungeon map — tap to pin target while fighting; '
+          'long-press for God Hand; fist button also works';
 
   @override
   State<SpatialDungeonView> createState() => _SpatialDungeonViewState();
@@ -463,9 +471,11 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                             },
                             child: Semantics(
                               button: true,
-                              label:
-                                  'Dungeon map — tap to pin target while fighting; '
-                                  'long-press for God Hand; fist button also works',
+                              label: SpatialDungeonView.mapSemanticsLabel(
+                                plain: GameLogic.plainPlayerChrome(
+                                  widget.director.state,
+                                ),
+                              ),
                               onTap: () {
                                 if (widget.director.awaitingWipeChoice) return;
                                 if (widget.director.state.isPartyDefeated) {
