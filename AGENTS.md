@@ -189,8 +189,8 @@ Spire climb from Hub; **boss every 5 floors**; wipe/leave → hub;
 normal zone runs — dial under hub **KEY**. Before party max level there is no KEY habit or KEY tab.
 
 **Rifts** (same gate): farm timed kill-quota in **Stormwake Hollow** from hub /
-**KEY** — gold and gear mid-run; not Play-ranked; not Spire climb.
-`metaDepth.riftBestTier` survives Ascend.
+**KEY** — gold and gear mid-run; not Play-ranked; not Spire climb. Endless after R20
+(kill quota holds; threat keeps climbing). `metaDepth.riftBestTier` survives Ascend.
 
 **Greater Rifts** (same gate): harder timed ladder in **Mothveil Hollow**,
 no mid-run gear, larger clear payout; season PB on Play Games BOARDS.

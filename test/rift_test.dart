@@ -128,6 +128,34 @@ void main() {
     expect(resolved.metaDepth.riftBestTier, 4);
     expect(resolved.essence, greaterThan(0));
   });
+
+  test('Farm Rift stays selectable past 20', () {
+    expect(Rift.maxSelectableTier(20), 21);
+    expect(Rift.killTarget(21), Rift.killTarget(20));
+    expect(Rift.parTimeMs(50), Rift.parTimeMs(20));
+    expect(Rift.threatMul(21), greaterThan(Rift.threatMul(20)));
+    expect(Rift.densityMul(50), Rift.densityMul(20));
+    expect(Rift.successEssence(21), greaterThan(Rift.successEssence(20)));
+  });
+
+  test('Farm Rift R25 survives save load', () {
+    final now = DateTime.utc(2026, 8, 24);
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              riftBestTier: 25,
+              riftPreferredTier: 26,
+            ),
+      ),
+    );
+    state = GameLogic.setRiftPreferredTier(state, 26);
+    expect(state.metaDepth.riftPreferredTier, 26);
+    final loaded = GameLogic.stateFromJson(state.toJson());
+    expect(loaded.metaDepth.riftBestTier, 25);
+    expect(loaded.metaDepth.riftPreferredTier, 26);
+    expect(GameLogic.enterRift(loaded, tier: 26).riftTier, 26);
+  });
 }
 
 GameState _withPartyMaxLevel(GameState state) => state.copyWith(

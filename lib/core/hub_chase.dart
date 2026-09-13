@@ -935,7 +935,7 @@ class HubChase {
     }
     // No milestone left — nudge next selectable tier if below max.
     final next = Rift.maxSelectableTier(best);
-    if (best < Rift.maxTier && next > best) {
+    if (best < Rift.campaignCap && next > best) {
       return HubChase(
         kind: HubChaseKind.riftMilestone,
         title: 'Clear Farm Rift R$next',

@@ -1,4 +1,4 @@
-/// KEY / Ranked GR save bound. Keep in sync with Keystone.maxLevel / GreaterRift.maxTier.
+/// KEY / Ranked GR / Farm Rift save bound. Keep in sync with Keystone.maxLevel / GreaterRift.maxTier / Rift.maxTier.
 const int kEndlessLadderBound = 999;
 
 /// Prestige shop offerings (AL-gated essence sinks).
@@ -1081,9 +1081,10 @@ class MetaDepthState {
       gauntletBestFloor: (json['gauntletBestFloor'] as num?)?.toInt() ?? 0,
       lifetimeGauntletFloors:
           (json['lifetimeGauntletFloors'] as num?)?.toInt() ?? 0,
-      riftBestTier: ((json['riftBestTier'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      riftBestTier: ((json['riftBestTier'] as num?)?.toInt() ?? 0)
+          .clamp(0, kEndlessLadderBound),
       riftPreferredTier: ((json['riftPreferredTier'] as num?)?.toInt() ?? 1)
-          .clamp(1, 20),
+          .clamp(1, kEndlessLadderBound),
       lifetimeRiftClears: (json['lifetimeRiftClears'] as num?)?.toInt() ?? 0,
       claimedRiftMilestones:
           (json['claimedRiftMilestones'] as List<dynamic>?)?.cast<String>() ??

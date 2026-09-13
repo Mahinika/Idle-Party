@@ -34,7 +34,7 @@ abstract final class MetaSystems {
       version: '1.12.163',
       bullets: <String>[
         'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
-        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEY and Ranked GREATER Rifts keep going past 20 — packs get harder, the hunt does not stop. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEY, Farm Rift, and Ranked GREATER Rifts keep going past 20 — packs get harder, the hunt does not stop. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
       ],
     ),
     ChangelogRelease(

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import '../models/meta_depth.dart';
 import 'timed_ladder.dart';
 
 /// Farm Rift — timed kill challenge with mid-run gold and gear (party max level).
@@ -9,7 +10,11 @@ import 'timed_ladder.dart';
 /// with ≥25% time remaining). Not ranked on Play Games (see [GreaterRift]).
 /// SpatialCombat stays the fight authority — this module is rules + payout only.
 abstract final class Rift {
-  static const int maxTier = 20;
+  /// TODAY campaign chase / kill-quota plateau — farm push keeps going.
+  static const int campaignCap = 20;
+
+  /// Practical endless bound (save / overflow).
+  static const int maxTier = kEndlessLadderBound;
   static const int minTier = 1;
 
   /// Same endgame gate as KEY / Gauntlet.
@@ -20,24 +25,27 @@ abstract final class Rift {
 
   static int clampTier(int tier) => tier.clamp(minTier, maxTier);
 
-  /// Preferred hub dial: 1…best+1 (capped).
+  /// Preferred hub dial: 1…best+1 (no campaign stop).
   static int maxSelectableTier(int bestCleared) =>
       clampTier(max(minTier, bestCleared + 1));
 
   static int killTarget(int tier) {
-    final t = clampTier(tier);
-    return 20 + t * 3; // R1=23 … R20=80
+    final t = min(clampTier(tier), campaignCap);
+    return 20 + t * 3; // R1=23 … R20+=80
   }
 
-  /// Par window — higher tiers get less time.
+  /// Par window — higher tiers get less time through [campaignCap], then hold.
   static int parTimeMs(int tier) {
-    final t = clampTier(tier);
-    return max(45000, 120000 - t * 3000); // R1≈117s … R20=60s
+    final t = min(clampTier(tier), campaignCap);
+    return max(45000, 120000 - t * 3000); // R1≈117s … R20+=60s
   }
 
+  /// Pack threat keeps climbing after 20.
   static double threatMul(int tier) => 1.0 + clampTier(tier) * 0.12;
 
-  static double densityMul(int tier) => 1.0 + clampTier(tier) * 0.08;
+  /// Pack count soft-caps at [campaignCap]; threat still climbs.
+  static double densityMul(int tier) =>
+      1.0 + min(clampTier(tier), campaignCap) * 0.08;
 
   static int successEssence(int tier) => 8 + clampTier(tier) * 2;
 

@@ -41,6 +41,7 @@ class RiftHubPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'Timed kill farm — not Gauntlet floors. Gold + gear mid-run. '
+          'Endless after R${Rift.campaignCap}. '
           'Best R$best · kill $kills before $par · '
           '+${Rift.successEssence(pref)}e / +${Rift.successGold(pref)}g',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

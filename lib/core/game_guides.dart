@@ -657,7 +657,7 @@ abstract final class GameGuides {
           'Farm mode at party level ${GameLogic.maxHeroLevel} — not Ranked GR.\n\n'
           '• Timed kill challenges — clear the kill quota before the par timer.\n'
           '• Gold and gear drop during the run; success also pays essence + gold.\n'
-          '• Higher tiers: tougher packs and less time; fast clears unlock +2.\n'
+          '• Tiers keep going past R20 — packs get harder; kill quota and timer hold after R20. Fast clears unlock +2.\n'
           '• Wipe or timeout ends the run with a small consolation.\n'
           '• Not ranked on Play Games — gear drops mid-run (Ranked GR does not). '
           'The hub hunt chases Farm Rift after GR milestones quiet.\n'
@@ -843,7 +843,7 @@ abstract final class GameGuides {
       body:
           'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
           'stronger Ascend Blessing.\n\n'
-          '• AL20 is the Ascension cap. Endgame (endless KEY / Ranked GR, Gauntlet, Farm Rifts, '
+          '• AL20 is the Ascension cap. Endgame (endless KEY / Farm Rift / Ranked GR, Gauntlet, '
           'Ashen Crown, vault, boards) unlocks when every active hero reaches level '
           '${GameLogic.maxHeroLevel} — not from AL20 alone.\n'
           '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
