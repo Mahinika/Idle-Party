@@ -2341,7 +2341,7 @@ class GameLogic {
         final bonus = Keystone.timedClearBonus(key);
         essence += bonus;
         preferredKey = min(
-          next.effectiveMaxHardmode,
+          Keystone.maxLevel,
           max(preferredKey, key + 1),
         );
         bestTimed = max(bestTimed, key);

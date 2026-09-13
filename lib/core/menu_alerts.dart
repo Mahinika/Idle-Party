@@ -3,6 +3,7 @@ import 'gear_service.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'hub_chase.dart';
+import 'keystone.dart';
 import 'market_listings_service.dart';
 import 'meta_systems.dart';
 
@@ -249,7 +250,11 @@ class MenuAlerts {
     if (!GameLogic.endgameUnlocked(state) || !MenuTabs.showKey(state)) {
       return MenuAlert.quiet;
     }
-    final cap = state.ascensionLevel.clamp(0, GameLogic.maxAscensionLevel);
+    final unlocked = Keystone.maxForState(state);
+    if (unlocked <= 0) return MenuAlert.quiet;
+    final cap = unlocked < Keystone.campaignCap
+        ? unlocked
+        : Keystone.campaignCap;
     if (state.hardmodeLevel < cap) {
       return MenuAlert(
         count: 1,

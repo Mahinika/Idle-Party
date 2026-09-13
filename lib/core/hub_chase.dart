@@ -428,7 +428,8 @@ class HubChase {
     final pb = _gauntletPbChase(state);
     if (pb == null) return null;
     final cap = Keystone.maxForState(state);
-    final keySettled = cap <= 0 || state.hardmodeLevel >= cap;
+    final keySettled =
+        cap <= 0 || state.hardmodeLevel >= Keystone.campaignCap;
     final vaultOk = state.metaDepth.dailyVaultClaimed;
     final dailyOk = MetaSystems.isDailyClaimedToday(state, now: clock);
     if (vaultOk && dailyOk && keySettled) {
@@ -647,13 +648,13 @@ class HubChase {
     );
   }
 
-  /// Next KEY after endgame unlock, until preferred key hits the dial cap.
+  /// Next KEY after endgame unlock, until preferred key hits the campaign stop.
   static HubChase? _keystonePushChase(GameState state) {
     if (!GameLogic.endgameUnlocked(state)) return null;
     final cap = Keystone.maxForState(state);
     if (cap <= 0) return null;
     final pref = state.hardmodeLevel.clamp(0, cap);
-    if (pref >= cap) return null;
+    if (pref >= Keystone.campaignCap) return null;
     final target = pref <= 0 ? 1 : pref;
     final firstKey = pref <= 0;
     return HubChase(
@@ -804,7 +805,9 @@ class HubChase {
       );
     }
     final gr = state.metaDepth.grBestTier;
-    final nextGr = gr <= 0 ? 1 : (gr >= GreaterRift.maxTier ? gr : gr + 1);
+    final nextGr = gr <= 0
+        ? 1
+        : (gr >= GreaterRift.maxTier ? gr : gr + 1);
     return HubChase(
       kind: HubChaseKind.greaterRiftMilestone,
       title: 'Push Ranked GR$nextGr',
@@ -969,7 +972,7 @@ class HubChase {
       );
     }
     final next = GreaterRift.maxSelectableTier(best);
-    if (best < GreaterRift.maxTier && next > best) {
+    if (best < GreaterRift.campaignCap && next > best) {
       return HubChase(
         kind: HubChaseKind.greaterRiftMilestone,
         title: 'Clear Ranked GR$next',

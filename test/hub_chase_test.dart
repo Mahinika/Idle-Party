@@ -120,7 +120,7 @@ void main() {
         hardmodeLevel: GameLogic.maxAscensionLevel,
         metaDepth: state.metaDepth.copyWith(
           dailyVaultClaimed: true,
-          grBestTier: GreaterRift.maxTier,
+          grBestTier: GreaterRift.campaignCap,
           claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
           gauntletBestFloor: 10,
         ),
@@ -573,7 +573,7 @@ void main() {
           dailyVaultClaimed: true,
           gauntletBestFloor: 200,
           claimedGauntletMilestones: _gauntletMilestonesDone,
-          grBestTier: GreaterRift.maxTier,
+          grBestTier: GreaterRift.campaignCap,
           claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
           riftBestTier: 0,
         ),
@@ -659,7 +659,7 @@ void main() {
   test('Ashen Crown chase when GR Gauntlet Rift ladder is done', () {
     var md = GameLogic.createInitialState(now: now).metaDepth.copyWith(
       dailyVaultClaimed: true,
-      grBestTier: GreaterRift.maxTier,
+      grBestTier: GreaterRift.campaignCap,
       claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
       gauntletBestFloor: 200,
       claimedGauntletMilestones: _gauntletMilestonesDone,
@@ -771,7 +771,7 @@ void main() {
         dailyClaimed: false,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
           dailyVaultClaimed: true,
-          grBestTier: GreaterRift.maxTier,
+          grBestTier: GreaterRift.campaignCap,
           claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
           gauntletBestFloor: 200,
           claimedGauntletMilestones: _gauntletMilestonesDone,
@@ -985,7 +985,7 @@ GameState _settledEndgameLadderState({required DateTime now}) =>
         dailyClaimed: true,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
           dailyVaultClaimed: true,
-          grBestTier: GreaterRift.maxTier,
+          grBestTier: GreaterRift.campaignCap,
           claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
           gauntletBestFloor: 200,
           claimedGauntletMilestones: _gauntletMilestonesDone,

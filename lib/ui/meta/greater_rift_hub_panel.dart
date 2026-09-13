@@ -41,7 +41,7 @@ class GreaterRiftHubPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'Mothveil prestige timer — harder packs, no mid-run gear, board score. '
-          'Not Gauntlet floors · not farm Rift loot. '
+          'Not Gauntlet floors · not farm Rift loot. Endless after GR${GreaterRift.campaignCap}. '
           'Best GR$best · kill $kills before $par · '
           '+${GreaterRift.successEssence(pref)}e / +${GreaterRift.successGold(pref)}g',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

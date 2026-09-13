@@ -209,7 +209,7 @@ void main() {
     );
     expect(GameLogic.endgameUnlocked(maxed), isTrue);
     expect(MenuTabs.showKey(maxed), isTrue);
-    expect(Keystone.maxForState(maxed), Keystone.maxLevel);
+    expect(Keystone.maxForState(maxed), Keystone.campaignCap);
     expect(MetaSystems.currentVersion, isNotEmpty);
     expect(MetaSystems.releases.first.version, MetaSystems.currentVersion);
     expect(MetaSystems.releases.first.bullets, isNotEmpty);

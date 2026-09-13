@@ -41,6 +41,7 @@ void main() {
     expect(Keystone.lootItemLevelBonus(1), 2);
     expect(Keystone.lootItemLevelBonus(10), 20);
     expect(Keystone.lootItemLevelBonus(20), 40);
+    expect(Keystone.lootItemLevelBonus(25), 50);
   });
 
   test('KEY gold tracks threat so it is not a gold/hour tax', () {
@@ -249,7 +250,7 @@ void main() {
     expect(GameLogic.canAscend(ready), isTrue);
     final ascended = GameLogic.ascend(ready, now: DateTime(2026, 8, 2));
     expect(ascended.ascensionLevel, GameLogic.maxAscensionLevel);
-    expect(ascended.effectiveMaxHardmode, Keystone.maxLevel);
+    expect(ascended.effectiveMaxHardmode, Keystone.campaignCap);
     expect(GameLogic.showKeystoneJargon(ascended), isTrue);
     expect(ascended.hardmodeLevel, 5);
   });
@@ -269,6 +270,37 @@ void main() {
     expect(migrated.metaDepth.dailyVaultClears, 1);
     expect(migrated.metaDepth.dailyBestTimedKey, 3);
     expect(migrated.metaDepth.dailyVaultClaimed, isFalse);
+  });
+
+  test('KEY dial opens +21 after clearing +20', () {
+    final capped = _withPartyMaxLevel(
+      GameLogic.createInitialState().copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 20,
+        metaDepth: const MetaDepthState(highestHardmodeCleared: 20),
+      ),
+    );
+    expect(Keystone.maxForState(capped), 21);
+    expect(Keystone.threatMul(21), greaterThan(Keystone.threatMul(20)));
+    expect(Keystone.densityMul(50), Keystone.densityMul(20));
+    final raised = GameLogic.setHardmodeLevel(capped, 21);
+    expect(raised.hardmodeLevel, 21);
+    final blocked = GameLogic.setHardmodeLevel(capped, 22);
+    expect(blocked.hardmodeLevel, 21);
+  });
+
+  test('KEY 25 survives save load', () {
+    final state = _withPartyMaxLevel(
+      GameLogic.createInitialState().copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: 25,
+        metaDepth: const MetaDepthState(highestHardmodeCleared: 25),
+      ),
+    );
+    final loaded = GameLogic.stateFromJson(state.toJson());
+    expect(loaded.hardmodeLevel, 25);
+    expect(loaded.metaDepth.highestHardmodeCleared, 25);
+    expect(Keystone.maxForState(loaded), 26);
   });
 }
 

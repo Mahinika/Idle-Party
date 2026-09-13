@@ -7,7 +7,7 @@ abstract final class PlayGamesScores {
 
   /// Higher KEY always ranks above lower KEY; same KEY → faster clear wins.
   static int encodeTimedKey({required int keyLevel, required int clearMs}) {
-    final key = keyLevel.clamp(0, 99);
+    final key = keyLevel.clamp(0, Keystone.maxLevel);
     final ms = clearMs.clamp(0, _timePad - 1);
     return key * _keyStride + (_timePad - ms);
   }

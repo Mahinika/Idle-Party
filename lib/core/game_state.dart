@@ -361,7 +361,7 @@ class GameState {
   /// Challenge toggle: flasks are disabled entirely.
   final bool challengeNoFlask;
 
-  /// Preferred keystone level 0–20 (0 = normal dungeon). Locked into a run on enter.
+  /// Preferred keystone level (0 = normal dungeon). Locked into a run on enter.
   final int hardmodeLevel;
 
   /// True while inside a keystone dungeon run (not Gauntlet / Daily).
@@ -1628,11 +1628,11 @@ class GameState {
       challengeNoFlask: (json['challengeNoFlask'] as bool?) ?? false,
       hardmodeLevel: ((json['hardmodeLevel'] as num?)?.toInt() ?? 0).clamp(
         0,
-        20,
+        Keystone.maxLevel,
       ),
       keystoneRunActive: (json['keystoneRunActive'] as bool?) ?? false,
       keystoneRunLevel: ((json['keystoneRunLevel'] as num?)?.toInt() ?? 0)
-          .clamp(0, 20),
+          .clamp(0, Keystone.maxLevel),
       keystoneTimerMs: max(0, (json['keystoneTimerMs'] as num?)?.toInt() ?? 0),
       keystoneParMs: max(0, (json['keystoneParMs'] as num?)?.toInt() ?? 0),
       keystoneRunAffixes:

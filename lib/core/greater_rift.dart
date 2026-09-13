@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import '../models/meta_depth.dart';
 import 'timed_ladder.dart';
 
 /// Greater Rift — prestige timed kill ladder (party max level; Play Games ranked).
@@ -9,7 +10,11 @@ import 'timed_ladder.dart';
 /// payout. Higher GR tier always ranks above lower; same tier prefers faster clear.
 /// Shares timer/unlock helpers with [Rift] via [TimedLadder] — modes stay separate.
 abstract final class GreaterRift {
-  static const int maxTier = 20;
+  /// TODAY campaign chase / kill-quota plateau — ranked push keeps going.
+  static const int campaignCap = 20;
+
+  /// Practical endless bound (save / Play encode / overflow).
+  static const int maxTier = kEndlessLadderBound;
   static const int minTier = 1;
   static const int minAscension = 20;
   /// Zone art — Mothveil (prestige; not Crystal Spire Gauntlet / Stormwake farm).
@@ -21,21 +26,23 @@ abstract final class GreaterRift {
       clampTier(max(minTier, bestCleared + 1));
 
   static int killTarget(int tier) {
-    final t = clampTier(tier);
-    return 22 + t * 4; // GR1=26 … GR20=102
+    final t = min(clampTier(tier), campaignCap);
+    return 22 + t * 4; // GR1=26 … GR20+=102
   }
 
   static int parTimeMs(int tier) {
-    final t = clampTier(tier);
-    // Tighter than farm through mid tiers. GR20 keeps ~62s — ranked is extra
-    // kills + threat, not a 46s blender.
+    final t = min(clampTier(tier), campaignCap);
+    // Tighter than farm through mid tiers. GR20+ keeps ~62s — ranked is extra
+    // threat, not a shorter fuse or a bigger kill tax.
     return max(58000, 112000 - t * 2500);
   }
 
-  /// ~1.5× farm Rift threat at the same tier band.
+  /// ~1.5× farm Rift threat at the same tier band; keeps climbing after 20.
   static double threatMul(int tier) => 1.0 + clampTier(tier) * 0.20;
 
-  static double densityMul(int tier) => 1.0 + clampTier(tier) * 0.12;
+  /// Pack count soft-caps at [campaignCap]; threat still climbs.
+  static double densityMul(int tier) =>
+      1.0 + min(clampTier(tier), campaignCap) * 0.12;
 
   static int successEssence(int tier) => 14 + clampTier(tier) * 3;
 

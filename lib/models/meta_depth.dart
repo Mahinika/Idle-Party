@@ -1,3 +1,6 @@
+/// KEY / Ranked GR save bound. Keep in sync with Keystone.maxLevel / GreaterRift.maxTier.
+const int kEndlessLadderBound = 999;
+
 /// Prestige shop offerings (AL-gated essence sinks).
 class PrestigeShopItem {
   const PrestigeShopItem({
@@ -1050,12 +1053,12 @@ class MetaDepthState {
       weeklyClaimed: (json['weeklyClaimed'] as bool?) ?? false,
       weeklyModifier: (json['weeklyModifier'] as String?) ?? '',
       weeklyBestTimedKey: ((json['weeklyBestTimedKey'] as num?)?.toInt() ?? 0)
-          .clamp(0, 20),
+          .clamp(0, kEndlessLadderBound),
       dailyVaultDate: (json['dailyVaultDate'] as String?) ?? '',
       dailyVaultClears: ((json['dailyVaultClears'] as num?)?.toInt() ?? 0)
           .clamp(0, 999),
       dailyBestTimedKey: ((json['dailyBestTimedKey'] as num?)?.toInt() ?? 0)
-          .clamp(0, 20),
+          .clamp(0, kEndlessLadderBound),
       dailyVaultClaimed: (json['dailyVaultClaimed'] as bool?) ?? false,
       favoritePetSpecies: (json['favoritePetSpecies'] as String?) ?? '',
       petRosterCapBonus: (json['petRosterCapBonus'] as num?)?.toInt() ?? 0,
@@ -1073,7 +1076,8 @@ class MetaDepthState {
       lifetimePetMerges: (json['lifetimePetMerges'] as num?)?.toInt() ?? 0,
       lifetimeAscends: (json['lifetimeAscends'] as num?)?.toInt() ?? 0,
       highestHardmodeCleared:
-          ((json['highestHardmodeCleared'] as num?)?.toInt() ?? 0).clamp(0, 20),
+          ((json['highestHardmodeCleared'] as num?)?.toInt() ?? 0)
+              .clamp(0, kEndlessLadderBound),
       gauntletBestFloor: (json['gauntletBestFloor'] as num?)?.toInt() ?? 0,
       lifetimeGauntletFloors:
           (json['lifetimeGauntletFloors'] as num?)?.toInt() ?? 0,
@@ -1084,10 +1088,11 @@ class MetaDepthState {
       claimedRiftMilestones:
           (json['claimedRiftMilestones'] as List<dynamic>?)?.cast<String>() ??
           const [],
-      grBestTier: ((json['grBestTier'] as num?)?.toInt() ?? 0).clamp(0, 20),
+      grBestTier: ((json['grBestTier'] as num?)?.toInt() ?? 0)
+          .clamp(0, kEndlessLadderBound),
       grPreferredTier: ((json['grPreferredTier'] as num?)?.toInt() ?? 1).clamp(
         1,
-        20,
+        kEndlessLadderBound,
       ),
       lifetimeGrClears: (json['lifetimeGrClears'] as num?)?.toInt() ?? 0,
       claimedGrMilestones:
@@ -1137,13 +1142,13 @@ class MetaDepthState {
           const [],
       leaderboardSeasonKey: (json['leaderboardSeasonKey'] as String?) ?? '',
       seasonBestTimedKey: ((json['seasonBestTimedKey'] as num?)?.toInt() ?? 0)
-          .clamp(0, 20),
+          .clamp(0, kEndlessLadderBound),
       seasonBestTimedClearMs:
           (json['seasonBestTimedClearMs'] as num?)?.toInt() ?? 0,
       seasonBestGauntletFloor:
           (json['seasonBestGauntletFloor'] as num?)?.toInt() ?? 0,
       seasonBestGrTier: ((json['seasonBestGrTier'] as num?)?.toInt() ?? 0)
-          .clamp(0, 20),
+          .clamp(0, kEndlessLadderBound),
       seasonBestGrClearMs: (json['seasonBestGrClearMs'] as num?)?.toInt() ?? 0,
       cloudSaveUpdatedMs: (json['cloudSaveUpdatedMs'] as num?)?.toInt() ?? 0,
       playGamesOptIn: (json['playGamesOptIn'] as bool?) ?? false,
@@ -1170,24 +1175,25 @@ class MetaDepthState {
           .clamp(0, 20),
       monthPassKey: (json['monthPassKey'] as String?) ?? '',
       monthlyBestTimedKey: ((json['monthlyBestTimedKey'] as num?)?.toInt() ?? 0)
-          .clamp(0, 20),
+          .clamp(0, kEndlessLadderBound),
       monthlyBestGrTier: ((json['monthlyBestGrTier'] as num?)?.toInt() ?? 0)
-          .clamp(0, 20),
+          .clamp(0, kEndlessLadderBound),
       claimedMonthGoals:
           (json['claimedMonthGoals'] as List<dynamic>?)?.cast<String>() ??
           const [],
       challengeBestBossRushKey:
           ((json['challengeBestBossRushKey'] as num?)?.toInt() ?? 0).clamp(
             0,
-            20,
+            kEndlessLadderBound,
           ),
       challengeBestNoFlaskKey:
           ((json['challengeBestNoFlaskKey'] as num?)?.toInt() ?? 0).clamp(
             0,
-            20,
+            kEndlessLadderBound,
           ),
       challengeBestTinyKey:
-          ((json['challengeBestTinyKey'] as num?)?.toInt() ?? 0).clamp(0, 20),
+          ((json['challengeBestTinyKey'] as num?)?.toInt() ?? 0)
+              .clamp(0, kEndlessLadderBound),
       worldBossWeekKey: (json['worldBossWeekKey'] as String?) ?? '',
       worldBossTickets: ((json['worldBossTickets'] as num?)?.toInt() ?? 3)
           .clamp(0, 3),

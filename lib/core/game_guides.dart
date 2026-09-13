@@ -1,6 +1,7 @@
+import 'ashen_crown.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
-import 'ashen_crown.dart';
+import 'keystone.dart';
 
 /// In-game guide copy for MORE → INFO.
 abstract final class GameGuides {
@@ -668,11 +669,10 @@ abstract final class GameGuides {
       body:
           'Ranked GR at party level ${GameLogic.maxHeroLevel} — '
           'Mothveil timer, harder than Farm Rift.\n\n'
-          '• Timed kill quota on a tougher ladder (GR1–GR20).\n'
+          '• Timed kill quota on a tougher endless ladder (GR1, GR2, …).\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear. '
           'Farm Rift is the loot path; Ranked GR is the board path.\n'
-          '• GR20 keeps about a minute on the clock — ranked is more kills and '
-          'tougher packs, not a shorter fuse.\n'
+          '• GR20 keeps about a minute on the clock — later ranks keep that window and raise pack threat.\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
           'Ranked GR board wires when the Console ID is pasted.\n'
@@ -824,7 +824,7 @@ abstract final class GameGuides {
           '(party Lv${GameLogic.maxHeroLevel}) — unlocks at '
           'party level ${GameLogic.maxHeroLevel}.\n\n'
           '• Endgame only: set key before you enter a normal zone dungeon.\n'
-          '• Key level caps at +20 once the party is max level.\n'
+          '• Key level has no stop at +20 — time under par to push the next KEY.\n'
           '• Affixes lock on enter (weekly + Fortified/Tyrannical at +4, more at higher keys).\n'
           '• Idle-friendly timer: AFK time counts; beat the boss under par to TIMED upgrade.\n'
           '• Overtime = depleted (clear still counts, no key upgrade).\n'
@@ -834,7 +834,7 @@ abstract final class GameGuides {
           'Glass packs execute low HP; Fortified trash stacks armor mid-fight.\n'
           '• Higher keys drop higher iLvl gear (KEY +10 is +20 iLvl) and pay '
           'gold in line with the harder packs — not a gold tax.\n'
-          '• At party Lv${GameLogic.maxHeroLevel}, the hub hunt may chase KEY until your preferred key is at the cap.\n'
+          '• At party Lv${GameLogic.maxHeroLevel}, the hub hunt may chase KEY until +${Keystone.campaignCap}; higher keys stay on the KEY tab.\n'
           '• Ashen Crown tickets and PRACTICE live under KEY and on the hub ENDGAME tab.',
     ),
     GuideTopic(
@@ -843,7 +843,7 @@ abstract final class GameGuides {
       body:
           'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
           'stronger Ascend Blessing.\n\n'
-          '• AL20 is the Ascension cap. Endgame (KEY +20, Gauntlet, Farm Rifts, Ranked GR, '
+          '• AL20 is the Ascension cap. Endgame (endless KEY / Ranked GR, Gauntlet, Farm Rifts, '
           'Ashen Crown, vault, boards) unlocks when every active hero reaches level '
           '${GameLogic.maxHeroLevel} — not from AL20 alone.\n'
           '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '

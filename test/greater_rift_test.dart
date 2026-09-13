@@ -4,6 +4,7 @@ import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/greater_rift.dart';
 import 'package:idle_party/core/play_games_scores.dart';
 import 'package:idle_party/core/rift.dart';
+import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 24);
@@ -91,6 +92,34 @@ void main() {
     final resolved = GameLogic.tryResolveRift(state)!;
     expect(resolved.metaDepth.seasonBestGrTier, 0);
     expect(resolved.metaDepth.riftBestTier, greaterThan(0));
+  });
+
+  test('Ranked GR stays selectable past 20', () {
+    expect(GreaterRift.maxSelectableTier(20), 21);
+    expect(GreaterRift.killTarget(21), GreaterRift.killTarget(20));
+    expect(GreaterRift.parTimeMs(50), GreaterRift.parTimeMs(20));
+    expect(GreaterRift.threatMul(21), greaterThan(GreaterRift.threatMul(20)));
+    expect(GreaterRift.densityMul(50), GreaterRift.densityMul(20));
+    expect(GreaterRift.successEssence(21), greaterThan(GreaterRift.successEssence(20)));
+  });
+
+  test('Greater Rift GR25 survives save load', () {
+    final now = DateTime.utc(2026, 8, 24);
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        metaDepth: const MetaDepthState(
+          grBestTier: 25,
+          grPreferredTier: 26,
+        ),
+      ),
+    );
+    state = GameLogic.setGrPreferredTier(state, 26);
+    expect(state.metaDepth.grPreferredTier, 26);
+    final loaded = GameLogic.stateFromJson(state.toJson());
+    expect(loaded.metaDepth.grBestTier, 25);
+    expect(loaded.metaDepth.grPreferredTier, 26);
+    expect(GameLogic.enterGreaterRift(loaded, tier: 26).grTier, 26);
   });
 }
 

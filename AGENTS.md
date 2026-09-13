@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.162**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.163**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -31,7 +31,7 @@ locally when green; ask before push / PR / tag / Play.
 **Distribution today:** **Google Play is the primary install path**
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Store listing:
 `https://play.google.com/store/apps/details?id=com.idleparty.app` (production
-live **1.12.133 / 163**; **1.12.157 / 187** submitted 2026-09-12; working ship **1.12.162 / 192**). Closed opt-in remains for early builds.
+live **1.12.133 / 163**; **1.12.157 / 187** submitted 2026-09-12; working ship **1.12.163 / 193**). Closed opt-in remains for early builds.
 Do **not** link players to GitHub Releases (repo may be private). Working ship
 in-repo may be ahead of Play — wait for owner play before uploading a new AAB.
 
@@ -194,7 +194,7 @@ normal zone runs — dial under hub **KEY**. Before party max level there is no 
 
 **Greater Rifts** (same gate): harder timed ladder in **Mothveil Hollow**,
 no mid-run gear, larger clear payout; season PB on Play Games BOARDS.
-GR20 keeps ~62s on the clock (kills + threat, not a 46s fuse).
+GR20+ keeps ~62s on the clock (kills plateau; threat keeps climbing).
 `metaDepth.grBestTier` / `seasonBestGrTier` survive Ascend.
 
 **Ashen Crown** (same gate): weekly ticket solo boss (ember art); wipe/leave
@@ -202,8 +202,7 @@ returns the ticket; PRACTICE free after the paid clear. Tickets /
 `worldBoss*` fields in `metaDepth`; see `lib/core/ashen_crown.dart`.
 
 **Ascension cap:** `GameLogic.maxAscensionLevel` = **AL20** — Ascend stops here
-(Blessing / kit roadmap). **Endgame content** (KEY +20, Gauntlet, Rifts, Greater
-Rifts) unlocks when the **active party is all Lv100**, not at AL20 alone.
+(Blessing / kit roadmap). **Endgame content** (endless KEY / Ranked GR, Gauntlet, Rifts) unlocks when the **active party is all Lv100**, not at AL20 alone.
 **Hero level cap:** `GameLogic.maxHeroLevel` = **100**; combat XP only (no gold
 Train +1 level). Endgame (KEY / Gauntlet / Rifts) when every active hero is
 Lv100. Gold tracks (ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY) still buyable (wipe on
@@ -425,14 +424,14 @@ Dungeon unlock uses **party mean level** (and prior clears), not lifetime gold.
 ### Keystone (Mythic+-style)
 
 Hub **KEY** (bottom tab after party max level / jargon unlock) sets preferred
-key (`hardmodeLevel` 0–20, AL-gated). On enter, affixes lock + idle-friendly par
+key (`hardmodeLevel` 0…endless, party-max gated). On enter, affixes lock + idle-friendly par
 timer starts (AFK counts). Boss clear under par → TIMED (upgrade key, vault
 score); overtime → depleted. Loot iLvl bonus is `key * 2`
 (`Keystone.lootItemLevelBonus`) so higher keys are a visible gear jump. Combat
 **gold** scales with the same curve as threat (`Keystone.goldMul` — e.g. KEY +10
 ≈ gold ×5.5) so harder keys are not a gold/hour tax. At party max level, hub
-TODAY chases the next KEY until the AL key cap; then Gauntlet / GR / Rift /
-Ashen Crown / Daily / Will (ALMOST cliffs stay above). **Daily vault** (UTC):
+TODAY chases the next KEY until +20; then Gauntlet / GR / Rift /
+Ashen Crown / Daily / Will (ALMOST cliffs stay above). KEY +21 and Ranked GR past 20 stay on the KEY tab / ENDGAME map. **Daily vault** (UTC):
 1 clear **or** timed KEY+2; claim once per day (scales with best timed key).
 Affixes still rotate weekly. See `lib/core/keystone.dart`.
 

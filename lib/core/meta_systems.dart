@@ -6,6 +6,7 @@ import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/pet.dart';
 import 'game_state.dart';
+import 'keystone.dart';
 
 /// One versioned What's New block (newest releases first in [MetaSystems.releases]).
 class ChangelogRelease {
@@ -25,10 +26,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.162';
+  static const String currentVersion = '1.12.163';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.163',
+      bullets: <String>[
+        'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
+        'World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEY and Ranked GREATER Rifts keep going past 20 — packs get harder, the hunt does not stop. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.162',
       bullets: <String>[
@@ -1776,7 +1784,7 @@ abstract final class MetaSystems {
     if (state.challengeBossRush) bonus += 2;
     if (state.challengeNoFlask) bonus += 2;
     final key = state.keystoneRunActive ? state.keystoneRunLevel : 0;
-    bonus += key.clamp(0, state.effectiveMaxHardmode);
+    bonus += key.clamp(0, Keystone.campaignCap);
     return bonus;
   }
 

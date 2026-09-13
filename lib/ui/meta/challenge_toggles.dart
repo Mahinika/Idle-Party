@@ -140,7 +140,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           const SizedBox(height: 4),
           Text(
             state.hardmodeLevel <= 0
-                ? 'KEY +0 (normal) · no key loot bonus · max KEY +$maxKey'
+                ? 'KEY +0 (normal) · no key loot bonus · endless after +${Keystone.campaignCap}'
                 : 'KEY +${state.hardmodeLevel} · loot +${Keystone.lootItemLevelBonus(state.hardmodeLevel)} iLvl · ${Keystone.goldMulLabel(state.hardmodeLevel)}',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -333,7 +333,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           Text(
             !GameLogic.endgameUnlocked(state)
                 ? 'KEY unlocks at party level ${GameLogic.maxHeroLevel} with Gauntlet and Ranked GR.'
-                : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2.',
+                : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2. Keys keep going past +${Keystone.campaignCap}.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
@@ -381,7 +381,11 @@ class _HardmodeStepper extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '0 = normal  ·  max +$maxLevel (AL)',
+                  level <= 0
+                      ? '0 = normal · KEY + to push'
+                      : (level < maxLevel
+                          ? 'endless · KEY + to push'
+                          : 'clear this key to unlock +${level + 1}'),
                   textAlign: TextAlign.center,
                   style: GameTheme.body(
                     size: 11,

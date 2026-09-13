@@ -99,7 +99,7 @@ abstract final class AscendRoadmap {
   /// Next meaningful goal from the player’s **current** AL (before Ascend).
   static String nextGoalLine(int currentAl) {
     if (currentAl >= GameLogic.maxAscensionLevel) {
-      return 'Endgame at party Lv${GameLogic.maxHeroLevel}: KEY +20, Gauntlet, Rifts, vault, boards';
+      return 'Endgame at party Lv${GameLogic.maxHeroLevel}: endless KEY / Ranked GR, Gauntlet, Rifts, vault, boards';
     }
     for (var al = currentAl + 1; al <= GameLogic.maxAscensionLevel; al++) {
       final unlock = unlockAtAl(al);

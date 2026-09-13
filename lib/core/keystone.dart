@@ -2,10 +2,15 @@ import 'dart:math';
 
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/dungeon_def.dart';
+import 'package:idle_party/models/meta_depth.dart';
 
 /// Mythic+-style keystone runs: level, affixes, idle-friendly timer, upgrade.
 abstract final class Keystone {
-  static const int maxLevel = 20;
+  /// TODAY chase / starter dial stop — higher keys stay on the KEY tab.
+  static const int campaignCap = 20;
+
+  /// Practical endless bound (save / Play encode / overflow).
+  static const int maxLevel = kEndlessLadderBound;
   static const int minActiveLevel = 1;
 
   /// Pool for the week's primary affix (also used as secondary at higher keys).
@@ -22,29 +27,34 @@ abstract final class Keystone {
   static const int minAscension = 20;
   static const int heroLevelGate = 100;
 
-  /// Full KEY dial once the party is capped; 0 before.
+  /// Dial ceiling: +1…[campaignCap] at endgame, then best cleared + 1.
   static int maxForState(GameState state) {
     if (state.heroes.isEmpty) return 0;
     for (final h in state.heroes) {
       if (h.level < heroLevelGate) return 0;
     }
-    return maxLevel;
+    final best = state.metaDepth.highestHardmodeCleared;
+    return max(campaignCap, best + 1).clamp(campaignCap, maxLevel);
   }
+
+  static int clampKey(int key) => key.clamp(0, maxLevel);
 
   /// Legacy AL helper — prefer [maxForState].
   static int maxForAl(int ascensionLevel) {
     if (ascensionLevel < minAscension) return 0;
-    return maxLevel;
+    return campaignCap;
   }
 
-  /// Threat / pack density vs old HM+10 ≈ 10× at key 20.
-  static double threatMul(int key) => 1.0 + key.clamp(0, maxLevel) * 0.45;
+  /// Threat vs old HM+10 ≈ 10× at key 20; keeps climbing after.
+  static double threatMul(int key) => 1.0 + clampKey(key) * 0.45;
 
   /// Combat gold tracks threat so KEY is not a gold/hour tax.
   /// iLvl remains the extra prize (`lootItemLevelBonus`).
   static double goldMul(int key) => threatMul(key);
 
-  static double densityMul(int key) => 1.0 + key.clamp(0, maxLevel) * 0.45;
+  /// Pack count soft-caps at [campaignCap] so phones are not buried in bodies.
+  static double densityMul(int key) =>
+      1.0 + min(clampKey(key), campaignCap) * 0.45;
 
   /// Extra KEY bodies pay this slice of density into pack gold (1.0 = full).
   static const double densityGoldShare = 0.85;
@@ -61,18 +71,22 @@ abstract final class Keystone {
 
   /// Legendary direct-drop chance contribution (key 20 ≈ old HM+10).
   static double legendaryChance(int key) =>
-      0.004 + key.clamp(0, maxLevel) * 0.0055;
+      (0.004 + clampKey(key) * 0.0055).clamp(0.0, 0.12);
 
-  static double rarityBump(int key) => key.clamp(0, maxLevel) * 0.02;
+  static double rarityBump(int key) => min(clampKey(key), campaignCap) * 0.02;
 
   /// Honest loot jump: KEY +10 is +20 iLvl, not a +2 crumb.
-  static int lootItemLevelBonus(int key) => key.clamp(0, maxLevel) * 2;
+  static int lootItemLevelBonus(int key) => clampKey(key) * 2;
 
-  /// Idle-friendly par: ~2 min/floor + 20s/key/floor (offline counts).
+  /// Idle-friendly par: ~2 min/floor + 20s/key/floor through +20, then +5s.
   static int parTimeMs({required int bossFloor, required int key}) {
     if (key <= 0) return 0;
     final floors = max(1, bossFloor);
-    final perFloorMs = 120000 + key.clamp(0, maxLevel) * 20000;
+    final k = clampKey(key);
+    final extra = k <= campaignCap
+        ? k * 20000
+        : campaignCap * 20000 + (k - campaignCap) * 5000;
+    final perFloorMs = 120000 + extra;
     return floors * perFloorMs;
   }
 
@@ -139,10 +153,10 @@ abstract final class Keystone {
 
   /// Combat key level for minting packs (locked run, else 0 outside keystone).
   static int combatLevel(GameState? state, {int fallback = 0}) {
-    if (state == null) return fallback.clamp(0, maxLevel);
+    if (state == null) return clampKey(fallback);
     if (state.inGauntlet) return 0;
     if (state.keystoneRunActive) {
-      return state.keystoneRunLevel.clamp(0, maxLevel);
+      return clampKey(state.keystoneRunLevel);
     }
     return 0;
   }
@@ -240,9 +254,11 @@ abstract final class Keystone {
   }
 
   /// Essence for claiming daily vault (scales with today's best timed key).
-  static int dailyVaultEssence(int bestTimedKey) =>
-      16 + bestTimedKey.clamp(0, maxLevel) * 4;
+  static int dailyVaultEssence(int bestTimedKey) {
+    final k = clampKey(bestTimedKey);
+    return 16 + min(k, campaignCap) * 4 + max(0, k - campaignCap);
+  }
 
   /// Extra essence when timing a keystone boss clear.
-  static int timedClearBonus(int key) => 4 + key.clamp(0, maxLevel) * 2;
+  static int timedClearBonus(int key) => 4 + clampKey(key) * 2;
 }

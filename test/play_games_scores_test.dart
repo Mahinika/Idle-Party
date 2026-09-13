@@ -13,6 +13,13 @@ void main() {
       expect(highSlow, greaterThan(lowFast));
     });
 
+    test('encode ranks KEY 50 above KEY 20', () {
+      final cap = PlayGamesScores.encodeTimedKey(keyLevel: 20, clearMs: 1000);
+      final push = PlayGamesScores.encodeTimedKey(keyLevel: 50, clearMs: 900000);
+      expect(push, greaterThan(cap));
+      expect(PlayGamesScores.decodeTimedKey(push).keyLevel, 50);
+    });
+
     test('same KEY prefers faster clear', () {
       final slow = PlayGamesScores.encodeTimedKey(keyLevel: 8, clearMs: 120000);
       final fast = PlayGamesScores.encodeTimedKey(keyLevel: 8, clearMs: 60000);
