@@ -41,7 +41,7 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 | balance / too strong / too weak | share-fast then gate; `grinding-until-pass` if many failures |
 | What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
 | PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
-| review this diff / before merge | `reviewing-code` |
+| review this diff / before merge / granska / kolla PR | `reviewing-code` |
 | polish hub / weekly / tips / first hour | `hub-smoke` on A56 (`a56-playtest`) + `first_hour_plain_test` |
 | does it look ok? / UI verify | `a56-playtest` / `verifying-in-browser` |
 | a11y / labels / reduce motion | `accessibility-auditing` |

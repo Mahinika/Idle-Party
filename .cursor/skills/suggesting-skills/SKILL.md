@@ -32,7 +32,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | What’s New vs code / version drift | `screenshotting-changelog` + `changelog_sync_test` |
 | Open PR CI failures | `babysitting-pr` / `parallel-ci-triage` |
 | Hard bug | `systematic-debugging` |
-| Code review of a diff | `reviewing-code` |
+| Code review of a diff / granska / kolla PR / innan merge | `reviewing-code` |
 | Same workflow 3× | `building-skills-from-patterns` |
 | A11y / reduce motion / labels | `accessibility-auditing` |
 | Record web flow as Playwright test | `recording-browser-flow-as-test` |
