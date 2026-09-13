@@ -170,11 +170,7 @@ class _InventoryDockState extends State<InventoryDock>
       label: upgrades > 0 ? 'EQUIP $upgrades' : 'EQUIP',
       tip: upgrades > 0
           ? 'One tap: equip all $upgrades upgrades now'
-          : (state.gearStash.isEmpty
-              ? 'Bag empty — farm for drops'
-              : (MenuTabs.showMerge(state)
-                  ? 'No BiS upgrades in bag — CLEAN BAG or MERGE junk'
-                  : 'No BiS upgrades in bag — CLEAN BAG')),
+          : MenuAlerts.bagEquipIdleTip(state),
       onPressed: state.gearStash.isEmpty ? null : onAutoEquip,
       primary: upgrades > 0 && !dense,
       dense: dense,
@@ -495,16 +491,14 @@ class _InventoryDockState extends State<InventoryDock>
         const SizedBox(height: 4),
         GameButton(
           label: 'CLEAN BAG',
-          tip: 'Merge junk pairs → sell gold → scrap essence (BiS kept)',
+          tip: MenuAlerts.bagCleanButtonTip(state),
           onPressed: state.gearStash.isEmpty ? null : onCleanBag,
           style: GameButtonStyle.grey,
         ),
         const SizedBox(height: 4),
         GameButton(
           label: 'FILTERS',
-          tip: _showFilters
-              ? 'Hide auto-sell and scrap rules'
-              : 'When bag is near full: sell gold vs scrap essence',
+          tip: MenuAlerts.bagFiltersButtonTip(state, showing: _showFilters),
           onPressed: () => setState(() => _showFilters = !_showFilters),
           style: _showFilters ? GameButtonStyle.brown : GameButtonStyle.grey,
         ),

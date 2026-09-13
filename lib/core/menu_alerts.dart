@@ -357,6 +357,40 @@ class MenuAlerts {
     return 'CLEAN BAG: sell for gold';
   }
 
+  static String bagEquipIdleTip(GameState state) {
+    if (state.gearStash.isEmpty) return 'Bag empty — farm for drops';
+    final merge = MenuTabs.showMerge(state);
+    if (GameLogic.plainPlayerChrome(state)) {
+      return merge
+          ? 'No upgrades in bag — CLEAN BAG or MERGE junk'
+          : 'No upgrades in bag — CLEAN BAG';
+    }
+    return merge
+        ? 'No BiS upgrades in bag — CLEAN BAG or MERGE junk'
+        : 'No BiS upgrades in bag — CLEAN BAG';
+  }
+
+  static String bagCleanButtonTip(GameState state) {
+    if (MenuTabs.showCamp(state)) {
+      return 'Merge junk pairs → sell gold → scrap essence (BiS kept)';
+    }
+    if (MenuTabs.showMerge(state)) {
+      return 'Merge junk pairs and sell gold (upgrades kept)';
+    }
+    return 'Sells junk for gold (upgrades kept)';
+  }
+
+  static String bagFiltersButtonTip(GameState state, {required bool showing}) {
+    if (showing) {
+      return MenuTabs.showCamp(state)
+          ? 'Hide auto-sell and scrap rules'
+          : 'Hide auto-sell rules';
+    }
+    return MenuTabs.showCamp(state)
+        ? 'When bag is near full: sell gold vs scrap essence'
+        : 'When bag is near full: sell junk for gold';
+  }
+
   static String meetRosterHint(GameState state) {
     if (state.metaDepth.pendingHeroReveals.isEmpty) return '';
     if (!MenuTabs.showRoster(state)) return '';

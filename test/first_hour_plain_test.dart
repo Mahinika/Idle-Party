@@ -66,11 +66,12 @@ void main() {
     expect(basics.body.toUpperCase(), isNot(contains('PETS')));
     expect(basics.body.toUpperCase(), isNot(contains('KEY')));
 
-    final party = GameGuides.topics.firstWhere((t) => t.id == 'party');
+    final party = GameGuides.topicsFor(state).firstWhere((t) => t.id == 'party');
     expect(party.body.toUpperCase(), isNot(contains('WOTLK')));
     expect(party.body.toLowerCase(), contains('shield'));
     expect(party.body.toLowerCase(), contains('healer'));
     expect(party.body.toLowerCase(), contains('damage'));
+    expect(party.body.toUpperCase(), isNot(contains('ROSTER')));
   });
 
   test('first-hour guides hide advanced topics', () {
@@ -86,6 +87,15 @@ void main() {
     expect(world.body.toUpperCase(), isNot(contains('KEY')));
     expect(world.body.toUpperCase(), isNot(contains('ENDGAME')));
     expect(world.body.toUpperCase(), isNot(contains('GAUNTLET')));
+    final combat = early.firstWhere((t) => t.id == 'combat');
+    expect(combat.body.toUpperCase(), isNot(contains('METER')));
+    expect(combat.body.toLowerCase(), isNot(contains('tank')));
+    expect(combat.body.toLowerCase(), contains('tap the fight'));
+    final bag = early.firstWhere((t) => t.id == 'bag_equip');
+    expect(bag.body.toUpperCase(), isNot(contains('ESSENCE')));
+    expect(bag.body.toUpperCase(), isNot(contains('BIS')));
+    expect(bag.body.toUpperCase(), isNot(contains('MARKET')));
+    expect(bag.body.toUpperCase(), contains('EQUIP'));
   });
 
   test('first tip points at ENTER DUNGEON, not a menu dictionary', () {
@@ -255,5 +265,14 @@ void main() {
     final withEssence = fresh.copyWith(essence: 8, highestFloorCleared: 1);
     expect(MenuTabs.showCamp(withEssence), isTrue);
     expect(MenuAlerts.bagPanelHint(withEssence), isEmpty);
+
+    expect(MenuAlerts.bagEquipIdleTip(fresh).toUpperCase(), isNot(contains('BIS')));
+    expect(MenuAlerts.bagCleanButtonTip(fresh).toUpperCase(), isNot(contains('ESSENCE')));
+    expect(MenuAlerts.bagFiltersButtonTip(fresh, showing: false).toUpperCase(),
+        isNot(contains('ESSENCE')));
+    expect(
+      MenuAlerts.bagCleanButtonTip(withEssence).toUpperCase(),
+      contains('ESSENCE'),
+    );
   });
 }

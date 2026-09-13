@@ -42,6 +42,9 @@ abstract final class GameGuides {
           if (firstHourTopicIds.contains(t.id))
             switch (t.id) {
               'basics' => _firstHourBasics,
+              'combat' => _firstHourCombat,
+              'party' => _firstHourParty,
+              'bag_equip' => _firstHourBagEquip,
               'world_path' => _firstHourWorldPath,
               _ => t,
             },
@@ -111,6 +114,41 @@ abstract final class GameGuides {
         '• Locked caves sit dim. The caption under the map shows party level '
         'progress (have / need).\n'
         '• Boss floor is shown under your party name (Boss on F n).',
+  );
+
+  static const GuideTopic _firstHourCombat = GuideTopic(
+    id: 'combat',
+    title: 'COMBAT',
+    body:
+        'Each floor is one fight. The party walks and fights on its own.\n\n'
+        '• Clear a room to open the next.\n'
+        '• When enemies are down, loot banks and they walk to the stairs.\n'
+        '• Tap the fight when you want to smash and steer.\n'
+        '• HP strip is bottom-left — tap a hero for their kit.\n'
+        '• Target chip is top-right (name + HP).',
+  );
+
+  static const GuideTopic _firstHourParty = GuideTopic(
+    id: 'party',
+    title: 'PARTY',
+    body:
+        'Your party is three jobs: Shield (soaks hits), Healer (keeps people up), '
+        'and Damage (kills enemies).\n\n'
+        '• Easy start: one of each. You do not need another RPG.\n'
+        '• Tap a hero in the HUD for abilities. Chips show when a skill is ready.\n'
+        '• The strip shows level so growth is visible mid-fight.\n'
+        '• Flask heals the party when you have a potion.',
+  );
+
+  static const GuideTopic _firstHourBagEquip = GuideTopic(
+    id: 'bag_equip',
+    title: 'BAG & GEAR',
+    body:
+        'Loot drops on the floor, then goes to BAG.\n\n'
+        '• A number on GEAR means better items wait — open BAG and tap EQUIP.\n'
+        '• BAG: view stash. EQUIP wears upgrades. CLEAN BAG sells junk for gold.\n'
+        '• FILTERS (when the bag is filling): auto-sell weak drops for gold.\n'
+        '• Compare ATK / DEF / STA. Worn pieces you replace go back to the bag.',
   );
 
   /// After first boss, before first Ascend — one daily job, not three dailies.

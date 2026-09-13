@@ -4,6 +4,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/gear/gear_cleanup.dart';
+import '../../core/menu_alerts.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 
@@ -23,12 +24,18 @@ class BagCleanupFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showScrap = MenuTabs.showCamp(state);
+    final showMarket = MenuTabs.showGold(state);
+    final jargon = !GameLogic.plainPlayerChrome(state);
+    final keepLine = jargon
+        ? 'BiS / upgrades are never cleaned.'
+        : 'Upgrades are never cleaned.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (compact) ...[
           Text(
-            'CLEAN BAG uses these rules. BiS / upgrades are never cleaned.',
+            'CLEAN BAG uses these rules. $keepLine',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 10),
@@ -39,9 +46,11 @@ class BagCleanupFilters extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Near-full bag auto-rules (also BAG → FILTERS). '
-            'Auto-sell = gold · auto-scrap = essence. '
-            'BiS / upgrades are never cleaned.',
+            showScrap
+                ? 'Near-full bag auto-rules (also BAG → FILTERS). '
+                    'Auto-sell = gold · auto-scrap = essence. $keepLine'
+                : 'Near-full bag auto-rules (also BAG → FILTERS). '
+                    'Auto-sell = gold. $keepLine',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 10),
@@ -80,46 +89,68 @@ class BagCleanupFilters extends StatelessWidget {
             style: GameTheme.body(size: 12, color: GameTheme.mossLit),
           ),
         ],
-        const SizedBox(height: 12),
-        MenuChrome.sectionLabelScoped(
-          'AUTO-SCRAP · essence',
-          scope: MenuScope.account,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Leftovers broken for essence after sell pass — not the same as sell. '
-          '${state.autoDisassembleMaxIlvl <= 0 ? 'Off = never auto-scraps.' : 'Scraps iLvl 1–${state.autoDisassembleMaxIlvl} at or below the rarity cap.'}',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Max iLvl to scrap',
-          style: GameTheme.body(size: 13, color: GameTheme.mossLit),
-        ),
-        _IlvlFilterRow(
-          value: state.autoDisassembleMaxIlvl,
-          max: GameLogic.maxAutoSellIlvlCap(state),
-          onChanged: director.setAutoDisassembleMaxIlvl,
-          offLabel: 'Off',
-        ),
-        const SizedBox(height: 6),
-        _RarityFilterRow(
-          value: state.autoDisassembleMaxRarity,
-          onChanged: director.setAutoDisassembleMaxRarity,
-          enabled: state.autoDisassembleMaxIlvl > 0,
-        ),
+        if (showScrap) ...[
+          const SizedBox(height: 12),
+          MenuChrome.sectionLabelScoped(
+            'AUTO-SCRAP · essence',
+            scope: MenuScope.account,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Leftovers broken for essence after sell pass — not the same as sell. '
+            '${state.autoDisassembleMaxIlvl <= 0 ? 'Off = never auto-scraps.' : 'Scraps iLvl 1–${state.autoDisassembleMaxIlvl} at or below the rarity cap.'}',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Max iLvl to scrap',
+            style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+          ),
+          _IlvlFilterRow(
+            value: state.autoDisassembleMaxIlvl,
+            max: GameLogic.maxAutoSellIlvlCap(state),
+            onChanged: director.setAutoDisassembleMaxIlvl,
+            offLabel: 'Off',
+          ),
+          const SizedBox(height: 6),
+          _RarityFilterRow(
+            value: state.autoDisassembleMaxRarity,
+            onChanged: director.setAutoDisassembleMaxRarity,
+            enabled: state.autoDisassembleMaxIlvl > 0,
+          ),
+        ],
         const SizedBox(height: 8),
         Text(
-          compact
-              ? 'CLEAN BAG: sell gold first, then scrap leftovers that match. '
-                  'GOLD → MARKET buys flasks — it does not tap-sell stash.'
-              : 'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity), then scrap '
-                  'leftovers that match scrap filters. GOLD → MARKET buys flasks '
-                  'and listings — it does not tap-sell stash.',
+          _footer(
+            compact: compact,
+            showScrap: showScrap,
+            showMarket: showMarket,
+          ),
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
       ],
     );
+  }
+
+  static String _footer({
+    required bool compact,
+    required bool showScrap,
+    required bool showMarket,
+  }) {
+    final sell = compact
+        ? 'CLEAN BAG: sell gold first'
+        : 'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity)';
+    final scrap = showScrap
+        ? (compact
+            ? ', then scrap leftovers that match'
+            : ', then scrap leftovers that match scrap filters')
+        : '';
+    final market = showMarket
+        ? (compact
+            ? '. GOLD → MARKET buys flasks — it does not tap-sell stash.'
+            : '. GOLD → MARKET buys flasks and listings — it does not tap-sell stash.')
+        : '.';
+    return '$sell$scrap$market';
   }
 }
 
