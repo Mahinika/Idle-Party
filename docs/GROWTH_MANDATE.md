@@ -215,9 +215,14 @@ prove a later hole is bigger)
 **Owner / Console**
 
 - [ ] D1 (and D7 if traffic exists) pasted once after Program 2 smoke
-- [ ] Crashes / 1★ answered or empty
-- [ ] Store Listing Experiment started **or** deferred (too little traffic)
-- [ ] Tiny UA only if D1 is known and owner asked — no scale
+- [x] Crashes / 1★ answered or empty
+      (**2026-09-12** Console: no user-perceived crashes/ANR; one 5★ already
+      replied; no 1★. Revisit if a new 1★ lands.)
+- [x] Store Listing Experiment started **or** deferred (too little traffic)
+      (**2026-09-12**: ~10 listing visitors / 28 days — deferred. Revisit when
+      visitors exist.)
+- [x] Tiny UA only if D1 is known and owner asked — no scale
+      (**2026-09-13**: D1 not readable yet; owner did not ask — no paid spend.)
 
 When **every Program 3** box is `[x]`, the next user-facing message starts
 with **exactly**:

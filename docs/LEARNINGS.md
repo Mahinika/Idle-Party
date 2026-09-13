@@ -61,6 +61,8 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 - Owner confirmed Play publish + SHOP/POWERUPS smoke **2026-09-13**. D1 / Store
   Listing Experiment stay deferred from the **2026-09-12** look (too little
   traffic). Program 2 Console is `[x]`. Program 3 clock starts.
+- Program 3 in-repo + crashes / experiment / no-UA boxes closed **2026-09-13**.
+  D1 still waits for an owner paste — do not invent it.
 
 ## 2026-09-12 — funnel + first session (after shipping those boxes)
 

@@ -53,7 +53,11 @@ Owner confirmed on a **Play-installed** build: listing Updated, SHOP SKUs
 visible, POWERUPS + AD PRIVACY path. D1 / listing A/B still deferred
 (too little traffic — Console look **2026-09-12**).
 
-Tiny UA stays optional and capped — see ads test plan below.
+### Program 3 — Console (2026-09-13)
+
+In-repo bar + `v1.12.163` tag done. Crashes empty / 1★ none / listing A/B
+deferred / no tiny UA — from the **2026-09-12** look plus owner did not ask
+for ads. **D1 still needs a paste** (or “still no traffic”).
 
 ### Console look (2026-09-12)
 
