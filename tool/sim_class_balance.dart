@@ -53,7 +53,12 @@ String runClassBalanceSim(List<String> args) {
   final aoeEnemyCount = _argInt(args, 'aoe-enemies', 0);
   final useAoe = aoeEnemyCount > 0;
   final ascensionLevel = _argInt(args, 'al', 0);
+  final keyLevel = _argInt(args, 'key', 0);
   final floorOverride = _argInt(args, 'floor', 0);
+  final jsonOut = _argString(args, 'json-out');
+  final partySize = _argInt(args, 'party-size', 3).clamp(3, 5);
+  final maxSecondsArg = _argInt(args, 'max-seconds', 0);
+  final allSpecs = args.contains('--all-specs');
 
   seedEquipmentRng(42);
 
@@ -90,18 +95,24 @@ String runClassBalanceSim(List<String> args) {
   log('- quick: $quick');
   if (shareOnly) log('- share-only: true');
   if (useAoe) log('- aoe-enemies: $aoeEnemyCount (awake + clumped)');
+  if (keyLevel > 0) log('- KEY: +$keyLevel');
   if (floorOverride > 0) log('- floor: $floorOverride');
   if (focus.isNotEmpty) log('- focus: ${focus.join(', ')}');
+  if (allSpecs) log('- all-specs: true');
+  if (partySize > 3) log('- party-size: $partySize');
+  if (maxSecondsArg > 0) log('- max-seconds: $maxSecondsArg');
   log('');
 
-  var dpsSpecs = HeroSpecId.values
-      .where((id) {
-        final t = HeroSpecs.def(id).roleTag;
-        return t == SpecRoleTag.meleeDps ||
-            t == SpecRoleTag.rangedDps ||
-            t == SpecRoleTag.caster;
-      })
-      .toList();
+  var dpsSpecs = allSpecs
+      ? HeroSpecId.values.toList()
+      : HeroSpecId.values
+          .where((id) {
+            final t = HeroSpecs.def(id).roleTag;
+            return t == SpecRoleTag.meleeDps ||
+                t == SpecRoleTag.rangedDps ||
+                t == SpecRoleTag.caster;
+          })
+          .toList();
   if (focus.isNotEmpty) {
     dpsSpecs = dpsSpecs.where((id) => focus.contains(id.name)).toList();
     if (dpsSpecs.isEmpty) {
@@ -145,7 +156,7 @@ String runClassBalanceSim(List<String> args) {
             _runAgg(
               label: dps.name,
               focusSpec: dps,
-              partySpecs: [anchor.$2, anchor.$3, dps],
+              partySpecs: allSpecs ? _trioFor(dps) : [anchor.$2, anchor.$3, dps],
               band: band,
               dungeonId: dungeonId,
               floor: floor,
@@ -154,6 +165,10 @@ String runClassBalanceSim(List<String> args) {
               mode: mode,
               aoeEnemyCount: useAoe ? aoeEnemyCount : null,
               ascensionLevel: ascensionLevel,
+              keyLevel: keyLevel,
+              partySize: partySize,
+              maxSecondsOverride:
+                  maxSecondsArg > 0 ? maxSecondsArg.toDouble() : null,
             ),
           );
         }
@@ -253,6 +268,14 @@ String runClassBalanceSim(List<String> args) {
       trials: trials,
       focus: focus,
       shareOnly: shareOnly,
+      path: jsonOut,
+      al: ascensionLevel,
+      key: keyLevel,
+      aoeEnemies: useAoe ? aoeEnemyCount : 0,
+      level: partyLevel,
+      band: bands.first,
+      partySize: partySize,
+      maxSeconds: maxSecondsArg,
     );
     log('Wrote $jsonPath');
   }
@@ -272,6 +295,7 @@ class _AggRow {
     required this.shareMedian,
     required this.dpsMedian,
     required this.focusHpMedian,
+    this.elapsedMedian = 0,
   });
 
   final String label;
@@ -285,6 +309,7 @@ class _AggRow {
   final double shareMedian;
   final double dpsMedian;
   final double focusHpMedian;
+  final double elapsedMedian;
 }
 
 _AggRow _runAgg({
@@ -299,6 +324,9 @@ _AggRow _runAgg({
   required SimPlayMode mode,
   int? aoeEnemyCount,
   int ascensionLevel = 0,
+  int keyLevel = 0,
+  int partySize = 3,
+  double? maxSecondsOverride,
 }) {
   var clears = 0;
   var wipes = 0;
@@ -308,23 +336,32 @@ _AggRow _runAgg({
   final shares = <double>[];
   final dpsVals = <double>[];
   final focusHp = <double>[];
+  final elapsedVals = <double>[];
   final useAoe = aoeEnemyCount != null && aoeEnemyCount > 0;
-  final maxSeconds = useAoe || ascensionLevel >= 10 ? 180.0 : 90.0;
+  final maxSeconds = maxSecondsOverride ??
+      (useAoe || ascensionLevel >= 10 ? 180.0 : 90.0);
 
   for (var t = 0; t < trials; t++) {
     final trialSeed = 1000 + t * 97 + floor * 13 + focusSpec.index * 3;
     seedEquipmentRng(42 + t);
     GameLogic.random = Random(trialSeed ^ 0x5EED);
     var state = createPartyState(partySpecs: partySpecs);
-    if (ascensionLevel > 0) {
+    if (ascensionLevel > 0 || keyLevel > 0) {
       state = state.copyWith(
-        ascensionLevel: ascensionLevel,
+        ascensionLevel: max(state.ascensionLevel, ascensionLevel),
         highestDungeonCleared: 14,
+        hardmodeLevel: keyLevel > 0 ? keyLevel : state.hardmodeLevel,
         // Blessing stacks roughly track Ascend count for endgame boards.
         metaDepth: state.metaDepth.copyWith(
-          ascendBlessings: ascensionLevel,
+          ascendBlessings: max(
+            state.metaDepth.ascendBlessings,
+            ascensionLevel,
+          ),
         ),
       );
+    }
+    if (partySize > GameLogic.starterPartySize) {
+      state = withEndgameSupportParty(state, size: partySize);
     }
     state = prepareSimParty(state, band: band, partyLevel: partyLevel);
     state = enterFloor(
@@ -334,6 +371,13 @@ _AggRow _runAgg({
       seed: trialSeed,
       aoeEnemyCount: useAoe ? aoeEnemyCount : null,
     );
+    if (keyLevel > 0 && !state.keystoneRunActive) {
+      throw StateError(
+        'KEY+$keyLevel did not lock (endgame='
+        '${GameLogic.endgameUnlocked(state)} levels='
+        '${state.heroes.map((h) => '${h.specId.name} L${h.level}').join(', ')})',
+      );
+    }
     final r = simulateFloor(
       state,
       mode: mode,
@@ -356,6 +400,7 @@ _AggRow _runAgg({
       shares.add(100.0 * focusDmg / totalDmg);
     }
     final elapsed = max(0.01, r.combatElapsed);
+    elapsedVals.add(elapsed);
     dpsVals.add(focusDmg / elapsed);
     focusHp.add(r.hpPctBySpec[focusSpec] ?? 0);
   }
@@ -373,7 +418,19 @@ _AggRow _runAgg({
     shareMedian: medianOf(shares),
     dpsMedian: medianOf(dpsVals),
     focusHpMedian: medianOf(focusHp),
+    elapsedMedian: medianOf(elapsedVals),
   );
+}
+
+List<HeroSpecId> _trioFor(HeroSpecId focus) {
+  final def = HeroSpecs.def(focus);
+  if (def.isTank) {
+    return [focus, HeroSpecId.discipline, HeroSpecId.fire];
+  }
+  if (def.isHealer) {
+    return [HeroSpecId.protection, focus, HeroSpecId.fire];
+  }
+  return [HeroSpecId.protection, HeroSpecId.discipline, focus];
 }
 
 void _printDpsTable(void Function(String) log, List<_AggRow> rows) {
@@ -422,6 +479,14 @@ String _writeShareJson({
   required int trials,
   required List<String> focus,
   required bool shareOnly,
+  String? path,
+  int al = 0,
+  int key = 0,
+  int aoeEnemies = 0,
+  int level = 12,
+  String band = 'light',
+  int partySize = 3,
+  int maxSeconds = 0,
 }) {
   final shares = rows.map((r) => r.shareMedian).where((v) => v > 0).toList();
   final med = shares.isEmpty ? 0.0 : medianOf(shares);
@@ -443,6 +508,8 @@ String _writeShareJson({
       'share': double.parse(r.shareMedian.toStringAsFixed(2)),
       'dps': double.parse(r.dpsMedian.toStringAsFixed(2)),
       'clearPct': double.parse((r.clearPct * 100).toStringAsFixed(1)),
+      'wipePct': double.parse((r.wipePct * 100).toStringAsFixed(1)),
+      'elapsed': double.parse(r.elapsedMedian.toStringAsFixed(2)),
       'flag': flag,
     });
   }
@@ -451,6 +518,13 @@ String _writeShareJson({
     'mode': mode,
     'trials': trials,
     'shareOnly': shareOnly,
+    'al': al,
+    'key': key,
+    'aoeEnemies': aoeEnemies,
+    'level': level,
+    'band': band,
+    'partySize': partySize,
+    'maxSeconds': maxSeconds,
     'focus': focus,
     'medianShare': double.parse(med.toStringAsFixed(2)),
     'bandLow': double.parse(lo.toStringAsFixed(2)),
@@ -459,7 +533,8 @@ String _writeShareJson({
     'low': low,
     'specs': specs,
   };
-  final file = File('tool/out/class_balance_share.json');
+  final file = File(path ?? 'tool/out/class_balance_share.json');
+  file.parent.createSync(recursive: true);
   file.writeAsStringSync(
     const JsonEncoder.withIndent('  ').convert(payload),
   );

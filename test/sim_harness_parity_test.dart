@@ -90,4 +90,32 @@ void main() {
       lessThan(LootRarity.rare.index),
     );
   });
+
+  test('endgame support party pads to 5 and KEY+20 locks at L100', () {
+    seedEquipmentRng(11);
+    var state = createPartyState(partySpecs: const [
+      HeroSpecId.protection,
+      HeroSpecId.discipline,
+      HeroSpecId.elemental,
+    ]);
+    state = state.copyWith(
+      ascensionLevel: 20,
+      hardmodeLevel: 20,
+      highestDungeonCleared: 14,
+    );
+    state = withEndgameSupportParty(state, size: 5);
+    expect(state.heroes.length, 5);
+    expect(state.metaDepth.partySlot5Unlocked, isTrue);
+    state = prepareSimParty(state, band: 'mid', partyLevel: 100);
+    expect(state.heroes.every((h) => h.level == 100), isTrue);
+    state = enterFloor(
+      state,
+      dungeonId: 'sandy',
+      floor: 1,
+      seed: 7,
+      aoeEnemyCount: 1,
+    );
+    expect(state.keystoneRunActive, isTrue);
+    expect(state.keystoneRunLevel, 20);
+  });
 }

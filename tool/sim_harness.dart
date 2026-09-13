@@ -4,6 +4,7 @@ import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/offline_progress.dart';
+import 'package:idle_party/core/starter_gear.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/hero.dart';
@@ -73,6 +74,39 @@ GameState createPartyState({
     now: now ?? DateTime(2026, 8, 1),
     partySpecs: partySpecs,
   );
+}
+
+/// Endgame KEY boards: pad to 5 with tanks/healers so casters live long enough
+/// to land bolts. Extra bodies are never extra DPS specs.
+GameState withEndgameSupportParty(GameState state, {int size = 5}) {
+  final cap = size.clamp(GameLogic.starterPartySize, 5);
+  var next = state.copyWith(
+    essence: max(state.essence, GameLogic.partySlot5EssenceCost),
+    metaDepth: state.metaDepth.copyWith(partySlot5Unlocked: cap >= 5),
+  );
+  if (next.heroes.length >= cap) return next;
+  const fillers = <HeroSpecId>[
+    HeroSpecId.protection,
+    HeroSpecId.discipline,
+    HeroSpecId.protPaladin,
+    HeroSpecId.holyPaladin,
+    HeroSpecId.holyPriest,
+  ];
+  final party = [...next.heroes];
+  final used = party.map((h) => h.specId).toSet();
+  for (final spec in fillers) {
+    if (party.length >= cap) break;
+    if (!used.add(spec)) continue;
+    party.add(
+      PartyHero.starting(
+        name: HeroSpecs.def(spec).defaultName,
+        specId: spec,
+        stats: PartyHero.startingStatsForSpec(spec),
+        equipped: StarterGear.forSpec(spec),
+      ),
+    );
+  }
+  return next.withActiveParty(party);
 }
 
 GameState levelPartyTo(GameState state, int level) {
