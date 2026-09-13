@@ -865,6 +865,16 @@ void main() {
     expect(seen.contains('PULSE'), isFalse);
   });
 
+  test('Gauntlet F5 keeps SHARD; F10 shouts WAVE', () {
+    final f5 = _bossTellTexts('crystal', inGauntlet: true, floorNumber: 5);
+    expect(f5.contains('SHARD'), isTrue);
+    expect(f5.contains('PULSE'), isFalse);
+    final f10 = _bossTellTexts('crystal', inGauntlet: true, floorNumber: 10);
+    expect(f10.contains('WAVE'), isTrue);
+    expect(f10.contains('SHARD'), isFalse);
+    expect(f10.contains('PULSE'), isFalse);
+  });
+
   test('KEY swarm affix shows SWARM banner at fight start', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
     final room = DungeonRoom(
@@ -896,10 +906,12 @@ void main() {
 Set<String> _bossTellTexts(
   String dungeonId, {
   bool inWorldBoss = false,
+  bool inGauntlet = false,
+  int floorNumber = 5,
 }) {
   var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
   final room = DungeonRoom(
-    floorNumber: 5,
+    floorNumber: floorNumber,
     roomIndex: 0,
     type: RoomType.boss,
     enemyLevel: 10,
@@ -914,6 +926,7 @@ Set<String> _bossTellTexts(
     enemies: [boss],
     inDungeon: true,
     inWorldBoss: inWorldBoss,
+    inGauntlet: inGauntlet,
   );
   var world = SpatialCombat.build(state);
   final body = world.enemies.first;

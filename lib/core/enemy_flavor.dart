@@ -69,6 +69,35 @@ abstract final class EnemyFlavor {
     return _addNames[dungeonId]?[archetype] ?? _addNames['sandy']![archetype]!;
   }
 
+  /// Gauntlet every-5 bosses cycle shipped-cave tells (Spire art stays).
+  /// F5 = SHARD, F10 = WAVE, then the rest of the 15-zone roster.
+  static const List<String> gauntletTellCycle = <String>[
+    'crystal',
+    'tide',
+    'brass',
+    'goblin',
+    'king',
+    'underworld',
+    'dead',
+    'hell',
+    'ember',
+    'grove',
+    'storm',
+    'rime',
+    'fen',
+    'veil',
+    'sandy',
+  ];
+
+  /// Which cave's tell the Gauntlet boss on [floor] uses (boss every 5).
+  static String gauntletBossDungeonId(int floor) {
+    final bossIndex = max(1, floor ~/ 5);
+    return gauntletTellCycle[(bossIndex - 1) % gauntletTellCycle.length];
+  }
+
+  static String gauntletBossTell(int floor) =>
+      bossTell(gauntletBossDungeonId(floor));
+
   /// Combat floater for that zone's unique boss tell.
   static String bossTell(String dungeonId) => switch (dungeonId) {
     'sandy' => 'SLAM',

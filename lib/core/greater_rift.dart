@@ -47,13 +47,21 @@ abstract final class GreaterRift {
 
   static int parTimeMs(int tier) {
     final t = min(clampTier(tier), campaignCap);
-    // Tighter than farm through mid tiers. GR20+ keeps ~62s — ranked is extra
-    // threat, not a shorter fuse or a bigger kill tax.
-    return max(58000, 112000 - t * 2500);
+    // Tighter than farm through mid tiers. GR20 is the campaign peak (~62s).
+    // Past 20, add clock so thicker packs are a ladder — play timed out GR21
+    // around F10 on the frozen 62s window.
+    final base = max(58000, 112000 - t * 2500);
+    final extra = max(0, clampTier(tier) - campaignCap);
+    return min(90000, base + extra * 4000);
   }
 
-  /// ~1.5× farm Rift threat at the same tier band; keeps climbing after 20.
-  static double threatMul(int tier) => 1.0 + clampTier(tier) * 0.20;
+  /// ~1.5× farm Rift threat at the same tier band. After 20 the climb slows
+  /// (still harder each rank, not a brick wall).
+  static double threatMul(int tier) {
+    final t = clampTier(tier);
+    if (t <= campaignCap) return 1.0 + t * 0.20;
+    return 1.0 + campaignCap * 0.20 + (t - campaignCap) * 0.08;
+  }
 
   /// Pack count soft-caps at [campaignCap]; threat still climbs.
   static double densityMul(int tier) =>

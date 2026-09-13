@@ -37,7 +37,8 @@ class GreaterRiftHubPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'Next rank after your best — hub ENDGAME shows it. No KEY dial. '
-          'Mothveil · no mid-run gear. Endless after GR${GreaterRift.campaignCap}. '
+          'Mothveil · gold OK, no gear mid-run. Local PB (Play GR board waits on a Console ID). '
+          'Endless after GR${GreaterRift.campaignCap}. '
           'Best GR$best · next GR$next · kill $kills before $par · '
           '+${GreaterRift.successEssence(next)}e / +${GreaterRift.successGold(next)}g',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

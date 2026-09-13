@@ -123,7 +123,8 @@ abstract final class LootPipeline {
     final drops = <LootDrop>[
       LootDrop(name: 'Gold Pouch', amount: gold, rarity: LootRarity.common),
     ];
-    if (rng.nextDouble() < chest.gearChance) {
+    // Ranked GR copy: gold OK mid-run, no gear. Skip the gear roll entirely.
+    if (!state.inGreaterRift && rng.nextDouble() < chest.gearChance) {
       final gear = rollKillLoot(
         state.battleNumber,
         ascensionLevel: state.ascensionLevel,

@@ -544,7 +544,7 @@ class GameLogic {
   static bool canEnterGreaterRift(GameState state) =>
       endgameUnlocked(state) && !state.inDungeon;
 
-  /// Prestige timed kill ladder — harder packs, no mid-run gear, Play ranked.
+  /// Prestige timed kill ladder — harder packs, no mid-run gear, local PB.
   static GameState enterGreaterRift(GameState state, {int? tier}) =>
       _enterGreaterRift(state, tier: tier);
 
@@ -2073,10 +2073,16 @@ class GameLogic {
     late List<LootDrop> drops;
     var lootReceipt = const LootGrantResult();
     // Floor fillers (sigil / pouch / relic / vial) once per clear.
-    final floorDrops = rollFloorClearLoot(
-      room.globalBattleNumber,
-      roomType: room.type,
-    );
+    // Ranked GR: gold pouch only — copy promises no mid-run gear.
+    final floorDrops = state.inGreaterRift
+        ? rollFloorClearLoot(
+            room.globalBattleNumber,
+            roomType: room.type,
+          ).where(LootPipeline.isWalletGoldDrop).toList()
+        : rollFloorClearLoot(
+            room.globalBattleNumber,
+            roomType: room.type,
+          );
     if (skipLootRoll) {
       // Combat: kill gear already applied on pickup; still grant floor fillers.
       final lootResult = grantLoot(state, floorDrops);

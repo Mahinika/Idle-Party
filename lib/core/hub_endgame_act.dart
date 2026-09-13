@@ -50,7 +50,7 @@ abstract final class HubEndgameAct {
       shortLabel: 'GAUNTLET',
       title: 'Infinity Gauntlet',
       blurb:
-          'Endless Spire · not a 16th cave · boss every 5 · wipe or leave → hub',
+          'Endless Spire · not a 16th cave · boss every 5, tells cycle · wipe or leave → hub',
       portraitDungeonId: 'crystal',
       enterLabel: 'GAUNTLET',
       chaseKind: HubChaseKind.gauntletMilestone,

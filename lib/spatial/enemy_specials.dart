@@ -313,7 +313,9 @@ void _tickBossKit(
 
   if (enemy.specialCd > 0) return;
 
-  final id = world.dungeonId;
+  final id = world.inGauntlet
+      ? EnemyFlavor.gauntletBossDungeonId(world.combatFloor)
+      : world.dungeonId;
   switch (id) {
     case 'brass':
       enemy.telegraphTimer = 1.4;

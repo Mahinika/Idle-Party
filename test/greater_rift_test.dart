@@ -1,10 +1,15 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/greater_rift.dart';
+import 'package:idle_party/core/loot_pipeline.dart';
 import 'package:idle_party/core/play_games_scores.dart';
 import 'package:idle_party/core/rift.dart';
+import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/meta_depth.dart';
+import 'package:idle_party/spatial/spatial_combat.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 24);
@@ -115,10 +120,15 @@ void main() {
   test('Ranked GR stays selectable past 20', () {
     expect(GreaterRift.maxSelectableTier(20), 21);
     expect(GreaterRift.killTarget(21), GreaterRift.killTarget(20));
-    expect(GreaterRift.parTimeMs(50), GreaterRift.parTimeMs(20));
+    expect(GreaterRift.parTimeMs(21), greaterThan(GreaterRift.parTimeMs(20)));
+    expect(GreaterRift.parTimeMs(50), 90000);
     expect(GreaterRift.threatMul(21), greaterThan(GreaterRift.threatMul(20)));
     expect(GreaterRift.densityMul(50), GreaterRift.densityMul(20));
     expect(GreaterRift.successEssence(21), greaterThan(GreaterRift.successEssence(20)));
+    double kps(int t) =>
+        GreaterRift.killTarget(t) / (GreaterRift.parTimeMs(t) / 1000);
+    expect(kps(21), lessThan(kps(20)));
+    expect(kps(30), lessThan(kps(21)));
   });
 
   test('Greater Rift GR25 survives save load', () {
@@ -138,6 +148,44 @@ void main() {
     expect(loaded.metaDepth.grBestTier, 25);
     expect(loaded.metaDepth.grPreferredTier, 26);
     expect(GameLogic.enterGreaterRift(loaded, tier: 26).grTier, 26);
+  });
+
+  test('Ranked GR room chests never roll gear', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
+    );
+    state = GameLogic.enterGreaterRift(state, tier: 1);
+    for (var i = 0; i < 48; i++) {
+      final drops = LootPipeline.rollRoomChestLoot(state, random: Random(i));
+      expect(
+        drops.any((d) => d.isEquipment),
+        isFalse,
+        reason: 'seed $i rolled gear in Ranked GR',
+      );
+    }
+  });
+
+  test('Ranked GR floor spawn has no gear on chests', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
+    );
+    state = GameLogic.enterGreaterRift(state, tier: 1);
+    final world = SpatialCombat.build(state);
+    expect(world.groundLoot.where((g) => g.drop.isEquipment), isEmpty);
+  });
+
+  test('Ranked GR floor fillers keep gold pouch only', () {
+    final mixed = LootPipeline.rollFloorClearLoot(9, roomType: RoomType.boss);
+    expect(mixed.any((d) => d.name == 'Relic Shard'), isTrue);
+    expect(mixed.any((d) => d.name == 'Boss Sigil'), isTrue);
+    final goldOnly = mixed.where(LootPipeline.isWalletGoldDrop).toList();
+    expect(goldOnly.any((d) => d.name == 'Relic Shard'), isFalse);
+    expect(goldOnly.any((d) => d.name == 'Boss Sigil'), isFalse);
+    expect(goldOnly.every(LootPipeline.isWalletGoldDrop), isTrue);
   });
 }
 

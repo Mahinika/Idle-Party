@@ -271,7 +271,7 @@ Future<void> confirmGauntletRun(
         title: 'Infinity Gauntlet?',
         content: Text(
           'Endless Spire climb — not a 16th PATH cave, not a timed Rift.\n\n'
-          'Floors escalate forever. Boss every 5 floors. '
+          'Floors escalate forever. Boss every 5 floors, each with a different tell. '
           'Wipe or leave returns to hub.\n\n'
           'Best clear: F$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
@@ -378,7 +378,8 @@ Future<void> confirmGreaterRiftRun(
         content: Text(
           'Mothveil ranked kill ladder — not Gauntlet floors, not farm Rift loot.\n\n'
           'Kill $kills before $par. Gold OK mid-run; no gear drops. '
-          'Clear pays +${essence}e · +${gold}g and ranks on KEY · BOARDS.\n\n'
+          'Clear pays +${essence}e · +${gold}g. Local PB — Play GR board waits '
+          'on a Console ID.\n\n'
           'Harder packs than Farm Rift. Best clear: GR$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),

@@ -34,9 +34,9 @@ class GauntletHubPanel extends StatelessWidget {
         Text(
           best <= 0
               ? 'Endless Spire floors — not a 16th cave, not a timed Rift. '
-                  'Boss every 5. Wipe or leave → hub. Best floor is your PB.'
+                  'Boss every 5, each with a different tell. Wipe or leave → hub. Best floor is your PB.'
               : 'Spire climb · best F$best. Not a 16th cave. Floors escalate forever — '
-                  'boss every 5. Not a Rift timer.',
+                  'boss every 5, tells cycle. Not a Rift timer.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),

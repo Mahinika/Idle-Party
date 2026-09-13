@@ -644,7 +644,7 @@ abstract final class GameGuides {
       body:
           'Unlocks when every active hero reaches level ${GameLogic.maxHeroLevel} (endgame).\n\n'
           '• Endless Crystal Spire climb — not a 16th PATH cave; each floor gets harder.\n'
-          '• Boss every 5 floors — SHARD tells scale past F100 (wider, faster).\n'
+          '• Boss every 5 floors — tells cycle (SHARD, WAVE, WIND-UP, …) and scale past F100 (faster).\n'
           '• Gold and essence scale with floor; boss every 5 floors.\n'
           '• Wipe or leave returns to hub; best floor is saved.\n'
           '• Enter from the hub ENDGAME tab, KEY, or the hub hunt line.\n'
@@ -671,11 +671,11 @@ abstract final class GameGuides {
           'Mothveil timer, harder than Farm Rift.\n\n'
           '• Timed kill quota on a tougher endless ladder (GR1, GR2, …).\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear. '
-          'Farm Rift is the loot path; Ranked GR is the board path.\n'
-          '• GR20 keeps about a minute on the clock — later ranks keep that window and raise pack threat.\n'
+          'Farm Rift is the loot path; Ranked GR is the ranked ladder.\n'
+          '• GR20 keeps about a minute on the clock — later ranks add a little clock as packs thicken (max ~90s).\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
-          'Ranked GR board wires when the Console ID is pasted.\n'
+          'Ranked GR board wires when the Console ID is pasted. Until then, local PB on hub ENDGAME.\n'
           '• The hub hunt chases Ranked GR before Farm Rift. Hub ENDGAME shows the next rank after your best (GR34 → GR35) — no KEY dial.',
     ),
     GuideTopic(

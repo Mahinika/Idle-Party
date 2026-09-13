@@ -253,8 +253,10 @@ Ashen weekly tickets + PRACTICE. The hole is **same-cave feel**.
       ENDGAME. PRACTICE uses this week’s kit.
       (**2026-09-13 / 1.12.164**: Crown visits a shipped cave each week;
       telegraph follows that cave. Same tickets.)
-- [ ] Gauntlet every-5 bosses cycle distinct tells (not the same SHARD
+- [x] Gauntlet every-5 bosses cycle distinct tells (not the same SHARD
       forever). Same Spire climb.
+      (**2026-09-13 / 1.12.166**: F5 SHARD → F10 WAVE → WIND-UP / RALLY / …
+      through the 15 shipped caves; cadence still scales past F100.)
 - [ ] KEY week affix only if play notes say KEY still feels like a Rift.
 
 Stop: God Hand redesign, second sim, gacha, listing that promises zone #16.

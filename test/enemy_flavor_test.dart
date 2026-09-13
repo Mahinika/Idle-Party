@@ -105,6 +105,16 @@ void main() {
     expect(tells.contains('PULSE'), isFalse);
   });
 
+  test('Gauntlet every-5 bosses cycle distinct cave tells', () {
+    expect(EnemyFlavor.gauntletTellCycle.length, DungeonCatalog.all.length);
+    expect(EnemyFlavor.gauntletTellCycle.toSet().length, 15);
+    expect(EnemyFlavor.gauntletBossTell(5), 'SHARD');
+    expect(EnemyFlavor.gauntletBossTell(10), 'WAVE');
+    expect(EnemyFlavor.gauntletBossTell(15), 'WIND-UP');
+    expect(EnemyFlavor.gauntletBossTell(10), isNot(EnemyFlavor.gauntletBossTell(5)));
+    expect(EnemyFlavor.gauntletBossTell(80), 'SHARD');
+  });
+
   test('week-1 Sandy leans brawlers; Goblin leans glass and support', () {
     var sandyBrawlers = 0;
     var goblinBrawlers = 0;

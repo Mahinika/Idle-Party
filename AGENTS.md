@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.165**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.166**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -30,7 +30,7 @@ box. Do not restore AL20 as the batch. Chat Swedish; short test list
 **Distribution today:** **Google Play is the primary install path**
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Store listing:
 `https://play.google.com/store/apps/details?id=com.idleparty.app` (production
-live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.165 / 195**). Closed opt-in remains for early builds.
+live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.166 / 196**). Closed opt-in remains for early builds.
 Do **not** link players to GitHub Releases (repo may be private). Working ship
 in-repo may be ahead of Play — wait for owner play before uploading a new AAB.
 
@@ -181,7 +181,8 @@ through Mothveil Hollow.
 
 **Infinity Gauntlet** (`GameLogic.endgameUnlocked` = active party all at
 `maxHeroLevel` **100**): endless Crystal
-Spire climb from Hub; **boss every 5 floors**; wipe/leave → hub;
+Spire climb from Hub; **boss every 5 floors** (tells cycle shipped-cave jobs —
+not the same SHARD forever); wipe/leave → hub;
 `metaDepth.gauntletBestFloor` survives Ascend.
 
 **KEYSTONE** (same party-max-level gate): Mythic+-style keys on
@@ -192,8 +193,10 @@ normal zone runs — dial under hub **KEY**. Before party max level there is no 
 (kill quota holds; threat keeps climbing). `metaDepth.riftBestTier` survives Ascend.
 
 **Greater Rifts** (same gate): harder timed ladder in **Mothveil Hollow**,
-no mid-run gear, larger clear payout; season PB on Play Games BOARDS.
-GR20+ keeps ~62s on the clock (kills plateau; threat keeps climbing).
+no mid-run gear (gold OK; chests skip equipment), larger clear payout;
+season PB is **local** until a Play Games GR board ID is pasted under
+`PlayLeaderboardIds`. After GR20 the kill quota holds; par grows a little
+(max ~90s) and threat climbs slower so the ladder stays winnable.
 `metaDepth.grBestTier` / `seasonBestGrTier` survive Ascend.
 
 **Ashen Crown** (same gate): weekly ticket solo boss (ember art); wipe/leave
