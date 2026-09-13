@@ -193,8 +193,13 @@ prove a later hole is bigger)
       loot; TODAY grow-the-party. `first_hour_plain_test` + `ship_smoke_test`
       green. Play-install wall-clock still needs owner notes — do not mark
       Console boxes from this check.)
-- [ ] Day-2–7: one cave today + Welcome Back still honest on a **Play return**
+- [x] Day-2–7: one cave today + Welcome Back still honest on a **Play return**
       (not a sideload)
+      (in-repo **2026-09-13**: after first boss, hunt + Up next are
+      “Clear one cave today”; Welcome Back stays wow + ≤3 rows + that line.
+      `first_hour_plain_test` / `chase_contract_test` / `offline_progress_test`
+      green. Play-return wall-clock still needs owner notes — do not mark
+      Console boxes from this check.)
 - [ ] Week-1 crawl: packs / boss tells not identical if play notes say they
       are (SpatialCombat mix — no dungeon #16)
 - [ ] At least one 2–3 week tag; What’s New lead for a new player; DPS HIGH

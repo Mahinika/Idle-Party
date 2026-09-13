@@ -172,4 +172,40 @@ void main() {
     expect(find.textContaining('Sanctuary'), findsNothing);
     expect(find.text('NICE'), findsOneWidget);
   });
+
+  testWidgets('day-2–7 Welcome Back Up next is one cave today', (tester) async {
+    final now = DateTime.utc(2026, 8, 8);
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      bossVictories: 1,
+    );
+    final summary = OfflineProgressResult(
+      state: state,
+      secondsApplied: 3600,
+      goldGained: 40,
+      essenceGained: 2,
+      roomsCleared: 0,
+      highestFloorDelta: 0,
+      bossDelta: 0,
+    );
+    expect(summary.highlightRows.length, lessThanOrEqualTo(3));
+    final director = GameDirector.preview();
+    director.uiFeedback.presentOffline(summary);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome back!'), findsOneWidget);
+    expect(find.textContaining('Up next: Clear one cave today'), findsOneWidget);
+    expect(find.textContaining('Daily Run'), findsNothing);
+    expect(find.textContaining('KEY'), findsNothing);
+    expect(find.text('NICE'), findsOneWidget);
+  });
 }

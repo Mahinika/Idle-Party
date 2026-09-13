@@ -78,4 +78,20 @@ void main() {
     expect(contract.kind, isNot(HubChaseKind.keystone));
     expect(contract.upNextLine, startsWith('Up next:'));
   });
+
+  test('day-2–7 return: Up next is one cave today, same as hub hunt', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      bossVictories: 1,
+    );
+    expect(GameLogic.showDailyChase(state), isTrue);
+    expect(GameLogic.showDailyRunOnHub(state), isFalse);
+    final hub = HubChase.forState(state, now: now);
+    final contract = ChaseContract.fromState(state, now: now);
+    expect(contract.kind, HubChaseKind.dailyVaultProgress);
+    expect(contract.title, hub.title);
+    expect(contract.title.toLowerCase(), contains('cave'));
+    expect(contract.upNextLine, 'Up next: ${hub.title}');
+    expect(contract.upNextLine.toUpperCase(), isNot(contains('DAILY RUN')));
+    expect(contract.upNextLine.toUpperCase(), isNot(contains('KEY')));
+  });
 }

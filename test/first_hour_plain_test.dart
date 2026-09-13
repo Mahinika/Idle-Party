@@ -253,6 +253,9 @@ void main() {
     expect(chase.kind, HubChaseKind.dailyVaultProgress);
     expect(chase.title.toLowerCase(), contains('cave'));
     expect(chase.detail.toUpperCase(), isNot(contains('DAILY RUN')));
+    final upNext = ChaseContract.fromState(state, now: now).upNextLine;
+    expect(upNext, 'Up next: ${chase.title}');
+    expect(upNext.toUpperCase(), isNot(contains('DAILY RUN')));
   });
 
   test('What’s New lead is a new-player sentence', () {
