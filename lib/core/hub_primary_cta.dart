@@ -108,9 +108,13 @@ class HubPrimaryCta {
     final canEnter = unlockedSelected;
     final label = hasChaseAction ? chaseActionLabel : null;
 
-    if (mapHunt != null && endgameUnlocked) {
+    final endgameHunt = !endgameUnlocked
+        ? null
+        : (mapHunt ??
+            (showEndgameMap ? HubEndgameAct.huntForChase(chase.kind) : null));
+    if (endgameHunt != null) {
       final huntLabel =
-          HubEndgameAct.enterLabelFor(mapHunt, grBestTier: grBestTier);
+          HubEndgameAct.enterLabelFor(endgameHunt, grBestTier: grBestTier);
       if (label != null && isReadyClaim(chase)) {
         return HubPrimaryCta(
           primaryLabel: label,
@@ -119,7 +123,7 @@ class HubPrimaryCta {
           showKeyDial: false,
         );
       }
-      final ashen = mapHunt == HubEndgameHunt.ashen;
+      final ashen = endgameHunt == HubEndgameHunt.ashen;
       return HubPrimaryCta(
         primaryLabel: huntLabel,
         secondaryLabel: ashen ? 'PRACTICE' : null,

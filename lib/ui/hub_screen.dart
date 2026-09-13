@@ -297,7 +297,7 @@ class _HubScreenState extends State<HubScreen>
       hardmodeLevel: state.hardmodeLevel,
       showKeystoneJargon: GameLogic.showKeystoneJargon(state),
       endgameUnlocked: GameLogic.endgameUnlocked(state),
-      mapHunt: _userPickedZone ? _selectedHunt : null,
+      mapHunt: _showEndgameMap ? _selectedHunt : null,
       showEndgameMap: _showEndgameMap,
       grBestTier: state.metaDepth.grBestTier,
     );

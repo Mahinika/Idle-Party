@@ -31,7 +31,7 @@ void main() {
       endgameUnlocked: true,
     );
     expect(cta.primaryLabel, 'GAUNTLET');
-    expect(cta.secondaryLabel, 'ENTER DUNGEON');
+    expect(cta.secondaryLabel, isNull);
     expect(cta.hideInlineChaseAction, isTrue);
     expect(cta.showKeyDial, isFalse);
   });
