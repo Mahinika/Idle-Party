@@ -21,6 +21,11 @@ import 'bag_cleanup_filters.dart';
 import 'shell_common.dart';
 
 class InventoryDock extends StatefulWidget {
+  /// MERGE footer. BiS waits until first-hour plain chrome lifts.
+  static String mergeFooterHint({required bool plainEnglish}) => plainEnglish
+      ? 'Merges junk pairs of the same slot (skips upgrades). Uses gold.'
+      : 'Merges junk pairs of the same slot (skips upgrades and BiS (kept safe)). Uses gold.';
+
   const InventoryDock({
     super.key,
     required this.state,
@@ -721,7 +726,9 @@ class _InventoryDockState extends State<InventoryDock>
           ),
           const SizedBox(height: 4),
           Text(
-            'Merges junk pairs of the same slot (skips upgrades and BiS (kept safe)). Uses gold.',
+            InventoryDock.mergeFooterHint(
+              plainEnglish: GameLogic.plainPlayerChrome(state),
+            ),
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),

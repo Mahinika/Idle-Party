@@ -13,6 +13,8 @@ import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/ui/first_session_tips.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
 import 'package:idle_party/ui/shell/forge_overlay.dart';
+import 'package:idle_party/ui/shell/inventory_dock.dart';
+import 'package:idle_party/ui/shell/jobs_overlay.dart';
 import 'package:idle_party/ui/shell/settings_overlay.dart';
 import 'package:idle_party/ui/shell/shop_dock.dart';
 import 'package:idle_party/ui/shell/whats_new_overlay.dart';
@@ -330,6 +332,42 @@ void main() {
     expect(
       SpatialDungeonView.mapSemanticsLabel(plain: false).toUpperCase(),
       contains('GOD HAND'),
+    );
+  });
+
+  test('QUESTS and MERGE skip essence and BiS before unlock', () {
+    final afterFloor = GameLogic.createInitialState(now: now).copyWith(
+      highestFloorCleared: 1,
+    );
+    expect(MenuTabs.showQuests(afterFloor), isTrue);
+    expect(MenuTabs.showCamp(afterFloor), isFalse);
+    expect(GameLogic.plainPlayerChrome(afterFloor), isTrue);
+
+    expect(
+      JobsOverlay.introLine(showEssence: false, chainCount: 0).toUpperCase(),
+      isNot(contains('ESSENCE')),
+    );
+    expect(
+      JobsOverlay.introLine(showEssence: false, chainCount: 0),
+      isNot(contains('+5e')),
+    );
+    expect(JobsOverlay.rewardLine(gold: 40, essence: 3, showEssence: false), '+40g');
+    expect(
+      JobsOverlay.rewardLine(gold: 40, essence: 3, showEssence: true),
+      '+40g +3e',
+    );
+    expect(
+      JobsOverlay.chainClaimLabel(showEssence: false).toUpperCase(),
+      isNot(contains('E')),
+    );
+
+    expect(
+      InventoryDock.mergeFooterHint(plainEnglish: true).toUpperCase(),
+      isNot(contains('BIS')),
+    );
+    expect(
+      InventoryDock.mergeFooterHint(plainEnglish: false).toUpperCase(),
+      contains('BIS'),
     );
   });
 

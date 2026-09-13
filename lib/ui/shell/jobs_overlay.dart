@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
+import '../../core/menu_alerts.dart';
 import '../../models/mission.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -9,6 +10,29 @@ import '../menu_chrome.dart';
 class JobsOverlay extends StatelessWidget {
   const JobsOverlay({super.key, required this.director});
   final GameDirector director;
+
+  /// Header + chain line. Essence waits for the ESSENCE tab.
+  static String introLine({required bool showEssence, required int chainCount}) {
+    final claim = showEssence ? 'gold + essence' : 'gold';
+    final chain = showEssence
+        ? 'Chain $chainCount/3 · the 3rd claim in a row pays +5e extra.'
+        : 'Chain $chainCount/3 · the 3rd claim in a row pays a bonus reward.';
+    return 'QUESTS — clear goals while you dungeon. Claim for $claim.\n'
+        'Five slots: Daily · Bounty · Side · Week · Contract.\n'
+        '$chain';
+  }
+
+  static String rewardLine({
+    required int gold,
+    required int essence,
+    required bool showEssence,
+  }) {
+    if (!showEssence || essence <= 0) return '+${gold}g';
+    return '+${gold}g +${essence}e';
+  }
+
+  static String chainClaimLabel({required bool showEssence}) =>
+      showEssence ? 'CLAIM · chain +5e' : 'CLAIM · chain bonus';
 
   static String _slotBadge(int index) => switch (index) {
     0 => 'DAILY · easy',
@@ -21,14 +45,16 @@ class JobsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    final showEssence = MenuTabs.showCamp(state);
     final claimable = state.missions.where((m) => m.canClaim).length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'QUESTS — clear goals while you dungeon. Claim for gold + essence.\n'
-          'Five slots: Daily · Bounty · Side · Week · Contract.\n'
-          'Chain ${state.metaDepth.jobChainCount}/3 · the 3rd claim in a row pays +5e extra.',
+          introLine(
+            showEssence: showEssence,
+            chainCount: state.metaDepth.jobChainCount,
+          ),
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (claimable > 0) ...[
@@ -44,12 +70,22 @@ class JobsOverlay extends StatelessWidget {
         ],
         const SizedBox(height: 8),
         for (var i = 0; i < state.missions.length; i++)
-          _questCard(state.missions[i], i, hideClaim: claimable > 0),
+          _questCard(
+            state.missions[i],
+            i,
+            hideClaim: claimable > 0,
+            showEssence: showEssence,
+          ),
       ],
     );
   }
 
-  Widget _questCard(Mission mission, int index, {bool hideClaim = false}) {
+  Widget _questCard(
+    Mission mission,
+    int index, {
+    bool hideClaim = false,
+    required bool showEssence,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
@@ -110,7 +146,11 @@ class JobsOverlay extends StatelessWidget {
                   style: GameTheme.body(size: 14),
                 ),
                 Text(
-                  '+${mission.goldReward}g +${mission.essenceReward}e',
+                  rewardLine(
+                    gold: mission.goldReward,
+                    essence: mission.essenceReward,
+                    showEssence: showEssence,
+                  ),
                   style: GameTheme.body(
                     size: 13,
                     color: GameTheme.parchmentDim,
@@ -139,7 +179,7 @@ class JobsOverlay extends StatelessWidget {
               label: mission.claimed
                   ? 'CLAIMED'
                   : (director.state.metaDepth.jobChainCount == 2
-                        ? 'CLAIM · chain +5e'
+                        ? chainClaimLabel(showEssence: showEssence)
                         : 'CLAIM'),
               onPressed: mission.canClaim
                   ? () => director.claimMission(mission.id)
