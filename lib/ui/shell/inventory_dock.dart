@@ -336,6 +336,7 @@ class _InventoryDockState extends State<InventoryDock>
         !nearFull &&
         MenuTabs.showShop(state);
     final mergeOpen = MenuTabs.showMerge(state);
+    final bagHint = MenuAlerts.bagPanelHint(state);
     final filter = bagSlotFilter;
     final filterLabel = filter == null
         ? null
@@ -414,16 +415,9 @@ class _InventoryDockState extends State<InventoryDock>
             ],
           ),
           const SizedBox(height: 4),
-        ] else
+        ] else if (bagHint.isNotEmpty)
           Text(
-            () {
-              final line = MenuAlerts.bagStatusLine(state);
-              if (line.isNotEmpty) return line;
-              if (nearFull && filled >= cap) {
-                return 'CLEAN BAG: gold first, then essence from leftovers';
-              }
-              return 'CLEAN BAG: sell for gold first, then scrap for essence';
-            }(),
+            bagHint,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         const SizedBox(height: 6),

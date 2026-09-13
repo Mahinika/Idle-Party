@@ -43,7 +43,7 @@ void main() {
     expect(state.wipeAdviceLine, '');
     state = GameLogic.notePartyWipe(state, atkLack());
     expect(state.wipeStreakCount, 2);
-    expect(state.wipeAdviceLine, 'Upgrade ATK in GOLD');
+    expect(state.wipeAdviceLine, 'Get stronger in GEAR');
   });
 
   test('melted pack points at DEF on first wipe', () {
@@ -57,7 +57,7 @@ void main() {
     );
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.notePartyWipe(state, fight);
-    expect(state.wipeAdviceLine, 'Upgrade DEF in GOLD');
+    expect(state.wipeAdviceLine, WipeAdvice.gearWearLine);
   });
 
   test('instant melt still tips DEF when damageDealt is zero', () {
@@ -72,7 +72,7 @@ void main() {
     final state = GameLogic.createInitialState(now: now);
     expect(
       WipeAdvice.lineFor(state: state, fight: fight),
-      'Upgrade DEF in GOLD',
+      WipeAdvice.gearWearLine,
     );
   });
 
@@ -88,7 +88,7 @@ void main() {
     final state = GameLogic.createInitialState(now: now);
     expect(
       WipeAdvice.lineFor(state: state, fight: fight),
-      'Upgrade STA in GOLD',
+      'Get stronger in GEAR',
     );
   });
 
@@ -175,6 +175,28 @@ void main() {
     expect(state.wipeAdviceLine, '');
     state = GameLogic.notePartyWipe(state, atkLack());
     expect(state.wipeStreakCount, 2);
+    expect(state.wipeAdviceLine, 'Get stronger in GEAR');
+  });
+
+  test('GOLD ATK/DEF after first reward names the GOLD tab', () {
+    var state = GameLogic.createInitialState(now: now).copyWith(
+      highestFloorCleared: 1,
+    );
+    const melt = WipeFightSnapshot(
+      waveHp: 8000,
+      remainingHp: 6000,
+      damageDealt: 400,
+      damageTaken: 900,
+      partyMaxHp: 400,
+      elapsedSec: 4,
+    );
+    expect(
+      WipeAdvice.lineFor(state: state, fight: melt),
+      'Upgrade DEF in GOLD',
+    );
+    state = GameLogic.notePartyWipe(state, atkLack());
+    expect(state.wipeAdviceLine, '');
+    state = GameLogic.notePartyWipe(state, atkLack());
     expect(state.wipeAdviceLine, 'Upgrade ATK in GOLD');
   });
 
@@ -320,6 +342,18 @@ void main() {
     expect(
       WipeAdvice.hubCtaLabelFor('Equip the better item in BAG'),
       'OPEN BAG',
+    );
+    expect(
+      WipeAdvice.hubCtaLabelFor(WipeAdvice.gearWearLine),
+      'OPEN GEAR',
+    );
+    expect(
+      WipeAdvice.hubNavFor(WipeAdvice.gearWearLine)?.route,
+      MenuRoute.gear,
+    );
+    expect(
+      WipeAdvice.hubHintFor(WipeAdvice.gearWearLine),
+      contains('GEAR'),
     );
   });
 

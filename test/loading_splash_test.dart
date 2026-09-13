@@ -5,6 +5,15 @@ import 'package:idle_party/ui/cognifox_mark.dart';
 import 'package:idle_party/ui/loading_splash.dart';
 
 void main() {
+  testWidgets('studio mark exposes Cognifox Studio for a11y', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: CognifoxStudioMark())),
+    );
+    expect(find.byType(CognifoxStudioMark), findsOneWidget);
+    expect(find.bySemanticsLabel(StoryLore.studioName), findsOneWidget);
+    expect(find.text(StoryLore.studioName.toUpperCase()), findsNothing);
+  });
+
   testWidgets('loading splash shows Cognifox Studio and Loading…', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: LoadingSplash()));
     expect(find.byType(CognifoxStudioMark), findsOneWidget);

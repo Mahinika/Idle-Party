@@ -239,4 +239,21 @@ void main() {
     final market = FirstSessionTips.tips.firstWhere((t) => t.id == 'market');
     expect(market.body.toUpperCase(), isNot(contains('SELL JUNK')));
   });
+
+  test('first-hour BAG idle copy does not teach ESSENCE', () {
+    final fresh = GameLogic.createInitialState(now: now);
+    expect(MenuAlerts.bagPanelHint(fresh), isEmpty);
+    expect(MenuAlerts.bagPanelHint(fresh).toUpperCase(), isNot(contains('ESSENCE')));
+    expect(MenuAlerts.bagStatusLine(fresh), isNot(contains('MERGE')));
+
+    final afterFloor = fresh.copyWith(highestFloorCleared: 1);
+    expect(
+      MenuAlerts.bagPanelHint(afterFloor).toUpperCase(),
+      isNot(contains('ESSENCE')),
+    );
+
+    final withEssence = fresh.copyWith(essence: 8, highestFloorCleared: 1);
+    expect(MenuTabs.showCamp(withEssence), isTrue);
+    expect(MenuAlerts.bagPanelHint(withEssence), isEmpty);
+  });
 }

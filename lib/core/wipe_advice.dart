@@ -64,9 +64,13 @@ abstract final class WipeAdvice {
   /// GOLD ATK/STA track tips wait for two wipes on the same floor.
   static const int streakNeeded = 2;
 
+  /// First-hour stand-in when GOLD tracks are still hidden (DEF, wipe 1).
+  static const String gearWearLine = 'Wear loot in GEAR';
+
   /// High-confidence tips safe on the first wipe (bag, floor gap, early melt).
   static bool isImmediate(String line) =>
       line.startsWith('Equip') ||
+      line == gearWearLine ||
       line.contains('too far') ||
       line == 'Upgrade DEF in GOLD' ||
       line.contains('MARKET has an upgrade') ||
@@ -90,6 +94,9 @@ abstract final class WipeAdvice {
     }
     if (adviceLine.startsWith('Equip')) {
       return 'HUB → BAG to equip the upgrade';
+    }
+    if (adviceLine == gearWearLine || adviceLine.contains(' in GEAR')) {
+      return 'HUB → GEAR to wear loot';
     }
     if (adviceLine.contains(' in GOLD') ||
         adviceLine.contains('Upgrade ATK') ||
@@ -116,6 +123,9 @@ abstract final class WipeAdvice {
     if (adviceLine.startsWith('Equip')) {
       return const NavIntent(route: MenuRoute.gear, gear: GearPanel.bag);
     }
+    if (adviceLine == gearWearLine || adviceLine.contains(' in GEAR')) {
+      return const NavIntent(route: MenuRoute.gear);
+    }
     if (adviceLine.contains(' in GOLD') ||
         adviceLine.contains('Upgrade ATK') ||
         adviceLine.contains('Upgrade DEF') ||
@@ -133,11 +143,16 @@ abstract final class WipeAdvice {
     if (nav.goldPanel == GoldPanel.market) return 'OPEN GOLD';
     if (nav.route == MenuRoute.shop) return 'OPEN SHOP';
     if (nav.gear == GearPanel.bag) return 'OPEN BAG';
+    if (nav.route == MenuRoute.gear) return 'OPEN GEAR';
     if (nav.route == MenuRoute.gold) return 'OPEN GOLD';
     return null;
   }
 
   static String _forgeOrMarket(GameState state, String forgeLine) {
+    if (!MenuTabs.showGold(state)) {
+      // DEF stays first-wipe; ATK/STA still wait for streakNeeded.
+      return forgeLine.contains('DEF') ? gearWearLine : 'Get stronger in GEAR';
+    }
     final listing = MarketListingsService.bestAffordableUpgradeListing(state);
     if (listing != null) {
       return 'GOLD: ${listing.item.name} · ${listing.priceGold}g';

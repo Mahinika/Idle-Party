@@ -336,7 +336,25 @@ class MenuAlerts {
     }
     if (!isBagFull(state)) return '';
     if (state.gearStash.isEmpty) return 'Bag is full — CLEAN BAG';
-    return 'Bag full — backups kept; CLEAN BAG or MERGE';
+    final merge = MenuTabs.showMerge(state) ? ' or MERGE' : '';
+    return 'Bag full — backups kept; CLEAN BAG$merge';
+  }
+
+  /// BAG panel idle line. Empty in the first hour unless the bag is jammed.
+  /// Essence scrap waits for the ESSENCE tab ([showCamp]).
+  static String bagPanelHint(GameState state) {
+    final status = bagStatusLine(state);
+    if (status.isNotEmpty) return status;
+    if (bagUpgradeCount(state) > 0) return '';
+    final jammed = GearService.isBagJammed(state);
+    final full = isBagFull(state);
+    if (!jammed && !full) return '';
+    if (MenuTabs.showCamp(state)) {
+      return full
+          ? 'CLEAN BAG: gold first, then essence from leftovers'
+          : 'CLEAN BAG: sell for gold first, then scrap for essence';
+    }
+    return 'CLEAN BAG: sell for gold';
   }
 
   static String meetRosterHint(GameState state) {
