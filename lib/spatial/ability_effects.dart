@@ -400,6 +400,12 @@ abstract final class AbilityEffectRunner {
         return b.coeff.compareTo(a.coeff);
       });
       for (final d in sigs) {
+        // Packs: let AoE fillers play instead of ST nukes (Chaos Bolt, Aimed).
+        if (pack >= 3 &&
+            d.effect == AbilityEffectKind.damage &&
+            d.gate.executeHpFrac == null) {
+          continue;
+        }
         if (tryCast(d)) break;
       }
     }
@@ -459,6 +465,14 @@ abstract final class AbilityEffectRunner {
               a.id == AbilityId.coneOfCold;
           final bPack = b.id == AbilityId.blizzard ||
               b.id == AbilityId.coneOfCold;
+          if (aPack != bPack) return aPack ? -1 : 1;
+        }
+        // Destruction: Rain / Shadowfury instead of Incinerate in packs.
+        if (hero.heroSpecId == HeroSpecId.destruction && pack >= 2) {
+          final aPack = a.id == AbilityId.rainOfFire ||
+              a.id == AbilityId.shadowfury;
+          final bPack = b.id == AbilityId.rainOfFire ||
+              b.id == AbilityId.shadowfury;
           if (aPack != bPack) return aPack ? -1 : 1;
         }
         // Assassin: Envenom when combo is ready.
@@ -1883,6 +1897,12 @@ abstract final class AbilityEffectRunner {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (SpatialCombat._distPoint(ox, oy, e.x, e.y) > radius) continue;
+      if (hitCount >= 8 &&
+          (def.id == AbilityId.fanOfKnivesCombat ||
+              def.id == AbilityId.fanOfKnives ||
+              def.id == AbilityId.fanOfKnivesSub)) {
+        break;
+      }
       final wasAlive = e.hp > 0;
       final dealt = CombatRatings.mitigateByArmor(
         rawDamage: raw,

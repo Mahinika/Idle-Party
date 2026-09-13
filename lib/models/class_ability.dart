@@ -1409,11 +1409,11 @@ class ClassKits {
       shortLabel: 'CFoK',
       description: 'Knives into a big pack — not used on two-target cleave.',
       unlockLevel: 10,
-      cooldown: 7,
+      cooldown: 9,
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.28,
+      coeff: 0.16,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -4962,11 +4962,11 @@ class ClassKits {
       shortLabel: 'FRain',
       description: 'Fire rain on the pack around your focus.',
       unlockLevel: 8,
-      cooldown: 10,
-      resourceCost: 22,
+      cooldown: 6,
+      resourceCost: 10,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.62,
+      coeff: 1.15,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.fire,
@@ -4977,7 +4977,7 @@ class ClassKits {
         groundRadius: 2.8,
       ),
 
-      aoeShape: AbilityAoeShape.rain,
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.shadowfury,

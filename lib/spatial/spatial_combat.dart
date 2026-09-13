@@ -4006,7 +4006,7 @@ abstract final class SpatialCombat {
               if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
               if (_dist(hero, e) > 2.2) continue;
               final frac = switch (hero.heroSpecId) {
-                HeroSpecId.combat => 0.60,
+                HeroSpecId.combat => 0.40,
                 HeroSpecId.arms => 0.38,
                 _ => 0.30,
               };

@@ -228,6 +228,48 @@ void main() {
     expect(fired, isTrue);
     expect(pack.where((e) => e.hp < 2500).length, greaterThanOrEqualTo(3));
   });
+
+  test('Destruction Rain of Fire hits a pack instead of Chaos Bolt', () {
+    final state = _soloSpecParty(HeroSpecId.destruction, level: 15);
+    var world = SpatialCombat.build(state);
+    final lock = world.heroes.firstWhere((h) => !h.isPet);
+    final pack = world.enemies.take(4).toList();
+    for (final e in world.enemies) {
+      e
+        ..hp = 0
+        ..dormant = true;
+    }
+    for (var i = 0; i < pack.length; i++) {
+      pack[i]
+        ..dormant = false
+        ..hp = 2500
+        ..maxHp = 2500
+        ..x = lock.x + 3.2
+        ..y = lock.y + i * 0.12
+        ..moveSpeed = 0;
+    }
+    lock
+      ..rage = 100
+      ..x = pack.first.x - 3.4
+      ..y = pack.first.y
+      ..moveSpeed = 0
+      ..fireCooldown = 99;
+    _padAllCds(lock, except: AbilityId.rainOfFire);
+    lock.abilityCd.remove(AbilityId.chaosBolt.name);
+
+    var fired = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((lock.abilityCd[AbilityId.rainOfFire.name] ?? 0) > 0.05) {
+        fired = true;
+        break;
+      }
+      lock.rage = 100;
+    }
+    expect(fired, isTrue);
+    expect(lock.abilityCd[AbilityId.chaosBolt.name] ?? 0, lessThan(0.05));
+    expect(pack.where((e) => e.hp < 2500).length, greaterThanOrEqualTo(3));
+  });
 }
 
 GameState _soloSpecParty(HeroSpecId specId, {required int level}) {
