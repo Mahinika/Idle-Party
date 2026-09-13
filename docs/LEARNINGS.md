@@ -49,7 +49,17 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 - Program 1 done bar complete **2026-09-12** (Robban line said). Program 2 is
   the new default. Say exactly
   `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN` only when **Program 2**
-  is fully checked.
+  is fully checked. After that line, Program 3 (stranger stays) is the bar —
+  not AL20 as the batch (`GROWTH_MANDATE.md`).
+
+## 2026-09-13 — seats drafted Program 3 before Play smoke was done
+
+- Owner asked for a future plan with all six chairs. EP + UX + Marketing
+  picked **stranger stays** (D1→D7 on Play, crawl feel without zone #16).
+  Game Director may freshen packs/tells against play notes. Tech/Art do not
+  pick the batch. Endless KEY / Rift / GR is quality, not the story.
+- **Do not start Program 3** until Program 2 Console boxes are `[x]` and the
+  Robban line is said. Remaining P2 work is owner Play publish + SHOP smoke.
 
 ## 2026-09-12 — funnel + first session (after shipping those boxes)
 

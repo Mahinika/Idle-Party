@@ -4,8 +4,9 @@
 Do **not** chase Casual / Battle Royale / sandbox search volume.
 
 **Active program:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) **Program 2**
-(hide-until-unlock + Play smoke). Program 1 done bar complete **2026-09-12**.
-Do not silently restore AL20 as the batch.
+(hide-until-unlock + Play smoke; Console still open). Program 1 done
+**2026-09-12**. **Program 3** (stranger stays) is drafted; it starts after
+the Program 2 Robban line. Do not silently restore AL20 as the batch.
 
 Honest growth order: **crash-free → listing conversion → D1 → D7 → rating → tiny paid test**.
 

@@ -1,7 +1,7 @@
 ---
 description: >-
   Program 2 — hide-until-unlock + Play smoke until that done bar.
-  When complete, say the exact Robban line (never early, never paraphrased).
+  Program 3 (stranger stays) starts after the Robban line. Never early.
 alwaysApply: true
 ---
 
@@ -39,7 +39,8 @@ the next user-facing message starts with **exactly**:
 
 `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`
 
-Never early. Never paraphrase. `/init` must not restore the old AL20 default.
+Never early. Never paraphrase. After that line, default work is **Program 3**
+(stranger stays) — not AL20. `/init` must not restore the old AL20 default.
 Why: `docs/LEARNINGS.md`.
 
 ## Decision policy

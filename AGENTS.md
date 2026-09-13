@@ -10,18 +10,18 @@ in sync (currently **1.12.163**). What’s New lives in `lib/core/meta_systems.d
 
 Owner describes goals in plain language; agents pick skills/tools/verify alone.
 **Rules (don’t duplicate here):**
-- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **Program 2** (hide-until-unlock + Play smoke). Program 1 done bar complete 2026-09-12. Do not restore AL20 as the batch
+- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **Program 2** (hide-until-unlock + Play smoke; Console still open). **Program 3** (stranger stays) is drafted; it starts after the Program 2 Robban line. Program 1 done 2026-09-12. Do not restore AL20 as the batch
 - `.cursor/rules/studio-seats.mdc` — six chairs (EP, Game, UX, Tech, Art, Marketing)
 - `.cursor/rules/product-locks.mdc` — hard + soft locks (dated)
 - `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
 - `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff
 - `.cursor/rules/definition-of-done.mdc` — analyze / tests / commit locally
 
-Cadence: `docs/GROWTH_MANDATE.md` **Program 2**, then
+Cadence: `docs/GROWTH_MANDATE.md` **Program 2** (then Program 3), then
 `docs/CONTENT_CADENCE.md`. **Default work** when vague: next unchecked Program 2
-box (do not restore AL20 as the batch). The Robban line waits until Program 2
-is fully `[x]`. Chat Swedish; short test list (new save first) → wait. Commit
-locally when green; ask before push / PR / tag / Play.
+box (Console if in-repo is done). After the Program 2 Robban line: next
+Program 3 box. Do not restore AL20 as the batch. Chat Swedish; short test list
+(new save first) → wait. Commit locally when green; ask before push / PR / tag / Play.
 
 **UI target:** portrait phones (~360–430 px). Reference **Samsung A56**
 (1080×2340 → **360×780**). Live look: AVD `Samsung_A56` + `flutter run`
@@ -119,7 +119,7 @@ Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 Slash: `/init` resyncs AGENTS/rules; `/repo auditandcleaning` runs a read-only
 full-repo audit (see `.cursor/commands/repo-auditandcleaning.md`).
 
-Cadence: **`docs/GROWTH_MANDATE.md` Program 2**, then
+Cadence: **`docs/GROWTH_MANDATE.md` Program 2**, then Program 3, then
 `docs/CONTENT_CADENCE.md` (tag rhythm). Not AL20-as-batch. Why we flipped:
 [`docs/LEARNINGS.md`](docs/LEARNINGS.md). Background (optional):
 `docs/TOP_GAMES_RESEARCH.md`. Chase contract (hub TODAY ↔ offline Up next):

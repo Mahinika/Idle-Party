@@ -1,9 +1,10 @@
 # Idle Party — monthly content cadence
 
 **Active program (2026-09-12):** [GROWTH_MANDATE.md](GROWTH_MANDATE.md)
-**Program 2** — hide-until-unlock + Play smoke. Program 1 (time-to-combat +
-funnel) shipped the same day. This file is the **tag rhythm** (balance +
-What’s New) under that program.
+**Program 2** — hide-until-unlock + Play smoke (in-repo done; owner Console
+boxes still open). **Program 3** (stranger stays) is drafted but **does not
+start** until the Program 2 Robban line. Program 1 shipped the same day.
+This file is the **tag rhythm** (balance + What’s New) under that program.
 
 Optional background: [TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md). Live
 contracts: [CHASE_CONTRACT.md](CHASE_CONTRACT.md) ·
@@ -14,23 +15,25 @@ contracts: [CHASE_CONTRACT.md](CHASE_CONTRACT.md) ·
 
 Each tagged `1.x.y` release should include:
 
-1. **One Program 2 slice** — next unchecked box on `GROWTH_MANDATE.md` Program 2
-   (first-hour chrome, TODAY honesty, starter kit HUD, Play smoke).
+1. **One Program 2 slice** until that bar is `[x]`, then **one Program 3
+   slice** — next unchecked box on `GROWTH_MANDATE.md`.
    Play What’s New in **one sentence a new player understands**.
 2. **Balance pass** — iterate with share-only, then gate:
    - Fast: `flutter test test/class_balance_share_fast_test.dart` (or `--focus=specA,specB` via harness args)
    - CI: `test/class_balance_gate_test.dart` (live light, fails on DPS `**HIGH**`)
 3. **Release notes** — What’s New in `lib/core/meta_systems.dart`; `test/changelog_sync_test.dart` keeps pubspec ↔ version ↔ zone tokens honest.
 
-### Success-spår (Program 2)
+### Success-spår (while Program 2 Console is open)
 
 1. **Activation** — new save combat in ≤90 s; day-one bar hides GOLD/SHOP/ESSENCE
    until they mean something; TODAY stays grow-the-party until the first boss.
 2. **Habit** — one TODAY job a new player can do on day 1 and day 2–7.
 3. **Store** — Play publish + SHOP/POWERUPS smoke; D1 when traffic exists.
 
-AL20 chase / wipe advice / kit depth are **quality gates**, not the default
-slice. Endgame copy and GEAR follow-up only against play notes. No new zones or classes (soft lock).
+After the Program 2 Robban line: **Program 3** success is D1 → D7 on a Play
+install without a 16th cave. AL20 chase / wipe advice / kit depth stay
+**quality gates**, not the default slice. Endgame copy and GEAR follow-up only
+against play notes. No new zones or classes (soft lock).
 
 ## Decision table (when unsure)
 
@@ -42,7 +45,7 @@ slice. Endgame copy and GEAR follow-up only against play notes. No new zones or 
 | Cool affinity-nudge vs budget | Budget |
 | Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
 | Stor rewrite vs small ship | Small ship + synlig What’s New a new player can read |
-| Vagt “gör bättre” vs explicit bredare mål | Följ `GROWTH_MANDATE.md` Program 2 |
+| Vagt “gör bättre” vs explicit bredare mål | Program 2 Console boxes if any are open; else Program 3 on `GROWTH_MANDATE.md` |
 | Två stolar oense | `.cursor/rules/studio-seats.mdc` — EP + UX + Marketing vinner; Game/Tech/Art veto enligt stolen |
 
 ## Non-goals (unless owner asks)

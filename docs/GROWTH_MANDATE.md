@@ -133,6 +133,7 @@ ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN
 ```
 
 Do not paraphrase. Do not say it early. Do not restore AL20 as the batch.
+After that line, default work is **[Program 3](#program-3--stranger-stays)**.
 
 **Quality gates (not the batch)**
 
@@ -142,6 +143,79 @@ Do not paraphrase. Do not say it early. Do not restore AL20 as the batch.
   against play notes from the current save.
 - Tag cadence **2–3 weeks** — `docs/CONTENT_CADENCE.md`. Balance gate stays the
   CI veto. No new zone / class.
+
+## Program 3 — stranger stays
+
+**Drafted 2026-09-13** (owner asked for a future plan; six chairs, one
+decision). **Starts after** the Program 2 Robban line — not before.
+In-repo Program 2 is done; remaining P2 boxes are owner Console.
+
+North star unchanged: **främlingar på Play blir spelare.** Pillars unchanged
+(party walks the room · one TODAY job · one prestige loop). Endless KEY /
+Farm Rift / Ranked GR already shipped as an AL20 **quality** ladder — they
+are not this program’s story.
+
+EP + UX + Marketing pick the batch. Game Director may freshen the **crawl**
+(the listing product) but does not restore AL20 hub polish. Tech never picks
+the feature. Art sits unless listing conversion is the hole (icon / shots).
+Marketing may run tiny UA only after D1 exists and the owner asks.
+
+### 90 days (clock starts at the Robban line)
+
+**Days 1–14 — read Play, don’t invent content**
+
+- Owner pastes D1, crashes, reviews, listing visitors. Agent does not guess.
+- Order of truth: crash-free → listing conversion → D1 → D7 → rating.
+- If the number is listing/D1: first-session + listing honesty (not KEY chrome).
+- If the number is D7: day-2–7 job + Welcome Back vs a Play-returned save.
+- If reviews say the fight is the same cave forever: pack mix / boss tells
+  (SpatialCombat jobs — not zone #16).
+
+**Days 15–45 — week-1 feel without a 16th cave**
+
+- Keep hide-until-unlock. One hub job. ≤2 first-run beats.
+- Combat identity pass only against play notes (new save first). Fairness
+  gate still fails DPS HIGH.
+- Cadence 2–3 weeks; What’s New lead still a new player.
+
+**Days 45–90 — habit in public**
+
+- Another tag. Store Listing Experiment when visitors exist.
+- Tiny UA (€5–10/day) only if D1 is known and the owner asks — smoke, not scale.
+- Still no iOS, gacha, whale shop, second sim, new class, zone #16.
+
+### Done bar (Program 3)
+
+Check boxes only when **shipped** (or owner confirmed for Console-only).
+Do not start this bar until Program 2 is fully `[x]`.
+
+**In-repo** (in order, skip a box only if the owner’s Play numbers already
+prove a later hole is bigger)
+
+- [ ] Play-install first hour still holds: combat ≤90 s; GOLD / SHOP / ESSENCE
+      hide-until-unlock; TODAY grow-the-party until first boss
+- [ ] Day-2–7: one cave today + Welcome Back still honest on a **Play return**
+      (not a sideload)
+- [ ] Week-1 crawl: packs / boss tells not identical if play notes say they
+      are (SpatialCombat mix — no dungeon #16)
+- [ ] At least one 2–3 week tag; What’s New lead for a new player; DPS HIGH
+      still fails CI
+
+**Owner / Console**
+
+- [ ] D1 (and D7 if traffic exists) pasted once after Program 2 smoke
+- [ ] Crashes / 1★ answered or empty
+- [ ] Store Listing Experiment started **or** deferred (too little traffic)
+- [ ] Tiny UA only if D1 is known and owner asked — no scale
+
+When **every Program 3** box is `[x]`, the next user-facing message starts
+with **exactly**:
+
+```
+ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN
+```
+
+Same phrase, next bar. Never early. Never paraphrase.
 
 ## Metrics (owner / Console — do not fake)
 
@@ -157,6 +231,7 @@ SpatialCombat remains the only fight sim.
 ## Studio seats
 
 Six chairs only — `.cursor/rules/studio-seats.mdc`. Not a theatrical panel.
-**EP + UX + Marketing** pick *what to build* while this mandate is open.
+**EP + UX + Marketing** pick *what to build* while Program 2 or 3 is open.
 Game Director vetoes a broken fight or DPS HIGH. Tech vetoes red
-analyze / crash. AL20 is not a chair.
+analyze / crash. AL20 is not a chair. After the Program 2 Robban line,
+re-seat on Program 3 (stranger stays) — not AL20 as the default voice.

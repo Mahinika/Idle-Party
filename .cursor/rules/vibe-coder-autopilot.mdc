@@ -22,9 +22,12 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 5. After UI/meta: verify (tests and/or `a56-playtest`). Web only if Android can’t run.
 6. After kit number tweaks: share-fast; grind gate green before done.
 7. Git: commit locally when green; ask before push/Play — `owner-preferences`.
-8. Vague goal → next unchecked `docs/GROWTH_MANDATE.md` **Program 2** box. When
-   Program 2 is fully checked, start the user message with exactly
-   `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`.
+8. Vague goal → next unchecked `docs/GROWTH_MANDATE.md` **Program 2** box
+   (Console if in-repo is done). When Program 2 is fully checked, start the
+   user message with exactly
+   `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`. After that: next
+   **Program 3** box. When Program 3 is fully checked, the same Robban line
+   again.
 
 ## Skill map (silent)
 
@@ -49,7 +52,7 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 | same workflow 3× | `building-skills-from-patterns` |
 | ny meny / panel / var ska X ligga / UI-röd tråd | `game-ux-director` rule + `ui-theme` / `docs/UI_THEME.md` |
 | I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — **new-save first** |
-| “gör spelet bättre” / vad härnäst (no other target) | `docs/GROWTH_MANDATE.md` Program 2 next box — not AL20 default |
+| “gör spelet bättre” / vad härnäst (no other target) | `docs/GROWTH_MANDATE.md` next open program box (P2 Console, then P3) — not AL20 default |
 | fork / två spel / vem har rätt | silent `studio-seats` (six chairs) |
 | Play Store / listing / privacy / AAB / screenshots | `play-store-prep` (+ `docs/PLAY_STORE.md` / `STORE_LISTING.md`) |
 | itch.io / itch listing | `play-store-prep` + `tool/store_listing/itch/PAGE.md` (no APK) |
