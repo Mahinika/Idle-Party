@@ -1150,7 +1150,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.42,
+      coeff: 0.85,
 
       customId: AbilityCustomId.blastWave,
       aoeShape: AbilityAoeShape.ground,
@@ -1167,7 +1167,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.62,
+      coeff: 1.28,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.fire,
@@ -1413,7 +1413,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.78,
+      coeff: 0.28,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -1522,7 +1522,7 @@ class ClassKits {
       resourceCost: 25,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.signature,
-      coeff: 0.74,
+      coeff: 0.46,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -1615,7 +1615,7 @@ class ClassKits {
       resourceCost: 16,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.78,
+      coeff: 0.60,
       boltStyle: SpellBoltStyle.weapon,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.weapon,
@@ -2091,7 +2091,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 1.12,
+      coeff: 0.88,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.holy,
@@ -2219,11 +2219,11 @@ class ClassKits {
       shortLabel: 'Multi',
       description: 'AoE around focus.',
       unlockLevel: 7,
-      cooldown: 8,
-      resourceCost: 22,
+      cooldown: 6,
+      resourceCost: 14,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.74,
+      coeff: 1.55,
       boltStyle: SpellBoltStyle.arrow,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.arrow,
@@ -2401,7 +2401,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.72,
+      coeff: 0.88,
       boltStyle: SpellBoltStyle.arrow,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.arrow,
@@ -2590,7 +2590,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.72,
+      coeff: 0.88,
       boltStyle: SpellBoltStyle.arrow,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.arrow,
@@ -3865,7 +3865,7 @@ class ClassKits {
       resourceCost: 24,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.98,
+      coeff: 0.72,
       boltStyle: SpellBoltStyle.lightning,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.lightning,
@@ -3886,8 +3886,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.85,
-
+      coeff: 0.38,
       aoeShape: AbilityAoeShape.rain,
     ),
     ClassAbilityDef(
@@ -3902,7 +3901,7 @@ class ClassKits {
       resourceCost: 22,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.72,
+      coeff: 0.26,
       boltStyle: SpellBoltStyle.nature,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.nature,
@@ -4026,7 +4025,7 @@ class ClassKits {
       resourceCost: 20,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.75,
+      coeff: 0.95,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.fire,
@@ -4050,7 +4049,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.58,
+      coeff: 0.78,
       boltStyle: SpellBoltStyle.fire,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.fire,
@@ -4322,13 +4321,13 @@ class ClassKits {
       specId: HeroSpecId.arcane,
       name: 'Arcane Explosion',
       shortLabel: 'AE',
-      description: 'AoE around self.',
+      description: 'Arcane burst on the pack around your focus.',
       unlockLevel: 7,
-      cooldown: 7,
-      resourceCost: 22,
+      cooldown: 5,
+      resourceCost: 12,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.7,
+      coeff: 1.55,
       boltStyle: SpellBoltStyle.arcane,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.arcane,
@@ -4336,9 +4335,11 @@ class ClassKits {
         groundDisc: true,
         groundLife: 1.6,
         groundArgb: 0x88C070FF,
+        groundRadius: 3.5,
       ),
 
       aoeShape: AbilityAoeShape.ground,
+      gate: AbilityGate(packMin: 2),
     ),
     ClassAbilityDef(
       id: AbilityId.slow,
@@ -4463,15 +4464,24 @@ class ClassKits {
       specId: HeroSpecId.frostMage,
       name: 'Cone of Cold',
       shortLabel: 'Cone',
-      description: 'Frost AoE.',
+      description: 'Frost cone on the pack around your focus.',
       unlockLevel: 7,
-      cooldown: 8,
-      resourceCost: 20,
+      cooldown: 6,
+      resourceCost: 12,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.7,
+      coeff: 1.20,
+      boltStyle: SpellBoltStyle.frost,
+      vfx: AbilityVfxSpec(
+        boltStyle: SpellBoltStyle.frost,
+        castArgb: 0xFF90E8FF,
+        groundDisc: true,
+        groundLife: 1.2,
+        groundArgb: 0x6690D8FF,
+        groundRadius: 2.8,
+      ),
 
-      aoeShape: AbilityAoeShape.nova,
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.blizzard,
@@ -4481,11 +4491,11 @@ class ClassKits {
       shortLabel: 'Blizz',
       description: 'Frost rain on the pack around your focus.',
       unlockLevel: 8,
-      cooldown: 10,
-      resourceCost: 22,
+      cooldown: 6,
+      resourceCost: 10,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.68,
+      coeff: 1.40,
       boltStyle: SpellBoltStyle.frost,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.frost,
@@ -4496,7 +4506,7 @@ class ClassKits {
         groundRadius: 2.8,
       ),
 
-      aoeShape: AbilityAoeShape.rain,
+      aoeShape: AbilityAoeShape.ground,
     ),
     ClassAbilityDef(
       id: AbilityId.frostNovaMage,
@@ -5145,7 +5155,7 @@ class ClassKits {
       resourceCost: 18,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.75,
+      coeff: 0.92,
       boltStyle: SpellBoltStyle.nature,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.nature,

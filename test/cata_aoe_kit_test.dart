@@ -66,6 +66,49 @@ void main() {
     );
   });
 
+  test('Arms Sweeping Strikes cleaves one extra foe, not the whole pack', () {
+    final state = _soloSpecParty(HeroSpecId.arms, level: 15);
+    var world = SpatialCombat.build(state);
+    final arms = world.heroes.firstWhere((h) => !h.isPet);
+    final pack = world.enemies.take(4).toList();
+    expect(pack.length, greaterThanOrEqualTo(4));
+    for (final e in world.enemies) {
+      e
+        ..hp = 0
+        ..dormant = true;
+    }
+    for (var i = 0; i < pack.length; i++) {
+      pack[i]
+        ..dormant = false
+        ..hp = 4000
+        ..maxHp = 4000
+        ..x = arms.x + 0.6
+        ..y = arms.y + i * 0.15
+        ..moveSpeed = 0;
+    }
+    arms
+      ..rage = 0
+      ..bladeFlurryTimer = 7
+      ..fireCooldown = 0
+      ..x = pack.first.x - 1.0
+      ..y = pack.first.y
+      ..moveSpeed = 0;
+    _padAllCds(arms);
+
+    final before = [for (final e in pack) e.hp];
+    world = SpatialCombat.step(world, state, dt: 0.12).world;
+    final dropped = [
+      for (var i = 0; i < pack.length; i++)
+        if (pack[i].hp < before[i]) i,
+    ];
+    expect(dropped, isNotEmpty, reason: 'main swing should land');
+    expect(
+      dropped.length,
+      lessThanOrEqualTo(2),
+      reason: 'Cata Sweeping is one extra target, got $dropped',
+    );
+  });
+
   test('Elemental Earthquake enters cooldown on a stacked pack', () {
     final state = _soloSpecParty(HeroSpecId.elemental, level: 15);
     var world = SpatialCombat.build(state);
@@ -103,6 +146,87 @@ void main() {
     }
     expect(fired, isTrue);
     expect(pack.where((e) => e.hp < 2000).length, greaterThanOrEqualTo(3));
+  });
+
+  test('Arcane Explosion hits a stacked pack instead of Blast', () {
+    final state = _soloSpecParty(HeroSpecId.arcane, level: 15);
+    var world = SpatialCombat.build(state);
+    final mage = world.heroes.firstWhere((h) => !h.isPet);
+    final pack = world.enemies.take(4).toList();
+    for (final e in world.enemies) {
+      e
+        ..hp = 0
+        ..dormant = true;
+    }
+    for (var i = 0; i < pack.length; i++) {
+      pack[i]
+        ..dormant = false
+        ..hp = 2500
+        ..maxHp = 2500
+        ..x = mage.x + 3.2
+        ..y = mage.y + i * 0.12
+        ..moveSpeed = 0;
+    }
+    mage
+      ..rage = 100
+      ..arcaneCharges = 0
+      ..x = pack.first.x - 3.4
+      ..y = pack.first.y
+      ..moveSpeed = 0
+      ..fireCooldown = 99;
+    _padAllCds(mage, except: AbilityId.arcaneExplosion);
+
+    var fired = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((mage.abilityCd[AbilityId.arcaneExplosion.name] ?? 0) > 0.05) {
+        fired = true;
+        break;
+      }
+      mage.rage = 100;
+    }
+    expect(fired, isTrue);
+    expect(pack.where((e) => e.hp < 2500).length, greaterThanOrEqualTo(3));
+  });
+
+  test('Frost Blizzard hits a stacked pack from kite range', () {
+    final state = _soloSpecParty(HeroSpecId.frostMage, level: 15);
+    var world = SpatialCombat.build(state);
+    final mage = world.heroes.firstWhere((h) => !h.isPet);
+    final pack = world.enemies.take(4).toList();
+    for (final e in world.enemies) {
+      e
+        ..hp = 0
+        ..dormant = true;
+    }
+    for (var i = 0; i < pack.length; i++) {
+      pack[i]
+        ..dormant = false
+        ..hp = 2500
+        ..maxHp = 2500
+        ..x = mage.x + 3.2
+        ..y = mage.y + i * 0.12
+        ..moveSpeed = 0;
+    }
+    mage
+      ..rage = 100
+      ..x = pack.first.x - 3.4
+      ..y = pack.first.y
+      ..moveSpeed = 0
+      ..fireCooldown = 99;
+    _padAllCds(mage, except: AbilityId.blizzard);
+
+    var fired = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((mage.abilityCd[AbilityId.blizzard.name] ?? 0) > 0.05) {
+        fired = true;
+        break;
+      }
+      mage.rage = 100;
+    }
+    expect(fired, isTrue);
+    expect(pack.where((e) => e.hp < 2500).length, greaterThanOrEqualTo(3));
   });
 }
 

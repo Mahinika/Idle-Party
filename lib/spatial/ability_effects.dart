@@ -437,9 +437,13 @@ abstract final class AbilityEffectRunner {
           final bDot = b.gate.maintainDot;
           if (aDot != bDot) return aDot ? -1 : 1;
         }
-        // Arcane: build Blast stacks, then dump Missiles.
+        // Arcane: packs dump Explosion; ST builds Blast, then Missiles.
         if (hero.heroSpecId == HeroSpecId.arcane) {
-          if (hero.arcaneCharges >= 3) {
+          if (pack >= 2) {
+            final aAe = a.id == AbilityId.arcaneExplosion;
+            final bAe = b.id == AbilityId.arcaneExplosion;
+            if (aAe != bAe) return aAe ? -1 : 1;
+          } else if (hero.arcaneCharges >= 3) {
             final aDump = a.id == AbilityId.arcaneMissiles;
             final bDump = b.id == AbilityId.arcaneMissiles;
             if (aDump != bDump) return aDump ? -1 : 1;
@@ -448,6 +452,14 @@ abstract final class AbilityEffectRunner {
             final bBuild = b.id == AbilityId.arcaneBlast;
             if (aBuild != bBuild) return aBuild ? -1 : 1;
           }
+        }
+        // Frost: dump Blizzard/Cone in packs instead of locking into Frostbolt.
+        if (hero.heroSpecId == HeroSpecId.frostMage && pack >= 2) {
+          final aPack = a.id == AbilityId.blizzard ||
+              a.id == AbilityId.coneOfCold;
+          final bPack = b.id == AbilityId.blizzard ||
+              b.id == AbilityId.coneOfCold;
+          if (aPack != bPack) return aPack ? -1 : 1;
         }
         // Assassin: Envenom when combo is ready.
         if (hero.heroSpecId == HeroSpecId.assassination &&
@@ -1385,7 +1397,12 @@ abstract final class AbilityEffectRunner {
           def,
           style,
           rng,
-          hops: 4,
+          hops: switch (def.id) {
+            AbilityId.multiShot ||
+            AbilityId.multiShotMm ||
+            AbilityId.multiShotSurv => 12,
+            _ => 4,
+          },
           reducedVfx: reducedVfx,
         );
         return;
@@ -1393,7 +1410,15 @@ abstract final class AbilityEffectRunner {
         _rainBolts(world, hero, focus, def, style, rng, reducedVfx: reducedVfx);
         return;
       case AbilityAoeShape.ground:
-        _groundNova(world, hero, def, style, rng, reducedVfx: reducedVfx);
+        _groundNova(
+          world,
+          hero,
+          focus,
+          def,
+          style,
+          rng,
+          reducedVfx: reducedVfx,
+        );
         return;
       case AbilityAoeShape.nova:
         _novaStrike(world, hero, def, style, rng, reducedVfx: reducedVfx);
@@ -1676,16 +1701,15 @@ abstract final class AbilityEffectRunner {
     );
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
-    // Ranged kits kite outside self-radius — rain on the focus pack.
-    final anchor = focus != null && focus.hp > 0 && !focus.dormant
-        ? focus
-        : hero;
+    final pack = _aoeAnchor(world, hero, focus);
+    final ax = pack.$1;
+    final ay = pack.$2;
 
     if (!reducedVfx) {
       SpatialCombat._spawnBurst(
         world,
-        x: anchor.x,
-        y: anchor.y,
+        x: ax,
+        y: ay,
         argb: argb,
         radius: radius * 0.55,
         kind: SpatialBurstKind.rain,
@@ -1693,8 +1717,8 @@ abstract final class AbilityEffectRunner {
       );
       SpatialCombat._spawnRing(
         world,
-        x: anchor.x,
-        y: anchor.y,
+        x: ax,
+        y: ay,
         argb: argb,
         radius: radius * 0.45,
         life: 0.5,
@@ -1704,8 +1728,8 @@ abstract final class AbilityEffectRunner {
     var i = 0;
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
-      if (SpatialCombat._dist(anchor, e) > radius) continue;
-      if (i >= 4) break;
+      if (SpatialCombat._distPoint(ax, ay, e.x, e.y) > radius) continue;
+      if (i >= 12) break;
       SpatialCombat._addProjectile(
         world,
         SpatialCombat.spellBoltBetween(
@@ -1737,22 +1761,54 @@ abstract final class AbilityEffectRunner {
     }
   }
 
+  /// Sit a pack disc on the clump, not the edge target a kiting caster sees.
+  static (double, double) _aoeAnchor(
+    SpatialWorld world,
+    SpatialActor hero,
+    SpatialActor? focus,
+  ) {
+    final ranged = (hero.preferredRange ?? 0) >= 3.2;
+    final seed = ranged &&
+            focus != null &&
+            focus.hp > 0 &&
+            !focus.dormant
+        ? focus
+        : hero;
+    var sx = 0.0;
+    var sy = 0.0;
+    var n = 0;
+    for (final e in world.enemies) {
+      if (e.hp <= 0 || e.dormant) continue;
+      if (SpatialCombat._dist(seed, e) > 4.2) continue;
+      sx += e.x;
+      sy += e.y;
+      n++;
+    }
+    if (n <= 0) return (seed.x, seed.y);
+    return (sx / n, sy / n);
+  }
+
   /// Consecration / WW / Bladestorm / Blood Boil — ground pulse, no bolt spam.
   static void _groundNova(
     SpatialWorld world,
     SpatialActor hero,
+    SpatialActor? focus,
     ClassAbilityDef def,
     SpellBoltStyle style,
     math.Random rng, {
     required bool reducedVfx,
   }) {
-    final radius = style == SpellBoltStyle.lightning ? 3.0 : 2.7;
+    final radius = def.vfx?.groundRadius ??
+        (style == SpellBoltStyle.lightning ? 3.0 : 2.7);
     final raw = math.max(
       2,
       (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
     );
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
+    final anchor = _aoeAnchor(world, hero, focus);
+    final ox = anchor.$1;
+    final oy = anchor.$2;
 
     if (!reducedVfx) {
       SpellVfx.spawnCast(
@@ -1765,16 +1821,16 @@ abstract final class AbilityEffectRunner {
       );
       SpatialCombat._spawnRing(
         world,
-        x: hero.x,
-        y: hero.y,
+        x: ox,
+        y: oy,
         argb: argb,
         radius: radius * 0.4,
         life: 0.55,
       );
       SpatialCombat._spawnRing(
         world,
-        x: hero.x,
-        y: hero.y,
+        x: ox,
+        y: oy,
         argb: (argb & 0x00FFFFFF) | 0x66000000,
         radius: radius * 0.7,
         life: 0.4,
@@ -1784,8 +1840,8 @@ abstract final class AbilityEffectRunner {
         for (var i = 0; i < 3; i++) {
           SpatialCombat._spawnBurst(
             world,
-            x: hero.x,
-            y: hero.y,
+            x: ox,
+            y: oy,
             argb: 0xCCFFE08A,
             radius: radius * (0.45 + i * 0.12),
             angle: i * 2.1,
@@ -1798,8 +1854,8 @@ abstract final class AbilityEffectRunner {
       if (def.id == AbilityId.shadowfury) {
         SpellVfx.spawnImpact(
           world,
-          x: hero.x,
-          y: hero.y,
+          x: ox,
+          y: oy,
           style: SpellBoltStyle.shadow,
           id: AbilityId.shadowfury,
           radius: radius * 0.7,
@@ -1813,8 +1869,8 @@ abstract final class AbilityEffectRunner {
       if (vfx?.groundDisc == true || discLife != null) {
         SpatialCombat._spawnGroundFx(
           world,
-          x: hero.x,
-          y: hero.y,
+          x: ox,
+          y: oy,
           argb: vfx?.groundArgb ?? ((argb & 0x00FFFFFF) | 0x55000000),
           radius: vfx?.groundRadius ?? radius,
           life: discLife ?? 2.5,
@@ -1826,7 +1882,7 @@ abstract final class AbilityEffectRunner {
     var hitCount = 0;
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
-      if (SpatialCombat._dist(hero, e) > radius) continue;
+      if (SpatialCombat._distPoint(ox, oy, e.x, e.y) > radius) continue;
       final wasAlive = e.hp > 0;
       final dealt = CombatRatings.mitigateByArmor(
         rawDamage: raw,

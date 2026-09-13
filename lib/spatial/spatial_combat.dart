@@ -3998,17 +3998,16 @@ abstract final class SpatialCombat {
           if (hero.bladeFlurryTimer > 0) {
             var extras = 0;
             final maxExtras = switch (hero.heroSpecId) {
-              // Cata Blade Flurry: one additional target, not the whole pack.
-              HeroSpecId.combat => 1,
+              // Cata Blade Flurry / Sweeping Strikes: one extra target.
+              HeroSpecId.combat || HeroSpecId.arms => 1,
               _ => 99,
             };
             for (final e in world.enemies) {
               if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
               if (_dist(hero, e) > 2.2) continue;
-              // Dense packs: Arms Sweeping was 40% AA → blender; Combat stays one extra.
               final frac = switch (hero.heroSpecId) {
-                HeroSpecId.combat => 0.85,
-                HeroSpecId.arms => 0.28,
+                HeroSpecId.combat => 0.60,
+                HeroSpecId.arms => 0.38,
                 _ => 0.30,
               };
               final cleave = math.max(1, (dealt * frac).round());
