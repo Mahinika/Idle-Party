@@ -166,6 +166,32 @@ void main() {
     expect(cta.secondaryLabel, 'ENTER DUNGEON');
   });
 
+  test('ENTER DUNGEON is enter-family (not Ascend/Gauntlet chase action)', () {
+    expect(HubPrimaryCta.isEnterFamilyLabel('ENTER DUNGEON'), isTrue);
+    expect(HubPrimaryCta.isEnterFamilyLabel('ENTER'), isTrue);
+    expect(HubPrimaryCta.isEnterFamilyLabel('ASCEND'), isFalse);
+    expect(HubPrimaryCta.isEnterFamilyLabel('GAUNTLET'), isFalse);
+
+    const chase = HubChase(
+      kind: HubChaseKind.ascend,
+      title: 'Ascend for lasting power',
+      detail: '+e · Blessing',
+      urgency: HubChaseUrgency.ready,
+    );
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: 'ASCEND',
+      hasChaseAction: true,
+      unlockedSelected: true,
+      hardmodeLevel: 0,
+      showKeystoneJargon: false,
+      endgameUnlocked: true,
+    );
+    expect(cta.primaryLabel, 'ASCEND');
+    expect(cta.secondaryLabel, 'ENTER DUNGEON');
+    expect(HubPrimaryCta.isEnterFamilyLabel(cta.secondaryLabel), isTrue);
+  });
+
   testWidgets('READY claim card has chip without ready progress echo', (
     tester,
   ) async {

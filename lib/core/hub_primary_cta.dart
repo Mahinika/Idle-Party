@@ -31,7 +31,10 @@ class HubPrimaryCta {
   /// Labels that mean “run the selected zone” (fold into big ENTER*).
   static bool isEnterFamilyLabel(String? label) {
     if (label == null) return false;
-    if (label == 'ENTER' || label == 'DAILY' || label == 'DAILY RUN') {
+    if (label == 'ENTER' ||
+        label == 'ENTER DUNGEON' ||
+        label == 'DAILY' ||
+        label == 'DAILY RUN') {
       return true;
     }
     return label.startsWith('ENTER KEY');
