@@ -2240,6 +2240,8 @@ abstract final class AbilityEffectRunner {
       AbilityId.rupture ||
       AbilityId.serpentSting ||
       AbilityId.lacerate ||
+      AbilityId.feralThrash ||
+      AbilityId.guardianThrash ||
       AbilityId.corruption ||
       AbilityId.unstableAffliction ||
       AbilityId.curseOfAgony ||
@@ -2265,7 +2267,9 @@ abstract final class AbilityEffectRunner {
       AbilityId.serpentSting ||
       AbilityId.moonfire ||
       AbilityId.insectSwarm ||
-      AbilityId.lacerate => 10.0,
+      AbilityId.lacerate ||
+      AbilityId.feralThrash ||
+      AbilityId.guardianThrash => 10.0,
       AbilityId.corruption ||
       AbilityId.unstableAffliction ||
       AbilityId.curseOfAgony ||

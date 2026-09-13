@@ -2991,6 +2991,10 @@ abstract final class SpatialCombat {
       AbilityId.healingRain || AbilityId.tranquility => 5.5,
       AbilityId.explosiveTrap => 4.0,
       AbilityId.handOfGuldan || AbilityId.wildGrowth => 3.5,
+      AbilityId.earthquake ||
+      AbilityId.deathAndDecayBlood ||
+      AbilityId.deathAndDecayUnholy => 4.0,
+      AbilityId.flamestrike || AbilityId.magmaTotem => 3.2,
       AbilityId.bladestorm ||
       AbilityId.bladeFlurry ||
       AbilityId.divineStorm => 3.2,
@@ -3015,7 +3019,10 @@ abstract final class SpatialCombat {
       AbilityId.swipe ||
       AbilityId.feralSwipe ||
       AbilityId.fanOfKnives ||
-      AbilityId.fanOfKnivesSub => 1.5,
+      AbilityId.fanOfKnivesSub ||
+      AbilityId.fanOfKnivesCombat ||
+      AbilityId.feralThrash ||
+      AbilityId.guardianThrash => 1.5,
       _ => null,
     };
   }
@@ -3989,18 +3996,26 @@ abstract final class SpatialCombat {
           }
           _grantCombatResource(hero, dealt: dealt, skipRageTank: true);
           if (hero.bladeFlurryTimer > 0) {
+            var extras = 0;
+            final maxExtras = switch (hero.heroSpecId) {
+              // Cata Blade Flurry: one additional target, not the whole pack.
+              HeroSpecId.combat => 1,
+              _ => 99,
+            };
             for (final e in world.enemies) {
               if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
               if (_dist(hero, e) > 2.2) continue;
-              // Dense packs: Arms Sweeping was 40% AA → blender; Combat stays lower.
+              // Dense packs: Arms Sweeping was 40% AA → blender; Combat stays one extra.
               final frac = switch (hero.heroSpecId) {
-                HeroSpecId.combat => 0.22,
+                HeroSpecId.combat => 0.85,
                 HeroSpecId.arms => 0.28,
                 _ => 0.30,
               };
               final cleave = math.max(1, (dealt * frac).round());
               _hurtEnemy(e, cleave, soft: true);
               _recordHeroDamage(hero, cleave);
+              extras++;
+              if (extras >= maxExtras) break;
               // No per-cleave number — pack swings already shout on the main hit.
             }
           }

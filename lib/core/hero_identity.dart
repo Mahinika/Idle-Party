@@ -129,7 +129,7 @@ abstract final class HeroIdentity {
       HeroSpecId.blood => 'Selfish tank — blood for blood.',
       HeroSpecId.frostDk => 'Frost and howls — icy pressure.',
       HeroSpecId.unholy => 'Disease and ghouls.',
-      HeroSpecId.elemental => 'Lightning and lava bursts.',
+      HeroSpecId.elemental => 'Lightning, lava, and Earthquake on packs.',
       HeroSpecId.enhancement => 'Stormstrike melee shaman.',
       HeroSpecId.restorationShaman => 'Totems and chain heals.',
       HeroSpecId.arcane => 'Charge and dump — mana missiles.',
@@ -140,7 +140,7 @@ abstract final class HeroIdentity {
       HeroSpecId.destruction => 'Chaos bolts — big nukes.',
       HeroSpecId.balance => 'Moonfire and stars.',
       HeroSpecId.feral => 'Bleeds and bites.',
-      HeroSpecId.guardian => 'Bear form — swipe the pack.',
+      HeroSpecId.guardian => 'Bear form — swipe and thrash the pack.',
       HeroSpecId.restorationDruid => 'HoTs that keep ticking.',
     };
   }
@@ -176,8 +176,8 @@ abstract final class HeroIdentity {
       HeroSpecId.demonology => 'Watch demons join the fight.',
       HeroSpecId.destruction => 'Watch Chaos Bolt nukes.',
       HeroSpecId.balance => 'Watch Moonfire / Starfall.',
-      HeroSpecId.feral => 'Watch bleeds build into bites.',
-      HeroSpecId.guardian => 'Watch Swipe / bear threat.',
+      HeroSpecId.feral => 'Watch bleeds, Swipe, and Thrash.',
+      HeroSpecId.guardian => 'Watch Swipe / Thrash / bear threat.',
       HeroSpecId.restorationDruid => 'Watch Rejuvenation HoTs tick.',
     };
   }

@@ -45,6 +45,7 @@ void main() {
       (AbilityId.divineStorm, HeroSpecId.retribution, SpellBoltStyle.holy),
       (AbilityId.holyWrath, HeroSpecId.protPaladin, SpellBoltStyle.holy),
       (AbilityId.chainLightning, HeroSpecId.elemental, SpellBoltStyle.lightning),
+      (AbilityId.earthquake, HeroSpecId.elemental, SpellBoltStyle.nature),
       (AbilityId.lavaBurst, HeroSpecId.elemental, SpellBoltStyle.fire),
       (AbilityId.hurricane, HeroSpecId.balance, SpellBoltStyle.nature),
       (AbilityId.insectSwarm, HeroSpecId.balance, SpellBoltStyle.nature),
@@ -107,6 +108,7 @@ void main() {
       (AbilityId.cheapShot, HeroSpecId.subtlety, SpellBoltStyle.weapon),
       (AbilityId.kidneyShot, HeroSpecId.combat, SpellBoltStyle.weapon),
       (AbilityId.killingSpree, HeroSpecId.combat, SpellBoltStyle.weapon),
+      (AbilityId.fanOfKnivesCombat, HeroSpecId.combat, SpellBoltStyle.weapon),
       // Hunter melee / traps
       (AbilityId.mongooseBite, HeroSpecId.survival, SpellBoltStyle.weapon),
       (AbilityId.freezingTrap, HeroSpecId.survival, SpellBoltStyle.frost),

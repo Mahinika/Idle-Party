@@ -431,10 +431,10 @@ void main() {
     expect(cat.comboPoints, 0, reason: 'Bite spends all combo points');
   });
 
-  test('Guardian fantasy copy says Swipe not Thrash', () {
+  test('Guardian fantasy copy names Swipe and Thrash', () {
     expect(HeroIdentity.fantasyLine(HeroSpecId.guardian), contains('swipe'));
     expect(HeroIdentity.meetHook(HeroSpecId.guardian), contains('Swipe'));
-    expect(HeroIdentity.meetHook(HeroSpecId.guardian), isNot(contains('Thrash')));
+    expect(HeroIdentity.meetHook(HeroSpecId.guardian), contains('Thrash'));
   });
 }
 

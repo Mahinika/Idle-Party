@@ -1161,6 +1161,9 @@ bool _hudCastEntersCd(HeroSpecId spec, ClassAbilityDef def) {
   if (!def.gate.needClearCorridor) {
     _reviveNeighbor(world, target);
   }
+  if (def.gate.packMin > 1) {
+    _ensurePack(world, target, def.gate.packMin);
+  }
   final hero = world.heroes.firstWhere((h) => !h.isPet);
   final g = def.gate;
 
@@ -1314,4 +1317,40 @@ void _reviveNeighbor(SpatialWorld world, SpatialActor keep) {
       role: EnemyRole.normal,
     ),
   );
+}
+
+void _ensurePack(SpatialWorld world, SpatialActor keep, int minAlive) {
+  var alive = world.enemies.where((e) => e.hp > 0 && !e.dormant).length;
+  for (final e in world.enemies) {
+    if (alive >= minAlive) return;
+    if (identical(e, keep)) continue;
+    if (e.hp > 0 && !e.dormant) continue;
+    e
+      ..dormant = false
+      ..hp = math.max(e.hp, 800)
+      ..x = keep.x + 0.35 * alive
+      ..y = keep.y
+      ..moveSpeed = 0;
+    alive++;
+  }
+  while (alive < minAlive) {
+    world.enemies.add(
+      SpatialActor(
+        id: '${keep.id}_pack$alive',
+        name: 'Pack',
+        team: SpatialTeam.enemy,
+        x: keep.x + 0.35 * alive,
+        y: keep.y,
+        hp: 800,
+        maxHp: 800,
+        attack: 1,
+        defense: 0,
+        moveSpeed: 0,
+        attackRange: 1,
+        attackCooldown: 1,
+        role: EnemyRole.normal,
+      ),
+    );
+    alive++;
+  }
 }

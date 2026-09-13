@@ -9,6 +9,19 @@ import '../tool/sim_class_balance.dart';
 ///
 /// Not a CI gate — use when comparing cleave/AoE kits vs single-target.
 void main() {
+  test('AoE pack focus combat vs caster kits', () {
+    final report = runClassBalanceSim(const [
+      '--share-only',
+      '--trials=2',
+      '--mode=live',
+      '--aoe-enemies=12',
+      '--focus=combat,elemental,fire,assassination,subtlety,unholy,feral,demonology,enhancement,marksmanship,arms,fury',
+    ]);
+    expect(report, contains('aoe-enemies: 12'));
+    expect(report, contains('| spec | share% | vs med | flag |'));
+    expect(report.contains('- **HIGH** combat'), isFalse);
+  }, timeout: const Timeout(Duration(minutes: 8)));
+
   test('AoE×20 AL20 F21 share board runs', () {
     final report = runClassBalanceSim(const [
       '--share-only',

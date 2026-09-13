@@ -152,6 +152,7 @@ abstract final class SpellVfx {
     AbilityId.thunderClap ||
     AbilityId.stormstrike ||
     AbilityId.thunderstorm ||
+    AbilityId.earthquake ||
     AbilityId.holyShock ||
     AbilityId.penance => SpatialBurstKind.beam,
     AbilityId.hurricane ||
@@ -160,7 +161,8 @@ abstract final class SpellVfx {
     AbilityId.healingRain ||
     AbilityId.volley ||
     AbilityId.rainOfFire ||
-    AbilityId.multiShot => SpatialBurstKind.rain,
+    AbilityId.multiShot ||
+    AbilityId.multiShotMm => SpatialBurstKind.rain,
     AbilityId.howlingBlast ||
     AbilityId.frostNova ||
     AbilityId.frostNovaMage ||
@@ -174,6 +176,9 @@ abstract final class SpellVfx {
     AbilityId.incinerate ||
     AbilityId.conflagrate ||
     AbilityId.fireNova ||
+    AbilityId.flamestrike ||
+    AbilityId.magmaTotem ||
+    AbilityId.hellfire ||
     AbilityId.livingBomb ||
     AbilityId.lavaBurst => SpatialBurstKind.flame,
     AbilityId.consecration ||
@@ -188,12 +193,17 @@ abstract final class SpellVfx {
     AbilityId.mindBlast ||
     AbilityId.deathCoil ||
     AbilityId.shadowfury ||
-    AbilityId.handOfGuldan => SpatialBurstKind.skull,
+    AbilityId.handOfGuldan ||
+    AbilityId.deathAndDecayBlood ||
+    AbilityId.deathAndDecayUnholy => SpatialBurstKind.skull,
     AbilityId.chaosBolt || AbilityId.chaosBoltDemo => SpatialBurstKind.flame,
     AbilityId.bladestorm ||
     AbilityId.whirlwind ||
     AbilityId.bladeFlurry ||
-    AbilityId.killingSpree => SpatialBurstKind.slash,
+    AbilityId.killingSpree ||
+    AbilityId.fanOfKnivesCombat ||
+    AbilityId.feralThrash ||
+    AbilityId.guardianThrash => SpatialBurstKind.slash,
     AbilityId.shockwave => SpatialBurstKind.cone,
     _ => null,
   };
@@ -211,21 +221,30 @@ abstract final class SpellVfx {
     AbilityId.volley => SpatialGroundFxKind.rain,
     AbilityId.explosiveTrap ||
     AbilityId.rainOfFire ||
-    AbilityId.fireNova => SpatialGroundFxKind.fire,
+    AbilityId.fireNova ||
+    AbilityId.flamestrike ||
+    AbilityId.magmaTotem ||
+    AbilityId.hellfire => SpatialGroundFxKind.fire,
     AbilityId.hungeringCold ||
     AbilityId.frostNova ||
     AbilityId.frostNovaMage ||
     AbilityId.howlingBlast => SpatialGroundFxKind.frost,
     AbilityId.shadowfury ||
     AbilityId.handOfGuldan ||
-    AbilityId.mindSear => SpatialGroundFxKind.shadow,
+    AbilityId.mindSear ||
+    AbilityId.deathAndDecayBlood ||
+    AbilityId.deathAndDecayUnholy => SpatialGroundFxKind.shadow,
     AbilityId.tranquility ||
     AbilityId.wildGrowth ||
-    AbilityId.spiritLink => SpatialGroundFxKind.nature,
+    AbilityId.spiritLink ||
+    AbilityId.earthquake => SpatialGroundFxKind.nature,
     AbilityId.bladestorm ||
     AbilityId.whirlwind ||
     AbilityId.bladeFlurry ||
-    AbilityId.killingSpree => SpatialGroundFxKind.steel,
+    AbilityId.killingSpree ||
+    AbilityId.fanOfKnivesCombat ||
+    AbilityId.feralThrash ||
+    AbilityId.guardianThrash => SpatialGroundFxKind.steel,
     _ => null,
   };
 }

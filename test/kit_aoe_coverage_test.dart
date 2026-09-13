@@ -63,12 +63,15 @@ void main() {
       (AbilityId.seedOfCorruption, HeroSpecId.affliction, SpellBoltStyle.shadow),
       (AbilityId.fanOfKnives, HeroSpecId.assassination, SpellBoltStyle.weapon),
       (AbilityId.fanOfKnivesSub, HeroSpecId.subtlety, SpellBoltStyle.shadow),
+      (AbilityId.fanOfKnivesCombat, HeroSpecId.combat, SpellBoltStyle.weapon),
       (AbilityId.mindSear, HeroSpecId.shadow, SpellBoltStyle.shadow),
       (AbilityId.feralSwipe, HeroSpecId.feral, SpellBoltStyle.weapon),
       (AbilityId.consecrationHoly, HeroSpecId.holyPaladin, SpellBoltStyle.holy),
       (AbilityId.blizzard, HeroSpecId.frostMage, SpellBoltStyle.frost),
       (AbilityId.rainOfFire, HeroSpecId.destruction, SpellBoltStyle.fire),
       (AbilityId.multiShotSurv, HeroSpecId.survival, SpellBoltStyle.arrow),
+      (AbilityId.earthquake, HeroSpecId.elemental, SpellBoltStyle.nature),
+      (AbilityId.flamestrike, HeroSpecId.fire, SpellBoltStyle.fire),
     ];
     for (final (id, spec, want) in cases) {
       final def = ClassKits.defFor(id)!;
