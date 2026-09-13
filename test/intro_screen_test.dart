@@ -45,7 +45,7 @@ void main() {
 
     expect(find.byType(BootIntroScreen), findsOneWidget);
     expect(find.byType(CognifoxStudioMark), findsOneWidget);
-    expect(find.text(StoryLore.studioName.toUpperCase()), findsOneWidget);
+    expect(find.text(StoryLore.studioName.toUpperCase()), findsNothing);
     expect(find.text(StoryLore.introBeats.first.body), findsNothing);
     expect(find.text('Tap to continue'), findsNothing);
     expect(find.byType(StartMenuScreen), findsNothing);

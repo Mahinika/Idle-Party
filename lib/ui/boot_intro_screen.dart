@@ -200,7 +200,7 @@ class _BootIntroScreenState extends State<BootIntroScreen>
                 const Spacer(flex: 2),
                 FadeTransition(
                   opacity: _fade,
-                  child: const CognifoxStudioMark(logoSize: 128, nameSize: 16),
+                  child: const CognifoxStudioMark(logoSize: 196),
                 ),
                 const Spacer(flex: 3),
                 _skipChrome(dimHint: true),

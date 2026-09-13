@@ -24,7 +24,7 @@ class LoadingSplash extends StatelessWidget {
             child: Column(
               children: [
                 const Spacer(flex: 2),
-                const CognifoxStudioMark(logoSize: 128, nameSize: 16),
+                const CognifoxStudioMark(logoSize: 196),
                 const Spacer(flex: 3),
                 SizedBox(
                   width: 26,

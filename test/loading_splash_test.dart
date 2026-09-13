@@ -8,7 +8,8 @@ void main() {
   testWidgets('loading splash shows Cognifox Studio and Loading…', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: LoadingSplash()));
     expect(find.byType(CognifoxStudioMark), findsOneWidget);
-    expect(find.text(StoryLore.studioName.toUpperCase()), findsOneWidget);
+    expect(find.bySemanticsLabel(StoryLore.studioName), findsOneWidget);
+    expect(find.text(StoryLore.studioName.toUpperCase()), findsNothing);
     expect(find.text('IDLE PARTY'), findsNothing);
     expect(find.text(StoryLore.introTagline), findsNothing);
     expect(find.text('Loading…'), findsOneWidget);

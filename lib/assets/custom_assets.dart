@@ -233,7 +233,7 @@ abstract final class CustomAssets {
   // —— Intro / hub / dungeon painted scenes ——
   static const String introLogo = '$_root/ui/intro_logo.png';
 
-  /// Cognifox Studio mark (boot + loading).
+  /// Cognifox Studio mark (boot + loading). Brand lockup, not pixel art.
   static const String studioLogo = '$_root/ui/cognifox_studio.png';
 
   /// Full-bleed cold-start scene (party facing into the cave).
