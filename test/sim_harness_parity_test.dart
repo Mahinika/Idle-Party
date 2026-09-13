@@ -118,4 +118,25 @@ void main() {
     expect(state.keystoneRunActive, isTrue);
     expect(state.keystoneRunLevel, 20);
   });
+
+  test('mid outfit --ilvl=100 lands display iLvl 100', () {
+    seedEquipmentRng(13);
+    var state = createPartyState(partySpecs: const [
+      HeroSpecId.protection,
+      HeroSpecId.discipline,
+      HeroSpecId.fire,
+    ]);
+    state = prepareSimParty(
+      state,
+      band: 'mid',
+      partyLevel: 100,
+      itemLevel: 100,
+    );
+    expect(equippedWeaponItemLevel(state), 100);
+    for (final h in state.heroes) {
+      final weapon = h.equipped[EquipmentSlot.weapon];
+      expect(weapon, isNotNull);
+      expect(weapon!.effectiveItemLevel, 100);
+    }
+  });
 }

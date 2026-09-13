@@ -266,8 +266,10 @@ GameState enterFloor(
   required int seed,
 
   /// When set, force a dense AoE trash pack (normal room, N bodies).
-  /// Total combat budget stays floor-scaled; it is split across [aoeEnemyCount].
+  /// Total combat budget stays floor-scaled; it is split across [aoeEnemyCount]
+  /// unless [aoeFullHp] copies the 1-target body onto every enemy.
   int? aoeEnemyCount,
+  bool aoeFullHp = false,
 }) {
   var state = GameLogic.enterDungeon(base, dungeonId: dungeonId);
   state = GameLogic.setDungeonMode(state, DungeonMode.push);
@@ -285,13 +287,36 @@ GameState enterFloor(
           enemyCount: aoeEnemyCount.clamp(1, 40),
         )
       : state.currentRoom;
-  state = state.copyWith(
-    currentRoom: room,
-    enemies: GameLogic.createEnemyGroup(
-      room,
+  var enemies = GameLogic.createEnemyGroup(
+    room,
+    dungeonId: dungeonId,
+    fromState: state,
+  );
+  if (aoeFullHp &&
+      aoeEnemyCount != null &&
+      aoeEnemyCount > 1 &&
+      enemies.isNotEmpty) {
+    final stamp = GameLogic.createEnemyGroup(
+      room.copyWith(enemyCount: 1),
       dungeonId: dungeonId,
       fromState: state,
-    ),
+    );
+    if (stamp.isNotEmpty) {
+      final t = stamp.first;
+      enemies = [
+        for (final e in enemies)
+          e.copyWith(
+            stats: t.stats,
+            currentHp: t.stats.maxHp,
+            level: t.level,
+            rewardGold: t.rewardGold,
+          ),
+      ];
+    }
+  }
+  state = state.copyWith(
+    currentRoom: room,
+    enemies: enemies,
   );
   return fullHeal(state);
 }
@@ -319,15 +344,52 @@ void prepareAoePackWorld(SpatialWorld world) {
   }
 }
 
+/// Battle number whose rare Sandy drop lands closest to [targetIlvl].
+int battleNumberForItemLevel(
+  int targetIlvl, {
+  LootRarity rarity = LootRarity.rare,
+  String dungeonId = 'sandy',
+}) {
+  final t = max(1, targetIlvl);
+  var bestBn = 1;
+  var bestDist = 1 << 30;
+  for (var bn = 1; bn <= 250; bn++) {
+    final ilvl = GameLogic.itemLevelFor(
+      battleNumber: bn,
+      rarity: rarity,
+      dungeonId: dungeonId,
+    );
+    final dist = (ilvl - t).abs();
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestBn = bn;
+    }
+    if (ilvl > t + 40) break;
+  }
+  return bestBn;
+}
+
+int equippedWeaponItemLevel(GameState state) {
+  for (final h in state.heroes) {
+    final w = h.equipped[EquipmentSlot.weapon];
+    if (w != null) return w.effectiveItemLevel;
+  }
+  return 0;
+}
+
 /// Prepare a party the way live/AFK combat actually sees it.
 GameState prepareSimParty(
   GameState state, {
   required String band,
   required int partyLevel,
+  int? itemLevel,
 }) {
   var next = applyPowerBand(state, band);
   next = levelPartyTo(next, partyLevel);
-  next = applyGearBand(next, band, battleNumber: partyLevel);
+  final bn = itemLevel != null && itemLevel > 0
+      ? battleNumberForItemLevel(itemLevel)
+      : partyLevel;
+  next = applyGearBand(next, band, battleNumber: bn);
   next = ensureCombatConsumables(next);
   return next;
 }

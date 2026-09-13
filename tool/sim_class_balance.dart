@@ -59,6 +59,8 @@ String runClassBalanceSim(List<String> args) {
   final partySize = _argInt(args, 'party-size', 3).clamp(3, 5);
   final maxSecondsArg = _argInt(args, 'max-seconds', 0);
   final allSpecs = args.contains('--all-specs');
+  final itemLevel = _argInt(args, 'ilvl', 0);
+  final aoeFullHp = args.contains('--aoe-full-hp');
 
   seedEquipmentRng(42);
 
@@ -101,6 +103,8 @@ String runClassBalanceSim(List<String> args) {
   if (allSpecs) log('- all-specs: true');
   if (partySize > 3) log('- party-size: $partySize');
   if (maxSecondsArg > 0) log('- max-seconds: $maxSecondsArg');
+  if (itemLevel > 0) log('- ilvl: $itemLevel');
+  if (aoeFullHp) log('- aoe-full-hp: true');
   log('');
 
   var dpsSpecs = allSpecs
@@ -169,6 +173,8 @@ String runClassBalanceSim(List<String> args) {
               partySize: partySize,
               maxSecondsOverride:
                   maxSecondsArg > 0 ? maxSecondsArg.toDouble() : null,
+              itemLevel: itemLevel,
+              aoeFullHp: aoeFullHp,
             ),
           );
         }
@@ -276,6 +282,7 @@ String runClassBalanceSim(List<String> args) {
       band: bands.first,
       partySize: partySize,
       maxSeconds: maxSecondsArg,
+      ilvl: itemLevel,
     );
     log('Wrote $jsonPath');
   }
@@ -327,6 +334,8 @@ _AggRow _runAgg({
   int keyLevel = 0,
   int partySize = 3,
   double? maxSecondsOverride,
+  int itemLevel = 0,
+  bool aoeFullHp = false,
 }) {
   var clears = 0;
   var wipes = 0;
@@ -363,13 +372,19 @@ _AggRow _runAgg({
     if (partySize > GameLogic.starterPartySize) {
       state = withEndgameSupportParty(state, size: partySize);
     }
-    state = prepareSimParty(state, band: band, partyLevel: partyLevel);
+    state = prepareSimParty(
+      state,
+      band: band,
+      partyLevel: partyLevel,
+      itemLevel: itemLevel > 0 ? itemLevel : null,
+    );
     state = enterFloor(
       state,
       dungeonId: dungeonId,
       floor: floor,
       seed: trialSeed,
       aoeEnemyCount: useAoe ? aoeEnemyCount : null,
+      aoeFullHp: aoeFullHp,
     );
     if (keyLevel > 0 && !state.keystoneRunActive) {
       throw StateError(
@@ -487,6 +502,7 @@ String _writeShareJson({
   String band = 'light',
   int partySize = 3,
   int maxSeconds = 0,
+  int ilvl = 0,
 }) {
   final shares = rows.map((r) => r.shareMedian).where((v) => v > 0).toList();
   final med = shares.isEmpty ? 0.0 : medianOf(shares);
@@ -525,6 +541,7 @@ String _writeShareJson({
     'band': band,
     'partySize': partySize,
     'maxSeconds': maxSeconds,
+    'ilvl': ilvl,
     'focus': focus,
     'medianShare': double.parse(med.toStringAsFixed(2)),
     'bandLow': double.parse(lo.toStringAsFixed(2)),
