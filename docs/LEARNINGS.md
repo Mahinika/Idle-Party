@@ -63,6 +63,8 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   traffic). Program 2 Console is `[x]`. Program 3 clock starts.
 - Program 3 in-repo + crashes / experiment / no-UA boxes closed **2026-09-13**.
   D1 still waits for an owner paste — do not invent it.
+- Owner asked for more endgame (six chairs). EP + UX + Marketing: deepen the
+  five hunts, **not** zone #16. First slice = Ashen Crown weekly kit.
 
 ## 2026-09-12 — funnel + first session (after shipping those boxes)
 

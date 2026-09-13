@@ -233,6 +233,33 @@ ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN
 
 Same phrase, next bar. Never early. Never paraphrase.
 
+## Endgame identity (owner named 2026-09-13)
+
+Not a new program. Does **not** close the D1 paste. Soft lock: no dungeon #16
+unless the owner says “ny zon OK”. No new class. No hunt #6 under MORE.
+
+**One call (six chairs):** EP + UX + Marketing — more endgame means the
+**five hunts feel different**, not a 16th cave. Game Director owns the fight.
+Tech keeps one sim. Art stays Kenney/custom. Marketing: listing still the
+first minute; What’s New lead still a new player.
+
+Already shipped: endless KEY / Farm Rift / Ranked GR past 20; Gauntlet climb;
+Ashen weekly tickets + PRACTICE. The hole is **same-cave feel**.
+
+### Slices (in order, one at a time)
+
+- [ ] Ashen Crown weekly kit — each ISO week a different tell/job at old
+      PULSE power (not a new zone). Ember staging. Door = KEY tab + hub
+      ENDGAME. PRACTICE uses this week’s kit.
+- [ ] Gauntlet every-5 bosses cycle distinct tells (not the same SHARD
+      forever). Same Spire climb.
+- [ ] KEY week affix only if play notes say KEY still feels like a Rift.
+
+Stop: God Hand redesign, second sim, gacha, listing that promises zone #16.
+
+When the owner names “mer endgame” / “kör det”, do the next unchecked slice
+above. Vague “nästa” while D1 is open still means the D1 paste.
+
 ## Metrics (owner / Console — do not fake)
 
 Crash-free → listing conversion → D1 (~22% median all-mobile; Android top
