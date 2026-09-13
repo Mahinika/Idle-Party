@@ -206,8 +206,11 @@ prove a later hole is bigger)
       Goblin RALLY; mixes differ. `enemy_flavor_test` + `spatial_combat_test`
       green. Play notes still win if a later crawl feels cloned — do not mark
       Console boxes from this check.)
-- [ ] At least one 2–3 week tag; What’s New lead for a new player; DPS HIGH
+- [x] At least one 2–3 week tag; What’s New lead for a new player; DPS HIGH
       still fails CI
+      (**2026-09-13**: `v1.12.163` annotated tag; What’s New lead is a new-player
+      fight line; `changelog_sync_test` + `class_balance_gate_test` green, no
+      DPS HIGH. Next Play AAB still waits for owner ask.)
 
 **Owner / Console**
 
