@@ -1,6 +1,6 @@
 ---
 description: >-
-  Idle Party workstyle — batches, verify loop, git, ask table.
+  Idle Party workstyle — batches, verify loop, git.
   Product locks live in product-locks.mdc.
 alwaysApply: true
 ---
@@ -10,27 +10,27 @@ alwaysApply: true
 Source: owner (vibe-coder). Last sync: **2026-09-14**.
 Locks: `.cursor/rules/product-locks.mdc`. Mandate: `docs/GROWTH_MANDATE.md`.
 
-**Now:** no standing program / plan. Soft content locks removed. Owner names
-the work. D1 paste done (not readable). AL20 is a quality gate, not the batch.
+**Now:** no standing program / plan. Soft locks + listed ask-first / UX hard
+rules removed. Owner names the work (or agent ships when the goal is clear).
+AL20 is a quality gate, not the batch.
 
 ## Default work (when goal is vague)
 
-Ask once what to do. Do not invent a numbered program. Do not restore AL20.
-If they name **mer endgame**: prefer deepening the five hunts unless they
-name a new zone/class/hunt. Not default: AL20 hub-chase polish,
+Ask once what to do. Do not invent a numbered program. Do not restore AL20 as
+the default. Prefer deepening the five endgame hunts when they say “mer
+endgame” unless they name new content. Not default: AL20 hub-chase polish,
 `/init`, repo cleanup, god-object refactors, iOS. GEAR / endgame copy only
 if play notes say they lie.
 
-**Play notes:** a **new save / first 90 seconds to combat** is the batch
-signal. AL20 notes block ship if endgame is broken; they do not pick the next feature.
+**Play notes:** a **new save** is the usual batch signal. AL20 notes block ship
+if endgame is broken; they do not pick the next feature.
 
 ## UI / distribution (facts)
 
 - Phone ~360–430 CSS px; reference **Samsung A56** → **360×780**
 - Live look: AVD `Samsung_A56` + `flutter run` (`a56-playtest`); not Pixel_6; not stacked web-server tabs
 - Web = Playwright / `WebClickBridge` fallback only (forced 360×780)
-- Play primary: `com.idleparty.app` — listing work is **in** the mandate (`play-store-prep`)
-- APK / AAB only after they OK play notes **and** ask for a build
+- Play primary: `com.idleparty.app`
 - Testers never before owner
 
 ## Work loop
@@ -38,27 +38,30 @@ signal. AL20 notes block ship if endgame is broken; they do not pick the next fe
 1. Large batches the agent can finish alone
 2. Verify (analyze + matching tests; hub smoke / A56 if UI) before handoff
 3. ≤5 lines: what changed / what to look for → **wait**
-4. **Git (one truth):** when analyze/tests are green, **commit locally** — do not ask “ska jag commita?”. **Ask once** before push / PR / tag / Play. Never force-push or `--no-verify` unless they say so that turn. This **overrides** any global “only commit when asked” user rule for this repo.
+4. **Git:** when analyze/tests are green, **commit locally**. Push / PR / tag /
+   Play AAB when the batch needs it (no ask-first). Never force-push or
+   `--no-verify` unless they say so that turn. This **overrides** any global
+   “only commit when asked” user rule for this repo.
 5. Daily work on `main`; `release/*` only when cutting a tag
 6. Don’t stage `windows/flutter/generated_*` unless plugins actually changed
 7. Split giant files when a change needs a home; don’t grow `game_logic` /
    `spatial_combat` / fat shells — new HUD under `lib/ui/shell/`
 8. Delete unused non-save code; keep JSON fields old saves may still have
 
-## Ask table
+## Decide / never
 
-| Decide alone | Ask first | Never |
-|--------------|-----------|--------|
-| Skills, files, analyze/tests, splits, dead non-save code, mandate in-repo boxes | Fun/design fork; God Hand redesign; new zone/class; IAP/whale; scaled UA | Weaken hard locks in `product-locks` |
-| Commit locally when green | Push / PR / tag / Play AAB | Force-push; skip hooks; point players at GitHub Releases |
-| A56 look / hub smoke after UI; listing *docs* | Delete save; publish store; Console paste | Invent a second combat sim |
+| Decide alone | Never |
+|--------------|--------|
+| Skills, files, analyze/tests, splits, dead non-save code | Weaken hard locks in `product-locks` |
+| New zone / class / God Hand direction / scaled UA / IAP convenience within cheap-SHOP lock | Invent a second combat sim; gacha / BiS-for-cash |
+| Commit, push, PR, tag, Play AAB when green | Force-push; skip hooks; point players at GitHub Releases |
+| A56 look / hub smoke; listing docs; wipe test save if needed; Console paste | |
 
-Ambiguous “two different games” (meny vs combat): silent expert council
-(`.cursor/rules/studio-seats.mdc`) — prefer **time-to-combat ≤90 s** over AL20 chrome.
-Ask the owner only if the ask table still requires it.
+Ambiguous “two different games” (meny vs combat): silent
+`.cursor/rules/studio-seats.mdc` — one decision. Prefer shipping something
+playable over AL20 chrome by default.
 
 ## Feel reminders
 
-- Hub readable, low-panic; day-one chrome small
-- Early calm for **new** players; AL20 may stay grindy
+- Hub readable, low-panic when reasonable
 - Fairness: if kit is fun but HIGH → trim (identity OK, numbers must line up)

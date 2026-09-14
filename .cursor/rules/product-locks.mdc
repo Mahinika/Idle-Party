@@ -6,9 +6,8 @@ alwaysApply: true
 
 # Product locks (Idle Party)
 
-**Confirmed:** 2026-09-12. Soft content locks removed **2026-09-14** by owner
-(new zone / class / God Hand / UA-default). Scope forks still use the ask
-table in `owner-preferences`.
+**Confirmed:** 2026-09-12. Soft content locks and ask-first for zone / class /
+God Hand / UA / push / Play / wipe-save removed **2026-09-14** by owner.
 
 No standing work program — owner names the batch
 (`docs/GROWTH_MANDATE.md`).
@@ -26,6 +25,5 @@ No standing work program — owner names the batch
 | Play primary | Install via Play; do not point players at GitHub Releases |
 | Cursor safety | No exploits / foreign dumps — not overridable here |
 
-**Escape for everything else:** owner names the goal. Do not invent numbered
-programs. Do not restore AL20 hub polish as the default batch. Ask first for
-zone / class / God Hand redesign / scaled UA (ask table) — not soft-blocked.
+**Escape for everything else:** owner names the goal (or clear batch). Do not
+invent numbered programs. Do not restore AL20 hub polish as the default batch.

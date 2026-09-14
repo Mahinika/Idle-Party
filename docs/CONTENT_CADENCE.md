@@ -28,8 +28,8 @@ Each tagged `1.x.y` release should include:
 3. **Store** — D1 pasted **2026-09-14** (not readable); listing experiment when visitors suffice.
 
 AL20 chase / wipe advice / kit depth stay **quality gates**, not the default slice.
-Endgame copy and GEAR follow-up only against play notes. New zone / class only
-when the owner asks (ask table — not soft-blocked).
+Endgame copy and GEAR follow-up only against play notes. New zone / class when
+the goal needs them.
 
 ## Decision table (when unsure)
 
@@ -44,13 +44,11 @@ when the owner asks (ask table — not soft-blocked).
 | Vagt “gör bättre” vs explicit bredare mål | Ask once. Do not restore AL20 |
 | Två stolar oense | `.cursor/rules/studio-seats.mdc` — EP + UX + Marketing vinner; Game/Tech/Art veto enligt stolen |
 
-## Non-goals (unless owner asks)
+## Non-goals (unless the batch needs them)
 
-- New zone / new class / God Hand philosophy redesign
 - SpatialCombat rewrite
 - iOS or web-as-product
 - Gacha / whale ladder
-- Scaled paid UA (ask first; D1 still unread as of 2026-09-14)
 - God-object cleanup as the quarter’s story
 
 ## Checklist before tagging

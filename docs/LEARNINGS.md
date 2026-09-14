@@ -62,7 +62,10 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   August class batch → `docs/archive/CLASS_AUDITS_2026-08.md`.
   Living template stays `docs/CLASS_AUDIT_TEMPLATE.md`.
 - Soft content locks removed (zone / class / God Hand / UA-default). Hard
-  locks stay. Zone/class/God Hand/scaled UA still **ask first**.
+  locks stay.
+- Later same day: owner removed **ask-first** for zone/class/God Hand/UA/
+  push/Play/wipe-save, and UX hard rules (flat nav / hide-until-unlock /
+  ≤90 s). Placement map stays guidance. Hard locks + CI DPS gate stay.
 
 ## 2026-09-14 — Console D1 is not a number yet
 

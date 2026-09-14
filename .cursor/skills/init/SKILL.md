@@ -52,7 +52,7 @@ Sync architecture facts; do not invent numbered programs.
 4. **Report (plain Swedish)**
    - 3–8 bullets: what was wrong / what you fixed
    - Note anything still uncertain (needs playtest) without blocking the doc sync
-   - **Commit locally when green** (`owner-preferences`); ask before push
+   - **Commit locally when green** (`owner-preferences`); push when the batch needs it
 
 ## Out of scope for /init
 

@@ -6,7 +6,8 @@ alwaysApply: false
 
 # UI theme
 
-**IA / placement / flat nav** → always-on `.cursor/rules/game-ux-director.mdc`.
+**IA / placement** → always-on `.cursor/rules/game-ux-director.mdc`
+(placement map; flat nav / hide-until-unlock / ≤90 s are not hard locks).
 This rule is **tokens + chrome patterns** only.
 
 When editing menus, overlays, sheets, or dialogs under `lib/ui/`:

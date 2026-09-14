@@ -21,7 +21,8 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 4. Follow skills silently (`suggesting-skills`) — don’t ask “ska jag använda X?”.
 5. After UI/meta: verify (tests and/or `a56-playtest`). Web only if Android can’t run.
 6. After kit number tweaks: share-fast; grind gate green before done.
-7. Git: commit locally when green; ask before push/Play — `owner-preferences`.
+7. Git: commit locally when green; push / Play when the batch needs it —
+   `owner-preferences`.
 8. Vague goal → ask once what to do. Do not invent a numbered program.
    Do not restore AL20 as the batch.
 
@@ -60,5 +61,5 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 
 ## Done looks like
 
-Short test list for a **new save (combat in ≤90 s)** plus AL20 only if endgame
+Short test list for a **new save** plus AL20 only if endgame
 touched. Wait. No tool-name essays unless they ask “hur gjorde du?”.

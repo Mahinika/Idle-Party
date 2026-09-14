@@ -2,8 +2,7 @@
 name: reviewing-code
 description: >-
   Reviews Idle Party diffs against AGENTS.md and the ship bar (SpatialCombat
-  authority, save defaults, hide-until-unlock, flat nav, matching tests,
-  product locks). Use when reviewing a PR/diff, before merge, or when the
+  authority, save defaults, matching tests, product locks). Use when reviewing a PR/diff, before merge, or when the
   owner says "granska", "kolla PR", "innan merge", or asks for a code review.
   Do not use for automated CI babysitting (babysitting-pr) or running the
   verify loop (flutter-verify).
@@ -47,10 +46,10 @@ If the diff belongs to a domain skill, follow it for that slice:
 - **Assets**: Kenney/custom via helpers; `FilterQuality.none`; no dumps
 - **Balance**: share-moving kit changes considered share-fast/gate; no HIGH-assert edits without an explicit product decision
 - **What's New**: version bump names the player-visible systems
-- **Honesty**: English in-game copy matches reality. Day-1 must not teach locked KEY / ESSENCE / MARKET
-- **Chrome**: hide-until-unlock. No second nav — `MenuRouter` + `MenuSurface` + `AppBottomBar` only
+- **Honesty**: English in-game copy matches reality
+- **Chrome**: prefer shared `MenuRouter` + `MenuSurface` + `AppBottomBar` when it fits; flat nav / hide-until-unlock are not hard review blocks
 - **Tests**: new GameLogic / hub / chase / guides branches have matching tests using `GameDirector.preview()`
-- **Locks**: hard product locks only (no iOS/web-as-product, gacha / BiS-for-cash, GitHub Releases as install path). New zone / class / God Hand redesign without owner yes → flag ask-table miss, not a soft lock.
+- **Locks**: hard product locks only (no iOS/web-as-product, gacha / BiS-for-cash, GitHub Releases as install path)
 
 ## 3. Should fix
 

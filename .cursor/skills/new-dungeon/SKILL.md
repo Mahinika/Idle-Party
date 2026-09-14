@@ -4,8 +4,7 @@ description: >-
   Adds or extends an Idle Party dungeon zone (DungeonCatalog, FloorBlueprint,
   enemies, portraits, party-mean-level unlock, lore). Use when creating a new
   zone, boss, or unlock gate, or when the owner says "ny zon" / "new dungeon".
-  Do not use for art-only reskins (zone-art-identity). Ask first if unclear
-  (ask table) — not soft-blocked.
+  Do not use for art-only reskins (zone-art-identity).
 ---
 
 # New dungeon (Idle Party)
@@ -21,7 +20,6 @@ Party **mean level** gates even steps Lv1…100 across 15 zones. Wallet gold and
 `lifetimeGoldEarned` do **not** unlock dungeons (`DungeonCatalog.isUnlocked`).
 Entry: `GameLogic.enterDungeon`.
 
-**Ask first** if the owner did not clearly request a new zone (ask table).
 Party **mean level** gates still apply for unlock math.
 
 ## Source of truth

@@ -91,10 +91,10 @@ Or just watch the attached `flutter run` terminal. Release / Play builds stay qu
   connection”, relaunch first — an idle emulator with an old APK is not
   “the new build”.
 - **“Installera om” / up to date:** stop the old `flutter run`, then one new
-  `flutter run -d emulator-5554` (keeps the emu save). `adb uninstall` wipes
-  that save — ask first. Do not stack a second `flutter run`.
-- Then a short phone test list (Swedish). Wait. No sideload APK unless
-  they asked.
+  `flutter run -d emulator-5554` (keeps the emu save). Prefer keep-save
+  reinstall; `adb uninstall` wipes that save — OK when the batch needs a
+  clean Play-style install. Do not stack a second `flutter run`.
+- Then a short phone test list (Swedish). Wait.
 
 ## Related
 

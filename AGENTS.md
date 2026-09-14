@@ -12,16 +12,14 @@ Owner describes goals in plain language; agents pick skills/tools/verify alone.
 **Rules (don’t duplicate here):**
 - `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — standing Play-growth principles; no numbered programs. Owner names work. Do not restore AL20 as the batch.
 - `.cursor/rules/studio-seats.mdc` — six chairs (EP, Game, UX, Tech, Art, Marketing)
-- `.cursor/rules/product-locks.mdc` — hard locks (dated); soft content locks removed
-- `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
+- `.cursor/rules/product-locks.mdc` — hard locks only
+- `.cursor/rules/owner-preferences.mdc` — work loop; push/Play when green (no ask-first)
 - `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff
 - `.cursor/rules/definition-of-done.mdc` — analyze / tests / commit locally
 
 Cadence: `docs/CONTENT_CADENCE.md` (tag rhythm). **Default work** when
-vague: ask once what to do. If they name **mer endgame**: prefer the five
-hunts unless they name new content. Do not restore AL20 as the batch. Chat
-Swedish; short test list (new save first) → wait. Commit locally when green;
-ask before push / PR / tag / Play.
+vague: ask once what to do. Chat Swedish; short test list (new save first) →
+wait. Commit locally when green; push / PR / tag / Play when the batch needs it.
 
 **UI target:** portrait phones (~360–430 px). Reference **Samsung A56**
 (1080×2340 → **360×780**). Live look: AVD `Samsung_A56` + `flutter run`

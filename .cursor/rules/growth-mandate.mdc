@@ -8,21 +8,19 @@ alwaysApply: true
 # Growth mandate (Idle Party)
 
 **Locked 2026-09-12.** Source: `docs/GROWTH_MANDATE.md` (research-checked).
-Numbered programs / soft content locks removed **2026-09-14** by owner.
+Programs / soft locks / ask-first UX hard rules removed **2026-09-14**.
 Play numbers: `docs/PLAY_GROWTH.md`. Why: `docs/LEARNINGS.md`.
 
 **Default:** owner names the work. Vague “gör bättre / vad härnäst” → ask
 once; do not invent a numbered program; do not restore AL20 as the batch.
 AL20 play notes are a **quality gate**, not the batch.
-Endgame / GEAR follow-up only when play notes say they lie.
 
 ## Do this
 
-- Play-install first hour still holds (combat ≤90 s; hide GOLD/SHOP/ESSENCE)
-- TODAY grow-the-party until the first boss; one cave today on day 2–7
-- Week-1 crawl identity only against play notes (packs / tells)
+- Keep first-session playable (combat reachable without tip dump when possible)
+- TODAY useful; honest offline return
 - Cadence 2–3 weeks; new-player What’s New; DPS HIGH still fails CI
-- Listing experiment when traffic exists; ask before scaled UA
+- Listing experiment when traffic exists
 
 ## Do not do
 
@@ -31,13 +29,10 @@ Endgame / GEAR follow-up only when play notes say they lie.
 - God-object cleanup as the quarter’s story
 - GitHub Releases as a player funnel
 - Invent “Program N” roadmaps unless the owner asks
-- Teaching ESSENCE / MARKET / GOLD tracks / pets before first combat reward
-- Notification permission on first launch; more than ~1–2 pings/day
 
 ## Decision policy
 
 `.cursor/rules/studio-seats.mdc` — six chairs, not a persona play.
-EP + UX + Marketing pick *what to build* when the owner names a goal.
+EP + UX + Marketing pick *what to build* when there is a fork.
 Game Director vetoes a broken fight. Tech vetoes red analyze / crash.
-Legal/fairness sit on Art + Game + EP. New zone / class / God Hand /
-scaled UA → ask table (not soft-blocked).
+Legal/fairness sit on Art + Game + EP.

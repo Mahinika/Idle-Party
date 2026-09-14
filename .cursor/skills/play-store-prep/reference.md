@@ -63,7 +63,7 @@ py -3 tool/store_listing/make_listing_icon.py
 
 ## Upload signed AAB to closed Alpha (Cursor browser)
 
-Owner asked → do this (ask before push/tag; Play upload is OK when they ask).
+Owner asked or batch needs upload → do this (push/tag/Play when green).
 
 ### 1. Build
 
@@ -133,7 +133,7 @@ Developer Cognifox / app Idle Party (`com.idleparty.app`):
 ### 4. After submit
 
 - Update `docs/PLAY_STORE.md` Operator status (submitted vs live).
-- Commit locally; ask before push.
+- Commit locally; push when the batch needs it.
 - Testers keep the previous live Alpha until review publishes the new one.
 
 ## itch.io images (HTTPS — localhost CORS will not work)
