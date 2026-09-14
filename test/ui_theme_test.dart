@@ -1,9 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:idle_party/ui/game_icon.dart';
-import 'package:idle_party/ui/game_theme.dart';
-import 'package:idle_party/ui/menu_chrome.dart';
+import 'package:idle_party/ui/theme.dart';
 
 /// Keeps chrome on one theme stack: tokens in GameTheme, pixel icons, no
 /// Material Icons / TextButton / emoji / raw hex in menus.
