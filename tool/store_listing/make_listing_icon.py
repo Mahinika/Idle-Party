@@ -1,6 +1,7 @@
 """Play high-res icon (512×512) from owned app_icon art.
 
 Does not invent a new mark — same cave-party painting as the launcher.
+After changing app_icon.png also run tool/make_app_icons.py (Android launcher).
 """
 from __future__ import annotations
 

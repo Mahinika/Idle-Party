@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Match GameTheme.ink — cold-start must not flash white. -->
+    <!-- Match GameTheme.ink — cold-start and adaptive-icon plate must not flash white. -->
     <color name="splash_ink">#FF06080C</color>
 </resources>
