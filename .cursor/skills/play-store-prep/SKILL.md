@@ -23,7 +23,7 @@ remains for early builds. Source of truth:
 - Before tagging a release meant for Play closed testing
 - Agent notices store blockers while doing release polish
 
-Push / tag / Play upload when the batch needs it (`owner-preferences`).
+Push / tag when the batch needs it. **Play AAB upload only when the owner asks.**
 
 ## Operator status (update `docs/PLAY_STORE.md`)
 

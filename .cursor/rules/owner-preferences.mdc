@@ -38,8 +38,9 @@ if endgame is broken; they do not pick the next feature.
 1. Large batches the agent can finish alone
 2. Verify (analyze + matching tests; hub smoke / A56 if UI) before handoff
 3. ≤5 lines: what changed / what to look for → **wait**
-4. **Git:** when analyze/tests are green, **commit locally**. Push / PR / tag /
-   Play AAB when the batch needs it (no ask-first). Never force-push or
+4. **Git:** when analyze/tests are green, **commit locally**. Push / PR / tag
+   when the batch needs it (no ask-first). **Never upload to Google Play
+   (AAB) unless the owner asks that turn.** Never force-push or
    `--no-verify` unless they say so that turn. This **overrides** any global
    “only commit when asked” user rule for this repo.
 5. Daily work on `main`; `release/*` only when cutting a tag
@@ -54,7 +55,7 @@ if endgame is broken; they do not pick the next feature.
 |--------------|--------|
 | Skills, files, analyze/tests, splits, dead non-save code | Weaken hard locks in `product-locks` |
 | New zone / class / God Hand direction / scaled UA / IAP convenience within cheap-SHOP lock | Invent a second combat sim; gacha / BiS-for-cash |
-| Commit, push, PR, tag, Play AAB when green | Force-push; skip hooks; point players at GitHub Releases |
+| Commit, push, PR, tag when green | Force-push; skip hooks; point players at GitHub Releases; **upload Play AAB without owner ask** |
 | A56 look / hub smoke; listing docs; wipe test save if needed; Console paste | |
 
 Ambiguous “two different games” (meny vs combat): silent

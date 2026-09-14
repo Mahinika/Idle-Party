@@ -63,7 +63,7 @@ py -3 tool/store_listing/make_listing_icon.py
 
 ## Upload signed AAB to closed Alpha (Cursor browser)
 
-Owner asked or batch needs upload → do this (push/tag/Play when green).
+Owner asked for Play upload → do this (never upload AAB unprompted).
 
 ### 1. Build
 

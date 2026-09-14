@@ -2,8 +2,9 @@
 
 **Locked:** 2026-09-12 by owner. **Research-checked:** 2026-09-12.
 **Updated:** 2026-09-14 — numbered programs, soft locks, ask-first (zone /
-class / God Hand / UA / push / Play / wipe-save), and UX hard rules (flat
-nav / hide-until-unlock / ≤90 s) removed by owner.
+class / God Hand / UA / git push / wipe-save), and UX hard rules (flat
+nav / hide-until-unlock / ≤90 s) removed by owner. **Play AAB upload still
+requires owner ask.**
 History: [LEARNINGS.md](LEARNINGS.md) · [PLAY_GROWTH.md](PLAY_GROWTH.md).
 
 North star: **främlingar på Play blir spelare.**

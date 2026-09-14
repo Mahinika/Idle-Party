@@ -64,8 +64,9 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 - Soft content locks removed (zone / class / God Hand / UA-default). Hard
   locks stay.
 - Later same day: owner removed **ask-first** for zone/class/God Hand/UA/
-  push/Play/wipe-save, and UX hard rules (flat nav / hide-until-unlock /
-  ≤90 s). Placement map stays guidance. Hard locks + CI DPS gate stay.
+  git push/wipe-save, and UX hard rules (flat nav / hide-until-unlock /
+  ≤90 s). Then clarified: **never upload Google Play AAB without ask.**
+  Placement map stays guidance. Hard locks + CI DPS gate stay.
 
 ## 2026-09-14 — Console D1 is not a number yet
 

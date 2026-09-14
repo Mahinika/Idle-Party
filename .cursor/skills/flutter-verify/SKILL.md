@@ -34,7 +34,7 @@ Optional MCP shortcut when `user-idle-party` is up: `verify`.
   - save/meta → `test/save_load_test.dart`, `test/meta_systems_test.dart`
   - assets/dungeons → `test/asset_catalog_test.dart`, `test/custom_assets_test.dart`, `test/dungeon_environment_test.dart`
 - Use `GameDirector.preview()` in new tests (no SharedPreferences / no spatial timer).
-- **Commit locally when analyze/tests are green** (`owner-preferences`). Push / PR / tag / Play when the batch needs it.
+- **Commit locally when analyze/tests are green** (`owner-preferences`). Push / PR / tag when needed. **Play AAB only when the owner asks.**
 - Windows: set process env `PROGRAMFILES(X86)` to `C:\Program Files (x86)` or `flutter test` dies. Widget `timersPending` / missing `flutter_soloud_plugin.dll` on this machine is environment noise — do not “fix” GEAR/GOLD for it.
 
 ## Progress

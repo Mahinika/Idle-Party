@@ -7,7 +7,8 @@ alwaysApply: true
 # Product locks (Idle Party)
 
 **Confirmed:** 2026-09-12. Soft content locks and ask-first for zone / class /
-God Hand / UA / push / Play / wipe-save removed **2026-09-14** by owner.
+God Hand / UA / git push / wipe-save removed **2026-09-14** by owner.
+**Google Play AAB upload still requires owner ask** (same day).
 
 No standing work program — owner names the batch
 (`docs/GROWTH_MANDATE.md`).
@@ -23,6 +24,7 @@ No standing work program — owner names the batch
 | SpatialCombat | One fight sim; extract helpers, don’t add a second |
 | Cheap SHOP | Convenience boosts / ad-free / small QoL — no gacha / BiS-for-cash |
 | Play primary | Install via Play; do not point players at GitHub Releases |
+| Play upload | Never upload AAB / publish without owner ask that turn |
 | Cursor safety | No exploits / foreign dumps — not overridable here |
 
 **Escape for everything else:** owner names the goal (or clear batch). Do not
