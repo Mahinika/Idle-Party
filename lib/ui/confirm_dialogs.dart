@@ -378,8 +378,8 @@ Future<void> confirmGreaterRiftRun(
         content: Text(
           'Mothveil ranked kill ladder — not Gauntlet floors, not farm Rift loot.\n\n'
           'Kill $kills before $par. Gold OK mid-run; no gear drops. '
-          'Clear pays +${essence}e · +${gold}g. Local PB — Play GR board waits '
-          'on a Console ID.\n\n'
+          'Clear pays +${essence}e · +${gold}g. Local PB on hub. Play GR board '
+          'needs a Play install + sign-in.\n\n'
           'Harder packs than Farm Rift. Best clear: GR$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),

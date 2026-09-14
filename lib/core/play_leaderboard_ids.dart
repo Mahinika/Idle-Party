@@ -9,7 +9,7 @@ abstract final class PlayLeaderboardIds {
   /// Month → (timed KEY, gauntlet, greater Rift board ids).
   ///
   /// Play Console boards for season 2026-08 (Idle Party Games project 986358854278).
-  /// Paste Greater Rift Android ID when the Console board exists.
+  /// Greater Rift Android ID is the Sep board (`Greater Rift 2026-09`).
   static const Map<String, ({String timedKey, String gauntlet, String greaterRift})>
       byMonth =
       <String, ({String timedKey, String gauntlet, String greaterRift})>{
@@ -18,12 +18,12 @@ abstract final class PlayLeaderboardIds {
           gauntlet: 'CgkIhuXGvNocEAIQAQ',
           greaterRift: '',
         ),
-        // Reuse Aug KEY/Gauntlet until Console creates distinct Sep boards.
-        // Greater Rift stays empty (soft-fail) until a Sep GR board ID exists.
+        // Reuse Aug KEY/Gauntlet until Console creates distinct Sep KEY/Gauntlet
+        // boards. GR uses the Sep Console board (publish via Games Publishing).
         '2026-09': (
           timedKey: 'CgkIhuXGvNocEAIQAA',
           gauntlet: 'CgkIhuXGvNocEAIQAQ',
-          greaterRift: '',
+          greaterRift: 'CgkIhuXGvNocEAIQAw',
         ),
       };
 

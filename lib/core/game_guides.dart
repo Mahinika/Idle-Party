@@ -674,8 +674,8 @@ abstract final class GameGuides {
           'Farm Rift is the loot path; Ranked GR is the ranked ladder.\n'
           '• GR20 keeps about a minute on the clock — later ranks add a little clock as packs thicken (max ~90s).\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
-          '• Season ranks: Timed KEY + Gauntlet on KEY · BOARDS (Play Games). '
-          'Ranked GR board wires when the Console ID is pasted. Until then, local PB on hub ENDGAME.\n'
+          '• Season ranks: Timed KEY + Gauntlet + Ranked GR on KEY · BOARDS (Play Games). '
+          'Play install + sign-in. Local PB also stays on hub ENDGAME.\n'
           '• The hub hunt chases Ranked GR before Farm Rift. Hub ENDGAME shows the next rank after your best (GR34 → GR35) — no KEY dial.',
     ),
     GuideTopic(

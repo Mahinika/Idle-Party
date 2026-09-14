@@ -14,7 +14,7 @@ Package id: **`com.idleparty.app`**
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ✅ review | Ads / Play Games / Advertising ID + **Firebase Analytics** (App interactions, Diagnostics, Device IDs) submitted **2026-09-10** — under Google review (`Ändringarna granskas`). Matches [PRIVACY.md](PRIVACY.md). |
 | IARC / content rating | ⏳ review | New questionnaire submitted 2026-09-08: fantasy creature violence (often close-up, pixel, no blood), digital goods (SHOP) yes / no loot-boxes / no player trading, no fear/sex/gambling/language/drugs. Ads are **not** in this IARC form — covered by Ads declaration **Yes**. Ratings preview: ESRB 10+ fantasy violence, USK 12, PEGI 3 + IAP. |
-| Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
+| Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 KEY/Gauntlet wired; 2026-09 Greater Rift `CgkIhuXGvNocEAIQAw` wired (Console Draft — publish via Games Publishing). OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ⏳ review | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md` (itch-parity: Day-one menus, Shield/Healer/Damage, Cognifox, privacy URL). **2026-09-12:** pasted + submitted with Production **187**. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ⏳ review | **2026-09-12:** **8** phone shots submitted (1–2 = new-save Sandy combat; then chase, gear, party, zone, AFK, ascend — same story as itch). Icon remains owned `play_icon_512.png`. Preview `OMWXbgGBFMA`. Console look **2026-09-14:** listing 28d (through 8 Sep) **9** visitors / **6** install clicks / **67%** CTR; funnel **433** impressions / **15** acquisitions / **4** first opens. D1 not readable. Store Listing Experiment **deferred**. |
@@ -162,12 +162,14 @@ Closed testers watching a few ads will not pay rent. Real money needs many playe
 
 1. Play Console → Play Games Services → link `com.idleparty.app`.
 2. Enable player login + **Saved Games**.
-3. Each calendar month create two leaderboards (e.g. `Timed KEY · 2026-08`, `Gauntlet · 2026-08`) and paste Android IDs into [`lib/core/play_leaderboard_ids.dart`](../lib/core/play_leaderboard_ids.dart).
+3. Each calendar month create KEY + Gauntlet (+ Greater Rift) leaderboards and paste Android IDs into [`lib/core/play_leaderboard_ids.dart`](../lib/core/play_leaderboard_ids.dart).
 4. Put the numeric Games **App ID** in [`android/app/src/main/res/values/games-ids.xml`](../android/app/src/main/res/values/games-ids.xml).
 5. OAuth consent screen + Android credential (package `com.idleparty.app` + signing SHA-1) so device sign-in works.
 6. Test on a **Play-installed** build (internal/closed). GitHub sideload may soft-fail sign-in.
 
 **Done for 2026-08:** Saved Games on; App ID `986358854278`; boards `Timed KEY 2026-08` (`CgkIhuXGvNocEAIQAA`) and `Gauntlet 2026-08` (`CgkIhuXGvNocEAIQAQ`); OAuth consent (external Testing) + scopes `games` / `games_lite` / `drive.appdata`; Android credential attached (Play App Signing SHA-1, package `com.idleparty.app`); owner Google account added as OAuth test user; Games **category** Role Playing; **icon** 512 + **feature graphic** 1024×500 from owned `app_icon`; **Description saved + Games project published**. Smoke on a Play-installed closed-test build near ship line. Sideload debug SHA-1 needs a second Android client if you test unsigned APKs. Leave Cloud OAuth consent in **Testing** (do not click Cloud “Publish app”).
+
+**2026-09 Greater Rift:** Android ID `CgkIhuXGvNocEAIQAw` (`Greater Rift 2026-09`) wired in `play_leaderboard_ids.dart`. Created as Console **Draft** — same ID after publish. Publish the board via Play Games Services → Publishing (same path as KEY/Gauntlet) so store players see it; testers can use the draft.
 
 Suggested Description (en-US):
 

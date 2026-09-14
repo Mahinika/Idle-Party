@@ -133,7 +133,7 @@ void main() {
       expect(PlayLeaderboardIds.gauntletId('2026-08'), isNot(contains('YYYY')));
     });
 
-    test('2026-09 reuses Aug KEY/Gauntlet; GR soft-fails', () {
+    test('2026-09 reuses Aug KEY/Gauntlet; GR board is wired', () {
       expect(PlayLeaderboardIds.hasBoards('2026-09'), isTrue);
       expect(
         PlayLeaderboardIds.timedKeyId('2026-09'),
@@ -143,7 +143,12 @@ void main() {
         PlayLeaderboardIds.gauntletId('2026-09'),
         PlayLeaderboardIds.gauntletId('2026-08'),
       );
-      expect(PlayLeaderboardIds.hasGreaterRiftBoard('2026-09'), isFalse);
+      expect(PlayLeaderboardIds.hasGreaterRiftBoard('2026-09'), isTrue);
+      expect(
+        PlayLeaderboardIds.greaterRiftId('2026-09'),
+        'CgkIhuXGvNocEAIQAw',
+      );
+      expect(PlayLeaderboardIds.hasGreaterRiftBoard('2026-08'), isFalse);
     });
 
     test('boardsAvailable needs Play support + live IDs', () {
