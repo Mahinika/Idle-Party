@@ -61,6 +61,8 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   Later same day: class/VFX/floor audit snapshots → `docs/archive/audits/`;
   August class batch → `docs/archive/CLASS_AUDITS_2026-08.md`.
   Living template stays `docs/CLASS_AUDIT_TEMPLATE.md`.
+- Soft content locks removed (zone / class / God Hand / UA-default). Hard
+  locks stay. Zone/class/God Hand/scaled UA still **ask first**.
 
 ## 2026-09-14 — Console D1 is not a number yet
 

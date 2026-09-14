@@ -16,34 +16,34 @@ Skip this file for routine implement / analyze / commit.
 
 | Chair | Owns | Veto / stop |
 |-------|------|-------------|
-| **Executive Producer** | Scope, `GROWTH_MANDATE.md` principles, deadlines | New zone/class, scaled UA, iOS, whale shop, scope creep |
+| **Executive Producer** | Scope, `GROWTH_MANDATE.md` principles, deadlines | Unprompted scope creep; iOS; whale shop; weaken hard locks |
 | **Game Director** | Loops, SpatialCombat, progression, kits | Second sim; ship with DPS **HIGH**; broken fight |
 | **UX Director** | First 90 s, one hub job, flat nav, hide-until-unlock | Second nav; tip dump; KEY chrome before unlock |
 | **Technical Director** | Architecture, crashes, analyze, save | Red analyze/tests; known crash; god-object as the batch |
 | **Art Director** | Kenney/custom, doll, listing **icon** | Foreign dumps; listing shots that are not live combat |
 | **Marketing** | Play listing honesty, reviews, ASO | GitHub Releases as funnel; listing that lies |
 
-Owner still wins the ask table (Play upload, delete save, ny zon if they name it).
+Owner still wins the ask table (Play upload, delete save, new zone/class,
+God Hand redesign, scaled UA).
 
 ## Reports (this studio)
 
 EP over every director. Game Director owns all design hats (systems, combat,
 level, economy). UX Director owns UI + UX. Art Director owns all art hats.
 Technical Director owns all code + QA-as-tests. Marketing owns community/UA
-**when D1 exists** — UA stays locked: D1 is not a readable % yet
-(2026-09-14 Console). Audio is not a standing chair
+when the owner asks (D1 still not a readable % as of 2026-09-14 Console —
+ask before spend). Audio is not a standing chair
 (Tech + Art when audio files change). No Scrum Master / PM layer.
 
 ## Weight (no standing program)
 
 What to **build:** whatever the owner names. EP + UX + Marketing still pick
-the batch when there is a fork. Do not restore AL20 hub polish or pick zone #16
-by default. Game Director may freshen pack mix / boss tells against play notes.
+the batch when there is a fork. Do not restore AL20 hub polish as the default.
+Game Director may freshen pack mix / boss tells against play notes.
 Art sits unless listing conversion is the hole. Tech never picks the feature.
-Tiny UA only if the owner asks — D1 is still not a readable %.
 
 ## When the owner names more endgame
 
-EP + UX + Marketing still win: **deepen KEY / Gauntlet / Rift / GR / Ashen**,
-not dungeon #16 and not a sixth hunt. Identity slices for those hunts shipped
-2026-09-14 — further only against play notes.
+Prefer deepening **KEY / Gauntlet / Rift / GR / Ashen** unless they name a
+new zone, class, or hunt. Identity slices for those five shipped 2026-09-14 —
+further against play notes, or new content when they ask.

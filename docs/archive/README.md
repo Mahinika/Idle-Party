@@ -1,6 +1,6 @@
-# Archived docs (not active work)
+﻿# Archived docs (not active work)
 
-Point-in-time lists and audit snapshots. **Not** the agent’s default batch.
+Point-in-time lists and audit snapshots. **Not** the agent's default batch.
 Standing principles: [../GROWTH_MANDATE.md](../GROWTH_MANDATE.md).
 Live game truth: [../../AGENTS.md](../../AGENTS.md).
 
@@ -17,5 +17,11 @@ Live game truth: [../../AGENTS.md](../../AGENTS.md).
 
 Snapshots under [audits/](audits/). Re-run `class-audit` for a fresh kit
 verdict. Living template stays at [../CLASS_AUDIT_TEMPLATE.md](../CLASS_AUDIT_TEMPLATE.md).
+
+## Research
+
+| File | What it was |
+|------|-------------|
+| [TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md) | Optional top-games background (not a roadmap) |
 
 One-shot generators for polish lists: `tool/archive/`.

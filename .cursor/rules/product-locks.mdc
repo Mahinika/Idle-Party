@@ -1,17 +1,17 @@
 ---
 description: >-
-  Dated Idle Party product locks — do not weaken without owner yes.
-  Soft content locks may lift when the owner clearly asks to broaden.
+  Dated Idle Party hard product locks — do not weaken without owner yes.
 alwaysApply: true
 ---
 
 # Product locks (Idle Party)
 
-**Confirmed:** 2026-09-12. Soft locks lift when the owner clearly asks
-(e.g. “ny zon OK”, “gör om God Hand”). Hard locks do not.
+**Confirmed:** 2026-09-12. Soft content locks removed **2026-09-14** by owner
+(new zone / class / God Hand / UA-default). Scope forks still use the ask
+table in `owner-preferences`.
 
 No standing work program — owner names the batch
-(`docs/GROWTH_MANDATE.md`). Hard + soft locks below still hold.
+(`docs/GROWTH_MANDATE.md`).
 
 ## Hard (never weaken from this file)
 
@@ -26,15 +26,6 @@ No standing work program — owner names the batch
 | Play primary | Install via Play; do not point players at GitHub Releases |
 | Cursor safety | No exploits / foreign dumps — not overridable here |
 
-## Soft (default off until owner revisits)
-
-| Lock | Meaning |
-|------|---------|
-| No new zones | Polish existing 15; no dungeon #16 unless asked |
-| No new classes/specs | No specs “for the list”; kit trim only if HIGH or day-1 identity is broken |
-| God Hand direction | No philosophy redesign without asking |
-| Default work slice | **Owner names the work.** AL20 is a quality gate, not the batch |
-
-**Escape:** if the owner names a broader goal this turn, follow that — do not
-force AL20-hub polish. Do not invent numbered programs. No dungeon #16
-unless they ask.
+**Escape for everything else:** owner names the goal. Do not invent numbered
+programs. Do not restore AL20 hub polish as the default batch. Ask first for
+zone / class / God Hand redesign / scaled UA (ask table) — not soft-blocked.

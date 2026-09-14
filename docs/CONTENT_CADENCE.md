@@ -4,7 +4,7 @@
 programs; owner names work. This file is the **tag rhythm** (balance + What’s
 New). Do not restore AL20.
 
-Optional background: [TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md). Live
+Optional background: [archive/TOP_GAMES_RESEARCH.md](archive/TOP_GAMES_RESEARCH.md). Live
 contracts: [CHASE_CONTRACT.md](CHASE_CONTRACT.md) ·
 [GEAR_BUDGET.md](GEAR_BUDGET.md) · [FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md) ·
 [PLAY_GROWTH.md](PLAY_GROWTH.md).
@@ -28,15 +28,16 @@ Each tagged `1.x.y` release should include:
 3. **Store** — D1 pasted **2026-09-14** (not readable); listing experiment when visitors suffice.
 
 AL20 chase / wipe advice / kit depth stay **quality gates**, not the default slice.
-Endgame copy and GEAR follow-up only against play notes. No new zones or classes (soft lock).
+Endgame copy and GEAR follow-up only against play notes. New zone / class only
+when the owner asks (ask table — not soft-blocked).
 
 ## Decision table (when unsure)
 
 | Om ni tvekar mellan … | Välj |
 |------------------------|------|
 | AL20 polish vs first session | First-hour chrome + time-to-combat (`GROWTH_MANDATE.md`) |
-| Ny spec vs polisha kit | Trim HIGH only; no specs for the list |
-| Ny zon vs listing/onboarding | Listing + first session. Ny zon bara om ägaren ber |
+| Ny spec vs polisha kit | Ask if they want a new spec; otherwise trim HIGH |
+| Ny zon vs listing/onboarding | Prefer listing + first session unless they asked for a zon |
 | Cool affinity-nudge vs budget | Budget |
 | Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
 | Stor rewrite vs small ship | Small ship + synlig What’s New a new player can read |
@@ -45,11 +46,11 @@ Endgame copy and GEAR follow-up only against play notes. No new zones or classes
 
 ## Non-goals (unless owner asks)
 
-- New zone #16 / new class
-- SpatialCombat rewrite / God Hand philosophy redesign
+- New zone / new class / God Hand philosophy redesign
+- SpatialCombat rewrite
 - iOS or web-as-product
 - Gacha / whale ladder
-- Scaled paid UA before D1 is known
+- Scaled paid UA (ask first; D1 still unread as of 2026-09-14)
 - God-object cleanup as the quarter’s story
 
 ## Checklist before tagging

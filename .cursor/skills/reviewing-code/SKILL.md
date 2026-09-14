@@ -50,7 +50,7 @@ If the diff belongs to a domain skill, follow it for that slice:
 - **Honesty**: English in-game copy matches reality. Day-1 must not teach locked KEY / ESSENCE / MARKET
 - **Chrome**: hide-until-unlock. No second nav — `MenuRouter` + `MenuSurface` + `AppBottomBar` only
 - **Tests**: new GameLogic / hub / chase / guides branches have matching tests using `GameDirector.preview()`
-- **Locks**: no iOS/web-as-product, gacha / BiS-for-cash, GitHub Releases as install path, zone #16 or new class without owner yes. No God Hand philosophy redesign without ask
+- **Locks**: hard product locks only (no iOS/web-as-product, gacha / BiS-for-cash, GitHub Releases as install path). New zone / class / God Hand redesign without owner yes → flag ask-table miss, not a soft lock.
 
 ## 3. Should fix
 

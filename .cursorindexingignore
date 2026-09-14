@@ -3,7 +3,7 @@
 # (build/, tool/out/, *.png already covered by .gitignore + Cursor defaults.)
 
 docs/archive/
-docs/TOP_GAMES_RESEARCH.md
+
 
 # Tracked Flutter Windows plugin glue — not product logic
 windows/flutter/generated_plugin_registrant.cc

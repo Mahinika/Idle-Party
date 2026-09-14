@@ -1,9 +1,8 @@
 # Idle Party — growth mandate (standing principles)
 
 **Locked:** 2026-09-12 by owner. **Research-checked:** 2026-09-12.
-**Updated:** 2026-09-14 — numbered programs / done bars / “next plan” removed
-by owner. History of shipped funnel work lives in [LEARNINGS.md](LEARNINGS.md)
-and [PLAY_GROWTH.md](PLAY_GROWTH.md).
+**Updated:** 2026-09-14 — numbered programs and soft content locks removed
+by owner. History: [LEARNINGS.md](LEARNINGS.md) · [PLAY_GROWTH.md](PLAY_GROWTH.md).
 
 North star: **främlingar på Play blir spelare.**
 
@@ -13,12 +12,13 @@ default batch driver.
 Live listing ops: [PLAY_GROWTH.md](PLAY_GROWTH.md) ·
 [STORE_LISTING.md](STORE_LISTING.md) · [PLAY_STORE.md](PLAY_STORE.md).
 Decision policy: [`.cursor/rules/studio-seats.mdc`](../.cursor/rules/studio-seats.mdc).
+Hard locks: [`.cursor/rules/product-locks.mdc`](../.cursor/rules/product-locks.mdc).
 
 ## Default work
 
-**Owner names the work.** No standing program. No “wait for the next plan.”
-Vague “gör bättre / vad härnäst” → ask once what to do; do not invent a
-numbered program and do not restore AL20 hub polish as the default.
+**Owner names the work.** No standing program. Vague “gör bättre / vad härnäst”
+→ ask once; do not invent a numbered program; do not restore AL20 hub polish
+as the default.
 
 ## Time-to-value
 
@@ -45,32 +45,31 @@ matters; first victory in the **first session**.
 - Funnel events live (`first_open` → … → `d1_return` + time-to-combat)
 - Systems gated (KEY / endgame / advanced MORE) until unlock
 - Cadence 2–3 weeks; What’s New lead for a **new** player; DPS HIGH fails CI
-- Listing experiment deferred until traffic exists; no scaled UA while D1 unread
 
 ## Stop doing
 
 - AL20 hub-chase / wipe polish “because a list said so”
-- New zone #16, new class/spec, God Hand redesign, second combat sim
-- Gacha / BiS-for-cash / whale ladder
+- Second combat sim; gacha / BiS-for-cash / whale ladder
 - God-object refactors as the quarter’s story
 - iOS / web-as-product / GitHub Releases as a player funnel
-- Scaled paid UA before D1 is known
 - Teaching ESSENCE / MARKET / GOLD tracks / pets before first combat reward
 - Notification permission on first launch; more than ~1–2 pings/day
 - Inventing numbered “Program N” roadmaps unless the owner asks for one
 
 ## Endgame (when owner names it)
 
-Deepen the **five hunts** (KEY / Gauntlet / Farm Rift / Ranked GR / Ashen) —
-not dungeon #16 and not a sixth hunt under MORE. Identity slices for those
-hunts shipped **2026-09-14**; further work only against play notes.
+Prefer deepening the **five hunts** (KEY / Gauntlet / Farm Rift / Ranked GR /
+Ashen) when the ask is “mer endgame.” New zone / class / hunt is OK when the
+owner names it (ask table) — not soft-blocked. Identity slices for the five
+hunts shipped **2026-09-14**; further only against play notes unless they ask
+for more.
 
 ## Metrics (owner / Console — do not fake)
 
 Honest order: crash-free → listing conversion → D1 → D7 → rating → then
 tiny UA / D30. Agent cannot mark D1 “good” without a real return %.
 Latest paste (**2026-09-14**): Play has no D1 metric; 2-day/D7 empty or n=1 —
-see [PLAY_GROWTH.md](PLAY_GROWTH.md).
+see [PLAY_GROWTH.md](PLAY_GROWTH.md). Ask before scaled UA.
 
 ## Quality gate (still)
 

@@ -46,7 +46,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | First hour / onboarding / listing / funnel | first-hour tests + `hub-smoke` + `play-store-prep` |
 | Fork / two games / whose call | silent `studio-seats` |
 | Strategi / 90 dagar / prioritering | `docs/GROWTH_MANDATE.md` then `docs/CONTENT_CADENCE.md` |
-| Topplistor / varför bra spel | `docs/TOP_GAMES_RESEARCH.md` background only — don’t derail |
+| Topplistor / varför bra spel | `docs/archive/TOP_GAMES_RESEARCH.md` background only — don’t derail |
 
 ## Rules
 

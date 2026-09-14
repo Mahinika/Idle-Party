@@ -8,7 +8,7 @@ alwaysApply: true
 # Growth mandate (Idle Party)
 
 **Locked 2026-09-12.** Source: `docs/GROWTH_MANDATE.md` (research-checked).
-Numbered programs / “next plan” removed **2026-09-14** by owner.
+Numbered programs / soft content locks removed **2026-09-14** by owner.
 Play numbers: `docs/PLAY_GROWTH.md`. Why: `docs/LEARNINGS.md`.
 
 **Default:** owner names the work. Vague “gör bättre / vad härnäst” → ask
@@ -20,21 +20,24 @@ Endgame / GEAR follow-up only when play notes say they lie.
 
 - Play-install first hour still holds (combat ≤90 s; hide GOLD/SHOP/ESSENCE)
 - TODAY grow-the-party until the first boss; one cave today on day 2–7
-- Week-1 crawl identity only against play notes (packs / tells, not dungeon #16)
+- Week-1 crawl identity only against play notes (packs / tells)
 - Cadence 2–3 weeks; new-player What’s New; DPS HIGH still fails CI
-- Listing experiment deferred until traffic exists. No scaled UA while D1 unread
+- Listing experiment when traffic exists; ask before scaled UA
 
 ## Do not do
 
-- New zone / class / God Hand redesign / second sim / gacha / iOS / web product
 - AL20 chase/wipe polish as the default slice
+- Second combat sim / gacha / BiS-for-cash / iOS / web-as-product
 - God-object cleanup as the quarter’s story
-- Scaled paid UA (tiny spend ≠ a D1 study; D1 still not a readable %)
+- GitHub Releases as a player funnel
 - Invent “Program N” roadmaps unless the owner asks
+- Teaching ESSENCE / MARKET / GOLD tracks / pets before first combat reward
+- Notification permission on first launch; more than ~1–2 pings/day
 
 ## Decision policy
 
 `.cursor/rules/studio-seats.mdc` — six chairs, not a persona play.
 EP + UX + Marketing pick *what to build* when the owner names a goal.
 Game Director vetoes a broken fight. Tech vetoes red analyze / crash.
-Legal/fairness sit on Art + Game + EP.
+Legal/fairness sit on Art + Game + EP. New zone / class / God Hand /
+scaled UA → ask table (not soft-blocked).

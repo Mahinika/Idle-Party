@@ -12,16 +12,16 @@ Owner describes goals in plain language; agents pick skills/tools/verify alone.
 **Rules (don’t duplicate here):**
 - `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — standing Play-growth principles; no numbered programs. Owner names work. Do not restore AL20 as the batch.
 - `.cursor/rules/studio-seats.mdc` — six chairs (EP, Game, UX, Tech, Art, Marketing)
-- `.cursor/rules/product-locks.mdc` — hard + soft locks (dated)
+- `.cursor/rules/product-locks.mdc` — hard locks (dated); soft content locks removed
 - `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
 - `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff
 - `.cursor/rules/definition-of-done.mdc` — analyze / tests / commit locally
 
 Cadence: `docs/CONTENT_CADENCE.md` (tag rhythm). **Default work** when
-vague: ask once what to do. If they name **mer endgame**: deepen the five
-hunts — do not add zone #16. Do not restore AL20 as the batch. Chat Swedish;
-short test list (new save first) → wait. Commit locally when green; ask before
-push / PR / tag / Play.
+vague: ask once what to do. If they name **mer endgame**: prefer the five
+hunts unless they name new content. Do not restore AL20 as the batch. Chat
+Swedish; short test list (new save first) → wait. Commit locally when green;
+ask before push / PR / tag / Play.
 
 **UI target:** portrait phones (~360–430 px). Reference **Samsung A56**
 (1080×2340 → **360×780**). Live look: AVD `Samsung_A56` + `flutter run`
@@ -122,7 +122,7 @@ full-repo audit (see `.cursor/commands/repo-auditandcleaning.md`).
 Cadence: **`docs/CONTENT_CADENCE.md`** (tag rhythm). No standing program —
 owner names work. Not AL20-as-batch. Why:
 [`docs/LEARNINGS.md`](docs/LEARNINGS.md). Background (optional):
-`docs/TOP_GAMES_RESEARCH.md`. Chase contract (hub TODAY ↔ offline Up next):
+`docs/archive/TOP_GAMES_RESEARCH.md`. Chase contract (hub TODAY ↔ offline Up next):
 `docs/CHASE_CONTRACT.md`. Gear budget: `docs/GEAR_BUDGET.md`. Floor blueprint
 (shipped): `docs/FLOOR_BLUEPRINT.md`. Play listing: `docs/PLAY_STORE.md` +
 skill `play-store-prep` (in mandate, not background). Growth / ASO / reviews /
