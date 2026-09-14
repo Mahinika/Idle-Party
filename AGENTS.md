@@ -162,11 +162,11 @@ main.dart
 Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
   (flat tabs; one shared bar always visible under sheets; dungeon LEAVE = hub)
   GOLD = forge tracks + market (flasks/listings) · SHOP = real-money convenience
-  (boosts / ad-free; Play Billing on Play installs) · ESSENCE = TRACKS + KEEP (God Hand / buys) + relics + pets
-  MORE rows = QUESTS (after first floor) / Craft (after first boss)
+  (boosts / ad-free; Play Billing on Play installs) · ESSENCE = TRACKS + KEEP (God Hand / STAR NODES / buys) + relics + pets
+  MORE rows = QUESTS (after first floor) / Craft (after first boss; monthly Craft Trial at Lv100)
   MORE → SETTINGS ACCOUNT = Play Games / AD PRIVACY / away reminders (after first loot)
   MORE → INFO uses `GameGuides.topicsFor` (first hour / mid-game / endgame)
-  (Blessing / God Hand / REBORN under ESSENCE → KEEP)
+  (Blessing / God Hand / REBORN / STAR NODES under ESSENCE → KEEP)
   Hub POWERUPS rewarded ads stay on the hub (not under SHOP)
 ```
 
@@ -209,11 +209,17 @@ After GR20 the progress target holds; par grows a little
 returns the ticket; PRACTICE free after the paid clear. Tickets /
 `worldBoss*` fields in `metaDepth`; see `lib/core/ashen_crown.dart`.
 
+**Craft Trial** (same party-Lv100 gate; **not** a hub ENDGAME hunt / TODAY
+chase): **MORE → CRAFT** `START CRAFT TRIAL` once per ISO month on the
+recommended PATH cave. Combat sheet uses **Apex-crafted gear only** (bag
+untouched). Boss clear → hub, **+20 essence** + **1 constellation point**;
+`metaDepth.apexTrialCleared` / `apexTrialMonthKey` survive Ascend. See
+`GameLogic.startApexTrial`.
+
 **Ascension cap:** `GameLogic.maxAscensionLevel` = **AL20** — Ascend stops here
-(Blessing / kit roadmap). **Endgame content** (endless KEY / Ranked GR, Gauntlet, Rifts) unlocks when the **active party is all Lv100**, not at AL20 alone.
+(Blessing / kit roadmap). **Endgame content** (endless KEY / Ranked GR, Gauntlet, Rifts, Ashen, Craft Trial) unlocks when the **active party is all Lv100**, not at AL20 alone.
 **Hero level cap:** `GameLogic.maxHeroLevel` = **100**; combat XP only (no gold
-Train +1 level). Endgame (KEY / Gauntlet / Rifts) when every active hero is
-Lv100. Gold tracks (ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY) still buyable (wipe on
+Train +1 level). Gold tracks (ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY) still buyable (wipe on
 Ascend).
 
 **Zone unlock:** party **mean level** (even steps 1…100 across 15 zones) **or**
@@ -239,8 +245,9 @@ wait. **KEY habit** (`ENTER KEY +N`), KEY tab,
 week-affix jargon, and KEYSTONE tips wait until the **active party is all
 Lv100** (`GameLogic.showKeystoneJargon` → `endgameUnlocked`). At endgame,
 the hub grows a **PATH | ENDGAME** switch: PATH is the 15-zone World Path;
-**ENDGAME** is its own map (Gauntlet, Ranked GR, Farm Rift, Ashen Crown) —
-not a footer under Mothveil, not dungeon #16. Tap a hunt then ENTER. KEY
+**ENDGAME** is its own map (`HubEndgameHunt`: Gauntlet, Ranked GR, Farm Rift, Ashen Crown) —
+not a footer under Mothveil, not dungeon #16. Craft Trial stays under MORE → CRAFT.
+Tap a hunt then ENTER. KEY
 holds KEY / Farm Rift dials; Ranked GR shows the next rank on ENDGAME
 (GR34 → GR35) — no KEY stepper. Hub KEY / Vault / Week crumbs stay off while that
 hunt is KEY, Gauntlet, Ranked GR, Farm Rift, or Ashen.
@@ -333,7 +340,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Area | Path |
 |------|------|
 | Orchestration | `lib/core/game_director.dart` |
-| Rules | `lib/core/game_logic.dart` |
+| Rules | `lib/core/game_logic.dart` (+ parts `game_logic_ascend` / `_endgame` / `_ladders` / `_meta_season`) |
 | State | `lib/core/game_state.dart` |
 | Changelog / meta helpers | `lib/core/meta_systems.dart` |
 | Meta blob | `lib/models/meta_depth.dart` |
@@ -353,7 +360,10 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Real-money SHOP catalog | `lib/core/shop_catalog.dart` · `lib/ui/shell/shop_dock.dart` · `docs/SHOP_MONETIZATION.md` |
 | Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
 | POWER Essence rates | `lib/ui/shell/income_overlay.dart` (`CampRatesSection`) |
-| Apex hub (craft / vault / farm meter) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) — MORE → CRAFT |
+| Apex hub (craft / vault / farm meter / Craft Trial) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) — MORE → CRAFT |
+| Blessing STAR NODES | `lib/core/blessing_constellation.dart` · **ESSENCE → KEEP** |
+| God Hand mastery claims | `lib/core/god_hand_mastery.dart` · KEEP |
+| Hub ENDGAME map | `lib/core/hub_endgame_act.dart` |
 | Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
 | Guides copy | `lib/core/game_guides.dart` |
 | Keystone | `lib/core/keystone.dart` |
@@ -396,8 +406,9 @@ God Hand **level** on `GameState.godHandLevel` (style/CD in `metaDepth`),
 saves may still have a legacy heirloom), `highestDungeonCleared`,
 `lifetimeGoldEarned`, achievements/codex, settings
 (mute/VFX/colorblind/text scale/dungeon zoom/haptics/keep-awake/auto-sell/**auto-disassemble**),
-full `metaDepth` (Gauntlet best, Will / Gauntlet claims, daily vault / weekly
-affix season, **prestige shop** purchases — Apothecary Writ / Junk Magnifier /
+full `metaDepth` (Gauntlet / Rift / GR bests, Will / Gauntlet claims, daily vault / weekly
+affix season, **constellation** nodes/points, **Craft Trial** month/cleared,
+**God Hand mastery** claims / smash count, **prestige shop** purchases — Apothecary Writ / Junk Magnifier /
 Away Ledger / …; Loadout Folio is delisted but old slot-count purchases stay;
 Play funnel `funnelInstallMs` / `funnelLogged`,
 **local reminders** `notifyOptIn` / `notifyPrompted` / `notifyPingMs`),
@@ -425,6 +436,9 @@ loadouts, floors → starter gear). **Keeps** hero levels/XP, open zones
 soulbound, settings. Sets `metaDepth.freshPrestige` so TODAY farms gear instead
 of KEY until real drops land. **Clears** `bossVictories`, wipe streak/advice,
 active dungeon / KEY / rift via leave-dungeon; mission board rebuilt.
+**AL20 STAR NODES** (`BlessingConstellation`, KEEP): not Ascend Blessing stacks.
+AL20 grants **3** starter points; Ashen Crown, Craft Trial, and REBORN each add
+**+1**. Spend on ≤6 nodes (Offense / Defense / Fortune). Never a TODAY chase.
 **AL20 REBORN** (**ESSENCE → KEEP**, optional): same bag wipe, AL and
 Blessing unchanged, essence + 1 constellation point. Never a TODAY chase.
 
@@ -450,6 +464,7 @@ cave’s pack jobs and boss tell (PATH art stays). See `lib/core/keystone.dart`.
 Tap steers the party briefly and deals AOE; has cooldown. Damage upgrades with essence.
 Styles under **ESSENCE → KEEP**: **BAL** / **FOCUS** (+dmg −radius) /
 **WIDE** (+radius −dmg). Optional CD upgrades: `metaDepth.godHandCdLevel`.
+KEEP also lists **God Hand mastery** claims (`GodHandMastery` — titles + essence).
 Direction changes only when the owner’s goal names them.
 
 ## Balance policy

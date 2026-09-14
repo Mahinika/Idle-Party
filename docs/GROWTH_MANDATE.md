@@ -51,6 +51,7 @@ early and hide chrome until it matters when it does not fight the named goal.
 
 Prefer deepening the **five hunts** (KEY / Gauntlet / Farm Rift / Ranked GR /
 Ashen) when the ask is “mer endgame.” New zone / class / hunt OK when named.
+Monthly **Craft Trial** (MORE → CRAFT) is not a sixth ENDGAME hunt.
 
 ## Metrics (owner / Console — do not fake)
 

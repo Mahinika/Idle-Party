@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | Owner confirmed Google publish **2026-09-13** (listing Updated). Submitted **1.12.157 (187)** 2026-09-12; in-repo working ship still **1.12.163 / 193**. |
+| Production | ✅ live | Owner confirmed Google publish **2026-09-13** (listing Updated). Submitted **1.12.157 (187)** 2026-09-12; in-repo working ship still **1.12.169 / 199**. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ✅ review | Ads / Play Games / Advertising ID + **Firebase Analytics** (App interactions, Diagnostics, Device IDs) submitted **2026-09-10** — under Google review (`Ändringarna granskas`). Matches [PRIVACY.md](PRIVACY.md). |

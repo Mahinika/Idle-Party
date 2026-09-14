@@ -28,7 +28,7 @@ needs it — still use `GameTheme` / `MenuChrome` / `GameButton` / `GameIcon`.
 | Real-money convenience | **SHOP** | single sheet |
 | Essence tracks / KEEP / relics / pets | **ESSENCE** | `EssencePanel` |
 | KEYSTONE dial / KEY habit | **KEY** tab | prefer not burying under MORE |
-| QUESTS / Craft / Settings / Info | **MORE** | `MoreSection` rows |
+| QUESTS / Craft / Settings / Info | **MORE** | `MoreSection` rows; monthly **Craft Trial** is CRAFT, not ENDGAME |
 | “What do I do now?” / enter | **Hub TODAY** | `ChaseContract` |
 | Rewarded boost tickets | **Hub POWERUPS** | not SHOP |
 
