@@ -78,7 +78,7 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
 - STAR NODES points from Ashen / Craft Trial must bank before AL20 (spend
   still waits for KEEP). What’s New names Craft Trial + STAR NODES. Ship
-  **1.12.170 / 200**.
+  **1.12.170 / 200** — Production AAB submitted for review **2026-09-14**.
 
 ## 2026-09-14 — Console D1 is not a number yet
 
