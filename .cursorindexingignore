@@ -4,7 +4,6 @@
 
 docs/archive/
 docs/TOP_GAMES_RESEARCH.md
-docs/audits/
 
 # Tracked Flutter Windows plugin glue — not product logic
 windows/flutter/generated_plugin_registrant.cc

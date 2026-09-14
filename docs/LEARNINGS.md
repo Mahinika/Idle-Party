@@ -58,6 +58,9 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   owner names the work; vague → ask once.
 - Same day: archived feel/polish/endgame-eval lists under `docs/archive/`
   (not agent default work). Generators → `tool/archive/`.
+  Later same day: class/VFX/floor audit snapshots → `docs/archive/audits/`;
+  August class batch → `docs/archive/CLASS_AUDITS_2026-08.md`.
+  Living template stays `docs/CLASS_AUDIT_TEMPLATE.md`.
 
 ## 2026-09-14 — Console D1 is not a number yet
 

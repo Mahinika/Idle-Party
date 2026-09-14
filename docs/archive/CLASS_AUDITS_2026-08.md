@@ -21,4 +21,4 @@ Quick identity pass on five shipped specs. Verdicts guide polish before any new 
 | **Hollow Grove** | Root fence overgrowth | Double fence landmarks (1.12.37) |
 | **Stormwake Hollow** | Trap + lightning corridor | Trap/pillar landmarks (1.12.37) |
 
-Full template: [CLASS_AUDIT_TEMPLATE.md](CLASS_AUDIT_TEMPLATE.md).
+Full template: [CLASS_AUDIT_TEMPLATE.md](../CLASS_AUDIT_TEMPLATE.md).

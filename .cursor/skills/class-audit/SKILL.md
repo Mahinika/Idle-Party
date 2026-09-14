@@ -51,7 +51,7 @@ For Wowhead slices, rotation buckets, form contracts, and numbers guidance, read
 | Offline | `GameLogic.simulateSpatialOffline` / director offline path |
 | Tests | `test/class_kits_combat_test.dart`, `*_abilities_test.dart` |
 | Report | `docs/CLASS_AUDIT_TEMPLATE.md` |
-| Archive | `docs/audits/YYYY-MM-DD-<specs>.md` |
+| Archive | `docs/archive/audits/YYYY-MM-DD-<specs>.md` |
 
 ## Workflow
 

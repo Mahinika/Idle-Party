@@ -58,7 +58,7 @@ Sync architecture facts; do not invent numbered programs.
 
 - Large refactors, balance retunes, new content
 - Pushing unless the user already said yes this turn (local commit when green is OK)
-- Rewriting or treating `docs/audits/` snapshots as current kit truth (archive
+- Rewriting or treating `docs/archive/audits/` snapshots as current kit truth (archive
   only; re-run `class-audit` for live verdicts)
 
 ## Done when

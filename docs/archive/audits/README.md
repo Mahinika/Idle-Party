@@ -1,7 +1,8 @@
-# Audits (Idle Party)
+# Audits (Idle Party) — archived snapshots
 
 Point-in-time snapshots — not live kit / store truth. Current game:
-[AGENTS.md](../../AGENTS.md) + code.
+[AGENTS.md](../../../AGENTS.md) + code. Parent index:
+[../README.md](../README.md).
 
 ## Archives
 
@@ -17,8 +18,5 @@ Point-in-time snapshots — not live kit / store truth. Current game:
 | 2026-08-22 | [2026-08-22-class-combat-cata.md](2026-08-22-class-combat-cata.md) | Design audit vs Cata 4.0–4.3 (original; re-audited 2026-09-11) |
 | 2026-08-22 | [2026-08-22-class-combat-cata-implementation.md](2026-08-22-class-combat-cata-implementation.md) | Cata combat v2 implementation + self-audit (updated 2026-09-11) |
 
-Class/kit template: [CLASS_AUDIT_TEMPLATE.md](../CLASS_AUDIT_TEMPLATE.md).
+Class/kit template: [CLASS_AUDIT_TEMPLATE.md](../../CLASS_AUDIT_TEMPLATE.md).
 Re-run `class-audit` when you need a fresh kit verdict.
-
-Old Play polish / feel / endgame-eval backlogs:
-[../archive/](../archive/) (not live work).
