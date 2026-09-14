@@ -7,15 +7,15 @@ void main() {
   final context =
       'Idle Party default work this session: $now '
       'Do that unless the owner named something else. '
-      'Program: docs/GROWTH_MANDATE.md Program 3 — stranger stays (D1→D7). '
-      'AL20 is a quality gate, not the batch. '
+      'Program 3 closed 2026-09-14 (D1 paste: Play has no D1; too small to read). '
+      'Wait for the next plan. Do not restore AL20 as the batch. '
+      'Do not repeat the Program 3 Robban line. '
       'Forks: six studio seats (.cursor/rules/studio-seats.mdc) — EP + UX + Marketing outweigh AL20. '
       'Do not start /init or repo cleanup unprompted. '
-      'Play listing/docs ARE in mandate (play-store-prep); do not treat Play as background chores. '
+      'Play listing/docs stay honest (play-store-prep); do not treat Play as background chores. '
       'If they paste play notes, prefer a new save / first 90s to combat; AL20 notes block ship if endgame is broken. '
+      'Named leftover if they say mer endgame: KEY week affix only against play notes. '
       'After code: short phone test list (new save first), wait; no GitHub/Play upload before they play. '
-      'When every GROWTH_MANDATE Program 3 box is checked, start the user message with exactly: '
-      'ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN '
       'Prefer git branch main for daily work; release/* only when cutting a tag. '
       'Do not stage windows/flutter/generated_* unless pubspec plugins changed. '
       'Live app look is the Samsung_A56 emulator (a56-playtest), not localhost web tabs.';
@@ -30,7 +30,7 @@ void main() {
 String _nowLine() {
   final file = File('.cursor/rules/owner-preferences.mdc');
   if (!file.existsSync()) {
-    return 'Program 3 (stranger stays)';
+    return 'Wait for the next plan (Program 3 closed)';
   }
   for (final line in file.readAsLinesSync()) {
     final t = line.trim();
@@ -40,5 +40,5 @@ String _nowLine() {
       return t.substring(i + marker.length).trim();
     }
   }
-  return 'Program 3 (stranger stays)';
+  return 'Wait for the next plan (Program 3 closed)';
 }

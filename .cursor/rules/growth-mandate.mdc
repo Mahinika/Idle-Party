@@ -1,7 +1,7 @@
 ---
 description: >-
-  Program 3 — stranger stays (D1→D7) until that done bar.
-  When complete, say the exact Robban line (never early, never paraphrased).
+  Program 3 closed 2026-09-14. Wait for the next plan.
+  Do not restore AL20. Do not repeat the Robban line.
 alwaysApply: true
 ---
 
@@ -9,9 +9,13 @@ alwaysApply: true
 
 **Locked 2026-09-12.** Source: `docs/GROWTH_MANDATE.md` (research-checked).
 Program 1 shipped 2026-09-12. Program 2 (Play smoke) closed 2026-09-13.
+**Program 3** (stranger stays) closed **2026-09-14** — D1 paste: Play has
+no D1; 2-day/D7 empty or n=1. Numbers in `docs/PLAY_GROWTH.md`.
 
-Default work is **Program 3** — stranger stays (D1→D7 on Play, no zone #16).
-Vague “gör bättre / vad härnäst” → next **unchecked** box on **Program 3**.
+Default work **waits for the next plan**. Vague “gör bättre / vad härnäst”
+does **not** invent Program 4 and does **not** restore AL20.
+If the owner names **mer endgame**: next Endgame identity slice (KEY week
+affix — only if play notes say KEY feels like a Rift).
 AL20 play notes are a **quality gate**. They are not the batch.
 Endgame copy / GEAR follow-up only when the owner’s notes say they lie.
 
@@ -21,28 +25,25 @@ Endgame copy / GEAR follow-up only when the owner’s notes say they lie.
 - TODAY grow-the-party until the first boss; one cave today on day 2–7
 - Week-1 crawl identity only against play notes (packs / tells, not dungeon #16)
 - Cadence 2–3 weeks; new-player What’s New; DPS HIGH still fails CI
-- Owner: paste D1 (and D7 if traffic exists); listing experiment or defer
+- Listing experiment still deferred (~9 visitors / 28d). No scaled UA.
 
 ## Do not do
 
 - New zone / class / God Hand redesign / second sim / gacha / iOS / web product
 - AL20 chase/wipe polish as the default slice
 - God-object cleanup as the quarter’s story
-- Scaled paid UA before D1 is known (tiny spend ≠ a D1 study)
-- Repeat the Robban line for Program 1 or Program 2 (those bars are history)
+- Scaled paid UA (tiny spend ≠ a D1 study; D1 still not a readable %)
+- Repeat the Robban line for Program 1, 2, or **3** (those bars are history)
 
 ## Phrase
 
-When **every** checkbox in `docs/GROWTH_MANDATE.md` → **Program 3** is `[x]`,
-the next user-facing message starts with **exactly**:
-
-`ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN`
-
-Never early. Never paraphrase. `/init` must not restore the old AL20 default.
+The Program 3 Robban line was said **2026-09-14**. Do not repeat it.
+`/init` must not restore the old AL20 default.
 Why: `docs/LEARNINGS.md`.
 
 ## Decision policy
 
 `.cursor/rules/studio-seats.mdc` — six chairs, not a persona play.
-EP + UX + Marketing pick *what to build*. Game Director vetoes a broken fight.
-Tech vetoes red analyze / crash. Legal/fairness sit on Art + Game + EP.
+EP + UX + Marketing pick *what to build* on the next plan.
+Game Director vetoes a broken fight. Tech vetoes red analyze / crash.
+Legal/fairness sit on Art + Game + EP.

@@ -4,7 +4,8 @@
 (GameAnalytics 2025–26, Play ASO experiments, idle FTUE, persona-prompt papers).
 **Program 1** (time-to-combat + Play funnel) shipped **2026-09-12**.
 **Program 2** (hide-until-unlock + Play smoke) closed **2026-09-13**.
-**Default work now:** [Program 3](#program-3--stranger-stays).
+**Default work now:** wait for the **next plan**. Program 3 closed
+**2026-09-14**. Do not restore AL20 as the batch.
 Why: [LEARNINGS.md](LEARNINGS.md).
 
 North star: **främlingar på Play blir spelare.** AL20 is a quality gate
@@ -129,7 +130,7 @@ Check boxes only when **shipped** (or owner confirmed for Console-only).
       deferred. No scaled UA. (Program 3 pastes D1 after smoke when numbers exist.)
 
 Program 2 completed **2026-09-13**. The Robban line for *this* bar is said
-in the same turn. Do not repeat it. Default work is **[Program 3](#program-3--stranger-stays)**.
+in the same turn. Do not repeat it. Program 3 closed **2026-09-14**.
 Do not restore AL20 as the batch.
 
 **Quality gates (not the batch)**
@@ -214,15 +215,25 @@ prove a later hole is bigger)
 
 **Owner / Console**
 
-- [ ] D1 (and D7 if traffic exists) pasted once after Program 2 smoke
+- [x] D1 (and D7 if traffic exists) pasted once after Program 2 smoke
+      (**2026-09-14** Console look, Idle Party production). Play has **no
+      D1** metric (earliest return is **2 days**). 2-day retained users
+      (28d): **1** returner on 23 Aug and **1** on 28 Aug — not a %.
+      D7 retained devices: **no data**. Funnel 28d (device): **433**
+      impressions, **15** acquisitions, **4** first opens, **4** MAU.
+      Listing 28d (data through 8 Sep): **9** visitors / **6** install
+      clicks / **67%** CTR. Too small to compare to ~22% median D1.
+      Numbers: [PLAY_GROWTH.md](PLAY_GROWTH.md).
 - [x] Crashes / 1★ answered or empty
       (**2026-09-12** Console: no user-perceived crashes/ANR; one 5★ already
-      replied; no 1★. Revisit if a new 1★ lands.)
+      replied; no 1★. **2026-09-14**: still empty / 5,00. Revisit if a new
+      1★ lands.)
 - [x] Store Listing Experiment started **or** deferred (too little traffic)
-      (**2026-09-12**: ~10 listing visitors / 28 days — deferred. Revisit when
-      visitors exist.)
+      (**2026-09-12**: ~10 listing visitors / 28 days — deferred.
+      **2026-09-14**: still ~9 visitors / 28d — still deferred.)
 - [x] Tiny UA only if D1 is known and owner asked — no scale
-      (**2026-09-13**: D1 not readable yet; owner did not ask — no paid spend.)
+      (**2026-09-14**: D1 still not a readable %; owner did not ask — no
+      paid spend.)
 
 When **every Program 3** box is `[x]`, the next user-facing message starts
 with **exactly**:
@@ -233,9 +244,14 @@ ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN
 
 Same phrase, next bar. Never early. Never paraphrase.
 
+Program 3 completed **2026-09-14**. The Robban line for *this* bar is said
+in the same turn. Do not repeat it. Default work waits for the **next plan**.
+Do not restore AL20 as the batch. Endgame identity KEY affix stays a
+named-owner slice (play notes), not a substitute program.
+
 ## Endgame identity (owner named 2026-09-13)
 
-Not a new program. Does **not** close the D1 paste. Soft lock: no dungeon #16
+Not a new program. D1 paste closed **2026-09-14** (too small to read). Soft lock: no dungeon #16
 unless the owner says “ny zon OK”. No new class. No hunt #6 under MORE.
 
 **One call (six chairs):** EP + UX + Marketing — more endgame means the
@@ -262,13 +278,15 @@ Ashen weekly tickets + PRACTICE. The hole is **same-cave feel**.
 Stop: God Hand redesign, second sim, gacha, listing that promises zone #16.
 
 When the owner names “mer endgame” / “kör det”, do the next unchecked slice
-above. Vague “nästa” while D1 is open still means the D1 paste.
+above. Vague “nästa” after Program 3 waits for the **next plan** — do not
+invent Program 4 and do not restore AL20.
 
 ## Metrics (owner / Console — do not fake)
 
 Crash-free → listing conversion → D1 (~22% median all-mobile; Android top
 quartile ~25–27%) → D7 → rating → then D30 / UA / iOS.
-Agent cannot mark D1 “good” without owner numbers.
+Agent cannot mark D1 “good” without a real return %. The 2026-09-14 paste
+is **not readable** (n too small; Play has no D1 metric).
 
 ## Quality gate (still)
 
@@ -278,7 +296,7 @@ SpatialCombat remains the only fight sim.
 ## Studio seats
 
 Six chairs only — `.cursor/rules/studio-seats.mdc`. Not a theatrical panel.
-**EP + UX + Marketing** pick *what to build* while Program 3 is open.
+**EP + UX + Marketing** pick *what to build* on the next plan.
 Game Director vetoes a broken fight or DPS HIGH. Tech vetoes red
-analyze / crash. AL20 is not a chair. After the Program 3 Robban line,
-re-seat on the next plan — not AL20 as the default voice.
+analyze / crash. AL20 is not a chair. Program 3 Robban line is said —
+re-seat on the next plan, not AL20 as the default voice.

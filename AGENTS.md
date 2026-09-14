@@ -10,16 +10,17 @@ in sync (currently **1.12.166**). What’s New lives in `lib/core/meta_systems.d
 
 Owner describes goals in plain language; agents pick skills/tools/verify alone.
 **Rules (don’t duplicate here):**
-- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **Program 3** (stranger stays — D1→D7). Program 2 Play smoke closed 2026-09-13. Program 1 done 2026-09-12. Do not restore AL20 as the batch
+- `.cursor/rules/growth-mandate.mdc` + `docs/GROWTH_MANDATE.md` — **Program 3** closed **2026-09-14** (D1 paste: not readable). Wait for the next plan. Do not restore AL20 as the batch. Do not repeat the Program 1–3 Robban lines.
 - `.cursor/rules/studio-seats.mdc` — six chairs (EP, Game, UX, Tech, Art, Marketing)
 - `.cursor/rules/product-locks.mdc` — hard + soft locks (dated)
 - `.cursor/rules/owner-preferences.mdc` — work loop, ask table, default slice
 - `.cursor/rules/vibe-coder-autopilot.mdc` — skill map + plain Swedish handoff
 - `.cursor/rules/definition-of-done.mdc` — analyze / tests / commit locally
 
-Cadence: `docs/GROWTH_MANDATE.md` **Program 3**, then
-`docs/CONTENT_CADENCE.md`. **Default work** when vague: next unchecked Program 3
-box. Do not restore AL20 as the batch. Chat Swedish; short test list
+Cadence: `docs/CONTENT_CADENCE.md` (tag rhythm). **Default work** when
+vague: wait for the next plan (Program 3 closed). If they name **mer
+endgame**: next Endgame identity slice (KEY week affix, play notes).
+Do not restore AL20 as the batch. Chat Swedish; short test list
 (new save first) → wait. Commit locally when green; ask before push / PR / tag / Play.
 
 **UI target:** portrait phones (~360–430 px). Reference **Samsung A56**
@@ -118,8 +119,8 @@ Cursor workflows (`suggesting-skills`, `building-skills-from-patterns`,
 Slash: `/init` resyncs AGENTS/rules; `/repo auditandcleaning` runs a read-only
 full-repo audit (see `.cursor/commands/repo-auditandcleaning.md`).
 
-Cadence: **`docs/GROWTH_MANDATE.md` Program 3**, then
-`docs/CONTENT_CADENCE.md` (tag rhythm). Not AL20-as-batch. Why we flipped:
+Cadence: **`docs/CONTENT_CADENCE.md`** (tag rhythm). Program 3 closed
+**2026-09-14**. Not AL20-as-batch. Why we flipped:
 [`docs/LEARNINGS.md`](docs/LEARNINGS.md). Background (optional):
 `docs/TOP_GAMES_RESEARCH.md`. Chase contract (hub TODAY ↔ offline Up next):
 `docs/CHASE_CONTRACT.md`. Gear budget: `docs/GEAR_BUDGET.md`. Floor blueprint

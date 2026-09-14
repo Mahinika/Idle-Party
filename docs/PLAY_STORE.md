@@ -17,7 +17,7 @@ Package id: **`com.idleparty.app`**
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 boards wired; OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ⏳ review | Default locale **en-US only**. Short + full from `docs/STORE_LISTING.md` (itch-parity: Day-one menus, Shield/Healer/Damage, Cognifox, privacy URL). **2026-09-12:** pasted + submitted with Production **187**. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
-| Screenshots + feature graphic | ⏳ review | **2026-09-12:** **8** phone shots submitted (1–2 = new-save Sandy combat; then chase, gear, party, zone, AFK, ascend — same story as itch). Icon remains owned `play_icon_512.png`. Preview `OMWXbgGBFMA`. Console look earlier same day: **11** listing visitors / **8** install clicks / **73%** CTR (28d); **0** user-perceived crashes; **1** 5★ review. Store Listing Experiment **deferred**. |
+| Screenshots + feature graphic | ⏳ review | **2026-09-12:** **8** phone shots submitted (1–2 = new-save Sandy combat; then chase, gear, party, zone, AFK, ascend — same story as itch). Icon remains owned `play_icon_512.png`. Preview `OMWXbgGBFMA`. Console look **2026-09-14:** listing 28d (through 8 Sep) **9** visitors / **6** install clicks / **67%** CTR; funnel **433** impressions / **15** acquisitions / **4** first opens. D1 not readable. Store Listing Experiment **deferred**. |
 | Preview video (YouTube) | ⏳ review | **2026-09-11:** Cognifox Studio channel unlisted YT `https://www.youtube.com/watch?v=OMWXbgGBFMA` (replaces Robert personal `fiZjJ9S9l4A`). Relink + resubmit after Cognifox upload. Confirm YT: ads off, embeddable, not age-restricted. |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
@@ -69,9 +69,10 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 **Primary distribution: Google Play.**  
 Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
 (production track live; keep Operator status honest above). Closed opt-in for early builds. Do **not**
-point players at GitHub Releases (repo may be private). Day-to-day: **Program 3**
-([GROWTH_MANDATE.md](GROWTH_MANDATE.md)) — stranger stays (D1→D7). Program 2
-Play publish/smoke closed **2026-09-13**.
+point players at GitHub Releases (repo may be private). Day-to-day: wait for
+the **next plan** ([GROWTH_MANDATE.md](GROWTH_MANDATE.md)). Program 3 closed
+**2026-09-14** (D1 paste: not readable). Program 2 Play publish/smoke closed
+**2026-09-13**.
 Ship path for players = Play AAB after owner play OK — not public GitHub APK
 links.
 

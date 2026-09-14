@@ -1,11 +1,11 @@
 # Idle Party — Play growth (what we can do)
 
-**Updated:** 2026-09-12 · Category stays **Role Playing** (idle fantasy RPG).  
+**Updated:** 2026-09-14 · Category stays **Role Playing** (idle fantasy RPG).  
 Do **not** chase Casual / Battle Royale / sandbox search volume.
 
 **Active program:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) **Program 3**
-(stranger stays — D1→D7). Program 1 done **2026-09-12**. Program 2 Play
-publish/smoke closed **2026-09-13**. Do not silently restore AL20 as the batch.
+closed **2026-09-14** (D1 paste: not readable). Wait for the next plan.
+Do not restore AL20 as the batch.
 
 Honest growth order: **crash-free → listing conversion → D1 → D7 → rating → tiny paid test**.
 
@@ -53,11 +53,23 @@ Owner confirmed on a **Play-installed** build: listing Updated, SHOP SKUs
 visible, POWERUPS + AD PRIVACY path. D1 / listing A/B still deferred
 (too little traffic — Console look **2026-09-12**).
 
-### Program 3 — Console (2026-09-13)
+### Program 3 — Console (closed 2026-09-14)
 
-In-repo bar + `v1.12.163` tag done. Crashes empty / 1★ none / listing A/B
-deferred / no tiny UA — from the **2026-09-12** look plus owner did not ask
-for ads. **D1 still needs a paste** (or “still no traffic”).
+D1 / D7 pasted from a Console look **2026-09-14**. Play has no D1 metric;
+2-day and D7 are empty or n=1. Listing A/B still deferred. No tiny UA.
+
+### Console look (2026-09-14)
+
+Opened after Program 2 smoke. Last **28 days** unless noted. Numbers are
+too small to call D1 good or bad vs ~22% median.
+
+| Surface | What we saw |
+|---------|-------------|
+| Funnel (Öka, Enhet) | **433** device impressions, **15** acquisitions, **4** first opens, **4** MAU. D7 retained devices: **—** (no data). Grow-page listing conversion **72,73%**. +9 exploration acquisitions / 90d. **0** listing experiments. |
+| Listing (Butiksuppgifter) | Data lags (through **8 Sep**). Last 28d: **9** visitors, **6** unique install clicks, **67%** CTR. Standard listing table also shows **39** visitors / **25,6%** conversion (longer / different window — do not mix with the 9). |
+| Retention (Statistik) | No “after 1 day”. 2-day: **1** returner on 23 Aug and **1** on 28 Aug. D7: no data. |
+| Crashes / ANR | Still none on Översikt. Rating **5,00**. Production **4** installed users. Revenue **12,0 kr**. |
+| Store Listing Experiment | **Still deferred** — ~9 listing visitors / 28 days. |
 
 ### Console look (2026-09-12)
 

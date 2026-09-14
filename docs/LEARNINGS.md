@@ -42,15 +42,24 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 - **Persona panels don’t make better calls.** “Act as expert” changes tone.
   Six chairs + vetoes beat a 40-role org chart. Chairs: EP, Game, UX, Tech,
   Art, Marketing. No Scrum/Network/UA department.
-- **`/init` must not restore AL20-default** while Program 2 is open.
+- **`/init` must not restore AL20-default.** After Program 3, wait for the
+  next plan (`GROWTH_MANDATE.md`).
 - **What’s New lead is for a stranger.** First bullet = party fights / tap ENTER.
   Keep KEY / GREATER / Mastery in later bullets. Do not teach removed
   LOADOUTS / Sell junk / Scrap buttons by naming them.
 - Program 1 done bar complete **2026-09-12** (Robban line said). Program 2
-  closed **2026-09-13**. Say exactly
-  `ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN` only when **Program 3**
-  is fully checked. Until then, Program 3 (stranger stays) is the bar —
-  not AL20 as the batch (`GROWTH_MANDATE.md`).
+  closed **2026-09-13**. Program 3 closed **2026-09-14** (D1 paste: Play
+  has no D1; 2-day/D7 empty or n=1). The Robban line for Program 3 is
+  said. Do not repeat it. Wait for the next plan — not AL20 as the batch
+  (`GROWTH_MANDATE.md`).
+
+## 2026-09-14 — Console D1 is not a number yet
+
+- Agent opened Play Console (Cognifox Studio / Idle Party production).
+  Play has **no D1** (earliest return is 2 days). 2-day = two days with
+  1 returner each; D7 empty. ~4 first opens / 15 acquisitions / 9 listing
+  visitors. Paste that — do not invent a % vs 22% median. Program 3
+  Console bar closes on the paste, not on a “good D1”.
 
 ## 2026-09-13 — seats drafted Program 3; Play smoke closed it the same day
 
@@ -62,7 +71,8 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   Listing Experiment stay deferred from the **2026-09-12** look (too little
   traffic). Program 2 Console is `[x]`. Program 3 clock starts.
 - Program 3 in-repo + crashes / experiment / no-UA boxes closed **2026-09-13**.
-  D1 still waits for an owner paste — do not invent it.
+  D1 paste closed **2026-09-14** from a Console look — not a readable %;
+  do not invent one vs 22% median.
 - Owner asked for more endgame (six chairs). EP + UX + Marketing: deepen the
   five hunts, **not** zone #16. First slice = Ashen Crown weekly kit.
 
