@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.168**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.169**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -30,7 +30,7 @@ Google Play AAB.**
 **Distribution today:** **Google Play is the primary install path**
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Store listing:
 `https://play.google.com/store/apps/details?id=com.idleparty.app` (production
-live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.168 / 198**). Closed opt-in remains for early builds.
+live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.169 / 199**). Closed opt-in remains for early builds.
 Do **not** link players to GitHub Releases (repo may be private). Working ship
 in-repo may be ahead of Play — **never upload a new AAB without owner ask**.
 
@@ -189,15 +189,17 @@ not the same SHARD forever); wipe/leave → hub;
 **KEYSTONE** (same party-max-level gate): Mythic+-style keys on
 normal zone runs — dial under hub **KEY**. Before party max level there is no KEY habit or KEY tab.
 
-**Rifts** (same gate): farm timed kill-quota in **Stormwake Hollow** from hub /
-**KEY** — gold and gear mid-run; not Play-ranked; not Spire climb. Endless after R20
-(kill quota holds; threat keeps climbing). `metaDepth.riftBestTier` survives Ascend.
+**Rifts** (same gate): Diablo 3 Nephalem-style farm in **Stormwake Hollow**
+from hub / **KEY** — kills fill a progress bar → **Rift Guardian**; no clear-timer
+fail; gold and gear mid-run; not Play-ranked; not Spire climb. Endless after R20
+(progress target holds; threat keeps climbing). `metaDepth.riftBestTier` survives Ascend.
 
-**Greater Rifts** (same gate): harder timed ladder in **Mothveil Hollow**,
-no mid-run gear (gold OK; chests skip equipment), larger clear payout;
+**Greater Rifts** (same gate): Diablo 3 Greater-style timed ladder in
+**Mothveil Hollow** — same progress bar → Guardian under [parTimeMs]; no mid-run
+gear (gold OK; chests skip equipment), larger clear payout;
 season PB is **local** on hub and submits to Play Games when the month’s
 `PlayLeaderboardIds.greaterRift` ID is wired (2026-09 `CgkIhuXGvNocEAIQAw`).
-After GR20 the kill quota holds; par grows a little
+After GR20 the progress target holds; par grows a little
 (max ~90s) and threat climbs slower so the ladder stays winnable.
 `metaDepth.grBestTier` / `seasonBestGrTier` survive Ascend.
 

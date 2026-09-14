@@ -118,6 +118,11 @@ class OfflineSim {
         if (result.kills > 0) {
           _current = GameLogic.noteRiftKills(_current, result.kills);
         }
+        final beforeGuardian = _current.riftGuardianActive;
+        _current = GameLogic.maybeActivateRiftGuardian(_current);
+        if (_current.riftGuardianActive && !beforeGuardian) {
+          _rebuildWorld();
+        }
         final resolved = GameLogic.tryResolveRift(_current);
         if (resolved != null) {
           _current = resolved;
@@ -132,6 +137,11 @@ class OfflineSim {
         );
         if (result.kills > 0) {
           _current = GameLogic.noteGreaterRiftKills(_current, result.kills);
+        }
+        final beforeGuardian = _current.grGuardianActive;
+        _current = GameLogic.maybeActivateGreaterRiftGuardian(_current);
+        if (_current.grGuardianActive && !beforeGuardian) {
+          _rebuildWorld();
         }
         final resolved = GameLogic.tryResolveGreaterRift(_current);
         if (resolved != null) {
@@ -227,7 +237,12 @@ class OfflineSim {
         }
       }
 
-      if (!result.roomCleared) continue;
+      // Guardian phase owns the floor — do not advance past the RG.
+      if (!result.roomCleared ||
+          _current.riftGuardianActive ||
+          _current.grGuardianActive) {
+        continue;
+      }
 
       final wasTreasure = _world.isTreasure;
       // Combat gold already credited per kill; treasure pays scaled chest budget.

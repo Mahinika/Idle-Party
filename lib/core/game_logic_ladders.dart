@@ -116,6 +116,8 @@ GameState _enterRift(GameState state, {int? tier}) {
       riftParMs: Rift.parTimeMs(t),
       riftKillTarget: Rift.killTarget(t),
       riftKills: 0,
+      riftProgress01: 0,
+      riftGuardianActive: false,
       riftOutcome: '',
       metaDepth: cleared.metaDepth.copyWith(riftPreferredTier: t),
       heroes: cleared.heroes
@@ -136,6 +138,8 @@ GameState _clearRiftRun(GameState state) {
       state.riftParMs == 0 &&
       state.riftKillTarget == 0 &&
       state.riftKills == 0 &&
+      state.riftProgress01 == 0 &&
+      !state.riftGuardianActive &&
       state.riftOutcome.isEmpty) {
     return state;
   }
@@ -146,6 +150,8 @@ GameState _clearRiftRun(GameState state) {
     riftParMs: 0,
     riftKillTarget: 0,
     riftKills: 0,
+    riftProgress01: 0,
+    riftGuardianActive: false,
     riftOutcome: '',
   );
 }
@@ -169,17 +175,82 @@ GameState _advanceRiftTimer(GameState state, int deltaMs) {
 GameState _noteRiftKills(GameState state, int kills) {
   if (!state.inRift || kills <= 0) return state;
   if (state.riftOutcome.isNotEmpty) return state;
-  return state.copyWith(riftKills: state.riftKills + kills);
+  if (state.riftGuardianActive) return state;
+  final nextKills = state.riftKills + kills;
+  final progress = RiftProgress.add(
+    current: state.riftProgress01,
+    killTarget: max(1, state.riftKillTarget),
+    normalKills: kills,
+    farm: true,
+  );
+  return state.copyWith(riftKills: nextKills, riftProgress01: progress);
+}
+
+EnemyUnit _buildRiftGuardian(GameState state, {required bool farm}) {
+  final dungeonId = farm ? Rift.dungeonId : GreaterRift.dungeonId;
+  final tier = farm ? state.riftTier : state.grTier;
+  final level = max(
+    1,
+    state.currentRoom.globalBattleNumber + clampTierBoost(tier),
+  );
+  final bossRoom = DungeonRoom(
+    floorNumber: max(1, state.currentRoom.floorNumber),
+    roomIndex: 0,
+    type: RoomType.boss,
+    enemyLevel: level,
+    enemyCount: 1,
+  );
+  final group = GameLogic.createEnemyGroup(
+    bossRoom,
+    dungeonId: dungeonId,
+    fromState: farm
+        ? state.copyWith(inRift: true, riftTier: tier)
+        : state.copyWith(inGreaterRift: true, grTier: tier),
+  );
+  if (group.isEmpty) {
+    return EnemyUnit(
+      name: 'Rift Guardian',
+      level: level,
+      currentHp: 800 + tier * 120,
+      stats: Stats.enemy(
+        attack: 20 + tier * 4,
+        defense: 8 + tier,
+        maxHp: 800 + tier * 120,
+      ),
+      rewardGold: farm ? 40 + tier * 8 : 0,
+      role: EnemyRole.boss,
+      archetype: EnemyArchetype.tank,
+    );
+  }
+  final boss = group.first;
+  return boss.copyWith(
+    name: 'Rift Guardian',
+    role: EnemyRole.boss,
+  );
+}
+
+int clampTierBoost(int tier) => max(0, tier);
+
+GameState _maybeActivateRiftGuardian(GameState state) {
+  if (!state.inRift || state.riftOutcome.isNotEmpty) return state;
+  if (state.riftGuardianActive || state.riftProgress01 < 1.0) return state;
+  final boss = _buildRiftGuardian(state, farm: true);
+  return state.copyWith(
+    riftGuardianActive: true,
+    riftProgress01: 1.0,
+    enemies: <EnemyUnit>[boss],
+  );
+}
+
+bool _riftGuardianDown(GameState state) {
+  if (state.enemies.isEmpty) return true;
+  return state.enemies.every((e) => e.isDefeated);
 }
 
 GameState? _tryResolveRift(GameState state) {
   if (!state.inRift || state.riftOutcome.isNotEmpty) return null;
-  if (state.riftKills >= state.riftKillTarget &&
-      state.riftTimerMs <= state.riftParMs) {
+  if (state.riftGuardianActive && _riftGuardianDown(state)) {
     return _resolveRiftSuccess(state);
-  }
-  if (state.riftTimerMs > state.riftParMs) {
-    return _resolveRiftFail(state);
   }
   return null;
 }
@@ -187,11 +258,7 @@ GameState? _tryResolveRift(GameState state) {
 GameState _resolveRiftSuccess(GameState state) {
   if (!state.inRift) return state;
   final tier = Rift.clampTier(state.riftTier);
-  final unlock = Rift.unlockTierAfterSuccess(
-    clearedTier: tier,
-    timerMs: state.riftTimerMs,
-    parMs: state.riftParMs,
-  );
+  final unlock = Rift.unlockTierAfterSuccess(clearedTier: tier);
   final best = max(state.metaDepth.riftBestTier, unlock);
   final essence = Rift.successEssence(tier);
   final gold = Rift.successGold(tier);
@@ -208,8 +275,8 @@ GameState _resolveRiftSuccess(GameState state) {
   );
   next = GameLogic.syncMetaPayoffs(next);
   LogicNotices.addMetaPayoffs([
-    'Rift R$tier timed · +${essence}e · +${gold}g'
-        '${unlock > tier + 1 ? ' · unlock R$unlock' : ''}',
+    'Rift R$tier cleared · +${essence}e · +${gold}g'
+        '${unlock > tier ? ' · unlock R$unlock' : ''}',
   ]);
   return GameLogic.exitToHubHealed(
     GameLogic.applyMissionProgress(next, riftClears: 1),
@@ -226,7 +293,7 @@ GameState _resolveRiftFail(GameState state) {
     riftOutcome: 'depleted',
   );
   LogicNotices.addMetaPayoffs([
-    'Rift R$tier failed · +${essence}e consolation',
+    'Rift R$tier ended · +${essence}e consolation',
   ]);
   return GameLogic.exitToHubHealed(next);
 }
@@ -234,7 +301,6 @@ GameState _resolveRiftFail(GameState state) {
 GameState _enterGreaterRift(GameState state, {int? tier}) {
   if (!GameLogic.canEnterGreaterRift(state)) return state;
   final maxSel = GreaterRift.maxSelectableTier(state.metaDepth.grBestTier);
-  // Default is always the next uncleared rank (best+1). Ignore KEY preferred.
   final t = GreaterRift.clampTier(
     (tier ?? maxSel).clamp(GreaterRift.minTier, maxSel),
   );
@@ -270,6 +336,8 @@ GameState _enterGreaterRift(GameState state, {int? tier}) {
       grParMs: GreaterRift.parTimeMs(t),
       grKillTarget: GreaterRift.killTarget(t),
       grKills: 0,
+      grProgress01: 0,
+      grGuardianActive: false,
       grOutcome: '',
       metaDepth: cleared.metaDepth.copyWith(grPreferredTier: t),
       heroes: cleared.heroes
@@ -290,6 +358,8 @@ GameState _clearGreaterRiftRun(GameState state) {
       state.grParMs == 0 &&
       state.grKillTarget == 0 &&
       state.grKills == 0 &&
+      state.grProgress01 == 0 &&
+      !state.grGuardianActive &&
       state.grOutcome.isEmpty) {
     return state;
   }
@@ -300,6 +370,8 @@ GameState _clearGreaterRiftRun(GameState state) {
     grParMs: 0,
     grKillTarget: 0,
     grKills: 0,
+    grProgress01: 0,
+    grGuardianActive: false,
     grOutcome: '',
   );
 }
@@ -325,12 +397,32 @@ GameState _advanceGreaterRiftTimer(GameState state, int deltaMs) {
 GameState _noteGreaterRiftKills(GameState state, int kills) {
   if (!state.inGreaterRift || kills <= 0) return state;
   if (state.grOutcome.isNotEmpty) return state;
-  return state.copyWith(grKills: state.grKills + kills);
+  if (state.grGuardianActive) return state;
+  final nextKills = state.grKills + kills;
+  final progress = RiftProgress.add(
+    current: state.grProgress01,
+    killTarget: max(1, state.grKillTarget),
+    normalKills: kills,
+    farm: false,
+  );
+  return state.copyWith(grKills: nextKills, grProgress01: progress);
+}
+
+GameState _maybeActivateGreaterRiftGuardian(GameState state) {
+  if (!state.inGreaterRift || state.grOutcome.isNotEmpty) return state;
+  if (state.grGuardianActive || state.grProgress01 < 1.0) return state;
+  final boss = _buildRiftGuardian(state, farm: false);
+  return state.copyWith(
+    grGuardianActive: true,
+    grProgress01: 1.0,
+    enemies: <EnemyUnit>[boss],
+  );
 }
 
 GameState? _tryResolveGreaterRift(GameState state) {
   if (!state.inGreaterRift || state.grOutcome.isNotEmpty) return null;
-  if (state.grKills >= state.grKillTarget &&
+  if (state.grGuardianActive &&
+      _riftGuardianDown(state) &&
       state.grTimerMs <= state.grParMs) {
     return _resolveGreaterRiftSuccess(state);
   }

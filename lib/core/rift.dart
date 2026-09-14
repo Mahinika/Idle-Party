@@ -1,13 +1,14 @@
 import 'dart:math';
 
 import '../models/meta_depth.dart';
+import 'rift_progress.dart';
 import 'timed_ladder.dart';
 
-/// Farm Rift — timed kill challenge with mid-run gold and gear (party max level).
+/// Farm Rift — Diablo 3 Nephalem-style (party max level).
 ///
-/// Runs in **Stormwake Hollow** (not Crystal Spire). Kill [killTarget] enemies
-/// before [parTimeMs] expires. Success unlocks the next tier (+2 if finished
-/// with ≥25% time remaining). Not ranked on Play Games (see [GreaterRift]).
+/// Runs in **Stormwake Hollow**. Fill progress by killing monsters, then defeat
+/// the **Rift Guardian**. No clear-timer fail (elapsed is display-only). Mid-run
+/// gold + gear. Not ranked on Play Games (see [GreaterRift]).
 /// SpatialCombat stays the fight authority — this module is rules + payout only.
 abstract final class Rift {
   /// TODAY campaign chase / kill-quota plateau — farm push keeps going.
@@ -29,15 +30,16 @@ abstract final class Rift {
   static int maxSelectableTier(int bestCleared) =>
       clampTier(max(minTier, bestCleared + 1));
 
+  /// Normal kills needed to fill the progress bar to 100%.
   static int killTarget(int tier) {
     final t = min(clampTier(tier), campaignCap);
     return 20 + t * 3; // R1=23 … R20+=80
   }
 
-  /// Par window — higher tiers get less time through [campaignCap], then hold.
+  /// Display-only elapsed reference (not a fail gate). Kept for HUD pacing.
   static int parTimeMs(int tier) {
     final t = min(clampTier(tier), campaignCap);
-    return max(45000, 120000 - t * 3000); // R1≈117s … R20+=60s
+    return max(45000, 120000 - t * 3000);
   }
 
   /// Pack threat keeps climbing after 20.
@@ -56,37 +58,33 @@ abstract final class Rift {
     return 80 + t * 35;
   }
 
-  /// Unlock next tier; +2 when remaining time ≥ 25% of par.
-  static int unlockTierAfterSuccess({
-    required int clearedTier,
-    required int timerMs,
-    required int parMs,
-  }) =>
-      TimedLadder.unlockTiersAfterSuccess(
-        clearedTier: clearedTier,
-        timerMs: timerMs,
-        parMs: parMs,
-        clampTier: clampTier,
-      );
+  /// Farm clears unlock +1 only (no timer-based +2).
+  static int unlockTierAfterSuccess({required int clearedTier}) =>
+      clampTier(clearedTier + 1);
 
   static String formatTimer(int ms) => TimedLadder.formatTimer(ms);
 
-  /// Short in-dungeon chip (no timer — timer lives on the place line).
   static String hudChipLabel({
-    required int kills,
-    required int target,
+    required double progress01,
     required int tier,
-  }) =>
-      'FARM R$tier · $kills/$target';
+    required bool guardianActive,
+  }) {
+    if (guardianActive) return 'FARM R$tier · GUARDIAN';
+    return 'FARM R$tier · ${RiftProgress.percentLabel(progress01)}';
+  }
 
   static String progressLabel({
-    required int kills,
-    required int target,
+    required double progress01,
     required int timerMs,
-    required int parMs,
     required int tier,
-  }) =>
-      'FARM R$tier · $kills/$target · ${formatTimer(timerMs)}/${formatTimer(parMs)}';
+    required bool guardianActive,
+  }) {
+    final pct = RiftProgress.percentLabel(progress01);
+    if (guardianActive) {
+      return 'FARM R$tier · GUARDIAN · ${formatTimer(timerMs)}';
+    }
+    return 'FARM R$tier · $pct · ${formatTimer(timerMs)}';
+  }
 }
 
 /// One-time essence at Rift tier milestones.

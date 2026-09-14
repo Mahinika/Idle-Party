@@ -1,14 +1,15 @@
 import 'dart:math';
 
 import '../models/meta_depth.dart';
+import 'rift_progress.dart';
 import 'timed_ladder.dart';
 
-/// Greater Rift — prestige timed kill ladder (party max level; Play Games ranked).
+/// Greater Rift — Diablo 3 Greater-style (party max level; Play Games ranked).
 ///
-/// Runs in **Mothveil Hollow** (not Crystal Spire / not Stormwake farm). Harder
-/// packs than farm [Rift], thinner mid-run loot (gold OK, no gear), bigger clear
-/// payout. Higher GR tier always ranks above lower; same tier prefers faster clear.
-/// Shares timer/unlock helpers with [Rift] via [TimedLadder] — modes stay separate.
+/// Runs in **Mothveil Hollow**. Fill progress by killing monsters, spawn the
+/// **Rift Guardian** at 100%, defeat it before [parTimeMs]. No mid-run gear
+/// (gold OK). Harder packs than farm [Rift]. Shares unlock helpers via
+/// [TimedLadder]. SpatialCombat stays the fight authority.
 abstract final class GreaterRift {
   /// TODAY campaign chase / kill-quota plateau — ranked push keeps going.
   static const int campaignCap = 20;
@@ -40,6 +41,7 @@ abstract final class GreaterRift {
   static bool isHubEnterLabel(String label) =>
       RegExp(r'^RANKED GR\d*$').hasMatch(label);
 
+  /// Normal kills needed to fill the progress bar to 100%.
   static int killTarget(int tier) {
     final t = min(clampTier(tier), campaignCap);
     return 22 + t * 4; // GR1=26 … GR20+=102
@@ -47,23 +49,17 @@ abstract final class GreaterRift {
 
   static int parTimeMs(int tier) {
     final t = min(clampTier(tier), campaignCap);
-    // Tighter than farm through mid tiers. GR20 is the campaign peak (~62s).
-    // Past 20, add clock so thicker packs are a ladder — play timed out GR21
-    // around F10 on the frozen 62s window.
     final base = max(58000, 112000 - t * 2500);
     final extra = max(0, clampTier(tier) - campaignCap);
     return min(90000, base + extra * 4000);
   }
 
-  /// ~1.5× farm Rift threat at the same tier band. After 20 the climb slows
-  /// (still harder each rank, not a brick wall).
   static double threatMul(int tier) {
     final t = clampTier(tier);
     if (t <= campaignCap) return 1.0 + t * 0.20;
     return 1.0 + campaignCap * 0.20 + (t - campaignCap) * 0.08;
   }
 
-  /// Pack count soft-caps at [campaignCap]; threat still climbs.
   static double densityMul(int tier) =>
       1.0 + min(clampTier(tier), campaignCap) * 0.12;
 
@@ -90,22 +86,35 @@ abstract final class GreaterRift {
 
   static String formatTimer(int ms) => TimedLadder.formatTimer(ms);
 
-  /// Short in-dungeon chip (no timer — timer lives on the place line).
   static String hudChipLabel({
-    required int kills,
-    required int target,
+    required double progress01,
     required int tier,
-  }) =>
-      'RANK GR$tier · $kills/$target';
+    required bool guardianActive,
+  }) {
+    if (guardianActive) return 'RANK GR$tier · GUARDIAN';
+    return 'RANK GR$tier · ${RiftProgress.percentLabel(progress01)}';
+  }
 
   static String progressLabel({
-    required int kills,
-    required int target,
+    required double progress01,
     required int timerMs,
     required int parMs,
     required int tier,
-  }) =>
-      'RANK GR$tier · $kills/$target · ${formatTimer(timerMs)}/${formatTimer(parMs)}';
+    required bool guardianActive,
+  }) {
+    final pct = RiftProgress.percentLabel(progress01);
+    final pace = RiftProgress.paceLabel(
+      progress01: progress01,
+      timerMs: timerMs,
+      parMs: parMs,
+    );
+    final clock = '${formatTimer(timerMs)}/${formatTimer(parMs)}';
+    if (guardianActive) {
+      return 'RANK GR$tier · GUARDIAN · $clock';
+    }
+    final paceBit = pace.isEmpty ? '' : ' · $pace';
+    return 'RANK GR$tier · $pct · $clock$paceBit';
+  }
 }
 
 /// One-time essence at Greater Rift tier milestones.

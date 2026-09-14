@@ -928,7 +928,7 @@ class HubChase {
         kind: HubChaseKind.riftMilestone,
         title: almost ? 'Almost Farm Rift R$tier' : 'Farm Rift R$tier',
         detail: best <= 0
-            ? 'Farm Rift in Stormwake (KEY dial) — timed kills + loot mid-run; +${pay}e at R$tier.'
+            ? 'Farm Rift in Stormwake (KEY dial) — progress bar → Guardian + loot mid-run; +${pay}e at R$tier.'
             : 'Best R$best — $need farm tiers to R$tier (+${pay}e). Not Spire climb.',
         progressLabel: 'R$best → R$tier',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
@@ -941,9 +941,8 @@ class HubChase {
         kind: HubChaseKind.riftMilestone,
         title: 'Clear Farm Rift R$next',
         detail:
-            'Stormwake farm · ${Rift.killTarget(next)} kills before '
-            '${Rift.formatTimer(Rift.parTimeMs(next))} — gold + gear mid-run '
-            '(not Gauntlet floors).',
+            'Stormwake farm · fill progress, defeat the Rift Guardian — '
+            'gold + gear mid-run (no fail timer; not Gauntlet floors).',
         progressLabel: 'FARM R$next',
         urgency: HubChaseUrgency.normal,
       );
@@ -978,7 +977,7 @@ class HubChase {
         kind: HubChaseKind.greaterRiftMilestone,
         title: 'Clear Ranked GR$next',
         detail:
-            'Mothveil ranked · ${GreaterRift.killTarget(next)} kills before '
+            'Mothveil ranked · fill progress, defeat the Guardian before '
             '${GreaterRift.formatTimer(GreaterRift.parTimeMs(next))} — '
             'no mid-run gear (not farm Rift / not Spire climb).',
         progressLabel: 'RANK GR$next',

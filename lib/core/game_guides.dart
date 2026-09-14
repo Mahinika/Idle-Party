@@ -654,11 +654,11 @@ abstract final class GameGuides {
       id: 'rift',
       title: 'FARM RIFT',
       body:
-          'Farm mode at party level ${GameLogic.maxHeroLevel} — not Ranked GR.\n\n'
-          '• Timed kill challenges — clear the kill quota before the par timer.\n'
+          'Farm mode at party level ${GameLogic.maxHeroLevel} — Nephalem-style, not Ranked GR.\n\n'
+          '• Kills fill a progress bar; at 100% a Rift Guardian spawns — defeat it to clear.\n'
+          '• No fail timer (elapsed is display-only). Leave/wipe before the Guardian dies = small consolation.\n'
           '• Gold and gear drop during the run; success also pays essence + gold.\n'
-          '• Tiers keep going past R20 — packs get harder; kill quota and timer hold after R20. Fast clears unlock +2.\n'
-          '• Wipe or timeout ends the run with a small consolation.\n'
+          '• Tiers keep going past R20 — packs get harder; progress target holds after R20. Clears unlock +1.\n'
           '• Not ranked on Play Games — gear drops mid-run (Ranked GR does not). '
           'The hub hunt chases Farm Rift after GR milestones quiet.\n'
           '• Set tier under KEY · FARM RIFT (Stormwake), on the hub ENDGAME tab, or follow the hub hunt.',
@@ -668,8 +668,8 @@ abstract final class GameGuides {
       title: 'RANKED GR',
       body:
           'Ranked GR at party level ${GameLogic.maxHeroLevel} — '
-          'Mothveil timer, harder than Farm Rift.\n\n'
-          '• Timed kill quota on a tougher endless ladder (GR1, GR2, …).\n'
+          'Mothveil Greater-style, harder than Farm Rift.\n\n'
+          '• Kills fill progress; at 100% a Rift Guardian spawns — defeat it before the par timer.\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear. '
           'Farm Rift is the loot path; Ranked GR is the ranked ladder.\n'
           '• GR20 keeps about a minute on the clock — later ranks add a little clock as packs thicken (max ~90s).\n'

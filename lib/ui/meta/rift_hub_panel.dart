@@ -19,7 +19,7 @@ class RiftHubPanel extends StatelessWidget {
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
         'FARM RIFT unlocks at party level ${GameLogic.maxHeroLevel} — '
-        'timed kill quota in Stormwake (loot mid-run; not Spire climb).',
+        'Stormwake progress bar + Guardian (loot mid-run; not Spire climb).',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
       );
@@ -29,8 +29,6 @@ class RiftHubPanel extends StatelessWidget {
     final pref = Rift.clampTier(
       state.metaDepth.riftPreferredTier.clamp(Rift.minTier, maxSel),
     );
-    final kills = Rift.killTarget(pref);
-    final par = Rift.formatTimer(Rift.parTimeMs(pref));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -40,10 +38,9 @@ class RiftHubPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Timed kill farm — not Gauntlet floors. Gold + gear mid-run. '
+          'Progress bar → Rift Guardian — no fail timer. Gold + gear mid-run. '
           'Endless after R${Rift.campaignCap}. '
-          'Best R$best · kill $kills before $par · '
-          '+${Rift.successEssence(pref)}e / +${Rift.successGold(pref)}g',
+          'Best R$best · +${Rift.successEssence(pref)}e / +${Rift.successGold(pref)}g',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),

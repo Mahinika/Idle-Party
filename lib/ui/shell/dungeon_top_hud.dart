@@ -272,19 +272,18 @@ class DungeonTopHud extends StatelessWidget {
         ? 'CLIMB · F$floor'
         : state.inRift
         ? Rift.progressLabel(
-            kills: state.riftKills,
-            target: state.riftKillTarget,
+            progress01: state.riftProgress01,
             timerMs: state.riftTimerMs,
-            parMs: state.riftParMs,
             tier: state.riftTier,
+            guardianActive: state.riftGuardianActive,
           )
         : state.inGreaterRift
         ? GreaterRift.progressLabel(
-            kills: state.grKills,
-            target: state.grKillTarget,
+            progress01: state.grProgress01,
             timerMs: state.grTimerMs,
             parMs: state.grParMs,
             tier: state.grTier,
+            guardianActive: state.grGuardianActive,
           )
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).title
@@ -353,30 +352,32 @@ class DungeonTopHud extends StatelessWidget {
       if (state.inRift) {
         return DungeonModeChip(
           label: Rift.hudChipLabel(
-            kills: state.riftKills,
-            target: state.riftKillTarget,
+            progress01: state.riftProgress01,
             tier: state.riftTier,
+            guardianActive: state.riftGuardianActive,
           ),
           selected: true,
           dense: true,
           interactive: false,
           maxLabelWidth: 140,
-          tip: 'Stormwake farm timer — gold and gear mid-run.',
+          tip:
+              'Stormwake farm — fill progress, kill the Guardian. Gold and gear mid-run. No fail timer.',
           onTap: () {},
         );
       }
       if (state.inGreaterRift) {
         return DungeonModeChip(
           label: GreaterRift.hudChipLabel(
-            kills: state.grKills,
-            target: state.grKillTarget,
+            progress01: state.grProgress01,
             tier: state.grTier,
+            guardianActive: state.grGuardianActive,
           ),
           selected: true,
           dense: true,
           interactive: false,
           maxLabelWidth: 140,
-          tip: 'Mothveil ranked timer — no mid-run gear.',
+          tip:
+              'Mothveil ranked — fill progress, kill the Guardian under the timer. No mid-run gear.',
           onTap: () {},
         );
       }

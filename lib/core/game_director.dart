@@ -665,6 +665,11 @@ class GameDirector extends ChangeNotifier {
         if (result.kills > 0) {
           _state = GameLogic.noteRiftKills(_state, result.kills);
         }
+        final beforeGuardian = _state.riftGuardianActive;
+        _state = GameLogic.maybeActivateRiftGuardian(_state);
+        if (_state.riftGuardianActive && !beforeGuardian) {
+          _rebuildSpatial();
+        }
         final resolved = GameLogic.tryResolveRift(_state);
         if (resolved != null) {
           _state = resolved;
@@ -690,6 +695,11 @@ class GameDirector extends ChangeNotifier {
         );
         if (result.kills > 0) {
           _state = GameLogic.noteGreaterRiftKills(_state, result.kills);
+        }
+        final beforeGuardian = _state.grGuardianActive;
+        _state = GameLogic.maybeActivateGreaterRiftGuardian(_state);
+        if (_state.grGuardianActive && !beforeGuardian) {
+          _rebuildSpatial();
         }
         final resolved = GameLogic.tryResolveGreaterRift(_state);
         if (resolved != null) {
@@ -865,7 +875,10 @@ class GameDirector extends ChangeNotifier {
         return;
       }
 
-      if (result.roomCleared) {
+      // Rift / GR Guardian phase replaces trash — do not floor-advance away.
+      if (result.roomCleared &&
+          !_state.riftGuardianActive &&
+          !_state.grGuardianActive) {
         final floorNo = _state.currentRoom.floorNumber;
         final started = _floorStartedAt;
         if (started != null) {

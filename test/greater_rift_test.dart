@@ -56,9 +56,12 @@ void main() {
     );
     state = GameLogic.enterGreaterRift(state, tier: 1);
     final goldBefore = state.gold;
+    state = GameLogic.noteGreaterRiftKills(state, state.grKillTarget);
+    state = GameLogic.maybeActivateGreaterRiftGuardian(state);
+    expect(state.grGuardianActive, isTrue);
     state = state.copyWith(
-      grKills: state.grKillTarget,
       grTimerMs: 5_000,
+      enemies: const [],
     );
     final resolved = GameLogic.tryResolveGreaterRift(state);
     expect(resolved, isNotNull);
@@ -68,6 +71,26 @@ void main() {
     expect(resolved.metaDepth.seasonBestGrTier, 1);
     expect(resolved.metaDepth.seasonBestGrClearMs, 5_000);
     expect(resolved.metaDepth.lifetimeGrClears, 1);
+  });
+
+  test('Greater Rift fails when par expires with Guardian alive', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        metaDepth: const MetaDepthState(grBestTier: 3),
+      ),
+    );
+    state = GameLogic.enterGreaterRift(state, tier: 1);
+    state = GameLogic.noteGreaterRiftKills(state, state.grKillTarget);
+    state = GameLogic.maybeActivateGreaterRiftGuardian(state);
+    expect(state.grGuardianActive, isTrue);
+    expect(state.enemies, isNotEmpty);
+    state = state.copyWith(grTimerMs: state.grParMs + 1);
+    final resolved = GameLogic.tryResolveGreaterRift(state);
+    expect(resolved, isNotNull);
+    expect(resolved!.inGreaterRift, isFalse);
+    expect(resolved.metaDepth.grBestTier, 3);
+    expect(resolved.metaDepth.lifetimeGrClears, 0);
   });
 
   test('Greater Rift encode prefers higher tier then faster clear', () {
@@ -90,9 +113,11 @@ void main() {
       ),
     );
     state = GameLogic.enterRift(state, tier: 1);
+    state = GameLogic.noteRiftKills(state, state.riftKillTarget);
+    state = GameLogic.maybeActivateRiftGuardian(state);
     state = state.copyWith(
-      riftKills: state.riftKillTarget,
       riftTimerMs: 2_000,
+      enemies: const [],
     );
     final resolved = GameLogic.tryResolveRift(state)!;
     expect(resolved.metaDepth.seasonBestGrTier, 0);

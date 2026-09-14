@@ -312,8 +312,6 @@ Future<void> confirmRiftRun(
       Rift.maxSelectableTier(state.metaDepth.riftBestTier),
     ),
   );
-  final kills = Rift.killTarget(tier);
-  final par = Rift.formatTimer(Rift.parTimeMs(tier));
   final essence = Rift.successEssence(tier);
   final gold = Rift.successGold(tier);
   final best = state.metaDepth.riftBestTier;
@@ -325,10 +323,10 @@ Future<void> confirmRiftRun(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Farm Rift R$tier?',
         content: Text(
-          'Stormwake Hollow timed kill farm — not Gauntlet floors.\n\n'
-          'Kill $kills before $par. Gold and gear drop during the run. '
-          'Success pays +${essence}e · +${gold}g '
-          '(faster clears unlock +2 tiers).\n\n'
+          'Stormwake Hollow Nephalem-style farm — not Gauntlet floors.\n\n'
+          'Kills fill a progress bar, then defeat the Rift Guardian. '
+          'No fail timer. Gold and gear drop during the run. '
+          'Success pays +${essence}e · +${gold}g and unlocks the next tier.\n\n'
           'Not ranked on Play Games. Best clear: R$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
@@ -363,7 +361,6 @@ Future<void> confirmGreaterRiftRun(
   final state = director.state;
   if (!GameLogic.canEnterGreaterRift(state)) return;
   final tier = GreaterRift.nextOfferTier(state.metaDepth.grBestTier);
-  final kills = GreaterRift.killTarget(tier);
   final par = GreaterRift.formatTimer(GreaterRift.parTimeMs(tier));
   final essence = GreaterRift.successEssence(tier);
   final gold = GreaterRift.successGold(tier);
@@ -376,8 +373,9 @@ Future<void> confirmGreaterRiftRun(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Ranked GR$tier?',
         content: Text(
-          'Mothveil ranked kill ladder — not Gauntlet floors, not farm Rift loot.\n\n'
-          'Kill $kills before $par. Gold OK mid-run; no gear drops. '
+          'Mothveil Greater-style ranked ladder — not Gauntlet floors, not farm loot.\n\n'
+          'Kills fill progress, then defeat the Rift Guardian before $par. '
+          'Gold OK mid-run; no gear drops. '
           'Clear pays +${essence}e · +${gold}g. Local PB on hub. Play GR board '
           'needs a Play install + sign-in.\n\n'
           'Harder packs than Farm Rift. Best clear: GR$best',

@@ -131,12 +131,16 @@ class GameState {
     this.riftParMs = 0,
     this.riftKillTarget = 0,
     this.riftKills = 0,
+    this.riftProgress01 = 0,
+    this.riftGuardianActive = false,
     this.riftOutcome = '',
     this.grTier = 0,
     this.grTimerMs = 0,
     this.grParMs = 0,
     this.grKillTarget = 0,
     this.grKills = 0,
+    this.grProgress01 = 0,
+    this.grGuardianActive = false,
     this.grOutcome = '',
     this.colorblindMode = false,
     this.uiTextScale = 1.0,
@@ -397,6 +401,12 @@ class GameState {
   /// Kills banked this farm Rift run.
   final int riftKills;
 
+  /// Nephalem-style progress 0..1 toward the Rift Guardian (farm).
+  final double riftProgress01;
+
+  /// True after farm progress hits 100% and the Guardian is up.
+  final bool riftGuardianActive;
+
   /// '' | `timed` | `depleted` after farm Rift resolution.
   final String riftOutcome;
 
@@ -414,6 +424,12 @@ class GameState {
 
   /// Kills banked this Greater Rift run.
   final int grKills;
+
+  /// Greater progress 0..1 toward the Rift Guardian.
+  final double grProgress01;
+
+  /// True after GR progress hits 100% and the Guardian is up.
+  final bool grGuardianActive;
 
   /// '' | `timed` | `depleted` after Greater Rift resolution.
   final String grOutcome;
@@ -1064,12 +1080,16 @@ class GameState {
     int? riftParMs,
     int? riftKillTarget,
     int? riftKills,
+    double? riftProgress01,
+    bool? riftGuardianActive,
     String? riftOutcome,
     int? grTier,
     int? grTimerMs,
     int? grParMs,
     int? grKillTarget,
     int? grKills,
+    double? grProgress01,
+    bool? grGuardianActive,
     String? grOutcome,
     bool? colorblindMode,
     double? uiTextScale,
@@ -1200,12 +1220,16 @@ class GameState {
       riftParMs: riftParMs ?? this.riftParMs,
       riftKillTarget: riftKillTarget ?? this.riftKillTarget,
       riftKills: riftKills ?? this.riftKills,
+      riftProgress01: riftProgress01 ?? this.riftProgress01,
+      riftGuardianActive: riftGuardianActive ?? this.riftGuardianActive,
       riftOutcome: riftOutcome ?? this.riftOutcome,
       grTier: grTier ?? this.grTier,
       grTimerMs: grTimerMs ?? this.grTimerMs,
       grParMs: grParMs ?? this.grParMs,
       grKillTarget: grKillTarget ?? this.grKillTarget,
       grKills: grKills ?? this.grKills,
+      grProgress01: grProgress01 ?? this.grProgress01,
+      grGuardianActive: grGuardianActive ?? this.grGuardianActive,
       grOutcome: grOutcome ?? this.grOutcome,
       colorblindMode: colorblindMode ?? this.colorblindMode,
       uiTextScale: uiTextScale ?? this.uiTextScale,
@@ -1357,12 +1381,16 @@ class GameState {
     'riftParMs': riftParMs,
     'riftKillTarget': riftKillTarget,
     'riftKills': riftKills,
+    'riftProgress01': riftProgress01,
+    'riftGuardianActive': riftGuardianActive,
     'riftOutcome': riftOutcome,
     'grTier': grTier,
     'grTimerMs': grTimerMs,
     'grParMs': grParMs,
     'grKillTarget': grKillTarget,
     'grKills': grKills,
+    'grProgress01': grProgress01,
+    'grGuardianActive': grGuardianActive,
     'grOutcome': grOutcome,
     'colorblindMode': colorblindMode,
     'uiTextScale': uiTextScale,
@@ -1646,12 +1674,18 @@ class GameState {
       riftParMs: max(0, (json['riftParMs'] as num?)?.toInt() ?? 0),
       riftKillTarget: max(0, (json['riftKillTarget'] as num?)?.toInt() ?? 0),
       riftKills: max(0, (json['riftKills'] as num?)?.toInt() ?? 0),
+      riftProgress01: ((json['riftProgress01'] as num?)?.toDouble() ?? 0)
+          .clamp(0.0, 1.0),
+      riftGuardianActive: (json['riftGuardianActive'] as bool?) ?? false,
       riftOutcome: (json['riftOutcome'] as String?) ?? '',
       grTier: max(0, (json['grTier'] as num?)?.toInt() ?? 0),
       grTimerMs: max(0, (json['grTimerMs'] as num?)?.toInt() ?? 0),
       grParMs: max(0, (json['grParMs'] as num?)?.toInt() ?? 0),
       grKillTarget: max(0, (json['grKillTarget'] as num?)?.toInt() ?? 0),
       grKills: max(0, (json['grKills'] as num?)?.toInt() ?? 0),
+      grProgress01: ((json['grProgress01'] as num?)?.toDouble() ?? 0)
+          .clamp(0.0, 1.0),
+      grGuardianActive: (json['grGuardianActive'] as bool?) ?? false,
       grOutcome: (json['grOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
       uiTextScale: ((json['uiTextScale'] as num?)?.toDouble() ?? 1.0).clamp(

@@ -129,7 +129,7 @@ class FirstSessionTips extends StatelessWidget {
           'At party level ${GameLogic.maxHeroLevel}, under KEY pick a key level before you enter. Affixes lock in, '
           'this week KEY borrows another cave’s jobs and boss tell (PATH art stays), '
           'a generous timer runs (AFK counts), and beating the boss under par upgrades your key. '
-          'Farm Rift is a Stormwake kill quota. Gauntlet, Ranked GR, and Ashen Crown sit on the hub ENDGAME tab.',
+          'Farm Rift is Stormwake progress + Guardian (loot mid-run). Gauntlet, Ranked GR, and Ashen Crown sit on the hub ENDGAME tab.',
     ),
     (
       id: 'weekly',
@@ -165,15 +165,16 @@ class FirstSessionTips extends StatelessWidget {
       title: 'FARM RIFT',
       body:
           'At party Lv${GameLogic.maxHeroLevel}, Farm Rift is Stormwake loot farming — '
-          'gold + gear mid-run. Tap FARM RIFT on the hub ENDGAME tab, or KEY · FARM RIFT. '
+          'progress bar → Guardian, gold + gear mid-run, no fail timer. '
+          'Tap FARM RIFT on the hub ENDGAME tab, or KEY · FARM RIFT. '
           'The hub hunt chases it after Ranked GR. Not Spire climb.',
     ),
     (
       id: 'greater_rift',
       title: 'RANKED GR',
       body:
-          'At party Lv${GameLogic.maxHeroLevel}, Ranked GR is the Mothveil prestige timer — '
-          'harder packs, no mid-run gear. Local PB on hub ENDGAME. Play GR board needs a Play install + sign-in. '
+          'At party Lv${GameLogic.maxHeroLevel}, Ranked GR is the Mothveil Greater-style timer — '
+          'progress → Guardian under par, harder packs, no mid-run gear. Local PB on hub ENDGAME. Play GR board needs a Play install + sign-in. '
           'Tap RANKED GR on the hub ENDGAME tab — it offers the next rank after your best. The hub hunt chases GR before Farm Rift.',
     ),
     (

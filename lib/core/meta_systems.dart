@@ -26,10 +26,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.168';
+  static const String currentVersion = '1.12.169';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.169',
+      bullets: <String>[
+        'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
+        'Farm Rift (Stormwake) and Ranked GREATER GR (Mothveil) now match a Diablo 3 pair: kills fill a progress bar, then a Rift Guardian. Farm has no fail timer and still drops gear mid-run; Ranked GR keeps the par clock, no mid-run gear, and Play PB. KEY this week still borrows another cave’s pack jobs and boss tell. Gauntlet bosses still cycle tells every 5 floors. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEY and Farm Rift keep going past 20. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.168',
       bullets: <String>[

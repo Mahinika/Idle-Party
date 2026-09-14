@@ -3,11 +3,13 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/rift.dart';
+import 'package:idle_party/models/enemy.dart';
+import 'package:idle_party/models/stats.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 24);
 
-  test('tier scaling grows kills and shrinks par time', () {
+  test('tier scaling grows kills and shrinks display par', () {
     expect(Rift.killTarget(1), 23);
     expect(Rift.killTarget(20), 80);
     expect(Rift.parTimeMs(1), greaterThan(Rift.parTimeMs(20)));
@@ -16,42 +18,30 @@ void main() {
     expect(Rift.failEssence(8), 2);
   });
 
-  test('timers pad minutes so dungeon HUD width stays stable', () {
-    expect(Rift.formatTimer(5_000), '00:05');
-    expect(Rift.formatTimer(65_000), '01:05');
+  test('HUD progress labels use percent / GUARDIAN (no kill counts)', () {
     expect(
-      Rift.hudChipLabel(kills: 3, target: 50, tier: 5),
-      'FARM R5 · 3/50',
+      Rift.hudChipLabel(progress01: 0.06, tier: 5, guardianActive: false),
+      'FARM R5 · 6%',
+    );
+    expect(
+      Rift.hudChipLabel(progress01: 1, tier: 5, guardianActive: true),
+      'FARM R5 · GUARDIAN',
     );
     expect(
       Rift.progressLabel(
-        kills: 3,
-        target: 50,
+        progress01: 0.06,
         timerMs: 5_000,
-        parMs: 300_000,
         tier: 5,
+        guardianActive: false,
       ),
-      contains('00:05/05:00'),
+      'FARM R5 · 6% · 00:05',
     );
+    expect(Rift.formatTimer(65_000), '01:05');
   });
 
-  test('fast clear unlocks +2 tiers', () {
-    expect(
-      Rift.unlockTierAfterSuccess(
-        clearedTier: 3,
-        timerMs: 10_000,
-        parMs: 100_000,
-      ),
-      5,
-    );
-    expect(
-      Rift.unlockTierAfterSuccess(
-        clearedTier: 3,
-        timerMs: 90_000,
-        parMs: 100_000,
-      ),
-      4,
-    );
+  test('Farm clear unlocks +1 only (no timer +2)', () {
+    expect(Rift.unlockTierAfterSuccess(clearedTier: 3), 4);
+    expect(Rift.unlockTierAfterSuccess(clearedTier: 20), 21);
   });
 
   test('Rift enter requires party max level', () {
@@ -70,6 +60,8 @@ void main() {
     expect(run.riftTier, 1);
     expect(run.riftKillTarget, Rift.killTarget(1));
     expect(run.riftParMs, Rift.parTimeMs(1));
+    expect(run.riftProgress01, 0);
+    expect(run.riftGuardianActive, isFalse);
     expect(run.dungeonId, Rift.dungeonId);
     expect(run.dungeonId, 'storm');
     expect(run.dungeonId, isNot('crystal'));
@@ -88,7 +80,7 @@ void main() {
     expect(loaded.keystoneRunActive, isFalse);
   });
 
-  test('Rift success pays out and unlocks next tier', () {
+  test('progress fills then Guardian kill clears even after long elapsed', () {
     var state = _withPartyMaxLevel(
       GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel,
@@ -97,9 +89,16 @@ void main() {
     state = GameLogic.enterRift(state, tier: 1);
     final goldBefore = state.gold;
     final essenceBefore = state.essence;
+    state = GameLogic.noteRiftKills(state, state.riftKillTarget);
+    expect(state.riftProgress01, 1.0);
+    state = GameLogic.maybeActivateRiftGuardian(state);
+    expect(state.riftGuardianActive, isTrue);
+    expect(state.enemies, isNotEmpty);
+    expect(state.enemies.first.name, 'Rift Guardian');
+    // Long elapsed — Farm must still succeed (no timer fail).
     state = state.copyWith(
-      riftKills: state.riftKillTarget,
-      riftTimerMs: 1_000,
+      riftTimerMs: state.riftParMs * 5,
+      enemies: const <EnemyUnit>[],
     );
     final resolved = GameLogic.tryResolveRift(state);
     expect(resolved, isNotNull);
@@ -111,7 +110,7 @@ void main() {
     expect(resolved.metaDepth.lifetimeRiftClears, 1);
   });
 
-  test('Rift fail on timeout keeps best tier', () {
+  test('Farm does not fail on timer alone', () {
     var state = _withPartyMaxLevel(
       GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel,
@@ -122,11 +121,47 @@ void main() {
     );
     state = GameLogic.enterRift(state, tier: 5);
     state = state.copyWith(riftTimerMs: state.riftParMs + 1);
-    final resolved = GameLogic.tryResolveRift(state);
-    expect(resolved, isNotNull);
-    expect(resolved!.inRift, isFalse);
-    expect(resolved.metaDepth.riftBestTier, 4);
-    expect(resolved.essence, greaterThan(0));
+    expect(GameLogic.tryResolveRift(state), isNull);
+    expect(state.metaDepth.riftBestTier, 4);
+  });
+
+  test('leave mid-run depletes with consolation essence', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
+    );
+    state = GameLogic.enterRift(state, tier: 5);
+    final essenceBefore = state.essence;
+    final left = GameLogic.leaveDungeon(state);
+    expect(left.inRift, isFalse);
+    expect(left.essence, greaterThan(essenceBefore));
+  });
+
+  test('progress + Guardian fields survive save load', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
+    );
+    state = GameLogic.enterRift(state, tier: 2);
+    state = state.copyWith(
+      riftProgress01: 0.42,
+      riftGuardianActive: true,
+      enemies: [
+        EnemyUnit(
+          name: 'Rift Guardian',
+          level: 10,
+          currentHp: 100,
+          stats: Stats.enemy(attack: 5, defense: 1, maxHp: 100),
+          rewardGold: 0,
+          role: EnemyRole.boss,
+        ),
+      ],
+    );
+    final loaded = GameLogic.stateFromJson(state.toJson());
+    expect(loaded.riftProgress01, closeTo(0.42, 0.0001));
+    expect(loaded.riftGuardianActive, isTrue);
   });
 
   test('Farm Rift stays selectable past 20', () {

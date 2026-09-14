@@ -5,6 +5,7 @@ import '../models/dungeon_def.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
+import '../models/stats.dart';
 import '../models/gear_loadout.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
@@ -23,6 +24,7 @@ import 'keystone.dart';
 import 'logic_notices.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
+import 'rift_progress.dart';
 import 'apex_forge.dart';
 import 'encounter_factory.dart';
 import 'market_service.dart';
@@ -520,20 +522,25 @@ class GameLogic {
   static bool canEnterRift(GameState state) =>
       endgameUnlocked(state) && !state.inDungeon;
 
-  /// Timed kill-quota farm — Stormwake Hollow, gold+gear mid-run, hub on resolve.
+  /// Nephalem-style farm Rift — Stormwake, progress→Guardian, loot mid-run.
   static GameState enterRift(GameState state, {int? tier}) =>
       _enterRift(state, tier: tier);
 
   static GameState setRiftPreferredTier(GameState state, int tier) =>
       _setRiftPreferredTier(state, tier);
 
+  /// Elapsed display clock (Farm has no timer fail).
   static GameState advanceRiftTimer(GameState state, int deltaMs) =>
       _advanceRiftTimer(state, deltaMs);
 
   static GameState noteRiftKills(GameState state, int kills) =>
       _noteRiftKills(state, kills);
 
-  /// Success if kill quota met under par; fail if over par.
+  /// Spawn Guardian at 100% progress when needed.
+  static GameState maybeActivateRiftGuardian(GameState state) =>
+      _maybeActivateRiftGuardian(state);
+
+  /// Success when Guardian is down; Farm never fails on timer.
   static GameState? tryResolveRift(GameState state) => _tryResolveRift(state);
 
   static GameState resolveRiftSuccess(GameState state) =>
@@ -544,7 +551,7 @@ class GameLogic {
   static bool canEnterGreaterRift(GameState state) =>
       endgameUnlocked(state) && !state.inDungeon;
 
-  /// Prestige timed kill ladder — harder packs, no mid-run gear, local PB.
+  /// Greater-style ranked Rift — progress→Guardian under par, no mid-run gear.
   static GameState enterGreaterRift(GameState state, {int? tier}) =>
       _enterGreaterRift(state, tier: tier);
 
@@ -556,6 +563,9 @@ class GameLogic {
 
   static GameState noteGreaterRiftKills(GameState state, int kills) =>
       _noteGreaterRiftKills(state, kills);
+
+  static GameState maybeActivateGreaterRiftGuardian(GameState state) =>
+      _maybeActivateGreaterRiftGuardian(state);
 
   static GameState? tryResolveGreaterRift(GameState state) =>
       _tryResolveGreaterRift(state);

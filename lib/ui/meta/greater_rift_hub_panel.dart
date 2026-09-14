@@ -18,14 +18,13 @@ class GreaterRiftHubPanel extends StatelessWidget {
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
         'GREATER RIFT unlocks at party level ${GameLogic.maxHeroLevel} — '
-        'ranked Mothveil kill ladder (no mid-run gear; not Spire climb).',
+        'ranked Mothveil progress + Guardian under the timer (no mid-run gear).',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
       );
     }
     final best = state.metaDepth.grBestTier;
     final next = GreaterRift.nextOfferTier(best);
-    final kills = GreaterRift.killTarget(next);
     final par = GreaterRift.formatTimer(GreaterRift.parTimeMs(next));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -37,9 +36,10 @@ class GreaterRiftHubPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'Next rank after your best — hub ENDGAME shows it. No KEY dial. '
-          'Mothveil · gold OK, no gear mid-run. Local PB on hub. Play GR board needs a Play install + sign-in. '
+          'Progress → Guardian before $par. Gold OK, no gear mid-run. '
+          'Local PB on hub. Play GR board needs a Play install + sign-in. '
           'Endless after GR${GreaterRift.campaignCap}. '
-          'Best GR$best · next GR$next · kill $kills before $par · '
+          'Best GR$best · next GR$next · '
           '+${GreaterRift.successEssence(next)}e / +${GreaterRift.successGold(next)}g',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),

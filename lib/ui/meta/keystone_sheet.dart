@@ -49,8 +49,8 @@ class KeystoneSheet extends StatelessWidget {
         ],
         Text(
           'PATH is the 15 caves. KEY is a timed run on those caves — this '
-          'week’s pack jobs and boss tell rotate. Farm Rift is a Stormwake '
-          'kill quota, not the same hunt.',
+          'week’s pack jobs and boss tell rotate. Farm Rift is Stormwake '
+          'progress + Guardian (loot), not the same hunt.',
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
