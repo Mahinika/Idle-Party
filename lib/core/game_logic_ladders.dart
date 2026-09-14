@@ -239,12 +239,16 @@ GameState _maybeActivateRiftGuardian(GameState state) {
     riftGuardianActive: true,
     riftProgress01: 1.0,
     enemies: <EnemyUnit>[boss],
+    currentRoom: state.currentRoom.copyWith(type: RoomType.boss, enemyCount: 1),
   );
 }
 
+bool _isRiftGuardian(EnemyUnit e) =>
+    e.role == EnemyRole.boss || e.name == 'Rift Guardian';
+
 bool _riftGuardianDown(GameState state) {
-  if (state.enemies.isEmpty) return true;
-  return state.enemies.every((e) => e.isDefeated);
+  // Leftover trash must not block a dead Guardian (old all-enemies-dead check).
+  return !state.enemies.any((e) => _isRiftGuardian(e) && !e.isDefeated);
 }
 
 GameState? _tryResolveRift(GameState state) {
@@ -259,7 +263,7 @@ GameState _resolveRiftSuccess(GameState state) {
   if (!state.inRift) return state;
   final tier = Rift.clampTier(state.riftTier);
   final unlock = Rift.unlockTierAfterSuccess(clearedTier: tier);
-  final best = max(state.metaDepth.riftBestTier, unlock);
+  final best = max(state.metaDepth.riftBestTier, tier);
   final essence = Rift.successEssence(tier);
   final gold = Rift.successGold(tier);
   var next = state.copyWith(
@@ -416,14 +420,14 @@ GameState _maybeActivateGreaterRiftGuardian(GameState state) {
     grGuardianActive: true,
     grProgress01: 1.0,
     enemies: <EnemyUnit>[boss],
+    currentRoom: state.currentRoom.copyWith(type: RoomType.boss, enemyCount: 1),
   );
 }
 
 GameState? _tryResolveGreaterRift(GameState state) {
   if (!state.inGreaterRift || state.grOutcome.isNotEmpty) return null;
-  if (state.grGuardianActive &&
-      _riftGuardianDown(state) &&
-      state.grTimerMs <= state.grParMs) {
+  // Last hit on the Guardian counts even if the clock ticked over this frame.
+  if (state.grGuardianActive && _riftGuardianDown(state)) {
     return _resolveGreaterRiftSuccess(state);
   }
   if (state.grTimerMs > state.grParMs) {
@@ -441,7 +445,9 @@ GameState _resolveGreaterRiftSuccess(GameState state) {
     timerMs: next.grTimerMs,
     parMs: next.grParMs,
   );
-  final best = max(next.metaDepth.grBestTier, unlock);
+  // grBestTier = highest cleared. Next hub enter is best+1 (fast skip gifts
+  // the extra rank as if it were cleared).
+  final best = max(next.metaDepth.grBestTier, max(tier, unlock - 1));
   final essence = GreaterRift.successEssence(tier);
   final gold = GreaterRift.successGold(tier);
   final clearMs = next.grTimerMs;

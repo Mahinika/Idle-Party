@@ -2060,7 +2060,9 @@ abstract final class SpatialCombat {
           ranged: ranged,
           preferredRange: ranged ? 3.2 : 1.2,
           chamberIndex: chamberIndex,
-          dormant: chamberIndex > firstCombat,
+          dormant: enemy.role == EnemyRole.boss
+              ? false
+              : chamberIndex > firstCombat,
         ),
       );
     }

@@ -106,7 +106,8 @@ void main() {
     expect(resolved.inDungeon, isFalse);
     expect(resolved.gold, greaterThan(goldBefore));
     expect(resolved.essence, greaterThan(essenceBefore));
-    expect(resolved.metaDepth.riftBestTier, greaterThanOrEqualTo(2));
+    expect(resolved.metaDepth.riftBestTier, 1);
+    expect(Rift.maxSelectableTier(resolved.metaDepth.riftBestTier), 2);
     expect(resolved.metaDepth.lifetimeRiftClears, 1);
   });
 

@@ -8,7 +8,9 @@ import 'package:idle_party/core/loot_pipeline.dart';
 import 'package:idle_party/core/play_games_scores.dart';
 import 'package:idle_party/core/rift.dart';
 import 'package:idle_party/models/dungeon_room.dart';
+import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/meta_depth.dart';
+import 'package:idle_party/models/stats.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 
 void main() {
@@ -60,16 +62,17 @@ void main() {
     state = GameLogic.maybeActivateGreaterRiftGuardian(state);
     expect(state.grGuardianActive, isTrue);
     state = state.copyWith(
-      grTimerMs: 5_000,
+      grTimerMs: state.grParMs - 1_000,
       enemies: const [],
     );
     final resolved = GameLogic.tryResolveGreaterRift(state);
     expect(resolved, isNotNull);
     expect(resolved!.inGreaterRift, isFalse);
     expect(resolved.gold, greaterThan(goldBefore));
-    expect(resolved.metaDepth.grBestTier, greaterThanOrEqualTo(2));
+    expect(resolved.metaDepth.grBestTier, 1);
+    expect(GreaterRift.hubEnterLabel(resolved.metaDepth.grBestTier), 'RANKED GR2');
     expect(resolved.metaDepth.seasonBestGrTier, 1);
-    expect(resolved.metaDepth.seasonBestGrClearMs, 5_000);
+    expect(resolved.metaDepth.seasonBestGrClearMs, state.grParMs - 1_000);
     expect(resolved.metaDepth.lifetimeGrClears, 1);
   });
 
@@ -91,6 +94,98 @@ void main() {
     expect(resolved!.inGreaterRift, isFalse);
     expect(resolved.metaDepth.grBestTier, 3);
     expect(resolved.metaDepth.lifetimeGrClears, 0);
+  });
+
+  test('Greater Rift success counts last hit after par', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        metaDepth: const MetaDepthState(grBestTier: 20),
+      ),
+    );
+    state = GameLogic.enterGreaterRift(state, tier: 21);
+    state = GameLogic.noteGreaterRiftKills(state, state.grKillTarget);
+    state = GameLogic.maybeActivateGreaterRiftGuardian(state);
+    expect(state.grTier, 21);
+    expect(state.grGuardianActive, isTrue);
+    final dead = state.enemies.first.copyWith(currentHp: 0);
+    state = state.copyWith(
+      grTimerMs: state.grParMs + 1,
+      enemies: [dead],
+    );
+    final resolved = GameLogic.tryResolveGreaterRift(state);
+    expect(resolved, isNotNull);
+    expect(resolved!.metaDepth.grBestTier, 21);
+    expect(
+      GreaterRift.hubEnterLabel(resolved.metaDepth.grBestTier),
+      'RANKED GR22',
+    );
+    expect(resolved.metaDepth.lifetimeGrClears, 1);
+  });
+
+  test('Greater Rift success ignores leftover trash', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        metaDepth: const MetaDepthState(grBestTier: 20),
+      ),
+    );
+    state = GameLogic.enterGreaterRift(state, tier: 21);
+    state = GameLogic.noteGreaterRiftKills(state, state.grKillTarget);
+    state = GameLogic.maybeActivateGreaterRiftGuardian(state);
+    final deadGuardian = state.enemies.first.copyWith(currentHp: 0);
+    final trash = EnemyUnit(
+      name: 'Leftover',
+      level: 1,
+      currentHp: 40,
+      stats: Stats.enemy(attack: 4, defense: 1, maxHp: 40),
+      rewardGold: 0,
+    );
+    state = state.copyWith(
+      grTimerMs: state.grParMs - 1_000,
+      enemies: [deadGuardian, trash],
+    );
+    final resolved = GameLogic.tryResolveGreaterRift(state);
+    expect(resolved, isNotNull);
+    expect(resolved!.metaDepth.grBestTier, 21);
+    expect(
+      GreaterRift.hubEnterLabel(resolved.metaDepth.grBestTier),
+      'RANKED GR22',
+    );
+  });
+
+  test('Rift Guardian is awake after activate on a GR floor', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
+    );
+    state = GameLogic.enterGreaterRift(state, tier: 1);
+    state = GameLogic.noteGreaterRiftKills(state, state.grKillTarget);
+    state = GameLogic.maybeActivateGreaterRiftGuardian(state);
+    expect(state.currentRoom.type, RoomType.boss);
+    final world = SpatialCombat.build(state);
+    expect(world.enemies, isNotEmpty);
+    expect(
+      world.enemies.every((e) => e.role != EnemyRole.boss || !e.dormant),
+      isTrue,
+    );
+  });
+
+  test('fast GR clear gifts the skip rank as highest cleared', () {
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
+    );
+    state = GameLogic.enterGreaterRift(state, tier: 1);
+    state = GameLogic.noteGreaterRiftKills(state, state.grKillTarget);
+    state = GameLogic.maybeActivateGreaterRiftGuardian(state);
+    state = state.copyWith(grTimerMs: 5_000, enemies: const []);
+    final resolved = GameLogic.tryResolveGreaterRift(state)!;
+    expect(resolved.metaDepth.grBestTier, 2);
+    expect(GreaterRift.hubEnterLabel(resolved.metaDepth.grBestTier), 'RANKED GR3');
+    expect(resolved.metaDepth.seasonBestGrTier, 1);
   });
 
   test('Greater Rift encode prefers higher tier then faster clear', () {
