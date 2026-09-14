@@ -2,7 +2,7 @@
 # Keeps big / rarely needed text out of automatic codebase context.
 # (build/, tool/out/, *.png already covered by .gitignore + Cursor defaults.)
 
-docs/FEEL_AUDIT_500.md
+docs/archive/
 docs/TOP_GAMES_RESEARCH.md
 docs/audits/
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-shot: add Completion status + Status column to docs/FEEL_AUDIT_500.md."""
+"""Historical one-shot: Completion status column for docs/archive/FEEL_AUDIT_500.md."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DOC = ROOT / "docs" / "FEEL_AUDIT_500.md"
+DOC = ROOT / "docs" / "archive" / "FEEL_AUDIT_500.md"
 
 # Structural / needs owner redesign — honest Won't fix.
 WONT_FIX = {

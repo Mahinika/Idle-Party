@@ -28,7 +28,7 @@ item that still claimed “no analytics servers.”
 | D3 | P1 | AdMob↔Firebase link + impression-level revenue not mentioned in PRIVACY (ad metrics may flow into Analytics). | PRIVACY clarified |
 | D4 | P2 | Local SETTINGS session notes undocumented (local-only; easy to confuse with Firebase). | PRIVACY clarified |
 | D5 | P2 | PLAY_STORE still said AdMob “not store-linked” / “Requires review” while Apps shows Play linked + Klart. | PLAY_STORE cleaned |
-| D6 | P2 | `PLAY_PROD_POLISH_1000` #008 / #025 open against outdated “no analytics / store-link” claims. | Rows marked Done |
+| D6 | P2 | Archived `docs/archive/PLAY_PROD_POLISH_1000` #008 / #025 open against outdated “no analytics / store-link” claims. | Rows marked Done |
 | D7 | OK | STORE_LISTING does not mention analytics — fine; privacy URL + Data safety own that. Ads/SHOP honesty OK. | none |
 | D8 | OK | AGENTS.md Firebase blurb matches code. | none |
 | D9 | Note | AdMob red **betalningsproblem** banner is ops, not a doc lie — keep owner aware. | no code |

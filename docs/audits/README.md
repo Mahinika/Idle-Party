@@ -19,3 +19,6 @@ Point-in-time snapshots — not live kit / store truth. Current game:
 
 Class/kit template: [CLASS_AUDIT_TEMPLATE.md](../CLASS_AUDIT_TEMPLATE.md).
 Re-run `class-audit` when you need a fresh kit verdict.
+
+Old Play polish / feel / endgame-eval backlogs:
+[../archive/](../archive/) (not live work).

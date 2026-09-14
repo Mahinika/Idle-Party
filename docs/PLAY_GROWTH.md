@@ -19,7 +19,7 @@ Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
 | Lever | Where |
 |-------|--------|
 | ASO short + full (idle RPG keywords, fair SHOP line) | `docs/STORE_LISTING.md` |
-| Screenshot / feature graphic plan | `docs/STORE_LISTING.md` |
+| Screenshot / feature graphic checklist | `docs/STORE_LISTING.md` |
 | Play preview video brief | `docs/TRAILER.md` § Play preview |
 | TODAY chase clarity (claim / equip / rebuild / short phones) | `lib/core/hub_chase.dart`, `chase_dispatcher.dart`, `hub_screen.dart` |
 
@@ -43,7 +43,7 @@ Do these in Console when you have 20 minutes:
    (brief in `TRAILER.md`). Confirm YT ads stay off.
 4. **Reply to reviews** (templates below) — especially 1–2★.
 5. **Store listing experiments** (if available): A/B short description vs previous.
-6. Optional: **Google App campaigns** — see ads test plan below (start tiny).
+6. Optional: **Google App campaigns** — see ads checklist below (start tiny).
 
 Never point players at GitHub Releases.
 
@@ -116,7 +116,7 @@ Idle Party stays single-player and fair — SHOP is convenience (boosts / QoL), 
 
 ---
 
-## Tiny ads test plan (optional)
+## Tiny ads checklist (optional)
 
 Only if you want paid installs after listing + retention feel OK.
 

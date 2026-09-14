@@ -56,6 +56,8 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 - Owner: **ta bort alla planer.** Growth mandate is standing principles only;
   no Program N / done bar / Robban phrase / “wait for next plan.” Default:
   owner names the work; vague → ask once.
+- Same day: archived feel/polish/endgame-eval lists under `docs/archive/`
+  (not agent default work). Generators → `tool/archive/`.
 
 ## 2026-09-14 — Console D1 is not a number yet
 

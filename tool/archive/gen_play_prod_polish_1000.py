@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Generate docs/PLAY_PROD_POLISH_1000.md"""
+"""Historical one-shot: regenerate docs/archive/PLAY_PROD_POLISH_1000.md"""
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-feel = (ROOT / "docs/FEEL_AUDIT_500.md").read_text(encoding="utf-8")
+feel = (ROOT / "docs/archive/FEEL_AUDIT_500.md").read_text(encoding="utf-8")
 feel_rows = []
 for line in feel.splitlines():
     m = re.match(
@@ -1192,9 +1192,9 @@ out.append(
     "Do not block production on P2 zone Kenney reuse."
 )
 out.append("")
-out.append("Regenerate: `py -3 tool/gen_play_prod_polish_1000.py`")
+out.append("Regenerate: `py -3 tool/archive/gen_play_prod_polish_1000.py` (historical)")
 out.append("")
 
-path = ROOT / "docs/PLAY_PROD_POLISH_1000.md"
+path = ROOT / "docs/archive/PLAY_PROD_POLISH_1000.md"
 path.write_text("\n".join(out), encoding="utf-8")
 print("wrote", path, "items", len(final), "launch", len(launch_ids))

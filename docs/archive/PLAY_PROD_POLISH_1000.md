@@ -1175,4 +1175,4 @@ Production ships when **Fas 0 + Fas 1 + Top 40** are green — not when all 1000
 
 Say **fixa top 40**, or list IDs. Mark rows `✅ Shipped` in this file when done. Do not block production on P2 zone Kenney reuse.
 
-Regenerate: `py -3 tool/gen_play_prod_polish_1000.py`
+Regenerate: `py -3 tool/archive/gen_play_prod_polish_1000.py` (historical)
