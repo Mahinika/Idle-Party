@@ -400,6 +400,9 @@ abstract final class EncounterFactory {
     final rng = Random(level * 9173 + id.hashCode + room.type.index * 41);
     final isBossRoom = isBossRoomEarly;
     final pickType = eliteWeek && !isBossRoom ? RoomType.elite : room.type;
+    final flavorId = fromState != null && fromState.keystoneRunActive
+        ? Keystone.weekCaveId(fromState.metaDepth.weeklyKey)
+        : id;
 
     final archetypes = <EnemyArchetype>[
       for (var i = 0; i < count; i++)
@@ -409,7 +412,7 @@ abstract final class EncounterFactory {
                   : EnemyFlavor.pickArchetype(
                       type: RoomType.elite,
                       isBossUnit: false,
-                      dungeonId: id,
+                      dungeonId: flavorId,
                       index: i,
                       count: count,
                       rng: rng,
@@ -417,7 +420,7 @@ abstract final class EncounterFactory {
             : EnemyFlavor.pickArchetype(
                 type: pickType,
                 isBossUnit: isBossRoom && i == 0,
-                dungeonId: id,
+                dungeonId: flavorId,
                 index: i,
                 count: count,
                 rng: rng,

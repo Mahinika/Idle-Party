@@ -127,8 +127,9 @@ class FirstSessionTips extends StatelessWidget {
       title: 'KEY',
       body:
           'At party level ${GameLogic.maxHeroLevel}, under KEY pick a key level before you enter. Affixes lock in, '
+          'this week KEY borrows another cave’s jobs and boss tell (PATH art stays), '
           'a generous timer runs (AFK counts), and beating the boss under par upgrades your key. '
-          'Gauntlet, Ranked GR, Farm Rift, and Ashen Crown sit on the hub ENDGAME tab.',
+          'Farm Rift is a Stormwake kill quota. Gauntlet, Ranked GR, and Ashen Crown sit on the hub ENDGAME tab.',
     ),
     (
       id: 'weekly',

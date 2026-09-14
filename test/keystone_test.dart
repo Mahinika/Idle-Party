@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/enemy_flavor.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/keystone.dart';
@@ -34,6 +35,21 @@ void main() {
     );
     expect(high, contains('no_flask'));
     expect(high, contains('boss_rush'));
+  });
+
+  test('KEY week cave is stable, not always Stormwake, and rotates', () {
+    expect(Keystone.weekCaveId('2026-W38'), Keystone.weekCaveId('2026-W38'));
+    expect(Keystone.weekCaveId(''), EnemyFlavor.gauntletTellCycle[3]);
+    final caves = <String>{
+      for (var w = 1; w <= 53; w++)
+        Keystone.weekCaveId('2026-W${w.toString().padLeft(2, '0')}'),
+    };
+    expect(caves.length, greaterThan(1));
+    expect(caves, isNot(equals({'storm'})));
+    expect(
+      Keystone.weekFightLine('2026-W38'),
+      contains(Keystone.weekTell('2026-W38')),
+    );
   });
 
   test('KEY loot iLvl bonus is a visible jump, not a crumb', () {

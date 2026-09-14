@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:idle_party/core/enemy_flavor.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/meta_depth.dart';
@@ -21,6 +22,29 @@ abstract final class Keystone {
     'fortune',
     'iron',
   ];
+
+  /// This week's KEY fight identity — a shipped cave's pack mix + boss tell.
+  /// PATH art stays the zone you entered. Farm Rift stays Stormwake kill-quota.
+  /// Offset vs [EnemyFlavor.gauntletTellCycle] so KEY week 0 is not always SHARD.
+  static String weekCaveId(String weeklyKey) {
+    final cycle = EnemyFlavor.gauntletTellCycle;
+    if (weeklyKey.isEmpty) return cycle[3];
+    var h = 0;
+    for (final c in weeklyKey.codeUnits) {
+      h = (h * 31 + c) & 0x7fffffff;
+    }
+    return cycle[(h + 3) % cycle.length];
+  }
+
+  static String weekTell(String weeklyKey) =>
+      EnemyFlavor.bossTell(weekCaveId(weeklyKey));
+
+  static String weekFightLine(String weeklyKey) {
+    final id = weekCaveId(weeklyKey);
+    final tell = EnemyFlavor.bossTell(id);
+    final name = DungeonCatalog.byId(id).name;
+    return 'This week: $tell — $name jobs on the PATH cave you enter';
+  }
 
   /// KEY unlocks when every active hero is at [heroLevelGate] (endgame).
   /// Keep in sync with [GameLogic.maxHeroLevel].

@@ -60,6 +60,17 @@ void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
       priority: 2,
     );
   }
+  if (world.keystoneWeekDungeonId.isNotEmpty) {
+    SpatialCombat._spawnFloater(
+      world,
+      x: x,
+      y: y - 1.05,
+      text: EnemyFlavor.bossTell(world.keystoneWeekDungeonId),
+      argb: 0xFFE8D090,
+      life: 1.2,
+      priority: 2,
+    );
+  }
 }
 
 /// Trash specials (heal / hex / cleave / fortify) plus one unique boss tell
@@ -315,7 +326,9 @@ void _tickBossKit(
 
   final id = world.inGauntlet
       ? EnemyFlavor.gauntletBossDungeonId(world.combatFloor)
-      : world.dungeonId;
+      : (world.keystoneWeekDungeonId.isNotEmpty
+            ? world.keystoneWeekDungeonId
+            : world.dungeonId);
   switch (id) {
     case 'brass':
       enemy.telegraphTimer = 1.4;

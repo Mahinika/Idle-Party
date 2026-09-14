@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.166**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.167**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -19,7 +19,7 @@ Owner describes goals in plain language; agents pick skills/tools/verify alone.
 
 Cadence: `docs/CONTENT_CADENCE.md` (tag rhythm). **Default work** when
 vague: wait for the next plan (Program 3 closed). If they name **mer
-endgame**: next Endgame identity slice (KEY week affix, play notes).
+endgame**: identity slices are done — do not add zone #16.
 Do not restore AL20 as the batch. Chat Swedish; short test list
 (new save first) → wait. Commit locally when green; ask before push / PR / tag / Play.
 
@@ -31,7 +31,7 @@ Do not restore AL20 as the batch. Chat Swedish; short test list
 **Distribution today:** **Google Play is the primary install path**
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Store listing:
 `https://play.google.com/store/apps/details?id=com.idleparty.app` (production
-live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.166 / 196**). Closed opt-in remains for early builds.
+live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.167 / 197**). Closed opt-in remains for early builds.
 Do **not** link players to GitHub Releases (repo may be private). Working ship
 in-repo may be ahead of Play — wait for owner play before uploading a new AAB.
 
@@ -437,7 +437,8 @@ score); overtime → depleted. Loot iLvl bonus is `key * 2`
 TODAY chases the next KEY until +20; then Gauntlet / GR / Rift /
 Ashen Crown / Daily / Will (ALMOST cliffs stay above). KEY +21 stays on the KEY tab. Ranked GR past 20 shows the next rank on hub ENDGAME (no KEY dial) so weekly Ashen is not buried on TODAY. **Daily vault** (UTC):
 1 clear **or** timed KEY+2; claim once per day (scales with best timed key).
-Affixes still rotate weekly. See `lib/core/keystone.dart`.
+Affixes still rotate weekly. This week’s KEY also borrows another shipped
+cave’s pack jobs and boss tell (PATH art stays). See `lib/core/keystone.dart`.
 
 ## God Hand
 

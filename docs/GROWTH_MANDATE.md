@@ -273,13 +273,16 @@ Ashen weekly tickets + PRACTICE. The hole is **same-cave feel**.
       forever). Same Spire climb.
       (**2026-09-13 / 1.12.166**: F5 SHARD → F10 WAVE → WIND-UP / RALLY / …
       through the 15 shipped caves; cadence still scales past F100.)
-- [ ] KEY week affix only if play notes say KEY still feels like a Rift.
+- [x] KEY week affix only if play notes say KEY still feels like a Rift.
+      (**2026-09-14 / 1.12.167**: agent play — KEY was number affixes on the
+      same PATH crawl as a timed Rift. Week now picks a shipped cave’s pack
+      mix + boss tell; PATH art stays. Farm Rift stays Stormwake kill-quota.)
 
 Stop: God Hand redesign, second sim, gacha, listing that promises zone #16.
 
-When the owner names “mer endgame” / “kör det”, do the next unchecked slice
-above. Vague “nästa” after Program 3 waits for the **next plan** — do not
-invent Program 4 and do not restore AL20.
+When the owner names “mer endgame” / “kör det”, Endgame identity slices are
+done. Vague “nästa” waits for the **next plan** — do not invent Program 4
+and do not restore AL20.
 
 ## Metrics (owner / Console — do not fake)
 

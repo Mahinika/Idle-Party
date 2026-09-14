@@ -48,8 +48,9 @@ class KeystoneSheet extends StatelessWidget {
           const SizedBox(height: 4),
         ],
         Text(
-          'PATH is the 15 caves. KEY is those caves with a timer and affixes. '
-          'ENDGAME is four other hunts — not a 16th cave.',
+          'PATH is the 15 caves. KEY is a timed run on those caves — this '
+          'week’s pack jobs and boss tell rotate. Farm Rift is a Stormwake '
+          'kill quota, not the same hunt.',
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),

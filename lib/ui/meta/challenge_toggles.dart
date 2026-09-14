@@ -145,6 +145,16 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
+          if (GameLogic.endgameUnlocked(state)) ...[
+            const SizedBox(height: 4),
+            Text(
+              Keystone.weekFightLine(weekKey),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+            ),
+          ],
           if (affixes.isNotEmpty) ...[
             const SizedBox(height: 4),
             Wrap(

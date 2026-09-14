@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/enemy_flavor.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/enemy.dart';
@@ -161,5 +162,57 @@ void main() {
       {for (final e in state.enemies) e.name}.length,
       greaterThan(1),
     );
+  });
+
+  test('KEY week pack mix follows the week cave, not PATH Sandy', () {
+    String weekFor(String cave) {
+      for (var w = 1; w <= 53; w++) {
+        final k = '2026-W${w.toString().padLeft(2, '0')}';
+        if (Keystone.weekCaveId(k) == cave) return k;
+      }
+      fail('no week for $cave');
+    }
+
+    final brassKey = weekFor('brass');
+    final tideKey = weekFor('tide');
+    var brassTanks = 0;
+    var tideTanks = 0;
+    var brassRanged = 0;
+    var tideRanged = 0;
+    final base = GameLogic.createInitialState().copyWith(
+      keystoneRunActive: true,
+      dungeonId: 'sandy',
+    );
+    for (var i = 0; i < 40; i++) {
+      final room = DungeonRoom(
+        floorNumber: 8 + i,
+        roomIndex: 0,
+        type: RoomType.normal,
+        enemyLevel: 8 + i,
+        enemyCount: 9,
+      );
+      final brass = GameLogic.createEnemyGroup(
+        room,
+        dungeonId: 'sandy',
+        fromState: base.copyWith(
+          metaDepth: base.metaDepth.copyWith(weeklyKey: brassKey),
+        ),
+      );
+      final tide = GameLogic.createEnemyGroup(
+        room,
+        dungeonId: 'sandy',
+        fromState: base.copyWith(
+          metaDepth: base.metaDepth.copyWith(weeklyKey: tideKey),
+        ),
+      );
+      brassTanks += brass.where((e) => e.archetype == EnemyArchetype.tank).length;
+      tideTanks += tide.where((e) => e.archetype == EnemyArchetype.tank).length;
+      brassRanged +=
+          brass.where((e) => e.archetype == EnemyArchetype.ranged).length;
+      tideRanged +=
+          tide.where((e) => e.archetype == EnemyArchetype.ranged).length;
+    }
+    expect(brassTanks, greaterThan(tideTanks));
+    expect(tideRanged, greaterThan(brassRanged));
   });
 }

@@ -715,6 +715,7 @@ class SpatialWorld {
     this.afkAssist = false,
     this.dungeonId = 'sandy',
     this.keystoneRunAffixes = const <String>[],
+    this.keystoneWeekDungeonId = '',
     this.inWorldBoss = false,
     this.inGauntlet = false,
     this.combatFloor = 1,
@@ -761,6 +762,9 @@ class SpatialWorld {
 
   /// Locked KEY affixes for live combat tells (fortified / tyrannical / swarm).
   final List<String> keystoneRunAffixes;
+
+  /// KEY week cave for pack mix / boss tell (empty = PATH dungeon tell).
+  final String keystoneWeekDungeonId;
 
   /// Ashen Crown ticket or practice run.
   final bool inWorldBoss;
@@ -2199,6 +2203,9 @@ abstract final class SpatialCombat {
       keystoneRunAffixes: state.keystoneRunActive
           ? List<String>.from(state.keystoneRunAffixes)
           : const <String>[],
+      keystoneWeekDungeonId: state.keystoneRunActive
+          ? Keystone.weekCaveId(state.metaDepth.weeklyKey)
+          : '',
       inWorldBoss: state.inWorldBoss,
       inGauntlet: state.inGauntlet,
       combatFloor:
@@ -2457,6 +2464,7 @@ abstract final class SpatialCombat {
       afkAssist: world.afkAssist,
       dungeonId: world.dungeonId,
       keystoneRunAffixes: world.keystoneRunAffixes,
+      keystoneWeekDungeonId: world.keystoneWeekDungeonId,
       inWorldBoss: world.inWorldBoss,
       inGauntlet: world.inGauntlet,
       combatFloor: world.combatFloor,

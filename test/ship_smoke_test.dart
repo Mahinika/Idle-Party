@@ -173,6 +173,8 @@ void main() {
 
     final keystone = GameGuides.topics.firstWhere((t) => t.id == 'hardmode');
     expect(keystone.body.toLowerCase(), contains('ashen'));
+    expect(keystone.body.toLowerCase(), contains('farm rift'));
+    expect(keystone.body.toLowerCase(), contains('pack'));
 
     final ascend = GameGuides.topics.firstWhere((t) => t.id == 'ascend');
     expect(ascend.body, contains('AL20'));

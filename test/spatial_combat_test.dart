@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_room.dart';
@@ -875,6 +876,19 @@ void main() {
     expect(f10.contains('PULSE'), isFalse);
   });
 
+  test('KEY week on Sandy uses that week cave tell, not SLAM', () {
+    final weekKey = _weekKeyForCave('tide');
+    expect(Keystone.weekCaveId(weekKey), 'tide');
+    final seen = _bossTellTexts(
+      'sandy',
+      keystoneRun: true,
+      weeklyKey: weekKey,
+    );
+    expect(seen.contains('WAVE'), isTrue);
+    expect(seen.contains('SLAM'), isFalse);
+    expect(seen.contains('PULSE'), isFalse);
+  });
+
   test('KEY swarm affix shows SWARM banner at fight start', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
     final room = DungeonRoom(
@@ -907,6 +921,8 @@ Set<String> _bossTellTexts(
   String dungeonId, {
   bool inWorldBoss = false,
   bool inGauntlet = false,
+  bool keystoneRun = false,
+  String weeklyKey = '',
   int floorNumber = 5,
 }) {
   var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
@@ -927,6 +943,9 @@ Set<String> _bossTellTexts(
     inDungeon: true,
     inWorldBoss: inWorldBoss,
     inGauntlet: inGauntlet,
+    keystoneRunActive: keystoneRun,
+    keystoneRunAffixes: keystoneRun ? const ['elite'] : const <String>[],
+    metaDepth: state.metaDepth.copyWith(weeklyKey: weeklyKey),
   );
   var world = SpatialCombat.build(state);
   final body = world.enemies.first;
@@ -950,4 +969,12 @@ Set<String> _bossTellTexts(
     seen.addAll(world.floaters.map((f) => f.text));
   }
   return seen;
+}
+
+String _weekKeyForCave(String dungeonId) {
+  for (var w = 1; w <= 53; w++) {
+    final key = '2026-W${w.toString().padLeft(2, '0')}';
+    if (Keystone.weekCaveId(key) == dungeonId) return key;
+  }
+  fail('no ISO week maps to $dungeonId');
 }

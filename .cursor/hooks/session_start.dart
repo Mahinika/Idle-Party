@@ -14,7 +14,7 @@ void main() {
       'Do not start /init or repo cleanup unprompted. '
       'Play listing/docs stay honest (play-store-prep); do not treat Play as background chores. '
       'If they paste play notes, prefer a new save / first 90s to combat; AL20 notes block ship if endgame is broken. '
-      'Named leftover if they say mer endgame: KEY week affix only against play notes. '
+      'Endgame identity slices are done (Ashen week, Gauntlet tells, KEY week cave). '
       'After code: short phone test list (new save first), wait; no GitHub/Play upload before they play. '
       'Prefer git branch main for daily work; release/* only when cutting a tag. '
       'Do not stage windows/flutter/generated_* unless pubspec plugins changed. '
