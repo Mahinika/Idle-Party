@@ -16,8 +16,11 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
    `owner-preferences`). Product / risk / design forks: silent
    `studio-seats` (six chairs, one decision) then ask only if
    the ask table says so.
-3. Plain short Swedish (or their language). After code: what to test on the
-   phone → **stop and wait**. One plain synonym if a term is needed.
+3. Plain short Swedish (or their language). After code they should see:
+   **emu already running this batch** (`a56-playtest` hot restart /
+   relaunch), then what to test on the phone → **stop and wait**. Never
+   ask them to look while the attached session is older than the edits.
+   One plain synonym if a term is needed.
 4. Follow skills silently (`suggesting-skills`) — don’t ask “ska jag använda X?”.
 5. After UI/meta: verify (tests and/or `a56-playtest`). Web only if Android can’t run.
 6. After kit number tweaks: share-fast; grind gate green before done.

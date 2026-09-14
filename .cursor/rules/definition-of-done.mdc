@@ -15,8 +15,10 @@ Before telling the owner a coding task is finished:
 3. **Honesty** — player-visible copy matches reality (English in-game).
 4. **Legal** — no foreign dumps; art via Kenney/custom helpers only.
 5. **Git** — when analyze/tests are green, **commit locally**. Push / PR / tag
-   when the batch needs it. **Play AAB only when the owner asks.** Short test
-   list for a **new save** (and AL20 if endgame touched). Never force-push or
+   when the batch needs it. **Play AAB only when the owner asks.** If the
+   handoff asks them to look at the phone, **A56 must already be running this
+   batch** (hot restart / relaunch) *before* the test list. Short test list
+   for a **new save** (and AL20 if endgame touched). Never force-push or
    skip hooks unless they said so. Never point players at GitHub Releases.
 6. **Docs** — if architecture / Ascend / world path / distribution / tooling
    changed, update `AGENTS.md` (or `/init`). Standing growth principles live
@@ -25,4 +27,5 @@ Before telling the owner a coding task is finished:
    the default batch. Do not invent numbered programs.
 
 Skip heavy mid-band sims unless the task is balance. Skip A56 for pure logic
-unless UI chrome changed. UI changes: prefer A56 or hub smoke when practical.
+unless the handoff asks them to look on the phone (then push this batch first)
+or UI chrome changed. UI changes: prefer A56 or hub smoke when practical.

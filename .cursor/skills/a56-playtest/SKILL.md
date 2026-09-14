@@ -81,20 +81,25 @@ Or just watch the attached `flutter run` terminal. Release / Play builds stay qu
 
 ## After code changes
 
-- Copy / menu labels: hot **restart** (`R`) so the owner sees new English.
-- Small widget tweaks: hot **reload** (`r`) is enough.
-- **New / deleted PNGs or asset paths:** full `flutter run` (or
-  `--purge-persistent-cache`). Hot reload will **not** ship new art.
-- **Never ask the owner to look** until this session shows the app is
-  live (e.g. `Syncing files to device` / `Flutter run key commands` /
-  `[IP]` boot line). If `flutter run` already exited or “Lost
-  connection”, relaunch first — an idle emulator with an old APK is not
-  “the new build”.
-- **“Installera om” / up to date:** stop the old `flutter run`, then one new
-  `flutter run -d emulator-5554` (keeps the emu save). Prefer keep-save
-  reinstall; `adb uninstall` wipes that save — OK when the batch needs a
-  clean Play-style install. Do not stack a second `flutter run`.
-- Then a short phone test list (Swedish). Wait.
+**Hard rule:** never ask the owner to look / test on the phone until **this
+batch** is running on the A56. A live `flutter run` started *before* the
+edits still has the old isolate — that is not “the new build”.
+
+1. Dart / logic / copy / HUD: hot **restart** (`R`) on the attached session.
+   If you cannot send `R` (no stdin, tool detached, session older than the
+   edits), **one** new `flutter run -d emulator-5554` (keeps the emu save).
+2. Small widget-only tweaks: hot **reload** (`r`) is enough *after* you
+   confirm this session compiled the new files.
+3. **New / deleted PNGs or asset paths:** full `flutter run` (or
+   `--purge-persistent-cache`). Hot reload will **not** ship new art.
+4. Wait until this session shows the app is live (`Syncing files to device` /
+   `Flutter run key commands` / `[IP]` boot). Then the short Swedish test
+   list. If `flutter run` already exited or “Lost connection”, relaunch
+   first — an idle emulator with an old APK is not “the new build”.
+5. **“Installera om” / up to date:** stop the old `flutter run`, then one new
+   `flutter run -d emulator-5554` (keeps the emu save). Prefer keep-save
+   reinstall; `adb uninstall` wipes that save — OK when the batch needs a
+   clean Play-style install. Do not stack a second `flutter run`.
 
 ## Related
 

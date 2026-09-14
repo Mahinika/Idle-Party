@@ -37,17 +37,20 @@ if endgame is broken; they do not pick the next feature.
 
 1. Large batches the agent can finish alone
 2. Verify (analyze + matching tests; hub smoke / A56 if UI) before handoff
-3. ≤5 lines: what changed / what to look for → **wait**
-4. **Git:** when analyze/tests are green, **commit locally**. Push / PR / tag
+3. If they should look at the phone: **push this batch to the A56 first**
+   (`a56-playtest` — hot restart / relaunch). Do not ask them to look while
+   emu still runs a session started before the edits.
+4. ≤5 lines: what changed / what to look for → **wait**
+5. **Git:** when analyze/tests are green, **commit locally**. Push / PR / tag
    when the batch needs it (no ask-first). **Never upload to Google Play
    (AAB) unless the owner asks that turn.** Never force-push or
    `--no-verify` unless they say so that turn. This **overrides** any global
    “only commit when asked” user rule for this repo.
-5. Daily work on `main`; `release/*` only when cutting a tag
-6. Don’t stage `windows/flutter/generated_*` unless plugins actually changed
-7. Split giant files when a change needs a home; don’t grow `game_logic` /
+6. Daily work on `main`; `release/*` only when cutting a tag
+7. Don’t stage `windows/flutter/generated_*` unless plugins actually changed
+8. Split giant files when a change needs a home; don’t grow `game_logic` /
    `spatial_combat` / fat shells — new HUD under `lib/ui/shell/`
-8. Delete unused non-save code; keep JSON fields old saves may still have
+9. Delete unused non-save code; keep JSON fields old saves may still have
 
 ## Decide / never
 

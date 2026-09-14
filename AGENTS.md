@@ -18,7 +18,8 @@ Owner describes goals in plain language; agents pick skills/tools/verify alone.
 - `.cursor/rules/definition-of-done.mdc` — analyze / tests / commit locally
 
 Cadence: `docs/CONTENT_CADENCE.md` (tag rhythm). **Default work** when
-vague: ask once what to do. Chat Swedish; short test list (new save first) →
+vague: ask once what to do. Chat Swedish; if they should look at the phone,
+emu already running **this batch**, then short test list (new save first) →
 wait. Commit locally when green; push / PR / tag when needed. **Ask before
 Google Play AAB.**
 
