@@ -72,8 +72,8 @@ Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
 point players at GitHub Releases (repo may be private). Day-to-day: owner
 names work ([GROWTH_MANDATE.md](GROWTH_MANDATE.md)). D1 paste **2026-09-14**
 (not readable). Play publish/smoke closed **2026-09-13**.
-Ship path for players = Play AAB after owner play OK — not public GitHub APK
-links.
+Ship path for players = Play AAB **only when the owner asks** (after they
+play OK) — not public GitHub APK links. Agents never upload AAB unprompted.
 
 **Growth:** paste listing from [`STORE_LISTING.md`](STORE_LISTING.md); owner
 Play-smoke checklist + review templates in [`PLAY_GROWTH.md`](PLAY_GROWTH.md).

@@ -32,7 +32,7 @@ Google Play AAB.**
 `https://play.google.com/store/apps/details?id=com.idleparty.app` (production
 live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.168 / 198**). Closed opt-in remains for early builds.
 Do **not** link players to GitHub Releases (repo may be private). Working ship
-in-repo may be ahead of Play — wait for owner play before uploading a new AAB.
+in-repo may be ahead of Play — **never upload a new AAB without owner ask**.
 
 Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
@@ -120,7 +120,8 @@ full-repo audit (see `.cursor/commands/repo-auditandcleaning.md`).
 
 Cadence: **`docs/CONTENT_CADENCE.md`** (tag rhythm). No standing program —
 owner names work. Not AL20-as-batch. Why:
-[`docs/LEARNINGS.md`](docs/LEARNINGS.md). Background (optional):
+[`docs/LEARNINGS.md`](docs/LEARNINGS.md). Archived polish/audits:
+[`docs/archive/`](docs/archive/). Background (optional):
 `docs/archive/TOP_GAMES_RESEARCH.md`. Chase contract (hub TODAY ↔ offline Up next):
 `docs/CHASE_CONTRACT.md`. Gear budget: `docs/GEAR_BUDGET.md`. Floor blueprint
 (shipped): `docs/FLOOR_BLUEPRINT.md`. Play listing: `docs/PLAY_STORE.md` +
@@ -200,7 +201,8 @@ After GR20 the kill quota holds; par grows a little
 (max ~90s) and threat climbs slower so the ladder stays winnable.
 `metaDepth.grBestTier` / `seasonBestGrTier` survive Ascend.
 
-**Ashen Crown** (same gate): weekly ticket solo boss (ember art); wipe/leave
+**Ashen Crown** (same gate): weekly ticket solo boss; each ISO week visits a
+**different shipped cave** (ember staging / art; not dungeon #16); wipe/leave
 returns the ticket; PRACTICE free after the paid clear. Tickets /
 `worldBoss*` fields in `metaDepth`; see `lib/core/ashen_crown.dart`.
 
@@ -366,7 +368,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Custom art helpers | `lib/assets/custom_assets.dart` |
 | Gear budget contract | `docs/GEAR_BUDGET.md` |
 | UI theme | `lib/ui/theme.dart` + `docs/UI_THEME.md` — `GameTheme` tokens, `MenuChrome`, `GameButton`, `GameIcon` |
-| Game UX / flat nav | `.cursor/rules/game-ux-director.mdc` — placement map + self-stop (pairs with `ui-theme.mdc`) |
+| Game UX / placement | `.cursor/rules/game-ux-director.mdc` — placement map (pairs with `ui-theme.mdc`; flat nav / hide-until / ≤90 s are guidance, not hard locks) |
 
 ## Conventions
 
@@ -444,8 +446,8 @@ cave’s pack jobs and boss tell (PATH art stays). See `lib/core/keystone.dart`.
 
 Tap steers the party briefly and deals AOE; has cooldown. Damage upgrades with essence.
 Styles under **ESSENCE → KEEP**: **BAL** / **FOCUS** (+dmg −radius) /
-**WIDE** (+radius −dmg). Optional CD upgrades: `metaDepth.godHandCdLevel`. Soft
-knobs — do not redesign direction without asking.
+**WIDE** (+radius −dmg). Optional CD upgrades: `metaDepth.godHandCdLevel`.
+Direction changes only when the owner’s goal names them.
 
 ## Balance policy
 

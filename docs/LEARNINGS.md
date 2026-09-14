@@ -68,6 +68,12 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   ≤90 s). Then clarified: **never upload Google Play AAB without ask.**
   Placement map stays guidance. Hard locks + CI DPS gate stay.
 
+## 2026-09-14 — /init resync after plan/lock cleanup
+
+- Version **1.12.168** sync OK. AGENTS: Ashen weekly cave kit, Play AAB
+  never-without-ask, UX placement guidance (not hard flat-nav), `docs/archive/`
+  pointer. changelog_sync + ship_smoke green.
+
 ## 2026-09-14 — Console D1 is not a number yet
 
 - Agent opened Play Console (Cognifox Studio / Idle Party production).

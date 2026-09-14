@@ -19,7 +19,8 @@ Make `AGENTS.md` and `.cursor/rules/*.mdc` accurate for **today’s** codebase a
 
 **Do not revert** `docs/GROWTH_MANDATE.md` / `.cursor/rules/growth-mandate.mdc`
 to the old AL20-default slice. No standing program — owner names work.
-Sync architecture facts; do not invent numbered programs.
+**Never upload Google Play AAB without owner ask.** Sync architecture facts;
+do not invent numbered programs.
 
 ## Procedure
 
@@ -52,7 +53,7 @@ Sync architecture facts; do not invent numbered programs.
 4. **Report (plain Swedish)**
    - 3–8 bullets: what was wrong / what you fixed
    - Note anything still uncertain (needs playtest) without blocking the doc sync
-   - **Commit locally when green** (`owner-preferences`); push when the batch needs it
+   - **Commit locally when green** (`owner-preferences`); push when the batch needs it; **never Play AAB without owner ask**
 
 ## Out of scope for /init
 

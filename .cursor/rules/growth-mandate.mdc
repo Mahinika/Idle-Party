@@ -9,6 +9,7 @@ alwaysApply: true
 
 **Locked 2026-09-12.** Source: `docs/GROWTH_MANDATE.md` (research-checked).
 Programs / soft locks / ask-first UX hard rules removed **2026-09-14**.
+**Never upload Google Play AAB without owner ask.**
 Play numbers: `docs/PLAY_GROWTH.md`. Why: `docs/LEARNINGS.md`.
 
 **Default:** owner names the work. Vague “gör bättre / vad härnäst” → ask
