@@ -22,8 +22,8 @@ Each tagged `1.x.y` release should include:
 
 ### Success-spår (hold)
 
-1. **Activation** — new Play save combat in ≤90 s; day-one bar hides GOLD/SHOP/ESSENCE
-   until they mean something; TODAY stays grow-the-party until the first boss.
+1. **Activation** — new Play save reaches combat early when possible; day-one
+   chrome stays light when it helps.
 2. **Habit** — one TODAY job a new player can do on day 1 and day 2–7 (Play return).
 3. **Store** — D1 pasted **2026-09-14** (not readable); listing experiment when visitors suffice.
 
