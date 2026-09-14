@@ -15,6 +15,8 @@ void main() {
   });
 
   testWidgets('loading splash shows Cognifox Studio and Loading…', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(360, 780));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MaterialApp(home: LoadingSplash()));
     expect(find.byType(CognifoxStudioMark), findsOneWidget);
     expect(find.bySemanticsLabel(StoryLore.studioName), findsOneWidget);
@@ -23,5 +25,8 @@ void main() {
     expect(find.text(StoryLore.introTagline), findsNothing);
     expect(find.text('Loading…'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    final mark = tester.getRect(find.byType(CognifoxStudioMark));
+    expect(mark.center.dx, closeTo(180, 24));
+    expect(mark.top, greaterThan(80));
   });
 }

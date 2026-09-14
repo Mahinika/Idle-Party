@@ -79,7 +79,9 @@ class _BootIntroScreenState extends State<BootIntroScreen>
     _fade = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 520),
-    )..forward();
+      // Loading splash already showed the mark — don't fade it in again.
+      value: 1,
+    );
     _glow = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
@@ -195,16 +197,12 @@ class _BootIntroScreenState extends State<BootIntroScreen>
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-            child: Column(
-              children: [
-                const Spacer(flex: 2),
-                FadeTransition(
-                  opacity: _fade,
-                  child: const CognifoxStudioMark(logoSize: 196),
-                ),
-                const Spacer(flex: 3),
-                _skipChrome(dimHint: true),
-              ],
+            child: CognifoxSplashStage(
+              logo: FadeTransition(
+                opacity: _fade,
+                child: const CognifoxStudioMark(logoSize: 196),
+              ),
+              footer: _skipChrome(dimHint: true),
             ),
           ),
         ),
@@ -286,6 +284,7 @@ class _BootIntroScreenState extends State<BootIntroScreen>
 
   Widget _skipChrome({required bool dimHint}) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         if (_inputUnlocked)
           Semantics(
