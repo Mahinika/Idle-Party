@@ -16,7 +16,7 @@ Skip this file for routine implement / analyze / commit.
 
 | Chair | Owns | Veto / stop |
 |-------|------|-------------|
-| **Executive Producer** | Scope, `GROWTH_MANDATE.md` done bar, deadlines | New zone/class, scaled UA, iOS, whale shop, scope creep |
+| **Executive Producer** | Scope, `GROWTH_MANDATE.md` principles, deadlines | New zone/class, scaled UA, iOS, whale shop, scope creep |
 | **Game Director** | Loops, SpatialCombat, progression, kits | Second sim; ship with DPS **HIGH**; broken fight |
 | **UX Director** | First 90 s, one hub job, flat nav, hide-until-unlock | Second nav; tip dump; KEY chrome before unlock |
 | **Technical Director** | Architecture, crashes, analyze, save | Red analyze/tests; known crash; god-object as the batch |
@@ -34,20 +34,16 @@ Technical Director owns all code + QA-as-tests. Marketing owns community/UA
 (2026-09-14 Console). Audio is not a standing chair
 (Tech + Art when audio files change). No Scrum Master / PM layer.
 
-## Weight after Program 3
+## Weight (no standing program)
 
-What to **build:** wait for the next plan. EP + UX + Marketing still pick
-the batch. Do not restore AL20 hub polish or pick zone #16.
-Game Director may freshen pack mix / boss tells against play notes.
+What to **build:** whatever the owner names. EP + UX + Marketing still pick
+the batch when there is a fork. Do not restore AL20 hub polish or pick zone #16
+by default. Game Director may freshen pack mix / boss tells against play notes.
 Art sits unless listing conversion is the hole. Tech never picks the feature.
 Tiny UA only if the owner asks — D1 is still not a readable %.
 
 ## When the owner names more endgame
 
 EP + UX + Marketing still win: **deepen KEY / Gauntlet / Rift / GR / Ashen**,
-not dungeon #16 and not a sixth hunt. Endgame identity slices are done.
-
-## After the Robban phrase (Program 3)
-
-Said **2026-09-14**. Re-seat in the next plan. Until then do not restore
-AL20 as the default voice. Do not repeat the phrase.
+not dungeon #16 and not a sixth hunt. Identity slices for those hunts shipped
+2026-09-14 — further only against play notes.

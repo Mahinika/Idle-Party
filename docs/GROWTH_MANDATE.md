@@ -1,21 +1,26 @@
-# Idle Party — growth mandate (save + grow players)
+# Idle Party — growth mandate (standing principles)
 
-**Locked:** 2026-09-12 by owner. **Research-checked:** 2026-09-12
-(GameAnalytics 2025–26, Play ASO experiments, idle FTUE, persona-prompt papers).
-**Program 1** (time-to-combat + Play funnel) shipped **2026-09-12**.
-**Program 2** (hide-until-unlock + Play smoke) closed **2026-09-13**.
-**Default work now:** wait for the **next plan**. Program 3 closed
-**2026-09-14**. Do not restore AL20 as the batch.
-Why: [LEARNINGS.md](LEARNINGS.md).
+**Locked:** 2026-09-12 by owner. **Research-checked:** 2026-09-12.
+**Updated:** 2026-09-14 — numbered programs / done bars / “next plan” removed
+by owner. History of shipped funnel work lives in [LEARNINGS.md](LEARNINGS.md)
+and [PLAY_GROWTH.md](PLAY_GROWTH.md).
 
-North star: **främlingar på Play blir spelare.** AL20 is a quality gate
-(do not ship a broken endgame). It is **not** the batch driver.
+North star: **främlingar på Play blir spelare.**
+
+AL20 is a **quality gate** (do not ship a broken endgame). It is **not** the
+default batch driver.
 
 Live listing ops: [PLAY_GROWTH.md](PLAY_GROWTH.md) ·
 [STORE_LISTING.md](STORE_LISTING.md) · [PLAY_STORE.md](PLAY_STORE.md).
 Decision policy: [`.cursor/rules/studio-seats.mdc`](../.cursor/rules/studio-seats.mdc).
 
-## Time-to-value (do not treat “15 min” as the hook)
+## Default work
+
+**Owner names the work.** No standing program. No “wait for the next plan.”
+Vague “gör bättre / vad härnäst” → ask once what to do; do not invent a
+numbered program and do not restore AL20 hub polish as the default.
+
+## Time-to-value
 
 Median mobile session is ~**3–3.5 min**; median D1 ~**22%**. RPG churn often
 hits **day 3–7** on loop complexity. Idle best practice: hide chrome until it
@@ -24,7 +29,7 @@ matters; first victory in the **first session**.
 | Target | Meaning |
 |--------|---------|
 | **≤60–90 s** | Core combat on screen (party walking/fighting). Not tips, not GOLD. |
-| **First session** | First *reward* (loot / stronger / floor clear) — often 45 s–4 min in published idle/FTUE notes; **instrument**, don’t guess. |
+| **First session** | First *reward* (loot / stronger / floor clear) — often 45 s–4 min; **instrument**, don’t guess. |
 | **≤15 min** | Envelope if they stay — not the aha. First boss may be too late as the D1 win. |
 
 ## Pillars (max three)
@@ -33,263 +38,39 @@ matters; first victory in the **first session**.
 2. **Come back tomorrow** — one TODAY job; honest offline return; one day-2–7 habit a *new* player can do.
 3. **One prestige loop** — Ascend / Blessing / GOLD wipe. No new spell modes.
 
+## Hold (shipped; do not regress)
+
+- Play-install first hour: combat ≤90 s; hide GOLD / SHOP / ESSENCE until unlock
+- Tip dump ≤2 beats; TODAY grow-the-party until first boss; one cave today on day 2–7
+- Funnel events live (`first_open` → … → `d1_return` + time-to-combat)
+- Systems gated (KEY / endgame / advanced MORE) until unlock
+- Cadence 2–3 weeks; What’s New lead for a **new** player; DPS HIGH fails CI
+- Listing experiment deferred until traffic exists; no scaled UA while D1 unread
+
 ## Stop doing
 
-- AL20 hub-chase / wipe polish “because the old list said so”
+- AL20 hub-chase / wipe polish “because a list said so”
 - New zone #16, new class/spec, God Hand redesign, second combat sim
 - Gacha / BiS-for-cash / whale ladder
 - God-object refactors as the quarter’s story
 - iOS / web-as-product / GitHub Releases as a player funnel
-- Scaled paid UA before D1 is known (median games cannot pay back UA)
+- Scaled paid UA before D1 is known
 - Teaching ESSENCE / MARKET / GOLD tracks / pets before first combat reward
 - Notification permission on first launch; more than ~1–2 pings/day
+- Inventing numbered “Program N” roadmaps unless the owner asks for one
 
-## 90-day phases
+## Endgame (when owner names it)
 
-### Days 1–14 — store + funnel
-
-- Listing: **icon** (highest search/browse swing) + screenshots **1–2** = live
-  combat crawl (benefit, not menus). Honesty: the ad/listing must be the first
-  minute. Run **Store Listing Experiments** when traffic exists (owner Console).
-- Funnel: `first_open` → `app_ready` → `first_enter` → `first_reward` →
-  `first_boss` → `d1_return`. Also log **seconds to combat**. First boss is a
-  later FTUE step, not the only win.
-- Day-1 TODAY = grow the party / first cave. Not vault / KEY / ESSENCE.
-- Crashes and 1★ reviews outrank features.
-
-### Days 15–45 — stranger → player
-
-- Cut the tip dump. ≤2 first-run beats. Contextual hints, not a syllabus.
-- One player-facing day-2–7 job.
-- Welcome Back = reward, not three system names.
-- Opt-in **local** notifications after a milestone (first reward/boss), never
-  at install, never mid-combat, cap ~1–2/day. Track opt-out if possible.
-
-### Days 45–90 — habit + visible updates
-
-- Patch every 2–3 weeks. Play What’s New in one sentence a new player understands.
-- Tiny UA (€5–10/day) is a **CPI/creative smoke**, not a D1 verdict (~900
-  installs needed to read D1 ±3 pts). Do not scale.
-
-## Done bar (say the phrase)
-
-Check boxes only when **shipped** (or owner confirmed for Console-only).
-
-**In-repo**
-
-- [x] Funnel live: `first_open`, `app_ready`, `first_enter`, `first_reward`,
-      `first_boss`, `d1_return` + time-to-combat (`AppAnalytics` + tests)
-- [x] First session: tip dump cut (≤2 beats); combat on screen in ≤90 s on a
-      new save; no MARKET / GOLD-tracks / pets / ESSENCE coaching before first reward
-- [x] Systems gated (KEY / endgame / advanced MORE) until unlock
-- [x] One player-facing day-2–7 job
-- [x] Offline Welcome Back = short reward (wow + ≤3 highlights + one Up next)
-- [x] Opt-in local notifications after a milestone; never install-prompt; never combat; ~1–2/day cap
-- [x] Listing pack: icon + shots 1–2 = new-save first minute of **combat**
-      (`docs/STORE_LISTING.md`)
-- [x] At least one What’s New line aimed at a **new** player
-- [x] Dead chrome stays hidden (LOADOUTS / Sell junk / Scrap / GEAR Sell)
-
-**Owner / Console**
-
-- [x] Play listing icon + screenshots + preview updated to match live first-minute combat
-- [x] Owner looked at Play conversion + crashes + reviews once after the in-repo bar
-- [x] Store Listing Experiment started **or** owner deferred (too little traffic)
-
-Program 1 completed **2026-09-12**. The Robban line for *this* bar was said.
-Do not repeat it. Default work is **Program 2**.
-
-## Program 2 — hide-until-unlock + Play smoke
-
-**Locked:** 2026-09-12 (owner confirmed the plan). North star unchanged:
-strangers on Play become players. AL20 stays a quality gate, not the batch.
-Endgame copy and GEAR follow-up only when play notes say they lie.
-
-Check boxes only when **shipped** (or owner confirmed for Console-only).
-
-**In-repo**
-
-- [x] First-hour bottom bar: GOLD until first reward; SHOP after first boss;
-      ESSENCE when essence exists (or first Ascend). BAG Shop-chip off in the
-      first hour. Flat nav — tabs return at unlock; no second nav.
-- [x] TODAY: grow-the-party beats EQUIP / MARKET until the first boss
-      (claimables still win). `first_hour_plain_test`.
-- [x] First-hour MetaPulse stays empty — no “KEY off” crumbs.
-- [x] Starter kits (Protection / Discipline / Fire): HUD chips keep the job
-      (identity reserve + Shield/Healer/Damage line).
-- [x] Cadence: tag every 2–3 weeks; What’s New lead for a new player;
-      live-light balance gate stays the CI veto (`docs/CONTENT_CADENCE.md`).
-
-**Owner / Console**
-
-- [x] Google publish complete (listing shows Updated + live version)
-      (owner **2026-09-13**)
-- [x] SHOP + POWERUPS smoked on a **Play-installed** build (AD PRIVACY path too)
-      (owner **2026-09-13**)
-- [x] D1 / Store Listing Experiment: looked **2026-09-12** — traffic too small;
-      deferred. No scaled UA. (Program 3 pastes D1 after smoke when numbers exist.)
-
-Program 2 completed **2026-09-13**. The Robban line for *this* bar is said
-in the same turn. Do not repeat it. Program 3 closed **2026-09-14**.
-Do not restore AL20 as the batch.
-
-**Quality gates (not the batch)**
-
-- Endgame copy (KEY loot line, Gauntlet wipe→hub, GR “no mid-run gear”) only
-  when an AL12 / AL20 save’s play notes say the hunt lies.
-- GEAR follow-up (BiS jargon in tips, Shop-chip, two EQUIP buttons) only
-  against play notes from the current save.
-- Tag cadence **2–3 weeks** — `docs/CONTENT_CADENCE.md`. Balance gate stays the
-  CI veto. No new zone / class.
-
-## Program 3 — stranger stays
-
-**Drafted 2026-09-13** (owner asked for a future plan; six chairs, one
-decision). **Clock starts 2026-09-13** (Program 2 Robban line).
-
-North star unchanged: **främlingar på Play blir spelare.** Pillars unchanged
-(party walks the room · one TODAY job · one prestige loop). Endless KEY /
-Farm Rift / Ranked GR already shipped as an AL20 **quality** ladder — they
-are not this program’s story.
-
-EP + UX + Marketing pick the batch. Game Director may freshen the **crawl**
-(the listing product) but does not restore AL20 hub polish. Tech never picks
-the feature. Art sits unless listing conversion is the hole (icon / shots).
-Marketing may run tiny UA only after D1 exists and the owner asks.
-
-### 90 days (clock starts at the Robban line)
-
-**Days 1–14 — read Play, don’t invent content**
-
-- Owner pastes D1, crashes, reviews, listing visitors. Agent does not guess.
-- Order of truth: crash-free → listing conversion → D1 → D7 → rating.
-- If the number is listing/D1: first-session + listing honesty (not KEY chrome).
-- If the number is D7: day-2–7 job + Welcome Back vs a Play-returned save.
-- If reviews say the fight is the same cave forever: pack mix / boss tells
-  (SpatialCombat jobs — not zone #16).
-
-**Days 15–45 — week-1 feel without a 16th cave**
-
-- Keep hide-until-unlock. One hub job. ≤2 first-run beats.
-- Combat identity pass only against play notes (new save first). Fairness
-  gate still fails DPS HIGH.
-- Cadence 2–3 weeks; What’s New lead still a new player.
-
-**Days 45–90 — habit in public**
-
-- Another tag. Store Listing Experiment when visitors exist.
-- Tiny UA (€5–10/day) only if D1 is known and the owner asks — smoke, not scale.
-- Still no iOS, gacha, whale shop, second sim, new class, zone #16.
-
-### Done bar (Program 3)
-
-Check boxes only when **shipped** (or owner confirmed for Console-only).
-
-**In-repo** (in order, skip a box only if the owner’s Play numbers already
-prove a later hole is bigger)
-
-- [x] Play-install first hour still holds: combat ≤90 s; GOLD / SHOP / ESSENCE
-      hide-until-unlock; TODAY grow-the-party until first boss
-      (in-repo **2026-09-13**: skippable boot → ENTER; GEAR+MORE until first
-      loot; TODAY grow-the-party. `first_hour_plain_test` + `ship_smoke_test`
-      green. Play-install wall-clock still needs owner notes — do not mark
-      Console boxes from this check.)
-- [x] Day-2–7: one cave today + Welcome Back still honest on a **Play return**
-      (not a sideload)
-      (in-repo **2026-09-13**: after first boss, hunt + Up next are
-      “Clear one cave today”; Welcome Back stays wow + ≤3 rows + that line.
-      `first_hour_plain_test` / `chase_contract_test` / `offline_progress_test`
-      green. Play-return wall-clock still needs owner notes — do not mark
-      Console boxes from this check.)
-- [x] Week-1 crawl: packs / boss tells not identical if play notes say they
-      are (SpatialCombat mix — no dungeon #16)
-      (in-repo **2026-09-13**: Sandy starter pack is mixed jobs; Sandy SLAM vs
-      Goblin RALLY; mixes differ. `enemy_flavor_test` + `spatial_combat_test`
-      green. Play notes still win if a later crawl feels cloned — do not mark
-      Console boxes from this check.)
-- [x] At least one 2–3 week tag; What’s New lead for a new player; DPS HIGH
-      still fails CI
-      (**2026-09-13**: `v1.12.163` annotated tag; What’s New lead is a new-player
-      fight line; `changelog_sync_test` + `class_balance_gate_test` green, no
-      DPS HIGH. Next Play AAB still waits for owner ask.)
-
-**Owner / Console**
-
-- [x] D1 (and D7 if traffic exists) pasted once after Program 2 smoke
-      (**2026-09-14** Console look, Idle Party production). Play has **no
-      D1** metric (earliest return is **2 days**). 2-day retained users
-      (28d): **1** returner on 23 Aug and **1** on 28 Aug — not a %.
-      D7 retained devices: **no data**. Funnel 28d (device): **433**
-      impressions, **15** acquisitions, **4** first opens, **4** MAU.
-      Listing 28d (data through 8 Sep): **9** visitors / **6** install
-      clicks / **67%** CTR. Too small to compare to ~22% median D1.
-      Numbers: [PLAY_GROWTH.md](PLAY_GROWTH.md).
-- [x] Crashes / 1★ answered or empty
-      (**2026-09-12** Console: no user-perceived crashes/ANR; one 5★ already
-      replied; no 1★. **2026-09-14**: still empty / 5,00. Revisit if a new
-      1★ lands.)
-- [x] Store Listing Experiment started **or** deferred (too little traffic)
-      (**2026-09-12**: ~10 listing visitors / 28 days — deferred.
-      **2026-09-14**: still ~9 visitors / 28d — still deferred.)
-- [x] Tiny UA only if D1 is known and owner asked — no scale
-      (**2026-09-14**: D1 still not a readable %; owner did not ask — no
-      paid spend.)
-
-When **every Program 3** box is `[x]`, the next user-facing message starts
-with **exactly**:
-
-```
-ROBBAN DET BEHÖVS GÖRAS EN NY PLAN FÖR FRAMTIDEN
-```
-
-Same phrase, next bar. Never early. Never paraphrase.
-
-Program 3 completed **2026-09-14**. The Robban line for *this* bar is said
-in the same turn. Do not repeat it. Default work waits for the **next plan**.
-Do not restore AL20 as the batch. Endgame identity KEY affix stays a
-named-owner slice (play notes), not a substitute program.
-
-## Endgame identity (owner named 2026-09-13)
-
-Not a new program. D1 paste closed **2026-09-14** (too small to read). Soft lock: no dungeon #16
-unless the owner says “ny zon OK”. No new class. No hunt #6 under MORE.
-
-**One call (six chairs):** EP + UX + Marketing — more endgame means the
-**five hunts feel different**, not a 16th cave. Game Director owns the fight.
-Tech keeps one sim. Art stays Kenney/custom. Marketing: listing still the
-first minute; What’s New lead still a new player.
-
-Already shipped: endless KEY / Farm Rift / Ranked GR past 20; Gauntlet climb;
-Ashen weekly tickets + PRACTICE. The hole is **same-cave feel**.
-
-### Slices (in order, one at a time)
-
-- [x] Ashen Crown weekly kit — each ISO week a different tell/job at old
-      PULSE power (not a new zone). Ember staging. Door = KEY tab + hub
-      ENDGAME. PRACTICE uses this week’s kit.
-      (**2026-09-13 / 1.12.164**: Crown visits a shipped cave each week;
-      telegraph follows that cave. Same tickets.)
-- [x] Gauntlet every-5 bosses cycle distinct tells (not the same SHARD
-      forever). Same Spire climb.
-      (**2026-09-13 / 1.12.166**: F5 SHARD → F10 WAVE → WIND-UP / RALLY / …
-      through the 15 shipped caves; cadence still scales past F100.)
-- [x] KEY week affix only if play notes say KEY still feels like a Rift.
-      (**2026-09-14 / 1.12.167**: agent play — KEY was number affixes on the
-      same PATH crawl as a timed Rift. Week now picks a shipped cave’s pack
-      mix + boss tell; PATH art stays. Farm Rift stays Stormwake kill-quota.)
-
-Stop: God Hand redesign, second sim, gacha, listing that promises zone #16.
-
-When the owner names “mer endgame” / “kör det”, Endgame identity slices are
-done. Vague “nästa” waits for the **next plan** — do not invent Program 4
-and do not restore AL20.
+Deepen the **five hunts** (KEY / Gauntlet / Farm Rift / Ranked GR / Ashen) —
+not dungeon #16 and not a sixth hunt under MORE. Identity slices for those
+hunts shipped **2026-09-14**; further work only against play notes.
 
 ## Metrics (owner / Console — do not fake)
 
-Crash-free → listing conversion → D1 (~22% median all-mobile; Android top
-quartile ~25–27%) → D7 → rating → then D30 / UA / iOS.
-Agent cannot mark D1 “good” without a real return %. The 2026-09-14 paste
-is **not readable** (n too small; Play has no D1 metric).
+Honest order: crash-free → listing conversion → D1 → D7 → rating → then
+tiny UA / D30. Agent cannot mark D1 “good” without a real return %.
+Latest paste (**2026-09-14**): Play has no D1 metric; 2-day/D7 empty or n=1 —
+see [PLAY_GROWTH.md](PLAY_GROWTH.md).
 
 ## Quality gate (still)
 
@@ -298,8 +79,7 @@ SpatialCombat remains the only fight sim.
 
 ## Studio seats
 
-Six chairs only — `.cursor/rules/studio-seats.mdc`. Not a theatrical panel.
-**EP + UX + Marketing** pick *what to build* on the next plan.
-Game Director vetoes a broken fight or DPS HIGH. Tech vetoes red
-analyze / crash. AL20 is not a chair. Program 3 Robban line is said —
-re-seat on the next plan, not AL20 as the default voice.
+Six chairs only — `.cursor/rules/studio-seats.mdc`.
+**EP + UX + Marketing** pick *what to build* when the owner names a goal.
+Game Director vetoes a broken fight or DPS HIGH. Tech vetoes red analyze /
+crash. AL20 is not a chair.

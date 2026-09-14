@@ -21,10 +21,10 @@ Before telling the owner a coding task is finished:
    **APK only if asked.** Ask once before push / PR / tag / Play. Never push
    silently. Never point players at GitHub Releases.
 6. **Docs** — if architecture / Ascend / world path / distribution / tooling
-   changed, update `AGENTS.md` (or `/init`). If a growth-mandate box shipped,
-   check it in `docs/GROWTH_MANDATE.md`.
-7. **Mandate** — Program 3 Robban line was said **2026-09-14**. Do not
-   repeat it. Do not restore AL20 as the batch. Wait for the next plan.
+   changed, update `AGENTS.md` (or `/init`). Standing growth principles live
+   in `docs/GROWTH_MANDATE.md` (no numbered program boxes).
+7. **Mandate** — owner names the work. Do not restore AL20 as the batch.
+   Do not invent numbered programs.
 
 Skip heavy mid-band sims unless the task is balance. Skip A56 for pure logic
 unless UI chrome changed. First-15-min UI always needs A56 or hub smoke.

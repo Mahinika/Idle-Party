@@ -3,8 +3,8 @@
 **Updated:** 2026-09-14 · Category stays **Role Playing** (idle fantasy RPG).  
 Do **not** chase Casual / Battle Royale / sandbox search volume.
 
-**Active program:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) **Program 3**
-closed **2026-09-14** (D1 paste: not readable). Wait for the next plan.
+**Standing principles:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) — no numbered
+programs; owner names work. D1 paste **2026-09-14** (not readable).
 Do not restore AL20 as the batch.
 
 Honest growth order: **crash-free → listing conversion → D1 → D7 → rating → tiny paid test**.
@@ -47,20 +47,20 @@ Do these in Console when you have 20 minutes:
 
 Never point players at GitHub Releases.
 
-### Program 2 — owner Play smoke (closed 2026-09-13)
+### Play smoke (closed 2026-09-13)
 
 Owner confirmed on a **Play-installed** build: listing Updated, SHOP SKUs
 visible, POWERUPS + AD PRIVACY path. D1 / listing A/B still deferred
 (too little traffic — Console look **2026-09-12**).
 
-### Program 3 — Console (closed 2026-09-14)
+### Console D1 paste (2026-09-14)
 
 D1 / D7 pasted from a Console look **2026-09-14**. Play has no D1 metric;
 2-day and D7 are empty or n=1. Listing A/B still deferred. No tiny UA.
 
 ### Console look (2026-09-14)
 
-Opened after Program 2 smoke. Last **28 days** unless noted. Numbers are
+Opened after Play smoke. Last **28 days** unless noted. Numbers are
 too small to call D1 good or bad vs ~22% median.
 
 | Surface | What we saw |

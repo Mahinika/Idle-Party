@@ -1,8 +1,8 @@
 # Idle Party — monthly content cadence
 
-**Active program (2026-09-14):** [GROWTH_MANDATE.md](GROWTH_MANDATE.md)
-**Program 3** closed (D1 paste: not readable). Wait for the next plan.
-This file is the **tag rhythm** (balance + What’s New). Do not restore AL20.
+**Standing principles:** [GROWTH_MANDATE.md](GROWTH_MANDATE.md) — no numbered
+programs; owner names work. This file is the **tag rhythm** (balance + What’s
+New). Do not restore AL20.
 
 Optional background: [TOP_GAMES_RESEARCH.md](TOP_GAMES_RESEARCH.md). Live
 contracts: [CHASE_CONTRACT.md](CHASE_CONTRACT.md) ·
@@ -14,7 +14,7 @@ contracts: [CHASE_CONTRACT.md](CHASE_CONTRACT.md) ·
 Each tagged `1.x.y` release should include:
 
 1. **One visible slice** — What’s New in **one sentence a new player understands**.
-   After Program 3: next plan, or named Endgame identity (KEY affix vs play notes).
+   Owner names the slice (first session / listing / crawl / named endgame).
 2. **Balance pass** — iterate with share-only, then gate:
    - Fast: `flutter test test/class_balance_share_fast_test.dart` (or `--focus=specA,specB` via harness args)
    - CI: `test/class_balance_gate_test.dart` (live light, fails on DPS `**HIGH**`)
@@ -40,7 +40,7 @@ Endgame copy and GEAR follow-up only against play notes. No new zones or classes
 | Cool affinity-nudge vs budget | Budget |
 | Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
 | Stor rewrite vs small ship | Small ship + synlig What’s New a new player can read |
-| Vagt “gör bättre” vs explicit bredare mål | Wait for the next plan. Do not restore AL20 |
+| Vagt “gör bättre” vs explicit bredare mål | Ask once. Do not restore AL20 |
 | Två stolar oense | `.cursor/rules/studio-seats.mdc` — EP + UX + Marketing vinner; Game/Tech/Art veto enligt stolen |
 
 ## Non-goals (unless owner asks)

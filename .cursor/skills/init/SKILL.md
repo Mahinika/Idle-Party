@@ -18,8 +18,8 @@ When the user runs **`/init`**, do this job (do not ask which files to touch):
 Make `AGENTS.md` and `.cursor/rules/*.mdc` accurate for **today’s** codebase and product decisions.
 
 **Do not revert** `docs/GROWTH_MANDATE.md` / `.cursor/rules/growth-mandate.mdc`
-to the old AL20-default slice. Program 3 closed **2026-09-14** — wait for
-the next plan. Sync architecture facts; do not invent Program 4.
+to the old AL20-default slice. No standing program — owner names work.
+Sync architecture facts; do not invent numbered programs.
 
 ## Procedure
 
@@ -30,7 +30,7 @@ the next plan. Sync architecture facts; do not invent Program 4.
    - **Keep** six studio seats; do not restore a 40-role org or AL20 expert panel
    - Key systems: `GameDirector`, `GameLogic`, `SpatialCombat`, hub/dungeon UI, `DungeonCatalog`, `metaDepth`, Ascend keep/reset
    - Docs that claim “current”: `docs/PLAY_STORE.md`, `docs/CONTENT_CADENCE.md`,
-     `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md` (Program 3 closed; wait for the next plan)
+     `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md` (owner names work; no standing program)
    - Optional fast honesty: `flutter test test/ship_smoke_test.dart` and/or MCP `changelog_check` / `zone_identity` if helpful
 
 2. **Diff claims vs code**
@@ -40,7 +40,7 @@ the next plan. Sync architecture facts; do not invent Program 4.
    - Build/verify commands, MCP server name, skill list
    - Live look is `a56-playtest` (Samsung A56 emulator), not web-server tabs
    - Owner prefs (language, Play vs sideload, commit/propose behavior) — update only if product reality changed
-   - **Keep** waiting for the next plan; do not restore AL20; do not invent Program 4
+   - **Keep** owner-names-work default; do not restore AL20; do not invent numbered programs
 
 3. **Edit**
    - Update **`AGENTS.md`** so architecture + conventions + tooling match code

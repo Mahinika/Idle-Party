@@ -69,10 +69,9 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 **Primary distribution: Google Play.**  
 Store: `https://play.google.com/store/apps/details?id=com.idleparty.app`
 (production track live; keep Operator status honest above). Closed opt-in for early builds. Do **not**
-point players at GitHub Releases (repo may be private). Day-to-day: wait for
-the **next plan** ([GROWTH_MANDATE.md](GROWTH_MANDATE.md)). Program 3 closed
-**2026-09-14** (D1 paste: not readable). Program 2 Play publish/smoke closed
-**2026-09-13**.
+point players at GitHub Releases (repo may be private). Day-to-day: owner
+names work ([GROWTH_MANDATE.md](GROWTH_MANDATE.md)). D1 paste **2026-09-14**
+(not readable). Play publish/smoke closed **2026-09-13**.
 Ship path for players = Play AAB after owner play OK — not public GitHub APK
 links.
 
