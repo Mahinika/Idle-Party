@@ -74,6 +74,12 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   never-without-ask, UX placement guidance (not hard flat-nav), `docs/archive/`
   pointer. changelog_sync + ship_smoke green.
 
+## 2026-09-14 — Craft Trial / STAR NODES honesty + 1.12.170
+
+- STAR NODES points from Ashen / Craft Trial must bank before AL20 (spend
+  still waits for KEEP). What’s New names Craft Trial + STAR NODES. Ship
+  **1.12.170 / 200**.
+
 ## 2026-09-14 — Console D1 is not a number yet
 
 - Agent opened Play Console (Cognifox Studio / Idle Party production).

@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code,
 **Kenney** (CC0) world art, and **owned** custom identity sprites (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.169**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.170**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -31,7 +31,7 @@ Google Play AAB.**
 **Distribution today:** **Google Play is the primary install path**
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Store listing:
 `https://play.google.com/store/apps/details?id=com.idleparty.app` (production
-live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.169 / 199**). Closed opt-in remains for early builds.
+live as of owner **2026-09-13**; submitted **1.12.157 / 187**; working ship **1.12.170 / 200**). Closed opt-in remains for early builds.
 Do **not** link players to GitHub Releases (repo may be private). Working ship
 in-repo may be ahead of Play — **never upload a new AAB without owner ask**.
 
