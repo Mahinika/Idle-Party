@@ -61,6 +61,12 @@ abstract final class RiftProgress {
     return 'BEHIND';
   }
 
+  /// How far the GR clock needle sits on the bar (0..1).
+  static double timeSpent01({required int timerMs, required int parMs}) {
+    if (parMs <= 0) return 0;
+    return (timerMs / parMs).clamp(0.0, 1.0);
+  }
+
   static String percentLabel(double progress01) =>
       '${(clamp01(progress01) * 100).round()}%';
 }

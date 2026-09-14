@@ -5,13 +5,12 @@ import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/keystone.dart';
 import '../../core/menu_alerts.dart';
-import '../../core/rift.dart';
-import '../../core/greater_rift.dart';
 import '../../models/dungeon_mode.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../spatial_dungeon_view.dart';
+import 'rift_progress_hud.dart';
 import 'wallet_strip.dart';
 
 class DungeonTopHud extends StatelessWidget {
@@ -271,20 +270,9 @@ class DungeonTopHud extends StatelessWidget {
         : state.inGauntlet
         ? 'CLIMB · F$floor'
         : state.inRift
-        ? Rift.progressLabel(
-            progress01: state.riftProgress01,
-            timerMs: state.riftTimerMs,
-            tier: state.riftTier,
-            guardianActive: state.riftGuardianActive,
-          )
+        ? 'STORMWAKE · FARM R${state.riftTier}'
         : state.inGreaterRift
-        ? GreaterRift.progressLabel(
-            progress01: state.grProgress01,
-            timerMs: state.grTimerMs,
-            parMs: state.grParMs,
-            tier: state.grTier,
-            guardianActive: state.grGuardianActive,
-          )
+        ? 'MOTHVEIL · RANK GR${state.grTier}'
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).title
         : '$zoneShort · F$floor$keyBit';
@@ -349,37 +337,8 @@ class DungeonTopHud extends StatelessWidget {
           onTap: () {},
         );
       }
-      if (state.inRift) {
-        return DungeonModeChip(
-          label: Rift.hudChipLabel(
-            progress01: state.riftProgress01,
-            tier: state.riftTier,
-            guardianActive: state.riftGuardianActive,
-          ),
-          selected: true,
-          dense: true,
-          interactive: false,
-          maxLabelWidth: 140,
-          tip:
-              'Stormwake farm — fill progress, kill the Guardian. Gold and gear mid-run. No fail timer.',
-          onTap: () {},
-        );
-      }
-      if (state.inGreaterRift) {
-        return DungeonModeChip(
-          label: GreaterRift.hudChipLabel(
-            progress01: state.grProgress01,
-            tier: state.grTier,
-            guardianActive: state.grGuardianActive,
-          ),
-          selected: true,
-          dense: true,
-          interactive: false,
-          maxLabelWidth: 140,
-          tip:
-              'Mothveil ranked — fill progress, kill the Guardian under the timer. No mid-run gear.',
-          onTap: () {},
-        );
+      if (state.inRift || state.inGreaterRift) {
+        return const SizedBox.shrink();
       }
       return Row(
         mainAxisSize: MainAxisSize.min,
@@ -510,6 +469,23 @@ class DungeonTopHud extends StatelessWidget {
               ),
             ],
           ),
+          if (state.inRift)
+            RiftProgressHud(
+              progress01: state.riftProgress01,
+              guardianActive: state.riftGuardianActive,
+              farm: true,
+              tier: state.riftTier,
+              timerMs: state.riftTimerMs,
+            ),
+          if (state.inGreaterRift)
+            RiftProgressHud(
+              progress01: state.grProgress01,
+              guardianActive: state.grGuardianActive,
+              farm: false,
+              tier: state.grTier,
+              timerMs: state.grTimerMs,
+              parMs: state.grParMs,
+            ),
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Align(

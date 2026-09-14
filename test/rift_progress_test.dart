@@ -61,4 +61,10 @@ void main() {
     expect(RiftProgress.percentLabel(0.505), '51%');
     expect(RiftProgress.percentLabel(1), '100%');
   });
+
+  test('timeSpent01 clamps GR needle', () {
+    expect(RiftProgress.timeSpent01(timerMs: 30_000, parMs: 60_000), 0.5);
+    expect(RiftProgress.timeSpent01(timerMs: 90_000, parMs: 60_000), 1.0);
+    expect(RiftProgress.timeSpent01(timerMs: 10, parMs: 0), 0);
+  });
 }

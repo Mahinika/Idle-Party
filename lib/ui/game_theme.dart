@@ -112,6 +112,12 @@ abstract final class GameTheme {
   /// Combat HUD wells (party strip, target chip, DPS meter).
   static const Color hudWell = Color(0xCC14110C);
   static const Color hudWellBorder = Color(0x665A5040);
+
+  /// Farm / Ranked GR progress bar (Diablo 3 rift-style electric purple).
+  static const Color riftBarFill = Color(0xFFB45CFF);
+  static const Color riftBarFillHot = Color(0xFFE0A0FF);
+  static const Color riftBarTrack = Color(0xFF1A1020);
+  static const Color riftBarPace = Color(0xFF6EB6FF);
   static const Color hudFlaskUrgent = Color(0xEE4A2010);
   static const Color hudFlaskIdle = Color(0xDD2A1810);
   static const Color hudRowSelected = Color(0x331C1812);
