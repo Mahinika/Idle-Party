@@ -38,7 +38,7 @@ class _ShopDockState extends State<ShopDock>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 3, vsync: this);
+    _tabs = TabController(length: 2, vsync: this);
     unawaited(_refresh());
   }
 
@@ -83,8 +83,7 @@ class _ShopDockState extends State<ShopDock>
               onTap: (_) => setState(() {}),
               tabs: [
                 MenuChrome.bridgedTab('SCROLLS', onSelect: () => _tabs.animateTo(0)),
-                MenuChrome.bridgedTab('TIME', onSelect: () => _tabs.animateTo(1)),
-                MenuChrome.bridgedTab('EXTRA', onSelect: () => _tabs.animateTo(2)),
+                MenuChrome.bridgedTab('EXTRA', onSelect: () => _tabs.animateTo(1)),
               ],
             ),
             const SizedBox(height: 8),
@@ -103,14 +102,6 @@ class _ShopDockState extends State<ShopDock>
                       ...ShopCatalog.foreverSingles,
                     ],
                     compact: true,
-                  ),
-                  _page(
-                    hint:
-                        'Hours of Scroll of Battle — same ×${AdBoost.goldMul} gold '
-                        'and +${AdBoost.attackPercent}% ATK as tickets. Stacks to 24h.',
-                    storeLine: storeLine,
-                    items: ShopCatalog.timePacks,
-                    compact: false,
                   ),
                   _page(
                     hint: 'Ad-free and a small thank-you pack. No extra combat class.',

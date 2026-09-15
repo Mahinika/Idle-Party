@@ -44,10 +44,10 @@ expensive power packs.
 
 | SKU id | Play type | Price | Offer | Notes |
 |--------|-----------|-------|--------|-------|
-| `starter_boost_6h` | Non-consumable | $0.99 | +6h Full Boost | One-time starter (~$0.17/h) |
-| `boost_12h` | Consumable | $1.99 | +12h Full Boost | Repeatable; ~$0.17/h. Day pack must stay cheaper per hour. |
-| `ad_free` | Non-consumable | $2.99 | Ad-free + +2 tickets once | Hide WATCH; daily CLAIM TICKET (UTC). Priced at/above a day boost so forever is not the cheap impulse next to timed packs. |
-| `day_boost_24h` | Consumable | $2.99 | +24h Full Boost | Best boost $/h (~$0.12/h) |
+| `starter_boost_6h` | Non-consumable | $0.99 | +6h Full Boost | Legacy — restore only, not listed in SHOP |
+| `boost_12h` | Consumable | $1.99 | +12h Full Boost | Legacy — restore only |
+| `ad_free` | Non-consumable | $2.99 | Ad-free + +2 tickets once | Hide WATCH; daily CLAIM TICKET (UTC) |
+| `day_boost_24h` | Consumable | $2.99 | +24h Full Boost | Legacy — restore only |
 | `supporter_qol` | Non-consumable | $4.99 | +4 bag slots + 12h + thank-you | Ceiling; **no extra combat class** |
 | `perm_scroll_atk` (and gold/xp/move/loot/haste/rest) | Non-consumable | $0.99 | Forever that SCROLLS effect | Same % as tickets |
 | `perm_scrolls_all` | Non-consumable | $4.99 | All seven forever scrolls | Cheaper than 7×$0.99 |
@@ -61,7 +61,7 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as t
 | Surface | Currency | Role |
 |---------|----------|------|
 | Hub SCROLLS | Ad Ticket (from ad / playtest / ad-free daily) | Free path to the same buffs |
-| Bottom SHOP | Real money | Full Boost hours / ad-free / small QoL |
+| Bottom SHOP | Real money | Forever SCROLLS / ad-free / small QoL |
 | GOLD | Gold | Forge tracks + market |
 | ESSENCE → KEEP | Essence | AL-gated permanent prestige buys |
 

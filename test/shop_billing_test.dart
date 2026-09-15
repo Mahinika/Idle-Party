@@ -124,7 +124,7 @@ void main() {
     );
     expect(ShopCatalog.foreverSingles.length, 7);
     expect(ShopCatalog.foreverBundle.single.id, 'perm_scrolls_all');
-    expect(ShopCatalog.timePacks.length, 3);
+    expect(ShopCatalog.timePacks.length, 3); // restore-only, not listed in SHOP
     expect(ShopCatalog.extraPacks.length, 2);
     final bundle = ShopCatalog.byId['perm_scrolls_all']!;
     final singleSum = singles.fold<double>(0, (n, e) => n + usd(e));

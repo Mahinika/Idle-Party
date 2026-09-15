@@ -168,7 +168,7 @@ abstract final class ShopCatalog {
       name: 'Ad-free welcome',
       description:
           'Permanent — hide SCROLLS ads, +2 Ad Tickets once, and a free '
-          'ticket claim once per UTC day. More boost time still for sale here.',
+          'ticket claim once per UTC day.',
       priceLabel: '\$2.99',
       kind: ShopOfferKind.adFree,
       boostHours: 0,
@@ -212,6 +212,7 @@ abstract final class ShopCatalog {
       .where((e) => e.kind == ShopOfferKind.permScroll && e.permMask != AdBoost.permAll)
       .toList();
 
+  /// Timed hour packs — kept for restore / old Play SKUs, not listed in SHOP.
   static List<ShopCatalogItem> get timePacks =>
       offered.where((e) => e.kind == ShopOfferKind.boostHours).toList();
 
