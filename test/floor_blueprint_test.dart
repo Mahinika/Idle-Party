@@ -532,4 +532,46 @@ void main() {
     expect(bigMap.rows, greaterThan(smallMap.rows));
     expect(bigMap.chambers.length, greaterThanOrEqualTo(smallMap.chambers.length));
   });
+
+  test('chambers carve non-rectangle footprints', () {
+    var organic = 0;
+    var samples = 0;
+    for (var seed = 0; seed < 40; seed++) {
+      final map = RoomLayouts.forFloor(
+        floorNumber: 4,
+        room: DungeonRoom(
+          floorNumber: 4,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 7,
+          enemyCount: 8,
+        ),
+        dungeonId: 'sandy',
+        layoutSeed: seed,
+      );
+      expect(
+        map.isWalkable(map.spawnPoints.first.$1, map.spawnPoints.first.$2),
+        isTrue,
+      );
+      expect(map.isWalkable(map.exitPoint.$1, map.exitPoint.$2), isTrue);
+      for (final c in map.chambers) {
+        samples++;
+        var floorTiles = 0;
+        for (var y = c.y; y < c.y + c.h; y++) {
+          for (var x = c.x; x < c.x + c.w; x++) {
+            if (map.at(x, y) == TileKind.floor ||
+                map.at(x, y) == TileKind.spawn ||
+                map.at(x, y) == TileKind.exit ||
+                map.at(x, y) == TileKind.gate) {
+              floorTiles++;
+            }
+          }
+        }
+        expect(map.isWalkable(c.cx, c.cy), isTrue, reason: 'seed $seed');
+        if (floorTiles < c.w * c.h * 0.92) organic++;
+      }
+    }
+    expect(samples, greaterThan(20));
+    expect(organic, greaterThan(samples ~/ 5));
+  });
 }

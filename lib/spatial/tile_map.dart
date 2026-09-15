@@ -254,6 +254,8 @@ class _Rect {
   }
 }
 
+enum _RoomSilhouette { rect, oval, diamond, el, plus, chamfer, blob }
+
 /// Multi-room floor maps (cave / hideout / fort flavours).
 abstract final class RoomLayouts {
   static TileMap forRoom(DungeonRoom room, {String dungeonId = 'sandy'}) {
@@ -419,12 +421,20 @@ abstract final class RoomLayouts {
       }
     }
 
+    final rcx = (cols - 1) / 2.0;
+    final rcy = (rows - 1) / 2.0;
+    final rx = max(4.0, (cols - 5) / 2.0);
+    final ry = max(4.0, (rows - 5) / 2.0);
     for (var y = 2; y < rows - 2; y++) {
       for (var x = 2; x < cols - 2; x++) {
-        set(x, y, TileKind.floor);
+        final dx = (x - rcx) / rx;
+        final dy = (y - rcy) / ry;
+        if (dx * dx + dy * dy <= 1.08) {
+          set(x, y, TileKind.floor);
+        }
       }
     }
-    // North / south bays so the arena isn't a flat rectangle.
+    // North / south bays so the arena isn't a flat oval.
     for (var y = 2; y <= 5; y++) {
       for (var x = cols ~/ 2 - 5; x <= cols ~/ 2 + 5; x++) {
         set(x, y, TileKind.floor);
@@ -447,6 +457,7 @@ abstract final class RoomLayouts {
     }
     set(3, rows ~/ 2, TileKind.spawn);
     set(cols - 3, rows ~/ 2, TileKind.exit);
+    _carveExitPlaza(tiles, cols, rows, 3, rows ~/ 2);
     _carveExitPlaza(tiles, cols, rows, cols - 3, rows ~/ 2);
 
     final chamber = Chamber(index: 0, x: 2, y: 2, w: cols - 4, h: rows - 4);
@@ -532,6 +543,115 @@ abstract final class RoomLayouts {
       rng: rng,
       room: room,
     );
+  }
+
+  static _RoomSilhouette _silhouetteFor(FloorBeatKind kind, Random rng) {
+    if (kind == FloorBeatKind.choke) {
+      return rng.nextBool() ? _RoomSilhouette.oval : _RoomSilhouette.chamfer;
+    }
+    if (kind == FloorBeatKind.treasure || kind == FloorBeatKind.decoy) {
+      return switch (rng.nextInt(3)) {
+        0 => _RoomSilhouette.oval,
+        1 => _RoomSilhouette.el,
+        _ => _RoomSilhouette.diamond,
+      };
+    }
+    return switch (rng.nextInt(7)) {
+      0 => _RoomSilhouette.rect,
+      1 => _RoomSilhouette.oval,
+      2 => _RoomSilhouette.diamond,
+      3 => _RoomSilhouette.el,
+      4 => _RoomSilhouette.plus,
+      5 => _RoomSilhouette.chamfer,
+      _ => _RoomSilhouette.blob,
+    };
+  }
+
+  static bool _inSilhouette(
+    _Rect r,
+    int x,
+    int y,
+    _RoomSilhouette silhouette,
+    int salt,
+  ) {
+    final lx = x - r.x;
+    final ly = y - r.y;
+    if (lx < 0 || ly < 0 || lx >= r.w || ly >= r.h) return false;
+    final mx = r.w ~/ 2;
+    final my = r.h ~/ 2;
+    if ((lx - mx).abs() <= 1 && (ly - my).abs() <= 1) return true;
+    final dx = lx - (r.w - 1) / 2.0;
+    final dy = ly - (r.h - 1) / 2.0;
+    switch (silhouette) {
+      case _RoomSilhouette.rect:
+        return true;
+      case _RoomSilhouette.oval:
+        final rx = max(1.2, r.w / 2.0 - 0.15);
+        final ry = max(1.2, r.h / 2.0 - 0.15);
+        return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1.06;
+      case _RoomSilhouette.diamond:
+        final nx = dx.abs() / max(1.0, r.w / 2.0);
+        final ny = dy.abs() / max(1.0, r.h / 2.0);
+        return nx + ny <= 1.12;
+      case _RoomSilhouette.el:
+        final thickW = max(3, r.w ~/ 2);
+        final thickH = max(3, r.h ~/ 2);
+        if (salt.isOdd) {
+          return lx < thickW || ly < thickH;
+        }
+        return lx >= r.w - thickW || ly >= r.h - thickH;
+      case _RoomSilhouette.plus:
+        final armW = max(3, r.w ~/ 3);
+        final armH = max(3, r.h ~/ 3);
+        return dx.abs() <= armW / 2 || dy.abs() <= armH / 2;
+      case _RoomSilhouette.chamfer:
+        final cut = max(2, min(r.w, r.h) ~/ 4);
+        final fromL = lx;
+        final fromR = r.w - 1 - lx;
+        final fromT = ly;
+        final fromB = r.h - 1 - ly;
+        if (fromL + fromT < cut) return false;
+        if (fromR + fromT < cut) return false;
+        if (fromL + fromB < cut) return false;
+        if (fromR + fromB < cut) return false;
+        return true;
+      case _RoomSilhouette.blob:
+        final rx = max(1.2, r.w / 2.0);
+        final ry = max(1.2, r.h / 2.0);
+        final ang = atan2(dy, dx);
+        final wobble =
+            0.14 * sin(ang * 3 + salt) + 0.08 * cos(ang * 5 + salt * 0.37);
+        return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 0.92 + wobble;
+    }
+  }
+
+  static void _carveRoomFootprint(
+    _Rect r,
+    void Function(int x, int y, TileKind k) set,
+    _RoomSilhouette silhouette,
+    Random rng,
+  ) {
+    final salt = rng.nextInt(64);
+    for (var yy = r.y; yy < r.y + r.h; yy++) {
+      for (var xx = r.x; xx < r.x + r.w; xx++) {
+        if (_inSilhouette(r, xx, yy, silhouette, salt)) {
+          set(xx, yy, TileKind.floor);
+        }
+      }
+    }
+    set(r.cx, r.cy, TileKind.floor);
+    if (silhouette == _RoomSilhouette.blob ||
+        silhouette == _RoomSilhouette.oval) {
+      final nubs = 1 + rng.nextInt(3);
+      for (var i = 0; i < nubs; i++) {
+        final nx = r.x + rng.nextInt(max(1, r.w));
+        final ny = r.y + rng.nextInt(max(1, r.h));
+        if ((nx - r.cx).abs() + (ny - r.cy).abs() <= max(r.w, r.h) ~/ 2 + 1) {
+          set(nx, ny, TileKind.floor);
+          set(nx + (rng.nextBool() ? 1 : 0), ny, TileKind.floor);
+        }
+      }
+    }
   }
 
   static TileMap _multiRoomFloor({
@@ -756,12 +876,13 @@ abstract final class RoomLayouts {
       parentOf.add(null);
     }
 
-    for (final r in rooms) {
-      for (var yy = r.y; yy < r.y + r.h; yy++) {
-        for (var xx = r.x; xx < r.x + r.w; xx++) {
-          set(xx, yy, TileKind.floor);
-        }
-      }
+    for (var i = 0; i < rooms.length; i++) {
+      _carveRoomFootprint(
+        rooms[i],
+        set,
+        _silhouetteFor(roomBeats[i] ?? FloorBeatKind.approach, rng),
+        rng,
+      );
     }
 
     final gateList = <GateInfo>[];
