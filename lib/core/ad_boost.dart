@@ -24,7 +24,19 @@ abstract final class AdBoost {
   /// Next Welcome Back gold while Away Bonus is pending (one shot).
   static const int awayGoldMul = 3;
 
-  /// Sharp Edge / Gold Rush duration per ticket.
+  /// Party combat XP while Study Rush is running.
+  static const int xpPercent = 50;
+
+  /// Hero walk speed while Fleet Foot is running.
+  static const int movePercent = 30;
+
+  /// Additive item-find while Lucky Bag is running (same unit as pet find).
+  static const int lootFindPercent = 40;
+
+  /// Dungeon sim + KEY/GR clocks while Time Warp is running (not hub AFK).
+  static const int speedPercent = 25;
+
+  /// Sharp Edge / Gold Rush / Study / Fleet / Lucky duration per ticket.
   static const int splitHours = 2;
   static const int splitMs = splitHours * hourMs;
 
@@ -80,9 +92,29 @@ abstract final class AdBoost {
   static bool goldActive(MetaDepthState md, {int? nowMs}) =>
       isActive(md.adGoldUntilMs, nowMs: nowMs);
 
+  static bool xpActive(MetaDepthState md, {int? nowMs}) =>
+      isActive(md.adXpUntilMs, nowMs: nowMs);
+
+  static bool moveActive(MetaDepthState md, {int? nowMs}) =>
+      isActive(md.adMoveUntilMs, nowMs: nowMs);
+
+  static bool lootActive(MetaDepthState md, {int? nowMs}) =>
+      isActive(md.adLootUntilMs, nowMs: nowMs);
+
+  static bool speedActive(MetaDepthState md, {int? nowMs}) =>
+      isActive(md.adSpeedUntilMs, nowMs: nowMs);
+
+  /// Live dungeon dt multiplier. KEY / GR timers use the same scale.
+  static double combatDtMul(MetaDepthState md, {int? nowMs}) =>
+      speedActive(md, nowMs: nowMs) ? (1 + speedPercent / 100) : 1.0;
+
   static bool anyBuffActive(MetaDepthState md, {int? nowMs}) =>
       atkActive(md, nowMs: nowMs) ||
       goldActive(md, nowMs: nowMs) ||
+      xpActive(md, nowMs: nowMs) ||
+      moveActive(md, nowMs: nowMs) ||
+      lootActive(md, nowMs: nowMs) ||
+      speedActive(md, nowMs: nowMs) ||
       awayBonusReady(md, nowMs: nowMs);
 
   static bool awayBonusReady(MetaDepthState md, {int? nowMs}) {
@@ -100,6 +132,18 @@ abstract final class AdBoost {
     }
     if (goldActive(md, nowMs: nowMs)) {
       return 'GOLD ${formatRemaining(md.adGoldUntilMs, nowMs: nowMs)}';
+    }
+    if (xpActive(md, nowMs: nowMs)) {
+      return 'XP ${formatRemaining(md.adXpUntilMs, nowMs: nowMs)}';
+    }
+    if (moveActive(md, nowMs: nowMs)) {
+      return 'MOVE ${formatRemaining(md.adMoveUntilMs, nowMs: nowMs)}';
+    }
+    if (lootActive(md, nowMs: nowMs)) {
+      return 'LOOT ${formatRemaining(md.adLootUntilMs, nowMs: nowMs)}';
+    }
+    if (speedActive(md, nowMs: nowMs)) {
+      return 'SPEED ${formatRemaining(md.adSpeedUntilMs, nowMs: nowMs)}';
     }
     if (awayBonusReady(md, nowMs: nowMs)) return 'AWAY READY';
     final n = md.adTickets;
@@ -122,7 +166,7 @@ abstract final class AdBoost {
 }
 
 /// Catalog row ids for POWERUPS spend.
-enum AdBuffId { atk, gold, bundle, offline }
+enum AdBuffId { atk, gold, xp, move, loot, speed, bundle, offline }
 
 class AdBuffOffer {
   const AdBuffOffer({
@@ -140,7 +184,7 @@ class AdBuffOffer {
   final int durationMs;
 }
 
-/// Fixed POWERUPS shop (exactly four rows).
+/// Fixed POWERUPS shop (combat, farm, convenience).
 abstract final class AdBuffCatalog {
   static const List<AdBuffOffer> offered = [
     AdBuffOffer(
@@ -156,6 +200,38 @@ abstract final class AdBuffCatalog {
       label: 'Gold Rush',
       blurb:
           '×${AdBoost.goldMul} all gold (kills, chests, hub AFK) for ${AdBoost.splitHours} hours',
+      ticketCost: 1,
+      durationMs: AdBoost.splitMs,
+    ),
+    AdBuffOffer(
+      id: AdBuffId.xp,
+      label: 'Study Rush',
+      blurb:
+          '+${AdBoost.xpPercent}% party XP for ${AdBoost.splitHours} hours — levels land faster',
+      ticketCost: 1,
+      durationMs: AdBoost.splitMs,
+    ),
+    AdBuffOffer(
+      id: AdBuffId.move,
+      label: 'Fleet Foot',
+      blurb:
+          '+${AdBoost.movePercent}% walk speed for ${AdBoost.splitHours} hours — caves feel snappier',
+      ticketCost: 1,
+      durationMs: AdBoost.splitMs,
+    ),
+    AdBuffOffer(
+      id: AdBuffId.loot,
+      label: 'Lucky Bag',
+      blurb:
+          '+${AdBoost.lootFindPercent}% item find for ${AdBoost.splitHours} hours — more gear on kills',
+      ticketCost: 1,
+      durationMs: AdBoost.splitMs,
+    ),
+    AdBuffOffer(
+      id: AdBuffId.speed,
+      label: 'Time Warp',
+      blurb:
+          '+${AdBoost.speedPercent}% dungeon speed for ${AdBoost.splitHours} hours — fights run faster; timed clocks keep pace',
       ticketCost: 1,
       durationMs: AdBoost.splitMs,
     ),

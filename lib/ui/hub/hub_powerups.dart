@@ -191,10 +191,10 @@ Future<void> openPowerupsSheet(
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Watch a short ad for 1 Ad Ticket. Spend '
-                                'on combat ATK, double gold, or a bigger '
-                                'Welcome Back. Full Boost is the best deal. '
-                                'Fights never pause for an ad.',
+                                'Watch a short ad for 1 Ad Ticket. Spend on '
+                                'ATK, gold, XP, walk, loot, or dungeon speed. '
+                                'Full Boost is ATK+gold. Fights never pause '
+                                'for an ad.',
                                 style: GameTheme.body(
                                   size: 15,
                                   color: GameTheme.parchment,
@@ -217,6 +217,34 @@ Future<void> openPowerupsSheet(
                                   label: 'Gold Rush',
                                   value: AdBoost.formatRemaining(
                                     md.adGoldUntilMs,
+                                  ),
+                                ),
+                              if (AdBoost.xpActive(md))
+                                MenuChrome.statRow(
+                                  label: 'Study Rush',
+                                  value: AdBoost.formatRemaining(
+                                    md.adXpUntilMs,
+                                  ),
+                                ),
+                              if (AdBoost.moveActive(md))
+                                MenuChrome.statRow(
+                                  label: 'Fleet Foot',
+                                  value: AdBoost.formatRemaining(
+                                    md.adMoveUntilMs,
+                                  ),
+                                ),
+                              if (AdBoost.lootActive(md))
+                                MenuChrome.statRow(
+                                  label: 'Lucky Bag',
+                                  value: AdBoost.formatRemaining(
+                                    md.adLootUntilMs,
+                                  ),
+                                ),
+                              if (AdBoost.speedActive(md))
+                                MenuChrome.statRow(
+                                  label: 'Time Warp',
+                                  value: AdBoost.formatRemaining(
+                                    md.adSpeedUntilMs,
                                   ),
                                 ),
                               if (AdBoost.awayBonusReady(md))

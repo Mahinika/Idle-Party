@@ -89,16 +89,20 @@ Migration from current saves:
   (gold ×2 + ATK +25% both set to the same `untilMs`), tickets start at **0**.
 - Old field can stay as legacy or be cleared after migrate once.
 
-## Buff catalog (exactly 4 rows)
+## Buff catalog
 
 Effects stay **same for tickets and SHOP**. Do **not** ship +100% ATK or a paid-only combat class.
 
 | Id | Label | Effect | Duration | Cost | Notes |
 |----|-------|--------|----------|------|-------|
-| `atk` | Sharp Edge | **+40% ATK** | **2 hours** | **1** ticket | Combat push (felt vs GOLD ATK tracks) |
+| `atk` | Sharp Edge | **+40% ATK** | **2 hours** | **1** ticket | Combat push |
 | `gold` | Gold Rush | **×2 gold** (kills, chests, hub AFK) | **2 hours** | **1** ticket | Same ×2 magnitude |
-| `bundle` | Full Boost | **+40% ATK** and **×2 gold** | **4 hours** | **2** tickets | Best ticket value (both for 2h/ticket) |
-| `offline` | Away Bonus | Next offline / Welcome Back gold claim **×3** (one shot) | Until claimed or **24h** expiry | **1** ticket | Idle punch; not combat |
+| `xp` | Study Rush | **+50% party XP** | **2 hours** | **1** ticket | Combat XP (live + AFK catch-up) |
+| `move` | Fleet Foot | **+30% walk speed** | **2 hours** | **1** ticket | Dungeon travel |
+| `loot` | Lucky Bag | **+40% item find** | **2 hours** | **1** ticket | Additive with pet / STAR loot |
+| `speed` | Time Warp | **+25% dungeon speed** | **2 hours** | **1** ticket | Live SpatialCombat dt; KEY/GR timers scale so ladders stay fair |
+| `bundle` | Full Boost | **+40% ATK** and **×2 gold** | **4 hours** | **2** tickets | Best ATK+gold ticket value |
+| `offline` | Away Bonus | Next Welcome Back gold **×3** (one shot) | Until claimed or **24h** | **1** ticket | Idle punch |
 
 ### Stack / interact rules
 
@@ -124,6 +128,10 @@ feel worth spending. Gold stays **×2**. SHOP sells the same numbers.
 | `adTickets` | int ≥ 0 |
 | `adAtkUntilMs` | Sharp Edge end |
 | `adGoldUntilMs` | Gold Rush end |
+| `adXpUntilMs` | Study Rush end |
+| `adMoveUntilMs` | Fleet Foot end |
+| `adLootUntilMs` | Lucky Bag end |
+| `adSpeedUntilMs` | Time Warp end |
 | `adOfflineMulPending` | bool — Away Bonus ready |
 | `adOfflineMulExpiresMs` | expiry if unclaimed |
 | `adFree` | unchanged — hide WATCH |

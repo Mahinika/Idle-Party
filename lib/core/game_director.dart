@@ -646,7 +646,10 @@ class GameDirector extends ChangeNotifier {
         _rebuildSpatial();
       }
 
-      final result = SpatialCombat.step(_spatial!, _state, dt: _spatialDt);
+      final dt = _spatialDt * AdBoost.combatDtMul(_state.metaDepth);
+      final dtMs = (dt * 1000).round();
+
+      final result = SpatialCombat.step(_spatial!, _state, dt: dt);
       final before = _state;
       _spatial = result.world;
       _state = result.state;
@@ -654,13 +657,13 @@ class GameDirector extends ChangeNotifier {
       if (_state.keystoneRunActive) {
         _state = GameLogic.advanceKeystoneTimer(
           _state,
-          (_spatialDt * 1000).round(),
+          dtMs,
         );
       }
       if (_state.inRift) {
         _state = GameLogic.advanceRiftTimer(
           _state,
-          (_spatialDt * 1000).round(),
+          dtMs,
         );
         if (result.kills > 0) {
           _state = GameLogic.noteRiftKills(_state, result.kills);
@@ -691,7 +694,7 @@ class GameDirector extends ChangeNotifier {
       if (_state.inGreaterRift) {
         _state = GameLogic.advanceGreaterRiftTimer(
           _state,
-          (_spatialDt * 1000).round(),
+          dtMs,
         );
         if (result.kills > 0) {
           _state = GameLogic.noteGreaterRiftKills(_state, result.kills);
@@ -736,7 +739,7 @@ class GameDirector extends ChangeNotifier {
           ),
         );
       }
-      _tickUiTimers(_spatialDt);
+      _tickUiTimers(dt);
       _announceAbilityUnlocks(before, _state);
       _announceAchievementUnlocks(before, _state);
       if (result.critHits > 0 && _feelCritCooldown <= 0) {

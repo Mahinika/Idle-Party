@@ -6,6 +6,7 @@ import '../models/enemy.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
 import '../models/stats.dart';
+import 'ad_boost.dart';
 import 'dungeon_generator.dart';
 import 'enemy_flavor.dart';
 import 'game_logic.dart';
@@ -215,9 +216,13 @@ abstract final class EncounterFactory {
     int? enemyLevel,
   }) {
     if (amount <= 0) return state;
+    final adXp = AdBoost.xpActive(state.metaDepth) ? AdBoost.xpPercent : 0;
     final boosted =
         amount +
-        (amount * (state.sanctuaryXpBonusPercent + state.petXpFindPercent)) ~/
+        (amount *
+                (state.sanctuaryXpBonusPercent +
+                    state.petXpFindPercent +
+                    adXp)) ~/
             100;
     final meanLevel = state.heroes.isEmpty
         ? 1

@@ -274,8 +274,11 @@ Live look: `a56-playtest` (Samsung A56 emulator). Web fallback:
 **Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded` +
 `ad_config.dart` (live AdMob ids on release Android; sample ids in debug). 1 ad =
 **1 Ad Ticket**; spend tickets on Sharp Edge (+40% ATK 2h), Gold Rush (×2 gold
-2h), Full Boost (both 4h / 2 tickets), or Away Bonus (next offline gold ×3). Timers stack
-per buff (max 24h) on `metaDepth.adAtkUntilMs` / `adGoldUntilMs`; tickets on
+2h), Study Rush (+50% party XP 2h), Fleet Foot (+30% walk 2h), Lucky Bag (+40% item find 2h),
+Time Warp (+25% dungeon speed 2h; KEY/GR clocks scale),
+Full Boost (ATK+gold 4h / 2 tickets), or Away Bonus (next offline gold ×3). Timers stack
+per buff (max 24h) on `metaDepth.adAtkUntilMs` / `adGoldUntilMs` / `adXpUntilMs` /
+`adMoveUntilMs` / `adLootUntilMs` / `adSpeedUntilMs`; tickets on
 `adTickets` (survives Ascend). Camera overlay on the hub map opens the sheet.
 Web playtest grants a ticket. Ads never interrupt combat. SETTINGS **AD PRIVACY**
 withdraws AdMob GDPR consent. See `docs/AD_POWERUPS_DESIGN.md`.

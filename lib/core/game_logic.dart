@@ -1052,6 +1052,10 @@ class GameLogic {
     var tickets = md.adTickets - offer.ticketCost;
     var atk = md.adAtkUntilMs;
     var gold = md.adGoldUntilMs;
+    var xp = md.adXpUntilMs;
+    var move = md.adMoveUntilMs;
+    var loot = md.adLootUntilMs;
+    var speed = md.adSpeedUntilMs;
     var offlinePending = md.adOfflineMulPending;
     var offlineExp = md.adOfflineMulExpiresMs;
     switch (id) {
@@ -1061,6 +1065,18 @@ class GameLogic {
       case AdBuffId.gold:
         if (AdBoost.atStackCap(gold, nowMs: now)) return state;
         gold = AdBoost.extendUntil(gold, offer.durationMs, nowMs: now);
+      case AdBuffId.xp:
+        if (AdBoost.atStackCap(xp, nowMs: now)) return state;
+        xp = AdBoost.extendUntil(xp, offer.durationMs, nowMs: now);
+      case AdBuffId.move:
+        if (AdBoost.atStackCap(move, nowMs: now)) return state;
+        move = AdBoost.extendUntil(move, offer.durationMs, nowMs: now);
+      case AdBuffId.loot:
+        if (AdBoost.atStackCap(loot, nowMs: now)) return state;
+        loot = AdBoost.extendUntil(loot, offer.durationMs, nowMs: now);
+      case AdBuffId.speed:
+        if (AdBoost.atStackCap(speed, nowMs: now)) return state;
+        speed = AdBoost.extendUntil(speed, offer.durationMs, nowMs: now);
       case AdBuffId.bundle:
         if (AdBoost.atStackCap(atk, nowMs: now) &&
             AdBoost.atStackCap(gold, nowMs: now)) {
@@ -1078,6 +1094,10 @@ class GameLogic {
         adTickets: tickets,
         adAtkUntilMs: atk,
         adGoldUntilMs: gold,
+        adXpUntilMs: xp,
+        adMoveUntilMs: move,
+        adLootUntilMs: loot,
+        adSpeedUntilMs: speed,
         adOfflineMulPending: offlinePending,
         adOfflineMulExpiresMs: offlineExp,
         adBoostUntilMs: legacy,
@@ -2106,7 +2126,7 @@ class GameLogic {
         ...rollKillLoot(
           room.globalBattleNumber,
           ascensionLevel: state.ascensionLevel,
-          lootFindPercent: state.petLootFindPercent + BlessingConstellation.lootFindPercent(state),
+          lootFindPercent: state.combatLootFindPercent,
           hardmodeLevel: Keystone.combatLevel(state),
           party: state.heroes,
           dungeonId: state.dungeonId,

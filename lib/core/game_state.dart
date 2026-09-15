@@ -605,6 +605,12 @@ class GameState {
         relicLootFindPercent;
   }
 
+  /// Kill / chest item-find: pet + relic + STAR loot node + Lucky Bag.
+  int get combatLootFindPercent =>
+      petLootFindPercent +
+      BlessingConstellation.lootFindPercent(this) +
+      (AdBoost.lootActive(metaDepth) ? AdBoost.lootFindPercent : 0);
+
   /// XP-find pets grant percent XP via [Pet.passiveValue].
   int get petXpFindPercent {
     final pet = activePet;
@@ -952,7 +958,9 @@ class GameState {
       HeroRole.mage => 3.0,
     };
     final pct = hero.gearMoveSpeedBonus + softForgePercent(moveSpeedBonus);
-    return base * (1 + pct / 100);
+    final forged = base * (1 + pct / 100);
+    if (!AdBoost.moveActive(metaDepth)) return forged;
+    return forged * (1 + AdBoost.movePercent / 100);
   }
 
   /// God Hand AOE radius in tiles (before style).

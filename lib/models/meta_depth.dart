@@ -307,6 +307,10 @@ class MetaDepthState {
     this.adTickets = 0,
     this.adAtkUntilMs = 0,
     this.adGoldUntilMs = 0,
+    this.adXpUntilMs = 0,
+    this.adMoveUntilMs = 0,
+    this.adLootUntilMs = 0,
+    this.adSpeedUntilMs = 0,
     this.adOfflineMulPending = false,
     this.adOfflineMulExpiresMs = 0,
     this.adFreeDailyClaimUtc = '',
@@ -546,6 +550,18 @@ class MetaDepthState {
   /// Gold Rush (×2 gold) end millis. Survives Ascend.
   final int adGoldUntilMs;
 
+  /// Study Rush (+party XP%) end millis. Survives Ascend.
+  final int adXpUntilMs;
+
+  /// Fleet Foot (+walk speed%) end millis. Survives Ascend.
+  final int adMoveUntilMs;
+
+  /// Lucky Bag (+item find%) end millis. Survives Ascend.
+  final int adLootUntilMs;
+
+  /// Time Warp (+dungeon sim speed%) end millis. Survives Ascend.
+  final int adSpeedUntilMs;
+
   /// Away Bonus: next offline gold claim ×[AdBoost.awayGoldMul]. Survives Ascend.
   final bool adOfflineMulPending;
 
@@ -707,6 +723,10 @@ class MetaDepthState {
     int? adTickets,
     int? adAtkUntilMs,
     int? adGoldUntilMs,
+    int? adXpUntilMs,
+    int? adMoveUntilMs,
+    int? adLootUntilMs,
+    int? adSpeedUntilMs,
     bool? adOfflineMulPending,
     int? adOfflineMulExpiresMs,
     String? adFreeDailyClaimUtc,
@@ -846,6 +866,10 @@ class MetaDepthState {
       adTickets: adTickets ?? this.adTickets,
       adAtkUntilMs: adAtkUntilMs ?? this.adAtkUntilMs,
       adGoldUntilMs: adGoldUntilMs ?? this.adGoldUntilMs,
+      adXpUntilMs: adXpUntilMs ?? this.adXpUntilMs,
+      adMoveUntilMs: adMoveUntilMs ?? this.adMoveUntilMs,
+      adLootUntilMs: adLootUntilMs ?? this.adLootUntilMs,
+      adSpeedUntilMs: adSpeedUntilMs ?? this.adSpeedUntilMs,
       adOfflineMulPending: adOfflineMulPending ?? this.adOfflineMulPending,
       adOfflineMulExpiresMs:
           adOfflineMulExpiresMs ?? this.adOfflineMulExpiresMs,
@@ -980,6 +1004,10 @@ class MetaDepthState {
     'adTickets': adTickets,
     'adAtkUntilMs': adAtkUntilMs,
     'adGoldUntilMs': adGoldUntilMs,
+    'adXpUntilMs': adXpUntilMs,
+    'adMoveUntilMs': adMoveUntilMs,
+    'adLootUntilMs': adLootUntilMs,
+    'adSpeedUntilMs': adSpeedUntilMs,
     'adOfflineMulPending': adOfflineMulPending,
     'adOfflineMulExpiresMs': adOfflineMulExpiresMs,
     'adFreeDailyClaimUtc': adFreeDailyClaimUtc,
@@ -1166,6 +1194,10 @@ class MetaDepthState {
       adTickets: ((json['adTickets'] as num?)?.toInt() ?? 0).clamp(0, 9999),
       adAtkUntilMs: adMig.atk,
       adGoldUntilMs: adMig.gold,
+      adXpUntilMs: (json['adXpUntilMs'] as num?)?.toInt() ?? 0,
+      adMoveUntilMs: (json['adMoveUntilMs'] as num?)?.toInt() ?? 0,
+      adLootUntilMs: (json['adLootUntilMs'] as num?)?.toInt() ?? 0,
+      adSpeedUntilMs: (json['adSpeedUntilMs'] as num?)?.toInt() ?? 0,
       adOfflineMulPending: (json['adOfflineMulPending'] as bool?) ?? false,
       adOfflineMulExpiresMs:
           (json['adOfflineMulExpiresMs'] as num?)?.toInt() ?? 0,

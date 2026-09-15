@@ -4993,7 +4993,7 @@ abstract final class SpatialCombat {
         : GameLogic.rollKillLoot(
             state.battleNumber,
             ascensionLevel: state.ascensionLevel,
-            lootFindPercent: state.petLootFindPercent,
+            lootFindPercent: state.combatLootFindPercent,
             hardmodeLevel: Keystone.combatLevel(state),
             party: state.heroes,
             dungeonId: state.dungeonId,
