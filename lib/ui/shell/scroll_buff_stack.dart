@@ -38,20 +38,14 @@ class _ScrollBuffStackState extends State<ScrollBuffStack> {
   }
 
   void _syncTick() {
-    final live =
-        widget.nowMs == null && AdBoost.hudChips(widget.meta).isNotEmpty;
+    final live = widget.nowMs == null;
     if (!live) {
       _tick?.cancel();
       _tick = null;
       return;
     }
     _tick ??= Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      setState(() {});
-      if (AdBoost.hudChips(widget.meta).isEmpty) {
-        _tick?.cancel();
-        _tick = null;
-      }
+      if (mounted) setState(() {});
     });
   }
 
@@ -64,7 +58,6 @@ class _ScrollBuffStackState extends State<ScrollBuffStack> {
   @override
   Widget build(BuildContext context) {
     final chips = AdBoost.hudChips(widget.meta, nowMs: widget.nowMs);
-    if (chips.isEmpty) return const SizedBox.shrink();
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -103,13 +96,14 @@ class _ScrollBuffPip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = tintFor(chip.id);
+    final on = chip.active;
+    final tint = on ? tintFor(chip.id) : GameTheme.parchmentDim;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 2),
       child: Semantics(
-        label: '${chip.shortLabel} ${chip.timeLabel}',
+        label: on ? '${chip.shortLabel} ${chip.timeLabel}' : '${chip.shortLabel} off',
         child: SizedBox(
-          width: 36,
+          width: 32,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -117,27 +111,30 @@ class _ScrollBuffPip extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: GameTheme.hudWell,
                   borderRadius: BorderRadius.circular(GameTheme.radiusHud),
-                  border: Border.all(color: tint, width: 1.2),
+                  border: Border.all(color: tint, width: 1),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(3),
+                  padding: const EdgeInsets.all(2),
                   child: GameIcon.asset(
                     assetFor(chip.id),
-                    size: 18,
+                    size: 16,
+                    color: on ? null : GameTheme.parchmentDim,
                   ),
                 ),
               ),
-              const SizedBox(height: 1),
-              Text(
-                chip.timeLabel,
-                maxLines: 1,
-                overflow: TextOverflow.clip,
-                textAlign: TextAlign.center,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: tint,
+              if (on && chip.timeLabel.isNotEmpty) ...[
+                const SizedBox(height: 1),
+                Text(
+                  chip.timeLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  textAlign: TextAlign.center,
+                  style: GameTheme.pixel(
+                    size: GameTheme.hudPixel,
+                    color: tint,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

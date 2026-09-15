@@ -669,8 +669,7 @@ class _HubScreenState extends State<HubScreen>
                                               ),
                                       ),
                                     ),
-                                    if (_showPowerupsFab())
-                                      Positioned(
+                                    Positioned(
                                         right: 0,
                                         bottom: 0,
                                         child: Column(
@@ -681,13 +680,14 @@ class _HubScreenState extends State<HubScreen>
                                             ScrollBuffStack(
                                               meta: state.metaDepth,
                                             ),
-                                            HubPowerupsFab(
-                                              state: state,
-                                              onOpen: () => openPowerupsSheet(
-                                                context,
-                                                director,
+                                            if (_showPowerupsFab())
+                                              HubPowerupsFab(
+                                                state: state,
+                                                onOpen: () => openPowerupsSheet(
+                                                  context,
+                                                  director,
+                                                ),
                                               ),
-                                            ),
                                           ],
                                         ),
                                       ),

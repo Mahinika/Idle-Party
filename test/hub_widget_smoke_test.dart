@@ -303,4 +303,19 @@ void main() {
 
     expect(find.text('2:00'), findsNWidgets(2));
   });
+
+  testWidgets('ScrollBuffStack stays visible when no buffs are on', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: ScrollBuffStack(meta: MetaDepthState(), nowMs: 1),
+        ),
+      ),
+    );
+
+    expect(find.byType(ScrollBuffStack), findsOneWidget);
+    expect(find.text('2:00'), findsNothing);
+  });
 }

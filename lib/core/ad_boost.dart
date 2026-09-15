@@ -143,38 +143,37 @@ abstract final class AdBoost {
     return n == 1 ? '1 TICKET' : '$n TICKETS';
   }
 
-  /// Active scrolls for hub / dungeon HUD, catalog order (top → bottom).
+  /// All HUD scrolls, catalog order. Inactive chips stay visible (gray).
   static List<AdScrollHudChip> hudChips(MetaDepthState md, {int? nowMs}) {
     final now = nowMs ?? AdBoost.nowMs();
-    final chips = <AdScrollHudChip>[];
-    void add(AdBuffId id, int untilMs, String shortLabel) {
-      if (!isActive(untilMs, nowMs: now)) return;
-      chips.add(
-        AdScrollHudChip(
-          id: id,
-          shortLabel: shortLabel,
-          timeLabel: formatChipRemaining(untilMs, nowMs: now),
-        ),
+    AdScrollHudChip timed(AdBuffId id, int untilMs, String shortLabel) {
+      final on = isActive(untilMs, nowMs: now);
+      return AdScrollHudChip(
+        id: id,
+        shortLabel: shortLabel,
+        timeLabel: on ? formatChipRemaining(untilMs, nowMs: now) : '',
+        active: on,
       );
     }
 
-    add(AdBuffId.atk, md.adAtkUntilMs, 'ATK');
-    add(AdBuffId.gold, md.adGoldUntilMs, 'GOLD');
-    add(AdBuffId.xp, md.adXpUntilMs, 'XP');
-    add(AdBuffId.move, md.adMoveUntilMs, 'MOVE');
-    add(AdBuffId.loot, md.adLootUntilMs, 'LOOT');
-    add(AdBuffId.speed, md.adSpeedUntilMs, 'HASTE');
-    if (awayBonusReady(md, nowMs: now)) {
-      final exp = md.adOfflineMulExpiresMs;
-      chips.add(
-        AdScrollHudChip(
-          id: AdBuffId.offline,
-          shortLabel: 'REST',
-          timeLabel: exp <= 0 ? 'RDY' : formatChipRemaining(exp, nowMs: now),
-        ),
-      );
-    }
-    return chips;
+    final restOn = awayBonusReady(md, nowMs: now);
+    final exp = md.adOfflineMulExpiresMs;
+    return [
+      timed(AdBuffId.atk, md.adAtkUntilMs, 'ATK'),
+      timed(AdBuffId.gold, md.adGoldUntilMs, 'GOLD'),
+      timed(AdBuffId.xp, md.adXpUntilMs, 'XP'),
+      timed(AdBuffId.move, md.adMoveUntilMs, 'MOVE'),
+      timed(AdBuffId.loot, md.adLootUntilMs, 'LOOT'),
+      timed(AdBuffId.speed, md.adSpeedUntilMs, 'HASTE'),
+      AdScrollHudChip(
+        id: AdBuffId.offline,
+        shortLabel: 'REST',
+        timeLabel: !restOn
+            ? ''
+            : (exp <= 0 ? 'RDY' : formatChipRemaining(exp, nowMs: now)),
+        active: restOn,
+      ),
+    ];
   }
 
   static String utcDayKey([DateTime? now]) {
@@ -246,11 +245,13 @@ class AdScrollHudChip {
     required this.id,
     required this.shortLabel,
     required this.timeLabel,
+    required this.active,
   });
 
   final AdBuffId id;
   final String shortLabel;
   final String timeLabel;
+  final bool active;
 }
 
 class AdBuffOffer {

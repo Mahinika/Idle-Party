@@ -198,21 +198,32 @@ void main() {
     expect(boostGain, greaterThan(plainGain));
   });
 
-  test('hudChips lists active scrolls in catalog order', () {
+  test('hudChips lists all scrolls; only live ones are active', () {
     var md = const MetaDepthState();
-    expect(AdBoost.hudChips(md, nowMs: now), isEmpty);
+    var chips = AdBoost.hudChips(md, nowMs: now);
+    expect(chips.length, 7);
+    expect(chips.every((c) => !c.active), isTrue);
     md = md.copyWith(
       adAtkUntilMs: now + AdBoost.splitMs,
       adGoldUntilMs: now + AdBoost.splitMs,
       adMoveUntilMs: now + AdBoost.minuteMs * 40,
     );
-    final chips = AdBoost.hudChips(md, nowMs: now);
+    chips = AdBoost.hudChips(md, nowMs: now);
     expect(chips.map((c) => c.id).toList(), [
+      AdBuffId.atk,
+      AdBuffId.gold,
+      AdBuffId.xp,
+      AdBuffId.move,
+      AdBuffId.loot,
+      AdBuffId.speed,
+      AdBuffId.offline,
+    ]);
+    expect(chips.where((c) => c.active).map((c) => c.id).toList(), [
       AdBuffId.atk,
       AdBuffId.gold,
       AdBuffId.move,
     ]);
     expect(chips.first.timeLabel, '2:00');
-    expect(chips.last.timeLabel, '40m');
+    expect(chips[3].timeLabel, '40m');
   });
 }

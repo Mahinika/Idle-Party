@@ -61,9 +61,9 @@ flowchart LR
   - Ticket count badge when tickets > 0.
   - Short status under the icon: `WATCH` or `N TICKETS`.
   - Dim when idle; torch-lit when tickets or a buff is active.
-- Active buffs stack **above** the FAB (and above FLASK in dungeon): sword (ATK),
-  gold coin, tome (XP), boots (walk), chest (loot), wand (haste), campfire (rest),
-  each with remaining time under the icon.
+- Buff icons always stack **above** the FAB (and above FLASK in dungeon): sword
+  (ATK), gold coin, tome (XP), boots (walk), chest (loot), wand (haste),
+  campfire (rest). Gray when off, full color + remaining time when on.
 - Tap FAB → bottom sheet with two blocks:
   1. **Earn** — WATCH AD · +1 Ticket (playtest: PREVIEW +1).
   2. **Spend** — catalog rows (below).
