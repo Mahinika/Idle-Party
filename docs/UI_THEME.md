@@ -200,7 +200,7 @@ Three buckets — use in copy, section labels, and guides (not a new palette):
 | **TODAY** | Session habits & claims | vault, jobs, daily run, hub TODAY |
 | **ACCOUNT** | Essence / forever meta | essence, CAMP, KEEP, Apex, codex |
 
-Helpers: `MenuChrome.scopeChip`, `sectionLabelScoped(title, scope: MenuScope.run|today|account)`, or plain `sectionLabel` when scope is obvious.
+Helpers: `sectionLabelScoped(title, scope: …)` tints the header; do **not** show RUN / TODAY / ACCOUNT chips in menus. Plain `sectionLabel` when scope is obvious.
 
 **Hub stack (phone):** TODAY text → at most **one brown** primary + **one grey** secondary under it; everything else tertiary/link/chip. MetaPulse crumbs hide when TODAY is READY/ALMOST.
 

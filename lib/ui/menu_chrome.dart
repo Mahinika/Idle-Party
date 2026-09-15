@@ -177,22 +177,12 @@ abstract final class MenuChrome {
           };
     return Padding(
       padding: const EdgeInsets.only(left: 6, bottom: 6, top: 2),
-      child: Row(
-        children: [
-          if (scope != null) ...[
-            scopeChip(scope.name.toUpperCase()),
-            const SizedBox(width: 8),
-          ],
-          Expanded(
-            child: Text(
-              title.toUpperCase(),
-              style: GameTheme.body(
-                size: 13,
-                color: tone.withValues(alpha: 0.9),
-              ),
-            ),
-          ),
-        ],
+      child: Text(
+        title.toUpperCase(),
+        style: GameTheme.body(
+          size: 13,
+          color: tone.withValues(alpha: 0.9),
+        ),
       ),
     );
   }

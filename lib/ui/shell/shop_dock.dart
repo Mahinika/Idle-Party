@@ -98,8 +98,6 @@ class _ShopDockState extends State<ShopDock>
                       showEssence: MenuTabs.showCamp(state),
                     ),
                     storeLine: storeLine,
-                    section: 'FOREVER',
-                    scope: MenuScope.account,
                     items: [
                       ...ShopCatalog.foreverBundle,
                       ...ShopCatalog.foreverSingles,
@@ -111,16 +109,12 @@ class _ShopDockState extends State<ShopDock>
                         'Hours of Scroll of Battle — same ×${AdBoost.goldMul} gold '
                         'and +${AdBoost.attackPercent}% ATK as tickets. Stacks to 24h.',
                     storeLine: storeLine,
-                    section: 'HOURS',
-                    scope: MenuScope.today,
                     items: ShopCatalog.timePacks,
                     compact: false,
                   ),
                   _page(
                     hint: 'Ad-free and a small thank-you pack. No extra combat class.',
                     storeLine: storeLine,
-                    section: 'ACCOUNT',
-                    scope: MenuScope.account,
                     items: ShopCatalog.extraPacks,
                     compact: false,
                   ),
@@ -144,8 +138,6 @@ class _ShopDockState extends State<ShopDock>
   Widget _page({
     required String hint,
     required String storeLine,
-    required String section,
-    required MenuScope scope,
     required List<ShopCatalogItem> items,
     required bool compact,
   }) {
@@ -163,8 +155,6 @@ class _ShopDockState extends State<ShopDock>
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 10),
-        MenuChrome.sectionLabelScoped(section, scope: scope),
-        const SizedBox(height: 6),
         for (var i = 0; i < items.length; i++) ...[
           if (i > 0) const SizedBox(height: 8),
           _ShopRow(

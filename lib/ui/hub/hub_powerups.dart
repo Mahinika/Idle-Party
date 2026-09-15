@@ -260,7 +260,6 @@ Future<void> openPowerupsSheet(
                                       style: GameTheme.menuTitle(size: 18),
                                     ),
                                   ),
-                                  MenuChrome.scopeChip('TODAY'),
                                 ],
                               ),
                               const SizedBox(height: 8),
