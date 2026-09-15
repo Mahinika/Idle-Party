@@ -13,8 +13,7 @@ import 'custom_assets.dart';
 
 /// Runtime art catalog (owned custom). Name kept for call-site stability.
 ///
-/// World tiles, props, and chrome live under [CustomAssets]. Kenney packs
-/// may remain on disk as reference and are not bundled.
+/// World tiles, props, and chrome live under [CustomAssets].
 abstract final class KenneyAssets {
   /// Role id kept for tests that compare sand vs unused lip tiles.
   static String tile(int id) {

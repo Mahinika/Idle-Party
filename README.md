@@ -99,7 +99,7 @@ Privacy: [docs/PRIVACY.md](docs/PRIVACY.md) · Cadence: [docs/CONTENT_CADENCE.md
 
 ## License & art
 
-- Game code: [MIT](LICENSE); Kenney under `assets/kenney/`: [CC0](https://kenney.nl/license); custom art under `assets/custom/`: all rights reserved.
+- Game code: [MIT](LICENSE); custom art under `assets/custom/`: all rights reserved.
 - Do not drop commercial game dumps, APKs from other titles, or ripped sprites into this repo.
 
 ---

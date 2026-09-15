@@ -2,12 +2,11 @@
 
 Owned Idle Party pixel art (AI-assisted originals for this project).
 
-Not Kenney / not third-party commercial game dumps. Prefer these for heroes,
-enemies, pets, slot icons, dungeon portraits, and painted hub/combat scenes.
+Heroes, enemies, pets, slot icons, dungeon portraits, painted hub/combat
+scenes, dungeon interiors, fallback tiles, and UI chrome all live here.
 
-World tiles and UI chrome still use `assets/kenney/` (CC0) while dungeon
-interiors migrate zone-by-zone to `assets/custom/dungeon/` — see
-`docs/DUNGEON_ART.md`. Tidehold (`tide`) is the first custom interior.
+Generic cave fallback (unknown zone / hideout): `dungeon/fallback/`.
+Style: `docs/DUNGEON_ART.md`. Regenerate: `py tool/generate_owned_replacements.py`.
 
-Path helpers: `lib/ui/custom_assets.dart` (wired through `KenneyAssets` where
-shared APIs need one entry point).
+Path helpers: `lib/assets/custom_assets.dart` (also reached via `KenneyAssets`
+facade where shared APIs need one entry point).

@@ -7,9 +7,7 @@ import '../models/spell_bolt_style.dart';
 /// `tool/generate_soft_sfx.py` + `tool/generate_combat_spell_sfx.py`).
 /// Hit families ship 5 variants (`_a`…`_e`); spells ship 6 (`_a`…`_f`).
 /// Swish/material layers stay separate. Mix picks via [AudioVariationCatalog].
-/// Kenney RPG Audio (CC0) remains under [sfxRoot] as reference only.
 abstract final class AudioAssets {
-  static const sfxRoot = 'assets/kenney/audio/sfx';
   static const customSfxRoot = 'assets/custom/audio/sfx';
   static const ambienceRoot = 'assets/custom/audio/ambience';
   static const musicRoot = 'assets/custom/audio/music';

@@ -1,8 +1,7 @@
 # AGENTS.md
 
 Idle Party is a **working Flutter idle RPG** with original Dart gameplay code
-and **owned** pixel art (`assets/custom/`). Kenney CC0 packs may remain on
-disk as reference; they are not bundled.
+and **owned** pixel art (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
 in sync (currently **1.12.170**). What’s New lives in `lib/core/meta_systems.dart`.
@@ -57,7 +56,7 @@ See `docs/PRIVACY.md` + setup in `docs/PLAY_STORE.md`.
 
 - **Do not** add, keep, or commit APKs, IPA/AAB, SWF, DEX, or dumps from other commercial games.
 - **Do not** copy sprites, audio, code, or text from other games into this repo.
-- Shipped art must come from `assets/custom/` (owned). Kenney CC0 packs may stay on disk as reference and are **not** bundled.
+- Shipped art must come from `assets/custom/` (owned Idle Party art).
 - Gameplay may follow common idle-RPG *ideas*; implement as original Dart — never paste
   or translate decompiled sources.
 - If a third-party binary appears locally, delete it and ensure `.gitignore` covers it.

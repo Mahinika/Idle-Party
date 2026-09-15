@@ -9,7 +9,7 @@ description: >-
 
 # Zone art identity (Idle Party)
 
-Legal: only `assets/kenney/` (CC0) or `assets/custom/` (owned). See [assets-legal](../assets-legal/SKILL.md).
+Legal: owned `assets/custom/` only. See [assets-legal](../assets-legal/SKILL.md).
 
 Dedicated PNGs are ideal; until then, **identity = remap + wash + props + hub icon**, not a copy of a neighbor zone.
 

@@ -17,6 +17,3 @@
 ## Ambience
 
 `ambience/*.wav` — Idle Party procedural pads (`tool/generate_ambience_pads.py`).
-
-Kenney RPG Audio (CC0) remains under `assets/kenney/audio/` as reference only
-(not listed in `pubspec.yaml` — not shipped in the APK).

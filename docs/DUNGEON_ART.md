@@ -2,7 +2,7 @@
 
 Owned pixel art for **in-dungeon** floors, walls, exits, gates, and floor props.
 Heroes, enemies, hub backdrops, and gear icons already live under `assets/custom/`;
-this doc covers the **room interior** migration off Kenney `tiny_dungeon`.
+this doc covers the **room interior** art under `assets/custom/dungeon/`.
 
 **Showcase zone:** Sunken Tidehold (`tide`) — first fully custom dungeon interior.  
 **All 15 zones** now ship owned dungeon tiles + props under `assets/custom/dungeon/<id>/`.
@@ -99,8 +99,8 @@ heroes, and combat-pet art under the same `assets/custom/` paths).
 5. `PlacementPlan` uses lower clutter density + intentional edge placement for custom zones
 6. Tests: `custom_assets_test` + existing layout tests
 
-Repeat for next zone (Rime, Ember, …). Fallback tiles/props live in
-`assets/custom/dungeon/fallback/` — Kenney `tiny_dungeon` is not bundled.
+Repeat for next zone (Rime, Ember, …). Generic cave tiles/props live in
+`assets/custom/dungeon/fallback/` (`py tool/generate_owned_replacements.py`).
 
 ---
 

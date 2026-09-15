@@ -1,10 +1,10 @@
 # Custom dungeon interiors
 
-Owned tiles + floor props for combat rooms (migration off Kenney `tiny_dungeon`).
+Owned tiles + floor props for combat rooms.
 
 ```
 dungeon/
-  fallback/          # generic tiles/props (was Kenney tiny_dungeon)
+  fallback/          # generic cave (unknown zone / hideout)
   sandy/ … veil/     # all 15 zones
     tiles/           # 16×16 floor, wall, stairs, doors
     props/           # 32×32 MapPropKind sprites (full set per zone)

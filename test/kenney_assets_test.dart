@@ -5,7 +5,7 @@ import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/assets/kenney_assets.dart';
 
 void main() {
-  test('Tiny Dungeon tile files exist for catalog getters', () {
+  test('catalog getters resolve to owned files on disk', () {
     final paths = <String>{
       KenneyAssets.floorDirt,
       KenneyAssets.floorSand,

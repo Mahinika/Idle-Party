@@ -503,7 +503,7 @@ abstract final class CustomAssets {
   static const String uiBarYellowMid = '$_root/ui/chrome/bar_yellow_mid.png';
   static const String uiBarYellowRight = '$_root/ui/chrome/bar_yellow_right.png';
 
-  /// Shipped zones with owned floor/wall/prop art (Kenney tiny_dungeon fallback off).
+  /// Shipped zones with owned floor/wall/prop art.
   static const Set<String> customDungeonZones = {
     'sandy',
     'goblin',

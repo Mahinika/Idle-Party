@@ -12,7 +12,7 @@ description: >-
 
 Compare kits to **Wrath** design identity via Wowhead guide *structure*, then verify Idle Party systems end-to-end.
 
-**Legal:** Read Wowhead for names, buckets, strengths/weaknesses. **Never** paste tooltips, numbers, talent spreads, glyphs, or BiS into the repo (`AGENTS.md`). Art only from `assets/kenney/` or owned `assets/custom/`.
+**Legal:** Read Wowhead for names, buckets, strengths/weaknesses. **Never** paste tooltips, numbers, talent spreads, glyphs, or BiS into the repo (`AGENTS.md`). Art only from owned `assets/custom/`.
 
 ## Scope inputs
 

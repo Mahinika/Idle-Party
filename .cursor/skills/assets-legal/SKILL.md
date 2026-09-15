@@ -11,7 +11,7 @@ description: >-
 
 ## Legal (mandatory)
 
-- Shipped art only from `assets/kenney/` (CC0) or `assets/custom/` (owned)
+- Shipped art only from `assets/custom/` (owned)
 - Never copy sprites/audio/code/text from other games; no APK/IPA/SWF/DEX dumps
 - Delete stray third-party binaries; keep `.gitignore` covering them
 - Gameplay *ideas* OK — original Dart only
@@ -29,20 +29,19 @@ description: >-
 ## Layout
 
 ```
-assets/kenney/   # tiny_dungeon, icons, ui_*, runes, extras, roguelike_char
-assets/custom/   # heroes, enemies, pets, icons, portraits, ui/, ui/backdrops/, audio/sfx, audio/ambience, audio/music
+assets/custom/   # heroes, enemies, pets, icons, portraits, ui/, dungeon/, audio
 assets/data/     # JSON (e.g. item_affixes)
 ```
 
 Existing folders are listed in `pubspec.yaml`. New **top-level** asset folders need a pubspec entry.
 
-Audio: **runtime SFX** under `assets/custom/audio/sfx/` (owned procedural + unlock; paths via `AudioAssets` / variation banks). Ambience + music under `assets/custom/audio/ambience/` and `…/music/`. Kenney RPG Audio may remain under `assets/kenney/audio/` as **reference only** (not shipped in pubspec). Never raw `assets/...` in call sites. Never copy audio from other commercial games.
+Audio: **runtime SFX** under `assets/custom/audio/sfx/` (owned procedural + unlock; paths via `AudioAssets` / variation banks). Ambience + music under `assets/custom/audio/ambience/` and `…/music/`. Never raw `assets/...` in call sites. Never copy audio from other commercial games.
 
 ## Add a sprite
 
 ```
 New sprite:
-- [ ] 1. Place under kenney/ or custom/ (legal source)
+- [ ] 1. Place under `assets/custom/` (owned)
 - [ ] 2. pubspec dir if new folder
 - [ ] 3. Const/getter on CustomAssets and/or KenneyAssets
 - [ ] 4. Wire resolvers (hero/enemy/portrait/pet/equipment) if needed
@@ -62,6 +61,6 @@ Image.asset('assets/custom/heroes/knight.png');
 Image.asset(KenneyAssets.iconSword); // missing FilterQuality.none
 ```
 
-Do not copy the hardcoded atlas path in `hero_paper_doll.dart` for new assets.
+Do not hardcode `'assets/...'` in UI; use helpers.
 
 Owned denser heroes (undertunic + 128 overlays): [character-paper-doll](../character-paper-doll/SKILL.md).
