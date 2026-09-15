@@ -80,7 +80,7 @@ abstract final class SpellVfx {
       argb: argb,
       radius: radius,
       kind: kind,
-      life: 0.42,
+      life: 0.55,
     );
     if (kind == SpatialBurstKind.flame ||
         kind == SpatialBurstKind.cross ||
@@ -117,7 +117,7 @@ abstract final class SpellVfx {
       argb: argb,
       radius: radius,
       kind: kind,
-      life: 0.38,
+      life: 0.52,
       x2: x2,
       y2: y2,
     );
@@ -131,7 +131,7 @@ abstract final class SpellVfx {
     required double y2,
     required int argb,
     double radius = 0.35,
-    double life = 0.28,
+    double life = 0.36,
   }) {
     SpatialCombat._spawnBurst(
       world,

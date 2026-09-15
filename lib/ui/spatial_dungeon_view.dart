@@ -2349,63 +2349,80 @@ class _TileRoomPainter extends CustomPainter {
     if (showBursts) {
       for (final burst in world.bursts) {
         final kind = burst.slash ? SpatialBurstKind.slash : burst.kind;
-        if (kind == SpatialBurstKind.slash && burst.angle != null) {
-          // Prefer longer slash window for readability.
-          final alpha = (burst.life / 0.42).clamp(0.0, 1.0);
+        if (kind == SpatialBurstKind.slash) {
+          final alpha = (burst.life / 0.55).clamp(0.0, 1.0);
           final c = center(burst.x, burst.y);
           final sweep = 1.45;
-          final start = burst.angle! - sweep * 0.5;
-          final r = tile * burst.radius * (0.7 + (1 - alpha) * 0.45);
-          final paint = Paint()
-            ..color = Color(burst.argb).withValues(alpha: alpha * 0.95)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = math.max(3.5, tile * 0.22)
-            ..strokeCap = StrokeCap.round;
+          final start = (burst.angle ?? (burst.life * 9)) - sweep * 0.5;
+          final r = tile * burst.radius * (0.75 + (1 - alpha) * 0.4);
+          final rect = Rect.fromCircle(center: c, radius: r);
+          final sweepDraw = sweep * alpha.clamp(0.45, 1.0);
           canvas.drawArc(
-            Rect.fromCircle(center: c, radius: r),
+            rect,
             start,
-            sweep * alpha.clamp(0.4, 1.0),
+            sweepDraw,
             false,
-            paint,
+            Paint()
+              ..color = const Color(0xE6100C08).withValues(alpha: alpha)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(5.5, tile * 0.32)
+              ..strokeCap = StrokeCap.round,
           );
-          // Soft inner glow
+          canvas.drawArc(
+            rect,
+            start,
+            sweepDraw,
+            false,
+            Paint()
+              ..color = Color(burst.argb).withValues(alpha: alpha)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(3.2, tile * 0.2)
+              ..strokeCap = StrokeCap.round,
+          );
           canvas.drawArc(
             Rect.fromCircle(center: c, radius: r * 0.72),
             start,
-            sweep * alpha.clamp(0.4, 1.0),
+            sweepDraw,
             false,
             Paint()
-              ..color = Colors.white.withValues(alpha: alpha * 0.55)
+              ..color = Colors.white.withValues(alpha: alpha * 0.7)
               ..style = PaintingStyle.stroke
-              ..strokeWidth = math.max(2.0, tile * 0.1)
+              ..strokeWidth = math.max(1.8, tile * 0.09)
               ..strokeCap = StrokeCap.round,
           );
-          // Tip spark at the leading edge of the swing
-          final tipAng = start + sweep * 0.85;
+          final tipAng = start + sweepDraw * 0.9;
           canvas.drawCircle(
             Offset(c.dx + math.cos(tipAng) * r, c.dy + math.sin(tipAng) * r),
-            math.max(2.0, tile * 0.08),
-            Paint()..color = Colors.white.withValues(alpha: alpha * 0.9),
+            math.max(2.2, tile * 0.09),
+            Paint()..color = Colors.white.withValues(alpha: alpha),
           );
         } else if (kind == SpatialBurstKind.ring) {
-          final alpha = (burst.life / 0.5).clamp(0.0, 1.0);
+          final alpha = (burst.life / 0.55).clamp(0.0, 1.0);
           final c = center(burst.x, burst.y);
           final r = tile * burst.radius * (0.55 + (1 - alpha) * 0.7);
           canvas.drawCircle(
             c,
             r,
             Paint()
-              ..color = Color(burst.argb).withValues(alpha: alpha * 0.85)
+              ..color = const Color(0xCC100C08).withValues(alpha: alpha)
               ..style = PaintingStyle.stroke
-              ..strokeWidth = math.max(2.5, tile * 0.12),
+              ..strokeWidth = math.max(4.2, tile * 0.2),
           );
           canvas.drawCircle(
             c,
-            r * 0.72,
+            r,
             Paint()
-              ..color = Colors.white.withValues(alpha: alpha * 0.35)
+              ..color = Color(burst.argb).withValues(alpha: alpha * 0.95)
               ..style = PaintingStyle.stroke
-              ..strokeWidth = math.max(1.5, tile * 0.06),
+              ..strokeWidth = math.max(2.4, tile * 0.11),
+          );
+          canvas.drawCircle(
+            c,
+            r * 0.7,
+            Paint()
+              ..color = Colors.white.withValues(alpha: alpha * 0.45)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(1.4, tile * 0.055),
           );
         } else if (kind == SpatialBurstKind.cone && burst.angle != null) {
           final alpha = (burst.life / 0.45).clamp(0.0, 1.0);
@@ -2429,7 +2446,7 @@ class _TileRoomPainter extends CustomPainter {
               ..strokeWidth = math.max(2, tile * 0.08),
           );
         } else if (kind == SpatialBurstKind.spark) {
-          final alpha = (burst.life / 0.35).clamp(0.0, 1.0);
+          final alpha = (burst.life / 0.5).clamp(0.0, 1.0);
           final c = center(burst.x, burst.y);
           final r = tile * burst.radius * (0.4 + alpha * 0.4);
           canvas.drawCircle(
@@ -2462,19 +2479,24 @@ class _TileRoomPainter extends CustomPainter {
             kind == SpatialBurstKind.skull) {
           _paintSpellBurst(canvas, burst, tile, center);
         } else {
-          final maxLife = 0.45;
+          final maxLife = 0.55;
           final alpha = (burst.life / maxLife).clamp(0.0, 1.0);
           final c = center(burst.x, burst.y);
-          final r = tile * burst.radius * (1.2 - alpha * 0.35);
+          final r = tile * burst.radius * (1.15 - alpha * 0.28);
           canvas.drawCircle(
             c,
             r,
-            Paint()..color = Color(burst.argb).withValues(alpha: alpha * 0.55),
+            Paint()..color = const Color(0xAA100C08).withValues(alpha: alpha * 0.85),
           );
           canvas.drawCircle(
             c,
-            r * 0.55,
-            Paint()..color = Color(burst.argb).withValues(alpha: alpha * 0.85),
+            r * 0.82,
+            Paint()..color = Color(burst.argb).withValues(alpha: alpha * 0.7),
+          );
+          canvas.drawCircle(
+            c,
+            r * 0.42,
+            Paint()..color = Colors.white.withValues(alpha: alpha * 0.9),
           );
         }
       }
@@ -2549,6 +2571,14 @@ class _TileRoomPainter extends CustomPainter {
       ..color = color.withValues(alpha: 0.6 * frac)
       ..style = PaintingStyle.stroke
       ..strokeWidth = math.max(1.5, tile * 0.06);
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..color = const Color(0x99100C08).withValues(alpha: 0.85 * frac)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(3.2, tile * 0.11),
+    );
     canvas.drawCircle(c, r, stroke);
     switch (kind) {
       case SpatialGroundFxKind.disc:
@@ -2679,158 +2709,256 @@ class _TileRoomPainter extends CustomPainter {
     double tile,
     Offset Function(double, double) center,
   ) {
-    final alpha = (burst.life / 0.45).clamp(0.0, 1.0);
+    final alpha = (burst.life / 0.55).clamp(0.0, 1.0);
     final c = center(burst.x, burst.y);
-    final r = tile * burst.radius * (0.7 + (1 - alpha) * 0.35);
+    final r = tile * burst.radius * (0.78 + (1 - alpha) * 0.32);
     final color = Color(burst.argb);
+    final ink = Paint()
+      ..color = const Color(0xE6100C08).withValues(alpha: alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(3.4, tile * 0.13)
+      ..strokeCap = StrokeCap.round;
     switch (burst.kind) {
       case SpatialBurstKind.beam:
         final end = burst.x2 != null && burst.y2 != null
             ? center(burst.x2!, burst.y2!)
-            : Offset(c.dx, c.dy - r * 2.2);
-        final glow = Paint()
-          ..color = color.withValues(alpha: alpha * 0.45)
-          ..strokeWidth = math.max(4, tile * 0.16)
-          ..strokeCap = StrokeCap.round;
-        final core = Paint()
-          ..color = Colors.white.withValues(alpha: alpha * 0.95)
-          ..strokeWidth = math.max(1.6, tile * 0.055)
-          ..strokeCap = StrokeCap.round;
-        canvas.drawLine(c, end, glow);
-        // Zigzag so lightning isn't a boring line.
+            : Offset(c.dx, c.dy - r * 2.4);
         final dx = end.dx - c.dx;
         final dy = end.dy - c.dy;
+        final len = math.sqrt(dx * dx + dy * dy) + 0.001;
+        final nx = -dy / len;
+        final ny = dx / len;
         final zig = Path()..moveTo(c.dx, c.dy);
-        for (var i = 1; i <= 3; i++) {
-          final t = i / 4;
-          final side = (i.isOdd ? 1.0 : -1.0) * r * 0.35;
-          final nx = -dy / (math.sqrt(dx * dx + dy * dy) + 0.001);
-          final ny = dx / (math.sqrt(dx * dx + dy * dy) + 0.001);
+        for (var i = 1; i <= 4; i++) {
+          final t = i / 5;
+          final side = (i.isOdd ? 1.0 : -1.0) * r * 0.42;
           zig.lineTo(c.dx + dx * t + nx * side, c.dy + dy * t + ny * side);
         }
         zig.lineTo(end.dx, end.dy);
-        canvas.drawPath(zig, core);
-        canvas.drawCircle(end, r * 0.35, Paint()..color = Colors.white.withValues(alpha: alpha));
+        canvas.drawPath(zig, ink);
+        canvas.drawPath(
+          zig,
+          Paint()
+            ..color = color.withValues(alpha: alpha * 0.95)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(2.4, tile * 0.09)
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round,
+        );
+        canvas.drawPath(
+          zig,
+          Paint()
+            ..color = Colors.white.withValues(alpha: alpha)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1.1, tile * 0.04)
+            ..strokeCap = StrokeCap.round,
+        );
+        canvas.drawCircle(
+          end,
+          r * 0.42,
+          Paint()..color = Colors.white.withValues(alpha: alpha),
+        );
       case SpatialBurstKind.rain:
-        for (var i = 0; i < 7; i++) {
-          final a = i * 0.9;
-          final ox = math.cos(a) * r * 0.7;
-          final oy = math.sin(a) * r * 0.45;
-          final fall = (1 - alpha) * r * 0.5;
+        for (var i = 0; i < 8; i++) {
+          final a = i * 0.85;
+          final ox = math.cos(a) * r * 0.75;
+          final oy = math.sin(a) * r * 0.35;
+          final fall = (1 - alpha) * r * 0.7;
+          final a0 = Offset(c.dx + ox, c.dy + oy - r * 1.05 + fall);
+          final a1 = Offset(c.dx + ox, c.dy + oy - r * 0.12 + fall);
           canvas.drawLine(
-            Offset(c.dx + ox, c.dy + oy - r * 0.8 + fall),
-            Offset(c.dx + ox, c.dy + oy - r * 0.15 + fall),
+            a0,
+            a1,
             Paint()
-              ..color = color.withValues(alpha: alpha * 0.85)
-              ..strokeWidth = math.max(1.4, tile * 0.05)
+              ..color = const Color(0xCC100C08).withValues(alpha: alpha)
+              ..strokeWidth = math.max(3.0, tile * 0.1)
+              ..strokeCap = StrokeCap.round,
+          );
+          canvas.drawLine(
+            a0,
+            a1,
+            Paint()
+              ..color = color.withValues(alpha: alpha)
+              ..strokeWidth = math.max(1.6, tile * 0.055)
               ..strokeCap = StrokeCap.round,
           );
         }
       case SpatialBurstKind.shards:
         for (var i = 0; i < 6; i++) {
-          final a = i * math.pi / 3 + burst.life * 2;
+          final a = i * math.pi / 3 + (1 - alpha) * 0.4;
           final p = Path()
-            ..moveTo(c.dx + math.cos(a) * r * 1.15, c.dy + math.sin(a) * r * 1.15)
-            ..lineTo(
-              c.dx + math.cos(a + 0.35) * r * 0.25,
-              c.dy + math.sin(a + 0.35) * r * 0.25,
+            ..moveTo(
+              c.dx + math.cos(a) * r * 1.25,
+              c.dy + math.sin(a) * r * 1.25,
             )
             ..lineTo(
-              c.dx + math.cos(a - 0.35) * r * 0.25,
-              c.dy + math.sin(a - 0.35) * r * 0.25,
+              c.dx + math.cos(a + 0.28) * r * 0.22,
+              c.dy + math.sin(a + 0.28) * r * 0.22,
+            )
+            ..lineTo(
+              c.dx + math.cos(a - 0.28) * r * 0.22,
+              c.dy + math.sin(a - 0.28) * r * 0.22,
             )
             ..close();
-          canvas.drawPath(p, Paint()..color = color.withValues(alpha: alpha * 0.9));
+          canvas.drawPath(
+            p,
+            Paint()..color = const Color(0xDD100C08).withValues(alpha: alpha),
+          );
+          canvas.drawPath(p, Paint()..color = color.withValues(alpha: alpha));
         }
         canvas.drawCircle(
           c,
-          r * 0.28,
-          Paint()..color = Colors.white.withValues(alpha: alpha * 0.8),
+          r * 0.3,
+          Paint()..color = Colors.white.withValues(alpha: alpha),
         );
       case SpatialBurstKind.flame:
+        // Petals bias upward so fire reads as rising, not a tinted disc.
         for (var i = 0; i < 5; i++) {
-          final a = i * 1.256 + (1 - alpha);
+          final a = -1.15 + i * 0.55 + (1 - alpha) * 0.2;
+          final lift = r * 0.35 * (1 - alpha);
           final p = Path()
-            ..moveTo(c.dx, c.dy)
+            ..moveTo(c.dx, c.dy + r * 0.15)
             ..quadraticBezierTo(
-              c.dx + math.cos(a + 0.4) * r * 0.5,
-              c.dy + math.sin(a + 0.4) * r * 0.5,
-              c.dx + math.cos(a) * r * 1.15,
-              c.dy + math.sin(a) * r * 1.15,
+              c.dx + math.cos(a + 0.35) * r * 0.45,
+              c.dy + math.sin(a + 0.35) * r * 0.45 - lift,
+              c.dx + math.cos(a) * r * 1.2,
+              c.dy + math.sin(a) * r * 1.2 - lift,
             )
             ..quadraticBezierTo(
-              c.dx + math.cos(a - 0.4) * r * 0.5,
-              c.dy + math.sin(a - 0.4) * r * 0.5,
+              c.dx + math.cos(a - 0.35) * r * 0.45,
+              c.dy + math.sin(a - 0.35) * r * 0.45 - lift,
               c.dx,
-              c.dy,
+              c.dy + r * 0.15,
             );
-          canvas.drawPath(p, Paint()..color = color.withValues(alpha: alpha * 0.7));
+          canvas.drawPath(
+            p,
+            Paint()..color = const Color(0xBB100C08).withValues(alpha: alpha),
+          );
+          canvas.drawPath(
+            p,
+            Paint()..color = color.withValues(alpha: alpha * 0.88),
+          );
         }
         canvas.drawCircle(
           c,
-          r * 0.32,
+          r * 0.34,
           Paint()..color = const Color(0xFFFFF0A0).withValues(alpha: alpha),
         );
       case SpatialBurstKind.cross:
-        final arm = r * 1.05;
-        final holy = Paint()
-          ..color = color.withValues(alpha: alpha * 0.9)
-          ..strokeWidth = math.max(2.2, tile * 0.09)
-          ..strokeCap = StrokeCap.round;
-        canvas.drawLine(Offset(c.dx, c.dy - arm), Offset(c.dx, c.dy + arm), holy);
+        final arm = r * 1.15;
         canvas.drawLine(
-          Offset(c.dx - arm * 0.7, c.dy - arm * 0.15),
-          Offset(c.dx + arm * 0.7, c.dy - arm * 0.15),
+          Offset(c.dx, c.dy - arm),
+          Offset(c.dx, c.dy + arm * 0.55),
+          ink,
+        );
+        canvas.drawLine(
+          Offset(c.dx - arm * 0.75, c.dy - arm * 0.12),
+          Offset(c.dx + arm * 0.75, c.dy - arm * 0.12),
+          ink,
+        );
+        final holy = Paint()
+          ..color = color.withValues(alpha: alpha)
+          ..strokeWidth = math.max(2.4, tile * 0.1)
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(
+          Offset(c.dx, c.dy - arm),
+          Offset(c.dx, c.dy + arm * 0.55),
+          holy,
+        );
+        canvas.drawLine(
+          Offset(c.dx - arm * 0.75, c.dy - arm * 0.12),
+          Offset(c.dx + arm * 0.75, c.dy - arm * 0.12),
           holy,
         );
         canvas.drawCircle(
           c,
-          r * 0.28,
-          Paint()..color = Colors.white.withValues(alpha: alpha * 0.85),
+          r * 0.3,
+          Paint()..color = Colors.white.withValues(alpha: alpha),
         );
       case SpatialBurstKind.poison:
-        for (var i = 0; i < 4; i++) {
-          final a = i * 1.57 + 0.4;
+        for (var i = 0; i < 5; i++) {
+          final a = -0.4 + i * 0.55;
+          final fall = r * 0.45 * (1 - alpha);
+          final drip = Offset(
+            c.dx + math.sin(a) * r * 0.55,
+            c.dy + math.cos(a) * r * 0.15 + fall,
+          );
           canvas.drawOval(
             Rect.fromCenter(
-              center: Offset(
-                c.dx + math.cos(a) * r * 0.65,
-                c.dy + math.sin(a) * r * 0.65 + r * 0.15 * (1 - alpha),
-              ),
-              width: r * 0.38,
-              height: r * 0.55,
+              center: drip,
+              width: r * 0.32,
+              height: r * 0.62,
             ),
-            Paint()..color = color.withValues(alpha: alpha * 0.75),
+            Paint()..color = const Color(0xCC100C08).withValues(alpha: alpha),
+          );
+          canvas.drawOval(
+            Rect.fromCenter(
+              center: drip,
+              width: r * 0.24,
+              height: r * 0.5,
+            ),
+            Paint()..color = color.withValues(alpha: alpha * 0.9),
           );
         }
-        canvas.drawCircle(c, r * 0.28, Paint()..color = const Color(0xAAE8FFC0).withValues(alpha: alpha));
+        canvas.drawCircle(
+          c,
+          r * 0.26,
+          Paint()..color = const Color(0xAAE8FFC0).withValues(alpha: alpha),
+        );
       case SpatialBurstKind.skull:
+        final head = Rect.fromCenter(
+          center: Offset(c.dx, c.dy - r * 0.08),
+          width: r * 1.55,
+          height: r * 1.7,
+        );
         canvas.drawOval(
-          Rect.fromCenter(center: c, width: r * 1.5, height: r * 1.7),
-          Paint()..color = color.withValues(alpha: alpha * 0.75),
+          head.inflate(r * 0.08),
+          Paint()..color = const Color(0xDD100C08).withValues(alpha: alpha),
+        );
+        canvas.drawOval(
+          head,
+          Paint()..color = color.withValues(alpha: alpha * 0.92),
         );
         canvas.drawCircle(
-          Offset(c.dx - r * 0.28, c.dy - r * 0.12),
-          r * 0.18,
+          Offset(c.dx - r * 0.3, c.dy - r * 0.18),
+          r * 0.2,
+          Paint()..color = const Color(0xFF100C08).withValues(alpha: alpha),
+        );
+        canvas.drawCircle(
+          Offset(c.dx + r * 0.3, c.dy - r * 0.18),
+          r * 0.2,
+          Paint()..color = const Color(0xFF100C08).withValues(alpha: alpha),
+        );
+        canvas.drawCircle(
+          Offset(c.dx - r * 0.3, c.dy - r * 0.18),
+          r * 0.08,
           Paint()..color = const Color(0xFFFFE080).withValues(alpha: alpha),
         );
         canvas.drawCircle(
-          Offset(c.dx + r * 0.28, c.dy - r * 0.12),
-          r * 0.18,
+          Offset(c.dx + r * 0.3, c.dy - r * 0.18),
+          r * 0.08,
           Paint()..color = const Color(0xFFFFE080).withValues(alpha: alpha),
         );
         canvas.drawArc(
-          Rect.fromCenter(center: Offset(c.dx, c.dy + r * 0.28), width: r * 0.7, height: r * 0.4),
-          0.2,
-          math.pi - 0.4,
+          Rect.fromCenter(
+            center: Offset(c.dx, c.dy + r * 0.32),
+            width: r * 0.72,
+            height: r * 0.42,
+          ),
+          0.25,
+          math.pi - 0.5,
           false,
           Paint()
-            ..color = const Color(0xAA201028).withValues(alpha: alpha)
+            ..color = const Color(0xEE100C08).withValues(alpha: alpha)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = math.max(1.5, tile * 0.05),
+            ..strokeWidth = math.max(2, tile * 0.07),
         );
       default:
-        canvas.drawCircle(c, r, Paint()..color = color.withValues(alpha: alpha * 0.6));
+        canvas.drawCircle(
+          c,
+          r,
+          Paint()..color = color.withValues(alpha: alpha * 0.7),
+        );
     }
   }
 

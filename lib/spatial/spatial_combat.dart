@@ -945,7 +945,7 @@ abstract final class SpatialCombat {
   static int get _floaterPet => colorblindMode ? 0xFF56B4E9 : 0xFF7CE8FF;
 
   static const int _maxFloaters = 8;
-  static const int _maxBursts = 22;
+  static const int _maxBursts = 16;
   static const int _maxProjectiles = 36;
   static const int _maxGroundFx = 6;
 
@@ -1102,7 +1102,7 @@ abstract final class SpatialCombat {
     double radius = 0.55,
     double? angle,
     bool slash = false,
-    double life = 0.35,
+    double life = 0.48,
     SpatialBurstKind kind = SpatialBurstKind.blast,
     double? x2,
     double? y2,
