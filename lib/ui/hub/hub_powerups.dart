@@ -13,7 +13,7 @@ import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 
 /// Floating SCROLLS overlay — rolled-scroll glyph on the hub map, not in the header.
-class HubPowerupsFab extends StatelessWidget {
+class HubPowerupsFab extends StatefulWidget {
   const HubPowerupsFab({
     super.key,
     required this.state,
@@ -24,24 +24,65 @@ class HubPowerupsFab extends StatelessWidget {
   final VoidCallback onOpen;
 
   @override
+  State<HubPowerupsFab> createState() => _HubPowerupsFabState();
+}
+
+class _HubPowerupsFabState extends State<HubPowerupsFab>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pop;
+
+  @override
+  void initState() {
+    super.initState();
+    _pop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1300),
+    );
+    _syncMotion();
+  }
+
+  @override
+  void didUpdateWidget(HubPowerupsFab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.vfxQuality != widget.state.vfxQuality) {
+      _syncMotion();
+    }
+  }
+
+  void _syncMotion() {
+    if (!widget.state.vfxQuality.showGuideAndPulse) {
+      _pop.stop();
+      _pop.value = 0.55;
+      return;
+    }
+    if (!_pop.isAnimating) {
+      unawaited(_pop.repeat(reverse: true));
+    }
+  }
+
+  @override
+  void dispose() {
+    _pop.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final md = state.metaDepth;
+    final md = widget.state.metaDepth;
     final status = AdBoost.fabStatus(md);
     final tickets = md.adTickets;
-    final lit = AdBoost.anyBuffActive(md) || tickets > 0;
-    final labelColor = lit ? GameTheme.torchHot : GameTheme.parchmentDim;
     return WebClickScope(
       label: 'SCROLLS',
-      onPressed: onOpen,
+      onPressed: widget.onOpen,
       child: Semantics(
         button: true,
         label: 'SCROLLS. $status',
-        onTap: onOpen,
+        onTap: widget.onOpen,
         excludeSemantics: true,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: onOpen,
+            onTap: widget.onOpen,
             borderRadius: BorderRadius.circular(GameTheme.radiusMd),
             child: ConstrainedBox(
               constraints: const BoxConstraints(
@@ -49,33 +90,61 @@ class HubPowerupsFab extends StatelessWidget {
                 minHeight: GameTheme.minTouch,
               ),
               child: Padding(
-                padding: const EdgeInsets.only(left: 4, top: 4),
+                padding: const EdgeInsets.fromLTRB(6, 8, 6, 2),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: GameTheme.primaryTouch,
-                      height: GameTheme.primaryTouch,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          DecoratedBox(
-                            decoration: MenuChrome.hubPanel(selected: lit),
-                            child: Center(
-                              child: GameIcon.glyph(
-                                UiGlyph.scroll,
-                                size: 24,
-                                color: labelColor,
+                    AnimatedBuilder(
+                      animation: _pop,
+                      builder: (context, child) {
+                        final t = Curves.easeInOut.transform(_pop.value);
+                        final scale = 1.0 + 0.1 * t;
+                        final glow = 0.28 + 0.42 * t;
+                        return Transform.scale(
+                          scale: scale,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(
+                                GameTheme.radiusSm,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: GameTheme.torch.withValues(
+                                    alpha: glow,
+                                  ),
+                                  blurRadius: 10 + 10 * t,
+                                  spreadRadius: 1 + 2 * t,
+                                ),
+                              ],
+                            ),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: SizedBox(
+                        width: GameTheme.primaryTouch,
+                        height: GameTheme.primaryTouch,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            DecoratedBox(
+                              decoration: MenuChrome.hubPanel(selected: true),
+                              child: Center(
+                                child: GameIcon.glyph(
+                                  UiGlyph.scroll,
+                                  size: 26,
+                                  color: GameTheme.torchHot,
+                                ),
                               ),
                             ),
-                          ),
-                          if (tickets > 0)
-                            Positioned(
-                              right: -3,
-                              top: -3,
-                              child: _TicketBadge(count: tickets),
-                            ),
-                        ],
+                            if (tickets > 0)
+                              Positioned(
+                                right: -3,
+                                top: -3,
+                                child: _TicketBadge(count: tickets),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -83,7 +152,10 @@ class HubPowerupsFab extends StatelessWidget {
                       status,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(size: 10, color: labelColor),
+                      style: GameTheme.body(
+                        size: 10,
+                        color: GameTheme.torchHot,
+                      ),
                     ),
                   ],
                 ),
