@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/hub_endgame_act.dart';
 import '../../models/dungeon_def.dart';
-import '../../assets/custom_assets.dart';
 import '../game_theme.dart';
 import '../../assets/kenney_assets.dart';
 import '../kenney_sprite.dart';
@@ -109,7 +108,7 @@ class SelectedHuntCaption extends StatelessWidget {
   }
 }
 
-class ZonePathMap extends StatefulWidget {
+class ZonePathMap extends StatelessWidget {
   const ZonePathMap({
     super.key,
     required this.dungeons,
@@ -129,89 +128,25 @@ class ZonePathMap extends StatefulWidget {
   final Animation<double>? pulse;
   final ValueChanged<String> onSelect;
 
-  /// Marker centers on painted gold rings (zone 0…14 top→bottom).
-  /// Campaign only — endgame hunts live on the hub ENDGAME tab.
+  /// Marker centers on the continent board (catalog order 0…14).
+  /// Not a vertical road — clusters are lands (frost, dunes, ash, veil…).
   static const List<Offset> markerNorm = [
-    Offset(0.491, 0.042), // sandy — cave mouth
-    Offset(0.483, 0.088), // goblin — camp
-    Offset(0.474, 0.146), // king — fort wall
-    Offset(0.514, 0.197), // underworld — purple crystals
-    Offset(0.454, 0.249), // dead — tombs
-    Offset(0.479, 0.303), // hell — spiked gate
-    Offset(0.465, 0.355), // crystal — ice peaks
-    Offset(0.503, 0.403), // tide — sunken ruins
-    Offset(0.466, 0.449), // ember — lava door
-    Offset(0.478, 0.513), // grove — dark forest
-    Offset(0.485, 0.570), // storm — purple chasm
-    Offset(0.544, 0.635), // rime — ice-rift ring
-    Offset(0.506, 0.736), // fen — mire ring
-    Offset(0.507, 0.839), // brass — vault ring
-    Offset(0.499, 0.963), // veil — moth-dust ring
+    Offset(0.20, 0.78), // sandy — dune coast
+    Offset(0.34, 0.74), // goblin — dune hills
+    Offset(0.20, 0.38), // king — crownlands
+    Offset(0.36, 0.42), // underworld — deep highland
+    Offset(0.42, 0.58), // dead — blight
+    Offset(0.58, 0.82), // hell — ash isles
+    Offset(0.28, 0.14), // crystal — frost
+    Offset(0.12, 0.56), // tide — western isles
+    Offset(0.74, 0.78), // ember — ash caldera
+    Offset(0.58, 0.36), // grove — green belt
+    Offset(0.74, 0.18), // storm — storm reach
+    Offset(0.46, 0.12), // rime — frost rift
+    Offset(0.54, 0.62), // fen — blight mire
+    Offset(0.80, 0.56), // brass — brass coast
+    Offset(0.86, 0.34), // veil — moth woods
   ];
-
-  static const double mapAspect = 2532 / 1024;
-
-  @override
-  State<ZonePathMap> createState() => _ZonePathMapState();
-}
-
-class _ZonePathMapState extends State<ZonePathMap> {
-  final ScrollController _scroll = ScrollController();
-  String? _scrolledTo;
-  bool _didInitialJump = false;
-  double? _lastMapH;
-  double? _lastViewH;
-
-  @override
-  void didUpdateWidget(covariant ZonePathMap oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedId != widget.selectedId) {
-      _scrolledTo = null;
-    }
-  }
-
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  DateTime? _userPanAt; // FEEL 077
-
-  void _ensureSelectedVisible(double mapH, double viewH) {
-    if (!_scroll.hasClients) return;
-    final scrollKey = widget.selectedId;
-    if (_userPanAt != null &&
-        DateTime.now().difference(_userPanAt!) < const Duration(seconds: 2)) {
-      return;
-    }
-    if (_scrolledTo == scrollKey && _lastMapH == mapH && _lastViewH == viewH) {
-      return;
-    }
-    final idx = widget.dungeons.indexWhere((d) => d.id == widget.selectedId);
-    if (idx < 0 || idx >= ZonePathMap.markerNorm.length) return;
-    final y = ZonePathMap.markerNorm[idx].dy * mapH;
-    // Keep HERE near vertical center of the path viewport.
-    final target = (y - viewH * 0.45)
-        .clamp(0.0, math.max(0.0, mapH - viewH))
-        .toDouble();
-    _scrolledTo = scrollKey;
-    _lastMapH = mapH;
-    _lastViewH = viewH;
-    if (!_didInitialJump) {
-      _didInitialJump = true;
-      _scroll.jumpTo(target);
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scroll.hasClients) return;
-      _scroll.animateTo(
-        target,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-      );
-    });
-  }
 
   static String _statusWord({
     required bool unlocked,
@@ -219,8 +154,6 @@ class _ZonePathMapState extends State<ZonePathMap> {
     required bool selected,
     required bool frontier,
   }) {
-    // Grey portrait = locked; moss ring = cleared. Words only for the
-    // node you are on and the next push, so they don't cover the icon below.
     if (selected) return 'HERE';
     if (frontier && unlocked && !cleared) return 'NEXT';
     return '';
@@ -231,25 +164,13 @@ class _ZonePathMapState extends State<ZonePathMap> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final mapW = constraints.maxWidth;
-        final viewH = constraints.maxHeight;
-        if (mapW < 8 || viewH < 8) return const SizedBox.shrink();
-        final mapH = mapW * ZonePathMap.mapAspect;
-        // Disc stays readable; hit box meets phone minTouch (44).
-        final discSize = (mapW * 0.092).clamp(34.0, 40.0);
+        final mapH = constraints.maxHeight;
+        if (mapW < 8 || mapH < 8) return const SizedBox.shrink();
+        final discSize = (mapW * 0.078).clamp(28.0, 36.0);
         final hitSize = math.max(discSize, GameTheme.minTouch);
         const statusH = 15.0;
 
-        final needsScroll =
-            _scrolledTo != widget.selectedId ||
-            _lastMapH != mapH ||
-            _lastViewH != viewH;
-        if (needsScroll) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _ensureSelectedVisible(mapH, viewH);
-          });
-        }
-
-        final dungeons = widget.dungeons;
+        final dungeons = this.dungeons;
         assert(
           dungeons.length == ZonePathMap.markerNorm.length,
           'World Path markerNorm must match DungeonCatalog (${dungeons.length} vs ${ZonePathMap.markerNorm.length})',
@@ -257,40 +178,9 @@ class _ZonePathMapState extends State<ZonePathMap> {
         final n = math.min(dungeons.length, ZonePathMap.markerNorm.length);
 
         final pathChildren = <Widget>[
-          Positioned.fill(
+          const Positioned.fill(
             child: ExcludeSemantics(
-              child: Image.asset(
-                CustomAssets.worldPathMap,
-                fit: BoxFit.fill,
-                filterQuality: FilterQuality.medium,
-                gaplessPlayback: true,
-                // Decode at the size we actually paint. The source is
-                // 1024x2532; without a cap that is ~10 MB of decoded memory
-                // for a map drawn ~336 logical px wide.
-                cacheWidth: (mapW * MediaQuery.devicePixelRatioOf(context))
-                    .round()
-                    .clamp(256, 1024),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 40,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      GameTheme.ink.withValues(alpha: 0.3),
-                    ],
-                  ),
-                ),
-              ),
+              child: CustomPaint(painter: HubWorldContinentsPainter()),
             ),
           ),
         ];
@@ -300,14 +190,13 @@ class _ZonePathMapState extends State<ZonePathMap> {
           final anchor = ZonePathMap.markerNorm[i];
           final unlocked = DungeonCatalog.isUnlocked(
             d.id,
-            widget.partyLevel,
-            widget.highestCleared,
+            partyLevel,
+            highestCleared,
           );
-          final cleared = widget.highestCleared >= d.number;
-          final selected = d.id == widget.selectedId;
-          // Frontier = lowest uncleared unlocked zone (what to push next).
+          final cleared = highestCleared >= d.number;
+          final selected = d.id == selectedId;
           final frontier =
-              unlocked && !cleared && d.number == widget.highestCleared + 1;
+              unlocked && !cleared && d.number == highestCleared + 1;
           final statusWord = _statusWord(
             unlocked: unlocked,
             cleared: cleared,
@@ -335,28 +224,102 @@ class _ZonePathMapState extends State<ZonePathMap> {
                 unlocked: unlocked,
                 cleared: cleared,
                 selected: selected,
-                pulse: selected ? widget.pulse : null,
+                pulse: selected ? pulse : null,
                 statusWord: statusWord,
-                onTap: () => widget.onSelect(d.id),
+                onTap: () => onSelect(d.id),
               ),
             ),
           );
         }
 
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: SingleChildScrollView(
-            controller: _scroll,
-            child: SizedBox(
-              width: mapW,
-              height: mapH,
-              child: Stack(clipBehavior: Clip.none, children: pathChildren),
-            ),
-          ),
+          borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+          child: Stack(clipBehavior: Clip.none, children: pathChildren),
         );
       },
     );
   }
+}
+
+/// Fitted ocean + landmasses. Hub viewport is the whole board (no scroll).
+class HubWorldContinentsPainter extends CustomPainter {
+  const HubWorldContinentsPainter({this.dim = false});
+
+  final bool dim;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = GameTheme.mapOcean,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(size.width * 0.22, size.height * 0.58),
+        width: size.width * 0.42,
+        height: size.height * 0.28,
+      ),
+      Paint()..color = GameTheme.mapShallow.withValues(alpha: dim ? 0.35 : 0.7),
+    );
+
+    void land(Offset c, double nw, double nh, Color color) {
+      final rect = Rect.fromCenter(
+        center: Offset(c.dx * size.width, c.dy * size.height),
+        width: nw * size.width,
+        height: nh * size.height,
+      );
+      canvas.drawOval(
+        rect,
+        Paint()..color = color.withValues(alpha: dim ? 0.42 : 0.92),
+      );
+      canvas.drawOval(
+        rect,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.1
+          ..color = GameTheme.border.withValues(alpha: dim ? 0.22 : 0.5),
+      );
+    }
+
+    land(const Offset(0.36, 0.14), 0.44, 0.22, GameTheme.mapFrost);
+    land(const Offset(0.48, 0.10), 0.20, 0.12, GameTheme.mapFrost);
+    land(const Offset(0.74, 0.18), 0.30, 0.18, GameTheme.mapStormLand);
+    land(const Offset(0.24, 0.40), 0.34, 0.24, GameTheme.mapCrown);
+    land(const Offset(0.38, 0.42), 0.16, 0.12, GameTheme.mapDeep);
+    land(const Offset(0.58, 0.36), 0.30, 0.20, GameTheme.moss);
+    land(const Offset(0.84, 0.36), 0.26, 0.22, GameTheme.mapVeilLand);
+    land(const Offset(0.11, 0.56), 0.18, 0.14, GameTheme.mapTide);
+    land(const Offset(0.18, 0.62), 0.10, 0.08, GameTheme.mapTide);
+    land(const Offset(0.46, 0.60), 0.30, 0.20, GameTheme.mapBlight);
+    land(const Offset(0.80, 0.56), 0.24, 0.18, GameTheme.mapBrassLand);
+    land(const Offset(0.26, 0.78), 0.38, 0.24, GameTheme.mapDune);
+    land(const Offset(0.66, 0.82), 0.36, 0.22, GameTheme.mapAsh);
+
+    if (dim) return;
+    _label(canvas, size, 'FROST', const Offset(0.34, 0.04));
+    _label(canvas, size, 'DUNES', const Offset(0.22, 0.90));
+    _label(canvas, size, 'ASH', const Offset(0.66, 0.92));
+    _label(canvas, size, 'VEIL', const Offset(0.86, 0.24));
+    _label(canvas, size, 'CROWN', const Offset(0.18, 0.28));
+  }
+
+  static void _label(Canvas canvas, Size size, String text, Offset norm) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: GameTheme.body(size: 9, color: GameTheme.parchmentDim),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(
+      canvas,
+      Offset(norm.dx * size.width - tp.width / 2, norm.dy * size.height),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant HubWorldContinentsPainter oldDelegate) =>
+      oldDelegate.dim != dim;
 }
 
 class MapZoneMarker extends StatelessWidget {

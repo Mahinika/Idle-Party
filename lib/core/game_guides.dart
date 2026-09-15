@@ -109,8 +109,9 @@ abstract final class GameGuides {
     id: 'world_path',
     title: 'WORLD PATH',
     body:
-        'The hub map is the World Path. Start at Sandy Caverns.\n\n'
+        'The hub map is the World Path. Start at Sandy Caverns on the dune coast.\n\n'
         '• Tap a cave, then ENTER DUNGEON.\n'
+        '• Caves sit in different lands on one map — no scrolling the board.\n'
         '• New caves open as the party grows (mean level) or when you clear '
         'the one before. Gold does not unlock them.\n'
         '• Locked caves sit dim. The caption under the map shows party level '
@@ -202,9 +203,11 @@ abstract final class GameGuides {
     id: 'world_path',
     title: 'WORLD PATH',
     body:
-        'The hub World Path is a painted map from Sandy Caverns through Mothveil Hollow '
-        '(Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault, and the rest along the road).\n\n'
-        '• Scroll the map and tap a zone portrait on a glowing ring to select it.\n'
+        'The hub World Path is one continent map: dunes (Sandy / Goblin), crownlands '
+        '(King’s Fort), frost (Crystal Spire / Rimeglass), tide isles (Tidehold), blight '
+        '(City of Dead / Blightfen), ash (Hell’s Gate / Ashen Vault), Hollow Grove, '
+        'Stormwake, Brassvault, and Mothveil in the east.\n\n'
+        '• Tap a zone portrait to select it — the whole map fits on the hub.\n'
         '• The selected zone is HERE; the next unlocked uncleared zone is NEXT. Other rings stay unlabeled so the path stays readable.\n'
         '• Unlock the next zone by clearing the previous boss, or when your '
         'party mean level reaches that zone’s gate (even steps from Lv1 on '
@@ -408,9 +411,11 @@ abstract final class GameGuides {
       id: 'world_path',
       title: 'WORLD PATH',
       body:
-          'The hub World Path is a painted map from Sandy Caverns through Mothveil Hollow '
-          '(Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault, and the rest along the road).\n\n'
-          '• Scroll the map and tap a zone portrait on a glowing ring to select it.\n'
+          'The hub World Path is one continent map: dunes (Sandy / Goblin), crownlands '
+          '(King’s Fort), frost (Crystal Spire / Rimeglass), tide isles (Tidehold), blight '
+          '(City of Dead / Blightfen), ash (Hell’s Gate / Ashen Vault), Hollow Grove, '
+          'Stormwake, Brassvault, and Mothveil in the east.\n\n'
+          '• Tap a zone portrait to select it — the whole map fits on the hub.\n'
           '• The selected zone is HERE; the next unlocked uncleared zone is NEXT. Other rings stay unlabeled so the path stays readable.\n'
           '• Unlock the next zone by clearing the previous boss, or when your '
           'party mean level reaches that zone’s gate (even steps from Lv1 on '
