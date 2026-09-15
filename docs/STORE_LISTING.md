@@ -99,11 +99,11 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.170+200** (`pubspec.yaml`). Pasted as Play Production release notes with **200** submitted **2026-09-14**:
+Working ship: **1.12.171+201** (`pubspec.yaml`). Pasted as Play Production release notes with **201** submitted **2026-09-15**:
 
 ```
 • Your party fights on its own. Day-one menus stay GEAR and MORE until gold, the shop, and essence mean something. Shield, Healer, and Damage kits show their job in the fight.
-• Party Lv100 unlocks Craft Trial under MORE → CRAFT and the extra hunts. AL20 KEEP STAR NODES keep Ashen / Craft Trial / REBORN points until you spend them.
+• PATH is a continent map. PUSH floors pay a little essence. SHOP has forever SCROLLS and a redeem code. Party Lv100 still unlocks Craft Trial and the extra hunts.
 ```
 
 ### Full description honesty (SHOP)

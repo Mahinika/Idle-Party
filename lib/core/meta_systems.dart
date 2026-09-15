@@ -26,10 +26,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.170';
+  static const String currentVersion = '1.12.171';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.171',
+      bullets: <String>[
+        'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
+        'Hub PATH is a continent map (no scroll strip). Floors grow with KEY and AL; rooms are not just boxes. PUSH pays a little essence (farm does not). SHOP sells forever SCROLLS; redeem a code in SHOP or SETTINGS. MORE → CRAFT still has a monthly Craft Trial at party Lv100. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEY and Farm Rift keep going past 20. Prestige Ascend still Rebuild your bag; AL20 KEEP still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.170',
       bullets: <String>[
