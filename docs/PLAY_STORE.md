@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | Live store still **1.12.157 (187)** until Google publishes. **1.12.170 (200)** submitted **2026-09-14**. Working AAB **1.12.171 (201)** for **2026-09-15**. |
+| Production | ✅ live | Live store still **1.12.170 (200)** until Google publishes **201**. **1.12.171 (201)** uploaded + submitted for review **2026-09-15** (full rollout). |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ✅ review | Ads / Play Games / Advertising ID + **Firebase Analytics** (App interactions, Diagnostics, Device IDs) submitted **2026-09-10** — under Google review (`Ändringarna granskas`). Matches [PRIVACY.md](PRIVACY.md). |
@@ -39,6 +39,8 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] After production live: AdMob store-link Idle Party (**2026-09-09** — Play linked; AdMob app review 2–3 days)
 - [x] Owner asked new Production AAB (**2026-09-14**)
 - [x] Signed Production AAB **1.12.170+200** built + uploaded; submitted for review (full rollout). Console: Ändringarna granskas. AD_ID warning ignored for this version (permission is in the 200 AAB).
+- [x] Owner asked new Production AAB (**2026-09-15**)
+- [x] Signed Production AAB **1.12.171+201** built + uploaded; submitted for review (full rollout). Console: Ändringarna granskas. AD_ID “Lansera utan behörighet” (permission is in the 201 AAB).
 
 ### Production upload paste (en-US release notes)
 

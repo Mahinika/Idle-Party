@@ -31,7 +31,7 @@ Google Play AAB.**
 **Distribution today:** **Google Play is the primary install path**
 (`docs/PLAY_STORE.md`). Package id `com.idleparty.app`. Store listing:
 `https://play.google.com/store/apps/details?id=com.idleparty.app` (production
-live as of owner **2026-09-13**; store still **1.12.157 / 187** until review; Production **1.12.170 / 200** submitted **2026-09-14**; working ship **1.12.171 / 201**). Closed opt-in remains for early builds.
+live as of owner **2026-09-13**; store still **1.12.170 / 200** until review; Production **1.12.171 / 201** submitted **2026-09-15**). Closed opt-in remains for early builds.
 Do **not** link players to GitHub Releases (repo may be private). Working ship
 in-repo may be ahead of Play — **never upload a new AAB without owner ask**.
 
