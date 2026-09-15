@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/hub_endgame_act.dart';
 import '../../models/dungeon_def.dart';
+import '../../assets/custom_assets.dart';
 import '../game_theme.dart';
 import '../../assets/kenney_assets.dart';
 import '../kenney_sprite.dart';
@@ -178,9 +179,17 @@ class ZonePathMap extends StatelessWidget {
         final n = math.min(dungeons.length, ZonePathMap.markerNorm.length);
 
         final pathChildren = <Widget>[
-          const Positioned.fill(
+          Positioned.fill(
             child: ExcludeSemantics(
-              child: CustomPaint(painter: HubWorldContinentsPainter()),
+              child: Image.asset(
+                CustomAssets.worldPathMap,
+                fit: BoxFit.fill,
+                filterQuality: FilterQuality.none,
+                gaplessPlayback: true,
+                cacheWidth: (mapW * MediaQuery.devicePixelRatioOf(context))
+                    .round()
+                    .clamp(256, 1024),
+              ),
             ),
           ),
         ];
@@ -239,87 +248,6 @@ class ZonePathMap extends StatelessWidget {
       },
     );
   }
-}
-
-/// Fitted ocean + landmasses. Hub viewport is the whole board (no scroll).
-class HubWorldContinentsPainter extends CustomPainter {
-  const HubWorldContinentsPainter({this.dim = false});
-
-  final bool dim;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = GameTheme.mapOcean,
-    );
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(size.width * 0.22, size.height * 0.58),
-        width: size.width * 0.42,
-        height: size.height * 0.28,
-      ),
-      Paint()..color = GameTheme.mapShallow.withValues(alpha: dim ? 0.35 : 0.7),
-    );
-
-    void land(Offset c, double nw, double nh, Color color) {
-      final rect = Rect.fromCenter(
-        center: Offset(c.dx * size.width, c.dy * size.height),
-        width: nw * size.width,
-        height: nh * size.height,
-      );
-      canvas.drawOval(
-        rect,
-        Paint()..color = color.withValues(alpha: dim ? 0.42 : 0.92),
-      );
-      canvas.drawOval(
-        rect,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.1
-          ..color = GameTheme.border.withValues(alpha: dim ? 0.22 : 0.5),
-      );
-    }
-
-    land(const Offset(0.36, 0.14), 0.44, 0.22, GameTheme.mapFrost);
-    land(const Offset(0.48, 0.10), 0.20, 0.12, GameTheme.mapFrost);
-    land(const Offset(0.74, 0.18), 0.30, 0.18, GameTheme.mapStormLand);
-    land(const Offset(0.24, 0.40), 0.34, 0.24, GameTheme.mapCrown);
-    land(const Offset(0.38, 0.42), 0.16, 0.12, GameTheme.mapDeep);
-    land(const Offset(0.58, 0.36), 0.30, 0.20, GameTheme.moss);
-    land(const Offset(0.84, 0.36), 0.26, 0.22, GameTheme.mapVeilLand);
-    land(const Offset(0.11, 0.56), 0.18, 0.14, GameTheme.mapTide);
-    land(const Offset(0.18, 0.62), 0.10, 0.08, GameTheme.mapTide);
-    land(const Offset(0.46, 0.60), 0.30, 0.20, GameTheme.mapBlight);
-    land(const Offset(0.80, 0.56), 0.24, 0.18, GameTheme.mapBrassLand);
-    land(const Offset(0.26, 0.78), 0.38, 0.24, GameTheme.mapDune);
-    land(const Offset(0.66, 0.82), 0.36, 0.22, GameTheme.mapAsh);
-
-    if (dim) return;
-    _label(canvas, size, 'FROST', const Offset(0.34, 0.04));
-    _label(canvas, size, 'DUNES', const Offset(0.22, 0.90));
-    _label(canvas, size, 'ASH', const Offset(0.66, 0.92));
-    _label(canvas, size, 'VEIL', const Offset(0.86, 0.24));
-    _label(canvas, size, 'CROWN', const Offset(0.18, 0.28));
-  }
-
-  static void _label(Canvas canvas, Size size, String text, Offset norm) {
-    final tp = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: GameTheme.body(size: 9, color: GameTheme.parchmentDim),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    tp.paint(
-      canvas,
-      Offset(norm.dx * size.width - tp.width / 2, norm.dy * size.height),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant HubWorldContinentsPainter oldDelegate) =>
-      oldDelegate.dim != dim;
 }
 
 class MapZoneMarker extends StatelessWidget {

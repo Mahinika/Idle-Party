@@ -122,20 +122,6 @@ abstract final class GameTheme {
   static const Color hudFlaskIdle = Color(0xDD2A1810);
   static const Color hudRowSelected = Color(0x331C1812);
 
-  /// Hub world map biomes (CustomPainter continents).
-  static const Color mapOcean = Color(0xFF071018);
-  static const Color mapShallow = Color(0xFF102030);
-  static const Color mapFrost = Color(0xFF7A96B0);
-  static const Color mapDune = Color(0xFFC4A05A);
-  static const Color mapAsh = Color(0xFF8A4030);
-  static const Color mapBlight = Color(0xFF4A5A38);
-  static const Color mapCrown = Color(0xFF4E5C50);
-  static const Color mapBrassLand = Color(0xFF8A7040);
-  static const Color mapVeilLand = Color(0xFF5A4A68);
-  static const Color mapStormLand = Color(0xFF3A4A70);
-  static const Color mapTide = Color(0xFF2A6A78);
-  static const Color mapDeep = Color(0xFF2A2438);
-
   /// Feedback toast fills (celebrate / danger gradient ends).
   static const Color toastCelebrateTop = Color(0xEE1A2410);
   static const Color toastCelebrateBottom = Color(0xEE142018);

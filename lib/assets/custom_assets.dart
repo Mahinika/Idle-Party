@@ -248,7 +248,7 @@ abstract final class CustomAssets {
   /// Hub keep / gate plaza behind translucent chrome.
   static const String hubScene = '$_root/ui/hub_scene.png';
 
-  /// Scrollable World Path campaign map (portrait).
+  /// Hub World Path continent atlas (fits the PATH board, no scroll).
   static const String worldPathMap = '$_root/ui/world_path_map.png';
 
   /// Generic combat stage backdrop (fallback).

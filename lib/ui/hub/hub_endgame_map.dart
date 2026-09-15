@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/hub_endgame_act.dart';
+import '../../assets/custom_assets.dart';
 import '../game_theme.dart';
 import '../web_click_bridge.dart';
 import 'hub_world_map.dart';
@@ -127,8 +128,21 @@ class HubEndgameMap extends StatelessWidget {
             children: [
               Positioned.fill(
                 child: ExcludeSemantics(
-                  child: CustomPaint(
-                    painter: const HubWorldContinentsPainter(dim: true),
+                  child: ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                      GameTheme.ink.withValues(alpha: 0.55),
+                      BlendMode.darken,
+                    ),
+                    child: Image.asset(
+                      CustomAssets.worldPathMap,
+                      fit: BoxFit.fill,
+                      filterQuality: FilterQuality.none,
+                      gaplessPlayback: true,
+                      cacheWidth:
+                          (mapW * MediaQuery.devicePixelRatioOf(context))
+                              .round()
+                              .clamp(256, 1024),
+                    ),
                   ),
                 ),
               ),
