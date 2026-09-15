@@ -8,7 +8,7 @@ Idle Party is a single-player idle RPG. This document describes how the app hand
 
 - **No Idle Party account.** You do not create a username or password with us.
 - **Optional Google Play Games.** You may sign in with Play Games for seasonal leaderboards and cloud save. This is opt-in and not required to play.
-- **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **POWERUPS**) for an **Ad Ticket**. You spend tickets on timed boosts (Sharp Edge, Gold Rush, Full Boost, Away Bonus). Ads do not play unless you start them. Ad serving uses Google AdMob.
+- **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **SCROLLS**) for an **Ad Ticket**. You spend tickets on timed scrolls (Scroll of Damage, Scroll of Gold, Scroll of XP, Scroll of Speed, Scroll of Loot, Scroll of Haste, Scroll of Battle, Scroll of Rest). Ads do not play unless you start them. Ad serving uses Google AdMob.
 - **Analytics (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, first dungeon enter, first combat reward, first boss, returning the next day, entering/leaving a dungeon, Ascend, party wipe). This helps Cognifox Studio understand what works. In the **EU/EEA**, collection follows the Google UMP consent prompt (same path as ads; **SETTINGS → AD PRIVACY**). Outside regions where that form is required, Google may allow collection without a separate prompt. Web playtest and builds without Firebase config do not send analytics.
 - **Local save by default.** Progress is stored on your device (e.g. SharedPreferences / platform equivalent).
 
@@ -39,19 +39,19 @@ The app may let you **copy a save to the clipboard** or **paste a save from the 
 Aside from normal OS / store behavior (install, updates), optional Play Billing
 when you buy from SHOP, optional Play Games calls when you opt in, optional
 Firebase Analytics on Android (see below), and optional AdMob when you use
-POWERUPS, Idle Party does not require an Idle Party account or Idle Party
+SCROLLS, Idle Party does not require an Idle Party account or Idle Party
 cloud service.
 
 On **Google Play installs** (Android), the app may ask Google Play whether a newer Idle Party is available and show an in-app notice. That check goes to Google, not to an Idle Party server. Sideloaded APKs skip it.
 
-On **Android**, if you tap hub **POWERUPS** and watch an ad, Google AdMob may load an ad over the network. That can include an advertising ID and a consent prompt (EU/EEA). Skipping POWERUPS means those ad calls are not started by you. Web playtest builds do not show real ads.
+On **Android**, if you tap hub **SCROLLS** and watch an ad, Google AdMob may load an ad over the network. That can include an advertising ID and a consent prompt (EU/EEA). Skipping SCROLLS means those ad calls are not started by you. Web playtest builds do not show real ads.
 
 ## Analytics (Firebase Analytics)
 
 On **Android** builds that include Firebase configuration (`google-services.json`):
 
 - Google **Firebase Analytics** may receive **anonymous** app events (device/app identifiers under Google’s policies; not an Idle Party login).
-- The SDK may initialize when the app starts (not only when you open POWERUPS). Typical events: session start, first time the game is playable, first dungeon enter (including seconds until combat), first combat gold, first boss, first return on a later UTC day, enter/leave dungeon, Ascend, party wipe, and (if you answer the reminder card) whether away reminders were turned on or off. Events do **not** include your save file or clipboard backups.
+- The SDK may initialize when the app starts (not only when you open SCROLLS). Typical events: session start, first time the game is playable, first dungeon enter (including seconds until combat), first combat gold, first boss, first return on a later UTC day, enter/leave dungeon, Ascend, party wipe, and (if you answer the reminder card) whether away reminders were turned on or off. Events do **not** include your save file or clipboard backups.
 - In the **EU/EEA**, the Google consent form (UMP) also gates analytics collection. You can change or withdraw that consent later in **SETTINGS → AD PRIVACY**.
 - Analytics is not sent from web playtest builds, Flutter tests, or Android builds that lack Firebase config.
 
@@ -67,10 +67,10 @@ if you opt in). Sideloaded APKs cannot complete Play Billing buys.
 
 ## Optional rewarded ads (Android)
 
-Hub **POWERUPS** is opt-in:
+Hub **SCROLLS** is opt-in:
 
 - You choose when to watch. Combat is never interrupted by an ad.
-- One finished ad grants **1 Ad Ticket**. Spend tickets on Sharp Edge (+40% ATK 2h), Gold Rush (×2 gold 2h), Study Rush (+50% party XP 2h), Fleet Foot (+30% walk 2h), Lucky Bag (+40% item find 2h), Time Warp (+25% dungeon speed 2h), Full Boost (ATK+gold for 4h / 2 tickets), or Away Bonus (next offline gold ×3). Timers stack per buff up to 24h.
+- One finished ad grants **1 Ad Ticket**. Spend tickets on Scroll of Damage (+40% ATK 2h), Scroll of Gold (×2 gold 2h), Scroll of XP (+50% party XP 2h), Scroll of Speed (+30% walk 2h), Scroll of Loot (+40% item find 2h), Scroll of Haste (+25% dungeon speed 2h), Scroll of Battle (ATK+gold for 4h / 2 tickets), or Scroll of Rest (next offline gold ×3). Timers stack per buff up to 24h.
 - Google AdMob serves the ad. Idle Party does not run its own ad server.
 - In the **EU/EEA**, a Google consent form (UMP) may appear before ads can be requested (and the same consent path gates Firebase Analytics).
 - You can change or withdraw that consent later in **SETTINGS → AD PRIVACY** (Android).

@@ -21,7 +21,7 @@ class ShopDock extends StatefulWidget {
   /// SHOP blurb. ESSENCE is named only when that tab exists.
   static String convenienceLine({required bool showEssence}) {
     final essenceBit = showEssence ? ' · essence under ESSENCE' : '';
-    return 'Same Full Boost as POWERUPS tickets '
+    return 'Same Scroll of Battle as SCROLLS tickets '
         '(×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
         'Watch ads for Ad Tickets on the hub · gold under GOLD$essenceBit.';
   }

@@ -70,7 +70,7 @@ Player cinematic brief (boot trailer): [docs/TRAILER.md](docs/TRAILER.md)
 ### Android (play)
 
 Install from [Google Play](https://play.google.com/store/apps/details?id=com.idleparty.app).
-Optional hub **POWERUPS** (rewarded ad) for a timed boost — never mid-fight.
+Optional hub **SCROLLS** (rewarded ad) for a timed scroll — never mid-fight.
 
 ### From source
 

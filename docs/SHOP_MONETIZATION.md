@@ -35,7 +35,7 @@ expensive power packs.
 3. **No gacha / loot boxes** for real money.
 4. **No BiS gear, kit unlocks, or zone skips** for cash.
 5. **Clear IA:** GOLD = gold buys · ESSENCE = essence buys · SHOP = real money ·
-   hub POWERUPS = optional ads → Ad Tickets → same buffs.
+   hub SCROLLS = optional ads → Ad Tickets → same scrolls.
 
 **Dev take-home:** Play Billing ~**15%** under $1M/yr (EEA/US/UK: 10% service +
 5% billing). A `$0.99` sale ≈ `$0.84` net — still far above one rewarded ad.
@@ -56,7 +56,7 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as t
 
 | Surface | Currency | Role |
 |---------|----------|------|
-| Hub POWERUPS | Ad Ticket (from ad / playtest / ad-free daily) | Free path to the same buffs |
+| Hub SCROLLS | Ad Ticket (from ad / playtest / ad-free daily) | Free path to the same buffs |
 | Bottom SHOP | Real money | Full Boost hours / ad-free / small QoL |
 | GOLD | Gold | Forge tracks + market |
 | ESSENCE → KEEP | Essence | AL-gated permanent prestige buys |

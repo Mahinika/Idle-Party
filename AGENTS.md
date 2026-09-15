@@ -271,12 +271,12 @@ Offline return uses `OfflineProgressResult` (wow headline + ≤3 highlights +
 Live look: `a56-playtest` (Samsung A56 emulator). Web fallback:
 `WebClickBridge` + Semantics (`browser-playtest`).
 
-**Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded` +
+**Hub SCROLLS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded` +
 `ad_config.dart` (live AdMob ids on release Android; sample ids in debug). 1 ad =
-**1 Ad Ticket**; spend tickets on Sharp Edge (+40% ATK 2h), Gold Rush (×2 gold
-2h), Study Rush (+50% party XP 2h), Fleet Foot (+30% walk 2h), Lucky Bag (+40% item find 2h),
-Time Warp (+25% dungeon speed 2h; KEY/GR clocks scale),
-Full Boost (ATK+gold 4h / 2 tickets), or Away Bonus (next offline gold ×3). Timers stack
+**1 Ad Ticket**; spend tickets on Scroll of Damage (+40% ATK 2h), Scroll of Gold (×2 gold
+2h), Scroll of XP (+50% party XP 2h), Scroll of Speed (+30% walk 2h), Scroll of Loot (+40% item find 2h),
+Scroll of Haste (+25% dungeon speed 2h),
+Scroll of Battle (ATK+gold 4h / 2 tickets), or Scroll of Rest (next offline gold ×3). Timers stack
 per buff (max 24h) on `metaDepth.adAtkUntilMs` / `adGoldUntilMs` / `adXpUntilMs` /
 `adMoveUntilMs` / `adLootUntilMs` / `adSpeedUntilMs`; tickets on
 `adTickets` (survives Ascend). Camera overlay on the hub map opens the sheet.

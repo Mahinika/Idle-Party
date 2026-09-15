@@ -187,9 +187,9 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'powerups',
-      title: 'POWERUPS',
+      title: 'SCROLLS',
       body:
-          'Tap the camera on the World Path (POWERUPS). Watch an optional ad for an Ad Ticket, then spend on timed boosts. Ads never interrupt combat.',
+          'Tap the camera on the World Path (SCROLLS). Watch an optional ad for an Ad Ticket, then spend on timed scrolls. Ads never interrupt combat.',
     ),
     (
       id: 'prestige',

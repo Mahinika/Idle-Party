@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/chase_contract.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/session_telemetry.dart';
@@ -208,7 +209,7 @@ void main() {
     expect(contract.upNextLine.toLowerCase(), contains('up next'));
   });
 
-  testWidgets('HubPowerupsFab is a camera overlay labeled POWERUPS', (
+  testWidgets('HubPowerupsFab is a camera overlay labeled SCROLLS', (
     tester,
   ) async {
     final state = GameLogic.createInitialState(now: now);
@@ -220,7 +221,7 @@ void main() {
       ),
     );
 
-    expect(find.bySemanticsLabel('POWERUPS. WATCH'), findsOneWidget);
+    expect(find.bySemanticsLabel('SCROLLS. WATCH'), findsOneWidget);
     expect(find.text('WATCH'), findsOneWidget);
   });
 
@@ -237,8 +238,47 @@ void main() {
       ),
     );
 
-    expect(find.bySemanticsLabel('POWERUPS. 3 TICKETS'), findsOneWidget);
+    expect(find.bySemanticsLabel('SCROLLS. 3 TICKETS'), findsOneWidget);
     expect(find.text('3 TICKETS'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
+  });
+
+  testWidgets('POWERUPS sheet lists compact boosts and a ticket bank', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState(now: now),
+    );
+    addTearDown(director.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () => openPowerupsSheet(context, director),
+                child: const Text('OPEN'),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('OPEN'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('SCROLLS'), findsWidgets);
+    expect(find.text('Ad Tickets'), findsOneWidget);
+    expect(find.text('USE'), findsOneWidget);
+    expect(find.text('Scroll of Damage'), findsOneWidget);
+    expect(find.text('Scroll of Gold'), findsOneWidget);
+    expect(find.textContaining('+40% ATK'), findsWidgets);
   });
 }

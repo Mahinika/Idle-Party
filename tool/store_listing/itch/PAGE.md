@@ -114,7 +114,7 @@ Idle Party is a portrait idle RPG. Your heroes move, fight, heal, and use their 
 
 ## Fair play
 - Single-player — no Idle Party account required.
-- Optional rewarded ads (hub POWERUPS) grant timed boosts and never interrupt a fight.
+- Optional rewarded ads (hub SCROLLS) grant timed scrolls and never interrupt a fight.
 - Optional SHOP sells cheap convenience only (boosts, ad-free, small QoL) — not pay-to-win gear.
 
 Start your party and take one more floor.
@@ -144,7 +144,7 @@ itch.io page: https://cognifox-studio.itch.io/idle-party
 Android on Google Play (free, single-player, no account):
 https://play.google.com/store/apps/details?id=com.idleparty.app
 
-Fair SHOP (convenience only) and optional hub POWERUPS ads — nothing interrupts combat.
+Fair SHOP (convenience only) and optional hub SCROLLS ads — nothing interrupts combat.
 
 Trailer:
 ```

@@ -58,8 +58,8 @@ abstract final class ShopCatalog {
       id: 'starter_boost_6h',
       name: 'Starter boost',
       description:
-          '+6 hours Full Boost (×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
-          'Same as POWERUPS tickets — once per save.',
+          '+6 hours Scroll of Battle (×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
+          'Same as SCROLLS tickets — once per save.',
       priceLabel: '\$0.99',
       kind: ShopOfferKind.boostHours,
       boostHours: 6,
@@ -69,7 +69,7 @@ abstract final class ShopCatalog {
       id: 'boost_12h',
       name: '12-hour boost',
       description:
-          '+12 hours Full Boost (×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
+          '+12 hours Scroll of Battle (×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
           'Stacks up to 24 hours, same as tickets.',
       priceLabel: '\$1.99',
       kind: ShopOfferKind.boostHours,
@@ -79,7 +79,7 @@ abstract final class ShopCatalog {
       id: 'ad_free',
       name: 'Ad-free welcome',
       description:
-          'Permanent — hide POWERUPS ads, +2 Ad Tickets once, and a free '
+          'Permanent — hide SCROLLS ads, +2 Ad Tickets once, and a free '
           'ticket claim once per UTC day. More boost time still for sale here.',
       priceLabel: '\$2.99',
       kind: ShopOfferKind.adFree,
@@ -90,7 +90,7 @@ abstract final class ShopCatalog {
       id: 'day_boost_24h',
       name: 'Day pack',
       description:
-          '+24 hours Full Boost (fills the stack from empty). '
+          '+24 hours Scroll of Battle (fills the stack from empty). '
           'Best boost value per hour — same ×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK as tickets.',
       priceLabel: '\$2.99',
       kind: ShopOfferKind.boostHours,
@@ -100,7 +100,7 @@ abstract final class ShopCatalog {
       id: 'supporter_qol',
       name: 'Supporter pack',
       description:
-          '+4 bag slots, +12 hours Full Boost, and a thank-you. '
+          '+4 bag slots, +12 hours Scroll of Battle, and a thank-you. '
           'No extra combat power beyond the same boost tickets give.',
       priceLabel: '\$4.99',
       kind: ShopOfferKind.supporterQol,

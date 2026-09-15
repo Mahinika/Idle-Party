@@ -30,7 +30,7 @@ the **same** buffs (payers skip watching / buy tickets).
 | Term | Meaning |
 |------|---------|
 | **Ad Ticket** | Soft currency from watching one ad (or from SHOP) |
-| **POWERUPS** | Sheet / shop title (keep existing label) |
+| **SCROLLS** | Sheet / shop title |
 | **WATCH** | Earn +1 Ad Ticket |
 | **USE** / row buttons | Spend tickets on a buff |
 
@@ -93,14 +93,14 @@ Effects stay **same for tickets and SHOP**. Do **not** ship +100% ATK or a paid-
 
 | Id | Label | Effect | Duration | Cost | Notes |
 |----|-------|--------|----------|------|-------|
-| `atk` | Sharp Edge | **+40% ATK** | **2 hours** | **1** ticket | Combat push |
-| `gold` | Gold Rush | **×2 gold** (kills, chests, hub AFK) | **2 hours** | **1** ticket | Same ×2 magnitude |
-| `xp` | Study Rush | **+50% party XP** | **2 hours** | **1** ticket | Combat XP (live + AFK catch-up) |
-| `move` | Fleet Foot | **+30% walk speed** | **2 hours** | **1** ticket | Dungeon travel |
-| `loot` | Lucky Bag | **+40% item find** | **2 hours** | **1** ticket | Additive with pet / STAR loot |
-| `speed` | Time Warp | **+25% dungeon speed** | **2 hours** | **1** ticket | Live SpatialCombat dt; KEY/GR timers scale so ladders stay fair |
-| `bundle` | Full Boost | **+40% ATK** and **×2 gold** | **4 hours** | **2** tickets | Best ATK+gold ticket value |
-| `offline` | Away Bonus | Next Welcome Back gold **×3** (one shot) | Until claimed or **24h** | **1** ticket | Idle punch |
+| `atk` | Scroll of Damage | **+40% ATK** | **2 hours** | **1** ticket | Combat push |
+| `gold` | Scroll of Gold | **×2 gold** (kills, chests, hub AFK) | **2 hours** | **1** ticket | Same ×2 magnitude |
+| `xp` | Scroll of XP | **+50% party XP** | **2 hours** | **1** ticket | Combat XP (live + AFK catch-up) |
+| `move` | Scroll of Speed | **+30% walk speed** | **2 hours** | **1** ticket | Dungeon travel |
+| `loot` | Scroll of Loot | **+40% item find** | **2 hours** | **1** ticket | Additive with pet / STAR loot |
+| `speed` | Scroll of Haste | **+25% dungeon speed** | **2 hours** | **1** ticket | Live SpatialCombat dt; KEY/GR timers scale so ladders stay fair |
+| `bundle` | Scroll of Battle | **+40% ATK** and **×2 gold** | **4 hours** | **2** tickets | Best ATK+gold ticket value |
+| `offline` | Scroll of Rest | Next Welcome Back gold **×3** (one shot) | Until claimed or **24h** | **1** ticket | Idle punch |
 
 ### Stack / interact rules
 

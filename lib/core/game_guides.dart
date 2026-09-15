@@ -388,19 +388,19 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'powerups',
-      title: 'POWERUPS',
+      title: 'SCROLLS',
       body:
-          'Tap the camera on the hub map (POWERUPS). Optional. Watch a short ad '
-          'for 1 Ad Ticket, then spend tickets on timed boosts.\n\n'
-          '• Sharp Edge: +${AdBoost.attackPercent}% attack for ${AdBoost.splitHours} hours (1 ticket).\n'
-          '• Gold Rush: ×${AdBoost.goldMul} gold (kills, chests, hub AFK) for ${AdBoost.splitHours} hours (1 ticket).\n'
-          '• Study Rush: +${AdBoost.xpPercent}% party XP for ${AdBoost.splitHours} hours (1 ticket).\n'
-          '• Fleet Foot: +${AdBoost.movePercent}% walk speed for ${AdBoost.splitHours} hours (1 ticket).\n'
-          '• Lucky Bag: +${AdBoost.lootFindPercent}% item find for ${AdBoost.splitHours} hours (1 ticket).\n'
-          '• Time Warp: +${AdBoost.speedPercent}% dungeon speed for ${AdBoost.splitHours} hours (1 ticket).\n'
-          '• Full Boost: ATK + gold for ${AdBoost.hoursPerAd} hours (2 tickets) — best gold/ATK value.\n'
-          '• Away Bonus: next Welcome Back gold ×${AdBoost.awayGoldMul} (1 ticket).\n'
-          '• Time stacks up to 24 hours per boost. Magnitudes do not stack higher.\n'
+          'Tap the camera on the hub map (SCROLLS). Optional. Watch a short ad '
+          'for 1 Ad Ticket, then spend tickets on timed scrolls.\n\n'
+          '• Scroll of Damage: +${AdBoost.attackPercent}% attack for ${AdBoost.splitHours} hours (1 ticket).\n'
+          '• Scroll of Gold: ×${AdBoost.goldMul} gold (kills, chests, hub AFK) for ${AdBoost.splitHours} hours (1 ticket).\n'
+          '• Scroll of XP: +${AdBoost.xpPercent}% party XP for ${AdBoost.splitHours} hours (1 ticket).\n'
+          '• Scroll of Speed: +${AdBoost.movePercent}% walk speed for ${AdBoost.splitHours} hours (1 ticket).\n'
+          '• Scroll of Loot: +${AdBoost.lootFindPercent}% item find for ${AdBoost.splitHours} hours (1 ticket).\n'
+          '• Scroll of Haste: +${AdBoost.speedPercent}% dungeon speed for ${AdBoost.splitHours} hours (1 ticket).\n'
+          '• Scroll of Battle: ATK + gold for ${AdBoost.hoursPerAd} hours (2 tickets) — best gold/ATK value.\n'
+          '• Scroll of Rest: next Welcome Back gold ×${AdBoost.awayGoldMul} (1 ticket).\n'
+          '• Time stacks up to 24 hours per scroll. Magnitudes do not stack higher.\n'
           '• Ads never pop up in a fight. You choose when to watch.\n'
           '• Tickets and remaining time survive Ascend.',
     ),

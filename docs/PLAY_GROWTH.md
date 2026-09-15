@@ -50,7 +50,7 @@ Never point players at GitHub Releases.
 ### Play smoke (closed 2026-09-13)
 
 Owner confirmed on a **Play-installed** build: listing Updated, SHOP SKUs
-visible, POWERUPS + AD PRIVACY path. D1 / listing A/B still deferred
+visible, SCROLLS + AD PRIVACY path. D1 / listing A/B still deferred
 (too little traffic — Console look **2026-09-12**).
 
 ### Console D1 paste (2026-09-14)
@@ -106,7 +106,7 @@ Sorry that broke your run. Please update to the latest version from Play if you 
 
 **Ads complaint**
 ```
-Ads are optional: hub POWERUPS only when you choose a boost. SETTINGS → AD PRIVACY covers consent. SHOP has a cheap ad-free option if you prefer that path. Thanks for saying so.
+Ads are optional: hub SCROLLS only when you choose a scroll. SETTINGS → AD PRIVACY covers consent. SHOP has a cheap ad-free option if you prefer that path. Thanks for saying so.
 ```
 
 **Pay-to-win worry**

@@ -171,6 +171,44 @@ abstract final class AdBoost {
     if (md.adFree) return canClaimAdFreeDaily(md, now: now);
     return true;
   }
+
+  /// Timer chip on a POWERUPS spend row, or null if that buff is idle.
+  static String? rowTimer(AdBuffId id, MetaDepthState md, {int? nowMs}) {
+    switch (id) {
+      case AdBuffId.atk:
+        return atkActive(md, nowMs: nowMs)
+            ? formatRemaining(md.adAtkUntilMs, nowMs: nowMs)
+            : null;
+      case AdBuffId.gold:
+        return goldActive(md, nowMs: nowMs)
+            ? formatRemaining(md.adGoldUntilMs, nowMs: nowMs)
+            : null;
+      case AdBuffId.xp:
+        return xpActive(md, nowMs: nowMs)
+            ? formatRemaining(md.adXpUntilMs, nowMs: nowMs)
+            : null;
+      case AdBuffId.move:
+        return moveActive(md, nowMs: nowMs)
+            ? formatRemaining(md.adMoveUntilMs, nowMs: nowMs)
+            : null;
+      case AdBuffId.loot:
+        return lootActive(md, nowMs: nowMs)
+            ? formatRemaining(md.adLootUntilMs, nowMs: nowMs)
+            : null;
+      case AdBuffId.speed:
+        return speedActive(md, nowMs: nowMs)
+            ? formatRemaining(md.adSpeedUntilMs, nowMs: nowMs)
+            : null;
+      case AdBuffId.bundle:
+        final a = remainingMs(md.adAtkUntilMs, nowMs: nowMs);
+        final g = remainingMs(md.adGoldUntilMs, nowMs: nowMs);
+        if (a <= 0 && g <= 0) return null;
+        final until = a >= g ? md.adAtkUntilMs : md.adGoldUntilMs;
+        return formatRemaining(until, nowMs: nowMs);
+      case AdBuffId.offline:
+        return awayBonusReady(md, nowMs: nowMs) ? 'READY' : null;
+    }
+  }
 }
 
 /// Catalog row ids for POWERUPS spend.
@@ -190,6 +228,26 @@ class AdBuffOffer {
   final String blurb;
   final int ticketCost;
   final int durationMs;
+
+  /// One-line sheet subtitle (phone width).
+  String get effect => switch (id) {
+    AdBuffId.atk =>
+      '+${AdBoost.attackPercent}% ATK · ${AdBoost.splitHours}h',
+    AdBuffId.gold =>
+      '×${AdBoost.goldMul} gold · ${AdBoost.splitHours}h',
+    AdBuffId.xp =>
+      '+${AdBoost.xpPercent}% party XP · ${AdBoost.splitHours}h',
+    AdBuffId.move =>
+      '+${AdBoost.movePercent}% walk · ${AdBoost.splitHours}h',
+    AdBuffId.loot =>
+      '+${AdBoost.lootFindPercent}% item find · ${AdBoost.splitHours}h',
+    AdBuffId.speed =>
+      '+${AdBoost.speedPercent}% dungeon speed · ${AdBoost.splitHours}h',
+    AdBuffId.bundle =>
+      'ATK + gold · ${AdBoost.hoursPerAd}h',
+    AdBuffId.offline =>
+      'Next AFK gold ×${AdBoost.awayGoldMul}',
+  };
 }
 
 /// Fixed POWERUPS shop (combat, farm, convenience).
@@ -197,7 +255,7 @@ abstract final class AdBuffCatalog {
   static const List<AdBuffOffer> offered = [
     AdBuffOffer(
       id: AdBuffId.atk,
-      label: 'Sharp Edge',
+      label: 'Scroll of Damage',
       blurb:
           '+${AdBoost.attackPercent}% ATK for ${AdBoost.splitHours} hours — kills and bosses hit harder',
       ticketCost: 1,
@@ -205,7 +263,7 @@ abstract final class AdBuffCatalog {
     ),
     AdBuffOffer(
       id: AdBuffId.gold,
-      label: 'Gold Rush',
+      label: 'Scroll of Gold',
       blurb:
           '×${AdBoost.goldMul} all gold (kills, chests, hub AFK) for ${AdBoost.splitHours} hours',
       ticketCost: 1,
@@ -213,7 +271,7 @@ abstract final class AdBuffCatalog {
     ),
     AdBuffOffer(
       id: AdBuffId.xp,
-      label: 'Study Rush',
+      label: 'Scroll of XP',
       blurb:
           '+${AdBoost.xpPercent}% party XP for ${AdBoost.splitHours} hours — levels land faster',
       ticketCost: 1,
@@ -221,7 +279,7 @@ abstract final class AdBuffCatalog {
     ),
     AdBuffOffer(
       id: AdBuffId.move,
-      label: 'Fleet Foot',
+      label: 'Scroll of Speed',
       blurb:
           '+${AdBoost.movePercent}% walk speed for ${AdBoost.splitHours} hours — caves feel snappier',
       ticketCost: 1,
@@ -229,7 +287,7 @@ abstract final class AdBuffCatalog {
     ),
     AdBuffOffer(
       id: AdBuffId.loot,
-      label: 'Lucky Bag',
+      label: 'Scroll of Loot',
       blurb:
           '+${AdBoost.lootFindPercent}% item find for ${AdBoost.splitHours} hours — more gear on kills',
       ticketCost: 1,
@@ -237,7 +295,7 @@ abstract final class AdBuffCatalog {
     ),
     AdBuffOffer(
       id: AdBuffId.speed,
-      label: 'Time Warp',
+      label: 'Scroll of Haste',
       blurb:
           '+${AdBoost.speedPercent}% dungeon speed for ${AdBoost.splitHours} hours — fights run faster; timed clocks keep pace',
       ticketCost: 1,
@@ -245,7 +303,7 @@ abstract final class AdBuffCatalog {
     ),
     AdBuffOffer(
       id: AdBuffId.bundle,
-      label: 'Full Boost',
+      label: 'Scroll of Battle',
       blurb:
           '+${AdBoost.attackPercent}% ATK and ×${AdBoost.goldMul} gold for ${AdBoost.hoursPerAd} hours — best ticket value',
       ticketCost: 2,
@@ -253,7 +311,7 @@ abstract final class AdBuffCatalog {
     ),
     AdBuffOffer(
       id: AdBuffId.offline,
-      label: 'Away Bonus',
+      label: 'Scroll of Rest',
       blurb:
           'Next Welcome Back gold ×${AdBoost.awayGoldMul} (expires in 24h if unused)',
       ticketCost: 1,

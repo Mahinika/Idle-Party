@@ -27,7 +27,7 @@ fairness, cheap convenience SHOP).
 3. **Captions short** (≤ ~8 words) if used; never cover critical HUD.
 4. **Phone portrait** 9:16, ≥1080 px wide (Play featuring bar).
 5. **Copy matches ship** — 15 zones, 31 specs, KEYSTONE (not invented systems).
-   Do **not** promise “no ads forever” — rewarded POWERUPS and a cheap SHOP
+   Do **not** promise “no ads forever” — rewarded SCROLLS and a cheap SHOP
    catalog exist (`docs/SHOP_MONETIZATION.md`).
 6. **English only on the store page** — default locale **en-US**. Do not add
    translated Play listings (sv-SE or otherwise). Screenshot captions stay English.
@@ -86,7 +86,7 @@ KEEP GROWING
 
 FAIR PLAY
 • Single-player — no Idle Party account required.
-• Optional rewarded ads (hub POWERUPS) grant timed boosts and never interrupt a fight.
+• Optional rewarded ads (hub SCROLLS) grant timed scrolls and never interrupt a fight.
 • Optional SHOP sells cheap convenience only (boosts, ad-free, small QoL) — not pay-to-win gear.
 • Privacy policy covers optional Play Games, ads, and analytics.
 • Designed for portrait phones.
@@ -110,7 +110,7 @@ Working ship: **1.12.170+200** (`pubspec.yaml`). Pasted as Play Production relea
 
 SHOP convenience (boosts / ad-free / QoL) is live in Console — the FAIR PLAY
 line above is accurate. Do **not** imply whale packs, gacha, or BiS-for-cash.
-POWERUPS ads remain the free path to the same boost power.
+SCROLLS ads remain the free path to the same boost power.
 
 ### Screenshot plan (Play phone carousel)
 

@@ -167,6 +167,7 @@ void main() {
     expect(AdBoost.moveActive(state.metaDepth, nowMs: nowMs), isTrue);
     expect(AdBoost.lootActive(state.metaDepth, nowMs: nowMs), isTrue);
     expect(AdBoost.speedActive(state.metaDepth, nowMs: nowMs), isTrue);
+    expect(AdBoost.rowTimer(AdBuffId.xp, state.metaDepth, nowMs: nowMs), isNotNull);
     expect(AdBoost.combatDtMul(state.metaDepth, nowMs: nowMs), 1.25);
 
     final loaded = MetaDepthState.fromJson(state.metaDepth.toJson());
