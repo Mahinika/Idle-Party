@@ -91,21 +91,21 @@ Migration from current saves:
 
 ## Buff catalog (exactly 4 rows)
 
-Effects stay **near current** power. Do **not** ship +100% ATK in v1.
+Effects stay **same for tickets and SHOP**. Do **not** ship +100% ATK or a paid-only combat class.
 
 | Id | Label | Effect | Duration | Cost | Notes |
 |----|-------|--------|----------|------|-------|
-| `atk` | Sharp Edge | **+25% ATK** | **60 min** | **1** ticket | Combat push |
-| `gold` | Gold Rush | **×2 gold** (combat + hub AFK) | **60 min** | **1** ticket | Same ×2 as today |
-| `bundle` | Full Boost | **+25% ATK** and **×2 gold** | **3 hours** | **2** tickets | Matches today’s “one ad” value (3h both) |
-| `offline` | Away Bonus | Next offline / Welcome Back gold claim **×2** (one shot) | Until claimed or **24h** expiry | **1** ticket | Convenience; not combat |
+| `atk` | Sharp Edge | **+40% ATK** | **2 hours** | **1** ticket | Combat push (felt vs GOLD ATK tracks) |
+| `gold` | Gold Rush | **×2 gold** (kills, chests, hub AFK) | **2 hours** | **1** ticket | Same ×2 magnitude |
+| `bundle` | Full Boost | **+40% ATK** and **×2 gold** | **4 hours** | **2** tickets | Best ticket value (both for 2h/ticket) |
+| `offline` | Away Bonus | Next offline / Welcome Back gold claim **×3** (one shot) | Until claimed or **24h** expiry | **1** ticket | Idle punch; not combat |
 
 ### Stack / interact rules
 
 - **Same buff again:** extend remaining time from current end (or from now if
-  expired), cap 24h. Effects do **not** stack in magnitude (still +25%, not +50%).
+  expired), cap 24h. Effects do **not** stack in magnitude (still +40%, not +80%).
 - **`atk` + `gold` both active:** both apply (same as today’s bundle split).
-- **`bundle` while split buffs active:** extends **both** timers by 3h (capped).
+- **`bundle` while split buffs active:** extends **both** timers by 4h (capped).
 - **`offline`:** one pending flag; watching another Away Bonus while pending
   refreshes expiry only — does not double-stack the multiplier.
 - Bundle and split are the **same** ATK%/gold mult — no extra power from owning
@@ -113,9 +113,9 @@ Effects stay **near current** power. Do **not** ship +100% ATK in v1.
 
 ### Why not +100% / 30 min
 
-Brick Inc–style spike buffs feel great in clickers; in Idle Party they skew
-wipe advice, KEY timing, and “same power as SHOP”. Start at **+25% / ×2**;
-revisit only after AL20 play notes.
+Brick Inc–style +100% ATK still skews wipe advice and KEY. Shipped bump
+**2026-09-15:** +40% ATK / 2h splits / 4h Full Boost / Away ×3 so tickets
+feel worth spending. Gold stays **×2**. SHOP sells the same numbers.
 
 ## Persist fields (future `metaDepth`)
 
@@ -179,8 +179,8 @@ match this doc.
 ## Acceptance (owner AL20 phone)
 
 1. Hub shows a camera overlay on the World Path; hunt card / ENTER still read first.
-2. WATCH → +1 ticket; USE Sharp Edge → +25% ATK for ~60m visible in combat feel.
-3. USE Full Boost → both gold ×2 and +25% for ~3h (old “one ad” feel).
+2. WATCH → +1 ticket; USE Sharp Edge → +40% ATK for ~2h visible in combat feel.
+3. USE Full Boost → both gold ×2 and +40% for ~4h (best ticket deal).
 4. No ad during an open dungeon fight.
 5. Ascend keeps tickets and remaining buff time.
 6. SHOP copy still says same power as tickets / ads.

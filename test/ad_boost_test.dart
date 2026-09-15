@@ -17,7 +17,7 @@ void main() {
     expect(state.metaDepth.adTickets, 0);
     expect(state.metaDepth.adAtkUntilMs, now + AdBoost.rewardMs);
     expect(state.metaDepth.adGoldUntilMs, now + AdBoost.rewardMs);
-    expect(AdBoost.formatRemaining(state.metaDepth.adAtkUntilMs, nowMs: now), '3h');
+    expect(AdBoost.formatRemaining(state.metaDepth.adAtkUntilMs, nowMs: now), '4h');
   });
 
   test('Sharp Edge stacks duration and caps at 24h', () {
@@ -64,10 +64,13 @@ void main() {
       GameLogic.applyGoldGain(boosted, 100),
       2 * GameLogic.applyGoldGain(base, 100),
     );
-    expect(GoldIncome.multiplierLine(boosted), contains('Ad ×2 gold'));
+    expect(
+      GoldIncome.multiplierLine(boosted),
+      contains('Ad ×${AdBoost.goldMul} gold'),
+    );
   });
 
-  test('active ATK boost raises party attack by 25 percent', () {
+  test('active ATK boost raises party attack by AdBoost.attackPercent', () {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     final base = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
     final hero = base.heroes.first;
@@ -80,7 +83,7 @@ void main() {
     );
   });
 
-  test('Away Bonus doubles next offline gold once', () {
+  test('Away Bonus multiplies next offline gold once', () {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
     state = GameLogic.grantAdTicket(state);
@@ -93,7 +96,7 @@ void main() {
       nowMs: nowMs,
     );
     final plain = afterIdle.gold - state.gold;
-    expect(withBonus.gold - state.gold, plain * 2);
+    expect(withBonus.gold - state.gold, plain * AdBoost.awayGoldMul);
     expect(withBonus.metaDepth.adOfflineMulPending, isFalse);
   });
 

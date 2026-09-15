@@ -58,7 +58,7 @@ abstract final class ShopCatalog {
       id: 'starter_boost_6h',
       name: 'Starter boost',
       description:
-          '+6 hours Full Boost (×2 gold · +${AdBoost.attackPercent}% ATK). '
+          '+6 hours Full Boost (×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
           'Same as POWERUPS tickets — once per save.',
       priceLabel: '\$0.99',
       kind: ShopOfferKind.boostHours,
@@ -69,7 +69,7 @@ abstract final class ShopCatalog {
       id: 'boost_12h',
       name: '12-hour boost',
       description:
-          '+12 hours Full Boost (×2 gold · +${AdBoost.attackPercent}% ATK). '
+          '+12 hours Full Boost (×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
           'Stacks up to 24 hours, same as tickets.',
       priceLabel: '\$1.99',
       kind: ShopOfferKind.boostHours,
@@ -91,7 +91,7 @@ abstract final class ShopCatalog {
       name: 'Day pack',
       description:
           '+24 hours Full Boost (fills the stack from empty). '
-          'Best boost value per hour — same ×2 gold · +${AdBoost.attackPercent}% ATK as tickets.',
+          'Best boost value per hour — same ×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK as tickets.',
       priceLabel: '\$2.99',
       kind: ShopOfferKind.boostHours,
       boostHours: 24,

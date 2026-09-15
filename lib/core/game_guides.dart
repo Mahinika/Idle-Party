@@ -1,3 +1,4 @@
+import 'ad_boost.dart';
 import 'ashen_crown.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
@@ -391,10 +392,10 @@ abstract final class GameGuides {
       body:
           'Tap the camera on the hub map (POWERUPS). Optional. Watch a short ad '
           'for 1 Ad Ticket, then spend tickets on timed boosts.\n\n'
-          '• Sharp Edge: +25% attack for 60 minutes (1 ticket).\n'
-          '• Gold Rush: ×2 gold for 60 minutes (1 ticket).\n'
-          '• Full Boost: both for 3 hours (2 tickets).\n'
-          '• Away Bonus: next Welcome Back gold ×2 (1 ticket).\n'
+          '• Sharp Edge: +${AdBoost.attackPercent}% attack for ${AdBoost.splitHours} hours (1 ticket).\n'
+          '• Gold Rush: ×${AdBoost.goldMul} gold (kills, chests, hub AFK) for ${AdBoost.splitHours} hours (1 ticket).\n'
+          '• Full Boost: both for ${AdBoost.hoursPerAd} hours (2 tickets) — best value.\n'
+          '• Away Bonus: next Welcome Back gold ×${AdBoost.awayGoldMul} (1 ticket).\n'
           '• Time stacks up to 24 hours per boost. Magnitudes do not stack higher.\n'
           '• Ads never pop up in a fight. You choose when to watch.\n'
           '• Tickets and remaining time survive Ascend.',

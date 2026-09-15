@@ -273,8 +273,8 @@ Live look: `a56-playtest` (Samsung A56 emulator). Web fallback:
 
 **Hub POWERUPS** (optional rewarded ads, Android): `AdBoost` + `AdRewarded` +
 `ad_config.dart` (live AdMob ids on release Android; sample ids in debug). 1 ad =
-**1 Ad Ticket**; spend tickets on Sharp Edge (+25% ATK 60m), Gold Rush (×2 gold
-60m), Full Boost (both 3h), or Away Bonus (next offline gold ×2). Timers stack
+**1 Ad Ticket**; spend tickets on Sharp Edge (+40% ATK 2h), Gold Rush (×2 gold
+2h), Full Boost (both 4h / 2 tickets), or Away Bonus (next offline gold ×3). Timers stack
 per buff (max 24h) on `metaDepth.adAtkUntilMs` / `adGoldUntilMs`; tickets on
 `adTickets` (survives Ascend). Camera overlay on the hub map opens the sheet.
 Web playtest grants a ticket. Ads never interrupt combat. SETTINGS **AD PRIVACY**

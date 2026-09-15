@@ -22,7 +22,7 @@ class ShopDock extends StatefulWidget {
   static String convenienceLine({required bool showEssence}) {
     final essenceBit = showEssence ? ' · essence under ESSENCE' : '';
     return 'Same Full Boost as POWERUPS tickets '
-        '(×2 gold · +${AdBoost.attackPercent}% ATK). '
+        '(×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
         'Watch ads for Ad Tickets on the hub · gold under GOLD$essenceBit.';
   }
 

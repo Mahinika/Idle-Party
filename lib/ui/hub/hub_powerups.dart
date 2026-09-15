@@ -192,8 +192,9 @@ Future<void> openPowerupsSheet(
                               const SizedBox(height: 8),
                               Text(
                                 'Watch a short ad for 1 Ad Ticket. Spend '
-                                'tickets on timed boosts. Optional — fights '
-                                'never pause for an ad.',
+                                'on combat ATK, double gold, or a bigger '
+                                'Welcome Back. Full Boost is the best deal. '
+                                'Fights never pause for an ad.',
                                 style: GameTheme.body(
                                   size: 15,
                                   color: GameTheme.parchment,

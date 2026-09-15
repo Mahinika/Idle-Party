@@ -546,7 +546,7 @@ class MetaDepthState {
   /// Gold Rush (×2 gold) end millis. Survives Ascend.
   final int adGoldUntilMs;
 
-  /// Away Bonus: next offline gold claim ×2. Survives Ascend.
+  /// Away Bonus: next offline gold claim ×[AdBoost.awayGoldMul]. Survives Ascend.
   final bool adOfflineMulPending;
 
   /// Away Bonus expiry if unclaimed (0 = no expiry while pending).

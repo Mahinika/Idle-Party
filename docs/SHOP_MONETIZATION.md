@@ -28,7 +28,7 @@ expensive power packs.
 ## Idle Party principles
 
 1. **Same power as F2P can already get** — paid Full Boost time matches POWERUPS
-   ticket buffs (`×2` gold + `+25%` ATK). Buyers skip watching; they do not unlock
+   ticket buffs (`×2` gold + `+40%` ATK). Buyers skip watching; they do not unlock
    a stronger combat class.
 2. **Cheap ladder** — v1 ceiling **`$4.99`**. No `$49`/`$99` whale packs.
    Larger packs beat smaller ones on $/hour.

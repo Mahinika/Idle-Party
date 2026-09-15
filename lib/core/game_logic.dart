@@ -1119,7 +1119,7 @@ class GameLogic {
     return state.copyWith(metaDepth: md);
   }
 
-  /// After offline gold credit: consume Away Bonus to double the gold gained.
+  /// After offline gold credit: consume Away Bonus to multiply the gold gained.
   static GameState applyAwayBonusToOfflineGold(
     GameState before,
     GameState after, {
@@ -1130,9 +1130,10 @@ class GameLogic {
     }
     final gained = after.gold - before.gold;
     if (gained <= 0) return after;
+    final extra = gained * (AdBoost.awayGoldMul - 1);
     return after.copyWith(
-      gold: after.gold + gained,
-      lifetimeGoldEarned: after.lifetimeGoldEarned + gained,
+      gold: after.gold + extra,
+      lifetimeGoldEarned: after.lifetimeGoldEarned + extra,
       metaDepth: after.metaDepth.copyWith(
         adOfflineMulPending: false,
         adOfflineMulExpiresMs: 0,

@@ -70,7 +70,7 @@ if you opt in). Sideloaded APKs cannot complete Play Billing buys.
 Hub **POWERUPS** is opt-in:
 
 - You choose when to watch. Combat is never interrupted by an ad.
-- One finished ad grants **1 Ad Ticket**. Spend tickets on Sharp Edge (+25% ATK 60m), Gold Rush (×2 gold 60m), Full Boost (both for 3h), or Away Bonus (next offline gold ×2). Timers stack per buff up to 24h.
+- One finished ad grants **1 Ad Ticket**. Spend tickets on Sharp Edge (+40% ATK 2h), Gold Rush (×2 gold 2h), Full Boost (both for 4h / 2 tickets), or Away Bonus (next offline gold ×3). Timers stack per buff up to 24h.
 - Google AdMob serves the ad. Idle Party does not run its own ad server.
 - In the **EU/EEA**, a Google consent form (UMP) may appear before ads can be requested (and the same consent path gates Firebase Analytics).
 - You can change or withdraw that consent later in **SETTINGS → AD PRIVACY** (Android).

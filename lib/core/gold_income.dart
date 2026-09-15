@@ -28,7 +28,7 @@ abstract final class GoldIncome {
         ? torched
         : torched + (torched * percent) ~/ 100;
     if (!AdBoost.goldActive(state.metaDepth)) return found;
-    return found * 2;
+    return found * AdBoost.goldMul;
   }
 
   static int rawFromSeconds(GameState state, int seconds) {
@@ -108,7 +108,7 @@ abstract final class GoldIncome {
       for (final p in multiplierParts(state)) '${p.$1} +${p.$2}%',
     ];
     if (AdBoost.goldActive(state.metaDepth)) {
-      bits.add('Ad ×2 gold');
+      bits.add('Ad ×${AdBoost.goldMul} gold');
     }
     if (AdBoost.atkActive(state.metaDepth)) {
       bits.add('Ad +${AdBoost.attackPercent}% ATK');

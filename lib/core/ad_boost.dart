@@ -15,10 +15,21 @@ abstract final class AdBoost {
   static const int ticketsPerAd = 1;
 
   /// Extra attack while Sharp Edge / Full Boost ATK timer is running.
-  static const int attackPercent = 25;
+  /// Felt vs GOLD ATK tracks; still far from a second combat class / +100%.
+  static const int attackPercent = 40;
 
-  /// Legacy: one old “watch ad” = Full Boost duration (3h both).
-  static const int hoursPerAd = 3;
+  /// Combat + hub AFK gold while Gold Rush / Full Boost gold timer is running.
+  static const int goldMul = 2;
+
+  /// Next Welcome Back gold while Away Bonus is pending (one shot).
+  static const int awayGoldMul = 3;
+
+  /// Sharp Edge / Gold Rush duration per ticket.
+  static const int splitHours = 2;
+  static const int splitMs = splitHours * hourMs;
+
+  /// Full Boost: both timers (best ticket value vs buying splits).
+  static const int hoursPerAd = 4;
   static const int rewardMs = hoursPerAd * hourMs;
 
   static int nowMs() => DateTime.now().millisecondsSinceEpoch;
@@ -135,29 +146,32 @@ abstract final class AdBuffCatalog {
     AdBuffOffer(
       id: AdBuffId.atk,
       label: 'Sharp Edge',
-      blurb: '+${AdBoost.attackPercent}% ATK for 60 minutes',
+      blurb:
+          '+${AdBoost.attackPercent}% ATK for ${AdBoost.splitHours} hours — kills and bosses hit harder',
       ticketCost: 1,
-      durationMs: 60 * AdBoost.minuteMs,
+      durationMs: AdBoost.splitMs,
     ),
     AdBuffOffer(
       id: AdBuffId.gold,
       label: 'Gold Rush',
-      blurb: '×2 gold for 60 minutes',
+      blurb:
+          '×${AdBoost.goldMul} all gold (kills, chests, hub AFK) for ${AdBoost.splitHours} hours',
       ticketCost: 1,
-      durationMs: 60 * AdBoost.minuteMs,
+      durationMs: AdBoost.splitMs,
     ),
     AdBuffOffer(
       id: AdBuffId.bundle,
       label: 'Full Boost',
       blurb:
-          '+${AdBoost.attackPercent}% ATK and ×2 gold for ${AdBoost.hoursPerAd} hours',
+          '+${AdBoost.attackPercent}% ATK and ×${AdBoost.goldMul} gold for ${AdBoost.hoursPerAd} hours — best ticket value',
       ticketCost: 2,
       durationMs: AdBoost.rewardMs,
     ),
     AdBuffOffer(
       id: AdBuffId.offline,
       label: 'Away Bonus',
-      blurb: 'Next Welcome Back gold ×2 (expires in 24h if unused)',
+      blurb:
+          'Next Welcome Back gold ×${AdBoost.awayGoldMul} (expires in 24h if unused)',
       ticketCost: 1,
       durationMs: AdBoost.maxStackMs,
     ),
