@@ -219,20 +219,20 @@ class _ShopRow extends StatelessWidget {
       ShopOfferKind.supporterQol =>
         '+${item.bagSlots} bag · +${item.boostHours}h · once',
       ShopOfferKind.permScroll => item.permMask == AdBoost.permAll
-          ? 'all seven · cheaper than buying each'
-          : _permEffect(item.permMask),
+          ? 'permanent · all seven · cheaper than each'
+          : '${_permEffect(item.permMask)} · permanent',
     };
   }
 
   static String _permEffect(int mask) => switch (mask) {
-        AdBoost.permAtk => '+${AdBoost.attackPercent}% ATK always',
-        AdBoost.permGold => '×${AdBoost.goldMul} gold always',
-        AdBoost.permXp => '+${AdBoost.xpPercent}% XP always',
-        AdBoost.permMove => '+${AdBoost.movePercent}% walk always',
-        AdBoost.permLoot => '+${AdBoost.lootFindPercent}% find always',
-        AdBoost.permSpeed => '+${AdBoost.speedPercent}% haste always',
-        AdBoost.permRest => 'Welcome Back ×${AdBoost.awayGoldMul} always',
-        _ => 'permanent',
+        AdBoost.permAtk => '+${AdBoost.attackPercent}% ATK',
+        AdBoost.permGold => '×${AdBoost.goldMul} gold',
+        AdBoost.permXp => '+${AdBoost.xpPercent}% XP',
+        AdBoost.permMove => '+${AdBoost.movePercent}% walk',
+        AdBoost.permLoot => '+${AdBoost.lootFindPercent}% find',
+        AdBoost.permSpeed => '+${AdBoost.speedPercent}% haste',
+        AdBoost.permRest => 'Welcome Back ×${AdBoost.awayGoldMul}',
+        _ => 'always on',
       };
 
   @override
