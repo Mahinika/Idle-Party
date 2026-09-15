@@ -200,8 +200,8 @@ fail; gold and gear mid-run; not Play-ranked; not Spire climb. Endless after R20
 gear (gold OK; chests skip equipment), larger clear payout;
 season PB is **local** on hub and submits to Play Games when the month’s
 `PlayLeaderboardIds.greaterRift` ID is wired (2026-09 `CgkIhuXGvNocEAIQAw`).
-After GR20 the progress target holds; par grows a little
-(max ~90s) and threat climbs slower so the ladder stays winnable.
+After GR20 the progress target holds; the clock stays at the 90s cap
+and threat climbs slower so the ladder stays winnable.
 `metaDepth.grBestTier` / `seasonBestGrTier` survive Ascend.
 
 **Ashen Crown** (same gate): weekly ticket solo boss; each ISO week visits a
@@ -366,6 +366,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
 | Guides copy | `lib/core/game_guides.dart` |
 | Keystone | `lib/core/keystone.dart` |
+| Farm / Ranked GR pacing | `lib/core/rift.dart`, `greater_rift.dart`, `rift_pacing.dart` |
 | Ashen Crown | `lib/core/ashen_crown.dart` |
 | Local season weeks | `lib/core/local_season.dart` |
 | Play Games | `lib/core/play_games_bridge.dart`, `play_leaderboard_ids.dart` |

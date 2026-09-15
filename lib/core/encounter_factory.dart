@@ -360,7 +360,11 @@ abstract final class EncounterFactory {
     );
     final count = min(
       80,
-      max(1, (baseCount * Keystone.densityMul(hm)).round()),
+      max(
+        1,
+        (baseCount * Keystone.densityMul(hm) * _riftDensityMul(fromState))
+            .round(),
+      ),
     );
     // Full density keep: each body still carries HM-scaled HP/ATK (not diluted).
     final density = count / baseCount;
@@ -382,17 +386,11 @@ abstract final class EncounterFactory {
       packHp = max(1, (packHp * threat).round());
       // Gold mul applied once on clear via goldGain — not here.
     }
-    if (fromState?.inRift ?? false) {
-      final threat = Rift.threatMul(fromState!.riftTier);
-      final dens = Rift.densityMul(fromState.riftTier);
-      packAttack = max(1, (packAttack * threat * dens).round());
-      packHp = max(1, (packHp * threat * dens).round());
-    }
-    if (fromState?.inGreaterRift ?? false) {
-      final threat = GreaterRift.threatMul(fromState!.grTier);
-      final dens = GreaterRift.densityMul(fromState.grTier);
-      packAttack = max(1, (packAttack * threat * dens).round());
-      packHp = max(1, (packHp * threat * dens).round());
+    final riftThreat = _riftThreatMul(fromState);
+    if (riftThreat > 1.0) {
+      packAttack = max(1, (packAttack * riftThreat).round());
+      packHp = max(1, (packHp * riftThreat).round());
+      packGold = (packGold * riftThreat).round();
     }
     final dungeon = DungeonCatalog.byId(id);
     final bossName = dungeon.bossName;
@@ -590,5 +588,23 @@ abstract final class EncounterFactory {
       return EnemyFlavor.addName(dungeonId, archetype);
     }
     return EnemyFlavor.trashName(dungeonId, archetype, index);
+  }
+
+  static double _riftDensityMul(GameState? fromState) {
+    if (fromState == null) return 1.0;
+    if (fromState.inRift) return Rift.densityMul(fromState.riftTier);
+    if (fromState.inGreaterRift) {
+      return GreaterRift.densityMul(fromState.grTier);
+    }
+    return 1.0;
+  }
+
+  static double _riftThreatMul(GameState? fromState) {
+    if (fromState == null) return 1.0;
+    if (fromState.inRift) return Rift.threatMul(fromState.riftTier);
+    if (fromState.inGreaterRift) {
+      return GreaterRift.threatMul(fromState.grTier);
+    }
+    return 1.0;
   }
 }

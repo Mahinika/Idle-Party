@@ -673,7 +673,7 @@ abstract final class GameGuides {
           '• Kills fill progress; at 100% a Rift Guardian spawns — defeat it before the par timer.\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear. '
           'Farm Rift is the loot path; Ranked GR is the ranked ladder.\n'
-          '• GR20 keeps about a minute on the clock — later ranks add a little clock as packs thicken (max ~90s).\n'
+          '• GR20 sits on a ~90s clock from the kills × toughness equation — later ranks keep that cap and climb threat (quota holds after 20).\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet + Ranked GR on KEY · BOARDS (Play Games). '
           'Play install + sign-in. Local PB also stays on hub ENDGAME.\n'

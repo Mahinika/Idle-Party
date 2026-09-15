@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../models/meta_depth.dart';
+import 'rift_pacing.dart';
 import 'rift_progress.dart';
 import 'timed_ladder.dart';
 
@@ -12,7 +13,7 @@ import 'timed_ladder.dart';
 /// SpatialCombat stays the fight authority — this module is rules + payout only.
 abstract final class Rift {
   /// TODAY campaign chase / kill-quota plateau — farm push keeps going.
-  static const int campaignCap = 20;
+  static const int campaignCap = RiftPacing.campaignCap;
 
   /// Practical endless bound (save / overflow).
   static const int maxTier = kEndlessLadderBound;
@@ -39,24 +40,39 @@ abstract final class Rift {
     return clampTier(bestCleared.clamp(minTier, maxSel));
   }
 
-  /// Normal kills needed to fill the progress bar to 100%.
-  static int killTarget(int tier) {
-    final t = min(clampTier(tier), campaignCap);
-    return 20 + t * 3; // R1=23 … R20+=80
-  }
+  /// Trash kills to fill the bar. Holds after [campaignCap].
+  static int killTarget(int tier) => RiftPacing.killTarget(
+        tier: clampTier(tier),
+        base: 20,
+        perTier: 2,
+      );
 
-  /// Display-only elapsed reference (not a fail gate). Kept for HUD pacing.
+  /// HUD expected duration — not a fail gate.
+  /// `par ≈ 8s guardian + kills × threat / 0.35 kps`, clamped 45s…150s.
   static int parTimeMs(int tier) {
-    final t = min(clampTier(tier), campaignCap);
-    return max(45000, 120000 - t * 3000);
+    final t = clampTier(tier);
+    return RiftPacing.parTimeMs(
+      killTarget: killTarget(t),
+      threatMul: threatMul(t),
+      refKps: 0.35,
+      guardianMs: 8000,
+      minMs: 45000,
+      maxMs: 150000,
+    );
   }
 
-  /// Pack threat keeps climbing after 20.
-  static double threatMul(int tier) => 1.0 + clampTier(tier) * 0.12;
+  /// Pack toughness. Keeps climbing after 20.
+  static double threatMul(int tier) => RiftPacing.threatMul(
+        tier: clampTier(tier),
+        perTier: 0.12,
+        afterCap: 0.12,
+      );
 
-  /// Pack count soft-caps at [campaignCap]; threat still climbs.
-  static double densityMul(int tier) =>
-      1.0 + min(clampTier(tier), campaignCap) * 0.08;
+  /// Extra bodies (soft-cap at 20) — not a second HP multiplier.
+  static double densityMul(int tier) => RiftPacing.densityMul(
+        tier: clampTier(tier),
+        perTier: 0.08,
+      );
 
   static int successEssence(int tier) => 8 + clampTier(tier) * 2;
 

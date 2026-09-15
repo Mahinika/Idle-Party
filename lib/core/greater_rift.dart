@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../models/meta_depth.dart';
+import 'rift_pacing.dart';
 import 'rift_progress.dart';
 import 'timed_ladder.dart';
 
@@ -12,7 +13,7 @@ import 'timed_ladder.dart';
 /// [TimedLadder]. SpatialCombat stays the fight authority.
 abstract final class GreaterRift {
   /// TODAY campaign chase / kill-quota plateau — ranked push keeps going.
-  static const int campaignCap = 20;
+  static const int campaignCap = RiftPacing.campaignCap;
 
   /// Practical endless bound (save / Play encode / overflow).
   static const int maxTier = kEndlessLadderBound;
@@ -50,27 +51,38 @@ abstract final class GreaterRift {
   static bool isHubEnterLabel(String label) =>
       RegExp(r'^RANKED GR\d*$').hasMatch(label);
 
-  /// Normal kills needed to fill the progress bar to 100%.
-  static int killTarget(int tier) {
-    final t = min(clampTier(tier), campaignCap);
-    return 22 + t * 4; // GR1=26 … GR20+=102
-  }
+  /// Trash kills to fill the bar. Holds after [campaignCap].
+  static int killTarget(int tier) => RiftPacing.killTarget(
+        tier: clampTier(tier),
+        base: 22,
+        perTier: 2,
+      );
 
+  /// Fail clock from the same work equation, clamped 60s…90s.
+  /// `par ≈ 12s guardian + kills × threat / 0.70 kps`.
   static int parTimeMs(int tier) {
-    final t = min(clampTier(tier), campaignCap);
-    final base = max(58000, 112000 - t * 2500);
-    final extra = max(0, clampTier(tier) - campaignCap);
-    return min(90000, base + extra * 4000);
-  }
-
-  static double threatMul(int tier) {
     final t = clampTier(tier);
-    if (t <= campaignCap) return 1.0 + t * 0.20;
-    return 1.0 + campaignCap * 0.20 + (t - campaignCap) * 0.08;
+    return RiftPacing.parTimeMs(
+      killTarget: killTarget(t),
+      threatMul: threatMul(t),
+      refKps: 0.70,
+      guardianMs: 12000,
+      minMs: 60000,
+      maxMs: 90000,
+    );
   }
 
-  static double densityMul(int tier) =>
-      1.0 + min(clampTier(tier), campaignCap) * 0.12;
+  static double threatMul(int tier) => RiftPacing.threatMul(
+        tier: clampTier(tier),
+        perTier: 0.16,
+        afterCap: 0.08,
+      );
+
+  /// Extra bodies (soft-cap at 20). Ranked GR denser than farm.
+  static double densityMul(int tier) => RiftPacing.densityMul(
+        tier: clampTier(tier),
+        perTier: 0.10,
+      );
 
   static int successEssence(int tier) => 14 + clampTier(tier) * 3;
 

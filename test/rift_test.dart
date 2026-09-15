@@ -9,10 +9,10 @@ import 'package:idle_party/models/stats.dart';
 void main() {
   final now = DateTime.utc(2026, 8, 24);
 
-  test('tier scaling grows kills and shrinks display par', () {
-    expect(Rift.killTarget(1), 23);
-    expect(Rift.killTarget(20), 80);
-    expect(Rift.parTimeMs(1), greaterThan(Rift.parTimeMs(20)));
+  test('tier scaling grows kills; clock follows work not a shrinking fuse', () {
+    expect(Rift.killTarget(1), 22);
+    expect(Rift.killTarget(20), 60);
+    expect(Rift.parTimeMs(20), greaterThanOrEqualTo(Rift.parTimeMs(1)));
     expect(Rift.threatMul(20), greaterThan(Rift.threatMul(1)));
     expect(Rift.successEssence(5), 18);
     expect(Rift.failEssence(8), 2);

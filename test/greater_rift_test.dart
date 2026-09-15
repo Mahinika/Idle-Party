@@ -22,7 +22,7 @@ void main() {
     expect(GreaterRift.successEssence(8), greaterThan(Rift.successEssence(8)));
     expect(GreaterRift.parTimeMs(12), lessThan(Rift.parTimeMs(12)));
     expect(GreaterRift.parTimeMs(1), lessThan(Rift.parTimeMs(1)));
-    expect(GreaterRift.parTimeMs(20), greaterThanOrEqualTo(58000));
+    expect(GreaterRift.parTimeMs(20), 90000);
     final grKps = GreaterRift.killTarget(20) /
         (GreaterRift.parTimeMs(20) / 1000);
     final farmKps =
@@ -253,15 +253,15 @@ void main() {
   test('Ranked GR stays selectable past 20', () {
     expect(GreaterRift.maxSelectableTier(20), 21);
     expect(GreaterRift.killTarget(21), GreaterRift.killTarget(20));
-    expect(GreaterRift.parTimeMs(21), greaterThan(GreaterRift.parTimeMs(20)));
+    expect(GreaterRift.parTimeMs(21), GreaterRift.parTimeMs(20));
     expect(GreaterRift.parTimeMs(50), 90000);
     expect(GreaterRift.threatMul(21), greaterThan(GreaterRift.threatMul(20)));
     expect(GreaterRift.densityMul(50), GreaterRift.densityMul(20));
     expect(GreaterRift.successEssence(21), greaterThan(GreaterRift.successEssence(20)));
     double kps(int t) =>
         GreaterRift.killTarget(t) / (GreaterRift.parTimeMs(t) / 1000);
-    expect(kps(21), lessThan(kps(20)));
-    expect(kps(30), lessThan(kps(21)));
+    expect(kps(21), kps(20));
+    expect(kps(30), kps(21));
   });
 
   test('Greater Rift GR25 survives save load', () {
