@@ -1151,13 +1151,16 @@ class GameLogic {
     final gained = after.gold - before.gold;
     if (gained <= 0) return after;
     final extra = gained * (AdBoost.awayGoldMul - 1);
+    final keepTicket = AdBoost.hasPerm(before.metaDepth, AdBoost.permRest);
     return after.copyWith(
       gold: after.gold + extra,
       lifetimeGoldEarned: after.lifetimeGoldEarned + extra,
-      metaDepth: after.metaDepth.copyWith(
-        adOfflineMulPending: false,
-        adOfflineMulExpiresMs: 0,
-      ),
+      metaDepth: keepTicket
+          ? after.metaDepth
+          : after.metaDepth.copyWith(
+              adOfflineMulPending: false,
+              adOfflineMulExpiresMs: 0,
+            ),
     );
   }
 

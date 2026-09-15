@@ -317,6 +317,7 @@ class MetaDepthState {
     this.adFree = false,
     this.shopStarterClaimed = false,
     this.shopBagBonusSlots = 0,
+    this.shopPermScrolls = 0,
     this.monthPassKey = '',
     this.monthlyBestTimedKey = 0,
     this.monthlyBestGrTier = 0,
@@ -580,6 +581,9 @@ class MetaDepthState {
   /// Extra bag slots from SHOP supporter_qol (survives Ascend).
   final int shopBagBonusSlots;
 
+  /// Bitmask of forever SCROLLS from SHOP (same % as tickets, no extra power).
+  final int shopPermScrolls;
+
   /// UTC month key for month pass progress (yyyy-mm).
   final String monthPassKey;
   final int monthlyBestTimedKey;
@@ -733,6 +737,7 @@ class MetaDepthState {
     bool? adFree,
     bool? shopStarterClaimed,
     int? shopBagBonusSlots,
+    int? shopPermScrolls,
     String? monthPassKey,
     int? monthlyBestTimedKey,
     int? monthlyBestGrTier,
@@ -877,6 +882,7 @@ class MetaDepthState {
       adFree: adFree ?? this.adFree,
       shopStarterClaimed: shopStarterClaimed ?? this.shopStarterClaimed,
       shopBagBonusSlots: shopBagBonusSlots ?? this.shopBagBonusSlots,
+      shopPermScrolls: shopPermScrolls ?? this.shopPermScrolls,
       monthPassKey: monthPassKey ?? this.monthPassKey,
       monthlyBestTimedKey: monthlyBestTimedKey ?? this.monthlyBestTimedKey,
       monthlyBestGrTier: monthlyBestGrTier ?? this.monthlyBestGrTier,
@@ -1014,6 +1020,7 @@ class MetaDepthState {
     'adFree': adFree,
     'shopStarterClaimed': shopStarterClaimed,
     'shopBagBonusSlots': shopBagBonusSlots,
+    'shopPermScrolls': shopPermScrolls,
     'monthPassKey': monthPassKey,
     'monthlyBestTimedKey': monthlyBestTimedKey,
     'monthlyBestGrTier': monthlyBestGrTier,
@@ -1206,6 +1213,8 @@ class MetaDepthState {
       shopStarterClaimed: (json['shopStarterClaimed'] as bool?) ?? false,
       shopBagBonusSlots: ((json['shopBagBonusSlots'] as num?)?.toInt() ?? 0)
           .clamp(0, 20),
+      shopPermScrolls: ((json['shopPermScrolls'] as num?)?.toInt() ?? 0)
+          .clamp(0, 127),
       monthPassKey: (json['monthPassKey'] as String?) ?? '',
       monthlyBestTimedKey: ((json['monthlyBestTimedKey'] as num?)?.toInt() ?? 0)
           .clamp(0, kEndlessLadderBound),

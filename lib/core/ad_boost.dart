@@ -36,6 +36,20 @@ abstract final class AdBoost {
   /// Dungeon sim + KEY/GR clocks while Time Warp is running (not hub AFK).
   static const int speedPercent = 25;
 
+  /// Forever SHOP scrolls — same magnitude as tickets (bitmask on meta).
+  static const int permAtk = 1 << 0;
+  static const int permGold = 1 << 1;
+  static const int permXp = 1 << 2;
+  static const int permMove = 1 << 3;
+  static const int permLoot = 1 << 4;
+  static const int permSpeed = 1 << 5;
+  static const int permRest = 1 << 6;
+  static const int permAll =
+      permAtk | permGold | permXp | permMove | permLoot | permSpeed | permRest;
+
+  static bool hasPerm(MetaDepthState md, int bit) =>
+      (md.shopPermScrolls & bit) == bit && bit != 0;
+
   /// Sharp Edge / Gold Rush / Study / Fleet / Lucky duration per ticket.
   static const int splitHours = 2;
   static const int splitMs = splitHours * hourMs;
@@ -98,22 +112,22 @@ abstract final class AdBoost {
   }
 
   static bool atkActive(MetaDepthState md, {int? nowMs}) =>
-      isActive(md.adAtkUntilMs, nowMs: nowMs);
+      hasPerm(md, permAtk) || isActive(md.adAtkUntilMs, nowMs: nowMs);
 
   static bool goldActive(MetaDepthState md, {int? nowMs}) =>
-      isActive(md.adGoldUntilMs, nowMs: nowMs);
+      hasPerm(md, permGold) || isActive(md.adGoldUntilMs, nowMs: nowMs);
 
   static bool xpActive(MetaDepthState md, {int? nowMs}) =>
-      isActive(md.adXpUntilMs, nowMs: nowMs);
+      hasPerm(md, permXp) || isActive(md.adXpUntilMs, nowMs: nowMs);
 
   static bool moveActive(MetaDepthState md, {int? nowMs}) =>
-      isActive(md.adMoveUntilMs, nowMs: nowMs);
+      hasPerm(md, permMove) || isActive(md.adMoveUntilMs, nowMs: nowMs);
 
   static bool lootActive(MetaDepthState md, {int? nowMs}) =>
-      isActive(md.adLootUntilMs, nowMs: nowMs);
+      hasPerm(md, permLoot) || isActive(md.adLootUntilMs, nowMs: nowMs);
 
   static bool speedActive(MetaDepthState md, {int? nowMs}) =>
-      isActive(md.adSpeedUntilMs, nowMs: nowMs);
+      hasPerm(md, permSpeed) || isActive(md.adSpeedUntilMs, nowMs: nowMs);
 
   /// Live dungeon dt multiplier. KEY / GR timers use the same scale.
   static double combatDtMul(MetaDepthState md, {int? nowMs}) =>
@@ -129,6 +143,7 @@ abstract final class AdBoost {
       awayBonusReady(md, nowMs: nowMs);
 
   static bool awayBonusReady(MetaDepthState md, {int? nowMs}) {
+    if (hasPerm(md, permRest)) return true;
     if (!md.adOfflineMulPending) return false;
     final now = nowMs ?? AdBoost.nowMs();
     final exp = md.adOfflineMulExpiresMs;
@@ -146,31 +161,38 @@ abstract final class AdBoost {
   /// All HUD scrolls, catalog order. Inactive chips stay visible (gray).
   static List<AdScrollHudChip> hudChips(MetaDepthState md, {int? nowMs}) {
     final now = nowMs ?? AdBoost.nowMs();
-    AdScrollHudChip timed(AdBuffId id, int untilMs, String shortLabel) {
-      final on = isActive(untilMs, nowMs: now);
+    AdScrollHudChip timed(AdBuffId id, int untilMs, String shortLabel, int permBit) {
+      final timer = isActive(untilMs, nowMs: now);
+      final perm = hasPerm(md, permBit);
+      final on = timer || perm;
       return AdScrollHudChip(
         id: id,
         shortLabel: shortLabel,
-        timeLabel: on ? formatChipRemaining(untilMs, nowMs: now) : '',
+        timeLabel: !on
+            ? ''
+            : (timer ? formatChipRemaining(untilMs, nowMs: now) : 'ON'),
         active: on,
       );
     }
 
     final restOn = awayBonusReady(md, nowMs: now);
+    final restPerm = hasPerm(md, permRest);
     final exp = md.adOfflineMulExpiresMs;
     return [
-      timed(AdBuffId.atk, md.adAtkUntilMs, 'ATK'),
-      timed(AdBuffId.gold, md.adGoldUntilMs, 'GOLD'),
-      timed(AdBuffId.xp, md.adXpUntilMs, 'XP'),
-      timed(AdBuffId.move, md.adMoveUntilMs, 'MOVE'),
-      timed(AdBuffId.loot, md.adLootUntilMs, 'LOOT'),
-      timed(AdBuffId.speed, md.adSpeedUntilMs, 'HASTE'),
+      timed(AdBuffId.atk, md.adAtkUntilMs, 'ATK', permAtk),
+      timed(AdBuffId.gold, md.adGoldUntilMs, 'GOLD', permGold),
+      timed(AdBuffId.xp, md.adXpUntilMs, 'XP', permXp),
+      timed(AdBuffId.move, md.adMoveUntilMs, 'MOVE', permMove),
+      timed(AdBuffId.loot, md.adLootUntilMs, 'LOOT', permLoot),
+      timed(AdBuffId.speed, md.adSpeedUntilMs, 'HASTE', permSpeed),
       AdScrollHudChip(
         id: AdBuffId.offline,
         shortLabel: 'REST',
         timeLabel: !restOn
             ? ''
-            : (exp <= 0 ? 'RDY' : formatChipRemaining(exp, nowMs: now)),
+            : (restPerm
+                ? 'ON'
+                : (exp <= 0 ? 'RDY' : formatChipRemaining(exp, nowMs: now))),
         active: restOn,
       ),
     ];

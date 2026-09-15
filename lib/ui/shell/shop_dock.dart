@@ -21,9 +21,9 @@ class ShopDock extends StatefulWidget {
   /// SHOP blurb. ESSENCE is named only when that tab exists.
   static String convenienceLine({required bool showEssence}) {
     final essenceBit = showEssence ? ' · essence under ESSENCE' : '';
-    return 'Same Scroll of Battle as SCROLLS tickets '
-        '(×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
-        'Watch ads for Ad Tickets on the hub · gold under GOLD$essenceBit.';
+    return 'Same SCROLLS power as tickets '
+        '(never a stronger combat class). Forever scrolls skip the watch; '
+        'gold under GOLD$essenceBit.';
   }
 
   @override
@@ -128,6 +128,9 @@ class _ShopRow extends StatelessWidget {
       ShopOfferKind.supporterQol =>
         '+${item.bagSlots} bag'
         '${item.boostHours > 0 ? ' · +${item.boostHours}h' : ''} · once',
+      ShopOfferKind.permScroll => item.permMask == AdBoost.permAll
+          ? 'permanent · all seven · cheaper pack'
+          : 'permanent · same as tickets',
     };
 
     return Container(

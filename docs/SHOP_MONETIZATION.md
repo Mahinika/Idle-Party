@@ -49,8 +49,12 @@ expensive power packs.
 | `ad_free` | Non-consumable | $2.99 | Ad-free + +2 tickets once | Hide WATCH; daily CLAIM TICKET (UTC). Priced at/above a day boost so forever is not the cheap impulse next to timed packs. |
 | `day_boost_24h` | Consumable | $2.99 | +24h Full Boost | Best boost $/h (~$0.12/h) |
 | `supporter_qol` | Non-consumable | $4.99 | +4 bag slots + 12h + thank-you | Ceiling; **no extra combat class** |
+| `perm_scroll_atk` (and gold/xp/move/loot/haste/rest) | Non-consumable | $0.99 | Forever that SCROLLS effect | Same % as tickets |
+| `perm_scrolls_all` | Non-consumable | $4.99 | All seven forever scrolls | Cheaper than 7×$0.99 |
 
 Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as tickets.
+
+**New SKUs need Play Console create + Activate** before live prices show. Add the eight `perm_scroll_*` ids. Sideload BUY still grants in debug via the existing preview path.
 
 ## Relation to existing systems
 
@@ -92,6 +96,7 @@ SHOP UI: **BUY** / **OWNED** + **RESTORE PURCHASES**.
 | `adFreeDailyClaimUtc` | Last UTC day of ad-free daily ticket |
 | `shopStarterClaimed` | One-time starter pack used |
 | `shopBagBonusSlots` | Extra bag slots from supporter QoL |
+| `shopPermScrolls` | Bitmask of forever SCROLLS from SHOP |
 
 See also: [AD_POWERUPS_DESIGN.md](AD_POWERUPS_DESIGN.md),
 [CONTENT_CADENCE.md](CONTENT_CADENCE.md), owner preferences (cheap convenience

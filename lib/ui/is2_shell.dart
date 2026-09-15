@@ -184,6 +184,7 @@ class _Is2ShellState extends State<Is2Shell> {
                           children: [
                             ScrollBuffStack(
                               meta: d.state.metaDepth,
+                              maxHeight: 168,
                             ),
                             DungeonFlaskButton(
                               director: d,

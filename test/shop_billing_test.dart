@@ -4,6 +4,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/gear/gear_stash.dart';
 import 'package:idle_party/core/shop_billing.dart';
 import 'package:idle_party/core/shop_catalog.dart';
+import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
   final now = DateTime.utc(2026, 9, 5, 12);
@@ -102,5 +103,41 @@ void main() {
     final round = GameLogic.stateFromJson(state.toJson());
     expect(round.metaDepth.adFree, isFalse);
     expect(round.metaDepth.adTickets, 0);
+  });
+
+  test('forever scroll SKU grants perm bit and marks owned', () {
+    var state = GameLogic.createInitialState(now: now);
+    final atk = ShopCatalog.byId['perm_scroll_atk']!;
+    state = ShopBilling.applyPurchase(state, atk, now: now);
+    expect(state.metaDepth.shopPermScrolls & AdBoost.permAtk, AdBoost.permAtk);
+    expect(ShopBilling.isOwned(state, atk), isTrue);
+    expect(AdBoost.atkActive(state.metaDepth), isTrue);
+    final again = ShopBilling.applyPurchase(state, atk, now: now);
+    expect(again.metaDepth.shopPermScrolls, state.metaDepth.shopPermScrolls);
+  });
+
+  test('forever bundle is cheaper than seven singles and owns all', () {
+    double usd(ShopCatalogItem item) =>
+        double.parse(item.priceLabel.replaceAll(r'$', ''));
+    final singles = ShopCatalog.offered.where(
+      (e) => e.kind == ShopOfferKind.permScroll && e.permMask != AdBoost.permAll,
+    );
+    expect(singles.length, 7);
+    final bundle = ShopCatalog.byId['perm_scrolls_all']!;
+    final singleSum = singles.fold<double>(0, (n, e) => n + usd(e));
+    expect(usd(bundle), lessThan(singleSum));
+    var state = GameLogic.createInitialState(now: now);
+    state = ShopBilling.applyPurchase(state, bundle, now: now);
+    expect(state.metaDepth.shopPermScrolls, AdBoost.permAll);
+    for (final item in ShopCatalog.offered.where(
+      (e) => e.kind == ShopOfferKind.permScroll,
+    )) {
+      expect(ShopBilling.isOwned(state, item), isTrue, reason: item.id);
+    }
+  });
+
+  test('old saves default shopPermScrolls to 0', () {
+    expect(const MetaDepthState().shopPermScrolls, 0);
+    expect(MetaDepthState.fromJson(const {}).shopPermScrolls, 0);
   });
 }

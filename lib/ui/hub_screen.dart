@@ -679,6 +679,7 @@ class _HubScreenState extends State<HubScreen>
                                           children: [
                                             ScrollBuffStack(
                                               meta: state.metaDepth,
+                                              maxHeight: 132,
                                             ),
                                             if (_showPowerupsFab())
                                               HubPowerupsFab(

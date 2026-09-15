@@ -13,10 +13,12 @@ class ScrollBuffStack extends StatefulWidget {
     super.key,
     required this.meta,
     this.nowMs,
+    this.maxHeight,
   });
 
   final MetaDepthState meta;
   final int? nowMs;
+  final double? maxHeight;
 
   @override
   State<ScrollBuffStack> createState() => _ScrollBuffStackState();
@@ -58,13 +60,25 @@ class _ScrollBuffStackState extends State<ScrollBuffStack> {
   @override
   Widget build(BuildContext context) {
     final chips = AdBoost.hudChips(widget.meta, nowMs: widget.nowMs);
-    return Column(
+    Widget column = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         for (final chip in chips) _ScrollBuffPip(chip: chip),
       ],
     );
+    final cap = widget.maxHeight;
+    if (cap != null) {
+      column = ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: cap),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.bottomRight,
+          child: column,
+        ),
+      );
+    }
+    return column;
   }
 }
 

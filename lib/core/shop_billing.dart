@@ -55,6 +55,14 @@ abstract final class ShopBilling {
             nowMs: clock.millisecondsSinceEpoch,
           );
         }
+      case ShopOfferKind.permScroll:
+        if (item.permMask == 0) return state;
+        if ((md.shopPermScrolls & item.permMask) == item.permMask) {
+          return state;
+        }
+        md = md.copyWith(
+          shopPermScrolls: md.shopPermScrolls | item.permMask,
+        );
     }
     return state.copyWith(metaDepth: md);
   }
@@ -66,6 +74,9 @@ abstract final class ShopBilling {
       ShopOfferKind.boostHours => item.oneTime && md.shopStarterClaimed,
       ShopOfferKind.adFree => md.adFree,
       ShopOfferKind.supporterQol => md.shopBagBonusSlots > 0,
+      ShopOfferKind.permScroll =>
+        item.permMask != 0 &&
+        (md.shopPermScrolls & item.permMask) == item.permMask,
     };
   }
 }

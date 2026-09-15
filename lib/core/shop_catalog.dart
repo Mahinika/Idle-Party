@@ -14,6 +14,9 @@ enum ShopOfferKind {
 
   /// Small QoL + thank-you (+ optional boost); no extra combat power.
   supporterQol,
+
+  /// Forever SCROLLS — same % as tickets, not a stronger combat class.
+  permScroll,
 }
 
 class ShopCatalogItem {
@@ -26,6 +29,7 @@ class ShopCatalogItem {
     this.boostHours = 0,
     this.oneTime = false,
     this.bagSlots = 0,
+    this.permMask = 0,
   });
 
   /// Play Console product id — must match Console exactly.
@@ -46,6 +50,9 @@ class ShopCatalogItem {
   /// Extra bag slots when [kind] is [ShopOfferKind.supporterQol].
   final int bagSlots;
 
+  /// Bits on [MetaDepthState.shopPermScrolls] granted by this SKU.
+  final int permMask;
+
   /// Repeatable boost packs — `buyConsumable`. Everything else is non-consumable.
   bool get isConsumable => kind == ShopOfferKind.boostHours && !oneTime;
 }
@@ -54,6 +61,87 @@ class ShopCatalogItem {
 /// Prices tuned so larger packs are better $/hour than smaller ones.
 abstract final class ShopCatalog {
   static const List<ShopCatalogItem> offered = [
+    ShopCatalogItem(
+      id: 'perm_scroll_atk',
+      name: 'Forever Scroll of Damage',
+      description:
+          'Always on: +${AdBoost.attackPercent}% ATK. Same as the SCROLLS ticket, forever.',
+      priceLabel: '\$0.99',
+      kind: ShopOfferKind.permScroll,
+      oneTime: true,
+      permMask: AdBoost.permAtk,
+    ),
+    ShopCatalogItem(
+      id: 'perm_scroll_gold',
+      name: 'Forever Scroll of Gold',
+      description:
+          'Always on: ×${AdBoost.goldMul} gold. Same as the SCROLLS ticket, forever.',
+      priceLabel: '\$0.99',
+      kind: ShopOfferKind.permScroll,
+      oneTime: true,
+      permMask: AdBoost.permGold,
+    ),
+    ShopCatalogItem(
+      id: 'perm_scroll_xp',
+      name: 'Forever Scroll of XP',
+      description:
+          'Always on: +${AdBoost.xpPercent}% party XP. Same as the SCROLLS ticket, forever.',
+      priceLabel: '\$0.99',
+      kind: ShopOfferKind.permScroll,
+      oneTime: true,
+      permMask: AdBoost.permXp,
+    ),
+    ShopCatalogItem(
+      id: 'perm_scroll_move',
+      name: 'Forever Scroll of Speed',
+      description:
+          'Always on: +${AdBoost.movePercent}% walk. Same as the SCROLLS ticket, forever.',
+      priceLabel: '\$0.99',
+      kind: ShopOfferKind.permScroll,
+      oneTime: true,
+      permMask: AdBoost.permMove,
+    ),
+    ShopCatalogItem(
+      id: 'perm_scroll_loot',
+      name: 'Forever Scroll of Loot',
+      description:
+          'Always on: +${AdBoost.lootFindPercent}% item find. Same as the SCROLLS ticket, forever.',
+      priceLabel: '\$0.99',
+      kind: ShopOfferKind.permScroll,
+      oneTime: true,
+      permMask: AdBoost.permLoot,
+    ),
+    ShopCatalogItem(
+      id: 'perm_scroll_haste',
+      name: 'Forever Scroll of Haste',
+      description:
+          'Always on: +${AdBoost.speedPercent}% dungeon speed. Same as the SCROLLS ticket, forever.',
+      priceLabel: '\$0.99',
+      kind: ShopOfferKind.permScroll,
+      oneTime: true,
+      permMask: AdBoost.permSpeed,
+    ),
+    ShopCatalogItem(
+      id: 'perm_scroll_rest',
+      name: 'Forever Scroll of Rest',
+      description:
+          'Always on: Welcome Back gold ×${AdBoost.awayGoldMul}. Same as the SCROLLS ticket, forever.',
+      priceLabel: '\$0.99',
+      kind: ShopOfferKind.permScroll,
+      oneTime: true,
+      permMask: AdBoost.permRest,
+    ),
+    ShopCatalogItem(
+      id: 'perm_scrolls_all',
+      name: 'Forever Scrolls bundle',
+      description:
+          'All seven forever scrolls (Damage, Gold, XP, Speed, Loot, Haste, Rest). '
+          'Same ticket power, cheaper than buying each.',
+      priceLabel: '\$4.99',
+      kind: ShopOfferKind.permScroll,
+      oneTime: true,
+      permMask: AdBoost.permAll,
+    ),
     ShopCatalogItem(
       id: 'starter_boost_6h',
       name: 'Starter boost',

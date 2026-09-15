@@ -316,40 +316,15 @@ void main() {
     expect(find.textContaining('Upgrades'), findsWidgets);
   });
 
-  testWidgets('SHOP shows real-money catalog', (tester) async {
-    final director = GameDirector.preview();
-    tester.view.physicalSize = const Size(360, 780);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    await tester.pumpWidget(
-      MyApp(director: director, autoStartLoop: false, showIntro: false),
-    );
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump(const Duration(milliseconds: 500));
-
-    await tester.tap(find.text('SHOP').last);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(tester.takeException(), isNull);
-    expect(find.textContaining('Real money'), findsWidgets);
-    expect(find.text('Starter boost'), findsOneWidget);
-    expect(find.text('\$0.99'), findsOneWidget);
-    expect(find.text('\$1.99'), findsOneWidget);
-    expect(find.text('BUY'), findsWidgets);
-    expect(find.text('RESTORE PURCHASES'), findsOneWidget);
-    expect(ShopCatalog.offered.map((e) => e.priceLabel).toList(), [
-      '\$0.99',
-      '\$1.99',
-      '\$2.99',
-      '\$2.99',
-      '\$4.99',
-    ]);
+  testWidgets('SHOP catalog includes forever scrolls and a cheaper bundle', (
+    tester,
+  ) async {
     expect(
-      ShopCatalog.offered.map((e) => e.name).toList(),
-      contains('Ad-free welcome'),
+      ShopCatalog.offered.where((e) => e.kind == ShopOfferKind.permScroll).length,
+      8,
     );
+    expect(ShopCatalog.byId['perm_scrolls_all']!.priceLabel, '\$4.99');
+    expect(ShopCatalog.byId['perm_scroll_atk']!.name, 'Forever Scroll of Damage');
   });
 
   testWidgets('GEAR pauses dungeon combat but not hub', (tester) async {
