@@ -203,4 +203,23 @@ abstract final class ShopCatalog {
   };
 
   static Set<String> get productIds => byId.keys.toSet();
+
+  static List<ShopCatalogItem> get foreverBundle => offered
+      .where((e) => e.kind == ShopOfferKind.permScroll && e.permMask == AdBoost.permAll)
+      .toList();
+
+  static List<ShopCatalogItem> get foreverSingles => offered
+      .where((e) => e.kind == ShopOfferKind.permScroll && e.permMask != AdBoost.permAll)
+      .toList();
+
+  static List<ShopCatalogItem> get timePacks =>
+      offered.where((e) => e.kind == ShopOfferKind.boostHours).toList();
+
+  static List<ShopCatalogItem> get extraPacks => offered
+      .where(
+        (e) =>
+            e.kind == ShopOfferKind.adFree ||
+            e.kind == ShopOfferKind.supporterQol,
+      )
+      .toList();
 }

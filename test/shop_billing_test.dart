@@ -122,7 +122,10 @@ void main() {
     final singles = ShopCatalog.offered.where(
       (e) => e.kind == ShopOfferKind.permScroll && e.permMask != AdBoost.permAll,
     );
-    expect(singles.length, 7);
+    expect(ShopCatalog.foreverSingles.length, 7);
+    expect(ShopCatalog.foreverBundle.single.id, 'perm_scrolls_all');
+    expect(ShopCatalog.timePacks.length, 3);
+    expect(ShopCatalog.extraPacks.length, 2);
     final bundle = ShopCatalog.byId['perm_scrolls_all']!;
     final singleSum = singles.fold<double>(0, (n, e) => n + usd(e));
     expect(usd(bundle), lessThan(singleSum));

@@ -8,6 +8,7 @@ import '../../core/menu_alerts.dart';
 import '../../core/shop_billing.dart';
 import '../../core/shop_catalog.dart';
 import '../../core/shop_store.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -30,17 +31,34 @@ class ShopDock extends StatefulWidget {
   State<ShopDock> createState() => _ShopDockState();
 }
 
-class _ShopDockState extends State<ShopDock> {
+class _ShopDockState extends State<ShopDock>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs;
+
   @override
   void initState() {
     super.initState();
-    // Newly activated Console SKUs can take hours; refresh every open.
+    _tabs = TabController(length: 3, vsync: this);
     unawaited(_refresh());
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
   }
 
   Future<void> _refresh() async {
     await ShopStore.refreshProducts();
     if (mounted) setState(() {});
+  }
+
+  void _buy(ShopCatalogItem item) {
+    unawaited(
+      widget.director.buyShopItem(item.id).then((_) {
+        if (mounted) setState(() {});
+      }),
+    );
   }
 
   @override
@@ -51,41 +69,61 @@ class _ShopDockState extends State<ShopDock> {
         final state = widget.director.state;
         final storeOk = ShopBilling.billingReady && ShopStore.storeAvailable;
         final catalogOk = ShopStore.productsReady;
+        final storeLine = !storeOk
+            ? 'Buys need a Play Store install of Idle Party (not sideload).'
+            : catalogOk
+            ? 'Prices come from Google Play.'
+            : 'Waiting for Play catalog…';
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            MenuChrome.tabRail(
+              controller: _tabs,
+              scrollable: false,
+              onTap: (_) => setState(() {}),
+              tabs: [
+                MenuChrome.bridgedTab('SCROLLS', onSelect: () => _tabs.animateTo(0)),
+                MenuChrome.bridgedTab('TIME', onSelect: () => _tabs.animateTo(1)),
+                MenuChrome.bridgedTab('EXTRA', onSelect: () => _tabs.animateTo(2)),
+              ],
+            ),
+            const SizedBox(height: 8),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              child: TabBarView(
+                controller: _tabs,
+                physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  Text(
-                    'Real money · cheap convenience',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(size: 15, color: GameTheme.torchHot),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${ShopDock.convenienceLine(showEssence: MenuTabs.showCamp(state))}\n'
-                    '${!storeOk ? 'Buys need a Play Store install of Idle Party (not sideload).' : catalogOk ? 'Prices come from Google Play.' : 'Waiting for Play catalog (can take a few hours after SKUs go live)…'}',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-                  ),
-                  const SizedBox(height: 12),
-                  for (var i = 0; i < ShopCatalog.offered.length; i++) ...[
-                    if (i > 0) const SizedBox(height: 8),
-                    _ShopRow(
-                      item: ShopCatalog.offered[i],
-                      owned: ShopBilling.isOwned(state, ShopCatalog.offered[i]),
-                      priceLabel:
-                          ShopStore.storePriceLabel(ShopCatalog.offered[i].id) ??
-                          ShopCatalog.offered[i].priceLabel,
-                      onBuy: () => widget.director
-                          .buyShopItem(ShopCatalog.offered[i].id)
-                          .then((_) {
-                        if (mounted) setState(() {});
-                      }),
+                  _page(
+                    hint: ShopDock.convenienceLine(
+                      showEssence: MenuTabs.showCamp(state),
                     ),
-                  ],
+                    storeLine: storeLine,
+                    section: 'FOREVER',
+                    scope: MenuScope.account,
+                    items: [
+                      ...ShopCatalog.foreverBundle,
+                      ...ShopCatalog.foreverSingles,
+                    ],
+                    compact: true,
+                  ),
+                  _page(
+                    hint:
+                        'Hours of Scroll of Battle — same ×${AdBoost.goldMul} gold '
+                        'and +${AdBoost.attackPercent}% ATK as tickets. Stacks to 24h.',
+                    storeLine: storeLine,
+                    section: 'HOURS',
+                    scope: MenuScope.today,
+                    items: ShopCatalog.timePacks,
+                    compact: false,
+                  ),
+                  _page(
+                    hint: 'Ad-free and a small thank-you pack. No extra combat class.',
+                    storeLine: storeLine,
+                    section: 'ACCOUNT',
+                    scope: MenuScope.account,
+                    items: ShopCatalog.extraPacks,
+                    compact: false,
+                  ),
                 ],
               ),
             ),
@@ -102,6 +140,45 @@ class _ShopDockState extends State<ShopDock> {
       },
     );
   }
+
+  Widget _page({
+    required String hint,
+    required String storeLine,
+    required String section,
+    required MenuScope scope,
+    required List<ShopCatalogItem> items,
+    required bool compact,
+  }) {
+    final state = widget.director.state;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+      children: [
+        Text(
+          hint,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          storeLine,
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 10),
+        MenuChrome.sectionLabelScoped(section, scope: scope),
+        const SizedBox(height: 6),
+        for (var i = 0; i < items.length; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
+          _ShopRow(
+            item: items[i],
+            owned: ShopBilling.isOwned(state, items[i]),
+            priceLabel:
+                ShopStore.storePriceLabel(items[i].id) ?? items[i].priceLabel,
+            compact: compact && items[i].permMask != AdBoost.permAll,
+            onBuy: () => _buy(items[i]),
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 class _ShopRow extends StatelessWidget {
@@ -110,40 +187,87 @@ class _ShopRow extends StatelessWidget {
     required this.owned,
     required this.priceLabel,
     required this.onBuy,
+    this.compact = false,
   });
 
   final ShopCatalogItem item;
   final bool owned;
   final String priceLabel;
   final VoidCallback onBuy;
+  final bool compact;
+
+  static String? assetFor(ShopCatalogItem item) {
+    if (item.permMask == AdBoost.permAll) return UiIcon.star;
+    if (item.kind == ShopOfferKind.adFree) return UiIcon.heart;
+    if (item.kind == ShopOfferKind.supporterQol) return UiIcon.trophy;
+    if (item.kind == ShopOfferKind.boostHours) return UiIcon.flask;
+    return switch (item.permMask) {
+      AdBoost.permAtk => UiIcon.sword,
+      AdBoost.permGold => UiIcon.gold,
+      AdBoost.permXp => UiIcon.tome,
+      AdBoost.permMove => UiIcon.boots,
+      AdBoost.permLoot => UiIcon.chest,
+      AdBoost.permSpeed => UiIcon.wand,
+      AdBoost.permRest => UiIcon.campfire,
+      _ => null,
+    };
+  }
+
+  static String shortTitle(ShopCatalogItem item) {
+    const prefix = 'Forever Scroll of ';
+    if (item.name.startsWith(prefix)) {
+      return item.name.substring(prefix.length);
+    }
+    return item.name;
+  }
+
+  static String tag(ShopCatalogItem item) {
+    return switch (item.kind) {
+      ShopOfferKind.boostHours =>
+        '+${item.boostHours}h${item.oneTime ? ' · once' : ''}',
+      ShopOfferKind.adFree => 'permanent',
+      ShopOfferKind.supporterQol =>
+        '+${item.bagSlots} bag · +${item.boostHours}h · once',
+      ShopOfferKind.permScroll => item.permMask == AdBoost.permAll
+          ? 'all seven · cheaper than buying each'
+          : _permEffect(item.permMask),
+    };
+  }
+
+  static String _permEffect(int mask) => switch (mask) {
+        AdBoost.permAtk => '+${AdBoost.attackPercent}% ATK always',
+        AdBoost.permGold => '×${AdBoost.goldMul} gold always',
+        AdBoost.permXp => '+${AdBoost.xpPercent}% XP always',
+        AdBoost.permMove => '+${AdBoost.movePercent}% walk always',
+        AdBoost.permLoot => '+${AdBoost.lootFindPercent}% find always',
+        AdBoost.permSpeed => '+${AdBoost.speedPercent}% haste always',
+        AdBoost.permRest => 'Welcome Back ×${AdBoost.awayGoldMul} always',
+        _ => 'permanent',
+      };
 
   @override
   Widget build(BuildContext context) {
-    final tag = switch (item.kind) {
-      ShopOfferKind.boostHours =>
-        '+${item.boostHours}h${item.oneTime ? ' · once' : ''}',
-      ShopOfferKind.adFree => item.boostHours > 0
-          ? 'permanent · +${item.boostHours}h once'
-          : 'permanent',
-      ShopOfferKind.supporterQol =>
-        '+${item.bagSlots} bag'
-        '${item.boostHours > 0 ? ' · +${item.boostHours}h' : ''} · once',
-      ShopOfferKind.permScroll => item.permMask == AdBoost.permAll
-          ? 'permanent · all seven · cheaper pack'
-          : 'permanent · same as tickets',
-    };
-
+    final mark = assetFor(item);
+    final featured = item.permMask == AdBoost.permAll;
     return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: MenuChrome.listCard(),
+      padding: EdgeInsets.all(compact ? 8 : 10),
+      decoration: MenuChrome.listCard(selected: owned || featured),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
+              if (mark != null) ...[
+                GameIcon.asset(
+                  mark,
+                  size: 22,
+                  color: owned ? GameTheme.torchHot : null,
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: Text(
-                  item.name,
+                  shortTitle(item),
                   style: GameTheme.body(size: 15, color: GameTheme.torchHot),
                 ),
               ),
@@ -155,14 +279,16 @@ class _ShopRow extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            tag,
+            tag(item),
             style: GameTheme.body(size: 11, color: GameTheme.mossLit),
           ),
-          const SizedBox(height: 4),
-          Text(
-            item.description,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-          ),
+          if (!compact) ...[
+            const SizedBox(height: 4),
+            Text(
+              item.description,
+              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            ),
+          ],
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
