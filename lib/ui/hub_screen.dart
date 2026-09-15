@@ -482,23 +482,7 @@ class _HubScreenState extends State<HubScreen>
     );
   }
 
-  bool _showPowerupsFab() {
-    final md = state.metaDepth;
-    final powerupsActive = AdBoost.anyBuffActive(md);
-    final hasTickets = md.adTickets > 0;
-
-    if (powerupsActive || hasTickets) return true;
-
-    if (md.adFree) {
-      return AdBoost.canClaimAdFreeDaily(md);
-    }
-
-    // First hour: keep hub calm until the first boss.
-    if (GameLogic.plainPlayerChrome(state)) return false;
-
-    // Always reachable on hub after first boss (phone + READY claims included).
-    return true;
-  }
+  bool _showPowerupsFab() => AdBoost.showHubFab(state.metaDepth);
 
   @override
   Widget build(BuildContext context) {

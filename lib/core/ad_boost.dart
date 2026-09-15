@@ -163,6 +163,14 @@ abstract final class AdBoost {
     if (!md.adFree) return false;
     return md.adFreeDailyClaimUtc != utcDayKey(now);
   }
+
+  /// Hub camera overlay. Shown on a new save so WATCH is findable.
+  /// Hidden only when ad-free and there is nothing to claim or spend.
+  static bool showHubFab(MetaDepthState md, {DateTime? now}) {
+    if (anyBuffActive(md) || md.adTickets > 0) return true;
+    if (md.adFree) return canClaimAdFreeDaily(md, now: now);
+    return true;
+  }
 }
 
 /// Catalog row ids for POWERUPS spend.

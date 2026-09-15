@@ -68,11 +68,9 @@ flowchart LR
 
 Visibility gates:
 
-- First hour (plain chrome): hide FAB unless a buff is active **or**
-  tickets > 0 (so banked tickets stay reachable).
-- Otherwise always show on hub (phone, READY claims, endgame KEY hunts).
-- `adFree`: hide WATCH; keep Spend + claim-without-video if we grant a free
-  daily tap (see IAP). Hide FAB when nothing to claim and no tickets/buff.
+- Always show on hub, including a new save (WATCH must be findable).
+- `adFree`: hide WATCH; keep Spend + daily ticket claim. Hide FAB when
+  nothing to claim and no tickets/buff.
 
 ## Economy numbers (v1)
 

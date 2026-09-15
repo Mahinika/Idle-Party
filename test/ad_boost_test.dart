@@ -140,6 +140,20 @@ void main() {
     expect(AdBoost.addHour(until, nowMs: now), until);
   });
 
+  test('POWERUPS camera shows on a fresh save', () {
+    final state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
+    expect(GameLogic.plainPlayerChrome(state), isTrue);
+    expect(AdBoost.showHubFab(state.metaDepth), isTrue);
+    final adFreeQuiet = state.metaDepth.copyWith(
+      adFree: true,
+      adFreeDailyClaimUtc: AdBoost.utcDayKey(DateTime.utc(2026, 8, 21)),
+    );
+    expect(
+      AdBoost.showHubFab(adFreeQuiet, now: DateTime.utc(2026, 8, 21)),
+      isFalse,
+    );
+  });
+
   test('Study Rush, Fleet Foot, Lucky Bag, and Time Warp persist and apply', () {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
