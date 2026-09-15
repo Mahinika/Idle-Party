@@ -209,7 +209,7 @@ void main() {
     expect(contract.upNextLine.toLowerCase(), contains('up next'));
   });
 
-  testWidgets('HubPowerupsFab is a camera overlay labeled SCROLLS', (
+  testWidgets('HubPowerupsFab is a scroll overlay labeled SCROLLS', (
     tester,
   ) async {
     final state = GameLogic.createInitialState(now: now);

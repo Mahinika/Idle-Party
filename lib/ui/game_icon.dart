@@ -7,7 +7,7 @@ import 'web_click_bridge.dart';
 
 /// Pixel chrome icons. Use these — never Material [Icons] or emoji.
 ///
-/// Sprites are owned custom art. Tiny marks (add/close/arrows/film) stay as
+/// Sprites are owned custom art. Tiny marks (add/close/arrows/scroll) stay as
 /// painted [UiGlyph]s; settings cog and KEY use PNG like the bottom tabs.
 abstract final class UiIcon {
   static const String gear = CustomAssets.iconHelm;
@@ -30,7 +30,7 @@ abstract final class UiIcon {
   static const String key = CustomAssets.iconKey;
 }
 
-enum UiGlyph { add, close, prev, next, film }
+enum UiGlyph { add, close, prev, next, scroll }
 
 /// Pixel mark: a [UiIcon] sprite or a [UiGlyph] painted in-theme.
 class GameIcon extends StatelessWidget {
@@ -76,7 +76,7 @@ class GameIcon extends StatelessWidget {
         UiGlyph.close => _kClose,
         UiGlyph.prev => _kPrev,
         UiGlyph.next => _kNext,
-        UiGlyph.film => _kFilm,
+        UiGlyph.scroll => _kScroll,
       };
 }
 
@@ -221,16 +221,16 @@ const _kNext = <String>[
   '#....',
 ];
 
-/// Side-view movie camera (hub POWERUPS overlay).
-/// Reels on the left, lens on the right — not two blobs over a mouth.
-const _kFilm = <String>[
-  '.##......',
-  '#####....',
-  '#...#.###',
-  '#...#.#.#',
-  '#...#.###',
-  '#####....',
-  '.##......',
-  '.##......',
-  '.........',
+/// Rolled parchment (hub SCROLLS). Two knobs + seal — not a camera or a book.
+const _kScroll = <String>[
+  '..##....##..',
+  '.##########.',
+  '##........##',
+  '#.########.#',
+  '#.##.##.##.#',
+  '#.########.#',
+  '#..........#',
+  '##........##',
+  '.##########.',
+  '..##....##..',
 ];

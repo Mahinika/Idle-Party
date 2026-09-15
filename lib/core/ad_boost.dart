@@ -164,7 +164,7 @@ abstract final class AdBoost {
     return md.adFreeDailyClaimUtc != utcDayKey(now);
   }
 
-  /// Hub camera overlay. Shown on a new save so WATCH is findable.
+  /// Hub SCROLLS overlay. Shown on a new save so tickets are findable.
   /// Hidden only when ad-free and there is nothing to claim or spend.
   static bool showHubFab(MetaDepthState md, {DateTime? now}) {
     if (anyBuffActive(md) || md.adTickets > 0) return true;

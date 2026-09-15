@@ -214,7 +214,7 @@ Helpers: `MenuChrome.scopeChip`, `sectionLabelScoped(title, scope: MenuScope.run
 **Radii:** `GameTheme.radiusSm` (8) / `radiusMd` (12) / `radiusLg` (18) / `radiusHud` (4)  
 **Type:** `menuTitle` (Cinzel) · `body` (VT323) · `sectionLabel` / `sectionLabelScoped` · `button` · `pixel` (HUD/tags only)  
 **Color:** `parchment` / `parchmentDim` · `torch` / `torchHot` · `mossLit` · `scopeRun/Today/Account` · `rarity*` · `tooltip*` (item tips) · `buttonBrown*` / `buttonGrey*` / `buttonRed*` · `hudWell*` / `hudFlask*` · `riftBar*` (Farm / Ranked GR D3-style fill)  
-**Icons:** `GameIcon.asset(UiIcon.settings)` / `UiIcon.key` (PNG) or `GameIcon.glyph` for add/close/arrows/film — never Material `Icons` or emoji in chrome. TODAY buttons are plain English (`ENTER KEY`, `GAUNTLET`, `RIFT`). Hub POWERUPS uses `UiGlyph.film` (camera overlay on the World Path), not a header star.  
+**Icons:** `GameIcon.asset(UiIcon.settings)` / `UiIcon.key` (PNG) or `GameIcon.glyph` for add/close/arrows/scroll — never Material `Icons` or emoji in chrome. TODAY buttons are plain English (`ENTER KEY`, `GAUNTLET`, `RIFT`). Hub SCROLLS uses `UiGlyph.scroll` (rolled parchment on the World Path), not a camera.  
 **Touch:** `minTouch` 44 · `primaryTouch` 48  
 
 **Tokens:** also `MenuChrome.toggleMark`, `slider`, `fold` for settings / Apex / What’s New.

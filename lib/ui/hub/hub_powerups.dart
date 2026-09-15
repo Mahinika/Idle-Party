@@ -12,7 +12,7 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 
-/// Floating POWERUPS overlay — film camera on the hub map, not in the header.
+/// Floating SCROLLS overlay — rolled-scroll glyph on the hub map, not in the header.
 class HubPowerupsFab extends StatelessWidget {
   const HubPowerupsFab({
     super.key,
@@ -63,8 +63,8 @@ class HubPowerupsFab extends StatelessWidget {
                             decoration: MenuChrome.hubPanel(selected: lit),
                             child: Center(
                               child: GameIcon.glyph(
-                                UiGlyph.film,
-                                size: 22,
+                                UiGlyph.scroll,
+                                size: 24,
                                 color: labelColor,
                               ),
                             ),
@@ -177,7 +177,7 @@ Future<void> openPowerupsSheet(
                               Row(
                                 children: [
                                   GameIcon.glyph(
-                                    UiGlyph.film,
+                                    UiGlyph.scroll,
                                     size: 18,
                                     color: GameTheme.torch,
                                   ),

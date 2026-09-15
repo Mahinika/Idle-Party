@@ -57,7 +57,7 @@ flowchart LR
 - **Floating camera overlay** on the hub World Path (portrait, bottom-trailing
   of the map, clear of the hunt card / ENTER and the header Settings cog).
 - FAB shows:
-  - Film-camera glyph (`UiGlyph.film`) at 48dp.
+  - Rolled-scroll glyph (`UiGlyph.scroll`) at 48dp.
   - Ticket count badge when tickets > 0.
   - Short status under the icon: `WATCH`, `N TICKETS`, or `ATK 42m`.
   - Dim when idle; torch-lit when tickets or a buff is active.
