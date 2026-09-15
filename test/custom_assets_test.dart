@@ -52,6 +52,8 @@ void main() {
       CustomAssets.enemyRat,
       CustomAssets.enemyBat,
       CustomAssets.enemySpider,
+      CustomAssets.enemySnake,
+      CustomAssets.iconFlaskGrey,
       CustomAssets.enemyGhost,
       CustomAssets.enemyCultist,
       CustomAssets.enemyCyclops,

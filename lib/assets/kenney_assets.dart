@@ -11,24 +11,56 @@ import '../visual/body_family.dart';
 import '../visual/equipment_visual_resolver.dart';
 import 'custom_assets.dart';
 
-/// Central Kenney Tiny Dungeon + UI asset catalog.
+/// Runtime art catalog (owned custom). Name kept for call-site stability.
 ///
-/// Tiny Dungeon files are kept as original `tile_XXXX.png` IDs (Kenney sheet
-/// is 12×11). Semantic getters below map roles → tile indices so art cannot
-/// drift from misnamed copies again. Rebuild with:
-/// `powershell -File tool/rebuild_tiny_dungeon_assets.ps1`
-///
-/// Identity art (pets, armor icons, dungeon portraits) prefers [CustomAssets].
+/// World tiles, props, and chrome live under [CustomAssets]. Kenney packs
+/// may remain on disk as reference and are not bundled.
 abstract final class KenneyAssets {
-  static const String _tiny = 'assets/kenney/tiny_dungeon';
-  static const String _ui = 'assets/kenney/ui_adventure';
-  static const String _bars = 'assets/kenney/ui_bars';
-
-  /// Original Kenney tile path (`tile_0000` … `tile_0131`).
+  /// Role id kept for tests that compare sand vs unused lip tiles.
   static String tile(int id) {
-    assert(id >= 0 && id < 132, 'Tiny Dungeon tile id out of range: $id');
-    final n = id.toString().padLeft(4, '0');
-    return '$_tiny/tile_$n.png';
+    assert(id >= 0 && id < 132, 'fallback tile id out of range: $id');
+    return switch (id) {
+      0 || 1 || 2 || 3 => CustomAssets.floorDirt,
+      24 => CustomAssets.floorDirtDetail,
+      48 => CustomAssets.floorSand,
+      49 => CustomAssets.floorSandWorn,
+      42 => CustomAssets.floorStone,
+      40 => CustomAssets.wallStone,
+      57 => CustomAssets.wallStone,
+      28 || 29 => CustomAssets.wallBanner,
+      6 => CustomAssets.tileDoorArch,
+      45 => CustomAssets.tileDoorClosed,
+      46 => CustomAssets.tileDoorClosed,
+      47 => CustomAssets.tileDoorOpen,
+      17 || 18 => CustomAssets.tileStairs,
+      19 => CustomAssets.tileStairs,
+      41 => CustomAssets.propTrap,
+      32 => CustomAssets.propWater,
+      12 => CustomAssets.propLava,
+      60 => CustomAssets.tileFxTarget,
+      61 => CustomAssets.tileFxSlash,
+      62 => CustomAssets.tileFxClaw,
+      64 || 65 => CustomAssets.propGravestone,
+      66 => CustomAssets.propHatch,
+      63 => CustomAssets.propCrate,
+      72 => CustomAssets.propTable,
+      73 => CustomAssets.propStool,
+      74 => CustomAssets.propAnvil,
+      82 => CustomAssets.propBarrel,
+      56 => CustomAssets.propBones,
+      20 => CustomAssets.propFountain,
+      75 => CustomAssets.propShelf,
+      76 => CustomAssets.propFence,
+      77 => CustomAssets.propPillar,
+      79 => CustomAssets.propRubble,
+      89 => CustomAssets.propChest,
+      90 => CustomAssets.propChestOpen,
+      92 => CustomAssets.propChestMimic,
+      8 => CustomAssets.propTorch,
+      25 => CustomAssets.propTorchAlt,
+      113 || 125 => CustomAssets.iconFlaskGrey,
+      _ => CustomAssets.floorDirt,
+    };
   }
 
   // —— Floors (verified sheet cells) ——
@@ -60,7 +92,7 @@ abstract final class KenneyAssets {
   static String get doorOpen => tile(47);
   static String get stairsDown => tile(17);
   static String get stairs => tile(18);
-  static String get stairsBoss => tile(18);
+  static String get stairsBoss => CustomAssets.tileStairsBoss;
   static String get exitPad => tile(19);
   static String get trapSpikes => tile(41);
 
@@ -70,7 +102,7 @@ abstract final class KenneyAssets {
   /// Warm red floor stain (distinct from spike trap tile 41).
   static String get hazardLava => tile(12);
   static String get corridorActive => tile(60);
-  static String get corridorInactive => tile(61);
+  static String get corridorInactive => CustomAssets.tileFxIdle;
   static String get target => tile(60);
   static String get slash => tile(61);
   static String get claw => tile(62);
@@ -103,14 +135,14 @@ abstract final class KenneyAssets {
 
   // —— Heroes (custom intro-matched pixel art) ——
   static String get heroWizard => CustomAssets.heroWizard;
-  static String get heroVillager => tile(85);
-  static String get heroBearded => tile(86);
-  static String get heroSoldier => tile(87);
+  static String get heroVillager => CustomAssets.heroKnight;
+  static String get heroBearded => CustomAssets.heroPaladin;
+  static String get heroSoldier => CustomAssets.heroHunter;
   static String get heroRogue => CustomAssets.heroRogue;
   static String get heroKnight => CustomAssets.heroKnight;
-  static String get heroWoman => tile(98);
+  static String get heroWoman => CustomAssets.heroHealer;
   static String get heroHealer => CustomAssets.heroHealer;
-  static String get heroElder => tile(100);
+  static String get heroElder => CustomAssets.heroWizard;
 
   // —— Enemies (custom identity sprites; Tiny Dungeon tiles kept as fallback IDs) ——
   static String get enemySlime => CustomAssets.enemySlime;
@@ -123,7 +155,7 @@ abstract final class KenneyAssets {
   static String get enemyGhost => CustomAssets.enemyGhost;
   static String get enemySpider => CustomAssets.enemySpider;
   static String get enemyRat => CustomAssets.enemyRat;
-  static String get enemySnake => CustomAssets.enemySpider;
+  static String get enemySnake => CustomAssets.enemySnake;
   static String get enemyGolem => CustomAssets.enemyGolem;
   static String get enemyCrystalBoss => CustomAssets.enemyCrystalBoss;
   static String get enemyCrystalWraith => CustomAssets.enemyCrystalWraith;
@@ -176,11 +208,11 @@ abstract final class KenneyAssets {
   static String get swordAlt => CustomAssets.iconSwordAlt;
   static String get hammer => CustomAssets.iconMace;
   static String get axe => CustomAssets.iconAxe;
-  static String get potionGrey => tile(113);
+  static String get potionGrey => CustomAssets.iconFlaskGrey;
   static String get potionGreen => CustomAssets.iconFlaskGreen;
   static String get potionRed => CustomAssets.iconFlask;
   static String get potionBlue => CustomAssets.iconFlaskBlue;
-  static String get vialGrey => tile(125);
+  static String get vialGrey => CustomAssets.iconFlaskGrey;
   static String get vialGreen => CustomAssets.iconFlaskGreen;
   static String get vialRed => CustomAssets.iconFlask;
   static String get vialBlue => CustomAssets.iconFlaskPurple;
@@ -208,38 +240,38 @@ abstract final class KenneyAssets {
   static String get ring => CustomAssets.iconRing;
 
   // —— UI panels & buttons ——
-  static const String panelBrown = '$_ui/panel_brown.png';
-  static const String panelBeige = '$_ui/panel_beige.png';
-  static const String panelInsetBrown = '$_ui/panelInset_brown.png';
-  static const String panelBorder = '$_ui/panel-border-015.png';
-  static const String buttonBrown = '$_ui/button_brown.png';
-  static const String buttonGrey = '$_ui/button_grey.png';
-  static const String buttonRed = '$_ui/button_red.png';
-  static const String hexagonBrown = '$_ui/hexagon_brown.png';
-  static const String hexagonBrownDark = '$_ui/hexagon_brown_dark.png';
+  static const String panelBrown = CustomAssets.uiPanelBrown;
+  static const String panelBeige = CustomAssets.uiPanelBeige;
+  static const String panelInsetBrown = CustomAssets.uiPanelInsetBrown;
+  static const String panelBorder = CustomAssets.uiPanelBorder;
+  static const String buttonBrown = CustomAssets.uiButtonBrown;
+  static const String buttonGrey = CustomAssets.uiButtonGrey;
+  static const String buttonRed = CustomAssets.uiButtonRed;
+  static const String hexagonBrown = CustomAssets.uiHexagonBrown;
+  static const String hexagonBrownDark = CustomAssets.uiHexagonBrownDark;
 
   // —— Progress bars (rounded) ——
-  static const String progressGreen = '$_ui/progress_green.png';
-  static const String progressGreenBorder = '$_ui/progress_green_border.png';
-  static const String progressRed = '$_ui/progress_red.png';
-  static const String progressRedBorder = '$_ui/progress_red_border.png';
-  static const String progressBlue = '$_ui/progress_blue.png';
-  static const String progressBlueBorder = '$_ui/progress_blue_border.png';
-  static const String progressWhite = '$_ui/progress_white.png';
+  static const String progressGreen = CustomAssets.uiProgressGreen;
+  static const String progressGreenBorder = CustomAssets.uiProgressGreenBorder;
+  static const String progressRed = CustomAssets.uiProgressRed;
+  static const String progressRedBorder = CustomAssets.uiProgressRedBorder;
+  static const String progressBlue = CustomAssets.uiProgressBlue;
+  static const String progressBlueBorder = CustomAssets.uiProgressBlueBorder;
+  static const String progressWhite = CustomAssets.uiProgressWhite;
 
   // —— HP bar segments ——
-  static const String barBackLeft = '$_bars/barBack_horizontalLeft.png';
-  static const String barBackMid = '$_bars/barBack_horizontalMid.png';
-  static const String barBackRight = '$_bars/barBack_horizontalRight.png';
-  static const String barGreenLeft = '$_bars/barGreen_horizontalLeft.png';
-  static const String barGreenMid = '$_bars/barGreen_horizontalMid.png';
-  static const String barGreenRight = '$_bars/barGreen_horizontalRight.png';
-  static const String barRedLeft = '$_bars/barRed_horizontalLeft.png';
-  static const String barRedMid = '$_bars/barRed_horizontalMid.png';
-  static const String barRedRight = '$_bars/barRed_horizontalRight.png';
-  static const String barYellowLeft = '$_bars/barYellow_horizontalLeft.png';
-  static const String barYellowMid = '$_bars/barYellow_horizontalMid.png';
-  static const String barYellowRight = '$_bars/barYellow_horizontalRight.png';
+  static const String barBackLeft = CustomAssets.uiBarBackLeft;
+  static const String barBackMid = CustomAssets.uiBarBackMid;
+  static const String barBackRight = CustomAssets.uiBarBackRight;
+  static const String barGreenLeft = CustomAssets.uiBarGreenLeft;
+  static const String barGreenMid = CustomAssets.uiBarGreenMid;
+  static const String barGreenRight = CustomAssets.uiBarGreenRight;
+  static const String barRedLeft = CustomAssets.uiBarRedLeft;
+  static const String barRedMid = CustomAssets.uiBarRedMid;
+  static const String barRedRight = CustomAssets.uiBarRedRight;
+  static const String barYellowLeft = CustomAssets.uiBarYellowLeft;
+  static const String barYellowMid = CustomAssets.uiBarYellowMid;
+  static const String barYellowRight = CustomAssets.uiBarYellowRight;
 
   // —— Icons ——
   static String get iconCoin => CustomAssets.iconCoinGold;

@@ -24,11 +24,10 @@ import '../visual/hero_anim_controller.dart';
 import '../visual/owned_gear_assets.dart';
 import '../visual/hero_anim_state.dart';
 import '../assets/custom_assets.dart';
+import '../assets/kenney_assets.dart';
 import 'decoded_image_cache.dart';
 import 'dungeon_environment.dart';
 import 'game_theme.dart';
-import 'hero_paper_doll.dart';
-import '../assets/kenney_assets.dart';
 import 'kenney_sprite.dart';
 import 'shell/offline_banner.dart';
 import 'shell/wipe_overlay.dart';
@@ -70,7 +69,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   final Map<HeroClassId, ui.Image?> _heroesByClass = {};
   final Map<HeroSpecId, ui.Image?> _heroesBySpec = {};
   final Map<String, ui.Image> _bodyByPath = <String, ui.Image>{};
-  ui.Image? _charAtlas;
   ui.Image? _chest;
   ui.Image? _coin;
   ui.Image? _sword;
@@ -96,8 +94,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       _zoneArtReady &&
       _tilesReady &&
       _sword != null &&
-      _vial != null &&
-      _charAtlas != null;
+      _vial != null;
 
   @override
   void initState() {
@@ -166,7 +163,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         load(CustomAssets.heroShaman, targetWidth: 128),
         load(CustomAssets.heroWarlock, targetWidth: 128),
         load(CustomAssets.heroDruid, targetWidth: 128),
-        load(RoguelikeCharAtlas.assetPath),
         load(KenneyAssets.chestClosed, targetWidth: 64),
         load(KenneyAssets.coinGold, targetWidth: 48),
         load(KenneyAssets.sword, targetWidth: 48),
@@ -195,7 +191,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         ..[HeroClassId.shaman] = critical[i++]
         ..[HeroClassId.warlock] = critical[i++]
         ..[HeroClassId.druid] = critical[i++];
-      _charAtlas = critical[i++];
       _chest = critical[i++];
       _coin = critical[i++];
       _sword = critical[i++];
@@ -225,8 +220,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
         _doorClosed != null &&
         _doorOpen != null &&
         _sword != null &&
-        _vial != null &&
-        _charAtlas != null;
+        _vial != null;
     setState(() {
       _loadedDungeonId = dungeonId;
       _floorReady = floorVariants;
@@ -583,7 +577,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                             layoutSeed: world.map.layoutSeed,
                                             clearedChambers:
                                                 world.clearedChambers,
-                                            charAtlas: _charAtlas!,
                                             heroes: <ui.Image?>[
                                               _hero0,
                                               _hero1,
@@ -1070,7 +1063,6 @@ class _TileRoomPainter extends CustomPainter {
     required this.dungeonId,
     required this.layoutSeed,
     required this.clearedChambers,
-    required this.charAtlas,
     required this.heroes,
     required this.heroesByClass,
     required this.heroesBySpec,
@@ -1100,7 +1092,6 @@ class _TileRoomPainter extends CustomPainter {
   final String dungeonId;
   final int layoutSeed;
   final Set<int> clearedChambers;
-  final ui.Image charAtlas;
   final List<ui.Image?> heroes;
   final Map<HeroClassId, ui.Image?> heroesByClass;
   final Map<HeroSpecId, ui.Image?> heroesBySpec;
@@ -2042,45 +2033,16 @@ class _TileRoomPainter extends CustomPainter {
               tint: tint,
               flipX: flipX,
             );
-            CharacterVisualPainter.paintGearOverlays(
-              canvas,
-              charAtlas,
-              c,
-              tile * scale,
-              hero: partyHero,
-              signals: signals,
-              flipX: flipX,
-              partyIndex: idx,
-              alpha: paintAlpha,
-              walkPhase: walkPhase,
-              cacheId: hero.id,
-              poseOverride: anim,
-            );
           }
         } else {
-          CharacterVisualPainter.paint(
-            canvas,
-            charAtlas,
-            c,
-            tile * scale * 1.35,
-            hero: partyHero,
-            signals: signals,
-            flipX: flipX,
-            partyIndex: idx,
-            alpha: paintAlpha,
-            walkPhase: walkPhase,
-            cacheId: hero.id,
-            poseOverride: anim,
-          );
-        }
-      } else {
-        ui.Image? img = heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
-        if (img != null) {
-          final scale = 0.95 *
-              (1 +
-                  flash *
-                      (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
-          drawSprite(img, c, scale, alpha: paintAlpha, flipX: flipX);
+          final img = heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
+          if (img != null) {
+            final scale = 0.95 *
+                (1 +
+                    flash *
+                        (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
+            drawSprite(img, c, scale, alpha: paintAlpha, flipX: flipX);
+          }
         }
       }
       // WoW-style persistent auras

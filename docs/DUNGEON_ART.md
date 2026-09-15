@@ -99,7 +99,8 @@ heroes, and combat-pet art under the same `assets/custom/` paths).
 5. `PlacementPlan` uses lower clutter density + intentional edge placement for custom zones
 6. Tests: `custom_assets_test` + existing layout tests
 
-Repeat for next zone (Rime, Ember, …). When all zones ship: remove `assets/kenney/tiny_dungeon` props/tiles.
+Repeat for next zone (Rime, Ember, …). Fallback tiles/props live in
+`assets/custom/dungeon/fallback/` — Kenney `tiny_dungeon` is not bundled.
 
 ---
 

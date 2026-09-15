@@ -11,10 +11,14 @@ import 'package:idle_party/assets/kenney_assets.dart';
 void main() {
   bool exists(String assetPath) => File(assetPath).existsSync();
 
-  test('all Tiny Dungeon tiles 0000–0131 exist', () {
+  test('owned fallback tiles exist for leftover Kenney roles', () {
     for (var id = 0; id < 132; id++) {
       expect(exists(KenneyAssets.tile(id)), isTrue, reason: 'tile $id');
     }
+    expect(exists(CustomAssets.floorDirt), isTrue);
+    expect(exists(CustomAssets.enemySnake), isTrue);
+    expect(exists(CustomAssets.iconFlaskGrey), isTrue);
+    expect(exists(CustomAssets.uiPanelBrown), isTrue);
   });
 
   test('CustomAssets hero/enemy/UI/pet/icon files exist', () {

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
 
-/// Kenney Roguelike Characters atlas (16×16 tiles, 1px margin).
+/// Kenney Roguelike Characters atlas layout (16×16 tiles, 1px margin).
+/// Pose math still uses these cells; the PNG is not bundled.
 class RoguelikeCharAtlas {
   RoguelikeCharAtlas._();
 

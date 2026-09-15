@@ -71,10 +71,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/kenney/tiny_dungeon/
-    - assets/kenney/ui_adventure/
-    - assets/kenney/ui_bars/
-    - assets/kenney/roguelike_char/
     - assets/custom/audio/ambience/
     - assets/custom/audio/music/
     - assets/custom/audio/sfx/
@@ -93,7 +89,11 @@ flutter:
     - assets/custom/char/rogue/gear/
     - assets/custom/char/gear/
     - assets/custom/ui/
+    - assets/custom/ui/chrome/
     - assets/custom/ui/backdrops/
+    - assets/custom/dungeon/fallback/tiles/
+    - assets/custom/dungeon/fallback/props/
+    - assets/custom/dungeon/fallback/hub_icon.png
     - assets/custom/dungeon/sandy/tiles/
     - assets/custom/dungeon/sandy/props/
     - assets/custom/dungeon/sandy/hub_icon.png

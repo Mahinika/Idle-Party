@@ -1,8 +1,8 @@
 import '../models/hero_spec.dart';
 import '../spatial/tile_map.dart' show MapPropKind;
 
-/// Original Idle Party art (AI-generated pixel icons/portraits).
-/// Prefer these for identity; fall back to Kenney for world tiles.
+  /// Original Idle Party art (AI-generated pixel icons/portraits).
+  /// World tiles, props, and chrome also live here (Kenney is reference-only).
 abstract final class CustomAssets {
   static const String _root = 'assets/custom';
 
@@ -178,6 +178,7 @@ abstract final class CustomAssets {
   static const String iconFlaskGreen = '$_root/icons/flask_green.png';
   static const String iconFlaskBlue = '$_root/icons/flask_blue.png';
   static const String iconFlaskPurple = '$_root/icons/flask_purple.png';
+  static const String iconFlaskGrey = '$_root/icons/flask_grey.png';
   static const String iconCoinGold = '$_root/icons/coin_gold.png';
   static const String iconBook = '$_root/icons/book.png';
   static const String iconRelicWarBanner = '$_root/icons/relic_war_banner.png';
@@ -371,6 +372,7 @@ abstract final class CustomAssets {
   static const String enemyRat = '$_root/enemies/rat.png';
   static const String enemyBat = '$_root/enemies/bat.png';
   static const String enemySpider = '$_root/enemies/spider.png';
+  static const String enemySnake = '$_root/enemies/snake.png';
   static const String enemyGhost = '$_root/enemies/ghost.png';
   static const String enemyCultist = '$_root/enemies/cultist.png';
   static const String enemyCyclops = '$_root/enemies/cyclops.png';
@@ -427,6 +429,79 @@ abstract final class CustomAssets {
 
   // —— Custom dungeon interiors (docs/DUNGEON_ART.md) ——
   static const String _dungeonRoot = '$_root/dungeon';
+  static const String _fallback = '$_dungeonRoot/fallback';
+
+  static const String floorDirt = '$_fallback/tiles/floor_dirt.png';
+  static const String floorDirtDetail = '$_fallback/tiles/floor_dirt_detail.png';
+  static const String floorSand = '$_fallback/tiles/floor_sand.png';
+  static const String floorSandWorn = '$_fallback/tiles/floor_sand_worn.png';
+  static const String floorStone = '$_fallback/tiles/floor_stone.png';
+  static const String wallStone = '$_fallback/tiles/wall_stone.png';
+  static const String wallBanner = '$_fallback/tiles/wall_banner.png';
+  static const String tileStairs = '$_fallback/tiles/stairs.png';
+  static const String tileStairsBoss = '$_fallback/tiles/stairs_boss.png';
+  static const String tileDoorClosed = '$_fallback/tiles/door_closed.png';
+  static const String tileDoorOpen = '$_fallback/tiles/door_open.png';
+  static const String tileDoorArch = '$_fallback/tiles/door_arch.png';
+  static const String tileFxTarget = '$_fallback/tiles/fx_target.png';
+  static const String tileFxIdle = '$_fallback/tiles/fx_idle.png';
+  static const String tileFxSlash = '$_fallback/tiles/fx_slash.png';
+  static const String tileFxClaw = '$_fallback/tiles/fx_claw.png';
+  static const String propBarrel = '$_fallback/props/barrel.png';
+  static const String propCrate = '$_fallback/props/crate.png';
+  static const String propTable = '$_fallback/props/table.png';
+  static const String propStool = '$_fallback/props/stool.png';
+  static const String propTorch = '$_fallback/props/torch.png';
+  static const String propTorchAlt = '$_fallback/props/torch_alt.png';
+  static const String propGravestone = '$_fallback/props/gravestone.png';
+  static const String propFountain = '$_fallback/props/fountain.png';
+  static const String propTrap = '$_fallback/props/trap.png';
+  static const String propPot = '$_fallback/props/pot.png';
+  static const String propBones = '$_fallback/props/bones.png';
+  static const String propSkull = '$_fallback/props/skull.png';
+  static const String propHatch = '$_fallback/props/hatch.png';
+  static const String propWater = '$_fallback/props/water.png';
+  static const String propLava = '$_fallback/props/lava.png';
+  static const String propAnvil = '$_fallback/props/anvil.png';
+  static const String propShelf = '$_fallback/props/shelf.png';
+  static const String propFence = '$_fallback/props/fence.png';
+  static const String propPillar = '$_fallback/props/pillar.png';
+  static const String propRubble = '$_fallback/props/rubble.png';
+  static const String propChest = '$_fallback/props/chest.png';
+  static const String propChestOpen = '$_fallback/props/chest_open.png';
+  static const String propChestMimic = '$_fallback/props/chest_mimic.png';
+  static const String uiPanelBrown = '$_root/ui/chrome/panel_brown.png';
+  static const String uiPanelBeige = '$_root/ui/chrome/panel_beige.png';
+  static const String uiPanelInsetBrown = '$_root/ui/chrome/panel_inset_brown.png';
+  static const String uiPanelBorder = '$_root/ui/chrome/panel_border.png';
+  static const String uiButtonBrown = '$_root/ui/chrome/button_brown.png';
+  static const String uiButtonGrey = '$_root/ui/chrome/button_grey.png';
+  static const String uiButtonRed = '$_root/ui/chrome/button_red.png';
+  static const String uiHexagonBrown = '$_root/ui/chrome/hexagon_brown.png';
+  static const String uiHexagonBrownDark =
+      '$_root/ui/chrome/hexagon_brown_dark.png';
+  static const String uiProgressGreen = '$_root/ui/chrome/progress_green.png';
+  static const String uiProgressGreenBorder =
+      '$_root/ui/chrome/progress_green_border.png';
+  static const String uiProgressRed = '$_root/ui/chrome/progress_red.png';
+  static const String uiProgressRedBorder =
+      '$_root/ui/chrome/progress_red_border.png';
+  static const String uiProgressBlue = '$_root/ui/chrome/progress_blue.png';
+  static const String uiProgressBlueBorder =
+      '$_root/ui/chrome/progress_blue_border.png';
+  static const String uiProgressWhite = '$_root/ui/chrome/progress_white.png';
+  static const String uiBarBackLeft = '$_root/ui/chrome/bar_back_left.png';
+  static const String uiBarBackMid = '$_root/ui/chrome/bar_back_mid.png';
+  static const String uiBarBackRight = '$_root/ui/chrome/bar_back_right.png';
+  static const String uiBarGreenLeft = '$_root/ui/chrome/bar_green_left.png';
+  static const String uiBarGreenMid = '$_root/ui/chrome/bar_green_mid.png';
+  static const String uiBarGreenRight = '$_root/ui/chrome/bar_green_right.png';
+  static const String uiBarRedLeft = '$_root/ui/chrome/bar_red_left.png';
+  static const String uiBarRedMid = '$_root/ui/chrome/bar_red_mid.png';
+  static const String uiBarRedRight = '$_root/ui/chrome/bar_red_right.png';
+  static const String uiBarYellowLeft = '$_root/ui/chrome/bar_yellow_left.png';
+  static const String uiBarYellowMid = '$_root/ui/chrome/bar_yellow_mid.png';
+  static const String uiBarYellowRight = '$_root/ui/chrome/bar_yellow_right.png';
 
   /// Shipped zones with owned floor/wall/prop art (Kenney tiny_dungeon fallback off).
   static const Set<String> customDungeonZones = {

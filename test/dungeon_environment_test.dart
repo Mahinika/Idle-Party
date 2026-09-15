@@ -29,6 +29,7 @@ void main() {
     // Sand floors must not use the edged lip tile (30).
     expect(KenneyAssets.floorSand, isNot(KenneyAssets.tile(30)));
     expect(KenneyAssets.floorSand, KenneyAssets.tile(48));
+    expect(KenneyAssets.floorSand, startsWith('assets/custom/'));
     // Lava / torch accents must not alias trap / fountain art.
     expect(KenneyAssets.hazardLava, isNot(KenneyAssets.trapSpikes));
     expect(KenneyAssets.torchAlt, isNot(KenneyAssets.fountainSlime));
