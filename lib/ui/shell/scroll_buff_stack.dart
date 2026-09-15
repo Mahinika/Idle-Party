@@ -60,6 +60,7 @@ class _ScrollBuffStackState extends State<ScrollBuffStack> {
     final chips = AdBoost.hudChips(widget.meta, nowMs: widget.nowMs);
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         for (final chip in chips) _ScrollBuffPip(chip: chip),
       ],

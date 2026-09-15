@@ -675,7 +675,7 @@ class _HubScreenState extends State<HubScreen>
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           crossAxisAlignment:
-                                              CrossAxisAlignment.center,
+                                              CrossAxisAlignment.end,
                                           children: [
                                             ScrollBuffStack(
                                               meta: state.metaDepth,

@@ -176,11 +176,11 @@ class _Is2ShellState extends State<Is2Shell> {
                         ),
                       ),
                       Positioned(
-                        right: hudSide,
+                        right: 0,
                         bottom: partyBottom,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             ScrollBuffStack(
                               meta: d.state.metaDepth,
