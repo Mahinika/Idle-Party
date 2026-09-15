@@ -219,7 +219,7 @@ void main() {
     expect(resolved.metaDepth.riftBestTier, greaterThan(0));
   });
 
-  test('enter without a tier uses preferred, clamped to best+1', () {
+  test('enter without a tier uses preferred; any tier is open', () {
     var state = _withPartyMaxLevel(
       GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel,
@@ -229,7 +229,8 @@ void main() {
         ),
       ),
     );
-    expect(GreaterRift.maxSelectableTier(20), 21);
+    expect(GreaterRift.maxSelectableTier(20), GreaterRift.maxTier);
+    expect(GreaterRift.nextOfferTier(20), 21);
     expect(
       GreaterRift.pickerStart(preferred: 1, bestCleared: 20),
       20,
@@ -246,12 +247,12 @@ void main() {
     expect(farm.grTier, 8);
     final push = GameLogic.enterGreaterRift(state, tier: 21);
     expect(push.grTier, 21);
-    final blocked = GameLogic.enterGreaterRift(state, tier: 22);
-    expect(blocked.grTier, 21);
+    final skip = GameLogic.enterGreaterRift(state, tier: 50);
+    expect(skip.grTier, 50);
   });
 
   test('Ranked GR stays selectable past 20', () {
-    expect(GreaterRift.maxSelectableTier(20), 21);
+    expect(GreaterRift.maxSelectableTier(20), GreaterRift.maxTier);
     expect(GreaterRift.killTarget(21), GreaterRift.killTarget(20));
     expect(GreaterRift.parTimeMs(21), GreaterRift.parTimeMs(20));
     expect(GreaterRift.parTimeMs(50), 90000);

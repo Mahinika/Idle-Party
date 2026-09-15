@@ -27,11 +27,17 @@ abstract final class Rift {
 
   static int clampTier(int tier) => tier.clamp(minTier, maxTier);
 
-  /// Preferred hub dial: 1…best+1 (no campaign stop).
-  static int maxSelectableTier(int bestCleared) =>
+  /// Open picker / enter: 1…[maxTier]. Best clear is not a gate.
+  static int maxSelectableTier([int bestCleared = 0]) {
+    assert(bestCleared >= 0);
+    return maxTier;
+  }
+
+  /// Hub chase stamp — next after best, not a pick lock.
+  static int nextOfferTier(int bestCleared) =>
       clampTier(max(minTier, bestCleared + 1));
 
-  /// Picker starts on last pick, else last clear (so GR20 opens on 20, not 1).
+  /// Picker starts on last pick, else last clear (so R20 opens on 20, not 1).
   static int pickerStart({required int preferred, required int bestCleared}) {
     final maxSel = maxSelectableTier(bestCleared);
     final p = clampTier(preferred.clamp(minTier, maxSel));

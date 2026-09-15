@@ -107,7 +107,7 @@ void main() {
     expect(resolved.gold, greaterThan(goldBefore));
     expect(resolved.essence, greaterThan(essenceBefore));
     expect(resolved.metaDepth.riftBestTier, 1);
-    expect(Rift.maxSelectableTier(resolved.metaDepth.riftBestTier), 2);
+    expect(Rift.maxSelectableTier(resolved.metaDepth.riftBestTier), Rift.maxTier);
     expect(resolved.metaDepth.lifetimeRiftClears, 1);
   });
 
@@ -166,7 +166,7 @@ void main() {
   });
 
   test('Farm Rift stays selectable past 20', () {
-    expect(Rift.maxSelectableTier(20), 21);
+    expect(Rift.maxSelectableTier(20), Rift.maxTier);
     expect(Rift.killTarget(21), Rift.killTarget(20));
     expect(Rift.parTimeMs(50), Rift.parTimeMs(20));
     expect(Rift.threatMul(21), greaterThan(Rift.threatMul(20)));
@@ -193,7 +193,7 @@ void main() {
     expect(GameLogic.enterRift(loaded, tier: 26).riftTier, 26);
   });
 
-  test('Farm Rift picker can drop below best and not skip past best+1', () {
+  test('Farm Rift picker can pick below or far above best', () {
     expect(Rift.pickerStart(preferred: 1, bestCleared: 20), 20);
     expect(Rift.pickerStart(preferred: 7, bestCleared: 20), 7);
     var state = _withPartyMaxLevel(
@@ -207,7 +207,7 @@ void main() {
     );
     expect(GameLogic.enterRift(state).riftTier, 7);
     expect(GameLogic.enterRift(state, tier: 21).riftTier, 21);
-    expect(GameLogic.enterRift(state, tier: 22).riftTier, 21);
+    expect(GameLogic.enterRift(state, tier: 50).riftTier, 50);
   });
 }
 

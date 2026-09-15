@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../game_icon.dart';
@@ -38,6 +40,7 @@ class RiftTierPickerDialog extends StatefulWidget {
 
 class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
   late int _tier;
+  Timer? _hold;
 
   @override
   void initState() {
@@ -45,11 +48,33 @@ class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
     _tier = widget.initial.clamp(widget.minTier, widget.maxTier);
   }
 
+  @override
+  void dispose() {
+    _hold?.cancel();
+    super.dispose();
+  }
+
   void _set(int next) {
     final t = next.clamp(widget.minTier, widget.maxTier);
     if (t == _tier) return;
     setState(() => _tier = t);
     widget.onStep?.call(t);
+  }
+
+  void _startHold(int delta) {
+    _hold?.cancel();
+    _hold = Timer.periodic(const Duration(milliseconds: 70), (_) {
+      _set(_tier + delta);
+      if (_tier == widget.minTier || _tier == widget.maxTier) {
+        _hold?.cancel();
+        _hold = null;
+      }
+    });
+  }
+
+  void _stopHold() {
+    _hold?.cancel();
+    _hold = null;
   }
 
   @override
@@ -67,14 +92,25 @@ class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
           const SizedBox(height: 12),
           Row(
             children: [
-              GameIconButton(
-                glyph: UiGlyph.prev,
-                label: widget.minusLabel,
-                size: 18,
-                color: GameTheme.torchHot,
-                width: GameTheme.minTouch,
-                height: GameTheme.minTouch,
-                onPressed: _tier > widget.minTier ? () => _set(_tier - 1) : null,
+              Listener(
+                onPointerUp: (_) => _stopHold(),
+                onPointerCancel: (_) => _stopHold(),
+                child: GestureDetector(
+                  onLongPressStart: _tier > widget.minTier
+                      ? (_) => _startHold(-1)
+                      : null,
+                  onLongPressEnd: (_) => _stopHold(),
+                  child: GameIconButton(
+                    glyph: UiGlyph.prev,
+                    label: widget.minusLabel,
+                    size: 18,
+                    color: GameTheme.torchHot,
+                    width: GameTheme.minTouch,
+                    height: GameTheme.minTouch,
+                    onPressed:
+                        _tier > widget.minTier ? () => _set(_tier - 1) : null,
+                  ),
+                ),
               ),
               Expanded(
                 child: Text(
@@ -83,14 +119,24 @@ class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
                   style: GameTheme.menuTitle(size: 28),
                 ),
               ),
-              GameIconButton(
-                glyph: UiGlyph.next,
-                label: widget.plusLabel,
-                size: 18,
-                color: GameTheme.torchHot,
-                width: GameTheme.minTouch,
-                height: GameTheme.minTouch,
-                onPressed: _tier < widget.maxTier ? () => _set(_tier + 1) : null,
+              Listener(
+                onPointerUp: (_) => _stopHold(),
+                onPointerCancel: (_) => _stopHold(),
+                child: GestureDetector(
+                  onLongPressStart:
+                      _tier < widget.maxTier ? (_) => _startHold(1) : null,
+                  onLongPressEnd: (_) => _stopHold(),
+                  child: GameIconButton(
+                    glyph: UiGlyph.next,
+                    label: widget.plusLabel,
+                    size: 18,
+                    color: GameTheme.torchHot,
+                    width: GameTheme.minTouch,
+                    height: GameTheme.minTouch,
+                    onPressed:
+                        _tier < widget.maxTier ? () => _set(_tier + 1) : null,
+                  ),
+                ),
               ),
             ],
           ),

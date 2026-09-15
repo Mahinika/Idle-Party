@@ -81,9 +81,8 @@ GameState _enterGauntlet(GameState state) {
 
 GameState _enterRift(GameState state, {int? tier}) {
   if (!GameLogic.canEnterRift(state)) return state;
-  final maxSel = Rift.maxSelectableTier(state.metaDepth.riftBestTier);
   final preferred = tier ?? state.metaDepth.riftPreferredTier;
-  final t = Rift.clampTier(preferred.clamp(Rift.minTier, maxSel));
+  final t = Rift.clampTier(preferred);
   final layoutSeed = GameLogic.newLayoutSeed();
   final floor = DungeonGenerator.generateFloor(
     1,
@@ -158,8 +157,7 @@ GameState _clearRiftRun(GameState state) {
 
 GameState _setRiftPreferredTier(GameState state, int tier) {
   if (!GameLogic.endgameUnlocked(state)) return state;
-  final maxSel = Rift.maxSelectableTier(state.metaDepth.riftBestTier);
-  final t = Rift.clampTier(tier.clamp(Rift.minTier, maxSel));
+  final t = Rift.clampTier(tier);
   return state.copyWith(
     metaDepth: state.metaDepth.copyWith(riftPreferredTier: t),
     lastUpdated: DateTime.now(),
@@ -273,19 +271,14 @@ GameState _resolveRiftSuccess(GameState state) {
     riftOutcome: 'timed',
     metaDepth: state.metaDepth.copyWith(
       riftBestTier: best,
-      riftPreferredTier: Rift.clampTier(
-        state.metaDepth.riftPreferredTier.clamp(
-          Rift.minTier,
-          Rift.maxSelectableTier(best),
-        ),
-      ),
+      riftPreferredTier: Rift.clampTier(state.metaDepth.riftPreferredTier),
       lifetimeRiftClears: state.metaDepth.lifetimeRiftClears + 1,
     ),
   );
   next = GameLogic.syncMetaPayoffs(next);
   LogicNotices.addMetaPayoffs([
     'Rift R$tier cleared · +${essence}e · +${gold}g'
-        '${unlock > tier ? ' · unlock R$unlock' : ''}',
+        '${unlock > tier ? ' · next best R$unlock' : ''}',
   ]);
   return GameLogic.exitToHubHealed(
     GameLogic.applyMissionProgress(next, riftClears: 1),
@@ -309,11 +302,8 @@ GameState _resolveRiftFail(GameState state) {
 
 GameState _enterGreaterRift(GameState state, {int? tier}) {
   if (!GameLogic.canEnterGreaterRift(state)) return state;
-  final maxSel = GreaterRift.maxSelectableTier(state.metaDepth.grBestTier);
   final preferred = tier ?? state.metaDepth.grPreferredTier;
-  final t = GreaterRift.clampTier(
-    preferred.clamp(GreaterRift.minTier, maxSel),
-  );
+  final t = GreaterRift.clampTier(preferred);
   final layoutSeed = GameLogic.newLayoutSeed();
   final floor = DungeonGenerator.generateFloor(
     1,
@@ -388,10 +378,7 @@ GameState _clearGreaterRiftRun(GameState state) {
 
 GameState _setGrPreferredTier(GameState state, int tier) {
   if (!GameLogic.endgameUnlocked(state)) return state;
-  final maxSel = GreaterRift.maxSelectableTier(state.metaDepth.grBestTier);
-  final t = GreaterRift.clampTier(
-    tier.clamp(GreaterRift.minTier, maxSel),
-  );
+  final t = GreaterRift.clampTier(tier);
   return state.copyWith(
     metaDepth: state.metaDepth.copyWith(grPreferredTier: t),
     lastUpdated: DateTime.now(),
@@ -451,7 +438,7 @@ GameState _resolveGreaterRiftSuccess(GameState state) {
     timerMs: next.grTimerMs,
     parMs: next.grParMs,
   );
-  // grBestTier = highest cleared. Next hub enter is best+1 (fast skip gifts
+  // grBestTier = highest cleared (fast skip gifts the extra rank as cleared).
   // the extra rank as if it were cleared).
   final best = max(next.metaDepth.grBestTier, max(tier, unlock - 1));
   final essence = GreaterRift.successEssence(tier);
@@ -485,9 +472,7 @@ GameState _resolveGreaterRiftSuccess(GameState state) {
     metaDepth: md.copyWith(
       grBestTier: best,
       monthlyBestGrTier: max(md.monthlyBestGrTier, best),
-      grPreferredTier: GreaterRift.clampTier(
-        md.grPreferredTier.clamp(GreaterRift.minTier, GreaterRift.maxSelectableTier(best)),
-      ),
+      grPreferredTier: GreaterRift.clampTier(md.grPreferredTier),
       lifetimeGrClears: md.lifetimeGrClears + 1,
       seasonBestGrTier: seasonTier,
       seasonBestGrClearMs: seasonMs,
@@ -496,7 +481,7 @@ GameState _resolveGreaterRiftSuccess(GameState state) {
   next = GameLogic.syncMetaPayoffs(next);
   LogicNotices.addMetaPayoffs([
     'Greater Rift GR$tier timed · +${essence}e · +${gold}g'
-        '${unlock > tier + 1 ? ' · unlock GR$unlock' : ''}',
+        '${unlock > tier + 1 ? ' · skip to GR$unlock' : ''}',
   ]);
   return GameLogic.exitToHubHealed(
     GameLogic.applyMissionProgress(next, greaterRiftClears: 1),

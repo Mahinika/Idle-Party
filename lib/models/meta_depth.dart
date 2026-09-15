@@ -415,7 +415,7 @@ class MetaDepthState {
   /// Highest farm Rift tier cleared (meta — survives Ascend).
   final int riftBestTier;
 
-  /// Preferred farm Rift tier dial on hub (1…best+1).
+  /// Preferred farm Rift tier on hub (1…max, not gated by best).
   final int riftPreferredTier;
 
   /// Lifetime successful farm Rift clears.
@@ -427,7 +427,7 @@ class MetaDepthState {
   /// Highest Greater Rift tier cleared (meta — survives Ascend).
   final int grBestTier;
 
-  /// Preferred Greater Rift tier dial on hub (1…best+1).
+  /// Preferred Greater Rift tier on hub (1…max, not gated by best).
   final int grPreferredTier;
 
   /// Lifetime successful Greater Rift clears.

@@ -176,7 +176,7 @@ class FirstSessionTips extends StatelessWidget {
           'At party Lv${GameLogic.maxHeroLevel}, Ranked GR is the Mothveil Greater-style timer — '
           'progress → Guardian under par, harder packs, no mid-run gear. Local PB on hub ENDGAME. Play GR board needs a Play install + sign-in. '
           'Tap RANKED GR on the hub ENDGAME tab, then pick GR with the arrows '
-          '(lower or next after your best). The hub hunt chases GR before Farm Rift.',
+          '(any GR). The hub hunt chases GR before Farm Rift.',
     ),
     (
       id: 'ashen_crown',

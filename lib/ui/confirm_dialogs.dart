@@ -308,7 +308,7 @@ Future<void> confirmRiftRun(
   final state = director.state;
   if (!GameLogic.canEnterRift(state)) return;
   final best = state.metaDepth.riftBestTier;
-  final maxSel = Rift.maxSelectableTier(best);
+  final maxSel = Rift.maxTier;
   final initial = Rift.pickerStart(
     preferred: state.metaDepth.riftPreferredTier,
     bestCleared: best,
@@ -328,7 +328,7 @@ Future<void> confirmRiftRun(
         minTier: Rift.minTier,
         maxTier: maxSel,
         blurb:
-            'Stormwake · gold + gear mid-run. Best R$best · pick 1–R$maxSel.',
+            'Stormwake · gold + gear mid-run. Best R$best · pick any R.',
         onStep: director.setRiftPreferredTier,
       ),
     );
@@ -347,7 +347,7 @@ Future<void> confirmGreaterRiftRun(
   final state = director.state;
   if (!GameLogic.canEnterGreaterRift(state)) return;
   final best = state.metaDepth.grBestTier;
-  final maxSel = GreaterRift.maxSelectableTier(best);
+  final maxSel = GreaterRift.maxTier;
   final initial = GreaterRift.pickerStart(
     preferred: state.metaDepth.grPreferredTier,
     bestCleared: best,
@@ -367,7 +367,7 @@ Future<void> confirmGreaterRiftRun(
         minTier: GreaterRift.minTier,
         maxTier: maxSel,
         blurb:
-            'Mothveil · clock · no gear. Best GR$best · pick 1–GR$maxSel.',
+            'Mothveil · clock · no gear. Best GR$best · pick any GR.',
         onStep: director.setGrPreferredTier,
       ),
     );

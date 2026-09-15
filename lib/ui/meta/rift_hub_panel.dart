@@ -24,7 +24,6 @@ class RiftHubPanel extends StatelessWidget {
       );
     }
     final best = state.metaDepth.riftBestTier;
-    final maxSel = Rift.maxSelectableTier(best);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -34,7 +33,7 @@ class RiftHubPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'ENTER opens the R picker (1–R$maxSel). Gold + gear mid-run. '
+          'ENTER opens the R picker — any R. Gold + gear mid-run. '
           'Endless after R${Rift.campaignCap}. Best R$best.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),

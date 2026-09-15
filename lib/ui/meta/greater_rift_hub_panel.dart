@@ -24,7 +24,6 @@ class GreaterRiftHubPanel extends StatelessWidget {
       );
     }
     final best = state.metaDepth.grBestTier;
-    final maxSel = GreaterRift.maxSelectableTier(best);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -34,7 +33,7 @@ class GreaterRiftHubPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'ENTER opens the GR picker (1–GR$maxSel) — lower or next after best. '
+          'ENTER opens the GR picker — any GR. '
           'Clock · no gear mid-run. Endless after GR${GreaterRift.campaignCap}. '
           'Best GR$best.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

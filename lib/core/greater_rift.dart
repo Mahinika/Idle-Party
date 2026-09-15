@@ -24,8 +24,11 @@ abstract final class GreaterRift {
 
   static int clampTier(int tier) => tier.clamp(minTier, maxTier);
 
-  static int maxSelectableTier(int bestCleared) =>
-      clampTier(max(minTier, bestCleared + 1));
+  /// Open picker / enter: 1…[maxTier]. Best clear is not a gate.
+  static int maxSelectableTier([int bestCleared = 0]) {
+    assert(bestCleared >= 0);
+    return maxTier;
+  }
 
   /// Picker starts on last pick, else last clear (so GR20 opens on 20, not 1).
   static int pickerStart({required int preferred, required int bestCleared}) {
@@ -36,8 +39,9 @@ abstract final class GreaterRift {
     return clampTier(bestCleared.clamp(minTier, maxSel));
   }
 
-  /// Next uncleared rank — hub ENDGAME stamp; ENTER still picks any 1…this.
-  static int nextOfferTier(int bestCleared) => maxSelectableTier(bestCleared);
+  /// Next uncleared rank — hub ENDGAME stamp; picker is any 1…[maxTier].
+  static int nextOfferTier(int bestCleared) =>
+      clampTier(max(minTier, bestCleared + 1));
 
   static String hubEnterLabel(int bestCleared) =>
       'RANKED GR${nextOfferTier(bestCleared)}';

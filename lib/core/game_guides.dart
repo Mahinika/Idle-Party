@@ -677,7 +677,7 @@ abstract final class GameGuides {
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet + Ranked GR on KEY · BOARDS (Play Games). '
           'Play install + sign-in. Local PB also stays on hub ENDGAME.\n'
-          '• The hub hunt chases Ranked GR before Farm Rift. ENTER opens arrows to pick any GR from 1 through next after your best.',
+          '• The hub hunt chases Ranked GR before Farm Rift. ENTER opens arrows to pick any GR.',
     ),
     GuideTopic(
       id: 'apex',

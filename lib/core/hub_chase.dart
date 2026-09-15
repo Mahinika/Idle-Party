@@ -935,7 +935,7 @@ class HubChase {
       );
     }
     // No milestone left — nudge next selectable tier if below max.
-    final next = Rift.maxSelectableTier(best);
+    final next = Rift.nextOfferTier(best);
     if (best < Rift.campaignCap && next > best) {
       return HubChase(
         kind: HubChaseKind.riftMilestone,
@@ -971,7 +971,7 @@ class HubChase {
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
     }
-    final next = GreaterRift.maxSelectableTier(best);
+    final next = GreaterRift.nextOfferTier(best);
     if (best < GreaterRift.campaignCap && next > best) {
       return HubChase(
         kind: HubChaseKind.greaterRiftMilestone,
