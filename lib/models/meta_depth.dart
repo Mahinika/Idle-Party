@@ -318,6 +318,7 @@ class MetaDepthState {
     this.shopStarterClaimed = false,
     this.shopBagBonusSlots = 0,
     this.shopPermScrolls = 0,
+    this.redeemedCoupons = const <String>[],
     this.monthPassKey = '',
     this.monthlyBestTimedKey = 0,
     this.monthlyBestGrTier = 0,
@@ -584,6 +585,9 @@ class MetaDepthState {
   /// Bitmask of forever SCROLLS from SHOP (same % as tickets, no extra power).
   final int shopPermScrolls;
 
+  /// Coupon ids already redeemed on this save. Survives Ascend.
+  final List<String> redeemedCoupons;
+
   /// UTC month key for month pass progress (yyyy-mm).
   final String monthPassKey;
   final int monthlyBestTimedKey;
@@ -738,6 +742,7 @@ class MetaDepthState {
     bool? shopStarterClaimed,
     int? shopBagBonusSlots,
     int? shopPermScrolls,
+    List<String>? redeemedCoupons,
     String? monthPassKey,
     int? monthlyBestTimedKey,
     int? monthlyBestGrTier,
@@ -883,6 +888,7 @@ class MetaDepthState {
       shopStarterClaimed: shopStarterClaimed ?? this.shopStarterClaimed,
       shopBagBonusSlots: shopBagBonusSlots ?? this.shopBagBonusSlots,
       shopPermScrolls: shopPermScrolls ?? this.shopPermScrolls,
+      redeemedCoupons: redeemedCoupons ?? this.redeemedCoupons,
       monthPassKey: monthPassKey ?? this.monthPassKey,
       monthlyBestTimedKey: monthlyBestTimedKey ?? this.monthlyBestTimedKey,
       monthlyBestGrTier: monthlyBestGrTier ?? this.monthlyBestGrTier,
@@ -1021,6 +1027,7 @@ class MetaDepthState {
     'shopStarterClaimed': shopStarterClaimed,
     'shopBagBonusSlots': shopBagBonusSlots,
     'shopPermScrolls': shopPermScrolls,
+    'redeemedCoupons': redeemedCoupons,
     'monthPassKey': monthPassKey,
     'monthlyBestTimedKey': monthlyBestTimedKey,
     'monthlyBestGrTier': monthlyBestGrTier,
@@ -1215,6 +1222,9 @@ class MetaDepthState {
           .clamp(0, 20),
       shopPermScrolls: ((json['shopPermScrolls'] as num?)?.toInt() ?? 0)
           .clamp(0, 127),
+      redeemedCoupons:
+          (json['redeemedCoupons'] as List<dynamic>?)?.cast<String>() ??
+          const [],
       monthPassKey: (json['monthPassKey'] as String?) ?? '',
       monthlyBestTimedKey: ((json['monthlyBestTimedKey'] as num?)?.toInt() ?? 0)
           .clamp(0, kEndlessLadderBound),

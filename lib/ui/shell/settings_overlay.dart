@@ -13,6 +13,7 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../meta/play_games_section.dart';
 import '../meta/save_transfer.dart';
+import '../redeem_coupon_dialog.dart';
 import 'bag_cleanup_filters.dart';
 import 'whats_new_overlay.dart';
 
@@ -417,6 +418,13 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           ),
         ],
         SaveTransferSection(director: director),
+        const SizedBox(height: 12),
+        GameButton(
+          label: 'REDEEM CODE',
+          tip: 'Unlock a coupon on this save',
+          style: GameButtonStyle.grey,
+          onPressed: () => showRedeemCouponDialog(context, director),
+        ),
         const SizedBox(height: 16),
         MenuChrome.sectionLabelScoped('COMMUNITY', scope: MenuScope.account),
         const SizedBox(height: 6),

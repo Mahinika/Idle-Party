@@ -36,6 +36,7 @@ import 'play_leaderboard_ids.dart';
 import 'play_store_update.dart';
 import 'screen_awake.dart';
 import 'shop_billing.dart';
+import 'coupon_codes.dart';
 import 'shop_catalog.dart';
 import 'shop_store.dart';
 import 'story_lore.dart';
@@ -3204,7 +3205,25 @@ class GameDirector extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Spend tickets on a POWERUPS buff.
+  void redeemCoupon(String raw) {
+    final result = CouponCodes.redeem(_state, raw);
+    switch (result.status) {
+      case CouponRedeemStatus.unknown:
+        showToast('Unknown code', life: 2.0);
+        return;
+      case CouponRedeemStatus.alreadyUsed:
+        showToast('Code already used on this save', life: 2.2);
+        return;
+      case CouponRedeemStatus.alreadyOwned:
+        _applyUpgrade(result.state);
+        showToast('Forever scrolls already owned', life: 2.2);
+        return;
+      case CouponRedeemStatus.granted:
+        _applyUpgrade(result.state);
+        GameAudio.ui();
+        showToast('All forever scrolls unlocked', life: 2.6);
+    }
+  }
   void spendPowerupBuff(AdBuffId id, {int? nowMs}) {
     final offer = AdBuffCatalog.byId(id);
     final before = _state.metaDepth.adTickets;
