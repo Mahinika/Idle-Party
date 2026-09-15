@@ -20,10 +20,11 @@ void main() {
     }
   });
 
-  test('Meet chase detail includes fantasy hook', () {
+  test('Meet chase detail is a short fantasy line', () {
     final now = DateTime.utc(2026, 8, 8, 12);
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
+      bossVictories: 1,
       metaDepth: state.metaDepth.copyWith(
         pendingHeroReveals: <String>[HeroSpecId.combat.name],
         dailyVaultClaimed: true,
@@ -34,9 +35,8 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.meetHero);
     expect(chase.detail, contains(HeroIdentity.meetBlurb(HeroSpecId.combat)));
-    expect(chase.detail, contains(HeroIdentity.meetHook(HeroSpecId.combat)));
-    expect(chase.detail, contains('GEAR'));
-    expect(chase.detail, contains('ROSTER'));
+    expect(chase.detail, isNot(contains(HeroIdentity.meetHook(HeroSpecId.combat))));
+    expect(chase.detail.toUpperCase(), isNot(contains('ROSTER')));
   });
 
   test('nextMissingKitTeaser includes a Watch hook', () {

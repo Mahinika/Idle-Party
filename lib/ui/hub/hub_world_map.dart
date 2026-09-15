@@ -16,6 +16,7 @@ class SelectedZoneCaption extends StatelessWidget {
     required this.partyLevel,
     this.keyLevel = 0,
     this.keyAffixLine,
+    this.hideBlurb = false,
   });
 
   final DungeonDef dungeon;
@@ -23,6 +24,7 @@ class SelectedZoneCaption extends StatelessWidget {
   final int partyLevel;
   final int keyLevel;
   final String? keyAffixLine;
+  final bool hideBlurb;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +48,7 @@ class SelectedZoneCaption extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: GameTheme.body(size: 12, color: GameTheme.torchHot),
             )
-          else if (dungeon.blurb.isNotEmpty)
+          else if (!hideBlurb && dungeon.blurb.isNotEmpty)
             Text(
               dungeon.blurb,
               textAlign: TextAlign.center,
@@ -61,9 +63,7 @@ class SelectedZoneCaption extends StatelessWidget {
     final prevName = dungeon.number <= 0
         ? 'the start'
         : DungeonCatalog.all[dungeon.number - 1].name;
-    final detail = need > 1
-        ? 'Clear $prevName or party Lv$need'
-        : 'Locked';
+    final detail = need > 1 ? 'Clear $prevName or party Lv$need' : 'Locked';
     return Text(
       '${dungeon.name} · $detail',
       textAlign: TextAlign.center,
@@ -124,6 +124,7 @@ class ZonePathMap extends StatefulWidget {
   final String selectedId;
   final int partyLevel;
   final int highestCleared;
+
   /// HERE-ring torch only — not a full-map rebuild every tick.
   final Animation<double>? pulse;
   final ValueChanged<String> onSelect;
@@ -181,13 +182,10 @@ class _ZonePathMapState extends State<ZonePathMap> {
     if (!_scroll.hasClients) return;
     final scrollKey = widget.selectedId;
     if (_userPanAt != null &&
-        DateTime.now().difference(_userPanAt!) <
-            const Duration(seconds: 2)) {
+        DateTime.now().difference(_userPanAt!) < const Duration(seconds: 2)) {
       return;
     }
-    if (_scrolledTo == scrollKey &&
-        _lastMapH == mapH &&
-        _lastViewH == viewH) {
+    if (_scrolledTo == scrollKey && _lastMapH == mapH && _lastViewH == viewH) {
       return;
     }
     final idx = widget.dungeons.indexWhere((d) => d.id == widget.selectedId);
@@ -405,8 +403,7 @@ class MapZoneMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final semanticsLabel =
-        '$name, $statusWord${selected ? ', selected' : ''}';
+    final semanticsLabel = '$name, $statusWord${selected ? ', selected' : ''}';
     final iconSize = discSize * 0.82;
 
     Widget portrait = KenneySprite(

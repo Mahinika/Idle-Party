@@ -29,6 +29,7 @@ class HubMetaPulse extends StatelessWidget {
   }) {
     if (!GameLogic.showDailyChase(state)) return const [];
     if (hubChaseOwnsEndgameRow(chaseKind)) return const [];
+    if (chaseUrgency == HubChaseUrgency.ready) return const [];
 
     final bits = <String>[];
     final showKey = GameLogic.showKeystoneJargon(state);
@@ -42,7 +43,7 @@ class HubMetaPulse extends StatelessWidget {
       );
     }
 
-      if (chaseKind != HubChaseKind.claimDailyVault &&
+    if (chaseKind != HubChaseKind.claimDailyVault &&
         chaseKind != HubChaseKind.dailyVaultProgress &&
         chaseKind != HubChaseKind.dailyRun &&
         chaseKind != HubChaseKind.claimMissions) {
@@ -156,57 +157,50 @@ class HubTodayCard extends StatelessWidget {
           chase.urgency == HubChaseUrgency.ready ||
           chase.urgency == HubChaseUrgency.almost,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+        padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Semantics(
                   label: 'Next job',
                   excludeSemantics: true,
-                  child: GameIcon.asset(UiIcon.star, size: 14),
+                  child: GameIcon.asset(UiIcon.star, size: 16),
                 ),
                 if (chip != null) ...[
-                  const SizedBox(width: 6),
-                  Text(chip, style: GameTheme.body(size: 12, color: accent)),
-                ],
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _todayHeadline(chase, ready: ready),
-                    maxLines: titleMaxLines,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(size: 13, color: GameTheme.parchment),
-                  ),
-                ),
-                if (actionLabel != null && onAction != null) ...[
-                  const SizedBox(width: 4),
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: GameButton(
-                        label: actionLabel!,
-                        style: GameButtonStyle.grey,
-                        expanded: false,
-                        onPressed: onAction,
-                      ),
-                    ),
-                  ),
+                  const SizedBox(width: 8),
+                  Text(chip, style: GameTheme.body(size: 13, color: accent)),
                 ],
               ],
             ),
+            const SizedBox(height: 6),
+            Text(
+              _todayHeadline(chase, ready: ready),
+              maxLines: titleMaxLines,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 16, color: GameTheme.parchment),
+            ),
             if (showDetail) ...[
-              const SizedBox(height: 2),
+              const SizedBox(height: 6),
               Text(
                 chase.detail,
-                maxLines: compact ? 3 : 3,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+              ),
+            ],
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: GameButton(
+                  label: actionLabel!,
+                  style: GameButtonStyle.grey,
+                  expanded: false,
+                  onPressed: onAction,
+                ),
               ),
             ],
           ],

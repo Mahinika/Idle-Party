@@ -390,7 +390,7 @@ class _HubScreenState extends State<HubScreen>
         ],
         HubTodayCard(
           chase: chase,
-          compact: true,
+          compact: short,
           // Short phones still keep READY / ALMOST detail — that is the hunt.
           hideDetail: short && chase.urgency == HubChaseUrgency.normal,
           actionLabel: cta.hideInlineChaseAction ? null : chaseActionLabel,
@@ -451,8 +451,8 @@ class _HubScreenState extends State<HubScreen>
             canAscend: canAscend,
             ascendLabel: canAscend
                 ? (GameLogic.endgameUnlocked(state)
-                    ? 'ASCEND · optional'
-                    : 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e')
+                      ? 'ASCEND · optional'
+                      : 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1)}e')
                 : null,
             hideAscend: // FEEL 050
                 chase.kind == HubChaseKind.ascend ||
@@ -600,9 +600,7 @@ class _HubScreenState extends State<HubScreen>
                                     _showEndgameMap = false;
                                     if (_selectedHunt != null) {
                                       _selectedId =
-                                          GameLogic.recommendedDungeonId(
-                                        state,
-                                      );
+                                          GameLogic.recommendedDungeonId(state);
                                     }
                                     _selectedHunt = null;
                                   }),
@@ -631,9 +629,7 @@ class _HubScreenState extends State<HubScreen>
                                       child: RepaintBoundary(
                                         child:
                                             _showEndgameMap &&
-                                                GameLogic.endgameUnlocked(
-                                                  state,
-                                                )
+                                                GameLogic.endgameUnlocked(state)
                                             ? HubEndgameMap(
                                                 selectedHunt: _selectedHunt,
                                                 pulse: _torch,
@@ -641,24 +637,24 @@ class _HubScreenState extends State<HubScreen>
                                                     state.metaDepth.grBestTier,
                                                 onSelectHunt: (hunt) =>
                                                     setState(() {
-                                                  _userPickedZone = true;
-                                                  _showEndgameMap = true;
-                                                  _selectedHunt = hunt;
-                                                  _selectedId =
-                                                      HubEndgameAct.nodeFor(
-                                                    hunt,
-                                                  ).portraitDungeonId;
-                                                }),
+                                                      _userPickedZone = true;
+                                                      _showEndgameMap = true;
+                                                      _selectedHunt = hunt;
+                                                      _selectedId =
+                                                          HubEndgameAct.nodeFor(
+                                                            hunt,
+                                                          ).portraitDungeonId;
+                                                    }),
                                               )
                                             : ZonePathMap(
                                                 dungeons: DungeonCatalog.all,
                                                 selectedId: _selectedId,
                                                 partyLevel:
                                                     GameLogic.partyMeanLevel(
-                                                  state,
-                                                ),
-                                                highestCleared: state
-                                                    .highestDungeonCleared,
+                                                      state,
+                                                    ),
+                                                highestCleared:
+                                                    state.highestDungeonCleared,
                                                 pulse: _torch,
                                                 onSelect: (id) => setState(() {
                                                   _userPickedZone = true;
@@ -670,28 +666,28 @@ class _HubScreenState extends State<HubScreen>
                                       ),
                                     ),
                                     Positioned(
-                                        right: 0,
-                                        bottom: 0,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            ScrollBuffStack(
-                                              meta: state.metaDepth,
-                                              maxHeight: 132,
-                                            ),
-                                            if (_showPowerupsFab())
-                                              HubPowerupsFab(
-                                                state: state,
-                                                onOpen: () => openPowerupsSheet(
-                                                  context,
-                                                  director,
-                                                ),
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          ScrollBuffStack(
+                                            meta: state.metaDepth,
+                                            maxHeight: 132,
+                                          ),
+                                          if (_showPowerupsFab())
+                                            HubPowerupsFab(
+                                              state: state,
+                                              onOpen: () => openPowerupsSheet(
+                                                context,
+                                                director,
                                               ),
-                                          ],
-                                        ),
+                                            ),
+                                        ],
                                       ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -710,8 +706,7 @@ class _HubScreenState extends State<HubScreen>
                                     // KEY chase detail already lists affixes · par.
                                     keyLevel:
                                         GameLogic.showKeystoneJargon(state) &&
-                                            chase.kind !=
-                                                HubChaseKind.keystone
+                                            chase.kind != HubChaseKind.keystone
                                         ? state.hardmodeLevel
                                         : 0,
                                     keyAffixLine:
@@ -724,6 +719,8 @@ class _HubScreenState extends State<HubScreen>
                                               .map(Keystone.label)
                                               .join(' · ')
                                         : null,
+                                    hideBlurb:
+                                        chase.urgency == HubChaseUrgency.ready,
                                   ),
                               ],
                               if (short)

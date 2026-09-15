@@ -164,8 +164,10 @@ class HubChase {
       final bossesNeed = GameLogic.bossesRequiredForAscension(
         state.ascensionLevel,
       );
-      final bossesLeft =
-          (bossesNeed - state.bossVictories).clamp(0, bossesNeed);
+      final bossesLeft = (bossesNeed - state.bossVictories).clamp(
+        0,
+        bossesNeed,
+      );
       return _ascendPushChase(
         state,
         bossesNeed: bossesNeed,
@@ -195,8 +197,7 @@ class HubChase {
       // stays on the hub urgent row so new saves are not trapped on one button.
       // At party Lv100, KEY / the endgame ladder is the night's job; Ascend
       // stays on the urgent row and KEEP as optional lasting power.
-      if (state.ascensionLevel > 0 &&
-          !GameLogic.endgameUnlocked(state)) {
+      if (state.ascensionLevel > 0 && !GameLogic.endgameUnlocked(state)) {
         final reward =
             GameLogic.ascendEssenceReward(state.ascensionLevel + 1) +
             MetaSystems.ascendMilestoneReward(
@@ -341,7 +342,8 @@ class HubChase {
 
     // Day-2–7 job (pre-endgame): one cave clear fills Daily Vault.
     // Daily Run waits until first Ascend so TODAY is not three dailies.
-    final wantVaultStart = !md.dailyVaultClaimed &&
+    final wantVaultStart =
+        !md.dailyVaultClaimed &&
         md.dailyVaultClears == 0 &&
         md.dailyBestTimedKey < 2;
     if (!GameLogic.endgameUnlocked(state)) {
@@ -381,7 +383,9 @@ class HubChase {
     final marketLate = _marketUpgradeChase(state);
     if (marketLate != null) return marketLate;
 
-    final will = GameLogic.showDailyRunOnHub(state) ? _nextWillChase(state) : null;
+    final will = GameLogic.showDailyRunOnHub(state)
+        ? _nextWillChase(state)
+        : null;
     if (will != null) return will;
 
     if (!GameLogic.endgameUnlocked(state)) {
@@ -428,8 +432,7 @@ class HubChase {
     final pb = _gauntletPbChase(state);
     if (pb == null) return null;
     final cap = Keystone.maxForState(state);
-    final keySettled =
-        cap <= 0 || state.hardmodeLevel >= Keystone.campaignCap;
+    final keySettled = cap <= 0 || state.hardmodeLevel >= Keystone.campaignCap;
     final vaultOk = state.metaDepth.dailyVaultClaimed;
     final dailyOk = MetaSystems.isDailyClaimedToday(state, now: clock);
     if (vaultOk && dailyOk && keySettled) {
@@ -455,7 +458,10 @@ class HubChase {
 
   static HubChase? _ashenCrownChase(GameState state, DateTime clock) {
     if (!AshenCrown.canEnter(state)) return null;
-    final tickets = AshenCrown.ensureWeek(state, now: clock).metaDepth.worldBossTickets;
+    final tickets = AshenCrown.ensureWeek(
+      state,
+      now: clock,
+    ).metaDepth.worldBossTickets;
     if (tickets <= 0) return null;
     if (state.metaDepth.worldBossClearedWeek) return null;
     final kit = AshenCrown.kitFor(now: clock);
@@ -464,9 +470,9 @@ class HubChase {
       title: 'Clear ${kit.title}',
       detail: tickets == 1
           ? '${kit.weekLine} 1 ticket. First clear pays '
-              '+${AshenCrown.essenceReward}e. PRACTICE free after.'
+                '+${AshenCrown.essenceReward}e. PRACTICE free after.'
           : '${kit.weekLine} $tickets tickets. One paid clear/week '
-              '(+${AshenCrown.essenceReward}e); PRACTICE free after.',
+                '(+${AshenCrown.essenceReward}e); PRACTICE free after.',
       progressLabel: tickets == 1 ? '1 ticket' : '$tickets tickets',
       urgency: tickets <= 1 ? HubChaseUrgency.almost : HubChaseUrgency.normal,
     );
@@ -495,10 +501,10 @@ class HubChase {
     final named = itemName == null
         ? null
         : (heroBit == null
-            ? (slotBit == null ? itemName : '$itemName ($slotBit)')
-            : (slotBit == null
-                ? '$itemName → $heroBit'
-                : '$itemName → $heroBit ($slotBit)'));
+              ? (slotBit == null ? itemName : '$itemName ($slotBit)')
+              : (slotBit == null
+                    ? '$itemName → $heroBit'
+                    : '$itemName → $heroBit ($slotBit)'));
     return HubChase(
       kind: HubChaseKind.equipBag,
       title: upgrades == 1
@@ -506,27 +512,27 @@ class HubChase {
           : '$upgrades better items waiting',
       detail: upgrades == 1
           ? (named != null
-              ? '$named is in BAG — tap EQUIP 1.'
-              : 'Tap EQUIP 1 before you go deeper.')
+                ? '$named is in BAG — tap EQUIP 1.'
+                : 'Tap EQUIP 1 before you go deeper.')
           : (named != null
-              ? 'Tap EQUIP $upgrades (first: $named).'
-              : 'Tap EQUIP $upgrades — upgrades waiting.'),
+                ? 'Tap EQUIP $upgrades (first: $named).'
+                : 'Tap EQUIP $upgrades — upgrades waiting.'),
       progressLabel: upgrades == 1 ? 'EQUIP 1' : 'EQUIP $upgrades',
       urgency: HubChaseUrgency.ready,
     );
   }
 
   static String _equipSlotLabel(EquipmentSlot slot) => switch (slot) {
-        EquipmentSlot.weapon => 'weapon',
-        EquipmentSlot.offHand => 'off-hand',
-        EquipmentSlot.ranged => 'ranged',
-        EquipmentSlot.head => 'helm',
-        EquipmentSlot.chest => 'chest',
-        EquipmentSlot.boots => 'boots',
-        EquipmentSlot.ring || EquipmentSlot.ring2 => 'ring',
-        EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'trinket',
-        _ => slot.name,
-      };
+    EquipmentSlot.weapon => 'weapon',
+    EquipmentSlot.offHand => 'off-hand',
+    EquipmentSlot.ranged => 'ranged',
+    EquipmentSlot.head => 'helm',
+    EquipmentSlot.chest => 'chest',
+    EquipmentSlot.boots => 'boots',
+    EquipmentSlot.ring || EquipmentSlot.ring2 => 'ring',
+    EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'trinket',
+    _ => slot.name,
+  };
 
   static HubChase? _marketUpgradeChase(GameState state) {
     final listing = MarketListingsService.bestAffordableUpgradeListing(state);
@@ -554,14 +560,19 @@ class HubChase {
     final extra = specs.length - 1;
     return HubChase(
       kind: HubChaseKind.meetHero,
-      title: extra > 0 ? 'Meet ${def.name} · +$extra' : 'Meet ${def.name}',
-      detail: '${HeroIdentity.meetDetail(first)} Open GEAR → ROSTER to field them.',
+      title: extra > 0 ? 'Meet ${def.name} (+$extra more)' : 'Meet ${def.name}',
+      detail: HeroIdentity.meetBlurb(first),
       progressLabel: 'New',
       urgency: HubChaseUrgency.ready,
     );
   }
 
-  static HubChase? _monthPassChase(GameState state, DateTime clock, {bool readyOnly = false, bool almostOnly = false}) {
+  static HubChase? _monthPassChase(
+    GameState state,
+    DateTime clock, {
+    bool readyOnly = false,
+    bool almostOnly = false,
+  }) {
     final monthKey = state.metaDepth.monthPassKey.isNotEmpty
         ? state.metaDepth.monthPassKey
         : GameLogic.isoMonthKey(clock);
@@ -680,14 +691,9 @@ class HubChase {
         ? 'no affixes'
         : affixes.map(Keystone.label).join(' · ');
     final par = Keystone.formatTimer(
-      Keystone.parTimeMs(
-        bossFloor: GameLogic.bossFloorFor(state),
-        key: key,
-      ),
+      Keystone.parTimeMs(bossFloor: GameLogic.bossFloorFor(state), key: key),
     );
-    final lead = firstKey
-        ? 'ENTER sets KEY +1 · +$ilvl iLvl'
-        : '+$ilvl iLvl';
+    final lead = firstKey ? 'ENTER sets KEY +1 · +$ilvl iLvl' : '+$ilvl iLvl';
     final hint = Keystone.rosterHintForAffixes(affixes);
     final base = '$lead · $affixBit · par $par';
     if (hint == null) return base;
@@ -711,8 +717,14 @@ class HubChase {
     if (!GameLogic.showDailyChase(state)) return null;
     final heroes = state.heroes;
     if (heroes.isEmpty) return null;
-    final minLv = heroes.fold<int>(heroes.first.level, (m, h) => min(m, h.level));
-    final maxLv = heroes.fold<int>(heroes.first.level, (m, h) => max(m, h.level));
+    final minLv = heroes.fold<int>(
+      heroes.first.level,
+      (m, h) => min(m, h.level),
+    );
+    final maxLv = heroes.fold<int>(
+      heroes.first.level,
+      (m, h) => max(m, h.level),
+    );
     final need = GameLogic.maxHeroLevel - minLv;
     if (need <= 0) return null;
     final almost = need <= 5;
@@ -723,9 +735,9 @@ class HubChase {
           : 'Level the party to ${GameLogic.maxHeroLevel}',
       detail: almost
           ? 'Lowest hero Lv$minLv — a few more combat levels unlock KEY, '
-              'Gauntlet, and Ranked GR.'
+                'Gauntlet, and Ranked GR.'
           : 'Heroes Lv$minLv–$maxLv. Combat XP to '
-              '${GameLogic.maxHeroLevel} unlocks KEY, Gauntlet, and Ranked GR.',
+                '${GameLogic.maxHeroLevel} unlocks KEY, Gauntlet, and Ranked GR.',
       progressLabel: minLv == maxLv
           ? 'Lv$minLv/${GameLogic.maxHeroLevel}'
           : 'Lv$minLv–$maxLv/${GameLogic.maxHeroLevel}',
@@ -784,7 +796,7 @@ class HubChase {
       title: keyTalk ? 'Start Daily Vault' : 'Clear one cave today',
       detail: keyTalk
           ? 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for '
-              'Daily Vault essence, or time KEY +2 under par for a bigger claim.'
+                'Daily Vault essence, or time KEY +2 under par for a bigger claim.'
           : 'One dungeon clear fills today\'s reward. Then claim on the hub.',
       progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
     );
@@ -806,9 +818,7 @@ class HubChase {
       );
     }
     final gr = state.metaDepth.grBestTier;
-    final nextGr = gr <= 0
-        ? 1
-        : (gr >= GreaterRift.maxTier ? gr : gr + 1);
+    final nextGr = gr <= 0 ? 1 : (gr >= GreaterRift.maxTier ? gr : gr + 1);
     return HubChase(
       kind: HubChaseKind.greaterRiftMilestone,
       title: 'Push Ranked GR$nextGr',
@@ -861,13 +871,13 @@ class HubChase {
         title: best <= 0
             ? 'First Gauntlet Spire'
             : (almost
-                ? 'Almost Gauntlet floor $floor'
-                : 'Gauntlet floor $floor'),
+                  ? 'Almost Gauntlet floor $floor'
+                  : 'Gauntlet floor $floor'),
         detail: best <= 0
             ? 'Infinity Gauntlet — boss every 5 floors; wipe or leave '
-                'returns to hub. Climb for +${pay}e.'
+                  'returns to hub. Climb for +${pay}e.'
             : 'Best F$best — $need floors to F$floor (+${pay}e). '
-                'Boss every 5; wipe → hub.',
+                  'Boss every 5; wipe → hub.',
         progressLabel: 'F$best → F$floor',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
