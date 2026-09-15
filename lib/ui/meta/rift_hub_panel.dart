@@ -6,9 +6,8 @@ import '../../core/rift.dart';
 import '../confirm_dialogs.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
-import '../menu_chrome.dart';
 
-/// KEY tab: farm Rift tier dial (gold + gear mid-run).
+/// KEY tab: Farm Rift enter (tier picker on ENTER).
 class RiftHubPanel extends StatelessWidget {
   const RiftHubPanel({super.key, required this.director});
   final GameDirector director;
@@ -26,9 +25,6 @@ class RiftHubPanel extends StatelessWidget {
     }
     final best = state.metaDepth.riftBestTier;
     final maxSel = Rift.maxSelectableTier(best);
-    final pref = Rift.clampTier(
-      state.metaDepth.riftPreferredTier.clamp(Rift.minTier, maxSel),
-    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -38,40 +34,13 @@ class RiftHubPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Progress bar → Rift Guardian — no fail timer. Gold + gear mid-run. '
-          'Endless after R${Rift.campaignCap}. '
-          'Best R$best · +${Rift.successEssence(pref)}e / +${Rift.successGold(pref)}g',
+          'ENTER opens the R picker (1–R$maxSel). Gold + gear mid-run. '
+          'Endless after R${Rift.campaignCap}. Best R$best.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            MenuChrome.stepperButton(
-              label: 'RIFT -',
-              sign: '-',
-              onPressed: pref > Rift.minTier
-                  ? () => director.setRiftPreferredTier(pref - 1)
-                  : null,
-            ),
-            Expanded(
-              child: Text(
-                'R$pref',
-                textAlign: TextAlign.center,
-                style: GameTheme.body(size: 16, color: GameTheme.parchment),
-              ),
-            ),
-            MenuChrome.stepperButton(
-              label: 'RIFT +',
-              sign: '+',
-              onPressed: pref < maxSel
-                  ? () => director.setRiftPreferredTier(pref + 1)
-                  : null,
-            ),
-          ],
         ),
         const SizedBox(height: 8),
         GameButton(
-          label: 'ENTER FARM R$pref',
+          label: 'ENTER FARM RIFT',
           style: GameButtonStyle.brown,
           onPressed: GameLogic.canEnterRift(state)
               ? () => confirmRiftRun(context, director)

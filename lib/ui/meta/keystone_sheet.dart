@@ -84,7 +84,7 @@ class KeystoneSheet extends StatelessWidget {
                 MenuChrome.fold(
                   title: 'RANKED GR',
                   subtitle:
-                      'Mothveil progress · Guardian under the clock · ranked',
+                      'Mothveil · pick GR on ENTER · clock · ranked',
                   initiallyExpanded: hunt == HubEndgameHunt.rankedGr,
                   children: [
                     GreaterRiftHubPanel(director: d),
@@ -93,7 +93,7 @@ class KeystoneSheet extends StatelessWidget {
                 MenuChrome.fold(
                   title: 'FARM RIFT',
                   subtitle:
-                      'Stormwake progress · gold + gear mid-run · not ranked',
+                      'Stormwake · pick R on ENTER · gold + gear · not ranked',
                   initiallyExpanded: hunt == HubEndgameHunt.farmRift,
                   children: [
                     RiftHubPanel(director: d),

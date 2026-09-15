@@ -26,7 +26,16 @@ abstract final class GreaterRift {
   static int maxSelectableTier(int bestCleared) =>
       clampTier(max(minTier, bestCleared + 1));
 
-  /// Next uncleared rank — hub ENDGAME / enter use this, not a KEY dial.
+  /// Picker starts on last pick, else last clear (so GR20 opens on 20, not 1).
+  static int pickerStart({required int preferred, required int bestCleared}) {
+    final maxSel = maxSelectableTier(bestCleared);
+    final p = clampTier(preferred.clamp(minTier, maxSel));
+    if (p > minTier) return p;
+    if (bestCleared <= 0) return minTier;
+    return clampTier(bestCleared.clamp(minTier, maxSel));
+  }
+
+  /// Next uncleared rank — hub ENDGAME stamp; ENTER still picks any 1…this.
   static int nextOfferTier(int bestCleared) => maxSelectableTier(bestCleared);
 
   static String hubEnterLabel(int bestCleared) =>

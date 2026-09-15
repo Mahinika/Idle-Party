@@ -247,9 +247,8 @@ Lv100** (`GameLogic.showKeystoneJargon` → `endgameUnlocked`). At endgame,
 the hub grows a **PATH | ENDGAME** switch: PATH is the 15-zone World Path;
 **ENDGAME** is its own map (`HubEndgameHunt`: Gauntlet, Ranked GR, Farm Rift, Ashen Crown) —
 not a footer under Mothveil, not dungeon #16. Craft Trial stays under MORE → CRAFT.
-Tap a hunt then ENTER. KEY
-holds KEY / Farm Rift dials; Ranked GR shows the next rank on ENDGAME
-(GR34 → GR35) — no KEY stepper. Hub KEY / Vault / Week crumbs stay off while that
+Tap a hunt then ENTER — Farm Rift and Ranked GR pick R/GR with arrows (1 through best+1). KEY
+holds the KEY dial. Hub KEY / Vault / Week crumbs stay off while that
 hunt is KEY, Gauntlet, Ranked GR, Farm Rift, or Ashen.
 TODAY prefers KEY then Gauntlet → Greater Rift → Rift → Ashen Crown before
 Daily grind; Meet-kit backlog stays on PARTY badge. New unlocks queue

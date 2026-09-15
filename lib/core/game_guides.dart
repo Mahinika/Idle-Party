@@ -416,7 +416,8 @@ abstract final class GameGuides {
           '• At party Lv${GameLogic.maxHeroLevel}, hub PATH and ENDGAME tabs open. '
           'ENDGAME is its own map (Gauntlet, Ranked GR, Farm Rift, Ashen Crown) — '
           'not under Mothveil, not a 16th dungeon. Tap a hunt, then ENTER. '
-          'KEY still holds the dials.\n'
+          'Farm Rift and Ranked GR pick the number on ENTER. '
+          'KEY still holds the KEY dial.\n'
           "• Goblin's Hideout: stolen-stash chests pay better gold but wake ambush guards.\n"
           '• Boss floor is shown under your party name (Boss on F n).',
     ),
@@ -661,7 +662,7 @@ abstract final class GameGuides {
           '• Tiers keep going past R20 — packs get harder; progress target holds after R20. Clears unlock +1.\n'
           '• Not ranked on Play Games — gear drops mid-run (Ranked GR does not). '
           'The hub hunt chases Farm Rift after GR milestones quiet.\n'
-          '• Set tier under KEY · FARM RIFT (Stormwake), on the hub ENDGAME tab, or follow the hub hunt.',
+          '• Set R on ENTER (arrows) — KEY · FARM RIFT, hub ENDGAME, or the hub hunt.',
     ),
     GuideTopic(
       id: 'greater_rift',
@@ -676,7 +677,7 @@ abstract final class GameGuides {
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet + Ranked GR on KEY · BOARDS (Play Games). '
           'Play install + sign-in. Local PB also stays on hub ENDGAME.\n'
-          '• The hub hunt chases Ranked GR before Farm Rift. Hub ENDGAME shows the next rank after your best (GR34 → GR35) — no KEY dial.',
+          '• The hub hunt chases Ranked GR before Farm Rift. ENTER opens arrows to pick any GR from 1 through next after your best.',
     ),
     GuideTopic(
       id: 'apex',

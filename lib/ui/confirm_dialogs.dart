@@ -12,6 +12,7 @@ import '../models/dungeon_mode.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
+import 'meta/rift_tier_picker.dart';
 import 'web_click_bridge.dart';
 
 Future<void> confirmAscend(BuildContext context, GameDirector director) async {
@@ -306,48 +307,33 @@ Future<void> confirmRiftRun(
 ) async {
   final state = director.state;
   if (!GameLogic.canEnterRift(state)) return;
-  final tier = Rift.clampTier(
-    state.metaDepth.riftPreferredTier.clamp(
-      Rift.minTier,
-      Rift.maxSelectableTier(state.metaDepth.riftBestTier),
-    ),
-  );
-  final essence = Rift.successEssence(tier);
-  final gold = Rift.successGold(tier);
   final best = state.metaDepth.riftBestTier;
+  final maxSel = Rift.maxSelectableTier(best);
+  final initial = Rift.pickerStart(
+    preferred: state.metaDepth.riftPreferredTier,
+    bestCleared: best,
+  );
   WebClickBridge.pushLayer();
   try {
-    final ok = await showDialog<bool>(
+    final chosen = await showDialog<int>(
       context: context,
       barrierColor: MenuChrome.scrim,
-      builder: (ctx) => MenuChrome.dialog(
-        title: 'Farm Rift R$tier?',
-        content: Text(
-          'Stormwake Hollow Nephalem-style farm — not Gauntlet floors.\n\n'
-          'Kills fill a progress bar, then defeat the Rift Guardian. '
-          'No fail timer. Gold and gear drop during the run. '
-          'Success pays +${essence}e · +${gold}g and unlocks the next tier.\n\n'
-          'Not ranked on Play Games. Best clear: R$best',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
-        ),
-        actions: [
-          GameButton(
-            label: 'CANCEL',
-            style: GameButtonStyle.grey,
-            expanded: false,
-            onPressed: () => Navigator.pop(ctx, false),
-          ),
-          GameButton(
-            label: 'ENTER FARM R$tier',
-            style: GameButtonStyle.brown,
-            expanded: false,
-            onPressed: () => Navigator.pop(ctx, true),
-          ),
-        ],
+      builder: (ctx) => RiftTierPickerDialog(
+        title: 'Farm Rift',
+        prefix: 'R',
+        minusLabel: 'RIFT -',
+        plusLabel: 'RIFT +',
+        enterLabel: (t) => 'ENTER FARM R$t',
+        initial: initial,
+        minTier: Rift.minTier,
+        maxTier: maxSel,
+        blurb:
+            'Stormwake · gold + gear mid-run. Best R$best · pick 1–R$maxSel.',
+        onStep: director.setRiftPreferredTier,
       ),
     );
-    if (ok == true && context.mounted) {
-      director.enterRift(tier: tier);
+    if (chosen != null && context.mounted) {
+      director.enterRift(tier: chosen);
     }
   } finally {
     WebClickBridge.popLayer();
@@ -360,45 +346,33 @@ Future<void> confirmGreaterRiftRun(
 ) async {
   final state = director.state;
   if (!GameLogic.canEnterGreaterRift(state)) return;
-  final tier = GreaterRift.nextOfferTier(state.metaDepth.grBestTier);
-  final par = GreaterRift.formatTimer(GreaterRift.parTimeMs(tier));
-  final essence = GreaterRift.successEssence(tier);
-  final gold = GreaterRift.successGold(tier);
   final best = state.metaDepth.grBestTier;
+  final maxSel = GreaterRift.maxSelectableTier(best);
+  final initial = GreaterRift.pickerStart(
+    preferred: state.metaDepth.grPreferredTier,
+    bestCleared: best,
+  );
   WebClickBridge.pushLayer();
   try {
-    final ok = await showDialog<bool>(
+    final chosen = await showDialog<int>(
       context: context,
       barrierColor: MenuChrome.scrim,
-      builder: (ctx) => MenuChrome.dialog(
-        title: 'Ranked GR$tier?',
-        content: Text(
-          'Mothveil Greater-style ranked ladder — not Gauntlet floors, not farm loot.\n\n'
-          'Kills fill progress, then defeat the Rift Guardian before $par. '
-          'Gold OK mid-run; no gear drops. '
-          'Clear pays +${essence}e · +${gold}g. Local PB on hub. Play GR board '
-          'needs a Play install + sign-in.\n\n'
-          'Harder packs than Farm Rift. Best clear: GR$best',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
-        ),
-        actions: [
-          GameButton(
-            label: 'CANCEL',
-            style: GameButtonStyle.grey,
-            expanded: false,
-            onPressed: () => Navigator.pop(ctx, false),
-          ),
-          GameButton(
-            label: 'ENTER RANK GR$tier',
-            style: GameButtonStyle.red,
-            expanded: false,
-            onPressed: () => Navigator.pop(ctx, true),
-          ),
-        ],
+      builder: (ctx) => RiftTierPickerDialog(
+        title: 'Ranked GR',
+        prefix: 'GR',
+        minusLabel: 'GR -',
+        plusLabel: 'GR +',
+        enterLabel: (t) => 'ENTER RANK GR$t',
+        initial: initial,
+        minTier: GreaterRift.minTier,
+        maxTier: maxSel,
+        blurb:
+            'Mothveil · clock · no gear. Best GR$best · pick 1–GR$maxSel.',
+        onStep: director.setGrPreferredTier,
       ),
     );
-    if (ok == true && context.mounted) {
-      director.enterGreaterRift(tier: tier);
+    if (chosen != null && context.mounted) {
+      director.enterGreaterRift(tier: chosen);
     }
   } finally {
     WebClickBridge.popLayer();

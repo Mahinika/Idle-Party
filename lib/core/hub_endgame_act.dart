@@ -5,8 +5,7 @@ import 'hub_chase.dart';
 ///
 /// Not dungeon #16 and not a footer under the 15-zone path — a separate
 /// board. Hunts reuse Crystal Spire / Mothveil / Stormwake / Ashen Vault
-/// staging. KEY still holds KEY / Farm Rift dials; Ranked GR is next-rank
-/// on this map (no KEY stepper).
+/// staging. KEY still holds KEY; Farm Rift and Ranked GR pick tier on ENTER.
 enum HubEndgameHunt { gauntlet, rankedGr, farmRift, ashen }
 
 class HubEndgameNode {
@@ -62,7 +61,7 @@ abstract final class HubEndgameAct {
       shortLabel: 'RANKED GR',
       title: 'Ranked GR',
       blurb:
-          'Next rank after your best · Mothveil · no gear mid-run',
+          'Pick GR on ENTER · Mothveil · no gear mid-run',
       portraitDungeonId: 'veil',
       enterLabel: 'RANKED GR',
       chaseKind: HubChaseKind.greaterRiftMilestone,

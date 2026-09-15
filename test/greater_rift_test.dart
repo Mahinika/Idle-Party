@@ -219,22 +219,35 @@ void main() {
     expect(resolved.metaDepth.riftBestTier, greaterThan(0));
   });
 
-  test('enter without a tier is always best+1, not KEY preferred', () {
+  test('enter without a tier uses preferred, clamped to best+1', () {
     var state = _withPartyMaxLevel(
       GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel,
         metaDepth: const MetaDepthState(
-          grBestTier: 34,
-          grPreferredTier: 1,
+          grBestTier: 20,
+          grPreferredTier: 8,
         ),
       ),
     );
-    expect(GreaterRift.nextOfferTier(34), 35);
-    expect(GreaterRift.hubEnterLabel(34), 'RANKED GR35');
-    expect(GreaterRift.hubShortLabel(34), 'GR35');
-    final run = GameLogic.enterGreaterRift(state);
-    expect(run.grTier, 35);
-    expect(run.inGreaterRift, isTrue);
+    expect(GreaterRift.maxSelectableTier(20), 21);
+    expect(
+      GreaterRift.pickerStart(preferred: 1, bestCleared: 20),
+      20,
+    );
+    expect(
+      GreaterRift.pickerStart(preferred: 8, bestCleared: 20),
+      8,
+    );
+    expect(
+      GreaterRift.pickerStart(preferred: 21, bestCleared: 20),
+      21,
+    );
+    final farm = GameLogic.enterGreaterRift(state);
+    expect(farm.grTier, 8);
+    final push = GameLogic.enterGreaterRift(state, tier: 21);
+    expect(push.grTier, 21);
+    final blocked = GameLogic.enterGreaterRift(state, tier: 22);
+    expect(blocked.grTier, 21);
   });
 
   test('Ranked GR stays selectable past 20', () {

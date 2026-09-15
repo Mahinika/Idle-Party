@@ -30,6 +30,15 @@ abstract final class Rift {
   static int maxSelectableTier(int bestCleared) =>
       clampTier(max(minTier, bestCleared + 1));
 
+  /// Picker starts on last pick, else last clear (so GR20 opens on 20, not 1).
+  static int pickerStart({required int preferred, required int bestCleared}) {
+    final maxSel = maxSelectableTier(bestCleared);
+    final p = clampTier(preferred.clamp(minTier, maxSel));
+    if (p > minTier) return p;
+    if (bestCleared <= 0) return minTier;
+    return clampTier(bestCleared.clamp(minTier, maxSel));
+  }
+
   /// Normal kills needed to fill the progress bar to 100%.
   static int killTarget(int tier) {
     final t = min(clampTier(tier), campaignCap);

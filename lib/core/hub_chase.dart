@@ -928,7 +928,7 @@ class HubChase {
         kind: HubChaseKind.riftMilestone,
         title: almost ? 'Almost Farm Rift R$tier' : 'Farm Rift R$tier',
         detail: best <= 0
-            ? 'Farm Rift in Stormwake (KEY dial) — progress bar → Guardian + loot mid-run; +${pay}e at R$tier.'
+            ? 'Farm Rift in Stormwake — pick R on ENTER (progress bar → Guardian + loot mid-run; +${pay}e at R$tier).'
             : 'Best R$best — $need farm tiers to R$tier (+${pay}e). Not Spire climb.',
         progressLabel: 'R$best → R$tier',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,

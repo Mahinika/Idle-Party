@@ -151,7 +151,7 @@ class FirstSessionTips extends StatelessWidget {
           'Party level ${GameLogic.maxHeroLevel} opened the hub ENDGAME tab — '
           'a separate map from the 15 zones. '
           'Tap Gauntlet, Ranked GR, Farm Rift, or Ashen Crown, then ENTER. '
-          'KEY still holds the dials.',
+          'Farm Rift and Ranked GR pick the number on ENTER. KEY still holds the KEY dial.',
     ),
     (
       id: 'gauntlet',
@@ -166,7 +166,7 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'At party Lv${GameLogic.maxHeroLevel}, Farm Rift is Stormwake loot farming — '
           'progress bar → Guardian, gold + gear mid-run, no fail timer. '
-          'Tap FARM RIFT on the hub ENDGAME tab, or KEY · FARM RIFT. '
+          'Tap FARM RIFT on the hub ENDGAME tab, or KEY · FARM RIFT, then pick R. '
           'The hub hunt chases it after Ranked GR. Not Spire climb.',
     ),
     (
@@ -175,7 +175,8 @@ class FirstSessionTips extends StatelessWidget {
       body:
           'At party Lv${GameLogic.maxHeroLevel}, Ranked GR is the Mothveil Greater-style timer — '
           'progress → Guardian under par, harder packs, no mid-run gear. Local PB on hub ENDGAME. Play GR board needs a Play install + sign-in. '
-          'Tap RANKED GR on the hub ENDGAME tab — it offers the next rank after your best. The hub hunt chases GR before Farm Rift.',
+          'Tap RANKED GR on the hub ENDGAME tab, then pick GR with the arrows '
+          '(lower or next after your best). The hub hunt chases GR before Farm Rift.',
     ),
     (
       id: 'ashen_crown',

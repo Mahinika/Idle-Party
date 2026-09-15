@@ -7,7 +7,7 @@ import '../confirm_dialogs.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 
-/// KEY tab: Greater Rift next-rank enter (no KEY stepper).
+/// KEY tab: Greater Rift enter (tier picker on ENTER).
 class GreaterRiftHubPanel extends StatelessWidget {
   const GreaterRiftHubPanel({super.key, required this.director});
   final GameDirector director;
@@ -24,8 +24,7 @@ class GreaterRiftHubPanel extends StatelessWidget {
       );
     }
     final best = state.metaDepth.grBestTier;
-    final next = GreaterRift.nextOfferTier(best);
-    final par = GreaterRift.formatTimer(GreaterRift.parTimeMs(next));
+    final maxSel = GreaterRift.maxSelectableTier(best);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -35,17 +34,14 @@ class GreaterRiftHubPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Next rank after your best — hub ENDGAME shows it. No KEY dial. '
-          'Progress → Guardian before $par. Gold OK, no gear mid-run. '
-          'Local PB on hub. Play GR board needs a Play install + sign-in. '
-          'Endless after GR${GreaterRift.campaignCap}. '
-          'Best GR$best · next GR$next · '
-          '+${GreaterRift.successEssence(next)}e / +${GreaterRift.successGold(next)}g',
+          'ENTER opens the GR picker (1–GR$maxSel) — lower or next after best. '
+          'Clock · no gear mid-run. Endless after GR${GreaterRift.campaignCap}. '
+          'Best GR$best.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         GameButton(
-          label: 'ENTER RANK GR$next',
+          label: 'ENTER RANKED GR',
           style: GameButtonStyle.red,
           onPressed: GameLogic.canEnterGreaterRift(state)
               ? () => confirmGreaterRiftRun(context, director)

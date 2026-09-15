@@ -81,8 +81,8 @@ GameState _enterGauntlet(GameState state) {
 
 GameState _enterRift(GameState state, {int? tier}) {
   if (!GameLogic.canEnterRift(state)) return state;
-  final preferred = tier ?? state.metaDepth.riftPreferredTier;
   final maxSel = Rift.maxSelectableTier(state.metaDepth.riftBestTier);
+  final preferred = tier ?? state.metaDepth.riftPreferredTier;
   final t = Rift.clampTier(preferred.clamp(Rift.minTier, maxSel));
   final layoutSeed = GameLogic.newLayoutSeed();
   final floor = DungeonGenerator.generateFloor(
@@ -273,7 +273,12 @@ GameState _resolveRiftSuccess(GameState state) {
     riftOutcome: 'timed',
     metaDepth: state.metaDepth.copyWith(
       riftBestTier: best,
-      riftPreferredTier: Rift.maxSelectableTier(best),
+      riftPreferredTier: Rift.clampTier(
+        state.metaDepth.riftPreferredTier.clamp(
+          Rift.minTier,
+          Rift.maxSelectableTier(best),
+        ),
+      ),
       lifetimeRiftClears: state.metaDepth.lifetimeRiftClears + 1,
     ),
   );
@@ -305,8 +310,9 @@ GameState _resolveRiftFail(GameState state) {
 GameState _enterGreaterRift(GameState state, {int? tier}) {
   if (!GameLogic.canEnterGreaterRift(state)) return state;
   final maxSel = GreaterRift.maxSelectableTier(state.metaDepth.grBestTier);
+  final preferred = tier ?? state.metaDepth.grPreferredTier;
   final t = GreaterRift.clampTier(
-    (tier ?? maxSel).clamp(GreaterRift.minTier, maxSel),
+    preferred.clamp(GreaterRift.minTier, maxSel),
   );
   final layoutSeed = GameLogic.newLayoutSeed();
   final floor = DungeonGenerator.generateFloor(
@@ -479,7 +485,9 @@ GameState _resolveGreaterRiftSuccess(GameState state) {
     metaDepth: md.copyWith(
       grBestTier: best,
       monthlyBestGrTier: max(md.monthlyBestGrTier, best),
-      grPreferredTier: GreaterRift.maxSelectableTier(best),
+      grPreferredTier: GreaterRift.clampTier(
+        md.grPreferredTier.clamp(GreaterRift.minTier, GreaterRift.maxSelectableTier(best)),
+      ),
       lifetimeGrClears: md.lifetimeGrClears + 1,
       seasonBestGrTier: seasonTier,
       seasonBestGrClearMs: seasonMs,

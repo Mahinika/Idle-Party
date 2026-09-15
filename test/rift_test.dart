@@ -192,6 +192,23 @@ void main() {
     expect(loaded.metaDepth.riftPreferredTier, 26);
     expect(GameLogic.enterRift(loaded, tier: 26).riftTier, 26);
   });
+
+  test('Farm Rift picker can drop below best and not skip past best+1', () {
+    expect(Rift.pickerStart(preferred: 1, bestCleared: 20), 20);
+    expect(Rift.pickerStart(preferred: 7, bestCleared: 20), 7);
+    var state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+              riftBestTier: 20,
+              riftPreferredTier: 7,
+            ),
+      ),
+    );
+    expect(GameLogic.enterRift(state).riftTier, 7);
+    expect(GameLogic.enterRift(state, tier: 21).riftTier, 21);
+    expect(GameLogic.enterRift(state, tier: 22).riftTier, 21);
+  });
 }
 
 GameState _withPartyMaxLevel(GameState state) => state.copyWith(
