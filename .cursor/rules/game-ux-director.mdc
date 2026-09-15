@@ -25,11 +25,12 @@ needs it — still use `GameTheme` / `MenuChrome` / `GameButton` / `GameIcon`.
 |------------|-------------|-------------|
 | Equip / BAG / MERGE / ROSTER | **GEAR** | `GearPanel` |
 | Forge tracks / gold market | **GOLD** | `GoldPanel` |
-| Real-money convenience | **SHOP** | single sheet |
+| Forever SCROLLS / ad-free / supporter / **REDEEM CODE** | **SHOP** | `ShopDock` (same redeem also MORE → SETTINGS) |
 | Essence tracks / KEEP / relics / pets | **ESSENCE** | `EssencePanel` |
 | KEYSTONE dial / KEY habit | **KEY** tab | prefer not burying under MORE |
 | QUESTS / Craft / Settings / Info | **MORE** | `MoreSection` rows; monthly **Craft Trial** is CRAFT, not ENDGAME |
 | “What do I do now?” / enter | **Hub TODAY** | `ChaseContract` |
+| Pick a cave | **Hub PATH** | continent atlas (`hub_world_map`) — no scroll strip |
 | Rewarded boost tickets | **Hub POWERUPS** | not SHOP |
 
 IA copy scopes (labels/guides, not colors): **RUN** · **TODAY** · **ACCOUNT**

@@ -161,10 +161,12 @@ main.dart
 
 Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
   (flat tabs; one shared bar always visible under sheets; dungeon LEAVE = hub)
-  GOLD = forge tracks + market (flasks/listings) · SHOP = real-money convenience
-  (boosts / ad-free; Play Billing on Play installs) · ESSENCE = TRACKS + KEEP (God Hand / STAR NODES / buys) + relics + pets
+  GOLD = forge tracks + market (flasks/listings) · SHOP = forever SCROLLS + ad-free / supporter
+  (Play Billing on Play installs; timed hour packs exist as SKUs for restore only, not listed)
+  · SHOP **REDEEM CODE** + MORE → SETTINGS **REDEEM CODE** (`CouponCodes`)
+  · ESSENCE = TRACKS + KEEP (God Hand / STAR NODES / buys) + relics + pets
   MORE rows = QUESTS (after first floor) / Craft (after first boss; monthly Craft Trial at Lv100)
-  MORE → SETTINGS ACCOUNT = Play Games / AD PRIVACY / away reminders (after first loot)
+  MORE → SETTINGS ACCOUNT = Play Games / AD PRIVACY / away reminders (after first loot) / redeem
   MORE → INFO uses `GameGuides.topicsFor` (first hour / mid-game / endgame)
   (Blessing / God Hand / REBORN / STAR NODES under ESSENCE → KEEP)
   Hub POWERUPS rewarded ads stay on the hub (not under SHOP)
@@ -174,7 +176,8 @@ Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
 catch-up (full enemy stats; same kits/abilities/chambers). Offline / AFK
 catch-up uses `afkAssist: true` inside the same `build`/`step` API — enemy
 hits are softer and hero hits harder so long catch-up stays snappy. Hub AFK
-(`!inDungeon`) is sanctuary idle gold only — no combat. Healers open each floor
+(`!inDungeon`) is sanctuary idle **gold** plus **slow essence** (`GoldIncome.essenceDue`) — no combat.
+**PUSH** floor clear **+1 essence**, boss **+2** (`GameLogic.pushClearEssence`); FARM and Gauntlet pay **0**. Healers open each floor
 with mana; **Spirit** refills mana over time (not a damage stat). Warrior /
 Paladin / Shaman can equip **shields** in the off-hand.
 
@@ -244,9 +247,11 @@ first reward (`first_run` + tap-the-fight); GOLD / MARKET / ESSENCE / pets tips
 wait. **KEY habit** (`ENTER KEY +N`), KEY tab,
 week-affix jargon, and KEYSTONE tips wait until the **active party is all
 Lv100** (`GameLogic.showKeystoneJargon` → `endgameUnlocked`). At endgame,
-the hub grows a **PATH | ENDGAME** switch: PATH is the 15-zone World Path;
-**ENDGAME** is its own map (`HubEndgameHunt`: Gauntlet, Ranked GR, Farm Rift, Ashen Crown) —
-not a footer under Mothveil, not dungeon #16. Craft Trial stays under MORE → CRAFT.
+the hub grows a **PATH | ENDGAME** switch: PATH is a **fitted continent atlas**
+(`CustomAssets.worldPathMap`, `ZonePathMap.markerNorm` by land — dunes / crown /
+frost / tide / blight / ash / grove / storm / brass / veil — **no scroll strip**);
+**ENDGAME** is its own board (`HubEndgameHunt`: Gauntlet, Ranked GR, Farm Rift, Ashen Crown)
+on the same PNG darkened — not a footer under Mothveil, not dungeon #16. Craft Trial stays under MORE → CRAFT.
 Tap a hunt then ENTER — Farm Rift and Ranked GR pick any R/GR with arrows. KEY
 holds the KEY dial. Hub KEY / Vault / Week crumbs stay off while that
 hunt is KEY, Gauntlet, Ranked GR, Farm Rift, or Ashen.
@@ -282,6 +287,10 @@ per buff (max 24h) on `metaDepth.adAtkUntilMs` / `adGoldUntilMs` / `adXpUntilMs`
 `adTickets` (survives Ascend). Camera overlay on the hub map opens the sheet.
 Web playtest grants a ticket. Ads never interrupt combat. SETTINGS **AD PRIVACY**
 withdraws AdMob GDPR consent. See `docs/AD_POWERUPS_DESIGN.md`.
+SHOP **forever SCROLLS** (`shopPermScrolls`) skip the ticket spend; timed hour
+packs are **not listed** (`ShopCatalog.timePacks` restore-only). Coupon
+`CouponCodes.foreverScrolls` (`FOREVERSCROLLS`) grants `AdBoost.permAll` once
+(`redeemedCoupons`). Redeem **after** the dialog pops (`useRootNavigator`).
 
 ## World path (15 zones)
 
@@ -304,16 +313,21 @@ withdraws AdMob GDPR consent. See `docs/AD_POWERUPS_DESIGN.md`.
 | 14 | veil | Mothveil Hollow |
 
 Unlock: prior clear **or** party **mean level** gate (even steps Lv1…Lv100).
+Hub PATH markers sit on lands, not a top→bottom road (catalog order is still 0…14).
 
 ## Floor / chamber model
 
 - One **combat wave per floor**; boss on floor `5 + ascensionLevel`.
+- Pack size + map pressure: `DungeonGenerator.layoutPressure` from **AL** and
+  **KEY** (Rift/GR tier as KEY; Gauntlet AL only). Caps so endless keys stay sane.
 - Generation: **FloorBlueprint** (room beats) → **PlacementPlan** (props +
   chest sockets) → `RoomLayouts` / `SpatialCombat.build`, with per-zone
   **`ZoneLayoutKit`** (e.g. Brassvault treasure alcoves vs Mothveil silk chokes).
+- Chamber **footprints** are ovals / L / plus / blobs, not only rectangles
+  (`_carveRoomFootprint` in `tile_map.dart`). Chamber AABB still used for wake.
 - Maps are **multi-chamber** with corridor **gates** after a chamber clears.
-  Main path zigzags; treasure vaults branch off the stairs. Normal/elite
-  floors with 6+ trash carve **three fight rooms** after a staging chamber.
+  Main path zigzags; treasure vaults branch off the stairs. High trash budgets
+  carve **up to five** fight rooms after staging (was three at 6+ trash).
 - Enemies in later chambers start **dormant**; wake when prior chambers clear
   (and can wake on **proximity** so soft-locks are rare).
 - **Room chests** on elite/treasure beats drop gold/gear pickups — vacuumed
@@ -360,6 +374,8 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Hub POWERUPS ads | `lib/core/ad_boost.dart`, `ad_rewarded.dart`, `ad_config.dart` · `lib/ui/hub/hub_powerups.dart` |
 | Away reminders | `lib/core/local_reminders.dart` + `local_notify.dart` · SETTINGS ACCOUNT + hub card |
 | Real-money SHOP catalog | `lib/core/shop_catalog.dart` · `lib/ui/shell/shop_dock.dart` · `docs/SHOP_MONETIZATION.md` |
+| Coupons | `lib/core/coupon_codes.dart` · `lib/ui/redeem_coupon_dialog.dart` (SHOP + SETTINGS) |
+| Hub PATH / ENDGAME maps | `lib/ui/hub/hub_world_map.dart`, `hub_endgame_map.dart` |
 | Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
 | POWER Essence rates | `lib/ui/shell/income_overlay.dart` (`CampRatesSection`) |
 | Apex hub (craft / vault / farm meter / Craft Trial) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) — MORE → CRAFT |
@@ -417,7 +433,8 @@ Play funnel `funnelInstallMs` / `funnelLogged`,
 **local reminders** `notifyOptIn` / `notifyPrompted` / `notifyPingMs`),
 unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY), party slot
 5, ascend streak/titles/trophies, **`ascendBlessings`**, **`adTickets`** /
-**`adAtkUntilMs`** / **`adGoldUntilMs`**,
+**`adAtkUntilMs`** / **`adGoldUntilMs`**, SHOP **`shopPermScrolls`** / **`adFree`** /
+**`shopBagBonusSlots`** / **`redeemedCoupons`**,
 Play Games opt-in + season PBs, **`sessionTelemetryOptIn`** / log,
 **away reminders** (SETTINGS ACCOUNT; card after first loot), …),
 **hero levels/XP**, craft mats/pity, keystone **dial** (`hardmodeLevel`,

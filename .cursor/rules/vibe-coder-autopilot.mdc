@@ -51,6 +51,9 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 | record web flow as test | `recording-browser-flow-as-test` |
 | same workflow 3× | `building-skills-from-patterns` |
 | ny meny / panel / var ska X ligga / UI-röd tråd | `game-ux-director` rule + `ui-theme` / `docs/UI_THEME.md` |
+| kupong / redeem / kod | `CouponCodes` + SHOP/SETTINGS dialog — no new skill |
+| världskartan / kontinenter / PATH scroll | `hub_world_map` + `assets-legal` if PNG |
+| rummen för små / fyrkantiga golv | `spatial-combat-change` (`layoutPressure` / silhouettes) |
 | I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — **new-save first** |
 | “gör spelet bättre” / vad härnäst (no other target) | ask once — not AL20, not invent a numbered program |
 | fork / två spel / vem har rätt | silent `studio-seats` (six chairs) |
