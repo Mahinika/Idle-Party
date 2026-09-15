@@ -86,6 +86,17 @@ abstract final class AdBoost {
     return '${h}h ${m}m';
   }
 
+  /// Tight HUD remaining (`42m` or `1:12`).
+  static String formatChipRemaining(int untilMs, {int? nowMs}) {
+    final ms = remainingMs(untilMs, nowMs: nowMs);
+    if (ms <= 0) return '';
+    final totalMin = max(1, (ms + 59999) ~/ 60000);
+    final h = totalMin ~/ 60;
+    final m = totalMin % 60;
+    if (h <= 0) return '${m}m';
+    return '$h:${m.toString().padLeft(2, '0')}';
+  }
+
   static bool atkActive(MetaDepthState md, {int? nowMs}) =>
       isActive(md.adAtkUntilMs, nowMs: nowMs);
 
@@ -125,30 +136,45 @@ abstract final class AdBoost {
     return exp > now;
   }
 
-  /// Short FAB label: prefer ATK timer, else gold, else ticket count.
+  /// Short FAB label: tickets or WATCH. Remaining time lives on [hudChips].
   static String fabStatus(MetaDepthState md, {int? nowMs}) {
-    if (atkActive(md, nowMs: nowMs)) {
-      return 'ATK ${formatRemaining(md.adAtkUntilMs, nowMs: nowMs)}';
-    }
-    if (goldActive(md, nowMs: nowMs)) {
-      return 'GOLD ${formatRemaining(md.adGoldUntilMs, nowMs: nowMs)}';
-    }
-    if (xpActive(md, nowMs: nowMs)) {
-      return 'XP ${formatRemaining(md.adXpUntilMs, nowMs: nowMs)}';
-    }
-    if (moveActive(md, nowMs: nowMs)) {
-      return 'MOVE ${formatRemaining(md.adMoveUntilMs, nowMs: nowMs)}';
-    }
-    if (lootActive(md, nowMs: nowMs)) {
-      return 'LOOT ${formatRemaining(md.adLootUntilMs, nowMs: nowMs)}';
-    }
-    if (speedActive(md, nowMs: nowMs)) {
-      return 'SPEED ${formatRemaining(md.adSpeedUntilMs, nowMs: nowMs)}';
-    }
-    if (awayBonusReady(md, nowMs: nowMs)) return 'AWAY READY';
     final n = md.adTickets;
     if (n <= 0) return 'WATCH';
     return n == 1 ? '1 TICKET' : '$n TICKETS';
+  }
+
+  /// Active scrolls for hub / dungeon HUD, catalog order (top → bottom).
+  static List<AdScrollHudChip> hudChips(MetaDepthState md, {int? nowMs}) {
+    final now = nowMs ?? AdBoost.nowMs();
+    final chips = <AdScrollHudChip>[];
+    void add(AdBuffId id, int untilMs, String shortLabel) {
+      if (!isActive(untilMs, nowMs: now)) return;
+      chips.add(
+        AdScrollHudChip(
+          id: id,
+          shortLabel: shortLabel,
+          timeLabel: formatChipRemaining(untilMs, nowMs: now),
+        ),
+      );
+    }
+
+    add(AdBuffId.atk, md.adAtkUntilMs, 'ATK');
+    add(AdBuffId.gold, md.adGoldUntilMs, 'GOLD');
+    add(AdBuffId.xp, md.adXpUntilMs, 'XP');
+    add(AdBuffId.move, md.adMoveUntilMs, 'MOVE');
+    add(AdBuffId.loot, md.adLootUntilMs, 'LOOT');
+    add(AdBuffId.speed, md.adSpeedUntilMs, 'HASTE');
+    if (awayBonusReady(md, nowMs: now)) {
+      final exp = md.adOfflineMulExpiresMs;
+      chips.add(
+        AdScrollHudChip(
+          id: AdBuffId.offline,
+          shortLabel: 'REST',
+          timeLabel: exp <= 0 ? 'RDY' : formatChipRemaining(exp, nowMs: now),
+        ),
+      );
+    }
+    return chips;
   }
 
   static String utcDayKey([DateTime? now]) {
@@ -213,6 +239,19 @@ abstract final class AdBoost {
 
 /// Catalog row ids for POWERUPS spend.
 enum AdBuffId { atk, gold, xp, move, loot, speed, bundle, offline }
+
+/// One lit scroll on hub / dungeon HUD.
+class AdScrollHudChip {
+  const AdScrollHudChip({
+    required this.id,
+    required this.shortLabel,
+    required this.timeLabel,
+  });
+
+  final AdBuffId id;
+  final String shortLabel;
+  final String timeLabel;
+}
 
 class AdBuffOffer {
   const AdBuffOffer({

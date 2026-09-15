@@ -28,6 +28,12 @@ abstract final class UiIcon {
   static const String shieldRound = CustomAssets.iconShieldRound;
   static const String settings = CustomAssets.iconSettings;
   static const String key = CustomAssets.iconKey;
+  static const String sword = CustomAssets.iconSword;
+  static const String boots = CustomAssets.iconBoots;
+  static const String chest = CustomAssets.iconChest;
+  static const String tome = CustomAssets.iconTome;
+  static const String campfire = CustomAssets.iconCampfire;
+  static const String wand = CustomAssets.iconWand;
 }
 
 enum UiGlyph { add, close, prev, next, scroll }

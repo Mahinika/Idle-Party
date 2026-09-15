@@ -16,6 +16,7 @@ import 'spatial_dungeon_view.dart';
 import 'shell/dungeon_party_hud.dart';
 import 'shell/dungeon_target_hud.dart';
 import 'shell/dungeon_top_hud.dart';
+import 'shell/scroll_buff_stack.dart';
 
 /// Idle Party dungeon scene: full-bleed stage + corner HUD.
 /// Shared menu sheets + bottom bar are owned by [PlayShell], not this scene.
@@ -177,9 +178,18 @@ class _Is2ShellState extends State<Is2Shell> {
                       Positioned(
                         right: hudSide,
                         bottom: partyBottom,
-                        child: DungeonFlaskButton(
-                          director: d,
-                          onTap: d.useConsumable,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            ScrollBuffStack(
+                              meta: d.state.metaDepth,
+                            ),
+                            DungeonFlaskButton(
+                              director: d,
+                              onTap: d.useConsumable,
+                            ),
+                          ],
                         ),
                       ),
                     ],

@@ -197,4 +197,22 @@ void main() {
     final boostGain = afterBoost.heroes.first.xp - state.heroes.first.xp;
     expect(boostGain, greaterThan(plainGain));
   });
+
+  test('hudChips lists active scrolls in catalog order', () {
+    var md = const MetaDepthState();
+    expect(AdBoost.hudChips(md, nowMs: now), isEmpty);
+    md = md.copyWith(
+      adAtkUntilMs: now + AdBoost.splitMs,
+      adGoldUntilMs: now + AdBoost.splitMs,
+      adMoveUntilMs: now + AdBoost.minuteMs * 40,
+    );
+    final chips = AdBoost.hudChips(md, nowMs: now);
+    expect(chips.map((c) => c.id).toList(), [
+      AdBuffId.atk,
+      AdBuffId.gold,
+      AdBuffId.move,
+    ]);
+    expect(chips.first.timeLabel, '2:00');
+    expect(chips.last.timeLabel, '40m');
+  });
 }

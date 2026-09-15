@@ -121,6 +121,12 @@ void main() {
       UiIcon.shieldRound,
       UiIcon.settings,
       UiIcon.key,
+      UiIcon.sword,
+      UiIcon.boots,
+      UiIcon.chest,
+      UiIcon.tome,
+      UiIcon.campfire,
+      UiIcon.wand,
     ]) {
       expect(File(path).existsSync(), isTrue, reason: path);
     }

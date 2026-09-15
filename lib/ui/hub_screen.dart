@@ -30,6 +30,7 @@ import 'shell/whats_new_overlay.dart';
 import 'hub/hub_endgame_map.dart';
 import 'hub/hub_header.dart';
 import 'hub/hub_powerups.dart';
+import 'shell/scroll_buff_stack.dart';
 import 'hub/hub_today_card.dart';
 import 'hub/hub_world_map.dart';
 
@@ -672,12 +673,22 @@ class _HubScreenState extends State<HubScreen>
                                       Positioned(
                                         right: 0,
                                         bottom: 0,
-                                        child: HubPowerupsFab(
-                                          state: state,
-                                          onOpen: () => openPowerupsSheet(
-                                            context,
-                                            director,
-                                          ),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            ScrollBuffStack(
+                                              meta: state.metaDepth,
+                                            ),
+                                            HubPowerupsFab(
+                                              state: state,
+                                              onOpen: () => openPowerupsSheet(
+                                                context,
+                                                director,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                   ],

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/ad_boost.dart';
 import 'package:idle_party/core/chase_contract.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/session_telemetry.dart';
+import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
 import 'package:idle_party/ui/hub/hub_powerups.dart';
+import 'package:idle_party/ui/shell/scroll_buff_stack.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 22);
@@ -280,5 +283,24 @@ void main() {
     expect(find.text('Scroll of Damage'), findsOneWidget);
     expect(find.text('Scroll of Gold'), findsOneWidget);
     expect(find.textContaining('+40% ATK'), findsWidgets);
+  });
+
+  testWidgets('ScrollBuffStack shows remaining time for ATK then gold', (
+    tester,
+  ) async {
+    const nowMs = 1_700_000_000_000;
+    const md = MetaDepthState(
+      adAtkUntilMs: nowMs + AdBoost.splitMs,
+      adGoldUntilMs: nowMs + AdBoost.splitMs,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ScrollBuffStack(meta: md, nowMs: nowMs),
+        ),
+      ),
+    );
+
+    expect(find.text('2:00'), findsNWidgets(2));
   });
 }

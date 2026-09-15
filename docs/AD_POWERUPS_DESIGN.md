@@ -59,9 +59,11 @@ flowchart LR
 - FAB shows:
   - Rolled-scroll glyph (`UiGlyph.scroll`) at 48dp.
   - Ticket count badge when tickets > 0.
-  - Short status under the icon: `WATCH`, `N TICKETS`, or `ATK 42m`.
+  - Short status under the icon: `WATCH` or `N TICKETS`.
   - Dim when idle; torch-lit when tickets or a buff is active.
-- **No dungeon FAB** in v1 (combat chrome stays clean; ads never mid-fight).
+- Active buffs stack **above** the FAB (and above FLASK in dungeon): sword (ATK),
+  gold coin, tome (XP), boots (walk), chest (loot), wand (haste), campfire (rest),
+  each with remaining time under the icon.
 - Tap FAB → bottom sheet with two blocks:
   1. **Earn** — WATCH AD · +1 Ticket (playtest: PREVIEW +1).
   2. **Spend** — catalog rows (below).
