@@ -133,6 +133,7 @@ abstract final class GoldIncome {
         maxLevels: sanctuaryGoldBulkMax,
       );
 
+  /// Hub AFK essence stays slow — CAMP/KEEP buys are permanent.
   static int essenceDue(int totalSec, int sanctuaryPowerLevel) {
     if (totalSec < 600) return 0;
     return (totalSec ~/ 750) + (sanctuaryPowerLevel ~/ 2);

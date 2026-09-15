@@ -459,6 +459,7 @@ void main() {
     );
 
     expect(progressed.bossVictories, greaterThan(0));
+    expect(progressed.essence, greaterThanOrEqualTo(initial.essence + 2));
     expect(progressed.inDungeon, isFalse); // push boss clear → hub
     expect(progressed.highestFloorCleared, bossFloor);
     expect(progressed.highestDungeonCleared, greaterThanOrEqualTo(0));

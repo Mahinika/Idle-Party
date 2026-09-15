@@ -602,6 +602,10 @@ class GameLogic {
 
   static int sanctuaryCost(int level) => 15 + (level * 12);
 
+  /// Essence from a PUSH floor. Farm and Gauntlet stay 0 so gold AFK cannot
+  /// print unbounded CAMP/KEEP power. Boss pays more than a trash floor.
+  static int pushClearEssence({required bool boss}) => boss ? 2 : 1;
+
   /// Essence paid back when prestigging a track at [level] (Lv12+).
   static int sanctuaryPrestigeEssenceGain(int level) => 25 + level;
 
@@ -2343,6 +2347,13 @@ class GameLogic {
     );
     if (challengeBonus > 0) {
       next = next.copyWith(essence: next.essence + challengeBonus);
+    }
+    if (!suppressMetaMint) {
+      next = next.copyWith(
+        essence:
+            next.essence +
+            pushClearEssence(boss: before.currentRoom.type == RoomType.boss),
+      );
     }
     final bossKill = before.currentRoom.type == RoomType.boss ? 1 : 0;
     // Zone trophies granted when a dungeon is fully cleared (push boss → hub).

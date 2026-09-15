@@ -45,5 +45,7 @@ void main() {
     expect(Keystone.dailyVaultEssence(12), 64);
     expect(Keystone.dailyVaultEssence(0), 16);
     expect(GoldIncome.essenceDue(3600, 12), 4 + 6);
+    expect(GameLogic.pushClearEssence(boss: false), 1);
+    expect(GameLogic.pushClearEssence(boss: true), 2);
   });
 }
