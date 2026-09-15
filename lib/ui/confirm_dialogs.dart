@@ -53,23 +53,16 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
           }
           return MenuChrome.dialog(
             title: 'Ascend?',
-            content: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(ctx).height * 0.5,
+            content: Text(
+              StoryLore.ascendConfirmBody(
+                rewardEssence: baseReward + milestone,
+                nextAl: nextAl,
+                milestoneBonus: milestone,
+                godHandLevel: state.godHandLevel,
+                blessingsAfter: state.metaDepth.ascendBlessings + 1,
+                unlockCombatRogue: state.ascensionLevel == 0,
               ),
-              child: SingleChildScrollView(
-                child: Text(
-                  StoryLore.ascendConfirmBody(
-                    rewardEssence: baseReward + milestone,
-                    nextAl: nextAl,
-                    milestoneBonus: milestone,
-                    godHandLevel: state.godHandLevel,
-                    blessingsAfter: state.metaDepth.ascendBlessings + 1,
-                    unlockCombatRogue: state.ascensionLevel == 0,
-                  ),
-                  style: GameTheme.body(size: 15, color: GameTheme.parchment),
-                ),
-              ),
+              style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),
             actions: [
               GameButton(
@@ -136,20 +129,13 @@ Future<void> confirmRebornAtCap(
           }
           return MenuChrome.dialog(
             title: 'Reborn?',
-            content: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(ctx).height * 0.5,
+            content: Text(
+              StoryLore.rebornConfirmBody(
+                rewardEssence: reward,
+                godHandLevel: state.godHandLevel,
+                blessings: state.metaDepth.ascendBlessings,
               ),
-              child: SingleChildScrollView(
-                child: Text(
-                  StoryLore.rebornConfirmBody(
-                    rewardEssence: reward,
-                    godHandLevel: state.godHandLevel,
-                    blessings: state.metaDepth.ascendBlessings,
-                  ),
-                  style: GameTheme.body(size: 15, color: GameTheme.parchment),
-                ),
-              ),
+              style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),
             actions: [
               GameButton(

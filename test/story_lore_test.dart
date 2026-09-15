@@ -28,14 +28,15 @@ void main() {
       godHandLevel: 3,
     );
     expect(body, contains('+7e'));
-    expect(body, contains('milestone'));
-    expect(body, contains('God Hand'));
-    expect(body, contains('Lv3'));
-    expect(body, contains('levels/XP'));
-    expect(body, contains('Your party stays'));
-    expect(body, contains('Apex stays'));
-    expect(body, contains('Reset: wallet'));
-    expect(body, isNot(contains('your run stays')));
+    expect(body, contains('AL1'));
+    expect(body, contains('Blessing'));
+    expect(body.toLowerCase(), contains('bag'));
+    expect(body.toLowerCase(), contains('gold'));
+    expect(body, contains('caves stay'));
+    expect(body, isNot(contains('AL power')));
+    expect(body, isNot(contains('total ×')));
+    expect(body, isNot(contains('Next: AL')));
+    expect(body.length, lessThan(420));
   });
 
   test('reborn confirm matches prestige wipe without extra Blessing', () {
@@ -44,12 +45,11 @@ void main() {
       godHandLevel: 4,
       blessings: 20,
     );
-    expect(body, contains('Your party stays'));
-    expect(body, contains('Apex stays'));
     expect(body, contains('AL stays'));
-    expect(body, contains('No extra Blessing'));
+    expect(body, contains('Blessing stays'));
     expect(body, contains('+64e'));
-    expect(body, contains('constellation'));
-    expect(body, contains('Rebuild your bag'));
+    expect(body, contains('STAR NODES'));
+    expect(body.toLowerCase(), contains('rebuild'));
+    expect(body, isNot(contains('Keep: hero')));
   });
 }

@@ -94,36 +94,26 @@ abstract final class StoryLore {
     int blessingsAfter = 1,
     bool unlockCombatRogue = false,
   }) {
-    final rewardLine = milestoneBonus > 0
-        ? '+${rewardEssence}e (+${milestoneBonus}e milestone) · AL → $nextAl'
-        : '+${rewardEssence}e · AL → $nextAl';
-    final alPower =
-        'AL power: +${GameLogic.alAttackPerLevel} ATK · '
-        '+${GameLogic.alDefensePerLevel} DEF · '
-        '+${GameLogic.alVitalityPerLevel} STA · +10% gold';
-    final blessAtk = blessingsAfter * GameLogic.ascendBlessingAtk;
-    final blessDef = blessingsAfter * GameLogic.ascendBlessingDef;
-    final blessVit = blessingsAfter * GameLogic.ascendBlessingVit;
-    final blessGold = blessingsAfter * GameLogic.ascendBlessingGoldPct;
-    final blessLine =
-        'Blessing: +${GameLogic.ascendBlessingAtk} ATK · +${GameLogic.ascendBlessingDef} DEF · '
-        '+${GameLogic.ascendBlessingVit} STA · +${GameLogic.ascendBlessingGoldPct}% gold '
-        '(total ×$blessingsAfter: +$blessAtk ATK · +$blessDef DEF · +$blessVit STA · +$blessGold% gold)';
-    final thisUnlock = AscendRoadmap.unlockLineForAscendTo(nextAl);
-    final unlockLine = unlockCombatRogue
-        ? '\nUnlock: Combat Rogue (Shade) joins the roster.'
-        : (thisUnlock != null ? '\n$thisUnlock' : '');
-    final ahead = AscendRoadmap.nextGoalLine(nextAl);
-    return 'Your party stays. Bag, wallet gold, GOLD tracks, and floors reset. Apex stays.\n\n'
-        '$rewardLine\n'
-        '$alPower\n'
-        '$blessLine$unlockLine\n'
-        '$ahead\n\n'
-        'Keep: hero levels/XP, open zones, essence, relics, pets, sanctuary, '
-        'God Hand, Apex, meta unlocks.\n'
-        'Reset: wallet gold, GOLD tracks, bag and worn drops, market, '
-        'floor height (starter gear back on).\n'
-        'God Hand Lv$godHandLevel kept';
+    final gain =
+        'You get AL$nextAl, +${rewardEssence}e, and a stronger Blessing'
+        '${blessingsAfter > 1 ? ' (×$blessingsAfter)' : ''}.';
+    final stay =
+        'Party levels and open caves stay. Gold, bag, and GOLD tracks reset.';
+    final kits = AscendRoadmap.kitUnlockSummary(nextAl, maxNames: 3);
+    final String? neu;
+    if (unlockCombatRogue) {
+      neu = 'New: Combat Rogue joins the roster.';
+    } else if (nextAl == 2 && kits != null) {
+      neu = 'New kits: $kits. 5th party slot in ESSENCE.';
+    } else if (kits != null) {
+      neu = 'New kits: $kits.';
+    } else {
+      neu = null;
+    }
+    // milestoneBonus / godHandLevel still passed from the dialog; payoff is
+    // already in [rewardEssence], God Hand is part of “party stays.”
+    assert(milestoneBonus >= 0 && godHandLevel >= 0);
+    return neu == null ? '$stay\n\n$gain' : '$stay\n\n$gain\n\n$neu';
   }
 
   static String ascendToast({
@@ -144,15 +134,11 @@ abstract final class StoryLore {
     required int godHandLevel,
     required int blessings,
   }) {
-    return 'Your party stays. Bag, wallet gold, GOLD tracks, and floors reset. Apex stays.\n\n'
-        'AL stays ${GameLogic.maxAscensionLevel}. No extra Blessing '
-        '(still ×$blessings).\n'
-        '+${rewardEssence}e · +1 constellation point.\n\n'
-        'TODAY will say Rebuild your bag until you loot real gear again.\n\n'
-        'Keep: hero levels/XP, open zones, essence spends, relics, pets, '
-        'sanctuary, God Hand Lv$godHandLevel, Apex.\n'
-        'Reset: wallet gold, GOLD tracks, bag and worn drops, market, '
-        'floor height.';
+    assert(godHandLevel >= 0);
+    return 'AL stays ${GameLogic.maxAscensionLevel}. Blessing stays ×$blessings.\n\n'
+        'Party levels and open caves stay. Gold, bag, and GOLD tracks reset.\n\n'
+        'You get +${rewardEssence}e and 1 STAR NODES point.\n\n'
+        'Rebuild the bag by looting.';
   }
 
   static String rebornToast({required int essence}) {
