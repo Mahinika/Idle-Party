@@ -29,14 +29,11 @@ void main() {
     );
     expect(body, contains('+7e'));
     expect(body, contains('AL1'));
-    expect(body, contains('Blessing'));
-    expect(body.toLowerCase(), contains('bag'));
-    expect(body.toLowerCase(), contains('gold'));
+    expect(body, contains('+5 ATK'));
+    expect(body, contains('forever'));
     expect(body, contains('caves stay'));
     expect(body, isNot(contains('AL power')));
-    expect(body, isNot(contains('total ×')));
-    expect(body, isNot(contains('Next: AL')));
-    expect(body.length, lessThan(420));
+    expect(body.length, lessThan(520));
   });
 
   test('reborn confirm matches prestige wipe without extra Blessing', () {

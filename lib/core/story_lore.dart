@@ -94,9 +94,13 @@ abstract final class StoryLore {
     int blessingsAfter = 1,
     bool unlockCombatRogue = false,
   }) {
-    final gain =
-        'You get AL$nextAl, +${rewardEssence}e, and a stronger Blessing'
-        '${blessingsAfter > 1 ? ' (×$blessingsAfter)' : ''}.';
+    final bless =
+        'Blessing: +${GameLogic.ascendBlessingAtk} ATK · '
+        '+${GameLogic.ascendBlessingDef} DEF · '
+        '+${GameLogic.ascendBlessingVit} STA · '
+        '+${GameLogic.ascendBlessingGoldPct}% gold, forever'
+        '${blessingsAfter > 1 ? ' (now ×$blessingsAfter)' : ''}.';
+    final gain = 'You get AL$nextAl and +${rewardEssence}e.\n\n$bless';
     final stay =
         'Party levels and open caves stay. Gold, bag, and GOLD tracks reset.';
     final kits = AscendRoadmap.kitUnlockSummary(nextAl, maxNames: 3);
