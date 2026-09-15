@@ -49,6 +49,7 @@ GameState _enterGauntlet(GameState state) {
     dungeonId: dungeonId,
     layoutSeed: layoutSeed,
     bossEvery: GameLogic.gauntletBossEvery,
+    keyLevel: 0,
   );
   final room = floor.first;
   final cleared = GameLogic._clearKeystoneRun(state);
@@ -89,6 +90,7 @@ GameState _enterRift(GameState state, {int? tier}) {
     ascensionLevel: state.ascensionLevel,
     dungeonId: Rift.dungeonId,
     layoutSeed: layoutSeed,
+    keyLevel: t.clamp(0, 20),
   );
   final room = floor.first;
   final cleared = GameLogic._clearKeystoneRun(
@@ -310,6 +312,7 @@ GameState _enterGreaterRift(GameState state, {int? tier}) {
     ascensionLevel: state.ascensionLevel,
     dungeonId: GreaterRift.dungeonId,
     layoutSeed: layoutSeed,
+    keyLevel: t.clamp(0, 20),
   );
   final room = floor.first;
   final cleared = GameLogic._clearKeystoneRun(

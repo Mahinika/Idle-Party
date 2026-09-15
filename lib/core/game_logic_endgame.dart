@@ -53,6 +53,7 @@ GameState _enterAshenCrown(
     dungeonId: kit.dungeonId,
     layoutSeed: layoutSeed,
     bossEvery: 1,
+    keyLevel: GameLogic.layoutKeyLevel(next),
   );
   final room = floor.first.copyWith(type: RoomType.boss);
   final cleared = next.copyWith(

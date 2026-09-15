@@ -489,4 +489,47 @@ void main() {
     }
     expect(enough, greaterThanOrEqualTo(16));
   });
+
+  test('AL and KEY grow packs and tile maps', () {
+    expect(
+      DungeonGenerator.layoutPressure(ascensionLevel: 0, keyLevel: 0),
+      0,
+    );
+    expect(
+      DungeonGenerator.layoutPressure(ascensionLevel: 20, keyLevel: 20),
+      10,
+    );
+    final low = DungeonGenerator.generateFloorRoom(
+      floorNumber: 4,
+      ascensionLevel: 0,
+      dungeonId: 'sandy',
+      layoutSeed: 3,
+    );
+    final high = DungeonGenerator.generateFloorRoom(
+      floorNumber: 4,
+      ascensionLevel: 20,
+      dungeonId: 'sandy',
+      layoutSeed: 3,
+      keyLevel: 20,
+    );
+    expect(high.enemyCount, greaterThan(low.enemyCount));
+
+    final smallMap = RoomLayouts.forFloor(
+      floorNumber: 4,
+      room: low,
+      dungeonId: 'sandy',
+      layoutSeed: 3,
+    );
+    final bigMap = RoomLayouts.forFloor(
+      floorNumber: 4,
+      room: high,
+      dungeonId: 'sandy',
+      layoutSeed: 3,
+      ascensionLevel: 20,
+      keyLevel: 20,
+    );
+    expect(bigMap.cols, greaterThan(smallMap.cols));
+    expect(bigMap.rows, greaterThan(smallMap.rows));
+    expect(bigMap.chambers.length, greaterThanOrEqualTo(smallMap.chambers.length));
+  });
 }

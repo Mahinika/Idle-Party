@@ -205,6 +205,8 @@ class FloorBlueprint {
 
   /// How many fight rooms the main spine should carve (staging is separate).
   static int _mainCombatRooms(int budget) {
+    if (budget >= 16) return 5;
+    if (budget >= 12) return 4;
     if (budget >= 6) return 3;
     if (budget >= 4) return 2;
     return budget > 0 ? 1 : 0;
@@ -244,6 +246,8 @@ class FloorBlueprint {
       FloorBeatKind.approach,
       FloorBeatKind.choke,
       if (rooms >= 3) third,
+      if (rooms >= 4) FloorBeatKind.elite,
+      if (rooms >= 5) FloorBeatKind.choke,
     ];
     for (var i = 0; i < rooms; i++) {
       beats.add(FloorBeat(kinds[i], enemyBudget: shares[i]));
@@ -268,6 +272,12 @@ class FloorBlueprint {
           ? FloorBeatKind.choke
           : FloorBeatKind.approach;
       beats.add(FloorBeat(last, enemyBudget: shares[2]));
+    }
+    if (rooms >= 4) {
+      beats.add(FloorBeat(FloorBeatKind.elite, enemyBudget: shares[3]));
+    }
+    if (rooms >= 5) {
+      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: shares[4]));
     }
   }
 

@@ -1906,6 +1906,8 @@ abstract final class SpatialCombat {
       dungeonId: state.dungeonId,
       layoutSeed: state.layoutSeed,
       enemyCountOverride: state.enemies.length,
+      ascensionLevel: state.ascensionLevel,
+      keyLevel: GameLogic.layoutKeyLevel(state),
     );
     final isTreasure = room.type == RoomType.treasure || state.enemies.isEmpty;
 

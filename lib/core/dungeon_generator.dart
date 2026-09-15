@@ -17,6 +17,7 @@ class DungeonGenerator {
     required String dungeonId,
     int layoutSeed = 0,
     int? bossEvery,
+    int keyLevel = 0,
   }) {
     final random = Random(floorNumber * 7919 + dungeonId.hashCode + layoutSeed);
     final bossFloor = bossFloorFor(ascensionLevel);
@@ -39,7 +40,13 @@ class DungeonGenerator {
 
     final baseLevel = (floorNumber - 1) * 2 + 1;
     final enemyLevel = baseLevel + random.nextInt(3);
-    final enemyCount = _enemyCountForType(type, random, floorNumber);
+    final enemyCount = _enemyCountForType(
+      type,
+      random,
+      floorNumber,
+      ascensionLevel: ascensionLevel,
+      keyLevel: keyLevel,
+    );
 
     return DungeonRoom(
       floorNumber: floorNumber,
@@ -57,6 +64,7 @@ class DungeonGenerator {
     String dungeonId = 'sandy',
     int layoutSeed = 0,
     int? bossEvery,
+    int keyLevel = 0,
   }) {
     return <DungeonRoom>[
       generateFloorRoom(
@@ -65,23 +73,40 @@ class DungeonGenerator {
         dungeonId: dungeonId,
         layoutSeed: layoutSeed,
         bossEvery: bossEvery,
+        keyLevel: keyLevel,
       ),
     ];
   }
 
-  static int _enemyCountForType(RoomType type, Random random, int floor) {
-    final earlyCut = floor <= 3 ? 1 : 0;
+  /// Extra pack / map size from AL and KEY (capped so endless keys stay sane).
+  static int layoutPressure({int ascensionLevel = 0, int keyLevel = 0}) {
+    final al = ascensionLevel.clamp(0, 20);
+    final key = keyLevel.clamp(0, 20);
+    return al ~/ 4 + key ~/ 4;
+  }
+
+  static int _enemyCountForType(
+    RoomType type,
+    Random random,
+    int floor, {
+    int ascensionLevel = 0,
+    int keyLevel = 0,
+  }) {
+    final p = layoutPressure(
+      ascensionLevel: ascensionLevel,
+      keyLevel: keyLevel,
+    );
     return switch (type) {
-      RoomType.boss => 7 + random.nextInt(2),
+      RoomType.boss => (6 + random.nextInt(2) + p).clamp(6, 14),
       RoomType.elite => max(
         5,
-        7 + random.nextInt(2) + (floor ~/ 4).clamp(0, 3) - earlyCut,
-      ),
+        6 + random.nextInt(2) + (floor ~/ 4).clamp(0, 3) + p,
+      ).clamp(5, 16),
       RoomType.treasure => 0,
       RoomType.normal => max(
-        4,
-        6 + (floor ~/ 3).clamp(0, 5) + random.nextInt(3) - earlyCut,
-      ),
+        5,
+        6 + (floor ~/ 3).clamp(0, 5) + random.nextInt(2) + p,
+      ).clamp(5, 16),
     };
   }
 

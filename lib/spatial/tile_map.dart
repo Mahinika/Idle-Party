@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import '../core/dungeon_generator.dart';
 import '../models/dungeon_def.dart';
 import '../models/dungeon_room.dart';
 import '../assets/kenney_assets.dart';
@@ -269,6 +270,8 @@ abstract final class RoomLayouts {
     required String dungeonId,
     int layoutSeed = 0,
     int? enemyCountOverride,
+    int ascensionLevel = 0,
+    int keyLevel = 0,
   }) {
     final def = DungeonCatalog.byId(dungeonId);
     final seed =
@@ -279,6 +282,10 @@ abstract final class RoomLayouts {
     final rng = Random(seed);
     final enemyCount = max(room.enemyCount, enemyCountOverride ?? 0);
 
+    final pressure = DungeonGenerator.layoutPressure(
+      ascensionLevel: ascensionLevel,
+      keyLevel: keyLevel,
+    );
     if (room.type == RoomType.boss) {
       return _bossArena(
         rng,
@@ -286,26 +293,25 @@ abstract final class RoomLayouts {
         layoutSeed: seed,
         enemyCount: enemyCount,
         room: room,
+        pressure: pressure,
       );
     }
 
     // Arena catalog zones used to be one open pit (samey late-path floors).
     // They now share beat-tagged multi-chamber grammar with cave/hideout/fort.
     // Treasure floors use the same winding grammar (hall + side vault).
+    final bump = 2 + pressure.clamp(0, 4);
     final roomCount = switch (def.layout) {
-      DungeonLayoutKind.cave => 6 + rng.nextInt(3),
-      DungeonLayoutKind.hideout => 5 + rng.nextInt(3),
-      DungeonLayoutKind.fort => 6 + rng.nextInt(3),
-      DungeonLayoutKind.arena => 4 + rng.nextInt(2),
+      DungeonLayoutKind.cave => 7 + rng.nextInt(3) + bump,
+      DungeonLayoutKind.hideout => 6 + rng.nextInt(3) + bump,
+      DungeonLayoutKind.fort => 7 + rng.nextInt(3) + bump,
+      DungeonLayoutKind.arena => 5 + rng.nextInt(2) + bump,
     };
+    final extent = _mapExtent(def.layout, pressure);
 
     return _multiRoomFloor(
-      cols: def.layout == DungeonLayoutKind.hideout
-          ? 48
-          : (def.layout == DungeonLayoutKind.arena ? 52 : 54),
-      rows: def.layout == DungeonLayoutKind.fort
-          ? 40
-          : (def.layout == DungeonLayoutKind.arena ? 36 : 38),
+      cols: extent.$1,
+      rows: extent.$2,
       fallbackRoomCount: roomCount,
       rng: rng,
       fortStyle: def.layout == DungeonLayoutKind.fort,
@@ -314,6 +320,16 @@ abstract final class RoomLayouts {
       layoutSeed: seed,
       room: room,
     );
+  }
+
+  static (int, int) _mapExtent(DungeonLayoutKind layout, int pressure) {
+    final p = pressure.clamp(0, 10);
+    return switch (layout) {
+      DungeonLayoutKind.hideout => (52 + p * 2, 40 + p),
+      DungeonLayoutKind.arena => (56 + p * 2, 38 + p),
+      DungeonLayoutKind.fort => (58 + p * 2, 42 + p),
+      DungeonLayoutKind.cave => (58 + p * 2, 40 + p),
+    };
   }
 
   /// Apply FloorBlueprint + PlacementPlan (fallback to legacy scatter).
@@ -391,9 +407,11 @@ abstract final class RoomLayouts {
     required int layoutSeed,
     required DungeonRoom room,
     int enemyCount = 6,
+    int pressure = 0,
   }) {
-    const cols = 34;
-    const rows = 26;
+    final extra = pressure.clamp(0, 6);
+    final cols = 36 + extra * 2;
+    final rows = 28 + extra;
     final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
     void set(int x, int y, TileKind k) {
       if (x >= 0 && y >= 0 && x < cols && y < rows) {
@@ -418,12 +436,12 @@ abstract final class RoomLayouts {
       }
     }
     for (final p in <(int, int)>[
-      (8, 7),
-      (8, 18),
-      (25, 7),
-      (25, 18),
-      (17, 6),
-      (17, 19),
+      (cols ~/ 4, rows ~/ 3),
+      (cols ~/ 4, (rows * 2) ~/ 3),
+      ((cols * 3) ~/ 4, rows ~/ 3),
+      ((cols * 3) ~/ 4, (rows * 2) ~/ 3),
+      (cols ~/ 2, 6),
+      (cols ~/ 2, rows - 7),
     ]) {
       set(p.$1, p.$2, TileKind.wall);
     }
@@ -440,7 +458,7 @@ abstract final class RoomLayouts {
       anchorX: 3,
       anchorY: rows ~/ 2,
     );
-    const exitPoint = (cols - 3, rows ~/ 2);
+    final exitPoint = (cols - 3, rows ~/ 2);
 
     bool spawnable(int x, int y) {
       if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
@@ -1046,7 +1064,7 @@ abstract final class RoomLayouts {
 
     final floorCount = edgeCells.length + openCells.length;
     // Dense enough to read in a zoomed-out camera (~12% of floor).
-    final target = (floorCount * 0.12).floor().clamp(16, 80);
+    final target = (floorCount * 0.12).floor().clamp(16, 140);
     final props = <MapProp>[];
     final used = <String>{};
 

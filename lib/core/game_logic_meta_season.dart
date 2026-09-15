@@ -326,6 +326,7 @@ GameState _enterDaily(GameState state, {DateTime? now}) {
     ascensionLevel: state.ascensionLevel,
     dungeonId: dungeonId,
     layoutSeed: seed,
+    keyLevel: GameLogic.layoutKeyLevel(state),
   );
   final room = floor.first;
   final cleared = GameLogic._clearKeystoneRun(state);

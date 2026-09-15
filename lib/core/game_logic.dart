@@ -260,6 +260,17 @@ class GameLogic {
 
   static int newLayoutSeed() => random.nextInt(0x3fffffff);
 
+  /// KEY / Rift / GR feed map + pack size. AL is applied in [DungeonGenerator].
+  static int layoutKeyLevel(GameState state) {
+    if (state.inGauntlet) return 0;
+    if (state.inRift) return state.riftTier.clamp(0, 20);
+    if (state.inGreaterRift) return state.grTier.clamp(0, 20);
+    if (state.keystoneRunActive) {
+      return state.keystoneRunLevel.clamp(0, 20);
+    }
+    return state.hardmodeLevel.clamp(0, 20);
+  }
+
   /// AL gear skip per level — blunted by loot-find / HM / elite-boss relief.
   static const double ascensionDropPenalty = 0.10;
 
@@ -283,14 +294,15 @@ class GameLogic {
     final baseSeed = newLayoutSeed();
     final mirrorSalt = LocalSeasonCatalog.mirrorLayoutSeed(state);
     final layoutSeed = mirrorSalt == 0 ? baseSeed : baseSeed ^ mirrorSalt;
+    final primed = _beginKeystoneRun(ensureWeeklyContract(state));
     final floor = DungeonGenerator.generateFloor(
       1,
-      ascensionLevel: state.ascensionLevel,
+      ascensionLevel: primed.ascensionLevel,
       dungeonId: dungeonId,
       layoutSeed: layoutSeed,
+      keyLevel: layoutKeyLevel(primed),
     );
     final room = floor.first;
-    final primed = _beginKeystoneRun(ensureWeeklyContract(state));
     return primed.copyWith(
       inDungeon: true,
       inGauntlet: false,
@@ -896,6 +908,7 @@ class GameLogic {
       ascensionLevel: state.ascensionLevel,
       dungeonId: state.dungeonId,
       layoutSeed: layoutSeed,
+      keyLevel: layoutKeyLevel(state),
     );
     final firstRoom = floor.first;
     return state.copyWith(
@@ -1417,6 +1430,7 @@ class GameLogic {
       ascensionLevel: state.ascensionLevel,
       dungeonId: state.dungeonId,
       layoutSeed: layoutSeed,
+      keyLevel: layoutKeyLevel(state),
     );
     final firstRoom = floor.first;
     return state.copyWith(
@@ -2234,6 +2248,7 @@ class GameLogic {
       dungeonId: awarded.dungeonId,
       layoutSeed: layoutSeed,
       bossEvery: gauntlet ? gauntletBossEvery : null,
+      keyLevel: layoutKeyLevel(awarded),
     );
     final nextRoom = nextFloor.first;
     final gauntletEss = gauntlet
