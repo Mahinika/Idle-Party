@@ -24,9 +24,9 @@ needs it — still use `GameTheme` / `MenuChrome` / `GameButton` / `GameIcon`.
 | Player job | Destination | Local focus |
 |------------|-------------|-------------|
 | Equip / BAG / MERGE / ROSTER | **GEAR** | `GearPanel` |
-| Forge tracks / gold market | **GOLD** | `GoldPanel` |
+| Forge (this-run gold) / gold market | **GOLD** | FORGE + MARKET |
 | Forever SCROLLS / ad-free / supporter / **REDEEM CODE** | **SHOP** | `ShopDock` (same redeem also MORE → SETTINGS) |
-| Essence tracks / KEEP / relics / pets | **ESSENCE** | `EssencePanel` |
+| Camp / Blessing / relics / pets | **ESSENCE** | CAMP + BLESSING + RELICS + PETS |
 | KEYSTONE dial / KEY habit | **KEY** tab | prefer not burying under MORE |
 | QUESTS / Craft / Settings / Info | **MORE** | `MoreSection` rows; monthly **Craft Trial** is CRAFT, not ENDGAME |
 | “What do I do now?” / enter | **Hub TODAY** | `ChaseContract` |

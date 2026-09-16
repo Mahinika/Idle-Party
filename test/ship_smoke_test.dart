@@ -268,7 +268,7 @@ void main() {
     expect(classes.body, contains('AL2'));
     expect(classes.body, contains('Beast Mastery'));
     expect(classes.body, contains('Holy Paladin'));
-    expect(classes.body, contains('ESSENCE KEEP'));
+    expect(classes.body, contains('ESSENCE BLESSING'));
 
     final forge = GameGuides.topics.firstWhere((t) => t.id == 'forge');
     expect(forge.body, contains('ESSENCE'));
@@ -283,15 +283,15 @@ void main() {
     final sanctuary = GameGuides.topics.firstWhere((t) => t.id == 'sanctuary');
     expect(sanctuary.body.toLowerCase(), contains('essence'));
     expect(sanctuary.title, 'ESSENCE');
-    expect(sanctuary.body, contains('TRACKS'));
-    expect(sanctuary.body, contains('KEEP'));
+    expect(sanctuary.body, contains('CAMP'));
+    expect(sanctuary.body, contains('BLESSING'));
     expect(sanctuary.body, contains('God Hand'));
     expect(sanctuary.body.toUpperCase(), contains('REBORN'));
     expect(sanctuary.body, isNot(contains('PRESTIGE')));
 
     final shop = GameGuides.topics.firstWhere((t) => t.id == 'prestige_shop');
     expect(shop.title, 'PERMANENT BUYS');
-    expect(shop.body, contains('KEEP'));
+    expect(shop.body, contains('BLESSING'));
     expect(shop.body.toLowerCase(), contains('vault'));
     expect(shop.body.toLowerCase(), contains('merge gold'));
     expect(shop.body.toLowerCase(), contains('bottom-tab shop'));

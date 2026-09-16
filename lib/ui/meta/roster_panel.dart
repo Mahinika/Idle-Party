@@ -105,7 +105,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Same buy as ESSENCE → KEEP.',
+            'Same buy as ESSENCE → BLESSING.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),

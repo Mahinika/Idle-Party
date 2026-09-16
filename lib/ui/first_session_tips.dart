@@ -66,9 +66,9 @@ class FirstSessionTips extends StatelessWidget {
       id: 'forge',
       title: 'GOLD',
       body:
-          'GOLD tab: TRACKS buys this-run power (×1 / % spend / EVEN split); '
+          'GOLD tab: FORGE buys this-run power (×1 / % spend / EVEN split); '
           'MARKET buys flasks and listings. '
-          'God Hand and Ascend Blessing live on ESSENCE → KEEP. Relics live under '
+          'God Hand and Ascend Blessing live on ESSENCE → BLESSING. Relics live under '
           'ESSENCE → RELICS. Craft is a row inside MORE. Hero '
           'levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
     ),
@@ -97,7 +97,7 @@ class FirstSessionTips extends StatelessWidget {
       title: 'AFTER ASCEND',
       body:
           'New kits land in GEAR → ROSTER — the hub hunt shows Meet … when something unlocked. '
-          'Spend essence under ESSENCE (TRACKS + KEEP for God Hand). '
+          'Spend essence under ESSENCE (CAMP + BLESSING for God Hand). '
           'Relics are ESSENCE → RELICS. '
           'Apex stays.',
     ),
@@ -193,10 +193,10 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'prestige',
-      title: 'ESSENCE KEEP',
+      title: 'ESSENCE BLESSING',
       body:
-          'Essence lasts between Ascends: ESSENCE → TRACKS for Gold Find and power, '
-          'ESSENCE → KEEP for God Hand and permanent buys, '
+          'Essence lasts between Ascends: ESSENCE → CAMP for Gold Find and power, '
+          'ESSENCE → BLESSING for God Hand and lasting buys, '
           'ESSENCE → RELICS for party auras, ESSENCE → PETS for pets. '
           'Bottom-tab SHOP is the real-money store (cheap boosts / ad-free on Play).',
     ),

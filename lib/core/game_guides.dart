@@ -265,7 +265,7 @@ abstract final class GameGuides {
         '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
         '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
         'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
-        '• Reset: wallet gold, GOLD tracks, bag and worn drops, market, floor height '
+        '• Reset: wallet gold, GOLD → FORGE, bag and worn drops, market, floor height '
         '(starter gear back on).\n'
         '• Boss victories toward the next Ascend clear.\n'
         '• At AL20, ESSENCE lasting buys offer optional REBORN (same bag wipe, AL stays 20, '
@@ -360,9 +360,9 @@ abstract final class GameGuides {
           '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
           '• Watch them clear rooms. Tap the fight when you want to help.\n'
           '• The hunt line on the hub always names the next job — start there.\n'
-          '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (tracks + '
-          'market), SHOP (real-money convenience store), ESSENCE (tracks / '
-          'essence / KEEP / relics / pets), MORE. QUESTS and Craft live as rows '
+          '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (run power + '
+          'market), SHOP (real-money convenience store), ESSENCE (CAMP / '
+          'BLESSING / relics / pets), MORE. QUESTS and Craft live as rows '
           'inside MORE. When the party is max level, KEY joins the hub bar as a '
           'sixth tab after MORE — SHOP stays. In a dungeon the sixth slot is '
           'LEAVE instead of KEY.\n'
@@ -460,7 +460,7 @@ abstract final class GameGuides {
           'Tap the dungeon floor to help: smash enemies and steer the party.\n\n'
           '• First job: smash a pack and pull the party toward your tap.\n'
           '• Cooldown ring is top-right of the dungeon view.\n'
-          '• ESSENCE → KEEP (soft knobs): more damage, shorter CD, BAL / FOCUS / WIDE styles.\n'
+          '• ESSENCE → BLESSING (soft knobs): more damage, shorter CD, BAL / FOCUS / WIDE styles.\n'
           '• Styles trade damage vs radius — not a second talent tree.\n'
           '• Upgrades use essence and survive Ascend.',
     ),
@@ -540,14 +540,14 @@ abstract final class GameGuides {
           '• Check RESULT preview (rarity, iLvl, SCORE jump) and gold cost, then MERGE.\n'
           '• AUTO MERGE: repeatedly merges junk pairs of the same slot '
           '(skips BiS / clear upgrades) while you can afford the cost.\n'
-          '• Combinator Charm in ESSENCE → KEEP (permanent buys) lowers MERGE gold (−3g per luck).\n'
+          '• Combinator Charm in ESSENCE → BLESSING (permanent buys) lowers MERGE gold (−3g per luck).\n'
           '• Both inputs are consumed.',
     ),
     GuideTopic(
       id: 'income',
       title: 'HUB GOLD RATE',
       body:
-          'ESSENCE → TRACKS (hub gold overnight).\n\n'
+          'ESSENCE → CAMP (hub gold overnight).\n\n'
           'Your incremental dashboard: Hub gold/min, Run gold/min (from real '
           'loot in the last couple of minutes), gold % multipliers, and Gold Find '
           '— the keep generator on the Gold Find track below.\n\n'
@@ -560,18 +560,18 @@ abstract final class GameGuides {
       title: 'GOLD',
       body:
           'GOLD tab — spend wallet gold on run power and the market.\n\n'
-          '• TRACKS: party ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY. '
+          '• FORGE: party ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY. '
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
           'SPEND ALL · EVEN to split gold round-robin across every track. '
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}). '
           'Harder kills (higher enemy level than the hero) pay more XP; heroes far behind the party catch up faster.\n'
-          'Gold tracks reset when you Ascend. '
+          'Gold FORGE buys reset when you Ascend. '
           'ATK, HASTE, and MOVE speed up clears — see Essence for rates. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade.\n'
           '• MARKET: flasks, bandages, traveling gear listings.\n'
-          '• Essence keeps (Ascend Blessing, God Hand, Star Nodes, 5th slot) live on ESSENCE → KEEP.\n'
+          '• Essence keeps (Ascend Blessing, God Hand, Star Nodes, 5th slot) live on ESSENCE → BLESSING.\n'
           '• Ascend from the Hub when ready (not from Gold).',
     ),
     GuideTopic(
@@ -579,14 +579,14 @@ abstract final class GameGuides {
       title: 'POWER SHELVES',
       body:
           'ATK / DEF / STA come from three shelves — do not stack them up wrong.\n\n'
-          '• GOLD tracks — run-only power bought with wallet gold. Wipes on Ascend. '
+          '• GOLD → FORGE — run-only power bought with wallet gold. Wipes on Ascend. '
           'Wipe advice points here (or GOLD → MARKET listings) when the sim proves a gap.\n'
           '• Ascend Blessing — stacks each Ascend (+ATK/DEF/STA/gold forever). '
-          'Readout on ESSENCE → KEEP. Not Star Nodes.\n'
-          '• ESSENCE tracks + relics + pets — forever power bought with essence. '
-          'TRACKS / RELICS / PETS tabs; sanctuary reset-for-essence is optional.\n\n'
+          'Readout on ESSENCE → BLESSING. Not Star Nodes.\n'
+          '• ESSENCE CAMP + relics + pets — forever power bought with essence. '
+          'CAMP / RELICS / PETS tabs; sanctuary reset-for-essence is optional.\n\n'
           'Gear, Apex, AL flats, and Star Nodes add sheet power on top. '
-          'After Ascend, rebuild GOLD tracks first — Blessing and essence shelves stay.',
+          'After Ascend, rebuild GOLD → FORGE first — Blessing and essence shelves stay.',
     ),
     GuideTopic(
       id: 'gates',
@@ -595,7 +595,7 @@ abstract final class GameGuides {
           'Two different gates — do not mix them up.\n\n'
           '• AL20 (Ascension cap): raise AL with Ascend, stack Ascend Blessing, '
           'unlock kits, spend Star Nodes, optional REBORN. Wipes your run bag '
-          '(gold, GOLD tracks, normal gear).\n'
+          '(gold, GOLD → FORGE, normal gear).\n'
           '• Party Lv${GameLogic.maxHeroLevel} (endgame): every active hero at max level '
           'unlocks KEY, Infinity Gauntlet, Ranked GR, Farm Rifts, '
           'and Ashen Crown. AL20 alone is not enough.\n'
@@ -622,7 +622,7 @@ abstract final class GameGuides {
           'with a short fantasy line plus a Watch… combat hook.\n\n'
           '• AL1: Combat Rogue, Arms, Holy Paladin\n'
           '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot '
-          '(ESSENCE KEEP · 80e)\n'
+          '(ESSENCE BLESSING · 80e)\n'
           '• AL3: Prot Paladin, Assassination, Resto Shaman, Frost Mage, Resto Druid\n'
           '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
           '• AL5: Blood DK, Frost DK, Guardian\n'
@@ -631,23 +631,23 @@ abstract final class GameGuides {
           '• Party Lv${GameLogic.maxHeroLevel}: KEY, Infinity Gauntlet, Farm Rifts, '
           'Ranked GR, and Ashen Crown unlock when every active hero is max level '
           '— AL20 alone is not enough.\n\n'
-          'Some kits also unlock from zone clears or ESSENCE → KEEP permanent buys — see each '
+          'Some kits also unlock from zone clears or ESSENCE → BLESSING permanent buys — see each '
           'spec’s unlock hint in GEAR → ROSTER.',
     ),
     GuideTopic(
       id: 'sanctuary',
       title: 'ESSENCE',
       body:
-          'ESSENCE tab. Four places: TRACKS, KEEP, RELICS, PETS.\n\n'
-          '• TRACKS: Gold Find, War Altar, Life Well, Aegis, Lore Font — spend essence '
+          'ESSENCE tab. Four places: CAMP, BLESSING, RELICS, PETS.\n\n'
+          '• CAMP: Gold Find, War Altar, Life Well, Aegis, Lore Font — spend essence '
           'on lasting rates/power. Optional reset from Lv12 keeps a small forever bonus.\n'
-          '• KEEP: God Hand damage/CD/style, Ascend Blessing readout, Star Nodes, permanent QoL buys '
+          '• BLESSING: God Hand damage/CD/style, Ascend Blessing readout, Star Nodes, lasting QoL buys '
           '(AL-gated), constellation at AL20, optional REBORN. '
           'Not the bottom-tab SHOP (real-money convenience).\n'
           '• RELICS: party auras (ATK / DEF / STA / loot), up to T6.\n'
           '• PETS: hatch and level pets when unlocked.\n'
           '• Everything here survives Ascend.\n'
-          '• Invest early — tracks compound over many runs.',
+          '• Invest early — CAMP compounds over many runs.',
     ),
     GuideTopic(
       id: 'gauntlet',
@@ -712,7 +712,7 @@ abstract final class GameGuides {
           '• GEAR: opens on Upgrades. Tap a row to buy. Switch to All gear if you want '
           'the full stock. Free refresh every 6 hours, or pay gold to reroll.\n'
           '• The hub hunt can chase Market when an affordable listing beats your gear.\n'
-          '• Wipe advice may point at GOLD when listings beat GOLD tracks for the same gap.\n'
+          '• Wipe advice may point at GOLD when listings beat GOLD → FORGE for the same gap.\n'
           '• Buy flasks and bandages with gold.\n'
           '• Clear a full bag with BAG → CLEAN BAG, MERGE, or BAG → FILTERS.\n'
           '• Keep at least one flask for tough floors and bosses.\n'
@@ -738,11 +738,11 @@ abstract final class GameGuides {
       id: 'prestige_shop',
       title: 'PERMANENT BUYS',
       body:
-          'ESSENCE → KEEP · Permanent buys (AL-gated).\n\n'
+          'ESSENCE → BLESSING · Permanent buys (AL-gated).\n\n'
           '• Spend essence on stash slots, cheaper MERGE gold, pet roster, '
           'cheaper market flasks, higher auto-sell / auto-disassemble ceilings, more Welcome '
           'Back rows, Dawn Tithe (vault + Daily Run), and more.\n'
-          '• God Hand cooldown upgrades live only under God Hand on KEEP (one door).\n'
+          '• God Hand cooldown upgrades live only under God Hand on BLESSING (one door).\n'
           '• Purchases survive Ascend.\n'
           '• Unlock higher offerings as Ascension Level rises.\n'
           '• Bottom-tab SHOP is real-money store (cheap boosts / ad-free) — not these essence buys.',
@@ -808,7 +808,7 @@ abstract final class GameGuides {
       id: 'constellation',
       title: 'STAR NODES',
       body:
-          'At AL20, ESSENCE → KEEP opens Star Nodes (spend points).\n\n'
+          'At AL20, ESSENCE → BLESSING opens Star Nodes (spend points).\n\n'
           '• Not the same as Ascend Blessing stacks (+ATK/DEF/STA/gold each Ascend).\n'
           '• Earn points from reaching AL20, Ashen Crown, and Apex Trial.\n'
           '• Spend points on permanent nodes (crit, gold, block, KEY par, …).\n'
@@ -864,15 +864,15 @@ abstract final class GameGuides {
           'Ashen Crown, vault, boards) unlocks when every active hero reaches level '
           '${GameLogic.maxHeroLevel} — not from AL20 alone.\n'
           '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
-          '+8% gold (stacks forever). See ESSENCE → KEEP. Separate from Star Nodes.\n'
+          '+8% gold (stacks forever). See ESSENCE → BLESSING. Separate from Star Nodes.\n'
           '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
           '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
           'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
-          '• Reset: wallet gold, GOLD tracks, bag and worn drops, market, floor height '
+          '• Reset: wallet gold, GOLD → FORGE, bag and worn drops, market, floor height '
           '(starter gear back on).\n'
           '• Boss victories toward the next Ascend clear.\n'
-          '• At AL20, ESSENCE → KEEP offers optional REBORN (same bag wipe, AL stays 20, '
+          '• At AL20, ESSENCE → BLESSING offers optional REBORN (same bag wipe, AL stays 20, '
           'no extra Ascend Blessing). The hub hunt never nags you to press it.',
     ),
     GuideTopic(

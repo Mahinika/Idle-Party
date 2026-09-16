@@ -48,7 +48,7 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'gh_cdr',
       name: 'God Hand Cadence',
-      description: 'Same cooldown as ESSENCE → KEEP. One CD level (max 8).',
+        description: 'Same cooldown as ESSENCE → BLESSING. One CD level (max 8).',
       cost: 45,
       minAl: 5,
       listedInShop: false,

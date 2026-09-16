@@ -37,13 +37,13 @@ class NavIntent {
 
   static const NavIntent essence = NavIntent(route: MenuRoute.essence);
 
-  /// KEEP (Blessing / God Hand / REBORN) — under ESSENCE.
+  /// BLESSING (God Hand / REBORN) — under ESSENCE.
   static const NavIntent essenceKeep = NavIntent(
     route: MenuRoute.essence,
     essencePanel: EssencePanel.keep,
   );
 
-  /// Permanent essence buys — under ESSENCE → KEEP (prestige section).
+  /// Lasting essence buys — under ESSENCE → BLESSING.
   static const NavIntent essenceShop = NavIntent(
     route: MenuRoute.essence,
     essencePanel: EssencePanel.keep,

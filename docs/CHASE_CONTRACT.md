@@ -10,7 +10,7 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 1. **Claimables (READY)** — daily vault (payday copy only; season bonus still pays on claim), finished **QUESTS**. Meet new kit and **equip BAG** wait until after the first boss (first hour keeps the cave).
 2. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Beats Meet kit / EQUIP / MARKET. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list. Skip kit teasers until after the first boss.
 3. **Market ALMOST** — affordable UPGRADE on GOLD → MARKET (after bag equip, after first boss). **Pre-endgame only** before KEY nights; at party Lv100 market waits until after KEY habit / endgame ladder / zone.
-4. **Ascend READY** — can Ascend now (blocked at AL20 cap). **Exceptions:** on **AL0** after the first boss, TODAY stays Daily / farming; **at party Lv100**, KEY habit and the endgame ladder beat Ascend (Ascend stays on the urgent row / KEEP as optional lasting power). Confirm copy: party stays; bag, gold, forge, and floors reset.
+4. **Ascend READY** — can Ascend now (blocked at AL20 cap). **Exceptions:** on **AL0** after the first boss, TODAY stays Daily / farming; **at party Lv100**, KEY habit and the endgame ladder beat Ascend (Ascend stays on the urgent row / ESSENCE → BLESSING as optional lasting power). Confirm copy: party stays; bag, gold, forge, and floors reset.
 5. **ALMOST** — one boss from Ascend (pre-endgame, not AL20 cap), then KEY+1 vault cliff (endgame only), then zone. **Month ALMOST** and Will / early week ALMOST: pre–Lv100 only before KEY. **At party Lv100:** Month ALMOST sits **after** the endgame ladder so Spire/KEY nights stay clear; Gauntlet/Rift/GR ALMOST still apply. **Party-level ALMOST** (within 5 of Lv100) beats Daily vault start.
 6. **Fresh prestige re-kit** — after Ascend or optional AL20 Reborn (`metaDepth.freshPrestige` and low gear pressure): TODAY says **Rebuild your bag** with plain farm/re-equip copy + geared % progress. Skip KEY / Gauntlet / Rift until real drops land. **Reborn is never a TODAY chase.**
 7. **Level the party** — after the first boss and before endgame unlock, TODAY can say **Level the party to 100** (combat XP unlocks KEY / Gauntlet / Ranked GR — not AL20). Normal urgency sits **under** Daily vault start; ALMOST (near 100) sits above it.
@@ -40,7 +40,7 @@ ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats
 - Run power: **GOLD tracks** (not forge / POWER)
 - Pets tab: **PETS** (not Beast Pen)
 - Merge: **MERGE** (Combinator Charm can stay as item name)
-- Essence buys: **Permanent buys** under KEEP (not Prestige Shop / bottom SHOP)
+- Essence buys: **lasting buys** under ESSENCE → BLESSING (not bottom-tab SHOP)
 
 **Wipe advice:** proven deficits say `Upgrade ATK/DEF/STA in GOLD` or `GOLD: listing` — CTA `OPEN GOLD`, not legacy POWER naming.
 

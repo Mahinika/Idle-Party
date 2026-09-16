@@ -63,7 +63,7 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as t
 | Hub SCROLLS | Ad Ticket (from ad / playtest / ad-free daily) | Free path to the same buffs |
 | Bottom SHOP | Real money | Forever SCROLLS / ad-free / small QoL |
 | GOLD | Gold | Forge tracks + market |
-| ESSENCE → KEEP | Essence | AL-gated permanent prestige buys |
+| ESSENCE → BLESSING | Essence | AL-gated lasting prestige buys |
 
 ## Play Console checklist (owner)
 

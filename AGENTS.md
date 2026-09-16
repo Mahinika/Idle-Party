@@ -161,14 +161,14 @@ main.dart
 
 Shared menus: MenuRouter + GearSession + NavIntent + MenuAlerts + MenuSurface
   (flat tabs; one shared bar always visible under sheets; dungeon LEAVE = hub)
-  GOLD = forge tracks + market (flasks/listings) · SHOP = forever SCROLLS + ad-free / supporter
+  GOLD = FORGE (this-run gold) + MARKET · SHOP = forever SCROLLS + ad-free / supporter
   (Play Billing on Play installs; timed hour packs exist as SKUs for restore only, not listed)
   · SHOP **REDEEM CODE** + MORE → SETTINGS **REDEEM CODE** (`CouponCodes`)
-  · ESSENCE = TRACKS + KEEP (God Hand / STAR NODES / buys) + relics + pets
+  · ESSENCE = CAMP + BLESSING (God Hand / STAR NODES / lasting buys) + relics + pets
   MORE rows = QUESTS (after first floor) / Craft (after first boss; monthly Craft Trial at Lv100)
   MORE → SETTINGS ACCOUNT = Play Games / AD PRIVACY / away reminders (after first loot) / redeem
   MORE → INFO uses `GameGuides.topicsFor` (first hour / mid-game / endgame)
-  (Blessing / God Hand / REBORN / STAR NODES under ESSENCE → KEEP)
+  (Blessing / God Hand / REBORN / STAR NODES under ESSENCE → BLESSING)
   Hub POWERUPS rewarded ads stay on the hub (not under SHOP)
 ```
 
@@ -379,8 +379,8 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Hub gold/min (keep AFK) | `lib/core/gold_income.dart` |
 | POWER Essence rates | `lib/ui/shell/income_overlay.dart` (`CampRatesSection`) |
 | Apex hub (craft / vault / farm meter / Craft Trial) | `lib/ui/apex_forge_panel.dart` (`ApexHubPanel`) — MORE → CRAFT |
-| Blessing STAR NODES | `lib/core/blessing_constellation.dart` · **ESSENCE → KEEP** |
-| God Hand mastery claims | `lib/core/god_hand_mastery.dart` · KEEP |
+| Blessing STAR NODES | `lib/core/blessing_constellation.dart` · **ESSENCE → BLESSING** |
+| God Hand mastery claims | `lib/core/god_hand_mastery.dart` · **ESSENCE → BLESSING** |
 | Hub ENDGAME map | `lib/core/hub_endgame_act.dart` |
 | Chase contract (hub ↔ AFK) | `lib/core/chase_contract.dart` + `docs/CHASE_CONTRACT.md` |
 | Guides copy | `lib/core/game_guides.dart` |
@@ -445,7 +445,7 @@ tracks, normal gear/stash/market/loadouts, or `highestFloorCleared`.
 **Ascend Blessing** (stacks in `metaDepth.ascendBlessings`, default `0` on old saves):
 each Ascend adds **+5 ATK · +20 DEF · +60 STA · +8% gold** on top of AL flats
 (`+1 ATK` / `+4 DEF` / `+12 STA` / `+10% gold` per AL). Shown in
-**ESSENCE → KEEP** and Sanctuary. Constants: `GameLogic.ascendBlessing*`.
+**ESSENCE → BLESSING** and Sanctuary. Constants: `GameLogic.ascendBlessing*`.
 Player-facing label is **STA / Stamina** (same as gear); internal fields may
 still say vitality.
 
@@ -459,7 +459,7 @@ active dungeon / KEY / rift via leave-dungeon; mission board rebuilt.
 **AL20 STAR NODES** (`BlessingConstellation`, KEEP): not Ascend Blessing stacks.
 AL20 grants **3** starter points; Ashen Crown, Craft Trial, and REBORN each add
 **+1**. Spend on ≤6 nodes (Offense / Defense / Fortune). Never a TODAY chase.
-**AL20 REBORN** (**ESSENCE → KEEP**, optional): same bag wipe, AL and
+**AL20 REBORN** (**ESSENCE → BLESSING**, optional): same bag wipe, AL and
 Blessing unchanged, essence + 1 constellation point. Never a TODAY chase.
 
 Dungeon unlock uses **party mean level** (and prior clears), not lifetime gold.
@@ -482,7 +482,7 @@ cave’s pack jobs and boss tell (PATH art stays). See `lib/core/keystone.dart`.
 ## God Hand
 
 Tap steers the party briefly and deals AOE; has cooldown. Damage upgrades with essence.
-Styles under **ESSENCE → KEEP**: **BAL** / **FOCUS** (+dmg −radius) /
+Styles under **ESSENCE → BLESSING**: **BAL** / **FOCUS** (+dmg −radius) /
 **WIDE** (+radius −dmg). Optional CD upgrades: `metaDepth.godHandCdLevel`.
 KEEP also lists **God Hand mastery** claims (`GodHandMastery` — titles + essence).
 Direction changes only when the owner’s goal names them.

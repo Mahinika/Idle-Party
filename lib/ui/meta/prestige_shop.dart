@@ -25,7 +25,7 @@ class PrestigeShopOverlay extends StatelessWidget {
       'combine_luck' => 'Luck ${md.combinatorLuck}/5',
       'torch_keep' => '+${state.torchOfflineGoldPercent}% hub AFK gold',
       'gh_cdr' =>
-        'CD ${state.godHandCooldownSeconds.toStringAsFixed(1)}s · KEEP',
+        'CD ${state.godHandCooldownSeconds.toStringAsFixed(1)}s · BLESSING',
       'roster_cap' => 'Roster +${md.petRosterCapBonus}',
       'loadout_slot' =>
         'Legacy purchase (unused extra slots)',

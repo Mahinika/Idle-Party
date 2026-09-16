@@ -4,7 +4,7 @@ import '../../core/game_director.dart';
 import '../../core/gold_income.dart';
 import '../game_theme.dart';
 
-/// Compact Hub / Run rates at the top of ESSENCE → TRACKS.
+/// Compact Hub / Run rates at the top of ESSENCE → CAMP.
 class CampRatesSection extends StatelessWidget {
   const CampRatesSection({super.key, required this.director});
   final GameDirector director;

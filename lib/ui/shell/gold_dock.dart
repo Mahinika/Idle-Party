@@ -7,7 +7,7 @@ import 'forge_overlay.dart';
 import 'market_overlay.dart';
 import 'shell_common.dart';
 
-/// GOLD sheet: run forge tracks + gold market (flasks / listings).
+/// GOLD sheet: FORGE (this-run) + gold market (flasks / listings).
 class GoldDock extends StatefulWidget {
   const GoldDock({
     super.key,
@@ -64,7 +64,7 @@ class _GoldDockState extends State<GoldDock> with TickerProviderStateMixin {
       for (final tab in _visible)
         switch (tab) {
           GoldPanel.tracks => (
-            label: 'TRACKS',
+            label: 'FORGE',
             body: ForgeOverlay(director: widget.director),
           ),
           GoldPanel.market => (

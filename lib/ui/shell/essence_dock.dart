@@ -9,7 +9,7 @@ import 'relics_overlay.dart';
 import 'sanctuary_overlay.dart';
 import 'shell_common.dart';
 
-/// ESSENCE sheet: tracks, KEEP (incl. permanent buys), relics, pets.
+/// ESSENCE sheet: CAMP, BLESSING (God Hand / lasting buys), relics, pets.
 class EssenceDock extends StatefulWidget {
   const EssenceDock({
     super.key,
@@ -69,13 +69,13 @@ class _EssenceDockState extends State<EssenceDock>
       for (final tab in _visible)
         switch (tab) {
           EssencePanel.tracks => (
-            label: 'TRACKS',
+            label: 'CAMP',
             body: SingleChildScrollView(
               child: SanctuaryOverlay(director: widget.director),
             ),
           ),
           EssencePanel.keep => (
-            label: 'KEEP',
+            label: 'BLESSING',
             body: SingleChildScrollView(
               child: EssenceKeepPanel(director: widget.director),
             ),
