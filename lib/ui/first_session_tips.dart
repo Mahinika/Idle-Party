@@ -418,8 +418,17 @@ class FirstSessionTips extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         GameButton(
-                          label: 'GOT IT',
-                          onPressed: () => director.dismissTip(tip.id),
+                          label: hubJob ? 'ENTER DUNGEON' : 'GOT IT',
+                          onPressed: () {
+                            if (hubJob && !director.state.inDungeon) {
+                              final id = director.state.dungeonId;
+                              director.enterDungeon(
+                                dungeonId: id.isEmpty ? 'sandy' : id,
+                              );
+                              return;
+                            }
+                            director.dismissTip(tip.id);
+                          },
                           primary: true,
                         ),
                         if (showSkipAll) ...[

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/chase_contract.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_guides.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/local_reminders.dart';
@@ -116,6 +117,19 @@ void main() {
     expect(tip.body.toLowerCase(), contains('enter'));
     expect(tip.body.toLowerCase(), contains('fights'));
     expect(tip.body, isNot(contains('Combat Rogue')));
+  });
+
+  test('hub job tip enters Sandy instead of a second GOT IT tap', () async {
+    final director = GameDirector.preview();
+    await director.boot();
+    await director.startNewGame(HeroSpecs.starterUnlocked);
+    expect(director.state.inDungeon, isFalse);
+    expect(FirstSessionTips.nextTipId(director.state, inDungeon: false), 'first_run');
+    director.enterDungeon(dungeonId: 'sandy');
+    expect(director.state.inDungeon, isTrue);
+    expect(director.state.dungeonId, 'sandy');
+    expect(director.state.seenTips, contains('first_run'));
+    director.dispose();
   });
 
   test('plain chrome is on for a fresh save', () {

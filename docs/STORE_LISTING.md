@@ -87,7 +87,7 @@ KEEP GROWING
 FAIR PLAY
 • Single-player — no Idle Party account required.
 • Optional rewarded ads (hub SCROLLS) grant timed scrolls and never interrupt a fight.
-• Optional SHOP sells cheap convenience only (boosts, ad-free, small QoL) — not pay-to-win gear.
+• Optional SHOP sells cheap convenience only (forever SCROLLS, ad-free, small QoL) — not pay-to-win gear.
 • Privacy policy covers optional Play Games, ads, and analytics.
 • Designed for portrait phones.
 
