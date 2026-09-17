@@ -110,7 +110,7 @@ def capture_one(save_json: Path, dest_mp4: Path) -> None:
             "--size",
             "1080x2340",
             "--bit-rate",
-            "14000000",
+            "20000000",
             "--time-limit",
             "8",
             remote,

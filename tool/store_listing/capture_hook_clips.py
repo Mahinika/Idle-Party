@@ -85,7 +85,7 @@ def record(dest: Path, seconds: int, tap: bool) -> None:
             "--size",
             "1080x2340",
             "--bit-rate",
-            "14000000",
+            "20000000",
             "--time-limit",
             str(seconds),
             remote,

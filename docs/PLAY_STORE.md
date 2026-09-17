@@ -9,13 +9,13 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | Live store still **1.12.170 (200)** until Google publishes **201**. **1.12.171 (201)** uploaded + submitted for review **2026-09-15** (full rollout). |
+| Production | ✅ live | Live store **1.12.171 (201)** as of Console **2026-09-17**. **1.12.172 (202)** uploaded + submitted for review **2026-09-17** (full rollout). |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ✅ review | Ads / Play Games / Advertising ID + **Firebase Analytics** (App interactions, Diagnostics, Device IDs) submitted **2026-09-10** — under Google review (`Ändringarna granskas`). Matches [PRIVACY.md](PRIVACY.md). |
 | IARC / content rating | ⏳ review | New questionnaire submitted 2026-09-08: fantasy creature violence (often close-up, pixel, no blood), digital goods (SHOP) yes / no loot-boxes / no player trading, no fear/sex/gambling/language/drugs. Ads are **not** in this IARC form — covered by Ads declaration **Yes**. Ratings preview: ESRB 10+ fantasy violence, USK 12, PEGI 3 + IAP. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 KEY/Gauntlet wired; 2026-09 Greater Rift `CgkIhuXGvNocEAIQAw` wired (Console Draft — publish via Games Publishing). OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
-| Store listing copy (EN) | ⏳ review | Default locale **en-US**. **2026-09-17:** title **Idle Party: Idle RPG** + full crawl-on-screen desc submitted (*Ändringarna granskas*). Short already live. Extra locales gated. |
+| Store listing copy (EN) | ✅ live | Default locale **en-US**. Title **Idle Party: Idle RPG** + crawl-on-screen full desc live on the public listing **2026-09-17**. Extra locales gated. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ⏳ attach | Live carousel still older 8. New pack in `out/` (party-centered 1–2); Console needs crop-before-add. Feature graphic unchanged. Preview rebuild uploaded YT `XfKog5CAiUs` but Play embed rejected — listing stays on `OMWXbgGBFMA`. |
 | Preview video (YouTube) | ⏳ review | Live listing: `OMWXbgGBFMA`. Rebuilt combat-first MP4 uploaded Cognifox `XfKog5CAiUs` (unlisted) — Play rejected embed (ads/visibility). Keep ads off / not made-for-kids, then swap. |
@@ -41,6 +41,8 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Signed Production AAB **1.12.170+200** built + uploaded; submitted for review (full rollout). Console: Ändringarna granskas. AD_ID warning ignored for this version (permission is in the 200 AAB).
 - [x] Owner asked new Production AAB (**2026-09-15**)
 - [x] Signed Production AAB **1.12.171+201** built + uploaded; submitted for review (full rollout). Console: Ändringarna granskas. AD_ID “Lansera utan behörighet” (permission is in the 201 AAB).
+- [x] Owner asked new Production AAB (**2026-09-17**)
+- [x] Signed Production AAB **1.12.172+202** built + uploaded; submitted for review (full rollout). Console: *Ändringarna granskas* + Produktion **202 (1.12.172)**. AD_ID “Lansera utan behörighet” (permission is in the 202 AAB). Phone shots + preview URL still the live set (crop / Play-YT embed).
 
 ### Production upload paste (en-US release notes)
 

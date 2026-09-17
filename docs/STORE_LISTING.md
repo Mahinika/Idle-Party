@@ -121,11 +121,11 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.171+201** (`pubspec.yaml`). Pasted as Play Production release notes with **201** submitted **2026-09-15**:
+Working ship: **1.12.172+202** (`pubspec.yaml`). Pasted as Play Production release notes with **202** submitted **2026-09-17**:
 
 ```
 • Your party fights on its own. Day-one menus stay GEAR and MORE until gold, the shop, and essence mean something. Shield, Healer, and Damage kits show their job in the fight.
-• PATH is a continent map. PUSH floors pay a little essence. SHOP has forever SCROLLS and a redeem code. Party Lv100 still unlocks Craft Trial and the extra hunts.
+• The dungeon camera stays on your party. PATH is a continent map. PUSH floors pay a little essence. SHOP has forever SCROLLS and a redeem code. Party Lv100 still unlocks Craft Trial and the extra hunts.
 ```
 
 ### Full description honesty (SHOP)
@@ -220,10 +220,12 @@ Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in fi
 
 ## Play Console status (2026-09-17)
 
-- **Submitted for review (no AAB):** app name → **Idle Party: Idle RPG** + full
-  description (crawl-on-screen opening). Short was already the 75-char line.
-  Console: *Ändringarna granskas*. Extra locales gated in
+- **Listing copy live:** app name **Idle Party: Idle RPG** + crawl-on-screen
+  full desc on the public store. Extra locales gated in
   `tool/store_listing/growth/LOCALES.md`.
+- **Production AAB:** **1.12.172+202** submitted **2026-09-17** (full rollout).
+  Console: *Ändringarna granskas*. Live players stay on **201** until Google
+  publishes.
 - Phone carousel: live **8** unchanged (older marketing set). New
   party-centered pack is local in `tool/store_listing/out/`
   (`01_01_combat_a.png` / `02_02_combat_b.png` + storyboard). Console attach

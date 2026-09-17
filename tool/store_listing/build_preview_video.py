@@ -209,7 +209,8 @@ def make_gameplay_mp4(
         fg_y = 0
     fc = (
         f"[0:v]trim=start={start}:duration={duration},setpts=PTS-STARTPTS,"
-        f"fps={FPS},tpad=stop_mode=clone:stop_duration=1,split=2[bg][fg];"
+        f"fps={FPS},"
+        f"tpad=stop_mode=clone:stop_duration=1,split=2[bg][fg];"
         f"[bg]scale={width}:{height}:force_original_aspect_ratio=increase,"
         f"crop={width}:{height},gblur=sigma=24,eq=brightness=-0.25:saturation=0.65[bg2];"
         f"[fg]scale={fg_w}:{fg_h}:force_original_aspect_ratio=decrease[fg2];"
@@ -236,9 +237,9 @@ def make_gameplay_mp4(
         "-c:v",
         "libx264",
         "-preset",
-        "veryfast",
+        "medium",
         "-crf",
-        "20",
+        "18",
         "-an",
         str(dest),
     ]
@@ -270,9 +271,9 @@ def make_still_mp4(
             "-c:v",
             "libx264",
             "-preset",
-            "veryfast",
+            "medium",
             "-crf",
-            "20",
+            "18",
             "-an",
             str(dest),
         ]
@@ -315,9 +316,9 @@ def concat_xfade(
         "-c:v",
         "libx264",
         "-preset",
-        "veryfast",
+        "medium",
         "-crf",
-        "20",
+        "18",
         "-an",
         str(dest),
     ]
