@@ -18,7 +18,8 @@ Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
 
 | Lever | Where |
 |-------|--------|
-| ASO short + full (idle RPG keywords, fair SHOP line) | `docs/STORE_LISTING.md` |
+| ASO title + short + full (idle RPG keywords, fair SHOP line) | `docs/STORE_LISTING.md` |
+| 0 kr discovery (hooks, Reddit, creator mail, gated locales) | `tool/store_listing/growth/` |
 | Screenshot / feature graphic checklist | `docs/STORE_LISTING.md` |
 | Play preview video brief | `docs/TRAILER.md` § Play preview |
 | TODAY chase clarity (claim / equip / rebuild / short phones) | `lib/core/hub_chase.dart`, `chase_dispatcher.dart`, `hub_screen.dart` |
@@ -29,7 +30,7 @@ Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
 
 Do these in Console when you have 20 minutes:
 
-1. **Paste listing** from `STORE_LISTING.md` (short + full) → submit for review.
+1. **Paste listing** from `STORE_LISTING.md` (app name **Idle Party: Idle RPG**, short + full) → submit for review. Do **not** paste `growth/LOCALES.md` until you say yes.
 2. **Tags** (Butiksinställningar → Hantera taggar): live set is
    **Clicker-rollspel** + **Rollspel**. Max 5. No Idle/Incremental names in
    SV picker — do not invent tags; AFK / Party / Dungeon / Ascend belong in

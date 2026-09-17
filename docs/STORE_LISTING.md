@@ -1,7 +1,8 @@
 # Idle Party — store listing (research + copy)
 
-**Updated:** 2026-09-11 · Target: Google Play (en-US) · Honesty first.  
-Growth checklist / review templates: [`PLAY_GROWTH.md`](PLAY_GROWTH.md).
+**Updated:** 2026-09-17 · Target: Google Play (en-US) · Honesty first.  
+Growth checklist / review templates: [`PLAY_GROWTH.md`](PLAY_GROWTH.md).  
+0 kr discovery pack: [`tool/store_listing/growth/`](../tool/store_listing/growth/).
 
 ## Research: what makes people tap Install
 
@@ -29,8 +30,10 @@ fairness, cheap convenience SHOP).
 5. **Copy matches ship** — 15 zones, 31 specs, KEYSTONE (not invented systems).
    Do **not** promise “no ads forever” — rewarded SCROLLS and a cheap SHOP
    catalog exist (`docs/SHOP_MONETIZATION.md`).
-6. **English only on the store page** — default locale **en-US**. Do not add
-   translated Play listings (sv-SE or otherwise). Screenshot captions stay English.
+6. **English only on the live store page** — default locale **en-US**.
+   Screenshot captions stay English. Extra Play **metadata** locales live in
+   [`tool/store_listing/growth/LOCALES.md`](../tool/store_listing/growth/LOCALES.md)
+   and stay **gated** until the owner says paste (in-game UI stays English).
 7. **Genre honesty** — Category stays **Rollspel / Role Playing** (one only).
    Play tags are a **fixed list**, max **5** — not free keywords.
    **Live Console tags (2026-09-11):** **Clicker-rollspel**, **Rollspel**
@@ -48,13 +51,31 @@ fairness, cheap convenience SHOP).
 
 ## en-US copy (paste into Play Console)
 
+### App name / title (30 chars max)
+
+Play indexes this hardest. Genre is honest (idle RPG). No “free”, “#1”, emoji.
+
+```
+Idle Party: Idle RPG
+```
+
+(20 characters)
+
 ### Short description (80 chars max)
+
+**Paste this** (live line, 75 characters — keep until listing experiments have traffic):
 
 ```
 Idle RPG: grow a fantasy party that fights AFK — always know today's chase.
 ```
 
-(75 characters)
+Later A/B only (do not paste until Console experiments can finish):
+
+```
+Idle RPG: a fantasy party dungeon crawl that fights AFK.
+Idle RPG: fantasy party dungeon crawl. Fights AFK on your phone.
+Offline idle RPG: your party keeps the dungeon crawl going AFK.
+```
 
 ### Full description
 
@@ -65,7 +86,7 @@ full description may name endgame after party level 100.
 ```
 Idle fantasy RPG for phones. Build a party that keeps fighting while you are away. Return to loot, progress, and one clear TODAY goal.
 
-Idle Party is a portrait idle RPG. Your heroes move, fight, heal, and use their own abilities — the same combat when you AFK. Free to play, single-player, no Idle Party account. Combat is on screen in about a minute.
+Idle Party is a portrait idle RPG and dungeon crawl. Your heroes move, fight, heal, and use their own abilities — the same combat when you AFK or play offline. Free to play, single-player, no Idle Party account. Combat is on screen in about a minute.
 
 BUILD YOUR PARTY
 • Choose classic fantasy roles: Shield, Healer, and Damage to start, then tanks, healers, melee fighters, ranged heroes, and spellcasters.
@@ -74,7 +95,7 @@ BUILD YOUR PARTY
 • Battle through 15 dungeon zones filled with room chests, enemies, and bosses.
 
 IDLE PROGRESS, REAL COMBAT
-• Watch the party fight on its own. Tap the fight to help. Leave a dungeon whenever you want and continue when you are ready.
+• Watch the party fight on its own. Tap the fight to help. Leave a dungeon whenever you want and continue when you are ready — the cave crawl is the same fight AFK.
 • TODAY puts your next useful goal on the main button: claim, equip, or enter.
 • Day-one menus stay small until gold, the shop, and essence mean something.
 
@@ -178,8 +199,10 @@ Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshot
 
 ## Play Console status (2026-09-12)
 
-- Short + full description: en-US only (this file) — itch-parity copy (party /
-  TODAY / 10 classes · 31 specs · 15 zones / fair SHOP) ready to paste.
+- App name paste: **Idle Party: Idle RPG**. Short + full: en-US (this file) —
+  itch-parity copy (party / TODAY / dungeon crawl / 10 classes · 31 specs ·
+  15 zones / fair SHOP) ready to paste. Extra locales gated in
+  `tool/store_listing/growth/LOCALES.md`.
 - Phone carousel plan: **8 shots** (1–2 live first-minute Sandy combat, then
   TODAY / GEAR / classes / World Path / AFK / Ascend — same story as the itch
   page). Icon `play_icon_512.png`. Preview video still

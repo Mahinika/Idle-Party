@@ -146,5 +146,8 @@ py -3 tool/store_listing/build_shorts_feed.py
 # Shot trims live in gitignored preview/shorts_feed.json.
 ```
 
+Feed hook library (20 first-second combat clips, A56):
+[`tool/store_listing/growth/HOOKS.md`](../tool/store_listing/growth/HOOKS.md).
+
 Live public Short: `https://www.youtube.com/shorts/l9jWy29YwJM`.
 Related video in Studio → Play listing preview `OMWXbgGBFMA`.

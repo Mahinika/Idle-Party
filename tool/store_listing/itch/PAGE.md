@@ -93,7 +93,7 @@ Idle fantasy RPG for phones. Build a party that keeps fighting while you are awa
 **Play on Android (Google Play)**
 https://play.google.com/store/apps/details?id=com.idleparty.app
 
-Idle Party is a portrait idle RPG. Your heroes move, fight, heal, and use their own abilities — the same combat when you AFK. Install from Play — this page is the itch.io home, not a PC/web build. Combat is on screen in about a minute.
+Idle Party is a portrait idle RPG and dungeon crawl. Your heroes move, fight, heal, and use their own abilities — the same combat when you AFK or play offline. Install from Play — this page is the itch.io home, not a PC/web build. Combat is on screen in about a minute.
 
 ## Build your party
 - Choose classic fantasy roles: Shield, Healer, and Damage to start, then tanks, healers, melee fighters, ranged heroes, and spellcasters.
@@ -102,7 +102,7 @@ Idle Party is a portrait idle RPG. Your heroes move, fight, heal, and use their 
 - Battle through 15 dungeon zones filled with room chests, enemies, and bosses.
 
 ## Idle progress, real combat
-- Watch the party fight on its own. Tap the fight to help. Leave a dungeon whenever you want and continue when you are ready.
+- Watch the party fight on its own. Tap the fight to help. Leave a dungeon whenever you want and continue when you are ready — the cave crawl is the same fight AFK.
 - TODAY puts your next useful goal on the main button: claim, equip, or enter.
 - Day-one menus stay small until gold, the shop, and essence mean something.
 
