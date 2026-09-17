@@ -220,21 +220,21 @@ Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in fi
 
 ## Play Console status (2026-09-17)
 
-- App name paste: **Idle Party: Idle RPG**. Short + full: en-US (this file) —
-  itch-parity copy (party / TODAY / dungeon crawl / 10 classes · 31 specs ·
-  15 zones / fair SHOP) ready to paste. Extra locales gated in
+- **Submitted for review (no AAB):** app name → **Idle Party: Idle RPG** + full
+  description (crawl-on-screen opening). Short was already the 75-char line.
+  Console: *Ändringarna granskas*. Extra locales gated in
   `tool/store_listing/growth/LOCALES.md`.
-- Phone carousel plan: **8 shots** (1–2 live first-minute Sandy combat, then
-  TODAY / GEAR / classes / World Path / AFK / Ascend — same story as the itch
-  page). Icon `play_icon_512.png`. Preview video still
-  `https://www.youtube.com/watch?v=OMWXbgGBFMA`.
-- Developer name: **Cognifox Studio**.
-- Growth ops (reviews / video / ads): see [`PLAY_GROWTH.md`](PLAY_GROWTH.md).
-- Preview video: `py -3 tool/store_listing/build_preview_video.py` →
-  `tool/store_listing/preview/idle_party_preview_16x9.mp4` (+ 9x16). Built
-  **2026-09-11** with real A56 hub/combat/GEAR gameplay. Live Play link
-  (unlisted, **Cognifox Studio**): `https://www.youtube.com/watch?v=OMWXbgGBFMA`.
-  Feed Short (public combat ad): `https://www.youtube.com/shorts/l9jWy29YwJM`
-  — uploaded **2026-09-12** (related video → Play preview).
-  Older listing 9:16 Short: `https://www.youtube.com/shorts/wdnrXCYLtZE`.
+- Phone carousel: live **8** unchanged (older marketing set). New
+  party-centered pack is local in `tool/store_listing/out/`
+  (`01_01_combat_a.png` / `02_02_combat_b.png` + storyboard). Console attach
+  needs manual **Beskär → 9:16 → Spara som kopia** per asset before Add.
+- Listing preview URL: keep `https://www.youtube.com/watch?v=OMWXbgGBFMA`.
+  Rebuilt MP4 (combat first 10 s) on Cognifox unlisted:
+  `https://www.youtube.com/watch?v=XfKog5CAiUs` — Play rejected embed
+  (ads/visibility); fix channel kids/ads, then swap later. Files:
+  `preview/idle_party_preview_16x9.mp4` (+ 9:16).
+- Icon `play_icon_512.png`. Developer: **Cognifox Studio**.
+- Growth ops: [`PLAY_GROWTH.md`](PLAY_GROWTH.md). Feed Short:
+  `https://www.youtube.com/shorts/l9jWy29YwJM`. Older 9:16 Short:
+  `https://www.youtube.com/shorts/wdnrXCYLtZE`.
 - Closed Alpha remains for early builds. Do not advertise GitHub Releases to players.
