@@ -20,6 +20,7 @@ Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
 |-------|--------|
 | ASO title + short + full (idle RPG keywords, fair SHOP line) | `docs/STORE_LISTING.md` |
 | 0 kr discovery (hooks, Reddit, creator mail, gated locales) | `tool/store_listing/growth/` |
+| FYP clip batch (7× 9:16 combat) | `py -3 tool/store_listing/build_hook_clips.py` → `preview/hooks/` |
 | Screenshot / feature graphic checklist | `docs/STORE_LISTING.md` |
 | Play preview video brief | `docs/TRAILER.md` § Play preview |
 | TODAY chase clarity (claim / equip / rebuild / short phones) | `lib/core/hub_chase.dart`, `chase_dispatcher.dart`, `hub_screen.dart` |

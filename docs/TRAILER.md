@@ -148,6 +148,15 @@ py -3 tool/store_listing/build_shorts_feed.py
 
 Feed hook library (20 first-second combat clips, A56):
 [`tool/store_listing/growth/HOOKS.md`](../tool/store_listing/growth/HOOKS.md).
+Cut a 7-clip FYP batch (not the 13s listing-style feed ad):
+
+```powershell
+py -3 tool/store_listing/capture_hook_clips.py
+py -3 tool/store_listing/build_hook_clips.py
+# → tool/store_listing/preview/hooks/01_they_fight.mp4 … 16_crit_pack.mp4
+```
+
+Recipe: [`tool/store_listing/growth/hooks_batch.json`](../tool/store_listing/growth/hooks_batch.json).
 
 Live public Short: `https://www.youtube.com/shorts/l9jWy29YwJM`.
 Related video in Studio → Play listing preview `OMWXbgGBFMA`.

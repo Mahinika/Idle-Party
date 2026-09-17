@@ -88,11 +88,57 @@ One chase. Then back into the room.
 Idle Party — idle RPG on Google Play.
 ```
 
-## Batch recipe (owner ~1 evening)
+**06**
+```
+Last kill. Loot walks in. Stairs next.
 
-1. Record 3× 60s combat (Sandy new-save, one later zone, one boss).
-2. Cut 7 clips from the table (mix 01, 03, 04, 06, 09, 10, 16).
-3. Hardcode **Idle Party** text by 3s.
-4. Upload TikTok + Shorts + Reels same day. Pin Play comment.
+Idle Party — Android idle RPG.
+https://play.google.com/store/apps/details?id=com.idleparty.app
+```
 
-Do **not** upload the 30s Play listing trailer as a FYP Short (`build_preview_video.py`).
+**09**
+```
+Shield. Healer. Damage. They walk the room together.
+
+Idle Party on Google Play.
+```
+
+**10**
+```
+The boss winds up. Then the party answers.
+
+Idle Party — idle RPG.
+```
+
+**16**
+```
+Big hit. Pack drops. Same cave if you AFK.
+
+Idle Party.
+https://play.google.com/store/apps/details?id=com.idleparty.app
+```
+
+## Batch 1 (ready to upload)
+
+Mix **01, 03, 04, 06, 09, 10, 16**. Files are gitignored (too big):
+
+`tool/store_listing/preview/hooks/`
+
+| File | Length |
+|------|--------|
+| `01_they_fight.mp4` | ~10s |
+| `03_healer_saves.mp4` | ~10s |
+| `04_tap_to_help.mp4` | ~6s |
+| `06_loot_walks.mp4` | ~9s |
+| `09_shield_healer_damage.mp4` | ~10s |
+| `10_boss_tell.mp4` | ~7s |
+| `16_crit_pack.mp4` | ~6s |
+
+1080×1920, owned `dungeon.mp3`, **IDLE PARTY** on screen by 3s, end card `Idle Party · Google Play`.
+
+```powershell
+py -3 tool/store_listing/capture_hook_clips.py
+py -3 tool/store_listing/build_hook_clips.py
+```
+
+**Upload (same day, same master each clip):** TikTok + YouTube Shorts (@CognifoxStudio) + Instagram Reels. Paste the matching caption. Pin the Play comment. Bio = Play link. Do **not** use the 30s listing trailer as a FYP Short.

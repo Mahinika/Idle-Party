@@ -1,0 +1,62 @@
+{
+  "crop_y": 140,
+  "note": "Raw files live in gitignored tool/store_listing/preview/. Outputs in preview/hooks/.",
+  "clips": [
+    {
+      "id": "01",
+      "file": "01_they_fight.mp4",
+      "hook": "THEY FIGHT WITHOUT YOU",
+      "raws": ["hook_sandy_raw.mp4", "hook_entered_raw.mp4", "gameplay_combat_raw.mp4"],
+      "start": 0.8,
+      "duration": 10.0
+    },
+    {
+      "id": "03",
+      "file": "03_healer_saves.mp4",
+      "hook": "HEALER SAVES THE TANK",
+      "raws": ["hook_entered_raw.mp4", "gameplay_combat_raw.mp4"],
+      "start": 2.0,
+      "duration": 10.0
+    },
+    {
+      "id": "04",
+      "file": "04_tap_to_help.mp4",
+      "hook": "TAP THE CAVE TO HELP",
+      "raws": ["hook_hell_raw.mp4", "gameplay_shorts_hell_raw.mp4"],
+      "start": 0.5,
+      "duration": 10.0
+    },
+    {
+      "id": "06",
+      "file": "06_loot_walks.mp4",
+      "hook": "LOOT WALKS TO YOU",
+      "raws": ["hook_entered_raw.mp4", "gameplay_shorts_veil_raw.mp4"],
+      "start": 4.0,
+      "duration": 9.0
+    },
+    {
+      "id": "09",
+      "file": "09_shield_healer_damage.mp4",
+      "hook": "SHIELD HEALER DAMAGE",
+      "raws": ["hook_sandy_raw.mp4", "hook_entered_raw.mp4", "gameplay_combat_raw.mp4"],
+      "start": 1.5,
+      "duration": 10.0
+    },
+    {
+      "id": "10",
+      "file": "10_boss_tell.mp4",
+      "hook": "BOSS HAS A TELL",
+      "raws": ["hook_hell_raw.mp4", "gameplay_shorts_crystal_raw.mp4"],
+      "start": 1.0,
+      "duration": 10.0
+    },
+    {
+      "id": "16",
+      "file": "16_crit_pack.mp4",
+      "hook": "CRIT. PACK DROPS",
+      "raws": ["gameplay_shorts_veil_raw.mp4", "hook_entered_raw.mp4"],
+      "start": 1.2,
+      "duration": 8.0
+    }
+  ]
+}

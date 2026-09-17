@@ -4,7 +4,8 @@ Agent-owned paste files. Play stays the install path. No GitHub Releases.
 
 | File | Use |
 |------|-----|
-| [HOOKS.md](HOOKS.md) | 20 Shorts/TikTok/Reels hooks, A56 capture |
+| [HOOKS.md](HOOKS.md) | 20 Shorts/TikTok/Reels hooks; batch 1 files in `preview/hooks/` |
+| [hooks_batch.json](hooks_batch.json) | Trim list for `build_hook_clips.py` |
 | [CREATORS.md](CREATORS.md) | 40 outreach rows + mail |
 | [REDDIT.md](REDDIT.md) | r/incremental_games (30-day rule + AI Disclosure) |
 | [LOCALES.md](LOCALES.md) | Play metadata translations — **gated** until owner says paste |
