@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
+import 'dungeon_camera.dart';
 import '../core/game_logic.dart';
 import '../core/hero_identity.dart';
 import '../core/meta_systems.dart';
@@ -3130,23 +3131,21 @@ class _TileCamera {
     final cols = math.min(targetCols, world.cols.toDouble());
     final tileSize = constraints.maxWidth / cols;
     final visibleRows = constraints.maxHeight / tileSize;
-    final leader =
-        world.leader ?? (world.heroes.isNotEmpty ? world.heroes.first : null);
-    final centerX = leader?.x ?? world.cols / 2;
-    final centerY = leader?.y ?? world.rows / 2;
-    final maxCamX = math.max(0.0, world.cols - cols);
-    final maxCamY = math.max(0.0, world.rows - visibleRows);
-    var camX = (centerX - cols / 2).clamp(0.0, maxCamX).toDouble();
-    var camY = (centerY - visibleRows / 2).clamp(0.0, maxCamY).toDouble();
-    if (shake > 0.02) {
-      final amp = shake * 0.38; // tiles
-      camX = (camX + math.sin(visualFrame * 1.7) * amp)
-          .clamp(0.0, maxCamX)
-          .toDouble();
-      camY = (camY + math.cos(visualFrame * 2.3) * amp * 0.85)
-          .clamp(0.0, maxCamY)
-          .toDouble();
-    }
+    final focus = dungeonPartyFocus(
+      heroes: world.heroes.map((h) => (x: h.x, y: h.y, alive: h.isAlive)),
+      mapCenterX: world.cols / 2,
+      mapCenterY: world.rows / 2,
+    );
+    final origin = dungeonCamOrigin(
+      focusX: focus.x,
+      focusY: focus.y,
+      visibleCols: cols,
+      visibleRows: visibleRows,
+      shakeAmp: shake > 0.02 ? shake * 0.38 : 0,
+      visualFrame: visualFrame,
+    );
+    final camX = origin.camX;
+    final camY = origin.camY;
     return _TileCamera(
       camX: camX,
       camY: camY,
