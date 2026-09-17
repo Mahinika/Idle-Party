@@ -93,6 +93,10 @@ keeps the whole phone UI visible.
   **Cognifox Studio** (`@CognifoxStudio`):
   `https://www.youtube.com/watch?v=OMWXbgGBFMA`
   (relinked **2026-09-11**; old personal upload `fiZjJ9S9l4A` superseded).
+  **2026-09-17:** recaptured `gameplay_combat_raw.mp4` on A56 after the
+  party-centered camera (Hell boss, Zoom · Close). Rebuild locally, then
+  replace YT when ads/visibility pass Play. Do not reuse the 2026-09-11
+  combat raw.
 - **Feed Short** (public combat ad, Cognifox Studio **2026-09-12**):
   `https://www.youtube.com/shorts/l9jWy29YwJM`
   Related video in Studio → unlisted Play preview `OMWXbgGBFMA`.
