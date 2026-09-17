@@ -2,7 +2,8 @@
 
 **Updated:** 2026-09-17 · Target: Google Play (en-US) · Honesty first.  
 Growth checklist / review templates: [`PLAY_GROWTH.md`](PLAY_GROWTH.md).  
-0 kr discovery pack: [`tool/store_listing/growth/`](../tool/store_listing/growth/).
+0 kr discovery pack: [`tool/store_listing/growth/`](../tool/store_listing/growth/).  
+Play charts + idle/RPG listing peers: [`tool/store_listing/growth/PLAY_LISTING_PEERS.md`](../tool/store_listing/growth/PLAY_LISTING_PEERS.md).
 
 ## Research: what makes people tap Install
 
@@ -84,9 +85,9 @@ community say the same game. Play still hides KEY in the first hour in-app;
 full description may name endgame after party level 100.
 
 ```
-Idle fantasy RPG for phones. Build a party that keeps fighting while you are away. Return to loot, progress, and one clear TODAY goal.
+Idle fantasy RPG for phones. Watch a party crawl dungeons on screen — they keep fighting while you are away. Return to loot, progress, and one clear TODAY goal.
 
-Idle Party is a portrait idle RPG and dungeon crawl. Your heroes move, fight, heal, and use their own abilities — the same combat when you AFK or play offline. Free to play, single-player, no Idle Party account. Combat is on screen in about a minute.
+Idle Party is a portrait idle RPG and dungeon crawl. The camera stays on your heroes as they move, fight, heal, and use their own abilities — the same combat when you AFK or play offline. Free to play, single-player, no Idle Party account. Combat is on screen in about a minute.
 
 BUILD YOUR PARTY
 • Choose classic fantasy roles: Shield, Healer, and Damage to start, then tanks, healers, melee fighters, ranged heroes, and spellcasters.
@@ -143,7 +144,7 @@ shots. High-res icon: `out/play_icon_512.png` (owned `app_icon`).
 | # | Source | Caption |
 |---|--------|---------|
 | Icon | `out/play_icon_512.png` | Owned cave-party mark (same as launcher) |
-| Feature | `marketing/01_feature_graphic_1024x500.png` | IDLE PARTY · Grow a party. Farm AFK. |
+| Feature | `marketing/01_feature_graphic_1024x500.png` | IDLE PARTY · Party fights AFK. |
 | 1 | `out/01_01_combat_a.png` | Your party fights on its own |
 | 2 | `out/02_02_combat_b.png` | Same fight while you are away |
 | 3 | `marketing/02_todays_chase_1080x1920.png` | Always know today's chase |
@@ -157,7 +158,7 @@ Shots **1–2** are a **new-save** Sandy floor (starter Shield / Healer / Damage
 not KEY / Gauntlet / AL20 chrome. Capture:
 
 1. `flutter test tool/store_listing/export_showcase_save_test.dart`
-2. Flutter web on `:8080`
+2. `flutter build web --release` and serve `build/web` on `:8080`
 3. `py -3 tool/store_listing/capture_first_minute.py`
 4. `py -3 tool/store_listing/compose_shots.py`
 5. `py -3 tool/store_listing/make_listing_icon.py`
@@ -180,7 +181,7 @@ Pipeline:
 
 1. `flutter test tool/store_listing/export_showcase_save_test.dart` →
    `first_minute_save.json` (+ `showcase_save.json` for later slots)
-2. Flutter web on `:8080` + `py -3 tool/store_listing/capture_first_minute.py`
+2. Release web on `:8080` (`flutter build web`) + `py -3 tool/store_listing/capture_first_minute.py`
 3. `py -3 tool/store_listing/compose_shots.py` + `make_listing_icon.py` → `out/`
 
 Hard-won rules:
@@ -193,11 +194,31 @@ Hard-won rules:
 | Widget-test screenshots look blank | Prefer Playwright; Google Fonts + `toImage` fights you |
 | AL0 empty **hub** / all LOCKED / forge +0 | Do not use as shot 1. Shot 1–2 = in-dungeon Sandy. Showcase AL3 is for later slots |
 | Fat caption covering HUD | Top caption band in `compose_shots.py`, crop bias per shot |
-| Play Console file picker blocked | CORS-serve `out/`, CDP `fetch` + `DataTransfer` (same idea as AAB) |
+| Flutter `web-server` never installs `__idlePartyButtons` | Serve a **release** `flutter build web` on :8080; `web-server` waits for a debug Chrome and Playwright times out |
 
 Full agent recipe: `.cursor/skills/play-store-prep/SKILL.md` § Store screenshots.
 
-## Play Console status (2026-09-12)
+## Console paste box (owner — no AAB)
+
+Paste from this file. Do **not** upload an AAB in this listing batch.
+Locales in `growth/LOCALES.md` stay gated until you say paste.
+
+| Console field | Paste / file |
+|---------------|----------------|
+| App name | `Idle Party: Idle RPG` (confirm live is not bare “Idle Party”) |
+| Short description | The 75-char line above |
+| Full description | The full block above (crawl-on-screen opening) |
+| Category | Role Playing / Rollspel only |
+| Tags (max 5) | Keep **Clicker-rollspel** + **Rollspel**. Do not add Clicker-spel or Rogue-liknande |
+| Phone screenshots 1–8 | `tool/store_listing/out/` + `marketing/` per table (shots 1–2 recaptured with party-centered camera) |
+| Icon 512 | `out/play_icon_512.png` |
+| Feature graphic | `marketing/01_feature_graphic_1024x500.png` |
+| Preview video | After you upload the rebuilt MP4: keep ads off, unlisted OK. Until then `https://www.youtube.com/watch?v=OMWXbgGBFMA`. New files: `preview/idle_party_preview_16x9.mp4` + `_9x16.mp4` |
+| Store listing experiment | Deferred until listing traffic is large enough |
+
+Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in first 10 s).
+
+## Play Console status (2026-09-17)
 
 - App name paste: **Idle Party: Idle RPG**. Short + full: en-US (this file) —
   itch-parity copy (party / TODAY / dungeon crawl / 10 classes · 31 specs ·

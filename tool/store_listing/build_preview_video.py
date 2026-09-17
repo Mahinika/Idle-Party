@@ -28,14 +28,8 @@ MUSIC = ROOT / "assets" / "custom" / "audio" / "music" / "hub.ogg"
 # Gameplay clips are A56 screen recordings in preview/ (gitignored). If they
 # are absent, tracked marketing cards keep the builder reproducible.
 # duration, gameplay, fallback still, caption, source trim start
+# Play Help: show the fight in the first 10s (muted autoplay).
 BEATS: list[tuple[float, str | None, str, str, float]] = [
-    (
-        4.0,
-        "preview/gameplay_hub_raw.mp4",
-        "marketing/02_todays_chase_1080x1920.png",
-        "Always know today's chase",
-        0.0,
-    ),
     (
         10.0,
         "preview/gameplay_combat_raw.mp4",
@@ -51,9 +45,16 @@ BEATS: list[tuple[float, str | None, str, str, float]] = [
         0.0,
     ),
     (
+        4.0,
+        "preview/gameplay_hub_raw.mp4",
+        "marketing/02_todays_chase_1080x1920.png",
+        "Always know today's chase",
+        0.0,
+    ),
+    (
         5.0,
         "preview/gameplay_gear_raw.mp4",
-        "marketing/09_ascend_1080x1920.png",
+        "marketing/05_build_party_1080x1920.png",
         "Build and equip your party",
         0.0,
     ),

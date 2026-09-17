@@ -56,11 +56,14 @@ In one glance: **idle fantasy RPG** · party fights · AFK progress · TODAY cha
 
 ### Shot list (keep this order)
 
+Play Help: real combat in the **first 10 seconds** (muted autoplay). Hub is
+not the lead.
+
 | Sec | Shot | On-screen (≤6 words) |
 |-----|------|----------------------|
-| 0–4 | Hub TODAY card (READY / clear goal) | Always know today's chase |
-| 4–14 | A56 gameplay: party walks, fights, abilities | Your party keeps fighting |
-| 14–19 | Welcome Back / AFK marketing card | Progress while you're away |
+| 0–10 | A56 gameplay: party centered, walks, fights | Your party keeps fighting |
+| 10–15 | Welcome Back / AFK marketing card | Progress while you're away |
+| 15–19 | Hub TODAY card (READY / clear goal) | Always know today's chase |
 | 19–24 | A56 gameplay: switch heroes in GEAR | Build and equip your party |
 | 24–30 | Title lockup + feature graphic feel | Idle Party |
 
@@ -130,7 +133,7 @@ Do not put a store CTA on the Play listing trailer.
 | | Play preview | Feed Short |
 |--|--------------|------------|
 | Builder | `build_preview_video.py` | `build_shorts_feed.py` |
-| First frame | Hub TODAY | Hook: *Your party fights even while you're away* |
+| First frame | Live combat (party centered) | Hook: *Your party fights even while you're away* |
 | Picture | 16:9 listing + 9:16 phone-in-frame | intro + three zones + outro, 1080×1920 |
 | On-screen | Chase / AFK / lockup beats | away hook → build / push / return → *Download free* |
 | Music | owned `hub.ogg` | owned `dungeon.mp3` |

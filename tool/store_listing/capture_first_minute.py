@@ -58,7 +58,11 @@ def main() -> None:
             timeout=90000,
         )
         page.wait_for_timeout(4500)
-        page.wait_for_selector("flt-semantics[role=button]", timeout=30000)
+        page.wait_for_function(
+            "() => typeof window.__idlePartyButtons === 'function' "
+            "&& window.__idlePartyButtons().length > 0",
+            timeout=90000,
+        )
 
         click_role(page, "SKIP", 700)
         click_role(page, "CONTINUE", 1800)

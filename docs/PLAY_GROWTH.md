@@ -42,7 +42,7 @@ Do these in Console when you have 20 minutes:
    (related video → Play preview; uploaded **2026-09-12**).
    Older listing 9:16 Short: `https://www.youtube.com/shorts/wdnrXCYLtZE`.
    Rebuild: `py -3 tool/store_listing/build_preview_video.py` → 16:9 + 9:16
-   (brief in `TRAILER.md`). Confirm YT ads stay off.
+   (brief in `TRAILER.md` — **combat first 10 s**). Confirm YT ads stay off.
 4. **Reply to reviews** (templates below) — especially 1–2★.
 5. **Store listing experiments** (if available): A/B short description vs previous.
 6. Optional: **Google App campaigns** — see ads checklist below (start tiny).
