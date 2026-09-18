@@ -372,4 +372,17 @@ void main() {
       contains('God Hand'),
     );
   });
+
+  test('unused flask is a proven wipe line when leftover is high', () {
+    const fight = WipeFightSnapshot(
+      waveHp: 2000,
+      remainingHp: 1100,
+      damageDealt: 2500,
+      damageTaken: 400,
+      partyMaxHp: 400,
+      elapsedSec: 10,
+    );
+    final state = GameLogic.createInitialState(now: now);
+    expect(WipeAdvice.lineFor(state: state, fight: fight), contains('flask'));
+  });
 }

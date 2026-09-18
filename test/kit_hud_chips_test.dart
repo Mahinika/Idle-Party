@@ -129,5 +129,38 @@ void main() {
     expect(KitHudChips.identityReserveFor(HeroSpecId.discipline), 3);
     expect(KitHudChips.identityReserveFor(HeroSpecId.fire), 3);
     expect(KitHudChips.identityReserveFor(HeroSpecId.combat), 2);
+    expect(KitHudChips.identityReserveFor(HeroSpecId.beastMastery), 3);
+    expect(KitHudChips.identityReserveFor(HeroSpecId.holyPaladin), 3);
+    expect(KitHudChips.identityReserveFor(HeroSpecId.arcane), 3);
+  });
+
+  test('capped HUD keeps BM / Arcane identity CDs', () {
+    const cases = <(HeroSpecId, Set<AbilityId>)>[
+      (
+        HeroSpecId.beastMastery,
+        {AbilityId.killCommand, AbilityId.bestialWrath, AbilityId.multiShot},
+      ),
+      (
+        HeroSpecId.arcane,
+        {AbilityId.arcaneBlast, AbilityId.arcaneMissiles, AbilityId.arcanePower},
+      ),
+    ];
+    for (final (spec, must) in cases) {
+      final all = ClassKits.hudAbilitiesAtSpec(spec, 15);
+      expect(all.length, greaterThan(4), reason: '$spec');
+      final visible = KitHudChips.prioritize(
+        all,
+        spatial: hero(spec),
+        resource: 100,
+        hasShield: true,
+        maxChips: 4,
+      );
+      final ids = visible.map((d) => d.id).toSet();
+      expect(
+        ids.intersection(must),
+        isNotEmpty,
+        reason: '$spec visible $ids missed $must',
+      );
+    }
   });
 }

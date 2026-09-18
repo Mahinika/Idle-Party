@@ -545,16 +545,31 @@ abstract final class RoomLayouts {
     );
   }
 
-  static _RoomSilhouette _silhouetteFor(FloorBeatKind kind, Random rng) {
+  static _RoomSilhouette _silhouetteFor(
+    FloorBeatKind kind,
+    Random rng,
+    ZoneLayoutKit kit,
+  ) {
     if (kind == FloorBeatKind.choke) {
+      if (kit.dungeonId == 'storm') return _RoomSilhouette.plus;
       return rng.nextBool() ? _RoomSilhouette.oval : _RoomSilhouette.chamfer;
     }
     if (kind == FloorBeatKind.treasure || kind == FloorBeatKind.decoy) {
+      if (kit.dungeonId == 'rime') return _RoomSilhouette.oval;
       return switch (rng.nextInt(3)) {
         0 => _RoomSilhouette.oval,
         1 => _RoomSilhouette.el,
         _ => _RoomSilhouette.diamond,
       };
+    }
+    if (kit.dungeonId == 'storm') {
+      return rng.nextBool() ? _RoomSilhouette.plus : _RoomSilhouette.chamfer;
+    }
+    if (kit.dungeonId == 'rime') {
+      return rng.nextBool() ? _RoomSilhouette.oval : _RoomSilhouette.diamond;
+    }
+    if (kit.dungeonId == 'brass') {
+      return rng.nextBool() ? _RoomSilhouette.rect : _RoomSilhouette.chamfer;
     }
     return switch (rng.nextInt(7)) {
       0 => _RoomSilhouette.rect,
@@ -880,7 +895,11 @@ abstract final class RoomLayouts {
       _carveRoomFootprint(
         rooms[i],
         set,
-        _silhouetteFor(roomBeats[i] ?? FloorBeatKind.approach, rng),
+        _silhouetteFor(
+          roomBeats[i] ?? FloorBeatKind.approach,
+          rng,
+          kit,
+        ),
         rng,
       );
     }

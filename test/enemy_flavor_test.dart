@@ -85,6 +85,38 @@ void main() {
     expect(tideRanged, greaterThan(brassRanged));
   });
 
+  test('Hell mixes more tanks than Ember; Ember mixes more glass', () {
+    var hellTanks = 0;
+    var emberTanks = 0;
+    var hellGlass = 0;
+    var emberGlass = 0;
+    const n = 240;
+    for (var i = 0; i < n; i++) {
+      final hell = EnemyFlavor.pickArchetype(
+        type: RoomType.normal,
+        isBossUnit: false,
+        dungeonId: 'hell',
+        index: i % 9,
+        count: 9,
+        rng: Random(i + 31),
+      );
+      final ember = EnemyFlavor.pickArchetype(
+        type: RoomType.normal,
+        isBossUnit: false,
+        dungeonId: 'ember',
+        index: i % 9,
+        count: 9,
+        rng: Random(i + 31),
+      );
+      if (hell == EnemyArchetype.tank) hellTanks++;
+      if (ember == EnemyArchetype.tank) emberTanks++;
+      if (hell == EnemyArchetype.glass) hellGlass++;
+      if (ember == EnemyArchetype.glass) emberGlass++;
+    }
+    expect(hellTanks, greaterThan(emberTanks));
+    expect(emberGlass, greaterThan(hellGlass));
+  });
+
   test('every zone has unique elite names, not generic Golem', () {
     for (final dungeon in DungeonCatalog.all) {
       final name = EnemyFlavor.eliteName(dungeon.id, EnemyArchetype.tank);

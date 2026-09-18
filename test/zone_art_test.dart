@@ -119,4 +119,17 @@ void main() {
     expect(art.wall, isNotEmpty);
     expect(art.enemies.forArchetype(EnemyArchetype.swarm), isNotEmpty);
   });
+
+  test('Hell is choke-only; Dead is alcove-only; King is hub halls', () {
+    final hell = ZoneArt.byId('hell');
+    final dead = ZoneArt.byId('dead');
+    final king = ZoneArt.byId('king');
+    expect(hell.preferChoke, isTrue);
+    expect(hell.preferTreasureAlcove, isFalse);
+    expect(dead.preferChoke, isFalse);
+    expect(dead.preferTreasureAlcove, isTrue);
+    expect(king.preferChoke, isFalse);
+    expect(king.preferTreasureAlcove, isFalse);
+    expect(king.hubChamberChance, greaterThan(0.45));
+  });
 }

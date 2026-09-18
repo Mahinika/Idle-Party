@@ -387,8 +387,10 @@ abstract final class ZoneArt {
       wash: Color(0x3A3060A0),
       floorBlend: Color(0x5A203048),
       projectileTint: Color(0xFF70A0E0),
+      preferChoke: false,
+      preferTreasureAlcove: false,
+      hubChamberChance: 0.52,
       normalRoomChestChance: 0.1,
-      hubChamberChance: 0.44,
       enemies: ZoneEnemyArt(
         boss: CustomAssets.enemyBossKing,
         elite: CustomAssets.enemySpider,
@@ -514,8 +516,8 @@ abstract final class ZoneArt {
       projectileTint: Color(0xFFE04038),
       corridorShade: Color(0x40000000),
       preferChoke: true,
-      preferTreasureAlcove: true,
-      treasureAlcoveChance: 0.30,
+      preferTreasureAlcove: false,
+      treasureAlcoveChance: 0.0,
       normalRoomChestChance: 0.14,
       enemies: ZoneEnemyArt(
         boss: CustomAssets.enemyBossHell,

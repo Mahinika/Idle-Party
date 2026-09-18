@@ -208,11 +208,19 @@ class OfflineSim {
             ratioSum += maxHp > 0 ? h.currentHp / maxHp : 0;
           }
           if (ratioSum / living.length < 0.35) {
+            final hpBefore = <String, int>{
+              for (final h in _current.heroes) h.id: h.currentHp,
+            };
             _current = GameLogic.useConsumable(_current);
             _world = SpatialCombat.syncPartyFromState(_world, _current);
+            final healed = <String>{
+              for (final h in _current.heroes)
+                if ((hpBefore[h.id] ?? h.currentHp) < h.currentHp) h.id,
+            };
             SpatialCombat.spawnFlaskHealFx(
               _world,
               reducedVfx: _current.reducedVfx,
+              healedHeroIds: healed,
             );
           }
         }

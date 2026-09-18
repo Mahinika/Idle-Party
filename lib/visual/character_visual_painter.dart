@@ -256,6 +256,10 @@ abstract final class CharacterVisualPainter {
       ),
       HeroAnimKind.hit => Offset(-size * 0.055 * (1 - p), size * 0.014 * (1 - p)),
       HeroAnimKind.cast => Offset(0, -size * 0.022 * math.sin(p * math.pi)),
+      HeroAnimKind.attack => Offset(
+        (pose.flipX ? -1.0 : 1.0) * size * 0.085 * math.sin(p * math.pi),
+        -size * 0.02 * math.sin(p * math.pi),
+      ),
       _ => Offset.zero,
     };
   }

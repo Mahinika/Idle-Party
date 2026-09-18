@@ -36,6 +36,38 @@ abstract final class KitHudChips {
     AbilityId.combustion,
     AbilityId.livingBomb,
     AbilityId.fireball,
+    // Beast Mastery / Holy / Arcane + late kits
+    AbilityId.killCommand,
+    AbilityId.bestialWrath,
+    AbilityId.multiShot,
+    AbilityId.holyShock,
+    AbilityId.beaconOfLight,
+    AbilityId.flashOfLight,
+    AbilityId.arcaneBlast,
+    AbilityId.arcaneMissiles,
+    AbilityId.arcanePower,
+    AbilityId.frostbolt,
+    AbilityId.deathStrike,
+    AbilityId.heartStrike,
+    AbilityId.obliterate,
+    AbilityId.howlingBlast,
+    AbilityId.unstableAffliction,
+    AbilityId.haunt,
+    AbilityId.chaosBolt,
+    AbilityId.chaosBoltDemo,
+    AbilityId.shadowBolt,
+    AbilityId.mortalStrike,
+    AbilityId.bladestorm,
+    AbilityId.bloodthirst,
+    AbilityId.crusaderStrike,
+    AbilityId.divineStorm,
+    AbilityId.aimedShot,
+    AbilityId.chimeraShot,
+    AbilityId.explosiveShot,
+    AbilityId.mutilate,
+    AbilityId.vendetta,
+    AbilityId.hemorrhage,
+    AbilityId.shadowDance,
   };
 
   static bool buffActive(ClassAbilityDef ability, SpatialActor s) {
@@ -84,7 +116,10 @@ abstract final class KitHudChips {
     return switch (spec) {
       HeroSpecId.protection ||
       HeroSpecId.discipline ||
-      HeroSpecId.fire => 3,
+      HeroSpecId.fire ||
+      HeroSpecId.beastMastery ||
+      HeroSpecId.holyPaladin ||
+      HeroSpecId.arcane => 3,
       _ => 2,
     };
   }

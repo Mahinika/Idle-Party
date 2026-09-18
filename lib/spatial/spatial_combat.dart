@@ -1170,11 +1170,20 @@ abstract final class SpatialCombat {
     );
   }
 
-  /// Mid-fight flask heal feedback on living heroes.
-  static void spawnFlaskHealFx(SpatialWorld world, {required bool reducedVfx}) {
+  /// Mid-fight flask heal feedback on heroes who actually gained HP.
+  static void spawnFlaskHealFx(
+    SpatialWorld world, {
+    required bool reducedVfx,
+    Set<String>? healedHeroIds,
+  }) {
     if (reducedVfx) return;
     for (final h in world.heroes) {
       if (!h.isAlive) continue;
+      if (healedHeroIds != null) {
+        if (!healedHeroIds.contains(h.id)) continue;
+      } else if (h.hp >= h.effectiveMaxHp) {
+        continue;
+      }
       _spawnRing(
         world,
         x: h.x,
@@ -4622,8 +4631,17 @@ abstract final class SpatialCombat {
       2 => 0xFF90D8FF, // WIDE — cool blue
       _ => 0xFFFFE080, // BAL — gold
     };
-    // Smash must read even on Lite — Minimal keeps motion quiet.
-    if (state.vfxQuality != VfxQuality.minimal) {
+    // Smash must read even on Minimal — one short ring, no extra floaters.
+    if (state.vfxQuality == VfxQuality.minimal) {
+      _spawnRing(
+        world,
+        x: tileX,
+        y: tileY,
+        argb: styleArgb,
+        radius: radius * 0.9,
+        life: 0.28,
+      );
+    } else {
       _spawnRing(
         world,
         x: tileX,

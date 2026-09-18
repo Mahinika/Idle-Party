@@ -845,6 +845,11 @@ void main() {
     );
     expect(hitStart.dx, lessThan(0));
     expect(hitEnd, Offset.zero);
+    final swing = CharacterVisualPainter.ownedStepOffset(
+      posed(HeroAnimKind.attack, 0.5),
+      64,
+    );
+    expect(swing.dx.abs(), greaterThan(0.5));
   });
 
   test('walk swings the held weapon so steps read as motion', () {

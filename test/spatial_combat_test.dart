@@ -11,6 +11,7 @@ import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/spatial/tile_map.dart';
 
@@ -795,10 +796,19 @@ void main() {
   test('flask heal shouts FLASK bigger than damage ticks', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
     final world = SpatialCombat.build(state);
-    SpatialCombat.spawnFlaskHealFx(world, reducedVfx: false);
+    world.heroes.first.hp = world.heroes.first.maxHp ~/ 2;
+    SpatialCombat.spawnFlaskHealFx(
+      world,
+      reducedVfx: false,
+      healedHeroIds: {world.heroes.first.id},
+    );
     expect(
       world.floaters.any((f) => f.text == 'FLASK' && f.priority >= 2),
       isTrue,
+    );
+    expect(
+      world.floaters.where((f) => f.text == 'FLASK').length,
+      1,
     );
   });
 
@@ -839,6 +849,7 @@ void main() {
 
   test('week-1 Sandy boss shouts SLAM, not PULSE', () {
     final seen = _bossTellTexts('sandy');
+    expect(seen.contains('WIND-UP'), isTrue);
     expect(seen.contains('SLAM'), isTrue);
     expect(seen.contains('PULSE'), isFalse);
   });
@@ -874,6 +885,19 @@ void main() {
     expect(f10.contains('WAVE'), isTrue);
     expect(f10.contains('SHARD'), isFalse);
     expect(f10.contains('PULSE'), isFalse);
+  });
+
+  test('storm / grove / veil bosses telegraph then unique tells', () {
+    final storm = _bossTellTexts('storm');
+    expect(storm.contains('WIND-UP'), isTrue);
+    expect(storm.contains('BOLT'), isTrue);
+    expect(storm.contains('PULSE'), isFalse);
+    final grove = _bossTellTexts('grove');
+    expect(grove.contains('WIND-UP'), isTrue);
+    expect(grove.contains('ROOT'), isTrue);
+    final veil = _bossTellTexts('veil');
+    expect(veil.contains('WIND-UP'), isTrue);
+    expect(veil.contains('SILK'), isTrue);
   });
 
   test('KEY week on Sandy uses that week cave tell, not SLAM', () {
@@ -914,6 +938,63 @@ void main() {
     final step = SpatialCombat.step(world, state, dt: 0.05);
     final texts = step.world.floaters.map((f) => f.text).toSet();
     expect(texts.contains('SWARM'), isTrue);
+  });
+
+  test('swarm trash shouts SURROUND on a close pack', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
+    final room = DungeonRoom(
+      floorNumber: 2,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 4,
+      enemyCount: 1,
+    );
+    final mite = GameLogic.createEnemyGroup(room, dungeonId: 'sandy').first
+        .copyWith(archetype: EnemyArchetype.swarm, role: EnemyRole.normal);
+    state = state.copyWith(
+      dungeonId: 'sandy',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: [mite],
+      inDungeon: true,
+    );
+    var world = SpatialCombat.build(state);
+    final enemy = world.enemies.first
+      ..dormant = false
+      ..specialCd = 0;
+    for (final h in world.heroes) {
+      h
+        ..x = enemy.x
+        ..y = enemy.y;
+    }
+    final seen = <String>{};
+    for (var i = 0; i < 40; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+      seen.addAll(world.floaters.map((f) => f.text));
+    }
+    expect(seen.contains('SURROUND'), isTrue);
+  });
+
+  test('God Hand still draws a smash ring on Minimal VFX', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
+    state = state.copyWith(vfxQuality: VfxQuality.minimal, inDungeon: true);
+    final world = SpatialCombat.build(state);
+    world.godHandCooldown = 0;
+    final enemy = world.enemies.first
+      ..dormant = false
+      ..hp = 50;
+    SpatialCombat.godHand(
+      world,
+      state,
+      tileX: enemy.x,
+      tileY: enemy.y,
+    );
+    expect(
+      world.bursts.any((b) => b.kind == SpatialBurstKind.ring),
+      isTrue,
+    );
   });
 }
 

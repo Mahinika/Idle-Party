@@ -226,12 +226,12 @@ abstract final class EnemyFlavor {
       EnemyArchetype.support: 3,
     },
     'hell': {
-      EnemyArchetype.swarm: 2,
-      EnemyArchetype.brute: 3,
-      EnemyArchetype.tank: 2,
+      EnemyArchetype.swarm: 1,
+      EnemyArchetype.brute: 2,
+      EnemyArchetype.tank: 4,
       EnemyArchetype.ranged: 2,
-      EnemyArchetype.glass: 2,
-      EnemyArchetype.support: 1,
+      EnemyArchetype.glass: 1,
+      EnemyArchetype.support: 3,
     },
     'crystal': {
       EnemyArchetype.swarm: 1,
@@ -251,10 +251,10 @@ abstract final class EnemyFlavor {
     },
     'ember': {
       EnemyArchetype.swarm: 2,
-      EnemyArchetype.brute: 3,
-      EnemyArchetype.tank: 2,
-      EnemyArchetype.ranged: 2,
-      EnemyArchetype.glass: 2,
+      EnemyArchetype.brute: 4,
+      EnemyArchetype.tank: 1,
+      EnemyArchetype.ranged: 1,
+      EnemyArchetype.glass: 4,
       EnemyArchetype.support: 1,
     },
     'grove': {

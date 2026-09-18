@@ -768,13 +768,21 @@ class GameDirector extends ChangeNotifier {
           ratioSum += maxHp > 0 ? h.currentHp / maxHp : 0;
         }
         if (livingCount > 0 && ratioSum / livingCount < 0.35) {
+            final hpBefore = <String, int>{
+              for (final h in _state.heroes) h.id: h.currentHp,
+            };
             final drank = GameLogic.useConsumable(_state);
             if (!identical(drank, _state)) {
               _state = drank;
               _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
+              final healed = <String>{
+                for (final h in _state.heroes)
+                  if ((hpBefore[h.id] ?? h.currentHp) < h.currentHp) h.id,
+              };
               SpatialCombat.spawnFlaskHealFx(
                 _spatial!,
                 reducedVfx: _state.reducedVfx,
+                healedHeroIds: healed,
               );
               GameAudio.flask();
             }
@@ -2932,11 +2940,22 @@ class GameDirector extends ChangeNotifier {
 
   void useConsumable({int? heroIndex}) {
     final before = _state;
+    final hpBefore = <String, int>{
+      for (final h in _state.heroes) h.id: h.currentHp,
+    };
     final next = GameLogic.useConsumable(_state, heroIndex: heroIndex);
     _applyUpgrade(next);
     if (!identical(next, before) && _spatial != null && _state.inDungeon) {
       _spatial = SpatialCombat.syncPartyFromState(_spatial!, _state);
-      SpatialCombat.spawnFlaskHealFx(_spatial!, reducedVfx: _state.reducedVfx);
+      final healed = <String>{
+        for (final h in _state.heroes)
+          if ((hpBefore[h.id] ?? h.currentHp) < h.currentHp) h.id,
+      };
+      SpatialCombat.spawnFlaskHealFx(
+        _spatial!,
+        reducedVfx: _state.reducedVfx,
+        healedHeroIds: healed,
+      );
       GameAudio.flask();
     }
   }

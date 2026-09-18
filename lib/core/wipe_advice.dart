@@ -4,6 +4,7 @@ import '../spatial/spatial_combat.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'market_listings_service.dart';
+import 'market_service.dart';
 import 'menu_alerts.dart';
 import 'menu_router.dart';
 import 'nav_intent.dart';
@@ -77,7 +78,8 @@ abstract final class WipeAdvice {
       line.contains('Shop has an upgrade') ||
       line.startsWith('MARKET:') ||
       line.startsWith('GOLD:') ||
-      line.startsWith('SHOP:');
+      line.startsWith('SHOP:') ||
+      line.startsWith('Use a flask');
 
   /// Short nudge under the wipe advice when the fix lives in hub menus.
   static String? hubHintFor(String adviceLine) {
@@ -306,6 +308,10 @@ abstract final class WipeAdvice {
       if (overkill <= 1.08) {
         return _forgeOrMarket(state, 'Upgrade STA in GOLD');
       }
+    }
+
+    if (MarketService.canUseConsumable(state) && leftover >= 0.5) {
+      return 'Use a flask — party melted with potions left';
     }
     return null;
   }

@@ -67,7 +67,10 @@ void main() {
       disc.heroes.firstWhere((h) => !h.isPet).rage,
       SpatialCombat.healerOpeningMana,
     );
-    expect(fire.heroes.firstWhere((h) => !h.isPet).rage, 0);
+    expect(
+      fire.heroes.firstWhere((h) => !h.isPet).rage,
+      SpatialCombat.dpsOpeningResource,
+    );
   });
 
   test('Combat rogue kitOutMul sits near melee band', () {
