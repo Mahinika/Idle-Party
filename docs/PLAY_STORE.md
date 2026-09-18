@@ -17,7 +17,7 @@ Package id: **`com.idleparty.app`**
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 KEY/Gauntlet wired; 2026-09 Greater Rift `CgkIhuXGvNocEAIQAw` wired (Console Draft — publish via Games Publishing). OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN) | ✅ live | Default locale **en-US**. Title **Idle Party: Idle RPG** + crawl-on-screen full desc live on the public listing **2026-09-17**. Extra locales gated. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
-| Screenshots + feature graphic | ⏳ attach | Live carousel still older 8. New pack in `out/` (party-centered 1–2); Console needs crop-before-add. Feature graphic unchanged. Preview rebuild uploaded YT `XfKog5CAiUs` but Play embed rejected — listing stays on `OMWXbgGBFMA`. |
+| Screenshots + feature graphic | ⏳ review | New **8 phone shots** swapped + submitted **2026-09-18** (`play_ready` pack: combat first). Console: *Ändringarna granskas*. Feature graphic unchanged. |
 | Preview video (YouTube) | ⏳ review | Live listing: `OMWXbgGBFMA`. Rebuilt combat-first MP4 uploaded Cognifox `XfKog5CAiUs` (unlisted) — Play rejected embed (ads/visibility). Keep ads off / not made-for-kids, then swap. |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
@@ -42,7 +42,8 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Owner asked new Production AAB (**2026-09-15**)
 - [x] Signed Production AAB **1.12.171+201** built + uploaded; submitted for review (full rollout). Console: Ändringarna granskas. AD_ID “Lansera utan behörighet” (permission is in the 201 AAB).
 - [x] Owner asked new Production AAB (**2026-09-17**)
-- [x] Signed Production AAB **1.12.172+202** built + uploaded; submitted for review (full rollout). Console: *Ändringarna granskas* + Produktion **202 (1.12.172)**. AD_ID “Lansera utan behörighet” (permission is in the 202 AAB). Phone shots + preview URL still the live set (crop / Play-YT embed).
+- [x] Signed Production AAB **1.12.172+202** built + uploaded; submitted for review (full rollout). Console: *Ändringarna granskas* + Produktion **202 (1.12.172)**. AD_ID “Lansera utan behörighet” (permission is in the 202 AAB).
+- [x] Phone carousel swapped to new `play_ready` 8 (combat-first) + submitted for review **2026-09-18**. Preview URL still `OMWXbgGBFMA` (XfKog embed rejected).
 
 ### Production upload paste (en-US release notes)
 

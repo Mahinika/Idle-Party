@@ -1,6 +1,6 @@
 # Idle Party — store listing (research + copy)
 
-**Updated:** 2026-09-17 · Target: Google Play (en-US) · Honesty first.  
+**Updated:** 2026-09-18 · Target: Google Play (en-US) · Honesty first.  
 Growth checklist / review templates: [`PLAY_GROWTH.md`](PLAY_GROWTH.md).  
 0 kr discovery pack: [`tool/store_listing/growth/`](../tool/store_listing/growth/).  
 Play charts + idle/RPG listing peers: [`tool/store_listing/growth/PLAY_LISTING_PEERS.md`](../tool/store_listing/growth/PLAY_LISTING_PEERS.md).
@@ -218,18 +218,16 @@ Locales in `growth/LOCALES.md` stay gated until you say paste.
 
 Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in first 10 s).
 
-## Play Console status (2026-09-17)
+## Play Console status (2026-09-18)
 
 - **Listing copy live:** app name **Idle Party: Idle RPG** + crawl-on-screen
   full desc on the public store. Extra locales gated in
   `tool/store_listing/growth/LOCALES.md`.
 - **Production AAB:** **1.12.172+202** submitted **2026-09-17** (full rollout).
-  Console: *Ändringarna granskas*. Live players stay on **201** until Google
-  publishes.
-- Phone carousel: live **8** unchanged (older marketing set). New
-  party-centered pack is local in `tool/store_listing/out/`
-  (`01_01_combat_a.png` / `02_02_combat_b.png` + storyboard). Console attach
-  needs manual **Beskär → 9:16 → Spara som kopia** per asset before Add.
+- **Phone carousel swap submitted 2026-09-18:** new 8 play-ready shots
+  (`tool/store_listing/out/play_ready/` → Console `01_play_combat_a` …
+  `08_play_ascend`). Order: combat a/b → TODAY chase → GEAR → party → zone →
+  AFK → Ascend. Console: *Ändringarna granskas* (snabbkontroller then review).
 - Listing preview URL: keep `https://www.youtube.com/watch?v=OMWXbgGBFMA`.
   Rebuilt MP4 (combat first 10 s) on Cognifox unlisted:
   `https://www.youtube.com/watch?v=XfKog5CAiUs` — Play rejected embed
