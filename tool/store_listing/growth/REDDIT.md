@@ -1,9 +1,19 @@
 # Idle Party — r/incremental_games post (paste-ready)
 
+**Posted 2026-09-18** as **u/Few-Command-8450** (Cognifox Gmail):
+https://www.reddit.com/r/incremental_games/comments/1wjwbga/idle_party_android_idle_rpg_where_the_party/
+
+Flair **Released**. Reddit showed **awaiting moderator approval** (new account, cake day same day). Next own-game post in this sub: **2026-10-18**.
+
+**Skip for now (would get removed / burn the account):**
+- r/AndroidGaming — `[DEV]` needs ~3-month account + 90% non-promo activity
+- r/playmygame — must give feedback on other games first
+- Same-day copy-paste to extra idle subs — sitewide spam filter
+
 **Rules to obey:** one self-promo / **30 days**; playable link; **AI Disclosure** section in the body.
 Flair whatever the sub uses for releases. GIF or short video of the **party crawl** as the image — not the hub.
 
-**Also usable (after you wait 30 days):** r/AndroidGaming as `[DEV]`. Do not copypaste the AI section there unless they ask; AndroidGaming cares more about “no APK / Play link.”
+**Also usable (after account age + 30 days):** r/AndroidGaming as `[DEV]`. Do not copypaste the AI section there unless they ask; AndroidGaming cares more about “no APK / Play link.”
 
 **Do not** post GitHub Releases. Play only.
 
