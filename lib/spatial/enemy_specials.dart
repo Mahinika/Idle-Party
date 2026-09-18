@@ -172,7 +172,7 @@ void _tickEnemySpecials(
           world,
           x: focus.x,
           y: focus.y - 0.5,
-          text: 'HEX',
+          text: EnemyFlavor.rangedTell(world.dungeonId),
           argb: 0xFFB060FF,
           life: 0.75,
           priority: reducedVfx ? 2 : 0,
@@ -198,13 +198,18 @@ void _tickEnemySpecials(
         }
       }
     }
-  } else if (enemy.archetype == EnemyArchetype.brute &&
-      (enemy.role == EnemyRole.elite || enemy.role == EnemyRole.boss)) {
+  } else if (enemy.archetype == EnemyArchetype.brute) {
+    final elite =
+        enemy.role == EnemyRole.elite || enemy.role == EnemyRole.boss;
+    final radius = elite ? 2.6 : 2.15;
     var hit = false;
     for (final h in world.heroes) {
       if (!h.isAlive) continue;
-      if (SpatialCombat._dist(enemy, h) > 2.6) continue;
-      var chip = math.max(2, (enemy.effectiveAttack * 0.35).round());
+      if (SpatialCombat._dist(enemy, h) > radius) continue;
+      var chip = math.max(
+        elite ? 2 : 1,
+        (enemy.effectiveAttack * (elite ? 0.35 : 0.22)).round(),
+      );
       if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
       SpatialCombat._applyHeroIncomingDamage(
         world,
@@ -217,7 +222,9 @@ void _tickEnemySpecials(
       hit = true;
     }
     if (hit) {
-      enemy.specialCd = world.afkAssist ? 7.0 : 6.5;
+      enemy.specialCd = world.afkAssist
+          ? (elite ? 7.0 : 6.2)
+          : (elite ? 6.5 : 5.6);
       if (!reducedVfx || world.spawnPersistentVfx) {
         SpatialCombat._spawnFloater(
           world,
@@ -238,6 +245,40 @@ void _tickEnemySpecials(
             kind: SpatialBurstKind.slash,
             angle: 0,
             life: 0.38,
+          );
+        }
+      }
+    }
+  } else if (enemy.role == EnemyRole.elite &&
+      enemy.archetype == EnemyArchetype.tank &&
+      enemy.hp >= enemy.effectiveMaxHp * 0.55) {
+    var buffed = false;
+    for (final ally in world.enemies) {
+      if (!ally.isAlive || ally.dormant) continue;
+      if (SpatialCombat._dist(enemy, ally) > 3.4) continue;
+      ally.enrageTimer = math.max(ally.enrageTimer, world.afkAssist ? 2.2 : 3.0);
+      buffed = true;
+    }
+    if (buffed) {
+      enemy.specialCd = world.afkAssist ? 8.5 : 7.5;
+      if (!reducedVfx || world.spawnPersistentVfx) {
+        SpatialCombat._spawnFloater(
+          world,
+          x: enemy.x,
+          y: enemy.y - 0.4,
+          text: 'HOWL',
+          argb: 0xFFFF7060,
+          life: 0.75,
+          priority: reducedVfx ? 2 : 0,
+        );
+        if (world.spawnPersistentVfx) {
+          SpatialCombat._spawnRing(
+            world,
+            x: enemy.x,
+            y: enemy.y,
+            argb: 0x88FF7060,
+            radius: 1.35,
+            life: 0.45,
           );
         }
       }

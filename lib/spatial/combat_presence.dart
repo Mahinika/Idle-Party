@@ -279,11 +279,12 @@ abstract final class CombatPresence {
     required math.Random rng,
   }) {
     if (rng.nextDouble() > 0.12) return;
-    final lines = <String>[
-      'Gotcha!',
-      'There it is!',
-      'Clean hit!',
-    ];
+    final lines = switch (hero.heroRole) {
+      HeroRole.mage => const ['Burn!', 'There it is!', 'Clean hit!'],
+      HeroRole.rogue => const ['From the dark!', 'Gotcha!', 'Clean hit!'],
+      HeroRole.healer => const ['Keep swinging!', 'There it is!', 'Gotcha!'],
+      _ => const ['Gotcha!', 'There it is!', 'Clean hit!'],
+    };
     spawnBark(
       world,
       hero,
@@ -302,7 +303,9 @@ abstract final class CombatPresence {
     spawnBark(
       world,
       healer,
-      "I've got you — fight!",
+      healer.heroSpecId == HeroSpecId.holyPaladin
+          ? 'Light holds you!'
+          : "I've got you — fight!",
       argb: barkCare,
       reducedVfx: reducedVfx,
     );

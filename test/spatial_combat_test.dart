@@ -1018,6 +1018,142 @@ void main() {
       isTrue,
     );
   });
+
+  test('normal brute shouts CLEAVE', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
+    final room = DungeonRoom(
+      floorNumber: 2,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 4,
+      enemyCount: 1,
+    );
+    final brute = GameLogic.createEnemyGroup(room, dungeonId: 'sandy').first
+        .copyWith(archetype: EnemyArchetype.brute, role: EnemyRole.normal);
+    state = state.copyWith(
+      dungeonId: 'sandy',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: [brute],
+      inDungeon: true,
+    );
+    var world = SpatialCombat.build(state);
+    final enemy = world.enemies.first
+      ..dormant = false
+      ..specialCd = 0;
+    for (final h in world.heroes) {
+      h
+        ..x = enemy.x
+        ..y = enemy.y;
+    }
+    final seen = <String>{};
+    for (var i = 0; i < 40; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+      seen.addAll(world.floaters.map((f) => f.text));
+    }
+    expect(seen.contains('CLEAVE'), isTrue);
+  });
+
+  test('Tide ranged shouts NET instead of HEX', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
+    final room = DungeonRoom(
+      floorNumber: 2,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 4,
+      enemyCount: 1,
+    );
+    final spit = GameLogic.createEnemyGroup(room, dungeonId: 'tide').first
+        .copyWith(archetype: EnemyArchetype.ranged, role: EnemyRole.normal);
+    state = state.copyWith(
+      dungeonId: 'tide',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: [spit],
+      inDungeon: true,
+    );
+    var world = SpatialCombat.build(state);
+    final enemy = world.enemies.first
+      ..dormant = false
+      ..specialCd = 0;
+    for (final h in world.heroes) {
+      h
+        ..x = enemy.x
+        ..y = enemy.y;
+    }
+    final seen = <String>{};
+    for (var i = 0; i < 50; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+      seen.addAll(world.floaters.map((f) => f.text));
+    }
+    expect(seen.contains('NET'), isTrue);
+    expect(seen.contains('HEX'), isFalse);
+  });
+
+  test('healthy elite tank shouts HOWL', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
+    final room = DungeonRoom(
+      floorNumber: 3,
+      roomIndex: 0,
+      type: RoomType.elite,
+      enemyLevel: 6,
+      enemyCount: 1,
+    );
+    final tank = GameLogic.createEnemyGroup(room, dungeonId: 'king').first
+        .copyWith(archetype: EnemyArchetype.tank, role: EnemyRole.elite);
+    state = state.copyWith(
+      dungeonId: 'king',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: [tank],
+      inDungeon: true,
+    );
+    var world = SpatialCombat.build(state);
+    world.enemies.first
+      ..dormant = false
+      ..specialCd = 0
+      ..hp = 400
+      ..maxHp = 400;
+    final seen = <String>{};
+    for (var i = 0; i < 40; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+      seen.addAll(world.floaters.map((f) => f.text));
+    }
+    expect(seen.contains('HOWL'), isTrue);
+  });
+
+  test('elite last-hit shouts ELITE DOWN', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
+    final first = state.enemies.first;
+    state = state.copyWith(
+      enemies: [
+        first.copyWith(role: EnemyRole.elite, currentHp: 1),
+        for (var i = 1; i < state.enemies.length; i++)
+          state.enemies[i].copyWith(currentHp: 0),
+      ],
+    );
+    final world = SpatialCombat.build(state);
+    world.enemies.first
+      ..hp = 1
+      ..dormant = false;
+    SpatialCombat.godHand(
+      world,
+      state,
+      tileX: world.enemies.first.x,
+      tileY: world.enemies.first.y,
+      baseDamage: 9999,
+    );
+    expect(
+      world.floaters.any((f) => f.text == 'ELITE DOWN' && f.priority >= 2),
+      isTrue,
+    );
+  });
 }
 
 Set<String> _bossTellTexts(

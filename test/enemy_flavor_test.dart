@@ -117,6 +117,45 @@ void main() {
     expect(emberGlass, greaterThan(hellGlass));
   });
 
+  test('Grove mixes more swarm than Veil; Veil mixes more glass', () {
+    var groveSwarm = 0;
+    var veilSwarm = 0;
+    var groveGlass = 0;
+    var veilGlass = 0;
+    const n = 240;
+    for (var i = 0; i < n; i++) {
+      final grove = EnemyFlavor.pickArchetype(
+        type: RoomType.normal,
+        isBossUnit: false,
+        dungeonId: 'grove',
+        index: i % 9,
+        count: 9,
+        rng: Random(i + 41),
+      );
+      final veil = EnemyFlavor.pickArchetype(
+        type: RoomType.normal,
+        isBossUnit: false,
+        dungeonId: 'veil',
+        index: i % 9,
+        count: 9,
+        rng: Random(i + 41),
+      );
+      if (grove == EnemyArchetype.swarm) groveSwarm++;
+      if (veil == EnemyArchetype.swarm) veilSwarm++;
+      if (grove == EnemyArchetype.glass) groveGlass++;
+      if (veil == EnemyArchetype.glass) veilGlass++;
+    }
+    expect(groveSwarm, greaterThan(veilSwarm));
+    expect(veilGlass, greaterThan(groveGlass));
+  });
+
+  test('ranged tells are zone-readable, not one HEX', () {
+    expect(EnemyFlavor.rangedTell('tide'), 'NET');
+    expect(EnemyFlavor.rangedTell('storm'), 'JOLT');
+    expect(EnemyFlavor.rangedTell('veil'), 'WEB');
+    expect(EnemyFlavor.rangedTell('goblin'), 'HEX');
+  });
+
   test('every zone has unique elite names, not generic Golem', () {
     for (final dungeon in DungeonCatalog.all) {
       final name = EnemyFlavor.eliteName(dungeon.id, EnemyArchetype.tank);

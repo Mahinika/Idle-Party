@@ -7,7 +7,7 @@ Status: **SHIPPED (P0–P4)** — Blueprint + PlacementPlan + zone kits wired th
 **pipeline contract** (kept for the next zone), not an open backlog.
 
 Showcase: **Rimeglass** (treasure alcoves, oval rooms) vs **Stormwake** (choke, plus footprints). **Brassvault** halls stay rectangular. All catalog
-zones have a `ZoneLayoutKit`. `_silhouetteFor` in `tile_map.dart` biases those three ids.
+zones have a `ZoneLayoutKit`. `_silhouetteFor` in `tile_map.dart` biases every shipped cave id.
 
 Relaterat: [GEAR_BUDGET.md](GEAR_BUDGET.md) (klar), [zone-art-identity](../.cursor/skills/zone-art-identity/SKILL.md), [CONTENT_CADENCE.md](CONTENT_CADENCE.md).
 

@@ -4997,6 +4997,15 @@ abstract final class SpatialCombat {
           radius: 0.95,
           life: 0.36,
         );
+        _spawnFloater(
+          world,
+          x: enemy.x,
+          y: enemy.y - 0.7,
+          text: 'ELITE DOWN',
+          argb: _floaterGold,
+          life: 1.15,
+          priority: 2,
+        );
       } else {
         _spawnBurst(
           world,

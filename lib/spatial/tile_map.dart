@@ -589,6 +589,24 @@ abstract final class RoomLayouts {
     if (kit.dungeonId == 'underworld') {
       return rng.nextBool() ? _RoomSilhouette.plus : _RoomSilhouette.diamond;
     }
+    if (kit.dungeonId == 'sandy') {
+      return rng.nextBool() ? _RoomSilhouette.oval : _RoomSilhouette.chamfer;
+    }
+    if (kit.dungeonId == 'goblin') {
+      return rng.nextBool() ? _RoomSilhouette.blob : _RoomSilhouette.el;
+    }
+    if (kit.dungeonId == 'king') {
+      return rng.nextBool() ? _RoomSilhouette.rect : _RoomSilhouette.plus;
+    }
+    if (kit.dungeonId == 'dead') {
+      return rng.nextBool() ? _RoomSilhouette.diamond : _RoomSilhouette.blob;
+    }
+    if (kit.dungeonId == 'grove') {
+      return rng.nextBool() ? _RoomSilhouette.blob : _RoomSilhouette.oval;
+    }
+    if (kit.dungeonId == 'veil') {
+      return rng.nextBool() ? _RoomSilhouette.el : _RoomSilhouette.plus;
+    }
     return switch (rng.nextInt(7)) {
       0 => _RoomSilhouette.rect,
       1 => _RoomSilhouette.oval,

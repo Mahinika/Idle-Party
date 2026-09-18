@@ -98,6 +98,26 @@ abstract final class EnemyFlavor {
   static String gauntletBossTell(int floor) =>
       bossTell(gauntletBossDungeonId(floor));
 
+  /// Trash ranged tell — same slow chip, zone-readable label.
+  static String rangedTell(String dungeonId) => switch (dungeonId) {
+    'sandy' => 'SPIT',
+    'goblin' => 'HEX',
+    'king' => 'MARK',
+    'underworld' => 'CURSE',
+    'dead' => 'WANE',
+    'hell' => 'HEX',
+    'crystal' => 'PING',
+    'tide' => 'NET',
+    'ember' => 'CINDER',
+    'grove' => 'SPORE',
+    'storm' => 'JOLT',
+    'rime' => 'CHILL',
+    'fen' => 'MUCK',
+    'brass' => 'LOCK',
+    'veil' => 'WEB',
+    _ => 'HEX',
+  };
+
   /// Combat floater for that zone's unique boss tell.
   static String bossTell(String dungeonId) => switch (dungeonId) {
     'sandy' => 'SLAM',
@@ -258,12 +278,12 @@ abstract final class EnemyFlavor {
       EnemyArchetype.support: 1,
     },
     'grove': {
-      EnemyArchetype.swarm: 3,
+      EnemyArchetype.swarm: 4,
       EnemyArchetype.brute: 2,
       EnemyArchetype.tank: 2,
       EnemyArchetype.ranged: 1,
       EnemyArchetype.glass: 1,
-      EnemyArchetype.support: 3,
+      EnemyArchetype.support: 4,
     },
     'storm': {
       EnemyArchetype.swarm: 2,
@@ -298,11 +318,11 @@ abstract final class EnemyFlavor {
       EnemyArchetype.support: 1,
     },
     'veil': {
-      EnemyArchetype.swarm: 2,
+      EnemyArchetype.swarm: 1,
       EnemyArchetype.brute: 1,
       EnemyArchetype.tank: 1,
-      EnemyArchetype.ranged: 2,
-      EnemyArchetype.glass: 3,
+      EnemyArchetype.ranged: 3,
+      EnemyArchetype.glass: 4,
       EnemyArchetype.support: 2,
     },
   };
