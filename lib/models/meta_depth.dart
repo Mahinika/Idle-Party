@@ -345,6 +345,7 @@ class MetaDepthState {
     this.notifyOptIn = false,
     this.notifyPrompted = false,
     this.notifyPingMs = const <int>[],
+    this.reviewPrompted = false,
   });
 
   final int sanctuaryXpLevel;
@@ -630,6 +631,10 @@ class MetaDepthState {
   /// Fire times (epoch ms) of recent pings — cap ~2 per UTC day.
   final List<int> notifyPingMs;
 
+  /// True after Play in-app review was asked (or SETTINGS RATE ON PLAY).
+  /// Survives Ascend. Never tied to loot.
+  final bool reviewPrompted;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -768,6 +773,7 @@ class MetaDepthState {
     bool? notifyOptIn,
     bool? notifyPrompted,
     List<int>? notifyPingMs,
+    bool? reviewPrompted,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -920,6 +926,7 @@ class MetaDepthState {
       notifyOptIn: notifyOptIn ?? this.notifyOptIn,
       notifyPrompted: notifyPrompted ?? this.notifyPrompted,
       notifyPingMs: notifyPingMs ?? this.notifyPingMs,
+      reviewPrompted: reviewPrompted ?? this.reviewPrompted,
     );
   }
 
@@ -1053,6 +1060,7 @@ class MetaDepthState {
     'notifyOptIn': notifyOptIn,
     'notifyPrompted': notifyPrompted,
     'notifyPingMs': notifyPingMs,
+    'reviewPrompted': reviewPrompted,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -1281,6 +1289,7 @@ class MetaDepthState {
               ?.map((e) => (e as num).toInt())
               .toList() ??
           const <int>[],
+      reviewPrompted: (json['reviewPrompted'] as bool?) ?? false,
     );
   }
 

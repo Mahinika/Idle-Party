@@ -32,6 +32,8 @@ void main() {
     expect(find.text('PLAY NOTES (LOCAL)'), findsOneWidget);
     expect(find.text('Away reminders'), findsNothing);
     expect(find.text('AUTO-SELL · GOLD'), findsNothing);
+    expect(find.text('RATE ON PLAY'), findsOneWidget);
+    expect(find.text('JOIN DISCORD'), findsOneWidget);
   });
 
   testWidgets('bag cleanup deep link opens the BAG tab', (tester) async {

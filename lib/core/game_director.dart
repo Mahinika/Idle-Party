@@ -33,6 +33,7 @@ import 'rift.dart';
 import 'greater_rift.dart';
 import 'play_games_scores.dart';
 import 'play_leaderboard_ids.dart';
+import 'play_review_ask.dart';
 import 'play_store_update.dart';
 import 'screen_awake.dart';
 import 'shop_billing.dart';
@@ -2513,6 +2514,29 @@ class GameDirector extends ChangeNotifier {
     if (!opened) {
       showToast('Could not open Google Play', life: 2.2);
     }
+  }
+
+  /// One-time Play in-app review (or listing fallback). Never pays loot.
+  Future<void> requestPlayReview({String source = 'card'}) async {
+    final already = _state.metaDepth.reviewPrompted;
+    _applyNotify(PlayReviewAsk.markPrompted(_state));
+    unawaited(AppAnalytics.logEvent('review_prompt', {'source': source}));
+    final sheet = await PlayStoreUpdate.requestInAppReview();
+    if (sheet) return;
+    final opened = await PlayStoreUpdate.openListing();
+    if (!opened && source == 'settings' && !already) {
+      showToast('Could not open Google Play', life: 2.2);
+    }
+  }
+
+  void dismissPlayReviewAsk() {
+    _applyNotify(PlayReviewAsk.markPrompted(_state));
+    unawaited(
+      AppAnalytics.logEvent('review_prompt', {
+        'source': 'card',
+        'result': 'later',
+      }),
+    );
   }
 
   /// Debug cold-start gate — pretends Play has a newer build.

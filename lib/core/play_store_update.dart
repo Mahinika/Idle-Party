@@ -4,6 +4,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
+import 'play_review_stub.dart'
+    if (dart.library.io) 'play_review_io.dart'
+    as play_core_review;
 import 'play_store_update_stub.dart'
     if (dart.library.io) 'play_store_update_io.dart'
     as play_core;
@@ -66,5 +69,11 @@ abstract final class PlayStoreUpdate {
       debugPrint('PlayStoreUpdate openListing failed: $e\n$st');
       return false;
     }
+  }
+
+  /// Google's in-app review sheet. Quota is Play's. Never a loot gate.
+  static Future<bool> requestInAppReview() async {
+    if (!isSupported) return false;
+    return play_core_review.requestPlayInAppReview();
   }
 }

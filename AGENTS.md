@@ -39,6 +39,8 @@ Closed opt-in: `https://play.google.com/apps/testing/com.idleparty.app`
 
 **Play update notice** (Android, Play-installed only): **mandatory cold-start gate** when Play has a newer versionCode (no play until updated); hub banner + SETTINGS **GET UPDATE** with LATER for optional nudge. Sideload / web stay quiet. Listing opens with `hl=en`.
 
+**Play rating ask** (after first boss or Ascend, hub only, once): honest card + MORE → SETTINGS **RATE ON PLAY**. Google in-app review when Play allows it, else listing. **No loot / tickets.** Never covers a READY hunt or other hub cards the same visit. `metaDepth.reviewPrompted` survives Ascend.
+
 **Optional Play Games** (Android): seasonal Timed KEY + Gauntlet boards under
 **KEY** (bottom tab when jargon unlocks); sign-in + cloud save under
 **MORE → SETTINGS**. Opt-in; clipboard export/import still works. IDs in
@@ -430,7 +432,8 @@ affix season, **constellation** nodes/points, **Craft Trial** month/cleared,
 **God Hand mastery** claims / smash count, **prestige shop** purchases — Apothecary Writ / Junk Magnifier /
 Away Ledger / …; Loadout Folio is delisted but old slot-count purchases stay;
 Play funnel `funnelInstallMs` / `funnelLogged`,
-**local reminders** `notifyOptIn` / `notifyPrompted` / `notifyPingMs`),
+**local reminders** `notifyOptIn` / `notifyPrompted` / `notifyPingMs`,
+**Play rating** `reviewPrompted`),
 unlocked specs, **`pendingHeroReveals`** (Meet … TODAY until PARTY), party slot
 5, ascend streak/titles/trophies, **`ascendBlessings`**, **`adTickets`** /
 **`adAtkUntilMs`** / **`adGoldUntilMs`**, SHOP **`shopPermScrolls`** / **`adFree`** /

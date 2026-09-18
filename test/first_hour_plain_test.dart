@@ -4,6 +4,7 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_guides.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/local_reminders.dart';
+import 'package:idle_party/core/play_review_ask.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/menu_router.dart';
@@ -331,6 +332,12 @@ void main() {
       ForgeOverlay.resetHint(plain: false, showCamp: true).toUpperCase(),
       contains('ESSENCE'),
     );
+  });
+
+  test('Play rating copy never pays loot', () {
+    expect(PlayReviewAsk.body.toLowerCase(), contains('no reward'));
+    expect(PlayReviewAsk.body.toUpperCase(), isNot(contains('ESSENCE')));
+    expect(PlayReviewAsk.body.toUpperCase(), isNot(contains('KEY')));
   });
 
   test('first-hour SETTINGS and dungeon map skip God Hand jargon', () {

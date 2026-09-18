@@ -439,6 +439,13 @@ class _SettingsOverlayState extends State<SettingsOverlay>
             }
           },
         ),
+        const SizedBox(height: 8),
+        GameButton(
+          label: 'RATE ON PLAY',
+          tip: 'Opens Google Play — no reward for rating',
+          style: GameButtonStyle.grey,
+          onPressed: () => director.requestPlayReview(source: 'settings'),
+        ),
         if (director.showPlayUpdateNotice) ...[
           const SizedBox(height: 8),
           GameButton(

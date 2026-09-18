@@ -23,6 +23,7 @@ import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'meta/offline_welcome.dart';
 import 'meta/notify_opt_in.dart';
+import 'meta/play_review_ask_overlay.dart';
 import '../core/menu_alerts.dart';
 import '../core/menu_router.dart';
 import 'shell/discord_thanks_overlay.dart';
@@ -68,6 +69,7 @@ class _HubScreenState extends State<HubScreen>
   bool _offeredWhatsNew = false;
   bool _offeredDiscordThanks = false;
   bool _offeredNotifyOptIn = false;
+  bool _offeredPlayReview = false;
   bool _userPickedZone = false;
   bool _showEndgameMap = false;
   int? _trackedAscension;
@@ -155,6 +157,13 @@ class _HubScreenState extends State<HubScreen>
       await _maybeShowWhatsNew();
       await _maybeShowDiscordThanks();
       await _maybeShowNotifyOptIn();
+      // One extra card per hub visit — rating waits if What's New / Discord /
+      // reminders already used the turn.
+      if (!_offeredWhatsNew &&
+          !_offeredDiscordThanks &&
+          !_offeredNotifyOptIn) {
+        await _maybeShowPlayReview();
+      }
     });
   }
 
@@ -195,6 +204,18 @@ class _HubScreenState extends State<HubScreen>
     if (!NotifyOptInOverlay.shouldOffer(director)) return;
     _offeredNotifyOptIn = true;
     await NotifyOptInOverlay.show(context, director);
+  }
+
+  Future<void> _maybeShowPlayReview() async {
+    if (_offeredPlayReview || !mounted) return;
+    if (director.state.inDungeon) return;
+    if (!PlayReviewAskOverlay.shouldOffer(director)) return;
+    await Future<void>.delayed(const Duration(milliseconds: 1400));
+    if (!mounted || _offeredPlayReview) return;
+    if (director.state.inDungeon) return;
+    if (!PlayReviewAskOverlay.shouldOffer(director)) return;
+    _offeredPlayReview = true;
+    await PlayReviewAskOverlay.show(context, director);
   }
 
   @override
