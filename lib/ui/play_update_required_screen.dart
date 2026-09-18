@@ -6,6 +6,7 @@ import '../assets/custom_assets.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
+import 'menu_chrome.dart';
 
 /// Blocks cold start until the player updates a Play-installed build.
 class PlayUpdateRequiredScreen extends StatelessWidget {
@@ -30,7 +31,8 @@ class PlayUpdateRequiredScreen extends StatelessWidget {
             alignment: const Alignment(0, -0.05),
           ),
           CaveAtmosphere.readabilityScrim(top: 0.7, bottom: 0.55),
-          SafeArea(
+          MenuChrome.playSafeArea(
+            bottom: true,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
               child: Column(

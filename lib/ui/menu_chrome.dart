@@ -23,6 +23,23 @@ abstract final class MenuChrome {
   static BorderRadius get sheetRadius =>
       const BorderRadius.vertical(top: Radius.circular(GameTheme.radiusLg));
 
+  /// Same top edge as full-height GEAR sheets. Hub used a status-bar
+  /// [SafeArea] that left a black strip on immersive phones.
+  static Widget playSafeArea({
+    required Widget child,
+    bool bottom = false,
+  }) {
+    return Builder(
+      builder: (context) {
+        return MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          child: SafeArea(top: false, bottom: bottom, child: child),
+        );
+      },
+    );
+  }
+
   static BoxDecoration panel({
     BorderRadius? borderRadius,
     bool opaque = false,

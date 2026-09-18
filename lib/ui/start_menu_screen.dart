@@ -105,7 +105,8 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                 alignment: const Alignment(0, 0.82),
                 sizeFactor: 0.35,
               ),
-              SafeArea(
+              MenuChrome.playSafeArea(
+                bottom: true,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final tight = constraints.maxHeight < 580;

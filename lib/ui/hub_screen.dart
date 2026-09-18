@@ -21,6 +21,7 @@ import 'cave_atmosphere.dart';
 import 'dungeon_environment.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
+import 'menu_chrome.dart';
 import 'meta/offline_welcome.dart';
 import 'meta/notify_opt_in.dart';
 import 'meta/play_review_ask_overlay.dart';
@@ -537,7 +538,7 @@ class _HubScreenState extends State<HubScreen>
       fit: StackFit.expand,
       children: [
         RepaintBoundary(child: const HubSceneBackdrop()),
-        SafeArea(
+        MenuChrome.playSafeArea(
           child: Builder(
             builder: (context) {
               return Stack(

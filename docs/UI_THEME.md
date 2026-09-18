@@ -217,7 +217,7 @@ Helpers: `sectionLabelScoped(title, scope: …)` tints the header; do **not** sh
 **Icons:** `GameIcon.asset(UiIcon.settings)` / `UiIcon.key` (PNG) or `GameIcon.glyph` for add/close/arrows/scroll — never Material `Icons` or emoji in chrome. TODAY buttons are plain English (`ENTER KEY`, `GAUNTLET`, `RIFT`). Hub SCROLLS uses `UiGlyph.scroll` on the FAB. Active buffs use owned `UiIcon` sprites (sword / coin / tome / boots / chest / wand / campfire) stacked above the FAB and above dungeon FLASK.  
 **Touch:** `minTouch` 44 · `primaryTouch` 48  
 
-**Tokens:** also `MenuChrome.toggleMark`, `slider`, `fold` for settings / Apex / What’s New.
+**Tokens:** also `MenuChrome.toggleMark`, `slider`, `fold` for settings / Apex / What’s New. **`MenuChrome.playSafeArea`** — hub / dungeon / start / intro share the full-height GEAR top edge (no status-bar letterbox). Play bottom inset stays on `AppBottomBar`.
 
 ---
 

@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 import 'cave_atmosphere.dart';
 import '../assets/custom_assets.dart';
 import 'kenney_button.dart';
+import 'menu_chrome.dart';
 
 /// Full-bleed skippable boot video. Falls back via [onDecodeFailed].
 class BootCinematicLayer extends StatefulWidget {
@@ -113,7 +114,8 @@ class _BootCinematicLayerState extends State<BootCinematicLayer> {
               ),
             ),
           ),
-        SafeArea(
+        MenuChrome.playSafeArea(
+          bottom: true,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
             child: Column(

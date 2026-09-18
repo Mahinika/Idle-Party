@@ -238,8 +238,8 @@ Future<void> openPowerupsSheet(
                           color: GameTheme.borderLit.withValues(alpha: 0.45),
                         ),
                       ),
-                      child: SafeArea(
-                        top: false,
+                      child: MenuChrome.playSafeArea(
+                        bottom: true,
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                           child: Column(

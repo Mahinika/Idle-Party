@@ -379,7 +379,8 @@ class FirstSessionTips extends StatelessWidget {
 
     return Align(
       alignment: hubJob ? const Alignment(0, -0.08) : Alignment.bottomCenter,
-      child: SafeArea(
+      child: MenuChrome.playSafeArea(
+        bottom: true,
         child: Padding(
           padding: EdgeInsets.fromLTRB(12, 0, 12, hubJob ? 12 : 72),
           child: LayoutBuilder(

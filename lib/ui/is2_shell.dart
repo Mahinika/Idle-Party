@@ -12,6 +12,7 @@ import 'confirm_dialogs.dart';
 import 'cave_atmosphere.dart';
 import '../assets/custom_assets.dart';
 import 'game_theme.dart';
+import 'menu_chrome.dart';
 import 'spatial_dungeon_view.dart';
 import 'shell/dungeon_party_hud.dart';
 import 'shell/dungeon_target_hud.dart';
@@ -109,13 +110,11 @@ class _Is2ShellState extends State<Is2Shell> {
         // SpatialDungeonView listens to combatFrame only around the map paint —
         // not the whole dungeon chrome tree (~60 Hz).
         Positioned.fill(
-          child: SafeArea(
-            bottom: false,
+          child: MenuChrome.playSafeArea(
             child: SpatialDungeonView(director: d),
           ),
         ),
-        SafeArea(
-          bottom: false,
+        MenuChrome.playSafeArea(
           child: Column(
             children: [
               DungeonTopHud(

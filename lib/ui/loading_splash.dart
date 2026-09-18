@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'cognifox_mark.dart';
 import 'game_theme.dart';
+import 'menu_chrome.dart';
 
 /// Cold-start splash while [GameDirector.boot] runs. No minimum dwell.
 ///
@@ -18,7 +19,8 @@ class LoadingSplash extends StatelessWidget {
       body: Semantics(
         label: 'Loading Idle Party',
         liveRegion: true,
-        child: SafeArea(
+        child: MenuChrome.playSafeArea(
+          bottom: true,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
             child: CognifoxSplashStage(

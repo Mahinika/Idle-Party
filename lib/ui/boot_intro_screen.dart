@@ -10,6 +10,7 @@ import 'cognifox_mark.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
+import 'menu_chrome.dart';
 
 /// Skippable boot: Cognifox card, then (first launch) one cave beat.
 ///
@@ -194,7 +195,8 @@ class _BootIntroScreenState extends State<BootIntroScreen>
       onTap: _onTap,
       child: ColoredBox(
         color: GameTheme.ink,
-        child: SafeArea(
+        child: MenuChrome.playSafeArea(
+          bottom: true,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
             child: CognifoxSplashStage(
@@ -233,7 +235,8 @@ class _BootIntroScreenState extends State<BootIntroScreen>
                 alignment: const Alignment(0, 0.82),
                 sizeFactor: 0.35,
               ),
-              SafeArea(
+              MenuChrome.playSafeArea(
+                bottom: true,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
                   child: Column(

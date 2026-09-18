@@ -149,6 +149,7 @@ class _MobileSheet extends StatelessWidget {
     }
 
     return SafeArea(
+      top: false,
       child: Align(
         alignment: Alignment.bottomCenter,
         child: FractionallySizedBox(
