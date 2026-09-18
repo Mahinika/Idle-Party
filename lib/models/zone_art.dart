@@ -644,8 +644,8 @@ abstract final class ZoneArt {
       projectileTint: Color(0xFFF0B028),
       corridorShade: Color(0x3C100800),
       preferChoke: true,
-      preferTreasureAlcove: true,
-      treasureAlcoveChance: 0.32,
+      preferTreasureAlcove: false,
+      treasureAlcoveChance: 0.0,
       normalRoomChestChance: 0.18,
       landmarkPerChamber: 2,
       enemies: ZoneEnemyArt(

@@ -132,4 +132,13 @@ void main() {
     expect(king.preferTreasureAlcove, isFalse);
     expect(king.hubChamberChance, greaterThan(0.45));
   });
+
+  test('Ember is choke-forge; Fen is choke-bog without treasure alcoves', () {
+    final ember = ZoneArt.byId('ember');
+    final fen = ZoneArt.byId('fen');
+    expect(ember.preferChoke, isTrue);
+    expect(ember.preferTreasureAlcove, isFalse);
+    expect(fen.preferChoke, isTrue);
+    expect(fen.preferTreasureAlcove, isFalse);
+  });
 }

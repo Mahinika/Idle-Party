@@ -337,6 +337,7 @@ void main() {
     final grove = ZoneArt.byId('grove');
     final storm = ZoneArt.byId('storm');
     expect(ember.preferChoke, isTrue);
+    expect(ember.preferTreasureAlcove, isFalse);
     expect(ember.landmarks, contains(MapPropKind.lava));
     expect(grove.landmarks.where((l) => l == MapPropKind.fence).length, 2);
     expect(storm.landmarkPerChamber, 2);

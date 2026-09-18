@@ -900,6 +900,28 @@ void main() {
     expect(veil.contains('SILK'), isTrue);
   });
 
+  test('hell crystal tide ember fen underworld telegraph distinct tells', () {
+    final hell = _bossTellTexts('hell');
+    expect(hell.contains('WIND-UP'), isTrue);
+    expect(hell.contains('TENTACLE'), isTrue);
+    expect(hell.contains('PULSE'), isFalse);
+    final crystal = _bossTellTexts('crystal');
+    expect(crystal.contains('WIND-UP'), isTrue);
+    expect(crystal.contains('SHARD'), isTrue);
+    final tide = _bossTellTexts('tide');
+    expect(tide.contains('WIND-UP'), isTrue);
+    expect(tide.contains('WAVE'), isTrue);
+    final ember = _bossTellTexts('ember');
+    expect(ember.contains('WIND-UP'), isTrue);
+    expect(ember.contains('IGNITE'), isTrue);
+    final fen = _bossTellTexts('fen');
+    expect(fen.contains('WIND-UP'), isTrue);
+    expect(fen.contains('SPIT'), isTrue);
+    final under = _bossTellTexts('underworld');
+    expect(under.contains('WIND-UP'), isTrue);
+    expect(under.contains('BEAM'), isTrue);
+  });
+
   test('KEY week on Sandy uses that week cave tell, not SLAM', () {
     final weekKey = _weekKeyForCave('tide');
     expect(Keystone.weekCaveId(weekKey), 'tide');
