@@ -113,6 +113,18 @@ Future<void> showOfflineProgressDialog(
                       : GameTheme.accentWarn,
                 ),
               ),
+              if (contract.detail.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  contract.detail,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(
+                    size: 12,
+                    color: GameTheme.parchmentDim,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

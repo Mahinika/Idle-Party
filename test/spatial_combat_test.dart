@@ -856,9 +856,23 @@ void main() {
 
   test('week-1 Goblin boss shouts RALLY, not PULSE', () {
     final seen = _bossTellTexts('goblin');
+    expect(seen.contains('WIND-UP'), isTrue);
     expect(seen.contains('RALLY'), isTrue);
     expect(seen.contains('PULSE'), isFalse);
     expect(seen.contains('SLAM'), isFalse);
+  });
+
+  test('king / dead / rime bosses telegraph then unique tells', () {
+    final king = _bossTellTexts('king');
+    expect(king.contains('WIND-UP'), isTrue);
+    expect(king.contains('DECREE'), isTrue);
+    expect(king.contains('PULSE'), isFalse);
+    final dead = _bossTellTexts('dead');
+    expect(dead.contains('WIND-UP'), isTrue);
+    expect(dead.contains('FADE'), isTrue);
+    final rime = _bossTellTexts('rime');
+    expect(rime.contains('WIND-UP'), isTrue);
+    expect(rime.contains('FROST'), isTrue);
   });
 
   test('ashen crown boss uses CROWN / SLAM / IGNITE kit', () {
@@ -1054,6 +1068,48 @@ void main() {
       seen.addAll(world.floaters.map((f) => f.text));
     }
     expect(seen.contains('CLEAVE'), isTrue);
+  });
+
+  test('grove support shouts GROW', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
+    final room = DungeonRoom(
+      floorNumber: 2,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 4,
+      enemyCount: 2,
+    );
+    final pack = GameLogic.createEnemyGroup(room, dungeonId: 'grove');
+    final support = pack.first.copyWith(
+      archetype: EnemyArchetype.support,
+      role: EnemyRole.normal,
+    );
+    final wounded = pack.last.copyWith(
+      archetype: EnemyArchetype.brute,
+      role: EnemyRole.normal,
+      currentHp: 8,
+    );
+    state = state.copyWith(
+      dungeonId: 'grove',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: [support, wounded],
+      inDungeon: true,
+    );
+    var world = SpatialCombat.build(state);
+    for (final e in world.enemies) {
+      e.dormant = false;
+      e.specialCd = 0;
+    }
+    world.enemies.last.hp = 8;
+    final seen = <String>{};
+    for (var i = 0; i < 40; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+      seen.addAll(world.floaters.map((f) => f.text));
+    }
+    expect(seen.contains('GROW'), isTrue);
   });
 
   test('Tide ranged shouts NET instead of HEX', () {

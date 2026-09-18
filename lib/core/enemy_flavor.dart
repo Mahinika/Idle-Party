@@ -98,6 +98,26 @@ abstract final class EnemyFlavor {
   static String gauntletBossTell(int floor) =>
       bossTell(gauntletBossDungeonId(floor));
 
+  /// Trash support tell — same heal, zone-readable label.
+  static String supportTell(String dungeonId) => switch (dungeonId) {
+    'sandy' => 'MEND',
+    'goblin' => 'TOTEM',
+    'king' => 'BANNER',
+    'underworld' => 'RITE',
+    'dead' => 'DRAIN',
+    'hell' => 'RITE',
+    'crystal' => 'MEND',
+    'tide' => 'TIDE',
+    'ember' => 'STIR',
+    'grove' => 'GROW',
+    'storm' => 'CHARGE',
+    'rime' => 'MEND',
+    'fen' => 'OOZE',
+    'brass' => 'OIL',
+    'veil' => 'WEAVE',
+    _ => 'MEND',
+  };
+
   /// Trash ranged tell — same slow chip, zone-readable label.
   static String rangedTell(String dungeonId) => switch (dungeonId) {
     'sandy' => 'SPIT',

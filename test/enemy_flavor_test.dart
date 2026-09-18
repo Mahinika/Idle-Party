@@ -156,6 +156,13 @@ void main() {
     expect(EnemyFlavor.rangedTell('goblin'), 'HEX');
   });
 
+  test('support tells are zone-readable, not a raw +heal', () {
+    expect(EnemyFlavor.supportTell('grove'), 'GROW');
+    expect(EnemyFlavor.supportTell('goblin'), 'TOTEM');
+    expect(EnemyFlavor.supportTell('veil'), 'WEAVE');
+    expect(EnemyFlavor.supportTell('sandy'), 'MEND');
+  });
+
   test('every zone has unique elite names, not generic Golem', () {
     for (final dungeon in DungeonCatalog.all) {
       final name = EnemyFlavor.eliteName(dungeon.id, EnemyArchetype.tank);

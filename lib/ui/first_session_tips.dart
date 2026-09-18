@@ -19,7 +19,7 @@ class FirstSessionTips extends StatelessWidget {
       id: 'first_run',
       title: 'NEXT JOB',
       body:
-          'Tap ENTER DUNGEON. Your party fights on its own — watch them, pick up loot, get stronger.',
+          'Tap ENTER DUNGEON. The party fights on its own — watch, loot, get stronger.',
     ),
     (
       id: 'lore_descent',
@@ -43,34 +43,27 @@ class FirstSessionTips extends StatelessWidget {
       id: 'bag',
       title: 'BAG & GEAR',
       body:
-          'A number on GEAR means better items are waiting. Open GEAR and tap '
-          'EQUIP — the party wears them. No number means nothing to do.',
+          'A number on GEAR means better items wait. Open GEAR and tap EQUIP.',
     ),
     (
       id: 'sanctuary',
       title: 'ESSENCE',
       body:
-          'ESSENCE unlocks after your first Ascend or when you earn essence. '
-          'Spend essence there for idle gold and party power that persists between '
-          'runs. Hub gold/min ticks at the keep overnight (enough to buy Gold). '
-          'Gold Find makes that number go up.',
+          'ESSENCE is forever power (idle gold, Blessing). It unlocks after '
+          'your first Ascend or first essence.',
     ),
     (
       id: 'market',
       title: 'GOLD MARKET',
       body:
-          'Buy flasks under GOLD → MARKET. When the bag is full, use BAG → CLEAN BAG, '
-          'MERGE, or BAG → FILTERS.',
+          'GOLD → MARKET buys flasks. Full bag: BAG → CLEAN BAG or MERGE.',
     ),
     (
       id: 'forge',
       title: 'GOLD',
       body:
-          'GOLD tab: FORGE buys this-run power (×1 / % spend / EVEN split); '
-          'MARKET buys flasks and listings. '
-          'God Hand and Ascend Blessing live on ESSENCE → BLESSING. Relics live under '
-          'ESSENCE → RELICS. Craft is a row inside MORE. Hero '
-          'levels come from combat XP (max ${GameLogic.maxHeroLevel}).',
+          'GOLD tab: FORGE is this-run power; MARKET is flasks and listings. '
+          'Relics live under ESSENCE → RELICS. Craft is a row inside MORE.',
     ),
     (
       id: 'pets',

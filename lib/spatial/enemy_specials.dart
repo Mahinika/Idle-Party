@@ -144,7 +144,7 @@ void _tickEnemySpecials(
           world,
           x: lowest.x,
           y: lowest.y - 0.35,
-          text: '+$heal',
+          text: EnemyFlavor.supportTell(world.dungeonId),
           argb: SpatialCombat._floaterHeal,
           life: 0.7,
           priority: reducedVfx ? 2 : 0,
@@ -447,78 +447,11 @@ void _tickBossKit(
     case 'ember':
     case 'fen':
     case 'underworld':
-      _armBossTelegraph(world, enemy, reducedVfx: reducedVfx);
-      return;
     case 'goblin':
-      _bossRally(world, enemy, reducedVfx: reducedVfx);
-      return;
     case 'king':
-      var any = false;
-      for (final h in world.heroes) {
-        if (!h.isAlive) continue;
-        h.attackSlowTimer = math.max(h.attackSlowTimer, 3.0);
-        h.demoShoutTimer = math.max(h.demoShoutTimer, 2.4);
-        any = true;
-      }
-      if (any) {
-        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
-        _bossTell(
-          world,
-          enemy,
-          text: EnemyFlavor.bossTell(id),
-          argb: 0xFFE0C060,
-          radius: 1.6,
-          reducedVfx: reducedVfx,
-        );
-      } else {
-        enemy.specialCd = 1.2;
-      }
-      return;
     case 'dead':
-      final healMul = world.afkAssist ? 0.4 : 1.0;
-      final heal = math.max(
-        12,
-        (enemy.effectiveMaxHp * 0.08 * healMul).round(),
-      );
-      enemy.hp = math.min(enemy.effectiveMaxHp, enemy.hp + heal);
-      enemy.specialCd = world.afkAssist ? 10.0 : 9.0;
-      _bossTell(
-        world,
-        enemy,
-        text: EnemyFlavor.bossTell(id),
-        argb: 0xFFC0C0D8,
-        radius: 1.2,
-        reducedVfx: reducedVfx,
-      );
-      return;
     case 'rime':
-      var any = false;
-      for (final h in world.heroes) {
-        if (!h.isAlive) continue;
-        h.attackSlowTimer = math.max(h.attackSlowTimer, 2.8);
-        _bossChipHero(
-          world,
-          enemy,
-          h,
-          atkMul: 0.28,
-          rng: rng,
-          reducedVfx: reducedVfx,
-        );
-        any = true;
-      }
-      if (any) {
-        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
-        _bossTell(
-          world,
-          enemy,
-          text: EnemyFlavor.bossTell(id),
-          argb: 0xFFA0E0FF,
-          radius: 1.55,
-          reducedVfx: reducedVfx,
-        );
-      } else {
-        enemy.specialCd = 1.2;
-      }
+      _armBossTelegraph(world, enemy, reducedVfx: reducedVfx);
       return;
     default:
       _bossPulseLike(
@@ -815,6 +748,77 @@ void _resolveBossTelegraph(
         reducedVfx: reducedVfx,
         at: focus,
       );
+      return;
+    case 'goblin':
+      _bossRally(world, enemy, reducedVfx: reducedVfx);
+      return;
+    case 'king':
+      var decreed = false;
+      for (final h in world.heroes) {
+        if (!h.isAlive) continue;
+        h.attackSlowTimer = math.max(h.attackSlowTimer, 3.0);
+        h.demoShoutTimer = math.max(h.demoShoutTimer, 2.4);
+        decreed = true;
+      }
+      if (decreed) {
+        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+        _bossTell(
+          world,
+          enemy,
+          text: EnemyFlavor.bossTell(id),
+          argb: 0xFFE0C060,
+          radius: 1.6,
+          reducedVfx: reducedVfx,
+        );
+      } else {
+        enemy.specialCd = 1.2;
+      }
+      return;
+    case 'dead':
+      final healMul = world.afkAssist ? 0.4 : 1.0;
+      final heal = math.max(
+        12,
+        (enemy.effectiveMaxHp * 0.08 * healMul).round(),
+      );
+      enemy.hp = math.min(enemy.effectiveMaxHp, enemy.hp + heal);
+      enemy.specialCd = world.afkAssist ? 10.0 : 9.0;
+      _bossTell(
+        world,
+        enemy,
+        text: EnemyFlavor.bossTell(id),
+        argb: 0xFFC0C0D8,
+        radius: 1.2,
+        reducedVfx: reducedVfx,
+      );
+      return;
+    case 'rime':
+      var frosted = false;
+      for (final h in world.heroes) {
+        if (!h.isAlive) continue;
+        h.attackSlowTimer = math.max(h.attackSlowTimer, 2.8);
+        _bossChipHero(
+          world,
+          enemy,
+          h,
+          atkMul: 0.28,
+          rng: rng,
+          reducedVfx: reducedVfx,
+        );
+        frosted = true;
+      }
+      if (frosted) {
+        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
+        _bossTell(
+          world,
+          enemy,
+          text: EnemyFlavor.bossTell(id),
+          argb: 0xFFA0E0FF,
+          radius: 1.55,
+          reducedVfx: reducedVfx,
+        );
+      } else {
+        enemy.specialCd = 1.2;
+      }
       return;
     default:
       final slammed = _bossChipInRadius(
