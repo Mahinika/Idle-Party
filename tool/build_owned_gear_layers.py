@@ -274,7 +274,9 @@ def sample_face(
     px = im.load()
     x0, y0, x1, y1 = box
     cx = (x0 + x1) // 2
-    cy = y0 + max(8, int((y1 - y0) * 0.22))
+    # Mage gold-master hat fills the top of the bbox — sample the real face.
+    face_frac = 0.42 if family == "mage" else 0.22
+    cy = y0 + max(8, int((y1 - y0) * face_frac))
     samples: list[tuple[int, int, int]] = []
     for dy in range(-8, 14):
         for dx in range(-10, 11):
@@ -298,9 +300,23 @@ def sample_face(
     return samples[len(samples) // 2]
 
 
+def is_hat_lining(rgb: tuple[int, int, int]) -> bool:
+    """Mage brim beige/yellow. Peach cheeks have more blue and a wider r-g."""
+    r, g, b = rgb
+    if b >= 132:
+        return False
+    if r < 160 or g < 140:
+        return False
+    if (g - b) < 60:
+        return False
+    if (r - g) > 40:
+        return False
+    return True
+
+
 def is_skin(rgb: tuple[int, int, int], face: tuple[int, int, int]) -> bool:
     r, g, b = rgb
-    if is_gold_pixel(rgb):
+    if is_gold_pixel(rgb) or is_hat_lining(rgb):
         return False
     if r < 90 or g < 50 or b < 40:
         return False
@@ -312,6 +328,9 @@ def is_skin(rgb: tuple[int, int, int], face: tuple[int, int, int]) -> bool:
     if r > 160 and g > 120 and b < 100 and r > b + 40:
         return False
     if abs(r - g) < 12 and abs(g - b) < 12:
+        return False
+    # Muted hat felt (red≈green) is not a cheek.
+    if r < 200 and abs(r - g) < 18 and 90 < b < 140 and (r - b) < 55:
         return False
     return dist(rgb, face) < 72
 
@@ -331,11 +350,11 @@ def is_gold_pixel(rgb: tuple[int, int, int]) -> bool:
 def is_hat_or_hood(family: str, rgb: tuple[int, int, int]) -> bool:
     r, g, b = rgb
     if family == "mage":
-        # Warm face is not a hat. Indigo/blue folds + gold brim are.
+        # Warm face is not a hat. Indigo/blue folds + gold/beige brim are.
+        if is_gold_pixel(rgb) or is_hat_lining(rgb):
+            return True
         if r > 150 and g > 90 and b > 50 and r > b:
             return False
-        if is_gold_pixel(rgb):
-            return True
         return b > 40 and b >= r - 12
     if family == "healer":
         # Neutral white hood — peach cheeks have a larger red–blue gap.
@@ -503,7 +522,12 @@ def paint_undertunic(
             if a < 16:
                 continue
             rgb = (r, g, b)
+            in_head = ((x - fx) / rx) ** 2 + ((y - fy) / ry) ** 2 <= 1.0
             if is_skin(rgb, face):
+                op[x, y] = (r, g, b, a)
+                continue
+            # Eyes / brows / mouth — keep ink even when it matches hat blue.
+            if in_head and lum(rgb) < 0.22:
                 op[x, y] = (r, g, b, a)
                 continue
             # Hat/hood only in the head band — mage robe / healer vestments stay.
@@ -518,7 +542,6 @@ def paint_undertunic(
                 continue
             if family == "rogue" and is_rogue_cloak(rgb):
                 continue
-            in_head = ((x - fx) / rx) ** 2 + ((y - fy) / ry) ** 2 <= 1.0
             if (
                 in_head
                 and y <= chin_y + 2
@@ -526,6 +549,9 @@ def paint_undertunic(
                 and not is_hat_or_hood(family, rgb)
             ):
                 op[x, y] = (r, g, b, a)
+                continue
+            # Never turn leftover brim into cloth — hat is the helm overlay.
+            if family == "mage" and y <= chin_y + 2:
                 continue
             cloth = tunic if y < mid_y else pants
             op[x, y] = recolor_to_cloth(rgb, cloth, a)
@@ -557,23 +583,29 @@ def paint_undertunic(
                 f"bald. Add hair to _src/body_idle.png or "
                 f"gear/_authored/, do not draw it here."
             )
-    if family in ("mage", "healer"):
+    if family == "healer":
+        # Circlet lives on helm_t0. Mage uses a geometric hat skip instead —
+        # punching the authored hat would eat bangs / eyes.
         strip_equipped_helm_from_body(family, out)
         strip_equipped_helm_from_body(family, tint_mask)
     if family == "mage":
-        # Hat leftover that is not on helm_t0 (tall cone / brim crumbs).
         op = out.load()
         mp = tint_mask.load()
-        cut = max(0, int(fy - 6))
-        for y in range(0, cut):
+        for y in range(0, int(fy)):
             for x in range(128):
                 r, g, b, a = op[x, y]
                 if a < 16:
                     continue
-                if is_skin((r, g, b), face):
+                rgb = (r, g, b)
+                if is_skin(rgb, face) or is_hair_color("mage", rgb):
                     continue
-                op[x, y] = (0, 0, 0, 0)
-                mp[x, y] = (0, 0, 0, 0)
+                if (
+                    is_gold_pixel(rgb)
+                    or is_hat_lining(rgb)
+                    or is_hat_or_hood("mage", rgb)
+                ):
+                    op[x, y] = (0, 0, 0, 0)
+                    mp[x, y] = (0, 0, 0, 0)
     return out, tint_mask
 
 
