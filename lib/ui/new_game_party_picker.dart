@@ -393,13 +393,13 @@ class _SlotCard extends StatelessWidget {
                 if (preview == null)
                   KenneySprite(
                     asset: CustomAssets.heroKnight,
-                    size: 40,
+                    size: 56,
                   )
                 else
                   HeroDollSprite(
                     hero: preview,
                     partyIndex: index,
-                    size: 40,
+                    size: 56,
                   ),
                 const SizedBox(height: 4),
                 Text(

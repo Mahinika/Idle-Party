@@ -338,7 +338,7 @@ def is_skin(rgb: tuple[int, int, int], face: tuple[int, int, int]) -> bool:
 def is_gold_pixel(rgb: tuple[int, int, int]) -> bool:
     r, g, b = rgb
     # Bright armor trim only — peach cheeks (high blue, small g-b) are not gold.
-    if r < 180 or g < 140 or b >= 120:
+    if r < 180 or g < 140 or b >= 132:
         return False
     if (g - b) < 88:
         return False
@@ -357,12 +357,12 @@ def is_hat_or_hood(family: str, rgb: tuple[int, int, int]) -> bool:
             return False
         return b > 40 and b >= r - 12
     if family == "healer":
-        # Neutral white hood — peach cheeks have a larger red–blue gap.
+        # Circlet gold + pale hood only. Blonde hair is warmer (bigger r-b).
+        if is_gold_pixel(rgb):
+            return True
         if r > 200 and g > 195 and b > 180 and (r - b) < 40:
             return True
-        return is_gold_pixel(rgb) or (
-            r > 190 and g > 140 and b < 110 and r > b + 50
-        )
+        return False
     return False
 
 
@@ -524,23 +524,29 @@ def paint_undertunic(
             rgb = (r, g, b)
             in_head = ((x - fx) / rx) ** 2 + ((y - fy) / ry) ** 2 <= 1.0
             if is_skin(rgb, face):
+                # Healer circlet cream matches peach — it's above the forehead.
+                if family == "healer" and y < fy - 8:
+                    continue
                 op[x, y] = (r, g, b, a)
                 continue
             # Eyes / brows / mouth — keep ink even when it matches hat blue.
             if in_head and lum(rgb) < 0.22:
                 op[x, y] = (r, g, b, a)
                 continue
-            # Hat/hood only in the head band — mage robe / healer vestments stay.
-            if y <= head_max + 6 and is_hat_or_hood(family, rgb):
+            # Hair before hat. Warrior brown plate matches the hair heuristic —
+            # keep hair only on the head, not the pauldrons.
+            hair_ok = True if family != "warrior" else (
+                in_head or abs(x - fx) <= face_half * 1.7
+            )
+            if y <= head_max + 4 and hair_ok and is_hair_color(family, rgb):
+                op[x, y] = (r, g, b, a)
+                continue
+            # Mage hat is above the eyes; indigo robe below is cloth.
+            hat_band = (y < fy - 1) if family == "mage" else (y <= head_max + 6)
+            if hat_band and is_hat_or_hood(family, rgb):
                 continue
             # Mage/healer: anything above the eyes that isn't skin/hair is hat.
             if family in ("mage", "healer") and y < fy - 1:
-                if not is_hair_color(family, rgb):
-                    continue
-            if y <= head_max + 4 and is_hair_color(family, rgb):
-                op[x, y] = (r, g, b, a)
-                continue
-            if family == "rogue" and is_rogue_cloak(rgb):
                 continue
             if (
                 in_head
@@ -550,8 +556,13 @@ def paint_undertunic(
             ):
                 op[x, y] = (r, g, b, a)
                 continue
-            # Never turn leftover brim into cloth — hat is the helm overlay.
-            if family == "mage" and y <= chin_y + 2:
+            # Gold-master cloth IS the undertunic for these families.
+            if family in ("mage", "healer", "rogue"):
+                op[x, y] = (r, g, b, a)
+                protects_head = y <= chin_y + 8 and abs(x - fx) <= face_half * 2.4
+                if not protects_head:
+                    shade = max(88, min(255, int(88 + lum(rgb) * 220)))
+                    mp[x, y] = (shade, shade, shade, a)
                 continue
             cloth = tunic if y < mid_y else pants
             op[x, y] = recolor_to_cloth(rgb, cloth, a)
@@ -583,11 +594,6 @@ def paint_undertunic(
                 f"bald. Add hair to _src/body_idle.png or "
                 f"gear/_authored/, do not draw it here."
             )
-    if family == "healer":
-        # Circlet lives on helm_t0. Mage uses a geometric hat skip instead —
-        # punching the authored hat would eat bangs / eyes.
-        strip_equipped_helm_from_body(family, out)
-        strip_equipped_helm_from_body(family, tint_mask)
     if family == "mage":
         op = out.load()
         mp = tint_mask.load()
