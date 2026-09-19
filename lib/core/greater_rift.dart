@@ -84,16 +84,23 @@ abstract final class GreaterRift {
         afterCap: 0.55,
       );
 
-  /// Gold FORGE + essence dump. Soft HASTE multiplies ATK (same as swing rate).
+  /// GOLD forge tax. Rank is the ladder: GR1–20 stay rank-only so a fat
+  /// ATK/HASTE dump still clears the first step. After [campaignCap] a log tax
+  /// ramps in (full by GR200) so GR239 is not GR25 for a 100k ATK whale.
   static double investMul(GameState? state) {
     if (state == null || !state.inGreaterRift) return 1.0;
+    final t = clampTier(state.grTier);
+    if (t <= campaignCap) return 1.0;
     final atk = max(0, state.metaAttackBonus).toDouble();
     final tank =
         (max(0, state.metaDefenseBonus) + max(0, state.metaVitalityBonus))
             .toDouble();
     final haste =
         1.0 + GameState.softForgePercent(state.attackSpeedBonus) / 100.0;
-    return (1.0 + atk * haste / 350.0 + tank / 900.0).clamp(1.0, 8000.0);
+    final power = atk * haste + tank / 4.0;
+    final full = (1.0 + log(1.0 + power / 400.0) * 28.0).clamp(1.0, 600.0);
+    final blend = ((t - campaignCap) / 180.0).clamp(0.0, 1.0);
+    return 1.0 + (full - 1.0) * blend;
   }
 
   /// Full pack tax used in [EncounterFactory] (rank × invest).

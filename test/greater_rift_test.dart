@@ -297,7 +297,36 @@ void main() {
     expect(highHp / lowHp, greaterThan(15));
   });
 
-  test('GOLD / ESSENCE dump raises GR pack HP at the same rank', () {
+  test('GR1 stays rank-only even with a whale forge', () {
+    final room = DungeonRoom(
+      floorNumber: 1,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 100,
+      enemyCount: 8,
+    );
+    final lean = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        inGreaterRift: true,
+        grTier: 1,
+      ),
+    );
+    final whale = _whaleForge(lean);
+    expect(GreaterRift.investMul(whale), closeTo(1.0, 0.01));
+    expect(GreaterRift.investMul(_whaleForge(lean.copyWith(grTier: 20))), 1.0);
+    expect(
+      GreaterRift.combatThreatMul(whale),
+      closeTo(GreaterRift.threatMul(1), 0.05),
+    );
+    final leanHp = GameLogic.createEnemyGroup(room, fromState: lean)
+        .fold<int>(0, (s, e) => s + e.stats.maxHp);
+    final whaleHp = GameLogic.createEnemyGroup(room, fromState: whale)
+        .fold<int>(0, (s, e) => s + e.stats.maxHp);
+    expect(whaleHp / leanHp, lessThan(1.2));
+  });
+
+  test('GOLD / ESSENCE dump raises GR pack HP at the same high rank', () {
     final room = DungeonRoom(
       floorNumber: 1,
       roomIndex: 0,
@@ -326,7 +355,7 @@ void main() {
     expect(fatHp / leanHp, greaterThan(2));
   });
 
-  test('100k ATK + soft HASTE dump walls GR239 vs a lean party', () {
+  test('100k ATK + soft HASTE dump walls GR239, not GR1', () {
     final room = DungeonRoom(
       floorNumber: 1,
       roomIndex: 0,
@@ -341,16 +370,14 @@ void main() {
         grTier: 239,
       ),
     );
-    final whale = lean.copyWith(
-      attackBonus: 124772,
-      defenseBonus: 84362,
-      vitalityBonus: 139992,
-      attackSpeedBonus: 31144,
-      critBonus: 31000,
-      masteryBonus: 207244,
+    final whale = _whaleForge(lean);
+    expect(GreaterRift.investMul(whale), greaterThan(80));
+    expect(GreaterRift.combatThreatMul(whale), greaterThan(8000));
+    expect(
+      GreaterRift.combatThreatMul(whale) /
+          GreaterRift.combatThreatMul(_whaleForge(lean.copyWith(grTier: 1))),
+      greaterThan(80),
     );
-    expect(GreaterRift.investMul(whale), greaterThan(200));
-    expect(GreaterRift.combatThreatMul(whale), greaterThan(20000));
     final leanHp = GameLogic.createEnemyGroup(room, fromState: lean)
         .fold<int>(0, (s, e) => s + e.stats.maxHp);
     final whaleHp = GameLogic.createEnemyGroup(room, fromState: whale)
@@ -421,4 +448,13 @@ GameState _withPartyMaxLevel(GameState state) => state.copyWith(
         for (final h in state.heroRoster)
           h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
       ],
+    );
+
+GameState _whaleForge(GameState state) => state.copyWith(
+      attackBonus: 124772,
+      defenseBonus: 84362,
+      vitalityBonus: 139992,
+      attackSpeedBonus: 31144,
+      critBonus: 31000,
+      masteryBonus: 207244,
     );
