@@ -39,7 +39,7 @@ SKIN_M = (104, 96, 176)
 SKIN_F = (128, 112, 188)
 SKIN_SHADOW = (52, 44, 110)
 HAIR_M = (40, 56, 92)
-HAIR_F = (156, 204, 214)
+HAIR_F = (186, 196, 214)
 EYE = (188, 244, 255)
 INK = (28, 22, 48)
 # Simple cloth — not plate / not an ornate robe.
@@ -170,9 +170,9 @@ def paint_ears(
 ) -> set[tuple[int, int]]:
     """Pointed chibi ears, attached at the hair silhouette. Original pixels."""
     painted: set[tuple[int, int]] = set()
-    length = 18 if female else 14
-    width = 3.6 if female else 4.6
-    lift = 13 if female else 10
+    length = 11 if female else 14
+    width = 3.2 if female else 4.6
+    lift = 8 if female else 10
     ear_y = int(fy - 1)
     left_edge = int(fx - face_half)
     right_edge = int(fx + face_half)
@@ -237,7 +237,10 @@ def paint_nightelf(family: str, anim: str, *, female: bool) -> tuple[Image.Image
     hat_fill = hair_t
     rx_hat = face_half * 1.12
     for x, y in tags["hat"]:
-        # Drop the circlet/hood ring so gear helms sit on hair, not a crown.
+        # Healer circlet is helm, not a glowing hair crown.
+        if family == "healer":
+            continue
+        # Drop the hood ring so gear helms sit on hair, not a crown.
         if y < fy - face_half * 0.72:
             continue
         if dist2(x, y, fx, fy) > (rx_hat * 1.35) ** 2:
