@@ -261,6 +261,14 @@ void main() {
       GreaterRift.threatMul(239) / GreaterRift.threatMul(25),
       greaterThan(15),
     );
+    expect(
+      GreaterRift.threatMul(30) / GreaterRift.threatMul(20),
+      closeTo(pow(GreaterRift.afterCapGrowth, 10), 0.001),
+    );
+    expect(
+      GreaterRift.threatMul(239) / GreaterRift.threatMul(1),
+      greaterThan(1000),
+    );
     expect(GreaterRift.densityMul(50), GreaterRift.densityMul(20));
     expect(GreaterRift.successEssence(21), greaterThan(GreaterRift.successEssence(20)));
     double kps(int t) =>
@@ -297,7 +305,7 @@ void main() {
     expect(highHp / lowHp, greaterThan(15));
   });
 
-  test('GR1 stays rank-only even with a whale forge', () {
+  test('GOLD forge never taxes Ranked GR pack HP', () {
     final room = DungeonRoom(
       floorNumber: 1,
       roomIndex: 0,
@@ -312,77 +320,15 @@ void main() {
         grTier: 1,
       ),
     );
-    final whale = _whaleForge(lean);
-    expect(GreaterRift.investMul(whale), closeTo(1.0, 0.01));
-    expect(GreaterRift.investMul(_whaleForge(lean.copyWith(grTier: 20))), 1.0);
+    int packHp(GameState s) => GameLogic.createEnemyGroup(room, fromState: s)
+        .fold<int>(0, (n, e) => n + e.stats.maxHp);
     expect(
-      GreaterRift.combatThreatMul(whale),
-      closeTo(GreaterRift.threatMul(1), 0.05),
+      GreaterRift.combatThreatMul(_whaleForge(lean)),
+      closeTo(GreaterRift.threatMul(1), 0.0001),
     );
-    final leanHp = GameLogic.createEnemyGroup(room, fromState: lean)
-        .fold<int>(0, (s, e) => s + e.stats.maxHp);
-    final whaleHp = GameLogic.createEnemyGroup(room, fromState: whale)
-        .fold<int>(0, (s, e) => s + e.stats.maxHp);
-    expect(whaleHp / leanHp, lessThan(1.2));
-  });
-
-  test('GOLD / ESSENCE dump raises GR pack HP at the same high rank', () {
-    final room = DungeonRoom(
-      floorNumber: 1,
-      roomIndex: 0,
-      type: RoomType.normal,
-      enemyLevel: 100,
-      enemyCount: 8,
-    );
-    final base = _withPartyMaxLevel(
-      GameLogic.createInitialState(now: now).copyWith(
-        ascensionLevel: GameLogic.maxAscensionLevel,
-        inGreaterRift: true,
-        grTier: 239,
-      ),
-    );
-    final fat = base.copyWith(
-      attackBonus: 800,
-      defenseBonus: 400,
-      vitalityBonus: 400,
-      sanctuaryPowerLevel: 80,
-    );
-    expect(GreaterRift.investMul(fat), greaterThan(GreaterRift.investMul(base)));
-    final leanHp = GameLogic.createEnemyGroup(room, fromState: base)
-        .fold<int>(0, (s, e) => s + e.stats.maxHp);
-    final fatHp = GameLogic.createEnemyGroup(room, fromState: fat)
-        .fold<int>(0, (s, e) => s + e.stats.maxHp);
-    expect(fatHp / leanHp, greaterThan(2));
-  });
-
-  test('100k ATK + soft HASTE dump walls GR239, not GR1', () {
-    final room = DungeonRoom(
-      floorNumber: 1,
-      roomIndex: 0,
-      type: RoomType.normal,
-      enemyLevel: 100,
-      enemyCount: 8,
-    );
-    final lean = _withPartyMaxLevel(
-      GameLogic.createInitialState(now: now).copyWith(
-        ascensionLevel: GameLogic.maxAscensionLevel,
-        inGreaterRift: true,
-        grTier: 239,
-      ),
-    );
-    final whale = _whaleForge(lean);
-    expect(GreaterRift.investMul(whale), greaterThan(80));
-    expect(GreaterRift.combatThreatMul(whale), greaterThan(8000));
-    expect(
-      GreaterRift.combatThreatMul(whale) /
-          GreaterRift.combatThreatMul(_whaleForge(lean.copyWith(grTier: 1))),
-      greaterThan(80),
-    );
-    final leanHp = GameLogic.createEnemyGroup(room, fromState: lean)
-        .fold<int>(0, (s, e) => s + e.stats.maxHp);
-    final whaleHp = GameLogic.createEnemyGroup(room, fromState: whale)
-        .fold<int>(0, (s, e) => s + e.stats.maxHp);
-    expect(whaleHp / leanHp, greaterThan(8));
+    expect(packHp(_whaleForge(lean)) / packHp(lean), closeTo(1.0, 0.01));
+    final high = lean.copyWith(grTier: 239);
+    expect(packHp(_whaleForge(high)), packHp(high));
   });
 
   test('Greater Rift GR25 survives save load', () {

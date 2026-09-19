@@ -77,36 +77,26 @@ abstract final class GreaterRift {
     );
   }
 
-  /// Pack HP/ATK from rank. After GR20 quota + 90s hold; this must stay steep.
-  static double threatMul(int tier) => RiftPacing.threatMul(
-        tier: clampTier(tier),
-        perTier: 0.16,
-        afterCap: 0.55,
-      );
+  /// Campaign GR1–20: +16% per rank (a few times GR1, not a fuse).
+  static const double campaignPerTier = 0.16;
 
-  /// GOLD forge tax. Rank is the ladder: GR1–20 stay rank-only so a fat
-  /// ATK/HASTE dump still clears the first step. After [campaignCap] a log tax
-  /// ramps in (full by GR200) so GR239 is not GR25 for a 100k ATK whale.
-  static double investMul(GameState? state) {
-    if (state == null || !state.inGreaterRift) return 1.0;
-    final t = clampTier(state.grTier);
-    if (t <= campaignCap) return 1.0;
-    final atk = max(0, state.metaAttackBonus).toDouble();
-    final tank =
-        (max(0, state.metaDefenseBonus) + max(0, state.metaVitalityBonus))
-            .toDouble();
-    final haste =
-        1.0 + GameState.softForgePercent(state.attackSpeedBonus) / 100.0;
-    final power = atk * haste + tank / 4.0;
-    final full = (1.0 + log(1.0 + power / 400.0) * 28.0).clamp(1.0, 600.0);
-    final blend = ((t - campaignCap) / 180.0).clamp(0.0, 1.0);
-    return 1.0 + (full - 1.0) * blend;
+  /// After GR20: D3-style multiply, not add. 1.17^n is too steep for a 90s
+  /// phone clock out to GR239 — 4%/rank still walls a fat forge there
+  /// without matching GOLD tracks to pack HP.
+  static const double afterCapGrowth = 1.04;
+
+  /// Pack HP/ATK from rank only. GOLD forge never taxes monsters.
+  static double threatMul(int tier) {
+    final t = clampTier(tier);
+    if (t <= campaignCap) return 1.0 + t * campaignPerTier;
+    final atCap = 1.0 + campaignCap * campaignPerTier;
+    return atCap * pow(afterCapGrowth, t - campaignCap);
   }
 
-  /// Full pack tax used in [EncounterFactory] (rank × invest).
+  /// Full pack tax used in [EncounterFactory] — rank ladder, not player power.
   static double combatThreatMul(GameState? state) {
     if (state == null || !state.inGreaterRift) return 1.0;
-    return (threatMul(state.grTier) * investMul(state)).clamp(1.0, 250000.0);
+    return threatMul(state.grTier).clamp(1.0, 250000.0);
   }
 
   /// Extra bodies (soft-cap at 20). Ranked GR denser than farm.

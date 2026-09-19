@@ -690,7 +690,7 @@ abstract final class GameGuides {
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear. '
           'Farm Rift is the loot path; Ranked GR is the ranked ladder.\n'
           '• GR20 sits on a ~90s clock — later ranks keep that cap and the kill quota. '
-          'GR1–20 follow rank only; after that packs climb with rank and a fat GOLD forge.\n'
+          'Each rank after that multiplies pack toughness (GOLD forge is your damage, not theirs).\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet + Ranked GR on KEY · BOARDS (Play Games). '
           'Play install + sign-in. Local PB also stays on hub ENDGAME.\n'

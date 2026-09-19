@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code
 and **owned** pixel art (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.177**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.178**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -207,8 +207,8 @@ gear (gold OK; chests skip equipment), larger clear payout;
 season PB is **local** on hub and submits to Play Games when the month’s
 `PlayLeaderboardIds.greaterRift` ID is wired (2026-09 `CgkIhuXGvNocEAIQAw`).
 After GR20 the progress target holds and the clock stays at the 90s cap;
-rank threat keeps climbing. A fat GOLD forge (ATK + HASTE) taxes packs only
-after GR20 (full by GR200) so GR1 stays a first step and GR239 is not GR25.
+rank threat keeps climbing (~4% multiplicative per rank, not GOLD-forge matching)
+so GR1 stays a first step and GR239 is not GR25.
 `metaDepth.grBestTier` / `seasonBestGrTier` survive Ascend.
 
 **Ashen Crown** (same gate): weekly ticket solo boss; each ISO week visits a
