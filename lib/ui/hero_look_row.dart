@@ -11,12 +11,16 @@ class HeroLookRow extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.hint,
+    this.title,
     this.compact = false,
   });
 
   final HeroRace value;
   final ValueChanged<HeroRace> onChanged;
   final String? hint;
+
+  /// Defaults to `LOOK`. New Game passes `LOOK · PROT` etc.
+  final String? title;
   final bool compact;
 
   @override
@@ -25,7 +29,7 @@ class HeroLookRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'LOOK',
+          title ?? 'LOOK',
           textAlign: TextAlign.center,
           style: GameTheme.body(
             size: compact ? 11 : 12,

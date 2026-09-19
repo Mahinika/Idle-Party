@@ -13,6 +13,8 @@ import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
 
 /// Pick exactly [GameLogic.starterPartySize] unique specs for a new run.
+///
+/// Each slot keeps its own [HeroRace]. LOOK edits the selected slot only.
 class NewGamePartyPicker extends StatefulWidget {
   const NewGamePartyPicker({
     super.key,
@@ -37,7 +39,7 @@ class NewGamePartyPicker extends StatefulWidget {
 class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   late final List<HeroSpecId?> _slots;
   late final TextEditingController _nameCtrl;
-  HeroClassId _filter = HeroSpecs.def(HeroSpecs.starterUnlocked.first).classId;
+  late HeroClassId _filter;
   int _activeSlot = 0;
   bool _nameError = false;
   String? _pickHint;
@@ -55,6 +57,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     for (var i = 0; i < _slots.length && i < seed.length; i++) {
       _slots[i] = seed[i];
     }
+    _filter = _classForSlot(0);
     _nameCtrl = TextEditingController();
   }
 
@@ -62,6 +65,20 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   void dispose() {
     _nameCtrl.dispose();
     super.dispose();
+  }
+
+  HeroClassId _classForSlot(int index) {
+    final spec = _slots[index];
+    if (spec != null) return HeroSpecs.def(spec).classId;
+    return HeroSpecs.def(HeroSpecs.starterUnlocked.first).classId;
+  }
+
+  void _selectSlot(int index) {
+    setState(() {
+      _activeSlot = index;
+      _filter = _classForSlot(index);
+      _pickHint = null;
+    });
   }
 
   void _tryStart() {
@@ -117,6 +134,12 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     return null;
   }
 
+  String get _activeLookTitle {
+    final spec = _slots[_activeSlot];
+    if (spec == null) return 'LOOK · Slot ${_activeSlot + 1}';
+    return 'LOOK · ${HeroSpecs.def(spec).shortLabel}';
+  }
+
   void _pick(HeroSpecId id) {
     if (!HeroSpecs.starterUnlocked.contains(id)) return;
     final takenIndex = _slots.indexWhere((s) => s == id);
@@ -127,14 +150,32 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
             '${def.shortLabel} is already picked — choose Healer or Fire mage '
             'for the other slots';
         _activeSlot = takenIndex;
+        _filter = HeroSpecs.def(id).classId;
       });
       return;
     }
     setState(() {
       _pickHint = null;
       _slots[_activeSlot] = id;
-      _activeSlot = _nextEmptySlot(after: _activeSlot) ?? _activeSlot;
+      final next = _nextEmptySlot(after: _activeSlot);
+      if (next != null) {
+        _activeSlot = next;
+        _filter = _classForSlot(next);
+      } else {
+        _filter = HeroSpecs.def(id).classId;
+      }
     });
+  }
+
+  PartyHero _previewHero(HeroSpecId specId, HeroRace race, {int? slot}) {
+    final def = HeroSpecs.def(specId);
+    return PartyHero.starting(
+      name: def.defaultName,
+      specId: specId,
+      race: race,
+      // Stable id per slot so LOOK swaps reload the doll.
+      id: 'new_party_${slot ?? _activeSlot}_${specId.name}',
+    );
   }
 
   @override
@@ -151,12 +192,21 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       for (final id in classSpecs)
         if (HeroSpecs.starterUnlocked.contains(id)) id,
     ];
+    final starterClasses = <HeroClassId>[
+      for (final id in HeroSpecs.starterUnlocked) HeroSpecs.def(id).classId,
+    ];
+    final seenClass = <HeroClassId>{};
+    final classTabs = <HeroClassId>[
+      for (final c in starterClasses)
+        if (seenClass.add(c)) c,
+    ];
+
     return Scaffold(
       backgroundColor: GameTheme.ink,
       body: MenuChrome.playSafeArea(
         bottom: true,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -165,14 +215,13 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                 textAlign: TextAlign.center,
                 style: GameTheme.menuTitle(size: 18),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
-                'Pick ${GameLogic.starterPartySize} heroes. Easy start: one Shield, '
-                'one Healer, one Damage. Healers open each floor with mana.',
+                'One Shield, one Healer, one Damage. LOOK is per hero.',
                 textAlign: TextAlign.center,
-                style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               TextField(
                 controller: _nameCtrl,
                 maxLength: PartyNameFilter.maxLen,
@@ -223,6 +272,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               ],
               const SizedBox(height: 8),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (var i = 0; i < _slots.length; i++) ...[
                     if (i > 0) const SizedBox(width: 8),
@@ -232,7 +282,10 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                         specId: _slots[i],
                         look: _looks[i],
                         selected: _activeSlot == i,
-                        onTap: () => setState(() => _activeSlot = i),
+                        hero: _slots[i] == null
+                            ? null
+                            : _previewHero(_slots[i]!, _looks[i], slot: i),
+                        onTap: () => _selectSlot(i),
                       ),
                     ),
                   ],
@@ -242,34 +295,33 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               HeroLookRow(
                 value: _looks[_activeSlot],
                 compact: true,
-                onChanged: (race) => setState(() => _looks[_activeSlot] = race),
+                title: _activeLookTitle,
+                onChanged: (race) =>
+                    setState(() => _looks[_activeSlot] = race),
                 hint: newGameLookHint(_looks[_activeSlot]),
               ),
               if (_pickHint != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   _pickHint!,
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 12, color: GameTheme.torchHot),
                 ),
               ] else if (warn != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   warn,
                   textAlign: TextAlign.center,
                   style: GameTheme.body(size: 12, color: GameTheme.torchHot),
                 ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               SizedBox(
                 height: 36,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
-                    for (final classId in {
-                      for (final id in HeroSpecs.starterUnlocked)
-                        HeroSpecs.def(id).classId,
-                    })
+                    for (final classId in classTabs)
                       Padding(
                         padding: const EdgeInsets.only(right: 6),
                         child: GameButton(
@@ -284,7 +336,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Expanded(
                 child: DecoratedBox(
                   decoration: MenuChrome.panel(opaque: true),
@@ -308,11 +360,14 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                           def: HeroSpecs.def(specId),
                           starter: HeroSpecs.starterUnlocked.contains(specId),
                           taken: _slots.contains(specId),
+                          preview: HeroSpecs.starterUnlocked.contains(specId)
+                              ? _previewHero(specId, _looks[_activeSlot])
+                              : null,
                           onTap: () => _pick(specId),
                         ),
                       const SizedBox(height: 8),
                       Text(
-                        'More hero types unlock as you grow. You do not need another game.',
+                        'More hero types unlock as you grow.',
                         textAlign: TextAlign.center,
                         style: GameTheme.body(
                           size: 12,
@@ -323,7 +378,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               if (!_ready && blockReason != null) ...[
                 Text(
                   blockReason,
@@ -369,6 +424,7 @@ class _SlotCard extends StatelessWidget {
     required this.look,
     required this.selected,
     required this.onTap,
+    required this.hero,
   });
 
   final int index;
@@ -376,17 +432,14 @@ class _SlotCard extends StatelessWidget {
   final HeroRace look;
   final bool selected;
   final VoidCallback onTap;
+  final PartyHero? hero;
 
   @override
   Widget build(BuildContext context) {
     final def = specId == null ? null : HeroSpecs.def(specId!);
-    final preview = specId == null
-        ? null
-        : PartyHero.starting(
-            name: def!.defaultName,
-            specId: specId!,
-            race: look,
-          );
+    final raceTone = look == HeroRace.nightElf
+        ? GameTheme.mossLit
+        : GameTheme.parchmentDim;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -395,33 +448,43 @@ class _SlotCard extends StatelessWidget {
         child: DecoratedBox(
           decoration: MenuChrome.cardBox(selected: selected),
           child: Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.fromLTRB(6, 8, 6, 6),
             child: Column(
               children: [
-                if (preview == null)
+                if (hero == null)
                   KenneySprite(
                     asset: CustomAssets.heroKnight,
-                    size: 56,
+                    size: 52,
                   )
                 else
                   HeroDollSprite(
-                    hero: preview,
+                    hero: hero!,
                     partyIndex: index,
-                    size: 56,
+                    size: 52,
                   ),
                 const SizedBox(height: 4),
                 Text(
                   def?.shortLabel ?? 'SLOT ${index + 1}',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(size: 13, color: GameTheme.parchment),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(size: 12, color: GameTheme.parchment),
                 ),
                 Text(
-                  def?.roleTag.plainLabel ?? 'Tap to pick',
+                  def?.roleTag.plainLabel ?? 'Tap',
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(
-                    size: 11,
+                    size: 10,
                     color: GameTheme.parchmentDim,
                   ),
+                ),
+                const SizedBox(height: 4),
+                MenuChrome.chip(
+                  label: look == HeroRace.nightElf ? 'N.ELF' : 'HUMAN',
+                  selected: selected,
+                  tone: raceTone,
                 ),
               ],
             ),
@@ -438,12 +501,14 @@ class _SpecPickRow extends StatelessWidget {
     required this.starter,
     required this.taken,
     required this.onTap,
+    required this.preview,
   });
 
   final HeroSpecDef def;
   final bool starter;
   final bool taken;
   final VoidCallback onTap;
+  final PartyHero? preview;
 
   String get _lockLabel => 'Unlocks later';
 
@@ -468,10 +533,17 @@ class _SpecPickRow extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    KenneySprite(
-                      asset: CustomAssets.heroForSpec(def.id),
-                      size: 36,
-                    ),
+                    if (preview != null)
+                      HeroDollSprite(
+                        hero: preview!,
+                        partyIndex: 0,
+                        size: 36,
+                      )
+                    else
+                      KenneySprite(
+                        asset: CustomAssets.heroForSpec(def.id),
+                        size: 36,
+                      ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(

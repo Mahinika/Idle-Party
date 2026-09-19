@@ -182,8 +182,8 @@ void main() {
     expect(find.byType(StartMenuScreen), findsNothing);
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
     expect(find.text('NEW PARTY'), findsOneWidget);
-    expect(find.text('LOOK'), findsOneWidget);
-    expect(find.text('HUMAN'), findsOneWidget);
+    expect(find.textContaining('LOOK'), findsWidgets);
+    expect(find.text('HUMAN'), findsWidgets);
     expect(find.text('NIGHT ELF'), findsOneWidget);
     expect(find.text('ARMS  Arms Warrior'), findsOneWidget);
     expect(find.text('LOCKED'), findsWidgets);
