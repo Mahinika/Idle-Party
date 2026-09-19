@@ -669,7 +669,8 @@ def paint_undertunic(
     if family == "mage":
         op = out.load()
         mp = tint_mask.load()
-        # Everything above the eyes that isn't skin/hair is hat brim/cone.
+        # Tall hat cone above the scalp goes. Near the forehead, keep dark
+        # pixels as hair — gold-master hat overlaps the bob.
         for y in range(0, int(fy)):
             for x in range(128):
                 r, g, b, a = op[x, y]
@@ -678,8 +679,12 @@ def paint_undertunic(
                 rgb = (r, g, b)
                 if is_skin(rgb, face) or is_hair_color("mage", rgb):
                     continue
-                op[x, y] = (0, 0, 0, 0)
-                mp[x, y] = (0, 0, 0, 0)
+                scalp = y >= fy - 14 and abs(x - fx) <= face_half * 1.85
+                if scalp and lum(rgb) < 0.38 and not is_gold_pixel(rgb):
+                    continue
+                if y < fy - 12 or is_hat_or_hood("mage", rgb) or is_hat_lining(rgb) or is_gold_pixel(rgb):
+                    op[x, y] = (0, 0, 0, 0)
+                    mp[x, y] = (0, 0, 0, 0)
     if family == "healer":
         op = out.load()
         mp = tint_mask.load()
