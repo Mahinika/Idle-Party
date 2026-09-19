@@ -387,12 +387,15 @@ def is_gold_pixel(rgb: tuple[int, int, int]) -> bool:
 def is_hat_or_hood(family: str, rgb: tuple[int, int, int]) -> bool:
     r, g, b = rgb
     if family == "mage":
-        # Warm face is not a hat. Indigo/blue folds + gold/beige brim are.
+        # Warm face is not a hat. Indigo/blue folds + gold/beige brim + near-black
+        # cone are. Dark hat was matching is_hair_color and surviving LOOK.
         if is_gold_pixel(rgb) or is_hat_lining(rgb):
             return True
         if r > 150 and g > 90 and b > 50 and r > b:
             return False
-        return b > 40 and b >= r - 12
+        if b >= r - 8 and (b > 28 or lum(rgb) < 0.14):
+            return True
+        return False
     if family == "healer":
         # Circlet gold + pale/black hood. Blonde hair is warmer (bigger r-b).
         if is_gold_pixel(rgb):
@@ -666,6 +669,7 @@ def paint_undertunic(
     if family == "mage":
         op = out.load()
         mp = tint_mask.load()
+        # Everything above the eyes that isn't skin/hair is hat brim/cone.
         for y in range(0, int(fy)):
             for x in range(128):
                 r, g, b, a = op[x, y]
@@ -674,13 +678,8 @@ def paint_undertunic(
                 rgb = (r, g, b)
                 if is_skin(rgb, face) or is_hair_color("mage", rgb):
                     continue
-                if (
-                    is_gold_pixel(rgb)
-                    or is_hat_lining(rgb)
-                    or is_hat_or_hood("mage", rgb)
-                ):
-                    op[x, y] = (0, 0, 0, 0)
-                    mp[x, y] = (0, 0, 0, 0)
+                op[x, y] = (0, 0, 0, 0)
+                mp[x, y] = (0, 0, 0, 0)
     if family == "healer":
         op = out.load()
         mp = tint_mask.load()
