@@ -1,6 +1,7 @@
 # Idle Party — store listing (research + copy)
 
-**Updated:** 2026-09-18 · Target: Google Play (en-US) · Honesty first.  
+**Updated:** 2026-09-19 · Target: Google Play (en-US) · Honesty first.  
+Listing A/B (when Play traffic exists): keep screenshot 1–2 as **live SpatialCombat**, not menus. Do not upload a new AAB unless the owner asks.  
 Growth checklist / review templates: [`PLAY_GROWTH.md`](PLAY_GROWTH.md).  
 0 kr discovery pack: [`tool/store_listing/growth/`](../tool/store_listing/growth/).  
 Play charts + idle/RPG listing peers: [`tool/store_listing/growth/PLAY_LISTING_PEERS.md`](../tool/store_listing/growth/PLAY_LISTING_PEERS.md).

@@ -99,12 +99,16 @@ class HubEndgameMap extends StatelessWidget {
     required this.onSelectHunt,
     this.pulse,
     this.grBestTier = 0,
+    this.gauntletBestFloor = 0,
+    this.riftBestTier = 0,
   });
 
   final HubEndgameHunt? selectedHunt;
   final ValueChanged<HubEndgameHunt> onSelectHunt;
   final Animation<double>? pulse;
   final int grBestTier;
+  final int gauntletBestFloor;
+  final int riftBestTier;
 
   /// Node centers (gauntlet / Ranked GR / Farm Rift / Ashen).
   static List<Offset> get markerNorm => [
@@ -215,7 +219,12 @@ class HubEndgameMap extends StatelessWidget {
     final selected = selectedHunt == node.hunt;
     final statusWord = selected
         ? 'HERE'
-        : HubEndgameAct.shortLabelFor(node.hunt, grBestTier: grBestTier);
+        : HubEndgameAct.shortLabelFor(
+            node.hunt,
+            grBestTier: grBestTier,
+            gauntletBestFloor: gauntletBestFloor,
+            riftBestTier: riftBestTier,
+          );
     final labelH = statusWord.isEmpty ? 0.0 : statusH;
     final cx = node.mapX * mapW;
     final cy = node.mapY * mapH;

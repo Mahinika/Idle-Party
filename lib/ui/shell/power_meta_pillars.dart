@@ -180,6 +180,13 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
           for (final row in metaRows) ...[
             GameButton(
               label: row.rowLabel,
+              tip: switch (row) {
+                MoreSection.quests =>
+                  'Daily / Bounty / Side / Week / Contract — MORE board, not ENDGAME',
+                MoreSection.craft =>
+                  'Apex recipes + monthly Craft Trial (Apex gear only, not ENDGAME)',
+                _ => null,
+              },
               style: GameButtonStyle.brown,
               onPressed: () => widget.onSectionChanged(row),
             ),

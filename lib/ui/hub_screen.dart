@@ -657,6 +657,10 @@ class _HubScreenState extends State<HubScreen>
                                                 pulse: _torch,
                                                 grBestTier:
                                                     state.metaDepth.grBestTier,
+                                                gauntletBestFloor: state
+                                                    .metaDepth.gauntletBestFloor,
+                                                riftBestTier:
+                                                    state.metaDepth.riftBestTier,
                                                 onSelectHunt: (hunt) =>
                                                     setState(() {
                                                       _userPickedZone = true;

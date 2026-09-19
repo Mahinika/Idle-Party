@@ -24,8 +24,8 @@ class ShopDock extends StatefulWidget {
   static String convenienceLine({required bool showEssence}) {
     final essenceBit = showEssence ? ' · essence under ESSENCE' : '';
     return 'Same SCROLLS power as tickets '
-        '(never a stronger combat class). Forever scrolls skip the watch; '
-        'gold under GOLD$essenceBit.';
+        '(convenience power — not BiS-for-cash, never a stronger class). '
+        'Forever scrolls skip the watch; gold under GOLD$essenceBit.';
   }
 
   @override

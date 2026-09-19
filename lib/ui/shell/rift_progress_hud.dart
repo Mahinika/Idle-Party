@@ -46,8 +46,11 @@ class RiftProgressHud extends StatelessWidget {
         : GreaterRift.formatTimer((parMs - timerMs).clamp(0, parMs));
     final title = farm ? 'FARM R$tier' : 'GR$tier';
     final pct = guardianActive ? 'GUARDIAN' : RiftProgress.percentLabel(fill);
+    final overPar = !farm && parMs > 0 && timerMs >= parMs;
     final semantics = farm
-        ? '$title $pct · $clock elapsed'
+        ? '$title $pct · $clock elapsed · no fail timer · not ranked'
+        : overPar
+        ? '$title $pct · par failed · depleted if Guardian is still up'
         : '$title $pct · $clock left${pace.isEmpty ? '' : ' · $pace'}';
 
     return Semantics(

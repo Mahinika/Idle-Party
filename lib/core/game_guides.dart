@@ -308,7 +308,8 @@ abstract final class GameGuides {
         '• MORE · QUESTS (or the badge on MORE) when claims are ready.\n'
         '• Hub CLAIM QUESTS claims ready rewards from the hub hunt line.\n'
         '• The dungeon top CLAIM chip claims all ready quests at once '
-        '(visible in combat too; long-press opens the list).',
+        '(visible in combat too; long-press opens the list).\n'
+        '• QUESTS is a MORE board — not a PATH cave.',
   );
 
   static const GuideTopic _midgameDaily = GuideTopic(
@@ -347,7 +348,8 @@ abstract final class GameGuides {
         'At AL20, ESSENCE lasting buys open Star Nodes (spend points).\n\n'
         '• Not the same as Ascend Blessing stacks (+ATK/DEF/STA/gold each Ascend).\n'
         '• Earn points from reaching AL20 and later challenges.\n'
-        '• Spend points on permanent nodes (crit, gold, block, …).\n'
+        '• Spend points on permanent nodes (crit, gold, block, …) — '
+        'that is real combat power, shown on the node.\n'
         '• Points and lit nodes survive Ascend / REBORN.',
   );
 
@@ -470,7 +472,8 @@ abstract final class GameGuides {
       body:
           'Toggle at the top of the dungeon view (FARM / PUSH).\n\n'
           '• FARM (loop): after clearing, stay on the same floor for more loot/gold.\n'
-          '• PUSH (climb): after clearing, advance to the next floor toward the boss.\n'
+          '• PUSH (climb): after clearing, advance to the next floor toward the boss. '
+          'PUSH floor clear pays +1 essence, boss +2 — FARM pays 0 essence.\n'
           '• Use Floor −1 / +1 in the floor menu to travel when allowed.',
     ),
     GuideTopic(
@@ -644,8 +647,10 @@ abstract final class GameGuides {
           '• BLESSING: God Hand damage/CD/style, Ascend Blessing readout, Star Nodes, lasting QoL buys '
           '(AL-gated), constellation at AL20, optional REBORN. '
           'Not the bottom-tab SHOP (real-money convenience).\n'
-          '• RELICS: party auras (ATK / DEF / STA / loot), up to T6.\n'
-          '• PETS: hatch and level pets when unlocked.\n'
+          '• RELICS: party auras (ATK / DEF / STA / loot), up to T6 — real combat '
+          'bonuses, not shop BiS.\n'
+          '• PETS: hatch and level pets when unlocked — active pets deal chip damage '
+          '(not cosmetics-only).\n'
           '• Everything here survives Ascend.\n'
           '• Invest early — CAMP compounds over many runs.',
     ),
@@ -688,6 +693,7 @@ abstract final class GameGuides {
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
           '• Season ranks: Timed KEY + Gauntlet + Ranked GR on KEY · BOARDS (Play Games). '
           'Play install + sign-in. Local PB also stays on hub ENDGAME.\n'
+          '• Fail the par clock: the run is depleted — keep your best tier, retry from hub ENDGAME.\n'
           '• The hub hunt chases Ranked GR before Farm Rift. ENTER opens arrows to pick any GR.',
     ),
     GuideTopic(
@@ -703,7 +709,9 @@ abstract final class GameGuides {
           '• Target meter: every boss clear builds toward a guaranteed mat '
           '(PUSH faster than FARM). Farm any zone — the meter grants what you need.\n'
           '• Craft weapon R1 first, then armor; the button shows CRAFT R1 or the real upgrade rank.\n'
-          '• Crafted gear and materials survive Ascend.',
+          '• Crafted gear and materials survive Ascend.\n'
+          '• At party Lv${GameLogic.maxHeroLevel}, START CRAFT TRIAL (once per ISO month) '
+          'uses Apex-crafted gear only — bag stays untouched. Not a hub ENDGAME hunt.',
     ),
     GuideTopic(
       id: 'market',
@@ -764,7 +772,8 @@ abstract final class GameGuides {
           '• MORE · QUESTS (or the badge on MORE) when claims are ready.\n'
           '• Hub CLAIM QUESTS claims ready rewards from the hub hunt line.\n'
           '• The dungeon top CLAIM chip claims all ready quests at once '
-          '(visible in combat too; long-press opens the list).',
+          '(visible in combat too; long-press opens the list).\n'
+          '• QUESTS is a MORE board — not a hub ENDGAME hunt.',
     ),
     GuideTopic(
       id: 'weekly',

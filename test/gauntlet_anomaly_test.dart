@@ -33,6 +33,9 @@ void main() {
       GauntletAnomalies.forFloor(23, inGauntlet: true),
       GauntletAnomaly.tightCorridors,
     );
+    expect(GauntletAnomalies.nextBossFloor(3), 5);
+    expect(GauntletAnomalies.nextAnomalyFloor(3), 8);
+    expect(GauntletAnomalies.isTreasureFloor(18), isTrue);
   });
 
   test('Gauntlet swarm floor packs denser than the prior non-anomaly floor', () {

@@ -143,6 +143,9 @@ class GameState {
     this.grGuardianActive = false,
     this.grOutcome = '',
     this.colorblindMode = false,
+    this.hideHealFloaters = false,
+    this.compactCombatNumbers = false,
+    this.alwaysShowEnemyHp = true,
     this.uiTextScale = 1.0,
     this.dungeonZoom = DungeonZoom.normal,
     this.hapticsEnabled = true,
@@ -439,6 +442,15 @@ class GameState {
 
   /// Accessibility: colorblind-friendly combat floater palette.
   final bool colorblindMode;
+
+  /// Skip green heal floaters.
+  final bool hideHealFloaters;
+
+  /// Show combat numbers as K/M when large.
+  final bool compactCombatNumbers;
+
+  /// Draw enemy HP bars even at full health.
+  final bool alwaysShowEnemyHp;
 
   /// Accessibility: UI text scale multiplier.
   final double uiTextScale;
@@ -1100,6 +1112,9 @@ class GameState {
     bool? grGuardianActive,
     String? grOutcome,
     bool? colorblindMode,
+    bool? hideHealFloaters,
+    bool? compactCombatNumbers,
+    bool? alwaysShowEnemyHp,
     double? uiTextScale,
     DungeonZoom? dungeonZoom,
     bool? hapticsEnabled,
@@ -1240,6 +1255,10 @@ class GameState {
       grGuardianActive: grGuardianActive ?? this.grGuardianActive,
       grOutcome: grOutcome ?? this.grOutcome,
       colorblindMode: colorblindMode ?? this.colorblindMode,
+      hideHealFloaters: hideHealFloaters ?? this.hideHealFloaters,
+      compactCombatNumbers:
+          compactCombatNumbers ?? this.compactCombatNumbers,
+      alwaysShowEnemyHp: alwaysShowEnemyHp ?? this.alwaysShowEnemyHp,
       uiTextScale: uiTextScale ?? this.uiTextScale,
       dungeonZoom: dungeonZoom ?? this.dungeonZoom,
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
@@ -1401,6 +1420,9 @@ class GameState {
     'grGuardianActive': grGuardianActive,
     'grOutcome': grOutcome,
     'colorblindMode': colorblindMode,
+    'hideHealFloaters': hideHealFloaters,
+    'compactCombatNumbers': compactCombatNumbers,
+    'alwaysShowEnemyHp': alwaysShowEnemyHp,
     'uiTextScale': uiTextScale,
     'dungeonZoom': dungeonZoom.name,
     'hapticsEnabled': hapticsEnabled,
@@ -1696,6 +1718,9 @@ class GameState {
       grGuardianActive: (json['grGuardianActive'] as bool?) ?? false,
       grOutcome: (json['grOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
+      hideHealFloaters: (json['hideHealFloaters'] as bool?) ?? false,
+      compactCombatNumbers: (json['compactCombatNumbers'] as bool?) ?? false,
+      alwaysShowEnemyHp: (json['alwaysShowEnemyHp'] as bool?) ?? true,
       uiTextScale: ((json['uiTextScale'] as num?)?.toDouble() ?? 1.0).clamp(
         kUiTextScaleMin,
         kUiTextScaleMax,

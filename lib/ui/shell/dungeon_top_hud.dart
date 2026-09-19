@@ -7,12 +7,31 @@ import '../../core/game_state.dart';
 import '../../core/keystone.dart';
 import '../../core/menu_alerts.dart';
 import '../../models/dungeon_mode.dart';
+import '../../spatial/spatial_combat.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../spatial_dungeon_view.dart';
 import 'rift_progress_hud.dart';
 import 'wallet_strip.dart';
+
+String _packJobBit(SpatialWorld? world) {
+  if (world == null) return '';
+  final awake = world.enemies.where((e) => !e.dormant && e.isAlive).length;
+  final sleep = world.enemies.where((e) => e.dormant).length;
+  if (awake <= 0 && sleep <= 0) return '';
+  final job = awake <= 2 ? 'mixed' : 'swarm+elite';
+  final next = sleep > 0 ? ' · next chamber' : '';
+  return ' · $job$next';
+}
+
+String _keyAffixBit(GameState state) {
+  if (!state.keystoneRunActive || state.keystoneRunAffixes.isEmpty) {
+    return '';
+  }
+  final names = state.keystoneRunAffixes.map(Keystone.label).join('/');
+  return ' · $names';
+}
 
 class DungeonTopHud extends StatelessWidget {
   const DungeonTopHud({
@@ -276,7 +295,7 @@ class DungeonTopHud extends StatelessWidget {
         ? 'MOTHVEIL · RANK GR${state.grTier}'
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).title
-        : '$zoneShort · F$floor$keyBit';
+        : '$zoneShort · F$floor$keyBit${_packJobBit(world)}${_keyAffixBit(state)}';
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);
       if (fighting && state.dungeonMode != mode) {
@@ -327,24 +346,35 @@ class DungeonTopHud extends StatelessWidget {
     Widget modeRow() {
       if (state.inGauntlet) {
         final floor = state.currentRoom.floorNumber;
-        final nextBoss = ((floor ~/ 5) + 1) * 5;
+        final nextBoss = GauntletAnomalies.nextBossFloor(floor);
         final anomaly = GauntletAnomalies.forFloor(
           floor,
           inGauntlet: true,
         );
+        final nextAnom = GauntletAnomalies.nextAnomalyFloor(floor);
+        final pb = state.metaDepth.gauntletBestFloor;
+        final treasure = GauntletAnomalies.isTreasureFloor(floor);
         final chip = anomaly != null
             ? 'GAUNTLET F$floor · ${GauntletAnomalies.chip(anomaly)}'
+            : treasure
+            ? 'GAUNTLET F$floor · LOOT'
             : 'GAUNTLET F$floor';
         final extra = anomaly != null
             ? '\n${GauntletAnomalies.oneLiner(anomaly)}'
+            : treasure
+            ? '\nTreasure floor — no anomaly this landing.'
             : '';
+        final nextBit = nextAnom != null
+            ? ' Next anomaly F$nextAnom.'
+            : '';
+        final pbBit = pb > 0 ? ' PB F$pb.' : '';
         return DungeonModeChip(
           label: chip,
           selected: true,
           dense: true,
           interactive: false,
           tip:
-              'Spire climb — not a 16th cave. Next boss F$nextBoss. No FARM. Wipe or leave → hub.$extra',
+              'Spire climb — not a 16th cave. Next boss F$nextBoss.$nextBit$pbBit No FARM. Wipe or leave → hub.$extra',
           onTap: () {},
         );
       }

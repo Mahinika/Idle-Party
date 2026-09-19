@@ -937,6 +937,23 @@ abstract final class SpatialCombat {
   /// Accessibility: swaps combat floaters to an Okabe-Ito colorblind-safe
   /// palette (avoids relying on red/green hue alone to distinguish types).
   static bool colorblindMode = false;
+  static bool hideHealFloaters = false;
+  static bool compactNumbers = false;
+  static bool alwaysShowEnemyHp = true;
+
+  static String _compactFloaterText(String text) {
+    final plus = text.startsWith('+');
+    final body = plus ? text.substring(1) : text;
+    final n = int.tryParse(body);
+    if (n == null) return text;
+    final abs = n.abs();
+    final core = abs >= 1000000
+        ? '${(n / 1000000).toStringAsFixed(1)}M'
+        : abs >= 10000
+        ? '${(n / 1000).toStringAsFixed(1)}K'
+        : '$n';
+    return plus ? '+$core' : core;
+  }
 
   /// Reused per step — avoid fresh spreads/lists on the hot path.
   static final List<SpatialActor> _scratchAllies = <SpatialActor>[];
@@ -968,6 +985,10 @@ abstract final class SpatialCombat {
     int priority = 0,
     SpatialFloaterKind kind = SpatialFloaterKind.combat,
   }) {
+    if (hideHealFloaters && argb == _floaterHeal) return;
+    if (compactNumbers) {
+      text = _compactFloaterText(text);
+    }
     // Skip empty / whitespace-only.
     if (text.isEmpty) return;
     // One speech bark at a time — stacked Gotcha/Clean hit wallpaper the map.

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/chase_contract.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/hub_chase.dart';
@@ -148,11 +149,12 @@ class HubTodayCard extends StatelessWidget {
         ? 'ALMOST'
         : null;
     final showDetail = !hideDetail && chase.detail.isNotEmpty;
+    final why = ChaseContract(chase: chase).whyLine;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final titleMaxLines = textScale > 1.2 ? 1 : 2;
     // Text strip only — no fill box under ENTER.
     return Semantics(
-      label: 'Next job: ${chase.title}. ${chase.detail}',
+      label: 'Next job: ${chase.title}. ${chase.detail}. $why',
       button:
           chase.urgency == HubChaseUrgency.ready ||
           chase.urgency == HubChaseUrgency.almost,
@@ -189,6 +191,13 @@ class HubTodayCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                why,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
               ),
             ],
             if (actionLabel != null && onAction != null) ...[

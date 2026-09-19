@@ -155,7 +155,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               const SizedBox(height: 6),
               Text(
                 'Pick ${GameLogic.starterPartySize} heroes. Easy start: one Shield, '
-                'one Healer, one Damage.',
+                'one Healer, one Damage. Healers open each floor with mana.',
                 textAlign: TextAlign.center,
                 style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
               ),

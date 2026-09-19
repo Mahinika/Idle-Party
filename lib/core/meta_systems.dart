@@ -26,10 +26,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.173';
+  static const String currentVersion = '1.12.174';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.174',
+      bullets: <String>[
+        'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
+        'Hub hunt now says why that job is next. SETTINGS can hide heal numbers, compact combat digits, and toggle enemy HP bars. KEY affixes and Gauntlet next-boss / treasure sit on the existing dungeon strip. MORE · QUESTS / CRAFT stay off the ENDGAME map. SHOP forever SCROLLS are convenience power, not BiS-for-cash. Infinity Gauntlet floors between bosses can still squeeze, swarm, echo a tell, or add gates. Ranked GREATER GR is still on hub ENDGAME. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.173',
       bullets: <String>[

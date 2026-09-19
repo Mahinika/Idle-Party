@@ -19,6 +19,13 @@ void main() {
     elapsedSec: 20,
   );
 
+  test('wipe scan names leftover pack and damage', () {
+    expect(
+      WipeAdvice.scanLine(atkLack()),
+      'Pack 70% left · 3000 dealt · 400 taken',
+    );
+  });
+
   test('GOLD tip after two wipes; floor gap on first wipe', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(

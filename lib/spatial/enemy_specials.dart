@@ -496,7 +496,7 @@ void _armBossTelegraph(
   SpatialActor enemy, {
   required bool reducedVfx,
 }) {
-  enemy.telegraphTimer = 1.4;
+  enemy.telegraphTimer = 1.55;
   enemy.telegraphSlam = true;
   _bossTell(
     world,

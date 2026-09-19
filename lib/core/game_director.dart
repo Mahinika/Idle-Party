@@ -2033,6 +2033,18 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(_state.copyWith(colorblindMode: value));
   }
 
+  void setHideHealFloaters(bool value) {
+    _applyUpgrade(_state.copyWith(hideHealFloaters: value));
+  }
+
+  void setCompactCombatNumbers(bool value) {
+    _applyUpgrade(_state.copyWith(compactCombatNumbers: value));
+  }
+
+  void setAlwaysShowEnemyHp(bool value) {
+    _applyUpgrade(_state.copyWith(alwaysShowEnemyHp: value));
+  }
+
   void setSessionTelemetryOptIn(bool value) {
     _applyUpgrade(SessionTelemetry.setOptIn(_state, value));
   }
@@ -2140,6 +2152,9 @@ class GameDirector extends ChangeNotifier {
         dungeonZoom: DungeonZoom.normal,
         vfxQuality: VfxQuality.full,
         colorblindMode: false,
+        hideHealFloaters: false,
+        compactCombatNumbers: false,
+        alwaysShowEnemyHp: true,
         hapticsEnabled: true,
         keepScreenAwake: true,
         soundMuted: false,
@@ -3537,6 +3552,9 @@ class GameDirector extends ChangeNotifier {
     );
     GameAudio.setMuted(_state.soundMuted);
     SpatialCombat.colorblindMode = _state.colorblindMode;
+    SpatialCombat.hideHealFloaters = _state.hideHealFloaters;
+    SpatialCombat.compactNumbers = _state.compactCombatNumbers;
+    SpatialCombat.alwaysShowEnemyHp = _state.alwaysShowEnemyHp;
     unawaited(
       ScreenAwake.setEnabled(_state.keepScreenAwake && _state.inDungeon),
     );

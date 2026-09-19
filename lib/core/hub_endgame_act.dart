@@ -73,7 +73,7 @@ abstract final class HubEndgameAct {
       shortLabel: 'FARM RIFT',
       title: 'Farm Rift',
       blurb:
-          'Timer farm · Stormwake · gold + gear mid-run · not ranked',
+          'Elapsed clock only · no fail timer · Stormwake · gold + gear mid-run · not ranked',
       portraitDungeonId: 'storm',
       enterLabel: 'FARM RIFT',
       chaseKind: HubChaseKind.riftMilestone,
@@ -118,11 +118,26 @@ abstract final class HubEndgameAct {
     return nodeFor(hunt).enterLabel;
   }
 
-  static String shortLabelFor(HubEndgameHunt hunt, {int grBestTier = 0}) {
-    if (hunt == HubEndgameHunt.rankedGr) {
-      return GreaterRift.hubShortLabel(grBestTier);
+  static String shortLabelFor(
+    HubEndgameHunt hunt, {
+    int grBestTier = 0,
+    int gauntletBestFloor = 0,
+    int riftBestTier = 0,
+  }) {
+    switch (hunt) {
+      case HubEndgameHunt.rankedGr:
+        return GreaterRift.hubShortLabel(grBestTier);
+      case HubEndgameHunt.gauntlet:
+        return gauntletBestFloor > 0
+            ? 'GAUNTLET F$gauntletBestFloor'
+            : nodeFor(hunt).shortLabel;
+      case HubEndgameHunt.farmRift:
+        return riftBestTier > 0
+            ? 'FARM R$riftBestTier'
+            : nodeFor(hunt).shortLabel;
+      case HubEndgameHunt.ashen:
+        return nodeFor(hunt).shortLabel;
     }
-    return nodeFor(hunt).shortLabel;
   }
 
   static String titleFor(HubEndgameHunt hunt, {int grBestTier = 0}) {

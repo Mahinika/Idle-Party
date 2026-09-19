@@ -313,6 +313,24 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           value: state.colorblindMode,
           onChanged: director.setColorblindMode,
         ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Hide heal numbers',
+          value: state.hideHealFloaters,
+          onChanged: director.setHideHealFloaters,
+        ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Compact combat numbers (K/M)',
+          value: state.compactCombatNumbers,
+          onChanged: director.setCompactCombatNumbers,
+        ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Always show enemy HP bars',
+          value: state.alwaysShowEnemyHp,
+          onChanged: director.setAlwaysShowEnemyHp,
+        ),
         Text(
           'Changes combat damage floaters and bark colors only — not map art. '
           'Chamber dots already use shape (square / diamond / circle).',

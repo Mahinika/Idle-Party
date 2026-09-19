@@ -65,6 +65,12 @@ abstract final class WipeAdvice {
   /// GOLD ATK/STA track tips wait for two wipes on the same floor.
   static const int streakNeeded = 2;
 
+  /// Honest fight crumb under the advice line (does not replace it).
+  static String scanLine(WipeFightSnapshot fight) {
+    final pct = (fight.leftover * 100).clamp(0, 100).round();
+    return 'Pack $pct% left · ${fight.damageDealt} dealt · ${fight.damageTaken} taken';
+  }
+
   /// First-hour stand-in when GOLD tracks are still hidden (DEF, wipe 1).
   static const String gearWearLine = 'Wear loot in GEAR';
 

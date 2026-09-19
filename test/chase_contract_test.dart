@@ -33,6 +33,7 @@ void main() {
     expect(contract.isClaimable, isTrue);
     expect(contract.upNextLine, startsWith('Up next:'));
     expect(contract.readyActionLabel, 'CLAIM VAULT');
+    expect(contract.whyLine, contains('vault'));
   });
 
   test('almost Ascend surfaces ALMOST Up next', () {

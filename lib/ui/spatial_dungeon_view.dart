@@ -1912,7 +1912,11 @@ class _TileRoomPainter extends CustomPainter {
             Paint()..color = const Color(0x44FF5020),
           );
         }
-        drawBar(c, enemy.hp, enemy.maxHp, tile * 0.85);
+        if (SpatialCombat.alwaysShowEnemyHp ||
+            enemy.hp < enemy.maxHp ||
+            enemy.hp <= 0) {
+          drawBar(c, enemy.hp, enemy.maxHp, tile * 0.85);
+        }
       }
     }
 

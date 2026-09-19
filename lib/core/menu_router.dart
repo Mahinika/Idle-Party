@@ -346,9 +346,9 @@ class MenuRouter extends ChangeNotifier {
 
       MoreSection.credits => 'Art credits',
 
-      MoreSection.craft => 'Any zone shard · Apex that keeps',
+      MoreSection.craft => 'Apex that keeps · Craft Trial here, not ENDGAME',
 
-      MoreSection.quests => 'Daily · Bounty · Side',
+      MoreSection.quests => 'Daily · Bounty · Side · Week · not ENDGAME',
 
     },
 

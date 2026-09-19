@@ -57,4 +57,18 @@ abstract final class GauntletAnomalies {
       a == GauntletAnomaly.swarmUprising;
 
   static bool bossEcho(GauntletAnomaly? a) => a == GauntletAnomaly.bossEcho;
+
+  static int nextBossFloor(int floor) {
+    if (floor <= 0) return bossEvery;
+    return ((floor ~/ bossEvery) + 1) * bossEvery;
+  }
+
+  static int? nextAnomalyFloor(int floor) {
+    for (var f = floor + 1; f <= floor + 12; f++) {
+      if (forFloor(f, inGauntlet: true) != null) return f;
+    }
+    return null;
+  }
+
+  static bool isTreasureFloor(int floor) => floor > 0 && floor % 6 == 0;
 }
