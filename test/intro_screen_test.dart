@@ -5,6 +5,7 @@ import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/party_name_filter.dart';
 import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/main.dart';
+import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/ui/boot_intro_screen.dart';
 import 'package:idle_party/assets/custom_assets.dart';
@@ -29,8 +30,9 @@ Future<void> skipBootIntro(WidgetTester tester) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('boot intro opens on Cognifox Studio and can be skipped',
-      (tester) async {
+  testWidgets('boot intro opens on Cognifox Studio and can be skipped', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final director = GameDirector.preview();
 
@@ -62,8 +64,9 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('returning save skips the cave beat after the studio card',
-      (tester) async {
+  testWidgets('returning save skips the cave beat after the studio card', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final director = GameDirector.preview();
 
@@ -86,8 +89,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 950));
   });
 
-  testWidgets('first launch plays the cave beat after Cognifox Studio',
-      (tester) async {
+  testWidgets('first launch plays the cave beat after Cognifox Studio', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final director = GameDirector(
       InMemoryGameStorage(),
@@ -116,29 +120,34 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('boot intro stays on painted beats while cinematic is unbundled',
-      (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    final director = GameDirector.preview();
+  testWidgets(
+    'boot intro stays on painted beats while cinematic is unbundled',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final director = GameDirector.preview();
 
-    await tester.binding.setSurfaceSize(const Size(400, 800));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(400, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(
-      MyApp(director: director, autoStartLoop: false, showIntro: true),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 150));
+      await tester.pumpWidget(
+        MyApp(director: director, autoStartLoop: false, showIntro: true),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
 
-    expect(CustomAssets.introVideoBundled, isFalse);
-    expect(find.byType(BootIntroScreen), findsOneWidget);
-    expect(find.byType(CognifoxStudioMark), findsOneWidget);
-    expect(director.state.seenTips, isNot(contains(BootIntroScreen.cinematicTipId)));
-    await tester.pump(BootIntroScreen.inputUnlock);
-    await tester.tap(find.text('SKIP'));
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 3));
-  });
+      expect(CustomAssets.introVideoBundled, isFalse);
+      expect(find.byType(BootIntroScreen), findsOneWidget);
+      expect(find.byType(CognifoxStudioMark), findsOneWidget);
+      expect(
+        director.state.seenTips,
+        isNot(contains(BootIntroScreen.cinematicTipId)),
+      );
+      await tester.pump(BootIntroScreen.inputUnlock);
+      await tester.tap(find.text('SKIP'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
 
   testWidgets('start menu shows Continue and New Game', (tester) async {
     SharedPreferences.setMockInitialValues({});
@@ -173,6 +182,9 @@ void main() {
     expect(find.byType(StartMenuScreen), findsNothing);
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
     expect(find.text('NEW PARTY'), findsOneWidget);
+    expect(find.text('LOOK'), findsOneWidget);
+    expect(find.text('HUMAN'), findsOneWidget);
+    expect(find.text('NIGHT ELF'), findsOneWidget);
     expect(find.text('ARMS  Arms Warrior'), findsOneWidget);
     expect(find.text('LOCKED'), findsWidgets);
     expect(find.text('SET'), findsOneWidget);
@@ -185,8 +197,9 @@ void main() {
     expect(find.byType(TextField), findsOneWidget);
   });
 
-  testWidgets('new game start reaches hub with chosen party size',
-      (tester) async {
+  testWidgets('new game start reaches hub with chosen party size', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final director = GameDirector.preview();
 
@@ -220,7 +233,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byType(NewGamePartyPicker), findsNothing);
-    expect(find.text('ENTER DUNGEON'), findsOneWidget);
+    // Hub CTA and the first-run tip both say ENTER DUNGEON.
+    expect(find.text('ENTER DUNGEON'), findsWidgets);
     expect(director.state.heroes.length, 3);
     expect(director.state.partyName, PartyNameFilter.defaultName);
     expect(
@@ -230,8 +244,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
   });
 
-  testWidgets('first launch hides Continue and starts with a named party',
-      (tester) async {
+  testWidgets('first launch hides Continue and starts with a named party', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final director = GameDirector(
       InMemoryGameStorage(),
@@ -264,9 +279,66 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('Overwrite save?'), findsNothing);
-    expect(find.text('ENTER DUNGEON'), findsOneWidget);
+    expect(find.text('ENTER DUNGEON'), findsWidgets);
     expect(director.state.partyName, 'The Ember Guard');
+    expect(
+      director.state.heroes.every((h) => h.race == HeroRace.human),
+      isTrue,
+    );
     expect(find.textContaining('The Ember Guard · Boss on F'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 500));
+  });
+
+  testWidgets('LOOK Night Elf stamps the starting party', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final director = GameDirector(
+      InMemoryGameStorage(),
+      enableSpatialLoop: false,
+    );
+
+    await tester.binding.setSurfaceSize(const Size(360, 780));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: true),
+    );
+    await skipBootIntro(tester);
+
+    await tester.tap(find.text('NEW GAME'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(NewGamePartyPicker), findsOneWidget);
+    await tester.ensureVisible(find.text('NIGHT ELF'));
+    await tester.tap(find.text('NIGHT ELF'));
+    await tester.pump();
+    expect(
+      find.textContaining('Purple skin on Shield and Healer'),
+      findsOneWidget,
+    );
+
+    await tester.enterText(find.byType(TextField), 'Moon Guard');
+    await tester.ensureVisible(find.text('START'));
+    await tester.tap(find.text('START'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      director.state.heroes.every((h) => h.race == HeroRace.nightElf),
+      isTrue,
+    );
+    expect(
+      director.state.heroes
+          .firstWhere((h) => h.specId == HeroSpecId.protection)
+          .sex,
+      HeroSex.male,
+    );
+    expect(
+      director.state.heroes
+          .firstWhere((h) => h.specId == HeroSpecId.discipline)
+          .sex,
+      HeroSex.female,
+    );
     await tester.pump(const Duration(milliseconds: 500));
   });
 
@@ -278,7 +350,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: NewGamePartyPicker(
-          onConfirm: (_, _) => started = true,
+          onConfirm: (_, _, _) => started = true,
           onBack: () {},
         ),
       ),
@@ -293,36 +365,37 @@ void main() {
     expect(find.text('Choose another party name'), findsOneWidget);
   });
 
-  testWidgets('picking the same starter twice keeps slots and explains why START is off', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(400, 900));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets(
+    'picking the same starter twice keeps slots and explains why START is off',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(400, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: NewGamePartyPicker(
-          initialSpecs: const [],
-          onConfirm: (_, _) {},
-          onBack: () {},
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NewGamePartyPicker(
+            initialSpecs: const [],
+            onConfirm: (_, _, _) {},
+            onBack: () {},
+          ),
         ),
-      ),
-    );
+      );
 
-    final protInList = find.descendant(
-      of: find.byType(ListView),
-      matching: find.textContaining('PROT'),
-    );
-    await tester.tap(protInList.first);
-    await tester.pump();
-    await tester.tap(protInList.first);
-    await tester.pump();
+      final protInList = find.descendant(
+        of: find.byType(ListView),
+        matching: find.textContaining('PROT'),
+      );
+      await tester.tap(protInList.first);
+      await tester.pump();
+      await tester.tap(protInList.first);
+      await tester.pump();
 
-    expect(find.textContaining('already picked'), findsOneWidget);
-    expect(find.textContaining('Pick 2 more heroes'), findsOneWidget);
-    final startButton = tester.widget<GameButton>(
-      find.widgetWithText(GameButton, 'START'),
-    );
-    expect(startButton.onPressed, isNull);
-  });
+      expect(find.textContaining('already picked'), findsOneWidget);
+      expect(find.textContaining('Pick 2 more heroes'), findsOneWidget);
+      final startButton = tester.widget<GameButton>(
+        find.widgetWithText(GameButton, 'START'),
+      );
+      expect(startButton.onPressed, isNull);
+    },
+  );
 }

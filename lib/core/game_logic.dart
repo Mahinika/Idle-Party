@@ -143,6 +143,7 @@ class GameLogic {
     DateTime? now,
     List<HeroSpecId>? partySpecs,
     String? partyName,
+    HeroRace partyRace = HeroRace.human,
   }) {
     final timestamp = now ?? DateTime.now();
     final layoutSeed = newLayoutSeed();
@@ -161,6 +162,7 @@ class GameLogic {
           specId: specId,
           stats: PartyHero.startingStatsForSpec(specId),
           equipped: StarterGear.forSpec(specId),
+          race: partyRace,
         ),
     ];
     var state = GameState(
@@ -338,12 +340,13 @@ class GameLogic {
       personalBossRush: state.challengeBossRush,
       personalNoFlask: state.challengeNoFlask,
     );
-    final par = (Keystone.parTimeMs(
-              bossFloor: Keystone.bossFloorForAl(state.ascensionLevel),
-              key: key,
-            ) *
-            BlessingConstellation.keyParMul(state))
-        .round();
+    final par =
+        (Keystone.parTimeMs(
+                  bossFloor: Keystone.bossFloorForAl(state.ascensionLevel),
+                  key: key,
+                ) *
+                BlessingConstellation.keyParMul(state))
+            .round();
     return state.copyWith(
       keystoneRunActive: true,
       keystoneRunLevel: key,
@@ -522,8 +525,7 @@ class GameLogic {
   static GameState recordGauntletRun(
     GameState state, {
     required int reachedFloor,
-  }) =>
-      _recordGauntletRun(state, reachedFloor: reachedFloor);
+  }) => _recordGauntletRun(state, reachedFloor: reachedFloor);
 
   /// Endless Spire climb at party Lv100 — Crystal Spire art, boss every 5
   /// floors. Wipe or leave returns to hub. Not a 16th PATH zone.
@@ -1031,20 +1033,18 @@ class GameLogic {
   static const int ascendBlessingGoldPct = 8;
 
   /// Optional POWERUPS: +[AdBoost.ticketsPerAd] Ad Ticket(s) from a finished ad.
-  static GameState grantAdTicket(GameState state, {int count = AdBoost.ticketsPerAd}) {
+  static GameState grantAdTicket(
+    GameState state, {
+    int count = AdBoost.ticketsPerAd,
+  }) {
     if (count <= 0) return state;
     final next = (state.metaDepth.adTickets + count).clamp(0, 9999);
     if (next == state.metaDepth.adTickets) return state;
-    return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(adTickets: next),
-    );
+    return state.copyWith(metaDepth: state.metaDepth.copyWith(adTickets: next));
   }
 
   /// Ad-free: claim +1 ticket once per UTC day without watching.
-  static GameState claimAdFreeDailyTicket(
-    GameState state, {
-    DateTime? now,
-  }) {
+  static GameState claimAdFreeDailyTicket(GameState state, {DateTime? now}) {
     final clock = now ?? DateTime.now().toUtc();
     if (!AdBoost.canClaimAdFreeDaily(state.metaDepth, now: clock)) {
       return state;
@@ -1057,11 +1057,7 @@ class GameLogic {
   }
 
   /// Spend tickets on a POWERUPS catalog row.
-  static GameState spendAdBuff(
-    GameState state,
-    AdBuffId id, {
-    int? nowMs,
-  }) {
+  static GameState spendAdBuff(GameState state, AdBuffId id, {int? nowMs}) {
     final offer = AdBuffCatalog.byId(id);
     final md = state.metaDepth;
     if (md.adTickets < offer.ticketCost) return state;
@@ -1144,11 +1140,7 @@ class GameLogic {
   /// Playtest / legacy: +[AdBoost.hoursPerAd] hours Full Boost (no ticket cost).
   static GameState grantAdBoostHour(GameState state, {int? nowMs}) {
     final before = state.metaDepth;
-    final md = grantFullBoostHours(
-      before,
-      AdBoost.hoursPerAd,
-      nowMs: nowMs,
-    );
+    final md = grantFullBoostHours(before, AdBoost.hoursPerAd, nowMs: nowMs);
     if (md.adAtkUntilMs == before.adAtkUntilMs &&
         md.adGoldUntilMs == before.adGoldUntilMs) {
       return state;
@@ -1256,6 +1248,7 @@ class GameLogic {
         stats: PartyHero.startingStatsForSpec(HeroSpecs.ascendUnlockSpec),
         equipped: StarterGear.forSpec(HeroSpecs.ascendUnlockSpec),
         level: rosterSeedLevel(next),
+        race: _rosterRace(next),
       );
       final roster = [...next.heroRoster, rogue];
       var active = List<String>.from(next.activeHeroIds);
@@ -1404,11 +1397,48 @@ class GameLogic {
       stats: PartyHero.startingStatsForSpec(specId),
       equipped: StarterGear.forSpec(def.id),
       level: rosterSeedLevel(next),
+      race: _rosterRace(next),
     );
     return next.copyWith(
       heroRoster: [...next.heroRoster, hero],
       lastUpdated: DateTime.now(),
     );
+  }
+
+  /// Race stamped on new roster entries so a Night Elf party stays Night Elf.
+  static HeroRace _rosterRace(GameState state) =>
+      state.heroRoster.isEmpty ? HeroRace.human : state.heroRoster.first.race;
+
+  /// Paper-doll look. Night Elf snaps sex to the family default so authored
+  /// warrior-male / healer-female bodies actually show.
+  static GameState setHeroLook(
+    GameState state, {
+    required String heroId,
+    HeroRace? race,
+    HeroSex? sex,
+  }) {
+    var changed = false;
+    final roster = <PartyHero>[];
+    for (final hero in state.heroRoster) {
+      if (hero.id != heroId) {
+        roster.add(hero);
+        continue;
+      }
+      final nextRace = race ?? hero.race;
+      final nextSex =
+          sex ??
+          (race == HeroRace.nightElf
+              ? HeroSex.defaultFor(hero.gearAffinity)
+              : hero.sex);
+      if (nextRace == hero.race && nextSex == hero.sex) {
+        roster.add(hero);
+        continue;
+      }
+      changed = true;
+      roster.add(hero.copyWith(race: nextRace, sex: nextSex));
+    }
+    if (!changed) return state;
+    return state.copyWith(heroRoster: roster, lastUpdated: DateTime.now());
   }
 
   /// Clears hub “Meet new hero” queue (player opened PARTY / acknowledged).
@@ -1920,8 +1950,7 @@ class GameLogic {
   static const int seasonWeeklyBonusEssence = 12;
 
   /// Claim when 1 push clear **or** a timed KEY ≥2 today.
-  static bool canClaimDailyVault(GameState state) =>
-      _canClaimDailyVault(state);
+  static bool canClaimDailyVault(GameState state) => _canClaimDailyVault(state);
 
   static GameState claimDailyVault(GameState state, {DateTime? now}) =>
       _claimDailyVault(state, now: now);
@@ -2131,10 +2160,7 @@ class GameLogic {
             room.globalBattleNumber,
             roomType: room.type,
           ).where(LootPipeline.isWalletGoldDrop).toList()
-        : rollFloorClearLoot(
-            room.globalBattleNumber,
-            roomType: room.type,
-          );
+        : rollFloorClearLoot(room.globalBattleNumber, roomType: room.type);
     if (skipLootRoll) {
       // Combat: kill gear already applied on pickup; still grant floor fillers.
       final lootResult = grantLoot(state, floorDrops);
@@ -2326,7 +2352,8 @@ class GameLogic {
       floorsCleared: 1,
       elitesDefeated: elitesDefeated,
       gauntletFloors: gauntlet ? 1 : 0,
-      timedKeys: (state.keystoneRunActive &&
+      timedKeys:
+          (state.keystoneRunActive &&
               state.keystoneOutcome.isEmpty &&
               progressed.keystoneOutcome == 'timed')
           ? 1
@@ -2409,10 +2436,7 @@ class GameLogic {
       if (timed) {
         final bonus = Keystone.timedClearBonus(key);
         essence += bonus;
-        preferredKey = min(
-          Keystone.maxLevel,
-          max(preferredKey, key + 1),
-        );
+        preferredKey = min(Keystone.maxLevel, max(preferredKey, key + 1));
         bestTimed = max(bestTimed, key);
         weekBestTimed = max(weekBestTimed, key);
         outcome = 'timed';
@@ -2957,10 +2981,8 @@ class GameLogic {
   ) => GearService.applyLootDrops(state, drops);
 
   static ({GameState state, List<LootDrop> resolved, LootGrantResult receipt})
-  grantLoot(
-    GameState state,
-    List<LootDrop> drops,
-  ) => GearService.grantLoot(state, drops);
+  grantLoot(GameState state, List<LootDrop> drops) =>
+      GearService.grantLoot(state, drops);
   static GameState unstickBagIfNeeded(GameState state) =>
       GearService.unstickBagIfNeeded(state);
   static GameState cleanBagJunk(
@@ -3161,6 +3183,7 @@ class GameLogic {
     if (need <= 0) return 0;
     return (hero.xp / need).clamp(0.0, 1.0);
   }
+
   static int xpForEnemy(EnemyUnit enemy) => EncounterFactory.xpForEnemy(enemy);
   static double xpOverlevelMul(int heroLevel, int enemyLevel) =>
       EncounterFactory.xpOverlevelMul(heroLevel, enemyLevel);
@@ -3362,7 +3385,8 @@ class OfflineProgressResult {
   /// Banner + Welcome Back share this gate.
   /// Gold / clears show even under 20s; other rewards need ≥20s away.
   bool get hasSummary {
-    final earned = goldGained > 0 ||
+    final earned =
+        goldGained > 0 ||
         essenceGained > 0 ||
         roomsCleared > 0 ||
         highestFloorDelta > 0 ||
@@ -3470,15 +3494,11 @@ class OfflineProgressResult {
       ranked.add((5, 'Essence earned', '+$essenceGained'));
     }
     if (goldGained > 0) {
-      ranked.add((
-        6,
-        wasInDungeon ? 'Combat gold' : 'Gold',
-        '+${goldGained}g',
-      ));
+      ranked.add((6, wasInDungeon ? 'Combat gold' : 'Gold', '+${goldGained}g'));
     }
     ranked.sort((a, b) => a.$1.compareTo(b.$1));
-    final take = maxHighlightRows +
-        state.metaDepth.offlineHighlightBonus.clamp(0, 3);
+    final take =
+        maxHighlightRows + state.metaDepth.offlineHighlightBonus.clamp(0, 3);
     return [for (final row in ranked.take(take)) (row.$2, row.$3)];
   }
 
@@ -3506,20 +3526,14 @@ enum PartyUpgradeType {
 }
 
 /// How much wallet gold a FORGE GOLD row spends when tapped.
-enum ForgeGoldSpendMode {
-  one,
-  pct5,
-  pct25,
-  pct50,
-  pct100,
-}
+enum ForgeGoldSpendMode { one, pct5, pct25, pct50, pct100 }
 
 extension ForgeGoldSpendModeLabels on ForgeGoldSpendMode {
   String get chipLabel => switch (this) {
-        ForgeGoldSpendMode.one => '×1',
-        ForgeGoldSpendMode.pct5 => '5%',
-        ForgeGoldSpendMode.pct25 => '25%',
-        ForgeGoldSpendMode.pct50 => '50%',
-        ForgeGoldSpendMode.pct100 => '100%',
-      };
+    ForgeGoldSpendMode.one => '×1',
+    ForgeGoldSpendMode.pct5 => '5%',
+    ForgeGoldSpendMode.pct25 => '25%',
+    ForgeGoldSpendMode.pct50 => '50%',
+    ForgeGoldSpendMode.pct100 => '100%',
+  };
 }

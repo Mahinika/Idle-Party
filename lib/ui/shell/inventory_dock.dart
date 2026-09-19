@@ -285,6 +285,8 @@ class _InventoryDockState extends State<InventoryDock>
         onUnequip: onUnequip,
         onEmptySlotTap: onBrowseBagSlot,
         compact: true,
+        onSetHeroLook: (heroId, race) =>
+            widget.director.setHeroLook(heroId, race: race),
       );
     }
 
@@ -300,7 +302,6 @@ class _InventoryDockState extends State<InventoryDock>
       ],
     );
   }
-
 
   Widget _equipHeroChipsFor(EquipmentItem selected) {
     final plannedHero = [
@@ -409,10 +410,7 @@ class _InventoryDockState extends State<InventoryDock>
                     : '${filteredSlots.length} in bag',
                 style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
               ),
-              MenuChrome.chip(
-                label: 'CLEAR',
-                onTap: onClearBagSlotFilter,
-              ),
+              MenuChrome.chip(label: 'CLEAR', onTap: onClearBagSlotFilter),
             ],
           ),
           const SizedBox(height: 4),
@@ -455,11 +453,11 @@ class _InventoryDockState extends State<InventoryDock>
                       itemCount: filteredSlots.length,
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
-                        mainAxisExtent: 72,
-                      ),
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                            mainAxisExtent: 72,
+                          ),
                       itemBuilder: (context, index) {
                         final item = filteredSlots[index];
                         final selected = item != null && item.id == selectedId;
@@ -694,10 +692,7 @@ class _InventoryDockState extends State<InventoryDock>
                     Text(
                       preview.effectLabel,
                       textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 12,
-                        color: GameTheme.mossLit,
-                      ),
+                      style: GameTheme.body(size: 12, color: GameTheme.mossLit),
                     ),
                 ],
               ],
@@ -769,7 +764,9 @@ class _InventoryDockState extends State<InventoryDock>
     );
     // Progressive menu: MERGE / ROSTER appear once they do something.
     _visible = MenuRouter.visibleGearPanels(state);
-    final safeTab = _visible.contains(widget.panel) ? widget.panel : _visible.first;
+    final safeTab = _visible.contains(widget.panel)
+        ? widget.panel
+        : _visible.first;
     if (safeTab != widget.panel) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) widget.onPanelChanged(safeTab);
@@ -976,10 +973,7 @@ class _EquipHeroChip extends StatelessWidget {
                   reject ?? 'Cannot use',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 10,
-                    color: GameTheme.accentWarn,
-                  ),
+                  style: GameTheme.body(size: 10, color: GameTheme.accentWarn),
                 )
               else ...[
                 Text(

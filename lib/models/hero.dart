@@ -13,6 +13,48 @@ import 'stats.dart';
 /// `warrior` ≈ plate/melee, `rogue` ≈ phys DPS, `mage` ≈ caster, `healer` ≈ heal.
 enum HeroRole { warrior, healer, mage, rogue }
 
+/// Paper-doll undertunic race. Missing clips fall back to the family body.
+enum HeroRace {
+  human,
+  nightElf;
+
+  String get assetKey => switch (this) {
+    HeroRace.human => 'human',
+    HeroRace.nightElf => 'nightelf',
+  };
+
+  String get label => switch (this) {
+    HeroRace.human => 'Human',
+    HeroRace.nightElf => 'Night Elf',
+  };
+
+  static HeroRace parse(String? raw) => switch (raw) {
+    'nightElf' || 'nightelf' => HeroRace.nightElf,
+    _ => HeroRace.human,
+  };
+}
+
+/// Body sex. Family default matches today's Human poses (healer female).
+enum HeroSex {
+  male,
+  female;
+
+  String get assetKey => switch (this) {
+    HeroSex.male => 'm',
+    HeroSex.female => 'f',
+  };
+
+  static HeroSex defaultFor(HeroRole affinity) =>
+      affinity == HeroRole.healer ? HeroSex.female : HeroSex.male;
+
+  static HeroSex parse(String? raw, {required HeroRole affinity}) =>
+      switch (raw) {
+        'female' || 'f' => HeroSex.female,
+        'male' || 'm' => HeroSex.male,
+        _ => defaultFor(affinity),
+      };
+}
+
 class PartyHero {
   const PartyHero({
     required this.id,
@@ -23,6 +65,8 @@ class PartyHero {
     required this.specId,
     this.equipped = const <EquipmentSlot, EquipmentItem>{},
     this.xp = 0,
+    this.race = HeroRace.human,
+    this.sex = HeroSex.male,
   });
 
   factory PartyHero.starting({
@@ -32,6 +76,8 @@ class PartyHero {
     Stats? stats,
     Map<EquipmentSlot, EquipmentItem>? equipped,
     int level = 1,
+    HeroRace race = HeroRace.human,
+    HeroSex? sex,
   }) {
     final startLevel = level < 1 ? 1 : level;
     final def = HeroSpecs.def(specId);
@@ -52,6 +98,8 @@ class PartyHero {
       specId: specId,
       equipped: equipped ?? const <EquipmentSlot, EquipmentItem>{},
       xp: 0,
+      race: race,
+      sex: sex ?? HeroSex.defaultFor(affinity),
     );
   }
 
@@ -77,6 +125,8 @@ class PartyHero {
   final HeroSpecId specId;
   final Map<EquipmentSlot, EquipmentItem> equipped;
   final int xp;
+  final HeroRace race;
+  final HeroSex sex;
 
   HeroSpecDef get spec => HeroSpecs.def(specId);
 
@@ -256,6 +306,8 @@ class PartyHero {
     HeroSpecId? specId,
     Map<EquipmentSlot, EquipmentItem>? equipped,
     int? xp,
+    HeroRace? race,
+    HeroSex? sex,
     bool clearEquipped = false,
   }) {
     return PartyHero(
@@ -269,6 +321,8 @@ class PartyHero {
           ? const <EquipmentSlot, EquipmentItem>{}
           : (equipped ?? this.equipped),
       xp: xp ?? this.xp,
+      race: race ?? this.race,
+      sex: sex ?? this.sex,
     );
   }
 
@@ -285,6 +339,8 @@ class PartyHero {
     'equipped': equipped.map(
       (slot, item) => MapEntry(slot.name, item.toJson()),
     ),
+    'race': race.name,
+    'sex': sex.name,
   };
 
   factory PartyHero.fromJson(Map<String, dynamic> json) {
@@ -370,6 +426,8 @@ class PartyHero {
       specId: specId,
       equipped: equipped,
       xp: asInt(json['xp']),
+      race: HeroRace.parse(json['race'] as String?),
+      sex: HeroSex.parse(json['sex'] as String?, affinity: affinity),
     );
   }
 }
