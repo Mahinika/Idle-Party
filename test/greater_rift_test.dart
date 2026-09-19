@@ -257,7 +257,10 @@ void main() {
     expect(GreaterRift.parTimeMs(21), GreaterRift.parTimeMs(20));
     expect(GreaterRift.parTimeMs(50), 90000);
     expect(GreaterRift.threatMul(21), greaterThan(GreaterRift.threatMul(20)));
-    expect(GreaterRift.threatMul(250) / GreaterRift.threatMul(25), greaterThan(8));
+    expect(
+      GreaterRift.threatMul(239) / GreaterRift.threatMul(25),
+      greaterThan(15),
+    );
     expect(GreaterRift.densityMul(50), GreaterRift.densityMul(20));
     expect(GreaterRift.successEssence(21), greaterThan(GreaterRift.successEssence(20)));
     double kps(int t) =>
@@ -291,7 +294,68 @@ void main() {
     expect(high.length, low.length);
     final lowHp = low.fold<int>(0, (s, e) => s + e.stats.maxHp);
     final highHp = high.fold<int>(0, (s, e) => s + e.stats.maxHp);
-    expect(highHp / lowHp, greaterThan(8));
+    expect(highHp / lowHp, greaterThan(15));
+  });
+
+  test('GOLD / ESSENCE dump raises GR pack HP at the same rank', () {
+    final room = DungeonRoom(
+      floorNumber: 1,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 100,
+      enemyCount: 8,
+    );
+    final base = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        inGreaterRift: true,
+        grTier: 239,
+      ),
+    );
+    final fat = base.copyWith(
+      attackBonus: 800,
+      defenseBonus: 400,
+      vitalityBonus: 400,
+      sanctuaryPowerLevel: 80,
+    );
+    expect(GreaterRift.investMul(fat), greaterThan(GreaterRift.investMul(base)));
+    final leanHp = GameLogic.createEnemyGroup(room, fromState: base)
+        .fold<int>(0, (s, e) => s + e.stats.maxHp);
+    final fatHp = GameLogic.createEnemyGroup(room, fromState: fat)
+        .fold<int>(0, (s, e) => s + e.stats.maxHp);
+    expect(fatHp / leanHp, greaterThan(2));
+  });
+
+  test('100k ATK + soft HASTE dump walls GR239 vs a lean party', () {
+    final room = DungeonRoom(
+      floorNumber: 1,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 100,
+      enemyCount: 8,
+    );
+    final lean = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        inGreaterRift: true,
+        grTier: 239,
+      ),
+    );
+    final whale = lean.copyWith(
+      attackBonus: 124772,
+      defenseBonus: 84362,
+      vitalityBonus: 139992,
+      attackSpeedBonus: 31144,
+      critBonus: 31000,
+      masteryBonus: 207244,
+    );
+    expect(GreaterRift.investMul(whale), greaterThan(200));
+    expect(GreaterRift.combatThreatMul(whale), greaterThan(20000));
+    final leanHp = GameLogic.createEnemyGroup(room, fromState: lean)
+        .fold<int>(0, (s, e) => s + e.stats.maxHp);
+    final whaleHp = GameLogic.createEnemyGroup(room, fromState: whale)
+        .fold<int>(0, (s, e) => s + e.stats.maxHp);
+    expect(whaleHp / leanHp, greaterThan(8));
   });
 
   test('Greater Rift GR25 survives save load', () {

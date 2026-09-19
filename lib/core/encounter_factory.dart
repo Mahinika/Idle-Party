@@ -401,11 +401,6 @@ abstract final class EncounterFactory {
       // Gold mul applied once on clear via goldGain — not here.
     }
     final riftThreat = _riftThreatMul(fromState);
-    if (riftThreat > 1.0) {
-      packAttack = max(1, (packAttack * riftThreat).round());
-      packHp = max(1, (packHp * riftThreat).round());
-      packGold = (packGold * riftThreat).round();
-    }
     final dungeon = DungeonCatalog.byId(id);
     final bossName = dungeon.bossName;
     final zone = dungeon.number;
@@ -517,8 +512,14 @@ abstract final class EncounterFactory {
         (minAtk * threatScale).round(),
         (baseAtk * skew.atk * rushMult * threatScale).round(),
       );
-      final hp = glassWeek ? max(1, (hpRaw * 0.75).round()) : hpRaw;
-      final attack = glassWeek ? max(1, (atkRaw * 1.2).round()) : atkRaw;
+      final hp = _scaleStat(
+        glassWeek ? max(1, (hpRaw * 0.75).round()) : hpRaw,
+        riftThreat > 1.0 ? riftThreat : 1.0,
+      );
+      final attack = _scaleStat(
+        glassWeek ? max(1, (atkRaw * 1.2).round()) : atkRaw,
+        riftThreat > 1.0 ? riftThreat : 1.0,
+      );
       // DEF scales hard so fights aren't melted by raw ATK.
       final partyLevel = max(1, level);
       final isBossUnit = isBossRoom && i == 0;
@@ -613,11 +614,19 @@ abstract final class EncounterFactory {
     return 1.0;
   }
 
+  static const int _statCap = 1990000000;
+
+  static int _scaleStat(int base, double mul) {
+    final v = base.toDouble() * mul;
+    if (v >= _statCap) return _statCap;
+    return max(1, v.round());
+  }
+
   static double _riftThreatMul(GameState? fromState) {
     if (fromState == null) return 1.0;
     if (fromState.inRift) return Rift.threatMul(fromState.riftTier);
     if (fromState.inGreaterRift) {
-      return GreaterRift.threatMul(fromState.grTier);
+      return GreaterRift.combatThreatMul(fromState);
     }
     return 1.0;
   }

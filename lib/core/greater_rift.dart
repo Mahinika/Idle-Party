@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../models/meta_depth.dart';
+import 'game_state.dart';
 import 'rift_pacing.dart';
 import 'rift_progress.dart';
 import 'timed_ladder.dart';
@@ -76,13 +77,30 @@ abstract final class GreaterRift {
     );
   }
 
-  /// Pack HP/ATK. After GR20 the kill quota + 90s clock hold; threat must
-  /// keep climbing or GR250 plays like GR25.
+  /// Pack HP/ATK from rank. After GR20 quota + 90s hold; this must stay steep.
   static double threatMul(int tier) => RiftPacing.threatMul(
         tier: clampTier(tier),
         perTier: 0.16,
-        afterCap: 0.20,
+        afterCap: 0.55,
       );
+
+  /// Gold FORGE + essence dump. Soft HASTE multiplies ATK (same as swing rate).
+  static double investMul(GameState? state) {
+    if (state == null || !state.inGreaterRift) return 1.0;
+    final atk = max(0, state.metaAttackBonus).toDouble();
+    final tank =
+        (max(0, state.metaDefenseBonus) + max(0, state.metaVitalityBonus))
+            .toDouble();
+    final haste =
+        1.0 + GameState.softForgePercent(state.attackSpeedBonus) / 100.0;
+    return (1.0 + atk * haste / 350.0 + tank / 900.0).clamp(1.0, 8000.0);
+  }
+
+  /// Full pack tax used in [EncounterFactory] (rank × invest).
+  static double combatThreatMul(GameState? state) {
+    if (state == null || !state.inGreaterRift) return 1.0;
+    return (threatMul(state.grTier) * investMul(state)).clamp(1.0, 250000.0);
+  }
 
   /// Extra bodies (soft-cap at 20). Ranked GR denser than farm.
   static double densityMul(int tier) => RiftPacing.densityMul(
