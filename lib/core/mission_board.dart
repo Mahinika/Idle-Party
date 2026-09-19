@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models/mission.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'logic_notices.dart';
 import 'meta_systems.dart';
 
 /// Fixed board roles: Daily (0) · Bounty (1) · Side (2) · Week (3) · Contract (4).
@@ -174,6 +175,32 @@ abstract final class MissionBoard {
     return ladder[bountyRung.clamp(0, ladder.length - 1)];
   }
 
+  /// Player-facing job line. [prefix] keeps Daily:/Bounty/Week:/Contract:.
+  static String goalTitle({
+    required MissionType type,
+    required int target,
+    String prefix = '',
+  }) {
+    final n = max(1, target);
+    final body = switch (type) {
+      MissionType.defeatEnemies => 'Defeat $n',
+      MissionType.clearBosses => n == 1 ? 'Clear 1 boss' : 'Clear $n bosses',
+      MissionType.earnGold => 'Earn $n gold',
+      MissionType.clearFloors => n == 1 ? 'Clear 1 floor' : 'Clear $n floors',
+      MissionType.defeatElites => n == 1 ? 'Defeat 1 elite' : 'Defeat $n elites',
+      MissionType.timedKeys =>
+        n == 1 ? 'Time 1 KEY' : 'Time $n KEY clears',
+      MissionType.gauntletFloors =>
+        n == 1 ? 'Climb 1 Gauntlet floor' : 'Climb $n Gauntlet floors',
+      MissionType.clearRifts =>
+        n == 1 ? 'Clear 1 Farm Rift' : 'Clear $n Farm Rifts',
+      MissionType.clearGreaterRifts =>
+        n == 1 ? 'Clear 1 Ranked GR' : 'Clear $n Ranked GR',
+      MissionType.ashenCrown => 'Beat Ashen Crown',
+    };
+    return '$prefix$body';
+  }
+
   static Mission createDailyMission({
     required int ascensionLevel,
     int highestDungeonCleared = 0,
@@ -196,7 +223,11 @@ abstract final class MissionBoard {
     return Mission(
       id: 'daily_s0_${rng.nextInt(1 << 20)}',
       type: MissionType.defeatEnemies,
-      title: 'Daily: Slay foes',
+      title: goalTitle(
+        type: MissionType.defeatEnemies,
+        target: target,
+        prefix: 'Daily: ',
+      ),
       target: target,
       progress: 0,
       goldReward: max(1, 24 + depth * 10 + target ~/ 4),
@@ -227,7 +258,11 @@ abstract final class MissionBoard {
     return Mission(
       id: 'bounty_s1_r$rung}_${rng.nextInt(1 << 20)}',
       type: MissionType.defeatEnemies,
-      title: 'Bounty $rungLabel: Slay foes',
+      title: goalTitle(
+        type: MissionType.defeatEnemies,
+        target: target,
+        prefix: 'Bounty $rungLabel: ',
+      ),
       target: target,
       progress: 0,
       goldReward: max(1, 30 + depth * 12 + target ~/ 5),
@@ -391,13 +426,8 @@ abstract final class MissionBoard {
           _ => 1.0,
         } *
         rewardScale;
-    final difficultyPrefix = switch (tier) {
-      1 => 'Hard: ',
-      2 => 'Brutal: ',
-      _ => '',
-    };
-    // Week/Contract already say the role; Hard/Brutal is border color only.
-    final prefix = titlePrefix.isEmpty ? difficultyPrefix : titlePrefix;
+    // Hard/Brutal is border color only — titles name the job.
+    final prefix = titlePrefix;
 
     int scaleTarget(int base) => max(1, (base * targetMul).round());
     int scaleGold(int base) => max(1, (base * rewardMul).round());
@@ -405,106 +435,76 @@ abstract final class MissionBoard {
 
     final id = '${type.name}_s${slot}_${rng.nextInt(1 << 20)}';
 
-    return switch (type) {
-      MissionType.defeatEnemies => Mission(
+    Mission typed({
+      required int target,
+      required int goldReward,
+      required int essenceReward,
+      int? tierOverride,
+    }) {
+      return Mission(
         id: id,
         type: type,
-        title: '${prefix}Slay foes',
-        target: scaleTarget(18 + depth * 6),
+        title: goalTitle(type: type, target: target, prefix: prefix),
+        target: target,
         progress: 0,
+        goldReward: goldReward,
+        essenceReward: essenceReward,
+        tier: tierOverride ?? tier,
+      );
+    }
+
+    return switch (type) {
+      MissionType.defeatEnemies => typed(
+        target: scaleTarget(18 + depth * 6),
         goldReward: scaleGold(28 + depth * 14),
         essenceReward: scaleEssence(3 + depth),
-        tier: tier,
       ),
-      MissionType.clearBosses => Mission(
-        id: id,
-        type: type,
-        title: '${prefix}Fell wardens',
+      MissionType.clearBosses => typed(
         target: scaleTarget(max(2, 2 + depth ~/ 3)),
-        progress: 0,
         goldReward: scaleGold(45 + depth * 20),
         essenceReward: scaleEssence(4 + depth),
-        tier: tier,
       ),
-      MissionType.earnGold => Mission(
-        id: id,
-        type: type,
-        title: '${prefix}Gather gold',
+      MissionType.earnGold => typed(
         target: scaleTarget(90 + depth * 55),
-        progress: 0,
         goldReward: scaleGold(22 + depth * 12),
         essenceReward: scaleEssence(2 + depth ~/ 2),
-        tier: tier,
       ),
-      MissionType.clearFloors => Mission(
-        id: id,
-        type: type,
-        title: '${prefix}Clear floors',
+      MissionType.clearFloors => typed(
         target: scaleTarget(5 + depth ~/ 2),
-        progress: 0,
         goldReward: scaleGold(30 + depth * 15),
         essenceReward: scaleEssence(3 + depth ~/ 2),
-        tier: tier,
       ),
-      MissionType.defeatElites => Mission(
-        id: id,
-        type: type,
-        title: '${prefix}Hunt elites',
+      MissionType.defeatElites => typed(
         target: scaleTarget(4 + depth),
-        progress: 0,
         goldReward: scaleGold(40 + depth * 16),
         essenceReward: scaleEssence(4 + depth ~/ 2),
-        tier: tier,
       ),
-      MissionType.timedKeys => Mission(
-        id: id,
-        type: type,
-        title: '${prefix}Time KEY clears',
+      MissionType.timedKeys => typed(
         target: scaleTarget(max(1, 1 + depth ~/ 8)),
-        progress: 0,
         goldReward: scaleGold(55 + depth * 18),
         essenceReward: scaleEssence(6 + depth),
-        tier: tier,
       ),
-      MissionType.gauntletFloors => Mission(
-        id: id,
-        type: type,
-        title: '${prefix}Climb Gauntlet',
+      MissionType.gauntletFloors => typed(
         target: scaleTarget(max(5, 8 + depth ~/ 2)),
-        progress: 0,
         goldReward: scaleGold(50 + depth * 16),
         essenceReward: scaleEssence(5 + depth),
-        tier: tier,
       ),
-      MissionType.clearRifts => Mission(
-        id: id,
-        type: type,
-        title: '${prefix}Clear Farm Rifts',
+      MissionType.clearRifts => typed(
         target: scaleTarget(max(1, 1 + depth ~/ 10)),
-        progress: 0,
         goldReward: scaleGold(48 + depth * 15),
         essenceReward: scaleEssence(5 + depth),
-        tier: tier,
       ),
-      MissionType.clearGreaterRifts => Mission(
-        id: id,
-        type: type,
-        title: '${prefix}Clear Ranked GR',
+      MissionType.clearGreaterRifts => typed(
         target: scaleTarget(1),
-        progress: 0,
         goldReward: scaleGold(70 + depth * 20),
         essenceReward: scaleEssence(8 + depth),
-        tier: max(tier, 1),
+        tierOverride: max(tier, 1),
       ),
-      MissionType.ashenCrown => Mission(
-        id: id,
-        type: type,
-        title: '${prefix}Beat Ashen Crown',
+      MissionType.ashenCrown => typed(
         target: 1,
-        progress: 0,
         goldReward: scaleGold(80 + depth * 22),
         essenceReward: scaleEssence(10 + depth),
-        tier: max(tier, 1),
+        tierOverride: max(tier, 1),
       ),
     };
   }
@@ -685,6 +685,7 @@ abstract final class MissionBoard {
       return state;
     }
 
+    var newlyReady = 0;
     final updated = state.missions.map((mission) {
       if (mission.claimed || mission.isComplete) {
         return mission;
@@ -704,11 +705,14 @@ abstract final class MissionBoard {
       if (add <= 0) {
         return mission;
       }
-      return mission.copyWith(
+      final next = mission.copyWith(
         progress: min(mission.target, mission.progress + add),
       );
+      if (next.canClaim) newlyReady++;
+      return next;
     }).toList();
 
+    if (newlyReady > 0) LogicNotices.recordQuestReady(newlyReady);
     return state.copyWith(missions: updated);
   }
 

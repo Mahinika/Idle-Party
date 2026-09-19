@@ -33,6 +33,7 @@ abstract final class LogicNotices {
   static List<String> _metaPayoffs = const <String>[];
   static String? _floorLootLine;
   static String? _floorEquipLine;
+  static int _questReady = 0;
 
   /// Reads and clears what the last auto-sell / disassemble pass cleared out.
   static BagCleanupReceipt takeBagCleanup() {
@@ -114,6 +115,18 @@ abstract final class LogicNotices {
     _floorEquipLine = line;
   }
 
+  /// Slots that just became claimable (from [MissionBoard.applyMissionProgress]).
+  static int takeQuestReady() {
+    final out = _questReady;
+    _questReady = 0;
+    return out;
+  }
+
+  static void recordQuestReady(int count) {
+    if (count <= 0) return;
+    _questReady += count;
+  }
+
   /// Test/reset hook — drops every pending receipt.
   static void reset() {
     _bag = const BagCleanupReceipt();
@@ -121,5 +134,6 @@ abstract final class LogicNotices {
     _metaPayoffs = const <String>[];
     _floorLootLine = null;
     _floorEquipLine = null;
+    _questReady = 0;
   }
 }

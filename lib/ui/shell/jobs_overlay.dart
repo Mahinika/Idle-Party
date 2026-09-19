@@ -13,13 +13,10 @@ class JobsOverlay extends StatelessWidget {
 
   /// Header + chain line. Essence waits for the ESSENCE tab.
   static String introLine({required bool showEssence, required int chainCount}) {
-    final claim = showEssence ? 'gold + essence' : 'gold';
     final chain = showEssence
-        ? 'Chain $chainCount/3 · the 3rd claim in a row pays +5e extra.'
-        : 'Chain $chainCount/3 · the 3rd claim in a row pays a bonus reward.';
-    return 'QUESTS — clear goals while you dungeon. Claim for $claim.\n'
-        'Five slots: Daily · Bounty · Side · Week · Contract.\n'
-        '$chain';
+        ? 'Chain $chainCount/3 · 3rd pays +5e.'
+        : 'Chain $chainCount/3 · 3rd pays extra.';
+    return 'QUESTS — claim while you dungeon.\n$chain';
   }
 
   static String rewardLine({
@@ -35,11 +32,11 @@ class JobsOverlay extends StatelessWidget {
       showEssence ? 'CLAIM · chain +5e' : 'CLAIM · chain bonus';
 
   static String _slotBadge(int index) => switch (index) {
-    0 => 'DAILY · easy',
-    1 => 'BOUNTY · climb',
-    2 => 'SIDE · variety',
-    3 => 'WEEK · weekly',
-    _ => 'CONTRACT · big',
+    0 => 'DAILY',
+    1 => 'BOUNTY',
+    2 => 'SIDE',
+    3 => 'WEEK',
+    _ => 'CONTRACT',
   };
 
   @override
@@ -73,7 +70,6 @@ class JobsOverlay extends StatelessWidget {
           _questCard(
             state.missions[i],
             i,
-            hideClaim: claimable > 0,
             showEssence: showEssence,
           ),
       ],
@@ -83,7 +79,6 @@ class JobsOverlay extends StatelessWidget {
   Widget _questCard(
     Mission mission,
     int index, {
-    bool hideClaim = false,
     required bool showEssence,
   }) {
     return Container(
@@ -174,7 +169,7 @@ class JobsOverlay extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          if (!hideClaim && (mission.canClaim || mission.claimed))
+          if (mission.canClaim || mission.claimed)
             GameButton(
               label: mission.claimed
                   ? 'CLAIMED'

@@ -300,6 +300,18 @@ class GameDirector extends ChangeNotifier {
     showToast(text, life: life, kind: NoticeKind.celebrate);
   }
 
+  String? _questReadyLine() {
+    final n = LogicNotices.takeQuestReady();
+    if (n <= 0) return null;
+    return n == 1 ? 'QUEST READY' : 'QUESTS READY';
+  }
+
+  void _flushQuestReadyToast({double life = 2.4}) {
+    final line = _questReadyLine();
+    if (line == null) return;
+    showToast(line, life: life);
+  }
+
   /// Bag auto-clean during combat — at most one toast every ~8s.
   void _toastBagCleanup(String message, {double life = 1.8}) {
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -730,6 +742,7 @@ class GameDirector extends ChangeNotifier {
       if (result.goldFromKills > 0) {
         _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
         _applyFunnelTick(FunnelAnalytics.onFirstReward(_state));
+        _flushQuestReadyToast(life: 1.8);
       }
       _noteLifetimeGold(before, _state);
       // Count casts live; defer achievement scan to room clear / discrete events.
@@ -972,6 +985,11 @@ class GameDirector extends ChangeNotifier {
           }
         }
         final payoffNotices = LogicNotices.takeMetaPayoffs();
+        final questReady = _questReadyLine();
+        if (questReady != null &&
+            (clearLine.length + questReady.length) < 72) {
+          clearLine = '$clearLine · $questReady';
+        }
         // KEY TIMED / depleted owns the clear banner (bigger than F CLEAR).
         final keyBanner = payoffNotices.cast<String?>().firstWhere(
           (n) =>
@@ -989,6 +1007,8 @@ class GameDirector extends ChangeNotifier {
           if (rest.isNotEmpty) {
             // After banner — toast only if something KEY-adjacent remains.
             showToast(rest.join(' · '), life: 2.6);
+          } else if (questReady != null) {
+            showToast(questReady, life: 2.4);
           }
         } else {
           presentClear(clearLine, life: 2.8);
@@ -1300,6 +1320,7 @@ class GameDirector extends ChangeNotifier {
     if (result.goldFromKills > 0) {
       _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
       _applyFunnelTick(FunnelAnalytics.onFirstReward(_state));
+      _flushQuestReadyToast(life: 1.8);
     }
     _noteLifetimeGold(before, _state);
     GameAudio.crit();
@@ -3491,6 +3512,7 @@ class GameDirector extends ChangeNotifier {
     _syncDevicePrefs();
     _announceAbilityUnlocks(before, _state);
     _announceAchievementUnlocks(before, _state);
+    _flushQuestReadyToast();
     if (!_state.inDungeon) {
       _spatial = null;
     } else if (_spatial != null &&

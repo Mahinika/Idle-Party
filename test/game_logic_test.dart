@@ -6,6 +6,7 @@ import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/meta_systems.dart';
+import 'package:idle_party/core/logic_notices.dart';
 import 'package:idle_party/core/mission_board.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_def.dart';
@@ -2819,6 +2820,47 @@ void main() {
     expect(state.missions[1].title, startsWith('Bounty'));
     expect(state.missions[3].title, startsWith('Week:'));
     expect(state.missions[4].title, startsWith('Contract:'));
+    expect(state.missions[0].title, contains('Defeat'));
+    expect(
+      MissionBoard.goalTitle(
+        type: MissionType.defeatEnemies,
+        target: 20,
+        prefix: 'Daily: ',
+      ),
+      'Daily: Defeat 20',
+    );
+    expect(
+      MissionBoard.goalTitle(type: MissionType.clearBosses, target: 3),
+      'Clear 3 bosses',
+    );
+    expect(
+      MissionBoard.goalTitle(type: MissionType.earnGold, target: 200),
+      'Earn 200 gold',
+    );
+  });
+
+  test('completing a mission records QUEST READY', () {
+    LogicNotices.reset();
+    final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final side = initial.missions[2].copyWith(
+      type: MissionType.clearFloors,
+      progress: 0,
+      target: 1,
+    );
+    final next = GameLogic.applyMissionProgress(
+      initial.copyWith(
+        missions: [
+          initial.missions[0],
+          initial.missions[1],
+          side,
+          initial.missions[3],
+          initial.missions[4],
+        ],
+      ),
+      floorsCleared: 1,
+    );
+    expect(next.missions[2].canClaim, isTrue);
+    expect(LogicNotices.takeQuestReady(), greaterThan(0));
   });
 
   test('clearing rooms progresses and claim pays out missions', () {
@@ -2833,13 +2875,13 @@ void main() {
             ascensionLevel: 0,
             random: Random(1),
             slot: 0,
-          ).copyWith(title: 'Daily: Slay foes'),
+          ).copyWith(title: 'Daily: Defeat 20'),
           GameLogic.createMission(
             type: MissionType.defeatEnemies,
             ascensionLevel: 0,
             random: Random(2),
             slot: 1,
-          ).copyWith(title: 'Bounty 1: Slay foes'),
+          ).copyWith(title: 'Bounty 1: Defeat 25'),
           GameLogic.createMission(
             type: MissionType.earnGold,
             ascensionLevel: 0,
