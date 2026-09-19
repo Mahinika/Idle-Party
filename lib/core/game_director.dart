@@ -564,6 +564,7 @@ class GameDirector extends ChangeNotifier {
     List<HeroSpecId> partySpecs, {
     String? partyName,
     HeroRace partyRace = HeroRace.human,
+    List<HeroRace>? partyRaces,
   }) async {
     _awaitingWipeChoice = false;
     uiFeedback.dismissOfflineSummary();
@@ -573,6 +574,7 @@ class GameDirector extends ChangeNotifier {
       partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
       partyName: partyName,
       partyRace: partyRace,
+      partyRaces: partyRaces,
     );
     _hasExistingSave = true;
     _noteFunnelSession(newInstall: true);

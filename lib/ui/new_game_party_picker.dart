@@ -21,7 +21,11 @@ class NewGamePartyPicker extends StatefulWidget {
     this.initialSpecs,
   });
 
-  final void Function(List<HeroSpecId> specs, String partyName, HeroRace race)
+  final void Function(
+    List<HeroSpecId> specs,
+    String partyName,
+    List<HeroRace> races,
+  )
   onConfirm;
   final VoidCallback onBack;
   final List<HeroSpecId>? initialSpecs;
@@ -37,13 +41,17 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   int _activeSlot = 0;
   bool _nameError = false;
   String? _pickHint;
-  HeroRace _look = HeroRace.human;
+  late final List<HeroRace> _looks;
 
   @override
   void initState() {
     super.initState();
     final seed = widget.initialSpecs ?? HeroSpecs.starterUnlocked;
     _slots = List<HeroSpecId?>.filled(GameLogic.starterPartySize, null);
+    _looks = List<HeroRace>.filled(
+      GameLogic.starterPartySize,
+      HeroRace.human,
+    );
     for (var i = 0; i < _slots.length && i < seed.length; i++) {
       _slots[i] = seed[i];
     }
@@ -63,7 +71,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       setState(() => _nameError = true);
       return;
     }
-    widget.onConfirm([for (final s in _slots) s!], name, _look);
+    widget.onConfirm([for (final s in _slots) s!], name, List.of(_looks));
   }
 
   bool get _ready =>
@@ -214,13 +222,6 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                 ),
               ],
               const SizedBox(height: 8),
-              HeroLookRow(
-                value: _look,
-                compact: true,
-                onChanged: (race) => setState(() => _look = race),
-                hint: _look == HeroRace.nightElf ? newGameNightElfHint : null,
-              ),
-              const SizedBox(height: 10),
               Row(
                 children: [
                   for (var i = 0; i < _slots.length; i++) ...[
@@ -229,13 +230,20 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                       child: _SlotCard(
                         index: i,
                         specId: _slots[i],
-                        look: _look,
+                        look: _looks[i],
                         selected: _activeSlot == i,
                         onTap: () => setState(() => _activeSlot = i),
                       ),
                     ),
                   ],
                 ],
+              ),
+              const SizedBox(height: 8),
+              HeroLookRow(
+                value: _looks[_activeSlot],
+                compact: true,
+                onChanged: (race) => setState(() => _looks[_activeSlot] = race),
+                hint: newGameLookHint(_looks[_activeSlot]),
               ),
               if (_pickHint != null) ...[
                 const SizedBox(height: 8),

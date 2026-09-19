@@ -368,6 +368,42 @@ void main() {
     expect(loaded.heroes.length, named.heroes.length);
   });
 
+  test('mixed per-hero races round-trip on New Game', () {
+    final state = GameLogic.createInitialState(
+      now: DateTime(2026, 9, 19),
+      partyRaces: const [
+        HeroRace.nightElf,
+        HeroRace.human,
+        HeroRace.nightElf,
+      ],
+    );
+    expect(
+      state.heroes.firstWhere((h) => h.specId == HeroSpecId.protection).race,
+      HeroRace.nightElf,
+    );
+    expect(
+      state.heroes.firstWhere((h) => h.specId == HeroSpecId.discipline).race,
+      HeroRace.human,
+    );
+    expect(
+      state.heroes.firstWhere((h) => h.specId == HeroSpecId.fire).race,
+      HeroRace.nightElf,
+    );
+    final loaded = GameLogic.stateFromJson(state.toJson());
+    expect(
+      loaded.heroes.firstWhere((h) => h.specId == HeroSpecId.protection).race,
+      HeroRace.nightElf,
+    );
+    expect(
+      loaded.heroes.firstWhere((h) => h.specId == HeroSpecId.discipline).race,
+      HeroRace.human,
+    );
+    expect(
+      loaded.heroes.firstWhere((h) => h.specId == HeroSpecId.fire).race,
+      HeroRace.nightElf,
+    );
+  });
+
   test('Night Elf party look round-trips and survives Ascend', () {
     var state = GameLogic.createInitialState(
       now: DateTime(2026, 9, 19),

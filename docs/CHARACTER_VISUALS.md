@@ -205,7 +205,8 @@ family’s anchors, then `py tool/paint_race_bodies.py` (or drop idle/walk/attac
 + tint masks by hand). Register the look in `BodyFamilyCatalog.authoredRaceLooks`.
 Do **not** regenerate family gear. Chest/robe overlays must not include a baked
 face (race undertunics show through). Human (default) uses `body_<anim>.png`.
-LOOK lives on New Game and GEAR (paper doll) — not a second nav.
+LOOK lives on New Game (**per selected hero**) and GEAR (paper doll) — not a
+second nav.
 
 Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 

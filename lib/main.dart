@@ -359,7 +359,7 @@ class _GameHomePageState extends State<GameHomePage>
   Future<void> _confirmNewGame(
     List<HeroSpecId> specs,
     String partyName,
-    HeroRace race,
+    List<HeroRace> races,
   ) async {
     if (_director.hasExistingSave) {
       WebClickBridge.pushLayer();
@@ -398,7 +398,11 @@ class _GameHomePageState extends State<GameHomePage>
         return;
       }
     }
-    await _director.startNewGame(specs, partyName: partyName, partyRace: race);
+    await _director.startNewGame(
+      specs,
+      partyName: partyName,
+      partyRaces: races,
+    );
     if (!mounted) return;
     _director.clearPendingStartMenu();
     setState(() => _phase = _AppPhase.play);

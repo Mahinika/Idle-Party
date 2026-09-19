@@ -144,6 +144,7 @@ class GameLogic {
     List<HeroSpecId>? partySpecs,
     String? partyName,
     HeroRace partyRace = HeroRace.human,
+    List<HeroRace>? partyRaces,
   }) {
     final timestamp = now ?? DateTime.now();
     final layoutSeed = newLayoutSeed();
@@ -155,14 +156,15 @@ class GameLogic {
     );
     final firstRoom = floor.first;
     final specs = _normalizeStarterSpecs(partySpecs);
+    final races = _normalizeStarterRaces(partyRaces, specs.length, partyRace);
     final roster = <PartyHero>[
-      for (final specId in specs)
+      for (var i = 0; i < specs.length; i++)
         PartyHero.starting(
-          name: HeroSpecs.def(specId).defaultName,
-          specId: specId,
-          stats: PartyHero.startingStatsForSpec(specId),
-          equipped: StarterGear.forSpec(specId),
-          race: partyRace,
+          name: HeroSpecs.def(specs[i]).defaultName,
+          specId: specs[i],
+          stats: PartyHero.startingStatsForSpec(specs[i]),
+          equipped: StarterGear.forSpec(specs[i]),
+          race: races[i],
         ),
     ];
     var state = GameState(
@@ -239,6 +241,23 @@ class GameLogic {
       if (out.length >= starterPartySize) break;
       if (seen.add(id)) out.add(id);
     }
+    return out;
+  }
+
+  /// Parallel LOOK races for New Game. Pads / truncates to [count].
+  static List<HeroRace> _normalizeStarterRaces(
+    List<HeroRace>? partyRaces,
+    int count,
+    HeroRace fallback,
+  ) {
+    if (count <= 0) return const [];
+    if (partyRaces == null || partyRaces.isEmpty) {
+      return List<HeroRace>.filled(count, fallback);
+    }
+    final out = <HeroRace>[
+      for (var i = 0; i < count; i++)
+        i < partyRaces.length ? partyRaces[i] : fallback,
+    ];
     return out;
   }
 

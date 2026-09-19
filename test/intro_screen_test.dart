@@ -289,7 +289,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
   });
 
-  testWidgets('LOOK Night Elf stamps the starting party', (tester) async {
+  testWidgets('LOOK Night Elf stamps only the selected hero', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final director = GameDirector(
       InMemoryGameStorage(),
@@ -309,11 +309,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
+    // Slot 0 (PROT) is selected by default — Night Elf only that hero.
     await tester.ensureVisible(find.text('NIGHT ELF'));
     await tester.tap(find.text('NIGHT ELF'));
     await tester.pump();
     expect(
-      find.textContaining('Purple skin and long ears on every kit'),
+      find.textContaining('LOOK for the selected hero'),
       findsOneWidget,
     );
 
@@ -323,22 +324,20 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(
-      director.state.heroes.every((h) => h.race == HeroRace.nightElf),
-      isTrue,
+    final prot = director.state.heroes.firstWhere(
+      (h) => h.specId == HeroSpecId.protection,
     );
-    expect(
-      director.state.heroes
-          .firstWhere((h) => h.specId == HeroSpecId.protection)
-          .sex,
-      HeroSex.male,
+    final disc = director.state.heroes.firstWhere(
+      (h) => h.specId == HeroSpecId.discipline,
     );
-    expect(
-      director.state.heroes
-          .firstWhere((h) => h.specId == HeroSpecId.discipline)
-          .sex,
-      HeroSex.female,
+    final fire = director.state.heroes.firstWhere(
+      (h) => h.specId == HeroSpecId.fire,
     );
+    expect(prot.race, HeroRace.nightElf);
+    expect(disc.race, HeroRace.human);
+    expect(fire.race, HeroRace.human);
+    expect(prot.sex, HeroSex.male);
+    expect(disc.sex, HeroSex.female);
     await tester.pump(const Duration(milliseconds: 500));
   });
 

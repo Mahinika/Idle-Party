@@ -75,6 +75,14 @@ String nightElfLookHint({required bool authoredBody}) {
   return 'Uses the Human pose until this kit\'s Night Elf body is drawn.';
 }
 
-/// New Game party-wide line.
-String get newGameNightElfHint =>
-    'Purple skin and long ears on every kit.';
+/// New Game: LOOK is per selected hero slot.
+String newGameLookHint(HeroRace race) {
+  final base = 'LOOK for the selected hero.';
+  if (race == HeroRace.nightElf) {
+    return '$base Purple skin and long ears.';
+  }
+  return base;
+}
+
+/// Shared New Game / GEAR hint — authored Night Elf bodies exist per family.
+String get newGameNightElfHint => newGameLookHint(HeroRace.nightElf);
