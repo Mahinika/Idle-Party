@@ -519,7 +519,12 @@ def paint_undertunic(
             if family == "rogue" and is_rogue_cloak(rgb):
                 continue
             in_head = ((x - fx) / rx) ** 2 + ((y - fy) / ry) ** 2 <= 1.0
-            if in_head and y <= chin_y + 2 and not is_metal_or_trim(rgb):
+            if (
+                in_head
+                and y <= chin_y + 2
+                and not is_metal_or_trim(rgb)
+                and not is_hat_or_hood(family, rgb)
+            ):
                 op[x, y] = (r, g, b, a)
                 continue
             cloth = tunic if y < mid_y else pants
@@ -552,7 +557,47 @@ def paint_undertunic(
                 f"bald. Add hair to _src/body_idle.png or "
                 f"gear/_authored/, do not draw it here."
             )
+    if family in ("mage", "healer"):
+        strip_equipped_helm_from_body(family, out)
+        strip_equipped_helm_from_body(family, tint_mask)
+    if family == "mage":
+        # Hat leftover that is not on helm_t0 (tall cone / brim crumbs).
+        op = out.load()
+        mp = tint_mask.load()
+        cut = max(0, int(fy - 6))
+        for y in range(0, cut):
+            for x in range(128):
+                r, g, b, a = op[x, y]
+                if a < 16:
+                    continue
+                if is_skin((r, g, b), face):
+                    continue
+                op[x, y] = (0, 0, 0, 0)
+                mp[x, y] = (0, 0, 0, 0)
     return out, tint_mask
+
+
+def strip_equipped_helm_from_body(family: str, body: Image.Image) -> None:
+    """Mage/healer live body must not include the hat — that is the helm overlay."""
+    helm_path = ROOT / family / "gear" / "helm_t0_idle.png"
+    if not helm_path.exists():
+        return
+    helm = Image.open(helm_path).convert("RGBA")
+    hp, bp = helm.load(), body.load()
+    kill: set[tuple[int, int]] = set()
+    for y in range(128):
+        for x in range(128):
+            if hp[x, y][3] >= 40:
+                kill.add((x, y))
+    extra: set[tuple[int, int]] = set()
+    for x, y in kill:
+        for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < 128 and 0 <= ny < 128:
+                extra.add((nx, ny))
+    for x, y in kill | extra:
+        bp[x, y] = (0, 0, 0, 0)
+
 
 
 def rarefy_cloak(cloak: Image.Image) -> Image.Image:
@@ -985,12 +1030,30 @@ def write_armor_preview(family: str, frames: dict) -> None:
         kit.save(TOOL / "preview_doll_warrior_full.png")
 
 
+def write_bodies_only(families: tuple[str, ...]) -> None:
+    """Rebuild undertunic + tint; keep live gear overlays (hat stays on helm)."""
+    for family in families:
+        for anim in ANIMS:
+            src = load128(ensure_src(family, anim))
+            box = bbox(src)
+            face = sample_face(src, box, family)
+            body, tint_mask = paint_undertunic(src, family, face, box)
+            body.save(ROOT / family / f"body_{anim}.png")
+            tint_mask.save(ROOT / family / f"body_tint_{anim}.png")
+            print("ok", family, anim, "body_only")
+    print("done — bodies only; run paint_race_bodies.py then facit --relock")
+
+
 def main() -> None:
     if "--tint-masks-only" in sys.argv:
         write_tint_masks_only()
         return
     if "--t2-only" in sys.argv:
         write_t2_only()
+        return
+    if "--bodies-only" in sys.argv:
+        wanted = tuple(a for a in sys.argv if a in FAMILIES)
+        write_bodies_only(wanted or FAMILIES)
         return
     shared = ROOT / "gear"
     shared.mkdir(parents=True, exist_ok=True)
