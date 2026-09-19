@@ -1410,7 +1410,7 @@ class GameLogic {
       state.heroRoster.isEmpty ? HeroRace.human : state.heroRoster.first.race;
 
   /// Paper-doll look. Night Elf snaps sex to the family default so authored
-  /// warrior-male / healer-female bodies actually show.
+  /// bodies (warrior/mage/rogue male, healer female) actually show.
   static GameState setHeroLook(
     GameState state, {
     required String heroId,

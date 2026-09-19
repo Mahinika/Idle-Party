@@ -313,7 +313,7 @@ void main() {
     await tester.tap(find.text('NIGHT ELF'));
     await tester.pump();
     expect(
-      find.textContaining('Purple skin on Shield and Healer'),
+      find.textContaining('Purple skin and long ears on every kit'),
       findsOneWidget,
     );
 

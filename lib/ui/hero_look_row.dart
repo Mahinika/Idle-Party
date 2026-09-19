@@ -67,8 +67,7 @@ class HeroLookRow extends StatelessWidget {
   }
 }
 
-/// Shared New Game / GEAR hint — authored bodies exist for warrior male and
-/// healer female Night Elf only.
+/// Shared New Game / GEAR hint — authored Night Elf bodies exist per family.
 String nightElfLookHint({required bool authoredBody}) {
   if (authoredBody) {
     return 'Purple skin, long ears. Gear uses this kit\'s pose.';
@@ -76,6 +75,6 @@ String nightElfLookHint({required bool authoredBody}) {
   return 'Uses the Human pose until this kit\'s Night Elf body is drawn.';
 }
 
-/// New Game party-wide line (starter Shield + Healer show Night Elf).
+/// New Game party-wide line.
 String get newGameNightElfHint =>
-    'Purple skin on Shield and Healer. Other kits keep the Human pose until drawn.';
+    'Purple skin and long ears on every kit.';

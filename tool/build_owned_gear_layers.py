@@ -649,10 +649,13 @@ def extract_bands(
             last_skin_row = y
         elif tot >= 4 and skin_n == 0 and gold_n == 0 and y > fy + face_half * 0.35:
             break
-    head_max = last_skin_row + 2
+    chin = int(_chin_y(src, face, fx, fy, face_half))
+    head_max = max(last_skin_row + 2, chin)
     mid_y = y0 + int(bh * 0.64)
     cx = (x0 + x1) / 2
     arm_top = head_max + 12
+    rx_head = max(14.0, face_half * 1.65)
+    ry_head = max(14.0, face_half * 1.55)
 
     chest = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
     legs = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
@@ -672,7 +675,8 @@ def extract_bands(
             # Only wipe true black crumbs — dark brown gorget must stay on chest.
             if lum(rgb) < 0.05:
                 continue
-            if y <= head_max:
+            in_head = ((x - fx) / rx_head) ** 2 + ((y - fy) / ry_head) ** 2 <= 1.0
+            if y <= head_max or (in_head and y <= chin + 4):
                 if family in ("mage", "healer") and (
                     is_hat_or_hood(family, rgb) or is_gold_pixel(rgb)
                 ):
@@ -693,6 +697,25 @@ def extract_bands(
                 lp[x, y] = (r, g, b, a)
 
     return chest, legs, cloak, hat, hands
+
+
+def strip_head_from_layer(
+    layer: Image.Image,
+    src: Image.Image,
+    face: tuple[int, int, int],
+    box: tuple[int, int, int, int],
+) -> None:
+    """Chest/robe must not carry a baked face — race undertunics show through."""
+    fx, fy, face_half = face_region(src, face, box)
+    chin = int(_chin_y(src, face, fx, fy, face_half))
+    rx = max(14.0, face_half * 1.65)
+    ry = max(14.0, face_half * 1.55)
+    lp = layer.load()
+    for y in range(0, min(128, chin + 5)):
+        for x in range(128):
+            if ((x - fx) / rx) ** 2 + ((y - fy) / ry) ** 2 > 1.0:
+                continue
+            lp[x, y] = (0, 0, 0, 0)
 
 
 def punch_face_visor(

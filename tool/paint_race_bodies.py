@@ -5,8 +5,8 @@ Does **not** rebuild gear overlays or family `body_*.png`. Writes:
   assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png
   assets/custom/char/<family>/<race>_<m|f>_body_tint_<anim>.png
 
-Night Elf day-one: warrior male + healer female. Original pixels derived from
-owned Idle Party bodies (pose/anchors) — not WoW/Kenney dumps.
+Night Elf: warrior / healer / mage / rogue family defaults (male except healer).
+Original pixels derived from owned Idle Party bodies — not WoW/Kenney dumps.
 """
 
 from __future__ import annotations
@@ -28,6 +28,7 @@ from build_owned_gear_layers import (
     is_skin,
     lum,
     sample_face,
+    strip_head_from_layer,
     _chin_y,
 )
 
@@ -315,11 +316,33 @@ def save_pair(path: Path, im: Image.Image) -> None:
     im.save(path)
 
 
+def punch_robe_faces(families: tuple[str, ...]) -> None:
+    """Healer/mage chest extracts baked a human face onto the torso overlay."""
+    for family in families:
+        src_path = ROOT / family / "_src" / "body_idle.png"
+        if not src_path.exists():
+            src_path = ROOT / family / "body_idle.png"
+        src = Image.open(src_path).convert("RGBA")
+        box = bbox(src)
+        face = sample_face(src, box, family)
+        gear = ROOT / family / "gear"
+        for path in sorted(gear.glob("chest*_idle.png")):
+            if "_authored" in path.parts:
+                continue
+            im = Image.open(path).convert("RGBA")
+            strip_head_from_layer(im, src, face, box)
+            im.save(path)
+            print("punched", path.relative_to(REPO))
+
+
 def main() -> int:
     jobs = (
         ("warrior", "nightelf", "m", False),
         ("healer", "nightelf", "f", True),
+        ("mage", "nightelf", "m", False),
+        ("rogue", "nightelf", "m", False),
     )
+    punch_robe_faces(("healer", "mage"))
     for family, race, sex, female in jobs:
         for anim in ANIMS:
             body, tint = paint_nightelf(family, anim, female=female)
@@ -328,7 +351,7 @@ def main() -> int:
             save_pair(stem, body)
             save_pair(tstem, tint)
             print("ok", stem.relative_to(REPO))
-    print("done — night elf warrior male + healer female")
+    print("done — night elf bodies for all four families")
     return 0
 
 

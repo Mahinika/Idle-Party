@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
 import '../core/party_name_filter.dart';
+import '../core/starter_gear.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../assets/custom_assets.dart';
 import 'game_theme.dart';
+import 'hero_doll_sprite.dart';
 import 'hero_look_row.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
@@ -228,6 +230,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                       child: _SlotCard(
                         index: i,
                         specId: _slots[i],
+                        look: _look,
                         selected: _activeSlot == i,
                         onTap: () => setState(() => _activeSlot = i),
                       ),
@@ -356,18 +359,28 @@ class _SlotCard extends StatelessWidget {
   const _SlotCard({
     required this.index,
     required this.specId,
+    required this.look,
     required this.selected,
     required this.onTap,
   });
 
   final int index;
   final HeroSpecId? specId;
+  final HeroRace look;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final def = specId == null ? null : HeroSpecs.def(specId!);
+    final preview = specId == null
+        ? null
+        : PartyHero.starting(
+            name: def!.defaultName,
+            specId: specId!,
+            equipped: StarterGear.forSpec(specId!),
+            race: look,
+          );
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -379,12 +392,17 @@ class _SlotCard extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             child: Column(
               children: [
-                KenneySprite(
-                  asset: def == null
-                      ? CustomAssets.heroKnight
-                      : CustomAssets.heroForSpec(def.id),
-                  size: 40,
-                ),
+                if (preview == null)
+                  KenneySprite(
+                    asset: CustomAssets.heroKnight,
+                    size: 40,
+                  )
+                else
+                  HeroDollSprite(
+                    hero: preview,
+                    partyIndex: index,
+                    size: 40,
+                  ),
                 const SizedBox(height: 4),
                 Text(
                   def?.shortLabel ?? 'SLOT ${index + 1}',

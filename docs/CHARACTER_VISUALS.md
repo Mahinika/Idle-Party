@@ -203,7 +203,8 @@ Keep `BodyFamily` as the gear pose. Author
 `assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png` that shares that
 family’s anchors, then `py tool/paint_race_bodies.py` (or drop idle/walk/attack
 + tint masks by hand). Register the look in `BodyFamilyCatalog.authoredRaceLooks`.
-Do **not** regenerate family gear. Human (default) uses `body_<anim>.png`.
+Do **not** regenerate family gear. Chest/robe overlays must not include a baked
+face (race undertunics show through). Human (default) uses `body_<anim>.png`.
 LOOK lives on New Game and GEAR (paper doll) — not a second nav.
 
 Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.

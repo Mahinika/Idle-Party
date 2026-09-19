@@ -73,8 +73,8 @@ PNGs — Kenney 16×16 tiles are not bundled. Items share looks via
 through generated **cloth-only** `body_tint_<anim>` masks
 (`HeroIdentity.ownedBodyTintArgb`); skin/hair and authored gear keep their
 palette. Optional **LOOK** (New Game + GEAR): Human is the family body;
-Night Elf uses authored `nightelf_*_body_*.png` on warrior-male and
-healer-female only — mage/rogue Night Elf fall back to the family undertunic.
+Night Elf uses authored `nightelf_*_body_*.png` per family (warrior/mage/rogue
+male, healer female). Gear overlays never include a baked face.
 One body clip per anim — walk bob, weapon swing and hit recoil come from
 `CharacterVisualPainter.ownedStepOffset`, not new PNGs. Hand items grip
 opaque pixels (`OwnedGearGrips`, generated). Looks gate:

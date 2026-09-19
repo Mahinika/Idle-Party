@@ -88,6 +88,16 @@ abstract final class BodyFamilyCatalog {
           race: HeroRace.nightElf,
           sex: HeroSex.female,
         ),
+        (
+          family: BodyFamily.mage,
+          race: HeroRace.nightElf,
+          sex: HeroSex.male,
+        ),
+        (
+          family: BodyFamily.rogue,
+          race: HeroRace.nightElf,
+          sex: HeroSex.male,
+        ),
       ];
 
   static bool hasAuthoredRaceBody(PartyHero hero) {

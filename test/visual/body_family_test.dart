@@ -72,14 +72,14 @@ void main() {
       contains('assets/custom/char/healer/nightelf_f_body_tint_attack.png'),
     );
     expect(paths.toSet().length, paths.length);
-    expect(paths.length, 24 + 12);
+      expect(paths.length, 24 + 24);
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: path);
     }
   });
 
   test(
-    'Night Elf uses warrior male and healer female clips, else family body',
+    'Night Elf uses a family body clip for every kit',
     () {
       final warrior = PartyHero.starting(
         name: 'Aegis',
@@ -114,10 +114,20 @@ void main() {
         race: HeroRace.nightElf,
       );
       expect(mage.sex, HeroSex.male);
-      expect(BodyFamilyCatalog.hasAuthoredRaceBody(mage), isFalse);
+      expect(BodyFamilyCatalog.hasAuthoredRaceBody(mage), isTrue);
       expect(
         BodyFamilyCatalog.assetFor(mage, HeroAnimKind.idle),
-        'assets/custom/char/mage/body_idle.png',
+        'assets/custom/char/mage/nightelf_m_body_idle.png',
+      );
+
+      final rogue = PartyHero.starting(
+        name: 'Shade',
+        specId: HeroSpecId.combat,
+        race: HeroRace.nightElf,
+      );
+      expect(
+        BodyFamilyCatalog.assetFor(rogue, HeroAnimKind.walk),
+        'assets/custom/char/rogue/nightelf_m_body_walk.png',
       );
     },
   );
