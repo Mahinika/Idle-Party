@@ -184,7 +184,10 @@ void main() {
     expect(find.text('NEW PARTY'), findsOneWidget);
     expect(find.textContaining('LOOK'), findsWidgets);
     expect(find.text('HUMAN'), findsWidgets);
-    expect(find.text('NIGHT ELF'), findsOneWidget);
+    expect(find.text('N.ELF'), findsWidgets);
+    expect(find.text('ORC'), findsWidgets);
+    expect(find.text('GOBLIN'), findsWidgets);
+    expect(HeroRace.values.length, 12);
     expect(find.text('ARMS  Arms Warrior'), findsOneWidget);
     expect(find.text('LOCKED'), findsWidgets);
     expect(find.text('SET'), findsOneWidget);
@@ -310,8 +313,8 @@ void main() {
 
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
     // Slot 0 (PROT) is selected by default — Night Elf only that hero.
-    await tester.ensureVisible(find.text('NIGHT ELF'));
-    await tester.tap(find.text('NIGHT ELF'));
+    await tester.ensureVisible(find.text('N.ELF').first);
+    await tester.tap(find.text('N.ELF').first);
     await tester.pump();
     expect(
       find.textContaining('LOOK for the selected hero'),

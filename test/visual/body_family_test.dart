@@ -72,7 +72,8 @@ void main() {
       contains('assets/custom/char/healer/nightelf_f_body_tint_attack.png'),
     );
     expect(paths.toSet().length, paths.length);
-      expect(paths.length, 24 + 24);
+    // 4 families × 3 anims × (body+tint) = 24; + 11 races × 4 × 3 × 2 = 264.
+    expect(paths.length, 24 + 264);
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: path);
     }

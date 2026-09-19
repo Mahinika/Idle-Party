@@ -437,9 +437,9 @@ class _SlotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final def = specId == null ? null : HeroSpecs.def(specId!);
-    final raceTone = look == HeroRace.nightElf
-        ? GameTheme.mossLit
-        : GameTheme.parchmentDim;
+    final raceTone = look == HeroRace.human
+        ? GameTheme.parchmentDim
+        : GameTheme.mossLit;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -482,7 +482,7 @@ class _SlotCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 MenuChrome.chip(
-                  label: look == HeroRace.nightElf ? 'N.ELF' : 'HUMAN',
+                  label: look.shortLabel,
                   selected: selected,
                   tone: raceTone,
                 ),

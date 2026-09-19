@@ -9,7 +9,6 @@ import '../models/loot.dart';
 import '../models/proficiency.dart';
 import '../models/spec_mastery.dart';
 import '../assets/custom_assets.dart';
-import '../visual/body_family.dart';
 import 'equipment_icon.dart';
 import 'game_icon.dart';
 import 'game_theme.dart';
@@ -359,12 +358,9 @@ class CharacterEquipPanel extends StatelessWidget {
                       value: hero.race,
                       compact: true,
                       onChanged: (race) => onSetHeroLook!(hero.id, race),
-                      hint: hero.race == HeroRace.nightElf
-                          ? nightElfLookHint(
-                              authoredBody:
-                                  BodyFamilyCatalog.hasAuthoredRaceBody(hero),
-                            )
-                          : null,
+                      hint: hero.race == HeroRace.human
+                          ? null
+                          : '${hero.race.label} undertunic for this kit.',
                     ),
                   ],
                   if (state.soulboundItem != null) ...[

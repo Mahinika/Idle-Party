@@ -72,9 +72,10 @@ PNGs — Kenney 16×16 tiles are not bundled. Items share looks via
 `visualSetId`. Four bodies serve 31 specs, so each spec washes its own color
 through generated **cloth-only** `body_tint_<anim>` masks
 (`HeroIdentity.ownedBodyTintArgb`); skin/hair and authored gear keep their
-palette. Optional **LOOK** (New Game + GEAR): Human is the family body;
-Night Elf uses authored `nightelf_*_body_*.png` per family (warrior/mage/rogue
-male, healer female). Gear overlays never include a baked face.
+palette. Optional **LOOK** (New Game + GEAR): Cataclysm’s **12** playable
+races (Human…Goblin; no Pandaren). Human uses the family body; other races use
+authored `<race>_<m|f>_body_*.png` per family (warrior/mage/rogue male,
+healer female). Gear overlays never include a baked face.
 One body clip per anim — walk bob, weapon swing and hit recoil come from
 `CharacterVisualPainter.ownedStepOffset`, not new PNGs. Hand items grip
 opaque pixels (`OwnedGearGrips`, generated). Looks gate:

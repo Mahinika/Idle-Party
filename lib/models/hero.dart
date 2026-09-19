@@ -13,25 +13,84 @@ import 'stats.dart';
 /// `warrior` ≈ plate/melee, `rogue` ≈ phys DPS, `mage` ≈ caster, `healer` ≈ heal.
 enum HeroRole { warrior, healer, mage, rogue }
 
-/// Paper-doll undertunic race. Missing clips fall back to the family body.
+/// Paper-doll undertunic race (Cataclysm playable set — no Pandaren).
+/// Missing clips fall back to the family body.
 enum HeroRace {
   human,
-  nightElf;
+  dwarf,
+  nightElf,
+  gnome,
+  draenei,
+  worgen,
+  orc,
+  forsaken,
+  tauren,
+  troll,
+  bloodElf,
+  goblin;
 
   String get assetKey => switch (this) {
     HeroRace.human => 'human',
+    HeroRace.dwarf => 'dwarf',
     HeroRace.nightElf => 'nightelf',
+    HeroRace.gnome => 'gnome',
+    HeroRace.draenei => 'draenei',
+    HeroRace.worgen => 'worgen',
+    HeroRace.orc => 'orc',
+    HeroRace.forsaken => 'forsaken',
+    HeroRace.tauren => 'tauren',
+    HeroRace.troll => 'troll',
+    HeroRace.bloodElf => 'bloodelf',
+    HeroRace.goblin => 'goblin',
   };
 
   String get label => switch (this) {
     HeroRace.human => 'Human',
+    HeroRace.dwarf => 'Dwarf',
     HeroRace.nightElf => 'Night Elf',
+    HeroRace.gnome => 'Gnome',
+    HeroRace.draenei => 'Draenei',
+    HeroRace.worgen => 'Worgen',
+    HeroRace.orc => 'Orc',
+    HeroRace.forsaken => 'Forsaken',
+    HeroRace.tauren => 'Tauren',
+    HeroRace.troll => 'Troll',
+    HeroRace.bloodElf => 'Blood Elf',
+    HeroRace.goblin => 'Goblin',
   };
 
-  static HeroRace parse(String? raw) => switch (raw) {
-    'nightElf' || 'nightelf' => HeroRace.nightElf,
-    _ => HeroRace.human,
+  /// Dense LOOK chip — fits a 3×4 wrap on ~360 CSS px.
+  String get shortLabel => switch (this) {
+    HeroRace.human => 'HUMAN',
+    HeroRace.dwarf => 'DWARF',
+    HeroRace.nightElf => 'N.ELF',
+    HeroRace.gnome => 'GNOME',
+    HeroRace.draenei => 'DRAENEI',
+    HeroRace.worgen => 'WORGEN',
+    HeroRace.orc => 'ORC',
+    HeroRace.forsaken => 'FORSAKEN',
+    HeroRace.tauren => 'TAUREN',
+    HeroRace.troll => 'TROLL',
+    HeroRace.bloodElf => 'B.ELF',
+    HeroRace.goblin => 'GOBLIN',
   };
+
+  static HeroRace parse(String? raw) {
+    if (raw == null || raw.isEmpty) return HeroRace.human;
+    final key = raw.trim();
+    for (final race in HeroRace.values) {
+      if (race.name == key || race.assetKey == key.toLowerCase()) {
+        return race;
+      }
+    }
+    // Legacy / loose aliases.
+    return switch (key.toLowerCase()) {
+      'nightelf' || 'night_elf' => HeroRace.nightElf,
+      'bloodelf' || 'blood_elf' => HeroRace.bloodElf,
+      'undead' => HeroRace.forsaken,
+      _ => HeroRace.human,
+    };
+  }
 }
 
 /// Body sex. Family default matches today's Human poses (healer female).

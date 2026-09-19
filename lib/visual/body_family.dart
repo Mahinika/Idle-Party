@@ -74,31 +74,18 @@ abstract final class BodyFamilyCatalog {
 
   static BodyFamilyDef defForHero(PartyHero hero) => defFor(familyFor(hero));
 
-  /// Day-one authored race undertunics. Missing (family, race, sex) falls back
-  /// to that family's `body_<anim>.png` so we do not need 96 files.
-  static const authoredRaceLooks =
-      <({BodyFamily family, HeroRace race, HeroSex sex})>[
-        (
-          family: BodyFamily.warrior,
-          race: HeroRace.nightElf,
-          sex: HeroSex.male,
-        ),
-        (
-          family: BodyFamily.healer,
-          race: HeroRace.nightElf,
-          sex: HeroSex.female,
-        ),
-        (
-          family: BodyFamily.mage,
-          race: HeroRace.nightElf,
-          sex: HeroSex.male,
-        ),
-        (
-          family: BodyFamily.rogue,
-          race: HeroRace.nightElf,
-          sex: HeroSex.male,
-        ),
-      ];
+  /// Authored race undertunics (Cataclysm set except Human = family body).
+  /// Default sex follows kit family (healer female). Missing files fall back.
+  static final List<({BodyFamily family, HeroRace race, HeroSex sex})>
+      authoredRaceLooks = [
+    for (final race in HeroRace.values)
+      if (race != HeroRace.human) ...[
+        (family: BodyFamily.warrior, race: race, sex: HeroSex.male),
+        (family: BodyFamily.healer, race: race, sex: HeroSex.female),
+        (family: BodyFamily.mage, race: race, sex: HeroSex.male),
+        (family: BodyFamily.rogue, race: race, sex: HeroSex.male),
+      ],
+  ];
 
   static bool hasAuthoredRaceBody(PartyHero hero) {
     if (hero.race == HeroRace.human) return false;
