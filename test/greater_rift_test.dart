@@ -257,12 +257,41 @@ void main() {
     expect(GreaterRift.parTimeMs(21), GreaterRift.parTimeMs(20));
     expect(GreaterRift.parTimeMs(50), 90000);
     expect(GreaterRift.threatMul(21), greaterThan(GreaterRift.threatMul(20)));
+    expect(GreaterRift.threatMul(250) / GreaterRift.threatMul(25), greaterThan(8));
     expect(GreaterRift.densityMul(50), GreaterRift.densityMul(20));
     expect(GreaterRift.successEssence(21), greaterThan(GreaterRift.successEssence(20)));
     double kps(int t) =>
         GreaterRift.killTarget(t) / (GreaterRift.parTimeMs(t) / 1000);
     expect(kps(21), kps(20));
     expect(kps(30), kps(21));
+  });
+
+  test('GR250 trash is much tougher than GR25 at the same party', () {
+    final room = DungeonRoom(
+      floorNumber: 1,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 100,
+      enemyCount: 8,
+    );
+    var hub = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
+    );
+    final low = GameLogic.createEnemyGroup(
+      room,
+      fromState: hub.copyWith(inGreaterRift: true, grTier: 25),
+    );
+    final high = GameLogic.createEnemyGroup(
+      room,
+      fromState: hub.copyWith(inGreaterRift: true, grTier: 250),
+    );
+    expect(low, isNotEmpty);
+    expect(high.length, low.length);
+    final lowHp = low.fold<int>(0, (s, e) => s + e.stats.maxHp);
+    final highHp = high.fold<int>(0, (s, e) => s + e.stats.maxHp);
+    expect(highHp / lowHp, greaterThan(8));
   });
 
   test('Greater Rift GR25 survives save load', () {

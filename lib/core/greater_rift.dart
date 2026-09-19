@@ -76,10 +76,12 @@ abstract final class GreaterRift {
     );
   }
 
+  /// Pack HP/ATK. After GR20 the kill quota + 90s clock hold; threat must
+  /// keep climbing or GR250 plays like GR25.
   static double threatMul(int tier) => RiftPacing.threatMul(
         tier: clampTier(tier),
         perTier: 0.16,
-        afterCap: 0.08,
+        afterCap: 0.20,
       );
 
   /// Extra bodies (soft-cap at 20). Ranked GR denser than farm.
