@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
 import '../core/party_name_filter.dart';
-import '../core/starter_gear.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../assets/custom_assets.dart';
@@ -378,7 +377,6 @@ class _SlotCard extends StatelessWidget {
         : PartyHero.starting(
             name: def!.defaultName,
             specId: specId!,
-            equipped: StarterGear.forSpec(specId!),
             race: look,
           );
     return Material(
