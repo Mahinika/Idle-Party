@@ -111,26 +111,28 @@ abstract final class CharacterVisualPainter {
             tintMask.width.toDouble(),
             tintMask.height.toDouble(),
           );
-          // A one-pixel cloth rim keeps specs readable even when armor covers
-          // most of the undertunic, without recoloring the equipped item art.
-          final rim = math.max(1.0, size / 96);
-          final rimPaint = Paint()
-            ..filterQuality = FilterQuality.none
-            ..isAntiAlias = false
-            ..color = Color.fromRGBO(255, 255, 255, alpha * 0.72)
-            ..colorFilter = ColorFilter.mode(bodyTint, BlendMode.srcIn);
-          for (final offset in [
-            Offset(-rim, 0),
-            Offset(rim, 0),
-            Offset(0, -rim),
-            Offset(0, rim),
-          ]) {
-            canvas.drawImageRect(
-              tintMask,
-              maskSrc,
-              dst.shift(offset),
-              rimPaint,
-            );
+          // Spec rim: only when the doll is big enough. At LOOK card size (~56)
+          // a 1px tint outline around the whole cloth mask reads as a blob halo.
+          final rim = size >= 72 ? math.max(1.0, size / 96) : 0.0;
+          if (rim > 0) {
+            final rimPaint = Paint()
+              ..filterQuality = FilterQuality.none
+              ..isAntiAlias = false
+              ..color = Color.fromRGBO(255, 255, 255, alpha * 0.72)
+              ..colorFilter = ColorFilter.mode(bodyTint, BlendMode.srcIn);
+            for (final offset in [
+              Offset(-rim, 0),
+              Offset(rim, 0),
+              Offset(0, -rim),
+              Offset(0, rim),
+            ]) {
+              canvas.drawImageRect(
+                tintMask,
+                maskSrc,
+                dst.shift(offset),
+                rimPaint,
+              );
+            }
           }
         }
         canvas.drawImageRect(

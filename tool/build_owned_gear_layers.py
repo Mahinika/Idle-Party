@@ -275,7 +275,7 @@ def sample_face(
     x0, y0, x1, y1 = box
     cx = (x0 + x1) // 2
     # Mage gold-master hat fills the top of the bbox — sample the real face.
-    face_frac = {"mage": 0.42, "rogue": 0.40}.get(family, 0.22)
+    face_frac = 0.42 if family == "mage" else 0.22
     cy = y0 + max(8, int((y1 - y0) * face_frac))
     samples: list[tuple[int, int, int]] = []
     for dy in range(-8, 14):
@@ -357,10 +357,13 @@ def is_hat_or_hood(family: str, rgb: tuple[int, int, int]) -> bool:
             return False
         return b > 40 and b >= r - 12
     if family == "healer":
-        # Circlet gold + pale hood only. Blonde hair is warmer (bigger r-b).
+        # Circlet gold + pale/black hood. Blonde hair is warmer (bigger r-b).
         if is_gold_pixel(rgb):
             return True
         if r > 200 and g > 195 and b > 180 and (r - b) < 40:
+            return True
+        # Authored black cowl around the face (not eye ink — callers gate by Y).
+        if lum(rgb) < 0.20 and abs(r - g) < 18 and abs(g - b) < 18:
             return True
         return False
     return False
@@ -524,13 +527,16 @@ def paint_undertunic(
             rgb = (r, g, b)
             in_head = ((x - fx) / rx) ** 2 + ((y - fy) / ry) ** 2 <= 1.0
             if is_skin(rgb, face):
-                # Healer circlet cream matches peach — it's above the forehead.
+                # Healer circlet cream matches peach — only above the forehead.
                 if family == "healer" and y < fy - 8:
                     continue
                 op[x, y] = (r, g, b, a)
                 continue
             # Eyes / brows / mouth — keep ink even when it matches hat blue.
+            # Healer black cowl sits in the head ellipse; strip it like a hat.
             if in_head and lum(rgb) < 0.22:
+                if family == "healer" and is_hat_or_hood("healer", rgb):
+                    continue
                 op[x, y] = (r, g, b, a)
                 continue
             # Hair before hat. Warrior brown plate matches the hair heuristic —
@@ -538,9 +544,7 @@ def paint_undertunic(
             hair_ok = True if family != "warrior" else (
                 in_head or abs(x - fx) <= face_half * 1.7
             )
-            # Healer circlet gold matches blonde hair — keep the bob, not the crown.
-            if family == "healer" and y < fy - 8:
-                hair_ok = False
+            # Circlet gold is not hair; blonde bob beside the face is.
             if family == "healer" and (
                 is_gold_pixel(rgb) or is_hat_or_hood("healer", rgb)
             ):
@@ -548,12 +552,15 @@ def paint_undertunic(
             if y <= head_max + 4 and hair_ok and is_hair_color(family, rgb):
                 op[x, y] = (r, g, b, a)
                 continue
-            # Mage hat is above the eyes; indigo robe below is cloth.
+            # Strip hat / circlet / hood only — never punch holes in the torso.
             hat_band = (y < fy - 1) if family == "mage" else (y <= head_max + 6)
             if hat_band and is_hat_or_hood(family, rgb):
                 continue
-            # Mage: anything above the eyes that isn't skin/hair is hat.
             if family == "mage" and y < fy - 1:
+                continue
+            if family == "healer" and y < fy - 6 and (
+                is_gold_pixel(rgb) or is_hat_or_hood("healer", rgb)
+            ):
                 continue
             if (
                 in_head
@@ -563,22 +570,8 @@ def paint_undertunic(
             ):
                 op[x, y] = (r, g, b, a)
                 continue
-            # LOOK / empty slots = a cloth person. Pauldrons, cape wings and
-            # huge sleeves live on gear overlays — drop them from the body.
-            core_mul = {"mage": 1.15, "healer": 1.7}.get(family, 2.05)
-            core_half = max(16.0, face_half * core_mul)
-            if y > chin_y and abs(x - fx) > core_half:
-                continue
-            rogue_head = (
-                family == "rogue"
-                and y <= chin_y + 18
-                and abs(x - fx) <= face_half * 1.9
-            )
-            if family == "rogue" and (in_head or rogue_head):
-                op[x, y] = (r, g, b, a)
-                continue
-            if family == "rogue" and is_rogue_cloak(rgb):
-                continue
+            # Keep the full gold-master silhouette (arms, neck, legs). Recolor
+            # plate / robe / cape to undertunic cloth — gear overlays add armor.
             cloth = tunic if y < mid_y else pants
             op[x, y] = recolor_to_cloth(rgb, cloth, a)
             # Runtime spec color replaces this grayscale cloth only. Skin,
