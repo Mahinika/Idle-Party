@@ -656,6 +656,7 @@ abstract final class GameGuides {
           'Unlocks when every active hero reaches level ${GameLogic.maxHeroLevel} (endgame).\n\n'
           '• Endless Crystal Spire climb — not a 16th PATH cave; each floor gets harder.\n'
           '• Boss every 5 floors — tells cycle (SHARD, WAVE, WIND-UP, …) and scale past F100 (faster).\n'
+          '• Between bosses (F3, F8, F13, … — not treasure floors) the floor can squeeze, swarm, echo a boss tell, or add extra gates. Same fight — not a new hunt.\n'
           '• Gold and essence scale with floor; boss every 5 floors.\n'
           '• Wipe or leave returns to hub; best floor is saved.\n'
           '• Enter from the hub ENDGAME tab, KEY, or the hub hunt line.\n'

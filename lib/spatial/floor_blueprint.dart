@@ -76,6 +76,7 @@ class FloorBlueprint {
     DungeonRoom room, {
     required String dungeonId,
     int layoutSeed = 0,
+    int extraCombatRooms = 0,
   }) {
     final kit = ZoneLayoutKit.forId(dungeonId);
     final rng = Random(
@@ -103,10 +104,22 @@ class FloorBlueprint {
         ]);
       case RoomType.elite:
         beats.add(FloorBeat(FloorBeatKind.approach, enemyBudget: 0));
-        _addEliteCombatSpine(beats, budget, kit, rng);
+        _addEliteCombatSpine(
+          beats,
+          budget,
+          kit,
+          rng,
+          extraCombatRooms: extraCombatRooms,
+        );
         beats.add(const FloorBeat(FloorBeatKind.exitHold));
       case RoomType.normal:
-        _buildNormalBeats(beats, budget, kit, rng);
+        _buildNormalBeats(
+          beats,
+          budget,
+          kit,
+          rng,
+          extraCombatRooms: extraCombatRooms,
+        );
         beats.add(const FloorBeat(FloorBeatKind.exitHold));
     }
 
@@ -121,8 +134,9 @@ class FloorBlueprint {
     List<FloorBeat> beats,
     int budget,
     ZoneLayoutKit kit,
-    Random rng,
-  ) {
+    Random rng, {
+    int extraCombatRooms = 0,
+  }) {
     final useHub =
         budget >= 4 &&
         kit.hubChamberChance > 0 &&
@@ -130,10 +144,22 @@ class FloorBlueprint {
 
     if (useHub) {
       beats.add(const FloorBeat(FloorBeatKind.hub));
-      _addHubSpineAndSides(beats, budget, kit, rng);
+      _addHubSpineAndSides(
+        beats,
+        budget,
+        kit,
+        rng,
+        extraCombatRooms: extraCombatRooms,
+      );
     } else {
       beats.add(const FloorBeat(FloorBeatKind.approach));
-      _addClassicNormalSpine(beats, budget, kit, rng);
+      _addClassicNormalSpine(
+        beats,
+        budget,
+        kit,
+        rng,
+        extraCombatRooms: extraCombatRooms,
+      );
       _maybeAddSideMainAlcove(beats, budget, kit, rng);
     }
 
@@ -153,8 +179,9 @@ class FloorBlueprint {
     List<FloorBeat> beats,
     int budget,
     ZoneLayoutKit kit,
-    Random rng,
-  ) {
+    Random rng, {
+    int extraCombatRooms = 0,
+  }) {
     var remaining = budget;
 
     if (kit.eliteAlcoveChance > 0 && rng.nextDouble() < kit.eliteAlcoveChance) {
@@ -181,16 +208,29 @@ class FloorBlueprint {
 
     if (remaining <= 0) return;
 
-    _addMainCombatSpine(beats, remaining, kit, rng);
+    _addMainCombatSpine(
+      beats,
+      remaining,
+      kit,
+      rng,
+      extraCombatRooms: extraCombatRooms,
+    );
   }
 
   static void _addClassicNormalSpine(
     List<FloorBeat> beats,
     int budget,
     ZoneLayoutKit kit,
-    Random rng,
-  ) {
-    _addMainCombatSpine(beats, budget, kit, rng);
+    Random rng, {
+    int extraCombatRooms = 0,
+  }) {
+    _addMainCombatSpine(
+      beats,
+      budget,
+      kit,
+      rng,
+      extraCombatRooms: extraCombatRooms,
+    );
     final preferTreasure =
         kit.preferTreasureAlcove && rng.nextDouble() < kit.treasureAlcoveChance;
     if (preferTreasure && budget >= 4) {
@@ -204,12 +244,21 @@ class FloorBlueprint {
   }
 
   /// How many fight rooms the main spine should carve (staging is separate).
-  static int _mainCombatRooms(int budget) {
-    if (budget >= 16) return 5;
-    if (budget >= 12) return 4;
-    if (budget >= 6) return 3;
-    if (budget >= 4) return 2;
-    return budget > 0 ? 1 : 0;
+  static int _mainCombatRooms(int budget, {int extra = 0}) {
+    var n = 0;
+    if (budget >= 16) {
+      n = 5;
+    } else if (budget >= 12) {
+      n = 4;
+    } else if (budget >= 6) {
+      n = 3;
+    } else if (budget >= 4) {
+      n = 2;
+    } else {
+      n = budget > 0 ? 1 : 0;
+    }
+    if (n <= 0) return 0;
+    return min(6, n + extra.clamp(0, 3));
   }
 
   static List<int> _shareBudget(int budget, int rooms) {
@@ -234,9 +283,10 @@ class FloorBlueprint {
     List<FloorBeat> beats,
     int budget,
     ZoneLayoutKit kit,
-    Random rng,
-  ) {
-    final rooms = _mainCombatRooms(budget);
+    Random rng, {
+    int extraCombatRooms = 0,
+  }) {
+    final rooms = _mainCombatRooms(budget, extra: extraCombatRooms);
     if (rooms == 0) return;
     final shares = _shareBudget(budget, rooms);
     final third = kit.preferChoke || rng.nextDouble() < 0.55
@@ -248,6 +298,7 @@ class FloorBlueprint {
       if (rooms >= 3) third,
       if (rooms >= 4) FloorBeatKind.elite,
       if (rooms >= 5) FloorBeatKind.choke,
+      if (rooms >= 6) FloorBeatKind.choke,
     ];
     for (var i = 0; i < rooms; i++) {
       beats.add(FloorBeat(kinds[i], enemyBudget: shares[i]));
@@ -258,9 +309,10 @@ class FloorBlueprint {
     List<FloorBeat> beats,
     int budget,
     ZoneLayoutKit kit,
-    Random rng,
-  ) {
-    final rooms = _mainCombatRooms(budget);
+    Random rng, {
+    int extraCombatRooms = 0,
+  }) {
+    final rooms = _mainCombatRooms(budget, extra: extraCombatRooms);
     if (rooms == 0) return;
     final shares = _shareBudget(budget, rooms);
     beats.add(FloorBeat(FloorBeatKind.elite, enemyBudget: shares[0]));
@@ -278,6 +330,9 @@ class FloorBlueprint {
     }
     if (rooms >= 5) {
       beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: shares[4]));
+    }
+    if (rooms >= 6) {
+      beats.add(FloorBeat(FloorBeatKind.choke, enemyBudget: shares[5]));
     }
   }
 

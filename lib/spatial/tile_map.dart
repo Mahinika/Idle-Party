@@ -274,6 +274,9 @@ abstract final class RoomLayouts {
     int? enemyCountOverride,
     int ascensionLevel = 0,
     int keyLevel = 0,
+    int pressureBonus = 0,
+    int extraCombatRooms = 0,
+    bool tightRooms = false,
   }) {
     final def = DungeonCatalog.byId(dungeonId);
     final seed =
@@ -285,9 +288,10 @@ abstract final class RoomLayouts {
     final enemyCount = max(room.enemyCount, enemyCountOverride ?? 0);
 
     final pressure = DungeonGenerator.layoutPressure(
-      ascensionLevel: ascensionLevel,
-      keyLevel: keyLevel,
-    );
+          ascensionLevel: ascensionLevel,
+          keyLevel: keyLevel,
+        ) +
+        pressureBonus.clamp(0, 12);
     if (room.type == RoomType.boss) {
       return _bossArena(
         rng,
@@ -321,6 +325,8 @@ abstract final class RoomLayouts {
       dungeonId: dungeonId,
       layoutSeed: seed,
       room: room,
+      extraCombatRooms: extraCombatRooms,
+      tightRooms: tightRooms,
     );
   }
 
@@ -715,11 +721,14 @@ abstract final class RoomLayouts {
     required String dungeonId,
     required int layoutSeed,
     required DungeonRoom room,
+    int extraCombatRooms = 0,
+    bool tightRooms = false,
   }) {
     final blueprint = FloorBlueprint.forRoom(
       room,
       dungeonId: dungeonId,
       layoutSeed: layoutSeed,
+      extraCombatRooms: extraCombatRooms,
     );
     final kit = ZoneLayoutKit.forId(dungeonId);
     final storyBeats = blueprint.storyChambers;
@@ -742,6 +751,11 @@ abstract final class RoomLayouts {
         r.x >= 1 && r.y >= 1 && r.x + r.w <= cols - 2 && r.y + r.h <= rows - 2;
 
     (int, int) sizeFor(FloorBeatKind kind) {
+      if (tightRooms &&
+          kind != FloorBeatKind.treasure &&
+          kind != FloorBeatKind.exitHold) {
+        return (6 + rng.nextInt(2), 8 + rng.nextInt(2));
+      }
       switch (kind) {
         case FloorBeatKind.approach:
           return (11 + rng.nextInt(4), 8 + rng.nextInt(3)); // hall, not closet

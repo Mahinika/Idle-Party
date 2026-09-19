@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/ashen_crown.dart';
+import '../../core/gauntlet_anomaly.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
@@ -327,13 +328,23 @@ class DungeonTopHud extends StatelessWidget {
       if (state.inGauntlet) {
         final floor = state.currentRoom.floorNumber;
         final nextBoss = ((floor ~/ 5) + 1) * 5;
+        final anomaly = GauntletAnomalies.forFloor(
+          floor,
+          inGauntlet: true,
+        );
+        final chip = anomaly != null
+            ? 'GAUNTLET F$floor · ${GauntletAnomalies.chip(anomaly)}'
+            : 'GAUNTLET F$floor';
+        final extra = anomaly != null
+            ? '\n${GauntletAnomalies.oneLiner(anomaly)}'
+            : '';
         return DungeonModeChip(
-          label: 'GAUNTLET F$floor',
+          label: chip,
           selected: true,
           dense: true,
           interactive: false,
           tip:
-              'Spire climb — not a 16th cave. Next boss F$nextBoss. No FARM. Wipe or leave → hub.',
+              'Spire climb — not a 16th cave. Next boss F$nextBoss. No FARM. Wipe or leave → hub.$extra',
           onTap: () {},
         );
       }

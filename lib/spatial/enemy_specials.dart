@@ -22,11 +22,24 @@ double _bossCooldownSec(SpatialWorld world, double base) =>
     base * _bossCadenceMul(world);
 
 void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
-  if (world.keystoneRunAffixes.isEmpty) return;
+  if (world.keystoneRunAffixes.isEmpty && world.gauntletAnomaly == null) {
+    return;
+  }
   final leader = world.leader;
   if (leader == null) return;
   final x = leader.x;
   final y = leader.y - 0.8;
+  if (world.gauntletAnomaly != null) {
+    SpatialCombat._spawnFloater(
+      world,
+      x: x,
+      y: y - 0.35,
+      text: GauntletAnomalies.chip(world.gauntletAnomaly!),
+      argb: 0xFFE8D090,
+      life: 1.15,
+      priority: 2,
+    );
+  }
   if (_worldHasAffix(world, 'swarm')) {
     SpatialCombat._spawnFloater(
       world,
@@ -112,6 +125,17 @@ void _tickEnemySpecials(
   }
 
   if (enemy.role == EnemyRole.boss) {
+    _tickBossKit(
+      world,
+      enemy,
+      focus,
+      rng: rng,
+      reducedVfx: reducedVfx,
+    );
+    return;
+  }
+
+  if (enemy.bossEcho) {
     _tickBossKit(
       world,
       enemy,

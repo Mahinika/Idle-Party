@@ -10,6 +10,7 @@ import 'ad_boost.dart';
 import 'dungeon_generator.dart';
 import 'enemy_flavor.dart';
 import 'game_logic.dart';
+import 'gauntlet_anomaly.dart';
 import 'game_state.dart';
 import 'keystone.dart';
 import 'rift.dart';
@@ -301,6 +302,12 @@ abstract final class EncounterFactory {
         affixes.contains('boss_rush');
     final glassWeek = affixes.contains('glass');
     final swarmWeek = affixes.contains('swarm');
+    final gauntletSwarm = GauntletAnomalies.swarmPacks(
+      GauntletAnomalies.forFloor(
+        room.floorNumber,
+        inGauntlet: fromState?.inGauntlet ?? false,
+      ),
+    );
     final eliteWeek = affixes.contains('elite');
     final fortuneWeek = affixes.contains('fortune');
     final ironWeek = affixes.contains('iron');
@@ -361,7 +368,9 @@ abstract final class EncounterFactory {
     // Key densifies packs; Swarm multiplies count before key density.
     final baseCount = max(
       1,
-      (room.enemyCount * (swarmWeek ? 1.35 : 1.0)).round(),
+      (room.enemyCount *
+              ((swarmWeek || gauntletSwarm) ? 1.35 : 1.0))
+          .round(),
     );
     final count = min(
       80,
@@ -420,14 +429,14 @@ abstract final class EncounterFactory {
                       count: count,
                       rng: rng,
                     ))
-            : EnemyFlavor.pickArchetype(
-                type: pickType,
-                isBossUnit: isBossRoom && i == 0,
-                dungeonId: flavorId,
-                index: i,
-                count: count,
-                rng: rng,
-              ),
+                    : EnemyFlavor.pickArchetype(
+                        type: pickType,
+                        isBossUnit: isBossRoom && i == 0,
+                        dungeonId: flavorId,
+                        index: gauntletSwarm ? 0 : i,
+                        count: gauntletSwarm ? 3 : count,
+                        rng: rng,
+                      ),
     ];
 
     // Weight shares by archetype (tanks eat HP budget, glass eats ATK).

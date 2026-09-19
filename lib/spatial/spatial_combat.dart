@@ -6,6 +6,7 @@ import '../core/blessing_constellation.dart';
 import '../core/combat_feel.dart';
 import '../core/enemy_flavor.dart';
 import '../core/game_logic.dart';
+import '../core/gauntlet_anomaly.dart';
 import '../core/game_state.dart';
 import '../core/keystone.dart';
 import '../models/class_ability.dart';
@@ -175,6 +176,7 @@ class SpatialActor {
     this.petOwnerId,
     this.petLifeTimer = 0,
     this.dormant = false,
+    this.bossEcho = false,
     this.blockValue = 0,
     this.spiritRegenBonus = 0,
     this.mp5RegenBonus = 0,
@@ -257,6 +259,9 @@ class SpatialActor {
 
   /// Waiting for chamber unlock (gated rooms).
   bool dormant;
+
+  /// Gauntlet anomaly: this trash body may fire a cave boss tell.
+  final bool bossEcho;
 
   /// Brief visual punch when the actor attacks (seconds remaining).
   double attackFlash = 0;
@@ -718,6 +723,7 @@ class SpatialWorld {
     this.keystoneWeekDungeonId = '',
     this.inWorldBoss = false,
     this.inGauntlet = false,
+    this.gauntletAnomaly,
     this.combatFloor = 1,
     this.affixBannerShown = false,
     this.combatElapsed = 0,
@@ -771,6 +777,9 @@ class SpatialWorld {
 
   /// Infinity Gauntlet — scales crystal boss tells by [combatFloor].
   final bool inGauntlet;
+
+  /// Non-boss Gauntlet floor modifier (null on PATH / boss floors).
+  final GauntletAnomaly? gauntletAnomaly;
 
   /// Current floor number (Gauntlet climb / wipe advice).
   final int combatFloor;
@@ -1909,6 +1918,10 @@ abstract final class SpatialCombat {
     bool? afkAssist,
   }) {
     final room = state.currentRoom;
+    final anomaly = GauntletAnomalies.forFloor(
+      room.floorNumber,
+      inGauntlet: state.inGauntlet,
+    );
     final map = RoomLayouts.forFloor(
       floorNumber: room.floorNumber,
       room: room,
@@ -1917,6 +1930,9 @@ abstract final class SpatialCombat {
       enemyCountOverride: state.enemies.length,
       ascensionLevel: state.ascensionLevel,
       keyLevel: GameLogic.layoutKeyLevel(state),
+      pressureBonus: GauntletAnomalies.layoutPressureBonus(anomaly),
+      extraCombatRooms: GauntletAnomalies.extraCombatRooms(anomaly),
+      tightRooms: GauntletAnomalies.tightRooms(anomaly),
     );
     final isTreasure = room.type == RoomType.treasure || state.enemies.isEmpty;
 
@@ -2018,6 +2034,16 @@ abstract final class SpatialCombat {
     }
 
     final enemies = <SpatialActor>[];
+    var echoIndex = -1;
+    if (GauntletAnomalies.bossEcho(anomaly) && state.enemies.isNotEmpty) {
+      echoIndex = 0;
+      for (var i = 0; i < state.enemies.length; i++) {
+        if (state.enemies[i].role == EnemyRole.elite) echoIndex = i;
+      }
+      if (echoIndex == 0 && state.enemies.length > 1) {
+        echoIndex = state.enemies.length - 1;
+      }
+    }
     for (var i = 0; i < state.enemies.length; i++) {
       final enemy = state.enemies[i];
       final spawn = placeEnemy(i);
@@ -2074,6 +2100,7 @@ abstract final class SpatialCombat {
           dormant: enemy.role == EnemyRole.boss
               ? false
               : chamberIndex > firstCombat,
+          bossEcho: i == echoIndex,
         ),
       );
     }
@@ -2221,6 +2248,7 @@ abstract final class SpatialCombat {
           : '',
       inWorldBoss: state.inWorldBoss,
       inGauntlet: state.inGauntlet,
+      gauntletAnomaly: anomaly,
       combatFloor:
           state.inDungeon ? state.currentRoom.floorNumber : 1,
       affixBannerShown: false,
@@ -2480,6 +2508,7 @@ abstract final class SpatialCombat {
       keystoneWeekDungeonId: world.keystoneWeekDungeonId,
       inWorldBoss: world.inWorldBoss,
       inGauntlet: world.inGauntlet,
+      gauntletAnomaly: world.gauntletAnomaly,
       combatFloor: world.combatFloor,
       affixBannerShown: world.affixBannerShown,
       combatElapsed: world.combatElapsed,

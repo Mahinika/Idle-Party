@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code
 and **owned** pixel art (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.172**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.173**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -189,7 +189,8 @@ through Mothveil Hollow.
 **Infinity Gauntlet** (`GameLogic.endgameUnlocked` = active party all at
 `maxHeroLevel` **100**): endless Crystal
 Spire climb from Hub; **boss every 5 floors** (tells cycle shipped-cave jobs —
-not the same SHARD forever); wipe/leave → hub;
+not the same SHARD forever); **non-boss F3/F8/F13…** (not treasure) can squeeze, swarm,
+echo a tell, or add extra gates (same SpatialCombat); wipe/leave → hub;
 `metaDepth.gauntletBestFloor` survives Ascend.
 
 **KEYSTONE** (same party-max-level gate): Mythic+-style keys on
