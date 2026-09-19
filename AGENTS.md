@@ -72,7 +72,10 @@ PNGs — Kenney 16×16 tiles are not bundled. Items share looks via
 `visualSetId`. Four bodies serve 31 specs, so each spec washes its own color
 through generated **cloth-only** `body_tint_<anim>` masks
 (`HeroIdentity.ownedBodyTintArgb`); skin/hair and authored gear keep their
-palette. One body clip per anim — walk bob, weapon swing and hit recoil come from
+palette. Optional **LOOK** (New Game + GEAR): Human is the family body;
+Night Elf uses authored `nightelf_*_body_*.png` on warrior-male and
+healer-female only — mage/rogue Night Elf fall back to the family undertunic.
+One body clip per anim — walk bob, weapon swing and hit recoil come from
 `CharacterVisualPainter.ownedStepOffset`, not new PNGs. Hand items grip
 opaque pixels (`OwnedGearGrips`, generated). Looks gate:
 `py tool/check_paper_doll_facit.py` (idle facit + t2/material + grips +

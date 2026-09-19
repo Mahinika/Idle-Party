@@ -55,6 +55,8 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
     if (oldWidget.hero.id != widget.hero.id ||
         oldWidget.hero.specId != widget.hero.specId ||
         oldWidget.hero.gearAffinity != widget.hero.gearAffinity ||
+        oldWidget.hero.race != widget.hero.race ||
+        oldWidget.hero.sex != widget.hero.sex ||
         !_sameEquipKeys(oldWidget.hero, widget.hero)) {
       _reload();
     }
@@ -93,8 +95,7 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
       return;
     }
 
-    final bodyPath =
-        BodyFamilyCatalog.assetFor(widget.hero, HeroAnimKind.idle);
+    final bodyPath = BodyFamilyCatalog.assetFor(widget.hero, HeroAnimKind.idle);
     _fallbackPath = KenneyAssets.heroSpriteForSpec(widget.hero.specId);
     // Owned bodies/overlays are 128×128. Upscaling to 256 then painting with
     // FilterQuality.none made GEAR dolls softer than the dungeon.

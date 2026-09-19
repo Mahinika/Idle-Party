@@ -783,8 +783,8 @@ void main() {
     expect(owned.bodyTint, isNotNull);
     expect(
       owned.bodyTint,
-      const Color(0xFFB0C8F0),
-      reason: 'protection blue from HeroIdentity',
+      Color(HeroIdentity.ownedBodyTintArgb(HeroSpecId.protection)),
+      reason: 'protection blue from ownedBodyTintArgb',
     );
     expect(
       owned.bodyTintAsset,

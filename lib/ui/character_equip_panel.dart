@@ -9,10 +9,12 @@ import '../models/loot.dart';
 import '../models/proficiency.dart';
 import '../models/spec_mastery.dart';
 import '../assets/custom_assets.dart';
+import '../visual/body_family.dart';
 import 'equipment_icon.dart';
 import 'game_icon.dart';
 import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
+import 'hero_look_row.dart';
 import 'item_tooltip.dart';
 import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
@@ -31,6 +33,7 @@ class CharacterEquipPanel extends StatelessWidget {
     this.onEmptySlotTap,
     this.compact = false,
     this.showHeroStrip = true,
+    this.onSetHeroLook,
   });
 
   final GameState state;
@@ -42,6 +45,7 @@ class CharacterEquipPanel extends StatelessWidget {
   final void Function(EquipmentSlot slot)? onEmptySlotTap;
   final bool compact;
   final bool showHeroStrip;
+  final void Function(String heroId, HeroRace race)? onSetHeroLook;
 
   /// Left armor column (reference: helm → feet).
   static const leftColumn = <EquipmentSlot>[
@@ -349,6 +353,20 @@ class CharacterEquipPanel extends StatelessWidget {
                       size: dollSize,
                     ),
                   ),
+                  if (onSetHeroLook != null) ...[
+                    SizedBox(height: slotGap),
+                    HeroLookRow(
+                      value: hero.race,
+                      compact: true,
+                      onChanged: (race) => onSetHeroLook!(hero.id, race),
+                      hint: hero.race == HeroRace.nightElf
+                          ? nightElfLookHint(
+                              authoredBody:
+                                  BodyFamilyCatalog.hasAuthoredRaceBody(hero),
+                            )
+                          : null,
+                    ),
+                  ],
                   if (state.soulboundItem != null) ...[
                     SizedBox(height: slotGap),
                     Text(

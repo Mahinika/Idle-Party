@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
 import '../core/party_name_filter.dart';
+import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../assets/custom_assets.dart';
 import 'game_theme.dart';
+import 'hero_look_row.dart';
 import 'kenney_button.dart';
 import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
@@ -18,7 +20,8 @@ class NewGamePartyPicker extends StatefulWidget {
     this.initialSpecs,
   });
 
-  final void Function(List<HeroSpecId> specs, String partyName) onConfirm;
+  final void Function(List<HeroSpecId> specs, String partyName, HeroRace race)
+  onConfirm;
   final VoidCallback onBack;
   final List<HeroSpecId>? initialSpecs;
 
@@ -33,6 +36,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   int _activeSlot = 0;
   bool _nameError = false;
   String? _pickHint;
+  HeroRace _look = HeroRace.human;
 
   @override
   void initState() {
@@ -58,7 +62,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       setState(() => _nameError = true);
       return;
     }
-    widget.onConfirm([for (final s in _slots) s!], name);
+    widget.onConfirm([for (final s in _slots) s!], name, _look);
   }
 
   bool get _ready =>
@@ -208,7 +212,14 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   style: GameTheme.body(size: 12, color: GameTheme.bloodLit),
                 ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
+              HeroLookRow(
+                value: _look,
+                compact: true,
+                onChanged: (race) => setState(() => _look = race),
+                hint: _look == HeroRace.nightElf ? newGameNightElfHint : null,
+              ),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   for (var i = 0; i < _slots.length; i++) ...[
@@ -307,7 +318,10 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                 Text(
                   blockReason,
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                  style: GameTheme.body(
+                    size: 12,
+                    color: GameTheme.parchmentDim,
+                  ),
                 ),
                 const SizedBox(height: 6),
               ],

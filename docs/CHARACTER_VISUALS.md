@@ -3,10 +3,13 @@
 Idle Party heroes use a **paper-doll** path when an owned body is available:
 
 1. **Undertunic base** from `assets/custom/char/<family>/body_<anim>.png`
-   (skin + hair + simple cloth — never naked). Empty jewelry slots never
-   draw on the body (same as WoW rings/neck).
-   Spec color uses `body_tint_<anim>.png`, a generated **cloth-only** grayscale
-   mask. Never color-filter the whole body: that recolors faces, hair and ink.
+   (skin + hair + simple cloth — never naked). Race/sex clips, when authored,
+   sit beside that file as `<race>_<m|f>_body_<anim>.png` and fall back to the
+   family body so we do not need every family×race×sex×anim on day one.
+   Empty jewelry slots never draw on the body (same as WoW rings/neck).
+   Spec color uses `body_tint_<anim>.png` (or `<race>_<m|f>_body_tint_<anim>.png`),
+   a generated **cloth-only** grayscale mask. Never color-filter the whole body:
+   that recolors faces, hair and ink.
 2. **Every equipped gear slot** is a 128×128 overlay on the same dest-rect
    (cape, legs, chest, gloves, helm, off-hand, main-hand). Overlays always
    use the **idle** PNG (`*_idle.png`); walk/attack only change the undertunic
@@ -42,7 +45,8 @@ family’s native look.
 
 | Axis | Resolves to |
 |------|-------------|
-| `BodyFamily` | undertunic + native armor folder |
+| `BodyFamily` | gear pose + overlay atlas (warrior / healer / mage / rogue) |
+| `HeroRace` + `HeroSex` | undertunic clip (`<race>_<m|f>_body_<anim>.png`); missing → family `body_<anim>.png`. Old saves default Human; sex follows family (healer female). |
 | `armorType` | material suffix when ≠ native (`*_mail_*`, `*_plate_*`, `*_leather_*`) |
 | `visualSetId` | tier / named weapon stem (`chest_t0`, `sword_thunderfury`, …) |
 
@@ -97,7 +101,8 @@ by `tool/make_gear_slot_icons.py` at the end of `build_owned_gear_layers.py`.
 ## Pipeline
 
 ```text
-PartyHero.gearAffinity → BodyFamilyCatalog → body_<anim>.png + cloth tint mask
+PartyHero.gearAffinity → BodyFamilyCatalog → family pose + overlays
+PartyHero.race / sex → race undertunic when authored, else family body_<anim>.png + cloth tint mask
 PartyHero.equipped     → normalized visualSetId → OwnedGearAssets idle overlay
 SpatialActor signals   → HeroAnimController → anim + frame
 Canvas: paintOwnedHero (body + armor same dest rect; hand items
@@ -108,7 +113,7 @@ grip-aligned to owned anchors via `OwnedGearGrips`)
 
 | File | Role |
 |------|------|
-| `lib/visual/body_family.dart` | Owned denser body families + asset paths |
+| `lib/visual/body_family.dart` | Owned denser body families + race/sex undertunic paths |
 | `lib/visual/owned_gear_assets.dart` | 128 overlay path helpers |
 | `lib/visual/hero_anim_state.dart` | `HeroAnimKind`, signals, pose |
 | `lib/visual/hero_anim_controller.dart` | SM + `snapshot()` for paint |
@@ -191,6 +196,15 @@ every time a hero took damage.
 3. Register paths in `BodyFamilyCatalog`.
 4. Do **not** paste Kenney tiles on denser bodies.
 5. `py tool/process_char_bodies.py` skips `gear/` and `_src/`.
+
+## Adding a race undertunic
+
+Keep `BodyFamily` as the gear pose. Author
+`assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png` that shares that
+family’s anchors, then `py tool/paint_race_bodies.py` (or drop idle/walk/attack
++ tint masks by hand). Register the look in `BodyFamilyCatalog.authoredRaceLooks`.
+Do **not** regenerate family gear. Human (default) uses `body_<anim>.png`.
+LOOK lives on New Game and GEAR (paper doll) — not a second nav.
 
 Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 

@@ -191,6 +191,45 @@ def check_files() -> list[str]:
     return [e for e in errors if e]
 
 
+def check_race_bodies() -> list[str]:
+    """Authored <race>_<m|f>_body_*.png must be 128×128 with a cloth tint."""
+    errors: list[str] = []
+    for family in FAMILIES:
+        folder = CHAR / family
+        if not folder.exists():
+            continue
+        for body in sorted(folder.glob("*_body_*.png")):
+            if "_body_tint_" in body.name:
+                continue
+            errors.append(must_exist_128(body))
+            tint_name = body.name.replace("_body_", "_body_tint_", 1)
+            tint = folder / tint_name
+            errors.append(must_exist_128(tint))
+            if body.exists() and tint.exists():
+                bp = Image.open(body).convert("RGBA").load()
+                tp = Image.open(tint).convert("RGBA").load()
+                outside = 0
+                painted = 0
+                for y in range(128):
+                    for x in range(128):
+                        if tp[x, y][3] < 40:
+                            continue
+                        painted += 1
+                        if bp[x, y][3] < 40:
+                            outside += 1
+                if painted < 200:
+                    errors.append(
+                        f"race tint too sparse ({painted}px) "
+                        f"{tint.relative_to(REPO)}"
+                    )
+                if outside:
+                    errors.append(
+                        f"race tint leaves body ({outside}px) "
+                        f"{tint.relative_to(REPO)}"
+                    )
+    return [e for e in errors if e]
+
+
 def check_body_tint_masks() -> list[str]:
     """Spec color may cover undertunic cloth, never face/hair or empty pixels."""
     errors: list[str] = []
@@ -488,6 +527,9 @@ def main() -> int:
     relock = "--relock" in sys.argv
     failed = 0
     for msg in check_files():
+        print("FAIL", msg)
+        failed += 1
+    for msg in check_race_bodies():
         print("FAIL", msg)
         failed += 1
     for msg in check_body_tint_masks():
