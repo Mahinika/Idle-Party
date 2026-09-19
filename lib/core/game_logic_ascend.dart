@@ -108,8 +108,7 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
 
   var preservedRoster = List<PartyHero>.from(base.heroRoster);
   if (!preservedRoster.any((h) => h.specId == HeroSpecs.ascendUnlockSpec)) {
-    final seedPool =
-        preservedRoster.isNotEmpty ? preservedRoster : base.heroes;
+    final seedPool = preservedRoster.isNotEmpty ? preservedRoster : base.heroes;
     final seedLevel = seedPool.isEmpty
         ? 1
         : max(
@@ -124,6 +123,9 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
         stats: PartyHero.startingStatsForSpec(HeroSpecs.ascendUnlockSpec),
         equipped: StarterGear.forSpec(HeroSpecs.ascendUnlockSpec),
         level: seedLevel,
+        race: preservedRoster.isEmpty
+            ? HeroRace.human
+            : preservedRoster.first.race,
       ),
     ];
   }
@@ -186,8 +188,7 @@ GameState _rebornAtCapGameState(GameState state, {DateTime? now}) {
   }
 
   final clock = (now ?? DateTime.now()).toUtc();
-  final essence =
-      state.essence + GameLogic.rebornEssenceReward();
+  final essence = state.essence + GameLogic.rebornEssenceReward();
   var base = _applyPrestigeRunWipe(GameLogic.leaveDungeon(state));
   var nextMeta = base.metaDepth.copyWith(
     lifetimeAscends: base.metaDepth.lifetimeAscends + 1,

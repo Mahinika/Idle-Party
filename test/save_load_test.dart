@@ -54,12 +54,16 @@ void main() {
     );
 
     // Load re-evaluates achievements and grants essence for unmet unlocks.
-    final grant = (AchievementCatalog.byId('first_floor')?.essenceReward ?? 0) +
+    final grant =
+        (AchievementCatalog.byId('first_floor')?.essenceReward ?? 0) +
         (AchievementCatalog.byId('first_ascend')?.essenceReward ?? 0) +
         (AchievementCatalog.byId('full_party')?.essenceReward ?? 0);
     expect(decoded.gold, 777);
     expect(decoded.essence, 12 + grant);
-    expect(decoded.achievements, containsAll(['first_floor', 'first_ascend', 'full_party']));
+    expect(
+      decoded.achievements,
+      containsAll(['first_floor', 'first_ascend', 'full_party']),
+    );
     expect(decoded.attackBonus, 4);
     expect(decoded.defenseBonus, 3);
     expect(decoded.vitalityBonus, 12);
@@ -89,10 +93,7 @@ void main() {
     expect(decoded.wipeAdviceLine, 'Upgrade ATK in FORGE');
     expect(decoded.heroes.length, state.heroes.length);
     // Load may run syncSpecUnlocks and bump lastUpdated.
-    expect(
-      !decoded.lastUpdated.isBefore(state.lastUpdated),
-      isTrue,
-    );
+    expect(!decoded.lastUpdated.isBefore(state.lastUpdated), isTrue);
   });
 
   test('legacy saves default forge mastery and Aegis track to 0', () {
@@ -127,17 +128,17 @@ void main() {
     // Prefer per-hero gear (current save shape).
     final heroes = [
       state.heroes.first.copyWith(
-        equipped: {
-          EquipmentSlot.weapon: weapon,
-          EquipmentSlot.cloak: cloak,
-        },
+        equipped: {EquipmentSlot.weapon: weapon, EquipmentSlot.cloak: cloak},
       ),
       ...state.heroes.skip(1),
     ];
     state = state.copyWith(heroes: heroes, gearStash: [cloak]);
 
     final round = GameLogic.stateFromJson(state.toJson());
-    expect(round.heroes.first.equipped[EquipmentSlot.weapon]?.name, weapon.name);
+    expect(
+      round.heroes.first.equipped[EquipmentSlot.weapon]?.name,
+      weapon.name,
+    );
     expect(round.heroes.first.equipped[EquipmentSlot.cloak]?.name, cloak.name);
     expect(round.gearStash, isNotEmpty);
     expect(round.gearStash.first.name, cloak.name);
@@ -201,9 +202,9 @@ void main() {
       rarity: PetRarity.rare,
       affinityDungeonId: 'hell',
     );
-    final json = GameLogic.createInitialState(now: DateTime(2026, 8, 1))
-        .copyWith(activePet: pet, ownedPets: const <Pet>[])
-        .toJson();
+    final json = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 1),
+    ).copyWith(activePet: pet, ownedPets: const <Pet>[]).toJson();
     // Simulate desync: active present, roster empty.
     json['ownedPets'] = <dynamic>[];
     json['activePet'] = pet.toJson();
@@ -214,9 +215,7 @@ void main() {
   });
 
   test('corrupt SharedPreferences save is quarantined on load', () async {
-    SharedPreferences.setMockInitialValues({
-      'idle_party_save_v2': '{not-json',
-    });
+    SharedPreferences.setMockInitialValues({'idle_party_save_v2': '{not-json'});
     final prefs = await SharedPreferences.getInstance();
     final storage = SharedPreferencesGameStorage(preferences: prefs);
 
@@ -227,9 +226,7 @@ void main() {
   });
 
   test('corrupt v2 recovers from valid legacy v1', () async {
-    final v1 = await File(
-      'test/fixtures/save_v1.json',
-    ).readAsString();
+    final v1 = await File('test/fixtures/save_v1.json').readAsString();
     SharedPreferences.setMockInitialValues({
       'idle_party_save_v2': '{not-json',
       'idle_party_save_v1': v1,
@@ -282,7 +279,10 @@ void main() {
       partyName: 'The Ember Guard',
     );
     expect(named.partyName, 'The Ember Guard');
-    expect(GameLogic.stateFromJson(named.toJson()).partyName, 'The Ember Guard');
+    expect(
+      GameLogic.stateFromJson(named.toJson()).partyName,
+      'The Ember Guard',
+    );
 
     final json = Map<String, dynamic>.from(
       GameLogic.createInitialState(now: DateTime(2026, 8, 22)).toJson(),
@@ -304,7 +304,9 @@ void main() {
     final director = GameDirector(storage, enableSpatialLoop: false);
     await director.boot();
     final raw = GameLogic.exportSaveJson(
-      GameLogic.createInitialState(now: DateTime(2026, 8, 21)).copyWith(gold: 999),
+      GameLogic.createInitialState(
+        now: DateTime(2026, 8, 21),
+      ).copyWith(gold: 999),
     );
     expect(director.importSaveJson(raw), isTrue);
     expect(director.hasExistingSave, isTrue);
@@ -314,8 +316,9 @@ void main() {
   });
 
   test('director will not sell hidden Loadout Folio', () async {
-    final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 21))
-        .copyWith(essence: 500, ascensionLevel: 10);
+    final seeded = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 21),
+    ).copyWith(essence: 500, ascensionLevel: 10);
     final storage = InMemoryGameStorage(seeded);
     final director = GameDirector(
       storage,
@@ -329,5 +332,80 @@ void main() {
     expect(director.state.essence, essence);
     expect(director.state.metaDepth.loadoutBonusSlots, slots);
     director.dispose();
+  });
+
+  test('legacy heroes default Human and family sex without wipe', () {
+    final named = GameLogic.createInitialState(now: DateTime(2026, 9, 19));
+    expect(named.heroes.every((h) => h.race == HeroRace.human), isTrue);
+    final healer = named.heroes.firstWhere(
+      (h) => h.specId == HeroSpecId.discipline,
+    );
+    expect(healer.sex, HeroSex.female);
+    final shield = named.heroes.firstWhere(
+      (h) => h.specId == HeroSpecId.protection,
+    );
+    expect(shield.sex, HeroSex.male);
+
+    final json = named.toJson();
+    for (final key in ['heroRoster', 'heroes']) {
+      final list = (json[key] as List).cast<Map<String, dynamic>>();
+      for (final hero in list) {
+        hero.remove('race');
+        hero.remove('sex');
+      }
+    }
+    final loaded = GameLogic.stateFromJson(json);
+    expect(loaded.heroes.every((h) => h.race == HeroRace.human), isTrue);
+    expect(
+      loaded.heroes.firstWhere((h) => h.specId == HeroSpecId.discipline).sex,
+      HeroSex.female,
+    );
+    expect(
+      loaded.heroes.firstWhere((h) => h.specId == HeroSpecId.protection).sex,
+      HeroSex.male,
+    );
+    expect(loaded.gold, named.gold);
+    expect(loaded.heroes.length, named.heroes.length);
+  });
+
+  test('Night Elf party look round-trips and survives Ascend', () {
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 9, 19),
+      partyRace: HeroRace.nightElf,
+    );
+    expect(state.heroes.every((h) => h.race == HeroRace.nightElf), isTrue);
+    final loaded = GameLogic.stateFromJson(state.toJson());
+    expect(loaded.heroes.every((h) => h.race == HeroRace.nightElf), isTrue);
+
+    final mage = loaded.heroes.firstWhere((h) => h.specId == HeroSpecId.fire);
+    final humanMage = GameLogic.setHeroLook(
+      loaded,
+      heroId: mage.id,
+      race: HeroRace.human,
+    );
+    expect(
+      humanMage.heroes.firstWhere((h) => h.id == mage.id).race,
+      HeroRace.human,
+    );
+    expect(
+      humanMage.heroes
+          .firstWhere((h) => h.specId == HeroSpecId.protection)
+          .race,
+      HeroRace.nightElf,
+    );
+
+    final ready = state.copyWith(bossVictories: 1);
+    final ascended = GameLogic.ascend(ready, now: DateTime(2026, 9, 20));
+    expect(ascended.heroes.every((h) => h.race == HeroRace.nightElf), isTrue);
+    expect(
+      ascended.heroRoster.any((h) => h.specId == HeroSpecs.ascendUnlockSpec),
+      isTrue,
+    );
+    expect(
+      ascended.heroRoster
+          .firstWhere((h) => h.specId == HeroSpecs.ascendUnlockSpec)
+          .race,
+      HeroRace.nightElf,
+    );
   });
 }

@@ -2,12 +2,7 @@ import '../models/hero.dart';
 import 'hero_anim_state.dart';
 
 /// Owned denser body families (Phase 3). Maps gear affinity → atlas folder.
-enum BodyFamily {
-  warrior,
-  healer,
-  mage,
-  rogue,
-}
+enum BodyFamily { warrior, healer, mage, rogue }
 
 /// Catalog entry for one family's anim frames under `assets/custom/char/`.
 class BodyFamilyDef {
@@ -50,8 +45,14 @@ class BodyFamilyDef {
   String tintMaskAssetFor(HeroAnimKind kind) =>
       tintMaskForBodyAsset(assetFor(kind));
 
-  static String tintMaskForBodyAsset(String bodyAsset) =>
-      bodyAsset.replaceFirst('/body_', '/body_tint_');
+  /// Family default `body_idle.png` → `body_tint_idle.png`.
+  /// Race undertunic `nightelf_m_body_idle.png` → `nightelf_m_body_tint_idle.png`.
+  static String tintMaskForBodyAsset(String bodyAsset) {
+    if (bodyAsset.contains('_body_')) {
+      return bodyAsset.replaceFirst('_body_', '_body_tint_');
+    }
+    return bodyAsset.replaceFirst('/body_', '/body_tint_');
+  }
 
   static String _path(BodyFamily id, String file) =>
       'assets/custom/char/${id.name}/$file';
@@ -71,14 +72,52 @@ abstract final class BodyFamilyCatalog {
 
   static BodyFamilyDef defFor(BodyFamily family) => catalog[family]!;
 
-  static BodyFamilyDef defForHero(PartyHero hero) =>
-      defFor(familyFor(hero));
+  static BodyFamilyDef defForHero(PartyHero hero) => defFor(familyFor(hero));
+
+  /// Day-one authored race undertunics. Missing (family, race, sex) falls back
+  /// to that family's `body_<anim>.png` so we do not need 96 files.
+  static const authoredRaceLooks =
+      <({BodyFamily family, HeroRace race, HeroSex sex})>[
+        (
+          family: BodyFamily.warrior,
+          race: HeroRace.nightElf,
+          sex: HeroSex.male,
+        ),
+        (
+          family: BodyFamily.healer,
+          race: HeroRace.nightElf,
+          sex: HeroSex.female,
+        ),
+      ];
+
+  static bool hasAuthoredRaceBody(PartyHero hero) {
+    if (hero.race == HeroRace.human) return false;
+    final family = familyFor(hero);
+    return authoredRaceLooks.any(
+      (look) =>
+          look.family == family &&
+          look.race == hero.race &&
+          look.sex == hero.sex,
+    );
+  }
+
+  /// Race undertunic next to the family body, or null to use the family clip.
+  static String? raceBodyAsset(PartyHero hero, HeroAnimKind kind) {
+    if (!hasAuthoredRaceBody(hero)) return null;
+    final fallback = defForHero(hero).assetFor(kind);
+    const needle = '/body_';
+    final at = fallback.lastIndexOf(needle);
+    if (at < 0) return null;
+    final dir = fallback.substring(0, at);
+    final rest = fallback.substring(at + needle.length);
+    return '$dir/${hero.race.assetKey}_${hero.sex.assetKey}_body_$rest';
+  }
 
   static String assetFor(PartyHero hero, HeroAnimKind kind) =>
-      defForHero(hero).assetFor(kind);
+      raceBodyAsset(hero, kind) ?? defForHero(hero).assetFor(kind);
 
   static String tintMaskAssetFor(PartyHero hero, HeroAnimKind kind) =>
-      defForHero(hero).tintMaskAssetFor(kind);
+      BodyFamilyDef.tintMaskForBodyAsset(assetFor(hero, kind));
 
   /// All PNG paths that dungeon loaders should precache.
   static List<String> get allAssetPaths {
@@ -97,47 +136,46 @@ abstract final class BodyFamilyCatalog {
       addClip(def.hitAsset);
       addClip(def.deathAsset);
     }
+    for (final look in authoredRaceLooks) {
+      for (final anim in const ['idle', 'walk', 'attack']) {
+        addClip(
+          'assets/custom/char/${look.family.name}/'
+          '${look.race.assetKey}_${look.sex.assetKey}_body_$anim.png',
+        );
+      }
+    }
     return out.toList(growable: false);
   }
 
-  static final Map<BodyFamily, BodyFamilyDef> catalog =
-      Map<BodyFamily, BodyFamilyDef>.unmodifiable({
-        BodyFamily.warrior: BodyFamilyDef(
-          id: BodyFamily.warrior,
-          folder: 'warrior',
-          idleAsset: BodyFamilyDef._path(BodyFamily.warrior, 'body_idle.png'),
-          walkAsset: BodyFamilyDef._path(BodyFamily.warrior, 'body_walk.png'),
-          attackAsset: BodyFamilyDef._path(
-            BodyFamily.warrior,
-            'body_attack.png',
-          ),
-        ),
-        BodyFamily.healer: BodyFamilyDef(
-          id: BodyFamily.healer,
-          folder: 'healer',
-          idleAsset: BodyFamilyDef._path(BodyFamily.healer, 'body_idle.png'),
-          walkAsset: BodyFamilyDef._path(BodyFamily.healer, 'body_walk.png'),
-          attackAsset: BodyFamilyDef._path(
-            BodyFamily.healer,
-            'body_attack.png',
-          ),
-        ),
-        BodyFamily.mage: BodyFamilyDef(
-          id: BodyFamily.mage,
-          folder: 'mage',
-          idleAsset: BodyFamilyDef._path(BodyFamily.mage, 'body_idle.png'),
-          walkAsset: BodyFamilyDef._path(BodyFamily.mage, 'body_walk.png'),
-          attackAsset: BodyFamilyDef._path(BodyFamily.mage, 'body_attack.png'),
-        ),
-        BodyFamily.rogue: BodyFamilyDef(
-          id: BodyFamily.rogue,
-          folder: 'rogue',
-          idleAsset: BodyFamilyDef._path(BodyFamily.rogue, 'body_idle.png'),
-          walkAsset: BodyFamilyDef._path(BodyFamily.rogue, 'body_walk.png'),
-          attackAsset: BodyFamilyDef._path(
-            BodyFamily.rogue,
-            'body_attack.png',
-          ),
-        ),
-      });
+  static final Map<BodyFamily, BodyFamilyDef>
+  catalog = Map<BodyFamily, BodyFamilyDef>.unmodifiable({
+    BodyFamily.warrior: BodyFamilyDef(
+      id: BodyFamily.warrior,
+      folder: 'warrior',
+      idleAsset: BodyFamilyDef._path(BodyFamily.warrior, 'body_idle.png'),
+      walkAsset: BodyFamilyDef._path(BodyFamily.warrior, 'body_walk.png'),
+      attackAsset: BodyFamilyDef._path(BodyFamily.warrior, 'body_attack.png'),
+    ),
+    BodyFamily.healer: BodyFamilyDef(
+      id: BodyFamily.healer,
+      folder: 'healer',
+      idleAsset: BodyFamilyDef._path(BodyFamily.healer, 'body_idle.png'),
+      walkAsset: BodyFamilyDef._path(BodyFamily.healer, 'body_walk.png'),
+      attackAsset: BodyFamilyDef._path(BodyFamily.healer, 'body_attack.png'),
+    ),
+    BodyFamily.mage: BodyFamilyDef(
+      id: BodyFamily.mage,
+      folder: 'mage',
+      idleAsset: BodyFamilyDef._path(BodyFamily.mage, 'body_idle.png'),
+      walkAsset: BodyFamilyDef._path(BodyFamily.mage, 'body_walk.png'),
+      attackAsset: BodyFamilyDef._path(BodyFamily.mage, 'body_attack.png'),
+    ),
+    BodyFamily.rogue: BodyFamilyDef(
+      id: BodyFamily.rogue,
+      folder: 'rogue',
+      idleAsset: BodyFamilyDef._path(BodyFamily.rogue, 'body_idle.png'),
+      walkAsset: BodyFamilyDef._path(BodyFamily.rogue, 'body_walk.png'),
+      attackAsset: BodyFamilyDef._path(BodyFamily.rogue, 'body_attack.png'),
+    ),
+  });
 }

@@ -12,6 +12,7 @@ import 'core/game_director.dart';
 import 'core/immersive_ui.dart';
 import 'core/menu_router.dart';
 import 'models/dungeon_def.dart';
+import 'models/hero.dart';
 import 'models/hero_spec.dart';
 import 'ui/boot_intro_screen.dart';
 import 'assets/custom_assets.dart';
@@ -185,7 +186,8 @@ class GameHomePage extends StatefulWidget {
   State<GameHomePage> createState() => _GameHomePageState();
 }
 
-class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver {
+class _GameHomePageState extends State<GameHomePage>
+    with WidgetsBindingObserver {
   GameDirector get _director => widget.director;
 
   /// One owner of "which menu is open", shared by hub and dungeon.
@@ -354,7 +356,11 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
     _continueGame();
   }
 
-  Future<void> _confirmNewGame(List<HeroSpecId> specs, String partyName) async {
+  Future<void> _confirmNewGame(
+    List<HeroSpecId> specs,
+    String partyName,
+    HeroRace race,
+  ) async {
     if (_director.hasExistingSave) {
       WebClickBridge.pushLayer();
       bool? ok;
@@ -392,7 +398,7 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
         return;
       }
     }
-    await _director.startNewGame(specs, partyName: partyName);
+    await _director.startNewGame(specs, partyName: partyName, partyRace: race);
     if (!mounted) return;
     _director.clearPendingStartMenu();
     setState(() => _phase = _AppPhase.play);
@@ -474,10 +480,7 @@ class _GameHomePageState extends State<GameHomePage> with WidgetsBindingObserver
           });
         }
 
-        final body = PlayShell(
-          director: _director,
-          router: _router,
-        );
+        final body = PlayShell(director: _director, router: _router);
 
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(

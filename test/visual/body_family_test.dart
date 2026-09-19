@@ -59,10 +59,66 @@ void main() {
     expect(paths, contains('assets/custom/char/mage/body_attack.png'));
     expect(paths, contains('assets/custom/char/warrior/body_tint_idle.png'));
     expect(paths, contains('assets/custom/char/rogue/body_tint_attack.png'));
+    expect(
+      paths,
+      contains('assets/custom/char/warrior/nightelf_m_body_idle.png'),
+    );
+    expect(
+      paths,
+      contains('assets/custom/char/healer/nightelf_f_body_walk.png'),
+    );
+    expect(
+      paths,
+      contains('assets/custom/char/healer/nightelf_f_body_tint_attack.png'),
+    );
     expect(paths.toSet().length, paths.length);
-    expect(paths.length, 24);
+    expect(paths.length, 24 + 12);
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: path);
     }
   });
+
+  test(
+    'Night Elf uses warrior male and healer female clips, else family body',
+    () {
+      final warrior = PartyHero.starting(
+        name: 'Aegis',
+        specId: HeroSpecId.protection,
+        race: HeroRace.nightElf,
+      );
+      expect(warrior.sex, HeroSex.male);
+      expect(BodyFamilyCatalog.hasAuthoredRaceBody(warrior), isTrue);
+      expect(
+        BodyFamilyCatalog.assetFor(warrior, HeroAnimKind.idle),
+        'assets/custom/char/warrior/nightelf_m_body_idle.png',
+      );
+      expect(
+        BodyFamilyCatalog.tintMaskAssetFor(warrior, HeroAnimKind.walk),
+        'assets/custom/char/warrior/nightelf_m_body_tint_walk.png',
+      );
+
+      final healer = PartyHero.starting(
+        name: 'Vale',
+        specId: HeroSpecId.discipline,
+        race: HeroRace.nightElf,
+      );
+      expect(healer.sex, HeroSex.female);
+      expect(
+        BodyFamilyCatalog.assetFor(healer, HeroAnimKind.attack),
+        'assets/custom/char/healer/nightelf_f_body_attack.png',
+      );
+
+      final mage = PartyHero.starting(
+        name: 'Ember',
+        specId: HeroSpecId.fire,
+        race: HeroRace.nightElf,
+      );
+      expect(mage.sex, HeroSex.male);
+      expect(BodyFamilyCatalog.hasAuthoredRaceBody(mage), isFalse);
+      expect(
+        BodyFamilyCatalog.assetFor(mage, HeroAnimKind.idle),
+        'assets/custom/char/mage/body_idle.png',
+      );
+    },
+  );
 }

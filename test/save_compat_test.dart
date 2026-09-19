@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/dungeon_def.dart';
+import 'package:idle_party/models/hero.dart';
 
 /// A save file is the one thing a player can lose for good.
 ///
@@ -36,6 +37,9 @@ void main() {
     for (final id in state.activeHeroIds) {
       expect(state.heroRoster.any((h) => h.id == id), isTrue, reason: id);
     }
+    // Missing race/sex on old JSON → Human + family default. No wipe.
+    expect(state.heroes.every((h) => h.race == HeroRace.human), isTrue);
+    expect(state.heroRoster.every((h) => h.race == HeroRace.human), isTrue);
   });
 
   test('save version is read from the file, not guessed', () {
