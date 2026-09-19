@@ -275,7 +275,7 @@ def sample_face(
     x0, y0, x1, y1 = box
     cx = (x0 + x1) // 2
     # Mage gold-master hat fills the top of the bbox — sample the real face.
-    face_frac = 0.42 if family == "mage" else 0.22
+    face_frac = {"mage": 0.42, "rogue": 0.40}.get(family, 0.22)
     cy = y0 + max(8, int((y1 - y0) * face_frac))
     samples: list[tuple[int, int, int]] = []
     for dy in range(-8, 14):
@@ -538,6 +538,13 @@ def paint_undertunic(
             hair_ok = True if family != "warrior" else (
                 in_head or abs(x - fx) <= face_half * 1.7
             )
+            # Healer circlet gold matches blonde hair — keep the bob, not the crown.
+            if family == "healer" and y < fy - 8:
+                hair_ok = False
+            if family == "healer" and (
+                is_gold_pixel(rgb) or is_hat_or_hood("healer", rgb)
+            ):
+                hair_ok = False
             if y <= head_max + 4 and hair_ok and is_hair_color(family, rgb):
                 op[x, y] = (r, g, b, a)
                 continue
@@ -545,8 +552,8 @@ def paint_undertunic(
             hat_band = (y < fy - 1) if family == "mage" else (y <= head_max + 6)
             if hat_band and is_hat_or_hood(family, rgb):
                 continue
-            # Mage/healer: anything above the eyes that isn't skin/hair is hat.
-            if family in ("mage", "healer") and y < fy - 1:
+            # Mage: anything above the eyes that isn't skin/hair is hat.
+            if family == "mage" and y < fy - 1:
                 continue
             if (
                 in_head
@@ -556,13 +563,21 @@ def paint_undertunic(
             ):
                 op[x, y] = (r, g, b, a)
                 continue
-            # Gold-master cloth IS the undertunic for these families.
-            if family in ("mage", "healer", "rogue"):
+            # LOOK / empty slots = a cloth person. Pauldrons, cape wings and
+            # huge sleeves live on gear overlays — drop them from the body.
+            core_mul = {"mage": 1.15, "healer": 1.7}.get(family, 2.05)
+            core_half = max(16.0, face_half * core_mul)
+            if y > chin_y and abs(x - fx) > core_half:
+                continue
+            rogue_head = (
+                family == "rogue"
+                and y <= chin_y + 18
+                and abs(x - fx) <= face_half * 1.9
+            )
+            if family == "rogue" and (in_head or rogue_head):
                 op[x, y] = (r, g, b, a)
-                protects_head = y <= chin_y + 8 and abs(x - fx) <= face_half * 2.4
-                if not protects_head:
-                    shade = max(88, min(255, int(88 + lum(rgb) * 220)))
-                    mp[x, y] = (shade, shade, shade, a)
+                continue
+            if family == "rogue" and is_rogue_cloak(rgb):
                 continue
             cloth = tunic if y < mid_y else pants
             op[x, y] = recolor_to_cloth(rgb, cloth, a)
@@ -612,6 +627,27 @@ def paint_undertunic(
                 ):
                     op[x, y] = (0, 0, 0, 0)
                     mp[x, y] = (0, 0, 0, 0)
+    if family == "healer":
+        op = out.load()
+        mp = tint_mask.load()
+        for y in range(0, int(fy - 8)):
+            for x in range(128):
+                r, g, b, a = op[x, y]
+                if a < 16:
+                    continue
+                rgb = (r, g, b)
+                if is_skin(rgb, face):
+                    continue
+                if is_gold_pixel(rgb) or is_hat_or_hood("healer", rgb):
+                    op[x, y] = (0, 0, 0, 0)
+                    mp[x, y] = (0, 0, 0, 0)
+    out = despeckle_alpha(out)
+    op = out.load()
+    mp = tint_mask.load()
+    for y in range(128):
+        for x in range(128):
+            if op[x, y][3] < 16:
+                mp[x, y] = (0, 0, 0, 0)
     return out, tint_mask
 
 
