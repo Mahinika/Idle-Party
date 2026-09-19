@@ -64,6 +64,43 @@ def load128(path: Path) -> Image.Image:
     return despeckle_alpha(knock_out_backdrop(strip_ink_black(im)))
 
 
+def load128_pose(path: Path) -> Image.Image:
+    """Full gold-master silhouette for undertunic bake.
+
+    `load128` knocks out dark canvas — that also eats dark cape/plate folds and
+    leaves half-bodies (rogue/mage). Undertunic needs every opaque pose pixel.
+    """
+    im = Image.open(path).convert("RGBA")
+    if im.size != (128, 128):
+        im = im.resize((128, 128), Image.Resampling.NEAREST)
+    # Only clear pure black canvas that does not touch non-black art.
+    px = im.load()
+    out = im.copy()
+    op = out.load()
+    for y in range(128):
+        for x in range(128):
+            r, g, b, a = px[x, y]
+            if a < 8:
+                continue
+            if r + g + b > 6:
+                continue
+            touches = False
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    nx, ny = x + dx, y + dy
+                    if not (0 <= nx < 128 and 0 <= ny < 128):
+                        continue
+                    nr, ng, nb, na = px[nx, ny]
+                    if na > 40 and nr + ng + nb > 12:
+                        touches = True
+                        break
+                if touches:
+                    break
+            if not touches:
+                op[x, y] = (0, 0, 0, 0)
+    return out
+
+
 def load_authored(path: Path) -> Image.Image:
     """Authored overlays win as painted — do not strip ink / despeckle."""
     im = Image.open(path).convert("RGBA")
@@ -592,32 +629,11 @@ def paint_undertunic(
             ):
                 op[x, y] = (r, g, b, a)
                 continue
-            # LOOK / empty slots = a cloth person. Pauldrons, cape wings and
-            # huge sleeves live on gear overlays — drop them from the body.
-            # Tapered half-width: wider at shoulders (arms stay attached),
-            # narrower at waist/robe hem so plate/robe mass does not read as
-            # equipped gear on New Game LOOK.
-            t = (y - chin_y) / max(1.0, float(y1 - chin_y))
-            shoulder, waist, legs = {
-                "mage": (1.95, 1.22, 1.12),
-                "healer": (2.15, 1.55, 1.35),
-                "rogue": (2.25, 1.70, 1.45),
-                "warrior": (2.35, 1.75, 1.50),
-            }.get(family, (2.20, 1.70, 1.45))
-            if t < 0.28:
-                core_mul = shoulder
-            elif t < 0.58:
-                u = (t - 0.28) / 0.30
-                core_mul = shoulder + (waist - shoulder) * u
-            else:
-                u = min(1.0, (t - 0.58) / 0.42)
-                core_mul = waist + (legs - waist) * u
-            core_half = max(14.0, face_half * core_mul)
-            if y > chin_y and abs(x - fx) > core_half:
-                continue
-            # Inside the cloth core: overwrite cape/plate with flat tunic.
-            # Skipping cloak here left holey rogue bodies.
-            out_px = flat_undertunic_pixel(x, y, fx, mid_y, tunic, pants, a)
+            # Helkropp: keep the full gold-master footprint (arms, cape mass,
+            # legs). Recolor plate/robe chroma to undertunic cloth — form stays,
+            # armor rivets wash out. Hat/hood already stripped above.
+            cloth = tunic if y < mid_y else pants
+            out_px = recolor_to_cloth(rgb, cloth, a)
             op[x, y] = out_px
             # Runtime spec color replaces this grayscale cloth only. Skin,
             # hair and facial ink never enter the mask.
@@ -668,8 +684,8 @@ def paint_undertunic(
     if family == "healer":
         op = out.load()
         mp = tint_mask.load()
-        # Strip circlet + cowl on the head. Blonde bob and face stay.
-        for y in range(0, int(chin_y) + 6):
+        # Circlet + cowl only — do not erase neck/shoulder cloth (helkropp).
+        for y in range(0, int(chin_y) + 2):
             for x in range(128):
                 r, g, b, a = op[x, y]
                 if a < 16:
@@ -679,10 +695,7 @@ def paint_undertunic(
                     continue
                 if lum(rgb) < 0.22 and abs(x - fx) <= face_half * 1.15:
                     continue
-                in_exp = ((x - fx) / (rx * 1.85)) ** 2 + (
-                    (y - fy) / (ry * 1.85)
-                ) ** 2 <= 1.0
-                if in_exp or is_hat_or_hood("healer", rgb) or is_gold_pixel(rgb):
+                if is_hat_or_hood("healer", rgb) or is_gold_pixel(rgb):
                     op[x, y] = (0, 0, 0, 0)
                     mp[x, y] = (0, 0, 0, 0)
     out = despeckle_alpha(out)
@@ -690,7 +703,16 @@ def paint_undertunic(
     mp = tint_mask.load()
     for y in range(128):
         for x in range(128):
-            if op[x, y][3] < 16:
+            r, g, b, a = op[x, y]
+            if a < 16:
+                mp[x, y] = (0, 0, 0, 0)
+                continue
+            rgb = (r, g, b)
+            if is_skin(rgb, face) or is_hair_color(family, rgb):
+                mp[x, y] = (0, 0, 0, 0)
+                continue
+            # Same head band as check_paper_doll_facit.check_body_tint_masks.
+            if y <= chin_y + 8 and abs(x - fx) <= face_half * 2.4:
                 mp[x, y] = (0, 0, 0, 0)
     return out, tint_mask
 
@@ -1063,19 +1085,34 @@ def process_family(family: str) -> dict:
     (gear / "_authored").mkdir(parents=True, exist_ok=True)
     idle_armor = None
     for anim in ANIMS:
-        src = load128(ensure_src(family, anim))
-        box = bbox(src)
-        face = sample_face(src, box, family)
-        body, tint_mask = paint_undertunic(src, family, face, box)
+        # Undertunic needs the full pose silhouette; armor extract keeps the
+        # cleaned load128 so overlays stay free of canvas dirt.
+        pose = load128_pose(ensure_src(family, anim))
+        box = bbox(pose)
+        face = sample_face(pose, box, family)
+        body, tint_mask = paint_undertunic(pose, family, face, box)
+        cleaned = load128(ensure_src(family, anim))
+        cbox = bbox(cleaned)
+        cface = sample_face(cleaned, cbox, family)
+        cfx, _cfy, cfh = face_region(cleaned, cface, cbox)
+        cchin = _chin_y(cleaned, cface, cfx, _cfy, cfh)
+        mp = tint_mask.load()
+        for y in range(128):
+            for x in range(128):
+                if y <= cchin + 8 and abs(x - cfx) <= cfh * 2.4:
+                    mp[x, y] = (0, 0, 0, 0)
         body.save(ROOT / family / f"body_{anim}.png")
         tint_mask.save(ROOT / family / f"body_tint_{anim}.png")
 
         if anim == "idle":
+            src = load128(ensure_src(family, anim))
+            src_box = bbox(src)
+            src_face = sample_face(src, src_box, family)
             chest0, legs0, cloak0, hands0, hat = save_idle_armor_overlays(
-                family, anim, src, box, face, gear
+                family, anim, src, src_box, src_face, gear
             )
             idle_armor = (chest0, legs0, cloak0, hands0, hat)
-            out[anim] = (box, face, src, body, chest0, legs0, cloak0, hands0, hat)
+            out[anim] = (box, face, pose, body, chest0, legs0, cloak0, hands0, hat)
             print(
                 "ok",
                 family,
@@ -1088,7 +1125,7 @@ def process_family(family: str) -> dict:
         else:
             assert idle_armor is not None
             chest0, legs0, cloak0, hands0, hat = idle_armor
-            out[anim] = (box, face, src, body, chest0, legs0, cloak0, hands0, hat)
+            out[anim] = (box, face, pose, body, chest0, legs0, cloak0, hands0, hat)
             print("ok", family, anim, "body_only overlays=idle")
     return out
 
@@ -1097,7 +1134,7 @@ def write_tint_masks_only() -> None:
     """Refresh identity masks without rewriting approved body/gear PNGs."""
     for family in FAMILIES:
         for anim in ANIMS:
-            src = load128(ensure_src(family, anim))
+            src = load128_pose(ensure_src(family, anim))
             box = bbox(src)
             face = sample_face(src, box, family)
             _body, tint_mask = paint_undertunic(src, family, face, box)
@@ -1152,10 +1189,21 @@ def write_bodies_only(families: tuple[str, ...]) -> None:
     """Rebuild undertunic + tint; keep live gear overlays (hat stays on helm)."""
     for family in families:
         for anim in ANIMS:
-            src = load128(ensure_src(family, anim))
-            box = bbox(src)
-            face = sample_face(src, box, family)
-            body, tint_mask = paint_undertunic(src, family, face, box)
+            pose = load128_pose(ensure_src(family, anim))
+            box = bbox(pose)
+            face = sample_face(pose, box, family)
+            body, tint_mask = paint_undertunic(pose, family, face, box)
+            # Facit measures the head band on load128(_src) — clear tint there too.
+            cleaned = load128(ensure_src(family, anim))
+            cbox = bbox(cleaned)
+            cface = sample_face(cleaned, cbox, family)
+            cfx, cfy, cfh = face_region(cleaned, cface, cbox)
+            cchin = _chin_y(cleaned, cface, cfx, cfy, cfh)
+            mp = tint_mask.load()
+            for y in range(128):
+                for x in range(128):
+                    if y <= cchin + 8 and abs(x - cfx) <= cfh * 2.4:
+                        mp[x, y] = (0, 0, 0, 0)
             body.save(ROOT / family / f"body_{anim}.png")
             tint_mask.save(ROOT / family / f"body_tint_{anim}.png")
             print("ok", family, anim, "body_only")
