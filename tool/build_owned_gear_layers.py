@@ -360,7 +360,7 @@ def is_hat_or_hood(family: str, rgb: tuple[int, int, int]) -> bool:
         # Circlet gold + pale/black hood. Blonde hair is warmer (bigger r-b).
         if is_gold_pixel(rgb):
             return True
-        if r > 200 and g > 195 and b > 180 and (r - b) < 40:
+        if r > 170 and g > 155 and b > 130 and (r - b) < 55 and abs(r - g) < 35:
             return True
         # Authored black cowl around the face (not eye ink — callers gate by Y).
         if lum(rgb) < 0.20 and abs(r - g) < 18 and abs(g - b) < 18:
@@ -428,9 +428,31 @@ def alpha_count(im: Image.Image) -> int:
 def recolor_to_cloth(
     rgb: tuple[int, int, int], cloth: tuple[int, int, int], a: int
 ) -> tuple[int, int, int, int]:
-    """Keep gold-master shading; swap armor chroma for undertunic cloth."""
+    """Legacy: remap armor luminance into cloth (keeps plate/robe detail)."""
     l = lum(rgb)
     s = max(0.42, min(1.22, 0.38 + l * 1.15))
+    return (
+        min(255, int(cloth[0] * s)),
+        min(255, int(cloth[1] * s)),
+        min(255, int(cloth[2] * s)),
+        a,
+    )
+
+
+def flat_undertunic_pixel(
+    x: int,
+    y: int,
+    fx: float,
+    mid_y: int,
+    tunic: tuple[int, int, int],
+    pants: tuple[int, int, int],
+    a: int,
+) -> tuple[int, int, int, int]:
+    """Simple cloth shade from pose only — no plate rivets / robe folds."""
+    cloth = tunic if y < mid_y else pants
+    vy = 0.82 + 0.28 * (1.0 - min(1.0, abs(y - mid_y) / 48.0))
+    hx = 0.90 + 0.14 * (1.0 - min(1.0, abs(x - fx) / 22.0))
+    s = max(0.58, min(1.12, vy * hx))
     return (
         min(255, int(cloth[0] * s)),
         min(255, int(cloth[1] * s)),
@@ -570,17 +592,40 @@ def paint_undertunic(
             ):
                 op[x, y] = (r, g, b, a)
                 continue
-            # Keep the full gold-master silhouette (arms, neck, legs). Recolor
-            # plate / robe / cape to undertunic cloth — gear overlays add armor.
-            cloth = tunic if y < mid_y else pants
-            op[x, y] = recolor_to_cloth(rgb, cloth, a)
+            # LOOK / empty slots = a cloth person. Pauldrons, cape wings and
+            # huge sleeves live on gear overlays — drop them from the body.
+            # Tapered half-width: wider at shoulders (arms stay attached),
+            # narrower at waist/robe hem so plate/robe mass does not read as
+            # equipped gear on New Game LOOK.
+            t = (y - chin_y) / max(1.0, float(y1 - chin_y))
+            shoulder, waist, legs = {
+                "mage": (1.95, 1.22, 1.12),
+                "healer": (2.15, 1.55, 1.35),
+                "rogue": (2.25, 1.70, 1.45),
+                "warrior": (2.35, 1.75, 1.50),
+            }.get(family, (2.20, 1.70, 1.45))
+            if t < 0.28:
+                core_mul = shoulder
+            elif t < 0.58:
+                u = (t - 0.28) / 0.30
+                core_mul = shoulder + (waist - shoulder) * u
+            else:
+                u = min(1.0, (t - 0.58) / 0.42)
+                core_mul = waist + (legs - waist) * u
+            core_half = max(14.0, face_half * core_mul)
+            if y > chin_y and abs(x - fx) > core_half:
+                continue
+            # Inside the cloth core: overwrite cape/plate with flat tunic.
+            # Skipping cloak here left holey rogue bodies.
+            out_px = flat_undertunic_pixel(x, y, fx, mid_y, tunic, pants, a)
+            op[x, y] = out_px
             # Runtime spec color replaces this grayscale cloth only. Skin,
             # hair and facial ink never enter the mask.
             protects_head = (
                 y <= chin_y + 8 and abs(x - fx) <= face_half * 2.4
             )
             if not protects_head:
-                shade = max(88, min(255, int(88 + lum(rgb) * 220)))
+                shade = max(88, min(255, int(88 + lum(out_px[:3]) * 220)))
                 mp[x, y] = (shade, shade, shade, a)
 
     if family in ("mage", "healer"):
@@ -623,15 +668,21 @@ def paint_undertunic(
     if family == "healer":
         op = out.load()
         mp = tint_mask.load()
-        for y in range(0, int(fy - 8)):
+        # Strip circlet + cowl on the head. Blonde bob and face stay.
+        for y in range(0, int(chin_y) + 6):
             for x in range(128):
                 r, g, b, a = op[x, y]
                 if a < 16:
                     continue
                 rgb = (r, g, b)
-                if is_skin(rgb, face):
+                if is_skin(rgb, face) or is_hair_color("healer", rgb):
                     continue
-                if is_gold_pixel(rgb) or is_hat_or_hood("healer", rgb):
+                if lum(rgb) < 0.22 and abs(x - fx) <= face_half * 1.15:
+                    continue
+                in_exp = ((x - fx) / (rx * 1.85)) ** 2 + (
+                    (y - fy) / (ry * 1.85)
+                ) ** 2 <= 1.0
+                if in_exp or is_hat_or_hood("healer", rgb) or is_gold_pixel(rgb):
                     op[x, y] = (0, 0, 0, 0)
                     mp[x, y] = (0, 0, 0, 0)
     out = despeckle_alpha(out)
