@@ -874,6 +874,57 @@ void main() {
     expect(seen.contains('PULSE'), isFalse);
   });
 
+  test('Sandy SLAM knocks the party off the boss', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
+    final room = DungeonRoom(
+      floorNumber: 5,
+      roomIndex: 0,
+      type: RoomType.boss,
+      enemyLevel: 10,
+      enemyCount: 1,
+    );
+    final boss = GameLogic.createEnemyGroup(room, dungeonId: 'sandy').first;
+    state = state.copyWith(
+      dungeonId: 'sandy',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: [boss],
+      inDungeon: true,
+    );
+    var world = SpatialCombat.build(state);
+    final body = world.enemies.first
+      ..dormant = false
+      ..hp = 99999
+      ..maxHp = 99999;
+    for (final h in world.heroes) {
+      h
+        ..attack = 0
+        ..hp = 99999
+        ..maxHp = 99999
+        ..x = body.x
+        ..y = body.y;
+    }
+    var slammed = false;
+    for (var i = 0; i < 90; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+      if (world.floaters.any((f) => f.text == 'SLAM')) {
+        slammed = true;
+        break;
+      }
+    }
+    expect(slammed, isTrue);
+    expect(
+      world.heroes.any((h) {
+        final dx = h.x - body.x;
+        final dy = h.y - body.y;
+        return sqrt(dx * dx + dy * dy) > 0.4;
+      }),
+      isTrue,
+    );
+  });
+
   test('week-1 Goblin boss shouts RALLY, not PULSE', () {
     final seen = _bossTellTexts('goblin');
     expect(seen.contains('WIND-UP'), isTrue);
@@ -1053,7 +1104,7 @@ void main() {
     );
   });
 
-  test('normal brute shouts CLEAVE', () {
+  test('sandy brute shouts CRASH, not CLEAVE', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
     final room = DungeonRoom(
       floorNumber: 2,
@@ -1066,6 +1117,44 @@ void main() {
         .copyWith(archetype: EnemyArchetype.brute, role: EnemyRole.normal);
     state = state.copyWith(
       dungeonId: 'sandy',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: [brute],
+      inDungeon: true,
+    );
+    var world = SpatialCombat.build(state);
+    final enemy = world.enemies.first
+      ..dormant = false
+      ..specialCd = 0;
+    for (final h in world.heroes) {
+      h
+        ..x = enemy.x
+        ..y = enemy.y;
+    }
+    final seen = <String>{};
+    for (var i = 0; i < 40; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+      seen.addAll(world.floaters.map((f) => f.text));
+    }
+    expect(seen.contains('CRASH'), isTrue);
+    expect(seen.contains('CLEAVE'), isFalse);
+  });
+
+  test('goblin brute still shouts CLEAVE', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
+    final room = DungeonRoom(
+      floorNumber: 2,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 4,
+      enemyCount: 1,
+    );
+    final brute = GameLogic.createEnemyGroup(room, dungeonId: 'goblin').first
+        .copyWith(archetype: EnemyArchetype.brute, role: EnemyRole.normal);
+    state = state.copyWith(
+      dungeonId: 'goblin',
       currentRoom: room,
       dungeonFloor: [room],
       enemies: [brute],

@@ -149,6 +149,12 @@ void main() {
     expect(veilGlass, greaterThan(groveGlass));
   });
 
+  test('brute tells are zone-readable, not one CLEAVE', () {
+    expect(EnemyFlavor.bruteTell('sandy'), 'CRASH');
+    expect(EnemyFlavor.bruteTell('goblin'), 'CLEAVE');
+    expect(EnemyFlavor.bruteTell('tide'), 'CLEAVE');
+  });
+
   test('ranged tells are zone-readable, not one HEX', () {
     expect(EnemyFlavor.rangedTell('tide'), 'NET');
     expect(EnemyFlavor.rangedTell('storm'), 'JOLT');
@@ -240,6 +246,8 @@ void main() {
       {for (final e in state.enemies) e.name}.length,
       greaterThan(1),
     );
+    expect(types.contains(EnemyArchetype.swarm), isTrue);
+    expect(types.contains(EnemyArchetype.ranged), isTrue);
   });
 
   test('KEY week pack mix follows the week cave, not PATH Sandy', () {

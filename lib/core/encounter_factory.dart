@@ -433,6 +433,13 @@ abstract final class EncounterFactory {
                         rng: rng,
                       ),
     ];
+    _ensureSandyOpenerJobs(
+      archetypes,
+      flavorId: flavorId,
+      isBossRoom: isBossRoom,
+      roomType: room.type,
+      level: level,
+    );
 
     // Weight shares by archetype (tanks eat HP budget, glass eats ATK).
     final rawShares = <double>[
@@ -603,6 +610,28 @@ abstract final class EncounterFactory {
       return EnemyFlavor.addName(dungeonId, archetype);
     }
     return EnemyFlavor.trashName(dungeonId, archetype, index);
+  }
+
+  /// First Sandy floors always open with mites + a spitter so the listing
+  /// crawl reads as a fight, not one cloned brute.
+  static void _ensureSandyOpenerJobs(
+    List<EnemyArchetype> archetypes, {
+    required String flavorId,
+    required bool isBossRoom,
+    required RoomType roomType,
+    required int level,
+  }) {
+    if (flavorId != 'sandy' ||
+        isBossRoom ||
+        roomType != RoomType.normal ||
+        level > 2 ||
+        archetypes.length < 3) {
+      return;
+    }
+    archetypes[0] = EnemyArchetype.swarm;
+    if (!archetypes.contains(EnemyArchetype.ranged)) {
+      archetypes[1] = EnemyArchetype.ranged;
+    }
   }
 
   static double _riftDensityMul(GameState? fromState) {

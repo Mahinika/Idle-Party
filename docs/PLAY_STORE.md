@@ -18,7 +18,7 @@ Package id: **`com.idleparty.app`**
 | Store listing copy (EN) | ✅ live | Default locale **en-US**. Title **Idle Party: Idle RPG** + crawl-on-screen full desc live on the public listing **2026-09-17**. Extra locales gated. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ⏳ review | New **8 phone shots** swapped + submitted **2026-09-18** (`play_ready` pack: combat first). Console: *Ändringarna granskas*. Feature graphic unchanged. |
-| Preview video (YouTube) | ⏳ review | Live listing: `OMWXbgGBFMA`. Rebuilt combat-first MP4 uploaded Cognifox `XfKog5CAiUs` (unlisted) — Play rejected embed (ads/visibility). Keep ads off / not made-for-kids, then swap. |
+| Preview video (YouTube) | ⏳ owner | Live listing: `OMWXbgGBFMA`. Rebuilt combat-first MP4 on Cognifox `XfKog5CAiUs` (unlisted) — Play rejected embed (ads/visibility). **Owner Console/Studio (20 min):** YouTube Studio → video → Info → **Made for kids = No**; Monetization → **ads off**; Visibility unlisted + embed allowed. Then Play Console → listing preview URL → `XfKog5CAiUs` (or new upload of `tool/store_listing/preview/` 16:9). Keep `OMWXbgGBFMA` until the swap embeds. |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
 

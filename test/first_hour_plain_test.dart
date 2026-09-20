@@ -112,6 +112,11 @@ void main() {
     expect(bag.body.toUpperCase(), contains('EQUIP'));
   });
 
+  test('first session is two beats: hub ENTER then tap the fight', () {
+    expect(FirstSessionTips.firstRunBeatIds, ['first_run', 'godhand']);
+    expect(FirstSessionTips.tips.first.title, 'NEXT JOB');
+  });
+
   test('first tip points at ENTER DUNGEON, not a menu dictionary', () {
     final tip = FirstSessionTips.tips.first;
     expect(tip.id, 'first_run');

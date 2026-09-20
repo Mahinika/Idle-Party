@@ -254,19 +254,20 @@ void _tickEnemySpecials(
           world,
           x: enemy.x,
           y: enemy.y - 0.4,
-          text: 'CLEAVE',
+          text: EnemyFlavor.bruteTell(world.dungeonId),
           argb: 0xFFFF8040,
           life: 0.7,
           priority: reducedVfx ? 2 : 0,
         );
         if (world.spawnPersistentVfx) {
+          final sandy = world.dungeonId == 'sandy';
           SpatialCombat._spawnBurst(
             world,
             x: enemy.x,
             y: enemy.y,
-            argb: 0xFFFF8040,
+            argb: sandy ? 0xFFC8A070 : 0xFFFF8040,
             radius: 1.2,
-            kind: SpatialBurstKind.slash,
+            kind: sandy ? SpatialBurstKind.shards : SpatialBurstKind.slash,
             angle: 0,
             life: 0.38,
           );
@@ -522,13 +523,9 @@ void _resolveBossTelegraph(
             : world.dungeonId);
   switch (id) {
     case 'sandy':
-      _bossPulseLike(
+      _sandyBossSlam(
         world,
         enemy,
-        radius: 2.8,
-        atkMul: 0.65,
-        text: EnemyFlavor.bossTell(id),
-        argb: 0xFFC8A070,
         rng: rng,
         reducedVfx: reducedVfx,
       );
@@ -864,6 +861,79 @@ void _resolveBossTelegraph(
           reducedVfx: reducedVfx,
         );
       }
+  }
+}
+
+void _sandyBossSlam(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  required math.Random rng,
+  required bool reducedVfx,
+}) {
+  const radius = 2.8;
+  final hit = _bossChipInRadius(
+    world,
+    enemy,
+    radius: radius,
+    atkMul: 0.65,
+    rng: rng,
+    reducedVfx: reducedVfx,
+  );
+  if (!hit) {
+    enemy.specialCd = 1.2;
+    return;
+  }
+  _knockHeroesFrom(world, enemy, radius: radius, dist: 1.55);
+  enemy.specialCd = _bossCooldownSec(world, world.afkAssist ? 9.0 : 8.0);
+  if (!reducedVfx || world.spawnPersistentVfx) {
+    SpatialCombat._spawnBurst(
+      world,
+      x: enemy.x,
+      y: enemy.y,
+      argb: 0xFFC8A070,
+      radius: 1.7,
+      kind: SpatialBurstKind.shards,
+      life: 0.42,
+    );
+  }
+  _bossTell(
+    world,
+    enemy,
+    text: EnemyFlavor.bossTell('sandy'),
+    argb: 0xFFC8A070,
+    radius: 1.35,
+    reducedVfx: reducedVfx,
+  );
+}
+
+void _knockHeroesFrom(
+  SpatialWorld world,
+  SpatialActor from, {
+  required double radius,
+  required double dist,
+}) {
+  for (final h in world.heroes) {
+    if (!h.isAlive) continue;
+    if (SpatialCombat._dist(from, h) > radius) continue;
+    var dx = h.x - from.x;
+    var dy = h.y - from.y;
+    final len = math.sqrt(dx * dx + dy * dy);
+    if (len < 0.08) {
+      dx = 0.25;
+      dy = -1.0;
+    } else {
+      dx /= len;
+      dy /= len;
+    }
+    final snapped = SpatialCombat._snapToWalkable(
+      world.map,
+      world.openGateIds,
+      h.x + dx * dist,
+      h.y + dy * dist,
+    );
+    h.x = snapped.$1;
+    h.y = snapped.$2;
+    h.attackSlowTimer = math.max(h.attackSlowTimer, 1.05);
   }
 }
 

@@ -11,6 +11,8 @@ Find the address on YouTube **About**, Linktree, or the video description. Do no
 
 Send **8–10 / week**. Expect ~5–15% replies.
 
+**This week (2026-09-20):** send rows **1–10** from `cognifoxstudio@gmail.com`. Look up each address on YouTube About / Linktree the hour you send — do not guess @gmail. Attach nothing; Play link + trailer URL are in the body. Stop after 10. Mega-channels (31+) wait.
+
 ## Mail body (swap FIRST_LINE + NAME)
 
 ```

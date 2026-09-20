@@ -118,6 +118,12 @@ abstract final class EnemyFlavor {
     _ => 'MEND',
   };
 
+  /// Trash brute tell — same cleave chip, zone-readable label.
+  static String bruteTell(String dungeonId) => switch (dungeonId) {
+    'sandy' => 'CRASH',
+    _ => 'CLEAVE',
+  };
+
   /// Trash ranged tell — same slow chip, zone-readable label.
   static String rangedTell(String dungeonId) => switch (dungeonId) {
     'sandy' => 'SPIT',
@@ -226,10 +232,10 @@ abstract final class EnemyFlavor {
   /// Mix weights per zone (higher = more of that body).
   static const Map<String, Map<EnemyArchetype, int>> _zoneMix = {
     'sandy': {
-      EnemyArchetype.swarm: 3,
+      EnemyArchetype.swarm: 4,
       EnemyArchetype.brute: 3,
       EnemyArchetype.tank: 2,
-      EnemyArchetype.ranged: 2,
+      EnemyArchetype.ranged: 3,
       EnemyArchetype.glass: 1,
       EnemyArchetype.support: 1,
     },

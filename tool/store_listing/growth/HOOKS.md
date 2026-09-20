@@ -1,11 +1,11 @@
 # Idle Party — Shorts / TikTok / Reels hook library
 
-**Updated:** 2026-09-17. English on-screen. Real A56 footage only — no AI combat, no fake UI.
+**Updated:** 2026-09-20. English on-screen. Real A56 footage only — no AI combat, no fake UI.
 Play link in **bio + first comment**, not as a GitHub Release. Cross-post the same master.
 
 **Capture:** Samsung A56, 1080×2340, `adb shell screenrecord`, Zoom · Close.
-Sandy new-save for “first minute” hooks. Showcase / later zones for spectacle.
-Restore the emulator save afterward. Trim with `build_shorts_feed.py` or a 7–15s cut.
+Sandy **new save** after **1.12.180** (spit / crash / slam). Showcase / later zones for spectacle.
+Restore the emulator save afterward. Trim with `build_hook_clips.py` / `build_shorts_feed.py`.
 
 **Hard rules**
 

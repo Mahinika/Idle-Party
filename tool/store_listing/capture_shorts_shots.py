@@ -9,6 +9,7 @@ import subprocess
 import sys
 import threading
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -28,6 +29,10 @@ def adb(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
 
 def write_prefs(save_json: Path, dest_xml: Path) -> None:
     data = json.loads(save_json.read_text(encoding="utf-8"))
+    # Future stamp so boot cannot open Welcome Back over the crawl.
+    data["lastUpdated"] = (
+        datetime.now(timezone.utc) + timedelta(minutes=15)
+    ).strftime("%Y-%m-%dT%H:%M:%S.000Z")
     data["dungeonZoom"] = "close"
     data["soundMuted"] = True
     data["dungeonMode"] = "push"

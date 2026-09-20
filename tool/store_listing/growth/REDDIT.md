@@ -61,6 +61,88 @@ Live sizes **2026-09-20**. Rank = likely Android idle-RPG players, not raw membe
 
 ---
 
+## Comment karma this week (no game posts)
+
+Do **not** dump a store link. Reply to other people's games: one specific thing you liked or a short honest question. Goal: comment karma before SideProject retry.
+
+Pick 5 threads on r/incremental_games, r/IndieGaming, or r/AndroidGaming that are **not** our posts.
+
+---
+
+**GIF file (local, gitignored):** `tool/store_listing/preview/hooks/reddit_sandy.gif`  
+Shorts: `tool/store_listing/preview/hooks/01_they_fight.mp4` and the rest of the 7-clip batch.  
+Play preview: `preview/idle_party_preview_16x9.mp4` + `_9x16.mp4`. Recaptured **2026-09-20** from Sandy F1.
+
+## r/IndieGaming paste (not before **2026-09-25**)
+
+Account must be **1 week** old. **1 post / 2 weeks.** GIF of the party crawl in the post (not a YouTube URL). Declare AI coding assistants. No bare store link as the title.
+
+### Title
+
+```
+Idle Party — the party walks the dungeon while you AFK (Android)
+```
+
+### Body
+
+```
+Portrait idle RPG on Google Play. A small fantasy party crawls painted rooms — they keep fighting if you look away. Same combat, not a second numbers screen.
+
+GIF is the first Sandy cave: spit, crash, then the boss slam.
+
+No gacha. Optional hub scrolls never cover a fight.
+
+Play (Android):
+https://play.google.com/store/apps/details?id=com.idleparty.app
+
+AI Disclosure
+Owned pixel art. Original combat and copy. I use AI coding assistants while developing. Gameplay footage is from the live build, not generated.
+```
+
+## r/indiegames paste (GIF ready)
+
+Footage **required**. Max 2/week. No fake “feedback?” titles.
+
+### Title
+
+```
+Idle Party — Android idle RPG, party crawl in the first minute
+```
+
+### Body
+
+```
+Idle Party is a portrait idle RPG. You send three heroes into a cave. They walk, heal, and fight on their own.
+
+The clip is live combat from a new save — not a menu tour.
+
+Google Play:
+https://play.google.com/store/apps/details?id=com.idleparty.app
+```
+
+## r/IndieDev paste (GIF ready)
+
+Clip first. Not a launch dump.
+
+### Title
+
+```
+Shipped an Android idle RPG where AFK is the same dungeon crawl
+```
+
+### Body
+
+```
+Idle Party is on Google Play. The party pathfinds the room and keeps the same fight if you AFK.
+
+I spent the last stretch on the first-cave read (spit / crash / slam) so a 10s clip is the hook, not a feature list.
+
+Play:
+https://play.google.com/store/apps/details?id=com.idleparty.app
+```
+
+---
+
 ## Performance (look 2026-09-20)
 
 | Sub | Views | Upvotes | Ratio | Comments | Shares | Status |

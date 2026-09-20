@@ -582,7 +582,7 @@ abstract final class GameGuides {
       title: 'POWER SHELVES',
       body:
           'ATK / DEF / STA come from three shelves — do not stack them up wrong.\n\n'
-          '• GOLD → FORGE — run-only power bought with wallet gold. Wipes on Ascend. '
+          '• GOLD tracks (GOLD → FORGE) — run-only power bought with wallet gold. Wipes on Ascend. '
           'Wipe advice points here (or GOLD → MARKET listings) when the sim proves a gap.\n'
           '• Ascend Blessing — stacks each Ascend (+ATK/DEF/STA/gold forever). '
           'Readout on ESSENCE → BLESSING. Not Star Nodes.\n'

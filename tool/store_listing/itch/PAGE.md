@@ -64,6 +64,24 @@ this `PAGE.md` and the owned cover PNGs.
   (editor **Video** button). Put the embed under the Trailer line so the label
   is not left empty.
 
+### Next community post (GIF first, Play button, no APK)
+
+Board: https://itch.io/board/10022/release-announcements
+
+```
+Idle Party — idle RPG for Android (Google Play)
+
+A small fantasy party crawls painted rooms and keeps fighting if you AFK. Same combat, not a second sim. No gacha. Optional hub scrolls never cover a fight.
+
+Play (Android):
+https://play.google.com/store/apps/details?id=com.idleparty.app
+
+itch page:
+https://cognifox-studio.itch.io/idle-party
+```
+
+Attach the 7–15s Sandy crawl GIF from `tool/store_listing/preview/hooks/reddit_sandy.gif` (gitignored). Not a YouTube URL as the only media. No APK.
+
 ---
 
 ## Create game form
