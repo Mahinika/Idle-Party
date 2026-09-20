@@ -1,6 +1,7 @@
 # Idle Party — Reddit posts (Cognifox / u/Few-Command-8450)
 
 Account: **u/Few-Command-8450** (Cognifox Gmail). Cake day **2026-09-18**.
+Look **2026-09-20**: 1 post karma, **0 comment karma**.
 
 **Do not** post GitHub Releases. Play only:
 https://play.google.com/store/apps/details?id=com.idleparty.app
@@ -9,15 +10,47 @@ Reply to comments the same day. Unique copy per sub — no copy-paste.
 
 ---
 
+## Decision (2026-09-20)
+
+**Do not post the game again this weekend.** The 3.2K-view hit already ran. A second launch post now would be spam (five posts on cake day, SideProject already filtered, 0 comment karma).
+
+r/incremental_games **did** convert to Play downloads. It also got **30.8% upvote ratio** (score 0). The crowd saw a text wall + YouTube link + “this post was drafted with an assistant.” Next time: **inline combat GIF**, one Play link, shorter body, AI disclosure for the *game* only.
+
+| When | Where | Why |
+|------|--------|-----|
+| Not before **2026-10-18** | r/incremental_games | 30-day own-content rule. Slot used 2026-09-18. |
+| Not while live | r/droidappshowcase / ShowMeYourApps / ShowYourApp | Still up. Do not delete-and-repost. |
+| After karma + a few days | r/SideProject | Spam-filter removed the first one. |
+| **2026-09-25+** | r/IndieGaming | Account 1 week old; 1 post / 2 weeks; attach GIF. |
+| After GIF exists | r/indiegames, r/DungeonCrawler | Need footage in the post, not a YouTube URL. |
+
+Until then: comment on **other** games (need comment karma). Capture a 7–15s party-crawl GIF from A56 (`HOOKS.md` hook 01).
+
+---
+
+## Performance (look 2026-09-20)
+
+| Sub | Views | Upvotes | Ratio | Comments | Shares | Status |
+|-----|------:|--------:|------:|---------:|-------:|--------|
+| r/incremental_games | **3.2K** | 0 | **30.8%** | 1 (gone) | 4 | Live, flair **Released**. Spike hour 11 (~497 views) after AutoMod delay. US 35%. |
+| r/ShowMeYourApps | 172 | 1 | 100% | 0 | 1 | Live. Best of the tiny maker subs. |
+| r/droidappshowcase | 104 | 1 | — | 1 sticky-bot | — | Live, flair **Showcase**. Not removed. Body is the template **pasted twice**; bot asked for images. |
+| r/ShowYourApp | 80 | 1 | 100% | 0 | 0 | Live. Dead. |
+| r/SideProject | — | 1 | — | 0 | — | Removed by Reddit filters. |
+
+Insights: https://www.reddit.com/poststats/1wjwbga/
+
+---
+
 ## Posted 2026-09-18
 
-| Sub | URL | Status |
-|-----|-----|--------|
-| r/incremental_games | https://www.reddit.com/r/incremental_games/comments/1wjwbga/idle_party_android_idle_rpg_where_the_party/ | AutoMod filter (new account). Flair **Released**. Next own-game post here: **2026-10-18**. |
-| r/droidappshowcase | https://www.reddit.com/r/droidappshowcase/comments/1wjwluk/idle_party_idle_rpg_party_fights_afk/ | Removed by mods (Feedback Goals looked like a tester request; account also &lt;24h / &lt;2 karma). Retry **2026-09-19+** with Showcase template, **no Feedback Goals**. |
-| r/ShowMeYourApps | https://www.reddit.com/r/ShowMeYourApps/comments/1wjwqqg/idle_party_android_idle_rpg_party_walks_the/ | Live. Rule: mobile apps only, **no AI content** — do not mention assistants there. |
-| r/ShowYourApp | https://www.reddit.com/r/ShowYourApp/comments/1wjwt11/i_shipped_idle_party_idle_rpg_where_afk_uses_the/ | Live. Maker copy. Comment on other posts when possible (their “help others grow”). |
-| r/SideProject | https://www.reddit.com/r/SideProject/comments/1wjwu0g/idle_party_portrait_idle_rpg_party_walks_the/ | Removed by Reddit spam filter (brand-new account). Retry after karma + a few days. Title format: `[Name] - [short desc]`. |
+| Sub | URL |
+|-----|-----|
+| r/incremental_games | https://www.reddit.com/r/incremental_games/comments/1wjwbga/idle_party_android_idle_rpg_where_the_party/ |
+| r/droidappshowcase | https://www.reddit.com/r/droidappshowcase/comments/1wjwluk/idle_party_idle_rpg_party_fights_afk/ |
+| r/ShowMeYourApps | https://www.reddit.com/r/ShowMeYourApps/comments/1wjwqqg/idle_party_android_idle_rpg_party_walks_the/ |
+| r/ShowYourApp | https://www.reddit.com/r/ShowYourApp/comments/1wjwt11/i_shipped_idle_party_idle_rpg_where_afk_uses_the/ |
+| r/SideProject | https://www.reddit.com/r/SideProject/comments/1wjwu0g/idle_party_portrait_idle_rpg_party_walks_the/ |
 
 ---
 
@@ -30,45 +63,43 @@ Reply to comments the same day. Unique copy per sub — no copy-paste.
 - r/androiddev / r/gamedev / r/flutterdev — no app ads
 - r/IdleGames — closed (use incremental_games)
 - r/IdleGame — restricted, 9 subscribers
-- r/IndieGaming — account must be **1 week** old; 1 post / 2 weeks
-- r/indiegames — needs inline gameplay image/gif/video; no gen-AI posts. Wait for footage upload + older account.
 - r/hobbygamedev — no commercial Play games
 - r/HowToMen — homescreen themes, not games
 - r/AppHookup — paid-app deals only
-- Same-day extra idle subs — sitewide spam (SideProject already filtered)
+- Same-week extra idle subs — sitewide spam (SideProject already filtered)
+- r/incremental_gamedev — dev talk, not Play installs
 
-**Later (when account is older):** r/itchio (itch page + Play), r/indiegames (with combat GIF), r/IndieGaming after 2026-09-25, AndroidGaming after ~3 months.
+**Later (account older + GIF):** r/itchio (itch page + Play), r/indiegames, r/IndieGaming after **2026-09-25**, r/DungeonCrawler, AndroidGaming after ~3 months.
 
 ---
 
-## incremental_games paste (already used 2026-09-18)
+## Next incremental_games paste (use 2026-10-18)
 
-Rules: one self-promo / **30 days**; playable link; **AI Disclosure**. GIF of the party crawl, not the hub.
+Rules: one self-promo / **30 days**; playable link; **AI Disclosure**. Attach a **GIF of the party crawl**, not the hub, not a YouTube URL.
 
 ### Title
 
 ```
-Android idle RPG where the party actually walks the dungeon (and keeps fighting AFK)
+Idle Party — Android idle RPG where the party walks the dungeon AFK
 ```
 
 ### Body
 
 ```
-Idle Party is a portrait idle RPG on Google Play. You send a small fantasy party into a cave. They walk the rooms, use their own kits, and keep fighting if you look away — same combat, not a second AFK sim.
+Idle Party is a portrait idle RPG on Google Play.
 
-I’m posting because the loop is the thing incremental players usually care about: watch the crawl, tap if you want to help, come back to loot and one clear next job (we call that TODAY on the hub). No energy gate. No gacha. Optional rewarded scrolls live on the hub and never pop over a fight. The cheap SHOP is convenience (forever scrolls / ad-free / small QoL), not best-in-slot gear.
+You send a small fantasy party into a cave. They walk the rooms, use their own kits, and keep fighting if you look away — same combat, not a second AFK numbers screen.
 
-Playable now (Android):
+No energy gate. No gacha. Optional rewarded scrolls sit on the hub and never pop over a fight. The cheap shop is convenience (ad-free / forever scrolls), not best-in-slot gear.
+
+Play (Android):
 https://play.google.com/store/apps/details?id=com.idleparty.app
 
-itch page (Play button, no APK):
-https://cognifox-studio.itch.io/idle-party
-
-If you try it, I’m looking for “does the first cave feel like a fight” more than feature notes. Happy to answer kit / AFK / shop questions in the comments.
-
 AI Disclosure
-The game’s art is owned pixel art (no generative game art). Combat, systems, and copy are original. I use AI coding assistants while developing. This post was drafted with an assistant and edited by me. No AI-generated gameplay footage.
+Art is owned pixel art (no generative game art). Combat, systems, and copy are original. I use AI coding assistants while developing. No AI-generated gameplay footage.
 ```
+
+Dropped vs 2026-09-18: itch link, TODAY jargon, “looking for feedback,” “this post was drafted with an assistant.”
 
 ## After you post
 
