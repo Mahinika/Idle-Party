@@ -281,6 +281,19 @@ def load_body(family: str, anim: str) -> Image.Image:
     return im
 
 
+def is_healer_circlet_trim(rgb: tuple[int, int, int]) -> bool:
+    """Healer circlet / hood-gold that is_gold_pixel often misses (darker brass)."""
+    if is_gold_pixel(rgb):
+        return True
+    r, g, b = rgb
+    # Saturated yellow/brass trim — not soft blonde bob.
+    if r >= 155 and g >= 90 and b < 145 and (g - b) >= 35 and (r - b) >= 40:
+        return True
+    if r >= 200 and g >= 150 and b < 155 and (r - b) > 55:
+        return True
+    return False
+
+
 def classify(
     src: Image.Image,
     family: str,
@@ -315,12 +328,21 @@ def classify(
             l = lum(rgb)
             in_head = in_ellipse(x, y, fx, fy, rx, ry) and y <= chin + 3
 
+            if family == "healer" and y <= chin + 8 and is_healer_circlet_trim(rgb):
+                tags["hat"].add((x, y))
+                continue
             if y <= chin + 8 and (is_hat_or_hood(family, rgb) or is_gold_pixel(rgb)):
                 tags["hat"].add((x, y))
                 continue
             # Mage tall hat / healer cowl above brows — never hair.
             if family in ("mage", "healer") and y < fy - 2 and not is_skin(rgb, face):
-                if is_hair_color(family, rgb) and y >= fy - 14:
+                # Circlet arc / hat cone above the forehead = hat, not fringe.
+                if family == "healer" and (
+                    is_healer_circlet_trim(rgb) or y < fy - 10 or abs(x - fx) > face_half * 1.15
+                ):
+                    tags["hat"].add((x, y))
+                    continue
+                if is_hair_color(family, rgb) and y >= fy - 14 and abs(x - fx) <= face_half * 1.2:
                     tags["hair"].add((x, y))
                 else:
                     tags["hat"].add((x, y))
@@ -331,13 +353,17 @@ def classify(
             if is_skin(rgb, face) and in_head:
                 tags["skin"].add((x, y))
                 continue
-            # Hair: head band only, color OR dark-warm fringe next to face.
+            # Hair: head band only — never circlet gold / hood ink.
             if y <= chin + 4 and in_head:
+                if family == "healer" and is_healer_circlet_trim(rgb):
+                    tags["hat"].add((x, y))
+                    continue
                 if is_hair_color(family, rgb):
                     tags["hair"].add((x, y))
                     continue
                 if (
                     not is_gold_pixel(rgb)
+                    and not (family == "healer" and is_healer_circlet_trim(rgb))
                     and l < 0.58
                     and abs(x - fx) <= face_half * 1.55
                     and y < fy + 3
@@ -622,12 +648,38 @@ def paint_canonical_body(
                 washed = shade_from(washed, look.skin_shadow, strength=0.55)
             op[x, y] = (*washed, 255)
 
-    # Hair over crown (classified only).
+    # Hair over crown (classified only — never circlet/hood gold).
     for x, y in tags["hair"]:
         if (x, y) in tags["hat"]:
             continue
         r, g, b, aa = sp[x, y]
+        if family == "healer" and is_healer_circlet_trim((r, g, b)):
+            continue
+        if is_gold_pixel((r, g, b)) or is_hat_or_hood(family, (r, g, b)):
+            continue
         op[x, y] = (*shade_from((r, g, b), hair_t, strength=0.8), max(aa, 220))
+
+    # Healer/mage: scrub any leftover circlet streaks outside the face oval.
+    if family in ("healer", "mage"):
+        for y in range(0, int(a.chin) + 2):
+            for x in range(128):
+                r, g, b, aa = op[x, y]
+                if aa < 16:
+                    continue
+                rgb = (r, g, b)
+                if is_skin(rgb, a.face_rgb) or is_skin(rgb, skin_t):
+                    continue
+                # Kill gold/brass streaks and orphan pixels above the brows.
+                if family == "healer" and is_healer_circlet_trim(rgb):
+                    op[x, y] = (0, 0, 0, 0)
+                    continue
+                if is_gold_pixel(rgb):
+                    op[x, y] = (0, 0, 0, 0)
+                    continue
+                if y < a.fy - 8 and not head_clip(x, y, a.fx, a.fy, a.face_half * 1.05):
+                    # Floating hood/circlet crumbs outside the head.
+                    if abs(r - hair_t[0]) + abs(g - hair_t[1]) + abs(b - hair_t[2]) > 40:
+                        op[x, y] = (0, 0, 0, 0)
 
     # Clean race eyes (small ovals) — wins over skin/hair noise.
     eye_y = a.fy + 0.5
