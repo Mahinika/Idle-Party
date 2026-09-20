@@ -24,8 +24,8 @@ class HeroLookRow extends StatelessWidget {
   final String? title;
   final bool compact;
 
-  /// When > 0, lay out a fixed column grid (New Party LOOK panel).
-  /// Otherwise use a centered [Wrap] (GEAR).
+  /// When > 0, lay out a fixed column grid (New Party RACE panel).
+  /// Otherwise use a centered [Wrap].
   final int columns;
 
   @override

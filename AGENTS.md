@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code
 and **owned** pixel art (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.180**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.181**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 
@@ -72,12 +72,12 @@ PNGs — Kenney 16×16 tiles are not bundled. Items share looks via
 `visualSetId`. Four bodies serve 31 specs, so each spec washes its own color
 through generated **cloth-only** `body_tint_<anim>` masks
 (`HeroIdentity.ownedBodyTintArgb`); skin/hair and authored gear keep their
-palette. Optional **LOOK** (New Game + GEAR): Cataclysm’s **12** playable
-races (Human…Goblin; no Pandaren). Every family uses authored
-`<race>_<m|f>_body_*.png` (male Human clips match family `body_*.png`;
-female Human healer is its own clip). Form kits (Shadow / Druid) skip LOOK
-on GEAR — race does not show through the form PNG. Gear overlays never
-include a baked face.
+palette. Optional **LOOK** (New Game only — race stays locked after START):
+Cataclysm’s **12** playable races (Human…Goblin; no Pandaren). Every family
+uses authored `<race>_<m|f>_body_*.png` (male Human clips match family
+`body_*.png`; female Human healer is its own clip). Form kits (Shadow /
+Druid) skip LOOK — race does not show through the form PNG. Gear overlays
+never include a baked face.
 One body clip per anim — walk bob, weapon swing and hit recoil come from
 `CharacterVisualPainter.ownedStepOffset`, not new PNGs. Hand items grip
 opaque pixels (`OwnedGearGrips`, generated). Looks gate:

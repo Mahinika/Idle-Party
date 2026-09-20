@@ -96,4 +96,10 @@ void main() {
     expect(lead.toUpperCase(), isNot(contains('GREATER')));
     expect(lead.toUpperCase(), isNot(contains('MASTERY')));
   });
+
+  test('current What’s New locks race after New Game START', () {
+    final rest = MetaSystems.releases.first.bullets.skip(1).join(' ');
+    expect(rest.toLowerCase(), contains('locked after start'));
+    expect(rest.toUpperCase(), isNot(contains('GEAR LOOK')));
+  });
 }

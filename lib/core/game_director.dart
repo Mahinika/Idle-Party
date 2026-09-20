@@ -2276,12 +2276,6 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(GameLogic.ackPendingHeroReveals(_state));
   }
 
-  void setHeroLook(String heroId, {HeroRace? race, HeroSex? sex}) {
-    _applyUpgrade(
-      GameLogic.setHeroLook(_state, heroId: heroId, race: race, sex: sex),
-    );
-  }
-
   // —— Daily run ——————————————————————————————————————————————
 
   void enterDaily() {

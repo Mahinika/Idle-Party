@@ -216,8 +216,9 @@ pose. Files live at `assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png`
 `BodyFamilyCatalog.authoredRaceLooks` lists all family × race × sex. Family
 `body_*.png` mirrors **male Human** undertunic. Do **not** regenerate family gear
 here. Chest/robe overlays must not include a baked face. LOOK / RACE lives on
-New Game and GEAR (hidden for Shadow / Druid form kits). New Party preview uses
-`StarterGear.forSpec` so the doll matches the first dungeon stack.
+New Game only (locked after START; hidden for Shadow / Druid form kits). New
+Party preview uses `StarterGear.forSpec` so the doll matches the first dungeon
+stack.
 
 Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 

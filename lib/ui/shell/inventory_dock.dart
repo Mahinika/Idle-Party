@@ -285,8 +285,6 @@ class _InventoryDockState extends State<InventoryDock>
         onUnequip: onUnequip,
         onEmptySlotTap: onBrowseBagSlot,
         compact: true,
-        onSetHeroLook: (heroId, race) =>
-            widget.director.setHeroLook(heroId, race: race),
       );
     }
 

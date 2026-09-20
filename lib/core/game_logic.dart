@@ -1428,7 +1428,8 @@ class GameLogic {
   static HeroRace _rosterRace(GameState state) =>
       state.heroRoster.isEmpty ? HeroRace.human : state.heroRoster.first.race;
 
-  /// Paper-doll look. Changing race from LOOK snaps sex to the kit family
+  /// Paper-doll look. Used at New Game / roster unlock / tests — GEAR cannot
+  /// retint race after START. Changing race snaps sex to the kit family
   /// default (healer female; other families male).
   static GameState setHeroLook(
     GameState state, {
