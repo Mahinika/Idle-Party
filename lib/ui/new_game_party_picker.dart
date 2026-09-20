@@ -15,7 +15,7 @@ import 'menu_chrome.dart';
 /// Pick exactly [GameLogic.starterPartySize] unique specs for a new run.
 ///
 /// Each slot keeps its own [HeroRace]. The editor under the cards switches
-/// between **KIT** (starter kits only) and **LOOK** (Cataclysm races).
+/// between **CLASS** (starter kits only) and **RACE** (Cataclysm races).
 class NewGamePartyPicker extends StatefulWidget {
   const NewGamePartyPicker({
     super.key,
@@ -37,14 +37,14 @@ class NewGamePartyPicker extends StatefulWidget {
   State<NewGamePartyPicker> createState() => _NewGamePartyPickerState();
 }
 
-enum _PartyEditTab { kit, look }
+enum _PartyEditTab { classTab, raceTab }
 
 class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   late final List<HeroSpecId?> _slots;
   late final TextEditingController _nameCtrl;
   late HeroClassId _filter;
   int _activeSlot = 0;
-  _PartyEditTab _tab = _PartyEditTab.kit;
+  _PartyEditTab _tab = _PartyEditTab.classTab;
   bool _nameError = false;
   String? _pickHint;
   late final List<HeroRace> _looks;
@@ -155,7 +155,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
             'for the other slots';
         _activeSlot = takenIndex;
         _filter = HeroSpecs.def(id).classId;
-        _tab = _PartyEditTab.kit;
+        _tab = _PartyEditTab.classTab;
       });
       return;
     }
@@ -288,18 +288,20 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               const SizedBox(height: 8),
               MenuChrome.segmented(
                 dense: true,
-                labels: const ['KIT', 'LOOK'],
-                selectedIndex: _tab == _PartyEditTab.kit ? 0 : 1,
+                labels: const ['CLASS', 'RACE'],
+                selectedIndex: _tab == _PartyEditTab.classTab ? 0 : 1,
                 onSelect: (i) => setState(() {
-                  _tab = i == 0 ? _PartyEditTab.kit : _PartyEditTab.look;
+                  _tab = i == 0
+                      ? _PartyEditTab.classTab
+                      : _PartyEditTab.raceTab;
                   _pickHint = null;
                 }),
               ),
               const SizedBox(height: 6),
               Text(
-                _tab == _PartyEditTab.kit
-                    ? 'Kit for $_activeKitLabel — Shield / Healer / Damage'
-                    : 'LOOK for $_activeKitLabel · ${_looks[_activeSlot].label}',
+                _tab == _PartyEditTab.classTab
+                    ? 'Class for $_activeKitLabel — Shield / Healer / Damage'
+                    : 'Race for $_activeKitLabel · ${_looks[_activeSlot].label}',
                 textAlign: TextAlign.center,
                 style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
               ),
@@ -315,7 +317,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               Expanded(
                 child: DecoratedBox(
                   decoration: MenuChrome.panel(opaque: true),
-                  child: _tab == _PartyEditTab.look
+                  child: _tab == _PartyEditTab.raceTab
                       ? Padding(
                           padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
                           child: HeroLookRow(

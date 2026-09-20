@@ -182,8 +182,8 @@ void main() {
     expect(find.byType(StartMenuScreen), findsNothing);
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
     expect(find.text('NEW PARTY'), findsOneWidget);
-    expect(find.text('KIT'), findsOneWidget);
-    expect(find.text('LOOK'), findsOneWidget);
+    expect(find.text('CLASS'), findsOneWidget);
+    expect(find.text('RACE'), findsOneWidget);
     expect(find.text('SET'), findsOneWidget);
     expect(find.text('Shield'), findsWidgets);
     expect(find.text('Healer'), findsWidgets);
@@ -193,8 +193,8 @@ void main() {
     expect(find.byType(TextField), findsOneWidget);
     expect(HeroRace.values.length, 12);
 
-    // LOOK tab holds the Cataclysm race grid (not stacked under KIT).
-    await tester.tap(find.text('LOOK'));
+    // RACE tab holds the Cataclysm race grid (not stacked under CLASS).
+    await tester.tap(find.text('RACE'));
     await tester.pump();
     expect(find.text('HUMAN'), findsWidgets);
     expect(find.text('N.ELF'), findsWidgets);
@@ -316,14 +316,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
-    await tester.tap(find.text('LOOK'));
+    await tester.tap(find.text('RACE'));
     await tester.pump();
     // Slot 0 (PROT) is selected by default — Night Elf only that hero.
     await tester.ensureVisible(find.text('N.ELF').first);
     await tester.tap(find.text('N.ELF').first);
     await tester.pump();
     expect(
-      find.textContaining('LOOK for PROT'),
+      find.textContaining('Race for PROT'),
       findsOneWidget,
     );
 
