@@ -1,12 +1,13 @@
 """Bake race undertunic bodies that match gold-master pose (for gear overlays).
 
-Pipeline:
-  _src pose → paint_undertunic (helkropp cloth, hat/hood stripped)
-  → flatten cloth chroma → race palette wash → race features
-  → tint → validate → save
+Pipeline (classify then paint — never recolor while guessing):
+  _src pose → exclusive labels (eye > skin > hair > ink > helm > armor > cloth)
+  → family/facit body copies identity + recolors garment
+  → LOOK variants: canonical sleeveless tunic+shorts, then race palette by tag
+  → features on the silhouette → cloth-only tint → validate → save
 
-Gear overlays stay untouched. Bodies keep the same silhouette as
-`build_owned_gear_layers.paint_undertunic` so plate/robe extracts line up.
+Gear overlays stay untouched. Human-male family bodies keep the gold-master
+footprint so idle facit vs dressed `_src` still gates.
 
 Writes:
   assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png
@@ -24,24 +25,16 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from build_owned_gear_layers import (
-    ANIMS,
-    ROOT,
-    TUNIC,
-    bbox,
-    despeckle_alpha,
-    face_region,
-    flat_undertunic_pixel,
-    is_gold_pixel,
-    is_hair_color,
-    is_hat_or_hood,
-    is_skin,
-    load128,
-    lum,
-    paint_undertunic,
-    sample_face,
-    strip_equipped_helm_from_body,
-    _chin_y,
+from build_owned_gear_layers import ANIMS, ROOT, TUNIC, lum
+from paper_doll_classify import (
+    EYE,
+    HAIR,
+    INK as LABEL_INK,
+    SKIN,
+    classify_src,
+    cloth_tint_from_labels,
+    paint_canonical_body,
+    paint_family_body,
 )
 
 REPO = Path(__file__).resolve().parents[1]
@@ -232,11 +225,6 @@ def shade_from(
     )
 
 
-def tint_pixel(rgb: tuple[int, int, int], alpha: int) -> tuple[int, int, int, int]:
-    value = max(48, clamp8(255 * lum(rgb)))
-    return (value, value, value, alpha)
-
-
 def dist2(ax: float, ay: float, bx: float, by: float) -> float:
     return (ax - bx) * (ax - bx) + (ay - by) * (ay - by)
 
@@ -245,243 +233,68 @@ def head_clip(x: int, y: int, fx: float, fy: float, radius: float) -> bool:
     return dist2(x, y, fx, fy) <= radius * radius
 
 
-def is_healer_circlet_trim(rgb: tuple[int, int, int]) -> bool:
-    if is_gold_pixel(rgb):
-        return True
-    r, g, b = rgb
-    if r >= 155 and g >= 90 and b < 145 and (g - b) >= 35 and (r - b) >= 40:
-        return True
-    if r >= 200 and g >= 150 and b < 155 and (r - b) > 55:
-        return True
-    return False
-
-
-def load_body(family: str, anim: str) -> Image.Image:
-    src_path = ROOT / family / "_src" / f"body_{anim}.png"
-    path = src_path if src_path.exists() else ROOT / family / f"body_{anim}.png"
-    im = Image.open(path).convert("RGBA")
-    if im.size != CONFIG.size:
-        raise SystemExit(f"{path} is {im.size}, want {CONFIG.size}")
-    return im
-
-
-def scrub_hat_hood(body: Image.Image, family: str, face: tuple[int, int, int], box) -> None:
-    """Second pass: kill circlet/hood crumbs paint_undertunic can leave."""
-    fx, fy, face_half = face_region(body, face, box)
-    chin = float(_chin_y(body, face, fx, fy, face_half))
-    op = body.load()
-    for y in range(0, int(chin) + 6):
-        for x in range(128):
-            r, g, b, a = op[x, y]
-            if a < 16:
-                continue
-            rgb = (r, g, b)
-            if is_skin(rgb, face):
-                continue
-            if is_hair_color(family, rgb) and y >= fy - 12 and abs(x - fx) <= face_half * 1.35:
-                continue
-            if family == "healer" and is_healer_circlet_trim(rgb):
-                op[x, y] = (0, 0, 0, 0)
-                continue
-            if is_hat_or_hood(family, rgb) or is_gold_pixel(rgb):
-                op[x, y] = (0, 0, 0, 0)
-                continue
-            if family == "mage" and y < fy - 8 and not is_hair_color(family, rgb):
-                op[x, y] = (0, 0, 0, 0)
-
-
-def flatten_cloth(
-    body: Image.Image,
-    family: str,
-    face: tuple[int, int, int],
-    box,
-    *,
-    female: bool,
-) -> Image.Image:
-    """Keep pose alpha, replace plate/robe chroma with flat undertunic cloth."""
-    fx, fy, face_half = face_region(body, face, box)
-    chin = float(_chin_y(body, face, fx, fy, face_half))
-    x0, y0, x1, y1 = box
-    mid_y = y0 + int((y1 - y0) * 0.62)
+def _family_cloth(family: str, *, female: bool) -> tuple[tuple[int, int, int], tuple[int, int, int]]:
     tunic, pants = TUNIC[family]
-    if female:
-        tunic = (
+    if not female:
+        return tunic, pants
+    return (
+        (
             clamp8(tunic[0] * 1.06 + 14),
             clamp8(tunic[1] * 1.06 + 14),
             clamp8(tunic[2] * 1.04 + 10),
-        )
-        pants = (
+        ),
+        (
             clamp8(pants[0] * 0.95 + 6),
             clamp8(pants[1] * 0.92 + 4),
             clamp8(pants[2] * 0.95 + 6),
-        )
-    out = body.copy()
-    op = out.load()
-    for y in range(128):
-        for x in range(128):
-            r, g, b, a = op[x, y]
-            if a < 40:
-                continue
-            rgb = (r, g, b)
-            if is_skin(rgb, face):
-                continue
-            if y <= chin + 6 and (
-                is_hair_color(family, rgb) or lum(rgb) < 0.2
-            ):
-                continue
-            if y <= chin + 8 and abs(x - fx) <= face_half * 2.2:
-                # Keep face ink / eyes / hair — never flatten the head.
-                if lum(rgb) < 0.55 or is_hair_color(family, rgb):
-                    continue
-            op[x, y] = flat_undertunic_pixel(x, y, fx, mid_y, tunic, pants, a)
-    return despeckle_alpha(out)
+        ),
+    )
 
 
-def rebuild_cloth_tint(
+def apply_race_on_labels(
+    clf,
     body: Image.Image,
-    src: Image.Image,
-    face: tuple[int, int, int],
-    box,
-) -> Image.Image:
-    """Cloth-only mask matching check_paper_doll_facit head/skin rules.
-
-    Facit keys off gold-master skin pixels, not the washed undertunic colors
-    (cream healer cloth and warm warrior tunic often false-positive as skin).
-    """
-    fx, fy, face_half = face_region(src, face, box)
-    chin = float(_chin_y(src, face, fx, fy, face_half))
-    op = body.load()
-    sp = src.load()
-    tint = Image.new("RGBA", CONFIG.size, (0, 0, 0, 0))
-    tp = tint.load()
-    for y in range(128):
-        for x in range(128):
-            r, g, b, a = op[x, y]
-            if a < 40:
-                continue
-            if y <= chin + 8 and abs(x - fx) <= face_half * 2.4:
-                continue
-            sr, sg, sb, sa = sp[x, y]
-            if sa >= 40 and is_skin((sr, sg, sb), face):
-                continue
-            tp[x, y] = tint_pixel((r, g, b), a)
-    return tint
-
-
-def apply_race_palette(
-    body: Image.Image,
-    family: str,
     look: RaceLook,
     *,
     female: bool,
-    face: tuple[int, int, int],
-    box,
-    src: Image.Image,
-) -> tuple[Image.Image, Image.Image]:
-    fx, fy, face_half = face_region(body, face, box)
-    chin = float(_chin_y(body, face, fx, fy, face_half))
+) -> Image.Image:
+    """Recolor identity tags only. Cloth was already painted from GARMENT."""
     skin_t = look.skin_f if female else look.skin_m
     hair_t = look.hair_f if female else look.hair_m
-    tunic, pants = TUNIC[family]
-    if female:
-        tunic = (
-            clamp8(tunic[0] * 1.06 + 14),
-            clamp8(tunic[1] * 1.06 + 14),
-            clamp8(tunic[2] * 1.04 + 10),
-        )
-        pants = (
-            clamp8(pants[0] * 0.95 + 6),
-            clamp8(pants[1] * 0.92 + 4),
-            clamp8(pants[2] * 0.95 + 6),
-        )
-    x0, y0, x1, y1 = box
-    mid_y = y0 + int((y1 - y0) * 0.62)
-
+    src = clf.src.load()
     out = body.copy()
     op = out.load()
-    tint = Image.new("RGBA", CONFIG.size, (0, 0, 0, 0))
-    tp = tint.load()
-
-    # Tag eyes first from bright skin pixels in the eye band.
-    eyes: set[tuple[int, int]] = set()
-    for y in range(max(0, int(fy - 2)), min(128, int(fy + 4))):
-        for x in range(max(0, int(fx - face_half)), min(128, int(fx + face_half) + 1)):
-            r, g, b, a = op[x, y]
-            if a < 40 or not is_skin((r, g, b), face):
-                continue
-            if lum((r, g, b)) < 0.78:
-                continue
-            dx = abs(x - fx)
-            if 3.0 <= dx <= face_half * 0.85:
-                eyes.add((x, y))
-
+    fy = clf.fy
+    face_half = clf.face_half
     for y in range(128):
         for x in range(128):
+            tag = clf.at(x, y)
             r, g, b, a = op[x, y]
             if a < 16:
                 continue
             rgb = (r, g, b)
-
-            # Eyes win.
-            if (x, y) in eyes:
-                op[x, y] = (*look.eye, 255)
-                tp[x, y] = (0, 0, 0, 0)
+            if tag == EYE:
+                op[x, y] = (*shade_from(rgb, look.eye, strength=0.9), a)
                 continue
-
-            if is_skin(rgb, face):
-                washed = shade_from(rgb, skin_t, strength=0.75)
-                if look.fur and lum(rgb) < 0.38:
+            if tag == SKIN:
+                washed = shade_from(src[x, y][:3], skin_t, strength=0.75)
+                if look.fur and lum(src[x, y][:3]) < 0.38:
                     washed = shade_from(washed, look.skin_shadow, strength=0.55)
-                elif y > fy + face_half * 0.35 and lum(rgb) < 0.42:
+                elif y > fy + face_half * 0.35 and lum(src[x, y][:3]) < 0.42:
                     washed = shade_from(washed, look.skin_shadow, strength=0.5)
                 op[x, y] = (*washed, a)
-                tp[x, y] = (0, 0, 0, 0)
                 continue
-
-            # Kill leftover circlet / hood before hair wash.
-            if family == "healer" and is_healer_circlet_trim(rgb):
-                op[x, y] = (0, 0, 0, 0)
-                tp[x, y] = (0, 0, 0, 0)
+            if tag == HAIR:
+                op[x, y] = (*shade_from(src[x, y][:3], hair_t, strength=0.8), a)
                 continue
-            if y <= chin + 8 and (is_hat_or_hood(family, rgb) or is_gold_pixel(rgb)):
-                op[x, y] = (0, 0, 0, 0)
-                tp[x, y] = (0, 0, 0, 0)
-                continue
-
-            if y <= chin + 6 and is_hair_color(family, rgb):
-                op[x, y] = (*shade_from(rgb, hair_t, strength=0.8), a)
-                tp[x, y] = (0, 0, 0, 0)
-                continue
-
-            # Face ink
-            if y <= chin + 4 and abs(x - fx) <= face_half * 1.4 and lum(rgb) < 0.18:
+            if tag == LABEL_INK:
                 op[x, y] = (*INK, a)
-                tp[x, y] = (0, 0, 0, 0)
-                continue
+    _paint_features(op, clf, look, female=female, skin=skin_t)
+    return out
 
-            # Cloth — soft race-neutral family tunic (already flattened).
-            cloth = tunic if y < mid_y else pants
-            washed = shade_from(rgb, cloth, strength=0.45)
-            op[x, y] = (*washed, a)
-            if y > chin + 8 and not is_skin(washed, face) and not is_skin(washed, skin_t):
-                # Facit: never tint gold-master skin pixels.
-                # We only have live body here; skip head band already.
-                tp[x, y] = tint_pixel(washed, a)
-            else:
-                tp[x, y] = (0, 0, 0, 0)
 
-    # Small clean eye ovals (readable at LOOK card size).
-    eye_y = fy + 0.5
-    eye_dx = face_half * 0.38
-    for side in (-1.0, 1.0):
-        ex = fx + side * eye_dx
-        for y in range(int(eye_y - 1), int(eye_y + 2)):
-            for x in range(int(ex - 2), int(ex + 3)):
-                if 0 <= x < 128 and 0 <= y < 128:
-                    if (x - ex) ** 2 / 4.5 + (y - eye_y) ** 2 / 2.2 <= 1.0:
-                        op[x, y] = (*look.eye, 255)
-                        tp[x, y] = (0, 0, 0, 0)
-
+def _paint_features(op, clf, look: RaceLook, *, female: bool, skin: tuple[int, int, int]) -> None:
+    fx, fy, face_half, chin = clf.fx, clf.fy, clf.face_half, clf.chin_y
     occupied = {(x, y) for y in range(128) for x in range(128) if op[x, y][3] > 16}
     if look.ears:
         _paint_ears(
@@ -491,19 +304,17 @@ def apply_race_palette(
             face_half,
             chin,
             female=female,
-            skin=skin_t,
+            skin=skin,
             occupied=occupied,
             length=look.ear_length if not female else max(6, look.ear_length - 2),
-            soft_edge=family in ("mage", "healer"),
+            soft_edge=clf.family in ("mage", "healer"),
         )
     if look.tusks:
-        _paint_tusks(op, fx, fy, face_half, chin, skin_t)
+        _paint_tusks(op, fx, fy, face_half, chin, skin)
     if look.horns_up:
         _paint_horns_up(op, fx, fy, face_half)
     if look.horns_side:
         _paint_horns_side(op, fx, fy, face_half)
-
-    return out, rebuild_cloth_tint(out, src, face, box)
 
 
 def _paint_ears(
@@ -637,35 +448,13 @@ def paint_undertunic_body(
     *,
     female: bool,
 ) -> tuple[Image.Image, Image.Image]:
-    src_path = ROOT / family / "_src" / f"body_{anim}.png"
-    if not src_path.exists():
-        src_path = ROOT / family / f"body_{anim}.png"
-    src = load_body(family, anim)
-    # Facit samples chin/face on load128 (dark canvas knocked out). Tint must
-    # use the same geometry or hair pixels count as head overlap.
-    geom = load128(src_path)
-    box = bbox(src)
-    face = sample_face(src, box, family)
-    geom_box = bbox(geom)
-    geom_face = sample_face(geom, geom_box, family)
-    body, _ = paint_undertunic(src, family, face, box)
-    # Helm overlay owns the hat — only punch mage/healer bodies. Warrior/rogue
-    # strip_equipped_helm deletes the painted scalp (coif mask covers the face).
-    if family in ("mage", "healer"):
-        strip_equipped_helm_from_body(family, body)
-        scrub_hat_hood(body, family, face, box)
-    # Family defaults (human male) stay close to paint_undertunic so idle facit
-    # vs dressed _src stays under the hard-diff gate. Race/sex variants flatten
-    # + wash for LOOK identity.
+    clf = classify_src(family, anim)
     if look.key == "human" and not female:
-        return body, rebuild_cloth_tint(body, geom, geom_face, geom_box)
-    body = flatten_cloth(body, family, face, box, female=female)
-    if family in ("mage", "healer"):
-        scrub_hat_hood(body, family, face, box)
-    out, _ = apply_race_palette(
-        body, family, look, female=female, face=face, box=box, src=src
-    )
-    return out, rebuild_cloth_tint(out, geom, geom_face, geom_box)
+        return paint_family_body(clf)
+    tunic, pants = _family_cloth(family, female=female)
+    body = paint_canonical_body(clf, tunic=tunic, pants=pants, sleeveless=False)
+    body = apply_race_on_labels(clf, body, look, female=female)
+    return body, cloth_tint_from_labels(clf, body)
 
 
 def save_pair(path: Path, im: Image.Image) -> None:

@@ -565,160 +565,20 @@ def paint_undertunic(
     face: tuple[int, int, int],
     box: tuple[int, int, int, int],
 ) -> tuple[Image.Image, Image.Image]:
-    """Build neutral body plus a cloth-only grayscale identity tint mask."""
-    px = src.load()
-    x0, y0, x1, y1 = box
-    bh = max(1, y1 - y0)
-    fx, fy, face_half = face_region(src, face, box)
-    chin_y = _chin_y(src, face, fx, fy, face_half)
-    head_max = int(chin_y)
-    mid_y = y0 + int(bh * 0.62)
-    tunic, pants = TUNIC[family]
-    out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-    tint_mask = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-    op = out.load()
-    mp = tint_mask.load()
-    rx = max(11.0, face_half * 1.35)
-    ry = max(12.0, face_half * 1.28)
+    """Build neutral body plus a cloth-only grayscale identity tint mask.
 
-    for y in range(128):
-        for x in range(128):
-            r, g, b, a = px[x, y]
-            if a < 16:
-                continue
-            rgb = (r, g, b)
-            in_head = ((x - fx) / rx) ** 2 + ((y - fy) / ry) ** 2 <= 1.0
-            if is_skin(rgb, face):
-                # Healer circlet cream matches peach — only above the forehead.
-                if family == "healer" and y < fy - 8:
-                    continue
-                op[x, y] = (r, g, b, a)
-                continue
-            # Eyes / brows / mouth — keep ink even when it matches hat blue.
-            # Healer black cowl sits in the head ellipse; strip it like a hat.
-            if in_head and lum(rgb) < 0.22:
-                if family == "healer" and is_hat_or_hood("healer", rgb):
-                    continue
-                op[x, y] = (r, g, b, a)
-                continue
-            # Hair before hat. Warrior brown plate matches the hair heuristic —
-            # keep hair only on the head, not the pauldrons.
-            hair_ok = True if family != "warrior" else (
-                in_head or abs(x - fx) <= face_half * 1.7
-            )
-            # Circlet gold is not hair; blonde bob beside the face is.
-            if family == "healer" and (
-                is_gold_pixel(rgb) or is_hat_or_hood("healer", rgb)
-            ):
-                hair_ok = False
-            if y <= head_max + 4 and hair_ok and is_hair_color(family, rgb):
-                op[x, y] = (r, g, b, a)
-                continue
-            # Strip hat / circlet / hood only — never punch holes in the torso.
-            hat_band = (y < fy - 1) if family == "mage" else (y <= head_max + 6)
-            if hat_band and is_hat_or_hood(family, rgb):
-                continue
-            if family == "mage" and y < fy - 1:
-                continue
-            if family == "healer" and y < fy - 6 and (
-                is_gold_pixel(rgb) or is_hat_or_hood("healer", rgb)
-            ):
-                continue
-            if (
-                in_head
-                and y <= chin_y + 2
-                and not is_metal_or_trim(rgb)
-                and not is_hat_or_hood(family, rgb)
-            ):
-                op[x, y] = (r, g, b, a)
-                continue
-            # Helkropp: keep the full gold-master footprint (arms, cape mass,
-            # legs). Recolor plate/robe chroma to undertunic cloth — form stays,
-            # armor rivets wash out. Hat/hood already stripped above.
-            cloth = tunic if y < mid_y else pants
-            out_px = recolor_to_cloth(rgb, cloth, a)
-            op[x, y] = out_px
-            # Runtime spec color replaces this grayscale cloth only. Skin,
-            # hair and facial ink never enter the mask.
-            protects_head = (
-                y <= chin_y + 8 and abs(x - fx) <= face_half * 2.4
-            )
-            if not protects_head:
-                shade = max(88, min(255, int(88 + lum(out_px[:3]) * 220)))
-                mp[x, y] = (shade, shade, shade, a)
+    Classify first (exclusive labels), then paint. Eyes never become skin.
+    """
+    from paper_doll_classify import HAIR, classify, paint_family_body
 
-    if family in ("mage", "healer"):
-        has_hair = False
-        for y in range(max(0, int(fy - face_half * 2)), int(fy)):
-            for x in range(
-                max(0, int(fx - face_half * 1.5)), min(128, int(fx + face_half * 1.5))
-            ):
-                if op[x, y][3] > 40 and is_hair_color(family, op[x, y][:3]):
-                    has_hair = True
-                    break
-            if has_hair:
-                break
-        if not has_hair:
-            # Header rule: never invent shapes. A drawn hair ellipse is exactly
-            # the placeholder look this pipeline banned — leave it bald and say so.
-            print(
-                f"WARN {family}: no hair pixels in _src head region — body stays "
-                f"bald. Add hair to _src/body_idle.png or "
-                f"gear/_authored/, do not draw it here."
-            )
-    if family == "mage":
-        op = out.load()
-        mp = tint_mask.load()
-        # Tall hat cone above the scalp goes. Near the forehead, keep dark
-        # pixels as hair — gold-master hat overlaps the bob.
-        for y in range(0, int(fy)):
-            for x in range(128):
-                r, g, b, a = op[x, y]
-                if a < 16:
-                    continue
-                rgb = (r, g, b)
-                if is_skin(rgb, face) or is_hair_color("mage", rgb):
-                    continue
-                scalp = y >= fy - 14 and abs(x - fx) <= face_half * 1.85
-                if scalp and lum(rgb) < 0.38 and not is_gold_pixel(rgb):
-                    continue
-                if y < fy - 12 or is_hat_or_hood("mage", rgb) or is_hat_lining(rgb) or is_gold_pixel(rgb):
-                    op[x, y] = (0, 0, 0, 0)
-                    mp[x, y] = (0, 0, 0, 0)
-    if family == "healer":
-        op = out.load()
-        mp = tint_mask.load()
-        # Circlet + cowl only — do not erase neck/shoulder cloth (helkropp).
-        for y in range(0, int(chin_y) + 2):
-            for x in range(128):
-                r, g, b, a = op[x, y]
-                if a < 16:
-                    continue
-                rgb = (r, g, b)
-                if is_skin(rgb, face) or is_hair_color("healer", rgb):
-                    continue
-                if lum(rgb) < 0.22 and abs(x - fx) <= face_half * 1.15:
-                    continue
-                if is_hat_or_hood("healer", rgb) or is_gold_pixel(rgb):
-                    op[x, y] = (0, 0, 0, 0)
-                    mp[x, y] = (0, 0, 0, 0)
-    out = despeckle_alpha(out)
-    op = out.load()
-    mp = tint_mask.load()
-    for y in range(128):
-        for x in range(128):
-            r, g, b, a = op[x, y]
-            if a < 16:
-                mp[x, y] = (0, 0, 0, 0)
-                continue
-            rgb = (r, g, b)
-            if is_skin(rgb, face) or is_hair_color(family, rgb):
-                mp[x, y] = (0, 0, 0, 0)
-                continue
-            # Same head band as check_paper_doll_facit.check_body_tint_masks.
-            if y <= chin_y + 8 and abs(x - fx) <= face_half * 2.4:
-                mp[x, y] = (0, 0, 0, 0)
-    return out, tint_mask
+    clf = classify(src, family, face, box)
+    if family in ("mage", "healer") and clf.count(HAIR) < 8:
+        print(
+            f"WARN {family}: no hair pixels in _src head region — body stays "
+            f"bald. Add hair to _src/body_idle.png or "
+            f"gear/_authored/, do not draw it here."
+        )
+    return paint_family_body(clf)
 
 
 def strip_equipped_helm_from_body(family: str, body: Image.Image) -> None:
@@ -813,11 +673,14 @@ def extract_bands(
     family: str,
 ):
     """Pixel extract from gold master — no invented shapes."""
+    from paper_doll_classify import IDENTITY, classify
+
+    clf = classify(src, family, face, box)
     px = src.load()
     x0, y0, x1, y1 = box
     bh = y1 - y0
     bw = max(1, x1 - x0)
-    fx, fy, face_half = face_region(src, face, box)
+    fx, fy, face_half = clf.fx, clf.fy, clf.face_half
     # Chest must start under the jaw — same chin rule as paint_undertunic.
     last_skin_row = int(fy)
     for y in range(int(fy), min(128, int(fy + face_half * 1.55))):
@@ -859,7 +722,7 @@ def extract_bands(
             if a < 12:
                 continue
             rgb = (r, g, b)
-            if is_skin(rgb, face):
+            if clf.at(x, y) in IDENTITY:
                 continue
             # Only wipe true black crumbs — dark brown gorget must stay on chest.
             if lum(rgb) < 0.05:

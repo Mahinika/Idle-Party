@@ -8,6 +8,7 @@ Also gates the parts the looks facit cannot judge:
 - t2 / rogue-mail / healer-plate overlays exist, are 128x128, and differ from
   their t0 peer without losing the silhouette;
 - every shared weapon / shield has pixels under its declared grip point;
+- gold-master idle classifies into exclusive labels (eyes beat skin);
 - `tool/paper_doll_lock.json` pins a hash per shipped PNG, so a re-run of any
   generator that quietly reshapes art fails instead of shipping.
 
@@ -31,6 +32,7 @@ from build_owned_gear_layers import (
     load128,
     sample_face,
 )
+from paper_doll_classify import check_invariants, classify_src
 
 REPO = Path(__file__).resolve().parents[1]
 CHAR = REPO / "assets" / "custom" / "char"
@@ -158,6 +160,15 @@ def helm_ok(family: str) -> tuple[bool, int]:
     if auth.exists():
         return helm_w >= 20 and helm_h <= 72, helm_w
     return helm_w <= 8, helm_w
+
+
+def check_classifier() -> list[str]:
+    """Classify-then-paint contract on gold-master idle clips."""
+    errors: list[str] = []
+    for family in FAMILIES:
+        clf = classify_src(family, "idle")
+        errors.extend(check_invariants(clf, require_eyes=True))
+    return errors
 
 
 def check_files() -> list[str]:
@@ -538,6 +549,9 @@ def main() -> int:
     relock = "--relock" in sys.argv
     failed = 0
     for msg in check_files():
+        print("FAIL", msg)
+        failed += 1
+    for msg in check_classifier():
         print("FAIL", msg)
         failed += 1
     for msg in check_race_bodies():

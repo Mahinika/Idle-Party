@@ -210,10 +210,15 @@ pose. Files live at `assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png`
 **Bake pipeline** (pose-matched to gear, not a stick redraw):
 
 1. Load gold `_src/body_<anim>.png` (same silhouette as armor extract).
-2. Soft-strip equipped helm / scrub hood / healer circlet (never hair).
-3. Flatten cloth to a sleeveless tunic + shorts (face / hair / ink kept).
-4. Race wash (skin / hair / eyes) + optional features (ears, tusks, horns).
-5. Cloth-only `*_body_tint_*.png` — never overlaps gold-master skin pixels.
+2. **Classify** every pixel into one exclusive tag (eye > skin > hair > ink >
+   helm > armor > cloth) — YCbCr chroma + 8-connected flood, never recolor
+   while guessing (`tool/paper_doll_classify.py`).
+3. Family/facit body: copy identity pixels, strip helm, recolor garment to
+   undertunic cloth (full pose footprint — sleeves stay so gear still lines
+   up). LOOK variants flatten garment chroma to tunic + shorts, then wash
+   skin/hair/eyes **by tag**.
+4. Cloth-only `*_body_tint_*.png` from GARMENT tags — never overlaps
+   gold-master skin / eyes / hair.
 
 `BodyFamilyCatalog.authoredRaceLooks` lists all family × race × sex. Family
 `body_*.png` mirrors **male Human** undertunic. Do **not** regenerate family gear
