@@ -200,13 +200,23 @@ every time a hero took damage.
 ## Adding a race undertunic
 
 Shipped LOOK set = Cataclysm’s **12** playable races (Human…Goblin; no Pandaren),
-each with **male and female** undertunic bases (sleeveless top + shorts — no
-baked plate/robe/hat). Keep `BodyFamily` as the gear pose. Files live at
-`assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png` (regenerate with
-`py tool/paint_race_bodies.py`). `BodyFamilyCatalog.authoredRaceLooks` lists
-all family × race × sex. Family `body_*.png` mirrors human male undertunic.
-Do **not** regenerate family gear here. Chest/robe overlays must not include a
-baked face. LOOK / RACE lives on New Game and GEAR.
+each with **male and female** undertunic bases. Keep `BodyFamily` as the gear
+pose. Files live at `assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png`
+(regenerate with `py tool/paint_race_bodies.py`).
+
+**Bake pipeline** (pose-matched to gear, not a stick redraw):
+
+1. Load gold `_src/body_<anim>.png` (same silhouette as armor extract).
+2. Soft-strip equipped helm / scrub hood / healer circlet (never hair).
+3. Flatten cloth to a sleeveless tunic + shorts (face / hair / ink kept).
+4. Race wash (skin / hair / eyes) + optional features (ears, tusks, horns).
+5. Cloth-only `*_body_tint_*.png` — never overlaps gold-master skin pixels.
+
+`BodyFamilyCatalog.authoredRaceLooks` lists all family × race × sex. Family
+`body_*.png` mirrors human male undertunic. Do **not** regenerate family gear
+here. Chest/robe overlays must not include a baked face. LOOK / RACE lives on
+New Game and GEAR — New Party preview uses `StarterGear.forSpec` so the doll
+matches the first dungeon stack (undertunic alone looks like a stick).
 
 Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 

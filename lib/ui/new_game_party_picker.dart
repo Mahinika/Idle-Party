@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
 import '../core/party_name_filter.dart';
+import '../core/starter_gear.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../assets/custom_assets.dart';
@@ -179,6 +180,8 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       specId: specId,
       race: race,
       id: 'new_party_${slot ?? _activeSlot}_${specId.name}',
+      // Same stack as after START — bare undertunic alone looks like a stick.
+      equipped: StarterGear.forSpec(specId),
     );
   }
 
