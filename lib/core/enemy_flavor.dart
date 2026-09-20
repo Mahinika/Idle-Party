@@ -6,25 +6,48 @@ import '../models/enemy.dart';
 /// Chamber job for a pack slot — first fight swarm, mid backline, last elites.
 enum PackJob { swarm, backline, elite, mixed }
 
+/// Ranged trash crowd-control — same ~6s cadence, zone-tinted effect.
+enum RangedJob { slow, hex, root, chill, jolt }
+
+/// Support trash job — heal, ally enrage, or drain a hero to mend.
+enum SupportJob { heal, totem, drain }
+
 /// Zone-flavoured enemy names, mix weights, and pack jobs.
 ///
 /// Combat authority stays in [SpatialCombat]; this only decides roster identity
 /// before `build`/`step`. Original Idle Party names — not dumps.
 abstract final class EnemyFlavor {
   /// Which job this body plays, matching spawn order (chamber 1 → 2 → 3).
+  /// [dungeonId] tilts the split so caves are not the same 1/3 swarm-back-elite.
   static PackJob packJobFor({
     required int index,
     required int count,
     required RoomType type,
     bool isBossUnit = false,
+    String dungeonId = '',
   }) {
     if (isBossUnit) return PackJob.elite;
     if (type == RoomType.boss) return PackJob.mixed;
     if (count <= 1) return PackJob.mixed;
-    final third = count / 3.0;
-    if (index < third) return PackJob.swarm;
-    if (index < third * 2) return PackJob.backline;
+    if (count == 2) return index == 0 ? PackJob.swarm : PackJob.elite;
+    final (swarmEnd, backEnd) = _jobCuts(dungeonId, count);
+    if (index < swarmEnd) return PackJob.swarm;
+    if (index < backEnd) return PackJob.backline;
     return PackJob.elite;
+  }
+
+  /// Chamber cuts for [count] bodies. Sandy/fen/grove swarm first; Tide/Veil/Storm
+  /// hold the mid room; Brass/King/Hell/Rime stack elites in the last chamber.
+  static (int swarmEnd, int backEnd) _jobCuts(String dungeonId, int count) {
+    final (swarmFrac, backFrac) = switch (dungeonId) {
+      'sandy' || 'fen' || 'grove' => (0.50, 0.22),
+      'tide' || 'veil' || 'storm' => (0.22, 0.50),
+      'brass' || 'king' || 'hell' || 'rime' => (0.22, 0.28),
+      _ => (1 / 3, 1 / 3),
+    };
+    final swarmEnd = (count * swarmFrac).round().clamp(1, count - 2);
+    final backLen = (count * backFrac).round().clamp(1, count - swarmEnd - 1);
+    return (swarmEnd, swarmEnd + backLen);
   }
 
   /// Weighted archetype for this slot (zone mix × pack job).
@@ -42,6 +65,7 @@ abstract final class EnemyFlavor {
       count: count,
       type: type,
       isBossUnit: false,
+      dungeonId: dungeonId,
     );
     final weights = <EnemyArchetype, double>{
       for (final a in EnemyArchetype.values)
@@ -121,7 +145,117 @@ abstract final class EnemyFlavor {
   /// Trash brute tell — same cleave chip, zone-readable label.
   static String bruteTell(String dungeonId) => switch (dungeonId) {
     'sandy' => 'CRASH',
+    'goblin' => 'SMASH',
+    'king' => 'HEW',
+    'underworld' => 'REND',
+    'dead' => 'CRUSH',
+    'hell' => 'SEAR',
+    'crystal' => 'SPLIT',
+    'tide' => 'SURGE',
+    'ember' => 'SLAG',
+    'grove' => 'SWING',
+    'storm' => 'CRACK',
+    'rime' => 'SHATTER',
+    'fen' => 'CHOMP',
+    'brass' => 'GRIND',
+    'veil' => 'TEAR',
     _ => 'CLEAVE',
+  };
+
+  /// Trash swarm tell — same surround chip, zone-readable label.
+  static String swarmTell(String dungeonId) => switch (dungeonId) {
+    'sandy' => 'PILE',
+    'goblin' => 'MOB',
+    'king' => 'RUSH',
+    'underworld' => 'SWARM',
+    'dead' => 'RISE',
+    'hell' => 'BURST',
+    'crystal' => 'SPARK',
+    'tide' => 'SURF',
+    'ember' => 'ASH',
+    'grove' => 'CREEP',
+    'storm' => 'GUST',
+    'rime' => 'FLURRY',
+    'fen' => 'BOIL',
+    'brass' => 'TICK',
+    'veil' => 'FLIT',
+    _ => 'SURROUND',
+  };
+
+  /// Trash glass tell — execute on a wounded hero.
+  static String glassTell(String dungeonId) => switch (dungeonId) {
+    'sandy' => 'NIP',
+    'goblin' => 'STAB',
+    'king' => 'CUT',
+    'underworld' => 'GUT',
+    'dead' => 'REAP',
+    'hell' => 'SCORCH',
+    'crystal' => 'LANCE',
+    'tide' => 'PIERCE',
+    'ember' => 'CHAR',
+    'grove' => 'THORN',
+    'storm' => 'ZAP',
+    'rime' => 'ICE',
+    'fen' => 'BITE',
+    'brass' => 'SHEAR',
+    'veil' => 'SLICE',
+    _ => 'EXECUTE',
+  };
+
+  /// Elite tank shout while healthy.
+  static String tankHowlTell(String dungeonId) => switch (dungeonId) {
+    'sandy' => 'HISS',
+    'goblin' => 'HOWL',
+    'king' => 'HOLD',
+    'underworld' => 'ROAR',
+    'dead' => 'WAIL',
+    'hell' => 'BELLOW',
+    'crystal' => 'CHIME',
+    'tide' => 'BOOM',
+    'ember' => 'ROAR',
+    'grove' => 'CREAK',
+    'storm' => 'PEAL',
+    'rime' => 'CRACK',
+    'fen' => 'CROAK',
+    'brass' => 'KLANG',
+    'veil' => 'HISS',
+    _ => 'HOWL',
+  };
+
+  /// Tank last-stand shield.
+  static String tankFortifyTell(String dungeonId) => switch (dungeonId) {
+    'sandy' => 'SHELL',
+    'goblin' => 'BRACE',
+    'king' => 'GUARD',
+    'underworld' => 'WARD',
+    'dead' => 'BONE',
+    'hell' => 'PLATE',
+    'crystal' => 'CRUST',
+    'tide' => 'SHELL',
+    'ember' => 'SLAG',
+    'grove' => 'BARK',
+    'storm' => 'BRACE',
+    'rime' => 'ICE',
+    'fen' => 'MUCK',
+    'brass' => 'BOLT',
+    'veil' => 'COCOON',
+    _ => 'FORTIFY',
+  };
+
+  /// Ranged trash job — same power band, different crowd-control.
+  static RangedJob rangedJob(String dungeonId) => switch (dungeonId) {
+    'tide' || 'veil' || 'grove' => RangedJob.root,
+    'rime' || 'fen' => RangedJob.chill,
+    'storm' || 'brass' => RangedJob.jolt,
+    'goblin' || 'hell' || 'underworld' || 'dead' => RangedJob.hex,
+    _ => RangedJob.slow,
+  };
+
+  /// Support trash job — heal, ally enrage, or drain.
+  static SupportJob supportJob(String dungeonId) => switch (dungeonId) {
+    'goblin' || 'king' || 'brass' => SupportJob.totem,
+    'dead' || 'fen' => SupportJob.drain,
+    _ => SupportJob.heal,
   };
 
   /// Trash ranged tell — same slow chip, zone-readable label.

@@ -24,6 +24,62 @@ void main() {
     );
   });
 
+  test('Sandy / Fen swarm first; Tide holds mid; Brass stacks elites last', () {
+    expect(
+      EnemyFlavor.packJobFor(
+        index: 4,
+        count: 9,
+        type: RoomType.normal,
+        dungeonId: 'sandy',
+      ),
+      PackJob.swarm,
+    );
+    expect(
+      EnemyFlavor.packJobFor(
+        index: 4,
+        count: 9,
+        type: RoomType.normal,
+        dungeonId: 'tide',
+      ),
+      PackJob.backline,
+    );
+    expect(
+      EnemyFlavor.packJobFor(
+        index: 6,
+        count: 9,
+        type: RoomType.normal,
+        dungeonId: 'brass',
+      ),
+      PackJob.elite,
+    );
+    final sandy = [
+      for (var i = 0; i < 9; i++)
+        EnemyFlavor.packJobFor(
+          index: i,
+          count: 9,
+          type: RoomType.normal,
+          dungeonId: 'sandy',
+        ),
+    ];
+    final brass = [
+      for (var i = 0; i < 9; i++)
+        EnemyFlavor.packJobFor(
+          index: i,
+          count: 9,
+          type: RoomType.normal,
+          dungeonId: 'brass',
+        ),
+    ];
+    expect(
+      sandy.where((j) => j == PackJob.swarm).length,
+      greaterThan(brass.where((j) => j == PackJob.swarm).length),
+    );
+    expect(
+      brass.where((j) => j == PackJob.elite).length,
+      greaterThan(sandy.where((j) => j == PackJob.elite).length),
+    );
+  });
+
   test('first chamber leans swarm, last chamber leans elites', () {
     const room = DungeonRoom(
       floorNumber: 8,
@@ -149,10 +205,37 @@ void main() {
     expect(veilGlass, greaterThan(groveGlass));
   });
 
-  test('brute tells are zone-readable, not one CLEAVE', () {
+  test('brute tells are unique per zone, not one CLEAVE', () {
     expect(EnemyFlavor.bruteTell('sandy'), 'CRASH');
-    expect(EnemyFlavor.bruteTell('goblin'), 'CLEAVE');
-    expect(EnemyFlavor.bruteTell('tide'), 'CLEAVE');
+    expect(EnemyFlavor.bruteTell('goblin'), 'SMASH');
+    expect(EnemyFlavor.bruteTell('tide'), 'SURGE');
+    final tells = {for (final d in DungeonCatalog.all) EnemyFlavor.bruteTell(d.id)};
+    expect(tells.length, DungeonCatalog.all.length);
+    expect(tells.contains('CLEAVE'), isFalse);
+  });
+
+  test('swarm / glass / tank tells are unique per zone', () {
+    expect(EnemyFlavor.swarmTell('sandy'), 'PILE');
+    expect(EnemyFlavor.glassTell('tide'), 'PIERCE');
+    expect(EnemyFlavor.tankHowlTell('king'), 'HOLD');
+    expect(EnemyFlavor.tankFortifyTell('brass'), 'BOLT');
+    final swarm = {for (final d in DungeonCatalog.all) EnemyFlavor.swarmTell(d.id)};
+    final glass = {for (final d in DungeonCatalog.all) EnemyFlavor.glassTell(d.id)};
+    expect(swarm.length, DungeonCatalog.all.length);
+    expect(glass.length, DungeonCatalog.all.length);
+    expect(swarm.contains('SURROUND'), isFalse);
+    expect(glass.contains('EXECUTE'), isFalse);
+  });
+
+  test('ranged and support jobs differ by cave', () {
+    expect(EnemyFlavor.rangedJob('tide'), RangedJob.root);
+    expect(EnemyFlavor.rangedJob('storm'), RangedJob.jolt);
+    expect(EnemyFlavor.rangedJob('rime'), RangedJob.chill);
+    expect(EnemyFlavor.rangedJob('goblin'), RangedJob.hex);
+    expect(EnemyFlavor.rangedJob('sandy'), RangedJob.slow);
+    expect(EnemyFlavor.supportJob('goblin'), SupportJob.totem);
+    expect(EnemyFlavor.supportJob('dead'), SupportJob.drain);
+    expect(EnemyFlavor.supportJob('grove'), SupportJob.heal);
   });
 
   test('ranged tells are zone-readable, not one HEX', () {

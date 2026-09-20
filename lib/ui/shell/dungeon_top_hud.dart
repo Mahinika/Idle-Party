@@ -34,6 +34,9 @@ String _packJobBit(SpatialWorld? world) {
       : eliteRoom
       ? RoomType.elite
       : RoomType.normal;
+  final flavorId = world.keystoneWeekDungeonId.isNotEmpty
+      ? world.keystoneWeekDungeonId
+      : world.dungeonId;
   final jobs = <PackJob>{
     for (final e in awake)
       EnemyFlavor.packJobFor(
@@ -41,6 +44,7 @@ String _packJobBit(SpatialWorld? world) {
         count: pack.length,
         type: roomType,
         isBossUnit: e.role == EnemyRole.boss,
+        dungeonId: flavorId,
       ),
   };
   final names = jobs.map((j) => j.name).toList()..sort();

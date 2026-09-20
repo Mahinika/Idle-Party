@@ -26,10 +26,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.182';
+  static const String currentVersion = '1.12.183';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.183',
+      bullets: <String>[
+        'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
+        'Caves fight differently: Sandy piles up front, Tide nets the mid room, Brass stacks elites. Pack jobs shout their own tells, and bosses telegraph that tell — Tide WAVE, Fen SPIT, Brass still WIND-UP then SLAM. Race still locks after New Game START. KEYSTONE waits until the party is Lv100. Ranked GREATER GR packs still scale with rank only — GOLD forge does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.182',
       bullets: <String>[

@@ -763,7 +763,7 @@ class SpatialWorld {
   /// When true, enemy outgoing damage is softened (offline AFK sim).
   final bool afkAssist;
 
-  /// Zone id for unique boss tells (Sandy SLAM, Tide WAVE, Brass WIND-UP).
+  /// Zone id for unique boss tells (Sandy SLAM, Tide WAVE, Brass WIND-UP then SLAM).
   final String dungeonId;
 
   /// Locked KEY affixes for live combat tells (fortified / tyrannical / swarm).

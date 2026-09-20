@@ -21,6 +21,22 @@ double _bossCadenceMul(SpatialWorld world) {
 double _bossCooldownSec(SpatialWorld world, double base) =>
     base * _bossCadenceMul(world);
 
+/// PATH cave, or KEY week cave when a key run is live.
+String _flavorId(SpatialWorld world) => world.keystoneWeekDungeonId.isNotEmpty
+    ? world.keystoneWeekDungeonId
+    : world.dungeonId;
+
+/// Boss tell source: Gauntlet cycle, KEY week cave, else PATH.
+String _bossFlavorId(SpatialWorld world) {
+  if (world.inGauntlet) {
+    return EnemyFlavor.gauntletBossDungeonId(world.combatFloor);
+  }
+  if (world.keystoneWeekDungeonId.isNotEmpty) {
+    return world.keystoneWeekDungeonId;
+  }
+  return world.dungeonId;
+}
+
 void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
   if (world.keystoneRunAffixes.isEmpty && world.gauntletAnomaly == null) {
     return;
@@ -148,80 +164,26 @@ void _tickEnemySpecials(
 
   if (enemy.specialCd > 0) return;
 
+  final flavor = _flavorId(world);
+
   if (enemy.archetype == EnemyArchetype.support) {
-    SpatialActor? lowest;
-    for (final ally in world.enemies) {
-      if (!ally.isAlive || ally.dormant) continue;
-      if (SpatialCombat._dist(enemy, ally) > 5.0) continue;
-      if (lowest == null ||
-          ally.hp / ally.effectiveMaxHp < lowest.hp / lowest.effectiveMaxHp) {
-        lowest = ally;
-      }
-    }
-    if (lowest != null && lowest.hp < lowest.effectiveMaxHp) {
-      final healMul = world.afkAssist ? 0.4 : 1.0;
-      final heal = math.max(8, (enemy.attack * 1.4 * healMul).round());
-      lowest.hp = math.min(lowest.effectiveMaxHp, lowest.hp + heal);
-      enemy.specialCd = world.afkAssist ? 6.0 : 5.0;
-      if (!reducedVfx || world.spawnPersistentVfx) {
-        SpatialCombat._spawnFloater(
-          world,
-          x: lowest.x,
-          y: lowest.y - 0.35,
-          text: EnemyFlavor.supportTell(world.dungeonId),
-          argb: SpatialCombat._floaterTell,
-          life: 0.7,
-          priority: reducedVfx ? 2 : 0,
-        );
-        if (world.spawnPersistentVfx) {
-          SpatialCombat._spawnBurst(
-            world,
-            x: lowest.x,
-            y: lowest.y,
-            argb: 0xFF60E080,
-            radius: 0.65,
-            kind: SpatialBurstKind.cross,
-            life: 0.35,
-          );
-        }
-      }
-    }
+    _tickSupportSpecial(
+      world,
+      enemy,
+      focus,
+      flavor: flavor,
+      rng: rng,
+      reducedVfx: reducedVfx,
+    );
   } else if (enemy.archetype == EnemyArchetype.ranged) {
-    if (SpatialCombat._dist(enemy, focus) <= 5.5) {
-      focus.attackSlowTimer = math.max(focus.attackSlowTimer, 2.2);
-      focus.demoShoutTimer = math.max(focus.demoShoutTimer, 2.0);
-      enemy.specialCd = 6.0;
-      if (!reducedVfx || world.spawnPersistentVfx) {
-        SpatialCombat._spawnFloater(
-          world,
-          x: focus.x,
-          y: focus.y - 0.5,
-          text: EnemyFlavor.rangedTell(world.dungeonId),
-          argb: 0xFFB060FF,
-          life: 0.75,
-          priority: reducedVfx ? 2 : 0,
-        );
-        if (world.spawnPersistentVfx) {
-          SpatialCombat._spawnRing(
-            world,
-            x: focus.x,
-            y: focus.y,
-            argb: 0x88B060FF,
-            radius: 0.85,
-            life: 0.45,
-          );
-          SpatialCombat._spawnBurst(
-            world,
-            x: focus.x,
-            y: focus.y,
-            argb: 0xFFB060E0,
-            radius: 0.5,
-            kind: SpatialBurstKind.skull,
-            life: 0.32,
-          );
-        }
-      }
-    }
+    _tickRangedSpecial(
+      world,
+      enemy,
+      focus,
+      flavor: flavor,
+      rng: rng,
+      reducedVfx: reducedVfx,
+    );
   } else if (enemy.archetype == EnemyArchetype.brute) {
     final elite =
         enemy.role == EnemyRole.elite || enemy.role == EnemyRole.boss;
@@ -254,13 +216,13 @@ void _tickEnemySpecials(
           world,
           x: enemy.x,
           y: enemy.y - 0.4,
-          text: EnemyFlavor.bruteTell(world.dungeonId),
+          text: EnemyFlavor.bruteTell(flavor),
           argb: 0xFFFF8040,
           life: 0.7,
           priority: reducedVfx ? 2 : 0,
         );
         if (world.spawnPersistentVfx) {
-          final sandy = world.dungeonId == 'sandy';
+          final sandy = flavor == 'sandy';
           SpatialCombat._spawnBurst(
             world,
             x: enemy.x,
@@ -291,7 +253,7 @@ void _tickEnemySpecials(
           world,
           x: enemy.x,
           y: enemy.y - 0.4,
-          text: 'HOWL',
+          text: EnemyFlavor.tankHowlTell(flavor),
           argb: 0xFFFF7060,
           life: 0.75,
           priority: reducedVfx ? 2 : 0,
@@ -325,7 +287,7 @@ void _tickEnemySpecials(
         world,
         x: enemy.x,
         y: enemy.y - 0.4,
-        text: 'FORTIFY',
+        text: EnemyFlavor.tankFortifyTell(flavor),
         argb: 0xFF80C0FF,
         life: 0.7,
         priority: reducedVfx ? 2 : 0,
@@ -365,7 +327,7 @@ void _tickEnemySpecials(
           world,
           x: enemy.x,
           y: enemy.y - 0.4,
-          text: 'SURROUND',
+          text: EnemyFlavor.swarmTell(flavor),
           argb: 0xFFFFA060,
           life: 0.65,
           priority: reducedVfx ? 2 : 0,
@@ -401,7 +363,7 @@ void _tickEnemySpecials(
         world,
         x: focus.x,
         y: focus.y - 0.5,
-        text: 'EXECUTE',
+        text: EnemyFlavor.glassTell(flavor),
         argb: 0xFFE8F0FF,
         life: 0.75,
         priority: reducedVfx ? 2 : 0,
@@ -417,6 +379,163 @@ void _tickEnemySpecials(
           life: 0.32,
         );
       }
+    }
+  }
+}
+
+void _tickSupportSpecial(
+  SpatialWorld world,
+  SpatialActor enemy,
+  SpatialActor focus, {
+  required String flavor,
+  required math.Random rng,
+  required bool reducedVfx,
+}) {
+  final job = EnemyFlavor.supportJob(flavor);
+  SpatialActor? lowest;
+  for (final ally in world.enemies) {
+    if (!ally.isAlive || ally.dormant) continue;
+    if (SpatialCombat._dist(enemy, ally) > 5.0) continue;
+    if (lowest == null ||
+        ally.hp / ally.effectiveMaxHp < lowest.hp / lowest.effectiveMaxHp) {
+      lowest = ally;
+    }
+  }
+
+  if (job == SupportJob.totem) {
+    var buffed = false;
+    for (final ally in world.enemies) {
+      if (!ally.isAlive || ally.dormant) continue;
+      if (SpatialCombat._dist(enemy, ally) > 5.0) continue;
+      ally.enrageTimer = math.max(ally.enrageTimer, world.afkAssist ? 2.0 : 2.6);
+      buffed = true;
+    }
+    if (!buffed) return;
+    enemy.specialCd = world.afkAssist ? 6.0 : 5.0;
+    _supportTellAt(world, enemy, flavor: flavor, reducedVfx: reducedVfx);
+    return;
+  }
+
+  if (job == SupportJob.drain) {
+    if (SpatialCombat._dist(enemy, focus) > 5.5) return;
+    var chip = math.max(1, (enemy.effectiveAttack * 0.18).round());
+    if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
+    SpatialCombat._applyHeroIncomingDamage(
+      world,
+      focus,
+      chip,
+      reducedVfx: reducedVfx,
+      rng: rng,
+      isMelee: false,
+    );
+    final healMul = world.afkAssist ? 0.4 : 1.0;
+    final heal = math.max(6, (enemy.attack * 1.0 * healMul).round());
+    final target = lowest ?? enemy;
+    target.hp = math.min(target.effectiveMaxHp, target.hp + heal);
+    enemy.specialCd = world.afkAssist ? 6.0 : 5.0;
+    _supportTellAt(world, target, flavor: flavor, reducedVfx: reducedVfx);
+    return;
+  }
+
+  if (lowest == null || lowest.hp >= lowest.effectiveMaxHp) return;
+  final healMul = world.afkAssist ? 0.4 : 1.0;
+  final heal = math.max(8, (enemy.attack * 1.4 * healMul).round());
+  lowest.hp = math.min(lowest.effectiveMaxHp, lowest.hp + heal);
+  enemy.specialCd = world.afkAssist ? 6.0 : 5.0;
+  _supportTellAt(world, lowest, flavor: flavor, reducedVfx: reducedVfx);
+}
+
+void _supportTellAt(
+  SpatialWorld world,
+  SpatialActor at, {
+  required String flavor,
+  required bool reducedVfx,
+}) {
+  if (!reducedVfx || world.spawnPersistentVfx) {
+    SpatialCombat._spawnFloater(
+      world,
+      x: at.x,
+      y: at.y - 0.35,
+      text: EnemyFlavor.supportTell(flavor),
+      argb: SpatialCombat._floaterTell,
+      life: 0.7,
+      priority: reducedVfx ? 2 : 0,
+    );
+    if (world.spawnPersistentVfx) {
+      SpatialCombat._spawnBurst(
+        world,
+        x: at.x,
+        y: at.y,
+        argb: 0xFF60E080,
+        radius: 0.65,
+        kind: SpatialBurstKind.cross,
+        life: 0.35,
+      );
+    }
+  }
+}
+
+void _tickRangedSpecial(
+  SpatialWorld world,
+  SpatialActor enemy,
+  SpatialActor focus, {
+  required String flavor,
+  required math.Random rng,
+  required bool reducedVfx,
+}) {
+  if (SpatialCombat._dist(enemy, focus) > 5.5) return;
+  switch (EnemyFlavor.rangedJob(flavor)) {
+    case RangedJob.root:
+      focus.rootTimer = math.max(focus.rootTimer, 1.55);
+    case RangedJob.chill:
+      focus.attackSlowTimer = math.max(focus.attackSlowTimer, 3.0);
+    case RangedJob.jolt:
+      var chip = math.max(1, (enemy.effectiveAttack * 0.18).round());
+      if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
+      SpatialCombat._applyHeroIncomingDamage(
+        world,
+        focus,
+        chip,
+        reducedVfx: reducedVfx,
+        rng: rng,
+        isMelee: false,
+      );
+      focus.attackSlowTimer = math.max(focus.attackSlowTimer, 1.4);
+    case RangedJob.hex:
+      focus.attackSlowTimer = math.max(focus.attackSlowTimer, 1.4);
+      focus.demoShoutTimer = math.max(focus.demoShoutTimer, 2.0);
+    case RangedJob.slow:
+      focus.attackSlowTimer = math.max(focus.attackSlowTimer, 2.2);
+  }
+  enemy.specialCd = 6.0;
+  if (!reducedVfx || world.spawnPersistentVfx) {
+    SpatialCombat._spawnFloater(
+      world,
+      x: focus.x,
+      y: focus.y - 0.5,
+      text: EnemyFlavor.rangedTell(flavor),
+      argb: 0xFFB060FF,
+      life: 0.75,
+      priority: reducedVfx ? 2 : 0,
+    );
+    if (world.spawnPersistentVfx) {
+      SpatialCombat._spawnRing(
+        world,
+        x: focus.x,
+        y: focus.y,
+        argb: 0x88B060FF,
+        radius: 0.85,
+        life: 0.45,
+      );
+      SpatialCombat._spawnBurst(
+        world,
+        x: focus.x,
+        y: focus.y,
+        argb: 0xFFB060E0,
+        radius: 0.5,
+        kind: SpatialBurstKind.skull,
+        life: 0.32,
+      );
     }
   }
 }
@@ -455,11 +574,7 @@ void _tickBossKit(
 
   if (enemy.specialCd > 0) return;
 
-  final id = world.inGauntlet
-      ? EnemyFlavor.gauntletBossDungeonId(world.combatFloor)
-      : (world.keystoneWeekDungeonId.isNotEmpty
-            ? world.keystoneWeekDungeonId
-            : world.dungeonId);
+  final id = _bossFlavorId(world);
   switch (id) {
     case 'brass':
     case 'sandy':
@@ -502,7 +617,7 @@ void _armBossTelegraph(
   _bossTell(
     world,
     enemy,
-    text: 'WIND-UP',
+    text: EnemyFlavor.bossTell(_bossFlavorId(world)),
     argb: 0xFFFFC060,
     radius: 1.2,
     reducedVfx: reducedVfx,
@@ -516,11 +631,7 @@ void _resolveBossTelegraph(
   required math.Random rng,
   required bool reducedVfx,
 }) {
-  final id = world.inGauntlet
-      ? EnemyFlavor.gauntletBossDungeonId(world.combatFloor)
-      : (world.keystoneWeekDungeonId.isNotEmpty
-            ? world.keystoneWeekDungeonId
-            : world.dungeonId);
+  final id = _bossFlavorId(world);
   switch (id) {
     case 'sandy':
       _sandyBossSlam(
