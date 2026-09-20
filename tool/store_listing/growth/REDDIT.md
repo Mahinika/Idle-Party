@@ -26,6 +26,39 @@ r/incremental_games **did** convert to Play downloads. It also got **30.8% upvot
 
 Until then: comment on **other** games (need comment karma). Capture a 7–15s party-crawl GIF from A56 (`HOOKS.md` hook 01).
 
+Do **not** blast the 20 list in one week. Sitewide 10% rule + cake-day spam already hit SideProject. One new sub every few days, unique copy, GIF first.
+
+---
+
+## Top 20 forums (ranked for Play installs)
+
+Live sizes **2026-09-20**. Rank = likely Android idle-RPG players, not raw member count. GIF = party crawl in the post, not a YouTube URL.
+
+| # | Sub | Members | When we can post | How |
+|---|-----|--------:|------------------|-----|
+| 1 | [r/incremental_games](https://www.reddit.com/r/incremental_games/) | 189k | **2026-10-18** | Proven 3.2K views → Play. 1 own-game / 30 days. GIF + short paste below. Feedback Friday comments OK sooner. |
+| 2 | [r/IndieGaming](https://www.reddit.com/r/IndieGaming/) | 525k | **2026-09-25+** | Account **1 week** + posting history. **1 post / 2 weeks.** GIF/screens. Declare AI coding assistants. No bare store link. |
+| 3 | [r/indiegames](https://www.reddit.com/r/indiegames/) | 337k | GIF ready | Footage **required**. Max 2/week. No fake “feedback?” titles. No gen-AI posts. |
+| 4 | [r/AndroidGaming](https://www.reddit.com/r/AndroidGaming/) | 427k | ~**2026-12-18** | `[DEV]` + Play link. Account **3 months**. 90% unaffiliated. 1 game post / month. Stay 3h after post. |
+| 5 | [r/playmygame](https://www.reddit.com/r/playmygame/) | 142k | After reviewing others | Free Play counts as playable. **1 / month.** Direct Play link + short desc. |
+| 6 | [r/IndieDev](https://www.reddit.com/r/IndieDev/) | 447k | GIF ready | Clip first, not a launch dump. Devs + players. |
+| 7 | [r/gamedevscreens](https://www.reddit.com/r/gamedevscreens/) | 100k | GIF/screenshot | One-line caption. Visual only. |
+| 8 | [r/SoloDevelopment](https://www.reddit.com/r/solodevelopment/) | 151k | GIF ready | Solo showcase. Max 2/week. |
+| 9 | [r/MobileGaming](https://www.reddit.com/r/MobileGaming/) | 128k | After **Game Developer** flair | [Flair thread](https://www.reddit.com/r/MobileGaming/comments/giy4js/get_your_game_developer_flairs/). Moderate promo. |
+| 10 | [r/itchio](https://www.reddit.com/r/itchio/) | 60k | itch + Play | Point at itch page (Play button, no APK). |
+| 11 | [r/DestroyMyGame](https://www.reddit.com/r/DestroyMyGame/) | 64k | Combat **video** | Critique, not an ad. No promo title. Gameplay > trailer. No gen-AI. |
+| 12 | [r/androidapps](https://www.reddit.com/r/androidapps/) | 576k | Weekly **megathread** only | Never a top-level post (7-day ban). |
+| 13 | [r/SideProject](https://www.reddit.com/r/SideProject/) | 847k | After karma | Retry. Title `[Idle Party] - …`. First try spam-filtered. |
+| 14 | [r/DungeonCrawler](https://www.reddit.com/r/DungeonCrawler/) | 5k | GIF ready | On-genre, small. Reddit suggested it next to the 3.2K post. |
+| 15 | [r/droidappshowcase](https://www.reddit.com/r/droidappshowcase/) | 16k | Already live | Do **not** repost. Template + images next cycle. |
+| 16 | [r/gamedev](https://www.reddit.com/r/gamedev/) | 2.1M | **Feedback Friday** only | No standalone app ads. Thread + 10% rule. |
+| 17 | [r/devblogs](https://www.reddit.com/r/devblogs/) | 23k | Progress post | Devlog, not “download now.” |
+| 18 | [r/playtesters](https://www.reddit.com/r/playtesters/) | 21k | Optional | Testers, not a launch blast. |
+| 19 | [r/alphaandbetausers](https://www.reddit.com/r/alphaandbetausers/) | 46k | Optional | Same: testers. Game is already on Play. |
+| 20 | [r/freegames](https://www.reddit.com/r/freegames/) | 117k | If they treat F2P as free | “Forever Free” — skip if they read optional IAP as not-free. |
+
+**Next three with a GIF:** #2 IndieGaming (25 sep) → #3 indiegames → #6 IndieDev. Then #5 playmygame after a few honest reviews of other games.
+
 ---
 
 ## Performance (look 2026-09-20)
@@ -54,22 +87,17 @@ Insights: https://www.reddit.com/poststats/1wjwbga/
 
 ---
 
-## Skip for now
+## Never / wrong fit
 
-- r/AndroidGaming — `[DEV]` needs ~3-month account + 90% non-promo
-- r/MobileGaming — need **Game Developer** flair first: https://www.reddit.com/r/MobileGaming/comments/giy4js/get_your_game_developer_flairs/
-- r/playmygame — must review other games first
-- r/androidapps — promo goes to r/droidappshowcase
-- r/androiddev / r/gamedev / r/flutterdev — no app ads
-- r/IdleGames — closed (use incremental_games)
-- r/IdleGame — restricted, 9 subscribers
-- r/hobbygamedev — no commercial Play games
-- r/HowToMen — homescreen themes, not games
-- r/AppHookup — paid-app deals only
-- Same-week extra idle subs — sitewide spam (SideProject already filtered)
-- r/incremental_gamedev — dev talk, not Play installs
-
-**Later (account older + GIF):** r/itchio (itch page + Play), r/indiegames, r/IndieGaming after **2026-09-25**, r/DungeonCrawler, AndroidGaming after ~3 months.
+- r/IdleGames — closed. r/IdleGame — 9 subscribers, restricted. r/clickergames — 23 subscribers.
+- r/incremental_gamedev — **no game marketing** (dev talk only).
+- r/androiddev / r/flutterdev / r/gamedev standalone / r/Unity3D / r/godot — no app ads / wrong engine.
+- r/rpg_gamers / r/googleplay / r/gaming / r/gamingsuggestions — no self-promo (answer rec threads only, never start one).
+- r/ARPG / r/CRPG — wrong subgenre; ARPG wants isometric loot; CRPG bans gen-AI content.
+- r/MelvorIdle / r/SodaDungeon / r/wow — other games / IP. Rec-thread comments only if someone asks.
+- r/hobbygamedev — no commercial Play games. r/AppHookup — paid deals only. r/WebGames — no downloads.
+- r/PixelArt / r/somethingimade — art/crafts, not game ads.
+- r/ShowMeYourApps / r/ShowYourApp — already posted this week; do not repost.
 
 ---
 
