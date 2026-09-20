@@ -26,10 +26,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.181';
+  static const String currentVersion = '1.12.182';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.182',
+      bullets: <String>[
+        'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
+        'GEAR and the cave now show loot on the doll: uncommon steel, rare bulk, epic gold, and more distinct weapons. Race still locks after New Game START. Sandy packs spit and crash; the first boss winds up then SLAM. Form kits keep their silhouette. KEYSTONE waits until the party is Lv100. Ranked GREATER GR packs still scale with rank only — GOLD forge does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Prestige Ascend still Rebuild your bag; AL20 BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.181',
       bullets: <String>[

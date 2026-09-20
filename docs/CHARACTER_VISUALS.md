@@ -72,9 +72,11 @@ when no donor exists.
 Derived by `tool/derive_armor_material_variants.py`. Rogue native gear (leather
 body + helm) upgrades via `tool/upgrade_native_body_src.py` + `refresh_native_gear.py`
 — rebakes `_src/body_idle.png` then re-extracts. Mage/healer hats live in `_src`;
-their native body pass needs a hat-aware bake (TODO). **Rarity = UI chrome**
-(GEAR borders / text tint) — unique looks are authored PNGs, not orange doll
-washes. Weapons: `*_t0` plus named models
+their native body pass needs a hat-aware bake (TODO). **Rarity on the doll:**
+generic `*_t0` / `*_t1` / `*_t3` overlays get a cool-steel or warm-gold
+modulate so uncommon vs epic reads at phone size. **t2 armor and named weapon
+models keep authored palettes** — no global orange wash. Slot borders stay
+UI chrome. Weapons: `*_t0` plus named models
 (`sword_thunderfury`, `sword_emberfang`, `staff_voidspire`, …) — hue variants
 from `tool/derive_weapon_hue_variants.py`.
 

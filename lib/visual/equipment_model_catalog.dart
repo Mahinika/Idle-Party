@@ -167,12 +167,12 @@ abstract final class EquipmentModelCatalog {
 
     // Uncommon+ lean toward authored models so BAG/doll identity pops.
     final chance = rarityTier >= 3
-        ? 0.78
+        ? 0.90
         : rarityTier >= 2
-        ? 0.62
+        ? 0.78
         : rarityTier >= 1
-        ? 0.42
-        : 0.18;
+        ? 0.58
+        : 0.32;
     if (rng.nextDouble() < chance) {
       final authored = list.where((id) => id != '${base}_t0').toList();
       if (authored.isNotEmpty) {

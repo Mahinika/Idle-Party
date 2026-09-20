@@ -303,6 +303,8 @@ MATERIAL_BY_FAMILY: dict[str, tuple[str, ...]] = {
 ARMOR_STEMS = ("helm", "chest", "legs", "cloak", "hands")
 MIN_MATERIAL_SIL_DIFF = 0.12  # native vs cross-material opaque mask
 MIN_SQUINT_SIL_DIFF = 0.08  # ~48 px thumbnail still reads different
+# Native t2 must grow vs t0 so rare armor isn't a pixel-identical twin.
+MIN_T2_GROW = 0.03
 
 
 def shipped_pngs() -> list[Path]:
@@ -420,10 +422,19 @@ def check_tiers_and_materials() -> list[str]:
                     errors.append(f"empty material {t0.relative_to(REPO)}")
                     continue
                 shift = silhouette_diff(im0, im2)
-                if shift > 0.55:
+                if shift > 0.62:
                     errors.append(
                         f"t2 silhouette drifted {shift:.2f} "
-                        f"{t2.relative_to(REPO)} (want <= 0.55)"
+                        f"{t2.relative_to(REPO)} (want <= 0.62)"
+                    )
+                if (
+                    not material
+                    and alpha_ratio(im0) >= 0.01
+                    and shift < MIN_T2_GROW
+                ):
+                    errors.append(
+                        f"t2 matches t0 {shift:.2f} "
+                        f"{t2.relative_to(REPO)} (want >= {MIN_T2_GROW})"
                     )
                 palette = palette_diff(im0, im2)
                 if palette > 0.16:

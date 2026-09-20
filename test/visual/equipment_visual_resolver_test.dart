@@ -395,7 +395,14 @@ void main() {
         'chest_t0',
         rarityTier: LootRarity.legendary.index,
       ),
-      const Color(0xFFFFEED8),
+      const Color(0xFFFFCC77),
+    );
+    expect(
+      EquipmentVisualResolver.rarityTint(
+        'chest_t1',
+        rarityTier: LootRarity.uncommon.index,
+      ),
+      const Color(0xFFB8D0F5),
     );
   });
 

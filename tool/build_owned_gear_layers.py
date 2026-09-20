@@ -745,17 +745,17 @@ def strip_equipped_helm_from_body(family: str, body: Image.Image) -> None:
 
 
 def rarefy_cloak(cloak: Image.Image) -> Image.Image:
-    """Rare cape: preserve its palette; one grow pass makes t2 read thicker."""
+    """Rare cape: preserve its palette; grow so t2 reads thicker on the doll."""
     if cloak.getbbox() is None:
         return cloak
-    return ImageEnhance.Contrast(thicken_cloak(cloak, passes=1)).enhance(1.06)
+    return ImageEnhance.Contrast(thicken_cloak(cloak, passes=2)).enhance(1.08)
 
 
 def rarefy_armor(im: Image.Image) -> Image.Image:
-    """Rare armor: preserve item colors; lightly grow/clarify the silhouette."""
+    """Rare armor: preserve item colors; grow the silhouette so t2 reads at phone size."""
     if im.getbbox() is None:
         return im
-    return ImageEnhance.Contrast(thicken_cloak(im, passes=1)).enhance(1.06)
+    return ImageEnhance.Contrast(thicken_cloak(im, passes=2)).enhance(1.08)
 
 
 def thicken_cape_to_target(

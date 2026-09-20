@@ -99,7 +99,11 @@ void main() {
 
   test('current What’s New locks race after New Game START', () {
     final rest = MetaSystems.releases.first.bullets.skip(1).join(' ');
-    expect(rest.toLowerCase(), contains('locked after start'));
+    expect(
+      rest.toLowerCase().contains('locked after start') ||
+          rest.toLowerCase().contains('locks after'),
+      isTrue,
+    );
     expect(rest.toUpperCase(), isNot(contains('GEAR LOOK')));
   });
 }

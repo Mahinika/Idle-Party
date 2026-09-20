@@ -108,21 +108,22 @@ abstract final class EquipmentVisualResolver {
   static EquipmentVisualDef? defForItem(EquipmentItem item) =>
       defFor(resolveId(item));
 
-  /// Very soft wash for generic t1/t3+ ids.
+  /// Readable wash for generic catalog ids. Named models (`sword_emberfang`)
+  /// and t2 armor keep their authored palette — a global gold filter made
+  /// every late-game doll orange.
   ///
-  /// t2 armor is already derived with its own palette, and named weapon models
-  /// carry authored colors. Recoloring either here made every late-game doll
-  /// orange, including carefully authored item details.
+  /// Uncommon cools t0 steel; epic/legendary warms the overlay so GEAR and
+  /// dungeon can tell a green from a purple without reading the slot border.
   static Color? rarityTint(String visualSetId, {int? rarityTier}) {
     final m = RegExp(r'_t(\d+)$').firstMatch(visualSetId);
     if (m == null) return null;
     final t = rarityTier ?? int.parse(m.group(1)!);
     return switch (t) {
       0 => null,
-      1 => const Color(0xFFF5FAFF),
+      1 => const Color(0xFFB8D0F5),
       2 => null,
-      3 => const Color(0xFFFFF5E8),
-      _ => const Color(0xFFFFEED8),
+      3 => const Color(0xFFFFE2A8),
+      _ => const Color(0xFFFFCC77),
     };
   }
 

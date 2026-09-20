@@ -69,7 +69,8 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
       if (other == null) return false;
       if (other.id != e.value.id ||
           other.visualSetId != e.value.visualSetId ||
-          other.armorType != e.value.armorType) {
+          other.armorType != e.value.armorType ||
+          other.rarity != e.value.rarity) {
         return false;
       }
     }
