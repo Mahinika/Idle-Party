@@ -182,22 +182,26 @@ void main() {
     expect(find.byType(StartMenuScreen), findsNothing);
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
     expect(find.text('NEW PARTY'), findsOneWidget);
-    expect(find.textContaining('LOOK'), findsWidgets);
-    expect(find.text('HUMAN'), findsWidgets);
-    expect(find.text('N.ELF'), findsWidgets);
-    expect(find.text('ORC'), findsWidgets);
-    expect(find.text('GOBLIN'), findsWidgets);
-    expect(HeroRace.values.length, 12);
-    expect(find.text('ARMS  Arms Warrior'), findsOneWidget);
-    expect(find.text('LOCKED'), findsWidgets);
+    expect(find.text('KIT'), findsOneWidget);
+    expect(find.text('LOOK'), findsOneWidget);
     expect(find.text('SET'), findsOneWidget);
     expect(find.text('Shield'), findsWidgets);
     expect(find.text('Healer'), findsWidgets);
     expect(find.text('Damage'), findsWidgets);
-    expect(find.text('Unlocks later'), findsWidgets);
     expect(find.text('Party name'), findsOneWidget);
     expect(find.text('The Ember Guard'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
+    expect(HeroRace.values.length, 12);
+
+    // LOOK tab holds the Cataclysm race grid (not stacked under KIT).
+    await tester.tap(find.text('LOOK'));
+    await tester.pump();
+    expect(find.text('HUMAN'), findsWidgets);
+    expect(find.text('N.ELF'), findsWidgets);
+    expect(find.text('ORC'), findsWidgets);
+    expect(find.text('GOBLIN'), findsWidgets);
+    expect(find.text('ARMS  Arms Warrior'), findsNothing);
+    expect(find.text('LOCKED'), findsNothing);
   });
 
   testWidgets('new game start reaches hub with chosen party size', (
@@ -312,12 +316,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
+    await tester.tap(find.text('LOOK'));
+    await tester.pump();
     // Slot 0 (PROT) is selected by default — Night Elf only that hero.
     await tester.ensureVisible(find.text('N.ELF').first);
     await tester.tap(find.text('N.ELF').first);
     await tester.pump();
     expect(
-      find.textContaining('LOOK for the selected hero'),
+      find.textContaining('LOOK for PROT'),
       findsOneWidget,
     );
 
