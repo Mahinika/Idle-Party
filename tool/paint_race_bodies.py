@@ -649,16 +649,19 @@ def paint_undertunic_body(
     geom_box = bbox(geom)
     geom_face = sample_face(geom, geom_box, family)
     body, _ = paint_undertunic(src, family, face, box)
-    strip_equipped_helm_from_body(family, body)
-    scrub_hat_hood(body, family, face, box)
+    # Helm overlay owns the hat — only punch mage/healer bodies. Warrior/rogue
+    # strip_equipped_helm deletes the painted scalp (coif mask covers the face).
+    if family in ("mage", "healer"):
+        strip_equipped_helm_from_body(family, body)
+        scrub_hat_hood(body, family, face, box)
     # Family defaults (human male) stay close to paint_undertunic so idle facit
     # vs dressed _src stays under the hard-diff gate. Race/sex variants flatten
     # + wash for LOOK identity.
     if look.key == "human" and not female:
-        scrub_hat_hood(body, family, face, box)
         return body, rebuild_cloth_tint(body, geom, geom_face, geom_box)
     body = flatten_cloth(body, family, face, box, female=female)
-    scrub_hat_hood(body, family, face, box)
+    if family in ("mage", "healer"):
+        scrub_hat_hood(body, family, face, box)
     out, _ = apply_race_palette(
         body, family, look, female=female, face=face, box=box, src=src
     )
