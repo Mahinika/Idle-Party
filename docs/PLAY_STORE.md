@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | Live store **1.12.171 (201)** as of Console **2026-09-17**. **1.12.172 (202)** uploaded + submitted for review **2026-09-17** (full rollout). |
+| Production | ✅ live | Live store **1.12.172 (202)** as of Console **2026-09-18**. **1.12.183 (213)** uploaded + submitted for review **2026-09-20** (full rollout). |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ✅ review | Ads / Play Games / Advertising ID + **Firebase Analytics** (App interactions, Diagnostics, Device IDs) submitted **2026-09-10** — under Google review (`Ändringarna granskas`). Matches [PRIVACY.md](PRIVACY.md). |
@@ -44,14 +44,16 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Owner asked new Production AAB (**2026-09-17**)
 - [x] Signed Production AAB **1.12.172+202** built + uploaded; submitted for review (full rollout). Console: *Ändringarna granskas* + Produktion **202 (1.12.172)**. AD_ID “Lansera utan behörighet” (permission is in the 202 AAB).
 - [x] Phone carousel swapped to new `play_ready` 8 (combat-first) + submitted for review **2026-09-18**. Preview URL still `OMWXbgGBFMA` (XfKog embed rejected).
+- [x] Owner asked new Production AAB (**2026-09-20**)
+- [x] Signed Production AAB **1.12.183+213** built + uploaded; submitted for review (full rollout). Console: *Ändringarna granskas* + Produktion **213 (1.12.183)**. AD_ID “Lansera utan behörighet” (permission is in the 213 AAB).
 
 ### Production upload paste (en-US release notes)
 
 From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 
 ```
-• Your party fights on its own. Day-one menus stay GEAR and MORE until gold, the shop, and essence mean something. Shield, Healer, and Damage kits show their job in the fight.
-• PATH is a continent map. PUSH floors pay a little essence. SHOP has forever SCROLLS and a redeem code. Party Lv100 still unlocks Craft Trial and the extra hunts.
+• Your party fights on its own. Caves feel different now: Sandy piles up front, Tide nets the mid room, Brass stacks elites. Bosses telegraph their own tell.
+• PATH is a continent map. SHOP has forever SCROLLS and a redeem code. Party Lv100 still unlocks Craft Trial and the extra hunts.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys

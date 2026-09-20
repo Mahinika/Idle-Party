@@ -122,11 +122,11 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.182+212** (`pubspec.yaml`). Last Play Production paste was **1.12.172+202** submitted **2026-09-17** — do not reuse that line for a new AAB:
+Working ship: **1.12.183+213** (`pubspec.yaml`). Last Play Production paste was **1.12.183+213** submitted **2026-09-20**:
 
 ```
-• Your party fights on its own. Day-one menus stay GEAR and MORE until gold, the shop, and essence mean something. Shield, Healer, and Damage kits show their job in the fight.
-• The dungeon camera stays on your party. PATH is a continent map. PUSH floors pay a little essence. SHOP has forever SCROLLS and a redeem code. Party Lv100 still unlocks Craft Trial and the extra hunts.
+• Your party fights on its own. Caves feel different now: Sandy piles up front, Tide nets the mid room, Brass stacks elites. Bosses telegraph their own tell.
+• PATH is a continent map. SHOP has forever SCROLLS and a redeem code. Party Lv100 still unlocks Craft Trial and the extra hunts.
 ```
 
 ### Full description honesty (SHOP)
@@ -219,13 +219,13 @@ Locales in `growth/LOCALES.md` stay gated until you say paste.
 
 Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in first 10 s).
 
-## Play Console status (2026-09-18)
+## Play Console status (2026-09-20)
 
 - **Listing copy live:** app name **Idle Party: Idle RPG** + crawl-on-screen
   full desc on the public store. Extra locales gated in
   `tool/store_listing/growth/LOCALES.md`.
-- **Production AAB:** **1.12.172+202** submitted **2026-09-17** (full rollout).
-  In-repo working ship is **1.12.182+212** — do not upload without owner ask.
+- **Production AAB:** **1.12.183+213** submitted **2026-09-20** (full rollout).
+  Console: *Ändringarna granskas*. Previous live **1.12.172+202**.
 - **Phone carousel swap submitted 2026-09-18:** new 8 play-ready shots
   (`tool/store_listing/out/play_ready/` → Console `01_play_combat_a` …
   `08_play_ascend`). Order: combat a/b → TODAY chase → GEAR → party → zone →
