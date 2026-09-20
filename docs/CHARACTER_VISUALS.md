@@ -199,16 +199,14 @@ every time a hero took damage.
 
 ## Adding a race undertunic
 
-Shipped LOOK set = Cataclysm’s **12** playable races (Human…Goblin; no Pandaren).
-Keep `BodyFamily` as the gear pose. Author
-`assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png` that shares that
-family’s anchors, then `py tool/paint_race_bodies.py` (or drop idle/walk/attack
-+ tint masks by hand). Non-Human races are registered via
-`BodyFamilyCatalog.authoredRaceLooks` (all kits × default sex).
-Do **not** regenerate family gear. Chest/robe overlays must not include a baked
-face (race undertunics show through). Human (default) uses `body_<anim>.png`.
-LOOK lives on New Game (**per selected hero**) and GEAR (paper doll) — not a
-second nav.
+Shipped LOOK set = Cataclysm’s **12** playable races (Human…Goblin; no Pandaren),
+each with **male and female** undertunic bases (sleeveless top + shorts — no
+baked plate/robe/hat). Keep `BodyFamily` as the gear pose. Files live at
+`assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png` (regenerate with
+`py tool/paint_race_bodies.py`). `BodyFamilyCatalog.authoredRaceLooks` lists
+all family × race × sex. Family `body_*.png` mirrors human male undertunic.
+Do **not** regenerate family gear here. Chest/robe overlays must not include a
+baked face. LOOK / RACE lives on New Game and GEAR.
 
 Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 

@@ -16,11 +16,11 @@ void main() {
     expect(BodyFamilyCatalog.familyFor(warrior), BodyFamily.warrior);
     expect(
       BodyFamilyCatalog.assetFor(warrior, HeroAnimKind.idle),
-      'assets/custom/char/warrior/body_idle.png',
+      'assets/custom/char/warrior/human_m_body_idle.png',
     );
     expect(
       BodyFamilyCatalog.assetFor(warrior, HeroAnimKind.attack),
-      'assets/custom/char/warrior/body_attack.png',
+      'assets/custom/char/warrior/human_m_body_attack.png',
     );
   });
 
@@ -33,21 +33,21 @@ void main() {
     expect(BodyFamilyCatalog.familyFor(mage), BodyFamily.mage);
     expect(
       BodyFamilyCatalog.assetFor(mage, HeroAnimKind.walk),
-      'assets/custom/char/mage/body_walk.png',
+      'assets/custom/char/mage/human_m_body_walk.png',
     );
     expect(
       BodyFamilyCatalog.assetFor(mage, HeroAnimKind.attack),
-      'assets/custom/char/mage/body_attack.png',
+      'assets/custom/char/mage/human_m_body_attack.png',
     );
     expect(
       BodyFamilyCatalog.assetFor(mage, HeroAnimKind.cast),
-      'assets/custom/char/mage/body_attack.png',
+      'assets/custom/char/mage/human_m_body_attack.png',
     );
     // No hit clip: idle + painter recoil. The walk stride read as a phantom
     // step every time a hero took damage.
     expect(
       BodyFamilyCatalog.assetFor(mage, HeroAnimKind.hit),
-      'assets/custom/char/mage/body_idle.png',
+      'assets/custom/char/mage/human_m_body_idle.png',
     );
   });
 
@@ -72,8 +72,9 @@ void main() {
       contains('assets/custom/char/healer/nightelf_f_body_tint_attack.png'),
     );
     expect(paths.toSet().length, paths.length);
-    // 4 families × 3 anims × (body+tint) = 24; + 11 races × 4 × 3 × 2 = 264.
-    expect(paths.length, 24 + 264);
+    // 4 families × 3 anims × (body+tint) = 24
+    // + 12 races × 4 families × 2 sexes × 3 anims × 2 = 576
+    expect(paths.length, 24 + 576);
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: path);
     }

@@ -74,21 +74,17 @@ abstract final class BodyFamilyCatalog {
 
   static BodyFamilyDef defForHero(PartyHero hero) => defFor(familyFor(hero));
 
-  /// Authored race undertunics (Cataclysm set except Human = family body).
-  /// Default sex follows kit family (healer female). Missing files fall back.
+  /// Authored race undertunics — all Cataclysm races × both sexes × families.
+  /// Pose stays family-anchored so gear overlays still fit.
   static final List<({BodyFamily family, HeroRace race, HeroSex sex})>
       authoredRaceLooks = [
-    for (final race in HeroRace.values)
-      if (race != HeroRace.human) ...[
-        (family: BodyFamily.warrior, race: race, sex: HeroSex.male),
-        (family: BodyFamily.healer, race: race, sex: HeroSex.female),
-        (family: BodyFamily.mage, race: race, sex: HeroSex.male),
-        (family: BodyFamily.rogue, race: race, sex: HeroSex.male),
-      ],
+    for (final family in BodyFamily.values)
+      for (final race in HeroRace.values)
+        for (final sex in HeroSex.values)
+          (family: family, race: race, sex: sex),
   ];
 
   static bool hasAuthoredRaceBody(PartyHero hero) {
-    if (hero.race == HeroRace.human) return false;
     final family = familyFor(hero);
     return authoredRaceLooks.any(
       (look) =>
