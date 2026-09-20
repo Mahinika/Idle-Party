@@ -352,7 +352,8 @@ class CharacterEquipPanel extends StatelessWidget {
                       size: dollSize,
                     ),
                   ),
-                  if (onSetHeroLook != null) ...[
+                  if (onSetHeroLook != null &&
+                      !CustomAssets.hasUniqueHeroSprite(hero.specId)) ...[
                     SizedBox(height: slotGap),
                     HeroLookRow(
                       value: hero.race,

@@ -941,6 +941,17 @@ abstract final class SpatialCombat {
   static bool compactNumbers = false;
   static bool alwaysShowEnemyHp = true;
 
+  /// SETTINGS “Hide heal numbers” drops numeric heals only — not tell words.
+  static bool suppressHealFloater({
+    required String text,
+    required int argb,
+  }) {
+    if (!hideHealFloaters) return false;
+    if (argb != _floaterHeal) return false;
+    final body = text.startsWith('+') ? text.substring(1) : text;
+    return int.tryParse(body) != null;
+  }
+
   static String _compactFloaterText(String text) {
     final plus = text.startsWith('+');
     final body = plus ? text.substring(1) : text;
@@ -967,6 +978,8 @@ abstract final class SpatialCombat {
   static int get _floaterEssence => colorblindMode ? 0xFF56B4E9 : 0xFF7EC8FF;
   static int get _floaterGear => colorblindMode ? 0xFF0072B2 : 0xFFB8E986;
   static int get _floaterHeal => colorblindMode ? 0xFFCC79A7 : 0xFF7AAB6E;
+  /// Enemy ability tells (MEND / TOTEM) — not a heal amount.
+  static int get _floaterTell => colorblindMode ? 0xFF0072B2 : 0xFF5BB8C8;
   static int get _floaterXp => colorblindMode ? 0xFF009E73 : 0xFF9AD0FF;
   static int get _floaterPet => colorblindMode ? 0xFF56B4E9 : 0xFF7CE8FF;
 
@@ -985,7 +998,7 @@ abstract final class SpatialCombat {
     int priority = 0,
     SpatialFloaterKind kind = SpatialFloaterKind.combat,
   }) {
-    if (hideHealFloaters && argb == _floaterHeal) return;
+    if (suppressHealFloater(text: text, argb: argb)) return;
     if (compactNumbers) {
       text = _compactFloaterText(text);
     }

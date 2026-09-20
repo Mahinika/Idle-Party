@@ -150,18 +150,7 @@ class _RaceCell extends StatelessWidget {
   }
 }
 
-/// Shared New Game / GEAR hint — authored race bodies exist per family.
-String nightElfLookHint({required bool authoredBody}) {
-  if (authoredBody) {
-    return 'Purple skin, long ears. Gear uses this kit\'s pose.';
-  }
-  return 'Uses the Human pose until this kit\'s Night Elf body is drawn.';
-}
-
 /// New Game: LOOK is per selected hero slot.
 String newGameLookHint(HeroRace race) {
   return 'LOOK for the selected hero · ${race.label}.';
 }
-
-/// Shared New Game / GEAR hint — authored Night Elf bodies exist per family.
-String get newGameNightElfHint => newGameLookHint(HeroRace.nightElf);

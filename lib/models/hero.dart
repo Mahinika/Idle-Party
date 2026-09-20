@@ -14,7 +14,8 @@ import 'stats.dart';
 enum HeroRole { warrior, healer, mage, rogue }
 
 /// Paper-doll undertunic race (Cataclysm playable set — no Pandaren).
-/// Missing clips fall back to the family body.
+/// Every family × race × sex has an authored clip; the doll never falls
+/// back to Kenney for a missing race body.
 enum HeroRace {
   human,
   dwarf,

@@ -738,14 +738,14 @@ void main() {
     );
     expect(
       BodyFamilyCatalog.assetFor(hero, HeroAnimKind.walk),
-      'assets/custom/char/warrior/body_walk.png',
+      'assets/custom/char/warrior/human_m_body_walk.png',
     );
     final pose = CharacterVisualPose.resolve(
       hero: hero,
       anim: const HeroAnimPose(kind: HeroAnimKind.walk, frame: 0),
       owned: true,
     );
-    expect(pose.bodyTintAsset, 'assets/custom/char/warrior/body_tint_walk.png');
+    expect(pose.bodyTintAsset, 'assets/custom/char/warrior/human_m_body_tint_walk.png');
     for (final layer in pose.layers.where((l) => l.id != CharacterLayerId.body)) {
       expect(layer.ownedAsset, isNotNull);
       expect(layer.ownedAsset, isNot(contains('kenney')));
@@ -788,7 +788,7 @@ void main() {
     );
     expect(
       owned.bodyTintAsset,
-      'assets/custom/char/warrior/body_tint_idle.png',
+      'assets/custom/char/warrior/human_m_body_tint_idle.png',
       reason: 'spec color must use the cloth-only mask, not the whole body',
     );
 

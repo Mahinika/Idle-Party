@@ -1,6 +1,6 @@
 # Idle Party — store listing (research + copy)
 
-**Updated:** 2026-09-19 · Target: Google Play (en-US) · Honesty first.  
+**Updated:** 2026-09-20 · Target: Google Play (en-US) · Honesty first.  
 Listing A/B (when Play traffic exists): keep screenshot 1–2 as **live SpatialCombat**, not menus. Do not upload a new AAB unless the owner asks.  
 Growth checklist / review templates: [`PLAY_GROWTH.md`](PLAY_GROWTH.md).  
 0 kr discovery pack: [`tool/store_listing/growth/`](../tool/store_listing/growth/).  
@@ -122,7 +122,7 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.172+202** (`pubspec.yaml`). Pasted as Play Production release notes with **202** submitted **2026-09-17**:
+Working ship: **1.12.179+209** (`pubspec.yaml`). Last Play Production paste was **1.12.172+202** submitted **2026-09-17** — do not reuse that line for a new AAB:
 
 ```
 • Your party fights on its own. Day-one menus stay GEAR and MORE until gold, the shop, and essence mean something. Shield, Healer, and Damage kits show their job in the fight.
@@ -225,6 +225,7 @@ Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in fi
   full desc on the public store. Extra locales gated in
   `tool/store_listing/growth/LOCALES.md`.
 - **Production AAB:** **1.12.172+202** submitted **2026-09-17** (full rollout).
+  In-repo working ship is **1.12.179+209** — do not upload without owner ask.
 - **Phone carousel swap submitted 2026-09-18:** new 8 play-ready shots
   (`tool/store_listing/out/play_ready/` → Console `01_play_combat_a` …
   `08_play_ascend`). Order: combat a/b → TODAY chase → GEAR → party → zone →

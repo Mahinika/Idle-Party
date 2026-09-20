@@ -1428,8 +1428,8 @@ class GameLogic {
   static HeroRace _rosterRace(GameState state) =>
       state.heroRoster.isEmpty ? HeroRace.human : state.heroRoster.first.race;
 
-  /// Paper-doll look. Night Elf snaps sex to the family default so authored
-  /// bodies (warrior/mage/rogue male, healer female) actually show.
+  /// Paper-doll look. Changing race from LOOK snaps sex to the kit family
+  /// default (healer female; other families male).
   static GameState setHeroLook(
     GameState state, {
     required String heroId,
@@ -1446,7 +1446,7 @@ class GameLogic {
       final nextRace = race ?? hero.race;
       final nextSex =
           sex ??
-          (race == HeroRace.nightElf
+          (race != null
               ? HeroSex.defaultFor(hero.gearAffinity)
               : hero.sex);
       if (nextRace == hero.race && nextSex == hero.sex) {

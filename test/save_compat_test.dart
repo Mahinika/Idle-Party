@@ -40,6 +40,9 @@ void main() {
     // Missing race/sex on old JSON → Human + family default. No wipe.
     expect(state.heroes.every((h) => h.race == HeroRace.human), isTrue);
     expect(state.heroRoster.every((h) => h.race == HeroRace.human), isTrue);
+    expect(state.hideHealFloaters, isFalse);
+    expect(state.compactCombatNumbers, isFalse);
+    expect(state.alwaysShowEnemyHp, isTrue);
   });
 
   test('save version is read from the file, not guessed', () {

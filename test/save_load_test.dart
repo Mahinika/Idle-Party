@@ -444,4 +444,55 @@ void main() {
       HeroRace.nightElf,
     );
   });
+
+  test('combat HUD toggles round-trip and survive Ascend', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 20));
+    state = state.copyWith(
+      hideHealFloaters: true,
+      compactCombatNumbers: true,
+      alwaysShowEnemyHp: false,
+    );
+    final loaded = GameLogic.stateFromJson(state.toJson());
+    expect(loaded.hideHealFloaters, isTrue);
+    expect(loaded.compactCombatNumbers, isTrue);
+    expect(loaded.alwaysShowEnemyHp, isFalse);
+
+    final missing = Map<String, dynamic>.from(state.toJson())
+      ..remove('hideHealFloaters')
+      ..remove('compactCombatNumbers')
+      ..remove('alwaysShowEnemyHp');
+    final legacy = GameLogic.stateFromJson(missing);
+    expect(legacy.hideHealFloaters, isFalse);
+    expect(legacy.compactCombatNumbers, isFalse);
+    expect(legacy.alwaysShowEnemyHp, isTrue);
+
+    final ascended = GameLogic.ascend(
+      loaded.copyWith(bossVictories: 1),
+      now: DateTime(2026, 9, 21),
+    );
+    expect(ascended.hideHealFloaters, isTrue);
+    expect(ascended.compactCombatNumbers, isTrue);
+    expect(ascended.alwaysShowEnemyHp, isFalse);
+  });
+
+  test('LOOK race change snaps sex to the kit family default', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 20));
+    final tank = state.heroes.firstWhere((h) => h.specId == HeroSpecId.protection);
+    state = GameLogic.setHeroLook(state, heroId: tank.id, race: HeroRace.orc);
+    final orc = state.heroes.firstWhere((h) => h.id == tank.id);
+    expect(orc.race, HeroRace.orc);
+    expect(orc.sex, HeroSex.male);
+    final healer = state.heroes.firstWhere(
+      (h) => h.specId == HeroSpecId.discipline,
+    );
+    state = GameLogic.setHeroLook(
+      state,
+      heroId: healer.id,
+      race: HeroRace.tauren,
+    );
+    expect(
+      state.heroes.firstWhere((h) => h.id == healer.id).sex,
+      HeroSex.female,
+    );
+  });
 }

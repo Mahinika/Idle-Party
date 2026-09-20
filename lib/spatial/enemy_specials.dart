@@ -169,7 +169,7 @@ void _tickEnemySpecials(
           x: lowest.x,
           y: lowest.y - 0.35,
           text: EnemyFlavor.supportTell(world.dungeonId),
-          argb: SpatialCombat._floaterHeal,
+          argb: SpatialCombat._floaterTell,
           life: 0.7,
           priority: reducedVfx ? 2 : 0,
         );

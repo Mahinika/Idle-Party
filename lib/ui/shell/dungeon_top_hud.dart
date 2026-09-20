@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/ashen_crown.dart';
+import '../../core/enemy_flavor.dart';
 import '../../core/gauntlet_anomaly.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
@@ -7,6 +8,8 @@ import '../../core/game_state.dart';
 import '../../core/keystone.dart';
 import '../../core/menu_alerts.dart';
 import '../../models/dungeon_mode.dart';
+import '../../models/dungeon_room.dart';
+import '../../models/enemy.dart';
 import '../../spatial/spatial_combat.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -17,12 +20,31 @@ import 'wallet_strip.dart';
 
 String _packJobBit(SpatialWorld? world) {
   if (world == null) return '';
-  final awake = world.enemies.where((e) => !e.dormant && e.isAlive).length;
-  final sleep = world.enemies.where((e) => e.dormant).length;
-  if (awake <= 0 && sleep <= 0) return '';
-  final job = awake <= 2 ? 'mixed' : 'swarm+elite';
+  final pack = world.enemies;
+  if (pack.isEmpty) return '';
+  final awake = pack.where((e) => !e.dormant && e.isAlive).toList();
+  final sleep = pack.where((e) => e.dormant).length;
+  if (awake.isEmpty && sleep <= 0) return '';
   final next = sleep > 0 ? ' · next chamber' : '';
-  return ' · $job$next';
+  if (awake.isEmpty) return next;
+  final bossRoom = pack.any((e) => e.role == EnemyRole.boss);
+  final eliteRoom = pack.any((e) => e.role == EnemyRole.elite);
+  final roomType = bossRoom
+      ? RoomType.boss
+      : eliteRoom
+      ? RoomType.elite
+      : RoomType.normal;
+  final jobs = <PackJob>{
+    for (final e in awake)
+      EnemyFlavor.packJobFor(
+        index: pack.indexOf(e),
+        count: pack.length,
+        type: roomType,
+        isBossUnit: e.role == EnemyRole.boss,
+      ),
+  };
+  final names = jobs.map((j) => j.name).toList()..sort();
+  return ' · ${names.join('+')}$next';
 }
 
 String _keyAffixBit(GameState state) {

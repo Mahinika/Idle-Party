@@ -147,6 +147,26 @@ void main() {
     expect(state.godHandCooldownSeconds, 0.45);
   });
 
+  test('hide heal numbers keeps enemy tell words', () {
+    SpatialCombat.hideHealFloaters = true;
+    SpatialCombat.colorblindMode = false;
+    addTearDown(() {
+      SpatialCombat.hideHealFloaters = false;
+    });
+    expect(
+      SpatialCombat.suppressHealFloater(text: '+42', argb: 0xFF7AAB6E),
+      isTrue,
+    );
+    expect(
+      SpatialCombat.suppressHealFloater(text: 'MEND', argb: 0xFF7AAB6E),
+      isFalse,
+    );
+    expect(
+      SpatialCombat.suppressHealFloater(text: 'MEND', argb: 0xFF5BB8C8),
+      isFalse,
+    );
+  });
+
   test('weapon pattern fires spread projectiles', () {
     final weapon = GameLogic.createEquipment(
       slot: EquipmentSlot.weapon,
