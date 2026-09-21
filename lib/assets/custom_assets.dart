@@ -405,6 +405,19 @@ abstract final class CustomAssets {
   static const String enemyBossDead = '$_root/enemies/boss_dead.png';
   static const String enemyDeadMite = '$_root/enemies/dead_mite.png';
   static const String enemyHellMite = '$_root/enemies/hell_mite.png';
+  static const String enemySandyBrute = '$_root/enemies/sandy_brute.png';
+  static const String enemySandyTank = '$_root/enemies/sandy_tank.png';
+  static const String enemySandyRanged = '$_root/enemies/sandy_ranged.png';
+  static const String enemyGoblinElite = '$_root/enemies/goblin_elite.png';
+  static const String enemyGoblinTank = '$_root/enemies/goblin_tank.png';
+  static const String enemyGoblinRanged = '$_root/enemies/goblin_ranged.png';
+  static const String enemyKingGuard = '$_root/enemies/king_guard.png';
+  static const String enemyKingTank = '$_root/enemies/king_tank.png';
+  static const String enemyUnderworldElite =
+      '$_root/enemies/underworld_elite.png';
+  static const String enemyDeadSwarm = '$_root/enemies/dead_swarm.png';
+  static const String enemyDeadSupport = '$_root/enemies/dead_support.png';
+  static const String enemyHellElite = '$_root/enemies/hell_elite.png';
   static const String enemyBossTide = '$_root/enemies/boss_tide.png';
   static const String enemyTideMite = '$_root/enemies/tide_mite.png';
   static const String enemyBossEmber = '$_root/enemies/boss_ember.png';

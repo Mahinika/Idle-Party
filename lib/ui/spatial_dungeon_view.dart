@@ -1809,23 +1809,31 @@ class _TileRoomPainter extends CustomPainter {
       final flash = enemy.attackFlash;
       final hit = enemy.hitFlash;
       final isBoss = enemy.role == EnemyRole.boss;
-      final c = center(enemy.x, enemy.y);
+      final zoneTint = DungeonEnvironment.projectileTint(dungeonId);
+      var c = center(enemy.x, enemy.y);
       final scale =
-          (isBoss ? 1.22 : 0.9) *
+          (isBoss ? 1.38 : 0.9) *
           (1 + flash * 0.18 + hit * 0.12);
+      final moving = enemy.vx.abs() > 0.05 || enemy.vy.abs() > 0.05;
+      if (moving && enemy.isAlive) {
+        final phase = ((enemy.x + enemy.y).abs() * 2.5 + visualFrame * 0.08) % 1.0;
+        c += CharacterVisualPainter.clipMotion(
+          HeroAnimKind.walk,
+          phase,
+          tile * scale,
+        );
+      }
       if (isBoss && enemy.isAlive) {
         canvas.drawCircle(
           c,
           tile * 0.58,
-          Paint()
-            ..color = const Color(0x55000000)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+          Paint()..color = const Color(0x55000000),
         );
         canvas.drawCircle(
           c,
-          tile * 0.48,
+          tile * 0.52,
           Paint()
-            ..color = const Color(0x88C04030)
+            ..color = zoneTint.withValues(alpha: 0.85)
             ..style = PaintingStyle.stroke
             ..strokeWidth = math.max(1.8, tile * 0.07),
         );
@@ -1835,7 +1843,8 @@ class _TileRoomPainter extends CustomPainter {
         canvas.drawCircle(
           c,
           tile * (isBoss ? 0.42 : 0.34) * (0.55 + hit),
-          Paint()..color = Color.fromRGBO(255, 220, 200, 0.55 * hit.clamp(0, 1)),
+          Paint()
+            ..color = zoneTint.withValues(alpha: 0.55 * hit.clamp(0.0, 1.0)),
         );
       }
       if (flash > 0.02) {

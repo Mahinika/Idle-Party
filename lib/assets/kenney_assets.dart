@@ -179,6 +179,18 @@ abstract final class KenneyAssets {
   static String get enemyBossDead => CustomAssets.enemyBossDead;
   static String get enemyDeadMite => CustomAssets.enemyDeadMite;
   static String get enemyHellMite => CustomAssets.enemyHellMite;
+  static String get enemySandyBrute => CustomAssets.enemySandyBrute;
+  static String get enemySandyTank => CustomAssets.enemySandyTank;
+  static String get enemySandyRanged => CustomAssets.enemySandyRanged;
+  static String get enemyGoblinElite => CustomAssets.enemyGoblinElite;
+  static String get enemyGoblinTank => CustomAssets.enemyGoblinTank;
+  static String get enemyGoblinRanged => CustomAssets.enemyGoblinRanged;
+  static String get enemyKingGuard => CustomAssets.enemyKingGuard;
+  static String get enemyKingTank => CustomAssets.enemyKingTank;
+  static String get enemyUnderworldElite => CustomAssets.enemyUnderworldElite;
+  static String get enemyDeadSwarm => CustomAssets.enemyDeadSwarm;
+  static String get enemyDeadSupport => CustomAssets.enemyDeadSupport;
+  static String get enemyHellElite => CustomAssets.enemyHellElite;
   static String get enemyBossTide => CustomAssets.enemyBossTide;
   static String get enemyTideMite => CustomAssets.enemyTideMite;
   static String get enemyBossEmber => CustomAssets.enemyBossEmber;
@@ -454,6 +466,19 @@ abstract final class KenneyAssets {
     enemyBrassBrute,
     enemyVeilElite,
     enemyVeilBrute,
+    // Append only — early-zone packs that used to share slime/golem/bat.
+    enemySandyBrute,
+    enemySandyTank,
+    enemySandyRanged,
+    enemyGoblinElite,
+    enemyGoblinTank,
+    enemyGoblinRanged,
+    enemyKingGuard,
+    enemyKingTank,
+    enemyUnderworldElite,
+    enemyDeadSwarm,
+    enemyDeadSupport,
+    enemyHellElite,
   ];
 
   static int enemySpriteCatalogIndex(String asset) {

@@ -5,8 +5,8 @@ Heroes, enemies, hub backdrops, and gear icons already live under `assets/custom
 this doc covers the **room interior** art under `assets/custom/dungeon/`.
 
 **Showcase zone:** Sunken Tidehold (`tide`) — first fully custom dungeon interior.  
-**Handcrafted starter:** Sandy Caverns (`sandy`) — cracked sandstone via `tool/craft_sandy_dungeon_art.py`.  
-`generate_dungeon_art.py` skips `HANDCRAFTED_ZONES` so a later bulk run cannot wipe that pass.  
+**Handcrafted:** Sandy Caverns (`sandy`) — cracked sandstone via `tool/craft_sandy_dungeon_art.py`. King's Fort walls (`king`) — stone plus a red-gold banner via `tool/craft_early_enemy_art.py`.  
+`generate_dungeon_art.py` skips `HANDCRAFTED_ZONES` so a later bulk run cannot wipe those passes.  
 **All 15 zones** now ship owned dungeon tiles + props under `assets/custom/dungeon/<id>/`.
 
 Related: [FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md) (placement grammar),

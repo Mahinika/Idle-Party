@@ -133,6 +133,58 @@ void main() {
     expect(king.hubChamberChance, greaterThan(0.45));
   });
 
+  test('early packs do not share slime, golem, bat, or the hell mite', () {
+    final sandy = ZoneArt.byId('sandy').enemies;
+    expect(sandy.elite, CustomAssets.enemySandyBrute);
+    expect(sandy.trash, isNot(sandy.elite));
+    expect(sandy.forArchetype(EnemyArchetype.tank), CustomAssets.enemySandyTank);
+    expect(sandy.forArchetype(EnemyArchetype.ranged), CustomAssets.enemySandyRanged);
+    expect(sandy.forArchetype(EnemyArchetype.tank), isNot(CustomAssets.enemyGolem));
+    expect(sandy.forArchetype(EnemyArchetype.ranged), isNot(CustomAssets.enemyBat));
+
+    final goblin = ZoneArt.byId('goblin').enemies;
+    expect(goblin.elite, CustomAssets.enemyGoblinElite);
+    expect(goblin.forArchetype(EnemyArchetype.tank), isNot(CustomAssets.enemyGolem));
+    expect(goblin.forArchetype(EnemyArchetype.ranged), CustomAssets.enemyGoblinRanged);
+
+    final king = ZoneArt.byId('king');
+    expect(king.wall, isNot(KenneyAssets.wallBanner));
+    expect(king.wall, contains('dungeon/king/'));
+    expect(king.enemies.elite, CustomAssets.enemyKingGuard);
+    expect(king.enemies.forArchetype(EnemyArchetype.tank), CustomAssets.enemyKingTank);
+
+    expect(
+      ZoneArt.byId('underworld').enemies.elite,
+      isNot(CustomAssets.enemyCyclops),
+    );
+    final dead = ZoneArt.byId('dead').enemies;
+    expect(dead.forArchetype(EnemyArchetype.swarm), CustomAssets.enemyDeadSwarm);
+    expect(dead.forArchetype(EnemyArchetype.support), CustomAssets.enemyDeadSupport);
+    expect(dead.elite, CustomAssets.enemyGhost);
+
+    final hell = ZoneArt.byId('hell').enemies;
+    expect(hell.elite, CustomAssets.enemyHellElite);
+    expect(hell.trash, CustomAssets.enemyHellMite);
+    expect(hell.elite, isNot(hell.trash));
+
+    for (final path in <String>[
+      sandy.elite,
+      sandy.forArchetype(EnemyArchetype.tank),
+      sandy.forArchetype(EnemyArchetype.ranged),
+      goblin.elite,
+      goblin.forArchetype(EnemyArchetype.tank),
+      goblin.forArchetype(EnemyArchetype.ranged),
+      king.enemies.elite,
+      king.enemies.forArchetype(EnemyArchetype.tank),
+      ZoneArt.byId('underworld').enemies.elite,
+      dead.forArchetype(EnemyArchetype.swarm),
+      dead.forArchetype(EnemyArchetype.support),
+      hell.elite,
+    ]) {
+      expect(File(path).existsSync(), isTrue, reason: path);
+    }
+  });
+
   test('Ember is choke-forge; Fen is choke-bog without treasure alcoves', () {
     final ember = ZoneArt.byId('ember');
     final fen = ZoneArt.byId('fen');
