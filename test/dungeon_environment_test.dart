@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:idle_party/models/dungeon_def.dart';
@@ -33,6 +34,24 @@ void main() {
     // Lava / torch accents must not alias trap / fountain art.
     expect(KenneyAssets.hazardLava, isNot(KenneyAssets.trapSpikes));
     expect(KenneyAssets.torchAlt, isNot(KenneyAssets.fountainSlime));
+  });
+
+  test('Sandy wash and prop shadow stay sand-brown and readable', () {
+    final wash = DungeonEnvironment.atmosphereWash('sandy');
+    expect((wash.toARGB32() >> 24) & 0xFF, lessThan(0x40));
+    expect((wash.toARGB32() >> 16) & 0xFF, greaterThan(wash.toARGB32() & 0xFF));
+    expect(
+      DungeonEnvironment.propShadow('sandy'),
+      const Color(0x66402814),
+    );
+    expect(
+      DungeonEnvironment.propShadow('tide'),
+      const Color(0x66000000),
+    );
+    expect(DungeonEnvironment.isTorchProp(MapPropKind.torch), isTrue);
+    expect(DungeonEnvironment.isTorchProp(MapPropKind.hatch), isFalse);
+    final stops = DungeonEnvironment.vignetteColors('sandy');
+    expect((stops.last.toARGB32() >> 24) & 0xFF, lessThan(0x90));
   });
 
   test('floors scatter denser wall-biased props for atmosphere', () {

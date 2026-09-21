@@ -16,4 +16,5 @@ Style rules: `docs/DUNGEON_ART.md`.
 Code: `CustomAssets.customDungeonZones` → `KenneyAssets` with `dungeonId`.
 Zones opt in via `ZoneArt.customDungeonArt` (all shipped zones).
 
-Regenerate all zone art: `py tool/generate_dungeon_art.py`
+Regenerate generated zones: `py tool/generate_dungeon_art.py`  
+(skips handcrafted `sandy`). Re-bake Sandy: `py tool/craft_sandy_dungeon_art.py`

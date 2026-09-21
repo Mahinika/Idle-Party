@@ -1118,6 +1118,7 @@ class _TileRoomPainter extends CustomPainter {
   bool get showLootPulse => vfxQuality.showLootPulse;
 
   Size? _vignetteSize;
+  String? _vignetteDungeonId;
   Paint? _vignettePaint;
   final Paint _fillPaint = Paint();
   final Paint _strokePaint = Paint()..style = PaintingStyle.stroke;
@@ -1279,13 +1280,16 @@ class _TileRoomPainter extends CustomPainter {
     canvas.drawRect(Offset.zero & size, _fillPaint);
 
     // Soft vignette so the play space feels framed by the cave.
-    if (_vignettePaint == null || _vignetteSize != size) {
+    if (_vignettePaint == null ||
+        _vignetteSize != size ||
+        _vignetteDungeonId != dungeonId) {
       _vignetteSize = size;
+      _vignetteDungeonId = dungeonId;
       _vignettePaint = Paint()
         ..shader = ui.Gradient.radial(
           Offset(size.width * 0.5, size.height * 0.42),
           size.longestSide * 0.78,
-          const [Color(0x00000000), Color(0x55000000), Color(0xBB000000)],
+          DungeonEnvironment.vignetteColors(dungeonId),
           const [0.28, 0.65, 1.0],
         );
     }
@@ -1360,8 +1364,22 @@ class _TileRoomPainter extends CustomPainter {
           width: tile * 0.55,
           height: tile * 0.22,
         ),
-        Paint()..color = const Color(0x66000000),
+        Paint()..color = DungeonEnvironment.propShadow(dungeonId),
       );
+      if (DungeonEnvironment.isTorchProp(prop.kind) && !reducedVfx) {
+        final pulse = 0.85 + 0.15 * math.sin(visualFrame * 0.12);
+        canvas.drawCircle(
+          c.translate(0, -tile * 0.18),
+          tile * 0.72 * pulse,
+          Paint()
+            ..shader = ui.Gradient.radial(
+              c.translate(0, -tile * 0.18),
+              tile * 0.72 * pulse,
+              const [Color(0x55F0B038), Color(0x18E08828), Color(0x00E08828)],
+              const [0.0, 0.45, 1.0],
+            ),
+        );
+      }
       drawSprite(img, c, 0.80);
     }
 

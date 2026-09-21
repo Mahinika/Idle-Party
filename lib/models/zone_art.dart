@@ -294,8 +294,10 @@ abstract final class ZoneArt {
       ],
       landmarks: [MapPropKind.hatch, MapPropKind.hatch, MapPropKind.rubble],
       ambient: Color(0xFF0C0A08),
-      wash: Color(0x44C88840),
-      floorBlend: Color(0x66A07038),
+      // Lighter wash so cracked sandstone tiles stay readable on phone.
+      wash: Color(0x28E0A858),
+      floorBlend: Color(0x2AA07038),
+      corridorShade: Color(0x24080502),
       projectileTint: Color(0xFFE0A050),
       normalRoomChestChance: 0.12,
       enemies: ZoneEnemyArt(

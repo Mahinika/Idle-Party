@@ -5,6 +5,8 @@ Heroes, enemies, hub backdrops, and gear icons already live under `assets/custom
 this doc covers the **room interior** art under `assets/custom/dungeon/`.
 
 **Showcase zone:** Sunken Tidehold (`tide`) — first fully custom dungeon interior.  
+**Handcrafted starter:** Sandy Caverns (`sandy`) — cracked sandstone via `tool/craft_sandy_dungeon_art.py`.  
+`generate_dungeon_art.py` skips `HANDCRAFTED_ZONES` so a later bulk run cannot wipe that pass.  
 **All 15 zones** now ship owned dungeon tiles + props under `assets/custom/dungeon/<id>/`.
 
 Related: [FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md) (placement grammar),
@@ -38,6 +40,16 @@ Match existing Idle Party identity art (`assets/custom/heroes/`, `enemies/`):
 | Coral / barnacle | `#c87858`, `#e8a878`, `#ffe8c8` | accents, chest, pillar |
 | Salvage wood | `#5a4030`, `#806040` | barrel, hatch |
 | Teal glow | `#38d0b8` | hub icon, bubble spring |
+
+### Material anchors (Sandy)
+
+| Material | Hex anchors | Use |
+|----------|-------------|-----|
+| Sandstone floor | `#5a4428`, `#7a5a34`, `#c88840` | cracked walkable slabs |
+| Dark sand wall | `#1a1410`, `#2a2218`, `#4a3a24` | rim walls, top-left light |
+| Salvage wood | `#5a4028`, `#705030` | hatch, doors, barrels |
+| Rope | `#c09858` | closed / open gate lash |
+| Torch glow | `#f0b038`, `#fff0c0` | props + canvas light disc |
 
 Other zones reuse the **same pixel rules** with their own wash row from `ZoneArt`.
 

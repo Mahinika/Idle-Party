@@ -11,6 +11,9 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1] / "assets" / "custom" / "dungeon"
 
+# Zones with a dedicated craft script — never overwrite their PNGs.
+HANDCRAFTED_ZONES = frozenset({"sandy"})
+
 ALL_ZONES = (
     "sandy",
     "goblin",
@@ -652,6 +655,9 @@ class Generator:
 def main() -> None:
     print("Generating custom dungeon art for all zones…")
     for zone_id in ALL_ZONES:
+        if zone_id in HANDCRAFTED_ZONES:
+            print(f"  {zone_id}: locked (handcrafted — tool/craft_{zone_id}_dungeon_art.py)")
+            continue
         Generator(zone_id).generate_all()
     print("Done.")
 

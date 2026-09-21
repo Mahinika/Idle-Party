@@ -23,6 +23,19 @@ abstract final class DungeonEnvironment {
   static Color corridorShade(String dungeonId) =>
       ZoneArt.byId(dungeonId).corridorShade;
 
+  /// Soft oval under floor props — sand-brown in Sandy so clutter lifts.
+  static Color propShadow(String dungeonId) => dungeonId == 'sandy'
+      ? const Color(0x66402814)
+      : const Color(0x66000000);
+
+  /// Edge vignette; Sandy stays open so sandstone reads.
+  static List<Color> vignetteColors(String dungeonId) => dungeonId == 'sandy'
+      ? const [Color(0x00000000), Color(0x28080502), Color(0x66080502)]
+      : const [Color(0x00000000), Color(0x55000000), Color(0xBB000000)];
+
+  static bool isTorchProp(MapPropKind kind) =>
+      kind == MapPropKind.torch || kind == MapPropKind.torchAlt;
+
   /// Rare luminance jitter (not a checkerboard).
   static Color floorNoise(int x, int y, int seed) {
     final h = x * 73856093 ^ y * 19349663 ^ seed;
