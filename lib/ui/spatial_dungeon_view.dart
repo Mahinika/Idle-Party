@@ -1509,23 +1509,24 @@ class _TileRoomPainter extends CustomPainter {
       final gc = center(world.guideX!, world.guideY!);
       final pulse = 0.85 + 0.15 * math.sin(world.guideTimer * 10);
       final r = tile * world.godHandRadius * pulse;
+      final ring = Color(world.godHandArgb);
       canvas.drawCircle(
         gc,
         r,
         Paint()
-          ..color = const Color(0x55FFE080)
+          ..color = ring.withValues(alpha: 0.4)
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(1.5, tile * 0.06),
       );
       canvas.drawCircle(
         gc,
         tile * 0.22 * pulse,
-        Paint()..color = const Color(0xAAFFF0A0),
+        Paint()..color = ring.withValues(alpha: 0.75),
       );
       canvas.drawCircle(
         gc,
         tile * 0.1,
-        Paint()..color = const Color(0xFFFFF8D0),
+        Paint()..color = ring,
       );
     }
 
@@ -1537,14 +1538,14 @@ class _TileRoomPainter extends CustomPainter {
       final angle = speed > 0.01 ? math.atan2(p.vy, p.vx) : 0.0;
       final baseColor = switch (p.style) {
         SpellBoltStyle.fire =>
-          p.label == 'PYRO' ? const Color(0xFFFF4010) : const Color(0xFFFF9030),
-        SpellBoltStyle.holy => const Color(0xFFFFF0A0),
-        SpellBoltStyle.frost => const Color(0xFF90D8FF),
-        SpellBoltStyle.arcane => const Color(0xFFC070FF),
-        SpellBoltStyle.shadow => const Color(0xFFB060E0),
+          p.label == 'PYRO' ? const Color(0xFFFF4010) : const Color(0xFFFF3C10),
+        SpellBoltStyle.holy => const Color(0xFFFFF8E0),
+        SpellBoltStyle.frost => const Color(0xFF4EE4FF),
+        SpellBoltStyle.arcane => const Color(0xFFE040FF),
+        SpellBoltStyle.shadow => const Color(0xFF9040D0),
         SpellBoltStyle.demon => const Color(0xFF70FF40),
-        SpellBoltStyle.nature => const Color(0xFF70D070),
-        SpellBoltStyle.poison => const Color(0xFF90D040),
+        SpellBoltStyle.nature => const Color(0xFF2EAA55),
+        SpellBoltStyle.poison => const Color(0xFFE4F04A),
         SpellBoltStyle.lightning => const Color(0xFFB8F0FF),
         SpellBoltStyle.arrow => const Color(0xFFD8C070),
         SpellBoltStyle.weapon =>
@@ -1553,7 +1554,7 @@ class _TileRoomPainter extends CustomPainter {
               : const Color(0xFFFF6A4A),
       };
       final zoneTint = DungeonEnvironment.projectileTint(dungeonId);
-      final color = Color.lerp(baseColor, zoneTint, 0.28)!;
+      final color = Color.lerp(baseColor, zoneTint, 0.10)!;
       final len = tile * (p.pierce ? 0.55 : (0.35 + p.radius));
       final thick = math.max(2.0, tile * (0.08 + p.radius * 0.45));
       canvas.save();
@@ -1616,6 +1617,32 @@ class _TileRoomPainter extends CustomPainter {
           Offset.zero,
           thick * 0.4,
           Paint()..color = Colors.white.withValues(alpha: 0.9),
+        );
+      }
+
+      void shadowEyes() {
+        final slit = Paint()..color = const Color(0xFFFFE080);
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: Offset(-thick * 0.28, -thick * 0.15),
+              width: thick * 0.42,
+              height: thick * 0.16,
+            ),
+            Radius.circular(thick * 0.08),
+          ),
+          slit,
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: Offset(thick * 0.28, -thick * 0.15),
+              width: thick * 0.42,
+              height: thick * 0.16,
+            ),
+            Radius.circular(thick * 0.08),
+          ),
+          slit,
         );
       }
 
@@ -1687,17 +1714,7 @@ class _TileRoomPainter extends CustomPainter {
             Paint()..color = const Color(0x66201040),
           );
           drawOrb(core: 1.05, glow: const Color(0xFF602090));
-          // Eye slits so Death Coil / Shadow Bolt read as shadow, not purple fire.
-          canvas.drawCircle(
-            Offset(-thick * 0.25, -thick * 0.2),
-            thick * 0.18,
-            Paint()..color = const Color(0xFFFFE080),
-          );
-          canvas.drawCircle(
-            Offset(thick * 0.28, -thick * 0.2),
-            thick * 0.18,
-            Paint()..color = const Color(0xFFFFE080),
-          );
+          shadowEyes();
         case SpellBoltStyle.demon:
           canvas.drawCircle(
             Offset(-len * 0.2, 0),
@@ -1850,28 +1867,38 @@ class _TileRoomPainter extends CustomPainter {
             ..color = zoneTint.withValues(alpha: 0.55 * hit.clamp(0.0, 1.0)),
         );
       }
+      if (enemy.isAlive &&
+          enemy.fireCooldown > 0 &&
+          enemy.fireCooldown < 0.45 &&
+          enemy.attackCooldown > 0) {
+        final wind = (1.0 - (enemy.fireCooldown / 0.45)).clamp(0.0, 1.0);
+        final reach = isBoss ? 0.72 : (isElite ? 0.5 : 0.38);
+        final job = switch (enemy.archetype) {
+          EnemyArchetype.swarm => const Color(0xFFE8E040),
+          EnemyArchetype.brute => const Color(0xFFE07040),
+          EnemyArchetype.tank => const Color(0xFFE8C060),
+          EnemyArchetype.ranged => const Color(0xFF40C8E8),
+          EnemyArchetype.glass => const Color(0xFFE060C0),
+          EnemyArchetype.support => const Color(0xFF70E090),
+        };
+        final tell = Color.lerp(job, zoneTint, 0.22)!;
+        canvas.drawCircle(
+          c,
+          tile * (reach + wind * (isBoss ? 0.28 : 0.12)),
+          Paint()
+            ..color = tell.withValues(alpha: 0.35 + wind * 0.45)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(
+              isBoss ? 2.4 : 1.6,
+              tile * (isBoss ? 0.09 : 0.05),
+            ),
+        );
+      }
       if (flash > 0.02) {
         canvas.drawCircle(
           c,
           tile * 0.35 * flash,
           Paint()..color = const Color(0x66FFE8A0),
-        );
-      }
-      // Boss wind-up telegraph when about to swing.
-      if (isBoss &&
-          enemy.isAlive &&
-          showAuras &&
-          enemy.fireCooldown > 0 &&
-          enemy.fireCooldown < 0.45 &&
-          enemy.attackCooldown > 0) {
-        final wind = (1.0 - (enemy.fireCooldown / 0.45)).clamp(0.0, 1.0);
-        canvas.drawCircle(
-          c,
-          tile * (0.55 + wind * 0.25),
-          Paint()
-            ..color = Color.fromRGBO(255, 60, 40, 0.25 + wind * 0.45)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = math.max(2.0, tile * 0.09),
         );
       }
       if (enemy.isAlive) {
@@ -2600,7 +2627,10 @@ class _TileRoomPainter extends CustomPainter {
               ..strokeWidth = math.max(1.0, tile * 0.03),
           );
         }
-        tp.paint(canvas, Offset(c.dx - tp.width / 2, c.dy - tp.height / 2));
+        final anchor = speech
+            ? Offset(c.dx - tp.width / 2, c.dy - tp.height / 2)
+            : Offset(c.dx + tile * 0.46 - tp.width / 2, c.dy - tile * 0.22);
+        tp.paint(canvas, anchor);
       }
       tp.dispose();
     }
@@ -2731,7 +2761,19 @@ class _TileRoomPainter extends CustomPainter {
               width: r * 0.28,
               height: r * 0.16,
             ),
-            Paint()..color = const Color(0x8878E060).withValues(alpha: 0.5 * frac),
+            Paint()..color = const Color(0x882EAA55).withValues(alpha: 0.5 * frac),
+          );
+        }
+      case SpatialGroundFxKind.poison:
+        for (var i = 0; i < 4; i++) {
+          final a = i * 1.6;
+          canvas.drawCircle(
+            Offset(
+              c.dx + math.cos(a) * r * 0.45,
+              c.dy + math.sin(a) * r * 0.45,
+            ),
+            r * 0.12,
+            Paint()..color = const Color(0xAAE4F04A).withValues(alpha: 0.55 * frac),
           );
         }
       case SpatialGroundFxKind.steel:

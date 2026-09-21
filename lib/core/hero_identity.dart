@@ -105,6 +105,22 @@ abstract final class HeroIdentity {
     HeroSpecId.restorationDruid => 0xFF70F070,
   };
 
+  /// Cloth tint. Colorblind play pushes green cloth toward cyan so it
+  /// does not sit on the same brown as red specs.
+  static int clothArgb(HeroSpecId specId, {required bool colorblind}) {
+    final raw = ownedBodyTintArgb(specId);
+    if (!colorblind) return raw;
+    final r = (raw >> 16) & 0xFF;
+    final g = (raw >> 8) & 0xFF;
+    final b = raw & 0xFF;
+    if (g > r + 18 && g >= b) {
+      final nb = (b + 120).clamp(0, 255);
+      final ng = (g * 0.7).round().clamp(0, 255);
+      return 0xFF000000 | (r << 16) | (ng << 8) | nb;
+    }
+    return raw;
+  }
+
   /// One-line fantasy for unlock toast / Meet card (GEAR/SYSTEMS meetBlurb).
   static String meetBlurb(HeroSpecId specId) => fantasyLine(specId);
 

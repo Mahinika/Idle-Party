@@ -53,7 +53,7 @@ abstract final class SpellVfx {
         SpellBoltStyle.frost => SpatialGroundFxKind.frost,
         SpellBoltStyle.fire => SpatialGroundFxKind.fire,
         SpellBoltStyle.nature => SpatialGroundFxKind.nature,
-        SpellBoltStyle.poison => SpatialGroundFxKind.nature,
+        SpellBoltStyle.poison => SpatialGroundFxKind.poison,
         SpellBoltStyle.shadow => SpatialGroundFxKind.shadow,
         SpellBoltStyle.demon => SpatialGroundFxKind.shadow,
         SpellBoltStyle.lightning => SpatialGroundFxKind.rain,
@@ -238,6 +238,7 @@ abstract final class SpellVfx {
     AbilityId.wildGrowth ||
     AbilityId.spiritLink ||
     AbilityId.earthquake => SpatialGroundFxKind.nature,
+    AbilityId.envenom || AbilityId.garrote => SpatialGroundFxKind.poison,
     AbilityId.bladestorm ||
     AbilityId.whirlwind ||
     AbilityId.bladeFlurry ||

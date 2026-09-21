@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/zone_art.dart';
+import '../spatial/spatial_combat.dart';
 import '../spatial/tile_map.dart';
 
 /// Visual theme for dungeon combat maps (all catalog zones).
@@ -9,11 +10,12 @@ abstract final class DungeonEnvironment {
   static Color ambient(String dungeonId) => ZoneArt.byId(dungeonId).ambient;
 
   /// Soft full-frame wash so each dungeon reads differently.
-  static Color atmosphereWash(String dungeonId) => ZoneArt.byId(dungeonId).wash;
+  static Color atmosphereWash(String dungeonId) =>
+      _colorblindSplit(ZoneArt.byId(dungeonId).wash);
 
   /// Per-tile mute + zone tint so Kenney floors sit in the painted cave.
   static Color floorBlend(String dungeonId) =>
-      ZoneArt.byId(dungeonId).floorBlend;
+      _colorblindSplit(ZoneArt.byId(dungeonId).floorBlend);
 
   /// Opaque tint mixed into combat projectiles so bolts read with the zone.
   static Color projectileTint(String dungeonId) =>
@@ -22,6 +24,20 @@ abstract final class DungeonEnvironment {
   /// Dim corridors vs room floors.
   static Color corridorShade(String dungeonId) =>
       ZoneArt.byId(dungeonId).corridorShade;
+
+  /// Green-heavy washes shift toward cyan so they stay apart from red caves.
+  static Color _colorblindSplit(Color c) {
+    if (!SpatialCombat.colorblindMode) return c;
+    final argb = c.toARGB32();
+    final a = (argb >> 24) & 0xFF;
+    final r = (argb >> 16) & 0xFF;
+    final g = (argb >> 8) & 0xFF;
+    final b = argb & 0xFF;
+    if (g <= r + 12 || g < b) return c;
+    final nb = (b + 80).clamp(0, 255);
+    final ng = (g * 0.72).round().clamp(0, 255);
+    return Color.fromARGB(a, r, ng, nb);
+  }
 
   /// Soft oval under floor props — sand-brown in Sandy so clutter lifts.
   static Color propShadow(String dungeonId) => dungeonId == 'sandy'

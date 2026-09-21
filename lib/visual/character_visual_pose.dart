@@ -4,6 +4,7 @@ import 'dart:ui' show Color;
 import '../core/hero_identity.dart';
 import '../models/hero.dart';
 import '../models/loot.dart';
+import '../spatial/spatial_combat.dart';
 import '../ui/hero_paper_doll.dart';
 import 'anchor_table.dart';
 import 'body_family.dart';
@@ -330,7 +331,12 @@ class CharacterVisualPose {
       layerOrder: order,
       equipHash: equipHashOf(hero),
       anchorProfile: BodyAnchorProfile.owned,
-      bodyTint: Color(HeroIdentity.ownedBodyTintArgb(hero.specId)),
+      bodyTint: Color(
+        HeroIdentity.clothArgb(
+          hero.specId,
+          colorblind: SpatialCombat.colorblindMode,
+        ),
+      ),
       bodyTintAsset: BodyFamilyCatalog.tintMaskAssetFor(hero, anim.kind),
     );
   }

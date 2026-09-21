@@ -154,11 +154,11 @@ void main() {
       SpatialCombat.hideHealFloaters = false;
     });
     expect(
-      SpatialCombat.suppressHealFloater(text: '+42', argb: 0xFF7AAB6E),
+      SpatialCombat.suppressHealFloater(text: '+42', argb: 0xFF2EBEA0),
       isTrue,
     );
     expect(
-      SpatialCombat.suppressHealFloater(text: 'MEND', argb: 0xFF7AAB6E),
+      SpatialCombat.suppressHealFloater(text: 'MEND', argb: 0xFF2EBEA0),
       isFalse,
     );
     expect(

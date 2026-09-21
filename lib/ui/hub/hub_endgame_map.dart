@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/hub_endgame_act.dart';
 import '../../assets/custom_assets.dart';
+import '../game_icon.dart';
 import '../game_theme.dart';
 import '../web_click_bridge.dart';
 import 'hub_world_map.dart';
@@ -124,7 +125,8 @@ class HubEndgameMap extends StatelessWidget {
         if (mapW < 8 || mapH < 8) return const SizedBox.shrink();
         final discSize = (mapW * 0.16).clamp(40.0, 52.0);
         final hitSize = math.max(discSize, GameTheme.minTouch);
-        const statusH = 16.0;
+        final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
+        final statusH = 16.0 * textScale;
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(GameTheme.radiusSm),
@@ -240,6 +242,12 @@ class HubEndgameMap extends StatelessWidget {
       child: MapZoneMarker(
         name: HubEndgameAct.titleFor(node.hunt, grBestTier: grBestTier),
         portraitDungeonId: node.portraitDungeonId,
+        iconAsset: switch (node.hunt) {
+          HubEndgameHunt.gauntlet => UiIcon.skull,
+          HubEndgameHunt.rankedGr => UiIcon.trophy,
+          HubEndgameHunt.farmRift => UiIcon.flaskBlue,
+          HubEndgameHunt.ashen => UiIcon.campfire,
+        },
         discSize: discSize,
         hitSize: hitSize,
         unlocked: true,

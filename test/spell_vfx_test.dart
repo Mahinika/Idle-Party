@@ -382,6 +382,20 @@ void main() {
       SpatialGroundFxKind.steel,
     );
     expect(
+      SpellVfx.groundKindFor(
+        style: SpellBoltStyle.poison,
+        id: AbilityId.envenom,
+      ),
+      SpatialGroundFxKind.poison,
+    );
+    expect(
+      SpellVfx.groundKindFor(
+        style: SpellBoltStyle.nature,
+        id: AbilityId.rejuvenation,
+      ),
+      isNot(SpatialGroundFxKind.poison),
+    );
+    expect(
       SpellVfx.burstKindFor(
         style: SpellBoltStyle.nature,
         id: AbilityId.rejuvenation,

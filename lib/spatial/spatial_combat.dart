@@ -666,6 +666,7 @@ enum SpatialGroundFxKind {
   rain,
   shadow,
   nature,
+  poison,
   steel,
 }
 
@@ -738,6 +739,7 @@ class SpatialWorld {
     List<CombatFeelHit>? pendingFeelHits,
     this.pendingVacuumLootLine,
     this.godHandRadius = 1.8,
+    this.godHandArgb = 0xFFFFE080,
     this.bagFullFloaterCooldown = 0,
     List<SpatialFloater>? floaters,
     List<SpatialBurst>? bursts,
@@ -850,6 +852,9 @@ class SpatialWorld {
 
   /// Cached God Hand radius for guide ring paint (set on cast).
   double godHandRadius;
+
+  /// BAL gold / FOCUS orange / WIDE blue. Set with [godHandRadius].
+  int godHandArgb;
 
   /// Suppress stacked "BAG FULL +Ne" floaters while salvage spam is high.
   double bagFullFloaterCooldown;
@@ -977,7 +982,7 @@ abstract final class SpatialCombat {
   static int get _floaterGold => colorblindMode ? 0xFFE69F00 : 0xFFFFE08A;
   static int get _floaterEssence => colorblindMode ? 0xFF56B4E9 : 0xFF7EC8FF;
   static int get _floaterGear => colorblindMode ? 0xFF0072B2 : 0xFFB8E986;
-  static int get _floaterHeal => colorblindMode ? 0xFFCC79A7 : 0xFF7AAB6E;
+  static int get _floaterHeal => colorblindMode ? 0xFFCC79A7 : 0xFF2EBEA0;
   /// Enemy ability tells (MEND / TOTEM) — not a heal amount.
   static int get _floaterTell => colorblindMode ? 0xFF0072B2 : 0xFF5BB8C8;
   static int get _floaterXp => colorblindMode ? 0xFF009E73 : 0xFF9AD0FF;
@@ -2560,6 +2565,7 @@ abstract final class SpatialCombat {
       bursts: world.bursts,
       groundFx: world.groundFx,
       godHandRadius: world.godHandRadius,
+      godHandArgb: world.godHandArgb,
     );
   }
 
@@ -4694,6 +4700,7 @@ abstract final class SpatialCombat {
       2 => 0xFF90D8FF, // WIDE — cool blue
       _ => 0xFFFFE080, // BAL — gold
     };
+    world.godHandArgb = styleArgb;
     // Smash must read even on Minimal — one short ring, no extra floaters.
     if (state.vfxQuality == VfxQuality.minimal) {
       _spawnRing(

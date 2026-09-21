@@ -151,7 +151,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final plainEnglish = GameLogic.plainPlayerChrome(state);
     // Thin strip: reclaim map; kit opens beside the strip (not expanding rows).
     const fullWidth = 118.0;
-    const rowHeight = 26.0;
+    final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
+    final rowHeight = 26.0 * textScale;
     final heroCount = state.heroes.length;
     var partyCritical = false;
     final bossFight =

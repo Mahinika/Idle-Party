@@ -169,7 +169,7 @@ class HubTodayCard extends StatelessWidget {
                 Semantics(
                   label: 'Next job',
                   excludeSemantics: true,
-                  child: GameIcon.asset(UiIcon.star, size: 16),
+                  child: GameIcon.asset(_chaseIcon(chase.kind), size: 16),
                 ),
                 if (chip != null) ...[
                   const SizedBox(width: 8),
@@ -218,6 +218,27 @@ class HubTodayCard extends StatelessWidget {
     );
   }
 }
+
+String _chaseIcon(HubChaseKind kind) => switch (kind) {
+  HubChaseKind.claimDailyVault ||
+  HubChaseKind.dailyVaultProgress => UiIcon.chest,
+  HubChaseKind.claimMissions || HubChaseKind.weekGoal || HubChaseKind.monthGoal =>
+    UiIcon.quests,
+  HubChaseKind.meetHero => UiIcon.star,
+  HubChaseKind.equipBag => UiIcon.gear,
+  HubChaseKind.marketUpgrade => UiIcon.gold,
+  HubChaseKind.ascend => UiIcon.ascend,
+  HubChaseKind.willRank => UiIcon.shieldRound,
+  HubChaseKind.gauntletMilestone => UiIcon.skull,
+  HubChaseKind.riftMilestone => UiIcon.flaskBlue,
+  HubChaseKind.greaterRiftMilestone => UiIcon.trophy,
+  HubChaseKind.unlockZone => UiIcon.leave,
+  HubChaseKind.dailyRun => UiIcon.boots,
+  HubChaseKind.keystone => UiIcon.key,
+  HubChaseKind.clearFloors => UiIcon.sword,
+  HubChaseKind.ashenCrown => UiIcon.campfire,
+  HubChaseKind.doneForToday => UiIcon.campfire,
+};
 
 /// TODAY title line — skip progress when READY chip already marks payoff.
 String _todayHeadline(HubChase chase, {required bool ready}) {

@@ -169,7 +169,8 @@ class ZonePathMap extends StatelessWidget {
         if (mapW < 8 || mapH < 8) return const SizedBox.shrink();
         final discSize = (mapW * 0.078).clamp(28.0, 36.0);
         final hitSize = math.max(discSize, GameTheme.minTouch);
-        const statusH = 15.0;
+        final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
+        final statusH = 16.0 * textScale;
 
         final dungeons = this.dungeons;
         assert(
@@ -263,6 +264,7 @@ class MapZoneMarker extends StatelessWidget {
     required this.statusWord,
     required this.onTap,
     this.pulse,
+    this.iconAsset,
   });
 
   final String name;
@@ -273,6 +275,7 @@ class MapZoneMarker extends StatelessWidget {
   final bool cleared;
   final bool selected;
   final Animation<double>? pulse;
+  final String? iconAsset;
   final String statusWord;
   final VoidCallback onTap;
 
@@ -298,7 +301,7 @@ class MapZoneMarker extends StatelessWidget {
     final iconSize = discSize * 0.82;
 
     Widget portrait = KenneySprite(
-      asset: KenneyAssets.dungeonPortraitFor(portraitDungeonId),
+      asset: iconAsset ?? KenneyAssets.dungeonIconFor(portraitDungeonId),
       size: iconSize,
     );
     if (!unlocked) {
@@ -360,7 +363,7 @@ class MapZoneMarker extends StatelessWidget {
                 Text(
                   statusWord,
                   maxLines: 1,
-                  overflow: TextOverflow.clip,
+                  overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(size: 11, color: _statusColor),
                 ),
               SizedBox(
