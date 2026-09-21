@@ -16,6 +16,7 @@ class HeroAnimPose {
     required this.frame,
     this.locked = false,
     this.progress = 0,
+    this.blocking = false,
   });
 
   final HeroAnimKind kind;
@@ -28,6 +29,9 @@ class HeroAnimPose {
 
   /// 0–1 progress through a one-shot clip (attack/cast/hit).
   final double progress;
+
+  /// Shield raised this frame — tilts the off-hand, does not change the clip.
+  final bool blocking;
 }
 
 /// Combat → animation input. No sprite knowledge.
@@ -42,6 +46,7 @@ class HeroAnimSignals {
     this.attackFlash = 0,
     this.castFlash = 0,
     this.hitFlash = 0,
+    this.blocking = false,
   });
 
   final bool moving;
@@ -59,4 +64,7 @@ class HeroAnimSignals {
 
   /// Seconds remaining on hit flinch.
   final double hitFlash;
+
+  /// Off-hand shield is up (Shield Block / Holy Shield).
+  final bool blocking;
 }

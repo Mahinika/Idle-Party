@@ -92,9 +92,18 @@ abstract final class CharacterVisualPainter {
     // One body clip per anim — a step bob / flinch recoil carries the motion.
     // Applied inside the flip so "backward" follows facing.
     final step = ownedStepOffset(pose, size);
-    if (step != Offset.zero) {
+    final lean = ownedLeanRadians(pose);
+    if (step != Offset.zero || lean != 0) {
       canvas.save();
-      canvas.translate(step.dx, step.dy);
+      if (lean != 0) {
+        final pivot = center.translate(0, size * 0.36);
+        canvas.translate(pivot.dx, pivot.dy);
+        canvas.rotate(lean);
+        canvas.translate(-pivot.dx, -pivot.dy);
+      }
+      if (step != Offset.zero) {
+        canvas.translate(step.dx, step.dy);
+      }
     }
 
     for (final layer in pose.orderedLayers()) {
@@ -212,6 +221,8 @@ abstract final class CharacterVisualPainter {
         var rot = ap.rotation;
         if (layer.anchorId == AnchorId.mainHand) {
           rot += pose.mainHandExtraRotation;
+        } else if (layer.anchorId == AnchorId.offHand) {
+          rot += pose.offHandExtraRotation;
         }
         final ax = center.dx + ap.x;
         final ay = center.dy + ap.y;
@@ -238,7 +249,7 @@ abstract final class CharacterVisualPainter {
       canvas.drawImageRect(img, src, dst, p);
     }
 
-    if (step != Offset.zero) {
+    if (step != Offset.zero || lean != 0) {
       canvas.restore();
     }
     if (pose.flipX) {
@@ -248,21 +259,52 @@ abstract final class CharacterVisualPainter {
 
   /// Whole-doll offset that fakes motion the single body clip cannot show.
   ///
-  /// Walk = step bob, hit = short recoil away from facing, cast = slow float.
-  static Offset ownedStepOffset(CharacterVisualPose pose, double size) {
+  /// Walk = step bob, hit = recoil on the idle clip, cast = lift (not a
+  /// lunge), death = a drop past the fade.
+  static Offset ownedStepOffset(CharacterVisualPose pose, double size) =>
+      clipMotion(
+        pose.anim.kind,
+        pose.anim.progress,
+        size,
+        flipX: pose.flipX,
+      );
+
+  /// Shared by the paper doll and unique form sprites (cat, bear, moonkin,
+  /// tree, Shadow) so a walk reads without a second PNG.
+  static Offset clipMotion(
+    HeroAnimKind kind,
+    double progress,
+    double size, {
+    bool flipX = false,
+  }) {
+    final p = progress.clamp(0.0, 1.0);
+    return switch (kind) {
+      HeroAnimKind.walk => Offset(
+        math.sin(p * math.pi * 2) * size * 0.04,
+        -(math.sin(p * math.pi * 2).abs()) * size * 0.07,
+      ),
+      HeroAnimKind.hit => Offset(
+        -size * 0.10 * (1 - p),
+        size * 0.02 * (1 - p),
+      ),
+      HeroAnimKind.cast => Offset(0, -size * 0.06 * math.sin(p * math.pi)),
+      HeroAnimKind.attack => Offset(
+        (flipX ? -1.0 : 1.0) * size * 0.10 * math.sin(p * math.pi),
+        -size * 0.03 * math.sin(p * math.pi),
+      ),
+      HeroAnimKind.death => Offset(0, size * 0.14),
+      _ => Offset.zero,
+    };
+  }
+
+  /// Feet-pivot lean. Hit tips back; death lies down. Idle clip stays put.
+  static double ownedLeanRadians(CharacterVisualPose pose) {
     final p = pose.anim.progress.clamp(0.0, 1.0);
     return switch (pose.anim.kind) {
-      HeroAnimKind.walk => Offset(
-        0,
-        -(math.sin(p * math.pi * 2).abs()) * size * 0.048,
-      ),
-      HeroAnimKind.hit => Offset(-size * 0.055 * (1 - p), size * 0.014 * (1 - p)),
-      HeroAnimKind.cast => Offset(0, -size * 0.022 * math.sin(p * math.pi)),
-      HeroAnimKind.attack => Offset(
-        (pose.flipX ? -1.0 : 1.0) * size * 0.085 * math.sin(p * math.pi),
-        -size * 0.02 * math.sin(p * math.pi),
-      ),
-      _ => Offset.zero,
+      HeroAnimKind.hit => -0.22 * (1 - p),
+      HeroAnimKind.death => 0.7,
+      HeroAnimKind.cast => -0.12 * math.sin(p * math.pi),
+      _ => 0,
     };
   }
 
@@ -394,6 +436,8 @@ abstract final class CharacterVisualPainter {
         var rot = ap.rotation;
         if (anchorId == AnchorId.mainHand) {
           rot += pose.mainHandExtraRotation;
+        } else if (anchorId == AnchorId.offHand) {
+          rot += pose.offHandExtraRotation;
         }
         final ax = center.dx + ap.x;
         final ay = center.dy + ap.y;

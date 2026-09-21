@@ -167,11 +167,11 @@ flip so "backward" follows facing):
 
 | Clip | Body PNG | Painter motion |
 |------|----------|----------------|
-| walk | `body_walk` | step bob + weapon swing (`mainHandExtraRotation`) |
-| attack | `body_attack` | swing rotation + view lean |
-| cast | `body_attack` | slow float |
-| hit | **`body_idle`** | short recoil away from facing |
-| death | `body_idle` | none (0.35 opacity) |
+| walk | `body_walk` | step bob + side sway + weapon swing (`mainHandExtraRotation`) |
+| attack | `body_attack` | swing rotation + forward lean |
+| cast | `body_attack` | weapon raised, body lifts — not the melee lunge |
+| hit | **`body_idle`** | recoil and lean back; shield kicks out |
+| death | `body_idle` | drop and feet-pivot fall, plus fade |
 
 `hit` must not fall back to `body_walk` — the stride read as a phantom step
 every time a hero took damage.

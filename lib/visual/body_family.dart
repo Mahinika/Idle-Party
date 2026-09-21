@@ -74,6 +74,14 @@ abstract final class BodyFamilyCatalog {
 
   static BodyFamilyDef defForHero(PartyHero hero) => defFor(familyFor(hero));
 
+  /// Phone-size read: plate reads broader, leather tighter. Cloth stays mid.
+  static double hudReadScale(BodyFamily family) => switch (family) {
+    BodyFamily.warrior => 1.10,
+    BodyFamily.rogue => 0.88,
+    BodyFamily.healer => 1.04,
+    BodyFamily.mage => 1.0,
+  };
+
   /// Authored race undertunics — all Cataclysm races × both sexes × families.
   /// Pose stays family-anchored so gear overlays still fit.
   static final List<({BodyFamily family, HeroRace race, HeroSex sex})>

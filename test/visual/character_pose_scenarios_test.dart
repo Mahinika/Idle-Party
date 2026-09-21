@@ -850,6 +850,45 @@ void main() {
       64,
     );
     expect(swing.dx.abs(), greaterThan(0.5));
+    // Cast lifts. Attack lunges. Death drops on the idle clip.
+    final cast = CharacterVisualPainter.ownedStepOffset(
+      posed(HeroAnimKind.cast, 0.5),
+      64,
+    );
+    expect(cast.dy, lessThan(0));
+    expect(cast.dx, closeTo(0, 0.001));
+    expect(
+      CharacterVisualPainter.ownedStepOffset(posed(HeroAnimKind.death, 1), 64).dy,
+      greaterThan(4),
+    );
+    expect(
+      posed(HeroAnimKind.cast, 0.5).mainHandExtraRotation,
+      lessThan(posed(HeroAnimKind.attack, 0.5).mainHandExtraRotation),
+    );
+    final blocking = posed(HeroAnimKind.idle, 0).withAnim(
+      const HeroAnimPose(kind: HeroAnimKind.idle, frame: 0, blocking: true),
+    );
+    expect(blocking.offHandExtraRotation, lessThan(0));
+    expect(posed(HeroAnimKind.idle, 0).offHandExtraRotation, 0);
+  });
+
+  test('nearby specs and families read apart at phone size', () {
+    int chan(int argb, int shift) => (argb >> shift) & 0xFF;
+    final blood = HeroIdentity.ownedBodyTintArgb(HeroSpecId.blood);
+    final frost = HeroIdentity.ownedBodyTintArgb(HeroSpecId.frostDk);
+    expect(chan(blood, 16), greaterThan(chan(frost, 16) + 80));
+    expect(chan(frost, 0), greaterThan(chan(blood, 0) + 80));
+    final fire = HeroIdentity.ownedBodyTintArgb(HeroSpecId.fire);
+    final arcane = HeroIdentity.ownedBodyTintArgb(HeroSpecId.arcane);
+    expect(chan(fire, 16), greaterThan(chan(arcane, 16) + 40));
+    expect(chan(arcane, 0), greaterThan(chan(fire, 0) + 80));
+    expect(
+      BodyFamilyCatalog.hudReadScale(BodyFamily.warrior),
+      greaterThan(BodyFamilyCatalog.hudReadScale(BodyFamily.rogue)),
+    );
+    final step = CharacterVisualPainter.clipMotion(HeroAnimKind.walk, 0.25, 64);
+    expect(step.dy, lessThan(0));
+    expect(step.dx.abs(), greaterThan(0.5));
   });
 
   test('walk swings the held weapon so steps read as motion', () {

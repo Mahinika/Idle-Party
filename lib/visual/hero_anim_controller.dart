@@ -26,6 +26,7 @@ abstract final class HeroAnimController {
     HeroAnimSignals signals, {
     double walkPhase = 0,
   }) {
+    final blocking = signals.blocking;
     if (signals.dead) {
       return const HeroAnimPose(
         kind: HeroAnimKind.death,
@@ -42,6 +43,7 @@ abstract final class HeroAnimController {
         kind: HeroAnimKind.hit,
         frame: _frameFor(HeroAnimKind.hit, progress),
         progress: progress,
+        blocking: blocking,
       );
     }
     if (signals.attacking || signals.attackFlash > 0.02) {
@@ -52,6 +54,7 @@ abstract final class HeroAnimController {
         kind: HeroAnimKind.attack,
         frame: _frameFor(HeroAnimKind.attack, progress),
         progress: progress,
+        blocking: blocking,
       );
     }
     if (signals.casting || signals.castFlash > 0.02) {
@@ -62,6 +65,7 @@ abstract final class HeroAnimController {
         kind: HeroAnimKind.cast,
         frame: _frameFor(HeroAnimKind.cast, progress),
         progress: progress,
+        blocking: blocking,
       );
     }
     if (signals.victory) {
@@ -69,6 +73,7 @@ abstract final class HeroAnimController {
         kind: HeroAnimKind.victory,
         frame: _frameFor(HeroAnimKind.victory, walkPhase),
         progress: walkPhase,
+        blocking: blocking,
       );
     }
     if (signals.moving) {
@@ -77,8 +82,13 @@ abstract final class HeroAnimController {
         kind: HeroAnimKind.walk,
         frame: _frameFor(HeroAnimKind.walk, progress),
         progress: progress,
+        blocking: blocking,
       );
     }
-    return const HeroAnimPose(kind: HeroAnimKind.idle, frame: 0);
+    return HeroAnimPose(
+      kind: HeroAnimKind.idle,
+      frame: 0,
+      blocking: blocking,
+    );
   }
 }

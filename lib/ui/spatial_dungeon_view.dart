@@ -1987,6 +1987,7 @@ class _TileRoomPainter extends CustomPainter {
           casting: hero.castFlash > 0.02 || hero.castingTimer > 0.05,
           hit: hero.hitFlash > 0.02,
           dead: !hero.isAlive,
+          blocking: hero.shieldBlockTimer > 0,
           attackFlash: flash,
           castFlash: hero.castFlash,
           hitFlash: hero.hitFlash,
@@ -2015,15 +2016,28 @@ class _TileRoomPainter extends CustomPainter {
         }
         bodyImg ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
         // Form sprites are 96px; owned denser bodies read larger than Kenney.
+        // Plate reads broader than leather at HUD size; forms keep their PNG.
+        final read = usingOwnedBody
+            ? BodyFamilyCatalog.hudReadScale(
+                BodyFamilyCatalog.familyFor(partyHero),
+              )
+            : 1.0;
         final scale = (formImg != null
                 ? 1.42
-                : (usingOwnedBody ? 1.72 : 0.95)) *
+                : (usingOwnedBody ? 1.72 * read : 0.95)) *
             (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
+        final motion = CharacterVisualPainter.clipMotion(
+          anim.kind,
+          anim.progress,
+          tile * scale,
+          flipX: flipX,
+        );
         if (formImg != null) {
           // Persistent form bodies — no gear overlays (silhouette is the kit).
+          // Same step bob as the paper doll so a walk is not a frozen PNG.
           drawSprite(
             formImg,
-            c,
+            c + motion,
             scale,
             alpha: paintAlpha,
             flipX: flipX,

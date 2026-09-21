@@ -92,9 +92,22 @@ class CharacterVisualPose {
     if (anim.kind == HeroAnimKind.attack) {
       return AnchorTables.attackSwingRotation(anim.progress);
     }
+    // Cast reuses the attack body clip. Raise the weapon so it is not a swing.
+    if (anim.kind == HeroAnimKind.cast) {
+      return -1.15 * math.sin(anim.progress * math.pi);
+    }
     // Walk has one body clip — swing the held weapon so steps read as motion.
     if (anim.kind == HeroAnimKind.walk) {
-      return math.sin(anim.progress * math.pi * 2) * 0.22;
+      return math.sin(anim.progress * math.pi * 2) * 0.28;
+    }
+    return 0;
+  }
+
+  /// Shield tips up while blocking, and kicks out on a hit.
+  double get offHandExtraRotation {
+    if (anim.blocking) return -0.55;
+    if (anim.kind == HeroAnimKind.hit) {
+      return 0.32 * (1 - anim.progress.clamp(0.0, 1.0));
     }
     return 0;
   }

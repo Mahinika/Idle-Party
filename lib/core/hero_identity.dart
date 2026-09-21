@@ -73,8 +73,8 @@ abstract final class HeroIdentity {
     HeroSpecId.fury => 0xFFFF7030,
     HeroSpecId.protection => 0xFF90B8F0,
     HeroSpecId.retribution => 0xFFFFC040,
-    HeroSpecId.blood => 0xFFFF7070,
-    HeroSpecId.frostDk => 0xFF80D0FF,
+    HeroSpecId.blood => 0xFFFF3038,
+    HeroSpecId.frostDk => 0xFF30C8FF,
     HeroSpecId.unholy => 0xFF70E090,
     HeroSpecId.enhancement => 0xFFFFA050,
     // Rogue / leather-mail body
@@ -87,8 +87,8 @@ abstract final class HeroIdentity {
     HeroSpecId.feral => 0xFFE09050,
     HeroSpecId.guardian => 0xFFC07840,
     // Mage / cloth casters
-    HeroSpecId.arcane => 0xFFD080FF,
-    HeroSpecId.fire => 0xFFFF8040,
+    HeroSpecId.arcane => 0xFFB020FF,
+    HeroSpecId.fire => 0xFFFF4010,
     HeroSpecId.frostMage => 0xFF70E8FF,
     HeroSpecId.affliction => 0xFFC060F0,
     HeroSpecId.demonology => 0xFFFF7050,
