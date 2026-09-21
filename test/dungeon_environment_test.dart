@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -152,5 +153,74 @@ void main() {
       expect(spawnPad.contains('${e.$1},${e.$2}'), isFalse);
       expect(map.at(e.$1, e.$2), TileKind.floor);
     }
+  });
+
+  test('late corridors follow the wash and hub icons differ', () {
+    int ch(Color c, int shift) => (c.toARGB32() >> shift) & 0xFF;
+    int r(Color c) => ch(c, 16);
+    int g(Color c) => ch(c, 8);
+    int b(Color c) => ch(c, 0);
+
+    final crystal = DungeonEnvironment.corridorShade('crystal');
+    final rime = DungeonEnvironment.corridorShade('rime');
+    final sandy = DungeonEnvironment.corridorShade('sandy');
+    expect(b(crystal), greaterThan(r(crystal)));
+    expect(r(sandy), greaterThan(b(sandy)));
+    expect(b(crystal) - g(crystal), greaterThan(b(rime) - g(rime)));
+    expect(g(rime), greaterThan(r(rime)));
+
+    final ember = DungeonEnvironment.corridorShade('ember');
+    final hell = DungeonEnvironment.corridorShade('hell');
+    expect(r(ember), greaterThan(b(ember)));
+    expect(r(ember), greaterThan(r(hell)));
+
+    final grove = DungeonEnvironment.corridorShade('grove');
+    final veil = DungeonEnvironment.corridorShade('veil');
+    expect(g(grove), greaterThan(r(grove)));
+    expect(b(veil), greaterThan(g(veil)));
+
+    final fen = DungeonEnvironment.corridorShade('fen');
+    final brass = DungeonEnvironment.corridorShade('brass');
+    expect(r(fen) + g(fen), greaterThan(b(fen) * 2));
+    expect(r(brass), greaterThan(g(brass)));
+    expect(g(brass), greaterThan(b(brass)));
+
+    final ids = [
+      'crystal',
+      'tide',
+      'ember',
+      'grove',
+      'storm',
+      'rime',
+      'fen',
+      'brass',
+      'veil',
+    ];
+    final seen = <String>{};
+    for (final id in ids) {
+      final bytes = File('assets/custom/dungeon/$id/hub_icon.png').readAsBytesSync();
+      expect(bytes.length, greaterThan(32), reason: id);
+      expect(seen.add(String.fromCharCodes(bytes)), isTrue, reason: id);
+    }
+
+    final boss = DungeonRoom(
+      floorNumber: 5,
+      roomIndex: 0,
+      type: RoomType.boss,
+      enemyLevel: 10,
+      enemyCount: 4,
+    );
+    expect(
+      RoomLayouts.forRoom(boss, dungeonId: 'crystal').props.map((p) => p.kind),
+      contains(MapPropKind.pillar),
+    );
+    expect(
+      RoomLayouts.forRoom(boss, dungeonId: 'ember').props.map((p) => p.kind),
+      contains(MapPropKind.anvil),
+    );
+    expect(
+      RoomLayouts.forRoom(boss, dungeonId: 'grove').props.map((p) => p.kind),
+      contains(MapPropKind.fountain),
+    );
   });
 }

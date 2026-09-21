@@ -17,4 +17,4 @@ Code: `CustomAssets.customDungeonZones` → `KenneyAssets` with `dungeonId`.
 Zones opt in via `ZoneArt.customDungeonArt` (all shipped zones).
 
 Regenerate generated zones: `py tool/generate_dungeon_art.py`  
-(skips handcrafted `sandy` and `king`). Re-bake Sandy: `py tool/craft_sandy_dungeon_art.py`. Re-bake King walls: `py tool/craft_early_enemy_art.py`
+(skips handcrafted sandy, king, tide, and the late rooms). Re-bake Sandy: `py tool/craft_sandy_dungeon_art.py`. Re-bake King walls: `py tool/craft_early_enemy_art.py`. Re-bake late rooms: `py tool/craft_late_room_art.py`

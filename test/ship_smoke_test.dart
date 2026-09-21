@@ -339,7 +339,8 @@ void main() {
     expect(ember.preferChoke, isTrue);
     expect(ember.preferTreasureAlcove, isFalse);
     expect(ember.landmarks, contains(MapPropKind.lava));
-    expect(grove.landmarks.where((l) => l == MapPropKind.fence).length, 2);
+    expect(grove.landmarks.first, MapPropKind.fountain);
+    expect(grove.landmarks, contains(MapPropKind.fence));
     expect(storm.landmarkPerChamber, 2);
     expect(storm.landmarks, contains(MapPropKind.trap));
   });

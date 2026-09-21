@@ -12,7 +12,20 @@ from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parents[1] / "assets" / "custom" / "dungeon"
 
 # Zones with a dedicated craft script — never overwrite their PNGs.
-HANDCRAFTED_ZONES = frozenset({"sandy", "king"})
+HANDCRAFTED_ZONES = frozenset({
+    "sandy",
+    "king",
+    # Tide is the quality facit (craft_asset_batch). Late rooms: craft_late_room_art.
+    "tide",
+    "crystal",
+    "ember",
+    "grove",
+    "storm",
+    "rime",
+    "fen",
+    "brass",
+    "veil",
+})
 
 ALL_ZONES = (
     "sandy",

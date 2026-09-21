@@ -220,15 +220,28 @@ class PlacementPlan {
           want = (want + 1).clamp(2, 4);
         case FloorBeatKind.decoy:
           want = (want + 1).clamp(1, 3);
+        case FloorBeatKind.boss:
+          want = want < 1 ? 1 : want;
         default:
           break;
+      }
+      if (chamber.beatKind == FloorBeatKind.boss && localEdge.isEmpty) {
+        for (final cell in openCells) {
+          if (used.contains('${cell.$1},${cell.$2}')) continue;
+          if (inChamber(chamber, cell.$1, cell.$2)) localEdge.add(cell);
+        }
       }
       for (var i = 0; i < want; i++) {
         final cell = takeCell(localEdge);
         if (cell == null) break;
         edgeCells.remove(cell);
+        openCells.remove(cell);
         MapPropKind kind;
-        if (kit.customDungeonArt && i == 0) {
+        if (chamber.beatKind == FloorBeatKind.boss &&
+            i == 0 &&
+            landmarkPool.isNotEmpty) {
+          kind = landmarkPool.first;
+        } else if (kit.customDungeonArt && i == 0) {
           final wet = landmarkPool.where(wetKind).toList();
           kind = wet.isNotEmpty
               ? wet[rng.nextInt(wet.length)]

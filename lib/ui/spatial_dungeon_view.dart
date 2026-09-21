@@ -1182,9 +1182,11 @@ class _TileRoomPainter extends CustomPainter {
           continue;
         }
 
-        // All carved tiles share one floor base.
-        final floorImg =
-            floorVariants[_hashPick(x, y, layoutSeed, floorVariants.length)];
+        // Boss rooms use the second floor tile (the landmark plate).
+        final bossPlate = roomType == RoomType.boss && floorVariants.length > 1;
+        final floorImg = bossPlate
+            ? floorVariants[1]
+            : floorVariants[_hashPick(x, y, layoutSeed, floorVariants.length)];
         _drawImage(canvas, floorImg, dst);
         // Mute Kenney tile chroma so painted backdrop + zone wash dominate.
         _fillPaint.color = floorBlend;
