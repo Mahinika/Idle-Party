@@ -424,6 +424,8 @@ abstract final class CustomAssets {
   static const String enemyEmberMite = '$_root/enemies/ember_mite.png';
   static const String enemyBossGrove = '$_root/enemies/boss_grove.png';
   static const String enemyGroveMite = '$_root/enemies/grove_mite.png';
+  static const String enemyGroveElite = '$_root/enemies/grove_elite.png';
+  static const String enemyGroveBrute = '$_root/enemies/grove_brute.png';
 
   // —— Late-zone unique elites / brutes (break shared golem/wraith) ——
   static const String enemyTideBrute = '$_root/enemies/tide_brute.png';

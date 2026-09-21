@@ -3,6 +3,8 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../models/enemy.dart';
 import '../../spatial/spatial_combat.dart';
+import '../../assets/kenney_assets.dart';
+import '../kenney_sprite.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 
@@ -163,25 +165,38 @@ class TargetCornerHud extends StatelessWidget {
               const SizedBox(height: 2),
               Row(
                 children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(1),
-                      child: LinearProgressIndicator(
-                        value: hpFrac,
-                        minHeight: 3,
-                        backgroundColor: GameTheme.equipChipBlocked,
-                        color: hpFrac > 0.35
-                            ? GameTheme.bloodLit
-                            : GameTheme.blood,
-                      ),
-                    ),
+                  KenneySprite(
+                    asset: KenneyAssets.enemySpriteCatalog[enemy.assetIndex
+                        .clamp(0, KenneyAssets.enemySpriteCatalog.length - 1)],
+                    size: role == 'BOSS'
+                        ? 28
+                        : (role == 'ELITE' ? 22 : 16),
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    '${enemy.hp} ${(hpFrac * 100).round()}%',
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(1),
+                          child: LinearProgressIndicator(
+                            value: hpFrac,
+                            minHeight: 3,
+                            backgroundColor: GameTheme.equipChipBlocked,
+                            color: hpFrac > 0.35
+                                ? GameTheme.bloodLit
+                                : GameTheme.blood,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${enemy.hp} ${(hpFrac * 100).round()}%',
+                          style: GameTheme.body(
+                            size: 11,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

@@ -1811,10 +1811,11 @@ class _TileRoomPainter extends CustomPainter {
       final flash = enemy.attackFlash;
       final hit = enemy.hitFlash;
       final isBoss = enemy.role == EnemyRole.boss;
+      final isElite = enemy.role == EnemyRole.elite;
       final zoneTint = DungeonEnvironment.projectileTint(dungeonId);
       var c = center(enemy.x, enemy.y);
       final scale =
-          (isBoss ? 1.38 : 0.9) *
+          (isBoss ? 1.42 : (isElite ? 1.18 : 0.9)) *
           (1 + flash * 0.18 + hit * 0.12);
       final moving = enemy.vx.abs() > 0.05 || enemy.vy.abs() > 0.05;
       if (moving && enemy.isAlive) {

@@ -197,6 +197,8 @@ abstract final class KenneyAssets {
   static String get enemyEmberMite => CustomAssets.enemyEmberMite;
   static String get enemyBossGrove => CustomAssets.enemyBossGrove;
   static String get enemyGroveMite => CustomAssets.enemyGroveMite;
+  static String get enemyGroveElite => CustomAssets.enemyGroveElite;
+  static String get enemyGroveBrute => CustomAssets.enemyGroveBrute;
   static String get enemyTideBrute => CustomAssets.enemyTideBrute;
   static String get enemyEmberElite => CustomAssets.enemyEmberElite;
   static String get enemyEmberBrute => CustomAssets.enemyEmberBrute;
@@ -399,8 +401,8 @@ abstract final class KenneyAssets {
       ZoneArt.byId(dungeonId ?? '').enemies.forRole(role);
 
   static String enemySpriteFor(EnemyUnit enemy, {String? dungeonId}) {
-    if (enemy.role == EnemyRole.boss) {
-      return enemySpriteForRole(EnemyRole.boss, dungeonId: dungeonId);
+    if (enemy.role == EnemyRole.boss || enemy.role == EnemyRole.elite) {
+      return enemySpriteForRole(enemy.role, dungeonId: dungeonId);
     }
     return enemySpriteForArchetype(enemy.archetype, dungeonId: dungeonId);
   }
@@ -479,6 +481,8 @@ abstract final class KenneyAssets {
     enemyDeadSwarm,
     enemyDeadSupport,
     enemyHellElite,
+    enemyGroveElite,
+    enemyGroveBrute,
   ];
 
   static int enemySpriteCatalogIndex(String asset) {
@@ -514,11 +518,11 @@ abstract final class KenneyAssets {
       'crystal golem' ||
       'frozen bulwark' ||
       'glacial brute' ||
-      'shard brawler' ||
+      'shard brawler' => enemyCrystalBoss,
       'shell leviathan' ||
       'barnacle guard' ||
       'tide brute' ||
-      'coral crusher' => enemyCrystalBoss,
+      'coral crusher' => enemyTideBrute,
       'crystal wraith' ||
       'ice caster' ||
       'frost slinger' ||
@@ -548,16 +552,14 @@ abstract final class KenneyAssets {
       'vault brute' ||
       'slag brawler' ||
       'basalt golem' ||
-      'ember bulwark' => enemyBoss,
+      'ember bulwark' => enemyEmberBrute,
       'spark caster' ||
       'cinder slinger' ||
       'ash chanter' ||
       'ember adept' => enemyCultist,
       'char blade' || 'soot fang' => enemyRat,
-      'grove brute' ||
-      'timber crusher' ||
-      'hollow guard' ||
-      'bark bulwark' => enemySpider,
+      'grove brute' || 'timber crusher' => enemyGroveBrute,
+      'hollow guard' || 'bark bulwark' => enemyGroveMite,
       'spore bat' ||
       'canopy spitter' ||
       'wyrd chanter' ||
@@ -567,7 +569,7 @@ abstract final class KenneyAssets {
       'storm brute' ||
       'thunder crusher' ||
       'gale bulwark' ||
-      'storm guard' => enemyGolem,
+      'storm guard' => enemyStormBrute,
       'volt spitter' || 'gale slinger' => enemyBat,
       'lightning fang' || 'zephyr blade' => enemyRat,
       'storm chanter' || 'tempest adept' => enemyCultist,
@@ -575,7 +577,7 @@ abstract final class KenneyAssets {
       'rime brute' ||
       'frost crusher' ||
       'glass bulwark' ||
-      'rime guard' => enemyGolem,
+      'rime guard' => enemyRimeBrute,
       'shard slinger' || 'rime spitter' => enemyGhost,
       'glass fang' || 'frost blade' => enemyRimeMite,
       'glacier chanter' || 'stillfrost adept' => enemyGhost,
@@ -583,7 +585,7 @@ abstract final class KenneyAssets {
       'fen brute' ||
       'mire crusher' ||
       'bog bulwark' ||
-      'fen guard' => enemySlime,
+      'fen guard' => enemyFenBrute,
       'bile spitter' || 'fen slinger' => enemyBat,
       'rot fang' || 'mire blade' => enemyFenMite,
       'fen chanter' || 'mire adept' => enemyCultist,
@@ -594,17 +596,17 @@ abstract final class KenneyAssets {
       'razor cog' || 'spring fang' => enemyBrassMite,
       'clock chanter' || 'brass adept' => enemyCultist,
       'dust moth' || 'veil mite' || 'silk flea' => enemyVeilMite,
-      'silk bruiser' || 'veil crusher' => enemySpider,
-      'cocoon guard' || 'veil bulwark' => enemyGhost,
+      'silk bruiser' || 'veil crusher' || 'cocoon guard' || 'veil bulwark' =>
+        enemyVeilBrute,
       'dust spitter' || 'silk slinger' => enemyBat,
       'wing fang' || 'veil blade' => enemySpider,
       'moth chanter' || 'veil adept' => enemyCultist,
       'cave slime' || 'drip ooze' || 'sand mite' => enemySlime,
       'spit bat' || 'cavern spitter' => enemyBat,
       'needle rat' || 'sneak rat' => enemyRat,
-      'rock crab' || 'shellback' || 'stone maw' => enemyCrab,
+      'rock crab' || 'cave brute' => enemySandyBrute,
+      'shellback' || 'stone maw' => enemySandyTank,
       'goblin thug' || 'clubber' || 'club champion' || 'lord thug' => enemyCrab,
-      'cave brute' ||
       'fort sentry' ||
       'hall guard' ||
       'elite brute' ||
@@ -670,6 +672,14 @@ abstract final class KenneyAssets {
       'warden archer' => enemyBat,
       'underworld imp' => enemyCultist,
       'warden shield' || 'warden guard' || 'warden adept' => enemyGolem,
+      'coral champion' || 'reef ward' => enemyCrab,
+      'timber champion' || 'heartwood ward' => enemyGroveElite,
+      'thunder champion' || 'gale ward' => enemyStormWraith,
+      'frost champion' || 'stillfrost ward' => enemyRimeWraith,
+      'vault champion' || 'slag ward' => enemyEmberElite,
+      'hydra kin' || 'bog ward' => enemyFenElite,
+      'mainspring kin' || 'cog ward' => enemyBrassElite,
+      'monarch kin' || 'cocoon ward' => enemyVeilElite,
       _ => null,
     };
     if (mapped != null) return mapped;

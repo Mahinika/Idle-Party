@@ -693,10 +693,10 @@ abstract final class ZoneArt {
       landmarkPerChamber: 3,
       enemies: ZoneEnemyArt(
         boss: CustomAssets.enemyBossGrove,
-        elite: CustomAssets.enemySpider,
+        elite: CustomAssets.enemyGroveElite,
         trash: CustomAssets.enemyGroveMite,
         swarm: CustomAssets.enemyGroveMite,
-        brute: CustomAssets.enemySpider,
+        brute: CustomAssets.enemyGroveBrute,
         tank: CustomAssets.enemyGroveMite,
         ranged: CustomAssets.enemyBat,
         glass: CustomAssets.enemyGroveMite,

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/hero_spec.dart';
+import 'package:idle_party/models/stats.dart';
 import 'package:idle_party/models/zone_art.dart';
 import 'package:idle_party/assets/custom_assets.dart';
 import 'package:idle_party/assets/kenney_assets.dart';
@@ -152,6 +153,64 @@ void main() {
       expect(exists(e.elite), isTrue);
       expect(exists(e.forArchetype(EnemyArchetype.brute)), isTrue);
     }
+    expect(ZoneArt.byId('tide').enemies.elite, isNot(CustomAssets.enemySandyBrute));
+    expect(ZoneArt.byId('tide').enemies.forArchetype(EnemyArchetype.brute),
+        isNot(CustomAssets.enemyCrab));
+    expect(ZoneArt.byId('grove').enemies.elite, isNot(CustomAssets.enemySpider));
+    expect(ZoneArt.byId('grove').enemies.forArchetype(EnemyArchetype.brute),
+        isNot(CustomAssets.enemySpider));
+    final wraiths = [
+      CustomAssets.enemyCrystalWraith,
+      CustomAssets.enemyStormWraith,
+      CustomAssets.enemyRimeWraith,
+    ];
+    expect(wraiths.toSet().length, 3);
+    final blobs = [for (final path in wraiths) File(path).readAsBytesSync()];
+    expect(blobs[0], isNot(blobs[1]));
+    expect(blobs[1], isNot(blobs[2]));
+    expect(blobs[0], isNot(blobs[2]));
+  });
+
+  test('an elite uses the elite sprite, and the codex matches combat', () {
+    EnemyUnit unit(EnemyRole role, EnemyArchetype archetype) => EnemyUnit(
+          name: 'x',
+          level: 1,
+          currentHp: 10,
+          stats: Stats.enemy(attack: 1, defense: 1, maxHp: 10),
+          rewardGold: 0,
+          role: role,
+          archetype: archetype,
+        );
+    expect(
+      KenneyAssets.enemySpriteFor(
+        unit(EnemyRole.elite, EnemyArchetype.brute),
+        dungeonId: 'storm',
+      ),
+      CustomAssets.enemyStormWraith,
+    );
+    expect(
+      KenneyAssets.enemySpriteFor(
+        unit(EnemyRole.normal, EnemyArchetype.brute),
+        dungeonId: 'storm',
+      ),
+      CustomAssets.enemyStormBrute,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Tide Brute'),
+      ZoneArt.byId('tide').enemies.forArchetype(EnemyArchetype.brute),
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Timber Champion'),
+      ZoneArt.byId('grove').enemies.elite,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Thunder Champion'),
+      ZoneArt.byId('storm').enemies.elite,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Frost Champion'),
+      ZoneArt.byId('rime').enemies.elite,
+    );
   });
 
   test('Shadow Feral Guardian Balance Resto have unique hero sprites', () {
