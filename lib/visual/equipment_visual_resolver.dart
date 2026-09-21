@@ -119,7 +119,8 @@ abstract final class EquipmentVisualResolver {
     if (m == null) return null;
     final t = rarityTier ?? int.parse(m.group(1)!);
     return switch (t) {
-      0 => null,
+      // Common reads as pale steel; uncommon is a stronger cool wash.
+      0 => const Color(0xFFD4E2F4),
       1 => const Color(0xFFB8D0F5),
       2 => null,
       3 => const Color(0xFFFFE2A8),

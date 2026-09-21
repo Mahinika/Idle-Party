@@ -404,6 +404,13 @@ void main() {
       ),
       const Color(0xFFB8D0F5),
     );
+    expect(
+      EquipmentVisualResolver.rarityTint(
+        'chest_t0',
+        rarityTier: LootRarity.common.index,
+      ),
+      const Color(0xFFD4E2F4),
+    );
   });
 
   test('catalog covers sword/shield tiers', () {

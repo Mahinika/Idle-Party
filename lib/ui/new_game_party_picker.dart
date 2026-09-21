@@ -328,6 +328,11 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                             compact: true,
                             title: 'RACE',
                             columns: 4,
+                            dollFor: (race) => _previewHero(
+                              _slots[_activeSlot] ??
+                                  HeroSpecs.starterUnlocked.first,
+                              race,
+                            ),
                             onChanged: (race) => setState(
                               () => _looks[_activeSlot] = race,
                             ),

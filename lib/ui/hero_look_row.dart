@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/hero.dart';
 import 'game_theme.dart';
+import 'hero_doll_sprite.dart';
 import 'menu_chrome.dart';
 
 /// LOOK race grid (Cataclysm 12). Sex follows the kit family (healer female).
@@ -14,6 +15,7 @@ class HeroLookRow extends StatelessWidget {
     this.title,
     this.compact = false,
     this.columns = 0,
+    this.dollFor,
   });
 
   final HeroRace value;
@@ -27,6 +29,9 @@ class HeroLookRow extends StatelessWidget {
   /// When > 0, lay out a fixed column grid (New Party RACE panel).
   /// Otherwise use a centered [Wrap].
   final int columns;
+
+  /// When set, each race cell shows that hero so skin and hair read on a phone.
+  final PartyHero Function(HeroRace race)? dollFor;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +71,7 @@ class HeroLookRow extends StatelessWidget {
                           label: race.shortLabel,
                           selected: value == race,
                           onTap: () => onChanged(race),
+                          doll: dollFor?.call(race),
                         ),
                       ),
                   ],
@@ -111,11 +117,13 @@ class _RaceCell extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.doll,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final PartyHero? doll;
 
   @override
   Widget build(BuildContext context) {
@@ -126,22 +134,32 @@ class _RaceCell extends StatelessWidget {
         borderRadius: BorderRadius.circular(GameTheme.radiusSm),
         child: DecoratedBox(
           decoration: MenuChrome.cardBox(selected: selected, inset: true),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
-                    color: selected
-                        ? GameTheme.torchHot
-                        : GameTheme.parchmentDim,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (doll != null)
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: HeroDollSprite(hero: doll!, size: 32),
+                    ),
+                  ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: selected
+                          ? GameTheme.torchHot
+                          : GameTheme.parchmentDim,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),

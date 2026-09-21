@@ -704,7 +704,7 @@ class _PartyRow extends StatelessWidget {
             HeroDollSprite(
               hero: hero,
               partyIndex: index,
-              size: 11,
+              size: 22,
             ),
             const SizedBox(width: 4),
             Expanded(
@@ -767,7 +767,7 @@ class _PartyRow extends StatelessWidget {
               HeroDollSprite(
                 hero: hero,
                 partyIndex: index,
-                size: phone ? 12 : (compact ? 14 : 16),
+                size: phone ? 26 : (compact ? 22 : 28),
               ),
               SizedBox(width: phone ? 4 : 5),
               Expanded(
