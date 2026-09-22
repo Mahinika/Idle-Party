@@ -21,7 +21,7 @@ void main() {
       0,
       reason: 'stdout:\n${result.stdout}\nstderr:\n${result.stderr}',
     );
-  }, timeout: const Timeout(Duration(minutes: 2)));
+  }, timeout: const Timeout(Duration(minutes: 5)));
 }
 
 String? _pythonExecutable() {

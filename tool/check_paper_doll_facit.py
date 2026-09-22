@@ -27,9 +27,12 @@ from PIL import Image
 from build_owned_gear_layers import (
     _chin_y,
     bbox as art_bbox,
+    ensure_src,
     face_region,
     is_skin,
     load128,
+    load128_pose,
+    paint_undertunic,
     sample_face,
 )
 from paper_doll_classify import check_invariants, classify_src
@@ -132,16 +135,16 @@ def tinted_body_preview(family: str, anim: str = "idle") -> Image.Image:
 
 
 def high_gear_preview(family: str, material: str = "") -> Image.Image:
-    """Representative equipped t2 stack in the same order as Flutter."""
+    """Equipped t2 stack. Cape behind the body, then armor, then helm."""
     gear = CHAR / family / "gear"
     suffix = f"_{material}" if material else ""
     layers = [
+        Image.open(gear / f"cloak{suffix}_t2_idle.png").convert("RGBA"),
         tinted_body_preview(family),
         Image.open(gear / f"legs{suffix}_t2_idle.png").convert("RGBA"),
         Image.open(gear / f"chest{suffix}_t2_idle.png").convert("RGBA"),
         Image.open(gear / f"hands{suffix}_t2_idle.png").convert("RGBA"),
         Image.open(gear / f"helm{suffix}_t2_idle.png").convert("RGBA"),
-        Image.open(gear / f"cloak{suffix}_t2_idle.png").convert("RGBA"),
     ]
     out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
     for layer in layers:
@@ -471,12 +474,107 @@ def check_tiers_and_materials() -> list[str]:
                                 f"{t0.relative_to(REPO)} (want >= "
                                 f"{MIN_SQUINT_SIL_DIFF})"
                             )
-                    if stem == "helm" and material in ("mail", "plate"):
-                        if not face_cutout_ok(im0, family):
-                            errors.append(
-                                f"helm face cutout missing "
-                                f"{t0.relative_to(REPO)}"
-                            )
+                if stem == "helm" and alpha_ratio(im0) >= 0.01:
+                    if not face_cutout_ok(im0, family):
+                        errors.append(
+                            f"helm face cutout missing "
+                            f"{t0.relative_to(REPO)}"
+                        )
+    return errors
+
+
+def pixels_differ(a: Image.Image, b: Image.Image) -> int:
+    if a.size != b.size:
+        return 10**9
+    pa, pb = a.convert("RGBA").load(), b.convert("RGBA").load()
+    n = 0
+    for y in range(a.height):
+        for x in range(a.width):
+            if pa[x, y] != pb[x, y]:
+                n += 1
+    return n
+
+
+def check_draw_order() -> list[str]:
+    """Phone stack must keep the cape behind the body, like this gate."""
+    path = REPO / "lib" / "visual" / "character_layer.dart"
+    text = path.read_text(encoding="utf-8")
+    match = re.search(
+        r"kOwnedLayerOrder = <CharacterLayerId>\[(.*?)\]",
+        text,
+        re.S,
+    )
+    if match is None:
+        return ["could not parse kOwnedLayerOrder"]
+    ids = re.findall(r"CharacterLayerId\.(\w+)", match.group(1))
+    need = ("cape", "body", "legs", "torso", "gloves", "head")
+    try:
+        pos = [ids.index(name) for name in need]
+    except ValueError as exc:
+        return [f"owned draw order missing a layer: {exc}"]
+    if pos != sorted(pos):
+        return ["owned cape/body/armor order drifted: " + ", ".join(ids)]
+    return []
+
+
+def check_pose_bodies() -> list[str]:
+    """Every body clip must match a fresh bake of that gold-master anim."""
+    errors: list[str] = []
+    for family in FAMILIES:
+        for anim in BODY_ANIMS:
+            src = load128_pose(ensure_src(family, anim))
+            box = art_bbox(src)
+            face = sample_face(src, box, family)
+            body, tint = paint_undertunic(src, family, face, box, anim=anim)
+            live_body = Image.open(CHAR / family / f"body_{anim}.png").convert("RGBA")
+            live_tint = Image.open(
+                CHAR / family / f"body_tint_{anim}.png"
+            ).convert("RGBA")
+            body_px = pixels_differ(body, live_body)
+            tint_px = pixels_differ(tint, live_tint)
+            if body_px:
+                errors.append(
+                    f"{family} {anim} body drifted {body_px}px from gold-master bake"
+                )
+            if tint_px:
+                errors.append(
+                    f"{family} {anim} tint drifted {tint_px}px from gold-master bake"
+                )
+    return errors
+
+
+def check_race_bake() -> list[str]:
+    """Race LOOK clips must match a fresh bake of the current gold master."""
+    from paint_race_bodies import RACES, paint_undertunic_body
+
+    errors: list[str] = []
+    for family in FAMILIES:
+        for look in RACES:
+            for sex, female in (("m", False), ("f", True)):
+                for anim in BODY_ANIMS:
+                    body, tint = paint_undertunic_body(
+                        family, anim, look, female=female
+                    )
+                    body_path = CHAR / family / f"{look.key}_{sex}_body_{anim}.png"
+                    tint_path = (
+                        CHAR / family / f"{look.key}_{sex}_body_tint_{anim}.png"
+                    )
+                    if not body_path.exists() or not tint_path.exists():
+                        errors.append(
+                            f"missing race clip {family}/{look.key}_{sex}_{anim}"
+                        )
+                        continue
+                    body_px = pixels_differ(
+                        body, Image.open(body_path).convert("RGBA")
+                    )
+                    tint_px = pixels_differ(
+                        tint, Image.open(tint_path).convert("RGBA")
+                    )
+                    if body_px or tint_px:
+                        errors.append(
+                            f"race drift {family} {look.key} {sex} {anim} "
+                            f"body={body_px}px tint={tint_px}px"
+                        )
     return errors
 
 
@@ -558,6 +656,15 @@ def main() -> int:
         print("FAIL", msg)
         failed += 1
     for msg in check_body_tint_masks():
+        print("FAIL", msg)
+        failed += 1
+    for msg in check_pose_bodies():
+        print("FAIL", msg)
+        failed += 1
+    for msg in check_race_bake():
+        print("FAIL", msg)
+        failed += 1
+    for msg in check_draw_order():
         print("FAIL", msg)
         failed += 1
     for msg in check_tiers_and_materials():

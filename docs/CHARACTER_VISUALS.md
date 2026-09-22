@@ -69,10 +69,11 @@ Mail helms remap warrior plate coif onto each family head (face punch). Body
 slots remap donor family silhouettes, then material ramp. Fallback recolor only
 when no donor exists.
 
-Derived by `tool/derive_armor_material_variants.py`. Rogue native gear (leather
-body + helm) upgrades via `tool/upgrade_native_body_src.py` + `refresh_native_gear.py`
-— rebakes `_src/body_idle.png` then re-extracts. Mage/healer hats live in `_src`;
-their native body pass needs a hat-aware bake (TODO). **Rarity on the doll:**
+Derived by `tool/derive_armor_material_variants.py`. Rogue, mage, and healer
+native armor can rebake through `tool/upgrade_native_body_src.py` (pass the
+family name). The gold hat is copied back on top before the master is
+replaced, then extracts run again. Rogue helm stays authored
+(`refresh_native_gear.py`). **Rarity on the doll:**
 generic `*_t0` / `*_t1` / `*_t3` overlays get a cool-steel or warm-gold
 modulate so uncommon vs epic reads at phone size. **t2 armor and named weapon
 models keep authored palettes** — no global orange wash. Slot borders stay
@@ -134,7 +135,8 @@ Facing is **L/R flipX only**. Enemies unchanged in Phase 3.
 ## What paints on the body
 
 - Cape, legs, torso, gloves, helm — full 128 same-origin blit (incl. common).
-- Owned cape paints **after** body/armor (front wrap). Kenney keeps cape behind.
+- Owned cape paints **behind** the body, same order as the gold master.
+  The sides still show. Painting the cape in front covers the chest.
 - Off-hand / main-hand — same 128 PNGs grip-aligned to owned hand
   anchors (`OwnedGearGrips`). Bake art to the socket with
   `py tool/bake_owned_hand_grips.py`, then `py tool/gen_owned_gear_grips.py`.
@@ -236,8 +238,12 @@ Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 3. Cross-material overlays differ from native in opaque mask (and at ~48 px
    squint). Mail/plate helms keep a face cutout.
 4. Every body tint mask stays inside the body and outside face/hair.
-4. Every `OwnedGearGrips` entry lands on opaque pixels.
-5. `tool/paper_doll_lock.json` pins a hash per shipped PNG — any generator run
+5. Walk and attack undertunic + tint match a fresh bake of that clip.
+   Race LOOK clips match a fresh race bake, so a body rebuild cannot leave
+   them behind.
+6. Owned draw order keeps the cape behind the body (same stack as this gate).
+7. Every `OwnedGearGrips` entry lands on opaque pixels.
+8. `tool/paper_doll_lock.json` pins a hash per shipped PNG — any generator run
    that reshapes art fails here. After a **deliberate** art change, re-run with
    `--relock` and commit the lock.
 

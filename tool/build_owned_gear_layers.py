@@ -564,14 +564,17 @@ def paint_undertunic(
     family: str,
     face: tuple[int, int, int],
     box: tuple[int, int, int, int],
+    anim: str = "idle",
 ) -> tuple[Image.Image, Image.Image]:
     """Build neutral body plus a cloth-only grayscale identity tint mask.
 
     Classify first (exclusive labels), then paint. Eyes never become skin.
+    [anim] selects which gold-master head band the tint punch uses. Leaving
+    it on idle wipes walk/attack cloth with the idle chin.
     """
     from paper_doll_classify import HAIR, classify, paint_family_body
 
-    clf = classify(src, family, face, box)
+    clf = classify(src, family, face, box, anim=anim)
     if family in ("mage", "healer") and clf.count(HAIR) < 8:
         print(
             f"WARN {family}: no hair pixels in _src head region — body stays "
@@ -957,17 +960,7 @@ def process_family(family: str) -> dict:
         pose = load128_pose(ensure_src(family, anim))
         box = bbox(pose)
         face = sample_face(pose, box, family)
-        body, tint_mask = paint_undertunic(pose, family, face, box)
-        cleaned = load128(ensure_src(family, anim))
-        cbox = bbox(cleaned)
-        cface = sample_face(cleaned, cbox, family)
-        cfx, _cfy, cfh = face_region(cleaned, cface, cbox)
-        cchin = _chin_y(cleaned, cface, cfx, _cfy, cfh)
-        mp = tint_mask.load()
-        for y in range(128):
-            for x in range(128):
-                if y <= cchin + 8 and abs(x - cfx) <= cfh * 2.4:
-                    mp[x, y] = (0, 0, 0, 0)
+        body, tint_mask = paint_undertunic(pose, family, face, box, anim=anim)
         body.save(ROOT / family / f"body_{anim}.png")
         tint_mask.save(ROOT / family / f"body_tint_{anim}.png")
 
@@ -1004,7 +997,9 @@ def write_tint_masks_only() -> None:
             src = load128_pose(ensure_src(family, anim))
             box = bbox(src)
             face = sample_face(src, box, family)
-            _body, tint_mask = paint_undertunic(src, family, face, box)
+            _body, tint_mask = paint_undertunic(
+                src, family, face, box, anim=anim
+            )
             tint_mask.save(ROOT / family / f"body_tint_{anim}.png")
             print("ok", family, anim, "tint_mask_px", alpha_count(tint_mask))
     print("done — tint masks only; run check_paper_doll_facit.py")
@@ -1059,22 +1054,16 @@ def write_bodies_only(families: tuple[str, ...]) -> None:
             pose = load128_pose(ensure_src(family, anim))
             box = bbox(pose)
             face = sample_face(pose, box, family)
-            body, tint_mask = paint_undertunic(pose, family, face, box)
-            # Facit measures the head band on load128(_src) — clear tint there too.
-            cleaned = load128(ensure_src(family, anim))
-            cbox = bbox(cleaned)
-            cface = sample_face(cleaned, cbox, family)
-            cfx, cfy, cfh = face_region(cleaned, cface, cbox)
-            cchin = _chin_y(cleaned, cface, cfx, cfy, cfh)
-            mp = tint_mask.load()
-            for y in range(128):
-                for x in range(128):
-                    if y <= cchin + 8 and abs(x - cfx) <= cfh * 2.4:
-                        mp[x, y] = (0, 0, 0, 0)
+            body, tint_mask = paint_undertunic(
+                pose, family, face, box, anim=anim
+            )
             body.save(ROOT / family / f"body_{anim}.png")
             tint_mask.save(ROOT / family / f"body_tint_{anim}.png")
             print("ok", family, anim, "body_only")
-    print("done — bodies only; run paint_race_bodies.py then facit --relock")
+    print("done — bodies only; race clips refreshed; run facit --relock")
+    subprocess.check_call(
+        [sys.executable, str(TOOL / "paint_race_bodies.py")],
+    )
 
 
 def main() -> None:
@@ -1102,6 +1091,9 @@ def main() -> None:
     # them as a second manual command let native and cross-material t2 drift.
     subprocess.check_call(
         [sys.executable, str(TOOL / "derive_armor_material_variants.py")],
+    )
+    subprocess.check_call(
+        [sys.executable, str(TOOL / "paint_race_bodies.py")],
     )
     print("done — inspect tool/preview_doll_*.png then run check_paper_doll_facit.py")
 

@@ -582,7 +582,7 @@ void main() {
     expect(attackHand.y, greaterThan(idleHand.y));
   });
 
-  test('owned cape paints after body armor layers', () {
+  test('owned cape paints behind the body', () {
     final hero = nakedWarrior().copyWith(
       equipped: {
         EquipmentSlot.cloak: GameLogic.createEquipment(
@@ -604,11 +604,11 @@ void main() {
       anim: idle,
       owned: true,
     );
-    expect(pose.layerOrder.indexOf(CharacterLayerId.body), lessThan(
-      pose.layerOrder.indexOf(CharacterLayerId.cape),
+    expect(pose.layerOrder.indexOf(CharacterLayerId.cape), lessThan(
+      pose.layerOrder.indexOf(CharacterLayerId.body),
     ));
-    expect(pose.layerOrder.indexOf(CharacterLayerId.torso), lessThan(
-      pose.layerOrder.indexOf(CharacterLayerId.cape),
+    expect(pose.layerOrder.indexOf(CharacterLayerId.cape), lessThan(
+      pose.layerOrder.indexOf(CharacterLayerId.torso),
     ));
   });
 

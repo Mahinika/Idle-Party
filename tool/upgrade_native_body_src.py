@@ -5,6 +5,8 @@ We bake them into `_src/body_idle.png`, then re-run `build_owned_gear_layers`
 so extracts + facit idle stack stay aligned.
 
 Rogue helm stays authored (`refresh_native_gear.py`) — not painted into _src.
+Mage and healer keep gold-master hat pixels on the new master.
+Pass the family name; a bare run does not rewrite art.
 """
 from __future__ import annotations
 
@@ -37,9 +39,10 @@ REPO = Path(__file__).resolve().parents[1]
 ROOT = REPO / "assets" / "custom" / "char"
 TOOL = REPO / "tool"
 DONOR = "warrior"
-# Mage/healer _src includes hat pixels — rebaking body armor needs a separate
-# hat-aware pass. Rogue has no helm in _src so this is safe today.
-UPGRADE_FAMILIES = ("rogue",)
+# Hat pixels from the gold master are pasted back on top. Rogue has none.
+# Re-running a family composites the current undertunic again, so only pass
+# a family when that bake is intentional.
+UPGRADE_FAMILIES = ("rogue", "mage", "healer")
 BODY_SLOTS = ("cloak", "legs", "chest", "hands")
 
 
@@ -70,18 +73,33 @@ def native_slot_overlay(family: str, slot: str) -> Image.Image:
     return convert_native(placed, family)
 
 
+def gold_hat(family: str) -> Image.Image:
+    """Helm pixels from the current gold master, before it is replaced."""
+    from paper_doll_classify import HELM, classify_src
+
+    clf = classify_src(family, "idle")
+    src = clf.src
+    hat = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    sp, hp = src.load(), hat.load()
+    for y in range(128):
+        for x in range(128):
+            if clf.labels[y][x] == HELM:
+                hp[x, y] = sp[x, y]
+    return hat
+
+
 def composite_dressed_src(family: str) -> Image.Image:
     body = Image.open(ROOT / family / "body_idle.png").convert("RGBA")
     layers = {slot: native_slot_overlay(family, slot) for slot in BODY_SLOTS}
+    hat = gold_hat(family)
     out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
     for slot in ("cloak", "body", "legs", "chest", "hands"):
         if slot == "body":
             out = Image.alpha_composite(out, body)
         else:
             out = Image.alpha_composite(out, layers[slot])
-    if family in ("mage", "healer"):
-        helm = Image.open(ROOT / family / "gear" / "helm_t0_idle.png").convert("RGBA")
-        out = Image.alpha_composite(out, helm)
+    if hat.getbbox():
+        out = Image.alpha_composite(out, hat)
     return out
 
 
@@ -103,11 +121,24 @@ def rebuild_extracts(families: tuple[str, ...]) -> None:
 
 
 def main() -> int:
-    for family in UPGRADE_FAMILIES:
+    wanted = tuple(a for a in sys.argv[1:] if a in UPGRADE_FAMILIES)
+    if not wanted:
+        print(
+            "pass a family: "
+            + " ".join(UPGRADE_FAMILIES)
+            + " — hat pixels are kept; the gold master is replaced"
+        )
+        return 2
+    for family in wanted:
         upgrade_family(family)
-    rebuild_extracts(UPGRADE_FAMILIES)
-    subprocess.check_call([sys.executable, str(TOOL / "refresh_native_gear.py")])
-    subprocess.check_call([sys.executable, str(TOOL / "derive_armor_material_variants.py")])
+    rebuild_extracts(wanted)
+    if "rogue" in wanted:
+        subprocess.check_call(
+            [sys.executable, str(TOOL / "refresh_native_gear.py")]
+        )
+    subprocess.check_call(
+        [sys.executable, str(TOOL / "derive_armor_material_variants.py")]
+    )
     print("done — run py tool/check_paper_doll_facit.py --relock")
     return 0
 

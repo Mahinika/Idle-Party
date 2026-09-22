@@ -12,6 +12,9 @@ Read when baking layers, a facit gate fails, or tuning authored overrides.
 - Cape = extracted pixels only (rogue/mage cape from `_src` / authored). Empty
   extract → transparent or authored — not a drawn trapezoid. Live thicken for
   readability must **not** overwrite `_authored` masters
+- Owned cape paints **behind** the body (gold-master order). The sides show.
+  Do not move it in front of the chest — that covers the armor and fails the
+  idle diff
 - 2H hides off-hand. Legs win over boots (BAG boots icon = foot-band crop).
   Shoulders/waist fold into chest+legs (`pathFor` null)
 - Own **body** PNG per idle/walk/attack. **Armor/weapon overlays** ship

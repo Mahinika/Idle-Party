@@ -28,13 +28,14 @@ const List<CharacterLayerId> kDefaultLayerOrder = <CharacterLayerId>[
   CharacterLayerId.effects,
 ];
 
-/// Owned paper-doll: cape is a front wrap — paint after body/armor so it shows.
+/// Owned paper-doll: cape sits behind the body, same as the gold master.
+/// The sides still show. Painting it in front covers the chest.
 const List<CharacterLayerId> kOwnedLayerOrder = <CharacterLayerId>[
+  CharacterLayerId.cape,
   CharacterLayerId.body,
   CharacterLayerId.legs,
   CharacterLayerId.torso,
   CharacterLayerId.gloves,
-  CharacterLayerId.cape,
   CharacterLayerId.hair,
   CharacterLayerId.head,
   CharacterLayerId.offHand,
@@ -57,11 +58,11 @@ const List<CharacterLayerId> kAttackWindupLayerOrder = <CharacterLayerId>[
 ];
 
 const List<CharacterLayerId> kOwnedAttackWindupLayerOrder = <CharacterLayerId>[
+  CharacterLayerId.cape,
   CharacterLayerId.body,
   CharacterLayerId.legs,
   CharacterLayerId.torso,
   CharacterLayerId.gloves,
-  CharacterLayerId.cape,
   CharacterLayerId.mainHand,
   CharacterLayerId.hair,
   CharacterLayerId.head,
@@ -84,11 +85,11 @@ const List<CharacterLayerId> kAttackLayerOrder = <CharacterLayerId>[
 ];
 
 const List<CharacterLayerId> kOwnedAttackLayerOrder = <CharacterLayerId>[
+  CharacterLayerId.cape,
   CharacterLayerId.body,
   CharacterLayerId.legs,
   CharacterLayerId.torso,
   CharacterLayerId.gloves,
-  CharacterLayerId.cape,
   CharacterLayerId.hair,
   CharacterLayerId.head,
   CharacterLayerId.offHand,
@@ -111,11 +112,11 @@ const List<CharacterLayerId> kDefaultLayerOrderFlip = <CharacterLayerId>[
 ];
 
 const List<CharacterLayerId> kOwnedLayerOrderFlip = <CharacterLayerId>[
+  CharacterLayerId.cape,
   CharacterLayerId.body,
   CharacterLayerId.legs,
   CharacterLayerId.torso,
   CharacterLayerId.gloves,
-  CharacterLayerId.cape,
   CharacterLayerId.hair,
   CharacterLayerId.head,
   CharacterLayerId.mainHand,
@@ -137,11 +138,11 @@ const List<CharacterLayerId> kAttackLayerOrderFlip = <CharacterLayerId>[
 ];
 
 const List<CharacterLayerId> kOwnedAttackLayerOrderFlip = <CharacterLayerId>[
+  CharacterLayerId.cape,
   CharacterLayerId.body,
   CharacterLayerId.legs,
   CharacterLayerId.torso,
   CharacterLayerId.gloves,
-  CharacterLayerId.cape,
   CharacterLayerId.hair,
   CharacterLayerId.head,
   CharacterLayerId.mainHand,
@@ -151,7 +152,7 @@ const List<CharacterLayerId> kOwnedAttackLayerOrderFlip = <CharacterLayerId>[
 
 /// Draw order for [anim] / [frame] / [flipX].
 ///
-/// [owned] uses front-wrap cape after body (Kenney keeps cape behind).
+/// [owned] keeps the cape behind the body, same as the gold master.
 List<CharacterLayerId> layerOrderFor(
   HeroAnimKind anim, {
   int frame = 0,

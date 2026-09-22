@@ -52,9 +52,11 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
    Race LOOK clips: `py tool/paint_race_bodies.py`.
 3. Inspect `tool/preview_doll_<family>.png` (armor stack). Must read as the same
    character as `_src`, not a grey mushroom head.
-4. Rogue native leather (body + helm): `py tool/upgrade_native_body_src.py` then
-   `py tool/refresh_native_gear.py`. Cross-material: `derive_armor_material_variants.py`.
-   Mage/healer native body still uses `_src` hat extract until a hat-aware bake exists.
+4. Rogue native leather (body + helm): `py tool/upgrade_native_body_src.py rogue`
+   then `py tool/refresh_native_gear.py`. Mage/healer:
+   `py tool/upgrade_native_body_src.py mage` (hat pixels are kept).
+   Cross-material: `derive_armor_material_variants.py`.
+   The full gear build also refreshes race LOOK clips.
 5. Run `py tool/check_paper_doll_facit.py` — composites **live** body+overlays
    vs `_src` (no gitignored preview required). Fail if idle armor stack drifts.
    After a **deliberate** art change: `--relock`, then commit the lock file.
