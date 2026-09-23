@@ -605,28 +605,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                               ),
                             ),
                           ),
-                          if (world != null && world.bossBannerTimer > 0)
-                            Align(
-                              alignment: const Alignment(0, -0.72),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xEE3A1810),
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: GameTheme.torchHot),
-                                ),
-                                child: Text(
-                                  'BOSS — ${world.bossBannerName}',
-                                  style: GameTheme.pixel(
-                                    size: GameTheme.hudPixelComfort,
-                                    color: GameTheme.torchHot,
-                                  ),
-                                ),
-                              ),
-                            ),
                         ],
                       );
                     },

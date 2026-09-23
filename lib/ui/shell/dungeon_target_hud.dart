@@ -8,6 +8,55 @@ import '../kenney_sprite.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 
+/// Top inset for the short boss callout, under the corner frames.
+///
+/// The boss frame is title + 28px portrait + bomb line. This grows with
+/// [textScale] so max UI scale (1.40) does not paint the callout on top
+/// of that frame or the DPS chip.
+double bossIntroBannerTop(double textScale) {
+  final scale = textScale.clamp(1.0, 1.40);
+  const line = 9 * 1.4;
+  return 2 + line * scale + 2 + 28 + line * scale + 10;
+}
+
+/// Timed "BOSS — name" callout. Sits in open map, not on the corner frame.
+class BossIntroBanner extends StatelessWidget {
+  const BossIntroBanner({super.key, required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xEE3A1810),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: GameTheme.torchHot),
+            ),
+            child: Text(
+              'BOSS — $name',
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GameTheme.pixel(
+                size: GameTheme.hudPixelComfort,
+                color: GameTheme.torchHot,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class TargetCornerHud extends StatelessWidget {
   const TargetCornerHud({super.key, required this.director});
   final GameDirector director;

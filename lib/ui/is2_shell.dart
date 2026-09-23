@@ -164,6 +164,25 @@ class _Is2ShellState extends State<Is2Shell> {
                         child: TargetCornerHud(director: d),
                       ),
                       Positioned(
+                        left: 0,
+                        right: 0,
+                        top: bossIntroBannerTop(
+                          MediaQuery.textScalerOf(context).scale(1),
+                        ),
+                        child: ListenableBuilder(
+                          listenable: d.combatFrame,
+                          builder: (context, _) {
+                            final world = d.spatial;
+                            if (_dpsMeterOpen ||
+                                world == null ||
+                                world.bossBannerTimer <= 0) {
+                              return const SizedBox.shrink();
+                            }
+                            return BossIntroBanner(name: world.bossBannerName);
+                          },
+                        ),
+                      ),
+                      Positioned(
                         left: hudSide,
                         bottom: partyBottom,
                         child: PartyCornerHud(
