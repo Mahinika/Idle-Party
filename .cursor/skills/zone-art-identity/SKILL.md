@@ -2,16 +2,18 @@
 name: zone-art-identity
 description: >-
   Checklist so Idle Party dungeon zones read as distinct (not crystal/hell
-  reskins). Use when remapping Kenney sprites, polishing Tide/Ember-style zone
-  identity, or when the owner says a zone "looks the same". Do not use for
-  full dungeon catalog wiring (new-dungeon).
+  reskins). Use when a cave looks like its neighbor, or the owner says a zone
+  "looks the same". Do not use for full dungeon catalog wiring (new-dungeon)
+  or for pack jobs and boss tells (spatial-combat-change).
 ---
 
 # Zone art identity (Idle Party)
 
 Legal: owned `assets/custom/` only. See [assets-legal](../assets-legal/SKILL.md).
+`KenneyAssets` is the old name of that catalog. Do not import a Kenney pack.
 
-Dedicated PNGs are ideal; until then, **identity = remap + wash + props + hub icon**, not a copy of a neighbor zone.
+Each zone already has its own boss and trash in `ZoneArt`. A cave that looks
+like its neighbor is missing a sprite, wash, or prop. Do not reuse the neighbor.
 
 ## Must differ from nearest neighbor
 
@@ -21,11 +23,11 @@ For each new `dungeonId`, verify against the closest old zone (e.g. tide ≠ cry
 |-------|------|-----------|
 | Portrait | `lib/assets/custom_assets.dart` | Not the same const as the neighbor |
 | Backdrop | `lib/assets/custom_assets.dart` | Not the same const as the neighbor |
-| Boss sprite | `KenneyAssets.enemySpriteForRole(boss)` | Distinct family (crab/golem/… not twin of neighbor) |
+| Boss sprite | `ZoneArt` via `KenneyAssets.enemySpriteForRole` | Owned PNG, not the neighbor's boss |
 | Codex name map | `enemySpriteForCodexName` | Boss name → **same** asset as combat boss role |
 | Trash/elite | `enemySpriteFor` archetypes | Mix differs (swarm/brute/ranged) |
 | Ambient wash | `dungeon_environment.dart` | Clear hue/alpha vs neighbor |
-| Floor/wall/props | `kenney_assets.dart` | Props/floor differ (water/lava/…) |
+| Floor/wall/props | `CustomAssets` (catalog name `KenneyAssets`) | Props/floor differ from the neighbor |
 | Hub icon | `dungeonIconFor` | Not identical to neighbor |
 
 ## Checklist
@@ -41,12 +43,13 @@ Zone identity:
 - [ ] 7. Apex shard name does not collide with another zone
 ```
 
-## Prefer owned art when polish budget allows
+## When the zone needs a new picture
 
 1. Place under `assets/custom/portraits/` and `assets/custom/ui/backdrops/`
 2. Wire getters on `CustomAssets` (no raw `assets/...` in UI)
 3. `FilterQuality.none` via `KenneySprite`
-4. Keep Kenney remaps for trash until custom enemies exist
+4. New enemy sprites append to the catalog. Do not insert in the middle
+   (the painter looks them up by index)
 
 ## Verify
 

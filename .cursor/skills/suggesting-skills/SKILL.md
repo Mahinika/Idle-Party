@@ -24,7 +24,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | Save fields / Ascend keep-reset / migrate | `save-migrate` |
 | Class / WotLK identity audit | `class-audit` |
 | Analyze / test / verify before PR | `flutter-verify` |
-| Art / sprites / Kenney paths | `assets-legal` |
+| Art / sprites / owned art | `assets-legal` |
 | Doll / gear on body / undertunic / paper-doll | `character-paper-doll` + `assets-legal` |
 | Playtest / “show me the app” | `a56-playtest` (emulator). Web: `browser-playtest` fallback |
 | Hub polish checklist | `hub-smoke` on the A56 emulator |

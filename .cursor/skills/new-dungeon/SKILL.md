@@ -35,7 +35,7 @@ Party **mean level** gates still apply for unlock math.
 | Names/pools | `GameLogic._zoneArchetypeName` / enemy creators |
 | Lore | `lib/core/story_lore.dart` |
 | Achievements | `lib/models/achievement_def.dart` (`clear_<id>`) + `MetaSystems` evaluators |
-| Hub list | `lib/ui/hub_screen.dart` (iterates catalog) |
+| Hub PATH | `lib/ui/hub/hub_world_map.dart` (continent marker, not a scroll row) |
 
 Layouts: `cave` / `hideout` / `fort` / `arena`. Boss floor = `5 + AL`.
 
@@ -51,7 +51,7 @@ New dungeon:
 - [ ] 6. _zoneArchetypeName (+ boss via catalog)
 - [ ] 7. StoryLore enter/clear lines
 - [ ] 8. clear_<id> achievement if needed
-- [ ] 9. Confirm hub unlock UI (mean level + prior clear)
+- [ ] 9. Confirm hub unlock (mean level + prior clear) and a marker on the atlas
 - [ ] 10. Tests: asset_catalog, custom_assets, dungeon_environment, story_lore, meta_systems
 ```
 

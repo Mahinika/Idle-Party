@@ -31,7 +31,7 @@ flutter test test/ship_smoke_test.dart test/changelog_sync_test.dart
 
 | # | Check | How |
 |---|--------|-----|
-| 1 | Hub loads | World Path nodes visible; `ENTER DUNGEON` present |
+| 1 | Hub loads | PATH is the continent atlas, not a scroll of nodes. `ENTER DUNGEON` present |
 | 2 | Hub hunt | Hunt line under the map (READY/ALMOST when close); no TODAY stamp |
 | 2b | Week affix | Line above the hunt: `Week · …` when `weeklyModifier` is set |
 | 2c | Daily CTA | When the hunt is Daily, only the hunt **DAILY** button (no duplicate **DAILY RUN**) |

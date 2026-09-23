@@ -1,10 +1,12 @@
 ---
 name: assets-legal
 description: >-
-  Enforces Idle Party art and asset conventions (Kenney CC0, owned custom,
-  KenneyAssets/CustomAssets helpers, FilterQuality.none, no commercial
-  dumps). Use when adding sprites, icons, portraits, backdrops, pets, or
-  any assets/... path in UI.
+  Enforces Idle Party art rules: owned files under assets/custom/ only,
+  CustomAssets and KenneyAssets helpers (the Kenney name is legacy),
+  FilterQuality.none, no commercial dumps or foreign packs. Use when adding
+  sprites, icons, portraits, backdrops, pets, or any assets path in UI.
+  Do not use for paper-doll layering (character-paper-doll) or a cave that
+  looks like its neighbor (zone-art-identity).
 ---
 
 # Assets & legal (Idle Party)
