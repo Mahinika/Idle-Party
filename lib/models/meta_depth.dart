@@ -48,9 +48,10 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'gh_cdr',
       name: 'God Hand Cadence',
-        description: 'Same cooldown as ESSENCE → BLESSING. One CD level (max 8).',
+      description: 'Same cooldown as ESSENCE → BLESSING. One CD level (max 8).',
       cost: 45,
       minAl: 5,
+      // Legacy: CD bought under ESSENCE → BLESSING now. Keep for old purchases.
       listedInShop: false,
     ),
     PrestigeShopItem(
@@ -66,6 +67,7 @@ abstract final class PrestigeShopCatalog {
       description: '+1 gear loadout slot (max 5 total).',
       cost: 45,
       minAl: 4,
+      // Legacy: LOADOUTS tab removed; keep for old purchase counts in saves.
       listedInShop: false,
     ),
     PrestigeShopItem(
@@ -476,6 +478,7 @@ class MetaDepthState {
   final int gauntletGoldBonusLevel;
 
   /// Prestige: extra LOADOUTS slots beyond the base 3 (max +2 → 5).
+  /// Legacy after LOADOUTS tab removal — still serialized for old purchases.
   final int loadoutBonusSlots;
 
   /// Prestige: market flask/bandage gold discount (−5% per level, max 5).

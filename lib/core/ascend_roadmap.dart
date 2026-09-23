@@ -89,13 +89,6 @@ abstract final class AscendRoadmap {
     return null;
   }
 
-  /// Short line for confirm / toast when ascending **to** [nextAl].
-  static String? unlockLineForAscendTo(int nextAl) {
-    final unlock = unlockAtAl(nextAl);
-    if (unlock == null) return null;
-    return 'Unlock at AL$nextAl: $unlock';
-  }
-
   /// Next meaningful goal from the player’s **current** AL (before Ascend).
   static String nextGoalLine(int currentAl) {
     if (currentAl >= GameLogic.maxAscensionLevel) {

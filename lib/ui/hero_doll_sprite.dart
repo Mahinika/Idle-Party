@@ -85,7 +85,9 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
       ui.Image? form;
       try {
         form = await DecodedImageCache.load(formPath, targetWidth: 96);
-      } catch (_) {}
+      } catch (e, st) {
+        debugPrint('HeroDollSprite form load failed: $e\n$st');
+      }
       if (!mounted || gen != _loadGen) return;
       setState(() {
         _formPath = formPath;
@@ -134,11 +136,15 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
                 idle,
                 targetWidth: decodeW,
               );
-            } catch (_) {}
+            } catch (e, st) {
+              debugPrint('HeroDollSprite overlay load failed: $e\n$st');
+            }
           }
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('HeroDollSprite body/overlays load failed: $e\n$st');
+    }
 
     if (!mounted || gen != _loadGen) return;
     setState(() {

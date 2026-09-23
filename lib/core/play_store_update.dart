@@ -34,12 +34,6 @@ abstract final class PlayStoreUpdate {
     return play_core.probeAvailableVersionCode();
   }
 
-  /// True when Play reports a newer build on the user's track.
-  static Future<bool> isUpdateRequired() async {
-    final code = await availableVersionCode();
-    return code != null && code > 0;
-  }
-
   static Future<bool> startImmediateUpdate() async {
     if (!isSupported) return false;
     return play_core.startImmediatePlayUpdate();

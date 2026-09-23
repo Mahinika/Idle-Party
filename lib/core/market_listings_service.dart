@@ -370,16 +370,6 @@ abstract final class MarketListingsService {
     return !isUpgradeForAnyHero(state, listing.item, listing.slot);
   }
 
-  /// Worn iLvl on the gap-target hero for GAP FILL copy.
-  static int? wornItemLevelForListing(GameState state, MarketListing listing) {
-    if (listing.targetHeroIndex < 0 ||
-        listing.targetHeroIndex >= state.heroes.length) {
-      return null;
-    }
-    final worn = state.heroes[listing.targetHeroIndex].itemIn(listing.slot);
-    return worn?.effectiveItemLevel;
-  }
-
   static EquipmentSlot _resolveEquipSlot(EquipmentSlot slot, EquipmentItem item) {
     if (slot == EquipmentSlot.ring || slot == EquipmentSlot.ring2) {
       return item.slot == EquipmentSlot.ring2

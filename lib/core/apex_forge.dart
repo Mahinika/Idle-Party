@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import '../models/apex_craft.dart';
 import '../models/dungeon_mode.dart';
 import '../models/hero.dart';
@@ -243,7 +245,8 @@ abstract final class ApexForge {
       if (!ApexCraft.isValidPair(classId, role)) return null;
       if (!ApexCraft.craftSlotsFor(classId, role).contains(slot)) return null;
       return (classId: classId, role: role, slot: slot);
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('ApexForge craft goal parse failed: $e\n$st');
       return null;
     }
   }

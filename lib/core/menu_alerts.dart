@@ -213,9 +213,6 @@ class MenuAlerts {
     return MenuAlert(count: count, reason: 'Market: ${reasons.join(' · ')}');
   }
 
-  /// Legacy alias — market lives under GOLD now.
-  static MenuAlert shopAlert(GameState state) => marketAlert(state);
-
   static MenuAlert essenceAlert(GameState state) {
     if (!MenuTabs.showCamp(state)) return MenuAlert.quiet;
     if (state.essence >= GameLogic.sanctuaryCost(cheapestCampLevel(state))) {
@@ -223,9 +220,6 @@ class MenuAlerts {
     }
     return MenuAlert.quiet;
   }
-
-  /// Combined gold alerts (legacy surfaces).
-  static MenuAlert powerAlert(GameState state) => goldAlert(state);
 
   static MenuAlert questsAlert(
     GameState state, {

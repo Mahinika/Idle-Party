@@ -188,7 +188,9 @@ abstract final class GameAudio {
     try {
       stopAmbience();
       SoLoud.instance.deinit();
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('GameAudio disposeEngine failed: $e\n$st');
+    }
     _sourcesByPath.clear();
     _hubAmb = null;
     _dungeonAmb = null;
@@ -348,7 +350,9 @@ abstract final class GameAudio {
         soloud.setRelativePlaySpeed(handle, pitch);
         soloud.setPause(handle, false);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('GameAudio play failed: $e\n$st');
+    }
   }
 
   static bool _admitCombatFeel(String id, DateTime now) {
@@ -452,7 +456,9 @@ abstract final class GameAudio {
       final soloud = SoLoud.instance;
       if (amb != null) soloud.stop(amb);
       if (mus != null) soloud.stop(mus);
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('GameAudio stopAmbience failed: $e\n$st');
+    }
   }
 
   /// App lifecycle: pause ambience + music when backgrounded.
@@ -486,7 +492,9 @@ abstract final class GameAudio {
     if (h == null || !_ready) return;
     try {
       SoLoud.instance.setVolume(h, _effectiveAmbienceVolume());
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('GameAudio ambience volume failed: $e\n$st');
+    }
   }
 
   static void _refreshMusicVolume() {
@@ -494,12 +502,16 @@ abstract final class GameAudio {
     if (h == null || !_ready) return;
     try {
       SoLoud.instance.setVolume(h, _effectiveMusicVolume());
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('GameAudio music volume failed: $e\n$st');
+    }
     if (musicVolume <= 0.01 && h != null) {
       // Volume cycled to Off — stop the music layer only.
       try {
         SoLoud.instance.stop(h);
-      } catch (_) {}
+      } catch (e, st) {
+        debugPrint('GameAudio music stop failed: $e\n$st');
+      }
       _musicHandle = null;
     } else if (h == null &&
         musicVolume > 0.01 &&
@@ -536,9 +548,13 @@ abstract final class GameAudio {
           if (mus != null && _musicHandle == mus) {
             soloud.setVolume(mus, _effectiveMusicVolume());
           }
-        } catch (_) {}
+        } catch (e, st) {
+          debugPrint('GameAudio duck restore failed: $e\n$st');
+        }
       });
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('GameAudio duck failed: $e\n$st');
+    }
   }
 
   static void _hapticFor(String id) {

@@ -5791,13 +5791,6 @@ class ClassKits {
     return '$names  |  next L${next.unlockLevel}: ${next.shortLabel}';
   }
 
-  static String resourceLabel(HeroRole role) => switch (role) {
-    HeroRole.warrior => 'RAGE',
-    HeroRole.healer => 'MANA',
-    HeroRole.mage => 'MANA',
-    HeroRole.rogue => 'ENERGY',
-  };
-
   static String resourceLabelForSpec(HeroSpecId specId) =>
       switch (HeroSpecs.def(specId).resource) {
         SpecResource.rage => 'RAGE',
@@ -5805,13 +5798,6 @@ class ClassKits {
         SpecResource.energy => 'ENERGY',
         SpecResource.runic => 'RUNIC',
       };
-
-  static int resourceColor(HeroRole role) => switch (role) {
-    HeroRole.warrior => 0xFFC04030,
-    HeroRole.healer => 0xFF5090E0,
-    HeroRole.mage => 0xFF7060D0,
-    HeroRole.rogue => 0xFFE0C040,
-  };
 
   static int resourceColorForSpec(HeroSpecId specId) =>
       switch (HeroSpecs.def(specId).resource) {

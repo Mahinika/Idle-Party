@@ -136,7 +136,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
           targetWidth: targetWidth,
           targetHeight: targetHeight,
         );
-      } catch (_) {
+      } catch (e, st) {
+        debugPrint('DecodedImageCache soft load failed ($asset): $e\n$st');
         return null;
       }
     }
@@ -1099,8 +1100,17 @@ class _TileRoomPainter extends CustomPainter {
   Size? _vignetteSize;
   String? _vignetteDungeonId;
   Paint? _vignettePaint;
-  final Paint _fillPaint = Paint();
-  final Paint _strokePaint = Paint()..style = PaintingStyle.stroke;
+  // Static so reuse survives CustomPainter recreation each frame.
+  static final Paint _fillPaint = Paint();
+  static final Paint _strokePaint = Paint()..style = PaintingStyle.stroke;
+  static final TextPainter _goLabelPainter = TextPainter(
+    textDirection: TextDirection.ltr,
+  );
+  static final TextPainter _floaterPainter = TextPainter(
+    textDirection: TextDirection.ltr,
+  );
+  static double? _goLabelTile;
+  static TextStyle? _goLabelStyle;
 
   static int _hashPick(int x, int y, int seed, int len) {
     if (len <= 0) return 0;
@@ -1199,13 +1209,10 @@ class _TileRoomPainter extends CustomPainter {
               canvas.drawRect(dst, _fillPaint);
             } else {
               // Open door always reads as progress (even Minimal VFX).
-              canvas.drawRect(
-                dst.deflate(tile * 0.08),
-                Paint()
-                  ..color = const Color(0x88FFE08A)
-                  ..style = PaintingStyle.stroke
-                  ..strokeWidth = math.max(1.5, tile * 0.06),
-              );
+              _strokePaint
+                ..color = const Color(0x88FFE08A)
+                ..strokeWidth = math.max(1.5, tile * 0.06);
+              canvas.drawRect(dst.deflate(tile * 0.08), _strokePaint);
             }
           } else if (!gateOpen) {
             // Side cells: sealed stubs, not extra door panels.
@@ -1218,36 +1225,39 @@ class _TileRoomPainter extends CustomPainter {
           if (world.awaitingExit) {
             if (showGuide) {
               final pulse = 0.75 + 0.25 * math.sin(visualFrame * 0.18);
+              _strokePaint
+                ..color = const Color(0x6670E0A0)
+                ..strokeWidth = math.max(2, tile * 0.08);
               canvas.drawCircle(
                 dst.center,
                 tile * 0.55 * pulse,
-                Paint()
-                  ..color = const Color(0x6670E0A0)
-                  ..style = PaintingStyle.stroke
-                  ..strokeWidth = math.max(2, tile * 0.08),
+                _strokePaint,
               );
+              _fillPaint.color = const Color(0x3380FFB0);
               canvas.drawCircle(
                 dst.center,
                 tile * 0.32 * pulse,
-                Paint()..color = const Color(0x3380FFB0),
+                _fillPaint,
               );
             }
             // GO stays visible even on Minimal VFX — stairs must stay obvious.
-            final go = TextPainter(
-              text: TextSpan(
-                text: 'GO',
-                style: GameTheme.pixelCached(
-                  size: math.max(GameTheme.hudPixelComfort, tile * 0.42),
-                  color: const Color(0xEE80FFB0),
-                ),
-              ),
-              textDirection: TextDirection.ltr,
-            )..layout();
-            go.paint(
-              canvas,
-              Offset(dst.center.dx - go.width / 2, dst.top - go.height - 2),
+            final goStyle = GameTheme.pixelCached(
+              size: math.max(GameTheme.hudPixelComfort, tile * 0.42),
+              color: const Color(0xEE80FFB0),
             );
-            go.dispose();
+            if (_goLabelTile != tile || !identical(_goLabelStyle, goStyle)) {
+              _goLabelTile = tile;
+              _goLabelStyle = goStyle;
+              _goLabelPainter.text = TextSpan(text: 'GO', style: goStyle);
+              _goLabelPainter.layout();
+            }
+            _goLabelPainter.paint(
+              canvas,
+              Offset(
+                dst.center.dx - _goLabelPainter.width / 2,
+                dst.top - _goLabelPainter.height - 2,
+              ),
+            );
           }
         } else if (kind == TileKind.spawn) {
           _fillPaint.color = const Color(0x14C88840);
@@ -1279,6 +1289,7 @@ class _TileRoomPainter extends CustomPainter {
     for (final chamber in world.map.chambers) {
       if (!clearedChambers.contains(chamber.index)) continue;
       // Soft clear wash only — no giant stamp clutter.
+      _fillPaint.color = const Color(0x1818A050);
       canvas.drawRect(
         Rect.fromLTWH(
           originX + chamber.x * tile,
@@ -1286,7 +1297,7 @@ class _TileRoomPainter extends CustomPainter {
           chamber.w * tile,
           chamber.h * tile,
         ),
-        Paint()..color = const Color(0x1818A050),
+        _fillPaint,
       );
     }
 
@@ -2559,7 +2570,7 @@ class _TileRoomPainter extends CustomPainter {
 
     if (showBursts || showPriorityFloaters) {
       final floaters = world.floaters;
-      final tp = TextPainter(textDirection: TextDirection.ltr);
+      final tp = _floaterPainter;
       final maxW = tile * 4.4;
       for (var i = 0; i < floaters.length; i++) {
         final floater = floaters[i];
@@ -2594,24 +2605,18 @@ class _TileRoomPainter extends CustomPainter {
             ),
             Radius.circular(tile * 0.12),
           );
-          canvas.drawRRect(
-            bubble,
-            Paint()..color = const Color(0xCC1A1420).withValues(alpha: alpha),
-          );
-          canvas.drawRRect(
-            bubble,
-            Paint()
-              ..color = Color(floater.argb).withValues(alpha: alpha * 0.55)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = math.max(1.0, tile * 0.03),
-          );
+          _fillPaint.color = const Color(0xCC1A1420).withValues(alpha: alpha);
+          canvas.drawRRect(bubble, _fillPaint);
+          _strokePaint
+            ..color = Color(floater.argb).withValues(alpha: alpha * 0.55)
+            ..strokeWidth = math.max(1.0, tile * 0.03);
+          canvas.drawRRect(bubble, _strokePaint);
         }
         final anchor = speech
             ? Offset(c.dx - tp.width / 2, c.dy - tp.height / 2)
             : Offset(c.dx + tile * 0.46 - tp.width / 2, c.dy - tile * 0.22);
         tp.paint(canvas, anchor);
       }
-      tp.dispose();
     }
   }
 

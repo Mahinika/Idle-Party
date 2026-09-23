@@ -137,21 +137,6 @@ abstract final class MenuChrome {
     );
   }
 
-  static BoxDecoration rowTile() {
-    return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [
-          GameTheme.stoneRaised.withValues(alpha: 0.92),
-          GameTheme.stone.withValues(alpha: 0.88),
-        ],
-      ),
-      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-      border: Border.all(color: GameTheme.border.withValues(alpha: 0.9)),
-    );
-  }
-
   static Widget sheetHandle() {
     return Center(
       child: Container(
@@ -509,18 +494,6 @@ abstract final class MenuChrome {
         style: GameTheme.body(size: 12, color: GameTheme.torchHot),
       ),
     );
-  }
-
-  /// RUN / TODAY / ACCOUNT scope chip for section headers and guides.
-  static Widget scopeChip(String scope) {
-    final key = scope.toUpperCase();
-    final tone = switch (key) {
-      'RUN' || 'GOLD' => GameTheme.scopeRun,
-      'TODAY' => GameTheme.scopeToday,
-      'ACCOUNT' || 'PERMANENT' => GameTheme.scopeAccount,
-      _ => GameTheme.parchmentDim,
-    };
-    return chip(label: key, tone: tone);
   }
 
   /// Low-emphasis navigation (hub shortcuts, “see KEY”).

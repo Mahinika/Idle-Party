@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import '../models/dungeon_def.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
@@ -525,9 +527,6 @@ class GameLogic {
 
   static GameState startApexTrial(GameState state) => _startApexTrial(state);
 
-  static GameState applyRosterExhibition(GameState state) =>
-      _applyRosterExhibition(state);
-
   static int partyPowerScore(GameState state) => PartyPower.score(state);
 
   /// Escalating threat: +10% enemy stats per floor beyond 1.
@@ -576,11 +575,6 @@ class GameLogic {
   /// Success when Guardian is down; Farm never fails on timer.
   static GameState? tryResolveRift(GameState state) => _tryResolveRift(state);
 
-  static GameState resolveRiftSuccess(GameState state) =>
-      _resolveRiftSuccess(state);
-
-  static GameState resolveRiftFail(GameState state) => _resolveRiftFail(state);
-
   static bool canEnterGreaterRift(GameState state) =>
       endgameUnlocked(state) && !state.inDungeon;
 
@@ -602,12 +596,6 @@ class GameLogic {
 
   static GameState? tryResolveGreaterRift(GameState state) =>
       _tryResolveGreaterRift(state);
-
-  static GameState resolveGreaterRiftSuccess(GameState state) =>
-      _resolveGreaterRiftSuccess(state);
-
-  static GameState resolveGreaterRiftFail(GameState state) =>
-      _resolveGreaterRiftFail(state);
 
   static int godHandUpgradeCost(int level) => 10 + level * 8;
 
@@ -634,6 +622,23 @@ class GameLogic {
   };
 
   static int sanctuaryCost(int level) => 15 + (level * 12);
+
+  /// Cheapest next CAMP click. Daily Vault pays at least this so a claim
+  /// still buys one upgrade after the tracks get expensive.
+  static int cheapestSanctuaryNextCost(GameState state) {
+    final levels = <int>[
+      state.sanctuaryGoldLevel,
+      state.sanctuaryPowerLevel,
+      state.sanctuaryVitalityLevel,
+      state.sanctuaryDefenseLevel,
+      state.metaDepth.sanctuaryXpLevel,
+    ];
+    var cheapest = levels.first;
+    for (final level in levels) {
+      if (level < cheapest) cheapest = level;
+    }
+    return sanctuaryCost(cheapest);
+  }
 
   /// Essence from a PUSH floor. Farm and Gauntlet stay 0 so gold AFK cannot
   /// print unbounded CAMP/KEEP power. Boss pays more than a trash floor.
@@ -1154,17 +1159,6 @@ class GameLogic {
       adGoldUntilMs: gold,
       adBoostUntilMs: legacy,
     );
-  }
-
-  /// Playtest / legacy: +[AdBoost.hoursPerAd] hours Full Boost (no ticket cost).
-  static GameState grantAdBoostHour(GameState state, {int? nowMs}) {
-    final before = state.metaDepth;
-    final md = grantFullBoostHours(before, AdBoost.hoursPerAd, nowMs: nowMs);
-    if (md.adAtkUntilMs == before.adAtkUntilMs &&
-        md.adGoldUntilMs == before.adGoldUntilMs) {
-      return state;
-    }
-    return state.copyWith(metaDepth: md);
   }
 
   /// After offline gold credit: consume Away Bonus to multiply the gold gained.
@@ -2647,7 +2641,8 @@ class GameLogic {
       final decoded = jsonDecode(raw);
       if (decoded is! Map<String, dynamic>) return null;
       return stateFromJson(decoded);
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('GameLogic.importSaveJson failed: $e\n$st');
       return null;
     }
   }

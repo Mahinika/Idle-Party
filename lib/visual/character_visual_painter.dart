@@ -245,49 +245,6 @@ abstract final class CharacterVisualPainter {
     };
   }
 
-  /// Anchored gear only — for hybrid (class PNG / Kenney body + equipment).
-  static void paintGearOverlays(
-    Canvas canvas,
-    ui.Image atlas,
-    Offset center,
-    double size, {
-    required PartyHero hero,
-    required HeroAnimSignals signals,
-    bool flipX = false,
-    int partyIndex = 0,
-    double alpha = 1,
-    double walkPhase = 0,
-    HeroAnimPose? poseOverride,
-    String? cacheId,
-    BodyAnchorProfile anchorProfile = BodyAnchorProfile.kenney,
-    GearOverlayScales? overlayScales,
-  }) {
-    final pose = _poseFor(
-      hero: hero,
-      signals: signals,
-      flipX: flipX,
-      partyIndex: partyIndex,
-      walkPhase: walkPhase,
-      poseOverride: poseOverride,
-      cacheId: cacheId,
-    );
-    final owned = anchorProfile == BodyAnchorProfile.owned;
-    paintPose(
-      canvas,
-      atlas,
-      center,
-      size,
-      pose: pose,
-      alpha: alpha,
-      onlyLayers:
-          owned ? kOwnedGearOverlayLayers : kGearOverlayLayers,
-      preferAnchored: true,
-      anchorProfile: anchorProfile,
-      overlayScales: overlayScales ??
-          (owned ? GearOverlayScales.owned : GearOverlayScales.kenney),
-    );
-  }
-
   static CharacterVisualPose _poseFor({
     required PartyHero hero,
     required HeroAnimSignals signals,
@@ -407,41 +364,5 @@ abstract final class CharacterVisualPainter {
     if (pose.flipX) {
       canvas.restore();
     }
-  }
-
-  /// Tiny facing lean helper used by dungeon view.
-  static Offset leanOffset({
-    required Offset center,
-    required double tile,
-    required double heroX,
-    required double heroY,
-    required double aimX,
-    required double aimY,
-    required double flash,
-    required bool warrior,
-  }) {
-    if (flash > 0.02 && (aimX != 0 || aimY != 0)) {
-      final adx = aimX - heroX;
-      final ady = aimY - heroY;
-      final alen = math.sqrt(adx * adx + ady * ady);
-      if (alen > 0.05) {
-        final punch = warrior ? 0.38 : 0.22;
-        return Offset(
-          center.dx + (adx / alen) * tile * punch * flash,
-          center.dy + (ady / alen) * tile * punch * flash,
-        );
-      }
-    } else if (aimX != 0 || aimY != 0) {
-      final adx = aimX - heroX;
-      final ady = aimY - heroY;
-      final alen = math.sqrt(adx * adx + ady * ady);
-      if (alen > 0.08) {
-        return Offset(
-          center.dx + (adx / alen) * tile * 0.06,
-          center.dy + (ady / alen) * tile * 0.04,
-        );
-      }
-    }
-    return center;
   }
 }

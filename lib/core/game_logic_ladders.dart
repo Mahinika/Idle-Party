@@ -287,21 +287,6 @@ GameState _resolveRiftSuccess(GameState state) {
   );
 }
 
-GameState _resolveRiftFail(GameState state) {
-  if (!state.inRift) return state;
-  if (state.riftOutcome.isNotEmpty) return GameLogic.exitToHubHealed(state);
-  final tier = Rift.clampTier(state.riftTier);
-  final essence = Rift.failEssence(tier);
-  final next = state.copyWith(
-    essence: state.essence + essence,
-    riftOutcome: 'depleted',
-  );
-  LogicNotices.addMetaPayoffs([
-    'Rift R$tier ended · +${essence}e consolation',
-  ]);
-  return GameLogic.exitToHubHealed(next);
-}
-
 GameState _enterGreaterRift(GameState state, {int? tier}) {
   if (!GameLogic.canEnterGreaterRift(state)) return state;
   final preferred = tier ?? state.metaDepth.grPreferredTier;

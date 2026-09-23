@@ -183,10 +183,6 @@ abstract final class EquipmentVisualResolver {
     return item.copyWith(visualSetId: id);
   }
 
-  /// Backwards-compatible name for callers outside the save migration.
-  static EquipmentItem stampMissingVisualSetId(EquipmentItem item) =>
-      normalizeVisualSetId(item);
-
   /// Built-in catalog (Dart v1). New items point at these ids.
   static final Map<String, EquipmentVisualDef> catalog =
       Map<String, EquipmentVisualDef>.unmodifiable({

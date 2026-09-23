@@ -195,9 +195,6 @@ abstract final class GameTheme {
     return gap + bottomNavHeight + inset + 14;
   }
 
-  /// Side inset for corner HUD.
-  static double combatHudSide(BuildContext context) => edgeGap;
-
   /// Compose OS Dynamic Type with in-game slider (do not replace OS alone).
   static TextScaler composeTextScaler({
     required TextScaler platform,

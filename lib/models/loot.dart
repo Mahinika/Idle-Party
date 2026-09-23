@@ -70,6 +70,8 @@ enum ProjectilePattern { single, spread, arc, pierce }
 /// Unique gear effect ids (data-driven).
 enum GearEffectId { none, lifesteal, pierce, goldFind, crit, haste }
 
+/// Drop destination after loot resolve.
+/// [equipped] / [replaced] kept for old save JSON (`byName`); never written now.
 enum LootOutcome { essence, equipped, replaced, stashed, gold }
 
 class EquipmentItem {

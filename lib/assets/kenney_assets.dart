@@ -304,19 +304,6 @@ abstract final class KenneyAssets {
   static String get relicIronWard => CustomAssets.iconRelicIronWard;
   static String get relicPhoenixEmber => CustomAssets.iconRelicPhoenixEmber;
 
-  static String heroSpriteForClass(HeroClassId classId) => switch (classId) {
-    HeroClassId.warrior => CustomAssets.heroKnight,
-    HeroClassId.paladin => CustomAssets.heroPaladin,
-    HeroClassId.hunter => CustomAssets.heroHunter,
-    HeroClassId.rogue => CustomAssets.heroRogue,
-    HeroClassId.priest => CustomAssets.heroHealer,
-    HeroClassId.deathKnight => CustomAssets.heroDeathKnight,
-    HeroClassId.shaman => CustomAssets.heroShaman,
-    HeroClassId.mage => CustomAssets.heroWizard,
-    HeroClassId.warlock => CustomAssets.heroWarlock,
-    HeroClassId.druid => CustomAssets.heroDruid,
-  };
-
   static String heroSpriteForSpec(HeroSpecId specId) =>
       CustomAssets.heroForSpec(specId);
 
@@ -331,9 +318,6 @@ abstract final class KenneyAssets {
   /// Single verified floor per dungeon — sand uses a clean + worn pair.
   static List<String> floorVariantsForDungeon(String dungeonId) =>
       ZoneArt.byId(dungeonId).floorVariants;
-
-  static String wallForDungeon(String dungeonId) =>
-      ZoneArt.byId(dungeonId).wall;
 
   /// Rim wall sprites only (deep walls paint as void).
   static List<String> wallVariantsForDungeon(String dungeonId) =>
@@ -1022,21 +1006,6 @@ abstract final class KenneyAssets {
     RelicIds.ironWill => iconTrophy,
     _ => relicWarBanner,
   };
-
-  static String forgeIconFor(String title) {
-    final upper = title.toUpperCase();
-    if (upper.contains('ATTACK SPEED') || upper.contains('HASTE')) {
-      return dagger;
-    }
-    if (upper.contains('MOVE') || upper.contains('SPEED')) return boots;
-    if (upper.contains('CRIT')) return iconStar;
-    if (upper.contains('ATTACK')) return sword;
-    if (upper.contains('DEFENSE')) return shield;
-    if (upper.contains('VITALITY')) return potionRed;
-    if (upper.contains('TRAIN')) return book;
-    if (upper.contains('FORGE') || upper.contains('ANVIL')) return anvil;
-    return hammer;
-  }
 
   /// Best-effort icon for a discovered Codex item name (cosmetic only).
   static String codexItemIconFor(String name) {

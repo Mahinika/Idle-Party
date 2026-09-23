@@ -493,8 +493,6 @@ abstract final class CharacterVisualPoseCache {
   }
 
   static void clear() => _byHero.clear();
-
-  static void evict(String heroId) => _byHero.remove(heroId);
 }
 
 class _CachedPose {

@@ -151,16 +151,6 @@ class EquipmentFactory {
     return out;
   }
 
-  /// Zone mult matching [GameLogic.roomCombatBudget] enemy scaling.
-  static double zoneMultFor(String? dungeonId) {
-    final zone = DungeonCatalog.byId(dungeonId ?? 'sandy').number;
-    return 1.0 + zone * 0.28;
-  }
-
-  /// Soft AL loot mult (half of enemy AL threat; AL already has drop skip).
-  static double alLootMult(int ascensionLevel) =>
-      1.0 + ascensionLevel.clamp(0, 40) * 0.05;
-
   static int itemLevelFor({
     required int battleNumber,
     required LootRarity rarity,

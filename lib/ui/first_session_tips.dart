@@ -104,13 +104,6 @@ class FirstSessionTips extends StatelessWidget {
     return hint.line;
   }
 
-  static bool shouldPulse(
-    GameState s,
-    CoachTarget target, {
-    required bool inDungeon,
-  }) =>
-      lineFor(s, target, inDungeon: inDungeon) != null;
-
   static String? nextTipId(GameState s, {required bool inDungeon}) {
     final seen = s.seenTips;
     final porch = leftPorch(s);

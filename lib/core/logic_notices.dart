@@ -110,11 +110,6 @@ abstract final class LogicNotices {
     return out;
   }
 
-  static void recordFloorEquipLine(String line) {
-    if (line.isEmpty) return;
-    _floorEquipLine = line;
-  }
-
   /// Slots that just became claimable (from [MissionBoard.applyMissionProgress]).
   static int takeQuestReady() {
     final out = _questReady;

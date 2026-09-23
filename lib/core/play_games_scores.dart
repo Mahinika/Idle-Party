@@ -21,11 +21,6 @@ abstract final class PlayGamesScores {
   static String formatTimedLabel(int keyLevel, int clearMs) =>
       'KEY +$keyLevel · ${Keystone.formatTimer(clearMs)}';
 
-  static String formatTimedScore(int score) {
-    final d = decodeTimedKey(score);
-    return formatTimedLabel(d.keyLevel, d.clearMs);
-  }
-
   /// Greater Rift uses the same packing as Timed KEY (tier × stride + pad−ms).
   static int encodeGreaterRift({required int tier, required int clearMs}) =>
       encodeTimedKey(keyLevel: tier, clearMs: clearMs);
@@ -37,11 +32,6 @@ abstract final class PlayGamesScores {
 
   static String formatGreaterRiftLabel(int tier, int clearMs) =>
       'GR$tier · ${Keystone.formatTimer(clearMs)}';
-
-  static String formatGreaterRiftScore(int score) {
-    final d = decodeGreaterRift(score);
-    return formatGreaterRiftLabel(d.tier, d.clearMs);
-  }
 
   /// True when [key]/[clearMs] should replace the stored season PB.
   static bool isBetterTimed({

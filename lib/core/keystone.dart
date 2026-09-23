@@ -194,11 +194,6 @@ abstract final class Keystone {
     return false;
   }
 
-  static bool hasAffix(GameState? state, String id) {
-    if (state == null || !state.keystoneRunActive) return false;
-    return state.keystoneRunAffixes.contains(id);
-  }
-
   static String label(String affix) => switch (affix) {
     'glass' => 'Glass',
     'swarm' => 'Swarm',

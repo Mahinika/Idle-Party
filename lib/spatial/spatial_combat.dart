@@ -5412,15 +5412,26 @@ abstract final class SpatialCombat {
     double weight = 1.0,
   }) {
     if (others == null || step <= 0) return;
+    final radiusSq = radius * radius;
     var sx = 0.0;
     var sy = 0.0;
     for (final o in others) {
       if (identical(o, a) || !o.isAlive) continue;
-      final d = _distPoint(a.x, a.y, o.x, o.y);
-      if (d < 0.01 || d > radius) continue;
+      final dx = a.x - o.x;
+      final dy = a.y - o.y;
+      final dSq = dx * dx + dy * dy;
+      if (dSq > radiusSq) continue;
+      // Overlapping / identical spawn: push with a fixed epsilon so actors
+      // do not stay glued forever (old path skipped d < 0.01 entirely).
+      if (dSq < 0.0001) {
+        sx += weight;
+        sy += weight * 0.37;
+        continue;
+      }
+      final d = math.sqrt(dSq);
       final push = (radius - d) / radius;
-      sx += (a.x - o.x) / d * push * weight;
-      sy += (a.y - o.y) / d * push * weight;
+      sx += dx / d * push * weight;
+      sy += dy / d * push * weight;
     }
     final len = math.sqrt(sx * sx + sy * sy);
     if (len < 0.001) return;

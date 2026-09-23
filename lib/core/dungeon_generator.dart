@@ -110,22 +110,6 @@ class DungeonGenerator {
     };
   }
 
-  static String zoneNameForFloor(
-    int floorNumber, {
-    String dungeonId = 'sandy',
-  }) {
-    return DungeonCatalog.byId(dungeonId).name;
-  }
-
-  static String getRoomVisualType(RoomType type) {
-    return switch (type) {
-      RoomType.boss => 'B',
-      RoomType.elite => 'E',
-      RoomType.treasure => 'T',
-      RoomType.normal => 'N',
-    };
-  }
-
   static double getDifficultyMultiplier(RoomType type) {
     return switch (type) {
       RoomType.boss => 2.1,

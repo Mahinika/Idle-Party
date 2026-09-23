@@ -438,7 +438,4 @@ abstract final class AchievementCatalog {
     }
     return null;
   }
-
-  static List<AchievementDef> forCategory(AchievementCategory c) =>
-      all.where((d) => d.category == c).toList();
 }
