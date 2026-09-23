@@ -403,6 +403,8 @@ def cloth_tint_from_labels(clf: Classification, body: Image.Image) -> Image.Imag
                 continue
             if tag not in GARMENT:
                 continue
+            if undertunic_zone(clf, x, y) not in ("shirt", "pants"):
+                continue
             if y <= chin + 8 and abs(x - fx) <= head_x:
                 continue
             sr, sg, sb, sa = sp[x, y]
@@ -431,29 +433,78 @@ def _punch_facit_head_band(clf: Classification, tint: Image.Image) -> Image.Imag
     return tint
 
 
-def paint_family_body(clf: Classification) -> tuple[Image.Image, Image.Image]:
-    """Facit body: copy identity pixels, strip helm, recolor garment to tunic.
+def undertunic_zone(clf: Classification, x: int, y: int) -> str:
+    """Shirt and pants stay. Arms become skin. Robe wings and pauldrons drop."""
+    x0, y0, x1, y1 = clf.box
+    mid_y = y0 + int((y1 - y0) * 0.62)
+    torso_half = max(11.0, clf.face_half * 1.35)
+    arm_half = max(torso_half + 8.0, clf.face_half * 2.2)
+    leg_half = torso_half * 1.25
+    arm_bottom = mid_y + int(clf.face_half * 1.05)
+    dx = abs(x - clf.fx)
+    if y < arm_bottom and dx > torso_half:
+        return "arm" if dx <= arm_half else "skip"
+    if y < mid_y:
+        return "shirt"
+    return "pants" if dx <= leg_half else "skip"
 
-    Keeps the gold-master footprint so idle stack vs _src stays under the
-    hard-diff gate. Does not invent geometry.
+
+def _arm_pixel(
+    x: int,
+    y: int,
+    fx: float,
+    fy: float,
+    skin: tuple[int, int, int],
+    a: int,
+) -> tuple[int, int, int, int]:
+    shade = 0.78 + 0.22 * (1.0 - min(1.0, abs(y - fy) / 48.0))
+    shade *= 0.92 + 0.08 * (1.0 - min(1.0, abs(x - fx) / 28.0))
+    return (
+        min(255, int(skin[0] * shade)),
+        min(255, int(skin[1] * shade)),
+        min(255, int(skin[2] * shade)),
+        a,
+    )
+
+
+def paint_family_body(
+    clf: Classification,
+    tunic: tuple[int, int, int] | None = None,
+    pants: tuple[int, int, int] | None = None,
+) -> tuple[Image.Image, Image.Image]:
+    """Undertunic: face, hair, a flat shirt, and pants. No plate, robe, or hat.
+
+    Does not invent a new silhouette. Costume pixels outside the shirt and
+    pants are dropped or turned into bare arms. Armor overlays cover that
+    footprint when a slot is filled.
     """
     px = clf.src.load()
-    tunic, pants = TUNIC[clf.family]
+    if tunic is None or pants is None:
+        tunic, pants = TUNIC[clf.family]
     x0, y0, x1, y1 = clf.box
     mid_y = y0 + int((y1 - y0) * 0.62)
     out = Image.new("RGBA", (N, N), (0, 0, 0, 0))
     op = out.load()
+    fx = clf.fx
     for y in range(N):
         for x in range(N):
             tag = clf.labels[y][x]
             if tag == EMPTY or tag == HELM:
                 continue
             r, g, b, a = px[x, y]
+            if clf.family in ("mage", "healer") and is_hat_or_hood(clf.family, (r, g, b)):
+                if tag != EYE and y < clf.chin_y:
+                    continue
             if tag in IDENTITY:
                 op[x, y] = (r, g, b, a)
                 continue
-            cloth = tunic if y < mid_y else pants
-            op[x, y] = recolor_to_cloth((r, g, b), cloth, a)
+            zone = undertunic_zone(clf, x, y)
+            if zone == "skip":
+                continue
+            if zone == "arm":
+                op[x, y] = _arm_pixel(x, y, fx, clf.fy, clf.face, a)
+                continue
+            op[x, y] = flat_undertunic_pixel(x, y, fx, mid_y, tunic, pants, a)
     out = despeckle_alpha(out)
     if clf.family in ("mage", "healer"):
         strip_equipped_helm_from_body(clf.family, out)

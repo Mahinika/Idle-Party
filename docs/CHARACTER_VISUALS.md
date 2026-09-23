@@ -212,10 +212,11 @@ pose. Files live at `assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png`
 2. **Classify** every pixel into one exclusive tag (eye > skin > hair > ink >
    helm > armor > cloth) — YCbCr chroma + 8-connected flood, never recolor
    while guessing (`tool/paper_doll_classify.py`).
-3. Family/facit body: copy identity pixels, strip helm, recolor garment to
-   undertunic cloth (full pose footprint — sleeves stay so gear still lines
-   up). LOOK variants flatten garment chroma to tunic + shorts, then wash
-   skin/hair/eyes **by tag**.
+3. Family/facit body: copy identity pixels, drop helm and robe/plate wings,
+   paint shirt and pants in the family cloth, and bare arms in face skin.
+   Mage/healer hat colors above the chin stay off the body (the hat is the
+   helm overlay). LOOK variants use that same shirt, then recolor skin/hair
+   and bare arms **by race**.
 4. Cloth-only `*_body_tint_*.png` from GARMENT tags — never overlaps
    gold-master skin / eyes / hair.
 

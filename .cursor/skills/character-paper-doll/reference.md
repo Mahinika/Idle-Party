@@ -24,9 +24,10 @@ Read when baking layers, a facit gate fails, or tuning authored overrides.
 - `hit` uses the **idle** body + painter recoil — not the walk stride
 - Motion for the single clips lives in `ownedStepOffset` /
   `mainHandExtraRotation`, not in new PNGs
-- Every spec gets a body wash (`HeroIdentity.ownedBodyTintArgb`) on the
-  generated **cloth-only mask**; never filter the whole body (skin/hair/face
-  ink stay original). Gear overlays keep their authored palette.
+- Draw the body PNG as authored. Specs that share a family look the same
+  with empty slots. Do not paint `ownedBodyTintArgb` over the doll — a hue
+  wash crushed cloth and filled the transparent corners. Gear overlays keep
+  their authored palette and only paint when that slot is filled.
 - Armor t2 may thicken/clarify t0 alpha but must keep its palette. Never apply
   a global gold/orange transform; `_authored/*_t2` is archive, not a live win.
 - Grips must sit on **opaque** pixels (handle centroid; bows mid-shape).

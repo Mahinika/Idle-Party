@@ -6,8 +6,9 @@ Pipeline (classify then paint — never recolor while guessing):
   → LOOK variants: canonical sleeveless tunic+shorts, then race palette by tag
   → features on the silhouette → cloth-only tint → validate → save
 
-Gear overlays stay untouched. Human-male family bodies keep the gold-master
-footprint so idle facit vs dressed `_src` still gates.
+Gear overlays stay untouched. Family bodies are the shirt-and-pants undertunic
+(helm and plate/robe wings dropped). Idle facit still stacks those bodies with
+the extracted overlays against dressed `_src`.
 
 Writes:
   assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png
@@ -35,6 +36,7 @@ from paper_doll_classify import (
     cloth_tint_from_labels,
     paint_canonical_body,
     paint_family_body,
+    undertunic_zone,
 )
 
 REPO = Path(__file__).resolve().parents[1]
@@ -449,12 +451,29 @@ def paint_undertunic_body(
     female: bool,
 ) -> tuple[Image.Image, Image.Image]:
     clf = classify_src(family, anim)
-    if look.key == "human" and not female:
-        return paint_family_body(clf)
     tunic, pants = _family_cloth(family, female=female)
-    body = paint_canonical_body(clf, tunic=tunic, pants=pants, sleeveless=False)
-    body = apply_race_on_labels(clf, body, look, female=female)
+    body, _tint = paint_family_body(clf, tunic=tunic, pants=pants)
+    if not (look.key == "human" and not female):
+        body = apply_race_on_labels(clf, body, look, female=female)
+        _recolor_bare_arms(clf, body, look.skin_f if female else look.skin_m)
+    if family in ("mage", "healer"):
+        from build_owned_gear_layers import strip_equipped_helm_from_body
+
+        strip_equipped_helm_from_body(family, body)
     return body, cloth_tint_from_labels(clf, body)
+
+
+def _recolor_bare_arms(clf, body: Image.Image, skin: tuple[int, int, int]) -> None:
+    op = body.load()
+    for y in range(128):
+        for x in range(128):
+            if undertunic_zone(clf, x, y) != "arm":
+                continue
+            r, g, b, a = op[x, y]
+            if a < 40:
+                continue
+            washed = shade_from((r, g, b), skin, strength=0.85)
+            op[x, y] = (*washed, a)
 
 
 def save_pair(path: Path, im: Image.Image) -> None:
