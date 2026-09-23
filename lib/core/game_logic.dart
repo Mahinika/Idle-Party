@@ -1447,9 +1447,7 @@ class GameLogic {
       final nextRace = race ?? hero.race;
       final nextSex =
           sex ??
-          (race != null
-              ? HeroSex.defaultFor(hero.gearAffinity)
-              : hero.sex);
+          (race != null ? HeroSex.defaultFor(hero.gearAffinity) : hero.sex);
       if (nextRace == hero.race && nextSex == hero.sex) {
         roster.add(hero);
         continue;
@@ -3071,6 +3069,8 @@ class GameLogic {
       PetService.bondPet(state, petId);
   static GameState setActivePet(GameState state, String petId) =>
       PetService.setActivePet(state, petId);
+  static GameState renamePet(GameState state, String petId, String rawName) =>
+      PetService.renamePet(state, petId, rawName);
   static int petLevelUpCost(Pet pet) => PetService.petLevelUpCost(pet);
   static GameState levelUpPet(GameState state, String petId) =>
       PetService.levelUpPet(state, petId);

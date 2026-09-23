@@ -183,6 +183,11 @@ class Pet {
     return id;
   }
 
+  /// Catalog label (Gold Grub). [name] may be a player nickname.
+  String get speciesName => PetCatalog.byId(resolvedSpecies)?.name ?? name;
+
+  bool get hasNickname => name != speciesName;
+
   int get totalAttackBonus {
     final rarityBonus = PetCatalog.rarityAtkBonus(rarity);
     final bond = bondLevel ~/ 5;

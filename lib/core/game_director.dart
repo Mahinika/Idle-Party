@@ -29,6 +29,7 @@ import 'hero_identity.dart';
 import 'gold_income.dart';
 import 'logic_notices.dart';
 import 'meta_systems.dart';
+import 'party_name_filter.dart';
 import 'play_games_bridge.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
@@ -985,8 +986,7 @@ class GameDirector extends ChangeNotifier {
         }
         final payoffNotices = LogicNotices.takeMetaPayoffs();
         final questReady = _questReadyLine();
-        if (questReady != null &&
-            (clearLine.length + questReady.length) < 72) {
+        if (questReady != null && (clearLine.length + questReady.length) < 72) {
           clearLine = '$clearLine · $questReady';
         }
         // KEY TIMED / depleted owns the clear banner (bigger than F CLEAR).
@@ -2927,6 +2927,27 @@ class GameDirector extends ChangeNotifier {
 
   void setActivePet(String petId) {
     _applyUpgrade(GameLogic.setActivePet(_state, petId));
+  }
+
+  void renamePet(String petId, String rawName) {
+    Pet? pet;
+    for (final owned in _state.ownedPets) {
+      if (owned.id == petId) {
+        pet = owned;
+        break;
+      }
+    }
+    if (pet == null) return;
+    final next = PartyNameFilter.sanitize(rawName, whenEmpty: pet.speciesName);
+    if (next == null) {
+      showToast('Choose another name', life: 1.8);
+      return;
+    }
+    if (next == pet.name) return;
+    final species = pet.speciesName;
+    _applyUpgrade(GameLogic.renamePet(_state, petId, rawName));
+    GameAudio.ui();
+    showToast(next == species ? 'Name cleared' : 'Named $next', life: 1.8);
   }
 
   void useConsumable({int? heroIndex}) {

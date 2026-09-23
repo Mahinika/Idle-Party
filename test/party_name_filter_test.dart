@@ -5,6 +5,7 @@ void main() {
   test('empty becomes The Party', () {
     expect(PartyNameFilter.sanitize(''), PartyNameFilter.defaultName);
     expect(PartyNameFilter.sanitize('   '), PartyNameFilter.defaultName);
+    expect(PartyNameFilter.sanitize('  ', whenEmpty: 'Gold Grub'), 'Gold Grub');
   });
 
   test('allows fantasy party names and Scunthorpe-safe words', () {
@@ -36,7 +37,9 @@ void main() {
     expect(PartyNameFilter.sanitize('MAGA'), isNull);
     expect(PartyNameFilter.sanitize('Antifa'), isNull);
     expect(
-      PartyNameFilter.isBlocked(String.fromCharCodes(const [110, 105, 103, 103, 101, 114])),
+      PartyNameFilter.isBlocked(
+        String.fromCharCodes(const [110, 105, 103, 103, 101, 114]),
+      ),
       isTrue,
     );
     expect(PartyNameFilter.isBlocked('democrat'), isTrue);

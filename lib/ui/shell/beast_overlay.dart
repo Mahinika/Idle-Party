@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/party_name_filter.dart';
 import '../../models/dungeon_def.dart';
 import '../../models/pet.dart';
 import '../../assets/custom_assets.dart';
@@ -9,6 +10,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
+import '../web_click_bridge.dart';
 
 class BeastOverlay extends StatefulWidget {
   const BeastOverlay({super.key, required this.director});
@@ -44,6 +46,25 @@ class _BeastOverlayState extends State<BeastOverlay> {
         _mergeB = petId;
       }
     });
+  }
+
+  Future<void> _promptRename(Pet pet) async {
+    WebClickBridge.pushLayer();
+    String? next;
+    try {
+      next = await showDialog<String>(
+        context: context,
+        useRootNavigator: true,
+        builder: (ctx) => _RenamePetDialog(
+          speciesName: pet.speciesName,
+          currentName: pet.name,
+        ),
+      );
+    } finally {
+      WebClickBridge.popLayer();
+    }
+    if (!mounted || next == null) return;
+    director.renamePet(pet.id, next);
   }
 
   void _doMerge() {
@@ -194,6 +215,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                                     ),
                                   ),
                                   Text(
+                                    '${pet.hasNickname ? '${pet.speciesName}  ' : ''}'
                                     'Lv${pet.level}  ATK +${pet.totalAttackBonus}'
                                     '${passive.isEmpty ? '' : '  $passive'}'
                                     '  · aff ${_affinityLabel(pet.affinityDungeonId)}'
@@ -219,6 +241,14 @@ class _BeastOverlayState extends State<BeastOverlay> {
                       ],
                     ),
                     const SizedBox(height: 8),
+                    GameButton(
+                      label: 'RENAME',
+                      style: GameButtonStyle.grey,
+                      dense: true,
+                      tip: 'Give this pet its own name',
+                      onPressed: () => _promptRename(pet),
+                    ),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Expanded(
@@ -345,6 +375,128 @@ class _BeastOverlayState extends State<BeastOverlay> {
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+class _RenamePetDialog extends StatefulWidget {
+  const _RenamePetDialog({
+    required this.speciesName,
+    required this.currentName,
+  });
+
+  final String speciesName;
+  final String currentName;
+
+  @override
+  State<_RenamePetDialog> createState() => _RenamePetDialogState();
+}
+
+class _RenamePetDialogState extends State<_RenamePetDialog> {
+  late final TextEditingController _ctrl;
+  bool _error = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.currentName);
+    _ctrl.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: widget.currentName.length,
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final next = PartyNameFilter.sanitize(
+      _ctrl.text,
+      whenEmpty: widget.speciesName,
+    );
+    if (next == null) {
+      setState(() => _error = true);
+      return;
+    }
+    Navigator.of(context).pop(next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: GameTheme.sheet,
+      title: Text(
+        'RENAME',
+        style: GameTheme.body(size: 16, color: GameTheme.parchment),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            widget.speciesName,
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _ctrl,
+            autofocus: true,
+            maxLength: PartyNameFilter.maxLen,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            autocorrect: false,
+            enableSuggestions: false,
+            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            cursorColor: GameTheme.torchHot,
+            onChanged: (_) {
+              if (_error) setState(() => _error = false);
+            },
+            onSubmitted: (_) => _submit(),
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: 'Grubby',
+              hintStyle: GameTheme.body(
+                size: 14,
+                color: GameTheme.parchmentDim,
+              ),
+              filled: true,
+              fillColor: GameTheme.panelInset,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                borderSide: BorderSide(color: GameTheme.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                borderSide: BorderSide(color: GameTheme.torch),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _error ? 'Choose another name' : 'Blank uses ${widget.speciesName}',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ],
+      ),
+      actions: [
+        MenuChrome.dialogCancel(
+          label: 'CLOSE',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        GameButton(
+          label: 'NAME',
+          style: GameButtonStyle.brown,
+          expanded: false,
+          onPressed: _submit,
         ),
       ],
     );

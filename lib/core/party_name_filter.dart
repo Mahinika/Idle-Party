@@ -17,9 +17,12 @@ abstract final class PartyNameFilter {
   );
 
   /// Trim, collapse spaces, apply default, or null if illegal / blocked.
-  static String? sanitize(String raw) {
+  ///
+  /// [whenEmpty] replaces [defaultName] for a blank field (pet rename resets
+  /// to the species name).
+  static String? sanitize(String raw, {String? whenEmpty}) {
     final trimmed = raw.trim().replaceAll(RegExp(r'\s+'), ' ');
-    if (trimmed.isEmpty) return defaultName;
+    if (trimmed.isEmpty) return whenEmpty ?? defaultName;
     if (trimmed.length < minLen || trimmed.length > maxLen) return null;
     if (!_allowedChars.hasMatch(trimmed)) return null;
     if (_urlLike.hasMatch(trimmed.replaceAll(' ', ''))) return null;

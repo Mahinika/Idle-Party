@@ -104,6 +104,53 @@ void main() {
     expect(state.metaDepth.lifetimePetMerges, 1);
   });
 
+  test('pet nickname saves, clears, and survives a merge', () {
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 7, 31),
+    ).copyWith(essence: 200);
+    final grub = Pet(
+      id: 'gold_grub_1',
+      name: 'Gold Grub',
+      attackBonus: 1,
+      speciesId: 'gold_grub',
+      rarity: PetRarity.common,
+      passive: PetPassive.goldFind,
+      affinityDungeonId: 'dead',
+    );
+    final twin = Pet(
+      id: 'gold_grub_2',
+      name: 'Gold Grub',
+      attackBonus: 1,
+      speciesId: 'gold_grub',
+      rarity: PetRarity.common,
+      passive: PetPassive.goldFind,
+      affinityDungeonId: 'dead',
+    );
+    state = state.copyWith(ownedPets: [grub], activePet: grub);
+    state = GameLogic.renamePet(state, grub.id, '  grubby ');
+    expect(state.ownedPets.single.name, 'grubby');
+    expect(state.ownedPets.single.speciesName, 'Gold Grub');
+    expect(state.ownedPets.single.hasNickname, isTrue);
+    expect(state.activePet?.name, 'grubby');
+
+    final loaded = GameLogic.stateFromJson(state.toJson());
+    expect(loaded.ownedPets.single.name, 'grubby');
+    expect(loaded.activePet?.name, 'grubby');
+
+    final blocked = GameLogic.renamePet(state, grub.id, 'shit');
+    expect(identical(blocked, state), isTrue);
+
+    state = GameLogic.renamePet(state, grub.id, '   ');
+    expect(state.ownedPets.single.name, 'Gold Grub');
+    expect(state.ownedPets.single.hasNickname, isFalse);
+
+    state = GameLogic.renamePet(state, grub.id, 'Grubby');
+    state = state.copyWith(ownedPets: [...state.ownedPets, twin]);
+    state = GameLogic.mergePets(state, grub.id, twin.id);
+    expect(state.ownedPets.single.name, 'Grubby');
+    expect(state.ownedPets.single.speciesName, 'Gold Grub');
+  });
+
   test('daily vault progress increments on floor clear path', () {
     final now = DateTime.now();
     var state = GameLogic.createInitialState(now: now);
@@ -256,7 +303,9 @@ void main() {
   });
 
   test('Combinator Charm cheapens MERGE gold, not odds', () {
-    final item = PrestigeShopCatalog.all.firstWhere((i) => i.id == 'combine_luck');
+    final item = PrestigeShopCatalog.all.firstWhere(
+      (i) => i.id == 'combine_luck',
+    );
     expect(item.description.toLowerCase(), contains('gold'));
     expect(item.description.toLowerCase(), isNot(contains('odds')));
   });
@@ -372,8 +421,9 @@ void main() {
   });
 
   test('new prestige QoL shop items apply and round-trip', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 20))
-        .copyWith(essence: 2000, ascensionLevel: 10);
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 20),
+    ).copyWith(essence: 2000, ascensionLevel: 10);
     final flaskBefore = GameLogic.marketFlaskCost(state);
     final capBefore = GameLogic.maxAutoSellIlvlCap(state);
     state = GameLogic.buyPrestigeShopItem(state, 'loadout_slot');
@@ -444,17 +494,15 @@ void main() {
     );
     expect(PrestigeShopCatalog.byId('loadout_slot')?.listedInShop, isFalse);
 
-    var state = GameLogic.createInitialState(now: DateTime(2026, 8, 21))
-        .copyWith(essence: 200, ascensionLevel: 10);
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 8, 21),
+    ).copyWith(essence: 200, ascensionLevel: 10);
     state = GameLogic.buyPrestigeShopItem(state, 'loadout_slot');
     expect(state.metaDepth.loadoutBonusSlots, 1);
   });
 
   test('God Hand Cadence stays off KEEP buys — CD lives on God Hand only', () {
-    expect(
-      PrestigeShopCatalog.offered.any((i) => i.id == 'gh_cdr'),
-      isFalse,
-    );
+    expect(PrestigeShopCatalog.offered.any((i) => i.id == 'gh_cdr'), isFalse);
     expect(PrestigeShopCatalog.byId('gh_cdr')?.listedInShop, isFalse);
   });
 }

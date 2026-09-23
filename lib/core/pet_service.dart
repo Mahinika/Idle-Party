@@ -4,6 +4,7 @@ import '../models/pet.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'meta_systems.dart';
+import 'party_name_filter.dart';
 
 /// Hatching, bonding, merging and framing pets.
 ///
@@ -34,7 +35,8 @@ abstract final class PetService {
     if (state.essence < cost) {
       return state;
     }
-    final species = PetCatalog.all[GameLogic.random.nextInt(PetCatalog.all.length)];
+    final species =
+        PetCatalog.all[GameLogic.random.nextInt(PetCatalog.all.length)];
     final rarity = _rollPetRarity();
     final pet = Pet(
       id: '${species.id}_${GameLogic.random.nextInt(100000)}',
@@ -87,6 +89,7 @@ abstract final class PetService {
     }
     if (a == null || b == null) return state;
     final species = PetCatalog.byId(a.resolvedSpecies);
+    final speciesName = species?.name ?? a.speciesName;
     final maxIdx = max(a.rarity.index, b.rarity.index);
     final nextIdx = min(PetRarity.values.length - 1, maxIdx + 1);
     final rarity = PetRarity.values[nextIdx];
@@ -94,7 +97,7 @@ abstract final class PetService {
     final level = max(a.level, b.level);
     final merged = Pet(
       id: '${a.resolvedSpecies}_${GameLogic.random.nextInt(100000)}',
-      name: species?.name ?? a.name,
+      name: _nicknameToKeep(a, b, speciesName),
       attackBonus: max(a.attackBonus, b.attackBonus),
       level: level,
       speciesId: a.resolvedSpecies,
@@ -186,6 +189,38 @@ abstract final class PetService {
       activePet: active,
       lastUpdated: DateTime.now(),
     );
+  }
+
+  /// Blank input restores the species name. Rejected names leave state unchanged.
+  static GameState renamePet(GameState state, String petId, String rawName) {
+    final idx = state.ownedPets.indexWhere((p) => p.id == petId);
+    if (idx < 0) return state;
+    final pet = state.ownedPets[idx];
+    final next = PartyNameFilter.sanitize(rawName, whenEmpty: pet.speciesName);
+    if (next == null || next == pet.name) return state;
+    final pets = List<Pet>.from(state.ownedPets);
+    pets[idx] = pet.copyWith(name: next);
+    Pet? active = state.activePet;
+    if (active?.id == petId) active = pets[idx];
+    return state.copyWith(
+      ownedPets: pets,
+      activePet: active,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// Custom names survive a merge. If both parents are nicknamed, the higher
+  /// bond wins; a tie keeps the first pet's name.
+  static String _nicknameToKeep(Pet a, Pet b, String speciesName) {
+    final aNick = a.name != speciesName;
+    final bNick = b.name != speciesName;
+    if (aNick && !bNick) return a.name;
+    if (bNick && !aNick) return b.name;
+    if (aNick && bNick) {
+      if (b.bondLevel > a.bondLevel) return b.name;
+      return a.name;
+    }
+    return speciesName;
   }
 
   static GameState setActivePet(GameState state, String petId) {
