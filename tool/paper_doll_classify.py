@@ -434,19 +434,26 @@ def _punch_facit_head_band(clf: Classification, tint: Image.Image) -> Image.Imag
 
 
 def undertunic_zone(clf: Classification, x: int, y: int) -> str:
-    """Shirt and pants stay. Arms become skin. Robe wings and pauldrons drop."""
-    x0, y0, x1, y1 = clf.box
-    mid_y = y0 + int((y1 - y0) * 0.62)
-    torso_half = max(11.0, clf.face_half * 1.35)
-    arm_half = max(torso_half + 8.0, clf.face_half * 2.2)
-    leg_half = torso_half * 1.25
-    arm_bottom = mid_y + int(clf.face_half * 1.05)
+    """Shirt and pants on the body column. Short bare arms. Robe and hat drop.
+
+    Anchored on the face, not the gold-master bbox — a robe fills the whole
+    canvas, and using that box paints the hat tip and the robe wings as cloth.
+    """
+    _x0, _y0, _x1, y1 = clf.box
+    torso_half = max(10.0, clf.face_half * 1.15)
+    arm_extra = max(5.0, clf.face_half * 0.55)
+    leg_half = torso_half * 0.92
+    shoulder_y = int(clf.fy + clf.face_half * 0.15)
+    arm_bottom = int(clf.chin_y + clf.face_half * 1.35)
+    mid_y = int(clf.chin_y + clf.face_half * 2.1)
     dx = abs(x - clf.fx)
-    if y < arm_bottom and dx > torso_half:
-        return "arm" if dx <= arm_half else "skip"
-    if y < mid_y:
+    if shoulder_y <= y < arm_bottom and torso_half < dx <= torso_half + arm_extra:
+        return "arm"
+    if clf.chin_y <= y < mid_y and dx <= torso_half:
         return "shirt"
-    return "pants" if dx <= leg_half else "skip"
+    if mid_y <= y <= y1 and dx <= leg_half:
+        return "pants"
+    return "skip"
 
 
 def _arm_pixel(
@@ -492,10 +499,15 @@ def paint_family_body(
             if tag == EMPTY or tag == HELM:
                 continue
             r, g, b, a = px[x, y]
+            # Hat cone and hood point sit above the brow. They are not hair.
+            if y < clf.fy - clf.face_half * 0.85 and tag != EYE:
+                continue
             if clf.family in ("mage", "healer") and is_hat_or_hood(clf.family, (r, g, b)):
-                if tag != EYE and y < clf.chin_y:
+                if tag != EYE and y < clf.chin_y + 4:
                     continue
-            if tag in IDENTITY:
+            if tag in (EYE, SKIN, HAIR) or (
+                tag == INK and y < clf.chin_y and abs(x - fx) <= clf.face_half * 1.35
+            ):
                 op[x, y] = (r, g, b, a)
                 continue
             zone = undertunic_zone(clf, x, y)
