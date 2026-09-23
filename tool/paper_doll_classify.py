@@ -24,11 +24,13 @@ from build_owned_gear_layers import (
     ensure_src,
     face_region,
     flat_undertunic_pixel,
+    ROOT,
     is_gold_pixel,
     is_hair_color,
     is_hat_lining,
     is_hat_or_hood,
     is_metal_or_trim,
+    is_rogue_cloak,
     is_skin,
     load128,
     load128_pose,
@@ -401,9 +403,9 @@ def cloth_tint_from_labels(clf: Classification, body: Image.Image) -> Image.Imag
             r, g, b, a = bp[x, y]
             if a < 40:
                 continue
-            if tag not in GARMENT:
-                continue
-            if undertunic_zone(clf, x, y) not in ("shirt", "pants"):
+            # Sleeves sit on empty pixels beside the old armor. They are
+            # still cloth, so the spec color has to reach them.
+            if tag not in GARMENT and tag != EMPTY:
                 continue
             if y <= chin + 8 and abs(x - fx) <= head_x:
                 continue
@@ -563,52 +565,556 @@ def _ink_the_cut_edge(clf: Classification, out: Image.Image) -> None:
         )
 
 
+_CLOTH_STEPS = (0.52, 0.74, 0.96, 1.16)
+_COVER_CACHE: dict[str, list[list[bool]]] = {}
+
+
+def _load_alpha(path: Path) -> list[list[bool]] | None:
+    if not path.exists():
+        return None
+    px = Image.open(path).convert("RGBA").load()
+    return [[px[x, y][3] >= 40 for x in range(N)] for y in range(N)]
+
+
+def _armor_cover(family: str) -> list[list[bool]]:
+    """Chest, legs, and gloves. Cloth under this stays hidden once equipped."""
+    if family in _COVER_CACHE:
+        return _COVER_CACHE[family]
+    gear = ROOT / family / "gear"
+    masks = []
+    for stem in ("chest_t0_idle", "legs_t0_idle", "hands_t0_idle"):
+        mask = _load_alpha(gear / f"{stem}.png")
+        if mask is not None:
+            masks.append(mask)
+    cover = _new_bool()
+    for y in range(N):
+        for x in range(N):
+            cover[y][x] = any(m[y][x] for m in masks)
+    _COVER_CACHE[family] = cover
+    return cover
+
+
+def _face_light_luma(clf: Classification, x: int, y: int) -> float:
+    """Same hard light as the face, used where the master is only metal."""
+    down = min(1.0, max(0.0, (y - clf.chin_y) / max(12.0, clf.face_half * 2.6)))
+    side = min(1.0, abs(x - clf.fx) / max(8.0, clf.face_half * 1.15))
+    neck = 0.78 if y < clf.chin_y + clf.face_half * 0.28 else 1.0
+    raw = (1.06 - 0.36 * down - 0.2 * side) * neck
+    return max(0.12, min(0.82, (raw - 0.45) / 0.85))
+
+
+def _blur_cloth_luma(px, clf: Classification, radius: int = 3) -> list[list[float]]:
+    """Fold-sized light. Gold trim and plate rivets do not steer the cloth."""
+    acc = [[0.0] * N for _ in range(N)]
+    wgt = [[0.0] * N for _ in range(N)]
+    for y in range(N):
+        for x in range(N):
+            r, g, b, a = px[x, y]
+            if a < 40:
+                continue
+            rgb = (r, g, b)
+            # Trim, plate, and ink lines are not cloth folds.
+            if is_gold_pixel(rgb) or is_metal_or_trim(rgb) or lum(rgb) < 0.22:
+                continue
+            sample = lum(rgb)
+            for dy in range(-radius, radius + 1):
+                yy = y + dy
+                if yy < 0 or yy >= N:
+                    continue
+                for dx in range(-radius, radius + 1):
+                    xx = x + dx
+                    if xx < 0 or xx >= N:
+                        continue
+                    acc[yy][xx] += sample
+                    wgt[yy][xx] += 1
+    out = [[0.0] * N for _ in range(N)]
+    for y in range(N):
+        for x in range(N):
+            if wgt[y][x] >= 4:
+                out[y][x] = acc[y][x] / wgt[y][x]
+            else:
+                out[y][x] = _face_light_luma(clf, x, y)
+    return out
+
+
+_IDLE_ANCHOR: dict[str, tuple[float, float]] = {}
+
+
+def _pose_shift(clf: Classification) -> tuple[int, int]:
+    """How far this clip's chin sits from the idle clip. Armor art is idle."""
+    if clf.anim == "idle":
+        return 0, 0
+    if clf.family not in _IDLE_ANCHOR:
+        idle = classify_src(clf.family, "idle")
+        _IDLE_ANCHOR[clf.family] = (idle.fx, idle.chin_y)
+    ix, iy = _IDLE_ANCHOR[clf.family]
+    return int(round(clf.fx - ix)), int(round(clf.chin_y - iy))
+
+
+def _shifted_cover(clf: Classification) -> list[list[bool]]:
+    cover = _armor_cover(clf.family)
+    dx, dy = _pose_shift(clf)
+    if dx == 0 and dy == 0:
+        return cover
+    out = _new_bool()
+    for y in range(N):
+        sy = y - dy
+        if sy < 0 or sy >= N:
+            continue
+        row = cover[sy]
+        for x in range(N):
+            sx = x - dx
+            if 0 <= sx < N and row[sx]:
+                out[y][x] = True
+    return out
+
+
+def _quantize_cloth(
+    cloth: tuple[int, int, int], luma: float, *, bias: float = 1.0
+) -> tuple[int, int, int, int]:
+    t = max(0.0, min(1.0, (luma - 0.06) / 0.70))
+    raw = (0.52 + t * 0.64) * bias
+    tone = min(_CLOTH_STEPS, key=lambda step: abs(step - raw))
+    return (
+        min(255, int(cloth[0] * tone)),
+        min(255, int(cloth[1] * tone)),
+        min(255, int(cloth[2] * tone)),
+        255,
+    )
+
+
+def _dilate_mask(mask: list[list[bool]], radius: int) -> list[list[bool]]:
+    out = _new_bool()
+    for y in range(N):
+        for x in range(N):
+            if not mask[y][x]:
+                continue
+            for dy in range(-radius, radius + 1):
+                yy = y + dy
+                if yy < 0 or yy >= N:
+                    continue
+                row = out[yy]
+                for dx in range(-radius, radius + 1):
+                    xx = x + dx
+                    if 0 <= xx < N:
+                        row[xx] = True
+    return out
+
+
+def _erode_mask(mask: list[list[bool]], radius: int) -> list[list[bool]]:
+    out = _new_bool()
+    for y in range(radius, N - radius):
+        for x in range(radius, N - radius):
+            if all(
+                mask[y + dy][x + dx]
+                for dy in range(-radius, radius + 1)
+                for dx in range(-radius, radius + 1)
+            ):
+                out[y][x] = True
+    return out
+
+
+def _fill_enclosed(keep: list[list[bool]], allowed: list[list[bool]]) -> None:
+    """Fill holes inside the silhouette. Filigree gaps are not polka dots."""
+    outside = _new_bool()
+    q: deque[tuple[int, int]] = deque()
+    for x in range(N):
+        q.append((x, 0))
+        q.append((x, N - 1))
+    for y in range(N):
+        q.append((0, y))
+        q.append((N - 1, y))
+    while q:
+        x, y = q.popleft()
+        if not (0 <= x < N and 0 <= y < N) or outside[y][x] or keep[y][x]:
+            continue
+        outside[y][x] = True
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            q.append((x + dx, y + dy))
+    for y in range(N):
+        for x in range(N):
+            if keep[y][x] or outside[y][x] or not allowed[y][x]:
+                continue
+            keep[y][x] = True
+
+
+def _drop_specks(mask: list[list[bool]], min_area: int = 80) -> None:
+    """Gold crumbs and overlay dirt are not a second sleeve."""
+    seen = _new_bool()
+    for y0 in range(N):
+        for x0 in range(N):
+            if not mask[y0][x0] or seen[y0][x0]:
+                continue
+            blob: list[tuple[int, int]] = []
+            q: deque[tuple[int, int]] = deque([(x0, y0)])
+            seen[y0][x0] = True
+            while q:
+                x, y = q.popleft()
+                blob.append((x, y))
+                for dx, dy in _NEIGH8:
+                    nx, ny = x + dx, y + dy
+                    if not (0 <= nx < N and 0 <= ny < N) or seen[ny][nx]:
+                        continue
+                    if not mask[ny][nx]:
+                        continue
+                    seen[ny][nx] = True
+                    q.append((nx, ny))
+            if len(blob) >= min_area:
+                continue
+            for x, y in blob:
+                mask[y][x] = False
+
+
+def _snap(width: float) -> int:
+    """Stair-step the edge so the hem is pixels, not a smooth curve."""
+    return max(4, int(round(width / 2.0)) * 2)
+
+
+def _hand_targets(clf: Classification) -> tuple[tuple[float, float], tuple[float, float]]:
+    """Where each sleeve aims. Falls back to a short hang beside the ribs."""
+    mask = _load_alpha(ROOT / clf.family / "gear" / "hands_t0_idle.png")
+    dx, dy = _pose_shift(clf)
+    fh = max(8.0, clf.face_half)
+    found: dict[int, list[tuple[int, int]]] = {-1: [], 1: []}
+    if mask is not None:
+        for y in range(N):
+            row = mask[y]
+            for x in range(N):
+                if not row[x]:
+                    continue
+                px_, py = x + dx, y + dy
+                if not (0 <= px_ < N and 0 <= py < N):
+                    continue
+                found[-1 if px_ < clf.fx else 1].append((px_, py))
+    out: list[tuple[float, float]] = []
+    for sign in (-1, 1):
+        pts = found[sign]
+        if len(pts) < 12:
+            out.append(
+                (
+                    clf.fx + sign * fh * 1.45,
+                    clf.chin_y + fh * 1.25,
+                )
+            )
+            continue
+        out.append(
+            (
+                sum(p[0] for p in pts) / len(pts),
+                sum(p[1] for p in pts) / len(pts),
+            )
+        )
+    return out[0], out[1]
+
+
+def _stamp_square(
+    zones: list[list[str]],
+    cx: float,
+    cy: float,
+    rad: int,
+    zone: str,
+    *,
+    overwrite: bool = False,
+) -> None:
+    for y in range(int(cy) - rad, int(cy) + rad + 1):
+        if y < 0 or y >= N:
+            continue
+        row = zones[y]
+        for x in range(int(cx) - rad, int(cx) + rad + 1):
+            if x < 0 or x >= N:
+                continue
+            if max(abs(x - int(cx)), abs(y - int(cy))) > rad:
+                continue
+            if row[x] and not overwrite:
+                continue
+            row[x] = zone
+
+
+def _cloth_zones(clf: Classification) -> list[list[str]]:
+    """Plain shirt, sleeves, pants, and shoes. Not the armor silhouette.
+
+    Widths are stair-stepped and the light matches the face, so the cloth
+    is the same kind of pixel picture as the head. Pauldrons, robes, gold,
+    and plate stay on the overlays.
+    """
+    fh = max(8.0, clf.face_half)
+    fx = clf.fx
+    chin = clf.chin_y
+    _x0, _y0, _x1, y1 = clf.box
+    shoulder_y = chin + fh * 0.42
+    waist_y = chin + fh * 1.85
+    hip_y = chin + fh * 2.35
+    hem = min(N - 3, max(int(chin + fh * 3.5), y1 - 6))
+    neck_w = fh * 0.40
+    chest_w = fh * 0.92
+    hip_w = fh * 0.70
+    zones = [[""] * N for _ in range(N)]
+
+    def torso_half(y: int) -> int:
+        if y < shoulder_y:
+            span = max(1.0, shoulder_y - (chin - 1))
+            t = min(1.0, max(0.0, (y - (chin - 1)) / span))
+            return _snap(neck_w + (chest_w - neck_w) * t)
+        if y < waist_y:
+            return _snap(chest_w)
+        span = max(1.0, hip_y - waist_y)
+        t = min(1.0, max(0.0, (y - waist_y) / span))
+        return _snap(chest_w + (hip_w - chest_w) * t)
+
+    y_start = max(0, int(chin) - 1)
+    for y in range(y_start, int(hip_y) + 1):
+        if y >= N:
+            break
+        half = torso_half(y)
+        for x in range(int(fx) - half, int(fx) + half + 1):
+            if 0 <= x < N:
+                zones[y][x] = "shirt"
+
+    leg_w = _snap(fh * 0.30)
+    gap = max(2, int(fh * 0.14))
+    shoe_top = hem - 5
+    for sign in (-1.0, 1.0):
+        cx = int(round(fx + sign * (gap + leg_w)))
+        for y in range(int(waist_y), hem + 1):
+            if y < 0 or y >= N:
+                continue
+            extra = 1 if y >= shoe_top else 0
+            half = leg_w + extra
+            zone = "shoe" if y >= shoe_top else "pants"
+            for x in range(cx - half, cx + half + 1):
+                if 0 <= x < N and not zones[y][x]:
+                    zones[y][x] = zone
+
+    sleeve_r = max(3, int(fh * 0.22))
+    left, right = _hand_targets(clf)
+    for sign, (hx, hy) in ((-1, left), (1, right)):
+        sx = fx + sign * (torso_half(int(shoulder_y)) - 1)
+        sy = shoulder_y
+        # Stop short of the glove so the cuff is cloth, not a gauntlet.
+        ex = sx + (hx - sx) * 0.72
+        ey = sy + (hy - sy) * 0.72
+        steps = max(6, int(abs(ex - sx) + abs(ey - sy)))
+        sag = fh * 0.42
+        for i in range(steps + 1):
+            t = i / steps
+            _stamp_square(
+                zones,
+                sx + (ex - sx) * t,
+                sy + (ey - sy) * t + sag * (4.0 * t * (1.0 - t)),
+                sleeve_r,
+                "cuff" if t > 0.78 else "shirt",
+                overwrite=t > 0.78,
+            )
+    return zones
+
+
+def _hair_on_the_face(clf: Classification) -> set[tuple[int, int]]:
+    """Haircut touching the face. Loose hood tufts are not hair."""
+    fh = clf.face_half
+    fx, fy, chin = clf.fx, clf.fy, clf.chin_y
+    stack: list[tuple[int, int]] = []
+    seen: set[tuple[int, int]] = set()
+    for y in range(N):
+        for x in range(N):
+            tag = clf.at(x, y)
+            if tag not in (EYE, SKIN):
+                continue
+            if abs(x - fx) > fh * 1.05 or not (fy - fh <= y <= chin + 2):
+                continue
+            if tag == SKIN and clf.family == "healer":
+                r, g, b, _a = clf.src.getpixel((x, y))
+                if lum((r, g, b)) < lum(clf.face) - 0.12:
+                    continue
+                if (
+                    abs(r - clf.face[0])
+                    + abs(g - clf.face[1])
+                    + abs(b - clf.face[2])
+                    > 90
+                ):
+                    continue
+            stack.append((x, y))
+            seen.add((x, y))
+    keep: set[tuple[int, int]] = set()
+    while stack:
+        x, y = stack.pop()
+        for dy in range(-2, 3):
+            for dx in range(-2, 3):
+                nx, ny = x + dx, y + dy
+                if (nx, ny) in seen or nx < 0 or ny < 0 or nx >= N or ny >= N:
+                    continue
+                if clf.at(nx, ny) != HAIR:
+                    continue
+                if abs(nx - fx) > fh * 1.45 or not (fy - fh * 1.15 <= ny <= chin + 2):
+                    continue
+                r, g, b, _a = clf.src.getpixel((nx, ny))
+                if (
+                    clf.family == "healer"
+                    and lum((r, g, b)) > 0.42
+                    and r > b + 8
+                ):
+                    continue
+                seen.add((nx, ny))
+                keep.add((nx, ny))
+                stack.append((nx, ny))
+    return keep
+
+
+def drop_small_islands(im: Image.Image, min_size: int = 12) -> Image.Image:
+    """Remove hood crumbs. The shirt and the face stay."""
+    src = im.copy()
+    sp = src.load()
+    seen = [[False] * N for _ in range(N)]
+    kill: list[tuple[int, int]] = []
+    for y in range(N):
+        for x in range(N):
+            if seen[y][x] or sp[x, y][3] < 40:
+                continue
+            stack = [(x, y)]
+            pix: list[tuple[int, int]] = []
+            while stack:
+                cx, cy = stack.pop()
+                if cx < 0 or cy < 0 or cx >= N or cy >= N or seen[cy][cx]:
+                    continue
+                if sp[cx, cy][3] < 40:
+                    continue
+                seen[cy][cx] = True
+                pix.append((cx, cy))
+                stack.extend(((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)))
+            if len(pix) < min_size:
+                kill.extend(pix)
+    if not kill:
+        return im
+    out = im.copy()
+    op = out.load()
+    for x, y in kill:
+        op[x, y] = (0, 0, 0, 0)
+    return out
+
+
+def _face_oval(clf: Classification, x: int, y: int) -> bool:
+    """Smooth cheek. The healer hood is not part of the face."""
+    fh = max(8.0, clf.face_half)
+    if y > clf.chin_y + 1:
+        return False
+    dx = (x - clf.fx) / (fh * 0.96)
+    dy = (y - clf.fy) / (fh * 0.98)
+    return dx * dx + dy * dy <= 1.0
+
+
+def _fill_face_oval(clf: Classification, op) -> None:
+    fr, fg, fb = clf.face
+    fh = clf.face_half
+    for y in range(N):
+        for x in range(N):
+            if not _face_oval(clf, x, y):
+                continue
+            shade = 1.0 if y < clf.fy + fh * 0.2 else 0.82
+            dx = abs(x - clf.fx) / max(8.0, fh)
+            if dx > 0.72 or (y - clf.fy) / max(8.0, fh) > 0.7:
+                shade = 0.7
+            op[x, y] = (
+                min(255, int(fr * shade)),
+                min(255, int(fg * shade)),
+                min(255, int(fb * shade)),
+                255,
+            )
+
+
+def _restore_healer_face(clf: Classification, body: Image.Image) -> None:
+    """Put a plain face back after the hood overlay is stripped off."""
+    _fill_face_oval(clf, body.load())
+    op = body.load()
+    px = clf.src.load()
+    fx = clf.fx
+    for y in range(N):
+        for x in range(N):
+            if not _face_oval(clf, x, y):
+                continue
+            tag = clf.at(x, y)
+            r, g, b, a = px[x, y]
+            if a < 16:
+                continue
+            if tag == EYE or (
+                tag == INK and abs(x - fx) <= clf.face_half * 0.7
+            ):
+                op[x, y] = (r, g, b, a)
+
+
+def _paint_cloth_pixel(
+    zone: str,
+    luma: float,
+    tunic: tuple[int, int, int],
+    pants: tuple[int, int, int],
+) -> tuple[int, int, int, int]:
+    if zone == "shirt":
+        return _quantize_cloth(tunic, luma)
+    if zone == "cuff":
+        return _quantize_cloth(tunic, luma, bias=0.72)
+    if zone == "shoe":
+        return _quantize_cloth(pants, luma, bias=0.58)
+    return _quantize_cloth(pants, luma)
+
+
 def paint_family_body(
     clf: Classification,
     tunic: tuple[int, int, int] | None = None,
     pants: tuple[int, int, int] | None = None,
 ) -> tuple[Image.Image, Image.Image]:
-    """Undertunic: face, hair, a shaded shirt, and pants. No plate, robe, or hat.
+    """Undertunic: the face from the master, and a plain shirt under the armor.
 
-    The shirt uses the same hard light steps and ink edge as the face.
-    Costume pixels outside that column are dropped. Armor overlays cover
-    the footprint when a slot is filled.
+    Sleeves, pants, and shoes use the face's hard light and ink. They are
+    narrower than plate, robes, and capes, so those stay off until equipped.
     """
     px = clf.src.load()
     if tunic is None or pants is None:
         tunic, pants = TUNIC[clf.family]
+    zones = _cloth_zones(clf)
+    hair_keep = _hair_on_the_face(clf)
     out = Image.new("RGBA", (N, N), (0, 0, 0, 0))
     op = out.load()
     fx = clf.fx
     for y in range(N):
         for x in range(N):
             tag = clf.labels[y][x]
-            if tag == EMPTY or tag == HELM:
-                continue
             r, g, b, a = px[x, y]
             # Hat cone and hood point sit above the brow. They are not hair.
             if y < clf.fy - clf.face_half * 0.85 and tag != EYE:
                 continue
-            if clf.family in ("mage", "healer") and is_hat_or_hood(clf.family, (r, g, b)):
+            if a > 16 and clf.family in ("mage", "healer") and is_hat_or_hood(
+                clf.family, (r, g, b)
+            ):
                 if tag != EYE and y < clf.chin_y + 4:
                     continue
-            if tag in (EYE, SKIN, HAIR) or (
-                tag == INK and y < clf.chin_y and abs(x - fx) <= clf.face_half * 1.35
+            # Hoods and hat fringes are tagged as hair. Keep only the
+            # haircut on the head so a naked hero is not still wearing one.
+            # Healer gold fringe is the hood, not a haircut.
+            hair_on_head = (x, y) in hair_keep
+            # Healer cheeks are the filled oval. Source "skin" is the hood.
+            skin_on_face = tag == SKIN and clf.family != "healer"
+            if a > 16 and (
+                tag == EYE
+                or skin_on_face
+                or hair_on_head
+                or (
+                    tag == INK
+                    and y < clf.chin_y
+                    and abs(x - fx) <= clf.face_half * 1.35
+                )
             ):
                 op[x, y] = (r, g, b, a)
                 continue
-            zone = undertunic_zone(clf, x, y)
-            if zone == "skip":
+            zone = zones[y][x]
+            if not zone or tag == HELM:
                 continue
-            if zone == "arm":
-                op[x, y] = _match_face_shade(px, x, y, clf, clf.face, a)
-                continue
-            cloth = tunic if zone == "shirt" else pants
-            op[x, y] = _match_face_shade(px, x, y, clf, cloth, a)
+            op[x, y] = _paint_cloth_pixel(
+                zone, _face_light_luma(clf, x, y), tunic, pants
+            )
     out = despeckle_alpha(out)
+    out = drop_small_islands(out)
     _ink_the_cut_edge(clf, out)
     if clf.family in ("mage", "healer"):
         strip_equipped_helm_from_body(clf.family, out)
+    if clf.family == "healer":
+        _restore_healer_face(clf, out)
     return out, cloth_tint_from_labels(clf, out)
 
 

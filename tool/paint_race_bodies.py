@@ -37,6 +37,8 @@ from paper_doll_classify import (
     paint_canonical_body,
     paint_family_body,
     undertunic_zone,
+    _face_oval,
+    drop_small_islands,
 )
 
 REPO = Path(__file__).resolve().parents[1]
@@ -278,8 +280,20 @@ def apply_race_on_labels(
             if tag == EYE:
                 op[x, y] = (*shade_from(rgb, look.eye, strength=0.9), a)
                 continue
+            if (
+                clf.family == "healer"
+                and _face_oval(clf, x, y)
+                and tag not in (HAIR, LABEL_INK)
+            ):
+                op[x, y] = (*shade_from(rgb, skin_t, strength=0.82), a)
+                continue
+            src_rgb = src[x, y][:3]
+            # Cloth painted over a hood pixel stays cloth. Only recolor
+            # identity we actually copied off the master.
             if tag == SKIN:
-                washed = shade_from(src[x, y][:3], skin_t, strength=0.75)
+                if (r, g, b) != src_rgb:
+                    continue
+                washed = shade_from(src_rgb, skin_t, strength=0.75)
                 if look.fur and lum(src[x, y][:3]) < 0.38:
                     washed = shade_from(washed, look.skin_shadow, strength=0.55)
                 elif y > fy + face_half * 0.35 and lum(src[x, y][:3]) < 0.42:
@@ -287,9 +301,13 @@ def apply_race_on_labels(
                 op[x, y] = (*washed, a)
                 continue
             if tag == HAIR:
-                op[x, y] = (*shade_from(src[x, y][:3], hair_t, strength=0.8), a)
+                if (r, g, b) != src_rgb:
+                    continue
+                op[x, y] = (*shade_from(src_rgb, hair_t, strength=0.8), a)
                 continue
             if tag == LABEL_INK:
+                if (r, g, b) != src_rgb:
+                    continue
                 op[x, y] = (*INK, a)
     _paint_features(op, clf, look, female=female, skin=skin_t)
     return out
@@ -334,15 +352,18 @@ def _paint_ears(
 ) -> None:
     width = 3.0 if female else 4.2
     lift = max(5, length - 4)
-    left_edge = int(fx - face_half)
-    right_edge = int(fx + face_half)
+    # Anchor on the cheek. Far pixels are leftover hood specks, not the face.
+    left_edge = int(fx)
+    right_edge = int(fx)
     for x, y in occupied:
-        if abs(y - fy) > 4:
+        if abs(y - fy) > 6 or abs(x - fx) > face_half * 1.15:
             continue
         if x < fx:
             left_edge = min(left_edge, x)
         else:
             right_edge = max(right_edge, x)
+    left_edge = min(int(fx) - 2, left_edge + 2)
+    right_edge = max(int(fx) + 2, right_edge - 2)
     for side in (-1, 1):
         ax = (left_edge - 1) if side < 0 else (right_edge + 1)
         ay = fy - 2.0
@@ -360,7 +381,7 @@ def _paint_ears(
                         continue
                     if not head_clip(x, y, fx, fy, face_half * 2.8):
                         continue
-                    if abs(x - fx) < face_half * 0.62 and fy - 6 < y < chin:
+                    if abs(x - fx) < face_half * 0.42 and fy - 6 < y < chin:
                         continue
                     edge = (x - cx) ** 2 + (y - cy) ** 2 > (rad - 1.05) ** 2
                     if edge or t > 0.92:
@@ -456,10 +477,7 @@ def paint_undertunic_body(
     if not (look.key == "human" and not female):
         body = apply_race_on_labels(clf, body, look, female=female)
         _recolor_bare_arms(clf, body, look.skin_f if female else look.skin_m)
-    if family in ("mage", "healer"):
-        from build_owned_gear_layers import strip_equipped_helm_from_body
-
-        strip_equipped_helm_from_body(family, body)
+        body = drop_small_islands(body)
     return body, cloth_tint_from_labels(clf, body)
 
 
