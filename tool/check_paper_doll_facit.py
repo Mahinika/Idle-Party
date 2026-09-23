@@ -278,7 +278,9 @@ def check_body_tint_masks() -> list[str]:
                         skin_overlap += 1
                     if y <= chin_y + 8 and abs(x - fx) <= face_half * 2.4:
                         head_overlap += 1
-            if painted < 400:
+            # Undertunic is a shirt and two legs, so attack poses are smaller
+            # than the old full-robe mask. Still reject an empty crop.
+            if painted < 320:
                 errors.append(
                     f"body tint mask too sparse ({painted}px) "
                     f"{mask_path.relative_to(REPO)}"

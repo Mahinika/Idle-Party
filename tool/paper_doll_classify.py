@@ -455,7 +455,7 @@ def _column_half(clf: Classification, y: int) -> float:
 
 
 def undertunic_zone(clf: Classification, x: int, y: int) -> str:
-    """Shirt and pants on a neck-to-hip column. Short arms. Robe and hat drop.
+    """Neck, hanging arms, shirt, and two pant legs. Robe wings and hat drop.
 
     Anchored on the face, not the gold-master bbox — a robe fills the whole
     canvas, and using that box paints the hat tip and the robe wings as cloth.
@@ -463,22 +463,20 @@ def undertunic_zone(clf: Classification, x: int, y: int) -> str:
     _x0, _y0, _x1, y1 = clf.box
     fh = max(8.0, clf.face_half)
     half = _column_half(clf, y)
-    if half <= 0:
-        return "skip"
-    shoulder_y = int(clf.chin_y + fh * 0.15)
-    arm_bottom = int(clf.chin_y + fh * 1.25)
-    arm_reach = fh * 0.55
-    mid_y = int(clf.chin_y + fh * 2.05)
-    dx = abs(x - clf.fx)
-    if shoulder_y <= y < arm_bottom:
-        t = (y - shoulder_y) / max(1.0, arm_bottom - shoulder_y)
-        reach = arm_reach * (1.0 - t * t)
-        if half < dx <= half + reach:
-            return "arm"
-    if y < mid_y and dx <= half:
+    chin = clf.chin_y
+    waist_y = chin + fh * 2.05
+    # No synthesized arms. The gold master has no bare arm to copy, and a
+    # filled block next to the painted face reads as a different picture.
+    if half > 0 and y < waist_y and abs(x - clf.fx) <= half:
         return "shirt"
-    if mid_y <= y <= y1 and dx <= half:
-        return "pants"
+    if waist_y <= y <= y1:
+        t = min(1.0, (y - waist_y) / max(8.0, fh * 2.2))
+        leg_w = fh * (0.40 - 0.08 * t)
+        gap = fh * 0.16
+        for sign in (-1.0, 1.0):
+            cx = clf.fx + sign * (gap + leg_w)
+            if abs(x - cx) <= leg_w:
+                return "pants"
     return "skip"
 
 
