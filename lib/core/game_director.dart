@@ -1314,6 +1314,7 @@ class GameDirector extends ChangeNotifier {
     _spatial = result.world;
     _state = result.state;
     _state = GodHandMastery.noteSmash(_state);
+    _state = GameLogic.dismissTip(_state, 'godhand');
     if (result.goldFromKills > 0) {
       _state = GameLogic.creditCombatGold(_state, result.goldFromKills);
       _applyFunnelTick(FunnelAnalytics.onFirstReward(_state));

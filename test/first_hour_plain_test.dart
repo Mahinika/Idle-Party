@@ -117,11 +117,10 @@ void main() {
     expect(FirstSessionTips.tips.first.title, 'NEXT JOB');
   });
 
-  test('first tip points at ENTER DUNGEON, not a menu dictionary', () {
+  test('first tip is one line on ENTER, not a menu dictionary', () {
     final tip = FirstSessionTips.tips.first;
     expect(tip.id, 'first_run');
-    expect(tip.body.toLowerCase(), contains('enter'));
-    expect(tip.body.toLowerCase(), contains('fights'));
+    expect(tip.body, 'They fight on their own.');
     expect(tip.body, isNot(contains('Combat Rogue')));
   });
 
@@ -280,9 +279,10 @@ void main() {
 
   test('What’s New lead is a new-player sentence', () {
     final lead = FirstSessionTips.tips.first.body.toLowerCase();
-    expect(lead, contains('fights'));
-    final market = FirstSessionTips.tips.firstWhere((t) => t.id == 'market');
-    expect(market.body.toUpperCase(), isNot(contains('SELL JUNK')));
+    expect(lead, contains('fight'));
+    final gold = FirstSessionTips.tips.firstWhere((t) => t.id == 'forge');
+    expect(gold.body, 'Power for this run.');
+    expect(gold.body.toUpperCase(), isNot(contains('SELL JUNK')));
   });
 
   test('first-hour What’s New is the lead bullet, not KEY recap', () {

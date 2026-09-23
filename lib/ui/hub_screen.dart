@@ -27,6 +27,8 @@ import 'meta/notify_opt_in.dart';
 import 'meta/play_review_ask_overlay.dart';
 import '../core/menu_alerts.dart';
 import '../core/menu_router.dart';
+import 'coach_pulse.dart';
+import 'first_session_tips.dart';
 import 'shell/discord_thanks_overlay.dart';
 import 'shell/whats_new_overlay.dart';
 import 'hub/hub_endgame_map.dart';
@@ -425,23 +427,46 @@ class _HubScreenState extends State<HubScreen>
             chaseUrgency: chase.urgency,
           ),
         SizedBox(height: short ? 4 : 6),
-        AnimatedBuilder(
-          animation: _torch,
-          builder: (context, child) => Transform.scale(
-            scale: 1.0 + (_torch.value * 0.012),
-            child: child,
-          ),
-          child: GameButton(
-            label: primaryLabel,
-            tip: chase.kind == HubChaseKind.keystone && _selectedHunt == null
-                ? 'Starts your preferred KEY on this zone'
-                : (ready || cta.hideInlineChaseAction)
-                ? 'Do this first'
-                : 'Enter the selected dungeon',
-            style: GameButtonStyle.brown,
-            primary: true,
-            onPressed: primaryAction,
-          ),
+        Builder(
+          builder: (context) {
+            final coachEnter = FirstSessionTips.lineFor(
+              state,
+              CoachTarget.enter,
+              inDungeon: false,
+            );
+            final enterFamily = HubPrimaryCta.isEnterFamilyLabel(primaryLabel);
+            final showCoach = coachEnter != null && enterFamily;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (showCoach) CoachLine(coachEnter),
+                AnimatedBuilder(
+                  animation: _torch,
+                  builder: (context, child) => Transform.scale(
+                    scale: 1.0 + (_torch.value * 0.012),
+                    child: child,
+                  ),
+                  child: CoachPulse(
+                    active: showCoach,
+                    child: GameButton(
+                      label: primaryLabel,
+                      tip: showCoach
+                          ? coachEnter
+                          : chase.kind == HubChaseKind.keystone &&
+                                _selectedHunt == null
+                          ? 'Starts your preferred KEY on this zone'
+                          : (ready || cta.hideInlineChaseAction)
+                          ? 'Do this first'
+                          : 'Enter the selected dungeon',
+                      style: GameButtonStyle.brown,
+                      primary: true,
+                      onPressed: primaryAction,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         if (secondaryLabel != null && secondaryAction != null) ...[
           const SizedBox(height: 4),

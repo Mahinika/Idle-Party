@@ -1,36 +1,53 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/models/hero_spec.dart';
+import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/ui/first_session_tips.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 8, 12);
 
-  test('fresh hub tip is the next job, not a menu dictionary', () {
+  test('fresh hub tip is one line on ENTER, not a menu dictionary', () {
     final state = GameLogic.createInitialState(now: now);
     expect(
       FirstSessionTips.nextTipId(state, inDungeon: false),
       'first_run',
     );
-    expect(FirstSessionTips.tips.first.title, 'NEXT JOB');
-    expect(FirstSessionTips.tips.first.body.toLowerCase(), contains('enter'));
-    expect(FirstSessionTips.tips.first.body.toUpperCase(), isNot(contains('TODAY')));
+    final tip = FirstSessionTips.tips.first;
+    expect(tip.id, 'first_run');
+    expect(tip.title, 'NEXT JOB');
+    expect(tip.body, 'They fight on their own.');
+    expect(tip.body.toUpperCase(), isNot(contains('TODAY')));
+    expect(
+      FirstSessionTips.lineFor(state, CoachTarget.enter, inDungeon: false),
+      'They fight on their own.',
+    );
   });
 
-  test('GOLD and APEX tips name live GOLD / MORE paths', () {
+  test('only six button-anchor tips — no multi-system cards', () {
+    final ids = FirstSessionTips.tips.map((t) => t.id).toSet();
+    expect(
+      ids,
+      {'first_run', 'godhand', 'farm_push', 'bag', 'forge', 'sanctuary'},
+    );
+    expect(ids, isNot(contains('lore_descent')));
+    expect(ids, isNot(contains('three_dailies')));
+    expect(ids, isNot(contains('al20_endgame')));
+    expect(ids, isNot(contains('market')));
+    expect(ids, isNot(contains('apex')));
+  });
+
+  test('GOLD and ESSENCE lines are one short sentence each', () {
     final gold = FirstSessionTips.tips.firstWhere((t) => t.id == 'forge');
-    expect(gold.body, contains('GOLD tab'));
-    expect(gold.body, contains('row inside MORE'));
-    expect(gold.body, contains('ESSENCE → RELICS'));
-    expect(gold.body.toLowerCase(), isNot(contains('relics for party')));
-    final apex = FirstSessionTips.tips.firstWhere((t) => t.id == 'apex');
-    expect(apex.title, 'APEX');
-    expect(apex.body, contains('MORE → CRAFT'));
-    expect(apex.body.toLowerCase(), isNot(contains('in forge')));
+    expect(gold.body, 'Power for this run.');
+    final essence =
+        FirstSessionTips.tips.firstWhere((t) => t.id == 'sanctuary');
+    expect(essence.body, 'Power that stays.');
   });
 
-  test('porch hub does not queue SANCTUARY or lore before the first floor', () {
+  test('porch hub does not queue GOLD or ESSENCE before the first floor', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       seenTips: const ['first_run'],
     );
@@ -47,97 +64,47 @@ void main() {
       FirstSessionTips.nextTipId(state, inDungeon: true),
       'godhand',
     );
+    expect(
+      FirstSessionTips.lineFor(state, CoachTarget.godhand, inDungeon: true),
+      'Tap to smash.',
+    );
   });
 
-  test('AL20 sub-max shows endgame gate tip before KEY jargon', () {
+  test('multi-system tip ids never queue as coach cards', () {
     final base = GameLogic.createInitialState(now: now);
     final state = base.copyWith(
       ascensionLevel: GameLogic.maxAscensionLevel,
       bossVictories: 99,
       highestFloorCleared: 50,
-      seenTips: [
-        for (final t in FirstSessionTips.tips)
-          if (t.id != 'al20_endgame') t.id,
-      ],
+      lifetimeGoldEarned: 100,
+      essence: 5,
+      seenTips: const ['first_run', 'godhand', 'farm_push', 'bag', 'forge'],
       heroRoster: [
         for (final h in base.heroRoster) h.copyWith(level: 88, xp: 0),
       ],
     );
-    expect(GameLogic.isMaxAscension(state), isTrue);
-    expect(GameLogic.endgameUnlocked(state), isFalse);
+    expect(MenuTabs.showCamp(state), isTrue);
     expect(
       FirstSessionTips.nextTipId(state, inDungeon: false),
-      'al20_endgame',
+      'sanctuary',
     );
   });
 
-  test('party max level queues ENDGAME ACT map tip', () {
-    final base = GameLogic.createInitialState(now: now);
-    final state = base.copyWith(
-      ascensionLevel: GameLogic.maxAscensionLevel,
-      bossVictories: 99,
-      highestFloorCleared: 50,
-      seenTips: [
-        for (final t in FirstSessionTips.tips)
-          if (t.id != 'endgame_act') t.id,
-      ],
-      heroRoster: [
-        for (final h in base.heroRoster) h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
-      ],
-    );
-    expect(GameLogic.endgameUnlocked(state), isTrue);
-    expect(
-      FirstSessionTips.nextTipId(state, inDungeon: false),
-      'endgame_act',
-    );
-    expect(
-      FirstSessionTips.tips.firstWhere((t) => t.id == 'endgame_act').body.toLowerCase(),
-      contains('tab'),
-    );
-  });
-
-  test('vault tip after first boss; three dailies wait for first Ascend', () {
-    final early = GameLogic.createInitialState(now: now).copyWith(
-      seenTips: [
-        for (final t in FirstSessionTips.tips)
-          if (t.id != 'three_dailies' && t.id != 'weekly') t.id,
-      ],
-    );
-    expect(GameLogic.showDailyChase(early), isFalse);
-    expect(FirstSessionTips.nextTipId(early, inDungeon: false), isNull);
-
-    final afterBoss = early.copyWith(
-      bossVictories: 1,
-      highestFloorCleared: 1,
-    );
-    expect(GameLogic.showDailyRunOnHub(afterBoss), isFalse);
-    expect(
-      FirstSessionTips.nextTipId(afterBoss, inDungeon: false),
-      'weekly',
-    );
-
-    final afterAscend = afterBoss.copyWith(ascensionLevel: 1);
-    expect(GameLogic.showDailyRunOnHub(afterAscend), isTrue);
-    expect(
-      FirstSessionTips.nextTipId(afterAscend, inDungeon: false),
-      'three_dailies',
-    );
-  });
-
-  test('after a floor, hub can show lore then power tips', () {
+  test('after a floor, hub does not dump lore cards', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       highestFloorCleared: 1,
       lifetimeGoldEarned: 12,
       seenTips: const ['first_run', 'godhand', 'farm_push'],
     );
     expect(FirstSessionTips.leftPorch(state), isTrue);
+    // GOLD unlocks with first reward — one line on the tab, not lore.
     expect(
       FirstSessionTips.nextTipId(state, inDungeon: false),
-      'lore_descent',
+      'forge',
     );
   });
 
-  test('first-run overlay is at most two beats before first reward', () {
+  test('first-run coach is at most two beats before first reward', () {
     final fresh = GameLogic.createInitialState(now: now);
     expect(FirstSessionTips.earnedFirstReward(fresh), isFalse);
     expect(
@@ -155,36 +122,58 @@ void main() {
     expect(FirstSessionTips.nextTipId(both, inDungeon: false), isNull);
   });
 
-  test('GOLD / MARKET / ESSENCE / pets wait until after first reward', () {
+  test('GOLD / ESSENCE wait until after first reward; GEAR needs bag upgrades',
+      () {
     final gold = GameLogic.createInitialState(now: now).copyWith(
       lifetimeGoldEarned: 0,
       seenTips: const ['first_run', 'godhand'],
     );
     expect(FirstSessionTips.earnedFirstReward(gold), isFalse);
-    for (final id in ['sanctuary', 'market', 'forge', 'pets', 'prestige']) {
+    for (final id in ['sanctuary', 'forge', 'bag']) {
       expect(
         FirstSessionTips.nextTipId(gold, inDungeon: false),
         isNot(equals(id)),
-        reason: '$id must not coach before first reward',
+        reason: '$id must not coach before first reward / upgrades',
       );
     }
     final afterFloor = gold.copyWith(
       highestFloorCleared: 1,
       lifetimeGoldEarned: 20,
-      seenTips: const ['first_run', 'godhand', 'farm_push', 'lore_descent', 'bag'],
+      seenTips: const ['first_run', 'godhand', 'farm_push', 'bag'],
     );
     expect(FirstSessionTips.earnedFirstReward(afterFloor), isTrue);
+    expect(MenuTabs.showGold(afterFloor), isTrue);
     expect(
       FirstSessionTips.nextTipId(afterFloor, inDungeon: false),
-      isNot(equals('forge')),
+      'forge',
     );
-    expect(
-      FirstSessionTips.nextTipId(afterFloor, inDungeon: false),
-      isNot(equals('market')),
+  });
+
+  test('GEAR coach waits for a better bag item', () {
+    final base = GameLogic.createInitialState(now: now).copyWith(
+      highestFloorCleared: 1,
+      lifetimeGoldEarned: 20,
+      seenTips: const ['first_run', 'godhand', 'farm_push'],
     );
+    expect(FirstSessionTips.nextTipId(base, inDungeon: false), 'forge');
+    final withBag = base.copyWith(
+      gearStash: [
+        EquipmentItem(
+          id: 'up_1',
+          name: 'Test Blade',
+          slot: EquipmentSlot.weapon,
+          rarity: LootRarity.epic,
+          attackBonus: 40,
+          strengthBonus: 30,
+          itemLevel: 90,
+        ),
+      ],
+    );
+    expect(MenuAlerts.bagUpgradeCount(withBag), greaterThan(0));
+    expect(FirstSessionTips.nextTipId(withBag, inDungeon: false), 'bag');
     expect(
-      FirstSessionTips.nextTipId(afterFloor, inDungeon: false),
-      isNot(equals('sanctuary')),
+      FirstSessionTips.lineFor(withBag, CoachTarget.gear, inDungeon: false),
+      'Better gear waiting.',
     );
   });
 
@@ -200,5 +189,21 @@ void main() {
       'godhand',
     );
     director.dispose();
+  });
+
+  test('Repeat/Next coach after first floor clear', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      inDungeon: true,
+      highestFloorCleared: 1,
+      seenTips: const ['first_run', 'godhand'],
+    );
+    expect(
+      FirstSessionTips.nextTipId(state, inDungeon: true),
+      'farm_push',
+    );
+    expect(
+      FirstSessionTips.lineFor(state, CoachTarget.farmPush, inDungeon: true),
+      'Repeat loots. Next goes deeper.',
+    );
   });
 }

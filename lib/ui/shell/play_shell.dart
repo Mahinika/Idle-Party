@@ -98,8 +98,40 @@ class _PlayShellState extends State<PlayShell> {
     }
   }
 
+  void _dismissCoachTab(MenuRoute dest) {
+    switch (dest) {
+      case MenuRoute.gear:
+        director.dismissTip('bag');
+      case MenuRoute.gold:
+        director.dismissTip('forge');
+      case MenuRoute.essence:
+        director.dismissTip('sanctuary');
+      default:
+        break;
+    }
+  }
+
+  (MenuRoute?, String?) _coachTab() {
+    final hint = FirstSessionTips.active(
+      director.state,
+      inDungeon: director.state.inDungeon,
+    );
+    if (hint == null) return (null, null);
+    final route = switch (hint.target) {
+      CoachTarget.gear => MenuRoute.gear,
+      CoachTarget.gold => MenuRoute.gold,
+      CoachTarget.essence => MenuRoute.essence,
+      CoachTarget.enter ||
+      CoachTarget.godhand ||
+      CoachTarget.farmPush => null,
+    };
+    if (route == null) return (null, null);
+    return (route, hint.line);
+  }
+
   Widget _bottomBar() {
     final state = director.state;
+    final (coachRoute, coachLine) = _coachTab();
     if (state.inDungeon) {
       final graph = DestinationGraph.dungeon(state);
       return AppBottomBar(
@@ -107,7 +139,10 @@ class _PlayShellState extends State<PlayShell> {
         route: router.route,
         destinations: graph.destinations,
         showReason: true,
+        coachRoute: coachRoute,
+        coachLine: coachLine,
         onSelect: (dest) => _openMenuFeel(() {
+          _dismissCoachTab(dest);
           if (dest == MenuRoute.more) {
             final chase = HubChase.forState(state);
             // Claimables win — don't reopen last CRAFT farm session.
@@ -158,7 +193,10 @@ class _PlayShellState extends State<PlayShell> {
       destinations: DestinationGraph.hub(state).destinations,
       // Reason line self-hides when empty; READY chase quiets non-chase alerts.
       showReason: true,
+      coachRoute: coachRoute,
+      coachLine: coachLine,
       onSelect: (dest) {
+        _dismissCoachTab(dest);
         if (dest == MenuRoute.more) {
           // Claimables win — don't reopen last CRAFT farm session.
           if (chase.kind == HubChaseKind.claimMissions ||

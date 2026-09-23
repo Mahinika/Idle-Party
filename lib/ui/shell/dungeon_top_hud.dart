@@ -11,6 +11,8 @@ import '../../models/dungeon_mode.dart';
 import '../../models/dungeon_room.dart';
 import '../../models/enemy.dart';
 import '../../spatial/spatial_combat.dart';
+import '../coach_pulse.dart';
+import '../first_session_tips.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -291,6 +293,17 @@ class DungeonTopHud extends StatelessWidget {
         bagUpgrades < 5 &&
         (state.wipeStreakCount >= 1 || softcap >= 4);
     final jargon = GameLogic.showKeystoneJargon(state);
+    final coachGod = FirstSessionTips.lineFor(
+      state,
+      CoachTarget.godhand,
+      inDungeon: true,
+    );
+    final coachFarm = FirstSessionTips.lineFor(
+      state,
+      CoachTarget.farmPush,
+      inDungeon: true,
+    );
+    final coachLine = coachGod ?? coachFarm;
     final keyBit = !jargon
         ? ''
         : state.keystoneRunActive
@@ -410,20 +423,34 @@ class DungeonTopHud extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DungeonModeChip(
-            label: GameLogic.dungeonModeChipLabel(DungeonMode.farm, state),
-            selected: farm,
-            dense: true,
-            tip: GameLogic.dungeonModeChipTip(DungeonMode.farm, state),
-            onTap: () => setMode(DungeonMode.farm),
+          CoachPulse(
+            active: coachFarm != null,
+            child: DungeonModeChip(
+              label: GameLogic.dungeonModeChipLabel(DungeonMode.farm, state),
+              selected: farm,
+              dense: true,
+              tip: coachFarm ??
+                  GameLogic.dungeonModeChipTip(DungeonMode.farm, state),
+              onTap: () {
+                director.dismissTip('farm_push');
+                setMode(DungeonMode.farm);
+              },
+            ),
           ),
           const SizedBox(width: 4),
-          DungeonModeChip(
-            label: GameLogic.dungeonModeChipLabel(DungeonMode.push, state),
-            selected: !farm,
-            dense: true,
-            tip: GameLogic.dungeonModeChipTip(DungeonMode.push, state),
-            onTap: () => setMode(DungeonMode.push),
+          CoachPulse(
+            active: coachFarm != null,
+            child: DungeonModeChip(
+              label: GameLogic.dungeonModeChipLabel(DungeonMode.push, state),
+              selected: !farm,
+              dense: true,
+              tip: coachFarm ??
+                  GameLogic.dungeonModeChipTip(DungeonMode.push, state),
+              onTap: () {
+                director.dismissTip('farm_push');
+                setMode(DungeonMode.push);
+              },
+            ),
           ),
         ],
       );
@@ -483,18 +510,22 @@ class DungeonTopHud extends StatelessWidget {
                   label: plain
                       ? 'Tap the fight — steer your party smash'
                       : 'God Hand — tap to smash and steer',
-                  child: GodHandRing(
-                    cooldown: world.godHandCooldown,
-                    maxCooldown: state.godHandCooldownSeconds,
-                    urgent: state.wipeStreakCount >= 2,
-                    dense: true,
-                    readyLabel: plain
-                        ? 'Tap the fight — steer your party smash'
-                        : null,
-                    coolingLabel: plain
-                        ? 'Tap the fight cooling ${world.godHandCooldown.toStringAsFixed(1)}s'
-                        : null,
-                    onTap: () => director.godHandAtFocus(),
+                  child: CoachPulse(
+                    active: coachGod != null,
+                    child: GodHandRing(
+                      cooldown: world.godHandCooldown,
+                      maxCooldown: state.godHandCooldownSeconds,
+                      urgent: state.wipeStreakCount >= 2,
+                      dense: true,
+                      readyLabel: coachGod ??
+                          (plain
+                              ? 'Tap the fight — steer your party smash'
+                              : null),
+                      coolingLabel: plain
+                          ? 'Tap the fight cooling ${world.godHandCooldown.toStringAsFixed(1)}s'
+                          : null,
+                      onTap: () => director.godHandAtFocus(),
+                    ),
                   ),
                 ),
               ],
@@ -536,6 +567,17 @@ class DungeonTopHud extends StatelessWidget {
               ),
             ],
           ),
+          if (coachLine != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2, right: 4),
+              child: Text(
+                coachLine,
+                textAlign: TextAlign.right,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+              ),
+            ),
           if (state.inRift)
             RiftProgressHud(
               progress01: state.riftProgress01,

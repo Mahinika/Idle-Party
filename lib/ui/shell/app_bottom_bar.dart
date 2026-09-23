@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
+import '../coach_pulse.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
 import '../web_click_bridge.dart';
@@ -17,6 +18,8 @@ class AppBottomBar extends StatelessWidget {
     required this.onSelect,
     this.onLeave,
     this.showReason = false,
+    this.coachRoute,
+    this.coachLine,
   });
 
   final MenuAlerts alerts;
@@ -25,6 +28,10 @@ class AppBottomBar extends StatelessWidget {
   final void Function(MenuRoute route) onSelect;
   final VoidCallback? onLeave;
   final bool showReason;
+
+  /// First-session coach: pulse this tab and prefer [coachLine] as the reason.
+  final MenuRoute? coachRoute;
+  final String? coachLine;
 
   static String labelFor(MenuRoute r) => switch (r) {
     MenuRoute.gear => 'GEAR',
@@ -67,6 +74,13 @@ class AppBottomBar extends StatelessWidget {
   };
 
   String _reasonLine() {
+    final coach = coachLine;
+    if (coach != null &&
+        coach.isNotEmpty &&
+        coachRoute != null &&
+        coachRoute != route) {
+      return coach;
+    }
     // Already inside a menu: skip that tab's "open X" nudge — the sheet owns
     // status copy. Prefer another destination's alert, else stay quiet so the
     // bar does not stack a second banner under GEAR / GOLD / …
@@ -108,14 +122,17 @@ class AppBottomBar extends StatelessWidget {
           children: [
             for (final dest in destinations)
               Expanded(
-                child: AppBottomBarItem(
-                  label: labelFor(dest),
-                  icon: iconFor(dest, size: dense ? 16 : 18),
-                  badge: route == dest ? '' : _alertFor(dest).badge,
-                  selected: route == dest,
-                  fill: slotColorFor(dest),
-                  dense: dense,
-                  onTap: () => onSelect(dest),
+                child: CoachPulse(
+                  active: coachRoute == dest && route != dest,
+                  child: AppBottomBarItem(
+                    label: labelFor(dest),
+                    icon: iconFor(dest, size: dense ? 16 : 18),
+                    badge: route == dest ? '' : _alertFor(dest).badge,
+                    selected: route == dest,
+                    fill: slotColorFor(dest),
+                    dense: dense,
+                    onTap: () => onSelect(dest),
+                  ),
                 ),
               ),
             if (onLeave != null)
