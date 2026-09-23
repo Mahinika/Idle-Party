@@ -1,6 +1,37 @@
 # Play Store prep — reference (read on demand)
 
-Read this file when uploading listing screenshots or a signed AAB via Cursor browser.
+## Play API (read this before opening Console)
+
+Service account `play-console@idle-party-505709.iam.gserviceaccount.com` is
+Active on `com.idleparty.app` (owner invite 2026-09-23). Key stays **outside
+git**: `~/.config/idle-party/play-console.json`. Do not mint another key, and
+do not print `private_key`. `cognifoxstudio@gmail.com` is a person login, not
+this key. Use `py -3` (not `python`). Sign a JWT (PyJWT) for both scopes
+`androidpublisher` and `playdeveloperreporting`, exchange it at the key's
+`token_uri`, then call as Bearer.
+
+Package `com.idleparty.app`. Reads that returned data:
+
+- `GET .../androidpublisher/v3/applications/{pkg}/reviews` — about the **last week** only
+- `GET .../applications/{pkg}/tracks/production/releases` (also `alpha`, `internal`; `beta` was empty)
+- `GET .../applications/{pkg}/oneTimeProducts` — shop products. Old `inappproducts` list says to migrate; ignore it
+- Crash/ANR: `POST .../playdeveloperreporting/v1beta1/apps/{pkg}/crashRateMetricSet:query` (same shape for `anrRateMetricSet`). `endTime` must be on or before the metric set's freshness (lags about a day). Zero rows can mean no crashes
+- Store text: `POST .../applications/{pkg}/edits` with `{}`, then `GET` that edit's `/listings`, `/tracks`, `/details`, then **`DELETE` the edit**. Nothing is live until `:commit`
+
+Reply: `POST .../reviews/{reviewId}:reply` with `replyText`. Permission
+`CAN_REPLY_TO_REVIEWS` is granted. English, like a person, only the review
+they named. Discord link is `CommunityLinks.discordInviteUrl` in
+`lib/core/community_links.dart`. List the review again and read the developer
+comment before saying it posted.
+
+**Not this API:** device acquisitions, first opens, rating average, D1. Those
+stay on the Console overview. `purchases/voidedpurchases` returned 401 even
+though the grant includes financial data — do not invent revenue from it.
+
+`CAN_MANAGE_PUBLIC_APKS` is granted. Still **never commit an edit or upload an
+AAB unless the owner asks that turn.** Users list needs `pageSize=-1`.
+
+The sections below are the browser path for screenshots, an AAB, and itch. Use them only when the API section does not cover the job.
 
 ## Store screenshots (capture → compose → Console)
 

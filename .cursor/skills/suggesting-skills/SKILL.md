@@ -38,7 +38,7 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | Record web flow as Playwright test | `recording-browser-flow-as-test` |
 | New menu / where does X live / UI consistency | always-on `game-ux-director` rule + `ui-theme` / `docs/UI_THEME.md` |
 | UI change “does it look ok?” | `a56-playtest` / `verifying-in-browser` |
-| Play Store / listing / privacy / IARC | `play-store-prep` |
+| Play Store / listing / privacy / IARC / statistik / recensioner | `play-store-prep` |
 | itch.io listing / community post | `play-store-prep` + `tool/store_listing/itch/PAGE.md` (no APK) |
 | `/init` / resync AGENTS + rules | `init` |
 | `/repo auditandcleaning` / full repo audit (no edits) | `repo-audit-and-cleaning` |

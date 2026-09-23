@@ -135,7 +135,7 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   `play-console@idle-party-505709.iam.gserviceaccount.com` failed
   (`78F28198`). Owner invite the same day stuck: Active, no expiry. Key
   stays outside git (`%USERPROFILE%\.config\idle-party\play-console.json`).
-  Reviews list and the crash-rate descriptor return 200. Reviews list is
-  about the last week (Jimmy’s 12 Sep note is outside it).
+  How to call it, and what it cannot see (downloads, first opens, rating),
+  lives in `play-store-prep` reference § Play API — not a second skill.
   `cognifoxstudio@gmail.com` is still just a person login. Do not mint
   another key.

@@ -57,7 +57,7 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 | I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — **new-save first** |
 | “gör spelet bättre” / vad härnäst (no other target) | ask once — not AL20, not invent a numbered program |
 | fork / två spel / vem har rätt | silent `studio-seats` (six chairs) |
-| Play Store / listing / privacy / AAB / screenshots | `play-store-prep` (+ `docs/PLAY_STORE.md` / `STORE_LISTING.md`) |
+| Play Store / listing / privacy / AAB / screenshots / statistik / recensioner | `play-store-prep` (+ `docs/PLAY_STORE.md` / `STORE_LISTING.md`) |
 | itch.io / itch listing | `play-store-prep` + `tool/store_listing/itch/PAGE.md` (no APK) |
 | **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules`; **keep growth mandate** |
 | **`/repo auditandcleaning`** | `repo-audit-and-cleaning` — report only, no code changes |

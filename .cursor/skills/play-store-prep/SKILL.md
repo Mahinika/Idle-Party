@@ -2,10 +2,12 @@
 name: play-store-prep
 description: >-
   Idle Party Play Console readiness (signing, privacy URL, screenshots, IARC,
-  listing copy) and AAB upload to closed Alpha. Use when preparing Google Play,
-  store listing, release ops, uploading AAB, itch.io listing, or when the owner
-  says "lägg upp på Play" / Play Store / itch. Do not upload an APK to itch or
-  point players at GitHub Releases (product lock).
+  listing copy), review replies, and Play API reads. Use when preparing Google
+  Play, store listing, release ops, uploading AAB, answering reviews, reading
+  Play stats the API can see, itch.io listing, or when the owner says "lägg upp
+  på Play" / "play console" / "recensioner" / "statistik" / Play Store / itch.
+  Do not upload an AAB unless the owner asks that turn. Do not upload an APK to
+  itch or point players at GitHub Releases (product lock).
 ---
 
 # Play Store prep (Idle Party)
@@ -19,6 +21,7 @@ remains for early builds. Source of truth:
 
 - **Growth mandate** listing pack (screenshots 1–2 = new-save first-minute combat)
 - Owner mentions Play, store listing, privacy, IARC, screenshots, AAB upload
+- Owner mentions Play stats, reviews, or "play console" (use the API section first)
 - Owner mentions itch.io listing / community post (PAGE.md — no APK)
 - Before tagging a release meant for Play closed testing
 - Agent notices store blockers while doing release polish
@@ -59,6 +62,14 @@ Play stays the install path. itch is a public page + Play button — **no APK**.
 Copy, live URLs, and image-upload gotchas:
 [`tool/store_listing/itch/PAGE.md`](../../../tool/store_listing/itch/PAGE.md).
 Read **[reference.md](reference.md)** § itch.io when attaching cover/screenshots.
+
+## Play API (reviews, live version, vitals)
+
+Prefer the service account over the browser for reviews, the live version,
+store text, shop products, and crash/ANR. Read **[reference.md](reference.md)**
+§ Play API. Reply only to the review the owner names, in a human voice
+(`docs/LEARNINGS.md`, 2026-09-23). Never commit an edit or upload an AAB
+unless they ask that turn.
 
 ## Upload recipes (read on demand)
 
