@@ -29,6 +29,11 @@ Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
 
 ## Owner-only (Play Console — cannot automate)
 
+Service-account invite failed **2026-09-23** (`78F28198`). The JSON key is
+outside the repo and cannot call Play until that user exists in Console.
+`cognifoxstudio@gmail.com` is a person login, not the key. Do not retry
+unless the owner asks.
+
 Do these in Console when you have 20 minutes:
 
 1. **Paste listing** from `STORE_LISTING.md` (app name **Idle Party: Idle RPG**, short + full) → submit for review. Do **not** paste `growth/LOCALES.md` until you say yes.
@@ -90,6 +95,9 @@ Opened after the in-repo bar. Last **28 days** unless noted (listing window
 ## Review reply templates (en-US)
 
 Keep replies short, English, no defensiveness. Fix bugs in-app when real.
+**2026-09-23:** owner wants a human voice, not these lines pasted as-is.
+Reply only to the review they name. Discord link, when used, is the in-game
+invite in `lib/core/community_links.dart`.
 
 **Thanks (4–5★)**
 ```
