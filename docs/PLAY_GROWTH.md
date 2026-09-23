@@ -29,10 +29,12 @@ Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
 
 ## Owner-only (Play Console — cannot automate)
 
-Service-account invite failed **2026-09-23** (`78F28198`). The JSON key is
-outside the repo and cannot call Play until that user exists in Console.
-`cognifoxstudio@gmail.com` is a person login, not the key. Do not retry
-unless the owner asks.
+Service account `play-console@idle-party-505709.iam.gserviceaccount.com`
+is **Active** in Console as of **2026-09-23** (owner invite; an earlier
+browser invite failed with `78F28198`). Key stays outside the repo at
+`%USERPROFILE%\.config\idle-party\play-console.json`. Reviews list works
+(about the last week). Do not mint another key.
+`cognifoxstudio@gmail.com` is a person login, not that key.
 
 Do these in Console when you have 20 minutes:
 

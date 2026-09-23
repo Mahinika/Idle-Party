@@ -126,14 +126,16 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   Russian “не интересно”, realme 11, **1.12.172**) is boredom, not a bug.
   Live reply is conversational and includes the in-game Discord invite
   `https://discord.gg/YMz5ZMkEG9`. The polished first draft was rejected the
-  same day. Brendan’s 5★ speed note stays unanswered until asked.
+  same day. Brendan’s 5★ speed note also has a human reply with the same
+  Discord invite — do not answer it again.
 - **Read the review back before saying it posted.** Typing in the box does
   not send. Update stays disabled until the field gets a real input event.
   A page script cannot POST the reply (blocked). Re-read the published text.
-- **The service account is not in Play.** Invite of
-  `play-console@idle-party-505709.iam.gserviceaccount.com` failed twice
-  (`78F28198`); it is not under Users and permissions. Key stays outside git
-  (`%USERPROFILE%\.config\idle-party\play-console.json`).
-  `cognifoxstudio@gmail.com` is an Active person login, not that key.
-  Stats and replies still go through the owner’s Console session. Do not
-  retry the invite or mint another key unless asked.
+- **The robot login works after the owner invites it.** Browser invite of
+  `play-console@idle-party-505709.iam.gserviceaccount.com` failed
+  (`78F28198`). Owner invite the same day stuck: Active, no expiry. Key
+  stays outside git (`%USERPROFILE%\.config\idle-party\play-console.json`).
+  Reviews list and the crash-rate descriptor return 200. Reviews list is
+  about the last week (Jimmy’s 12 Sep note is outside it).
+  `cognifoxstudio@gmail.com` is still just a person login. Do not mint
+  another key.
