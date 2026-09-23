@@ -132,3 +132,14 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   lives in `play-store-prep` reference § Play API — not a second skill.
   `cognifoxstudio@gmail.com` is still just a person login. Do not mint
   another key.
+
+## 2026-09-24 — first Discord bug
+
+- **#bugs is the report. The picture is the bug.** Just vin (23 Sep, Play)
+  set text scale to max and the boss banner sat on the boss panel. Reply on
+  that message in English. Do not say the Play build is fixed until the owner
+  asks for an AAB. What’s New waits for the version bump — no unreleased
+  notes list. Not a new skill; this happened once.
+- **The bug form is two lines.** What I did / What went wrong, plus a
+  screenshot. Version is optional. Do not put back the five-step form
+  (expected, version, GitHub APK vs closed test).
