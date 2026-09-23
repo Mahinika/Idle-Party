@@ -22,10 +22,16 @@ import 'dart:math' as math;
 }
 
 ({double x, double y}) dungeonPartyFocus({
-  required Iterable<({double x, double y, bool alive})> heroes,
+  required Iterable<({double x, double y, bool alive, int index})> heroes,
   required double mapCenterX,
   required double mapCenterY,
+  int? pinIndex,
 }) {
+  if (pinIndex != null) {
+    for (final h in heroes) {
+      if (h.index == pinIndex) return (x: h.x, y: h.y);
+    }
+  }
   final living = heroes.where((h) => h.alive).toList();
   final pack = living.isNotEmpty ? living : heroes.toList();
   if (pack.isEmpty) {

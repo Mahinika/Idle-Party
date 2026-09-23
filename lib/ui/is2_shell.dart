@@ -188,8 +188,10 @@ class _Is2ShellState extends State<Is2Shell> {
                         child: PartyCornerHud(
                           director: d,
                           selectedHeroIndex: router.session.abilityHeroIndex,
-                          onSelectHero: (i) =>
-                              router.session.abilityHeroIndex = i,
+                          onSelectHero: (i) {
+                            router.session.abilityHeroIndex = i;
+                            d.cameraHeroIndex = i;
+                          },
                           onOpenEquip: () => router.toggleGear(GearPanel.gear),
                         ),
                       ),

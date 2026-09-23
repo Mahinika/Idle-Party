@@ -132,6 +132,10 @@ class GameDirector extends ChangeNotifier {
   /// Screen punch 0..1 (presentation only; decays each combat tick).
   double combatShake = 0;
 
+  /// Party-frame pin for the dungeon camera. Null follows the living pack.
+  /// Not saved — cleared when leaving the dungeon.
+  int? cameraHeroIndex;
+
   static const double _autosaveIntervalSec = 25;
 
   /// Serializes SharedPreferences writes so overlapping unawaited saves cannot
@@ -1385,6 +1389,7 @@ class GameDirector extends ChangeNotifier {
 
   void leaveDungeon() {
     hudFocusEnemyId = null;
+    cameraHeroIndex = null;
     if (_isLoading) return;
     _awaitingWipeChoice = false;
     final leaveDungeonId = _state.dungeonId;

@@ -434,6 +434,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                         targetCols: widget.director.state.dungeonZoom.targetCols,
                         shake: widget.director.combatShake,
                         visualFrame: widget.director.visualFrame,
+                        pinHeroIndex: widget.director.cameraHeroIndex,
                       );
                       return Stack(
                         fit: StackFit.expand,
@@ -3185,6 +3186,7 @@ class _TileCamera {
     double targetCols = 20,
     double shake = 0,
     int visualFrame = 0,
+    int? pinHeroIndex,
   }) {
     if (world == null) {
       return const _TileCamera(
@@ -3200,9 +3202,12 @@ class _TileCamera {
     final tileSize = constraints.maxWidth / cols;
     final visibleRows = constraints.maxHeight / tileSize;
     final focus = dungeonPartyFocus(
-      heroes: world.heroes.map((h) => (x: h.x, y: h.y, alive: h.isAlive)),
+      heroes: world.heroes
+          .where((h) => !h.isPet)
+          .map((h) => (x: h.x, y: h.y, alive: h.isAlive, index: h.assetIndex)),
       mapCenterX: world.cols / 2,
       mapCenterY: world.rows / 2,
+      pinIndex: pinHeroIndex,
     );
     final origin = dungeonCamOrigin(
       focusX: focus.x,

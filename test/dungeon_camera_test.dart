@@ -17,14 +17,39 @@ void main() {
   test('party focus is centroid of living heroes', () {
     final f = dungeonPartyFocus(
       heroes: [
-        (x: 2, y: 2, alive: true),
-        (x: 6, y: 4, alive: true),
-        (x: 99, y: 99, alive: false),
+        (x: 2.0, y: 2.0, alive: true, index: 0),
+        (x: 6.0, y: 4.0, alive: true, index: 1),
+        (x: 99.0, y: 99.0, alive: false, index: 2),
       ],
       mapCenterX: 10,
       mapCenterY: 10,
+      pinIndex: null,
     );
     expect(f.x, 4);
     expect(f.y, 3);
+  });
+
+  test('pinned hero stays at camera center', () {
+    final heroes = [
+      (x: 2.0, y: 2.0, alive: true, index: 0),
+      (x: 6.0, y: 4.0, alive: true, index: 1),
+      (x: 99.0, y: 99.0, alive: false, index: 2),
+    ];
+    final pinned = dungeonPartyFocus(
+      heroes: heroes,
+      mapCenterX: 10,
+      mapCenterY: 10,
+      pinIndex: 1,
+    );
+    expect(pinned.x, 6);
+    expect(pinned.y, 4);
+    final missing = dungeonPartyFocus(
+      heroes: heroes,
+      mapCenterX: 10,
+      mapCenterY: 10,
+      pinIndex: 9,
+    );
+    expect(missing.x, 4);
+    expect(missing.y, 3);
   });
 }
