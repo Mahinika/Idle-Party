@@ -108,62 +108,12 @@ abstract final class CharacterVisualPainter {
 
     for (final layer in pose.orderedLayers()) {
       if (layer.id == CharacterLayerId.body) {
-        final bodyTint = pose.bodyTint;
-        final tintAsset = pose.bodyTintAsset;
-        final tintMask = tintAsset == null ? null : images[tintAsset];
         canvas.drawImageRect(
           body,
           Rect.fromLTWH(0, 0, body.width.toDouble(), body.height.toDouble()),
           dst,
           basePaint,
         );
-        // Multiply the spec color onto the body's own cloth pixels. A color
-        // blend over the whole box painted the empty corners solid red.
-        if (bodyTint != null &&
-            bodyTint != const Color(0xFFFFFFFF) &&
-            tintMask != null) {
-          final maskSrc = Rect.fromLTWH(
-            0,
-            0,
-            tintMask.width.toDouble(),
-            tintMask.height.toDouble(),
-          );
-          final bodySrc = Rect.fromLTWH(
-            0,
-            0,
-            body.width.toDouble(),
-            body.height.toDouble(),
-          );
-          final sharp = Paint()
-            ..filterQuality = FilterQuality.none
-            ..isAntiAlias = false;
-          canvas.saveLayer(
-            dst,
-            Paint()..color = Color.fromRGBO(255, 255, 255, alpha),
-          );
-          canvas.drawImageRect(body, bodySrc, dst, sharp);
-          canvas.drawImageRect(
-            tintMask,
-            maskSrc,
-            dst,
-            Paint()
-              ..filterQuality = FilterQuality.none
-              ..isAntiAlias = false
-              ..blendMode = BlendMode.dstIn,
-          );
-          canvas.drawRect(
-            dst,
-            Paint()
-              ..blendMode = BlendMode.modulate
-              ..color = bodyTint.withValues(alpha: 1),
-          );
-          canvas.restore();
-        } else if (bodyTint != null && tintAsset != null && tintMask == null) {
-          assert(() {
-            debugPrint('paper-doll missing body tint mask: $tintAsset');
-            return true;
-          }());
-        }
         continue;
       }
       if (!kOwnedGearOverlayLayers.contains(layer.id)) continue;

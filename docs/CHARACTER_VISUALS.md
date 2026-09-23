@@ -30,11 +30,8 @@ feral/guardian/shadow are authored.
 with the same pose (`CharacterVisualPose.resolve(..., owned: true)`) when on
 the paper-doll path (not form sprites).
 
-**Spec identity:** four bodies serve 31 specs, so the pose carries a `bodyTint`
-from `HeroIdentity.ownedBodyTintArgb` — a hue wash through the
-**cloth-only mask**, keeping the cloth's own shading. Skin, hair, and gear
-keep their palette. Every spec has a color (unlike
-`tintArgb`, which skips specs with unique class sprites).
+**Spec identity:** four bodies serve 31 specs. The owned body is drawn as
+authored, so skin, hair, and cloth keep that picture's palette.
 
 Not one PNG per class×weapon. Items share looks via `visualSetId` (e.g.
 legacy `sword_t1` → shipped `sword_t0`; named models keep authored colors).

@@ -11,7 +11,7 @@ import 'package:idle_party/visual/hero_anim_state.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('spec wash stays on the cloth and keeps its shading', () async {
+  test('spec color is not painted over the body', () async {
     const n = 8;
     final body = Uint8List(n * n * 4);
     final mask = Uint8List(n * n * 4);
@@ -64,13 +64,13 @@ void main() {
     }
 
     final corner = at(0, 0);
-    expect(corner[1], greaterThan(corner[0] + 40), reason: 'empty box stays backdrop');
-
-    final light = at(3, 3);
-    final dark = at(4, 4);
-    expect(light[0], greaterThan(light[2]), reason: 'light cloth picks up fire');
-    expect(dark[0], greaterThan(dark[2]), reason: 'dark cloth picks up fire');
-    expect((light[0] - dark[0]).abs(), greaterThan(40), reason: 'folds stay');
+    expect(
+      corner[1],
+      greaterThan(corner[0] + 40),
+      reason: 'empty box stays backdrop',
+    );
+    expect(at(3, 3), [220, 210, 240, 255]);
+    expect(at(4, 4), [40, 36, 70, 255]);
   });
 }
 
