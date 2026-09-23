@@ -111,6 +111,14 @@ abstract final class CharacterVisualPainter {
         final bodyTint = pose.bodyTint;
         final tintAsset = pose.bodyTintAsset;
         final tintMask = tintAsset == null ? null : images[tintAsset];
+        canvas.drawImageRect(
+          body,
+          Rect.fromLTWH(0, 0, body.width.toDouble(), body.height.toDouble()),
+          dst,
+          basePaint,
+        );
+        // Hue-only wash on the cloth already drawn. Stamping the gray mask
+        // with modulate covered the robe's folds with a flat color slab.
         if (bodyTint != null &&
             bodyTint != const Color(0xFFFFFFFF) &&
             tintMask != null) {
@@ -120,57 +128,36 @@ abstract final class CharacterVisualPainter {
             tintMask.width.toDouble(),
             tintMask.height.toDouble(),
           );
-          // Spec rim: only when the doll is big enough. At LOOK card size (~56)
-          // a 1px tint outline around the whole cloth mask reads as a blob halo.
-          final rim = size >= 72 ? math.max(1.0, size / 96) : 0.0;
-          if (rim > 0) {
-            final rimPaint = Paint()
-              ..filterQuality = FilterQuality.none
-              ..isAntiAlias = false
-              ..color = Color.fromRGBO(255, 255, 255, alpha * 0.72)
-              ..colorFilter = ColorFilter.mode(bodyTint, BlendMode.srcIn);
-            for (final offset in [
-              Offset(-rim, 0),
-              Offset(rim, 0),
-              Offset(0, -rim),
-              Offset(0, rim),
-            ]) {
-              canvas.drawImageRect(
-                tintMask,
-                maskSrc,
-                dst.shift(offset),
-                rimPaint,
-              );
-            }
-          }
-        }
-        canvas.drawImageRect(
-          body,
-          Rect.fromLTWH(0, 0, body.width.toDouble(), body.height.toDouble()),
-          dst,
-          basePaint,
-        );
-        // The prior whole-body filter also recolored faces and hair. Draw the
-        // generated cloth mask instead, before all equipped layers.
-        if (bodyTint != null &&
-            bodyTint != const Color(0xFFFFFFFF) &&
-            tintMask != null) {
-          final tintPaint = Paint()
+          final bodySrc = Rect.fromLTWH(
+            0,
+            0,
+            body.width.toDouble(),
+            body.height.toDouble(),
+          );
+          final sharp = Paint()
             ..filterQuality = FilterQuality.none
-            ..isAntiAlias = false
-            ..color = Color.fromRGBO(255, 255, 255, alpha)
-            ..colorFilter = ColorFilter.mode(bodyTint, BlendMode.modulate);
+            ..isAntiAlias = false;
+          canvas.saveLayer(
+            dst,
+            Paint()..color = Color.fromRGBO(255, 255, 255, alpha),
+          );
+          canvas.drawImageRect(body, bodySrc, dst, sharp);
           canvas.drawImageRect(
             tintMask,
-            Rect.fromLTWH(
-              0,
-              0,
-              tintMask.width.toDouble(),
-              tintMask.height.toDouble(),
-            ),
+            maskSrc,
             dst,
-            tintPaint,
+            Paint()
+              ..filterQuality = FilterQuality.none
+              ..isAntiAlias = false
+              ..blendMode = BlendMode.dstIn,
           );
+          canvas.drawRect(
+            dst,
+            Paint()
+              ..blendMode = BlendMode.color
+              ..color = bodyTint,
+          );
+          canvas.restore();
         } else if (bodyTint != null && tintAsset != null && tintMask == null) {
           assert(() {
             debugPrint('paper-doll missing body tint mask: $tintAsset');
