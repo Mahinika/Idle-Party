@@ -433,45 +433,136 @@ def _punch_facit_head_band(clf: Classification, tint: Image.Image) -> Image.Imag
     return tint
 
 
+def _column_half(clf: Classification, y: int) -> float:
+    """Neck under the jaw, wider chest, narrower legs. Not the robe's box."""
+    chin = clf.chin_y
+    fh = max(8.0, clf.face_half)
+    neck = fh * 0.58
+    chest = fh * 1.18
+    hip = fh * 0.92
+    shoulder_y = chin + fh * 0.75
+    hip_y = chin + fh * 2.15
+    if y < chin - 1:
+        return 0.0
+    if y < shoulder_y:
+        t = (y - (chin - 1)) / max(1.0, shoulder_y - (chin - 1))
+        return neck + (chest - neck) * t
+    if y < hip_y:
+        t = (y - shoulder_y) / max(1.0, hip_y - shoulder_y)
+        return chest + (hip - chest) * t
+    t = min(1.0, (y - hip_y) / max(8.0, fh * 3.0))
+    return hip * (1.0 - 0.16 * t)
+
+
 def undertunic_zone(clf: Classification, x: int, y: int) -> str:
-    """Shirt and pants on the body column. Short bare arms. Robe and hat drop.
+    """Shirt and pants on a neck-to-hip column. Short arms. Robe and hat drop.
 
     Anchored on the face, not the gold-master bbox — a robe fills the whole
     canvas, and using that box paints the hat tip and the robe wings as cloth.
     """
     _x0, _y0, _x1, y1 = clf.box
-    torso_half = max(10.0, clf.face_half * 1.15)
-    arm_extra = max(5.0, clf.face_half * 0.55)
-    leg_half = torso_half * 0.92
-    shoulder_y = int(clf.fy + clf.face_half * 0.15)
-    arm_bottom = int(clf.chin_y + clf.face_half * 1.35)
-    mid_y = int(clf.chin_y + clf.face_half * 2.1)
+    fh = max(8.0, clf.face_half)
+    half = _column_half(clf, y)
+    if half <= 0:
+        return "skip"
+    shoulder_y = int(clf.chin_y + fh * 0.15)
+    arm_bottom = int(clf.chin_y + fh * 1.25)
+    arm_reach = fh * 0.55
+    mid_y = int(clf.chin_y + fh * 2.05)
     dx = abs(x - clf.fx)
-    if shoulder_y <= y < arm_bottom and torso_half < dx <= torso_half + arm_extra:
-        return "arm"
-    if clf.chin_y <= y < mid_y and dx <= torso_half:
+    if shoulder_y <= y < arm_bottom:
+        t = (y - shoulder_y) / max(1.0, arm_bottom - shoulder_y)
+        reach = arm_reach * (1.0 - t * t)
+        if half < dx <= half + reach:
+            return "arm"
+    if y < mid_y and dx <= half:
         return "shirt"
-    if mid_y <= y <= y1 and dx <= leg_half:
+    if mid_y <= y <= y1 and dx <= half:
         return "pants"
     return "skip"
 
 
-def _arm_pixel(
+def _match_face_shade(
+    px,
     x: int,
     y: int,
-    fx: float,
-    fy: float,
-    skin: tuple[int, int, int],
+    clf: Classification,
+    cloth: tuple[int, int, int],
     a: int,
 ) -> tuple[int, int, int, int]:
-    shade = 0.78 + 0.22 * (1.0 - min(1.0, abs(y - fy) / 48.0))
-    shade *= 0.92 + 0.08 * (1.0 - min(1.0, abs(x - fx) / 28.0))
+    """Four hard light steps, the same way the face is shaded. No robe ornaments.
+
+    Brighter under the chin's light, darker toward the sides and the hem.
+    """
+    del px
+    down = min(1.0, max(0.0, (y - clf.chin_y) / max(12.0, clf.face_half * 2.6)))
+    side = min(1.0, abs(x - clf.fx) / max(8.0, clf.face_half * 1.15))
+    neck = 0.78 if y < clf.chin_y + clf.face_half * 0.28 else 1.0
+    raw = (1.06 - 0.36 * down - 0.2 * side) * neck
+    steps = (0.52, 0.74, 0.96, 1.16)
+    tone = min(steps, key=lambda step: abs(step - raw))
     return (
-        min(255, int(skin[0] * shade)),
-        min(255, int(skin[1] * shade)),
-        min(255, int(skin[2] * shade)),
+        min(255, int(cloth[0] * tone)),
+        min(255, int(cloth[1] * tone)),
+        min(255, int(cloth[2] * tone)),
         a,
     )
+
+
+def _face_ink(clf: Classification) -> tuple[int, int, int]:
+    total = [0, 0, 0]
+    n = 0
+    px = clf.src.load()
+    for y in range(N):
+        if y > clf.chin_y + 2:
+            break
+        for x in range(N):
+            if clf.labels[y][x] != INK:
+                continue
+            if abs(x - clf.fx) > clf.face_half * 1.8:
+                continue
+            r, g, b, a = px[x, y]
+            if a < 40:
+                continue
+            total[0] += r
+            total[1] += g
+            total[2] += b
+            n += 1
+    if n < 8:
+        return (36, 22, 28)
+    return (total[0] // n, total[1] // n, total[2] // n)
+
+
+def _ink_the_cut_edge(clf: Classification, out: Image.Image) -> None:
+    """The crop through the robe is a hard cut. Rim it with the face's ink."""
+    ink = _face_ink(clf)
+    op = out.load()
+    edge: list[tuple[int, int]] = []
+    for y in range(N):
+        for x in range(N):
+            if op[x, y][3] < 40:
+                continue
+            tag = clf.labels[y][x]
+            if tag in (EYE, SKIN, HAIR):
+                continue
+            if y < clf.chin_y and abs(x - clf.fx) <= clf.face_half * 1.4:
+                continue
+            cut = False
+            for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                nx, ny = x + dx, y + dy
+                if nx < 0 or ny < 0 or nx >= N or ny >= N or op[nx, ny][3] < 40:
+                    cut = True
+                    break
+            if cut:
+                edge.append((x, y))
+    for x, y in edge:
+        r, g, b, a = op[x, y]
+        op[x, y] = (
+            (r + ink[0] * 2) // 3,
+            (g + ink[1] * 2) // 3,
+            (b + ink[2] * 2) // 3,
+            a,
+        )
 
 
 def paint_family_body(
@@ -479,17 +570,15 @@ def paint_family_body(
     tunic: tuple[int, int, int] | None = None,
     pants: tuple[int, int, int] | None = None,
 ) -> tuple[Image.Image, Image.Image]:
-    """Undertunic: face, hair, a flat shirt, and pants. No plate, robe, or hat.
+    """Undertunic: face, hair, a shaded shirt, and pants. No plate, robe, or hat.
 
-    Does not invent a new silhouette. Costume pixels outside the shirt and
-    pants are dropped or turned into bare arms. Armor overlays cover that
-    footprint when a slot is filled.
+    The shirt uses the same hard light steps and ink edge as the face.
+    Costume pixels outside that column are dropped. Armor overlays cover
+    the footprint when a slot is filled.
     """
     px = clf.src.load()
     if tunic is None or pants is None:
         tunic, pants = TUNIC[clf.family]
-    x0, y0, x1, y1 = clf.box
-    mid_y = y0 + int((y1 - y0) * 0.62)
     out = Image.new("RGBA", (N, N), (0, 0, 0, 0))
     op = out.load()
     fx = clf.fx
@@ -514,10 +603,12 @@ def paint_family_body(
             if zone == "skip":
                 continue
             if zone == "arm":
-                op[x, y] = _arm_pixel(x, y, fx, clf.fy, clf.face, a)
+                op[x, y] = _match_face_shade(px, x, y, clf, clf.face, a)
                 continue
-            op[x, y] = flat_undertunic_pixel(x, y, fx, mid_y, tunic, pants, a)
+            cloth = tunic if zone == "shirt" else pants
+            op[x, y] = _match_face_shade(px, x, y, clf, cloth, a)
     out = despeckle_alpha(out)
+    _ink_the_cut_edge(clf, out)
     if clf.family in ("mage", "healer"):
         strip_equipped_helm_from_body(clf.family, out)
     return out, cloth_tint_from_labels(clf, out)
