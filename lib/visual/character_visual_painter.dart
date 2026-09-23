@@ -117,8 +117,8 @@ abstract final class CharacterVisualPainter {
           dst,
           basePaint,
         );
-        // Hue-only wash on the cloth already drawn. Stamping the gray mask
-        // with modulate covered the robe's folds with a flat color slab.
+        // Multiply the spec color onto the body's own cloth pixels. A color
+        // blend over the whole box painted the empty corners solid red.
         if (bodyTint != null &&
             bodyTint != const Color(0xFFFFFFFF) &&
             tintMask != null) {
@@ -154,8 +154,8 @@ abstract final class CharacterVisualPainter {
           canvas.drawRect(
             dst,
             Paint()
-              ..blendMode = BlendMode.color
-              ..color = bodyTint,
+              ..blendMode = BlendMode.modulate
+              ..color = bodyTint.withValues(alpha: 1),
           );
           canvas.restore();
         } else if (bodyTint != null && tintAsset != null && tintMask == null) {
