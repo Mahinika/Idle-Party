@@ -27,7 +27,7 @@ Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
 
 ---
 
-## Owner-only (Play Console — cannot automate)
+## Console clicks (listing, tags, video)
 
 Service account `play-console@idle-party-505709.iam.gserviceaccount.com`
 is **Active** in Console as of **2026-09-23** (owner invite; an earlier

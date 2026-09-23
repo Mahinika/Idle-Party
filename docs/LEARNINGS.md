@@ -15,22 +15,15 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   customer is a Play install who never heard KEYSTONE.
 - **A polish list is not a roadmap.** Do not hub/wipe-polish because a 10-part
   map said so.
-- **Time-to-combat is ≤90 s**, not “first 15 minutes.” Median session ~3–3.5
-  min. 15 min is an envelope if they stay. First *reward* in the first session;
-  first boss may be too late as the D1 win.
+- **First reward belongs in the first session.** Median session is about
+  3–3.5 min. First boss may be too late as the D1 win. ≤90 s to combat is
+  guidance only; the owner removed it as a hard lock on 2026-09-14.
 - **Hide chrome until it matters.** Tip dumps and three “dailies” are churn.
   Idle practice: roll buttons out when they mean something.
 - **Listing must be the live first minute.** Icon often swings search/browse
   more than screenshots; shots 1–2 still must be the crawl, not menus.
-  Capture via Playwright + web `:8080` (`capture_first_minute.py`) — do not
-  wipe the owner’s A56 save to get a new-save shot. Console paste is a
-  separate owner box; in-repo pack is `STORE_LISTING.md` + `out/` / icon.
-  Play library dump-all sorts by recency/dedupe — attach **one shot at a
-  time**. Assets tagged “Behöver beskäras” need **9:16 stående** → Spara som
-  kopia → **Lägg till** (default crop is 16:9 landscape). CORS on **9888**,
-  not poisoned 9877. Appikon is **1/1**: attach the new 512 from the library
-  first, then **Ta bort** the old icon — never save with an empty icon slot.
-  Do not 9:16-crop a 1∶1 512 icon.
+  Do not wipe the owner’s A56 save to get a new-save shot. The paste steps
+  live in `play-store-prep` reference, not here.
 - **Tiny UA is not a D1 study.** ~900 installs to read D1 ±3 pts. €5–10/day
   is CPI/creative smoke only. **Store Listing Experiments** need real listing
   traffic — ~10 visitors / 28 days (2026-09-12 look) is defer, not an A/B.

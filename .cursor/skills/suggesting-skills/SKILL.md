@@ -39,6 +39,11 @@ Only *mention* a skill name if they explicitly ask how you work, or when creatin
 | New menu / where does X live / UI consistency | always-on `game-ux-director` rule + `ui-theme` / `docs/UI_THEME.md` |
 | UI change “does it look ok?” | `a56-playtest` / `verifying-in-browser` |
 | Play Store / listing / privacy / IARC / statistik / recensioner | `play-store-prep` |
+| kupong / redeem / kod | `CouponCodes` + SHOP/SETTINGS dialog — no new skill |
+| världskartan / kontinenter / PATH scroll | `hub_world_map` + `assets-legal` if PNG |
+| rummen för små / fyrkantiga golv | `spatial-combat-change` |
+| I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` — new-save first |
+| Ascend / “what am I chasing” | `hub_chase`, `ascend_roadmap` |
 | itch.io listing / community post | `play-store-prep` + `tool/store_listing/itch/PAGE.md` (no APK) |
 | `/init` / resync AGENTS + rules | `init` |
 | `/repo auditandcleaning` / full repo audit (no edits) | `repo-audit-and-cleaning` |
