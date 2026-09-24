@@ -418,6 +418,32 @@ void main() {
     expect(legs.first.ownedAsset, contains('legs_t2'));
   });
 
+  test('wide legs keep their cut when a belt is worn', () {
+    final hero = nakedWarrior().copyWith(
+      equipped: {
+        EquipmentSlot.legs: GameLogic.createEquipment(
+          slot: EquipmentSlot.legs,
+          rarity: LootRarity.common,
+          battleNumber: 4,
+          bias: HeroRole.warrior,
+        ).copyWith(visualSetId: 'legs_wide'),
+        EquipmentSlot.waist: GameLogic.createEquipment(
+          slot: EquipmentSlot.waist,
+          rarity: LootRarity.rare,
+          battleNumber: 8,
+          bias: HeroRole.warrior,
+        ),
+      },
+    );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: idle,
+      owned: true,
+    );
+    final legs = pose.layers.where((l) => l.id == CharacterLayerId.legs);
+    expect(legs.first.ownedAsset, contains('legs_wide_idle.png'));
+  });
+
   test('owned rare chest uses t2 overlay path', () {
     final hero = nakedWarrior().copyWith(
       equipped: {

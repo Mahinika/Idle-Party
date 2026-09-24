@@ -368,7 +368,10 @@ class CharacterVisualPose {
       tintFrom = primary;
       armorType = primary.armorType ?? booster?.armorType;
       visId = EquipmentVisualResolver.resolveId(primary);
-      if (booster != null) {
+      // Shoulders and belts have no PNG, so a plain chest or legs steps up
+      // to the t2 extract. A wide or slim cut already is the look, so keep it.
+      if (booster != null &&
+          !OwnedGearAssets.kArmorShapeIds.contains(visId)) {
         visId = t2Id;
       }
     } else {
