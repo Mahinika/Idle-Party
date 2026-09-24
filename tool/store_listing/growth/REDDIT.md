@@ -70,6 +70,7 @@ Pick 5 threads on r/incremental_games, r/IndieGaming, or r/AndroidGaming that ar
 ---
 
 **GIF file (local, gitignored):** `tool/store_listing/preview/hooks/reddit_sandy.gif`  
+Hosted clip for posts **2026-09-20:** https://i.imgur.com/Ua26le5.gif (Sandy crawl, live build).  
 Shorts: `tool/store_listing/preview/hooks/01_they_fight.mp4` and the rest of the 7-clip batch.  
 Play preview: `preview/idle_party_preview_16x9.mp4` + `_9x16.mp4`. Recaptured **2026-09-20** from Sandy F1.
 
@@ -120,6 +121,27 @@ Google Play:
 https://play.google.com/store/apps/details?id=com.idleparty.app
 ```
 
+## r/DungeonCrawler paste (GIF ready)
+
+On-genre, small. Unique copy.
+
+### Title
+
+```
+Idle Party — party crawls the rooms AFK (Android idle RPG)
+```
+
+### Body
+
+```
+Portrait idle RPG. Three heroes walk a painted cave, use their kits, and keep the same fight if you look away.
+
+The GIF is the first Sandy floor from a new save — spit, crash, then the boss slam. Not a menu tour.
+
+Google Play:
+https://play.google.com/store/apps/details?id=com.idleparty.app
+```
+
 ## r/IndieDev paste (GIF ready)
 
 Clip first. Not a launch dump.
@@ -154,6 +176,18 @@ https://play.google.com/store/apps/details?id=com.idleparty.app
 | r/SideProject | — | 1 | — | 0 | — | Removed by Reddit filters. |
 
 Insights: https://www.reddit.com/poststats/1wjwbga/
+
+---
+
+## Posted 2026-09-21 (GIF threads)
+
+| Sub | URL |
+|-----|-----|
+| r/indiegames | https://www.reddit.com/r/indiegames/comments/1wm77hg/idle_party_android_idle_rpg_party_crawl_in_the/ |
+| r/DungeonCrawler | (submit open — captcha) |
+| r/IndieDev | (after DungeonCrawler) |
+
+GIF in body: https://i.imgur.com/Ua26le5.gif · Play only. r/indiegames flair **Promotion**. Text post, not a link post.
 
 ---
 

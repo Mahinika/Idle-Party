@@ -1,0 +1,30 @@
+# PandaOS Project Configuration
+# Edit these values to customize how skills and agents behave.
+# Agents and skills read this file directly when they need project settings.
+paths:
+  specs: .pandaos/specs/
+  features: .pandaos/features/
+  adrs: .pandaos/adrs/
+  docs: .pandaos/docs/
+  launches: .pandaos/launches/
+  playbooks: .pandaos/playbooks/
+  deprecations: .pandaos/deprecations/
+  migrations: .pandaos/migrations/
+  implementation_logs: .pandaos/logs/
+  rules: .claude/rules/
+  knowledge: .pandaos/knowledge/
+  api_specs: .pandaos/api-specs/
+prefixes:
+  spec_id: S
+  adr_id: ADR
+  feature_id: F
+code_quality:
+  max_file_lines: 300
+  max_function_lines: 50
+  max_params: 4
+  max_nesting: 3
+context:
+  budget: medium
+api:
+  style: rest
+artifact_format: markdown

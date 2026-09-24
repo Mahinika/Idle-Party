@@ -112,6 +112,9 @@ IdleSword*
 # Local MCP venv
 /tool/mcp_idle_party/.venv/
 
+# PandaOS local install (skills and config stay tracked)
+.pandaos/node_modules/
+
 # Local Play AAB CORS helper (often has a machine-specific path)
 /tool/_serve_aab_cors.py
 
