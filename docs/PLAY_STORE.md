@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | Live store **1.12.172 (202)** as of Console **2026-09-18**. **1.12.183 (213)** uploaded + submitted for review **2026-09-20** (full rollout). |
+| Production | ✅ live | Live store **1.12.183 (213)** as of API peek **2026-09-24**. **1.12.184 (214)** uploaded + production track committed **2026-09-24** (status `completed`, full rollout — Google may still show review briefly). |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ✅ review | Ads / Play Games / Advertising ID + **Firebase Analytics** (App interactions, Diagnostics, Device IDs) submitted **2026-09-10** — under Google review (`Ändringarna granskas`). Matches [PRIVACY.md](PRIVACY.md). |
@@ -46,13 +46,16 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Phone carousel swapped to new `play_ready` 8 (combat-first) + submitted for review **2026-09-18**. Preview URL still `OMWXbgGBFMA` (XfKog embed rejected).
 - [x] Owner asked new Production AAB (**2026-09-20**)
 - [x] Signed Production AAB **1.12.183+213** built + uploaded; submitted for review (full rollout). Console: *Ändringarna granskas* + Produktion **213 (1.12.183)**. AD_ID “Lansera utan behörighet” (permission is in the 213 AAB).
+- [x] Production **213 (1.12.183)** live (`completed`) as of API peek **2026-09-24**.
+- [x] Owner asked new Production AAB (**2026-09-24**)
+- [x] Signed Production AAB **1.12.184+214** built + uploaded via Play API; production track `completed` committed **2026-09-24**.
 
 ### Production upload paste (en-US release notes)
 
 From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 
 ```
-• Your party fights on its own. Caves feel different now: Sandy piles up front, Tide nets the mid room, Brass stacks elites. Bosses telegraph their own tell.
+• Your party fights on its own. Caves stay snappier in crowded fights, and stacked mobs unstick instead of gluing together.
 • PATH is a continent map. SHOP has forever SCROLLS and a redeem code. Party Lv100 still unlocks Craft Trial and the extra hunts.
 ```
 
