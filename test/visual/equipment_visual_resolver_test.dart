@@ -5,6 +5,7 @@ import 'dart:ui' show Color;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/hero.dart';
+import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/visual/body_family.dart';
 import 'package:idle_party/visual/character_layer.dart';
@@ -101,6 +102,45 @@ void main() {
         '${base}_t0',
       );
     }
+  });
+
+  test('class helm mark when the file is shipped, plain helm when it is not', () {
+    String helm(HeroClassId? heroClass) => OwnedGearAssets.pathFor(
+      visualSetId: 'helm_t0',
+      family: BodyFamily.warrior,
+      anim: HeroAnimKind.idle,
+      heroClass: heroClass,
+    )!;
+
+    expect(helm(HeroClassId.warrior), helm(null));
+    expect(
+      helm(HeroClassId.paladin),
+      'assets/custom/char/warrior/gear/helm_paladin_t0_idle.png',
+    );
+    expect(
+      helm(HeroClassId.deathKnight),
+      'assets/custom/char/warrior/gear/helm_deathknight_t0_idle.png',
+    );
+    expect(helm(HeroClassId.warrior), isNot(helm(HeroClassId.paladin)));
+    expect(
+      OwnedGearAssets.pathFor(
+        visualSetId: 'helm_t0',
+        family: BodyFamily.mage,
+        anim: HeroAnimKind.idle,
+        heroClass: HeroClassId.warlock,
+      ),
+      'assets/custom/char/mage/gear/helm_warlock_t0_idle.png',
+    );
+    expect(
+      OwnedGearAssets.pathFor(
+        visualSetId: 'helm_t0',
+        family: BodyFamily.healer,
+        anim: HeroAnimKind.idle,
+        armorType: ArmorType.plate,
+        heroClass: HeroClassId.paladin,
+      ),
+      'assets/custom/char/healer/gear/helm_plate_t0_idle.png',
+    );
   });
 
   test('family armor path uses extract tier id', () {

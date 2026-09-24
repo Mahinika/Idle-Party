@@ -3,6 +3,7 @@ import 'dart:ui' show Color;
 
 import '../core/hero_identity.dart';
 import '../models/hero.dart';
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../spatial/spatial_combat.dart';
 import '../ui/hero_paper_doll.dart';
@@ -257,6 +258,7 @@ class CharacterVisualPose {
         family: family,
         anim: anim.kind,
         armorType: item.armorType,
+        heroClass: hero.spec.classId,
       );
       if (path == null) return;
       final id = layer ?? def.layer;
@@ -293,6 +295,7 @@ class CharacterVisualPose {
       booster: hero.itemIn(EquipmentSlot.waist),
       layer: CharacterLayerId.legs,
       t2Id: 'legs_t2',
+      heroClass: hero.spec.classId,
     );
     _addFoldedArmor(
       layers: layers,
@@ -303,6 +306,7 @@ class CharacterVisualPose {
       booster: hero.itemIn(EquipmentSlot.shoulder),
       layer: CharacterLayerId.torso,
       t2Id: 'chest_t2',
+      heroClass: hero.spec.classId,
     );
     addItem(
       hero.itemIn(EquipmentSlot.hands) ?? hero.itemIn(EquipmentSlot.wrist),
@@ -352,6 +356,7 @@ class CharacterVisualPose {
     required EquipmentItem? booster,
     required CharacterLayerId layer,
     required String t2Id,
+    HeroClassId? heroClass,
   }) {
     if (primary == null && booster == null) return;
     if (!seen.add(layer)) return;
@@ -376,6 +381,7 @@ class CharacterVisualPose {
       family: family,
       anim: anim,
       armorType: armorType,
+      heroClass: heroClass,
     );
     if (path == null) {
       seen.remove(layer);

@@ -1,3 +1,4 @@
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import 'body_family.dart';
 import 'equipment_model_catalog.dart';
@@ -184,6 +185,52 @@ abstract final class OwnedGearAssets {
     return '${m.group(1)!}_${suffix}_t${m.group(2)!}';
   }
 
+  /// Class marks derived from the family's own helm and chest. Missing ids
+  /// fall back to the plain silhouette.
+  static const Set<String> kClassOverlayIds = {
+    'helm_paladin_t0',
+    'helm_paladin_t2',
+    'helm_deathknight_t0',
+    'helm_deathknight_t2',
+    'helm_warlock_t0',
+    'helm_warlock_t2',
+    'chest_paladin_t0',
+    'chest_paladin_t2',
+    'chest_deathknight_t0',
+    'chest_deathknight_t2',
+    'chest_warlock_t0',
+    'chest_warlock_t2',
+  };
+
+  /// `helm_t0` → `helm_paladin_t0` when that class shares the body and the
+  /// file is shipped. Native silhouettes only — mail and plate suffixes stay.
+  static String? classFileStem(
+    String silhouetteId, {
+    required BodyFamily family,
+    HeroClassId? heroClass,
+  }) {
+    if (heroClass == null) return null;
+    final onFamily = switch (heroClass) {
+      HeroClassId.paladin || HeroClassId.deathKnight =>
+        family == BodyFamily.warrior,
+      HeroClassId.warlock => family == BodyFamily.mage,
+      _ => false,
+    };
+    if (!onFamily) return null;
+    final m = RegExp(r'^(helm|chest)_t([02])$').firstMatch(silhouetteId);
+    if (m == null) return null;
+    final mark = switch (heroClass) {
+      HeroClassId.paladin => 'paladin',
+      HeroClassId.deathKnight => 'deathknight',
+      HeroClassId.warlock => 'warlock',
+      _ => null,
+    };
+    if (mark == null) return null;
+    final id = '${m.group(1)!}_${mark}_t${m.group(2)!}';
+    if (!kClassOverlayIds.contains(id)) return null;
+    return id;
+  }
+
   /// Whether [visualSetId] belongs to the shared (non-family) weapon/shield
   /// set. Works for both catalog ids (`sword_t0`) and named variants
   /// (`sword_thunderfury`) by extracting the base token before `_`.
@@ -221,6 +268,7 @@ abstract final class OwnedGearAssets {
     required BodyFamily family,
     required HeroAnimKind anim,
     ArmorType? armorType,
+    HeroClassId? heroClass,
   }) {
     if (visualSetId.isEmpty || visualSetId == 'none') return null;
     final stem = visualSetId.split('_').first;
@@ -237,6 +285,14 @@ abstract final class OwnedGearAssets {
       family: family,
       armorType: armorType,
     );
+    final classStem = classFileStem(
+      fileStem,
+      family: family,
+      heroClass: heroClass,
+    );
+    if (classStem != null) {
+      return familyGear(family, classStem, overlayAnim);
+    }
     return familyGear(family, fileStem, overlayAnim);
   }
 
@@ -284,6 +340,13 @@ abstract final class OwnedGearAssets {
     for (final id in kSharedSetIds) {
       out.add(sharedGear(id, 'idle'));
       out.add(sharedGear(id, 'idle').replaceFirst('_idle.png', '_icon.png'));
+    }
+    for (final id in kClassOverlayIds) {
+      out.add(familyGear(
+        id.contains('warlock') ? BodyFamily.mage : BodyFamily.warrior,
+        id,
+        'idle',
+      ));
     }
     for (final id in EquipmentModelCatalog.authoredSharedIds) {
       out.add(sharedGear(id, 'idle'));
