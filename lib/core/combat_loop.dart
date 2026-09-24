@@ -182,6 +182,7 @@ extension GameDirectorCombatLoop on GameDirector {
       }
       if (result.stairsOpened) {
         GameAudio.clear();
+        _state = GameLogic.healPartyAtStairs(_state);
         // Corner CLEAR + HOLD own the walk — no second center “congrats” yet.
       }
       if (result.state.gearStash.length > _lastStashLen) {

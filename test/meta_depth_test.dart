@@ -410,14 +410,19 @@ void main() {
     var state = GameLogic.createInitialState(
       now: DateTime(2026, 8, 7),
     ).copyWith(essence: 500, ascensionLevel: 12);
+    state = state.copyWith(metaDepth: state.metaDepth.copyWith(embers: 500));
     expect(GameLogic.relicOrder, contains(GameLogic.godHandFocusRelic));
     expect(
       PrestigeShopCatalog.all.firstWhere((i) => i.id == 'gh_cdr').name,
       contains('Cadence'),
     );
+    for (final id in GameLogic.relicOrder) {
+      if (id == GameLogic.godHandFocusRelic) break;
+      state = GameLogic.unlockRelic(state, id);
+    }
     state = GameLogic.unlockRelic(state, GameLogic.godHandFocusRelic);
     expect(state.hasRelic(GameLogic.godHandFocusRelic), isTrue);
-    expect(state.relicGodHandDamageBonus, 3);
+    expect(state.godHandCooldownSeconds, lessThan(1.1));
     state = GameLogic.unlockRelic(state, GameLogic.chamberLuckRelic);
     expect(state.relicLootFindPercent, 5);
     state = GameLogic.unlockRelic(state, GameLogic.ironWillRelic);

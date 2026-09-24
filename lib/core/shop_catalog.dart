@@ -17,6 +17,9 @@ enum ShopOfferKind {
 
   /// Forever SCROLLS — same % as tickets, not a stronger combat class.
   permScroll,
+
+  /// Repeatable Cinder pack. Same relics a player can earn.
+  cinders,
 }
 
 class ShopCatalogItem {
@@ -30,6 +33,7 @@ class ShopCatalogItem {
     this.oneTime = false,
     this.bagSlots = 0,
     this.permMask = 0,
+    this.cinderGrant = 0,
   });
 
   /// Play Console product id — must match Console exactly.
@@ -53,8 +57,13 @@ class ShopCatalogItem {
   /// Bits on [MetaDepthState.shopPermScrolls] granted by this SKU.
   final int permMask;
 
+  /// Cinders granted when [kind] is [ShopOfferKind.cinders].
+  final int cinderGrant;
+
   /// Repeatable boost packs — `buyConsumable`. Everything else is non-consumable.
-  bool get isConsumable => kind == ShopOfferKind.boostHours && !oneTime;
+  bool get isConsumable =>
+      (kind == ShopOfferKind.boostHours && !oneTime) ||
+      kind == ShopOfferKind.cinders;
 }
 
 /// Cheap convenience ladder — no whale packs, no gacha.
@@ -185,6 +194,16 @@ abstract final class ShopCatalog {
       boostHours: 24,
     ),
     ShopCatalogItem(
+      id: 'cinder_pouch',
+      name: 'Cinder pouch',
+      description:
+          '8 Cinders. Salvage a relic or trade a few for Embers. '
+          'Same relics you earn by playing.',
+      priceLabel: '\$0.99',
+      kind: ShopOfferKind.cinders,
+      cinderGrant: 8,
+    ),
+    ShopCatalogItem(
       id: 'supporter_qol',
       name: 'Supporter pack',
       description:
@@ -220,7 +239,8 @@ abstract final class ShopCatalog {
       .where(
         (e) =>
             e.kind == ShopOfferKind.adFree ||
-            e.kind == ShopOfferKind.supporterQol,
+            e.kind == ShopOfferKind.supporterQol ||
+            e.kind == ShopOfferKind.cinders,
       )
       .toList();
 }

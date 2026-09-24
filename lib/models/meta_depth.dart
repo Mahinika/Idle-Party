@@ -234,6 +234,10 @@ class MetaDepthState {
     this.titles = const <String>[],
     this.activeTitle = '',
     this.relicTiers = const <String, int>{},
+    this.embers = 0,
+    this.cinders = 0,
+    this.cinderWeekKey = '',
+    this.cinderExchanges = 0,
     this.prestigePurchases = const <String>[],
     this.weeklyKey = '',
     this.weeklyProgress = 0,
@@ -369,6 +373,18 @@ class MetaDepthState {
   final List<String> titles;
   final String activeTitle;
   final Map<String, int> relicTiers;
+
+  /// Artifact points. Discover and level relics. Survives Ascend.
+  final int embers;
+
+  /// Premium glow. Salvage and a small weekly Ember trade.
+  final int cinders;
+
+  /// ISO week of [cinderExchanges].
+  final String cinderWeekKey;
+
+  /// Cinder → Ember trades used in [cinderWeekKey].
+  final int cinderExchanges;
   final List<String> prestigePurchases;
   final String weeklyKey;
   final int weeklyProgress;
@@ -664,6 +680,10 @@ class MetaDepthState {
     List<String>? titles,
     String? activeTitle,
     Map<String, int>? relicTiers,
+    int? embers,
+    int? cinders,
+    String? cinderWeekKey,
+    int? cinderExchanges,
     List<String>? prestigePurchases,
     String? weeklyKey,
     int? weeklyProgress,
@@ -800,6 +820,10 @@ class MetaDepthState {
       titles: titles ?? this.titles,
       activeTitle: activeTitle ?? this.activeTitle,
       relicTiers: relicTiers ?? this.relicTiers,
+      embers: embers ?? this.embers,
+      cinders: cinders ?? this.cinders,
+      cinderWeekKey: cinderWeekKey ?? this.cinderWeekKey,
+      cinderExchanges: cinderExchanges ?? this.cinderExchanges,
       prestigePurchases: prestigePurchases ?? this.prestigePurchases,
       weeklyKey: weeklyKey ?? this.weeklyKey,
       weeklyProgress: weeklyProgress ?? this.weeklyProgress,
@@ -951,6 +975,10 @@ class MetaDepthState {
     'titles': titles,
     'activeTitle': activeTitle,
     'relicTiers': relicTiers,
+    'embers': embers,
+    'cinders': cinders,
+    'cinderWeekKey': cinderWeekKey,
+    'cinderExchanges': cinderExchanges,
     'prestigePurchases': prestigePurchases,
     'weeklyKey': weeklyKey,
     'weeklyProgress': weeklyProgress,
@@ -1098,6 +1126,10 @@ class MetaDepthState {
       titles: (json['titles'] as List<dynamic>?)?.cast<String>() ?? const [],
       activeTitle: (json['activeTitle'] as String?) ?? '',
       relicTiers: tiers,
+      embers: (json['embers'] as num?)?.toInt() ?? 0,
+      cinders: (json['cinders'] as num?)?.toInt() ?? 0,
+      cinderWeekKey: json['cinderWeekKey'] as String? ?? '',
+      cinderExchanges: (json['cinderExchanges'] as num?)?.toInt() ?? 0,
       prestigePurchases:
           (json['prestigePurchases'] as List<dynamic>?)?.cast<String>() ??
           const [],

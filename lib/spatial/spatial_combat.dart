@@ -1797,7 +1797,8 @@ abstract final class SpatialCombat {
             ? state.effectiveHeroStrength(hero) ~/ 20
             : 0,
         spiritRegenBonus: (hero.spec.resource == SpecResource.mana)
-            ? spiritManaRegenPerSec(state.effectiveHeroSpirit(hero))
+            ? spiritManaRegenPerSec(state.effectiveHeroSpirit(hero)) +
+                  state.relicManaPerSec
             : 0,
         mp5RegenBonus: mp5ManaRegenPerSec(hero.gearMp5Bonus),
       );
@@ -2185,7 +2186,8 @@ abstract final class SpatialCombat {
             ? state.effectiveHeroStrength(hero) ~/ 20
             : 0,
         spiritRegenBonus: hero.spec.resource == SpecResource.mana
-            ? spiritManaRegenPerSec(state.effectiveHeroSpirit(hero))
+            ? spiritManaRegenPerSec(state.effectiveHeroSpirit(hero)) +
+                  state.relicManaPerSec
             : 0,
         mp5RegenBonus: mp5ManaRegenPerSec(hero.gearMp5Bonus),
       );
@@ -2915,6 +2917,9 @@ abstract final class SpatialCombat {
   }
 
   /// Apply damage to an enemy and flash the sprite so hits read on phone.
+  static double relicBossDamageMul = 1;
+  static double relicLowHpDr = 0;
+
   static int hurtEnemy(SpatialActor enemy, int dealt, {bool soft = false}) =>
       combatHurtEnemy(enemy, dealt, soft: soft);
 
@@ -3079,6 +3084,8 @@ abstract final class SpatialCombat {
     GameState state, {
     required double dt,
   }) {
+    relicBossDamageMul = state.relicBossDamageMul;
+    relicLowHpDr = state.relicLowHpDr;
     var nextState = state;
     var goldFromKills = 0;
     final rng = GameLogic.random;

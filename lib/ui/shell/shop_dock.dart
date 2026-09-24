@@ -200,6 +200,7 @@ class _ShopRow extends StatelessWidget {
     if (item.kind == ShopOfferKind.adFree) return UiIcon.heart;
     if (item.kind == ShopOfferKind.supporterQol) return UiIcon.trophy;
     if (item.kind == ShopOfferKind.boostHours) return UiIcon.flask;
+    if (item.kind == ShopOfferKind.cinders) return UiIcon.gold;
     return switch (item.permMask) {
       AdBoost.permAtk => UiIcon.sword,
       AdBoost.permGold => UiIcon.gold,
@@ -227,6 +228,7 @@ class _ShopRow extends StatelessWidget {
       ShopOfferKind.adFree => 'permanent',
       ShopOfferKind.supporterQol =>
         '+${item.bagSlots} bag · +${item.boostHours}h · once',
+      ShopOfferKind.cinders => '${item.cinderGrant} Cinders',
       ShopOfferKind.permScroll => item.permMask == AdBoost.permAll
           ? 'permanent · all seven · cheaper than each'
           : '${_permEffect(item.permMask)} · permanent',

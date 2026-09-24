@@ -55,6 +55,11 @@ abstract final class ShopBilling {
             nowMs: clock.millisecondsSinceEpoch,
           );
         }
+      case ShopOfferKind.cinders:
+        if (item.cinderGrant <= 0) return state;
+        md = md.copyWith(
+          cinders: min(9999, md.cinders + item.cinderGrant),
+        );
       case ShopOfferKind.permScroll:
         if (item.permMask == 0) return state;
         if ((md.shopPermScrolls & item.permMask) == item.permMask) {
@@ -74,6 +79,7 @@ abstract final class ShopBilling {
       ShopOfferKind.boostHours => item.oneTime && md.shopStarterClaimed,
       ShopOfferKind.adFree => md.adFree,
       ShopOfferKind.supporterQol => md.shopBagBonusSlots > 0,
+      ShopOfferKind.cinders => false,
       ShopOfferKind.permScroll =>
         item.permMask != 0 &&
         (md.shopPermScrolls & item.permMask) == item.permMask,

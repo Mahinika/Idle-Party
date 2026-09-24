@@ -72,6 +72,11 @@ int combatApplyHeroIncomingDamage(
       hero.revengeReady = true;
     }
   }
+  if (SpatialCombat.relicLowHpDr > 0 &&
+      hero.maxHp > 0 &&
+      hero.hp / hero.maxHp < 0.4) {
+    mul *= 1 - SpatialCombat.relicLowHpDr;
+  }
   dealt = math.max(1, (dealt * mul).round());
   if (world.petMitigateFlat > 0) {
     dealt = math.max(1, dealt - world.petMitigateFlat);
@@ -260,6 +265,9 @@ int combatApplyHeroIncomingDamage(
 /// Apply damage to an enemy and flash the sprite so hits read on phone.
 int combatHurtEnemy(SpatialActor enemy, int dealt, {bool soft = false}) {
   if (dealt <= 0 || enemy.team != SpatialTeam.enemy) return 0;
+  if (enemy.role == EnemyRole.boss && SpatialCombat.relicBossDamageMul > 1) {
+    dealt = math.max(1, (dealt * SpatialCombat.relicBossDamageMul).round());
+  }
   enemy.hp = math.max(0, enemy.hp - dealt);
   final life = soft
       ? 0.07

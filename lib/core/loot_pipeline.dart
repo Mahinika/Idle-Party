@@ -653,12 +653,15 @@ abstract final class LootPipeline {
 
   /// Treasure / chest gold budget using full zone · HM · AL · gear pressure.
   static int treasureGoldBudget(GameState state) {
-    return GameLogic.roomCombatBudget(
+    final base = GameLogic.roomCombatBudget(
       state.currentRoom,
       dungeonId: state.dungeonId,
       hardmodeLevel: Keystone.combatLevel(state),
       ascensionLevel: state.ascensionLevel,
       gearPressure: GameLogic.partyGearPressure(state),
     ).gold;
+    final pct = state.relicTreasureGoldPercent;
+    if (pct <= 0) return base;
+    return base + (base * pct) ~/ 100;
   }
 }

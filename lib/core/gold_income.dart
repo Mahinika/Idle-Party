@@ -27,8 +27,10 @@ abstract final class GoldIncome {
     final found = percent <= 0
         ? torched
         : torched + (torched * percent) ~/ 100;
-    if (!AdBoost.goldActive(state.metaDepth)) return found;
-    return found * AdBoost.goldMul;
+    final porch = state.relicOfflineGoldPercent;
+    final withPorch = porch <= 0 ? found : found + (found * porch) ~/ 100;
+    if (!AdBoost.goldActive(state.metaDepth)) return withPorch;
+    return withPorch * AdBoost.goldMul;
   }
 
   static int rawFromSeconds(GameState state, int seconds) {

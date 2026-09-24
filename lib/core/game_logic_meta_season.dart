@@ -180,6 +180,7 @@ GameState _claimDailyVault(GameState state, {DateTime? now}) {
     essence: next.essence + essenceGain,
     metaDepth: md.copyWith(
       dailyVaultClaimed: true,
+      cinders: md.cinders + 1,
       claimedSeasonRewards: seasonClaims,
       titles: titles,
     ),

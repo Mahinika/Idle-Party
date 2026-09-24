@@ -102,6 +102,7 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
     dailyQuestDate: MetaSystems.dailyDateKey(clock),
     questWeekKey: GameLogic.isoWeekKey(clock),
     freshPrestige: true,
+    embers: state.metaDepth.embers + 4 + nextLevel,
   );
 
   var base = _applyPrestigeRunWipe(GameLogic.leaveDungeon(state));

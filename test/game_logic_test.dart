@@ -332,8 +332,6 @@ void main() {
   test('KEEP relics AL and Blessing STA match ATK after percent armor', () {
     expect(GameLogic.forgeDefenseGain, GameLogic.forgeAttackGain * 4);
     expect(GameLogic.forgeVitalityGain, GameLogic.forgeAttackGain * 12);
-    expect(GameLogic.relicDefensePerTier, GameLogic.relicAttackPerTier * 4);
-    expect(GameLogic.relicVitalityPerTier, GameLogic.relicAttackPerTier * 12);
     expect(GameLogic.alDefensePerLevel, GameLogic.alAttackPerLevel * 4);
     expect(GameLogic.alVitalityPerLevel, GameLogic.alAttackPerLevel * 12);
     expect(GameLogic.ascendBlessingDef, GameLogic.ascendBlessingAtk * 4);
@@ -344,11 +342,12 @@ void main() {
     );
 
     final seeded = GameLogic.createInitialState(now: DateTime(2026, 8, 17));
-    var state = seeded.copyWith(essence: 200);
-    state = GameLogic.unlockRelic(state, GameLogic.ironWardRelic);
-    expect(state.relicDefenseBonus, GameLogic.relicDefensePerTier);
-    state = GameLogic.unlockRelic(state, GameLogic.phoenixEmberRelic);
-    expect(state.relicVitalityBonus, GameLogic.relicVitalityPerTier);
+    var state = seeded.copyWith(
+      metaDepth: seeded.metaDepth.copyWith(embers: 200),
+    );
+    state = GameLogic.discoverNextRelic(state);
+    expect(state.hasRelic(GameLogic.warBannerRelic), isTrue);
+    expect(state.relicBossDamageMul, greaterThan(1));
     state = state.copyWith(ascensionLevel: 1);
     expect(state.ascensionDefenseBonus, GameLogic.alDefensePerLevel);
     expect(state.ascensionVitalityBonus, GameLogic.alVitalityPerLevel);
@@ -510,18 +509,16 @@ void main() {
     expect(next.lifetimeGoldEarned, greaterThan(state.lifetimeGoldEarned));
   });
 
-  test('essence can unlock relic bonuses', () {
-    final initial = GameLogic.createInitialState(
-      now: DateTime(2026, 7, 4),
-    ).copyWith(essence: GameLogic.relicCosts[GameLogic.warBannerRelic]);
-
+  test('embers discover the first relic', () {
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    final initial = seeded.copyWith(
+      metaDepth: seeded.metaDepth.copyWith(embers: 8),
+    );
     final unlocked = GameLogic.unlockRelic(initial, GameLogic.warBannerRelic);
-
     expect(unlocked.hasRelic(GameLogic.warBannerRelic), isTrue);
-    expect(unlocked.essence, 0);
-    expect(unlocked.totalAttackBonus, 4);
-    expect(GameLogic.relicKeepSummary(unlocked), contains('+4 ATK'));
-    expect(GameLogic.relicPerTierPayout(GameLogic.warBannerRelic), '+4 ATK');
+    expect(unlocked.metaDepth.embers, 0);
+    expect(unlocked.relicBossDamageMul, 1.04);
+    expect(GameLogic.relicPerTierPayout(GameLogic.warBannerRelic), contains('boss'));
   });
 
   test('ascension is locked until required bosses are cleared', () {
@@ -3749,8 +3746,10 @@ void main() {
   });
 
   test('relics upgrade to T6 then stop', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12))
-        .copyWith(essence: 2000);
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
+    var state = seeded.copyWith(
+      metaDepth: seeded.metaDepth.copyWith(embers: 2000),
+    );
     state = GameLogic.unlockRelic(state, GameLogic.warBannerRelic);
     expect(state.metaDepth.relicTierOf(GameLogic.warBannerRelic), 1);
     for (var i = 0; i < GameLogic.relicMaxTier - 1; i++) {
@@ -3760,7 +3759,7 @@ void main() {
       state.metaDepth.relicTierOf(GameLogic.warBannerRelic),
       GameLogic.relicMaxTier,
     );
-    expect(state.relicAttackBonus, GameLogic.relicAttackPerTier * 6);
+    expect(state.relicBossDamageMul, closeTo(1.24, 0.001));
     final blocked = GameLogic.upgradeRelicTier(
       state,
       GameLogic.warBannerRelic,

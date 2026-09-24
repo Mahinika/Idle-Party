@@ -18,6 +18,7 @@ import 'ad_boost.dart';
 import 'blessing_constellation.dart';
 import 'keystone.dart';
 import 'party_name_filter.dart';
+import 'relics.dart';
 import 'run_bag.dart';
 
 /// UI text scale clamps (SETTINGS slider + MediaQuery compose).
@@ -537,20 +538,40 @@ class GameState {
     return hasRelic(relicId) ? 1 : 0;
   }
 
-  int get relicAttackBonus => 4 * relicTierOf('war_banner');
+  int relicAmount(RelicEffect effect) {
+    var sum = 0;
+    for (final def in RelicCatalog.all) {
+      if (def.effect != effect) continue;
+      final tier = relicTierOf(def.id);
+      if (tier > 0) sum += def.perTier * tier;
+    }
+    return sum;
+  }
 
-  int get relicDefenseBonus => 16 * relicTierOf('iron_ward');
+  /// Loot-find percent from Finder's Knot.
+  int get relicLootFindPercent => relicAmount(RelicEffect.lootFind);
 
-  int get relicVitalityBonus => 48 * relicTierOf('phoenix_ember');
+  /// Flat incoming damage mitigate from Stone Stomach.
+  int get relicMitigateFlat => relicAmount(RelicEffect.mitigate);
 
-  /// Flat God Hand damage from the God Hand Focus relic.
-  int get relicGodHandDamageBonus => 3 * relicTierOf('god_hand_focus');
+  double get relicBossDamageMul => 1 + relicAmount(RelicEffect.bossDamage) / 100;
 
-  /// Loot-find percent from Chamber Luck relic.
-  int get relicLootFindPercent => 5 * relicTierOf('chamber_luck');
+  /// Fraction removed from hits while the hero is under 40% HP.
+  double get relicLowHpDr => relicAmount(RelicEffect.lowHpDr) / 100;
 
-  /// Flat incoming damage mitigate from Iron Will relic.
-  int get relicMitigateFlat => 8 * relicTierOf('iron_will');
+  int get relicStairHealPercent => relicAmount(RelicEffect.stairHeal);
+
+  int get relicTreasureGoldPercent => relicAmount(RelicEffect.treasureGold);
+
+  int get relicOfflineGoldPercent => relicAmount(RelicEffect.offlineGold);
+
+  int get relicBossEssence => relicAmount(RelicEffect.bossEssence);
+
+  int get relicMovePercent => relicAmount(RelicEffect.moveSpeed);
+
+  int get relicFlaskPercent => relicAmount(RelicEffect.flaskHeal);
+
+  double get relicManaPerSec => relicAmount(RelicEffect.manaRegen).toDouble();
 
   /// Flat attack from Ascension Level (+1 ATK per AL).
   int get ascensionAttackBonus => ascensionLevel;
@@ -784,7 +805,6 @@ class GameState {
   /// Forge / relics / AL / sanctuary / pet / soulbound — not personal gear.
   int get metaAttackBonus =>
       attackBonus +
-      relicAttackBonus +
       ascensionAttackBonus +
       sanctuaryAttackBonus +
       petAttackBonus +
@@ -796,7 +816,6 @@ class GameState {
 
   int get metaDefenseBonus =>
       defenseBonus +
-      relicDefenseBonus +
       ascensionDefenseBonus +
       sanctuaryDefenseBonus +
       soulboundDefenseBonus +
@@ -805,7 +824,6 @@ class GameState {
 
   int get metaVitalityBonus =>
       vitalityBonus +
-      relicVitalityBonus +
       ascensionVitalityBonus +
       sanctuaryVitalityBonus +
       soulboundVitalityBonus +
@@ -991,7 +1009,7 @@ class GameState {
       HeroRole.mage => 3.0,
     };
     final pct = hero.gearMoveSpeedBonus + softForgePercent(moveSpeedBonus);
-    final forged = base * (1 + pct / 100);
+    final forged = base * (1 + (pct + relicMovePercent) / 100);
     if (!AdBoost.moveActive(metaDepth)) return forged;
     return forged * (1 + AdBoost.movePercent / 100);
   }
@@ -1007,8 +1025,7 @@ class GameState {
     var damage =
         (baseDamage ?? godHandBaseDamage) +
         ascensionLevel +
-        (totalAttack ~/ 8) +
-        relicGodHandDamageBonus;
+        (totalAttack ~/ 8);
     switch (metaDepth.godHandStyle) {
       case 1:
         return (damage * 1.22).round();
@@ -1032,8 +1049,13 @@ class GameState {
   }
 
   /// Cooldown after damage + CD levels — same as SpatialCombat.
-  double get godHandCooldownSeconds =>
-      max(0.45, 1.1 - godHandLevel * 0.05 - metaDepth.godHandCdLevel * 0.06);
+  double get godHandCooldownSeconds => max(
+        0.45,
+        1.1 -
+            godHandLevel * 0.05 -
+            metaDepth.godHandCdLevel * 0.06 -
+            relicAmount(RelicEffect.godHandCd) / 100,
+      );
 
   GameState copyWith({
     List<PartyHero>? heroes,

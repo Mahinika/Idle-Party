@@ -26,10 +26,17 @@ class ChangelogRelease {
 /// monetization — everything here is a pure function over [GameState].
 abstract final class MetaSystems {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.185';
+  static const String currentVersion = '1.12.186';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.186',
+      bullets: <String>[
+        'Your party fights on its own. ESSENCE → RELICS are unique finds: Embers from bosses and Ascend discover and level them. Cinders are a slow glow — one from the daily vault, two Ad Tickets, or a cheap pouch — used to salvage or trade a few Embers each week.',
+        'Race still locks after New Game START. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEYSTONE waits until the party is Lv100.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.185',
       bullets: <String>[

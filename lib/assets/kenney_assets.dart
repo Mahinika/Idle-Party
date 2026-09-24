@@ -1004,6 +1004,12 @@ abstract final class KenneyAssets {
     RelicIds.godHandFocus => fist,
     RelicIds.chamberLuck => iconStar,
     RelicIds.ironWill => iconTrophy,
+    RelicIds.hoardJar => coinGold,
+    RelicIds.porchLantern => potionRed,
+    RelicIds.ashTithe => vialBlue,
+    RelicIds.dustyBoots => boots,
+    RelicIds.deepSip => potionBlue,
+    RelicIds.secondBreath => potionGreen,
     _ => relicWarBanner,
   };
 

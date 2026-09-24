@@ -18,6 +18,7 @@ import '../models/mission.dart';
 import '../models/pet.dart';
 import 'ad_boost.dart';
 import 'relic_ids.dart';
+import 'relics.dart';
 import 'dungeon_generator.dart';
 import 'economy_service.dart';
 import 'blessing_constellation.dart';
@@ -61,14 +62,8 @@ class GameLogic {
   static const String godHandFocusRelic = RelicIds.godHandFocus;
   static const String chamberLuckRelic = RelicIds.chamberLuck;
   static const String ironWillRelic = RelicIds.ironWill;
-  static const List<String> relicOrder = <String>[
-    warBannerRelic,
-    ironWardRelic,
-    phoenixEmberRelic,
-    godHandFocusRelic,
-    chamberLuckRelic,
-    ironWillRelic,
-  ];
+  static List<String> get relicOrder =>
+      [for (final def in RelicCatalog.all) def.id];
   static const Map<LootRarity, String> rarityNames = <LootRarity, String>{
     LootRarity.common: 'Common',
     LootRarity.uncommon: 'Uncommon',
@@ -76,67 +71,36 @@ class GameLogic {
     LootRarity.epic: 'Epic',
     LootRarity.legendary: 'Legendary',
   };
-  static const Map<String, String> relicNames = <String, String>{
-    warBannerRelic: 'War Banner',
-    ironWardRelic: 'Iron Ward',
-    phoenixEmberRelic: 'Phoenix Ember',
-    godHandFocusRelic: 'God Hand Focus',
-    chamberLuckRelic: 'Chamber Luck',
-    ironWillRelic: 'Iron Will',
-  };
-  static const Map<String, String> relicDescriptions = <String, String>{
-    warBannerRelic: 'Permanent +4 team attack aura.',
-    ironWardRelic: 'Permanent +16 team defense aura.',
-    phoenixEmberRelic: 'Permanent +48 STA for every hero.',
-    godHandFocusRelic: '+3 God Hand damage per tier.',
-    chamberLuckRelic: '+5% loot find per tier.',
-    ironWillRelic: '+8 flat damage mitigate per tier.',
-  };
-  static const Map<String, int> relicCosts = <String, int>{
-    warBannerRelic: 6,
-    ironWardRelic: 14,
-    phoenixEmberRelic: 28,
-    godHandFocusRelic: 36,
-    chamberLuckRelic: 42,
-    ironWillRelic: 48,
+  static Map<String, String> get relicNames => <String, String>{
+    for (final def in RelicCatalog.all) def.id: def.name,
   };
 
-  /// Per-tier payout shown on KEEP / CAMP (English).
-  static String relicPerTierPayout(String relicId) => switch (relicId) {
-    warBannerRelic => '+$relicAttackPerTier ATK',
-    ironWardRelic => '+$relicDefensePerTier DEF',
-    phoenixEmberRelic => '+$relicVitalityPerTier STA',
-    godHandFocusRelic => '+3 God Hand',
-    chamberLuckRelic => '+5% loot',
-    ironWillRelic => '+$relicMitigatePerTier mitigate',
-    _ => '',
+  static Map<String, String> get relicDescriptions => <String, String>{
+    for (final def in RelicCatalog.all) def.id: def.blurb,
   };
 
-  static String relicOwnedPayout(GameState state, String relicId) =>
-      switch (relicId) {
-        warBannerRelic => '+${state.relicAttackBonus} ATK',
-        ironWardRelic => '+${state.relicDefenseBonus} DEF',
-        phoenixEmberRelic => '+${state.relicVitalityBonus} STA',
-        godHandFocusRelic => '+${state.relicGodHandDamageBonus} God Hand',
-        chamberLuckRelic => '+${state.relicLootFindPercent}% loot',
-        ironWillRelic => '+${state.relicMitigateFlat} mitigate',
-        _ => '',
-      };
+  /// Discover cost of the next unowned relic, keyed for old call sites.
+  static int discoverCostFor(GameState state) =>
+      RelicCatalog.discoverCost(state.unlockedRelics.length);
 
-  /// One CAMP/KEEP line of owned relic bonuses, or null if none.
+  static String relicPerTierPayout(String relicId) =>
+      RelicCatalog.byId(relicId)?.payoutAt(1) ?? '';
+
+  static String relicOwnedPayout(GameState state, String relicId) {
+    final def = RelicCatalog.byId(relicId);
+    if (def == null) return '';
+    return def.payoutAt(state.relicTierOf(relicId));
+  }
+
+  /// One line of owned relic bonuses, or null if none.
   static String? relicKeepSummary(GameState state) {
     final bits = <String>[
-      if (state.relicAttackBonus > 0) '+${state.relicAttackBonus} ATK',
-      if (state.relicDefenseBonus > 0) '+${state.relicDefenseBonus} DEF',
-      if (state.relicVitalityBonus > 0) '+${state.relicVitalityBonus} STA',
-      if (state.relicGodHandDamageBonus > 0)
-        '+${state.relicGodHandDamageBonus} God Hand',
-      if (state.relicLootFindPercent > 0)
-        '+${state.relicLootFindPercent}% loot',
-      if (state.relicMitigateFlat > 0) '+${state.relicMitigateFlat} mitigate',
+      for (final id in state.unlockedRelics)
+        if (relicOwnedPayout(state, id).isNotEmpty)
+          '${relicNames[id]} ${relicOwnedPayout(state, id)}',
     ];
     if (bits.isEmpty) return null;
-    return 'KEEP relics · ${bits.join(' · ')}';
+    return 'Relics · ${bits.join(' · ')}';
   }
 
   static const int starterPartySize = 3;
@@ -1729,75 +1693,144 @@ class GameLogic {
     }
   }
 
-  static GameState unlockRelic(GameState state, String relicId) {
-    final cost = relicCosts[relicId];
-    if (cost == null || state.hasRelic(relicId) || state.essence < cost) {
-      return state;
-    }
+  /// Hearth at the Stairs — a percent of max HP when the exit opens.
+  static GameState healPartyAtStairs(GameState state) {
+    final pct = state.relicStairHealPercent;
+    if (pct <= 0) return state;
+    final heroes = [
+      for (final h in state.heroRoster)
+        h.currentHp <= 0
+            ? h
+            : h.copyWith(
+                currentHp: min(
+                  state.effectiveHeroMaxHp(h),
+                  h.currentHp +
+                      max(1, (state.effectiveHeroMaxHp(h) * pct) ~/ 100),
+                ),
+              ),
+    ];
+    return state.copyWith(heroRoster: heroes);
+  }
 
-    final unlockedRelics = List<String>.from(state.unlockedRelics)
-      ..add(relicId);
+  static String? nextRelicId(GameState state) {
+    for (final id in relicOrder) {
+      if (!state.hasRelic(id)) return id;
+    }
+    return null;
+  }
+
+  /// Discover [relicId] when it is the next one and Embers cover the cost.
+  static GameState unlockRelic(GameState state, String relicId) {
+    if (RelicCatalog.byId(relicId) == null) return state;
+    if (state.hasRelic(relicId) || nextRelicId(state) != relicId) return state;
+    final cost = RelicCatalog.discoverCost(state.unlockedRelics.length);
+    if (state.metaDepth.embers < cost) return state;
+    final unlocked = List<String>.from(state.unlockedRelics)..add(relicId);
     final tiers = Map<String, int>.from(state.metaDepth.relicTiers);
     tiers[relicId] = max(1, tiers[relicId] ?? 0);
-    final healedHeroes = state.heroes
-        .map(
-          (hero) => hero.copyWith(
-            currentHp: min(
-              hero.currentHp,
-              hero.maxHp +
-                  state.totalVitalityBonus +
-                  (relicId == phoenixEmberRelic ? relicVitalityPerTier : 0),
-            ),
-          ),
-        )
-        .toList();
-
     return MetaSystems.evaluateAchievements(
       state.copyWith(
-        essence: state.essence - cost,
-        heroes: healedHeroes,
-        unlockedRelics: unlockedRelics,
-        metaDepth: state.metaDepth.copyWith(relicTiers: tiers),
+        unlockedRelics: unlocked,
+        metaDepth: state.metaDepth.copyWith(
+          embers: state.metaDepth.embers - cost,
+          relicTiers: tiers,
+        ),
         lastUpdated: DateTime.now(),
       ),
     );
   }
 
-  static int relicTierUpgradeCost(int nextTier) => 12 + nextTier * 14;
+  static GameState discoverNextRelic(GameState state) {
+    final id = nextRelicId(state);
+    if (id == null) return state;
+    return unlockRelic(state, id);
+  }
+
+  static int relicTierUpgradeCost(int nextTier) => RelicCatalog.tierCost(nextTier);
 
   static GameState upgradeRelicTier(GameState state, String relicId) {
-    if (!state.hasRelic(relicId) || !relicCosts.containsKey(relicId)) {
+    if (!state.hasRelic(relicId) || RelicCatalog.byId(relicId) == null) {
       return state;
     }
-    final current = max(1, state.metaDepth.relicTierOf(relicId));
+    final current = max(1, state.relicTierOf(relicId));
     if (current >= relicMaxTier) return state;
     final nextTier = current + 1;
     final cost = relicTierUpgradeCost(nextTier);
-    if (state.essence < cost) return state;
+    if (state.metaDepth.embers < cost) return state;
     final tiers = Map<String, int>.from(state.metaDepth.relicTiers);
     tiers[relicId] = nextTier;
     return state.copyWith(
-      essence: state.essence - cost,
-      metaDepth: state.metaDepth.copyWith(relicTiers: tiers),
+      metaDepth: state.metaDepth.copyWith(
+        embers: state.metaDepth.embers - cost,
+        relicTiers: tiers,
+      ),
       lastUpdated: DateTime.now(),
     );
   }
 
-  static int respecRelicsCost(GameState state) =>
-      40 + state.metaDepth.relicRespecs * 25;
+  static const int salvageCinderCost = 2;
+  static const int cinderExchangeCost = 4;
+  static const int cinderExchangeWeeklyCap = 3;
+  static const int cindersPerTicketPair = 1;
+  static const int ticketCostPerCinder = 2;
 
-  static GameState respecRelics(GameState state) {
-    if (state.unlockedRelics.isEmpty && state.metaDepth.relicTiers.isEmpty) {
-      return state;
-    }
-    final cost = respecRelicsCost(state);
-    if (state.essence < cost) return state;
+  /// Remove one relic. Half the Embers that bought it come back. Costs Cinders.
+  static GameState salvageRelic(GameState state, String relicId) {
+    if (!state.hasRelic(relicId)) return state;
+    if (state.metaDepth.cinders < salvageCinderCost) return state;
+    final index = relicOrder.indexOf(relicId);
+    final tier = state.relicTierOf(relicId);
+    final refund = index < 0
+        ? 0
+        : RelicCatalog.embersSpent(index, tier) ~/ 2;
+    final unlocked = [
+      for (final id in state.unlockedRelics)
+        if (id != relicId) id,
+    ];
+    final tiers = Map<String, int>.from(state.metaDepth.relicTiers)
+      ..remove(relicId);
     return state.copyWith(
-      essence: state.essence - cost,
-      unlockedRelics: const <String>[],
+      unlockedRelics: unlocked,
       metaDepth: state.metaDepth.copyWith(
-        relicTiers: const <String, int>{},
+        cinders: state.metaDepth.cinders - salvageCinderCost,
+        embers: state.metaDepth.embers + refund,
+        relicTiers: tiers,
         relicRespecs: state.metaDepth.relicRespecs + 1,
+      ),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  static int cinderExchangesUsed(GameState state, {DateTime? now}) {
+    final week = isoWeekKey((now ?? DateTime.now()).toUtc());
+    if (state.metaDepth.cinderWeekKey != week) return 0;
+    return state.metaDepth.cinderExchanges;
+  }
+
+  /// 4 Cinders → 1 Ember, at most 3 times this ISO week.
+  static GameState exchangeCinders(GameState state, {DateTime? now}) {
+    final week = isoWeekKey((now ?? DateTime.now()).toUtc());
+    final used = cinderExchangesUsed(state, now: now);
+    if (used >= cinderExchangeWeeklyCap) return state;
+    if (state.metaDepth.cinders < cinderExchangeCost) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        cinders: state.metaDepth.cinders - cinderExchangeCost,
+        embers: state.metaDepth.embers + 1,
+        cinderWeekKey: week,
+        cinderExchanges: used + 1,
+      ),
+      lastUpdated: now ?? DateTime.now(),
+    );
+  }
+
+  /// Two Ad Tickets become one Cinder.
+  static GameState buyCinderWithTickets(GameState state) {
+    if (state.metaDepth.adTickets < ticketCostPerCinder) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        adTickets: state.metaDepth.adTickets - ticketCostPerCinder,
+        cinders: min(9999, state.metaDepth.cinders + cindersPerTicketPair),
       ),
       lastUpdated: DateTime.now(),
     );
@@ -2403,10 +2436,14 @@ class GameLogic {
       next = next.copyWith(essence: next.essence + challengeBonus);
     }
     if (!suppressMetaMint) {
+      final boss = before.currentRoom.type == RoomType.boss;
+      final essenceGain =
+          pushClearEssence(boss: boss) + (boss ? before.relicBossEssence : 0);
       next = next.copyWith(
-        essence:
-            next.essence +
-            pushClearEssence(boss: before.currentRoom.type == RoomType.boss),
+        essence: next.essence + essenceGain,
+        metaDepth: next.metaDepth.copyWith(
+          embers: next.metaDepth.embers + (boss ? 1 : 0),
+        ),
       );
     }
     final bossKill = before.currentRoom.type == RoomType.boss ? 1 : 0;

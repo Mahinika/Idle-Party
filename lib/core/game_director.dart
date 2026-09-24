@@ -2647,12 +2647,34 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  void respecRelics() {
-    final beforeEssence = _state.essence;
-    _applyUpgrade(GameLogic.respecRelics(_state));
-    if (_state.essence < beforeEssence) {
+  void salvageRelic(String relicId) {
+    final before = _state.metaDepth.embers;
+    _applyUpgrade(GameLogic.salvageRelic(_state, relicId));
+    if (_state.metaDepth.embers != before || !_state.hasRelic(relicId)) {
       GameAudio.ui();
-      showToast('Relics wiped — no essence back', life: 2.2);
+      final back = _state.metaDepth.embers - before;
+      showToast(
+        back > 0 ? 'Salvaged · +$back Embers' : 'Salvaged',
+        life: 2.2,
+      );
+    }
+  }
+
+  void exchangeCinders() {
+    final before = _state.metaDepth.embers;
+    _applyUpgrade(GameLogic.exchangeCinders(_state));
+    if (_state.metaDepth.embers > before) {
+      GameAudio.ui();
+      showToast('4 Cinders → 1 Ember', life: 2.0);
+    }
+  }
+
+  void buyCinderWithTickets() {
+    final before = _state.metaDepth.cinders;
+    _applyUpgrade(GameLogic.buyCinderWithTickets(_state));
+    if (_state.metaDepth.cinders > before) {
+      GameAudio.ui();
+      showToast('2 tickets → 1 Cinder', life: 2.0);
     }
   }
 

@@ -142,7 +142,8 @@ abstract final class MarketService {
   /// ~30% of effective max HP (min 8) — scales with level/gear instead of a flat ~13.
   static int _flaskHealAmount(GameState state, PartyHero hero) {
     final maxHp = state.effectiveHeroMaxHp(hero);
-    return max(8, (maxHp * 0.30).round());
+    final sip = 1 + state.relicFlaskPercent / 100;
+    return max(8, (maxHp * 0.30 * sip).round());
   }
 
   static int marketFlaskCost(GameState state) {
