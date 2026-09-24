@@ -373,7 +373,7 @@ with `docs/GEAR_BUDGET.md` / `EquipStatWeights`:
 | Dungeon catalog | `lib/models/dungeon_def.dart` |
 | Combat sheet | `lib/models/combat_ratings.dart` + `docs/GEAR_BUDGET.md` |
 | Spatial sim | `lib/spatial/spatial_combat.dart` |
-| Zone packs / boss tells | `lib/core/enemy_flavor.dart` + `lib/spatial/enemy_specials.dart` |
+| Zone packs / boss tells | `lib/core/enemy_flavor.dart` + `lib/core/boss_tells.dart` + `lib/spatial/enemy_specials.dart` |
 | Combat presence (idle/inertia/barks) | `lib/spatial/combat_presence.dart` |
 | Ability runtime | `lib/spatial/ability_effects.dart` + `kit_migrated_casts.dart` (`ClassAbilityDef.fireMode` / `gate` / `customId`) |
 | Tile maps | `lib/spatial/tile_map.dart` |

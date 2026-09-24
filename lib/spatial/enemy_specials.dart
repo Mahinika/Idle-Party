@@ -1,4 +1,11 @@
-part of 'spatial_combat.dart';
+import 'dart:math' as math;
+
+import '../core/ashen_crown.dart';
+import '../core/boss_tells.dart';
+import '../core/enemy_flavor.dart';
+import '../core/gauntlet_anomaly.dart';
+import '../models/enemy.dart';
+import 'spatial_combat.dart';
 
 bool _worldHasAffix(SpatialWorld world, String id) =>
     world.keystoneRunAffixes.contains(id);
@@ -37,7 +44,7 @@ String _bossFlavorId(SpatialWorld world) {
   return world.dungeonId;
 }
 
-void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
+void showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
   if (world.keystoneRunAffixes.isEmpty && world.gauntletAnomaly == null) {
     return;
   }
@@ -104,7 +111,7 @@ void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
 
 /// Trash specials (heal / hex / cleave / fortify) plus one unique boss tell
 /// per zone. Same [SpatialCombat.step] — not a second sim.
-void _tickEnemySpecials(
+void tickEnemySpecials(
   SpatialWorld world,
   SpatialActor enemy,
   SpatialActor focus, {
@@ -197,7 +204,7 @@ void _tickEnemySpecials(
         (enemy.effectiveAttack * (elite ? 0.35 : 0.22)).round(),
       );
       if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
-      SpatialCombat._applyHeroIncomingDamage(
+      SpatialCombat.applyHeroIncomingDamage(
         world,
         h,
         chip,
@@ -310,7 +317,7 @@ void _tickEnemySpecials(
       if (SpatialCombat.actorDist(enemy, h) > 1.85) continue;
       var chip = math.max(1, (enemy.effectiveAttack * 0.22).round());
       if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
-      SpatialCombat._applyHeroIncomingDamage(
+      SpatialCombat.applyHeroIncomingDamage(
         world,
         h,
         chip,
@@ -349,7 +356,7 @@ void _tickEnemySpecials(
       SpatialCombat.actorDist(enemy, focus) <= 4.2) {
     var chip = math.max(2, (enemy.effectiveAttack * 0.55).round());
     if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
-    SpatialCombat._applyHeroIncomingDamage(
+    SpatialCombat.applyHeroIncomingDamage(
       world,
       focus,
       chip,
@@ -420,7 +427,7 @@ void _tickSupportSpecial(
     if (SpatialCombat.actorDist(enemy, focus) > 5.5) return;
     var chip = math.max(1, (enemy.effectiveAttack * 0.18).round());
     if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
-    SpatialCombat._applyHeroIncomingDamage(
+    SpatialCombat.applyHeroIncomingDamage(
       world,
       focus,
       chip,
@@ -457,7 +464,7 @@ void _supportTellAt(
       x: at.x,
       y: at.y - 0.35,
       text: EnemyFlavor.supportTell(flavor),
-      argb: SpatialCombat._floaterTell,
+      argb: SpatialCombat.floaterTell,
       life: 0.7,
       priority: reducedVfx ? 2 : 0,
     );
@@ -492,7 +499,7 @@ void _tickRangedSpecial(
     case RangedJob.jolt:
       var chip = math.max(1, (enemy.effectiveAttack * 0.18).round());
       if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
-      SpatialCombat._applyHeroIncomingDamage(
+      SpatialCombat.applyHeroIncomingDamage(
         world,
         focus,
         chip,
@@ -624,6 +631,75 @@ void _armBossTelegraph(
   );
 }
 
+void _applyRecordedBossTell(
+  SpatialWorld world,
+  SpatialActor enemy,
+  SpatialActor focus,
+  BossTellDef def, {
+  required String id,
+  required math.Random rng,
+  required bool reducedVfx,
+}) {
+  final targets = <SpatialActor>[];
+  switch (def.shape) {
+    case BossTellShape.focus:
+      if (def.maxRange > 0 &&
+          SpatialCombat.actorDist(enemy, focus) > def.maxRange) {
+        enemy.specialCd = 1.2;
+        return;
+      }
+      targets.add(focus);
+    case BossTellShape.radius:
+      for (final h in world.heroes) {
+        if (!h.isAlive) continue;
+        if (SpatialCombat.actorDist(enemy, h) > def.radius) continue;
+        targets.add(h);
+      }
+    case BossTellShape.party:
+      for (final h in world.heroes) {
+        if (!h.isAlive) continue;
+        targets.add(h);
+      }
+  }
+  if (targets.isEmpty) {
+    enemy.specialCd = 1.2;
+    return;
+  }
+  for (final h in targets) {
+    if (def.atkMul > 0) {
+      _bossChipHero(
+        world,
+        enemy,
+        h,
+        atkMul: def.atkMul,
+        rng: rng,
+        reducedVfx: reducedVfx,
+        isMelee: def.meleeChip,
+      );
+    }
+    if (def.slowSeconds > 0) {
+      h.attackSlowTimer = math.max(h.attackSlowTimer, def.slowSeconds);
+    }
+    if (def.rootSeconds > 0) {
+      h.rootTimer = math.max(h.rootTimer, def.rootSeconds);
+    }
+    if (def.shoutSeconds > 0) {
+      h.demoShoutTimer = math.max(h.demoShoutTimer, def.shoutSeconds);
+    }
+  }
+  final base = world.afkAssist ? def.cdAfk : def.cdLive;
+  enemy.specialCd = def.scaleCooldown ? _bossCooldownSec(world, base) : base;
+  _bossTell(
+    world,
+    enemy,
+    text: EnemyFlavor.bossTell(id),
+    argb: def.argb,
+    radius: def.ringRadius,
+    reducedVfx: reducedVfx,
+    at: def.tellOnFocus ? focus : null,
+  );
+}
+
 void _resolveBossTelegraph(
   SpatialWorld world,
   SpatialActor enemy,
@@ -632,6 +708,19 @@ void _resolveBossTelegraph(
   required bool reducedVfx,
 }) {
   final id = _bossFlavorId(world);
+  final recorded = BossTells.forId(id);
+  if (recorded != null) {
+    _applyRecordedBossTell(
+      world,
+      enemy,
+      focus,
+      recorded,
+      id: id,
+      rng: rng,
+      reducedVfx: reducedVfx,
+    );
+    return;
+  }
   switch (id) {
     case 'sandy':
       _sandyBossSlam(
@@ -639,23 +728,6 @@ void _resolveBossTelegraph(
         enemy,
         rng: rng,
         reducedVfx: reducedVfx,
-      );
-      return;
-    case 'grove':
-      if (SpatialCombat.actorDist(enemy, focus) > 4.8) {
-        enemy.specialCd = 1.2;
-        return;
-      }
-      focus.rootTimer = math.max(focus.rootTimer, 2.0);
-      enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
-      _bossTell(
-        world,
-        enemy,
-        text: EnemyFlavor.bossTell(id),
-        argb: 0xFF70C060,
-        radius: 1.0,
-        reducedVfx: reducedVfx,
-        at: focus,
       );
       return;
     case 'storm':
@@ -700,62 +772,6 @@ void _resolveBossTelegraph(
         at: focus,
       );
       return;
-    case 'veil':
-      final hit = _bossChipInRadius(
-        world,
-        enemy,
-        radius: 3.6,
-        atkMul: 0.32,
-        rng: rng,
-        reducedVfx: reducedVfx,
-      );
-      if (hit) {
-        for (final h in world.heroes) {
-          if (!h.isAlive) continue;
-          if (SpatialCombat.actorDist(enemy, h) > 3.6) continue;
-          h.attackSlowTimer = math.max(h.attackSlowTimer, 2.8);
-        }
-        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
-        _bossTell(
-          world,
-          enemy,
-          text: EnemyFlavor.bossTell(id),
-          argb: 0xFFE8D0FF,
-          radius: 1.45,
-          reducedVfx: reducedVfx,
-        );
-      } else {
-        enemy.specialCd = 1.2;
-      }
-      return;
-    case 'hell':
-      final grabbed = _bossChipInRadius(
-        world,
-        enemy,
-        radius: 2.2,
-        atkMul: 0.5,
-        rng: rng,
-        reducedVfx: reducedVfx,
-      );
-      if (grabbed) {
-        for (final h in world.heroes) {
-          if (!h.isAlive) continue;
-          if (SpatialCombat.actorDist(enemy, h) > 2.2) continue;
-          h.rootTimer = math.max(h.rootTimer, 1.15);
-        }
-        enemy.specialCd = _bossCooldownSec(world, world.afkAssist ? 9.0 : 8.0);
-        _bossTell(
-          world,
-          enemy,
-          text: EnemyFlavor.bossTell(id),
-          argb: 0xFFFF6030,
-          radius: 1.15,
-          reducedVfx: reducedVfx,
-        );
-      } else {
-        enemy.specialCd = 1.2;
-      }
-      return;
     case 'crystal':
       final gScale = world.inGauntlet ? _gauntletBossScale(world) : 1.0;
       _bossPulseLike(
@@ -770,141 +786,8 @@ void _resolveBossTelegraph(
         isMelee: false,
       );
       return;
-    case 'tide':
-      final wave = _bossChipInRadius(
-        world,
-        enemy,
-        radius: 4.0,
-        atkMul: 0.4,
-        rng: rng,
-        reducedVfx: reducedVfx,
-      );
-      if (wave) {
-        for (final h in world.heroes) {
-          if (!h.isAlive) continue;
-          if (SpatialCombat.actorDist(enemy, h) > 4.0) continue;
-          h.attackSlowTimer = math.max(h.attackSlowTimer, 2.6);
-        }
-        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
-        _bossTell(
-          world,
-          enemy,
-          text: EnemyFlavor.bossTell(id),
-          argb: 0xFF40A0E0,
-          radius: 1.7,
-          reducedVfx: reducedVfx,
-        );
-      } else {
-        enemy.specialCd = 1.2;
-      }
-      return;
-    case 'ember':
-      if (SpatialCombat.actorDist(enemy, focus) > 5.2) {
-        enemy.specialCd = 1.2;
-        return;
-      }
-      _bossChipHero(
-        world,
-        enemy,
-        focus,
-        atkMul: 0.4,
-        rng: rng,
-        reducedVfx: reducedVfx,
-        isMelee: false,
-      );
-      focus.attackSlowTimer = math.max(focus.attackSlowTimer, 3.4);
-      enemy.specialCd = world.afkAssist ? 8.0 : 7.0;
-      _bossTell(
-        world,
-        enemy,
-        text: EnemyFlavor.bossTell(id),
-        argb: 0xFFFF7030,
-        radius: 0.95,
-        reducedVfx: reducedVfx,
-        at: focus,
-      );
-      return;
-    case 'fen':
-      var spat = false;
-      for (final h in world.heroes) {
-        if (!h.isAlive) continue;
-        if (SpatialCombat.actorDist(enemy, h) > 4.2) continue;
-        _bossChipHero(
-          world,
-          enemy,
-          h,
-          atkMul: 0.28,
-          rng: rng,
-          reducedVfx: reducedVfx,
-          isMelee: false,
-        );
-        h.attackSlowTimer = math.max(h.attackSlowTimer, 2.4);
-        spat = true;
-      }
-      if (spat) {
-        enemy.specialCd = world.afkAssist ? 8.0 : 7.0;
-        _bossTell(
-          world,
-          enemy,
-          text: EnemyFlavor.bossTell(id),
-          argb: 0xFF80C040,
-          radius: 1.35,
-          reducedVfx: reducedVfx,
-        );
-      } else {
-        enemy.specialCd = 1.2;
-      }
-      return;
-    case 'underworld':
-      if (SpatialCombat.actorDist(enemy, focus) > 6.2) {
-        enemy.specialCd = 1.2;
-        return;
-      }
-      _bossChipHero(
-        world,
-        enemy,
-        focus,
-        atkMul: 0.85,
-        rng: rng,
-        reducedVfx: reducedVfx,
-        isMelee: false,
-      );
-      focus.demoShoutTimer = math.max(focus.demoShoutTimer, 2.8);
-      enemy.specialCd = world.afkAssist ? 8.0 : 7.0;
-      _bossTell(
-        world,
-        enemy,
-        text: EnemyFlavor.bossTell(id),
-        argb: 0xFF80FFA0,
-        radius: 0.9,
-        reducedVfx: reducedVfx,
-        at: focus,
-      );
-      return;
     case 'goblin':
       _bossRally(world, enemy, reducedVfx: reducedVfx);
-      return;
-    case 'king':
-      var decreed = false;
-      for (final h in world.heroes) {
-        if (!h.isAlive) continue;
-        h.attackSlowTimer = math.max(h.attackSlowTimer, 3.0);
-        h.demoShoutTimer = math.max(h.demoShoutTimer, 2.4);
-        decreed = true;
-      }
-      if (decreed) {
-        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
-        _bossTell(
-          world,
-          enemy,
-          text: EnemyFlavor.bossTell(id),
-          argb: 0xFFE0C060,
-          radius: 1.6,
-          reducedVfx: reducedVfx,
-        );
-      } else {
-        enemy.specialCd = 1.2;
-      }
       return;
     case 'dead':
       final healMul = world.afkAssist ? 0.4 : 1.0;
@@ -922,35 +805,6 @@ void _resolveBossTelegraph(
         radius: 1.2,
         reducedVfx: reducedVfx,
       );
-      return;
-    case 'rime':
-      var frosted = false;
-      for (final h in world.heroes) {
-        if (!h.isAlive) continue;
-        h.attackSlowTimer = math.max(h.attackSlowTimer, 2.8);
-        _bossChipHero(
-          world,
-          enemy,
-          h,
-          atkMul: 0.28,
-          rng: rng,
-          reducedVfx: reducedVfx,
-        );
-        frosted = true;
-      }
-      if (frosted) {
-        enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
-        _bossTell(
-          world,
-          enemy,
-          text: EnemyFlavor.bossTell(id),
-          argb: 0xFFA0E0FF,
-          radius: 1.55,
-          reducedVfx: reducedVfx,
-        );
-      } else {
-        enemy.specialCd = 1.2;
-      }
       return;
     default:
       final slammed = _bossChipInRadius(
@@ -1192,7 +1046,7 @@ void _bossChipHero(
 }) {
   var chip = math.max(2, (enemy.effectiveAttack * atkMul).round());
   if (world.afkAssist) chip = math.max(1, (chip * 0.35).round());
-  SpatialCombat._applyHeroIncomingDamage(
+  SpatialCombat.applyHeroIncomingDamage(
     world,
     hero,
     chip,

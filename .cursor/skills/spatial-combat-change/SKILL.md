@@ -51,7 +51,7 @@ Do **not** add a second combat simulator for offline.
 | Kits / cast AI | `ability_effects.dart`, `spatial_combat.dart` |
 | Movement / focus / threat | `spatial_combat.dart` |
 | Zone packs / names / mix | `lib/core/enemy_flavor.dart` + `encounter_factory.dart` |
-| Enemy specials / boss tells | `lib/spatial/enemy_specials.dart` (`part` of SpatialCombat) |
+| Enemy specials / boss tells | `lib/spatial/enemy_specials.dart` + `lib/core/boss_tells.dart` (repeated shape). Unique tells stay named functions |
 | Chambers / gates / blueprint | `floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart`, `tile_map.dart`, `spatial_combat.dart` |
 | Offline catch-up | `game_logic.dart` (call sites only) |
 | Live loop / rebuild | `game_director.dart` |

@@ -1,10 +1,8 @@
 import 'dart:math' as math;
 
-import '../core/ashen_crown.dart';
 import '../core/audio_assets.dart';
 import '../core/blessing_constellation.dart';
 import '../core/combat_feel.dart';
-import '../core/enemy_flavor.dart';
 import '../core/game_logic.dart';
 import '../core/gauntlet_anomaly.dart';
 import '../core/game_state.dart';
@@ -26,6 +24,7 @@ import 'hideout_stash.dart';
 import 'tile_map.dart';
 
 import 'ability_effects.dart';
+import 'enemy_specials.dart';
 export 'ability_effects.dart' show AbilityEffectRunner;
 export 'kit_migrated_casts.dart' show KitNamedCasts;
 export '../models/spell_bolt_style.dart';
@@ -34,7 +33,6 @@ part 'hero_focus.dart';
 part 'combat_presence.dart';
 part 'spell_vfx.dart';
 part 'combat_pathing.dart';
-part 'enemy_specials.dart';
 
 enum SpatialTeam { hero, enemy }
 
@@ -985,7 +983,7 @@ abstract final class SpatialCombat {
   static int get _floaterGear => colorblindMode ? 0xFF0072B2 : 0xFFB8E986;
   static int get floaterHeal => colorblindMode ? 0xFFCC79A7 : 0xFF2EBEA0;
   /// Enemy ability tells (MEND / TOTEM) — not a heal amount.
-  static int get _floaterTell => colorblindMode ? 0xFF0072B2 : 0xFF5BB8C8;
+  static int get floaterTell => colorblindMode ? 0xFF0072B2 : 0xFF5BB8C8;
   static int get _floaterXp => colorblindMode ? 0xFF009E73 : 0xFF9AD0FF;
   static int get _floaterPet => colorblindMode ? 0xFF56B4E9 : 0xFF7CE8FF;
 
@@ -1539,7 +1537,7 @@ abstract final class SpatialCombat {
   }
 
   /// Incoming damage to a hero after mitigation / absorbs.
-  static int _applyHeroIncomingDamage(
+  static int applyHeroIncomingDamage(
     SpatialWorld world,
     SpatialActor hero,
     int rawDamage, {
@@ -3333,7 +3331,7 @@ abstract final class SpatialCombat {
         world.enemies.any((e) => e.hp > 0 && !e.dormant);
     if (inFight) {
       if (!world.affixBannerShown) {
-        _showAffixBanners(world, reducedVfx: state.reducedVfx);
+        showAffixBanners(world, reducedVfx: state.reducedVfx);
         world.affixBannerShown = true;
       }
       world.combatElapsed += dt;
@@ -3729,7 +3727,7 @@ abstract final class SpatialCombat {
       enemy.fireCooldown -= dt * slowRate;
 
       // Enemy specials (heal / enrage / unique boss tell)
-      _tickEnemySpecials(
+      tickEnemySpecials(
         world,
         enemy,
         target,
@@ -3783,7 +3781,7 @@ abstract final class SpatialCombat {
           target.attackSlowTimer = math.max(target.attackSlowTimer, 1.6);
         } else {
           enemy.attackFlash = 0.16;
-          final dmg = _applyHeroIncomingDamage(
+          final dmg = applyHeroIncomingDamage(
             world,
             target,
             raw,
@@ -4433,7 +4431,7 @@ abstract final class SpatialCombat {
             final int dealt;
             if (v.team == SpatialTeam.hero) {
               // Enemy shots already bake DEF at fire time.
-              dealt = _applyHeroIncomingDamage(
+              dealt = applyHeroIncomingDamage(
                 world,
                 v,
                 p.damage,
