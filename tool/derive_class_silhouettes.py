@@ -1,4 +1,4 @@
-"""Class helm and chest marks from pixels we already own.
+"""Class marks and extra armor shapes from pixels we already own.
 
 No new geometry. Paladin widens the warrior plate extract. Death knight
 shifts that same helm up and darkens it. Warlock drops the mage hat extract
@@ -103,12 +103,46 @@ def warlock(im: Image.Image) -> Image.Image:
     return ImageEnhance.Contrast(ramp(shift(im, 0, 7), shadow)).enhance(1.1)
 
 
+def brass(r: int, g: int, b: int) -> tuple[int, int, int]:
+    return (
+        min(255, int(r * 0.78 + 36)),
+        min(255, int(g * 0.62 + 18)),
+        min(255, int(b * 0.48 + 8)),
+    )
+
+
+def steel(r: int, g: int, b: int) -> tuple[int, int, int]:
+    return (
+        min(255, int(r * 0.55 + 12)),
+        min(255, int(g * 0.68 + 22)),
+        min(255, int(b * 0.82 + 36)),
+    )
+
+
+def wide(im: Image.Image) -> Image.Image:
+    return ramp(scale_wider(im, 1.34), brass)
+
+
+def slim(im: Image.Image) -> Image.Image:
+    return ramp(scale_wider(im, 0.74), steel)
+
+
+def write_shapes() -> None:
+    slots = ("helm", "chest", "legs", "cloak", "hands")
+    for family in ("warrior", "healer", "mage", "rogue"):
+        for slot in slots:
+            src = load(ROOT / family / "gear" / f"{slot}_t0_idle.png")
+            write(family, f"{slot}_wide", wide(src))
+            write(family, f"{slot}_slim", slim(src))
+
+
 def main() -> None:
     for tier in ("t0", "t2"):
         for slot in ("helm", "chest"):
             derive("warrior", slot, tier, paladin)
             derive("warrior", slot, tier, deathknight)
             derive("mage", slot, tier, warlock)
+    write_shapes()
 
 
 if __name__ == "__main__":

@@ -246,9 +246,23 @@ abstract final class OwnedGearAssets {
     return _sharedStems.contains(base);
   }
 
+  static const Set<String> kArmorShapeIds = {
+    'helm_wide',
+    'helm_slim',
+    'chest_wide',
+    'chest_slim',
+    'legs_wide',
+    'legs_slim',
+    'cloak_wide',
+    'cloak_slim',
+    'hands_wide',
+    'hands_slim',
+  };
+
   /// PNG stem on disk: extract tiers, authored weapons, or `{base}_t0` for
   /// legacy generated names (old saves may still hold `shield_stormwall`).
   static String shippedFileStem(String visualSetId) {
+    if (kArmorShapeIds.contains(visualSetId)) return visualSetId;
     if (isCatalogTierId(visualSetId)) return silhouetteId(visualSetId);
     if (EquipmentModelCatalog.authoredSharedIds.contains(visualSetId)) {
       return visualSetId;
@@ -340,6 +354,11 @@ abstract final class OwnedGearAssets {
     for (final id in kSharedSetIds) {
       out.add(sharedGear(id, 'idle'));
       out.add(sharedGear(id, 'idle').replaceFirst('_idle.png', '_icon.png'));
+    }
+    for (final family in BodyFamily.values) {
+      for (final id in kArmorShapeIds) {
+        out.add(familyGear(family, id, 'idle'));
+      }
     }
     for (final id in kClassOverlayIds) {
       out.add(familyGear(

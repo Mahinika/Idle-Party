@@ -156,6 +156,11 @@ abstract final class EquipmentVisualResolver {
     }
     final id = resolveId(item);
     if (id == 'none') return null;
+    if (OwnedGearAssets.kArmorShapeIds.contains(id)) {
+      final slot = id.split('_').first;
+      return OwnedGearAssets.familyGear(fam, '${slot}_t0', 'idle')
+          .replaceFirst('_idle.png', '_icon.png');
+    }
     final stem = EquipmentModelCatalog.baseToken(id);
     if (stem == 'shoulder' || stem == 'waist') return null;
     final idle = OwnedGearAssets.pathFor(

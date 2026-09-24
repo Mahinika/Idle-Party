@@ -97,9 +97,16 @@ void main() {
     expect(EquipmentModelCatalog.variantsFor('helm'), ['helm_t0', 'helm_t2']);
     expect(EquipmentModelCatalog.variantsFor('hands'), ['hands_t0', 'hands_t2']);
     for (final base in EquipmentModelCatalog.familyBases) {
+      final picked = <String>{};
+      for (var i = 0; i < 24; i++) {
+        picked.add(
+          EquipmentModelCatalog.pickVariant('${base}_t0', Random(i), rarityTier: 2),
+        );
+      }
+      expect(picked, contains('${base}_t0'));
       expect(
-        EquipmentModelCatalog.pickVariant('${base}_t0', Random(1)),
-        '${base}_t0',
+        picked.any((id) => id == '${base}_wide' || id == '${base}_slim'),
+        isTrue,
       );
     }
   });
@@ -618,6 +625,25 @@ void main() {
         anim: HeroAnimKind.idle,
       );
       expect(path, 'assets/custom/char/warrior/gear/helm_t0_idle.png');
+    });
+
+    test('wide and slim armor keep their own png', () {
+      expect(
+        OwnedGearAssets.pathFor(
+          visualSetId: 'helm_wide',
+          family: BodyFamily.rogue,
+          anim: HeroAnimKind.idle,
+        ),
+        'assets/custom/char/rogue/gear/helm_wide_idle.png',
+      );
+      expect(
+        OwnedGearAssets.pathFor(
+          visualSetId: 'cloak_slim',
+          family: BodyFamily.mage,
+          anim: HeroAnimKind.walk,
+        ),
+        'assets/custom/char/mage/gear/cloak_slim_idle.png',
+      );
     });
   });
 
