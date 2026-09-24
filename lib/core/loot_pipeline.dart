@@ -664,4 +664,53 @@ abstract final class LootPipeline {
     if (pct <= 0) return base;
     return base + (base * pct) ~/ 100;
   }
+
+  /// What a kill is worth. Loot roll runs before XP so the shared RNG stays
+  /// in the same order. Greater Rifts still drop no gear.
+  static ({
+    List<LootDrop> drops,
+    int gold,
+    GameState state,
+    int xp,
+    List<int> leveled,
+  }) killPayout({
+    required GameState state,
+    required EnemyRole enemyRole,
+    EnemyUnit? unit,
+  }) {
+    final gold = unit?.rewardGold ?? 0;
+    final drops = state.inGreaterRift
+        ? const <LootDrop>[]
+        : rollKillLoot(
+            state.battleNumber,
+            ascensionLevel: state.ascensionLevel,
+            lootFindPercent: state.combatLootFindPercent,
+            hardmodeLevel: Keystone.combatLevel(state),
+            party: state.heroes,
+            dungeonId: state.dungeonId,
+            enemyRole: enemyRole,
+          );
+    if (unit == null) {
+      return (
+        drops: drops,
+        gold: gold,
+        state: state,
+        xp: 0,
+        leveled: const <int>[],
+      );
+    }
+    final beforeLevels = [for (final h in state.heroes) h.level];
+    final next = GameLogic.awardEnemyKillXp(state, unit);
+    final leveled = <int>[];
+    for (var i = 0; i < next.heroes.length; i++) {
+      if (next.heroes[i].level > beforeLevels[i]) leveled.add(i);
+    }
+    return (
+      drops: drops,
+      gold: gold,
+      state: next,
+      xp: GameLogic.xpForEnemy(unit),
+      leveled: leveled,
+    );
+  }
 }

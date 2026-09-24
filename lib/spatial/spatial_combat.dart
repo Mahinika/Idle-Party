@@ -7,6 +7,7 @@ import '../core/game_logic.dart';
 import '../core/gauntlet_anomaly.dart';
 import '../core/game_state.dart';
 import '../core/keystone.dart';
+import '../core/loot_pipeline.dart';
 import '../models/class_ability.dart';
 import '../models/combat_ratings.dart';
 import '../models/dungeon_room.dart';
@@ -4673,7 +4674,12 @@ abstract final class SpatialCombat {
     final unit = index >= 0 && index < state.enemies.length
         ? state.enemies[index]
         : null;
-    final rewardGold = unit?.rewardGold ?? 0;
+    final payout = LootPipeline.killPayout(
+      state: state,
+      enemyRole: enemy.role,
+      unit: unit,
+    );
+    final rewardGold = payout.gold;
     _noteFeelKill(world);
     if (!state.reducedVfx) {
       if (enemy.role == EnemyRole.boss) {
@@ -4731,17 +4737,7 @@ abstract final class SpatialCombat {
         );
       }
     }
-    final drops = state.inGreaterRift
-        ? const <LootDrop>[]
-        : GameLogic.rollKillLoot(
-            state.battleNumber,
-            ascensionLevel: state.ascensionLevel,
-            lootFindPercent: state.combatLootFindPercent,
-            hardmodeLevel: Keystone.combatLevel(state),
-            party: state.heroes,
-            dungeonId: state.dungeonId,
-            enemyRole: enemy.role,
-          );
+    final drops = payout.drops;
     for (var i = 0; i < drops.length; i++) {
       final drop = drops[i];
       final angle = (i / math.max(1, drops.length)) * math.pi * 2;
@@ -4781,23 +4777,19 @@ abstract final class SpatialCombat {
         priority: 1,
       );
     }
-    var next = state;
+    final next = payout.state;
     if (unit != null) {
-      final beforeLevels = [for (final h in next.heroes) h.level];
-      next = GameLogic.awardEnemyKillXp(next, unit);
-      final xp = GameLogic.xpForEnemy(unit);
       spawnFloater(
         world,
         x: enemy.x - 0.15,
         y: enemy.y - 0.75,
-        text: '+${xp}XP',
+        text: '+${payout.xp}XP',
         argb: _floaterXp,
         life: 0.85,
         priority: 0,
       );
       var leveledFloater = false;
-      for (var i = 0; i < next.heroes.length; i++) {
-        if (next.heroes[i].level > beforeLevels[i]) {
+      for (final i in payout.leveled) {
           if (!leveledFloater) {
             leveledFloater = true;
             _noteFeelLevelUp(world);
@@ -4826,7 +4818,6 @@ abstract final class SpatialCombat {
             a.moveSpeed = next.effectiveHeroMoveSpeed(h);
             a.attackCooldown = 1.0 / next.effectiveHeroAttackSpeed(h);
           }
-        }
       }
     }
     return (gold: rewardGold, state: next);

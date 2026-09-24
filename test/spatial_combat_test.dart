@@ -705,6 +705,26 @@ void main() {
     expect(step.state.gearStash.length, greaterThan(stashBefore));
   });
 
+  test('kill payout still grants gold and XP', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
+    final world = SpatialCombat.build(state);
+    final enemy = world.enemies.first;
+    final unit = state.enemies[world.enemies.indexOf(enemy)];
+    expect(unit.rewardGold, greaterThan(0));
+    final beforeXp = state.heroes.fold<int>(0, (sum, h) => sum + h.xp);
+    final result = SpatialCombat.onEnemyKilled(
+      world,
+      state,
+      enemy,
+      Random(1),
+    );
+    final afterXp = result.state.heroes.fold<int>(0, (sum, h) => sum + h.xp);
+    expect(result.gold, unit.rewardGold);
+    expect(afterXp, greaterThan(beforeXp));
+    expect(world.floaters.any((f) => f.text.endsWith('g')), isTrue);
+    expect(world.floaters.any((f) => f.text.endsWith('XP')), isTrue);
+  });
+
   test('white-hit last-kill counts as a kill pop, not only God Hand', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 8, 19));
     var world = SpatialCombat.build(state);
