@@ -21,6 +21,7 @@ const List<ClassAbilityDef> _deathKnightKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.deathStrike,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Death Strike',
@@ -35,6 +36,7 @@ const List<ClassAbilityDef> _deathKnightKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.heartStrike,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Heart Strike',
@@ -51,6 +53,7 @@ const List<ClassAbilityDef> _deathKnightKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.runeTap,
+      boltStyle: SpellBoltStyle.shadow,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.blood,
       name: 'Rune Tap',
@@ -278,6 +281,7 @@ const List<ClassAbilityDef> _deathKnightKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.chainsOfIce,
+      boltStyle: SpellBoltStyle.frost,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.frostDk,
       name: 'Chains of Ice',
@@ -358,6 +362,7 @@ const List<ClassAbilityDef> _deathKnightKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.scourgeStrike,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.unholy,
       name: 'Scourge Strike',
@@ -468,6 +473,7 @@ const List<ClassAbilityDef> _deathKnightKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.antiMagicShell,
+      boltStyle: SpellBoltStyle.arcane,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.unholy,
       name: 'Anti-Magic Shell',

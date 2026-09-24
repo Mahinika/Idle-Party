@@ -5,6 +5,7 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
     // —— Rogue (Combat) ——
     ClassAbilityDef(
       id: AbilityId.sinisterStrike,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Sinister Strike',
@@ -37,6 +38,7 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.eviscerate,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Eviscerate',
@@ -54,6 +56,7 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.kidneyShot,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Kidney Shot',
@@ -75,6 +78,7 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.bladeFlurry,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.combat,
       name: 'Blade Flurry',
@@ -498,6 +502,7 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.cheapShot,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.subtlety,
       name: 'Cheap Shot',

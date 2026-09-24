@@ -69,6 +69,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.frostNova,
+      boltStyle: SpellBoltStyle.frost,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Frost Nova',
@@ -85,6 +86,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.blastWave,
+      boltStyle: SpellBoltStyle.fire,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Blast Wave',
@@ -186,6 +188,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.iceBlock,
+      boltStyle: SpellBoltStyle.frost,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.fire,
       name: 'Ice Block',
@@ -284,6 +287,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.slow,
+      boltStyle: SpellBoltStyle.arcane,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.arcane,
       name: 'Slow',
@@ -297,6 +301,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.presenceOfMind,
+      boltStyle: SpellBoltStyle.arcane,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.arcane,
       name: 'Presence of Mind',
@@ -454,6 +459,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.frostNovaMage,
+      boltStyle: SpellBoltStyle.frost,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.frostMage,
       name: 'Frost Nova',

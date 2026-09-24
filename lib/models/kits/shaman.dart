@@ -20,6 +20,7 @@ const List<ClassAbilityDef> _shamanKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.lightningBolt,
+      boltStyle: SpellBoltStyle.lightning,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.elemental,
       name: 'Lightning Bolt',
@@ -93,6 +94,7 @@ const List<ClassAbilityDef> _shamanKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.thunderstorm,
+      boltStyle: SpellBoltStyle.lightning,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.elemental,
       name: 'Thunderstorm',
@@ -300,6 +302,7 @@ const List<ClassAbilityDef> _shamanKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.frostShock,
+      boltStyle: SpellBoltStyle.frost,
       gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.enhancement,
       name: 'Frost Shock',
@@ -419,6 +422,7 @@ const List<ClassAbilityDef> _shamanKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.earthShield,
+      boltStyle: SpellBoltStyle.nature,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Earth Shield',
@@ -433,6 +437,7 @@ const List<ClassAbilityDef> _shamanKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.healingRain,
+      boltStyle: SpellBoltStyle.nature,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Healing Rain',
@@ -470,6 +475,7 @@ const List<ClassAbilityDef> _shamanKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.natureSwiftness,
+      boltStyle: SpellBoltStyle.nature,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationShaman,
       name: 'Nature\'s Swiftness',

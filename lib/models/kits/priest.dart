@@ -180,6 +180,7 @@ const List<ClassAbilityDef> _priestKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.renew,
+      boltStyle: SpellBoltStyle.holy,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPriest,
       name: 'Renew',
@@ -372,6 +373,7 @@ const List<ClassAbilityDef> _priestKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.devouringPlague,
+      boltStyle: SpellBoltStyle.shadow,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Devouring Plague',
@@ -388,6 +390,7 @@ const List<ClassAbilityDef> _priestKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.shadowWordPain,
+      boltStyle: SpellBoltStyle.shadow,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Shadow Word: Pain',
@@ -429,6 +432,7 @@ const List<ClassAbilityDef> _priestKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.psychicScream,
+      boltStyle: SpellBoltStyle.shadow,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.shadow,
       name: 'Psychic Scream',

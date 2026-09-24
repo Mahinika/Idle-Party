@@ -38,6 +38,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.flashOfLight,
+      boltStyle: SpellBoltStyle.holy,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Flash of Light',
@@ -66,6 +67,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.holyLight,
+      boltStyle: SpellBoltStyle.holy,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Holy Light',
@@ -81,6 +83,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.beaconOfLight,
+      boltStyle: SpellBoltStyle.holy,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Beacon (tank)',
@@ -139,6 +142,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.layOnHands,
+      boltStyle: SpellBoltStyle.holy,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.holyPaladin,
       name: 'Lay on Hands',
@@ -169,6 +173,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.avengersShield,
+      boltStyle: SpellBoltStyle.holy,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Avenger\'s Shield',
@@ -201,6 +206,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.hammerOfTheRighteous,
+      boltStyle: SpellBoltStyle.holy,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Hammer of the Righteous',
@@ -242,6 +248,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.shieldOfRighteousness,
+      boltStyle: SpellBoltStyle.holy,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protPaladin,
       name: 'Shield of Righteousness',
@@ -387,6 +394,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.hammerOfWrath,
+      boltStyle: SpellBoltStyle.holy,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.retribution,
       name: 'Hammer of Wrath',

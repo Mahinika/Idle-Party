@@ -125,6 +125,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.typhoon,
+      boltStyle: SpellBoltStyle.nature,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.balance,
       name: 'Typhoon',
@@ -192,6 +193,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.shred,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Shred',
@@ -206,6 +208,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.rake,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Rake',
@@ -222,6 +225,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.ferociousBite,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Ferocious Bite',
@@ -320,6 +324,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.rip,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.rogue,
       specId: HeroSpecId.feral,
       name: 'Rip',
@@ -365,6 +370,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.mangleBear,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Mangle',
@@ -379,6 +385,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.swipe,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Swipe',
@@ -441,6 +448,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.maul,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.guardian,
       name: 'Maul',
@@ -583,6 +591,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.wildGrowth,
+      boltStyle: SpellBoltStyle.nature,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
       name: 'Wild Growth',
@@ -616,6 +625,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.nourish,
+      boltStyle: SpellBoltStyle.nature,
       gearAffinity: HeroRole.healer,
       specId: HeroSpecId.restorationDruid,
       name: 'Nourish',

@@ -19,6 +19,7 @@ const List<ClassAbilityDef> _hunterKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneShot,
+      boltStyle: SpellBoltStyle.arrow,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.beastMastery,
       name: 'Arcane Shot',
@@ -73,6 +74,7 @@ const List<ClassAbilityDef> _hunterKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.bestialWrath,
+      boltStyle: SpellBoltStyle.arrow,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.beastMastery,
       name: 'Bestial Wrath',

@@ -189,6 +189,7 @@ const List<ClassAbilityDef> _warlockKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.shadowBolt,
+      boltStyle: SpellBoltStyle.shadow,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.demonology,
       name: 'Shadow Bolt',
@@ -250,6 +251,7 @@ const List<ClassAbilityDef> _warlockKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.immolateDemo,
+      boltStyle: SpellBoltStyle.fire,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.demonology,
       name: 'Immolate',
@@ -346,6 +348,7 @@ const List<ClassAbilityDef> _warlockKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.incinerate,
+      boltStyle: SpellBoltStyle.fire,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Incinerate',
@@ -360,6 +363,7 @@ const List<ClassAbilityDef> _warlockKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.conflagrate,
+      boltStyle: SpellBoltStyle.fire,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Conflagrate',
@@ -374,6 +378,7 @@ const List<ClassAbilityDef> _warlockKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.immolateDestro,
+      boltStyle: SpellBoltStyle.fire,
       gearAffinity: HeroRole.mage,
       specId: HeroSpecId.destruction,
       name: 'Immolate',

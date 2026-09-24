@@ -142,6 +142,7 @@ const List<ClassAbilityDef> _warriorKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.shieldSlam,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Shield Slam',
@@ -177,6 +178,7 @@ const List<ClassAbilityDef> _warriorKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.revenge,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.protection,
       name: 'Revenge',
@@ -305,6 +307,7 @@ const List<ClassAbilityDef> _warriorKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.rend,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.arms,
       name: 'Rend',
@@ -319,6 +322,7 @@ const List<ClassAbilityDef> _warriorKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.sweepingStrikes,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.arms,
       name: 'Sweeping Strikes',
@@ -456,6 +460,7 @@ const List<ClassAbilityDef> _warriorKit = <ClassAbilityDef>[
     ),
     ClassAbilityDef(
       id: AbilityId.ragingBlow,
+      boltStyle: SpellBoltStyle.weapon,
       gearAffinity: HeroRole.warrior,
       specId: HeroSpecId.fury,
       name: 'Slam',
