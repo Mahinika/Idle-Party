@@ -18,6 +18,7 @@ import 'ad_boost.dart';
 import 'blessing_constellation.dart';
 import 'keystone.dart';
 import 'party_name_filter.dart';
+import 'run_bag.dart';
 
 /// UI text scale clamps (SETTINGS slider + MediaQuery compose).
 const double kUiTextScaleMin = 0.80;
@@ -47,37 +48,38 @@ Map<String, int> _jsonStringIntMap(dynamic raw) {
 }
 
 class GameState {
-  const GameState({
+  GameState({
     required this.heroRoster,
     required this.activeHeroIds,
     this.partyName = 'The Party',
     required this.enemies,
-    required this.gold,
+    required int gold,
     this.lifetimeGoldEarned = 0,
     required this.essence,
     required this.bossVictories,
     required this.lastUpdated,
     required this.offlineSecondsRecovered,
-    required this.attackBonus,
-    required this.defenseBonus,
-    required this.vitalityBonus,
-    this.moveSpeedBonus = 0,
-    this.attackSpeedBonus = 0,
-    this.critBonus = 0,
-    this.masteryBonus = 0,
-    required this.recentLoot,
+    required int attackBonus,
+    required int defenseBonus,
+    required int vitalityBonus,
+    int moveSpeedBonus = 0,
+    int attackSpeedBonus = 0,
+    int critBonus = 0,
+    int masteryBonus = 0,
+    required List<LootDrop> recentLoot,
     required this.unlockedRelics,
     required this.currentRoom,
     required this.dungeonFloor,
     this.ascensionLevel = 0,
-    this.equipped = const <EquipmentSlot, EquipmentItem>{},
+    Map<EquipmentSlot, EquipmentItem> equipped =
+        const <EquipmentSlot, EquipmentItem>{},
     this.missions = const <Mission>[],
-    this.gearStash = const <EquipmentItem>[],
-    this.marketListings = const <MarketListing>[],
+    List<EquipmentItem> gearStash = const <EquipmentItem>[],
+    List<MarketListing> marketListings = const <MarketListing>[],
     this.marketListingsRefreshMs = 0,
     this.dungeonMode = DungeonMode.push,
-    this.highestFloorCleared = 0,
-    this.lastFloorClearSec = 0,
+    int highestFloorCleared = 0,
+    int lastFloorClearSec = 0,
     this.highestDungeonCleared = -1,
     this.activePet,
     this.ownedPets = const <Pet>[],
@@ -109,7 +111,7 @@ class GameState {
     this.autoDisassembleMaxRarity = 2,
     this.rogueUnlocked = false,
     this.seenTips = const <String>[],
-    this.loadouts = const <GearLoadout>[],
+    List<GearLoadout> loadouts = const <GearLoadout>[],
     this.achievements = const <String>[],
     this.codexEnemies = const <String>[],
     this.codexItems = const <String>[],
@@ -158,7 +160,23 @@ class GameState {
     this.wipeAdviceLine = '',
     this.sessionTelemetryOptIn = false,
     this.sessionTelemetryLog = const <String>[],
-  });
+  }) : run = RunBag(
+         gold: gold,
+         attackBonus: attackBonus,
+         defenseBonus: defenseBonus,
+         vitalityBonus: vitalityBonus,
+         moveSpeedBonus: moveSpeedBonus,
+         attackSpeedBonus: attackSpeedBonus,
+         critBonus: critBonus,
+         masteryBonus: masteryBonus,
+         recentLoot: recentLoot,
+         equipped: equipped,
+         gearStash: gearStash,
+         marketListings: marketListings,
+         loadouts: loadouts,
+         highestFloorCleared: highestFloorCleared,
+         lastFloorClearSec: lastFloorClearSec,
+       );
 
   /// All unlocked heroes (bench + active).
   final List<PartyHero> heroRoster;
@@ -189,7 +207,10 @@ class GameState {
   }
 
   final List<EnemyUnit> enemies;
-  final int gold;
+  /// This run's gold, forge, bag, and floor. JSON stays flat.
+  final RunBag run;
+
+  int get gold => run.gold;
 
   /// Total gold awarded across all runs. Survives Ascend; hard reset clears it.
   final int lifetimeGoldEarned;
@@ -198,23 +219,23 @@ class GameState {
   final int bossVictories;
   final DateTime lastUpdated;
   final int offlineSecondsRecovered;
-  final int attackBonus;
-  final int defenseBonus;
-  final int vitalityBonus;
+  int get attackBonus => run.attackBonus;
+  int get defenseBonus => run.defenseBonus;
+  int get vitalityBonus => run.vitalityBonus;
 
   /// Forge move-speed points (≈% before soft-cap). Reset on Ascend.
-  final int moveSpeedBonus;
+  int get moveSpeedBonus => run.moveSpeedBonus;
 
   /// Forge attack-speed points (≈% before soft-cap). Reset on Ascend.
-  final int attackSpeedBonus;
+  int get attackSpeedBonus => run.attackSpeedBonus;
 
   /// Forge crit-chance points (≈% before soft-cap). Reset on Ascend.
-  final int critBonus;
+  int get critBonus => run.critBonus;
 
   /// Forge mastery rating. Reset on Ascend.
-  final int masteryBonus;
+  int get masteryBonus => run.masteryBonus;
 
-  final List<LootDrop> recentLoot;
+  List<LootDrop> get recentLoot => run.recentLoot;
   final List<String> unlockedRelics;
   final DungeonRoom currentRoom;
   final List<DungeonRoom> dungeonFloor;
@@ -224,17 +245,17 @@ class GameState {
 
   /// Legacy single-hero equip map (pre per-hero gear). Kept for save migration only.
   /// Prefer [PartyHero.equipped] and [GearLoadout] presets. Cleared after migrate.
-  final Map<EquipmentSlot, EquipmentItem> equipped;
+  Map<EquipmentSlot, EquipmentItem> get equipped => run.equipped;
 
   /// Up to 3 active quests (Daily / Bounty / Side). Daily refreshes UTC;
   /// claimed Daily stays until next day; Bounty advances rung; Side rolls anew.
   final List<Mission> missions;
 
   /// Inventory / Combinator stash. Reset on Ascend (Apex pieces move to the vault).
-  final List<EquipmentItem> gearStash;
+  List<EquipmentItem> get gearStash => run.gearStash;
 
   /// Traveling gear listings on POWER → MARKET. Reset on Ascend.
-  final List<MarketListing> marketListings;
+  List<MarketListing> get marketListings => run.marketListings;
 
   /// UTC ms when [marketListings] last rolled (6h free refresh).
   final int marketListingsRefreshMs;
@@ -243,10 +264,10 @@ class GameState {
   final DungeonMode dungeonMode;
 
   /// Highest floor whose wave was cleared this run (0 = none yet).
-  final int highestFloorCleared;
+  int get highestFloorCleared => run.highestFloorCleared;
 
   /// Last cleared floor duration in seconds (forge tip). 0 = none yet.
-  final int lastFloorClearSec;
+  int get lastFloorClearSec => run.lastFloorClearSec;
 
   /// Highest dungeon catalog index cleared (meta — survives Ascend). -1 = none.
   final int highestDungeonCleared;
@@ -343,7 +364,7 @@ class GameState {
   final List<String> seenTips;
 
   /// Up to 3 saved gear presets (LOADOUTS UI hidden; cleared on Ascend).
-  final List<GearLoadout> loadouts;
+  List<GearLoadout> get loadouts => run.loadouts;
 
   /// Unlocked local achievement ids (survives Ascend / hard reset persists
   /// only via save — no server, purely cosmetic).
