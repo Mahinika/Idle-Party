@@ -33,6 +33,8 @@ part 'hero_focus.dart';
 part 'combat_presence.dart';
 part 'spell_vfx.dart';
 part 'combat_pathing.dart';
+part 'combat_damage.dart';
+part 'floor_flow.dart';
 
 enum SpatialTeam { hero, enemy }
 
@@ -1544,122 +1546,16 @@ abstract final class SpatialCombat {
     required bool reducedVfx,
     required math.Random rng,
     bool isMelee = true,
-  }) {
-    if (hero.iceBlockTimer > 0 || hero.vanishTimer > 0) {
-      if (!reducedVfx) {
-        spawnFloater(
-          world,
-          x: hero.x,
-          y: hero.y - 0.45,
-          text: hero.iceBlockTimer > 0 ? 'ICE BLOCK' : 'MISS',
-          argb: 0xFFA0D8FF,
-          life: 0.35,
-        );
-      }
-      return 0;
-    }
-
-    var dealt = rawDamage;
-    var blocked = false;
-
-    if (isMelee && dealt > 0) {
-      final avoid = CombatAvoidance.resolveIncomingMelee(
-        rawDamage: dealt,
-        dodgePercent: hero.dodgePercent,
-        parryPercent: hero.parryPercent,
-        blockChance: hero.blockChance,
-        blockValue: hero.blockValue,
-        shieldBlockActive: hero.shieldBlockTimer > 0,
-        rng: rng,
-      );
-      dealt = avoid.damage;
-      blocked = avoid.blocked;
-      if (avoid.avoided && !reducedVfx) {
-        spawnFloater(
-          world,
-          x: hero.x,
-          y: hero.y - 0.45,
-          text: avoid.dodged ? 'DODGE' : 'PARRY',
-          argb: 0xFF90E0A0,
-          life: 0.35,
-        );
-      }
-      if (blocked &&
-          hero.shieldBlockTimer > 0 &&
-          WarriorAbilities.isUnlocked(AbilityId.revenge, hero.heroLevel)) {
-        hero.revengeReady = true;
-      }
-    }
-
-    if (dealt <= 0) return 0;
-
-    var mul = hero.kitInMul;
-    if (hero.shieldWallTimer > 0) {
-      mul *= 0.45;
-    }
-    if (hero.painSuppressionTimer > 0) {
-      mul *= 0.55;
-    }
-    // Active Shield Block window stacks DR on top of mastery block (−30%).
-    if (hero.shieldBlockTimer > 0 && !blocked) {
-      mul *= 0.55;
-      blocked = true;
-      if (WarriorAbilities.isUnlocked(AbilityId.revenge, hero.heroLevel)) {
-        hero.revengeReady = true;
-      }
-    }
-    dealt = math.max(1, (dealt * mul).round());
-    if (world.petMitigateFlat > 0) {
-      dealt = math.max(1, dealt - world.petMitigateFlat);
-    }
-    var held = 0;
-    if (hero.absorbShield > 0) {
-      final absorbed = math.min(hero.absorbShield, dealt);
-      hero.absorbShield -= absorbed;
-      dealt -= absorbed;
-      held += absorbed;
-      if (!reducedVfx && absorbed > 0) {
-        spawnFloater(
-          world,
-          x: hero.x,
-          y: hero.y - 0.5,
-          text: 'ABSORB $absorbed',
-          argb: 0xFF80C0FF,
-          life: 0.4,
-        );
-      }
-      if (dealt <= 0) {
-        _recordHeroTaken(hero, held);
-        return absorbed;
-      }
-    }
-    hero.hp = math.max(0, hero.hp - dealt);
-    held += dealt;
-    _recordHeroTaken(hero, held);
-    hero.spiritRegenPaused = 5.0;
-    if (dealt > 0) {
-      hero.hitFlash = math.max(hero.hitFlash, 0.14);
-      _triggerPrayerOfMending(world, hero);
-    }
-    if (actorIsTank(hero) || _actorResource(hero) == SpecResource.rage) {
-      gainRage(hero, 2.5 + dealt * 0.35);
-    }
-    if (blocked) {
-      spawnFloater(
+  }) =>
+      combatApplyHeroIncomingDamage(
         world,
-        x: hero.x,
-        y: hero.y - 0.45,
-        text: 'BLOCK',
-        argb: 0xFF9AD0FF,
-        life: 0.4,
-        priority: 2,
+        hero,
+        rawDamage,
+        reducedVfx: reducedVfx,
+        rng: rng,
+        isMelee: isMelee,
       );
-    }
-    if (dealt > 0) {
-      CombatPresence.onLowHp(world, hero, reducedVfx: reducedVfx);
-    }
-    return dealt;
-  }
+
 
   /// Direct heal to the lowest ally (used by Penance side-heal in WotLK kit).
   static void healLowestAlly(
@@ -1751,41 +1647,6 @@ abstract final class SpatialCombat {
     hit.pomHeal = 0;
   }
 
-  /// Warrior attack modifiers: Defensive Stance, Shield Slam, Revenge.
-  static ({int damage, String? tag, int tagArgb}) _warriorAttackMods(
-    SpatialActor warrior,
-    int baseDamage,
-  ) {
-    var damage = baseDamage;
-    String? tag;
-    var tagArgb = floaterDamage;
-
-    // Defensive Stance itself is a kit passive (kitOutMul / kitInMul); the
-    // caller folds kitOutMul in, so only the swing riders live here.
-    if (warrior.revengeReady &&
-        WarriorAbilities.isUnlocked(AbilityId.revenge, warrior.heroLevel)) {
-      final def = WarriorAbilities.defFor(AbilityId.revenge)!;
-      if (warrior.rage + 0.001 >= def.resourceCost) {
-        spendRage(warrior, def.resourceCost);
-        warrior.revengeReady = false;
-        damage = (damage * 1.85).round();
-        tag = 'REVENGE';
-        tagArgb = 0xFFFF9060;
-        return (damage: damage, tag: tag, tagArgb: tagArgb);
-      }
-    }
-
-    if (warrior.queuedShieldSlam) {
-      warrior.queuedShieldSlam = false;
-      damage = (damage * 1.65).round();
-      tag = 'SLAM';
-      tagArgb = 0xFFFFD070;
-      gainRage(warrior, 10);
-    }
-
-    return (damage: damage, tag: tag, tagArgb: tagArgb);
-  }
-
   /// Softens caster kit casts vs white hits so spam kits don't eclipse melee.
   /// Raised toward parity after AL20 dense-pack boards left casters soft.
   static const double casterAbilityTax = 0.92;
@@ -1794,98 +1655,9 @@ abstract final class SpatialCombat {
     SpatialWorld world,
     SpatialActor hero,
     int baseDamage,
-  ) {
-    // Protection-only auto mods (Revenge / Shield Slam / Defensive Stance).
-    // Other warrior-legacy DPS use ClassKits + kitOutMul only.
-    if (hero.heroSpecId == HeroSpecId.protection) {
-      final w = _warriorAttackMods(hero, baseDamage);
-      var scaled = math.max(1, (w.damage * hero.kitOutMul).round());
-      if ((hero.buffTimers['atkShout'] ?? 0) > 0) {
-        scaled = math.max(1, (scaled * 1.08).round());
-      }
-      return (damage: scaled, tag: w.tag, tagArgb: w.tagArgb);
-    }
-    var damage = math.max(1, (baseDamage * hero.kitOutMul).round());
-    String? tag;
-    var tagArgb = floaterDamage;
+  ) =>
+      combatClassAttackMods(world, hero, baseDamage);
 
-    if ((hero.buffTimers['atkShout'] ?? 0) > 0) {
-      damage = math.max(1, (damage * 1.08).round());
-    }
-    // Vendetta / Cold Blood / Arcane Power / Combustion amp whites + kit AA.
-    if (hero.combustionTimer > 0 && hero.heroSpecId != HeroSpecId.fire) {
-      damage = math.max(1, (damage * 1.25).round());
-      tag ??= 'AMP';
-      tagArgb = 0xFFFF6060;
-    }
-
-    if (hero.heroSpecId == HeroSpecId.combat ||
-        hero.heroSpecId == HeroSpecId.subtlety) {
-      final buildsCombo = hero.heroSpecId == HeroSpecId.combat
-          ? ClassKits.isUnlocked(AbilityId.sinisterStrike, hero.heroLevel)
-          : ClassKits.isUnlocked(AbilityId.masterOfSubtlety, hero.heroLevel);
-      if (buildsCombo) {
-        hero.comboPoints = math.min(5, hero.comboPoints + 1);
-      }
-      final evisId = hero.heroSpecId == HeroSpecId.subtlety
-          ? AbilityId.eviscerateSub
-          : AbilityId.eviscerate;
-      final evisDef = ClassKits.defFor(evisId);
-      if (hero.comboPoints >= 4 &&
-          evisDef != null &&
-          hero.heroLevel >= evisDef.unlockLevel &&
-          hero.rage + 0.001 >= evisDef.resourceCost &&
-          abilityCdLeft(hero, evisId) <= 0) {
-        spendRage(hero, evisDef.resourceCost);
-        startAbilityCd(world, hero, evisId, evisDef.cooldown);
-        final pts = hero.comboPoints;
-        hero.comboPoints = 0;
-        damage = (damage * (1.2 + pts * 0.35)).round();
-        tag = 'EVIS';
-        tagArgb = 0xFFFF4060;
-      }
-    }
-
-    if (hero.setProcChance > 0 &&
-        GameLogic.random.nextDouble() < hero.setProcChance) {
-      damage = math.max(1, (damage * 1.35).round());
-      tag = hero.setProcTag ?? 'SET';
-      tagArgb = hero.setProcArgb;
-    }
-
-    // Spec mastery white-hit procs (Arms / MM / Combat). Skip finishers.
-    if (tag != 'EVIS') {
-      final mastery = masteryView(hero);
-      final roll = GameLogic.random.nextDouble();
-      switch (hero.heroSpecId) {
-        case HeroSpecId.arms:
-          final chance = SpecMastery.extraSwingProcChance(mastery);
-          if (chance > 0 && roll < chance) {
-            damage = math.max(1, (damage * 2.0).round());
-            tag = 'SWING';
-            tagArgb = 0xFFFFC060;
-          }
-        case HeroSpecId.marksmanship:
-          final chance = SpecMastery.extraAutoShotProcChance(mastery);
-          if (chance > 0 && roll < chance) {
-            damage = math.max(1, (damage * 2.0).round());
-            tag = 'WILD QUIVER';
-            tagArgb = 0xFF80E080;
-          }
-        case HeroSpecId.combat:
-          final chance = SpecMastery.mainGaucheProcChance(mastery);
-          if (chance > 0 && roll < chance) {
-            damage = math.max(1, (damage * 1.55).round());
-            tag ??= 'MAIN GAUCHE';
-            tagArgb = 0xFFFF9060;
-          }
-        default:
-          break;
-      }
-    }
-
-    return (damage: damage, tag: tag, tagArgb: tagArgb);
-  }
 
   static void _tickFloaters(SpatialWorld world, double dt) {
     for (final f in world.floaters) {
@@ -3143,15 +2915,9 @@ abstract final class SpatialCombat {
   }
 
   /// Apply damage to an enemy and flash the sprite so hits read on phone.
-  static int hurtEnemy(SpatialActor enemy, int dealt, {bool soft = false}) {
-    if (dealt <= 0 || enemy.team != SpatialTeam.enemy) return 0;
-    enemy.hp = math.max(0, enemy.hp - dealt);
-    final life = soft
-        ? 0.07
-        : (enemy.role == EnemyRole.boss ? 0.16 : 0.11);
-    enemy.hitFlash = math.max(enemy.hitFlash, life);
-    return dealt;
-  }
+  static int hurtEnemy(SpatialActor enemy, int dealt, {bool soft = false}) =>
+      combatHurtEnemy(enemy, dealt, soft: soft);
+
 
   /// Spawn floater when Full VFX, or priority (crit/heal/block) on Lite.
   static bool _allowFloater(VfxQuality quality, {required int priority}) {
@@ -4829,128 +4595,23 @@ abstract final class SpatialCombat {
     SpatialWorld world, {
     bool reducedVfx = false,
     bool softLock = true,
-  }) {
-    if (world.map.chambers.isEmpty) return;
-
-    final chamberCount = world.map.chambers.length;
-    // Chambers unlock in order, while empty chambers are safely skipped.
-    while (world.clearedChambers.length < chamberCount) {
-      var maxCleared = -1;
-      for (final chamber in world.clearedChambers) {
-        if (chamber > maxCleared) maxCleared = chamber;
-      }
-      final next = maxCleared + 1;
-      if (next >= chamberCount) break;
-      final hasLivingEnemy = world.enemies.any(
-        (enemy) => enemy.chamberIndex == next && enemy.hp > 0,
+  }) =>
+      combatUpdateChambers(
+        world,
+        reducedVfx: reducedVfx,
+        softLock: softLock,
       );
-      if (hasLivingEnemy) break;
-      world.clearedChambers.add(next);
-      if (!reducedVfx) {
-        for (final chamber in world.map.chambers) {
-          if (chamber.index != next) continue;
-          spawnRing(
-            world,
-            x: chamber.x + chamber.w * 0.5,
-            y: chamber.y + chamber.h * 0.5,
-            argb: 0xFF50C070,
-            radius: math.min(chamber.w, chamber.h) * 0.35,
-            life: 0.55,
-          );
-          break;
-        }
-      }
-    }
 
-    for (final gate in world.map.gates) {
-      if (!world.clearedChambers.contains(gate.opensAfterChamber)) continue;
-      final wasOpen = world.openGateIds.contains(gate.id);
-      world.openGateIds.add(gate.id);
-      if (!wasOpen) {
-        // One shout per door strip — multi-tile gates used to spam OPEN×3.
-        var alreadyShouted = false;
-        for (final f in world.floaters) {
-          if (f.text.startsWith('OPEN') && f.priority >= 2) {
-            alreadyShouted = true;
-            break;
-          }
-        }
-        if (!reducedVfx) {
-          spawnRing(
-            world,
-            x: gate.x + 0.5,
-            y: gate.y + 0.5,
-            argb: 0xFFFFD070,
-            radius: 1.35,
-            life: 0.55,
-          );
-        }
-        if (!alreadyShouted) {
-          if (!reducedVfx) {
-            spawnSpark(
-              world,
-              x: gate.x + 0.5,
-              y: gate.y + 0.5,
-              argb: 0xFFFFF0A0,
-              radius: 0.55,
-            );
-          }
-          // Priority floater — still paints on Lite VFX.
-          spawnFloater(
-            world,
-            x: gate.x + 0.5,
-            y: gate.y - 0.45,
-            text: 'OPEN →',
-            argb: _floaterGold,
-            life: 0.95,
-            priority: 2,
-          );
-        }
-      }
-    }
 
-    var maxCleared = -1;
-    for (final chamber in world.clearedChambers) {
-      if (chamber > maxCleared) maxCleared = chamber;
-    }
-    final nextChamber = math.min(chamberCount - 1, maxCleared + 1);
-    world.activeChamber = nextChamber;
-    for (final enemy in world.enemies) {
-      if (enemy.chamberIndex <= maxCleared + 1 ||
-          enemy.chamberIndex == nextChamber) {
-        enemy.dormant = false;
-      }
-    }
+  static void _openAllGatesAndWake(SpatialWorld world) =>
+      combatOpenAllGatesAndWake(world);
 
-    // Idle-safe: if nothing active remains but dormant packs do, open the
-    // road and wake them so the party isn't soft-locked behind gates.
-    final hasActive = world.enemies.any((e) => e.hp > 0 && !e.dormant);
-    final hasDormant = world.enemies.any((e) => e.hp > 0 && e.dormant);
-    if (!hasActive && hasDormant) {
-      _openAllGatesAndWake(world);
-    }
-
-    // Path soft-lock once per step (not on the early chamber pass).
-    if (softLock) {
-      _unlockIfEnemiesUnreachable(world);
-    }
-  }
-
-  static void _openAllGatesAndWake(SpatialWorld world) {
-    for (final gate in world.map.gates) {
-      world.openGateIds.add(gate.id);
-    }
-    for (final enemy in world.enemies) {
-      if (enemy.hp > 0) enemy.dormant = false;
-    }
-  }
 
   /// Opens remaining gates when any *active* living enemy is unreachable.
   /// One flood-fill from the party — not heroes×enemies BFS.
-  static void _unlockIfEnemiesUnreachable(SpatialWorld world) {
-    if (!_CombatPathing.anyActiveEnemyUnreachable(world)) return;
-    _openAllGatesAndWake(world);
-  }
+  static void _unlockIfEnemiesUnreachable(SpatialWorld world) =>
+      combatUnlockIfEnemiesUnreachable(world);
+
 
   /// Projectiles die on solid walls, but graze open corners so diagonal
   /// point-blank shots aren't eaten by tile floors.
@@ -4979,31 +4640,9 @@ abstract final class SpatialCombat {
 
   /// Apply any remaining ground loot into state and clear the pile.
   /// Used when exit starts early (AFK) or right before roomCleared.
-  static GameState _vacuumGroundLoot(SpatialWorld world, GameState state) {
-    if (world.groundLoot.isEmpty) return state;
-    final drops = <LootDrop>[for (final loot in world.groundLoot) loot.drop];
-    final names = <String>[];
-    for (final drop in drops) {
-      if (!drop.isEquipment) continue;
-      if (names.length >= 4) break;
-      final item = drop.equipment;
-      final label = item != null ? item.combatPopLabel : drop.name;
-      if (label.isNotEmpty && !names.contains(label)) names.add(label);
-    }
-    world.groundLoot.clear();
-    final granted = GameLogic.grantLoot(state, drops);
-    world.pendingFeelPickups += drops.length;
-    final bits = <String>[...names];
-    if (granted.receipt.goldGained > 0) {
-      bits.add('+${granted.receipt.goldGained}g');
-    } else if (names.isEmpty && granted.receipt.essenceGained > 0) {
-      bits.add('+${granted.receipt.essenceGained}e');
-    }
-    if (bits.isNotEmpty) {
-      world.pendingVacuumLootLine = bits.join(' · ');
-    }
-    return granted.state;
-  }
+  static GameState _vacuumGroundLoot(SpatialWorld world, GameState state) =>
+      combatVacuumGroundLoot(world, state);
+
 
   static ({int gold, GameState state}) onEnemyKilled(
     SpatialWorld world,
