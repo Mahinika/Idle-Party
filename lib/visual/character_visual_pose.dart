@@ -371,7 +371,8 @@ class CharacterVisualPose {
       // Shoulders and belts have no PNG, so a plain chest or legs steps up
       // to the t2 extract. A wide or slim cut already is the look, so keep it.
       if (booster != null &&
-          !OwnedGearAssets.kArmorShapeIds.contains(visId)) {
+          !OwnedGearAssets.kArmorShapeIds.contains(visId) &&
+          !OwnedGearAssets.isArmorVariantId(visId)) {
         visId = t2Id;
       }
     } else {

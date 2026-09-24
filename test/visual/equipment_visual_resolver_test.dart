@@ -103,11 +103,11 @@ void main() {
           EquipmentModelCatalog.pickVariant('${base}_t0', Random(i), rarityTier: 2),
         );
       }
-      expect(picked, contains('${base}_t0'));
       expect(
-        picked.any((id) => id == '${base}_wide' || id == '${base}_slim'),
+        picked.every((id) => RegExp('^${base}_v\\d{2}\$').hasMatch(id)),
         isTrue,
       );
+      expect(picked.length, greaterThan(1));
     }
   });
 
@@ -643,6 +643,32 @@ void main() {
           anim: HeroAnimKind.walk,
         ),
         'assets/custom/char/mage/gear/cloak_slim_idle.png',
+      );
+      expect(
+        OwnedGearAssets.pathFor(
+          visualSetId: 'chest_v03',
+          family: BodyFamily.healer,
+          anim: HeroAnimKind.idle,
+        ),
+        'assets/custom/char/healer/gear/chest_v03_idle.png',
+      );
+      expect(
+        OwnedGearAssets.pathFor(
+          visualSetId: 'chest_v03',
+          family: BodyFamily.mage,
+          anim: HeroAnimKind.idle,
+          heroClass: HeroClassId.warlock,
+        ),
+        'assets/custom/char/mage/gear/chest_warlock_v03_idle.png',
+      );
+      expect(
+        OwnedGearAssets.pathFor(
+          visualSetId: 'chest_v03',
+          family: BodyFamily.healer,
+          anim: HeroAnimKind.idle,
+          armorType: ArmorType.plate,
+        ),
+        'assets/custom/char/healer/gear/chest_plate_v03_idle.png',
       );
     });
   });

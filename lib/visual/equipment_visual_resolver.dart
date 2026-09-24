@@ -156,9 +156,12 @@ abstract final class EquipmentVisualResolver {
     }
     final id = resolveId(item);
     if (id == 'none') return null;
-    if (OwnedGearAssets.kArmorShapeIds.contains(id)) {
+    if (OwnedGearAssets.kArmorShapeIds.contains(id) ||
+        OwnedGearAssets.isArmorVariantId(id)) {
       final slot = id.split('_').first;
-      return OwnedGearAssets.familyGear(fam, '${slot}_t0', 'idle')
+      final mat = OwnedGearAssets.materialSuffix(fam, item.armorType);
+      final stem = mat == null ? '${slot}_t0' : '${slot}_${mat}_t0';
+      return OwnedGearAssets.familyGear(fam, stem, 'idle')
           .replaceFirst('_idle.png', '_icon.png');
     }
     final stem = EquipmentModelCatalog.baseToken(id);

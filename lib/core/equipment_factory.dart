@@ -10,7 +10,6 @@ import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
-import '../visual/body_family.dart';
 import '../visual/equipment_model_catalog.dart';
 import '../visual/equipment_visual_resolver.dart';
 import '../visual/owned_gear_assets.dart';
@@ -1183,19 +1182,16 @@ class EquipmentFactory {
       setId: setId,
     );
     // Preserve a data-driven visualSetId override (e.g. authored sword models).
-    // Weapons pick named models. Native armor can pick a wide or slim shape.
-    // Cross-material pieces stay on the mail or plate extract.
+    // Weapons pick named models. Armor picks one of 20 cuts. Mail, plate,
+    // and leather resolve when the doll paints.
     if (item.visualSetId?.isNotEmpty == true) {
       return item.copyWith(visualSetId: item.visualSetId);
     }
     final baseId = EquipmentVisualResolver.resolveId(item);
     final stem = EquipmentModelCatalog.baseToken(baseId);
-    final family = BodyFamilyCatalog.familyForAffinity(item.affinity);
-    final nativeArmor =
-        OwnedGearAssets.materialSuffix(family, item.armorType) == null;
     final pickShape =
         EquipmentModelCatalog.sharedBases.contains(stem) ||
-        (EquipmentModelCatalog.familyBases.contains(stem) && nativeArmor);
+        EquipmentModelCatalog.familyBases.contains(stem);
     final modelId = pickShape
         ? EquipmentModelCatalog.pickVariant(
             baseId,

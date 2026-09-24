@@ -181,8 +181,10 @@ abstract final class OwnedGearAssets {
     final m = RegExp(
       r'^(helm|chest|legs|cloak|hands)_t([02])$',
     ).firstMatch(silhouetteId);
-    if (m == null) return silhouetteId;
-    return '${m.group(1)!}_${suffix}_t${m.group(2)!}';
+    if (m != null) return '${m.group(1)!}_${suffix}_t${m.group(2)!}';
+    final v = armorVariantPattern.firstMatch(silhouetteId);
+    if (v != null) return '${v.group(1)!}_${suffix}_v${v.group(2)!}';
+    return silhouetteId;
   }
 
   /// Class marks derived from the family's own helm and chest. Missing ids
@@ -217,8 +219,6 @@ abstract final class OwnedGearAssets {
       _ => false,
     };
     if (!onFamily) return null;
-    final m = RegExp(r'^(helm|chest)_t([02])$').firstMatch(silhouetteId);
-    if (m == null) return null;
     final mark = switch (heroClass) {
       HeroClassId.paladin => 'paladin',
       HeroClassId.deathKnight => 'deathknight',
@@ -226,10 +226,27 @@ abstract final class OwnedGearAssets {
       _ => null,
     };
     if (mark == null) return null;
+    final v = armorVariantPattern.firstMatch(silhouetteId);
+    if (v != null) return '${v.group(1)!}_${mark}_v${v.group(2)!}';
+    final mat = RegExp(
+      r'^(helm|chest|legs|cloak|hands)_(mail|plate|leather)_v(\d{2})$',
+    ).firstMatch(silhouetteId);
+    if (mat != null) {
+      return '${mat.group(1)!}_${mark}_${mat.group(2)!}_v${mat.group(3)!}';
+    }
+    final m = RegExp(r'^(helm|chest)_t([02])$').firstMatch(silhouetteId);
+    if (m == null) return null;
     final id = '${m.group(1)!}_${mark}_t${m.group(2)!}';
     if (!kClassOverlayIds.contains(id)) return null;
     return id;
   }
+
+  static final RegExp armorVariantPattern = RegExp(
+    r'^(helm|chest|legs|cloak|hands)_v(\d{2})$',
+  );
+
+  static bool isArmorVariantId(String visualSetId) =>
+      armorVariantPattern.hasMatch(visualSetId);
 
   /// Whether [visualSetId] belongs to the shared (non-family) weapon/shield
   /// set. Works for both catalog ids (`sword_t0`) and named variants
@@ -262,7 +279,9 @@ abstract final class OwnedGearAssets {
   /// PNG stem on disk: extract tiers, authored weapons, or `{base}_t0` for
   /// legacy generated names (old saves may still hold `shield_stormwall`).
   static String shippedFileStem(String visualSetId) {
-    if (kArmorShapeIds.contains(visualSetId)) return visualSetId;
+    if (kArmorShapeIds.contains(visualSetId) || isArmorVariantId(visualSetId)) {
+      return visualSetId;
+    }
     if (isCatalogTierId(visualSetId)) return silhouetteId(visualSetId);
     if (EquipmentModelCatalog.authoredSharedIds.contains(visualSetId)) {
       return visualSetId;
@@ -360,6 +379,38 @@ abstract final class OwnedGearAssets {
         out.add(familyGear(family, id, 'idle'));
       }
     }
+    void addCuts(BodyFamily family, String stem) {
+      for (var i = 0; i < EquipmentModelCatalog.armorVariantCount; i++) {
+        final nn = i.toString().padLeft(2, '0');
+        out.add(familyGear(family, '${stem}_v$nn', 'idle'));
+      }
+    }
+    const slots = ['helm', 'chest', 'legs', 'cloak', 'hands'];
+    const materials = {
+      BodyFamily.warrior: ['leather'],
+      BodyFamily.rogue: ['mail'],
+      BodyFamily.healer: ['plate', 'mail', 'leather'],
+      BodyFamily.mage: ['mail', 'leather'],
+    };
+    for (final family in BodyFamily.values) {
+      for (final slot in slots) {
+        addCuts(family, slot);
+        for (final mat in materials[family]!) {
+          addCuts(family, '${slot}_$mat');
+        }
+      }
+    }
+    void addClassCuts(BodyFamily family, String mark, List<String> mats) {
+      for (final slot in slots) {
+        addCuts(family, '${slot}_$mark');
+        for (final mat in mats) {
+          addCuts(family, '${slot}_${mark}_$mat');
+        }
+      }
+    }
+    addClassCuts(BodyFamily.warrior, 'paladin', ['leather']);
+    addClassCuts(BodyFamily.warrior, 'deathknight', ['leather']);
+    addClassCuts(BodyFamily.mage, 'warlock', ['mail', 'leather']);
     for (final id in kClassOverlayIds) {
       out.add(familyGear(
         id.contains('warlock') ? BodyFamily.mage : BodyFamily.warrior,

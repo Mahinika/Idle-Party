@@ -150,10 +150,10 @@ abstract final class EquipmentModelCatalog {
 
   /// Pick a model for loot. [resolvedBaseId] is e.g. `sword_t2` / `helm_t0`.
   ///
-  /// Extra armor silhouettes derived from each family's t0 extract.
-  static const List<String> armorShapes = ['wide', 'slim'];
+  /// Cuts derived from each slot extract. Loot stamps `{slot}_vNN`.
+  static const int armorVariantCount = 20;
 
-  /// Armor keeps its tier unless a roll picks wide or slim. Shared weapons
+  /// Armor always picks one of [armorVariantCount] cuts. Shared weapons
   /// pick from the authored pool (`*_t0` + named models).
   static String pickVariant(
     String resolvedBaseId,
@@ -162,17 +162,8 @@ abstract final class EquipmentModelCatalog {
   }) {
     final base = baseToken(resolvedBaseId);
     if (isFamilyBase(base)) {
-      final chance = rarityTier >= 3
-          ? 0.90
-          : rarityTier >= 2
-          ? 0.78
-          : rarityTier >= 1
-          ? 0.58
-          : 0.32;
-      if (rng.nextDouble() < chance) {
-        return '${base}_${armorShapes[rng.nextInt(armorShapes.length)]}';
-      }
-      return resolvedBaseId;
+      final n = rng.nextInt(armorVariantCount).toString().padLeft(2, '0');
+      return '${base}_v$n';
     }
     final list = variantsFor(resolvedBaseId);
     if (list.isEmpty) return resolvedBaseId;
