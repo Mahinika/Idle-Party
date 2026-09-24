@@ -35,6 +35,9 @@ import 'shell/wipe_overlay.dart';
 import 'web_click_bridge.dart';
 
 part 'dungeon_tile_painter.dart';
+part 'dungeon_paint_projectiles.dart';
+part 'dungeon_paint_actors.dart';
+part 'dungeon_paint_floaters.dart';
 
 /// Top-down tile dungeon — painted, not 100+ Image widgets.
 class SpatialDungeonView extends StatefulWidget {
