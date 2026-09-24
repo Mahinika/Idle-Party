@@ -42,24 +42,34 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
 ## Workflow (mandatory order)
 
 1. Drop / update dressed `_src/body_*.png` (owned art, same 128 origin).
-2. Run `py tool/build_owned_gear_layers.py` — **extract armor from `_src/body_idle`
-   only**; walk/attack rebuild undertunic bodies plus cloth-only
-   `body_tint_<anim>` masks. Classify-then-paint (`paper_doll_classify.py`);
-   no `ImageDraw` helms or capes. Use
-   `--tint-masks-only` when approved body/gear art must stay byte-identical.
-   Live t2 armor is palette-preserving derivation from approved t0; use
-   `--t2-only` to refresh it without rebuilding bases.
-   Race LOOK clips: `py tool/paint_race_bodies.py`.
+2. Run `py tool/build_owned_gear_layers.py` — the **only** doll writer. It
+   builds everything in `tool/out/doll_stage/char` (bodies with the face and
+   haircut, cloth-only tint masks, t0/t2, short/broad styles, materials,
+   class marks, icons, race clips), runs facit there, and leaves live art
+   alone. `--publish` swaps a green build in, deletes orphans, and relocks.
+   The file list is `tool/paper_doll_manifest.py`. Do not run
+   `derive_armor_material_variants.py` or `make_gear_slot_icons.py` alone —
+   they are build steps. There is no `derive_armor_variants.py` any more.
 3. Inspect `tool/preview_doll_<family>.png` (armor stack). Must read as the same
    character as `_src`, not a grey mushroom head.
 4. Rogue native leather (body + helm): `py tool/upgrade_native_body_src.py rogue`
    then `py tool/refresh_native_gear.py`. Mage/healer:
-   `py tool/upgrade_native_body_src.py mage` (hat pixels are kept).
-   Cross-material: `derive_armor_material_variants.py`.
-   The full gear build also refreshes race LOOK clips.
-5. Run `py tool/check_paper_doll_facit.py` — composites **live** body+overlays
-   vs `_src` (no gitignored preview required). Fail if idle armor stack drifts.
-   After a **deliberate** art change: `--relock`, then commit the lock file.
+   `py tool/upgrade_native_body_src.py mage` (hat pixels are kept). Both only
+   write inputs (`_src`, `_authored`); build and publish after.
+5. `py tool/check_paper_doll_facit.py` checks live art: idle stack vs `_src`,
+   face ownership, styles, manifest, and the lock. The build already ran it
+   on the staged copy; publish relocks. Never relock over a red facit.
+
+**Face ownership:** the body owns face, eyes, and haircut. Chest, legs,
+cloak, and hands never paint them; helms keep the hair they cover and leave
+a face window. If a composite drifts after removing face pixels from armor,
+the body is missing them — fix `head_from_master`, do not put the face back
+on the armor.
+
+**Styles:** `short` and `broad` are drawn 128 masters in
+`gear/_authored/{slot}_{style}_idle.png` (same origin, no face). Facit fails a
+style that is t0 or t0 stretched. Replace a master by hand any time;
+`tool/author_style_masters.py` never overwrites one without `--force`.
 6. Hand art moved? `py tool/gen_owned_gear_grips.py`, then
    `py tool/audit_anchors.py` (findings must be empty).
 7. Only then full `flutter run` on A56 (PNG bytes need a rebuild, not hot reload).

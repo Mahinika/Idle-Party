@@ -114,9 +114,14 @@ abstract final class EquipmentVisualResolver {
   ///
   /// Uncommon cools t0 steel; epic/legendary warms the overlay so GEAR and
   /// dungeon can tell a green from a purple without reading the slot border.
+  /// Armor t2, short, and broad cuts keep their own palette.
   static Color? rarityTint(String visualSetId, {int? rarityTier}) {
-    final m = RegExp(r'_t(\d+)$').firstMatch(visualSetId);
+    final id = OwnedGearAssets.legacyArmorCut(visualSetId);
+    final m = RegExp(r'_t(\d+)$').firstMatch(id);
     if (m == null) return null;
+    if (m.group(1) == '2' && EquipmentModelCatalog.isFamilyBase(id)) {
+      return null;
+    }
     final t = rarityTier ?? int.parse(m.group(1)!);
     return switch (t) {
       // Common reads as pale steel; uncommon is a stronger cool wash.
@@ -156,8 +161,8 @@ abstract final class EquipmentVisualResolver {
     }
     final id = resolveId(item);
     if (id == 'none') return null;
-    if (OwnedGearAssets.kArmorShapeIds.contains(id) ||
-        OwnedGearAssets.isArmorVariantId(id)) {
+    // Short and broad borrow the plain cut's BAG icon.
+    if (OwnedGearAssets.isArmorStyleId(id)) {
       final slot = id.split('_').first;
       final mat = OwnedGearAssets.materialSuffix(fam, item.armorType);
       final stem = mat == null ? '${slot}_t0' : '${slot}_${mat}_t0';

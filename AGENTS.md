@@ -69,7 +69,11 @@ Layered Canvas heroes: `lib/visual/` + `docs/CHARACTER_VISUALS.md`.
 Dungeon, GEAR, and party HUD share `paintOwnedHero` (undertunic body +
 equipped 128×128 overlays, including common gear). Missing bodies use class
 PNGs — Kenney 16×16 tiles are not bundled. Items share looks via
-`visualSetId`. Four bodies serve 31 specs, so each spec washes its own color
+`visualSetId`: every armor slot has four cuts — `t0`, `t2`, and the drawn
+styles `short` / `broad` (`gear/_authored/{slot}_{style}_idle.png`); old
+`vNN` / `wide` / `slim` ids map onto them (`OwnedGearAssets.legacyArmorCut`).
+The body owns the face and haircut; armor never carries them (helms keep a
+face window). Four bodies serve 31 specs, so each spec washes its own color
 through generated **cloth-only** `body_tint_<anim>` masks
 (`HeroIdentity.ownedBodyTintArgb`); skin/hair and authored gear keep their
 palette. Optional **LOOK** (New Game only — race stays locked after START):
@@ -80,10 +84,13 @@ Druid) skip LOOK — race does not show through the form PNG. Gear overlays
 never include a baked face.
 One body clip per anim — walk bob, weapon swing and hit recoil come from
 `CharacterVisualPainter.ownedStepOffset`, not new PNGs. Hand items grip
-opaque pixels (`OwnedGearGrips`, generated). Looks gate:
-`py tool/check_paper_doll_facit.py` (idle facit + t2/material + grips +
-`tool/paper_doll_lock.json` art hashes; `--relock` after deliberate art
-changes). Enemies are a separate art pass.
+opaque pixels (`OwnedGearGrips`, generated). One build writes every doll
+PNG: `py tool/build_owned_gear_layers.py` stages the art under `tool/out/`,
+runs facit there, and only `--publish` swaps it in and relocks (file list:
+`tool/paper_doll_manifest.py`). Looks gate:
+`py tool/check_paper_doll_facit.py` (idle facit + t2/material + face
+ownership + styles + manifest + grips + `tool/paper_doll_lock.json` art
+hashes). Enemies are a separate art pass.
 
 ## Build & Test
 

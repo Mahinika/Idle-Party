@@ -94,20 +94,25 @@ void main() {
       'frill_soulcodex',
       'frill_embercodex',
     ]);
-    expect(EquipmentModelCatalog.variantsFor('helm'), ['helm_t0', 'helm_t2']);
-    expect(EquipmentModelCatalog.variantsFor('hands'), ['hands_t0', 'hands_t2']);
+    expect(EquipmentModelCatalog.variantsFor('helm'), [
+      'helm_t0',
+      'helm_t2',
+      'helm_short',
+      'helm_broad',
+    ]);
     for (final base in EquipmentModelCatalog.familyBases) {
       final picked = <String>{};
-      for (var i = 0; i < 24; i++) {
+      for (var i = 0; i < 40; i++) {
         picked.add(
           EquipmentModelCatalog.pickVariant('${base}_t0', Random(i), rarityTier: 2),
         );
       }
-      expect(
-        picked.every((id) => RegExp('^${base}_v\\d{2}\$').hasMatch(id)),
-        isTrue,
-      );
-      expect(picked.length, greaterThan(1));
+      expect(picked, {
+        '${base}_t0',
+        '${base}_t2',
+        '${base}_short',
+        '${base}_broad',
+      });
     }
   });
 
@@ -627,31 +632,62 @@ void main() {
       expect(path, 'assets/custom/char/warrior/gear/helm_t0_idle.png');
     });
 
-    test('wide and slim armor keep their own png', () {
+    test('short and broad styles resolve per body, material, and class', () {
+      String? path(
+        String id,
+        BodyFamily family, {
+        ArmorType? armor,
+        HeroClassId? heroClass,
+      }) => OwnedGearAssets.pathFor(
+        visualSetId: id,
+        family: family,
+        anim: HeroAnimKind.walk,
+        armorType: armor,
+        heroClass: heroClass,
+      );
+
       expect(
-        OwnedGearAssets.pathFor(
-          visualSetId: 'helm_wide',
-          family: BodyFamily.rogue,
-          anim: HeroAnimKind.idle,
-        ),
-        'assets/custom/char/rogue/gear/helm_wide_idle.png',
+        path('chest_short', BodyFamily.healer),
+        'assets/custom/char/healer/gear/chest_short_idle.png',
       );
       expect(
-        OwnedGearAssets.pathFor(
-          visualSetId: 'cloak_slim',
-          family: BodyFamily.mage,
-          anim: HeroAnimKind.walk,
-        ),
-        'assets/custom/char/mage/gear/cloak_slim_idle.png',
+        path('chest_broad', BodyFamily.healer, armor: ArmorType.plate),
+        'assets/custom/char/healer/gear/chest_plate_broad_idle.png',
       );
       expect(
-        OwnedGearAssets.pathFor(
-          visualSetId: 'chest_v03',
-          family: BodyFamily.healer,
-          anim: HeroAnimKind.idle,
-        ),
-        'assets/custom/char/healer/gear/chest_v03_idle.png',
+        path('helm_short', BodyFamily.mage, heroClass: HeroClassId.warlock),
+        'assets/custom/char/mage/gear/helm_warlock_short_idle.png',
       );
+      expect(
+        path('chest_t2', BodyFamily.warrior, heroClass: HeroClassId.paladin),
+        'assets/custom/char/warrior/gear/chest_paladin_t2_idle.png',
+      );
+      // Marks cover helm and chest only; legs stay the plain style.
+      expect(
+        path('legs_broad', BodyFamily.warrior, heroClass: HeroClassId.paladin),
+        'assets/custom/char/warrior/gear/legs_broad_idle.png',
+      );
+      // Holy paladin wears plate on the healer body, not the warrior mark.
+      expect(
+        path(
+          'chest_short',
+          BodyFamily.healer,
+          armor: ArmorType.plate,
+          heroClass: HeroClassId.paladin,
+        ),
+        'assets/custom/char/healer/gear/chest_plate_short_idle.png',
+      );
+    });
+
+    test('old vNN, wide, and slim ids spread over the four cuts', () {
+      expect(OwnedGearAssets.legacyArmorCut('chest_v00'), 'chest_t0');
+      expect(OwnedGearAssets.legacyArmorCut('chest_v04'), 'chest_t0');
+      expect(OwnedGearAssets.legacyArmorCut('chest_v05'), 'chest_t2');
+      expect(OwnedGearAssets.legacyArmorCut('legs_v12'), 'legs_short');
+      expect(OwnedGearAssets.legacyArmorCut('helm_v19'), 'helm_broad');
+      expect(OwnedGearAssets.legacyArmorCut('cloak_wide'), 'cloak_broad');
+      expect(OwnedGearAssets.legacyArmorCut('hands_slim'), 'hands_short');
+      expect(OwnedGearAssets.legacyArmorCut('sword_t0'), 'sword_t0');
       expect(
         OwnedGearAssets.pathFor(
           visualSetId: 'chest_v03',
@@ -659,17 +695,70 @@ void main() {
           anim: HeroAnimKind.idle,
           heroClass: HeroClassId.warlock,
         ),
-        'assets/custom/char/mage/gear/chest_warlock_v03_idle.png',
+        'assets/custom/char/mage/gear/chest_warlock_t0_idle.png',
       );
       expect(
         OwnedGearAssets.pathFor(
-          visualSetId: 'chest_v03',
+          visualSetId: 'chest_v17',
           family: BodyFamily.healer,
           anim: HeroAnimKind.idle,
           armorType: ArmorType.plate,
         ),
-        'assets/custom/char/healer/gear/chest_plate_v03_idle.png',
+        'assets/custom/char/healer/gear/chest_plate_broad_idle.png',
       );
+    });
+
+    test('styles borrow the plain BAG icon; t2 keeps its own', () {
+      EquipmentItem chest(String id) => EquipmentItem(
+        id: id,
+        name: 'Chest',
+        slot: EquipmentSlot.chest,
+        rarity: LootRarity.common,
+        itemLevel: 5,
+        visualSetId: id,
+        affinity: 'healer',
+      );
+      expect(
+        EquipmentVisualResolver.ownedIconPathFor(chest('chest_broad')),
+        'assets/custom/char/healer/gear/chest_t0_icon.png',
+      );
+      expect(
+        EquipmentVisualResolver.ownedIconPathFor(chest('chest_wide')),
+        'assets/custom/char/healer/gear/chest_t0_icon.png',
+      );
+      expect(
+        EquipmentVisualResolver.ownedIconPathFor(chest('chest_t2')),
+        'assets/custom/char/healer/gear/chest_t2_icon.png',
+      );
+    });
+
+    test('rarity wash stays on the plain armor cut', () {
+      expect(EquipmentVisualResolver.rarityTint('chest_t0', rarityTier: 1),
+          isNotNull);
+      expect(EquipmentVisualResolver.rarityTint('chest_t2', rarityTier: 1),
+          isNull);
+      expect(EquipmentVisualResolver.rarityTint('chest_short', rarityTier: 1),
+          isNull);
+      expect(EquipmentVisualResolver.rarityTint('chest_v02', rarityTier: 1),
+          isNotNull);
+    });
+
+    test('every listed doll PNG ships, and nothing else sits in gear', () {
+      // Four cuts per slot, not twenty colour copies: the dungeon precache
+      // stays a few hundred textures.
+      expect(OwnedGearAssets.dollOverlayPaths.length, lessThan(320));
+      final listed = OwnedGearAssets.allAssetPaths.toSet();
+      for (final path in listed) {
+        expect(File(path).existsSync(), isTrue, reason: path);
+      }
+      for (final family in BodyFamily.values) {
+        final dir = Directory('assets/custom/char/${family.name}/gear');
+        for (final f in dir.listSync().whereType<File>()) {
+          final path = f.path.replaceAll('\\', '/');
+          if (!path.endsWith('.png')) continue;
+          expect(listed.contains(path), isTrue, reason: 'orphan $path');
+        }
+      }
     });
   });
 

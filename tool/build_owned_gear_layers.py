@@ -11,23 +11,27 @@ Rules (see .cursor/skills/character-paper-doll/SKILL.md):
   derived from approved t0 so a stale t2 master cannot replace the silhouette
   or wash the whole doll orange.
 - Weapons may use shared overlays; prefer _authored when present.
+- The body owns the face and haircut. Every armor overlay loses those pixels
+  (helms keep hair and get a face window).
+- One build: every step writes a staging copy, facit checks it, and
+  `--publish` swaps it in and relocks. Live art never sees a half build.
 """
 from __future__ import annotations
 
 import math
+import os
 import shutil
 import subprocess
 import sys
+import time
 from collections import deque
+from functools import lru_cache
 from pathlib import Path
 
 from PIL import Image, ImageEnhance
 
-REPO = Path(__file__).resolve().parents[1]
-ROOT = REPO / "assets" / "custom" / "char"
-TOOL = REPO / "tool"
-FAMILIES = ("warrior", "healer", "mage", "rogue")
-ANIMS = ("idle", "walk", "attack")
+from paper_doll_paths import CHAR as ROOT, LIVE_CHAR, REPO, STAGE_CHAR, TOOL, staged
+from paper_doll_manifest import ANIMS, FAMILIES
 
 TUNIC = {
     "warrior": ((168, 132, 92), (112, 84, 58)),
@@ -848,6 +852,79 @@ def register_helm_to_head(
     return out
 
 
+@lru_cache(maxsize=None)
+def body_landmarks(family: str) -> tuple[float, float, float, float, int, int, int, int]:
+    """Face centre, face half, chin row, and body box of the idle master."""
+    src = load128(ensure_src(family, "idle"))
+    box = bbox(src)
+    face = sample_face(src, box, family)
+    fx, fy, half = face_region(src, face, box)
+    chin = _chin_y(src, face, fx, fy, half)
+    return (fx, fy, half, chin, *box)
+
+
+def register_to_body(
+    im: Image.Image, donor: str, family: str, slot: str
+) -> Image.Image:
+    """Move a donor family's piece onto [family] by body landmarks.
+
+    Helms follow the face. Everything else maps chin to chin and feet to feet,
+    so a donor's legs stay legs instead of being stretched over the head.
+    """
+    if donor == family:
+        return im.copy()
+    dfx, dfy, dhalf, dchin, dx0, _dy0, dx1, dy1 = body_landmarks(donor)
+    tfx, tfy, thalf, tchin, tx0, _ty0, tx1, ty1 = body_landmarks(family)
+    if slot == "helm":
+        sx = sy = thalf / max(1.0, dhalf)
+
+        def src_xy(x: int, y: int) -> tuple[float, float]:
+            return dfx + (x - tfx) / sx, dfy + (y - tfy) / sy
+    else:
+        sx = (tx1 - tx0) / max(1, dx1 - dx0)
+        sy = (ty1 - tchin) / max(1.0, dy1 - dchin)
+
+        def src_xy(x: int, y: int) -> tuple[float, float]:
+            return dfx + (x - tfx) / sx, dchin + (y - tchin) / sy
+
+    out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    ip, op = im.load(), out.load()
+    for y in range(128):
+        for x in range(128):
+            u, v = src_xy(x, y)
+            ui, vi = int(math.floor(u)), int(math.floor(v))
+            if 0 <= ui < 128 and 0 <= vi < 128:
+                p = ip[ui, vi]
+                if p[3]:
+                    op[x, y] = p
+    return out
+
+
+@lru_cache(maxsize=None)
+def idle_classification(family: str):
+    from paper_doll_classify import classify
+
+    src = load128(ensure_src(family, "idle"))
+    box = bbox(src)
+    return classify(src, family, sample_face(src, box, family), box)
+
+
+def own_face(family: str) -> int:
+    """Strip the face from every armor overlay the build wrote."""
+    clf = idle_classification(family)
+    n = 0
+    for path in sorted((ROOT / family / "gear").glob("*_idle.png")):
+        slot = path.name.split("_", 1)[0]
+        if slot not in ("helm", "chest", "legs", "cloak", "hands"):
+            continue
+        im = Image.open(path).convert("RGBA")
+        out = clear_head(im, clf, helm=slot == "helm")
+        if out.tobytes() != im.tobytes():
+            out.save(path)
+            n += 1
+    return n
+
+
 def ensure_shared_weapons(shared: Path, anim: str) -> None:
     """Keep existing shared weapon PNGs unless _authored replaces them.
 
@@ -886,6 +963,25 @@ def ensure_shared_weapons(shared: Path, anim: str) -> None:
         )
 
 
+def clear_head(layer: Image.Image, clf, *, helm: bool = False) -> Image.Image:
+    """The body owns the face and haircut. Armor keeps everything else.
+
+    A helm still covers hair, so it only loses the face window.
+    """
+    from paper_doll_classify import HAIR, _face_oval, is_head_identity
+
+    out = layer.copy()
+    op = out.load()
+    for y in range(128):
+        for x in range(128):
+            if op[x, y][3] == 0 or not is_head_identity(clf, x, y):
+                continue
+            if helm and (clf.at(x, y) == HAIR or not _face_oval(clf, x, y)):
+                continue
+            op[x, y] = (0, 0, 0, 0)
+    return out
+
+
 def save_idle_armor_overlays(
     family: str,
     anim: str,
@@ -895,6 +991,9 @@ def save_idle_armor_overlays(
     gear: Path,
 ) -> tuple:
     """Extract armor from gold master — idle only (walk/attack use these layers)."""
+    from paper_doll_classify import classify
+
+    clf = classify(src, family, face, box)
     chest, legs, cloak, hat, hands = extract_bands(src, face, box, family)
     if alpha_count(cloak) < 20:
         cloak = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
@@ -924,11 +1023,15 @@ def save_idle_armor_overlays(
             cloak0 = base
     else:
         cloak0 = maybe_authored(family, "cloak_t0", anim, cloak)
+    cloak0 = clear_head(cloak0, clf)
 
     def save_set(set_id: str, im: Image.Image) -> Image.Image:
         final = maybe_authored(family, set_id, anim, im)
         if set_id.startswith("helm_"):
             final = register_helm_to_head(final, src, face, box)
+            final = clear_head(final, clf, helm=True)
+        else:
+            final = clear_head(final, clf)
         final.save(gear / f"{set_id}_{anim}.png")
         return final
 
@@ -990,39 +1093,6 @@ def process_family(family: str) -> dict:
     return out
 
 
-def write_tint_masks_only() -> None:
-    """Refresh identity masks without rewriting approved body/gear PNGs."""
-    for family in FAMILIES:
-        for anim in ANIMS:
-            src = load128_pose(ensure_src(family, anim))
-            box = bbox(src)
-            face = sample_face(src, box, family)
-            _body, tint_mask = paint_undertunic(
-                src, family, face, box, anim=anim
-            )
-            tint_mask.save(ROOT / family / f"body_tint_{anim}.png")
-            print("ok", family, anim, "tint_mask_px", alpha_count(tint_mask))
-    print("done — tint masks only; run check_paper_doll_facit.py")
-
-
-def write_t2_only() -> None:
-    """Rebuild approved t2 silhouettes from live t0 without touching sources."""
-    for family in FAMILIES:
-        gear = ROOT / family / "gear"
-        for stem in ("helm", "chest", "legs", "cloak", "hands"):
-            src = gear / f"{stem}_t0_idle.png"
-            if not src.exists():
-                raise FileNotFoundError(src)
-            base = Image.open(src).convert("RGBA")
-            out = rarefy_cloak(base) if stem == "cloak" else rarefy_armor(base)
-            out.save(gear / f"{stem}_t2_idle.png")
-            print("ok", family, f"{stem}_t2", "palette=t0")
-    subprocess.check_call(
-        [sys.executable, str(TOOL / "derive_armor_material_variants.py"), "--t2-only"],
-    )
-    print("done — t2 tiers only; inspect high previews then relock")
-
-
 def write_armor_preview(family: str, frames: dict) -> None:
     """Armor stack vs gold master. Skip authored helm on facit preview (bare head)."""
     _box, _face, _src, body, chest, legs, cloak, hands, _hat = frames["idle"]
@@ -1047,55 +1117,104 @@ def write_armor_preview(family: str, frames: dict) -> None:
         kit.save(TOOL / "preview_doll_warrior_full.png")
 
 
-def write_bodies_only(families: tuple[str, ...]) -> None:
-    """Rebuild undertunic + tint; keep live gear overlays (hat stays on helm)."""
-    for family in families:
-        for anim in ANIMS:
-            pose = load128_pose(ensure_src(family, anim))
-            box = bbox(pose)
-            face = sample_face(pose, box, family)
-            body, tint_mask = paint_undertunic(
-                pose, family, face, box, anim=anim
-            )
-            body.save(ROOT / family / f"body_{anim}.png")
-            tint_mask.save(ROOT / family / f"body_tint_{anim}.png")
-            print("ok", family, anim, "body_only")
-    print("done — bodies only; race clips refreshed; run facit --relock")
-    subprocess.check_call(
-        [sys.executable, str(TOOL / "paint_race_bodies.py")],
-    )
+def run_build() -> None:
+    """Every doll step, in order, against [ROOT] (the staging copy)."""
+    import derive_armor_material_variants as materials
+    import make_gear_slot_icons as icons
+    from paper_doll_cuts import write_class_marks, write_styles
 
-
-def main() -> None:
-    if "--tint-masks-only" in sys.argv:
-        write_tint_masks_only()
-        return
-    if "--t2-only" in sys.argv:
-        write_t2_only()
-        return
-    if "--bodies-only" in sys.argv:
-        wanted = tuple(a for a in sys.argv if a in FAMILIES)
-        write_bodies_only(wanted or FAMILIES)
-        return
     shared = ROOT / "gear"
     shared.mkdir(parents=True, exist_ok=True)
     (shared / "_authored").mkdir(parents=True, exist_ok=True)
     built = {}
     for family in FAMILIES:
         built[family] = process_family(family)
-    for anim in ("idle",):
-        ensure_shared_weapons(shared, anim)
+    ensure_shared_weapons(shared, "idle")
+    for family in FAMILIES:
+        print("ok", family, "styles", write_styles(family))
+    print("ok materials", materials.derive_all())
+    for family in FAMILIES:
+        print("ok", family, "class marks", write_class_marks(family))
+    for family in FAMILIES:
+        print("ok", family, "face owned, rewrote", own_face(family))
+    print("ok icons", icons.write_all())
     for family in FAMILIES:
         write_armor_preview(family, built[family])
-    # Material variants + slot icons are part of one repeatable build. Leaving
-    # them as a second manual command let native and cross-material t2 drift.
-    subprocess.check_call(
-        [sys.executable, str(TOOL / "derive_armor_material_variants.py")],
-    )
-    subprocess.check_call(
-        [sys.executable, str(TOOL / "paint_race_bodies.py")],
-    )
-    print("done — inspect tool/preview_doll_*.png then run check_paper_doll_facit.py")
+    subprocess.check_call([sys.executable, str(TOOL / "paint_race_bodies.py")])
+
+
+def prepare_stage() -> None:
+    """Fresh copy of the art. Generated PNGs go; _src and _authored stay."""
+    if STAGE_CHAR.exists():
+        shutil.rmtree(STAGE_CHAR)
+    shutil.copytree(LIVE_CHAR, STAGE_CHAR)
+    for family in FAMILIES:
+        for path in (STAGE_CHAR / family).glob("*.png"):
+            path.unlink()
+        for path in (STAGE_CHAR / family / "gear").glob("*.png"):
+            path.unlink()
+
+
+def _retry(fn, *args) -> None:
+    """Windows can hold a PNG open for a moment (IDE preview, indexer)."""
+    for attempt in range(20):
+        try:
+            fn(*args)
+            return
+        except OSError:
+            if attempt == 19:
+                raise
+            time.sleep(0.25)
+
+
+def publish() -> tuple[int, int]:
+    """Copy every changed PNG in beside its target, then swap them in.
+
+    Nothing live changes until all copies exist. Orphans go last.
+    """
+    folders = [f for fam in FAMILIES for f in (fam, f"{fam}/gear")] + ["gear"]
+    swaps: list[tuple[Path, Path]] = []
+    orphans: list[Path] = []
+    for folder in folders:
+        stage, live = STAGE_CHAR / folder, LIVE_CHAR / folder
+        staged_names = set()
+        for src in sorted(stage.glob("*.png")):
+            staged_names.add(src.name)
+            target = live / src.name
+            if target.exists() and target.read_bytes() == src.read_bytes():
+                continue
+            tmp = live / f"{src.name}.publish"
+            shutil.copyfile(src, tmp)
+            swaps.append((tmp, target))
+        orphans += [p for p in live.glob("*.png") if p.name not in staged_names]
+    for tmp, target in swaps:
+        _retry(os.replace, tmp, target)
+    for path in orphans:
+        _retry(path.unlink)
+    return len(swaps), len(orphans)
+
+
+def main() -> None:
+    if staged():
+        run_build()
+        return
+    env = {**os.environ, "IDLE_PARTY_CHAR_ROOT": str(STAGE_CHAR)}
+    # --publish-staged re-checks and publishes the last staged build.
+    if "--publish-staged" in sys.argv:
+        sys.argv.append("--publish")
+    else:
+        prepare_stage()
+        subprocess.check_call([sys.executable, str(Path(__file__).resolve())], env=env)
+    facit = str(TOOL / "check_paper_doll_facit.py")
+    if subprocess.call([sys.executable, facit, "--no-lock"], env=env):
+        raise SystemExit("facit is red on the staged build — live art untouched")
+    if "--publish" not in sys.argv:
+        print(f"staged build is green in {STAGE_CHAR}; rerun with --publish")
+        return
+    changed, removed = publish()
+    print(f"published {changed} changed PNGs, removed {removed} orphans")
+    subprocess.check_call([sys.executable, facit, "--relock"])
+    print("published and relocked — full flutter run to see new PNGs")
 
 
 if __name__ == "__main__":

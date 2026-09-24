@@ -35,9 +35,25 @@ authored, so skin, hair, and cloth keep that picture's palette.
 
 Not one PNG per class×weapon. Items share looks via `visualSetId` (e.g.
 legacy `sword_t1` → shipped `sword_t0`; named models keep authored colors).
-Armor uses family extract `*_t0` plus palette-preserving derived `*_t2`
-silhouettes, and **material variants** when `armorType` differs from the
-family’s native look.
+
+**Four cuts per armor slot** (helm, chest, legs, cloak, hands):
+
+| Cut | Source |
+|-----|--------|
+| `t0` plain | extract from `_src` (or `_authored/{slot}_t0`) |
+| `t2` late | t0 grown, palette kept |
+| `short` | authored `_authored/{slot}_short_idle.png` — brow band, vest, breeches, capelet, cuff |
+| `broad` | authored `_authored/{slot}_broad_idle.png` — wide rim, pauldrons, skirt, hooded cloak, gauntlet |
+
+Loot stamps one of the four (`chest_short`). Material (`*_plate_*` …) and
+class marks resolve at paint. Old saves: `{slot}_v00…v04` → t0, `v05…v09` →
+t2, `v10…v14` → short, `v15…v19` → broad, `wide` → broad, `slim` → short
+(`OwnedGearAssets.legacyArmorCut`). Short and broad keep their own palette
+(no rarity wash) and borrow the plain cut's BAG icon.
+
+**The face lives on the body.** The undertunic carries the master's face,
+eyes, and haircut (`head_from_master`). No armor overlay paints those pixels;
+helms keep the hair they cover and leave a transparent face window.
 
 **Look axes (no extra loot fields):**
 
@@ -46,7 +62,8 @@ family’s native look.
 | `BodyFamily` | gear pose + overlay atlas (warrior / healer / mage / rogue) |
 | `HeroRace` + `HeroSex` | undertunic clip (`<race>_<m|f>_body_<anim>.png`) for every shipped race. Old saves default Human; sex follows family (healer female). |
 | `armorType` | material suffix when ≠ native (`*_mail_*`, `*_plate_*`, `*_leather_*`) |
-| `visualSetId` | tier / named weapon stem (`chest_t0`, `sword_thunderfury`, …) |
+| `visualSetId` | armor cut / named weapon stem (`chest_t0`, `chest_broad`, `sword_thunderfury`, …) |
+| class | paladin / death knight mark on warrior helm+chest, warlock on mage helm+chest (`*_paladin_*`) |
 
 Icon and doll share the same resolved stem (`EquipmentVisualResolver`).
 
@@ -61,22 +78,25 @@ Icon and doll share the same resolved stem (`EquipmentVisualResolver`).
 coif/visor steel · plate = hard mass + trim. A hue-only recolor of the native
 silhouette is a bug — facit requires opaque-mask diff vs native and at ~48 px.
 
-Authored-first: `gear/_authored/{slot}_{material}_{tier}_idle.png` wins.
-Mail helms remap warrior plate coif onto each family head (face punch). Body
-slots remap donor family silhouettes, then material ramp. Fallback recolor only
-when no donor exists.
+Authored-first: `gear/_authored/{slot}_{material}_{cut}_idle.png` wins. A
+hand-drawn plain cut grows its own late cut. Otherwise every cut takes the
+donor family that owns the material's shape (warrior for plate and mail,
+rogue for leather), moved onto the body by landmarks — chin to chin and feet
+to feet, helms by the face — then the material ramp. A donor is never
+stretched to the whole body box.
 
-Derived by `tool/derive_armor_material_variants.py`. Rogue, mage, and healer
-native armor can rebake through `tool/upgrade_native_body_src.py` (pass the
-family name). The gold hat is copied back on top before the master is
-replaced, then extracts run again. Rogue helm stays authored
-(`refresh_native_gear.py`). **Rarity on the doll:**
-generic `*_t0` / `*_t1` / `*_t3` overlays get a cool-steel or warm-gold
-modulate so uncommon vs epic reads at phone size. **t2 armor and named weapon
-models keep authored palettes** — no global orange wash. Slot borders stay
-UI chrome. Weapons: `*_t0` plus named models
-(`sword_thunderfury`, `sword_emberfang`, `staff_voidspire`, …) — hue variants
-from `tool/derive_weapon_hue_variants.py`.
+Class marks: the family's cut in the class palette plus a small authored
+emblem `gear/_authored/{slot}_{mark}_mark_idle.png`, clipped to the piece.
+
+Rogue, mage, and healer native armor can rebake the gold master through
+`tool/upgrade_native_body_src.py` (pass the family name); rogue helm stays
+authored (`refresh_native_gear.py`). Both only write inputs; run the build
+after. **Rarity on the doll:** plain `*_t0` / `*_t1` / `*_t3` overlays get a
+cool-steel or warm-gold modulate so uncommon vs epic reads at phone size.
+**t2, short, broad, and named weapon models keep authored palettes** — no
+global orange wash. Slot borders stay UI chrome. Weapons: `*_t0` plus named
+models (`sword_thunderfury`, `sword_emberfang`, `staff_voidspire`, …) — hue
+variants from `tool/derive_weapon_hue_variants.py`.
 
 Doll look = body family undertunic + overlay stem from `visualSetId` +
 optional material suffix from equipped `armorType`.
@@ -85,8 +105,9 @@ optional material suffix from equipped `armorType`.
 
 | Mode | Source | Used for |
 |------|--------|----------|
-| Body extract | `_src` → `build_owned_gear_layers.py` | undertunic per anim; armor extract **idle only** |
+| Body extract | `_src` → `build_owned_gear_layers.py` | undertunic per anim (face + haircut); armor extract **idle only** |
 | Armor tier | approved live `t0` → palette-preserving `t2` | rare silhouette; never global gold/orange wash |
+| Armor style | `gear/_authored/{slot}_{short,broad}_idle.png` | two drawn silhouettes per slot; never t0 rescaled |
 | Authored weapon | `char/gear/_authored/` | shared weapons / shields / frills |
 | Kenney / custom icons | `KenneyAssets` / `CustomAssets` | jewelry, flask, empty shoulder/waist slots |
 
@@ -185,16 +206,16 @@ every time a hero took damage.
 ## Adding a body family / denser frame
 
 1. Drop dressed `_src/body_<anim>.png` (gold master) then run
-   `py tool/build_owned_gear_layers.py` — **extracts** undertunic + overlays from
-   `_src`, and regenerates the cloth-only identity masks; never copies dressed
-   `_src` onto body; never invents helm/cape with `ImageDraw`. Optional
-   overrides: `gear/_authored/`. When only the mask contract changes, use
-   `--tint-masks-only` so approved body/gear PNGs are not rewritten.
-   When only armor tier derivation changes, use `--t2-only`; t2 is rebuilt from
-   live t0 and old `_authored/*_t2` files remain archive inputs, not live wins.
-2. Check `tool/preview_doll_<family>.png` (written by the facit script from **live**
-   body+overlays), then `py tool/check_paper_doll_facit.py`. Facit does not
-   depend on a previously generated preview file.
+   `py tool/build_owned_gear_layers.py`. It is the **only** writer of doll
+   PNGs: it copies the art to `tool/out/doll_stage/char`, runs every step
+   there (bodies, tint masks, t0/t2, styles, materials, class marks, face
+   ownership, icons, race clips), and runs facit `--no-lock` on the copy.
+   Live art is untouched until you pass `--publish`, which swaps changed
+   PNGs in, deletes orphans, and relocks. `--publish-staged` re-checks and
+   publishes the last staged build. Never copies dressed `_src` onto body;
+   never invents helm/cape with `ImageDraw`. Optional overrides:
+   `gear/_authored/`. The PNG list lives in `tool/paper_doll_manifest.py`.
+2. Check `tool/preview_doll_<family>.png` (written by facit from body+overlays).
 3. Register paths in `BodyFamilyCatalog`.
 4. Do **not** paste Kenney tiles on denser bodies.
 5. `py tool/process_char_bodies.py` skips `gear/` and `_src/`.
@@ -241,9 +262,22 @@ Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
    them behind.
 6. Owned draw order keeps the cape behind the body (same stack as this gate).
 7. Every `OwnedGearGrips` entry lands on opaque pixels.
-8. `tool/paper_doll_lock.json` pins a hash per shipped PNG — any generator run
-   that reshapes art fails here. After a **deliberate** art change, re-run with
-   `--relock` and commit the lock.
+8. Only the body paints the face: no chest, legs, cloak, or hands overlay
+   touches the idle face mask; helms leave the face window open.
+9. Short and broad differ from t0 and from t0 stretched to their box, and sit
+   where the slot sits.
+10. Family folders hold exactly `tool/paper_doll_manifest.py` — no orphans.
+11. `tool/paper_doll_lock.json` pins a hash per shipped PNG — any generator run
+   that reshapes art fails here. `build_owned_gear_layers.py --publish`
+   relocks after a green publish; commit the lock.
+
+## Drawing a new style
+
+Replace `gear/_authored/{slot}_{short|broad}_idle.png` with a hand-drawn 128
+PNG on the family's canvas (same origin as the body, transparent, no face),
+then build and publish. `tool/author_style_masters.py` composed the first set
+from owned pixels (crop for short; a wider donor piece under the family's own
+for broad); it never overwrites an existing master unless `--force`.
 
 ## Performance
 

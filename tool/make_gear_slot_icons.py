@@ -10,7 +10,9 @@ from pathlib import Path
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[1] / "assets" / "custom" / "char"
+from paper_doll_manifest import FAMILIES, icon_stems
+from paper_doll_paths import CHAR as ROOT
+
 MIN_OPAQUE = 40
 ICON = 64
 # Hands are sparse wrist pixels — still crop when enough opaque remains.
@@ -41,7 +43,10 @@ def make_icon(im: Image.Image, *, min_opaque: int = MIN_OPAQUE) -> Image.Image |
     return canvas.resize((ICON, ICON), Image.Resampling.NEAREST)
 
 
-def convert_folder(folder: Path, *, t2_only: bool = False) -> int:
+def convert_folder(
+    folder: Path, *, t2_only: bool = False, only: set[str] | None = None
+) -> int:
+    """Icons for [only] stems (family folders), or every overlay (shared)."""
     n = 0
     if not folder.is_dir():
         return 0
@@ -49,6 +54,8 @@ def convert_folder(folder: Path, *, t2_only: bool = False) -> int:
         if "_authored" in src.parts:
             continue
         base = src.name[: -len("_idle.png")]
+        if only is not None and base not in only:
+            continue
         if t2_only and not base.endswith("_t2"):
             continue
         token = base.split("_")[0]
@@ -88,12 +95,17 @@ def write_boots_icons(folder: Path, *, t2_only: bool = False) -> int:
     return n
 
 
-def main() -> None:
-    t2_only = "--t2-only" in sys.argv
+def write_all(*, t2_only: bool = False) -> int:
     n = convert_folder(ROOT / "gear", t2_only=t2_only)
-    for family in ("warrior", "healer", "mage", "rogue"):
-        n += convert_folder(ROOT / family / "gear", t2_only=t2_only)
-    print(f"wrote {n} slot icons")
+    for family in FAMILIES:
+        n += convert_folder(
+            ROOT / family / "gear", t2_only=t2_only, only=set(icon_stems(family))
+        )
+    return n
+
+
+def main() -> None:
+    print(f"wrote {write_all(t2_only='--t2-only' in sys.argv)} slot icons")
 
 
 if __name__ == "__main__":

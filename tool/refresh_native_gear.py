@@ -7,25 +7,18 @@ Rogue leather helm: warrior coif → leather cowl (visor softened, ≠ mail).
 """
 from __future__ import annotations
 
-import subprocess
-import sys
-from pathlib import Path
-
 from PIL import Image
 
 from build_owned_gear_layers import (
     bbox,
     load128,
     punch_face_visor,
-    rarefy_armor,
     register_helm_to_head,
     sample_face,
 )
 from derive_armor_material_variants import CONVERTERS
+from paper_doll_paths import LIVE_CHAR as ROOT, REPO
 
-REPO = Path(__file__).resolve().parents[1]
-ROOT = REPO / "assets" / "custom" / "char"
-TOOL = REPO / "tool"
 DONOR = "warrior"
 
 
@@ -84,22 +77,17 @@ def family_src(family: str):
     return src, box, face
 
 
-def refresh_rogue_leather_helm() -> int:
-    gear = ROOT / "rogue" / "gear"
-    (gear / "_authored").mkdir(parents=True, exist_ok=True)
-    t0 = build_leather_helm("rogue")
-    auth = gear / "_authored" / "helm_t0_idle.png"
-    t0.save(auth)
-    t0.save(gear / "helm_t0_idle.png")
-    rarefy_armor(t0).save(gear / "helm_t2_idle.png")
+def refresh_rogue_leather_helm() -> None:
+    """Rewrite the authored master only; the gear build ships it."""
+    auth = ROOT / "rogue" / "gear" / "_authored" / "helm_t0_idle.png"
+    auth.parent.mkdir(parents=True, exist_ok=True)
+    build_leather_helm("rogue").save(auth)
     print("authored", auth.relative_to(REPO))
-    return 3
 
 
 def main() -> int:
-    n = refresh_rogue_leather_helm()
-    print(f"refreshed {n} rogue native helm frames")
-    subprocess.check_call([sys.executable, str(TOOL / "make_gear_slot_icons.py")])
+    refresh_rogue_leather_helm()
+    print("done — run py tool/build_owned_gear_layers.py --publish")
     return 0
 
 

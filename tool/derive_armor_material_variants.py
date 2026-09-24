@@ -1,55 +1,40 @@
-"""Derive cross-material armor overlays (authored-first).
+"""Cross-material armor overlays (authored-first). Called by the gear build.
 
 Paper-doll rule: material must read without tooltip — silhouette before color.
 
-Priority order per slot:
-1. `gear/_authored/{slot}_{material}_{tier}_{anim}.png`
-2. Cross-family remap (warrior plate → mail on cloth bodies; rogue leather →
-   leather on non-rogue druids)
-3. Structured material ramp on native extract (last resort; must pass facit)
+Priority order per slot and cut (t0, t2, short, broad):
+1. `gear/_authored/{slot}_{material}_{cut}_idle.png`
+2. The donor family that owns the material's shape (warrior plate for plate
+   and mail, rogue leather for leather), moved onto the body by landmarks
+3. Structured material ramp on the native piece (last resort)
 
 Also writes boots_*_{material}_t*_icon.png foot-band crops.
 """
 from __future__ import annotations
 
-import subprocess
-import sys
 from pathlib import Path
 
 from PIL import Image, ImageEnhance
 
 from build_owned_gear_layers import (
     bbox,
-    face_region,
     load128,
-    punch_face_visor,
+    rarefy_armor,
     register_helm_to_head,
+    register_to_body,
     sample_face,
 )
+from paper_doll_manifest import (
+    CUTS,
+    FAMILIES,
+    MATERIALS as MATERIAL_MATRIX,
+    NATIVE_MATERIAL,
+    SLOTS,
+    TIERS,
+)
+from paper_doll_paths import CHAR as ROOT
 
-REPO = Path(__file__).resolve().parents[1]
-ROOT = REPO / "assets" / "custom" / "char"
-TOOL = REPO / "tool"
 OVERLAY_ANIMS = ("idle",)
-SLOTS = ("helm", "chest", "legs", "cloak", "hands")
-TIERS = ("t0", "t2")
-FAMILIES = ("warrior", "healer", "mage", "rogue")
-
-# Native look per body family (no suffix on disk).
-NATIVE_MATERIAL = {
-    "warrior": "plate",
-    "rogue": "leather",
-    "mage": "cloth",
-    "healer": "cloth",
-}
-
-# Allowed non-native materials per family (from HeroSpecs armorTypes).
-MATERIAL_MATRIX: dict[str, tuple[str, ...]] = {
-    "warrior": ("leather",),  # guardian druid
-    "rogue": ("mail",),  # hunter 40+, enhancement shaman
-    "mage": ("mail", "leather"),  # elemental; druid
-    "healer": ("plate", "mail", "leather"),  # holy; resto; druid
-}
 
 
 def thicken(im: Image.Image, passes: int = 1) -> Image.Image:
@@ -155,42 +140,6 @@ def family_src(family: str) -> tuple[Image.Image, tuple[int, int, int, int], tup
     return src, box, face
 
 
-def remap_overlay(
-    im: Image.Image,
-    dest_box: tuple[int, int, int, int],
-    y_anchor: float = 0.0,
-) -> Image.Image:
-    """Scale overlay bbox to dest body box; y_anchor 0=top, 1=bottom."""
-    bb = im.getbbox()
-    if bb is None:
-        return Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-    x0, y0, x1, y1 = dest_box
-    bw, bh = max(1, x1 - x0), max(1, y1 - y0)
-    hx0, hy0, hx1, hy1 = bb
-    hw, hh = max(1, hx1 - hx0), max(1, hy1 - hy0)
-    scale = min(bw / hw, bh / hh) * 0.92
-    nw = max(1, int(hw * scale))
-    nh = max(1, int(hh * scale))
-    crop = im.crop(bb).resize((nw, nh), Image.Resampling.NEAREST)
-    out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-    px = x0 + (bw - nw) // 2
-    py = int(y0 + (bh - nh) * y_anchor)
-    px = max(0, min(128 - nw, px))
-    py = max(0, min(128 - nh, py))
-    out.paste(crop, (px, py), crop)
-    return out
-
-
-def slot_y_anchor(slot: str) -> float:
-    return {
-        "helm": 0.0,
-        "chest": 0.18,
-        "hands": 0.22,
-        "cloak": 0.0,
-        "legs": 0.52,
-    }.get(slot, 0.2)
-
-
 def remap_source_family(material: str, family: str) -> str:
     """Pick a donor family with the right material shape language."""
     if material == "mail":
@@ -200,33 +149,6 @@ def remap_source_family(material: str, family: str) -> str:
     if material == "plate":
         return "warrior"
     return family
-
-
-def build_mail_helm_authored(family: str) -> Image.Image:
-    """Mail coif from warrior plate helm — distinct from leather hood."""
-    warrior_helm = Image.open(
-        ROOT / "warrior" / "gear" / "helm_t0_idle.png"
-    ).convert("RGBA")
-    src, box, face = family_src(family)
-    placed = register_helm_to_head(warrior_helm, src, face, box)
-    return to_mail(placed)
-
-
-def ensure_authored_mail_helms() -> int:
-    """Write _authored mail helm masters when missing."""
-    n = 0
-    for family in FAMILIES:
-        if "mail" not in MATERIAL_MATRIX.get(family, ()):
-            continue
-        dest = ROOT / family / "gear" / "_authored" / "helm_mail_t0_idle.png"
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        if dest.exists():
-            continue
-        helm = build_mail_helm_authored(family)
-        helm.save(dest)
-        print("authored", dest.relative_to(REPO))
-        n += 1
-    return n
 
 
 def load_native(family: str, slot: str, tier: str, anim: str) -> Image.Image:
@@ -258,6 +180,9 @@ def derive_slot(
     anim: str,
 ) -> Image.Image:
     auth = authored_path(family, slot, material, tier, anim)
+    if auth is None and tier == "t2" and authored_path(family, slot, material, "t0", anim):
+        # A hand-drawn plain cut owns the shape; the late cut grows from it.
+        return rarefy_armor(derive_slot(family, slot, material, "t0", anim))
     if auth is not None:
         im = Image.open(auth).convert("RGBA")
         if slot == "helm":
@@ -266,27 +191,11 @@ def derive_slot(
         return im
 
     convert = CONVERTERS[material]
-    src_body, dest_box, face = family_src(family)
-
-    if slot == "helm" and material == "mail":
-        return build_mail_helm_authored(family)
-
     donor = remap_source_family(material, family)
     if donor != family:
         donor_im = load_donor(donor, slot, tier, anim, material)
-        if slot == "helm":
-            donor_src, donor_box, donor_face = family_src(donor)
-            donor_im = register_helm_to_head(donor_im, donor_src, donor_face, donor_box)
-            placed = remap_overlay(donor_im, dest_box, y_anchor=0.0)
-            punch_face_visor(placed, src_body, face, dest_box)
-            return convert(placed)
-        placed = remap_overlay(donor_im, dest_box, y_anchor=slot_y_anchor(slot))
-        return convert(placed)
-
-    native = load_native(family, slot, tier, anim)
-    if slot == "helm" and material == "mail":
-        return build_mail_helm_authored(family)
-    return convert(native)
+        return convert(register_to_body(donor_im, donor, family, slot))
+    return convert(load_native(family, slot, tier, anim))
 
 
 def write_boots_icon(legs: Image.Image, dest: Path) -> None:
@@ -304,45 +213,31 @@ def write_boots_icon(legs: Image.Image, dest: Path) -> None:
     icon.save(dest)
 
 
-def derive_family_material(
-    family: str,
-    material: str,
-    tiers: tuple[str, ...] = TIERS,
-) -> int:
+def derive_family_material(family: str, material: str) -> int:
     if material == NATIVE_MATERIAL[family]:
         return 0
     gear = ROOT / family / "gear"
-    gear.mkdir(parents=True, exist_ok=True)
-    (gear / "_authored").mkdir(parents=True, exist_ok=True)
     n = 0
     for slot in SLOTS:
-        for tier in tiers:
+        for cut in CUTS:
             for anim in OVERLAY_ANIMS:
-                out = derive_slot(family, slot, material, tier, anim)
-                dest = gear / f"{slot}_{material}_{tier}_{anim}.png"
-                out.save(dest)
+                out = derive_slot(family, slot, material, cut, anim)
+                out.save(gear / f"{slot}_{material}_{cut}_{anim}.png")
                 n += 1
-            if slot == "legs":
-                idle = gear / f"legs_{material}_{tier}_idle.png"
-                legs = Image.open(idle).convert("RGBA")
-                write_boots_icon(legs, gear / f"boots_{material}_{tier}_icon.png")
+            if slot == "legs" and cut in TIERS:
+                legs = Image.open(gear / f"legs_{material}_{cut}_idle.png").convert("RGBA")
+                write_boots_icon(legs, gear / f"boots_{material}_{cut}_icon.png")
                 n += 1
     return n
 
 
-def main() -> None:
-    tiers: tuple[str, ...] = ("t2",) if "--t2-only" in sys.argv else TIERS
-    n_auth = ensure_authored_mail_helms()
-    n = n_auth
-    for family, materials in MATERIAL_MATRIX.items():
-        for material in materials:
-            n += derive_family_material(family, material, tiers)
-    print(f"wrote {n} material frames/icons")
-    icon_args = [sys.executable, str(TOOL / "make_gear_slot_icons.py")]
-    if "--t2-only" in sys.argv:
-        icon_args.append("--t2-only")
-    subprocess.check_call(icon_args)
+def derive_all() -> int:
+    n = 0
+    for family in FAMILIES:
+        for material in MATERIAL_MATRIX[family]:
+            n += derive_family_material(family, material)
+    return n
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit("run py tool/build_owned_gear_layers.py — materials are one of its steps")

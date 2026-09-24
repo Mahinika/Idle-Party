@@ -112,11 +112,11 @@ abstract final class EquipmentModelCatalog {
       'frill_soulcodex',
       'frill_embercodex',
     ],
-    'helm': ['helm_t0', 'helm_t2'],
-    'chest': ['chest_t0', 'chest_t2'],
-    'legs': ['legs_t0', 'legs_t2'],
-    'cloak': ['cloak_t0', 'cloak_t2'],
-    'hands': ['hands_t0', 'hands_t2'],
+    'helm': ['helm_t0', 'helm_t2', 'helm_short', 'helm_broad'],
+    'chest': ['chest_t0', 'chest_t2', 'chest_short', 'chest_broad'],
+    'legs': ['legs_t0', 'legs_t2', 'legs_short', 'legs_broad'],
+    'cloak': ['cloak_t0', 'cloak_t2', 'cloak_short', 'cloak_broad'],
+    'hands': ['hands_t0', 'hands_t2', 'hands_short', 'hands_broad'],
   };
 
   /// Art stem for a weapon type (loot + paint must agree).
@@ -148,13 +148,14 @@ abstract final class EquipmentModelCatalog {
   static bool isFamilyBase(String baseOrId) =>
       familyBases.contains(baseToken(baseOrId));
 
+  /// Plain, late, and the two authored styles every armor slot ships.
+  static const List<String> armorCuts = ['t0', 't2', 'short', 'broad'];
+
   /// Pick a model for loot. [resolvedBaseId] is e.g. `sword_t2` / `helm_t0`.
   ///
-  /// Cuts derived from each slot extract. Loot stamps `{slot}_vNN`.
-  static const int armorVariantCount = 20;
-
-  /// Armor always picks one of [armorVariantCount] cuts. Shared weapons
-  /// pick from the authored pool (`*_t0` + named models).
+  /// Armor picks one of [armorCuts] (`chest_short`); material and class
+  /// marks resolve at paint. Shared weapons pick from the authored pool
+  /// (`*_t0` + named models).
   static String pickVariant(
     String resolvedBaseId,
     Random rng, {
@@ -162,8 +163,7 @@ abstract final class EquipmentModelCatalog {
   }) {
     final base = baseToken(resolvedBaseId);
     if (isFamilyBase(base)) {
-      final n = rng.nextInt(armorVariantCount).toString().padLeft(2, '0');
-      return '${base}_v$n';
+      return '${base}_${armorCuts[rng.nextInt(armorCuts.length)]}';
     }
     final list = variantsFor(resolvedBaseId);
     if (list.isEmpty) return resolvedBaseId;

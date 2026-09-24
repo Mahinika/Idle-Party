@@ -17,27 +17,10 @@ from pathlib import Path
 
 from PIL import Image, ImageEnhance
 
-from build_owned_gear_layers import (
-    TUNIC,
-    bbox,
-    process_family,
-    recolor_to_cloth,
-    sample_face,
-    write_armor_preview,
-)
-from derive_armor_material_variants import (
-    CONVERTERS,
-    NATIVE_MATERIAL,
-    SLOTS,
-    family_src,
-    load_donor,
-    remap_overlay,
-    slot_y_anchor,
-)
-
-REPO = Path(__file__).resolve().parents[1]
-ROOT = REPO / "assets" / "custom" / "char"
-TOOL = REPO / "tool"
+from build_owned_gear_layers import TUNIC, recolor_to_cloth, register_to_body
+from derive_armor_material_variants import CONVERTERS, load_donor
+from paper_doll_manifest import NATIVE_MATERIAL
+from paper_doll_paths import LIVE_CHAR as ROOT, REPO, TOOL
 DONOR = "warrior"
 # Hat pixels from the gold master are pasted back on top. Rogue has none.
 # Re-running a family composites the current undertunic again, so only pass
@@ -67,10 +50,8 @@ def convert_native(im: Image.Image, family: str) -> Image.Image:
 
 
 def native_slot_overlay(family: str, slot: str) -> Image.Image:
-    _src, dest_box, _face = family_src(family)
     donor_im = load_donor(DONOR, slot, "t0", "idle", NATIVE_MATERIAL[DONOR])
-    placed = remap_overlay(donor_im, dest_box, y_anchor=slot_y_anchor(slot))
-    return convert_native(placed, family)
+    return convert_native(register_to_body(donor_im, DONOR, family, slot), family)
 
 
 def gold_hat(family: str) -> Image.Image:
@@ -113,13 +94,6 @@ def upgrade_family(family: str) -> None:
     print("upgraded _src", src_path.relative_to(REPO))
 
 
-def rebuild_extracts(families: tuple[str, ...]) -> None:
-    built: dict = {}
-    for family in families:
-        built[family] = process_family(family)
-        write_armor_preview(family, built[family])
-
-
 def main() -> int:
     wanted = tuple(a for a in sys.argv[1:] if a in UPGRADE_FAMILIES)
     if not wanted:
@@ -131,15 +105,11 @@ def main() -> int:
         return 2
     for family in wanted:
         upgrade_family(family)
-    rebuild_extracts(wanted)
     if "rogue" in wanted:
         subprocess.check_call(
             [sys.executable, str(TOOL / "refresh_native_gear.py")]
         )
-    subprocess.check_call(
-        [sys.executable, str(TOOL / "derive_armor_material_variants.py")]
-    )
-    print("done — run py tool/check_paper_doll_facit.py --relock")
+    print("done — gold master updated; run py tool/build_owned_gear_layers.py --publish")
     return 0
 
 

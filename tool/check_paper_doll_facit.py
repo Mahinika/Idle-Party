@@ -12,7 +12,12 @@ Also gates the parts the looks facit cannot judge:
 - `tool/paper_doll_lock.json` pins a hash per shipped PNG, so a re-run of any
   generator that quietly reshapes art fails instead of shipping.
 
-Run with `--relock` after a deliberate art change.
+- every family folder holds exactly the manifest (`paper_doll_manifest.py`);
+- only the body paints the face; short and broad styles are their own
+  drawings, not t0 stretched.
+
+Run with `--relock` after a deliberate art change. The gear build runs this
+with `--no-lock` against its staging copy before publishing.
 """
 from __future__ import annotations
 
@@ -36,13 +41,18 @@ from build_owned_gear_layers import (
     sample_face,
 )
 from paper_doll_classify import check_invariants, classify_src
+from paper_doll_manifest import (
+    FAMILIES,
+    MATERIALS,
+    SLOTS,
+    STYLES,
+    body_files,
+    gear_files,
+)
+from paper_doll_paths import CHAR, REPO, TOOL
 
-REPO = Path(__file__).resolve().parents[1]
-CHAR = REPO / "assets" / "custom" / "char"
-TOOL = REPO / "tool"
 LOCK = TOOL / "paper_doll_lock.json"
 GRIPS_DART = REPO / "lib" / "visual" / "owned_gear_grips.dart"
-FAMILIES = ("warrior", "healer", "mage", "rogue")
 
 # Idle facit gate vs dressed _src. Walk/attack dungeon uses idle overlays on
 # poser body clips — not a separate armor extract per anim.
@@ -303,20 +313,8 @@ def check_body_tint_masks() -> list[str]:
     return errors
 
 
-# Non-native materials per family (must match derive_armor_material_variants.py).
-NATIVE_MATERIAL = {
-    "warrior": "plate",
-    "rogue": "leather",
-    "mage": "cloth",
-    "healer": "cloth",
-}
-MATERIAL_BY_FAMILY: dict[str, tuple[str, ...]] = {
-    "warrior": ("leather",),
-    "rogue": ("mail",),
-    "mage": ("mail", "leather"),
-    "healer": ("plate", "mail", "leather"),
-}
-ARMOR_STEMS = ("helm", "chest", "legs", "cloak", "hands")
+MATERIAL_BY_FAMILY = MATERIALS
+ARMOR_STEMS = SLOTS
 MIN_MATERIAL_SIL_DIFF = 0.12  # native vs cross-material opaque mask
 MIN_SQUINT_SIL_DIFF = 0.08  # ~48 px thumbnail still reads different
 # Native t2 must grow vs t0 so rare armor isn't a pixel-identical twin.
@@ -482,6 +480,128 @@ def check_tiers_and_materials() -> list[str]:
                             f"helm face cutout missing "
                             f"{t0.relative_to(REPO)}"
                         )
+    return errors
+
+
+MIN_STYLE_SIL_DIFF = 0.12
+
+
+def stretched_to(im: Image.Image, box: tuple[int, int, int, int]) -> Image.Image:
+    """[im]'s opaque shape resized onto [box] — what a lazy rescale would be."""
+    bb = im.getbbox()
+    out = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    if bb is None:
+        return out
+    w, h = max(1, box[2] - box[0]), max(1, box[3] - box[1])
+    crop = im.crop(bb).resize((w, h), Image.Resampling.NEAREST)
+    out.paste(crop, (box[0], box[1]), crop)
+    return out
+
+
+def check_styles() -> list[str]:
+    """Short and broad are drawings of their own that sit where the piece sits."""
+    errors: list[str] = []
+    for family in FAMILIES:
+        gear = CHAR / family / "gear"
+        for slot in SLOTS:
+            t0 = Image.open(gear / f"{slot}_t0_idle.png").convert("RGBA")
+            t0_box = t0.getbbox()
+            for style in STYLES:
+                path = gear / f"{slot}_{style}_idle.png"
+                err = must_exist_128(path)
+                if err:
+                    errors.append(err)
+                    continue
+                im = Image.open(path).convert("RGBA")
+                box = im.getbbox()
+                if box is None or alpha_ratio(im) < 0.004:
+                    errors.append(f"empty style {path.relative_to(REPO)}")
+                    continue
+                rel = path.relative_to(REPO)
+                plain = silhouette_diff(im, t0)
+                if plain < MIN_STYLE_SIL_DIFF:
+                    errors.append(f"style matches t0 {plain:.2f} {rel}")
+                stretch = silhouette_diff(im, stretched_to(t0, box))
+                if stretch < MIN_STYLE_SIL_DIFF:
+                    errors.append(f"style is t0 stretched {stretch:.2f} {rel}")
+                if t0_box is None:
+                    continue
+                x0, y0, x1, y1 = t0_box
+                pad = 18
+                px = im.load()
+                total = inside = 0
+                for y in range(128):
+                    for x in range(128):
+                        if px[x, y][3] < 40:
+                            continue
+                        total += 1
+                        if x0 - pad <= x < x1 + pad and y0 - pad <= y < y1 + pad:
+                            inside += 1
+                if inside < total * 0.85:
+                    errors.append(
+                        f"style sits off its slot ({inside}/{total} near t0) {rel}"
+                    )
+    return errors
+
+
+def check_manifest() -> list[str]:
+    """Family folders hold exactly the manifest — no orphans, no gaps."""
+    errors: list[str] = []
+    for family in FAMILIES:
+        for folder, want in (
+            (CHAR / family, body_files(family)),
+            (CHAR / family / "gear", gear_files(family)),
+        ):
+            have = {p.name for p in folder.glob("*.png")}
+            for name in sorted(want - have):
+                errors.append(f"missing {folder.relative_to(CHAR).as_posix()}/{name}")
+            for name in sorted(have - want):
+                errors.append(f"orphan {folder.relative_to(CHAR).as_posix()}/{name}")
+    return errors
+
+
+def face_mask(family: str, *, window: bool = False) -> set[tuple[int, int]]:
+    """Idle face pixels the body owns: skin, eyes, and ink, never hair.
+
+    [window] narrows it to the face oval a helm must leave open.
+    """
+    from build_owned_gear_layers import idle_classification
+    from paper_doll_classify import HAIR, _face_oval, is_head_identity
+
+    clf = idle_classification(family)
+    return {
+        (x, y)
+        for y in range(128)
+        for x in range(128)
+        if is_head_identity(clf, x, y)
+        and clf.at(x, y) != HAIR
+        and (not window or _face_oval(clf, x, y))
+    }
+
+
+def check_face_ownership() -> list[str]:
+    """Only the body paints the face. Helms keep a window over it."""
+    errors: list[str] = []
+    for family in FAMILIES:
+        mask = face_mask(family)
+        window = face_mask(family, window=True)
+        if len(window) < 60:
+            errors.append(f"{family} face window too small ({len(window)}px)")
+            continue
+        body = Image.open(CHAR / family / "body_idle.png").convert("RGBA").load()
+        bare = sum(1 for x, y in mask if body[x, y][3] < 40)
+        if bare > len(mask) // 20:
+            errors.append(f"{family} body is missing {bare}px of its face")
+        for path in sorted((CHAR / family / "gear").glob("*_idle.png")):
+            stem = path.name.split("_", 1)[0]
+            if stem not in ARMOR_STEMS:
+                continue
+            px = Image.open(path).convert("RGBA").load()
+            owned = window if stem == "helm" else mask
+            hit = sum(1 for x, y in owned if px[x, y][3] >= 40)
+            if hit:
+                where = "face window" if stem == "helm" else "face"
+                errors.append(f"{path.relative_to(REPO)} covers {hit}px of the {where}")
     return errors
 
 
@@ -672,12 +792,22 @@ def main() -> int:
     for msg in check_tiers_and_materials():
         print("FAIL", msg)
         failed += 1
+    for msg in check_face_ownership():
+        print("FAIL", msg)
+        failed += 1
+    for msg in check_styles():
+        print("FAIL", msg)
+        failed += 1
+    for msg in check_manifest():
+        print("FAIL", msg)
+        failed += 1
     for msg in check_hand_items():
         print("FAIL", msg)
         failed += 1
-    for msg in check_lock(relock):
-        print("FAIL", msg)
-        failed += 1
+    if "--no-lock" not in sys.argv:
+        for msg in check_lock(relock):
+            print("FAIL", msg)
+            failed += 1
 
     print("IDLE (gated)")
     for family in FAMILIES:

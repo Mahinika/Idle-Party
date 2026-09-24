@@ -1039,6 +1039,43 @@ def _restore_healer_face(clf: Classification, body: Image.Image) -> None:
                 op[x, y] = (r, g, b, a)
 
 
+def in_head_zone(clf: Classification, x: int, y: int) -> bool:
+    """Face, brow, and haircut. Armor starts under this."""
+    fh = max(8.0, clf.face_half)
+    if y > clf.chin_y + 2:
+        return False
+    dx = (x - clf.fx) / (fh * 1.55)
+    dy = (y - clf.fy) / (fh * 1.7)
+    return dx * dx + dy * dy <= 1.0
+
+
+def is_head_identity(clf: Classification, x: int, y: int) -> bool:
+    """Gold-master pixel that belongs to the body's head, never to armor."""
+    if not in_head_zone(clf, x, y):
+        return False
+    tag = clf.at(x, y)
+    if tag == EYE:
+        return True
+    if tag not in IDENTITY:
+        return False
+    r, g, b, a = clf.src.getpixel((x, y))
+    if a < 16:
+        return False
+    if clf.family in ("mage", "healer") and is_hat_or_hood(clf.family, (r, g, b)):
+        return tag == INK and _face_oval(clf, x, y)
+    return True
+
+
+def head_from_master(clf: Classification, body: Image.Image) -> None:
+    """Copy the master's face, eyes, and haircut onto the undertunic."""
+    op = body.load()
+    px = clf.src.load()
+    for y in range(N):
+        for x in range(N):
+            if is_head_identity(clf, x, y):
+                op[x, y] = px[x, y]
+
+
 def _paint_cloth_pixel(
     zone: str,
     luma: float,
@@ -1115,6 +1152,7 @@ def paint_family_body(
         strip_equipped_helm_from_body(clf.family, out)
     if clf.family == "healer":
         _restore_healer_face(clf, out)
+    head_from_master(clf, out)
     return out, cloth_tint_from_labels(clf, out)
 
 

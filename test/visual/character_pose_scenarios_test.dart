@@ -418,30 +418,40 @@ void main() {
     expect(legs.first.ownedAsset, contains('legs_t2'));
   });
 
-  test('wide legs keep their cut when a belt is worn', () {
-    final hero = nakedWarrior().copyWith(
-      equipped: {
-        EquipmentSlot.legs: GameLogic.createEquipment(
-          slot: EquipmentSlot.legs,
-          rarity: LootRarity.common,
-          battleNumber: 4,
-          bias: HeroRole.warrior,
-        ).copyWith(visualSetId: 'legs_wide'),
-        EquipmentSlot.waist: GameLogic.createEquipment(
-          slot: EquipmentSlot.waist,
-          rarity: LootRarity.rare,
-          battleNumber: 8,
-          bias: HeroRole.warrior,
-        ),
-      },
-    );
-    final pose = CharacterVisualPose.resolve(
-      hero: hero,
-      anim: idle,
-      owned: true,
-    );
-    final legs = pose.layers.where((l) => l.id == CharacterLayerId.legs);
-    expect(legs.first.ownedAsset, contains('legs_wide_idle.png'));
+  test('short and broad legs keep their cut when a belt is worn', () {
+    String legsWith(String visualSetId) {
+      final hero = nakedWarrior().copyWith(
+        equipped: {
+          EquipmentSlot.legs: GameLogic.createEquipment(
+            slot: EquipmentSlot.legs,
+            rarity: LootRarity.common,
+            battleNumber: 4,
+            bias: HeroRole.warrior,
+          ).copyWith(visualSetId: visualSetId),
+          EquipmentSlot.waist: GameLogic.createEquipment(
+            slot: EquipmentSlot.waist,
+            rarity: LootRarity.rare,
+            battleNumber: 8,
+            bias: HeroRole.warrior,
+          ),
+        },
+      );
+      final pose = CharacterVisualPose.resolve(
+        hero: hero,
+        anim: idle,
+        owned: true,
+      );
+      return pose.layers
+          .firstWhere((l) => l.id == CharacterLayerId.legs)
+          .ownedAsset!;
+    }
+
+    expect(legsWith('legs_broad'), contains('legs_broad_idle.png'));
+    expect(legsWith('legs_short'), contains('legs_short_idle.png'));
+    // An old save's wide legs are the broad style now.
+    expect(legsWith('legs_wide'), contains('legs_broad_idle.png'));
+    // A plain old cut still steps up to t2 under a belt.
+    expect(legsWith('legs_v01'), contains('legs_t2_idle.png'));
   });
 
   test('owned rare chest uses t2 overlay path', () {
