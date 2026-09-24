@@ -190,7 +190,6 @@ class _OverlayPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final handle = showHandle ?? borderRadius != null;
-    final showWallet = gold != null && essence != null;
     final panel = Container(
       margin: margin,
       padding: EdgeInsets.fromLTRB(12, handle ? 6 : 6, 12, 8),
@@ -199,50 +198,13 @@ class _OverlayPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (handle) MenuChrome.sheetHandle(),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (title.isNotEmpty)
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: GameTheme.menuTitle(size: 18)),
-                      if (subtitle.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GameTheme.body(
-                            size: 12,
-                            color: GameTheme.parchmentDim,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                )
-              else
-                const Spacer(),
-              if (showWallet) ...[
-                const SizedBox(width: 6),
-                // Natural size — never FittedBox-crush gold for the sheet title.
-                WalletStrip(
-                  gold: gold!,
-                  essence: essence!,
-                  showEssence: showEssence,
-                ),
-                const SizedBox(width: 6),
-              ],
-              GameButton(
-                label: 'CLOSE',
-                onPressed: onClose,
-                style: GameButtonStyle.grey,
-                expanded: false,
-                dense: true,
-              ),
-            ],
+          _SheetHeader(
+            title: title,
+            subtitle: subtitle,
+            onClose: onClose,
+            gold: gold,
+            essence: essence,
+            showEssence: showEssence,
           ),
           const SizedBox(height: 4),
           Container(
@@ -257,5 +219,102 @@ class _OverlayPanel extends StatelessWidget {
     // Mobile sheet already wraps SafeArea; avoid double bottom inset.
     if (margin == EdgeInsets.zero) return panel;
     return SafeArea(top: false, child: panel);
+  }
+}
+
+/// Sheet title stays one word. At M and up the wallet row is too wide to
+/// share a line with Cinzel, so the title takes the full width.
+class _SheetHeader extends StatelessWidget {
+  const _SheetHeader({
+    required this.title,
+    required this.subtitle,
+    required this.onClose,
+    required this.gold,
+    required this.essence,
+    required this.showEssence,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onClose;
+  final int? gold;
+  final int? essence;
+  final bool showEssence;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    final showWallet = gold != null && essence != null;
+    final stackTitle = showWallet && scale >= 0.95;
+    final titleBlock = title.isEmpty
+        ? null
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.fade,
+                style: GameTheme.menuTitle(size: 18),
+              ),
+              if (subtitle.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(
+                    size: 12,
+                    color: GameTheme.parchmentDim,
+                  ),
+                ),
+              ],
+            ],
+          );
+    final close = GameButton(
+      label: 'CLOSE',
+      onPressed: onClose,
+      style: GameButtonStyle.grey,
+      expanded: false,
+      dense: true,
+    );
+    final wallet = showWallet
+        ? WalletStrip(
+            gold: gold!,
+            essence: essence!,
+            showEssence: showEssence,
+          )
+        : null;
+
+    if (stackTitle) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ?titleBlock,
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              wallet!,
+              const Spacer(),
+              close,
+            ],
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (titleBlock != null) Expanded(child: titleBlock) else const Spacer(),
+        if (wallet != null) ...[
+          const SizedBox(width: 6),
+          wallet,
+          const SizedBox(width: 6),
+        ],
+        close,
+      ],
+    );
   }
 }
