@@ -566,7 +566,7 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.meetHero,
       title: extra > 0 ? 'Meet ${def.name} (+$extra more)' : 'Meet ${def.name}',
-      detail: HeroIdentity.meetBlurb(first),
+      detail: '${HeroIdentity.meetBlurb(first)} Open PARTY.',
       progressLabel: 'New',
       urgency: HubChaseUrgency.ready,
     );
@@ -769,14 +769,24 @@ class HubChase {
     final almost = urgency == HubChaseUrgency.almost;
     final firstHour =
         state.ascensionLevel == 0 && state.bossVictories == 0 && !almost;
+    final floorsDone = state.highestFloorCleared;
+    final bossFloor = GameLogic.bossFloorFor(state);
+    // After F1+, name the next floor — "Enter the cave / Boss 0/1" hid the win.
+    final firstHourAfterFloor = firstHour && floorsDone >= 1;
+    final nextFloor = (floorsDone + 1).clamp(2, bossFloor);
     return HubChase(
       kind: HubChaseKind.clearFloors,
       title: almost
           ? 'Almost Ascend — push ${dungeon.name}'
+          : firstHourAfterFloor
+          ? 'Floor $nextFloor — ${dungeon.name}'
           : firstHour
           ? 'Grow the party — ${dungeon.name}'
           : 'Push ${dungeon.name}',
-      detail: firstHour
+      detail: firstHourAfterFloor
+          ? 'Floor $floorsDone paid out. Enter again and push floor $nextFloor — '
+                'the boss is on floor $bossFloor.'
+          : firstHour
           ? 'Enter the cave. Your party fights on its own. Get stronger and beat the boss.'
           : bossesLeft > 0
           ? (almost
@@ -785,7 +795,9 @@ class HubChase {
           : state.ascensionLevel == 0 && GameLogic.canAscend(state)
           ? 'Ascend is ready when you want it — farm more floors or gear first. $teaser'
           : 'Farm gear or push deeper for power. $teaser',
-      progressLabel: firstHour
+      progressLabel: firstHourAfterFloor
+          ? 'Floor $floorsDone/$bossFloor'
+          : firstHour
           ? 'Boss ${state.bossVictories}/$bossesNeed'
           : 'Ascend ${state.bossVictories}/$bossesNeed',
       urgency: urgency,

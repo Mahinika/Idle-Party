@@ -4,7 +4,7 @@ Idle Party is a **working Flutter idle RPG** with original Dart gameplay code
 and **owned** pixel art (`assets/custom/`).
 
 **Ship version:** keep `pubspec.yaml` versionName and `MetaSystems.currentVersion`
-in sync (currently **1.12.184**). What’s New lives in `lib/core/meta_systems.dart`.
+in sync (currently **1.12.185**). What’s New lives in `lib/core/meta_systems.dart`.
 
 ## Human (vibe-coder)
 

@@ -143,3 +143,20 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 - **The bug form is two lines.** What I did / What went wrong, plus a
   screenshot. Version is optional. Do not put back the five-step form
   (expected, version, GitHub APK vs closed test).
+
+## 2026-09-24 — funnel look (Sandy first minute)
+
+- Opened Firebase project `idle-party-4a2e9` Events / Realtime for
+  `com.idleparty.app` while logged in as `robertjonsson90@gmail.com`.
+  Shell loads; the Events pane stayed empty. Direct Google Analytics
+  (`p900067828121`) says **permissions missing** for that account.
+  No `app_ready` / `first_enter` / `first_reward` / `first_boss` /
+  `time_to_combat` counts to paste.
+- Play paste from **2026-09-14** stays the only install numbers: ~4 first
+  opens / 15 acquisitions / listing already converts. Play has no D1.
+  Do not invent a funnel % until Firebase/GA is readable (invite the
+  Console person on the GA property, or paste from DebugView).
+- **New-save probe (same day):** ENTER reaches Sandy F1. After F1 clear
+  the run has gold + bag gear, but hub hunt still said “Enter the cave /
+  Boss 0/1” with no floor progress. Outcome = next-floor chase copy,
+  not intro length and not a missing F1 drop.

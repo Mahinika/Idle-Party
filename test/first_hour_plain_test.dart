@@ -65,6 +65,27 @@ void main() {
     expect(chase.progressLabel, isNot(contains('Ascend')));
   });
 
+  test('after first floor the hub hunt names the next floor', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      highestFloorCleared: 1,
+      lifetimeGoldEarned: 17,
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.title, contains('Floor 2'));
+    expect(chase.title, contains('Sandy'));
+    expect(chase.detail.toLowerCase(), contains('floor 1'));
+    expect(chase.detail.toLowerCase(), contains('floor 2'));
+    expect(chase.detail.toLowerCase(), contains('boss'));
+    expect(chase.detail.toLowerCase(), isNot(contains('enter the cave')));
+    expect(chase.progressLabel, 'Floor 1/5');
+    expect(chase.title.toUpperCase(), isNot(contains('KEY')));
+
+    final contract = ChaseContract.fromState(state, now: now);
+    expect(contract.title, chase.title);
+    expect(contract.detail, chase.detail);
+  });
+
   test('BASICS / PARTY guides skip WotLK and name the three jobs', () {
     final state = GameLogic.createInitialState(now: now);
     final basics = GameGuides.topicsFor(state).firstWhere((t) => t.id == 'basics');
