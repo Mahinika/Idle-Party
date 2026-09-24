@@ -47,5 +47,17 @@ void main() {
     expect(GoldIncome.essenceDue(3600, 12), 4 + 6);
     expect(GameLogic.pushClearEssence(boss: false), 1);
     expect(GameLogic.pushClearEssence(boss: true), 2);
+    var deep = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 22));
+    deep = deep.copyWith(
+      sanctuaryGoldLevel: 100,
+      sanctuaryPowerLevel: 100,
+      sanctuaryVitalityLevel: 80,
+      sanctuaryDefenseLevel: 100,
+      metaDepth: deep.metaDepth.copyWith(sanctuaryXpLevel: 100),
+    );
+    expect(
+      GameLogic.dailyVaultClaimEssence(deep),
+      Keystone.dailyVaultEssence(0) + GameLogic.sanctuaryCost(80),
+    );
   });
 }

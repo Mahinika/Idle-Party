@@ -20,8 +20,8 @@ class HubMetaPulse extends StatelessWidget {
   final HubChaseKind chaseKind;
   final HubChaseUrgency chaseUrgency;
 
-  /// KEY / Vault / Week crumbs. Empty when first-hour or the hunt is already
-  /// KEY / Gauntlet / Ranked GR / Farm Rift / Ashen / soft rest.
+  /// KEY / Week crumbs stay off on an endgame hunt. An unfilled vault still
+  /// shows. Empty in the first hour.
   static List<String> crumbsFor({
     required GameState state,
     required HubChaseKind chaseKind,
@@ -29,7 +29,16 @@ class HubMetaPulse extends StatelessWidget {
     DateTime? now,
   }) {
     if (!GameLogic.showDailyChase(state)) return const [];
-    if (hubChaseOwnsEndgameRow(chaseKind)) return const [];
+    // Endgame hunts stay the one job, but an unfilled vault stays visible.
+    if (hubChaseOwnsEndgameRow(chaseKind)) {
+      if (state.metaDepth.dailyVaultClaimed ||
+          GameLogic.canClaimDailyVault(state)) {
+        return const [];
+      }
+      final clears = state.metaDepth.dailyVaultClears;
+      final target = GameLogic.dailyVaultClearTarget;
+      return ['Vault $clears/$target'];
+    }
     if (chaseUrgency == HubChaseUrgency.ready) return const [];
 
     final bits = <String>[];

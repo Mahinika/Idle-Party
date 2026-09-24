@@ -125,16 +125,21 @@ class HubChase {
     if (!firstHourQuiet && GameLogic.canClaimDailyVault(state)) {
       final best = md.dailyBestTimedKey;
       final plain = GameLogic.plainPlayerChrome(state);
-      final preview = GameLogic.dailyVaultClaimPreviewEssence(state);
+      final preview = GameLogic.dailyVaultClaimPreviewEssence(state, now: clock);
       final pay = plain ? '+$preview Permanent' : '+${preview}e';
-      // Season bonus still pays on claim — keep TODAY copy to the vault payday.
+      final month = GameLogic.isoMonthKey(clock);
+      final monthBonus =
+          month.isNotEmpty && !md.claimedSeasonRewards.contains(month);
+      final bonusBit = monthBonus
+          ? ' Includes +${GameLogic.seasonWeeklyBonusEssence}e month bonus.'
+          : '';
       final keyTalk = GameLogic.showKeystoneJargon(state);
       return HubChase(
         kind: HubChaseKind.claimDailyVault,
         title: 'Claim Daily Vault',
         detail: best >= 2 && keyTalk
-            ? 'Claim $pay (KEY +$best timed today).'
-            : 'Claim $pay.',
+            ? 'Claim $pay (KEY +$best timed today). Covers your next camp upgrade.$bonusBit'
+            : 'Claim $pay. Covers your next camp upgrade.$bonusBit',
         // READY chip owns urgency — no "N ready" progress echo.
         progressLabel: null,
         urgency: HubChaseUrgency.ready,
@@ -795,9 +800,10 @@ class HubChase {
       kind: HubChaseKind.dailyVaultProgress,
       title: keyTalk ? 'Start Daily Vault' : 'Clear one cave today',
       detail: keyTalk
-          ? 'Clear ${GameLogic.dailyVaultClearTarget} dungeon floor for '
-                'Daily Vault essence, or time KEY +2 under par for a bigger claim.'
-          : 'One dungeon clear fills today\'s reward. Then claim on the hub.',
+          ? 'One PUSH floor for Daily Vault essence '
+                '(FARM does not count), or time KEY +2 under par for a bigger claim.'
+          : 'One PUSH clear fills today\'s reward. FARM loops do not. '
+                'Then claim on the hub.',
       progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
     );
   }

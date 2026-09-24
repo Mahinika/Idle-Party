@@ -47,7 +47,7 @@ void main() {
     expect(chase.progressLabel, isNull);
   });
 
-  test('claimable vault stays on payday copy (season pays silently)', () {
+  test('claimable vault names the month bonus on the payday', () {
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.ensureWeeklyContract(state, now: now);
     state = state.copyWith(
@@ -62,7 +62,7 @@ void main() {
     expect(chase.kind, HubChaseKind.claimDailyVault);
     expect(chase.title.toLowerCase(), contains('vault'));
     expect(chase.detail.toLowerCase(), contains('claim'));
-    expect(chase.detail.toLowerCase(), isNot(contains('season')));
+    expect(chase.detail, contains('month bonus'));
   });
 
   test('complete missions surface as claim chase', () {

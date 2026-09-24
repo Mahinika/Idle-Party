@@ -224,8 +224,8 @@ abstract final class GameGuides {
     title: 'THREE DAILIES',
     body:
         'Three different systems — not the same button:\n\n'
-        '• Daily Vault — UTC day on the hub hunt. Fill with 1 dungeon clear, '
-        'then CLAIM VAULT for essence.\n'
+        '• Daily Vault — UTC day on the hub hunt. One PUSH floor fills it '
+        '(FARM does not, including a FARM boss). Then CLAIM VAULT for essence.\n'
         '• Daily Run — one free seeded floor from the hub (DAILY RUN) for +25e. '
         'Separate from the vault.\n'
         '• Quests — MORE · QUESTS board (Daily / Bounty / Side / Week / Contract). '
@@ -277,13 +277,13 @@ abstract final class GameGuides {
     title: 'DAILY VAULT',
     body:
         'Three different dailies:\n'
-        '• Daily Vault — fill with 1 dungeon clear, then CLAIM VAULT.\n'
+        '• Daily Vault — one PUSH clear (FARM does not count), then CLAIM VAULT.\n'
         '• Daily Run — one free seeded floor for +25e (hub DAILY RUN).\n'
         '• Quests — Daily / Bounty / Side / Week / Contract board; '
         'CLAIM QUESTS when ready.\n\n'
         '• Early on: the hub hunt tells you to grow the party in the starter zone. '
         'Daily Run and vault-start wait until you have beaten a boss (or Ascended).\n'
-        '• Fill today’s Daily Vault with 1 dungeon clear, then claim essence.\n'
+        '• Fill today’s Daily Vault with one PUSH clear (not a FARM loop), then claim essence.\n'
         '• The hub hunt and offline Up next share one chase (claim → READY → '
         'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
         '• Welcome-back says where you were: hub = sanctuary gold only; '
@@ -382,8 +382,8 @@ abstract final class GameGuides {
       title: 'THREE DAILIES',
       body:
           'Three different systems — not the same button:\n\n'
-          '• Daily Vault — UTC day on the hub hunt. Fill with 1 dungeon clear '
-          '(or timed KEY +2), then CLAIM VAULT for essence.\n'
+          '• Daily Vault — UTC day on the hub hunt. One PUSH floor fills it '
+          '(FARM does not). Or time KEY +2. Then CLAIM VAULT for essence.\n'
           '• Daily Run — one free seeded floor from the hub (DAILY RUN) for +25e. '
           'Separate from the vault.\n'
           '• Quests — MORE · QUESTS board (Daily / Bounty / Side / Week / Contract). '
@@ -605,7 +605,9 @@ abstract final class GameGuides {
           '• At AL20 with heroes below ${GameLogic.maxHeroLevel}, the hub hunt may say '
           '"Level the party" — that is the bridge into endgame.\n\n'
           'Three different "dailies" (not the same button):\n'
-          '• Daily Vault — UTC day; 1 clear or timed KEY +2, then CLAIM VAULT.\n'
+          '• Daily Vault — UTC day; one PUSH clear (not FARM) or timed KEY +2, '
+          'then CLAIM VAULT. While the hub hunts KEY or a ladder, the line under '
+          'it still shows Vault 0/1 until you fill it.\n'
           '• Daily Run — one free seeded floor for +25e.\n'
           '• Quests Daily — MORE · QUESTS kill board; CLAIM QUESTS when ready.\n\n'
           'Four season clocks (all optional — the hub hunt picks one job):\n'
@@ -781,7 +783,8 @@ abstract final class GameGuides {
       title: 'DAILY VAULT',
       body:
           'Three different dailies:\n'
-          '• Daily Vault — fill with 1 clear (or timed KEY +2), then CLAIM VAULT.\n'
+          '• Daily Vault — one PUSH clear (FARM does not count) or timed KEY +2, '
+          'then CLAIM VAULT.\n'
           '• Daily Run — one free seeded floor for +25e (hub DAILY RUN).\n'
           '• Quests — Daily / Bounty / Side / Week / Contract board; '
           'CLAIM QUESTS when ready.\n\n'
@@ -789,7 +792,7 @@ abstract final class GameGuides {
           'jobs/tell KEY borrows). The vault is daily.\n\n'
           '• Early on: the hub hunt tells you to grow the party in the starter zone. '
           'Daily Run and vault-start wait until you have beaten a boss (or Ascended).\n'
-          '• Fill today’s Daily Vault with 1 dungeon clear, then claim essence.\n'
+          '• Fill today’s Daily Vault with one PUSH clear (not a FARM loop), then claim essence.\n'
           '• At party Lv${GameLogic.maxHeroLevel}: KEY unlocks — time a KEY +2 (or higher) for a bigger '
           'vault claim. The hub hunt may chase KEY / Gauntlet / Ranked GR / Farm Rift.\n'
           '• The hub hunt and offline Up next share one chase (claim → READY → '

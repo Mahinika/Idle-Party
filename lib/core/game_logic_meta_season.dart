@@ -106,7 +106,8 @@ GameState _ensureDailyVault(GameState state, {DateTime? now}) {
 int _dailyVaultClaimEssence(GameState state) =>
     Keystone.dailyVaultEssence(state.metaDepth.dailyBestTimedKey) +
     state.metaDepth.dailyEssenceBonusLevel *
-        GameLogic.dawnTitheEssencePerLevel;
+        GameLogic.dawnTitheEssencePerLevel +
+    GameLogic.cheapestSanctuaryNextCost(state);
 
 int _dailyVaultClaimPreviewEssence(GameState state, {DateTime? now}) {
   var gain = GameLogic.dailyVaultClaimEssence(state);

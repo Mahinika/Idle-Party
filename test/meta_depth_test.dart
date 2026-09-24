@@ -3,6 +3,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/achievement_def.dart';
+import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/models/pet.dart';
@@ -171,6 +172,19 @@ void main() {
     final beforeVault = state.metaDepth.dailyVaultClears;
     state = GameLogic.ascend(state, now: now);
     expect(state.metaDepth.dailyVaultClears, beforeVault);
+  });
+
+  test('farm clear does not fill daily vault', () {
+    final now = DateTime.now();
+    var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.ensureWeeklyContract(state, now: now);
+    state = state.copyWith(dungeonMode: DungeonMode.farm);
+    state = GameLogic.completeCurrentRoom(
+      state,
+      goldGain: 10,
+      skipLootRoll: true,
+    );
+    expect(state.metaDepth.dailyVaultClears, 0);
   });
 
   test('weekly rollover resets legacy weeklyProgress on new week', () {

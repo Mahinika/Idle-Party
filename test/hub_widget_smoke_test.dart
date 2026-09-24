@@ -108,8 +108,8 @@ void main() {
           chaseUrgency: HubChaseUrgency.almost,
           now: now,
         ),
-        isEmpty,
-        reason: '$kind must not stack KEY / Vault / Week crumbs',
+        ['Vault 0/${GameLogic.dailyVaultClearTarget}'],
+        reason: '$kind keeps an unfilled vault visible',
       );
     }
   });
@@ -127,7 +127,7 @@ void main() {
     expect(bits.join(' '), contains('Vault'));
   });
 
-  testWidgets('HubMetaPulse has zero height on Ranked GR hunt', (tester) async {
+  testWidgets('HubMetaPulse shows unfilled vault on Ranked GR hunt', (tester) async {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
       ascensionLevel: 20,
@@ -150,8 +150,8 @@ void main() {
         ),
       ),
     );
-    expect(tester.getSize(find.byType(HubMetaPulse)).height, 0);
-    expect(find.textContaining('Vault'), findsNothing);
+    expect(tester.getSize(find.byType(HubMetaPulse)).height, greaterThan(0));
+    expect(find.textContaining('Vault'), findsOneWidget);
     expect(find.textContaining('KEY'), findsNothing);
   });
 

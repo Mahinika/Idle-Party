@@ -7,7 +7,7 @@ Facade for *all surfaces*: [`ChaseContract.fromState`](../lib/core/chase_contrac
 
 ## Priority (high → low)
 
-1. **Claimables (READY)** — daily vault (payday copy only; season bonus still pays on claim), finished **QUESTS**. Meet new kit and **equip BAG** wait until after the first boss (first hour keeps the cave).
+1. **Claimables (READY)** — daily vault (payday names the +12e month bonus when this claim includes it), finished **QUESTS**. Meet new kit and **equip BAG** wait until after the first boss (first hour keeps the cave).
 2. **First hour** — no boss and no Ascend yet: **grow the party** in the recommended zone. Beats Meet kit / EQUIP / MARKET. Skip Daily / KEY / vault-start / Will grind so TODAY is not a meta list. Skip kit teasers until after the first boss.
 3. **Market ALMOST** — affordable UPGRADE on GOLD → MARKET (after bag equip, after first boss). **Pre-endgame only** before KEY nights; at party Lv100 market waits until after KEY habit / endgame ladder / zone.
 4. **Ascend READY** — can Ascend now (blocked at AL20 cap). **Exceptions:** on **AL0** after the first boss, TODAY stays Daily / farming; **at party Lv100**, KEY habit and the endgame ladder beat Ascend (Ascend stays on the urgent row / ESSENCE → BLESSING as optional lasting power). Confirm copy: party stays; bag, gold, forge, and floors reset.
@@ -29,7 +29,7 @@ ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats
 
 **Rift consolidation:** TODAY chases **Ranked GR** before **Farm Rift** (`_farmRiftChaseReady` — GR1 clear or GR milestones done). Ranked GR next rank lives on hub ENDGAME; Farm Rift dial stays on KEY. Farm Rift is not deleted.
 
-**Season clocks:** UTC day (vault/run) · ISO week (KEY affix + week goal) · calendar month (vault bonus) · Play month (boards). Hub meta pulse crumbs (`KEY +N`, `Vault n/target · not Daily Run`, `Week · …`) stay off when the hunt is already KEY / Gauntlet / Ranked GR / Farm Rift / Ashen. One hunt still wins.
+**Season clocks:** UTC day (vault/run) · ISO week (KEY affix + week goal) · calendar month (vault bonus) · Play month (boards). Hub meta pulse crumbs (`KEY +N`, `Week · …`) stay off when the hunt is already KEY / Gauntlet / Ranked GR / Farm Rift / Ashen. An unfilled Daily Vault still shows `Vault n/target` under that hunt. One hunt still wins.
 
 **Power shelves:** GOLD tracks (run, wipe on Ascend) · Ascend Blessing (forever) · ESSENCE tracks/relics/pets (forever). Guide: MORE → INFO → POWER SHELVES.
 
