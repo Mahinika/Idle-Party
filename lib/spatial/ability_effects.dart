@@ -1,4 +1,13 @@
-part of 'spatial_combat.dart';
+import 'dart:math' as math;
+
+import '../core/game_state.dart';
+import '../models/class_ability.dart';
+import '../models/combat_ratings.dart';
+import '../models/enemy.dart';
+import '../models/hero_spec.dart';
+import '../models/spec_mastery.dart';
+import 'spatial_combat.dart';
+
 
 /// Dispatches class-kit casts for live spatial combat.
 ///
@@ -8,19 +17,19 @@ part of 'spatial_combat.dart';
 /// Eviscerate / Living Bomb ticks / Prayer of Mending bounce) still live in
 /// [SpatialCombat] because they hang off swings, not casts.
 abstract final class AbilityEffectRunner {
-  static GameState? _stateOut;
-  static int _goldOut = 0;
+  static GameState? stateOut;
+  static int goldOut = 0;
 
   /// Last [GameState] produced by ability kills (warrior legacy / spec kits).
   static GameState takeState(GameState fallback) {
-    final s = _stateOut ?? fallback;
-    _stateOut = null;
+    final s = stateOut ?? fallback;
+    stateOut = null;
     return s;
   }
 
   static int takeGold() {
-    final g = _goldOut;
-    _goldOut = 0;
+    final g = goldOut;
+    goldOut = 0;
     return g;
   }
 
@@ -49,7 +58,7 @@ abstract final class AbilityEffectRunner {
     return def.castDelaySeconds / haste;
   }
 
-  /// Apply cast lockout for named casts that bypass [_castDamage].
+  /// Apply cast lockout for named casts that bypass [castDamage].
   static void applyCastDelay(SpatialActor hero, ClassAbilityDef def) {
     final delay = _castDelaySeconds(hero, def);
     if (delay <= 0) return;
@@ -62,7 +71,7 @@ abstract final class AbilityEffectRunner {
   }
 
   /// Returns ability cast count this tick (also increments
-  /// [SpatialWorld.pendingAbilityCasts] via [_startAbilityCd]).
+  /// [SpatialWorld.pendingAbilityCasts] via [startAbilityCd]).
   static int tick(
     SpatialWorld world,
     SpatialActor hero,
@@ -72,8 +81,8 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
     required bool hasShield,
   }) {
-    _stateOut = state;
-    _goldOut = 0;
+    stateOut = state;
+    goldOut = 0;
     if (!hero.isAlive) return 0;
 
     final before = world.pendingAbilityCasts;
@@ -82,7 +91,7 @@ abstract final class AbilityEffectRunner {
     final specId =
         hero.heroSpecId ??
         (role == null ? null : HeroSpecs.fromGearAffinity(role));
-    final focus = SpatialCombat._pickSmartFocus(hero, world);
+    final focus = SpatialCombat.pickSmartFocus(hero, world);
 
     if (specId != null) {
       _tickSpecKit(
@@ -115,10 +124,10 @@ abstract final class AbilityEffectRunner {
     // target so the first heal is not gated on picking a focus.
     if (focus != null || def.isHealer) {
       final rate = _resourceRate(specId, def.resource);
-      SpatialCombat._gainRage(hero, rate * dt);
+      SpatialCombat.gainRage(hero, rate * dt);
       // Combat Rogue floods energy during Killing Spree.
       if (specId == HeroSpecId.combat && hero.killingSpreeTimer > 0) {
-        SpatialCombat._gainRage(hero, 6 * dt);
+        SpatialCombat.gainRage(hero, 6 * dt);
       }
     }
     if (def.resource == SpecResource.mana) {
@@ -128,7 +137,7 @@ abstract final class AbilityEffectRunner {
       } else if (focus != null) {
         spiritMul = 0.55;
       }
-      SpatialCombat._gainRage(
+      SpatialCombat.gainRage(
         hero,
         (hero.spiritRegenBonus * spiritMul + hero.mp5RegenBonus) * dt,
       );
@@ -144,7 +153,7 @@ abstract final class AbilityEffectRunner {
     hero.innerFireActive = false;
     for (final d in unlocked) {
       if (d.effect != AbilityEffectKind.passive) continue;
-      _applyPassive(hero, d, def);
+      _applyPassive(hero, d);
     }
     if ((hero.buffTimers['favor'] ?? 0) > 0) {
       hero.kitHealMul *= 1.35;
@@ -168,15 +177,15 @@ abstract final class AbilityEffectRunner {
       if (!ClassKits.isUnlocked(d.id, hero.heroLevel)) return false;
       if (d.requiresShield && !hasShield) return false;
       if (hero.castingTimer > 0) return false;
-      if (SpatialCombat._abilityCdLeft(hero, d.id) > 0) return false;
+      if (SpatialCombat.abilityCdLeft(hero, d.id) > 0) return false;
       if (hero.rage + 0.001 < d.resourceCost) return false;
       return true;
     }
 
-    final nearby = SpatialCombat._countNearbyEnemies(hero, world);
+    final nearby = SpatialCombat.countNearbyEnemies(hero, world);
     final aroundFocus = focus == null
         ? 0
-        : SpatialCombat._countNearbyEnemies(focus, world);
+        : SpatialCombat.countNearbyEnemies(focus, world);
     // Ranged kits kite outside self-radius; packs around the focus still count.
     final pack = math.max(nearby, aroundFocus);
     final focusHpFrac = focus == null || focus.maxHp <= 0
@@ -188,7 +197,7 @@ abstract final class AbilityEffectRunner {
 
     bool contextOk(ClassAbilityDef d) {
       final g = d.gate;
-      final dist = focus == null ? 999.0 : SpatialCombat._dist(hero, focus);
+      final dist = focus == null ? 999.0 : SpatialCombat.actorDist(hero, focus);
 
       if (g.requireFocus && (focus == null || focus.hp <= 0 || focus.dormant)) {
         return false;
@@ -230,7 +239,7 @@ abstract final class AbilityEffectRunner {
 
       if (g.needClearCorridor) {
         if (focus == null) return false;
-        if (!SpatialCombat._hasClearCorridor(
+        if (!SpatialCombat.hasClearCorridor(
           world.map,
           world.openGateIds,
           hero.x.floor(),
@@ -244,7 +253,7 @@ abstract final class AbilityEffectRunner {
       if (g.nearPackLeader) {
         final leader = KitNamedCasts.packLeader(world, hero);
         final nearPack =
-            leader == null || SpatialCombat._dist(hero, leader) < 2.5;
+            leader == null || SpatialCombat.actorDist(hero, leader) < 2.5;
         if (!nearPack) return false;
       }
 
@@ -252,11 +261,11 @@ abstract final class AbilityEffectRunner {
         final scan = g.peelScanRange;
         final near = [
           for (final e in world.enemies)
-            if (e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= scan)
+            if (e.hp > 0 && !e.dormant && SpatialCombat.actorDist(hero, e) <= scan)
               e,
         ];
         final peel = near.any(
-          (e) => SpatialCombat._dist(hero, e) <= g.peelRange!,
+          (e) => SpatialCombat.actorDist(hero, e) <= g.peelRange!,
         );
         final need = g.packMin > 0 ? g.packMin : 2;
         if (near.length < need && !peel) return false;
@@ -327,7 +336,7 @@ abstract final class AbilityEffectRunner {
       if (g.nearbyRadius != null) {
         final r = g.nearbyRadius!;
         if (!world.enemies.any(
-          (e) => e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= r,
+          (e) => e.hp > 0 && !e.dormant && SpatialCombat.actorDist(hero, e) <= r,
         )) {
           return false;
         }
@@ -350,7 +359,7 @@ abstract final class AbilityEffectRunner {
         final burn =
             focus != null &&
             focus.hp > 0 &&
-            SpatialCombat._dist(hero, focus) <= hero.attackRange + 1.5;
+            SpatialCombat.actorDist(hero, focus) <= hero.attackRange + 1.5;
         if (!heal && !burn) return false;
       }
       return true;
@@ -382,7 +391,7 @@ abstract final class AbilityEffectRunner {
     }
 
     // 1.5) Kit tanks: hard-taunt before signature/filler DPS.
-    if (_actorIsTank(hero) && focus != null) {
+    if (actorIsTank(hero) && focus != null) {
       for (final d in castable) {
         if (d.effect != AbilityEffectKind.taunt) continue;
         if (tryCast(d)) break;
@@ -557,134 +566,63 @@ abstract final class AbilityEffectRunner {
     _ => false,
   };
 
-  /// Applies always-on kit passive bonuses from [ability.id].
+  /// Applies always-on kit passive bonuses from [ability] data fields.
   /// Magnitudes are mild so stacking with GameState auras stays sane.
-  static void _applyPassive(
-    SpatialActor hero,
-    ClassAbilityDef ability,
-    HeroSpecDef spec,
-  ) {
-    switch (ability.id) {
-      // —— tanks ——
-      case AbilityId.righteousFury:
-        hero.kitInMul *= 0.82;
-        hero.kitOutMul *= 0.97;
-      case AbilityId.bloodPresence:
-        // Self-heal tank: stronger DR + heal amp than presence-only peers.
-        hero.kitInMul *= 0.85;
-        hero.kitHealMul *= 1.18;
-        hero.kitOutMul *= 0.98;
-      case AbilityId.bearForm:
-        hero.kitInMul *= 0.88;
-        hero.kitOutMul *= 0.95;
-
-      // —— healer amplify ——
-      case AbilityId.holyLightAura:
-      case AbilityId.spiritOfRedemption:
-      case AbilityId.ancestralAwakening:
-        hero.kitHealMul *= 1.32;
-      case AbilityId.treeOfLife:
-        // HoT healer amp — match / slightly lead peer healer passives.
-        hero.kitHealMul *= 1.34;
-
-      // —— melee DPS (soft LOW lift 1.12.126; stay under HIGH ~63%) ——
-      case AbilityId.armsStance:
-        hero.kitOutMul *= 2.02;
-        hero.kitInMul *= 1.04;
-      case AbilityId.berserkerStance:
-        hero.kitOutMul *= 1.70;
-        hero.kitHasteMul *= 1.12;
-        hero.kitInMul *= 1.06;
-      case AbilityId.sealOfCommand:
-        hero.kitOutMul *= 2.05;
-      case AbilityId.improvedPoisons:
-        // Assass led the board — slight lean so lows can rise without HIGH.
-        hero.kitOutMul *= 1.28;
-      case AbilityId.masterOfSubtlety:
-        // Opener fantasy: damage + slight haste for ambush windows.
-        hero.kitOutMul *= 1.46;
-        hero.kitHasteMul *= 1.08;
-      case AbilityId.frostPresence:
-        hero.kitOutMul *= 2.10;
-        hero.kitInMul *= 0.97;
-      case AbilityId.unholyPresence:
-        // Fairness: ghoul + diseases carry identity; presence is a lean, not a stomp.
-        hero.kitOutMul *= 1.16;
-        hero.kitHasteMul *= 1.10;
-      // Ghoul companion spawned in SpatialCombat.build.
-      case AbilityId.enhancementWeapons:
-        hero.kitOutMul *= 1.26;
-      case AbilityId.catForm:
-        hero.kitOutMul *= 1.28;
-        hero.kitHasteMul *= 1.10;
-
-      // —— ranged ——
-      case AbilityId.aspectOfHawk:
-        hero.kitOutMul *= 1.18;
-      case AbilityId.trueshotAura:
-        hero.kitOutMul *= 1.22;
-        hero.kitHasteMul *= 1.06;
-      case AbilityId.trapMastery:
-        hero.kitOutMul *= 1.26;
-        hero.kitRootBonus += 1.0;
-
-      // —— casters: identity buffs; spam tax is casterAbilityTax only ——
-      case AbilityId.shadowform:
-        hero.kitOutMul *= 1.16;
-        hero.kitInMul *= 1.04;
-      case AbilityId.elementalFocus:
-        hero.kitOutMul *= 1.14;
-        hero.kitHasteMul *= 1.10;
-      case AbilityId.arcanePowerPassive:
-        hero.kitOutMul *= 1.12;
-      case AbilityId.frostArmor:
-        hero.kitInMul *= 0.92;
-        hero.kitOutMul *= 1.12;
-        hero.kitRootBonus += 0.5;
-      case AbilityId.soulSiphon:
-        hero.kitOutMul *= 1.14;
-        hero.kitHealMul *= 1.08;
-      case AbilityId.demonicKnowledge:
-        // Pet-family identity: felguard carries share; personal passive stays lean.
-        hero.kitOutMul *= 0.96;
-        hero.kitHasteMul *= 1.06;
-      case AbilityId.cataclysm:
-        // Fairness: Chaos Bolt + Rain pack share was HIGH on live-light gate.
-        hero.kitOutMul *= 1.06;
-      case AbilityId.moonkinForm:
-        hero.kitOutMul *= 1.16;
-        hero.kitInMul *= 0.92;
-
-      // —— original four kits ——
-      case AbilityId.defensiveStance:
-        // White-hit half of the stance lives in [_warriorAttackMods].
-        hero.kitOutMul *= 0.9;
-        hero.kitInMul *= 0.92;
-      case AbilityId.revenge:
-        // Rider on blocked swings — no always-on multiplier.
-        break;
-      case AbilityId.innerFire:
-        hero.innerFireActive = true;
-        hero.kitHealMul *= 1.36;
-        hero.kitInMul *= 0.94;
-      case AbilityId.sinisterStrike:
-        // Combo build rides white swings; lift so Combat sits in the melee share band.
-        hero.kitOutMul *= 1.62;
-      case AbilityId.arcaneIntellect:
-        // Personal spell power; party-wide Int is the GameState caster aura.
-        hero.kitOutMul *= 1.24;
-      default:
-        // Fallback: mild role-appropriate crumb if a new passive is added.
-        if (spec.isTank) {
-          hero.kitInMul *= 0.94;
-        } else if (spec.isHealer) {
-          hero.kitHealMul *= 1.08;
-        } else if (spec.roleTag == SpecRoleTag.caster) {
-          hero.kitOutMul *= 1.06;
-        } else {
-          hero.kitOutMul *= 1.06;
-        }
+  static void _applyPassive(SpatialActor hero, ClassAbilityDef ability) {
+    hero.kitOutMul *= ability.passiveOutMul;
+    hero.kitInMul *= ability.passiveInMul;
+    hero.kitHealMul *= ability.passiveHealMul;
+    hero.kitHasteMul *= ability.passiveHasteMul;
+    hero.kitRootBonus += ability.passiveRootBonus;
+    if (ability.innerFire) {
+      hero.innerFireActive = true;
     }
+  }
+
+  /// Temp-pet summons from [ClassAbilityDef.summonCount] data.
+  static bool _resolveSummon(
+    SpatialWorld world,
+    SpatialActor hero,
+    SpatialActor? focus,
+    ClassAbilityDef def, {
+    required math.Random rng,
+    required bool reducedVfx,
+  }) {
+    spendAndCd(world, hero, def);
+    SpatialCombat.spawnTempPets(
+      world,
+      owner: hero,
+      count: def.summonCount,
+      duration: def.summonDuration,
+      atkScale: def.summonAtkScale,
+      namePrefix: def.summonName,
+      idPrefix: def.summonIdPrefix,
+    );
+    if (def.summonHasteSeconds > 0) {
+      hero.powerInfusionTimer = math.max(
+        hero.powerInfusionTimer,
+        def.summonHasteSeconds,
+      );
+    }
+    if (def.effect == AbilityEffectKind.aoe) {
+      castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+      return true;
+    }
+    final argb = SpatialCombat.burstArgbForStyle(
+      SpatialCombat.boltStyleForAbility(hero, def: def),
+    );
+    announce(world, hero, def.shortLabel, argb, reducedVfx);
+    if (!reducedVfx) {
+      SpatialCombat.spawnRing(
+        world,
+        x: hero.x,
+        y: hero.y,
+        argb: argb,
+        radius: 1.0,
+        life: 0.45,
+      );
+    }
+    return true;
   }
 
   static bool _resolveEffect(
@@ -695,6 +633,16 @@ abstract final class AbilityEffectRunner {
     required math.Random rng,
     required bool reducedVfx,
   }) {
+    if (def.summonCount > 0) {
+      return _resolveSummon(
+        world,
+        hero,
+        focus,
+        def,
+        rng: rng,
+        reducedVfx: reducedVfx,
+      );
+    }
     if (def.customId != AbilityCustomId.none) {
       return KitNamedCasts.run(
         world,
@@ -712,24 +660,24 @@ abstract final class AbilityEffectRunner {
       case AbilityEffectKind.damage:
         if (focus == null || focus.hp <= 0) return false;
         if (def.gate.maxRange != null &&
-            SpatialCombat._dist(hero, focus) > def.gate.maxRange!) {
+            SpatialCombat.actorDist(hero, focus) > def.gate.maxRange!) {
           return false;
         }
-        _spendAndCd(world, hero, def);
-        _castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+        spendAndCd(world, hero, def);
+        castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
         if (def.id == AbilityId.bloodthirst) {
-          SpatialCombat._gainRage(hero, 10);
+          SpatialCombat.gainRage(hero, 10);
         }
         return true;
       case AbilityEffectKind.aoe:
-        _spendAndCd(world, hero, def);
-        _castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+        spendAndCd(world, hero, def);
+        castAoe(world, hero, focus, def, rng, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.heal:
         // Blood Rune Tap / Guardian FR are self-sustain, not party triage.
         if (def.id == AbilityId.runeTap || def.id == AbilityId.frenziedRegen) {
           if (!_allyNeedsHeal(hero)) return false;
-          _spendAndCd(world, hero, def);
+          spendAndCd(world, hero, def);
           _castHeal(world, hero, hero, def, reducedVfx: reducedVfx);
           return true;
         }
@@ -738,18 +686,18 @@ abstract final class AbilityEffectRunner {
           if (_partyNeedsHeal(world)) {
             final ally = _lowestAlly(world, hero);
             if (ally == null) return false;
-            _spendAndCd(world, hero, def);
+            spendAndCd(world, hero, def);
             _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
             return true;
           }
           if (focus == null || focus.hp <= 0) return false;
-          _spendAndCd(world, hero, def);
-          _castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
+          spendAndCd(world, hero, def);
+          castDamage(world, hero, focus, def, rng, reducedVfx: reducedVfx);
           return true;
         }
         if (_isPartyHeal(def)) {
           if (!_partyNeedsHeal(world)) return false;
-          _spendAndCd(world, hero, def);
+          spendAndCd(world, hero, def);
           _castPartyHeal(world, hero, def, reducedVfx: reducedVfx);
           return true;
         }
@@ -757,12 +705,12 @@ abstract final class AbilityEffectRunner {
         if (ally == null) return false;
         // Skip overheal when nobody is meaningfully hurt (Disc-style triage).
         if (!_allyNeedsHeal(ally)) return false;
-        _spendAndCd(world, hero, def);
+        spendAndCd(world, hero, def);
         _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.emergencyHeal:
         if (_isPartyHeal(def)) {
-          _spendAndCd(world, hero, def);
+          spendAndCd(world, hero, def);
           _castPartyHeal(world, hero, def, reducedVfx: reducedVfx);
           CombatPresence.onEmergencyHeal(
             world,
@@ -773,7 +721,7 @@ abstract final class AbilityEffectRunner {
         }
         final ally = _lowestAlly(world, hero);
         if (ally == null) return false;
-        _spendAndCd(world, hero, def);
+        spendAndCd(world, hero, def);
         _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
         CombatPresence.onEmergencyHeal(world, hero, reducedVfx: reducedVfx);
         return true;
@@ -785,7 +733,7 @@ abstract final class AbilityEffectRunner {
             : _lowestAlly(world, hero);
         if (ally == null) return false;
         if (!_allyNeedsAbsorb(ally)) return false;
-        _spendAndCd(world, hero, def);
+        spendAndCd(world, hero, def);
         _castAbsorb(world, hero, ally, def, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.selfBuff:
@@ -793,10 +741,10 @@ abstract final class AbilityEffectRunner {
           final mark = _beaconMarkTarget(world, hero);
           hero.beaconTargetId = mark.id;
           hero.beaconTimer = 18;
-          _spendAndCd(world, hero, def);
-          _announce(world, hero, def.shortLabel, 0xFFFFF0A8, reducedVfx);
+          spendAndCd(world, hero, def);
+          announce(world, hero, def.shortLabel, 0xFFFFF0A8, reducedVfx);
           if (world.spawnPersistentVfx) {
-            SpatialCombat._spawnRing(
+            SpatialCombat.spawnRing(
               world,
               x: mark.x,
               y: mark.y,
@@ -807,11 +755,11 @@ abstract final class AbilityEffectRunner {
           }
           return true;
         }
-        _spendAndCd(world, hero, def);
+        spendAndCd(world, hero, def);
         _selfBuff(hero, def);
-        _announce(world, hero, def.shortLabel, 0xFF90E0FF, reducedVfx);
+        announce(world, hero, def.shortLabel, 0xFF90E0FF, reducedVfx);
         if (world.spawnPersistentVfx) {
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: hero.x,
             y: hero.y,
@@ -826,15 +774,15 @@ abstract final class AbilityEffectRunner {
       case AbilityEffectKind.root:
         if (def.id == AbilityId.slow) {
           if (focus == null || focus.hp <= 0) return false;
-          _spendAndCd(world, hero, def);
+          spendAndCd(world, hero, def);
           focus.attackSlowTimer = math.max(
             focus.attackSlowTimer,
             4.0 + hero.kitRootBonus,
           );
           hero.attackFlash = 0.12;
-          _announce(world, hero, def.shortLabel, 0xFFB090FF, reducedVfx);
+          announce(world, hero, def.shortLabel, 0xFFB090FF, reducedVfx);
           if (!reducedVfx) {
-            SpatialCombat._spawnRing(
+            SpatialCombat.spawnRing(
               world,
               x: focus.x,
               y: focus.y,
@@ -850,20 +798,20 @@ abstract final class AbilityEffectRunner {
             def.id == AbilityId.hungeringCold) {
           final nearby = [
             for (final e in world.enemies)
-              if (e.hp > 0 && !e.dormant && SpatialCombat._dist(hero, e) <= 2.5)
+              if (e.hp > 0 && !e.dormant && SpatialCombat.actorDist(hero, e) <= 2.5)
                 e,
           ];
           if (nearby.isEmpty) return false;
-          _spendAndCd(world, hero, def);
+          spendAndCd(world, hero, def);
           final rootDur = 2.4 + hero.kitRootBonus;
           for (final e in nearby) {
-            _applyEnemyRoot(e, rootDur);
+            applyEnemyRoot(e, rootDur);
             e.attackSlowTimer = math.max(e.attackSlowTimer, 3.0);
           }
           hero.attackFlash = 0.14;
-          _announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
+          announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
           if (!reducedVfx) {
-            SpatialCombat._spawnRing(
+            SpatialCombat.spawnRing(
               world,
               x: hero.x,
               y: hero.y,
@@ -875,17 +823,17 @@ abstract final class AbilityEffectRunner {
           return true;
         }
         if (focus == null || focus.hp <= 0) return false;
-        _spendAndCd(world, hero, def);
+        spendAndCd(world, hero, def);
         _castRoot(world, hero, focus, def, reducedVfx: reducedVfx);
         return true;
       case AbilityEffectKind.grantResource:
-        _spendAndCd(world, hero, def);
+        spendAndCd(world, hero, def);
         final grant = def.coeff > 0 ? def.coeff : 20.0;
-        SpatialCombat._gainRage(hero, grant);
-        _announce(world, hero, def.shortLabel, 0xFFE0C040, reducedVfx);
+        SpatialCombat.gainRage(hero, grant);
+        announce(world, hero, def.shortLabel, 0xFFE0C040, reducedVfx);
         return true;
       case AbilityEffectKind.emergencyDefend:
-        _spendAndCd(world, hero, def);
+        spendAndCd(world, hero, def);
         // Preparation: reset other kit CDs (Prep stays on CD).
         if (def.id == AbilityId.preparation) {
           final spec = hero.heroSpecId;
@@ -902,7 +850,7 @@ abstract final class AbilityEffectRunner {
             );
           }
           hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 4.0);
-          _announce(
+          announce(
             world,
             hero,
             def.shortLabel,
@@ -911,7 +859,7 @@ abstract final class AbilityEffectRunner {
             important: true,
           );
           if (!reducedVfx) {
-            SpatialCombat._spawnRing(
+            SpatialCombat.spawnRing(
               world,
               x: hero.x,
               y: hero.y,
@@ -932,7 +880,7 @@ abstract final class AbilityEffectRunner {
           ally.absorbShield += amount;
           ally.shieldWallTimer = math.max(ally.shieldWallTimer, 4.0);
           ally.buffTimers['shield'] = 4.0;
-          _announce(
+          announce(
             world,
             hero,
             def.shortLabel,
@@ -941,7 +889,7 @@ abstract final class AbilityEffectRunner {
             important: true,
           );
           if (!reducedVfx) {
-            SpatialCombat._spawnRing(
+            SpatialCombat.spawnRing(
               world,
               x: ally.x,
               y: ally.y,
@@ -962,7 +910,7 @@ abstract final class AbilityEffectRunner {
               e.forcedTargetTimer = 0;
             }
           }
-          _announce(
+          announce(
             world,
             hero,
             def.shortLabel,
@@ -971,7 +919,7 @@ abstract final class AbilityEffectRunner {
             important: true,
           );
           if (!reducedVfx) {
-            SpatialCombat._spawnRing(
+            SpatialCombat.spawnRing(
               world,
               x: hero.x,
               y: hero.y,
@@ -987,7 +935,7 @@ abstract final class AbilityEffectRunner {
           hero.sprintTimer = math.max(hero.sprintTimer, 3.5);
           hero.shieldWallTimer = math.max(hero.shieldWallTimer, 2.0);
           hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 3.0);
-          _announce(
+          announce(
             world,
             hero,
             def.shortLabel,
@@ -996,7 +944,7 @@ abstract final class AbilityEffectRunner {
             important: true,
           );
           if (!reducedVfx) {
-            SpatialCombat._spawnRing(
+            SpatialCombat.spawnRing(
               world,
               x: hero.x,
               y: hero.y,
@@ -1012,16 +960,16 @@ abstract final class AbilityEffectRunner {
             ? 1.0
             : lowest.hp / lowest.effectiveMaxHp;
         final defendTarget =
-            (!_actorIsTank(hero) && lowest != null && lowestFrac <= 0.32)
+            (!actorIsTank(hero) && lowest != null && lowestFrac <= 0.32)
             ? lowest
             : hero;
         defendTarget.shieldWallTimer = math.max(
           defendTarget.shieldWallTimer,
           3.5,
         );
-        if (_actorIsTank(hero) && identical(defendTarget, hero)) {
+        if (actorIsTank(hero) && identical(defendTarget, hero)) {
           hero.shieldBlockTimer = math.max(hero.shieldBlockTimer, 3.5);
-          SpatialCombat._tauntLooseEnemies(world, hero, reducedVfx: reducedVfx);
+          SpatialCombat.tauntLooseEnemies(world, hero, reducedVfx: reducedVfx);
         }
         defendTarget.buffTimers['shield'] = 3.5;
         if (identical(defendTarget, hero) &&
@@ -1031,7 +979,7 @@ abstract final class AbilityEffectRunner {
           hero.lastStandTimer = math.max(hero.lastStandTimer, 4.0);
           hero.hp = math.min(hero.effectiveMaxHp, hero.hp + bonus ~/ 2);
         }
-        _announce(
+        announce(
           world,
           hero,
           def.shortLabel,
@@ -1040,7 +988,7 @@ abstract final class AbilityEffectRunner {
           important: true,
         );
         if (!reducedVfx) {
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: defendTarget.x,
             y: defendTarget.y,
@@ -1051,13 +999,13 @@ abstract final class AbilityEffectRunner {
         }
         return true;
       case AbilityEffectKind.taunt:
-        _spendAndCd(world, hero, def);
-        final pulled = SpatialCombat._tauntLooseEnemies(
+        spendAndCd(world, hero, def);
+        final pulled = SpatialCombat.tauntLooseEnemies(
           world,
           hero,
           reducedVfx: reducedVfx,
         );
-        _announce(
+        announce(
           world,
           hero,
           def.shortLabel,
@@ -1074,7 +1022,7 @@ abstract final class AbilityEffectRunner {
 
   /// Outgoing scale for kit casts. Casters get [SpatialCombat.casterAbilityTax]
   /// because Int-based ability spam outpaced melee Str kits on mid-band sims.
-  static double _abilityOutScale(SpatialActor hero) {
+  static double abilityOutScale(SpatialActor hero) {
     var scale = hero.kitOutMul;
     final id = hero.heroSpecId;
     if (id != null && HeroSpecs.def(id).roleTag == SpecRoleTag.caster) {
@@ -1083,7 +1031,7 @@ abstract final class AbilityEffectRunner {
     return scale;
   }
 
-  static void _castDamage(
+  static void castDamage(
     SpatialWorld world,
     SpatialActor hero,
     SpatialActor enemy,
@@ -1102,15 +1050,15 @@ abstract final class AbilityEffectRunner {
     }
     var raw = math.max(
       2,
-      (_abilityPower(hero, def) * def.coeff * _abilityOutScale(hero)).round(),
+      (_abilityPower(hero, def) * def.coeff * abilityOutScale(hero)).round(),
     );
     raw = math.max(
       2,
       (raw *
               SpecMastery.damageMul(
-                _masteryView(hero),
+                masteryView(hero),
                 def,
-                _masteryView(enemy),
+                masteryView(enemy),
               ))
           .round(),
     );
@@ -1169,19 +1117,19 @@ abstract final class AbilityEffectRunner {
         ? false
         : (def.id == AbilityId.killCommand && pet != null
               ? false
-              : (hero.ranged || SpatialCombat._dist(hero, enemy) > 2.2));
+              : (hero.ranged || SpatialCombat.actorDist(hero, enemy) > 2.2));
     final tint = SpatialCombat.burstArgbForStyle(style);
 
     hero.attackFlash = 0.16;
-    SpatialCombat._setAttackAnim(hero, enemy, 0.22);
-    _announce(world, hero, def.shortLabel, tint, reducedVfx);
+    SpatialCombat.setAttackAnim(hero, enemy, 0.22);
+    announce(world, hero, def.shortLabel, tint, reducedVfx);
     _applyDamageSideEffects(world, hero, def, rawEstimate: raw);
     _applyBleedIfNeeded(world, hero, enemy, def, raw);
 
     if (useBolt) {
-      SpatialCombat._addProjectile(
+      SpatialCombat.addProjectile(
         world,
-        SpatialCombat._spellBolt(
+        SpatialCombat.spellBolt(
           from: hero,
           to: enemy,
           damage: raw,
@@ -1230,14 +1178,14 @@ abstract final class AbilityEffectRunner {
       attackerAttack: hero.attack,
     );
     final wasAlive = enemy.hp > 0;
-    SpatialCombat._hurtEnemy(enemy, dealt);
-    SpatialCombat._recordHeroDamage(hero, dealt);
-    SpatialCombat._applyTankSoftThreat(hero, enemy);
-    SpatialCombat._spawnSlash(world, from: hero, to: enemy, isCrit: false);
+    SpatialCombat.hurtEnemy(enemy, dealt);
+    SpatialCombat.recordHeroDamage(hero, dealt);
+    SpatialCombat.applyTankSoftThreat(hero, enemy);
+    SpatialCombat.spawnSlash(world, from: hero, to: enemy, isCrit: false);
     if (dealt > 0) {
-      SpatialCombat._noteFeelHit(
+      SpatialCombat.noteFeelHit(
         world,
-        SpatialCombat._combatHitSfxFor(
+        SpatialCombat.combatHitSfxFor(
           hero: hero,
           style: style,
         ),
@@ -1254,12 +1202,12 @@ abstract final class AbilityEffectRunner {
         radius: 0.5,
       );
     }
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: enemy.x,
       y: enemy.y - 0.4,
       text: '$dealt',
-      argb: SpatialCombat._floaterDamage,
+      argb: SpatialCombat.floaterDamage,
       life: 0.45,
       priority: 0,
     );
@@ -1275,14 +1223,14 @@ abstract final class AbilityEffectRunner {
       reducedVfx: reducedVfx,
     );
     if (wasAlive && enemy.hp <= 0) {
-      final killed = SpatialCombat._onEnemyKilled(
+      final killed = SpatialCombat.onEnemyKilled(
         world,
-        _stateOut!,
+        stateOut!,
         enemy,
         rng,
       );
-      _goldOut += killed.gold;
-      _stateOut = killed.state;
+      goldOut += killed.gold;
+      stateOut = killed.state;
     }
   }
 
@@ -1307,7 +1255,7 @@ abstract final class AbilityEffectRunner {
     if (hero.heroSpecId != HeroSpecId.elemental) return;
     if (!_elementalOverloadEligible(def)) return;
     if (enemy.hp <= 0 || enemy.dormant) return;
-    final chance = SpecMastery.elementalOverloadProcChance(_masteryView(hero));
+    final chance = SpecMastery.elementalOverloadProcChance(masteryView(hero));
     if (chance <= 0 || rng.nextDouble() >= chance) return;
 
     final echo = math.max(
@@ -1315,12 +1263,12 @@ abstract final class AbilityEffectRunner {
       (raw * SpecMastery.elementalOverloadDamageFrac).round(),
     );
     const overloadArgb = 0xFF90E8FF;
-    _announce(world, hero, 'OVERLOAD', overloadArgb, reducedVfx);
+    announce(world, hero, 'OVERLOAD', overloadArgb, reducedVfx);
 
     if (useBolt) {
-      SpatialCombat._addProjectile(
+      SpatialCombat.addProjectile(
         world,
-        SpatialCombat._spellBolt(
+        SpatialCombat.spellBolt(
           from: hero,
           to: enemy,
           damage: echo,
@@ -1349,17 +1297,17 @@ abstract final class AbilityEffectRunner {
       defense: enemy.effectiveDefense,
       attackerAttack: hero.attack,
     );
-    SpatialCombat._hurtEnemy(enemy, dealt);
-    SpatialCombat._recordHeroDamage(hero, dealt);
-    SpatialCombat._applyTankSoftThreat(hero, enemy);
+    SpatialCombat.hurtEnemy(enemy, dealt);
+    SpatialCombat.recordHeroDamage(hero, dealt);
+    SpatialCombat.applyTankSoftThreat(hero, enemy);
     if (dealt > 0) {
-      SpatialCombat._noteFeelHit(
+      SpatialCombat.noteFeelHit(
         world,
-        SpatialCombat._combatHitSfxFor(hero: hero, style: style),
+        SpatialCombat.combatHitSfxFor(hero: hero, style: style),
         target: enemy,
       );
     }
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: enemy.x,
       y: enemy.y - 0.55,
@@ -1370,7 +1318,7 @@ abstract final class AbilityEffectRunner {
     );
   }
 
-  static void _castAoe(
+  static void castAoe(
     SpatialWorld world,
     SpatialActor hero,
     SpatialActor? focus,
@@ -1384,7 +1332,7 @@ abstract final class AbilityEffectRunner {
       hero.comboPoints = math.min(5, hero.comboPoints + 1);
     }
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
-    _announce(
+    announce(
       world,
       hero,
       def.shortLabel,
@@ -1460,12 +1408,12 @@ abstract final class AbilityEffectRunner {
     const style = SpellBoltStyle.lightning;
     final base = math.max(
       2,
-      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+      (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
     final targets = <SpatialActor>[];
     SpatialActor? cursor = focus != null && focus.hp > 0 && !focus.dormant
         ? focus
-        : SpatialCombat._nearestActiveEnemy(hero, world.enemies);
+        : SpatialCombat.nearestActiveEnemy(hero, world.enemies);
     final used = <String>{};
     while (cursor != null && targets.length < 4) {
       targets.add(cursor);
@@ -1474,7 +1422,7 @@ abstract final class AbilityEffectRunner {
       var best = 3.6;
       for (final e in world.enemies) {
         if (e.hp <= 0 || e.dormant || used.contains(e.id)) continue;
-        final d = SpatialCombat._dist(cursor, e);
+        final d = SpatialCombat.actorDist(cursor, e);
         if (d < best) {
           best = d;
           next = e;
@@ -1500,7 +1448,7 @@ abstract final class AbilityEffectRunner {
       // Nudge off the previous target so hops don't instantly re-hit it.
       final ox = i == 0 ? 0.0 : dx / len * 0.4;
       final oy = i == 0 ? 0.0 : dy / len * 0.4;
-      SpatialCombat._addProjectile(
+      SpatialCombat.addProjectile(
         world,
         SpatialCombat.spellBoltBetween(
           x0: px + ox,
@@ -1554,25 +1502,25 @@ abstract final class AbilityEffectRunner {
   }) {
     final raw = math.max(
       2,
-      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+      (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
     final anchor = focus != null && focus.hp > 0 && !focus.dormant
         ? focus
         : hero;
     final enemies = world.enemies.where((e) => e.hp > 0 && !e.dormant).toList()
       ..sort(
-        (a, b) => SpatialCombat._dist(
+        (a, b) => SpatialCombat.actorDist(
           anchor,
           a,
-        ).compareTo(SpatialCombat._dist(anchor, b)),
+        ).compareTo(SpatialCombat.actorDist(anchor, b)),
       );
     final picks = enemies.take(hops).toList();
     if (picks.isEmpty) return;
     hero.attackFlash = 0.18;
     for (var i = 0; i < picks.length; i++) {
-      SpatialCombat._addProjectile(
+      SpatialCombat.addProjectile(
         world,
-        SpatialCombat._spellBolt(
+        SpatialCombat.spellBolt(
           from: hero,
           to: picks[i],
           damage: raw,
@@ -1596,7 +1544,7 @@ abstract final class AbilityEffectRunner {
     final radius = style == SpellBoltStyle.lightning ? 3.0 : 2.6;
     final raw = math.max(
       2,
-      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+      (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.18;
@@ -1610,7 +1558,7 @@ abstract final class AbilityEffectRunner {
         id: def.id,
         radius: radius * 0.45,
       );
-      SpatialCombat._spawnRing(
+      SpatialCombat.spawnRing(
         world,
         x: hero.x,
         y: hero.y,
@@ -1623,7 +1571,7 @@ abstract final class AbilityEffectRunner {
     var i = 0;
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
-      if (SpatialCombat._dist(hero, e) > radius) continue;
+      if (SpatialCombat.actorDist(hero, e) > radius) continue;
       if (i >= _aoeHitCap) break;
       // Cone of Cold / chill AoE: slow attack cadence.
       if (def.id == AbilityId.coneOfCold) {
@@ -1641,9 +1589,9 @@ abstract final class AbilityEffectRunner {
           style == SpellBoltStyle.nature ||
           style == SpellBoltStyle.poison;
       if (fly) {
-        SpatialCombat._addProjectile(
+        SpatialCombat.addProjectile(
           world,
-          SpatialCombat._spellBolt(
+          SpatialCombat.spellBolt(
             from: hero,
             to: e,
             damage: raw,
@@ -1662,13 +1610,13 @@ abstract final class AbilityEffectRunner {
           defense: e.effectiveDefense,
           attackerAttack: hero.attack,
         );
-        SpatialCombat._hurtEnemy(e, dealt);
-        SpatialCombat._recordHeroDamage(hero, dealt);
-        SpatialCombat._applyTankSoftThreat(hero, e);
+        SpatialCombat.hurtEnemy(e, dealt);
+        SpatialCombat.recordHeroDamage(hero, dealt);
+        SpatialCombat.applyTankSoftThreat(hero, e);
         if (dealt > 0) {
-          SpatialCombat._noteFeelHit(
+          SpatialCombat.noteFeelHit(
             world,
-            SpatialCombat._combatHitSfxFor(hero: hero, style: style),
+            SpatialCombat.combatHitSfxFor(hero: hero, style: style),
             target: e,
           );
         }
@@ -1683,24 +1631,24 @@ abstract final class AbilityEffectRunner {
             id: def.id,
             radius: 0.5,
           );
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: e.x,
             y: e.y - 0.35,
             text: '$dealt',
-            argb: SpatialCombat._floaterDamage,
+            argb: SpatialCombat.floaterDamage,
             life: 0.45,
           );
         }
         if (wasAlive && e.hp <= 0) {
-          final killed = SpatialCombat._onEnemyKilled(
+          final killed = SpatialCombat.onEnemyKilled(
             world,
-            _stateOut!,
+            stateOut!,
             e,
             rng,
           );
-          _goldOut += killed.gold;
-          _stateOut = killed.state;
+          goldOut += killed.gold;
+          stateOut = killed.state;
         }
       }
       i++;
@@ -1720,7 +1668,7 @@ abstract final class AbilityEffectRunner {
     final radius = style == SpellBoltStyle.lightning ? 3.2 : 2.9;
     final raw = math.max(
       2,
-      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+      (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
@@ -1729,7 +1677,7 @@ abstract final class AbilityEffectRunner {
     final ay = pack.$2;
 
     if (!reducedVfx) {
-      SpatialCombat._spawnBurst(
+      SpatialCombat.spawnBurst(
         world,
         x: ax,
         y: ay,
@@ -1738,7 +1686,7 @@ abstract final class AbilityEffectRunner {
         kind: SpatialBurstKind.rain,
         life: 0.55,
       );
-      SpatialCombat._spawnRing(
+      SpatialCombat.spawnRing(
         world,
         x: ax,
         y: ay,
@@ -1751,9 +1699,9 @@ abstract final class AbilityEffectRunner {
     var i = 0;
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
-      if (SpatialCombat._distPoint(ax, ay, e.x, e.y) > radius) continue;
+      if (SpatialCombat.distPoint(ax, ay, e.x, e.y) > radius) continue;
       if (i >= _aoeHitCap) break;
-      SpatialCombat._addProjectile(
+      SpatialCombat.addProjectile(
         world,
         SpatialCombat.spellBoltBetween(
           x0: e.x + (rng.nextDouble() - 0.5) * 0.6,
@@ -1802,7 +1750,7 @@ abstract final class AbilityEffectRunner {
     var n = 0;
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
-      if (SpatialCombat._dist(seed, e) > 4.2) continue;
+      if (SpatialCombat.actorDist(seed, e) > 4.2) continue;
       sx += e.x;
       sy += e.y;
       n++;
@@ -1825,7 +1773,7 @@ abstract final class AbilityEffectRunner {
         (style == SpellBoltStyle.lightning ? 3.0 : 2.7);
     final raw = math.max(
       2,
-      (hero.attack * def.coeff * _abilityOutScale(hero)).round(),
+      (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
@@ -1842,7 +1790,7 @@ abstract final class AbilityEffectRunner {
         id: def.id,
         radius: radius * 0.4,
       );
-      SpatialCombat._spawnRing(
+      SpatialCombat.spawnRing(
         world,
         x: ox,
         y: oy,
@@ -1850,7 +1798,7 @@ abstract final class AbilityEffectRunner {
         radius: radius * 0.4,
         life: 0.55,
       );
-      SpatialCombat._spawnRing(
+      SpatialCombat.spawnRing(
         world,
         x: ox,
         y: oy,
@@ -1861,7 +1809,7 @@ abstract final class AbilityEffectRunner {
       // Signature spin arcs for Bladestorm.
       if (def.id == AbilityId.bladestorm) {
         for (var i = 0; i < 3; i++) {
-          SpatialCombat._spawnBurst(
+          SpatialCombat.spawnBurst(
             world,
             x: ox,
             y: oy,
@@ -1890,7 +1838,7 @@ abstract final class AbilityEffectRunner {
       final discLife =
           vfx?.groundLife ?? SpatialCombat.groundDiscLifeFor(def.id);
       if (vfx?.groundDisc == true || discLife != null) {
-        SpatialCombat._spawnGroundFx(
+        SpatialCombat.spawnGroundFx(
           world,
           x: ox,
           y: oy,
@@ -1905,7 +1853,7 @@ abstract final class AbilityEffectRunner {
     var hitCount = 0;
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
-      if (SpatialCombat._distPoint(ox, oy, e.x, e.y) > radius) continue;
+      if (SpatialCombat.distPoint(ox, oy, e.x, e.y) > radius) continue;
       if (hitCount >= _aoeHitCap) break;
       final wasAlive = e.hp > 0;
       final dealt = CombatRatings.mitigateByArmor(
@@ -1913,13 +1861,13 @@ abstract final class AbilityEffectRunner {
         defense: e.effectiveDefense,
         attackerAttack: hero.attack,
       );
-      SpatialCombat._hurtEnemy(e, dealt);
-      SpatialCombat._recordHeroDamage(hero, dealt);
-      SpatialCombat._applyTankSoftThreat(hero, e);
+      SpatialCombat.hurtEnemy(e, dealt);
+      SpatialCombat.recordHeroDamage(hero, dealt);
+      SpatialCombat.applyTankSoftThreat(hero, e);
       if (dealt > 0) {
-        SpatialCombat._noteFeelHit(
+        SpatialCombat.noteFeelHit(
           world,
-          SpatialCombat._combatHitSfxFor(hero: hero, style: style),
+          SpatialCombat.combatHitSfxFor(hero: hero, style: style),
           target: e,
         );
       }
@@ -1937,21 +1885,21 @@ abstract final class AbilityEffectRunner {
         );
         // Cap per-target numbers on big ground AOEs.
         if (hitCount <= 3) {
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: e.x,
             y: e.y - 0.35,
             text: '$dealt',
-            argb: SpatialCombat._floaterDamage,
+            argb: SpatialCombat.floaterDamage,
             life: 0.4,
             priority: 0,
           );
         }
       }
       if (wasAlive && e.hp <= 0) {
-        final killed = SpatialCombat._onEnemyKilled(world, _stateOut!, e, rng);
-        _goldOut += killed.gold;
-        _stateOut = killed.state;
+        final killed = SpatialCombat.onEnemyKilled(world, stateOut!, e, rng);
+        goldOut += killed.gold;
+        stateOut = killed.state;
       }
     }
   }
@@ -1964,14 +1912,14 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
   }) {
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
-    _applyEnemyRoot(focus, 2.2 + hero.kitRootBonus);
+    applyEnemyRoot(focus, 2.2 + hero.kitRootBonus);
     hero.attackFlash = 0.14;
-    _announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
+    announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
 
-    if (hero.ranged || SpatialCombat._dist(hero, focus) > 2.0) {
-      SpatialCombat._addProjectile(
+    if (hero.ranged || SpatialCombat.actorDist(hero, focus) > 2.0) {
+      SpatialCombat.addProjectile(
         world,
-        SpatialCombat._spellBolt(
+        SpatialCombat.spellBolt(
           from: hero,
           to: focus,
           damage: math.max(1, (hero.attack * 0.35).round()),
@@ -2020,7 +1968,7 @@ abstract final class AbilityEffectRunner {
       ally.hotHps = math.max(ally.hotHps, nextHps);
       ally.hotAcc = 0;
     }
-    _announce(world, caster, def.shortLabel, tint, reducedVfx);
+    announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
       SpellVfx.spawnImpact(
         world,
@@ -2030,7 +1978,7 @@ abstract final class AbilityEffectRunner {
         id: def.id,
         radius: 0.6,
       );
-      SpatialCombat._spawnRing(
+      SpatialCombat.spawnRing(
         world,
         x: ally.x,
         y: ally.y,
@@ -2051,7 +1999,7 @@ abstract final class AbilityEffectRunner {
     final style = SpatialCombat.boltStyleForAbility(caster, def: def);
     final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     _absorbLowest(world, caster, ally, def.coeff, def.shortLabel);
-    _announce(world, caster, def.shortLabel, tint, reducedVfx);
+    announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
       SpellVfx.spawnImpact(
         world,
@@ -2061,7 +2009,7 @@ abstract final class AbilityEffectRunner {
         id: def.id,
         radius: 0.7,
       );
-      SpatialCombat._spawnRing(
+      SpatialCombat.spawnRing(
         world,
         x: ally.x,
         y: ally.y,
@@ -2072,16 +2020,16 @@ abstract final class AbilityEffectRunner {
     }
   }
 
-  static void _spendAndCd(
+  static void spendAndCd(
     SpatialWorld world,
     SpatialActor hero,
     ClassAbilityDef def,
   ) {
-    SpatialCombat._spendRage(hero, def.resourceCost);
-    SpatialCombat._startAbilityCd(world, hero, def.id, def.cooldown);
+    SpatialCombat.spendRage(hero, def.resourceCost);
+    SpatialCombat.startAbilityCd(world, hero, def.id, def.cooldown);
   }
 
-  static void _announce(
+  static void announce(
     SpatialWorld world,
     SpatialActor hero,
     String text,
@@ -2091,7 +2039,7 @@ abstract final class AbilityEffectRunner {
   }) {
     // Always give a small style-colored cast burst so kits aren't silent.
     if (!reducedVfx) {
-      SpatialCombat._spawnBurst(
+      SpatialCombat.spawnBurst(
         world,
         x: hero.x,
         y: hero.y,
@@ -2102,7 +2050,7 @@ abstract final class AbilityEffectRunner {
     }
     // Routine ability-name shoutouts drown the stage.
     if (reducedVfx || !important) return;
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: hero.x,
       y: hero.y - 0.5,
@@ -2119,7 +2067,7 @@ abstract final class AbilityEffectRunner {
     var bestMax = -1;
     for (final h in world.heroes) {
       if (!h.isAlive || h.isPet) continue;
-      if (_actorIsTank(h)) {
+      if (actorIsTank(h)) {
         if (tank == null || h.effectiveMaxHp > tank.effectiveMaxHp) {
           tank = h;
         }
@@ -2215,7 +2163,7 @@ abstract final class AbilityEffectRunner {
       );
       bounce *= 0.72;
     }
-    _announce(world, caster, def.shortLabel, tint, reducedVfx);
+    announce(world, caster, def.shortLabel, tint, reducedVfx);
     if (!reducedVfx) {
       SpellVfx.spawnCast(
         world,
@@ -2224,7 +2172,7 @@ abstract final class AbilityEffectRunner {
         id: def.id,
         radius: 1.1,
       );
-      SpatialCombat._spawnRing(
+      SpatialCombat.spawnRing(
         world,
         x: caster.x,
         y: caster.y,
@@ -2236,7 +2184,7 @@ abstract final class AbilityEffectRunner {
     if (world.spawnPersistentVfx) {
       final discLife = SpatialCombat.groundDiscLifeFor(def.id);
       if (discLife != null || def.vfx?.groundDisc == true) {
-        SpatialCombat._spawnGroundFx(
+        SpatialCombat.spawnGroundFx(
           world,
           x: caster.x,
           y: caster.y,
@@ -2264,25 +2212,25 @@ abstract final class AbilityEffectRunner {
       final gained = hero.hp - before;
       if (gained > 0) {
         hero.healingDone += gained;
-        SpatialCombat._spawnFloater(
+        SpatialCombat.spawnFloater(
           world,
           x: hero.x,
           y: hero.y - 0.4,
           text: '+$gained',
-          argb: SpatialCombat._floaterHeal,
+          argb: SpatialCombat.floaterHeal,
           life: 0.45,
         );
       }
     }
     if (def.id == AbilityId.vampiricTouch) {
-      SpatialCombat._gainRage(hero, 12);
+      SpatialCombat.gainRage(hero, 12);
     }
     // Balance Eclipse cycle: Wrath → Solar (nature amp); Starfire → Lunar (arcane amp).
     if (hero.heroSpecId == HeroSpecId.balance) {
       if (def.id == AbilityId.wrath) {
         hero.buffTimers['eclipse_nature'] = 7.0;
         hero.buffTimers.remove('eclipse_arcane');
-        SpatialCombat._spawnFloater(
+        SpatialCombat.spawnFloater(
           world,
           x: hero.x,
           y: hero.y - 0.55,
@@ -2293,7 +2241,7 @@ abstract final class AbilityEffectRunner {
       } else if (def.id == AbilityId.starfire) {
         hero.buffTimers['eclipse_arcane'] = 7.0;
         hero.buffTimers.remove('eclipse_nature');
-        SpatialCombat._spawnFloater(
+        SpatialCombat.spawnFloater(
           world,
           x: hero.x,
           y: hero.y - 0.55,
@@ -2388,7 +2336,7 @@ abstract final class AbilityEffectRunner {
       AbilityId.scourgeStrike || AbilityId.heartStrike => 0.10,
       _ => 0.12,
     };
-    final dotMul = SpecMastery.dotTickMul(_masteryView(hero));
+    final dotMul = SpecMastery.dotTickMul(masteryView(hero));
     final fromHit = raw * 0.08;
     final newDps = math.max(
       1.5,
@@ -2412,7 +2360,7 @@ abstract final class AbilityEffectRunner {
     enemy.bleedCasterId = hero.id;
     enemy.bleedAbilityId = def.id.name;
     if (def.id == AbilityId.rip) {
-      SpatialCombat._spawnFloater(
+      SpatialCombat.spawnFloater(
         world,
         x: enemy.x,
         y: enemy.y - 0.55,
@@ -2466,7 +2414,7 @@ abstract final class AbilityEffectRunner {
         ? 0.0
         : (1.0 - ally.hp / ally.effectiveMaxHp).clamp(0.0, 1.0);
     final healMul =
-        SpecMastery.healMul(_masteryView(caster), missing) * caster.kitHealMul;
+        SpecMastery.healMul(masteryView(caster), missing) * caster.kitHealMul;
     final amount = math.max(
       4,
       (_healPower(caster) * coeff * healMul).round(),
@@ -2476,12 +2424,12 @@ abstract final class AbilityEffectRunner {
     final gained = ally.hp - before;
     if (gained > 0) {
       caster.healingDone += gained;
-      SpatialCombat._spawnFloater(
+      SpatialCombat.spawnFloater(
         world,
         x: ally.x,
         y: ally.y - 0.4,
         text: '+$gained',
-        argb: SpatialCombat._floaterHeal,
+        argb: SpatialCombat.floaterHeal,
         life: 0.55,
       );
     }
@@ -2505,7 +2453,7 @@ abstract final class AbilityEffectRunner {
     final peeled = marked.hp - markedBefore;
     if (peeled > 0) {
       caster.healingDone += peeled;
-      SpatialCombat._spawnFloater(
+      SpatialCombat.spawnFloater(
         world,
         x: marked.x,
         y: marked.y - 0.55,
@@ -2529,11 +2477,11 @@ abstract final class AbilityEffectRunner {
               coeff *
               1.1 *
               caster.kitHealMul *
-              SpecMastery.absorbStrengthMul(_masteryView(caster)))
+              SpecMastery.absorbStrengthMul(masteryView(caster)))
           .round(),
     );
     ally.absorbShield += amount;
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: ally.x,
       y: ally.y - 0.45,

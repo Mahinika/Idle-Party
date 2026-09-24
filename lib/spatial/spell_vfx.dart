@@ -73,7 +73,7 @@ abstract final class SpellVfx {
   }) {
     final argb = SpatialCombat.burstArgbForStyle(style);
     final kind = burstKindFor(style: style, shape: shape, id: id);
-    SpatialCombat._spawnBurst(
+    SpatialCombat.spawnBurst(
       world,
       x: hero.x,
       y: hero.y,
@@ -85,7 +85,7 @@ abstract final class SpellVfx {
     if (kind == SpatialBurstKind.flame ||
         kind == SpatialBurstKind.cross ||
         kind == SpatialBurstKind.shards) {
-      SpatialCombat._spawnRing(
+      SpatialCombat.spawnRing(
         world,
         x: hero.x,
         y: hero.y,
@@ -110,7 +110,7 @@ abstract final class SpellVfx {
   }) {
     final argb = SpatialCombat.burstArgbForStyle(style);
     final kind = burstKindFor(style: style, shape: shape, id: id);
-    SpatialCombat._spawnBurst(
+    SpatialCombat.spawnBurst(
       world,
       x: x,
       y: y,
@@ -133,7 +133,7 @@ abstract final class SpellVfx {
     double radius = 0.35,
     double life = 0.36,
   }) {
-    SpatialCombat._spawnBurst(
+    SpatialCombat.spawnBurst(
       world,
       x: x,
       y: y,

@@ -28,7 +28,7 @@ abstract final class HeroFocus {
     var bestD = double.infinity;
     for (final enemy in enemies) {
       if (enemy.hp <= 0 || enemy.dormant) continue;
-      final distance = SpatialCombat._dist(self, enemy);
+      final distance = SpatialCombat.actorDist(self, enemy);
       if (distance < bestD) {
         bestD = distance;
         best = enemy;
@@ -38,7 +38,7 @@ abstract final class HeroFocus {
     // Next chamber still dormant: path toward them so floors don't soft-lock.
     for (final enemy in enemies) {
       if (enemy.hp <= 0) continue;
-      final distance = SpatialCombat._dist(self, enemy);
+      final distance = SpatialCombat.actorDist(self, enemy);
       if (distance < bestD) {
         bestD = distance;
         best = enemy;
@@ -65,7 +65,7 @@ abstract final class HeroFocus {
     SpatialActor? tank;
     SpatialActor? tankNearest;
     for (final h in world.heroes) {
-      if (!h.isAlive || !_actorIsTank(h)) continue;
+      if (!h.isAlive || !actorIsTank(h)) continue;
       tank = h;
       tankNearest = nearestActiveEnemy(h, world.enemies);
       break;
@@ -137,7 +137,7 @@ abstract final class HeroFocus {
     required SpatialActor? tank,
     required SpatialActor? tankNearest,
   }) {
-    final d = SpatialCombat._dist(self, e);
+    final d = SpatialCombat.actorDist(self, e);
     final maxHp = math.max(1, e.maxHp);
     final hpFrac = e.hp / maxHp;
     final inRange = d <= self.attackRange + 1.4;
@@ -161,7 +161,7 @@ abstract final class HeroFocus {
     if (e.forcedTargetTimer > 0 && e.forcedTargetId != null) {
       for (final h in world.heroes) {
         if (!h.isAlive || h.id != e.forcedTargetId) continue;
-        if (_actorIsHealer(h)) {
+        if (actorIsHealer(h)) {
           score += 50;
         } else if (h.ranged ||
             (h.heroSpecId != null &&
@@ -172,7 +172,7 @@ abstract final class HeroFocus {
       }
     }
 
-    if (_actorIsTank(self)) {
+    if (actorIsTank(self)) {
       // Peel: prefer enemies hitting allies over ones already on us.
       if (e.forcedTargetId != null && e.forcedTargetId != self.id) {
         score += 42;

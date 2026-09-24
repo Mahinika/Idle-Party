@@ -177,10 +177,10 @@ abstract final class CombatPresence {
       hero.lowHpBarked = false;
       return false;
     }
-    if (_actorIsHealer(hero) || _actorIsTank(hero)) return false;
+    if (actorIsHealer(hero) || actorIsTank(hero)) return false;
     SpatialActor? healer;
     for (final h in world.heroes) {
-      if (h.isAlive && _actorIsHealer(h) && h.id != hero.id) {
+      if (h.isAlive && actorIsHealer(h) && h.id != hero.id) {
         healer = h;
         break;
       }
@@ -246,7 +246,7 @@ abstract final class CombatPresence {
     if (reducedVfx || world.afkAssist) return;
     if (text.isEmpty || actor.barkCd > 0) return;
     actor.barkCd = barkCooldown;
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: actor.x,
       y: actor.y - 0.85,
@@ -316,7 +316,7 @@ abstract final class CombatPresence {
     SpatialActor hero, {
     required bool reducedVfx,
   }) {
-    if (_actorIsTank(hero)) return;
+    if (actorIsTank(hero)) return;
     spawnBark(
       world,
       hero,

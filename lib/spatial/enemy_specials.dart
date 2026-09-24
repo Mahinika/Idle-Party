@@ -46,7 +46,7 @@ void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
   final x = leader.x;
   final y = leader.y - 0.8;
   if (world.gauntletAnomaly != null) {
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: x,
       y: y - 0.35,
@@ -57,7 +57,7 @@ void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
     );
   }
   if (_worldHasAffix(world, 'swarm')) {
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: x,
       y: y,
@@ -68,7 +68,7 @@ void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
     );
   }
   if (_worldHasAffix(world, 'fortified')) {
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: x,
       y: y - 0.35,
@@ -79,7 +79,7 @@ void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
     );
   }
   if (_worldHasAffix(world, 'tyrannical') && !reducedVfx) {
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: x,
       y: y - 0.7,
@@ -90,7 +90,7 @@ void _showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
     );
   }
   if (world.keystoneWeekDungeonId.isNotEmpty) {
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: x,
       y: y - 1.05,
@@ -118,7 +118,7 @@ void _tickEnemySpecials(
       enemy.enrageTimer <= 0) {
     enemy.enrageTimer = 5.0;
     if (!reducedVfx || world.spawnPersistentVfx) {
-      SpatialCombat._spawnFloater(
+      SpatialCombat.spawnFloater(
         world,
         x: enemy.x,
         y: enemy.y - 0.45,
@@ -128,7 +128,7 @@ void _tickEnemySpecials(
         priority: 2,
       );
       if (world.spawnPersistentVfx) {
-        SpatialCombat._spawnRing(
+        SpatialCombat.spawnRing(
           world,
           x: enemy.x,
           y: enemy.y,
@@ -191,7 +191,7 @@ void _tickEnemySpecials(
     var hit = false;
     for (final h in world.heroes) {
       if (!h.isAlive) continue;
-      if (SpatialCombat._dist(enemy, h) > radius) continue;
+      if (SpatialCombat.actorDist(enemy, h) > radius) continue;
       var chip = math.max(
         elite ? 2 : 1,
         (enemy.effectiveAttack * (elite ? 0.35 : 0.22)).round(),
@@ -212,7 +212,7 @@ void _tickEnemySpecials(
           ? (elite ? 7.0 : 6.2)
           : (elite ? 6.5 : 5.6);
       if (!reducedVfx || world.spawnPersistentVfx) {
-        SpatialCombat._spawnFloater(
+        SpatialCombat.spawnFloater(
           world,
           x: enemy.x,
           y: enemy.y - 0.4,
@@ -223,7 +223,7 @@ void _tickEnemySpecials(
         );
         if (world.spawnPersistentVfx) {
           final sandy = flavor == 'sandy';
-          SpatialCombat._spawnBurst(
+          SpatialCombat.spawnBurst(
             world,
             x: enemy.x,
             y: enemy.y,
@@ -242,14 +242,14 @@ void _tickEnemySpecials(
     var buffed = false;
     for (final ally in world.enemies) {
       if (!ally.isAlive || ally.dormant) continue;
-      if (SpatialCombat._dist(enemy, ally) > 3.4) continue;
+      if (SpatialCombat.actorDist(enemy, ally) > 3.4) continue;
       ally.enrageTimer = math.max(ally.enrageTimer, world.afkAssist ? 2.2 : 3.0);
       buffed = true;
     }
     if (buffed) {
       enemy.specialCd = world.afkAssist ? 8.5 : 7.5;
       if (!reducedVfx || world.spawnPersistentVfx) {
-        SpatialCombat._spawnFloater(
+        SpatialCombat.spawnFloater(
           world,
           x: enemy.x,
           y: enemy.y - 0.4,
@@ -259,7 +259,7 @@ void _tickEnemySpecials(
           priority: reducedVfx ? 2 : 0,
         );
         if (world.spawnPersistentVfx) {
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: enemy.x,
             y: enemy.y,
@@ -283,7 +283,7 @@ void _tickEnemySpecials(
     enemy.hp = math.min(enemy.effectiveMaxHp, enemy.hp + enemy.bonusMaxHp);
     enemy.specialCd = 8.0;
     if (!reducedVfx || world.spawnPersistentVfx) {
-      SpatialCombat._spawnFloater(
+      SpatialCombat.spawnFloater(
         world,
         x: enemy.x,
         y: enemy.y - 0.4,
@@ -293,7 +293,7 @@ void _tickEnemySpecials(
         priority: reducedVfx ? 2 : 0,
       );
       if (world.spawnPersistentVfx) {
-        SpatialCombat._spawnRing(
+        SpatialCombat.spawnRing(
           world,
           x: enemy.x,
           y: enemy.y,
@@ -307,7 +307,7 @@ void _tickEnemySpecials(
     var hit = false;
     for (final h in world.heroes) {
       if (!h.isAlive) continue;
-      if (SpatialCombat._dist(enemy, h) > 1.85) continue;
+      if (SpatialCombat.actorDist(enemy, h) > 1.85) continue;
       var chip = math.max(1, (enemy.effectiveAttack * 0.22).round());
       if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
       SpatialCombat._applyHeroIncomingDamage(
@@ -323,7 +323,7 @@ void _tickEnemySpecials(
     if (hit) {
       enemy.specialCd = world.afkAssist ? 5.5 : 4.8;
       if (!reducedVfx || world.spawnPersistentVfx) {
-        SpatialCombat._spawnFloater(
+        SpatialCombat.spawnFloater(
           world,
           x: enemy.x,
           y: enemy.y - 0.4,
@@ -333,7 +333,7 @@ void _tickEnemySpecials(
           priority: reducedVfx ? 2 : 0,
         );
         if (world.spawnPersistentVfx) {
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: enemy.x,
             y: enemy.y,
@@ -346,7 +346,7 @@ void _tickEnemySpecials(
     }
   } else if (enemy.archetype == EnemyArchetype.glass &&
       focus.hp < focus.effectiveMaxHp * 0.35 &&
-      SpatialCombat._dist(enemy, focus) <= 4.2) {
+      SpatialCombat.actorDist(enemy, focus) <= 4.2) {
     var chip = math.max(2, (enemy.effectiveAttack * 0.55).round());
     if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
     SpatialCombat._applyHeroIncomingDamage(
@@ -355,11 +355,11 @@ void _tickEnemySpecials(
       chip,
       reducedVfx: reducedVfx,
       rng: rng,
-      isMelee: SpatialCombat._dist(enemy, focus) <= 2.2,
+      isMelee: SpatialCombat.actorDist(enemy, focus) <= 2.2,
     );
     enemy.specialCd = world.afkAssist ? 6.5 : 5.8;
     if (!reducedVfx || world.spawnPersistentVfx) {
-      SpatialCombat._spawnFloater(
+      SpatialCombat.spawnFloater(
         world,
         x: focus.x,
         y: focus.y - 0.5,
@@ -369,7 +369,7 @@ void _tickEnemySpecials(
         priority: reducedVfx ? 2 : 0,
       );
       if (world.spawnPersistentVfx) {
-        SpatialCombat._spawnBurst(
+        SpatialCombat.spawnBurst(
           world,
           x: focus.x,
           y: focus.y,
@@ -395,7 +395,7 @@ void _tickSupportSpecial(
   SpatialActor? lowest;
   for (final ally in world.enemies) {
     if (!ally.isAlive || ally.dormant) continue;
-    if (SpatialCombat._dist(enemy, ally) > 5.0) continue;
+    if (SpatialCombat.actorDist(enemy, ally) > 5.0) continue;
     if (lowest == null ||
         ally.hp / ally.effectiveMaxHp < lowest.hp / lowest.effectiveMaxHp) {
       lowest = ally;
@@ -406,7 +406,7 @@ void _tickSupportSpecial(
     var buffed = false;
     for (final ally in world.enemies) {
       if (!ally.isAlive || ally.dormant) continue;
-      if (SpatialCombat._dist(enemy, ally) > 5.0) continue;
+      if (SpatialCombat.actorDist(enemy, ally) > 5.0) continue;
       ally.enrageTimer = math.max(ally.enrageTimer, world.afkAssist ? 2.0 : 2.6);
       buffed = true;
     }
@@ -417,7 +417,7 @@ void _tickSupportSpecial(
   }
 
   if (job == SupportJob.drain) {
-    if (SpatialCombat._dist(enemy, focus) > 5.5) return;
+    if (SpatialCombat.actorDist(enemy, focus) > 5.5) return;
     var chip = math.max(1, (enemy.effectiveAttack * 0.18).round());
     if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
     SpatialCombat._applyHeroIncomingDamage(
@@ -452,7 +452,7 @@ void _supportTellAt(
   required bool reducedVfx,
 }) {
   if (!reducedVfx || world.spawnPersistentVfx) {
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: at.x,
       y: at.y - 0.35,
@@ -462,7 +462,7 @@ void _supportTellAt(
       priority: reducedVfx ? 2 : 0,
     );
     if (world.spawnPersistentVfx) {
-      SpatialCombat._spawnBurst(
+      SpatialCombat.spawnBurst(
         world,
         x: at.x,
         y: at.y,
@@ -483,7 +483,7 @@ void _tickRangedSpecial(
   required math.Random rng,
   required bool reducedVfx,
 }) {
-  if (SpatialCombat._dist(enemy, focus) > 5.5) return;
+  if (SpatialCombat.actorDist(enemy, focus) > 5.5) return;
   switch (EnemyFlavor.rangedJob(flavor)) {
     case RangedJob.root:
       focus.rootTimer = math.max(focus.rootTimer, 1.55);
@@ -509,7 +509,7 @@ void _tickRangedSpecial(
   }
   enemy.specialCd = 6.0;
   if (!reducedVfx || world.spawnPersistentVfx) {
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: focus.x,
       y: focus.y - 0.5,
@@ -519,7 +519,7 @@ void _tickRangedSpecial(
       priority: reducedVfx ? 2 : 0,
     );
     if (world.spawnPersistentVfx) {
-      SpatialCombat._spawnRing(
+      SpatialCombat.spawnRing(
         world,
         x: focus.x,
         y: focus.y,
@@ -527,7 +527,7 @@ void _tickRangedSpecial(
         radius: 0.85,
         life: 0.45,
       );
-      SpatialCombat._spawnBurst(
+      SpatialCombat.spawnBurst(
         world,
         x: focus.x,
         y: focus.y,
@@ -642,7 +642,7 @@ void _resolveBossTelegraph(
       );
       return;
     case 'grove':
-      if (SpatialCombat._dist(enemy, focus) > 4.8) {
+      if (SpatialCombat.actorDist(enemy, focus) > 4.8) {
         enemy.specialCd = 1.2;
         return;
       }
@@ -672,7 +672,7 @@ void _resolveBossTelegraph(
       var best = 99.0;
       for (final h in world.heroes) {
         if (!h.isAlive || h.id == focus.id) continue;
-        final d = SpatialCombat._dist(focus, h);
+        final d = SpatialCombat.actorDist(focus, h);
         if (d < best && d < 3.2) {
           best = d;
           second = h;
@@ -712,7 +712,7 @@ void _resolveBossTelegraph(
       if (hit) {
         for (final h in world.heroes) {
           if (!h.isAlive) continue;
-          if (SpatialCombat._dist(enemy, h) > 3.6) continue;
+          if (SpatialCombat.actorDist(enemy, h) > 3.6) continue;
           h.attackSlowTimer = math.max(h.attackSlowTimer, 2.8);
         }
         enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
@@ -740,7 +740,7 @@ void _resolveBossTelegraph(
       if (grabbed) {
         for (final h in world.heroes) {
           if (!h.isAlive) continue;
-          if (SpatialCombat._dist(enemy, h) > 2.2) continue;
+          if (SpatialCombat.actorDist(enemy, h) > 2.2) continue;
           h.rootTimer = math.max(h.rootTimer, 1.15);
         }
         enemy.specialCd = _bossCooldownSec(world, world.afkAssist ? 9.0 : 8.0);
@@ -782,7 +782,7 @@ void _resolveBossTelegraph(
       if (wave) {
         for (final h in world.heroes) {
           if (!h.isAlive) continue;
-          if (SpatialCombat._dist(enemy, h) > 4.0) continue;
+          if (SpatialCombat.actorDist(enemy, h) > 4.0) continue;
           h.attackSlowTimer = math.max(h.attackSlowTimer, 2.6);
         }
         enemy.specialCd = world.afkAssist ? 9.0 : 8.0;
@@ -799,7 +799,7 @@ void _resolveBossTelegraph(
       }
       return;
     case 'ember':
-      if (SpatialCombat._dist(enemy, focus) > 5.2) {
+      if (SpatialCombat.actorDist(enemy, focus) > 5.2) {
         enemy.specialCd = 1.2;
         return;
       }
@@ -828,7 +828,7 @@ void _resolveBossTelegraph(
       var spat = false;
       for (final h in world.heroes) {
         if (!h.isAlive) continue;
-        if (SpatialCombat._dist(enemy, h) > 4.2) continue;
+        if (SpatialCombat.actorDist(enemy, h) > 4.2) continue;
         _bossChipHero(
           world,
           enemy,
@@ -856,7 +856,7 @@ void _resolveBossTelegraph(
       }
       return;
     case 'underworld':
-      if (SpatialCombat._dist(enemy, focus) > 6.2) {
+      if (SpatialCombat.actorDist(enemy, focus) > 6.2) {
         enemy.specialCd = 1.2;
         return;
       }
@@ -997,7 +997,7 @@ void _sandyBossSlam(
   _knockHeroesFrom(world, enemy, radius: radius, dist: 1.55);
   enemy.specialCd = _bossCooldownSec(world, world.afkAssist ? 9.0 : 8.0);
   if (!reducedVfx || world.spawnPersistentVfx) {
-    SpatialCombat._spawnBurst(
+    SpatialCombat.spawnBurst(
       world,
       x: enemy.x,
       y: enemy.y,
@@ -1025,7 +1025,7 @@ void _knockHeroesFrom(
 }) {
   for (final h in world.heroes) {
     if (!h.isAlive) continue;
-    if (SpatialCombat._dist(from, h) > radius) continue;
+    if (SpatialCombat.actorDist(from, h) > radius) continue;
     var dx = h.x - from.x;
     var dy = h.y - from.y;
     final len = math.sqrt(dx * dx + dy * dy);
@@ -1036,7 +1036,7 @@ void _knockHeroesFrom(
       dx /= len;
       dy /= len;
     }
-    final snapped = SpatialCombat._snapToWalkable(
+    final snapped = SpatialCombat.snapToWalkable(
       world.map,
       world.openGateIds,
       h.x + dx * dist,
@@ -1117,7 +1117,7 @@ void _tickAshenBossKit(
 
   if (enemy.specialCd > 0) return;
 
-  final far = SpatialCombat._dist(enemy, focus) > 5.0;
+  final far = SpatialCombat.actorDist(enemy, focus) > 5.0;
   if (far || rng.nextDouble() < 0.42) {
     enemy.telegraphTimer = 1.5;
     enemy.telegraphSlam = true;
@@ -1166,7 +1166,7 @@ bool _bossChipInRadius(
   var hit = false;
   for (final h in world.heroes) {
     if (!h.isAlive) continue;
-    if (SpatialCombat._dist(enemy, h) > radius) continue;
+    if (SpatialCombat.actorDist(enemy, h) > radius) continue;
     _bossChipHero(
       world,
       enemy,
@@ -1213,7 +1213,7 @@ void _bossRally(
   for (final ally in world.enemies) {
     if (!ally.isAlive || ally.dormant) continue;
     if (ally.id == enemy.id) continue;
-    if (SpatialCombat._dist(enemy, ally) > 5.0) continue;
+    if (SpatialCombat.actorDist(enemy, ally) > 5.0) continue;
     ally.hp = math.min(ally.effectiveMaxHp, ally.hp + heal);
     any = true;
   }
@@ -1242,7 +1242,7 @@ void _bossTell(
 }) {
   final keepRing = world.spawnPersistentVfx || world.afkAssist;
   if (reducedVfx && !keepRing) {
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: (at ?? enemy).x,
       y: (at ?? enemy).y - 0.55,
@@ -1255,7 +1255,7 @@ void _bossTell(
   }
   if (!reducedVfx || keepRing) {
     if (!reducedVfx) {
-      SpatialCombat._spawnBurst(
+      SpatialCombat.spawnBurst(
         world,
         x: enemy.x,
         y: enemy.y,
@@ -1266,7 +1266,7 @@ void _bossTell(
       );
     }
     if (keepRing) {
-      SpatialCombat._spawnRing(
+      SpatialCombat.spawnRing(
         world,
         x: enemy.x,
         y: enemy.y,
@@ -1275,7 +1275,7 @@ void _bossTell(
         life: world.afkAssist ? 0.4 : 0.55,
       );
     }
-    SpatialCombat._spawnFloater(
+    SpatialCombat.spawnFloater(
       world,
       x: (at ?? enemy).x,
       y: (at ?? enemy).y - 0.55,

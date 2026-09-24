@@ -1,4 +1,10 @@
-part of 'spatial_combat.dart';
+import 'dart:math' as math;
+
+import '../core/game_logic.dart';
+import '../models/class_ability.dart';
+import '../models/combat_ratings.dart';
+import 'spatial_combat.dart';
+
 
 /// Named helpers for rare kit casts. Dispatch is [AbilityCustomId] on the def —
 /// not a second combat engine.
@@ -7,13 +13,13 @@ abstract final class KitNamedCasts {
     final pyro = ClassKits.defFor(AbilityId.pyroblast);
     if (pyro == null) return false;
     return ClassKits.isUnlocked(AbilityId.pyroblast, hero.heroLevel) &&
-        SpatialCombat._abilityCdLeft(hero, AbilityId.pyroblast) <= 0 &&
+        SpatialCombat.abilityCdLeft(hero, AbilityId.pyroblast) <= 0 &&
         hero.rage + 0.001 >= pyro.resourceCost;
   }
 
   static SpatialActor? packLeader(SpatialWorld world, SpatialActor self) {
     for (final h in world.heroes) {
-      if (h.hp > 0 && _actorIsTank(h)) return h;
+      if (h.hp > 0 && actorIsTank(h)) return h;
     }
     for (final h in world.heroes) {
       if (h.hp > 0 && h.id != self.id) return h;
@@ -44,7 +50,7 @@ abstract final class KitNamedCasts {
     SpatialActor? dps;
     var bestAtk = -1;
     for (final h in world.heroes) {
-      if (!h.isAlive || _actorIsHealer(h)) continue;
+      if (!h.isAlive || actorIsHealer(h)) continue;
       if (h.powerInfusionTimer > 1) continue;
       if (h.attack > bestAtk) {
         bestAtk = h.attack;
@@ -94,12 +100,12 @@ abstract final class KitNamedCasts {
       // ——————————————— Prot Warrior ———————————————
       case AbilityCustomId.charge:
         if (focus == null) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         final dx = focus.x - hero.x;
         final dy = focus.y - hero.y;
         final len = math.sqrt(dx * dx + dy * dy);
         if (!reducedVfx) {
-          SpatialCombat._spawnBurst(
+          SpatialCombat.spawnBurst(
             world,
             x: hero.x,
             y: hero.y,
@@ -110,7 +116,7 @@ abstract final class KitNamedCasts {
         }
         if (len > 0.1) {
           final stop = math.max(0.55, hero.attackRange * 0.85);
-          final snapped = SpatialCombat._snapToWalkable(
+          final snapped = SpatialCombat.snapToWalkable(
             world.map,
             world.openGateIds,
             focus.x - (dx / len) * stop,
@@ -120,8 +126,8 @@ abstract final class KitNamedCasts {
           hero.y = snapped.$2;
         }
         focus.rootTimer = math.max(focus.rootTimer, 0.85);
-        SpatialCombat._gainRage(hero, 8);
-        SpatialCombat._announceCast(
+        SpatialCombat.gainRage(hero, 8);
+        SpatialCombat.announceCast(
           world,
           hero,
           text: 'CHARGE',
@@ -133,14 +139,14 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.shieldBlock:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.shieldBlockTimer = math.max(hero.shieldBlockTimer, 2.5);
         // Sword and Board–lite: chance to reset Shield Slam.
         if (ClassKits.isUnlocked(AbilityId.shieldSlam, hero.heroLevel) &&
             rng.nextDouble() < 0.4) {
           hero.abilityCd.remove(AbilityId.shieldSlam.name);
           if (!reducedVfx) {
-            SpatialCombat._spawnFloater(
+            SpatialCombat.spawnFloater(
               world,
               x: hero.x,
               y: hero.y - 0.7,
@@ -151,7 +157,7 @@ abstract final class KitNamedCasts {
           }
         }
         if (!reducedVfx) {
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: hero.x,
             y: hero.y - 0.5,
@@ -165,9 +171,9 @@ abstract final class KitNamedCasts {
       case AbilityCustomId.shieldSlam:
         // Lands as a rider on the next swing (see [_warriorAttackMods]).
         if (focus == null) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.queuedShieldSlam = true;
-        SpatialCombat._announceCast(
+        SpatialCombat.announceCast(
           world,
           hero,
           text: 'SHIELD SLAM',
@@ -180,10 +186,10 @@ abstract final class KitNamedCasts {
 
       case AbilityCustomId.devastate:
         if (focus == null || focus.hp <= 0) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         focus.sunderStacks = math.min(5, focus.sunderStacks + 1);
         focus.sunderTimer = 14;
-        AbilityEffectRunner._castDamage(
+        AbilityEffectRunner.castDamage(
           world,
           hero,
           focus,
@@ -201,12 +207,12 @@ abstract final class KitNamedCasts {
       case AbilityCustomId.demoralizingShout:
         final shouted = _enemiesAround(world, hero, 3.4);
         if (shouted.isEmpty) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         for (final e in shouted) {
           e.demoShoutTimer = math.max(e.demoShoutTimer, 6.5);
         }
         if (!reducedVfx) {
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: hero.x,
             y: hero.y - 0.55,
@@ -214,7 +220,7 @@ abstract final class KitNamedCasts {
             argb: 0xFFFF8866,
             life: 0.7,
           );
-          SpatialCombat._spawnBurst(
+          SpatialCombat.spawnBurst(
             world,
             x: hero.x,
             y: hero.y,
@@ -226,12 +232,12 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.commandingShout:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         for (final h in world.heroes) {
           if (h.isAlive && !h.isPet) h.buffTimers['atkShout'] = 14;
         }
         if (!reducedVfx) {
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: hero.x,
             y: hero.y - 0.55,
@@ -239,7 +245,7 @@ abstract final class KitNamedCasts {
             argb: 0xFFFFD070,
             life: 0.75,
           );
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: hero.x,
             y: hero.y,
@@ -252,14 +258,14 @@ abstract final class KitNamedCasts {
 
       case AbilityCustomId.tauntPull:
         // Only burn the cooldown when something actually turns around.
-        final pulled = SpatialCombat._tauntLooseEnemies(
+        final pulled = SpatialCombat.tauntLooseEnemies(
           world,
           hero,
           reducedVfx: reducedVfx,
         );
         if (!pulled) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
-        AbilityEffectRunner._announce(
+        AbilityEffectRunner.spendAndCd(world, hero, def);
+        AbilityEffectRunner.announce(
           world,
           hero,
           def.shortLabel,
@@ -270,8 +276,8 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.thunderClap:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
-        AbilityEffectRunner._castAoe(
+        AbilityEffectRunner.spendAndCd(world, hero, def);
+        AbilityEffectRunner.castAoe(
           world,
           hero,
           focus,
@@ -282,16 +288,16 @@ abstract final class KitNamedCasts {
         for (final e in _enemiesAround(world, hero, 2.7)) {
           e.attackSlowTimer = math.max(e.attackSlowTimer, 3.2);
         }
-        SpatialCombat._gainRage(hero, 8);
+        SpatialCombat.gainRage(hero, 8);
         return true;
 
       case AbilityCustomId.shockwave:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.shockwaveFlash = 0.6;
         final wave = _enemiesAround(world, hero, 2.7);
         if (!reducedVfx && wave.isNotEmpty) {
           final aim = wave.first;
-          SpatialCombat._spawnCone(
+          SpatialCombat.spawnCone(
             world,
             x: hero.x,
             y: hero.y,
@@ -301,7 +307,7 @@ abstract final class KitNamedCasts {
             life: 0.42,
           );
         }
-        AbilityEffectRunner._castAoe(
+        AbilityEffectRunner.castAoe(
           world,
           hero,
           focus,
@@ -315,12 +321,12 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.lastStand:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         final bonus = math.max(8, (hero.maxHp * 0.3).round());
         hero.bonusMaxHp = math.max(hero.bonusMaxHp, bonus);
         hero.lastStandTimer = 6.0;
         hero.hp = math.min(hero.effectiveMaxHp, hero.hp + bonus);
-        AbilityEffectRunner._announce(
+        AbilityEffectRunner.announce(
           world,
           hero,
           'LAST STAND',
@@ -331,10 +337,10 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.shieldWall:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.shieldWallTimer = math.max(hero.shieldWallTimer, 5.0);
         hero.buffTimers['shield'] = 5.0;
-        AbilityEffectRunner._announce(
+        AbilityEffectRunner.announce(
           world,
           hero,
           'SHIELD WALL',
@@ -348,10 +354,10 @@ abstract final class KitNamedCasts {
       case AbilityCustomId.painSuppression:
         final target = painSuppressionTarget(world);
         if (target == null) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         target.painSuppressionTimer = 5.5;
         if (!reducedVfx) {
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: target.x,
             y: target.y - 0.5,
@@ -359,7 +365,7 @@ abstract final class KitNamedCasts {
             argb: 0xFFFF9090,
             life: 0.7,
           );
-          SpatialCombat._spawnBurst(
+          SpatialCombat.spawnBurst(
             world,
             x: target.x,
             y: target.y,
@@ -371,14 +377,14 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.powerWordFortitude:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         for (final h in world.heroes) {
           if (!h.isAlive) continue;
           h.fortitudeTimer = 20;
           h.hp = math.min(h.effectiveMaxHp, h.hp + 4);
         }
         if (!reducedVfx) {
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: hero.x,
             y: hero.y - 0.5,
@@ -388,7 +394,7 @@ abstract final class KitNamedCasts {
           );
           for (final h in world.heroes) {
             if (!h.isAlive) continue;
-            SpatialCombat._spawnBurst(
+            SpatialCombat.spawnBurst(
               world,
               x: h.x,
               y: h.y,
@@ -412,7 +418,7 @@ abstract final class KitNamedCasts {
           }
         }
         if (bubble == null || worstShield >= 0.92) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         final inner = hero.innerFireActive ? 1.25 : 1.0;
         final shield = math.max(10, (hero.attack * def.coeff * inner).round());
         bubble.absorbShield = math.max(bubble.absorbShield, shield);
@@ -420,7 +426,7 @@ abstract final class KitNamedCasts {
         hero.attackAimX = bubble.x;
         hero.attackAimY = bubble.y;
         if (!reducedVfx) {
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: bubble.x,
             y: bubble.y - 0.45,
@@ -428,7 +434,7 @@ abstract final class KitNamedCasts {
             argb: 0xFF90D0FF,
             life: 0.75,
           );
-          SpatialCombat._spawnBurst(
+          SpatialCombat.spawnBurst(
             world,
             x: hero.x,
             y: hero.y,
@@ -436,7 +442,7 @@ abstract final class KitNamedCasts {
             radius: 0.55,
             life: 0.25,
           );
-          SpatialCombat._spawnBurst(
+          SpatialCombat.spawnBurst(
             world,
             x: bubble.x,
             y: bubble.y,
@@ -450,7 +456,7 @@ abstract final class KitNamedCasts {
       case AbilityCustomId.prayerOfMending:
         final mend = pomTarget(world);
         if (mend == null) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         final pomInner = hero.innerFireActive ? 1.15 : 1.0;
         mend.pomCharges = 5;
         mend.pomHeal = math.max(
@@ -458,7 +464,7 @@ abstract final class KitNamedCasts {
           (hero.attack * def.coeff * pomInner).round(),
         );
         if (!reducedVfx) {
-          SpatialCombat._spawnSpark(
+          SpatialCombat.spawnSpark(
             world,
             x: mend.x,
             y: mend.y,
@@ -466,7 +472,7 @@ abstract final class KitNamedCasts {
             radius: 0.7,
             life: 0.4,
           );
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: mend.x,
             y: mend.y,
@@ -480,10 +486,10 @@ abstract final class KitNamedCasts {
       case AbilityCustomId.powerInfusion:
         final dps = powerInfusionTarget(world);
         if (dps == null || focus == null) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         dps.powerInfusionTimer = 8;
         if (!reducedVfx) {
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: dps.x,
             y: dps.y - 0.5,
@@ -491,7 +497,7 @@ abstract final class KitNamedCasts {
             argb: 0xFFE0A0FF,
             life: 0.8,
           );
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: dps.x,
             y: dps.y,
@@ -499,7 +505,7 @@ abstract final class KitNamedCasts {
             radius: 1.0,
             life: 0.45,
           );
-          SpatialCombat._spawnSpark(
+          SpatialCombat.spawnSpark(
             world,
             x: dps.x,
             y: dps.y - 0.2,
@@ -514,9 +520,9 @@ abstract final class KitNamedCasts {
         final burnable =
             focus != null &&
             focus.hp > 0 &&
-            SpatialCombat._dist(hero, focus) <= hero.attackRange + 1.5;
+            SpatialCombat.actorDist(hero, focus) <= hero.attackRange + 1.5;
         if (mend == null && !burnable) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.attackFlash = 0.2;
         if (mend != null) {
           final tick = math.max(
@@ -528,20 +534,20 @@ abstract final class KitNamedCasts {
             mend.hp = math.min(mend.effectiveMaxHp, mend.hp + tick);
             final gained = mend.hp - before;
             if (gained <= 0) continue;
-            SpatialCombat._recordHeroHeal(hero, gained);
+            SpatialCombat.recordHeroHeal(hero, gained);
             if (!reducedVfx) {
-              SpatialCombat._spawnFloater(
+              SpatialCombat.spawnFloater(
                 world,
                 x: mend.x,
                 y: mend.y - 0.35 - i * 0.08,
                 text: '+$gained',
-                argb: SpatialCombat._floaterHeal,
+                argb: SpatialCombat.floaterHeal,
                 life: 0.55,
               );
             }
           }
           if (!reducedVfx) {
-            SpatialCombat._spawnBurst(
+            SpatialCombat.spawnBurst(
               world,
               x: mend.x,
               y: mend.y,
@@ -553,9 +559,9 @@ abstract final class KitNamedCasts {
         } else {
           final bolt = math.max(2, (hero.attack * 0.7).round());
           for (var i = 0; i < 3; i++) {
-            SpatialCombat._addProjectile(
+            SpatialCombat.addProjectile(
               world,
-              SpatialCombat._spellBolt(
+              SpatialCombat.spellBolt(
                 from: hero,
                 to: focus!,
                 damage: bolt,
@@ -566,14 +572,14 @@ abstract final class KitNamedCasts {
               ),
             );
           }
-          SpatialCombat._healLowestAlly(
+          SpatialCombat.healLowestAlly(
             world,
             math.max(4, (bolt * 0.9 * hero.kitHealMul).round()),
             reducedVfx: reducedVfx,
             healer: hero,
           );
         }
-        SpatialCombat._announceCast(
+        SpatialCombat.announceCast(
           world,
           hero,
           text: 'PENANCE',
@@ -586,9 +592,9 @@ abstract final class KitNamedCasts {
 
       // ——————————————— Fire Mage ———————————————
       case AbilityCustomId.iceBlock:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.iceBlockTimer = math.max(hero.iceBlockTimer, 4.0);
-        SpatialCombat._announceCast(
+        SpatialCombat.announceCast(
           world,
           hero,
           text: 'ICE BLOCK',
@@ -601,12 +607,12 @@ abstract final class KitNamedCasts {
 
       case AbilityCustomId.blink:
         if (focus == null) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         final awayX = hero.x - focus.x;
         final awayY = hero.y - focus.y;
         final away = math.sqrt(awayX * awayX + awayY * awayY);
         if (!reducedVfx) {
-          SpatialCombat._spawnBurst(
+          SpatialCombat.spawnBurst(
             world,
             x: hero.x,
             y: hero.y,
@@ -616,7 +622,7 @@ abstract final class KitNamedCasts {
           );
         }
         if (away > 0.1) {
-          final snapped = SpatialCombat._snapToWalkable(
+          final snapped = SpatialCombat.snapToWalkable(
             world.map,
             world.openGateIds,
             hero.x + (awayX / away) * 2.2,
@@ -625,7 +631,7 @@ abstract final class KitNamedCasts {
           hero.x = snapped.$1;
           hero.y = snapped.$2;
         }
-        SpatialCombat._announceCast(
+        SpatialCombat.announceCast(
           world,
           hero,
           text: 'BLINK',
@@ -638,16 +644,16 @@ abstract final class KitNamedCasts {
 
       case AbilityCustomId.livingBomb:
         if (focus == null || focus.hp <= 0) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         focus.livingBombTimer = 8;
         focus.livingBombDps = math.max(
           3.0,
-          hero.attack * 0.22 * AbilityEffectRunner._abilityOutScale(hero),
+          hero.attack * 0.22 * AbilityEffectRunner.abilityOutScale(hero),
         );
         focus.livingBombCasterId = hero.id;
         hero.livingBombArmed = 8;
         if (!reducedVfx) {
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: focus.x,
             y: focus.y - 0.4,
@@ -655,7 +661,7 @@ abstract final class KitNamedCasts {
             argb: 0xFFFF7030,
             life: 0.55,
           );
-          SpatialCombat._spawnSpark(
+          SpatialCombat.spawnSpark(
             world,
             x: focus.x,
             y: focus.y,
@@ -663,7 +669,7 @@ abstract final class KitNamedCasts {
             radius: 0.65,
             life: 0.4,
           );
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: focus.x,
             y: focus.y,
@@ -677,13 +683,13 @@ abstract final class KitNamedCasts {
       case AbilityCustomId.frostNova:
         final frozen = _enemiesAround(world, hero, 2.4);
         if (frozen.isEmpty) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         for (final e in frozen) {
           e.rootTimer = math.max(e.rootTimer, 2.4 + hero.kitRootBonus);
           e.attackSlowTimer = math.max(e.attackSlowTimer, 3);
         }
         hero.attackFlash = 0.14;
-        SpatialCombat._spawnRing(
+        SpatialCombat.spawnRing(
           world,
           x: hero.x,
           y: hero.y,
@@ -691,7 +697,7 @@ abstract final class KitNamedCasts {
           radius: 1.6,
           life: 0.45,
         );
-        SpatialCombat._announceCast(
+        SpatialCombat.announceCast(
           world,
           hero,
           text: 'FROST NOVA',
@@ -703,8 +709,8 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.blastWave:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
-        AbilityEffectRunner._castAoe(
+        AbilityEffectRunner.spendAndCd(world, hero, def);
+        AbilityEffectRunner.castAoe(
           world,
           hero,
           focus,
@@ -720,11 +726,11 @@ abstract final class KitNamedCasts {
       case AbilityCustomId.fireball:
         if (focus == null || focus.hp <= 0) return false;
         AbilityEffectRunner.applyCastDelay(hero, def);
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.attackFlash = 0.18;
         var ball = math.max(
           2,
-          (hero.attack * def.coeff * AbilityEffectRunner._abilityOutScale(hero))
+          (hero.attack * def.coeff * AbilityEffectRunner.abilityOutScale(hero))
               .round(),
         );
         if (hero.combustionTimer > 0) ball = (ball * 1.05).round();
@@ -740,9 +746,9 @@ abstract final class KitNamedCasts {
         } else {
           hero.hotStreakStack = 0;
         }
-        SpatialCombat._addProjectile(
+        SpatialCombat.addProjectile(
           world,
-          SpatialCombat._spellBolt(
+          SpatialCombat.spellBolt(
             from: hero,
             to: focus,
             damage: ball,
@@ -752,7 +758,7 @@ abstract final class KitNamedCasts {
             labelArgb: 0xFFFF8040,
           ),
         );
-        SpatialCombat._announceCast(
+        SpatialCombat.announceCast(
           world,
           hero,
           text: hero.hotStreakReady ? 'HOT STREAK!' : 'FIREBALL',
@@ -767,19 +773,19 @@ abstract final class KitNamedCasts {
         if (focus == null || focus.hp <= 0) return false;
         AbilityEffectRunner.applyCastDelay(hero, def);
         // Hot Streak makes it free; the cooldown still starts so it can't chain.
-        SpatialCombat._startAbilityCd(world, hero, def.id, def.cooldown);
+        SpatialCombat.startAbilityCd(world, hero, def.id, def.cooldown);
         hero.hotStreakReady = false;
         hero.hotStreakStack = 0;
         hero.attackFlash = 0.22;
         var pyro = math.max(
           3,
-          (hero.attack * def.coeff * AbilityEffectRunner._abilityOutScale(hero))
+          (hero.attack * def.coeff * AbilityEffectRunner.abilityOutScale(hero))
               .round(),
         );
         if (hero.combustionTimer > 0) pyro = (pyro * 1.08).round();
-        SpatialCombat._addProjectile(
+        SpatialCombat.addProjectile(
           world,
-          SpatialCombat._spellBolt(
+          SpatialCombat.spellBolt(
             from: hero,
             to: focus,
             damage: pyro,
@@ -788,7 +794,7 @@ abstract final class KitNamedCasts {
             labelArgb: 0xFFFF5020,
           ),
         );
-        SpatialCombat._announceCast(
+        SpatialCombat.announceCast(
           world,
           hero,
           text: 'HOT STREAK',
@@ -801,7 +807,7 @@ abstract final class KitNamedCasts {
 
       // ——————————————— Combat Rogue ———————————————
       case AbilityCustomId.vanish:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.vanishTimer = math.max(hero.vanishTimer, 3.5);
         for (final e in world.enemies) {
           if (e.forcedTargetId == hero.id) {
@@ -809,7 +815,7 @@ abstract final class KitNamedCasts {
             e.forcedTargetTimer = 0;
           }
         }
-        SpatialCombat._announceCast(
+        SpatialCombat.announceCast(
           world,
           hero,
           text: 'VANISH',
@@ -821,7 +827,7 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.shadowDance:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.vanishTimer = math.max(hero.vanishTimer, 3.5);
         hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 6.0);
         for (final e in world.enemies) {
@@ -830,7 +836,7 @@ abstract final class KitNamedCasts {
             e.forcedTargetTimer = 0;
           }
         }
-        SpatialCombat._announceCast(
+        SpatialCombat.announceCast(
           world,
           hero,
           text: 'SHADOW DANCE',
@@ -842,15 +848,15 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.killingSpree:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.killingSpreeTimer = 3.0;
-        SpatialCombat._gainRage(hero, 15);
+        SpatialCombat.gainRage(hero, 15);
         final spree = _enemiesAround(world, hero, 4.5)
           ..sort(
-            (a, b) => SpatialCombat._dist(
+            (a, b) => SpatialCombat.actorDist(
               hero,
               a,
-            ).compareTo(SpatialCombat._dist(hero, b)),
+            ).compareTo(SpatialCombat.actorDist(hero, b)),
           );
         var prevX = hero.x;
         var prevY = hero.y;
@@ -860,14 +866,14 @@ abstract final class KitNamedCasts {
               2,
               (hero.attack *
                       def.coeff *
-                      AbilityEffectRunner._abilityOutScale(hero))
+                      AbilityEffectRunner.abilityOutScale(hero))
                   .round(),
             ),
             defense: e.effectiveDefense,
             attackerAttack: hero.attack,
           );
           if (!reducedVfx) {
-            SpatialCombat._spawnBurst(
+            SpatialCombat.spawnBurst(
               world,
               x: (prevX + e.x) * 0.5,
               y: (prevY + e.y) * 0.5,
@@ -878,14 +884,14 @@ abstract final class KitNamedCasts {
             );
           }
           final wasAlive = e.hp > 0;
-          SpatialCombat._hurtEnemy(e, hit);
-          SpatialCombat._recordHeroDamage(hero, hit);
+          SpatialCombat.hurtEnemy(e, hit);
+          SpatialCombat.recordHeroDamage(hero, hit);
           hero.x = e.x;
           hero.y = e.y;
           prevX = e.x;
           prevY = e.y;
-          SpatialCombat._spawnSlash(world, from: hero, to: e, isCrit: true);
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnSlash(world, from: hero, to: e, isCrit: true);
+          SpatialCombat.spawnFloater(
             world,
             x: e.x,
             y: e.y - 0.3,
@@ -894,18 +900,18 @@ abstract final class KitNamedCasts {
             life: 0.45,
           );
           if (wasAlive && e.hp <= 0) {
-            final killed = SpatialCombat._onEnemyKilled(
+            final killed = SpatialCombat.onEnemyKilled(
               world,
-              AbilityEffectRunner._stateOut!,
+              AbilityEffectRunner.stateOut!,
               e,
               rng,
             );
-            AbilityEffectRunner._goldOut += killed.gold;
-            AbilityEffectRunner._stateOut = killed.state;
+            AbilityEffectRunner.goldOut += killed.gold;
+            AbilityEffectRunner.stateOut = killed.state;
           }
         }
         if (!reducedVfx) {
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: hero.x,
             y: hero.y,
@@ -913,7 +919,7 @@ abstract final class KitNamedCasts {
             radius: 1.1,
             life: 0.4,
           );
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: hero.x,
             y: hero.y - 0.5,
@@ -925,17 +931,17 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.sprint:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.sprintTimer = math.max(hero.sprintTimer, 4.0);
         if (!reducedVfx) {
-          SpatialCombat._spawnSpark(
+          SpatialCombat.spawnSpark(
             world,
             x: hero.x,
             y: hero.y,
             argb: 0xFF90FF90,
             radius: 0.55,
           );
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: hero.x,
             y: hero.y - 0.45,
@@ -947,12 +953,12 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.bladeFlurry:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         final dur = def.selfBuffDuration > 0 ? def.selfBuffDuration : 5.0;
         hero.bladeFlurryTimer = math.max(hero.bladeFlurryTimer, dur);
         hero.buffTimers['buff'] = dur;
         if (!reducedVfx) {
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: hero.x,
             y: hero.y,
@@ -960,7 +966,7 @@ abstract final class KitNamedCasts {
             radius: 1.2,
             life: 0.4,
           );
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: hero.x,
             y: hero.y - 0.5,
@@ -972,18 +978,18 @@ abstract final class KitNamedCasts {
         return true;
 
       case AbilityCustomId.sliceAndDice:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.sliceAndDiceTimer = 6 + hero.comboPoints * 1.5;
         hero.comboPoints = 0;
         if (!reducedVfx) {
-          SpatialCombat._spawnSpark(
+          SpatialCombat.spawnSpark(
             world,
             x: hero.x,
             y: hero.y,
             argb: 0xFFFFD070,
             radius: 0.5,
           );
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: hero.x,
             y: hero.y - 0.45,
@@ -996,11 +1002,11 @@ abstract final class KitNamedCasts {
 
       case AbilityCustomId.kidneyShot:
         if (focus == null || focus.hp <= 0) return false;
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         focus.rootTimer = 2.0 + hero.comboPoints * 0.25 + hero.kitRootBonus;
         hero.comboPoints = 0;
         if (!reducedVfx) {
-          SpatialCombat._spawnSpark(
+          SpatialCombat.spawnSpark(
             world,
             x: focus.x,
             y: focus.y,
@@ -1008,7 +1014,7 @@ abstract final class KitNamedCasts {
             radius: 0.6,
             life: 0.4,
           );
-          SpatialCombat._spawnFloater(
+          SpatialCombat.spawnFloater(
             world,
             x: focus.x,
             y: focus.y - 0.4,
@@ -1019,125 +1025,13 @@ abstract final class KitNamedCasts {
         }
         return true;
 
-      case AbilityCustomId.armyOfDead:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
-        SpatialCombat.spawnTempPets(
-          world,
-          owner: hero,
-          count: 4,
-          duration: 16,
-          atkScale: 0.30,
-          namePrefix: 'Ghoul',
-          idPrefix: 'army',
-        );
-        AbilityEffectRunner._castAoe(
-          world,
-          hero,
-          focus,
-          def,
-          rng,
-          reducedVfx: reducedVfx,
-        );
-        return true;
-
-      case AbilityCustomId.feralSpirit:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
-        SpatialCombat.spawnTempPets(
-          world,
-          owner: hero,
-          count: 2,
-          duration: 30,
-          atkScale: 0.42,
-          namePrefix: 'Spirit Wolf',
-          idPrefix: 'wolf',
-        );
-        AbilityEffectRunner._announce(
-          world,
-          hero,
-          def.shortLabel,
-          0xFF90E0FF,
-          reducedVfx,
-        );
-        if (!reducedVfx) {
-          SpatialCombat._spawnRing(
-            world,
-            x: hero.x,
-            y: hero.y,
-            argb: 0xFF90E0FF,
-            radius: 0.95,
-            life: 0.4,
-          );
-        }
-        return true;
-
-      case AbilityCustomId.waterElemental:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
-        SpatialCombat.spawnTempPets(
-          world,
-          owner: hero,
-          count: 1,
-          duration: 28,
-          atkScale: 0.40,
-          namePrefix: 'Water Elemental',
-          idPrefix: 'water',
-        );
-        AbilityEffectRunner._announce(
-          world,
-          hero,
-          def.shortLabel,
-          0xFF80D0FF,
-          reducedVfx,
-        );
-        if (!reducedVfx) {
-          SpatialCombat._spawnRing(
-            world,
-            x: hero.x,
-            y: hero.y,
-            argb: 0xFF80D0FF,
-            radius: 1.0,
-            life: 0.45,
-          );
-        }
-        return true;
-
-      case AbilityCustomId.gargoyle:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
-        SpatialCombat.spawnTempPets(
-          world,
-          owner: hero,
-          count: 1,
-          duration: 22,
-          atkScale: 0.48,
-          namePrefix: 'Gargoyle',
-          idPrefix: 'garg',
-        );
-        hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 8.0);
-        AbilityEffectRunner._announce(
-          world,
-          hero,
-          def.shortLabel,
-          0xFFA080C0,
-          reducedVfx,
-        );
-        if (!reducedVfx) {
-          SpatialCombat._spawnRing(
-            world,
-            x: hero.x,
-            y: hero.y,
-            argb: 0xFFA080C0,
-            radius: 1.05,
-            life: 0.45,
-          );
-        }
-        return true;
-
       case AbilityCustomId.shamanisticRage:
-        AbilityEffectRunner._spendAndCd(world, hero, def);
+        AbilityEffectRunner.spendAndCd(world, hero, def);
         final grant = def.coeff > 0 ? def.coeff : 30.0;
-        SpatialCombat._gainRage(hero, grant);
+        SpatialCombat.gainRage(hero, grant);
         hero.shieldWallTimer = math.max(hero.shieldWallTimer, 4.0);
         hero.buffTimers['shield'] = 4.0;
-        AbilityEffectRunner._announce(
+        AbilityEffectRunner.announce(
           world,
           hero,
           def.shortLabel,
@@ -1145,7 +1039,7 @@ abstract final class KitNamedCasts {
           reducedVfx,
         );
         if (!reducedVfx) {
-          SpatialCombat._spawnRing(
+          SpatialCombat.spawnRing(
             world,
             x: hero.x,
             y: hero.y,
@@ -1167,6 +1061,6 @@ abstract final class KitNamedCasts {
     double radius,
   ) => [
     for (final e in world.enemies)
-      if (e.hp > 0 && !e.dormant && SpatialCombat._dist(self, e) <= radius) e,
+      if (e.hp > 0 && !e.dormant && SpatialCombat.actorDist(self, e) <= radius) e,
   ];
 }

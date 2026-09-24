@@ -1,58 +1,5 @@
 part of 'spatial_combat.dart';
 
-/// Per-tick focus facts so every hero doesn't re-scan tank / threats.
-final class _FocusTickCache {
-  _FocusTickCache({
-    required this.tank,
-    required this.tankFocus,
-    required this.anyActive,
-    required this.threatBonusByEnemyId,
-  });
-
-  final SpatialActor? tank;
-  final SpatialActor? tankFocus;
-  final bool anyActive;
-
-  /// Precomputed peel score for enemies currently beating on backline.
-  final Map<String, double> threatBonusByEnemyId;
-
-  static _FocusTickCache build(SpatialWorld world) {
-    SpatialActor? tank;
-    SpatialActor? tankFocus;
-    for (final h in world.heroes) {
-      if (!h.isAlive || !_actorIsTank(h)) continue;
-      tank = h;
-      tankFocus = SpatialCombat._nearestActiveEnemy(h, world.enemies);
-      break;
-    }
-
-    var anyActive = false;
-    final threat = <String, double>{};
-    for (final e in world.enemies) {
-      if (e.hp <= 0) continue;
-      if (!e.dormant) anyActive = true;
-      if (e.forcedTargetTimer <= 0 || e.forcedTargetId == null) continue;
-      for (final h in world.heroes) {
-        if (!h.isAlive || h.id != e.forcedTargetId) continue;
-        if (_actorIsHealer(h)) {
-          threat[e.id] = 50;
-        } else if (h.ranged ||
-            (h.heroSpecId != null &&
-                HeroSpecs.def(h.heroSpecId!).roleTag == SpecRoleTag.caster)) {
-          threat[e.id] = 28;
-        }
-        break;
-      }
-    }
-    return _FocusTickCache(
-      tank: tank,
-      tankFocus: tankFocus,
-      anyActive: anyActive,
-      threatBonusByEnemyId: threat,
-    );
-  }
-}
-
 /// Pathing / soft-lock helpers (indexed BFS — no queue removeAt(0)).
 abstract final class _CombatPathing {
   /// Reusable key buffer for cooldown / buff maps (single-threaded combat).
