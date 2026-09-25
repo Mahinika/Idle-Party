@@ -1,8 +1,9 @@
 ---
 description: >-
-  Idle Party studio seats — six chairs only. Not a 40-person org.
-  Decision policy on forks; no department role-play in chat.
-alwaysApply: true
+  Six studio chairs for a design fork: two games, whose call, or scope
+  versus fight versus findability. Skip for routine implement, analyze,
+  and commit.
+alwaysApply: false
 ---
 
 # Studio seats (Idle Party)
@@ -35,10 +36,9 @@ change). No Scrum Master / PM layer.
 
 ## Weight (no standing program)
 
-What to **build:** whatever the owner names (or a clear batch). Do not restore
-AL20 hub polish as the default. Game Director may freshen pack mix / boss
-tells against play notes. Art sits unless listing conversion is the hole.
-Tech never picks the feature unprompted.
+What to **build:** whatever the owner names (or a clear batch). Game Director
+may freshen pack mix / boss tells against play notes. Art sits unless listing
+conversion is the hole. Tech never picks the feature unprompted.
 
 ## When the owner names more endgame
 

@@ -1,39 +1,13 @@
 ---
 description: >-
-  Standing Play-growth principles. No numbered programs.
-  Owner names work. Do not restore AL20 as the batch.
-alwaysApply: true
+  Standing Play-growth principles when prioritizing, listing, or the owner
+  asks what to build next. Source of truth is docs/GROWTH_MANDATE.md.
+alwaysApply: false
 ---
 
 # Growth mandate (Idle Party)
 
-**Locked 2026-09-12.** Source: `docs/GROWTH_MANDATE.md` (research-checked).
-Programs / soft locks / ask-first UX hard rules removed **2026-09-14**.
-**Never upload Google Play AAB without owner ask.**
-Play numbers: `docs/PLAY_GROWTH.md`. Why: `docs/LEARNINGS.md`.
+Read `docs/GROWTH_MANDATE.md`. Do not copy it into other rules.
 
-**Default:** owner names the work. Vague “gör bättre / vad härnäst” → ask
-once; do not invent a numbered program; do not restore AL20 as the batch.
-AL20 play notes are a **quality gate**, not the batch.
-
-## Do this
-
-- Keep first-session playable (combat reachable without tip dump when possible)
-- TODAY useful; honest offline return
-- Cadence 2–3 weeks; new-player What’s New; DPS HIGH still fails CI
-- Listing experiment when traffic exists
-
-## Do not do
-
-- AL20 chase/wipe polish as the default slice
-- Second combat sim / gacha / BiS-for-cash / iOS / web-as-product
-- God-object cleanup as the quarter’s story
-- GitHub Releases as a player funnel
-- Invent “Program N” roadmaps unless the owner asks
-
-## Decision policy
-
-`.cursor/rules/studio-seats.mdc` — six chairs, not a persona play.
-EP + UX + Marketing pick *what to build* when there is a fork.
-Game Director vetoes a broken fight. Tech vetoes red analyze / crash.
-Legal/fairness sit on Art + Game + EP.
+Owner names the work. A vague “gör bättre / vad härnäst” asks once.
+Numbers and why: `docs/PLAY_GROWTH.md`, `docs/LEARNINGS.md`.

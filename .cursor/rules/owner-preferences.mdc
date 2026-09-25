@@ -10,21 +10,19 @@ alwaysApply: true
 Source: owner (vibe-coder). Last sync: **2026-09-15**.
 Locks: `.cursor/rules/product-locks.mdc`. Mandate: `docs/GROWTH_MANDATE.md`.
 
-**Now:** no standing program / plan. Soft locks + listed ask-first / UX hard
-rules removed. **Never Play AAB without owner ask.** Owner names the work
-(or agent ships when the goal is clear). AL20 is a quality gate, not the batch.
+**Now:** no standing program. Owner names the work. **Never Play AAB without
+owner ask.** AL20 is a quality gate, not the batch: those notes block ship
+only when endgame is broken, and they do not pick the next feature.
 
 ## Default work (when goal is vague)
 
-Ask once what to do. Do not invent a numbered program. Do not restore AL20 as
-the default. Prefer deepening the five endgame hunts when they say “mer
-endgame” unless they name new content. Monthly Craft Trial (MORE → CRAFT) is
-not a sixth ENDGAME hunt. Not default: AL20 hub-chase polish,
-`/init`, repo cleanup, god-object refactors, iOS. GEAR / endgame copy only
-if play notes say they lie.
+Ask once what to do. Do not invent a numbered program. Prefer deepening KEY,
+Gauntlet, Rift, Greater Rift, and Ashen when they say “mer endgame” unless
+they name new content. Monthly Craft Trial (MORE → CRAFT) is not a sixth
+ENDGAME hunt. Not default: hub-chase polish, `/init`, repo cleanup,
+god-object refactors, iOS. GEAR / endgame copy only if play notes say they lie.
 
-**Play notes:** a **new save** is the usual batch signal. AL20 notes block ship
-if endgame is broken; they do not pick the next feature.
+**Play notes:** a **new save** is the usual batch signal.
 
 ## UI / distribution (facts)
 
@@ -64,7 +62,7 @@ if endgame is broken; they do not pick the next feature.
 
 Ambiguous “two different games” (meny vs combat): silent
 `.cursor/rules/studio-seats.mdc` — one decision. Prefer shipping something
-playable over AL20 chrome by default.
+playable.
 
 ## Feel reminders
 

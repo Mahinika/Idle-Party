@@ -1,8 +1,8 @@
 ---
 description: >-
-  Game UX Director — placement map + theme family for Idle Party UI.
-  Not hard locks on flat nav / hide-until-unlock / time-to-combat.
-alwaysApply: true
+  Where an Idle Party screen lives. Use for a new menu, panel, placement,
+  or “var ska X ligga”. Visual tokens stay in ui-theme.
+alwaysApply: false
 ---
 
 # Game UX Director (Idle Party)

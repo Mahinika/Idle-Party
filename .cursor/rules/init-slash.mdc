@@ -5,12 +5,6 @@ alwaysApply: true
 
 # /init → resync agent docs
 
-If the user message is exactly **`/init`**, or clearly means that slash command, **immediately** follow `.cursor/skills/init/SKILL.md`:
+If the user message is exactly **`/init`**, or clearly means that slash command, **immediately** follow `.cursor/skills/init/SKILL.md`.
 
-> Gå igenom spelet och uppdatera `AGENTS.md` + regler så de stämmer med hur spelet funkar nu.
-
-Do not ask which skill to use. Do not treat `/init` as a vague “start coding”
-request. **`/init` must not restore AL20 as the default work slice.**
-Owner names work — no standing program / “next plan.”
-**Never upload Google Play AAB without owner ask.** Do not restore AL20 as the
-default work slice.
+Do not ask which skill to use. Do not treat `/init` as a vague “start coding” request.

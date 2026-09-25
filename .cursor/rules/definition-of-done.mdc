@@ -1,6 +1,7 @@
 ---
 description: >-
-  Ship bar — analyze, matching tests, honesty, commit locally; ask before Play upload.
+  Ship bar — analyze, matching tests, honest copy, legal art, docs.
+  Git and Play upload live in owner-preferences.
 alwaysApply: true
 ---
 
@@ -13,18 +14,13 @@ Before telling the owner a coding task is finished:
    `changelog_sync_test`; hub / chase / guides / first hour → `ship_smoke_test`
    + `first_hour_plain_test` when those surfaces moved.
 3. **Honesty** — player-visible copy matches reality (English in-game).
-4. **Legal** — no foreign dumps; art via Kenney/custom helpers only.
-5. **Git** — when analyze/tests are green, **commit locally**. Push / PR / tag
-   when the batch needs it. **Play AAB only when the owner asks.** If the
-   handoff asks them to look at the phone, **A56 must already be running this
-   batch** (hot restart / relaunch) *before* the test list. Short test list
-   for a **new save** (and AL20 if endgame touched). Never force-push or
-   skip hooks unless they said so. Never point players at GitHub Releases.
-6. **Docs** — if architecture / Ascend / world path / distribution / tooling
+4. **Legal** — no foreign dumps; art via `CustomAssets` / `KenneyAssets` only.
+5. **Docs** — if architecture / Ascend / world path / distribution / tooling
    changed, update `AGENTS.md` (or `/init`). Standing growth principles live
    in `docs/GROWTH_MANDATE.md`.
-7. **Mandate** — owner names the work (or clear goal). Do not restore AL20 as
-   the default batch. Do not invent numbered programs.
+
+Git, the phone handoff, and what not to restore as the batch live in
+`owner-preferences`.
 
 Skip heavy mid-band sims unless the task is balance. Skip A56 for pure logic
 unless the handoff asks them to look on the phone (then push this batch first)

@@ -24,10 +24,8 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 4. Follow skills silently (`suggesting-skills`) — don’t ask “ska jag använda X?”.
 5. After UI/meta: verify (tests and/or `a56-playtest`). Web only if Android can’t run.
 6. After kit number tweaks: share-fast; grind gate green before done.
-7. Git: commit locally when green; push when needed; **never Play upload
-   without owner ask** — `owner-preferences`.
+7. Git and Play upload: follow `owner-preferences`.
 8. Vague goal → ask once what to do. Do not invent a numbered program.
-   Do not restore AL20 as the batch.
 
 ## Skill map (silent)
 
@@ -55,7 +53,7 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 | världskartan / kontinenter / PATH scroll | `hub_world_map` + `assets-legal` if PNG |
 | rummen för små / fyrkantiga golv | `spatial-combat-change` (`layoutPressure` / silhouettes) |
 | I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — **new-save first** |
-| “gör spelet bättre” / vad härnäst (no other target) | ask once — not AL20, not invent a numbered program |
+| “gör spelet bättre” / vad härnäst (no other target) | ask once — do not invent a numbered program |
 | fork / två spel / vem har rätt | silent `studio-seats` (six chairs) |
 | Play Store / listing / privacy / AAB / screenshots / statistik / recensioner | `play-store-prep` (+ `docs/PLAY_STORE.md` / `STORE_LISTING.md`) |
 | itch.io / itch listing | `play-store-prep` + `tool/store_listing/itch/PAGE.md` (no APK) |
@@ -67,5 +65,5 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 
 ## Done looks like
 
-Short test list for a **new save** plus AL20 only if endgame
-touched. Wait. No tool-name essays unless they ask “hur gjorde du?”.
+Short test list for a **new save**. Add an endgame save only if endgame
+was touched. Wait. No tool-name essays unless they ask “hur gjorde du?”.
