@@ -87,6 +87,9 @@ def clean_folder(folder: Path) -> int:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("cleanup_generated_gear_variants.py")
     n = clean_folder(ROOT / "gear")
     n += clean_folder(ROOT / "gear" / "_authored")
     for family in ("warrior", "healer", "mage", "rogue"):

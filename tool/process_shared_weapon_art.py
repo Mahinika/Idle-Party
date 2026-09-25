@@ -101,6 +101,9 @@ def cover_hair_with_helm(helm: Image.Image, body_path: Path) -> Image.Image:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("process_shared_weapon_art.py")
     jobs = [
         ("weapon_staff_gen.png", "staff_t0", STAFF_BOX, False),
         ("weapon_dagger_gen.png", "dagger_t0", MAIN_BOX, False),

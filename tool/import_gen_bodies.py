@@ -48,6 +48,9 @@ def to_body_idle(src: Path, dst: Path) -> None:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("import_gen_bodies.py")
     for src_rel, dst_rel in PAIRS:
         to_body_idle(ROOT / src_rel, ROOT / dst_rel)
 

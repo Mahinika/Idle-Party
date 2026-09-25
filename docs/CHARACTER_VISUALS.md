@@ -114,9 +114,8 @@ optional material suffix from equipped `armorType`.
 
 Boots fold into legs on the doll; BAG uses a foot-band `boots_t*_icon.png` crop.
 
-Do **not** invent armor or mass weapon variants with `ImageDraw` /
-`generate_item_model_variants` mutate. That script only syncs authored
-frames and rebuilds `*_icon.png` crops.
+Do **not** invent armor or mass weapon variants with `ImageDraw`.
+`generate_item_model_variants.py` refuses to copy masters into live gear.
 
 Slot / BAG icons: `*_icon.png` (bbox crop of the same idle overlay), built
 by `tool/make_gear_slot_icons.py` at the end of `build_owned_gear_layers.py`.
@@ -157,8 +156,8 @@ Facing is **L/R flipX only**. Enemies unchanged in Phase 3.
 - Owned cape paints **behind** the body, same order as the gold master.
   The sides still show. Painting the cape in front covers the chest.
 - Off-hand / main-hand — same 128 PNGs grip-aligned to owned hand
-  anchors (`OwnedGearGrips`). Bake art to the socket with
-  `py tool/bake_owned_hand_grips.py`, then `py tool/gen_owned_gear_grips.py`.
+  anchors (`OwnedGearGrips`). When hand art moves, regenerate the grip
+  table with `py tool/gen_owned_gear_grips.py`. Do not shift the PNGs.
   Audit: `py tool/audit_anchors.py`.
   Grips are **opaque-pixel** points: handle centroid for melee/staves, shape
   mid-height for bows, shape centroid for shields/frills. A bbox center is

@@ -67,6 +67,9 @@ def undo(path: Path, dx: float, dy: float) -> None:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("undo_bake_hand_grips.py")
     n = 0
     for folder in (GEAR, AUTH):
         for stem, (dx, dy) in SHIFTS.items():

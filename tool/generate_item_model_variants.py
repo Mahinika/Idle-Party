@@ -54,6 +54,9 @@ def sync_authored() -> int:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("generate_item_model_variants.py")
     n = sync_authored()
     print(f"synced {n} authored frames")
     subprocess.check_call([sys.executable, str(TOOL / "make_gear_slot_icons.py")])

@@ -67,6 +67,9 @@ def bake_one(path: Path) -> tuple[bool, str]:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("bake_owned_hand_grips.py")
     updated = 0
     skipped = 0
     for folder in (GEAR, AUTHORED):
