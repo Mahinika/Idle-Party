@@ -316,9 +316,9 @@ class MenuRouter extends ChangeNotifier {
 
     MenuRoute.gold => switch (_goldPanel) {
 
-      GoldPanel.tracks => 'Run power bought with gold',
+      GoldPanel.tracks => 'Forge this run · Market',
 
-      GoldPanel.market => 'Flasks · bandages · buy upgrades',
+      GoldPanel.market => 'Flasks · buy upgrades',
 
     },
 
@@ -326,11 +326,11 @@ class MenuRouter extends ChangeNotifier {
 
     MenuRoute.essence => switch (_essencePanel) {
 
-      EssencePanel.tracks => 'Spend essence on lasting tracks',
+      EssencePanel.tracks => 'Camp · Blessing · lasting power',
 
-      EssencePanel.keep => 'God Hand · Blessing · permanent buys',
+      EssencePanel.keep => 'God Hand · Blessing · Ascend',
 
-      EssencePanel.relics => 'Party auras that keep on Ascend',
+      EssencePanel.relics => 'Relics that keep on Ascend',
 
       EssencePanel.pets => 'Hatch and level pets',
 

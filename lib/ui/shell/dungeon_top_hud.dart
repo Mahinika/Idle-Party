@@ -20,7 +20,7 @@ import '../spatial_dungeon_view.dart';
 import 'rift_progress_hud.dart';
 import 'wallet_strip.dart';
 
-String _packJobBit(SpatialWorld? world, {required bool plain}) {
+String _packJobBit(SpatialWorld? world) {
   if (world == null) return '';
   final pack = world.enemies;
   if (pack.isEmpty) return '';
@@ -58,7 +58,8 @@ String _packJobBit(SpatialWorld? world, {required bool plain}) {
       : jobs.contains(PackJob.elite)
       ? PackJob.elite
       : jobs.first;
-  return ' · ${lead.hudBit(plain: plain)}$next';
+  // Pack jobs stay plain English — enum names (swarm/backline) are jargon.
+  return ' · ${lead.plainHudBit()}$next';
 }
 
 String _keyAffixBit(GameState state) {
@@ -344,7 +345,7 @@ class DungeonTopHud extends StatelessWidget {
         ? 'MOTHVEIL · RANK GR${state.grTier}'
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).title
-        : '$zoneShort · F$floor$keyBit${_packJobBit(world, plain: plain)}${_keyAffixBit(state)}';
+        : '$zoneShort · F$floor$keyBit${_packJobBit(world)}${_keyAffixBit(state)}';
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);
       if (fighting && state.dungeonMode != mode) {

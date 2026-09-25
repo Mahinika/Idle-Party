@@ -124,14 +124,18 @@ class MenuAlerts {
     }
     if (urgency == HubChaseUrgency.ready && chaseKind != null) {
       return switch (chaseKind) {
-        HubChaseKind.equipBag || HubChaseKind.meetHero => MenuAlerts(
-          gear: gearAlert(state),
-          gold: MenuAlert.quiet,
-          shop: MenuAlert.quiet,
-          essence: MenuAlert.quiet,
-          key: MenuAlert.quiet,
-          more: MenuAlert.quiet,
-        ),
+        HubChaseKind.equipBag || HubChaseKind.meetHero => () {
+          final g = gearAlert(state);
+          // Badge only — TODAY / EQUIP CTA already names the job (#16).
+          return MenuAlerts(
+            gear: MenuAlert(count: g.count, star: g.star),
+            gold: MenuAlert.quiet,
+            shop: MenuAlert.quiet,
+            essence: MenuAlert.quiet,
+            key: MenuAlert.quiet,
+            more: MenuAlert.quiet,
+          );
+        }(),
         HubChaseKind.marketUpgrade => MenuAlerts(
           gear: MenuAlert.quiet,
           gold: marketAlert(state),

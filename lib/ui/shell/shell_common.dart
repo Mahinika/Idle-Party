@@ -61,21 +61,29 @@ int? gearDisplayIlvl(EquipmentItem item) {
     slot: item.slot,
     handed: item.handed,
   );
+  final slotM = EquipmentFactory.slotMult(item.slot, handed: item.handed);
+  final quality = switch (item.rarity) {
+    LootRarity.common => 0.92,
+    LootRarity.uncommon => 0.96,
+    LootRarity.rare => 1.0,
+    LootRarity.epic => 1.06,
+    LootRarity.legendary => 1.12,
+  };
+  int fromPower() => math.max(
+        1,
+        (item.statPowerScore / (0.88 * quality * slotM)).round(),
+      );
+  // Tagged too low for the stats (classic starter i5 on real gear).
+  if (expected > 0 && item.statPowerScore > expected * 1.35) {
+    final derived = fromPower();
+    return derived <= 5 && tagged <= 5 ? null : derived;
+  }
   if (item.statPowerScore < expected * 0.6) {
     if (item.statPowerScore <= 4) return null;
-    final slotM = EquipmentFactory.slotMult(item.slot, handed: item.handed);
-    final quality = switch (item.rarity) {
-      LootRarity.common => 0.92,
-      LootRarity.uncommon => 0.96,
-      LootRarity.rare => 1.0,
-      LootRarity.epic => 1.06,
-      LootRarity.legendary => 1.12,
-    };
-    return math.max(
-      1,
-      (item.statPowerScore / (0.88 * quality * slotM)).round(),
-    );
+    return fromPower();
   }
+  // Starter tag alone is noise on a progressed hero.
+  if (tagged <= 5 && item.statPowerScore <= 4) return null;
   return tagged;
 }
 
