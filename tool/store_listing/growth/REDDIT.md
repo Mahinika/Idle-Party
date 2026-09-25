@@ -21,7 +21,7 @@ r/incremental_games **did** convert to Play downloads. It also got **30.8% upvot
 | Not before **2026-10-18** | r/incremental_games | 30-day own-content rule. Slot used 2026-09-18. |
 | Not while live | r/droidappshowcase / ShowMeYourApps / ShowYourApp | Still up. Do not delete-and-repost. |
 | After karma + a few days | r/SideProject | Spam-filter removed the first one. |
-| **2026-09-25+** | r/IndieGaming | Account 1 week old; 1 post / 2 weeks; attach GIF. |
+| Not before **2026-10-09** | r/IndieGaming | Posted **2026-09-25**. One submission / 2 weeks. |
 | After GIF exists | r/indiegames, r/DungeonCrawler | Need footage in the post, not a YouTube URL. |
 
 Until then: comment on **other** games (need comment karma). Capture a 7–15s party-crawl GIF from A56 (`HOOKS.md` hook 01).
@@ -37,7 +37,7 @@ Live sizes **2026-09-20**. Rank = likely Android idle-RPG players, not raw membe
 | # | Sub | Members | When we can post | How |
 |---|-----|--------:|------------------|-----|
 | 1 | [r/incremental_games](https://www.reddit.com/r/incremental_games/) | 189k | **2026-10-18** | Proven 3.2K views → Play. 1 own-game / 30 days. GIF + short paste below. Feedback Friday comments OK sooner. |
-| 2 | [r/IndieGaming](https://www.reddit.com/r/IndieGaming/) | 525k | **2026-09-25+** | Account **1 week** + posting history. **1 post / 2 weeks.** GIF/screens. Declare AI coding assistants. No bare store link. |
+| 2 | [r/IndieGaming](https://www.reddit.com/r/IndieGaming/) | 525k | **2026-10-09** | Posted **2026-09-25**. **1 post / 2 weeks.** GIF in the post. Declare AI coding assistants in the body. Store page is not the post URL. |
 | 3 | [r/indiegames](https://www.reddit.com/r/indiegames/) | 337k | GIF ready | Footage **required**. Max 2/week. No fake “feedback?” titles. No gen-AI posts. |
 | 4 | [r/AndroidGaming](https://www.reddit.com/r/AndroidGaming/) | 427k | ~**2026-12-18** | `[DEV]` + Play link. Account **3 months**. 90% unaffiliated. 1 game post / month. Stay 3h after post. |
 | 5 | [r/playmygame](https://www.reddit.com/r/playmygame/) | 142k | After reviewing others | Free Play counts as playable. **1 / month.** Direct Play link + short desc. |
@@ -57,7 +57,7 @@ Live sizes **2026-09-20**. Rank = likely Android idle-RPG players, not raw membe
 | 19 | [r/alphaandbetausers](https://www.reddit.com/r/alphaandbetausers/) | 46k | Optional | Same: testers. Game is already on Play. |
 | 20 | [r/freegames](https://www.reddit.com/r/freegames/) | 117k | If they treat F2P as free | “Forever Free” — skip if they read optional IAP as not-free. |
 
-**Next three with a GIF:** #2 IndieGaming (25 sep) → #3 indiegames → #6 IndieDev. Then #5 playmygame after a few honest reviews of other games.
+**Next:** #6 IndieDev (GIF, unique copy). Then #5 playmygame after a few honest reviews of other games. IndieGaming again only after **2026-10-09**.
 
 ---
 
@@ -178,6 +178,16 @@ https://play.google.com/store/apps/details?id=com.idleparty.app
 Insights: https://www.reddit.com/poststats/1wjwbga/
 
 ---
+
+## Posted 2026-09-25
+
+| Sub | URL |
+|-----|-----|
+| r/IndieGaming | https://www.reddit.com/r/IndieGaming/comments/1wq7hpc/gameplay_of_idle_party_released_android_idle_rpg/ |
+
+GIF embed (not the post URL): https://i.imgur.com/Ua26le5.gif. Title is the hook plus `'Idle Party'` and “released Android”. Body has the AI disclosure and the Play link. AutoMod left the Discord sticky; the post stayed up. Next slot **2026-10-09**.
+
+What the month’s top posts actually were: native clip, first-person hook, game name in the title. Store page as the link gets removed. GenAI use must be declared in the post.
 
 ## Posted 2026-09-21 (GIF threads)
 
