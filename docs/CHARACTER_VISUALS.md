@@ -220,14 +220,14 @@ every time a hero took damage.
 2. Check `tool/preview_doll_<family>.png` (written by facit from body+overlays).
 3. Register paths in `BodyFamilyCatalog`.
 4. Do **not** paste Kenney tiles on denser bodies.
-5. `py tool/process_char_bodies.py` skips `gear/` and `_src/`.
+5. `process_char_bodies.py` refuses to run. It used to crop body PNGs.
 
 ## Adding a race undertunic
 
 Shipped LOOK set = Cataclysm’s **12** playable races (Human…Goblin; no Pandaren),
 each with **male and female** undertunic bases. Keep `BodyFamily` as the gear
 pose. Files live at `assets/custom/char/<family>/<race>_<m|f>_body_<anim>.png`
-(regenerate with `py tool/paint_race_bodies.py`).
+(the gear build runs `paint_race_bodies.py` on the staged copy).
 
 **Bake pipeline** (pose-matched to gear, not a stick redraw):
 

@@ -105,6 +105,10 @@ def write_all(*, t2_only: bool = False) -> int:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer, staged
+
+    if not staged():
+        refuse_live_writer("make_gear_slot_icons.py")
     print(f"wrote {write_all(t2_only='--t2-only' in sys.argv)} slot icons")
 
 

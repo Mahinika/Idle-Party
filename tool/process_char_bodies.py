@@ -40,17 +40,29 @@ def clear_corner_bg(im: Image.Image) -> Image.Image:
     return im
 
 
-for p in root.rglob("*.png"):
-    if any(part in ("_src", "gear") for part in p.parts):
-        continue
-    im = clear_corner_bg(Image.open(p))
-    bbox = im.getbbox()
-    if bbox:
-        im = im.crop(bbox)
-        pad = 8
-        canvas = Image.new("RGBA", (im.width + pad * 2, im.height + pad * 2), (0, 0, 0, 0))
-        canvas.paste(im, (pad, pad), im)
-        im = canvas
-    im = im.resize((128, 128), Image.Resampling.LANCZOS)
-    im.save(p, optimize=True)
-    print(p.parent.name, p.name, im.size)
+def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("process_char_bodies.py")
+    for p in root.rglob("*.png"):
+        if any(part in ("_src", "gear") for part in p.parts):
+            continue
+        im = clear_corner_bg(Image.open(p))
+        bbox = im.getbbox()
+        if bbox:
+            im = im.crop(bbox)
+            pad = 8
+            canvas = Image.new(
+                "RGBA",
+                (im.width + pad * 2, im.height + pad * 2),
+                (0, 0, 0, 0),
+            )
+            canvas.paste(im, (pad, pad), im)
+            im = canvas
+        im = im.resize((128, 128), Image.Resampling.LANCZOS)
+        im.save(p, optimize=True)
+        print(p.parent.name, p.name, im.size)
+
+
+if __name__ == "__main__":
+    main()

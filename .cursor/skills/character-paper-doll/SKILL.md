@@ -86,7 +86,7 @@ For Must rules, authored overrides, and A56 checks, read
 - Auto-strip armor luminance onto body (brown plate blocks)
 - **Invent** helm / cape / chest / legs with `ImageDraw` shapes
 - Ghost t0 on empty slots. Jewelry/flask on the body
-- `py tool/process_char_bodies.py` on `gear/` or `_src/` (it crops)
+- `py tool/process_char_bodies.py` (it refuses; it used to crop bodies)
 - Declare done from “layer paths exist” alone — facit / preview must pass
 - Tune placeholder ellipses to chase A56 symptoms
 

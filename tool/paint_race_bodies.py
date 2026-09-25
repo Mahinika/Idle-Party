@@ -579,6 +579,10 @@ def write_preview() -> None:
 
 
 def main() -> int:
+    from paper_doll_paths import refuse_live_writer, staged
+
+    if not staged():
+        refuse_live_writer("paint_race_bodies.py")
     cfg = CONFIG
     count = 0
     for family in cfg.families:

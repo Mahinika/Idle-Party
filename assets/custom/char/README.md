@@ -20,7 +20,7 @@ Path: `assets/custom/char/<family>/body_<anim>.png`
 - Enemies are **not** in this pass.
 
 Rebuild from dressed `_src/` gold master (armor extract from **idle** only).
-Do not run `process_char_bodies` on gear — it crops:
+`process_char_bodies.py` refuses to run. It used to crop body PNGs:
 
 ```bash
 py tool/build_owned_gear_layers.py
