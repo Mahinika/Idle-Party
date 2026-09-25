@@ -922,7 +922,7 @@ class GameDirector extends ChangeNotifier {
       '${_state.dungeonId} F${_state.currentRoom.floorNumber} · '
           'KEY +${_state.hardmodeLevel}',
     );
-    showToast(StoryLore.enterDungeon(dungeonId), life: 2.8);
+    showToast(StoryLore.enterDungeon(dungeonId), life: 1.35);
     unawaited(
       AppAnalytics.enterDungeon(
         dungeonId: dungeonId,

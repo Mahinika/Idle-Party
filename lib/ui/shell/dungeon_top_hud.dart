@@ -27,7 +27,7 @@ String _packJobBit(SpatialWorld? world) {
   final awake = pack.where((e) => !e.dormant && e.isAlive).toList();
   final sleep = pack.where((e) => e.dormant).length;
   if (awake.isEmpty && sleep <= 0) return '';
-  final next = sleep > 0 ? ' · next chamber' : '';
+  final next = sleep > 0 ? ' · next' : '';
   if (awake.isEmpty) return next;
   final bossRoom = pack.any((e) => e.role == EnemyRole.boss);
   final eliteRoom = pack.any((e) => e.role == EnemyRole.elite);
@@ -49,8 +49,15 @@ String _packJobBit(SpatialWorld? world) {
         dungeonId: flavorId,
       ),
   };
-  final names = jobs.map((j) => j.name).toList()..sort();
-  return ' · ${names.join('+')}$next';
+  // One job word so the top line stays readable on a phone.
+  final lead = jobs.contains(PackJob.swarm)
+      ? PackJob.swarm
+      : jobs.contains(PackJob.backline)
+      ? PackJob.backline
+      : jobs.contains(PackJob.elite)
+      ? PackJob.elite
+      : jobs.first;
+  return ' · ${lead.name}$next';
 }
 
 String _keyAffixBit(GameState state) {

@@ -191,12 +191,6 @@ class HubChase {
     final bagEquip = _equipBagChase(state);
     if (bagEquip != null) return bagEquip;
 
-    // Shop READY: before KEY nights only. At party max, KEY/Spire habit wins.
-    if (!GameLogic.endgameUnlocked(state)) {
-      final market = _marketUpgradeChase(state);
-      if (market != null) return market;
-    }
-
     if (GameLogic.canAscend(state)) {
       // AL0 first Ascend is optional — keep TODAY on Daily / farming; Ascend
       // stays on the hub urgent row so new saves are not trapped on one button.
@@ -225,6 +219,16 @@ class HubChase {
           urgency: HubChaseUrgency.ready,
         );
       }
+    }
+
+    // After bag work: ENTER (level / zone) beats GOLD market.
+    if (!GameLogic.endgameUnlocked(state)) {
+      final levelFirst = _partyLevelChase(state);
+      if (levelFirst != null) return levelFirst;
+      final zoneFirst = _nextZoneChase(state);
+      if (zoneFirst != null) return zoneFirst;
+      final market = _marketUpgradeChase(state);
+      if (market != null) return market;
     }
 
     final bossesNeed = GameLogic.bossesRequiredForAscension(

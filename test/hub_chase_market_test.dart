@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:idle_party/core/chase_contract.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/hub_chase.dart';
@@ -26,7 +25,7 @@ void main() {
     );
   }
 
-  test('affordable MARKET upgrade becomes TODAY chase when bag is quiet', () {
+  test('MARKET waits behind bag, Ascend, and leveling ENTER', () {
     final state = al20();
     expect(
       MarketListingsService.hasAffordableUpgradeListing(state),
@@ -34,12 +33,18 @@ void main() {
       reason: 'seeded AL20 should have at least one affordable upgrade',
     );
     final chase = HubChase.forState(state);
-    expect(chase.kind, HubChaseKind.marketUpgrade);
-    expect(chase.urgency, HubChaseUrgency.ready);
-    expect(chase.title.toLowerCase(), contains('market'));
-    final contract = ChaseContract.fromState(state);
-    expect(contract.isClaimable, isTrue);
-    expect(contract.readyActionLabel, 'OPEN GOLD');
+    // Midgame ENTER / Ascend beat GOLD market after bag work.
+    expect(chase.kind, isNot(HubChaseKind.marketUpgrade));
+    expect(
+      chase.kind,
+      anyOf(
+        HubChaseKind.clearFloors,
+        HubChaseKind.ascend,
+        HubChaseKind.dailyVaultProgress,
+        HubChaseKind.dailyRun,
+        HubChaseKind.unlockZone,
+      ),
+    );
   });
 
   test('BAG equip beats MARKET in chase priority', () {

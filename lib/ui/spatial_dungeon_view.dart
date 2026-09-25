@@ -206,16 +206,34 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       if (mounted) setState(() {});
     }
 
-    // Zone floors/walls ASAP — paint before deferred loot/body catalogs.
+    // Zone floors/walls ASAP — paint after the first pair so enter never sticks
+    // on Loading floor… while the rest of the catalog decodes.
     final floorVariants = <ui.Image>[];
-    for (final a in floorPaths) {
-      final img = await loadSoft(a, targetWidth: 64);
-      if (img != null) floorVariants.add(img);
-    }
     final wallVariants = <ui.Image>[];
-    for (final a in wallPaths) {
-      final img = await loadSoft(a, targetWidth: 64);
-      if (img != null) wallVariants.add(img);
+    var paintedEarly = false;
+    for (var i = 0; i < floorPaths.length || i < wallPaths.length; i++) {
+      if (i < floorPaths.length) {
+        final img = await loadSoft(floorPaths[i], targetWidth: 64);
+        if (img != null) floorVariants.add(img);
+      }
+      if (i < wallPaths.length) {
+        final img = await loadSoft(wallPaths[i], targetWidth: 64);
+        if (img != null) wallVariants.add(img);
+      }
+      if (!paintedEarly &&
+          floorVariants.isNotEmpty &&
+          wallVariants.isNotEmpty &&
+          _stairs != null &&
+          _sword != null) {
+        if (!mounted || gen != _loadGen) return;
+        paintedEarly = true;
+        setState(() {
+          _loadedDungeonId = dungeonId;
+          _floorReady = List<ui.Image>.from(floorVariants);
+          _wallReady = List<ui.Image>.from(wallVariants);
+          _zoneArtReady = true;
+        });
+      }
     }
     if (!mounted || gen != _loadGen) return;
 
@@ -232,7 +250,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       _loadedDungeonId = dungeonId;
       _floorReady = floorVariants;
       _wallReady = wallVariants;
-      _zoneArtReady = canPaint;
+      _zoneArtReady = canPaint || paintedEarly;
     });
 
     // Deferred shared catalog (loot icons, pets, paper-doll overlays).

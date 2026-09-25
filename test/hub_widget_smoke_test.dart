@@ -224,8 +224,8 @@ void main() {
       ),
     );
 
-    expect(find.bySemanticsLabel('SCROLLS. WATCH'), findsOneWidget);
-    expect(find.text('WATCH'), findsOneWidget);
+    expect(find.bySemanticsLabel('SCROLLS. SCROLLS'), findsOneWidget);
+    expect(find.text('SCROLLS'), findsWidgets);
   });
 
   testWidgets('HubPowerupsFab shows ticket count when banked', (tester) async {

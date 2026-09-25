@@ -151,10 +151,10 @@ abstract final class AdBoost {
     return exp > now;
   }
 
-  /// Short FAB label: tickets or WATCH. Remaining time lives on [hudChips].
+  /// Short FAB label under the scroll glyph.
   static String fabStatus(MetaDepthState md, {int? nowMs}) {
     final n = md.adTickets;
-    if (n <= 0) return 'WATCH';
+    if (n <= 0) return 'SCROLLS';
     return n == 1 ? '1 TICKET' : '$n TICKETS';
   }
 

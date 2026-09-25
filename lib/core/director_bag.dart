@@ -74,14 +74,34 @@ extension GameDirectorBag on GameDirector {
 
   void autoEquipBetterGear() {
     final result = GameLogic.autoEquipBetterGearResult(_state);
-    _applyUpgrade(result.state);
+    var next = result.state;
+    final beforeLen = next.gearStash.length;
+    final beforeGold = next.gold;
+    final beforeEss = next.essence;
     if (result.equipped > 0) {
-      showToast(
+      // Swapped pieces stay in bag — clear junk so EQUIP 42 does not leave 44/50.
+      next = GameLogic.cleanBagJunk(
+        next,
+        unstickBag: GearService.isBagJammed(next),
+        mergeFirst: true,
+        manualClean: false,
+      );
+      LogicNotices.takeBagCleanup();
+    }
+    _applyUpgrade(next);
+    if (result.equipped > 0) {
+      final cleared = beforeLen - _state.gearStash.length;
+      final gold = _state.gold - beforeGold;
+      final ess = _state.essence - beforeEss;
+      final bits = <String>[
         result.equipped == 1
             ? 'Equipped 1 upgrade'
             : 'Equipped ${result.equipped} upgrades',
-        life: 1.8,
-      );
+        if (cleared > 0) 'cleaned $cleared',
+        if (gold > 0) '+${gold}g',
+        if (ess > 0) '+${ess}e',
+      ];
+      showToast(bits.join(' · '), life: 2.0);
     } else {
       showToast('No upgrades in bag', life: 1.5);
     }

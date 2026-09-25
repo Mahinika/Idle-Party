@@ -213,7 +213,10 @@ class ZonePathMap extends StatelessWidget {
             selected: selected,
             frontier: frontier,
           );
-          final labelH = statusWord.isEmpty ? 0.0 : statusH;
+          final mapTag = unlocked && statusWord.isEmpty ? d.hubMapTag : '';
+          final labelH = (statusWord.isEmpty && mapTag.isEmpty)
+              ? 0.0
+              : statusH;
           final cx = anchor.dx * mapW;
           final cy = anchor.dy * mapH;
           final left = (cx - hitSize / 2).clamp(0.0, mapW - hitSize).toDouble();
@@ -235,7 +238,7 @@ class ZonePathMap extends StatelessWidget {
                 cleared: cleared,
                 selected: selected,
                 pulse: selected ? pulse : null,
-                statusWord: statusWord,
+                statusWord: statusWord.isNotEmpty ? statusWord : mapTag,
                 onTap: () => onSelect(d.id),
               ),
             ),

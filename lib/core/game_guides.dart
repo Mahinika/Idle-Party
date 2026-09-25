@@ -395,7 +395,7 @@ abstract final class GameGuides {
       id: 'powerups',
       title: 'SCROLLS',
       body:
-          'Tap the camera on the hub map (SCROLLS). Optional. Watch a short ad '
+          'Tap SCROLLS on the hub map. Optional. Watch a short ad '
           'for 1 Ad Ticket, then spend tickets on timed scrolls.\n\n'
           '• Scroll of Damage: +${AdBoost.attackPercent}% attack for ${AdBoost.splitHours} hours (1 ticket).\n'
           '• Scroll of Gold: ×${AdBoost.goldMul} gold (kills, chests, hub AFK) for ${AdBoost.splitHours} hours (1 ticket).\n'

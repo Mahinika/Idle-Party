@@ -23,6 +23,26 @@ class DungeonDef {
 
   /// Short hub flavor line (also mirrored in [StoryLore.dungeonBlurb]).
   final String blurb;
+
+  /// Short map tag — readable over the painted continent art.
+  String get hubMapTag => switch (id) {
+    'sandy' => 'SANDY',
+    'goblin' => 'GOBLIN',
+    'king' => 'KING',
+    'underworld' => 'UNDER',
+    'dead' => 'DEAD',
+    'hell' => 'HELL',
+    'crystal' => 'SPIRE',
+    'tide' => 'TIDE',
+    'ember' => 'ASHEN',
+    'grove' => 'GROVE',
+    'storm' => 'STORM',
+    'rime' => 'RIME',
+    'fen' => 'FEN',
+    'brass' => 'BRASS',
+    'veil' => 'VEIL',
+    _ => name.split(' ').first.toUpperCase(),
+  };
 }
 
 abstract final class DungeonCatalog {

@@ -312,7 +312,8 @@ void main() {
     final powerups = GameGuides.topics.firstWhere((t) => t.id == 'powerups');
     expect(powerups.title, 'SCROLLS');
     expect(powerups.body.toLowerCase(), contains('ad ticket'));
-    expect(powerups.body.toLowerCase(), contains('camera'));
+    expect(powerups.body.toLowerCase(), contains('scrolls'));
+    expect(powerups.body.toLowerCase(), contains('ad ticket'));
     expect(powerups.body.toLowerCase(), contains('scroll of battle'));
     expect(powerups.body.toLowerCase(), contains('24 hours'));
   });

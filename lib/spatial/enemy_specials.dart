@@ -156,8 +156,8 @@ void shoutAwakePacks(SpatialWorld world, {required bool reducedVfx}) {
       y: y - 0.55,
       text: text,
       argb: 0xFFFFC060,
-      life: 1.15,
-      priority: 2,
+      life: 1.35,
+      priority: 3,
     );
     if (!reducedVfx && world.spawnPersistentVfx) {
       SpatialCombat.spawnRing(
