@@ -90,16 +90,29 @@ def repaint(donor: Image.Image, palette_from: Image.Image) -> Image.Image:
 def donor_band(donor: str, slot: str) -> Image.Image:
     piece = load(donor, f"{slot}_t0")
     fx, fy, half, chin, x0, y0, x1, y1 = body_landmarks(donor)
+    if slot == "helm":
+        # Crown only: side flaps would hang beside the face like loose hair.
+        return keep_rows(piece, 0, fy - half * 0.9)
     if slot == "chest" and donor == "warrior":
         return keep_rows(piece, chin - 4, chin + (y1 - chin) * 0.28)
     return piece
+
+
+# The rogue cowl already frames the face and hides a crown, so rogue takes
+# the whole healer hood; everyone else takes only the crown.
+FULL_HOOD = {"rogue"}
 
 
 def broad(family: str, slot: str) -> Image.Image:
     first, second = BROAD_DONOR[slot]
     donor = second if family == first else first
     own = load(family, f"{slot}_t0")
-    moved = register_to_body(donor_band(donor, slot), donor, family, slot)
+    band = (
+        load(donor, "helm_t0")
+        if slot == "helm" and family in FULL_HOOD
+        else donor_band(donor, slot)
+    )
+    moved = register_to_body(band, donor, family, slot)
     under = repaint(drop_small_islands(moved, min_size=24), own)
     return Image.alpha_composite(under, own)
 
