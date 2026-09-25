@@ -109,6 +109,69 @@ void showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
   }
 }
 
+/// One cave word when a room's pack is already on screen, before anyone walks in.
+void shoutAwakePacks(SpatialWorld world, {required bool reducedVfx}) {
+  final byChamber = <int, List<SpatialActor>>{};
+  for (final enemy in world.enemies) {
+    if (enemy.hp <= 0 || enemy.dormant) continue;
+    if (enemy.role == EnemyRole.boss) continue;
+    byChamber.putIfAbsent(enemy.chamberIndex, () => <SpatialActor>[]).add(enemy);
+  }
+  final flavor = _flavorId(world);
+  for (final entry in byChamber.entries) {
+    if (!world.packShoutedChambers.add(entry.key)) continue;
+    final bodies = entry.value;
+    if (bodies.isEmpty) continue;
+    final counts = <EnemyArchetype, int>{};
+    for (final body in bodies) {
+      counts[body.archetype] = (counts[body.archetype] ?? 0) + 1;
+    }
+    var best = bodies.first.archetype;
+    var bestN = 0;
+    for (final c in counts.entries) {
+      if (c.value > bestN) {
+        best = c.key;
+        bestN = c.value;
+      }
+    }
+    final text = switch (best) {
+      EnemyArchetype.swarm => EnemyFlavor.swarmTell(flavor),
+      EnemyArchetype.brute => EnemyFlavor.bruteTell(flavor),
+      EnemyArchetype.ranged => EnemyFlavor.rangedTell(flavor),
+      EnemyArchetype.support => EnemyFlavor.supportTell(flavor),
+      EnemyArchetype.glass => EnemyFlavor.glassTell(flavor),
+      EnemyArchetype.tank => EnemyFlavor.tankHowlTell(flavor),
+    };
+    var x = 0.0;
+    var y = 0.0;
+    for (final body in bodies) {
+      x += body.x;
+      y += body.y;
+    }
+    x /= bodies.length;
+    y /= bodies.length;
+    SpatialCombat.spawnFloater(
+      world,
+      x: x,
+      y: y - 0.55,
+      text: text,
+      argb: 0xFFFFC060,
+      life: 1.15,
+      priority: 2,
+    );
+    if (!reducedVfx && world.spawnPersistentVfx) {
+      SpatialCombat.spawnRing(
+        world,
+        x: x,
+        y: y,
+        argb: 0x88FFC060,
+        radius: 1.3,
+        life: 0.45,
+      );
+    }
+  }
+}
+
 /// Trash specials (heal / hex / cleave / fortify) plus one unique boss tell
 /// per zone. Same [SpatialCombat.step] — not a second sim.
 void tickEnemySpecials(

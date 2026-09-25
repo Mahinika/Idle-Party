@@ -721,6 +721,7 @@ class SpatialWorld {
     this.activeChamber = 0,
     Set<int>? openGateIds,
     Set<int>? clearedChambers,
+    Set<int>? packShoutedChambers,
     this.pets = const <SpatialActor>[],
     this.pulseX,
     this.pulseY,
@@ -753,8 +754,9 @@ class SpatialWorld {
     List<SpatialFloater>? floaters,
     List<SpatialBurst>? bursts,
     List<SpatialGroundFx>? groundFx,
-  }) : openGateIds = openGateIds ?? <int>{},
+  }) :        openGateIds = openGateIds ?? <int>{},
        clearedChambers = clearedChambers ?? <int>{},
+       packShoutedChambers = packShoutedChambers ?? <int>{},
        floaters = floaters ?? <SpatialFloater>[],
        bursts = bursts ?? <SpatialBurst>[],
        groundFx = groundFx ?? <SpatialGroundFx>[],
@@ -820,6 +822,9 @@ class SpatialWorld {
   int activeChamber;
   final Set<int> openGateIds;
   final Set<int> clearedChambers;
+
+  /// Chambers that already shouted their pack word. Once per wake.
+  final Set<int> packShoutedChambers;
   double? pulseX;
   double? pulseY;
   double pulseTimer;
@@ -2315,6 +2320,7 @@ abstract final class SpatialCombat {
       activeChamber: world.activeChamber,
       openGateIds: world.openGateIds,
       clearedChambers: world.clearedChambers,
+      packShoutedChambers: world.packShoutedChambers,
       pets: pets,
       pulseX: world.pulseX,
       pulseY: world.pulseY,
@@ -3134,6 +3140,7 @@ abstract final class SpatialCombat {
   }) {
     var nextState = state;
     var goldFromKills = 0;
+    shoutAwakePacks(world, reducedVfx: reducedVfx);
     // Enemies: prefer the tank, kite if ranged, path around walls.
     for (final enemy in world.enemies) {
       if (enemy.hp <= 0 || enemy.dormant) continue;

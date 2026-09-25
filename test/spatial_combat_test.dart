@@ -1066,6 +1066,41 @@ void main() {
     expect(texts.contains('SWARM'), isTrue);
   });
 
+  test('awake sandy pack shouts PILE before anyone is in melee', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 25));
+    final room = DungeonRoom(
+      floorNumber: 2,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 4,
+      enemyCount: 3,
+    );
+    final pack = GameLogic.createEnemyGroup(room, dungeonId: 'sandy');
+    final mites = [
+      for (var i = 0; i < 3; i++)
+        pack[i].copyWith(archetype: EnemyArchetype.swarm, role: EnemyRole.normal),
+    ];
+    state = state.copyWith(
+      dungeonId: 'sandy',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: mites,
+      inDungeon: true,
+    );
+    var world = SpatialCombat.build(state);
+    for (final e in world.enemies) {
+      e.dormant = false;
+    }
+    for (final h in world.heroes) {
+      h
+        ..x = 1
+        ..y = 1;
+    }
+    final step = SpatialCombat.step(world, state, dt: 0.05);
+    final texts = step.world.floaters.map((f) => f.text).toSet();
+    expect(texts.contains('PILE'), isTrue);
+  });
+
   test('sandy swarm shouts PILE, not SURROUND', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
     final room = DungeonRoom(
