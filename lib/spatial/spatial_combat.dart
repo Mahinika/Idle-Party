@@ -639,6 +639,9 @@ enum SpatialBurstKind {
   /// Tiny spark ticks (PoM bounce, Living Bomb fuse).
   spark,
 
+  /// Leaves (Rejuvenation, Healing Wave, Wrath).
+  leaf,
+
   /// Line / zigzag (lightning, holy shock, penance).
   beam,
 
@@ -654,7 +657,7 @@ enum SpatialBurstKind {
   /// Holy cross / rays (Holy Shock, Consecration pop, Divine Storm).
   cross,
 
-  /// Poison / nature drips (Envenom, Wrath, Healing Wave).
+  /// Poison drips (Envenom, Garrote).
   poison,
 
   /// Shadow swirl (Shadow Bolt, Death Coil, Mind Blast).
@@ -5189,15 +5192,8 @@ abstract final class SpatialCombat {
   }) {
     final tint = burstArgb ?? argb;
     if (reducedVfx) {
-      // Tiny cast pulse so legacy kits aren't fully silent offline.
-      spawnBurst(
-        world,
-        x: caster.x,
-        y: caster.y,
-        argb: (tint & 0x00FFFFFF) | 0x66000000,
-        radius: burstRadius * 0.55,
-        life: 0.18,
-      );
+      // Lite and Minimal skip routine cast pops. Offline is Minimal and
+      // does not paint bursts.
       return;
     }
     // Ability-name floaters clutter the stage — default to burst-only.

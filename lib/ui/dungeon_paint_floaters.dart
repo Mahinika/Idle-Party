@@ -110,6 +110,24 @@ extension DungeonPaintFloaters on _TileRoomPainter {
               ..style = PaintingStyle.stroke
               ..strokeWidth = math.max(2, tile * 0.08),
           );
+        } else if (kind == SpatialBurstKind.leaf) {
+          final alpha = (burst.life / 0.5).clamp(0.0, 1.0);
+          final c = center(burst.x, burst.y);
+          final r = tile * burst.radius * (0.55 + alpha * 0.35);
+          for (var i = 0; i < 5; i++) {
+            final a = i * 1.26 + burst.life * 2;
+            canvas.drawOval(
+              Rect.fromCenter(
+                center: Offset(
+                  c.dx + math.cos(a) * r * 0.7,
+                  c.dy + math.sin(a) * r * 0.7,
+                ),
+                width: r * 0.55,
+                height: r * 0.28,
+              ),
+              Paint()..color = Color(burst.argb).withValues(alpha: alpha * 0.9),
+            );
+          }
         } else if (kind == SpatialBurstKind.spark) {
           final alpha = (burst.life / 0.5).clamp(0.0, 1.0);
           final c = center(burst.x, burst.y);

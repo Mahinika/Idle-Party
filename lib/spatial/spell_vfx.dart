@@ -27,7 +27,7 @@ abstract final class SpellVfx {
         SpellBoltStyle.frost => SpatialBurstKind.shards,
         SpellBoltStyle.holy => SpatialBurstKind.cross,
         SpellBoltStyle.lightning => SpatialBurstKind.beam,
-        SpellBoltStyle.nature => SpatialBurstKind.spark,
+        SpellBoltStyle.nature => SpatialBurstKind.leaf,
         SpellBoltStyle.poison => SpatialBurstKind.poison,
         SpellBoltStyle.shadow => SpatialBurstKind.skull,
         SpellBoltStyle.demon => SpatialBurstKind.skull,

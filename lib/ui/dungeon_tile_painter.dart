@@ -423,14 +423,14 @@ class _TileRoomPainter extends CustomPainter {
         pc,
         outer * 0.55,
         Paint()
-          ..color = Color.fromRGBO(255, 248, 200, 0.55 * (1 - progress))
+          ..color = smash.withValues(alpha: 0.55 * (1 - progress))
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(1.8, tile * 0.08),
       );
       canvas.drawCircle(
         pc,
         tile * 0.35 * (1 - progress * 0.4),
-        Paint()..color = Color.fromRGBO(255, 240, 180, 0.4 * (1 - progress)),
+        Paint()..color = smash.withValues(alpha: 0.4 * (1 - progress)),
       );
     }
 

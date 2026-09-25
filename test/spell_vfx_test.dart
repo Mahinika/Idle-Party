@@ -400,7 +400,7 @@ void main() {
         style: SpellBoltStyle.nature,
         id: AbilityId.rejuvenation,
       ),
-      SpatialBurstKind.spark,
+      SpatialBurstKind.leaf,
     );
     expect(
       SpellVfx.burstKindFor(
