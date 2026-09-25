@@ -17,8 +17,9 @@ only.
 
 **Distribution:** Google Play is the install path (`com.idleparty.app`,
 `docs/PLAY_STORE.md`). Do not link players to GitHub Releases. Never upload
-an AAB unless the owner asks that turn. Update notice, rating ask, Play
-Games, and Firebase live in `docs/PLAY_STORE.md` and `docs/PRIVACY.md`.
+an AAB unless the owner asks that turn. In-app update gate, hub **GET
+UPDATE**, and the one-time rating ask are in `docs/PLAY_STORE.md`. Play
+Games and Firebase are there and in `docs/PRIVACY.md`.
 
 **Legal:** owned `assets/custom/` only. No foreign dumps, sprites, audio, or
 decompiled code. See `.cursor/rules/product-locks.mdc`.
