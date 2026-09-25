@@ -1124,6 +1124,53 @@ void main() {
     );
   });
 
+  test('sandy brute shouts CRASH before the cleave lands', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
+    final room = DungeonRoom(
+      floorNumber: 2,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 4,
+      enemyCount: 1,
+    );
+    final brute = GameLogic.createEnemyGroup(room, dungeonId: 'sandy').first
+        .copyWith(archetype: EnemyArchetype.brute, role: EnemyRole.normal);
+    state = state.copyWith(
+      dungeonId: 'sandy',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: [brute],
+      inDungeon: true,
+    );
+    var world = SpatialCombat.build(state);
+    final enemy = world.enemies.first
+      ..dormant = false
+      ..specialCd = 0;
+    for (final h in world.heroes) {
+      h
+        ..x = enemy.x
+        ..y = enemy.y;
+    }
+    final startHp = world.heroes.fold<int>(0, (sum, h) => sum + h.hp);
+    var shouted = false;
+    for (var i = 0; i < 8; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+      if (world.floaters.any((f) => f.text == 'CRASH')) shouted = true;
+    }
+    final midHp = world.heroes.fold<int>(0, (sum, h) => sum + h.hp);
+    expect(shouted, isTrue);
+    expect(midHp, startHp);
+    for (var i = 0; i < 20; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+    }
+    final endHp = world.heroes.fold<int>(0, (sum, h) => sum + h.hp);
+    expect(endHp, lessThan(startHp));
+  });
+
   test('sandy brute shouts CRASH, not CLEAVE', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
     final room = DungeonRoom(

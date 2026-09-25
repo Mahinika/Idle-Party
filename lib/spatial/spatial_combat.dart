@@ -3257,12 +3257,32 @@ abstract final class SpatialCombat {
       }
       final target = _focusHero(enemy, world.heroes);
       if (target == null) continue;
+
+      // Enemy specials (heal / enrage / unique boss tell). A melee wind-up
+      // plants the body so the cave word shows before the chip.
+      tickEnemySpecials(
+        world,
+        enemy,
+        target,
+        rng: rng,
+        reducedVfx: reducedVfx,
+      );
+      if (enemy.telegraphTimer > 0) continue;
+
       final dist = actorDist(enemy, target);
       final preferred = enemy.preferredRange ?? (enemy.attackRange * 0.75);
       var tx = target.x;
       var ty = target.y;
       var hold = preferred;
-      if (enemy.ranged && dist < preferred * 0.65) {
+      if (enemy.archetype == EnemyArchetype.swarm && !enemy.ranged) {
+        // Ring the party instead of stacking on one hero.
+        final slot = enemy.id.hashCode.abs() % 8;
+        final angle = slot * (math.pi / 4);
+        const ring = 0.72;
+        tx = target.x + math.cos(angle) * ring;
+        ty = target.y + math.sin(angle) * ring;
+        hold = 0.15;
+      } else if (enemy.ranged && dist < preferred * 0.65) {
         tx = enemy.x - (target.x - enemy.x);
         ty = enemy.y - (target.y - enemy.y);
         hold = 0;
@@ -3280,15 +3300,6 @@ abstract final class SpatialCombat {
 
       final slowRate = enemy.attackSlowTimer > 0 ? 0.8 : 1.0;
       enemy.fireCooldown -= dt * slowRate;
-
-      // Enemy specials (heal / enrage / unique boss tell)
-      tickEnemySpecials(
-        world,
-        enemy,
-        target,
-        rng: rng,
-        reducedVfx: reducedVfx,
-      );
 
       final afterDist = actorDist(enemy, target);
       if (enemy.fireCooldown <= 0 && afterDist <= enemy.attackRange) {

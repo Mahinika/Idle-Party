@@ -170,6 +170,27 @@ void tickEnemySpecials(
   }
 
   if (enemy.specialCd > 0) return;
+  if (enemy.telegraphTimer > 0) return;
+  if (enemy.telegraphSlam) {
+    enemy.telegraphSlam = false;
+    if (enemy.archetype == EnemyArchetype.brute) {
+      _resolveBruteCrash(
+        world,
+        enemy,
+        flavor: _flavorId(world),
+        rng: rng,
+        reducedVfx: reducedVfx,
+      );
+    } else if (enemy.archetype == EnemyArchetype.swarm) {
+      _resolveSwarmPile(
+        world,
+        enemy,
+        rng: rng,
+        reducedVfx: reducedVfx,
+      );
+    }
+    return;
+  }
 
   final flavor = _flavorId(world);
 
@@ -192,56 +213,14 @@ void tickEnemySpecials(
       reducedVfx: reducedVfx,
     );
   } else if (enemy.archetype == EnemyArchetype.brute) {
-    final elite =
-        enemy.role == EnemyRole.elite || enemy.role == EnemyRole.boss;
-    final radius = elite ? 2.6 : 2.15;
-    var hit = false;
-    for (final h in world.heroes) {
-      if (!h.isAlive) continue;
-      if (SpatialCombat.actorDist(enemy, h) > radius) continue;
-      var chip = math.max(
-        elite ? 2 : 1,
-        (enemy.effectiveAttack * (elite ? 0.35 : 0.22)).round(),
-      );
-      if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
-      SpatialCombat.applyHeroIncomingDamage(
+    if (_meleeTellInRange(world, enemy, eliteRadius: 2.6, trashRadius: 2.15)) {
+      _armMeleeTell(
         world,
-        h,
-        chip,
+        enemy,
+        text: EnemyFlavor.bruteTell(flavor),
+        argb: 0xFFFF8040,
         reducedVfx: reducedVfx,
-        rng: rng,
-        isMelee: true,
       );
-      hit = true;
-    }
-    if (hit) {
-      enemy.specialCd = world.afkAssist
-          ? (elite ? 7.0 : 6.2)
-          : (elite ? 6.5 : 5.6);
-      if (!reducedVfx || world.spawnPersistentVfx) {
-        SpatialCombat.spawnFloater(
-          world,
-          x: enemy.x,
-          y: enemy.y - 0.4,
-          text: EnemyFlavor.bruteTell(flavor),
-          argb: 0xFFFF8040,
-          life: 0.7,
-          priority: reducedVfx ? 2 : 0,
-        );
-        if (world.spawnPersistentVfx) {
-          final sandy = flavor == 'sandy';
-          SpatialCombat.spawnBurst(
-            world,
-            x: enemy.x,
-            y: enemy.y,
-            argb: sandy ? 0xFFC8A070 : 0xFFFF8040,
-            radius: 1.2,
-            kind: sandy ? SpatialBurstKind.shards : SpatialBurstKind.slash,
-            angle: 0,
-            life: 0.38,
-          );
-        }
-      }
     }
   } else if (enemy.role == EnemyRole.elite &&
       enemy.archetype == EnemyArchetype.tank &&
@@ -311,45 +290,14 @@ void tickEnemySpecials(
       }
     }
   } else if (enemy.archetype == EnemyArchetype.swarm) {
-    var hit = false;
-    for (final h in world.heroes) {
-      if (!h.isAlive) continue;
-      if (SpatialCombat.actorDist(enemy, h) > 1.85) continue;
-      var chip = math.max(1, (enemy.effectiveAttack * 0.22).round());
-      if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
-      SpatialCombat.applyHeroIncomingDamage(
+    if (_meleeTellInRange(world, enemy, eliteRadius: 1.85, trashRadius: 1.85)) {
+      _armMeleeTell(
         world,
-        h,
-        chip,
+        enemy,
+        text: EnemyFlavor.swarmTell(flavor),
+        argb: 0xFFFFA060,
         reducedVfx: reducedVfx,
-        rng: rng,
-        isMelee: true,
       );
-      hit = true;
-    }
-    if (hit) {
-      enemy.specialCd = world.afkAssist ? 5.5 : 4.8;
-      if (!reducedVfx || world.spawnPersistentVfx) {
-        SpatialCombat.spawnFloater(
-          world,
-          x: enemy.x,
-          y: enemy.y - 0.4,
-          text: EnemyFlavor.swarmTell(flavor),
-          argb: 0xFFFFA060,
-          life: 0.65,
-          priority: reducedVfx ? 2 : 0,
-        );
-        if (world.spawnPersistentVfx) {
-          SpatialCombat.spawnRing(
-            world,
-            x: enemy.x,
-            y: enemy.y,
-            argb: 0x88FFA060,
-            radius: 1.15,
-            life: 0.4,
-          );
-        }
-      }
     }
   } else if (enemy.archetype == EnemyArchetype.glass &&
       focus.hp < focus.effectiveMaxHp * 0.35 &&
@@ -387,6 +335,135 @@ void tickEnemySpecials(
         );
       }
     }
+  }
+}
+
+bool _meleeTellInRange(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  required double eliteRadius,
+  required double trashRadius,
+}) {
+  final elite = enemy.role == EnemyRole.elite || enemy.role == EnemyRole.boss;
+  final radius = elite ? eliteRadius : trashRadius;
+  for (final h in world.heroes) {
+    if (!h.isAlive) continue;
+    if (SpatialCombat.actorDist(enemy, h) <= radius) return true;
+  }
+  return false;
+}
+
+/// Cave word first, chip when the timer ends. Same damage as the old instant hit.
+void _armMeleeTell(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  required String text,
+  required int argb,
+  required bool reducedVfx,
+}) {
+  enemy.telegraphTimer = world.afkAssist ? 0.32 : 0.72;
+  enemy.telegraphSlam = true;
+  if (!reducedVfx || world.spawnPersistentVfx) {
+    SpatialCombat.spawnFloater(
+      world,
+      x: enemy.x,
+      y: enemy.y - 0.4,
+      text: text,
+      argb: argb,
+      life: 0.95,
+      priority: reducedVfx ? 2 : 0,
+    );
+    if (world.spawnPersistentVfx) {
+      SpatialCombat.spawnRing(
+        world,
+        x: enemy.x,
+        y: enemy.y,
+        argb: argb & 0x00FFFFFF | 0x88000000,
+        radius: 1.15,
+        life: 0.4,
+      );
+    }
+  }
+}
+
+void _resolveBruteCrash(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  required String flavor,
+  required math.Random rng,
+  required bool reducedVfx,
+}) {
+  final elite = enemy.role == EnemyRole.elite || enemy.role == EnemyRole.boss;
+  final radius = elite ? 2.6 : 2.15;
+  var hit = false;
+  for (final h in world.heroes) {
+    if (!h.isAlive) continue;
+    if (SpatialCombat.actorDist(enemy, h) > radius) continue;
+    var chip = math.max(
+      elite ? 2 : 1,
+      (enemy.effectiveAttack * (elite ? 0.35 : 0.22)).round(),
+    );
+    if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
+    SpatialCombat.applyHeroIncomingDamage(
+      world,
+      h,
+      chip,
+      reducedVfx: reducedVfx,
+      rng: rng,
+      isMelee: true,
+    );
+    hit = true;
+  }
+  enemy.specialCd = hit
+      ? (world.afkAssist ? (elite ? 7.0 : 6.2) : (elite ? 6.5 : 5.6))
+      : 1.2;
+  if (hit && world.spawnPersistentVfx) {
+    final sandy = flavor == 'sandy';
+    SpatialCombat.spawnBurst(
+      world,
+      x: enemy.x,
+      y: enemy.y,
+      argb: sandy ? 0xFFC8A070 : 0xFFFF8040,
+      radius: 1.2,
+      kind: sandy ? SpatialBurstKind.shards : SpatialBurstKind.slash,
+      angle: 0,
+      life: 0.38,
+    );
+  }
+}
+
+void _resolveSwarmPile(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  required math.Random rng,
+  required bool reducedVfx,
+}) {
+  var hit = false;
+  for (final h in world.heroes) {
+    if (!h.isAlive) continue;
+    if (SpatialCombat.actorDist(enemy, h) > 1.85) continue;
+    var chip = math.max(1, (enemy.effectiveAttack * 0.22).round());
+    if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
+    SpatialCombat.applyHeroIncomingDamage(
+      world,
+      h,
+      chip,
+      reducedVfx: reducedVfx,
+      rng: rng,
+      isMelee: true,
+    );
+    hit = true;
+  }
+  enemy.specialCd = hit ? (world.afkAssist ? 5.5 : 4.8) : 1.2;
+  if (hit && world.spawnPersistentVfx) {
+    SpatialCombat.spawnRing(
+      world,
+      x: enemy.x,
+      y: enemy.y,
+      argb: 0x88FFA060,
+      radius: 1.15,
+      life: 0.4,
+    );
   }
 }
 
