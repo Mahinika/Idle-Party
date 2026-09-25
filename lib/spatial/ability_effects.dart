@@ -2219,6 +2219,7 @@ abstract final class AbilityEffectRunner {
           text: '+$gained',
           argb: SpatialCombat.floaterHeal,
           life: 0.45,
+          priority: 2,
         );
       }
     }
@@ -2431,6 +2432,7 @@ abstract final class AbilityEffectRunner {
         text: '+$gained',
         argb: SpatialCombat.floaterHeal,
         life: 0.55,
+        priority: 2,
       );
     }
     if (!beaconPeel ||
@@ -2460,6 +2462,7 @@ abstract final class AbilityEffectRunner {
         text: '+$peeled',
         argb: 0xFFFFF0A8,
         life: 0.5,
+        priority: 2,
       );
     }
   }

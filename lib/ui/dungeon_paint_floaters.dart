@@ -10,7 +10,8 @@ extension DungeonPaintFloaters on _TileRoomPainter {
     Offset center(double tx, double ty) =>
         Offset(originX + tx * tile, originY + ty * tile);
 
-    if (showBursts) {
+    // Lite keeps enemy tells and flask rings. Minimal stays still.
+    if (showBursts || showGround) {
       for (final burst in world.bursts) {
         final kind = burst.slash ? SpatialBurstKind.slash : burst.kind;
         if (kind == SpatialBurstKind.slash) {

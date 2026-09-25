@@ -403,18 +403,19 @@ class _TileRoomPainter extends CustomPainter {
       drawSprite(img, c, loot.kind == GroundLootKind.chest ? 0.55 : 0.48);
     }
 
-    if (showGuide &&
-        world.pulseTimer > 0 &&
+    // Smash ring paints on Minimal too — one pulse, not the aim guide.
+    if (world.pulseTimer > 0 &&
         world.pulseX != null &&
         world.pulseY != null) {
       final progress = (1 - world.pulseTimer / 0.55).clamp(0.0, 1.0);
       final pc = center(world.pulseX!, world.pulseY!);
       final outer = tile * (0.55 + progress * 2.8);
+      final smash = Color(world.godHandArgb);
       canvas.drawCircle(
         pc,
         outer,
         Paint()
-          ..color = Color.fromRGBO(255, 230, 120, 0.85 * (1 - progress * 0.5))
+          ..color = smash.withValues(alpha: 0.85 * (1 - progress * 0.5))
           ..style = PaintingStyle.stroke
           ..strokeWidth = math.max(2.5, tile * 0.12),
       );
@@ -620,6 +621,23 @@ class _TileRoomPainter extends CustomPainter {
               ..style = PaintingStyle.stroke
               ..strokeWidth = math.max(2, tile * 0.08)
               ..strokeCap = StrokeCap.round,
+          );
+        }
+      case SpatialGroundFxKind.blood:
+        canvas.drawCircle(
+          c,
+          r * 0.42,
+          Paint()..color = color.withValues(alpha: 0.28 * frac),
+        );
+        for (var i = 0; i < 5; i++) {
+          final a = i * 1.25 + 0.4;
+          canvas.drawCircle(
+            Offset(
+              c.dx + math.cos(a) * r * 0.55,
+              c.dy + math.sin(a) * r * 0.55,
+            ),
+            r * 0.1,
+            Paint()..color = const Color(0xCCE03040).withValues(alpha: 0.7 * frac),
           );
         }
     }

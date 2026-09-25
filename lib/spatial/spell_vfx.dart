@@ -149,12 +149,11 @@ abstract final class SpellVfx {
   static SpatialBurstKind? _burstKindForId(AbilityId id) => switch (id) {
     AbilityId.chainLightning ||
     AbilityId.lightningBolt ||
-    AbilityId.thunderClap ||
     AbilityId.stormstrike ||
     AbilityId.thunderstorm ||
-    AbilityId.earthquake ||
     AbilityId.holyShock ||
     AbilityId.penance => SpatialBurstKind.beam,
+    AbilityId.thunderClap || AbilityId.earthquake => SpatialBurstKind.ring,
     AbilityId.hurricane ||
     AbilityId.blizzard ||
     AbilityId.starfall ||
@@ -238,6 +237,9 @@ abstract final class SpellVfx {
     AbilityId.wildGrowth ||
     AbilityId.spiritLink ||
     AbilityId.earthquake => SpatialGroundFxKind.nature,
+    AbilityId.thunderClap => SpatialGroundFxKind.disc,
+    AbilityId.bloodBoil ||
+    AbilityId.bloodBoilUnholy => SpatialGroundFxKind.blood,
     AbilityId.envenom || AbilityId.garrote => SpatialGroundFxKind.poison,
     AbilityId.bladestorm ||
     AbilityId.whirlwind ||

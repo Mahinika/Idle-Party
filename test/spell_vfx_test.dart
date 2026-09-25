@@ -416,5 +416,40 @@ void main() {
       ),
       SpellBoltStyle.shadow,
     );
+    expect(
+      SpellVfx.burstKindFor(
+        style: SpellBoltStyle.nature,
+        id: AbilityId.earthquake,
+      ),
+      SpatialBurstKind.ring,
+    );
+    expect(
+      SpellVfx.burstKindFor(
+        style: SpellBoltStyle.lightning,
+        id: AbilityId.thunderClap,
+      ),
+      SpatialBurstKind.ring,
+    );
+    expect(
+      SpellVfx.groundKindFor(
+        style: SpellBoltStyle.lightning,
+        id: AbilityId.thunderClap,
+      ),
+      SpatialGroundFxKind.disc,
+    );
+    expect(
+      SpellVfx.groundKindFor(
+        style: SpellBoltStyle.shadow,
+        id: AbilityId.bloodBoil,
+      ),
+      SpatialGroundFxKind.blood,
+    );
+    expect(
+      SpellVfx.groundKindFor(
+        style: SpellBoltStyle.shadow,
+        id: AbilityId.bloodBoilUnholy,
+      ),
+      SpatialGroundFxKind.blood,
+    );
   });
 }

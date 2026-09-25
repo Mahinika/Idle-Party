@@ -671,6 +671,9 @@ enum SpatialGroundFxKind {
   nature,
   poison,
   steel,
+
+  /// Dark red pools (Blood Boil) — not steel arcs or a shadow swirl.
+  blood,
 }
 
 /// Lasting ground disc (Consecration / Bladestorm / Shadowfury).
@@ -1227,7 +1230,8 @@ abstract final class SpatialCombat {
     required bool reducedVfx,
     Set<String>? healedHeroIds,
   }) {
-    if (reducedVfx) return;
+    // Minimal stays still. Lite keeps the flask word and one green ring.
+    if (reducedVfx && !world.spawnPersistentVfx) return;
     for (final h in world.heroes) {
       if (!h.isAlive) continue;
       if (healedHeroIds != null) {
@@ -1583,18 +1587,15 @@ abstract final class SpatialCombat {
     final gained = lowest.hp - before;
     recordHeroHeal(healer, gained);
     if (gained > 0 && gained >= 8) {
-      final pri = gained >= 35 ? 2 : 1;
-      if (!reducedVfx || pri >= 2) {
-        spawnFloater(
-          world,
-          x: lowest.x,
-          y: lowest.y - 0.4,
-          text: '+$gained',
-          argb: floaterHeal,
-          life: 0.4,
-          priority: pri,
-        );
-      }
+      spawnFloater(
+        world,
+        x: lowest.x,
+        y: lowest.y - 0.4,
+        text: '+$gained',
+        argb: floaterHeal,
+        life: 0.4,
+        priority: 2,
+      );
     }
   }
 
@@ -1613,6 +1614,7 @@ abstract final class SpatialCombat {
         text: '+$gained',
         argb: floaterHeal,
         life: 0.45,
+        priority: 2,
       );
       spawnSpark(
         world,
@@ -3041,6 +3043,7 @@ abstract final class SpatialCombat {
                 text: '+$gained',
                 argb: floaterHeal,
                 life: 0.5,
+                priority: 2,
               );
             }
           }
@@ -3746,6 +3749,7 @@ abstract final class SpatialCombat {
               text: '+$gained',
               argb: floaterHeal,
               life: 0.55,
+              priority: 2,
             );
           }
         }

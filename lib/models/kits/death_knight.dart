@@ -413,9 +413,9 @@ const List<ClassAbilityDef> _deathKnightKit = <ClassAbilityDef>[
       boltStyle: SpellBoltStyle.shadow,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.shadow,
-        castArgb: 0xFF9060A8,
+        castArgb: 0xFFC05060,
         groundDisc: true,
-        groundArgb: 0x66804090,
+        groundArgb: 0x77A03040,
         groundLife: 2.8,
       ),
 

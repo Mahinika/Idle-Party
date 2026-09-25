@@ -40,7 +40,7 @@ enum VfxQuality {
   String get settingsHint => switch (this) {
     VfxQuality.full => 'All combat effects',
     VfxQuality.lite =>
-        'Ground discs & auras stay — routine floaters/bursts off',
+        'Discs, auras, crits, heals, BLOCK, flask — routine hits off',
     VfxQuality.minimal => 'Reduce motion — auras & discs off too',
   };
 

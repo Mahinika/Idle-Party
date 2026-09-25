@@ -535,16 +535,15 @@ abstract final class KitNamedCasts {
             final gained = mend.hp - before;
             if (gained <= 0) continue;
             SpatialCombat.recordHeroHeal(hero, gained);
-            if (!reducedVfx) {
-              SpatialCombat.spawnFloater(
-                world,
-                x: mend.x,
-                y: mend.y - 0.35 - i * 0.08,
-                text: '+$gained',
-                argb: SpatialCombat.floaterHeal,
-                life: 0.55,
-              );
-            }
+            SpatialCombat.spawnFloater(
+              world,
+              x: mend.x,
+              y: mend.y - 0.35 - i * 0.08,
+              text: '+$gained',
+              argb: SpatialCombat.floaterHeal,
+              life: 0.55,
+              priority: 2,
+            );
           }
           if (!reducedVfx) {
             SpatialCombat.spawnBurst(
