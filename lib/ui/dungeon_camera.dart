@@ -46,8 +46,12 @@ import 'dart:math' as math;
   return (x: sx / pack.length, y: sy / pack.length);
 }
 
-/// Blend party focus toward the awake pack centroid so mid-fight framing
-/// keeps threats on screen without abandoning the hero pin.
+/// Nudge party focus toward the nearby fight so threats share the frame.
+///
+/// Only enemies within [nearbyTiles] count. A floor-wide centroid (next
+/// chamber, far elites) used to park the camera on empty tiles and shove
+/// the party into the phone corner. [maxShiftX]/[maxShiftY] keep the pin
+/// on screen even when the local pack sits at the edge of that radius.
 ({double x, double y}) dungeonCombatFocus({
   required Iterable<({double x, double y, bool alive, int index})> heroes,
   required Iterable<({double x, double y, bool alive})> awakeEnemies,
@@ -55,6 +59,9 @@ import 'dart:math' as math;
   required double mapCenterY,
   int? pinIndex,
   double packBias = 0.38,
+  double nearbyTiles = 9,
+  double maxShiftX = 3.5,
+  double maxShiftY = 3.5,
 }) {
   final party = dungeonPartyFocus(
     heroes: heroes,
@@ -64,18 +71,24 @@ import 'dart:math' as math;
   );
   final living = awakeEnemies.where((e) => e.alive).toList();
   if (living.isEmpty || packBias <= 0) return party;
+  final reach = nearbyTiles <= 0 ? 0.0 : nearbyTiles;
+  final reach2 = reach * reach;
   var ex = 0.0;
   var ey = 0.0;
+  var n = 0;
   for (final e in living) {
+    final dx = e.x - party.x;
+    final dy = e.y - party.y;
+    if (dx * dx + dy * dy > reach2) continue;
     ex += e.x;
     ey += e.y;
+    n++;
   }
-  final cx = ex / living.length;
-  final cy = ey / living.length;
+  if (n == 0) return party;
+  final cx = ex / n;
+  final cy = ey / n;
   final bias = packBias.clamp(0.0, 0.55);
-  final keep = 1.0 - bias;
-  return (
-    x: party.x * keep + cx * bias,
-    y: party.y * keep + cy * bias,
-  );
+  final shiftX = ((cx - party.x) * bias).clamp(-maxShiftX.abs(), maxShiftX.abs());
+  final shiftY = ((cy - party.y) * bias).clamp(-maxShiftY.abs(), maxShiftY.abs());
+  return (x: party.x + shiftX, y: party.y + shiftY);
 }

@@ -1121,6 +1121,9 @@ class _TileCamera {
             mapCenterX: world.cols / 2,
             mapCenterY: world.rows / 2,
             pinIndex: pinHeroIndex,
+            nearbyTiles: math.min(cols, visibleRows) * 0.45,
+            maxShiftX: cols * 0.18,
+            maxShiftY: visibleRows * 0.14,
           )
         : dungeonPartyFocus(
             heroes: heroRows,

@@ -52,4 +52,44 @@ void main() {
     expect(missing.x, 4);
     expect(missing.y, 3);
   });
+
+  test('far awake enemies do not pull the camera off the party', () {
+    final heroes = [
+      (x: 6.0, y: 28.0, alive: true, index: 0),
+      (x: 7.0, y: 29.0, alive: true, index: 1),
+    ];
+    final focus = dungeonCombatFocus(
+      heroes: heroes,
+      awakeEnemies: [
+        (x: 40.0, y: 8.0, alive: true),
+        (x: 42.0, y: 10.0, alive: true),
+      ],
+      mapCenterX: 27,
+      mapCenterY: 19,
+      pinIndex: null,
+    );
+    expect(focus.x, closeTo(6.5, 0.01));
+    expect(focus.y, closeTo(28.5, 0.01));
+  });
+
+  test('nearby pack nudges focus but stays within the shift cap', () {
+    final focus = dungeonCombatFocus(
+      heroes: [
+        (x: 10.0, y: 10.0, alive: true, index: 0),
+      ],
+      awakeEnemies: [
+        (x: 18.0, y: 10.0, alive: true),
+        (x: 50.0, y: 10.0, alive: true),
+      ],
+      mapCenterX: 27,
+      mapCenterY: 19,
+      pinIndex: null,
+      packBias: 0.38,
+      nearbyTiles: 9,
+      maxShiftX: 2,
+      maxShiftY: 2,
+    );
+    expect(focus.x, 12);
+    expect(focus.y, 10);
+  });
 }
