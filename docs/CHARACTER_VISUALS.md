@@ -36,7 +36,7 @@ authored, so skin, hair, and cloth keep that picture's palette.
 Not one PNG per class×weapon. Items share looks via `visualSetId` (e.g.
 legacy `sword_t1` → shipped `sword_t0`; named models keep authored colors).
 
-**Four cuts per armor slot** (helm, chest, legs, cloak, hands):
+**Four cuts per armor slot** (helm, chest, legs, cloak, hands, shoulder):
 
 | Cut | Source |
 |-----|--------|
@@ -45,11 +45,18 @@ legacy `sword_t1` → shipped `sword_t0`; named models keep authored colors).
 | `short` | authored `_authored/{slot}_short_idle.png` — brow band, vest, breeches, capelet, cuff |
 | `broad` | authored `_authored/{slot}_broad_idle.png` — wide rim, pauldrons, skirt, hooded cloak, gauntlet |
 
-Loot stamps one of the four (`chest_short`). Material (`*_plate_*` …) and
-class marks resolve at paint. Old saves: `{slot}_v00…v04` → t0, `v05…v09` →
-t2, `v10…v14` → short, `v15…v19` → broad, `wide` → broad, `slim` → short
-(`OwnedGearAssets.legacyArmorCut`). Short and broad keep their own palette
-(no rarity wash) and borrow the plain cut's BAG icon.
+**Snap-ons:** named helms (`helm_ironcrown`, `helm_visored`, `helm_wingcrest`) and
+shoulder overlays (`shoulder_*`) are separate 128 layers, same pattern as
+`sword_thunderfury`. Shoulders no longer fold into a chest t2 boost.
+
+**Cloth dye:** chest overlays ship a `*_dye.png` mask (cloth/trim only). Paint
+applies one of six curated dyes from the item id — metal and gold stay clear.
+
+Loot stamps one of the cuts or a named snap-on (`chest_short`, `helm_ironcrown`).
+Material (`*_plate_*` …) and class marks resolve at paint. Old saves:
+`{slot}_v00…v04` → t0, `v05…v09` → t2, `v10…v14` → short, `v15…v19` → broad,
+`wide` → broad, `slim` → short (`OwnedGearAssets.legacyArmorCut`). Short and
+broad keep their own palette (no rarity wash) and ship matching BAG icons.
 
 **The face lives on the body.** The undertunic carries the master's face,
 eyes, and haircut (`head_from_master`). No armor overlay paints those pixels;
@@ -171,8 +178,7 @@ Facing is **L/R flipX only**. Enemies unchanged in Phase 3.
   empty corners stay the body PNG. Gear overlays are not washed.
 - Helm covers hair (hair lives in the body; no extra hair layer on owned).
 - Neck, rings, trinkets, flask: slots only.
-- Shoulders / belt fold into chest+legs art — `OwnedGearAssets.pathFor` is
-  null for those stems (no extra PNG).
+- Shoulders are snap-on overlays (`shoulder_*`). Belts still fold into legs.
 
 ## Animation priority
 

@@ -28,6 +28,7 @@ abstract final class CharacterVisualPainter {
     CharacterLayerId.cape,
     CharacterLayerId.legs,
     CharacterLayerId.torso,
+    CharacterLayerId.shoulders,
     CharacterLayerId.gloves,
     CharacterLayerId.head,
     CharacterLayerId.offHand,
@@ -210,6 +211,29 @@ abstract final class CharacterVisualPainter {
       }
 
       canvas.drawImageRect(img, src, dst, p);
+      final dyeMaskPath = layer.dyeMaskAsset;
+      final dyeTint = layer.dyeTint;
+      if (dyeMaskPath != null && dyeTint != null) {
+        final dyeImg = overlayImage(dyeMaskPath);
+        if (dyeImg != null) {
+          final dyePaint = Paint()
+            ..filterQuality = FilterQuality.none
+            ..isAntiAlias = false
+            ..color = Color.fromRGBO(255, 255, 255, alpha)
+            ..colorFilter = ColorFilter.mode(dyeTint, BlendMode.modulate);
+          canvas.drawImageRect(
+            dyeImg,
+            Rect.fromLTWH(
+              0,
+              0,
+              dyeImg.width.toDouble(),
+              dyeImg.height.toDouble(),
+            ),
+            dst,
+            dyePaint,
+          );
+        }
+      }
     }
 
     if (step != Offset.zero || lean != 0) {

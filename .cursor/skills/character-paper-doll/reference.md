@@ -16,7 +16,7 @@ Read when baking layers, a facit gate fails, or tuning authored overrides.
   Do not move it in front of the chest — that covers the armor and fails the
   idle diff
 - 2H hides off-hand. Legs win over boots (BAG boots icon = foot-band crop).
-  Shoulders/waist fold into chest+legs (`pathFor` null)
+  Shoulders are snap-on overlays; belts still fold into legs (`pathFor` null for waist)
 - Own **body** PNG per idle/walk/attack. **Armor/weapon overlays** ship
   **idle-only** live PNGs (`OwnedGearAssets.pathFor` → `*_idle.png`). Do not
   regenerate live `*_walk` / `*_attack` overlays. Missing body clip → idle

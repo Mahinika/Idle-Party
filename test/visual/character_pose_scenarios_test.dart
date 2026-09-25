@@ -370,7 +370,7 @@ void main() {
     expect(cape.ownedAsset, contains('/warrior/gear/'));
   });
 
-  test('owned shoulders paint chest_t2 when no chest worn', () {
+  test('owned shoulders paint a dedicated snap-on layer', () {
     final hero = nakedWarrior().copyWith(
       equipped: {
         EquipmentSlot.shoulder: GameLogic.createEquipment(
@@ -378,7 +378,7 @@ void main() {
           rarity: LootRarity.rare,
           battleNumber: 8,
           bias: HeroRole.warrior,
-        ),
+        ).copyWith(visualSetId: 'shoulder_broad'),
       },
     );
     final pose = CharacterVisualPose.resolve(
@@ -386,9 +386,12 @@ void main() {
       anim: idle,
       owned: true,
     );
-    final torso = pose.layers.where((l) => l.id == CharacterLayerId.torso);
-    expect(torso, isNotEmpty);
-    expect(torso.first.ownedAsset, contains('chest_t2'));
+    final shoulders = pose.layers.where(
+      (l) => l.id == CharacterLayerId.shoulders,
+    );
+    expect(shoulders, isNotEmpty);
+    expect(shoulders.first.ownedAsset, contains('shoulder_broad_idle.png'));
+    expect(pose.layers.any((l) => l.id == CharacterLayerId.torso), isFalse);
   });
 
   test('owned waist bumps legs to t2 silhouette', () {

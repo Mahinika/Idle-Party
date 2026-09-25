@@ -25,6 +25,8 @@ class ResolvedLayer {
     this.iconKey,
     this.ownedAsset,
     this.tint,
+    this.dyeMaskAsset,
+    this.dyeTint,
   });
 
   final CharacterLayerId id;
@@ -41,6 +43,10 @@ class ResolvedLayer {
 
   /// Optional rarity wash for owned overlays.
   final Color? tint;
+
+  /// Cloth-trim dye mask (grayscale) painted with [dyeTint] after the overlay.
+  final String? dyeMaskAsset;
+  final Color? dyeTint;
 }
 
 /// Fully resolved visual pose for one hero this frame.
@@ -269,6 +275,14 @@ class CharacterVisualPose {
         CharacterLayerId.offHand => AnchorId.offHand,
         _ => null,
       };
+      final dye = EquipmentVisualResolver.clothDyeFor(item);
+      final dyeMask = dye == null
+          ? null
+          : OwnedGearAssets.clothDyeMaskPath(
+              visualSetId: visId,
+              family: family,
+              armorType: item.armorType,
+            );
       layers.add(
         ResolvedLayer(
           id: id,
@@ -281,6 +295,8 @@ class CharacterVisualPose {
             visId,
             rarityTier: item.rarity.index,
           ),
+          dyeMaskAsset: dyeMask,
+          dyeTint: dye,
         ),
       );
     }
@@ -297,16 +313,11 @@ class CharacterVisualPose {
       t2Id: 'legs_t2',
       heroClass: hero.spec.classId,
     );
-    _addFoldedArmor(
-      layers: layers,
-      seen: seen,
-      family: family,
-      anim: anim.kind,
-      primary: hero.itemIn(EquipmentSlot.chest),
-      booster: hero.itemIn(EquipmentSlot.shoulder),
-      layer: CharacterLayerId.torso,
-      t2Id: 'chest_t2',
-      heroClass: hero.spec.classId,
+    // Chest and shoulders are independent snap-ons (Diablo-style).
+    addItem(hero.itemIn(EquipmentSlot.chest), layer: CharacterLayerId.torso);
+    addItem(
+      hero.itemIn(EquipmentSlot.shoulder),
+      layer: CharacterLayerId.shoulders,
     );
     addItem(
       hero.itemIn(EquipmentSlot.hands) ?? hero.itemIn(EquipmentSlot.wrist),
@@ -345,8 +356,8 @@ class CharacterVisualPose {
     );
   }
 
-  /// Shoulder → chest silhouette, waist → legs. No dedicated PNGs — boost to
-  /// t2 when a booster is worn, or paint t2 alone when only the booster is on.
+  /// Waist folds into legs: bump plain legs to t2, or paint t2 alone when
+  /// only a belt is worn. Shoulders are a dedicated snap-on layer now.
   static void _addFoldedArmor({
     required List<ResolvedLayer> layers,
     required Set<CharacterLayerId> seen,
@@ -368,8 +379,8 @@ class CharacterVisualPose {
       tintFrom = primary;
       armorType = primary.armorType ?? booster?.armorType;
       visId = EquipmentVisualResolver.resolveId(primary);
-      // Shoulders and belts have no PNG, so a plain chest or legs steps up
-      // to the t2 extract. A short or broad style already is the look.
+      // Belts have no PNG, so a plain legs cut steps up to the t2 extract.
+      // A short or broad style already is the look.
       if (booster != null && !OwnedGearAssets.isArmorStyleId(visId)) {
         visId = t2Id;
       }
@@ -444,6 +455,9 @@ class CharacterVisualPose {
       buf.write(e.value.armorType?.name ?? '-');
       buf.write('/');
       buf.write(e.value.rarity.index);
+      buf.write('/');
+      final dye = EquipmentVisualResolver.clothDyeFor(e.value);
+      buf.write(dye?.hashCode ?? 0);
       buf.write(';');
     }
     return buf.toString();

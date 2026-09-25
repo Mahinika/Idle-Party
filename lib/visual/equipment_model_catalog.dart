@@ -31,7 +31,15 @@ abstract final class EquipmentModelCatalog {
     'legs',
     'cloak',
     'hands',
+    'shoulder',
   ];
+
+  /// Named helm snap-ons (per-family remasters of owned helm masters).
+  static const Set<String> authoredFamilyIds = {
+    'helm_ironcrown',
+    'helm_visored',
+    'helm_wingcrest',
+  };
 
   /// Authored weapon models kept in the loot pool (plus each base `*_t0`).
   static const Set<String> authoredSharedIds = {
@@ -112,11 +120,25 @@ abstract final class EquipmentModelCatalog {
       'frill_soulcodex',
       'frill_embercodex',
     ],
-    'helm': ['helm_t0', 'helm_t2', 'helm_short', 'helm_broad'],
+    'helm': [
+      'helm_t0',
+      'helm_t2',
+      'helm_short',
+      'helm_broad',
+      'helm_ironcrown',
+      'helm_visored',
+      'helm_wingcrest',
+    ],
     'chest': ['chest_t0', 'chest_t2', 'chest_short', 'chest_broad'],
     'legs': ['legs_t0', 'legs_t2', 'legs_short', 'legs_broad'],
     'cloak': ['cloak_t0', 'cloak_t2', 'cloak_short', 'cloak_broad'],
     'hands': ['hands_t0', 'hands_t2', 'hands_short', 'hands_broad'],
+    'shoulder': [
+      'shoulder_t0',
+      'shoulder_t2',
+      'shoulder_short',
+      'shoulder_broad',
+    ],
   };
 
   /// Art stem for a weapon type (loot + paint must agree).
@@ -134,8 +156,15 @@ abstract final class EquipmentModelCatalog {
   };
 
   static String baseToken(String visualSetId) {
+    if (authoredFamilyIds.contains(visualSetId)) {
+      return visualSetId.split('_').first;
+    }
     final m = RegExp(r'^(.+)_t\d+$').firstMatch(visualSetId);
     if (m != null) return m.group(1)!;
+    final style = RegExp(
+      r'^(helm|chest|legs|cloak|hands|shoulder)_(short|broad)$',
+    ).firstMatch(visualSetId);
+    if (style != null) return style.group(1)!;
     return visualSetId.split('_').first;
   }
 
@@ -153,37 +182,38 @@ abstract final class EquipmentModelCatalog {
 
   /// Pick a model for loot. [resolvedBaseId] is e.g. `sword_t2` / `helm_t0`.
   ///
-  /// Armor picks one of [armorCuts] (`chest_short`); material and class
-  /// marks resolve at paint. Shared weapons pick from the authored pool
-  /// (`*_t0` + named models).
+  /// Helms and weapons lean toward named snap-ons at higher rarity. Other
+  /// armor picks one of [armorCuts]. Material and class marks resolve at paint.
   static String pickVariant(
     String resolvedBaseId,
     Random rng, {
     int rarityTier = 0,
   }) {
     final base = baseToken(resolvedBaseId);
+    final list = variantsFor(resolvedBaseId);
+    if (base == 'helm' || sharedBases.contains(base)) {
+      if (list.isEmpty) return resolvedBaseId;
+      if (list.length == 1) return list.first;
+      final chance = rarityTier >= 3
+          ? 0.90
+          : rarityTier >= 2
+          ? 0.78
+          : rarityTier >= 1
+          ? 0.58
+          : 0.32;
+      if (rng.nextDouble() < chance) {
+        final authored = list.where((id) => id != '${base}_t0').toList();
+        if (authored.isNotEmpty) {
+          return authored[rng.nextInt(authored.length)];
+        }
+      }
+      return '${base}_t0';
+    }
     if (isFamilyBase(base)) {
       return '${base}_${armorCuts[rng.nextInt(armorCuts.length)]}';
     }
-    final list = variantsFor(resolvedBaseId);
     if (list.isEmpty) return resolvedBaseId;
-    if (list.length == 1) return list.first;
-
-    // Uncommon+ lean toward authored models so BAG/doll identity pops.
-    final chance = rarityTier >= 3
-        ? 0.90
-        : rarityTier >= 2
-        ? 0.78
-        : rarityTier >= 1
-        ? 0.58
-        : 0.32;
-    if (rng.nextDouble() < chance) {
-      final authored = list.where((id) => id != '${base}_t0').toList();
-      if (authored.isNotEmpty) {
-        return authored[rng.nextInt(authored.length)];
-      }
-    }
-    return '${base}_t0';
+    return list[rng.nextInt(list.length)];
   }
 
   static Iterable<String> get allSharedVariantIds sync* {

@@ -149,14 +149,15 @@ abstract final class OwnedGearAssets {
     'legs',
     'cloak',
     'hands',
+    'shoulder',
   ];
 
   static final RegExp armorCutPattern = RegExp(
-    r'^(helm|chest|legs|cloak|hands)_(t0|t2|short|broad)$',
+    r'^(helm|chest|legs|cloak|hands|shoulder)_(t0|t2|short|broad)$',
   );
 
   static final RegExp _legacyCutPattern = RegExp(
-    r'^(helm|chest|legs|cloak|hands)_(?:v(\d{2})|(wide|slim))$',
+    r'^(helm|chest|legs|cloak|hands|shoulder)_(?:v(\d{2})|(wide|slim))$',
   );
 
   /// Short or broad — authored styles that keep their own palette.
@@ -198,6 +199,9 @@ abstract final class OwnedGearAssets {
   static String shippedFileStem(String visualSetId) {
     final cut = legacyArmorCut(visualSetId);
     if (armorCutPattern.hasMatch(cut)) return cut;
+    if (EquipmentModelCatalog.authoredFamilyIds.contains(visualSetId)) {
+      return visualSetId;
+    }
     if (isCatalogTierId(visualSetId)) return silhouetteId(visualSetId);
     if (EquipmentModelCatalog.authoredSharedIds.contains(visualSetId)) {
       return visualSetId;
@@ -221,13 +225,17 @@ abstract final class OwnedGearAssets {
   }) {
     if (visualSetId.isEmpty || visualSetId == 'none') return null;
     final stem = visualSetId.split('_').first;
-    // Shoulders / belt fold into chest+legs art — no extra owned PNG.
-    if (stem == 'shoulder' || stem == 'waist') return null;
+    // Belts fold into legs art — no extra owned PNG.
+    if (stem == 'waist') return null;
     // Ignore [anim]: walk/attack only change BodyFamilyCatalog body clips.
     const overlayAnim = 'idle';
     var fileStem = shippedFileStem(visualSetId);
     if (isSharedSet(visualSetId)) {
       return sharedGear(fileStem, overlayAnim);
+    }
+    // Named helms keep authored palette — no material/class remap.
+    if (EquipmentModelCatalog.authoredFamilyIds.contains(visualSetId)) {
+      return familyGear(family, fileStem, overlayAnim);
     }
     fileStem = materialFileStem(
       fileStem,
@@ -240,6 +248,23 @@ abstract final class OwnedGearAssets {
       heroClass: heroClass,
     );
     return familyGear(family, classStem ?? fileStem, overlayAnim);
+  }
+
+  /// Cloth-trim dye mask for a chest overlay (`*_dye.png`), or null.
+  static String? clothDyeMaskPath({
+    required String visualSetId,
+    required BodyFamily family,
+    ArmorType? armorType,
+  }) {
+    final cut = legacyArmorCut(visualSetId);
+    final m = armorCutPattern.firstMatch(cut);
+    if (m == null || m.group(1) != 'chest') return null;
+    final fileStem = materialFileStem(
+      cut,
+      family: family,
+      armorType: armorType,
+    );
+    return '$root/${family.name}/gear/${fileStem}_dye.png';
   }
 
   /// Overlays the doll actually paints (no BAG `*_icon` crops).
@@ -267,8 +292,7 @@ abstract final class OwnedGearAssets {
   /// Every owned overlay + BAG `*_icon` crop (boots icons included).
   ///
   /// Bodies precache via [BodyFamilyCatalog.allAssetPaths]. Walk/attack use
-  /// the same idle gear overlays on poser body clips. Short and broad borrow
-  /// the plain cut's BAG icon, so only t0/t2 ship icons.
+  /// the same idle gear overlays on poser body clips.
   static List<String> get allAssetPaths {
     final out = <String>{};
     String icon(BodyFamily family, String stem) =>
@@ -280,7 +304,10 @@ abstract final class OwnedGearAssets {
           for (final cut in kArmorCuts) {
             final stem = '${slot}_$look$cut';
             out.add(familyGear(family, stem, 'idle'));
-            if (cut == 't0' || cut == 't2') out.add(icon(family, stem));
+            out.add(icon(family, stem));
+            if (slot == 'chest') {
+              out.add('$root/${family.name}/gear/${stem}_dye.png');
+            }
           }
         }
         out.add(icon(family, 'boots_${look}t0'));
@@ -292,6 +319,10 @@ abstract final class OwnedGearAssets {
             out.add(familyGear(family, '${slot}_${mark}_$cut', 'idle'));
           }
         }
+      }
+      for (final id in EquipmentModelCatalog.authoredFamilyIds) {
+        out.add(familyGear(family, id, 'idle'));
+        out.add(icon(family, id));
       }
     }
     for (final id in kSharedSetIds) {

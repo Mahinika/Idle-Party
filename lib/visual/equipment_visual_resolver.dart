@@ -116,7 +116,12 @@ abstract final class EquipmentVisualResolver {
   /// dungeon can tell a green from a purple without reading the slot border.
   /// Armor t2, short, and broad cuts keep their own palette.
   static Color? rarityTint(String visualSetId, {int? rarityTier}) {
+    if (EquipmentModelCatalog.authoredFamilyIds.contains(visualSetId) ||
+        EquipmentModelCatalog.authoredSharedIds.contains(visualSetId)) {
+      return null;
+    }
     final id = OwnedGearAssets.legacyArmorCut(visualSetId);
+    if (OwnedGearAssets.isArmorStyleId(id)) return null;
     final m = RegExp(r'_t(\d+)$').firstMatch(id);
     if (m == null) return null;
     if (m.group(1) == '2' && EquipmentModelCatalog.isFamilyBase(id)) {
@@ -131,6 +136,27 @@ abstract final class EquipmentVisualResolver {
       3 => const Color(0xFFFFE2A8),
       _ => const Color(0xFFFFCC77),
     };
+  }
+
+  /// Curated cloth-trim dyes (Diablo-style: few colors, not a random rainbow).
+  static const List<Color> clothDyes = [
+    Color(0xFF4A6FA5), // steel blue
+    Color(0xFF8B5A2B), // bronze brown
+    Color(0xFF8B3A3A), // crimson
+    Color(0xFF3D6B4F), // forest
+    Color(0xFF5A4A7A), // void purple
+    Color(0xFF6B5A3A), // sand
+  ];
+
+  /// Stable dye pick for chest cloth/trim. Null when no dye mask applies.
+  static Color? clothDyeFor(EquipmentItem item) {
+    if (item.slot != EquipmentSlot.chest && item.slot != EquipmentSlot.cloak) {
+      return null;
+    }
+    // Skip named / empty. Cloak uses its own overlay without a dye mask yet.
+    if (item.slot == EquipmentSlot.cloak) return null;
+    final i = item.id.hashCode.abs() % clothDyes.length;
+    return clothDyes[i];
   }
 
   static String? ownedAssetForItem(
@@ -161,16 +187,8 @@ abstract final class EquipmentVisualResolver {
     }
     final id = resolveId(item);
     if (id == 'none') return null;
-    // Short and broad borrow the plain cut's BAG icon.
-    if (OwnedGearAssets.isArmorStyleId(id)) {
-      final slot = id.split('_').first;
-      final mat = OwnedGearAssets.materialSuffix(fam, item.armorType);
-      final stem = mat == null ? '${slot}_t0' : '${slot}_${mat}_t0';
-      return OwnedGearAssets.familyGear(fam, stem, 'idle')
-          .replaceFirst('_idle.png', '_icon.png');
-    }
     final stem = EquipmentModelCatalog.baseToken(id);
-    if (stem == 'shoulder' || stem == 'waist') return null;
+    if (stem == 'waist') return null;
     final idle = OwnedGearAssets.pathFor(
       visualSetId: id,
       family: fam,
@@ -206,6 +224,48 @@ abstract final class EquipmentVisualResolver {
             atlasCol: 28,
             atlasRow: t >= 2 ? 6 : 0,
           ),
+          'helm_short': const EquipmentVisualDef(
+            id: 'helm_short',
+            layer: CharacterLayerId.head,
+            atlasCol: 28,
+            atlasRow: 0,
+          ),
+          'helm_broad': const EquipmentVisualDef(
+            id: 'helm_broad',
+            layer: CharacterLayerId.head,
+            atlasCol: 28,
+            atlasRow: 6,
+          ),
+          'helm_ironcrown': const EquipmentVisualDef(
+            id: 'helm_ironcrown',
+            layer: CharacterLayerId.head,
+            atlasCol: 28,
+            atlasRow: 6,
+          ),
+          'helm_visored': const EquipmentVisualDef(
+            id: 'helm_visored',
+            layer: CharacterLayerId.head,
+            atlasCol: 28,
+            atlasRow: 0,
+          ),
+          'helm_wingcrest': const EquipmentVisualDef(
+            id: 'helm_wingcrest',
+            layer: CharacterLayerId.head,
+            atlasCol: 28,
+            atlasRow: 6,
+          ),
+          'shoulder_short': const EquipmentVisualDef(
+            id: 'shoulder_short',
+            layer: CharacterLayerId.shoulders,
+            atlasCol: 10,
+            atlasRow: 2,
+          ),
+          'shoulder_broad': const EquipmentVisualDef(
+            id: 'shoulder_broad',
+            layer: CharacterLayerId.shoulders,
+            atlasCol: 10,
+            atlasRow: 4,
+          ),
           'chest_t$t': EquipmentVisualDef(
             id: 'chest_t$t',
             layer: CharacterLayerId.torso,
@@ -237,7 +297,7 @@ abstract final class EquipmentVisualResolver {
           ),
           'shoulder_t$t': EquipmentVisualDef(
             id: 'shoulder_t$t',
-            layer: CharacterLayerId.torso,
+            layer: CharacterLayerId.shoulders,
             atlasCol: 10,
             atlasRow: t.clamp(0, 4),
           ),

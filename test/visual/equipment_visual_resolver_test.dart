@@ -99,20 +99,33 @@ void main() {
       'helm_t2',
       'helm_short',
       'helm_broad',
+      'helm_ironcrown',
+      'helm_visored',
+      'helm_wingcrest',
     ]);
     for (final base in EquipmentModelCatalog.familyBases) {
+      final variants = EquipmentModelCatalog.variantsFor('${base}_t0').toSet();
       final picked = <String>{};
-      for (var i = 0; i < 40; i++) {
+      for (var i = 0; i < 80; i++) {
         picked.add(
-          EquipmentModelCatalog.pickVariant('${base}_t0', Random(i), rarityTier: 2),
+          EquipmentModelCatalog.pickVariant(
+            '${base}_t0',
+            Random(i),
+            rarityTier: 2,
+          ),
         );
       }
-      expect(picked, {
-        '${base}_t0',
-        '${base}_t2',
-        '${base}_short',
-        '${base}_broad',
-      });
+      expect(picked.every(variants.contains), isTrue);
+      if (base != 'helm') {
+        expect(picked, {
+          '${base}_t0',
+          '${base}_t2',
+          '${base}_short',
+          '${base}_broad',
+        });
+      } else {
+        expect(picked.length, greaterThan(4));
+      }
     }
   });
 
@@ -711,7 +724,7 @@ void main() {
       );
     });
 
-    test('styles borrow the plain BAG icon; t2 keeps its own', () {
+    test('styles ship matching BAG icons; t2 keeps its own', () {
       EquipmentItem chest(String id) => EquipmentItem(
         id: id,
         name: 'Chest',
@@ -723,11 +736,11 @@ void main() {
       );
       expect(
         EquipmentVisualResolver.ownedIconPathFor(chest('chest_broad')),
-        'assets/custom/char/healer/gear/chest_t0_icon.png',
+        'assets/custom/char/healer/gear/chest_broad_icon.png',
       );
       expect(
         EquipmentVisualResolver.ownedIconPathFor(chest('chest_wide')),
-        'assets/custom/char/healer/gear/chest_t0_icon.png',
+        'assets/custom/char/healer/gear/chest_broad_icon.png',
       );
       expect(
         EquipmentVisualResolver.ownedIconPathFor(chest('chest_t2')),
@@ -747,9 +760,8 @@ void main() {
     });
 
     test('every listed doll PNG ships, and nothing else sits in gear', () {
-      // Four cuts per slot, not twenty colour copies: the dungeon precache
-      // stays a few hundred textures.
-      expect(OwnedGearAssets.dollOverlayPaths.length, lessThan(320));
+      // Cuts + snap-ons + dye masks: still a few hundred textures.
+      expect(OwnedGearAssets.dollOverlayPaths.length, lessThan(420));
       final listed = OwnedGearAssets.allAssetPaths.toSet();
       for (final path in listed) {
         expect(File(path).existsSync(), isTrue, reason: path);
@@ -815,13 +827,13 @@ void main() {
     });
   });
 
-  test('shoulders and belts have no owned overlay path', () {
+  test('shoulders paint owned overlays; belts still fold into legs', () {
     final shoulder = GameLogic.createEquipment(
       slot: EquipmentSlot.shoulder,
       rarity: LootRarity.rare,
       battleNumber: 8,
       bias: HeroRole.warrior,
-    );
+    ).copyWith(visualSetId: 'shoulder_t0');
     final belt = GameLogic.createEquipment(
       slot: EquipmentSlot.waist,
       rarity: LootRarity.uncommon,
@@ -836,7 +848,7 @@ void main() {
         family: BodyFamily.warrior,
         anim: HeroAnimKind.idle,
       ),
-      isNull,
+      'assets/custom/char/warrior/gear/shoulder_t0_idle.png',
     );
     expect(
       EquipmentVisualResolver.ownedAssetForItem(
@@ -846,6 +858,51 @@ void main() {
       ),
       isNull,
     );
+  });
+
+  test('short and broad BAG icons match the doll cut', () {
+    final chest = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 5,
+      bias: HeroRole.warrior,
+    ).copyWith(visualSetId: 'chest_broad');
+    final path = EquipmentVisualResolver.ownedIconPathFor(
+      chest,
+      family: BodyFamily.warrior,
+    );
+    expect(path, 'assets/custom/char/warrior/gear/chest_broad_icon.png');
+  });
+
+  test('named helm snap-ons resolve to family overlays', () {
+    final helm = GameLogic.createEquipment(
+      slot: EquipmentSlot.head,
+      rarity: LootRarity.epic,
+      battleNumber: 12,
+      bias: HeroRole.warrior,
+    ).copyWith(visualSetId: 'helm_ironcrown');
+    expect(
+      EquipmentVisualResolver.ownedAssetForItem(
+        helm,
+        family: BodyFamily.warrior,
+        anim: HeroAnimKind.idle,
+      ),
+      'assets/custom/char/warrior/gear/helm_ironcrown_idle.png',
+    );
+    expect(EquipmentVisualResolver.rarityTint('helm_ironcrown'), isNull);
+  });
+
+  test('cloth dye is curated and stable per item id', () {
+    final a = GameLogic.createEquipment(
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      battleNumber: 3,
+      bias: HeroRole.mage,
+    );
+    final b = a.copyWith(id: a.id);
+    expect(EquipmentVisualResolver.clothDyeFor(a), isNotNull);
+    expect(EquipmentVisualResolver.clothDyeFor(a), EquipmentVisualResolver.clothDyeFor(b));
+    expect(EquipmentVisualResolver.clothDyes, hasLength(6));
   });
 
   test('boots BAG icon uses foot-band crop not full legs', () {

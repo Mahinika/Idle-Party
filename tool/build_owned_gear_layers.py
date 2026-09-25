@@ -1135,6 +1135,9 @@ def run_build() -> None:
     print("ok materials", materials.derive_all())
     for family in FAMILIES:
         print("ok", family, "class marks", write_class_marks(family))
+    import author_snap_ons as snap_ons
+
+    print("ok snap-ons", snap_ons.write_all())
     for family in FAMILIES:
         print("ok", family, "face owned, rewrote", own_face(family))
     print("ok icons", icons.write_all())

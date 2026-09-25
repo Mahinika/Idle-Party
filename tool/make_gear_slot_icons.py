@@ -17,6 +17,7 @@ MIN_OPAQUE = 40
 ICON = 64
 # Hands are sparse wrist pixels — still crop when enough opaque remains.
 HANDS_MIN_OPAQUE = 24
+SHOULDER_MIN_OPAQUE = 12
 
 
 def opaque_count(im: Image.Image) -> int:
@@ -59,7 +60,12 @@ def convert_folder(
         if t2_only and not base.endswith("_t2"):
             continue
         token = base.split("_")[0]
-        min_op = HANDS_MIN_OPAQUE if token == "hands" else MIN_OPAQUE
+        if token == "hands":
+            min_op = HANDS_MIN_OPAQUE
+        elif token == "shoulder":
+            min_op = SHOULDER_MIN_OPAQUE
+        else:
+            min_op = MIN_OPAQUE
         im = Image.open(src).convert("RGBA")
         icon = make_icon(im, min_opaque=min_op)
         dest = src.with_name(src.name.replace("_idle.png", "_icon.png"))

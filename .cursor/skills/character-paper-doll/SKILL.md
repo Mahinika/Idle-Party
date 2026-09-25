@@ -70,6 +70,10 @@ on the armor.
 `gear/_authored/{slot}_{style}_idle.png` (same origin, no face). Facit fails a
 style that is t0 or t0 stretched. Replace a master by hand any time;
 `tool/author_style_masters.py` never overwrites one without `--force`.
+BAG icons for short/broad come from the same idle overlay (not a t0 loan).
+**Snap-ons:** named helms (`helm_ironcrown` / `visored` / `wingcrest`) and
+shoulder overlays use the same display-id path as named weapons. Cloth dye is
+a chest sash/tabard mask painted at runtime (`*_dye.png`), not a PNG per drop.
 6. Hand art moved? `py tool/gen_owned_gear_grips.py`, then
    `py tool/audit_anchors.py` (findings must be empty).
 7. Only then full `flutter run` on A56 (PNG bytes need a rebuild, not hot reload).
