@@ -21,47 +21,11 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
    relaunch), then what to test on the phone → **stop and wait**. Never
    ask them to look while the attached session is older than the edits.
    One plain synonym if a term is needed.
-4. Follow skills silently (`suggesting-skills`) — don’t ask “ska jag använda X?”.
+4. Follow the project skill whose description matches. Don’t ask “ska jag använda X?”.
 5. After UI/meta: verify (tests and/or `a56-playtest`). Web only if Android can’t run.
 6. After kit number tweaks: share-fast; grind gate green before done.
 7. Git and Play upload: follow `owner-preferences`.
 8. Vague goal → ask once what to do. Do not invent a numbered program.
-
-## Skill map (silent)
-
-| They say something like… | You use… |
-|--------------------------|----------|
-| combat feels wrong / abilities / AFK | `spatial-combat-change`, maybe `systematic-debugging` |
-| fiender tråkiga / samma PULSE / packs feel identical | `spatial-combat-change` (jobs + mix + boss tell) — not `zone-art-identity` |
-| new spell / kit broken | `add-ability` |
-| new dungeon / zone looks same | `new-dungeon`, `zone-art-identity`, `assets-legal` |
-| dockan / gear syns inte / hjälm / undertunic | `character-paper-doll` + `assets-legal` |
-| save / ascend / lost progress | `save-migrate` |
-| class fantasy / WotLK | `class-audit` |
-| “does it work?” / verify | `flutter-verify`; UI → `a56-playtest` / `hub-smoke` |
-| balance / too strong / too weak | share-fast then gate; `grinding-until-pass` if many failures |
-| What’s New / release notes feel wrong | `screenshotting-changelog` + changelog tests |
-| PR / CI red | `babysitting-pr` / `parallel-ci-triage` |
-| review this diff / before merge / granska / kolla PR | `reviewing-code` |
-| polish hub / weekly / tips / first hour | `hub-smoke` on A56 (`a56-playtest`) + `first_hour_plain_test` |
-| does it look ok? / UI verify | `a56-playtest` / `verifying-in-browser` |
-| a11y / labels / reduce motion | `accessibility-auditing` |
-| record web flow as test | `recording-browser-flow-as-test` |
-| same workflow 3× | `building-skills-from-patterns` |
-| ny meny / panel / var ska X ligga / UI-röd tråd | `game-ux-director` rule + `ui-theme` / `docs/UI_THEME.md` |
-| kupong / redeem / kod | `CouponCodes` + SHOP/SETTINGS dialog — no new skill |
-| världskartan / kontinenter / PATH scroll | `hub_world_map` + `assets-legal` if PNG |
-| rummen för små / fyrkantiga golv | `spatial-combat-change` (`layoutPressure` / silhouettes) |
-| I played / TODAY felt wrong / visste inte vad jag jagar | `ChaseContract` / `hub_chase` / tips — **new-save first** |
-| “gör spelet bättre” / vad härnäst (no other target) | ask once — do not invent a numbered program |
-| fork / två spel / vem har rätt | silent `studio-seats` (six chairs) |
-| Play Store / listing / privacy / AAB / screenshots / statistik / recensioner | `play-store-prep` (+ `docs/PLAY_STORE.md` / `STORE_LISTING.md`) |
-| itch.io / itch listing | `play-store-prep` + `tool/store_listing/itch/PAGE.md` (no APK) |
-| **`/init`** | `init` — resync `AGENTS.md` + `.cursor/rules`; **keep growth mandate** |
-| **`/repo auditandcleaning`** | `repo-audit-and-cleaning` — report only, no code changes |
-| Ascend / “what am I chasing” | `hub_chase`, `ascend_roadmap`, Blessing in `metaDepth` |
-| strategi / 90 dagar / prioritering | `docs/GROWTH_MANDATE.md` then `docs/CONTENT_CADENCE.md` |
-| topplistor / varför bra spel | `docs/archive/TOP_GAMES_RESEARCH.md` background only |
 
 ## Done looks like
 

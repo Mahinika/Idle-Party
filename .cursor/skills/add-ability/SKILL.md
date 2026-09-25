@@ -3,7 +3,7 @@ name: add-ability
 description: >-
   Wires Idle Party hero abilities end-to-end (AbilityId, ClassAbilityDef,
   AbilityEffectRunner, HUD, VFX, tests). Use when adding or fixing a kit
-  ability, spell, passive, taunt, or when an ability shows in HUD but never fires.
+  ability, spell, passive, taunt, a new spell, a broken kit, or when an ability shows in HUD but never fires.
 ---
 
 # Add ability (Idle Party)

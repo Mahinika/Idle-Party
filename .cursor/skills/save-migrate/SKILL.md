@@ -3,7 +3,8 @@ name: save-migrate
 description: >-
   Adds or migrates Idle Party GameState fields safely (toJson/fromJson
   defaults, Ascend keep/reset, SharedPreferences). Use when adding
-  persistent state, meta, Ascend behavior, save load, or export/import.
+  persistent state, meta, Ascend behavior, save load, export/import, or when
+  the owner says save / ascend / lost progress.
 ---
 
 # Save / migrate (Idle Party)

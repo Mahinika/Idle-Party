@@ -28,6 +28,10 @@ Keep the steering shape:
 - `.github/instructions/flutter-blueprint.instructions.md` stays a pointer
   plus Dart facts that still match the code.
 - Do not paste growth, AL20, or Play-upload essays back into every rule.
+- Do not restore `init-slash` or `repo-audit-slash`. Slash entry is
+  `.cursor/commands/` plus the skill (`disable-model-invocation: true`).
+- Do not restore a skill map in `vibe-coder-autopilot` or
+  `suggesting-skills`. Owner phrases live in each skill `description`.
 
 ## Procedure
 

@@ -3,7 +3,8 @@ name: a56-playtest
 description: >-
   Default live look for Idle Party: Samsung A56 Android emulator + flutter run
   (hot reload). Use when the owner should see the app, after UI/hub/dungeon
-  chrome, or instead of Flutter web in a browser tab.
+  chrome, when the owner says "show me the app" / "visa spelet", or instead
+  of Flutter web in a browser tab.
 ---
 
 # A56 playtest (Idle Party)

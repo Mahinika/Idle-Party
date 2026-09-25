@@ -2,7 +2,8 @@
 name: grinding-until-pass
 description: >-
   Keep iterating until flutter analyze / targeted tests / balance gate are
-  green. Use when the user wants the agent to grind through failures autonomously.
+  green. Use when balance feels too strong or too weak, or the user wants
+  the agent to grind through failures autonomously.
 ---
 
 # Grind until pass (Idle Party)

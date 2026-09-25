@@ -3,7 +3,7 @@ name: accessibility-auditing
 description: >-
   Audits Idle Party a11y: Semantics/WebClickBridge labels, text scale, colorblind
   mode, Minimal VFX as reduce-motion, touch targets. Use after UI chrome changes
-  or when labels/automation feel missing. Do not use for general hub polish
+  or when labels, a11y, or reduce motion feel missing. Do not use for general hub polish
   (hub-smoke).
 ---
 

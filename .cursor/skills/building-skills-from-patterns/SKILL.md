@@ -51,11 +51,11 @@ description: WHAT it does. Use when [triggers + 1–2 Swedish phrases]. Do not u
 | Mechanism | Use for |
 |-----------|---------|
 | Skill | On-demand procedure |
-| Rule (`.cursor/rules/`) | Always-on conventions |
+| Rule (`.cursor/rules/`) | Always-on locks, or intelligent / glob rules |
 | Hook | Automate after save / stop |
 
 ## Notes
 
 - Update an existing skill instead of duplicating
-- Keep `suggesting-skills` and `vibe-coder-autopilot` skill maps in sync
+- Put the owner's phrases in that skill's `description`. Do not add a central map in `suggesting-skills` or `vibe-coder-autopilot`.
 - Project skills live under `.cursor/skills/` (tracked via gitignore exceptions)

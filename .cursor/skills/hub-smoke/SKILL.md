@@ -3,8 +3,10 @@ name: hub-smoke
 description: >-
   Hub polish smoke playtest for Idle Party (daily vault, TODAY chase, What's New,
   guides, God Hand tip). Use after hub/meta/UX polish, before tagging a release,
-  or when the owner says "polish hub" / "kolla hubben". Do not use for
-  in-dungeon combat feel (spatial-combat-change).
+  or when the owner says "polish hub" / "kolla hubben" / first hour, or
+  TODAY felt wrong / visste inte vad jag jagar / what am I chasing
+  (new save first). Do not use for in-dungeon combat feel
+  (spatial-combat-change).
 ---
 
 # Hub smoke (Idle Party)
