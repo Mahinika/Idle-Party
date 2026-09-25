@@ -473,6 +473,32 @@ class GameLogic {
     return max(1, sum ~/ state.heroes.length);
   }
 
+  /// Extra enemy HP/ATK when the party outscales the cave (#64 soft floor).
+  /// Skips KEY / Gauntlet / Rift so endgame ladders stay honest.
+  static double overgearThreatScale(GameState state) {
+    if (state.inGauntlet ||
+        state.inRift ||
+        state.inGreaterRift ||
+        state.keystoneRunActive ||
+        state.inWorldBoss) {
+      return 1.0;
+    }
+    final party = partyMeanLevel(state);
+    final unlock = DungeonCatalog.unlockHeroLevel(
+      DungeonCatalog.byId(state.dungeonId),
+    );
+    final levelGap = party - unlock;
+    final gp = EncounterFactory.partyGearPressure(state);
+    var scale = 1.0;
+    if (levelGap >= 15) {
+      scale = max(scale, 1.0 + (levelGap - 15) * 0.04);
+    }
+    if (gp >= 1.7) {
+      scale = max(scale, 1.0 + (gp - 1.7) * 0.45);
+    }
+    return scale.clamp(1.0, 1.7);
+  }
+
   /// Endgame modes unlock when every active hero is [maxHeroLevel] — not AL20 alone.
   /// Includes KEY jargon, Gauntlet, Rifts, Greater Rifts, and Ashen Crown.
   static bool endgameUnlocked(GameState state) => partyAtMaxLevel(state);

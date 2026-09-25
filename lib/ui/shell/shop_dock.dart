@@ -24,9 +24,9 @@ class ShopDock extends StatefulWidget {
   /// SHOP blurb. ESSENCE is named only when that tab exists.
   static String convenienceLine({required bool showEssence}) {
     final essenceBit = showEssence ? ' · essence under ESSENCE' : '';
-    return 'Same SCROLLS as hub tickets '
-        '(convenience — not BiS-for-cash). '
-        'Forever scrolls skip the watch; gold under GOLD$essenceBit.';
+    return 'Timed tickets are free SCROLLS on the hub. '
+        'Forever scrolls here skip the watch (not BiS-for-cash). '
+        'Gold under GOLD$essenceBit.';
   }
 
   @override

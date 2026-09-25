@@ -181,14 +181,21 @@ class ZonePathMap extends StatelessWidget {
         final pathChildren = <Widget>[
           Positioned.fill(
             child: ExcludeSemantics(
-              child: Image.asset(
-                CustomAssets.worldPathMap,
-                fit: BoxFit.fill,
-                filterQuality: FilterQuality.none,
-                gaplessPlayback: true,
-                cacheWidth: (mapW * MediaQuery.devicePixelRatioOf(context))
-                    .round()
-                    .clamp(256, 1024),
+              child: ColorFiltered(
+                // Dim baked continent labels so HERE / NEXT / hubMapTag win (#6).
+                colorFilter: ColorFilter.mode(
+                  const Color(0xFF0A0C12).withValues(alpha: 0.32),
+                  BlendMode.darken,
+                ),
+                child: Image.asset(
+                  CustomAssets.worldPathMap,
+                  fit: BoxFit.fill,
+                  filterQuality: FilterQuality.none,
+                  gaplessPlayback: true,
+                  cacheWidth: (mapW * MediaQuery.devicePixelRatioOf(context))
+                      .round()
+                      .clamp(256, 1024),
+                ),
               ),
             ),
           ),
@@ -212,7 +219,13 @@ class ZonePathMap extends StatelessWidget {
             selected: selected,
             frontier: frontier,
           );
-          final mapTag = unlocked && statusWord.isEmpty ? d.hubMapTag : '';
+          // HERE/NEXT alone when present; short tag only on open uncleared
+          // caves that are not the frontier (#7).
+          final mapTag = unlocked &&
+                  !cleared &&
+                  statusWord.isEmpty
+              ? d.hubMapTag
+              : '';
           final labelH = (statusWord.isEmpty && mapTag.isEmpty)
               ? 0.0
               : statusH;

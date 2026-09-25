@@ -19,12 +19,14 @@ class StartMenuScreen extends StatefulWidget {
     required this.onNewGame,
     required this.onRestore,
     this.saveSummary,
+    this.onSettings,
   });
 
   final bool canContinue;
   final VoidCallback onContinue;
   final VoidCallback onNewGame;
   final VoidCallback onRestore;
+  final VoidCallback? onSettings;
 
   /// Party name + zone when a save exists, e.g. "The Ember Guard · Sandy Caverns".
   final String? saveSummary;
@@ -222,6 +224,21 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
+                                    if (widget.onSettings != null) ...[
+                                      MenuChrome.textLink(
+                                        label: 'SETTINGS',
+                                        onPressed: _inputUnlocked
+                                            ? widget.onSettings
+                                            : null,
+                                      ),
+                                      Text(
+                                        ' · ',
+                                        style: GameTheme.body(
+                                          size: 13,
+                                          color: GameTheme.parchmentDim,
+                                        ),
+                                      ),
+                                    ],
                                     MenuChrome.textLink(
                                       label: 'PRIVACY',
                                       onPressed: _inputUnlocked

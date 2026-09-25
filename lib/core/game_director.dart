@@ -641,6 +641,8 @@ class GameDirector extends ChangeNotifier {
     final ticketAshenCrown = _state.inWorldBoss && !_state.worldBossPractice;
     _spatial = SpatialCombat.build(
       _state,
+      // Soft HP when party >> zone unlock so pack tells stay readable (#64).
+      threatScale: GameLogic.overgearThreatScale(_state),
       afkAssist: ticketAshenCrown ? false : null,
     );
     _battleToken = _state.battleNumber;

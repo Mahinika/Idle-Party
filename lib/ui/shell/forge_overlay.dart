@@ -200,17 +200,68 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
         if (canBuyAny) ...[
           MenuChrome.segmented(
             dense: true,
-            labels: [
-              for (final mode in ForgeGoldSpendMode.values) mode.chipLabel,
-            ],
-            selectedIndex: _spendMode.index,
-            onSelect: (i) => setState(
-              () => _spendMode = ForgeGoldSpendMode.values[i],
-            ),
+            labels: const ['×1', 'Bulk'],
+            selectedIndex: _spendMode == ForgeGoldSpendMode.one ? 0 : 1,
+            onSelect: (i) {
+              if (i == 0) {
+                setState(() => _spendMode = ForgeGoldSpendMode.one);
+                return;
+              }
+              // Bulk sheet: pick a wallet slice (#43).
+              showModalBottomSheet<void>(
+                context: context,
+                backgroundColor: GameTheme.ink,
+                builder: (ctx) => SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Bulk spend',
+                          style: GameTheme.menuTitle(size: 18),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Spend that slice of your wallet on one forge track.',
+                          style: GameTheme.body(
+                            size: 13,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        for (final mode in [
+                          ForgeGoldSpendMode.pct5,
+                          ForgeGoldSpendMode.pct25,
+                          ForgeGoldSpendMode.pct50,
+                          ForgeGoldSpendMode.pct100,
+                        ])
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: GameButton(
+                              label: mode.chipLabel,
+                              style: _spendMode == mode
+                                  ? GameButtonStyle.brown
+                                  : GameButtonStyle.grey,
+                              onPressed: () {
+                                setState(() => _spendMode = mode);
+                                Navigator.pop(ctx);
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 2),
           Text(
-            '×1 = one buy · % chips spend that slice of wallet on one track',
+            _spendMode == ForgeGoldSpendMode.one
+                ? '×1 = one buy · Bulk opens wallet slices'
+                : 'Bulk ${_spendMode.chipLabel} on each tap',
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 4),

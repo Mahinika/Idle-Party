@@ -460,6 +460,43 @@ class _GameHomePageState extends State<GameHomePage>
           onContinue: _continueGame,
           onNewGame: _openNewGamePicker,
           onRestore: _restoreSave,
+          onSettings: () {
+            if (_director.hasExistingSave) {
+              _continueGame();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                _router.open(
+                  MenuRoute.more,
+                  more: MoreSection.settings,
+                );
+              });
+              return;
+            }
+            showDialog<void>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: GameTheme.ink,
+                title: Text(
+                  'Settings',
+                  style: GameTheme.menuTitle(size: 18),
+                ),
+                content: Text(
+                  'Start or continue a save, then open MORE → SETTINGS for sound, zoom, and save tools.\n\n'
+                  'Privacy options are on PRIVACY below.',
+                  style: GameTheme.body(size: 14, color: GameTheme.parchment),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      'OK',
+                      style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       );
     }

@@ -108,6 +108,13 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
     final overlays = <String, ui.Image>{};
     try {
       body = await DecodedImageCache.load(bodyPath, targetWidth: decodeW);
+      // Paint body stub ASAP so GEAR never stalls on empty (#98).
+      if (mounted && gen == _loadGen) {
+        setState(() {
+          _formPath = null;
+          _body = body;
+        });
+      }
       final pose = CharacterVisualPose.resolve(
         hero: widget.hero,
         anim: const HeroAnimPose(kind: HeroAnimKind.idle, frame: 0),

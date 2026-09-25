@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/gold_income.dart';
 import '../game_theme.dart';
+import '../menu_chrome.dart';
 
 /// Compact Hub / Run rates at the top of ESSENCE → CAMP.
 class CampRatesSection extends StatelessWidget {
@@ -24,11 +25,17 @@ class CampRatesSection extends StatelessWidget {
               : 'Hub ${GoldIncome.perMinuteLabel(hub)} · Run — enter a dungeon',
           style: GameTheme.body(size: 14, color: GameTheme.mossLit),
         ),
-        Text(
-          GoldIncome.multiplierLine(state),
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        // Two chips only — full multiplier dump lived in one dense line (#55).
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            for (final p in GoldIncome.multiplierParts(state).take(2))
+              MenuChrome.chip(
+                label: '${p.$1} +${p.$2}%',
+                tone: GameTheme.parchmentDim,
+              ),
+          ],
         ),
       ],
     );
