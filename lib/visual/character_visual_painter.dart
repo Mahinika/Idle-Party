@@ -108,12 +108,38 @@ abstract final class CharacterVisualPainter {
 
     for (final layer in pose.orderedLayers()) {
       if (layer.id == CharacterLayerId.body) {
-        canvas.drawImageRect(
-          body,
-          Rect.fromLTWH(0, 0, body.width.toDouble(), body.height.toDouble()),
-          dst,
-          basePaint,
+        final bodySrc = Rect.fromLTWH(
+          0,
+          0,
+          body.width.toDouble(),
+          body.height.toDouble(),
         );
+        canvas.drawImageRect(body, bodySrc, dst, basePaint);
+        // Spec color only where the cloth mask is opaque. Skin, hair, and
+        // the empty corners stay the body PNG. Gear overlays paint after.
+        final tint = pose.bodyTint;
+        final mask = overlayImage(pose.bodyTintAsset);
+        if (tint != null && mask != null) {
+          final tintPaint = Paint()
+            ..filterQuality = FilterQuality.none
+            ..isAntiAlias = false
+            ..color = Color.fromRGBO(255, 255, 255, alpha)
+            ..colorFilter = ColorFilter.mode(
+              tint.withValues(alpha: 1),
+              BlendMode.modulate,
+            );
+          canvas.drawImageRect(
+            mask,
+            Rect.fromLTWH(
+              0,
+              0,
+              mask.width.toDouble(),
+              mask.height.toDouble(),
+            ),
+            dst,
+            tintPaint,
+          );
+        }
         continue;
       }
       if (!kOwnedGearOverlayLayers.contains(layer.id)) continue;

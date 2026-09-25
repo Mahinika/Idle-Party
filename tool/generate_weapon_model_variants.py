@@ -350,6 +350,9 @@ def opaque(im: Image.Image) -> int:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("generate_weapon_model_variants.py")
     import argparse
 
     ap = argparse.ArgumentParser(

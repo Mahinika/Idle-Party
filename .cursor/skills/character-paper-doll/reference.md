@@ -24,10 +24,11 @@ Read when baking layers, a facit gate fails, or tuning authored overrides.
 - `hit` uses the **idle** body + painter recoil — not the walk stride
 - Motion for the single clips lives in `ownedStepOffset` /
   `mainHandExtraRotation`, not in new PNGs
-- Draw the body PNG as authored. Specs that share a family look the same
-  with empty slots. Do not paint `ownedBodyTintArgb` over the doll — a hue
-  wash crushed cloth and filled the transparent corners. Gear overlays keep
-  their authored palette and only paint when that slot is filled.
+- Draw the body PNG as authored. Spec color is a modulate of
+  `body_tint_*.png` only (`pose.bodyTint` + `bodyTintAsset`). Never wash the
+  whole sprite — that crushed skin and filled the transparent corners.
+  Gear overlays keep their authored palette and only paint when that slot
+  is filled.
 - Armor t2 may thicken/clarify t0 alpha but must keep its palette. Never apply
   a global gold/orange transform; `_authored/*_t2` is archive, not a live win.
 - Four cuts per slot: t0, t2 (grown t0), and the drawn styles short and broad.

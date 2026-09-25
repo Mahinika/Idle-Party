@@ -133,6 +133,9 @@ def cover_hair_with_helm(helm: Image.Image, body_path: Path) -> Image.Image:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("process_warrior_gen_art.py")
     helm_src = Image.open(GEN / "warrior_helm_gen.png")
     cape_src = Image.open(GEN / "warrior_cape_gen.png")
     sword_src = Image.open(GEN / "warrior_sword_gen.png")

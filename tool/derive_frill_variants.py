@@ -73,6 +73,9 @@ def write_set(stem: str, idle: Image.Image) -> None:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("derive_frill_variants.py")
     base = Image.open(GEAR / "frill_t0_idle.png").convert("RGBA")
     write_set("frill_prism", recolor(base, "prism"))
     write_set("frill_soulcodex", recolor(base, "soulcodex"))

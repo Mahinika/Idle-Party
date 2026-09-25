@@ -688,6 +688,9 @@ void main() {
       expect(OwnedGearAssets.legacyArmorCut('cloak_wide'), 'cloak_broad');
       expect(OwnedGearAssets.legacyArmorCut('hands_slim'), 'hands_short');
       expect(OwnedGearAssets.legacyArmorCut('sword_t0'), 'sword_t0');
+      expect(OwnedGearAssets.silhouetteId('chest_leather_t2'), 'chest_leather_t2');
+      expect(OwnedGearAssets.silhouetteId('helm_leather_t5'), 'helm_leather_t2');
+      expect(OwnedGearAssets.silhouetteId('legs_mail_t0'), 'legs_mail_t0');
       expect(
         OwnedGearAssets.pathFor(
           visualSetId: 'chest_v03',

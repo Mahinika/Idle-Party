@@ -94,6 +94,9 @@ def icon_crop(im: Image.Image) -> Image.Image:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("derive_weapon_hue_variants.py")
     ROOT.mkdir(parents=True, exist_ok=True)
     AUTH.mkdir(parents=True, exist_ok=True)
     for new_id, src_id, mode in VARIANTS:

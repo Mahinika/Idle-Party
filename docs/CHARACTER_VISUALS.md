@@ -95,8 +95,9 @@ after. **Rarity on the doll:** plain `*_t0` / `*_t1` / `*_t3` overlays get a
 cool-steel or warm-gold modulate so uncommon vs epic reads at phone size.
 **t2, short, broad, and named weapon models keep authored palettes** — no
 global orange wash. Slot borders stay UI chrome. Weapons: `*_t0` plus named
-models (`sword_thunderfury`, `sword_emberfang`, `staff_voidspire`, …) — hue
-variants from `tool/derive_weapon_hue_variants.py`.
+models (`sword_thunderfury`, `sword_emberfang`, `staff_voidspire`, …) live
+under `char/gear/_authored/`. The old hue scripts refuse to write; the gear
+build is the only doll writer.
 
 Doll look = body family undertunic + overlay stem from `visualSetId` +
 optional material suffix from equipped `armorType`.
@@ -167,6 +168,8 @@ Facing is **L/R flipX only**. Enemies unchanged in Phase 3.
 - BAG/GEAR icons use `EquipmentVisualResolver.ownedIconPathFor` (same
   `resolveId` as the doll) so missing `visualSetId` still matches overlays.
 - Empty slot = undertunic showing through. No ghost t0.
+- Spec color modulates `body_tint_*.png` onto the body only. Skin, hair, and
+  empty corners stay the body PNG. Gear overlays are not washed.
 - Helm covers hair (hair lives in the body; no extra hair layer on owned).
 - Neck, rings, trinkets, flask: slots only.
 - Shoulders / belt fold into chest+legs art — `OwnedGearAssets.pathFor` is

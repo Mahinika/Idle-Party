@@ -21,7 +21,7 @@ def main() -> None:
     for p in sorted(w + g):
         print(" ", p.relative_to(ROOT))
     if not w and not g:
-        print("no authored warrior gear yet — run tool/process_warrior_gen_art.py")
+        print("no authored warrior gear yet — draw masters, then build_owned_gear_layers.py --publish")
 
 
 if __name__ == "__main__":

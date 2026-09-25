@@ -52,9 +52,9 @@ abstract final class OwnedGearAssets {
 
   /// Map any catalog id onto a shipped PNG id (t0/t2 silhouettes).
   static String silhouetteId(String visualSetId) {
-    // Material forms: chest_mail_t0 / helm_plate_t2
+    // Material forms: chest_mail_t0 / helm_plate_t2 / chest_leather_t2
     final mat = RegExp(
-      r'^(helm|chest|legs|cloak|hands)_(mail|plate)_t(\d+)$',
+      r'^(helm|chest|legs|cloak|hands)_(mail|plate|leather)_t(\d+)$',
     ).firstMatch(visualSetId);
     if (mat != null) {
       final slot = mat.group(1)!;

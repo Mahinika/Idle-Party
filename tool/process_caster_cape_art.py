@@ -213,6 +213,9 @@ def make_healer_cape() -> Image.Image:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("process_caster_cape_art.py")
     # Mage: extract from gen
     raw = Image.open(GEN / "mage_cape_gen.png")
     cape = extract_cape(raw, "mage")

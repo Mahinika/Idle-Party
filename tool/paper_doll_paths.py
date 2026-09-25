@@ -19,3 +19,11 @@ CHAR = Path(_override) if _override else LIVE_CHAR
 
 def staged() -> bool:
     return CHAR != LIVE_CHAR
+
+
+def refuse_live_writer(script: str) -> None:
+    """Old generators must not write live doll PNGs. The build is the writer."""
+    raise SystemExit(
+        f"{script} does not write doll art. Drop masters under gear/_authored/, "
+        "then py tool/build_owned_gear_layers.py --publish"
+    )

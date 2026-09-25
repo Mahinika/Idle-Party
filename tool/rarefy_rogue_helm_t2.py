@@ -69,6 +69,9 @@ def rarefy_helm(base: Image.Image) -> Image.Image:
 
 
 def main() -> None:
+    from paper_doll_paths import refuse_live_writer
+
+    refuse_live_writer("rarefy_rogue_helm_t2.py")
     for anim in ANIMS:
         src = AUTH / f"helm_t0_{anim}.png"
         if not src.exists():

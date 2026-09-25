@@ -11,7 +11,7 @@ import 'package:idle_party/visual/hero_anim_state.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('spec color is not painted over the body', () async {
+  test('spec color paints cloth only', () async {
     const n = 8;
     final body = Uint8List(n * n * 4);
     final mask = Uint8List(n * n * 4);
@@ -26,7 +26,6 @@ void main() {
     put(body, 3, 3, 220, 210, 240, 255);
     put(body, 4, 4, 40, 36, 70, 255);
     put(mask, 3, 3, 180, 180, 180, 255);
-    put(mask, 4, 4, 180, 180, 180, 255);
 
     final bodyImg = await _image(n, body);
     final maskImg = await _image(n, mask);
@@ -69,7 +68,8 @@ void main() {
       greaterThan(corner[0] + 40),
       reason: 'empty box stays backdrop',
     );
-    expect(at(3, 3), [220, 210, 240, 255]);
+    // Mask 180 modulated by 0xFFFF4010, then drawn over the body.
+    expect(at(3, 3), [180, 45, 11, 255]);
     expect(at(4, 4), [40, 36, 70, 255]);
   });
 }
