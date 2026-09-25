@@ -71,7 +71,7 @@ abstract final class ChaseDispatcher {
         }
         return _monthAlmostPlan(state, chase, selectedZoneId);
       case HubChaseKind.meetHero:
-        return const ChasePlan(label: 'OPEN GEAR', op: ChaseOp.navMeetHero);
+        return const ChasePlan(label: 'OPEN ROSTER', op: ChaseOp.navMeetHero);
       case HubChaseKind.equipBag:
         final n = MenuAlerts.bagUpgradeCount(state);
         final label = n <= 1 ? 'EQUIP 1' : 'EQUIP $n';

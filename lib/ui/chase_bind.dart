@@ -41,8 +41,10 @@ void runChasePlan({
     case ChaseOp.claimVault:
       director.claimDailyVault();
     case ChaseOp.claimMissions:
-      // One-tap TODAY claim — do not bounce into MORE · QUESTS.
       director.claimAllReadyMissions();
+      if (openMenus) {
+        router.open(MenuRoute.more, more: MoreSection.quests);
+      }
     case ChaseOp.claimMonth:
       director.claimMonthPass();
     case ChaseOp.syncWeek:

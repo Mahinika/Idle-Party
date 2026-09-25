@@ -64,7 +64,7 @@ abstract final class GameTheme {
   static const Color torch = Color(0xFFE4B04A);
   static const Color torchHot = Color(0xFFFFE2A8);
   static const Color parchment = Color(0xFFECE8DF);
-  static const Color parchmentDim = Color(0xFF9AA3B0);
+  static const Color parchmentDim = Color(0xFFB4BCC8);
   static const Color blood = Color(0xFF8B3A2A);
   static const Color bloodLit = Color(0xFFE07058);
   static const Color clear = Color(0xFF7DCF9A);

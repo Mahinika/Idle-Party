@@ -27,8 +27,8 @@ part 'bag_combine_slot.dart';
 class InventoryDock extends StatefulWidget {
   /// MERGE footer. BiS waits until first-hour plain chrome lifts.
   static String mergeFooterHint({required bool plainEnglish}) => plainEnglish
-      ? 'Merges junk pairs of the same slot (skips upgrades). Uses gold.'
-      : 'Merges junk pairs of the same slot (skips upgrades and BiS (kept safe)). Uses gold.';
+      ? 'Same-slot junk pairs → one stronger piece. Uses gold.'
+      : 'Same-slot junk pairs → one stronger piece (skips upgrades). Uses gold.';
 
   const InventoryDock({
     super.key,
@@ -94,6 +94,8 @@ class _InventoryDockState extends State<InventoryDock>
   late final FlexTabs _tabs;
   List<GearPanel> _visible = const [GearPanel.gear, GearPanel.bag];
   bool _showFilters = false;
+  bool _upgradesOnlyFilter = false;
+  bool _longPressTipShown = false;
 
   GameState get state => widget.state;
   String? get selectedId => widget.selectedId;
@@ -123,12 +125,12 @@ class _InventoryDockState extends State<InventoryDock>
   }
 
   String _gearPanelReason(GearPanel tab) {
-    final meet = MenuAlerts.meetRosterHint(state);
-    if (meet.isNotEmpty && tab != GearPanel.roster) return meet;
+    final meet = MenuAlerts.meetRosterHint(state, panel: tab);
+    if (meet.isNotEmpty) return meet;
 
     switch (tab) {
       case GearPanel.gear:
-        return MenuAlerts.gearEquipHint(state, equipHeroIndex);
+        return MenuAlerts.gearEquipHint(state, equipHeroIndex, panel: tab);
       case GearPanel.bag:
         final upgrades = MenuAlerts.bagUpgradeCount(state);
         if (upgrades > 0) {
@@ -156,6 +158,17 @@ class _InventoryDockState extends State<InventoryDock>
         if (i >= 0 && i < _visible.length) widget.onPanelChanged(_visible[i]);
       },
     );
+    _maybeOpenRosterForMeet();
+  }
+
+  void _maybeOpenRosterForMeet() {
+    if (!MenuTabs.showRoster(state)) return;
+    if (state.metaDepth.pendingHeroReveals.isEmpty) return;
+    if (widget.panel == GearPanel.roster) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onPanelChanged(GearPanel.roster);
+    });
   }
 
   @override
@@ -163,6 +176,15 @@ class _InventoryDockState extends State<InventoryDock>
     super.didUpdateWidget(oldWidget);
     if (widget.panel != GearPanel.bag && _showFilters) {
       _showFilters = false;
+    }
+    if (widget.panel != GearPanel.bag && _upgradesOnlyFilter) {
+      _upgradesOnlyFilter = false;
+    }
+    if (oldWidget.state.metaDepth.pendingHeroReveals.length <
+            state.metaDepth.pendingHeroReveals.length ||
+        (state.metaDepth.pendingHeroReveals.isNotEmpty &&
+            widget.panel != GearPanel.roster)) {
+      _maybeOpenRosterForMeet();
     }
   }
 
@@ -207,12 +229,10 @@ class _InventoryDockState extends State<InventoryDock>
       final singleAction = worn != null
           ? () => onUnequip(worn.slot)
           : (inStash ? onEquip : null);
-      // Selected item keeps its own EQUIP/UNEQUIP; bulk upgrades stay secondary.
       if (selectedId != null && (worn != null || inStash)) {
         return Row(
           children: [
             Expanded(
-              flex: 3,
               child: GameButton(
                 label: singleLabel,
                 onPressed: singleAction,
@@ -227,56 +247,16 @@ class _InventoryDockState extends State<InventoryDock>
             if (upgrades > 0) ...[
               const SizedBox(width: 6),
               Expanded(
-                flex: 2,
                 child: _autoEquipButton(dense: true, expanded: true),
-              ),
-            ] else ...[
-              const SizedBox(width: 6),
-              Expanded(
-                flex: 2,
-                child: GameButton(
-                  label: 'OPEN BAG',
-                  onPressed: () => widget.onPanelChanged(GearPanel.bag),
-                  style: GameButtonStyle.grey,
-                  dense: true,
-                  expanded: true,
-                ),
               ),
             ],
           ],
         );
       }
-      // Upgrades: EQUIP N + OPEN BAG. Empty upgrade list: one OPEN BAG only
-      // (avoid twin OPEN BAG / BAG that both do the same thing).
       if (upgrades > 0) {
-        return Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: _autoEquipButton(dense: true, expanded: true),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              flex: 2,
-              child: GameButton(
-                label: 'OPEN BAG',
-                onPressed: () => widget.onPanelChanged(GearPanel.bag),
-                style: GameButtonStyle.grey,
-                dense: true,
-                expanded: true,
-              ),
-            ),
-          ],
-        );
+        return _autoEquipButton(dense: true, expanded: true);
       }
-      return GameButton(
-        label: 'OPEN BAG',
-        onPressed: () => widget.onPanelChanged(GearPanel.bag),
-        style: GameButtonStyle.grey,
-        primary: false,
-        dense: true,
-        expanded: true,
-      );
+      return const SizedBox.shrink();
     }
 
     Widget sheet() {
@@ -333,24 +313,26 @@ class _InventoryDockState extends State<InventoryDock>
     final cap = GameLogic.maxGearStashFor(state);
     final filled = state.gearStash.length;
     final nearFull = GearService.isBagJammed(state);
-    final upgrades = MenuAlerts.bagUpgradeCount(state);
-    final showShopChip =
-        onOpenMarket != null &&
-        upgrades == 0 &&
-        !nearFull &&
-        MenuTabs.showShop(state);
+    final showMarketChip =
+        onOpenMarket != null && showMarketGearHint(state);
     final mergeOpen = MenuTabs.showMerge(state);
     final bagHint = MenuAlerts.bagPanelHint(state);
     final filter = bagSlotFilter;
     final filterLabel = filter == null
         ? null
         : (CharacterEquipPanel.slotLabels[filter] ?? filter.name);
-    final filteredSlots = filter == null
+    var filteredSlots = filter == null
         ? slots
         : [
             for (final item in state.gearStash)
               if (_itemMatchesBagFilter(item, filter)) item,
           ];
+    if (_upgradesOnlyFilter) {
+      filteredSlots = [
+        for (final item in filteredSlots)
+          if (item != null && isUpgradeForAny(state, item)) item,
+      ];
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -395,12 +377,19 @@ class _InventoryDockState extends State<InventoryDock>
           ),
         ),
         const SizedBox(height: 4),
-        if (filter != null) ...[
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            MenuChrome.chip(
+              label: 'Upgrades',
+              selected: _upgradesOnlyFilter,
+              onTap: () => setState(
+                () => _upgradesOnlyFilter = !_upgradesOnlyFilter,
+              ),
+            ),
+            if (filter != null) ...[
               MenuChrome.chip(
                 label: filterLabel ?? filter.name,
                 selected: true,
@@ -414,22 +403,24 @@ class _InventoryDockState extends State<InventoryDock>
               ),
               MenuChrome.chip(label: 'CLEAR', onTap: onClearBagSlotFilter),
             ],
-          ),
+          ],
+        ),
+        if (filter == null && bagHint.isNotEmpty) ...[
           const SizedBox(height: 4),
-        ] else if (bagHint.isNotEmpty)
           Text(
             bagHint,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
-        const SizedBox(height: 6),
-        if (showShopChip)
+        ],
+        const SizedBox(height: 4),
+        if (showMarketChip)
           Center(
             child: MenuChrome.chip(
-              label: 'Need gear? → Shop',
+              label: 'Need gear? → MARKET',
               onTap: onOpenMarket,
             ),
           ),
-        if (showShopChip) const SizedBox(height: 6),
+        if (showMarketChip) const SizedBox(height: 6),
         Expanded(
           child: _showFilters
               ? SingleChildScrollView(
@@ -438,10 +429,12 @@ class _InventoryDockState extends State<InventoryDock>
                     compact: true,
                   ),
                 )
-              : filteredSlots.isEmpty && filter != null
+              : filteredSlots.isEmpty
               ? Center(
                   child: Text(
-                    'No $filterLabel gear in BAG.\nLoot more, or CLEAR filter.',
+                    filter != null || _upgradesOnlyFilter
+                        ? 'No pieces in this filter.'
+                        : 'Bag empty — farm for loot or try GOLD → MARKET.',
                     textAlign: TextAlign.center,
                     style: GameTheme.body(
                       size: 13,
@@ -484,7 +477,17 @@ class _InventoryDockState extends State<InventoryDock>
                           onTap: item == null || combineFiltered
                               ? null
                               : () => onSelect(item.id),
-                          onLongPress: null,
+                          onLongPress: item == null || combineFiltered
+                              ? null
+                              : () {
+                                  if (!_longPressTipShown) {
+                                    _longPressTipShown = true;
+                                    widget.director.showToast(
+                                      'Long-press shows grade and stat tip',
+                                      life: 2.2,
+                                    );
+                                  }
+                                },
                         );
                       },
                     );
@@ -492,20 +495,39 @@ class _InventoryDockState extends State<InventoryDock>
                 ),
         ),
         const SizedBox(height: 4),
-        _autoEquipButton(),
-        const SizedBox(height: 4),
-        GameButton(
-          label: 'CLEAN BAG',
-          tip: MenuAlerts.bagCleanButtonTip(state),
-          onPressed: state.gearStash.isEmpty ? null : onCleanBag,
-          style: GameButtonStyle.grey,
-        ),
-        const SizedBox(height: 4),
-        GameButton(
-          label: 'FILTERS',
-          tip: MenuAlerts.bagFiltersButtonTip(state, showing: _showFilters),
-          onPressed: () => setState(() => _showFilters = !_showFilters),
-          style: _showFilters ? GameButtonStyle.brown : GameButtonStyle.grey,
+        Row(
+          children: [
+            Expanded(
+              child: _autoEquipButton(dense: true, expanded: true),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: GameButton(
+                label: 'CLEAN',
+                tip: MenuAlerts.bagCleanButtonTip(state),
+                onPressed: state.gearStash.isEmpty ? null : onCleanBag,
+                style: GameButtonStyle.grey,
+                dense: true,
+                expanded: true,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: GameButton(
+                label: 'FILTERS',
+                tip: MenuAlerts.bagFiltersButtonTip(
+                  state,
+                  showing: _showFilters,
+                ),
+                onPressed: () => setState(() => _showFilters = !_showFilters),
+                style: _showFilters
+                    ? GameButtonStyle.brown
+                    : GameButtonStyle.grey,
+                dense: true,
+                expanded: true,
+              ),
+            ),
+          ],
         ),
         if (mergeOpen && selectedId != null) ...[
           const SizedBox(height: 4),
@@ -568,7 +590,7 @@ class _InventoryDockState extends State<InventoryDock>
           Padding(
             padding: const EdgeInsets.only(top: 6),
             child: Text(
-              'Bag empty — clear floors for loot, or open BAG after a run.',
+              'Bag empty — clear floors for loot, or open GOLD → MARKET.',
               style: GameTheme.body(size: 12, color: GameTheme.mossLit),
             ),
           ),
@@ -735,6 +757,7 @@ class _InventoryDockState extends State<InventoryDock>
               label: 'OPEN BAG',
               onPressed: () => widget.onPanelChanged(GearPanel.bag),
               style: GameButtonStyle.grey,
+              dense: true,
             ),
           ],
           const SizedBox(height: 10),

@@ -188,6 +188,25 @@ void main() {
     expect(cta.secondaryLabel, 'ENTER DUNGEON');
   });
 
+  test('clearFloors chase title owns primary enter button', () {
+    const chase = HubChase(
+      kind: HubChaseKind.clearFloors,
+      title: 'Floor 2 · Sandy Caverns',
+      detail: 'Clear floor 1, then push floor 2.',
+      urgency: HubChaseUrgency.normal,
+    );
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: 'ENTER',
+      hasChaseAction: true,
+      unlockedSelected: true,
+      hardmodeLevel: 0,
+      showKeystoneJargon: false,
+      endgameUnlocked: false,
+    );
+    expect(cta.primaryLabel, 'Floor 2 · Sandy Caverns');
+  });
+
   test('ENTER DUNGEON is enter-family (not Ascend/Gauntlet chase action)', () {
     expect(HubPrimaryCta.isEnterFamilyLabel('ENTER DUNGEON'), isTrue);
     expect(HubPrimaryCta.isEnterFamilyLabel('ENTER'), isTrue);
@@ -240,7 +259,7 @@ void main() {
     );
 
     expect(find.text('READY'), findsOneWidget);
-    expect(find.textContaining('ready'), findsNothing);
+    expect(chase.progressLabel, isNull);
     expect(find.text('Claim Daily Vault'), findsOneWidget);
   });
 

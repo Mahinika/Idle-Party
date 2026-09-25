@@ -219,6 +219,8 @@ extension DungeonPaintActors on _TileRoomPainter {
       }
     }
 
+    var castLabelsPainted = 0;
+    const maxCastLabels = 3;
     for (final hero in world.heroes) {
       final idx = hero.assetIndex
           .clamp(0, math.max(0, party.length - 1))
@@ -592,6 +594,37 @@ extension DungeonPaintActors on _TileRoomPainter {
                 ? const Color(0x99FFE080)
                 : const Color(0x77FFF0C0),
         );
+      }
+      if (hero.isAlive &&
+          hero.castingTimer > 0.02 &&
+          hero.pendingCastDef != null &&
+          castLabelsPainted < maxCastLabels) {
+        AbilityId? castId;
+        for (final aid in AbilityId.values) {
+          if (aid.name == hero.pendingCastDef) {
+            castId = aid;
+            break;
+          }
+        }
+        final raw = castId == null ? null : ClassKits.defFor(castId)?.shortLabel;
+        if (raw != null && raw.isNotEmpty) {
+          castLabelsPainted++;
+          final label = raw.length > 8 ? raw.substring(0, 8) : raw;
+          final tp = _TileRoomPainter._floaterPainter;
+          final size = tile * 0.22;
+          tp.text = TextSpan(
+            text: label,
+            style: GameTheme.pixelCached(
+              size: math.max(5.5, size),
+              color: const Color(0xDDFFE08A),
+            ),
+          );
+          tp.layout(maxWidth: tile * 2.8);
+          tp.paint(
+            canvas,
+            Offset(c.dx - tp.width / 2, c.dy + tile * 0.18),
+          );
+        }
       }
       if (hero.isAlive &&
           showGuide &&

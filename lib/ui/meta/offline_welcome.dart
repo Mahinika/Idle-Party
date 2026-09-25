@@ -90,13 +90,13 @@ Future<void> showOfflineProgressDialog(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Away for ${OfflineProgressResult.formatOfflineDuration(summary.secondsApplied)}',
-                style: GameTheme.body(size: 16, color: GameTheme.parchment),
+                summary.afkWhereLine,
+                style: GameTheme.body(size: 15, color: GameTheme.torchHot),
               ),
               const SizedBox(height: 6),
               Text(
-                summary.welcomeLead,
-                style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+                'Away for ${OfflineProgressResult.formatOfflineDuration(summary.secondsApplied)} · ${summary.welcomeLead}',
+                style: GameTheme.body(size: 14, color: GameTheme.parchment),
               ),
               if (rows.isNotEmpty) ...[
                 const SizedBox(height: 10),

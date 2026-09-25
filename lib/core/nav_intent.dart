@@ -58,4 +58,9 @@ class NavIntent {
     route: MenuRoute.more,
     more: MoreSection.quests,
   );
+
+  static const NavIntent whatsNew = NavIntent(
+    route: MenuRoute.more,
+    more: MoreSection.info,
+  );
 }

@@ -21,9 +21,9 @@ class _BagSlot extends StatelessWidget {
 
   static String _slotHint(EquipmentSlot slot) {
     return switch (slot) {
-      EquipmentSlot.weapon => 'MH',
-      EquipmentSlot.offHand => 'OH',
-      EquipmentSlot.ranged => 'Rng',
+      EquipmentSlot.weapon => 'Main',
+      EquipmentSlot.offHand => 'Off',
+      EquipmentSlot.ranged => 'Ranged',
       EquipmentSlot.head => 'Head',
       EquipmentSlot.shoulder => 'Shldr',
       EquipmentSlot.chest => 'Chest',
@@ -47,9 +47,12 @@ class _BagSlot extends StatelessWidget {
         : rarityBorderColor(item!.rarity);
     final isBest = item != null && isBestStashItem(state, item!);
     final isUpgrade = item != null && isUpgradeForAny(state, item!);
+    final ilLabel = item == null ? null : gearDisplayIlvlLabel(item!);
     final a11yLabel = item == null
         ? 'Empty bag slot'
-        : '${item!.name}, item level ${item!.effectiveItemLevel}';
+        : ilLabel == null
+        ? item!.name
+        : '${item!.name}, item level ${ilLabel.substring(1)}';
     final slot = Opacity(
       opacity: dimmed ? 0.25 : 1,
       child: Semantics(
@@ -131,19 +134,20 @@ class _BagSlot extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Positioned(
-                        bottom: 2,
-                        left: 6,
-                        child: ExcludeSemantics(
-                          child: Text(
-                            'i${item!.effectiveItemLevel}',
-                            style: GameTheme.body(
-                              size: 12,
-                              color: GameTheme.parchment,
+                      if (ilLabel != null)
+                        Positioned(
+                          bottom: 2,
+                          left: 6,
+                          child: ExcludeSemantics(
+                            child: Text(
+                              ilLabel,
+                              style: GameTheme.body(
+                                size: 12,
+                                color: GameTheme.parchment,
+                              ),
                             ),
                           ),
                         ),
-                      ),
                       if (isUpgrade && !isBest)
                         Positioned(
                           top: 2,

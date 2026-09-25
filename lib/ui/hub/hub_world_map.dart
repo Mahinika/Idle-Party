@@ -61,11 +61,10 @@ class SelectedZoneCaption extends StatelessWidget {
     }
     final need = DungeonCatalog.unlockHeroLevel(dungeon);
     final prevName = dungeon.number <= 0
-        ? 'the start'
+        ? 'Sandy'
         : DungeonCatalog.all[dungeon.number - 1].name;
-    final detail = need > 1 ? 'Clear $prevName or party Lv$need' : 'Locked';
     return Text(
-      '${dungeon.name} · $detail',
+      '${dungeon.name} · party Lv$partyLevel / $need · clear $prevName · gold does not unlock',
       textAlign: TextAlign.center,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
@@ -91,7 +90,7 @@ class SelectedHuntCaption extends StatelessWidget {
     return Column(
       children: [
         Text(
-          '$title · ENDGAME',
+          title,
           textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -167,8 +166,8 @@ class ZonePathMap extends StatelessWidget {
         final mapW = constraints.maxWidth;
         final mapH = constraints.maxHeight;
         if (mapW < 8 || mapH < 8) return const SizedBox.shrink();
-        final discSize = (mapW * 0.078).clamp(28.0, 36.0);
-        final hitSize = math.max(discSize, GameTheme.minTouch);
+        final discSize = (mapW * 0.082).clamp(30.0, 38.0);
+        final hitSize = math.max(discSize + 6, GameTheme.minTouch + 4);
         final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
         final statusH = 16.0 * textScale;
 

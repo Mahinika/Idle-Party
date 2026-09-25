@@ -12,6 +12,8 @@ import '../../models/hero_spec.dart';
 import '../../models/loot.dart';
 import '../../models/spec_mastery.dart';
 import '../../spatial/spatial_combat.dart';
+import '../coach_pulse.dart';
+import '../first_session_tips.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
 import '../hero_doll_sprite.dart';
@@ -103,6 +105,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
 
   void _onHeroTap(int i) {
     _bump();
+    widget.director.dismissTip('kit_abilities');
     if (widget.selectedHeroIndex == i && _kitOpen) {
       setState(() => _kitOpen = false);
       return;
@@ -196,6 +199,11 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
         kitHero != null &&
         kitActor != null &&
         kitActor.isAlive;
+    final coachKit = FirstSessionTips.lineFor(
+      state,
+      CoachTarget.kit,
+      inDungeon: true,
+    );
 
     final panel = SizedBox(
       width: fullWidth,
@@ -300,7 +308,10 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
             _scheduleFade(phone: true);
           }
         },
-        child: panel,
+        child: CoachPulse(
+          active: coachKit != null,
+          child: panel,
+        ),
       ),
     );
   }
@@ -373,10 +384,10 @@ class DungeonFlaskButton extends StatelessWidget {
     final borderColor = urgent
         ? GameTheme.torchHot
         : GameTheme.bloodLit.withValues(alpha: 0.8);
-    final countBit = count > 0 ? ' ×$count' : '';
+    final countLabel = ' · $count';
     final semanticsLabel = urgent
-        ? 'Use healing flask$countBit, party critical'
-        : 'Use healing flask$countBit';
+        ? 'Use healing flask$countLabel, party critical'
+        : 'Use healing flask$countLabel';
     return WebClickScope(
       label: semanticsLabel,
       onPressed: onTap,
@@ -406,7 +417,7 @@ class DungeonFlaskButton extends StatelessWidget {
                   GameIcon.asset(UiIcon.flask, size: 16),
                   const SizedBox(width: 5),
                   Text(
-                    'FLASK$countBit',
+                    'FLASK · $count',
                     style: GameTheme.pixel(
                       size: GameTheme.hudPixel,
                       color: urgent ? GameTheme.torchHot : GameTheme.parchment,

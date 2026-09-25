@@ -1,3 +1,4 @@
+import '../models/dungeon_mode.dart';
 import '../models/loot.dart';
 import '../models/meta_depth.dart';
 import '../spatial/spatial_combat.dart';
@@ -199,6 +200,15 @@ abstract final class WipeAdvice {
       return 'Equip better $slotName on $heroName (BAG)';
     }
     return 'Equip better gear on $heroName +${upgrades - 1} more (BAG)';
+  }
+
+  /// One-line FARM/PUSH reminder on the wipe panel (hub INFO has detail).
+  static String? modeLineFor(GameState state) {
+    if (state.inGauntlet || state.inAnyRiftMode) return null;
+    if (state.dungeonMode == DungeonMode.farm) {
+      return 'FARM loops this floor for loot. See INFO.';
+    }
+    return 'PUSH climbs after each clear. See INFO.';
   }
 
   /// Nudge God Hand after repeated wipes on the same floor (commit path — no redesign).

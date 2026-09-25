@@ -32,8 +32,8 @@ void main() {
     );
   }
 
-  test('meet hero and bag map to GEAR intents', () {
-    final state = GameLogic.createInitialState(now: now);
+  test('meet hero opens roster and bag maps to GEAR intents', () {
+    var state = GameLogic.createInitialState(now: now);
     final meet = ChaseDispatcher.plan(
       const HubChase(
         kind: HubChaseKind.meetHero,
@@ -42,10 +42,20 @@ void main() {
       ),
       state: state,
     );
+    expect(meet.label, 'OPEN ROSTER');
     expect(meet.op, ChaseOp.navMeetHero);
     expect(
       ChaseDispatcher.navIntent(meet, state)?.gear,
       GearPanel.gear,
+    );
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        pendingHeroReveals: const ['combat'],
+      ),
+    );
+    expect(
+      ChaseDispatcher.navIntent(meet, state)?.gear,
+      GearPanel.roster,
     );
 
     final bag = ChaseDispatcher.plan(

@@ -193,6 +193,11 @@ void main() {
     expect(gates.body.toLowerCase(), contains('daily vault'));
     expect(gates.body.toLowerCase(), contains('daily run'));
     expect(gates.body.toLowerCase(), contains('quests daily'));
+    expect(gates.body.toLowerCase(), contains('wotlk'));
+
+    final rift = GameGuides.topics.firstWhere((t) => t.id == 'rift');
+    expect(rift.body.toLowerCase(), contains('loot farm rift'));
+    expect(rift.body.toLowerCase(), isNot(contains('nephalem')));
 
     final armor = GameGuides.topics.where((t) => t.id == 'armor_sets');
     if (armor.isNotEmpty) {

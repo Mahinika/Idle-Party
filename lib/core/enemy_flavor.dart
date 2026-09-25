@@ -6,6 +6,18 @@ import '../models/enemy.dart';
 /// Chamber job for a pack slot — first fight swarm, mid backline, last elites.
 enum PackJob { swarm, backline, elite, mixed }
 
+extension PackJobHud on PackJob {
+  /// Plain English for the compact dungeon top line.
+  String plainHudBit() => switch (this) {
+        PackJob.swarm => 'many foes',
+        PackJob.backline => 'ranged back',
+        PackJob.elite => 'elite',
+        PackJob.mixed => 'mixed',
+      };
+
+  String hudBit({required bool plain}) => plain ? plainHudBit() : name;
+}
+
 /// Ranged trash crowd-control — same ~6s cadence, zone-tinted effect.
 enum RangedJob { slow, hex, root, chill, jolt }
 

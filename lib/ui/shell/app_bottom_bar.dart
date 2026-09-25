@@ -18,6 +18,7 @@ class AppBottomBar extends StatelessWidget {
     required this.onSelect,
     this.onLeave,
     this.showReason = false,
+    this.suppressReason,
     this.coachRoute,
     this.coachLine,
   });
@@ -28,6 +29,9 @@ class AppBottomBar extends StatelessWidget {
   final void Function(MenuRoute route) onSelect;
   final VoidCallback? onLeave;
   final bool showReason;
+
+  /// When true for [reason], hide the bar line (toast already said it).
+  final bool Function(String reason)? suppressReason;
 
   /// First-session coach: pulse this tab and prefer [coachLine] as the reason.
   final MenuRoute? coachRoute;
@@ -96,7 +100,10 @@ class AppBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final slotCount = destinations.length + (onLeave != null ? 1 : 0);
     final dense = slotCount >= 6;
-    final reason = _reasonLine();
+    var reason = _reasonLine();
+    if (suppressReason != null && reason.isNotEmpty && suppressReason!(reason)) {
+      reason = '';
+    }
     final bar = Material(
       color: Colors.transparent,
       child: Container(

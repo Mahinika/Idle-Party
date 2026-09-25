@@ -17,20 +17,29 @@ void main() {
     );
     final tip = FirstSessionTips.tips.first;
     expect(tip.id, 'first_run');
-    expect(tip.title, 'NEXT JOB');
-    expect(tip.body, 'They fight on their own.');
+    expect(tip.title, 'ENTER DUNGEON');
+    expect(tip.body, 'Tap ENTER DUNGEON.');
     expect(tip.body.toUpperCase(), isNot(contains('TODAY')));
     expect(
       FirstSessionTips.lineFor(state, CoachTarget.enter, inDungeon: false),
-      'They fight on their own.',
+      'Tap ENTER DUNGEON.',
     );
   });
 
-  test('only six button-anchor tips — no multi-system cards', () {
+  test('only button-anchor tips — no multi-system cards', () {
     final ids = FirstSessionTips.tips.map((t) => t.id).toSet();
     expect(
       ids,
-      {'first_run', 'godhand', 'farm_push', 'bag', 'forge', 'sanctuary'},
+      {
+        'first_run',
+        'hub_enter',
+        'godhand',
+        'farm_push',
+        'kit_abilities',
+        'bag',
+        'forge',
+        'sanctuary',
+      },
     );
     expect(ids, isNot(contains('lore_descent')));
     expect(ids, isNot(contains('three_dailies')));
@@ -66,7 +75,7 @@ void main() {
     );
     expect(
       FirstSessionTips.lineFor(state, CoachTarget.godhand, inDungeon: true),
-      'Tap to smash.',
+      'Tap the fight — BAL smash',
     );
   });
 
@@ -78,7 +87,15 @@ void main() {
       highestFloorCleared: 50,
       lifetimeGoldEarned: 100,
       essence: 5,
-      seenTips: const ['first_run', 'godhand', 'farm_push', 'bag', 'forge'],
+      seenTips: const [
+        'first_run',
+        'hub_enter',
+        'godhand',
+        'farm_push',
+        'kit_abilities',
+        'bag',
+        'forge',
+      ],
       heroRoster: [
         for (final h in base.heroRoster) h.copyWith(level: 88, xp: 0),
       ],
@@ -90,16 +107,29 @@ void main() {
     );
   });
 
-  test('after a floor, hub does not dump lore cards', () {
+  test('after a floor, hub shows one ENTER tip before GOLD', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       highestFloorCleared: 1,
       lifetimeGoldEarned: 12,
       seenTips: const ['first_run', 'godhand', 'farm_push'],
     );
     expect(FirstSessionTips.leftPorch(state), isTrue);
-    // GOLD unlocks with first reward — one line on the tab, not lore.
     expect(
       FirstSessionTips.nextTipId(state, inDungeon: false),
+      'hub_enter',
+    );
+    expect(
+      FirstSessionTips.lineFor(state, CoachTarget.enter, inDungeon: false),
+      'Tap ENTER DUNGEON for the next floor.',
+    );
+    final afterEnter = state.copyWith(seenTips: [
+      'first_run',
+      'godhand',
+      'farm_push',
+      'hub_enter',
+    ]);
+    expect(
+      FirstSessionTips.nextTipId(afterEnter, inDungeon: false),
       'forge',
     );
   });
@@ -139,7 +169,14 @@ void main() {
     final afterFloor = gold.copyWith(
       highestFloorCleared: 1,
       lifetimeGoldEarned: 20,
-      seenTips: const ['first_run', 'godhand', 'farm_push', 'bag'],
+      seenTips: const [
+        'first_run',
+        'hub_enter',
+        'godhand',
+        'farm_push',
+        'kit_abilities',
+        'bag',
+      ],
     );
     expect(FirstSessionTips.earnedFirstReward(afterFloor), isTrue);
     expect(MenuTabs.showGold(afterFloor), isTrue);
@@ -153,10 +190,19 @@ void main() {
     final base = GameLogic.createInitialState(now: now).copyWith(
       highestFloorCleared: 1,
       lifetimeGoldEarned: 20,
-      seenTips: const ['first_run', 'godhand', 'farm_push'],
+      seenTips: const [
+        'first_run',
+        'godhand',
+        'farm_push',
+        'hub_enter',
+        'forge',
+      ],
     );
-    expect(FirstSessionTips.nextTipId(base, inDungeon: false), 'forge');
-    final withBag = base.copyWith(
+    final afterEnter = base.copyWith(
+      seenTips: const ['first_run', 'godhand', 'farm_push', 'hub_enter'],
+    );
+    expect(FirstSessionTips.nextTipId(afterEnter, inDungeon: false), 'forge');
+    final withBag = afterEnter.copyWith(
       gearStash: [
         EquipmentItem(
           id: 'up_1',

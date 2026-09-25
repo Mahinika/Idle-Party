@@ -364,6 +364,16 @@ void main() {
     );
   });
 
+  test('wipe mode line names FARM/PUSH and INFO', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(dungeonMode: DungeonMode.farm);
+    expect(WipeAdvice.modeLineFor(state), contains('FARM'));
+    expect(WipeAdvice.modeLineFor(state), contains('INFO'));
+    state = state.copyWith(dungeonMode: DungeonMode.push);
+    expect(WipeAdvice.modeLineFor(state), contains('PUSH'));
+    expect(WipeAdvice.modeLineFor(state), contains('INFO'));
+  });
+
   test('God Hand hint after two wipes on same floor', () {
     var state = GameLogic.createInitialState(now: now);
     expect(WipeAdvice.godHandHintFor(state), isNull);

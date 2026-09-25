@@ -1,6 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import '../../core/equipment_factory.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/market_listings_service.dart';
+import '../../core/menu_alerts.dart';
 import '../../models/loot.dart';
 import '../game_theme.dart';
 
@@ -41,6 +46,53 @@ bool isUpgradeForAny(GameState state, EquipmentItem item) =>
 
 bool isBestStashItem(GameState state, EquipmentItem item) =>
     GameLogic.isBestPlannedStashItem(state, item.id);
+
+/// Budget-honest iLvl for UI — null when the tag would mislead (starter i5).
+int? gearDisplayIlvl(EquipmentItem item) {
+  if (item.slot == EquipmentSlot.consumable) return null;
+  final tagged = item.itemLevel;
+  if (tagged <= 0) {
+    final derived = item.effectiveItemLevel;
+    return derived <= 1 ? null : derived;
+  }
+  final expected = EquipmentFactory.budgetForItemLevel(
+    itemLevel: tagged,
+    rarity: item.rarity,
+    slot: item.slot,
+    handed: item.handed,
+  );
+  if (item.statPowerScore < expected * 0.6) {
+    if (item.statPowerScore <= 4) return null;
+    final slotM = EquipmentFactory.slotMult(item.slot, handed: item.handed);
+    final quality = switch (item.rarity) {
+      LootRarity.common => 0.92,
+      LootRarity.uncommon => 0.96,
+      LootRarity.rare => 1.0,
+      LootRarity.epic => 1.06,
+      LootRarity.legendary => 1.12,
+    };
+    return math.max(
+      1,
+      (item.statPowerScore / (0.88 * quality * slotM)).round(),
+    );
+  }
+  return tagged;
+}
+
+String? gearDisplayIlvlLabel(EquipmentItem item) {
+  final il = gearDisplayIlvl(item);
+  return il == null ? null : 'i$il';
+}
+
+/// MARKET nudge only when bag has no upgrades and market has affordable stock.
+bool showMarketGearHint(GameState state) {
+  if (!MenuTabs.showGold(state)) return false;
+  if (MenuAlerts.bagUpgradeCount(state) > 0) return false;
+  if (state.marketListings.isEmpty) return false;
+  return MarketListingsService.hasAffordableUpgradeListing(state) ||
+      (!state.challengeNoFlask &&
+          state.gold >= GameLogic.marketFlaskCost(state));
+}
 
 /// Tab controller whose length can grow as menus unlock (progressive tabs).
 ///

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
+import '../../core/game_logic.dart';
+import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
+import '../game_theme.dart';
 import '../menu_chrome.dart';
 import 'forge_overlay.dart';
 import 'market_overlay.dart';
@@ -76,6 +79,9 @@ class _GoldDockState extends State<GoldDock> with TickerProviderStateMixin {
         },
     ];
     _tabs.syncToId(_visible, safeTab);
+    final marketAlert = MenuAlerts.marketAlert(widget.director.state);
+    final showMarketIntro = GameLogic.plainPlayerChrome(widget.director.state) &&
+        safeTab == GoldPanel.market;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -84,7 +90,13 @@ class _GoldDockState extends State<GoldDock> with TickerProviderStateMixin {
           tabs: [
             for (var i = 0; i < pages.length; i++)
               MenuChrome.bridgedTab(
-                pages[i].label,
+                () {
+                  final tab = _visible[i];
+                  if (tab == GoldPanel.market && !marketAlert.isQuiet) {
+                    return 'MARKET · ${marketAlert.count}';
+                  }
+                  return pages[i].label;
+                }(),
                 onSelect: () {
                   _tabs.controller.animateTo(i);
                   widget.onPanelChanged(_visible[i]);
@@ -93,6 +105,14 @@ class _GoldDockState extends State<GoldDock> with TickerProviderStateMixin {
               ),
           ],
         ),
+        if (showMarketIntro) ...[
+          const SizedBox(height: 6),
+          Text(
+            'This run · Market — flasks and upgrade listings spend gold only',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ],
         const SizedBox(height: 8),
         Expanded(
           child: IndexedStack(

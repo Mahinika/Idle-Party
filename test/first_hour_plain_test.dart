@@ -35,9 +35,10 @@ void main() {
     expect(SpecRoleTag.meleeDps.plainLabel, 'Damage');
   });
 
-  test('intro never asks for another game or fifteen gates', () {
+  test('intro sells offline party progress, not another game', () {
     expect(StoryLore.introTagline.toLowerCase(), contains('party'));
-    expect(StoryLore.introSubline.toLowerCase(), contains('no other game'));
+    expect(StoryLore.introSubline.toLowerCase(), contains('offline'));
+    expect(StoryLore.introSubline.toLowerCase(), isNot(contains('no other game')));
     final intro = StoryLore.introBeats.map((b) => '${b.title} ${b.body}').join(' ');
     expect(intro.toLowerCase(), isNot(contains('fifteen')));
     expect(intro.toLowerCase(), isNot(contains('distant will')));
@@ -135,13 +136,13 @@ void main() {
 
   test('first session is two beats: hub ENTER then tap the fight', () {
     expect(FirstSessionTips.firstRunBeatIds, ['first_run', 'godhand']);
-    expect(FirstSessionTips.tips.first.title, 'NEXT JOB');
+    expect(FirstSessionTips.tips.first.title, 'ENTER DUNGEON');
   });
 
   test('first tip is one line on ENTER, not a menu dictionary', () {
     final tip = FirstSessionTips.tips.first;
     expect(tip.id, 'first_run');
-    expect(tip.body, 'They fight on their own.');
+    expect(tip.body, 'Tap ENTER DUNGEON.');
     expect(tip.body, isNot(contains('Combat Rogue')));
   });
 
@@ -251,6 +252,18 @@ void main() {
     final world = early.firstWhere((t) => t.id == 'world_path');
     expect(world.body.toLowerCase(), contains('tidehold'));
     expect(world.body.toLowerCase(), contains('party mean level'));
+    expect(world.body.toLowerCase(), contains('gold does not unlock'));
+  });
+
+  test('early guides name Daily Vault and skip ISO week', () {
+    final afterBoss = GameLogic.createInitialState(now: now).copyWith(
+      bossVictories: 1,
+    );
+    final weekly = GameGuides.topicsFor(afterBoss)
+        .firstWhere((t) => t.id == 'weekly');
+    expect(weekly.title, 'DAILY VAULT');
+    expect(weekly.body.toUpperCase(), isNot(contains('ISO')));
+    expect(weekly.body, contains('UTC midnight'));
   });
 
   test('AL20 INFO shows the endgame-bridge topic before KEY unlocks', () {
@@ -284,15 +297,16 @@ void main() {
     expect(ids, containsAll(['hardmode', 'gauntlet', 'gates', 'ashen_crown']));
   });
 
-  test('after first boss TODAY is one cave today, not Daily Run', () {
+  test('after first boss TODAY chases party level before Daily Run', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       bossVictories: 1,
+      highestFloorCleared: 5,
     );
     expect(GameLogic.showDailyRunOnHub(state), isFalse);
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.dailyVaultProgress);
-    expect(chase.title.toLowerCase(), contains('cave'));
-    expect(chase.detail.toUpperCase(), isNot(contains('DAILY RUN')));
+    expect(chase.kind, HubChaseKind.clearFloors);
+    expect(chase.title.toLowerCase(), contains('level the party'));
+    expect(chase.title.toUpperCase(), isNot(contains('DAILY RUN')));
     final upNext = ChaseContract.fromState(state, now: now).upNextLine;
     expect(upNext, 'Up next: ${chase.title}');
     expect(upNext.toUpperCase(), isNot(contains('DAILY RUN')));
@@ -300,7 +314,7 @@ void main() {
 
   test('What’s New lead is a new-player sentence', () {
     final lead = FirstSessionTips.tips.first.body.toLowerCase();
-    expect(lead, contains('fight'));
+    expect(lead, contains('enter'));
     final gold = FirstSessionTips.tips.firstWhere((t) => t.id == 'forge');
     expect(gold.body, 'Power for this run.');
     expect(gold.body.toUpperCase(), isNot(contains('SELL JUNK')));
@@ -416,8 +430,8 @@ void main() {
       isNot(contains('BIS')),
     );
     expect(
-      InventoryDock.mergeFooterHint(plainEnglish: false).toUpperCase(),
-      contains('BIS'),
+      InventoryDock.mergeFooterHint(plainEnglish: false).toLowerCase(),
+      contains('skips upgrades'),
     );
   });
 

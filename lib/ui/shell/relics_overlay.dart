@@ -37,6 +37,15 @@ class RelicsOverlay extends StatelessWidget {
                 ? () => director.unlockRelic(next.id)
                 : null,
           ),
+        if (state.unlockedRelics.isEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            'No relics yet. Embers come from bosses, Ascend, and the Daily Vault '
+            '— discover your first relic here.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+        ],
         const SizedBox(height: 8),
         for (final id in state.unlockedRelics.reversed)
           _OwnedRelic(director: director, relicId: id),

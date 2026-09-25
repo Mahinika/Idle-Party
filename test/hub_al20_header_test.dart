@@ -12,8 +12,12 @@ void main() {
       ascensionLevel: GameLogic.maxAscensionLevel,
       huntHint: 'to Lv${GameLogic.maxHeroLevel}',
       blessingStacks: 3,
+      showBlessingStacks: true,
     );
-    expect(label, 'AL ${GameLogic.maxAscensionLevel} · to Lv${GameLogic.maxHeroLevel} · Asc B×3');
+    expect(
+      label,
+      'AL ${GameLogic.maxAscensionLevel} · to Lv${GameLogic.maxHeroLevel} · Blessing ×3',
+    );
     expect(label.contains('MAX'), isFalse);
   });
 

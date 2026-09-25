@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
+import '../../core/game_logic.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
 import '../game_theme.dart';
@@ -37,6 +38,12 @@ class MoreList extends StatefulWidget {
 }
 
 class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
+  static const _chromeSectionsEarly = <MoreSection>[
+    MoreSection.settings,
+    MoreSection.info,
+    MoreSection.credits,
+  ];
+
   static const _chromeSections = <MoreSection>[
     MoreSection.info,
     MoreSection.settings,
@@ -49,17 +56,21 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    final s = widget.director.state;
     final chrome = widget.section.isMetaOverlay
         ? MoreSection.info
         : widget.section;
-    final initial = _chromeSections.indexOf(chrome).clamp(0, 2);
+    final sections = GameLogic.plainPlayerChrome(s)
+        ? _chromeSectionsEarly
+        : _chromeSections;
+    final initial = sections.indexOf(chrome).clamp(0, sections.length - 1);
     _tabs = FlexTabs(
       vsync: this,
-      length: _chromeSections.length,
+      length: sections.length,
       initialIndex: initial,
       onChanged: (i) {
-        if (i >= 0 && i < _chromeSections.length) {
-          widget.onSectionChanged(_chromeSections[i]);
+        if (i >= 0 && i < sections.length) {
+          widget.onSectionChanged(sections[i]);
         }
         setState(() {});
       },
@@ -75,6 +86,9 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final s = widget.director.state;
+    final chromeSections = GameLogic.plainPlayerChrome(s)
+        ? _chromeSectionsEarly
+        : _chromeSections;
     var section = widget.section;
     if (section == MoreSection.quests && !MenuTabs.showQuests(s)) {
       section = MoreSection.info;
@@ -85,7 +99,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
     final alert = MenuAlerts.moreAlert(s);
     final onMeta = section.isMetaOverlay;
     if (!onMeta) {
-      _tabs.syncToId(_chromeSections, section);
+      _tabs.syncToId(chromeSections, section);
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -115,17 +129,17 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
             controller: _tabs.controller,
             onTap: (_) => setState(() {}),
             tabs: [
-              for (var i = 0; i < _chromeSections.length; i++)
+              for (var i = 0; i < chromeSections.length; i++)
                 MenuChrome.bridgedTab(
-                  switch (_chromeSections[i]) {
+                  switch (chromeSections[i]) {
                     MoreSection.info => 'INFO',
                     MoreSection.settings => 'SETTINGS',
                     MoreSection.credits => 'CREDITS',
-                    _ => _chromeSections[i].rowLabel,
+                    _ => chromeSections[i].rowLabel,
                   },
                   onSelect: () {
                     _tabs.controller.animateTo(i);
-                    widget.onSectionChanged(_chromeSections[i]);
+                    widget.onSectionChanged(chromeSections[i]);
                     setState(() {});
                   },
                 ),
@@ -176,15 +190,20 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(
+          'MORE · INFO',
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
         if (metaRows.isNotEmpty) ...[
           for (final row in metaRows) ...[
             GameButton(
               label: row.rowLabel,
               tip: switch (row) {
                 MoreSection.quests =>
-                  'Daily / Bounty / Side / Week / Contract — MORE board, not ENDGAME',
+                  'Daily / Bounty / Side / Week — not ENDGAME hunts',
                 MoreSection.craft =>
-                  'Apex recipes + monthly Craft Trial (Apex gear only, not ENDGAME)',
+                  'Apex + Craft Trial — not ENDGAME hunts',
                 _ => null,
               },
               style: GameButtonStyle.brown,
@@ -192,13 +211,16 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
             ),
             const SizedBox(height: 6),
           ],
-          const SizedBox(height: 4),
         ],
-        GameButton(
-          label: "WHAT'S NEW",
-          style: GameButtonStyle.grey,
-          onPressed: widget.onOpenWhatsNew,
-        ),
+        if (MenuTabs.showWhatsNew(s)) ...[
+          GameButton(
+            label: "WHAT'S NEW",
+            style: GameButtonStyle.grey,
+            dense: true,
+            onPressed: widget.onOpenWhatsNew,
+          ),
+          const SizedBox(height: 6),
+        ],
         if (showCodex) ...[
           const SizedBox(height: 6),
           Row(

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../core/game_logic.dart';
 import '../../core/hub_endgame_act.dart';
 import '../../assets/custom_assets.dart';
 import '../game_icon.dart';
@@ -38,6 +39,7 @@ class HubMapModeTabs extends StatelessWidget {
                 child: _tab(
                   label: HubEndgameAct.pathTabLabel,
                   selected: !showEndgame,
+                  dimmed: showEndgame,
                   onTap: onSelectPath,
                 ),
               ),
@@ -46,6 +48,7 @@ class HubMapModeTabs extends StatelessWidget {
                 child: _tab(
                   label: HubEndgameAct.mapTitle,
                   selected: showEndgame,
+                  dimmed: !showEndgame,
                   onTap: onSelectEndgame,
                 ),
               ),
@@ -59,6 +62,7 @@ class HubMapModeTabs extends StatelessWidget {
   Widget _tab({
     required String label,
     required bool selected,
+    required bool dimmed,
     required VoidCallback onTap,
   }) {
     return WebClickScope(
@@ -81,7 +85,11 @@ class HubMapModeTabs extends StatelessWidget {
                 label,
                 style: GameTheme.body(
                   size: 12,
-                  color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+                  color: selected
+                      ? GameTheme.torchHot
+                      : (dimmed
+                            ? GameTheme.parchmentDim.withValues(alpha: 0.72)
+                            : GameTheme.parchment),
                 ),
               ),
             ),
@@ -102,10 +110,12 @@ class HubEndgameMap extends StatelessWidget {
     this.grBestTier = 0,
     this.gauntletBestFloor = 0,
     this.riftBestTier = 0,
+    this.locked = false,
   });
 
   final HubEndgameHunt? selectedHunt;
-  final ValueChanged<HubEndgameHunt> onSelectHunt;
+  final ValueChanged<HubEndgameHunt>? onSelectHunt;
+  final bool locked;
   final Animation<double>? pulse;
   final int grBestTier;
   final int gauntletBestFloor;
@@ -124,7 +134,7 @@ class HubEndgameMap extends StatelessWidget {
         final mapH = constraints.maxHeight;
         if (mapW < 8 || mapH < 8) return const SizedBox.shrink();
         final discSize = (mapW * 0.16).clamp(40.0, 52.0);
-        final hitSize = math.max(discSize, GameTheme.minTouch);
+        final hitSize = math.max(discSize + 6, GameTheme.minTouch + 4);
         final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
         final statusH = 16.0 * textScale;
 
@@ -184,13 +194,15 @@ class HubEndgameMap extends StatelessWidget {
                 right: 8,
                 top: 6,
                 child: Text(
-                  HubEndgameAct.mapUnlockLine,
+                  locked
+                      ? 'Party Lv${GameLogic.maxHeroLevel} unlocks these hunts'
+                      : HubEndgameAct.mapUnlockLine,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(
                     size: 11,
-                    color: GameTheme.parchmentDim,
+                    color: locked ? GameTheme.torchHot : GameTheme.parchmentDim,
                   ),
                 ),
               ),
@@ -250,12 +262,12 @@ class HubEndgameMap extends StatelessWidget {
         },
         discSize: discSize,
         hitSize: hitSize,
-        unlocked: true,
+        unlocked: !locked,
         cleared: false,
         selected: selected,
-        pulse: selected ? pulse : null,
-        statusWord: statusWord,
-        onTap: () => onSelectHunt(node.hunt),
+        pulse: selected && !locked ? pulse : null,
+        statusWord: locked ? 'LOCK' : statusWord,
+        onTap: locked ? () {} : () => onSelectHunt?.call(node.hunt),
       ),
     );
   }

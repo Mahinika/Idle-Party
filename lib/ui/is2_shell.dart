@@ -58,16 +58,20 @@ class _Is2ShellState extends State<Is2Shell> {
     }
     if (key == LogicalKeyboardKey.keyH && widget.onLeaveDungeon != null) {
       if (router.isOpen) router.close();
-      confirmLeaveDungeon(
-        context,
-        widget.onLeaveDungeon!,
-        state: state,
-        floorCleared: widget.director.spatial?.awaitingExit == true,
-        keystoneActive: state.keystoneRunActive,
-        keyTimer: state.keystoneRunActive
-            ? Keystone.formatTimer(state.keystoneTimerMs)
-            : null,
-      );
+      if (widget.director.spatial?.awaitingExit == true) {
+        widget.onLeaveDungeon!();
+      } else {
+        confirmLeaveDungeon(
+          context,
+          widget.onLeaveDungeon!,
+          state: state,
+          floorCleared: widget.director.spatial?.awaitingExit == true,
+          keystoneActive: state.keystoneRunActive,
+          keyTimer: state.keystoneRunActive
+              ? Keystone.formatTimer(state.keystoneTimerMs)
+              : null,
+        );
+      }
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.space) {
@@ -86,7 +90,7 @@ class _Is2ShellState extends State<Is2Shell> {
       autofocus: true,
       onKeyEvent: _handleKey,
       child: ListenableBuilder(
-        listenable: router,
+        listenable: Listenable.merge([router, d]),
         builder: (context, _) => _buildBody(d),
       ),
     );
@@ -117,6 +121,8 @@ class _Is2ShellState extends State<Is2Shell> {
         MenuChrome.playSafeArea(
           child: Column(
             children: [
+              if (!d.dungeonTilesReady) const SizedBox.shrink()
+              else
               DungeonTopHud(
                 state: state,
                 director: d,
@@ -133,7 +139,8 @@ class _Is2ShellState extends State<Is2Shell> {
                 onOpenParty: () => router.toggleGear(GearPanel.gear),
               ),
               Expanded(
-                child: Stack(
+                child: d.dungeonTilesReady
+                    ? Stack(
                   fit: StackFit.expand,
                   children: [
                     if (!d.awaitingWipeChoice) ...[
@@ -185,27 +192,21 @@ class _Is2ShellState extends State<Is2Shell> {
                       Positioned(
                         left: hudSide,
                         bottom: partyBottom,
-                        child: PartyCornerHud(
-                          director: d,
-                          selectedHeroIndex: router.session.abilityHeroIndex,
-                          onSelectHero: (i) {
-                            router.session.abilityHeroIndex = i;
-                            d.cameraHeroIndex = i;
-                          },
-                          onOpenEquip: () => router.toggleGear(GearPanel.gear),
-                        ),
-                      ),
-                      Positioned(
-                        right: 0,
-                        bottom: partyBottom,
-                        child: Column(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            ScrollBuffStack(
-                              meta: d.state.metaDepth,
-                              maxHeight: 168,
+                            PartyCornerHud(
+                              director: d,
+                              selectedHeroIndex: router.session.abilityHeroIndex,
+                              onSelectHero: (i) {
+                                router.session.abilityHeroIndex = i;
+                                d.cameraHeroIndex = i;
+                              },
+                              onOpenEquip: () =>
+                                  router.toggleGear(GearPanel.gear),
                             ),
+                            const SizedBox(width: 4),
                             DungeonFlaskButton(
                               director: d,
                               onTap: d.useConsumable,
@@ -213,9 +214,18 @@ class _Is2ShellState extends State<Is2Shell> {
                           ],
                         ),
                       ),
+                      Positioned(
+                        right: hudSide,
+                        bottom: partyBottom + 44,
+                        child: ScrollBuffStack(
+                          meta: d.state.metaDepth,
+                          maxHeight: 168,
+                        ),
+                      ),
                     ],
                   ],
-                ),
+                )
+                    : const SizedBox.shrink(),
               ),
             ],
           ),

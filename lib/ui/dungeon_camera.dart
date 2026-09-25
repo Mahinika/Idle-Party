@@ -45,3 +45,37 @@ import 'dart:math' as math;
   }
   return (x: sx / pack.length, y: sy / pack.length);
 }
+
+/// Blend party focus toward the awake pack centroid so mid-fight framing
+/// keeps threats on screen without abandoning the hero pin.
+({double x, double y}) dungeonCombatFocus({
+  required Iterable<({double x, double y, bool alive, int index})> heroes,
+  required Iterable<({double x, double y, bool alive})> awakeEnemies,
+  required double mapCenterX,
+  required double mapCenterY,
+  int? pinIndex,
+  double packBias = 0.38,
+}) {
+  final party = dungeonPartyFocus(
+    heroes: heroes,
+    mapCenterX: mapCenterX,
+    mapCenterY: mapCenterY,
+    pinIndex: pinIndex,
+  );
+  final living = awakeEnemies.where((e) => e.alive).toList();
+  if (living.isEmpty || packBias <= 0) return party;
+  var ex = 0.0;
+  var ey = 0.0;
+  for (final e in living) {
+    ex += e.x;
+    ey += e.y;
+  }
+  final cx = ex / living.length;
+  final cy = ey / living.length;
+  final bias = packBias.clamp(0.0, 0.55);
+  final keep = 1.0 - bias;
+  return (
+    x: party.x * keep + cx * bias,
+    y: party.y * keep + cy * bias,
+  );
+}

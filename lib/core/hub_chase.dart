@@ -126,7 +126,7 @@ class HubChase {
       final best = md.dailyBestTimedKey;
       final plain = GameLogic.plainPlayerChrome(state);
       final preview = GameLogic.dailyVaultClaimPreviewEssence(state, now: clock);
-      final pay = plain ? '+$preview Permanent' : '+${preview}e';
+      final pay = plain ? '+$preview essence' : '+${preview}e essence';
       final month = GameLogic.isoMonthKey(clock);
       final monthBonus =
           month.isNotEmpty && !md.claimedSeasonRewards.contains(month);
@@ -210,11 +210,8 @@ class HubChase {
           kind: HubChaseKind.ascend,
           title: 'Ascend for lasting power',
           detail:
-              '+${reward}e · Ascend Blessing +${GameLogic.ascendBlessingAtk} ATK/'
-              '+${GameLogic.ascendBlessingDef} DEF/'
-              '+${GameLogic.ascendBlessingVit} STA/'
-              '+${GameLogic.ascendBlessingGoldPct}% gold · bag, wallet gold, GOLD tracks, '
-              'and floors reset$unlockBit',
+              '+$reward essence · Blessing +1 · bag, gold, and floors reset'
+              '$unlockBit',
           progressLabel: '+${reward}e',
           urgency: HubChaseUrgency.ready,
         );
@@ -458,7 +455,7 @@ class HubChase {
         title: 'Done for today',
         detail:
             'Vault, Daily, and KEY dial settled — soft rest. '
-            'Optional: KEY · BOARDS (Spire PB ${pb.progressLabel ?? 'open'}).',
+            'Optional Spire PB ${pb.progressLabel ?? 'open'} on KEY · BOARDS.',
         progressLabel: 'BOARDS',
       );
     }
@@ -570,7 +567,7 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.meetHero,
       title: extra > 0 ? 'Meet ${def.name} (+$extra more)' : 'Meet ${def.name}',
-      detail: '${HeroIdentity.meetBlurb(first)} Open PARTY.',
+      detail: HeroIdentity.meetBlurb(first),
       progressLabel: 'New',
       urgency: HubChaseUrgency.ready,
     );

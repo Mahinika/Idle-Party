@@ -109,6 +109,12 @@ class WhatsNewOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
+          'MORE · INFO · WHAT\'S NEW',
+          textAlign: TextAlign.center,
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
+        Text(
           "WHAT'S NEW",
           textAlign: TextAlign.center,
           style: GameTheme.menuTitle(size: 20),

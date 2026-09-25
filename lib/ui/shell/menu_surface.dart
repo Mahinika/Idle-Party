@@ -129,11 +129,15 @@ class _MenuSurfaceState extends State<MenuSurface> {
       onClearCombineB: session.clearCombineB,
       onCombine: () {
         if (session.combineA == null || session.combineB == null) return;
+        final onBag = router.gearPanel == GearPanel.bag;
         d.combineGear(
           primaryId: session.combineA!,
           secondaryId: session.combineB!,
         );
         session.clearCombine();
+        if (onBag && MenuTabs.showMerge(d.state)) {
+          router.open(MenuRoute.gear, gear: GearPanel.merge);
+        }
       },
       onCleanBag: d.cleanBagJunk,
       onAutoMerge: () {

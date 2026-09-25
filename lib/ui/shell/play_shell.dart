@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/chase_dispatcher.dart';
 import '../../core/game_director.dart';
 import '../../core/hub_chase.dart';
+import '../../core/hub_primary_cta.dart';
 import '../../core/keystone.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
@@ -118,7 +120,7 @@ class _PlayShellState extends State<PlayShell> {
     );
     if (hint == null) return (null, null);
     final route = switch (hint.target) {
-      CoachTarget.gear => MenuRoute.gear,
+      CoachTarget.gear || CoachTarget.kit => MenuRoute.gear,
       CoachTarget.gold => MenuRoute.gold,
       CoachTarget.essence => MenuRoute.essence,
       CoachTarget.enter ||
@@ -127,6 +129,16 @@ class _PlayShellState extends State<PlayShell> {
     };
     if (route == null) return (null, null);
     return (route, hint.line);
+  }
+
+  bool _suppressBarReason(String reason) {
+    final toast = director.toast;
+    if (toast == null || toast.isEmpty || reason.isEmpty) return false;
+    if (toast == reason) return true;
+    final t = toast.toLowerCase();
+    final r = reason.toLowerCase();
+    if (t.contains(r) || r.contains(t)) return true;
+    return false;
   }
 
   Widget _bottomBar() {
@@ -139,6 +151,7 @@ class _PlayShellState extends State<PlayShell> {
         route: router.route,
         destinations: graph.destinations,
         showReason: true,
+        suppressReason: _suppressBarReason,
         coachRoute: coachRoute,
         coachLine: coachLine,
         onSelect: (dest) => _openMenuFeel(() {
@@ -168,6 +181,11 @@ class _PlayShellState extends State<PlayShell> {
             director.hubAfterWipe();
             return;
           }
+          if (director.spatial?.awaitingExit == true) {
+            if (router.isOpen) router.close();
+            _leaveDungeon();
+            return;
+          }
           if (router.isOpen) router.close();
           confirmLeaveDungeon(
             context,
@@ -183,16 +201,23 @@ class _PlayShellState extends State<PlayShell> {
       );
     }
     final chase = HubChase.forState(state);
+    final chasePlan = ChaseDispatcher.plan(chase, state: state);
+    final enterPrimary = chase.urgency != HubChaseUrgency.ready &&
+        (chasePlan.op == ChaseOp.enter ||
+            chasePlan.op == ChaseOp.enterKey ||
+            HubPrimaryCta.isEnterFamilyLabel(chasePlan.label));
     return AppBottomBar(
       alerts: MenuAlerts.forHub(
         state,
         chaseKind: chase.kind,
         urgency: chase.urgency,
+        enterPrimary: enterPrimary,
       ),
       route: router.route,
       destinations: DestinationGraph.hub(state).destinations,
       // Reason line self-hides when empty; READY chase quiets non-chase alerts.
       showReason: true,
+      suppressReason: _suppressBarReason,
       coachRoute: coachRoute,
       coachLine: coachLine,
       onSelect: (dest) {

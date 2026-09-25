@@ -1101,6 +1101,33 @@ void main() {
     expect(texts.contains('PILE'), isTrue);
   });
 
+  test('cast tags demote when pack shout is live', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 25));
+    final world = SpatialCombat.build(state);
+    SpatialCombat.spawnFloater(
+      world,
+      x: 4,
+      y: 4,
+      text: 'PILE',
+      argb: 0xFFFFC060,
+      life: 1.2,
+      priority: 3,
+    );
+    SpatialCombat.spawnFloater(
+      world,
+      x: 4.2,
+      y: 4.2,
+      text: 'FIREBALL',
+      argb: 0xFFFF6030,
+      life: 0.5,
+      priority: 1,
+    );
+    expect(
+      world.floaters.where((f) => f.text == 'FIREBALL').single.priority,
+      0,
+    );
+  });
+
   test('sandy swarm shouts PILE, not SURROUND', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
     final room = DungeonRoom(

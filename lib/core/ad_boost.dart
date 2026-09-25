@@ -152,10 +152,16 @@ abstract final class AdBoost {
   }
 
   /// Short FAB label under the scroll glyph.
-  static String fabStatus(MetaDepthState md, {int? nowMs}) {
+  static String fabStatus(
+    MetaDepthState md, {
+    int? nowMs,
+    DateTime? now,
+  }) {
+    if (md.adFree && canClaimAdFreeDaily(md, now: now)) return 'READY';
     final n = md.adTickets;
-    if (n <= 0) return 'SCROLLS';
-    return n == 1 ? '1 TICKET' : '$n TICKETS';
+    if (n > 0) return n == 1 ? '1 TICKET' : '$n TICKETS';
+    if (anyBuffActive(md, nowMs: nowMs)) return 'ON';
+    return 'SCROLLS';
   }
 
   /// All HUD scrolls, catalog order. Inactive chips stay visible (gray).

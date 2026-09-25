@@ -1002,6 +1002,13 @@ abstract final class SpatialCombat {
   static int get _floaterXp => colorblindMode ? 0xFF009E73 : 0xFF9AD0FF;
   static int get _floaterPet => colorblindMode ? 0xFF56B4E9 : 0xFF7CE8FF;
 
+  static bool _packShoutLive(SpatialWorld world) {
+    for (final f in world.floaters) {
+      if (f.priority >= 3 && f.life > 0.35) return true;
+    }
+    return false;
+  }
+
   static const int _maxFloaters = 8;
   static const int _maxBursts = 16;
   static const int _maxProjectiles = 36;
@@ -1023,6 +1030,10 @@ abstract final class SpatialCombat {
     }
     // Skip empty / whitespace-only.
     if (text.isEmpty) return;
+    // Pack shouts own the stage — routine cast tags step back.
+    if (priority == 1 && _packShoutLive(world)) {
+      priority = 0;
+    }
     // One speech bark at a time — stacked Gotcha/Clean hit wallpaper the map.
     if (kind == SpatialFloaterKind.speech) {
       for (final f in world.floaters) {

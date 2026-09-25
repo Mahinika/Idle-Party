@@ -135,7 +135,7 @@ extension GameDirectorBag on GameDirector {
         life: 1.9,
       );
     } else {
-      showToast('No junk for sell/disassemble filters', life: 1.5);
+      showToast('Already clean — nothing matches sell/scrap filters', life: 1.6);
     }
   }
 

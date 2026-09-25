@@ -51,9 +51,21 @@ class SanctuaryOverlay extends StatelessWidget {
       children: [
         CampRatesSection(director: director),
         const SizedBox(height: 8),
-        Text(
-          '${state.essence}e · survive Ascend · reset at Lv12+',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            MenuChrome.chip(
+              label: 'Ascend ${state.ascensionLevel}',
+              tone: GameTheme.torchHot,
+            ),
+            MenuChrome.chip(label: 'Camp tracks', selected: campOpen),
+            Text(
+              '${state.essence}e · survive Ascend · reset at Lv12+',
+              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         if (campOpen)

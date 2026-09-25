@@ -167,12 +167,13 @@ class HubPrimaryCta {
     if (label != null && chaseIsEnterFamily(chase, label)) {
       final primary = isEnterFamilyLabel(label) && label.contains('ENTER KEY')
           ? label
-          : enterLabel;
+          : chaseTitleButton(chase, enterLabel);
       return HubPrimaryCta(
         primaryLabel: primary,
         secondaryLabel: null,
         hideInlineChaseAction: true,
         showKeyDial: showKeystoneJargon &&
+            chase.kind != HubChaseKind.dailyRun &&
             (chase.kind == HubChaseKind.keystone ||
                 chase.kind == HubChaseKind.dailyVaultProgress),
       );
@@ -185,7 +186,9 @@ class HubPrimaryCta {
       if (chase.kind == HubChaseKind.ashenCrown && endgameUnlocked) {
         secondary = 'PRACTICE';
         ashenPractice = true;
-      } else if (canEnter && enterLabel != label) {
+      } else if (canEnter &&
+          enterLabel != label &&
+          chase.kind != HubChaseKind.dailyRun) {
         secondary = enterLabel;
       }
       return HubPrimaryCta(
@@ -201,10 +204,26 @@ class HubPrimaryCta {
     }
 
     return HubPrimaryCta(
-      primaryLabel: enterLabel,
+      primaryLabel: chaseTitleButton(chase, enterLabel),
       secondaryLabel: null,
       hideInlineChaseAction: false,
       showKeyDial: showKeystoneJargon,
     );
+  }
+
+  /// PATH enter-family hunts use the chase title on the brown button.
+  static String chaseTitleButton(HubChase chase, String enterLabel) {
+    if (!isEnterFamilyLabel(enterLabel)) return enterLabel;
+    switch (chase.kind) {
+      case HubChaseKind.clearFloors:
+      case HubChaseKind.dailyVaultProgress:
+      case HubChaseKind.unlockZone:
+        final title = chase.title.trim();
+        if (title.isEmpty) return enterLabel;
+        if (title.length <= 30) return title;
+        return title.split(' ').take(4).join(' ');
+      default:
+        return enterLabel;
+    }
   }
 }

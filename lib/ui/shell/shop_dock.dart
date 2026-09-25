@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/ad_boost.dart';
@@ -23,8 +24,8 @@ class ShopDock extends StatefulWidget {
   /// SHOP blurb. ESSENCE is named only when that tab exists.
   static String convenienceLine({required bool showEssence}) {
     final essenceBit = showEssence ? ' · essence under ESSENCE' : '';
-    return 'Same SCROLLS power as tickets '
-        '(convenience power — not BiS-for-cash, never a stronger class). '
+    return 'Same SCROLLS as hub tickets '
+        '(convenience — not BiS-for-cash). '
         'Forever scrolls skip the watch; gold under GOLD$essenceBit.';
   }
 
@@ -70,11 +71,13 @@ class _ShopDockState extends State<ShopDock>
         final state = widget.director.state;
         final storeOk = ShopBilling.billingReady && ShopStore.storeAvailable;
         final catalogOk = ShopStore.productsReady;
-        final storeLine = !storeOk
-            ? 'Buys need a Play Store install of Idle Party (not sideload).'
-            : catalogOk
-            ? 'Prices come from Google Play.'
-            : 'Waiting for Play catalog…';
+        final storeLine = storeOk
+            ? (catalogOk
+                ? 'Prices come from Google Play.'
+                : 'Waiting for Play catalog…')
+            : (kReleaseMode
+                ? 'Waiting for Play billing…'
+                : 'Buys need a Play Store install of Idle Party (not sideload).');
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -109,31 +112,7 @@ class _ShopDockState extends State<ShopDock>
                     storeLine: storeLine,
                     items: ShopCatalog.extraPacks,
                     compact: false,
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GameButton(
-                      label: 'RESTORE',
-                      style: GameButtonStyle.grey,
-                      onPressed: widget.director.restoreShopPurchases,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: GameButton(
-                      label: 'REDEEM CODE',
-                      style: GameButtonStyle.grey,
-                      onPressed: () => showRedeemCouponDialog(
-                        context,
-                        widget.director,
-                      ),
-                    ),
+                    showAccountActions: true,
                   ),
                 ],
               ),
@@ -149,6 +128,7 @@ class _ShopDockState extends State<ShopDock>
     required String storeLine,
     required List<ShopCatalogItem> items,
     required bool compact,
+    bool showAccountActions = false,
   }) {
     final state = widget.director.state;
     return ListView(
@@ -173,6 +153,33 @@ class _ShopDockState extends State<ShopDock>
                 ShopStore.storePriceLabel(items[i].id) ?? items[i].priceLabel,
             compact: compact && items[i].permMask != AdBoost.permAll,
             onBuy: () => _buy(items[i]),
+          ),
+        ],
+        if (showAccountActions) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: GameButton(
+                  label: 'RESTORE',
+                  style: GameButtonStyle.grey,
+                  dense: true,
+                  onPressed: widget.director.restoreShopPurchases,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GameButton(
+                  label: 'REDEEM CODE',
+                  style: GameButtonStyle.grey,
+                  dense: true,
+                  onPressed: () => showRedeemCouponDialog(
+                    context,
+                    widget.director,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ],
@@ -216,7 +223,7 @@ class _ShopRow extends StatelessWidget {
   static String shortTitle(ShopCatalogItem item) {
     const prefix = 'Forever Scroll of ';
     if (item.name.startsWith(prefix)) {
-      return item.name.substring(prefix.length);
+      return 'Forever ${item.name.substring(prefix.length)}';
     }
     return item.name;
   }

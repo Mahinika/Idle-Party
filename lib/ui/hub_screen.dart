@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../core/chase_contract.dart';
+import '../core/menu_alerts.dart';
+import '../core/nav_intent.dart';
 import '../core/chase_dispatcher.dart';
 import '../core/ad_boost.dart';
 import '../core/game_director.dart';
+import '../core/game_guides.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/gold_income.dart';
@@ -25,7 +28,6 @@ import 'menu_chrome.dart';
 import 'meta/offline_welcome.dart';
 import 'meta/notify_opt_in.dart';
 import 'meta/play_review_ask_overlay.dart';
-import '../core/menu_alerts.dart';
 import '../core/menu_router.dart';
 import 'coach_pulse.dart';
 import 'first_session_tips.dart';
@@ -404,7 +406,7 @@ class _HubScreenState extends State<HubScreen>
       children: [
         if (showWeekAffix) ...[
           Text(
-            'Week · ${Keystone.label(weekMod)} — ${Keystone.blurb(weekMod)}',
+            '${Keystone.label(weekMod)} · Week — ${Keystone.blurb(weekMod)}',
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -415,10 +417,15 @@ class _HubScreenState extends State<HubScreen>
         HubTodayCard(
           chase: chase,
           compact: short,
-          // Short phones still keep READY / ALMOST detail — that is the hunt.
-          hideDetail: short && chase.urgency == HubChaseUrgency.normal,
-          actionLabel: cta.hideInlineChaseAction ? null : chaseActionLabel,
-          onAction: cta.hideInlineChaseAction ? null : onAction,
+          // Short phones: one headline progress line; detail/why on taller screens.
+          hideDetail: short,
+          actionLabel: cta.hideInlineChaseAction ||
+                  chase.kind == HubChaseKind.meetHero
+              ? null
+              : chaseActionLabel,
+          onAction: cta.hideInlineChaseAction || chase.kind == HubChaseKind.meetHero
+              ? null
+              : onAction,
         ),
         if (!short)
           HubMetaPulse(
@@ -436,6 +443,10 @@ class _HubScreenState extends State<HubScreen>
             );
             final enterFamily = HubPrimaryCta.isEnterFamilyLabel(primaryLabel);
             final showCoach = coachEnter != null && enterFamily;
+            final readyContract = ChaseContract(chase: chase);
+            final readyTip = ready
+                ? (readyContract.readyActionLabel ?? 'Do this first')
+                : null;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -455,9 +466,8 @@ class _HubScreenState extends State<HubScreen>
                           : chase.kind == HubChaseKind.keystone &&
                                 _selectedHunt == null
                           ? 'Starts your preferred KEY on this zone'
-                          : (ready || cta.hideInlineChaseAction)
-                          ? 'Do this first'
-                          : 'Enter the selected dungeon',
+                          : readyTip ??
+                              'Enter the selected dungeon',
                       style: GameButtonStyle.brown,
                       primary: true,
                       onPressed: primaryAction,
@@ -515,6 +525,7 @@ class _HubScreenState extends State<HubScreen>
                 !GameLogic.showDailyRunOnHub(state),
             onContracts: () {
               director.claimAllReadyMissions();
+              router.open(MenuRoute.more, more: MoreSection.quests);
             },
             onAscend: () => confirmAscend(context, director),
             dailyClaimed: director.isDailyClaimedToday,
@@ -558,6 +569,9 @@ class _HubScreenState extends State<HubScreen>
     final short = GameTheme.isShortHeight(context);
     final selectedDungeon = DungeonCatalog.byId(_selectedId);
     final chase = HubChase.forState(state);
+    final endgameUnlocked = GameLogic.endgameUnlocked(state);
+    final showEndgameLayer =
+        endgameUnlocked || GameGuides.showEndgameBridgeGuides(state);
 
     return Stack(
       fit: StackFit.expand,
@@ -598,7 +612,10 @@ class _HubScreenState extends State<HubScreen>
                               // not rebuild 60×/s (wallet + HubChase.forState).
                               HubHeader(
                                 ascensionLevel: state.ascensionLevel,
-                                bossFloor: bossFloor,
+                                partySubline: chase.urgency ==
+                                        HubChaseUrgency.ready
+                                    ? chase.title
+                                    : '${state.partyName} · Boss on F$bossFloor',
                                 gold: state.gold,
                                 essence: state.essence,
                                 willRank: state.willRankTitle,
@@ -612,12 +629,12 @@ class _HubScreenState extends State<HubScreen>
                                 multiplierLine: GoldIncome.multiplierLine(
                                   state,
                                 ),
-                                partyName: state.partyName,
                                 plainChrome: GameLogic.plainPlayerChrome(state),
                                 showEssence: MenuTabs.showCamp(state),
                                 dimIncome: hubChaseOwnsEndgameRow(chase.kind),
                                 huntHint: _shortHuntHint(chase),
                                 blessingStacks: state.metaDepth.ascendBlessings,
+                                showBlessingStacks: MenuTabs.showKeep(state),
                               ),
                               if (director.offlineSummary != null) ...[
                                 SizedBox(height: short ? 4 : 8),
@@ -639,7 +656,7 @@ class _HubScreenState extends State<HubScreen>
                                 ),
                               ],
                               SizedBox(height: short ? 4 : 6),
-                              if (GameLogic.endgameUnlocked(state)) ...[
+                              if (showEndgameLayer) ...[
                                 HubMapModeTabs(
                                   showEndgame: _showEndgameMap,
                                   onSelectPath: () => setState(() {
@@ -675,27 +692,33 @@ class _HubScreenState extends State<HubScreen>
                                     Positioned.fill(
                                       child: RepaintBoundary(
                                         child:
-                                            _showEndgameMap &&
-                                                GameLogic.endgameUnlocked(state)
+                                            _showEndgameMap && showEndgameLayer
                                             ? HubEndgameMap(
                                                 selectedHunt: _selectedHunt,
                                                 pulse: _torch,
+                                                locked: !endgameUnlocked,
                                                 grBestTier:
                                                     state.metaDepth.grBestTier,
                                                 gauntletBestFloor: state
                                                     .metaDepth.gauntletBestFloor,
                                                 riftBestTier:
                                                     state.metaDepth.riftBestTier,
-                                                onSelectHunt: (hunt) =>
-                                                    setState(() {
-                                                      _userPickedZone = true;
-                                                      _showEndgameMap = true;
-                                                      _selectedHunt = hunt;
-                                                      _selectedId =
-                                                          HubEndgameAct.nodeFor(
-                                                            hunt,
-                                                          ).portraitDungeonId;
-                                                    }),
+                                                onSelectHunt: endgameUnlocked
+                                                    ? (hunt) =>
+                                                        setState(() {
+                                                          _userPickedZone =
+                                                              true;
+                                                          _showEndgameMap =
+                                                              true;
+                                                          _selectedHunt = hunt;
+                                                          _selectedId =
+                                                              HubEndgameAct
+                                                                  .nodeFor(
+                                                                    hunt,
+                                                                  )
+                                                                  .portraitDungeonId;
+                                                        })
+                                                    : null,
                                               )
                                             : ZonePathMap(
                                                 dungeons: DungeonCatalog.all,
@@ -726,15 +749,13 @@ class _HubScreenState extends State<HubScreen>
                                         children: [
                                           ScrollBuffStack(
                                             meta: state.metaDepth,
-                                            maxHeight: 132,
+                                            maxHeight: 88,
                                           ),
                                           if (_showPowerupsFab())
                                             HubPowerupsFab(
                                               state: state,
-                                              onOpen: () => openPowerupsSheet(
-                                                context,
-                                                director,
-                                              ),
+                                              onOpen: () =>
+                                                  router.apply(NavIntent.shop),
                                             ),
                                         ],
                                       ),

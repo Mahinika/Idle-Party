@@ -20,14 +20,15 @@ import '../spatial_dungeon_view.dart';
 import 'rift_progress_hud.dart';
 import 'wallet_strip.dart';
 
-String _packJobBit(SpatialWorld? world) {
+String _packJobBit(SpatialWorld? world, {required bool plain}) {
   if (world == null) return '';
   final pack = world.enemies;
   if (pack.isEmpty) return '';
+  if (world.awaitingExit) return '';
   final awake = pack.where((e) => !e.dormant && e.isAlive).toList();
-  final sleep = pack.where((e) => e.dormant).length;
+  final sleep = pack.where((e) => e.dormant && e.isAlive).length;
   if (awake.isEmpty && sleep <= 0) return '';
-  final next = sleep > 0 ? ' · next' : '';
+  final next = sleep > 0 ? ' · $sleep next' : '';
   if (awake.isEmpty) return next;
   final bossRoom = pack.any((e) => e.role == EnemyRole.boss);
   final eliteRoom = pack.any((e) => e.role == EnemyRole.elite);
@@ -57,7 +58,7 @@ String _packJobBit(SpatialWorld? world) {
       : jobs.contains(PackJob.elite)
       ? PackJob.elite
       : jobs.first;
-  return ' · ${lead.name}$next';
+  return ' · ${lead.hudBit(plain: plain)}$next';
 }
 
 String _keyAffixBit(GameState state) {
@@ -230,23 +231,25 @@ class DungeonTopHud extends StatelessWidget {
         content: Text(
           alive
               ? 'Enemies are still alive on this floor.\n\n'
-                  'Jump to F$target anyway? Progress on this chamber is lost.'
+                  'Jump to F$target anyway? Loot on the ground is lost and '
+                  'chamber progress resets.'
                   '$keyNote'
-              : 'This floor is mid-run (progress or loot still out).\n\n'
-                  'Jump to F$target anyway? Chamber progress is lost.'
+              : 'This floor is mid-run.\n\n'
+                  'Jump to F$target anyway? Loot still on the ground is lost '
+                  'and chamber progress resets.'
                   '$keyNote',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
           GameButton(
             label: 'CANCEL',
-            style: GameButtonStyle.grey,
+            style: GameButtonStyle.brown,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, false),
           ),
           GameButton(
             label: 'JUMP',
-            style: GameButtonStyle.brown,
+            style: GameButtonStyle.grey,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),
@@ -341,7 +344,7 @@ class DungeonTopHud extends StatelessWidget {
         ? 'MOTHVEIL · RANK GR${state.grTier}'
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).title
-        : '$zoneShort · F$floor$keyBit${_packJobBit(world)}${_keyAffixBit(state)}';
+        : '$zoneShort · F$floor$keyBit${_packJobBit(world, plain: plain)}${_keyAffixBit(state)}';
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);
       if (fighting && state.dungeonMode != mode) {
@@ -529,8 +532,8 @@ class DungeonTopHud extends StatelessWidget {
                               ? 'Tap the fight — steer your party smash'
                               : null),
                       coolingLabel: plain
-                          ? 'Tap the fight cooling ${world.godHandCooldown.toStringAsFixed(1)}s'
-                          : null,
+                          ? 'Cooling ${world.godHandCooldown.toStringAsFixed(1)}s'
+                          : 'Cooling ${world.godHandCooldown.toStringAsFixed(1)}s',
                       onTap: () => director.godHandAtFocus(),
                     ),
                   ),
@@ -559,7 +562,7 @@ class DungeonTopHud extends StatelessWidget {
                     onSelected: (value) =>
                         _onFloorMenu(context, value, floor),
                     itemBuilder: (context) =>
-                        _floorMenuItems(floor: floor, includeExtras: true),
+                        _floorMenuItems(floor: floor, includeExtras: false),
                     child: Center(
                       child: Text(
                         'F$floor',
@@ -747,7 +750,7 @@ class MissionClaimChip extends StatelessWidget {
                 border: Border.all(color: GameTheme.clear),
               ),
               child: Text(
-                dense ? 'C$count' : 'CLAIM $count',
+                dense ? 'QUESTS · $count' : 'QUESTS · $count',
                 style: GameTheme.pixel(
                   size: GameTheme.hudPixel,
                   color: GameTheme.clear,

@@ -59,7 +59,10 @@ class _ScrollBuffStackState extends State<ScrollBuffStack> {
 
   @override
   Widget build(BuildContext context) {
-    final chips = AdBoost.hudChips(widget.meta, nowMs: widget.nowMs);
+    final chips = AdBoost.hudChips(widget.meta, nowMs: widget.nowMs)
+        .where((c) => c.active)
+        .toList();
+    if (chips.isEmpty) return const SizedBox.shrink();
     Widget column = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,

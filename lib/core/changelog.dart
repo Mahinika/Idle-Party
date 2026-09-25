@@ -22,8 +22,8 @@ abstract final class ChangelogCatalog {
     ChangelogRelease(
       version: '1.12.186',
       bullets: <String>[
-        'Your party fights on its own. ESSENCE → RELICS are unique finds: Embers from bosses and Ascend discover and level them. Cinders are a slow glow — one from the daily vault, two Ad Tickets, or a cheap pouch — used to salvage or trade a few Embers each week.',
-        'Race still locks after New Game START. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEYSTONE waits until the party is Lv100.',
+        'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight. ESSENCE → RELICS are unique finds: Embers from bosses and Ascend discover and level them. Cinders are a slow glow — one from the Daily Vault, two Ad Tickets, or a cheap pouch — used to salvage or trade a few Embers each week. At party Lv100, MORE → CRAFT still runs a monthly Craft Trial (Apex gear only).',
+        'Race still locks after New Game START. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEYSTONE waits until the party is Lv100. Ranked GREATER GR packs still scale with rank only — GOLD forge does not buff monsters. Prestige Ascend still Rebuild your bag; AL20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(

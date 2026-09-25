@@ -180,27 +180,28 @@ Future<void> confirmLeaveDungeon(
   final String body;
   if (plain) {
     body = floorCleared
-        ? 'Leave to hub now? This floor is already clear — banked gear and gold stay.'
+        ? 'Leave to hub now? Floor is clear — banked gear and gold stay. '
+            'Next enter starts fresh from hub.'
         : 'Leave to hub now? This floor’s fight restarts when you come back. '
             'Gear and gold you already got stay.';
   } else if (floorCleared) {
     body =
-        'Leave to hub now? Floor is clear (stairs ready) — you keep banked gear and gold. '
-        'Coming back starts a fresh floor from hub.';
+        'Leave to hub now? Floor is clear (stairs ready) — banked gear and gold stay. '
+        'Next enter starts a fresh floor from hub.';
   } else if (keystoneActive) {
     final timerBit = (keyTimer != null && keyTimer.isNotEmpty)
-        ? ' Timer $keyTimer.'
-        : '';
+        ? ' Timer $keyTimer stops.'
+        : ' KEY timer stops.';
     body =
-        'Leave to hub now? KEY run ends — timer stops.$timerBit '
-        'Gear and gold already banked stay.';
+        'Leave to hub now? KEY run ends —$timerBit '
+        'Chamber progress is lost. Gear and gold already banked stay.';
   } else if (state != null && state.dungeonMode == DungeonMode.farm) {
     body =
         'Leave to hub now? FARM loop on this floor stops — you restart '
-        'from hub (not the same floor mid-loop). Gear and gold already banked stay.';
+        'from hub (not mid-loop). Gear and gold already banked stay.';
   } else {
     body =
-        'Leave to hub now? This floor’s fight progress is lost '
+        'Leave to hub now? This floor’s chamber progress is lost '
         '(PUSH climb resets from hub). Gear and gold already banked stay.';
   }
   WebClickBridge.pushLayer();
@@ -377,12 +378,28 @@ Future<void> confirmDailyRun(
       context: context,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) => MenuChrome.dialog(
-        title: 'Daily Run?',
-        content: Text(
-          '${StoryLore.dailyRun(dungeonId)}\n\n'
-          'One free seeded floor for +25e — separate from Daily Vault and Quests. '
-          'Clear it, then return to hub. Wipe: retry the floor or leave from MORE.',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        title: 'Daily Run',
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              StoryLore.dailyRun(dungeonId),
+              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Reward: +25 essence',
+              style: GameTheme.body(size: 15, color: GameTheme.torchHot),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'How it works: one free seeded floor — separate from Daily Vault '
+              'and Quests. Clear it, then return to hub. Leave from the dungeon '
+              'bar if you need out.',
+              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            ),
+          ],
         ),
         actions: [
           GameButton(

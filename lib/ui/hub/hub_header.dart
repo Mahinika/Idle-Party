@@ -65,7 +65,7 @@ class HubOfflineBanner extends StatelessWidget {
                 ),
               ),
               Text(
-                'OPEN',
+                'OPEN SUMMARY',
                 style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
               ),
             ],
@@ -151,11 +151,87 @@ class HubPlayUpdateBanner extends StatelessWidget {
   }
 }
 
-class HubHeader extends StatefulWidget {
+Future<void> showHubIncomeSheet(
+  BuildContext context, {
+  required String incomeLine,
+  required String multiplierLine,
+  required String displayTitle,
+  required String willRank,
+  required int collectionScore,
+}) async {
+  WebClickBridge.pushLayer();
+  try {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Material(
+            color: MenuChrome.sheet,
+            borderRadius: MenuChrome.sheetRadius,
+            clipBehavior: Clip.antiAlias,
+            child: MenuChrome.playSafeArea(
+              bottom: true,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    MenuChrome.sheetHandle(),
+                    Text('Income', style: GameTheme.menuTitle(size: 18)),
+                    const SizedBox(height: 8),
+                    Text(
+                      incomeLine,
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(size: 14, color: GameTheme.mossLit),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      multiplierLine,
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                    ),
+                    if (displayTitle.isNotEmpty || collectionScore > 0) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        displayTitle.isEmpty
+                            ? '$willRank · $collectionScore'
+                            : '$willRank · $displayTitle',
+                        textAlign: TextAlign.center,
+                        style: GameTheme.body(
+                          size: 12,
+                          color: GameTheme.parchmentDim,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    GameButton(
+                      label: 'CLOSE',
+                      style: GameButtonStyle.grey,
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  } finally {
+    WebClickBridge.popLayer();
+  }
+}
+
+class HubHeader extends StatelessWidget {
   const HubHeader({
     super.key,
     required this.ascensionLevel,
-    required this.bossFloor,
+    required this.partySubline,
     required this.gold,
     required this.essence,
     required this.willRank,
@@ -164,16 +240,16 @@ class HubHeader extends StatefulWidget {
     required this.onOpenSettings,
     required this.incomeLine,
     required this.multiplierLine,
-    this.partyName = 'The Party',
     this.dimIncome = false,
     this.plainChrome = false,
     this.showEssence = true,
     this.huntHint,
     this.blessingStacks = 0,
+    this.showBlessingStacks = false,
   });
 
   final int ascensionLevel;
-  final int bossFloor;
+  final String partySubline;
   final int gold;
   final int essence;
   final String willRank;
@@ -182,7 +258,6 @@ class HubHeader extends StatefulWidget {
   final VoidCallback onOpenSettings;
   final String incomeLine;
   final String multiplierLine;
-  final String partyName;
   final bool dimIncome;
   final bool plainChrome;
   final bool showEssence;
@@ -193,43 +268,38 @@ class HubHeader extends StatefulWidget {
   /// Ascend Blessing stacks for KEEP one-liner.
   final int blessingStacks;
 
+  /// Hide Blessing until ESSENCE / KEEP is unlocked.
+  final bool showBlessingStacks;
+
   /// Short AL-cap pill: tease the tonight hunt — never "MAX" (not game over).
   static String alCapPillLabel({
     required int ascensionLevel,
     String? huntHint,
     int blessingStacks = 0,
+    bool showBlessingStacks = false,
   }) {
     final hunt = (huntHint != null && huntHint.isNotEmpty)
         ? huntHint
         : 'next hunt';
-    final bless =
-        blessingStacks > 0 ? ' · Asc B×$blessingStacks' : '';
+    final bless = showBlessingStacks && blessingStacks > 0
+        ? ' · Blessing ×$blessingStacks'
+        : '';
     return 'AL $ascensionLevel · $hunt$bless';
   }
 
   @override
-  State<HubHeader> createState() => _HubHeaderState();
-}
-
-class _HubHeaderState extends State<HubHeader> {
-  /// Gold-rate breakdown stays folded so TODAY / ENTER stay higher on phone.
-  bool _ratesOpen = false;
-
-  @override
   Widget build(BuildContext context) {
-    final incomeColor = widget.dimIncome
+    final incomeColor = dimIncome
         ? GameTheme.parchmentDim
         : GameTheme.mossLit;
     return Column(
       children: [
         Row(
           children: [
-            // Keep gold/essence readable — never FittedBox-crush them for the
-            // title. IDLE PARTY can scale down instead if the row is tight.
             WalletStrip(
-              gold: widget.gold,
-              essence: widget.essence,
-              showEssence: widget.showEssence,
+              gold: gold,
+              essence: essence,
+              showEssence: showEssence,
             ),
             const SizedBox(width: 6),
             Expanded(
@@ -241,7 +311,7 @@ class _HubHeaderState extends State<HubHeader> {
                   maxLines: 1,
                   style: GameTheme.pixel(
                     size: 18,
-                    color: GameTheme.torch, // FEEL 274,
+                    color: GameTheme.torch,
                     height: 1.25,
                   ),
                 ),
@@ -251,43 +321,46 @@ class _HubHeaderState extends State<HubHeader> {
               label: 'Settings',
               asset: UiIcon.settings,
               size: 18,
-              onPressed: widget.onOpenSettings,
+              onPressed: onOpenSettings,
             ),
           ],
         ),
         const SizedBox(height: 4),
-          Text(
-            '${widget.partyName} · Boss on F${widget.bossFloor}',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-          ),
-        if (!widget.plainChrome) ...[
+        Text(
+          partySubline,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+        ),
+        if (!plainChrome) ...[
           const SizedBox(height: 6),
           Center(
             child: HubStatPill(
               icon: UiIcon.ascend,
               caption: 'Ascend',
               label: () {
-                if (widget.ascensionLevel < GameLogic.maxAscensionLevel) {
-                  final bless = widget.blessingStacks > 0
-                      ? ' · Asc B ×${widget.blessingStacks}'
+                if (ascensionLevel < GameLogic.maxAscensionLevel) {
+                  final bless = showBlessingStacks && blessingStacks > 0
+                      ? ' · Blessing ×$blessingStacks'
                       : '';
-                  return 'AL ${widget.ascensionLevel}$bless';
+                  return 'AL $ascensionLevel$bless';
                 }
                 return HubHeader.alCapPillLabel(
-                  ascensionLevel: widget.ascensionLevel,
-                  huntHint: widget.huntHint,
-                  blessingStacks: widget.blessingStacks,
+                  ascensionLevel: ascensionLevel,
+                  huntHint: huntHint,
+                  blessingStacks: blessingStacks,
+                  showBlessingStacks: showBlessingStacks,
                 );
               }(),
             ),
           ),
         ],
         const SizedBox(height: 4),
-        if (widget.dimIncome) ...[
+        if (dimIncome) ...[
           Text(
             () {
-              final hunt = widget.huntHint;
+              final hunt = huntHint;
               if (hunt != null && hunt.isNotEmpty) {
                 return 'Tonight · $hunt';
               }
@@ -298,23 +371,40 @@ class _HubHeaderState extends State<HubHeader> {
           ),
         ] else ...[
           WebClickScope(
-            label: _ratesOpen ? 'Hide income details' : 'Show income details',
-            onPressed: () => setState(() => _ratesOpen = !_ratesOpen),
+            label: 'Show income details',
+            onPressed: () => showHubIncomeSheet(
+              context,
+              incomeLine: incomeLine,
+              multiplierLine: multiplierLine,
+              displayTitle: displayTitle,
+              willRank: willRank,
+              collectionScore: collectionScore,
+            ),
             child: Semantics(
               button: true,
-              label: _ratesOpen
-                  ? 'Hide income details. ${widget.incomeLine}'
-                  : 'Show income details. ${widget.incomeLine}',
-              onTap: () => setState(() => _ratesOpen = !_ratesOpen),
+              label: 'Show income details. $incomeLine',
+              onTap: () => showHubIncomeSheet(
+                context,
+                incomeLine: incomeLine,
+                multiplierLine: multiplierLine,
+                displayTitle: displayTitle,
+                willRank: willRank,
+                collectionScore: collectionScore,
+              ),
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () => setState(() => _ratesOpen = !_ratesOpen),
+                onTap: () => showHubIncomeSheet(
+                  context,
+                  incomeLine: incomeLine,
+                  multiplierLine: multiplierLine,
+                  displayTitle: displayTitle,
+                  willRank: willRank,
+                  collectionScore: collectionScore,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Text(
-                    _ratesOpen
-                        ? widget.incomeLine
-                        : '${widget.incomeLine} · Income ▸',
+                    incomeLine,
                     textAlign: TextAlign.center,
                     style: GameTheme.body(size: 13, color: incomeColor),
                   ),
@@ -322,27 +412,6 @@ class _HubHeaderState extends State<HubHeader> {
               ),
             ),
           ),
-        ],
-        if (!widget.dimIncome && _ratesOpen) ...[
-          Text(
-            widget.multiplierLine,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-          ),
-          if (widget.displayTitle.isNotEmpty || widget.collectionScore > 0) ...[
-            const SizedBox(height: 3),
-            Text(
-              widget.displayTitle.isEmpty
-                  ? '${widget.willRank} · ${widget.collectionScore}'
-                  : '${widget.willRank} · ${widget.displayTitle}',
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-            ),
-          ],
         ],
       ],
     );
@@ -362,7 +431,6 @@ class HubStatPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Loose chips — no framed inventory boxes on the keep.
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

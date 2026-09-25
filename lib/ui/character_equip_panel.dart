@@ -16,6 +16,7 @@ import 'hero_doll_sprite.dart';
 import 'item_tooltip.dart';
 import 'kenney_sprite.dart';
 import 'menu_chrome.dart';
+import 'shell/shell_common.dart';
 
 /// Character sheet inspired by classic mobile RPG equip screens:
 /// hero preview, labeled slots around it, big DAMAGE / ARMOR under the doll.
@@ -80,8 +81,8 @@ class CharacterEquipPanel extends StatelessWidget {
   ];
 
   static const slotLabels = <EquipmentSlot, String>{
-    EquipmentSlot.weapon: 'WEAPON',
-    EquipmentSlot.offHand: 'OFFHAND',
+    EquipmentSlot.weapon: 'MAIN',
+    EquipmentSlot.offHand: 'OFF',
     EquipmentSlot.ranged: 'RANGED',
     EquipmentSlot.head: 'HELM',
     EquipmentSlot.shoulder: 'SHOULDER',
@@ -230,13 +231,16 @@ class CharacterEquipPanel extends StatelessWidget {
                       alignment: Alignment.center,
                       decoration: MenuChrome.cardBox(selected: active),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          HeroDollSprite(
-                            hero: h,
-                            partyIndex: i,
-                            size: compact ? 22 : 26,
-                          ),
-                          const SizedBox(width: 6),
+                          if (!compact) ...[
+                            HeroDollSprite(
+                              hero: h,
+                              partyIndex: i,
+                              size: compact ? 22 : 26,
+                            ),
+                            const SizedBox(width: 6),
+                          ],
                           Text(
                             '${h.displayRoleLabel(plainEnglish: GameLogic.plainPlayerChrome(state))} · L${h.level}',
                             style: GameTheme.body(
@@ -279,10 +283,20 @@ class CharacterEquipPanel extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    state.isPartyDefeated
-                        ? 'iLvl ${_avgItemLevel(hero)} · min ${_minItemLevel(hero)}  ·  WIPED'
-                        : 'iLvl ${_avgItemLevel(hero)} · min ${_minItemLevel(hero)}  ·  HP '
-                              '${hero.currentHp.clamp(0, maxHp)}/$maxHp',
+                    () {
+                      final avg = _avgDisplayItemLevel(hero);
+                      final minIl = _minDisplayItemLevel(hero);
+                      final ilBit = avg == null
+                          ? ''
+                          : minIl == null || minIl == avg
+                          ? ' · iLvl $avg'
+                          : ' · iLvl $avg · min $minIl';
+                      return state.isPartyDefeated
+                          ? '$ilBit  ·  WIPED'.replaceFirst(' ·  ·', ' ·')
+                          : '$ilBit  ·  HP '
+                                '${hero.currentHp.clamp(0, maxHp)}/$maxHp'
+                              .replaceFirst(' ·  ·', ' ·');
+                    }(),
                     textAlign: TextAlign.center,
                     style: GameTheme.body(
                       size: 13,
@@ -428,7 +442,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Ranged · Trinkets · Flask',
+                    'Main · Off · Ranged · Trinkets · Flask',
                     textAlign: TextAlign.center,
                     style: GameTheme.body(
                       size: compact ? 10 : 11,
@@ -490,7 +504,8 @@ class CharacterEquipPanel extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${slotLabels[selected.slot] ?? selected.slot.name}'
-                  ' · i${selected.effectiveItemLevel} · ${selected.statsLine}',
+                  '${gearDisplayIlvlLabel(selected) == null ? '' : ' · ${gearDisplayIlvlLabel(selected)}'}'
+                  ' · ${selected.statsLine}',
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(size: 12, color: GameTheme.parchment),
@@ -558,7 +573,9 @@ class CharacterEquipPanel extends StatelessWidget {
         if (compact)
           MenuChrome.fold(
             title: 'HERO STATS',
-            subtitle: 'STR ${ratings.strength} · STA ${ratings.stamina}',
+            subtitle: 'ATK $atk · DEF $def · HP $maxHp',
+            expandLabel: 'All stats',
+            collapseLabel: 'Combat only',
             initiallyExpanded: false,
             children: [
               const SizedBox(height: 4),
@@ -574,6 +591,7 @@ class CharacterEquipPanel extends StatelessWidget {
                     atk,
                     def,
                     maxHp,
+                    includeExtended: true,
                   ))
                     MenuChrome.chip(
                       label: entry.$1,
@@ -605,6 +623,7 @@ class CharacterEquipPanel extends StatelessWidget {
                 atk,
                 def,
                 maxHp,
+                includeExtended: true,
               ))
                 MenuChrome.chip(
                   label: entry.$1,
@@ -626,27 +645,34 @@ class CharacterEquipPanel extends StatelessWidget {
     CombatRatings ratings,
     int atk,
     int def,
-    int maxHp,
-  ) {
+    int maxHp, {
+    bool includeExtended = true,
+  }) {
     final kind = SpecMastery.kindFor(hero.specId);
     final masteryLabel = kind == null
         ? 'MASTERY'
         : SpecMastery.playerLabel(kind);
+    final combat = <(String, String)>[
+      ('DMG', '$atk'),
+      ('DEF', '$def'),
+      ('HP', '$maxHp'),
+      ('CRIT', '${state.effectiveHeroCrit(hero)}%'),
+    ];
+    if (!includeExtended) return combat;
+    final avg = _avgDisplayItemLevel(hero);
+    final minIl = _minDisplayItemLevel(hero);
     return [
       ('STR', '${ratings.strength}'),
       ('AGI', '${ratings.agility}'),
       ('STA', '${ratings.stamina}'),
       ('INT', '${ratings.intellect}'),
       ('SPI', '${ratings.spirit}'),
-      ('DMG', '$atk'),
-      ('DEF', '$def'),
-      ('HP', '$maxHp'),
-      ('CRIT', '${state.effectiveHeroCrit(hero)}%'),
+      ...combat,
       ('HASTE', state.effectiveHeroAttackSpeed(hero).toStringAsFixed(2)),
       (masteryLabel, '${ratings.masteryPoints.round()}'),
       ('LS', '${hero.gearLifestealPercent}%'),
-      ('iLvl avg', '${_avgItemLevel(hero)}'),
-      ('iLvl min', '${_minItemLevel(hero)}'),
+      if (avg != null) ('iLvl avg', '$avg'),
+      if (minIl != null && minIl != avg) ('iLvl min', '$minIl'),
     ];
   }
 
@@ -669,28 +695,28 @@ class CharacterEquipPanel extends StatelessWidget {
     return null;
   }
 
-  int _avgItemLevel(PartyHero hero) {
-    final slots = allSlots;
-    if (slots.isEmpty) return 0;
-    var sum = 0;
-    for (final slot in slots) {
-      sum += hero.itemIn(slot)?.effectiveItemLevel ?? 0;
+  int? _avgDisplayItemLevel(PartyHero hero) {
+    final values = <int>[];
+    for (final slot in allSlots) {
+      final item = hero.itemIn(slot);
+      if (item == null) continue;
+      final il = gearDisplayIlvl(item);
+      if (il != null) values.add(il);
     }
-    return (sum / slots.length).round();
+    if (values.isEmpty) return null;
+    return (values.fold<int>(0, (a, b) => a + b) / values.length).round();
   }
 
-  int _minItemLevel(PartyHero hero) {
-    var minIlvl = 0;
-    var any = false;
+  int? _minDisplayItemLevel(PartyHero hero) {
+    int? minIl;
     for (final slot in allSlots) {
-      final il = hero.itemIn(slot)?.effectiveItemLevel ?? 0;
-      if (il <= 0) continue;
-      if (!any || il < minIlvl) {
-        minIlvl = il;
-        any = true;
-      }
+      final item = hero.itemIn(slot);
+      if (item == null) continue;
+      final il = gearDisplayIlvl(item);
+      if (il == null) continue;
+      minIl = minIl == null ? il : (il < minIl ? il : minIl);
     }
-    return minIlvl;
+    return minIl;
   }
 }
 
@@ -785,12 +811,14 @@ class PaperDollSlot extends StatelessWidget {
             padding: const EdgeInsets.all(4),
             child: EquipmentIcon(item: item!, size: size - 8, hero: hero),
           ),
-          if (item!.effectiveItemLevel > 0)
+          if (selected &&
+              item != null &&
+              gearDisplayIlvl(item!) != null)
             Positioned(
               right: 2,
               bottom: 1,
               child: Text(
-                '${item!.effectiveItemLevel}',
+                '${gearDisplayIlvl(item!)}',
                 style: GameTheme.body(size: 9, color: GameTheme.parchment),
               ),
             ),

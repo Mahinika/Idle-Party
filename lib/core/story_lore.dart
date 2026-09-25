@@ -8,7 +8,7 @@ abstract final class StoryLore {
   static const String introTagline = 'Your party fights while you watch.';
 
   static const String introSubline =
-      'Tap to help. Grow stronger. No other game required.';
+      'Your party keeps fighting offline — gold and progress bank while you are away.';
 
   static const String studioName = 'Cognifox Studio';
 

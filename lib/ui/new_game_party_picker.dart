@@ -86,12 +86,40 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     });
   }
 
-  void _tryStart() {
+  Future<void> _tryStart() async {
     if (!_ready) return;
     final name = PartyNameFilter.sanitize(_nameCtrl.text);
     if (name == null) {
       setState(() => _nameError = true);
       return;
+    }
+    final hasNonHuman = _looks.any((r) => r != HeroRace.human);
+    if (hasNonHuman) {
+      final ok = await showDialog<bool>(
+        context: context,
+        barrierColor: MenuChrome.scrim,
+        builder: (ctx) => MenuChrome.dialog(
+          title: 'Lock race?',
+          content: Text(
+            'Each hero\'s race locks after START. You can still change class '
+            'later — race does not.',
+            style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
+          ),
+          actions: [
+            MenuChrome.dialogCancel(
+              label: 'BACK',
+              onPressed: () => Navigator.pop(ctx, false),
+            ),
+            GameButton(
+              label: 'START',
+              style: GameButtonStyle.brown,
+              expanded: false,
+              onPressed: () => Navigator.pop(ctx, true),
+            ),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
     }
     widget.onConfirm([for (final s in _slots) s!], name, List.of(_looks));
   }
@@ -104,8 +132,8 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     final empty = _slots.where((s) => s == null).length;
     if (empty > 0) {
       return empty == 1
-          ? 'Pick 1 more hero — each slot needs a different kit'
-          : 'Pick $empty more heroes — each slot needs a different kit';
+          ? 'Pick a job for the last slot — each hero needs a different kit'
+          : 'Pick a job for $empty slots — each hero needs a different kit';
     }
     if (_slots.map((s) => s!).toSet().length != _slots.length) {
       return 'Each hero must be a different kit';
@@ -483,14 +511,14 @@ class _SlotCard extends StatelessWidget {
                   ),
                 const SizedBox(height: 4),
                 Text(
-                  def?.shortLabel ?? 'SLOT ${index + 1}',
+                  def?.shortLabel ?? 'Pick a job',
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(size: 12, color: GameTheme.parchment),
                 ),
                 Text(
-                  def?.roleTag.plainLabel ?? 'Tap',
+                  def?.roleTag.plainLabel ?? 'Shield / Healer / Damage',
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -560,14 +588,14 @@ class _SpecPickRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${def.shortLabel}  ${def.name}',
+                          def.plainRoleLine,
                           style: GameTheme.body(
                             size: 14,
-                            color: GameTheme.parchment,
+                            color: GameTheme.torchHot,
                           ),
                         ),
                         Text(
-                          def.plainRoleLine,
+                          '${def.shortLabel} · ${def.name}',
                           style: GameTheme.body(
                             size: 11,
                             color: GameTheme.parchmentDim,

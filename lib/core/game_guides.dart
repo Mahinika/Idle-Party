@@ -113,7 +113,7 @@ abstract final class GameGuides {
         '• Tap a cave, then ENTER DUNGEON.\n'
         '• Caves sit in different lands on one map — no scrolling the board.\n'
         '• New caves open as the party grows (mean level) or when you clear '
-        'the one before. Gold does not unlock them.\n'
+        'the one before. Gold does not unlock caves.\n'
         '• Locked caves sit dim. The caption under the map shows party level '
         'progress (have / need).\n'
         '• Boss floor is shown under your party name (Boss on F n).',
@@ -163,17 +163,17 @@ abstract final class GameGuides {
         '• Tap ENTER DUNGEON and beat a floor.\n'
         '• The hub hunt says Clear one cave today until the vault fills.\n'
         '• Then CLAIM VAULT for essence.\n'
-        '• Progress resets at UTC midnight. That is the daily job.',
+        '• Daily Vault progress resets at UTC midnight. That is the daily job.',
   );
 
   static const GuideTopic _dayTwoWeekly = GuideTopic(
     id: 'weekly',
     title: 'DAILY VAULT',
     body:
-        'One dungeon clear fills today\'s vault, then CLAIM VAULT.\n\n'
+        'One dungeon clear fills today\'s Daily Vault, then CLAIM VAULT.\n\n'
         '• The hub hunt names this job until you claim.\n'
-        '• First vault claim of each calendar month also pays a season bonus.\n'
-        '• Progress resets at UTC midnight.\n'
+        '• First Daily Vault claim of each calendar month also pays a season bonus.\n'
+        '• Daily Vault resets at UTC midnight.\n'
         '• The hub hunt and offline Up next share the same job.',
   );
 
@@ -255,6 +255,8 @@ abstract final class GameGuides {
     id: 'ascend',
     title: 'ASCEND',
     body:
+        'Ascend = prestige: same heroes and zones, empty bag and gold, stronger '
+        'lasting Blessing. Not the same as party max-level hunts.\n\n'
         'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
         'stronger Ascend Blessing.\n\n'
         '• AL20 is the Ascension cap. More content unlocks when every active hero '
@@ -618,7 +620,10 @@ abstract final class GameGuides {
           '• Play Games month — ranked KEY / Gauntlet / GR boards (opt-in).\n\n'
           'Endgame ladder on the hub hunt (party Lv${GameLogic.maxHeroLevel}): '
           'KEY habit → Gauntlet → Ranked GR → Farm Rift → Ashen Crown.\n'
-          'Those hunts live on the hub ENDGAME tab (its own map, not under the 15 zones).',
+          'Those hunts live on the hub ENDGAME tab (its own map, not under the 15 zones).\n\n'
+          'Class unlock ladder (WotLK-shaped AL kits) lives in CLASS UNLOCKS — '
+          'Shield / Healer / Damage starters are plain English; AL1+ names match '
+          'classic specs.',
     ),
     GuideTopic(
       id: 'classes',
@@ -674,7 +679,7 @@ abstract final class GameGuides {
       id: 'rift',
       title: 'FARM RIFT',
       body:
-          'Farm mode at party level ${GameLogic.maxHeroLevel} — Nephalem-style, not Ranked GR.\n\n'
+          'Loot farm rift at party level ${GameLogic.maxHeroLevel} — not Ranked GR.\n\n'
           '• Kills fill a progress bar; at 100% a Rift Guardian spawns — defeat it to clear.\n'
           '• No fail timer (elapsed is display-only). Leave/wipe before the Guardian dies = small consolation.\n'
           '• Gold and gear drop during the run; success also pays essence + gold.\n'

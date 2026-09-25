@@ -7,6 +7,7 @@ import '../../core/local_season.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
+import '../menu_chrome.dart';
 
 class HubMetaPulse extends StatelessWidget {
   const HubMetaPulse({
@@ -42,7 +43,8 @@ class HubMetaPulse extends StatelessWidget {
     if (chaseUrgency == HubChaseUrgency.ready) return const [];
 
     final bits = <String>[];
-    final showKey = GameLogic.showKeystoneJargon(state);
+    final showKey = GameLogic.endgameUnlocked(state) &&
+        GameLogic.showKeystoneJargon(state);
     if (showKey &&
         chaseKind != HubChaseKind.dailyVaultProgress &&
         chaseKind != HubChaseKind.claimDailyVault) {
@@ -62,7 +64,7 @@ class HubMetaPulse extends StatelessWidget {
       if (!GameLogic.canClaimDailyVault(state)) {
         bits.add(
           GameLogic.showDailyRunOnHub(state)
-              ? 'Vault $clears/$target · not Daily Run'
+              ? 'Vault $clears/$target · not Daily Run / not Quests'
               : 'Vault $clears/$target',
         );
       }
@@ -73,11 +75,11 @@ class HubMetaPulse extends StatelessWidget {
     if (GameLogic.showDailyRunOnHub(state)) {
       if (chaseKind == HubChaseKind.dailyVaultProgress ||
           chaseKind == HubChaseKind.claimDailyVault) {
-        bits.add('≠ Daily Run · ≠ Quests');
+        bits.add('not Daily Run / not Quests');
       } else if (chaseKind == HubChaseKind.dailyRun) {
-        bits.add('≠ Vault · ≠ Quests');
+        bits.add('not Vault / not Quests');
       } else if (chaseKind == HubChaseKind.claimMissions) {
-        bits.add('≠ Vault · ≠ Daily Run');
+        bits.add('not Vault / not Daily Run');
       }
     }
 
@@ -350,32 +352,23 @@ class HubUrgentRow extends StatelessWidget {
           ),
           const SizedBox(height: 4),
         ],
-        if (showMissions || showDaily)
-          Row(
-            children: [
-              if (showMissions) ...[
-                Expanded(
-                  child: GameButton(
-                    label: claimable == 1
-                        ? 'CLAIM QUESTS'
-                        : 'CLAIM QUESTS ($claimable)',
-                    style: showVault
-                        ? GameButtonStyle.grey
-                        : GameButtonStyle.brown,
-                    onPressed: onContracts,
-                  ),
-                ),
-                if (showDaily) const SizedBox(width: 6),
-              ],
-              if (showDaily)
-                Expanded(
-                  child: GameButton(
-                    label: dailyClaimed ? 'DAILY RUN · done' : 'DAILY RUN',
-                    style: GameButtonStyle.grey,
-                    onPressed: dailyClaimed ? null : onDaily,
-                  ),
-                ),
-            ],
+        if (showMissions) ...[
+          GameButton(
+            label: claimable == 1
+                ? 'CLAIM QUESTS'
+                : 'CLAIM QUESTS ($claimable)',
+            style: showVault ? GameButtonStyle.grey : GameButtonStyle.brown,
+            onPressed: onContracts,
+          ),
+          const SizedBox(height: 4),
+        ],
+        if (showDaily)
+          Center(
+            child: MenuChrome.chip(
+              label: dailyClaimed ? 'DAILY RUN · done' : 'DAILY RUN',
+              selected: !dailyClaimed,
+              onTap: dailyClaimed ? null : onDaily,
+            ),
           ),
       ],
     );

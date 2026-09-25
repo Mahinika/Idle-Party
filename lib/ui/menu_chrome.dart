@@ -578,7 +578,7 @@ abstract final class MenuChrome {
           width: 1.2,
         ),
       ),
-      title: Text(title, style: GameTheme.menuTitle(size: 18)),
+      title: Text(title, style: GameTheme.menuTitle(size: 17)),
       content: content,
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -638,11 +638,15 @@ abstract final class MenuChrome {
     String? subtitle,
     required List<Widget> children,
     bool initiallyExpanded = false,
+    String expandLabel = 'SHOW',
+    String collapseLabel = 'HIDE',
   }) {
     return _MenuFold(
       title: title,
       subtitle: subtitle,
       initiallyExpanded: initiallyExpanded,
+      expandLabel: expandLabel,
+      collapseLabel: collapseLabel,
       children: children,
     );
   }
@@ -735,12 +739,16 @@ class _MenuFold extends StatefulWidget {
     required this.children,
     this.subtitle,
     this.initiallyExpanded = false,
+    this.expandLabel = 'SHOW',
+    this.collapseLabel = 'HIDE',
   });
 
   final String title;
   final String? subtitle;
   final List<Widget> children;
   final bool initiallyExpanded;
+  final String expandLabel;
+  final String collapseLabel;
 
   @override
   State<_MenuFold> createState() => _MenuFoldState();
@@ -788,7 +796,7 @@ class _MenuFoldState extends State<_MenuFold> {
                     ),
                   ),
                   Text(
-                    _open ? 'HIDE' : 'SHOW',
+                    _open ? widget.collapseLabel : widget.expandLabel,
                     style: GameTheme.body(
                       size: 12,
                       color: GameTheme.parchmentDim,

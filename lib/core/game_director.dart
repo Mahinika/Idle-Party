@@ -141,6 +141,16 @@ class GameDirector extends ChangeNotifier {
   /// Not saved — cleared when leaving the dungeon.
   int? cameraHeroIndex;
 
+  /// False until zone floor tiles decode — dungeon HUD stays hidden.
+  bool _dungeonTilesReady = false;
+  bool get dungeonTilesReady => _dungeonTilesReady;
+
+  void setDungeonTilesReady(bool ready) {
+    if (_dungeonTilesReady == ready) return;
+    _dungeonTilesReady = ready;
+    notifyListeners();
+  }
+
   static const double _autosaveIntervalSec = 25;
 
   /// Serializes SharedPreferences writes so overlapping unawaited saves cannot
@@ -937,8 +947,10 @@ class GameDirector extends ChangeNotifier {
   void leaveDungeon() {
     hudFocusEnemyId = null;
     cameraHeroIndex = null;
+    _dungeonTilesReady = false;
     if (_isLoading) return;
     _awaitingWipeChoice = false;
+    final hadSpeedBoost = AdBoost.speedActive(_state.metaDepth);
     final leaveDungeonId = _state.dungeonId;
     final leaveFloor = _state.currentRoom.floorNumber;
     _state = GameLogic.ensureWeeklyContract(GameLogic.leaveDungeon(_state));
@@ -956,6 +968,8 @@ class GameDirector extends ChangeNotifier {
     final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {
       showToast(payoffs.join(' · '), life: 3.0);
+    } else if (hadSpeedBoost) {
+      showToast('Dungeon speed back to 1× in hub', life: 2.2);
     } else {
       showToast('Returned to hub', life: 2);
     }

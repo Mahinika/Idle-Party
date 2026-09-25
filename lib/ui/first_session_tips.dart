@@ -6,7 +6,7 @@ import '../core/game_state.dart';
 import '../core/menu_alerts.dart';
 
 /// Where a one-line coach hint lives (the real control, not a GOT IT card).
-enum CoachTarget { enter, godhand, farmPush, gear, gold, essence }
+enum CoachTarget { enter, godhand, farmPush, kit, gear, gold, essence }
 
 /// Active first-session nudge: one short line on [target].
 class CoachHint {
@@ -34,18 +34,28 @@ class FirstSessionTips extends StatelessWidget {
   static final tips = <({String id, String title, String body})>[
     (
       id: 'first_run',
-      title: 'NEXT JOB',
-      body: 'They fight on their own.',
+      title: 'ENTER DUNGEON',
+      body: 'Tap ENTER DUNGEON.',
+    ),
+    (
+      id: 'hub_enter',
+      title: 'ENTER DUNGEON',
+      body: 'Tap ENTER DUNGEON for the next floor.',
     ),
     (
       id: 'godhand',
       title: 'Tap the fight',
-      body: 'Tap to smash.',
+      body: 'Tap the fight where enemies are.',
     ),
     (
       id: 'farm_push',
       title: 'Repeat / Next',
       body: 'Repeat loots. Next goes deeper.',
+    ),
+    (
+      id: 'kit_abilities',
+      title: 'Abilities',
+      body: 'Tap a hero — kit chips open beside the strip.',
     ),
     (
       id: 'bag',
@@ -66,8 +76,10 @@ class FirstSessionTips extends StatelessWidget {
 
   static const Map<String, CoachTarget> _targets = {
     'first_run': CoachTarget.enter,
+    'hub_enter': CoachTarget.enter,
     'godhand': CoachTarget.godhand,
     'farm_push': CoachTarget.farmPush,
+    'kit_abilities': CoachTarget.kit,
     'bag': CoachTarget.gear,
     'forge': CoachTarget.gold,
     'sanctuary': CoachTarget.essence,
@@ -91,8 +103,25 @@ class FirstSessionTips extends StatelessWidget {
     final tip = tips.firstWhere((t) => t.id == id);
     final target = _targets[id];
     if (target == null) return null;
-    return CoachHint(id: tip.id, line: tip.body, target: target);
+    final line = tip.id == 'farm_push'
+        ? _farmPushLine(s)
+        : tip.body;
+    return CoachHint(id: tip.id, line: line, target: target);
   }
+
+  /// FARM/PUSH labels match the dungeon mode chips when jargon is on.
+  static String _farmPushLine(GameState s) {
+    if (GameLogic.plainPlayerChrome(s)) {
+      return 'Repeat loots. Next goes deeper.';
+    }
+    return 'FARM loops loot. PUSH climbs.';
+  }
+
+  static String godHandModeLabel(GameState s) => switch (s.metaDepth.godHandStyle) {
+        1 => 'FOCUS',
+        2 => 'WIDE',
+        _ => 'BAL',
+      };
 
   static String? lineFor(
     GameState s,
@@ -101,6 +130,12 @@ class FirstSessionTips extends StatelessWidget {
   }) {
     final hint = active(s, inDungeon: inDungeon);
     if (hint == null || hint.target != target) return null;
+    if (hint.id == 'godhand') {
+      final mode = godHandModeLabel(s);
+      return GameLogic.plainPlayerChrome(s)
+          ? 'Tap the fight — $mode smash'
+          : 'God Hand · $mode — tap to steer + smash';
+    }
     return hint.line;
   }
 
@@ -116,12 +151,21 @@ class FirstSessionTips extends StatelessWidget {
         if (inDungeon) continue;
         return tip.id;
       }
+      if (tip.id == 'hub_enter') {
+        if (inDungeon || !porch || !seen.contains('first_run')) continue;
+        if (!seen.contains('godhand')) continue;
+        return tip.id;
+      }
       if (tip.id == 'godhand') {
         if (!inDungeon) continue;
         return tip.id;
       }
       if (tip.id == 'farm_push') {
         if (!inDungeon || !porch) continue;
+        return tip.id;
+      }
+      if (tip.id == 'kit_abilities') {
+        if (!inDungeon || !seen.contains('godhand')) continue;
         return tip.id;
       }
       if (tip.id == 'bag') {

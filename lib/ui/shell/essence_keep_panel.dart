@@ -104,15 +104,16 @@ class EssenceKeepPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Row(
           children: [
-            for (final entry in <(int, String)>[
-              (0, 'BAL'),
-              (1, 'FOCUS'),
-              (2, 'WIDE'),
+            for (final entry in <(int, String, String)>[
+              (0, 'BAL', 'Balanced smash'),
+              (1, 'FOCUS', 'Single-target burst'),
+              (2, 'WIDE', 'Wide arc'),
             ]) ...[
               if (entry.$1 > 0) const SizedBox(width: 6),
               Expanded(
                 child: GameButton(
                   label: entry.$2,
+                  tip: entry.$3,
                   dense: true,
                   style: style == entry.$1
                       ? GameButtonStyle.brown

@@ -136,8 +136,8 @@ class _MarketOverlayState extends State<MarketOverlay> {
               children: [
                 Text(
                   _upgradesOnly
-                      ? 'No upgrades in stock.'
-                      : 'No listings right now.',
+                      ? 'No upgrades in stock — show all gear or reroll.'
+                      : 'No listings — earn gold, then reroll when ready.',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(
                     size: 14,

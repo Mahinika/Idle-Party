@@ -368,9 +368,9 @@ class MenuRouter extends ChangeNotifier {
 
         return state.gearStash.isEmpty
 
-            ? 'Bag empty — farm for drops'
+            ? 'Bag empty — farm drops or try MARKET'
 
-            : 'No BiS upgrades — CLEAN BAG or MERGE junk';
+            : 'No upgrades in bag — CLEAN or MERGE junk';
 
       }
 

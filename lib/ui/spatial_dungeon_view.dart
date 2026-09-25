@@ -9,6 +9,7 @@ import 'dungeon_camera.dart';
 import '../core/game_logic.dart';
 import '../core/hero_identity.dart';
 import '../core/meta_systems.dart';
+import '../models/class_ability.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
 import '../models/enemy.dart';
@@ -102,9 +103,14 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       _sword != null &&
       _vial != null;
 
+  void _syncTilesReady() {
+    widget.director.setDungeonTilesReady(_canPaintFloor);
+  }
+
   @override
   void initState() {
     super.initState();
+    widget.director.setDungeonTilesReady(false);
     _loadImages(widget.director.state.dungeonId);
   }
 
@@ -113,8 +119,15 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     super.didUpdateWidget(oldWidget);
     final id = widget.director.state.dungeonId;
     if (id != _loadedDungeonId) {
+      widget.director.setDungeonTilesReady(false);
       _loadImages(id);
     }
+  }
+
+  @override
+  void dispose() {
+    widget.director.setDungeonTilesReady(false);
+    super.dispose();
   }
 
   Future<void> _loadImages(String dungeonId) async {
@@ -203,7 +216,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       _sword = critical[i++];
       _vial = critical[i++];
       _sharedLoaded = true;
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+        _syncTilesReady();
+      }
     }
 
     // Zone floors/walls ASAP — paint after the first pair so enter never sticks
@@ -233,6 +249,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
           _wallReady = List<ui.Image>.from(wallVariants);
           _zoneArtReady = true;
         });
+        _syncTilesReady();
       }
     }
     if (!mounted || gen != _loadGen) return;
@@ -252,6 +269,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       _wallReady = wallVariants;
       _zoneArtReady = canPaint || paintedEarly;
     });
+    _syncTilesReady();
 
     // Deferred shared catalog (loot icons, pets, paper-doll overlays).
     if (_lootByPath.isEmpty || _bodyByPath.isEmpty) {
@@ -910,7 +928,7 @@ class GodHandRing extends StatelessWidget {
             (urgent
                 ? 'God Hand ready — TAP to steer + smash'
                 : 'God Hand ready'))
-        : (coolingLabel ?? 'God Hand ${cooldown.toStringAsFixed(1)}s');
+        : (coolingLabel ?? 'Cooling ${cooldown.toStringAsFixed(1)}s');
     final action = onTap != null && ready ? onTap : null;
     final box = dense ? 40.0 : GameTheme.minTouch;
     final ring = dense ? 26.0 : 28.0;
@@ -1089,14 +1107,27 @@ class _TileCamera {
     final cols = math.min(targetCols, world.cols.toDouble());
     final tileSize = constraints.maxWidth / cols;
     final visibleRows = constraints.maxHeight / tileSize;
-    final focus = dungeonPartyFocus(
-      heroes: world.heroes
-          .where((h) => !h.isPet)
-          .map((h) => (x: h.x, y: h.y, alive: h.isAlive, index: h.assetIndex)),
-      mapCenterX: world.cols / 2,
-      mapCenterY: world.rows / 2,
-      pinIndex: pinHeroIndex,
-    );
+    final heroRows = world.heroes
+        .where((h) => !h.isPet)
+        .map((h) => (x: h.x, y: h.y, alive: h.isAlive, index: h.assetIndex));
+    final awakeEnemies = world.enemies
+        .where((e) => e.hp > 0 && !e.dormant)
+        .map((e) => (x: e.x, y: e.y, alive: true));
+    final inFight = awakeEnemies.isNotEmpty;
+    final focus = inFight
+        ? dungeonCombatFocus(
+            heroes: heroRows,
+            awakeEnemies: awakeEnemies,
+            mapCenterX: world.cols / 2,
+            mapCenterY: world.rows / 2,
+            pinIndex: pinHeroIndex,
+          )
+        : dungeonPartyFocus(
+            heroes: heroRows,
+            mapCenterX: world.cols / 2,
+            mapCenterY: world.rows / 2,
+            pinIndex: pinHeroIndex,
+          );
     final origin = dungeonCamOrigin(
       focusX: focus.x,
       focusY: focus.y,

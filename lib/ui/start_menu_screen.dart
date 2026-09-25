@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/ad_rewarded.dart';
+import '../core/community_links.dart';
 import '../core/meta_systems.dart';
 import '../core/story_lore.dart';
 import 'cave_atmosphere.dart';
@@ -121,7 +123,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                       ),
                       child: Column(
                         children: [
-                          const Spacer(flex: 2),
+                          const Spacer(flex: 1),
                           Opacity(
                             opacity: titleOpacity,
                             child: Semantics(
@@ -137,7 +139,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               ),
                             ),
                           ),
-                          SizedBox(height: tight ? 10 : 14),
+                          SizedBox(height: tight ? 6 : 8),
                           Opacity(
                             opacity: copyOpacity,
                             child: Text(
@@ -161,22 +163,6 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               ),
                             ),
                           ),
-                          if (widget.canContinue &&
-                              widget.saveSummary != null &&
-                              widget.saveSummary!.isNotEmpty) ...[
-                            const SizedBox(height: 10),
-                            Opacity(
-                              opacity: copyOpacity,
-                              child: Text(
-                                widget.saveSummary!,
-                                textAlign: TextAlign.center,
-                                style: GameTheme.body(
-                                  size: 13,
-                                  color: GameTheme.torchHot,
-                                ),
-                              ),
-                            ),
-                          ],
                           const Spacer(flex: 3),
                           Opacity(
                             opacity: ctaOpacity,
@@ -187,10 +173,26 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                   GameButton(
                                     label: 'CONTINUE',
                                     style: GameButtonStyle.brown,
+                                    primary: true,
                                     onPressed: _inputUnlocked
                                         ? () => _choose(widget.onContinue)
                                         : null,
                                   ),
+                                  if (widget.saveSummary != null &&
+                                      widget.saveSummary!.isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Opacity(
+                                      opacity: copyOpacity,
+                                      child: Text(
+                                        widget.saveSummary!,
+                                        textAlign: TextAlign.center,
+                                        style: GameTheme.body(
+                                          size: 13,
+                                          color: GameTheme.torchHot,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                   const SizedBox(height: 8),
                                   GameButton(
                                     label: 'NEW GAME',
@@ -203,16 +205,43 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                   GameButton(
                                     label: 'NEW GAME',
                                     style: GameButtonStyle.brown,
+                                    primary: true,
                                     onPressed: _inputUnlocked
                                         ? () => _choose(widget.onNewGame)
                                         : null,
                                   ),
                                 const SizedBox(height: 8),
-                                MenuChrome.textLink(
+                                GameButton(
                                   label: 'RESTORE SAVE',
+                                  style: GameButtonStyle.grey,
                                   onPressed: _inputUnlocked
                                       ? widget.onRestore
                                       : null,
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    MenuChrome.textLink(
+                                      label: 'PRIVACY',
+                                      onPressed: _inputUnlocked
+                                          ? AdRewarded.showPrivacyOptions
+                                          : null,
+                                    ),
+                                    Text(
+                                      ' · ',
+                                      style: GameTheme.body(
+                                        size: 13,
+                                        color: GameTheme.parchmentDim,
+                                      ),
+                                    ),
+                                    MenuChrome.textLink(
+                                      label: 'DISCORD',
+                                      onPressed: _inputUnlocked
+                                          ? () => CommunityLinks.openDiscord()
+                                          : null,
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 6),
                                 Text(

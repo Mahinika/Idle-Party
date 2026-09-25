@@ -76,6 +76,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     final recommended = GameLogic.recommendedForgeUpgrade(state) == type.index;
     final cost = GameLogic.upgradeCostFor(state, type);
     final preview = GameLogic.previewForgeGoldSpend(state, type, _spendMode);
+    final nextDelta = _nextRankDelta(state, type);
     final String buyLabel;
     if (onPressed == null) {
       buyLabel = '${cost}g';
@@ -88,11 +89,13 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       accent: _forgeAccent(type),
       title: _forgeName(type),
       tag: recommended ? 'BEST' : null,
-      subtitle: _forgeBonus(state, type),
+      subtitle: '${_forgeBonus(state, type)}${nextDelta == null ? '' : ' · $nextDelta'}',
+      detail: recommended ? 'Tap when unsure — splits evenly with SPEND ALL' : null,
       selected: recommended,
       dense: true,
       trailing: GameButton(
         label: buyLabel,
+        tip: recommended ? 'Recommended BEST track for your gold' : null,
         expanded: false,
         dense: true,
         onPressed: onPressed,
@@ -100,22 +103,66 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     );
   }
 
+  String? _nextRankDelta(GameState state, PartyUpgradeType type) {
+    if (!GameLogic.canForgeGoldSpend(state, type, ForgeGoldSpendMode.one)) {
+      return null;
+    }
+    return switch (type) {
+      PartyUpgradeType.attack =>
+        '+${GameLogic.forgeAttackGain} ATK next',
+      PartyUpgradeType.defense =>
+        '+${GameLogic.forgeDefenseGain} DEF next',
+      PartyUpgradeType.vitality =>
+        '+${GameLogic.forgeVitalityGain} STA next',
+      PartyUpgradeType.moveSpeed => '+5% MOVE next',
+      PartyUpgradeType.attackSpeed => '+5% HASTE next',
+      PartyUpgradeType.crit => '+5% CRIT next',
+      PartyUpgradeType.mastery => '+1 MASTERY next',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final plain = GameLogic.plainPlayerChrome(director.state);
+    final state = director.state;
+    final canBuyAny = !(plain &&
+        state.gold <
+            GameLogic.upgradeCostFor(
+              state,
+              PartyUpgradeType.values[
+                  GameLogic.recommendedForgeUpgrade(state)],
+            ));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
           child: SingleChildScrollView(
-            child: _classicForgeBody(plain: plain),
+            child: _classicForgeBody(plain: plain, pinSpendAll: false),
           ),
         ),
+        if (canBuyAny)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: GameButton(
+              label: GameLogic.canForgeGoldSpendEven(state)
+                  ? 'SPEND ALL · EVEN'
+                  : 'SPEND ALL · EVEN · Need gold',
+              tip: 'Splits wallet gold round-robin across every track',
+              style: GameButtonStyle.grey,
+              dense: true,
+              onPressed: GameLogic.canForgeGoldSpendEven(state)
+                  ? () {
+                      director.upgradeSpendAllEvenly();
+                      setState(() {});
+                    }
+                  : null,
+            ),
+          ),
       ],
     );
   }
 
-  Widget _classicForgeBody({required bool plain}) {
+  Widget _classicForgeBody({required bool plain, required bool pinSpendAll}) {
     final state = director.state;
     final canBuyAny = !(plain &&
         state.gold <
@@ -137,6 +184,9 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                   'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
                   'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%  '
                   'MASTERY +${state.masteryBonus}',
+          maxLines: 3,
+          overflow: TextOverflow.visible,
+          softWrap: true,
           style: GameTheme.body(size: 12, color: GameTheme.parchment),
         ),
         Text(
@@ -157,6 +207,11 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
             onSelect: (i) => setState(
               () => _spendMode = ForgeGoldSpendMode.values[i],
             ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '×1 = one buy · % chips spend that slice of wallet on one track',
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 4),
         ] else ...[
@@ -179,7 +234,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                   }
                 : null,
           ),
-        if (canBuyAny) ...[
+        if (canBuyAny && pinSpendAll) ...[
           const SizedBox(height: 2),
           GameButton(
             label: GameLogic.canForgeGoldSpendEven(state)

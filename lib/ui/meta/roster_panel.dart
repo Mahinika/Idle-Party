@@ -89,26 +89,21 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ),
           const SizedBox(height: 6),
         ],
-        if (!state.metaDepth.partySlot5Unlocked) ...[
-          const SizedBox(height: 8),
+        if (!state.metaDepth.partySlot5Unlocked && maxSlots < 5) ...[
           GameButton(
-            label:
-                'UNLOCK 5TH SLOT  ${GameLogic.partySlot5EssenceCost}e  AL${GameLogic.partySlot5MinAscension}+',
+            label: state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
+                    state.essence >= GameLogic.partySlot5EssenceCost
+                ? 'UNLOCK SLOT 5 · ${GameLogic.partySlot5EssenceCost}e'
+                : '${GameLogic.partySlot5EssenceCost} essence · needs Ascend ${GameLogic.partySlot5MinAscension}',
             style: GameButtonStyle.brown,
+            dense: true,
             onPressed:
                 state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
                     state.essence >= GameLogic.partySlot5EssenceCost
-                ? () {
-                    director.unlockPartySlot5();
-                  }
+                ? () => director.unlockPartySlot5()
                 : null,
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Same buy as ESSENCE → BLESSING.',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
+          const SizedBox(height: 6),
         ],
         const SizedBox(height: 12),
         MenuChrome.sectionLabelScoped('ROSTER', scope: MenuScope.account),
@@ -188,7 +183,7 @@ class _ActiveSlotChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = hero == null
         ? 'SLOT ${index + 1}'
-        : '${hero!.name} · ${hero!.roleLabel}';
+        : '${hero!.name} · ${hero!.spec.name}';
     return Row(
       children: [
         Expanded(
@@ -236,40 +231,53 @@ class _RosterSpecRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = !unlocked
-        ? (def.unlockHint.isEmpty ? 'LOCKED' : def.unlockHint)
-        : inActive
-        ? 'ACTIVE'
-        : onRoster
-        ? 'BENCH'
-        : 'READY';
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Text(
-              '${def.name}\n$status',
-              style: GameTheme.body(
-                size: 12,
-                color: unlocked ? GameTheme.parchment : GameTheme.parchmentDim,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  def.name,
+                  style: GameTheme.body(
+                    size: 12,
+                    color: unlocked ? GameTheme.parchment : GameTheme.parchmentDim,
+                  ),
+                ),
               ),
+              if (!unlocked)
+                GameButton(
+                  label: 'UNLOCK',
+                  expanded: false,
+                  style: GameButtonStyle.grey,
+                  onPressed: disabled ? null : onUnlock,
+                )
+              else if (!inActive && onRoster)
+                GameButton(
+                  label: 'ADD',
+                  expanded: false,
+                  style: GameButtonStyle.brown,
+                  onPressed: disabled ? null : onAdd,
+                ),
+            ],
+          ),
+          Text(
+            !unlocked
+                ? (def.unlockHint.isEmpty ? 'LOCKED' : def.unlockHint)
+                : inActive
+                ? 'ACTIVE'
+                : onRoster
+                ? def.plainRoleLine
+                : 'READY',
+            style: GameTheme.body(
+              size: 11,
+              color: inActive
+                  ? GameTheme.mossLit
+                  : (unlocked ? GameTheme.parchmentDim : GameTheme.parchmentDim),
             ),
           ),
-          if (!unlocked)
-            GameButton(
-              label: 'UNLOCK',
-              expanded: false,
-              style: GameButtonStyle.grey,
-              onPressed: disabled ? null : onUnlock,
-            )
-          else if (!inActive && onRoster)
-            GameButton(
-              label: 'ADD',
-              expanded: false,
-              style: GameButtonStyle.brown,
-              onPressed: disabled ? null : onAdd,
-            ),
         ],
       ),
     );

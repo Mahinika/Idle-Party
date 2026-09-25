@@ -859,7 +859,7 @@ abstract final class ZoneArt {
       ],
       ambient: Color(0xFF120A04),
       wash: Color(0x48C89820),
-      floorBlend: Color(0x5A483010),
+      floorBlend: Color(0x6E382808),
       projectileTint: Color(0xFFE0C040),
       corridorShade: Color(0x48302008),
       preferChoke: true,

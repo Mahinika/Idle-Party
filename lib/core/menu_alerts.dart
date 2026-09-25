@@ -5,6 +5,7 @@ import 'game_state.dart';
 import 'hub_chase.dart';
 import 'keystone.dart';
 import 'market_listings_service.dart';
+import 'menu_router.dart';
 import 'meta_systems.dart';
 
 /// One "something is waiting here" mark for a menu button.
@@ -87,7 +88,23 @@ class MenuAlerts {
     GameState state, {
     HubChaseKind? chaseKind,
     HubChaseUrgency urgency = HubChaseUrgency.normal,
+    bool enterPrimary = false,
   }) {
+    if (!enterPrimary && urgency != HubChaseUrgency.ready) {
+      final upgrades = bagUpgradeCount(state);
+      if (upgrades <= 0) return none;
+      return MenuAlerts(
+        gear: MenuAlert(
+          count: upgrades,
+          reason: '',
+        ),
+        gold: MenuAlert.quiet,
+        shop: MenuAlert.quiet,
+        essence: MenuAlert.quiet,
+        key: MenuAlert.quiet,
+        more: MenuAlert.quiet,
+      );
+    }
     if (GameLogic.plainPlayerChrome(state)) {
       final upgrades = bagUpgradeCount(state);
       if (upgrades <= 0) return none;
@@ -171,23 +188,17 @@ class MenuAlerts {
   /// Backward-compatible alias used by inventory hints.
   static MenuAlert partyAlert(GameState state) => gearAlert(state);
 
-  static MenuAlert goldAlert(GameState state) {
-    final forge = forgeAlert(state);
-    final market = marketAlert(state);
-    if (forge.isQuiet && market.isQuiet) return MenuAlert.quiet;
-    if (!forge.isQuiet && market.isQuiet) return forge;
-    if (forge.isQuiet && !market.isQuiet) return market;
-    return MenuAlert(
-      count: forge.count + market.count,
-      reason: '${forge.reason} · ${market.reason}',
-    );
-  }
+  static MenuAlert goldAlert(GameState state) => forgeAlert(state);
 
   static MenuAlert forgeAlert(GameState state) {
     final forgeType =
         PartyUpgradeType.values[GameLogic.recommendedForgeUpgrade(state)];
-    if (state.gold >= GameLogic.upgradeCostFor(state, forgeType) * 3) {
-      return const MenuAlert(count: 1, reason: 'gold for run tracks');
+    final cost = GameLogic.upgradeCostFor(state, forgeType);
+    if (state.gold >= cost) {
+      return MenuAlert(
+        count: 1,
+        reason: 'BEST ${forgeType.name.toUpperCase()} affordable',
+      );
     }
     return MenuAlert.quiet;
   }
@@ -215,8 +226,10 @@ class MenuAlerts {
 
   static MenuAlert essenceAlert(GameState state) {
     if (!MenuTabs.showCamp(state)) return MenuAlert.quiet;
-    if (state.essence >= GameLogic.sanctuaryCost(cheapestCampLevel(state))) {
-      return const MenuAlert(count: 1, reason: 'essence for tracks');
+    final cheapest = cheapestCampLevel(state);
+    final cost = GameLogic.sanctuaryCost(cheapest);
+    if (state.essence >= cost) {
+      return MenuAlert(count: 1, reason: 'Camp track affordable');
     }
     return MenuAlert.quiet;
   }
@@ -268,18 +281,17 @@ class MenuAlerts {
         return MenuAlert(
           star: true,
           count: quests.count,
-          reason: "${quests.reason} · What's New unread — MORE",
+          reason: "${quests.count} to claim · What's New",
         );
       }
-      return const MenuAlert(
-        star: true,
-        reason: "What's New is unread — MORE · INFO",
-      );
+      return const MenuAlert(star: true, reason: "What's New unread");
     }
     if (!quests.isQuiet) {
       return MenuAlert(
         count: quests.count,
-        reason: '${quests.reason} — MORE · QUESTS',
+        reason: quests.count == 1
+            ? '1 claim ready — QUESTS'
+            : '${quests.count} claims ready — QUESTS',
       );
     }
     return MenuAlert.quiet;
@@ -390,14 +402,17 @@ class MenuAlerts {
         : 'When bag is near full: sell junk for gold';
   }
 
-  static String meetRosterHint(GameState state) {
+  static String meetRosterHint(GameState state, {GearPanel? panel}) {
     if (state.metaDepth.pendingHeroReveals.isEmpty) return '';
     if (!MenuTabs.showRoster(state)) return '';
-    return 'New kit — open GEAR, then ROSTER';
+    if (panel == GearPanel.roster) {
+      return 'Tap ADD to put the new kit in the party';
+    }
+    return 'New kit — open ROSTER tab';
   }
 
-  static String gearEquipHint(GameState state, int heroIndex) {
-    final meet = meetRosterHint(state);
+  static String gearEquipHint(GameState state, int heroIndex, {GearPanel? panel}) {
+    final meet = meetRosterHint(state, panel: panel);
     if (meet.isNotEmpty) return meet;
 
     final total = bagUpgradeCount(state);
@@ -453,4 +468,8 @@ abstract final class MenuTabs {
       s.ownedPets.isNotEmpty ||
       s.essence >= GameLogic.hatchPetCost(s);
   static bool showCodex(GameState s) => _clearedAFloor(s);
+
+  /// SETTINGS + What's New stay in MORE from day one.
+  static bool showSettings(GameState s) => true;
+  static bool showWhatsNew(GameState s) => true;
 }

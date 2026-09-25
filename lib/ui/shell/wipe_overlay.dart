@@ -29,6 +29,7 @@ class DungeonWipePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    final modeLine = WipeAdvice.modeLineFor(state);
     return ColoredBox(
       color: MenuChrome.scrim,
       child: Center(
@@ -59,9 +60,9 @@ class DungeonWipePanel extends StatelessWidget {
                         : state.inRift
                         ? 'Farm Rift ends. Best R${state.metaDepth.riftBestTier}. Hub → farm Stormwake again (loot mid-run).'
                         : dailyEcho
-                        ? 'RETRY this floor · HUB ends run'
+                        ? 'RETRY this floor. HUB ends the run.'
                         : farm
-                        ? 'RETRY restarts this floor (F${state.currentRoom.floorNumber}). HUB ends the run.'
+                        ? 'RETRY restarts F${state.currentRoom.floorNumber}. HUB ends the run.'
                         : () {
                             final safe = state.highestFloorCleared.clamp(
                               1,
@@ -69,9 +70,9 @@ class DungeonWipePanel extends StatelessWidget {
                             );
                             final cur = state.currentRoom.floorNumber;
                             if (safe >= cur) {
-                              return 'RETRY restarts this floor (F$cur, still PUSH). HUB ends the run.';
+                              return 'RETRY restarts F$cur (still PUSH). HUB ends the run.';
                             }
-                            return 'RETRY retreats to F$safe (last cleared, still PUSH). HUB ends the run.';
+                            return 'RETRY retreats to F$safe (still PUSH). HUB ends the run.';
                           }(),
                     textAlign: TextAlign.center,
                     style: GameTheme.body(
@@ -83,6 +84,17 @@ class DungeonWipePanel extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       'Claim needs a clear',
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 12,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                  ],
+                  if (modeLine != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      modeLine,
                       textAlign: TextAlign.center,
                       style: GameTheme.body(
                         size: 12,
@@ -182,8 +194,8 @@ class DungeonWipePanel extends StatelessWidget {
                     if (fixLabel == null || fixNav == null) {
                       return GameButton(
                         label: state.inGauntlet || state.inAnyRiftMode
-                            ? 'END RUN → HUB'
-                            : 'RETURN TO HUB',
+                            ? 'HUB'
+                            : 'HUB',
                         style: GameButtonStyle.grey,
                         primary: true,
                         onPressed: director.hubAfterWipe,
@@ -202,9 +214,7 @@ class DungeonWipePanel extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         GameButton(
-                          label: state.inGauntlet || state.inAnyRiftMode
-                              ? 'END RUN → HUB'
-                              : 'RETURN TO HUB',
+                          label: 'HUB',
                           style: GameButtonStyle.grey,
                           onPressed: director.hubAfterWipe,
                         ),

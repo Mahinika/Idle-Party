@@ -99,8 +99,9 @@ class _SettingsOverlayState extends State<SettingsOverlay>
       builder: (ctx) => MenuChrome.dialog(
         title: 'Reset game?',
         content: Text(
+          'Export your save first (ACCOUNT below) if you want a backup. '
           'All progress will be wiped. This cannot be undone.',
-          style: GameTheme.body(size: 16, color: GameTheme.parchmentDim),
+          style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
         ),
         actions: [
           MenuChrome.dialogCancel(
@@ -439,8 +440,8 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         const SizedBox(height: 12),
         GameButton(
           label: 'REDEEM CODE',
-          tip: 'Unlock a coupon on this save',
-          style: GameButtonStyle.grey,
+          tip: 'Also in SHOP → EXTRA',
+          style: GameButtonStyle.brown,
           onPressed: () => showRedeemCouponDialog(context, director),
         ),
         const SizedBox(height: 16),

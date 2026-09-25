@@ -97,6 +97,11 @@ void main() {
     expect(lead.toUpperCase(), isNot(contains('MASTERY')));
   });
 
+  test('current What’s New mentions Craft Trial at party Lv100', () {
+    final bullets = MetaSystems.releases.first.bullets.join(' ').toLowerCase();
+    expect(bullets, contains('craft trial'));
+  });
+
   test('current What’s New locks race after New Game START', () {
     final rest = MetaSystems.releases.first.bullets.skip(1).join(' ');
     expect(

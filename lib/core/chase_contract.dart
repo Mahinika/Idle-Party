@@ -40,34 +40,25 @@ class ChaseContract {
 
   /// One-line “why this job” — same contract, not a second chase.
   String get whyLine => switch (kind) {
-    HubChaseKind.claimDailyVault =>
-      'Why: the UTC vault is ready — claim before the next job.',
-    HubChaseKind.claimMissions =>
-      'Why: MORE · QUESTS has rewards (board, not an ENDGAME hunt).',
-    HubChaseKind.monthGoal => 'Why: the month pass is ready to claim.',
-    HubChaseKind.weekGoal => 'Why: this week’s local goal is ready to claim.',
-    HubChaseKind.meetHero => 'Why: a new kit is waiting on GEAR → PARTY.',
-    HubChaseKind.equipBag => 'Why: BAG already holds a stronger piece.',
-    HubChaseKind.marketUpgrade => 'Why: GOLD → MARKET has an affordable upgrade.',
-    HubChaseKind.ascend =>
-      'Why: Ascend is ready — AL and Blessing, not party-Lv100 endgame.',
-    HubChaseKind.dailyVaultProgress =>
-      'Why: one clear (or timed KEY +2) fills today’s vault.',
-    HubChaseKind.dailyRun => 'Why: the free Daily Run floor is still open.',
-    HubChaseKind.keystone =>
-      'Why: party is max level — KEY is the next precision climb.',
-    HubChaseKind.gauntletMilestone =>
-      'Why: KEY habit settled — Gauntlet is the next endless climb.',
-    HubChaseKind.greaterRiftMilestone =>
-      'Why: Ranked GR is the timed ladder (no mid-run gear).',
-    HubChaseKind.riftMilestone =>
-      'Why: Farm Rift is the gear farm (elapsed clock, no fail timer).',
-    HubChaseKind.ashenCrown =>
-      'Why: a weekly Ashen ticket is waiting (PRACTICE is free after).',
-    HubChaseKind.unlockZone => 'Why: the next PATH cave is in reach.',
-    HubChaseKind.clearFloors => 'Why: grow the party — extra hunts wait.',
-    HubChaseKind.willRank => 'Why: a Will rank payday is close.',
-    HubChaseKind.doneForToday => 'Why: vault and KEY habit are settled.',
+    HubChaseKind.claimDailyVault => 'Why: vault ready — claim first.',
+    HubChaseKind.claimMissions => 'Why: quests ready on MORE · QUESTS.',
+    HubChaseKind.monthGoal => 'Why: month pass ready.',
+    HubChaseKind.weekGoal => 'Why: week goal ready.',
+    HubChaseKind.meetHero => 'Why: new kit on ROSTER.',
+    HubChaseKind.equipBag => 'Why: stronger gear in BAG.',
+    HubChaseKind.marketUpgrade => 'Why: affordable MARKET upgrade.',
+    HubChaseKind.ascend => 'Why: Ascend ready — Blessing stacks.',
+    HubChaseKind.dailyVaultProgress => 'Why: one clear fills vault.',
+    HubChaseKind.dailyRun => 'Why: free Daily Run open.',
+    HubChaseKind.keystone => 'Why: KEY is the next climb.',
+    HubChaseKind.gauntletMilestone => 'Why: Gauntlet is next.',
+    HubChaseKind.greaterRiftMilestone => 'Why: timed Ranked GR ladder.',
+    HubChaseKind.riftMilestone => 'Why: Farm Rift for gear.',
+    HubChaseKind.ashenCrown => 'Why: weekly Ashen ticket.',
+    HubChaseKind.unlockZone => 'Why: next cave in reach.',
+    HubChaseKind.clearFloors => 'Why: grow the party first.',
+    HubChaseKind.willRank => 'Why: Will rank payday close.',
+    HubChaseKind.doneForToday => 'Why: dailies settled — rest OK.',
   };
 
   /// Short CTA when [isReady] (hub / offline action buttons).
@@ -76,7 +67,7 @@ class ChaseContract {
     HubChaseKind.claimMissions => 'CLAIM QUESTS',
     HubChaseKind.monthGoal => 'CLAIM MONTH',
     HubChaseKind.weekGoal => 'CLAIM WEEK',
-    HubChaseKind.meetHero => 'OPEN GEAR',
+    HubChaseKind.meetHero => 'OPEN ROSTER',
     HubChaseKind.equipBag =>
       progressLabel != null && progressLabel!.startsWith('EQUIP')
           ? progressLabel

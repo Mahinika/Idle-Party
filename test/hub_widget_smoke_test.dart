@@ -304,7 +304,7 @@ void main() {
     expect(find.text('2:00'), findsNWidgets(2));
   });
 
-  testWidgets('ScrollBuffStack stays visible when no buffs are on', (
+  testWidgets('ScrollBuffStack hides when no buffs are on', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -316,6 +316,7 @@ void main() {
     );
 
     expect(find.byType(ScrollBuffStack), findsOneWidget);
+    expect(tester.getSize(find.byType(ScrollBuffStack)).height, 0);
     expect(find.text('2:00'), findsNothing);
   });
 }
