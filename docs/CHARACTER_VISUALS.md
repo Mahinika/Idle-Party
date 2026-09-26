@@ -167,8 +167,10 @@ Facing is **L/R flipX only**. Enemies unchanged in Phase 3.
 - Owned cape paints **behind** the body, same order as the gold master.
   The sides still show. Painting the cape in front covers the chest.
 - Off-hand / main-hand — same 128 PNGs grip-aligned to owned hand
-  anchors (`OwnedGearGrips`). When hand art moves, regenerate the grip
-  table with `py tool/gen_owned_gear_grips.py`. Do not shift the PNGs.
+  anchors (`OwnedGearGrips`). Each family has its own fist for idle, walk,
+  and attack (cast uses the attack body). When hand art moves, regenerate
+  the grip table with `py tool/gen_owned_gear_grips.py` and remeasure the
+  fists in `AnchorTables`. Do not shift the PNGs.
   Audit: `py tool/audit_anchors.py`.
   Grips are **opaque-pixel** points: handle centroid for melee/staves, shape
   mid-height for bows, shape centroid for shields/frills. A bbox center is
@@ -303,7 +305,7 @@ the step bob stays live. Dungeon precaches bodies + cloth tint masks +
 
 - Two specs of the same class read as different colors (Frost DK vs Blood).
 - Walking heroes bob and swing the weapon; a hit is a recoil, not a step.
-- Weapons and shields sit **in the hand**, not beside it.
+- Weapons and shields sit **in the fist** of that family's clip, not on the thigh.
 - Unequipped doll = undertunic (no plate / no wizard hat).
 - Equip common chest → silhouette changes on GEAR **and** dungeon.
 - Helm covers hair; mage hat is the helm overlay, not the base.

@@ -18,14 +18,67 @@ OWNED_IDLE = {
     "body": (0.0, 0.0),
     "back": (0.0, -0.08),
     "feet": (0.0, 0.40),
-    "mainHand": (0.28, 0.14),
-    "offHand": (-0.28, 0.14),
 }
 
-OWNED_ATTACK = {
-    "mainHand": (0.25, 0.20),
-    "offHand": (-0.24, 0.21),
-}
+
+def shipped_fists() -> dict[str, dict[str, tuple[float, float]]]:
+    """Per-family fist points the game uses (anchor_table.dart is the truth)."""
+    import re
+
+    text = (ROOT / "lib" / "visual" / "anchor_table.dart").read_text(
+        encoding="utf-8"
+    )
+    families: dict[str, dict[str, tuple[float, float]]] = {}
+    for m in re.finditer(
+        r"BodyFamily\.(\w+):\s*_FamilyFists\((.*?)\n    \),",
+        text,
+        re.S,
+    ):
+        pairs = {
+            key: (float(x), float(y))
+            for key, x, y in re.findall(
+                r"(idleMain|idleOff|walkMain|walkOff|attackMain|attackOff):"
+                r"\s*\(([-\d.]+),\s*([-\d.]+)\)",
+                m.group(2),
+            )
+        }
+        families[m.group(1)] = pairs
+    return families
+
+
+def fist_n(im: Image.Image, side: str) -> tuple[float, float] | None:
+    """Sleeve-end fist, center origin. Matches the numbers in anchor_table."""
+    px = im.load()
+    pts: list[tuple[int, int]] = []
+    for y in range(48, 92):
+        for x in range(128):
+            if px[x, y][3] < 160:
+                continue
+            if side == "R" and x >= 88:
+                pts.append((x, y))
+            elif side == "L" and x <= 40:
+                pts.append((x, y))
+    if len(pts) < 8:
+        return None
+    pts.sort(key=lambda p: p[1])
+    bands: list[list[tuple[int, int]]] = []
+    cur = [pts[0]]
+    for p in pts[1:]:
+        if p[1] - cur[-1][1] > 6:
+            bands.append(cur)
+            cur = [p]
+        else:
+            cur.append(p)
+    bands.append(cur)
+    low = [
+        b
+        for b in bands
+        if sum(p[1] for p in b) / len(b) >= 58 and len(b) >= 8
+    ]
+    b = max(low or bands, key=len)
+    mx = sum(p[0] for p in b) / len(b)
+    my = sum(p[1] for p in b) / len(b)
+    return (mx / 128.0 - 0.5, my / 128.0 - 0.5)
 
 
 def to_uv(nx: float, ny: float) -> tuple[float, float]:
@@ -102,73 +155,35 @@ def region_centroid(
 
 
 def main() -> None:
-    print("=== BODY vs OWNED ANCHORS (idle) ===")
-    print(
-        f"{'family':8s} {'side':5s} {'bodyUV':14s} {'anchorUV':14s} "
-        f"{'dx':7s} {'dy':7s} {'dist':6s}"
-    )
+    fists = shipped_fists()
+    print("=== BODY FIST vs OWNED ANCHORS ===")
     body_findings: list[str] = []
-    for fam in ["warrior", "rogue", "mage", "healer"]:
-        im = Image.open(CHAR / fam / "body_idle.png").convert("RGBA")
-        for side, x0, x1, aname in [
-            ("main", 85, 120, "mainHand"),
-            ("off", 8, 45, "offHand"),
-        ]:
-            c = region_centroid(im, x0, x1, 70, 105)
-            ax, ay = to_uv(*OWNED_IDLE[aname])
-            if c is None:
-                print(fam, side, "NO PIXELS")
-                continue
-            dx, dy = c[0] - ax, c[1] - ay
-            dist = math.hypot(dx, dy)
-            print(
-                f"{fam:8s} {side:5s} ({c[0]:.3f},{c[1]:.3f})  "
-                f"({ax:.3f},{ay:.3f})  {dx:+.3f}  {dy:+.3f}  {dist:.3f}"
-            )
-            if dist > 0.06:
-                body_findings.append(
-                    f"{fam} {side} hand mass vs anchor dist={dist:.3f}"
-                )
-        c = region_centroid(im, 40, 88, 8, 40, alpha=100)
-        ax, ay = to_uv(*OWNED_IDLE["head"])
-        if c:
-            dist = math.hypot(c[0] - ax, c[1] - ay)
-            print(
-                f"{fam:8s} head  ({c[0]:.3f},{c[1]:.3f})  "
-                f"({ax:.3f},{ay:.3f})  {c[0]-ax:+.3f}  {c[1]-ay:+.3f}  {dist:.3f}"
-            )
-            if dist > 0.10:
-                body_findings.append(f"{fam} head mass vs anchor dist={dist:.3f}")
-
-    print()
-    print("=== WALK/ATTACK body drift vs matching owned anchors ===")
     anim_findings: list[str] = []
     for fam in ["warrior", "rogue", "mage", "healer"]:
-        for anim in ["walk", "attack"]:
-            path = CHAR / fam / f"body_{anim}.png"
-            if not path.exists():
-                continue
-            im = Image.open(path).convert("RGBA")
-            table = OWNED_ATTACK if anim == "attack" else OWNED_IDLE
-            for side, x0, x1, aname in [
-                ("main", 85, 120, "mainHand"),
-                ("off", 8, 45, "offHand"),
-            ]:
-                c = region_centroid(im, x0, x1, 65, 110)
-                ax, ay = to_uv(*table[aname])
-                if not c:
+        table = fists[fam]
+        for anim, main_key, off_key in [
+            ("idle", "idleMain", "idleOff"),
+            ("walk", "walkMain", "walkOff"),
+            ("attack", "attackMain", "attackOff"),
+        ]:
+            im = Image.open(CHAR / fam / f"body_{anim}.png").convert("RGBA")
+            for side, key in [("main", main_key), ("off", off_key)]:
+                measured = fist_n(im, "R" if side == "main" else "L")
+                ax, ay = table[key]
+                if measured is None:
+                    print(f"{fam:8s} {anim:7s} {side:5s} NO PIXELS")
+                    body_findings.append(f"{fam}/{anim}/{side} no fist pixels")
                     continue
-                dist = math.hypot(c[0] - ax, c[1] - ay)
-                mark = " !" if dist > 0.08 else ""
+                dist = math.hypot(measured[0] - ax, measured[1] - ay)
+                mark = " !" if dist > 0.02 else ""
                 print(
                     f"{fam:8s} {anim:7s} {side:5s} "
-                    f"body=({c[0]:.3f},{c[1]:.3f}) "
-                    f"anc=({ax:.3f},{ay:.3f}) d={dist:.3f}{mark}"
+                    f"fist=({measured[0]:+.3f},{measured[1]:+.3f}) "
+                    f"anc=({ax:+.3f},{ay:+.3f}) d={dist:.3f}{mark}"
                 )
-                if dist > 0.08:
-                    anim_findings.append(
-                        f"{fam}/{anim}/{side} drift={dist:.3f}"
-                    )
+                bucket = body_findings if anim == "idle" else anim_findings
+                if dist > 0.02:
+                    bucket.append(f"{fam}/{anim}/{side} drift={dist:.3f}")
 
     print()
     # The painter shifts each hand item so its grip lands on the hand anchor,
@@ -187,7 +202,9 @@ def main() -> None:
             grip_findings.append((stem, 0.0, 0.0, "NO_GRIP_ENTRY"))
             continue
         off = stem.startswith(("shield_", "frill_"))
-        want = OWNED_IDLE["offHand"] if off else OWNED_IDLE["mainHand"]
+        want = (
+            fists["warrior"]["idleOff"] if off else fists["warrior"]["idleMain"]
+        )
         px = im.load()
         gx, gy = int(grip[0] * 128), int(grip[1] * 128)
         on_art = any(
@@ -226,7 +243,7 @@ def main() -> None:
         "owned paintOwnedHero: head/back/feet anchors UNUSED (armor is full blit)",
         "owned GearOverlayScales.owned: Kenney-fallback only (owned uses full 128)",
         "CharacterVisualPose.anchorProfile set per resolve path (owned/kenney)",
-        "owned attackLean hand UVs measured from body_attack centroids",
+        "owned fists are per family and per clip (idle/walk/attack)",
         "Kenney path: uses AnchorTables + GearOverlayScales (fallback dolls)",
     ]
     for line in wiring:
@@ -243,7 +260,9 @@ def main() -> None:
     for i, path in enumerate(sorted(GEAR.glob("*_idle.png"))[:25]):
         stem = path.name.removesuffix("_idle.png")
         off = stem.startswith(("shield_", "frill_"))
-        want = OWNED_IDLE["offHand"] if off else OWNED_IDLE["mainHand"]
+        want = (
+            fists["warrior"]["idleOff"] if off else fists["warrior"]["idleMain"]
+        )
         weap = Image.open(path).convert("RGBA")
         grip = shipped.get(stem) or grip_uv(weap, off_hand=off)
         canvas = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
@@ -277,9 +296,13 @@ def main() -> None:
     for i, fam in enumerate(["warrior", "rogue", "mage", "healer"]):
         im = Image.open(CHAR / fam / "body_idle.png").convert("RGBA")
         draw = ImageDraw.Draw(im)
-        for name, (nx, ny) in OWNED_IDLE.items():
-            if name in ("body", "back"):
-                continue
+        marks = {
+            "mainHand": fists[fam]["idleMain"],
+            "offHand": fists[fam]["idleOff"],
+            "head": OWNED_IDLE["head"],
+            "feet": OWNED_IDLE["feet"],
+        }
+        for name, (nx, ny) in marks.items():
             x = 64 + nx * 128
             y = 64 + ny * 128
             color = {

@@ -63,6 +63,7 @@ class CharacterVisualPose {
     required this.layerOrder,
     this.equipHash = '',
     this.anchorProfile = BodyAnchorProfile.kenney,
+    this.bodyFamily,
     this.bodyTint,
     this.bodyTintAsset,
   });
@@ -73,6 +74,10 @@ class CharacterVisualPose {
   final List<CharacterLayerId> layerOrder;
   final String equipHash;
   final BodyAnchorProfile anchorProfile;
+
+  /// Owned body family. Hand anchors are per family; Kenney dolls leave this
+  /// null.
+  final BodyFamily? bodyFamily;
 
   /// Spec wash for the owned body layer (gear overlays keep rarity tints).
   final Color? bodyTint;
@@ -89,6 +94,7 @@ class CharacterVisualPose {
     layerOrder: layerOrder,
     equipHash: equipHash,
     anchorProfile: anchorProfile,
+    bodyFamily: bodyFamily,
     bodyTint: bodyTint,
     bodyTintAsset: bodyTintAsset,
   );
@@ -99,6 +105,7 @@ class CharacterVisualPose {
     id: id,
     flipX: flipX,
     profile: anchorProfile,
+    family: bodyFamily,
   );
 
   double get mainHandExtraRotation {
@@ -358,6 +365,7 @@ class CharacterVisualPose {
       layerOrder: order,
       equipHash: equipHashOf(hero),
       anchorProfile: BodyAnchorProfile.owned,
+      bodyFamily: family,
       bodyTint: Color(
         HeroIdentity.clothArgb(
           hero.specId,

@@ -199,6 +199,7 @@ abstract final class CharacterVisualPainter {
           id: layer.anchorId!,
           flipX: false,
           profile: BodyAnchorProfile.owned,
+          family: pose.bodyFamily,
         ).scaled(size);
         var rot = ap.rotation;
         if (layer.anchorId == AnchorId.mainHand) {
@@ -394,6 +395,7 @@ abstract final class CharacterVisualPainter {
           id: anchorId,
           flipX: false,
           profile: anchorProfile,
+          family: pose.bodyFamily,
         ).scaled(size);
         var rot = ap.rotation;
         if (anchorId == AnchorId.mainHand) {

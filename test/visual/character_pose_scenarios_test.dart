@@ -276,20 +276,49 @@ void main() {
     );
   });
 
-  test('owned denser anchors sit lower on hands than kenney', () {
-    final kenney = AnchorTables.lookup(
-      anim: HeroAnimKind.idle,
-      frame: 0,
-      id: AnchorId.mainHand,
-      profile: BodyAnchorProfile.kenney,
-    );
-    final owned = AnchorTables.lookup(
+  test('owned hand anchors sit on each family fist', () {
+    final warrior = AnchorTables.lookup(
       anim: HeroAnimKind.idle,
       frame: 0,
       id: AnchorId.mainHand,
       profile: BodyAnchorProfile.owned,
+      family: BodyFamily.warrior,
     );
-    expect(owned.y, greaterThan(kenney.y));
+    final mage = AnchorTables.lookup(
+      anim: HeroAnimKind.idle,
+      frame: 0,
+      id: AnchorId.mainHand,
+      profile: BodyAnchorProfile.owned,
+      family: BodyFamily.mage,
+    );
+    expect(warrior.y, closeTo(0.033, 0.001));
+    expect(mage.y, closeTo(0.078, 0.001));
+    // Mage walk lifts the arms. The grip follows that clip, not the idle fist.
+    final mageWalk = AnchorTables.lookup(
+      anim: HeroAnimKind.walk,
+      frame: 1,
+      id: AnchorId.mainHand,
+      profile: BodyAnchorProfile.owned,
+      family: BodyFamily.mage,
+    );
+    expect(mageWalk.y, lessThan(mage.y - 0.10));
+    // Attack is one PNG, so both frames share the attack fist.
+    final windup = AnchorTables.lookup(
+      anim: HeroAnimKind.attack,
+      frame: 0,
+      id: AnchorId.mainHand,
+      profile: BodyAnchorProfile.owned,
+      family: BodyFamily.warrior,
+    );
+    final swing = AnchorTables.lookup(
+      anim: HeroAnimKind.attack,
+      frame: 1,
+      id: AnchorId.mainHand,
+      profile: BodyAnchorProfile.owned,
+      family: BodyFamily.warrior,
+    );
+    expect(windup.x, swing.x);
+    expect(windup.y, swing.y);
     expect(
       AnchorTables.lookup(
         anim: HeroAnimKind.idle,
@@ -660,20 +689,29 @@ void main() {
     );
   });
 
-  test('owned attack hand anchors sit lower than idle', () {
-    final idleHand = AnchorTables.lookup(
-      anim: HeroAnimKind.idle,
-      frame: 0,
-      id: AnchorId.mainHand,
-      profile: BodyAnchorProfile.owned,
+  test('owned pose uses the family fist', () {
+    final pose = CharacterVisualPose.resolve(
+      hero: nakedWarrior(),
+      anim: idle,
+      owned: true,
     );
-    final attackHand = AnchorTables.lookup(
+    expect(pose.bodyFamily, BodyFamily.warrior);
+    expect(pose.anchor(AnchorId.mainHand).y, closeTo(0.033, 0.001));
+    final rogueAttack = AnchorTables.lookup(
       anim: HeroAnimKind.attack,
       frame: 1,
       id: AnchorId.mainHand,
       profile: BodyAnchorProfile.owned,
+      family: BodyFamily.rogue,
     );
-    expect(attackHand.y, greaterThan(idleHand.y));
+    final rogueIdle = AnchorTables.lookup(
+      anim: HeroAnimKind.idle,
+      frame: 0,
+      id: AnchorId.mainHand,
+      profile: BodyAnchorProfile.owned,
+      family: BodyFamily.rogue,
+    );
+    expect(rogueAttack.y, greaterThan(rogueIdle.y));
   });
 
   test('owned cape paints behind the body', () {
