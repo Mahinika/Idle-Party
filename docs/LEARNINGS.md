@@ -57,6 +57,26 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   portrait Android, Play as the install path, and AAB-only-when-asked stay.
   DPS **HIGH** still fails CI.
 
+## 2026-09-26 — Play preview clip
+
+- Listing file is `idle_party_preview_16x9.mp4` (~11 MB, 11 053 KB in the
+  picker). The 9:16 file is Shorts. The owner selected the 9:16 one first.
+- A fight raw at ~13 fps looks laggy when played at 30. New A56 captures of a
+  real fight hold about 26–30 fps. Do not blend pixel frames. Record the
+  fight, not the splash or the CONTINUE menu. On 1080×2340, CONTINUE is
+  about y=1635; y=1856 is NEW GAME. A stale UI dump that still says LEAVE
+  records the splash. A PUSH boss clear returns to the hub under the notify
+  card — shoot a normal floor, and mark the notify card already answered.
+- Cursor’s browser cannot sign into Google (“browser may not be secure”).
+  Cognifox Studio is the Chrome profile for `cognifoxstudio@gmail.com`, not
+  Robert Jönsson’s channel in that browser. Do not upload the listing clip
+  to the personal channel.
+- Swap the Play URL only after YouTube oEmbed works. Title is
+  `Idle Party — Play Store Preview`. Not for kids, ads off, unlisted, embed
+  on. Skip cards, end screen, and quiz. All 10 listing locales share one
+  video field. Live clip from **2026-09-26** is `UHLG28lHmPs`. Do not point
+  the listing at `XfKog5CAiUs` (Play rejected that embed).
+
 ## 2026-09-26 — year roadmap on ask only
 
 - Owner can say **Uppdatera 1års roadmap**. Skill
