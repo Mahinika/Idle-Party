@@ -46,7 +46,7 @@ the goal needs them.
 
 ## Non-goals (unless the batch needs them)
 
-- iOS or web-as-product
+- iOS / Apple (never) or web-as-product
 
 A second fight sim, gacha / whale packs, and a god-object quarter are allowed
 when the owner names them (2026-09-26).

@@ -10,15 +10,15 @@ alwaysApply: true
 God Hand / UA / git push / wipe-save removed **2026-09-14** by owner.
 **2026-09-26:** owner removed the design stops they had set — one fight sim,
 no gacha / BiS-for-cash / whale, god-object as the quarter’s story, and
-AL20 polish as a forbidden default. **Google Play AAB upload still requires
-owner ask.**
+AL20 polish as a forbidden default. Same day: **never iOS, never an Apple
+release.** **Google Play AAB upload still requires owner ask.**
 
 ## Hard (never weaken from this file)
 
 | Lock | Meaning |
 |------|---------|
 | Legal / IP | Owned `assets/custom/` only; no foreign dumps/sprites/code |
-| Phone product | Portrait Android; no iOS / web-as-product |
+| Phone product | Portrait Android only. Never iOS or an Apple release, even if a plan names it. No web-as-product |
 | English UI | In-game copy English; chat with owner in their language |
 | Fairness first | Live-light DPS gate / ±20% share — trim HIGH kits |
 | SpatialCombat | Current fight sim. A second sim is not forbidden |

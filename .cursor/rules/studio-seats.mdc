@@ -26,7 +26,7 @@ confused. Skip this file for routine implement / analyze / commit.
 
 | Chair | Owns | Veto / stop |
 |-------|------|-------------|
-| **Executive Producer** | Scope, `GROWTH_MANDATE.md` principles, deadlines | Unprompted scope creep; iOS; weaken remaining hard locks |
+| **Executive Producer** | Scope, `GROWTH_MANDATE.md` principles, deadlines | Unprompted scope creep; iOS / Apple even if named; weaken remaining hard locks |
 | **Game Director** | Loops, SpatialCombat, progression, kits | Ship with DPS **HIGH**; broken fight |
 | **UX Director** | Hub/menus, placement map, readability | Second visual chaos; broken findability |
 | **Technical Director** | Architecture, crashes, analyze, save | Red analyze/tests; known crash |

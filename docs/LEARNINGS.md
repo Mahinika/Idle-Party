@@ -44,6 +44,11 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   **2026-09-12…14** (Play D1 still not readable). History only — not a
   standing program. Do not restore AL20 as the batch (`GROWTH_MANDATE.md`).
 
+## 2026-09-26 — never iOS
+
+- Owner: vi kommer aldrig släppa iOS på Apple. Portrait Android only. Naming
+  it in a plan does not lift the lock.
+
 ## 2026-09-26 — owner removed their design stops
 
 - Owner: ta bort spärrarna de själva satt. Lifted in living rules: one-sim ban,

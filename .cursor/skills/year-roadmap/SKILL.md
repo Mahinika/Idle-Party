@@ -45,8 +45,9 @@ Reserve slash if the phrase is missed: `/year-roadmap`.
    - **B** — examples under *Om du namnger det* only
    - **C** — list so they are not reused (Playio, recycled AppsFlyer 2022,
      “up to 25%”, battle-pass calendars)
-   - Remaining hard locks still win (Legal / IP, no exploits, no foreign dumps).
-     Gacha, a second sim, and a god-object quarter are not automatic stops.
+   - Remaining hard locks still win (Legal / IP, no exploits, no foreign dumps,
+     never iOS / Apple). Gacha, a second sim, and a god-object quarter are not
+     automatic stops.
 
 4. **Rewrite** `docs/YEAR_ROADMAP.md` in Swedish. Game terms stay English
    (KEY, Gauntlet, Ranked GR, Farm Rift, Ashen Crown). No invented Console %.

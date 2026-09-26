@@ -49,7 +49,7 @@ If the diff belongs to a domain skill, follow it for that slice:
 - **Honesty**: English in-game copy matches reality
 - **Chrome**: prefer shared `MenuRouter` + `MenuSurface` + `AppBottomBar` when it fits; flat nav / hide-until-unlock are not hard review blocks
 - **Tests**: new GameLogic / hub / chase / guides branches have matching tests using `GameDirector.preview()`
-- **Locks**: remaining hard locks only (Legal / IP, no foreign dumps, portrait Android, English UI, Play install path, AAB ask). Gacha and a second sim are not review blocks.
+- **Locks**: remaining hard locks only (Legal / IP, no foreign dumps, portrait Android, never iOS / Apple, English UI, Play install path, AAB ask). Gacha and a second sim are not review blocks.
 
 ## 3. Should fix
 

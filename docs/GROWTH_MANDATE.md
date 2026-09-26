@@ -41,7 +41,7 @@ early and hide chrome until it matters when it does not fight the named goal.
 
 ## Stop doing
 
-- iOS / web-as-product / GitHub Releases as a player funnel
+- iOS / Apple release (never, even if a plan names it); web-as-product; GitHub Releases as a player funnel
 - Inventing numbered “Program N” roadmaps unless the owner asks for one
 
 Owner **2026-09-26** removed these stops: AL20 polish as a forbidden default,

@@ -108,7 +108,8 @@ Det här är spärrar från researchen, inte från dina lås.
 - User-perceived crash ≥1,09 % eller ANR ≥0,47 % (28 dagar) — content väntar.
   API-kollen 2026-09-26 var inte röd.
 
-iOS, GitHub Releases som installväg, engelska i spelet, och Play-uppladdning
+Aldrig iOS eller en Apple-release, inte ens om en plan namnger det.
+GitHub Releases som installväg, engelska i spelet, och Play-uppladdning
 utan att du ber om den står kvar i produktlåsen. DPS **HIGH** failar fortfarande CI.
 
 ---
