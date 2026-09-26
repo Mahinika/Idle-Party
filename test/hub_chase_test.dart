@@ -29,10 +29,7 @@ void main() {
 
   test('claim daily vault beats other chases', () {
     var state = GameLogic.createInitialState(now: now);
-    state = GameLogic.ensureWeeklyContract(
-      state,
-      now: now,
-    );
+    state = GameLogic.ensureWeeklyContract(state, now: now);
     state = state.copyWith(
       bossVictories: 1,
       metaDepth: state.metaDepth.copyWith(
@@ -97,9 +94,7 @@ void main() {
       lastDailyDate: MetaSystems.dailyDateKey(now),
       dailyClaimed: true,
       // 11 ach × 2 = score 22 → 3 points to Kindled Will (ALMOST).
-      achievements: [
-        for (var i = 0; i < 11; i++) 'ach_$i',
-      ],
+      achievements: [for (var i = 0; i < 11; i++) 'ach_$i'],
       lifetimeGoldEarned: 5_000_000,
       highestDungeonCleared: 8,
     );
@@ -126,9 +121,7 @@ void main() {
         ),
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
-        achievements: [
-          for (var i = 0; i < 160; i++) 'ach_$i',
-        ],
+        achievements: [for (var i = 0; i < 160; i++) 'ach_$i'],
         highestDungeonCleared: 8,
         lifetimeGoldEarned: 5_000_000,
       ),
@@ -137,7 +130,10 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.gauntletMilestone);
     expect(chase.title, contains('25'));
-    expect(chase.detail, contains('+${GauntletMilestones.essenceForFloor(25)}e'));
+    expect(
+      chase.detail,
+      contains('+${GauntletMilestones.essenceForFloor(25)}e'),
+    );
   });
 
   test('normal zone unlock does not beat pushing the current dungeon', () {
@@ -149,9 +145,7 @@ void main() {
       metaDepth: state.metaDepth.copyWith(dailyVaultClaimed: true),
       lastDailyDate: MetaSystems.dailyDateKey(now),
       dailyClaimed: true,
-      achievements: [
-        for (var i = 0; i < 160; i++) 'ach_$i',
-      ],
+      achievements: [for (var i = 0; i < 160; i++) 'ach_$i'],
     );
     expect(state.collectionScore, greaterThanOrEqualTo(320));
     final chase = HubChase.forState(state, now: now);
@@ -160,9 +154,9 @@ void main() {
   });
 
   test('first boss on AL0 chases the cave vault, not sole Ascend button', () {
-    var state = GameLogic.createInitialState(now: now).copyWith(
-      bossVictories: 1,
-    );
+    var state = GameLogic.createInitialState(
+      now: now,
+    ).copyWith(bossVictories: 1);
     expect(GameLogic.canAscend(state), isTrue);
     expect(GameLogic.showDailyRunOnHub(state), isFalse);
     final chase = HubChase.forState(state, now: now);
@@ -179,10 +173,10 @@ void main() {
         bossVictories: 1,
         highestDungeonCleared: 14,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClears: 0,
-              dailyVaultClaimed: false,
-              dailyBestTimedKey: 0,
-            ),
+          dailyVaultClears: 0,
+          dailyVaultClaimed: false,
+          dailyBestTimedKey: 0,
+        ),
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
       ),
@@ -205,9 +199,9 @@ void main() {
         ascensionLevel: 5,
         bossVictories: 1,
         highestDungeonCleared: 14,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-            ),
+        metaDepth: GameLogic.createInitialState(
+          now: now,
+        ).metaDepth.copyWith(dailyVaultClaimed: true),
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
       ),
@@ -216,7 +210,10 @@ void main() {
     expect(GameLogic.endgameUnlocked(state), isFalse);
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.clearFloors);
-    expect(chase.title, contains('Level the party to ${GameLogic.maxHeroLevel}'));
+    expect(
+      chase.title,
+      contains('Level the party to ${GameLogic.maxHeroLevel}'),
+    );
     expect(chase.urgency, HubChaseUrgency.normal);
     expect(chase.detail.toUpperCase(), contains('KEY'));
     expect(chase.detail, isNot(contains('AL20')));
@@ -231,10 +228,10 @@ void main() {
         bossVictories: 1,
         highestDungeonCleared: 14,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClears: 0,
-              dailyVaultClaimed: false,
-              dailyBestTimedKey: 0,
-            ),
+          dailyVaultClears: 0,
+          dailyVaultClaimed: false,
+          dailyBestTimedKey: 0,
+        ),
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
       ),
@@ -254,9 +251,9 @@ void main() {
         hardmodeLevel: 2,
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-            ),
+        metaDepth: GameLogic.createInitialState(
+          now: now,
+        ).metaDepth.copyWith(dailyVaultClaimed: true),
       ),
     );
     expect(GameLogic.endgameUnlocked(state), isTrue);
@@ -270,9 +267,9 @@ void main() {
     var state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
       bossVictories: 2,
-      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-            dailyVaultClaimed: true,
-          ),
+      metaDepth: GameLogic.createInitialState(
+        now: now,
+      ).metaDepth.copyWith(dailyVaultClaimed: true),
       lastDailyDate: MetaSystems.dailyDateKey(now),
       dailyClaimed: true,
     );
@@ -289,10 +286,10 @@ void main() {
         bossVictories: 99,
         hardmodeLevel: GameLogic.maxAscensionLevel,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-              gauntletBestFloor: 42,
-              ascendBlessings: 20,
-            ),
+          dailyVaultClaimed: true,
+          gauntletBestFloor: 42,
+          ascendBlessings: 20,
+        ),
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
       ),
@@ -310,10 +307,10 @@ void main() {
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-              freshPrestige: true,
-              ascendBlessings: 20,
-            ),
+          dailyVaultClaimed: true,
+          freshPrestige: true,
+          ascendBlessings: 20,
+        ),
       ),
     );
     expect(GameLogic.endgameUnlocked(state), isTrue);
@@ -334,10 +331,10 @@ void main() {
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-              freshPrestige: false,
-              ascendBlessings: 20,
-            ),
+          dailyVaultClaimed: true,
+          freshPrestige: false,
+          ascendBlessings: 20,
+        ),
       ),
     );
     expect(GameLogic.isFreshPrestigeGear(state), isFalse);
@@ -350,9 +347,9 @@ void main() {
     var state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
       bossVictories: 1,
-      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-            dailyVaultClaimed: true,
-          ),
+      metaDepth: GameLogic.createInitialState(
+        now: now,
+      ).metaDepth.copyWith(dailyVaultClaimed: true),
     );
     expect(GameLogic.bossesRequiredForAscension(1), 2);
     // Daily still available — almost-Ascend should still win.
@@ -370,12 +367,8 @@ void main() {
     var state = base.copyWith(
       bossVictories: 1,
       highestDungeonCleared: -1,
-      heroes: [
-        for (final h in base.heroes) h.copyWith(level: 6, xp: 0),
-      ],
-      metaDepth: base.metaDepth.copyWith(
-        dailyVaultClaimed: true,
-      ),
+      heroes: [for (final h in base.heroes) h.copyWith(level: 6, xp: 0)],
+      metaDepth: base.metaDepth.copyWith(dailyVaultClaimed: true),
     );
     expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
     final chase = HubChase.forState(state, now: now);
@@ -407,10 +400,10 @@ void main() {
         ascensionLevel: GameLogic.maxAscensionLevel,
         highestDungeonCleared: 14,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClears: 0,
-              dailyVaultClaimed: false,
-              dailyBestTimedKey: 1,
-            ),
+          dailyVaultClears: 0,
+          dailyVaultClaimed: false,
+          dailyBestTimedKey: 1,
+        ),
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
       ),
@@ -472,26 +465,27 @@ void main() {
   test('ack clears pending hero reveals', () {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
-      metaDepth: state.metaDepth.copyWith(
-        pendingHeroReveals: const ['combat'],
-      ),
+      metaDepth: state.metaDepth.copyWith(pendingHeroReveals: const ['combat']),
     );
     state = GameLogic.ackPendingHeroReveals(state);
     expect(state.metaDepth.pendingHeroReveals, isEmpty);
   });
 
-  test('after first Ascend, one cave today is the hub chase (KEY waits for party max)', () {
-    final state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: 1,
-    );
-    expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
-    expect(GameLogic.showKeystoneJargon(state), isFalse);
-    final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.dailyVaultProgress);
-    expect(chase.title.toLowerCase(), contains('cave'));
-    expect(chase.kind, isNot(HubChaseKind.keystone));
-    expect(chase.kind, isNot(HubChaseKind.dailyRun));
-  });
+  test(
+    'after first Ascend, one cave today is the hub chase (KEY waits for party max)',
+    () {
+      final state = GameLogic.createInitialState(
+        now: now,
+      ).copyWith(ascensionLevel: 1);
+      expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
+      expect(GameLogic.showKeystoneJargon(state), isFalse);
+      final chase = HubChase.forState(state, now: now);
+      expect(chase.kind, HubChaseKind.dailyVaultProgress);
+      expect(chase.title.toLowerCase(), contains('cave'));
+      expect(chase.kind, isNot(HubChaseKind.keystone));
+      expect(chase.kind, isNot(HubChaseKind.dailyRun));
+    },
+  );
 
   test('KEY habit at party max when preferred key below cap', () {
     final state = _withPartyMaxLevel(
@@ -501,15 +495,13 @@ void main() {
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-              gauntletBestFloor: 200,
-              claimedGauntletMilestones: _gauntletMilestonesDone,
-              riftBestTier: 20,
-              claimedRiftMilestones: const ['r5', 'r10', 'r20'],
-            ),
-        achievements: [
-          for (var i = 0; i < 200; i++) 'ach_$i',
-        ],
+          dailyVaultClaimed: true,
+          gauntletBestFloor: 200,
+          claimedGauntletMilestones: _gauntletMilestonesDone,
+          riftBestTier: 20,
+          claimedRiftMilestones: const ['r5', 'r10', 'r20'],
+        ),
+        achievements: [for (var i = 0; i < 200; i++) 'ach_$i'],
         highestDungeonCleared: 14,
         lifetimeGoldEarned: 50_000_000,
       ),
@@ -529,19 +521,17 @@ void main() {
         dailyClaimed: false,
         lastDailyDate: '',
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-              gauntletBestFloor: 200,
-              claimedGauntletMilestones: _gauntletMilestonesDone,
-              riftBestTier: 20,
-              claimedRiftMilestones: const ['r5', 'r10', 'r20'],
-              grBestTier: 20,
-              claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
-              worldBossTickets: 0,
-              worldBossClearedWeek: true,
-            ),
-        achievements: [
-          for (var i = 0; i < 200; i++) 'ach_$i',
-        ],
+          dailyVaultClaimed: true,
+          gauntletBestFloor: 200,
+          claimedGauntletMilestones: _gauntletMilestonesDone,
+          riftBestTier: 20,
+          claimedRiftMilestones: const ['r5', 'r10', 'r20'],
+          grBestTier: 20,
+          claimedGrMilestones: const ['gr5', 'gr10', 'gr20'],
+          worldBossTickets: 0,
+          worldBossClearedWeek: true,
+        ),
+        achievements: [for (var i = 0; i < 200; i++) 'ach_$i'],
         highestDungeonCleared: 14,
         lifetimeGoldEarned: 50_000_000,
       ),
@@ -553,10 +543,9 @@ void main() {
   });
 
   test('KEY at AL cap falls through to today\'s cave before party max', () {
-    final state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: 1,
-      hardmodeLevel: 0,
-    );
+    final state = GameLogic.createInitialState(
+      now: now,
+    ).copyWith(ascensionLevel: 1, hardmodeLevel: 0);
     expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.dailyVaultProgress);
@@ -579,9 +568,7 @@ void main() {
         ),
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
-        achievements: [
-          for (var i = 0; i < 200; i++) 'ach_$i',
-        ],
+        achievements: [for (var i = 0; i < 200; i++) 'ach_$i'],
         highestDungeonCleared: 14,
         lifetimeGoldEarned: 50_000_000,
       ),
@@ -638,12 +625,10 @@ void main() {
         hardmodeLevel: GameLogic.maxAscensionLevel,
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: false,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-            ),
-        achievements: [
-          for (var i = 0; i < 200; i++) 'ach_$i',
-        ],
+        metaDepth: GameLogic.createInitialState(
+          now: now,
+        ).metaDepth.copyWith(dailyVaultClaimed: true),
+        achievements: [for (var i = 0; i < 200; i++) 'ach_$i'],
         highestDungeonCleared: 14,
         lifetimeGoldEarned: 50_000_000,
       ),
@@ -675,9 +660,7 @@ void main() {
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
         metaDepth: md,
-        achievements: [
-          for (var i = 0; i < 200; i++) 'ach_$i',
-        ],
+        achievements: [for (var i = 0; i < 200; i++) 'ach_$i'],
         highestDungeonCleared: 14,
         lifetimeGoldEarned: 50_000_000,
       ),
@@ -780,9 +763,7 @@ void main() {
           worldBossTickets: 0,
           worldBossClearedWeek: true,
         ),
-        achievements: [
-          for (var i = 0; i < 400; i++) 'ach_$i',
-        ],
+        achievements: [for (var i = 0; i < 400; i++) 'ach_$i'],
         highestDungeonCleared: 14,
         lifetimeGoldEarned: 50_000_000,
       ),
@@ -809,46 +790,46 @@ void main() {
     expect(chase.detail, contains('PB F200'));
   });
 
-  test('KEY chase detail names affixes and par', () {
+  test('KEY chase detail is one night sentence', () {
     var state = _withPartyMaxLevel(
       GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel,
         hardmodeLevel: 5,
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-              ascendBlessings: 20,
-            ),
+        metaDepth: GameLogic.createInitialState(
+          now: now,
+        ).metaDepth.copyWith(dailyVaultClaimed: true, ascendBlessings: 20),
       ),
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.keystone);
-    expect(chase.detail, contains('iLvl'));
-    expect(chase.detail.toLowerCase(), contains('par'));
+    expect(chase.detail, startsWith("Tonight's KEY +5:"));
+    expect(chase.detail, contains('clock'));
+    expect(chase.detail, endsWith('.'));
+    expect(chase.detail, isNot(contains('iLvl')));
   });
 
-  test('KEY roster hint surfaces for swarm affix week', () {
-    expect(
-      Keystone.rosterHintForAffixes(const ['swarm']),
-      contains('Shield'),
-    );
+  test('KEY roster hint stays off the night sentence', () {
+    expect(Keystone.rosterHintForAffixes(const ['swarm']), contains('Shield'));
     var state = _withPartyMaxLevel(
       GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel,
         hardmodeLevel: 2,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-              weeklyModifier: 'swarm',
-            ),
+        metaDepth: GameLogic.createInitialState(
+          now: now,
+        ).metaDepth.copyWith(dailyVaultClaimed: true, weeklyModifier: 'swarm'),
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
       ),
     );
     final chase = HubChase.forState(state, now: now);
-    if (chase.kind == HubChaseKind.keystone) {
-      expect(chase.detail, contains('Shield'));
-    }
+    expect(chase.kind, HubChaseKind.keystone);
+    expect(
+      chase.detail,
+      "Tonight's KEY +2: more enemies, clock ${Keystone.formatTimer(Keystone.parTimeMs(bossFloor: GameLogic.bossFloorFor(state), key: 2))}.",
+    );
+    expect(chase.detail, isNot(contains('Shield')));
   });
 
   test('Rebuild bag chase uses plain gear-farm copy', () {
@@ -859,10 +840,10 @@ void main() {
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
         metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-              freshPrestige: true,
-              ascendBlessings: 20,
-            ),
+          dailyVaultClaimed: true,
+          freshPrestige: true,
+          ascendBlessings: 20,
+        ),
       ),
     );
     final chase = HubChase.forState(state, now: now);
@@ -874,9 +855,9 @@ void main() {
 
   group('session 2–5 chase matrix', () {
     test('S2 after first boss: one cave today, not Daily Run', () {
-      final state = GameLogic.createInitialState(now: now).copyWith(
-        bossVictories: 1,
-      );
+      final state = GameLogic.createInitialState(
+        now: now,
+      ).copyWith(bossVictories: 1);
       expect(GameLogic.showDailyChase(state), isTrue);
       expect(GameLogic.showDailyRunOnHub(state), isFalse);
       final chase = HubChase.forState(state, now: now);
@@ -885,19 +866,22 @@ void main() {
       expect(chase.detail.toUpperCase(), isNot(contains('DAILY RUN')));
     });
 
-    test('S2 vault already claimed: level the party, not Daily Run or Ascend', () {
-      final state = GameLogic.createInitialState(now: now).copyWith(
-        bossVictories: 1,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-            ),
-      );
-      final chase = HubChase.forState(state, now: now);
-      expect(chase.kind, HubChaseKind.clearFloors);
-      expect(chase.title.toLowerCase(), contains('level the party'));
-      expect(chase.kind, isNot(HubChaseKind.dailyRun));
-      expect(chase.kind, isNot(HubChaseKind.ascend));
-    });
+    test(
+      'S2 vault already claimed: level the party, not Daily Run or Ascend',
+      () {
+        final state = GameLogic.createInitialState(now: now).copyWith(
+          bossVictories: 1,
+          metaDepth: GameLogic.createInitialState(
+            now: now,
+          ).metaDepth.copyWith(dailyVaultClaimed: true),
+        );
+        final chase = HubChase.forState(state, now: now);
+        expect(chase.kind, HubChaseKind.clearFloors);
+        expect(chase.title.toLowerCase(), contains('level the party'));
+        expect(chase.kind, isNot(HubChaseKind.dailyRun));
+        expect(chase.kind, isNot(HubChaseKind.ascend));
+      },
+    );
 
     test('S3 Daily done, vault empty: fill Daily Vault', () {
       final state = GameLogic.createInitialState(now: now).copyWith(
@@ -905,10 +889,9 @@ void main() {
         bossVictories: 0,
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClears: 0,
-              dailyVaultClaimed: false,
-            ),
+        metaDepth: GameLogic.createInitialState(
+          now: now,
+        ).metaDepth.copyWith(dailyVaultClears: 0, dailyVaultClaimed: false),
       );
       final chase = HubChase.forState(state, now: now);
       expect(chase.kind, HubChaseKind.dailyVaultProgress);
@@ -920,9 +903,9 @@ void main() {
       final state = GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: 1,
         bossVictories: 0,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-            ),
+        metaDepth: GameLogic.createInitialState(
+          now: now,
+        ).metaDepth.copyWith(dailyVaultClaimed: true),
       );
       expect(GameLogic.showDailyRunOnHub(state), isTrue);
       expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
@@ -936,12 +919,10 @@ void main() {
         bossVictories: 0,
         lastDailyDate: MetaSystems.dailyDateKey(now),
         dailyClaimed: true,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-            ),
-        achievements: [
-          for (var i = 0; i < 160; i++) 'ach_$i',
-        ],
+        metaDepth: GameLogic.createInitialState(
+          now: now,
+        ).metaDepth.copyWith(dailyVaultClaimed: true),
+        achievements: [for (var i = 0; i < 160; i++) 'ach_$i'],
       );
       final chase = HubChase.forState(state, now: now);
       expect(chase.kind, HubChaseKind.clearFloors);
@@ -953,9 +934,9 @@ void main() {
       final state = GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: 1,
         bossVictories: 1,
-        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-              dailyVaultClaimed: true,
-            ),
+        metaDepth: GameLogic.createInitialState(
+          now: now,
+        ).metaDepth.copyWith(dailyVaultClaimed: true),
       );
       expect(MetaSystems.isDailyClaimedToday(state, now: now), isFalse);
       final chase = HubChase.forState(state, now: now);
@@ -967,10 +948,10 @@ void main() {
 }
 
 GameState _withHeroLevels(GameState state, int level) => state.copyWith(
-      heroRoster: [
-        for (final h in state.heroRoster) h.copyWith(level: level, xp: 0),
-      ],
-    );
+  heroRoster: [
+    for (final h in state.heroRoster) h.copyWith(level: level, xp: 0),
+  ],
+);
 
 GameState _withPartyMaxLevel(GameState state) =>
     _withHeroLevels(state, GameLogic.maxHeroLevel);
@@ -994,9 +975,7 @@ GameState _settledEndgameLadderState({required DateTime now}) =>
           worldBossTickets: 0,
           worldBossClearedWeek: true,
         ),
-        achievements: [
-          for (var i = 0; i < 400; i++) 'ach_$i',
-        ],
+        achievements: [for (var i = 0; i < 400; i++) 'ach_$i'],
         highestDungeonCleared: 14,
         lifetimeGoldEarned: 50_000_000,
       ),

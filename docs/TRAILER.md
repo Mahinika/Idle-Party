@@ -61,11 +61,11 @@ not the lead.
 
 | Sec | Shot | On-screen (≤6 words) |
 |-----|------|----------------------|
-| 0–10 | A56 gameplay: party centered, walks, fights | Your party keeps fighting |
-| 10–15 | Welcome Back / AFK marketing card | Progress while you're away |
-| 15–19 | Hub TODAY card (READY / clear goal) | Always know today's chase |
-| 19–24 | A56 gameplay: switch heroes in GEAR | Build and equip your party |
-| 24–30 | Title lockup + feature graphic feel | Idle Party |
+| 0–14 | A56 crawl: party centered, walks, fights | Your party keeps fighting |
+| 14–17 | Welcome Back / AFK marketing card | Progress while you're away |
+| 17–21 | Hub TODAY card (READY / clear goal) | Always know today's chase |
+| 21–27 | A56 gameplay: switch heroes in GEAR | Build and equip your party |
+| 27–30 | Title lockup + feature graphic feel | Idle Party |
 
 Music: soft dungeon / parchment mood. No voice-over required. End on title —
 no “Download now” hard sell if it fights the tone.

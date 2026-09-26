@@ -14,11 +14,18 @@ class ChangelogRelease {
 /// What's New catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.186';
-
+  static const String currentVersion = '1.12.187';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.187',
+      bullets: <String>[
+        'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight. ESSENCE → RELICS are unique finds: Embers from bosses and Ascend discover and level them. Cinders are a slow glow — one from the Daily Vault, two Ad Tickets, or a cheap pouch — used to salvage or trade a few Embers each week. At party Lv100, MORE → CRAFT still runs a monthly Craft Trial (Apex gear only).',
+        'At Lv100, KEY is one night\'s job.',
+        'Race still locks after New Game START. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEYSTONE waits until the party is Lv100. Ranked GREATER GR packs still scale with rank only — GOLD forge does not buff monsters. Prestige Ascend still Rebuild your bag; AL20 BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.186',
       bullets: <String>[
@@ -1642,5 +1649,4 @@ abstract final class ChangelogCatalog {
       ],
     ),
   ];
-
 }

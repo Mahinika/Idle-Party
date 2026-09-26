@@ -90,10 +90,7 @@ abstract final class ChaseDispatcher {
           pickZone: chase.zoneId != null,
         );
       case HubChaseKind.gauntletMilestone:
-        return const ChasePlan(
-          label: 'GAUNTLET',
-          op: ChaseOp.confirmGauntlet,
-        );
+        return const ChasePlan(label: 'GAUNTLET', op: ChaseOp.confirmGauntlet);
       case HubChaseKind.riftMilestone:
         return const ChasePlan(label: 'FARM RIFT', op: ChaseOp.confirmRift);
       case HubChaseKind.greaterRiftMilestone:
@@ -105,10 +102,7 @@ abstract final class ChaseDispatcher {
           op: ChaseOp.confirmGreaterRift,
         );
       case HubChaseKind.ashenCrown:
-        return const ChasePlan(
-          label: 'ASHEN CROWN',
-          op: ChaseOp.confirmAshen,
-        );
+        return const ChasePlan(label: 'ASHEN CROWN', op: ChaseOp.confirmAshen);
       case HubChaseKind.weekGoal:
         final weekKey = state.metaDepth.weeklyKey.isNotEmpty
             ? state.metaDepth.weeklyKey
@@ -137,7 +131,8 @@ abstract final class ChaseDispatcher {
           zoneId: chase.zoneId ?? selectedZoneId,
         );
       case HubChaseKind.dailyVaultProgress:
-        final vaultKey = chase.keyLevel ??
+        final vaultKey =
+            chase.keyLevel ??
             (state.metaDepth.dailyBestTimedKey == 1 ? 2 : null);
         if (vaultKey != null && GameLogic.showKeystoneJargon(state)) {
           return _enterKeyPlan(
@@ -181,15 +176,9 @@ abstract final class ChaseDispatcher {
     required String? zoneId,
     required bool pickZone,
   }) {
-    final affixes = Keystone.previewAffixes(state);
-    final affixBit = affixes.isEmpty
-        ? 'no affixes'
-        : affixes.map(Keystone.label).join(' · ');
+    final affixes = Keystone.previewAffixesForKey(state, key);
     final par = Keystone.formatTimer(
-      Keystone.parTimeMs(
-        bossFloor: GameLogic.bossFloorFor(state),
-        key: key,
-      ),
+      Keystone.parTimeMs(bossFloor: GameLogic.bossFloorFor(state), key: key),
     );
     return ChasePlan(
       label: 'ENTER KEY +$key',
@@ -197,7 +186,7 @@ abstract final class ChaseDispatcher {
       zoneId: zoneId,
       keyLevel: key,
       pickZone: pickZone,
-      toast: 'KEY +$key · $affixBit · par $par',
+      toast: Keystone.nightJobLine(key: key, affixes: affixes, clock: par),
     );
   }
 
@@ -246,10 +235,7 @@ abstract final class ChaseDispatcher {
       case ChaseOp.navMarket:
         return NavIntent.market;
       case ChaseOp.navMoreInfo:
-        return const NavIntent(
-          route: MenuRoute.more,
-          more: MoreSection.info,
-        );
+        return const NavIntent(route: MenuRoute.more, more: MoreSection.info);
       case ChaseOp.navKey:
         return const NavIntent(route: MenuRoute.key);
       default:

@@ -18,9 +18,10 @@ marknadskontext, inte en timer.
 
 ## Nu (6–8 veckor)
 
-Jämfört med What’s New t.o.m. **1.12.186**. Krypet, ENTER, nästa våning efter
+Jämfört med What’s New t.o.m. **1.12.187**. Krypet, ENTER, nästa våning efter
 första clear, en TODAY-jakt, offline Up next, relics, cinders och Craft Trial
-är redan skeppade. De är inte nästa skiva.
+är redan skeppade. KEY-meningen på en natt är också skeppad. De är inte nästa
+skiva.
 
 Play Reporting API **2026-09-26** (färskhet t.o.m. 25 sep): inga krasch-rader
 och inga ANR-rader. Det är inte ett påhittat 0 %. Det blockerar inte innehåll.
@@ -32,9 +33,10 @@ och inga ANR-rader. Det är inte ett påhittat 0 %. Det blockerar inte innehåll
    och för spel uppladdad inom 90 dagar. Det är ditt Studio-steg, inte en ny
    feature.
 
-2. **KEY går att läsa på en natt** — What’s New-ledet för en främling stannar
-   *Your party fights on its own. Tap ENTER DUNGEON.* Senare bullet: *At
-   Lv100, KEY is one night’s job.* Fördjupa KEY. Lär inte ut KEY på dag ett.
+2. **KEY går att läsa på en natt** — skeppad i 1.12.187. What’s New-ledet
+   för en främling stannar *Your party fights on its own. Tap ENTER DUNGEON.*
+   Senare bullet: *At Lv100, KEY is one night’s job.* TODAY säger klockan.
+   Lär inte ut KEY på dag ett.
 
 Slack för analyze finns i båda släppen. Ingen tredje feature och ingen ny
 daily i det här fönstret.

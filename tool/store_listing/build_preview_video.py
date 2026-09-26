@@ -29,37 +29,39 @@ MUSIC = ROOT / "assets" / "custom" / "audio" / "music" / "hub.ogg"
 # are absent, tracked marketing cards keep the builder reproducible.
 # duration, gameplay, fallback still, caption, source trim start
 # Play Help: show the fight in the first 10s (muted autoplay).
+# Visible time sums to 30s. Gameplay beats are 24s (~80% real play).
+# Combat raw is the Sandy crawl; its first 10s stay the opening.
 BEATS: list[tuple[float, str | None, str, str, float]] = [
     (
-        10.0,
+        14.0,
         "preview/gameplay_combat_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "Your party keeps fighting",
         0.6,
     ),
     (
-        5.0,
+        3.0,
         None,
         "marketing/07_afk_progress_1080x1920.png",
         "Progress while you're away",
         0.0,
     ),
     (
-        4.0,
+        4.4,
         "preview/gameplay_hub_raw.mp4",
         "marketing/02_todays_chase_1080x1920.png",
         "Always know today's chase",
         0.0,
     ),
     (
-        5.0,
+        5.6,
         "preview/gameplay_gear_raw.mp4",
         "marketing/05_build_party_1080x1920.png",
         "Build and equip your party",
         0.0,
     ),
     (
-        6.0,
+        3.0,
         None,
         "marketing/01_feature_graphic_1024x500.png",
         "Idle Party",

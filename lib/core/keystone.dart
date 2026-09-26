@@ -265,6 +265,21 @@ abstract final class Keystone {
     return null;
   }
 
+  /// One sentence: tonight's KEY, one twist, and the clock. Not the +1…+20 ladder.
+  static String nightJobLine({
+    required int key,
+    required List<String> affixes,
+    required String clock,
+  }) {
+    final night = "Tonight's KEY +$key";
+    if (affixes.isEmpty) return '$night, clock $clock.';
+    final twist = blurb(affixes.first);
+    final words = twist.isEmpty
+        ? twist
+        : '${twist[0].toLowerCase()}${twist.substring(1)}';
+    return '$night: $words, clock $clock.';
+  }
+
   static String formatTimer(int ms) {
     final totalSec = max(0, ms) ~/ 1000;
     final m = totalSec ~/ 60;

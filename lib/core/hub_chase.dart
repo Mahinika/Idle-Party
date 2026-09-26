@@ -125,7 +125,10 @@ class HubChase {
     if (!firstHourQuiet && GameLogic.canClaimDailyVault(state)) {
       final best = md.dailyBestTimedKey;
       final plain = GameLogic.plainPlayerChrome(state);
-      final preview = GameLogic.dailyVaultClaimPreviewEssence(state, now: clock);
+      final preview = GameLogic.dailyVaultClaimPreviewEssence(
+        state,
+        now: clock,
+      );
       final pay = plain ? '+$preview essence' : '+${preview}e essence';
       final month = GameLogic.isoMonthKey(clock);
       final monthBonus =
@@ -678,32 +681,20 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.keystone,
       title: firstKey ? 'Run KEY +1' : 'Time KEY +$target',
-      detail: _keyPhoneDetail(state, target, firstKey: firstKey),
+      detail: _keyPhoneDetail(state, target),
       progressLabel: 'KEY +$target',
       keyLevel: target,
       zoneId: GameLogic.recommendedDungeonId(state),
     );
   }
 
-  /// Compact phone line: KEY +N · +iLvl · affixes · par.
-  static String _keyPhoneDetail(
-    GameState state,
-    int key, {
-    bool firstKey = false,
-  }) {
-    final ilvl = Keystone.lootItemLevelBonus(key);
+  /// One sentence on TODAY once the party is Lv100.
+  static String _keyPhoneDetail(GameState state, int key) {
     final affixes = Keystone.previewAffixesForKey(state, key);
-    final affixBit = affixes.isEmpty
-        ? 'no affixes'
-        : affixes.map(Keystone.label).join(' · ');
     final par = Keystone.formatTimer(
       Keystone.parTimeMs(bossFloor: GameLogic.bossFloorFor(state), key: key),
     );
-    final lead = firstKey ? 'ENTER sets KEY +1 · +$ilvl iLvl' : '+$ilvl iLvl';
-    final hint = Keystone.rosterHintForAffixes(affixes);
-    final base = '$lead · $affixBit · par $par';
-    if (hint == null) return base;
-    return '$base · $hint';
+    return Keystone.nightJobLine(key: key, affixes: affixes, clock: par);
   }
 
   static String _weekRhythmPrefix(GameState state, DateTime clock) {
