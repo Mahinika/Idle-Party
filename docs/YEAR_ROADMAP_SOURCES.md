@@ -1,8 +1,8 @@
 # Idle Party — year roadmap sources
 **Pass:** 2026-09-26
-**Counts:** A=28 B=47 C=25 (must sum to 100)
+**Counts:** A=23 B=54 C=23 (sum 100)
 
-Brief note: mirrors excluded (`?hl=`, same PDF on two hosts); mandate vetoes whale/gacha/iOS/second-sim advice (grade C or EP stop in claim). No invented Play Console percentages.
+Brief note: pass corrected 2026-09-26. Repo paths and mirrors (same report or PDF on another host, `?hl=`) are not rows. Studio docs are read by the skill, not counted here. Mandate vetoes whale/gacha/iOS/second-sim advice. No invented Play Console percentages.
 
 | # | Grade | Seen | URL | One-sentence claim |
 |---|-------|------|-----|-------------------|
@@ -25,15 +25,10 @@ Brief note: mirrors excluded (`?hl=`, same PDF on two hosts); mandate vetoes wha
 | 17 | A | 2026-09-26 | https://www.kongregate.com/en/pages/the-math-of-idle-games-part-i | Pecorella: idle core math — exponential costs vs polynomial production and bulk-buy formulas. |
 | 18 | A | 2026-09-26 | https://www.kongregate.com/en/pages/the-math-of-idle-games-part-ii | Pecorella Part II: derivative/generator-chain growth as an alternative idle curve model. |
 | 19 | A | 2026-09-26 | https://www.kongregate.com/en/pages/the-math-of-idle-games-part-iii | Pecorella Part III: prestige reset purpose, currency shaping, and “bumpy” prestige cadence. |
-| 20 | A | 2026-09-26 | docs/GROWTH_MANDATE.md | Idle Party mandate: fairness-first, cheap SHOP, Play-primary portrait Android — vetoes whale/gacha plans. |
-| 21 | A | 2026-09-26 | docs/CONTENT_CADENCE.md | Studio cadence contract for how often player-visible content should land. |
-| 22 | A | 2026-09-26 | docs/CHASE_CONTRACT.md | TODAY chase / hunt order contract (KEY → Gauntlet → Rift → GR → Ashen). |
-| 23 | A | 2026-09-26 | docs/PLAY_GROWTH.md | Studio Play-growth notes: installs via Play, listing honesty, no GitHub Releases as player path. |
-| 24 | A | 2026-09-26 | docs/PLAY_STORE.md | Play distribution facts: package, update gate, rating ask — owner must ask before AAB upload. |
-| 25 | A | 2026-09-26 | docs/STORE_LISTING.md | Studio listing copy/screenshot honesty checklist aligned with Play policy. |
-| 26 | A | 2026-09-26 | docs/LEARNINGS.md | Studio learnings log: durable constraints that should beat recycled industry folklore. |
-| 27 | A | 2026-09-26 | docs/SHOP_MONETIZATION.md | Cheap SHOP lock: convenience/ad-free/QoL only — no BiS-for-cash / gacha ladder. |
-| 28 | A | 2026-09-26 | docs/PRIVACY.md | Privacy/Play Games/Firebase facts that constrain growth copy and store disclosures. |
+| 20 | A | 2026-09-26 | https://developer.android.com/google/play/vitals/excessive-wakelock | Android vitals: excessive partial wake locks above 5% of sessions can cut Play visibility. |
+| 21 | A | 2026-09-26 | https://developer.android.com/google/play/vitals/stuck-wakelock | Android vitals: a background wake lock held an hour counts as stuck and is a Play quality signal. |
+| 22 | A | 2026-09-26 | https://developer.android.com/google/play/vitals/bg-wifi | Android vitals: background Wi-Fi scans over 4 per hour are a battery bad-behavior signal. |
+| 23 | A | 2026-09-26 | https://support.google.com/googleplay/android-developer/answer/16386748 | Play Help: Asset Library is where listing, experiment, and event graphics stay one set. |
 | 29 | B | 2026-09-26 | https://ericguan.substack.com/p/idle-game-design-principles | Guan: layered reengagement “clocks” and exponential cost/production with diminishing returns. |
 | 30 | B | 2026-09-26 | https://news.melvoridle.com/melvor-idle-2-development-progress-update-june-2026/ | Melvor Idle 2 (Jun 2026): after a huge combat drop, return to smaller, more regular content additions. |
 | 31 | B | 2026-09-26 | https://news.melvoridle.com/melvor-idle-2-coming-soon/ | Melvor Idle 2 announcement: public monthly-ish progress posts + denser Patreon cadence. |
@@ -74,8 +69,8 @@ Brief note: mirrors excluded (`?hl=`, same PDF on two hosts); mandate vetoes wha
 | 66 | B | 2026-09-26 | https://www.producttalk.org/glossary-discovery-roadmap/ | Product Talk glossary: Now-Next-Later definition without locking features to dates. |
 | 67 | B | 2026-09-26 | https://www.gdcvault.com/play/1020101/Why-Players-are-Leaving-Your | GDC Vault deltaDNA talk: first minutes and engagement thresholds beyond vanity retention %. |
 | 68 | B | 2026-09-26 | https://support.google.com/googleplay/android-developer/answer/9859751 | Play Help publish/status model: listing experiments appear as updatable items in release status. |
-| 69 | B | 2026-09-26 | docs/FLOOR_BLUEPRINT.md | Studio floor/chamber blueprint: content depth before inventing new live-ops calendars. |
-| 70 | B | 2026-09-26 | docs/GEAR_BUDGET.md | Studio gear budget authority: fairness math for chase upgrades without cash BiS. |
+| 69 | B | 2026-09-26 | https://www.gamerefinery.com/first-impression-seals-the-deal-onboarding-best-practices-part-1/ | GameRefinery FTUE part 1: teach the fight in the first minutes; do not front-load the whole meta. |
+| 70 | B | 2026-09-26 | https://vthoerfabre.com/en/deconstructing-afk-arena/ | AFK Arena structure: when the campaign walls, other modes carry the session — not a gacha recipe. |
 | 71 | B | 2026-09-26 | https://www.reddit.com/r/MelvorIdle/comments/1lez93h/melvor_idle_2s_early_alpha_is_now_available_on/ | Melvor community post: Alpha via Patreon with 1–2 week dev notes (cadence example). |
 | 72 | B | 2026-09-26 | https://app2top.com/industry/the-longer-the-first-game-session-the-higher-the-retention-89989.html | Another deltaDNA first-session write-up (secondary; same axis as #46). |
 | 73 | B | 2026-09-26 | https://www.pocketgamer.biz/afk-arena-celebrates-seventh-anniversary-and-over-15bn-in-lifetime-earnings/ | AFK Arena longevity/revenue context — example of live RPG scale, not Idle Party monetization model. |
@@ -85,14 +80,14 @@ Brief note: mirrors excluded (`?hl=`, same PDF on two hosts); mandate vetoes wha
 | 77 | C | 2026-09-26 | https://business.mistplay.com/resources/mobile-game-retention-benchmarks | Mistplay “big list” recycling AppsFlyer Q3 2022 genre D1–D30 tables as evergreen advice. |
 | 78 | C | 2026-09-26 | https://splitmetrics.com/cases/pixel-federation-pre-launch-store-optimization/ | SplitMetrics case marketed as “25% conversion boost” — single case, not Idle Party baseline. |
 | 79 | C | 2026-09-26 | https://splitmetrics.com/blog/ab-testing/ | SplitMetrics ASO pitch page; prefer Play Help for experiment rules over vendor claims. |
-| 80 | C | 2026-09-26 | https://investgame.net/wp-content/uploads/2026/01/2026-01-27-2026-mobile-pc-benchmarks_compressed.pdf | InvestGame host of GA 2026 PDF — same report as #1; do not double-count as primary. |
-| 81 | C | 2026-09-26 | https://www.gamedeveloper.com/design/the-math-of-idle-games-part-i | GameDeveloper republication of Kongregate Part I — mirror of #17. |
-| 82 | C | 2026-09-26 | https://www.gamedeveloper.com/design/the-math-of-idle-games-part-iii | GameDeveloper republication of Kongregate Part III — mirror of #19. |
-| 83 | C | 2026-09-26 | https://www.researchgate.net/publication/365003534_Daily_Quests_or_Daily_Pests_The_Benefits_and_Pitfalls_of_Engagement_Rewards_in_Games | ResearchGate copy of Frommel paper — same work as #16 PDF. |
+| 80 | C | 2026-09-26 | https://www.martechcube.com/splitmetrics-research-app-icon-optimisation-lands-up-to-25-more-users/ | SplitMetrics press claim of up to 25% more users — vendor ceiling, not an Idle Party target. |
+| 81 | C | 2026-09-26 | https://cookieclickeronline.com/how-to-build-a-live-service-game-roadmap-that-actually-drives-dau/ | Live-ops calendar that schedules battle passes and collabs — EP stop for this SHOP. |
+| 82 | C | 2026-09-26 | https://www.businesswire.com/news/home/20220223005183/en/AppsFlyer-Report-Finds-Gaming-Apps-Spent-%2414.5-Billion-on-User-Acquisition-in-2021-as-10-of-Budgets-Shifted-From-iOS-to-Android | AppsFlyer 2022 UA-spend release — four years old, not a 2026 retention target. |
+| 83 | C | 2026-09-26 | https://alexandremacmillan.com/2019/06/13/idle-mechanics-and-monetizing-progession-in-afk-arena/ | AFK Arena VIP and gacha-timed offers — mandate stop, structure only lives on other rows. |
 | 84 | C | 2026-09-26 | https://www.appsflyer.com/zh-hans/infograms/attention-retention-benchmarks-report-2022/ | AppsFlyer 2022 retention benchmarks still circulated as if current. |
 | 85 | C | 2026-09-26 | https://gamedevreports.substack.com/p/appsflyer-d30-retention-in-games | 2022 AppsFlyer D30 decline digest still reused in 2026 planning threads. |
 | 86 | C | 2026-09-26 | https://app2top.com/analytics/appsflyer-in-two-years-the-retention-of-30-days-in-games-has-fallen-by-20-204417.html | App2top 2022 AppsFlyer summary — aged genre/retention folklore. |
-| 87 | C | 2026-09-26 | https://demo-1.adjust.com/blog/what-is-live-ops/ | Adjust live-ops mirror/demo host pushing timed events/monetization calendars. |
+| 87 | C | 2026-09-26 | https://www.businessofapps.com/marketplace/app-store-optimization/research/app-store-optimization-case-studies/ | ASO case-study roundup of icon lifts — anecdotes, not a listing promise. |
 | 88 | C | 2026-09-26 | https://demo-1.adjust.com/blog/gacha-mechanics-for-mobile-games-explained/ | Adjust gacha design guide — EP hard stop for Idle Party. |
 | 89 | C | 2026-09-26 | https://medium.com/udonis/afk-arena-monetization-strategy-how-does-it-earn-the-big-bucks-8d2f42f67761 | AFK Arena monetization/whale write-up — mandate veto. |
 | 90 | C | 2026-09-26 | https://www.pocketgamer.biz/behind-the-scenes-how-adding-sandwich-offers-to-an-idle-merge-game-boosted-three-metrics-at-once/ | Gold & Goblins sandwich-offer monetization tactics — not cheap-SHOP aligned. |
@@ -104,8 +99,13 @@ Brief note: mirrors excluded (`?hl=`, same PDF on two hosts); mandate vetoes wha
 | 96 | C | 2026-09-26 | https://gameindustrylibrary.com/documents/mobile-pc-gaming-benchmarks-2026 | Third-party host of GA 2026 benchmarks — not the primary GameAnalytics page. |
 | 97 | C | 2026-09-26 | https://solana.garden/guides/game-idle-game-design-explained/ | SEO idle-design explainer recycling prestige tropes without primary research. |
 | 98 | C | 2026-09-26 | https://www.casestudies.com/company/splitmetrics/case-study/how-splitmetrics-agency-boosted-vibers-google-play-performance-with-optimized-screenshots | Case-study scraper of SplitMetrics Viber numbers — not a primary for Idle Party Nu. |
-| 99 | C | 2026-09-26 | https://investgame.net/news/pdf/2026-01-27-2026-mobile-pc-benchmarks_compressed/ | InvestGame HTML wrapper of the same GA 2026 PDF already listed. |
-| 100 | C | 2026-09-26 | https://ko.mistplay.com/resources/mobile-game-retention-benchmarks | Locale Mistplay mirror of the AppsFlyer-2022 retention list (#77). |
+| 99 | B | 2026-09-26 | https://www.prodpad.com/glossary/now-next-later-roadmap/ | ProdPad: Now / Next / Later is confidence, not a dated feature list. |
+| 100 | B | 2026-09-26 | https://www.avion.io/blog/now-next-later-roadmaps/ | Avion: Later stays a theme; only Now is specific enough to build. |
+| 101 | B | 2026-09-26 | https://news.melvoridle.com/what-weve-been-up-to-with-melvor-idle-2/ | Melvor Idle 2: smaller regular drops after a long combat package. |
+| 102 | B | 2026-09-26 | https://forum.cursor.com/t/how-to-use-agent-skills-in-cursor-ide/149860 | Cursor forum: a skill loads from its description, or from /skill-name. |
+| 103 | B | 2026-09-26 | https://forum.cursor.com/t/subagents-do-not-receive-user-rules/148987 | Cursor forum: a research subagent does not inherit user rules. |
+| 104 | B | 2026-09-26 | https://forum.cursor.com/t/cursor-2-4-subagents/149403 | Cursor forum: subagents keep long source lists out of the main chat. |
+| 105 | B | 2026-09-26 | https://partner.steamgames.com/doc/store/earlyaccess | Steam Early Access: publish the next milestones, not a locked year of feature names. |
 
 ### Notes for the year-plan author
 - Prefer **A** for Nu reorder; **B** only under *Om du namnger det*; list **C** so they are not reused.

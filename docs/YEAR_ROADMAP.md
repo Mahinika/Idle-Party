@@ -13,20 +13,15 @@ Inga numeriska D1/D7-mål medan Console-n är litet (paste 2026-09-14).
 
 ## Nu (6–8 veckor)
 
-Tre släpp à 2–3 veckor. En What’s New-mening per släpp. Slack för krasch
-och analyze. Vitals röda → innehåll väntar.
+Jämfört med What’s New t.o.m. **1.12.186**. Krypet, ENTER, nästa våning efter första clear, en TODAY-jakt och offline Up next är redan skeppade. De är inte nästa skiva.
 
-1. **Krypet syns för en främling** — What’s New: *Party fights in the cave;
-   tap ENTER.* Listing shots 1–2 och ikon visar live crawl (Art + Marketing
-   veto om de ljuger). Inget listing-A/B förrän trafiken räcker.
+Play Reporting API **2026-09-26** (färskhet t.o.m. 25 sep): inga krasch-rader och inga ANR-rader. Det är inte ett påhittat 0 %. Det blockerar inte innehåll.
 
-2. **En TODAY-jakt utan checklista** — What’s New: *One clear job on the hub
-   today.* Frommel: dagliga måsten får inte bli FOMO eller jobb. En jakt.
-   Missad dag straffas inte.
+1. **Preview-videon visar krypet** — What’s New ändras inte. Live-listningen pekar fortfarande på `OMWXbgGBFMA` (`PLAY_STORE.md`). Första 10 sekunderna ska vara crawlen. Det är ägarens YouTube-steg, inte en ny feature.
 
-3. **KEY känns som nästa natt** — What’s New: *KEY nights stay the endgame
-   habit.* Fördjupa KEY innan nya lägen. Pecorella: trimma klockor och
-   prestige-känsla inuti Ascend / valv / KEY — ingen sjätte jakt.
+2. **KEY går att läsa på en natt** — What’s New-ledet för en främling stannar *Your party fights on its own. Tap ENTER DUNGEON.* Senare bullet: *At Lv100, KEY is one night’s job.* Fördjupa KEY. Lär inte ut KEY på dag ett.
+
+Slack för analyze finns i båda släppen. Ingen tredje feature i det här fönstret.
 
 ---
 
@@ -34,9 +29,7 @@ och analyze. Vitals röda → innehåll väntar.
 
 Teman och spelarproblem. Inga låsta feature-namn.
 
-- **Morgondagen** — spelaren vet varför de öppnar spelet dag 2–7 (Daily vault
-  / en jakt). Median session ~3–3,5 min (GameAnalytics 2025) — korta, ärliga
-  loopar.
+- **Morgondagen** — routing för en jakt och offline Up next är redan i What’s New. Temat som är kvar: dag 2–7 känns fortfarande som ett jobb, inte en ny checklista. Median session ~3–3,5 min (GameAnalytics 2025).
 - **När ett läge tar stopp** — Gauntlet → Farm Rift → Ranked GR → Ashen i
   chase-ordning (`CHASE_CONTRACT.md`). Parallella lägen som i AFK-struktur,
   utan gacha/VIP.
@@ -95,7 +88,7 @@ Obokade exempel (A/B). Varje rad: vad · varför · var · veto.
 - ≤90 s till combat som hard lock (guidning bara)
 - Listing-A/B med ~9–39 besökare (Console 2026-09-14)
 - AL20 hub-polish “för att planen sa så”
-- User-perceived crash ≥1,09 % eller ANR ≥0,47 % (28 dagar) — content väntar
+- User-perceived crash ≥1,09 % eller ANR ≥0,47 % (28 dagar) — content väntar. API-kollen 2026-09-26 var inte röd.
 
 ---
 
