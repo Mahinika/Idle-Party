@@ -21,20 +21,16 @@ Studios that chase top-grossing charts often run a **whale ladder**:
 - A visible `$99` **anchor** makes a `$9.99` mid pack feel “reasonable.”
 - Heavy **user-acquisition** spend needs fast payback from whoever will pay.
 
-Idle Party does **not** need that model: fairness-first, no PvP paywall, small
-Alpha / GitHub installs first. Prefer many **cheap** convenience buys over few
-expensive power packs.
+Idle Party’s current catalog is cheap convenience. Owner **2026-09-26**
+removed the ban on a whale ladder, gacha, and BiS-for-cash.
 
 ## Idle Party principles
 
-1. **Same power as F2P can already get** — paid Full Boost time matches POWERUPS
-   ticket buffs (`×2` gold + `+40%` ATK). Buyers skip watching; they do not unlock
-   a stronger combat class.
-2. **Cheap ladder** — v1 ceiling **`$4.99`**. No `$49`/`$99` whale packs.
-   Larger packs beat smaller ones on $/hour.
-3. **No gacha / loot boxes** for real money.
-4. **No BiS gear, kit unlocks, or zone skips** for cash.
-5. **Clear IA:** GOLD = gold buys · ESSENCE = essence buys · SHOP = real money ·
+1. **Current Full Boost** matches POWERUPS ticket buffs (`×2` gold + `+40%` ATK)
+   unless the owner names a stronger paid offer.
+2. **Paid power is allowed** when the owner names it, including packs above
+   `$4.99`, gacha, and gear that free play cannot earn.
+3. **Clear IA:** GOLD = gold buys · ESSENCE = essence buys · SHOP = real money ·
    hub SCROLLS = optional ads → Ad Tickets → same scrolls.
 
 **Dev take-home:** Play Billing ~**15%** under $1M/yr (EEA/US/UK: 10% service +

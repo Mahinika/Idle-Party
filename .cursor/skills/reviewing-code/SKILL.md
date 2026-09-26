@@ -40,7 +40,7 @@ If the diff belongs to a domain skill, follow it for that slice:
 
 ## 2. Must fix (block merge)
 
-- **Combat**: live + in-dungeon AFK through SpatialCombat; no second sim
+- **Combat**: live + in-dungeon AFK through SpatialCombat unless the owner asked for another sim
 - **State**: GameLogic `copyWith`; no silent Ascend field drops
 - **Save**: new fields have fromJson defaults + test (`save-migrate`)
 - **Assets**: Kenney/custom via helpers; `FilterQuality.none`; no dumps
@@ -49,7 +49,7 @@ If the diff belongs to a domain skill, follow it for that slice:
 - **Honesty**: English in-game copy matches reality
 - **Chrome**: prefer shared `MenuRouter` + `MenuSurface` + `AppBottomBar` when it fits; flat nav / hide-until-unlock are not hard review blocks
 - **Tests**: new GameLogic / hub / chase / guides branches have matching tests using `GameDirector.preview()`
-- **Locks**: hard product locks only (no iOS/web-as-product, gacha / BiS-for-cash, GitHub Releases as install path)
+- **Locks**: remaining hard locks only (Legal / IP, no foreign dumps, portrait Android, English UI, Play install path, AAB ask). Gacha and a second sim are not review blocks.
 
 ## 3. Should fix
 

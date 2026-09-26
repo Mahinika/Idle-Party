@@ -31,8 +31,7 @@ Teman och spelarproblem. Inga låsta feature-namn.
 
 - **Morgondagen** — routing för en jakt och offline Up next är redan i What’s New. Temat som är kvar: dag 2–7 känns fortfarande som ett jobb, inte en ny checklista. Median session ~3–3,5 min (GameAnalytics 2025).
 - **När ett läge tar stopp** — Gauntlet → Farm Rift → Ranked GR → Ashen i
-  chase-ordning (`CHASE_CONTRACT.md`). Parallella lägen som i AFK-struktur,
-  utan gacha/VIP.
+  chase-ordning (`CHASE_CONTRACT.md`). Parallella lägen som i AFK-struktur.
 - **Listing när trafiken finns** — ikon och shots 1–2, en sak i taget, minst
   en vecka (Play Help). Inte “upp till 25 %”.
 - **Cadence håller** — synlig skiva var 2–3 veckor; idle-marknaden uppdaterar
@@ -80,15 +79,15 @@ Obokade exempel (A/B). Varje rad: vad · varför · var · veto.
 
 ## Stoppas
 
-- iOS, web-as-product, GitHub Releases som spelarfälla
-- Gacha / BiS-for-cash / whale / battle-pass-kalender som default
-- Andra fight-sim; god-object som kvartalets story
+Det här är spärrar från researchen, inte från dina lås.
+
 - Genre-tabeller “idle D1 35–50 %” och återpublicerad AppsFlyer 2022 som mål
 - “Upp till 25 % fler installs” som löfte
-- ≤90 s till combat som hard lock (guidning bara)
 - Listing-A/B med ~9–39 besökare (Console 2026-09-14)
-- AL20 hub-polish “för att planen sa så”
+- Battle-pass-kalender som default
 - User-perceived crash ≥1,09 % eller ANR ≥0,47 % (28 dagar) — content väntar. API-kollen 2026-09-26 var inte röd.
+
+iOS, GitHub Releases som installväg, och Play-uppladdning utan att du ber om den står kvar i produktlåsen.
 
 ---
 

@@ -41,11 +41,12 @@ early and hide chrome until it matters when it does not fight the named goal.
 
 ## Stop doing
 
-- AL20 hub-chase / wipe polish “because a list said so”
-- Second combat sim; gacha / BiS-for-cash / whale ladder
-- God-object refactors as the quarter’s story
 - iOS / web-as-product / GitHub Releases as a player funnel
 - Inventing numbered “Program N” roadmaps unless the owner asks for one
+
+Owner **2026-09-26** removed these stops: AL20 polish as a forbidden default,
+a second fight sim, gacha / BiS-for-cash / whale, and god-object work as
+something the quarter may not be.
 
 ## Year roadmap (owner ask only)
 

@@ -168,6 +168,8 @@ match this doc.
 
 ## Out of scope (v1)
 
+This list is the ad-powerups cut, not a repo-wide ban. Owner 2026-09-26 lifted the gacha / whale stop.
+
 - Dungeon floating icon
 - Daily ad impression hard cap
 - Extra currencies / gacha / random buff chests

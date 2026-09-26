@@ -2,7 +2,7 @@
 **Pass:** 2026-09-26
 **Counts:** A=23 B=54 C=23 (sum 100)
 
-Brief note: pass corrected 2026-09-26. Repo paths and mirrors (same report or PDF on another host, `?hl=`) are not rows. Studio docs are read by the skill, not counted here. Mandate vetoes whale/gacha/iOS/second-sim advice. No invented Play Console percentages.
+Brief note: pass corrected 2026-09-26. Repo paths and mirrors are not rows. Studio docs are read by the skill, not counted here. Legal / IP and no foreign dumps still veto dump advice. Gacha and a second sim are not automatic stops. No invented Play Console percentages.
 
 | # | Grade | Seen | URL | One-sentence claim |
 |---|-------|------|-----|-------------------|
@@ -110,4 +110,4 @@ Brief note: pass corrected 2026-09-26. Repo paths and mirrors (same report or PD
 ### Notes for the year-plan author
 - Prefer **A** for Nu reorder; **B** only under *Om du namnger det*; list **C** so they are not reused.
 - Do not invent Play Console percentages; GA medians are market context only.
-- Mandate wins: whale ladders, gacha, iOS product, second combat sim → stop even if a B/C source loves them.
+- Legal / IP and no foreign dumps still stop dump advice. Gacha and a second sim do not.

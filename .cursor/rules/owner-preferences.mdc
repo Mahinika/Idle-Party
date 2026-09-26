@@ -10,15 +10,15 @@ alwaysApply: true
 Source: owner (vibe-coder). Last sync: **2026-09-15**.
 Locks: `.cursor/rules/product-locks.mdc`. Mandate: `docs/GROWTH_MANDATE.md`.
 
-**Now:** no standing program. Owner names the work. **Never Play AAB without owner ask.** AL20 is a quality gate, not the batch: those notes block ship only when endgame is broken, and they do not pick the next feature.
+**Now:** no standing program. Owner names the work. **Never Play AAB without owner ask.** AL20 polish is allowed when they name it.
 
 ## Default work (when goal is vague)
 
 Ask once what to do. Do not invent a numbered program. Prefer deepening KEY,
 Gauntlet, Rift, Greater Rift, and Ashen when they say “mer endgame” unless
 they name new content. Monthly Craft Trial (MORE → CRAFT) is not a sixth
-ENDGAME hunt. Not default: hub-chase polish, `/init`, repo cleanup,
-god-object refactors, iOS. GEAR / endgame copy only if play notes say they lie.
+ENDGAME hunt. Not default: `/init`, repo cleanup, iOS. GEAR / endgame
+copy only if play notes say they lie.
 
 **Play notes:** a **new save** is the usual batch signal.
 
@@ -53,8 +53,8 @@ god-object refactors, iOS. GEAR / endgame copy only if play notes say they lie.
 
 | Decide alone | Never |
 |--------------|--------|
-| Skills, files, analyze/tests, splits, dead non-save code | Weaken hard locks in `product-locks` |
-| New zone / class / God Hand direction / scaled UA / IAP convenience within cheap-SHOP lock | Invent a second combat sim; gacha / BiS-for-cash |
+| Skills, files, analyze/tests, splits, dead non-save code | Weaken Legal / IP or Cursor safety |
+| New zone / class / God Hand direction / scaled UA / IAP, a second sim, or gacha when they name it | Invent a numbered program they did not ask for |
 | Commit, push, PR, tag when green | Force-push; skip hooks; point players at GitHub Releases; **upload Play AAB without owner ask** |
 | A56 look / hub smoke; listing docs; wipe test save if needed; Console paste | |
 

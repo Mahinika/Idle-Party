@@ -44,6 +44,14 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   **2026-09-12…14** (Play D1 still not readable). History only — not a
   standing program. Do not restore AL20 as the batch (`GROWTH_MANDATE.md`).
 
+## 2026-09-26 — owner removed their design stops
+
+- Owner: ta bort spärrarna de själva satt. Lifted in living rules: one-sim ban,
+  gacha / BiS-for-cash / whale ban, god-object quarter ban, AL20 polish as a
+  forbidden default. Legal / IP, no foreign dumps, no exploits, English UI,
+  portrait Android, Play as the install path, and AAB-only-when-asked stay.
+  DPS **HIGH** still fails CI.
+
 ## 2026-09-26 — year roadmap on ask only
 
 - Owner can say **Uppdatera 1års roadmap**. Skill

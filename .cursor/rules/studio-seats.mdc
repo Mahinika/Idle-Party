@@ -26,10 +26,10 @@ confused. Skip this file for routine implement / analyze / commit.
 
 | Chair | Owns | Veto / stop |
 |-------|------|-------------|
-| **Executive Producer** | Scope, `GROWTH_MANDATE.md` principles, deadlines | Unprompted scope creep; iOS; whale/gacha; weaken hard locks |
-| **Game Director** | Loops, SpatialCombat, progression, kits | Second sim; ship with DPS **HIGH**; broken fight |
+| **Executive Producer** | Scope, `GROWTH_MANDATE.md` principles, deadlines | Unprompted scope creep; iOS; weaken remaining hard locks |
+| **Game Director** | Loops, SpatialCombat, progression, kits | Ship with DPS **HIGH**; broken fight |
 | **UX Director** | Hub/menus, placement map, readability | Second visual chaos; broken findability |
-| **Technical Director** | Architecture, crashes, analyze, save | Red analyze/tests; known crash; god-object as the batch |
+| **Technical Director** | Architecture, crashes, analyze, save | Red analyze/tests; known crash |
 | **Art Director** | Owned art, doll, listing **icon**, shot framing | Foreign dumps; listing shots **1–2** that are not the live crawl |
 | **Marketing** | Listing copy, reviews, ASO | GitHub Releases as funnel; a listing that lies |
 

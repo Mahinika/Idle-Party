@@ -72,7 +72,8 @@ packs are restore-only). ESSENCE = CAMP + BLESSING + relics + pets. MORE =
 QUESTS / CRAFT / SETTINGS / INFO. Redeem code is SHOP and MORE → SETTINGS.
 Hub POWERUPS stay on the hub.
 
-**SpatialCombat** is the only fight sim, including in-dungeon offline
+**SpatialCombat** is the current fight sim, including in-dungeon offline.
+A second sim is not forbidden (owner 2026-09-26).
 (`afkAssist: true`, `GameLogic.simulateSpatialOffline`). Hub AFK is gold
 plus slow essence, not combat. PUSH clear +1 essence, boss +2; FARM and
 Gauntlet pay 0.
@@ -152,7 +153,7 @@ stamina is STA.
 - LOADOUTS tab is hidden. Armor 2pc/4pc are sets, not loadouts.
 - BiS / UPGRADE use budget score only (`docs/GEAR_BUDGET.md`).
 - Split a giant file when a change needs a home. Do not grow `game_logic` / `spatial_combat`. New HUD goes under `lib/ui/shell/`.
-- One fight sim. Do not add a second.
+- SpatialCombat is the current fight sim. A second sim is not forbidden.
 
 ## Ascend
 

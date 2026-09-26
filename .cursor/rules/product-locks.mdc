@@ -8,7 +8,10 @@ alwaysApply: true
 
 **Confirmed:** 2026-09-12. Soft content locks and ask-first for zone / class /
 God Hand / UA / git push / wipe-save removed **2026-09-14** by owner.
-**Google Play AAB upload still requires owner ask** (same day).
+**2026-09-26:** owner removed the design stops they had set — one fight sim,
+no gacha / BiS-for-cash / whale, god-object as the quarter’s story, and
+AL20 polish as a forbidden default. **Google Play AAB upload still requires
+owner ask.**
 
 ## Hard (never weaken from this file)
 
@@ -18,8 +21,8 @@ God Hand / UA / git push / wipe-save removed **2026-09-14** by owner.
 | Phone product | Portrait Android; no iOS / web-as-product |
 | English UI | In-game copy English; chat with owner in their language |
 | Fairness first | Live-light DPS gate / ±20% share — trim HIGH kits |
-| SpatialCombat | One fight sim; extract helpers, don’t add a second |
-| Cheap SHOP | Convenience boosts / ad-free / small QoL — no gacha / BiS-for-cash |
+| SpatialCombat | Current fight sim. A second sim is not forbidden |
+| SHOP | Not limited to convenience / ad-free. Gacha, BiS-for-cash, and whale packs are not forbidden |
 | Play primary | Install via Play; do not point players at GitHub Releases |
 | Play upload | Never upload AAB / publish without owner ask that turn |
 | Cursor safety | No exploits / foreign dumps — not overridable here |

@@ -46,10 +46,10 @@ the goal needs them.
 
 ## Non-goals (unless the batch needs them)
 
-- SpatialCombat rewrite
 - iOS or web-as-product
-- Gacha / whale ladder
-- God-object cleanup as the quarter’s story
+
+A second fight sim, gacha / whale packs, and a god-object quarter are allowed
+when the owner names them (2026-09-26).
 
 ## Checklist before tagging
 

@@ -19,7 +19,7 @@ Reserve slash if the phrase is missed: `/year-roadmap`.
 
 - Vague “vad härnäst” / “gör bättre” → ask once; do not invent a numbered plan
 - Routine implement, analyze, commit, or Play upload
-- Restoring AL20 hub polish “because the year plan said so”
+- Restoring a standing program when the owner did not ask for the year plan
 
 ## Steps
 
@@ -45,7 +45,8 @@ Reserve slash if the phrase is missed: `/year-roadmap`.
    - **B** — examples under *Om du namnger det* only
    - **C** — list so they are not reused (Playio, recycled AppsFlyer 2022,
      “up to 25%”, battle-pass calendars)
-   - Mandate wins if an A-source pushes whale, gacha, iOS, or a second fight sim
+   - Remaining hard locks still win (Legal / IP, no exploits, no foreign dumps).
+     Gacha, a second sim, and a god-object quarter are not automatic stops.
 
 4. **Rewrite** `docs/YEAR_ROADMAP.md` in Swedish. Game terms stay English
    (KEY, Gauntlet, Ranked GR, Farm Rift, Ashen Crown). No invented Console %.
@@ -75,6 +76,5 @@ the owner names them.
 
 - Three horizons, not four equal quarters
 - No numeric D1/D7 targets while Console n is tiny
-- Do not restore ≤90 s as a hard lock
 - Listing A/B waits for real traffic
 - Same chat never starts the Nu build
