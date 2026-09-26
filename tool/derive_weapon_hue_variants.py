@@ -14,6 +14,8 @@ ROOT = REPO / "assets" / "custom" / "char" / "gear"
 AUTH = ROOT / "_authored"
 
 # (new_id, source_id, hue_fn_name)
+# Flat ImageDraw stubs use the same recipe: keep the painted t0 alpha,
+# shift hue. Do not invent a second silhouette.
 VARIANTS: list[tuple[str, str, str]] = [
     ("sword_emberfang", "sword_t0", "ember"),
     ("staff_voidspire", "staff_t0", "void"),
@@ -23,7 +25,23 @@ VARIANTS: list[tuple[str, str, str]] = [
     ("dagger_venomkiss", "dagger_t0", "venom"),
     ("shield_frostwall", "shield_t0", "frost"),
     ("frill_embercodex", "frill_t0", "ember"),
+    ("sword_thunderfury", "sword_t0", "storm"),
+    ("sword_warglaive", "sword_t0", "fel"),
+    ("sword_runebound", "sword_t0", "rune"),
+    ("axe_bloodhowl", "axe_t0", "blood"),
+    ("axe_goreblade", "axe_t0", "gore"),
+    ("mace_dawnbreak", "mace_t0", "dawn"),
+    ("dagger_shadowfang", "dagger_t0", "shadow"),
+    ("dagger_nightbite", "dagger_t0", "night"),
+    ("staff_frostfire", "staff_t0", "frost"),
+    ("staff_nethercore", "staff_t0", "void"),
+    ("bow_eagle", "bow_t0", "eagle"),
+    ("bow_windpierce", "bow_t0", "wind"),
+    ("shield_ironwall", "shield_t0", "iron"),
 ]
+
+# Already painted in the plate language. A hue pass would flatten them.
+SKIP_WRITE = {"mace_lightbringer", "shield_aegis"}
 
 
 def recolor(im: Image.Image, mode: str) -> Image.Image:
@@ -69,6 +87,46 @@ def recolor(im: Image.Image, mode: str) -> Image.Image:
                 nr = int(40 + lum * 120)
                 ng = int(70 + lum * 165)
                 nb = int(95 + lum * 160)
+            elif mode == "fel":
+                nr = int(36 + lum * 120)
+                ng = int(88 + lum * 160)
+                nb = int(28 + lum * 55)
+            elif mode == "rune":
+                nr = int(64 + lum * 130)
+                ng = int(28 + lum * 55)
+                nb = int(100 + lum * 140)
+            elif mode == "blood":
+                nr = int(48 + lum * 190)
+                ng = int(12 + lum * 36)
+                nb = int(16 + lum * 32)
+            elif mode == "gore":
+                nr = int(96 + lum * 150)
+                ng = int(22 + lum * 48)
+                nb = int(18 + lum * 28)
+            elif mode == "dawn":
+                nr = int(88 + lum * 160)
+                ng = int(58 + lum * 140)
+                nb = int(16 + lum * 42)
+            elif mode == "shadow":
+                nr = int(24 + lum * 60)
+                ng = int(16 + lum * 36)
+                nb = int(42 + lum * 80)
+            elif mode == "night":
+                nr = int(18 + lum * 50)
+                ng = int(72 + lum * 140)
+                nb = int(88 + lum * 130)
+            elif mode == "eagle":
+                nr = int(28 + lum * 70)
+                ng = int(58 + lum * 130)
+                nb = int(96 + lum * 145)
+            elif mode == "wind":
+                nr = int(48 + lum * 130)
+                ng = int(86 + lum * 145)
+                nb = int(108 + lum * 140)
+            elif mode == "iron":
+                nr = int(36 + lum * 145)
+                ng = int(40 + lum * 150)
+                nb = int(48 + lum * 155)
             else:
                 nr, ng, nb = r, g, b
             px[x, y] = (
@@ -80,37 +138,55 @@ def recolor(im: Image.Image, mode: str) -> Image.Image:
     return out
 
 
-def icon_crop(im: Image.Image) -> Image.Image:
-    bb = im.getbbox()
-    if not bb:
-        return Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-    cropped = im.crop(bb)
-    # Pad to square then resize to 32 for BAG.
-    w, h = cropped.size
-    side = max(w, h)
-    square = Image.new("RGBA", (side, side), (0, 0, 0, 0))
-    square.paste(cropped, ((side - w) // 2, (side - h) // 2), cropped)
-    return square.resize((32, 32), Image.Resampling.NEAREST)
+# ImageDraw stubs. Everything else in VARIANTS is already a painted recolor.
+FLAT_IDS = {
+    "sword_thunderfury",
+    "sword_warglaive",
+    "sword_runebound",
+    "axe_bloodhowl",
+    "axe_goreblade",
+    "mace_dawnbreak",
+    "dagger_shadowfang",
+    "dagger_nightbite",
+    "staff_frostfire",
+    "staff_nethercore",
+    "bow_eagle",
+    "bow_windpierce",
+    "shield_ironwall",
+}
+
+
+def write_one(new_id: str, src_id: str, mode: str) -> None:
+    from make_gear_slot_icons import make_icon
+
+    src = AUTH / f"{src_id}_idle.png"
+    if not src.exists():
+        src = ROOT / f"{src_id}_idle.png"
+    if not src.exists():
+        raise SystemExit(f"missing source {src_id} for {new_id}")
+    idle = recolor(Image.open(src).convert("RGBA"), mode)
+    AUTH.mkdir(parents=True, exist_ok=True)
+    for anim in ("idle", "walk", "attack"):
+        idle.save(AUTH / f"{new_id}_{anim}.png")
+    idle.save(ROOT / f"{new_id}_idle.png")
+    icon = make_icon(idle)
+    if icon is None:
+        raise SystemExit(f"empty icon for {new_id}")
+    icon.save(ROOT / f"{new_id}_icon.png")
+    print(f"wrote {new_id} from {src_id} ({mode})")
 
 
 def main() -> None:
-    from paper_doll_paths import refuse_live_writer
+    import sys
 
-    refuse_live_writer("derive_weapon_hue_variants.py")
-    ROOT.mkdir(parents=True, exist_ok=True)
-    AUTH.mkdir(parents=True, exist_ok=True)
+    if "--write-flat" not in sys.argv:
+        from paper_doll_paths import refuse_live_writer
+
+        refuse_live_writer("derive_weapon_hue_variants.py")
     for new_id, src_id, mode in VARIANTS:
-        src = AUTH / f"{src_id}_idle.png"
-        if not src.exists():
-            src = ROOT / f"{src_id}_idle.png"
-        if not src.exists():
-            print(f"SKIP {new_id}: missing source {src_id}")
+        if new_id in SKIP_WRITE or new_id not in FLAT_IDS:
             continue
-        idle = recolor(Image.open(src).convert("RGBA"), mode)
-        for folder in (AUTH, ROOT):
-            idle.save(folder / f"{new_id}_idle.png")
-        icon_crop(idle).save(ROOT / f"{new_id}_icon.png")
-        print(f"wrote {new_id}")
+        write_one(new_id, src_id, mode)
 
 
 if __name__ == "__main__":

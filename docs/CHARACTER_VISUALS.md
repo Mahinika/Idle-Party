@@ -127,6 +127,8 @@ covers them.
 
 Do **not** invent armor or mass weapon variants with `ImageDraw`.
 `generate_item_model_variants.py` refuses to copy masters into live gear.
+Named weapons keep the painted t0 silhouette and only shift hue
+(`tool/derive_weapon_hue_variants.py`). A flat fill is not a finished weapon.
 
 Slot / BAG icons: `*_icon.png` (bbox crop of the same idle overlay), built
 by `tool/make_gear_slot_icons.py` at the end of `build_owned_gear_layers.py`.
