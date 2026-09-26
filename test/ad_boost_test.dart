@@ -140,9 +140,8 @@ void main() {
     expect(AdBoost.addHour(until, nowMs: now), until);
   });
 
-  test('POWERUPS camera shows on a fresh save', () {
+  test('SCROLLS fab spend-check is quiet only when ad-free with nothing to do', () {
     final state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
-    expect(GameLogic.plainPlayerChrome(state), isTrue);
     expect(AdBoost.showHubFab(state.metaDepth), isTrue);
     final adFreeQuiet = state.metaDepth.copyWith(
       adFree: true,

@@ -224,10 +224,12 @@ void main() {
       equals(const [MenuRoute.gear, MenuRoute.more]),
     );
     expect(MenuTabs.showShop(fresh), isFalse);
+    expect(MenuTabs.showScrolls(fresh), isFalse);
     expect(MenuRouter.visibleHubTabs(fresh.copyWith(highestFloorCleared: 1)),
       contains(MenuRoute.gold),
     );
     expect(MenuTabs.showShop(fresh.copyWith(bossVictories: 1)), isTrue);
+    expect(MenuTabs.showScrolls(fresh.copyWith(bossVictories: 1)), isTrue);
   });
 
   test('after first boss INFO still hides KEY and endgame topics', () {

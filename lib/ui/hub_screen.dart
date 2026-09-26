@@ -541,7 +541,8 @@ class _HubScreenState extends State<HubScreen>
     );
   }
 
-  bool _showPowerupsFab() => AdBoost.showHubFab(state.metaDepth);
+  bool _showPowerupsFab() =>
+      MenuTabs.showScrolls(state) && AdBoost.showHubFab(state.metaDepth);
 
   @override
   Widget build(BuildContext context) {

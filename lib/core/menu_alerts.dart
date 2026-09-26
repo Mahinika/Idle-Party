@@ -455,6 +455,8 @@ abstract final class MenuTabs {
   static bool showGold(GameState s) => GameLogic.earnedFirstReward(s);
   /// Real-money SHOP — after the first boss (or first Ascend).
   static bool showShop(GameState s) => GameLogic.showDailyChase(s);
+  /// Hub SCROLLS glyph — same unlock as SHOP (first boss / Ascend).
+  static bool showScrolls(GameState s) => showShop(s);
   /// Blessing / God Hand / REBORN — after first-hour plain chrome.
   static bool showKeep(GameState s) => !GameLogic.plainPlayerChrome(s);
   /// Relics / Craft tabs — after first-hour plain chrome (same as old KEEP/APEX).

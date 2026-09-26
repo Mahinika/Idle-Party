@@ -69,6 +69,7 @@ void main() {
     expect(MenuTabs.showGold(early), isFalse);
     expect(MenuTabs.showCamp(early), isFalse);
     expect(MenuTabs.showShop(early), isFalse);
+    expect(MenuTabs.showScrolls(early), isFalse);
     expect(
       MenuRouter.visibleHubTabs(early),
       equals(const [
@@ -102,6 +103,7 @@ void main() {
 
     final afterBoss = early.copyWith(bossVictories: 1, highestFloorCleared: 1);
     expect(MenuTabs.showShop(afterBoss), isTrue);
+    expect(MenuTabs.showScrolls(afterBoss), isTrue);
     expect(MenuTabs.showCamp(afterBoss), isFalse);
     expect(
       MenuRouter.visibleHubTabs(afterBoss),
@@ -182,7 +184,7 @@ void main() {
     final router = MenuRouter();
     expect(router.jobHint, isEmpty);
     router.open(MenuRoute.gold);
-    expect(router.jobHint, contains('gold'));
+    expect(router.jobHint.toLowerCase(), contains('forge'));
     router.open(MenuRoute.gear, gear: GearPanel.bag);
     expect(router.jobHint.toLowerCase(), contains('loot'));
     router.open(MenuRoute.more, more: MoreSection.quests);

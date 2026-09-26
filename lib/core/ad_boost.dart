@@ -217,8 +217,10 @@ abstract final class AdBoost {
     return md.adFreeDailyClaimUtc != utcDayKey(now);
   }
 
-  /// Hub SCROLLS overlay. Shown on a new save so tickets are findable.
-  /// Hidden only when ad-free and there is nothing to claim or spend.
+  /// Hub SCROLLS overlay spend/claim readiness (ad-free quiet check).
+  ///
+  /// Hub also gates with [MenuTabs.showScrolls] (first boss / Ascend) so
+  /// day-one chrome stays quiet — see [HubScreen].
   static bool showHubFab(MetaDepthState md, {DateTime? now}) {
     if (anyBuffActive(md) || md.adTickets > 0) return true;
     if (md.adFree) return canClaimAdFreeDaily(md, now: now);
