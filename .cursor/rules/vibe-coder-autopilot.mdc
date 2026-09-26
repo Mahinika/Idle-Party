@@ -14,7 +14,7 @@ The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
 1. Pick skills, tools, tests, and commands alone.
 2. Do the work — don’t ask coding-process questions (see ask table in
    `owner-preferences`). Product / risk / design forks: silent
-   `studio-seats` (six chairs, one decision) then ask only if
+   `studio-seats` (six vetoes, one decision, no vote) then ask only if
    the ask table says so.
 3. Plain short Swedish (or their language). After code they should see:
    **emu already running this batch** (`a56-playtest` hot restart /

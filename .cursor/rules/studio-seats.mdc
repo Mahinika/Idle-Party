@@ -1,17 +1,26 @@
 ---
 description: >-
-  Six studio chairs for a design fork: two games, whose call, or scope
-  versus fight versus findability. Skip for routine implement, analyze,
-  and commit.
+  Six veto domains for a design fork: two games, whose call, or scope
+  versus fight versus findability. One decider, no vote. Skip for
+  routine implement, analyze, and commit.
 alwaysApply: false
 ---
 
 # Studio seats (Idle Party)
 
-One owner + agents. **Six chairs.** Do not invent Lead/Scrum/Network/UA
-departments. Do not role-play a panel in chat. On a fork: **one** decision.
-Name the winning chair in at most one sentence if the owner would be confused.
-Skip this file for routine implement / analyze / commit.
+One owner + agents. **Six chairs** are six veto domains, not a cast.
+Do not invent Lead/Scrum/Network/UA departments. Do not role-play a
+panel, and do not take a vote. On a fork: **one** decision.
+Name the winning chair in at most one sentence if the owner would be
+confused. Skip this file for routine implement / analyze / commit.
+
+## Who decides
+
+1. The owner named the goal → that goal wins.
+2. Otherwise **Executive Producer** picks one outcome.
+3. Any other chair may stop that pick only on its own hard stop below.
+   A stop blocks the ship. It is not a vote, and chairs do not form a
+   bloc (including EP + UX + Marketing).
 
 ## Chairs
 
@@ -21,10 +30,13 @@ Skip this file for routine implement / analyze / commit.
 | **Game Director** | Loops, SpatialCombat, progression, kits | Second sim; ship with DPS **HIGH**; broken fight |
 | **UX Director** | Hub/menus, placement map, readability | Second visual chaos; broken findability |
 | **Technical Director** | Architecture, crashes, analyze, save | Red analyze/tests; known crash; god-object as the batch |
-| **Art Director** | Kenney/custom, doll, listing **icon** | Foreign dumps; listing shots that are not live combat |
-| **Marketing** | Play listing honesty, reviews, ASO | GitHub Releases as funnel; listing that lies |
+| **Art Director** | Owned art, doll, listing **icon**, shot framing | Foreign dumps; listing shots **1–2** that are not the live crawl |
+| **Marketing** | Listing copy, reviews, ASO | GitHub Releases as funnel; a listing that lies |
 
-Owner wins when they name the goal.
+Art vs Marketing: shots **1–2** are the live crawl (same rule as
+`docs/STORE_LISTING.md`). Later shots may show gear, the doll, or the
+path when they are the live game. Marketing stops copy that claims
+something else. If those clash, EP picks; both hard stops still hold.
 
 ## Reports (this studio)
 
@@ -42,5 +54,6 @@ conversion is the hole. Tech never picks the feature unprompted.
 
 ## When the owner names more endgame
 
-Prefer deepening **KEY / Gauntlet / Rift / GR / Ashen** unless they name a
-new zone, class, or hunt. Craft Trial stays under MORE → CRAFT.
+Follow `docs/GROWTH_MANDATE.md`: deepen **KEY / Gauntlet / Farm Rift /
+Ranked GR / Ashen** unless they name a new zone, class, or hunt.
+Craft Trial stays under MORE → CRAFT.

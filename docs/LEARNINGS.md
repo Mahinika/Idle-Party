@@ -82,7 +82,8 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
 ## 2026-09-13 — seats; Play smoke; endgame identity
 
-- EP + UX + Marketing: strangers on Play matter more than AL20 polish;
+- EP + UX + Marketing (that day’s call only, not a standing vote):
+  strangers on Play matter more than AL20 polish;
   crawl feel without zone #16. Game Director may freshen packs/tells against
   play notes. Endless KEY / Rift / GR is quality, not the story.
 - Owner confirmed Play publish + SHOP/POWERUPS smoke **2026-09-13**. D1 /
@@ -160,3 +161,11 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   the run has gold + bag gear, but hub hunt still said “Enter the cave /
   Boss 0/1” with no floor progress. Outcome = next-floor chase copy,
   not intro length and not a missing F1 drop.
+
+## 2026-09-26 — seats are vetoes, not a bloc
+
+- The 2026-09-13 line “EP + UX + Marketing” was that day’s call
+  (strangers on Play over AL20 polish). It is not a standing vote.
+  One decider: the owner if they named the goal, otherwise EP. Each
+  chair blocks only its own hard stop. Listing shots 1–2 stay the live
+  crawl; later shots may be gear, the doll, or the path.

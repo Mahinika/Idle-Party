@@ -66,4 +66,5 @@ SpatialCombat remains the only fight sim.
 
 ## Studio seats
 
-Six chairs only — `.cursor/rules/studio-seats.mdc`.
+Six veto domains, one decider — `.cursor/rules/studio-seats.mdc`.
+Owner if they named the goal, otherwise EP. No chair vote.
