@@ -71,7 +71,7 @@ see [PLAY_GROWTH.md](PLAY_GROWTH.md).
 ## Quality gate (still)
 
 `flutter analyze` / matching tests / live-light DPS gate. Fairness first.
-SpatialCombat remains the only fight sim.
+SpatialCombat is the current fight sim. A second sim is not forbidden.
 
 ## Studio seats
 
