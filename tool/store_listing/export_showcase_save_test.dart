@@ -164,6 +164,35 @@ GameState showcaseCombatState({
   );
 }
 
+/// Lv100 party already inside a hunt, Zoom Close, no What's New sheet.
+GameState _huntSave(GameState entered) {
+  return entered.copyWith(
+    dungeonZoom: DungeonZoom.close,
+    soundMuted: true,
+    seenChangelogVersion: MetaSystems.currentVersion,
+    seenTips: [for (final t in FirstSessionTips.tips) t.id, 'discord_thanks'],
+    metaDepth: entered.metaDepth.copyWith(notifyPrompted: true),
+  );
+}
+
+GameState endgameHub() {
+  final base = showcaseState();
+  final heroes = [
+    for (final h in base.heroes) h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+  ];
+  return base.copyWith(
+    heroes: heroes,
+    inDungeon: false,
+    ascensionLevel: 8,
+    attackBonus: 80,
+    defenseBonus: 80,
+    vitalityBonus: 80,
+    seenChangelogVersion: MetaSystems.currentVersion,
+    dungeonZoom: DungeonZoom.close,
+    soundMuted: true,
+  );
+}
+
 void main() {
   test('export showcase save json', () {
     final out = File('tool/store_listing/showcase_save.json');
@@ -215,6 +244,47 @@ void main() {
     // Default name used by the single-clip capture helper.
     File('tool/store_listing/preview/showcase_entered.json').writeAsStringSync(
       File('tool/store_listing/preview/showcase_entered_hell.json').readAsStringSync(),
+    );
+  });
+
+  test('export preview hunt saves', () {
+    final hub = endgameHub();
+    expect(GameLogic.endgameUnlocked(hub), isTrue);
+    final shots = <(String, GameState)>[
+      ('preview_crawl.json', firstMinuteCombatState()),
+      ('preview_gauntlet.json', _huntSave(GameLogic.enterGauntlet(hub))),
+      (
+        'preview_greater_rift.json',
+        _huntSave(GameLogic.enterGreaterRift(hub, tier: 3)),
+      ),
+      (
+        'preview_hell.json',
+        _huntSave(
+          showcaseCombatState(
+            dungeonId: 'hell',
+            floorNumber: 4,
+            roomType: RoomType.normal,
+          ),
+        ),
+      ),
+    ];
+    for (final (name, state) in shots) {
+      expect(state.inDungeon, isTrue, reason: name);
+      expect(state.enemies, isNotEmpty, reason: name);
+      final out = File('tool/store_listing/preview/$name');
+      out.writeAsStringSync(jsonEncode(state.toJson()));
+      expect(GameLogic.importSaveJson(out.readAsStringSync()), isNotNull);
+      // ignore: avoid_print
+      print('wrote $name inDungeon=${state.inDungeon} id=${state.dungeonId}');
+    }
+    expect(
+      GameState.fromJson(
+        jsonDecode(
+          File('tool/store_listing/preview/preview_gauntlet.json')
+              .readAsStringSync(),
+        ) as Map<String, dynamic>,
+      ).inGauntlet,
+      isTrue,
     );
   });
 }

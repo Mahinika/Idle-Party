@@ -61,11 +61,12 @@ not the lead.
 
 | Sec | Shot | On-screen (≤6 words) |
 |-----|------|----------------------|
-| 0–14 | A56 crawl: party centered, walks, fights | Your party keeps fighting |
-| 14–17 | Welcome Back / AFK marketing card | Progress while you're away |
-| 17–21 | Hub TODAY card (READY / clear goal) | Always know today's chase |
-| 21–27 | A56 gameplay: switch heroes in GEAR | Build and equip your party |
-| 27–30 | Title lockup + feature graphic feel | Idle Party |
+| 0–6 | Sandy crawl: party walks and fights | Your party keeps fighting |
+| 6–11 | Crystal Spire Gauntlet | Climb the Gauntlet |
+| 11–17 | Mothveil Greater Rift | Ranked Greater Rift |
+| 17–23 | Hell's Gate | Hell's Gate |
+| 23–25 | AFK marketing card | Progress while you're away |
+| 25–28 | Title lockup | Idle Party |
 
 Music: soft dungeon / parchment mood. No voice-over required. End on title —
 no “Download now” hard sell if it fights the tone.
@@ -79,13 +80,15 @@ py -3 tool/store_listing/build_preview_video.py
 # → tool/store_listing/preview/idle_party_preview_9x16.mp4  (~30s, ads tests)
 ```
 
-Music: owned `assets/custom/audio/music/hub.ogg`. A56 gameplay recordings:
-`preview/gameplay_{hub,combat,gear}_raw.mp4`; if missing, the builder falls
-back to tracked `tool/store_listing/marketing/` cards. Raw clips and preview
-MP4s are gitignored — regenerate locally before Console upload.
+Music: owned `assets/custom/audio/music/hub.ogg`. A56 fight recordings:
+`preview/gameplay_{crawl,gauntlet,gr,hell}_raw.mp4`; if missing, the builder
+falls back to tracked `tool/store_listing/marketing/` cards. Raw clips and
+preview MP4s are gitignored — regenerate locally before Console upload.
 
-Capture gameplay on A56 at 1080×2340 with `adb shell screenrecord`; use the
-AL3 showcase save, **Zoom · Close**, and restore the emulator save afterward.
+Capture on A56 at 1080×2340 with `adb shell screenrecord` (~30 fps). Saves
+come from `export_showcase_save_test.dart` (Zoom · Close). Record with
+`py -3 tool/store_listing/capture_preview_beats.py`, then restore the
+emulator save. Do not reuse the 2026-09-20 combat raw (~13 fps).
 The 16:9 render puts the real phone capture beside the English promise; 9:16
 keeps the whole phone UI visible.
 
@@ -93,10 +96,10 @@ keeps the whole phone UI visible.
   **Cognifox Studio** (`@CognifoxStudio`):
   `https://www.youtube.com/watch?v=OMWXbgGBFMA`
   (relinked **2026-09-11**; old personal upload `fiZjJ9S9l4A` superseded).
-  **2026-09-17:** recaptured `gameplay_combat_raw.mp4` on A56 after the
-  party-centered camera (Hell boss, Zoom · Close). Rebuild locally, then
-  replace YT when ads/visibility pass Play. Do not reuse the 2026-09-11
-  combat raw.
+  **2026-09-26:** local montage is Sandy crawl, Gauntlet, Greater Rift,
+  Hell's Gate, a short AFK card, then the title (~28s, ~30 fps). Rebuild
+  locally, then replace YT when ads/visibility pass Play. Do not reuse the
+  ~13 fps `gameplay_combat_raw.mp4`.
 - **Feed Short** (public combat ad, Cognifox Studio **2026-09-12**):
   `https://www.youtube.com/shorts/l9jWy29YwJM`
   Related video in Studio → unlisted Play preview `OMWXbgGBFMA`.

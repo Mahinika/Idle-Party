@@ -26,12 +26,13 @@ skiva.
 Play Reporting API **2026-09-26** (färskhet t.o.m. 25 sep): inga krasch-rader
 och inga ANR-rader. Det är inte ett påhittat 0 %. Det blockerar inte innehåll.
 
-1. **Preview-videon visar krypet** — What’s New ändras inte. Live-listningen
-   pekar fortfarande på `OMWXbgGBFMA` (`PLAY_STORE.md`). Första 10 sekunderna
-   ska vara crawlen, och ungefär 80 % av klippet ska vara spelet (Play Help).
-   En YouTube-video på listningen ska vara publik, embeddable, utan annonser,
-   och för spel uppladdad inom 90 dagar. Det är ditt Studio-steg, inte en ny
-   feature.
+1. **Preview-videon visar spelet** — What’s New ändras inte. Live-listningen
+   pekar fortfarande på `OMWXbgGBFMA` (`PLAY_STORE.md`). Lokala klippet
+   (2026-09-26) öppnar med Sandy-krypet och går sedan Gauntlet, Greater Rift
+   och Hell's Gate. Första 10 sekunderna är fight, och ungefär 80 % av
+   klippet är spelet (Play Help). En YouTube-video på listningen ska vara
+   publik, embeddable, utan annonser, och för spel uppladdad inom 90 dagar.
+   Det är ditt Studio-steg, inte en ny feature.
 
 2. **KEY går att läsa på en natt** — skeppad i 1.12.187. What’s New-ledet
    för en främling stannar *Your party fights on its own. Tap ENTER DUNGEON.*
@@ -76,7 +77,7 @@ Avsikt. Inte löfte. Förbi månad 6 är det en hypotes.
 
 Obokade exempel (A/B). Varje rad: vad · varför · var · veto.
 
-1. **Preview-video första 10 s = crawl** — Play Help · listing · Marketing
+1. **Preview-video första 10 s = fight** — Play Help · listing · Marketing
    stoppar meny-first och en video med annonser.
 2. **KEY-affix i en mening** — vana · KEY · Game Director stoppar om fighten
    bryts eller DPS blir HIGH.

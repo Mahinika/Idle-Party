@@ -28,40 +28,47 @@ MUSIC = ROOT / "assets" / "custom" / "audio" / "music" / "hub.ogg"
 # Gameplay clips are A56 screen recordings in preview/ (gitignored). If they
 # are absent, tracked marketing cards keep the builder reproducible.
 # duration, gameplay, fallback still, caption, source trim start
-# Play Help: show the fight in the first 10s (muted autoplay).
-# Visible time sums to 30s. Gameplay beats are 24s (~80% real play).
-# Combat raw is the Sandy crawl; its first 10s stay the opening.
+# Play Help: fight in the first 10s, about 80% real play, muted autoplay.
+# Visible time is the sum of beat durations (~28s). Each fight clip is an
+# A56 screenrecord at ~26–30 fps (do not reuse the old ~13 fps combat raw).
 BEATS: list[tuple[float, str | None, str, str, float]] = [
     (
-        14.0,
-        "preview/gameplay_combat_raw.mp4",
+        6.3,
+        "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "Your party keeps fighting",
-        0.6,
+        0.3,
     ),
     (
-        3.0,
+        5.2,
+        "preview/gameplay_gauntlet_raw.mp4",
+        "marketing/03_party_fights_1080x1920.png",
+        "Climb the Gauntlet",
+        0.9,
+    ),
+    (
+        5.8,
+        "preview/gameplay_gr_raw.mp4",
+        "marketing/03_party_fights_1080x1920.png",
+        "Ranked Greater Rift",
+        0.35,
+    ),
+    (
+        5.2,
+        "preview/gameplay_hell_raw.mp4",
+        "marketing/03_party_fights_1080x1920.png",
+        "Hell's Gate",
+        0.4,
+    ),
+    (
+        2.6,
         None,
         "marketing/07_afk_progress_1080x1920.png",
         "Progress while you're away",
         0.0,
     ),
     (
-        4.4,
-        "preview/gameplay_hub_raw.mp4",
-        "marketing/02_todays_chase_1080x1920.png",
-        "Always know today's chase",
-        0.0,
-    ),
-    (
-        5.6,
-        "preview/gameplay_gear_raw.mp4",
-        "marketing/05_build_party_1080x1920.png",
-        "Build and equip your party",
-        0.0,
-    ),
-    (
-        3.0,
+        2.6,
         None,
         "marketing/01_feature_graphic_1024x500.png",
         "Idle Party",
