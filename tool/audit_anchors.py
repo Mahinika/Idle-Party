@@ -46,38 +46,27 @@ def shipped_fists() -> dict[str, dict[str, tuple[float, float]]]:
     return families
 
 
-def fist_n(im: Image.Image, side: str) -> tuple[float, float] | None:
-    """Sleeve-end fist, center origin. Matches the numbers in anchor_table."""
+def glove_palm(fam: str, side: str) -> tuple[float, float] | None:
+    """Outer palm of the t2 glove. The weapon pivot, center origin."""
+    path = CHAR / fam / "gear" / "hands_t2_idle.png"
+    if not path.exists():
+        path = CHAR / fam / "gear" / "hands_t0_idle.png"
+    im = Image.open(path).convert("RGBA")
     px = im.load()
-    pts: list[tuple[int, int]] = []
-    for y in range(48, 92):
-        for x in range(128):
-            if px[x, y][3] < 160:
-                continue
-            if side == "R" and x >= 88:
-                pts.append((x, y))
-            elif side == "L" and x <= 40:
-                pts.append((x, y))
-    if len(pts) < 8:
-        return None
-    pts.sort(key=lambda p: p[1])
-    bands: list[list[tuple[int, int]]] = []
-    cur = [pts[0]]
-    for p in pts[1:]:
-        if p[1] - cur[-1][1] > 6:
-            bands.append(cur)
-            cur = [p]
-        else:
-            cur.append(p)
-    bands.append(cur)
-    low = [
-        b
-        for b in bands
-        if sum(p[1] for p in b) / len(b) >= 58 and len(b) >= 8
-    ]
-    b = max(low or bands, key=len)
-    mx = sum(p[0] for p in b) / len(b)
-    my = sum(p[1] for p in b) / len(b)
+    if side == "R":
+        pts = [(x, y) for y in range(128) for x in range(80, 128) if px[x, y][3] >= 40]
+        if not pts:
+            return None
+        extreme = max(p[0] for p in pts)
+        band = [p for p in pts if p[0] >= extreme - 14]
+    else:
+        pts = [(x, y) for y in range(128) for x in range(0, 48) if px[x, y][3] >= 40]
+        if not pts:
+            return None
+        extreme = min(p[0] for p in pts)
+        band = [p for p in pts if p[0] <= extreme + 14]
+    mx = sum(p[0] for p in band) / len(band)
+    my = sum(p[1] for p in band) / len(band)
     return (mx / 128.0 - 0.5, my / 128.0 - 0.5)
 
 
@@ -166,9 +155,8 @@ def main() -> None:
             ("walk", "walkMain", "walkOff"),
             ("attack", "attackMain", "attackOff"),
         ]:
-            im = Image.open(CHAR / fam / f"body_{anim}.png").convert("RGBA")
             for side, key in [("main", main_key), ("off", off_key)]:
-                measured = fist_n(im, "R" if side == "main" else "L")
+                measured = glove_palm(fam, "R" if side == "main" else "L")
                 ax, ay = table[key]
                 if measured is None:
                     print(f"{fam:8s} {anim:7s} {side:5s} NO PIXELS")

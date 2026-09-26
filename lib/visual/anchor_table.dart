@@ -111,43 +111,43 @@ abstract final class AnchorTables {
     };
   }
 
-  /// Fist pivots measured on each family's body clip (center origin).
+  /// Glove palm, center origin. The same point for every clip.
   ///
-  /// Walk and attack PNGs move the arms. Cast reuses the attack body, so it
-  /// uses that fist. Hit, death, and victory stay on the idle body.
-  /// Both frames of a clip share one fist — the PNG does not change mid-swing.
+  /// Armor gloves are the idle overlay, so they do not follow the walk or
+  /// attack body. Sitting the weapon on the undertunic sleeve left the
+  /// visible hand empty. Cast, hit, and death keep this palm too.
   static const Map<BodyFamily, _FamilyFists> _familyFists = {
     BodyFamily.warrior: _FamilyFists(
-      idleMain: (0.233, 0.033),
-      idleOff: (-0.236, 0.032),
-      walkMain: (0.236, 0.008),
-      walkOff: (-0.234, 0.011),
-      attackMain: (0.259, -0.024),
-      attackOff: (-0.228, 0.036),
+      idleMain: (0.424, 0.088),
+      idleOff: (-0.432, 0.083),
+      walkMain: (0.424, 0.088),
+      walkOff: (-0.432, 0.083),
+      attackMain: (0.424, 0.088),
+      attackOff: (-0.432, 0.083),
     ),
     BodyFamily.rogue: _FamilyFists(
-      idleMain: (0.222, 0.001),
-      idleOff: (-0.226, -0.003),
-      walkMain: (0.225, -0.003),
-      walkOff: (-0.217, -0.002),
-      attackMain: (0.241, 0.053),
-      attackOff: (-0.191, 0.086),
+      idleMain: (0.413, 0.137),
+      idleOff: (-0.417, 0.122),
+      walkMain: (0.413, 0.137),
+      walkOff: (-0.417, 0.122),
+      attackMain: (0.413, 0.137),
+      attackOff: (-0.417, 0.122),
     ),
     BodyFamily.mage: _FamilyFists(
-      idleMain: (0.226, 0.078),
-      idleOff: (-0.230, 0.078),
-      walkMain: (0.222, -0.063),
-      walkOff: (-0.234, -0.063),
-      attackMain: (0.222, -0.016),
-      attackOff: (-0.234, -0.016),
+      idleMain: (0.401, 0.146),
+      idleOff: (-0.409, 0.141),
+      walkMain: (0.401, 0.146),
+      walkOff: (-0.409, 0.141),
+      attackMain: (0.401, 0.146),
+      attackOff: (-0.409, 0.141),
     ),
     BodyFamily.healer: _FamilyFists(
-      idleMain: (0.225, 0.038),
-      idleOff: (-0.230, 0.032),
-      walkMain: (0.225, -0.009),
-      walkOff: (-0.230, -0.015),
-      attackMain: (0.225, 0.046),
-      attackOff: (-0.230, 0.039),
+      idleMain: (0.423, 0.114),
+      idleOff: (-0.431, 0.109),
+      walkMain: (0.423, 0.114),
+      walkOff: (-0.431, 0.109),
+      attackMain: (0.423, 0.114),
+      attackOff: (-0.431, 0.109),
     ),
   };
 

@@ -291,9 +291,9 @@ void main() {
       profile: BodyAnchorProfile.owned,
       family: BodyFamily.mage,
     );
-    expect(warrior.y, closeTo(0.033, 0.001));
-    expect(mage.y, closeTo(0.078, 0.001));
-    // Mage walk lifts the arms. The grip follows that clip, not the idle fist.
+    expect(warrior.y, closeTo(0.088, 0.001));
+    expect(mage.y, closeTo(0.146, 0.001));
+    // Gloves are the idle overlay, so walk keeps the same palm.
     final mageWalk = AnchorTables.lookup(
       anim: HeroAnimKind.walk,
       frame: 1,
@@ -301,7 +301,8 @@ void main() {
       profile: BodyAnchorProfile.owned,
       family: BodyFamily.mage,
     );
-    expect(mageWalk.y, lessThan(mage.y - 0.10));
+    expect(mageWalk.x, mage.x);
+    expect(mageWalk.y, mage.y);
     // Attack is one PNG, so both frames share the attack fist.
     final windup = AnchorTables.lookup(
       anim: HeroAnimKind.attack,
@@ -696,22 +697,8 @@ void main() {
       owned: true,
     );
     expect(pose.bodyFamily, BodyFamily.warrior);
-    expect(pose.anchor(AnchorId.mainHand).y, closeTo(0.033, 0.001));
-    final rogueAttack = AnchorTables.lookup(
-      anim: HeroAnimKind.attack,
-      frame: 1,
-      id: AnchorId.mainHand,
-      profile: BodyAnchorProfile.owned,
-      family: BodyFamily.rogue,
-    );
-    final rogueIdle = AnchorTables.lookup(
-      anim: HeroAnimKind.idle,
-      frame: 0,
-      id: AnchorId.mainHand,
-      profile: BodyAnchorProfile.owned,
-      family: BodyFamily.rogue,
-    );
-    expect(rogueAttack.y, greaterThan(rogueIdle.y));
+    expect(pose.anchor(AnchorId.mainHand).y, closeTo(0.088, 0.001));
+    expect(pose.anchor(AnchorId.mainHand).x, closeTo(0.424, 0.001));
   });
 
   test('owned cape paints behind the body', () {

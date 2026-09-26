@@ -167,10 +167,11 @@ Facing is **L/R flipX only**. Enemies unchanged in Phase 3.
 - Owned cape paints **behind** the body, same order as the gold master.
   The sides still show. Painting the cape in front covers the chest.
 - Off-hand / main-hand — same 128 PNGs grip-aligned to owned hand
-  anchors (`OwnedGearGrips`). Each family has its own fist for idle, walk,
-  and attack (cast uses the attack body). When hand art moves, regenerate
-  the grip table with `py tool/gen_owned_gear_grips.py` and remeasure the
-  fists in `AnchorTables`. Do not shift the PNGs.
+  anchors (`OwnedGearGrips`). The pivot is that family's glove palm.
+  Gloves are the idle overlay, so walk and attack keep the same palm.
+  When hand art moves, regenerate the grip table with
+  `py tool/gen_owned_gear_grips.py` and remeasure the palms in
+  `AnchorTables`. Do not shift the PNGs.
   Audit: `py tool/audit_anchors.py`.
   Grips are **opaque-pixel** points: handle centroid for melee/staves, shape
   mid-height for bows, shape centroid for shields/frills. A bbox center is
