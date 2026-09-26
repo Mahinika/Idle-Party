@@ -1337,7 +1337,7 @@ class GameDirector extends ChangeNotifier {
       showToast(
         _state.inDungeon
             ? 'Leave the dungeon first'
-            : 'Apex Trial needs party Lv${GameLogic.maxHeroLevel}',
+            : 'Craft Trial needs party Lv${GameLogic.maxHeroLevel}',
         life: 2.6,
       );
       return;
@@ -1345,12 +1345,12 @@ class GameDirector extends ChangeNotifier {
     final month = GameLogic.isoMonthKey(DateTime.now().toUtc());
     if (_state.metaDepth.apexTrialMonthKey == month &&
         _state.metaDepth.apexTrialCleared) {
-      showToast('Apex Trial already cleared this month', life: 2.6);
+      showToast('Craft Trial already cleared this month', life: 2.6);
       return;
     }
     _state = GameLogic.startApexTrial(_state);
     notifyListeners();
-    showToast('Apex Trial — non-Apex gear ignored', life: 2.6);
+    showToast('Craft Trial — non-Apex gear ignored', life: 2.6);
   }
 
   void lightConstellationNode(String id) {

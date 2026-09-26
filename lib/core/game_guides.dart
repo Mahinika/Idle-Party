@@ -603,7 +603,7 @@ abstract final class GameGuides {
           'unlock kits, spend Star Nodes, optional REBORN. Wipes your run bag '
           '(gold, GOLD → FORGE, normal gear).\n'
           '• Party Lv${GameLogic.maxHeroLevel} (endgame): every active hero at max level '
-          'unlocks KEY, Infinity Gauntlet, Ranked GR, Farm Rifts, '
+          'unlocks KEY, Gauntlet, Ranked GR, Farm Rifts, '
           'and Ashen Crown. AL20 alone is not enough.\n'
           '• At AL20 with heroes below ${GameLogic.maxHeroLevel}, the hub hunt may say '
           '"Level the party" — that is the bridge into endgame.\n\n'
@@ -639,7 +639,7 @@ abstract final class GameGuides {
           '• AL5: Blood DK, Frost DK, Guardian\n'
           '• AL6: Affliction, Demonology\n\n'
           'Endgame (not Ascend):\n'
-          '• Party Lv${GameLogic.maxHeroLevel}: KEY, Infinity Gauntlet, Farm Rifts, '
+          '• Party Lv${GameLogic.maxHeroLevel}: KEY, Gauntlet, Farm Rifts, '
           'Ranked GR, and Ashen Crown unlock when every active hero is max level '
           '— AL20 alone is not enough.\n\n'
           'Some kits also unlock from zone clears or ESSENCE → BLESSING permanent buys — see each '
@@ -830,7 +830,7 @@ abstract final class GameGuides {
       body:
           'At AL20, ESSENCE → BLESSING opens Star Nodes (spend points).\n\n'
           '• Not the same as Ascend Blessing stacks (+ATK/DEF/STA/gold each Ascend).\n'
-          '• Earn points from reaching AL20, Ashen Crown, and Apex Trial.\n'
+          '• Earn points from reaching AL20, Ashen Crown, and Craft Trial.\n'
           '• Spend points on permanent nodes (crit, gold, block, KEY par, …).\n'
           '• Points and lit nodes survive Ascend / REBORN.',
     ),

@@ -47,7 +47,7 @@ abstract final class HubEndgameAct {
     HubEndgameNode(
       hunt: HubEndgameHunt.gauntlet,
       shortLabel: 'GAUNTLET',
-      title: 'Infinity Gauntlet',
+      title: 'Gauntlet',
       blurb:
           'Endless Spire · not a 16th cave · boss every 5, tells cycle · wipe or leave → hub',
       portraitDungeonId: 'crystal',

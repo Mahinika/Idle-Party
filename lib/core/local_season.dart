@@ -128,7 +128,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'spire_late',
       name: 'Late Spire Push',
-      blurb: 'Climb Infinity Gauntlet to floor 20 this week.',
+      blurb: 'Climb Gauntlet to floor 20 this week.',
       weekKey: '2026-W35',
       affixOverride: 'iron',
       gauntletFloorTarget: 20,
@@ -148,7 +148,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'ember_climb',
       name: 'Ember Climb',
-      blurb: 'Climb Infinity Gauntlet to floor 25 this week.',
+      blurb: 'Climb Gauntlet to floor 25 this week.',
       weekKey: '2026-W37',
       affixOverride: 'fortune',
       gauntletFloorTarget: 25,
@@ -176,7 +176,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'spire_push',
       name: 'Spire Push',
-      blurb: 'Climb Infinity Gauntlet to floor 15 this season of climbs.',
+      blurb: 'Climb Gauntlet to floor 15 this season of climbs.',
       affixOverride: 'elite',
       gauntletFloorTarget: 15,
       essenceReward: 12,

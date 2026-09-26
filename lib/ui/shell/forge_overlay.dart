@@ -224,7 +224,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Spend that slice of your wallet on one forge track.',
+                          'Spend that slice of your wallet on one GOLD track.',
                           style: GameTheme.body(
                             size: 13,
                             color: GameTheme.parchmentDim,

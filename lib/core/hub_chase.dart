@@ -893,7 +893,7 @@ class HubChase {
                   ? 'Almost Gauntlet floor $floor'
                   : 'Gauntlet floor $floor'),
         detail: best <= 0
-            ? 'Infinity Gauntlet — boss every 5 floors; wipe or leave '
+            ? 'Gauntlet — boss every 5 floors; wipe or leave '
                   'returns to hub. Climb for +${pay}e.'
             : 'Best F$best — $need floors to F$floor (+${pay}e). '
                   'Boss every 5; wipe → hub.',

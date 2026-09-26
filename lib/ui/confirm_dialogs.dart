@@ -256,7 +256,7 @@ Future<void> confirmGauntletRun(
       context: context,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) => MenuChrome.dialog(
-        title: 'Infinity Gauntlet?',
+        title: 'Gauntlet?',
         content: Text(
           'Endless Spire climb — not a 16th PATH cave, not a timed Rift.\n\n'
           'Floors escalate forever. Boss every 5 floors, each with a different tell. '
