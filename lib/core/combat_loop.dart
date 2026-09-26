@@ -38,7 +38,8 @@ extension GameDirectorCombatLoop on GameDirector {
         _rebuildSpatial();
       }
 
-      final dt = GameDirector._spatialDt * AdBoost.combatDtMul(_state.metaDepth);
+      final dt =
+          GameDirector._spatialDt * AdBoost.combatDtMul(_state.metaDepth);
       final dtMs = (dt * 1000).round();
 
       final result = SpatialCombat.step(_spatial!, _state, dt: dt);
@@ -74,6 +75,7 @@ extension GameDirectorCombatLoop on GameDirector {
           );
           _notifyShell();
           unawaited(_persistFlush());
+          _syncSituationMusic();
           return;
         }
       }
@@ -102,6 +104,7 @@ extension GameDirectorCombatLoop on GameDirector {
           );
           _notifyShell();
           unawaited(_persistFlush());
+          _syncSituationMusic();
           return;
         }
       }
@@ -182,6 +185,7 @@ extension GameDirectorCombatLoop on GameDirector {
       }
       if (result.stairsOpened) {
         GameAudio.clear();
+        GameAudio.noteFloorClear(_state.currentRoom.floorNumber);
         _state = GameLogic.healPartyAtStairs(_state);
         // Corner CLEAR + HOLD own the walk — no second center “congrats” yet.
       }
@@ -236,6 +240,7 @@ extension GameDirectorCombatLoop on GameDirector {
         _spatialTimer?.cancel();
         _spatialTimer = null;
         GameAudio.wipe();
+        GameAudio.noteWipe();
         // Panel owns the wipe copy — drop CLEAR/bag toast so it does not
         // draw on top of PARTY WIPED.
         clearToast();
@@ -448,6 +453,8 @@ extension GameDirectorCombatLoop on GameDirector {
             );
           }
         }
+        _syncFightMusic();
+        if (!_state.inDungeon) _syncSituationMusic();
         _bumpCombatFrame();
         _notifyShell();
         unawaited(_persistFlush());
@@ -461,9 +468,18 @@ extension GameDirectorCombatLoop on GameDirector {
     if (!_runIncomeFrozen && _state.inDungeon && _uiThrottle % 60 == 0) {
       _refreshRunGpm(DateTime.now().millisecondsSinceEpoch);
     }
+    _syncFightMusic();
     // Shell chrome (~10 Hz); map/HUD corners listen to [combatFrame] at 60 Hz.
     if (_uiThrottle % GameDirector._shellNotifyEvery == 0) {
       _notifyShell();
     }
+  }
+
+  void _syncFightMusic() {
+    if (!_state.inDungeon || _awaitingWipeChoice) return;
+    GameAudio.syncBossFight(
+      active: bossEncounterNow,
+      floor: _state.currentRoom.floorNumber,
+    );
   }
 }

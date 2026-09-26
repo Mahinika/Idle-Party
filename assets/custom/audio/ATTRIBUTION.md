@@ -6,6 +6,9 @@
 |------|--------|---------|
 | `music/hub.ogg` | [Heavenly Loop](https://opengameart.org/content/heavenly-loop) by isaiah658 | CC0 |
 | `music/dungeon.mp3` | Owned ElevenLabs loop (“Deep Cave Hush”) | Owned |
+| `music/boss.wav` | Owned procedural (“Unresolved Crown”, `tool/generate_music_loops.py`) | Owned |
+| `music/resolve.wav` | Owned procedural (“Floor Breath”) | Owned |
+| `music/down.wav` | Owned procedural (“The Drop”) | Owned |
 
 ## SFX
 

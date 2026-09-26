@@ -266,13 +266,13 @@ class _GameHomePageState extends State<GameHomePage>
       music: _director.state.musicVolume,
     );
     GameAudio.setMuted(_director.state.soundMuted);
-    if (!_director.state.soundMuted) {
-      unawaited(
-        GameAudio.setAmbience(
-          _director.state.inDungeon ? AmbienceKind.dungeon : AmbienceKind.hub,
-        ),
-      );
-    }
+    unawaited(
+      GameAudio.setAmbience(
+        _director.state.inDungeon ? AmbienceKind.dungeon : AmbienceKind.hub,
+        bossFight: _director.bossEncounterNow,
+        floor: _director.state.currentRoom.floorNumber,
+      ),
+    );
     if (kIsWeb) {
       WebClickBridge.bindSpeedControls(
         getSpeed: () => _director.debugTimeScale,
@@ -465,10 +465,7 @@ class _GameHomePageState extends State<GameHomePage>
               _continueGame();
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted) return;
-                _router.open(
-                  MenuRoute.more,
-                  more: MoreSection.settings,
-                );
+                _router.open(MenuRoute.more, more: MoreSection.settings);
               });
               return;
             }
@@ -476,10 +473,7 @@ class _GameHomePageState extends State<GameHomePage>
               context: context,
               builder: (ctx) => AlertDialog(
                 backgroundColor: GameTheme.ink,
-                title: Text(
-                  'Settings',
-                  style: GameTheme.menuTitle(size: 18),
-                ),
+                title: Text('Settings', style: GameTheme.menuTitle(size: 18)),
                 content: Text(
                   'Start or continue a save, then open MORE → SETTINGS for sound, zoom, and save tools.\n\n'
                   'Privacy options are on PRIVACY below.',
@@ -490,7 +484,10 @@ class _GameHomePageState extends State<GameHomePage>
                     onPressed: () => Navigator.pop(ctx),
                     child: Text(
                       'OK',
-                      style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+                      style: GameTheme.body(
+                        size: 14,
+                        color: GameTheme.torchHot,
+                      ),
                     ),
                   ),
                 ],

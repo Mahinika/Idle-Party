@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 import 'audio_assets.dart';
 import 'audio_variation_bank.dart';
 import 'combat_feel.dart';
+import 'music_score.dart';
 
 enum AmbienceKind { none, hub, dungeon }
 
@@ -47,10 +49,17 @@ abstract final class GameAudio {
   static AudioSource? _dungeonAmb;
   static AudioSource? _hubMusic;
   static AudioSource? _dungeonMusic;
+  static AudioSource? _bossMusic;
+  static AudioSource? _resolveMusic;
+  static AudioSource? _downMusic;
   static SoundHandle? _ambienceHandle;
   static SoundHandle? _musicHandle;
   static AmbienceKind _ambience = AmbienceKind.none;
   static bool _backgroundPaused = false;
+  static final MusicScore _score = MusicScore();
+  static MusicStem _playing = MusicStem.none;
+  static Timer? _scoreTimer;
+  static int _fadeGen = 0;
   static final Map<String, DateTime> _lastPlayAt = <String, DateTime>{};
   static final Map<_CombatFamily, DateTime> _lastFamilyAt =
       <_CombatFamily, DateTime>{};
@@ -116,6 +125,11 @@ abstract final class GameAudio {
     _lastUiAt = null;
     _sfxReady = false;
     _warmFuture = null;
+    _scoreTimer?.cancel();
+    _scoreTimer = null;
+    _score.reset();
+    _playing = MusicStem.none;
+    _fadeGen++;
   }
 
   static bool get isReady => _ready;
@@ -163,6 +177,9 @@ abstract final class GameAudio {
       }
       _dungeonAmb ??= await soloud.loadAsset(AudioAssets.dungeonAmbience);
       _dungeonMusic ??= await soloud.loadAsset(AudioAssets.dungeonMusic);
+      _bossMusic ??= await soloud.loadAsset(AudioAssets.bossMusic);
+      _resolveMusic ??= await soloud.loadAsset(AudioAssets.resolveMusic);
+      _downMusic ??= await soloud.loadAsset(AudioAssets.downMusic);
       _sfxReady = true;
     } catch (e, st) {
       debugPrint('GameAudio.warmRemainingAssets failed: $e\n$st');
@@ -196,6 +213,13 @@ abstract final class GameAudio {
     _dungeonAmb = null;
     _hubMusic = null;
     _dungeonMusic = null;
+    _bossMusic = null;
+    _resolveMusic = null;
+    _downMusic = null;
+    _scoreTimer?.cancel();
+    _scoreTimer = null;
+    _score.reset();
+    _playing = MusicStem.none;
     _ready = false;
     _sfxReady = false;
     _warmFuture = null;
@@ -218,9 +242,9 @@ abstract final class GameAudio {
     muted = value;
     if (muted) {
       stopAmbience();
-    } else if (!_backgroundPaused) {
-      unawaited(setAmbience(_ambience, forceRestart: true));
     }
+    // Unmute playback is the caller's [setAmbience] so the place and boss
+    // cue stay in one path (settings always follows this with a sync).
   }
 
   static void play(String id) {
@@ -334,10 +358,8 @@ abstract final class GameAudio {
       final variation = bank.pick(_rng, heavy: heavy);
       final source = _sourcesByPath[variation.path];
       if (source == null) return;
-      final pitch =
-          (variation.rollPitch(_rng) * speedMul).clamp(0.85, 1.15);
-      final layerVol =
-          (variation.rollVolume(_rng) * volumeMul).clamp(0.0, 1.5);
+      final pitch = (variation.rollPitch(_rng) * speedMul).clamp(0.85, 1.15);
+      final layerVol = (variation.rollVolume(_rng) * volumeMul).clamp(0.0, 1.5);
       final gain = _idGain[id] ?? 1.0;
       final soloud = SoLoud.instance;
       final handle = soloud.play(
@@ -369,9 +391,7 @@ abstract final class GameAudio {
     final lastId = _lastPlayAt[id] ?? _epoch;
     if (now.difference(lastId) < combatFeelMinGap) return false;
 
-    _combatWindowAt.removeWhere(
-      (t) => now.difference(t) >= combatWindow,
-    );
+    _combatWindowAt.removeWhere((t) => now.difference(t) >= combatWindow);
     final priority = AudioAssets.priorityFeelIds.contains(id);
     if (!priority && _combatWindowAt.length >= combatWindowMax) {
       return false;
@@ -395,54 +415,227 @@ abstract final class GameAudio {
   static Future<void> setAmbience(
     AmbienceKind kind, {
     bool forceRestart = false,
+    bool? bossFight,
+    int floor = 0,
   }) async {
-    // Music may be intentionally off (volume 0 → no handle). That must not
-    // force a restart of the ambience loop on every UI state sync.
-    final musicOk =
-        _musicHandle != null || musicVolume <= 0.01 || kind == AmbienceKind.none;
+    final now = DateTime.now();
+    final placeChanged = _score.setPlace(_placeOf(kind), now);
+    final bossChanged = bossFight != null && kind == AmbienceKind.dungeon
+        ? _score.syncBoss(active: bossFight, floor: floor, now: now)
+        : false;
+    _ambience = kind;
+    if (!_ready || muted || _backgroundPaused) {
+      if (muted) stopAmbience();
+      return;
+    }
+    _ensureScoreTimer();
+    // Rest is a real state (no music handle). Do not treat that as a
+    // failed start and restart the bed on every settings sync.
+    final musicOk = _musicMatches();
     if (!forceRestart &&
+        !placeChanged &&
+        !bossChanged &&
         kind == _ambience &&
         _ambienceHandle != null &&
         musicOk) {
       return;
     }
-    _ambience = kind;
-    if (!_ready || muted || _backgroundPaused) {
-      stopAmbience();
-      return;
-    }
     await _ensureBedFor(kind);
-    stopAmbience();
-    debugBackgroundStartCount++;
-    final ambSource = switch (kind) {
+    if (forceRestart || placeChanged || _ambienceHandle == null) {
+      _restartAmbienceOnly();
+    }
+    if (forceRestart || placeChanged || bossChanged || !musicOk) {
+      await _realizeMusic(restart: forceRestart || placeChanged || bossChanged);
+    }
+  }
+
+  /// Fight state, without going through a full ambience restart.
+  static void syncBossFight({required bool active, required int floor}) {
+    if (_score.syncBoss(active: active, floor: floor, now: DateTime.now())) {
+      unawaited(_realizeMusic());
+    }
+  }
+
+  /// Stairs opened. Short resolution, then quiet.
+  static void noteFloorClear(int floor) {
+    if (_score.noteClear(floor, DateTime.now())) {
+      unawaited(_realizeMusic());
+    }
+  }
+
+  /// Party wiped. Falling phrase, then a longer quiet.
+  static void noteWipe() {
+    if (_score.noteWipe(DateTime.now())) {
+      unawaited(_realizeMusic());
+    }
+  }
+
+  static MusicPlace _placeOf(AmbienceKind kind) => switch (kind) {
+    AmbienceKind.hub => MusicPlace.hub,
+    AmbienceKind.dungeon => MusicPlace.dungeon,
+    AmbienceKind.none => MusicPlace.none,
+  };
+
+  static bool _musicMatches() {
+    final stem = _score.stem;
+    if (stem == MusicStem.none || musicVolume <= 0.01) {
+      return _playing == MusicStem.none;
+    }
+    return _playing == stem && _musicHandle != null;
+  }
+
+  static void _ensureScoreTimer() {
+    if (_scoreTimer != null) return;
+    // Widget tests boot the app. A periodic timer left running fails the test.
+    final binding = SchedulerBinding.instance.runtimeType.toString();
+    if (binding.contains('Test')) return;
+    _scoreTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!_ready || _backgroundPaused) return;
+      if (!_score.tick(DateTime.now())) return;
+      if (muted) return;
+      unawaited(_realizeMusic());
+    });
+  }
+
+  static void _restartAmbienceOnly() {
+    final amb = _ambienceHandle;
+    _ambienceHandle = null;
+    if (_ready && amb != null) {
+      try {
+        SoLoud.instance.stop(amb);
+      } catch (e, st) {
+        debugPrint('GameAudio ambience stop failed: $e\n$st');
+      }
+    }
+    if (!_ready || muted || _backgroundPaused) return;
+    final ambSource = switch (_ambience) {
       AmbienceKind.hub => _hubAmb,
       AmbienceKind.dungeon => _dungeonAmb,
       AmbienceKind.none => null,
     };
-    final musicSource = switch (kind) {
-      AmbienceKind.hub => _hubMusic,
-      AmbienceKind.dungeon => _dungeonMusic,
-      AmbienceKind.none => null,
-    };
+    if (ambSource == null) return;
+    try {
+      debugBackgroundStartCount++;
+      _ambienceHandle = SoLoud.instance.play(
+        ambSource,
+        volume: _effectiveAmbienceVolume(),
+        looping: true,
+      );
+    } catch (e, st) {
+      _ambienceHandle = null;
+      debugPrint('GameAudio ambience start failed: $e\n$st');
+    }
+  }
+
+  static Future<void> _realizeMusic({bool restart = false}) async {
+    if (!_ready || muted || _backgroundPaused) return;
+    final stem = musicVolume <= 0.01 ? MusicStem.none : _score.stem;
+    if (!restart &&
+        _playing == stem &&
+        (stem == MusicStem.none || _musicHandle != null)) {
+      return;
+    }
+    final gen = ++_fadeGen;
+    final previous = _musicHandle;
+    _musicHandle = null;
+    _playing = stem;
+    final fade = _fadeFor(stem);
+    _releaseHandle(previous, fade);
+    if (stem == MusicStem.none) return;
+    await _ensureStem(stem);
+    if (gen != _fadeGen || muted || _backgroundPaused) return;
+    final source = _sourceFor(stem);
+    if (source == null) {
+      _playing = MusicStem.none;
+      return;
+    }
+    try {
+      final handle = SoLoud.instance.play(
+        source,
+        volume: 0.001,
+        looping: _loops(stem),
+      );
+      if (gen != _fadeGen) {
+        _releaseHandle(handle, Duration.zero);
+        return;
+      }
+      _musicHandle = handle;
+      SoLoud.instance.fadeVolume(handle, _musicGain(stem), fade);
+    } catch (e, st) {
+      _musicHandle = null;
+      _playing = MusicStem.none;
+      debugPrint('GameAudio music start failed: $e\n$st');
+    }
+  }
+
+  static Future<void> _ensureStem(MusicStem stem) async {
+    if (!_ready) return;
     try {
       final soloud = SoLoud.instance;
-      if (ambSource != null) {
-        _ambienceHandle = soloud.play(
-          ambSource,
-          volume: _effectiveAmbienceVolume(),
-          looping: true,
-        );
+      switch (stem) {
+        case MusicStem.hub:
+          _hubMusic ??= await soloud.loadAsset(AudioAssets.hubMusic);
+        case MusicStem.dungeon:
+          _dungeonMusic ??= await soloud.loadAsset(AudioAssets.dungeonMusic);
+        case MusicStem.boss:
+          _bossMusic ??= await soloud.loadAsset(AudioAssets.bossMusic);
+        case MusicStem.resolve:
+          _resolveMusic ??= await soloud.loadAsset(AudioAssets.resolveMusic);
+        case MusicStem.down:
+          _downMusic ??= await soloud.loadAsset(AudioAssets.downMusic);
+        case MusicStem.none:
+          break;
       }
-      if (musicSource != null && musicVolume > 0.01) {
-        _musicHandle = soloud.play(
-          musicSource,
-          volume: _effectiveMusicVolume(),
-          looping: true,
-        );
+    } catch (e, st) {
+      debugPrint('GameAudio stem load failed: $e\n$st');
+    }
+  }
+
+  static AudioSource? _sourceFor(MusicStem stem) => switch (stem) {
+    MusicStem.hub => _hubMusic,
+    MusicStem.dungeon => _dungeonMusic,
+    MusicStem.boss => _bossMusic,
+    MusicStem.resolve => _resolveMusic,
+    MusicStem.down => _downMusic,
+    MusicStem.none => null,
+  };
+
+  static bool _loops(MusicStem stem) =>
+      stem == MusicStem.hub ||
+      stem == MusicStem.dungeon ||
+      stem == MusicStem.boss;
+
+  static double _stemGain(MusicStem stem) => switch (stem) {
+    MusicStem.boss => 1.08,
+    MusicStem.resolve => 1.04,
+    _ => 1.0,
+  };
+
+  static double _musicGain(MusicStem stem) =>
+      (_effectiveMusicVolume() * _stemGain(stem)).clamp(0.0, 1.0);
+
+  static Duration _fadeFor(MusicStem stem) => switch (stem) {
+    MusicStem.boss => const Duration(milliseconds: 420),
+    MusicStem.resolve || MusicStem.down => const Duration(milliseconds: 280),
+    MusicStem.none => const Duration(milliseconds: 1600),
+    _ => const Duration(milliseconds: 1100),
+  };
+
+  static void _releaseHandle(SoundHandle? handle, Duration fade) {
+    if (handle == null || !_ready) return;
+    try {
+      if (fade == Duration.zero) {
+        SoLoud.instance.stop(handle);
+        return;
       }
-    } catch (_) {
-      _ambienceHandle = null;
-      _musicHandle = null;
+      SoLoud.instance.fadeVolume(handle, 0, fade);
+      Future<void>.delayed(fade, () {
+        try {
+          SoLoud.instance.stop(handle);
+        } catch (_) {}
+      });
+    } catch (e, st) {
+      debugPrint('GameAudio music release failed: $e\n$st');
     }
   }
 
@@ -451,6 +644,8 @@ abstract final class GameAudio {
     final mus = _musicHandle;
     _ambienceHandle = null;
     _musicHandle = null;
+    _playing = MusicStem.none;
+    _fadeGen++;
     if (!_ready) return;
     try {
       final soloud = SoLoud.instance;
@@ -498,27 +693,26 @@ abstract final class GameAudio {
   }
 
   static void _refreshMusicVolume() {
+    if (!_ready) return;
     final h = _musicHandle;
-    if (h == null || !_ready) return;
-    try {
-      SoLoud.instance.setVolume(h, _effectiveMusicVolume());
-    } catch (e, st) {
-      debugPrint('GameAudio music volume failed: $e\n$st');
-    }
-    if (musicVolume <= 0.01 && h != null) {
-      // Volume cycled to Off — stop the music layer only.
-      try {
-        SoLoud.instance.stop(h);
-      } catch (e, st) {
-        debugPrint('GameAudio music stop failed: $e\n$st');
+    if (musicVolume <= 0.01) {
+      if (h != null) {
+        _releaseHandle(h, const Duration(milliseconds: 200));
+        _musicHandle = null;
+        _playing = MusicStem.none;
       }
-      _musicHandle = null;
-    } else if (h == null &&
-        musicVolume > 0.01 &&
-        _ambience != AmbienceKind.none &&
-        !muted &&
-        !_backgroundPaused) {
-      unawaited(setAmbience(_ambience, forceRestart: true));
+      return;
+    }
+    if (h != null) {
+      try {
+        SoLoud.instance.setVolume(h, _musicGain(_playing));
+      } catch (e, st) {
+        debugPrint('GameAudio music volume failed: $e\n$st');
+      }
+      return;
+    }
+    if (_score.stem != MusicStem.none && !muted && !_backgroundPaused) {
+      unawaited(_realizeMusic(restart: true));
     }
   }
 
@@ -529,6 +723,11 @@ abstract final class GameAudio {
       muted ? 0.0 : musicVolume.clamp(0.0, 1.0);
 
   static void _duckBackgroundBriefly() {
+    if (_playing == MusicStem.boss ||
+        _playing == MusicStem.resolve ||
+        _playing == MusicStem.down) {
+      return;
+    }
     final amb = _ambienceHandle;
     final mus = _musicHandle;
     if (!_ready || muted) return;
@@ -536,9 +735,8 @@ abstract final class GameAudio {
     try {
       final soloud = SoLoud.instance;
       final ambBase = _effectiveAmbienceVolume();
-      final musBase = _effectiveMusicVolume();
       if (amb != null) soloud.setVolume(amb, ambBase * 0.35);
-      if (mus != null) soloud.setVolume(mus, musBase * 0.35);
+      if (mus != null) soloud.setVolume(mus, _musicGain(_playing) * 0.35);
       Future<void>.delayed(const Duration(milliseconds: 700), () {
         if (muted) return;
         try {
@@ -546,7 +744,7 @@ abstract final class GameAudio {
             soloud.setVolume(amb, _effectiveAmbienceVolume());
           }
           if (mus != null && _musicHandle == mus) {
-            soloud.setVolume(mus, _effectiveMusicVolume());
+            soloud.setVolume(mus, _musicGain(_playing));
           }
         } catch (e, st) {
           debugPrint('GameAudio duck restore failed: $e\n$st');

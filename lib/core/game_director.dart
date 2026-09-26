@@ -658,7 +658,6 @@ class GameDirector extends ChangeNotifier {
 
   void _notifyShell() => notifyListeners();
 
-
   void _handleWipe() {
     _awaitingWipeChoice = false;
     if (_state.inGauntlet) {
@@ -944,6 +943,7 @@ class GameDirector extends ChangeNotifier {
     );
     notifyListeners();
     unawaited(_persistFlush());
+    _syncSituationMusic();
   }
 
   void leaveDungeon() {
@@ -977,6 +977,7 @@ class GameDirector extends ChangeNotifier {
     }
     notifyListeners();
     unawaited(_persistFlush());
+    _syncSituationMusic();
   }
 
   void upgradeGodHand() {
@@ -990,10 +991,6 @@ class GameDirector extends ChangeNotifier {
       );
     }
   }
-
-
-
-
 
   void setDungeonMode(DungeonMode mode) {
     final before = _state.dungeonMode;
@@ -1027,7 +1024,6 @@ class GameDirector extends ChangeNotifier {
       showToast('Floor $after · party healed', life: 2.0);
     }
   }
-
 
   void setSoundMuted(bool muted) {
     _applyUpgrade(_state.copyWith(soundMuted: muted));
@@ -1821,7 +1817,6 @@ class GameDirector extends ChangeNotifier {
 
   Future<GameState?> loadPlayGamesCloud() => PlayGamesBridge.loadCloud();
 
-
   void buyMarketFlask() {
     final cost = GameLogic.marketFlaskCost(_state);
     if (_state.gold < cost) {
@@ -2224,7 +2219,6 @@ class GameDirector extends ChangeNotifier {
       );
     }
   }
-
 
   void upgradeGodHandCd() {
     final before = _state.metaDepth.godHandCdLevel;
@@ -2642,16 +2636,28 @@ class GameDirector extends ChangeNotifier {
     unawaited(
       ScreenAwake.setEnabled(_state.keepScreenAwake && _state.inDungeon),
     );
-    // Only switch loops on hub ↔ dungeon (or unmute). Re-calling every
-    // `_applyUpgrade` used to restart music on each button press.
-    if (!_state.soundMuted) {
-      unawaited(
-        GameAudio.setAmbience(
-          _state.inDungeon ? AmbienceKind.dungeon : AmbienceKind.hub,
-        ),
-      );
-    }
+    // Only switch loops on hub ↔ dungeon, a boss, or unmute. Re-calling
+    // every `_applyUpgrade` used to restart music on each button press.
+    // While muted the score still tracks the fight so unmute is in the
+    // right place; playback itself stays stopped.
+    _syncSituationMusic();
   }
+
+  void _syncSituationMusic() {
+    unawaited(
+      GameAudio.setAmbience(
+        _state.inDungeon ? AmbienceKind.dungeon : AmbienceKind.hub,
+        bossFight: _state.inDungeon && bossEncounterNow,
+        floor: _state.currentRoom.floorNumber,
+      ),
+    );
+  }
+
+  bool get bossEncounterNow =>
+      _state.currentRoom.type == RoomType.boss ||
+      _state.riftGuardianActive ||
+      _state.grGuardianActive ||
+      _state.inWorldBoss;
 
   void _announceAbilityUnlocks(GameState before, GameState after) {
     final bits = <String>[];

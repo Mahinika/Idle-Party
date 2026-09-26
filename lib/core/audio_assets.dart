@@ -32,6 +32,9 @@ abstract final class AudioAssets {
   static const dungeonAmbience = '$ambienceRoot/dungeon.wav';
   static const hubMusic = '$musicRoot/hub.ogg';
   static const dungeonMusic = '$musicRoot/dungeon.mp3';
+  static const bossMusic = '$musicRoot/boss.wav';
+  static const resolveMusic = '$musicRoot/resolve.wav';
+  static const downMusic = '$musicRoot/down.wav';
 
   static List<String> _hitVariants(String stem) => <String>[
     for (final letter in <String>['a', 'b', 'c', 'd', 'e'])
@@ -184,8 +187,7 @@ abstract final class AudioAssets {
       WeaponType.crossbow ||
       WeaponType.gun ||
       WeaponType.thrown ||
-      null =>
-        'hit_blade',
+      null => 'hit_blade',
     };
   }
 
@@ -195,5 +197,8 @@ abstract final class AudioAssets {
     dungeonAmbience,
     hubMusic,
     dungeonMusic,
+    bossMusic,
+    resolveMusic,
+    downMusic,
   ];
 }

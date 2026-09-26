@@ -31,9 +31,9 @@ class SettingsOverlay extends StatefulWidget {
   /// ACCOUNT session-log hint. God Hand waits until first-hour chrome lifts.
   static String sessionLogHint({required bool plain}) => plain
       ? 'Optional session log on this device only — chase and wipes. '
-          'Never uploaded. Copy to clipboard for your own notes.'
+            'Never uploaded. Copy to clipboard for your own notes.'
       : 'Optional session log on this device only — chase, wipes, God Hand. '
-          'Never uploaded. Copy to clipboard for your own notes.';
+            'Never uploaded. Copy to clipboard for your own notes.';
 
   @override
   State<SettingsOverlay> createState() => _SettingsOverlayState();
@@ -179,8 +179,9 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         MenuChrome.sectionLabel('SOUND'),
         const SizedBox(height: 4),
         Text(
-          'Mute turns everything off. Music is the hub / dungeon track; '
-          'ambience is the soft bed underneath; SFX is combat and UI.',
+          'Mute turns everything off. Music rests between passages, '
+          'rises for a boss, and resolves when a floor clears. '
+          'Ambience is the soft bed underneath. SFX is combat and UI.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
