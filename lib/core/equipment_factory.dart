@@ -10,9 +10,7 @@ import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
-import '../visual/equipment_model_catalog.dart';
 import '../visual/equipment_visual_resolver.dart';
-import '../visual/owned_gear_assets.dart';
 import 'keystone.dart';
 
 /// Affix definition loaded from `item_affixes.json`.
@@ -1181,24 +1179,8 @@ class EquipmentFactory {
       affixSuffixId: suffix?.id,
       setId: setId,
     );
-    // Preserve a data-driven visualSetId override (e.g. authored sword models).
-    // Weapons pick named models. Armor picks one of 20 cuts. Mail, plate,
-    // and leather resolve when the doll paints.
-    if (item.visualSetId?.isNotEmpty == true) {
-      return item.copyWith(visualSetId: item.visualSetId);
-    }
-    final baseId = EquipmentVisualResolver.resolveId(item);
-    final stem = EquipmentModelCatalog.baseToken(baseId);
-    final pickShape =
-        EquipmentModelCatalog.sharedBases.contains(stem) ||
-        EquipmentModelCatalog.familyBases.contains(stem);
-    final modelId = pickShape
-        ? EquipmentModelCatalog.pickVariant(
-            baseId,
-            random,
-            rarityTier: rarity.index,
-          )
-        : OwnedGearAssets.silhouetteId(baseId);
-    return item.copyWith(visualSetId: modelId);
+    // Weapons pick named models. Armor picks one of the four cuts.
+    // Mail, plate, and leather resolve when the doll paints.
+    return EquipmentVisualResolver.stampLook(item, random);
   }
 }

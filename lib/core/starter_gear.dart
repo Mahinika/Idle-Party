@@ -4,9 +4,7 @@ import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/proficiency.dart';
-import '../visual/equipment_model_catalog.dart';
 import '../visual/equipment_visual_resolver.dart';
-import '../visual/owned_gear_assets.dart';
 import 'game_state.dart';
 
 /// The gear a hero starts with, and the rules for topping empty slots back up.
@@ -92,40 +90,16 @@ abstract final class StarterGear {
       out.remove(EquipmentSlot.ranged);
     }
 
-    // Stamp stable model variants on weapons/shields only — armor stays on
-    // silhouette tiers so starter dolls don't pick noisy named overlays.
+    // Same catalog stamp as dungeon drops — stable on item id.
     for (final e in out.entries.toList()) {
       final item = e.value;
-      if (item.visualSetId != null && item.visualSetId!.isNotEmpty) continue;
-      final base = EquipmentVisualResolver.resolveId(item);
-      if (base == 'none') continue;
-      final stem = EquipmentModelCatalog.baseToken(base);
-      final String modelId;
-      if (EquipmentModelCatalog.sharedBases.contains(stem)) {
-        final rng = Random(_stableSeed('${item.id}:${e.key.name}'));
-        modelId = EquipmentModelCatalog.pickVariant(
-          base,
-          rng,
-          rarityTier: item.rarity.index,
-        );
-      } else {
-        modelId = OwnedGearAssets.silhouetteId(base);
-      }
-      out[e.key] = item.copyWith(visualSetId: modelId);
+      out[e.key] = EquipmentVisualResolver.stampLook(
+        item,
+        Random(EquipmentVisualResolver.stableSeed('${item.id}:${e.key.name}')),
+      );
     }
 
     return out;
-  }
-
-  /// Dart does not promise that [String.hashCode] stays stable between
-  /// runtimes. Starter model choices must not reshuffle after an app update.
-  static int _stableSeed(String value) {
-    var hash = 0x811C9DC5;
-    for (final unit in value.codeUnits) {
-      hash ^= unit;
-      hash = (hash * 0x01000193) & 0x7FFFFFFF;
-    }
-    return hash;
   }
 
   static ({

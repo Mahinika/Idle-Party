@@ -2,6 +2,7 @@ import 'dart:math';
 
 import '../../models/hero.dart';
 import '../../models/loot.dart';
+import '../../visual/equipment_visual_resolver.dart';
 import '../game_logic.dart';
 import '../game_state.dart';
 import '../logic_notices.dart';
@@ -366,7 +367,7 @@ abstract final class GearCleanup {
         : max(primary.effectValue, secondary.effectValue);
     final affixPrefixId = primary.affixPrefixId ?? secondary.affixPrefixId;
     final affixSuffixId = primary.affixSuffixId ?? secondary.affixSuffixId;
-    return EquipmentItem(
+    final merged = EquipmentItem(
       id: id,
       name: LootPipeline.equipmentNameFor(
         primary.slot,
@@ -418,9 +419,15 @@ abstract final class GearCleanup {
       handed: primary.handed ?? secondary.handed,
       offHandKind: primary.offHandKind ?? secondary.offHandKind,
       iconId: primary.iconId ?? secondary.iconId,
+      visualSetId: primary.visualSetId,
       affixPrefixId: affixPrefixId,
       affixSuffixId: affixSuffixId,
       setId: primary.setId,
+    );
+    // Keep the primary look when its stem still matches; otherwise stamp once.
+    return EquipmentVisualResolver.stampLook(
+      merged,
+      Random(EquipmentVisualResolver.stableSeed(id)),
     );
   }
 

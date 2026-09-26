@@ -4,6 +4,8 @@ import 'dart:ui' show Color;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/gear/gear_cleanup.dart';
+import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
@@ -918,5 +920,100 @@ void main() {
     );
     expect(path, 'assets/custom/char/warrior/gear/boots_t0_icon.png');
     expect(File(path!).existsSync(), isTrue);
+  });
+
+  group('stampLook across create / merge / apex', () {
+    test('stampLook keeps a matching named look', () {
+      final item = GameLogic.createEquipment(
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.rare,
+        battleNumber: 5,
+        bias: HeroRole.warrior,
+      ).copyWith(
+        weaponType: WeaponType.sword,
+        visualSetId: 'sword_thunderfury',
+      );
+      final stamped = EquipmentVisualResolver.stampLook(item, Random(1));
+      expect(stamped.visualSetId, 'sword_thunderfury');
+    });
+
+    test('stampLook replaces a mismatched stem', () {
+      final item = GameLogic.createEquipment(
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.rare,
+        battleNumber: 5,
+        bias: HeroRole.warrior,
+      ).copyWith(
+        weaponType: WeaponType.mace,
+        visualSetId: 'sword_thunderfury',
+      );
+      final stamped = EquipmentVisualResolver.stampLook(item, Random(7));
+      expect(stamped.visualSetId, startsWith('mace_'));
+      expect(stamped.visualSetId, isNot('sword_thunderfury'));
+    });
+
+    test('merge keeps the primary look when the stem still matches', () {
+      final primary = GameLogic.createEquipment(
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.rare,
+        battleNumber: 8,
+        bias: HeroRole.warrior,
+      ).copyWith(
+        weaponType: WeaponType.sword,
+        visualSetId: 'sword_thunderfury',
+      );
+      final secondary = GameLogic.createEquipment(
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.uncommon,
+        battleNumber: 4,
+        bias: HeroRole.warrior,
+      ).copyWith(weaponType: WeaponType.sword, visualSetId: 'sword_emberfang');
+      final merged = GearCleanup.mergedEquipment(
+        primary,
+        secondary,
+        id: 'merge_keep_look',
+      );
+      expect(merged.visualSetId, 'sword_thunderfury');
+    });
+
+    test('normalize fills a missing look once, stable on item id', () {
+      final bare = GameLogic.createEquipment(
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.epic,
+        battleNumber: 12,
+        bias: HeroRole.mage,
+      ).copyWith(weaponType: WeaponType.staff, clearVisualSetId: true);
+      final a = EquipmentVisualResolver.normalizeVisualSetId(bare);
+      final b = EquipmentVisualResolver.normalizeVisualSetId(bare);
+      expect(a.visualSetId, isNotNull);
+      expect(a.visualSetId, startsWith('staff_'));
+      expect(a.visualSetId, b.visualSetId);
+      expect(
+        EquipmentModelCatalog.variantsFor('staff'),
+        contains(a.visualSetId),
+      );
+    });
+
+    test('apex stamps a catalog look that survives rank-up', () {
+      final r1 = ApexCraft.buildItem(
+        classId: HeroClassId.warrior,
+        role: SpecRoleTag.tank,
+        slot: EquipmentSlot.weapon,
+        rank: 1,
+        ascensionLevel: 3,
+      );
+      final r3 = ApexCraft.buildItem(
+        classId: HeroClassId.warrior,
+        role: SpecRoleTag.tank,
+        slot: EquipmentSlot.weapon,
+        rank: 3,
+        ascensionLevel: 3,
+      );
+      expect(r1.visualSetId, isNotNull);
+      expect(r1.visualSetId, r3.visualSetId);
+      expect(r1.id, r3.id);
+      final stem = EquipmentModelCatalog.baseToken(r1.visualSetId!);
+      expect(EquipmentModelCatalog.variantsFor(stem), contains(r1.visualSetId));
+    });
   });
 }

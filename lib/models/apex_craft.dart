@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import '../core/equipment_factory.dart';
+import '../visual/equipment_visual_resolver.dart';
 import 'equip_stat_weights.dart';
 import 'hero.dart';
 import 'hero_spec.dart';
@@ -643,7 +646,7 @@ abstract final class ApexCraft {
     }
     crit = EquipmentFactory.lootCritPercent(crit);
 
-    return EquipmentItem(
+    final piece = EquipmentItem(
       id: pieceId(classId: classId, role: role, slot: slot),
       name: pieceName(classId: classId, role: role, slot: slot),
       slot: slot,
@@ -670,6 +673,11 @@ abstract final class ApexCraft {
       apexClassId: classId.name,
       apexRoleTag: role.name,
       apexRank: rank.clamp(1, maxRank),
+    );
+    // Same look every rank — seed is the fixed piece id.
+    return EquipmentVisualResolver.stampLook(
+      piece,
+      Random(EquipmentVisualResolver.stableSeed(piece.id)),
     );
   }
 

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../models/loot.dart';
@@ -199,16 +201,69 @@ abstract final class EquipmentVisualResolver {
     return idle.replaceFirst('_idle.png', '_icon.png');
   }
 
+  /// Stable seed so the same item id always picks the same look.
+  ///
+  /// Dart does not promise [String.hashCode] stays stable across runtimes.
+  static int stableSeed(String value) {
+    var hash = 0x811C9DC5;
+    for (final unit in value.codeUnits) {
+      hash ^= unit;
+      hash = (hash * 0x01000193) & 0x7FFFFFFF;
+    }
+    return hash;
+  }
+
+  /// Whether [lookId]'s art stem matches [item]'s slot / weapon type.
+  static bool lookMatchesItem(EquipmentItem item, String lookId) {
+    final derived = _derivedId(item);
+    if (derived == 'none') return false;
+    return EquipmentModelCatalog.baseToken(lookId) ==
+        EquipmentModelCatalog.baseToken(derived);
+  }
+
+  /// Catalog look for [item] — same rules as dungeon drops.
+  static String pickLookId(EquipmentItem item, Random rng) {
+    final baseId = _derivedId(item);
+    if (baseId == 'none') return 'none';
+    final stem = EquipmentModelCatalog.baseToken(baseId);
+    if (EquipmentModelCatalog.sharedBases.contains(stem) ||
+        EquipmentModelCatalog.familyBases.contains(stem)) {
+      return EquipmentModelCatalog.pickVariant(
+        baseId,
+        rng,
+        rarityTier: item.rarity.index,
+      );
+    }
+    return OwnedGearAssets.silhouetteId(baseId);
+  }
+
+  /// Stamp a catalog look. Keeps an existing id when its stem still matches.
+  static EquipmentItem stampLook(EquipmentItem item, Random rng) {
+    final existing = item.visualSetId;
+    if (existing != null &&
+        existing.isNotEmpty &&
+        lookMatchesItem(item, existing)) {
+      return item;
+    }
+    final id = pickLookId(item, rng);
+    if (id == 'none') {
+      return existing == null ? item : item.copyWith(clearVisualSetId: true);
+    }
+    return item.copyWith(visualSetId: id);
+  }
+
   /// Persist the same validated id used by BAG and the doll.
   ///
-  /// This fills missing ids, repairs stale cross-slot ids from old saves and
-  /// clears impossible ids from jewelry/consumables.
+  /// Fills missing looks once (stable on [EquipmentItem.id]), repairs stale
+  /// cross-slot ids from old saves, and clears jewelry/consumable ids.
   static EquipmentItem normalizeVisualSetId(EquipmentItem item) {
+    final existing = item.visualSetId;
+    if (existing == null || existing.isEmpty) {
+      return stampLook(item, Random(stableSeed(item.id)));
+    }
     final id = resolveId(item);
     if (id == 'none') {
-      return item.visualSetId == null
-          ? item
-          : item.copyWith(clearVisualSetId: true);
+      return item.copyWith(clearVisualSetId: true);
     }
     if (item.visualSetId == id) return item;
     return item.copyWith(visualSetId: id);

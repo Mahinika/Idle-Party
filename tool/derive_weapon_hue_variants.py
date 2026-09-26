@@ -34,7 +34,7 @@ VARIANTS: list[tuple[str, str, str]] = [
     ("dagger_shadowfang", "dagger_t0", "shadow"),
     ("dagger_nightbite", "dagger_t0", "night"),
     ("staff_frostfire", "staff_t0", "frost"),
-    ("staff_nethercore", "staff_t0", "void"),
+    ("staff_nethercore", "staff_t0", "nether"),
     ("bow_eagle", "bow_t0", "eagle"),
     ("bow_windpierce", "bow_t0", "wind"),
     ("shield_ironwall", "shield_t0", "iron"),
@@ -61,6 +61,14 @@ def recolor(im: Image.Image, mode: str) -> Image.Image:
                 nr = int(48 + lum * 120)
                 ng = int(28 + lum * 70)
                 nb = int(70 + lum * 185)
+            elif mode == "nether":
+                # Dark charcoal with a crimson core — darker and warmer than void.
+                nr = int(22 + lum * 95)
+                ng = int(10 + lum * 36)
+                nb = int(14 + lum * 48)
+                if lum > 0.55:
+                    nr = min(255, nr + 85)
+                    ng = min(255, ng + 22)
             elif mode == "ash":
                 nr = int(42 + lum * 150)
                 ng = int(40 + lum * 130)
