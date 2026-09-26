@@ -47,6 +47,14 @@ early and hide chrome until it matters when it does not fight the named goal.
 - iOS / web-as-product / GitHub Releases as a player funnel
 - Inventing numbered “Program N” roadmaps unless the owner asks for one
 
+## Year roadmap (owner ask only)
+
+When the owner says **Uppdatera 1års roadmap**, follow
+`.cursor/skills/year-roadmap/`. Output lives in
+[YEAR_ROADMAP.md](YEAR_ROADMAP.md) (sources:
+[YEAR_ROADMAP_SOURCES.md](YEAR_ROADMAP_SOURCES.md)). That file does **not**
+pick the next code batch — the owner names a line first.
+
 ## Endgame (when owner names it)
 
 Prefer deepening the **five hunts** (KEY / Gauntlet / Farm Rift / Ranked GR /

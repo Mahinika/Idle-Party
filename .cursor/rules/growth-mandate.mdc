@@ -13,3 +13,5 @@ Read `docs/GROWTH_MANDATE.md`. Do not copy it into other rules.
 
 Owner names the work. A vague “gör bättre / vad härnäst” asks once.
 Numbers and why: `docs/PLAY_GROWTH.md`, `docs/LEARNINGS.md`.
+“Uppdatera 1års roadmap” → `.cursor/skills/year-roadmap/` (not a standing
+program; the plan file does not pick the next batch).

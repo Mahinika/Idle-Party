@@ -44,6 +44,14 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
   **2026-09-12…14** (Play D1 still not readable). History only — not a
   standing program. Do not restore AL20 as the batch (`GROWTH_MANDATE.md`).
 
+## 2026-09-26 — year roadmap on ask only
+
+- Owner can say **Uppdatera 1års roadmap**. Skill
+  `.cursor/skills/year-roadmap/` rewrites `docs/YEAR_ROADMAP.md` (graded
+  sources in `docs/YEAR_ROADMAP_SOURCES.md`). Exception to “no numbered
+  plans”: the file is owner-driven, not a standing program, and does not
+  pick the next code batch until a line is named in a new chat.
+
 ## 2026-09-14 — owner removed numbered plans
 
 - Owner: **ta bort alla planer.** Growth mandate is standing principles only;
