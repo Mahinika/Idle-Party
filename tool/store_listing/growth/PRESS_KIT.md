@@ -3,7 +3,7 @@
 **Studio:** Cognifox Studio · cognifoxstudio@gmail.com  
 **Play (install):** https://play.google.com/store/apps/details?id=com.idleparty.app  
 **itch (discovery, no APK):** https://cognifox-studio.itch.io/idle-party  
-**Trailer:** https://www.youtube.com/watch?v=OMWXbgGBFMA  
+**Trailer:** https://www.youtube.com/watch?v=UHLG28lHmPs  
 
 ## One line
 

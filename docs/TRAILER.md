@@ -94,7 +94,7 @@ keeps the whole phone UI visible.
 
 - Play listing uses a **YouTube URL only** (not direct MP4). Live unlisted on
   **Cognifox Studio** (`@CognifoxStudio`):
-  `https://www.youtube.com/watch?v=OMWXbgGBFMA`
+  `https://www.youtube.com/watch?v=UHLG28lHmPs`
   (relinked **2026-09-11**; old personal upload `fiZjJ9S9l4A` superseded).
   **2026-09-26:** local montage is Sandy crawl, Gauntlet, Greater Rift,
   Hell's Gate, a short AFK card, then the title (~28s, ~30 fps). Rebuild
@@ -102,7 +102,7 @@ keeps the whole phone UI visible.
   ~13 fps `gameplay_combat_raw.mp4`.
 - **Feed Short** (public combat ad, Cognifox Studio **2026-09-12**):
   `https://www.youtube.com/shorts/l9jWy29YwJM`
-  Related video in Studio → unlisted Play preview `OMWXbgGBFMA`.
+  Related video in Studio → unlisted Play preview `UHLG28lHmPs`.
 - **Listing 9:16 Short** (older Play-trailer crop, still public):
   `https://www.youtube.com/shorts/wdnrXCYLtZE`
   (The 2026-09-11 upload `0zKNQKg6kaQ` is 16:9, so YouTube treats it as a
@@ -169,4 +169,4 @@ py -3 tool/store_listing/build_hook_clips.py
 Recipe: [`tool/store_listing/growth/hooks_batch.json`](../tool/store_listing/growth/hooks_batch.json).
 
 Live public Short: `https://www.youtube.com/shorts/l9jWy29YwJM`.
-Related video in Studio → Play listing preview `OMWXbgGBFMA`.
+Related video in Studio → Play listing preview `UHLG28lHmPs`.

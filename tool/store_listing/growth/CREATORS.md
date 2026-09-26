@@ -4,7 +4,7 @@
 From: **cognifoxstudio@gmail.com**. One follow-up after 7 days. Stop if they say no.
 
 **Play:** https://play.google.com/store/apps/details?id=com.idleparty.app  
-**Trailer (optional):** https://www.youtube.com/watch?v=OMWXbgGBFMA  
+**Trailer (optional):** https://www.youtube.com/watch?v=UHLG28lHmPs  
 **itch (no APK):** https://cognifox-studio.itch.io/idle-party
 
 Find the address on YouTube **About**, Linktree, or the video description. Do not scrape inboxes into git. Prefer 1k–80k idle / Android RPG / incremental channels. Mega-channels (row 31+) are last.
@@ -28,7 +28,7 @@ Play (Android):
 https://play.google.com/store/apps/details?id=com.idleparty.app
 
 30s look (real UI):
-https://www.youtube.com/watch?v=OMWXbgGBFMA
+https://www.youtube.com/watch?v=UHLG28lHmPs
 
 No pressure to post. If it is not your kind of idle, say so and I will not follow up.
 

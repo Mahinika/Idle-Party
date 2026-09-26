@@ -44,7 +44,7 @@ Do these in Console when you have 20 minutes:
    SV picker — do not invent tags; AFK / Party / Dungeon / Ascend belong in
    description only. Keep Clicker-spel / Rogue-liknande off (dishonest).
 3. **Preview video** — Cognifox Studio unlisted YT
-   `https://www.youtube.com/watch?v=OMWXbgGBFMA` (relinked **2026-09-11**).
+   `https://www.youtube.com/watch?v=UHLG28lHmPs` (relinked **2026-09-26**).
    Feed Short (public combat ad): `https://www.youtube.com/shorts/l9jWy29YwJM`
    (related video → Play preview; uploaded **2026-09-12**).
    Older listing 9:16 Short: `https://www.youtube.com/shorts/wdnrXCYLtZE`.

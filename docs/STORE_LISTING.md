@@ -32,10 +32,11 @@ fairness, cheap convenience SHOP).
 5. **Copy matches ship** — 15 zones, 31 specs, KEYSTONE (not invented systems).
    Do **not** promise “no ads forever” — rewarded SCROLLS and a cheap SHOP
    catalog exist (`docs/SHOP_MONETIZATION.md`).
-6. **English only on the live store page** — default locale **en-US**.
-   Screenshot captions stay English. Extra Play **metadata** locales live in
-   [`tool/store_listing/growth/LOCALES.md`](../tool/store_listing/growth/LOCALES.md)
-   and stay **gated** until the owner says paste (in-game UI stays English).
+6. **Store metadata localized** — default locale **en-US** + 9 store
+   metadata locales (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`)
+   committed and active on Google Play Console (2026-09-25). In-game UI and
+   screenshot captions stay English. Extra metadata reference lives in
+   [`tool/store_listing/growth/LOCALES.md`](../tool/store_listing/growth/LOCALES.md).
 7. **Genre honesty** — Category stays **Rollspel / Role Playing** (one only).
    Play tags are a **fixed list**, max **5** — not free keywords.
    **Live Console tags (2026-09-11):** **Clicker-rollspel**, **Rollspel**
@@ -214,7 +215,7 @@ Locales in `growth/LOCALES.md` stay gated until you say paste.
 | Phone screenshots 1–8 | `tool/store_listing/out/` + `marketing/` per table (shots 1–2 recaptured with party-centered camera) |
 | Icon 512 | `out/play_icon_512.png` |
 | Feature graphic | `marketing/01_feature_graphic_1024x500.png` |
-| Preview video | After you upload the rebuilt MP4: keep ads off, unlisted OK. Until then `https://www.youtube.com/watch?v=OMWXbgGBFMA`. New files: `preview/idle_party_preview_16x9.mp4` + `_9x16.mp4` |
+| Preview video | `https://www.youtube.com/watch?v=UHLG28lHmPs` (unlisted, Cognifox, ads off). File: `preview/idle_party_preview_16x9.mp4`. 9:16 is Shorts only. |
 | Store listing experiment | Deferred until listing traffic is large enough |
 
 Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in first 10 s).
@@ -230,11 +231,9 @@ Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in fi
   (`tool/store_listing/out/play_ready/` → Console `01_play_combat_a` …
   `08_play_ascend`). Order: combat a/b → TODAY chase → GEAR → party → zone →
   AFK → Ascend. Console: *Ändringarna granskas* (snabbkontroller then review).
-- Listing preview URL: keep `https://www.youtube.com/watch?v=OMWXbgGBFMA`.
-  Rebuilt MP4 (combat first 10 s) on Cognifox unlisted:
-  `https://www.youtube.com/watch?v=XfKog5CAiUs` — Play rejected embed
-  (ads/visibility); fix channel kids/ads, then swap later. Files:
-  `preview/idle_party_preview_16x9.mp4` (+ 9:16).
+- Listing preview URL: `https://www.youtube.com/watch?v=UHLG28lHmPs` (set **2026-09-26**).
+  Older Cognifox upload `XfKog5CAiUs` stays unused (Play rejected that embed).
+  File: `preview/idle_party_preview_16x9.mp4` (9:16 is Shorts only).
 - Icon `play_icon_512.png`. Developer: **Cognifox Studio**.
 - Growth ops: [`PLAY_GROWTH.md`](PLAY_GROWTH.md). Feed Short:
   `https://www.youtube.com/shorts/l9jWy29YwJM`. Older 9:16 Short:

@@ -23,7 +23,7 @@ Do **not** upload an APK.
 - `07_afk_progress_1080x1920.png`
 - `08_keystone_1080x1920.png`
 
-**Trailer:** `https://www.youtube.com/watch?v=OMWXbgGBFMA`
+**Trailer:** `https://www.youtube.com/watch?v=UHLG28lHmPs`
 
 Pricing: **No payments**. Generative AI: **No**.
 
@@ -167,4 +167,4 @@ Fair SHOP (convenience only) and optional hub SCROLLS ads — nothing interrupts
 Trailer:
 ```
 
-YouTube: `https://www.youtube.com/watch?v=OMWXbgGBFMA`
+YouTube: `https://www.youtube.com/watch?v=UHLG28lHmPs`
