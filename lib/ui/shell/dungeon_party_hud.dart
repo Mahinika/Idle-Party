@@ -199,6 +199,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
         kitHero != null &&
         kitActor != null &&
         kitActor.isAlive;
+    final showFlask = GameLogic.canUseConsumable(state);
     final coachKit = FirstSessionTips.lineFor(
       state,
       CoachTarget.kit,
@@ -276,13 +277,18 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                     ),
                   ),
                 ],
+                if (showFlask)
+                  DungeonFlaskButton(
+                    director: widget.director,
+                    onTap: widget.director.useConsumable,
+                  ),
               ],
             ),
           ),
           if (showSideKit)
             Positioned(
               left: fullWidth + 4,
-              bottom: 0,
+              bottom: showFlask ? DungeonFlaskButton.stripReserve + 2 : 0,
               child: _KitSidePanel(
                 hero: kitHero,
                 plainEnglish: plainEnglish,
@@ -317,7 +323,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   }
 }
 
-/// Healing flask — sits bottom-right in the dungeon (away from the party strip).
+/// Healing flask — last row of the party strip, same width as the heroes.
+/// The kit panel sits above this row so chips are not covered.
 class DungeonFlaskButton extends StatelessWidget {
   const DungeonFlaskButton({
     super.key,
@@ -327,6 +334,9 @@ class DungeonFlaskButton extends StatelessWidget {
 
   final GameDirector director;
   final VoidCallback onTap;
+
+  /// Gap + rule + tap row. Kit panel bottom inset matches this.
+  static const double stripReserve = 40;
 
   static int flaskCount(GameState state) {
     var n = 0;
@@ -381,53 +391,84 @@ class DungeonFlaskButton extends StatelessWidget {
     }
     final urgent = partyCritical(director);
     final count = flaskCount(state);
-    final borderColor = urgent
-        ? GameTheme.torchHot
-        : GameTheme.bloodLit.withValues(alpha: 0.8);
     final countLabel = ' · $count';
     final semanticsLabel = urgent
         ? 'Use healing flask$countLabel, party critical'
         : 'Use healing flask$countLabel';
-    return WebClickScope(
-      label: semanticsLabel,
-      onPressed: onTap,
-      child: Semantics(
-        button: true,
-        label: semanticsLabel,
-        onTap: onTap,
-        excludeSemantics: true,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(4),
-            child: Container(
-              height: 36,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: urgent
-                    ? GameTheme.hudFlaskUrgent
-                    : GameTheme.hudFlaskIdle,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: borderColor, width: 1),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GameIcon.asset(UiIcon.flask, size: 16),
-                  const SizedBox(width: 5),
-                  Text(
-                    'FLASK · $count',
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
-                      color: urgent ? GameTheme.torchHot : GameTheme.parchment,
+    final labelColor = urgent ? GameTheme.torchHot : GameTheme.parchment;
+    return SizedBox(
+      height: stripReserve,
+      child: Column(
+        children: [
+          const SizedBox(height: 2),
+          Container(
+            height: 1,
+            color: urgent
+                ? GameTheme.torch.withValues(alpha: 0.55)
+                : GameTheme.hudWellBorder,
+          ),
+          const SizedBox(height: 1),
+          Expanded(
+            child: WebClickScope(
+              label: semanticsLabel,
+              onPressed: onTap,
+              child: Semantics(
+                button: true,
+                label: semanticsLabel,
+                onTap: onTap,
+                excludeSemantics: true,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onTap,
+                    borderRadius: BorderRadius.circular(3),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                        color: urgent
+                            ? GameTheme.hudFlaskUrgent
+                            : GameTheme.hudRowSelected,
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(
+                          color: urgent
+                              ? GameTheme.torchHot
+                              : Colors.transparent,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          GameIcon.asset(UiIcon.flask, size: 16),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'FLASK',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GameTheme.pixel(
+                                size: GameTheme.hudPixel,
+                                color: labelColor,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '$count',
+                            style: GameTheme.pixel(
+                              size: GameTheme.hudPixelComfort,
+                              color: urgent
+                                  ? GameTheme.torchHot
+                                  : GameTheme.torch,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

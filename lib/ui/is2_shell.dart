@@ -192,26 +192,15 @@ class _Is2ShellState extends State<Is2Shell> {
                       Positioned(
                         left: hudSide,
                         bottom: partyBottom,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            PartyCornerHud(
-                              director: d,
-                              selectedHeroIndex: router.session.abilityHeroIndex,
-                              onSelectHero: (i) {
-                                router.session.abilityHeroIndex = i;
-                                d.cameraHeroIndex = i;
-                              },
-                              onOpenEquip: () =>
-                                  router.toggleGear(GearPanel.gear),
-                            ),
-                            const SizedBox(width: 4),
-                            DungeonFlaskButton(
-                              director: d,
-                              onTap: d.useConsumable,
-                            ),
-                          ],
+                        child: PartyCornerHud(
+                          director: d,
+                          selectedHeroIndex: router.session.abilityHeroIndex,
+                          onSelectHero: (i) {
+                            router.session.abilityHeroIndex = i;
+                            d.cameraHeroIndex = i;
+                          },
+                          onOpenEquip: () =>
+                              router.toggleGear(GearPanel.gear),
                         ),
                       ),
                       Positioned(
