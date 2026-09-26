@@ -27,6 +27,7 @@ abstract final class CharacterVisualPainter {
   static const Set<CharacterLayerId> kOwnedGearOverlayLayers = {
     CharacterLayerId.cape,
     CharacterLayerId.legs,
+    CharacterLayerId.boots,
     CharacterLayerId.torso,
     CharacterLayerId.shoulders,
     CharacterLayerId.gloves,
@@ -129,15 +130,23 @@ abstract final class CharacterVisualPainter {
               tint.withValues(alpha: 1),
               BlendMode.modulate,
             );
+          // Shoes live on the bottom of the undertunic. Dyeing them the spec
+          // color makes short pants look barefoot.
+          final shoeTop = OwnedGearAssets.undertunicShoeTop;
           canvas.drawImageRect(
             mask,
             Rect.fromLTWH(
               0,
               0,
               mask.width.toDouble(),
-              mask.height.toDouble(),
+              mask.height * shoeTop,
             ),
-            dst,
+            Rect.fromLTWH(
+              dst.left,
+              dst.top,
+              dst.width,
+              dst.height * shoeTop,
+            ),
             tintPaint,
           );
         }
@@ -161,12 +170,21 @@ abstract final class CharacterVisualPainter {
       if (tint != null) {
         p.colorFilter = ColorFilter.mode(tint, BlendMode.modulate);
       }
+      final crop = layer.cropTop.clamp(0.0, 0.95);
       final src = Rect.fromLTWH(
         0,
-        0,
+        img.height * crop,
         img.width.toDouble(),
-        img.height.toDouble(),
+        img.height * (1 - crop),
       );
+      final layerDst = crop == 0
+          ? dst
+          : Rect.fromLTWH(
+              dst.left,
+              dst.top + dst.height * crop,
+              dst.width,
+              dst.height * (1 - crop),
+            );
 
       // Weapons / shields: shift full 128 canvas so grip UV sits on hand
       // anchor (armor layers stay unshifted same-origin blit).
@@ -210,7 +228,7 @@ abstract final class CharacterVisualPainter {
         continue;
       }
 
-      canvas.drawImageRect(img, src, dst, p);
+      canvas.drawImageRect(img, src, layerDst, p);
       final dyeMaskPath = layer.dyeMaskAsset;
       final dyeTint = layer.dyeTint;
       if (dyeMaskPath != null && dyeTint != null) {

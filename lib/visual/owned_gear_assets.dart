@@ -18,6 +18,14 @@ abstract final class OwnedGearAssets {
   /// Shipped overlay clips (idle only). Body clips live on [BodyFamilyCatalog].
   static const List<String> kOverlayAnims = ['idle'];
 
+  /// Short legs end by row 111 of the 128 canvas. Sabatons in t0/t2/broad
+  /// continue below this, so a boot overlay starts here.
+  static const double bootFootTop = 104 / 128;
+
+  /// Undertunic shoes. Cloth tint stops above this row so they stay brown
+  /// when the pants cut does not cover the feet.
+  static const double undertunicShoeTop = 116 / 128;
+
   /// Shared hand items (one art + rarity tint).
   static const List<String> kSharedSetIds = [
     'sword_t0',

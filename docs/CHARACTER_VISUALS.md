@@ -12,7 +12,7 @@ Idle Party heroes use a **paper-doll** path when an owned body is available:
    a generated **cloth-only** grayscale mask. Never color-filter the whole body:
    that recolors faces, hair and ink.
 2. **Every equipped gear slot** is a 128×128 overlay on the same dest-rect
-   (cape, legs, chest, gloves, helm, off-hand, main-hand). Overlays always
+   (cape, legs, boots, chest, gloves, helm, off-hand, main-hand). Overlays always
    use the **idle** PNG (`*_idle.png`); walk/attack only change the undertunic
    body clip (`body_walk` / `body_attack`). Common/t0 is visible — it is not
    baked into the body. Not Kenney 16×16 tiles.
@@ -120,6 +120,10 @@ optional material suffix from equipped `armorType`.
 | Kenney / custom icons | `KenneyAssets` / `CustomAssets` | jewelry, flask, empty shoulder/waist slots |
 
 Boots fold into legs on the doll; BAG uses a foot-band `boots_t*_icon.png` crop.
+Short pants stop above the ankle. Equipped boots still paint the sabaton band
+(from row 104 of a t0 / t2 / broad cut) so the feet are not bare. Cloth tint
+stops above the undertunic shoes (row 116) so those stay brown when no boot
+covers them.
 
 Do **not** invent armor or mass weapon variants with `ImageDraw`.
 `generate_item_model_variants.py` refuses to copy masters into live gear.

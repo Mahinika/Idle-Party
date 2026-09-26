@@ -457,6 +457,61 @@ void main() {
     expect(legsWith('legs_v01'), contains('legs_t2_idle.png'));
   });
 
+  test('short pants keep their cut and equipped boots paint sabatons', () {
+    final hero = nakedWarrior().copyWith(
+      equipped: {
+        EquipmentSlot.legs: GameLogic.createEquipment(
+          slot: EquipmentSlot.legs,
+          rarity: LootRarity.common,
+          battleNumber: 4,
+          bias: HeroRole.warrior,
+        ).copyWith(visualSetId: 'legs_short'),
+        EquipmentSlot.boots: GameLogic.createEquipment(
+          slot: EquipmentSlot.boots,
+          rarity: LootRarity.rare,
+          battleNumber: 8,
+          bias: HeroRole.warrior,
+        ).copyWith(visualSetId: 'legs_short'),
+      },
+    );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: idle,
+      owned: true,
+    );
+    final legs = pose.layers.firstWhere((l) => l.id == CharacterLayerId.legs);
+    final boots = pose.layers.firstWhere((l) => l.id == CharacterLayerId.boots);
+    expect(legs.ownedAsset, contains('legs_short_idle.png'));
+    expect(boots.ownedAsset, contains('legs_t2_idle.png'));
+    expect(boots.cropTop, OwnedGearAssets.bootFootTop);
+    expect(boots.ownedAsset, contains('/warrior/gear/'));
+  });
+
+  test('boots that already match the pants do not add a second foot layer', () {
+    final hero = nakedWarrior().copyWith(
+      equipped: {
+        EquipmentSlot.legs: GameLogic.createEquipment(
+          slot: EquipmentSlot.legs,
+          rarity: LootRarity.common,
+          battleNumber: 4,
+          bias: HeroRole.warrior,
+        ).copyWith(visualSetId: 'legs_t0'),
+        EquipmentSlot.boots: GameLogic.createEquipment(
+          slot: EquipmentSlot.boots,
+          rarity: LootRarity.common,
+          battleNumber: 4,
+          bias: HeroRole.warrior,
+        ).copyWith(visualSetId: 'legs_t0'),
+      },
+    );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: idle,
+      owned: true,
+    );
+    expect(pose.layers.any((l) => l.id == CharacterLayerId.boots), isFalse);
+  });
+
   test('owned rare chest uses t2 overlay path', () {
     final hero = nakedWarrior().copyWith(
       equipped: {

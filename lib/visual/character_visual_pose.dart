@@ -27,6 +27,7 @@ class ResolvedLayer {
     this.tint,
     this.dyeMaskAsset,
     this.dyeTint,
+    this.cropTop = 0,
   });
 
   final CharacterLayerId id;
@@ -47,6 +48,10 @@ class ResolvedLayer {
   /// Cloth-trim dye mask (grayscale) painted with [dyeTint] after the overlay.
   final String? dyeMaskAsset;
   final Color? dyeTint;
+
+  /// Fraction of the 128 canvas to skip from the top. Boot sabatons use this
+  /// so short pants keep their cut and the feet still get shoes.
+  final double cropTop;
 }
 
 /// Fully resolved visual pose for one hero this frame.
@@ -313,6 +318,13 @@ class CharacterVisualPose {
       t2Id: 'legs_t2',
       heroClass: hero.spec.classId,
     );
+    _addBootFeet(
+      layers: layers,
+      family: family,
+      anim: anim.kind,
+      boots: hero.itemIn(EquipmentSlot.boots),
+      heroClass: hero.spec.classId,
+    );
     // Chest and shoulders are independent snap-ons (Diablo-style).
     addItem(hero.itemIn(EquipmentSlot.chest), layer: CharacterLayerId.torso);
     addItem(
@@ -353,6 +365,49 @@ class CharacterVisualPose {
         ),
       ),
       bodyTintAsset: BodyFamilyCatalog.tintMaskAssetFor(hero, anim.kind),
+    );
+  }
+
+  /// Short pants stop above the ankle. Equipped boots still paint the sabaton
+  /// band from a cut that reaches the feet (t0 / t2 / broad, never short).
+  static void _addBootFeet({
+    required List<ResolvedLayer> layers,
+    required BodyFamily family,
+    required HeroAnimKind anim,
+    required EquipmentItem? boots,
+    HeroClassId? heroClass,
+  }) {
+    if (boots == null) return;
+    var visId = EquipmentVisualResolver.resolveId(boots);
+    if (visId == 'none') return;
+    if (OwnedGearAssets.legacyArmorCut(visId).endsWith('_short')) {
+      visId = boots.rarity.index >= 2 ? 'legs_t2' : 'legs_t0';
+    }
+    final path = OwnedGearAssets.pathFor(
+      visualSetId: visId,
+      family: family,
+      anim: anim,
+      armorType: boots.armorType,
+      heroClass: heroClass,
+    );
+    if (path == null) return;
+    final already = layers.any(
+      (layer) =>
+          layer.id == CharacterLayerId.legs && layer.ownedAsset == path,
+    );
+    if (already) return;
+    layers.add(
+      ResolvedLayer(
+        id: CharacterLayerId.boots,
+        col: 0,
+        row: 0,
+        ownedAsset: path,
+        cropTop: OwnedGearAssets.bootFootTop,
+        tint: EquipmentVisualResolver.rarityTint(
+          visId,
+          rarityTier: boots.rarity.index,
+        ),
+      ),
     );
   }
 
