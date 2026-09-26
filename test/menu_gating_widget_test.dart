@@ -195,6 +195,6 @@ void main() {
     router.open(MenuRoute.gold, gold: GoldPanel.market);
     expect(router.jobHint.toLowerCase(), contains('flask'));
     router.open(MenuRoute.essence, essence: EssencePanel.relics);
-    expect(router.jobHint.toLowerCase(), contains('aura'));
+    expect(router.jobHint.toLowerCase(), contains('relic'));
   });
 }
