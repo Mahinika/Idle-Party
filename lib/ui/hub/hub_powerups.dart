@@ -294,7 +294,9 @@ Future<void> openPowerupsSheet(
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Optional ads. Never mid-fight. Same scrolls as SHOP.',
+                                'Optional ads. Never mid-fight. '
+                                'Timed ticket scrolls live here. '
+                                'Forever scrolls are bought in SHOP.',
                                 style: GameTheme.body(
                                   size: 13,
                                   color: GameTheme.parchmentDim,

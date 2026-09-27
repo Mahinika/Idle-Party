@@ -58,6 +58,25 @@ void main() {
     expect(line, contains('Essence'));
   });
 
+  test('income line names relic and star gold the hub rate uses', () {
+    final bare = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 20));
+    final state = bare.copyWith(
+      sanctuaryGoldLevel: 40,
+      unlockedRelics: const ['porch_lantern'],
+      metaDepth: bare.metaDepth.copyWith(
+        constellationNodes: const ['for_gold'],
+      ),
+    );
+    final paced = bare.copyWith(sanctuaryGoldLevel: 40);
+    final line = GoldIncome.multiplierLine(state);
+    expect(line, contains('Relic +6%'));
+    expect(line, contains('Stars +3%'));
+    expect(
+      GoldIncome.hubGoldPerMinute(state),
+      greaterThan(GoldIncome.hubGoldPerMinute(paced)),
+    );
+  });
+
   test('legacy metaDepth json defaults hub idle remainders to 0', () {
     final md = MetaDepthState.fromJson({'playGamesOptIn': false});
     expect(md.hubIdleSubSec, 0);

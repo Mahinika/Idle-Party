@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'ad_boost.dart';
+import 'blessing_constellation.dart';
 import 'game_state.dart';
 import 'game_logic.dart';
 
@@ -99,8 +100,10 @@ abstract final class GoldIncome {
       ('AL', state.ascensionGoldBonusPercent),
       ('Essence', state.sanctuaryGoldBonusPercent),
       ('Blessing', state.ascendBlessingGoldPercent),
+      ('Stars', BlessingConstellation.goldFindPercent(state)),
       ('gear', state.gearGoldFindPercent),
       ('pet', state.petGoldFindPercent),
+      ('Relic', state.relicOfflineGoldPercent),
       ('Torch', state.torchOfflineGoldPercent),
     ].where((p) => p.$2 > 0).toList();
   }
@@ -109,6 +112,10 @@ abstract final class GoldIncome {
     final bits = [
       for (final p in multiplierParts(state)) '${p.$1} +${p.$2}%',
     ];
+    // Hub gold uses the soft-capped find, not the raw stack of those percents.
+    if (state.totalGoldFindPercent > state.effectiveGoldFindPercent) {
+      bits.add('uses ${state.effectiveGoldFindPercent}%');
+    }
     if (AdBoost.goldActive(state.metaDepth)) {
       bits.add('Ad ×${AdBoost.goldMul} gold');
     }

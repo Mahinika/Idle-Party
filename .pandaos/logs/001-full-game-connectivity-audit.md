@@ -1,7 +1,7 @@
 # Log — F-001 Full game connectivity audit
 
 **Started:** 2026-09-27  
-**Status:** batch E done — next is batch F (step 58)  
+**Status:** batch F done — next is batch G (step 70)  
 **Steps:** 119 (19 screens folded in 2026-09-27)
 
 ## Progress
@@ -13,7 +13,7 @@
 | C GEAR | 24–36 | 13/13 |
 | D Combat | 37–47 | 11/11 |
 | E Zones | 48–57 | 10/10 |
-| F GOLD/SHOP/ESSENCE | 58–69 | 0/12 |
+| F GOLD/SHOP/ESSENCE | 58–69 | 12/12 |
 | G Ascend & meta | 70–82 | 0/13 |
 | H Endgame | 83–96 | 0/14 |
 | I Chase & return | 97–108 | 0/12 |
@@ -65,3 +65,13 @@ Note for batch C: starter doll logs missing gear overlays (cloak/helm/weapon). N
 56: You can jump back to a cleared floor, and one floor past the furthest clear. Not further.
 57: A push boss clear names the next cave and opens it.
 Copy: Crystal Spire no longer says the cave itself is endless. Hollow Grove no longer claims to sit between Tidehold and Ashen.
+
+### Batch F (2026-09-27)
+
+58–60: GOLD forge spends gold on ATK, DEF, and STA. MARKET buy follows what you can afford. Ascend clears gold and forge tracks and keeps essence and relics.
+61–62: Ad-free and supporter stay owned after a reload. Forever scrolls in SHOP match the bonus they describe. Hour packs stay off the buy list.
+63: Hub SCROLLS is the timed ticket list. It no longer says those are the same scrolls as SHOP.
+64: The income sheet names relic gold and star gold that the hub rate uses. When gold-find is softened, the line says the percent that is actually used.
+65–67: CAMP prices match the buy. God Hand modes are BAL, FOCUS, and WIDE. Relics level with Embers and survive Ascend.
+68: Cinders match What’s New: one from the daily vault, one per two Ad Tickets, or the pouch. They salvage or trade a few Embers a week.
+69: Pets live under ESSENCE → PETS. No Beast Pen label.
