@@ -1,9 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/economy_service.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/gold_income.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/market_listings_service.dart';
+import 'package:idle_party/models/achievement_def.dart';
+import 'package:idle_party/models/dungeon_mode.dart';
+import 'package:idle_party/models/dungeon_room.dart';
 
 void main() {
   test('AL0 forge and gold find stay gentle', () {
@@ -58,6 +62,45 @@ void main() {
     expect(
       GameLogic.dailyVaultClaimEssence(deep),
       Keystone.dailyVaultEssence(0) + GameLogic.sanctuaryCost(80),
+    );
+  });
+
+  test('farm clear pays no floor essence; push clear does', () {
+    final entered = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime.utc(2026, 8, 22)),
+      dungeonId: 'sandy',
+    );
+    final farm = GameLogic.setDungeonMode(entered, DungeonMode.farm);
+    final push = GameLogic.setDungeonMode(entered, DungeonMode.push);
+    final farmClear = GameLogic.completeCurrentRoom(
+      farm,
+      goldGain: 0,
+      skipLootRoll: true,
+    );
+    final pushClear = GameLogic.completeCurrentRoom(
+      push,
+      goldGain: 0,
+      skipLootRoll: true,
+    );
+    final boss = push.currentRoom.type == RoomType.boss;
+    int newAchievementEssence(GameState after) {
+      var gain = 0;
+      for (final id in after.achievements) {
+        if (entered.achievements.contains(id)) continue;
+        gain += AchievementCatalog.byId(id)?.essenceReward ?? 0;
+      }
+      return gain;
+    }
+
+    // Farm still counts the one-time floor achievement. It does not pay
+    // the repeating PUSH floor essence.
+    expect(
+      farmClear.essence - entered.essence,
+      newAchievementEssence(farmClear),
+    );
+    expect(
+      pushClear.essence - entered.essence,
+      newAchievementEssence(pushClear) + GameLogic.pushClearEssence(boss: boss),
     );
   });
 }

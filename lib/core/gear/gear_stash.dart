@@ -73,10 +73,12 @@ abstract final class GearStash {
     if (stash.length >= cap) {
       final overflow = stash.removeAt(0);
       if (overflow.isApex) {
+        // The new piece stays in the bag. Only the apex item leaves for the vault.
+        stash.add(item);
         return (
           state: state.copyWith(
             gearStash: stash,
-            apexVault: [...state.apexVault, overflow, item],
+            apexVault: [...state.apexVault, overflow],
             essence: essence,
           ),
           overflowEssence: 0,

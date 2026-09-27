@@ -507,4 +507,33 @@ void main() {
     expect(state.metaDepth.apexTargetMatId, 'apex_slag');
     expect(state.metaDepth.apexTargetProgress, 0);
   });
+
+  test('unequip keeps the piece when a full bag evicts an apex item', () {
+    final apex = ApexCraft.buildItem(
+      classId: HeroClassId.warrior,
+      role: SpecRoleTag.tank,
+      slot: EquipmentSlot.weapon,
+      rank: 1,
+      ascensionLevel: 0,
+    ).copyWith(id: 'bag_apex');
+    final fillers = [
+      for (var i = 0; i < GameLogic.maxGearStash - 1; i++)
+        GameLogic.createEquipment(
+          slot: EquipmentSlot.cloak,
+          rarity: LootRarity.common,
+          battleNumber: 1,
+        ).copyWith(id: 'fill_$i'),
+    ];
+    var state = GameLogic.createInitialState().copyWith(
+      gearStash: [apex, ...fillers],
+    );
+    expect(state.gearStash.length, GameLogic.maxGearStash);
+    final wornId = state.heroes[0].itemIn(EquipmentSlot.cloak)!.id;
+    state = GameLogic.unequipSlot(state, EquipmentSlot.cloak, heroIndex: 0);
+    expect(state.heroes[0].itemIn(EquipmentSlot.cloak), isNull);
+    expect(state.gearStash.any((g) => g.id == wornId), isTrue);
+    expect(state.apexVault.any((g) => g.id == 'bag_apex'), isTrue);
+    expect(state.apexVault.any((g) => g.id == wornId), isFalse);
+    expect(state.gearStash.length, GameLogic.maxGearStash);
+  });
 }
