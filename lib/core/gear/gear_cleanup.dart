@@ -29,11 +29,7 @@ abstract final class GearCleanup {
     if (mergeFirst) {
       next = autoMergeJunk(next).state;
     }
-    next = autoSellJunk(
-      next,
-      unstickBag: unstickBag,
-      manualClean: manualClean,
-    );
+    next = autoSellJunk(next, unstickBag: unstickBag, manualClean: manualClean);
     next = autoDisassembleJunk(
       next,
       unstickBag: unstickBag,
@@ -77,6 +73,40 @@ abstract final class GearCleanup {
       if (shouldAutoSellOnPickup(state, item)) n++;
     }
     return n;
+  }
+
+  /// How many stash items CLEAN will sell. Unlike pickup, CLEAN does not
+  /// keep upgrades that match the iLvl and rarity caps.
+  static int cleanSellPreviewCount(GameState state) {
+    var n = 0;
+    for (final item in state.gearStash) {
+      if (_isProtectedGear(item)) continue;
+      if (matchesIlvlRarityFilter(
+        item,
+        maxIlvl: state.autoSellMaxPower,
+        maxRarity: state.autoSellMaxRarity,
+      )) {
+        n++;
+      }
+    }
+    return n;
+  }
+
+  /// Median worn item level (flasks skipped). The sell slider's reference.
+  static int? partyWornIlvl(GameState state) {
+    final values = <int>[];
+    for (final hero in state.heroes) {
+      for (final item in hero.equipped.values) {
+        if (item.slot == EquipmentSlot.consumable) continue;
+        final il = item.effectiveItemLevel;
+        if (il <= 5 && item.statPowerScore <= 4) continue;
+        if (il <= 0) continue;
+        values.add(il);
+      }
+    }
+    if (values.isEmpty) return null;
+    values.sort();
+    return values[values.length ~/ 2];
   }
 
   static bool shouldAutoDisassembleOnPickup(
@@ -638,5 +668,4 @@ abstract final class GearCleanup {
       LootRarity.legendary => 'Legendary',
     };
   }
-
 }

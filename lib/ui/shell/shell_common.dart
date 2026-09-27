@@ -1,7 +1,4 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import '../../core/equipment_factory.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/market_listings_service.dart';
@@ -47,7 +44,11 @@ bool isUpgradeForAny(GameState state, EquipmentItem item) =>
 bool isBestStashItem(GameState state, EquipmentItem item) =>
     GameLogic.isBestPlannedStashItem(state, item.id);
 
-/// Budget-honest iLvl for UI — null when the tag would mislead (starter i5).
+/// Item level painted on gear. Same number the sell filter compares.
+///
+/// Hide a blank starter tag. Do not invent a higher level from stat weight:
+/// secondaries sit on top of the primary budget, so that comparison always
+/// looks "too strong" and the icon disagrees with the tooltip and FILTERS.
 int? gearDisplayIlvl(EquipmentItem item) {
   if (item.slot == EquipmentSlot.consumable) return null;
   final tagged = item.itemLevel;
@@ -55,34 +56,6 @@ int? gearDisplayIlvl(EquipmentItem item) {
     final derived = item.effectiveItemLevel;
     return derived <= 1 ? null : derived;
   }
-  final expected = EquipmentFactory.budgetForItemLevel(
-    itemLevel: tagged,
-    rarity: item.rarity,
-    slot: item.slot,
-    handed: item.handed,
-  );
-  final slotM = EquipmentFactory.slotMult(item.slot, handed: item.handed);
-  final quality = switch (item.rarity) {
-    LootRarity.common => 0.92,
-    LootRarity.uncommon => 0.96,
-    LootRarity.rare => 1.0,
-    LootRarity.epic => 1.06,
-    LootRarity.legendary => 1.12,
-  };
-  int fromPower() => math.max(
-        1,
-        (item.statPowerScore / (0.88 * quality * slotM)).round(),
-      );
-  // Tagged too low for the stats (classic starter i5 on real gear).
-  if (expected > 0 && item.statPowerScore > expected * 1.35) {
-    final derived = fromPower();
-    return derived <= 5 && tagged <= 5 ? null : derived;
-  }
-  if (item.statPowerScore < expected * 0.6) {
-    if (item.statPowerScore <= 4) return null;
-    return fromPower();
-  }
-  // Starter tag alone is noise on a progressed hero.
   if (tagged <= 5 && item.statPowerScore <= 4) return null;
   return tagged;
 }

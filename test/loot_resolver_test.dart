@@ -3,6 +3,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/gear/gear_cleanup.dart';
 import 'package:idle_party/core/gear/loot_resolver.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/ui/shell/shell_common.dart';
 
 void main() {
   EquipmentItem junk({
@@ -25,10 +26,17 @@ void main() {
     const base = 100;
     final expected = GameLogic.applyGoldGain(state, base);
     final result = LootResolver.grant(state, [
-      const LootDrop(name: 'Gold Pouch', amount: base, rarity: LootRarity.common),
+      const LootDrop(
+        name: 'Gold Pouch',
+        amount: base,
+        rarity: LootRarity.common,
+      ),
     ]);
     expect(result.state.gold, state.gold + expected);
-    expect(result.state.lifetimeGoldEarned, state.lifetimeGoldEarned + expected);
+    expect(
+      result.state.lifetimeGoldEarned,
+      state.lifetimeGoldEarned + expected,
+    );
     expect(result.receipt.goldGained, expected);
     expect(result.resolved.single.outcome, LootOutcome.gold);
   });
@@ -40,7 +48,12 @@ void main() {
     );
     final item = junk(id: 'chest_a', ilvl: 18, rarity: LootRarity.uncommon);
     final result = LootResolver.grant(state, [
-      LootDrop(name: item.name, amount: 1, rarity: item.rarity, equipment: item),
+      LootDrop(
+        name: item.name,
+        amount: 1,
+        rarity: item.rarity,
+        equipment: item,
+      ),
     ]);
     expect(result.state.gearStash.any((g) => g.id == 'chest_a'), isTrue);
     expect(result.receipt.gearStashed, 1);
@@ -55,7 +68,12 @@ void main() {
     final item = junk(id: 'sell_me', ilvl: 12);
     final beforeGold = state.gold;
     final result = LootResolver.grant(state, [
-      LootDrop(name: item.name, amount: 1, rarity: item.rarity, equipment: item),
+      LootDrop(
+        name: item.name,
+        amount: 1,
+        rarity: item.rarity,
+        equipment: item,
+      ),
     ]);
     expect(result.state.gearStash.any((g) => g.id == 'sell_me'), isFalse);
     expect(result.state.gold, greaterThan(beforeGold));
@@ -125,9 +143,7 @@ void main() {
       gearStash: [backup, junkChest],
     );
     final heroes = [...state.heroes];
-    heroes[0] = heroes[0].copyWith(
-      equipped: {EquipmentSlot.chest: worn},
-    );
+    heroes[0] = heroes[0].copyWith(equipped: {EquipmentSlot.chest: worn});
     state = state.copyWith(heroes: heroes);
     expect(GearCleanup.shouldKeepInBag(state, backup), isTrue);
     expect(GearCleanup.shouldAutoSellOnPickup(state, backup), isFalse);
@@ -158,15 +174,15 @@ void main() {
       gearStash: [backup],
     );
     final heroes = [...state.heroes];
-    heroes[0] = heroes[0].copyWith(
-      equipped: {EquipmentSlot.chest: worn},
-    );
+    heroes[0] = heroes[0].copyWith(equipped: {EquipmentSlot.chest: worn});
     state = state.copyWith(heroes: heroes);
     expect(GearCleanup.shouldKeepInBag(state, backup), isTrue);
 
     final cleaned = GameLogic.cleanBagJunk(state, manualClean: true);
     expect(cleaned.gearStash.any((g) => g.id == 'backup_chest'), isFalse);
     expect(cleaned.gold, greaterThan(state.gold));
+    expect(GearCleanup.cleanSellPreviewCount(state), 1);
+    expect(GearCleanup.autoSellPreviewCount(state), 0);
   });
 
   test('combat pop label is a short slot word, not the full name', () {
@@ -187,5 +203,68 @@ void main() {
       itemLevel: 21,
     );
     expect(chest.combatPopLabel, 'Chest');
+  });
+
+  test('painted item level is the tag the sell filter uses', () {
+    const sword = EquipmentItem(
+      id: 'w1',
+      name: 'Bulwark Sword',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.uncommon,
+      strengthBonus: 22,
+      staminaBonus: 43,
+      masteryBonus: 5,
+      effectValue: 9,
+      itemLevel: 77,
+      handed: WeaponHanded.oneHand,
+    );
+    expect(gearDisplayIlvl(sword), sword.effectiveItemLevel);
+    expect(gearDisplayIlvl(sword), 77);
+    const flask = EquipmentItem(
+      id: 'f1',
+      name: 'Healing Flask',
+      slot: EquipmentSlot.consumable,
+      rarity: LootRarity.common,
+      itemLevel: 5,
+    );
+    expect(gearDisplayIlvl(flask), isNull);
+  });
+
+  test('worn item level is the median tag on the party', () {
+    const sword = EquipmentItem(
+      id: 'w77',
+      name: 'Sword',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.uncommon,
+      strengthBonus: 22,
+      staminaBonus: 43,
+      itemLevel: 77,
+    );
+    const chest = EquipmentItem(
+      id: 'c70',
+      name: 'Chest',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.uncommon,
+      staminaBonus: 20,
+      itemLevel: 70,
+    );
+    const helm = EquipmentItem(
+      id: 'h80',
+      name: 'Helm',
+      slot: EquipmentSlot.head,
+      rarity: LootRarity.uncommon,
+      staminaBonus: 20,
+      itemLevel: 80,
+    );
+    final base = GameLogic.createInitialState();
+    final kit = {
+      EquipmentSlot.weapon: sword,
+      EquipmentSlot.chest: chest,
+      EquipmentSlot.head: helm,
+    };
+    final state = base.copyWith(
+      heroes: [for (final h in base.heroes) h.copyWith(equipped: kit)],
+    );
+    expect(GearCleanup.partyWornIlvl(state), 77);
   });
 }

@@ -71,10 +71,7 @@ class MenuAlerts {
     final upgrades = bagUpgradeCount(state);
     if (upgrades <= 0) return none;
     return MenuAlerts(
-      gear: MenuAlert(
-        count: upgrades,
-        reason: '',
-      ),
+      gear: MenuAlert(count: upgrades, reason: ''),
       gold: MenuAlert.quiet,
       shop: MenuAlert.quiet,
       essence: MenuAlert.quiet,
@@ -94,10 +91,7 @@ class MenuAlerts {
       final upgrades = bagUpgradeCount(state);
       if (upgrades <= 0) return none;
       return MenuAlerts(
-        gear: MenuAlert(
-          count: upgrades,
-          reason: '',
-        ),
+        gear: MenuAlert(count: upgrades, reason: ''),
         gold: MenuAlert.quiet,
         shop: MenuAlert.quiet,
         essence: MenuAlert.quiet,
@@ -154,7 +148,8 @@ class MenuAlerts {
           key: MenuAlert.quiet,
           more: moreAlert(
             state,
-            omitVault: chaseKind == HubChaseKind.claimDailyVault ||
+            omitVault:
+                chaseKind == HubChaseKind.claimDailyVault ||
                 chaseKind == HubChaseKind.dailyVaultProgress,
           ),
         ),
@@ -238,10 +233,7 @@ class MenuAlerts {
     return MenuAlert.quiet;
   }
 
-  static MenuAlert questsAlert(
-    GameState state, {
-    bool omitVault = false,
-  }) {
+  static MenuAlert questsAlert(GameState state, {bool omitVault = false}) {
     var count = 0;
     final reasons = <String>[];
     final jobs = state.missions.where((m) => m.canClaim).length;
@@ -275,10 +267,7 @@ class MenuAlerts {
     return MenuAlert.quiet;
   }
 
-  static MenuAlert moreAlert(
-    GameState state, {
-    bool omitVault = false,
-  }) {
+  static MenuAlert moreAlert(GameState state, {bool omitVault = false}) {
     final quests = questsAlert(state, omitVault: omitVault);
     if (MetaSystems.hasUnseenChangelog(state)) {
       if (!quests.isQuiet) {
@@ -387,12 +376,12 @@ class MenuAlerts {
 
   static String bagCleanButtonTip(GameState state) {
     if (MenuTabs.showCamp(state)) {
-      return 'Merge junk pairs → sell gold → scrap essence (BiS kept)';
+      return 'Merge, then sell gold and scrap essence for whatever matches FILTERS';
     }
     if (MenuTabs.showMerge(state)) {
-      return 'Merge junk pairs and sell gold (upgrades kept)';
+      return 'Merge, then sell whatever matches FILTERS';
     }
-    return 'Sells junk for gold (upgrades kept)';
+    return 'Sells stash items that match FILTERS';
   }
 
   static String bagFiltersButtonTip(GameState state, {required bool showing}) {
@@ -415,7 +404,11 @@ class MenuAlerts {
     return 'New kit — open ROSTER tab';
   }
 
-  static String gearEquipHint(GameState state, int heroIndex, {GearPanel? panel}) {
+  static String gearEquipHint(
+    GameState state,
+    int heroIndex, {
+    GearPanel? panel,
+  }) {
     final meet = meetRosterHint(state, panel: panel);
     if (meet.isNotEmpty) return meet;
 
@@ -451,17 +444,23 @@ abstract final class MenuTabs {
       s.ascensionLevel >= 1 || s.metaDepth.pendingHeroReveals.isNotEmpty;
 
   static bool showCamp(GameState s) => s.ascensionLevel >= 1 || s.essence > 0;
+
   /// GOLD tab — after the first reward (loot / floor / boss).
   static bool showGold(GameState s) => GameLogic.earnedFirstReward(s);
+
   /// Real-money SHOP — after the first boss (or first Ascend).
   static bool showShop(GameState s) => GameLogic.showDailyChase(s);
+
   /// Hub SCROLLS glyph — same unlock as SHOP (first boss / Ascend).
   static bool showScrolls(GameState s) => showShop(s);
+
   /// Blessing / God Hand / REBORN — after first-hour plain chrome.
   static bool showKeep(GameState s) => !GameLogic.plainPlayerChrome(s);
+
   /// Relics / Craft tabs — after first-hour plain chrome (same as old KEEP/APEX).
   static bool showRelics(GameState s) => !GameLogic.plainPlayerChrome(s);
   static bool showCraft(GameState s) => !GameLogic.plainPlayerChrome(s);
+
   /// QUESTS row — after first floor (or a claim is waiting).
   static bool showQuests(GameState s) =>
       _clearedAFloor(s) ||

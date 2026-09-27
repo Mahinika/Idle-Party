@@ -28,8 +28,8 @@ class BagCleanupFilters extends StatelessWidget {
     final showMarket = MenuTabs.showGold(state);
     final jargon = !GameLogic.plainPlayerChrome(state);
     final keepLine = jargon
-        ? 'BiS / upgrades are never cleaned.'
-        : 'Upgrades are never cleaned.';
+        ? 'CLEAN sells every match. A full bag still keeps BiS and upgrades.'
+        : 'CLEAN sells every match. A full bag still keeps upgrades.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -48,9 +48,9 @@ class BagCleanupFilters extends StatelessWidget {
           Text(
             showScrap
                 ? 'Near-full bag auto-rules (also BAG → FILTERS). '
-                    'Auto-sell = gold · auto-scrap = essence. $keepLine'
+                      'Auto-sell = gold · auto-scrap = essence. $keepLine'
                 : 'Near-full bag auto-rules (also BAG → FILTERS). '
-                    'Auto-sell = gold. $keepLine',
+                      'Auto-sell = gold. $keepLine',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 10),
@@ -61,8 +61,7 @@ class BagCleanupFilters extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Junk sold for coins when bag is near full or you CLEAN BAG. '
-          '${state.autoSellMaxPower <= 0 ? 'Off = never auto-sells.' : 'Sells iLvl 1–${state.autoSellMaxPower} at or below the rarity cap.'}',
+          _sellRule(state),
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
@@ -85,7 +84,7 @@ class BagCleanupFilters extends StatelessWidget {
         if (state.autoSellMaxPower > 0) ...[
           const SizedBox(height: 4),
           Text(
-            'Sells ~${GearCleanup.autoSellPreviewCount(state)} stash items',
+            'CLEAN would sell ${GearCleanup.cleanSellPreviewCount(state)} stash items',
             style: GameTheme.body(size: 12, color: GameTheme.mossLit),
           ),
         ],
@@ -132,6 +131,23 @@ class BagCleanupFilters extends StatelessWidget {
     );
   }
 
+  static String _sellRule(GameState state) {
+    if (state.autoSellMaxPower <= 0) {
+      return 'Junk sold for coins when the bag is near full or you CLEAN. '
+          'Off = never auto-sells.';
+    }
+    final cap =
+        'Sells iLvl 1–${state.autoSellMaxPower} at or below the rarity cap.';
+    final worn = GearCleanup.partyWornIlvl(state);
+    if (worn == null) {
+      return 'Junk sold for coins when the bag is near full or you CLEAN. $cap';
+    }
+    final vs = state.autoSellMaxPower >= worn
+        ? ' Worn gear is about i$worn, so this cap can sell upgrades.'
+        : ' Worn gear is about i$worn.';
+    return 'Junk sold for coins when the bag is near full or you CLEAN. $cap$vs';
+  }
+
   static String _footer({
     required bool compact,
     required bool showScrap,
@@ -142,13 +158,13 @@ class BagCleanupFilters extends StatelessWidget {
         : 'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity)';
     final scrap = showScrap
         ? (compact
-            ? ', then scrap leftovers that match'
-            : ', then scrap leftovers that match scrap filters')
+              ? ', then scrap leftovers that match'
+              : ', then scrap leftovers that match scrap filters')
         : '';
     final market = showMarket
         ? (compact
-            ? '. GOLD → MARKET buys flasks — it does not tap-sell stash.'
-            : '. GOLD → MARKET buys flasks and listings — it does not tap-sell stash.')
+              ? '. GOLD → MARKET buys flasks — it does not tap-sell stash.'
+              : '. GOLD → MARKET buys flasks and listings — it does not tap-sell stash.')
         : '.';
     return '$sell$scrap$market';
   }
