@@ -1,7 +1,7 @@
 # Log — F-001 Full game connectivity audit
 
 **Started:** 2026-09-27  
-**Status:** batch D done — next is batch E (step 48)  
+**Status:** batch E done — next is batch F (step 58)  
 **Steps:** 119 (19 screens folded in 2026-09-27)
 
 ## Progress
@@ -12,7 +12,7 @@
 | B First boss & chrome | 12–23 | 12/12 |
 | C GEAR | 24–36 | 13/13 |
 | D Combat | 37–47 | 11/11 |
-| E Zones | 48–57 | 0/10 |
+| E Zones | 48–57 | 10/10 |
 | F GOLD/SHOP/ESSENCE | 58–69 | 0/12 |
 | G Ascend & meta | 70–82 | 0/13 |
 | H Endgame | 83–96 | 0/14 |
@@ -55,3 +55,13 @@ Note for batch C: starter doll logs missing gear overlays (cloak/helm/weapon). N
 45: A wipe shows advice, then RETRY or HUB. The run is not stuck in the cave.
 46: LEAVE mid-cave returns to the hub and clears the run.
 47: Fast damage check: no job is too strong. Arms and Fury looked weak on a tiny sample; left alone.
+
+### Batch E (2026-09-27)
+
+48–50: PATH is a continent map, Sandy is open at level 1, and a pile of gold does not open the next cave. Level or a prior clear does.
+51–53: Early, middle, and late caves have their own blurbs, packs, and boss shouts. Mothveil is last.
+54: TODAY sends you into the open frontier cave, not a locked one.
+55: Floors still follow the room plan (rooms, gates, boss shape).
+56: You can jump back to a cleared floor, and one floor past the furthest clear. Not further.
+57: A push boss clear names the next cave and opens it.
+Copy: Crystal Spire no longer says the cave itself is endless. Hollow Grove no longer claims to sit between Tidehold and Ashen.

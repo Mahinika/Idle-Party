@@ -119,7 +119,8 @@ abstract final class DungeonCatalog {
       bossId: 'crystal_warden',
       bossName: 'Crystal Warden',
       unlockPrice: 400000,
-      blurb: 'The Spire remembers every climb — endless for those who will it.',
+      blurb:
+          'Shard halls climb to the Warden. The endless hunt is a separate climb.',
     ),
     DungeonDef(
       number: 7,
@@ -151,7 +152,7 @@ abstract final class DungeonCatalog {
       bossName: 'Wyrd Root',
       unlockPrice: 1800000,
       blurb:
-          'Root fences and canopy clearings — Wyrd Root drinks between Tidehold and Ashen.',
+          'Root fences and canopy clearings — Wyrd Root drinks the green belt.',
     ),
     DungeonDef(
       number: 10,

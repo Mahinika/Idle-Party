@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/ascend_roadmap.dart';
 import 'package:idle_party/core/game_guides.dart';
+import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/story_lore.dart';
+import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/hub_endgame_act.dart';
 import 'package:idle_party/core/keystone.dart';
@@ -153,6 +156,68 @@ void main() {
       DungeonCatalog.unlockHeroLevel(DungeonCatalog.byId('veil')),
       100,
     );
+  });
+
+  test('gold does not open a cave, and floor jumps stay on the cleared path', () {
+    final rich = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 9, 27),
+    ).copyWith(gold: 50000000, lifetimeGoldEarned: 50000000);
+    expect(rich.lifetimeGoldEarned, greaterThan(DungeonCatalog.byId('veil').unlockPrice));
+    expect(GameLogic.enterDungeon(rich, dungeonId: 'goblin').inDungeon, isFalse);
+
+    final sandy = GameLogic.enterDungeon(rich, dungeonId: 'sandy');
+    expect(sandy.inDungeon, isTrue);
+    expect(GameLogic.canTravelToFloor(sandy, 2), isFalse);
+
+    final progressed = sandy.copyWith(highestFloorCleared: 3);
+    expect(GameLogic.canTravelToFloor(progressed, 1), isTrue);
+    expect(GameLogic.canTravelToFloor(progressed, 4), isTrue);
+    expect(GameLogic.canTravelToFloor(progressed, 5), isFalse);
+
+    final farm = GameLogic.travelToFloor(
+      GameLogic.setDungeonMode(progressed, DungeonMode.farm),
+      1,
+    );
+    expect(farm.currentRoom.floorNumber, 1);
+    expect(farm.dungeonMode, DungeonMode.farm);
+
+    final push = GameLogic.travelToFloor(
+      GameLogic.setDungeonMode(progressed, DungeonMode.push),
+      4,
+    );
+    expect(push.currentRoom.floorNumber, 4);
+    expect(push.dungeonMode, DungeonMode.push);
+  });
+
+  test('push boss clear opens the next cave and names it', () {
+    final bossFloor = DungeonGenerator.bossFloorFor(0);
+    final floor = DungeonGenerator.generateFloor(
+      bossFloor,
+      ascensionLevel: 0,
+      dungeonId: 'sandy',
+    );
+    final bossRoom = floor.first;
+    final initial = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 9, 27),
+    ).copyWith(
+      dungeonId: 'sandy',
+      dungeonMode: DungeonMode.push,
+      inDungeon: true,
+      currentRoom: bossRoom,
+      dungeonFloor: floor,
+    );
+    final cleared = GameLogic.completeCurrentRoom(
+      initial,
+      goldGain: 10,
+      skipLootRoll: true,
+    );
+    expect(cleared.inDungeon, isFalse);
+    expect(cleared.highestDungeonCleared, 0);
+    expect(DungeonCatalog.isUnlocked('goblin', 1, cleared.highestDungeonCleared), isTrue);
+    expect(StoryLore.unlockedNextZone('goblin'), contains("Goblin's Hideout"));
+    expect(StoryLore.dungeonCleared('sandy'), contains('quiet'));
+    expect(DungeonCatalog.byId('crystal').blurb.toLowerCase(), isNot(contains('endless for those')));
+    expect(DungeonCatalog.byId('veil').number, DungeonCatalog.all.length - 1);
   });
 
   test('guides cover World Path endgame zones and Ashen Crown honesty', () {
