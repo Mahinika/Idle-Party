@@ -6,6 +6,8 @@ import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
+import 'package:idle_party/models/enemy.dart';
+import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
@@ -303,6 +305,50 @@ void main() {
     expect(raised.hardmodeLevel, 21);
     final blocked = GameLogic.setHardmodeLevel(capped, 22);
     expect(blocked.hardmodeLevel, 21);
+  });
+
+  test('Boss Rush keeps trash packs and makes them elites', () {
+    const room = DungeonRoom(
+      floorNumber: 2,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 2,
+      enemyCount: 3,
+    );
+    final plain = GameLogic.createEnemyGroup(room, dungeonId: 'sandy');
+    final rushState = GameLogic.createInitialState().copyWith(
+      challengeBossRush: true,
+    );
+    final rush = GameLogic.createEnemyGroup(
+      room,
+      dungeonId: 'sandy',
+      fromState: rushState,
+    );
+    expect(plain, isNotEmpty);
+    expect(rush, isNotEmpty);
+    expect(rush.any((e) => e.role == EnemyRole.boss), isFalse);
+    expect(rush.every((e) => e.role == EnemyRole.elite), isTrue);
+    expect(Keystone.blurb('boss_rush').toLowerCase(), contains('elite'));
+  });
+
+  test('No Flask blocks a healing flask', () {
+    final flask = GameLogic.createEquipment(
+      slot: EquipmentSlot.consumable,
+      rarity: LootRarity.common,
+      battleNumber: 1,
+    );
+    var state = GameLogic.createInitialState();
+    final first = state.heroes.first;
+    state = state.copyWith(
+      challengeNoFlask: true,
+      heroes: [
+        first.copyWith(equipped: {EquipmentSlot.consumable: flask}),
+        ...state.heroes.skip(1),
+      ],
+    );
+    expect(GameLogic.canUseConsumable(state), isFalse);
+    final after = GameLogic.useConsumable(state);
+    expect(after.heroes.first.itemIn(EquipmentSlot.consumable)?.id, flask.id);
   });
 
   test('KEY 25 survives save load', () {

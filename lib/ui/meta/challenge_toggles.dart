@@ -240,7 +240,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              'Boss Rush: bosses only · No Flask: healing flasks disabled',
+              'Boss Rush: elite-heavy pulls · No Flask: healing flasks disabled',
               textAlign: TextAlign.center,
               style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
             ),

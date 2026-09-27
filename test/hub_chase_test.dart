@@ -703,6 +703,20 @@ void main() {
     expect(chase.detail.toLowerCase(), contains('boards'));
   });
 
+  test('KEY +21 stays off tonight\'s hub job', () {
+    var state = _settledEndgameLadderState(now: now);
+    state = state.copyWith(
+      hardmodeLevel: Keystone.campaignCap + 1,
+      metaDepth: state.metaDepth.copyWith(
+        highestHardmodeCleared: Keystone.campaignCap,
+      ),
+    );
+    expect(Keystone.maxForState(state), greaterThan(Keystone.campaignCap));
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, isNot(HubChaseKind.keystone));
+    expect(chase.title, isNot(contains('KEY +21')));
+  });
+
   test('week ALMOST beats doneForToday soft rest', () {
     var state = _settledEndgameLadderState(now: now);
     state = AshenCrown.ensureWeek(state, now: now);

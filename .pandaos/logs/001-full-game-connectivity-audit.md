@@ -1,7 +1,7 @@
 # Log — F-001 Full game connectivity audit
 
 **Started:** 2026-09-27  
-**Status:** batch G done — next is batch H (step 83)  
+**Status:** batch H done — next is batch I (step 97)  
 **Steps:** 119 (19 screens folded in 2026-09-27)
 
 ## Progress
@@ -15,7 +15,7 @@
 | E Zones | 48–57 | 10/10 |
 | F GOLD/SHOP/ESSENCE | 58–69 | 12/12 |
 | G Ascend & meta | 70–82 | 13/13 |
-| H Endgame | 83–96 | 0/14 |
+| H Endgame | 83–96 | 14/14 |
 | I Chase & return | 97–108 | 0/12 |
 | J Ship bar | 109–119 | 0/11 |
 
@@ -83,3 +83,14 @@ Copy: Crystal Spire no longer says the cave itself is endless. Hollow Grove no l
 76: REBORN is an optional button at AL20. It is never the night's job on the hub.
 77–80: Daily Vault, Quests, and Daily Run stay three different things. The vault names the month bonus when it is included. Daily Run waits until the first Ascend. Week goals that need endgame stay quiet until then.
 81–82: Welcome Back uses the same next step as the hub. The small gold line on the hub is not that screen.
+
+### Batch H (2026-09-27)
+
+83–84: The five hunts open when every active hero is level 100. Ascend 20 alone does not open them. ENDGAME is four pins on its own map. KEY stays on the KEY tab.
+85: Tonight's KEY line names the week's twist and the clock. KEY +21 stays on the dial, not as the hub's night job.
+86: Boss Rush was labeled "bosses only". Trash packs still spawn; they fight as elites. The label now says elite-heavy pulls. No Flask still blocks a healing flask.
+87–88: Gauntlet is the endless Spire, boss every 5 floors. After floor 100 the hub can push the personal best. The extra Spire rule shows on those floors and changes the fight.
+89–91: Ranked GR is timed on Mothveil and records a local season best. Running out of time fails the rift and does not count as a clear. A last hit after the clock still counts. Farm Rift on Stormwake has a clock and does not fail when it runs long. The hub asks for Ranked GR before Farm Rift.
+92: Ashen Crown is a weekly ticket. Each week it visits a cave that already exists.
+93–94: Craft Trial lives under MORE → CRAFT. It is not a fifth pin. Finishing the named craft goal makes that piece.
+95–96: After KEY +20 the night order is Gauntlet, Ranked GR, Farm Rift, then Ashen. When the vault, the daily, and the KEY dial are settled, the hub says done for today.
