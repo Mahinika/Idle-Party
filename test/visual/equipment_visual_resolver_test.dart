@@ -1016,4 +1016,19 @@ void main() {
       expect(EquipmentModelCatalog.variantsFor(stem), contains(r1.visualSetId));
     });
   });
+
+  test('mail overlay falls back to the native cut path', () {
+    expect(
+      OwnedGearAssets.nativeCutFallback(
+        'assets/custom/char/rogue/gear/chest_mail_short_idle.png',
+      ),
+      'assets/custom/char/rogue/gear/chest_short_idle.png',
+    );
+    expect(
+      OwnedGearAssets.nativeCutFallback(
+        'assets/custom/char/rogue/gear/cloak_t2_idle.png',
+      ),
+      isNull,
+    );
+  });
 }

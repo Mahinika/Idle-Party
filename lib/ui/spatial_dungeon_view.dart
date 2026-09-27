@@ -126,7 +126,9 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
 
   @override
   void dispose() {
-    widget.director.setDungeonTilesReady(false);
+    // The tree is already locked while this view unmounts. A notify here
+    // throws setState-during-build on every leave.
+    widget.director.setDungeonTilesReady(false, notify: false);
     super.dispose();
   }
 

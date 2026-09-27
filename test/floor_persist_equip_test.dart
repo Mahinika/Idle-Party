@@ -85,4 +85,16 @@ void main() {
     expect(director.spatial!.heroes.first.x, closeTo(heroX, 0.001));
     expect(director.spatial!.enemies.first.hp, enemyHp);
   });
+
+  test('silent tile flag does not notify while the dungeon view unmounts', () {
+    final director = GameDirector.preview();
+    director.setDungeonTilesReady(true);
+    var notes = 0;
+    director.addListener(() => notes++);
+    director.setDungeonTilesReady(false, notify: false);
+    expect(director.dungeonTilesReady, isFalse);
+    expect(notes, 0);
+    director.setDungeonTilesReady(true);
+    expect(notes, 1);
+  });
 }

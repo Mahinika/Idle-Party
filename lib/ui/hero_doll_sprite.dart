@@ -6,6 +6,7 @@ import '../assets/custom_assets.dart';
 import '../models/hero.dart';
 import '../visual/body_family.dart';
 import '../visual/character_visual_painter.dart';
+import '../visual/owned_gear_assets.dart';
 import '../visual/character_visual_pose.dart';
 import '../visual/hero_anim_state.dart';
 import 'decoded_image_cache.dart';
@@ -132,20 +133,25 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
             path,
             targetWidth: decodeW,
           );
-        } catch (_) {
-          final idle = path.replaceFirst(
-            RegExp(r'_(walk|attack)\.png$'),
-            '_idle.png',
+        } catch (e, st) {
+          final idle = OwnedGearAssets.idleFallback(path);
+          final native = OwnedGearAssets.nativeCutFallback(
+            idle == path ? path : idle,
           );
-          if (idle != path) {
+          final fallback = idle != path ? idle : native;
+          if (fallback != null && fallback != path) {
             try {
-              overlays[idle] = await DecodedImageCache.load(
-                idle,
+              overlays[path] = await DecodedImageCache.load(
+                fallback,
                 targetWidth: decodeW,
               );
-            } catch (e, st) {
-              debugPrint('HeroDollSprite overlay load failed: $e\n$st');
+            } catch (e2, st2) {
+              debugPrint(
+                'HeroDollSprite overlay load failed ($path): $e2\n$st2',
+              );
             }
+          } else {
+            debugPrint('HeroDollSprite overlay load failed ($path): $e\n$st');
           }
         }
       }

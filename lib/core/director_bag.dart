@@ -73,18 +73,24 @@ extension GameDirectorBag on GameDirector {
   }
 
   void autoEquipBetterGear() {
+    final wornBefore = <String>{
+      for (final hero in _state.heroes)
+        for (final item in hero.equipped.values) item.id,
+    };
     final result = GameLogic.autoEquipBetterGearResult(_state);
     var next = result.state;
     final beforeLen = next.gearStash.length;
     final beforeGold = next.gold;
     final beforeEss = next.essence;
     if (result.equipped > 0) {
-      // Swapped pieces stay in bag — clear junk so EQUIP 42 does not leave 44/50.
+      // Junk can still sell. The pieces this EQUIP just took off stay,
+      // so a wide filter does not turn a swap into gold.
       next = GameLogic.cleanBagJunk(
         next,
         unstickBag: GearService.isBagJammed(next),
         mergeFirst: true,
         manualClean: false,
+        keepIds: wornBefore,
       );
       LogicNotices.takeBagCleanup();
     }

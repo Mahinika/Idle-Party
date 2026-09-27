@@ -330,7 +330,7 @@ class MenuRouter extends ChangeNotifier {
 
     MenuRoute.essence => switch (_essencePanel) {
 
-      EssencePanel.tracks => 'Camp · Blessing · lasting power',
+      EssencePanel.tracks => 'Camp · Blessing',
 
       EssencePanel.keep => 'God Hand · Blessing · Ascend',
 
@@ -380,9 +380,9 @@ class MenuRouter extends ChangeNotifier {
 
       return n == 1
 
-          ? '1 upgrade waiting — tap EQUIP 1'
+          ? '1 upgrade — EQUIP 1'
 
-          : '$n upgrades waiting — tap EQUIP $n';
+          : '$n upgrades — EQUIP $n';
 
     }
 

@@ -252,12 +252,24 @@ class TargetCornerHud extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          '${enemy.hp} ${(hpFrac * 100).round()}%',
-                          style: GameTheme.body(
-                            size: 11,
-                            color: GameTheme.parchmentDim,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              '${enemy.hp}',
+                              style: GameTheme.body(
+                                size: 11,
+                                color: GameTheme.parchmentDim,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '${(hpFrac * 100).round()}%',
+                              style: GameTheme.body(
+                                size: 11,
+                                color: GameTheme.parchmentDim,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

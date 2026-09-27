@@ -347,4 +347,12 @@ abstract final class OwnedGearAssets {
   /// If [path] is missing, try the idle clip of the same set.
   static String idleFallback(String path) =>
       path.replaceFirst(RegExp(r'_(walk|attack)\.png$'), '_idle.png');
+
+  /// Mail/plate/leather cuts fall back to the body's native file
+  /// (`chest_mail_short` → `chest_short`) when that PNG did not decode.
+  static String? nativeCutFallback(String path) {
+    final next = path.replaceFirst(RegExp(r'_(mail|plate|leather)_'), '_');
+    if (next == path) return null;
+    return next;
+  }
 }

@@ -361,6 +361,19 @@ class _HubScreenState extends State<HubScreen>
         if (node.enterLabel == label) return huntAction(node.hunt);
       }
       if (HubPrimaryCta.isEnterFamilyLabel(label)) {
+        if (label.startsWith('ENTER KEY')) {
+          final key =
+              HubPrimaryCta.keyLevelFromLabel(label) ??
+              chase.keyLevel ??
+              state.hardmodeLevel;
+          return () {
+            if (enterAction == null) return;
+            if (director.state.hardmodeLevel != key) {
+              director.setHardmodeLevel(key);
+            }
+            enterAction();
+          };
+        }
         return enterAction;
       }
       return onAction;
@@ -494,12 +507,19 @@ class _HubScreenState extends State<HubScreen>
         if (showMetaKeyLink) ...[
           const SizedBox(height: 4),
           GameButton(
-            label: state.hardmodeLevel <= 0
-                ? 'KEY DIAL · +0'
-                : 'KEY DIAL · +${state.hardmodeLevel}',
+            label:
+                'KEY DIAL · +${chase.kind == HubChaseKind.keystone ? (chase.keyLevel ?? state.hardmodeLevel) : state.hardmodeLevel}',
             tip: 'Open KEY for Soft/Hard/Brutal, Rifts, and boards',
             style: GameButtonStyle.grey,
-            onPressed: () => router.open(MenuRoute.key),
+            onPressed: () {
+              if (chase.kind == HubChaseKind.keystone) {
+                final key = chase.keyLevel ?? state.hardmodeLevel;
+                if (director.state.hardmodeLevel != key) {
+                  director.setHardmodeLevel(key);
+                }
+              }
+              router.open(MenuRoute.key);
+            },
           ),
         ],
         if (showUrgentRow)

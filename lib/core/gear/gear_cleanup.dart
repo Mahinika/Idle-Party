@@ -24,16 +24,23 @@ abstract final class GearCleanup {
     bool unstickBag = false,
     bool mergeFirst = true,
     bool manualClean = false,
+    Set<String> keepIds = const {},
   }) {
     var next = state;
     if (mergeFirst) {
       next = autoMergeJunk(next).state;
     }
-    next = autoSellJunk(next, unstickBag: unstickBag, manualClean: manualClean);
+    next = autoSellJunk(
+      next,
+      unstickBag: unstickBag,
+      manualClean: manualClean,
+      keepIds: keepIds,
+    );
     next = autoDisassembleJunk(
       next,
       unstickBag: unstickBag,
       manualClean: manualClean,
+      keepIds: keepIds,
     );
     return next;
   }
@@ -231,8 +238,10 @@ abstract final class GearCleanup {
     required bool forSell,
     bool unstickBag = false,
     bool manualClean = false,
+    Set<String> keepIds = const {},
   }) {
     if (_isProtectedGear(item)) return true;
+    if (keepIds.contains(item.id)) return true;
 
     if (manualClean) {
       final matches = forSell
@@ -576,6 +585,7 @@ abstract final class GearCleanup {
     GameState state, {
     bool unstickBag = false,
     bool manualClean = false,
+    Set<String> keepIds = const {},
   }) {
     var gold = state.gold;
     var lifetime = state.lifetimeGoldEarned;
@@ -594,6 +604,7 @@ abstract final class GearCleanup {
           forSell: true,
           unstickBag: unstickBag,
           manualClean: manualClean,
+          keepIds: keepIds,
         )) {
           sellItem = item;
           break;
@@ -619,6 +630,7 @@ abstract final class GearCleanup {
     GameState state, {
     bool unstickBag = false,
     bool manualClean = false,
+    Set<String> keepIds = const {},
   }) {
     var essence = state.essence;
     var stash = List<EquipmentItem>.from(state.gearStash);
@@ -636,6 +648,7 @@ abstract final class GearCleanup {
           forSell: false,
           unstickBag: unstickBag,
           manualClean: manualClean,
+          keepIds: keepIds,
         )) {
           scrap = item;
           break;

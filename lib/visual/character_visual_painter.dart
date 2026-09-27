@@ -81,7 +81,11 @@ abstract final class CharacterVisualPainter {
 
     ui.Image? overlayImage(String? path) {
       if (path == null) return null;
-      return images[path] ?? images[OwnedGearAssets.idleFallback(path)];
+      final direct = images[path] ?? images[OwnedGearAssets.idleFallback(path)];
+      if (direct != null) return direct;
+      final native = OwnedGearAssets.nativeCutFallback(path);
+      if (native == null) return null;
+      return images[native] ?? images[OwnedGearAssets.idleFallback(native)];
     }
 
     if (pose.flipX) {
@@ -155,13 +159,7 @@ abstract final class CharacterVisualPainter {
       if (!kOwnedGearOverlayLayers.contains(layer.id)) continue;
       final asset = layer.ownedAsset;
       final img = overlayImage(asset);
-      if (img == null) {
-        assert(() {
-          debugPrint('paper-doll missing overlay: $asset');
-          return true;
-        }());
-        continue;
-      }
+      if (img == null) continue;
       final p = Paint()
         ..filterQuality = FilterQuality.none
         ..isAntiAlias = false

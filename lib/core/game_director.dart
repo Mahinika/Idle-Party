@@ -146,10 +146,10 @@ class GameDirector extends ChangeNotifier {
   bool _dungeonTilesReady = false;
   bool get dungeonTilesReady => _dungeonTilesReady;
 
-  void setDungeonTilesReady(bool ready) {
+  void setDungeonTilesReady(bool ready, {bool notify = true}) {
     if (_dungeonTilesReady == ready) return;
     _dungeonTilesReady = ready;
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
   static const double _autosaveIntervalSec = 25;

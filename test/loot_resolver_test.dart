@@ -185,6 +185,47 @@ void main() {
     expect(GearCleanup.autoSellPreviewCount(state), 0);
   });
 
+  test('post-equip cleanup keeps the piece that just came off', () {
+    final worn = EquipmentItem(
+      id: 'worn_chest',
+      name: 'Worn',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      staminaBonus: 40,
+      itemLevel: 42,
+    );
+    final swapped = EquipmentItem(
+      id: 'just_off',
+      name: 'Old Chest',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.common,
+      staminaBonus: 6,
+      itemLevel: 38,
+    );
+    var state = GameLogic.createInitialState().copyWith(
+      autoSellMaxPower: 50,
+      autoSellMaxRarity: LootRarity.epic.index,
+      autoDisassembleMaxIlvl: 0,
+      gearStash: [swapped],
+    );
+    final heroes = [...state.heroes];
+    heroes[0] = heroes[0].copyWith(equipped: {EquipmentSlot.chest: worn});
+    state = state.copyWith(heroes: heroes);
+
+    final sold = GameLogic.cleanBagJunk(state, manualClean: false);
+    expect(sold.gearStash, isEmpty);
+
+    final kept = GameLogic.cleanBagJunk(
+      state,
+      manualClean: false,
+      keepIds: const {'just_off'},
+    );
+    expect(kept.gearStash.map((g) => g.id), ['just_off']);
+
+    final cleaned = GameLogic.cleanBagJunk(kept, manualClean: true);
+    expect(cleaned.gearStash, isEmpty);
+  });
+
   test('combat pop label is a short slot word, not the full name', () {
     const mace = EquipmentItem(
       id: 'm1',

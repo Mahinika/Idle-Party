@@ -290,11 +290,13 @@ abstract final class GearService {
     bool unstickBag = false,
     bool mergeFirst = true,
     bool manualClean = false,
+    Set<String> keepIds = const {},
   }) => GearCleanup.cleanBagJunk(
     state,
     unstickBag: unstickBag,
     mergeFirst: mergeFirst,
     manualClean: manualClean,
+    keepIds: keepIds,
   );
 
   static bool shouldKeepInBag(GameState state, EquipmentItem item) =>

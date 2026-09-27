@@ -3066,11 +3066,13 @@ class GameLogic {
     bool unstickBag = false,
     bool mergeFirst = true,
     bool manualClean = false,
+    Set<String> keepIds = const {},
   }) => GearService.cleanBagJunk(
     state,
     unstickBag: unstickBag,
     mergeFirst: mergeFirst,
     manualClean: manualClean,
+    keepIds: keepIds,
   );
   static ({GameState state, int merges}) autoMergeJunk(
     GameState state, {

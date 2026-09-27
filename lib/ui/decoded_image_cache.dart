@@ -20,16 +20,20 @@ abstract final class DecodedImageCache {
     final hit = _images[key];
     if (hit != null) return Future<ui.Image>.value(hit);
     return _inflight.putIfAbsent(key, () async {
-      final data = await rootBundle.load(asset);
-      final codec = await ui.instantiateImageCodec(
-        data.buffer.asUint8List(),
-        targetWidth: targetWidth,
-        targetHeight: targetHeight,
-      );
-      final frame = await codec.getNextFrame();
-      _images[key] = frame.image;
-      _inflight.remove(key);
-      return frame.image;
+      try {
+        final data = await rootBundle.load(asset);
+        final codec = await ui.instantiateImageCodec(
+          data.buffer.asUint8List(),
+          targetWidth: targetWidth,
+          targetHeight: targetHeight,
+        );
+        final frame = await codec.getNextFrame();
+        _images[key] = frame.image;
+        return frame.image;
+      } finally {
+        // A failed decode must not stick, or every later paint misses it.
+        _inflight.remove(key);
+      }
     });
   }
 

@@ -88,7 +88,9 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
             ),
             MenuChrome.chip(label: 'Camp tracks', selected: campOpen),
             Text(
-              '${state.essence}e · survive Ascend · reset at Lv12+',
+              GameLogic.partyMeanLevel(state) < 12
+                  ? '${state.essence}e · survive Ascend · reset at Lv12+'
+                  : '${state.essence}e · survive Ascend',
               style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
             ),
           ],

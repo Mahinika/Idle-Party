@@ -286,24 +286,59 @@ class _InventoryDockState extends State<InventoryDock>
   }
 
   Widget _equipHeroChipsFor(EquipmentItem selected) {
+    final plain = GameLogic.plainPlayerChrome(state);
     final plannedHero = [
       for (var i = 0; i < state.heroes.length; i++)
         if (GameLogic.autoEquipWouldWear(state, selected.id, heroIndex: i)) i,
     ];
     final bestIndex = plannedHero.isEmpty ? -1 : plannedHero.first;
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
+    final wearable = <int>[];
+    final blocked = <String, List<String>>{};
+    for (var i = 0; i < state.heroes.length; i++) {
+      final hero = state.heroes[i];
+      final reject = ClassProficiency.rejectReason(
+        role: hero.gearAffinity,
+        level: hero.level,
+        item: selected,
+        specId: hero.specId,
+      );
+      if (reject == null) {
+        wearable.add(i);
+        continue;
+      }
+      final name = hero.displayRoleLabel(plainEnglish: plain);
+      final why = reject.startsWith('$name ')
+          ? reject.substring(name.length + 1)
+          : reject;
+      blocked.putIfAbsent(why, () => <String>[]).add(name);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (var i = 0; i < state.heroes.length; i++)
-          _EquipHeroChip(
-            hero: state.heroes[i],
-            candidate: selected,
-            pairingStash: state.gearStash,
-            isBest: i == bestIndex,
-            plannedUpgrade: i == bestIndex,
-            plainEnglish: GameLogic.plainPlayerChrome(state),
-            onTap: () => onEquipToHero(i),
+        if (wearable.isNotEmpty)
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              for (final i in wearable)
+                _EquipHeroChip(
+                  hero: state.heroes[i],
+                  candidate: selected,
+                  pairingStash: state.gearStash,
+                  isBest: i == bestIndex,
+                  plannedUpgrade: i == bestIndex,
+                  plainEnglish: plain,
+                  onTap: () => onEquipToHero(i),
+                ),
+            ],
+          ),
+        for (final entry in blocked.entries)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '${entry.value.join(', ')} ${entry.key}.',
+              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            ),
           ),
       ],
     );

@@ -59,7 +59,7 @@ void main() {
     expect(cta.showKeyDial, isFalse);
   });
 
-  test('map Farm Rift pick owns primary even when TODAY is KEY', () {
+  test('map Farm Rift stays grey when TODAY is KEY', () {
     const chase = HubChase(
       kind: HubChaseKind.keystone,
       title: 'Run KEY +12',
@@ -77,9 +77,9 @@ void main() {
       endgameUnlocked: true,
       mapHunt: HubEndgameHunt.farmRift,
     );
-    expect(cta.primaryLabel, 'FARM RIFT');
-    expect(cta.secondaryLabel, isNull);
-    expect(cta.showKeyDial, isFalse);
+    expect(cta.primaryLabel, 'ENTER KEY +12');
+    expect(cta.secondaryLabel, 'FARM RIFT');
+    expect(cta.showKeyDial, isTrue);
   });
 
   test('READY vault still owns primary when a map hunt is selected', () {

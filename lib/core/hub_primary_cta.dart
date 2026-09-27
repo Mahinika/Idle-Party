@@ -55,7 +55,7 @@ class HubPrimaryCta {
   }) {
     final fromLabel = chaseActionLabel != null &&
             chaseActionLabel.contains('ENTER KEY')
-        ? _keyLevelFromLabel(chaseActionLabel)
+        ? keyLevelFromLabel(chaseActionLabel)
         : null;
     final key = chase.keyLevel ?? fromLabel;
     if (key != null) return 'ENTER KEY +$key';
@@ -66,7 +66,7 @@ class HubPrimaryCta {
     return 'ENTER DUNGEON';
   }
 
-  static int? _keyLevelFromLabel(String label) {
+  static int? keyLevelFromLabel(String label) {
     final m = RegExp(r'ENTER KEY \+(\d+)').firstMatch(label);
     if (m == null) return null;
     return int.tryParse(m.group(1)!);
@@ -122,6 +122,22 @@ class HubPrimaryCta {
           hideInlineChaseAction: true,
           showKeyDial: false,
         );
+      }
+      // A tapped hunt pin is the grey button. Tonight's job stays brown,
+      // so KEY does not turn into GAUNTLET because a skull is selected.
+      if (label != null && label != huntLabel) {
+        final primary = chase.kind == HubChaseKind.keystone
+            ? enterLabel
+            : label;
+        if (primary != huntLabel) {
+          return HubPrimaryCta(
+            primaryLabel: primary,
+            secondaryLabel: huntLabel,
+            hideInlineChaseAction: true,
+            showKeyDial:
+                chase.kind == HubChaseKind.keystone && showKeystoneJargon,
+          );
+        }
       }
       final ashen = endgameHunt == HubEndgameHunt.ashen;
       return HubPrimaryCta(
