@@ -147,7 +147,8 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     final canPrestige = level >= 12;
     final prestigeGain = GameLogic.sanctuaryPrestigeEssenceGain(level);
     final maxForTrack = GameLogic.sanctuaryBulkAffordableLevels(state, track);
-    final buyN = buyLevels.clamp(1, maxForTrack);
+    // clamp(1, 0) throws when this track costs more than the wallet.
+    final buyN = maxForTrack < 1 ? 1 : buyLevels.clamp(1, maxForTrack);
     final canAffordOne = state.essence >= cost;
 
     String? detail;
