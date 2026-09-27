@@ -216,7 +216,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
       showInHud: true,
       effect: AbilityEffectKind.passive,
       tier: AbilityCastTier.passive,
-      passiveOutMul: 1.12,
+      passiveOutMul: 1.04,
     ),
     ClassAbilityDef(
       id: AbilityId.arcaneBlast,
@@ -230,7 +230,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
       resourceCost: 14,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.2,
+      coeff: 1.1,
       castDelaySeconds: 1.4,
       boltStyle: SpellBoltStyle.arcane,
       vfx: AbilityVfxSpec(
@@ -250,7 +250,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
       resourceCost: 16,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.3,
+      coeff: 1.18,
       boltStyle: SpellBoltStyle.arcane,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.arcane,
@@ -271,7 +271,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
       resourceCost: 12,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 1.55,
+      coeff: 1.46,
       boltStyle: SpellBoltStyle.arcane,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.arcane,

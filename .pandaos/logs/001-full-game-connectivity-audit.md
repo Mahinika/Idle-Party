@@ -111,7 +111,7 @@ Copy: Crystal Spire no longer says the cave itself is endless. Hollow Grove no l
 ### Batch J (2026-09-27)
 
 109: Analyzer is clean aside from the four notes it already reports.
-110–112: The game tests, the hub smoke, and the version line match. Two older checks stayed red and were left alone: the doll picture lock (weapon pictures changed without a new lock) and Arcane sitting a hair over the damage line on a short sample.
+110–112: The game tests, the hub smoke, and the version line match. The doll picture lock was refreshed after the looks check passed. Arcane's bolts were trimmed so the short damage check is under the line again.
 113–115: Goblin slingers use the goblin picture from the fight, not a bat. No iPhone project. The Play package is still com.idleparty.app. Version 1.12.187 matches.
 116–118: A save export loads back. A failed Play Games sign-in keeps the gold on the device. Ascend still wipes gold and floors and keeps the party.
 119: The phone save was not wiped. First hit, a mid-game claim, and KEY are already covered by tests. No new look on the phone.
