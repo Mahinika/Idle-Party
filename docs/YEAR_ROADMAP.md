@@ -1,50 +1,54 @@
 # Idle Party — 1års roadmap
 
-**Uppdaterad:** 2026-09-26 (ny svep)  
+**Uppdaterad:** 2026-09-27 (ny svep)  
 **Inte ett stående program.** Nästa kodbatch startar först när du namnger
-en rad här i en **ny** chatt. Skill: `.cursor/skills/year-roadmap/`.  
+en rad här i en **ny** chatt.  
 Källor (A/B/C): [YEAR_ROADMAP_SOURCES.md](YEAR_ROADMAP_SOURCES.md).
 
 North star: främlingar på Play blir spelare (`GROWTH_MANDATE.md`).  
 Tillväxtordning: crash-free → listing → D1 → D7 → betyg → pytteliten UA.  
-Inga numeriska D1/D7-mål (paste 2026-09-27: 107 installationer, 32 första
-öppningar, D7 fortfarande tom).
+Inga numeriska D1/D7-mål. Paste 2026-09-27: 4 910 visningar, 107
+installationer, listing ungefär 25 %, 32 första öppningar, 30 månadsaktiva
+enheter, D7 fortfarande tom. Play har inget D1-tal.
 
-A-källorna den här svepen flyttade inte **Nu**. Marknadsläsningen 27 sep
-ligger i `PLAY_GROWTH.md`: hoppet kom från ett Reddit-inlägg, inte från
-videon. Listing-test är inte längre blockerat av “för få besökare”, och
-det är ändå inte nästa bet — hålet är att installationen inte öppnas.
-Vitals-kollen 2026-09-26 var inte röd. Frommel säger ingen ny daglig kalender.
-Median session 3,1–3,5 min (GameAnalytics 2026-rapport, 2025-data) är
-marknadskontext, inte en timer.
+A-källorna den här svepen flyttade inte **Nu**. Första öppning är en egen
+räknare (enhet som öppnat inom 180 dagar efter install), inte ett känt
+datatapp 2026. Ett listing-test mäter klick på butikssidan, inte den
+öppningen. Median-sessionen 2025 är 3,1–3,5 minuter (GameAnalytics
+2026-rapport), kortare än förra årets 5–6 minuter. Det är marknadskontext,
+inte en timer, och det är inte ett skäl att göra första gången längre.
+Unlisted preview är tillåten. En annan Play-yta (YouTube på listningen och
+Games-fliken) kräver publik video och är inte det här fönstrets jobb.
+
+Jämfört med What’s New t.o.m. **1.12.187** är de här redan skeppade och
+inte nästa skiva: krypet och ENTER, nästa våning efter första clear, en
+TODAY-jakt, Welcome Back, relics, cinders, Craft Trial, KEY på en natt,
+och preview-videon som öppnar med fight. Vitals-kollen 27 sep visade inga
+krasch-rader och inga ANR-rader. Det är inte ett påhittat 0 %.
 
 ---
 
 ## Nu (6–8 veckor)
 
-Jämfört med What’s New t.o.m. **1.12.187**. Krypet, ENTER, nästa våning efter
-första clear, en TODAY-jakt, offline Up next, relics, cinders och Craft Trial
-är redan skeppade. KEY-meningen på en natt är också skeppad. De är inte nästa
-skiva.
+Tre rubriker. En per släpp om du namnger raden. Slack för analyze och
+krasch sitter i alla tre. Ingen fjärde feature.
 
-Play Reporting API **2026-09-26** (färskhet t.o.m. 25 sep): inga krasch-rader
-och inga ANR-rader. Det är inte ett påhittat 0 %. Det blockerar inte innehåll.
+1. **18 oktober-inlägget** — What’s New ändras inte. Nästa förvärv är
+   `r/incremental_games` med GIF, en Play-länk och kort text. Inte fler
+   subreddits, inte en ny Shorts-batch, inte köpta installs. Listing-test
+   väntar: det lagar inte 107 installationer mot 32 öppningar.
 
-1. **Preview-videon visar spelet** — What’s New ändras inte. Live-listningen
-   pekar på `UHLG28lHmPs` (`PLAY_STORE.md`). Lokala klippet
-   (2026-09-26) öppnar med Sandy-krypet och går sedan Gauntlet, Greater Rift
-   och Hell's Gate. Första 10 sekunderna är fight, och ungefär 80 % av
-   klippet är spelet (Play Help). Studio-steget är gjort. Kollen 27 sep:
-   klippet har 1 visning. Det stannar som listningsfil. Det är inte
-   förvärvskanalen.
+2. **Första gången stannar kort** — ledet för en främling förblir *Your
+   party fights on its own. Tap ENTER DUNGEON.* Om du namnger en kodrad är
+   den en koll att en ny save hinner ett slag, inte en längre intro och
+   inte ett nytt system.
 
-2. **KEY går att läsa på en natt** — skeppad i 1.12.187. What’s New-ledet
-   för en främling stannar *Your party fights on its own. Tap ENTER DUNGEON.*
-   Senare bullet: *At Lv100, KEY is one night’s job.* TODAY säger klockan.
-   Lär inte ut KEY på dag ett.
+3. **Imorgon är ett jobb** — bara om återkomsten ljuger. What’s New som en
+   ny spelare kan läsa: kom tillbaka, en grotta är jobbet. Frommel: lägg
+   inte en daglig kalender ovanpå Daily Vault. Ingen andra daily.
 
-Slack för analyze finns i båda släppen. Ingen tredje feature och ingen ny
-daily i det här fönstret.
+Gauntlet, Farm Rift, Ranked GR och Ashen Crown är inte det här fönstret.
+KEY-meningen är redan skeppad.
 
 ---
 
@@ -52,17 +56,21 @@ daily i det här fönstret.
 
 Teman och spelarproblem. Inga låsta feature-namn.
 
-- **Morgondagen** — en jakt räcker. Frommel (CHI PLAY): dagliga uppdrag kan
-  bli ett jobb. Lägg inte en pest-kalender ovanpå Daily Vault.
-- **Prestige som redan finns** — Pecorella: nästa reset ska kännas som ungefär
-  +50–200 % prestige-valuta. Det är en koll på Ascend, inte ett nytt system.
-- **När ett läge tar stopp** — Gauntlet → Farm Rift → Ranked GR → Ashen i
-  chase-ordning (`CHASE_CONTRACT.md`). Parallella lägen som i AFK-struktur.
-- **Listing när trafiken finns** — en tillgång i taget, minst en vecka
-  (Play Help). Inte “upp till 25 %”.
-- **Cadence håller** — synlig skiva var 2–3 veckor inne i de fem jakterna.
-  Melvor Idle 2 gick tillbaka till mindre, tätare droppar (juni 2026).
-  IdleOn-skalan är för stor. Onirealms har ingen publik uppdateringstakt.
+- **Morgondagen** — en jakt räcker. Frommel (CHI PLAY): dagliga belöningar
+  kan vara motivation, FOMO eller ett jobb. GameAnalytics: spelandet ligger
+  utspritt över veckan, inte i en helghändelse. Det är ett skäl att behålla
+  ett kort jobb varje dag, inte en live-ops-kalender.
+- **Prestige som redan finns** — Pecorella: nästa reset ska kännas som
+  ungefär +50–200 % prestige-valuta. En koll på Ascend, inte ett nytt
+  system. 2015 års speed-multiplier är ett exempel, inte ett paket att
+  lägga in.
+- **När ett läge tar stopp** — hubbens ordning efter KEY: Gauntlet, sedan
+  Ranked GR, sedan Farm Rift, sedan Ashen Crown (`CHASE_CONTRACT.md`).
+- **Listing när du namnger det** — en tillgång, minst en vecka så både
+  vardag och helg finns med. Play räknar själv hur många klick som krävs.
+  Med den här volymen lovar en vecka inget resultat. Inte “upp till 25 %”.
+- **Cadence håller** — en synlig skiva var 2–3 veckor. Melvor Idle 2 gick
+  mot mindre, glesare publika droppar 2026. IdleOn-skalan är för stor.
 
 ---
 
@@ -73,7 +81,10 @@ Avsikt. Inte löfte. Förbi månad 6 är det en hypotes.
 - Året stänger med djupare fem jakter, ärlig listing och stabila vitals.
 - Ny zon, klass, hunt, gacha, whale-paket eller en andra fight-sim bara om
   du namnger det.
-- Pytteliten UA först när crash-free och listing håller. D30 är sist.
+- Pytteliten UA först när en organisk öppning är känd och inte skräp.
+  D30 är sist.
+- YouTube på Games-fliken (publik video, uppladdad inom 21 dagar) bara om
+  Play ens erbjuder ytan. Preview-fältet får vara unlisted.
 
 ---
 
@@ -81,19 +92,24 @@ Avsikt. Inte löfte. Förbi månad 6 är det en hypotes.
 
 Obokade exempel (A/B). Varje rad: vad · varför · var · veto.
 
-1. **Preview-video första 10 s = fight** — Play Help · listing · Marketing
-   stoppar meny-first och en video med annonser.
-2. **KEY-affix i en mening** — vana · KEY · Game Director stoppar om fighten
-   bryts eller DPS blir HIGH.
-3. **Gauntlet PB-teaser på ENDGAME-kartan** — när KEY tar stopp · Gauntlet ·
-   UX stoppar kaos.
-4. **Farm Rift och Ranked GR i varsin mening** — ärlighet · Rift / GR ·
-   Marketing stoppar lögn.
-5. **Ashen PRACTICE före biljett** — riskkänsla · Ashen · EP stoppar om det
-   blir en ny jakt.
-6. **Klockor med olika längd** — Guan · meta · EP stoppar en sjätte jakt.
+1. **Ett listing-test, en tillgång, minst en vecka** — Play Help · listing ·
+   Marketing stoppar om testet påstås laga öppningen efter install. EP
+   stoppar om det tränger undan det hålet.
+2. **YouTube på listningen, publik och utan annonser** — annan yta än
+   preview-videon · listing · Marketing stoppar om unlisted preview byts
+   ut, eller om annonser slås på. Sidan säger att ytan kräver eligibility.
+3. **Gauntlet läsbar när KEY-natten är klar** — när KEY tar stopp ·
+   Gauntlet · UX stoppar kaos. Game Director stoppar om fighten bryts
+   eller DPS blir HIGH.
+4. **Ranked GR och Farm Rift i varsin mening** — ärlighet · Rift / GR ·
+   Marketing stoppar lögn. Ordningen är Ranked GR före Farm Rift.
+5. **Ashen före biljetten, utan en ny jakt** — riskkänsla · Ashen · EP
+   stoppar om det blir en sjätte ENDGAME-jakt. Craft Trial stannar på
+   MORE → CRAFT.
+6. **Klockor som inte är lika långa** — Pecorella · meta · EP stoppar en
+   sjätte jakt och en pest-kalender.
 7. **Ikon 512×512 utan egen skugga** — Play-spec · listing · Art stoppar
-   främmande dumps. Vänta tills trafiken räcker till ett test.
+   främmande dumps. Ett ikon-test är fortfarande ett listing-test.
 8. **Ascend-koll mot +50–200 %** — Pecorella · BLESSING · Game Director
    stoppar om loopen blir en andra prestige.
 9. **Gacha eller whale-paket** — bara om du säger det · SHOP · Marketing
@@ -107,22 +123,29 @@ Obokade exempel (A/B). Varje rad: vad · varför · var · veto.
 
 Det här är spärrar från researchen, inte från dina lås.
 
-- Genre-tabeller “idle D1 35–50 %” och återpublicerad AppsFlyer 2022 som mål
-- “Upp till 25 % fler installs” som löfte
-- Listing-A/B med ~9–39 besökare (Console 2026-09-14)
-- Battle-pass-kalender som default
-- Playio-folklore om ~60–90 s till kärnan som hard lock
-- User-perceived crash ≥1,09 % eller ANR ≥0,47 % (28 dagar) — content väntar.
-  API-kollen 2026-09-26 var inte röd.
+- Genre-tabeller som mål: idle D1 35–50 %, “bra” 35/15/5, topp 40/20/10,
+  och 2022-tal om idle D1 48–52 %
+- Återpublicerad AppsFlyer 2022 som 2026-mål. GameAnalytics 2026 har inga
+  genre-snitt den här gången
+- “Upp till 25 %”, “+25 % revenue”, “upp till 50 % av onboarding”
+- D1 under 20 % eller under 25 % som en spärr mot att synas
+- Battle-pass eller tre lager event-kalender som default
+- Playio om ~60 sekunder till kärnan som hard lock
+- Listing-test som bot för 107 installationer mot 32 öppningar
+- Royalty-free sprite-paket
+- Krasch eller ANR som Play flaggar röd — då väntar innehåll. Paste 27 sep
+  var inte röd
 
 Aldrig iOS eller en Apple-release, inte ens om en plan namnger det.
 GitHub Releases som installväg, engelska i spelet, och Play-uppladdning
-utan att du ber om den står kvar i produktlåsen. DPS **HIGH** failar fortfarande CI.
+utan att du ber om den står kvar i produktlåsen. DPS **HIGH** failar
+fortfarande CI.
 
 ---
 
 ## Studio seats
 
-EP låser scope. Game Director ordnar innehåll: synligt hål först (videon),
-sedan KEY. UX / Tech / Art / Marketing veto bara. Du vinner när du namnger
-målet.
+EP låser scope: öppningen efter install vinner de här 6–8 veckorna. Game
+Director ordnar innehåll efter det synliga hålet: KEY är skeppad, sedan
+Gauntlet, Ranked GR, Farm Rift, Ashen Crown. UX / Tech / Art / Marketing
+veto bara. Du vinner när du namnger målet.
