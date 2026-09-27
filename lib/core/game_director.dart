@@ -95,6 +95,7 @@ class GameDirector extends ChangeNotifier {
   SpatialWorld? _spatial;
   Timer? _spatialTimer;
   Timer? _uiTimer;
+  Timer? _bootWarmup;
   Timer? _hubIdleTimer;
   int _battleToken = 0;
   int _uiThrottle = 0;
@@ -570,12 +571,11 @@ class GameDirector extends ChangeNotifier {
       unawaited(refreshPlayUpdateNotice());
       unawaited(LocalNotify.init());
       // Ads / billing after first hub frames — Binder + Play Services hitch cold start.
-      unawaited(
-        Future<void>.delayed(const Duration(seconds: 2), () async {
-          await AdRewarded.warmup();
-          await _warmupShopStore();
-        }),
-      );
+      _bootWarmup?.cancel();
+      _bootWarmup = Timer(const Duration(seconds: 2), () {
+        unawaited(AdRewarded.warmup());
+        unawaited(_warmupShopStore());
+      });
     }
   }
 
@@ -2703,6 +2703,7 @@ class GameDirector extends ChangeNotifier {
   void dispose() {
     _spatialTimer?.cancel();
     _uiTimer?.cancel();
+    _bootWarmup?.cancel();
     _hubIdleTimer?.cancel();
     combatFrame.dispose();
     PlayGamesBridge.cancelPendingUpload();

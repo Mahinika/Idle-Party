@@ -351,15 +351,15 @@ void main() {
     expect(ids, containsAll(['hardmode', 'gauntlet', 'gates', 'ashen_crown']));
   });
 
-  test('after first boss TODAY chases party level before Daily Run', () {
+  test('after first boss TODAY is one cave today, not Daily Run', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       bossVictories: 1,
       highestFloorCleared: 5,
     );
     expect(GameLogic.showDailyRunOnHub(state), isFalse);
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.clearFloors);
-    expect(chase.title.toLowerCase(), contains('level the party'));
+    expect(chase.kind, HubChaseKind.dailyVaultProgress);
+    expect(chase.title, 'Clear one cave today');
     expect(chase.title.toUpperCase(), isNot(contains('DAILY RUN')));
     final upNext = ChaseContract.fromState(state, now: now).upNextLine;
     expect(upNext, 'Up next: ${chase.title}');

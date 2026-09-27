@@ -38,7 +38,7 @@ void main() {
 
     expect(
       KenneyAssets.enemySpriteForCodexName('Goblin Slinger'),
-      KenneyAssets.enemyBat,
+      KenneyAssets.enemyGoblinRanged,
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Stash Guard'),

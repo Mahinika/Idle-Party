@@ -648,7 +648,7 @@ abstract final class KenneyAssets {
       'goblin slinger' ||
       'dart rascal' ||
       'raid slinger' ||
-      'lord slinger' => enemyBat,
+      'lord slinger' => enemyGoblinRanged,
       'crossbowman' ||
       'tower archer' ||
       'ember archer' ||

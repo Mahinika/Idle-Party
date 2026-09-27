@@ -221,16 +221,6 @@ class HubChase {
       }
     }
 
-    // After bag work: ENTER (level / zone) beats GOLD market.
-    if (!GameLogic.endgameUnlocked(state)) {
-      final levelFirst = _partyLevelChase(state);
-      if (levelFirst != null) return levelFirst;
-      final zoneFirst = _nextZoneChase(state);
-      if (zoneFirst != null) return zoneFirst;
-      final market = _marketUpgradeChase(state);
-      if (market != null) return market;
-    }
-
     final bossesNeed = GameLogic.bossesRequiredForAscension(
       state.ascensionLevel,
     );

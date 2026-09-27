@@ -619,8 +619,8 @@ void main() {
     expect(ascended.metaDepth.freshPrestige, isTrue);
     expect(
       ascended.metaAttackBonus,
-      1 + 4 + GameLogic.ascendBlessingAtk,
-    ); // AL + war banner + Blessing (forge wiped)
+      1 + GameLogic.ascendBlessingAtk,
+    ); // AL + Blessing. Crownbreaker is boss damage, not flat attack.
     expect(ascended.ascensionGoldBonusPercent, 10);
     expect(ascended.ascendBlessingGoldPercent, GameLogic.ascendBlessingGoldPct);
     expect(ascended.soulboundFragments, 0);

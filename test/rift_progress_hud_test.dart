@@ -18,7 +18,12 @@ void main() {
         ),
       ),
     );
-    expect(find.bySemanticsLabel('FARM R5 34% · 00:45 elapsed'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(
+        'FARM R5 34% · 00:45 elapsed · no fail timer · not ranked',
+      ),
+      findsOneWidget,
+    );
     expect(find.text('FARM R5'), findsOneWidget);
     expect(find.text('34%'), findsOneWidget);
     expect(find.text('00:45'), findsOneWidget);
@@ -63,7 +68,9 @@ void main() {
       ),
     );
     expect(
-      find.bySemanticsLabel('FARM R1 GUARDIAN · 00:12 elapsed'),
+      find.bySemanticsLabel(
+        'FARM R1 GUARDIAN · 00:12 elapsed · no fail timer · not ranked',
+      ),
       findsOneWidget,
     );
     expect(find.text('GUARDIAN'), findsOneWidget);

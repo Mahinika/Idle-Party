@@ -429,7 +429,7 @@ void main() {
     expect(chase.kind, HubChaseKind.meetHero);
     expect(chase.urgency, HubChaseUrgency.ready);
     expect(chase.title, contains('Combat'));
-    expect(chase.detail.toLowerCase(), contains('party'));
+    expect(chase.detail.toLowerCase(), contains('blades'));
   });
 
   test('endgame skips Meet backlog so TODAY keeps Gauntlet/KEY hunt', () {

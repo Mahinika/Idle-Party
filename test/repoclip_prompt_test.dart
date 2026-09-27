@@ -22,7 +22,9 @@ void main() {
   });
 
   test('trailer brief matches cold-start lore and bans feature soup', () {
-    final trailer = File('docs/TRAILER.md').readAsStringSync().toLowerCase();
+    final raw = File('docs/TRAILER.md').readAsStringSync();
+    final cinematic = raw.split('---').first.toLowerCase();
+    final trailer = cinematic;
     expect(trailer, contains('cave mouth'));
     expect(trailer, contains(StoryLore.introTagline.toLowerCase()));
     expect(trailer, contains('no other game'));

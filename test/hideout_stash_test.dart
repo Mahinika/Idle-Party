@@ -37,14 +37,14 @@ void main() {
   test('codex slinger matches combat bat', () {
     expect(
       KenneyAssets.enemySpriteForCodexName('Goblin Slinger'),
-      CustomAssets.enemyBat,
+      CustomAssets.enemyGoblinRanged,
     );
     expect(
       KenneyAssets.enemySpriteForArchetype(
         EnemyArchetype.ranged,
         dungeonId: 'goblin',
       ),
-      CustomAssets.enemyBat,
+      CustomAssets.enemyGoblinRanged,
     );
   });
 

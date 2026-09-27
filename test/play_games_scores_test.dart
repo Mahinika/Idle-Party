@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/play_games_scores.dart';
 import 'package:idle_party/core/play_leaderboard_ids.dart';
@@ -191,5 +192,29 @@ void main() {
       expect(md.cloudSaveUpdatedMs, 0);
       expect(md.playGamesOptIn, isFalse);
     });
+  });
+
+  test('cloud snapshot round-trips and a failed sign-in keeps local gold', () async {
+    final local = GameLogic.createInitialState().copyWith(
+      gold: 4321,
+      partyName: 'Keepers',
+      essence: 17,
+    );
+    final raw = GameLogic.exportSaveJson(local);
+    final loaded = GameLogic.importSaveJson(raw);
+    expect(loaded, isNotNull);
+    expect(loaded!.gold, 4321);
+    expect(loaded.partyName, 'Keepers');
+    expect(loaded.essence, 17);
+
+    final director = GameDirector.preview(initialState: local);
+    addTearDown(director.dispose);
+    expect(await director.signInPlayGames(), isFalse);
+    expect(await director.restoreFromPlayGames(), isFalse);
+    expect(await director.backupToPlayGames(), isFalse);
+    expect(director.state.gold, 4321);
+    expect(director.state.partyName, 'Keepers');
+    expect(director.state.essence, 17);
+    expect(director.state.metaDepth.playGamesOptIn, isFalse);
   });
 }

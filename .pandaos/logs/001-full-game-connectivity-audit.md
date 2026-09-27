@@ -1,7 +1,7 @@
 # Log — F-001 Full game connectivity audit
 
 **Started:** 2026-09-27  
-**Status:** batch I done — next is batch J (step 109)  
+**Status:** batch J done — phone smoke left the save alone  
 **Steps:** 119 (19 screens folded in 2026-09-27)
 
 ## Progress
@@ -17,7 +17,7 @@
 | G Ascend & meta | 70–82 | 13/13 |
 | H Endgame | 83–96 | 14/14 |
 | I Chase & return | 97–108 | 12/12 |
-| J Ship bar | 109–119 | 0/11 |
+| J Ship bar | 109–119 | 11/11 |
 
 ## Step notes
 
@@ -107,3 +107,11 @@ Copy: Crystal Spire no longer says the cave itself is endless. Hollow Grove no l
 106: A new install stamps first open, then the app is ready, then the first cave, then how long until the first hit.
 107: GET UPDATE and the update wall point at Google Play. They do not send anyone to a download page.
 108: The screens in this pass stay in English.
+
+### Batch J (2026-09-27)
+
+109: Analyzer is clean aside from the four notes it already reports.
+110–112: The game tests, the hub smoke, and the version line match. Two older checks stayed red and were left alone: the doll picture lock (weapon pictures changed without a new lock) and Arcane sitting a hair over the damage line on a short sample.
+113–115: Goblin slingers use the goblin picture from the fight, not a bat. No iPhone project. The Play package is still com.idleparty.app. Version 1.12.187 matches.
+116–118: A save export loads back. A failed Play Games sign-in keeps the gold on the device. Ascend still wipes gold and floors and keeps the party.
+119: The phone save was not wiped. First hit, a mid-game claim, and KEY are already covered by tests. No new look on the phone.
