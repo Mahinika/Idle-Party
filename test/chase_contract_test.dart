@@ -41,9 +41,9 @@ void main() {
     var state = GameLogic.createInitialState(now: now).copyWith(
       ascensionLevel: 1,
       bossVictories: 1,
-      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-            dailyVaultClaimed: true,
-          ),
+      metaDepth: GameLogic.createInitialState(
+        now: now,
+      ).metaDepth.copyWith(dailyVaultClaimed: true),
     );
     expect(GameLogic.bossesRequiredForAscension(1), 2);
     final contract = ChaseContract.fromState(state, now: now);
@@ -70,20 +70,43 @@ void main() {
     expect(offline.kind, hub.kind);
   });
 
-  test('after first Ascend, one cave today is Up next (KEY waits for party max)', () {
-    final state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: 1,
+  test(
+    'after first Ascend, one cave today is Up next (KEY waits for party max)',
+    () {
+      final state = GameLogic.createInitialState(
+        now: now,
+      ).copyWith(ascensionLevel: 1);
+      final contract = ChaseContract.fromState(state, now: now);
+      expect(contract.kind, HubChaseKind.dailyVaultProgress);
+      expect(contract.kind, isNot(HubChaseKind.keystone));
+      expect(contract.upNextLine, startsWith('Up next:'));
+    },
+  );
+
+  test('almost party Lv100 why is the hunts, not grow-the-party', () {
+    final contract = ChaseContract(
+      chase: const HubChase(
+        kind: HubChaseKind.clearFloors,
+        title: 'Almost party Lv100',
+        detail: 'Lowest hero Lv97',
+      ),
     );
-    final contract = ChaseContract.fromState(state, now: now);
-    expect(contract.kind, HubChaseKind.dailyVaultProgress);
-    expect(contract.kind, isNot(HubChaseKind.keystone));
-    expect(contract.upNextLine, startsWith('Up next:'));
+    expect(contract.whyLine, 'Why: those levels open the hunts.');
+    expect(contract.whyLine, isNot(contains('grow the party')));
+    final grow = ChaseContract(
+      chase: const HubChase(
+        kind: HubChaseKind.clearFloors,
+        title: 'Grow the party — Sandy Caverns',
+        detail: 'first hour',
+      ),
+    );
+    expect(grow.whyLine, 'Why: grow the party first.');
   });
 
   test('day-2–7 return: Up next is one cave today, same as hub hunt', () {
-    final state = GameLogic.createInitialState(now: now).copyWith(
-      bossVictories: 1,
-    );
+    final state = GameLogic.createInitialState(
+      now: now,
+    ).copyWith(bossVictories: 1);
     expect(GameLogic.showDailyChase(state), isTrue);
     expect(GameLogic.showDailyRunOnHub(state), isFalse);
     final hub = HubChase.forState(state, now: now);

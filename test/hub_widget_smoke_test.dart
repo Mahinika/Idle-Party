@@ -62,9 +62,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: HubTodayCard(chase: chase),
-        ),
+        home: Scaffold(body: HubTodayCard(chase: chase)),
       ),
     );
 
@@ -115,19 +113,22 @@ void main() {
   });
 
   test('HubMetaPulse still names Vault on a non-endgame grind', () {
-    final state = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: 20,
-      bossVictories: 3,
-    );
+    final state = GameLogic.createInitialState(
+      now: now,
+    ).copyWith(ascensionLevel: 20, bossVictories: 3);
     final bits = HubMetaPulse.crumbsFor(
       state: state,
       chaseKind: HubChaseKind.clearFloors,
       now: now,
     );
     expect(bits.join(' '), contains('Vault'));
+    expect(bits.join(' '), isNot(contains('not Daily Run')));
+    expect(bits.join(' '), isNot(contains('Week')));
   });
 
-  testWidgets('HubMetaPulse shows unfilled vault on Ranked GR hunt', (tester) async {
+  testWidgets('HubMetaPulse shows unfilled vault on Ranked GR hunt', (
+    tester,
+  ) async {
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(
       ascensionLevel: 20,
@@ -230,9 +231,7 @@ void main() {
 
   testWidgets('HubPowerupsFab shows ticket count when banked', (tester) async {
     var state = GameLogic.createInitialState(now: now);
-    state = state.copyWith(
-      metaDepth: state.metaDepth.copyWith(adTickets: 3),
-    );
+    state = state.copyWith(metaDepth: state.metaDepth.copyWith(adTickets: 3));
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -279,7 +278,10 @@ void main() {
 
     expect(find.text('SCROLLS'), findsWidgets);
     expect(find.text('Ad Tickets'), findsOneWidget);
-    expect(find.textContaining('Forever scrolls are bought in SHOP'), findsOneWidget);
+    expect(
+      find.textContaining('Forever scrolls are bought in SHOP'),
+      findsOneWidget,
+    );
     expect(find.textContaining('Same scrolls'), findsNothing);
     expect(find.text('USE'), findsOneWidget);
     expect(find.text('Scroll of Damage'), findsOneWidget);
@@ -306,14 +308,10 @@ void main() {
     expect(find.text('2:00'), findsNWidgets(2));
   });
 
-  testWidgets('ScrollBuffStack hides when no buffs are on', (
-    tester,
-  ) async {
+  testWidgets('ScrollBuffStack hides when no buffs are on', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(
-          body: ScrollBuffStack(meta: MetaDepthState(), nowMs: 1),
-        ),
+        home: Scaffold(body: ScrollBuffStack(meta: MetaDepthState(), nowMs: 1)),
       ),
     );
 

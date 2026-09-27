@@ -39,27 +39,41 @@ class ChaseContract {
   String get upNextLine => 'Up next: $title';
 
   /// One-line “why this job” — same contract, not a second chase.
-  String get whyLine => switch (kind) {
-    HubChaseKind.claimDailyVault => 'Why: vault ready — claim first.',
-    HubChaseKind.claimMissions => 'Why: quests ready on MORE · QUESTS.',
-    HubChaseKind.monthGoal => 'Why: month pass ready.',
-    HubChaseKind.weekGoal => 'Why: week goal ready.',
-    HubChaseKind.meetHero => 'Why: new kit on ROSTER.',
-    HubChaseKind.equipBag => 'Why: stronger gear in BAG.',
-    HubChaseKind.marketUpgrade => 'Why: affordable MARKET upgrade.',
-    HubChaseKind.ascend => 'Why: Ascend ready — Blessing stacks.',
-    HubChaseKind.dailyVaultProgress => 'Why: one clear fills vault.',
-    HubChaseKind.dailyRun => 'Why: free Daily Run open.',
-    HubChaseKind.keystone => 'Why: KEY is the next climb.',
-    HubChaseKind.gauntletMilestone => 'Why: Gauntlet is next.',
-    HubChaseKind.greaterRiftMilestone => 'Why: timed Ranked GR ladder.',
-    HubChaseKind.riftMilestone => 'Why: Farm Rift for gear.',
-    HubChaseKind.ashenCrown => 'Why: weekly Ashen ticket.',
-    HubChaseKind.unlockZone => 'Why: next cave in reach.',
-    HubChaseKind.clearFloors => 'Why: grow the party first.',
-    HubChaseKind.willRank => 'Why: Will rank payday close.',
-    HubChaseKind.doneForToday => 'Why: dailies settled — rest OK.',
-  };
+  String get whyLine {
+    if (kind == HubChaseKind.clearFloors) {
+      final t = title;
+      if (t.startsWith('Almost party') || t.startsWith('Level the party')) {
+        return 'Why: those levels open the hunts.';
+      }
+      if (t.startsWith('Rebuild')) return 'Why: re-equip after Ascend.';
+      if (t.startsWith('Almost Ascend')) return 'Why: one boss, then Ascend.';
+      if (t.startsWith('Grow the party') || t.startsWith('Floor ')) {
+        return 'Why: grow the party first.';
+      }
+      return 'Why: push this cave.';
+    }
+    return switch (kind) {
+      HubChaseKind.claimDailyVault => 'Why: vault ready — claim first.',
+      HubChaseKind.claimMissions => 'Why: quests ready on MORE · QUESTS.',
+      HubChaseKind.monthGoal => 'Why: month pass ready.',
+      HubChaseKind.weekGoal => 'Why: week goal ready.',
+      HubChaseKind.meetHero => 'Why: new kit on ROSTER.',
+      HubChaseKind.equipBag => 'Why: stronger gear in BAG.',
+      HubChaseKind.marketUpgrade => 'Why: affordable MARKET upgrade.',
+      HubChaseKind.ascend => 'Why: Ascend ready — Blessing stacks.',
+      HubChaseKind.dailyVaultProgress => 'Why: one clear fills vault.',
+      HubChaseKind.dailyRun => 'Why: free Daily Run open.',
+      HubChaseKind.keystone => 'Why: KEY is the next climb.',
+      HubChaseKind.gauntletMilestone => 'Why: Gauntlet is next.',
+      HubChaseKind.greaterRiftMilestone => 'Why: timed Ranked GR ladder.',
+      HubChaseKind.riftMilestone => 'Why: Farm Rift for gear.',
+      HubChaseKind.ashenCrown => 'Why: weekly Ashen ticket.',
+      HubChaseKind.unlockZone => 'Why: next cave in reach.',
+      HubChaseKind.clearFloors => 'Why: push this cave.',
+      HubChaseKind.willRank => 'Why: Will rank payday close.',
+      HubChaseKind.doneForToday => 'Why: dailies settled — rest OK.',
+    };
+  }
 
   /// Short CTA when [isReady] (hub / offline action buttons).
   String? get readyActionLabel => switch (kind) {
@@ -75,15 +89,14 @@ class ChaseContract {
     HubChaseKind.marketUpgrade => 'OPEN GOLD',
     HubChaseKind.ascend => 'ASCEND',
     HubChaseKind.dailyRun => 'DAILY RUN',
-    HubChaseKind.keystone => chase.keyLevel != null
-        ? 'ENTER KEY +${chase.keyLevel}'
-        : 'ENTER KEY',
+    HubChaseKind.keystone =>
+      chase.keyLevel != null ? 'ENTER KEY +${chase.keyLevel}' : 'ENTER KEY',
     HubChaseKind.gauntletMilestone => 'GAUNTLET',
     HubChaseKind.riftMilestone => 'FARM RIFT',
-    HubChaseKind.greaterRiftMilestone => chase.progressLabel != null &&
-            chase.progressLabel!.startsWith('RANK GR')
-        ? chase.progressLabel!.replaceFirst('RANK GR', 'RANKED GR')
-        : 'RANKED GR',
+    HubChaseKind.greaterRiftMilestone =>
+      chase.progressLabel != null && chase.progressLabel!.startsWith('RANK GR')
+          ? chase.progressLabel!.replaceFirst('RANK GR', 'RANKED GR')
+          : 'RANKED GR',
     HubChaseKind.ashenCrown => 'ASHEN CROWN',
     HubChaseKind.doneForToday => 'KEY · BOARDS',
     HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,

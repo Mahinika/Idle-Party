@@ -43,8 +43,8 @@ class HubMetaPulse extends StatelessWidget {
     if (chaseUrgency == HubChaseUrgency.ready) return const [];
 
     final bits = <String>[];
-    final showKey = GameLogic.endgameUnlocked(state) &&
-        GameLogic.showKeystoneJargon(state);
+    final showKey =
+        GameLogic.endgameUnlocked(state) && GameLogic.showKeystoneJargon(state);
     if (showKey &&
         chaseKind != HubChaseKind.dailyVaultProgress &&
         chaseKind != HubChaseKind.claimDailyVault) {
@@ -62,11 +62,7 @@ class HubMetaPulse extends StatelessWidget {
       final clears = state.metaDepth.dailyVaultClears;
       final target = GameLogic.dailyVaultClearTarget;
       if (!GameLogic.canClaimDailyVault(state)) {
-        bits.add(
-          GameLogic.showDailyRunOnHub(state)
-              ? 'Vault $clears/$target · not Daily Run / not Quests'
-              : 'Vault $clears/$target',
-        );
+        bits.add('Vault $clears/$target');
       }
     }
 
@@ -90,7 +86,7 @@ class HubMetaPulse extends StatelessWidget {
           ? state.metaDepth.weeklyKey
           : GameLogic.isoWeekKey(clock);
       final week = LocalSeasonCatalog.forWeekKey(weekKey);
-      if (week.hasGoal) {
+      if (week.hasGoal && _weekCrumbVisible(state, week)) {
         if (LocalSeasonCatalog.weekGoalReady(state, week)) {
           bits.add('Week goal READY');
         } else if (!LocalSeasonCatalog.weekGoalClaimed(state, week)) {
@@ -101,6 +97,18 @@ class HubMetaPulse extends StatelessWidget {
       }
     }
     return bits;
+  }
+
+  /// KEY, Gauntlet, Ranked GR, and Ashen weeks stay off the hub until the
+  /// party is level 100. A GR counter under "almost Lv100" is not a job yet.
+  static bool _weekCrumbVisible(GameState state, LocalSeasonWeek week) {
+    final needsEndgame =
+        week.timedKeyTarget > 0 ||
+        week.gauntletFloorTarget > 0 ||
+        week.grTierTarget > 0 ||
+        week.ashenClearTarget;
+    if (needsEndgame && !GameLogic.endgameUnlocked(state)) return false;
+    return true;
   }
 
   @override
@@ -233,8 +241,9 @@ class HubTodayCard extends StatelessWidget {
 String _chaseIcon(HubChaseKind kind) => switch (kind) {
   HubChaseKind.claimDailyVault ||
   HubChaseKind.dailyVaultProgress => UiIcon.chest,
-  HubChaseKind.claimMissions || HubChaseKind.weekGoal || HubChaseKind.monthGoal =>
-    UiIcon.quests,
+  HubChaseKind.claimMissions ||
+  HubChaseKind.weekGoal ||
+  HubChaseKind.monthGoal => UiIcon.quests,
   HubChaseKind.meetHero => UiIcon.star,
   HubChaseKind.equipBag => UiIcon.gear,
   HubChaseKind.marketUpgrade => UiIcon.gold,
@@ -366,7 +375,7 @@ class HubUrgentRow extends StatelessWidget {
           Center(
             child: MenuChrome.chip(
               label: dailyClaimed ? 'DAILY RUN · done' : 'DAILY RUN',
-              selected: !dailyClaimed,
+              selected: false,
               onTap: dailyClaimed ? null : onDaily,
             ),
           ),
