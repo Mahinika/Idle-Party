@@ -102,7 +102,7 @@ abstract final class StoryLore {
         '${blessingsAfter > 1 ? ' (now ×$blessingsAfter)' : ''}.';
     final gain = 'You get AL$nextAl and +${rewardEssence}e.\n\n$bless';
     final stay =
-        'Party levels and open caves stay. Gold, bag, and GOLD tracks reset.';
+        'Party levels and open caves stay. Gold, bag, GOLD tracks, and floor progress reset.';
     final kits = AscendRoadmap.kitUnlockSummary(nextAl, maxNames: 3);
     final String? neu;
     if (unlockCombatRogue) {
@@ -140,7 +140,7 @@ abstract final class StoryLore {
   }) {
     assert(godHandLevel >= 0);
     return 'AL stays ${GameLogic.maxAscensionLevel}. Blessing stays ×$blessings.\n\n'
-        'Party levels and open caves stay. Gold, bag, and GOLD tracks reset.\n\n'
+        'Party levels and open caves stay. Gold, bag, GOLD tracks, and floor progress reset.\n\n'
         'You get +${rewardEssence}e and 1 STAR NODES point.\n\n'
         'Rebuild the bag by looting.';
   }

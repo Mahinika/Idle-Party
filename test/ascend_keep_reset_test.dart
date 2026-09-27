@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/gear_loadout.dart';
+import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/market_listing.dart';
@@ -101,6 +102,9 @@ void main() {
         const LootDrop(name: 'scrap', amount: 1, rarity: LootRarity.common),
       ],
       equipped: {EquipmentSlot.head: item},
+      metaDepth: const MetaDepthState(
+        constellationNodes: ['for_gold'],
+      ),
     );
 
     final beforeJson = before.toJson();
@@ -138,6 +142,9 @@ void main() {
     expect(afterJson['ascensionLevel'], 1);
     expect(afterJson['bossVictories'], 0);
     expect(ascended.essence, greaterThan(before.essence));
+    expect(ascended.metaDepth.constellationNodes, contains('for_gold'));
+    expect(ascended.metaDepth.freshPrestige, isTrue);
+    expect(ascended.highestFloorCleared, 0);
     expect(ascended.isSpecUnlocked(HeroSpecs.ascendUnlockSpec), isTrue);
     expect(ascended.isSpecUnlocked(HeroSpecId.protPaladin), isFalse);
     expect(GameLogic.canUnlockSpec(ascended, HeroSpecId.protPaladin), isFalse);

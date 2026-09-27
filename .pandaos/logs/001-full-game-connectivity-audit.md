@@ -1,7 +1,7 @@
 # Log — F-001 Full game connectivity audit
 
 **Started:** 2026-09-27  
-**Status:** batch F done — next is batch G (step 70)  
+**Status:** batch G done — next is batch H (step 83)  
 **Steps:** 119 (19 screens folded in 2026-09-27)
 
 ## Progress
@@ -14,7 +14,7 @@
 | D Combat | 37–47 | 11/11 |
 | E Zones | 48–57 | 10/10 |
 | F GOLD/SHOP/ESSENCE | 58–69 | 12/12 |
-| G Ascend & meta | 70–82 | 0/13 |
+| G Ascend & meta | 70–82 | 13/13 |
 | H Endgame | 83–96 | 0/14 |
 | I Chase & return | 97–108 | 0/12 |
 | J Ship bar | 109–119 | 0/11 |
@@ -75,3 +75,11 @@ Copy: Crystal Spire no longer says the cave itself is endless. Hollow Grove no l
 65–67: CAMP prices match the buy. God Hand modes are BAL, FOCUS, and WIDE. Relics level with Embers and survive Ascend.
 68: Cinders match What’s New: one from the daily vault, one per two Ad Tickets, or the pouch. They salvage or trade a few Embers a week.
 69: Pets live under ESSENCE → PETS. No Beast Pen label.
+
+### Batch G (2026-09-27)
+
+70–72: Ascend and REBORN now name the same wipe: gold, bag, GOLD tracks, and floor progress. Party levels, open caves, essence, relics, and lit star nodes stay. Forge tracks and the wallet clear. A fresh climb starts after.
+73–75: Blessing stacks on each Ascend. Star nodes are a separate spend and stay lit. The lasting-buy list says it is not the bottom-tab SHOP.
+76: REBORN is an optional button at AL20. It is never the night's job on the hub.
+77–80: Daily Vault, Quests, and Daily Run stay three different things. The vault names the month bonus when it is included. Daily Run waits until the first Ascend. Week goals that need endgame stay quiet until then.
+81–82: Welcome Back uses the same next step as the hub. The small gold line on the hub is not that screen.

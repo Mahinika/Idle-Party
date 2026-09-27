@@ -255,10 +255,11 @@ abstract final class GameGuides {
     id: 'ascend',
     title: 'ASCEND',
     body:
-        'Ascend = prestige: same heroes and zones, empty bag and gold, stronger '
-        'lasting Blessing. Not the same as party max-level hunts.\n\n'
+        'Ascend = prestige: same heroes and zones, empty bag, gold, GOLD tracks, '
+        'and floor progress, stronger lasting Blessing. Not the same as party '
+        'max-level hunts.\n\n'
         'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
-        'stronger Ascend Blessing.\n\n'
+        'gold, GOLD tracks, and floor progress, stronger Ascend Blessing.\n\n'
         '• AL20 is the Ascension cap. More content unlocks when every active hero '
         'reaches level 100 — not from AL20 alone.\n'
         '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
@@ -879,7 +880,7 @@ abstract final class GameGuides {
       title: 'ASCEND',
       body:
           'Claim Ascend in the hub when ready (AL1–AL20) — same party, empty bag, '
-          'stronger Ascend Blessing.\n\n'
+          'gold, GOLD tracks, and floor progress, stronger Ascend Blessing.\n\n'
           '• AL20 is the Ascension cap. Endgame (endless KEY / Farm Rift / Ranked GR, Gauntlet, '
           'Ashen Crown, vault, boards) unlocks when every active hero reaches level '
           '${GameLogic.maxHeroLevel} — not from AL20 alone.\n'

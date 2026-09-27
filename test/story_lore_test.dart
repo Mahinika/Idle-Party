@@ -33,6 +33,8 @@ void main() {
     expect(body, contains('+5 ATK'));
     expect(body, contains('forever'));
     expect(body, contains('caves stay'));
+    expect(body, contains('GOLD tracks'));
+    expect(body, contains('floor progress'));
     expect(body, isNot(contains('AL power')));
     expect(body.length, lessThan(520));
   });
@@ -47,6 +49,7 @@ void main() {
     expect(body, contains('Blessing stays'));
     expect(body, contains('+64e'));
     expect(body, contains('STAR NODES'));
+    expect(body, contains('floor progress'));
     expect(body.toLowerCase(), contains('rebuild'));
     expect(body, isNot(contains('Keep: hero')));
   });

@@ -213,7 +213,7 @@ class HubChase {
           kind: HubChaseKind.ascend,
           title: 'Ascend for lasting power',
           detail:
-              '+$reward essence · Blessing +1 · bag, gold, and floors reset'
+              '+$reward essence · Blessing +1 · bag, gold, GOLD tracks, and floors reset'
               '$unlockBit',
           progressLabel: '+${reward}e',
           urgency: HubChaseUrgency.ready,
@@ -261,7 +261,7 @@ class HubChase {
         title: 'Rebuild your bag',
         detail:
             'Farm early floors in $zoneName and re-equip the party. '
-            'Zones stay open — bag and GOLD tracks reset on Ascend.',
+            'Zones stay open — gold, bag, GOLD tracks, and floor progress reset on Ascend.',
         progressLabel: '$pct% geared',
         zoneId: zoneId,
       );
