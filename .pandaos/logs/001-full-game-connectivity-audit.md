@@ -1,7 +1,7 @@
 # Log — F-001 Full game connectivity audit
 
 **Started:** 2026-09-27  
-**Status:** batch C done — next is batch D (step 37)  
+**Status:** batch D done — next is batch E (step 48)  
 **Steps:** 119 (19 screens folded in 2026-09-27)
 
 ## Progress
@@ -11,7 +11,7 @@
 | A Boot & first hour | 1–11 | 11/11 |
 | B First boss & chrome | 12–23 | 12/12 |
 | C GEAR | 24–36 | 13/13 |
-| D Combat | 37–47 | 1/11 |
+| D Combat | 37–47 | 11/11 |
 | E Zones | 48–57 | 0/10 |
 | F GOLD/SHOP/ESSENCE | 58–69 | 0/12 |
 | G Ascend & meta | 70–82 | 0/13 |
@@ -43,6 +43,15 @@ Note for batch C: starter doll logs missing gear overlays (cloak/helm/weapon). N
 34: Soulbound and equipped apex survive Ascend.
 36: Party name is checked at a new game. Pet rename blocks a bad name. Heroes are not renamed separately.
 
-### Batch D (started)
+### Batch D (2026-09-27)
 
-39: Farm clear pays no repeating floor essence. The one-time first-floor achievement still pays. Push pays the floor essence on top.
+37–38: Later rooms wake after the first room dies, and the gate opens once. A boss clear counts and sends the party home.
+39: Farm clear pays no repeating floor essence. The one-time first-floor achievement still pays. Push pays the floor essence on top. Switching mode mid-fight asks first.
+40: Kit chips on the fight strip keep each job’s main spells.
+41: God Hand smash, blast size, and cooldown match BAL / FOCUS / WIDE under ESSENCE → BLESSING. A tap steers the party.
+42: Each cave’s boss has its own shout. None of them use the old generic pulse.
+43: Time away inside a cave is the same fight as playing. Time away on the hub is not.
+44: Hub time away pays gold (and slow essence). It does not clear floors or start a cave.
+45: A wipe shows advice, then RETRY or HUB. The run is not stuck in the cave.
+46: LEAVE mid-cave returns to the hub and clears the run.
+47: Fast damage check: no job is too strong. Arms and Fury looked weak on a tiny sample; left alone.
