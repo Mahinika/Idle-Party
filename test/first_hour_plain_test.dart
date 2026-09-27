@@ -12,6 +12,7 @@ import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/ui/first_session_tips.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
 import 'package:idle_party/ui/shell/forge_overlay.dart';
@@ -157,6 +158,57 @@ void main() {
     expect(director.state.dungeonId, 'sandy');
     expect(director.state.seenTips, contains('first_run'));
     director.dispose();
+  });
+
+  test('new save reaches first hit without a longer intro', () {
+    // Year roadmap Nu #2: short lead stays; check is "lands a hit", not a
+    // new system or a longer boot story.
+    expect(StoryLore.introBeats, hasLength(1));
+    expect(
+      MetaSystems.releases.first.bullets.first,
+      startsWith('Your party fights on its own. Tap ENTER DUNGEON'),
+    );
+    expect(
+      HubChase.forState(
+        GameLogic.createInitialState(now: now),
+        now: now,
+      ).detail,
+      contains('Your party fights on its own'),
+    );
+
+    var state = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: now),
+      dungeonId: 'sandy',
+    );
+    // Fixed seed so walk-to-pack time is not seed-lottery in CI.
+    state = state.copyWith(layoutSeed: 4242);
+    state = state.copyWith(
+      enemies: GameLogic.createEnemyGroup(
+        state.currentRoom,
+        dungeonId: 'sandy',
+        fromState: state,
+      ),
+    );
+    expect(state.enemies, isNotEmpty);
+
+    var world = SpatialCombat.build(state);
+    var current = state;
+    var elapsed = 0.0;
+    const dt = 0.05;
+    var dealt = 0;
+    while (elapsed < 90) {
+      final step = SpatialCombat.step(world, current, dt: dt);
+      world = step.world;
+      current = step.state;
+      elapsed += dt;
+      dealt = world.heroes.fold(0, (n, h) => n + h.damageDealt);
+      if (dealt > 0) break;
+    }
+    expect(
+      dealt,
+      greaterThan(0),
+      reason: 'fresh Sandy party should land a hit within 90s of combat time',
+    );
   });
 
   test('plain chrome is on for a fresh save', () {
