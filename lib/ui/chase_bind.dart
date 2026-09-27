@@ -56,7 +56,7 @@ void runChasePlan({
     case ChaseOp.navMarket:
       router.apply(NavIntent.market);
     case ChaseOp.navMoreInfo:
-      router.open(MenuRoute.more, more: MoreSection.info);
+      router.open(MenuRoute.more, more: MoreSection.info, infoPane: 1);
     case ChaseOp.navKey:
       router.open(MenuRoute.key);
     case ChaseOp.enter:

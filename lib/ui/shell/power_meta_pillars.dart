@@ -31,6 +31,7 @@ class MoreList extends StatefulWidget {
     required this.onOpenWhatsNew,
     required this.onClose,
     this.bagFiltersScrollNonce = 0,
+    this.initialInfoPane = 0,
   });
 
   final GameDirector director;
@@ -39,6 +40,9 @@ class MoreList extends StatefulWidget {
   final VoidCallback onOpenWhatsNew;
   final VoidCallback onClose;
   final int bagFiltersScrollNonce;
+
+  /// 0 guide, 1 codex, 2 trophies. The hub CODEX button asks for 1.
+  final int initialInfoPane;
 
   @override
   State<MoreList> createState() => _MoreListState();
@@ -63,6 +67,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _infoPane = widget.initialInfoPane;
     final s = widget.director.state;
     final chrome = widget.section.isMetaOverlay
         ? MoreSection.info

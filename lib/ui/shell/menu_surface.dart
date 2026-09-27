@@ -180,6 +180,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
         MenuRoute.more => MoreList(
           director: d,
           section: router.moreSection,
+          initialInfoPane: router.moreInfoPane,
           onSectionChanged: (sec) => router.moreSection = sec,
           onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
           onClose: router.close,

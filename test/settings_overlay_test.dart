@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/funnel_analytics.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/shell/power_meta_pillars.dart';
 import 'package:idle_party/ui/shell/settings_overlay.dart';
 
@@ -73,6 +74,47 @@ void main() {
     await tester.tap(_tab('ACCOUNT'));
     await tester.pumpAndSettle();
     expect(find.text('Away reminders'), findsOneWidget);
+  });
+
+  test('CODEX chase asks for the codex page, not the guide', () {
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    router.open(MenuRoute.more, more: MoreSection.info, infoPane: 1);
+    expect(router.moreSection, MoreSection.info);
+    expect(router.moreInfoPane, 1);
+    router.open(MenuRoute.more, more: MoreSection.info);
+    expect(router.moreInfoPane, 0);
+  });
+
+  testWidgets('discovered monster shows on the codex page', (tester) async {
+    final state = GameLogic.createInitialState().copyWith(
+      highestFloorCleared: 1,
+      codexEnemies: const ['Earth Kraken'],
+    );
+    final director = GameDirector.preview(initialState: state);
+    addTearDown(director.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 360,
+            height: 700,
+            child: MoreList(
+              director: director,
+              section: MoreSection.info,
+              initialInfoPane: 1,
+              onSectionChanged: (_) {},
+              onOpenWhatsNew: () {},
+              onClose: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Earth Kraken'), findsOneWidget);
+    expect(find.text('MONSTERS (1)'), findsOneWidget);
   });
 }
 

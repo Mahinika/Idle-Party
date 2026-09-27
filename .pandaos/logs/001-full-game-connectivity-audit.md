@@ -1,7 +1,7 @@
 # Log — F-001 Full game connectivity audit
 
 **Started:** 2026-09-27  
-**Status:** batch H done — next is batch I (step 97)  
+**Status:** batch I done — next is batch J (step 109)  
 **Steps:** 119 (19 screens folded in 2026-09-27)
 
 ## Progress
@@ -16,7 +16,7 @@
 | F GOLD/SHOP/ESSENCE | 58–69 | 12/12 |
 | G Ascend & meta | 70–82 | 13/13 |
 | H Endgame | 83–96 | 14/14 |
-| I Chase & return | 97–108 | 0/12 |
+| I Chase & return | 97–108 | 12/12 |
 | J Ship bar | 109–119 | 0/11 |
 
 ## Step notes
@@ -94,3 +94,16 @@ Copy: Crystal Spire no longer says the cave itself is endless. Hollow Grove no l
 92: Ashen Crown is a weekly ticket. Each week it visits a cave that already exists.
 93–94: Craft Trial lives under MORE → CRAFT. It is not a fifth pin. Finishing the named craft goal makes that piece.
 95–96: After KEY +20 the night order is Gauntlet, Ranked GR, Farm Rift, then Ashen. When the vault, the daily, and the KEY dial are settled, the hub says done for today.
+
+### Batch I (2026-09-27)
+
+97–98: When the night's job is a hunt, that hunt owns the brown button. A ready claim stays on top, and ENTER stays underneath so you are not stuck on one button.
+99: The first hour stays on the cave. Meet a hero and equip-from-bag wait until after the first boss.
+100–101: Right after Ascend, the hub says rebuild the bag and skips KEY and Gauntlet until gear lands. Leveling the party to 100 is the job before the hunts open, and it waits under the daily unless you are almost there.
+102: The hub button labeled CODEX opened the guide. It now opens the discovered list. A monster you have met shows up there.
+103: Trophies list the real feats. A feat you have met says AWARDED.
+104: Away reminders stay off until the first loot. The line says quiet pings, a couple a day, never during a fight.
+105: A brand-new save never asks for a Play rating. The card says there is no reward.
+106: A new install stamps first open, then the app is ready, then the first cave, then how long until the first hit.
+107: GET UPDATE and the update wall point at Google Play. They do not send anyone to a download page.
+108: The screens in this pass stay in English.

@@ -150,6 +150,8 @@ class MenuRouter extends ChangeNotifier {
 
   MoreSection _moreSection = MoreSection.info;
 
+  int _moreInfoPane = 0;
+
 
 
   MenuRoute get route => _route;
@@ -163,6 +165,8 @@ class MenuRouter extends ChangeNotifier {
   EssencePanel get essencePanel => _essencePanel;
 
   MoreSection get moreSection => _moreSection;
+
+  int get moreInfoPane => _moreInfoPane;
 
 
 
@@ -400,6 +404,8 @@ class MenuRouter extends ChangeNotifier {
 
     MoreSection? more,
 
+    int? infoPane,
+
   }) {
 
     final before = debugWhere;
@@ -411,6 +417,8 @@ class MenuRouter extends ChangeNotifier {
     if (essence != null) _essencePanel = essence;
 
     if (more != null) _moreSection = more;
+
+    if (route == MenuRoute.more) _moreInfoPane = infoPane ?? 0;
 
     if (route == MenuRoute.gear && _route != MenuRoute.gear) {
 
