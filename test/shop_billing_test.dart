@@ -125,7 +125,20 @@ void main() {
     expect(ShopCatalog.foreverSingles.length, 7);
     expect(ShopCatalog.foreverBundle.single.id, 'perm_scrolls_all');
     expect(ShopCatalog.timePacks.length, 3); // restore-only, not listed in SHOP
-    expect(ShopCatalog.extraPacks.length, 2);
+    final listed = [
+      ...ShopCatalog.foreverBundle,
+      ...ShopCatalog.foreverSingles,
+      ...ShopCatalog.extraPacks,
+    ];
+    expect(
+      listed.every((e) => e.kind != ShopOfferKind.boostHours),
+      isTrue,
+    );
+    expect(ShopCatalog.extraPacks.map((e) => e.id), [
+      'ad_free',
+      'cinder_pouch',
+      'supporter_qol',
+    ]);
     final bundle = ShopCatalog.byId['perm_scrolls_all']!;
     final singleSum = singles.fold<double>(0, (n, e) => n + usd(e));
     expect(usd(bundle), lessThan(singleSum));

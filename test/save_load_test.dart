@@ -34,6 +34,8 @@ void main() {
       autoDisassembleMaxIlvl: 18,
       autoDisassembleMaxRarity: 1,
       soundMuted: true,
+      colorblindMode: true,
+      uiTextScale: 1.3,
       sfxVolume: 0.35,
       ambienceVolume: 0.15,
       musicVolume: 0.65,
@@ -77,6 +79,8 @@ void main() {
     expect(decoded.autoDisassembleMaxIlvl, 18);
     expect(decoded.autoDisassembleMaxRarity, 1);
     expect(decoded.soundMuted, isTrue);
+    expect(decoded.colorblindMode, isTrue);
+    expect(decoded.uiTextScale, closeTo(1.3, 0.001));
     expect(decoded.sfxVolume, closeTo(0.35, 0.001));
     expect(decoded.ambienceVolume, closeTo(0.15, 0.001));
     expect(decoded.musicVolume, closeTo(0.65, 0.001));

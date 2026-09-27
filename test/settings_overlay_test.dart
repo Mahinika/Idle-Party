@@ -3,9 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/funnel_analytics.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/ui/shell/power_meta_pillars.dart';
 import 'package:idle_party/ui/shell/settings_overlay.dart';
 
 void main() {
+  test('credits name the studio and owned art', () {
+    expect(MoreList.creditsBody, contains('Cognifox Studio'));
+    expect(MoreList.creditsBody.toLowerCase(), isNot(contains('kenney')));
+  });
+
   testWidgets('settings splits sound display bag and account into local tabs', (
     tester,
   ) async {
@@ -20,6 +26,7 @@ void main() {
     await tester.tap(_tab('DISPLAY'));
     await tester.pumpAndSettle();
     expect(find.text('UI text scale'), findsOneWidget);
+    expect(find.text('Colorblind-friendly combat numbers'), findsOneWidget);
     expect(find.text('Mute all sound'), findsNothing);
 
     await tester.tap(_tab('BAG'));

@@ -16,6 +16,13 @@ import 'shell_common.dart';
 
 /// MORE list: INFO / Settings / Credits plus meta rows (QUESTS / Craft).
 class MoreList extends StatefulWidget {
+  /// MORE → CREDITS. Studio name, owned art — not a third-party pack credit.
+  static const creditsBody = 'Idle Party\n\n'
+      'Cognifox Studio\n\n'
+      'Sprites and world art: Idle Party\n\n'
+      'Made for portrait phones.';
+
+
   const MoreList({
     super.key,
     required this.director,
@@ -165,10 +172,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
       MoreSection.credits => SingleChildScrollView(
         padding: const EdgeInsets.all(8),
         child: Text(
-          'Idle Party\n\n'
-          'World art: Kenney (CC0)\n'
-          'Custom sprites: Idle Party\n\n'
-          'Made for portrait phones.',
+          MoreList.creditsBody,
           style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
       ),
