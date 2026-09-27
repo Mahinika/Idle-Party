@@ -1,6 +1,7 @@
 # Idle Party — unpaid creator outreach
 
-**Updated:** 2026-09-17. Free Play link only. No GitHub Releases. No paid ask.
+**Updated:** 2026-09-27. Free Play link only. No GitHub Releases. No paid ask.
+**Hold the weekly send.** The 27 Sep look had no creator-shaped spike (channel still 2 subscribers, best Short 57 views). Do not send the next 10 as the default week. The list stays for when outreach is named again.
 From: **cognifoxstudio@gmail.com**. One follow-up after 7 days. Stop if they say no.
 
 **Play:** https://play.google.com/store/apps/details?id=com.idleparty.app  
@@ -9,9 +10,7 @@ From: **cognifoxstudio@gmail.com**. One follow-up after 7 days. Stop if they say
 
 Find the address on YouTube **About**, Linktree, or the video description. Do not scrape inboxes into git. Prefer 1k–80k idle / Android RPG / incremental channels. Mega-channels (row 31+) are last.
 
-Send **8–10 / week**. Expect ~5–15% replies.
-
-**This week (2026-09-20):** send rows **1–10** from `cognifoxstudio@gmail.com`. Look up each address on YouTube About / Linktree the hour you send — do not guess @gmail. Attach nothing; Play link + trailer URL are in the body. Stop after 10. Mega-channels (31+) wait.
+When outreach is named again: send **8–10**, then stop. Expect ~5–15% replies. Look up each address on YouTube About / Linktree the hour you send — do not guess @gmail. Attach nothing; Play link + trailer URL are in the body. Mega-channels (31+) wait. Rows **1–10** were the 2026-09-20 batch; do not resend them as a new default week.
 
 ## Mail body (swap FIRST_LINE + NAME)
 

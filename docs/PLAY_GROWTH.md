@@ -1,13 +1,35 @@
 # Idle Party — Play growth (what we can do)
 
-**Updated:** 2026-09-14 · Category stays **Role Playing** (idle fantasy RPG).  
+**Updated:** 2026-09-27 · Category stays **Role Playing** (idle fantasy RPG).  
 Do **not** chase Casual / Battle Royale / sandbox search volume.
 
 **Standing principles:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) — no numbered
-programs; owner names work. D1 paste **2026-09-14** (not readable).
+programs; owner names work. D1 is still not a Play metric.
 Do not restore AL20 as the batch.
 
 Honest growth order: **crash-free → listing conversion → D1 → D7 → rating → tiny paid test**.
+
+### What 27 Sep changes
+
+Crash-free still holds. The store is no longer empty (4,910 impressions,
+107 installs, listing conversion **25%**). The hole is the open: 32 first
+opens, 30 monthly active devices, D7 still blank. The only install jump
+lined up with one `r/incremental_games` post on 18 Sep and then stuck near
+42 devices. Shorts, the unlisted preview (1 view), and later Reddit posts
+did not repeat it.
+
+Until the owner names a different bet:
+
+- Next acquisition post is the **2026-10-18** `r/incremental_games` slot.
+  GIF in the post, one Play link, short body. Do not fill the weeks with
+  more subs.
+- Keep the listing video on the store page. Do not spend the week cutting
+  another Shorts batch or sending the next 10 creator mails.
+- Do not buy installs. Paid UA would buy the same open-after-install leak.
+- One listing test is no longer blocked by “~10 visitors.” It is still one
+  asset, one week, and only when named. The open hole is larger than the
+  store-page hole.
+- Do not answer the 2★ “not interesting” review with a feature list.
 
 Paste-ready listing copy: [`STORE_LISTING.md`](STORE_LISTING.md).  
 Ops status: [`PLAY_STORE.md`](PLAY_STORE.md).
@@ -51,8 +73,11 @@ Do these in Console when you have 20 minutes:
    Rebuild: `py -3 tool/store_listing/build_preview_video.py` → 16:9 + 9:16
    (brief in `TRAILER.md` — **combat first 10 s**). Confirm YT ads stay off.
 4. **Reply to reviews** (templates below) — especially 1–2★.
-5. **Store listing experiments** (if available): A/B short description vs previous.
-6. Optional: **Google App campaigns** — see ads checklist below (start tiny).
+5. **Store listing experiments** — traffic is no longer the blocker (look
+   **2026-09-27**). Still one asset, one week, only when the owner names the
+   test. The open-after-install hole is the larger one.
+6. **Google App campaigns** — do not start. 107 installs became 32 first
+   opens and D7 is still empty. Checklist below stays for later.
 
 Never point players at GitHub Releases.
 
@@ -62,10 +87,27 @@ Owner confirmed on a **Play-installed** build: listing Updated, SHOP SKUs
 visible, SCROLLS + AD PRIVACY path. D1 / listing A/B still deferred
 (too little traffic — Console look **2026-09-12**).
 
+### Console look (2026-09-27)
+
+Last **28 days** (30 Aug–26 Sep) unless noted. Play still has no D1 metric.
+D7 retained devices: **—**. No tiny UA.
+
+| Surface | What we saw |
+|---------|-------------|
+| Funnel (Öka, Enhet) | **4,910** device impressions, **107** acquisitions, **32** first opens, **30** MAU. Listing conversion **25.48%**. **0** experiments. **+48** exploration acquisitions / 90d. |
+| Installed audience | **9–16** devices through 17 Sep, then **29** (18 Sep), **39**, **43**, then about **42** through 22 Sep (latest day in that table). 22 Sep: US 13, France 5, Netherlands 4, Australia 2, other 18. |
+| Acquisition source (11–20 Sep, 101 of 107) | Explore **42**, paid-and-direct **50**, none **9**. Paid-and-direct mixes ads and direct links. No campaign was running. |
+| Crashes / ANR | Reporting API through **26 Sep**: no crash rows, no ANR rows. Översikt shows a dash, not a measured 0%. Firebase overview: crash-free. |
+| Reviews | Average **3.50** from **4** ratings (NL 5, US 5, JP 2, UA 2). Latest text is 2★ on 1.12.172, Russian “not interesting”, already replied. |
+| Revenue | Play IAP **12.0 kr** (same as the 14 Sep look). AdMob month-to-date **5.87 kr** (August **10.77 kr**). Last 7 days: **2.58 kr**, **170** requests, **4** impressions. Payout identity, PIN, and bank still open. Ignore eCPM. |
+| YouTube | `@CognifoxStudio`: **2** subscribers, **4** videos. Best public Short **57** views. Live listing preview `UHLG28lHmPs`: **1** view (unlisted, 26 Sep). |
+| Reddit | `r/incremental_games` still score **0**, **31%** upvotes, 1 comment. `r/IndieGaming` (25 Sep) score **0**, **40%**. `r/indiegames` removed by a mod. `r/SideProject` removed by Reddit. No second install wave after 20 Sep. |
+| Firebase | Overview **218 / 123 / 23** active users (28d / 7d / 1d), **14m 20s** per active user. Includes owner test runs. Standalone Google Analytics still says this account lacks permission. Production track at the look: **1.12.186**, 100%. |
+
 ### Console D1 paste (2026-09-14)
 
 D1 / D7 pasted from a Console look **2026-09-14**. Play has no D1 metric;
-2-day and D7 are empty or n=1. Listing A/B still deferred. No tiny UA.
+2-day and D7 are empty or n=1. Listing A/B was deferred then. No tiny UA.
 
 ### Console look (2026-09-14)
 
@@ -130,6 +172,10 @@ Idle Party stays single-player and fair — SHOP is convenience (boosts / QoL), 
 
 ## Tiny ads checklist (optional)
 
+Do **not** start this on the 27 Sep read. 107 installs became 32 first
+opens, and D7 is still empty. Revisit only after an organic open is known
+and not junk.
+
 Only if you want paid installs after listing + retention feel OK.
 
 | Field | Start value |
@@ -146,7 +192,10 @@ Do **not** scale spend until organic D1 on a **new save** is known and not junk.
 
 ## Skip for now
 
-- Re-tagging as Casual / Action / Arcade  
-- Mass locale listings before EN listing + retention sit  
-- Chasing Play editorial featuring (Google picks)  
+- Another Shorts / TikTok / Reels batch (the public clips stayed under 60 views)
+- The next 10 creator mails (no creator-shaped spike on the 27 Sep look)
+- Paid UA / App campaigns
+- Re-tagging as Casual / Action / Arcade
+- Mass locale listings before EN listing + retention sit
+- Chasing Play editorial featuring (Google picks)
 - GitHub Releases as a player funnel  

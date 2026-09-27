@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-09-27 — first real traffic
+
+- **One Reddit post moved installs. Shorts and the listing clip did not.** Devices sat at 9–16 until 18 Sep (`r/incremental_games`), then stuck near 42. 101 of 107 acquisitions in the 28-day window fell on 11–20 Sep. Later posts did not repeat it. YouTube: 2 subscribers, best Short 57 views, live listing preview 1 view. 107 installs became 32 first opens and 30 monthly active devices; D7 still empty — do not buy UA or spend the week on another Shorts batch. Listing conversion at this traffic is 25%, not the old 73% on a handful of visitors. Firebase’s 218 includes test runs; Play’s 30 is the player count. Paste: `PLAY_GROWTH.md`.
+
 ## 2026-09-12 — grow players, not the maker’s save
 
 - **Feature-complete ≠ growth.** 31 specs / 15 zones / five endgame modes did

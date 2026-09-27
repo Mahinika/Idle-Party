@@ -7,9 +7,13 @@ Källor (A/B/C): [YEAR_ROADMAP_SOURCES.md](YEAR_ROADMAP_SOURCES.md).
 
 North star: främlingar på Play blir spelare (`GROWTH_MANDATE.md`).  
 Tillväxtordning: crash-free → listing → D1 → D7 → betyg → pytteliten UA.  
-Inga numeriska D1/D7-mål medan Console-n är litet (paste 2026-09-14).
+Inga numeriska D1/D7-mål (paste 2026-09-27: 107 installationer, 32 första
+öppningar, D7 fortfarande tom).
 
-A-källorna den här svepen flyttade inte **Nu**. Listing-test väntar på trafik.
+A-källorna den här svepen flyttade inte **Nu**. Marknadsläsningen 27 sep
+ligger i `PLAY_GROWTH.md`: hoppet kom från ett Reddit-inlägg, inte från
+videon. Listing-test är inte längre blockerat av “för få besökare”, och
+det är ändå inte nästa bet — hålet är att installationen inte öppnas.
 Vitals-kollen 2026-09-26 var inte röd. Frommel säger ingen ny daglig kalender.
 Median session 3,1–3,5 min (GameAnalytics 2026-rapport, 2025-data) är
 marknadskontext, inte en timer.
@@ -30,7 +34,9 @@ och inga ANR-rader. Det är inte ett påhittat 0 %. Det blockerar inte innehåll
    pekar på `UHLG28lHmPs` (`PLAY_STORE.md`). Lokala klippet
    (2026-09-26) öppnar med Sandy-krypet och går sedan Gauntlet, Greater Rift
    och Hell's Gate. Första 10 sekunderna är fight, och ungefär 80 % av
-   klippet är spelet (Play Help). Studio-steget är gjort.
+   klippet är spelet (Play Help). Studio-steget är gjort. Kollen 27 sep:
+   klippet har 1 visning. Det stannar som listningsfil. Det är inte
+   förvärvskanalen.
 
 2. **KEY går att läsa på en natt** — skeppad i 1.12.187. What’s New-ledet
    för en främling stannar *Your party fights on its own. Tap ENTER DUNGEON.*

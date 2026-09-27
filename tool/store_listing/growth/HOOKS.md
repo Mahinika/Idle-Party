@@ -1,6 +1,8 @@
 # Idle Party — Shorts / TikTok / Reels hook library
 
-**Updated:** 2026-09-20. English on-screen. Real A56 footage only — no AI combat, no fake UI.
+**Updated:** 2026-09-20. **Hold the batch** as of **2026-09-27**: public Shorts stayed under 60 views and did not move installs (`docs/PLAY_GROWTH.md`). Keep this library. Do not cut another week of clips unless that bet is named again.
+
+English on-screen. Real A56 footage only — no AI combat, no fake UI.
 Play link in **bio + first comment**, not as a GitHub Release. Cross-post the same master.
 
 **Capture:** Samsung A56, 1080×2340, `adb shell screenrecord`, Zoom · Close.

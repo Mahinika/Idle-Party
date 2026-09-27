@@ -10,6 +10,12 @@ Reply to comments the same day. Unique copy per sub — no copy-paste.
 
 ---
 
+## Decision (2026-09-27)
+
+The 18 Sep `r/incremental_games` post is the only one that lined up with installs (devices 16 → about 42, then flat). Public score on **27 Sep** is still **0**, upvote ratio **31%**, 1 comment. `r/IndieGaming` (25 Sep) is also score **0** / **40%** and did not make a second wave. `r/indiegames` was removed by a moderator. `r/SideProject` is still removed by Reddit.
+
+Next own-game post stays **2026-10-18** on `r/incremental_games`. GIF in the post, one Play link, short body. Do not spend the weeks before that on more subs. Comment on other people’s threads if comment karma is still 0.
+
 ## Decision (2026-09-20)
 
 **Do not post the game again this weekend.** The 3.2K-view hit already ran. A second launch post now would be spam (five posts on cake day, SideProject already filtered, 0 comment karma).
@@ -18,15 +24,13 @@ r/incremental_games **did** convert to Play downloads. It also got **30.8% upvot
 
 | When | Where | Why |
 |------|--------|-----|
-| Not before **2026-10-18** | r/incremental_games | 30-day own-content rule. Slot used 2026-09-18. |
+| Not before **2026-10-18** | r/incremental_games | 30-day own-content rule. Slot used 2026-09-18. Still the only post that lined up with installs (look 2026-09-27). |
 | Not while live | r/droidappshowcase / ShowMeYourApps / ShowYourApp | Still up. Do not delete-and-repost. |
-| After karma + a few days | r/SideProject | Spam-filter removed the first one. |
-| Not before **2026-10-09** | r/IndieGaming | Posted **2026-09-25**. One submission / 2 weeks. |
-| After GIF exists | r/indiegames, r/DungeonCrawler | Need footage in the post, not a YouTube URL. |
+| After karma + a few days | r/SideProject | Spam-filter removed the first one. Still removed on 2026-09-27. |
+| Not before **2026-10-09** | r/IndieGaming | Posted **2026-09-25**. Score 0 / 40% on 2026-09-27. One submission / 2 weeks. |
+| Not this cycle | r/indiegames | Removed by a moderator (2026-09-21 post). |
 
-Until then: comment on **other** games (need comment karma). Capture a 7–15s party-crawl GIF from A56 (`HOOKS.md` hook 01).
-
-Do **not** blast the 20 list in one week. Sitewide 10% rule + cake-day spam already hit SideProject. One new sub every few days, unique copy, GIF first.
+Until then: comment on **other** games (need comment karma). Have the 7–15s party-crawl GIF ready for 18 Oct (`HOOKS.md` hook 01). Do not open a new sub in the meantime.
 
 ---
 
@@ -38,7 +42,7 @@ Live sizes **2026-09-20**. Rank = likely Android idle-RPG players, not raw membe
 |---|-----|--------:|------------------|-----|
 | 1 | [r/incremental_games](https://www.reddit.com/r/incremental_games/) | 189k | **2026-10-18** | Proven 3.2K views → Play. 1 own-game / 30 days. GIF + short paste below. Feedback Friday comments OK sooner. |
 | 2 | [r/IndieGaming](https://www.reddit.com/r/IndieGaming/) | 525k | **2026-10-09** | Posted **2026-09-25**. **1 post / 2 weeks.** GIF in the post. Declare AI coding assistants in the body. Store page is not the post URL. |
-| 3 | [r/indiegames](https://www.reddit.com/r/indiegames/) | 337k | GIF ready | Footage **required**. Max 2/week. No fake “feedback?” titles. No gen-AI posts. |
+| 3 | [r/indiegames](https://www.reddit.com/r/indiegames/) | 337k | Not again soon | Posted **2026-09-21**, removed by a moderator. Do not repost this cycle. |
 | 4 | [r/AndroidGaming](https://www.reddit.com/r/AndroidGaming/) | 427k | ~**2026-12-18** | `[DEV]` + Play link. Account **3 months**. 90% unaffiliated. 1 game post / month. Stay 3h after post. |
 | 5 | [r/playmygame](https://www.reddit.com/r/playmygame/) | 142k | After reviewing others | Free Play counts as playable. **1 / month.** Direct Play link + short desc. |
 | 6 | [r/IndieDev](https://www.reddit.com/r/IndieDev/) | 447k | GIF ready | Clip first, not a launch dump. Devs + players. |
