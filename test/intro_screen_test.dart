@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
+import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/party_name_filter.dart';
 import 'package:idle_party/core/story_lore.dart';
@@ -204,6 +205,47 @@ void main() {
     expect(find.text('LOCKED'), findsNothing);
   });
 
+  testWidgets('Continue opens the existing save, not a new game', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final seeded = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 9, 27),
+      partyName: 'Cave Company',
+    ).copyWith(
+      gold: 4242,
+      highestFloorCleared: 1,
+      lifetimeGoldEarned: 17,
+      lastUpdated: DateTime.now(),
+    );
+    final director = GameDirector.preview(initialState: seeded);
+
+    await tester.binding.setSurfaceSize(const Size(360, 780));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: true),
+    );
+    await skipBootIntro(tester);
+
+    expect(find.text('CONTINUE'), findsOneWidget);
+    expect(find.textContaining('Cave Company'), findsOneWidget);
+
+    await tester.tap(find.text('CONTINUE'));
+    await tester.pump();
+    // Continue waits for the menu exit (~480ms) before opening the hub.
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(StartMenuScreen), findsNothing);
+    expect(find.byType(NewGamePartyPicker), findsNothing);
+    expect(director.state.partyName, 'Cave Company');
+    expect(director.state.gold, 4242);
+    expect(director.state.highestFloorCleared, 1);
+    expect(find.textContaining('Floor 2'), findsWidgets);
+    expect(find.text('Grow the party'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 500));
+  });
+
   testWidgets('new game start reaches hub with chosen party size', (
     tester,
   ) async {
@@ -331,6 +373,10 @@ void main() {
     await tester.ensureVisible(find.text('START'));
     await tester.tap(find.text('START'));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('Lock race?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(GameButton, 'START').last);
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
     final prot = director.state.heroes.firstWhere(
@@ -399,7 +445,7 @@ void main() {
       await tester.pump();
 
       expect(find.textContaining('already picked'), findsOneWidget);
-      expect(find.textContaining('Pick 2 more heroes'), findsOneWidget);
+      expect(find.textContaining('Pick a job for 2 slots'), findsOneWidget);
       final startButton = tester.widget<GameButton>(
         find.widgetWithText(GameButton, 'START'),
       );

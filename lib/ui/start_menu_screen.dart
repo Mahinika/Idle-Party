@@ -188,6 +188,8 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                       child: Text(
                                         widget.saveSummary!,
                                         textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                         style: GameTheme.body(
                                           size: 13,
                                           color: GameTheme.torchHot,
@@ -221,36 +223,23 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                       : null,
                                 ),
                                 const SizedBox(height: 4),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                Wrap(
+                                  alignment: WrapAlignment.center,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 4,
                                   children: [
-                                    if (widget.onSettings != null) ...[
+                                    if (widget.onSettings != null)
                                       MenuChrome.textLink(
                                         label: 'SETTINGS',
                                         onPressed: _inputUnlocked
                                             ? widget.onSettings
                                             : null,
                                       ),
-                                      Text(
-                                        ' · ',
-                                        style: GameTheme.body(
-                                          size: 13,
-                                          color: GameTheme.parchmentDim,
-                                        ),
-                                      ),
-                                    ],
                                     MenuChrome.textLink(
                                       label: 'PRIVACY',
                                       onPressed: _inputUnlocked
                                           ? AdRewarded.showPrivacyOptions
                                           : null,
-                                    ),
-                                    Text(
-                                      ' · ',
-                                      style: GameTheme.body(
-                                        size: 13,
-                                        color: GameTheme.parchmentDim,
-                                      ),
                                     ),
                                     MenuChrome.textLink(
                                       label: 'DISCORD',

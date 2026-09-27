@@ -188,6 +188,25 @@ void main() {
     expect(cta.secondaryLabel, 'ENTER DUNGEON');
   });
 
+  test('first cave button stays ENTER DUNGEON', () {
+    const chase = HubChase(
+      kind: HubChaseKind.clearFloors,
+      title: 'Grow the party — Sandy Caverns',
+      detail: 'Enter the cave. Your party fights on its own.',
+      urgency: HubChaseUrgency.normal,
+    );
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: 'ENTER',
+      hasChaseAction: true,
+      unlockedSelected: true,
+      hardmodeLevel: 0,
+      showKeystoneJargon: false,
+      endgameUnlocked: false,
+    );
+    expect(cta.primaryLabel, 'ENTER DUNGEON');
+  });
+
   test('clearFloors chase title owns primary enter button', () {
     const chase = HubChase(
       kind: HubChaseKind.clearFloors,

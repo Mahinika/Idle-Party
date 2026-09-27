@@ -218,9 +218,12 @@ class HubPrimaryCta {
       case HubChaseKind.clearFloors:
       case HubChaseKind.dailyVaultProgress:
       case HubChaseKind.unlockZone:
-        final title = chase.title.trim();
-        if (title.isEmpty) return enterLabel;
-        if (title.length <= 30) return title;
+      final title = chase.title.trim();
+      if (title.isEmpty) return enterLabel;
+      // First cave: the tip and What's New say ENTER DUNGEON. A truncated
+      // "Grow the party —" does not match that button.
+      if (title.startsWith('Grow the party')) return enterLabel;
+      if (title.length <= 30) return title;
         return title.split(' ').take(4).join(' ');
       default:
         return enterLabel;

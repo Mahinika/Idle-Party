@@ -15,7 +15,8 @@ void main() {
 
   test('intro and ascend copy stay short and present', () {
     expect(StoryLore.introTagline, contains('party'));
-    expect(StoryLore.introSubline.toLowerCase(), contains('help'));
+    expect(StoryLore.introSubline.toLowerCase(), contains('offline'));
+    expect(StoryLore.introBeats.first.body.toLowerCase(), contains('help'));
     expect(StoryLore.studioName, 'Cognifox Studio');
     expect(StoryLore.introBeats, hasLength(1));
     expect(StoryLore.introBeats.first.title, 'IDLE PARTY');
