@@ -1,7 +1,7 @@
 ---
 name: hub-smoke
 description: >-
-  Hub polish smoke playtest for Idle Party (daily vault, TODAY chase, What's New,
+  Hub polish smoke playtest for Idle Party (daily vault, TODAY chase, Patch Notes,
   guides, God Hand tip). Use after hub/meta/UX polish, before tagging a release,
   or when the owner says "polish hub" / "kolla hubben" / first hour, or
   TODAY felt wrong / visste inte vad jag jagar / what am I chasing
@@ -11,7 +11,7 @@ description: >-
 
 # Hub smoke (Idle Party)
 
-Short visual QA after What’s New / daily vault / MORE / guides / God Hand style work.
+Short visual QA after Patch Notes / daily vault / MORE / guides / God Hand style work.
 
 **Growth mandate:** prefer starting from **NEW GAME** (not AL20) for hub smoke.
 Combat early is nice; not a hard lock.
@@ -39,7 +39,7 @@ flutter test test/ship_smoke_test.dart test/changelog_sync_test.dart
 | 2c | Daily CTA | When the hunt is Daily, only the hunt **DAILY** button (no duplicate **DAILY RUN**) |
 | 3 | Daily vault claim | Vault filled (1 clear or timed KEY +2): `CLAIM VAULT`; toast says **Daily vault claimed** |
 | 4 | MORE badge | Unseen changelog → `★` on **MORE** (`MenuAlerts.more.star`); claimable quests → count badge on **MORE** |
-| 5 | What’s New | Open MORE → INFO → WHAT'S NEW; bullets match `MetaSystems.currentVersion` |
+| 5 | Patch Notes | Open MORE → INFO → PATCH NOTES; version matches `MetaSystems.currentVersion`; sections only when that release has lines |
 | 6 | Guides | MORE → INFO → topics labeled `Guide · …`; WORLD PATH mentions Tidehold/Ashen/Grove |
 | 7 | God Hand tip | Enter dungeon once; tip mentions BAL/FOCUS/WIDE or ESSENCE → BLESSING |
 | 8 | GEAR tabs | GEAR shows GEAR + BAG early; MERGE / ROSTER unlock later — no LOADOUTS tab |

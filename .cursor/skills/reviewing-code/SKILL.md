@@ -35,7 +35,7 @@ If the diff belongs to a domain skill, follow it for that slice:
 | `assets/` | `assets-legal` (+ `character-paper-doll` if body/gear) |
 | hub / chase / guides / first hour | `ship_smoke_test` + `first_hour_plain_test` |
 | kit DPS numbers | share-fast / gate — do not weaken HIGH |
-| version / What's New | `changelog_sync_test` |
+| version / Patch Notes | `changelog_sync_test` |
 | zone sprites | `zone-art-identity` (only if art moved) |
 
 ## 2. Must fix (block merge)
@@ -45,7 +45,7 @@ If the diff belongs to a domain skill, follow it for that slice:
 - **Save**: new fields have fromJson defaults + test (`save-migrate`)
 - **Assets**: Kenney/custom via helpers; `FilterQuality.none`; no dumps
 - **Balance**: share-moving kit changes considered share-fast/gate; no HIGH-assert edits without an explicit product decision
-- **What's New**: version bump names the player-visible systems
+- **Patch Notes**: version bump uses summary plus sections (NEW / CHANGES / FIXES). Empty sections stay hidden. The summary stays the new-player lead.
 - **Honesty**: English in-game copy matches reality
 - **Chrome**: prefer shared `MenuRouter` + `MenuSurface` + `AppBottomBar` when it fits; flat nav / hide-until-unlock are not hard review blocks
 - **Tests**: new GameLogic / hub / chase / guides branches have matching tests using `GameDirector.preview()`
