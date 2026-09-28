@@ -29,7 +29,7 @@ class WispGiftOverlay extends StatelessWidget {
         if (director.wispMenuPaused) return const SizedBox.shrink();
         final minimal = director.state.vfxQuality == VfxQuality.minimal;
         return Align(
-          alignment: const Alignment(0.62, -0.08),
+          alignment: const Alignment(0.84, -0.58),
           child: _WispTapTarget(
             minimal: minimal,
             onTap: () {
@@ -131,8 +131,8 @@ class _WispTapTargetState extends State<_WispTapTarget>
                   );
                 },
                 child: const SizedBox(
-                  width: 54,
-                  height: 72,
+                  width: 66,
+                  height: 84,
                   child: CustomPaint(painter: _LanternPainter()),
                 ),
               ),
@@ -149,29 +149,28 @@ class _LanternPainter extends CustomPainter {
   const _LanternPainter();
 
   static const _rows = <String>[
-    '...###...',
-    '..#...#..',
-    '..#...#..',
-    '...###...',
+    '....#....',
+    '...#.#...',
+    '....#....',
     '..#####..',
-    '.#+++++.#',
-    '.#+***+.#',
-    '.#+***+.#',
-    '.#+++++.#',
+    '.#.#.#.#.',
+    '.#*#*#*#.',
+    '.#*#*#*#.',
+    '.#*#*#*#.',
+    '.#.#.#.#.',
     '..#####..',
     '...###...',
-    '..#...#..',
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
     const cols = 9;
-    const glyphRows = 12;
-    final px = size.shortestSide / cols;
+    const glyphRows = 11;
+    final px = size.width / cols;
     final ox = (size.width - cols * px) / 2;
     final oy = (size.height - glyphRows * px) / 2;
     final iron = Paint()
-      ..color = GameTheme.parchmentDim
+      ..color = GameTheme.buttonBrownBottom
       ..isAntiAlias = false;
     final glass = Paint()
       ..color = GameTheme.torch
