@@ -55,8 +55,8 @@ Track closed testers who **install from Play** and stay opted in:
 From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 
 ```
-• Your party fights on its own. Caves stay snappier in crowded fights, and stacked mobs unstick instead of gluing together.
-• PATH is a continent map. SHOP has forever SCROLLS and a redeem code. Party Lv100 still unlocks Craft Trial and the extra hunts.
+• Worn gear shows its real item level. CLEAN says when it would sell an upgrade. A piece you take off stays in the bag.
+• ENTER KEY uses the dial you set. At Lv100, KEY is one night's job. The hub, shop, and bag use one main button.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys

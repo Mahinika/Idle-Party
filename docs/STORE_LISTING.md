@@ -123,11 +123,11 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.183+213** (`pubspec.yaml`). Last Play Production paste was **1.12.183+213** submitted **2026-09-20**:
+Working ship: **1.12.187+217** (`pubspec.yaml`). Not uploaded. Last Play Production live is **1.12.186 (216)**. Paste for the next Production upload:
 
 ```
-• Your party fights on its own. Caves feel different now: Sandy piles up front, Tide nets the mid room, Brass stacks elites. Bosses telegraph their own tell.
-• PATH is a continent map. SHOP has forever SCROLLS and a redeem code. Party Lv100 still unlocks Craft Trial and the extra hunts.
+• Worn gear shows its real item level. CLEAN says when it would sell an upgrade. A piece you take off stays in the bag.
+• ENTER KEY uses the dial you set. At Lv100, KEY is one night's job. The hub, shop, and bag use one main button.
 ```
 
 ### Full description honesty (SHOP)
