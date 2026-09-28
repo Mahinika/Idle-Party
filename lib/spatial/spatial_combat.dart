@@ -296,6 +296,13 @@ class SpatialActor {
   /// Sidestep bias while kiting (−1 / +1).
   double kiteSide = 0;
 
+  /// Focus this enemy locked its approach bearing against.
+  String? approachFocusId;
+
+  /// Where the approach started. Keeps slot facing stable so packs don't orbit.
+  double approachX = 0;
+  double approachY = 0;
+
   /// Seconds until another speech bark may fire.
   double barkCd = 0;
 
@@ -2379,6 +2386,9 @@ abstract final class SpatialCombat {
     to.impatience = from.impatience;
     to.kiteMul = from.kiteMul;
     to.kiteSide = from.kiteSide;
+    to.approachFocusId = from.approachFocusId;
+    to.approachX = from.approachX;
+    to.approachY = from.approachY;
     to.barkCd = from.barkCd;
     to.lowHpBarked = from.lowHpBarked;
     to.rage = from.rage;
@@ -3287,33 +3297,17 @@ abstract final class SpatialCombat {
       );
       if (enemy.telegraphTimer > 0) continue;
 
-      final dist = actorDist(enemy, target);
-      final preferred = enemy.preferredRange ?? (enemy.attackRange * 0.75);
-      var tx = target.x;
-      var ty = target.y;
-      var hold = preferred;
-      if (enemy.archetype == EnemyArchetype.swarm && !enemy.ranged) {
-        // Ring the party instead of stacking on one hero.
-        final slot = enemy.id.hashCode.abs() % 8;
-        final angle = slot * (math.pi / 4);
-        const ring = 0.72;
-        tx = target.x + math.cos(angle) * ring;
-        ty = target.y + math.sin(angle) * ring;
-        hold = 0.15;
-      } else if (enemy.ranged && dist < preferred * 0.65) {
-        tx = enemy.x - (target.x - enemy.x);
-        ty = enemy.y - (target.y - enemy.y);
-        hold = 0;
-      }
+      final goal = CombatPresence.enemyMoveGoal(enemy, target, world);
       _steerActor(
         enemy,
-        tx,
-        ty,
+        goal.x,
+        goal.y,
         enemy.moveSpeed * enemy.moveSpeedMul,
         world,
         dt: dt,
-        holdDistance: hold,
+        holdDistance: goal.hold,
         separateFrom: world.enemies,
+        separationRadius: goal.separation,
       );
 
       final slowRate = enemy.attackSlowTimer > 0 ? 0.8 : 1.0;
@@ -3426,15 +3420,7 @@ abstract final class SpatialCombat {
       var tx = hero.x;
       var ty = hero.y;
       var hold = 0.0;
-      final roleTag = hero.heroSpecId != null
-          ? HeroSpecs.def(hero.heroSpecId!).roleTag
-          : null;
-      final isHealer = actorIsHealer(hero) || roleTag == SpecRoleTag.healer;
-      final isBackliner =
-          isHealer ||
-          hero.ranged ||
-          roleTag == SpecRoleTag.caster ||
-          roleTag == SpecRoleTag.rangedDps;
+      final isHealer = CombatPresence.isHealerRole(hero);
 
       if (guiding) {
         // God Hand: tap pulls the party toward the point.
@@ -3442,7 +3428,6 @@ abstract final class SpatialCombat {
         ty = world.guideY!;
         hold = 0.35;
       } else if (target != null) {
-        final dist = actorDist(hero, target);
         var preferred = CombatPresence.preferredFightRange(
           hero,
           hero.preferredRange ?? (hero.attackRange * 0.7),
@@ -3458,51 +3443,27 @@ abstract final class SpatialCombat {
           target.x.floor(),
           target.y.floor(),
         );
-
-        if (isHealer && packAnchor != null && packAnchor.id != hero.id) {
-          // Stay slightly behind the tank, not deep in the pack.
-          final dx = packAnchor.x - target.x;
-          final dy = packAnchor.y - target.y;
-          final len = math.sqrt(dx * dx + dy * dy);
-          if (len > 0.15) {
-            tx = packAnchor.x + (dx / len) * 0.75;
-            ty = packAnchor.y + (dy / len) * 0.75;
-          } else {
-            tx = packAnchor.x - 0.7;
-            ty = packAnchor.y;
-          }
-          hold = 0.3;
-        } else if (isBackliner &&
-            dist < preferred * (isHealer ? 0.88 : 0.72) &&
-            hasLos) {
-          // Kite away — Fire panics straight back, Arcane sidesteps.
-          final kite = CombatPresence.kiteTarget(hero, target);
-          tx = kite.$1;
-          ty = kite.$2;
-          hold = 0;
-        } else {
-          tx = target.x;
-          ty = target.y;
-          // No LOS at hold range ? close in so shots/melee aren't wall-blocked.
-          hold = hasLos ? preferred : 0;
-        }
+        final goal = CombatPresence.heroFightGoal(
+          hero: hero,
+          target: target,
+          world: world,
+          packAnchor: packAnchor,
+          index: i,
+          preferred: preferred,
+          hasLos: hasLos,
+        );
+        tx = goal.x;
+        ty = goal.y;
+        hold = goal.hold;
       } else if (packAnchor != null && hero.id != packAnchor.id) {
-        // Idle pack: trail the tank/leader with light formation offsets.
-        final ox = switch (roleTag) {
-          SpecRoleTag.caster || SpecRoleTag.rangedDps => -1.05,
-          SpecRoleTag.healer => -1.15,
-          SpecRoleTag.meleeDps => -0.25,
-          SpecRoleTag.tank => -0.4,
-          null => switch (hero.heroRole) {
-            HeroRole.mage => -1.05,
-            HeroRole.healer => -1.15,
-            HeroRole.rogue => -0.25,
-            _ => -0.4,
-          },
-        };
-        final oy = (i - 1) * 0.55;
-        tx = packAnchor.x + ox;
-        ty = packAnchor.y + oy;
+        final goal = CombatPresence.idleSlot(
+          hero: hero,
+          anchor: packAnchor,
+          world: world,
+          index: i,
+        );
+        tx = goal.x;
+        ty = goal.y;
         hold = 0.45;
       }
 
@@ -4191,10 +4152,11 @@ abstract final class SpatialCombat {
       final target =
           ownerFocus ?? nearestActiveEnemy(pet, world.enemies);
       if (target == null) {
+        final heel = CombatPresence.heelPoint(leashOwner, world);
         _steerActor(
           pet,
-          leashOwner.x - 0.55,
-          leashOwner.y + 0.45,
+          heel.$1,
+          heel.$2,
           pet.moveSpeed,
           world,
           dt: dt,
@@ -4204,15 +4166,35 @@ abstract final class SpatialCombat {
         continue;
       }
       final distance = actorDist(pet, target);
-      if (distance > pet.attackRange) {
-        _steerActor(
-          pet,
+      if (distance > pet.attackRange * 0.85) {
+        final fwd = CombatPresence.fightForward(
+          fromX: leashOwner.x,
+          fromY: leashOwner.y,
+          toX: target.x,
+          toY: target.y,
+        );
+        final flank = CombatPresence.ringPoint(
+          cx: target.x,
+          cy: target.y,
+          front: (-fwd.$1, -fwd.$2),
+          index: 2,
+          radius: math.min(0.9, pet.attackRange * 0.62),
+        );
+        final spot = CombatPresence.clampGoal(
+          world,
+          flank.$1,
+          flank.$2,
           target.x,
           target.y,
+        );
+        _steerActor(
+          pet,
+          spot.$1,
+          spot.$2,
           pet.moveSpeed,
           world,
           dt: dt,
-          holdDistance: pet.attackRange * 0.7,
+          holdDistance: 0.2,
           separateFrom: allies,
         );
       }

@@ -343,4 +343,517 @@ abstract final class CombatPresence {
       reducedVfx: reducedVfx,
     );
   }
+
+  static SpecRoleTag? roleTag(SpatialActor hero) {
+    final id = hero.heroSpecId;
+    if (id == null) return null;
+    return HeroSpecs.def(id).roleTag;
+  }
+
+  static bool isHealerRole(SpatialActor hero) {
+    if (actorIsHealer(hero)) return true;
+    if (roleTag(hero) == SpecRoleTag.healer) return true;
+    return hero.heroRole == HeroRole.healer;
+  }
+
+  /// Casters, ranged, and healers stand off the front line.
+  static bool isBackliner(SpatialActor hero) {
+    if (isHealerRole(hero) || hero.ranged) return true;
+    final tag = roleTag(hero);
+    return tag == SpecRoleTag.caster || tag == SpecRoleTag.rangedDps;
+  }
+
+  /// How far behind the tank this hero trails when the pack is marching.
+  static double packDepth(SpatialActor hero) {
+    if (isHealerRole(hero)) return 1.25;
+    final tag = roleTag(hero);
+    if (tag == SpecRoleTag.caster ||
+        tag == SpecRoleTag.rangedDps ||
+        hero.ranged ||
+        hero.heroRole == HeroRole.mage) {
+      return 1.05;
+    }
+    if (tag == SpecRoleTag.meleeDps || hero.heroRole == HeroRole.rogue) {
+      return 0.45;
+    }
+    return 0.2;
+  }
+
+  /// 0, +1, −1, +2, −2… so party index spreads bodies sideways.
+  static double wing(int index) {
+    if (index <= 0) return 0;
+    final mag = ((index + 1) ~/ 2).toDouble();
+    return index.isOdd ? mag : -mag;
+  }
+
+  /// Unit vector from [from] toward [to]. Falls back to +x when stacked.
+  static (double, double) fightForward({
+    required double fromX,
+    required double fromY,
+    required double toX,
+    required double toY,
+  }) {
+    final dx = toX - fromX;
+    final dy = toY - fromY;
+    final len = math.sqrt(dx * dx + dy * dy);
+    if (len < 0.25) return (1.0, 0.0);
+    return (dx / len, dy / len);
+  }
+
+  /// [along] follows [forward] (negative = behind). [lateral] is to the left.
+  static (double, double) offsetAlong(
+    double x,
+    double y,
+    (double, double) forward, {
+    required double along,
+    required double lateral,
+  }) {
+    final fx = forward.$1;
+    final fy = forward.$2;
+    final lx = -fy;
+    final ly = fx;
+    return (x + fx * along + lx * lateral, y + fy * along + ly * lateral);
+  }
+
+  /// Slot 0 sits on [front]. Later slots alternate left and right.
+  static (double, double) ringPoint({
+    required double cx,
+    required double cy,
+    required (double, double) front,
+    required int index,
+    required double radius,
+    double firstAngle = 0,
+    double step = 1.15,
+  }) {
+    final bx = front.$1;
+    final by = front.$2;
+    final lx = -by;
+    final ly = bx;
+    final n = index < 0 ? 0 : index;
+    final signed = n == 0 ? 0 : (n.isOdd ? (n + 1) ~/ 2 : -(n ~/ 2));
+    final ang = firstAngle + signed * step;
+    final c = math.cos(ang);
+    final s = math.sin(ang);
+    return (cx + (bx * c + lx * s) * radius, cy + (by * c + ly * s) * radius);
+  }
+
+  /// Step toward [dir] but pick a nearby angle that lands on a floor tile.
+  static (double, double) walkableGoal(
+    SpatialWorld world,
+    double x,
+    double y,
+    double dirX,
+    double dirY,
+    double distance,
+  ) {
+    var dx = dirX;
+    var dy = dirY;
+    final len = math.sqrt(dx * dx + dy * dy);
+    if (len < 0.001 || distance <= 0) return (x, y);
+    dx /= len;
+    dy /= len;
+    const angles = <double>[0, 0.65, -0.65, 1.2, -1.2, 1.85, -1.85, 2.5, -2.5];
+    for (final scale in const <double>[1, 0.62, 0.35]) {
+      final dist = distance * scale;
+      for (final ang in angles) {
+        final c = math.cos(ang);
+        final s = math.sin(ang);
+        final rx = dx * c - dy * s;
+        final ry = dx * s + dy * c;
+        final tx = x + rx * dist;
+        final ty = y + ry * dist;
+        if (world.canWalk(tx, ty)) return (tx, ty);
+      }
+    }
+    return (x, y);
+  }
+
+  static (double, double) clampGoal(
+    SpatialWorld world,
+    double tx,
+    double ty,
+    double fallbackX,
+    double fallbackY,
+  ) {
+    if (world.canWalk(tx, ty)) return (tx, ty);
+    for (var t = 0.8; t >= 0.2; t -= 0.2) {
+      final x = fallbackX + (tx - fallbackX) * t;
+      final y = fallbackY + (ty - fallbackY) * t;
+      if (world.canWalk(x, y)) return (x, y);
+    }
+    if (world.canWalk(fallbackX, fallbackY)) return (fallbackX, fallbackY);
+    return SpatialCombat.snapToWalkable(world.map, world.openGateIds, tx, ty);
+  }
+
+  static int meleeSlot(SpatialActor hero, List<SpatialActor> heroes) {
+    final tanks = <SpatialActor>[];
+    final dps = <SpatialActor>[];
+    for (final h in heroes) {
+      if (!h.isAlive || isBackliner(h)) continue;
+      if (actorIsTank(h)) {
+        tanks.add(h);
+      } else {
+        dps.add(h);
+      }
+    }
+    final ti = tanks.indexWhere((h) => h.id == hero.id);
+    if (ti >= 0) return ti;
+    final di = dps.indexWhere((h) => h.id == hero.id);
+    return tanks.length + (di < 0 ? 0 : di);
+  }
+
+  static int _backlineSlot(SpatialActor hero, List<SpatialActor> heroes) {
+    var slot = 0;
+    for (final h in heroes) {
+      if (!h.isAlive || !isBackliner(h) || isHealerRole(h)) continue;
+      if (h.id == hero.id) return slot;
+      slot++;
+    }
+    return 0;
+  }
+
+  /// In-fight stand point: wedge on the enemy, healers behind the tank,
+  /// casters on the party side of the fight.
+  static ({double x, double y, double hold}) heroFightGoal({
+    required SpatialActor hero,
+    required SpatialActor target,
+    required SpatialWorld world,
+    required SpatialActor? packAnchor,
+    required int index,
+    required double preferred,
+    required bool hasLos,
+  }) {
+    final anchor = packAnchor ?? hero;
+    final fwd = fightForward(
+      fromX: anchor.x,
+      fromY: anchor.y,
+      toX: target.x,
+      toY: target.y,
+    );
+    final healer = isHealerRole(hero);
+    if (healer && packAnchor != null && packAnchor.id != hero.id) {
+      final p = offsetAlong(
+        packAnchor.x,
+        packAnchor.y,
+        fwd,
+        along: -0.95,
+        lateral: wing(index) * 0.42,
+      );
+      final g = clampGoal(world, p.$1, p.$2, packAnchor.x, packAnchor.y);
+      return (x: g.$1, y: g.$2, hold: 0.28);
+    }
+
+    final dist = SpatialCombat.actorDist(hero, target);
+    if (isBackliner(hero) &&
+        dist < preferred * (healer ? 0.88 : 0.72) &&
+        hasLos) {
+      final kite = kiteTarget(hero, target);
+      final safe = walkableGoal(
+        world,
+        hero.x,
+        hero.y,
+        kite.$1 - hero.x,
+        kite.$2 - hero.y,
+        1.35,
+      );
+      return (x: safe.$1, y: safe.$2, hold: 0);
+    }
+
+    if (!isBackliner(hero)) {
+      final radius = math
+          .min(preferred, hero.attackRange * 0.78)
+          .clamp(0.8, 1.2);
+      final front = (-fwd.$1, -fwd.$2);
+      final raw = ringPoint(
+        cx: target.x,
+        cy: target.y,
+        front: front,
+        index: meleeSlot(hero, world.heroes),
+        radius: radius,
+      );
+      final g = clampGoal(world, raw.$1, raw.$2, target.x, target.y);
+      return (x: g.$1, y: g.$2, hold: 0.16);
+    }
+
+    if (!hasLos) {
+      return (x: target.x, y: target.y, hold: 0);
+    }
+
+    final stand = math.min(preferred, hero.attackRange * 0.9).clamp(1.4, 6.0);
+    final front = (-fwd.$1, -fwd.$2);
+    final raw = ringPoint(
+      cx: target.x,
+      cy: target.y,
+      front: front,
+      index: _backlineSlot(hero, world.heroes),
+      radius: stand,
+      step: 0.42,
+    );
+    final g = clampGoal(world, raw.$1, raw.$2, hero.x, hero.y);
+    return (x: g.$1, y: g.$2, hold: 0.32);
+  }
+
+  /// Marching formation faces the next threat, or the stairs.
+  static ({double x, double y}) idleSlot({
+    required SpatialActor hero,
+    required SpatialActor anchor,
+    required SpatialWorld world,
+    required int index,
+  }) {
+    final exitX = world.map.exitPoint.$1 + 0.5;
+    final exitY = world.map.exitPoint.$2 + 0.5;
+    var toX = exitX;
+    var toY = exitY;
+    var best = double.infinity;
+    for (final e in world.enemies) {
+      if (e.hp <= 0 || e.dormant) continue;
+      final d = SpatialCombat.distPoint(anchor.x, anchor.y, e.x, e.y);
+      if (d < best) {
+        best = d;
+        toX = e.x;
+        toY = e.y;
+      }
+    }
+    final fwd = fightForward(
+      fromX: anchor.x,
+      fromY: anchor.y,
+      toX: toX,
+      toY: toY,
+    );
+    final p = offsetAlong(
+      anchor.x,
+      anchor.y,
+      fwd,
+      along: -packDepth(hero),
+      lateral: wing(index) * 0.48,
+    );
+    final g = clampGoal(world, p.$1, p.$2, anchor.x, anchor.y);
+    return (x: g.$1, y: g.$2);
+  }
+
+  /// Pet heels just behind and to the side of its owner, facing the fight.
+  static (double, double) heelPoint(
+    SpatialActor owner,
+    SpatialWorld world, {
+    SpatialActor? threat,
+  }) {
+    final exitX = world.map.exitPoint.$1 + 0.5;
+    final exitY = world.map.exitPoint.$2 + 0.5;
+    final fwd = fightForward(
+      fromX: owner.x,
+      fromY: owner.y,
+      toX: threat?.x ?? exitX,
+      toY: threat?.y ?? exitY,
+    );
+    final p = offsetAlong(owner.x, owner.y, fwd, along: -0.4, lateral: 0.55);
+    return clampGoal(world, p.$1, p.$2, owner.x, owner.y);
+  }
+
+  static void lockApproach(SpatialActor enemy, SpatialActor target) {
+    if (enemy.approachFocusId == target.id) return;
+    enemy.approachFocusId = target.id;
+    enemy.approachX = enemy.x;
+    enemy.approachY = enemy.y;
+  }
+
+  static (double, double)? _lockedFront(
+    SpatialActor hero,
+    SpatialWorld world,
+    bool Function(SpatialActor e) include,
+  ) {
+    var sx = 0.0;
+    var sy = 0.0;
+    var n = 0;
+    for (final e in world.enemies) {
+      if (e.hp <= 0 || e.dormant || !include(e)) continue;
+      if (e.approachFocusId != hero.id) continue;
+      sx += e.approachX;
+      sy += e.approachY;
+      n++;
+    }
+    if (n == 0) return null;
+    return fightForward(fromX: hero.x, fromY: hero.y, toX: sx / n, toY: sy / n);
+  }
+
+  static int enemySlot(
+    SpatialActor self,
+    SpatialWorld world,
+    SpatialActor focus,
+    bool Function(SpatialActor e) match,
+  ) {
+    final group = <SpatialActor>[];
+    for (final e in world.enemies) {
+      if (e.hp <= 0 || e.dormant || !match(e)) continue;
+      final f = SpatialCombat._focusHero(e, world.heroes);
+      if (f == null || f.id != focus.id) continue;
+      group.add(e);
+    }
+    group.sort((a, b) {
+      final ra = a.role == EnemyRole.boss || a.archetype == EnemyArchetype.tank
+          ? 0
+          : 1;
+      final rb = b.role == EnemyRole.boss || b.archetype == EnemyArchetype.tank
+          ? 0
+          : 1;
+      final byRank = ra.compareTo(rb);
+      if (byRank != 0) return byRank;
+      return a.id.compareTo(b.id);
+    });
+    final i = group.indexWhere((e) => e.id == self.id);
+    return i < 0 ? 0 : i;
+  }
+
+  static bool _frontMelee(SpatialActor e) =>
+      !e.ranged &&
+      e.archetype != EnemyArchetype.glass &&
+      e.archetype != EnemyArchetype.swarm &&
+      e.archetype != EnemyArchetype.support;
+
+  static SpatialActor? _nearestFront(SpatialActor enemy, SpatialWorld world) {
+    SpatialActor? best;
+    var bestD = double.infinity;
+    for (final o in world.enemies) {
+      if (identical(o, enemy) || o.hp <= 0 || o.dormant) continue;
+      if (o.ranged || o.archetype == EnemyArchetype.support) continue;
+      final d = SpatialCombat.actorDist(enemy, o);
+      if (d < bestD) {
+        bestD = d;
+        best = o;
+      }
+    }
+    return best;
+  }
+
+  /// Where this enemy wants to stand: front plant, flank, ring, or back line.
+  static ({double x, double y, double hold, double separation}) enemyMoveGoal(
+    SpatialActor enemy,
+    SpatialActor target,
+    SpatialWorld world,
+  ) {
+    lockApproach(enemy, target);
+    final preferred = enemy.preferredRange ?? (enemy.attackRange * 0.75);
+    final separation = switch (enemy.archetype) {
+      EnemyArchetype.swarm => 0.5,
+      EnemyArchetype.tank => 0.95,
+      EnemyArchetype.glass => 0.7,
+      EnemyArchetype.brute => 0.72,
+      _ => 0.9,
+    };
+
+    if (enemy.archetype == EnemyArchetype.support) {
+      final frontAlly = _nearestFront(enemy, world);
+      if (frontAlly != null) {
+        final face = fightForward(
+          fromX: frontAlly.x,
+          fromY: frontAlly.y,
+          toX: target.x,
+          toY: target.y,
+        );
+        final slot = enemySlot(
+          enemy,
+          world,
+          target,
+          (e) => e.archetype == EnemyArchetype.support,
+        );
+        final p = offsetAlong(
+          frontAlly.x,
+          frontAlly.y,
+          face,
+          along: -1.2,
+          lateral: wing(slot + 1) * 0.4,
+        );
+        final g = clampGoal(world, p.$1, p.$2, frontAlly.x, frontAlly.y);
+        return (x: g.$1, y: g.$2, hold: 0.28, separation: separation);
+      }
+    }
+
+    if (enemy.ranged) {
+      final dist = SpatialCombat.actorDist(enemy, target);
+      if (dist < preferred * 0.7) {
+        final safe = walkableGoal(
+          world,
+          enemy.x,
+          enemy.y,
+          enemy.x - target.x,
+          enemy.y - target.y,
+          1.45,
+        );
+        return (x: safe.$1, y: safe.$2, hold: 0, separation: separation);
+      }
+      final front =
+          _lockedFront(target, world, _frontMelee) ??
+          _lockedFront(target, world, (e) => e.ranged) ??
+          fightForward(
+            fromX: target.x,
+            fromY: target.y,
+            toX: enemy.x,
+            toY: enemy.y,
+          );
+      final slot = enemySlot(
+        enemy,
+        world,
+        target,
+        (e) => e.ranged && e.archetype != EnemyArchetype.support,
+      );
+      final radius = math
+          .min(preferred, enemy.attackRange * 0.88)
+          .clamp(1.8, 5.5);
+      final raw = ringPoint(
+        cx: target.x,
+        cy: target.y,
+        front: front,
+        index: slot,
+        radius: radius,
+        firstAngle: 0.15,
+        step: 0.38,
+      );
+      final g = clampGoal(world, raw.$1, raw.$2, enemy.x, enemy.y);
+      return (x: g.$1, y: g.$2, hold: 0.34, separation: separation);
+    }
+
+    final glass = enemy.archetype == EnemyArchetype.glass;
+    final swarm = enemy.archetype == EnemyArchetype.swarm;
+    var front = _lockedFront(target, world, _frontMelee);
+    if (swarm) {
+      front = _lockedFront(
+        target,
+        world,
+        (e) => e.archetype == EnemyArchetype.swarm,
+      );
+    } else if (glass && front == null) {
+      front = _lockedFront(
+        target,
+        world,
+        (e) => e.archetype == EnemyArchetype.glass,
+      );
+    }
+    front ??= fightForward(
+      fromX: target.x,
+      fromY: target.y,
+      toX: enemy.approachX,
+      toY: enemy.approachY,
+    );
+    final slot = enemySlot(enemy, world, target, (e) {
+      if (swarm) return e.archetype == EnemyArchetype.swarm;
+      if (glass) return e.archetype == EnemyArchetype.glass;
+      return _frontMelee(e);
+    });
+    final radius = swarm
+        ? 0.68
+        : math.min(
+            enemy.attackRange * 0.58,
+            enemy.role == EnemyRole.boss ? 1.05 : 0.86,
+          );
+    final raw = ringPoint(
+      cx: target.x,
+      cy: target.y,
+      front: front,
+      index: slot,
+      radius: radius,
+      firstAngle: glass ? 1.15 : (swarm ? 0.45 : 0),
+      step: swarm ? 0.78 : 0.95,
+    );
+    final g = clampGoal(world, raw.$1, raw.$2, target.x, target.y);
+    return (x: g.$1, y: g.$2, hold: swarm ? 0.1 : 0.14, separation: separation);
+  }
 }
