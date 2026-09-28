@@ -159,11 +159,60 @@ void main() {
     expect((spot.x - tank.x).abs(), lessThan(0.4));
   });
 
+  test('a blocked flank slot stays in the corridor', () {
+    const cols = 8;
+    const rows = 14;
+    final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
+    for (var y = 1; y < rows - 1; y++) {
+      tiles[y * cols + 3] = TileKind.floor;
+    }
+    final world = SpatialWorld(
+      map: TileMap(
+        cols: cols,
+        rows: rows,
+        tiles: tiles,
+        spawnPoints: const [(3, 2)],
+        exitPoint: (3, 12),
+        enemySpawns: const [(3, 8)],
+      ),
+      heroes: [],
+      enemies: [],
+      projectiles: <SpatialProjectile>[],
+      groundLoot: [],
+      isTreasure: false,
+      pets: <SpatialActor>[],
+    );
+    final spot = CombatPresence.walkableRing(
+      world: world,
+      cx: 3.5,
+      cy: 8.5,
+      front: (0, -1),
+      index: 1,
+      radius: 1.15,
+    );
+    expect(world.canWalk(spot.$1, spot.$2), isTrue);
+    expect((spot.$1 - 3.5).abs(), lessThan(0.55));
+    expect((spot.$2 - 8.5).abs(), greaterThan(0.3));
+  });
+
   test('retreat picks a floor tile when the straight line is a wall', () {
     final world = _world(heroes: [], enemies: []);
     final spot = CombatPresence.walkableGoal(world, 1.2, 5, -1, 0, 1.6);
     expect(world.canWalk(spot.$1, spot.$2), isTrue);
     expect(spot.$1, greaterThan(0.9));
+    final backed = CombatPresence.walkableGoal(
+      world,
+      1.2,
+      5,
+      -1,
+      0,
+      1.6,
+      avoidX: 4,
+      avoidY: 5,
+    );
+    final before = math.sqrt(math.pow(1.2 - 4, 2) + math.pow(5 - 5, 2));
+    final after = math.sqrt(math.pow(backed.$1 - 4, 2) + math.pow(backed.$2 - 5, 2));
+    expect(after + 0.05, greaterThanOrEqualTo(before));
   });
 
   test('party spreads: tank in front, melee off the line, backline behind', () {

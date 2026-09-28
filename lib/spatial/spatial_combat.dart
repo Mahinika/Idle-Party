@@ -303,6 +303,10 @@ class SpatialActor {
   double approachX = 0;
   double approachY = 0;
 
+  /// Where the focus stood when the approach locked. Relock if they move far.
+  double approachHeroX = 0;
+  double approachHeroY = 0;
+
   /// Seconds until another speech bark may fire.
   double barkCd = 0;
 
@@ -840,6 +844,11 @@ class SpatialWorld {
 
   /// Seconds of active combat this floor (for DPS meter).
   double combatElapsed;
+
+  /// Smoothed party facing (toward the fight). Keeps the wedge from twitching.
+  double packFaceX = 1;
+  double packFaceY = 0;
+  bool packFaceReady = false;
 
   /// Flat incoming damage reduction from mitigate pets.
   int petMitigateFlat;
@@ -2370,7 +2379,10 @@ abstract final class SpatialCombat {
       groundFx: world.groundFx,
       godHandRadius: world.godHandRadius,
       godHandArgb: world.godHandArgb,
-    );
+    )
+      ..packFaceX = world.packFaceX
+      ..packFaceY = world.packFaceY
+      ..packFaceReady = world.packFaceReady;
   }
 
   static void _copyHeroRuntime(SpatialActor from, SpatialActor to) {
@@ -2389,6 +2401,8 @@ abstract final class SpatialCombat {
     to.approachFocusId = from.approachFocusId;
     to.approachX = from.approachX;
     to.approachY = from.approachY;
+    to.approachHeroX = from.approachHeroX;
+    to.approachHeroY = from.approachHeroY;
     to.barkCd = from.barkCd;
     to.lowHpBarked = from.lowHpBarked;
     to.rage = from.rage;
@@ -3412,6 +3426,9 @@ abstract final class SpatialCombat {
       }
     }
     final packAnchor = tankAnchor ?? leader;
+    if (!guiding && packAnchor != null) {
+      CombatPresence.refreshPackFacing(world, packAnchor, dt);
+    }
 
     for (var i = 0; i < world.heroes.length; i++) {
       final hero = world.heroes[i];
@@ -4165,39 +4182,32 @@ abstract final class SpatialCombat {
         );
         continue;
       }
-      final distance = actorDist(pet, target);
-      if (distance > pet.attackRange * 0.85) {
-        final fwd = CombatPresence.fightForward(
-          fromX: leashOwner.x,
-          fromY: leashOwner.y,
-          toX: target.x,
-          toY: target.y,
-        );
-        final flank = CombatPresence.ringPoint(
-          cx: target.x,
-          cy: target.y,
-          front: (-fwd.$1, -fwd.$2),
-          index: 2,
-          radius: math.min(0.9, pet.attackRange * 0.62),
-        );
-        final spot = CombatPresence.clampGoal(
-          world,
-          flank.$1,
-          flank.$2,
-          target.x,
-          target.y,
-        );
-        _steerActor(
-          pet,
-          spot.$1,
-          spot.$2,
-          pet.moveSpeed,
-          world,
-          dt: dt,
-          holdDistance: 0.2,
-          separateFrom: allies,
-        );
-      }
+      final fwd = CombatPresence.fightForward(
+        fromX: leashOwner.x,
+        fromY: leashOwner.y,
+        toX: target.x,
+        toY: target.y,
+      );
+      final spot = CombatPresence.walkableRing(
+        world: world,
+        cx: target.x,
+        cy: target.y,
+        front: (-fwd.$1, -fwd.$2),
+        index: 2,
+        radius: math.min(0.85, pet.attackRange * 0.55),
+        fallbackX: leashOwner.x,
+        fallbackY: leashOwner.y,
+      );
+      _steerActor(
+        pet,
+        spot.$1,
+        spot.$2,
+        pet.moveSpeed,
+        world,
+        dt: dt,
+        holdDistance: 0.2,
+        separateFrom: allies,
+      );
       pet.fireCooldown -= dt;
       if (pet.fireCooldown <= 0 && actorDist(pet, target) <= pet.attackRange) {
         pet.fireCooldown = pet.attackCooldown;

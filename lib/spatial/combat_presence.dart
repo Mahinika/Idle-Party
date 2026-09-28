@@ -438,20 +438,27 @@ abstract final class CombatPresence {
   }
 
   /// Step toward [dir] but pick a nearby angle that lands on a floor tile.
+  /// [avoidX]/[avoidY] rejects steps that move closer to a threat.
   static (double, double) walkableGoal(
     SpatialWorld world,
     double x,
     double y,
     double dirX,
     double dirY,
-    double distance,
-  ) {
+    double distance, {
+    double? avoidX,
+    double? avoidY,
+  }) {
     var dx = dirX;
     var dy = dirY;
     final len = math.sqrt(dx * dx + dy * dy);
     if (len < 0.001 || distance <= 0) return (x, y);
     dx /= len;
     dy /= len;
+    final avoid = avoidX != null && avoidY != null;
+    final before = avoid
+        ? SpatialCombat.distPoint(x, y, avoidX, avoidY)
+        : 0.0;
     const angles = <double>[0, 0.65, -0.65, 1.2, -1.2, 1.85, -1.85, 2.5, -2.5];
     for (final scale in const <double>[1, 0.62, 0.35]) {
       final dist = distance * scale;
@@ -462,10 +469,120 @@ abstract final class CombatPresence {
         final ry = dx * s + dy * c;
         final tx = x + rx * dist;
         final ty = y + ry * dist;
-        if (world.canWalk(tx, ty)) return (tx, ty);
+        if (!world.canWalk(tx, ty)) continue;
+        if (avoid &&
+            SpatialCombat.distPoint(tx, ty, avoidX, avoidY) + 0.04 < before) {
+          continue;
+        }
+        return (tx, ty);
       }
     }
     return (x, y);
+  }
+
+  /// Ring slot that stays on a floor. In a corridor, pull toward the front
+  /// instead of collapsing everyone onto the same tile.
+  static (double, double) walkableRing({
+    required SpatialWorld world,
+    required double cx,
+    required double cy,
+    required (double, double) front,
+    required int index,
+    required double radius,
+    double firstAngle = 0,
+    double step = 1.15,
+    double? fallbackX,
+    double? fallbackY,
+  }) {
+    (double, double) at(int idx, double rad, double ang0) => ringPoint(
+      cx: cx,
+      cy: cy,
+      front: front,
+      index: idx,
+      radius: rad,
+      firstAngle: ang0,
+      step: step,
+    );
+
+    final raw = at(index, radius, firstAngle);
+    if (world.canWalk(raw.$1, raw.$2)) return raw;
+    for (final scale in const <double>[0.85, 0.7, 0.55]) {
+      final idx = index <= 0 ? 0 : index - 1;
+      for (final candidate in [idx, 0]) {
+        final p = at(candidate, radius * scale, firstAngle * scale);
+        if (world.canWalk(p.$1, p.$2)) return p;
+      }
+    }
+    return clampGoal(
+      world,
+      raw.$1,
+      raw.$2,
+      fallbackX ?? cx,
+      fallbackY ?? cy,
+    );
+  }
+
+  /// Ease the party facing toward the next threat so slots do not twitch.
+  static void refreshPackFacing(
+    SpatialWorld world,
+    SpatialActor anchor,
+    double dt,
+  ) {
+    final exitX = world.map.exitPoint.$1 + 0.5;
+    final exitY = world.map.exitPoint.$2 + 0.5;
+    var toX = exitX;
+    var toY = exitY;
+    var best = double.infinity;
+    for (final e in world.enemies) {
+      if (e.hp <= 0 || e.dormant) continue;
+      final d = SpatialCombat.distPoint(anchor.x, anchor.y, e.x, e.y);
+      if (d < best) {
+        best = d;
+        toX = e.x;
+        toY = e.y;
+      }
+    }
+    final dx = toX - anchor.x;
+    final dy = toY - anchor.y;
+    final len = math.sqrt(dx * dx + dy * dy);
+    if (len < 0.35) return;
+    final fx = dx / len;
+    final fy = dy / len;
+    if (!world.packFaceReady) {
+      world.packFaceX = fx;
+      world.packFaceY = fy;
+      world.packFaceReady = true;
+      return;
+    }
+    final t = 1 - math.exp(-2.8 * dt);
+    world.packFaceX += (fx - world.packFaceX) * t;
+    world.packFaceY += (fy - world.packFaceY) * t;
+    final n = math.sqrt(
+      world.packFaceX * world.packFaceX + world.packFaceY * world.packFaceY,
+    );
+    if (n < 0.05) return;
+    world.packFaceX /= n;
+    world.packFaceY /= n;
+  }
+
+  static (double, double) _facingFor(
+    SpatialWorld world,
+    double fromX,
+    double fromY,
+    double toX,
+    double toY,
+  ) {
+    final instant = fightForward(
+      fromX: fromX,
+      fromY: fromY,
+      toX: toX,
+      toY: toY,
+    );
+    if (!world.packFaceReady) return instant;
+    final dot =
+        instant.$1 * world.packFaceX + instant.$2 * world.packFaceY;
+    if (dot < 0.55) return instant;
+    return (world.packFaceX, world.packFaceY);
   }
 
   static (double, double) clampGoal(
@@ -524,11 +641,12 @@ abstract final class CombatPresence {
     required bool hasLos,
   }) {
     final anchor = packAnchor ?? hero;
-    final fwd = fightForward(
-      fromX: anchor.x,
-      fromY: anchor.y,
-      toX: target.x,
-      toY: target.y,
+    final fwd = _facingFor(
+      world,
+      anchor.x,
+      anchor.y,
+      target.x,
+      target.y,
     );
     final healer = isHealerRole(hero);
     if (healer && packAnchor != null && packAnchor.id != hero.id) {
@@ -555,6 +673,8 @@ abstract final class CombatPresence {
         kite.$1 - hero.x,
         kite.$2 - hero.y,
         1.35,
+        avoidX: target.x,
+        avoidY: target.y,
       );
       return (x: safe.$1, y: safe.$2, hold: 0);
     }
@@ -564,14 +684,16 @@ abstract final class CombatPresence {
           .min(preferred, hero.attackRange * 0.78)
           .clamp(0.8, 1.2);
       final front = (-fwd.$1, -fwd.$2);
-      final raw = ringPoint(
+      final g = walkableRing(
+        world: world,
         cx: target.x,
         cy: target.y,
         front: front,
         index: meleeSlot(hero, world.heroes),
         radius: radius,
+        fallbackX: anchor.x,
+        fallbackY: anchor.y,
       );
-      final g = clampGoal(world, raw.$1, raw.$2, target.x, target.y);
       return (x: g.$1, y: g.$2, hold: 0.16);
     }
 
@@ -581,15 +703,17 @@ abstract final class CombatPresence {
 
     final stand = math.min(preferred, hero.attackRange * 0.9).clamp(1.4, 6.0);
     final front = (-fwd.$1, -fwd.$2);
-    final raw = ringPoint(
+    final g = walkableRing(
+      world: world,
       cx: target.x,
       cy: target.y,
       front: front,
       index: _backlineSlot(hero, world.heroes),
       radius: stand,
       step: 0.42,
+      fallbackX: hero.x,
+      fallbackY: hero.y,
     );
-    final g = clampGoal(world, raw.$1, raw.$2, hero.x, hero.y);
     return (x: g.$1, y: g.$2, hold: 0.32);
   }
 
@@ -614,12 +738,14 @@ abstract final class CombatPresence {
         toY = e.y;
       }
     }
-    final fwd = fightForward(
-      fromX: anchor.x,
-      fromY: anchor.y,
-      toX: toX,
-      toY: toY,
-    );
+    final fwd = world.packFaceReady
+        ? (world.packFaceX, world.packFaceY)
+        : fightForward(
+            fromX: anchor.x,
+            fromY: anchor.y,
+            toX: toX,
+            toY: toY,
+          );
     final p = offsetAlong(
       anchor.x,
       anchor.y,
@@ -650,10 +776,20 @@ abstract final class CombatPresence {
   }
 
   static void lockApproach(SpatialActor enemy, SpatialActor target) {
-    if (enemy.approachFocusId == target.id) return;
+    final same = enemy.approachFocusId == target.id;
+    final heroMoved = SpatialCombat.distPoint(
+          target.x,
+          target.y,
+          enemy.approachHeroX,
+          enemy.approachHeroY,
+        ) >
+        2.4;
+    if (same && !heroMoved) return;
     enemy.approachFocusId = target.id;
     enemy.approachX = enemy.x;
     enemy.approachY = enemy.y;
+    enemy.approachHeroX = target.x;
+    enemy.approachHeroY = target.y;
   }
 
   static (double, double)? _lockedFront(
@@ -689,18 +825,18 @@ abstract final class CombatPresence {
       group.add(e);
     }
     group.sort((a, b) {
-      final ra = a.role == EnemyRole.boss || a.archetype == EnemyArchetype.tank
-          ? 0
-          : 1;
-      final rb = b.role == EnemyRole.boss || b.archetype == EnemyArchetype.tank
-          ? 0
-          : 1;
-      final byRank = ra.compareTo(rb);
+      final byRank = _slotRank(a).compareTo(_slotRank(b));
       if (byRank != 0) return byRank;
       return a.id.compareTo(b.id);
     });
     final i = group.indexWhere((e) => e.id == self.id);
     return i < 0 ? 0 : i;
+  }
+
+  static int _slotRank(SpatialActor e) {
+    if (e.role == EnemyRole.boss) return 0;
+    if (e.archetype == EnemyArchetype.tank) return 1;
+    return 2;
   }
 
   static bool _frontMelee(SpatialActor e) =>
@@ -710,18 +846,24 @@ abstract final class CombatPresence {
       e.archetype != EnemyArchetype.support;
 
   static SpatialActor? _nearestFront(SpatialActor enemy, SpatialWorld world) {
-    SpatialActor? best;
-    var bestD = double.infinity;
+    SpatialActor? front;
+    SpatialActor? any;
+    var frontD = double.infinity;
+    var anyD = double.infinity;
     for (final o in world.enemies) {
       if (identical(o, enemy) || o.hp <= 0 || o.dormant) continue;
       if (o.ranged || o.archetype == EnemyArchetype.support) continue;
       final d = SpatialCombat.actorDist(enemy, o);
-      if (d < bestD) {
-        bestD = d;
-        best = o;
+      if (d < anyD) {
+        anyD = d;
+        any = o;
+      }
+      if (_frontMelee(o) && d < frontD) {
+        frontD = d;
+        front = o;
       }
     }
-    return best;
+    return front ?? any;
   }
 
   /// Where this enemy wants to stand: front plant, flank, ring, or back line.
@@ -769,7 +911,7 @@ abstract final class CombatPresence {
 
     if (enemy.ranged) {
       final dist = SpatialCombat.actorDist(enemy, target);
-      if (dist < preferred * 0.7) {
+      if (dist < preferred * 0.72) {
         final safe = walkableGoal(
           world,
           enemy.x,
@@ -777,18 +919,45 @@ abstract final class CombatPresence {
           enemy.x - target.x,
           enemy.y - target.y,
           1.45,
+          avoidX: target.x,
+          avoidY: target.y,
         );
         return (x: safe.$1, y: safe.$2, hold: 0, separation: separation);
       }
-      final front =
-          _lockedFront(target, world, _frontMelee) ??
-          _lockedFront(target, world, (e) => e.ranged) ??
-          fightForward(
-            fromX: target.x,
-            fromY: target.y,
-            toX: enemy.x,
-            toY: enemy.y,
-          );
+      // Already in range: hold this side. Only slide if stacked on another shooter.
+      if (dist <= preferred * 1.22) {
+        SpatialActor? crowded;
+        for (final o in world.enemies) {
+          if (identical(o, enemy) || o.hp <= 0 || o.dormant || !o.ranged) {
+            continue;
+          }
+          if (SpatialCombat.actorDist(enemy, o) < 0.75) {
+            crowded = o;
+            break;
+          }
+        }
+        if (crowded == null) {
+          return (x: enemy.x, y: enemy.y, hold: 0.2, separation: separation);
+        }
+        final safe = walkableGoal(
+          world,
+          enemy.x,
+          enemy.y,
+          enemy.x - crowded.x,
+          enemy.y - crowded.y,
+          0.8,
+          avoidX: target.x,
+          avoidY: target.y,
+        );
+        return (x: safe.$1, y: safe.$2, hold: 0.15, separation: separation);
+      }
+      // Still far: close along this body's own line, not across the pack.
+      final front = fightForward(
+        fromX: target.x,
+        fromY: target.y,
+        toX: enemy.x,
+        toY: enemy.y,
+      );
       final slot = enemySlot(
         enemy,
         world,
@@ -798,7 +967,8 @@ abstract final class CombatPresence {
       final radius = math
           .min(preferred, enemy.attackRange * 0.88)
           .clamp(1.8, 5.5);
-      final raw = ringPoint(
+      final g = walkableRing(
+        world: world,
         cx: target.x,
         cy: target.y,
         front: front,
@@ -806,8 +976,9 @@ abstract final class CombatPresence {
         radius: radius,
         firstAngle: 0.15,
         step: 0.38,
+        fallbackX: enemy.x,
+        fallbackY: enemy.y,
       );
-      final g = clampGoal(world, raw.$1, raw.$2, enemy.x, enemy.y);
       return (x: g.$1, y: g.$2, hold: 0.34, separation: separation);
     }
 
@@ -844,16 +1015,18 @@ abstract final class CombatPresence {
             enemy.attackRange * 0.58,
             enemy.role == EnemyRole.boss ? 1.05 : 0.86,
           );
-    final raw = ringPoint(
+    final g = walkableRing(
+      world: world,
       cx: target.x,
       cy: target.y,
       front: front,
       index: slot,
       radius: radius,
-      firstAngle: glass ? 1.15 : (swarm ? 0.45 : 0),
+      firstAngle: glass ? 1.75 : (swarm ? 0.45 : 0),
       step: swarm ? 0.78 : 0.95,
+      fallbackX: enemy.x,
+      fallbackY: enemy.y,
     );
-    final g = clampGoal(world, raw.$1, raw.$2, target.x, target.y);
     return (x: g.$1, y: g.$2, hold: swarm ? 0.1 : 0.14, separation: separation);
   }
 }
