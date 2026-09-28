@@ -85,7 +85,6 @@ abstract final class WispGift {
   static bool shouldSpawn(MetaDepthState md, int nowMs) {
     if (!md.wispUnlocked) return false;
     if (!canTapToday(md)) return false;
-    if (hasPendingChoice(md)) return false;
     if (md.wispNextSpawnMs <= 0) return false;
     return nowMs >= md.wispNextSpawnMs;
   }

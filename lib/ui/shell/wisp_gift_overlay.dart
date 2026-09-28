@@ -10,7 +10,6 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
-import 'shell_common.dart';
 
 /// Floating lantern on the open map — right of center, clear of the header.
 class WispGiftOverlay extends StatelessWidget {
@@ -23,28 +22,19 @@ class WispGiftOverlay extends StatelessWidget {
     return ListenableBuilder(
       listenable: director,
       builder: (context, _) {
-        final waiting = director.wispPendingChoice;
-        final flying = director.isWispVisible;
-        if (!flying && !waiting) return const SizedBox.shrink();
+        if (!director.isWispVisible) return const SizedBox.shrink();
         if (director.wispMenuPaused) return const SizedBox.shrink();
         final minimal = director.state.vfxQuality == VfxQuality.minimal;
         return Align(
           alignment: const Alignment(0.84, -0.58),
           child: _WispTapTarget(
             minimal: minimal,
-            onTap: () {
-              if (waiting && !flying) {
-                if (director.state.inDungeon) {
-                  director.showToast(
-                    'WATCH on hub for the bigger pile',
-                    life: 2.2,
-                  );
-                  return;
-                }
-                openWispChoiceSheet(context, director);
-                return;
-              }
+            onTap: () async {
               director.tapWispGift();
+              if (!director.wispPendingChoice) return;
+              director.setWispChoiceOpen(true);
+              await openWispChoiceSheet(context, director);
+              director.setWispChoiceOpen(false);
             },
           ),
         );
@@ -207,6 +197,7 @@ Future<void> openWispChoiceSheet(
   GameDirector director,
 ) async {
   if (!director.wispPendingChoice) return;
+  var watch = false;
   WebClickBridge.pushLayer();
   try {
     await showModalBottomSheet<void>(
@@ -223,7 +214,6 @@ Future<void> openWispChoiceSheet(
             if (!WispGift.hasPendingChoice(md)) {
               return const SizedBox.shrink();
             }
-            final keep = md.wispPendingKeepGold;
             final watchLabel = WispGift.watchButtonLabel(director.state);
             final atCap = WispGift.goldHourAtCap(director.state);
             return Padding(
@@ -270,17 +260,9 @@ Future<void> openWispChoiceSheet(
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'You kept +${formatCount(keep)} gold.',
+                              'Watch a short ad for the bigger pile '
+                              'and 1 hour ×2 gold?',
                               style: GameTheme.body(size: 14),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Watch a short ad on hub for the bigger pile '
-                              'and 1 hour ×2 gold. Fights never pause for ads.',
-                              style: GameTheme.body(
-                                size: 12,
-                                color: GameTheme.parchmentDim,
-                              ),
                             ),
                             if (atCap) ...[
                               const SizedBox(height: 6),
@@ -295,20 +277,17 @@ Future<void> openWispChoiceSheet(
                             ],
                             const SizedBox(height: 12),
                             GameButton(
-                              label: 'WATCH · $watchLabel',
-                              onPressed: () async {
+                              label: 'WATCH AD · $watchLabel',
+                              onPressed: () {
+                                watch = true;
                                 Navigator.of(ctx).pop();
-                                await director.watchWispGiftAd();
                               },
                             ),
                             const SizedBox(height: 8),
                             GameButton(
-                              label: 'KEEP',
+                              label: 'NO THANKS',
                               style: GameButtonStyle.grey,
-                              onPressed: () {
-                                director.dismissWispPending();
-                                Navigator.of(ctx).pop();
-                              },
+                              onPressed: () => Navigator.of(ctx).pop(),
                             ),
                           ],
                         ),
@@ -324,5 +303,10 @@ Future<void> openWispChoiceSheet(
     );
   } finally {
     WebClickBridge.popLayer();
+  }
+  if (watch) {
+    await director.watchWispGiftAd();
+  } else {
+    director.dismissWispPending();
   }
 }

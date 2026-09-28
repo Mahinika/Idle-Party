@@ -37,8 +37,6 @@ class _PlayShellState extends State<PlayShell> {
   GameDirector get director => widget.director;
   MenuRouter get router => widget.router;
   late bool _inDungeon;
-  bool _wispSheetOpening = false;
-  int _offeredWispGold = 0;
 
   @override
   void initState() {
@@ -82,22 +80,6 @@ class _PlayShellState extends State<PlayShell> {
   void _syncPause() {
     director.setUiPaused(router.isOpen && director.state.inDungeon);
     director.setWispMenuPaused(router.isOpen);
-  }
-
-  void _maybeOpenWispChoiceSheet() {
-    if (!director.shouldShowWispChoiceSheet) return;
-    final gold = director.state.metaDepth.wispPendingWatchGold;
-    if (gold <= 0 || gold == _offeredWispGold || _wispSheetOpening) return;
-    _wispSheetOpening = true;
-    _offeredWispGold = gold;
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) {
-        _wispSheetOpening = false;
-        return;
-      }
-      await openWispChoiceSheet(context, director);
-      _wispSheetOpening = false;
-    });
   }
 
   void _leaveDungeon() {
@@ -266,8 +248,6 @@ class _PlayShellState extends State<PlayShell> {
 
   @override
   Widget build(BuildContext context) {
-    _syncPause();
-    _maybeOpenWispChoiceSheet();
     final inDungeon = director.state.inDungeon;
     final noticeAlign = inDungeon
         ? (router.isOpen

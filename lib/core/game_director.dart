@@ -127,6 +127,7 @@ class GameDirector extends ChangeNotifier {
   bool _wispSpawnArmed = false;
   bool _wispTappedThisWindow = false;
   bool _wispMenuPaused = false;
+  bool _wispChoiceOpen = false;
 
   /// Hard pause while the app is backgrounded (separate from menu [uiPaused]).
   bool _appPaused = false;
@@ -331,17 +332,15 @@ class GameDirector extends ChangeNotifier {
 
   bool get wispPendingChoice => WispGift.hasPendingChoice(_state.metaDepth);
 
-  /// Hub overlay: show WATCH sheet when pending and not in a menu.
-  bool get shouldShowWispChoiceSheet =>
-      wispPendingChoice && !_state.inDungeon && !_wispMenuPaused;
+  void setWispChoiceOpen(bool open) {
+    _wispChoiceOpen = open;
+  }
 
   void tickWisp({int deltaMs = 200}) {
     if (_isLoading) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     final md = _state.metaDepth;
-    if (!WispGift.unlocked(md) ||
-        !WispGift.canTapToday(md) ||
-        WispGift.hasPendingChoice(md)) {
+    if (!WispGift.unlocked(md) || !WispGift.canTapToday(md)) {
       if (_wispVisibleRemainingMs > 0) {
         _wispVisibleRemainingMs = 0;
         _wispSpawnArmed = false;
@@ -360,6 +359,7 @@ class GameDirector extends ChangeNotifier {
       );
     }
     final schedule = _state.metaDepth;
+    if (_wispChoiceOpen) return;
     if (_wispVisibleRemainingMs > 0) {
       if (!_wispMenuPaused) {
         final next = _wispVisibleRemainingMs - deltaMs;
@@ -393,7 +393,6 @@ class GameDirector extends ChangeNotifier {
     _wispVisibleRemainingMs = 0;
     _wispSpawnArmed = false;
     _wispTappedThisWindow = true;
-    final inHub = !_state.inDungeon;
     final adFree = _state.metaDepth.adFree;
     final keepBefore = _state.gold;
     _applyUpgrade(WispGift.onWispTapped(_state));
@@ -402,8 +401,6 @@ class GameDirector extends ChangeNotifier {
     showToast('WISP · +$keep gold', life: 2.2);
     if (adFree) {
       _grantWispWatchReward(toast: true);
-    } else if (!inHub) {
-      showToast('WATCH on hub for a bigger pile + 1 hour ×2 gold', life: 2.6);
     }
     notifyListeners();
     unawaited(_persistFlush());
@@ -431,28 +428,30 @@ class GameDirector extends ChangeNotifier {
     unawaited(_persistFlush());
   }
 
-  /// Rewarded ad for the locked WATCH pile (hub only).
+  /// Rewarded ad for the locked WATCH pile. Plays where the lantern was tapped.
   Future<void> watchWispGiftAd() async {
     if (!wispPendingChoice) return;
-    if (_state.inDungeon) {
-      showToast('WATCH on hub — fights never pause for ads', life: 2.2);
-      return;
-    }
+    _wispChoiceOpen = true;
     if (!AdRewarded.realAdsAvailable) {
       showToast('Ads play on the Android app', life: 2.2);
+      _wispChoiceOpen = false;
       return;
     }
     showToast('Loading ad…', life: 1.4);
     final result = await AdRewarded.showRewarded();
+    _wispChoiceOpen = false;
     switch (result) {
       case AdWatchResult.rewarded:
         _grantWispWatchReward();
       case AdWatchResult.skipped:
         showToast('Watch the whole ad for the WISP bonus', life: 2.2);
+        dismissWispPending();
       case AdWatchResult.failed:
         showToast('Ad not ready — try again in a bit', life: 2.2);
+        dismissWispPending();
       case AdWatchResult.unavailable:
         showToast('Ads play on the Android app', life: 2.2);
+        dismissWispPending();
     }
   }
 

@@ -168,12 +168,11 @@ match this doc.
 
 ## WISP gift (separate from SCROLLS)
 
-Optional **WISP** drifts on hub / dungeon after the first ENTER (not before). Tap
-→ small gold pile (3 floors of normal-kill gold). On **hub**, **WATCH** a
-rewarded ad for **10×** that pile + **1 hour ×2 gold** (extends
-`adGoldUntilMs`, same magnitude as Scroll of Gold; 24h stack cap). Dungeon tap
-banks the WATCH offer until hub; ads never start mid-fight. Ad-free: big pile +
-hour on tap. Max **6** taps per UTC day. Logic: `lib/core/wisp_gift.dart`.
+Optional **WISP** drifts on hub or in a dungeon after the first ENTER. Tap it
+where it appears. A small prompt offers a short ad for **10×** gold + **1 hour
+×2 gold** right there. **NO THANKS** keeps the small pile. The lantern leaves
+when its few seconds are up. Ad-free: big pile + hour on tap. Max **6** taps
+per UTC day in release. Logic: `lib/core/wisp_gift.dart`.
 
 ## Out of scope (v1)
 
