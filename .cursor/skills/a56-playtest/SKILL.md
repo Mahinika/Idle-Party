@@ -65,20 +65,42 @@ Then set in `~/.android/avd/Samsung_A56.avd/config.ini`:
 
 Google does not ship One UI. **Screen size** is what we need.
 
-## Logs (what the agent reads)
+## See the app (ADB)
 
-Debug builds print `[IP]` lines into `flutter run` / logcat:
+Read structure first. One command dumps the UI tree (label, center, bounds)
+and the recent `[IP]` lines. On this PC `python` is a store alias, so use
+`py -3`:
+
+```bash
+py -3 tool/adb_see.py
+py -3 tool/adb_see.py see GEAR
+py -3 tool/adb_see.py tap CONTINUE
+py -3 tool/adb_see.py swipe 540 1800 540 900
+py -3 tool/adb_see.py key back
+py -3 tool/adb_see.py log
+```
+
+`tap` / `swipe` / `text` / `key` act, wait, then print the new tree. Match
+buttons by their label. Do not hard-code a tap coordinate when a label exists.
+
+Take a PNG only when pixels matter (doll, gear art, color, overlap):
+
+```bash
+py -3 tool/adb_see.py shot playshots/now.png
+```
+
+Leave the layout-debug overlay off. Bounds are already in the dump, and the
+overlay draws on the window the owner is watching. A video mirror (`scrcpy`)
+is for human eyes; this loop reads the tree and the log.
+
+Debug builds print `[IP]` into `flutter run` / logcat. Release stays quiet.
 
 - `nav` — GEAR / GOLD/… / SHOP / ESSENCE/… / KEY / MORE / closed (`MenuRouter.debugWhere`)
 - `toast` — what the player just saw
 - `boot` / `continue` / `new_game` / `enter` / `leave` / `wipe` / `ascend`
 - `state` — gold, essence, KEY, forge ATK/DEF/STA, bag, floor (tiny hub gold ticks skipped)
 
-```bash
-adb -s emulator-5554 logcat -d | findstr [IP]
-```
-
-Or just watch the attached `flutter run` terminal. Release / Play builds stay quiet.
+The attached `flutter run` terminal shows the same `[IP]` lines live.
 
 ## After code changes
 
