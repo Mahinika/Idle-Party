@@ -46,14 +46,16 @@ void main() {
     expect(state.gold, greaterThan(0));
   });
 
-  test('daily cap blocks tap after six claims', () {
+  test('debug cadence does not stop after six claims', () {
     final now = DateTime.utc(2026, 9, 28, 12);
     var md = MetaDepthState.empty.copyWith(
       wispUnlocked: true,
       wispGiftUtcDay: WispGift.utcDayKey(now),
       wispGiftClaimsToday: 6,
     );
-    expect(WispGift.canTapToday(md, now: now), isFalse);
+    expect(WispGift.unlimitedToday, isTrue);
+    expect(WispGift.canTapToday(md, now: now), isTrue);
+    expect(WispGift.intervalMs, 20 * 1000);
   });
 
   test('on wisp tap locks pending watch amount', () {

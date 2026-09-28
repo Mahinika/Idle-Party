@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import '../models/dungeon_room.dart';
 import '../models/meta_depth.dart';
 import 'ad_boost.dart';
@@ -13,10 +15,18 @@ abstract final class WispGift {
   static const int keepFloorMul = 3;
   static const int watchFloorMul = 30;
   static const int watchGoldHourMs = AdBoost.hourMs;
-  static const int dailyCap = 6;
-  static const int firstDelayMs = 90 * 1000;
-  static const int intervalMs = 10 * 60 * 1000;
+
+  /// Live cadence. Debug builds (emulator) spawn often with no daily cap
+  /// so the gift can be tried without waiting. Release keeps the real loop.
+  static const int releaseDailyCap = 6;
+  static const int releaseFirstDelayMs = 90 * 1000;
+  static const int releaseIntervalMs = 10 * 60 * 1000;
+  static int get dailyCap => kDebugMode ? 1000000 : releaseDailyCap;
+  static int get firstDelayMs => kDebugMode ? 20 * 1000 : releaseFirstDelayMs;
+  static int get intervalMs => kDebugMode ? 20 * 1000 : releaseIntervalMs;
   static const int visibleMs = 10 * 1000;
+
+  static bool get unlimitedToday => kDebugMode;
 
   static String utcDayKey([DateTime? now]) => AdBoost.utcDayKey(now);
 
@@ -32,6 +42,7 @@ abstract final class WispGift {
   }
 
   static bool canTapToday(MetaDepthState md, {DateTime? now}) {
+    if (unlimitedToday) return true;
     return claimsToday(md, now: now) < dailyCap;
   }
 

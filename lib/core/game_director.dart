@@ -347,6 +347,17 @@ class GameDirector extends ChangeNotifier {
       }
       return;
     }
+    // Debug cadence is 20s. A save still waiting on the live 10-minute
+    // timer would hide the gift — pull that clock forward once.
+    if (WispGift.unlimitedToday &&
+        md.wispNextSpawnMs > now + WispGift.intervalMs) {
+      _applyUpgrade(
+        _state.copyWith(
+          metaDepth: md.copyWith(wispNextSpawnMs: now),
+        ),
+      );
+    }
+    final schedule = _state.metaDepth;
     if (_wispVisibleRemainingMs > 0) {
       if (!_wispMenuPaused) {
         final next = _wispVisibleRemainingMs - deltaMs;
@@ -363,7 +374,7 @@ class GameDirector extends ChangeNotifier {
       }
       return;
     }
-    if (WispGift.shouldSpawn(md, now)) {
+    if (WispGift.shouldSpawn(schedule, now)) {
       if (!_wispSpawnArmed) {
         _wispSpawnArmed = true;
         _wispTappedThisWindow = false;
