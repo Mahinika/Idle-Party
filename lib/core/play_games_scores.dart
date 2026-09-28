@@ -174,3 +174,105 @@ abstract final class PlayBoardList {
     return built;
   }
 }
+
+/// Sample ranks for a debug playtest. Never shown on a release build.
+abstract final class PlayBoardPreview {
+  static const String notice =
+      'Preview on this device. Not live players.';
+
+  static List<PlayBoardRow> rows(PlayBoardKind kind) {
+    final you = switch (kind) {
+      PlayBoardKind.timedKey => PlayBoardRaw(
+          rank: 4,
+          name: 'You',
+          rawScore: PlayGamesScores.encodeTimedKey(
+            keyLevel: 12,
+            clearMs: 125000,
+          ),
+          playerId: 'preview-you',
+        ),
+      PlayBoardKind.gauntlet => const PlayBoardRaw(
+          rank: 18,
+          name: 'You',
+          rawScore: 22,
+          playerId: 'preview-you',
+        ),
+      PlayBoardKind.greaterRift => PlayBoardRaw(
+          rank: 6,
+          name: 'You',
+          rawScore: PlayGamesScores.encodeGreaterRift(
+            tier: 8,
+            clearMs: 90000,
+          ),
+          playerId: 'preview-you',
+        ),
+    };
+    final scores = switch (kind) {
+      PlayBoardKind.timedKey => [
+        PlayBoardRaw(
+          rank: 1,
+          name: 'Lantern',
+          rawScore: PlayGamesScores.encodeTimedKey(
+            keyLevel: 20,
+            clearMs: 90000,
+          ),
+          playerId: 'preview-1',
+        ),
+        PlayBoardRaw(
+          rank: 2,
+          name: 'Moth',
+          rawScore: PlayGamesScores.encodeTimedKey(
+            keyLevel: 18,
+            clearMs: 110000,
+          ),
+          playerId: 'preview-2',
+        ),
+        PlayBoardRaw(
+          rank: 3,
+          name: 'Brass',
+          rawScore: PlayGamesScores.encodeTimedKey(
+            keyLevel: 15,
+            clearMs: 80000,
+          ),
+          playerId: 'preview-3',
+        ),
+        you,
+      ],
+      PlayBoardKind.gauntlet => const [
+        PlayBoardRaw(rank: 1, name: 'Lantern', rawScore: 120, playerId: 'p1'),
+        PlayBoardRaw(rank: 2, name: 'Moth', rawScore: 88, playerId: 'p2'),
+        PlayBoardRaw(rank: 3, name: 'Brass', rawScore: 40, playerId: 'p3'),
+      ],
+      PlayBoardKind.greaterRift => [
+        PlayBoardRaw(
+          rank: 1,
+          name: 'Lantern',
+          rawScore: PlayGamesScores.encodeGreaterRift(
+            tier: 20,
+            clearMs: 70000,
+          ),
+          playerId: 'preview-1',
+        ),
+        PlayBoardRaw(
+          rank: 2,
+          name: 'Moth',
+          rawScore: PlayGamesScores.encodeGreaterRift(
+            tier: 14,
+            clearMs: 80000,
+          ),
+          playerId: 'preview-2',
+        ),
+        PlayBoardRaw(
+          rank: 3,
+          name: 'Brass',
+          rawScore: PlayGamesScores.encodeGreaterRift(
+            tier: 11,
+            clearMs: 60000,
+          ),
+          playerId: 'preview-3',
+        ),
+      ],
+    };
+    return PlayBoardList.rows(kind: kind, scores: scores, you: you);
+  }
+}

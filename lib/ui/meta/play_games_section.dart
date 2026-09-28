@@ -1,4 +1,5 @@
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
@@ -177,10 +178,13 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
     // not paint an empty rank list.
     final signedInLive = PlayGamesBridge.isSignedInCached;
     final showLiveBoards = boardsReady && signedInLive;
+    // Debug playtest (emulator) can flip the three lists without Play sign-in.
+    // Release builds keep the sign-in gate.
+    final preview = kDebugMode && !showLiveBoards;
 
-    // Sideload / AVD / missing IDs / signed out: honesty only — no dead
+    // Sideload / missing IDs / signed out: honesty only — no dead
     // KEY/GR board buttons that look like an empty live leaderboard.
-    if (!showLiveBoards) {
+    if (!showLiveBoards && !preview) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -210,11 +214,13 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
       );
     }
 
-    final grBoardReady = PlayLeaderboardIds.hasGreaterRiftBoard(month);
+    final grBoardReady =
+        preview || PlayLeaderboardIds.hasGreaterRiftBoard(month);
     final kind = !grBoardReady && _kind == PlayBoardKind.greaterRift
         ? PlayBoardKind.timedKey
         : _kind;
     if (showLiveBoards) _queueLoad(month, kind);
+    final shownRows = preview ? PlayBoardPreview.rows(kind) : _rows;
 
     final yours = switch (kind) {
       PlayBoardKind.timedKey => md.seasonBestTimedKey > 0
@@ -270,7 +276,9 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           style: GameTheme.body(size: 13, color: GameTheme.parchment),
         ),
         const SizedBox(height: 6),
-        if (_loading && (_rows == null || _rows!.isEmpty))
+        if (preview)
+          ..._rankRows(shownRows!)
+        else if (_loading && (_rows == null || _rows!.isEmpty))
           Text(
             'Loading ranks…',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
@@ -287,7 +295,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           )
         else if (_rows != null)
           ..._rankRows(_rows!),
-        if (_loading && _rows != null && _rows!.isNotEmpty)
+        if (!preview && _loading && _rows != null && _rows!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
@@ -295,16 +303,20 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
               style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
             ),
           ),
-        const SizedBox(height: 6),
-        GameButton(
-          label: _failed ? 'RETRY' : 'REFRESH',
-          style: GameButtonStyle.ghost,
-          dense: true,
-          onPressed: playGamesBusy || _loading ? null : () => _refresh(month),
-        ),
+        if (!preview) ...[
+          const SizedBox(height: 6),
+          GameButton(
+            label: _failed ? 'RETRY' : 'REFRESH',
+            style: GameButtonStyle.ghost,
+            dense: true,
+            onPressed: playGamesBusy || _loading ? null : () => _refresh(month),
+          ),
+        ],
         const SizedBox(height: 6),
         Text(
-          'A new record sends itself while you are signed in. Cloud save: SETTINGS.',
+          preview
+              ? PlayBoardPreview.notice
+              : 'A new record sends itself while you are signed in. Cloud save: SETTINGS.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
       ],

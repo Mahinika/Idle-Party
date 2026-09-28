@@ -8,6 +8,7 @@ import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/session_telemetry.dart';
 import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
+import 'package:idle_party/core/play_games_scores.dart';
 import 'package:idle_party/ui/hub/hub_powerups.dart';
 import 'package:idle_party/ui/hub/hub_ranks.dart';
 import 'package:idle_party/ui/shell/scroll_buff_stack.dart';
@@ -262,7 +263,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Switch KEY, Gauntlet, or Ranked GR.'), findsOneWidget);
-    expect(find.text('Boards need a Play install + sign-in'), findsOneWidget);
+    expect(find.text(PlayBoardPreview.notice), findsOneWidget);
+    expect(find.text('KEY +20 · 01:30'), findsOneWidget);
+
+    await tester.tap(find.text('GAUNTLET'));
+    await tester.pumpAndSettle();
+    expect(find.text('F120'), findsOneWidget);
+    expect(find.text('#18'), findsOneWidget);
+
+    await tester.tap(find.text('GR'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('GR20'), findsOneWidget);
   });
 
   testWidgets('HubPowerupsFab shows ticket count when banked', (tester) async {

@@ -103,6 +103,21 @@ void main() {
       expect(top.last.scoreLabel, 'F12');
     });
 
+    test('debug preview lists differ and mark you', () {
+      final key = PlayBoardPreview.rows(PlayBoardKind.timedKey);
+      final gauntlet = PlayBoardPreview.rows(PlayBoardKind.gauntlet);
+      final gr = PlayBoardPreview.rows(PlayBoardKind.greaterRift);
+      expect(key.first.scoreLabel, 'KEY +20 · 01:30');
+      expect(key[3].isYou, isTrue);
+      expect(key[3].scoreLabel, 'KEY +12 · 02:05');
+      expect(gauntlet.first.scoreLabel, 'F120');
+      expect(gauntlet.last.isYou, isTrue);
+      expect(gauntlet.last.rank, 18);
+      expect(gr.first.scoreLabel, contains('GR20'));
+      expect(gr.last.isYou, isTrue);
+      expect(gr.last.rank, 6);
+    });
+
     test('board marks you inside the top list without a second row', () {
       final rows = PlayBoardList.rows(
         kind: PlayBoardKind.gauntlet,
