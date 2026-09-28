@@ -165,6 +165,7 @@ enum _AppPhase {
   playUpdateRequired,
   bootIntro,
   startMenu,
+  pickSave,
   newGamePicker,
   play,
 }
@@ -193,6 +194,7 @@ class _GameHomePageState extends State<GameHomePage>
   final MenuRouter _router = MenuRouter();
   _AppPhase _phase = _AppPhase.loading;
   bool _playUpdateTapBusy = false;
+  _AppPhase _menuBeforeNewGame = _AppPhase.startMenu;
 
   @override
   void initState() {
@@ -334,19 +336,72 @@ class _GameHomePageState extends State<GameHomePage>
   }
 
   void _continueGame() {
-    if (_phase != _AppPhase.startMenu) return;
+    if (_phase != _AppPhase.startMenu && _phase != _AppPhase.pickSave) return;
     _director.continueGame();
     setState(() => _phase = _AppPhase.play);
     _director.ensureCombatLoop();
   }
 
-  void _openNewGamePicker() {
+  void _openSavePicker() {
     if (_phase != _AppPhase.startMenu) return;
+    setState(() => _phase = _AppPhase.pickSave);
+  }
+
+  void _openNewGamePicker() {
+    if (_phase != _AppPhase.startMenu && _phase != _AppPhase.pickSave) return;
+    final empty = _director.saveSlots.indexWhere((slot) => !slot.occupied);
+    if (empty < 0) return;
+    _director.armNewGameSlot(empty);
+    _menuBeforeNewGame = _phase;
     setState(() => _phase = _AppPhase.newGamePicker);
   }
 
+  String? _continueSummary() {
+    final slots = _director.saveSlots;
+    SaveSlotSummary? slot;
+    final active = _director.activeSaveSlot;
+    if (active >= 0 && active < slots.length) {
+      final current = slots[active];
+      if (current.occupied && !current.corrupt) slot = current;
+    }
+    if (slot == null) {
+      for (final candidate in slots) {
+        if (candidate.occupied && !candidate.corrupt) {
+          slot = candidate;
+          break;
+        }
+      }
+    }
+    final name = slot?.partyName;
+    if (name == null || name.isEmpty) return null;
+    final zone = slot?.zoneName;
+    if (zone == null || zone.isEmpty) return name;
+    return '$name · $zone';
+  }
+
+  void _savesFull() {
+    showDialog<void>(
+      context: context,
+      barrierColor: MenuChrome.scrim,
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Saves full',
+        content: Text(
+          'All five saves are in use. Continue, then erase one.',
+          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        ),
+        actions: [
+          GameButton(
+            label: 'OK',
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _openSlot(int index) async {
-    if (_phase != _AppPhase.startMenu) return;
+    if (_phase != _AppPhase.pickSave) return;
     if (index < 0 || index >= _director.saveSlots.length) return;
     final slot = _director.saveSlots[index];
     if (!slot.occupied || slot.corrupt) {
@@ -361,7 +416,7 @@ class _GameHomePageState extends State<GameHomePage>
   }
 
   Future<void> _eraseSlot(int index) async {
-    if (_phase != _AppPhase.startMenu) return;
+    if (_phase != _AppPhase.pickSave) return;
     if (index < 0 || index >= _director.saveSlots.length) return;
     final slot = _director.saveSlots[index];
     if (!slot.occupied) return;
@@ -480,10 +535,12 @@ class _GameHomePageState extends State<GameHomePage>
       return Scaffold(
         body: StartMenuScreen(
           key: const ValueKey('start-menu'),
-          slots: _director.saveSlots,
-          activeSlot: _director.activeSaveSlot,
-          onOpenSlot: (index) => unawaited(_openSlot(index)),
-          onEraseSlot: (index) => unawaited(_eraseSlot(index)),
+          canContinue: _director.hasAnySave,
+          saveSummary: _continueSummary(),
+          canStartNewGame: _director.saveSlots.any((slot) => !slot.occupied),
+          onContinue: _openSavePicker,
+          onNewGame: _openNewGamePicker,
+          onSavesFull: _savesFull,
           onRestore: () => unawaited(_restoreSave()),
           onSettings: () {
             if (_director.hasExistingSave) {
@@ -523,10 +580,23 @@ class _GameHomePageState extends State<GameHomePage>
       );
     }
 
+    if (_phase == _AppPhase.pickSave) {
+      return Scaffold(
+        body: SaveSlotPicker(
+          key: const ValueKey('save-picker'),
+          slots: _director.saveSlots,
+          activeSlot: _director.activeSaveSlot,
+          onOpenSlot: (index) => unawaited(_openSlot(index)),
+          onEraseSlot: (index) => unawaited(_eraseSlot(index)),
+          onBack: () => setState(() => _phase = _AppPhase.startMenu),
+        ),
+      );
+    }
+
     if (_phase == _AppPhase.newGamePicker) {
       return NewGamePartyPicker(
         key: const ValueKey('new-game-picker'),
-        onBack: () => setState(() => _phase = _AppPhase.startMenu),
+        onBack: () => setState(() => _phase = _menuBeforeNewGame),
         onConfirm: _confirmNewGame,
       );
     }

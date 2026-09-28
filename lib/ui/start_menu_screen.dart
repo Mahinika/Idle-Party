@@ -12,24 +12,32 @@ import 'kenney_button.dart';
 import 'menu_chrome.dart';
 import 'web_click_bridge.dart';
 
-/// Cold-start menu: brand scene + five save files.
+/// Cold-start menu: brand scene + Continue / New Game.
 class StartMenuScreen extends StatefulWidget {
   const StartMenuScreen({
     super.key,
-    required this.slots,
-    required this.activeSlot,
-    required this.onOpenSlot,
-    required this.onEraseSlot,
+    required this.canContinue,
+    required this.onContinue,
+    required this.onNewGame,
     required this.onRestore,
+    this.saveSummary,
     this.onSettings,
+    this.canStartNewGame = true,
+    this.onSavesFull,
   });
 
-  final List<SaveSlotSummary> slots;
-  final int activeSlot;
-  final ValueChanged<int> onOpenSlot;
-  final ValueChanged<int> onEraseSlot;
+  final bool canContinue;
+  final VoidCallback onContinue;
+  final VoidCallback onNewGame;
   final VoidCallback onRestore;
   final VoidCallback? onSettings;
+
+  /// Party name + zone when a save exists, e.g. "The Ember Guard · Sandy Caverns".
+  final String? saveSummary;
+
+  /// False when all five files are in use.
+  final bool canStartNewGame;
+  final VoidCallback? onSavesFull;
 
   @override
   State<StartMenuScreen> createState() => _StartMenuScreenState();
@@ -77,6 +85,15 @@ class _StartMenuScreenState extends State<StartMenuScreen>
     _finishing = true;
     await _exit.forward();
     if (mounted) action();
+  }
+
+  void _pressNewGame() {
+    if (!_inputUnlocked || _finishing) return;
+    if (!widget.canStartNewGame) {
+      widget.onSavesFull?.call();
+      return;
+    }
+    _choose(widget.onNewGame);
   }
 
   @override
@@ -165,51 +182,52 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               ),
                             ),
                           ),
-                          Expanded(
-                            flex: 3,
-                            child: Opacity(
-                              opacity: ctaOpacity,
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                ),
-                                child: Column(
-                                  children: [
-                                    for (
-                                      var i = 0;
-                                      i < widget.slots.length;
-                                      i++
-                                    ) ...[
-                                      if (i > 0) const SizedBox(height: 6),
-                                      _SaveSlotRow(
-                                        slot: widget.slots[i],
-                                        selected:
-                                            widget.slots[i].index ==
-                                                widget.activeSlot &&
-                                            widget.slots[i].occupied,
-                                        enabled: _inputUnlocked,
-                                        onOpen: () => _choose(
-                                          () => widget.onOpenSlot(
-                                            widget.slots[i].index,
-                                          ),
-                                        ),
-                                        onErase: widget.slots[i].occupied
-                                            ? () => widget.onEraseSlot(
-                                                widget.slots[i].index,
-                                              )
-                                            : null,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+                          const Spacer(flex: 3),
                           Opacity(
                             opacity: ctaOpacity,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                if (widget.canContinue) ...[
+                                  GameButton(
+                                    label: 'CONTINUE',
+                                    style: GameButtonStyle.brown,
+                                    primary: true,
+                                    onPressed: _inputUnlocked
+                                        ? () => _choose(widget.onContinue)
+                                        : null,
+                                  ),
+                                  if (widget.saveSummary != null &&
+                                      widget.saveSummary!.isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      widget.saveSummary!,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GameTheme.body(
+                                        size: 13,
+                                        color: GameTheme.torchHot,
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 8),
+                                  GameButton(
+                                    label: 'NEW GAME',
+                                    style: GameButtonStyle.grey,
+                                    onPressed: _inputUnlocked
+                                        ? _pressNewGame
+                                        : null,
+                                  ),
+                                ] else
+                                  GameButton(
+                                    label: 'NEW GAME',
+                                    style: GameButtonStyle.brown,
+                                    primary: true,
+                                    onPressed: _inputUnlocked
+                                        ? _pressNewGame
+                                        : null,
+                                  ),
                                 const SizedBox(height: 8),
                                 GameButton(
                                   label: 'RESTORE SAVE',
@@ -269,6 +287,79 @@ class _StartMenuScreenState extends State<StartMenuScreen>
           );
         },
       ),
+    );
+  }
+}
+
+/// Shown after CONTINUE: pick one of the five save files.
+class SaveSlotPicker extends StatelessWidget {
+  const SaveSlotPicker({
+    super.key,
+    required this.slots,
+    required this.activeSlot,
+    required this.onOpenSlot,
+    required this.onEraseSlot,
+    required this.onBack,
+  });
+
+  final List<SaveSlotSummary> slots;
+  final int activeSlot;
+  final ValueChanged<int> onOpenSlot;
+  final ValueChanged<int> onEraseSlot;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        CaveAtmosphere.fullBleedScene(
+          CustomAssets.introScene,
+          alignment: const Alignment(0, -0.05),
+        ),
+        CaveAtmosphere.readabilityScrim(top: 0.7, bottom: 0.55),
+        MenuChrome.playSafeArea(
+          bottom: true,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'CHOOSE SAVE',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.pixel(size: 22, color: GameTheme.torchHot),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < slots.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 6),
+                          _SaveSlotRow(
+                            slot: slots[i],
+                            selected:
+                                slots[i].index == activeSlot &&
+                                slots[i].occupied,
+                            enabled: true,
+                            onOpen: () => onOpenSlot(slots[i].index),
+                            onErase: slots[i].occupied
+                                ? () => onEraseSlot(slots[i].index)
+                                : null,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                MenuChrome.textLink(label: 'BACK', onPressed: onBack),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -165,22 +165,19 @@ void main() {
     expect(find.byType(StartMenuScreen), findsOneWidget);
     expect(find.text('IDLE PARTY'), findsOneWidget);
     expect(find.text(StoryLore.introTagline), findsOneWidget);
-    expect(find.text('SAVE 1'), findsOneWidget);
-    expect(find.text('SAVE 5'), findsOneWidget);
-    expect(find.text('CONTINUE'), findsNothing);
-    expect(find.text('NEW GAME'), findsNothing);
+    expect(find.text('CONTINUE'), findsOneWidget);
+    expect(find.text('NEW GAME'), findsOneWidget);
+    expect(find.text('SAVE 1'), findsNothing);
     expect(find.text('RESTORE SAVE'), findsOneWidget);
     expect(find.text(MetaSystems.currentVersion), findsOneWidget);
-    expect(find.text('The Party'), findsOneWidget);
-    expect(find.textContaining('Sandy Caverns'), findsOneWidget);
+    expect(find.textContaining('The Party ·'), findsOneWidget);
 
     // Still on menu after time passes (no auto-dismiss).
     await tester.pump(const Duration(seconds: 3));
     expect(find.byType(StartMenuScreen), findsOneWidget);
 
     // Input lock unlocks after ~400ms (already passed above).
-    await tester.ensureVisible(find.text('SAVE 2'));
-    await tester.tap(find.text('SAVE 2'));
+    await tester.tap(find.text('NEW GAME'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -233,8 +230,14 @@ void main() {
     );
     await skipBootIntro(tester);
 
-    expect(find.text('SAVE 1'), findsOneWidget);
+    expect(find.text('CONTINUE'), findsOneWidget);
     expect(find.textContaining('Cave Company'), findsOneWidget);
+
+    await tester.tap(find.text('CONTINUE'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('CHOOSE SAVE'), findsOneWidget);
+    expect(find.text('SAVE 1'), findsOneWidget);
 
     await tester.tap(find.text('SAVE 1'));
     await tester.pump();
@@ -266,11 +269,10 @@ void main() {
     await skipBootIntro(tester);
     await tester.pump(const Duration(milliseconds: 500));
 
-    // preview() seeds SAVE 1, so SAVE 2 is an empty file.
+    // preview() seeds SAVE 1, so NEW GAME uses the next empty file.
     expect(director.hasExistingSave, isTrue);
 
-    await tester.ensureVisible(find.text('SAVE 2'));
-    await tester.tap(find.text('SAVE 2'));
+    await tester.tap(find.text('NEW GAME'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -315,14 +317,13 @@ void main() {
     await skipBootIntro(tester);
 
     expect(find.byType(StartMenuScreen), findsOneWidget);
-    expect(find.text('SAVE 1'), findsOneWidget);
-    expect(find.text('Empty'), findsWidgets);
     expect(find.text('CONTINUE'), findsNothing);
-    expect(find.text('NEW GAME'), findsNothing);
+    expect(find.text('NEW GAME'), findsOneWidget);
+    expect(find.text('SAVE 1'), findsNothing);
     expect(find.text('RESTORE SAVE'), findsOneWidget);
     expect(director.hasExistingSave, isFalse);
 
-    await tester.tap(find.text('SAVE 1'));
+    await tester.tap(find.text('NEW GAME'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -359,7 +360,7 @@ void main() {
     );
     await skipBootIntro(tester);
 
-    await tester.tap(find.text('SAVE 1'));
+    await tester.tap(find.text('NEW GAME'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
