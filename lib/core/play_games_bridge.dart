@@ -165,45 +165,66 @@ abstract final class PlayGamesBridge {
     }
   }
 
-  static Future<void> showTimedLeaderboard(String monthKey) async {
-    final id = PlayLeaderboardIds.timedKeyId(monthKey);
-    if (id.isEmpty) return;
-    if (!_signedInCache && !await signIn()) return;
-    try {
-      await Leaderboards.showLeaderboards(
-        androidLeaderboardID: id,
-        iOSLeaderboardID: '',
-      );
-    } catch (e, st) {
-      debugPrint('PlayGames show timed board failed: $e\n$st');
+  /// Top season ranks for the in-game KEY list. Never opens the Play screen.
+  static Future<PlayBoardSnapshot> loadBoard({
+    required PlayBoardKind kind,
+    required String monthKey,
+  }) async {
+    if (!isSupported) return PlayBoardSnapshot.error;
+    final id = switch (kind) {
+      PlayBoardKind.timedKey => PlayLeaderboardIds.timedKeyId(monthKey),
+      PlayBoardKind.gauntlet => PlayLeaderboardIds.gauntletId(monthKey),
+      PlayBoardKind.greaterRift => PlayLeaderboardIds.greaterRiftId(monthKey),
+    };
+    if (!PlayLeaderboardIds.isLiveBoardId(id)) return PlayBoardSnapshot.error;
+    if (!_signedInCache && !await refreshSignedIn()) {
+      return PlayBoardSnapshot.error;
     }
-  }
-
-  static Future<void> showGauntletLeaderboard(String monthKey) async {
-    final id = PlayLeaderboardIds.gauntletId(monthKey);
-    if (id.isEmpty) return;
-    if (!_signedInCache && !await signIn()) return;
     try {
-      await Leaderboards.showLeaderboards(
+      final scores = await Leaderboards.loadLeaderboardScores(
         androidLeaderboardID: id,
-        iOSLeaderboardID: '',
+        scope: PlayerScope.global,
+        timeScope: TimeScope.allTime,
+        maxResults: 10,
+        forceRefresh: true,
+      );
+      if (scores == null) return PlayBoardSnapshot.error;
+      PlayBoardRaw? you;
+      try {
+        final mine = await Leaderboards.getPlayerScoreObject(
+          androidLeaderboardID: id,
+          scope: PlayerScope.global,
+          timeScope: TimeScope.allTime,
+        );
+        if (mine != null && mine.rawScore > 0) {
+          you = PlayBoardRaw(
+            rank: mine.rank,
+            name: mine.scoreHolder.displayName,
+            rawScore: mine.rawScore,
+            playerId: mine.scoreHolder.playerID,
+          );
+        }
+      } catch (e, st) {
+        debugPrint('PlayGames player rank skipped: $e\n$st');
+      }
+      return PlayBoardSnapshot(
+        rows: PlayBoardList.rows(
+          kind: kind,
+          scores: [
+            for (final row in scores)
+              PlayBoardRaw(
+                rank: row.rank,
+                name: row.scoreHolder.displayName,
+                rawScore: row.rawScore,
+                playerId: row.scoreHolder.playerID,
+              ),
+          ],
+          you: you,
+        ),
       );
     } catch (e, st) {
-      debugPrint('PlayGames show gauntlet board failed: $e\n$st');
-    }
-  }
-
-  static Future<void> showGreaterRiftLeaderboard(String monthKey) async {
-    final id = PlayLeaderboardIds.greaterRiftId(monthKey);
-    if (id.isEmpty) return;
-    if (!_signedInCache && !await signIn()) return;
-    try {
-      await Leaderboards.showLeaderboards(
-        androidLeaderboardID: id,
-        iOSLeaderboardID: '',
-      );
-    } catch (e, st) {
-      debugPrint('PlayGames show greater rift board failed: $e\n$st');
+      debugPrint('PlayGames load board failed: $e\n$st');
+      return PlayBoardSnapshot.error;
     }
   }
 

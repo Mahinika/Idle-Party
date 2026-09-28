@@ -184,7 +184,7 @@ Sideload and web stay quiet. Code: `PlayStoreUpdate`, `PlayReviewAsk`.
 
 1. Play Console → Play Games Services → link `com.idleparty.app`.
 2. Enable player login + **Saved Games**.
-3. Each calendar month create KEY + Gauntlet (+ Greater Rift) leaderboards and paste Android IDs into [`lib/core/play_leaderboard_ids.dart`](../lib/core/play_leaderboard_ids.dart).
+3. Each calendar month create KEY + Gauntlet (+ Greater Rift) leaderboards and paste Android IDs into [`lib/core/play_leaderboard_ids.dart`](../lib/core/play_leaderboard_ids.dart). The game lists those ranks on **KEY → BOARDS** after sign-in. It does not open the Play Games leaderboard screen.
 4. Put the numeric Games **App ID** in [`android/app/src/main/res/values/games-ids.xml`](../android/app/src/main/res/values/games-ids.xml).
 5. OAuth consent screen + Android credential (package `com.idleparty.app` + signing SHA-1) so device sign-in works.
 6. Test on a **Play-installed** build (internal/closed). GitHub sideload may soft-fail sign-in.

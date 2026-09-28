@@ -62,3 +62,115 @@ abstract final class PlayGamesScores {
 }
 
 enum CloudConflict { preferLocal, preferCloud, askUser }
+
+/// Which seasonal board the KEY list is showing.
+enum PlayBoardKind { timedKey, gauntlet, greaterRift }
+
+/// One public row before player-facing labels. Tests build these without Play.
+class PlayBoardRaw {
+  const PlayBoardRaw({
+    required this.rank,
+    required this.name,
+    required this.rawScore,
+    this.playerId,
+  });
+
+  final int rank;
+  final String name;
+  final int rawScore;
+  final String? playerId;
+}
+
+/// One row on the in-game season board.
+class PlayBoardRow {
+  const PlayBoardRow({
+    required this.rank,
+    required this.name,
+    required this.scoreLabel,
+    required this.isYou,
+  });
+
+  final int rank;
+  final String name;
+  final String scoreLabel;
+  final bool isYou;
+}
+
+/// Loaded season board. [failed] means the list could not be fetched.
+class PlayBoardSnapshot {
+  const PlayBoardSnapshot({required this.rows, this.failed = false});
+
+  final List<PlayBoardRow> rows;
+  final bool failed;
+
+  static const empty = PlayBoardSnapshot(rows: []);
+  static const error = PlayBoardSnapshot(rows: [], failed: true);
+}
+
+/// Turns Play score numbers into the KEY board list.
+abstract final class PlayBoardList {
+  static String scoreLabel(PlayBoardKind kind, int rawScore) {
+    switch (kind) {
+      case PlayBoardKind.timedKey:
+        final decoded = PlayGamesScores.decodeTimedKey(rawScore);
+        if (decoded.keyLevel <= 0) return '—';
+        return PlayGamesScores.formatTimedLabel(
+          decoded.keyLevel,
+          decoded.clearMs,
+        );
+      case PlayBoardKind.gauntlet:
+        final floor = rawScore.clamp(0, 999999);
+        if (floor <= 0) return '—';
+        return 'F$floor';
+      case PlayBoardKind.greaterRift:
+        final decoded = PlayGamesScores.decodeGreaterRift(rawScore);
+        if (decoded.tier <= 0) return '—';
+        return PlayGamesScores.formatGreaterRiftLabel(
+          decoded.tier,
+          decoded.clearMs,
+        );
+    }
+  }
+
+  static String playerName(String name) {
+    final trimmed = name.trim();
+    return trimmed.isEmpty ? 'Player' : trimmed;
+  }
+
+  /// Top rows, plus your rank at the bottom when it sits outside that list.
+  static List<PlayBoardRow> rows({
+    required PlayBoardKind kind,
+    required List<PlayBoardRaw> scores,
+    PlayBoardRaw? you,
+  }) {
+    final youId = you?.playerId;
+    bool sameYou(PlayBoardRaw row) {
+      if (you == null) return false;
+      if (youId != null && youId.isNotEmpty && row.playerId == youId) {
+        return true;
+      }
+      return row.rank == you.rank && row.rawScore == you.rawScore;
+    }
+
+    final built = <PlayBoardRow>[
+      for (final row in scores)
+        PlayBoardRow(
+          rank: row.rank,
+          name: playerName(row.name),
+          scoreLabel: scoreLabel(kind, row.rawScore),
+          isYou: sameYou(row),
+        ),
+    ];
+    if (you != null && you.rawScore > 0 && !built.any((row) => row.isYou)) {
+      built.add(
+        PlayBoardRow(
+          rank: you.rank,
+          name: playerName(you.name),
+          scoreLabel: scoreLabel(kind, you.rawScore),
+          isYou: true,
+        ),
+      );
+    }
+    return built;
+  }
+}

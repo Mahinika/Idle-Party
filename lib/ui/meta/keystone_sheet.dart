@@ -103,7 +103,7 @@ class KeystoneSheet extends StatelessWidget {
                 ),
                 MenuChrome.fold(
                   title: 'BOARDS',
-                  subtitle: 'Play Games ranks',
+                  subtitle: "This month's ranks",
                   initiallyExpanded: chase.kind == HubChaseKind.doneForToday,
                   children: [
                     PlayGamesBoardsSection(director: d),

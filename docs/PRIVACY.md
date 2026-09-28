@@ -2,7 +2,7 @@
 
 Idle Party is a single-player idle RPG. This document describes how the app handles data and is suitable for Google Play Data safety disclosures.
 
-**Last updated:** 2026-09-12.
+**Last updated:** 2026-09-28.
 
 ## Summary
 
@@ -24,7 +24,7 @@ Typical save data may include party progress, gear, gold/meta currency, settings
 
 If you sign in with **Google Play Games**:
 
-- **Leaderboards:** the app may submit opt-in seasonal scores (best timed KEY + clear time, best Infinity Gauntlet floor for the calendar month) to Google’s leaderboard service.
+- **Leaderboards:** the app may submit opt-in seasonal scores (best timed KEY + clear time, best Infinity Gauntlet floor, best Greater Rift tier + clear time for the calendar month) to Google’s leaderboard service, and show those public Play Games names and ranks inside **KEY → BOARDS**.
 - **Cloud save:** the app may upload a progress snapshot to Google Play Games **Saved Games** so you can restore after reinstall or on another device signed into the same Play Games profile.
 - Google hosts that data under Play Games / your Google account. Idle Party does not run its own cloud save or leaderboard server.
 

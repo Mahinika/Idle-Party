@@ -67,6 +67,60 @@ void main() {
       );
     });
 
+    test('in-game board labels decode KEY, floor, and GR', () {
+      final key = PlayGamesScores.encodeTimedKey(keyLevel: 12, clearMs: 65000);
+      expect(
+        PlayBoardList.scoreLabel(PlayBoardKind.timedKey, key),
+        'KEY +12 · 01:05',
+      );
+      expect(PlayBoardList.scoreLabel(PlayBoardKind.gauntlet, 40), 'F40');
+      final gr = PlayGamesScores.encodeGreaterRift(tier: 8, clearMs: 90000);
+      expect(
+        PlayBoardList.scoreLabel(PlayBoardKind.greaterRift, gr),
+        'GR8 · 01:30',
+      );
+    });
+
+    test('board keeps your rank when it is outside the top list', () {
+      final top = PlayBoardList.rows(
+        kind: PlayBoardKind.gauntlet,
+        scores: const [
+          PlayBoardRaw(rank: 1, name: 'Ada', rawScore: 80, playerId: 'a'),
+          PlayBoardRaw(rank: 2, name: '  ', rawScore: 70, playerId: 'b'),
+        ],
+        you: const PlayBoardRaw(
+          rank: 40,
+          name: 'Robin',
+          rawScore: 12,
+          playerId: 'you',
+        ),
+      );
+      expect(top, hasLength(3));
+      expect(top[1].name, 'Player');
+      expect(top[1].isYou, isFalse);
+      expect(top.last.isYou, isTrue);
+      expect(top.last.rank, 40);
+      expect(top.last.scoreLabel, 'F12');
+    });
+
+    test('board marks you inside the top list without a second row', () {
+      final rows = PlayBoardList.rows(
+        kind: PlayBoardKind.gauntlet,
+        scores: const [
+          PlayBoardRaw(rank: 1, name: 'Ada', rawScore: 80, playerId: 'a'),
+          PlayBoardRaw(rank: 2, name: 'Robin', rawScore: 12, playerId: 'you'),
+        ],
+        you: const PlayBoardRaw(
+          rank: 2,
+          name: 'Robin',
+          rawScore: 12,
+          playerId: 'you',
+        ),
+      );
+      expect(rows, hasLength(2));
+      expect(rows[1].isYou, isTrue);
+    });
+
     test('Greater Rift encode prefers higher tier', () {
       final low = PlayGamesScores.encodeGreaterRift(tier: 3, clearMs: 1000);
       final high = PlayGamesScores.encodeGreaterRift(tier: 4, clearMs: 500000);

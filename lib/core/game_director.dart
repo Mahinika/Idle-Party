@@ -34,7 +34,6 @@ import 'play_games_bridge.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
 import 'play_games_scores.dart';
-import 'play_leaderboard_ids.dart';
 import 'play_review_ask.dart';
 import 'play_store_update.dart';
 import 'screen_awake.dart';
@@ -1775,39 +1774,6 @@ class GameDirector extends ChangeNotifier {
 
   /// Hint lines for cloud conflict dialogs.
   String playGamesConflictHint(GameState s) => PlayGamesBridge.conflictHint(s);
-
-  Future<void> showPlayTimedLeaderboard() async {
-    final month = _state.metaDepth.leaderboardSeasonKey.isNotEmpty
-        ? _state.metaDepth.leaderboardSeasonKey
-        : GameLogic.isoMonthKey(DateTime.now().toUtc());
-    if (!PlayLeaderboardIds.hasBoards(month)) {
-      showToast('Season boards not configured yet', life: 2.4);
-      return;
-    }
-    await PlayGamesBridge.showTimedLeaderboard(month);
-  }
-
-  Future<void> showPlayGauntletLeaderboard() async {
-    final month = _state.metaDepth.leaderboardSeasonKey.isNotEmpty
-        ? _state.metaDepth.leaderboardSeasonKey
-        : GameLogic.isoMonthKey(DateTime.now().toUtc());
-    if (!PlayLeaderboardIds.hasBoards(month)) {
-      showToast('Season boards not configured yet', life: 2.4);
-      return;
-    }
-    await PlayGamesBridge.showGauntletLeaderboard(month);
-  }
-
-  Future<void> showPlayGreaterRiftLeaderboard() async {
-    final month = _state.metaDepth.leaderboardSeasonKey.isNotEmpty
-        ? _state.metaDepth.leaderboardSeasonKey
-        : GameLogic.isoMonthKey(DateTime.now().toUtc());
-    if (!PlayLeaderboardIds.hasGreaterRiftBoard(month)) {
-      showToast('Greater Rift board not configured yet', life: 2.4);
-      return;
-    }
-    await PlayGamesBridge.showGreaterRiftLeaderboard(month);
-  }
 
   CloudConflict peekCloudConflict(GameState cloud) =>
       PlayGamesScores.resolveConflict(
