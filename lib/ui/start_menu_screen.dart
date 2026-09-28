@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/ad_rewarded.dart';
 import '../core/community_links.dart';
+import '../core/game_storage.dart';
 import '../core/meta_systems.dart';
 import '../core/story_lore.dart';
 import 'cave_atmosphere.dart';
@@ -9,27 +10,26 @@ import '../assets/custom_assets.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
+import 'web_click_bridge.dart';
 
-/// Cold-start menu: brand scene + Continue / New Game.
+/// Cold-start menu: brand scene + five save files.
 class StartMenuScreen extends StatefulWidget {
   const StartMenuScreen({
     super.key,
-    required this.canContinue,
-    required this.onContinue,
-    required this.onNewGame,
+    required this.slots,
+    required this.activeSlot,
+    required this.onOpenSlot,
+    required this.onEraseSlot,
     required this.onRestore,
-    this.saveSummary,
     this.onSettings,
   });
 
-  final bool canContinue;
-  final VoidCallback onContinue;
-  final VoidCallback onNewGame;
+  final List<SaveSlotSummary> slots;
+  final int activeSlot;
+  final ValueChanged<int> onOpenSlot;
+  final ValueChanged<int> onEraseSlot;
   final VoidCallback onRestore;
   final VoidCallback? onSettings;
-
-  /// Party name + zone when a save exists, e.g. "The Ember Guard · Sandy Caverns".
-  final String? saveSummary;
 
   @override
   State<StartMenuScreen> createState() => _StartMenuScreenState();
@@ -165,55 +165,51 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               ),
                             ),
                           ),
-                          const Spacer(flex: 3),
+                          Expanded(
+                            flex: 3,
+                            child: Opacity(
+                              opacity: ctaOpacity,
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                child: Column(
+                                  children: [
+                                    for (
+                                      var i = 0;
+                                      i < widget.slots.length;
+                                      i++
+                                    ) ...[
+                                      if (i > 0) const SizedBox(height: 6),
+                                      _SaveSlotRow(
+                                        slot: widget.slots[i],
+                                        selected:
+                                            widget.slots[i].index ==
+                                                widget.activeSlot &&
+                                            widget.slots[i].occupied,
+                                        enabled: _inputUnlocked,
+                                        onOpen: () => _choose(
+                                          () => widget.onOpenSlot(
+                                            widget.slots[i].index,
+                                          ),
+                                        ),
+                                        onErase: widget.slots[i].occupied
+                                            ? () => widget.onEraseSlot(
+                                                widget.slots[i].index,
+                                              )
+                                            : null,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
                           Opacity(
                             opacity: ctaOpacity,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                if (widget.canContinue) ...[
-                                  GameButton(
-                                    label: 'CONTINUE',
-                                    style: GameButtonStyle.brown,
-                                    primary: true,
-                                    onPressed: _inputUnlocked
-                                        ? () => _choose(widget.onContinue)
-                                        : null,
-                                  ),
-                                  if (widget.saveSummary != null &&
-                                      widget.saveSummary!.isNotEmpty) ...[
-                                    const SizedBox(height: 6),
-                                    Opacity(
-                                      opacity: copyOpacity,
-                                      child: Text(
-                                        widget.saveSummary!,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GameTheme.body(
-                                          size: 13,
-                                          color: GameTheme.torchHot,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: 8),
-                                  GameButton(
-                                    label: 'NEW GAME',
-                                    style: GameButtonStyle.grey,
-                                    onPressed: _inputUnlocked
-                                        ? () => _choose(widget.onNewGame)
-                                        : null,
-                                  ),
-                                ] else
-                                  GameButton(
-                                    label: 'NEW GAME',
-                                    style: GameButtonStyle.brown,
-                                    primary: true,
-                                    onPressed: _inputUnlocked
-                                        ? () => _choose(widget.onNewGame)
-                                        : null,
-                                  ),
                                 const SizedBox(height: 8),
                                 GameButton(
                                   label: 'RESTORE SAVE',
@@ -272,6 +268,111 @@ class _StartMenuScreenState extends State<StartMenuScreen>
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _SaveSlotRow extends StatelessWidget {
+  const _SaveSlotRow({
+    required this.slot,
+    required this.selected,
+    required this.enabled,
+    required this.onOpen,
+    required this.onErase,
+  });
+
+  final SaveSlotSummary slot;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onOpen;
+  final VoidCallback? onErase;
+
+  @override
+  Widget build(BuildContext context) {
+    final open = enabled && !slot.corrupt ? onOpen : null;
+    final headline = slot.corrupt
+        ? 'Could not read this save'
+        : (slot.partyName ?? 'Empty');
+    final border = selected
+        ? GameTheme.torchHot.withValues(alpha: 0.85)
+        : GameTheme.border.withValues(alpha: slot.occupied ? 0.95 : 0.55);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: GameTheme.card.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+        border: Border.all(color: border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: WebClickScope(
+              label: slot.label,
+              onPressed: open,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: open,
+                  borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minHeight: GameTheme.minTouch,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            slot.label,
+                            style: GameTheme.pixel(
+                              size: 11,
+                              color: GameTheme.torchHot,
+                            ),
+                          ),
+                          Text(
+                            headline,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GameTheme.body(
+                              size: 14,
+                              color: slot.occupied
+                                  ? GameTheme.parchment
+                                  : GameTheme.parchmentDim,
+                            ),
+                          ),
+                          if (slot.detail != null)
+                            Text(
+                              slot.detail!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GameTheme.body(
+                                size: 12,
+                                color: GameTheme.parchmentDim,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (onErase != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: GameButton(
+                label: 'ERASE ${slot.index + 1}',
+                style: GameButtonStyle.red,
+                dense: true,
+                expanded: false,
+                onPressed: enabled ? onErase : null,
+              ),
+            ),
+        ],
       ),
     );
   }

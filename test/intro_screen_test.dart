@@ -165,18 +165,22 @@ void main() {
     expect(find.byType(StartMenuScreen), findsOneWidget);
     expect(find.text('IDLE PARTY'), findsOneWidget);
     expect(find.text(StoryLore.introTagline), findsOneWidget);
-    expect(find.text('CONTINUE'), findsOneWidget);
-    expect(find.text('NEW GAME'), findsOneWidget);
+    expect(find.text('SAVE 1'), findsOneWidget);
+    expect(find.text('SAVE 5'), findsOneWidget);
+    expect(find.text('CONTINUE'), findsNothing);
+    expect(find.text('NEW GAME'), findsNothing);
     expect(find.text('RESTORE SAVE'), findsOneWidget);
     expect(find.text(MetaSystems.currentVersion), findsOneWidget);
-    expect(find.textContaining('The Party ·'), findsOneWidget);
+    expect(find.text('The Party'), findsOneWidget);
+    expect(find.textContaining('Sandy Caverns'), findsOneWidget);
 
     // Still on menu after time passes (no auto-dismiss).
     await tester.pump(const Duration(seconds: 3));
     expect(find.byType(StartMenuScreen), findsOneWidget);
 
     // Input lock unlocks after ~400ms (already passed above).
-    await tester.tap(find.text('NEW GAME'));
+    await tester.ensureVisible(find.text('SAVE 2'));
+    await tester.tap(find.text('SAVE 2'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -209,15 +213,16 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    final seeded = GameLogic.createInitialState(
-      now: DateTime.utc(2026, 9, 27),
-      partyName: 'Cave Company',
-    ).copyWith(
-      gold: 4242,
-      highestFloorCleared: 1,
-      lifetimeGoldEarned: 17,
-      lastUpdated: DateTime.now(),
-    );
+    final seeded =
+        GameLogic.createInitialState(
+          now: DateTime.utc(2026, 9, 27),
+          partyName: 'Cave Company',
+        ).copyWith(
+          gold: 4242,
+          highestFloorCleared: 1,
+          lifetimeGoldEarned: 17,
+          lastUpdated: DateTime.now(),
+        );
     final director = GameDirector.preview(initialState: seeded);
 
     await tester.binding.setSurfaceSize(const Size(360, 780));
@@ -228,10 +233,10 @@ void main() {
     );
     await skipBootIntro(tester);
 
-    expect(find.text('CONTINUE'), findsOneWidget);
+    expect(find.text('SAVE 1'), findsOneWidget);
     expect(find.textContaining('Cave Company'), findsOneWidget);
 
-    await tester.tap(find.text('CONTINUE'));
+    await tester.tap(find.text('SAVE 1'));
     await tester.pump();
     // Continue waits for the menu exit (~480ms) before opening the hub.
     await tester.pump(const Duration(milliseconds: 600));
@@ -261,10 +266,11 @@ void main() {
     await skipBootIntro(tester);
     await tester.pump(const Duration(milliseconds: 500));
 
-    // preview() seeds an in-memory save, so Continue is available.
+    // preview() seeds SAVE 1, so SAVE 2 is an empty file.
     expect(director.hasExistingSave, isTrue);
 
-    await tester.tap(find.text('NEW GAME'));
+    await tester.ensureVisible(find.text('SAVE 2'));
+    await tester.tap(find.text('SAVE 2'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -275,16 +281,14 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    // Existing save → confirm overwrite.
-    expect(find.text('Overwrite save?'), findsOneWidget);
-    await tester.tap(find.text('OVERWRITE'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('Overwrite save?'), findsNothing);
 
     expect(find.byType(NewGamePartyPicker), findsNothing);
     // Hub CTA and the first-run tip both say ENTER DUNGEON.
     expect(find.text('ENTER DUNGEON'), findsWidgets);
     expect(director.state.heroes.length, 3);
+    expect(director.activeSaveSlot, 1);
+    expect(director.saveSlots[0].occupied, isTrue);
     expect(director.state.partyName, PartyNameFilter.defaultName);
     expect(
       director.state.heroes.map((h) => h.specId).toSet(),
@@ -311,12 +315,14 @@ void main() {
     await skipBootIntro(tester);
 
     expect(find.byType(StartMenuScreen), findsOneWidget);
+    expect(find.text('SAVE 1'), findsOneWidget);
+    expect(find.text('Empty'), findsWidgets);
     expect(find.text('CONTINUE'), findsNothing);
-    expect(find.text('NEW GAME'), findsOneWidget);
+    expect(find.text('NEW GAME'), findsNothing);
     expect(find.text('RESTORE SAVE'), findsOneWidget);
     expect(director.hasExistingSave, isFalse);
 
-    await tester.tap(find.text('NEW GAME'));
+    await tester.tap(find.text('SAVE 1'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -353,7 +359,7 @@ void main() {
     );
     await skipBootIntro(tester);
 
-    await tester.tap(find.text('NEW GAME'));
+    await tester.tap(find.text('SAVE 1'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -364,10 +370,7 @@ void main() {
     await tester.ensureVisible(find.text('N.ELF').first);
     await tester.tap(find.text('N.ELF').first);
     await tester.pump();
-    expect(
-      find.textContaining('Race for PROT'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Race for PROT'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'Moon Guard');
     await tester.ensureVisible(find.text('START'));

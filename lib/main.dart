@@ -11,7 +11,6 @@ import 'core/gear/drop_tables.dart';
 import 'core/game_director.dart';
 import 'core/immersive_ui.dart';
 import 'core/menu_router.dart';
-import 'models/dungeon_def.dart';
 import 'models/hero.dart';
 import 'models/hero_spec.dart';
 import 'ui/boot_intro_screen.dart';
@@ -346,11 +345,76 @@ class _GameHomePageState extends State<GameHomePage>
     setState(() => _phase = _AppPhase.newGamePicker);
   }
 
+  Future<void> _openSlot(int index) async {
+    if (_phase != _AppPhase.startMenu) return;
+    if (index < 0 || index >= _director.saveSlots.length) return;
+    final slot = _director.saveSlots[index];
+    if (!slot.occupied || slot.corrupt) {
+      if (slot.corrupt) return;
+      _director.armNewGameSlot(index);
+      _openNewGamePicker();
+      return;
+    }
+    final ok = await _director.openSaveSlot(index);
+    if (!ok || !mounted) return;
+    _continueGame();
+  }
+
+  Future<void> _eraseSlot(int index) async {
+    if (_phase != _AppPhase.startMenu) return;
+    if (index < 0 || index >= _director.saveSlots.length) return;
+    final slot = _director.saveSlots[index];
+    if (!slot.occupied) return;
+    WebClickBridge.pushLayer();
+    bool? ok;
+    try {
+      final who = slot.partyName ?? slot.label;
+      ok = await showDialog<bool>(
+        context: context,
+        barrierColor: MenuChrome.scrim,
+        builder: (ctx) => MenuChrome.dialog(
+          title: 'Erase ${slot.label}?',
+          content: Text(
+            '$who will be deleted. Your other saves stay.',
+            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          ),
+          actions: [
+            GameButton(
+              label: 'CANCEL',
+              style: GameButtonStyle.grey,
+              expanded: false,
+              onPressed: () => Navigator.pop(ctx, false),
+            ),
+            GameButton(
+              label: 'ERASE',
+              expanded: false,
+              style: GameButtonStyle.red,
+              onPressed: () => Navigator.pop(ctx, true),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      WebClickBridge.popLayer();
+    }
+    if (ok != true || !mounted) return;
+    await _director.eraseSaveSlot(index);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _restoreSave() async {
     if (_phase != _AppPhase.startMenu) return;
+    final slot = _director.preferredImportSlot;
+    final replaces = _director.saveSlots[slot].occupied;
+    if (!mounted) return;
+    final label = 'SAVE ${slot + 1}';
     final ok = await SaveImportFlow.fromClipboard(
       context: context,
       director: _director,
+      message: replaces
+          ? 'This replaces $label. This cannot be undone.'
+          : 'This fills $label from the clipboard.',
+      onConfirmed: () => _director.armImportSlot(slot),
     );
     if (!ok || !mounted) return;
     _continueGame();
@@ -361,43 +425,6 @@ class _GameHomePageState extends State<GameHomePage>
     String partyName,
     List<HeroRace> races,
   ) async {
-    if (_director.hasExistingSave) {
-      WebClickBridge.pushLayer();
-      bool? ok;
-      try {
-        ok = await showDialog<bool>(
-          context: context,
-          barrierColor: MenuChrome.scrim,
-          builder: (ctx) => MenuChrome.dialog(
-            title: 'Overwrite save?',
-            content: Text(
-              'Starting a new game erases your current progress.',
-              style: GameTheme.body(size: 15, color: GameTheme.parchment),
-            ),
-            actions: [
-              GameButton(
-                label: 'CANCEL',
-                style: GameButtonStyle.grey,
-                expanded: false,
-                onPressed: () => Navigator.pop(ctx, false),
-              ),
-              GameButton(
-                label: 'OVERWRITE',
-                expanded: false,
-                style: GameButtonStyle.red,
-                onPressed: () => Navigator.pop(ctx, true),
-              ),
-            ],
-          ),
-        );
-      } finally {
-        WebClickBridge.popLayer();
-      }
-      if (ok != true || !mounted) {
-        setState(() => _phase = _AppPhase.startMenu);
-        return;
-      }
-    }
     await _director.startNewGame(
       specs,
       partyName: partyName,
@@ -430,7 +457,7 @@ class _GameHomePageState extends State<GameHomePage>
         body: BootIntroScreen(
           key: const ValueKey('boot-intro'),
           showStory:
-              !_director.hasExistingSave &&
+              !_director.hasAnySave &&
               !_director.state.seenTips.contains(BootIntroScreen.storyTipId),
           playCinematic:
               CustomAssets.introVideoBundled &&
@@ -453,13 +480,11 @@ class _GameHomePageState extends State<GameHomePage>
       return Scaffold(
         body: StartMenuScreen(
           key: const ValueKey('start-menu'),
-          canContinue: _director.hasExistingSave,
-          saveSummary: _director.hasExistingSave
-              ? '${_director.state.partyName} · ${DungeonCatalog.byId(_director.state.dungeonId).name}'
-              : null,
-          onContinue: _continueGame,
-          onNewGame: _openNewGamePicker,
-          onRestore: _restoreSave,
+          slots: _director.saveSlots,
+          activeSlot: _director.activeSaveSlot,
+          onOpenSlot: (index) => unawaited(_openSlot(index)),
+          onEraseSlot: (index) => unawaited(_eraseSlot(index)),
+          onRestore: () => unawaited(_restoreSave()),
           onSettings: () {
             if (_director.hasExistingSave) {
               _continueGame();

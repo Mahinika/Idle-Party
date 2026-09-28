@@ -246,6 +246,30 @@ void main() {
     expect(prefs.getString('idle_party_save_v2_corrupt'), '{not-json');
   });
 
+  test(
+    'legacy v2 save becomes SAVE 1 and leaves the other slots empty',
+    () async {
+      final state = GameLogic.createInitialState(
+        now: DateTime(2026, 8, 21),
+        partyName: 'Old Guard',
+      );
+      SharedPreferences.setMockInitialValues({
+        'idle_party_save_v2': jsonEncode(state.toJson()),
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final storage = SharedPreferencesGameStorage(preferences: prefs);
+
+      final slots = await storage.listSlots();
+      expect(slots, hasLength(5));
+      expect(slots[0].partyName, 'Old Guard');
+      expect(slots[0].occupied, isTrue);
+      expect(slots[1].occupied, isFalse);
+      expect(slots[4].occupied, isFalse);
+      expect((await storage.load())!.partyName, 'Old Guard');
+      expect(storage.activeSlotIndex, 0);
+    },
+  );
+
   test('legacy save without wipe streak fields stays quiet', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 8, 21));
     final json = Map<String, dynamic>.from(state.toJson());
@@ -274,6 +298,22 @@ void main() {
     expect(director.state.partyName, 'Cave Company');
     expect(await storage.load(), isNotNull);
     expect((await storage.load())!.partyName, 'Cave Company');
+
+    director.armNewGameSlot(1);
+    await director.startNewGame(
+      HeroSpecs.starterUnlocked,
+      partyName: 'Second Watch',
+    );
+    expect(director.activeSaveSlot, 1);
+    expect(director.state.partyName, 'Second Watch');
+    expect(director.saveSlots[0].partyName, 'Cave Company');
+    expect(director.saveSlots[1].partyName, 'Second Watch');
+    expect(director.saveSlots[2].occupied, isFalse);
+    expect((await storage.loadSlot(0))!.partyName, 'Cave Company');
+
+    expect(await director.openSaveSlot(0), isTrue);
+    expect(director.state.partyName, 'Cave Company');
+    expect(director.activeSaveSlot, 0);
     director.dispose();
   });
 
@@ -375,11 +415,7 @@ void main() {
   test('mixed per-hero races round-trip on New Game', () {
     final state = GameLogic.createInitialState(
       now: DateTime(2026, 9, 19),
-      partyRaces: const [
-        HeroRace.nightElf,
-        HeroRace.human,
-        HeroRace.nightElf,
-      ],
+      partyRaces: const [HeroRace.nightElf, HeroRace.human, HeroRace.nightElf],
     );
     expect(
       state.heroes.firstWhere((h) => h.specId == HeroSpecId.protection).race,
@@ -481,7 +517,9 @@ void main() {
 
   test('LOOK race change snaps sex to the kit family default', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 9, 20));
-    final tank = state.heroes.firstWhere((h) => h.specId == HeroSpecId.protection);
+    final tank = state.heroes.firstWhere(
+      (h) => h.specId == HeroSpecId.protection,
+    );
     state = GameLogic.setHeroLook(state, heroId: tank.id, race: HeroRace.orc);
     final orc = state.heroes.firstWhere((h) => h.id == tank.id);
     expect(orc.race, HeroRace.orc);

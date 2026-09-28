@@ -11,6 +11,8 @@ abstract final class SaveImportFlow {
   static Future<bool> fromClipboard({
     required BuildContext context,
     required GameDirector director,
+    String? message,
+    Future<void> Function()? onConfirmed,
   }) async {
     final data = await Clipboard.getData('text/plain');
     final raw = data?.text;
@@ -25,8 +27,9 @@ abstract final class SaveImportFlow {
       builder: (ctx) => MenuChrome.dialog(
         title: 'Import save?',
         content: Text(
-          'This replaces your current save with the clipboard contents. '
-          'This cannot be undone.',
+          message ??
+              'This replaces your current save with the clipboard contents. '
+                  'This cannot be undone.',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
@@ -44,6 +47,8 @@ abstract final class SaveImportFlow {
       ),
     );
     if (ok != true) return false;
+    if (!context.mounted) return false;
+    if (onConfirmed != null) await onConfirmed();
     final success = director.importSaveJson(raw);
     director.showToast(success ? 'Save imported' : 'Could not read that save');
     return success;

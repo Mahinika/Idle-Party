@@ -99,8 +99,8 @@ class _SettingsOverlayState extends State<SettingsOverlay>
       builder: (ctx) => MenuChrome.dialog(
         title: 'Reset game?',
         content: Text(
-          'Export your save first (ACCOUNT below) if you want a backup. '
-          'All progress will be wiped. This cannot be undone.',
+          'Export this save first (ACCOUNT below) if you want a backup. '
+          'This save slot will be wiped. Your other saves stay.',
           style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
         ),
         actions: [

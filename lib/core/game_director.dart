@@ -91,6 +91,12 @@ class GameDirector extends ChangeNotifier {
   GameState _state;
   bool _isLoading = true;
   bool _hasExistingSave = false;
+  int _activeSlot = 0;
+  int? _pendingNewGameSlot;
+  List<SaveSlotSummary> _saveSlots = List<SaveSlotSummary>.generate(
+    GameStorage.slotCount,
+    SaveSlotSummary.empty,
+  );
   SpatialWorld? _spatial;
   Timer? _spatialTimer;
   Timer? _uiTimer;
@@ -219,8 +225,39 @@ class GameDirector extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
-  /// True after [boot] if a save was loaded (Continue available).
+  /// True after [boot] if the active slot was loaded (autosave may write).
   bool get hasExistingSave => _hasExistingSave;
+
+  /// Title-screen files. Always [GameStorage.slotCount] long.
+  List<SaveSlotSummary> get saveSlots => _saveSlots;
+
+  /// Slot autosave writes to (0-based).
+  int get activeSaveSlot => _activeSlot;
+
+  /// Any of the five files has a party (title story skips when this is set).
+  bool get hasAnySave => _saveSlots.any((slot) => slot.occupied);
+
+  /// Empty slot the next clipboard import should fill, else the active file.
+  int get preferredImportSlot {
+    final empty = _saveSlots.indexWhere((slot) => !slot.occupied);
+    if (empty >= 0) return empty;
+    return _activeSlot;
+  }
+
+  /// Title NEW GAME on an empty file. Ignored once [startNewGame] runs.
+  void armNewGameSlot(int index) {
+    _pendingNewGameSlot = index.clamp(0, GameStorage.slotCount - 1);
+  }
+
+  /// Point the next import / cloud write at [index] without loading it yet.
+  Future<void> armImportSlot(int index) async {
+    final slot = index.clamp(0, GameStorage.slotCount - 1);
+    await _storage.setActiveSlot(slot);
+    _activeSlot = slot;
+    if (!_saveSlots[slot].occupied) {
+      _hasExistingSave = false;
+    }
+  }
 
   SpatialWorld? get spatial => _spatial;
 
@@ -488,40 +525,13 @@ class GameDirector extends ChangeNotifier {
   Future<void> boot({bool deferCombatLoop = false}) async {
     _funnelSessionReadyMs = DateTime.now().millisecondsSinceEpoch;
     try {
+      _saveSlots = await _storage.listSlots();
+      _activeSlot = _storage.activeSlotIndex;
       final saved = await _storage.load();
       _hasExistingSave = saved != null;
-      late GameState loaded;
-      if (saved == null) {
-        // Placeholder only — do not persist until New Game / Continue path.
-        loaded = GameLogic.createInitialState();
-      } else {
-        // Paint immediately — AFK spatial sim must not hold the spinner.
-        // Do NOT start the live spatial loop until after offline catch-up.
-        _state = GameLogic.ensureRogueHero(saved);
-        _lastHighestDungeon = _state.highestDungeonCleared;
-        _syncDevicePrefs();
-        _ensureUiTimer();
-        // Keep loading flag true until finally{} when intro is deferred —
-        // early notify would flash hub/dungeon under the title card.
-        if (!deferCombatLoop) {
-          _isLoading = false;
-          notifyListeners();
-        }
-
-        final elapsed = DateTime.now().difference(saved.lastUpdated);
-        final offline = await GameLogic.applyOfflineProgressAsync(
-          saved,
-          elapsed,
-        );
-        loaded = offline.state;
-        if (offline.hasSummary) {
-          uiFeedback.presentOffline(offline);
-          // Hub shows a tappable banner; toast only when loading mid-dungeon.
-          if (saved.inDungeon) {
-            showToast(offline.headline, life: 5);
-          }
-        }
-      }
+      final loaded = saved == null
+          ? GameLogic.createInitialState()
+          : await _catchUpSaved(saved, deferCombatLoop: deferCombatLoop);
       _state = GameLogic.backfillCodexFromInventory(
         GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
       );
@@ -554,6 +564,8 @@ class GameDirector extends ChangeNotifier {
         _noteFunnelSession(newInstall: false);
         await _persistFlush();
       }
+      _saveSlots = await _storage.listSlots();
+      _activeSlot = _storage.activeSlotIndex;
     } catch (e, st) {
       DebugPlayLog.event('boot', 'failed: $e');
       debugPrint('boot failed: $e\n$st');
@@ -578,13 +590,116 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  /// Hard start: wipe save and create a fresh party from [partySpecs] (3 heroes).
+  /// Offline catch-up for one slot. Does not write prefs.
+  Future<GameState> _catchUpSaved(
+    GameState saved, {
+    required bool deferCombatLoop,
+  }) async {
+    // Paint immediately — AFK spatial sim must not hold the spinner.
+    // Do NOT start the live spatial loop until after offline catch-up.
+    _state = GameLogic.ensureRogueHero(saved);
+    _lastHighestDungeon = _state.highestDungeonCleared;
+    _syncDevicePrefs();
+    _ensureUiTimer();
+    // Keep loading flag true until boot's finally{} when intro is deferred —
+    // early notify would flash hub/dungeon under the title card.
+    if (!deferCombatLoop) {
+      _isLoading = false;
+      notifyListeners();
+    }
+
+    final elapsed = DateTime.now().difference(saved.lastUpdated);
+    final offline = await GameLogic.applyOfflineProgressAsync(saved, elapsed);
+    if (offline.hasSummary) {
+      uiFeedback.presentOffline(offline);
+      // Hub shows a tappable banner; toast only when loading mid-dungeon.
+      if (saved.inDungeon) {
+        showToast(offline.headline, life: 5);
+      }
+    }
+    return offline.state;
+  }
+
+  Future<void> _installCaughtUp(GameState loaded) async {
+    _state = GameLogic.backfillCodexFromInventory(
+      GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
+    );
+    _lastHighestDungeon = _state.highestDungeonCleared;
+    if (_state.lastFloorClearSec > 0) {
+      _lastFloorClearSec = _state.lastFloorClearSec;
+    }
+    _syncDevicePrefs();
+    _ensureUiTimer();
+    if (_state.inDungeon) {
+      _rebuildSpatial();
+    } else {
+      _spatialTimer?.cancel();
+      _spatialTimer = null;
+      _spatial = null;
+    }
+  }
+
+  /// Load [index] and make it the autosave target. No-op success if already active.
+  Future<bool> openSaveSlot(int index) async {
+    final slot = index.clamp(0, GameStorage.slotCount - 1);
+    if (slot == _activeSlot && _hasExistingSave) return true;
+    final saved = await _storage.loadSlot(slot);
+    if (saved == null) {
+      _saveSlots = await _storage.listSlots();
+      notifyListeners();
+      return false;
+    }
+    _spatialTimer?.cancel();
+    _spatialTimer = null;
+    _spatial = null;
+    _awaitingWipeChoice = false;
+    uiFeedback.dismissOfflineSummary();
+    await _storage.setActiveSlot(slot);
+    _activeSlot = slot;
+    _hasExistingSave = true;
+    final caught = await _catchUpSaved(saved, deferCombatLoop: true);
+    await _installCaughtUp(caught);
+    _noteFunnelSession(newInstall: false);
+    await _persistFlush();
+    _saveSlots = await _storage.listSlots();
+    _syncHubIdleTimer();
+    notifyListeners();
+    return true;
+  }
+
+  /// Delete one file. Other slots stay. Active slot becomes a blank title state.
+  Future<void> eraseSaveSlot(int index) async {
+    final slot = index.clamp(0, GameStorage.slotCount - 1);
+    await _storage.clearSlot(slot);
+    if (slot == _activeSlot) {
+      _awaitingWipeChoice = false;
+      uiFeedback.dismissOfflineSummary();
+      _spatialTimer?.cancel();
+      _spatialTimer = null;
+      _spatial = null;
+      _state = GameLogic.createInitialState();
+      _hasExistingSave = false;
+      _syncDevicePrefs();
+    }
+    _saveSlots = await _storage.listSlots();
+    _syncHubIdleTimer();
+    notifyListeners();
+  }
+
+  /// Hard start: create a fresh party in the armed slot (or the active one).
   Future<void> startNewGame(
     List<HeroSpecId> partySpecs, {
     String? partyName,
     HeroRace partyRace = HeroRace.human,
     List<HeroRace>? partyRaces,
   }) async {
+    final slot = (_pendingNewGameSlot ?? _activeSlot).clamp(
+      0,
+      GameStorage.slotCount - 1,
+    );
+    _pendingNewGameSlot = null;
+    await _storage.setActiveSlot(slot);
+    _activeSlot = slot;
     _awaitingWipeChoice = false;
     uiFeedback.dismissOfflineSummary();
     _spatialTimer?.cancel();
@@ -604,6 +719,8 @@ class GameDirector extends ChangeNotifier {
     notifyListeners();
     DebugPlayLog.event('new_game', DebugPlayLog.bootDetail(_state));
     await _persistFlush();
+    _saveSlots = await _storage.listSlots();
+    notifyListeners();
   }
 
   /// Continue from the loaded save into play (no-op if already ready).
@@ -1585,9 +1702,17 @@ class GameDirector extends ChangeNotifier {
       _spatialTimer = null;
       _spatial = null;
     }
+    _rememberActiveSummary();
     notifyListeners();
     unawaited(_persistFlush());
     return true;
+  }
+
+  void _rememberActiveSummary() {
+    if (_activeSlot < 0 || _activeSlot >= _saveSlots.length) return;
+    final next = List<SaveSlotSummary>.from(_saveSlots);
+    next[_activeSlot] = SaveSlotSummary.fromState(_activeSlot, _state);
+    _saveSlots = next;
   }
 
   /// Play-installed Android with a newer build on the store — blocks cold start.
@@ -1734,6 +1859,7 @@ class GameDirector extends ChangeNotifier {
       _spatialTimer = null;
       _spatial = null;
     }
+    _rememberActiveSummary();
     notifyListeners();
     showToast(toast, life: 2.6);
   }
@@ -2552,6 +2678,7 @@ class GameDirector extends ChangeNotifier {
     await _storage.clear();
     _state = GameLogic.createInitialState();
     _hasExistingSave = false;
+    _saveSlots = await _storage.listSlots();
     _pendingStartMenu = true;
     _syncDevicePrefs();
     _spatialTimer?.cancel();
