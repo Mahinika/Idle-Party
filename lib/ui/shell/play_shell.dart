@@ -38,6 +38,7 @@ class _PlayShellState extends State<PlayShell> {
   MenuRouter get router => widget.router;
   late bool _inDungeon;
   bool _wispSheetOpening = false;
+  int _offeredWispGold = 0;
 
   @override
   void initState() {
@@ -84,8 +85,11 @@ class _PlayShellState extends State<PlayShell> {
   }
 
   void _maybeOpenWispChoiceSheet() {
-    if (_wispSheetOpening || !director.shouldShowWispChoiceSheet) return;
+    if (!director.shouldShowWispChoiceSheet) return;
+    final gold = director.state.metaDepth.wispPendingWatchGold;
+    if (gold <= 0 || gold == _offeredWispGold || _wispSheetOpening) return;
     _wispSheetOpening = true;
+    _offeredWispGold = gold;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) {
         _wispSheetOpening = false;

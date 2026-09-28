@@ -325,6 +325,8 @@ class GameDirector extends ChangeNotifier {
     _wispMenuPaused = paused;
   }
 
+  bool get wispMenuPaused => _wispMenuPaused;
+
   bool get isWispVisible => _wispVisibleRemainingMs > 0;
 
   bool get wispPendingChoice => WispGift.hasPendingChoice(_state.metaDepth);

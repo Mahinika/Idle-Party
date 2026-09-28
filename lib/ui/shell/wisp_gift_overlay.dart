@@ -12,7 +12,7 @@ import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 import 'shell_common.dart';
 
-/// Floating WISP on hub and dungeon (top center, clear of map chrome).
+/// Floating lantern on the open map — right of center, clear of the header.
 class WispGiftOverlay extends StatelessWidget {
   const WispGiftOverlay({super.key, required this.director});
 
@@ -23,18 +23,29 @@ class WispGiftOverlay extends StatelessWidget {
     return ListenableBuilder(
       listenable: director,
       builder: (context, _) {
-        if (!director.isWispVisible) return const SizedBox.shrink();
-        final minimal =
-            director.state.vfxQuality == VfxQuality.minimal;
-        return Positioned(
-          top: MediaQuery.paddingOf(context).top + 56,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: _WispTapTarget(
-              minimal: minimal,
-              onTap: director.tapWispGift,
-            ),
+        final waiting = director.wispPendingChoice;
+        final flying = director.isWispVisible;
+        if (!flying && !waiting) return const SizedBox.shrink();
+        if (director.wispMenuPaused) return const SizedBox.shrink();
+        final minimal = director.state.vfxQuality == VfxQuality.minimal;
+        return Align(
+          alignment: const Alignment(0.62, -0.08),
+          child: _WispTapTarget(
+            minimal: minimal,
+            onTap: () {
+              if (waiting && !flying) {
+                if (director.state.inDungeon) {
+                  director.showToast(
+                    'WATCH on hub for the bigger pile',
+                    life: 2.2,
+                  );
+                  return;
+                }
+                openWispChoiceSheet(context, director);
+                return;
+              }
+              director.tapWispGift();
+            },
           ),
         );
       },
@@ -113,42 +124,16 @@ class _WispTapTargetState extends State<_WispTapTarget>
                 animation: _pulse,
                 builder: (context, child) {
                   final t = Curves.easeInOut.transform(_pulse.value);
-                  final scale = widget.minimal ? 1.0 : 0.92 + t * 0.12;
-                  final glow = widget.minimal ? 0.35 : 0.25 + t * 0.45;
-                  return Transform.scale(
-                    scale: scale,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: GameTheme.torch.withValues(alpha: glow),
-                            blurRadius: 14,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: child,
-                    ),
+                  final dy = widget.minimal ? 0.0 : -3 + t * 6;
+                  return Transform.translate(
+                    offset: Offset(0, dy),
+                    child: child,
                   );
                 },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GameIcon.glyph(
-                      UiGlyph.wisp,
-                      size: 40,
-                      color: GameTheme.torchHot,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'WISP',
-                      style: GameTheme.pixel(
-                        size: 9,
-                        color: GameTheme.parchment,
-                      ),
-                    ),
-                  ],
+                child: const SizedBox(
+                  width: 54,
+                  height: 72,
+                  child: CustomPaint(painter: _LanternPainter()),
                 ),
               ),
             ),
@@ -157,6 +142,64 @@ class _WispTapTargetState extends State<_WispTapTarget>
       ),
     );
   }
+}
+
+/// Pixel lantern: dark iron, warm glass, bright flame. No blur.
+class _LanternPainter extends CustomPainter {
+  const _LanternPainter();
+
+  static const _rows = <String>[
+    '...###...',
+    '..#...#..',
+    '..#...#..',
+    '...###...',
+    '..#####..',
+    '.#+++++.#',
+    '.#+***+.#',
+    '.#+***+.#',
+    '.#+++++.#',
+    '..#####..',
+    '...###...',
+    '..#...#..',
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const cols = 9;
+    const glyphRows = 12;
+    final px = size.shortestSide / cols;
+    final ox = (size.width - cols * px) / 2;
+    final oy = (size.height - glyphRows * px) / 2;
+    final iron = Paint()
+      ..color = GameTheme.parchmentDim
+      ..isAntiAlias = false;
+    final glass = Paint()
+      ..color = GameTheme.torch
+      ..isAntiAlias = false;
+    final flame = Paint()
+      ..color = GameTheme.torchHot
+      ..isAntiAlias = false;
+    for (var y = 0; y < _rows.length; y++) {
+      final row = _rows[y];
+      for (var x = 0; x < row.length; x++) {
+        final ch = row[x];
+        final paint = switch (ch) {
+          '#' => iron,
+          '+' => glass,
+          '*' => flame,
+          _ => null,
+        };
+        if (paint == null) continue;
+        canvas.drawRect(
+          Rect.fromLTWH(ox + x * px, oy + y * px, px, px),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _LanternPainter oldDelegate) => false;
 }
 
 /// KEEP (dismiss) vs WATCH (rewarded ad) after collecting the small pile.
