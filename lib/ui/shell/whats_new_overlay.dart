@@ -10,7 +10,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 
-/// In-app "What's new" changelog — marks itself seen once shown.
+/// In-app patch notes — marks itself seen once shown.
 class WhatsNewOverlay extends StatelessWidget {
   const WhatsNewOverlay({super.key, required this.director});
   final GameDirector director;
@@ -36,7 +36,7 @@ class WhatsNewOverlay extends StatelessWidget {
       MetaSystems.releases.length > 1 &&
       !GameLogic.plainPlayerChrome(state);
 
-  /// Dialog host used by hub auto-show and Settings → What's New.
+  /// Dialog host used by hub auto-show and Settings → Patch Notes.
   static Future<void> show(BuildContext context, GameDirector director) {
     return showDialog<void>(
       context: context,
@@ -75,31 +75,64 @@ class WhatsNewOverlay extends StatelessWidget {
         : MetaSystems.releases.sublist(1);
     final focus = visibleFocus(state);
 
+    Widget noteLine(String entry) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '•  ',
+              style: GameTheme.body(size: 16, color: GameTheme.torch),
+            ),
+            Expanded(
+              child: Text(entry, style: GameTheme.body(size: 15)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget section(String title, List<String> lines) {
+      if (lines.isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              title,
+              style: GameTheme.menuTitle(size: 13, color: GameTheme.torch),
+            ),
+            const SizedBox(height: 4),
+            for (final entry in lines) noteLine(entry),
+          ],
+        ),
+      );
+    }
+
     Widget releaseBlock(ChangelogRelease release) {
+      final summary = release.summary;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'VERSION ${release.version}',
+            release.versionLine,
             style: GameTheme.menuTitle(size: 14, color: GameTheme.torch),
           ),
-          const SizedBox(height: 6),
-          for (final entry in release.bullets)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '•  ',
-                    style: GameTheme.body(size: 16, color: GameTheme.torch),
-                  ),
-                  Expanded(
-                    child: Text(entry, style: GameTheme.body(size: 15)),
-                  ),
-                ],
-              ),
-            ),
+          if (summary != null && summary.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(summary, style: GameTheme.body(size: 15)),
+          ],
+          if (release.notes.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            for (final entry in release.notes) noteLine(entry),
+          ],
+          section('NEW', release.added),
+          section('CHANGES', release.changed),
+          section('FIXES', release.fixed),
+          section('TECHNICAL', release.technical),
+          section('KNOWN ISSUES', release.known),
           const SizedBox(height: 8),
         ],
       );
@@ -109,13 +142,13 @@ class WhatsNewOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'MORE · INFO · WHAT\'S NEW',
+          'MORE · INFO · PATCH NOTES',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
         Text(
-          "WHAT'S NEW",
+          'PATCH NOTES',
           textAlign: TextAlign.center,
           style: GameTheme.menuTitle(size: 20),
         ),

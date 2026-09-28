@@ -477,7 +477,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         ],
         const SizedBox(height: 8),
         GameButton(
-          label: "WHAT'S NEW",
+          label: 'PATCH NOTES',
           style: GameButtonStyle.grey,
           onPressed: () => WhatsNewOverlay.show(context, director),
         ),

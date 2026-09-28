@@ -274,10 +274,10 @@ class MenuAlerts {
         return MenuAlert(
           star: true,
           count: quests.count,
-          reason: "${quests.count} to claim · What's New",
+          reason: '${quests.count} to claim · Patch Notes',
         );
       }
-      return const MenuAlert(star: true, reason: "What's New unread");
+      return const MenuAlert(star: true, reason: 'Patch Notes unread');
     }
     if (!quests.isQuiet) {
       return MenuAlert(

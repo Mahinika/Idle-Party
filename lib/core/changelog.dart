@@ -1,17 +1,89 @@
-/// One versioned What's New block (newest releases first in [ChangelogCatalog.releases]).
+/// One versioned patch note (newest first in [ChangelogCatalog.releases]).
+///
+/// New releases use [summary] plus the sections below. Empty sections stay
+/// hidden. Older releases may still be a flat [bullets] list.
 class ChangelogRelease {
-  const ChangelogRelease({required this.version, required this.bullets});
-  final String version;
-  final List<String> bullets;
+  const ChangelogRelease({
+    required this.version,
+    this.date,
+    this.summary,
+    List<String> bullets = const <String>[],
+    this.added = const <String>[],
+    this.changed = const <String>[],
+    this.fixed = const <String>[],
+    this.technical = const <String>[],
+    this.known = const <String>[],
+  }) : _notes = bullets;
 
-  /// First-hour What’s New: the new-player lead, not KEY / endgame recap.
+  final String version;
+
+  /// Player-facing date, e.g. `Sep 28, 2026`. Omitted on older notes.
+  final String? date;
+
+  /// One or two sentences: what this patch is for.
+  final String? summary;
+
+  /// New systems, features, areas, bosses, or UI.
+  final List<String> added;
+
+  /// Tweaks to systems that already exist, including balance and UI.
+  final List<String> changed;
+
+  /// Bugs, stability, and performance.
+  final List<String> fixed;
+
+  /// Refactors and tools. Hidden when empty.
+  final List<String> technical;
+
+  /// Known broken or watched behavior. Hidden when empty.
+  final List<String> known;
+
+  final List<String> _notes;
+
+  /// Unsectioned lines. Empty when this note uses [summary] and sections.
+  List<String> get notes => _notes;
+
+  bool get hasSections =>
+      added.isNotEmpty ||
+      changed.isNotEmpty ||
+      fixed.isNotEmpty ||
+      technical.isNotEmpty ||
+      known.isNotEmpty;
+
+  /// Flat lines for tests and the first-hour lead. Summary comes first.
+  List<String> get bullets {
+    if (!hasSections && summary == null) return _notes;
+    return <String>[
+      if (summary != null && summary!.isNotEmpty) summary!,
+      ...added,
+      ...changed,
+      ...fixed,
+      ...technical,
+      ...known,
+      ..._notes,
+    ];
+  }
+
+  /// `VERSION 1.12.188` or `VERSION 1.12.188 — Sep 28, 2026`.
+  String get versionLine {
+    final when = date;
+    if (when == null || when.isEmpty) return 'VERSION $version';
+    return 'VERSION $version — $when';
+  }
+
+  /// First hour: the new-player lead, not KEY / endgame recap.
   ChangelogRelease get leadOnly {
-    if (bullets.length <= 1) return this;
-    return ChangelogRelease(version: version, bullets: [bullets.first]);
+    final lines = bullets;
+    if (lines.length <= 1) return this;
+    return ChangelogRelease(
+      version: version,
+      date: date,
+      summary: lines.first,
+    );
   }
 }
 
-/// What's New catalog. A version bump edits this file and pubspec.yaml.
+/// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
   static const String currentVersion = '1.12.188';
@@ -20,11 +92,25 @@ abstract final class ChangelogCatalog {
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: '1.12.188',
-      bullets: <String>[
-        'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight.',
-        'Name your party on New Game. Season ranks show that name. Racist, Nazi, and political names are turned away.',
-        'Worn gear shows its real item level, and CLEAN says when it would sell an upgrade. A piece you take off stays in the bag. ENTER KEY uses the dial you set. At Lv100, KEY is one night\'s job. The hub, shop, and bag use one main button.',
-        'Race still locks after New Game START. World Path still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). At party Lv100, MORE → CRAFT still runs a monthly Craft Trial. KEYSTONE waits until the party is Lv100. Ranked GREATER GR packs still scale with rank only — GOLD forge does not buff monsters. Prestige Ascend still Rebuild your bag; AL20 BLESSING still has optional REBORN.',
+      date: 'Sep 28, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight — this patch adds a party name, real item level on worn gear, and one main button on the hub, shop, and bag.',
+      added: <String>[
+        'Name your party on New Game. Season ranks show that name.',
+        'Racist, Nazi, and political names are turned away.',
+      ],
+      changed: <String>[
+        'Worn gear shows its real item level.',
+        'CLEAN says when it would sell an upgrade.',
+        'A piece you take off stays in the bag.',
+        'ENTER KEY uses the dial you set. At Lv100, KEY is one night\'s job.',
+        'The hub, shop, and bag use one main button.',
+        'Race still locks after New Game START.',
+        'World Path still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'KEYSTONE waits until the party is Lv100.',
+        'Ranked GREATER GR packs still scale with rank only. GOLD forge does not buff monsters.',
+        'Prestige Ascend still Rebuild your bag. AL20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(

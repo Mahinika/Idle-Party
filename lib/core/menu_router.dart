@@ -344,7 +344,7 @@ class MenuRouter extends ChangeNotifier {
 
     MenuRoute.more => switch (_moreSection) {
 
-      MoreSection.info => 'Guides · What\'s New',
+      MoreSection.info => 'Guides · Patch Notes',
 
       MoreSection.settings => 'Sound · zoom · save',
 

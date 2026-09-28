@@ -216,7 +216,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
         ],
         if (MenuTabs.showWhatsNew(s)) ...[
           GameButton(
-            label: "WHAT'S NEW",
+            label: 'PATCH NOTES',
             style: GameButtonStyle.grey,
             dense: true,
             onPressed: widget.onOpenWhatsNew,
