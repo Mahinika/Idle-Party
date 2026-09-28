@@ -3511,14 +3511,22 @@ abstract final class SpatialCombat {
         hold = 0.45;
       }
 
-      // Healers that drifted into the pack: snap back toward tank.
-      if (packAnchor != null &&
-          isHealer &&
-          hero.id != packAnchor.id &&
-          actorDist(hero, packAnchor) > 3.2) {
-        tx = packAnchor.x;
-        ty = packAnchor.y;
-        hold = 0.75;
+      // Healers that lost the tank around a corner, or drifted off, close
+      // back in. A straight offset behind the tank is often the hallway.
+      if (packAnchor != null && isHealer && hero.id != packAnchor.id) {
+        final blindToTank = !hasClearCorridor(
+          world.map,
+          world.openGateIds,
+          hero.x.floor(),
+          hero.y.floor(),
+          packAnchor.x.floor(),
+          packAnchor.y.floor(),
+        );
+        if (blindToTank || actorDist(hero, packAnchor) > 3.2) {
+          tx = packAnchor.x;
+          ty = packAnchor.y;
+          hold = blindToTank ? 0.4 : 0.75;
+        }
       }
 
       _steerActor(

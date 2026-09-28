@@ -629,8 +629,229 @@ abstract final class CombatPresence {
     return 0;
   }
 
-  /// In-fight stand point: wedge on the enemy, healers behind the tank,
-  /// casters on the party side of the fight.
+  static bool _clearSight(
+    SpatialWorld world,
+    double fromX,
+    double fromY,
+    double toX,
+    double toY,
+  ) {
+    return SpatialCombat.hasClearCorridor(
+      world.map,
+      world.openGateIds,
+      fromX.floor(),
+      fromY.floor(),
+      toX.floor(),
+      toY.floor(),
+    );
+  }
+
+  /// Chamber that contains [x],[y], if the fight is inside a carved room.
+  static Chamber? _fightRoom(SpatialWorld world, double x, double y) {
+    for (final c in world.map.chambers) {
+      if (c.containsWorld(x, y)) return c;
+    }
+    return null;
+  }
+
+  /// [lip] keeps the doorway tile; the approach hall beyond that does not count.
+  static bool _inFightRoom(
+    SpatialWorld world,
+    double x,
+    double y,
+    double lookX,
+    double lookY, {
+    required bool lip,
+  }) {
+    final room = _fightRoom(world, lookX, lookY);
+    if (room == null) return true;
+    final tx = x.floor();
+    final ty = y.floor();
+    if (room.containsTile(tx, ty)) return true;
+    if (!lip) return false;
+    return tx >= room.x - 1 &&
+        tx <= room.x + room.w &&
+        ty >= room.y - 1 &&
+        ty <= room.y + room.h;
+  }
+
+  static (double, double)? _bestFloorTile({
+    required SpatialWorld world,
+    required double originX,
+    required double originY,
+    required int radius,
+    required double? Function(double x, double y) score,
+  }) {
+    final cx = originX.floor();
+    final cy = originY.floor();
+    (double, double)? best;
+    var bestScore = double.infinity;
+    for (var dy = -radius; dy <= radius; dy++) {
+      for (var dx = -radius; dx <= radius; dx++) {
+        final x = cx + dx + 0.5;
+        final y = cy + dy + 0.5;
+        final s = score(x, y);
+        if (s == null || s >= bestScore) continue;
+        bestScore = s;
+        best = (x, y);
+      }
+    }
+    return best;
+  }
+
+  /// Casters stand on the party side of the foe, inside the fight room,
+  /// on a tile that can actually see them. A straight max-range ring lands
+  /// in the approach hall on these maps.
+  static (double, double) _rangedStand({
+    required SpatialWorld world,
+    required SpatialActor hero,
+    required SpatialActor target,
+    required SpatialActor anchor,
+    required double preferred,
+    required bool hasLos,
+  }) {
+    final stand = math.min(preferred, hero.attackRange * 0.9).clamp(1.5, 4.6);
+    final maxDist = math.min(hero.attackRange * 0.95, 5.2);
+    final minStand = hasLos ? 1.35 : 0.85;
+    final back = fightForward(
+      fromX: target.x,
+      fromY: target.y,
+      toX: anchor.x,
+      toY: anchor.y,
+    );
+    final slot = _backlineSlot(hero, world.heroes);
+    final hint = offsetAlong(
+      target.x,
+      target.y,
+      back,
+      along: stand,
+      lateral: wing(slot) * 0.62 + hero.kiteSide * 0.28,
+    );
+    final bx = anchor.x - target.x;
+    final by = anchor.y - target.y;
+    final bl = math.sqrt(bx * bx + by * by);
+
+    bool fits(double x, double y, {required bool lip, required double minD}) {
+      if (!world.canWalk(x, y)) return false;
+      if (!_inFightRoom(world, x, y, target.x, target.y, lip: lip)) {
+        return false;
+      }
+      final d = SpatialCombat.distPoint(x, y, target.x, target.y);
+      if (d < minD || d > maxDist + 0.2) return false;
+      return _clearSight(world, x, y, target.x, target.y);
+    }
+
+    double scoreOf(double x, double y) {
+      final d = SpatialCombat.distPoint(x, y, target.x, target.y);
+      final hintD = SpatialCombat.distPoint(x, y, hint.$1, hint.$2);
+      var side = 1.0;
+      if (bl > 0.25 && d > 0.05) {
+        side = ((x - target.x) * bx + (y - target.y) * by) / (d * bl);
+      }
+      final sidePenalty = side < 0.12 ? (0.12 - side) * 5.5 : 0.0;
+      var crowd = 0.0;
+      for (final h in world.heroes) {
+        if (!h.isAlive || h.id == hero.id) continue;
+        if (SpatialCombat.distPoint(x, y, h.x, h.y) < 0.5) crowd += 1.6;
+      }
+      final stick =
+          SpatialCombat.distPoint(x, y, hero.x, hero.y) < 0.48 ? 0.65 : 0.0;
+      return (d - stand).abs() + hintD * 0.72 + sidePenalty + crowd - stick;
+    }
+
+    if (fits(hint.$1, hint.$2, lip: false, minD: minStand)) {
+      return hint;
+    }
+
+    (double, double)? pick({required bool lip, required double minD}) {
+      return _bestFloorTile(
+        world: world,
+        originX: target.x,
+        originY: target.y,
+        radius: maxDist.ceil() + 2,
+        score: (x, y) {
+          if (!fits(x, y, lip: lip, minD: minD)) return null;
+          return scoreOf(x, y);
+        },
+      );
+    }
+
+    return pick(lip: false, minD: minStand) ??
+        pick(lip: false, minD: 0.7) ??
+        pick(lip: true, minD: 0.7) ??
+        (target.x, target.y);
+  }
+
+  /// Healer tucks just behind the tank, but only on a tile that can see the
+  /// tank and, when the room allows, the fight. The straight "behind" step
+  /// walks out the door on a south-facing choke.
+  static (double, double) _healerPocket({
+    required SpatialWorld world,
+    required SpatialActor hero,
+    required SpatialActor tank,
+    required SpatialActor target,
+    required int index,
+  }) {
+    final fwd = fightForward(
+      fromX: tank.x,
+      fromY: tank.y,
+      toX: target.x,
+      toY: target.y,
+    );
+    final hint = offsetAlong(
+      tank.x,
+      tank.y,
+      fwd,
+      along: -1.05,
+      lateral: wing(index) * 0.34,
+    );
+
+    bool pocket(
+      double x,
+      double y, {
+      required bool needTarget,
+    }) {
+      if (!world.canWalk(x, y)) return false;
+      final d = SpatialCombat.distPoint(x, y, tank.x, tank.y);
+      if (d < 0.4 || d > 2.15) return false;
+      if (!_inFightRoom(world, x, y, tank.x, tank.y, lip: false)) return false;
+      if (!_clearSight(world, x, y, tank.x, tank.y)) return false;
+      if (needTarget && !_clearSight(world, x, y, target.x, target.y)) {
+        return false;
+      }
+      return true;
+    }
+
+    double scoreOf(double x, double y) {
+      final stick =
+          SpatialCombat.distPoint(x, y, hero.x, hero.y) < 0.48 ? 0.65 : 0.0;
+      return SpatialCombat.distPoint(x, y, hint.$1, hint.$2) - stick;
+    }
+
+    if (pocket(hint.$1, hint.$2, needTarget: true)) return hint;
+
+    (double, double)? pick({required bool needTarget}) {
+      return _bestFloorTile(
+        world: world,
+        originX: tank.x,
+        originY: tank.y,
+        radius: 3,
+        score: (x, y) {
+          if (!pocket(x, y, needTarget: needTarget)) return null;
+          return scoreOf(x, y);
+        },
+      );
+    }
+
+    return pick(needTarget: true) ??
+        (pocket(hint.$1, hint.$2, needTarget: false) ? hint : null) ??
+        pick(needTarget: false) ??
+        (tank.x, tank.y);
+  }
+
+  /// In-fight stand point: melee wedge on the enemy. Ranged and healers
+  /// stay inside the fight room on a tile with a clear shot — not at max
+  /// range down the corridor they entered from.
   static ({double x, double y, double hold}) heroFightGoal({
     required SpatialActor hero,
     required SpatialActor target,
@@ -641,45 +862,26 @@ abstract final class CombatPresence {
     required bool hasLos,
   }) {
     final anchor = packAnchor ?? hero;
-    final fwd = _facingFor(
-      world,
-      anchor.x,
-      anchor.y,
-      target.x,
-      target.y,
-    );
     final healer = isHealerRole(hero);
     if (healer && packAnchor != null && packAnchor.id != hero.id) {
-      final p = offsetAlong(
-        packAnchor.x,
-        packAnchor.y,
-        fwd,
-        along: -0.95,
-        lateral: wing(index) * 0.42,
+      final g = _healerPocket(
+        world: world,
+        hero: hero,
+        tank: packAnchor,
+        target: target,
+        index: index,
       );
-      final g = clampGoal(world, p.$1, p.$2, packAnchor.x, packAnchor.y);
-      return (x: g.$1, y: g.$2, hold: 0.28);
-    }
-
-    final dist = SpatialCombat.actorDist(hero, target);
-    if (isBackliner(hero) &&
-        dist < preferred * (healer ? 0.88 : 0.72) &&
-        hasLos) {
-      final kite = kiteTarget(hero, target);
-      final safe = walkableGoal(
-        world,
-        hero.x,
-        hero.y,
-        kite.$1 - hero.x,
-        kite.$2 - hero.y,
-        1.35,
-        avoidX: target.x,
-        avoidY: target.y,
-      );
-      return (x: safe.$1, y: safe.$2, hold: 0);
+      return (x: g.$1, y: g.$2, hold: 0.2);
     }
 
     if (!isBackliner(hero)) {
+      final fwd = _facingFor(
+        world,
+        anchor.x,
+        anchor.y,
+        target.x,
+        target.y,
+      );
       final radius = math
           .min(preferred, hero.attackRange * 0.78)
           .clamp(0.8, 1.2);
@@ -697,24 +899,15 @@ abstract final class CombatPresence {
       return (x: g.$1, y: g.$2, hold: 0.16);
     }
 
-    if (!hasLos) {
-      return (x: target.x, y: target.y, hold: 0);
-    }
-
-    final stand = math.min(preferred, hero.attackRange * 0.9).clamp(1.4, 6.0);
-    final front = (-fwd.$1, -fwd.$2);
-    final g = walkableRing(
+    final g = _rangedStand(
       world: world,
-      cx: target.x,
-      cy: target.y,
-      front: front,
-      index: _backlineSlot(hero, world.heroes),
-      radius: stand,
-      step: 0.42,
-      fallbackX: hero.x,
-      fallbackY: hero.y,
+      hero: hero,
+      target: target,
+      anchor: anchor,
+      preferred: preferred,
+      hasLos: hasLos,
     );
-    return (x: g.$1, y: g.$2, hold: 0.32);
+    return (x: g.$1, y: g.$2, hold: 0.18);
   }
 
   /// Marching formation faces the next threat, or the stairs.
@@ -746,13 +939,32 @@ abstract final class CombatPresence {
             toX: toX,
             toY: toY,
           );
-    final p = offsetAlong(
+    var depth = packDepth(hero);
+    var lat = wing(index) * 0.48;
+    var p = offsetAlong(
       anchor.x,
       anchor.y,
       fwd,
-      along: -packDepth(hero),
-      lateral: wing(index) * 0.48,
+      along: -depth,
+      lateral: lat,
     );
+    // A corner turns "behind the tank" into another hallway. Step in until
+    // the slot can see the anchor.
+    for (var n = 0; n < 4; n++) {
+      if (world.canWalk(p.$1, p.$2) &&
+          _clearSight(world, p.$1, p.$2, anchor.x, anchor.y)) {
+        break;
+      }
+      depth *= 0.55;
+      lat *= 0.55;
+      p = offsetAlong(
+        anchor.x,
+        anchor.y,
+        fwd,
+        along: -depth,
+        lateral: lat,
+      );
+    }
     final g = clampGoal(world, p.$1, p.$2, anchor.x, anchor.y);
     return (x: g.$1, y: g.$2);
   }

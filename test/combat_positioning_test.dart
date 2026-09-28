@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
@@ -305,4 +306,336 @@ void main() {
     if (delta > math.pi) delta = math.pi * 2 - delta;
     expect(delta, greaterThan(0.4));
   });
+
+  test('ranged stand in the fight room, not down the entry hall', () {
+    final map = _hallIntoRoom();
+    final room = map.chambers.single;
+    final tank = _hero(id: 'tank', spec: HeroSpecId.protection, x: 4.5, y: 6.5);
+    final fire = _hero(id: 'fire', spec: HeroSpecId.fire, x: 3.5, y: 6.5);
+    final brute = _foe(
+      id: 'brute',
+      archetype: EnemyArchetype.brute,
+      x: 11.5,
+      y: 6.5,
+      moveSpeed: 0,
+    );
+    final world = SpatialWorld(
+      map: map,
+      heroes: [tank, fire],
+      enemies: [brute],
+      projectiles: <SpatialProjectile>[],
+      groundLoot: [],
+      isTreasure: false,
+      pets: <SpatialActor>[],
+    );
+    final goal = CombatPresence.heroFightGoal(
+      hero: fire,
+      target: brute,
+      world: world,
+      packAnchor: tank,
+      index: 1,
+      preferred: 4.0,
+      hasLos: true,
+    );
+    expect(room.containsWorld(goal.x, goal.y), isTrue, reason: 'stand ${goal.x},${goal.y}');
+    expect(
+      SpatialCombat.hasClearCorridor(
+        map,
+        world.openGateIds,
+        goal.x.floor(),
+        goal.y.floor(),
+        brute.x.floor(),
+        brute.y.floor(),
+      ),
+      isTrue,
+    );
+    expect(_distPoint(goal.x, goal.y, brute.x, brute.y), lessThan(fire.attackRange));
+
+    _run(world, 4);
+    expect(room.containsWorld(fire.x, fire.y), isTrue, reason: 'fire ${fire.x},${fire.y}');
+    expect(
+      SpatialCombat.hasClearCorridor(
+        map,
+        world.openGateIds,
+        fire.x.floor(),
+        fire.y.floor(),
+        brute.x.floor(),
+        brute.y.floor(),
+      ),
+      isTrue,
+    );
+  });
+
+  test('healer tucks inside the room instead of the doorway hall', () {
+    final map = _southDoorRoom();
+    final room = map.chambers.single;
+    final tank = _hero(
+      id: 'tank',
+      spec: HeroSpecId.protection,
+      x: 9.5,
+      y: 8.2,
+      moveSpeed: 0,
+    );
+    final holy = _hero(id: 'holy', spec: HeroSpecId.discipline, x: 9.5, y: 11.2);
+    final brute = _foe(
+      id: 'brute',
+      archetype: EnemyArchetype.brute,
+      x: 10.5,
+      y: 5.5,
+      moveSpeed: 0,
+    );
+    final world = SpatialWorld(
+      map: map,
+      heroes: [tank, holy],
+      enemies: [brute],
+      projectiles: <SpatialProjectile>[],
+      groundLoot: [],
+      isTreasure: false,
+      pets: <SpatialActor>[],
+    );
+    final goal = CombatPresence.heroFightGoal(
+      hero: holy,
+      target: brute,
+      world: world,
+      packAnchor: tank,
+      index: 1,
+      preferred: 3.2,
+      hasLos: false,
+    );
+    expect(room.containsWorld(goal.x, goal.y), isTrue, reason: 'pocket ${goal.x},${goal.y}');
+    expect(
+      SpatialCombat.hasClearCorridor(
+        map,
+        world.openGateIds,
+        goal.x.floor(),
+        goal.y.floor(),
+        brute.x.floor(),
+        brute.y.floor(),
+      ),
+      isTrue,
+    );
+
+    _run(world, 3);
+    expect(room.containsWorld(holy.x, holy.y), isTrue, reason: 'holy ${holy.x},${holy.y}');
+    expect(
+      SpatialCombat.hasClearCorridor(
+        map,
+        world.openGateIds,
+        holy.x.floor(),
+        holy.y.floor(),
+        brute.x.floor(),
+        brute.y.floor(),
+      ),
+      isTrue,
+    );
+    expect(_dist(holy, tank), lessThan(2.4));
+  });
+
+  test('generated caves keep the caster in the fight room with a shot', () {
+    const zones = ['sandy', 'goblin', 'crystal', 'fen', 'veil'];
+    for (final zone in zones) {
+      for (final seed in const [0, 3, 11]) {
+        final map = RoomLayouts.forFloor(
+          floorNumber: 4,
+          layoutSeed: seed,
+          dungeonId: zone,
+          room: DungeonRoom(
+            floorNumber: 4,
+            roomIndex: 0,
+            type: RoomType.normal,
+            enemyLevel: 12,
+            enemyCount: 8,
+          ),
+        );
+        if (map.enemySpawns.isEmpty || map.chambers.isEmpty) continue;
+        final spawn = map.enemySpawns.first;
+        final foe = _foe(
+          id: 'foe',
+          archetype: EnemyArchetype.brute,
+          x: spawn.$1 + 0.5,
+          y: spawn.$2 + 0.5,
+          moveSpeed: 0,
+        );
+        final room = _roomContaining(map, foe.x, foe.y);
+        if (room == null) continue;
+        final tankPos = _stepInside(map, foe.x, foe.y, room);
+        final tank = _hero(
+          id: 'tank',
+          spec: HeroSpecId.protection,
+          x: tankPos.$1,
+          y: tankPos.$2,
+          moveSpeed: 0,
+        );
+        final fire = _hero(
+          id: 'fire',
+          spec: HeroSpecId.fire,
+          x: map.spawnPoints.first.$1 + 0.5,
+          y: map.spawnPoints.first.$2 + 0.5,
+        );
+        final holy = _hero(
+          id: 'holy',
+          spec: HeroSpecId.discipline,
+          x: fire.x,
+          y: fire.y,
+        );
+        final world = SpatialWorld(
+          map: map,
+          heroes: [tank, fire, holy],
+          enemies: [foe],
+          projectiles: <SpatialProjectile>[],
+          groundLoot: [],
+          isTreasure: false,
+          pets: <SpatialActor>[],
+        );
+        final seen = SpatialCombat.hasClearCorridor(
+          map,
+          world.openGateIds,
+          fire.x.floor(),
+          fire.y.floor(),
+          foe.x.floor(),
+          foe.y.floor(),
+        );
+        final goal = CombatPresence.heroFightGoal(
+          hero: fire,
+          target: foe,
+          world: world,
+          packAnchor: tank,
+          index: 1,
+          preferred: fire.preferredRange ?? 4,
+          hasLos: seen,
+        );
+        expect(
+          room.containsWorld(goal.x, goal.y),
+          isTrue,
+          reason: '$zone#$seed stand ${goal.x},${goal.y} foe ${foe.x},${foe.y}',
+        );
+        expect(
+          SpatialCombat.hasClearCorridor(
+            map,
+            world.openGateIds,
+            goal.x.floor(),
+            goal.y.floor(),
+            foe.x.floor(),
+            foe.y.floor(),
+          ),
+          isTrue,
+          reason: '$zone#$seed blind stand',
+        );
+        expect(
+          _distPoint(goal.x, goal.y, foe.x, foe.y),
+          lessThan(fire.attackRange + 0.05),
+        );
+        final pocket = CombatPresence.heroFightGoal(
+          hero: holy,
+          target: foe,
+          world: world,
+          packAnchor: tank,
+          index: 2,
+          preferred: holy.preferredRange ?? 3.2,
+          hasLos: seen,
+        );
+        expect(
+          room.containsWorld(pocket.x, pocket.y),
+          isTrue,
+          reason: '$zone#$seed pocket ${pocket.x},${pocket.y}',
+        );
+        expect(
+          SpatialCombat.hasClearCorridor(
+            map,
+            world.openGateIds,
+            pocket.x.floor(),
+            pocket.y.floor(),
+            foe.x.floor(),
+            foe.y.floor(),
+          ),
+          isTrue,
+          reason: '$zone#$seed healer blind',
+        );
+        expect(_distPoint(pocket.x, pocket.y, tank.x, tank.y), lessThan(2.3));
+      }
+    }
+  });
+}
+
+TileMap _hallIntoRoom() {
+  const cols = 16;
+  const rows = 12;
+  final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
+  void floor(int x, int y) => tiles[y * cols + x] = TileKind.floor;
+  for (var y = 3; y <= 9; y++) {
+    for (var x = 8; x <= 13; x++) {
+      floor(x, y);
+    }
+  }
+  for (var x = 2; x <= 7; x++) {
+    floor(x, 5);
+    floor(x, 6);
+    floor(x, 7);
+  }
+  return TileMap(
+    cols: cols,
+    rows: rows,
+    tiles: tiles,
+    spawnPoints: const [(3, 6)],
+    exitPoint: (13, 6),
+    enemySpawns: const [(11, 6)],
+    chambers: const [Chamber(index: 1, x: 8, y: 3, w: 6, h: 7)],
+  );
+}
+
+TileMap _southDoorRoom() {
+  const cols = 16;
+  const rows = 14;
+  final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
+  void floor(int x, int y) => tiles[y * cols + x] = TileKind.floor;
+  for (var y = 2; y <= 8; y++) {
+    for (var x = 8; x <= 13; x++) {
+      floor(x, y);
+    }
+  }
+  for (var y = 9; y <= 11; y++) {
+    floor(9, y);
+    floor(10, y);
+  }
+  return TileMap(
+    cols: cols,
+    rows: rows,
+    tiles: tiles,
+    spawnPoints: const [(9, 11)],
+    exitPoint: (12, 3),
+    enemySpawns: const [(10, 5)],
+    chambers: const [Chamber(index: 1, x: 8, y: 2, w: 6, h: 7)],
+  );
+}
+
+double _distPoint(double x1, double y1, double x2, double y2) {
+  final dx = x1 - x2;
+  final dy = y1 - y2;
+  return math.sqrt(dx * dx + dy * dy);
+}
+
+Chamber? _roomContaining(TileMap map, double x, double y) {
+  for (final c in map.chambers) {
+    if (c.containsWorld(x, y)) return c;
+  }
+  return null;
+}
+
+(double, double) _stepInside(TileMap map, double x, double y, Chamber room) {
+  const steps = <(int, int)>[
+    (-1, 0),
+    (1, 0),
+    (0, -1),
+    (0, 1),
+    (-1, -1),
+    (1, 1),
+  ];
+  for (final s in steps) {
+    final tx = x + s.$1;
+    final ty = y + s.$2;
+    if (!room.containsWorld(tx, ty)) continue;
+    if (!map.isWalkableWorld(tx, ty)) continue;
+    return (tx, ty);
+  }
+  return (x, y);
 }
