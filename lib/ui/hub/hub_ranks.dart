@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
+import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../meta/play_games_section.dart';
 import '../web_click_bridge.dart';
@@ -133,7 +134,7 @@ Future<void> openHubRanksSheet(
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Switch KEY, Gauntlet, or Ranked GR.',
+                                'KEY, Gauntlet, Ranked GR, or party power.',
                                 style: GameTheme.body(
                                   size: 12,
                                   color: GameTheme.parchmentDim,
@@ -146,6 +147,13 @@ Future<void> openHubRanksSheet(
                                     director: director,
                                   ),
                                 ),
+                              ),
+                              const SizedBox(height: 8),
+                              GameButton(
+                                label: 'BACK',
+                                style: GameButtonStyle.grey,
+                                dense: true,
+                                onPressed: () => Navigator.of(ctx).pop(),
                               ),
                             ],
                           ),

@@ -175,6 +175,7 @@ abstract final class PlayGamesBridge {
       PlayBoardKind.timedKey => PlayLeaderboardIds.timedKeyId(monthKey),
       PlayBoardKind.gauntlet => PlayLeaderboardIds.gauntletId(monthKey),
       PlayBoardKind.greaterRift => PlayLeaderboardIds.greaterRiftId(monthKey),
+      PlayBoardKind.partyPower => '',
     };
     if (!PlayLeaderboardIds.isLiveBoardId(id)) return PlayBoardSnapshot.error;
     if (!_signedInCache && !await refreshSignedIn()) {

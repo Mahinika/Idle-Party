@@ -262,7 +262,7 @@ void main() {
     await tester.tap(find.bySemanticsLabel('RANKS. Season boards'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Switch KEY, Gauntlet, or Ranked GR.'), findsOneWidget);
+    expect(find.text('KEY, Gauntlet, Ranked GR, or party power.'), findsOneWidget);
     expect(find.text(PlayBoardPreview.notice), findsOneWidget);
     expect(find.text('KEY +20 · 01:30'), findsOneWidget);
 
@@ -274,6 +274,15 @@ void main() {
     await tester.tap(find.text('GR'));
     await tester.pumpAndSettle();
     expect(find.textContaining('GR20'), findsOneWidget);
+
+    await tester.tap(find.text('PARTY'));
+    await tester.pumpAndSettle();
+    expect(find.text('4800'), findsOneWidget);
+    expect(find.text('Level, worn gear, Ascend, and blessings.'), findsOneWidget);
+
+    await tester.tap(find.text('BACK'));
+    await tester.pumpAndSettle();
+    expect(find.text(PlayBoardPreview.notice), findsNothing);
   });
 
   testWidgets('HubPowerupsFab shows ticket count when banked', (tester) async {

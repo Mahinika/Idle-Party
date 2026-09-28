@@ -64,7 +64,7 @@ abstract final class PlayGamesScores {
 enum CloudConflict { preferLocal, preferCloud, askUser }
 
 /// Which seasonal board the KEY list is showing.
-enum PlayBoardKind { timedKey, gauntlet, greaterRift }
+enum PlayBoardKind { timedKey, gauntlet, greaterRift, partyPower }
 
 /// One public row before player-facing labels. Tests build these without Play.
 class PlayBoardRaw {
@@ -129,6 +129,9 @@ abstract final class PlayBoardList {
           decoded.tier,
           decoded.clearMs,
         );
+      case PlayBoardKind.partyPower:
+        if (rawScore <= 0) return '0';
+        return '$rawScore';
     }
   }
 
@@ -206,6 +209,12 @@ abstract final class PlayBoardPreview {
           ),
           playerId: 'preview-you',
         ),
+      PlayBoardKind.partyPower => const PlayBoardRaw(
+          rank: 11,
+          name: 'You',
+          rawScore: 2100,
+          playerId: 'preview-you',
+        ),
     };
     final scores = switch (kind) {
       PlayBoardKind.timedKey => [
@@ -271,6 +280,11 @@ abstract final class PlayBoardPreview {
           ),
           playerId: 'preview-3',
         ),
+      ],
+      PlayBoardKind.partyPower => const [
+        PlayBoardRaw(rank: 1, name: 'Lantern', rawScore: 4800, playerId: 'p1'),
+        PlayBoardRaw(rank: 2, name: 'Moth', rawScore: 3600, playerId: 'p2'),
+        PlayBoardRaw(rank: 3, name: 'Brass', rawScore: 2900, playerId: 'p3'),
       ],
     };
     return PlayBoardList.rows(kind: kind, scores: scores, you: you);

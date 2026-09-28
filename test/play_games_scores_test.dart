@@ -116,6 +116,11 @@ void main() {
       expect(gr.first.scoreLabel, contains('GR20'));
       expect(gr.last.isYou, isTrue);
       expect(gr.last.rank, 6);
+      final party = PlayBoardPreview.rows(PlayBoardKind.partyPower);
+      expect(party.first.scoreLabel, '4800');
+      expect(party.last.isYou, isTrue);
+      expect(party.last.rank, 11);
+      expect(party.last.scoreLabel, '2100');
     });
 
     test('board marks you inside the top list without a second row', () {
