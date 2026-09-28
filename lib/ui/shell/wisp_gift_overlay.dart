@@ -121,9 +121,15 @@ class _WispTapTargetState extends State<_WispTapTarget>
                   );
                 },
                 child: const SizedBox(
-                  width: 66,
-                  height: 84,
-                  child: CustomPaint(painter: _LanternPainter()),
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: SizedBox(
+                      width: 32,
+                      height: 42,
+                      child: CustomPaint(painter: _LanternPainter()),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -139,43 +145,44 @@ class _LanternPainter extends CustomPainter {
   const _LanternPainter();
 
   static const _rows = <String>[
-    '....#....',
-    '...#.#...',
-    '....#....',
-    '..#####..',
-    '.#.#.#.#.',
-    '.#*#*#*#.',
-    '.#*#*#*#.',
-    '.#*#*#*#.',
-    '.#.#.#.#.',
-    '..#####..',
-    '...###...',
+    '...#...',
+    '..#.#..',
+    '...#...',
+    '..###..',
+    '.#####.',
+    '#+*^*+#',
+    '#+***+#',
+    '.#####.',
+    '..#.#..',
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    const cols = 9;
-    const glyphRows = 11;
+    const cols = 7;
+    const glyphRows = 9;
     final px = size.width / cols;
     final ox = (size.width - cols * px) / 2;
     final oy = (size.height - glyphRows * px) / 2;
     final iron = Paint()
-      ..color = GameTheme.buttonBrownBottom
+      ..color = const Color(0xFF3A2414)
       ..isAntiAlias = false;
     final glass = Paint()
-      ..color = GameTheme.torch
+      ..color = const Color(0xFF8A4E16)
       ..isAntiAlias = false;
     final flame = Paint()
-      ..color = GameTheme.torchHot
+      ..color = const Color(0xFFFFC14A)
+      ..isAntiAlias = false;
+    final tip = Paint()
+      ..color = const Color(0xFFFFF6D0)
       ..isAntiAlias = false;
     for (var y = 0; y < _rows.length; y++) {
       final row = _rows[y];
       for (var x = 0; x < row.length; x++) {
-        final ch = row[x];
-        final paint = switch (ch) {
+        final paint = switch (row[x]) {
           '#' => iron,
           '+' => glass,
           '*' => flame,
+          '^' => tip,
           _ => null,
         };
         if (paint == null) continue;
