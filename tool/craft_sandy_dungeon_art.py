@@ -415,7 +415,7 @@ def main() -> None:
     }
     for name, fn in props.items():
         _save(fn(), f"props/{name}.png")
-    _save(_hub(), "hub_icon.png")
+    # Hub pin: tool/craft_hub_map_icons.py (do not rewrite hub_icon.png).
     print("Sandy handcraft written.")
 
 

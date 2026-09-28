@@ -223,4 +223,26 @@ void main() {
       contains(MapPropKind.fountain),
     );
   });
+
+  test('hub map pins are 64px landmarks', () {
+    final seen = <String>{};
+    for (final def in DungeonCatalog.all) {
+      final bytes = File(
+        'assets/custom/dungeon/${def.id}/hub_icon.png',
+      ).readAsBytesSync();
+      final width = (bytes[16] << 24) |
+          (bytes[17] << 16) |
+          (bytes[18] << 8) |
+          bytes[19];
+      final height = (bytes[20] << 24) |
+          (bytes[21] << 16) |
+          (bytes[22] << 8) |
+          bytes[23];
+      expect(width, 64, reason: def.id);
+      expect(height, 64, reason: def.id);
+      expect(bytes.length, greaterThan(300), reason: def.id);
+      expect(seen.add(String.fromCharCodes(bytes)), isTrue, reason: def.id);
+    }
+    expect(seen.length, DungeonCatalog.all.length);
+  });
 }

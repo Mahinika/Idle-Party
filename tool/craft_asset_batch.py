@@ -486,7 +486,7 @@ def craft_tide_all() -> None:
         "rubble",
     ):
         _save(craft_tide_prop_generic(name), tdir / "props" / f"{name}.png")
-    _save(craft_tide_hub(), tdir / "hub_icon.png")
+    # Hub pin: tool/craft_hub_map_icons.py (do not rewrite hub_icon.png).
 
 
 # —— Creature painter (96×96) ——

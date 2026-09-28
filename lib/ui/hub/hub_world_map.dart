@@ -313,7 +313,8 @@ class MapZoneMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final semanticsLabel = '$name, $statusWord${selected ? ', selected' : ''}';
-    final iconSize = discSize * 0.82;
+    final borderW = selected ? 2.0 : (cleared ? 1.0 : 0.0);
+    final iconSize = discSize - borderW * 2;
 
     Widget portrait = KenneySprite(
       asset: iconAsset ?? KenneyAssets.dungeonIconFor(portraitDungeonId),
@@ -354,9 +355,9 @@ class MapZoneMarker extends StatelessWidget {
               final p = pulse!.value;
               return _discShell(pulseValue: p, child: child!);
             },
-            child: ClipOval(child: portrait),
+            child: portrait,
           )
-        : _discShell(pulseValue: 0, child: ClipOval(child: portrait));
+        : _discShell(pulseValue: 0, child: portrait);
 
     return WebClickScope(
       label: semanticsLabel,
@@ -394,27 +395,21 @@ class MapZoneMarker extends StatelessWidget {
   }
 
   Widget _discShell({required double pulseValue, required Widget child}) {
+    final borderW = selected ? 2.0 : (cleared ? 1.0 : 0.0);
     return SizedBox(
       width: discSize,
       height: discSize,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: GameTheme.hudMapCaption.withValues(alpha: 0.75),
-          border: Border.all(
-            color: _ringColor(pulseValue),
-            width: selected ? 2.5 : 1.2,
-          ),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: GameTheme.torch.withValues(alpha: 0.45),
-                    blurRadius: 10 + pulseValue * 3,
-                  ),
-                ]
+          borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+          border: borderW > 0
+              ? Border.all(color: _ringColor(pulseValue), width: borderW)
               : null,
         ),
-        child: Center(child: child),
+        child: Padding(
+          padding: EdgeInsets.all(borderW),
+          child: Center(child: child),
+        ),
       ),
     );
   }

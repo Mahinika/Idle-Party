@@ -661,8 +661,8 @@ class Generator:
         self.save(self.tile_door(True), "tiles/door_open.png")
         for name in PROP_FILES:
             self.save(self.prop_by_name(name), f"props/{name}.png")
-        self.save(self.hub_icon(), "hub_icon.png")
-        print(f"  {self.zone_id}: {8 + len(PROP_FILES) + 1} PNGs")
+        # Hub pins: tool/craft_hub_map_icons.py (do not rewrite hub_icon.png).
+        print(f"  {self.zone_id}: {8 + len(PROP_FILES)} PNGs")
 
 
 def main() -> None:

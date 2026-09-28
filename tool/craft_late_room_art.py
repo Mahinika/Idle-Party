@@ -1,5 +1,5 @@
 #!/usr/bin/env py
-"""Handcraft late-zone floors, walls, hub icons, and one landmark prop.
+"""Handcraft late-zone floors, walls, and one landmark prop.
 
 Locked against generate_dungeon_art.py (HANDCRAFTED_ZONES). Tide is the
 quality facit and is not rewritten here. 16×16 tiles, 32×32 props, nearest.
@@ -370,7 +370,7 @@ def main() -> None:
         _save(zone, paint(1), "tiles/floor_b.png")
         _save(zone, _wall(p, 0), "tiles/wall_a.png")
         _save(zone, _wall(p, 1), "tiles/wall_b.png")
-        _save(zone, hub_icon(zone), "hub_icon.png")
+        # Hub pins: tool/craft_hub_map_icons.py (do not rewrite hub_icon.png).
         rel, fn = LANDMARKS[zone]
         _save(zone, fn(), rel)
         n += 1
