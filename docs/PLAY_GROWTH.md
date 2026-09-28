@@ -1,6 +1,6 @@
 # Idle Party — Play growth (what we can do)
 
-**Updated:** 2026-09-27 · Category stays **Role Playing** (idle fantasy RPG).  
+**Updated:** 2026-09-28 · Category stays **Role Playing** (idle fantasy RPG).  
 Do **not** chase Casual / Battle Royale / sandbox search volume.
 
 **Standing principles:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) — no numbered
@@ -9,14 +9,32 @@ Do not restore AL20 as the batch.
 
 Honest growth order: **crash-free → listing conversion → D1 → D7 → rating → tiny paid test**.
 
-### What 27 Sep changes
+### What 28 Sep changes
 
-Crash-free still holds. The store is no longer empty (4,910 impressions,
-107 installs, listing conversion **25%**). The hole is the open: 32 first
-opens, 30 monthly active devices, D7 still blank. The only install jump
-lined up with one `r/incremental_games` post on 18 Sep and then stuck near
-42 devices. Shorts, the unlisted preview (1 view), and later Reddit posts
-did not repeat it.
+The 27 Sep read was lagging the 18–20 Sep wave. Fresh window **31 Aug–27
+Sep**: **6,440** device impressions, **117** acquisitions, **50** first
+opens, **45** monthly active devices, **42** still installed. Store
+listing cards: **386** visitors, **100** unique install clicks, **26%**
+click rate. D7 retained devices: **1** (19 Sep, US). The 18–20 Sep
+cohort’s day-7 (25–27 Sep) is empty. Acquisitions and first opens are
+both **zero** 23–27 Sep. Do not read monthly active as a return — it
+still counts the install open.
+
+One crash report on **23 Sep**, version **214** (1.12.184), one device.
+ANR report empty. Crash-rate card is still a dash. Production
+**1.12.187 (217)** published **28 Sep**, full rollout; it is not in this
+window.
+
+AdMob month-to-date **9.32 kr** (August **10.77 kr**). Last 7 days
+**7.62 kr**, **166** requests, **9** impressions (show rate **5%** —
+the app preloads a rewarded ad at boot). **27 Sep** alone was **5.04
+kr** / 5 impressions. Play IAP still **12.0 kr**. Payout identity, PIN,
+and bank still open. Play payment-account banner from **10 Sep** still
+asks for missing info. Ignore eCPM.
+
+The only install jump still lines up with the **18 Sep**
+`r/incremental_games` post (direct-link bucket, no campaign running)
+and then stops. Shorts and later posts did not start a second wave.
 
 Until the owner names a different bet:
 
@@ -25,7 +43,7 @@ Until the owner names a different bet:
   more subs.
 - Keep the listing video on the store page. Do not spend the week cutting
   another Shorts batch or sending the next 10 creator mails.
-- Do not buy installs. Paid UA would buy the same open-after-install leak.
+- Do not buy installs. Paid UA would buy the same leak: 117 installs, 50 opens, 1 device back on day 7.
 - One listing test is no longer blocked by “~10 visitors.” It is still one
   asset, one week, and only when named. The open hole is larger than the
   store-page hole.
@@ -76,8 +94,8 @@ Do these in Console when you have 20 minutes:
 5. **Store listing experiments** — traffic is no longer the blocker (look
    **2026-09-27**). Still one asset, one week, only when the owner names the
    test. The open-after-install hole is the larger one.
-6. **Google App campaigns** — do not start. 107 installs became 32 first
-   opens and D7 is still empty. Checklist below stays for later.
+6. **Google App campaigns** — do not start. 28 Sep read: 117 installs, 50
+   first opens, 1 device back on day 7. Checklist below stays for later.
 
 Never point players at GitHub Releases.
 
@@ -172,9 +190,9 @@ Idle Party stays single-player and fair — SHOP is convenience (boosts / QoL), 
 
 ## Tiny ads checklist (optional)
 
-Do **not** start this on the 27 Sep read. 107 installs became 32 first
-opens, and D7 is still empty. Revisit only after an organic open is known
-and not junk.
+Do **not** start this on the 28 Sep read. 117 installs became 50 first
+opens, and 1 device came back on day 7. Revisit only after an organic
+return is known and not junk.
 
 Only if you want paid installs after listing + retention feel OK.
 
