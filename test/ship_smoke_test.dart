@@ -294,7 +294,7 @@ void main() {
     expect(MetaSystems.releases.first.bullets, isNotEmpty);
     expect(
       MetaSystems.releases.first.bullets.join(' ').toUpperCase(),
-      contains('GREATER'),
+      contains('RANKED GR'),
     );
     expect(
       MetaSystems.releases.first.bullets.join(' '),

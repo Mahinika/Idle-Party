@@ -51,7 +51,7 @@ The newest release, summary included, must still mention:
 - Shipped zone names (Tidehold, Ashen, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault, Mothveil)
 - Craft Trial
 - Race still locks after New Game START (and must not say GEAR LOOK)
-- GREATER, `Rebuild your bag`, and REBORN
+- Ranked GR, `Rebuild your bag`, and REBORN
 
 Those lines are the world as it is, not a claim that this patch invented them.
 
