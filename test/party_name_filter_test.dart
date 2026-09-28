@@ -44,5 +44,43 @@ void main() {
     );
     expect(PartyNameFilter.isBlocked('democrat'), isTrue);
     expect(PartyNameFilter.isBlocked('republican'), isTrue);
+    expect(PartyNameFilter.sanitize('Magenta'), 'Magenta');
+    expect(PartyNameFilter.sanitize('The Healer'), 'The Healer');
+    expect(PartyNameFilter.sanitize('Spice Rats'), 'Spice Rats');
+    expect(PartyNameFilter.sanitize('Crisis'), 'Crisis');
+    expect(PartyNameFilter.sanitize('Názi'), isNull);
+    expect(PartyNameFilter.sanitize('Trump'), isNull);
+    expect(PartyNameFilter.sanitize('KKK'), isNull);
+    expect(PartyNameFilter.isBlocked('kommunist'), isTrue);
+    expect(PartyNameFilter.isBlocked('swastika'), isTrue);
+  });
+
+  test('score tag round-trips a clean party name', () {
+    final tag = PartyNameFilter.scoreTag('The Ember Guard');
+    expect(tag, isNotNull);
+    expect(tag!.length, lessThanOrEqualTo(64));
+    expect(
+      PartyNameFilter.partyNameFromScoreTag(tag),
+      'The Ember Guard',
+    );
+    expect(PartyNameFilter.scoreTag(''), isNotNull);
+    expect(
+      PartyNameFilter.partyNameFromScoreTag(
+        PartyNameFilter.scoreTag('sh1t'),
+      ),
+      PartyNameFilter.defaultName,
+    );
+    expect(
+      PartyNameFilter.publicLabel(
+        'Google Name',
+        scoreTag: PartyNameFilter.scoreTag('Cave Company'),
+      ),
+      'Cave Company',
+    );
+    expect(PartyNameFilter.publicLabel('MAGA'), 'Player');
+    expect(
+      PartyNameFilter.publicLabel('Ada', fallbackParty: 'Old Guard'),
+      'Old Guard',
+    );
   });
 }

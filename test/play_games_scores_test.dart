@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/party_name_filter.dart';
 import 'package:idle_party/core/play_games_scores.dart';
 import 'package:idle_party/core/play_leaderboard_ids.dart';
 import 'package:idle_party/models/meta_depth.dart';
@@ -101,6 +102,38 @@ void main() {
       expect(top.last.isYou, isTrue);
       expect(top.last.rank, 40);
       expect(top.last.scoreLabel, 'F12');
+    });
+
+    test('rank row prefers the party name stored on the score', () {
+      final tag = PartyNameFilter.scoreTag('Ember Guard');
+      final rows = PlayBoardList.rows(
+        kind: PlayBoardKind.gauntlet,
+        scores: [
+          PlayBoardRaw(
+            rank: 1,
+            name: 'Google One',
+            rawScore: 40,
+            playerId: 'a',
+            scoreTag: tag,
+          ),
+          const PlayBoardRaw(
+            rank: 2,
+            name: 'MAGA',
+            rawScore: 10,
+            playerId: 'b',
+          ),
+        ],
+        you: PlayBoardRaw(
+          rank: 2,
+          name: 'MAGA',
+          rawScore: 10,
+          playerId: 'b',
+        ),
+        yourPartyName: 'Cave Company',
+      );
+      expect(rows[0].name, 'Ember Guard');
+      expect(rows[1].name, 'Cave Company');
+      expect(rows[1].isYou, isTrue);
     });
 
     test('debug preview lists differ and mark you', () {

@@ -262,6 +262,11 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   counterText: '',
                   labelText: 'Party name',
                   hintText: 'The Ember Guard',
+                  helperText: 'Shows on season ranks',
+                  helperStyle: GameTheme.body(
+                    size: 11,
+                    color: GameTheme.parchmentDim,
+                  ),
                   labelStyle: GameTheme.body(
                     size: 13,
                     color: GameTheme.parchmentDim,

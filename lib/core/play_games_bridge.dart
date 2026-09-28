@@ -8,6 +8,7 @@ import 'flutter_test_env_stub.dart'
     as test_env;
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'party_name_filter.dart';
 import 'play_games_scores.dart';
 import 'play_leaderboard_ids.dart';
 
@@ -28,6 +29,7 @@ abstract final class PlayGamesBridge {
   static String? _pendingGauntletBoard;
   static int? _pendingGreaterRiftScore;
   static String? _pendingGreaterRiftBoard;
+  static String _partyScoreTag = PartyNameFilter.scoreTag('') ?? '';
 
   static bool get isSignedInCached => _signedInCache;
 
@@ -73,11 +75,18 @@ abstract final class PlayGamesBridge {
     }
   }
 
+  static void _rememberParty(String? partyName) {
+    final tag = PartyNameFilter.scoreTag(partyName ?? '');
+    if (tag != null && tag.isNotEmpty) _partyScoreTag = tag;
+  }
+
   static void noteTimedPb({
     required String monthKey,
     required int keyLevel,
     required int clearMs,
+    String? partyName,
   }) {
+    _rememberParty(partyName);
     final id = PlayLeaderboardIds.timedKeyId(monthKey);
     if (id.isEmpty || !PlayLeaderboardIds.hasBoards(monthKey)) return;
     _pendingTimedBoard = id;
@@ -87,7 +96,12 @@ abstract final class PlayGamesBridge {
     );
   }
 
-  static void noteGauntletPb({required String monthKey, required int floor}) {
+  static void noteGauntletPb({
+    required String monthKey,
+    required int floor,
+    String? partyName,
+  }) {
+    _rememberParty(partyName);
     final id = PlayLeaderboardIds.gauntletId(monthKey);
     if (id.isEmpty || !PlayLeaderboardIds.hasBoards(monthKey)) return;
     _pendingGauntletBoard = id;
@@ -98,7 +112,9 @@ abstract final class PlayGamesBridge {
     required String monthKey,
     required int tier,
     required int clearMs,
+    String? partyName,
   }) {
+    _rememberParty(partyName);
     final id = PlayLeaderboardIds.greaterRiftId(monthKey);
     if (id.isEmpty || !PlayLeaderboardIds.hasGreaterRiftBoard(monthKey)) {
       return;
@@ -121,6 +137,7 @@ abstract final class PlayGamesBridge {
             androidLeaderboardID: timedBoard,
             iOSLeaderboardID: '',
             value: timed,
+            token: _partyScoreTag,
           ),
         );
         _pendingTimedScore = null;
@@ -138,6 +155,7 @@ abstract final class PlayGamesBridge {
             androidLeaderboardID: gBoard,
             iOSLeaderboardID: '',
             value: g,
+            token: _partyScoreTag,
           ),
         );
         _pendingGauntletScore = null;
@@ -155,6 +173,7 @@ abstract final class PlayGamesBridge {
             androidLeaderboardID: grBoard,
             iOSLeaderboardID: '',
             value: gr,
+            token: _partyScoreTag,
           ),
         );
         _pendingGreaterRiftScore = null;
@@ -169,6 +188,7 @@ abstract final class PlayGamesBridge {
   static Future<PlayBoardSnapshot> loadBoard({
     required PlayBoardKind kind,
     required String monthKey,
+    String? yourPartyName,
   }) async {
     if (!isSupported) return PlayBoardSnapshot.error;
     final id = switch (kind) {
@@ -203,6 +223,7 @@ abstract final class PlayGamesBridge {
             name: mine.scoreHolder.displayName,
             rawScore: mine.rawScore,
             playerId: mine.scoreHolder.playerID,
+            scoreTag: mine.token,
           );
         }
       } catch (e, st) {
@@ -218,9 +239,11 @@ abstract final class PlayGamesBridge {
                 name: row.scoreHolder.displayName,
                 rawScore: row.rawScore,
                 playerId: row.scoreHolder.playerID,
+                scoreTag: row.token,
               ),
           ],
           you: you,
+          yourPartyName: yourPartyName,
         ),
       );
     } catch (e, st) {

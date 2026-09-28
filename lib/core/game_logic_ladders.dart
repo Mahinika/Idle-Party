@@ -27,6 +27,7 @@ GameState _recordGauntletRun(
     PlayGamesBridge.noteGauntletPb(
       monthKey: next.metaDepth.leaderboardSeasonKey,
       floor: seasonBest,
+      partyName: next.partyName,
     );
   }
   return GameLogic.syncMetaPayoffs(
@@ -450,6 +451,7 @@ GameState _resolveGreaterRiftSuccess(GameState state) {
           : GameLogic.isoMonthKey(DateTime.now().toUtc()),
       tier: tier,
       clearMs: clearMs,
+      partyName: next.partyName,
     );
   }
   next = next.copyWith(

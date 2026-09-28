@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 /// Local party-name gate: length, charset, and an owned block list.
 ///
 /// Empty input becomes [defaultName]. Blocked names return null — callers
 /// show a generic "choose another" line and never echo the match.
+///
+/// [scoreTag] packs a clean name into the Play Games score tag (URI-safe,
+/// at most 64 characters) so season ranks can show the party, not the
+/// Google account name.
 abstract final class PartyNameFilter {
   static const String defaultName = 'The Party';
   static const int minLen = 2;
@@ -28,6 +34,55 @@ abstract final class PartyNameFilter {
     if (_urlLike.hasMatch(trimmed.replaceAll(' ', ''))) return null;
     if (isBlocked(trimmed)) return null;
     return trimmed;
+  }
+
+  /// Play score tag for [raw], or the default party when [raw] is empty.
+  /// Null only if even the default name cannot be packed.
+  static String? scoreTag(String raw) {
+    final name = sanitize(raw) ?? defaultName;
+    return _encodeTag(name) ?? _encodeTag(defaultName);
+  }
+
+  /// Party name stored in a Play score tag, or null when missing / blocked.
+  static String? partyNameFromScoreTag(String? tag) {
+    if (tag == null) return null;
+    final clean = tag.trim();
+    if (clean.isEmpty || clean.length > 64) return null;
+    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(clean)) return null;
+    try {
+      var padded = clean;
+      final mod = padded.length % 4;
+      if (mod != 0) padded += '=' * (4 - mod);
+      final decoded = utf8.decode(base64Url.decode(padded));
+      return sanitize(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Name to print on a rank row. Prefers the score tag, then this device's
+  /// party, then the account name. Blocked text becomes `Player`.
+  static String publicLabel(
+    String raw, {
+    String? scoreTag,
+    String? fallbackParty,
+  }) {
+    final fromTag = partyNameFromScoreTag(scoreTag);
+    if (fromTag != null) return fromTag;
+    if (fallbackParty != null) {
+      final local = sanitize(fallbackParty);
+      if (local != null) return local;
+    }
+    final trimmed = raw.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (trimmed.isEmpty || isBlocked(trimmed)) return 'Player';
+    return trimmed;
+  }
+
+  static String? _encodeTag(String name) {
+    final tag = base64Url.encode(utf8.encode(name)).replaceAll('=', '');
+    if (tag.isEmpty || tag.length > 64) return null;
+    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(tag)) return null;
+    return tag;
   }
 
   static bool isBlocked(String raw) {
@@ -75,6 +130,47 @@ abstract final class PartyNameFilter {
       '5': 's',
       '7': 't',
       r'$': 's',
+      'à': 'a',
+      'á': 'a',
+      'â': 'a',
+      'ã': 'a',
+      'ä': 'a',
+      'å': 'a',
+      'ā': 'a',
+      'ç': 'c',
+      'ć': 'c',
+      'è': 'e',
+      'é': 'e',
+      'ê': 'e',
+      'ë': 'e',
+      'ì': 'i',
+      'í': 'i',
+      'î': 'i',
+      'ï': 'i',
+      'ñ': 'n',
+      'ò': 'o',
+      'ó': 'o',
+      'ô': 'o',
+      'õ': 'o',
+      'ö': 'o',
+      'ø': 'o',
+      'ù': 'u',
+      'ú': 'u',
+      'û': 'u',
+      'ü': 'u',
+      'ý': 'y',
+      'ÿ': 'y',
+      // Latin lookalikes so a mixed-script slogan still matches.
+      'а': 'a',
+      'е': 'e',
+      'о': 'o',
+      'р': 'p',
+      'с': 'c',
+      'у': 'y',
+      'х': 'x',
+      'і': 'i',
+      'ѕ': 's',
+      'һ': 'h',
     };
     final buf = StringBuffer();
     for (final rune in s.runes) {
@@ -129,6 +225,31 @@ abstract final class PartyNameFilter {
     'slut',
     'whore',
     'sex',
+    'spic',
+    'coon',
+    'gook',
+    'paki',
+    'beaner',
+    'negro',
+    'heil',
+    'kkk',
+    'ss',
+    'isis',
+    'hamas',
+    'blm',
+    'maga',
+    'antifa',
+    'trump',
+    'biden',
+    'putin',
+    'stalin',
+    'lenin',
+    'marx',
+    'woke',
+    'tory',
+    'labour',
+    'labor',
+    'liberal',
   };
 
   /// Longer swears, slurs, hate codes, political slogans — substring after
@@ -145,7 +266,6 @@ abstract final class PartyNameFilter {
     'faggot',
     'retard',
     'kike',
-    'spic',
     'chink',
     'wetback',
     'trany',
@@ -153,11 +273,27 @@ abstract final class PartyNameFilter {
     '1488',
     'nazi',
     'fascis',
-    'maga',
-    'antifa',
     'democrat',
     'republican',
     'communist',
+    'kommunist',
+    'demokrat',
+    'republikan',
+    'socialis',
     'hitler',
+    'swastika',
+    'siegheil',
+    'whitepower',
+    'whitesuprem',
+    'aryan',
+    'kuklux',
+    'raghead',
+    'towelhead',
+    'marxist',
+    'altright',
+    'farright',
+    'farleft',
+    'jihad',
+    'illiberal',
   ];
 }

@@ -1,4 +1,5 @@
 import 'keystone.dart';
+import 'party_name_filter.dart';
 
 /// Encode / decode seasonal Play Games scores (single int per board).
 abstract final class PlayGamesScores {
@@ -73,12 +74,16 @@ class PlayBoardRaw {
     required this.name,
     required this.rawScore,
     this.playerId,
+    this.scoreTag,
   });
 
   final int rank;
   final String name;
   final int rawScore;
   final String? playerId;
+
+  /// Play Games score tag. Holds the party name when this build submitted it.
+  final String? scoreTag;
 }
 
 /// One row on the in-game season board.
@@ -135,9 +140,16 @@ abstract final class PlayBoardList {
     }
   }
 
-  static String playerName(String name) {
-    final trimmed = name.trim();
-    return trimmed.isEmpty ? 'Player' : trimmed;
+  static String playerName(
+    String name, {
+    String? scoreTag,
+    String? yourPartyName,
+  }) {
+    return PartyNameFilter.publicLabel(
+      name,
+      scoreTag: scoreTag,
+      fallbackParty: yourPartyName,
+    );
   }
 
   /// Top rows, plus your rank at the bottom when it sits outside that list.
@@ -145,6 +157,7 @@ abstract final class PlayBoardList {
     required PlayBoardKind kind,
     required List<PlayBoardRaw> scores,
     PlayBoardRaw? you,
+    String? yourPartyName,
   }) {
     final youId = you?.playerId;
     bool sameYou(PlayBoardRaw row) {
@@ -159,7 +172,11 @@ abstract final class PlayBoardList {
       for (final row in scores)
         PlayBoardRow(
           rank: row.rank,
-          name: playerName(row.name),
+          name: playerName(
+            row.name,
+            scoreTag: row.scoreTag,
+            yourPartyName: sameYou(row) ? yourPartyName : null,
+          ),
           scoreLabel: scoreLabel(kind, row.rawScore),
           isYou: sameYou(row),
         ),
@@ -168,7 +185,11 @@ abstract final class PlayBoardList {
       built.add(
         PlayBoardRow(
           rank: you.rank,
-          name: playerName(you.name),
+          name: playerName(
+            you.name,
+            scoreTag: you.scoreTag,
+            yourPartyName: yourPartyName,
+          ),
           scoreLabel: scoreLabel(kind, you.rawScore),
           isYou: true,
         ),

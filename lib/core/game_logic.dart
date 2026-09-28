@@ -2395,7 +2395,11 @@ class GameLogic {
       final month = awarded.metaDepth.leaderboardSeasonKey.isNotEmpty
           ? awarded.metaDepth.leaderboardSeasonKey
           : isoMonthKey(DateTime.now().toUtc());
-      PlayGamesBridge.noteGauntletPb(monthKey: month, floor: room.floorNumber);
+      PlayGamesBridge.noteGauntletPb(
+        monthKey: month,
+        floor: room.floorNumber,
+        partyName: awarded.partyName,
+      );
     }
     progressed = _applyMetaProgress(state, progressed, drops);
 
@@ -2559,6 +2563,7 @@ class GameLogic {
             ),
           );
           PlayGamesBridge.noteTimedPb(
+            partyName: next.partyName,
             monthKey: next.metaDepth.leaderboardSeasonKey.isNotEmpty
                 ? next.metaDepth.leaderboardSeasonKey
                 : isoMonthKey(DateTime.now().toUtc()),

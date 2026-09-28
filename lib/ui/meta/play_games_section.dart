@@ -145,7 +145,11 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
       _loading = true;
       _failed = false;
     });
-    final snap = await PlayGamesBridge.loadBoard(kind: kind, monthKey: month);
+    final snap = await PlayGamesBridge.loadBoard(
+      kind: kind,
+      monthKey: month,
+      yourPartyName: widget.director.state.partyName,
+    );
     if (!mounted || gen != _loadGen) return;
     setState(() {
       _loading = false;
@@ -242,9 +246,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           : 'No Ranked GR yet',
       PlayBoardKind.partyPower => '${GameLogic.partyPowerScore(director.state)}',
     };
-    final yoursLine = kind == PlayBoardKind.partyPower
-        ? 'Party power · $yours'
-        : 'Your best · $yours';
+    final yoursLine = '${director.state.partyName} · $yours';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
