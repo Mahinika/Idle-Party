@@ -258,9 +258,8 @@ Future<void> confirmGauntletRun(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Gauntlet?',
         content: Text(
-          'Endless Spire climb — not a 16th PATH cave, not a timed Rift.\n\n'
-          'Floors escalate forever. Boss every 5 floors, each with a different tell. '
-          'Wipe or leave returns to hub.\n\n'
+          'Boss every 5 floors. Each boss has its own tell. '
+          'Leave or a wipe returns you to the hub.\n\n'
           'Best clear: F$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
@@ -273,7 +272,7 @@ Future<void> confirmGauntletRun(
           ),
           GameButton(
             label: 'ENTER',
-            style: GameButtonStyle.red,
+            style: GameButtonStyle.brown,
             expanded: false,
             onPressed: () => Navigator.pop(ctx, true),
           ),

@@ -171,14 +171,18 @@ class HubTodayCard extends StatelessWidget {
     final why = ChaseContract(chase: chase).whyLine;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final titleMaxLines = textScale > 1.2 ? 1 : 2;
-    // Text strip only — no fill box under ENTER.
     return Semantics(
       label: 'Next job: ${chase.title}. ${chase.detail}. $why',
       button:
           chase.urgency == HubChaseUrgency.ready ||
           chase.urgency == HubChaseUrgency.almost,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: GameTheme.panel.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+          border: Border.all(color: GameTheme.border.withValues(alpha: 0.7)),
+        ),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,

@@ -655,7 +655,7 @@ class _InventoryDockState extends State<InventoryDock>
       if (!goldOk) {
         return 'Need $cost gold to merge (have ${state.gold}).';
       }
-      return 'Ready — merge destroys both and creates one stronger piece.';
+      return 'Ready — MERGE spends both and makes one stronger piece.';
     }();
 
     return SingleChildScrollView(
@@ -665,7 +665,7 @@ class _InventoryDockState extends State<InventoryDock>
           MenuChrome.sectionLabelScoped('MERGE', scope: MenuScope.run),
           const SizedBox(height: 4),
           Text(
-            'Sacrifice two bag items of the same slot for one upgraded result. Equipped gear is never used.'
+            'Two bag items, same slot. MERGE spends them for one stronger piece. Worn gear stays.'
             '${state.metaDepth.combinatorLuck > 0 ? ' Charm luck ${state.metaDepth.combinatorLuck}/5 · −${state.metaDepth.combinatorLuck * 3}g on MERGE.' : ''}',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
@@ -678,8 +678,8 @@ class _InventoryDockState extends State<InventoryDock>
           ],
           const SizedBox(height: 8),
           _CombineSlot(
-            label: 'BASE',
-            emptyHint: 'First item',
+            label: 'FIRST',
+            emptyHint: 'Bag item',
             item: primary,
             onClear: combineA == null ? null : onClearCombineA,
           ),
@@ -692,8 +692,8 @@ class _InventoryDockState extends State<InventoryDock>
             ),
           ),
           _CombineSlot(
-            label: 'FUEL',
-            emptyHint: 'Same slot as BASE',
+            label: 'SECOND',
+            emptyHint: 'Same slot',
             item: secondary,
             onClear: combineB == null ? null : onClearCombineB,
           ),
@@ -795,12 +795,6 @@ class _InventoryDockState extends State<InventoryDock>
               dense: true,
             ),
           ],
-          const SizedBox(height: 10),
-          Text(
-            'Flask heals the party in the dungeon.',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-          ),
         ],
       ),
     );

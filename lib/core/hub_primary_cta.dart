@@ -158,7 +158,7 @@ class HubPrimaryCta {
           primaryLabel: label,
           secondaryLabel: enterLabel,
           hideInlineChaseAction: true,
-          showKeyDial: showKeystoneJargon,
+          showKeyDial: showKeystoneJargon && hardmodeLevel > 0,
         );
       }
       if (label != null && HubEndgameAct.isEnterLabel(label)) {

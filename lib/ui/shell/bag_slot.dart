@@ -95,13 +95,7 @@ class _BagSlot extends StatelessWidget {
             ),
             clipBehavior: Clip.hardEdge,
             child: item == null
-                ? Center(
-                    child: GameIcon.glyph(
-                      UiGlyph.add,
-                      size: 14,
-                      color: GameTheme.border.withValues(alpha: 0.55),
-                    ),
-                  )
+                ? const SizedBox.shrink()
                 : Stack(
                     fit: StackFit.expand,
                     children: [
@@ -150,11 +144,11 @@ class _BagSlot extends StatelessWidget {
                         ),
                       if (isUpgrade && !isBest)
                         Positioned(
-                          top: 2,
-                          right: 2,
+                          top: 3,
+                          right: 3,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
+                              horizontal: 3,
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
@@ -172,11 +166,11 @@ class _BagSlot extends StatelessWidget {
                         ),
                       if (isBest)
                         Positioned(
-                          top: 2,
-                          right: 2,
+                          top: 3,
+                          right: 3,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
+                              horizontal: 3,
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
@@ -201,19 +195,6 @@ class _BagSlot extends StatelessWidget {
                             style: GameTheme.body(
                               size: 10,
                               color: GameTheme.torchHot,
-                            ),
-                          ),
-                        ),
-                      if (item!.slot == EquipmentSlot.weapon &&
-                          !isSoulboundItem(item!))
-                        Positioned(
-                          bottom: 2,
-                          right: 3,
-                          child: Text(
-                            patternGlyph(item!.pattern),
-                            style: GameTheme.body(
-                              size: 11,
-                              color: GameTheme.parchmentDim,
                             ),
                           ),
                         ),

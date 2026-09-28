@@ -43,7 +43,7 @@ abstract final class Keystone {
     final id = weekCaveId(weeklyKey);
     final tell = EnemyFlavor.bossTell(id);
     final name = DungeonCatalog.byId(id).name;
-    return 'This week: $tell — $name jobs on the PATH cave you enter';
+    return 'Boss tell: $tell on $name';
   }
 
   /// KEY unlocks when every active hero is at [heroLevelGate] (endgame).

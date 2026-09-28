@@ -199,23 +199,16 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'MORE · INFO',
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 4),
         if (metaRows.isNotEmpty) ...[
           for (final row in metaRows) ...[
             GameButton(
               label: row.rowLabel,
               tip: switch (row) {
-                MoreSection.quests =>
-                  'Daily / Bounty / Side / Week — not ENDGAME hunts',
-                MoreSection.craft =>
-                  'Apex + Craft Trial — not ENDGAME hunts',
+                MoreSection.quests => 'Daily, bounty, side, and week jobs',
+                MoreSection.craft => 'Apex and the Craft Trial',
                 _ => null,
               },
-              style: GameButtonStyle.brown,
+              style: GameButtonStyle.grey,
               onPressed: () => widget.onSectionChanged(row),
             ),
             const SizedBox(height: 6),

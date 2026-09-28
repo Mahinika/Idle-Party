@@ -277,9 +277,16 @@ class CharacterEquipPanel extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    '${hero.spec.name} — L${hero.level}',
+                    hero.spec.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: GameTheme.menuTitle(size: compact ? 18 : 20),
+                    style: GameTheme.menuTitle(size: compact ? 16 : 18),
+                  ),
+                  Text(
+                    'L${hero.level}',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.menuTitle(size: compact ? 14 : 16),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -408,18 +415,15 @@ class CharacterEquipPanel extends StatelessWidget {
                       final hasShield =
                           hero.itemIn(EquipmentSlot.offHand)?.offHandKind ==
                           OffHandKind.shield;
+                      if (hasShield) return const SizedBox.shrink();
                       return Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          hasShield
-                              ? 'Off-hand: shield equipped'
-                              : 'Off-hand: Warrior / Paladin / Shaman need a shield',
+                          'Off-hand needs a shield',
                           textAlign: TextAlign.center,
                           style: GameTheme.body(
                             size: 11,
-                            color: hasShield
-                                ? GameTheme.parchmentDim
-                                : GameTheme.torchHot,
+                            color: GameTheme.torchHot,
                           ),
                         ),
                       );
@@ -449,14 +453,6 @@ class CharacterEquipPanel extends StatelessWidget {
                       color: GameTheme.parchmentDim,
                     ),
                   ),
-                  Text(
-                    'Flask heals the party in the dungeon',
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: compact ? 10 : 11,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -464,18 +460,6 @@ class CharacterEquipPanel extends StatelessWidget {
               slots: rightColumn,
               slotGap: slotGap,
               slotBuilder: slotFor,
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: MenuChrome.chip(label: 'ATK', value: '$atk'),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: MenuChrome.chip(label: 'DEF', value: '$def'),
             ),
           ],
         ),
@@ -780,7 +764,9 @@ class PaperDollSlot extends StatelessWidget {
         );
     final border = blockedOh
         ? GameTheme.border.withValues(alpha: 0.45)
-        : item == null
+        : item == null ||
+              item!.rarity == LootRarity.common ||
+              item!.rarity == LootRarity.uncommon
         ? GameTheme.border
         : itemRarityBorder(item!.rarity);
     final ohKind =
@@ -808,8 +794,8 @@ class PaperDollSlot extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Padding(
-            padding: const EdgeInsets.all(4),
-            child: EquipmentIcon(item: item!, size: size - 8, hero: hero),
+            padding: const EdgeInsets.all(2),
+            child: EquipmentIcon(item: item!, size: size - 4, hero: hero),
           ),
           if (selected &&
               item != null &&

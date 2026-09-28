@@ -340,19 +340,19 @@ class MenuRouter extends ChangeNotifier {
 
     },
 
-    MenuRoute.key => 'KEY dial · Gauntlet · Ranked GR · Farm Rift · Ashen',
+    MenuRoute.key => 'Dial and hunts',
 
     MenuRoute.more => switch (_moreSection) {
 
-      MoreSection.info => 'Guides · codex · What\'s New',
+      MoreSection.info => 'Guides · What\'s New',
 
       MoreSection.settings => 'Sound · zoom · save',
 
       MoreSection.credits => 'Art credits',
 
-      MoreSection.craft => 'Apex that keeps · Craft Trial here, not ENDGAME',
+      MoreSection.craft => 'Apex · Craft Trial',
 
-      MoreSection.quests => 'Daily · Bounty · Side · Week · not ENDGAME',
+      MoreSection.quests => 'Daily · Bounty · Side · Week',
 
     },
 

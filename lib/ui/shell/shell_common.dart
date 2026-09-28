@@ -14,13 +14,6 @@ Color rarityBorderColor(LootRarity rarity) => switch (rarity) {
   LootRarity.legendary => GameTheme.rarityLegendary,
 };
 
-String patternGlyph(ProjectilePattern pattern) => switch (pattern) {
-  ProjectilePattern.single => 'S',
-  ProjectilePattern.spread => 'P',
-  ProjectilePattern.arc => 'A',
-  ProjectilePattern.pierce => 'X',
-};
-
 String formatCount(int n) {
   if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
   if (n >= 10000) return '${(n / 1000).toStringAsFixed(1)}k';

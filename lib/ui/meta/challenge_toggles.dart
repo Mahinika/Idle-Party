@@ -89,7 +89,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        WebClickScope(
+        if (!widget.lockExpanded)
+          WebClickScope(
           label: headerLabel,
           onPressed: widget.lockExpanded
               ? null
@@ -140,8 +141,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           const SizedBox(height: 4),
           Text(
             state.hardmodeLevel <= 0
-                ? 'KEY +0 (normal) · no key loot bonus · endless after +${Keystone.campaignCap}'
-                : 'KEY +${state.hardmodeLevel} · loot +${Keystone.lootItemLevelBonus(state.hardmodeLevel)} iLvl · ${Keystone.goldMulLabel(state.hardmodeLevel)}',
+                ? 'Normal caves. Loot bonus starts at KEY +1.'
+                : 'Loot +${Keystone.lootItemLevelBonus(state.hardmodeLevel)} iLvl · ${Keystone.goldMulLabel(state.hardmodeLevel)}',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
@@ -272,7 +273,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             ),
           ],
           Text(
-            'Power ${GameLogic.partyPowerScore(state)} · sheet score (not a clear guarantee)',
+            'Party power ${GameLogic.partyPowerScore(state)}',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.mossLit),
           ),
@@ -380,7 +381,7 @@ class _HardmodeStepper extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  level <= 0 ? 'KEY  OFF' : 'KEY  +$level',
+                  level <= 0 ? 'OFF' : '+$level',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(
                     size: 12,
@@ -389,19 +390,19 @@ class _HardmodeStepper extends StatelessWidget {
                         : GameTheme.parchmentDim,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  level <= 0
-                      ? '0 = normal · KEY + to push'
-                      : (level < maxLevel
-                          ? 'endless · KEY + to push'
-                          : 'clear this key to unlock +${level + 1}'),
-                  textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 11,
-                    color: GameTheme.parchmentDim,
+                if (level > 0) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    level < maxLevel
+                        ? 'Higher keys stay open'
+                        : 'Clear this key to unlock +${level + 1}',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 11,
+                      color: GameTheme.parchmentDim,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

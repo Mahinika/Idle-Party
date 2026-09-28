@@ -48,9 +48,7 @@ class KeystoneSheet extends StatelessWidget {
           const SizedBox(height: 4),
         ],
         Text(
-          'PATH is the 15 caves. KEY is a timed run on those caves — this '
-          'week’s pack jobs and boss tell rotate. Farm Rift is Stormwake '
-          'progress + Guardian (loot), not the same hunt.',
+          'Turn the dial, then ENTER. The hunts below are separate from PATH caves.',
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
@@ -63,19 +61,15 @@ class KeystoneSheet extends StatelessWidget {
               children: [
                 MenuChrome.fold(
                   title: 'KEY',
-                  subtitle: 'Timed keys on PATH caves — dial then ENTER',
+                  subtitle: 'Dial, then ENTER',
                   initiallyExpanded: hunt == null,
                   children: [
-                    MenuChrome.sectionLabelScoped(
-                      'KEY',
-                      scope: MenuScope.run,
-                    ),
                     ChallengeToggles(director: d, lockExpanded: true),
                   ],
                 ),
                 MenuChrome.fold(
                   title: 'GAUNTLET',
-                  subtitle: 'Endless Spire — not a 16th cave · wipe → hub',
+                  subtitle: 'Boss every 5 · not a 16th cave',
                   initiallyExpanded: hunt == HubEndgameHunt.gauntlet,
                   children: [
                     GauntletHubPanel(director: d),

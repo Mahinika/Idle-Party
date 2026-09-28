@@ -51,62 +51,64 @@ class _MarketOverlayState extends State<MarketOverlay> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Text(
-              '${formatCount(state.gold)}g',
-              style: GameTheme.body(size: 15, color: GameTheme.torchHot),
-            ),
-            const Spacer(),
-            if (freeReady)
-              Text(
-                'Listings fresh',
-                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-              )
-            else
-              MenuChrome.textLink(
-                label: 'Reroll · ${formatCount(refreshCost)}g',
-                onPressed: state.gold >= refreshCost
-                    ? director.refreshMarketListings
-                    : null,
-              ),
-          ],
-        ),
-        if (!freeReady)
+        if (freeReady)
+          Text(
+            'Listings fresh',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          )
+        else ...[
+          GameButton(
+            label: 'REROLL · ${formatCount(refreshCost)}g',
+            style: GameButtonStyle.grey,
+            dense: true,
+            onPressed: state.gold >= refreshCost
+                ? director.refreshMarketListings
+                : null,
+          ),
+          const SizedBox(height: 4),
           Text(
             'Free refresh in $refreshLabel',
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
+        ],
 
         const SizedBox(height: 10),
         GameButton(
           label: state.gold >= flaskCost
-              ? 'Buy flask · ${flaskCost}g'
-              : 'Flask · need ${flaskCost}g',
+              ? 'BUY FLASK · ${flaskCost}g'
+              : 'FLASK · NEED ${flaskCost}g',
           dense: true,
           onPressed:
               state.gold >= flaskCost ? director.buyMarketFlask : null,
         ),
-        const SizedBox(height: 2),
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 10,
+        const SizedBox(height: 6),
+        Text(
+          _marketHealCount(state),
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
+        Row(
           children: [
-            Text(
-              _marketHealCount(state),
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            Expanded(
+              child: GameButton(
+                label: 'BUY 3 · ${flaskCost * 3}g',
+                style: GameButtonStyle.grey,
+                dense: true,
+                onPressed: state.gold >= flaskCost * 3
+                    ? () => director.buyMarketFlasks()
+                    : null,
+              ),
             ),
-            MenuChrome.textLink(
-              label: '×3 · ${flaskCost * 3}g',
-              onPressed: state.gold >= flaskCost * 3
-                  ? () => director.buyMarketFlasks()
-                  : null,
-            ),
-            MenuChrome.textLink(
-              label: 'Bandage · ${bandageCost}g',
-              onPressed: state.gold >= bandageCost
-                  ? director.buyMarketBandage
-                  : null,
+            const SizedBox(width: 6),
+            Expanded(
+              child: GameButton(
+                label: 'BANDAGE · ${bandageCost}g',
+                style: GameButtonStyle.grey,
+                dense: true,
+                onPressed: state.gold >= bandageCost
+                    ? director.buyMarketBandage
+                    : null,
+              ),
             ),
           ],
         ),
@@ -136,28 +138,14 @@ class _MarketOverlayState extends State<MarketOverlay> {
               children: [
                 Text(
                   _upgradesOnly
-                      ? 'No upgrades in stock — show all gear or reroll.'
-                      : 'No listings — earn gold, then reroll when ready.',
+                      ? 'No upgrades in stock.'
+                      : 'No listings yet.',
                   textAlign: TextAlign.center,
                   style: GameTheme.body(
                     size: 14,
                     color: GameTheme.parchmentDim,
                   ),
                 ),
-                if (_upgradesOnly) ...[
-                  const SizedBox(height: 6),
-                  MenuChrome.textLink(
-                    label: 'Show all gear',
-                    onPressed: () => setState(() => _upgradesOnly = false),
-                  ),
-                ],
-                if (!freeReady && state.gold >= refreshCost) ...[
-                  const SizedBox(height: 4),
-                  MenuChrome.textLink(
-                    label: 'Reroll listings · ${formatCount(refreshCost)}g',
-                    onPressed: director.refreshMarketListings,
-                  ),
-                ],
               ],
             ),
           )
@@ -383,6 +371,10 @@ class _MarketOverlayState extends State<MarketOverlay> {
         bandages++;
       }
     }
-    return 'Have $flasks flask · $bandages bandage';
+    return 'Have ${_marketCount(flasks, 'flask', 'flasks')} · '
+        '${_marketCount(bandages, 'bandage', 'bandages')}';
   }
+
+  static String _marketCount(int n, String one, String many) =>
+      '$n ${n == 1 ? one : many}';
 }

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/ad_boost.dart';
@@ -23,10 +22,10 @@ class ShopDock extends StatefulWidget {
 
   /// SHOP blurb. ESSENCE is named only when that tab exists.
   static String convenienceLine({required bool showEssence}) {
-    final essenceBit = showEssence ? ' · essence under ESSENCE' : '';
-    return 'Timed tickets are free SCROLLS on the hub. '
-        'Forever scrolls here skip the watch (not BiS-for-cash). '
-        'Gold under GOLD$essenceBit.';
+    final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
+    return 'Free tickets are SCROLLS on the hub. '
+        'Forever scrolls here skip the watch. '
+        'Gold is under GOLD.$essenceBit';
   }
 
   @override
@@ -75,9 +74,7 @@ class _ShopDockState extends State<ShopDock>
             ? (catalogOk
                 ? 'Prices come from Google Play.'
                 : 'Waiting for Play catalog…')
-            : (kReleaseMode
-                ? 'Waiting for Play billing…'
-                : 'Buys need a Play Store install of Idle Party (not sideload).');
+            : 'Waiting for Play billing…';
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -152,6 +149,7 @@ class _ShopDockState extends State<ShopDock>
             priceLabel:
                 ShopStore.storePriceLabel(items[i].id) ?? items[i].priceLabel,
             compact: compact && items[i].permMask != AdBoost.permAll,
+            primary: items[i].permMask == AdBoost.permAll,
             onBuy: () => _buy(items[i]),
           ),
         ],
@@ -194,6 +192,7 @@ class _ShopRow extends StatelessWidget {
     required this.priceLabel,
     required this.onBuy,
     this.compact = false,
+    this.primary = false,
   });
 
   final ShopCatalogItem item;
@@ -201,6 +200,7 @@ class _ShopRow extends StatelessWidget {
   final String priceLabel;
   final VoidCallback onBuy;
   final bool compact;
+  final bool primary;
 
   static String? assetFor(ShopCatalogItem item) {
     if (item.permMask == AdBoost.permAll) return UiIcon.star;
@@ -302,6 +302,9 @@ class _ShopRow extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: GameButton(
               label: owned ? 'OWNED' : 'BUY',
+              style: primary && !owned
+                  ? GameButtonStyle.brown
+                  : GameButtonStyle.grey,
               expanded: false,
               dense: true,
               onPressed: owned ? null : onBuy,

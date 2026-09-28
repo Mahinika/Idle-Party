@@ -41,7 +41,7 @@ abstract final class HubEndgameAct {
   static const String pathTabLabel = 'PATH';
 
   static String get mapUnlockLine =>
-      'PATH = 15 caves · KEY = harder PATH · these hunts are not a 16th cave';
+      'PATH caves · KEY is harder · hunts are not a 16th cave';
 
   static const List<HubEndgameNode> nodes = <HubEndgameNode>[
     HubEndgameNode(
@@ -49,7 +49,7 @@ abstract final class HubEndgameAct {
       shortLabel: 'GAUNTLET',
       title: 'Gauntlet',
       blurb:
-          'Endless Spire · not a 16th cave · boss every 5, tells cycle · wipe or leave → hub',
+          'Boss every 5 · not a 16th cave',
       portraitDungeonId: 'crystal',
       enterLabel: 'GAUNTLET',
       chaseKind: HubChaseKind.gauntletMilestone,

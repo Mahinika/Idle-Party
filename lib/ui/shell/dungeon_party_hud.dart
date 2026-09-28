@@ -754,10 +754,19 @@ class _PartyRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            HeroDollSprite(
-              hero: hero,
-              partyIndex: index,
-              size: 22,
+            SizedBox(
+              width: 28,
+              height: 22,
+              child: ClipRect(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: HeroDollSprite(
+                    hero: hero,
+                    partyIndex: index,
+                    size: 20,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: 4),
             Expanded(
@@ -1247,7 +1256,7 @@ class _DpsMeterState extends State<DpsMeter> {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
       decoration: MenuChrome.hudWell(),
       child: Text(
-        _open ? 'METER ▴' : '${snap.chipLabel} ▾',
+        _open ? 'METER' : snap.chipLabel,
         style: GameTheme.pixel(
           size: GameTheme.hudPixel,
           color: GameTheme.parchment,
@@ -1265,7 +1274,7 @@ class _DpsMeterState extends State<DpsMeter> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'METER ▴',
+              'METER',
               style: GameTheme.pixel(
                 size: GameTheme.hudPixel,
                 color: GameTheme.parchmentDim,

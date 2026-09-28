@@ -16,8 +16,8 @@ class GauntletHubPanel extends StatelessWidget {
     final state = director.state;
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
-        'INFINITY GAUNTLET unlocks at party level ${GameLogic.maxHeroLevel} — '
-        'endless Spire climb, not a 16th cave (boss every 5 floors).',
+        'INFINITY GAUNTLET unlocks at party level ${GameLogic.maxHeroLevel}. '
+        'Boss every 5 floors.',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
       );
@@ -33,16 +33,14 @@ class GauntletHubPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           best <= 0
-              ? 'Endless Spire floors — not a 16th cave, not a timed Rift. '
-                  'Boss every 5, each with a different tell. Wipe or leave → hub. Best floor is your PB.'
-              : 'Spire climb · best F$best. Not a 16th cave. Floors escalate forever — '
-                  'boss every 5, tells cycle. Not a Rift timer.',
+              ? 'Boss every 5 floors. Each boss has its own tell.'
+              : 'Best clear F$best. Boss every 5 floors.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         GameButton(
           label: 'ENTER GAUNTLET',
-          style: GameButtonStyle.red,
+          style: GameButtonStyle.brown,
           onPressed: GameLogic.canEnterGauntlet(state)
               ? () => confirmGauntletRun(context, director)
               : null,

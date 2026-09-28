@@ -404,6 +404,7 @@ class _HubScreenState extends State<HubScreen>
         : const <String>{};
     final showWeekAffix =
         !short &&
+        state.hardmodeLevel > 0 &&
         weekMod.isNotEmpty &&
         GameLogic.showKeystoneJargon(state) &&
         // Don't repeat the same affix under KEY +N and as Week · …
@@ -419,7 +420,7 @@ class _HubScreenState extends State<HubScreen>
       children: [
         if (showWeekAffix) ...[
           Text(
-            '${Keystone.label(weekMod)} · Week — ${Keystone.blurb(weekMod)}',
+            '${Keystone.label(weekMod)} · KEY — ${Keystone.blurb(weekMod)}',
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -633,10 +634,8 @@ class _HubScreenState extends State<HubScreen>
                               // not rebuild 60×/s (wallet + HubChase.forState).
                               HubHeader(
                                 ascensionLevel: state.ascensionLevel,
-                                partySubline: chase.urgency ==
-                                        HubChaseUrgency.ready
-                                    ? chase.title
-                                    : '${state.partyName} · Boss on F$bossFloor',
+                                partySubline:
+                                    '${state.partyName} · Boss on F$bossFloor',
                                 gold: state.gold,
                                 essence: state.essence,
                                 willRank: state.willRankTitle,

@@ -338,7 +338,7 @@ class DungeonTopHud extends StatelessWidget {
         : awaitingExit
         ? '$zoneShort · F$floor · GO stairs'
         : state.inGauntlet
-        ? 'CLIMB · F$floor'
+        ? 'CLIMB'
         : state.inRift
         ? 'STORMWAKE · FARM R${state.riftTier}'
         : state.inGreaterRift
@@ -424,7 +424,7 @@ class DungeonTopHud extends StatelessWidget {
           dense: true,
           interactive: false,
           tip:
-              'Spire climb — not a 16th cave. Next boss F$nextBoss.$nextBit$pbBit No FARM. Wipe or leave → hub.$extra',
+              'Next boss F$nextBoss.$nextBit$pbBit Wipe or leave returns to the hub.$extra',
           onTap: () {},
         );
       }
@@ -566,7 +566,7 @@ class DungeonTopHud extends StatelessWidget {
                         _floorMenuItems(floor: floor, includeExtras: false),
                     child: Center(
                       child: Text(
-                        'F$floor',
+                        state.inGauntlet ? '...' : 'F$floor',
                         style: GameTheme.pixel(
                           size: GameTheme.hudPixel,
                           color: GameTheme.torchHot,

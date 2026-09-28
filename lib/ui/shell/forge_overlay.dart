@@ -58,13 +58,13 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     PartyUpgradeType.vitality => '+${state.vitalityBonus}',
     PartyUpgradeType.moveSpeed =>
       '+${GameState.softForgePercent(state.moveSpeedBonus).round()}%'
-      '${state.moveSpeedBonus >= 40 ? ' · SOFT' : ''}',
+      '${state.moveSpeedBonus >= 40 ? ' · cap' : ''}',
     PartyUpgradeType.attackSpeed =>
       '+${GameState.softForgePercent(state.attackSpeedBonus).round()}%'
-      '${state.attackSpeedBonus >= 40 ? ' · SOFT' : ''}',
+      '${state.attackSpeedBonus >= 40 ? ' · cap' : ''}',
     PartyUpgradeType.crit =>
       '+${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%'
-      '${state.critBonus >= 25 ? ' · SOFT' : ''}',
+      '${state.critBonus >= 25 ? ' · cap' : ''}',
     PartyUpgradeType.mastery => '+${state.masteryBonus}',
   };
 
@@ -90,7 +90,6 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       title: _forgeName(type),
       tag: recommended ? 'BEST' : null,
       subtitle: '${_forgeBonus(state, type)}${nextDelta == null ? '' : ' · $nextDelta'}',
-      detail: recommended ? 'Tap when unsure — splits evenly with SPEND ALL' : null,
       selected: recommended,
       dense: true,
       trailing: GameButton(
