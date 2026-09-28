@@ -14,6 +14,7 @@ import '../hub_screen.dart';
 import '../is2_shell.dart';
 import 'app_bottom_bar.dart';
 import 'menu_surface.dart';
+import 'wisp_gift_overlay.dart';
 import 'play_nav.dart';
 
 /// Single play-phase owner: hub or dungeon scene, one [MenuSurface], toast,
@@ -36,6 +37,7 @@ class _PlayShellState extends State<PlayShell> {
   GameDirector get director => widget.director;
   MenuRouter get router => widget.router;
   late bool _inDungeon;
+  bool _wispSheetOpening = false;
 
   @override
   void initState() {
@@ -78,6 +80,20 @@ class _PlayShellState extends State<PlayShell> {
 
   void _syncPause() {
     director.setUiPaused(router.isOpen && director.state.inDungeon);
+    director.setWispMenuPaused(router.isOpen);
+  }
+
+  void _maybeOpenWispChoiceSheet() {
+    if (_wispSheetOpening || !director.shouldShowWispChoiceSheet) return;
+    _wispSheetOpening = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        _wispSheetOpening = false;
+        return;
+      }
+      await openWispChoiceSheet(context, director);
+      _wispSheetOpening = false;
+    });
   }
 
   void _leaveDungeon() {
@@ -246,6 +262,8 @@ class _PlayShellState extends State<PlayShell> {
 
   @override
   Widget build(BuildContext context) {
+    _syncPause();
+    _maybeOpenWispChoiceSheet();
     final inDungeon = director.state.inDungeon;
     final noticeAlign = inDungeon
         ? (router.isOpen
@@ -296,7 +314,10 @@ class _PlayShellState extends State<PlayShell> {
                       Expanded(
                         child: Stack(
                           fit: StackFit.expand,
-                          children: tipsAndMenus,
+                          children: [
+                            ...tipsAndMenus,
+                            WispGiftOverlay(director: director),
+                          ],
                         ),
                       ),
                       ListenableBuilder(
@@ -325,6 +346,7 @@ class _PlayShellState extends State<PlayShell> {
                           ),
                         ),
                         ...tipsAndMenus,
+                        WispGiftOverlay(director: director),
                       ],
                     ),
                   ),

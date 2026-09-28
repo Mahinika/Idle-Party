@@ -166,11 +166,20 @@ match this doc.
   again.*
 - Empty tickets: *WATCH an ad to earn a ticket.*
 
+## WISP gift (separate from SCROLLS)
+
+Optional **WISP** drifts on hub / dungeon after the first ENTER (not before). Tap
+→ small gold pile (3 floors of normal-kill gold). On **hub**, **WATCH** a
+rewarded ad for **10×** that pile + **1 hour ×2 gold** (extends
+`adGoldUntilMs`, same magnitude as Scroll of Gold; 24h stack cap). Dungeon tap
+banks the WATCH offer until hub; ads never start mid-fight. Ad-free: big pile +
+hour on tap. Max **6** taps per UTC day. Logic: `lib/core/wisp_gift.dart`.
+
 ## Out of scope (v1)
 
 This list is the ad-powerups cut, not a repo-wide ban. Owner 2026-09-26 lifted the gacha / whale stop.
 
-- Dungeon floating icon
+- Second floating ad icon besides WISP (SCROLLS FAB unchanged)
 - Daily ad impression hard cap
 - Extra currencies / gacha / random buff chests
 - Progressive “watch more → stronger forever” (Legend of Slime style)

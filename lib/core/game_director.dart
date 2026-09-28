@@ -48,6 +48,7 @@ import 'session_telemetry.dart';
 import 'local_notify.dart';
 import 'local_reminders.dart';
 import 'wipe_advice.dart';
+import 'wisp_gift.dart';
 import 'ashen_crown.dart';
 import 'blessing_constellation.dart';
 import 'god_hand_mastery.dart';
@@ -121,6 +122,11 @@ class GameDirector extends ChangeNotifier {
 
   /// Soft-pause spatial sim while inventory / meta menus are open.
   bool _uiPaused = false;
+
+  int _wispVisibleRemainingMs = 0;
+  bool _wispSpawnArmed = false;
+  bool _wispTappedThisWindow = false;
+  bool _wispMenuPaused = false;
 
   /// Hard pause while the app is backgrounded (separate from menu [uiPaused]).
   bool _appPaused = false;
@@ -314,6 +320,129 @@ class GameDirector extends ChangeNotifier {
     _uiPaused = paused;
   }
 
+  /// Pause WISP despawn while hub/dungeon menus are open.
+  void setWispMenuPaused(bool paused) {
+    _wispMenuPaused = paused;
+  }
+
+  bool get isWispVisible => _wispVisibleRemainingMs > 0;
+
+  bool get wispPendingChoice => WispGift.hasPendingChoice(_state.metaDepth);
+
+  /// Hub overlay: show WATCH sheet when pending and not in a menu.
+  bool get shouldShowWispChoiceSheet =>
+      wispPendingChoice && !_state.inDungeon && !_wispMenuPaused;
+
+  void tickWisp({int deltaMs = 200}) {
+    if (_isLoading) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final md = _state.metaDepth;
+    if (!WispGift.unlocked(md) ||
+        !WispGift.canTapToday(md) ||
+        WispGift.hasPendingChoice(md)) {
+      if (_wispVisibleRemainingMs > 0) {
+        _wispVisibleRemainingMs = 0;
+        _wispSpawnArmed = false;
+        notifyListeners();
+      }
+      return;
+    }
+    if (_wispVisibleRemainingMs > 0) {
+      if (!_wispMenuPaused) {
+        final next = _wispVisibleRemainingMs - deltaMs;
+        if (next <= 0) {
+          _wispVisibleRemainingMs = 0;
+          _wispSpawnArmed = false;
+          if (!_wispTappedThisWindow) {
+            _applyUpgrade(WispGift.onWispMissed(_state, nowMs: now));
+          }
+          notifyListeners();
+        } else {
+          _wispVisibleRemainingMs = next;
+        }
+      }
+      return;
+    }
+    if (WispGift.shouldSpawn(md, now)) {
+      if (!_wispSpawnArmed) {
+        _wispSpawnArmed = true;
+        _wispTappedThisWindow = false;
+        _wispVisibleRemainingMs = WispGift.visibleMs;
+        notifyListeners();
+      }
+    } else {
+      _wispSpawnArmed = false;
+    }
+  }
+
+  void tapWispGift() {
+    if (!isWispVisible) return;
+    _wispVisibleRemainingMs = 0;
+    _wispSpawnArmed = false;
+    _wispTappedThisWindow = true;
+    final inHub = !_state.inDungeon;
+    final adFree = _state.metaDepth.adFree;
+    final keepBefore = _state.gold;
+    _applyUpgrade(WispGift.onWispTapped(_state));
+    final keep = _state.gold - keepBefore;
+    GameAudio.ui();
+    showToast('WISP · +$keep gold', life: 2.2);
+    if (adFree) {
+      _grantWispWatchReward(toast: true);
+    } else if (!inHub) {
+      showToast('WATCH on hub for a bigger pile + 1 hour ×2 gold', life: 2.6);
+    }
+    notifyListeners();
+    unawaited(_persistFlush());
+  }
+
+  void dismissWispPending() {
+    if (!wispPendingChoice) return;
+    _applyUpgrade(WispGift.dismissPending(_state));
+    notifyListeners();
+    unawaited(_persistFlush());
+  }
+
+  void _grantWispWatchReward({bool toast = true}) {
+    if (!wispPendingChoice) return;
+    final before = _state.gold;
+    final atCap = WispGift.goldHourAtCap(_state);
+    _applyUpgrade(WispGift.grantWatchReward(_state));
+    final gained = _state.gold - before;
+    if (toast) {
+      GameAudio.ui();
+      final capNote = atCap ? ' · Gold Rush already at 24h' : '';
+      showToast('WISP · +$gained gold · 1 hour ×2 gold$capNote', life: 2.8);
+    }
+    notifyListeners();
+    unawaited(_persistFlush());
+  }
+
+  /// Rewarded ad for the locked WATCH pile (hub only).
+  Future<void> watchWispGiftAd() async {
+    if (!wispPendingChoice) return;
+    if (_state.inDungeon) {
+      showToast('WATCH on hub — fights never pause for ads', life: 2.2);
+      return;
+    }
+    if (!AdRewarded.realAdsAvailable) {
+      showToast('Ads play on the Android app', life: 2.2);
+      return;
+    }
+    showToast('Loading ad…', life: 1.4);
+    final result = await AdRewarded.showRewarded();
+    switch (result) {
+      case AdWatchResult.rewarded:
+        _grantWispWatchReward();
+      case AdWatchResult.skipped:
+        showToast('Watch the whole ad for the WISP bonus', life: 2.2);
+      case AdWatchResult.failed:
+        showToast('Ad not ready — try again in a bit', life: 2.2);
+      case AdWatchResult.unavailable:
+        showToast('Ads play on the Android app', life: 2.2);
+    }
+  }
+
   /// Freeze dungeon combat while the app is backgrounded; flush save on pause.
   void setAppPaused(bool paused) {
     if (_appPaused == paused) return;
@@ -391,7 +520,8 @@ class GameDirector extends ChangeNotifier {
   void _ensureUiTimer() {
     if (_uiTimer != null) return;
     _uiTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
-      if (!uiFeedback.hasActiveTimers) return;
+      tickWisp(deltaMs: 200);
+      if (!uiFeedback.hasActiveTimers && !isWispVisible) return;
       _tickUiTimers(0.2);
       notifyListeners();
     });
@@ -1023,10 +1153,20 @@ class GameDirector extends ChangeNotifier {
     if (_isLoading) return;
     _awaitingWipeChoice = false;
     _flushHubIdle();
-    _state = GameLogic.dismissTip(
+    var entered = GameLogic.dismissTip(
       GameLogic.enterDungeon(_state, dungeonId: dungeonId),
       'first_run',
     );
+    final md = entered.metaDepth;
+    if (!md.wispUnlocked) {
+      entered = entered.copyWith(
+        metaDepth: WispGift.unlockOnFirstEnter(md),
+      );
+    }
+    _state = entered;
+    if (_state.metaDepth.wispUnlocked) {
+      _ensureUiTimer();
+    }
     _applyFunnelTick(
       FunnelAnalytics.onFirstEnter(
         _state,

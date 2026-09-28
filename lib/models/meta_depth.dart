@@ -321,6 +321,12 @@ class MetaDepthState {
     this.adOfflineMulExpiresMs = 0,
     this.adFreeDailyClaimUtc = '',
     this.adFree = false,
+    this.wispUnlocked = false,
+    this.wispGiftUtcDay = '',
+    this.wispGiftClaimsToday = 0,
+    this.wispNextSpawnMs = 0,
+    this.wispPendingWatchGold = 0,
+    this.wispPendingKeepGold = 0,
     this.shopStarterClaimed = false,
     this.shopBagBonusSlots = 0,
     this.shopPermScrolls = 0,
@@ -596,6 +602,24 @@ class MetaDepthState {
   /// Permanent SHOP ad-free purchase. Survives Ascend. Billing grants later.
   final bool adFree;
 
+  /// WISP gift unlocked after first dungeon enter. Survives Ascend.
+  final bool wispUnlocked;
+
+  /// UTC day for [wispGiftClaimsToday] (yyyy-mm-dd).
+  final String wispGiftUtcDay;
+
+  /// WISP taps claimed today (max 6).
+  final int wispGiftClaimsToday;
+
+  /// Earliest millis when the next WISP may appear.
+  final int wispNextSpawnMs;
+
+  /// Locked WATCH gold waiting for hub ad (0 = none).
+  final int wispPendingWatchGold;
+
+  /// KEEP gold already granted when [wispPendingWatchGold] was set (UI copy).
+  final int wispPendingKeepGold;
+
   /// One-time starter_boost_6h claimed. Survives Ascend.
   final bool shopStarterClaimed;
 
@@ -767,6 +791,12 @@ class MetaDepthState {
     int? adOfflineMulExpiresMs,
     String? adFreeDailyClaimUtc,
     bool? adFree,
+    bool? wispUnlocked,
+    String? wispGiftUtcDay,
+    int? wispGiftClaimsToday,
+    int? wispNextSpawnMs,
+    int? wispPendingWatchGold,
+    int? wispPendingKeepGold,
     bool? shopStarterClaimed,
     int? shopBagBonusSlots,
     int? shopPermScrolls,
@@ -918,6 +948,12 @@ class MetaDepthState {
           adOfflineMulExpiresMs ?? this.adOfflineMulExpiresMs,
       adFreeDailyClaimUtc: adFreeDailyClaimUtc ?? this.adFreeDailyClaimUtc,
       adFree: adFree ?? this.adFree,
+      wispUnlocked: wispUnlocked ?? this.wispUnlocked,
+      wispGiftUtcDay: wispGiftUtcDay ?? this.wispGiftUtcDay,
+      wispGiftClaimsToday: wispGiftClaimsToday ?? this.wispGiftClaimsToday,
+      wispNextSpawnMs: wispNextSpawnMs ?? this.wispNextSpawnMs,
+      wispPendingWatchGold: wispPendingWatchGold ?? this.wispPendingWatchGold,
+      wispPendingKeepGold: wispPendingKeepGold ?? this.wispPendingKeepGold,
       shopStarterClaimed: shopStarterClaimed ?? this.shopStarterClaimed,
       shopBagBonusSlots: shopBagBonusSlots ?? this.shopBagBonusSlots,
       shopPermScrolls: shopPermScrolls ?? this.shopPermScrolls,
@@ -1062,6 +1098,12 @@ class MetaDepthState {
     'adOfflineMulExpiresMs': adOfflineMulExpiresMs,
     'adFreeDailyClaimUtc': adFreeDailyClaimUtc,
     'adFree': adFree,
+    'wispUnlocked': wispUnlocked,
+    'wispGiftUtcDay': wispGiftUtcDay,
+    'wispGiftClaimsToday': wispGiftClaimsToday,
+    'wispNextSpawnMs': wispNextSpawnMs,
+    'wispPendingWatchGold': wispPendingWatchGold,
+    'wispPendingKeepGold': wispPendingKeepGold,
     'shopStarterClaimed': shopStarterClaimed,
     'shopBagBonusSlots': shopBagBonusSlots,
     'shopPermScrolls': shopPermScrolls,
@@ -1260,6 +1302,15 @@ class MetaDepthState {
           (json['adOfflineMulExpiresMs'] as num?)?.toInt() ?? 0,
       adFreeDailyClaimUtc: (json['adFreeDailyClaimUtc'] as String?) ?? '',
       adFree: (json['adFree'] as bool?) ?? false,
+      wispUnlocked: (json['wispUnlocked'] as bool?) ?? false,
+      wispGiftUtcDay: (json['wispGiftUtcDay'] as String?) ?? '',
+      wispGiftClaimsToday:
+          ((json['wispGiftClaimsToday'] as num?)?.toInt() ?? 0).clamp(0, 99),
+      wispNextSpawnMs: (json['wispNextSpawnMs'] as num?)?.toInt() ?? 0,
+      wispPendingWatchGold:
+          ((json['wispPendingWatchGold'] as num?)?.toInt() ?? 0).clamp(0, 999999999),
+      wispPendingKeepGold:
+          ((json['wispPendingKeepGold'] as num?)?.toInt() ?? 0).clamp(0, 999999999),
       shopStarterClaimed: (json['shopStarterClaimed'] as bool?) ?? false,
       shopBagBonusSlots: ((json['shopBagBonusSlots'] as num?)?.toInt() ?? 0)
           .clamp(0, 20),

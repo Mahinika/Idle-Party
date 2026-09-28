@@ -36,7 +36,7 @@ abstract final class UiIcon {
   static const String wand = CustomAssets.iconWand;
 }
 
-enum UiGlyph { add, close, prev, next, scroll }
+enum UiGlyph { add, close, prev, next, scroll, wisp }
 
 /// Pixel mark: a [UiIcon] sprite or a [UiGlyph] painted in-theme.
 class GameIcon extends StatelessWidget {
@@ -83,6 +83,7 @@ class GameIcon extends StatelessWidget {
         UiGlyph.prev => _kPrev,
         UiGlyph.next => _kNext,
         UiGlyph.scroll => _kScroll,
+        UiGlyph.wisp => _kWisp,
       };
 }
 
@@ -228,6 +229,20 @@ const _kNext = <String>[
 ];
 
 /// Rolled parchment: a roll on the left, a page trailing to the right.
+/// Lantern + flame (hub WISP gift).
+const _kWisp = <String>[
+  '...###...',
+  '..#####..',
+  '.#.....#.',
+  '.#..#..#.',
+  '.#..#..#.',
+  '.#.....#.',
+  '..#...#..',
+  '...###...',
+  '....#....',
+  '..#####..',
+];
+
 const _kScroll = <String>[
   '..####......',
   '.######.....',
