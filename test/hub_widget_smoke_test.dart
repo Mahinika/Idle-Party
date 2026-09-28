@@ -9,6 +9,7 @@ import 'package:idle_party/core/session_telemetry.dart';
 import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
 import 'package:idle_party/ui/hub/hub_powerups.dart';
+import 'package:idle_party/ui/hub/hub_ranks.dart';
 import 'package:idle_party/ui/shell/scroll_buff_stack.dart';
 
 void main() {
@@ -227,6 +228,41 @@ void main() {
 
     expect(find.bySemanticsLabel('SCROLLS. SCROLLS'), findsOneWidget);
     expect(find.text('SCROLLS'), findsWidgets);
+  });
+
+  testWidgets('Hub RANKS button opens the season list', (tester) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState(now: now),
+    );
+    addTearDown(director.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              return HubRanksFab(
+                onOpen: () => openHubRanksSheet(context, director),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('RANKS. Season boards'), findsOneWidget);
+    expect(find.text('RANKS'), findsWidgets);
+
+    await tester.tap(find.bySemanticsLabel('RANKS. Season boards'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Switch KEY, Gauntlet, or Ranked GR.'), findsOneWidget);
+    expect(find.text('Boards need a Play install + sign-in'), findsOneWidget);
   });
 
   testWidgets('HubPowerupsFab shows ticket count when banked', (tester) async {

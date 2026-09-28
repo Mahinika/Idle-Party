@@ -701,9 +701,9 @@ abstract final class GameGuides {
           '• GR20 sits on a ~90s clock — later ranks keep that cap and the kill quota. '
           'Each rank after that multiplies pack toughness (GOLD forge is your damage, not theirs).\n'
           '• Fast clears unlock +2 tiers; fails keep your best tier.\n'
-          '• Season ranks show on KEY · BOARDS (Timed KEY, Gauntlet, Ranked GR). '
-          'Play install + sign-in. The list stays in the game. '
-          'Local PB also stays on hub ENDGAME.\n'
+          '• Season ranks: hub RANKS button (KEY, Gauntlet, Ranked GR). '
+          'Same list on KEY · BOARDS. Play install + sign-in. '
+          'The list stays in the game. Local PB also stays on hub ENDGAME.\n'
           '• Fail the par clock: the run is depleted — keep your best tier, retry from hub ENDGAME.\n'
           '• The hub hunt chases Ranked GR before Farm Rift. ENTER opens arrows to pick any GR.',
     ),
