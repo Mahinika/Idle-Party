@@ -1,5 +1,6 @@
 /// stop: if code was edited, run flutter analyze (+ changelog sync when relevant).
 /// On failure, emit followup_message so the agent fixes without owner typing "fix it".
+/// When green, nudge once if files edited this batch are still uncommitted.
 import 'dart:convert';
 import 'dart:io';
 
@@ -80,7 +81,43 @@ Future<void> main() async {
   try {
     dirty.deleteSync();
   } catch (_) {}
+
+  final pending = await _uncommitted(dirtyText);
+  if (pending.isNotEmpty) {
+    _emit(<String, dynamic>{
+      'followup_message':
+          'Stop-hook: checks are green, but files edited this batch are not '
+          'committed:\n${pending.join('\n')}\n\n'
+          'Commit them locally (owner-preferences), or tell the owner in one '
+          'line why they stay open.',
+    });
+    return;
+  }
   _emit(<String, dynamic>{});
+}
+
+/// Edited paths from the dirty list that git still shows as changed.
+Future<List<String>> _uncommitted(String dirtyText) async {
+  final root = '${Directory.current.path.replaceAll('\\', '/')}/'.toLowerCase();
+  final paths = <String>{};
+  for (final line in dirtyText.split('\n').skip(1)) {
+    var p = line.trim().replaceAll('\\', '/');
+    if (p.isEmpty) continue;
+    if (p.toLowerCase().startsWith(root)) p = p.substring(root.length);
+    if (p.startsWith('/') || p.contains(':')) continue;
+    paths.add(p);
+  }
+  if (paths.isEmpty) return const <String>[];
+  final status = await _run(
+    'git',
+    <String>['status', '--porcelain', '--', ...paths],
+  );
+  if (status.exitCode != 0) return const <String>[];
+  return status.combined
+      .split('\n')
+      .map((l) => l.trimRight())
+      .where((l) => l.isNotEmpty && !l.startsWith('warning:'))
+      .toList();
 }
 
 bool _touchesChangelog(String dirtyText) {

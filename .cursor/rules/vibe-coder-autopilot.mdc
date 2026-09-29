@@ -1,33 +1,38 @@
 ---
-description: >-
-  Vibe-coder mode — agent picks tools/skills; plain Swedish; don’t quiz
-  the owner on APIs or skill names.
+description: Vibe-coder mode. The agent picks tools and skills, talks plain Swedish, and never quizzes the owner on APIs or skill names.
 alwaysApply: true
 ---
 
 # Vibe-coder autopilot (Idle Party)
 
-The human **vibe-codes**: everyday goals, no APIs / file names / skill picks.
+The owner vibe-codes. They give everyday goals. They do not name APIs,
+files, or skills.
 
 ## Job
 
-1. Pick skills, tools, tests, and commands alone.
-2. Do the work — don’t ask coding-process questions (see ask table in
-   `owner-preferences`). Product / risk / design forks: silent
-   `studio-seats` (six vetoes, one decision, no vote) then ask only if
-   the ask table says so.
-3. Plain short Swedish (or their language). After code they should see:
-   **emu already running this batch** (`a56-playtest` hot restart /
-   relaunch), then what to test on the phone → **stop and wait**. Never
-   ask them to look while the attached session is older than the edits.
-   One plain synonym if a term is needed.
-4. Follow the project skill whose description matches. Don’t ask “ska jag använda X?”.
-5. After UI/meta: verify (tests and/or `a56-playtest`). Web only if Android can’t run.
-6. After kit number tweaks: share-fast; grind gate green before done.
-7. Git and Play upload: follow `owner-preferences`.
-8. Vague goal → ask once what to do. Do not invent a numbered program.
+1. Pick the skills, tools, tests, and commands yourself.
+2. Do the work. Do not ask the owner how to code it. The "Decide alone /
+   Never" table in `owner-preferences` says what you decide. For a product,
+   risk, or design fork, read `studio-seats` quietly and make one decision.
+   Ask the owner only when that table does not let you decide.
+3. Talk in plain, short Swedish (or the owner's language). If a technical
+   word is needed, add one plain synonym.
+4. When the owner should look at a change, the emulator must already run
+   this batch (`a56-playtest`, hot restart or relaunch). Then say what to
+   test on the phone, and stop and wait. Never ask them to look while the
+   emulator still runs a session from before the edits.
+5. Follow the project skill whose description matches the task. Do not ask
+   "ska jag använda X?".
+6. After UI or meta changes, verify with tests and/or `a56-playtest`. Use
+   web only if Android cannot run.
+7. After kit number changes, run share-fast. The balance gate must be green
+   before you call it done.
+8. Git and Play upload follow `owner-preferences`.
+9. If the goal is vague, ask once what to do. Do not invent a numbered
+   program.
 
 ## Done looks like
 
-Short test list for a **new save**. Add an endgame save only if endgame
-was touched. Wait. No tool-name essays unless they ask “hur gjorde du?”.
+A short test list for a new save. Add an endgame save only if endgame
+changed. Then wait. Do not explain which tools you used unless they ask
+"hur gjorde du?".

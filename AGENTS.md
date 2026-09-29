@@ -47,9 +47,11 @@ Skills live under `.cursor/skills/`. Slash: `/init` resyncs this file and
 the rules; `/repo auditandcleaning` is analysis only.
 
 Hooks (`.cursor/hooks.json`): **sessionStart** injects the owner **Now:**
-line plus the Play-upload lock. **afterFileEdit** marks verify-dirty.
+line plus the Play-upload lock, and deletes `playshots/` images older than
+3 days (the folder is git-ignored). **afterFileEdit** marks verify-dirty.
 **stop** runs analyze, plus changelog or ship-smoke tests when those files
-moved.
+moved, then nudges once if edited files are still uncommitted.
+`test/agent_rules_test.dart` keeps rule descriptions readable by Cursor.
 
 MCP: `.cursor/mcp.json` → `idle-party` (`tool/mcp_idle_party/`).
 

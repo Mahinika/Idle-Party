@@ -1,28 +1,33 @@
 ---
-description: >-
-  Dated Idle Party hard product locks — do not weaken without owner yes.
+description: Dated Idle Party hard product locks. Do not weaken them without the owner's yes.
 alwaysApply: true
 ---
 
 # Product locks (Idle Party)
 
-**Confirmed:** 2026-09-12. Soft content locks and ask-first for zone / class /
-God Hand / UA / git push / wipe-save removed **2026-09-14** by owner.
-**2026-09-26:** owner removed the design stops they had set — one fight sim,
-no gacha / BiS-for-cash / whale, god-object as the quarter’s story, and
-AL20 polish as a forbidden default. Same day: **never iOS, never an Apple
-release.** **Google Play AAB upload still requires owner ask.**
+**Confirmed:** 2026-09-12.
 
-## Hard (never weaken from this file)
+On **2026-09-14** the owner removed the soft content locks and the
+ask-first rule for new zones, classes, God Hand, UA, git push, and wiping
+the save.
+
+On **2026-09-26** the owner removed the design stops they had set: only one
+fight sim; no gacha, BiS-for-cash, or whale packs; the god-object as the
+quarter's story; and AL20 polish as a forbidden default. The same day they
+added: **never iOS, never an Apple release.**
+
+**Uploading an AAB to Google Play still needs the owner to ask.**
+
+## Hard locks (never weaken from this file)
 
 | Lock | Meaning |
 |------|---------|
-| Legal / IP | Owned `assets/custom/` only; no foreign dumps/sprites/code |
-| Phone product | Portrait Android only. Never iOS or an Apple release, even if a plan names it. No web-as-product |
-| English UI | In-game copy English; chat with owner in their language |
-| Fairness first | Live-light DPS gate / ±20% share — trim HIGH kits |
-| SpatialCombat | Current fight sim. A second sim is not forbidden |
-| SHOP | Not limited to convenience / ad-free. Gacha, BiS-for-cash, and whale packs are not forbidden |
-| Play primary | Install via Play; do not point players at GitHub Releases |
-| Play upload | Never upload AAB / publish without owner ask that turn |
-| Cursor safety | No exploits / foreign dumps — not overridable here |
+| Legal / IP | Only owned art in `assets/custom/`. No foreign dumps, sprites, or code |
+| Phone product | Portrait Android only. Never iOS or an Apple release, even if a plan names it. The web build is not a product |
+| English UI | In-game text is English. Chat with the owner in their language |
+| Fairness first | The live-light DPS gate allows ±20% share. Trim HIGH kits |
+| SpatialCombat | The current fight sim. A second sim is allowed |
+| SHOP | Not limited to convenience or ad-free. Gacha, BiS-for-cash, and whale packs are allowed |
+| Play primary | Players install through Play. Do not point them at GitHub Releases |
+| Play upload | Never upload an AAB or publish unless the owner asks in that turn |
+| Cursor safety | No exploits and no foreign dumps. This file cannot override that |

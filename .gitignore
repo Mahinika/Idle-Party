@@ -157,3 +157,6 @@ IdleSword*
 /tool/parse_ui_dump.py
 /tool/parse_ui_dump_local.py
 
+# Emulator shots from tool/adb_see.py. sessionStart deletes images older than 3 days.
+/playshots/
+

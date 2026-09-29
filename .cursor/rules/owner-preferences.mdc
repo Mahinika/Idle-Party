@@ -1,56 +1,66 @@
 ---
-description: >-
-  Idle Party workstyle — batches, verify loop, git.
-  Product locks live in product-locks.mdc.
+description: Idle Party work style (batches, verify loop, git). Product locks live in product-locks.mdc.
 alwaysApply: true
 ---
 
 # Owner preferences (Idle Party)
 
-Source: owner (vibe-coder). Last sync: **2026-09-15**.
-Locks: `.cursor/rules/product-locks.mdc`. Mandate: `docs/GROWTH_MANDATE.md`.
+Source: the owner, who vibe-codes. Last sync: **2026-09-15**.
+Locks: `.cursor/rules/product-locks.mdc`. Growth principles:
+`docs/GROWTH_MANDATE.md`.
 
 **Now:** no standing program. Owner names the work. **Never Play AAB without owner ask.** AL20 polish is allowed when they name it.
 
-## Default work (when goal is vague)
+## When the goal is vague
 
-Ask once what to do. Do not invent a numbered program. Prefer deepening KEY,
-Gauntlet, Rift, Greater Rift, and Ashen when they say “mer endgame” unless
-they name new content. Monthly Craft Trial (MORE → CRAFT) is not a sixth
-ENDGAME hunt. Not default: `/init`, repo cleanup. Never iOS / Apple.
-GEAR / endgame
-copy only if play notes say they lie.
+Ask once what to do. Do not invent a numbered program.
 
-**Play notes:** a **new save** is the usual batch signal.
+When they say "mer endgame" and name no new content, deepen KEY,
+Gauntlet, Rift, Greater Rift, and Ashen. The monthly Craft Trial
+(MORE → CRAFT) is not a sixth ENDGAME hunt.
 
-## UI / distribution (facts)
+Do not run `/init` or clean up the repo unless they ask. Never iOS or
+Apple. Change GEAR or endgame copy only when play notes say it lies.
 
-- Phone ~360–430 CSS px; reference **Samsung A56** → **360×780**
-- Live look: AVD `Samsung_A56` + `flutter run` (`a56-playtest`); not Pixel_6; not stacked web-server tabs
-- Web = Playwright / `WebClickBridge` fallback only (forced 360×780)
-- Play primary: `com.idleparty.app`
-- Testers never before owner
+Play notes usually come from a new save.
+
+## UI and distribution (facts)
+
+- Phones are about 360–430 CSS px wide. The reference is the Samsung A56
+  at 360×780.
+- The live look is the AVD `Samsung_A56` with `flutter run`
+  (`a56-playtest`). Not Pixel_6, and not stacked web-server tabs.
+- Web is only a fallback through Playwright / `WebClickBridge` (forced
+  360×780).
+- The Play package is `com.idleparty.app`.
+- Testers never get a build before the owner.
 
 ## Work loop
 
-1. Large batches the agent can finish alone
-2. Verify (analyze + matching tests; hub smoke / A56 if UI) before handoff
-3. If they should look at the phone: **push this batch to the A56 first**
-   (`a56-playtest` — hot restart / relaunch). Do not ask them to look while
-   emu still runs a session started before the edits.
-4. ≤5 lines: what changed / what to look for → **wait**
-5. **Git:** when analyze/tests are green, **commit locally**. Push / PR / tag
-   when the batch needs it (no ask-first). **Never upload to Google Play
-   (AAB) unless the owner asks that turn.** Never force-push or
-   `--no-verify` unless they say so that turn. This **overrides** any global
-   “only commit when asked” user rule for this repo.
-6. Daily work on `main`; `release/*` only when cutting a tag
-7. Don’t stage `windows/flutter/generated_*` unless plugins actually changed
-8. Split giant files when a change needs a home; don’t grow `game_logic` /
-   `spatial_combat` / fat shells — new HUD under `lib/ui/shell/`
-9. Delete unused non-save code; keep JSON fields old saves may still have
+1. Work in large batches you can finish alone.
+2. Before handoff, verify: analyze plus the matching tests, and hub smoke
+   or the A56 if UI changed.
+3. If the owner should look at the phone, push this batch to the A56 first
+   (`a56-playtest`, hot restart or relaunch). Do not ask them to look while
+   the emulator still runs a session from before the edits.
+4. Hand off in at most 5 lines: what changed and what to look for. Then
+   wait.
+5. **Git:** when analyze and tests are green, **commit locally** without
+   asking. Push, open a PR, or tag when the batch needs it, also without
+   asking. **Never upload an AAB to Google Play unless the owner asks in
+   that turn.** Never force-push or use `--no-verify` unless they say so in
+   that turn. This **overrides** any global "only commit when asked" rule
+   for this repo.
+6. Daily work goes on `main`. Use `release/*` only when cutting a tag.
+7. Do not stage `windows/flutter/generated_*` unless plugins actually
+   changed.
+8. When a change needs a home, split the giant file. Do not grow
+   `game_logic`, `spatial_combat`, or fat shells. New HUD goes under
+   `lib/ui/shell/`.
+9. Delete unused code that saves do not need. Keep JSON fields that old
+   saves may still have.
 
-## Decide / never
+## Decide alone / Never
 
 | Decide alone | Never |
 |--------------|--------|
@@ -59,11 +69,13 @@ copy only if play notes say they lie.
 | Commit, push, PR, tag when green | Force-push; skip hooks; point players at GitHub Releases; **upload Play AAB without owner ask** |
 | A56 look / hub smoke; listing docs; wipe test save if needed; Console paste | |
 
-Ambiguous “two different games” (meny vs combat): silent
-`.cursor/rules/studio-seats.mdc` — one decision (EP if they did not
-name the goal). No chair vote. Prefer shipping something playable.
+If it is unclear whether the owner means the menus or combat ("two
+different games"), read `.cursor/rules/studio-seats.mdc` quietly and make
+one decision. The Executive Producer decides if they did not name the goal.
+No chair vote. Prefer shipping something playable.
 
 ## Feel reminders
 
-- Hub readable, low-panic when reasonable
-- Fairness: if kit is fun but HIGH → trim (identity OK, numbers must line up)
+- Keep the hub readable and calm when you can.
+- Fairness: if a kit is fun but rated HIGH, trim its numbers. Its identity
+  can stay.

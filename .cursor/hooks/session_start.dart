@@ -1,8 +1,14 @@
-/// sessionStart: owner Now-line plus the Play-upload lock.
+/// sessionStart: owner Now-line plus the Play-upload lock. Also prunes old
+/// emulator shots in playshots/.
 import 'dart:convert';
 import 'dart:io';
 
+const _shotDir = 'playshots';
+const _shotMaxAge = Duration(days: 3);
+const _shotExtensions = <String>['.png', '.jpg', '.jpeg', '.xml'];
+
 void main() {
+  _pruneOldShots();
   final now = _nowLine();
   final context =
       'Idle Party this session: $now '
@@ -29,4 +35,23 @@ String _nowLine() {
     }
   }
   return 'Owner names the work (no standing program).';
+}
+
+void _pruneOldShots() {
+  final dir = Directory(_shotDir);
+  if (!dir.existsSync()) return;
+  final cutoff = DateTime.now().subtract(_shotMaxAge);
+  try {
+    for (final entity in dir.listSync(recursive: true)) {
+      if (entity is! File) continue;
+      final name = entity.path.toLowerCase();
+      if (!_shotExtensions.any(name.endsWith)) continue;
+      if (entity.lastModifiedSync().isBefore(cutoff)) entity.deleteSync();
+    }
+    for (final sub in dir.listSync(recursive: true).whereType<Directory>()
+        .toList()
+        .reversed) {
+      if (sub.listSync().isEmpty) sub.deleteSync();
+    }
+  } catch (_) {}
 }
