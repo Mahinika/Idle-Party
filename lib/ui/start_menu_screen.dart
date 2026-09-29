@@ -310,56 +310,62 @@ class SaveSlotPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        CaveAtmosphere.fullBleedScene(
-          CustomAssets.introScene,
-          alignment: const Alignment(0, -0.05),
-        ),
-        CaveAtmosphere.readabilityScrim(top: 0.7, bottom: 0.55),
-        MenuChrome.playSafeArea(
-          bottom: true,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'CHOOSE SAVE',
-                  textAlign: TextAlign.center,
-                  style: GameTheme.pixel(size: 22, color: GameTheme.torchHot),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < slots.length; i++) ...[
-                          if (i > 0) const SizedBox(height: 6),
-                          _SaveSlotRow(
-                            slot: slots[i],
-                            selected:
-                                slots[i].index == activeSlot &&
-                                slots[i].occupied,
-                            enabled: true,
-                            onOpen: () => onOpenSlot(slots[i].index),
-                            onErase: slots[i].occupied
-                                ? () => onEraseSlot(slots[i].index)
-                                : null,
-                          ),
-                        ],
+    return DecoratedBox(
+      decoration: MenuChrome.panel(
+        borderRadius: BorderRadius.zero,
+        opaque: true,
+      ),
+      child: MenuChrome.playSafeArea(
+        bottom: true,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('CHOOSE SAVE', style: GameTheme.menuTitle(size: 18)),
+              const SizedBox(height: 4),
+              Text(
+                'Five files on this phone. Tap one to play.',
+                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 1,
+                color: GameTheme.borderLit.withValues(alpha: 0.22),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < slots.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 6),
+                        _SaveSlotRow(
+                          slot: slots[i],
+                          selected:
+                              slots[i].index == activeSlot && slots[i].occupied,
+                          enabled: true,
+                          onOpen: () => onOpenSlot(slots[i].index),
+                          onErase: slots[i].occupied
+                              ? () => onEraseSlot(slots[i].index)
+                              : null,
+                        ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                MenuChrome.textLink(label: 'BACK', onPressed: onBack),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              GameButton(
+                label: 'BACK',
+                style: GameButtonStyle.grey,
+                dense: true,
+                onPressed: onBack,
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -385,15 +391,12 @@ class _SaveSlotRow extends StatelessWidget {
     final headline = slot.corrupt
         ? 'Could not read this save'
         : (slot.partyName ?? 'Empty');
-    final border = selected
-        ? GameTheme.torchHot.withValues(alpha: 0.85)
-        : GameTheme.border.withValues(alpha: slot.occupied ? 0.95 : 0.55);
 
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: GameTheme.card.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-        border: Border.all(color: border),
+      decoration: MenuChrome.listCard(
+        selected: selected,
+        inset: !slot.occupied,
+        borderColor: slot.corrupt ? GameTheme.buttonRedTop : null,
       ),
       child: Row(
         children: [
