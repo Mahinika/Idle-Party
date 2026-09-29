@@ -207,6 +207,12 @@ abstract final class WispGift {
     return '${_formatGold(watch)} GOLD';
   }
 
+  static String keepButtonLabel(GameState state) {
+    final keep = state.metaDepth.wispPendingKeepGold;
+    final shown = keep > 0 ? keep : keepGold(state);
+    return '${_formatGold(shown)} GOLD';
+  }
+
   static String _formatGold(int n) {
     if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
     if (n >= 10000) return '${(n / 1000).toStringAsFixed(1)}k';

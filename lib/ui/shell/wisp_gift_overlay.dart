@@ -222,6 +222,7 @@ Future<void> openWispChoiceSheet(
               return const SizedBox.shrink();
             }
             final watchLabel = WispGift.watchButtonLabel(director.state);
+            final keepLabel = WispGift.keepButtonLabel(director.state);
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.viewInsetsOf(ctx).bottom,
@@ -280,7 +281,7 @@ Future<void> openWispChoiceSheet(
                             ),
                             const SizedBox(height: 8),
                             GameButton(
-                              label: 'NO THANKS',
+                              label: 'NO THANKS · $keepLabel',
                               style: GameButtonStyle.grey,
                               onPressed: () => Navigator.of(ctx).pop(),
                             ),

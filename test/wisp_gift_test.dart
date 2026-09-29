@@ -101,6 +101,14 @@ void main() {
     expect(WispGift.watchButtonLabel(state), '2,500 GOLD');
   });
 
+  test('keep button label uses pending keep gold', () {
+    var state = GameLogic.createInitialState();
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(wispPendingKeepGold: 16600),
+    );
+    expect(WispGift.keepButtonLabel(state), '16.6k GOLD');
+  });
+
   test('endgame sandy farm still pays a wallet-worth watch pile', () {
     var state = GameLogic.createInitialState();
     state = state.copyWith(
