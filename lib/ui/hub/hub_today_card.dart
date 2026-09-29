@@ -351,18 +351,9 @@ class HubUrgentRow extends StatelessWidget {
       );
     }
     if (showAscend) {
-      final optional = ascendLabel!.contains('optional');
-      if (optional) {
-        return Center(
-          child: TextButton(
-            onPressed: onAscend,
-            child: Text(
-              ascendLabel!,
-              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-            ),
-          ),
-        );
-      }
+      // Optional ascend lives under ESSENCE. A stray line under ENTER
+      // reads as a broken second button.
+      if (ascendLabel!.contains('optional')) return const SizedBox.shrink();
       return GameButton(
         label: ascendLabel!,
         style: GameButtonStyle.red,

@@ -217,8 +217,8 @@ class _PlayShellState extends State<PlayShell> {
       ),
       route: router.route,
       destinations: DestinationGraph.hub(state).destinations,
-      // Reason line self-hides when empty; READY chase quiets non-chase alerts.
-      showReason: true,
+      // The enter button is the job. A forge ticker on the tabs fights it.
+      showReason: !enterPrimary,
       suppressReason: _suppressBarReason,
       coachRoute: coachRoute,
       coachLine: coachLine,
