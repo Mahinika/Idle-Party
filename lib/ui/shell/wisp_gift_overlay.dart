@@ -125,8 +125,8 @@ class _WispTapTargetState extends State<_WispTapTarget>
                   height: 48,
                   child: Center(
                     child: SizedBox(
-                      width: 32,
-                      height: 42,
+                      width: 36,
+                      height: 46,
                       child: CustomPaint(painter: _LanternPainter()),
                     ),
                   ),
@@ -141,6 +141,7 @@ class _WispTapTargetState extends State<_WispTapTarget>
 }
 
 /// Pixel lantern: dark iron, warm glass, bright flame. No blur.
+/// Hard black outline so the glyph reads on amber cave walls.
 class _LanternPainter extends CustomPainter {
   const _LanternPainter();
 
@@ -156,25 +157,65 @@ class _LanternPainter extends CustomPainter {
     '..#.#..',
   ];
 
+  static const _neighborDeltas = <(int, int)>[
+    (-1, 0),
+    (1, 0),
+    (0, -1),
+    (0, 1),
+    (-1, -1),
+    (1, -1),
+    (-1, 1),
+    (1, 1),
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
     const cols = 7;
     const glyphRows = 9;
-    final px = size.width / cols;
-    final ox = (size.width - cols * px) / 2;
+    // Leave one cell of margin so the silhouette is not clipped.
+    final px = size.width / (cols + 2);
+    final ox = px;
     final oy = (size.height - glyphRows * px) / 2;
+    final outline = Paint()
+      ..color = const Color(0xFF070402)
+      ..isAntiAlias = false;
     final iron = Paint()
-      ..color = const Color(0xFF3A2414)
+      ..color = const Color(0xFF1A1008)
       ..isAntiAlias = false;
     final glass = Paint()
-      ..color = const Color(0xFF8A4E16)
+      ..color = const Color(0xFFE08A22)
       ..isAntiAlias = false;
     final flame = Paint()
-      ..color = const Color(0xFFFFC14A)
+      ..color = const Color(0xFFFFE066)
       ..isAntiAlias = false;
     final tip = Paint()
-      ..color = const Color(0xFFFFF6D0)
+      ..color = const Color(0xFFFFFFFF)
       ..isAntiAlias = false;
+
+    bool filled(int x, int y) {
+      if (y < 0 || y >= _rows.length) return false;
+      final row = _rows[y];
+      if (x < 0 || x >= row.length) return false;
+      return row[x] != '.';
+    }
+
+    // Silhouette first — pops the warm glass off cave amber.
+    for (var y = 0; y < _rows.length; y++) {
+      final row = _rows[y];
+      for (var x = 0; x < row.length; x++) {
+        if (row[x] == '.') continue;
+        for (final (dx, dy) in _neighborDeltas) {
+          final nx = x + dx;
+          final ny = y + dy;
+          if (filled(nx, ny)) continue;
+          canvas.drawRect(
+            Rect.fromLTWH(ox + nx * px, oy + ny * px, px, px),
+            outline,
+          );
+        }
+      }
+    }
+
     for (var y = 0; y < _rows.length; y++) {
       final row = _rows[y];
       for (var x = 0; x < row.length; x++) {

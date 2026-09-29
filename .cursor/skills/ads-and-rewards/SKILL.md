@@ -34,10 +34,10 @@ follow `save-migrate`.
 ## Landed decisions (do not re-litigate without the owner)
 
 - **Lantern:** `Alignment(0.84, -0.58)` on the open map, clear of the header.
-  48×48 touch box, 32×42 pixel cage glyph with a ring and one flame tip.
-  Hard pixel colors, no blur. It took six commits on 2026-09-28 to land;
-  any new size or spot is a big look change, so show a before and after on
-  the A56 first (`owner-preferences`).
+  48×48 touch box, 36×46 pixel cage glyph with a hard black outline, bright
+  flame, and one tip. Hard pixel colors, no blur. Spot stays
+  `Alignment(0.84, -0.58)`. New size or spot is still a big look change —
+  show a before and after on the A56 first (`owner-preferences`).
 - **Where the WISP ad runs:** where the lantern was tapped, hub or dungeon.
 - **SCROLLS:** never start an ad mid-fight. Hub FAB shows with SHOP
   (`MenuTabs.showScrolls`). One ad = +1 ticket. Magnitudes do not stack;
