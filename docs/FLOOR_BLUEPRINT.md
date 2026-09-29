@@ -92,16 +92,17 @@ Varje beat mappar till **rumstaggar** som `RoomLayouts` förstår:
 
 | Tag | Form | Zon får välja bland |
 |-----|------|---------------------|
-| `approach` | hall (~11–14×8–10), party spawn | cave mouth / hall / rift ledge |
-| `choke` | tighter fight room (~6–7 short axis) + gate | corridor / ice crack / root tunnel |
+| `approach` | hall (base ~11–14×8–10, then scaled to the floor) | cave mouth / hall / rift ledge |
+| `choke` | tighter fight room (base short axis ~6–7) + gate | corridor / ice crack / root tunnel |
 | `elite` | medium hall | pocket on the winding spine |
 | `treasure` | side vault off the last fight (not on the stairs) | dead-end med chest socket |
-| `boss` | stor arena (~34×26) | befintlig boss-layout + north/south bays |
+| `boss` | arena (base ~36×28, then scaled to the floor) | oval + north/south bays, inset in the cave |
 | `exitHold` | exit cell synlig efter clear | stairs/boss stairs |
 
 Main path **zigzags** north/south while progressing east. Treasure alcoves
 **branch** off the last main chamber — exit stays on the spine. Canvas is
-~54×38 (hideout ~48×36) so a phone camera (~20 cols) cannot see the whole floor.
+about 125×125. Room footprints were tuned for ~56×40 and grow with the live
+map (`_scaledRoom`), so a phone camera (~20 cols) still cannot see the whole floor.
 
 **Zon-kit** (data, inte if-träd överallt):
 

@@ -286,9 +286,10 @@ void main() {
     final chokeMin = choke
         .map((c) => c.w < c.h ? c.w : c.h)
         .reduce((a, b) => a < b ? a : b);
-    // Choke is still the tight room; approach is a hall (short axis 8+).
+    // Choke stays the tighter room. Its short side grows with the floor
+    // (the old cap was 7, on a map about half this wide).
     expect(chokeMin, lessThanOrEqualTo(approachMin));
-    expect(chokeMin, lessThanOrEqualTo(7));
+    expect(chokeMin, greaterThan(7));
   });
 
   test('gates seal the full corridor, 2 for a choke and 5 for a hall', () {
@@ -327,6 +328,40 @@ void main() {
       );
       expect(map.cols, greaterThanOrEqualTo(125), reason: id);
       expect(map.rows, greaterThanOrEqualTo(125), reason: id);
+      final widest = map.chambers.map((c) => c.w).reduce(max);
+      final tallest = map.chambers.map((c) => c.h).reduce(max);
+      // Footprints were ~16×11 on the old map. They grow with this floor.
+      expect(widest, greaterThanOrEqualTo(20), reason: id);
+      expect(tallest, greaterThanOrEqualTo(18), reason: id);
+    }
+  });
+
+  test('boss arena grows with the floor and stays inside it', () {
+    final map = RoomLayouts.forFloor(
+      floorNumber: 5,
+      room: const DungeonRoom(
+        floorNumber: 5,
+        roomIndex: 0,
+        type: RoomType.boss,
+        enemyLevel: 10,
+        enemyCount: 6,
+      ),
+      dungeonId: 'crystal',
+      layoutSeed: 2,
+    );
+    final arena = map.chambers.single;
+    expect(arena.w, greaterThan(50));
+    expect(arena.h, greaterThan(40));
+    expect(arena.w, lessThan(map.cols - 8));
+    expect(arena.h, lessThan(map.rows - 4));
+    expect(
+      map.isWalkable(map.spawnPoints.first.$1, map.spawnPoints.first.$2),
+      isTrue,
+    );
+    expect(map.isWalkable(map.exitPoint.$1, map.exitPoint.$2), isTrue);
+    expect(map.enemySpawns, isNotEmpty);
+    for (final e in map.enemySpawns) {
+      expect(map.isWalkable(e.$1, e.$2), isTrue, reason: '$e');
     }
   });
 
@@ -495,26 +530,26 @@ void main() {
     expect(threeCombat, greaterThanOrEqualTo(30));
   });
 
-  test('later generated floors have packs big enough for three fight rooms', () {
-    var enough = 0;
-    for (var seed = 0; seed < 24; seed++) {
-      final room = DungeonGenerator.generateFloorRoom(
-        floorNumber: 10,
-        ascensionLevel: 11,
-        dungeonId: 'brass',
-        layoutSeed: seed,
-      );
-      if (room.type == RoomType.treasure) continue;
-      if (room.enemyCount >= 7) enough++;
-    }
-    expect(enough, greaterThanOrEqualTo(16));
-  });
+  test(
+    'later generated floors have packs big enough for three fight rooms',
+    () {
+      var enough = 0;
+      for (var seed = 0; seed < 24; seed++) {
+        final room = DungeonGenerator.generateFloorRoom(
+          floorNumber: 10,
+          ascensionLevel: 11,
+          dungeonId: 'brass',
+          layoutSeed: seed,
+        );
+        if (room.type == RoomType.treasure) continue;
+        if (room.enemyCount >= 7) enough++;
+      }
+      expect(enough, greaterThanOrEqualTo(16));
+    },
+  );
 
   test('AL and KEY grow packs and tile maps', () {
-    expect(
-      DungeonGenerator.layoutPressure(ascensionLevel: 0, keyLevel: 0),
-      0,
-    );
+    expect(DungeonGenerator.layoutPressure(ascensionLevel: 0, keyLevel: 0), 0);
     expect(
       DungeonGenerator.layoutPressure(ascensionLevel: 20, keyLevel: 20),
       10,
@@ -550,7 +585,10 @@ void main() {
     );
     expect(bigMap.cols, greaterThan(smallMap.cols));
     expect(bigMap.rows, greaterThan(smallMap.rows));
-    expect(bigMap.chambers.length, greaterThanOrEqualTo(smallMap.chambers.length));
+    expect(
+      bigMap.chambers.length,
+      greaterThanOrEqualTo(smallMap.chambers.length),
+    );
   });
 
   test('chambers carve non-rectangle footprints', () {

@@ -256,6 +256,14 @@ class _Rect {
 
 enum _RoomSilhouette { rect, oval, diamond, el, plus, chamfer, blob }
 
+/// Footprints below were tuned for a ~56×40 floor. A live map near 125×125
+/// grows the same rooms on both axes so they stay a similar share of the cave.
+(int, int) _scaledRoom(int cols, int rows, int w, int h) {
+  final gw = max(4, (w * cols / 56).round());
+  final gh = max(4, (h * rows / 40).round());
+  return (min(gw, max(4, cols - 8)), min(gh, max(4, rows - 8)));
+}
+
 /// Multi-room floor maps (cave / hideout / fort flavours).
 abstract final class RoomLayouts {
   static TileMap forRoom(DungeonRoom room, {String dungeonId = 'sandy'}) {
@@ -287,7 +295,8 @@ abstract final class RoomLayouts {
     final rng = Random(seed);
     final enemyCount = max(room.enemyCount, enemyCountOverride ?? 0);
 
-    final pressure = DungeonGenerator.layoutPressure(
+    final pressure =
+        DungeonGenerator.layoutPressure(
           ascensionLevel: ascensionLevel,
           keyLevel: keyLevel,
         ) +
@@ -428,10 +437,13 @@ abstract final class RoomLayouts {
       }
     }
 
+    // The old arena filled a ~36×28 map. Grow that room with this floor
+    // instead of turning the whole cave into one oval.
+    final arena = _scaledRoom(cols, rows, 36, 28);
     final rcx = (cols - 1) / 2.0;
     final rcy = (rows - 1) / 2.0;
-    final rx = max(4.0, (cols - 5) / 2.0);
-    final ry = max(4.0, (rows - 5) / 2.0);
+    final rx = max(4.0, arena.$1 / 2.0);
+    final ry = max(4.0, arena.$2 / 2.0);
     for (var y = 2; y < rows - 2; y++) {
       for (var x = 2; x < cols - 2; x++) {
         final dx = (x - rcx) / rx;
@@ -442,41 +454,62 @@ abstract final class RoomLayouts {
       }
     }
     // North / south bays so the arena isn't a flat oval.
-    for (var y = 2; y <= 5; y++) {
-      for (var x = cols ~/ 2 - 5; x <= cols ~/ 2 + 5; x++) {
+    final bayHalf = max(4, (5 * cols / 56).round());
+    final arenaH = max(8, (ry * 2).round());
+    var bayDepth = max(3, (4 * rows / 40).round());
+    bayDepth = min(bayDepth, max(2, (rows - arenaH - 16) ~/ 2));
+    final northLip = (rcy - ry).floor();
+    final southLip = (rcy + ry).ceil();
+    for (var y = northLip - bayDepth; y <= northLip; y++) {
+      for (var x = (rcx - bayHalf).round(); x <= (rcx + bayHalf).round(); x++) {
         set(x, y, TileKind.floor);
       }
     }
-    for (var y = rows - 6; y < rows - 2; y++) {
-      for (var x = cols ~/ 2 - 5; x <= cols ~/ 2 + 5; x++) {
+    for (var y = southLip; y <= southLip + bayDepth; y++) {
+      for (var x = (rcx - bayHalf).round(); x <= (rcx + bayHalf).round(); x++) {
         set(x, y, TileKind.floor);
       }
     }
-    for (final p in <(int, int)>[
-      (cols ~/ 4, rows ~/ 3),
-      (cols ~/ 4, (rows * 2) ~/ 3),
-      ((cols * 3) ~/ 4, rows ~/ 3),
-      ((cols * 3) ~/ 4, (rows * 2) ~/ 3),
-      (cols ~/ 2, 6),
-      (cols ~/ 2, rows - 7),
-    ]) {
-      set(p.$1, p.$2, TileKind.wall);
+    void pillar(int x, int y) {
+      if (x < 1 || y < 1 || x >= cols - 1 || y >= rows - 1) return;
+      if (tiles[y * cols + x] == TileKind.floor) set(x, y, TileKind.wall);
     }
-    set(3, rows ~/ 2, TileKind.spawn);
-    set(cols - 3, rows ~/ 2, TileKind.exit);
-    _carveExitPlaza(tiles, cols, rows, 3, rows ~/ 2);
-    _carveExitPlaza(tiles, cols, rows, cols - 3, rows ~/ 2);
 
-    final chamber = Chamber(index: 0, x: 2, y: 2, w: cols - 4, h: rows - 4);
+    pillar((rcx - rx * 0.45).round(), (rcy - ry * 0.35).round());
+    pillar((rcx - rx * 0.45).round(), (rcy + ry * 0.35).round());
+    pillar((rcx + rx * 0.45).round(), (rcy - ry * 0.35).round());
+    pillar((rcx + rx * 0.45).round(), (rcy + ry * 0.35).round());
+    pillar(rcx.round(), (rcy - ry * 0.7).round());
+    pillar(rcx.round(), (rcy + ry * 0.7).round());
+    final spawnX = (rcx - rx + 3).round().clamp(2, cols - 3);
+    final spawnY = rcy.round().clamp(2, rows - 3);
+    final exitX = (rcx + rx - 3).round().clamp(2, cols - 3);
+    final exitY = spawnY;
+    _carveExitPlaza(tiles, cols, rows, spawnX, spawnY);
+    _carveExitPlaza(tiles, cols, rows, exitX, exitY);
+    set(spawnX, spawnY, TileKind.spawn);
+    set(exitX, exitY, TileKind.exit);
+
+    final left = max(1, (rcx - rx).floor() - 1);
+    final right = min(cols - 2, (rcx + rx).ceil() + 1);
+    final top = max(1, northLip - bayDepth - 1);
+    final bottom = min(rows - 2, southLip + bayDepth + 1);
+    final chamber = Chamber(
+      index: 0,
+      x: left,
+      y: top,
+      w: max(4, right - left + 1),
+      h: max(4, bottom - top + 1),
+    );
 
     final spawnPoints = _partySpawnCluster(
       tiles: tiles,
       cols: cols,
       rows: rows,
-      anchorX: 3,
-      anchorY: rows ~/ 2,
+      anchorX: spawnX,
+      anchorY: spawnY,
     );
-    final exitPoint = (cols - 3, rows ~/ 2);
+    final exitPoint = (exitX, exitY);
 
     bool spawnable(int x, int y) {
       if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
@@ -752,32 +785,36 @@ abstract final class RoomLayouts {
         r.x >= 1 && r.y >= 1 && r.x + r.w <= cols - 2 && r.y + r.h <= rows - 2;
 
     (int, int) sizeFor(FloorBeatKind kind) {
+      (int, int) fit(int w, int h) => _scaledRoom(cols, rows, w, h);
       if (tightRooms &&
           kind != FloorBeatKind.treasure &&
           kind != FloorBeatKind.exitHold) {
-        return (6 + rng.nextInt(2), 8 + rng.nextInt(2));
+        return fit(6 + rng.nextInt(2), 8 + rng.nextInt(2));
       }
       switch (kind) {
         case FloorBeatKind.approach:
-          return (11 + rng.nextInt(4), 8 + rng.nextInt(3)); // hall, not closet
+          return fit(
+            11 + rng.nextInt(4),
+            8 + rng.nextInt(3),
+          ); // hall, not closet
         case FloorBeatKind.hub:
-          return (14 + rng.nextInt(3), 10 + rng.nextInt(2));
+          return fit(14 + rng.nextInt(3), 10 + rng.nextInt(2));
         case FloorBeatKind.choke:
           // Still the tightest room — but a fight can stand in it.
           if (rng.nextBool()) {
-            return (6 + rng.nextInt(2), 9 + rng.nextInt(3));
+            return fit(6 + rng.nextInt(2), 9 + rng.nextInt(3));
           }
-          return (9 + rng.nextInt(3), 6 + rng.nextInt(2));
+          return fit(9 + rng.nextInt(3), 6 + rng.nextInt(2));
         case FloorBeatKind.elite:
-          return (9 + rng.nextInt(3), 8 + rng.nextInt(3));
+          return fit(9 + rng.nextInt(3), 8 + rng.nextInt(3));
         case FloorBeatKind.treasure:
-          return (7 + rng.nextInt(2), 6 + rng.nextInt(2)); // side vault
+          return fit(7 + rng.nextInt(2), 6 + rng.nextInt(2)); // side vault
         case FloorBeatKind.decoy:
-          return (6 + rng.nextInt(2), 5 + rng.nextInt(2));
+          return fit(6 + rng.nextInt(2), 5 + rng.nextInt(2));
         case FloorBeatKind.boss:
-          return (12 + rng.nextInt(3), 10 + rng.nextInt(3));
+          return fit(12 + rng.nextInt(3), 10 + rng.nextInt(3));
         case FloorBeatKind.exitHold:
-          return (8 + rng.nextInt(3), 8 + rng.nextInt(2));
+          return fit(8 + rng.nextInt(3), 8 + rng.nextInt(2));
       }
     }
 
@@ -798,8 +835,14 @@ abstract final class RoomLayouts {
 
     // Beat-driven carve: main path zigzags east; side alcoves branch off hub/last main.
     if (storyBeats.length >= 2) {
-      final mainBeats = [for (final b in storyBeats) if (!b.isSide) b];
-      final sideBeats = [for (final b in storyBeats) if (b.isSide) b];
+      final mainBeats = [
+        for (final b in storyBeats)
+          if (!b.isSide) b,
+      ];
+      final sideBeats = [
+        for (final b in storyBeats)
+          if (b.isSide) b,
+      ];
       final spine = mainBeats.isEmpty ? storyBeats : mainBeats;
 
       for (var i = 0; i < spine.length; i++) {
@@ -912,8 +955,14 @@ abstract final class RoomLayouts {
       var attempts = 0;
       while (rooms.length < fallbackRoomCount && attempts < 160) {
         attempts++;
-        final w = 8 + rng.nextInt(5);
-        final h = 7 + rng.nextInt(4);
+        final sized = _scaledRoom(
+          cols,
+          rows,
+          8 + rng.nextInt(5),
+          7 + rng.nextInt(4),
+        );
+        final w = sized.$1;
+        final h = sized.$2;
         final x = 1 + rng.nextInt(max(1, cols - w - 2));
         final y = 1 + rng.nextInt(max(1, rows - h - 2));
         final cand = _Rect(x, y, w, h);
@@ -930,8 +979,16 @@ abstract final class RoomLayouts {
       }
     }
     if (rooms.isEmpty) {
-      rooms.add(_Rect(2, 2, 10, 8));
-      rooms.add(_Rect(cols - 14, rows - 12, 10, 8));
+      final sized = _scaledRoom(cols, rows, 10, 8);
+      rooms.add(_Rect(2, 2, sized.$1, sized.$2));
+      rooms.add(
+        _Rect(
+          max(2, cols - sized.$1 - 4),
+          max(2, rows - sized.$2 - 4),
+          sized.$1,
+          sized.$2,
+        ),
+      );
       roomBeats.addAll([FloorBeatKind.approach, FloorBeatKind.choke]);
       sideFlags.addAll([false, false]);
       parentOf.addAll([null, null]);
@@ -946,11 +1003,7 @@ abstract final class RoomLayouts {
       _carveRoomFootprint(
         rooms[i],
         set,
-        _silhouetteFor(
-          roomBeats[i] ?? FloorBeatKind.approach,
-          rng,
-          kit,
-        ),
+        _silhouetteFor(roomBeats[i] ?? FloorBeatKind.approach, rng, kit),
         rng,
       );
     }
