@@ -336,9 +336,10 @@ SpatialWorld _quietWorld({bool afk = false}) {
         attackCooldown: 1,
       ),
     ],
-    enemies: const <SpatialActor>[],
-    projectiles: const <SpatialProjectile>[],
-    groundLoot: const [],
+    enemies: <SpatialActor>[],
+    projectiles: <SpatialProjectile>[],
+    groundLoot: <GroundLoot>[],
+    pets: <SpatialActor>[],
     isTreasure: false,
     afkAssist: afk,
   );
