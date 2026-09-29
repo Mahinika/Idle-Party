@@ -397,9 +397,7 @@ class _TileRoomPainter extends CustomPainter {
     }
 
     // Smash ring paints on Minimal too — one pulse, not the aim guide.
-    if (world.pulseTimer > 0 &&
-        world.pulseX != null &&
-        world.pulseY != null) {
+    if (world.pulseTimer > 0 && world.pulseX != null && world.pulseY != null) {
       final progress = (1 - world.pulseTimer / 0.55).clamp(0.0, 1.0);
       final pc = center(world.pulseX!, world.pulseY!);
       final outer = tile * (0.55 + progress * 2.8);
@@ -449,16 +447,14 @@ class _TileRoomPainter extends CustomPainter {
         tile * 0.22 * pulse,
         Paint()..color = ring.withValues(alpha: 0.75),
       );
-      canvas.drawCircle(
-        gc,
-        tile * 0.1,
-        Paint()..color = ring,
-      );
+      canvas.drawCircle(gc, tile * 0.1, Paint()..color = ring);
     }
 
+    paintSpellGlow(canvas, tile, originX, originY);
     paintDungeonProjectiles(canvas, tile, originX, originY);
     paintDungeonActors(canvas, tile, originX, originY);
     paintAmbientParticles(canvas, size);
+    paintSpellSparks(canvas, tile, originX, originY);
     paintDungeonFloaters(canvas, tile, originX, originY);
   }
 
@@ -494,7 +490,10 @@ class _TileRoomPainter extends CustomPainter {
           final a = i * math.pi / 4;
           canvas.drawLine(
             Offset(c.dx + math.cos(a) * r * 0.2, c.dy + math.sin(a) * r * 0.2),
-            Offset(c.dx + math.cos(a) * r * 0.92, c.dy + math.sin(a) * r * 0.92),
+            Offset(
+              c.dx + math.cos(a) * r * 0.92,
+              c.dy + math.sin(a) * r * 0.92,
+            ),
             Paint()
               ..color = const Color(0xAAFFF6C0).withValues(alpha: 0.55 * frac)
               ..strokeWidth = math.max(1.2, tile * 0.045)
@@ -513,7 +512,10 @@ class _TileRoomPainter extends CustomPainter {
         for (var i = 0; i < 6; i++) {
           final a = i * math.pi / 3 + life * 0.4;
           final p = Path()
-            ..moveTo(c.dx + math.cos(a) * r * 0.25, c.dy + math.sin(a) * r * 0.25)
+            ..moveTo(
+              c.dx + math.cos(a) * r * 0.25,
+              c.dy + math.sin(a) * r * 0.25,
+            )
             ..lineTo(
               c.dx + math.cos(a) * r * 0.88,
               c.dy + math.sin(a) * r * 0.88,
@@ -525,7 +527,8 @@ class _TileRoomPainter extends CustomPainter {
             ..close();
           canvas.drawPath(
             p,
-            Paint()..color = const Color(0x88C8F0FF).withValues(alpha: 0.45 * frac),
+            Paint()
+              ..color = const Color(0x88C8F0FF).withValues(alpha: 0.45 * frac),
           );
         }
       case SpatialGroundFxKind.fire:
@@ -540,7 +543,8 @@ class _TileRoomPainter extends CustomPainter {
               width: r * 0.55,
               height: r * 0.38,
             ),
-            Paint()..color = const Color(0x66FF5018).withValues(alpha: 0.4 * frac),
+            Paint()
+              ..color = const Color(0x66FF5018).withValues(alpha: 0.4 * frac),
           );
         }
       case SpatialGroundFxKind.rain:
@@ -562,7 +566,8 @@ class _TileRoomPainter extends CustomPainter {
         canvas.drawCircle(
           c,
           r * 0.55,
-          Paint()..color = const Color(0x55201040).withValues(alpha: 0.5 * frac),
+          Paint()
+            ..color = const Color(0x55201040).withValues(alpha: 0.5 * frac),
         );
         canvas.drawArc(
           Rect.fromCircle(center: c, radius: r * 0.72),
@@ -587,7 +592,8 @@ class _TileRoomPainter extends CustomPainter {
               width: r * 0.28,
               height: r * 0.16,
             ),
-            Paint()..color = const Color(0x882EAA55).withValues(alpha: 0.5 * frac),
+            Paint()
+              ..color = const Color(0x882EAA55).withValues(alpha: 0.5 * frac),
           );
         }
       case SpatialGroundFxKind.poison:
@@ -599,7 +605,8 @@ class _TileRoomPainter extends CustomPainter {
               c.dy + math.sin(a) * r * 0.45,
             ),
             r * 0.12,
-            Paint()..color = const Color(0xAAE4F04A).withValues(alpha: 0.55 * frac),
+            Paint()
+              ..color = const Color(0xAAE4F04A).withValues(alpha: 0.55 * frac),
           );
         }
       case SpatialGroundFxKind.steel:
@@ -631,7 +638,8 @@ class _TileRoomPainter extends CustomPainter {
               c.dy + math.sin(a) * r * 0.55,
             ),
             r * 0.1,
-            Paint()..color = const Color(0xCCE03040).withValues(alpha: 0.7 * frac),
+            Paint()
+              ..color = const Color(0xCCE03040).withValues(alpha: 0.7 * frac),
           );
         }
     }
@@ -818,19 +826,11 @@ class _TileRoomPainter extends CustomPainter {
             c.dy + math.cos(a) * r * 0.15 + fall,
           );
           canvas.drawOval(
-            Rect.fromCenter(
-              center: drip,
-              width: r * 0.32,
-              height: r * 0.62,
-            ),
+            Rect.fromCenter(center: drip, width: r * 0.32, height: r * 0.62),
             Paint()..color = const Color(0xCC100C08).withValues(alpha: alpha),
           );
           canvas.drawOval(
-            Rect.fromCenter(
-              center: drip,
-              width: r * 0.24,
-              height: r * 0.5,
-            ),
+            Rect.fromCenter(center: drip, width: r * 0.24, height: r * 0.5),
             Paint()..color = color.withValues(alpha: alpha * 0.9),
           );
         }

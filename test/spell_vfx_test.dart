@@ -44,7 +44,11 @@ void main() {
       (AbilityId.bladestorm, HeroSpecId.arms, SpellBoltStyle.weapon),
       (AbilityId.divineStorm, HeroSpecId.retribution, SpellBoltStyle.holy),
       (AbilityId.holyWrath, HeroSpecId.protPaladin, SpellBoltStyle.holy),
-      (AbilityId.chainLightning, HeroSpecId.elemental, SpellBoltStyle.lightning),
+      (
+        AbilityId.chainLightning,
+        HeroSpecId.elemental,
+        SpellBoltStyle.lightning,
+      ),
       (AbilityId.earthquake, HeroSpecId.elemental, SpellBoltStyle.nature),
       (AbilityId.lavaBurst, HeroSpecId.elemental, SpellBoltStyle.fire),
       (AbilityId.hurricane, HeroSpecId.balance, SpellBoltStyle.nature),
@@ -114,12 +118,32 @@ void main() {
       (AbilityId.freezingTrap, HeroSpecId.survival, SpellBoltStyle.frost),
       (AbilityId.explosiveTrap, HeroSpecId.survival, SpellBoltStyle.fire),
       // Resto shaman must be nature, not holy/lightning
-      (AbilityId.healingWave, HeroSpecId.restorationShaman, SpellBoltStyle.nature),
-      (AbilityId.chainHeal, HeroSpecId.restorationShaman, SpellBoltStyle.nature),
-      (AbilityId.healingRain, HeroSpecId.restorationShaman, SpellBoltStyle.nature),
+      (
+        AbilityId.healingWave,
+        HeroSpecId.restorationShaman,
+        SpellBoltStyle.nature,
+      ),
+      (
+        AbilityId.chainHeal,
+        HeroSpecId.restorationShaman,
+        SpellBoltStyle.nature,
+      ),
+      (
+        AbilityId.healingRain,
+        HeroSpecId.restorationShaman,
+        SpellBoltStyle.nature,
+      ),
       (AbilityId.riptide, HeroSpecId.restorationShaman, SpellBoltStyle.nature),
-      (AbilityId.earthShield, HeroSpecId.restorationShaman, SpellBoltStyle.nature),
-      (AbilityId.spiritLink, HeroSpecId.restorationShaman, SpellBoltStyle.nature),
+      (
+        AbilityId.earthShield,
+        HeroSpecId.restorationShaman,
+        SpellBoltStyle.nature,
+      ),
+      (
+        AbilityId.spiritLink,
+        HeroSpecId.restorationShaman,
+        SpellBoltStyle.nature,
+      ),
       // Feral / guardian physical ≠ nature
       (AbilityId.shred, HeroSpecId.feral, SpellBoltStyle.weapon),
       (AbilityId.rake, HeroSpecId.feral, SpellBoltStyle.weapon),
@@ -158,7 +182,11 @@ void main() {
       (AbilityId.frostbolt, HeroSpecId.frostMage, SpellBoltStyle.frost),
       (AbilityId.corruption, HeroSpecId.affliction, SpellBoltStyle.shadow),
       (AbilityId.starfire, HeroSpecId.balance, SpellBoltStyle.arcane),
-      (AbilityId.rejuvenation, HeroSpecId.restorationDruid, SpellBoltStyle.nature),
+      (
+        AbilityId.rejuvenation,
+        HeroSpecId.restorationDruid,
+        SpellBoltStyle.nature,
+      ),
       (AbilityId.holyShock, HeroSpecId.holyPaladin, SpellBoltStyle.holy),
       (AbilityId.garrote, HeroSpecId.assassination, SpellBoltStyle.poison),
       (AbilityId.handOfGuldan, HeroSpecId.demonology, SpellBoltStyle.demon),
@@ -325,10 +353,7 @@ void main() {
 
   test('themed burst kinds match spell identity', () {
     expect(
-      SpellVfx.burstKindFor(
-        style: SpellBoltStyle.fire,
-        id: AbilityId.fireball,
-      ),
+      SpellVfx.burstKindFor(style: SpellBoltStyle.fire, id: AbilityId.fireball),
       SpatialBurstKind.flame,
     );
     expect(
@@ -451,5 +476,110 @@ void main() {
       ),
       SpatialGroundFxKind.blood,
     );
+  });
+
+  SpatialWorld fxWorld(GameState state) {
+    final world = SpatialCombat.build(
+      GameLogic.enterDungeon(state, dungeonId: 'sandy'),
+    );
+    return SpatialCombat.step(world, state, dt: 0.01).world;
+  }
+
+  test('big spells punch harder and leave sparks on Full', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
+    final world = fxWorld(state);
+    world.reducedVfx = false;
+    world.spawnPersistentVfx = true;
+    world.bursts.clear();
+    world.spellSparks.clear();
+    final hero = world.heroes.first;
+    SpellVfx.spawnImpact(
+      world,
+      x: hero.x,
+      y: hero.y,
+      style: SpellBoltStyle.fire,
+      id: AbilityId.pyroblast,
+    );
+    expect(SpellVfx.isBig(AbilityId.pyroblast), isTrue);
+    expect(SpellVfx.isBig(AbilityId.fireball), isFalse);
+    expect(world.bursts.any((b) => b.life >= 0.7), isTrue);
+    expect(world.bursts.any((b) => b.argb == 0xFFFFFFFF), isTrue);
+    expect(world.spellSparks, isNotEmpty);
+    expect(world.spellSparks.length, lessThanOrEqualTo(SpellSparks.capFull));
+  });
+
+  test('Lite sparks without routine bursts; Minimal stays still', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
+    final world = fxWorld(state);
+    final hero = world.heroes.first;
+    world.bursts.clear();
+    world.spellSparks.clear();
+    world.reducedVfx = true;
+    world.spawnPersistentVfx = true;
+    SpellVfx.spawnCast(
+      world,
+      hero: hero,
+      style: SpellBoltStyle.holy,
+      id: AbilityId.holyWrath,
+    );
+    expect(world.bursts, isEmpty);
+    expect(world.spellSparks, isNotEmpty);
+    expect(world.spellSparks.length, lessThanOrEqualTo(SpellSparks.capLite));
+
+    world.spellSparks.clear();
+    world.bursts.clear();
+    world.spawnPersistentVfx = false;
+    SpellVfx.spawnImpact(
+      world,
+      x: hero.x,
+      y: hero.y,
+      style: SpellBoltStyle.fire,
+      id: AbilityId.chaosBolt,
+    );
+    expect(world.bursts, isEmpty);
+    expect(world.spellSparks, isEmpty);
+  });
+
+  test('bolt trails drop sparks on Full only', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
+    final world = fxWorld(state);
+    world.spellSparks.clear();
+    world.reducedVfx = false;
+    world.spawnPersistentVfx = true;
+    final bolt = SpatialProjectile(
+      x: 2,
+      y: 2,
+      vx: 6,
+      vy: 0,
+      damage: 1,
+      team: SpatialTeam.hero,
+      style: SpellBoltStyle.fire,
+    );
+    SpellSparks.trail(world, bolt);
+    expect(world.spellSparks, isNotEmpty);
+    world.spellSparks.clear();
+    world.reducedVfx = true;
+    world.spawnPersistentVfx = false;
+    SpellSparks.trail(world, bolt);
+    expect(world.spellSparks, isEmpty);
+  });
+
+  test('spark cap stays bounded', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
+    final world = fxWorld(state);
+    world.reducedVfx = false;
+    world.spawnPersistentVfx = true;
+    world.spellSparks.clear();
+    for (var i = 0; i < 40; i++) {
+      SpellSparks.puff(
+        world,
+        x: 1,
+        y: 1,
+        style: SpellBoltStyle.arcane,
+        count: 8,
+      );
+    }
+    expect(world.spellSparks.length, lessThanOrEqualTo(SpellSparks.capFull));
+    expect(world.spellSparks, isNotEmpty);
   });
 }

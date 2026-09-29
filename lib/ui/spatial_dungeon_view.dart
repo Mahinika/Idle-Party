@@ -42,6 +42,7 @@ part 'dungeon_tile_painter.dart';
 part 'dungeon_paint_projectiles.dart';
 part 'dungeon_paint_actors.dart';
 part 'dungeon_paint_floaters.dart';
+part 'dungeon_paint_spell_fx.dart';
 part 'dungeon_floor_layer.dart';
 part 'dungeon_ambient_particles.dart';
 

@@ -5,7 +5,6 @@ import '../models/class_ability.dart';
 import '../models/combat_ratings.dart';
 import 'spatial_combat.dart';
 
-
 /// Named helpers for rare kit casts. Dispatch is [AbilityCustomId] on the def —
 /// not a second combat engine.
 abstract final class KitNamedCasts {
@@ -793,6 +792,13 @@ abstract final class KitNamedCasts {
             labelArgb: 0xFFFF5020,
           ),
         );
+        SpellVfx.spawnCast(
+          world,
+          hero: hero,
+          style: SpellBoltStyle.fire,
+          id: AbilityId.pyroblast,
+          radius: 0.9,
+        );
         SpatialCombat.announceCast(
           world,
           hero,
@@ -1060,6 +1066,7 @@ abstract final class KitNamedCasts {
     double radius,
   ) => [
     for (final e in world.enemies)
-      if (e.hp > 0 && !e.dormant && SpatialCombat.actorDist(self, e) <= radius) e,
+      if (e.hp > 0 && !e.dormant && SpatialCombat.actorDist(self, e) <= radius)
+        e,
   ];
 }

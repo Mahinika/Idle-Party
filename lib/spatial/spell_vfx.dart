@@ -62,6 +62,41 @@ abstract final class SpellVfx {
         SpellBoltStyle.arcane => SpatialGroundFxKind.disc,
       };
 
+  /// Signature nukes read bigger than a routine hit.
+  static bool isBig(AbilityId? id) => switch (id) {
+    AbilityId.pyroblast ||
+    AbilityId.chaosBolt ||
+    AbilityId.chaosBoltDemo ||
+    AbilityId.starfall ||
+    AbilityId.holyWrath ||
+    AbilityId.bladestorm ||
+    AbilityId.deathCoil => true,
+    _ => false,
+  };
+
+  static bool _showBursts(SpatialWorld world) => !world.reducedVfx;
+
+  /// Full and Lite. Minimal (and offline, which forces Minimal) stays still.
+  static bool _showSparks(SpatialWorld world) =>
+      !world.reducedVfx || world.spawnPersistentVfx;
+
+  static void _punch(
+    SpatialWorld world, {
+    required double x,
+    required double y,
+    required double radius,
+  }) {
+    SpatialCombat.spawnBurst(
+      world,
+      x: x,
+      y: y,
+      argb: 0xFFFFFFFF,
+      radius: radius * 0.4,
+      life: 0.2,
+      kind: SpatialBurstKind.spark,
+    );
+  }
+
   /// Caster pop when a spell goes off.
   static void spawnCast(
     SpatialWorld world, {
@@ -71,29 +106,43 @@ abstract final class SpellVfx {
     AbilityId? id,
     double radius = 0.7,
   }) {
-    final argb = SpatialCombat.burstArgbForStyle(style);
-    final kind = burstKindFor(style: style, shape: shape, id: id);
-    SpatialCombat.spawnBurst(
-      world,
-      x: hero.x,
-      y: hero.y,
-      argb: argb,
-      radius: radius,
-      kind: kind,
-      life: 0.55,
-    );
-    if (kind == SpatialBurstKind.flame ||
-        kind == SpatialBurstKind.cross ||
-        kind == SpatialBurstKind.shards) {
-      SpatialCombat.spawnRing(
+    if (!_showSparks(world)) return;
+    final punch = isBig(id);
+    final r = punch ? radius * 1.5 : radius;
+    final life = punch ? 0.72 : 0.55;
+    if (_showBursts(world)) {
+      final argb = SpatialCombat.burstArgbForStyle(style);
+      final kind = burstKindFor(style: style, shape: shape, id: id);
+      SpatialCombat.spawnBurst(
         world,
         x: hero.x,
         y: hero.y,
         argb: argb,
-        radius: radius * 0.85,
-        life: 0.32,
+        radius: r,
+        kind: kind,
+        life: life,
       );
+      if (kind == SpatialBurstKind.flame ||
+          kind == SpatialBurstKind.cross ||
+          kind == SpatialBurstKind.shards) {
+        SpatialCombat.spawnRing(
+          world,
+          x: hero.x,
+          y: hero.y,
+          argb: argb,
+          radius: r * 0.85,
+          life: punch ? 0.42 : 0.32,
+        );
+      }
+      if (punch) _punch(world, x: hero.x, y: hero.y, radius: r);
     }
+    SpellSparks.puff(
+      world,
+      x: hero.x,
+      y: hero.y,
+      style: style,
+      count: punch ? 9 : 5,
+    );
   }
 
   /// Hit spark that matches the spell, not a generic disc.
@@ -108,19 +157,27 @@ abstract final class SpellVfx {
     double? x2,
     double? y2,
   }) {
-    final argb = SpatialCombat.burstArgbForStyle(style);
-    final kind = burstKindFor(style: style, shape: shape, id: id);
-    SpatialCombat.spawnBurst(
-      world,
-      x: x,
-      y: y,
-      argb: argb,
-      radius: radius,
-      kind: kind,
-      life: 0.52,
-      x2: x2,
-      y2: y2,
-    );
+    if (!_showSparks(world)) return;
+    final punch = isBig(id);
+    final r = punch ? radius * 1.5 : radius;
+    final life = punch ? 0.72 : 0.52;
+    if (_showBursts(world)) {
+      final argb = SpatialCombat.burstArgbForStyle(style);
+      final kind = burstKindFor(style: style, shape: shape, id: id);
+      SpatialCombat.spawnBurst(
+        world,
+        x: x,
+        y: y,
+        argb: argb,
+        radius: r,
+        kind: kind,
+        life: life,
+        x2: x2,
+        y2: y2,
+      );
+      if (punch) _punch(world, x: x, y: y, radius: r);
+    }
+    SpellSparks.puff(world, x: x, y: y, style: style, count: punch ? 9 : 6);
   }
 
   static void spawnBeam(
@@ -133,6 +190,7 @@ abstract final class SpellVfx {
     double radius = 0.35,
     double life = 0.36,
   }) {
+    if (world.reducedVfx) return;
     SpatialCombat.spawnBurst(
       world,
       x: x,

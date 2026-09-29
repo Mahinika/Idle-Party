@@ -33,6 +33,7 @@ export '../models/spell_bolt_style.dart';
 part 'hero_focus.dart';
 part 'combat_presence.dart';
 part 'spell_vfx.dart';
+part 'spell_particles.dart';
 part 'combat_pathing.dart';
 part 'combat_damage.dart';
 part 'floor_flow.dart';
@@ -139,12 +140,14 @@ void _syncHeroCataStats(SpatialActor actor, PartyHero hero, GameState state) {
   actor.dodgePercent = ratings.dodgePercent;
   actor.parryPercent = ratings.parryPercent;
   actor.masteryPoints = ratings.masteryPoints;
-  actor.blockChance = SpecMastery.blockChance(
-    MasteryCombatant(
-      specId: hero.specId,
-      masteryPoints: ratings.masteryPoints,
-    ),
-  ) + BlessingConstellation.blockChanceAdd(state);
+  actor.blockChance =
+      SpecMastery.blockChance(
+        MasteryCombatant(
+          specId: hero.specId,
+          masteryPoints: ratings.masteryPoints,
+        ),
+      ) +
+      BlessingConstellation.blockChanceAdd(state);
   actor.uncrittable = hero.spec.isTank;
   actor.defense = state.effectiveHeroDefense(hero);
 }
@@ -431,6 +434,7 @@ class SpatialActor {
   /// Ally heal-over-time (Riptide / Renew / Rejuvenation).
   double hotHps = 0;
   double hotAcc = 0;
+
   /// Who applied [hotHps] — meter HPS credits this hero on ticks.
   String? hotCasterId;
 
@@ -769,12 +773,14 @@ class SpatialWorld {
     List<SpatialFloater>? floaters,
     List<SpatialBurst>? bursts,
     List<SpatialGroundFx>? groundFx,
-  }) :        openGateIds = openGateIds ?? <int>{},
+    List<SpellSpark>? spellSparks,
+  }) : openGateIds = openGateIds ?? <int>{},
        clearedChambers = clearedChambers ?? <int>{},
        packShoutedChambers = packShoutedChambers ?? <int>{},
        floaters = floaters ?? <SpatialFloater>[],
        bursts = bursts ?? <SpatialBurst>[],
        groundFx = groundFx ?? <SpatialGroundFx>[],
+       spellSparks = spellSparks ?? <SpellSpark>[],
        pendingFeelHits = pendingFeelHits ?? <CombatFeelHit>[];
 
   final TileMap map;
@@ -786,6 +792,9 @@ class SpatialWorld {
   final List<SpatialFloater> floaters;
   final List<SpatialBurst> bursts;
   final List<SpatialGroundFx> groundFx;
+
+  /// Visual sparks only. Never read by damage, loot, or offline results.
+  final List<SpellSpark> spellSparks;
   final bool isTreasure;
 
   /// When true, enemy outgoing damage is softened (offline AFK sim).
@@ -981,10 +990,7 @@ abstract final class SpatialCombat {
   static bool alwaysShowEnemyHp = true;
 
   /// SETTINGS “Hide heal numbers” drops numeric heals only — not tell words.
-  static bool suppressHealFloater({
-    required String text,
-    required int argb,
-  }) {
+  static bool suppressHealFloater({required String text, required int argb}) {
     if (!hideHealFloaters) return false;
     if (argb != floaterHeal) return false;
     final body = text.startsWith('+') ? text.substring(1) : text;
@@ -1017,6 +1023,7 @@ abstract final class SpatialCombat {
   static int get _floaterEssence => colorblindMode ? 0xFF56B4E9 : 0xFF7EC8FF;
   static int get _floaterGear => colorblindMode ? 0xFF0072B2 : 0xFFB8E986;
   static int get floaterHeal => colorblindMode ? 0xFFCC79A7 : 0xFF2EBEA0;
+
   /// Enemy ability tells (MEND / TOTEM) — not a heal amount.
   static int get floaterTell => colorblindMode ? 0xFF0072B2 : 0xFF5BB8C8;
   static int get _floaterXp => colorblindMode ? 0xFF009E73 : 0xFF9AD0FF;
@@ -1134,9 +1141,7 @@ abstract final class SpatialCombat {
       x: x,
       y: y,
       text: '$dealt',
-      argb: isCrit
-          ? _floaterCrit
-          : (abilityArgb ?? floaterDamage),
+      argb: isCrit ? _floaterCrit : (abilityArgb ?? floaterDamage),
       life: isCrit ? 0.55 : (ability ? 0.45 : 0.32),
       priority: isCrit ? 2 : (ability ? 1 : 0),
     );
@@ -1591,16 +1596,14 @@ abstract final class SpatialCombat {
     required bool reducedVfx,
     required math.Random rng,
     bool isMelee = true,
-  }) =>
-      combatApplyHeroIncomingDamage(
-        world,
-        hero,
-        rawDamage,
-        reducedVfx: reducedVfx,
-        rng: rng,
-        isMelee: isMelee,
-      );
-
+  }) => combatApplyHeroIncomingDamage(
+    world,
+    hero,
+    rawDamage,
+    reducedVfx: reducedVfx,
+    rng: rng,
+    isMelee: isMelee,
+  );
 
   /// Direct heal to the lowest ally (used by Penance side-heal in WotLK kit).
   static void healLowestAlly(
@@ -1698,9 +1701,7 @@ abstract final class SpatialCombat {
     SpatialWorld world,
     SpatialActor hero,
     int baseDamage,
-  ) =>
-      combatClassAttackMods(world, hero, baseDamage);
-
+  ) => combatClassAttackMods(world, hero, baseDamage);
 
   static void _tickFloaters(SpatialWorld world, double dt) {
     for (final f in world.floaters) {
@@ -1743,6 +1744,7 @@ abstract final class SpatialCombat {
     if (world.bossBannerTimer > 0) {
       world.bossBannerTimer = math.max(0, world.bossBannerTimer - dt);
     }
+    SpellSparks.tick(world, dt);
   }
 
   /// Fresh-floor mana so a healer's first spell is not a 10s wait from 0.
@@ -2105,8 +2107,7 @@ abstract final class SpatialCombat {
       inWorldBoss: state.inWorldBoss,
       inGauntlet: state.inGauntlet,
       gauntletAnomaly: anomaly,
-      combatFloor:
-          state.inDungeon ? state.currentRoom.floorNumber : 1,
+      combatFloor: state.inDungeon ? state.currentRoom.floorNumber : 1,
       affixBannerShown: false,
       petMitigateFlat: state.petMitigateFlat,
       petHealBoost: state.petHealBoost,
@@ -2334,61 +2335,64 @@ abstract final class SpatialCombat {
     }
 
     return SpatialWorld(
-      map: world.map,
-      heroes: heroes,
-      enemies: world.enemies,
-      projectiles: world.projectiles,
-      groundLoot: world.groundLoot,
-      isTreasure: world.isTreasure,
-      treasureOpen: world.treasureOpen,
-      treasureTimer: world.treasureTimer,
-      awaitingExit: world.awaitingExit,
-      exitWaitTimer: world.exitWaitTimer,
-      exitHoldSec: world.exitHoldSec,
-      guideX: world.guideX,
-      guideY: world.guideY,
-      guideTimer: world.guideTimer,
-      godHandCooldown: world.godHandCooldown,
-      mendTimer: world.mendTimer,
-      activeChamber: world.activeChamber,
-      openGateIds: world.openGateIds,
-      clearedChambers: world.clearedChambers,
-      packShoutedChambers: world.packShoutedChambers,
-      pets: pets,
-      pulseX: world.pulseX,
-      pulseY: world.pulseY,
-      pulseTimer: world.pulseTimer,
-      bossBannerTimer: world.bossBannerTimer,
-      bossBannerName: world.bossBannerName,
-      afkAssist: world.afkAssist,
-      dungeonId: world.dungeonId,
-      keystoneRunAffixes: world.keystoneRunAffixes,
-      keystoneWeekDungeonId: world.keystoneWeekDungeonId,
-      inWorldBoss: world.inWorldBoss,
-      inGauntlet: world.inGauntlet,
-      gauntletAnomaly: world.gauntletAnomaly,
-      combatFloor: world.combatFloor,
-      affixBannerShown: world.affixBannerShown,
-      combatElapsed: world.combatElapsed,
-      petMitigateFlat: state.petMitigateFlat,
-      petHealBoost: state.petHealBoost,
-      pendingAbilityCasts: world.pendingAbilityCasts,
-      pendingFeelCrits: world.pendingFeelCrits,
-      pendingFeelLevelUps: world.pendingFeelLevelUps,
-      pendingFeelKills: world.pendingFeelKills,
-      pendingFeelPickups: world.pendingFeelPickups,
-      pendingFeelStairs: world.pendingFeelStairs,
-      pendingFeelHits: List<CombatFeelHit>.from(world.pendingFeelHits),
-      pendingVacuumLootLine: world.pendingVacuumLootLine,
-      floaters: world.floaters,
-      bursts: world.bursts,
-      groundFx: world.groundFx,
-      godHandRadius: world.godHandRadius,
-      godHandArgb: world.godHandArgb,
-    )
+        map: world.map,
+        heroes: heroes,
+        enemies: world.enemies,
+        projectiles: world.projectiles,
+        groundLoot: world.groundLoot,
+        isTreasure: world.isTreasure,
+        treasureOpen: world.treasureOpen,
+        treasureTimer: world.treasureTimer,
+        awaitingExit: world.awaitingExit,
+        exitWaitTimer: world.exitWaitTimer,
+        exitHoldSec: world.exitHoldSec,
+        guideX: world.guideX,
+        guideY: world.guideY,
+        guideTimer: world.guideTimer,
+        godHandCooldown: world.godHandCooldown,
+        mendTimer: world.mendTimer,
+        activeChamber: world.activeChamber,
+        openGateIds: world.openGateIds,
+        clearedChambers: world.clearedChambers,
+        packShoutedChambers: world.packShoutedChambers,
+        pets: pets,
+        pulseX: world.pulseX,
+        pulseY: world.pulseY,
+        pulseTimer: world.pulseTimer,
+        bossBannerTimer: world.bossBannerTimer,
+        bossBannerName: world.bossBannerName,
+        afkAssist: world.afkAssist,
+        dungeonId: world.dungeonId,
+        keystoneRunAffixes: world.keystoneRunAffixes,
+        keystoneWeekDungeonId: world.keystoneWeekDungeonId,
+        inWorldBoss: world.inWorldBoss,
+        inGauntlet: world.inGauntlet,
+        gauntletAnomaly: world.gauntletAnomaly,
+        combatFloor: world.combatFloor,
+        affixBannerShown: world.affixBannerShown,
+        combatElapsed: world.combatElapsed,
+        petMitigateFlat: state.petMitigateFlat,
+        petHealBoost: state.petHealBoost,
+        pendingAbilityCasts: world.pendingAbilityCasts,
+        pendingFeelCrits: world.pendingFeelCrits,
+        pendingFeelLevelUps: world.pendingFeelLevelUps,
+        pendingFeelKills: world.pendingFeelKills,
+        pendingFeelPickups: world.pendingFeelPickups,
+        pendingFeelStairs: world.pendingFeelStairs,
+        pendingFeelHits: List<CombatFeelHit>.from(world.pendingFeelHits),
+        pendingVacuumLootLine: world.pendingVacuumLootLine,
+        floaters: world.floaters,
+        bursts: world.bursts,
+        groundFx: world.groundFx,
+        spellSparks: world.spellSparks,
+        godHandRadius: world.godHandRadius,
+        godHandArgb: world.godHandArgb,
+      )
       ..packFaceX = world.packFaceX
       ..packFaceY = world.packFaceY
-      ..packFaceReady = world.packFaceReady;
+      ..packFaceReady = world.packFaceReady
+      ..reducedVfx = world.reducedVfx
+      ..spawnPersistentVfx = world.spawnPersistentVfx;
   }
 
   static void _copyHeroRuntime(SpatialActor from, SpatialActor to) {
@@ -2729,8 +2733,7 @@ abstract final class SpatialCombat {
       spellBoltStyleForAbilityId(id);
 
   /// Lasting ground disc defaults for signature AOEs (life seconds).
-  static double? groundDiscLifeFor(AbilityId id) =>
-      spellGroundDiscLifeFor(id);
+  static double? groundDiscLifeFor(AbilityId id) => spellGroundDiscLifeFor(id);
 
   static bool _keyHasAny(String key, List<String> parts) {
     for (final p in parts) {
@@ -2750,7 +2753,6 @@ abstract final class SpatialCombat {
 
   static int hurtEnemy(SpatialActor enemy, int dealt, {bool soft = false}) =>
       combatHurtEnemy(enemy, dealt, soft: soft);
-
 
   /// Spawn floater when Full VFX, or priority (crit/heal/block) on Lite.
   static bool _allowFloater(VfxQuality quality, {required int priority}) {
@@ -2889,8 +2891,9 @@ abstract final class SpatialCombat {
     if (state != null &&
         hero.assetIndex >= 0 &&
         hero.assetIndex < state.heroes.length) {
-      weaponType =
-          state.heroes[hero.assetIndex].itemIn(EquipmentSlot.weapon)?.weaponType;
+      weaponType = state.heroes[hero.assetIndex]
+          .itemIn(EquipmentSlot.weapon)
+          ?.weaponType;
     }
     return AudioAssets.combatHitId(
       weaponType: weaponType,
@@ -2919,7 +2922,10 @@ abstract final class SpatialCombat {
     final rng = GameLogic.random;
 
     world.godHandCooldown = math.max(0, world.godHandCooldown - dt);
-    world.bagFullFloaterCooldown = math.max(0, world.bagFullFloaterCooldown - dt);
+    world.bagFullFloaterCooldown = math.max(
+      0,
+      world.bagFullFloaterCooldown - dt,
+    );
     world.pulseTimer = math.max(0, world.pulseTimer - dt);
     world.guideTimer = math.max(0, world.guideTimer - dt);
     world.reducedVfx = state.reducedVfx;
@@ -3075,9 +3081,7 @@ abstract final class SpatialCombat {
     // The healer's mend is independent of attacks and only runs while alive.
     world.mendTimer -= dt;
     while (world.mendTimer <= 0) {
-      final healerAlive = world.heroes.any(
-        (h) => h.hp > 0 && actorIsHealer(h),
-      );
+      final healerAlive = world.heroes.any((h) => h.hp > 0 && actorIsHealer(h));
       if (healerAlive) {
         final mend = nextState.healerMendAmount;
         for (final hero in world.heroes) {
@@ -3308,13 +3312,7 @@ abstract final class SpatialCombat {
 
       // Enemy specials (heal / enrage / unique boss tell). A melee wind-up
       // plants the body so the cave word shows before the chip.
-      tickEnemySpecials(
-        world,
-        enemy,
-        target,
-        rng: rng,
-        reducedVfx: reducedVfx,
-      );
+      tickEnemySpecials(world, enemy, target, rng: rng, reducedVfx: reducedVfx);
       if (enemy.telegraphTimer > 0) continue;
 
       final goal = CombatPresence.enemyMoveGoal(enemy, target, world);
@@ -3343,9 +3341,11 @@ abstract final class SpatialCombat {
           attackerAttack: enemy.effectiveAttack,
         );
         // Glass execute: bonus damage vs low-HP heroes.
-        final glassExecute = enemy.archetype == EnemyArchetype.glass &&
+        final glassExecute =
+            enemy.archetype == EnemyArchetype.glass &&
             target.hp < target.effectiveMaxHp * 0.3;
-        final keyGlass = world.keystoneRunAffixes.contains('glass') &&
+        final keyGlass =
+            world.keystoneRunAffixes.contains('glass') &&
             target.hp < target.effectiveMaxHp * 0.35;
         if (glassExecute || keyGlass) {
           raw = math.max(1, (raw * (glassExecute ? 1.35 : 1.2)).round());
@@ -3399,11 +3399,7 @@ abstract final class SpatialCombat {
             life: 0.65,
           );
           if (dmg > 0) {
-            CombatPresence.onPulledAggro(
-              world,
-              target,
-              reducedVfx: reducedVfx,
-            );
+            CombatPresence.onPulledAggro(world, target, reducedVfx: reducedVfx);
           }
         }
       }
@@ -3594,7 +3590,8 @@ abstract final class SpatialCombat {
           damage = (damage * 1.75).round();
         }
         if (target.role == EnemyRole.boss) {
-          damage = (damage * BlessingConstellation.bossAtkMul(nextState)).round();
+          damage = (damage * BlessingConstellation.bossAtkMul(nextState))
+              .round();
         }
         if (!reducedVfx &&
             (abilityTag == 'SWING' ||
@@ -3638,11 +3635,7 @@ abstract final class SpatialCombat {
                 : null;
             noteFeelHit(
               world,
-              combatHitSfxFor(
-                hero: hero,
-                state: nextState,
-                style: hitStyle,
-              ),
+              combatHitSfxFor(hero: hero, state: nextState, style: hitStyle),
               target: target,
               heavy: isCrit && dealt > 0,
             );
@@ -3904,8 +3897,7 @@ abstract final class SpatialCombat {
             radius: loot.drop.isEquipment ? 0.42 : 0.28,
           );
         }
-        final showFloater =
-            !salvaged || world.bagFullFloaterCooldown <= 0;
+        final showFloater = !salvaged || world.bagFullFloaterCooldown <= 0;
         if (salvaged) {
           world.bagFullFloaterCooldown = 2.0;
         }
@@ -3978,6 +3970,7 @@ abstract final class SpatialCombat {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.life -= dt;
+      if (!reducedVfx) SpellSparks.trail(world, p);
       if (p.life <= 0 ||
           p.x < -1 ||
           p.y < -1 ||
@@ -4088,7 +4081,16 @@ abstract final class SpatialCombat {
                 }
               }
             }
-            if (p.isCrit && !reducedVfx) {
+            if (!reducedVfx && p.label == 'PYRO') {
+              SpellVfx.spawnImpact(
+                world,
+                x: v.x,
+                y: v.y,
+                style: p.style,
+                id: AbilityId.pyroblast,
+                radius: 0.7,
+              );
+            } else if (p.isCrit && !reducedVfx) {
               spawnBurst(
                 world,
                 x: v.x,
@@ -4121,6 +4123,16 @@ abstract final class SpatialCombat {
                     : (p.style == SpellBoltStyle.arrow ? 0.28 : 0.35),
                 life: 0.2,
               );
+              if (p.style != SpellBoltStyle.weapon &&
+                  p.style != SpellBoltStyle.arrow) {
+                SpellSparks.puff(
+                  world,
+                  x: v.x,
+                  y: v.y,
+                  style: p.style,
+                  count: 4,
+                );
+              }
             }
             hit = true;
             p.hitsRemaining -= 1;
@@ -4180,8 +4192,7 @@ abstract final class SpatialCombat {
       if (petLeader == null) break;
       final leashOwner = _heroById(world, pet.petOwnerId) ?? petLeader;
       final ownerFocus = HeroFocus.stickyEnemy(leashOwner, world);
-      final target =
-          ownerFocus ?? nearestActiveEnemy(pet, world.enemies);
+      final target = ownerFocus ?? nearestActiveEnemy(pet, world.enemies);
       if (target == null) {
         final heel = CombatPresence.heelPoint(leashOwner, world);
         _steerActor(
@@ -4326,13 +4337,7 @@ abstract final class SpatialCombat {
         life: 0.35,
         kind: SpatialBurstKind.ring,
       );
-      spawnSpark(
-        world,
-        x: tileX,
-        y: tileY,
-        argb: 0xFFFFF8D0,
-        radius: 0.7,
-      );
+      spawnSpark(world, x: tileX, y: tileY, argb: 0xFFFFF8D0, radius: 0.7);
     }
     var gold = 0;
     var nextState = state;
@@ -4362,11 +4367,7 @@ abstract final class SpatialCombat {
     }
     _updateChambers(world, reducedVfx: reduced, softLock: true);
     final synced = _syncHp(nextState, world);
-    return _stepResult(
-      world,
-      synced,
-      goldFromKills: gold,
-    );
+    return _stepResult(world, synced, goldFromKills: gold);
   }
 
   static GameState _syncHp(GameState state, SpatialWorld world) {
@@ -4420,23 +4421,15 @@ abstract final class SpatialCombat {
     SpatialWorld world, {
     bool reducedVfx = false,
     bool softLock = true,
-  }) =>
-      combatUpdateChambers(
-        world,
-        reducedVfx: reducedVfx,
-        softLock: softLock,
-      );
-
+  }) => combatUpdateChambers(world, reducedVfx: reducedVfx, softLock: softLock);
 
   static void _openAllGatesAndWake(SpatialWorld world) =>
       combatOpenAllGatesAndWake(world);
-
 
   /// Opens remaining gates when any *active* living enemy is unreachable.
   /// One flood-fill from the party — not heroes×enemies BFS.
   static void _unlockIfEnemiesUnreachable(SpatialWorld world) =>
       combatUnlockIfEnemiesUnreachable(world);
-
 
   /// Projectiles die on solid walls, but graze open corners so diagonal
   /// point-blank shots aren't eaten by tile floors.
@@ -4467,7 +4460,6 @@ abstract final class SpatialCombat {
   /// Used when exit starts early (AFK) or right before roomCleared.
   static GameState _vacuumGroundLoot(SpatialWorld world, GameState state) =>
       combatVacuumGroundLoot(world, state);
-
 
   static ({int gold, GameState state}) onEnemyKilled(
     SpatialWorld world,
@@ -4607,34 +4599,34 @@ abstract final class SpatialCombat {
       );
       var leveledFloater = false;
       for (final i in payout.leveled) {
-          if (!leveledFloater) {
-            leveledFloater = true;
-            _noteFeelLevelUp(world);
-            spawnFloater(
-              world,
-              x: world.heroes.length > i ? world.heroes[i].x : enemy.x,
-              y: (world.heroes.length > i ? world.heroes[i].y : enemy.y) - 0.9,
-              text: 'LEVEL UP!',
-              argb: _floaterXp,
-              life: 1.45,
-              priority: 2,
-            );
+        if (!leveledFloater) {
+          leveledFloater = true;
+          _noteFeelLevelUp(world);
+          spawnFloater(
+            world,
+            x: world.heroes.length > i ? world.heroes[i].x : enemy.x,
+            y: (world.heroes.length > i ? world.heroes[i].y : enemy.y) - 0.9,
+            text: 'LEVEL UP!',
+            argb: _floaterXp,
+            life: 1.45,
+            priority: 2,
+          );
+        }
+        if (i < world.heroes.length) {
+          final h = next.heroes[i];
+          final a = world.heroes[i];
+          final newMax = next.effectiveHeroMaxHp(h);
+          final delta = newMax - a.maxHp;
+          a.maxHp = newMax;
+          if (a.hp > 0 && delta > 0) {
+            a.hp = math.min(a.effectiveMaxHp, a.hp + delta);
           }
-          if (i < world.heroes.length) {
-            final h = next.heroes[i];
-            final a = world.heroes[i];
-            final newMax = next.effectiveHeroMaxHp(h);
-            final delta = newMax - a.maxHp;
-            a.maxHp = newMax;
-            if (a.hp > 0 && delta > 0) {
-              a.hp = math.min(a.effectiveMaxHp, a.hp + delta);
-            }
-            a.attack = next.effectiveHeroAttack(h);
-            a.defense = next.effectiveHeroDefense(h);
-            a.heroLevel = h.level;
-            a.moveSpeed = next.effectiveHeroMoveSpeed(h);
-            a.attackCooldown = 1.0 / next.effectiveHeroAttackSpeed(h);
-          }
+          a.attack = next.effectiveHeroAttack(h);
+          a.defense = next.effectiveHeroDefense(h);
+          a.heroLevel = h.level;
+          a.moveSpeed = next.effectiveHeroMoveSpeed(h);
+          a.attackCooldown = 1.0 / next.effectiveHeroAttackSpeed(h);
+        }
       }
     }
     return (gold: rewardGold, state: next);

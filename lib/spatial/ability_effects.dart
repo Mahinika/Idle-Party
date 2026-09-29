@@ -8,7 +8,6 @@ import '../models/hero_spec.dart';
 import '../models/spec_mastery.dart';
 import 'spatial_combat.dart';
 
-
 /// Dispatches class-kit casts for live spatial combat.
 ///
 /// Every [HeroSpecId] runs the shared data-driven path: kit passives feed the
@@ -51,10 +50,7 @@ abstract final class AbilityEffectRunner {
 
   static double _castDelaySeconds(SpatialActor hero, ClassAbilityDef def) {
     if (def.castDelaySeconds <= 0) return 0;
-    final haste = math.max(
-      0.45,
-      hero.kitHasteMul * hero.attackSpeedMul,
-    );
+    final haste = math.max(0.45, hero.kitHasteMul * hero.attackSpeedMul);
     return def.castDelaySeconds / haste;
   }
 
@@ -261,7 +257,9 @@ abstract final class AbilityEffectRunner {
         final scan = g.peelScanRange;
         final near = [
           for (final e in world.enemies)
-            if (e.hp > 0 && !e.dormant && SpatialCombat.actorDist(hero, e) <= scan)
+            if (e.hp > 0 &&
+                !e.dormant &&
+                SpatialCombat.actorDist(hero, e) <= scan)
               e,
         ];
         final peel = near.any(
@@ -336,7 +334,8 @@ abstract final class AbilityEffectRunner {
       if (g.nearbyRadius != null) {
         final r = g.nearbyRadius!;
         if (!world.enemies.any(
-          (e) => e.hp > 0 && !e.dormant && SpatialCombat.actorDist(hero, e) <= r,
+          (e) =>
+              e.hp > 0 && !e.dormant && SpatialCombat.actorDist(hero, e) <= r,
         )) {
           return false;
         }
@@ -481,18 +480,18 @@ abstract final class AbilityEffectRunner {
         }
         // Frost: dump Blizzard/Cone in packs instead of locking into Frostbolt.
         if (hero.heroSpecId == HeroSpecId.frostMage && pack >= 2) {
-          final aPack = a.id == AbilityId.blizzard ||
-              a.id == AbilityId.coneOfCold;
-          final bPack = b.id == AbilityId.blizzard ||
-              b.id == AbilityId.coneOfCold;
+          final aPack =
+              a.id == AbilityId.blizzard || a.id == AbilityId.coneOfCold;
+          final bPack =
+              b.id == AbilityId.blizzard || b.id == AbilityId.coneOfCold;
           if (aPack != bPack) return aPack ? -1 : 1;
         }
         // Destruction: Rain / Shadowfury instead of Incinerate in packs.
         if (hero.heroSpecId == HeroSpecId.destruction && pack >= 2) {
-          final aPack = a.id == AbilityId.rainOfFire ||
-              a.id == AbilityId.shadowfury;
-          final bPack = b.id == AbilityId.rainOfFire ||
-              b.id == AbilityId.shadowfury;
+          final aPack =
+              a.id == AbilityId.rainOfFire || a.id == AbilityId.shadowfury;
+          final bPack =
+              b.id == AbilityId.rainOfFire || b.id == AbilityId.shadowfury;
           if (aPack != bPack) return aPack ? -1 : 1;
         }
         // Assassin / Feral finishers are ST — packs already picked AoE above.
@@ -712,11 +711,7 @@ abstract final class AbilityEffectRunner {
         if (_isPartyHeal(def)) {
           spendAndCd(world, hero, def);
           _castPartyHeal(world, hero, def, reducedVfx: reducedVfx);
-          CombatPresence.onEmergencyHeal(
-            world,
-            hero,
-            reducedVfx: reducedVfx,
-          );
+          CombatPresence.onEmergencyHeal(world, hero, reducedVfx: reducedVfx);
           return true;
         }
         final ally = _lowestAlly(world, hero);
@@ -798,7 +793,9 @@ abstract final class AbilityEffectRunner {
             def.id == AbilityId.hungeringCold) {
           final nearby = [
             for (final e in world.enemies)
-              if (e.hp > 0 && !e.dormant && SpatialCombat.actorDist(hero, e) <= 2.5)
+              if (e.hp > 0 &&
+                  !e.dormant &&
+                  SpatialCombat.actorDist(hero, e) <= 2.5)
                 e,
           ];
           if (nearby.isEmpty) return false;
@@ -1054,12 +1051,7 @@ abstract final class AbilityEffectRunner {
     );
     raw = math.max(
       2,
-      (raw *
-              SpecMastery.damageMul(
-                masteryView(hero),
-                def,
-                masteryView(enemy),
-              ))
+      (raw * SpecMastery.damageMul(masteryView(hero), def, masteryView(enemy)))
           .round(),
     );
     // Damage amp window (Vendetta / Cold Blood / Arcane Power).
@@ -1138,25 +1130,24 @@ abstract final class AbilityEffectRunner {
           labelArgb: null,
         ),
       );
-      if (!reducedVfx) {
-        SpellVfx.spawnCast(
+      SpellVfx.spawnCast(
+        world,
+        hero: hero,
+        style: style,
+        id: def.id,
+        radius: 0.55,
+      );
+      if (!reducedVfx &&
+          (style == SpellBoltStyle.lightning || style == SpellBoltStyle.holy)) {
+        SpellVfx.spawnBeam(
           world,
-          hero: hero,
-          style: style,
-          id: def.id,
-          radius: 0.55,
+          x: hero.x,
+          y: hero.y,
+          x2: enemy.x,
+          y2: enemy.y,
+          argb: tint,
+          life: 0.22,
         );
-        if (style == SpellBoltStyle.lightning || style == SpellBoltStyle.holy) {
-          SpellVfx.spawnBeam(
-            world,
-            x: hero.x,
-            y: hero.y,
-            x2: enemy.x,
-            y2: enemy.y,
-            argb: tint,
-            life: 0.22,
-          );
-        }
       }
       _tryElementalOverload(
         world,
@@ -1185,23 +1176,18 @@ abstract final class AbilityEffectRunner {
     if (dealt > 0) {
       SpatialCombat.noteFeelHit(
         world,
-        SpatialCombat.combatHitSfxFor(
-          hero: hero,
-          style: style,
-        ),
+        SpatialCombat.combatHitSfxFor(hero: hero, style: style),
         target: enemy,
       );
     }
-    if (!reducedVfx) {
-      SpellVfx.spawnImpact(
-        world,
-        x: enemy.x,
-        y: enemy.y,
-        style: style,
-        id: def.id,
-        radius: 0.5,
-      );
-    }
+    SpellVfx.spawnImpact(
+      world,
+      x: enemy.x,
+      y: enemy.y,
+      style: style,
+      id: def.id,
+      radius: 0.5,
+    );
     SpatialCombat.spawnFloater(
       world,
       x: enemy.x,
@@ -1223,12 +1209,7 @@ abstract final class AbilityEffectRunner {
       reducedVfx: reducedVfx,
     );
     if (wasAlive && enemy.hp <= 0) {
-      final killed = SpatialCombat.onEnemyKilled(
-        world,
-        stateOut!,
-        enemy,
-        rng,
-      );
+      final killed = SpatialCombat.onEnemyKilled(world, stateOut!, enemy, rng);
       goldOut += killed.gold;
       stateOut = killed.state;
     }
@@ -1327,8 +1308,7 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
   }) {
     // Feral Swipe builds a combo point (same pool as Shred / Rake).
-    if (hero.heroSpecId == HeroSpecId.feral &&
-        def.id == AbilityId.feralSwipe) {
+    if (hero.heroSpecId == HeroSpecId.feral && def.id == AbilityId.feralSwipe) {
       hero.comboPoints = math.min(5, hero.comboPoints + 1);
     }
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
@@ -1339,16 +1319,14 @@ abstract final class AbilityEffectRunner {
       SpatialCombat.burstArgbForStyle(style),
       reducedVfx,
     );
-    if (!reducedVfx) {
-      SpellVfx.spawnCast(
-        world,
-        hero: hero,
-        style: style,
-        shape: def.aoeShape,
-        id: def.id,
-        radius: 0.85,
-      );
-    }
+    SpellVfx.spawnCast(
+      world,
+      hero: hero,
+      style: style,
+      shape: def.aoeShape,
+      id: def.id,
+      radius: 0.85,
+    );
 
     final shape =
         def.aoeShape ??
@@ -1474,16 +1452,16 @@ abstract final class AbilityEffectRunner {
           argb: SpatialCombat.burstArgbForStyle(style),
           life: 0.32 + delay * 0.1,
         );
-        SpellVfx.spawnImpact(
-          world,
-          x: t.x,
-          y: t.y,
-          style: style,
-          shape: AbilityAoeShape.chain,
-          id: def.id,
-          radius: 0.5 - i * 0.05,
-        );
       }
+      SpellVfx.spawnImpact(
+        world,
+        x: t.x,
+        y: t.y,
+        style: style,
+        shape: AbilityAoeShape.chain,
+        id: def.id,
+        radius: 0.5 - i * 0.05,
+      );
       px = t.x;
       py = t.y;
       delay += 0.12;
@@ -1549,15 +1527,15 @@ abstract final class AbilityEffectRunner {
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.18;
 
+    SpellVfx.spawnCast(
+      world,
+      hero: hero,
+      style: style,
+      shape: AbilityAoeShape.nova,
+      id: def.id,
+      radius: radius * 0.45,
+    );
     if (!reducedVfx) {
-      SpellVfx.spawnCast(
-        world,
-        hero: hero,
-        style: style,
-        shape: AbilityAoeShape.nova,
-        id: def.id,
-        radius: radius * 0.45,
-      );
       SpatialCombat.spawnRing(
         world,
         x: hero.x,
@@ -1621,16 +1599,16 @@ abstract final class AbilityEffectRunner {
           );
         }
         _applyBleedIfNeeded(world, hero, e, def, raw);
+        SpellVfx.spawnImpact(
+          world,
+          x: e.x,
+          y: e.y,
+          style: style,
+          shape: AbilityAoeShape.nova,
+          id: def.id,
+          radius: 0.5,
+        );
         if (!reducedVfx) {
-          SpellVfx.spawnImpact(
-            world,
-            x: e.x,
-            y: e.y,
-            style: style,
-            shape: AbilityAoeShape.nova,
-            id: def.id,
-            radius: 0.5,
-          );
           SpatialCombat.spawnFloater(
             world,
             x: e.x,
@@ -1641,12 +1619,7 @@ abstract final class AbilityEffectRunner {
           );
         }
         if (wasAlive && e.hp <= 0) {
-          final killed = SpatialCombat.onEnemyKilled(
-            world,
-            stateOut!,
-            e,
-            rng,
-          );
+          final killed = SpatialCombat.onEnemyKilled(world, stateOut!, e, rng);
           goldOut += killed.gold;
           stateOut = killed.state;
         }
@@ -1717,17 +1690,15 @@ abstract final class AbilityEffectRunner {
           delay: i * 0.06,
         ),
       );
-      if (!reducedVfx) {
-        SpellVfx.spawnImpact(
-          world,
-          x: e.x,
-          y: e.y,
-          style: style,
-          shape: AbilityAoeShape.rain,
-          id: def.id,
-          radius: 0.45,
-        );
-      }
+      SpellVfx.spawnImpact(
+        world,
+        x: e.x,
+        y: e.y,
+        style: style,
+        shape: AbilityAoeShape.rain,
+        id: def.id,
+        radius: 0.45,
+      );
       i++;
     }
   }
@@ -1739,10 +1710,7 @@ abstract final class AbilityEffectRunner {
     SpatialActor? focus,
   ) {
     final ranged = (hero.preferredRange ?? 0) >= 3.2;
-    final seed = ranged &&
-            focus != null &&
-            focus.hp > 0 &&
-            !focus.dormant
+    final seed = ranged && focus != null && focus.hp > 0 && !focus.dormant
         ? focus
         : hero;
     var sx = 0.0;
@@ -1769,7 +1737,8 @@ abstract final class AbilityEffectRunner {
     math.Random rng, {
     required bool reducedVfx,
   }) {
-    final radius = def.vfx?.groundRadius ??
+    final radius =
+        def.vfx?.groundRadius ??
         (style == SpellBoltStyle.lightning ? 3.0 : 2.7);
     final raw = math.max(
       2,
@@ -1781,15 +1750,15 @@ abstract final class AbilityEffectRunner {
     final ox = anchor.$1;
     final oy = anchor.$2;
 
+    SpellVfx.spawnCast(
+      world,
+      hero: hero,
+      style: style,
+      shape: AbilityAoeShape.ground,
+      id: def.id,
+      radius: radius * 0.4,
+    );
     if (!reducedVfx) {
-      SpellVfx.spawnCast(
-        world,
-        hero: hero,
-        style: style,
-        shape: AbilityAoeShape.ground,
-        id: def.id,
-        radius: radius * 0.4,
-      );
       SpatialCombat.spawnRing(
         world,
         x: ox,
@@ -1873,16 +1842,16 @@ abstract final class AbilityEffectRunner {
       }
       _applyBleedIfNeeded(world, hero, e, def, raw);
       hitCount++;
+      SpellVfx.spawnImpact(
+        world,
+        x: e.x,
+        y: e.y,
+        style: style,
+        shape: AbilityAoeShape.ground,
+        id: def.id,
+        radius: 0.55,
+      );
       if (!reducedVfx) {
-        SpellVfx.spawnImpact(
-          world,
-          x: e.x,
-          y: e.y,
-          style: style,
-          shape: AbilityAoeShape.ground,
-          id: def.id,
-          radius: 0.55,
-        );
         // Cap per-target numbers on big ground AOEs.
         if (hitCount <= 3) {
           SpatialCombat.spawnFloater(
@@ -1929,16 +1898,14 @@ abstract final class AbilityEffectRunner {
         ),
       );
     }
-    if (!reducedVfx) {
-      SpellVfx.spawnImpact(
-        world,
-        x: focus.x,
-        y: focus.y,
-        style: style,
-        id: def.id,
-        radius: 0.7,
-      );
-    }
+    SpellVfx.spawnImpact(
+      world,
+      x: focus.x,
+      y: focus.y,
+      style: style,
+      id: def.id,
+      radius: 0.7,
+    );
   }
 
   static void _castHeal(
@@ -1969,15 +1936,15 @@ abstract final class AbilityEffectRunner {
       ally.hotAcc = 0;
     }
     announce(world, caster, def.shortLabel, tint, reducedVfx);
+    SpellVfx.spawnImpact(
+      world,
+      x: ally.x,
+      y: ally.y,
+      style: style,
+      id: def.id,
+      radius: 0.6,
+    );
     if (!reducedVfx) {
-      SpellVfx.spawnImpact(
-        world,
-        x: ally.x,
-        y: ally.y,
-        style: style,
-        id: def.id,
-        radius: 0.6,
-      );
       SpatialCombat.spawnRing(
         world,
         x: ally.x,
@@ -2000,15 +1967,15 @@ abstract final class AbilityEffectRunner {
     final tint = def.vfx?.castArgb ?? SpatialCombat.burstArgbForStyle(style);
     _absorbLowest(world, caster, ally, def.coeff, def.shortLabel);
     announce(world, caster, def.shortLabel, tint, reducedVfx);
+    SpellVfx.spawnImpact(
+      world,
+      x: ally.x,
+      y: ally.y,
+      style: style,
+      id: def.id,
+      radius: 0.7,
+    );
     if (!reducedVfx) {
-      SpellVfx.spawnImpact(
-        world,
-        x: ally.x,
-        y: ally.y,
-        style: style,
-        id: def.id,
-        radius: 0.7,
-      );
       SpatialCombat.spawnRing(
         world,
         x: ally.x,
@@ -2164,14 +2131,14 @@ abstract final class AbilityEffectRunner {
       bounce *= 0.72;
     }
     announce(world, caster, def.shortLabel, tint, reducedVfx);
+    SpellVfx.spawnCast(
+      world,
+      hero: caster,
+      style: style,
+      id: def.id,
+      radius: 1.1,
+    );
     if (!reducedVfx) {
-      SpellVfx.spawnCast(
-        world,
-        hero: caster,
-        style: style,
-        id: def.id,
-        radius: 1.1,
-      );
       SpatialCombat.spawnRing(
         world,
         x: caster.x,
@@ -2416,10 +2383,7 @@ abstract final class AbilityEffectRunner {
         : (1.0 - ally.hp / ally.effectiveMaxHp).clamp(0.0, 1.0);
     final healMul =
         SpecMastery.healMul(masteryView(caster), missing) * caster.kitHealMul;
-    final amount = math.max(
-      4,
-      (_healPower(caster) * coeff * healMul).round(),
-    );
+    final amount = math.max(4, (_healPower(caster) * coeff * healMul).round());
     final before = ally.hp;
     ally.hp = math.min(ally.effectiveMaxHp, ally.hp + amount);
     final gained = ally.hp - before;
