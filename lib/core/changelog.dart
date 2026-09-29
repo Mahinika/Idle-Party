@@ -86,10 +86,30 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.191';
+  static const String currentVersion = '1.12.192';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.192',
+      date: 'Sep 29, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight — this patch gives each cave its own music and a clearer hit, spell, and button sound.',
+      added: <String>[
+        'Five cave songs: warm, dark, ice, wet, and storm. Sandy, Goblin, and King share the warm one.',
+      ],
+      changed: <String>[
+        'Hits, spells, loot, level-up, and boss landings are fuller. A hurt hero, a heal, a shield, and a boss wind-up each have their own sound.',
+        'Buttons differ: a tap, a tab, a yes, a back, and a no. Buying and forging have their own sounds too.',
+        'Music rests for a shorter gap, then comes back. Hub song is unchanged.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until the party is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.191',
       date: 'Sep 29, 2026',

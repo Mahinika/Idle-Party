@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/audio_assets.dart';
 import 'package:idle_party/core/music_score.dart';
 
 void main() {
@@ -37,6 +38,14 @@ void main() {
     expect(score.tick(rested.add(MusicScore.hubQuiet)), isTrue);
     expect(score.cue, MusicCue.bed);
     expect(score.stem, MusicStem.hub);
+  });
+
+  test('a new cave mood asks the dungeon bed to change', () {
+    final score = cave();
+    expect(score.setMood(ZoneMood.warm), isFalse);
+    expect(score.setMood(ZoneMood.ice), isTrue);
+    expect(score.mood, ZoneMood.ice);
+    expect(score.stem, MusicStem.dungeon);
   });
 
   test('cave bed uses the dungeon stem and its own clock', () {

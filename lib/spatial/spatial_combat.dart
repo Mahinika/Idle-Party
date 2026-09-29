@@ -4194,11 +4194,14 @@ abstract final class SpatialCombat {
     var nextState = state;
     var goldFromKills = 0;
     final petLeader = world.leader;
-    world.pets.removeWhere((p) {
-      if (p.petLifeTimer <= 0) return false;
-      p.petLifeTimer -= dt;
-      return p.petLifeTimer <= 0;
-    });
+    // The default pet list is const and empty. Expiry needs a real list.
+    if (world.pets.isNotEmpty) {
+      world.pets.removeWhere((p) {
+        if (p.petLifeTimer <= 0) return false;
+        p.petLifeTimer -= dt;
+        return p.petLifeTimer <= 0;
+      });
+    }
     final allies = _scratchAllies
       ..clear()
       ..addAll(world.heroes)
