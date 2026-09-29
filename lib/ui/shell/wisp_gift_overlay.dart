@@ -11,7 +11,8 @@ import '../game_theme.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 
-/// Floating lantern on the open map — right of center, clear of the header.
+/// Floating lantern in a dungeon — right of center, clear of the header.
+/// Not shown on the hub.
 class WispGiftOverlay extends StatelessWidget {
   const WispGiftOverlay({super.key, required this.director});
 

@@ -321,14 +321,16 @@ class GameDirector extends ChangeNotifier {
     _uiPaused = paused;
   }
 
-  /// Pause WISP despawn while hub/dungeon menus are open.
+  /// Pause WISP despawn while dungeon menus are open.
   void setWispMenuPaused(bool paused) {
     _wispMenuPaused = paused;
   }
 
   bool get wispMenuPaused => _wispMenuPaused;
 
-  bool get isWispVisible => _wispVisibleRemainingMs > 0;
+  /// Lantern only paints in a dungeon — never on the hub World Path.
+  bool get isWispVisible =>
+      _state.inDungeon && _wispVisibleRemainingMs > 0;
 
   bool get wispPendingChoice => WispGift.hasPendingChoice(_state.metaDepth);
 
@@ -356,6 +358,9 @@ class GameDirector extends ChangeNotifier {
         _state.copyWith(metaDepth: md.copyWith(wispNextSpawnMs: now)),
       );
     }
+    // Hub: do not spawn or burn the lantern window. Schedule stays ready
+    // until the player is in a cave.
+    if (!_state.inDungeon) return;
     final schedule = _state.metaDepth;
     if (_wispChoiceOpen) return;
     if (_wispVisibleRemainingMs > 0) {

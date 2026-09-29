@@ -330,7 +330,6 @@ class _PlayShellState extends State<PlayShell> {
                           ),
                         ),
                         ...tipsAndMenus,
-                        WispGiftOverlay(director: director),
                       ],
                     ),
                   ),

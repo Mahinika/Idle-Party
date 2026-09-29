@@ -168,10 +168,10 @@ match this doc.
 
 ## WISP gift (separate from SCROLLS)
 
-Optional **WISP** drifts on hub or in a dungeon after the first ENTER. Tap it
-where it appears. A small prompt offers a short ad for a **bigger gold pile**
-(no time boost). Amounts use the **best cleared zone** (and about **4% of
-wallet** as a soft floor for WATCH), not the farm floor under your feet.
+Optional **WISP** drifts in a dungeon after the first ENTER (not on the hub).
+Tap it where it appears. A small prompt offers a short ad for a **bigger gold
+pile** (no time boost). Amounts use the **best cleared zone** (and about **4%
+of wallet** as a soft floor for WATCH), not the farm floor under your feet.
 **NO THANKS** keeps the small pile. The lantern leaves when its few seconds
 are up. Ad-free: big pile on tap. Max **6** taps per UTC day in release.
 Logic: `lib/core/wisp_gift.dart`.
@@ -201,8 +201,7 @@ This list is the ad-powerups cut, not a repo-wide ban. Owner 2026-09-26 lifted t
 1. Hub shows a camera overlay on the World Path; hunt card / ENTER still read first.
 2. WATCH → +1 ticket; USE Sharp Edge → +40% ATK for ~2h visible in combat feel.
 3. USE Full Boost → both gold ×2 and +40% for ~4h (best ticket deal).
-4. SCROLLS never start an ad mid-fight. The WISP lantern is the one
-   exception: since 2026-09-28 its optional ad is offered where it appears,
-   including in a dungeon, and only when the player taps it.
+4. SCROLLS never start an ad mid-fight. The WISP lantern is dungeon-only;
+   its optional ad runs where it was tapped, and only when the player taps it.
 5. Ascend keeps tickets and remaining buff time.
 6. SHOP copy still says same power as tickets / ads.
