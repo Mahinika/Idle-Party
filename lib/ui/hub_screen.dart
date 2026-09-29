@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../core/chase_contract.dart';
 import '../core/menu_alerts.dart';
-import '../core/nav_intent.dart';
 import '../core/chase_dispatcher.dart';
 import '../core/ad_boost.dart';
 import '../core/game_director.dart';
@@ -35,8 +34,9 @@ import 'shell/discord_thanks_overlay.dart';
 import 'shell/whats_new_overlay.dart';
 import 'hub/hub_endgame_map.dart';
 import 'hub/hub_header.dart';
-import 'hub/hub_map_extras.dart';
+import 'hub/hub_powerups.dart';
 import 'hub/hub_ranks.dart';
+import 'shell/scroll_buff_stack.dart';
 import 'hub/hub_today_card.dart';
 import 'hub/hub_world_map.dart';
 
@@ -651,6 +651,33 @@ class _HubScreenState extends State<HubScreen>
                                 ),
                               ],
                               SizedBox(height: short ? 4 : 6),
+                              if (showEndgameLayer) ...[
+                                HubMapModeTabs(
+                                  showEndgame: _showEndgameMap,
+                                  onSelectPath: () => setState(() {
+                                    _userPickedZone = true;
+                                    _showEndgameMap = false;
+                                    if (_selectedHunt != null) {
+                                      _selectedId =
+                                          GameLogic.recommendedDungeonId(state);
+                                    }
+                                    _selectedHunt = null;
+                                  }),
+                                  onSelectEndgame: () => setState(() {
+                                    _userPickedZone = true;
+                                    _showEndgameMap = true;
+                                    _selectedHunt ??=
+                                        HubEndgameAct.huntForChase(
+                                          chase.kind,
+                                        ) ??
+                                        HubEndgameHunt.gauntlet;
+                                    _selectedId = HubEndgameAct.nodeFor(
+                                      _selectedHunt!,
+                                    ).portraitDungeonId;
+                                  }),
+                                ),
+                                SizedBox(height: short ? 4 : 6),
+                              ],
                               // PATH or ENDGAME board; only HERE-ring listens to torch.
                               Expanded(
                                 flex: short ? 7 : 1,
@@ -707,52 +734,33 @@ class _HubScreenState extends State<HubScreen>
                                               ),
                                       ),
                                     ),
-                                    if (showEndgameLayer)
-                                      Positioned(
-                                        left: 0,
-                                        top: 0,
-                                        right: 72,
-                                        child: HubMapModeTabs(
-                                          overlay: true,
-                                          showEndgame: _showEndgameMap,
-                                          onSelectPath: () => setState(() {
-                                            _userPickedZone = true;
-                                            _showEndgameMap = false;
-                                            if (_selectedHunt != null) {
-                                              _selectedId =
-                                                  GameLogic
-                                                      .recommendedDungeonId(
-                                                    state,
-                                                  );
-                                            }
-                                            _selectedHunt = null;
-                                          }),
-                                          onSelectEndgame: () => setState(() {
-                                            _userPickedZone = true;
-                                            _showEndgameMap = true;
-                                            _selectedHunt ??=
-                                                HubEndgameAct.huntForChase(
-                                                  chase.kind,
-                                                ) ??
-                                                HubEndgameHunt.gauntlet;
-                                            _selectedId = HubEndgameAct.nodeFor(
-                                              _selectedHunt!,
-                                            ).portraitDungeonId;
-                                          }),
-                                        ),
-                                      ),
                                     Positioned(
                                       right: 0,
                                       bottom: 0,
-                                      child: HubMapExtrasFab(
-                                        meta: state.metaDepth,
-                                        showPowerups: _showPowerupsFab(),
-                                        onRanks: () => openHubRanksSheet(
-                                          context,
-                                          director,
-                                        ),
-                                        onPowerups: () =>
-                                            router.apply(NavIntent.shop),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          ScrollBuffStack(
+                                            meta: state.metaDepth,
+                                            maxHeight: 88,
+                                          ),
+                                          HubRanksFab(
+                                            onOpen: () => openHubRanksSheet(
+                                              context,
+                                              director,
+                                            ),
+                                          ),
+                                          if (_showPowerupsFab())
+                                            HubPowerupsFab(
+                                              state: state,
+                                              onOpen: () => openPowerupsSheet(
+                                                context,
+                                                director,
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                     ),
                                   ],
