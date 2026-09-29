@@ -8,9 +8,12 @@ import 'package:idle_party/core/audio_variation_bank.dart';
 import 'package:idle_party/core/combat_feel.dart';
 import 'package:idle_party/core/game_audio.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/spell_bolt_style.dart';
+import 'package:idle_party/spatial/spatial_combat.dart';
+import 'package:idle_party/spatial/tile_map.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -21,18 +24,18 @@ void main() {
     }
   });
 
-  test('hit families ship five mix variants', () {
+  test('hit families ship mix variants', () {
     for (final id in <String>[
       'hit_blade',
       'hit_axe',
       'hit_blunt',
       'hit_dagger',
       'hit_fist',
-      'hit_bow',
     ]) {
       final variants = AudioAssets.sfxVariants[id]!;
-      expect(variants, hasLength(5), reason: id);
+      expect(variants, hasLength(6), reason: id);
     }
+    expect(AudioAssets.sfxVariants['hit_bow'], hasLength(4));
     expect(AudioAssets.sfxVariants.containsKey('hit'), isFalse);
   });
 
@@ -255,10 +258,89 @@ void main() {
     expect(decoded.soundMuted, isFalse);
   });
 
+  test('every cave has a mood bed and the folder stays under 10 MB', () {
+    for (final dungeon in DungeonCatalog.all) {
+      final mood = AudioAssets.moodForDungeon(dungeon.id);
+      expect(
+        AudioAssets.allCatalogPaths,
+        contains(AudioAssets.dungeonMusic(mood)),
+        reason: dungeon.id,
+      );
+      expect(
+        File(AudioAssets.dungeonMusic(mood)).existsSync(),
+        isTrue,
+        reason: dungeon.id,
+      );
+      expect(
+        File(AudioAssets.dungeonAmbience(mood)).existsSync(),
+        isTrue,
+        reason: dungeon.id,
+      );
+    }
+    var bytes = 0;
+    for (final entity in Directory('assets/custom/audio').listSync(recursive: true)) {
+      if (entity is File) bytes += entity.lengthSync();
+    }
+    expect(bytes, lessThan(AudioAssets.maxCatalogBytes));
+  });
+
+  test('offline fights stay silent and a live step drains cues', () {
+    final world = _quietWorld();
+    combatNoteAudioCue(world, 'enemy_hit');
+    expect(world.pendingAudioCues, <String>['enemy_hit']);
+    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
+    final result = SpatialCombat.step(world, state, dt: 0.05);
+    expect(world.pendingAudioCues, isEmpty);
+    expect(result.audioCues, <String>['enemy_hit']);
+
+    final offline = _quietWorld(afk: true);
+    combatNoteAudioCue(offline, 'boss_tell');
+    expect(offline.pendingAudioCues, isEmpty);
+    final silent = SpatialCombat.step(offline, state, dt: 0.05);
+    expect(silent.audioCues, isEmpty);
+  });
+
   test('new save defaults use softer audio mix', () {
     final state = GameLogic.createInitialState(now: DateTime(2026, 9, 10));
     expect(state.sfxVolume, closeTo(0.45, 0.001));
     expect(state.ambienceVolume, closeTo(0.20, 0.001));
     expect(state.musicVolume, closeTo(0.22, 0.001));
   });
+}
+
+SpatialWorld _quietWorld({bool afk = false}) {
+  const cols = 8;
+  const rows = 8;
+  final tiles = List<TileKind>.filled(cols * rows, TileKind.floor);
+  return SpatialWorld(
+    map: TileMap(
+      cols: cols,
+      rows: rows,
+      tiles: tiles,
+      spawnPoints: const [(2, 2)],
+      exitPoint: (5, 5),
+      enemySpawns: const [(6, 2)],
+    ),
+    heroes: [
+      SpatialActor(
+        id: 'h',
+        name: 'h',
+        team: SpatialTeam.hero,
+        x: 2,
+        y: 2,
+        hp: 100,
+        maxHp: 100,
+        attack: 10,
+        defense: 5,
+        moveSpeed: 2,
+        attackRange: 1.2,
+        attackCooldown: 1,
+      ),
+    ],
+    enemies: const <SpatialActor>[],
+    projectiles: const <SpatialProjectile>[],
+    groundLoot: const [],
+    isTreasure: false,
+    afkAssist: afk,
+  );
 }

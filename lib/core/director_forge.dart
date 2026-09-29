@@ -50,6 +50,7 @@ extension GameDirectorForge on GameDirector {
       return;
     }
     _applyUpgrade(updated);
+    GameAudio.forgeUp();
     final afterRec = GameLogic.recommendedForgeUpgrade(_state);
     if (afterRec != beforeRec) {
       final name = GameDirector._forgeTrackShort(PartyUpgradeType.values[afterRec]);
@@ -81,6 +82,7 @@ extension GameDirectorForge on GameDirector {
       return;
     }
     _applyUpgrade(updated);
+    GameAudio.forgeUp();
     final afterRec = GameLogic.recommendedForgeUpgrade(_state);
     if (afterRec != beforeRec) {
       final name = GameDirector._forgeTrackShort(PartyUpgradeType.values[afterRec]);

@@ -1,89 +1,107 @@
 import '../models/loot.dart';
 import '../models/spell_bolt_style.dart';
+import 'combat_feel.dart';
+
+/// Which cave bed and air a dungeon uses.
+enum ZoneMood { warm, dark, ice, wet, storm }
 
 /// Asset paths for Idle Party audio (core-safe — no ui/ imports).
 ///
-/// SFX: Idle Party soft procedural one-shots under [customSfxRoot] (see
-/// `tool/generate_soft_sfx.py` + `tool/generate_combat_spell_sfx.py`).
-/// Hit families ship 5 variants (`_a`…`_e`); spells ship 6 (`_a`…`_f`).
-/// Swish/material layers stay separate. Mix picks via [AudioVariationCatalog].
+/// SFX and cave beds are owned procedural OGG (`tool/audio_synth`).
+/// Hub music stays the CC0 Heavenly Loop. The old cave loop
+/// `music/dungeon.mp3` stays on disk as the A/B spare and is not played.
 abstract final class AudioAssets {
   static const customSfxRoot = 'assets/custom/audio/sfx';
   static const ambienceRoot = 'assets/custom/audio/ambience';
   static const musicRoot = 'assets/custom/audio/music';
 
-  static const ui = '$customSfxRoot/ui.wav';
-  static const crit = '$customSfxRoot/crit.wav';
-  static const kill = '$customSfxRoot/kill.wav';
-  static const loot = '$customSfxRoot/loot.wav';
-  static const flask = '$customSfxRoot/flask.wav';
-  static const level = '$customSfxRoot/level.wav';
-  static const clear = '$customSfxRoot/clear.wav';
-  static const unlock = '$customSfxRoot/unlock.wav';
-  static const boss = '$customSfxRoot/boss.wav';
-  static const wipe = '$customSfxRoot/wipe.wav';
-
-  static const matFlesh = '$customSfxRoot/mat_flesh.wav';
-  static const matBone = '$customSfxRoot/mat_bone.wav';
-  static const matWet = '$customSfxRoot/mat_wet.wav';
-  static const matStone = '$customSfxRoot/mat_stone.wav';
-
-  static const hubAmbience = '$ambienceRoot/hub.wav';
-  static const dungeonAmbience = '$ambienceRoot/dungeon.wav';
+  static const hubAmbience = '$ambienceRoot/hub.ogg';
   static const hubMusic = '$musicRoot/hub.ogg';
-  static const dungeonMusic = '$musicRoot/dungeon.mp3';
-  static const bossMusic = '$musicRoot/boss.wav';
-  static const resolveMusic = '$musicRoot/resolve.wav';
-  static const downMusic = '$musicRoot/down.wav';
 
-  static List<String> _hitVariants(String stem) => <String>[
-    for (final letter in <String>['a', 'b', 'c', 'd', 'e'])
-      '$customSfxRoot/${stem}_$letter.wav',
+  /// Spare from before the zone beds. Not in [allCatalogPaths].
+  static const legacyDungeonMusic = '$musicRoot/dungeon.mp3';
+
+  static const bossMusic = '$musicRoot/boss.ogg';
+  static const resolveMusic = '$musicRoot/resolve.ogg';
+  static const downMusic = '$musicRoot/down.ogg';
+
+  static const maxCatalogBytes = 10 * 1024 * 1024;
+
+  static ZoneMood moodForDungeon(String dungeonId) => switch (dungeonId) {
+    'underworld' || 'dead' || 'hell' => ZoneMood.dark,
+    'crystal' || 'rime' => ZoneMood.ice,
+    'tide' || 'fen' || 'grove' => ZoneMood.wet,
+    'ember' || 'brass' || 'storm' || 'veil' => ZoneMood.storm,
+    _ => ZoneMood.warm,
+  };
+
+  static String dungeonMusic(ZoneMood mood) =>
+      '$musicRoot/bed_${mood.name}.ogg';
+
+  static String dungeonAmbience(ZoneMood mood) =>
+      '$ambienceRoot/${mood.name}.ogg';
+
+  static List<String> _letters(String stem, String letters) => <String>[
+    for (final letter in letters.split(''))
+      '$customSfxRoot/${stem}_$letter.ogg',
   ];
 
-  static List<String> _triple(String stem) => <String>[
-    for (final letter in <String>['a', 'b', 'c'])
-      '$customSfxRoot/${stem}_$letter.wav',
-  ];
-
-  static List<String> _six(String stem) => <String>[
-    for (final letter in <String>['a', 'b', 'c', 'd', 'e', 'f'])
-      '$customSfxRoot/${stem}_$letter.wav',
-  ];
+  static List<String> _one(String stem) => <String>['$customSfxRoot/$stem.ogg'];
 
   /// Play id → one or more variant paths (combat picks random).
   static final Map<String, List<String>> sfxVariants = <String, List<String>>{
-    'ui': <String>[ui],
-    'hit_blade': _hitVariants('hit_blade'),
-    'hit_axe': _hitVariants('hit_axe'),
-    'hit_blunt': _hitVariants('hit_blunt'),
-    'hit_dagger': _hitVariants('hit_dagger'),
-    'hit_fist': _hitVariants('hit_fist'),
-    'hit_bow': _hitVariants('hit_bow'),
-    'swish_melee': _triple('swish_melee'),
-    'swish_bow': _triple('swish_bow'),
-    'mat_flesh': <String>[matFlesh],
-    'mat_bone': <String>[matBone],
-    'mat_wet': <String>[matWet],
-    'mat_stone': <String>[matStone],
-    'crit': <String>[crit],
-    'kill': <String>[kill],
-    'loot': <String>[loot],
-    'flask': <String>[flask],
-    'level': <String>[level],
-    'clear': <String>[clear],
-    'unlock': <String>[unlock],
-    'boss': <String>[boss],
-    'wipe': <String>[wipe],
-    'spell_fire': _six('spell_fire'),
-    'spell_frost': _six('spell_frost'),
-    'spell_holy': _six('spell_holy'),
-    'spell_shadow': _six('spell_shadow'),
-    'spell_arcane': _six('spell_arcane'),
-    'spell_nature': _six('spell_nature'),
-    'spell_lightning': _six('spell_lightning'),
-    'spell_demon': _six('spell_demon'),
-    'spell_poison': _six('spell_poison'),
+    'ui_tap': _one('ui_tap'),
+    'ui_tab': _one('ui_tab'),
+    'ui_confirm': _one('ui_confirm'),
+    'ui_back': _one('ui_back'),
+    'ui_deny': _one('ui_deny'),
+    'hit_blade': _letters('hit_blade', 'abcdef'),
+    'hit_axe': _letters('hit_axe', 'abcdef'),
+    'hit_blunt': _letters('hit_blunt', 'abcdef'),
+    'hit_dagger': _letters('hit_dagger', 'abcdef'),
+    'hit_fist': _letters('hit_fist', 'abcdef'),
+    'hit_bow': _letters('hit_bow', 'abcd'),
+    'swish_melee': _letters('swish_melee', 'abc'),
+    'swish_bow': _letters('swish_bow', 'abc'),
+    'mat_flesh': _one('mat_flesh'),
+    'mat_bone': _one('mat_bone'),
+    'mat_wet': _one('mat_wet'),
+    'mat_stone': _one('mat_stone'),
+    'crit': _letters('crit', 'abcd'),
+    'kill': _letters('kill', 'abcd'),
+    'loot': _one('loot'),
+    'loot_rare': _one('loot_rare'),
+    'loot_epic': _one('loot_epic'),
+    'loot_legendary': _one('loot_legendary'),
+    'gold': _one('gold'),
+    'equip': _one('equip'),
+    'forge_up': _one('forge_up'),
+    'achievement': _one('achievement'),
+    'ascend': _one('ascend'),
+    'flask': _one('flask'),
+    'level': _one('level'),
+    'clear': _one('clear'),
+    'unlock': _one('unlock'),
+    'boss': _one('boss'),
+    'wipe': _one('wipe'),
+    'enemy_hit': _letters('enemy_hit', 'abc'),
+    'hero_down': _one('hero_down'),
+    'heal': _letters('heal', 'ab'),
+    'shield': _letters('shield', 'ab'),
+    'boss_tell': _letters('boss_tell', 'ab'),
+    'enrage': _letters('enrage', 'ab'),
+    'enemy_die_flesh': _letters('enemy_die_flesh', 'abc'),
+    'enemy_die_bone': _letters('enemy_die_bone', 'abc'),
+    'enemy_die_stone': _letters('enemy_die_stone', 'abc'),
+    'spell_fire': _letters('spell_fire', 'abcdef'),
+    'spell_frost': _letters('spell_frost', 'abcdef'),
+    'spell_holy': _letters('spell_holy', 'abcdef'),
+    'spell_shadow': _letters('spell_shadow', 'abcdef'),
+    'spell_arcane': _letters('spell_arcane', 'abcdef'),
+    'spell_nature': _letters('spell_nature', 'abcdef'),
+    'spell_lightning': _letters('spell_lightning', 'abcdef'),
+    'spell_demon': _letters('spell_demon', 'abcdef'),
+    'spell_poison': _letters('spell_poison', 'abcdef'),
   };
 
   /// First variant path per id (compat / single-source lookups).
@@ -112,6 +130,19 @@ abstract final class AudioAssets {
     'kill',
   };
 
+  /// Body cues (hero hurt, death, tell). Own limiter, not the weapon hammer.
+  static const Set<String> bodyCueIds = <String>{
+    'enemy_hit',
+    'hero_down',
+    'heal',
+    'shield',
+    'boss_tell',
+    'enrage',
+    'enemy_die_flesh',
+    'enemy_die_bone',
+    'enemy_die_stone',
+  };
+
   static const Set<String> meleeFeelIds = <String>{
     'hit_blade',
     'hit_axe',
@@ -135,6 +166,26 @@ abstract final class AudioAssets {
   };
 
   static const Set<String> priorityFeelIds = <String>{'crit', 'kill'};
+
+  static const Set<String> lootIds = <String>{
+    'loot',
+    'loot_rare',
+    'loot_epic',
+    'loot_legendary',
+  };
+
+  static String lootIdFor(LootRarity rarity) => switch (rarity) {
+    LootRarity.rare => 'loot_rare',
+    LootRarity.epic => 'loot_epic',
+    LootRarity.legendary => 'loot_legendary',
+    LootRarity.common || LootRarity.uncommon => 'loot',
+  };
+
+  static String enemyDieId(CombatHitMaterial material) => switch (material) {
+    CombatHitMaterial.stone => 'enemy_die_stone',
+    CombatHitMaterial.bone => 'enemy_die_bone',
+    CombatHitMaterial.flesh || CombatHitMaterial.wet => 'enemy_die_flesh',
+  };
 
   /// Map equipped weapon + optional bolt style → play id.
   static String combatHitId({
@@ -194,9 +245,9 @@ abstract final class AudioAssets {
   static final List<String> allCatalogPaths = <String>[
     for (final variants in sfxVariants.values) ...variants,
     hubAmbience,
-    dungeonAmbience,
+    for (final mood in ZoneMood.values) dungeonAmbience(mood),
     hubMusic,
-    dungeonMusic,
+    for (final mood in ZoneMood.values) dungeonMusic(mood),
     bossMusic,
     resolveMusic,
     downMusic,

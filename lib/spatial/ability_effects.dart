@@ -1178,6 +1178,7 @@ abstract final class AbilityEffectRunner {
         world,
         SpatialCombat.combatHitSfxFor(hero: hero, style: style),
         target: enemy,
+        heavy: SpellVfx.isBig(def.id),
       );
     }
     SpellVfx.spawnImpact(
@@ -1286,6 +1287,7 @@ abstract final class AbilityEffectRunner {
         world,
         SpatialCombat.combatHitSfxFor(hero: hero, style: style),
         target: enemy,
+        heavy: SpellVfx.isBig(def.id),
       );
     }
     SpatialCombat.spawnFloater(
@@ -1596,6 +1598,7 @@ abstract final class AbilityEffectRunner {
             world,
             SpatialCombat.combatHitSfxFor(hero: hero, style: style),
             target: e,
+            heavy: SpellVfx.isBig(def.id),
           );
         }
         _applyBleedIfNeeded(world, hero, e, def, raw);
@@ -1838,6 +1841,7 @@ abstract final class AbilityEffectRunner {
           world,
           SpatialCombat.combatHitSfxFor(hero: hero, style: style),
           target: e,
+          heavy: SpellVfx.isBig(def.id),
         );
       }
       _applyBleedIfNeeded(world, hero, e, def, raw);
@@ -2389,6 +2393,7 @@ abstract final class AbilityEffectRunner {
     final gained = ally.hp - before;
     if (gained > 0) {
       caster.healingDone += gained;
+      combatNoteAudioCue(world, 'heal');
       SpatialCombat.spawnFloater(
         world,
         x: ally.x,

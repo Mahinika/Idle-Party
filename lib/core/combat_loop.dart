@@ -179,8 +179,11 @@ extension GameDirectorCombatLoop on GameDirector {
           GameAudio.playCombatHit(hit);
         }
       }
+      for (final cue in result.audioCues) {
+        GameAudio.playCue(cue);
+      }
       if (result.lootPickups > 0 && !playedLoot) {
-        GameAudio.loot();
+        GameAudio.lootRarity(_bestNewLootRarity(before, result.state));
         playedLoot = true;
       }
       if (result.stairsOpened) {
@@ -191,7 +194,7 @@ extension GameDirectorCombatLoop on GameDirector {
       }
       if (result.state.gearStash.length > _lastStashLen) {
         if (!playedLoot) {
-          GameAudio.loot();
+          GameAudio.lootRarity(_bestNewLootRarity(before, result.state));
           playedLoot = true;
         }
         // Loot stays in BAG — equip via PARTY → AUTO EQUIP (not mid-fight).
@@ -482,4 +485,14 @@ extension GameDirectorCombatLoop on GameDirector {
       floor: _state.currentRoom.floorNumber,
     );
   }
+}
+
+LootRarity _bestNewLootRarity(GameState before, GameState after) {
+  final oldIds = <String>{for (final item in before.gearStash) item.id};
+  var best = LootRarity.common;
+  for (final item in after.gearStash) {
+    if (oldIds.contains(item.id)) continue;
+    if (item.rarity.index > best.index) best = item.rarity;
+  }
+  return best;
 }

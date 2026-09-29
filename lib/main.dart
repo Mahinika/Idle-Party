@@ -273,6 +273,7 @@ class _GameHomePageState extends State<GameHomePage>
         _director.state.inDungeon ? AmbienceKind.dungeon : AmbienceKind.hub,
         bossFight: _director.bossEncounterNow,
         floor: _director.state.currentRoom.floorNumber,
+        dungeonId: _director.state.dungeonId,
       ),
     );
     if (kIsWeb) {

@@ -19,7 +19,7 @@ extension GameDirectorBag on GameDirector {
     if (preview == null || _state.gold >= beforeGold || primary == null) {
       return;
     }
-    GameAudio.loot();
+    GameAudio.lootRarity(preview.rarity);
     final delta = preview.powerScore - primary.powerScore;
     showToast(
       delta > 0
@@ -66,9 +66,11 @@ extension GameDirectorBag on GameDirector {
     final equipped =
         !_state.gearStash.any((g) => g.id == id) && beforeIds.contains(id);
     if (!equipped) {
+      GameAudio.uiDeny();
       showToast('Cannot equip on that hero (class / level / slot)', life: 2.6);
       return EquipFromStashResult.cannotEquip;
     }
+    GameAudio.equip();
     return EquipFromStashResult.equipped;
   }
 

@@ -1,3 +1,5 @@
+import 'audio_assets.dart';
+
 /// Where the party is. Picks the resting bed, not the fight cue.
 enum MusicPlace { none, hub, dungeon }
 
@@ -15,6 +17,7 @@ enum MusicStem { none, hub, dungeon, boss, resolve, down }
 /// fight ends.
 class MusicScore {
   MusicPlace place = MusicPlace.none;
+  ZoneMood mood = ZoneMood.warm;
   MusicCue cue = MusicCue.rest;
 
   /// Floor whose clear is still resolving. Boss sync will not snap back
@@ -25,9 +28,9 @@ class MusicScore {
   Duration _quietFor = hubQuiet;
 
   static const hubBed = Duration(seconds: 32);
-  static const hubQuiet = Duration(seconds: 46);
+  static const hubQuiet = Duration(seconds: 20);
   static const dungeonBed = Duration(seconds: 48);
-  static const dungeonQuiet = Duration(seconds: 44);
+  static const dungeonQuiet = Duration(seconds: 20);
   static const resolveCue = Duration(milliseconds: 6500);
   static const downCue = Duration(milliseconds: 4800);
   static const clearQuiet = Duration(seconds: 18);
@@ -47,6 +50,7 @@ class MusicScore {
 
   void reset() {
     place = MusicPlace.none;
+    mood = ZoneMood.warm;
     cue = MusicCue.rest;
     holdFloor = null;
     anchor = DateTime.fromMillisecondsSinceEpoch(0);
@@ -65,6 +69,13 @@ class MusicScore {
       _enter(MusicCue.bed, now);
     }
     return true;
+  }
+
+  /// Cave family. True when the audible dungeon bed should change.
+  bool setMood(ZoneMood next) {
+    if (next == mood) return false;
+    mood = next;
+    return place == MusicPlace.dungeon;
   }
 
   /// [active] while a boss, rift guardian, greater-rift guardian, or

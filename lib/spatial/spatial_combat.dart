@@ -38,6 +38,7 @@ part 'combat_pathing.dart';
 part 'combat_damage.dart';
 part 'floor_flow.dart';
 part 'spell_look.dart';
+part 'combat_audio_cues.dart';
 
 enum SpatialTeam { hero, enemy }
 
@@ -766,6 +767,7 @@ class SpatialWorld {
     this.pendingFeelPickups = 0,
     this.pendingFeelStairs = 0,
     List<CombatFeelHit>? pendingFeelHits,
+    List<String>? pendingAudioCues,
     this.pendingVacuumLootLine,
     this.godHandRadius = 1.8,
     this.godHandArgb = 0xFFFFE080,
@@ -781,7 +783,8 @@ class SpatialWorld {
        bursts = bursts ?? <SpatialBurst>[],
        groundFx = groundFx ?? <SpatialGroundFx>[],
        spellSparks = spellSparks ?? <SpellSpark>[],
-       pendingFeelHits = pendingFeelHits ?? <CombatFeelHit>[];
+       pendingFeelHits = pendingFeelHits ?? <CombatFeelHit>[],
+       pendingAudioCues = pendingAudioCues ?? <String>[];
 
   final TileMap map;
   final List<SpatialActor> heroes;
@@ -890,6 +893,10 @@ class SpatialWorld {
   /// Combat-hit feel events this step (weapon / spell; rate-limited in audio).
   final List<CombatFeelHit> pendingFeelHits;
 
+  /// One-shot body cues for this step (`enemy_hit`, `boss_tell`, …).
+  /// Offline (`afkAssist`) never queues these.
+  final List<String> pendingAudioCues;
+
   /// Short vacuum pickup line (≤3 item names + gold) for stairs-open toast.
   String? pendingVacuumLootLine;
 
@@ -947,6 +954,7 @@ class SpatialStepResult {
     this.stairsOpened = false,
     this.vacuumLootLine,
     this.feelHits = const <CombatFeelHit>[],
+    this.audioCues = const <String>[],
   });
 
   final SpatialWorld world;
@@ -964,6 +972,9 @@ class SpatialStepResult {
 
   /// Combat hit feel events (blade / bow / spell_*) for this step.
   final List<CombatFeelHit> feelHits;
+
+  /// Body cues drained from [SpatialWorld.pendingAudioCues] this step.
+  final List<String> audioCues;
 
   /// Party members who gained a level this result.
   final int heroLevelUps;
@@ -2380,6 +2391,7 @@ abstract final class SpatialCombat {
         pendingFeelPickups: world.pendingFeelPickups,
         pendingFeelStairs: world.pendingFeelStairs,
         pendingFeelHits: List<CombatFeelHit>.from(world.pendingFeelHits),
+        pendingAudioCues: List<String>.from(world.pendingAudioCues),
         pendingVacuumLootLine: world.pendingVacuumLootLine,
         floaters: world.floaters,
         bursts: world.bursts,
@@ -2805,6 +2817,8 @@ abstract final class SpatialCombat {
     world.pendingFeelStairs = 0;
     final feelHits = List<CombatFeelHit>.from(world.pendingFeelHits);
     world.pendingFeelHits.clear();
+    final audioCues = List<String>.from(world.pendingAudioCues);
+    world.pendingAudioCues.clear();
     final vacuumLine = world.pendingVacuumLootLine;
     world.pendingVacuumLootLine = null;
     return SpatialStepResult(
@@ -2821,6 +2835,7 @@ abstract final class SpatialCombat {
       stairsOpened: stairs > 0,
       vacuumLootLine: vacuumLine,
       feelHits: feelHits,
+      audioCues: audioCues,
     );
   }
 
@@ -4490,6 +4505,7 @@ abstract final class SpatialCombat {
     );
     final rewardGold = payout.gold;
     _noteFeelKill(world);
+    combatNoteAudioCue(world, combatEnemyDieCue(enemy));
     if (!state.reducedVfx) {
       if (enemy.role == EnemyRole.boss) {
         spawnRing(

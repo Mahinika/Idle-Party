@@ -27,7 +27,7 @@ extension GameDirectorMetaActions on GameDirector {
         slot: slot,
       ),
     );
-    GameAudio.ui();
+    GameAudio.forgeUp();
     final equippedOnHero = _state.heroes.any(
       (h) => h.equipped.values.any((g) => g.id == pieceId),
     );
@@ -49,7 +49,7 @@ extension GameDirectorMetaActions on GameDirector {
     final before = GameLogic.canUpgradeApex(_state, itemId);
     _applyUpgrade(GameLogic.upgradeApex(_state, itemId));
     if (before) {
-      GameAudio.ui();
+      GameAudio.forgeUp();
       showToast('Apex upgraded', life: 2.0);
     }
   }
@@ -75,8 +75,10 @@ extension GameDirectorMetaActions on GameDirector {
       ),
     );
     if (_state.apexVault.length < before) {
+      GameAudio.equip();
       showToast('Equipped Apex', life: 1.6);
     } else {
+      GameAudio.uiDeny();
       showToast(reason ?? 'Cannot equip Apex', life: 2.0);
     }
   }
@@ -90,7 +92,7 @@ extension GameDirectorMetaActions on GameDirector {
     final result = GameLogic.autoEquipAllApexVault(_state);
     _applyUpgrade(result.state);
     if (result.equipped > 0) {
-      GameAudio.ui();
+      GameAudio.equip();
       final skip = result.skipped > 0 ? ' · ${result.skipped} skipped' : '';
       showToast('Equipped ${result.equipped} Apex$skip', life: 2.4);
     } else {
@@ -156,7 +158,7 @@ extension GameDirectorMetaActions on GameDirector {
         title == null) {
       return;
     }
-    GameAudio.loot();
+    GameAudio.gold();
     final chainBonus = _state.essence - beforeEssence - essenceReward;
     if (chainBonus > 0 ||
         (beforeChain == 2 && _state.metaDepth.jobChainCount == 0)) {
@@ -182,7 +184,7 @@ extension GameDirectorMetaActions on GameDirector {
     final claimed = ready.length;
     final gold = _state.gold - beforeGold;
     final essence = _state.essence - beforeEssence;
-    GameAudio.loot();
+    GameAudio.gold();
     showToast(
       claimed == 1
           ? 'Claimed 1 quest · +${gold}g +${essence}e'
@@ -198,7 +200,7 @@ extension GameDirectorMetaActions on GameDirector {
     final after = _state.metaDepth.relicTierOf(relicId);
     if (after > before) {
       final name = GameLogic.relicNames[relicId] ?? relicId;
-      GameAudio.ui();
+      GameAudio.forgeUp();
       final pay = GameLogic.relicOwnedPayout(_state, relicId);
       showToast(
         pay.isEmpty ? '$name · Tier $after' : '$name · T$after · $pay',
@@ -211,7 +213,7 @@ extension GameDirectorMetaActions on GameDirector {
     final before = _state.metaDepth.embers;
     _applyUpgrade(GameLogic.salvageRelic(_state, relicId));
     if (_state.metaDepth.embers != before || !_state.hasRelic(relicId)) {
-      GameAudio.ui();
+      GameAudio.uiConfirm();
       final back = _state.metaDepth.embers - before;
       showToast(
         back > 0 ? 'Salvaged · +$back Embers' : 'Salvaged',
@@ -224,7 +226,7 @@ extension GameDirectorMetaActions on GameDirector {
     final before = _state.metaDepth.embers;
     _applyUpgrade(GameLogic.exchangeCinders(_state));
     if (_state.metaDepth.embers > before) {
-      GameAudio.ui();
+      GameAudio.uiConfirm();
       showToast('4 Cinders → 1 Ember', life: 2.0);
     }
   }
@@ -233,7 +235,7 @@ extension GameDirectorMetaActions on GameDirector {
     final before = _state.metaDepth.cinders;
     _applyUpgrade(GameLogic.buyCinderWithTickets(_state));
     if (_state.metaDepth.cinders > before) {
-      GameAudio.ui();
+      GameAudio.gold();
       showToast('2 tickets → 1 Cinder', life: 2.0);
     }
   }

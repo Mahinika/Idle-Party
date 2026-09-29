@@ -186,6 +186,7 @@ void tickEnemySpecials(
           enemy.role == EnemyRole.boss) &&
       enemy.hp < enemy.effectiveMaxHp * 0.4 &&
       enemy.enrageTimer <= 0) {
+    combatNoteAudioCue(world, 'enrage');
     enemy.enrageTimer = 5.0;
     if (!reducedVfx || world.spawnPersistentVfx) {
       SpatialCombat.spawnFloater(
@@ -296,6 +297,7 @@ void tickEnemySpecials(
       buffed = true;
     }
     if (buffed) {
+      combatNoteAudioCue(world, 'enrage');
       enemy.specialCd = world.afkAssist ? 8.5 : 7.5;
       if (!reducedVfx || world.spawnPersistentVfx) {
         SpatialCombat.spawnFloater(
@@ -424,6 +426,7 @@ void _armMeleeTell(
   required int argb,
   required bool reducedVfx,
 }) {
+  combatNoteAudioCue(world, 'boss_tell');
   enemy.telegraphTimer = world.afkAssist ? 0.32 : 0.72;
   enemy.telegraphSlam = true;
   if (!reducedVfx || world.spawnPersistentVfx) {
@@ -558,6 +561,7 @@ void _tickSupportSpecial(
       buffed = true;
     }
     if (!buffed) return;
+    combatNoteAudioCue(world, 'enrage');
     enemy.specialCd = world.afkAssist ? 6.0 : 5.0;
     _supportTellAt(world, enemy, flavor: flavor, reducedVfx: reducedVfx);
     return;
@@ -759,6 +763,7 @@ void _armBossTelegraph(
   SpatialActor enemy, {
   required bool reducedVfx,
 }) {
+  combatNoteAudioCue(world, 'boss_tell');
   enemy.telegraphTimer = 1.55;
   enemy.telegraphSlam = true;
   _bossTell(
@@ -1113,6 +1118,7 @@ void _tickAshenBossKit(
 
   final far = SpatialCombat.actorDist(enemy, focus) > 5.0;
   if (far || rng.nextDouble() < 0.42) {
+    combatNoteAudioCue(world, 'boss_tell');
     enemy.telegraphTimer = 1.5;
     enemy.telegraphSlam = true;
     _bossTell(

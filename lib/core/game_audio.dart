@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
+import '../models/loot.dart';
 import 'audio_assets.dart';
 import 'audio_variation_bank.dart';
 import 'combat_feel.dart';
@@ -46,9 +47,10 @@ abstract final class GameAudio {
   static final Map<String, AudioSource> _sourcesByPath =
       <String, AudioSource>{};
   static AudioSource? _hubAmb;
-  static AudioSource? _dungeonAmb;
   static AudioSource? _hubMusic;
-  static AudioSource? _dungeonMusic;
+  static final Map<ZoneMood, AudioSource> _moodAmb = <ZoneMood, AudioSource>{};
+  static final Map<ZoneMood, AudioSource> _moodMusic = <ZoneMood, AudioSource>{};
+  static ZoneMood _audibleMood = ZoneMood.warm;
   static AudioSource? _bossMusic;
   static AudioSource? _resolveMusic;
   static AudioSource? _downMusic;
@@ -67,13 +69,36 @@ abstract final class GameAudio {
   static DateTime? _lastLootAt;
   static DateTime? _lastUnlockAt;
   static DateTime? _lastUiAt;
+  static final Map<String, DateTime> _lastCueAt = <String, DateTime>{};
   static final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(0);
   static final math.Random _rng = math.Random();
 
   /// Per-id gain multiplier on top of [sfxVolume].
   static const Map<String, double> _idGain = <String, double>{
     'ui': 0.75,
+    'ui_tap': 0.70,
+    'ui_tab': 0.68,
+    'ui_confirm': 0.74,
+    'ui_back': 0.66,
+    'ui_deny': 0.70,
     'loot': 0.80,
+    'loot_rare': 0.84,
+    'loot_epic': 0.88,
+    'loot_legendary': 0.92,
+    'gold': 0.78,
+    'equip': 0.76,
+    'forge_up': 0.80,
+    'achievement': 0.82,
+    'ascend': 0.84,
+    'enemy_hit': 0.62,
+    'hero_down': 0.80,
+    'heal': 0.70,
+    'shield': 0.66,
+    'boss_tell': 0.78,
+    'enrage': 0.82,
+    'enemy_die_flesh': 0.70,
+    'enemy_die_bone': 0.70,
+    'enemy_die_stone': 0.72,
     'unlock': 0.72,
     'level': 0.78,
     'clear': 0.70,
@@ -123,6 +148,8 @@ abstract final class GameAudio {
     _lastLootAt = null;
     _lastUnlockAt = null;
     _lastUiAt = null;
+    _lastCueAt.clear();
+    _audibleMood = ZoneMood.warm;
     _sfxReady = false;
     _warmFuture = null;
     _scoreTimer?.cancel();
@@ -175,8 +202,10 @@ abstract final class GameAudio {
           await Future<void>.delayed(Duration.zero);
         }
       }
-      _dungeonAmb ??= await soloud.loadAsset(AudioAssets.dungeonAmbience);
-      _dungeonMusic ??= await soloud.loadAsset(AudioAssets.dungeonMusic);
+      for (final mood in ZoneMood.values) {
+        await _ensureMood(mood);
+        await Future<void>.delayed(Duration.zero);
+      }
       _bossMusic ??= await soloud.loadAsset(AudioAssets.bossMusic);
       _resolveMusic ??= await soloud.loadAsset(AudioAssets.resolveMusic);
       _downMusic ??= await soloud.loadAsset(AudioAssets.downMusic);
@@ -190,13 +219,18 @@ abstract final class GameAudio {
   static Future<void> _ensureBedFor(AmbienceKind kind) async {
     if (!_ready || _initFailed) return;
     if (kind != AmbienceKind.dungeon) return;
-    if (_dungeonAmb != null && _dungeonMusic != null) return;
+    await _ensureMood(_score.mood);
+  }
+
+  static Future<void> _ensureMood(ZoneMood mood) async {
+    if (!_ready || _initFailed) return;
+    if (_moodAmb.containsKey(mood) && _moodMusic.containsKey(mood)) return;
     try {
       final soloud = SoLoud.instance;
-      _dungeonAmb ??= await soloud.loadAsset(AudioAssets.dungeonAmbience);
-      _dungeonMusic ??= await soloud.loadAsset(AudioAssets.dungeonMusic);
+      _moodAmb[mood] ??= await soloud.loadAsset(AudioAssets.dungeonAmbience(mood));
+      _moodMusic[mood] ??= await soloud.loadAsset(AudioAssets.dungeonMusic(mood));
     } catch (e, st) {
-      debugPrint('GameAudio dungeon bed load failed: $e\n$st');
+      debugPrint('GameAudio mood load failed: $e\n$st');
     }
   }
 
@@ -210,9 +244,10 @@ abstract final class GameAudio {
     }
     _sourcesByPath.clear();
     _hubAmb = null;
-    _dungeonAmb = null;
     _hubMusic = null;
-    _dungeonMusic = null;
+    _moodAmb.clear();
+    _moodMusic.clear();
+    _audibleMood = ZoneMood.warm;
     _bossMusic = null;
     _resolveMusic = null;
     _downMusic = null;
@@ -249,17 +284,18 @@ abstract final class GameAudio {
 
   static void play(String id) {
     if (muted) return;
+    if (id == 'ui') id = 'ui_tap';
     final now = DateTime.now();
 
-    if (id == 'ui') {
+    if (id.startsWith('ui_')) {
       final last = _lastUiAt ?? _epoch;
       if (now.difference(last) < uiMinGap) return;
       _lastUiAt = now;
-    } else if (id == 'loot') {
+    } else if (AudioAssets.lootIds.contains(id)) {
       final last = _lastLootAt ?? _epoch;
       if (now.difference(last) < lootMinGap) return;
       _lastLootAt = now;
-    } else if (id == 'unlock') {
+    } else if (id == 'unlock' || id == 'achievement' || id == 'ascend') {
       final last = _lastUnlockAt ?? _epoch;
       if (now.difference(last) < unlockMinGap) return;
       _lastUnlockAt = now;
@@ -276,9 +312,31 @@ abstract final class GameAudio {
     debugPlayCount++;
     _hapticFor(id);
     _playLayer(id, volumeMul: 1.0, pan: 0.0, speedMul: 1.0);
-    if (id == 'wipe' || id == 'boss' || id == 'clear') {
+    if (id == 'wipe' ||
+        id == 'boss' ||
+        id == 'clear' ||
+        id == 'loot_legendary' ||
+        id == 'ascend') {
       _duckBackgroundBriefly();
     }
+  }
+
+  /// Hero hurt, tells, and deaths. Separate from the weapon hammer.
+  static void playCue(String id) {
+    if (muted || !AudioAssets.bodyCueIds.contains(id)) return;
+    final now = DateTime.now();
+    final gap = switch (id) {
+      'enemy_hit' => const Duration(milliseconds: 420),
+      'heal' || 'shield' => const Duration(milliseconds: 650),
+      'boss_tell' || 'enrage' => const Duration(milliseconds: 900),
+      _ => const Duration(milliseconds: 280),
+    };
+    final last = _lastCueAt[id] ?? _epoch;
+    if (now.difference(last) < gap) return;
+    _lastCueAt[id] = now;
+    debugPlayCount++;
+    _hapticFor(id);
+    _playLayer(id, volumeMul: 1.0, pan: 0.0, speedMul: 1.0);
   }
 
   /// Layered combat hit: optional swish → impact → soft material chirp.
@@ -417,9 +475,13 @@ abstract final class GameAudio {
     bool forceRestart = false,
     bool? bossFight,
     int floor = 0,
+    String? dungeonId,
   }) async {
     final now = DateTime.now();
     final placeChanged = _score.setPlace(_placeOf(kind), now);
+    final moodChanged =
+        dungeonId != null &&
+        _score.setMood(AudioAssets.moodForDungeon(dungeonId));
     final bossChanged = bossFight != null && kind == AmbienceKind.dungeon
         ? _score.syncBoss(active: bossFight, floor: floor, now: now)
         : false;
@@ -435,17 +497,23 @@ abstract final class GameAudio {
     if (!forceRestart &&
         !placeChanged &&
         !bossChanged &&
+        !moodChanged &&
         kind == _ambience &&
         _ambienceHandle != null &&
         musicOk) {
       return;
     }
     await _ensureBedFor(kind);
-    if (forceRestart || placeChanged || _ambienceHandle == null) {
+    if (forceRestart ||
+        placeChanged ||
+        moodChanged ||
+        _ambienceHandle == null) {
       _restartAmbienceOnly();
     }
-    if (forceRestart || placeChanged || bossChanged || !musicOk) {
-      await _realizeMusic(restart: forceRestart || placeChanged || bossChanged);
+    if (forceRestart || placeChanged || bossChanged || moodChanged || !musicOk) {
+      await _realizeMusic(
+        restart: forceRestart || placeChanged || bossChanged || moodChanged,
+      );
     }
   }
 
@@ -481,6 +549,7 @@ abstract final class GameAudio {
     if (stem == MusicStem.none || musicVolume <= 0.01) {
       return _playing == MusicStem.none;
     }
+    if (stem == MusicStem.dungeon && _audibleMood != _score.mood) return false;
     return _playing == stem && _musicHandle != null;
   }
 
@@ -510,7 +579,7 @@ abstract final class GameAudio {
     if (!_ready || muted || _backgroundPaused) return;
     final ambSource = switch (_ambience) {
       AmbienceKind.hub => _hubAmb,
-      AmbienceKind.dungeon => _dungeonAmb,
+      AmbienceKind.dungeon => _moodAmb[_score.mood],
       AmbienceKind.none => null,
     };
     if (ambSource == null) return;
@@ -560,6 +629,7 @@ abstract final class GameAudio {
         return;
       }
       _musicHandle = handle;
+      if (stem == MusicStem.dungeon) _audibleMood = _score.mood;
       SoLoud.instance.fadeVolume(handle, _musicGain(stem), fade);
     } catch (e, st) {
       _musicHandle = null;
@@ -576,7 +646,7 @@ abstract final class GameAudio {
         case MusicStem.hub:
           _hubMusic ??= await soloud.loadAsset(AudioAssets.hubMusic);
         case MusicStem.dungeon:
-          _dungeonMusic ??= await soloud.loadAsset(AudioAssets.dungeonMusic);
+          await _ensureMood(_score.mood);
         case MusicStem.boss:
           _bossMusic ??= await soloud.loadAsset(AudioAssets.bossMusic);
         case MusicStem.resolve:
@@ -593,7 +663,7 @@ abstract final class GameAudio {
 
   static AudioSource? _sourceFor(MusicStem stem) => switch (stem) {
     MusicStem.hub => _hubMusic,
-    MusicStem.dungeon => _dungeonMusic,
+    MusicStem.dungeon => _moodMusic[_score.mood],
     MusicStem.boss => _bossMusic,
     MusicStem.resolve => _resolveMusic,
     MusicStem.down => _downMusic,
@@ -782,8 +852,17 @@ abstract final class GameAudio {
       case 'loot':
       case 'unlock':
         _haptic(HapticFeedback.lightImpact);
+      case 'enemy_hit':
+      case 'shield':
+      case 'heal':
+        _haptic(HapticFeedback.selectionClick);
+      case 'hero_down':
+      case 'boss_tell':
+      case 'enrage':
+        _haptic(HapticFeedback.mediumImpact);
       case 'wipe':
       case 'boss':
+      case 'ascend':
         _haptic(HapticFeedback.heavyImpact);
       default:
         break;
@@ -798,12 +877,24 @@ abstract final class GameAudio {
   static void hit() => play('hit_blade');
   static void kill() => play('kill');
   static void crit() => play('crit');
-  static void loot() => play('loot');
+  static void loot() => lootRarity(LootRarity.common);
+  static void lootRarity(LootRarity rarity) =>
+      play(AudioAssets.lootIdFor(rarity));
+  static void gold() => play('gold');
+  static void equip() => play('equip');
+  static void forgeUp() => play('forge_up');
+  static void achievement() => play('achievement');
+  static void ascend() => play('ascend');
   static void flask() => play('flask');
   static void levelUp() => play('level');
   static void wipe() => play('wipe');
   static void boss() => play('boss');
   static void clear() => play('clear');
   static void unlock() => play('unlock');
-  static void ui() => play('ui');
+  static void ui() => uiTap();
+  static void uiTap() => play('ui_tap');
+  static void uiTab() => play('ui_tab');
+  static void uiConfirm() => play('ui_confirm');
+  static void uiBack() => play('ui_back');
+  static void uiDeny() => play('ui_deny');
 }

@@ -99,10 +99,14 @@ int combatApplyHeroIncomingDamage(
     }
     if (dealt <= 0) {
       SpatialCombat._recordHeroTaken(hero, held);
+      if (absorbed > 0) combatNoteAudioCue(world, 'shield');
       return absorbed;
     }
   }
   hero.hp = math.max(0, hero.hp - dealt);
+  if (dealt > 0) {
+    combatNoteAudioCue(world, hero.hp <= 0 ? 'hero_down' : 'enemy_hit');
+  }
   held += dealt;
   SpatialCombat._recordHeroTaken(hero, held);
   hero.spiritRegenPaused = 5.0;

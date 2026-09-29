@@ -469,7 +469,7 @@ class GameDirector extends ChangeNotifier {
     final keepBefore = _state.gold;
     _applyUpgrade(WispGift.onWispTapped(_state));
     final keep = _state.gold - keepBefore;
-    GameAudio.ui();
+    GameAudio.gold();
     showToast('WISP · +$keep gold', life: 2.2);
     if (adFree) {
       _grantWispWatchReward(toast: true);
@@ -491,7 +491,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(WispGift.grantWatchReward(_state));
     final gained = _state.gold - before;
     if (toast) {
-      GameAudio.ui();
+      GameAudio.gold();
       showToast('WISP · +$gained gold', life: 2.8);
     }
     notifyListeners();
@@ -1010,7 +1010,7 @@ class GameDirector extends ChangeNotifier {
       if (payoffs.isNotEmpty) {
         showToast(payoffs.join(' · '), life: 3.0);
       }
-      GameAudio.ui();
+      GameAudio.uiBack();
       notifyListeners();
       unawaited(_persistFlush());
       return;
@@ -1028,7 +1028,7 @@ class GameDirector extends ChangeNotifier {
       if (payoffs.isNotEmpty) {
         showToast(payoffs.join(' · '), life: 3.0);
       }
-      GameAudio.ui();
+      GameAudio.uiBack();
       notifyListeners();
       unawaited(_persistFlush());
       return;
@@ -1046,7 +1046,7 @@ class GameDirector extends ChangeNotifier {
       if (payoffs.isNotEmpty) {
         showToast(payoffs.join(' · '), life: 3.0);
       }
-      GameAudio.ui();
+      GameAudio.uiBack();
       notifyListeners();
       unawaited(_persistFlush());
       return;
@@ -1071,7 +1071,7 @@ class GameDirector extends ChangeNotifier {
       ).copyWith(lastUpdated: DateTime.now());
       showToast('Floor restarted — fight on', life: 2.5);
     }
-    GameAudio.ui();
+    GameAudio.uiConfirm();
     _rebuildSpatial();
     if (enableSpatialLoop) {
       _startSpatialLoop();
@@ -1107,7 +1107,7 @@ class GameDirector extends ChangeNotifier {
       payoffs.isNotEmpty ? payoffs.join(' · ') : 'Returned to hub',
       life: payoffs.isNotEmpty ? 3.0 : 2,
     );
-    GameAudio.ui();
+    GameAudio.uiBack();
     notifyListeners();
     unawaited(_persistFlush());
   }
@@ -1326,7 +1326,7 @@ class GameDirector extends ChangeNotifier {
     final before = _state.godHandLevel;
     _applyUpgrade(GameLogic.upgradeGodHand(_state));
     if (_state.godHandLevel > before) {
-      GameAudio.ui();
+      GameAudio.forgeUp();
       showToast(
         'God Hand Lv${_state.godHandLevel} · smash ${_state.godHandSmashDamage()}',
         life: 2.4,
@@ -1338,7 +1338,7 @@ class GameDirector extends ChangeNotifier {
     final before = _state.dungeonMode;
     _applyUpgrade(GameLogic.setDungeonMode(_state, mode));
     if (_state.dungeonMode != before) {
-      GameAudio.ui();
+      GameAudio.uiTab();
       showToast(
         _state.dungeonMode == DungeonMode.farm
             ? 'FARM — loop this floor for loot'
@@ -2157,12 +2157,13 @@ class GameDirector extends ChangeNotifier {
   void buyMarketFlask() {
     final cost = GameLogic.marketFlaskCost(_state);
     if (_state.gold < cost) {
+      GameAudio.uiDeny();
       showToast('Need ${cost}g for flask', life: 2);
       return;
     }
     final beforeEss = _state.essence;
     _applyUpgrade(GameLogic.buyMarketFlask(_state));
-    GameAudio.loot();
+    GameAudio.gold();
     final salvage = _state.essence - beforeEss;
     showToast(
       salvage > 0
@@ -2176,6 +2177,7 @@ class GameDirector extends ChangeNotifier {
     final unit = GameLogic.marketFlaskCost(_state);
     final need = unit * count;
     if (_state.gold < unit) {
+      GameAudio.uiDeny();
       showToast('Need ${unit}g for flask', life: 2);
       return;
     }
@@ -2186,10 +2188,11 @@ class GameDirector extends ChangeNotifier {
     final bought = _countFlasks(_state) - beforeFlasks;
     final spent = beforeGold - _state.gold;
     if (bought <= 0) {
+      GameAudio.uiDeny();
       showToast('Need ${need}g for $count flasks', life: 2);
       return;
     }
-    GameAudio.loot();
+    GameAudio.gold();
     final salvage = _state.essence - beforeEss;
     showToast(
       salvage > 0
@@ -2203,12 +2206,13 @@ class GameDirector extends ChangeNotifier {
   void buyMarketBandage() {
     final cost = GameLogic.marketBandageCost(_state);
     if (_state.gold < cost) {
+      GameAudio.uiDeny();
       showToast('Need ${cost}g for bandage', life: 2);
       return;
     }
     final beforeEss = _state.essence;
     _applyUpgrade(GameLogic.buyMarketBandage(_state));
-    GameAudio.loot();
+    GameAudio.gold();
     final salvage = _state.essence - beforeEss;
     showToast(
       salvage > 0
@@ -2237,13 +2241,14 @@ class GameDirector extends ChangeNotifier {
     }
     if (found == null) return;
     if (_state.gold < found.priceGold) {
+      GameAudio.uiDeny();
       showToast('Need ${found.priceGold}g', life: 2);
       return;
     }
     final beforeGold = _state.gold;
     _applyUpgrade(GameLogic.buyMarketListing(_state, listingId));
     if (_state.gold < beforeGold) {
-      GameAudio.loot();
+      GameAudio.gold();
       showToast('${found.item.name} · −${found.priceGold}g', life: 2.2);
     }
   }
@@ -2366,6 +2371,7 @@ class GameDirector extends ChangeNotifier {
     }
     if (beforeBond < 0) return;
     if (_state.essence < GameLogic.bondPetCost(beforeBond)) {
+      GameAudio.uiDeny();
       showToast('Need essence', life: 1.8);
       return;
     }
@@ -2561,7 +2567,7 @@ class GameDirector extends ChangeNotifier {
     final before = _state.metaDepth.godHandCdLevel;
     _applyUpgrade(GameLogic.upgradeGodHandCd(_state));
     if (_state.metaDepth.godHandCdLevel > before) {
-      GameAudio.ui();
+      GameAudio.forgeUp();
       showToast('God Hand CD Lv${_state.metaDepth.godHandCdLevel}', life: 2.2);
     }
   }
@@ -2802,7 +2808,7 @@ class GameDirector extends ChangeNotifier {
     );
     _state = updated;
     unawaited(AppAnalytics.ascend(fromAl: fromAl, toAl: _state.ascensionLevel));
-    GameAudio.unlock();
+    GameAudio.ascend();
     final parts = <String>[
       StoryLore.ascendToast(
         al: _state.ascensionLevel,
@@ -2987,6 +2993,7 @@ class GameDirector extends ChangeNotifier {
         _state.inDungeon ? AmbienceKind.dungeon : AmbienceKind.hub,
         bossFight: _state.inDungeon && bossEncounterNow,
         floor: _state.currentRoom.floorNumber,
+        dungeonId: _state.dungeonId,
       ),
     );
   }
@@ -3031,7 +3038,7 @@ class GameDirector extends ChangeNotifier {
     final known = before.achievements.toSet();
     for (final id in after.achievements) {
       if (known.contains(id)) continue;
-      GameAudio.unlock();
+      GameAudio.achievement();
       showToast('Achievement unlocked!', life: 2.8);
       break;
     }
