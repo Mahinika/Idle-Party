@@ -8,6 +8,7 @@ import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_zoom.dart';
 import 'package:idle_party/models/gear_loadout.dart';
 import 'package:idle_party/models/pet.dart';
+
 void main() {
   group('Daily run seeding', () {
     test('dailySeed is stable for the same UTC calendar date', () {
@@ -21,7 +22,10 @@ void main() {
     test('dailySeed differs across different UTC calendar dates', () {
       final day1 = DateTime.utc(2026, 7, 27);
       final day2 = DateTime.utc(2026, 7, 28);
-      expect(MetaSystems.dailyDateKey(day1), isNot(MetaSystems.dailyDateKey(day2)));
+      expect(
+        MetaSystems.dailyDateKey(day1),
+        isNot(MetaSystems.dailyDateKey(day2)),
+      );
     });
 
     test('dailyDungeonId always returns a catalog id', () {
@@ -34,19 +38,22 @@ void main() {
       }
     });
 
-    test('enterDaily sets up an in-progress dungeon run and resets claim on a new day', () {
-      var state = GameLogic.createInitialState(now: DateTime(2026, 7, 25));
-      state = state.copyWith(lastDailyDate: '2026-07-26', dailyClaimed: true);
+    test(
+      'enterDaily sets up an in-progress dungeon run and resets claim on a new day',
+      () {
+        var state = GameLogic.createInitialState(now: DateTime(2026, 7, 25));
+        state = state.copyWith(lastDailyDate: '2026-07-26', dailyClaimed: true);
 
-      final now = DateTime.utc(2026, 7, 27, 9);
-      final result = GameLogic.enterDaily(state, now: now);
+        final now = DateTime.utc(2026, 7, 27, 9);
+        final result = GameLogic.enterDaily(state, now: now);
 
-      expect(result.inDungeon, isTrue);
-      expect(result.dungeonId, MetaSystems.dailyDungeonId(now));
-      expect(result.dailyClaimed, isFalse);
-      expect(result.lastDailyDate, MetaSystems.dailyDateKey(now));
-      expect(MetaSystems.isActiveDailyRun(result, now: now), isTrue);
-    });
+        expect(result.inDungeon, isTrue);
+        expect(result.dungeonId, MetaSystems.dailyDungeonId(now));
+        expect(result.dailyClaimed, isFalse);
+        expect(result.lastDailyDate, MetaSystems.dailyDateKey(now));
+        expect(MetaSystems.isActiveDailyRun(result, now: now), isTrue);
+      },
+    );
 
     test('daily floor clear claims reward and returns to hub', () {
       final now = DateTime.utc(2026, 8, 9, 12);
@@ -106,8 +113,9 @@ void main() {
     });
 
     test('hardmode achievements require a clear, not dial alone', () {
-      var state = GameLogic.createInitialState(now: DateTime(2026, 7, 25))
-          .copyWith(hardmodeLevel: 5);
+      var state = GameLogic.createInitialState(
+        now: DateTime(2026, 7, 25),
+      ).copyWith(hardmodeLevel: 5);
       state = MetaSystems.evaluateAchievements(state);
       expect(state.achievements.contains('hm_1'), isFalse);
 
@@ -130,10 +138,7 @@ void main() {
       expect(MetaSystems.challengeClearEssenceBonus(state), 0);
       state = state.copyWith(challengeBossRush: true, challengeNoFlask: true);
       expect(MetaSystems.challengeClearEssenceBonus(state), 4);
-      expect(
-        MetaSystems.challengeClearEssenceBonus(state, farmLoop: true),
-        0,
-      );
+      expect(MetaSystems.challengeClearEssenceBonus(state, farmLoop: true), 0);
     });
 
     test('Loot Sprite grants gold and loot find', () {
@@ -187,159 +192,120 @@ void main() {
   });
 
   group('tide and ember dungeons', () {
-    test('Sunken Tidehold and Ashen Vault are registered after Crystal Spire', () {
-      final crystal = DungeonCatalog.byId('crystal');
-      final tide = DungeonCatalog.byId('tide');
-      final ember = DungeonCatalog.byId('ember');
-      final grove = DungeonCatalog.byId('grove');
-      final storm = DungeonCatalog.byId('storm');
-      final rime = DungeonCatalog.byId('rime');
-      expect(crystal.number, 6);
-      expect(tide.number, 7);
-      expect(tide.bossName, 'Tide Leviathan');
-      expect(ember.number, 8);
-      expect(ember.bossName, 'Cinder Sovereign');
-      expect(grove.number, 9);
-      expect(grove.bossName, 'Wyrd Root');
-      expect(storm.number, 10);
-      expect(storm.bossName, 'Storm Tyrant');
-      expect(rime.number, 11);
-      expect(rime.bossName, 'Rime Colossus');
-      final fen = DungeonCatalog.byId('fen');
-      expect(fen.number, 12);
-      expect(fen.bossName, 'Fen Hydra');
-      final brass = DungeonCatalog.byId('brass');
-      expect(brass.number, 13);
-      expect(brass.bossName, 'The Mainspring');
-      final veil = DungeonCatalog.byId('veil');
-      expect(veil.number, 14);
-      expect(veil.bossName, 'The Pale Monarch');
-      expect(DungeonCatalog.all.length, greaterThanOrEqualTo(15));
-      expect(
-        DungeonCatalog.isUnlocked('tide', 0, 6),
-        isTrue,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('ember', 0, 7),
-        isTrue,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('ember', 0, 6),
-        isFalse,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('grove', 0, 8),
-        isTrue,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('grove', 0, 7),
-        isFalse,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('storm', 0, 9),
-        isTrue,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('storm', 0, 8),
-        isFalse,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('rime', 0, 10),
-        isTrue,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('rime', 0, 9),
-        isFalse,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('fen', 0, 11),
-        isTrue,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('fen', 0, 10),
-        isFalse,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('brass', 0, 12),
-        isTrue,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('brass', 0, 11),
-        isFalse,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('veil', 0, 13),
-        isTrue,
-      );
-      expect(
-        DungeonCatalog.isUnlocked('veil', 0, 12),
-        isFalse,
-      );
-    });
+    test(
+      'Sunken Tidehold and Ashen Vault are registered after Crystal Spire',
+      () {
+        final crystal = DungeonCatalog.byId('crystal');
+        final tide = DungeonCatalog.byId('tide');
+        final ember = DungeonCatalog.byId('ember');
+        final grove = DungeonCatalog.byId('grove');
+        final storm = DungeonCatalog.byId('storm');
+        final rime = DungeonCatalog.byId('rime');
+        expect(crystal.number, 6);
+        expect(tide.number, 7);
+        expect(tide.bossName, 'Tide Leviathan');
+        expect(ember.number, 8);
+        expect(ember.bossName, 'Cinder Sovereign');
+        expect(grove.number, 9);
+        expect(grove.bossName, 'Wyrd Root');
+        expect(storm.number, 10);
+        expect(storm.bossName, 'Storm Tyrant');
+        expect(rime.number, 11);
+        expect(rime.bossName, 'Rime Colossus');
+        final fen = DungeonCatalog.byId('fen');
+        expect(fen.number, 12);
+        expect(fen.bossName, 'Fen Hydra');
+        final brass = DungeonCatalog.byId('brass');
+        expect(brass.number, 13);
+        expect(brass.bossName, 'The Mainspring');
+        final veil = DungeonCatalog.byId('veil');
+        expect(veil.number, 14);
+        expect(veil.bossName, 'The Pale Monarch');
+        expect(DungeonCatalog.all.length, greaterThanOrEqualTo(15));
+        expect(DungeonCatalog.isUnlocked('tide', 0, 6), isTrue);
+        expect(DungeonCatalog.isUnlocked('ember', 0, 7), isTrue);
+        expect(DungeonCatalog.isUnlocked('ember', 0, 6), isFalse);
+        expect(DungeonCatalog.isUnlocked('grove', 0, 8), isTrue);
+        expect(DungeonCatalog.isUnlocked('grove', 0, 7), isFalse);
+        expect(DungeonCatalog.isUnlocked('storm', 0, 9), isTrue);
+        expect(DungeonCatalog.isUnlocked('storm', 0, 8), isFalse);
+        expect(DungeonCatalog.isUnlocked('rime', 0, 10), isTrue);
+        expect(DungeonCatalog.isUnlocked('rime', 0, 9), isFalse);
+        expect(DungeonCatalog.isUnlocked('fen', 0, 11), isTrue);
+        expect(DungeonCatalog.isUnlocked('fen', 0, 10), isFalse);
+        expect(DungeonCatalog.isUnlocked('brass', 0, 12), isTrue);
+        expect(DungeonCatalog.isUnlocked('brass', 0, 11), isFalse);
+        expect(DungeonCatalog.isUnlocked('veil', 0, 13), isTrue);
+        expect(DungeonCatalog.isUnlocked('veil', 0, 12), isFalse);
+      },
+    );
   });
 
   group('GameState meta fields', () {
-    test('new meta fields round-trip through toJson/fromJson with safe defaults', () {
-      var state = GameLogic.createInitialState(now: DateTime(2026, 7, 25));
-      state = state.copyWith(
-        achievements: const ['first_floor'],
-        codexEnemies: const ['Goblin'],
-        codexItems: const ['Rusty Sword'],
-        challengeBossRush: true,
-        challengeNoFlask: true,
-        colorblindMode: true,
-        uiTextScale: 1.15,
-        dungeonZoom: DungeonZoom.wide,
-        hapticsEnabled: false,
-        keepScreenAwake: false,
-        lastDailyDate: '2026-07-27',
-        dailyClaimed: true,
-        seenChangelogVersion: '1.0.0',
-      );
-      state = state.copyWith(
-        loadouts: [
-          GearLoadout(
-            id: '1',
-            name: 'Loadout A',
-            heroSlotItemIds: const [],
-          ),
-        ],
-      );
+    test(
+      'new meta fields round-trip through toJson/fromJson with safe defaults',
+      () {
+        var state = GameLogic.createInitialState(now: DateTime(2026, 7, 25));
+        state = state.copyWith(
+          achievements: const ['first_floor'],
+          codexEnemies: const ['Goblin'],
+          codexItems: const ['Rusty Sword'],
+          challengeBossRush: true,
+          challengeNoFlask: true,
+          colorblindMode: true,
+          uiTextScale: 1.15,
+          dungeonZoom: DungeonZoom.wide,
+          dungeonViewCols: 14.5,
+          hapticsEnabled: false,
+          keepScreenAwake: false,
+          lastDailyDate: '2026-07-27',
+          dailyClaimed: true,
+          seenChangelogVersion: '1.0.0',
+        );
+        state = state.copyWith(
+          loadouts: [
+            GearLoadout(id: '1', name: 'Loadout A', heroSlotItemIds: const []),
+          ],
+        );
 
-      final round = GameLogic.stateFromJson(state.toJson());
-      expect(round.achievements, contains('first_floor'));
-      expect(round.codexEnemies, contains('Goblin'));
-      expect(round.codexItems, contains('Rusty Sword'));
-      expect(round.challengeBossRush, isTrue);
-      expect(round.challengeNoFlask, isTrue);
-      expect(round.colorblindMode, isTrue);
-      expect(round.uiTextScale, closeTo(1.15, 0.001));
-      expect(round.dungeonZoom, DungeonZoom.wide);
-      expect(round.hapticsEnabled, isFalse);
-      expect(round.keepScreenAwake, isFalse);
-      expect(round.lastDailyDate, '2026-07-27');
-      expect(round.dailyClaimed, isTrue);
-      expect(round.seenChangelogVersion, '1.0.0');
-      expect(round.loadouts, hasLength(1));
-      expect(round.loadouts.first.name, 'Loadout A');
-    });
+        final round = GameLogic.stateFromJson(state.toJson());
+        expect(round.achievements, contains('first_floor'));
+        expect(round.codexEnemies, contains('Goblin'));
+        expect(round.codexItems, contains('Rusty Sword'));
+        expect(round.challengeBossRush, isTrue);
+        expect(round.challengeNoFlask, isTrue);
+        expect(round.colorblindMode, isTrue);
+        expect(round.uiTextScale, closeTo(1.15, 0.001));
+        expect(round.dungeonZoom, DungeonZoom.wide);
+        expect(round.dungeonViewCols, 14.5);
+        expect(round.hapticsEnabled, isFalse);
+        expect(round.keepScreenAwake, isFalse);
+        expect(round.lastDailyDate, '2026-07-27');
+        expect(round.dailyClaimed, isTrue);
+        expect(round.seenChangelogVersion, '1.0.0');
+        expect(round.loadouts, hasLength(1));
+        expect(round.loadouts.first.name, 'Loadout A');
+      },
+    );
 
     test('legacy saves without meta fields decode with safe defaults', () {
-      final legacy = GameLogic.createInitialState(now: DateTime(2026, 7, 25)).toJson()
-        ..remove('achievements')
-        ..remove('codexEnemies')
-        ..remove('codexItems')
-        ..remove('challengeBossRush')
-        ..remove('challengeNoFlask')
-        ..remove('colorblindMode')
-        ..remove('uiTextScale')
-        ..remove('dungeonZoom')
-        ..remove('hapticsEnabled')
-        ..remove('keepScreenAwake')
-        ..remove('lastDailyDate')
-        ..remove('dailyClaimed')
-        ..remove('seenChangelogVersion')
-        ..remove('loadouts');
+      final legacy =
+          GameLogic.createInitialState(now: DateTime(2026, 7, 25)).toJson()
+            ..remove('achievements')
+            ..remove('codexEnemies')
+            ..remove('codexItems')
+            ..remove('challengeBossRush')
+            ..remove('challengeNoFlask')
+            ..remove('colorblindMode')
+            ..remove('uiTextScale')
+            ..remove('dungeonZoom')
+            ..remove('dungeonViewCols')
+            ..remove('hapticsEnabled')
+            ..remove('keepScreenAwake')
+            ..remove('lastDailyDate')
+            ..remove('dailyClaimed')
+            ..remove('seenChangelogVersion')
+            ..remove('loadouts');
 
       final decoded = GameLogic.stateFromJson(legacy);
       expect(decoded.achievements, isEmpty);
@@ -350,6 +316,7 @@ void main() {
       expect(decoded.colorblindMode, isFalse);
       expect(decoded.uiTextScale, 1.0);
       expect(decoded.dungeonZoom, DungeonZoom.normal);
+      expect(decoded.viewCols, 20);
       expect(decoded.hapticsEnabled, isTrue);
       expect(decoded.keepScreenAwake, isTrue);
       expect(decoded.lastDailyDate, isNull);
@@ -363,5 +330,29 @@ void main() {
     expect(DungeonZoom.close.hudChipLabel, 'NEAR');
     expect(DungeonZoom.normal.hudChipLabel, 'MID');
     expect(DungeonZoom.wide.hudChipLabel, 'FAR');
+  });
+
+  test('pinch zoom is kept and old presets still frame the camera', () {
+    final wide = GameLogic.createInitialState(
+      now: DateTime(2026, 7, 25),
+    ).copyWith(dungeonZoom: DungeonZoom.wide);
+    final preset = wide.toJson()..remove('dungeonViewCols');
+    final fromPreset = GameLogic.stateFromJson(preset);
+    expect(fromPreset.dungeonViewCols, isNull);
+    expect(fromPreset.viewCols, 24);
+
+    final pinched = wide.copyWith(dungeonViewCols: 14.2);
+    final round = GameLogic.stateFromJson(pinched.toJson());
+    expect(round.dungeonViewCols, closeTo(14.2, 0.001));
+    expect(round.viewCols, closeTo(14.2, 0.001));
+
+    final tooFar = pinched.toJson()..['dungeonViewCols'] = 99;
+    expect(GameLogic.stateFromJson(tooFar).viewCols, 36);
+    final tooClose = pinched.toJson()..['dungeonViewCols'] = 4;
+    expect(GameLogic.stateFromJson(tooClose).viewCols, 12);
+
+    final cleared = pinched.copyWith(clearDungeonViewCols: true);
+    expect(cleared.dungeonViewCols, isNull);
+    expect(cleared.viewCols, 24);
   });
 }

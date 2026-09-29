@@ -353,9 +353,7 @@ class GameDirector extends ChangeNotifier {
     if (WispGift.unlimitedToday &&
         md.wispNextSpawnMs > now + WispGift.intervalMs) {
       _applyUpgrade(
-        _state.copyWith(
-          metaDepth: md.copyWith(wispNextSpawnMs: now),
-        ),
+        _state.copyWith(metaDepth: md.copyWith(wispNextSpawnMs: now)),
       );
     }
     final schedule = _state.metaDepth;
@@ -1171,9 +1169,7 @@ class GameDirector extends ChangeNotifier {
     );
     final md = entered.metaDepth;
     if (!md.wispUnlocked) {
-      entered = entered.copyWith(
-        metaDepth: WispGift.unlockOnFirstEnter(md),
-      );
+      entered = entered.copyWith(metaDepth: WispGift.unlockOnFirstEnter(md));
     }
     _state = entered;
     if (_state.metaDepth.wispUnlocked) {
@@ -1371,11 +1367,19 @@ class GameDirector extends ChangeNotifier {
   }
 
   void setDungeonZoom(DungeonZoom value) {
-    _applyUpgrade(_state.copyWith(dungeonZoom: value));
+    _applyUpgrade(
+      _state.copyWith(dungeonZoom: value, clearDungeonViewCols: true),
+    );
   }
 
   void cycleDungeonZoom() {
     setDungeonZoom(_state.dungeonZoom.next);
+  }
+
+  /// Live pinch. One write when the fingers lift, not on every move.
+  void setDungeonViewCols(double cols) {
+    final clamped = DungeonZoom.clampCols(cols);
+    _applyUpgrade(_state.copyWith(dungeonViewCols: clamped));
   }
 
   void setAutoSellMaxPower(int value) {
@@ -1517,6 +1521,7 @@ class GameDirector extends ChangeNotifier {
       _state.copyWith(
         uiTextScale: 1.0,
         dungeonZoom: DungeonZoom.normal,
+        clearDungeonViewCols: true,
         vfxQuality: VfxQuality.full,
         colorblindMode: false,
         hideHealFloaters: false,

@@ -12,6 +12,7 @@ import '../core/meta_systems.dart';
 import '../models/class_ability.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
+import '../models/dungeon_zoom.dart';
 import '../models/enemy.dart';
 import '../models/hero.dart';
 import '../models/hero_spec.dart';
@@ -49,15 +50,21 @@ class SpatialDungeonView extends StatefulWidget {
   /// Map TalkBack. First hour matches the fist chip (tap the fight).
   static String mapSemanticsLabel({required bool plain}) => plain
       ? 'Dungeon map — tap to pin target while fighting; '
-          'long-press to smash and steer; fist button also works'
+            'long-press to smash and steer; pinch with two fingers to zoom; '
+            'fist button also works'
       : 'Dungeon map — tap to pin target while fighting; '
-          'long-press for God Hand; fist button also works';
+            'long-press for God Hand; pinch with two fingers to zoom; '
+            'fist button also works';
 
   @override
   State<SpatialDungeonView> createState() => _SpatialDungeonViewState();
 }
 
 class _SpatialDungeonViewState extends State<SpatialDungeonView> {
+  final Map<int, Offset> _pinchPointers = {};
+  double? _pinchBaseDist;
+  double? _pinchBaseCols;
+  final ValueNotifier<double?> _pinchCols = ValueNotifier<double?>(null);
   List<ui.Image> _floorReady = const [];
   List<ui.Image> _wallReady = const [];
   ui.Image? _stairs;
@@ -85,6 +92,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   List<ui.Image?> _enemySprites = const [];
   String? _loadedDungeonId;
   bool _sharedLoaded = false;
+
   /// Zone floor/enemy decode finished (partial OK — never block forever).
   bool _zoneArtReady = false;
   int _loadGen = 0;
@@ -98,10 +106,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       (_zoneDoorOpen ?? _doorOpen) != null;
 
   bool get _canPaintFloor =>
-      _zoneArtReady &&
-      _tilesReady &&
-      _sword != null &&
-      _vial != null;
+      _zoneArtReady && _tilesReady && _sword != null && _vial != null;
 
   void _syncTilesReady() {
     widget.director.setDungeonTilesReady(_canPaintFloor);
@@ -126,10 +131,59 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
 
   @override
   void dispose() {
+    _pinchCols.dispose();
     // The tree is already locked while this view unmounts. A notify here
     // throws setState-during-build on every leave.
     widget.director.setDungeonTilesReady(false, notify: false);
     super.dispose();
+  }
+
+  bool get _pinching => _pinchPointers.length >= 2;
+
+  double? _pinchSpan() {
+    if (_pinchPointers.length < 2) return null;
+    final pts = _pinchPointers.values.take(2).toList();
+    return (pts[0] - pts[1]).distance;
+  }
+
+  void _pinchDown(PointerDownEvent event) {
+    _pinchPointers[event.pointer] = event.localPosition;
+    if (_pinchPointers.length == 2) {
+      _pinchBaseDist = _pinchSpan();
+      _pinchBaseCols = _pinchCols.value ?? widget.director.state.viewCols;
+    }
+  }
+
+  void _pinchMove(PointerMoveEvent event) {
+    if (!_pinchPointers.containsKey(event.pointer)) return;
+    _pinchPointers[event.pointer] = event.localPosition;
+    final dist = _pinchSpan();
+    final baseDist = _pinchBaseDist;
+    final baseCols = _pinchBaseCols;
+    if (dist == null || baseDist == null || baseCols == null) return;
+    if (baseDist < 24) {
+      if (dist < 24) return;
+      _pinchBaseDist = dist;
+      _pinchBaseCols = _pinchCols.value ?? widget.director.state.viewCols;
+      return;
+    }
+    // Fingers apart → bigger sprites → fewer tiles on screen.
+    final next = DungeonZoom.clampCols(baseCols / (dist / baseDist));
+    if (_pinchCols.value != null && (next - _pinchCols.value!).abs() < 0.04) {
+      return;
+    }
+    _pinchCols.value = next;
+  }
+
+  void _pinchUp(PointerEvent event) {
+    final wasPinch = _pinchPointers.length >= 2;
+    _pinchPointers.remove(event.pointer);
+    if (!wasPinch || _pinchPointers.length >= 2) return;
+    final cols = _pinchCols.value;
+    _pinchBaseDist = null;
+    _pinchBaseCols = null;
+    if (cols != null) widget.director.setDungeonViewCols(cols);
+    _pinchCols.value = null;
   }
 
   Future<void> _loadImages(String dungeonId) async {
@@ -347,12 +401,14 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       String asset, {
       int? targetWidth,
       int? targetHeight,
-    }) load,
+    })
+    load,
     required Future<ui.Image?> Function(
       String asset, {
       int? targetWidth,
       int? targetHeight,
-    }) loadSoft,
+    })
+    loadSoft,
   }) async {
     final lootPaths = <String>{
       KenneyAssets.chestClosed,
@@ -411,14 +467,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     var i = 0;
     _lootByPath
       ..clear()
-      ..addEntries([
-        for (final path in lootPaths) MapEntry(path, shared[i++]),
-      ]);
+      ..addEntries([for (final path in lootPaths) MapEntry(path, shared[i++])]);
     _petsByPath
       ..clear()
-      ..addEntries([
-        for (final path in petPaths) MapEntry(path, shared[i++]),
-      ]);
+      ..addEntries([for (final path in petPaths) MapEntry(path, shared[i++])]);
     _heroesBySpec
       ..clear()
       ..addEntries([
@@ -468,14 +520,18 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                   // Live map + boss banner only — wipe/offline chrome stay on
                   // the ~10 Hz director notify (see GameDirector._shellNotifyEvery).
                   ListenableBuilder(
-                    listenable: widget.director.combatFrame,
+                    listenable: Listenable.merge([
+                      widget.director.combatFrame,
+                      _pinchCols,
+                    ]),
                     builder: (context, _) {
                       final world = widget.director.spatial;
                       final room = widget.director.state.currentRoom;
                       final camera = _TileCamera.forWorld(
                         world,
                         constraints,
-                        targetCols: widget.director.state.dungeonZoom.targetCols,
+                        targetCols:
+                            _pinchCols.value ?? widget.director.state.viewCols,
                         shake: widget.director.combatShake,
                         visualFrame: widget.director.visualFrame,
                         pinHeroIndex: widget.director.cameraHeroIndex,
@@ -495,8 +551,9 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                               final fighting =
                                   world?.enemies.any((e) => e.isAlive) ?? false;
                               if (!fighting || world == null) return;
-                              final alive =
-                                  world.heroes.where((h) => h.hp > 0).toList();
+                              final alive = world.heroes
+                                  .where((h) => h.hp > 0)
+                                  .toList();
                               if (alive.isEmpty) return;
                               var cx = 0.0;
                               var cy = 0.0;
@@ -524,7 +581,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                 }
                                 final fighting =
                                     world?.enemies.any((e) => e.isAlive) ??
-                                        false;
+                                    false;
                                 if (!fighting || world == null) return;
                                 final alive = world.heroes
                                     .where((h) => h.hp > 0)
@@ -542,111 +599,134 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                                 );
                               },
                               onLongPress: widget.director.godHandAtFocus,
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTapDown: (details) {
-                                  if (widget.director.awaitingWipeChoice) {
-                                    return;
-                                  }
-                                  if (widget.director.state.isPartyDefeated) {
-                                    widget.director.reviveParty();
-                                    return;
-                                  }
-                                  final tileX = camera.camX +
-                                      details.localPosition.dx /
-                                          camera.tileSize;
-                                  final tileY = camera.camY +
-                                      details.localPosition.dy /
-                                          camera.tileSize;
-                                  // Mid-pack: pin target HUD — fist / long-press for GH.
-                                  final fighting =
-                                      world?.enemies.any((e) => e.isAlive) ??
-                                          false;
-                                  if (fighting) {
-                                    widget.director
-                                        .setHudFocusAtWorld(tileX, tileY);
-                                  }
-                                  // Idle / clear: map tap does not fire God Hand.
-                                },
-                                onLongPressStart: (details) {
-                                  if (widget.director.awaitingWipeChoice) {
-                                    return;
-                                  }
-                                  if (widget.director.state.isPartyDefeated) {
-                                    return;
-                                  }
-                                  final tileX = camera.camX +
-                                      details.localPosition.dx /
-                                          camera.tileSize;
-                                  final tileY = camera.camY +
-                                      details.localPosition.dy /
-                                          camera.tileSize;
-                                  widget.director
-                                      .godHandAtWorld(tileX, tileY);
-                                },
-                                child: world == null || !_canPaintFloor
-                                    ? ColoredBox(
-                                        color: GameTheme.stone,
-                                        child: Center(
-                                          child: Text(
-                                            'Loading floor…',
-                                            style: GameTheme.body(
-                                              size: 15,
-                                              color: GameTheme.parchmentDim,
+                              child: Listener(
+                                behavior: HitTestBehavior.deferToChild,
+                                onPointerDown: _pinchDown,
+                                onPointerMove: _pinchMove,
+                                onPointerUp: _pinchUp,
+                                onPointerCancel: _pinchUp,
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTapDown: (details) {
+                                    if (_pinching) return;
+                                    if (widget.director.awaitingWipeChoice) {
+                                      return;
+                                    }
+                                    if (widget.director.state.isPartyDefeated) {
+                                      widget.director.reviveParty();
+                                      return;
+                                    }
+                                    final tileX =
+                                        camera.camX +
+                                        details.localPosition.dx /
+                                            camera.tileSize;
+                                    final tileY =
+                                        camera.camY +
+                                        details.localPosition.dy /
+                                            camera.tileSize;
+                                    // Mid-pack: pin target HUD — fist / long-press for GH.
+                                    final fighting =
+                                        world?.enemies.any((e) => e.isAlive) ??
+                                        false;
+                                    if (fighting) {
+                                      widget.director.setHudFocusAtWorld(
+                                        tileX,
+                                        tileY,
+                                      );
+                                    }
+                                    // Idle / clear: map tap does not fire God Hand.
+                                  },
+                                  onLongPressStart: (details) {
+                                    if (_pinching) return;
+                                    if (widget.director.awaitingWipeChoice) {
+                                      return;
+                                    }
+                                    if (widget.director.state.isPartyDefeated) {
+                                      return;
+                                    }
+                                    final tileX =
+                                        camera.camX +
+                                        details.localPosition.dx /
+                                            camera.tileSize;
+                                    final tileY =
+                                        camera.camY +
+                                        details.localPosition.dy /
+                                            camera.tileSize;
+                                    widget.director.godHandAtWorld(
+                                      tileX,
+                                      tileY,
+                                    );
+                                  },
+                                  child: world == null || !_canPaintFloor
+                                      ? ColoredBox(
+                                          color: GameTheme.stone,
+                                          child: Center(
+                                            child: Text(
+                                              'Loading floor…',
+                                              style: GameTheme.body(
+                                                size: 15,
+                                                color: GameTheme.parchmentDim,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : RepaintBoundary(
+                                          child: CustomPaint(
+                                            size: Size(
+                                              constraints.maxWidth,
+                                              constraints.maxHeight,
+                                            ),
+                                            painter: _TileRoomPainter(
+                                              world: world,
+                                              party:
+                                                  widget.director.state.heroes,
+                                              floorVariants: _floorReady,
+                                              wallVariants: _wallReady,
+                                              stairs: _zoneStairs ?? _stairs!,
+                                              stairsBoss:
+                                                  _zoneStairsBoss ??
+                                                  _stairsBoss!,
+                                              doorClosed:
+                                                  _zoneDoorClosed ??
+                                                  _doorClosed!,
+                                              doorOpen:
+                                                  _zoneDoorOpen ?? _doorOpen!,
+                                              propImages: _propImages,
+                                              roomType: room.type,
+                                              dungeonId: widget
+                                                  .director
+                                                  .state
+                                                  .dungeonId,
+                                              layoutSeed: world.map.layoutSeed,
+                                              clearedChambers:
+                                                  world.clearedChambers,
+                                              heroes: <ui.Image?>[
+                                                _hero0,
+                                                _hero1,
+                                                _hero2,
+                                                _hero3,
+                                              ],
+                                              heroesByClass: _heroesByClass,
+                                              heroesBySpec: _heroesBySpec,
+                                              bodyByPath: _bodyByPath,
+                                              enemies: _enemySprites,
+                                              chest: _chest!,
+                                              coin: _coin!,
+                                              sword: _sword!,
+                                              vial: _vial!,
+                                              lootByPath: _lootByPath,
+                                              petsByPath: _petsByPath,
+                                              camera: camera,
+                                              vfxQuality: widget
+                                                  .director
+                                                  .state
+                                                  .vfxQuality,
+                                              visualFrame:
+                                                  widget.director.visualFrame,
                                             ),
                                           ),
                                         ),
-                                      )
-                                    : RepaintBoundary(
-                                        child: CustomPaint(
-                                          size: Size(
-                                            constraints.maxWidth,
-                                            constraints.maxHeight,
-                                          ),
-                                          painter: _TileRoomPainter(
-                                            world: world,
-                                            party: widget.director.state.heroes,
-                                            floorVariants: _floorReady,
-                                            wallVariants: _wallReady,
-                                            stairs:
-                                                _zoneStairs ?? _stairs!,
-                                            stairsBoss: _zoneStairsBoss ??
-                                                _stairsBoss!,
-                                            doorClosed: _zoneDoorClosed ??
-                                                _doorClosed!,
-                                            doorOpen:
-                                                _zoneDoorOpen ?? _doorOpen!,
-                                            propImages: _propImages,
-                                            roomType: room.type,
-                                            dungeonId:
-                                                widget.director.state.dungeonId,
-                                            layoutSeed: world.map.layoutSeed,
-                                            clearedChambers:
-                                                world.clearedChambers,
-                                            heroes: <ui.Image?>[
-                                              _hero0,
-                                              _hero1,
-                                              _hero2,
-                                              _hero3,
-                                            ],
-                                            heroesByClass: _heroesByClass,
-                                            heroesBySpec: _heroesBySpec,
-                                            bodyByPath: _bodyByPath,
-                                            enemies: _enemySprites,
-                                            chest: _chest!,
-                                            coin: _coin!,
-                                            sword: _sword!,
-                                            vial: _vial!,
-                                            lootByPath: _lootByPath,
-                                            petsByPath: _petsByPath,
-                                            camera: camera,
-                                            vfxQuality: widget
-                                                .director.state.vfxQuality,
-                                            visualFrame:
-                                                widget.director.visualFrame,
-                                          ),
-                                        ),
-                                      ),
+                                ),
                               ),
                             ),
                           ),
@@ -676,17 +756,16 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
               child: Material(
                 color: GameTheme.blood.withValues(alpha: 0.85),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
                   child: Text(
                     state.inGauntlet || state.inAnyRiftMode
                         ? 'WIPED — End Run returns to hub'
                         : 'WIPED — use the Retry / Hub panel',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 15,
-                      color: GameTheme.torchHot,
-                    ),
+                    style: GameTheme.body(size: 15, color: GameTheme.torchHot),
                   ),
                 ),
               ),
@@ -734,7 +813,8 @@ class ChamberDots extends StatelessWidget {
         );
       },
       child: Tooltip(
-        message: 'Tap: chamber overview · square done · diamond here · circle ahead',
+        message:
+            'Tap: chamber overview · square done · diamond here · circle ahead',
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -823,6 +903,7 @@ class DungeonModeChip extends StatelessWidget {
   final bool dense;
   final String? tip;
   final bool interactive;
+
   /// When set, long labels ellipsis instead of stretching the top HUD.
   final double? maxLabelWidth;
 
@@ -831,10 +912,11 @@ class DungeonModeChip extends StatelessWidget {
     final semanticsLabel = tip == null ? '$label dungeon mode' : '$label. $tip';
     final action = interactive ? onTap : null;
     final child = Container(
-      constraints: BoxConstraints(
-        minHeight: dense ? 30 : GameTheme.minTouch,
+      constraints: BoxConstraints(minHeight: dense ? 30 : GameTheme.minTouch),
+      padding: EdgeInsets.symmetric(
+        horizontal: dense ? 7 : 8,
+        vertical: dense ? 4 : 0,
       ),
-      padding: EdgeInsets.symmetric(horizontal: dense ? 7 : 8, vertical: dense ? 4 : 0),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
@@ -844,9 +926,7 @@ class DungeonModeChip extends StatelessWidget {
         ),
       ),
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: maxLabelWidth ?? double.infinity,
-        ),
+        constraints: BoxConstraints(maxWidth: maxLabelWidth ?? double.infinity),
         child: Text(
           label,
           maxLines: 1,
@@ -859,10 +939,7 @@ class DungeonModeChip extends StatelessWidget {
       ),
     );
     if (!interactive) {
-      return Semantics(
-        label: semanticsLabel,
-        child: child,
-      );
+      return Semantics(label: semanticsLabel, child: child);
     }
     return WebClickScope(
       label: semanticsLabel,
@@ -927,9 +1004,9 @@ class GodHandRing extends StatelessWidget {
         : GameTheme.parchmentDim;
     final label = ready
         ? (readyLabel ??
-            (urgent
-                ? 'God Hand ready — TAP to steer + smash'
-                : 'God Hand ready'))
+              (urgent
+                  ? 'God Hand ready — TAP to steer + smash'
+                  : 'God Hand ready'))
         : (coolingLabel ?? 'Cooling ${cooldown.toStringAsFixed(1)}s');
     final action = onTap != null && ready ? onTap : null;
     final box = dense ? 40.0 : GameTheme.minTouch;
@@ -1071,7 +1148,6 @@ class _GodHandRingPainter extends CustomPainter {
       oldDelegate.color != color ||
       oldDelegate.ready != ready;
 }
-
 
 class _TileCamera {
   const _TileCamera({

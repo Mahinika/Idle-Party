@@ -151,6 +151,7 @@ class GameState {
     this.alwaysShowEnemyHp = true,
     this.uiTextScale = 1.0,
     this.dungeonZoom = DungeonZoom.normal,
+    this.dungeonViewCols,
     this.hapticsEnabled = true,
     this.keepScreenAwake = true,
     this.lastDailyDate,
@@ -208,6 +209,7 @@ class GameState {
   }
 
   final List<EnemyUnit> enemies;
+
   /// This run's gold, forge, bag, and floor. JSON stays flat.
   final RunBag run;
 
@@ -381,8 +383,10 @@ class GameState {
   /// entering a dungeon; survives Ascend as a standing preference.
   final bool challengeBossRush;
   final bool challengeTiny;
+
   /// Ashen Crown ticket run (save JSON: `inWorldBoss`).
   final bool inWorldBoss;
+
   /// Free practice run for Ashen Crown (save JSON: `worldBossPractice`).
   final bool worldBossPractice;
   final bool apexTrialActive;
@@ -480,6 +484,13 @@ class GameState {
   /// Dungeon camera framing (close / normal / wide).
   final DungeonZoom dungeonZoom;
 
+  /// Pinch override, in tiles across the screen. Null uses [dungeonZoom].
+  final double? dungeonViewCols;
+
+  /// Tiles across the dungeon view. Pinch wins over the Close / Normal / Wide preset.
+  double get viewCols =>
+      DungeonZoom.clampCols(dungeonViewCols ?? dungeonZoom.targetCols);
+
   /// Phone vibration on combat / UI cues (independent of mute).
   final bool hapticsEnabled;
 
@@ -554,7 +565,8 @@ class GameState {
   /// Flat incoming damage mitigate from Stone Stomach.
   int get relicMitigateFlat => relicAmount(RelicEffect.mitigate);
 
-  double get relicBossDamageMul => 1 + relicAmount(RelicEffect.bossDamage) / 100;
+  double get relicBossDamageMul =>
+      1 + relicAmount(RelicEffect.bossDamage) / 100;
 
   /// Fraction removed from hits while the hero is under 40% HP.
   double get relicLowHpDr => relicAmount(RelicEffect.lowHpDr) / 100;
@@ -715,8 +727,7 @@ class GameState {
 
   int get soulboundRefineAttackBonus => metaDepth.soulboundRefine;
 
-  int get soulboundRefineDefenseBonus =>
-      metaDepth.soulboundRefine * 4;
+  int get soulboundRefineDefenseBonus => metaDepth.soulboundRefine * 4;
 
   int get legacyAttackBonus => metaDepth.legacyPoints;
 
@@ -931,30 +942,37 @@ class GameState {
 
     final sheet = CombatRatings.fromHeroSheet(
       hero: hero,
-      gearStrength: apexOnly ? fold((i) => i.strengthBonus) : hero.gearStrengthBonus,
-      gearAgility: apexOnly ? fold((i) => i.agilityBonus) : hero.gearAgilityBonus,
-      gearStamina: apexOnly ? fold((i) => i.staminaBonus) : hero.gearStaminaBonus,
-      gearIntellect:
-          apexOnly ? fold((i) => i.intellectBonus) : hero.gearIntellectBonus,
+      gearStrength: apexOnly
+          ? fold((i) => i.strengthBonus)
+          : hero.gearStrengthBonus,
+      gearAgility: apexOnly
+          ? fold((i) => i.agilityBonus)
+          : hero.gearAgilityBonus,
+      gearStamina: apexOnly
+          ? fold((i) => i.staminaBonus)
+          : hero.gearStaminaBonus,
+      gearIntellect: apexOnly
+          ? fold((i) => i.intellectBonus)
+          : hero.gearIntellectBonus,
       gearSpirit: apexOnly ? fold((i) => i.spiritBonus) : hero.gearSpiritBonus,
-      gearSpellPower:
-          apexOnly ? fold((i) => i.spellPowerBonus) : hero.gearSpellPowerBonus,
+      gearSpellPower: apexOnly
+          ? fold((i) => i.spellPowerBonus)
+          : hero.gearSpellPowerBonus,
       gearMasteryRating:
           (apexOnly ? fold((i) => i.masteryBonus) : hero.gearMasteryBonus) +
           masteryBonus,
       gearArmor: apexOnly ? fold((i) => i.resolvedArmor) : hero.gearArmorBonus,
       gearCrit: apexOnly ? fold((i) => i.critChanceBonus) : hero.gearCritChance,
-      gearFlatAttack:
-          apexOnly ? fold((i) => i.attackBonus) : hero.gearAttackBonus,
+      gearFlatAttack: apexOnly
+          ? fold((i) => i.attackBonus)
+          : hero.gearAttackBonus,
       metaAttack: metaAttackBonus,
       metaDefense: metaDefenseBonus + BlessingConstellation.defAdd(this),
       metaVitality: metaVitalityBonus + BlessingConstellation.staAdd(this),
       guardBonus: tankGuardBonusFor(hero),
       auraBonus: casterAuraBonusFor(hero),
     );
-    var atkPct = AdBoost.atkActive(metaDepth)
-        ? AdBoost.attackPercent
-        : 0;
+    var atkPct = AdBoost.atkActive(metaDepth) ? AdBoost.attackPercent : 0;
     atkPct += ((BlessingConstellation.atkMul(this) - 1.0) * 100).round();
     return sheet.withAttackPercent(atkPct);
   }
@@ -1023,9 +1041,7 @@ class GameState {
   /// Smash damage after AL / party ATK / relic / style — same as SpatialCombat.
   int godHandSmashDamage({int? baseDamage}) {
     var damage =
-        (baseDamage ?? godHandBaseDamage) +
-        ascensionLevel +
-        (totalAttack ~/ 8);
+        (baseDamage ?? godHandBaseDamage) + ascensionLevel + (totalAttack ~/ 8);
     switch (metaDepth.godHandStyle) {
       case 1:
         return (damage * 1.22).round();
@@ -1050,12 +1066,12 @@ class GameState {
 
   /// Cooldown after damage + CD levels — same as SpatialCombat.
   double get godHandCooldownSeconds => max(
-        0.45,
-        1.1 -
-            godHandLevel * 0.05 -
-            metaDepth.godHandCdLevel * 0.06 -
-            relicAmount(RelicEffect.godHandCd) / 100,
-      );
+    0.45,
+    1.1 -
+        godHandLevel * 0.05 -
+        metaDepth.godHandCdLevel * 0.06 -
+        relicAmount(RelicEffect.godHandCd) / 100,
+  );
 
   GameState copyWith({
     List<PartyHero>? heroes,
@@ -1160,6 +1176,8 @@ class GameState {
     bool? alwaysShowEnemyHp,
     double? uiTextScale,
     DungeonZoom? dungeonZoom,
+    double? dungeonViewCols,
+    bool clearDungeonViewCols = false,
     bool? hapticsEnabled,
     bool? keepScreenAwake,
     String? lastDailyDate,
@@ -1299,11 +1317,13 @@ class GameState {
       grOutcome: grOutcome ?? this.grOutcome,
       colorblindMode: colorblindMode ?? this.colorblindMode,
       hideHealFloaters: hideHealFloaters ?? this.hideHealFloaters,
-      compactCombatNumbers:
-          compactCombatNumbers ?? this.compactCombatNumbers,
+      compactCombatNumbers: compactCombatNumbers ?? this.compactCombatNumbers,
       alwaysShowEnemyHp: alwaysShowEnemyHp ?? this.alwaysShowEnemyHp,
       uiTextScale: uiTextScale ?? this.uiTextScale,
       dungeonZoom: dungeonZoom ?? this.dungeonZoom,
+      dungeonViewCols: clearDungeonViewCols
+          ? null
+          : (dungeonViewCols ?? this.dungeonViewCols),
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
       keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       lastDailyDate: lastDailyDate ?? this.lastDailyDate,
@@ -1468,6 +1488,7 @@ class GameState {
     'alwaysShowEnemyHp': alwaysShowEnemyHp,
     'uiTextScale': uiTextScale,
     'dungeonZoom': dungeonZoom.name,
+    if (dungeonViewCols != null) 'dungeonViewCols': dungeonViewCols,
     'hapticsEnabled': hapticsEnabled,
     'keepScreenAwake': keepScreenAwake,
     if (lastDailyDate != null) 'lastDailyDate': lastDailyDate,
@@ -1747,8 +1768,10 @@ class GameState {
       riftParMs: max(0, (json['riftParMs'] as num?)?.toInt() ?? 0),
       riftKillTarget: max(0, (json['riftKillTarget'] as num?)?.toInt() ?? 0),
       riftKills: max(0, (json['riftKills'] as num?)?.toInt() ?? 0),
-      riftProgress01: ((json['riftProgress01'] as num?)?.toDouble() ?? 0)
-          .clamp(0.0, 1.0),
+      riftProgress01: ((json['riftProgress01'] as num?)?.toDouble() ?? 0).clamp(
+        0.0,
+        1.0,
+      ),
       riftGuardianActive: (json['riftGuardianActive'] as bool?) ?? false,
       riftOutcome: (json['riftOutcome'] as String?) ?? '',
       grTier: max(0, (json['grTier'] as num?)?.toInt() ?? 0),
@@ -1756,8 +1779,10 @@ class GameState {
       grParMs: max(0, (json['grParMs'] as num?)?.toInt() ?? 0),
       grKillTarget: max(0, (json['grKillTarget'] as num?)?.toInt() ?? 0),
       grKills: max(0, (json['grKills'] as num?)?.toInt() ?? 0),
-      grProgress01: ((json['grProgress01'] as num?)?.toDouble() ?? 0)
-          .clamp(0.0, 1.0),
+      grProgress01: ((json['grProgress01'] as num?)?.toDouble() ?? 0).clamp(
+        0.0,
+        1.0,
+      ),
       grGuardianActive: (json['grGuardianActive'] as bool?) ?? false,
       grOutcome: (json['grOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
@@ -1769,6 +1794,9 @@ class GameState {
         kUiTextScaleMax,
       ),
       dungeonZoom: DungeonZoom.fromJson(json['dungeonZoom']),
+      dungeonViewCols: json['dungeonViewCols'] == null
+          ? null
+          : DungeonZoom.clampCols((json['dungeonViewCols'] as num).toDouble()),
       hapticsEnabled: (json['hapticsEnabled'] as bool?) ?? true,
       keepScreenAwake: (json['keepScreenAwake'] as bool?) ?? true,
       lastDailyDate: json['lastDailyDate'] as String?,

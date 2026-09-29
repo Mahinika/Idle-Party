@@ -8,6 +8,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/local_reminders.dart';
 import '../../core/game_state.dart';
+import '../../models/dungeon_zoom.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -291,8 +292,8 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         ),
         const SizedBox(height: 10),
         _SettingsCycle(
-          label: state.dungeonZoom.settingsLabel,
-          hint: state.dungeonZoom.settingsHint,
+          label: DungeonZoom.labelForCols(state.viewCols),
+          hint: DungeonZoom.pinchHint,
           onCycle: director.cycleDungeonZoom,
         ),
         const SizedBox(height: 8),
