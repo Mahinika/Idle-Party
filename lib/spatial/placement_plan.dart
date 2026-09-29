@@ -164,6 +164,11 @@ class PlacementPlan {
         if (cell.$1 == exitPoint.$1 && cell.$2 == exitPoint.$2) continue;
         candidates.add(cell);
       }
+      if (candidates.isEmpty && targetChamber != null) {
+        for (final cell in openCells) {
+          if (inChamber(targetChamber, cell.$1, cell.$2)) candidates.add(cell);
+        }
+      }
       if (candidates.isEmpty) {
         candidates.addAll(edgeCells);
       }

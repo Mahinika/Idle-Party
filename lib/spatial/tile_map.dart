@@ -332,11 +332,12 @@ abstract final class RoomLayouts {
 
   static (int, int) _mapExtent(DungeonLayoutKind layout, int pressure) {
     final p = pressure.clamp(0, 10);
+    // About 250×250. A little extra at high AL / KEY so later floors still grow.
     return switch (layout) {
-      DungeonLayoutKind.hideout => (52 + p * 2, 40 + p),
-      DungeonLayoutKind.arena => (56 + p * 2, 38 + p),
-      DungeonLayoutKind.fort => (58 + p * 2, 42 + p),
-      DungeonLayoutKind.cave => (58 + p * 2, 40 + p),
+      DungeonLayoutKind.hideout ||
+      DungeonLayoutKind.arena ||
+      DungeonLayoutKind.fort ||
+      DungeonLayoutKind.cave => (250 + p * 2, 250 + p),
     };
   }
 
@@ -418,8 +419,8 @@ abstract final class RoomLayouts {
     int pressure = 0,
   }) {
     final extra = pressure.clamp(0, 6);
-    final cols = 36 + extra * 2;
-    final rows = 28 + extra;
+    final cols = 250 + extra * 2;
+    final rows = 250 + extra;
     final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
     void set(int x, int y, TileKind k) {
       if (x >= 0 && y >= 0 && x < cols && y < rows) {
@@ -976,6 +977,7 @@ abstract final class RoomLayouts {
         horizontalFirst: rng.nextBool(),
         winding: rng.nextDouble() < kit.corridorWindingChance,
         rng: rng,
+        rooms: rooms,
       );
       for (final gatePos in gateTiles) {
         final gx = gatePos.$1;
@@ -1392,7 +1394,7 @@ abstract final class RoomLayouts {
 
   /// Carve an L-corridor; return gate tiles at the midpoint choke.
   ///
-  /// Narrow = 1-tile choke. Default = 3-wide hall. Broad = 5-wide approach.
+  /// Chokes are 4 tiles wide (was 1). Every other hall is 10 (was 3, approach was 5).
   static List<(int, int)> _carveCorridorWithGate(
     void Function(int, int, TileKind) set,
     int x0,
@@ -1404,23 +1406,41 @@ abstract final class RoomLayouts {
     bool horizontalFirst = true,
     bool winding = false,
     Random? rng,
+    List<_Rect> rooms = const [],
   }) {
-    void carveWide(int x, int y, {required bool horizontal}) {
-      set(x, y, TileKind.floor);
-      if (narrow) return;
-      if (horizontal) {
-        set(x, y - 1, TileKind.floor);
-        set(x, y + 1, TileKind.floor);
-        if (broad) {
-          set(x, y - 2, TileKind.floor);
-          set(x, y + 2, TileKind.floor);
+    // Approach halls used to be 5 wide. They join the 10-wide hall.
+    final span = narrow ? 4 : (broad ? 10 : 10);
+    final left = span ~/ 2;
+    final right = span - left - 1;
+
+    bool deepInRoom(int x, int y) {
+      for (final r in rooms) {
+        if (x > r.x && x < r.x + r.w - 1 && y > r.y && y < r.y + r.h - 1) {
+          return true;
         }
-      } else {
-        set(x - 1, y, TileKind.floor);
-        set(x + 1, y, TileKind.floor);
-        if (broad) {
-          set(x - 2, y, TileKind.floor);
-          set(x + 2, y, TileKind.floor);
+      }
+      return false;
+    }
+
+    void paint(int x, int y, {required bool center}) {
+      if (!center && deepInRoom(x, y)) return;
+      set(x, y, TileKind.floor);
+    }
+
+    void carveWide(int x, int y, {required bool horizontal}) {
+      for (var d = -left; d <= right; d++) {
+        if (horizontal) {
+          paint(x, y + d, center: d == 0);
+        } else {
+          paint(x + d, y, center: d == 0);
+        }
+      }
+    }
+
+    void fillElbow(int x, int y) {
+      for (var dy = -left; dy <= right; dy++) {
+        for (var dx = -left; dx <= right; dx++) {
+          paint(x + dx, y + dy, center: dx == 0 && dy == 0);
         }
       }
     }
@@ -1460,13 +1480,7 @@ abstract final class RoomLayouts {
         toY: y0,
         path: path,
       );
-      if (x0 != x1 && y0 != y1 && !narrow) {
-        for (var dy = -1; dy <= 1; dy++) {
-          for (var dx = -1; dx <= 1; dx++) {
-            set(x1 + dx, y0 + dy, TileKind.floor);
-          }
-        }
-      }
+      if (x0 != x1 && y0 != y1) fillElbow(x1, y0);
       carveSegment(
         horizontal: false,
         fromX: x1,
@@ -1484,13 +1498,7 @@ abstract final class RoomLayouts {
         toY: y1,
         path: path,
       );
-      if (x0 != x1 && y0 != y1 && !narrow) {
-        for (var dy = -1; dy <= 1; dy++) {
-          for (var dx = -1; dx <= 1; dx++) {
-            set(x0 + dx, y1 + dy, TileKind.floor);
-          }
-        }
-      }
+      if (x0 != x1 && y0 != y1) fillElbow(x0, y1);
       carveSegment(
         horizontal: true,
         fromX: x0,
@@ -1523,33 +1531,16 @@ abstract final class RoomLayouts {
     final mid = path[path.length ~/ 2];
     final mx = mid.$1;
     final my = mid.$2;
-    if (narrow) {
-      return <(int, int)>[(mx, my)];
-    }
     final midIndex = path.length ~/ 2;
     final prev = path[midIndex - 1];
     final horizontal = prev.$2 == my;
-    if (horizontal) {
-      if (broad) {
-        return <(int, int)>[
-          (mx, my - 2),
-          (mx, my - 1),
-          (mx, my),
-          (mx, my + 1),
-          (mx, my + 2),
-        ];
-      }
-      return <(int, int)>[(mx, my - 1), (mx, my), (mx, my + 1)];
+    final gates = <(int, int)>[];
+    for (var d = -left; d <= right; d++) {
+      final gx = horizontal ? mx : mx + d;
+      final gy = horizontal ? my + d : my;
+      if (d != 0 && deepInRoom(gx, gy)) continue;
+      gates.add((gx, gy));
     }
-    if (broad) {
-      return <(int, int)>[
-        (mx - 2, my),
-        (mx - 1, my),
-        (mx, my),
-        (mx + 1, my),
-        (mx + 2, my),
-      ];
-    }
-    return <(int, int)>[(mx - 1, my), (mx, my), (mx + 1, my)];
+    return gates;
   }
 }

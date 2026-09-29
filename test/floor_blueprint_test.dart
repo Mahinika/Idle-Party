@@ -291,6 +291,26 @@ void main() {
     expect(chokeMin, lessThanOrEqualTo(7));
   });
 
+  test('gates seal the full corridor, 4 for a choke and 10 for a hall', () {
+    final map = RoomLayouts.forFloor(
+      floorNumber: 4,
+      room: const DungeonRoom(
+        floorNumber: 4,
+        roomIndex: 0,
+        type: RoomType.normal,
+        enemyLevel: 8,
+        enemyCount: 8,
+      ),
+      dungeonId: 'sandy',
+      layoutSeed: 2,
+    );
+    final runs = _gateRuns(map);
+    expect(runs, isNotEmpty);
+    expect(runs.every((n) => n == 4 || n == 10), isTrue, reason: '$runs');
+    expect(runs.contains(4), isTrue, reason: '$runs');
+    expect(runs.contains(10), isTrue, reason: '$runs');
+  });
+
   test('combat floors use a large canvas', () {
     for (final id in <String>['sandy', 'goblin', 'king', 'dead', 'crystal']) {
       final map = RoomLayouts.forFloor(
@@ -305,8 +325,8 @@ void main() {
         dungeonId: id,
         layoutSeed: 4,
       );
-      expect(map.cols, greaterThanOrEqualTo(48), reason: id);
-      expect(map.rows, greaterThanOrEqualTo(36), reason: id);
+      expect(map.cols, greaterThanOrEqualTo(250), reason: id);
+      expect(map.rows, greaterThanOrEqualTo(250), reason: id);
     }
   });
 
@@ -574,4 +594,56 @@ void main() {
     expect(samples, greaterThan(20));
     expect(organic, greaterThan(samples ~/ 5));
   });
+}
+
+/// Length of each straight gate line. A sealed corridor is one run.
+List<int> _gateRuns(TileMap map) {
+  final used = <int>{};
+  final runs = <int>[];
+  final gates = map.gates;
+  for (var i = 0; i < gates.length; i++) {
+    if (!used.add(i)) continue;
+    final g = gates[i];
+    var horizontal = 1;
+    var vertical = 1;
+    for (final other in gates) {
+      if (other.y == g.y && (other.x - g.x).abs() == 1) horizontal++;
+      if (other.x == g.x && (other.y - g.y).abs() == 1) vertical++;
+    }
+    // Count the full line, not just immediate neighbors, once per line.
+    if (horizontal >= vertical) {
+      final line = gates.where((e) => e.y == g.y).toList()
+        ..sort((a, b) => a.x.compareTo(b.x));
+      var run = 1;
+      for (var k = 1; k < line.length; k++) {
+        if (line[k].x == line[k - 1].x + 1) {
+          run++;
+        } else {
+          runs.add(run);
+          run = 1;
+        }
+      }
+      runs.add(run);
+      for (var j = 0; j < gates.length; j++) {
+        if (gates[j].y == g.y) used.add(j);
+      }
+    } else {
+      final line = gates.where((e) => e.x == g.x).toList()
+        ..sort((a, b) => a.y.compareTo(b.y));
+      var run = 1;
+      for (var k = 1; k < line.length; k++) {
+        if (line[k].y == line[k - 1].y + 1) {
+          run++;
+        } else {
+          runs.add(run);
+          run = 1;
+        }
+      }
+      runs.add(run);
+      for (var j = 0; j < gates.length; j++) {
+        if (gates[j].x == g.x) used.add(j);
+      }
+    }
+  }
+  return runs;
 }
