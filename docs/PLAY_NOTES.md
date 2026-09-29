@@ -1,1 +1,15 @@
-# Play notesWhat the owner noticed on the phone, so the next chat can pick up where thelast one stopped. The agent writes each note here when the owner gives it,in plain words and with the date. When a commit fixes it, move it to Donewith the commit hash. Read Open at the start of a batch.## Open_Nothing open._## Done<!-- - 2026-09-29 · Daily Run too easy / scale from yesterday push · fixed in 4e2888ff --><!-- - 2026-09-29 · Floors felt huge on the phone · fixed in e802ec62 -->
+# Play notes
+
+What the owner noticed on the phone, so the next chat can pick up where the
+last one stopped. The agent writes each note here when the owner gives it,
+in plain words and with the date. When a commit fixes it, move it to Done
+with the commit hash. Read Open at the start of a batch.
+
+## Open
+
+_Nothing open._
+
+## Done
+
+<!-- - 2026-09-29 · Daily Run too easy / scale from yesterday push · fixed in 4e2888ff -->
+<!-- - 2026-09-29 · Floors felt huge on the phone · fixed in e802ec62 -->
