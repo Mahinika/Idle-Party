@@ -1,4 +1,5 @@
-/// stop: if code was edited, run flutter analyze (+ changelog sync when relevant).
+/// stop: if code was edited, run flutter analyze (+ changelog sync, ship smoke,
+/// or share-fast when those areas moved).
 /// On failure, emit followup_message so the agent fixes without owner typing "fix it".
 /// When green, nudge once if files edited this batch are still uncommitted.
 import 'dart:convert';
@@ -78,6 +79,23 @@ Future<void> main() async {
     }
   }
 
+  if (_touchesKits(dirtyText)) {
+    final share = await _run(
+      'flutter',
+      <String>['test', 'test/class_balance_share_fast_test.dart'],
+    );
+    if (share.exitCode != 0) {
+      _emit(<String, dynamic>{
+        'followup_message':
+            'Stop-hook: share-fast failed after a kit or combat edit. A spec '
+            'is outside the ±20% DPS share. Trim it (skill grinding-until-pass), '
+            'then re-run `flutter test test/class_balance_share_fast_test.dart`.\n\n'
+            '${_trim(share.combined)}',
+      });
+      return;
+    }
+  }
+
   try {
     dirty.deleteSync();
   } catch (_) {}
@@ -126,6 +144,22 @@ bool _touchesChangelog(String dirtyText) {
       t.contains('pubspec.yaml') ||
       t.contains('dungeon_def.dart') ||
       t.contains('changelog_sync');
+}
+
+bool _touchesKits(String dirtyText) {
+  final t = dirtyText.toLowerCase().replaceAll('\\', '/');
+  const needles = <String>[
+    '/lib/models/kits/',
+    'class_ability.dart',
+    'ability_effects.dart',
+    'kit_migrated_casts.dart',
+    'spatial_combat.dart',
+    'class_balance',
+  ];
+  for (final n in needles) {
+    if (t.contains(n)) return true;
+  }
+  return false;
 }
 
 bool _touchesChase(String dirtyText) {

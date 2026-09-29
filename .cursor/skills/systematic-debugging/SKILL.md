@@ -38,7 +38,7 @@ Specific: “Drain Life uses heal-only effect so DPS share ignores it,” not �
 
 - Unit: `GameDirector.preview()` + focused `flutter test`
 - Combat: share-fast / gate for DPS; spatial tests for movement/clear
-- UI: `verifying-in-browser` / `hub-smoke`
+- UI: `a56-playtest` / `hub-smoke`
 - “It worked before”: `git bisect` with a tiny reproduce test
 
 ## 5. Fix

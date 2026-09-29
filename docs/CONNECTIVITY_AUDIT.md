@@ -1,6 +1,8 @@
 # F-001 — Full game connectivity audit (119 steps)
 
-**Status:** planning — wait for owner approval before step 1  
+**Status:** done 2026-09-27. All 119 steps passed; notes in
+`docs/CONNECTIVITY_AUDIT_LOG.md`. Left open: Arms and Fury looked weak on a
+small damage sample (step 47), and no fresh A56 look was taken (step 119).  
 **Scale:** Epic (multi-day walkthrough + fix-as-we-go)  
 **Updated:** 2026-09-27 — the 19 missing screens are folded in (was 100).  
 **Goal:** Go through every player-facing surface and prove it is wired,

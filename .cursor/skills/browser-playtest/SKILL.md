@@ -1,10 +1,11 @@
 ---
 name: browser-playtest
 description: >-
-  Fallback playtest via Flutter web and WebClickBridge for agent clicks,
-  Playwright, or when Android cannot run. Use when the agent must drive the UI
-  in Cursor's browser. Do not use for the owner's live look (a56-playtest) or
-  human UI judgment (verifying-in-browser).
+  The only web path for Idle Party. Fallback playtest via Flutter web and
+  WebClickBridge when the agent must click in Cursor's browser, Android cannot
+  run, or a web click path should become a Playwright script under
+  `tool/playtest_*.py`. Do not use for the owner's live look or judging UI
+  (a56-playtest) or combat balance (share-fast).
 ---
 
 # Browser playtest (Idle Party)
@@ -111,6 +112,20 @@ After boot, set `window.__idlePartySetSpeed(10)` so combat runs ~10 sim steps pe
 ## Hub polish smoke
 
 After hub / What’s New / weekly / guides changes, follow **hub-smoke** (`.cursor/skills/hub-smoke/SKILL.md`) — short checklist for MORE badge, weekly n/3, GEAR tabs, and God Hand tip.
+
+## Record a flow as a script
+
+1. Define one flow ("New Game → skip tips → ENTER DUNGEON → FARM").
+2. Per step: `browser_snapshot` → click by ref or `__idlePartyClick('LABEL')`
+   → note the action, label, and an optional assertion.
+3. Use stable `KenneyButton` / Semantics labels, not XY. God Hand needs a map
+   tap; write coordinates only when no label exists.
+4. Emit or update a script under `tool/` in the style of `tool/playtest_al3.py`
+   (bridge) or `tool/playwright_newgame_test.py`
+   (`page.get_by_role("button", name="ENTER DUNGEON").click()`).
+5. Run it once and harden the waits (visible before click). No secrets.
+
+Not for flows that need a real Play install or device.
 
 ## Pitfalls
 

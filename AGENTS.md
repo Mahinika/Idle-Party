@@ -49,8 +49,9 @@ the rules; `/repo auditandcleaning` is analysis only.
 Hooks (`.cursor/hooks.json`): **sessionStart** injects the owner **Now:**
 line plus the Play-upload lock, and deletes `playshots/` images older than
 3 days (the folder is git-ignored). **afterFileEdit** marks verify-dirty.
-**stop** runs analyze, plus changelog or ship-smoke tests when those files
-moved, then nudges once if edited files are still uncommitted.
+**stop** runs analyze, plus changelog, ship-smoke, or share-fast tests when
+those files moved, then nudges once if edited files are still uncommitted.
+Owner play notes live in `docs/PLAY_NOTES.md`.
 `test/agent_rules_test.dart` keeps rule descriptions readable by Cursor.
 
 MCP: `.cursor/mcp.json` → `idle-party` (`tool/mcp_idle_party/`).

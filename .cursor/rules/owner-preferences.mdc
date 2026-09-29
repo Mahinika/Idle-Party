@@ -22,7 +22,9 @@ Gauntlet, Rift, Greater Rift, and Ashen. The monthly Craft Trial
 Do not run `/init` or clean up the repo unless they ask. Never iOS or
 Apple. Change GEAR or endgame copy only when play notes say it lies.
 
-Play notes usually come from a new save.
+Play notes usually come from a new save. Write each note into
+`docs/PLAY_NOTES.md` under Open when the owner gives it, and move it to
+Done with the commit that fixes it. Read Open at the start of a batch.
 
 ## UI and distribution (facts)
 
@@ -43,21 +45,24 @@ Play notes usually come from a new save.
 3. If the owner should look at the phone, push this batch to the A56 first
    (`a56-playtest`, hot restart or relaunch). Do not ask them to look while
    the emulator still runs a session from before the edits.
-4. Hand off in at most 5 lines: what changed and what to look for. Then
+4. Before a big change to look or feel (sizes, speeds, or the layout of a
+   whole screen or floor), show the owner a before and an after on the A56
+   and let them pick. Then build on the pick. Small tweaks need no preview.
+5. Hand off in at most 5 lines: what changed and what to look for. Then
    wait.
-5. **Git:** when analyze and tests are green, **commit locally** without
+6. **Git:** when analyze and tests are green, **commit locally** without
    asking. Push, open a PR, or tag when the batch needs it, also without
    asking. **Never upload an AAB to Google Play unless the owner asks in
    that turn.** Never force-push or use `--no-verify` unless they say so in
    that turn. This **overrides** any global "only commit when asked" rule
    for this repo.
-6. Daily work goes on `main`. Use `release/*` only when cutting a tag.
-7. Do not stage `windows/flutter/generated_*` unless plugins actually
+7. Daily work goes on `main`. Use `release/*` only when cutting a tag.
+8. Do not stage `windows/flutter/generated_*` unless plugins actually
    changed.
-8. When a change needs a home, split the giant file. Do not grow
+9. When a change needs a home, split the giant file. Do not grow
    `game_logic`, `spatial_combat`, or fat shells. New HUD goes under
    `lib/ui/shell/`.
-9. Delete unused code that saves do not need. Keep JSON fields that old
+10. Delete unused code that saves do not need. Keep JSON fields that old
    saves may still have.
 
 ## Decide alone / Never
