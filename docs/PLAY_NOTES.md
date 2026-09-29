@@ -11,6 +11,8 @@ _Nothing open._
 
 ## Done
 
+<!-- - 2026-09-29 · Referring a friend paid no Ad Tickets on SCROLLS · fixed in e6131e9c -->
+
 <!-- - 2026-09-29 · TODAY said quests were ready to claim, but the list had none · fixed in b5c12c1b -->
 
 <!-- - 2026-09-29 · RANKS → PARTY said a public party list is not on Play yet · fixed in 55a5dd46 -->
