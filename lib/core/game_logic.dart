@@ -2492,6 +2492,15 @@ class GameLogic {
             (bossKill > 0 && !before.inGauntlet)
         ? 1
         : 0;
+    // PUSH peaks feed tomorrow's Daily Run floor (not farm / ladders / daily).
+    final wasDaily = MetaSystems.isActiveDailyRun(before);
+    if (!farmLoop &&
+        !before.inGauntlet &&
+        !before.inAnyRiftMode &&
+        !wasDaily &&
+        !before.inWorldBoss) {
+      next = _notePushPeak(next, before.currentRoom.floorNumber);
+    }
     final keyCleared = before.keystoneRunActive
         ? before.keystoneRunLevel
         : before.hardmodeLevel;

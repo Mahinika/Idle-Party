@@ -11,4 +11,5 @@ _Nothing open._
 
 ## Done
 
+<!-- - 2026-09-29 · Daily Run too easy / scale from yesterday push · fixed in a039da47 -->
 <!-- - 2026-09-29 · Floors felt huge on the phone · fixed in e802ec62 -->

@@ -226,8 +226,8 @@ abstract final class GameGuides {
         'Three different systems — not the same button:\n\n'
         '• Daily Vault — UTC day on the hub hunt. One PUSH floor fills it '
         '(FARM does not, including a FARM boss). Then CLAIM VAULT for essence.\n'
-        '• Daily Run — one free seeded floor from the hub (DAILY RUN) for +25e. '
-        'Separate from the vault.\n'
+        '• Daily Run — one free seeded floor scaled from yesterday\'s PUSH '
+        '(hub DAILY RUN) for +25e. Separate from the vault.\n'
         '• Quests — MORE · QUESTS board (Daily / Bounty / Side / Week / Contract). '
         'CLAIM QUESTS on the hub hunt when rewards are ready.\n\n'
         'The hub hunt always picks one job. Vault reset and Daily Run reset at UTC midnight. '
@@ -281,7 +281,8 @@ abstract final class GameGuides {
     body:
         'Three different dailies:\n'
         '• Daily Vault — one PUSH clear (FARM does not count), then CLAIM VAULT.\n'
-        '• Daily Run — one free seeded floor for +25e (hub DAILY RUN).\n'
+        '• Daily Run — one free seeded floor scaled from yesterday\'s PUSH '
+        'for +25e (hub DAILY RUN).\n'
         '• Quests — Daily / Bounty / Side / Week / Contract board; '
         'CLAIM QUESTS when ready.\n\n'
         '• Early on: the hub hunt tells you to grow the party in the starter zone. '
@@ -320,6 +321,7 @@ abstract final class GameGuides {
     title: 'DAILY RUN',
     body:
         'A free one-floor Daily Run on the hub — separate from Daily Vault and Quests.\n\n'
+        '• Floor scales from yesterday\'s best PUSH clear (+1), so it stays a stretch.\n'
         '• Early (before first boss): the hub hunt focuses on growing the party — Daily Run '
         'may wait.\n'
         '• After the first hour, the hub hunt may chase Ascend, zones, Daily Vault, or '
@@ -387,8 +389,8 @@ abstract final class GameGuides {
           'Three different systems — not the same button:\n\n'
           '• Daily Vault — UTC day on the hub hunt. One PUSH floor fills it '
           '(FARM does not). Or time KEY +2. Then CLAIM VAULT for essence.\n'
-          '• Daily Run — one free seeded floor from the hub (DAILY RUN) for +25e. '
-          'Separate from the vault.\n'
+          "• Daily Run — one free seeded floor scaled from yesterday's PUSH "
+          '(hub DAILY RUN) for +25e. Separate from the vault.\n'
           '• Quests — MORE · QUESTS board (Daily / Bounty / Side / Week / Contract). '
           'CLAIM QUESTS on the hub hunt when rewards are ready.\n\n'
           'The hub hunt always picks one job. Vault reset and Daily Run reset at UTC midnight. '
@@ -612,7 +614,8 @@ abstract final class GameGuides {
           '• Daily Vault — UTC day; one PUSH clear (not FARM) or timed KEY +2, '
           'then CLAIM VAULT. While the hub hunts KEY or a ladder, the line under '
           'it still shows Vault 0/1 until you fill it.\n'
-          '• Daily Run — one free seeded floor for +25e.\n'
+          '• Daily Run — one free seeded floor scaled from yesterday\'s PUSH '
+          'for +25e.\n'
           '• Quests Daily — MORE · QUESTS kill board; CLAIM QUESTS when ready.\n\n'
           'Four season clocks (all optional — the hub hunt picks one job):\n'
           '• UTC midnight — vault + Daily Run reset.\n'
@@ -793,7 +796,8 @@ abstract final class GameGuides {
           'Three different dailies:\n'
           '• Daily Vault — one PUSH clear (FARM does not count) or timed KEY +2, '
           'then CLAIM VAULT.\n'
-          '• Daily Run — one free seeded floor for +25e (hub DAILY RUN).\n'
+          '• Daily Run — one free seeded floor scaled from yesterday\'s PUSH '
+        'for +25e (hub DAILY RUN).\n'
           '• Quests — Daily / Bounty / Side / Week / Contract board; '
           'CLAIM QUESTS when ready.\n\n'
           'Keystone affixes still rotate each ISO week (numbers + which cave’s '
@@ -902,6 +906,7 @@ abstract final class GameGuides {
       title: 'DAILY RUN',
       body:
           'A free one-floor Daily Run on the hub — separate from Daily Vault and Quests.\n\n'
+          '• Floor scales from yesterday\'s best PUSH clear (+1), so it stays a stretch.\n'
           '• Early (before first boss): the hub hunt focuses on growing the party — Daily Run '
           'may wait.\n'
           '• After the first hour, the hub hunt may chase Ascend, zones, Daily Vault, Daily Run, or '

@@ -25,7 +25,7 @@ ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats
 
 **AL20 vs party Lv100:** Ascend / Blessing / Star Nodes / REBORN are AL gates. KEY, Gauntlet, Ranked GR, Farm Rift, and Ashen Crown are party-Lv100 gates. Before party max, Daily vault start (one cave today) is the day-2–7 job; `_partyLevelChase` sits under it unless ALMOST (within 5 of Lv100).
 
-**Daily ordlista (three systems):** Daily Vault (UTC claim) · Daily Run (+25e floor) · Quests Daily (MORE board). Never collapse them into one “daily” button.
+**Daily ordlista (three systems):** Daily Vault (UTC claim) · Daily Run (+25e floor scaled from yesterday's PUSH peak + 1) · Quests Daily (MORE board). Never collapse them into one “daily” button.
 
 **Rift consolidation:** TODAY chases **Ranked GR** before **Farm Rift** (`_farmRiftChaseReady` — GR1 clear or GR milestones done). Ranked GR next rank lives on hub ENDGAME; Farm Rift dial stays on KEY. Farm Rift is not deleted.
 

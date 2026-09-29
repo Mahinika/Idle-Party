@@ -76,13 +76,14 @@ GameState _ensureWeeklyContract(GameState state, {DateTime? now}) {
 GameState _ensureDailyVault(GameState state, {DateTime? now}) {
   final t = (now ?? DateTime.now()).toUtc();
   final day = MetaSystems.dailyDateKey(t);
-  final md = state.metaDepth;
-  if (md.dailyVaultDate == day) return state;
+  var next = _rollPushPeaks(state, now: t);
+  final md = next.metaDepth;
+  if (md.dailyVaultDate == day) return next;
   if (md.dailyVaultDate.isEmpty &&
       (md.weeklyProgress > 0 ||
           md.weeklyClaimed ||
           md.weeklyBestTimedKey > 0)) {
-    return state.copyWith(
+    return next.copyWith(
       metaDepth: md.copyWith(
         dailyVaultDate: day,
         dailyVaultClears: md.weeklyClaimed
@@ -93,12 +94,49 @@ GameState _ensureDailyVault(GameState state, {DateTime? now}) {
       ),
     );
   }
-  return state.copyWith(
+  return next.copyWith(
     metaDepth: md.copyWith(
       dailyVaultDate: day,
       dailyVaultClears: 0,
       dailyBestTimedKey: 0,
       dailyVaultClaimed: false,
+    ),
+  );
+}
+
+/// Archives yesterday's PUSH peak when the UTC day rolls.
+GameState _rollPushPeaks(GameState state, {DateTime? now}) {
+  final t = (now ?? DateTime.now()).toUtc();
+  final today = MetaSystems.dailyDateKey(t);
+  final md = state.metaDepth;
+  if (md.pushPeakDate.isEmpty || md.pushPeakDate == today) return state;
+  return state.copyWith(
+    metaDepth: md.copyWith(
+      prevPushPeakDate: md.pushPeakDate,
+      prevPushPeakFloor: md.pushPeakFloor,
+      pushPeakDate: today,
+      pushPeakFloor: 0,
+    ),
+  );
+}
+
+/// Records a PUSH floor clear for Daily Run difficulty scaling.
+GameState _notePushPeak(
+  GameState state,
+  int floor, {
+  DateTime? now,
+}) {
+  if (floor <= 0) return state;
+  final t = (now ?? DateTime.now()).toUtc();
+  var next = _rollPushPeaks(state, now: t);
+  final today = MetaSystems.dailyDateKey(t);
+  final md = next.metaDepth;
+  final peak =
+      md.pushPeakDate == today ? max(md.pushPeakFloor, floor) : floor;
+  return next.copyWith(
+    metaDepth: md.copyWith(
+      pushPeakDate: today,
+      pushPeakFloor: peak,
     ),
   );
 }
@@ -323,21 +361,22 @@ GameState _enterDaily(GameState state, {DateTime? now}) {
   final seed = MetaSystems.dailySeed(t);
   final dungeonId = MetaSystems.dailyDungeonId(t);
   final isNewDay = state.lastDailyDate != dateKey;
+  var cleared = GameLogic._clearKeystoneRun(_rollPushPeaks(state, now: t));
+  final echoFloor = MetaSystems.dailyEchoFloor(cleared, t);
   final floor = DungeonGenerator.generateFloor(
-    1,
-    ascensionLevel: state.ascensionLevel,
+    echoFloor,
+    ascensionLevel: cleared.ascensionLevel,
     dungeonId: dungeonId,
     layoutSeed: seed,
-    keyLevel: GameLogic.layoutKeyLevel(state),
+    keyLevel: GameLogic.layoutKeyLevel(cleared),
   );
   final room = floor.first;
-  final cleared = GameLogic._clearKeystoneRun(state);
   return cleared.copyWith(
     inDungeon: true,
     inGauntlet: false,
     dungeonId: dungeonId,
     dungeonMode: DungeonMode.push,
-    highestFloorCleared: 0,
+    highestFloorCleared: max(0, echoFloor - 1),
     currentRoom: room,
     dungeonFloor: floor,
     enemies: GameLogic.createEnemyGroup(

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../models/apex_craft.dart';
 import '../models/achievement_def.dart';
 import '../models/dungeon_def.dart';
@@ -94,6 +96,45 @@ abstract final class MetaSystems {
     if (all.isEmpty) return 'sandy';
     final index = _epochDay(utc) % all.length;
     return all[index].id;
+  }
+
+  /// UTC calendar day immediately before [utc]'s date key.
+  static String yesterdayDateKey(DateTime utc) {
+    final day = DateTime.utc(utc.year, utc.month, utc.day)
+        .subtract(const Duration(days: 1));
+    return dailyDateKey(day);
+  }
+
+  /// Best PUSH floor from yesterday (or today's so-far peak / stale peak).
+  /// Used so Daily Run tracks real crawl progress instead of always floor 1.
+  static int dailyEchoBaseFloor(GameState state, DateTime utc) {
+    final today = dailyDateKey(utc);
+    final yday = yesterdayDateKey(utc);
+    final md = state.metaDepth;
+    if (md.prevPushPeakDate == yday && md.prevPushPeakFloor > 0) {
+      return md.prevPushPeakFloor;
+    }
+    if (md.pushPeakDate == yday && md.pushPeakFloor > 0) {
+      return md.pushPeakFloor;
+    }
+    if (md.pushPeakDate == today && md.pushPeakFloor > 0) {
+      return md.pushPeakFloor;
+    }
+    if (md.prevPushPeakFloor > 0) return md.prevPushPeakFloor;
+    if (md.pushPeakFloor > 0) return md.pushPeakFloor;
+    if (state.highestFloorCleared > 0) return state.highestFloorCleared;
+    // Cold start after Ascend / brand-new: aim near the AL boss rung.
+    final boss = DungeonCatalog.bossFloor(state.ascensionLevel);
+    return max(1, boss ~/ 2);
+  }
+
+  /// Daily Run floor: one step past yesterday's PUSH peak so it needs a push.
+  static int dailyEchoFloor(GameState state, DateTime utc) {
+    final base = dailyEchoBaseFloor(state, utc);
+    final boss = DungeonCatalog.bossFloor(state.ascensionLevel);
+    // Soft cap: boss + 2 keeps echoes inside a stretch fight, not endless.
+    final cap = max(boss + 2, 6);
+    return (base + 1).clamp(1, cap);
   }
 
   /// Whether today's Daily Run has already been claimed on [state].

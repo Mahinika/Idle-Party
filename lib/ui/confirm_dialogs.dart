@@ -371,6 +371,7 @@ Future<void> confirmDailyRun(
 ) async {
   if (director.isDailyClaimedToday) return;
   final dungeonId = director.dailyDungeonId;
+  final echoFloor = director.dailyEchoFloor;
   WebClickBridge.pushLayer();
   try {
     final ok = await showDialog<bool>(
@@ -383,7 +384,7 @@ Future<void> confirmDailyRun(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              StoryLore.dailyRun(dungeonId),
+              StoryLore.dailyRun(dungeonId, floor: echoFloor),
               style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),
             const SizedBox(height: 8),
@@ -393,9 +394,10 @@ Future<void> confirmDailyRun(
             ),
             const SizedBox(height: 8),
             Text(
-              'How it works: one free seeded floor — separate from Daily Vault '
-              'and Quests. Clear it, then return to hub. Leave from the dungeon '
-              'bar if you need out.',
+              'How it works: one free seeded floor scaled from yesterday\'s '
+              'PUSH peak (F$echoFloor) — separate from Daily Vault and Quests. '
+              'Clear it, then return to hub. Leave from the dungeon bar if you '
+              'need out.',
               style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
             ),
           ],

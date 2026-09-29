@@ -1707,7 +1707,13 @@ class GameDirector extends ChangeNotifier {
       _startSpatialLoop();
     }
     _syncHubIdleTimer();
-    showToast(StoryLore.dailyRun(_state.dungeonId), life: 3.2);
+    showToast(
+      StoryLore.dailyRun(
+        _state.dungeonId,
+        floor: _state.currentRoom.floorNumber,
+      ),
+      life: 3.2,
+    );
     notifyListeners();
     unawaited(_persistFlush());
   }
@@ -1716,6 +1722,10 @@ class GameDirector extends ChangeNotifier {
 
   String get dailyDungeonId =>
       MetaSystems.dailyDungeonId(DateTime.now().toUtc());
+
+  /// Floor today's Daily Run will use (yesterday's PUSH peak + 1).
+  int get dailyEchoFloor =>
+      MetaSystems.dailyEchoFloor(_state, DateTime.now().toUtc());
 
   void enterGauntlet() {
     if (_isLoading) return;

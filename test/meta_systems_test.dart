@@ -52,8 +52,59 @@ void main() {
         expect(result.dailyClaimed, isFalse);
         expect(result.lastDailyDate, MetaSystems.dailyDateKey(now));
         expect(MetaSystems.isActiveDailyRun(result, now: now), isTrue);
+        expect(
+          result.currentRoom.floorNumber,
+          MetaSystems.dailyEchoFloor(state, now),
+        );
       },
     );
+
+    test('dailyEchoFloor stretches past yesterday PUSH peak', () {
+      final now = DateTime.utc(2026, 8, 10, 12);
+      final yday = MetaSystems.yesterdayDateKey(now);
+      final base = GameLogic.createInitialState(now: now);
+      var state = base.copyWith(
+        metaDepth: base.metaDepth.copyWith(
+          prevPushPeakDate: yday,
+          prevPushPeakFloor: 4,
+        ),
+      );
+      expect(MetaSystems.dailyEchoBaseFloor(state, now), 4);
+      expect(MetaSystems.dailyEchoFloor(state, now), 5);
+
+      state = GameLogic.enterDaily(state, now: now);
+      expect(state.currentRoom.floorNumber, 5);
+      expect(state.highestFloorCleared, 4);
+    });
+
+    test('PUSH clear notes today peak; vault day-roll archives it', () {
+      final now = DateTime.now().toUtc();
+      var state = GameLogic.createInitialState(now: now);
+      state = GameLogic.enterDungeon(state, dungeonId: 'sandy');
+      state = state.copyWith(enemies: const []);
+      state = GameLogic.completeCurrentRoom(state, goldGain: 0);
+      expect(state.metaDepth.pushPeakDate, MetaSystems.dailyDateKey(now));
+      expect(state.metaDepth.pushPeakFloor, greaterThanOrEqualTo(1));
+
+      final peak = state.metaDepth.pushPeakFloor;
+      final yday = MetaSystems.dailyDateKey(now);
+      final tomorrow = DateTime.utc(now.year, now.month, now.day)
+          .add(const Duration(days: 1));
+      // Seed as if the peak was logged yesterday, then roll the vault day.
+      state = state.copyWith(
+        metaDepth: state.metaDepth.copyWith(
+          pushPeakDate: yday,
+          pushPeakFloor: peak,
+          prevPushPeakDate: '',
+          prevPushPeakFloor: 0,
+          dailyVaultDate: yday,
+        ),
+      );
+      state = GameLogic.ensureDailyVault(state, now: tomorrow);
+      expect(state.metaDepth.prevPushPeakDate, yday);
+      expect(state.metaDepth.prevPushPeakFloor, peak);
+      expect(MetaSystems.dailyEchoFloor(state, tomorrow), peak + 1);
+    });
 
     test('daily floor clear claims reward and returns to hub', () {
       final now = DateTime.utc(2026, 8, 9, 12);

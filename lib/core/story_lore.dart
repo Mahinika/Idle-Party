@@ -81,9 +81,9 @@ abstract final class StoryLore {
     return 'A new gate: ${def.name}.';
   }
 
-  static String dailyRun(String dungeonId) {
+  static String dailyRun(String dungeonId, {int floor = 1}) {
     final def = DungeonCatalog.byId(dungeonId);
-    return "Daily echo — ${def.name}. Clear 1 floor · +25e";
+    return "Daily echo — ${def.name} F$floor. Clear 1 floor · +25e";
   }
 
   static String ascendConfirmBody({

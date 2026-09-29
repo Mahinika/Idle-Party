@@ -248,6 +248,10 @@ class MetaDepthState {
     this.dailyVaultClears = 0,
     this.dailyBestTimedKey = 0,
     this.dailyVaultClaimed = false,
+    this.pushPeakDate = '',
+    this.pushPeakFloor = 0,
+    this.prevPushPeakDate = '',
+    this.prevPushPeakFloor = 0,
     this.favoritePetSpecies = '',
     this.petRosterCapBonus = 0,
     this.zoneTrophies = const <String>[],
@@ -412,6 +416,18 @@ class MetaDepthState {
 
   /// Whether today's vault was claimed.
   final bool dailyVaultClaimed;
+
+  /// UTC date key for today's best PUSH floor clear (Daily Run scaling).
+  final String pushPeakDate;
+
+  /// Highest PUSH floor cleared on [pushPeakDate] (not farm / gauntlet / rift).
+  final int pushPeakFloor;
+
+  /// UTC date key for the previous day's PUSH peak (Daily Run uses this).
+  final String prevPushPeakDate;
+
+  /// Highest PUSH floor cleared on [prevPushPeakDate].
+  final int prevPushPeakFloor;
 
   final String favoritePetSpecies;
   final int petRosterCapBonus;
@@ -718,6 +734,10 @@ class MetaDepthState {
     int? dailyVaultClears,
     int? dailyBestTimedKey,
     bool? dailyVaultClaimed,
+    String? pushPeakDate,
+    int? pushPeakFloor,
+    String? prevPushPeakDate,
+    int? prevPushPeakFloor,
     String? favoritePetSpecies,
     int? petRosterCapBonus,
     List<String>? zoneTrophies,
@@ -864,6 +884,10 @@ class MetaDepthState {
       dailyVaultClears: dailyVaultClears ?? this.dailyVaultClears,
       dailyBestTimedKey: dailyBestTimedKey ?? this.dailyBestTimedKey,
       dailyVaultClaimed: dailyVaultClaimed ?? this.dailyVaultClaimed,
+      pushPeakDate: pushPeakDate ?? this.pushPeakDate,
+      pushPeakFloor: pushPeakFloor ?? this.pushPeakFloor,
+      prevPushPeakDate: prevPushPeakDate ?? this.prevPushPeakDate,
+      prevPushPeakFloor: prevPushPeakFloor ?? this.prevPushPeakFloor,
       favoritePetSpecies: favoritePetSpecies ?? this.favoritePetSpecies,
       petRosterCapBonus: petRosterCapBonus ?? this.petRosterCapBonus,
       zoneTrophies: zoneTrophies ?? this.zoneTrophies,
@@ -1025,6 +1049,10 @@ class MetaDepthState {
     'dailyVaultClears': dailyVaultClears,
     'dailyBestTimedKey': dailyBestTimedKey,
     'dailyVaultClaimed': dailyVaultClaimed,
+    'pushPeakDate': pushPeakDate,
+    'pushPeakFloor': pushPeakFloor,
+    'prevPushPeakDate': prevPushPeakDate,
+    'prevPushPeakFloor': prevPushPeakFloor,
     'favoritePetSpecies': favoritePetSpecies,
     'petRosterCapBonus': petRosterCapBonus,
     'zoneTrophies': zoneTrophies,
@@ -1187,6 +1215,12 @@ class MetaDepthState {
       dailyBestTimedKey: ((json['dailyBestTimedKey'] as num?)?.toInt() ?? 0)
           .clamp(0, kEndlessLadderBound),
       dailyVaultClaimed: (json['dailyVaultClaimed'] as bool?) ?? false,
+      pushPeakDate: (json['pushPeakDate'] as String?) ?? '',
+      pushPeakFloor: ((json['pushPeakFloor'] as num?)?.toInt() ?? 0)
+          .clamp(0, 999),
+      prevPushPeakDate: (json['prevPushPeakDate'] as String?) ?? '',
+      prevPushPeakFloor: ((json['prevPushPeakFloor'] as num?)?.toInt() ?? 0)
+          .clamp(0, 999),
       favoritePetSpecies: (json['favoritePetSpecies'] as String?) ?? '',
       petRosterCapBonus: (json['petRosterCapBonus'] as num?)?.toInt() ?? 0,
       zoneTrophies:
