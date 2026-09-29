@@ -362,6 +362,10 @@ class MetaDepthState {
     this.notifyPrompted = false,
     this.notifyPingMs = const <int>[],
     this.reviewPrompted = false,
+    this.friendCode = '',
+    this.friendClaimsPaid = 0,
+    this.friendInviteUsed = '',
+    this.friendReferrerChecked = false,
   });
 
   final int sanctuaryXpLevel;
@@ -694,6 +698,18 @@ class MetaDepthState {
   /// Survives Ascend. Never tied to loot.
   final bool reviewPrompted;
 
+  /// This save's friend-invite code. Survives Ascend. Empty until shared.
+  final String friendCode;
+
+  /// Friend installs already paid out as Ad Tickets on this save.
+  final int friendClaimsPaid;
+
+  /// Friend code this save already submitted (one phone, one invite).
+  final String friendInviteUsed;
+
+  /// Play install referrer was read once on this save.
+  final bool friendReferrerChecked;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -847,6 +863,10 @@ class MetaDepthState {
     bool? notifyPrompted,
     List<int>? notifyPingMs,
     bool? reviewPrompted,
+    String? friendCode,
+    int? friendClaimsPaid,
+    String? friendInviteUsed,
+    bool? friendReferrerChecked,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -1014,6 +1034,11 @@ class MetaDepthState {
       notifyPrompted: notifyPrompted ?? this.notifyPrompted,
       notifyPingMs: notifyPingMs ?? this.notifyPingMs,
       reviewPrompted: reviewPrompted ?? this.reviewPrompted,
+      friendCode: friendCode ?? this.friendCode,
+      friendClaimsPaid: friendClaimsPaid ?? this.friendClaimsPaid,
+      friendInviteUsed: friendInviteUsed ?? this.friendInviteUsed,
+      friendReferrerChecked:
+          friendReferrerChecked ?? this.friendReferrerChecked,
     );
   }
 
@@ -1162,6 +1187,10 @@ class MetaDepthState {
     'notifyPrompted': notifyPrompted,
     'notifyPingMs': notifyPingMs,
     'reviewPrompted': reviewPrompted,
+    'friendCode': friendCode,
+    'friendClaimsPaid': friendClaimsPaid,
+    'friendInviteUsed': friendInviteUsed,
+    'friendReferrerChecked': friendReferrerChecked,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -1216,8 +1245,10 @@ class MetaDepthState {
           .clamp(0, kEndlessLadderBound),
       dailyVaultClaimed: (json['dailyVaultClaimed'] as bool?) ?? false,
       pushPeakDate: (json['pushPeakDate'] as String?) ?? '',
-      pushPeakFloor: ((json['pushPeakFloor'] as num?)?.toInt() ?? 0)
-          .clamp(0, 999),
+      pushPeakFloor: ((json['pushPeakFloor'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        999,
+      ),
       prevPushPeakDate: (json['prevPushPeakDate'] as String?) ?? '',
       prevPushPeakFloor: ((json['prevPushPeakFloor'] as num?)?.toInt() ?? 0)
           .clamp(0, 999),
@@ -1237,21 +1268,27 @@ class MetaDepthState {
       lifetimePetMerges: (json['lifetimePetMerges'] as num?)?.toInt() ?? 0,
       lifetimeAscends: (json['lifetimeAscends'] as num?)?.toInt() ?? 0,
       highestHardmodeCleared:
-          ((json['highestHardmodeCleared'] as num?)?.toInt() ?? 0)
-              .clamp(0, kEndlessLadderBound),
+          ((json['highestHardmodeCleared'] as num?)?.toInt() ?? 0).clamp(
+            0,
+            kEndlessLadderBound,
+          ),
       gauntletBestFloor: (json['gauntletBestFloor'] as num?)?.toInt() ?? 0,
       lifetimeGauntletFloors:
           (json['lifetimeGauntletFloors'] as num?)?.toInt() ?? 0,
-      riftBestTier: ((json['riftBestTier'] as num?)?.toInt() ?? 0)
-          .clamp(0, kEndlessLadderBound),
+      riftBestTier: ((json['riftBestTier'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        kEndlessLadderBound,
+      ),
       riftPreferredTier: ((json['riftPreferredTier'] as num?)?.toInt() ?? 1)
           .clamp(1, kEndlessLadderBound),
       lifetimeRiftClears: (json['lifetimeRiftClears'] as num?)?.toInt() ?? 0,
       claimedRiftMilestones:
           (json['claimedRiftMilestones'] as List<dynamic>?)?.cast<String>() ??
           const [],
-      grBestTier: ((json['grBestTier'] as num?)?.toInt() ?? 0)
-          .clamp(0, kEndlessLadderBound),
+      grBestTier: ((json['grBestTier'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        kEndlessLadderBound,
+      ),
       grPreferredTier: ((json['grPreferredTier'] as num?)?.toInt() ?? 1).clamp(
         1,
         kEndlessLadderBound,
@@ -1338,18 +1375,23 @@ class MetaDepthState {
       adFree: (json['adFree'] as bool?) ?? false,
       wispUnlocked: (json['wispUnlocked'] as bool?) ?? false,
       wispGiftUtcDay: (json['wispGiftUtcDay'] as String?) ?? '',
-      wispGiftClaimsToday:
-          ((json['wispGiftClaimsToday'] as num?)?.toInt() ?? 0).clamp(0, 99),
+      wispGiftClaimsToday: ((json['wispGiftClaimsToday'] as num?)?.toInt() ?? 0)
+          .clamp(0, 99),
       wispNextSpawnMs: (json['wispNextSpawnMs'] as num?)?.toInt() ?? 0,
       wispPendingWatchGold:
-          ((json['wispPendingWatchGold'] as num?)?.toInt() ?? 0).clamp(0, 999999999),
-      wispPendingKeepGold:
-          ((json['wispPendingKeepGold'] as num?)?.toInt() ?? 0).clamp(0, 999999999),
+          ((json['wispPendingWatchGold'] as num?)?.toInt() ?? 0).clamp(
+            0,
+            999999999,
+          ),
+      wispPendingKeepGold: ((json['wispPendingKeepGold'] as num?)?.toInt() ?? 0)
+          .clamp(0, 999999999),
       shopStarterClaimed: (json['shopStarterClaimed'] as bool?) ?? false,
       shopBagBonusSlots: ((json['shopBagBonusSlots'] as num?)?.toInt() ?? 0)
           .clamp(0, 20),
-      shopPermScrolls: ((json['shopPermScrolls'] as num?)?.toInt() ?? 0)
-          .clamp(0, 127),
+      shopPermScrolls: ((json['shopPermScrolls'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        127,
+      ),
       redeemedCoupons:
           (json['redeemedCoupons'] as List<dynamic>?)?.cast<String>() ??
           const [],
@@ -1372,8 +1414,10 @@ class MetaDepthState {
             kEndlessLadderBound,
           ),
       challengeBestTinyKey:
-          ((json['challengeBestTinyKey'] as num?)?.toInt() ?? 0)
-              .clamp(0, kEndlessLadderBound),
+          ((json['challengeBestTinyKey'] as num?)?.toInt() ?? 0).clamp(
+            0,
+            kEndlessLadderBound,
+          ),
       worldBossWeekKey: (json['worldBossWeekKey'] as String?) ?? '',
       worldBossTickets: ((json['worldBossTickets'] as num?)?.toInt() ?? 3)
           .clamp(0, 3),
@@ -1410,7 +1454,23 @@ class MetaDepthState {
               .toList() ??
           const <int>[],
       reviewPrompted: (json['reviewPrompted'] as bool?) ?? false,
+      friendCode: _friendCode(json['friendCode'] as String?),
+      friendClaimsPaid: ((json['friendClaimsPaid'] as num?)?.toInt() ?? 0)
+          .clamp(0, 30),
+      friendInviteUsed: _friendCode(json['friendInviteUsed'] as String?),
+      friendReferrerChecked: (json['friendReferrerChecked'] as bool?) ?? false,
     );
+  }
+
+  /// Same alphabet and length as FriendReferral codes. Cap is 30 friends.
+  static final RegExp _friendCodeRe = RegExp(
+    r'^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$',
+  );
+
+  static String _friendCode(String? raw) {
+    final n = (raw ?? '').toUpperCase().replaceAll(RegExp('[^A-Z0-9]'), '');
+    if (!_friendCodeRe.hasMatch(n)) return '';
+    return n;
   }
 
   /// Old saves only had [adBoostUntilMs] (bundled ×2 gold + ATK). Copy into

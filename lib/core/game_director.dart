@@ -39,6 +39,8 @@ import 'play_store_update.dart';
 import 'screen_awake.dart';
 import 'shop_billing.dart';
 import 'coupon_codes.dart';
+import 'friend_referral.dart';
+import 'friend_referral_live.dart' as friend_live;
 import 'shop_catalog.dart';
 import 'shop_store.dart';
 import 'story_lore.dart';
@@ -197,6 +199,54 @@ class GameDirector extends ChangeNotifier {
     return _saveChain;
   }
 
+  FriendReferralSync? _friendSync;
+  Future<void> _friendChain = Future<void>.value();
+  int _friendEpoch = 0;
+
+  FriendReferralSync get _friends =>
+      _friendSync ??= friend_live.liveFriendReferralSync();
+
+  /// Test hook: friend list without Firebase.
+  @visibleForTesting
+  void debugSetFriendSync(FriendReferralSync sync) {
+    _friendSync = sync;
+  }
+
+  Future<void> _runFriend(
+    Future<FriendReferralOutcome> Function(FriendReferralSync sync) body,
+  ) {
+    final run = _friendChain.then((_) async {
+      try {
+        if (_isLoading) return;
+        final epoch = _friendEpoch;
+        final outcome = await body(_friends);
+        if (epoch != _friendEpoch || _isLoading) return;
+        if (!identical(outcome.state, _state)) {
+          _applyUpgrade(outcome.state);
+        }
+        final toast = outcome.toast;
+        if (toast != null && toast.isNotEmpty) {
+          showToast(toast, life: 2.6);
+        }
+      } catch (e, st) {
+        debugPrint('Friend referral failed: $e\n$st');
+      }
+    });
+    _friendChain = run;
+    return run;
+  }
+
+  /// Register this save's code, pay new friends, and read a Play install link.
+  Future<void> syncFriendReferral() => _runFriend((sync) => sync.sync(_state));
+
+  /// Create a code if needed and open the Android share sheet.
+  Future<void> shareFriendInvite() =>
+      _runFriend((sync) => sync.shareInvite(_state));
+
+  /// Friend types a code in SCROLLS. One phone, one invite.
+  Future<void> applyFriendCode(String raw) =>
+      _runFriend((sync) => sync.applyCode(_state, raw));
+
   /// Test hook: attempt a persist (no-op unless a real save exists).
   @visibleForTesting
   Future<void> debugTryPersist() {
@@ -329,8 +379,7 @@ class GameDirector extends ChangeNotifier {
   bool get wispMenuPaused => _wispMenuPaused;
 
   /// Lantern only paints in a dungeon — never on the hub World Path.
-  bool get isWispVisible =>
-      _state.inDungeon && _wispVisibleRemainingMs > 0;
+  bool get isWispVisible => _state.inDungeon && _wispVisibleRemainingMs > 0;
 
   bool get wispPendingChoice => WispGift.hasPendingChoice(_state.metaDepth);
 
@@ -722,6 +771,7 @@ class GameDirector extends ChangeNotifier {
       _syncHubIdleTimer();
       notifyListeners();
       DebugPlayLog.event('boot', DebugPlayLog.bootDetail(_state));
+      unawaited(syncFriendReferral());
       unawaited(refreshPlayUpdateNotice());
       unawaited(LocalNotify.init());
       // Ads / billing after first hub frames — Binder + Play Services hitch cold start.
@@ -792,6 +842,7 @@ class GameDirector extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+    _friendEpoch++;
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _spatial = null;
@@ -807,6 +858,7 @@ class GameDirector extends ChangeNotifier {
     _saveSlots = await _storage.listSlots();
     _syncHubIdleTimer();
     notifyListeners();
+    unawaited(syncFriendReferral());
     return true;
   }
 
@@ -815,6 +867,7 @@ class GameDirector extends ChangeNotifier {
     final slot = index.clamp(0, GameStorage.slotCount - 1);
     await _storage.clearSlot(slot);
     if (slot == _activeSlot) {
+      _friendEpoch++;
       _awaitingWipeChoice = false;
       uiFeedback.dismissOfflineSummary();
       _spatialTimer?.cancel();
@@ -836,6 +889,7 @@ class GameDirector extends ChangeNotifier {
     HeroRace partyRace = HeroRace.human,
     List<HeroRace>? partyRaces,
   }) async {
+    _friendEpoch++;
     final slot = (_pendingNewGameSlot ?? _activeSlot).clamp(
       0,
       GameStorage.slotCount - 1,
@@ -864,6 +918,7 @@ class GameDirector extends ChangeNotifier {
     await _persistFlush();
     _saveSlots = await _storage.listSlots();
     notifyListeners();
+    unawaited(syncFriendReferral());
   }
 
   /// Continue from the loaded save into play (no-op if already ready).

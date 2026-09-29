@@ -67,5 +67,10 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="discord" />
         </intent>
+        <!-- Share sheet: Messages, mail, Discord, and the rest. Not SEND_SMS. -->
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="text/plain" />
+        </intent>
     </queries>
 </manifest>

@@ -2,13 +2,14 @@
 
 Idle Party is a single-player idle RPG. This document describes how the app handles data and is suitable for Google Play Data safety disclosures.
 
-**Last updated:** 2026-09-28.
+**Last updated:** 2026-09-29.
 
 ## Summary
 
 - **No Idle Party account.** You do not create a username or password with us.
 - **Optional Google Play Games.** You may sign in with Play Games for seasonal leaderboards and cloud save. This is opt-in and not required to play.
 - **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **SCROLLS**) for an **Ad Ticket**. You spend tickets on timed scrolls (Scroll of Damage, Scroll of Gold, Scroll of XP, Scroll of Speed, Scroll of Loot, Scroll of Haste, Scroll of Battle, Scroll of Rest). Ads do not play unless you start them. Ad serving uses Google AdMob.
+- **Tip a friend (optional).** From hub **SCROLLS** you may share a Play Store link that contains a short code stored in your save. If a friend installs from that link and opens the app, or types your code, the Android app may send Google **Firebase** a hashed install id, that code, and the time. You get 10 Ad Tickets on your save. No name, no email, and no record of who you texted or emailed. The message itself is sent by the app you pick (Messages, mail, Discord, and so on).
 - **Analytics (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, first dungeon enter, first combat reward, first boss, returning the next day, entering/leaving a dungeon, Ascend, party wipe). This helps Cognifox Studio understand what works. In the **EU/EEA**, collection follows the Google UMP consent prompt (same path as ads; **SETTINGS → AD PRIVACY**). Outside regions where that form is required, Google may allow collection without a separate prompt. Web playtest and builds without Firebase config do not send analytics.
 - **Local save by default.** Progress is stored on your device (e.g. SharedPreferences / platform equivalent).
 
@@ -38,9 +39,10 @@ The app may let you **copy a save to the clipboard** or **paste a save from the 
 
 Aside from normal OS / store behavior (install, updates), optional Play Billing
 when you buy from SHOP, optional Play Games calls when you opt in, optional
-Firebase Analytics on Android (see below), and optional AdMob when you use
-SCROLLS, Idle Party does not require an Idle Party account or Idle Party
-cloud service.
+Firebase Analytics on Android (see below), optional friend-invite checks on
+Android (see below), and optional AdMob when you use SCROLLS, Idle Party does
+not require an Idle Party account. Google hosts Firebase. Idle Party does not
+run its own server.
 
 On **Google Play installs** (Android), the app may ask Google Play whether a newer Idle Party is available and show an in-app notice. That check goes to Google, not to an Idle Party server. Sideloaded APKs skip it.
 
@@ -56,6 +58,17 @@ On **Android** builds that include Firebase configuration (`google-services.json
 - Analytics is not sent from web playtest builds, Flutter tests, or Android builds that lack Firebase config.
 
 Idle Party does not run its own analytics server; Google hosts Firebase.
+
+## Tip a friend (Android)
+
+Hub **SCROLLS → TIP A FRIEND** is optional:
+
+- Your save keeps a short invite code. Sharing opens the phone's share sheet. Idle Party does not send the SMS, email, or chat itself, and does not ask for SMS permission.
+- The shared text includes a Play Store link with that code, and the code in plain words.
+- When a friend installs from the link and opens the app, or types the code in **SCROLLS**, the app may write to **Cloud Firestore** in the same Firebase project: a hashed Android install id, the invite code, and the time of the write. That is how the inviting save learns a friend arrived.
+- The inviting save then receives **10 Ad Tickets** per new install, up to 30 friends. Tickets stay in the local save.
+- There is still no Idle Party username or email. The anonymous Firebase sign-in used for this write is not a player profile.
+- Web playtest builds do not use the friend list. If Firebase is not configured, the share sheet can still open and the ticket grant waits.
 
 ## Optional real-money SHOP (Android / Google Play)
 
@@ -88,11 +101,13 @@ To stop sharing progress or scores with Play Games:
 
 To limit or stop Firebase Analytics / AdMob identifiers in the EU/EEA, use **SETTINGS → AD PRIVACY**, or clear app storage / uninstall. Google may retain aggregated analytics under their policies.
 
+Friend-invite rows are a hashed install id, a short code, and a time. Clearing app storage or uninstalling stops new writes from that phone. Google may keep those rows under their policies. There is no Idle Party account to delete.
+
 Local save on the device is removed when you clear the app’s storage or uninstall. Clipboard backups you made yourself stay on your device until you delete them.
 
 ## Children
 
-The game is intended as a general-audience idle RPG. It does not collect personal information for profiles. Optional Play Games, optional rewarded ads (AdMob), and Firebase Analytics may process identifiers under Google’s policies when those features run. The game is not directed at children.
+The game is intended as a general-audience idle RPG. It does not collect personal information for profiles. Optional Play Games, optional rewarded ads (AdMob), Firebase Analytics, and the optional friend-invite list may process identifiers under Google’s policies when those features run. The game is not directed at children.
 
 ## Changes
 

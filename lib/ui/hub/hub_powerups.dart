@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/ad_boost.dart';
 import '../../core/ad_rewarded.dart';
 import '../../core/game_director.dart';
+import 'friend_tip_block.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
 import '../game_icon.dart';
@@ -16,11 +17,7 @@ import '../web_click_bridge.dart';
 
 /// Floating SCROLLS overlay — rolled-scroll glyph on the hub map, not in the header.
 class HubPowerupsFab extends StatefulWidget {
-  const HubPowerupsFab({
-    super.key,
-    required this.state,
-    required this.onOpen,
-  });
+  const HubPowerupsFab({super.key, required this.state, required this.onOpen});
 
   final GameState state;
   final VoidCallback onOpen;
@@ -203,6 +200,7 @@ Future<void> openPowerupsSheet(
   GameDirector director,
 ) async {
   WebClickBridge.pushLayer();
+  unawaited(director.syncFriendReferral());
   try {
     await showModalBottomSheet<void>(
       context: context,
@@ -215,9 +213,10 @@ Future<void> openPowerupsSheet(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       builder: (ctx) {
         final viewPad = MediaQuery.viewPaddingOf(ctx);
+        final keyboard = MediaQuery.viewInsetsOf(ctx).bottom;
         // Same stack as GEAR / KEY: fill above the bottom bar, not the status
         // strip and not over the tabs.
-        final bottomGap = GameTheme.bottomNavHeight + viewPad.bottom;
+        final bottomGap = GameTheme.bottomNavHeight + viewPad.bottom + keyboard;
         return Padding(
           padding: EdgeInsets.only(top: viewPad.top, bottom: bottomGap),
           child: ListenableBuilder(
@@ -240,10 +239,7 @@ Future<void> openPowerupsSheet(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          'SCROLLS',
-                          style: GameTheme.menuTitle(size: 18),
-                        ),
+                        Text('SCROLLS', style: GameTheme.menuTitle(size: 18)),
                         const SizedBox(height: 6),
                         Row(
                           children: [
@@ -325,6 +321,8 @@ Future<void> openPowerupsSheet(
                           },
                           onPreview: director.grantPowerupHour,
                         ),
+                        const SizedBox(height: 8),
+                        FriendTipBlock(director: director),
                         const SizedBox(height: 10),
                         MenuChrome.sectionLabelScoped(
                           'USE',
@@ -465,20 +463,13 @@ class _BuffRow extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (on)
-                        MenuChrome.chip(
-                          label: timer!,
-                          selected: true,
-                        ),
+                      if (on) MenuChrome.chip(label: timer!, selected: true),
                     ],
                   ),
                   const SizedBox(height: 2),
                   Text(
                     offer.effect,
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.mossLit,
-                    ),
+                    style: GameTheme.body(size: 12, color: GameTheme.mossLit),
                   ),
                 ],
               ),

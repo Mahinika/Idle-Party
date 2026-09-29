@@ -48,6 +48,12 @@ dependencies:
   firebase_analytics: ^12.5.0
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
+  share_plus: ^13.3.0
+  play_install_referrer: ^0.5.0
+  firebase_auth: ^6.7.0
+  cloud_firestore: ^6.10.0
+  crypto: ^3.0.7
+  android_id: ^0.5.2+1
 
 dev_dependencies:
   flutter_test:

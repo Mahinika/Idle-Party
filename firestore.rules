@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function friendCodeId(code) {
+      return code.matches('^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$');
+    }
+
+    match /friendCodes/{code} {
+      allow get: if signedIn() && friendCodeId(code);
+      allow list: if false;
+      allow create: if signedIn()
+        && friendCodeId(code)
+        && request.resource.data.keys().hasOnly(['ownerDevice', 'claims', 'at'])
+        && request.resource.data.claims == 0
+        && request.resource.data.ownerDevice is string
+        && request.resource.data.ownerDevice.size() == 64
+        && request.resource.data.at == request.time;
+      allow update: if signedIn()
+        && request.resource.data.ownerDevice == resource.data.ownerDevice
+        && request.resource.data.at == resource.data.at
+        && request.resource.data.claims == resource.data.claims + 1
+        && request.resource.data.claims <= 30
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claims']);
+      allow delete: if false;
+    }
+
+    match /friendClaims/{device} {
+      allow get: if signedIn() && device.size() == 64;
+      allow list: if false;
+      allow create: if signedIn()
+        && device.size() == 64
+        && request.resource.data.keys().hasOnly(['code', 'device', 'at'])
+        && request.resource.data.device == device
+        && request.resource.data.code is string
+        && friendCodeId(request.resource.data.code)
+        && request.resource.data.at == request.time
+        && exists(/databases/$(database)/documents/friendCodes/$(request.resource.data.code))
+        && get(/databases/$(database)/documents/friendCodes/$(request.resource.data.code)).data.ownerDevice != device
+        && get(/databases/$(database)/documents/friendCodes/$(request.resource.data.code)).data.claims < 30;
+      allow update, delete: if false;
+    }
+  }
+}
