@@ -231,7 +231,6 @@ class HubHeader extends StatelessWidget {
   const HubHeader({
     super.key,
     required this.ascensionLevel,
-    required this.partySubline,
     required this.gold,
     required this.essence,
     required this.willRank,
@@ -246,10 +245,10 @@ class HubHeader extends StatelessWidget {
     this.huntHint,
     this.blessingStacks = 0,
     this.showBlessingStacks = false,
+    this.hubGoldRate,
   });
 
   final int ascensionLevel;
-  final String partySubline;
   final int gold;
   final int essence;
   final String willRank;
@@ -271,6 +270,9 @@ class HubHeader extends StatelessWidget {
   /// Hide Blessing until ESSENCE / KEEP is unlocked.
   final bool showBlessingStacks;
 
+  /// Compact +g/m next to gold; null hides the suffix.
+  final String? hubGoldRate;
+
   /// Short AL-cap pill: tease the tonight hunt — never "MAX" (not game over).
   static String alCapPillLabel({
     required int ascensionLevel,
@@ -287,132 +289,65 @@ class HubHeader extends StatelessWidget {
     return 'AL $ascensionLevel · $hunt$bless';
   }
 
+  void _openIncome(BuildContext context) {
+    showHubIncomeSheet(
+      context,
+      incomeLine: incomeLine,
+      multiplierLine: multiplierLine,
+      displayTitle: displayTitle,
+      willRank: willRank,
+      collectionScore: collectionScore,
+    );
+  }
+
+  String _alPillLabel() {
+    if (plainChrome) return '';
+    if (ascensionLevel < GameLogic.maxAscensionLevel) {
+      final bless = showBlessingStacks && blessingStacks > 0
+          ? ' · Blessing ×$blessingStacks'
+          : '';
+      return 'AL $ascensionLevel$bless';
+    }
+    return HubHeader.alCapPillLabel(
+      ascensionLevel: ascensionLevel,
+      huntHint: huntHint,
+      blessingStacks: blessingStacks,
+      showBlessingStacks: showBlessingStacks,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final incomeColor = dimIncome
-        ? GameTheme.parchmentDim
-        : GameTheme.mossLit;
-    return Column(
+    final rateSuffix = !dimIncome ? hubGoldRate : null;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          children: [
-            WalletStrip(
-              gold: gold,
-              essence: essence,
-              showEssence: showEssence,
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  'IDLE PARTY',
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  style: GameTheme.pixel(
-                    size: 18,
-                    color: GameTheme.torch,
-                    height: 1.25,
-                  ),
-                ),
-              ),
-            ),
-            GameIconButton(
-              label: 'Settings',
-              asset: UiIcon.settings,
-              size: 18,
-              onPressed: onOpenSettings,
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          partySubline,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+        WalletStrip(
+          gold: gold,
+          essence: essence,
+          showEssence: showEssence,
+          goldRateSuffix: rateSuffix,
+          onGoldRateTap: rateSuffix != null ? () => _openIncome(context) : null,
         ),
         if (!plainChrome) ...[
-          const SizedBox(height: 6),
-          Center(
-            child: HubStatPill(
-              icon: UiIcon.ascend,
-              caption: 'Ascend',
-              label: () {
-                if (ascensionLevel < GameLogic.maxAscensionLevel) {
-                  final bless = showBlessingStacks && blessingStacks > 0
-                      ? ' · Blessing ×$blessingStacks'
-                      : '';
-                  return 'AL $ascensionLevel$bless';
-                }
-                return HubHeader.alCapPillLabel(
-                  ascensionLevel: ascensionLevel,
-                  huntHint: huntHint,
-                  blessingStacks: blessingStacks,
-                  showBlessingStacks: showBlessingStacks,
-                );
-              }(),
-            ),
-          ),
-        ],
-        const SizedBox(height: 4),
-        if (dimIncome) ...[
-          Text(
-            () {
-              final hunt = huntHint;
-              if (hunt != null && hunt.isNotEmpty) {
-                return 'Tonight · $hunt';
-              }
-              return 'Tonight · endgame hunt';
-            }(),
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-          ),
-        ] else ...[
-          WebClickScope(
-            label: 'Show income details',
-            onPressed: () => showHubIncomeSheet(
-              context,
-              incomeLine: incomeLine,
-              multiplierLine: multiplierLine,
-              displayTitle: displayTitle,
-              willRank: willRank,
-              collectionScore: collectionScore,
-            ),
-            child: Semantics(
-              button: true,
-              label: 'Show income details. $incomeLine',
-              onTap: () => showHubIncomeSheet(
-                context,
-                incomeLine: incomeLine,
-                multiplierLine: multiplierLine,
-                displayTitle: displayTitle,
-                willRank: willRank,
-                collectionScore: collectionScore,
-              ),
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => showHubIncomeSheet(
-                  context,
-                  incomeLine: incomeLine,
-                  multiplierLine: multiplierLine,
-                  displayTitle: displayTitle,
-                  willRank: willRank,
-                  collectionScore: collectionScore,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Text(
-                    incomeLine,
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(size: 13, color: incomeColor),
-                  ),
-                ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Center(
+              child: HubStatPill(
+                icon: UiIcon.ascend,
+                caption: 'Ascend',
+                label: _alPillLabel(),
               ),
             ),
           ),
-        ],
+        ] else
+          const Spacer(),
+        GameIconButton(
+          label: 'Settings',
+          asset: UiIcon.settings,
+          size: 18,
+          onPressed: onOpenSettings,
+        ),
       ],
     );
   }

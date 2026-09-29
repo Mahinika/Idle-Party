@@ -44,12 +44,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('IDLE PARTY'), findsOneWidget);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
-    expect(find.textContaining('The Party · Boss on F'), findsOneWidget);
+    expect(find.textContaining('+'), findsWidgets);
     expect(find.bySemanticsLabel(RegExp(r'Sandy Caverns')), findsWidgets);
-    expect(find.textContaining('Boss on F'), findsWidgets);
-    expect(find.textContaining('Boss:'), findsOneWidget);
+    expect(find.text('Sandy Caverns'), findsOneWidget);
     expect(find.text('GEAR'), findsOneWidget);
     expect(find.text('GOLD'), findsNothing);
     expect(find.text('SHOP'), findsNothing);
@@ -129,8 +127,9 @@ void main() {
     expect(find.textContaining('FARM R'), findsWidgets);
     expect(find.textContaining('GAUNTLET'), findsWidgets);
 
-    await tester.tap(find.text('PATH'));
+    await tester.tap(find.text('PATH').last);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.bySemanticsLabel(RegExp(r'Mothveil Hollow')), findsWidgets);
   });
 

@@ -35,9 +35,8 @@ import 'shell/discord_thanks_overlay.dart';
 import 'shell/whats_new_overlay.dart';
 import 'hub/hub_endgame_map.dart';
 import 'hub/hub_header.dart';
-import 'hub/hub_powerups.dart';
+import 'hub/hub_map_extras.dart';
 import 'hub/hub_ranks.dart';
-import 'shell/scroll_buff_stack.dart';
 import 'hub/hub_today_card.dart';
 import 'hub/hub_world_map.dart';
 
@@ -160,16 +159,11 @@ class _HubScreenState extends State<HubScreen>
       // FEEL 298
       await Future<void>.delayed(const Duration(milliseconds: 450));
       if (!mounted) return;
-      await _maybeShowWhatsNew();
-      await _maybeShowDiscordThanks();
-      await _maybeShowNotifyOptIn();
-      // One extra card per hub visit — rating waits if What's New / Discord /
-      // reminders already used the turn.
-      if (!_offeredWhatsNew &&
-          !_offeredDiscordThanks &&
-          !_offeredNotifyOptIn) {
-        await _maybeShowPlayReview();
-      }
+      // One overlay card per hub visit after offline summary.
+      if (await _maybeShowWhatsNew()) return;
+      if (await _maybeShowDiscordThanks()) return;
+      if (await _maybeShowNotifyOptIn()) return;
+      await _maybeShowPlayReview();
     });
   }
 
@@ -181,47 +175,51 @@ class _HubScreenState extends State<HubScreen>
     await showOfflineProgressDialog(context, director);
   }
 
-  Future<void> _maybeShowWhatsNew() async {
-    if (_offeredWhatsNew || !mounted) return;
-    if (director.state.inDungeon) return;
-    if (!MetaSystems.hasUnseenChangelog(director.state)) return;
+  Future<bool> _maybeShowWhatsNew() async {
+    if (_offeredWhatsNew || !mounted) return false;
+    if (director.state.inDungeon) return false;
+    if (!MetaSystems.hasUnseenChangelog(director.state)) return false;
     // Don't cover READY claimables — let TODAY breathe first.
     final chase = HubChase.forState(director.state);
-    if (chase.urgency == HubChaseUrgency.ready) return;
+    if (chase.urgency == HubChaseUrgency.ready) return false;
     await Future<void>.delayed(const Duration(milliseconds: 1400));
-    if (!mounted || _offeredWhatsNew) return;
-    if (director.state.inDungeon) return;
-    if (!MetaSystems.hasUnseenChangelog(director.state)) return;
+    if (!mounted || _offeredWhatsNew) return false;
+    if (director.state.inDungeon) return false;
+    if (!MetaSystems.hasUnseenChangelog(director.state)) return false;
     _offeredWhatsNew = true;
     await WhatsNewOverlay.show(context, director);
+    return true;
   }
 
-  Future<void> _maybeShowDiscordThanks() async {
-    if (_offeredDiscordThanks || !mounted) return;
-    if (director.state.inDungeon) return;
-    if (!DiscordThanksOverlay.shouldOffer(director)) return;
+  Future<bool> _maybeShowDiscordThanks() async {
+    if (_offeredDiscordThanks || !mounted) return false;
+    if (director.state.inDungeon) return false;
+    if (!DiscordThanksOverlay.shouldOffer(director)) return false;
     _offeredDiscordThanks = true;
     await DiscordThanksOverlay.show(context, director);
+    return true;
   }
 
-  Future<void> _maybeShowNotifyOptIn() async {
-    if (_offeredNotifyOptIn || !mounted) return;
-    if (director.state.inDungeon) return;
-    if (!NotifyOptInOverlay.shouldOffer(director)) return;
+  Future<bool> _maybeShowNotifyOptIn() async {
+    if (_offeredNotifyOptIn || !mounted) return false;
+    if (director.state.inDungeon) return false;
+    if (!NotifyOptInOverlay.shouldOffer(director)) return false;
     _offeredNotifyOptIn = true;
     await NotifyOptInOverlay.show(context, director);
+    return true;
   }
 
-  Future<void> _maybeShowPlayReview() async {
-    if (_offeredPlayReview || !mounted) return;
-    if (director.state.inDungeon) return;
-    if (!PlayReviewAskOverlay.shouldOffer(director)) return;
+  Future<bool> _maybeShowPlayReview() async {
+    if (_offeredPlayReview || !mounted) return false;
+    if (director.state.inDungeon) return false;
+    if (!PlayReviewAskOverlay.shouldOffer(director)) return false;
     await Future<void>.delayed(const Duration(milliseconds: 1400));
-    if (!mounted || _offeredPlayReview) return;
-    if (director.state.inDungeon) return;
-    if (!PlayReviewAskOverlay.shouldOffer(director)) return;
+    if (!mounted || _offeredPlayReview) return false;
+    if (director.state.inDungeon) return false;
+    if (!PlayReviewAskOverlay.shouldOffer(director)) return false;
     _offeredPlayReview = true;
     await PlayReviewAskOverlay.show(context, director);
+    return true;
   }
 
   @override
@@ -399,55 +397,25 @@ class _HubScreenState extends State<HubScreen>
         GameLogic.endgameUnlocked(state) &&
         (hubChaseOwnsEndgameRow(chase.kind) ||
             chase.kind == HubChaseKind.keystone);
-    final weekMod = state.metaDepth.weeklyModifier;
-    final keyAffixLabels = state.hardmodeLevel > 0
-        ? Keystone.previewAffixes(state).map(Keystone.label).toSet()
-        : const <String>{};
-    final showWeekAffix =
-        !short &&
-        state.hardmodeLevel > 0 &&
-        weekMod.isNotEmpty &&
-        GameLogic.showKeystoneJargon(state) &&
-        // Don't repeat the same affix under KEY +N and as Week · …
-        !keyAffixLabels.contains(Keystone.label(weekMod));
     final vaultOwnedByChase =
         chase.kind == HubChaseKind.claimDailyVault ||
         chase.kind == HubChaseKind.dailyVaultProgress;
     final showUrgentRow =
         chase.urgency != HubChaseUrgency.ready && !(endgameHunt && !canAscend);
 
+    final keyDialLevel = chase.kind == HubChaseKind.keystone
+        ? (chase.keyLevel ?? state.hardmodeLevel)
+        : state.hardmodeLevel;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (showWeekAffix) ...[
-          Text(
-            '${Keystone.label(weekMod)} · KEY — ${Keystone.blurb(weekMod)}',
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
-          ),
-          const SizedBox(height: 4),
-        ],
         HubTodayCard(
           chase: chase,
           compact: short,
-          // Short phones: one headline progress line; detail/why on taller screens.
           hideDetail: short,
-          actionLabel: cta.hideInlineChaseAction ||
-                  chase.kind == HubChaseKind.meetHero
-              ? null
-              : chaseActionLabel,
-          onAction: cta.hideInlineChaseAction || chase.kind == HubChaseKind.meetHero
-              ? null
-              : onAction,
+          hideWhy: true,
         ),
-        if (!short)
-          HubMetaPulse(
-            state: state,
-            chaseKind: chase.kind,
-            chaseUrgency: chase.urgency,
-          ),
         SizedBox(height: short ? 4 : 6),
         Builder(
           builder: (context) {
@@ -493,35 +461,41 @@ class _HubScreenState extends State<HubScreen>
             );
           },
         ),
-        if (secondaryLabel != null && secondaryAction != null) ...[
+        if (showMetaKeyLink ||
+            (secondaryLabel != null && secondaryAction != null)) ...[
           const SizedBox(height: 4),
-          GameButton(
-            label: secondaryLabel,
-            tip:
-                secondaryLabel.startsWith('ENTER') ||
-                    secondaryLabel == 'DAILY RUN'
-                ? 'Farm the selected zone'
-                : 'Also available',
-            style: GameButtonStyle.grey,
-            onPressed: secondaryAction,
-          ),
-        ],
-        if (showMetaKeyLink) ...[
-          const SizedBox(height: 4),
-          GameButton(
-            label:
-                'KEY DIAL · +${chase.kind == HubChaseKind.keystone ? (chase.keyLevel ?? state.hardmodeLevel) : state.hardmodeLevel}',
-            tip: 'Open KEY for Soft/Hard/Brutal, Rifts, and boards',
-            style: GameButtonStyle.grey,
-            onPressed: () {
-              if (chase.kind == HubChaseKind.keystone) {
-                final key = chase.keyLevel ?? state.hardmodeLevel;
-                if (director.state.hardmodeLevel != key) {
-                  director.setHardmodeLevel(key);
-                }
-              }
-              router.open(MenuRoute.key);
-            },
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            children: [
+              if (showMetaKeyLink)
+                TextButton(
+                  onPressed: () {
+                    if (chase.kind == HubChaseKind.keystone) {
+                      final key = chase.keyLevel ?? state.hardmodeLevel;
+                      if (director.state.hardmodeLevel != key) {
+                        director.setHardmodeLevel(key);
+                      }
+                    }
+                    router.open(MenuRoute.key);
+                  },
+                  child: Text(
+                    'KEY +$keyDialLevel ›',
+                    style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+                  ),
+                ),
+              if (secondaryLabel != null && secondaryAction != null)
+                TextButton(
+                  onPressed: secondaryAction,
+                  child: Text(
+                    secondaryLabel,
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
         if (showUrgentRow)
@@ -581,7 +555,6 @@ class _HubScreenState extends State<HubScreen>
       _syncSelection(force: false);
     }
     final canAscend = GameLogic.canAscend(state);
-    final bossFloor = GameLogic.bossFloorFor(state);
     final unlockedSelected = _selectedHunt != null
         ? GameLogic.endgameUnlocked(state)
         : DungeonCatalog.isUnlocked(
@@ -635,8 +608,6 @@ class _HubScreenState extends State<HubScreen>
                               // not rebuild 60×/s (wallet + HubChase.forState).
                               HubHeader(
                                 ascensionLevel: state.ascensionLevel,
-                                partySubline:
-                                    '${state.partyName} · Boss on F$bossFloor',
                                 gold: state.gold,
                                 essence: state.essence,
                                 willRank: state.willRankTitle,
@@ -647,6 +618,9 @@ class _HubScreenState extends State<HubScreen>
                                   more: MoreSection.settings,
                                 ),
                                 incomeLine: GoldIncome.hubRateLine(state),
+                                hubGoldRate: hubChaseOwnsEndgameRow(chase.kind)
+                                    ? null
+                                    : GoldIncome.hubRateCompact(state),
                                 multiplierLine: GoldIncome.multiplierLine(
                                   state,
                                 ),
@@ -677,33 +651,6 @@ class _HubScreenState extends State<HubScreen>
                                 ),
                               ],
                               SizedBox(height: short ? 4 : 6),
-                              if (showEndgameLayer) ...[
-                                HubMapModeTabs(
-                                  showEndgame: _showEndgameMap,
-                                  onSelectPath: () => setState(() {
-                                    _userPickedZone = true;
-                                    _showEndgameMap = false;
-                                    if (_selectedHunt != null) {
-                                      _selectedId =
-                                          GameLogic.recommendedDungeonId(state);
-                                    }
-                                    _selectedHunt = null;
-                                  }),
-                                  onSelectEndgame: () => setState(() {
-                                    _userPickedZone = true;
-                                    _showEndgameMap = true;
-                                    _selectedHunt ??=
-                                        HubEndgameAct.huntForChase(
-                                          chase.kind,
-                                        ) ??
-                                        HubEndgameHunt.gauntlet;
-                                    _selectedId = HubEndgameAct.nodeFor(
-                                      _selectedHunt!,
-                                    ).portraitDungeonId;
-                                  }),
-                                ),
-                                SizedBox(height: short ? 4 : 6),
-                              ],
                               // PATH or ENDGAME board; only HERE-ring listens to torch.
                               Expanded(
                                 flex: short ? 7 : 1,
@@ -760,31 +707,52 @@ class _HubScreenState extends State<HubScreen>
                                               ),
                                       ),
                                     ),
+                                    if (showEndgameLayer)
+                                      Positioned(
+                                        left: 0,
+                                        top: 0,
+                                        right: 72,
+                                        child: HubMapModeTabs(
+                                          overlay: true,
+                                          showEndgame: _showEndgameMap,
+                                          onSelectPath: () => setState(() {
+                                            _userPickedZone = true;
+                                            _showEndgameMap = false;
+                                            if (_selectedHunt != null) {
+                                              _selectedId =
+                                                  GameLogic
+                                                      .recommendedDungeonId(
+                                                    state,
+                                                  );
+                                            }
+                                            _selectedHunt = null;
+                                          }),
+                                          onSelectEndgame: () => setState(() {
+                                            _userPickedZone = true;
+                                            _showEndgameMap = true;
+                                            _selectedHunt ??=
+                                                HubEndgameAct.huntForChase(
+                                                  chase.kind,
+                                                ) ??
+                                                HubEndgameHunt.gauntlet;
+                                            _selectedId = HubEndgameAct.nodeFor(
+                                              _selectedHunt!,
+                                            ).portraitDungeonId;
+                                          }),
+                                        ),
+                                      ),
                                     Positioned(
                                       right: 0,
                                       bottom: 0,
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          ScrollBuffStack(
-                                            meta: state.metaDepth,
-                                            maxHeight: 88,
-                                          ),
-                                          HubRanksFab(
-                                            onOpen: () => openHubRanksSheet(
-                                              context,
-                                              director,
-                                            ),
-                                          ),
-                                          if (_showPowerupsFab())
-                                            HubPowerupsFab(
-                                              state: state,
-                                              onOpen: () =>
-                                                  router.apply(NavIntent.shop),
-                                            ),
-                                        ],
+                                      child: HubMapExtrasFab(
+                                        meta: state.metaDepth,
+                                        showPowerups: _showPowerupsFab(),
+                                        onRanks: () => openHubRanksSheet(
+                                          context,
+                                          director,
+                                        ),
+                                        onPowerups: () =>
+                                            router.apply(NavIntent.shop),
                                       ),
                                     ),
                                   ],

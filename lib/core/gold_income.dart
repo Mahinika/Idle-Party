@@ -51,6 +51,10 @@ abstract final class GoldIncome {
   static String hubRateLine(GameState state) =>
       'Hub ${perMinuteLabel(hubGoldPerMinute(state))}';
 
+  /// Tiny hub header suffix next to gold (full line in income sheet).
+  static String hubRateCompact(GameState state) =>
+      '+${hubGoldPerMinute(state)}/m';
+
   /// Rolling combat gold/min from credited samples (not a DPS formula).
   static const int sessionWindowMs = 120000;
   static const int sessionWarmupMs = 15000;

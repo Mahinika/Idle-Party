@@ -17,6 +17,7 @@ class SelectedZoneCaption extends StatelessWidget {
     this.keyLevel = 0,
     this.keyAffixLine,
     this.hideBlurb = false,
+    this.compact = true,
   });
 
   final DungeonDef dungeon;
@@ -25,10 +26,80 @@ class SelectedZoneCaption extends StatelessWidget {
   final int keyLevel;
   final String? keyAffixLine;
   final bool hideBlurb;
+  final bool compact;
+
+  String _oneLineUnlocked() {
+    if (keyLevel > 0) {
+      return keyAffixLine != null && keyAffixLine!.isNotEmpty
+          ? '${dungeon.name} · KEY +$keyLevel'
+          : '${dungeon.name} · KEY +$keyLevel';
+    }
+    return dungeon.name;
+  }
+
+  void _showDetail(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: GameTheme.panel,
+        title: Text(dungeon.name, style: GameTheme.menuTitle(size: 16)),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Boss: ${dungeon.bossName}',
+                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+              ),
+              if (keyLevel > 0) ...[
+                const SizedBox(height: 6),
+                Text(
+                  keyAffixLine != null && keyAffixLine!.isNotEmpty
+                      ? 'KEY +$keyLevel · $keyAffixLine'
+                      : 'KEY +$keyLevel',
+                  style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                ),
+              ],
+              if (dungeon.blurb.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  dungeon.blurb,
+                  style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('CLOSE', style: GameTheme.body(size: 13)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     if (unlocked) {
+      if (compact) {
+        return Semantics(
+          button: true,
+          label: '${_oneLineUnlocked()}. Tap for zone details',
+          child: GestureDetector(
+            onTap: () => _showDetail(context),
+            child: Text(
+              _oneLineUnlocked(),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            ),
+          ),
+        );
+      }
       return Column(
         children: [
           Text(
@@ -87,23 +158,37 @@ class SelectedHuntCaption extends StatelessWidget {
   Widget build(BuildContext context) {
     final node = HubEndgameAct.nodeFor(hunt);
     final title = HubEndgameAct.titleFor(hunt, grBestTier: grBestTier);
-    return Column(
-      children: [
-        Text(
+    return Semantics(
+      button: true,
+      label: '$title. ${node.blurb}',
+      child: GestureDetector(
+        onTap: () {
+          showDialog<void>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: GameTheme.panel,
+              title: Text(title, style: GameTheme.menuTitle(size: 16)),
+              content: Text(
+                node.blurb,
+                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text('CLOSE', style: GameTheme.body(size: 13)),
+                ),
+              ],
+            ),
+          );
+        },
+        child: Text(
           title,
           textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: GameTheme.body(size: 13, color: GameTheme.torchHot),
         ),
-        Text(
-          node.blurb,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-      ],
+      ),
     );
   }
 }

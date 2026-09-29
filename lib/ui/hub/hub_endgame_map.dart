@@ -15,16 +15,22 @@ class HubMapModeTabs extends StatelessWidget {
     required this.showEndgame,
     required this.onSelectPath,
     required this.onSelectEndgame,
+    this.overlay = false,
   });
 
   final bool showEndgame;
   final VoidCallback onSelectPath;
   final VoidCallback onSelectEndgame;
 
+  /// Smaller chips on the map corner instead of a full-width row.
+  final bool overlay;
+
   @override
   Widget build(BuildContext context) {
+    final height = overlay ? 34.0 : GameTheme.minTouch;
+    final fontSize = overlay ? 11.0 : 14.0;
     return SizedBox(
-      height: GameTheme.minTouch,
+      height: height,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: GameTheme.panelInset.withValues(alpha: 0.9),
@@ -41,6 +47,7 @@ class HubMapModeTabs extends StatelessWidget {
                   selected: !showEndgame,
                   dimmed: showEndgame,
                   onTap: onSelectPath,
+                  textSize: fontSize,
                 ),
               ),
               Container(width: 1, color: GameTheme.border.withValues(alpha: 0.45)),
@@ -50,6 +57,7 @@ class HubMapModeTabs extends StatelessWidget {
                   selected: showEndgame,
                   dimmed: !showEndgame,
                   onTap: onSelectEndgame,
+                  textSize: fontSize,
                 ),
               ),
             ],
@@ -64,6 +72,7 @@ class HubMapModeTabs extends StatelessWidget {
     required bool selected,
     required bool dimmed,
     required VoidCallback onTap,
+    double textSize = 12,
   }) {
     return WebClickScope(
       label: label,
@@ -84,7 +93,7 @@ class HubMapModeTabs extends StatelessWidget {
               child: Text(
                 label,
                 style: GameTheme.body(
-                  size: 12,
+                  size: textSize,
                   color: selected
                       ? GameTheme.torchHot
                       : (dimmed

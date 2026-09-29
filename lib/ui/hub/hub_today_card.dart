@@ -143,6 +143,7 @@ class HubTodayCard extends StatelessWidget {
     required this.chase,
     this.compact = false,
     this.hideDetail = false,
+    this.hideWhy = true,
     this.actionLabel,
     this.onAction,
   });
@@ -150,6 +151,7 @@ class HubTodayCard extends StatelessWidget {
   final HubChase chase;
   final bool compact;
   final bool hideDetail;
+  final bool hideWhy;
   final String? actionLabel;
   final VoidCallback? onAction;
 
@@ -168,7 +170,7 @@ class HubTodayCard extends StatelessWidget {
         ? 'ALMOST'
         : null;
     final showDetail = !hideDetail && chase.detail.isNotEmpty;
-    final why = ChaseContract(chase: chase).whyLine;
+    final why = hideWhy ? '' : ChaseContract(chase: chase).whyLine;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final titleMaxLines = textScale > 1.2 ? 1 : 2;
     return Semantics(
@@ -216,12 +218,13 @@ class HubTodayCard extends StatelessWidget {
                 style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
               ),
               const SizedBox(height: 4),
-              Text(
-                why,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-              ),
+              if (why.isNotEmpty)
+                Text(
+                  why,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                ),
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 8),
@@ -337,53 +340,49 @@ class HubUrgentRow extends StatelessWidget {
     final showVault = weeklyReady && !hideVaultClaim;
     final showMissions = claimable > 0 && !hideMissionClaim;
     final showDaily = !hideDaily && !dailyClaimed;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (showAscend) ...[
-          GameButton(
-            label: ascendLabel!,
-            style: GameButtonStyle.red,
-            primary: true,
-            onPressed: onAscend,
-          ),
-          const SizedBox(height: 4),
-        ],
-        if (showVault) ...[
-          GameButton(
-            label: 'CLAIM VAULT  +${vaultClaimEssence}e',
-            style: GameButtonStyle.brown,
-            primary: true,
-            onPressed: onClaimDailyVault,
-          ),
-          const SizedBox(height: 4),
-        ] else if (showVaultProgress) ...[
-          Text(
-            'Daily Vault · $weeklyProgress/${GameLogic.dailyVaultClearTarget}',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 4),
-        ],
-        if (showMissions) ...[
-          GameButton(
-            label: claimable == 1
-                ? 'CLAIM QUESTS'
-                : 'CLAIM QUESTS ($claimable)',
-            style: showVault ? GameButtonStyle.grey : GameButtonStyle.brown,
-            onPressed: onContracts,
-          ),
-          const SizedBox(height: 4),
-        ],
-        if (showDaily)
-          Center(
-            child: MenuChrome.chip(
-              label: dailyClaimed ? 'DAILY RUN · done' : 'DAILY RUN',
-              selected: false,
-              onTap: dailyClaimed ? null : onDaily,
-            ),
-          ),
-      ],
-    );
+
+    // One hub row — rest surface on MORE / ESSENCE badges.
+    if (showVault) {
+      return GameButton(
+        label: 'CLAIM VAULT  +${vaultClaimEssence}e',
+        style: GameButtonStyle.brown,
+        primary: true,
+        onPressed: onClaimDailyVault,
+      );
+    }
+    if (showAscend) {
+      return GameButton(
+        label: ascendLabel!,
+        style: GameButtonStyle.red,
+        primary: true,
+        onPressed: onAscend,
+      );
+    }
+    if (showMissions) {
+      return GameButton(
+        label: claimable == 1
+            ? 'CLAIM QUESTS'
+            : 'CLAIM QUESTS ($claimable)',
+        style: GameButtonStyle.brown,
+        onPressed: onContracts,
+      );
+    }
+    if (showDaily) {
+      return Center(
+        child: MenuChrome.chip(
+          label: dailyClaimed ? 'DAILY RUN · done' : 'DAILY RUN',
+          selected: false,
+          onTap: dailyClaimed ? null : onDaily,
+        ),
+      );
+    }
+    if (showVaultProgress) {
+      return Text(
+        'Daily Vault · $weeklyProgress/${GameLogic.dailyVaultClearTarget}',
+        textAlign: TextAlign.center,
+        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+      );
+    }
+    return const SizedBox.shrink();
   }
 }

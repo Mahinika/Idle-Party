@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
+import '../web_click_bridge.dart';
 import 'shell_common.dart';
 
 /// Glanceable gold + essence at the top of hub, dungeon HUD, and menu sheets.
@@ -13,6 +14,8 @@ class WalletStrip extends StatelessWidget {
     required this.essence,
     this.dense = false,
     this.showEssence = true,
+    this.goldRateSuffix,
+    this.onGoldRateTap,
   });
 
   final int gold;
@@ -23,6 +26,10 @@ class WalletStrip extends StatelessWidget {
 
   /// First-hour saves hide essence until the ESSENCE tab means something.
   final bool showEssence;
+
+  /// Hub-only compact rate (e.g. +42/m) — tap opens income sheet via [onGoldRateTap].
+  final String? goldRateSuffix;
+  final VoidCallback? onGoldRateTap;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +51,8 @@ class WalletStrip extends StatelessWidget {
           _WalletChip(
             icon: UiIcon.gold,
             label: formatCount(gold),
+            suffix: goldRateSuffix,
+            onTap: onGoldRateTap,
             tone: GameTheme.torchHot,
             iconSize: iconSize,
             textSize: textSize,
@@ -74,6 +83,8 @@ class _WalletChip extends StatelessWidget {
     required this.iconSize,
     required this.textSize,
     required this.dense,
+    this.suffix,
+    this.onTap,
   });
 
   final String icon;
@@ -82,10 +93,12 @@ class _WalletChip extends StatelessWidget {
   final double iconSize;
   final double textSize;
   final bool dense;
+  final String? suffix;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final child = Container(
       padding: EdgeInsets.symmetric(
         horizontal: dense ? 8 : 10,
         vertical: dense ? 5 : 6,
@@ -96,11 +109,40 @@ class _WalletChip extends StatelessWidget {
         children: [
           GameIcon.asset(icon, size: iconSize),
           SizedBox(width: dense ? 5 : 6),
-          Text(
-            label,
-            style: GameTheme.button(size: textSize, color: tone),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: GameTheme.button(size: textSize, color: tone),
+              ),
+              if (suffix != null && suffix!.isNotEmpty)
+                Text(
+                  suffix!,
+                  style: GameTheme.body(
+                    size: dense ? 9 : 10,
+                    color: GameTheme.mossLit,
+                  ),
+                ),
+            ],
           ),
         ],
+      ),
+    );
+    if (onTap == null) return child;
+    return WebClickScope(
+      label: 'Show income details',
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        label: 'Gold $label. $suffix',
+        onTap: onTap,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: child,
+        ),
       ),
     );
   }
