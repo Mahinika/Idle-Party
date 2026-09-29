@@ -29,6 +29,9 @@ abstract final class PlayGamesBridge {
   static String? _pendingGauntletBoard;
   static int? _pendingGreaterRiftScore;
   static String? _pendingGreaterRiftBoard;
+  static int? _pendingPartyPower;
+  static String? _pendingPartyBoard;
+  static int _lastSubmittedPartyPower = -1;
   static String _partyScoreTag = PartyNameFilter.scoreTag('') ?? '';
 
   static bool get isSignedInCached => _signedInCache;
@@ -126,6 +129,22 @@ abstract final class PlayGamesBridge {
     );
   }
 
+  /// Current party power. Play keeps the higher score.
+  static void notePartyPower({
+    required int score,
+    String? partyName,
+  }) {
+    _rememberParty(partyName);
+    final id = PlayLeaderboardIds.partyPowerId;
+    if (!PlayLeaderboardIds.hasPartyPowerBoard) return;
+    if (score <= 0) return;
+    if (score == _lastSubmittedPartyPower && _pendingPartyPower == null) {
+      return;
+    }
+    _pendingPartyBoard = id;
+    _pendingPartyPower = score;
+  }
+
   static Future<void> flushPendingScores() async {
     if (!_signedInCache && !await refreshSignedIn()) return;
     final timed = _pendingTimedScore;
@@ -182,6 +201,25 @@ abstract final class PlayGamesBridge {
         debugPrint('PlayGames submit greater rift failed: $e\n$st');
       }
     }
+    final party = _pendingPartyPower;
+    final partyBoard = _pendingPartyBoard;
+    if (party != null && partyBoard != null && partyBoard.isNotEmpty) {
+      try {
+        await Leaderboards.submitScore(
+          score: Score(
+            androidLeaderboardID: partyBoard,
+            iOSLeaderboardID: '',
+            value: party,
+            token: _partyScoreTag,
+          ),
+        );
+        _lastSubmittedPartyPower = party;
+        _pendingPartyPower = null;
+        _pendingPartyBoard = null;
+      } catch (e, st) {
+        debugPrint('PlayGames submit party power failed: $e\n$st');
+      }
+    }
   }
 
   /// Top season ranks for the in-game KEY list. Never opens the Play screen.
@@ -195,7 +233,7 @@ abstract final class PlayGamesBridge {
       PlayBoardKind.timedKey => PlayLeaderboardIds.timedKeyId(monthKey),
       PlayBoardKind.gauntlet => PlayLeaderboardIds.gauntletId(monthKey),
       PlayBoardKind.greaterRift => PlayLeaderboardIds.greaterRiftId(monthKey),
-      PlayBoardKind.partyPower => '',
+      PlayBoardKind.partyPower => PlayLeaderboardIds.partyPowerId,
     };
     if (!PlayLeaderboardIds.isLiveBoardId(id)) return PlayBoardSnapshot.error;
     if (!_signedInCache && !await refreshSignedIn()) {

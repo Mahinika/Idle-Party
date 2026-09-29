@@ -145,6 +145,14 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
       _loading = true;
       _failed = false;
     });
+    if (kind == PlayBoardKind.partyPower) {
+      PlayGamesBridge.notePartyPower(
+        score: GameLogic.partyPowerScore(widget.director.state),
+        partyName: widget.director.state.partyName,
+      );
+      await PlayGamesBridge.flushPendingScores();
+    }
+    if (!mounted || gen != _loadGen) return;
     final snap = await PlayGamesBridge.loadBoard(
       kind: kind,
       monthKey: month,
@@ -220,10 +228,12 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
 
     final grBoardReady =
         preview || PlayLeaderboardIds.hasGreaterRiftBoard(month);
+    final partyBoardReady = preview || PlayLeaderboardIds.hasPartyPowerBoard;
     final kind = !grBoardReady && _kind == PlayBoardKind.greaterRift
         ? PlayBoardKind.timedKey
         : _kind;
-    if (showLiveBoards && kind != PlayBoardKind.partyPower) {
+    if (showLiveBoards &&
+        (kind != PlayBoardKind.partyPower || partyBoardReady)) {
       _queueLoad(month, kind);
     }
     final shownRows = preview ? PlayBoardPreview.rows(kind) : _rows;
@@ -298,7 +308,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         const SizedBox(height: 6),
         if (preview)
           ..._rankRows(shownRows!)
-        else if (kind == PlayBoardKind.partyPower)
+        else if (kind == PlayBoardKind.partyPower && !partyBoardReady)
           Text(
             'A public party list is not on Play yet.',
             style: GameTheme.body(size: 13, color: GameTheme.parchment),
@@ -315,7 +325,9 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           )
         else if (_rows != null && _rows!.isEmpty)
           Text(
-            'No scores yet this season.',
+            kind == PlayBoardKind.partyPower
+                ? 'No party scores yet.'
+                : 'No scores yet this season.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           )
         else if (_rows != null)
@@ -328,7 +340,8 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
               style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
             ),
           ),
-        if (!preview && kind != PlayBoardKind.partyPower) ...[
+        if (!preview &&
+            (kind != PlayBoardKind.partyPower || partyBoardReady)) ...[
           const SizedBox(height: 6),
           GameButton(
             label: _failed ? 'RETRY' : 'REFRESH',
@@ -341,7 +354,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         Text(
           preview
               ? PlayBoardPreview.notice
-              : kind == PlayBoardKind.partyPower
+              : kind == PlayBoardKind.partyPower && !partyBoardReady
               ? 'Your party power stays on this device.'
               : 'A new record sends itself while you are signed in. Cloud save: SETTINGS.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

@@ -259,6 +259,12 @@ void main() {
       expect(PlayLeaderboardIds.hasGreaterRiftBoard('2026-08'), isFalse);
     });
 
+    test('party power board is an all-time Play id', () {
+      expect(PlayLeaderboardIds.hasPartyPowerBoard, isTrue);
+      expect(PlayLeaderboardIds.partyPowerId, 'CgkIhuXGvNocEAIQBA');
+      expect(PlayLeaderboardIds.isLiveBoardId(PlayLeaderboardIds.partyPowerId), isTrue);
+    });
+
     test('boardsAvailable needs Play support + live IDs', () {
       expect(
         PlayLeaderboardIds.boardsAvailable(

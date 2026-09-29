@@ -1,9 +1,9 @@
 import 'game_state.dart';
 import 'game_logic.dart';
 
-/// Single party power number for hub/META display (no Play board yet).
+/// Single party power number for hub display and the Play party board.
 abstract final class PartyPower {
-  /// Weighted sheet + meta score — display only.
+  /// Weighted sheet + meta score. Higher is stronger.
   static int score(GameState state) {
     if (state.heroes.isEmpty) return 0;
     var gear = 0;

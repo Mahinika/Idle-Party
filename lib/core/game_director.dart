@@ -185,6 +185,10 @@ class GameDirector extends ChangeNotifier {
     _saveChain = _saveChain
         .then((_) => _storage.save(_state))
         .then((_) {
+          PlayGamesBridge.notePartyPower(
+            score: GameLogic.partyPowerScore(_state),
+            partyName: _state.partyName,
+          );
           PlayGamesBridge.scheduleCloudUpload(_state);
           unawaited(PlayGamesBridge.flushPendingScores());
         })

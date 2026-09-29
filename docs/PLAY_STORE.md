@@ -14,7 +14,7 @@ Package id: **`com.idleparty.app`**
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
 | IARC / content rating | ⏳ review | New questionnaire submitted 2026-09-08: fantasy creature violence (often close-up, pixel, no blood), digital goods (SHOP) yes / no loot-boxes / no player trading, no fear/sex/gambling/language/drugs. Ads are **not** in this IARC form — covered by Ads declaration **Yes**. Ratings preview: ESRB 10+ fantasy violence, USK 12, PEGI 3 + IAP. |
-| Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 KEY/Gauntlet wired; 2026-09 Greater Rift `CgkIhuXGvNocEAIQAw` wired (Console Draft — publish via Games Publishing). OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
+| Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 KEY/Gauntlet wired; 2026-09 Greater Rift `CgkIhuXGvNocEAIQAw` and all-time Party Power `CgkIhuXGvNocEAIQBA` published 2026-09-29. OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. |
 | Store listing copy (EN + 9 locales) | ✅ live | Default locale **en-US** + 9 translations committed **2026-09-25** (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`). In-game UI stays English. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ⏳ review | New **8 phone shots** swapped + submitted **2026-09-18** (`play_ready` pack: combat first). Console: *Ändringarna granskas*. Feature graphic unchanged. |
@@ -190,14 +190,16 @@ Sideload and web stay quiet. Code: `PlayStoreUpdate`, `PlayReviewAsk`.
 
 1. Play Console → Play Games Services → link `com.idleparty.app`.
 2. Enable player login + **Saved Games**.
-3. Each calendar month create KEY + Gauntlet (+ Greater Rift) leaderboards and paste Android IDs into [`lib/core/play_leaderboard_ids.dart`](../lib/core/play_leaderboard_ids.dart). The game lists those ranks on **KEY → BOARDS** after sign-in. It does not open the Play Games leaderboard screen.
+3. Each calendar month create KEY + Gauntlet (+ Greater Rift) leaderboards and paste Android IDs into [`lib/core/play_leaderboard_ids.dart`](../lib/core/play_leaderboard_ids.dart). Party power is one all-time board, not a new board each month. The game lists those ranks on hub **RANKS** after sign-in. It does not open the Play Games leaderboard screen.
 4. Put the numeric Games **App ID** in [`android/app/src/main/res/values/games-ids.xml`](../android/app/src/main/res/values/games-ids.xml).
 5. OAuth consent screen + Android credential (package `com.idleparty.app` + signing SHA-1) so device sign-in works.
 6. Test on a **Play-installed** build (internal/closed). GitHub sideload may soft-fail sign-in.
 
 **Done for 2026-08:** Saved Games on; App ID `986358854278`; boards `Timed KEY 2026-08` (`CgkIhuXGvNocEAIQAA`) and `Gauntlet 2026-08` (`CgkIhuXGvNocEAIQAQ`); OAuth consent (external Testing) + scopes `games` / `games_lite` / `drive.appdata`; Android credential attached (Play App Signing SHA-1, package `com.idleparty.app`); owner Google account added as OAuth test user; Games **category** Role Playing; **icon** 512 + **feature graphic** 1024×500 from owned `app_icon`; **Description saved + Games project published**. Smoke on a Play-installed closed-test build near ship line. Sideload debug SHA-1 needs a second Android client if you test unsigned APKs. Leave Cloud OAuth consent in **Testing** (do not click Cloud “Publish app”).
 
-**2026-09 Greater Rift:** Android ID `CgkIhuXGvNocEAIQAw` (`Greater Rift 2026-09`) wired in `play_leaderboard_ids.dart`. Created as Console **Draft** — same ID after publish. Publish the board via Play Games Services → Publishing (same path as KEY/Gauntlet) so store players see it; testers can use the draft.
+**2026-09 Greater Rift:** Android ID `CgkIhuXGvNocEAIQAw` (`Greater Rift 2026-09`) wired in `play_leaderboard_ids.dart`. Published with the games project on 2026-09-29.
+
+**Party power (all-time):** Android ID `CgkIhuXGvNocEAIQBA` (`Party Power`). Larger score wins. Published 2026-09-29. The client submits the current party power while signed in and lists it on hub **RANKS → PARTY**.
 
 Suggested Description (en-US):
 

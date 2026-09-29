@@ -56,6 +56,11 @@ abstract final class PlayLeaderboardIds {
   static bool hasGreaterRiftBoard(String monthKey) =>
       isLiveBoardId(greaterRiftId(monthKey));
 
+  /// All-time party power. Not a monthly board.
+  static const String partyPowerId = 'CgkIhuXGvNocEAIQBA';
+
+  static bool get hasPartyPowerBoard => isLiveBoardId(partyPowerId);
+
   /// Live KEY / Gauntlet board chrome is meaningful only when Play Games can
   /// run and Console IDs are wired for [monthKey].
   ///
