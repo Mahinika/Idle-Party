@@ -9,10 +9,10 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | **1.12.187 (217)** published **2026-09-28**, full rollout. Next candidate **1.12.191 (221)** is not uploaded. |
+| Production | ✅ live | **1.12.187 (217)** published **2026-09-28**, full rollout. Signed candidate **1.12.191 (221)** is built locally and not uploaded. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
-| Data safety form | ⏳ | Ads / Play Games / Advertising ID + **Firebase Analytics** submitted **2026-09-10**. **1.12.191** also writes a hashed install id, invite code, and time to Cloud Firestore when someone tips a friend ([PRIVACY.md](PRIVACY.md)). That row is not on the form yet — update App content → Data safety before this AAB is submitted. |
+| Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. Submitted **2026-09-29** from Publishing overview. Matches [PRIVACY.md](PRIVACY.md). Pre-checks run before Google review. |
 | IARC / content rating | ⏳ review | New questionnaire submitted 2026-09-08: fantasy creature violence (often close-up, pixel, no blood), digital goods (SHOP) yes / no loot-boxes / no player trading, no fear/sex/gambling/language/drugs. Ads are **not** in this IARC form — covered by Ads declaration **Yes**. Ratings preview: ESRB 10+ fantasy violence, USK 12, PEGI 3 + IAP. |
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 KEY/Gauntlet wired; 2026-09 Greater Rift `CgkIhuXGvNocEAIQAw` wired (Console Draft — publish via Games Publishing). OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. Remaining: smoke on a Play-installed closed-test build near ship line. |
 | Store listing copy (EN + 9 locales) | ✅ live | Default locale **en-US** + 9 translations committed **2026-09-25** (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`). In-game UI stays English. |
@@ -51,8 +51,9 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Signed Production AAB **1.12.184+214** built + uploaded via Play API; production track `completed` committed **2026-09-24**.
 - [x] Owner asked new Production AAB (**2026-09-28**)
 - [x] Signed Production AAB **1.12.187+217** built + uploaded via Play API. Production track **published** **2026-09-28** (full rollout).
-- [ ] Data safety mentions the friend-invite Firestore write before **1.12.191** is submitted.
-- [ ] Firestore rules in `firestore.rules` are deployed to `idle-party-4a2e9`, and Anonymous sign-in is on, or TIP A FRIEND cannot pay tickets.
+- [x] Data safety friend-invite row submitted for review **2026-09-29** (device id: app functionality, analytics, advertising).
+- [x] Firestore database `idle-party-4a2e9` in **eur3**, rules from `firestore.rules` published **2026-09-29**, Anonymous sign-in on.
+- [x] Signed Production candidate AAB **1.12.191+221** built locally. Not uploaded.
 - [ ] Owner asked upload of Production **1.12.191+221**.
 
 ### Production upload paste (en-US release notes)
