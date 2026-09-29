@@ -86,10 +86,30 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.190';
+  static const String currentVersion = '1.12.191';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.191',
+      date: 'Sep 29, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight — this patch lets you tip a friend for Ad Tickets.',
+      added: <String>[
+        'SCROLLS → TIP A FRIEND shares a Play link. You get 10 Ad Tickets when a friend installs and opens the app, up to 30 friends.',
+      ],
+      changed: <String>[
+        'The gold lantern shows in caves. Tap for a small pile. WATCH AD pays a bigger pile that grows with how far the save has come.',
+        'Daily Run scales from yesterday\'s PUSH clear so it stays a stretch.',
+        'Pinch with two fingers to zoom the cave.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until the party is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.190',
       date: 'Sep 29, 2026',
@@ -122,9 +142,8 @@ abstract final class ChangelogCatalog {
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight — this patch adds a WISP gold gift with an optional ad for a bigger pile and 1 hour ×2 gold on hub.',
       added: <String>[
-        'After your first dungeon, a WISP may drift by on hub or in caves. '
-            'Tap for gold; on hub you can WATCH a short ad for 10× that pile '
-            'plus 1 hour ×2 gold (same as Scroll of Gold).',
+        'After your first dungeon, a gold lantern can appear in a cave. '
+            'Tap for a small pile. WATCH a short ad for a bigger gold pile.',
       ],
       changed: <String>[
         'Worn gear shows its real item level.',

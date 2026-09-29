@@ -123,11 +123,13 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.187+217** (`pubspec.yaml`). Not uploaded. Last Play Production live is **1.12.186 (216)**. Paste for the next Production upload:
+Working ship: **1.12.191+221** (`pubspec.yaml`). Not uploaded. Last Play Production live is **1.12.187 (217)**. Paste for the next Production upload:
 
 ```
-• Worn gear shows its real item level. CLEAN says when it would sell an upgrade. A piece you take off stays in the bag.
-• ENTER KEY uses the dial you set. At Lv100, KEY is one night's job. The hub, shop, and bag use one main button.
+• Caves have their own look: themed halls, a signature room, and props. Pinch to zoom.
+• A gold lantern can appear in a cave. Tap for gold, or watch an ad for a bigger pile.
+• Name your party. On SCROLLS, tip a friend for 10 Ad Tickets when they install.
+• Daily Run stays a stretch based on yesterday's push.
 ```
 
 ### Full description honesty (SHOP)
