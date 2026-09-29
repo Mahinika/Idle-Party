@@ -204,7 +204,7 @@ abstract final class GameGuides {
     title: 'WORLD PATH',
     body:
         'The hub World Path is one continent map: dunes (Sandy / Goblin), crownlands '
-        '(King’s Fort), frost (Crystal Spire / Rimeglass), tide isles (Tidehold), blight '
+        '(King’s Fort), the Underworld, frost (Crystal Spire / Rimeglass), tide isles (Tidehold), blight '
         '(City of Dead / Blightfen), ash (Hell’s Gate / Ashen Vault), Hollow Grove, '
         'Stormwake, Brassvault, and Mothveil in the east.\n\n'
         '• Tap a zone portrait to select it — the whole map fits on the hub.\n'
@@ -420,7 +420,7 @@ abstract final class GameGuides {
       title: 'WORLD PATH',
       body:
           'The hub World Path is one continent map: dunes (Sandy / Goblin), crownlands '
-          '(King’s Fort), frost (Crystal Spire / Rimeglass), tide isles (Tidehold), blight '
+          '(King’s Fort), the Underworld, frost (Crystal Spire / Rimeglass), tide isles (Tidehold), blight '
           '(City of Dead / Blightfen), ash (Hell’s Gate / Ashen Vault), Hollow Grove, '
           'Stormwake, Brassvault, and Mothveil in the east.\n\n'
           '• Tap a zone portrait to select it — the whole map fits on the hub.\n'
@@ -537,7 +537,7 @@ abstract final class GameGuides {
           '• CLEAN BAG (BAG button): sells/scraps everything at or below your '
           'filters — keeps Apex and legacy heirloom only.\n'
           '• Near-full bag: light auto-clean while looting (still protects upgrades).\n'
-          '• Compare leads with ATK / DEF / STA — Score is a small crumb. Swapped pieces return to the bag.',
+          '• EQUIP, UPGRADE, and BEST follow Score. ATK / DEF / STA sit beside it. Swapped pieces return to the bag.',
     ),
     GuideTopic(
       id: 'combinator',
@@ -837,7 +837,7 @@ abstract final class GameGuides {
       body:
           'At AL20, ESSENCE → BLESSING opens Star Nodes (spend points).\n\n'
           '• Not the same as Ascend Blessing stacks (+ATK/DEF/STA/gold each Ascend).\n'
-          '• Earn points from reaching AL20, Ashen Crown, and Craft Trial.\n'
+          '• Earn points from reaching AL20, Ashen Crown, Craft Trial, and REBORN.\n'
           '• Spend points on permanent nodes (crit, gold, block, KEY par, …).\n'
           '• Points and lit nodes survive Ascend / REBORN.',
     ),
@@ -892,7 +892,7 @@ abstract final class GameGuides {
           '${GameLogic.maxHeroLevel} — not from AL20 alone.\n'
           '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
           '+8% gold (stacks forever). See ESSENCE → BLESSING. Separate from Star Nodes.\n'
-          '• Confirm / toast show the next unlock (Combat Rogue, 5th slot, Gauntlet…).\n'
+          '• Confirm / toast show the next Ascend unlock (Combat Rogue, 5th slot…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
           '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
           'Apex, unlocked specs, 5th party slot, lifetime gold.\n'

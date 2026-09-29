@@ -4,6 +4,7 @@ import '../../core/hub_endgame_act.dart';
 import '../../models/dungeon_def.dart';
 import '../../assets/custom_assets.dart';
 import '../game_theme.dart';
+import '../menu_chrome.dart';
 import '../../assets/kenney_assets.dart';
 import '../kenney_sprite.dart';
 import '../web_click_bridge.dart';
@@ -72,9 +73,9 @@ class SelectedZoneCaption extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(
+          MenuChrome.dialogCancel(
+            label: 'CLOSE',
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('CLOSE', style: GameTheme.body(size: 13)),
           ),
         ],
       ),
@@ -173,9 +174,9 @@ class SelectedHuntCaption extends StatelessWidget {
                 style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
               ),
               actions: [
-                TextButton(
+                MenuChrome.dialogCancel(
+                  label: 'CLOSE',
                   onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text('CLOSE', style: GameTheme.body(size: 13)),
                 ),
               ],
             ),

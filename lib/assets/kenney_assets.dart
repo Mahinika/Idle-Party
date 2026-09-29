@@ -524,14 +524,15 @@ abstract final class KenneyAssets {
       'rime chanter' ||
       'frost adept' ||
       'splinter blade' ||
-      'shatter fang' ||
+      'shatter fang' => enemyCrystalWraith,
       'spume spitter' ||
       'salt slinger' ||
       'depth chanter' ||
       'tide adept' ||
       'razor eel' ||
-      'needle urchin' => enemyCrystalWraith,
-      'crystal mite' || 'frost wisp' || 'rime bat' => enemyCrystalMite,
+      'needle urchin' => enemyTideMite,
+      'crystal mite' || 'frost wisp' => enemyCrystalMite,
+      'rime bat' => enemyRimeMite,
       // Zone trash with its own art (see lib/models/zone_art.dart).
       'brine mite' || 'reef tick' => enemyTideMite,
       'sand skitter' || 'glass skitter' => enemySandyMite,
@@ -601,7 +602,7 @@ abstract final class KenneyAssets {
       'needle rat' || 'sneak rat' => enemyRat,
       'rock crab' || 'cave brute' => enemySandyBrute,
       'shellback' || 'stone maw' => enemySandyTank,
-      'goblin thug' || 'clubber' || 'club champion' || 'lord thug' => enemyCrab,
+      'goblin thug' || 'clubber' || 'club champion' || 'lord thug' => enemyGoblinTank,
       'fort sentry' ||
       'hall guard' ||
       'elite brute' ||
@@ -703,19 +704,46 @@ abstract final class KenneyAssets {
       return enemyVeilMite;
     }
 
-    if (key.contains('crystal') ||
-        key.contains('frost') ||
-        key.contains('rime') ||
-        key.contains('glacial') ||
-        key.contains('shard') ||
-        key.contains('splinter') ||
-        key.contains('shatter') ||
-        key.contains('tide') ||
+    if (key.contains('tide') ||
         key.contains('brine') ||
         key.contains('reef') ||
         key.contains('coral') ||
         key.contains('barnacle') ||
-        key.contains('spume')) {
+        key.contains('spume') ||
+        key.contains('urchin') ||
+        key.contains('eel')) {
+      if (key.contains('leviathan')) return enemyBossTide;
+      if (key.contains('brute') ||
+          key.contains('crusher') ||
+          key.contains('guard') ||
+          key.contains('champion')) {
+        return enemyTideBrute;
+      }
+      return enemyTideMite;
+    }
+
+    if (key.contains('rime') || key.contains('glacier') || key.contains('stillfrost')) {
+      if (key.contains('colossus')) return enemyRimeBoss;
+      if (key.contains('brute') ||
+          key.contains('crusher') ||
+          key.contains('bulwark') ||
+          key.contains('guard')) {
+        return enemyRimeBrute;
+      }
+      if (key.contains('wraith') ||
+          key.contains('chanter') ||
+          key.contains('adept')) {
+        return enemyRimeWraith;
+      }
+      return enemyRimeMite;
+    }
+
+    if (key.contains('crystal') ||
+        key.contains('frost') ||
+        key.contains('glacial') ||
+        key.contains('shard') ||
+        key.contains('splinter') ||
+        key.contains('shatter')) {
       if (key.contains('wisp') ||
           key.contains('mite') ||
           key.contains('bat') ||

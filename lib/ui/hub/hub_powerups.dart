@@ -329,21 +329,21 @@ Future<void> openPowerupsSheet(
                           scope: MenuScope.today,
                         ),
                         Expanded(
-                          child: ListView.separated(
-                            padding: EdgeInsets.zero,
-                            itemCount: AdBuffCatalog.offered.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: 6),
-                            itemBuilder: (context, i) {
-                              final offer = AdBuffCatalog.offered[i];
-                              return _BuffRow(
-                                offer: offer,
-                                tickets: md.adTickets,
-                                timer: AdBoost.rowTimer(offer.id, md),
-                                onUse: () =>
-                                    director.spendPowerupBuff(offer.id),
-                              );
-                            },
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                for (final offer in AdBuffCatalog.offered) ...[
+                                  _BuffRow(
+                                    offer: offer,
+                                    tickets: md.adTickets,
+                                    timer: AdBoost.rowTimer(offer.id, md),
+                                    onUse: () =>
+                                        director.spendPowerupBuff(offer.id),
+                                  ),
+                                  const SizedBox(height: 6),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
                       ],

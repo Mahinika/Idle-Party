@@ -328,7 +328,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
       showInHud: true,
       effect: AbilityEffectKind.passive,
       tier: AbilityCastTier.passive,
-      passiveOutMul: 2.05,
+      passiveOutMul: 3.75,
     ),
     ClassAbilityDef(
       id: AbilityId.crusaderStrike,
@@ -342,7 +342,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
       resourceCost: 12,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.78,
+      coeff: 2.15,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.holy,
@@ -361,7 +361,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
       resourceCost: 15,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.filler,
-      coeff: 1.58,
+      coeff: 1.90,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.holy,
@@ -437,7 +437,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
       resourceCost: 25,
       effect: AbilityEffectKind.damage,
       tier: AbilityCastTier.signature,
-      coeff: 2.85,
+      coeff: 3.30,
       boltStyle: SpellBoltStyle.holy,
       vfx: AbilityVfxSpec(boltStyle: SpellBoltStyle.holy, castArgb: 0xFFFFF0C0),
     ),

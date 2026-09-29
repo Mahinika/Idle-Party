@@ -470,7 +470,11 @@ class _HubScreenState extends State<HubScreen>
             spacing: 12,
             children: [
               if (showMetaKeyLink)
-                TextButton(
+                GameButton(
+                  label: 'KEY +$keyDialLevel',
+                  style: GameButtonStyle.ghost,
+                  expanded: false,
+                  dense: true,
                   onPressed: () {
                     if (chase.kind == HubChaseKind.keystone) {
                       final key = chase.keyLevel ?? state.hardmodeLevel;
@@ -480,21 +484,14 @@ class _HubScreenState extends State<HubScreen>
                     }
                     router.open(MenuRoute.key);
                   },
-                  child: Text(
-                    'KEY +$keyDialLevel ›',
-                    style: GameTheme.body(size: 13, color: GameTheme.mossLit),
-                  ),
                 ),
               if (secondaryLabel != null && secondaryAction != null)
-                TextButton(
+                GameButton(
+                  label: secondaryLabel,
+                  style: GameButtonStyle.ghost,
+                  expanded: false,
+                  dense: true,
                   onPressed: secondaryAction,
-                  child: Text(
-                    secondaryLabel,
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  ),
                 ),
             ],
           ),
@@ -630,6 +627,17 @@ class _HubScreenState extends State<HubScreen>
                                 huntHint: _shortHuntHint(chase),
                                 blessingStacks: state.metaDepth.ascendBlessings,
                                 showBlessingStacks: MenuTabs.showKeep(state),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${state.partyName} · Boss on F${GameLogic.bossFloorFor(state)}',
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GameTheme.body(
+                                  size: 12,
+                                  color: GameTheme.parchmentDim,
+                                ),
                               ),
                               if (director.offlineSummary != null) ...[
                                 SizedBox(height: short ? 4 : 8),

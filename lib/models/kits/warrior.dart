@@ -264,7 +264,7 @@ const List<ClassAbilityDef> _warriorKit = <ClassAbilityDef>[
       showInHud: true,
       effect: AbilityEffectKind.passive,
       tier: AbilityCastTier.passive,
-      passiveOutMul: 2.02,
+      passiveOutMul: 2.50,
       passiveInMul: 1.04,
     ),
     ClassAbilityDef(
@@ -411,7 +411,7 @@ const List<ClassAbilityDef> _warriorKit = <ClassAbilityDef>[
       showInHud: true,
       effect: AbilityEffectKind.passive,
       tier: AbilityCastTier.passive,
-      passiveOutMul: 1.7,
+      passiveOutMul: 2.12,
       passiveHasteMul: 1.12,
       passiveInMul: 1.06,
     ),

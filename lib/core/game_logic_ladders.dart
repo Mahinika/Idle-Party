@@ -272,7 +272,7 @@ GameState _resolveRiftSuccess(GameState state) {
     gold: state.gold + gold,
     essence: state.essence + essence,
     lifetimeGoldEarned: state.lifetimeGoldEarned + gold,
-    riftOutcome: 'timed',
+    riftOutcome: 'cleared',
     metaDepth: state.metaDepth.copyWith(
       riftBestTier: best,
       riftPreferredTier: Rift.clampTier(state.metaDepth.riftPreferredTier),

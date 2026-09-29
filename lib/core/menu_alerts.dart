@@ -341,7 +341,7 @@ class MenuAlerts {
     if (!isBagFull(state)) return '';
     if (state.gearStash.isEmpty) return 'Bag is full — CLEAN BAG';
     final merge = MenuTabs.showMerge(state) ? ' or MERGE' : '';
-    return 'Bag full — backups kept; CLEAN BAG$merge';
+    return 'Bag full — CLEAN BAG sells filter matches$merge';
   }
 
   /// BAG panel idle line. Empty in the first hour unless the bag is jammed.

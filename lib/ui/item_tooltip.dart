@@ -538,12 +538,12 @@ class ItemTooltipCard extends StatelessWidget {
 
   static String _affinityLine(String affinity, PartyHero? hero) {
     final pretty = _titleCase(affinity);
-    if (hero == null) return 'Affinity: $pretty';
+    if (hero == null) return 'Drop lean: $pretty. Not equip power.';
     final match = hero.spec.gearAffinity.name == affinity.toLowerCase();
     if (match) {
-      return 'Affinity: $pretty · matches ${hero.spec.shortLabel}';
+      return 'Drop lean: $pretty · favors ${hero.spec.shortLabel}. Not equip power.';
     }
-    return 'Affinity: $pretty · weak for ${hero.spec.shortLabel}';
+    return 'Drop lean: $pretty · not ${hero.spec.shortLabel}. Not equip power.';
   }
 }
 

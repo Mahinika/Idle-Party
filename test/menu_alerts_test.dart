@@ -130,8 +130,8 @@ void main() {
       ),
     );
     final state = base.copyWith(gearStash: junk);
-    expect(MenuAlerts.partyAlert(state).reason, contains('backups kept'));
-    expect(MenuAlerts.gearEquipHint(state, 0), contains('backups kept'));
+    expect(MenuAlerts.partyAlert(state).reason, contains('sells filter matches'));
+    expect(MenuAlerts.gearEquipHint(state, 0), contains('sells filter matches'));
     expect(MenuAlerts.bagStatusLine(state), isNot(contains('MERGE')));
     expect(MenuAlerts.bagPanelHint(state), contains('CLEAN BAG'));
     expect(MenuAlerts.bagPanelHint(state).toUpperCase(), isNot(contains('ESSENCE')));

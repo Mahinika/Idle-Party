@@ -28,8 +28,8 @@ class BagCleanupFilters extends StatelessWidget {
     final showMarket = MenuTabs.showGold(state);
     final jargon = !GameLogic.plainPlayerChrome(state);
     final keepLine = jargon
-        ? 'CLEAN sells every match. A full bag still keeps BiS and upgrades.'
-        : 'CLEAN sells every match. A full bag still keeps upgrades.';
+        ? 'CLEAN sells every filter match, including BiS and upgrades.'
+        : 'CLEAN sells every filter match, including upgrades.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

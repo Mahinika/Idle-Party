@@ -332,7 +332,7 @@ class GameLogic {
     );
     final par =
         (Keystone.parTimeMs(
-                  bossFloor: Keystone.bossFloorForAl(state.ascensionLevel),
+                  bossFloor: bossFloorFor(state),
                   key: key,
                 ) *
                 BlessingConstellation.keyParMul(state))
