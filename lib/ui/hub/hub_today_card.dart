@@ -351,6 +351,18 @@ class HubUrgentRow extends StatelessWidget {
       );
     }
     if (showAscend) {
+      final optional = ascendLabel!.contains('optional');
+      if (optional) {
+        return Center(
+          child: TextButton(
+            onPressed: onAscend,
+            child: Text(
+              ascendLabel!,
+              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            ),
+          ),
+        );
+      }
       return GameButton(
         label: ascendLabel!,
         style: GameButtonStyle.red,

@@ -392,7 +392,8 @@ class _HubScreenState extends State<HubScreen>
     } else {
       secondaryAction = actionFor(secondaryLabel) ?? enterAction;
     }
-    final showMetaKeyLink = cta.showKeyDial;
+    final showMetaKeyLink =
+        cta.showKeyDial && !primaryLabel.contains('KEY');
     final endgameHunt =
         GameLogic.endgameUnlocked(state) &&
         (hubChaseOwnsEndgameRow(chase.kind) ||
