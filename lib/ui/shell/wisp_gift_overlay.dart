@@ -115,22 +115,21 @@ class _WispTapTargetState extends State<_WispTapTarget>
                 builder: (context, child) {
                   final t = Curves.easeInOut.transform(_pulse.value);
                   final dy = widget.minimal ? 0.0 : -3 + t * 6;
+                  final glow = widget.minimal ? 0.5 : 0.42 + t * 0.38;
                   return Transform.translate(
                     offset: Offset(0, dy),
-                    child: child,
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: CustomPaint(
+                        painter: _LanternPainter(
+                          glowStrength: glow,
+                          softGlow: !widget.minimal,
+                        ),
+                      ),
+                    ),
                   );
                 },
-                child: const SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: Center(
-                    child: SizedBox(
-                      width: 36,
-                      height: 46,
-                      child: CustomPaint(painter: _LanternPainter()),
-                    ),
-                  ),
-                ),
               ),
             ),
           ),
@@ -140,10 +139,15 @@ class _WispTapTargetState extends State<_WispTapTarget>
   }
 }
 
-/// Pixel lantern: dark iron, warm glass, bright flame. No blur.
-/// Hard black outline so the glyph reads on amber cave walls.
+/// Pixel lantern on a warm torch glow so it reads on cave walls. No black ring.
 class _LanternPainter extends CustomPainter {
-  const _LanternPainter();
+  const _LanternPainter({
+    required this.glowStrength,
+    required this.softGlow,
+  });
+
+  final double glowStrength;
+  final bool softGlow;
 
   static const _rows = <String>[
     '...#...',
@@ -157,30 +161,53 @@ class _LanternPainter extends CustomPainter {
     '..#.#..',
   ];
 
-  static const _neighborDeltas = <(int, int)>[
-    (-1, 0),
-    (1, 0),
-    (0, -1),
-    (0, 1),
-    (-1, -1),
-    (1, -1),
-    (-1, 1),
-    (1, 1),
-  ];
-
   @override
   void paint(Canvas canvas, Size size) {
+    final cx = size.width * 0.5;
+    final cy = size.height * 0.56;
+    final g = glowStrength.clamp(0.0, 1.0);
+
+    if (softGlow) {
+      canvas.drawCircle(
+        Offset(cx, cy),
+        size.shortestSide * 0.48,
+        Paint()
+          ..color = GameTheme.torch.withValues(alpha: 0.22 * g)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+      );
+      canvas.drawCircle(
+        Offset(cx, cy),
+        size.shortestSide * 0.32,
+        Paint()
+          ..color = GameTheme.torchHot.withValues(alpha: 0.38 * g)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+      );
+      canvas.drawCircle(
+        Offset(cx, cy),
+        size.shortestSide * 0.18,
+        Paint()
+          ..color = const Color(0xFFFFF6D0).withValues(alpha: 0.55 * g)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+      );
+    } else {
+      // Minimal VFX: hard warm disc instead of blur.
+      canvas.drawCircle(
+        Offset(cx, cy),
+        size.shortestSide * 0.34,
+        Paint()
+          ..color = GameTheme.torch.withValues(alpha: 0.35 * g)
+          ..isAntiAlias = false,
+      );
+    }
+
     const cols = 7;
     const glyphRows = 9;
-    // Leave one cell of margin so the silhouette is not clipped.
-    final px = size.width / (cols + 2);
-    final ox = px;
+    final glyphW = size.width * 0.72;
+    final px = glyphW / cols;
+    final ox = (size.width - cols * px) / 2;
     final oy = (size.height - glyphRows * px) / 2;
-    final outline = Paint()
-      ..color = const Color(0xFF070402)
-      ..isAntiAlias = false;
     final iron = Paint()
-      ..color = const Color(0xFF1A1008)
+      ..color = const Color(0xFF4A2C14)
       ..isAntiAlias = false;
     final glass = Paint()
       ..color = const Color(0xFFE08A22)
@@ -191,30 +218,6 @@ class _LanternPainter extends CustomPainter {
     final tip = Paint()
       ..color = const Color(0xFFFFFFFF)
       ..isAntiAlias = false;
-
-    bool filled(int x, int y) {
-      if (y < 0 || y >= _rows.length) return false;
-      final row = _rows[y];
-      if (x < 0 || x >= row.length) return false;
-      return row[x] != '.';
-    }
-
-    // Silhouette first — pops the warm glass off cave amber.
-    for (var y = 0; y < _rows.length; y++) {
-      final row = _rows[y];
-      for (var x = 0; x < row.length; x++) {
-        if (row[x] == '.') continue;
-        for (final (dx, dy) in _neighborDeltas) {
-          final nx = x + dx;
-          final ny = y + dy;
-          if (filled(nx, ny)) continue;
-          canvas.drawRect(
-            Rect.fromLTWH(ox + nx * px, oy + ny * px, px, px),
-            outline,
-          );
-        }
-      }
-    }
 
     for (var y = 0; y < _rows.length; y++) {
       final row = _rows[y];
@@ -236,7 +239,9 @@ class _LanternPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _LanternPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _LanternPainter oldDelegate) =>
+      oldDelegate.glowStrength != glowStrength ||
+      oldDelegate.softGlow != softGlow;
 }
 
 /// KEEP (dismiss) vs WATCH (rewarded ad) after collecting the small pile.
