@@ -6,10 +6,12 @@ import '../../core/ad_boost.dart';
 import '../../core/ad_rewarded.dart';
 import '../../core/game_director.dart';
 import '../../core/game_state.dart';
+import '../../core/menu_alerts.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/wallet_strip.dart';
 import '../web_click_bridge.dart';
 
 /// Floating SCROLLS overlay — rolled-scroll glyph on the hub map, not in the header.
@@ -205,163 +207,154 @@ Future<void> openPowerupsSheet(
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      enableDrag: false,
+      useSafeArea: false,
       backgroundColor: Colors.transparent,
       barrierColor: MenuChrome.scrim,
+      constraints: const BoxConstraints(maxWidth: double.infinity),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       builder: (ctx) {
-        final maxH = MediaQuery.sizeOf(ctx).height * 0.88;
-        return ListenableBuilder(
-          listenable: director,
-          builder: (ctx, _) {
-            final md = director.state.metaDepth;
-            final realAds = AdRewarded.realAdsAvailable;
-            final adFree = md.adFree;
-            final canDaily = AdBoost.canClaimAdFreeDaily(md);
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.viewInsetsOf(ctx).bottom,
-              ),
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: maxH,
-                    maxWidth: MediaQuery.sizeOf(ctx).width,
+        final viewPad = MediaQuery.viewPaddingOf(ctx);
+        // Same stack as GEAR / KEY: fill above the bottom bar, not the status
+        // strip and not over the tabs.
+        final bottomGap = GameTheme.bottomNavHeight + viewPad.bottom;
+        return Padding(
+          padding: EdgeInsets.only(top: viewPad.top, bottom: bottomGap),
+          child: ListenableBuilder(
+            listenable: director,
+            builder: (ctx, _) {
+              final state = director.state;
+              final md = state.metaDepth;
+              final realAds = AdRewarded.realAdsAvailable;
+              final adFree = md.adFree;
+              final canDaily = AdBoost.canClaimAdFreeDaily(md);
+              return Material(
+                color: GameTheme.panel,
+                child: DecoratedBox(
+                  decoration: MenuChrome.panel(
+                    borderRadius: BorderRadius.zero,
+                    opaque: true,
                   ),
-                  child: Material(
-                    color: MenuChrome.sheet,
-                    borderRadius: MenuChrome.sheetRadius,
-                    clipBehavior: Clip.antiAlias,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: MenuChrome.sheetRadius,
-                        border: Border.all(
-                          color: GameTheme.borderLit.withValues(alpha: 0.45),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'SCROLLS',
+                          style: GameTheme.menuTitle(size: 18),
                         ),
-                      ),
-                      child: MenuChrome.playSafeArea(
-                        bottom: true,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            WalletStrip(
+                              gold: state.gold,
+                              essence: state.essence,
+                              showEssence: MenuTabs.showCamp(state),
+                            ),
+                            const Spacer(),
+                            GameButton(
+                              label: 'CLOSE',
+                              style: GameButtonStyle.grey,
+                              expanded: false,
+                              dense: true,
+                              onPressed: () => Navigator.of(ctx).pop(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Watch for a ticket, then spend it here.',
+                          style: GameTheme.body(
+                            size: 12,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          height: 1,
+                          color: GameTheme.borderLit.withValues(alpha: 0.22),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                          decoration: MenuChrome.listCard(selected: true),
+                          child: Row(
                             children: [
-                              MenuChrome.sheetHandle(),
-                              Row(
-                                children: [
-                                  GameIcon.glyph(
-                                    UiGlyph.scroll,
-                                    size: 18,
-                                    color: GameTheme.torch,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'SCROLLS',
-                                      style: GameTheme.menuTitle(size: 18),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.fromLTRB(
-                                  12,
-                                  10,
-                                  12,
-                                  10,
-                                ),
-                                decoration: MenuChrome.listCard(selected: true),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        'Ad Tickets',
-                                        style: GameTheme.body(
-                                          size: 14,
-                                          color: GameTheme.parchmentDim,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      '${md.adTickets}',
-                                      style: GameTheme.menuTitle(
-                                        size: 22,
-                                        color: GameTheme.torchHot,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Optional ads. Never mid-fight. '
-                                'Timed ticket scrolls live here. '
-                                'Forever scrolls are bought in SHOP.',
-                                style: GameTheme.body(
-                                  size: 13,
-                                  color: GameTheme.parchmentDim,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              MenuChrome.sectionLabelScoped(
-                                'EARN',
-                                scope: MenuScope.today,
-                              ),
-                              _EarnBlock(
-                                adFree: adFree,
-                                canDaily: canDaily,
-                                realAds: realAds,
-                                onClaimDaily: director.claimAdFreeDailyTicket,
-                                onWatch: () {
-                                  unawaited(director.watchPowerupAd());
-                                },
-                                onPreview: director.grantPowerupHour,
-                              ),
-                              const SizedBox(height: 10),
-                              MenuChrome.sectionLabelScoped(
-                                'USE',
-                                scope: MenuScope.today,
-                              ),
                               Expanded(
-                                child: ListView.separated(
-                                  padding: EdgeInsets.zero,
-                                  itemCount: AdBuffCatalog.offered.length + 1,
-                                  separatorBuilder: (_, _) =>
-                                      const SizedBox(height: 6),
-                                  itemBuilder: (context, i) {
-                                    if (i == AdBuffCatalog.offered.length) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(top: 4),
-                                        child: GameButton(
-                                          label: 'CLOSE',
-                                          style: GameButtonStyle.grey,
-                                          onPressed: () =>
-                                              Navigator.of(ctx).pop(),
-                                        ),
-                                      );
-                                    }
-                                    final offer = AdBuffCatalog.offered[i];
-                                    return _BuffRow(
-                                      offer: offer,
-                                      tickets: md.adTickets,
-                                      timer: AdBoost.rowTimer(offer.id, md),
-                                      onUse: () => director.spendPowerupBuff(
-                                        offer.id,
-                                      ),
-                                    );
-                                  },
+                                child: Text(
+                                  'Ad Tickets',
+                                  style: GameTheme.body(
+                                    size: 14,
+                                    color: GameTheme.parchmentDim,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '${md.adTickets}',
+                                style: GameTheme.menuTitle(
+                                  size: 22,
+                                  color: GameTheme.torchHot,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Optional ads. Never mid-fight. '
+                          'Timed ticket scrolls live here. '
+                          'Forever scrolls are bought in SHOP.',
+                          style: GameTheme.body(
+                            size: 13,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        MenuChrome.sectionLabelScoped(
+                          'EARN',
+                          scope: MenuScope.today,
+                        ),
+                        _EarnBlock(
+                          adFree: adFree,
+                          canDaily: canDaily,
+                          realAds: realAds,
+                          onClaimDaily: director.claimAdFreeDailyTicket,
+                          onWatch: () {
+                            unawaited(director.watchPowerupAd());
+                          },
+                          onPreview: director.grantPowerupHour,
+                        ),
+                        const SizedBox(height: 10),
+                        MenuChrome.sectionLabelScoped(
+                          'USE',
+                          scope: MenuScope.today,
+                        ),
+                        Expanded(
+                          child: ListView.separated(
+                            padding: EdgeInsets.zero,
+                            itemCount: AdBuffCatalog.offered.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 6),
+                            itemBuilder: (context, i) {
+                              final offer = AdBuffCatalog.offered[i];
+                              return _BuffRow(
+                                offer: offer,
+                                tickets: md.adTickets,
+                                timer: AdBoost.rowTimer(offer.id, md),
+                                onUse: () =>
+                                    director.spendPowerupBuff(offer.id),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );
