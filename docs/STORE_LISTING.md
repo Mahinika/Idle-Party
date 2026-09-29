@@ -123,7 +123,7 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.191+221** (`pubspec.yaml`). Not uploaded. Last Play Production live is **1.12.187 (217)**. Paste for the next Production upload:
+Working ship: **1.12.191+221** (`pubspec.yaml`). Sent for review **2026-09-29**, full rollout. Last live Production is **1.12.187 (217)** until Google publishes. Notes used on that upload:
 
 ```
 • Caves have their own look: themed halls, a signature room, and props. Pinch to zoom.
