@@ -123,7 +123,7 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Live Production: **1.12.191 (221)**, published **2026-09-29**. Next local build: **1.12.192+222** (`pubspec.yaml`). Not uploaded. Notes for that upload:
+Live Production: **1.12.191 (221)** until Google publishes. **1.12.192+222** sent for review **2026-09-29**, full rollout. Notes used on that upload:
 
 ```
 • Each cave has its own song. Hits, spells, and buttons sound clearer.

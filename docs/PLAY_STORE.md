@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | **1.12.191 (221)** published (API **2026-09-29**), full rollout. Next local build **1.12.192+222** is not uploaded. Managed publishing is off. |
+| Production | ⏳ review | **1.12.191 (221)** still live (published **2026-09-29**). **1.12.192 (222)** uploaded **2026-09-29** and sent for review, full rollout. Managed publishing is off. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -56,8 +56,9 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Owner asked upload of Production **1.12.191+221** (**2026-09-29**).
 - [x] Signed Production AAB **1.12.191+221** uploaded via Play API and sent for review (full rollout).
 - [x] Production **1.12.191 (221)** published (API peek **2026-09-29**).
-- [x] Signed Production AAB **1.12.192+222** built locally **2026-09-29** (`app-release.aab`). Not uploaded.
-- [ ] Owner asked upload of **1.12.192+222**. Notes are in `docs/STORE_LISTING.md`. Do not upload until they say so.
+- [x] Signed Production AAB **1.12.192+222** built locally **2026-09-29** (`app-release.aab`).
+- [x] Owner asked upload of Production **1.12.192+222** (**2026-09-29**).
+- [x] Signed Production AAB **1.12.192+222** uploaded via Play API and sent for review (full rollout). Console: *Ändringarna granskas* — Produktion **1.12.192**, starta fullständig lansering. Pre-checks up to about 12 minutes. Live store build remains **1.12.191 (221)** until Google publishes.
 
 ### Production upload paste (en-US release notes)
 
