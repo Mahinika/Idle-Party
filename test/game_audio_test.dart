@@ -11,7 +11,6 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/loot.dart';
-import 'package:idle_party/models/spell_bolt_style.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/spatial/tile_map.dart';
 
