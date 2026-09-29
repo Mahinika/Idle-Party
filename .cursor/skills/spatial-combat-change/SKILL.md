@@ -4,11 +4,11 @@ description: >-
   Guides combat, chamber, gate, AI, enemy packs/tells, and offline changes
   where SpatialCombat is the single authority. Use when combat feels wrong,
   AFK catch-up diverges, chambers/gates misbehave, enemies feel the same
-  (fiender tråkiga / samma PULSE / packs feel identical), rooms feel small
-  or square (rummen för små / fyrkantiga golv), or editing spatial_combat /
-  ability_effects / tile maps / enemy_flavor. Do not use for a single broken
-  cast (add-ability),
-  zone sprite reskins (zone-art-identity), or DPS-only trim (grinding-until-pass).
+  (fiender tråkiga / samma PULSE / packs feel identical), rooms feel square
+  (fyrkantiga golv), or editing spatial_combat / ability_effects /
+  enemy_flavor. Do not use for a single broken cast (add-ability), room,
+  floor, hall, or zoom sizes (floor-feel), enemy pictures (enemy-art), zone
+  sprite reskins (zone-art-identity), or DPS-only trim (grinding-until-pass).
 ---
 
 # Spatial combat changes (Idle Party)

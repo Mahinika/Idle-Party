@@ -199,6 +199,8 @@ This list is the ad-powerups cut, not a repo-wide ban. Owner 2026-09-26 lifted t
 1. Hub shows a camera overlay on the World Path; hunt card / ENTER still read first.
 2. WATCH → +1 ticket; USE Sharp Edge → +40% ATK for ~2h visible in combat feel.
 3. USE Full Boost → both gold ×2 and +40% for ~4h (best ticket deal).
-4. No ad during an open dungeon fight.
+4. SCROLLS never start an ad mid-fight. The WISP lantern is the one
+   exception: since 2026-09-28 its optional ad is offered where it appears,
+   including in a dungeon, and only when the player taps it.
 5. Ascend keeps tickets and remaining buff time.
 6. SHOP copy still says same power as tickets / ads.

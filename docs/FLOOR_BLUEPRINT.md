@@ -164,7 +164,7 @@ Gear-power stil: [GEAR_BUDGET.md](GEAR_BUDGET.md) oförändrad. Blueprint styr *
 | `lib/core/dungeon_generator.dart` | anropar blueprint; behåller `DungeonRoom` shape |
 | `lib/spatial/spatial_combat.dart` | room-reward spawn hooks; **ingen** ny step-loop |
 | `test/floor_blueprint_test.dart` | determinism, socket rules, no path block |
-| `test/placement_plan_test.dart` | chest never on exit; enemy sockets unique |
+| `test/floor_blueprint_test.dart` (placement cases) | chest never on exit; enemy sockets unique |
 
 **Icke-mål:** ny roguelike BSP-motor, server maps, andra combat-sim.
 
