@@ -95,7 +95,7 @@ void main() {
     expect(release.versionLine, 'VERSION ${release.version} — Sep 29, 2026');
     expect(release.added, isNotEmpty);
     expect(release.changed, isNotEmpty);
-    expect(release.fixed, isEmpty);
+    expect(release.fixed, isNotEmpty);
     expect(release.technical, isEmpty);
     expect(release.known, isEmpty);
   });

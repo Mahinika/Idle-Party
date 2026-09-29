@@ -123,13 +123,13 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Working ship: **1.12.191+221** (`pubspec.yaml`). Sent for review **2026-09-29**, full rollout. Last live Production is **1.12.187 (217)** until Google publishes. Notes used on that upload:
+Live Production: **1.12.191 (221)**, published **2026-09-29**. Next local build: **1.12.192+222** (`pubspec.yaml`). Not uploaded. Notes for that upload:
 
 ```
-• Caves have their own look: themed halls, a signature room, and props. Pinch to zoom.
-• A gold lantern can appear in a cave. Tap for gold, or watch an ad for a bigger pile.
-• Name your party. On SCROLLS, tip a friend for 10 Ad Tickets when they install.
-• Daily Run stays a stretch based on yesterday's push.
+• Each cave has its own song. Hits, spells, and buttons sound clearer.
+• Fight rooms hold more enemies, with the same threat and the same rewards.
+• RANKS shows a public party power list.
+• A missed friend install still pays 10 Ad Tickets.
 ```
 
 ### Full description honesty (SHOP)

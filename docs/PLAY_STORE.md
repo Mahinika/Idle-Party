@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ⏳ review | **1.12.187 (217)** still live (published **2026-09-28**). **1.12.191 (221)** uploaded **2026-09-29** and sent for review, full rollout. Managed publishing is off. |
+| Production | ✅ live | **1.12.191 (221)** published (API **2026-09-29**), full rollout. Next local build **1.12.192+222** is not uploaded. Managed publishing is off. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -54,17 +54,20 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Data safety friend-invite row submitted for review **2026-09-29** (device id: app functionality, analytics, advertising).
 - [x] Firestore database `idle-party-4a2e9` in **eur3**, rules from `firestore.rules` published **2026-09-29**, Anonymous sign-in on.
 - [x] Owner asked upload of Production **1.12.191+221** (**2026-09-29**).
-- [x] Signed Production AAB **1.12.191+221** uploaded via Play API and sent for review (full rollout). Console: *Ändringarna granskas* — Produktion full launch + Datasäkerhet. Live store build remains **1.12.187 (217)** until Google publishes.
+- [x] Signed Production AAB **1.12.191+221** uploaded via Play API and sent for review (full rollout).
+- [x] Production **1.12.191 (221)** published (API peek **2026-09-29**).
+- [x] Signed Production AAB **1.12.192+222** built locally **2026-09-29** (`app-release.aab`). Not uploaded.
+- [ ] Owner asked upload of **1.12.192+222**. Notes are in `docs/STORE_LISTING.md`. Do not upload until they say so.
 
 ### Production upload paste (en-US release notes)
 
 From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 
 ```
-• Caves have their own look: themed halls, a signature room, and props. Pinch to zoom.
-• A gold lantern can appear in a cave. Tap for gold, or watch an ad for a bigger pile.
-• Name your party. On SCROLLS, tip a friend for 10 Ad Tickets when they install.
-• Daily Run stays a stretch based on yesterday's push.
+• Each cave has its own song. Hits, spells, and buttons sound clearer.
+• Fight rooms hold more enemies, with the same threat and the same rewards.
+• RANKS shows a public party power list.
+• A missed friend install still pays 10 Ad Tickets.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys
