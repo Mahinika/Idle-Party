@@ -41,7 +41,8 @@ void runChasePlan({
     case ChaseOp.claimVault:
       director.claimDailyVault();
     case ChaseOp.claimMissions:
-      director.claimAllReadyMissions();
+      // Open the board with the rewards still waiting. Claiming here
+      // replaced Bounty, Side, and Contract before the player saw them.
       if (openMenus) {
         router.open(MenuRoute.more, more: MoreSection.quests);
       }

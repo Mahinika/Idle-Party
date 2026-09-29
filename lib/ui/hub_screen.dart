@@ -521,7 +521,6 @@ class _HubScreenState extends State<HubScreen>
                 chase.kind == HubChaseKind.meetHero ||
                 !GameLogic.showDailyRunOnHub(state),
             onContracts: () {
-              director.claimAllReadyMissions();
               router.open(MenuRoute.more, more: MoreSection.quests);
             },
             onAscend: () => confirmAscend(context, director),

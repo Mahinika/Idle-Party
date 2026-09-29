@@ -1,7 +1,12 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/chase_dispatcher.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/hub_chase.dart';
+import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/ui/chase_bind.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/local_season.dart';
@@ -83,6 +88,72 @@ void main() {
     expect(chase.kind, HubChaseKind.claimMissions);
     expect(chase.detail.toLowerCase(), contains('claim quests'));
     expect(chase.detail.toLowerCase(), isNot(contains('wait under')));
+  });
+
+  testWidgets('CLAIM QUESTS opens the board with the bounty still claimable', (
+    tester,
+  ) async {
+    final clock = DateTime.now().toUtc();
+    var state = GameLogic.createInitialState(now: clock);
+    final bounty = state.missions[1];
+    state = state.copyWith(
+      bossVictories: 1,
+      lastUpdated: DateTime.now(),
+      missions: [
+        state.missions[0],
+        bounty.copyWith(progress: bounty.target),
+        ...state.missions.skip(2),
+      ],
+      metaDepth: state.metaDepth.copyWith(
+        dailyVaultClaimed: true,
+        dailyVaultDate: MetaSystems.dailyDateKey(clock),
+        dailyQuestDate: MetaSystems.dailyDateKey(clock),
+        questWeekKey: GameLogic.isoWeekKey(clock),
+        weeklyKey: GameLogic.isoWeekKey(clock),
+        seasonKey: GameLogic.seasonLabel(clock),
+      ),
+      lastDailyDate: MetaSystems.dailyDateKey(clock),
+      dailyClaimed: true,
+    );
+    final director = GameDirector.preview(initialState: state);
+    await director.boot();
+    expect(director.isLoading, isFalse);
+    final ready = director.state.missions[1];
+    expect(ready.canClaim, isTrue, reason: 'boot must keep the finished bounty');
+    final chase = HubChase.forState(director.state);
+    expect(chase.kind, HubChaseKind.claimMissions);
+    final router = MenuRouter();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            return TextButton(
+              onPressed: () {
+                runChasePlan(
+                  context: context,
+                  director: director,
+                  router: router,
+                  plan: ChaseDispatcher.plan(chase, state: director.state),
+                  onEnterDungeon: (_) {},
+                );
+              },
+              child: const Text('go'),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.tap(find.text('go'));
+    await tester.pump();
+
+    expect(router.route, MenuRoute.more);
+    expect(router.moreSection, MoreSection.quests);
+    expect(director.state.missions[1].id, ready.id);
+    expect(director.state.missions[1].canClaim, isTrue);
+    director.dispose();
+    router.dispose();
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   test('Will ALMOST still beats midgame party-level', () {
