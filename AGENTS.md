@@ -12,8 +12,9 @@ Work style, locks, and Swedish handoff live in `.cursor/rules/`. Do not
 restate them here. Growth principles: `docs/GROWTH_MANDATE.md`.
 
 **UI:** portrait phones, reference Samsung A56 (360×780). Live look is the
-AVD `Samsung_A56` via `a56-playtest`. Web is Playwright / `WebClickBridge`
-only.
+AVD `Samsung_A56` via `a56-playtest`. The agent reads that device with
+`py -3 tool/adb_see.py` (UI tree + `[IP]` log; a PNG only when pixels
+matter). Web is Playwright / `WebClickBridge` only.
 
 **Distribution:** Google Play is the install path (`com.idleparty.app`,
 `docs/PLAY_STORE.md`). Do not link players to GitHub Releases. Never upload
@@ -144,12 +145,14 @@ stamina is STA.
 | Hub / chase | `lib/ui/hub_screen.dart`, `lib/core/hub_chase.dart`, `lib/core/chase_contract.dart` |
 | Art helpers | `lib/assets/custom_assets.dart`, `lib/assets/kenney_assets.dart` |
 | UI tokens | `lib/ui/theme.dart`, `docs/UI_THEME.md` |
+| Emulator look | `py -3 tool/adb_see.py` (UI tree, tap-by-label, `[IP]` log) |
 
 ## Conventions
 
 - Immutable state. Mutate via `copyWith` in `GameLogic`.
 - No Riverpod/Provider. `ChangeNotifier` + `AnimatedBuilder`.
 - Tests use `GameDirector.preview()` (no SharedPreferences).
+- Five local save slots on the title screen. Autosave writes the slot you opened. An older single `idle_party_save_v2` migrates into SAVE 1.
 - Sprite paths go through `CustomAssets` or `KenneyAssets`. `assets/data/*.json` from core is fine. Pixel sprites use `FilterQuality.none`.
 - LOADOUTS tab is hidden. Armor 2pc/4pc are sets, not loadouts.
 - BiS / UPGRADE use budget score only (`docs/GEAR_BUDGET.md`).

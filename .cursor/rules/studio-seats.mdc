@@ -1,8 +1,5 @@
 ---
-description: >-
-  Six veto domains for a design fork: two games, whose call, or scope
-  versus fight versus findability. One decider, no vote. Skip for
-  routine implement, analyze, and commit.
+description: Six veto domains for a design fork (two games, whose call, or scope versus fight versus findability). One decider, no vote. Skip for routine implement, analyze, and commit.
 alwaysApply: false
 ---
 

@@ -1,8 +1,5 @@
 ---
-description: >-
-  Where an Idle Party screen lives. Use for a new menu, panel, placement,
-  “var ska X ligga”, kupong / redeem, or världskartan / PATH. Visual tokens
-  stay in ui-theme.
+description: Where an Idle Party screen lives. Use for a new menu, panel, placement, “var ska X ligga”, kupong / redeem, or världskartan / PATH. Visual tokens stay in ui-theme.
 alwaysApply: false
 ---
 

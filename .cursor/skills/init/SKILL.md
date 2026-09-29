@@ -23,6 +23,8 @@ Keep the steering shape:
   `session_start.dart` only.
 - `growth-mandate`, `studio-seats`, and `game-ux-director` stay
   `alwaysApply: false`.
+- Rule `description:` stays on one line. Cursor reads a folded `>-` rule
+  description as the text `>-`, so a requestable rule vanishes. Skills are fine.
 - `AGENTS.md` is the map. It points at docs. It does not hardcode the ship
   version or restate the rules.
 - `.github/instructions/flutter-blueprint.instructions.md` stays a pointer
