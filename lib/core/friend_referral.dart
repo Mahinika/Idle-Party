@@ -102,6 +102,10 @@ abstract final class FriendReferral {
   static const int ticketsPerFriend = 10;
   static const int maxFriends = 30;
   static const int codeLength = 8;
+
+  /// Empty Play referrer reads before giving up. One empty read used to
+  /// stick the flag, so a friend's install never paid the inviter.
+  static const int referrerGiveUpTries = 6;
   static const String packageId = 'com.idleparty.app';
 
   /// No I / O / 0 / 1 — those look alike in a text message.
@@ -184,6 +188,47 @@ abstract final class FriendReferral {
     );
     return withTickets.copyWith(
       metaDepth: withTickets.metaDepth.copyWith(friendClaimsPaid: paid + n),
+    );
+  }
+
+  /// Friend sync starts from a snapshot. Fold only its ticket and invite
+  /// changes onto the live save so a slow list read cannot wipe newer tickets.
+  static GameState mergeOnto(
+    GameState live,
+    GameState start,
+    GameState outcome,
+  ) {
+    if (identical(start, outcome)) return live;
+    final gain = outcome.metaDepth.adTickets - start.metaDepth.adTickets;
+    final o = outcome.metaDepth;
+    final l = live.metaDepth;
+    final tickets = (l.adTickets + gain).clamp(0, 9999);
+    final code = o.friendCode.isNotEmpty ? o.friendCode : l.friendCode;
+    final paid = math.max(l.friendClaimsPaid, o.friendClaimsPaid);
+    final used = o.friendInviteUsed.isNotEmpty
+        ? o.friendInviteUsed
+        : l.friendInviteUsed;
+    final tries = math.max(l.friendReferrerTries, o.friendReferrerTries);
+    final checked = o.friendReferrerTries > 0
+        ? o.friendReferrerChecked
+        : (l.friendReferrerChecked || o.friendReferrerChecked);
+    if (tickets == l.adTickets &&
+        code == l.friendCode &&
+        paid == l.friendClaimsPaid &&
+        used == l.friendInviteUsed &&
+        tries == l.friendReferrerTries &&
+        checked == l.friendReferrerChecked) {
+      return live;
+    }
+    return live.copyWith(
+      metaDepth: l.copyWith(
+        adTickets: tickets,
+        friendCode: code,
+        friendClaimsPaid: paid,
+        friendInviteUsed: used,
+        friendReferrerTries: tries,
+        friendReferrerChecked: checked,
+      ),
     );
   }
 }
@@ -306,7 +351,11 @@ class FriendReferralSync {
     String? toast,
   }) async {
     final md = state.metaDepth;
-    if (md.friendReferrerChecked || md.friendInviteUsed.isNotEmpty) {
+    if (md.friendInviteUsed.isNotEmpty) {
+      return FriendReferralOutcome(state, toast: toast);
+    }
+    // tries == 0 with the flag set is an old empty read. Look again.
+    if (md.friendReferrerChecked && md.friendReferrerTries > 0) {
       return FriendReferralOutcome(state, toast: toast);
     }
     final read = readInstallReferrer;
@@ -317,14 +366,13 @@ class FriendReferralSync {
     try {
       referrer = await read();
     } catch (_) {
-      return FriendReferralOutcome(state, toast: toast);
+      return FriendReferralOutcome(_noteReferrerMiss(state), toast: toast);
     }
     final code = FriendReferral.codeFromReferrer(referrer);
     if (code == null) {
+      final empty = referrer == null || referrer.trim().isEmpty;
       return FriendReferralOutcome(
-        state.copyWith(
-          metaDepth: state.metaDepth.copyWith(friendReferrerChecked: true),
-        ),
+        empty ? _noteReferrerMiss(state) : _noteReferrerDone(state),
         toast: toast,
       );
     }
@@ -333,6 +381,7 @@ class FriendReferralSync {
         state.copyWith(
           metaDepth: state.metaDepth.copyWith(
             friendReferrerChecked: true,
+            friendReferrerTries: math.max(1, state.metaDepth.friendReferrerTries),
             friendInviteUsed: code,
           ),
         ),
@@ -361,9 +410,7 @@ class FriendReferralSync {
     required bool fromInstall,
   }) {
     if (status == FriendClaimStatus.full && fromInstall) {
-      return state.copyWith(
-        metaDepth: state.metaDepth.copyWith(friendReferrerChecked: true),
-      );
+      return _noteReferrerDone(state);
     }
     final stop = switch (status) {
       FriendClaimStatus.accepted ||
@@ -375,6 +422,29 @@ class FriendReferralSync {
     return state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         friendInviteUsed: code,
+        friendReferrerChecked: true,
+        friendReferrerTries: math.max(1, state.metaDepth.friendReferrerTries),
+      ),
+    );
+  }
+
+  /// Empty or failed Play read. Keep looking until [FriendReferral.referrerGiveUpTries].
+  GameState _noteReferrerMiss(GameState state) {
+    final tries = state.metaDepth.friendReferrerTries + 1;
+    final giveUp = tries >= FriendReferral.referrerGiveUpTries;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        friendReferrerTries: tries,
+        friendReferrerChecked: giveUp,
+      ),
+    );
+  }
+
+  /// Referrer was present and was not a friend code, or the code is full.
+  GameState _noteReferrerDone(GameState state) {
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        friendReferrerTries: math.max(1, state.metaDepth.friendReferrerTries + 1),
         friendReferrerChecked: true,
       ),
     );

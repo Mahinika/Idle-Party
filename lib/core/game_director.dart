@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
@@ -223,10 +224,12 @@ class GameDirector extends ChangeNotifier {
       try {
         if (_isLoading) return;
         final epoch = _friendEpoch;
+        final start = _state;
         final outcome = await body(_friends);
         if (epoch != _friendEpoch || _isLoading) return;
-        if (!identical(outcome.state, _state)) {
-          _applyUpgrade(outcome.state);
+        final merged = FriendReferral.mergeOnto(_state, start, outcome.state);
+        if (!identical(merged, _state)) {
+          _applyUpgrade(merged);
         }
         final toast = outcome.toast;
         if (toast != null && toast.isNotEmpty) {
@@ -244,8 +247,21 @@ class GameDirector extends ChangeNotifier {
   Future<void> syncFriendReferral() => _runFriend((sync) => sync.sync(_state));
 
   /// Create a code if needed and open the Android share sheet.
-  Future<void> shareFriendInvite() =>
-      _runFriend((sync) => sync.shareInvite(_state));
+  /// The code is saved before the sheet so a friend can count if the app
+  /// closes while sharing.
+  Future<void> shareFriendInvite() async {
+    if (!FriendReferral.isValidCode(_state.metaDepth.friendCode)) {
+      _applyUpgrade(
+        _state.copyWith(
+          metaDepth: _state.metaDepth.copyWith(
+            friendCode: FriendReferral.newCode(math.Random.secure()),
+          ),
+        ),
+      );
+      await _persistFlush();
+    }
+    await _runFriend((sync) => sync.shareInvite(_state));
+  }
 
   /// Friend types a code in SCROLLS. One phone, one invite.
   Future<void> applyFriendCode(String raw) =>

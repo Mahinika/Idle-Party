@@ -21,10 +21,12 @@ service cloud.firestore {
         && request.resource.data.at == request.time;
       allow update: if signedIn()
         && request.resource.data.ownerDevice == resource.data.ownerDevice
-        && request.resource.data.at == resource.data.at
         && request.resource.data.claims == resource.data.claims + 1
         && request.resource.data.claims <= 30
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claims']);
+        && (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claims'])
+          || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claims', 'at'])
+        );
       allow delete: if false;
     }
 
@@ -37,7 +39,6 @@ service cloud.firestore {
         && request.resource.data.device == device
         && request.resource.data.code is string
         && friendCodeId(request.resource.data.code)
-        && request.resource.data.at == request.time
         && exists(/databases/$(database)/documents/friendCodes/$(request.resource.data.code))
         && get(/databases/$(database)/documents/friendCodes/$(request.resource.data.code)).data.ownerDevice != device
         && get(/databases/$(database)/documents/friendCodes/$(request.resource.data.code)).data.claims < 30;

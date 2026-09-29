@@ -366,6 +366,7 @@ class MetaDepthState {
     this.friendClaimsPaid = 0,
     this.friendInviteUsed = '',
     this.friendReferrerChecked = false,
+    this.friendReferrerTries = 0,
   });
 
   final int sanctuaryXpLevel;
@@ -707,8 +708,13 @@ class MetaDepthState {
   /// Friend code this save already submitted (one phone, one invite).
   final String friendInviteUsed;
 
-  /// Play install referrer was read once on this save.
+  /// Play install referrer was read and was not a friend link.
+  /// A first empty read used to set this and the inviter never got tickets.
+  /// Retries continue while this is false, or while [friendReferrerTries] is 0.
   final bool friendReferrerChecked;
+
+  /// How many times this save has read the Play install referrer.
+  final int friendReferrerTries;
 
   static const empty = MetaDepthState();
 
@@ -867,6 +873,7 @@ class MetaDepthState {
     int? friendClaimsPaid,
     String? friendInviteUsed,
     bool? friendReferrerChecked,
+    int? friendReferrerTries,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -1039,6 +1046,7 @@ class MetaDepthState {
       friendInviteUsed: friendInviteUsed ?? this.friendInviteUsed,
       friendReferrerChecked:
           friendReferrerChecked ?? this.friendReferrerChecked,
+      friendReferrerTries: friendReferrerTries ?? this.friendReferrerTries,
     );
   }
 
@@ -1191,6 +1199,7 @@ class MetaDepthState {
     'friendClaimsPaid': friendClaimsPaid,
     'friendInviteUsed': friendInviteUsed,
     'friendReferrerChecked': friendReferrerChecked,
+    'friendReferrerTries': friendReferrerTries,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -1459,6 +1468,8 @@ class MetaDepthState {
           .clamp(0, 30),
       friendInviteUsed: _friendCode(json['friendInviteUsed'] as String?),
       friendReferrerChecked: (json['friendReferrerChecked'] as bool?) ?? false,
+      friendReferrerTries: ((json['friendReferrerTries'] as num?)?.toInt() ?? 0)
+          .clamp(0, 30),
     );
   }
 

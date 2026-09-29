@@ -86,6 +86,7 @@ void main() {
     expect(missing.friendClaimsPaid, 0);
     expect(missing.friendInviteUsed, isEmpty);
     expect(missing.friendReferrerChecked, isFalse);
+    expect(missing.friendReferrerTries, 0);
     final junk = MetaDepthState.fromJson(const <String, dynamic>{
       'friendCode': 'winter',
       'friendClaimsPaid': 80,
@@ -187,5 +188,80 @@ void main() {
     expect(FriendReferral.isValidCode(code), isTrue);
     expect(shared, contains('Play Idle Party with me'));
     expect(shared, contains(code));
+  });
+
+  test('empty Play referrer retries, then a later read still pays', () async {
+    final gateway = MemoryFriendReferralGateway();
+    final inviter = FriendReferralSync(
+      gateway: gateway,
+      readDeviceId: () async => FriendReferral.deviceKey('inviter'),
+      share: (_) async {},
+      random: math.Random(5),
+    );
+    final invited = await inviter.shareInvite(GameLogic.createInitialState());
+    final code = invited.state.metaDepth.friendCode;
+
+    var reads = 0;
+    final friend = FriendReferralSync(
+      gateway: gateway,
+      readDeviceId: () async => FriendReferral.deviceKey('friend'),
+      readInstallReferrer: () async {
+        reads++;
+        return reads == 1 ? '' : 'ref=$code';
+      },
+    );
+    final missed = await friend.sync(GameLogic.createInitialState());
+    expect(missed.state.metaDepth.friendReferrerChecked, isFalse);
+    expect(missed.state.metaDepth.friendReferrerTries, 1);
+    expect(missed.state.metaDepth.friendInviteUsed, isEmpty);
+    expect(gateway.book.claimsOf(code), 0);
+
+    final joined = await friend.sync(missed.state);
+    expect(joined.state.metaDepth.friendInviteUsed, code);
+    expect(gateway.book.claimsOf(code), 1);
+
+    final paid = await inviter.sync(invited.state);
+    expect(paid.state.metaDepth.adTickets, 10);
+  });
+
+  test('a stuck empty read still counts the friend link later', () async {
+    final gateway = MemoryFriendReferralGateway();
+    final inviter = FriendReferralSync(
+      gateway: gateway,
+      readDeviceId: () async => FriendReferral.deviceKey('inviter'),
+      share: (_) async {},
+      random: math.Random(6),
+    );
+    final invited = await inviter.shareInvite(GameLogic.createInitialState());
+    final code = invited.state.metaDepth.friendCode;
+    final stuck = GameLogic.createInitialState().copyWith(
+      metaDepth: GameLogic.createInitialState().metaDepth.copyWith(
+        friendReferrerChecked: true,
+      ),
+    );
+    final friend = FriendReferralSync(
+      gateway: gateway,
+      readDeviceId: () async => FriendReferral.deviceKey('friend'),
+      readInstallReferrer: () async => 'ref=$code',
+    );
+    final joined = await friend.sync(stuck);
+    expect(joined.state.metaDepth.friendInviteUsed, code);
+    expect(gateway.book.claimsOf(code), 1);
+  });
+
+  test('ticket grant lands on the live save, not the old snapshot', () {
+    final start = GameLogic.createInitialState().copyWith(
+      metaDepth: GameLogic.createInitialState().metaDepth.copyWith(
+        friendCode: 'ABCD2345',
+      ),
+    );
+    final paid = FriendReferral.withPayout(start, 1);
+    final live = start.copyWith(
+      metaDepth: start.metaDepth.copyWith(adTickets: 4),
+    );
+    final merged = FriendReferral.mergeOnto(live, start, paid);
+    expect(merged.metaDepth.adTickets, 14);
+    expect(merged.metaDepth.friendClaimsPaid, 1);
+    expect(merged.gold, live.gold);
   });
 }

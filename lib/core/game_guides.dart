@@ -402,6 +402,7 @@ abstract final class GameGuides {
       body:
           'Tap SCROLLS on the hub map. Optional. Watch a short ad '
           'for 1 Ad Ticket, then spend tickets on timed scrolls.\n\n'
+          '• TIP A FRIEND: 10 Ad Tickets when a friend installs and opens the app, up to 30. If they already play, they enter your code on SCROLLS.\n\n'
           '• Scroll of Damage: +${AdBoost.attackPercent}% attack for ${AdBoost.splitHours} hours (1 ticket).\n'
           '• Scroll of Gold: ×${AdBoost.goldMul} gold (kills, chests, hub AFK) for ${AdBoost.splitHours} hours (1 ticket).\n'
           '• Scroll of XP: +${AdBoost.xpPercent}% party XP for ${AdBoost.splitHours} hours (1 ticket).\n'

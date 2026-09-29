@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../core/friend_referral.dart';
 import '../../core/game_director.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -40,9 +41,16 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Share Idle Party. You get 10 Ad Tickets when a friend installs and opens the app.',
+          'Share Idle Party. You get 10 Ad Tickets (the number above) when a friend installs and opens the app. Spend them on the scrolls below.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
+        if (md.friendClaimsPaid > 0) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Friends ${md.friendClaimsPaid} · ${md.friendClaimsPaid * FriendReferral.ticketsPerFriend} Ad Tickets',
+            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+          ),
+        ],
         const SizedBox(height: 6),
         GameButton(
           label: 'TIP A FRIEND',

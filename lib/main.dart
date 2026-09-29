@@ -226,6 +226,7 @@ class _GameHomePageState extends State<GameHomePage>
       case AppLifecycleState.resumed:
         GameAudio.onAppResumed();
         _director.setAppPaused(false);
+        unawaited(_director.syncFriendReferral());
         if (_phase != _AppPhase.playUpdateRequired) return;
         unawaited(_recheckMandatoryPlayUpdate());
     }
