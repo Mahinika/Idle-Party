@@ -2,10 +2,16 @@ import 'dart:math';
 
 import '../models/dungeon_room.dart';
 import 'floor_blueprint.dart';
+import 'floor_theme.dart';
+import 'prop_vignettes.dart';
 import 'tile_map.dart';
 import 'zone_layout_kit.dart';
 
 /// Socketed placement for props + room chests (docs/FLOOR_BLUEPRINT.md).
+///
+/// Order: room chest → one hero per chamber (+ symmetric flank) → door and
+/// stair torches → one vignette per room → sparse clumped clutter. The hero
+/// is the only prop that is big and lit, so it stands out against a calm room.
 class PlacementPlan {
   const PlacementPlan({
     required this.props,
@@ -31,287 +37,262 @@ class PlacementPlan {
     required FloorBlueprint blueprint,
     required ZoneLayoutKit kit,
     required Random rng,
+    List<GateInfo> gates = const <GateInfo>[],
+    Map<int, (int, int)> anchors = const <int, (int, int)>{},
   }) {
     final violations = <String>[];
-    final blocked = <String>{};
-    void block(int x, int y) => blocked.add('$x,$y');
+    final blocked = <int>{};
+    int key(int x, int y) => y * cols + x;
     for (final p in spawnPoints) {
-      block(p.$1, p.$2);
+      blocked.add(key(p.$1, p.$2));
     }
-    block(exitPoint.$1, exitPoint.$2);
+    blocked.add(key(exitPoint.$1, exitPoint.$2));
     for (final p in enemySpawns) {
-      block(p.$1, p.$2);
+      blocked.add(key(p.$1, p.$2));
+    }
+    // Keep doorways clear so a prop never reads as a blocker.
+    for (final g in gates) {
+      for (var dy = -1; dy <= 1; dy++) {
+        for (var dx = -1; dx <= 1; dx++) {
+          blocked.add(key(g.x + dx, g.y + dy));
+        }
+      }
     }
 
-    bool touchesWall(int x, int y) {
-      const dirs = <(int, int)>[(0, 1), (0, -1), (1, 0), (-1, 0)];
-      for (final d in dirs) {
-        final nx = x + d.$1;
-        final ny = y + d.$2;
-        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) return true;
-        if (tiles[ny * cols + nx] == TileKind.wall) return true;
-      }
-      return false;
-    }
+    bool inMap(int x, int y) => x >= 0 && y >= 0 && x < cols && y < rows;
 
     bool isFloor(int x, int y) {
-      if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
-      final t = tiles[y * cols + x];
+      if (!inMap(x, y)) return false;
+      final t = tiles[key(x, y)];
       return t == TileKind.floor || t == TileKind.spawn || t == TileKind.exit;
     }
 
-    bool inChamber(Chamber c, int x, int y) =>
-        x >= c.x && x < c.x + c.w && y >= c.y && y < c.y + c.h;
+    bool isWall(int x, int y) => !inMap(x, y) || tiles[key(x, y)] == TileKind.wall;
 
-    final edgeCells = <(int, int)>[];
-    final openCells = <(int, int)>[];
-    for (var y = 0; y < rows; y++) {
-      for (var x = 0; x < cols; x++) {
-        if (!isFloor(x, y)) continue;
-        if (blocked.contains('$x,$y')) continue;
-        if (tiles[y * cols + x] == TileKind.exit) continue;
-        final cell = (x, y);
-        if (touchesWall(x, y)) {
-          edgeCells.add(cell);
-        } else {
-          openCells.add(cell);
-        }
-      }
-    }
+    bool touchesWall(int x, int y) =>
+        isWall(x + 1, y) || isWall(x - 1, y) || isWall(x, y + 1) || isWall(x, y - 1);
 
-    (int, int)? takeFrom(List<(int, int)> cells) {
-      if (cells.isEmpty) return null;
-      final idx = rng.nextInt(cells.length);
-      return cells.removeAt(idx);
-    }
-
-    int distFromSpawn((int, int) cell) {
-      var best = 9999;
-      for (final s in spawnPoints) {
-        final d = (cell.$1 - s.$1).abs() + (cell.$2 - s.$2).abs();
-        if (d < best) best = d;
-      }
-      return best;
-    }
-
-    (int, int)? takeFarFromSpawn(List<(int, int)> cells) {
-      if (cells.isEmpty) return null;
-      var bestI = 0;
-      var bestD = -1;
-      for (var i = 0; i < cells.length; i++) {
-        final d = distFromSpawn(cells[i]);
-        if (d > bestD) {
-          bestD = d;
-          bestI = i;
-        }
-      }
-      return cells.removeAt(bestI);
-    }
-
-    (int, int)? takeCell(List<(int, int)> cells) =>
-        kit.customDungeonArt ? takeFarFromSpawn(cells) : takeFrom(cells);
-
-    bool wetKind(MapPropKind kind) =>
-        kind == MapPropKind.water || kind == MapPropKind.fountain;
-
-    final used = <String>{};
+    final used = <int>{};
     final props = <MapProp>[];
     final chests = <(int, int)>[];
 
-    void placeProp((int, int) cell, MapPropKind kind) {
-      final key = '${cell.$1},${cell.$2}';
-      if (used.contains(key) || blocked.contains(key)) return;
-      used.add(key);
-      props.add(MapProp(x: cell.$1, y: cell.$2, kind: kind));
+    bool free(int x, int y) =>
+        isFloor(x, y) &&
+        !blocked.contains(key(x, y)) &&
+        !used.contains(key(x, y)) &&
+        tiles[key(x, y)] != TileKind.exit;
+
+    bool place(int x, int y, MapPropKind kind, {bool hero = false}) {
+      if (!free(x, y)) return false;
+      used.add(key(x, y));
+      props.add(MapProp(x: x, y: y, kind: kind, hero: hero));
+      return true;
     }
 
+    /// Nearest free cell to (x, y) inside [c] (spiral).
+    (int, int)? nearestFree(Chamber c, int x, int y, {bool edge = false}) {
+      for (var r = 0; r <= max(c.w, c.h); r++) {
+        for (var dy = -r; dy <= r; dy++) {
+          for (var dx = -r; dx <= r; dx++) {
+            if (dx.abs() != r && dy.abs() != r) continue;
+            final nx = x + dx;
+            final ny = y + dy;
+            if (!c.containsTile(nx, ny) || !free(nx, ny)) continue;
+            if (edge && !touchesWall(nx, ny)) continue;
+            return (nx, ny);
+          }
+        }
+      }
+      return null;
+    }
+
+    final torch = _torchFor(kit);
+
+    // —— Room chest (loot socket) ——
     final wantChest =
         blueprint.wantsRoomChest ||
         (blueprint.legacyType == RoomType.elite && kit.eliteRoomChest) ||
         (blueprint.legacyType == RoomType.normal &&
             rng.nextDouble() < kit.normalRoomChestChance);
+    final chestChambers = <int>{};
     if (wantChest) {
-      Chamber? targetChamber;
+      Chamber? target;
       final preferredIdx = blueprint.preferredChestChamberIndex;
       if (preferredIdx != null &&
           preferredIdx >= 0 &&
           preferredIdx < chambers.length) {
-        targetChamber = chambers[preferredIdx];
-      } else {
-        for (final c in chambers) {
-          if (c.beatKind == FloorBeatKind.decoy) continue;
-          if (c.beatKind == FloorBeatKind.treasure ||
-              c.beatKind == FloorBeatKind.elite) {
-            targetChamber = c;
-            break;
+        target = chambers[preferredIdx];
+      }
+      target ??= chambers.cast<Chamber?>().firstWhere(
+        (c) =>
+            c!.beatKind == FloorBeatKind.treasure ||
+            c.beatKind == FloorBeatKind.elite,
+        orElse: () => chambers.isEmpty ? null : chambers.last,
+      );
+      if (target != null && target.beatKind == FloorBeatKind.choke) {
+        target = chambers.lastWhere(
+          (c) => c.beatKind != FloorBeatKind.choke,
+          orElse: () => target!,
+        );
+      }
+      (int, int)? cell;
+      if (target != null) {
+        // Back wall, far from the party spawn: the room's goal.
+        final back = (target.cx, target.y + 1);
+        cell =
+            nearestFree(target, back.$1, back.$2, edge: true) ??
+            nearestFree(target, target.cx, target.cy);
+      }
+      if (cell == null) {
+        for (var y = 0; y < rows && cell == null; y++) {
+          for (var x = 0; x < cols && cell == null; x++) {
+            if (free(x, y) && touchesWall(x, y)) cell = (x, y);
           }
         }
-        if (targetChamber == null && chambers.isNotEmpty) {
-          for (final c in chambers.reversed) {
-            if (c.beatKind != FloorBeatKind.decoy) {
-              targetChamber = c;
-              break;
-            }
-          }
-        }
       }
-      final candidates = <(int, int)>[];
-      for (final cell in edgeCells) {
-        if (targetChamber != null &&
-            !inChamber(targetChamber, cell.$1, cell.$2)) {
-          continue;
-        }
-        if (cell.$1 == exitPoint.$1 && cell.$2 == exitPoint.$2) continue;
-        candidates.add(cell);
-      }
-      if (candidates.isEmpty && targetChamber != null) {
-        for (final cell in openCells) {
-          if (inChamber(targetChamber, cell.$1, cell.$2)) candidates.add(cell);
-        }
-      }
-      if (candidates.isEmpty) {
-        candidates.addAll(edgeCells);
-      }
-      final chest = takeCell(candidates);
-      if (chest != null) {
-        chests.add(chest);
-        used.add('${chest.$1},${chest.$2}');
-        props.add(MapProp(x: chest.$1, y: chest.$2, kind: MapPropKind.chest));
-        edgeCells.remove(chest);
-        if (kit.customDungeonArt) {
-          for (final neighbor in <(int, int)>[
-            (chest.$1 - 1, chest.$2),
-            (chest.$1 + 1, chest.$2),
-            (chest.$1, chest.$2 - 1),
-            (chest.$1, chest.$2 + 1),
-          ]) {
-            final key = '${neighbor.$1},${neighbor.$2}';
-            if (!isFloor(neighbor.$1, neighbor.$2)) continue;
-            if (blocked.contains(key) || used.contains(key)) continue;
-            if (!touchesWall(neighbor.$1, neighbor.$2)) continue;
-            used.add(key);
-            props.add(
-              MapProp(
-                x: neighbor.$1,
-                y: neighbor.$2,
-                kind: MapPropKind.water,
-              ),
-            );
-            edgeCells.removeWhere(
-              (c) => c.$1 == neighbor.$1 && c.$2 == neighbor.$2,
-            );
-            break;
-          }
+      if (cell != null) {
+        final isTreasureRoom = target?.beatKind == FloorBeatKind.treasure;
+        place(cell.$1, cell.$2, MapPropKind.chest, hero: isTreasureRoom);
+        chests.add(cell);
+        if (target != null) chestChambers.add(target.index);
+        if (isTreasureRoom) {
+          place(cell.$1 - 1, cell.$2, torch);
+          place(cell.$1 + 1, cell.$2, torch);
+          place(cell.$1 - 2, cell.$2, MapPropKind.pot);
+          place(cell.$1 + 2, cell.$2 + 1, MapPropKind.pot);
         }
       } else {
         violations.add('no_chest_socket');
       }
     }
 
-    final landmarkPool = kit.landmarks.isNotEmpty
-        ? kit.landmarks
-        : kit.edgeClutter;
-    for (final chamber in chambers) {
-      final localEdge = <(int, int)>[];
-      for (final cell in edgeCells) {
-        if (used.contains('${cell.$1},${cell.$2}')) continue;
-        if (inChamber(chamber, cell.$1, cell.$2)) localEdge.add(cell);
+    // —— One hero per chamber (+ symmetric flank) ——
+    for (final c in chambers) {
+      final beat = c.beatKind;
+      if (beat == FloorBeatKind.treasure && chestChambers.contains(c.index)) {
+        continue;
       }
-      var want = kit.landmarkPerChamber.clamp(0, 3);
-      switch (chamber.beatKind) {
-        case FloorBeatKind.treasure:
-          want = (want + 2).clamp(2, 4);
-        case FloorBeatKind.hub:
-          want = (want + 1).clamp(2, 4);
-        case FloorBeatKind.decoy:
-          want = (want + 1).clamp(1, 3);
-        case FloorBeatKind.boss:
-          want = want < 1 ? 1 : want;
-        default:
-          break;
+      final heroKind = beat == FloorBeatKind.treasure
+          ? MapPropKind.sacks
+          : PropVignettes.heroFor(beat, kit, blueprint.wonder, rng);
+      final centred =
+          beat == FloorBeatKind.shrine || beat == FloorBeatKind.wonder;
+      final anchor = anchors[c.index] ??
+          (centred ? (c.cx, c.cy) : (c.cx, c.y + 1));
+      final cell = nearestFree(c, anchor.$1, anchor.$2, edge: !centred && anchors[c.index] == null) ??
+          nearestFree(c, anchor.$1, anchor.$2);
+      if (cell == null) continue;
+      place(cell.$1, cell.$2, heroKind, hero: true);
+      final flank = PropVignettes.flankFor(beat, torch);
+      if (flank != null) {
+        place(cell.$1 - 2, cell.$2, flank);
+        place(cell.$1 + 2, cell.$2, flank);
       }
-      if (chamber.beatKind == FloorBeatKind.boss && localEdge.isEmpty) {
-        for (final cell in openCells) {
-          if (used.contains('${cell.$1},${cell.$2}')) continue;
-          if (inChamber(chamber, cell.$1, cell.$2)) localEdge.add(cell);
+      if (beat == FloorBeatKind.wonder) {
+        _wonderExtras(blueprint.wonder, cell, place, rng);
+      }
+      if (beat == FloorBeatKind.boss && kit.landmarks.isNotEmpty) {
+        // Arena ring of the zone's own landmark (pillars, anvils, fountains).
+        final ring = kit.landmarks.first;
+        final dx = c.w ~/ 3;
+        final dy = c.h ~/ 4;
+        for (final o in [(-dx, -dy), (dx, -dy), (-dx, dy), (dx, dy)]) {
+          final spot = nearestFree(c, c.cx + o.$1, c.cy + o.$2);
+          if (spot != null) place(spot.$1, spot.$2, ring);
         }
-      }
-      for (var i = 0; i < want; i++) {
-        final cell = takeCell(localEdge);
-        if (cell == null) break;
-        edgeCells.remove(cell);
-        openCells.remove(cell);
-        MapPropKind kind;
-        if (chamber.beatKind == FloorBeatKind.boss &&
-            i == 0 &&
-            landmarkPool.isNotEmpty) {
-          kind = landmarkPool.first;
-        } else if (kit.customDungeonArt && i == 0) {
-          final wet = landmarkPool.where(wetKind).toList();
-          kind = wet.isNotEmpty
-              ? wet[rng.nextInt(wet.length)]
-              : landmarkPool[rng.nextInt(landmarkPool.length)];
-        } else {
-          kind = landmarkPool[rng.nextInt(landmarkPool.length)];
-        }
-        placeProp(cell, kind);
       }
     }
 
-    final floorCount = edgeCells.length + openCells.length + used.length;
-    final density = kit.clutterDensity.clamp(0.04, 0.16);
-    final target = (floorCount * density).floor().clamp(16, 80);
+    // —— Door sconces: both sides of each gate run (wall cells) ——
+    final wallTorches = <int>{};
+    void sconce(int x, int y) {
+      if (!inMap(x, y) || !isWall(x, y)) return;
+      if (!wallTorches.add(key(x, y))) return;
+      props.add(MapProp(x: x, y: y, kind: torch));
+    }
+
+    for (final run in _gateRuns(gates)) {
+      final horizontal = run.every((g) => g.y == run.first.y);
+      if (horizontal) {
+        final xs = run.map((g) => g.x).toList()..sort();
+        sconce(xs.first - 1, run.first.y);
+        sconce(xs.last + 1, run.first.y);
+      } else {
+        final ys = run.map((g) => g.y).toList()..sort();
+        sconce(run.first.x, ys.first - 1);
+        sconce(run.first.x, ys.last + 1);
+      }
+    }
+
+    // —— Stairs framed by torches (peak-end: the finish is a scene) ——
+    place(exitPoint.$1 - 1, exitPoint.$2 - 1, torch);
+    place(exitPoint.$1 + 1, exitPoint.$2 - 1, torch);
+
+    // —— One vignette per room, against a wall ——
+    final style = kit.style;
+    for (final c in chambers) {
+      final beat = c.beatKind;
+      if (beat == FloorBeatKind.shrine || beat == FloorBeatKind.wonder) continue;
+      final kind = beat == FloorBeatKind.elite
+          ? PropVignetteKind.crypt
+          : style.vignettes[rng.nextInt(style.vignettes.length)];
+      final pieces = PropVignettes.build(kind, rng);
+      _placeVignette(c, pieces, free, touchesWall, place, rng);
+    }
+
+    // —— Sparse clumped clutter (calm rooms so the hero stands out) ——
     final clutterPool = kit.edgeClutter.isNotEmpty
-        ? kit.edgeClutter
-        : landmarkPool;
-    while (props.length < target) {
-      final preferEdge = kit.customDungeonArt || rng.nextDouble() < 0.75;
-      var cell = preferEdge ? takeFrom(edgeCells) : takeFrom(openCells);
-      cell ??= takeFrom(edgeCells) ?? takeFrom(openCells);
-      if (cell == null) break;
-      var kind = clutterPool[rng.nextInt(clutterPool.length)];
-      if (kit.customDungeonArt && wetKind(kind) && !touchesWall(cell.$1, cell.$2)) {
-        final wetPool = clutterPool.where(wetKind).toList();
-        final dryPool = clutterPool.where((k) => !wetKind(k)).toList();
-        kind = (dryPool.isNotEmpty ? dryPool : wetPool)[
-            rng.nextInt((dryPool.isNotEmpty ? dryPool : wetPool).length)];
+        ? [
+            for (final k in kit.edgeClutter)
+              if (k != MapPropKind.chest) k,
+          ]
+        : const [MapPropKind.rubble];
+    bool wet(MapPropKind k) =>
+        k == MapPropKind.water || k == MapPropKind.lava || k == MapPropKind.fountain;
+    final perChamberMin = max(2, kit.clutterPerChamberMin - 1);
+    for (final c in chambers) {
+      var count = props.where((p) => c.containsTile(p.x, p.y)).length;
+      final edges = <(int, int)>[];
+      for (var y = c.y; y < c.y + c.h; y++) {
+        for (var x = c.x; x < c.x + c.w; x++) {
+          if (free(x, y) && touchesWall(x, y)) edges.add((x, y));
+        }
       }
-      placeProp(cell, kind);
+      edges.shuffle(rng);
+      var guard = 0;
+      while (count < perChamberMin + 2 && edges.isNotEmpty && guard++ < 24) {
+        final seed = edges.removeLast();
+        final clump = 1 + rng.nextInt(3);
+        final kind = clutterPool[rng.nextInt(clutterPool.length)];
+        var cx = seed.$1;
+        var cy = seed.$2;
+        for (var i = 0; i < clump; i++) {
+          var k = kind;
+          if (wet(k) && !touchesWall(cx, cy)) k = MapPropKind.rubble;
+          if (place(cx, cy, i == 0 ? k : clutterPool[rng.nextInt(clutterPool.length)])) {
+            count++;
+          }
+          final step = rng.nextBool() ? (1, 0) : (0, 1);
+          cx += step.$1;
+          cy += step.$2;
+          if (!free(cx, cy) || !touchesWall(cx, cy)) break;
+        }
+      }
     }
 
-    final perChamberMin = kit.clutterPerChamberMin.clamp(3, 12);
-    for (final chamber in chambers) {
-      var count = props.where((p) => inChamber(chamber, p.x, p.y)).length;
-      if (count >= perChamberMin) continue;
-      final localEdge = <(int, int)>[];
-      final localOpen = <(int, int)>[];
-      for (var y = chamber.y; y < chamber.y + chamber.h; y++) {
-        for (var x = chamber.x; x < chamber.x + chamber.w; x++) {
-          if (!isFloor(x, y)) continue;
-          if (blocked.contains('$x,$y') || used.contains('$x,$y')) continue;
-          if (x == exitPoint.$1 && y == exitPoint.$2) continue;
-          final cell = (x, y);
-          if (touchesWall(x, y)) {
-            localEdge.add(cell);
-          } else {
-            localOpen.add(cell);
-          }
-        }
-      }
-      while (count < perChamberMin) {
-        final preferEdge = kit.customDungeonArt || rng.nextDouble() < 0.8;
-        var cell = preferEdge ? takeFrom(localEdge) : takeFrom(localOpen);
-        cell ??= takeFrom(localEdge) ?? takeFrom(localOpen);
-        if (cell == null) break;
-        var kind = clutterPool[rng.nextInt(clutterPool.length)];
-        if (kit.customDungeonArt && wetKind(kind) && !touchesWall(cell.$1, cell.$2)) {
-          final dryPool = clutterPool.where((k) => !wetKind(k)).toList();
-          if (dryPool.isNotEmpty) {
-            kind = dryPool[rng.nextInt(dryPool.length)];
-          }
-        }
-        placeProp(cell, kind);
-        count++;
+    // Floor-wide minimum so small maps never look bare.
+    final spare = <(int, int)>[
+      for (var y = 0; y < rows; y++)
+        for (var x = 0; x < cols; x++)
+          if (free(x, y) && touchesWall(x, y)) (x, y),
+    ]..shuffle(rng);
+    // Most clutter hugs walls so mid-room fight space stays clear.
+    var edgeCount = props.where((p) => touchesWall(p.x, p.y)).length;
+    while ((props.length < 18 || edgeCount * 2 <= props.length) &&
+        spare.isNotEmpty) {
+      final s = spare.removeLast();
+      if (place(s.$1, s.$2, clutterPool[rng.nextInt(clutterPool.length)])) {
+        edgeCount++;
       }
     }
 
@@ -320,18 +301,12 @@ class PlacementPlan {
         violations.add('chest_on_exit');
       }
       for (final s in spawnPoints) {
-        if (c.$1 == s.$1 && c.$2 == s.$2) {
-          violations.add('chest_on_spawn');
-        }
+        if (c.$1 == s.$1 && c.$2 == s.$2) violations.add('chest_on_spawn');
       }
       for (final e in enemySpawns) {
-        if (c.$1 == e.$1 && c.$2 == e.$2) {
-          violations.add('chest_on_enemy');
-        }
+        if (c.$1 == e.$1 && c.$2 == e.$2) violations.add('chest_on_enemy');
       }
-      if (!isFloor(c.$1, c.$2)) {
-        violations.add('chest_not_floor');
-      }
+      if (!isFloor(c.$1, c.$2)) violations.add('chest_not_floor');
     }
 
     return PlacementPlan(
@@ -339,5 +314,89 @@ class PlacementPlan {
       lootChestPoints: List<(int, int)>.unmodifiable(chests),
       violations: List<String>.unmodifiable(violations),
     );
+  }
+
+  static MapPropKind _torchFor(ZoneLayoutKit kit) {
+    final pool = kit.edgeClutter;
+    final alt = pool.where((k) => k == MapPropKind.torchAlt).length;
+    final plain = pool.where((k) => k == MapPropKind.torch).length;
+    return alt > plain ? MapPropKind.torchAlt : MapPropKind.torch;
+  }
+
+  static void _wonderExtras(
+    WonderKind? wonder,
+    (int, int) at,
+    bool Function(int, int, MapPropKind, {bool hero}) place,
+    Random rng,
+  ) {
+    final (x, y) = at;
+    switch (wonder) {
+      case WonderKind.giantSkeleton:
+        // A spine of bones trailing from the skull.
+        for (var i = 1; i <= 5; i++) {
+          place(x + i, y + (i.isEven ? 1 : 0), MapPropKind.bones);
+        }
+      case WonderKind.hoard:
+        for (final o in const [(-1, 1), (1, 1), (0, 2), (-2, -1), (2, -1)]) {
+          place(x + o.$1, y + o.$2, rng.nextBool() ? MapPropKind.pot : MapPropKind.sacks);
+        }
+      case WonderKind.soulWell:
+        place(x, y - 2, MapPropKind.statue);
+        place(x, y + 2, MapPropKind.statue);
+      case WonderKind.starfall || null:
+        place(x, y + 2, MapPropKind.crystalCluster);
+        place(x, y - 2, MapPropKind.crystalCluster);
+    }
+  }
+
+  static void _placeVignette(
+    Chamber c,
+    List<VignettePiece> pieces,
+    bool Function(int, int) free,
+    bool Function(int, int) touchesWall,
+    bool Function(int, int, MapPropKind, {bool hero}) place,
+    Random rng,
+  ) {
+    for (var attempt = 0; attempt < 40; attempt++) {
+      final ax = c.x + 1 + rng.nextInt(max(1, c.w - 2));
+      final ay = c.y + 1 + rng.nextInt(max(1, c.h - 2));
+      if (!free(ax, ay) || !touchesWall(ax, ay)) continue;
+      // Rows run along the wall: flip down/up so the second row sits inside.
+      final down = !touchesWall(ax, ay + 1) || free(ax, ay + 1);
+      var fits = 0;
+      for (final p in pieces) {
+        final px = ax + p.dx;
+        final py = ay + (down ? p.dy : -p.dy);
+        if (c.containsTile(px, py) && free(px, py)) fits++;
+      }
+      if (fits < (pieces.length * 0.7).ceil()) continue;
+      for (final p in pieces) {
+        place(ax + p.dx, ay + (down ? p.dy : -p.dy), p.kind);
+      }
+      return;
+    }
+  }
+
+  /// Straight lines of gate cells (one corridor seal each).
+  static List<List<GateInfo>> _gateRuns(List<GateInfo> gates) {
+    final byKey = {for (final g in gates) (g.x, g.y): g};
+    final seen = <(int, int)>{};
+    final runs = <List<GateInfo>>[];
+    for (final g in gates) {
+      if (seen.contains((g.x, g.y))) continue;
+      final run = <GateInfo>[];
+      final stack = [g];
+      while (stack.isNotEmpty) {
+        final cur = stack.removeLast();
+        if (!seen.add((cur.x, cur.y))) continue;
+        run.add(cur);
+        for (final d in const [(1, 0), (-1, 0), (0, 1), (0, -1)]) {
+          final n = byKey[(cur.x + d.$1, cur.y + d.$2)];
+          if (n != null && !seen.contains((n.x, n.y))) stack.add(n);
+        }
+      }
+      runs.add(run);
+    }
+    return runs;
   }
 }

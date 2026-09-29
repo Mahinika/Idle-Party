@@ -544,12 +544,16 @@ class GroundLoot {
     required this.y,
     required this.drop,
     this.age = 0,
+    this.chestSocket,
   });
 
   double x;
   double y;
   final LootDrop drop;
   double age;
+
+  /// Index into `TileMap.lootChestPoints` when this came from a room chest.
+  final int? chestSocket;
 
   GroundLootKind get kind {
     if (drop.isEquipment) {
@@ -2012,7 +2016,8 @@ abstract final class SpatialCombat {
 
     final groundLoot = <GroundLoot>[];
     final chestRng = math.Random(state.layoutSeed ^ 0xC7E57);
-    for (final cell in map.lootChestPoints) {
+    for (var socket = 0; socket < map.lootChestPoints.length; socket++) {
+      final cell = map.lootChestPoints[socket];
       final drops = GameLogic.rollRoomChestLoot(state, random: chestRng);
       for (var i = 0; i < drops.length; i++) {
         final ang = (i / math.max(1, drops.length)) * math.pi * 2;
@@ -2021,6 +2026,7 @@ abstract final class SpatialCombat {
             x: cell.$1 + 0.5 + math.cos(ang) * 0.2,
             y: cell.$2 + 0.5 + math.sin(ang) * 0.2,
             drop: drops[i],
+            chestSocket: socket,
           ),
         );
       }

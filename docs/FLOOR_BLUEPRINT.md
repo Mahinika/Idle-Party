@@ -7,7 +7,14 @@ Status: **SHIPPED (P0–P4)** — Blueprint + PlacementPlan + zone kits wired th
 **pipeline contract** (kept for the next zone), not an open backlog.
 
 Showcase: **Rimeglass** (treasure alcoves, oval rooms) vs **Stormwake** (choke, plus footprints). **Brassvault** halls stay rectangular. All catalog
-zones have a `ZoneLayoutKit`. `_silhouetteFor` in `tile_map.dart` biases every shipped cave id.
+zones have a `ZoneLayoutKit`. Room shapes per zone are data in
+`ZoneFloorStyle` (`lib/spatial/floor_theme.dart`), carved by
+`lib/spatial/room_silhouette.dart`.
+
+**1.12.190 — look layer (below, "Floor look").** FloorTheme per floor, shrine /
+wonder / setpiece beats (decoy removed), one hero prop per chamber, vignettes,
+walkable decals, baked terrain with wall faces, lights, room reveal, particles.
+Enemy budgets and `SpatialCombat.step` are unchanged.
 
 Relaterat: [GEAR_BUDGET.md](GEAR_BUDGET.md) (klar), [zone-art-identity](../.cursor/skills/zone-art-identity/SKILL.md), [CONTENT_CADENCE.md](CONTENT_CADENCE.md).
 
@@ -96,6 +103,9 @@ Varje beat mappar till **rumstaggar** som `RoomLayouts` förstår:
 | `choke` | pinched fight (short side ~8–9) + a 3-wide gate | corridor / ice crack / root tunnel |
 | `elite` | medium hall (~14–15×12–13) | pocket on the winding spine |
 | `treasure` | small side vault (~10–11×8–9) | dead-end med chest socket |
+| `shrine` | quiet side room (~10–11×9–10), symmetric | rune circle + altar, 0 enemies |
+| `wonder` | rare side room (~13–14×11–12) | hoard / skeleton / starfall / soul well |
+| `setpiece` | last main fight (~16–17×12–13), symmetric | dais + zone signature props |
 | `boss` | oval arena (~32×22) with short north/south bays | inset, not the whole cave |
 | `exitHold` | exit landing (~12–14×10–11) | stairs/boss stairs |
 
@@ -225,6 +235,59 @@ Gear-power stil: [GEAR_BUDGET.md](GEAR_BUDGET.md) oförändrad. Blueprint styr *
 - [x] Live + offline samma layout/loot-regler  
 - [x] What’s New + guides ärliga när player-visible  
 - [x] `flutter analyze lib test`; relevanta layout/loot/ship tests gröna  
+
+---
+
+## Floor look (1.12.190)
+
+Why: floors read as flat rectangles with a random scatter. The look layer
+follows environmental-preference research so a floor is worth watching:
+
+| Finding | What it drives |
+|---|---|
+| Kaplan preference matrix (coherence, legibility, complexity, mystery together) | One `FloorTheme` per floor; one hero per room; variety between rooms; unreached rooms dim, never black |
+| Von Restorff (distinct only against a calm field) | Exactly one hero prop per chamber (scale 1.3, lit); everything else 0.8, no glow |
+| Attention Restoration Theory (soft fascination) | Slow, sparse, low-contrast particles and shimmer |
+| Fractal preference D ≈ 1.3–1.5 | Clumped decals (random walk), ±1 wall roughness in organic zones only |
+| Oatmeal problem (similarity = shape + colour) | Silhouette variety + a light tint per beat before more clutter |
+| Peak-end | `setpiece` is the last main fight (exit room); stairs framed by torches + finale ring |
+| Prediction error | `wonder` rooms about 1 floor in 12 (visual only) |
+| Environmental storytelling | ~20 % of vignettes swap in one out-of-place piece |
+| Openness vs density | Spine alternates open halls and chokes (no two chokes at the end) |
+
+**Blueprint.** `FloorBlueprint.theme` and `.wonder` roll from a separate RNG
+stream so beat rolls stay put. New beats: `shrine` (side, 0 enemies),
+`wonder` (side, 0 enemies, replaces the shrine roll), `setpiece` (retags the
+last main fight when there are ≥3; budget kept). `FloorBeatKindLook.isQuiet`
+marks rooms that never hold a pack.
+
+**Layout.** `_sculptInteriors` adds symmetric pillars in hub / setpiece /
+wonder rooms and rough edges in organic zones, then flood-fills from spawn;
+any room whose changes cut off a reachable cell is reverted. Runs before
+enemy placement. `FloorDecalPlan` (`floor_decals.dart`) places walkable
+decals (never on gate / exit) and returns one anchor per purposeful room
+(rune circle, dais, starlight).
+
+**Placement.** Order in `PlacementPlan.build`: room chest → one hero per
+chamber (+ symmetric flank) → door sconces on both wall ends of every gate
+run → torches beside the stairs → one vignette per room
+(`prop_vignettes.dart`) → sparse clumped clutter, then a floor-wide top-up
+so most props still hug walls.
+
+**Props.** 11 new `MapPropKind`s (altar, statue, bookshelf, banner,
+crystalCluster, cauldron, sacks, chains, signatureA, signatureB, chestOpen).
+Owned PNGs per zone from `tool/generate_floor_props.py` (writes only missing
+files; `--force` rewrites only those names). Signature pieces live in each
+zone's own folder.
+
+**Render.** `dungeon_floor_layer.dart` bakes floor, wall rims, south wall
+faces, contact shadows, theme + beat tints and decals into one image per map
+(16 px / tile) and falls back to the live per-tile path if baking fails.
+Dynamic: doors, stairs, light pools (plus blend), shimmer, room reveal fade
+(~0.4 s), stairs finale, open chest (`GroundLoot.chestSocket`), particles
+(`dungeon_ambient_particles.dart`: Full 22, Lite 10, Minimal 0).
+
+Tests: `test/floor_look_test.dart`.
 
 ---
 

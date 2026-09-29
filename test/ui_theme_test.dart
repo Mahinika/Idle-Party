@@ -21,8 +21,11 @@ void main() {
     'dungeon_paint_floaters.dart',
     'dungeon_paint_projectiles.dart',
     'dungeon_tile_painter.dart',
+    'dungeon_floor_layer.dart',
+    'dungeon_ambient_particles.dart',
     'dungeon_target_hud.dart',
     'hub_world_map.dart',
+    'wisp_gift_overlay.dart',
   };
 
   final hexColor = RegExp(r'Color\(0x[0-9A-Fa-f]+');

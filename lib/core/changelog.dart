@@ -86,10 +86,36 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.189';
+  static const String currentVersion = '1.12.190';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.190',
+      date: 'Sep 29, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight — this patch makes every floor a place worth watching.',
+      added: <String>[
+        'Each floor has a mood, like Frozen Halls or Flooded Halls. Its name shows at the top between fights.',
+        'Every cave has its own signature room right before the stairs: a throne in King\'s Fort, a big gear in Brassvault, an ice spire in Rimeglass.',
+        'Quiet shrine rooms with a glowing altar. They are only for looking; they give no power.',
+        'Rare wonder rooms, about one floor in twelve: a hoard, a giant skeleton, or starlight through a broken roof. Also only for looking.',
+        'New owned props in every cave: altars, statues, bookshelves, banners, crystals, cauldrons, sacks, chains, and two pieces only that cave has.',
+        'Snow, embers, spores, bubbles, sparks, or moths drift through each cave. Minimal VFX turns them off.',
+      ],
+      changed: <String>[
+        'Rooms are built around one lit centrepiece. Props stand in groups like camps, crypts, and forges instead of a random scatter.',
+        'Walls have a visible front, torches light the floor, and rooms you have not reached stay dim until the party walks in.',
+        'Room chests open once you loot them. The stairs light up when they unlock.',
+        'Enemy counts and fights are the same as before.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until the party is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.189',
       date: 'Sep 28, 2026',

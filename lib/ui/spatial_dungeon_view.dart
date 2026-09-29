@@ -18,6 +18,8 @@ import '../models/hero.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/vfx_quality.dart';
+import '../spatial/floor_blueprint.dart';
+import '../spatial/floor_theme.dart';
 import '../spatial/spatial_combat.dart';
 import '../spatial/tile_map.dart';
 import '../visual/body_family.dart';
@@ -40,6 +42,8 @@ part 'dungeon_tile_painter.dart';
 part 'dungeon_paint_projectiles.dart';
 part 'dungeon_paint_actors.dart';
 part 'dungeon_paint_floaters.dart';
+part 'dungeon_floor_layer.dart';
+part 'dungeon_ambient_particles.dart';
 
 /// Top-down tile dungeon — painted, not 100+ Image widgets.
 class SpatialDungeonView extends StatefulWidget {
@@ -218,8 +222,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
 
     final floorPaths = KenneyAssets.floorVariantsForDungeon(dungeonId);
     final wallPaths = KenneyAssets.wallVariantsForDungeon(dungeonId);
-    final propKinds = KenneyAssets.propPoolForDungeon(dungeonId).toSet()
-      ..add(MapPropKind.chest);
+    // Heroes, vignettes and signature pieces can use any kind, not just clutter.
+    final propKinds = MapPropKind.values.toSet();
 
     // Shared combat icons — critical paint set first so resume never sticks
     // on "Loading floor…" while hundreds of paper-doll PNGs decode.

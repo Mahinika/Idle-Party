@@ -5,7 +5,10 @@ import '../models/dungeon_def.dart';
 import '../models/dungeon_room.dart';
 import '../assets/kenney_assets.dart';
 import 'floor_blueprint.dart';
+import 'floor_decals.dart';
+import 'floor_theme.dart';
 import 'placement_plan.dart';
+import 'room_silhouette.dart';
 import 'zone_layout_kit.dart';
 
 enum TileKind { wall, floor, spawn, exit, gate }
@@ -42,14 +45,43 @@ enum MapPropKind {
 
   /// Interactive-looking room chest (also a GroundLoot socket).
   chest,
+
+  /// Shrine centrepiece.
+  altar,
+  statue,
+  bookshelf,
+
+  /// Hanging cloth on a wall rim.
+  banner,
+  crystalCluster,
+  cauldron,
+  sacks,
+
+  /// Wall shackles / hanging chains.
+  chains,
+
+  /// Zone-only signature pieces (throne, gear, ice stalagmite…).
+  signatureA,
+  signatureB,
+
+  /// Looted room chest (swapped in by the painter, never placed).
+  chestOpen,
 }
 
 class MapProp {
-  const MapProp({required this.x, required this.y, required this.kind});
+  const MapProp({
+    required this.x,
+    required this.y,
+    required this.kind,
+    this.hero = false,
+  });
 
   final int x;
   final int y;
   final MapPropKind kind;
+
+  /// The one landmark per chamber that is bigger, lit, and meant to be seen.
+  final bool hero;
 }
 
 /// A carved room on the floor map.
@@ -113,6 +145,9 @@ class TileMap {
     this.props = const <MapProp>[],
     this.lootChestPoints = const <(int, int)>[],
     this.layoutSeed = 0,
+    this.decals = const <FloorDecal>[],
+    this.floorTheme,
+    this.wonder,
   });
 
   final int cols;
@@ -136,6 +171,15 @@ class TileMap {
 
   /// Seed used for floor/wall hash + prop scatter.
   final int layoutSeed;
+
+  /// Walkable, purely visual floor detail.
+  final List<FloorDecal> decals;
+
+  /// Whole-floor mood (null on hand-built maps such as tests).
+  final FloorTheme? floorTheme;
+
+  /// Set when this floor has a wonder room.
+  final WonderKind? wonder;
 
   bool inBounds(int x, int y) => x >= 0 && y >= 0 && x < cols && y < rows;
 
@@ -241,20 +285,7 @@ class TileMap {
   }
 }
 
-class _Rect {
-  _Rect(this.x, this.y, this.w, this.h);
-  final int x, y, w, h;
-  int get cx => x + w ~/ 2;
-  int get cy => y + h ~/ 2;
-  bool overlaps(_Rect o, {int pad = 1}) {
-    return x - pad < o.x + o.w &&
-        x + w + pad > o.x &&
-        y - pad < o.y + o.h &&
-        y + h + pad > o.y;
-  }
-}
-
-enum _RoomSilhouette { rect, oval, diamond, el, plus, chamfer, blob }
+typedef _Rect = RoomRect;
 
 /// Keep a footprint on the map. Sizes are already in phone tiles.
 (int, int) _fitRoom(int cols, int rows, int w, int h) {
@@ -374,6 +405,16 @@ abstract final class RoomLayouts {
           layoutSeed: layoutSeed,
         );
     final kit = ZoneLayoutKit.forId(dungeonId);
+    final decalPlan = FloorDecalPlan.build(
+      cols: cols,
+      rows: rows,
+      tiles: tiles,
+      exitPoint: exitPoint,
+      chambers: chambers,
+      blueprint: story,
+      style: kit.style,
+      rng: Random(layoutSeed ^ 0xDECA1),
+    );
     final plan = PlacementPlan.build(
       cols: cols,
       rows: rows,
@@ -385,6 +426,8 @@ abstract final class RoomLayouts {
       blueprint: story,
       kit: kit,
       rng: rng,
+      gates: gates,
+      anchors: decalPlan.anchors,
     );
     final props = plan.props.isNotEmpty
         ? plan.props
@@ -414,6 +457,9 @@ abstract final class RoomLayouts {
       props: props,
       lootChestPoints: plan.lootChestPoints,
       layoutSeed: layoutSeed,
+      decals: decalPlan.decals,
+      floorTheme: story.theme,
+      wonder: story.wonder,
     );
   }
 
@@ -498,6 +544,7 @@ abstract final class RoomLayouts {
       y: top,
       w: max(4, right - left + 1),
       h: max(4, bottom - top + 1),
+      beatKind: FloorBeatKind.boss,
     );
 
     final spawnPoints = _partySpawnCluster(
@@ -583,163 +630,40 @@ abstract final class RoomLayouts {
     );
   }
 
-  static _RoomSilhouette _silhouetteFor(
+  static RoomSilhouette _silhouetteFor(
     FloorBeatKind kind,
     Random rng,
     ZoneLayoutKit kit,
   ) {
-    if (kind == FloorBeatKind.choke) {
-      if (kit.dungeonId == 'storm') return _RoomSilhouette.plus;
-      return rng.nextBool() ? _RoomSilhouette.oval : _RoomSilhouette.chamfer;
-    }
-    if (kind == FloorBeatKind.treasure || kind == FloorBeatKind.decoy) {
-      if (kit.dungeonId == 'rime') return _RoomSilhouette.oval;
-      return switch (rng.nextInt(3)) {
-        0 => _RoomSilhouette.oval,
-        1 => _RoomSilhouette.el,
-        _ => _RoomSilhouette.diamond,
-      };
-    }
-    if (kit.dungeonId == 'storm') {
-      return rng.nextBool() ? _RoomSilhouette.plus : _RoomSilhouette.chamfer;
-    }
-    if (kit.dungeonId == 'rime') {
-      return rng.nextBool() ? _RoomSilhouette.oval : _RoomSilhouette.diamond;
-    }
-    if (kit.dungeonId == 'brass') {
-      return rng.nextBool() ? _RoomSilhouette.rect : _RoomSilhouette.chamfer;
-    }
-    if (kit.dungeonId == 'hell') {
-      return rng.nextBool() ? _RoomSilhouette.el : _RoomSilhouette.blob;
-    }
-    if (kit.dungeonId == 'crystal') {
-      return rng.nextBool() ? _RoomSilhouette.diamond : _RoomSilhouette.plus;
-    }
-    if (kit.dungeonId == 'ember') {
-      return rng.nextBool() ? _RoomSilhouette.chamfer : _RoomSilhouette.blob;
-    }
-    if (kit.dungeonId == 'fen') {
-      return rng.nextBool() ? _RoomSilhouette.el : _RoomSilhouette.oval;
-    }
-    if (kit.dungeonId == 'tide') {
-      return rng.nextBool() ? _RoomSilhouette.oval : _RoomSilhouette.el;
-    }
-    if (kit.dungeonId == 'underworld') {
-      return rng.nextBool() ? _RoomSilhouette.plus : _RoomSilhouette.diamond;
-    }
-    if (kit.dungeonId == 'sandy') {
-      return rng.nextBool() ? _RoomSilhouette.oval : _RoomSilhouette.chamfer;
-    }
-    if (kit.dungeonId == 'goblin') {
-      return rng.nextBool() ? _RoomSilhouette.blob : _RoomSilhouette.el;
-    }
-    if (kit.dungeonId == 'king') {
-      return rng.nextBool() ? _RoomSilhouette.rect : _RoomSilhouette.plus;
-    }
-    if (kit.dungeonId == 'dead') {
-      return rng.nextBool() ? _RoomSilhouette.diamond : _RoomSilhouette.blob;
-    }
-    if (kit.dungeonId == 'grove') {
-      return rng.nextBool() ? _RoomSilhouette.blob : _RoomSilhouette.oval;
-    }
-    if (kit.dungeonId == 'veil') {
-      return rng.nextBool() ? _RoomSilhouette.el : _RoomSilhouette.plus;
-    }
-    return switch (rng.nextInt(7)) {
-      0 => _RoomSilhouette.rect,
-      1 => _RoomSilhouette.oval,
-      2 => _RoomSilhouette.diamond,
-      3 => _RoomSilhouette.el,
-      4 => _RoomSilhouette.plus,
-      5 => _RoomSilhouette.chamfer,
-      _ => _RoomSilhouette.blob,
-    };
-  }
-
-  static bool _inSilhouette(
-    _Rect r,
-    int x,
-    int y,
-    _RoomSilhouette silhouette,
-    int salt,
-  ) {
-    final lx = x - r.x;
-    final ly = y - r.y;
-    if (lx < 0 || ly < 0 || lx >= r.w || ly >= r.h) return false;
-    final mx = r.w ~/ 2;
-    final my = r.h ~/ 2;
-    if ((lx - mx).abs() <= 1 && (ly - my).abs() <= 1) return true;
-    final dx = lx - (r.w - 1) / 2.0;
-    final dy = ly - (r.h - 1) / 2.0;
-    switch (silhouette) {
-      case _RoomSilhouette.rect:
-        return true;
-      case _RoomSilhouette.oval:
-        final rx = max(1.2, r.w / 2.0 - 0.15);
-        final ry = max(1.2, r.h / 2.0 - 0.15);
-        return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1.06;
-      case _RoomSilhouette.diamond:
-        final nx = dx.abs() / max(1.0, r.w / 2.0);
-        final ny = dy.abs() / max(1.0, r.h / 2.0);
-        return nx + ny <= 1.12;
-      case _RoomSilhouette.el:
-        final thickW = max(3, r.w ~/ 2);
-        final thickH = max(3, r.h ~/ 2);
-        if (salt.isOdd) {
-          return lx < thickW || ly < thickH;
-        }
-        return lx >= r.w - thickW || ly >= r.h - thickH;
-      case _RoomSilhouette.plus:
-        final armW = max(3, r.w ~/ 3);
-        final armH = max(3, r.h ~/ 3);
-        return dx.abs() <= armW / 2 || dy.abs() <= armH / 2;
-      case _RoomSilhouette.chamfer:
-        final cut = max(2, min(r.w, r.h) ~/ 4);
-        final fromL = lx;
-        final fromR = r.w - 1 - lx;
-        final fromT = ly;
-        final fromB = r.h - 1 - ly;
-        if (fromL + fromT < cut) return false;
-        if (fromR + fromT < cut) return false;
-        if (fromL + fromB < cut) return false;
-        if (fromR + fromB < cut) return false;
-        return true;
-      case _RoomSilhouette.blob:
-        final rx = max(1.2, r.w / 2.0);
-        final ry = max(1.2, r.h / 2.0);
-        final ang = atan2(dy, dx);
-        final wobble =
-            0.14 * sin(ang * 3 + salt) + 0.08 * cos(ang * 5 + salt * 0.37);
-        return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 0.92 + wobble;
-    }
-  }
-
-  static void _carveRoomFootprint(
-    _Rect r,
-    void Function(int x, int y, TileKind k) set,
-    _RoomSilhouette silhouette,
-    Random rng,
-  ) {
-    final salt = rng.nextInt(64);
-    for (var yy = r.y; yy < r.y + r.h; yy++) {
-      for (var xx = r.x; xx < r.x + r.w; xx++) {
-        if (_inSilhouette(r, xx, yy, silhouette, salt)) {
-          set(xx, yy, TileKind.floor);
-        }
-      }
-    }
-    set(r.cx, r.cy, TileKind.floor);
-    if (silhouette == _RoomSilhouette.blob ||
-        silhouette == _RoomSilhouette.oval) {
-      final nubs = 1 + rng.nextInt(3);
-      for (var i = 0; i < nubs; i++) {
-        final nx = r.x + rng.nextInt(max(1, r.w));
-        final ny = r.y + rng.nextInt(max(1, r.h));
-        if ((nx - r.cx).abs() + (ny - r.cy).abs() <= max(r.w, r.h) ~/ 2 + 1) {
-          set(nx, ny, TileKind.floor);
-          set(nx + (rng.nextBool() ? 1 : 0), ny, TileKind.floor);
-        }
-      }
+    final style = kit.style;
+    RoomSilhouette pick(List<RoomSilhouette> pool) =>
+        pool[rng.nextInt(pool.length)];
+    switch (kind) {
+      case FloorBeatKind.choke:
+        if (kit.dungeonId == 'storm') return RoomSilhouette.plus;
+        return rng.nextBool() ? RoomSilhouette.oval : RoomSilhouette.chamfer;
+      case FloorBeatKind.treasure:
+        if (kit.dungeonId == 'rime') return RoomSilhouette.oval;
+        return pick(const [
+          RoomSilhouette.oval,
+          RoomSilhouette.el,
+          RoomSilhouette.diamond,
+        ]);
+      case FloorBeatKind.shrine:
+        // Built on purpose: symmetric so the centrepiece reads as the point.
+        return rng.nextBool() ? RoomSilhouette.oval : RoomSilhouette.diamond;
+      case FloorBeatKind.wonder:
+        return rng.nextBool() ? RoomSilhouette.oval : RoomSilhouette.blob;
+      case FloorBeatKind.setpiece:
+        final sym = [
+          for (final s in style.silhouettes)
+            if (RoomSilhouettes.symmetric.contains(s) ||
+                s == RoomSilhouette.rect)
+              s,
+        ];
+        return sym.isEmpty ? RoomSilhouette.oval : sym.first;
+      default:
+        return pick(style.silhouettes);
     }
   }
 
@@ -784,9 +708,7 @@ abstract final class RoomLayouts {
 
     (int, int) sizeFor(FloorBeatKind kind) {
       (int, int) fit(int w, int h) => _fitRoom(cols, rows, w, h);
-      if (tightRooms &&
-          kind != FloorBeatKind.treasure &&
-          kind != FloorBeatKind.exitHold) {
+      if (tightRooms && !kind.isQuiet && kind != FloorBeatKind.exitHold) {
         return fit(8 + rng.nextInt(2), 10 + rng.nextInt(2));
       }
       switch (kind) {
@@ -805,8 +727,13 @@ abstract final class RoomLayouts {
           return fit(14 + rng.nextInt(2), 12 + rng.nextInt(2));
         case FloorBeatKind.treasure:
           return fit(10 + rng.nextInt(2), 8 + rng.nextInt(2));
-        case FloorBeatKind.decoy:
-          return fit(8 + rng.nextInt(2), 7 + rng.nextInt(2));
+        case FloorBeatKind.shrine:
+          return fit(10 + rng.nextInt(2), 9 + rng.nextInt(2));
+        case FloorBeatKind.wonder:
+          return fit(13 + rng.nextInt(2), 11 + rng.nextInt(2));
+        case FloorBeatKind.setpiece:
+          // The floor's peak: a touch bigger than a fight hall.
+          return fit(16 + rng.nextInt(2), 12 + rng.nextInt(2));
         case FloorBeatKind.boss:
           return fit(16 + rng.nextInt(2), 13 + rng.nextInt(2));
         case FloorBeatKind.exitHold:
@@ -999,9 +926,9 @@ abstract final class RoomLayouts {
     }
 
     for (var i = 0; i < rooms.length; i++) {
-      _carveRoomFootprint(
+      RoomSilhouettes.carve(
         rooms[i],
-        set,
+        (x, y) => set(x, y, TileKind.floor),
         _silhouetteFor(roomBeats[i] ?? FloorBeatKind.approach, rng, kit),
         rng,
       );
@@ -1071,6 +998,18 @@ abstract final class RoomLayouts {
     gateList.removeWhere(
       (g) =>
           (g.x, g.y) == (start.cx, start.cy) || (g.x, g.y) == (end.cx, end.cy),
+    );
+
+    _sculptInteriors(
+      tiles: tiles,
+      cols: cols,
+      rows: rows,
+      rooms: rooms,
+      roomBeats: roomBeats,
+      kit: kit,
+      rng: Random(layoutSeed ^ 0x5C0F7),
+      start: (start.cx, start.cy),
+      end: (end.cx, end.cy),
     );
 
     final spawnPoints = _partySpawnCluster(
@@ -1186,23 +1125,20 @@ abstract final class RoomLayouts {
 
     for (final entry in combatRooms) {
       final want = budgetByChamber[entry.$1] ?? 0;
-      // Treasure/decoy alcoves stay quiet unless budget was assigned.
+      // Treasure / shrine / wonder rooms stay quiet unless budget was assigned.
       final beatKind = roomBeats[entry.$1];
-      if ((beatKind == FloorBeatKind.treasure ||
-              beatKind == FloorBeatKind.decoy) &&
-          want <= 0) {
+      if ((beatKind?.isQuiet ?? false) && want <= 0) {
         continue;
       }
       fillRoom(entry.$2, entry.$1, want);
     }
 
-    // Leftover: round-robin walkable cells in combat rooms (skip empty treasure/decoy).
+    // Leftover: round-robin walkable cells in combat rooms (skip quiet rooms).
     if (enemySpawns.length < enemyCount) {
       final pool = <(int x, int y, int ci)>[];
       for (final entry in combatRooms) {
         final beatKind = roomBeats[entry.$1];
-        if ((beatKind == FloorBeatKind.treasure ||
-                beatKind == FloorBeatKind.decoy) &&
+        if ((beatKind?.isQuiet ?? false) &&
             (budgetByChamber[entry.$1] ?? 0) <= 0) {
           continue;
         }
@@ -1243,6 +1179,170 @@ abstract final class RoomLayouts {
       room: room,
       blueprint: blueprint,
     );
+  }
+
+  /// Organic wall roughness + symmetric pillars in big purposeful rooms.
+  /// A room's changes are kept only if every cell the party could reach
+  /// before is still reachable (gates count as open), else they are undone.
+  static void _sculptInteriors({
+    required List<TileKind> tiles,
+    required int cols,
+    required int rows,
+    required List<_Rect> rooms,
+    required List<FloorBeatKind?> roomBeats,
+    required ZoneLayoutKit kit,
+    required Random rng,
+    required (int, int) start,
+    required (int, int) end,
+  }) {
+    bool walk(int i) => tiles[i] != TileKind.wall;
+
+    List<bool> reach() {
+      final seen = List<bool>.filled(tiles.length, false);
+      final s = start.$2 * cols + start.$1;
+      if (!walk(s)) return seen;
+      final queue = <int>[s];
+      seen[s] = true;
+      for (var q = 0; q < queue.length; q++) {
+        final i = queue[q];
+        final x = i % cols;
+        final y = i ~/ cols;
+        void visit(int nx, int ny) {
+          if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) return;
+          final n = ny * cols + nx;
+          if (seen[n] || !walk(n)) return;
+          seen[n] = true;
+          queue.add(n);
+        }
+
+        visit(x + 1, y);
+        visit(x - 1, y);
+        visit(x, y + 1);
+        visit(x, y - 1);
+      }
+      return seen;
+    }
+
+    bool nearGate(int x, int y) {
+      for (var dy = -2; dy <= 2; dy++) {
+        for (var dx = -2; dx <= 2; dx++) {
+          final nx = x + dx;
+          final ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+          if (tiles[ny * cols + nx] == TileKind.gate) return true;
+        }
+      }
+      return false;
+    }
+
+    bool isProtected(int x, int y, _Rect r) {
+      if ((x - start.$1).abs() <= 2 && (y - start.$2).abs() <= 2) return true;
+      if ((x - end.$1).abs() <= 2 && (y - end.$2).abs() <= 2) return true;
+      if ((x - r.cx).abs() <= 1 && (y - r.cy).abs() <= 1) return true;
+      return nearGate(x, y);
+    }
+
+    bool isFloorAt(int x, int y) {
+      if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
+      return tiles[y * cols + x] == TileKind.floor;
+    }
+
+    bool touchesWall(int x, int y) =>
+        tiles[y * cols + x + 1] == TileKind.wall ||
+        tiles[y * cols + x - 1] == TileKind.wall ||
+        tiles[(y + 1) * cols + x] == TileKind.wall ||
+        tiles[(y - 1) * cols + x] == TileKind.wall;
+
+    var before = reach();
+    final organic = kit.style.organicEdges;
+    for (var ri = 0; ri < rooms.length; ri++) {
+      final r = rooms[ri];
+      if (r.x < 2 || r.y < 2 || r.x + r.w > cols - 2 || r.y + r.h > rows - 2) {
+        continue;
+      }
+      final beat = roomBeats[ri];
+      final changed = <int, TileKind>{};
+      void toWall(int x, int y) {
+        final i = y * cols + x;
+        changed.putIfAbsent(i, () => tiles[i]);
+        tiles[i] = TileKind.wall;
+      }
+
+      void toFloor(int x, int y) {
+        final i = y * cols + x;
+        changed.putIfAbsent(i, () => tiles[i]);
+        tiles[i] = TileKind.floor;
+      }
+
+      if (organic) {
+        final bites = <(int, int)>[];
+        final bumps = <(int, int)>[];
+        for (var y = r.y; y < r.y + r.h; y++) {
+          for (var x = r.x; x < r.x + r.w; x++) {
+            if (isProtected(x, y, r)) continue;
+            final t = tiles[y * cols + x];
+            if (t == TileKind.floor && touchesWall(x, y)) {
+              bites.add((x, y));
+            } else if (t == TileKind.wall &&
+                (isFloorAt(x + 1, y) ||
+                    isFloorAt(x - 1, y) ||
+                    isFloorAt(x, y + 1) ||
+                    isFloorAt(x, y - 1))) {
+              bumps.add((x, y));
+            }
+          }
+        }
+        for (final c in bites) {
+          if (rng.nextDouble() < 0.16) toWall(c.$1, c.$2);
+        }
+        for (final c in bumps) {
+          if (rng.nextDouble() < 0.12) toFloor(c.$1, c.$2);
+        }
+      }
+
+      final pillared =
+          beat == FloorBeatKind.hub ||
+          beat == FloorBeatKind.setpiece ||
+          beat == FloorBeatKind.wonder;
+      if (pillared && r.w >= 12 && r.h >= 10) {
+        final inset = r.w >= 16 ? 4 : 3;
+        final spots = <(int, int)>[
+          (r.x + inset, r.y + 3),
+          (r.x + r.w - 1 - inset, r.y + 3),
+          (r.x + inset, r.y + r.h - 4),
+          (r.x + r.w - 1 - inset, r.y + r.h - 4),
+        ];
+        final ok = spots.every((p) {
+          if (isProtected(p.$1, p.$2, r)) return false;
+          for (var dy = -1; dy <= 1; dy++) {
+            for (var dx = -1; dx <= 1; dx++) {
+              if (!isFloorAt(p.$1 + dx, p.$2 + dy)) return false;
+            }
+          }
+          return true;
+        });
+        if (ok) {
+          for (final p in spots) {
+            toWall(p.$1, p.$2);
+          }
+        }
+      }
+
+      if (changed.isEmpty) continue;
+      final after = reach();
+      var broken = false;
+      for (var i = 0; i < tiles.length; i++) {
+        if (before[i] && walk(i) && !after[i]) {
+          broken = true;
+          break;
+        }
+      }
+      if (broken) {
+        changed.forEach((i, t) => tiles[i] = t);
+      } else {
+        before = after;
+      }
+    }
   }
 
   static List<MapProp> _scatterProps({

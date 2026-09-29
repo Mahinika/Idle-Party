@@ -366,6 +366,17 @@ abstract final class KenneyAssets {
     MapPropKind.pillar => propPillar,
     MapPropKind.rubble => propRubble,
     MapPropKind.chest => chestClosed,
+    MapPropKind.chestOpen => CustomAssets.propChestOpen,
+    MapPropKind.altar => CustomAssets.propAltar,
+    MapPropKind.statue => CustomAssets.propStatue,
+    MapPropKind.bookshelf => CustomAssets.propBookshelf,
+    MapPropKind.banner => CustomAssets.propBanner,
+    MapPropKind.crystalCluster => CustomAssets.propCrystalCluster,
+    MapPropKind.cauldron => CustomAssets.propCauldron,
+    MapPropKind.sacks => CustomAssets.propSacks,
+    MapPropKind.chains => CustomAssets.propChains,
+    MapPropKind.signatureA => CustomAssets.propSignatureA,
+    MapPropKind.signatureB => CustomAssets.propSignatureB,
     };
   }
 

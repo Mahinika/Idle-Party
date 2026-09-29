@@ -485,6 +485,17 @@ abstract final class CustomAssets {
   static const String propChest = '$_fallback/props/chest.png';
   static const String propChestOpen = '$_fallback/props/chest_open.png';
   static const String propChestMimic = '$_fallback/props/chest_mimic.png';
+  static const String propAltar = '$_fallback/props/altar.png';
+  static const String propStatue = '$_fallback/props/statue.png';
+  static const String propBookshelf = '$_fallback/props/bookshelf.png';
+  static const String propBanner = '$_fallback/props/banner.png';
+  static const String propCrystalCluster =
+      '$_fallback/props/crystal_cluster.png';
+  static const String propCauldron = '$_fallback/props/cauldron.png';
+  static const String propSacks = '$_fallback/props/sacks.png';
+  static const String propChains = '$_fallback/props/chains.png';
+  static const String propSignatureA = '$_fallback/props/signature_a.png';
+  static const String propSignatureB = '$_fallback/props/signature_b.png';
   static const String uiPanelBrown = '$_root/ui/chrome/panel_brown.png';
   static const String uiPanelBeige = '$_root/ui/chrome/panel_beige.png';
   static const String uiPanelInsetBrown = '$_root/ui/chrome/panel_inset_brown.png';
@@ -570,6 +581,17 @@ abstract final class CustomAssets {
     'pillar',
     'rubble',
     'chest',
+    'chest_open',
+    'altar',
+    'statue',
+    'bookshelf',
+    'banner',
+    'crystal_cluster',
+    'cauldron',
+    'sacks',
+    'chains',
+    'signature_a',
+    'signature_b',
   ];
 
   static bool usesCustomDungeonArt(String dungeonId) =>
@@ -603,6 +625,10 @@ abstract final class CustomAssets {
 
   static String dungeonPropFile(MapPropKind kind) => switch (kind) {
     MapPropKind.torchAlt => 'torch_alt.png',
+    MapPropKind.crystalCluster => 'crystal_cluster.png',
+    MapPropKind.signatureA => 'signature_a.png',
+    MapPropKind.signatureB => 'signature_b.png',
+    MapPropKind.chestOpen => 'chest_open.png',
     _ => '${kind.name}.png',
   };
 

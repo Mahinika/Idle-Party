@@ -111,131 +111,107 @@ class _TileRoomPainter extends CustomPainter {
     final startY = camera.camY.floor().clamp(0, world.rows - 1);
     final endY = (camera.camY + camera.visibleRows).ceil().clamp(0, world.rows);
 
-    final floorBlend = DungeonEnvironment.floorBlend(dungeonId);
-    final corridorShade = DungeonEnvironment.corridorShade(dungeonId);
+    // Static terrain: one baked image per map; live per-tile path if baking fails.
+    final baked = _FloorLayerCache.imageFor(this);
+    if (baked != null) {
+      final paint = Paint()..filterQuality = FilterQuality.none;
+      canvas.drawImageRect(
+        baked,
+        Rect.fromLTWH(0, 0, baked.width.toDouble(), baked.height.toDouble()),
+        Rect.fromLTWH(originX, originY, world.cols * tile, world.rows * tile),
+        paint,
+      );
+    } else {
+      paintStaticTerrain(
+        canvas,
+        tile: tile,
+        originX: originX,
+        originY: originY,
+        x0: startX,
+        x1: endX,
+        y0: startY,
+        y1: endY,
+      );
+    }
 
-    for (var y = startY; y < endY; y++) {
-      for (var x = startX; x < endX; x++) {
-        final kind = world.map.at(x, y);
-        final gate = kind == TileKind.gate ? world.map.gateAt(x, y) : null;
-        final gateOpen = gate != null && world.openGateIds.contains(gate.id);
-        final dst = Rect.fromLTWH(
-          originX + x * tile,
-          originY + y * tile,
-          tile + 0.5,
-          tile + 0.5,
-        );
-
-        if (kind == TileKind.wall) {
-          // Void fill + thin wall caps toward carved space (no solid brick mass).
-          if (DungeonEnvironment.wallTouchesCarved(world.map, x, y) &&
-              wallVariants.isNotEmpty) {
-            final img =
-                wallVariants[_hashPick(
-                  x,
-                  y,
-                  layoutSeed + 17,
-                  wallVariants.length,
-                )];
-            _drawWallCaps(canvas, x, y, dst, tile, img);
-          }
-          continue;
+    // Live tiles: doors and the stairs change state mid-floor.
+    for (final gate in world.map.gates) {
+      final x = gate.x;
+      final y = gate.y;
+      if (!_inView(x + 0.5, y + 0.5)) continue;
+      final gateOpen = world.openGateIds.contains(gate.id);
+      final dst = Rect.fromLTWH(
+        originX + x * tile,
+        originY + y * tile,
+        tile + 0.5,
+        tile + 0.5,
+      );
+      // Only the center cell of a 3-wide gate strip draws a door sprite.
+      if (_isGateDoorCenter(x, y)) {
+        final door = gateOpen ? doorOpen : doorClosed;
+        final eastWest = DungeonEnvironment.gateRunsEastWest(world.map, x, y);
+        _drawOrientedDoor(canvas, door, dst, rotate: eastWest);
+        if (!gateOpen) {
+          _fillPaint.color = const Color(0x44000000);
+          canvas.drawRect(dst, _fillPaint);
+        } else {
+          // Open door always reads as progress (even Minimal VFX).
+          _strokePaint
+            ..color = const Color(0x88FFE08A)
+            ..strokeWidth = math.max(1.5, tile * 0.06);
+          canvas.drawRect(dst.deflate(tile * 0.08), _strokePaint);
         }
-
-        // Boss rooms use the second floor tile (the landmark plate).
-        final bossPlate = roomType == RoomType.boss && floorVariants.length > 1;
-        final floorImg = bossPlate
-            ? floorVariants[1]
-            : floorVariants[_hashPick(x, y, layoutSeed, floorVariants.length)];
-        _drawImage(canvas, floorImg, dst);
-        // Mute Kenney tile chroma so painted backdrop + zone wash dominate.
-        _fillPaint.color = floorBlend;
+      } else if (!gateOpen) {
+        // Side cells: sealed stubs, not extra door panels.
+        _fillPaint.color = const Color(0x55000000);
         canvas.drawRect(dst, _fillPaint);
-
-        final noise = DungeonEnvironment.floorNoise(x, y, layoutSeed);
-        if (noise.a > 0) {
-          _fillPaint.color = noise;
-          canvas.drawRect(dst, _fillPaint);
-        }
-
-        if (!DungeonEnvironment.inChamber(world.map, x, y) &&
-            kind != TileKind.spawn &&
-            kind != TileKind.exit) {
-          _fillPaint.color = corridorShade;
-          canvas.drawRect(dst, _fillPaint);
-        }
-
-        if (kind == TileKind.gate) {
-          // Only the center cell of a 3-wide gate strip draws a door sprite.
-            if (_isGateDoorCenter(x, y)) {
-            final door = gateOpen ? doorOpen : doorClosed;
-            final eastWest = DungeonEnvironment.gateRunsEastWest(
-              world.map,
-              x,
-              y,
-            );
-            _drawOrientedDoor(canvas, door, dst, rotate: eastWest);
-            if (!gateOpen) {
-              _fillPaint.color = const Color(0x44000000);
-              canvas.drawRect(dst, _fillPaint);
-            } else {
-              // Open door always reads as progress (even Minimal VFX).
-              _strokePaint
-                ..color = const Color(0x88FFE08A)
-                ..strokeWidth = math.max(1.5, tile * 0.06);
-              canvas.drawRect(dst.deflate(tile * 0.08), _strokePaint);
-            }
-          } else if (!gateOpen) {
-            // Side cells: sealed stubs, not extra door panels.
-            _fillPaint.color = const Color(0x55000000);
-            canvas.drawRect(dst, _fillPaint);
-          }
-        } else if (kind == TileKind.exit) {
-          final exitImg = roomType == RoomType.boss ? stairsBoss : stairs;
-          _drawImage(canvas, exitImg, dst);
-          if (world.awaitingExit) {
-            if (showGuide) {
-              final pulse = 0.75 + 0.25 * math.sin(visualFrame * 0.18);
-              _strokePaint
-                ..color = const Color(0x6670E0A0)
-                ..strokeWidth = math.max(2, tile * 0.08);
-              canvas.drawCircle(
-                dst.center,
-                tile * 0.55 * pulse,
-                _strokePaint,
-              );
-              _fillPaint.color = const Color(0x3380FFB0);
-              canvas.drawCircle(
-                dst.center,
-                tile * 0.32 * pulse,
-                _fillPaint,
-              );
-            }
-            // GO stays visible even on Minimal VFX — stairs must stay obvious.
-            final goStyle = GameTheme.pixelCached(
-              size: math.max(GameTheme.hudPixelComfort, tile * 0.42),
-              color: const Color(0xEE80FFB0),
-            );
-            if (_goLabelTile != tile || !identical(_goLabelStyle, goStyle)) {
-              _goLabelTile = tile;
-              _goLabelStyle = goStyle;
-              _goLabelPainter.text = TextSpan(text: 'GO', style: goStyle);
-              _goLabelPainter.layout();
-            }
-            _goLabelPainter.paint(
-              canvas,
-              Offset(
-                dst.center.dx - _goLabelPainter.width / 2,
-                dst.top - _goLabelPainter.height - 2,
-              ),
-            );
-          }
-        } else if (kind == TileKind.spawn) {
-          _fillPaint.color = const Color(0x14C88840);
-          canvas.drawRect(dst, _fillPaint);
-        }
       }
     }
+    {
+      final (x, y) = world.map.exitPoint;
+      final dst = Rect.fromLTWH(
+        originX + x * tile,
+        originY + y * tile,
+        tile + 0.5,
+        tile + 0.5,
+      );
+      final exitImg = roomType == RoomType.boss ? stairsBoss : stairs;
+      _drawImage(canvas, exitImg, dst);
+      if (world.awaitingExit) {
+        if (showGuide) {
+          final pulse = 0.75 + 0.25 * math.sin(visualFrame * 0.18);
+          _strokePaint
+            ..color = const Color(0x6670E0A0)
+            ..strokeWidth = math.max(2, tile * 0.08);
+          canvas.drawCircle(dst.center, tile * 0.55 * pulse, _strokePaint);
+          _fillPaint.color = const Color(0x3380FFB0);
+          canvas.drawCircle(dst.center, tile * 0.32 * pulse, _fillPaint);
+        }
+        // GO stays visible even on Minimal VFX — stairs must stay obvious.
+        final goStyle = GameTheme.pixelCached(
+          size: math.max(GameTheme.hudPixelComfort, tile * 0.42),
+          color: const Color(0xEE80FFB0),
+        );
+        if (_goLabelTile != tile || !identical(_goLabelStyle, goStyle)) {
+          _goLabelTile = tile;
+          _goLabelStyle = goStyle;
+          _goLabelPainter.text = TextSpan(text: 'GO', style: goStyle);
+          _goLabelPainter.layout();
+        }
+        _goLabelPainter.paint(
+          canvas,
+          Offset(
+            dst.center.dx - _goLabelPainter.width / 2,
+            dst.top - _goLabelPainter.height - 2,
+          ),
+        );
+      }
+    }
+
+    Offset lightCenter(double tx, double ty) =>
+        Offset(originX + tx * tile, originY + ty * tile);
+    paintFloorLights(canvas, tile, lightCenter);
+    paintShimmer(canvas, tile, lightCenter);
 
     // Zone atmosphere wash over terrain (under actors).
     _fillPaint.color = DungeonEnvironment.atmosphereWash(dungeonId);
@@ -315,20 +291,33 @@ class _TileRoomPainter extends CustomPainter {
       }
     }
 
+    final chestPoints = world.map.lootChestPoints;
     for (final prop in world.map.props) {
-      if (!_inView(prop.x + 0.5, prop.y + 0.5, pad: 0.75)) continue;
-      final img = propImages[prop.kind];
+      if (!_inView(prop.x + 0.5, prop.y + 0.5, pad: 1.25)) continue;
+      var kind = prop.kind;
+      if (kind == MapPropKind.chest) {
+        final socket = chestPoints.indexOf((prop.x, prop.y));
+        if (socket >= 0 &&
+            !world.groundLoot.any((l) => l.chestSocket == socket)) {
+          kind = MapPropKind.chestOpen;
+        }
+      }
+      final img = propImages[kind] ?? propImages[prop.kind];
       if (img == null) continue;
-      final c = center(prop.x + 0.5, prop.y + 0.5);
-      // Soft ground shadow so clutter reads against flat floor tiles.
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: c.translate(0, tile * 0.18),
-          width: tile * 0.55,
-          height: tile * 0.22,
-        ),
-        Paint()..color = DungeonEnvironment.propShadow(dungeonId),
-      );
+      final onWall = world.map.at(prop.x, prop.y) == TileKind.wall;
+      // Hero props sit a little higher so their base lands on the tile.
+      final c = center(prop.x + 0.5, prop.y + (prop.hero ? 0.35 : 0.5));
+      if (!onWall) {
+        // Soft ground shadow so clutter reads against flat floor tiles.
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: c.translate(0, tile * (prop.hero ? 0.42 : 0.18)),
+            width: tile * (prop.hero ? 0.9 : 0.55),
+            height: tile * (prop.hero ? 0.3 : 0.22),
+          ),
+          Paint()..color = DungeonEnvironment.propShadow(dungeonId),
+        );
+      }
       if (DungeonEnvironment.isTorchProp(prop.kind) && !reducedVfx) {
         final pulse = 0.85 + 0.15 * math.sin(visualFrame * 0.12);
         canvas.drawCircle(
@@ -343,8 +332,12 @@ class _TileRoomPainter extends CustomPainter {
             ),
         );
       }
-      drawSprite(img, c, 0.80);
+      // One hero per room is big and lit; everything else stays calm.
+      drawSprite(img, c, prop.hero ? 1.3 : 0.80);
     }
+
+    paintChamberReveal(canvas, tile, originX, originY);
+    paintExitFinale(canvas, tile, center);
 
     for (final loot in world.groundLoot) {
       if (!_inView(loot.x, loot.y)) continue;
@@ -465,6 +458,7 @@ class _TileRoomPainter extends CustomPainter {
 
     paintDungeonProjectiles(canvas, tile, originX, originY);
     paintDungeonActors(canvas, tile, originX, originY);
+    paintAmbientParticles(canvas, size);
     paintDungeonFloaters(canvas, tile, originX, originY);
   }
 

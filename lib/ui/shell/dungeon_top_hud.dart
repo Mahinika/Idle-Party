@@ -20,16 +20,22 @@ import '../spatial_dungeon_view.dart';
 import 'rift_progress_hud.dart';
 import 'wallet_strip.dart';
 
+/// Floor mood name between fights ("Frozen Halls"); the pack job wins mid-fight.
+String _floorMoodBit(SpatialWorld world) {
+  final theme = world.map.floorTheme;
+  return theme == null ? '' : ' · ${theme.label}';
+}
+
 String _packJobBit(SpatialWorld? world) {
   if (world == null) return '';
   final pack = world.enemies;
-  if (pack.isEmpty) return '';
+  if (pack.isEmpty) return _floorMoodBit(world);
   if (world.awaitingExit) return '';
   final awake = pack.where((e) => !e.dormant && e.isAlive).toList();
   final sleep = pack.where((e) => e.dormant && e.isAlive).length;
-  if (awake.isEmpty && sleep <= 0) return '';
+  if (awake.isEmpty && sleep <= 0) return _floorMoodBit(world);
   final next = sleep > 0 ? ' · $sleep next' : '';
-  if (awake.isEmpty) return next;
+  if (awake.isEmpty) return '${_floorMoodBit(world)}$next';
   final bossRoom = pack.any((e) => e.role == EnemyRole.boss);
   final eliteRoom = pack.any((e) => e.role == EnemyRole.elite);
   final roomType = bossRoom

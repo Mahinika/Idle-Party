@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../models/dungeon_room.dart';
+import 'floor_theme.dart';
 import 'zone_layout_kit.dart';
 
 /// One story beat on a floor (plan: docs/FLOOR_BLUEPRINT.md).
@@ -10,9 +11,25 @@ enum FloorBeatKind {
   choke,
   elite,
   treasure,
-  decoy,
+
+  /// Quiet side room with a glowing centrepiece. No enemies, no power.
+  shrine,
+
+  /// Rare visual-only surprise room (about 1 floor in 12).
+  wonder,
+
+  /// The zone's signature room — the last fight before the stairs.
+  setpiece,
   boss,
   exitHold,
+}
+
+extension FloorBeatKindLook on FloorBeatKind {
+  /// Rooms that never hold a pack unless a budget was assigned.
+  bool get isQuiet =>
+      this == FloorBeatKind.treasure ||
+      this == FloorBeatKind.shrine ||
+      this == FloorBeatKind.wonder;
 }
 
 /// Main spine vs side alcove off hub or last main chamber.
@@ -38,11 +55,19 @@ class FloorBlueprint {
     required this.legacyType,
     required this.beats,
     required this.dungeonId,
+    this.theme = FloorTheme.torchlit,
+    this.wonder,
   });
 
   final RoomType legacyType;
   final List<FloorBeat> beats;
   final String dungeonId;
+
+  /// One mood for the whole floor (decals, tint, HUD name).
+  final FloorTheme theme;
+
+  /// Set when this floor rolled a wonder room.
+  final WonderKind? wonder;
 
   bool get wantsRoomChest =>
       beats.any((b) => b.kind == FloorBeatKind.treasure) ||
@@ -88,6 +113,15 @@ class FloorBlueprint {
     );
     final budget = max(0, room.enemyCount);
     final beats = <FloorBeat>[];
+    // Separate stream so look rolls never shift the beat rolls above.
+    final lookRng = Random(
+      room.floorNumber * 4513 + dungeonId.hashCode * 3 + layoutSeed + 0x7E3E,
+    );
+    final style = kit.style;
+    final theme = style.themes[lookRng.nextInt(style.themes.length)];
+    final rollWonder = lookRng.nextDouble() < ZoneLayoutKit.wonderChance;
+    final rollSetpiece = lookRng.nextDouble() < 0.78;
+    WonderKind? wonder;
 
     switch (room.type) {
       case RoomType.boss:
@@ -111,15 +145,39 @@ class FloorBlueprint {
           rng,
           extraCombatRooms: extraCombatRooms,
         );
+        if (rollWonder && budget >= 4) {
+          wonder = style.wonders[lookRng.nextInt(style.wonders.length)];
+          beats.add(
+            const FloorBeat(
+              FloorBeatKind.wonder,
+              attach: FloorBeatAttach.sideMain,
+            ),
+          );
+        } else if (budget >= 5 &&
+            kit.shrineAlcoveChance > 0 &&
+            lookRng.nextDouble() < kit.shrineAlcoveChance) {
+          beats.add(
+            const FloorBeat(
+              FloorBeatKind.shrine,
+              attach: FloorBeatAttach.sideMain,
+            ),
+          );
+        }
+        if (rollSetpiece) _promoteSetpiece(beats);
         beats.add(const FloorBeat(FloorBeatKind.exitHold));
       case RoomType.normal:
-        _buildNormalBeats(
+        final gotWonder = _buildNormalBeats(
           beats,
           budget,
           kit,
           rng,
           extraCombatRooms: extraCombatRooms,
+          rollWonder: rollWonder,
         );
+        if (gotWonder) {
+          wonder = style.wonders[lookRng.nextInt(style.wonders.length)];
+        }
+        if (rollSetpiece) _promoteSetpiece(beats);
         beats.add(const FloorBeat(FloorBeatKind.exitHold));
     }
 
@@ -127,15 +185,37 @@ class FloorBlueprint {
       legacyType: room.type,
       beats: List<FloorBeat>.unmodifiable(beats),
       dungeonId: dungeonId,
+      theme: theme,
+      wonder: wonder,
     );
   }
 
-  static void _buildNormalBeats(
+  /// Peak-end: the last main fight room becomes the zone's signature room so
+  /// the floor's high point sits right before the stairs. Budget is kept.
+  static void _promoteSetpiece(List<FloorBeat> beats) {
+    final mainFights = <int>[
+      for (var i = 0; i < beats.length; i++)
+        if (!beats[i].isSide && beats[i].enemyBudget > 0) i,
+    ];
+    if (mainFights.length < 3) return;
+    final last = mainFights.last;
+    final b = beats[last];
+    if (b.kind == FloorBeatKind.hub) return;
+    beats[last] = FloorBeat(
+      FloorBeatKind.setpiece,
+      enemyBudget: b.enemyBudget,
+      attach: b.attach,
+    );
+  }
+
+  /// Returns true when a wonder room was added.
+  static bool _buildNormalBeats(
     List<FloorBeat> beats,
     int budget,
     ZoneLayoutKit kit,
     Random rng, {
     int extraCombatRooms = 0,
+    bool rollWonder = false,
   }) {
     final useHub =
         budget >= 4 &&
@@ -163,16 +243,19 @@ class FloorBlueprint {
       _maybeAddSideMainAlcove(beats, budget, kit, rng);
     }
 
-    if (kit.decoyAlcoveChance > 0 && rng.nextDouble() < kit.decoyAlcoveChance) {
-      beats.add(
-        FloorBeat(
-          FloorBeatKind.decoy,
-          attach: useHub
-              ? FloorBeatAttach.sideHub
-              : FloorBeatAttach.sideMain,
-        ),
-      );
+    final sideAttach = useHub
+        ? FloorBeatAttach.sideHub
+        : FloorBeatAttach.sideMain;
+    final rollShrine =
+        kit.shrineAlcoveChance > 0 && rng.nextDouble() < kit.shrineAlcoveChance;
+    if (rollWonder && budget >= 4) {
+      beats.add(FloorBeat(FloorBeatKind.wonder, attach: sideAttach));
+      return true;
     }
+    if (rollShrine) {
+      beats.add(FloorBeat(FloorBeatKind.shrine, attach: sideAttach));
+    }
+    return false;
   }
 
   static void _addHubSpineAndSides(
@@ -298,7 +381,8 @@ class FloorBlueprint {
       if (rooms >= 3) third,
       if (rooms >= 4) FloorBeatKind.elite,
       if (rooms >= 5) FloorBeatKind.choke,
-      if (rooms >= 6) FloorBeatKind.choke,
+      // Open after tight: never two chokes back to back at the end.
+      if (rooms >= 6) FloorBeatKind.approach,
     ];
     for (var i = 0; i < rooms; i++) {
       beats.add(FloorBeat(kinds[i], enemyBudget: shares[i]));

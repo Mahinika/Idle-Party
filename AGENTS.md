@@ -138,7 +138,8 @@ stamina is STA.
 | Combat | `lib/spatial/spatial_combat.dart` |
 | Kits | `lib/models/class_ability.dart`, `lib/models/kits/`, `lib/spatial/ability_effects.dart`, `kit_migrated_casts.dart` |
 | Packs / tells | `lib/core/enemy_flavor.dart`, `lib/core/boss_tells.dart`, `lib/spatial/enemy_specials.dart` |
-| Floors | `lib/spatial/floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart` |
+| Floors | `lib/spatial/floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart`, `floor_theme.dart`, `floor_decals.dart`, `prop_vignettes.dart`, `room_silhouette.dart` |
+| Floor look | `lib/ui/dungeon_floor_layer.dart` (baked terrain, lights, reveal), `dungeon_ambient_particles.dart`; props art `tool/generate_floor_props.py` |
 | Menus | `lib/core/menu_router.dart`, `lib/ui/shell/menu_surface.dart`, `app_bottom_bar.dart` |
 | Hub / chase | `lib/ui/hub_screen.dart`, `lib/core/hub_chase.dart`, `lib/core/chase_contract.dart` |
 | Art helpers | `lib/assets/custom_assets.dart`, `lib/assets/kenney_assets.dart` |

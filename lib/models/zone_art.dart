@@ -98,7 +98,7 @@ class ZoneArtDef {
     this.clutterPerChamberMin = 6,
     this.hubChamberChance = 0.0,
     this.eliteAlcoveChance = 0.0,
-    this.decoyAlcoveChance = 0.0,
+    this.shrineAlcoveChance = 0.0,
     this.corridorWindingChance = 0.5,
     this.verticalSpreadBoost = 2,
   }) : _floorVariants = floorVariants,
@@ -154,7 +154,7 @@ class ZoneArtDef {
   /// Large spawn hub with side branches (docs/FLOOR_BLUEPRINT.md).
   final double hubChamberChance;
   final double eliteAlcoveChance;
-  final double decoyAlcoveChance;
+  final double shrineAlcoveChance;
   final double corridorWindingChance;
   final int verticalSpreadBoost;
 
@@ -239,7 +239,7 @@ abstract final class ZoneArt {
     int landmarkPerChamber = 1,
     double hubChamberChance = 0.30,
     double eliteAlcoveChance = 0.0,
-    double decoyAlcoveChance = 0.16,
+    double shrineAlcoveChance = 0.16,
     double corridorWindingChance = 0.52,
     int verticalSpreadBoost = 3,
   }) =>
@@ -268,7 +268,7 @@ abstract final class ZoneArt {
         landmarkPerChamber: landmarkPerChamber,
         hubChamberChance: hubChamberChance,
         eliteAlcoveChance: eliteAlcoveChance,
-        decoyAlcoveChance: decoyAlcoveChance,
+        shrineAlcoveChance: shrineAlcoveChance,
         corridorWindingChance: corridorWindingChance,
         verticalSpreadBoost: verticalSpreadBoost,
       );
@@ -345,7 +345,7 @@ abstract final class ZoneArt {
       treasureAlcoveChance: 0.34,
       hubChamberChance: 0.40,
       eliteAlcoveChance: 0.30,
-      decoyAlcoveChance: 0.22,
+      shrineAlcoveChance: 0.22,
       normalRoomChestChance: 0.22,
       landmarkPerChamber: 2,
       enemies: ZoneEnemyArt(

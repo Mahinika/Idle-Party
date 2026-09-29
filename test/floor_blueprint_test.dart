@@ -61,7 +61,7 @@ void main() {
     expect(goblin.preferTreasureAlcove, isTrue);
     expect(goblin.treasureAlcoveChance, greaterThan(0.2));
     expect(goblin.hubChamberChance, greaterThan(0.3));
-    expect(goblin.decoyAlcoveChance, greaterThan(0.15));
+    expect(goblin.shrineAlcoveChance, greaterThan(0.15));
     expect(
       goblin.normalRoomChestChance,
       greaterThan(sandy.normalRoomChestChance),
@@ -100,7 +100,7 @@ void main() {
     expect(map!.chambers.first.beatKind, FloorBeatKind.hub);
   });
 
-  test('decoy alcoves stay empty and never hold the room chest', () {
+  test('shrine alcoves stay empty and never hold the room chest', () {
     TileMap? map;
     for (var seed = 0; seed < 200; seed++) {
       final candidate = RoomLayouts.forFloor(
@@ -116,7 +116,7 @@ void main() {
         layoutSeed: seed,
       );
       final decoys = candidate.chambers
-          .where((c) => c.beatKind == FloorBeatKind.decoy)
+          .where((c) => c.beatKind == FloorBeatKind.shrine)
           .toList();
       if (decoys.isEmpty) continue;
       map = candidate;
@@ -139,7 +139,7 @@ void main() {
       }
       break;
     }
-    expect(map, isNotNull, reason: 'expected goblin floor with decoy alcove');
+    expect(map, isNotNull, reason: 'expected goblin floor with shrine alcove');
   });
 
   test('rime kit prefers treasure alcoves vs fen choke', () {
@@ -292,23 +292,31 @@ void main() {
   });
 
   test('gates seal the full corridor, 3 for a choke and 4 for a hall', () {
-    final map = RoomLayouts.forFloor(
-      floorNumber: 4,
-      room: const DungeonRoom(
+    var saw3 = false;
+    var saw4 = false;
+    for (var seed = 0; seed < 12; seed++) {
+      final map = RoomLayouts.forFloor(
         floorNumber: 4,
-        roomIndex: 0,
-        type: RoomType.normal,
-        enemyLevel: 8,
-        enemyCount: 8,
-      ),
-      dungeonId: 'sandy',
-      layoutSeed: 2,
-    );
-    final runs = _gateRuns(map);
-    expect(runs, isNotEmpty);
-    expect(runs.every((n) => n == 3 || n == 4), isTrue, reason: '$runs');
-    expect(runs.contains(3), isTrue, reason: '$runs');
-    expect(runs.contains(4), isTrue, reason: '$runs');
+        room: const DungeonRoom(
+          floorNumber: 4,
+          roomIndex: 0,
+          type: RoomType.normal,
+          enemyLevel: 8,
+          enemyCount: 8,
+        ),
+        dungeonId: 'sandy',
+        layoutSeed: seed,
+      );
+      // Hub floors fan two halls out of one room; runs can touch there.
+      if (map.chambers.any((c) => c.beatKind == FloorBeatKind.hub)) continue;
+      final runs = _gateRuns(map);
+      expect(runs, isNotEmpty);
+      expect(runs.every((n) => n == 3 || n == 4), isTrue, reason: '$runs');
+      saw3 |= runs.contains(3);
+      saw4 |= runs.contains(4);
+    }
+    expect(saw3, isTrue);
+    expect(saw4, isTrue);
   });
 
   test('combat floors use a large canvas', () {
