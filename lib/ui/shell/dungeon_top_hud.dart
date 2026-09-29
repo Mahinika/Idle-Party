@@ -743,7 +743,7 @@ class MissionClaimChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(3),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: dense ? 28 : GameTheme.minTouch,
+              minHeight: GameTheme.minTouch,
             ),
             child: Container(
               padding: EdgeInsets.symmetric(

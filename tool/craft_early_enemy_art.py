@@ -182,6 +182,59 @@ def hell_elite() -> Image.Image:
     return img
 
 
+    _rim(img)
+    return img
+
+
+def underworld_tank() -> Image.Image:
+    """Void block with a purple core. Underworld tank, not the stone golem."""
+    img = _blank()
+    d = ImageDraw.Draw(img)
+    d.rectangle([6, 6, 26, 28], fill=(0x28, 0x18, 0x48))
+    d.rectangle([10, 10, 22, 22], fill=(0x70, 0x30, 0xC0))
+    d.ellipse([13, 13, 19, 19], fill=(0xE0, 0xA0, 0xFF))
+    d.polygon([(6, 6), (4, 2), (10, 6)], fill=(0x40, 0x20, 0x70))
+    d.polygon([(26, 6), (28, 2), (22, 6)], fill=(0x40, 0x20, 0x70))
+    _rim(img)
+    return img
+
+
+def dead_tank() -> Image.Image:
+    """Bone shield in front of a tomb body. City of Dead tank."""
+    img = _blank()
+    d = ImageDraw.Draw(img)
+    d.ellipse([8, 8, 24, 26], fill=(0xE8, 0xE0, 0xC8))
+    d.rectangle([14, 10, 18, 24], fill=(0x90, 0x88, 0x78))
+    d.ellipse([12, 12, 20, 20], fill=(0xC8, 0xC0, 0xA8))
+    d.polygon([(16, 4), (20, 10), (12, 10)], fill=(0xF4, 0xF0, 0xE0))
+    _rim(img)
+    return img
+
+
+def hell_brute() -> Image.Image:
+    """Wide lava bulk. Hell brute and tank share this silhouette."""
+    img = _blank()
+    d = ImageDraw.Draw(img)
+    d.ellipse([4, 10, 28, 30], fill=(0x80, 0x18, 0x10))
+    d.polygon([(8, 12), (4, 4), (14, 12)], fill=(0xE8, 0x40, 0x18))
+    d.polygon([(24, 12), (28, 4), (18, 12)], fill=(0xE8, 0x40, 0x18))
+    d.ellipse([10, 16, 16, 22], fill=(0xFF, 0xC0, 0x30))
+    d.ellipse([16, 16, 22, 22], fill=(0xFF, 0xC0, 0x30))
+    _rim(img)
+    return img
+
+
+def crystal_brute() -> Image.Image:
+    """Faceted ice shard. Crystal trash brute, not the warden."""
+    img = _blank()
+    d = ImageDraw.Draw(img)
+    d.polygon([(16, 2), (28, 14), (22, 30), (10, 30), (4, 14)], fill=(0x70, 0xD0, 0xF0))
+    d.polygon([(16, 6), (24, 14), (16, 26), (8, 14)], fill=(0xE8, 0xF8, 0xFF))
+    d.line([(16, 6), (16, 26)], fill=(0x40, 0x90, 0xC0))
+    _rim(img)
+    return img
+
+
 def king_wall(variant: int) -> Image.Image:
     img = Image.new("RGB", (16, 16), (0x18, 0x22, 0x38))
     d = ImageDraw.Draw(img)
@@ -212,6 +265,10 @@ def main() -> None:
         "dead_swarm.png": dead_swarm,
         "dead_support.png": dead_support,
         "hell_elite.png": hell_elite,
+        "underworld_tank.png": underworld_tank,
+        "dead_tank.png": dead_tank,
+        "hell_brute.png": hell_brute,
+        "crystal_brute.png": crystal_brute,
     }
     for name, fn in sprites.items():
         _save(fn(), ENEMIES / name)

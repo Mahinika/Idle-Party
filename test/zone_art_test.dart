@@ -166,6 +166,23 @@ void main() {
     expect(hell.elite, CustomAssets.enemyHellElite);
     expect(hell.trash, CustomAssets.enemyHellMite);
     expect(hell.elite, isNot(hell.trash));
+    expect(hell.forArchetype(EnemyArchetype.tank), CustomAssets.enemyHellBrute);
+    expect(hell.forArchetype(EnemyArchetype.brute), CustomAssets.enemyHellBrute);
+
+    final underworld = ZoneArt.byId('underworld').enemies;
+    expect(underworld.forArchetype(EnemyArchetype.tank),
+        CustomAssets.enemyUnderworldTank);
+    expect(dead.forArchetype(EnemyArchetype.tank), CustomAssets.enemyDeadTank);
+    expect(
+      ZoneArt.byId('crystal').enemies.forArchetype(EnemyArchetype.tank),
+      CustomAssets.enemyCrystalBrute,
+    );
+    expect(hell.forArchetype(EnemyArchetype.tank),
+        isNot(CustomAssets.enemyGolem));
+    expect(underworld.forArchetype(EnemyArchetype.tank),
+        isNot(dead.forArchetype(EnemyArchetype.tank)));
+    expect(hell.forArchetype(EnemyArchetype.tank),
+        isNot(ZoneArt.byId('crystal').enemies.forArchetype(EnemyArchetype.tank)));
 
     for (final path in <String>[
       sandy.elite,
@@ -180,6 +197,10 @@ void main() {
       dead.forArchetype(EnemyArchetype.swarm),
       dead.forArchetype(EnemyArchetype.support),
       hell.elite,
+      hell.forArchetype(EnemyArchetype.tank),
+      underworld.forArchetype(EnemyArchetype.tank),
+      dead.forArchetype(EnemyArchetype.tank),
+      ZoneArt.byId('crystal').enemies.forArchetype(EnemyArchetype.tank),
     ]) {
       expect(File(path).existsSync(), isTrue, reason: path);
     }

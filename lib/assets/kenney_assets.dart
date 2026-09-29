@@ -191,6 +191,10 @@ abstract final class KenneyAssets {
   static String get enemyDeadSwarm => CustomAssets.enemyDeadSwarm;
   static String get enemyDeadSupport => CustomAssets.enemyDeadSupport;
   static String get enemyHellElite => CustomAssets.enemyHellElite;
+  static String get enemyUnderworldTank => CustomAssets.enemyUnderworldTank;
+  static String get enemyDeadTank => CustomAssets.enemyDeadTank;
+  static String get enemyHellBrute => CustomAssets.enemyHellBrute;
+  static String get enemyCrystalBrute => CustomAssets.enemyCrystalBrute;
   static String get enemyBossTide => CustomAssets.enemyBossTide;
   static String get enemyTideMite => CustomAssets.enemyTideMite;
   static String get enemyBossEmber => CustomAssets.enemyBossEmber;
@@ -478,6 +482,10 @@ abstract final class KenneyAssets {
     enemyHellElite,
     enemyGroveElite,
     enemyGroveBrute,
+    enemyUnderworldTank,
+    enemyDeadTank,
+    enemyHellBrute,
+    enemyCrystalBrute,
   ];
 
   static int enemySpriteCatalogIndex(String asset) {
@@ -509,11 +517,11 @@ abstract final class KenneyAssets {
       'fen hydra' => enemyFenBoss,
       'the mainspring' => enemyBrassBoss,
       'the pale monarch' => enemyVeilBoss,
-      'crystal warden' ||
+      'crystal warden' => enemyCrystalBoss,
       'crystal golem' ||
       'frozen bulwark' ||
       'glacial brute' ||
-      'shard brawler' => enemyCrystalBoss,
+      'shard brawler' => enemyCrystalBrute,
       'shell leviathan' ||
       'barnacle guard' ||
       'tide brute' ||
@@ -610,16 +618,13 @@ abstract final class KenneyAssets {
       'crypt brute' ||
       'infernal brute' ||
       'flame guard' => enemyCyclops,
+      'obsidian golem' || 'pit guard' => enemyUnderworldTank,
+      'tomb shield' || 'ossuary guard' => enemyDeadTank,
+      'molten golem' || 'ash colossus' => enemyHellBrute,
       'stash bulwark' ||
       'bulwark golem' ||
-      'obsidian golem' ||
-      'molten golem' ||
-      'ash colossus' ||
       'iron ward' ||
-      'gate knight' ||
-      'tomb shield' ||
-      'ossuary guard' ||
-      'pit guard' => enemyGolem,
+      'gate knight' => enemyGolem,
       'hideout guard' ||
       'scrap shield' ||
       'lord guard' => enemyCyclops,

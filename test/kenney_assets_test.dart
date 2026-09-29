@@ -73,7 +73,7 @@ void main() {
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Crystal Golem'),
-      KenneyAssets.enemyCrystalBoss,
+      KenneyAssets.enemyCrystalBrute,
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Frost Wisp'),

@@ -105,6 +105,18 @@ abstract final class HeroIdentity {
     HeroSpecId.restorationDruid => 0xFF70F070,
   };
 
+  /// Warrior stances and death knight presences. The cloth tint alone did
+  /// not read as a body at phone size.
+  static bool hasStanceBody(HeroSpecId specId) => switch (specId) {
+    HeroSpecId.arms ||
+    HeroSpecId.fury ||
+    HeroSpecId.protection ||
+    HeroSpecId.blood ||
+    HeroSpecId.frostDk ||
+    HeroSpecId.unholy => true,
+    _ => false,
+  };
+
   /// Cloth tint. Colorblind play pushes green cloth toward cyan so it
   /// does not sit on the same brown as red specs.
   static int clothArgb(HeroSpecId specId, {required bool colorblind}) {

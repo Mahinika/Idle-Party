@@ -187,6 +187,10 @@ int combatApplyHeroIncomingDamage(
   if ((hero.buffTimers['atkShout'] ?? 0) > 0) {
     damage = math.max(1, (damage * 1.08).round());
   }
+  // Seal already lifts the kit. Whites were still short of the share band.
+  if (hero.heroSpecId == HeroSpecId.retribution) {
+    damage = math.max(1, (damage * 1.45).round());
+  }
   // Vendetta / Cold Blood / Arcane Power / Combustion amp whites + kit AA.
   if (hero.combustionTimer > 0 && hero.heroSpecId != HeroSpecId.fire) {
     damage = math.max(1, (damage * 1.25).round());

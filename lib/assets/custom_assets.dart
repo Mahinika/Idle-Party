@@ -418,6 +418,11 @@ abstract final class CustomAssets {
   static const String enemyDeadSwarm = '$_root/enemies/dead_swarm.png';
   static const String enemyDeadSupport = '$_root/enemies/dead_support.png';
   static const String enemyHellElite = '$_root/enemies/hell_elite.png';
+  static const String enemyUnderworldTank =
+      '$_root/enemies/underworld_tank.png';
+  static const String enemyDeadTank = '$_root/enemies/dead_tank.png';
+  static const String enemyHellBrute = '$_root/enemies/hell_brute.png';
+  static const String enemyCrystalBrute = '$_root/enemies/crystal_brute.png';
   static const String enemyBossTide = '$_root/enemies/boss_tide.png';
   static const String enemyTideMite = '$_root/enemies/tide_mite.png';
   static const String enemyBossEmber = '$_root/enemies/boss_ember.png';

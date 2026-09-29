@@ -263,6 +263,7 @@ extension DungeonPaintActors on _TileRoomPainter {
       final alpha = hero.isAlive ? 1.0 : 0.25;
       final paintAlpha = hero.vanishTimer > 0 ? 0.35 : alpha;
       if (partyHero != null) {
+        paintStanceBodyMark(canvas, c, tile, partyHero.specId);
         final moving = hero.vx.abs() > 0.05 || hero.vy.abs() > 0.05;
         final signals = HeroAnimSignals(
           moving: moving,
@@ -696,5 +697,53 @@ extension DungeonPaintActors on _TileRoomPainter {
         );
       }
     }
+  }
+}
+
+/// Ground mark so a stance or presence reads without a second body PNG.
+void paintStanceBodyMark(
+  Canvas canvas,
+  Offset c,
+  double tile,
+  HeroSpecId spec,
+) {
+  if (!HeroIdentity.hasStanceBody(spec)) return;
+  final color = Color(
+    HeroIdentity.clothArgb(spec, colorblind: SpatialCombat.colorblindMode),
+  );
+  final feet = c + Offset(0, tile * 0.28);
+  final fill = Paint()..color = color.withValues(alpha: 0.55);
+  final stroke = Paint()
+    ..color = color.withValues(alpha: 0.9)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = math.max(1.5, tile * 0.06);
+  switch (spec) {
+    case HeroSpecId.arms:
+      canvas.drawOval(
+        Rect.fromCenter(center: feet, width: tile * 1.15, height: tile * 0.28),
+        fill,
+      );
+    case HeroSpecId.fury:
+      canvas.drawCircle(feet + Offset(-tile * 0.22, 0), tile * 0.12, fill);
+      canvas.drawCircle(feet + Offset(tile * 0.22, 0), tile * 0.12, fill);
+    case HeroSpecId.protection:
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: feet, width: tile * 0.7, height: tile * 0.34),
+          const Radius.circular(2),
+        ),
+        stroke,
+      );
+    case HeroSpecId.blood:
+      canvas.drawCircle(feet, tile * 0.22, fill);
+    case HeroSpecId.frostDk:
+      canvas.drawCircle(feet, tile * 0.26, stroke);
+      canvas.drawCircle(feet, tile * 0.16, stroke);
+    case HeroSpecId.unholy:
+      for (final dx in [-0.2, 0.0, 0.2]) {
+        canvas.drawCircle(feet + Offset(tile * dx, 0), tile * 0.08, fill);
+      }
+    default:
+      break;
   }
 }
