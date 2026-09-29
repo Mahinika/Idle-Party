@@ -72,6 +72,7 @@ extension DungeonPaintSpellFx on _TileRoomPainter {
       canvas.drawCircle(c, r * 2.1, _spark);
       _spark
         ..blendMode = BlendMode.srcOver
+        ..style = PaintingStyle.fill
         ..color = color.withValues(alpha: alpha);
       switch (s.kind) {
         case SpellSparkKind.ember:

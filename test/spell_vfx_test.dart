@@ -478,7 +478,8 @@ void main() {
     );
   });
 
-  SpatialWorld fxWorld(GameState state) {
+  SpatialWorld fxWorld() {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
     final world = SpatialCombat.build(
       GameLogic.enterDungeon(state, dungeonId: 'sandy'),
     );
@@ -486,8 +487,7 @@ void main() {
   }
 
   test('big spells punch harder and leave sparks on Full', () {
-    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
-    final world = fxWorld(state);
+    final world = fxWorld();
     world.reducedVfx = false;
     world.spawnPersistentVfx = true;
     world.bursts.clear();
@@ -509,8 +509,7 @@ void main() {
   });
 
   test('Lite sparks without routine bursts; Minimal stays still', () {
-    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
-    final world = fxWorld(state);
+    final world = fxWorld();
     final hero = world.heroes.first;
     world.bursts.clear();
     world.spellSparks.clear();
@@ -541,8 +540,7 @@ void main() {
   });
 
   test('bolt trails drop sparks on Full only', () {
-    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
-    final world = fxWorld(state);
+    final world = fxWorld();
     world.spellSparks.clear();
     world.reducedVfx = false;
     world.spawnPersistentVfx = true;
@@ -565,8 +563,7 @@ void main() {
   });
 
   test('spark cap stays bounded', () {
-    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
-    final world = fxWorld(state);
+    final world = fxWorld();
     world.reducedVfx = false;
     world.spawnPersistentVfx = true;
     world.spellSparks.clear();
