@@ -1,14 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/wisp_gift.dart';
+import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
-  test('watch gold is 10× keep gold', () {
+  test('watch gold is at least 10× keep gold on a fresh save', () {
     final state = GameLogic.createInitialState();
     final keep = WispGift.keepGold(state);
     final watch = WispGift.watchGold(state);
-    expect(watch, keep * 10);
+    expect(watch, greaterThanOrEqualTo(keep * 10));
   });
 
   test('grant watch adds gold only and clears pending', () {
@@ -98,5 +99,53 @@ void main() {
       metaDepth: state.metaDepth.copyWith(wispPendingWatchGold: 2500),
     );
     expect(WispGift.watchButtonLabel(state), '2,500 GOLD');
+  });
+
+  test('endgame sandy farm still pays a wallet-worth watch pile', () {
+    var state = GameLogic.createInitialState();
+    state = state.copyWith(
+      gold: 900000,
+      ascensionLevel: 4,
+      dungeonId: 'sandy',
+      highestDungeonCleared: 14,
+      highestFloorCleared: 9,
+      hardmodeLevel: 11,
+      currentRoom: const DungeonRoom(
+        floorNumber: 9,
+        roomIndex: 0,
+        type: RoomType.normal,
+        enemyLevel: 9,
+        enemyCount: 3,
+      ),
+    );
+    final sandyOnly = WispGift.floorGold(
+      state,
+      dungeonId: 'sandy',
+      floor: 9,
+    );
+    final watch = WispGift.watchGold(state);
+    // Old math was ~30× sandy floor (~10–15k). New floor is ~4% wallet.
+    expect(watch, greaterThanOrEqualTo(state.gold ~/ WispGift.watchWalletDivisor));
+    expect(watch, greaterThan(sandyOnly * 30));
+    expect(WispGift.keepGold(state), greaterThan(sandyOnly * WispGift.keepFloorMul));
+  });
+
+  test('KEY dial alone does not inflate hub WISP gold', () {
+    var base = GameLogic.createInitialState();
+    base = base.copyWith(
+      gold: 10000,
+      dungeonId: 'sandy',
+      highestDungeonCleared: 2,
+      hardmodeLevel: 0,
+      currentRoom: const DungeonRoom(
+        floorNumber: 5,
+        roomIndex: 0,
+        type: RoomType.normal,
+        enemyLevel: 5,
+        enemyCount: 2,
+      ),
+    );
+    final dialed = base.copyWith(hardmodeLevel: 15);
+    expect(WispGift.watchGold(dialed), WispGift.watchGold(base));
   });
 }

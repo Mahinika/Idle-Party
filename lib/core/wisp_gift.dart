@@ -2,18 +2,31 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../models/dungeon_def.dart';
 import '../models/dungeon_room.dart';
 import '../models/meta_depth.dart';
 import 'ad_boost.dart';
 import 'economy_service.dart';
 import 'encounter_factory.dart';
 import 'game_state.dart';
+import 'keystone.dart';
 
 /// Floating WISP: tap for a small gold pile; optional rewarded ad for a
 /// bigger gold pile (no time boost). See plan / AD_POWERUPS.
+///
+/// Amounts track **best cleared zone** (and a wallet soft floor), not the
+/// farm floor you happen to stand on — otherwise late-game Sandy runs make
+/// a 30s ad pay pocket change.
 abstract final class WispGift {
   static const int keepFloorMul = 3;
-  static const int watchFloorMul = 30;
+  /// Floors of reference gold for the WATCH pile (before wallet floor).
+  static const int watchFloorMul = 60;
+  /// WATCH is at least ~4% of wallet so endgame always feels worth the ad.
+  static const int watchWalletDivisor = 25;
+  /// Wallet floor cannot exceed this many reference floors (anti-whale spike).
+  static const int watchWalletCapFloorMul = 120;
+  /// Floor used when scoring the best cleared zone.
+  static const int referenceFloor = 10;
 
   /// Live cadence. Debug builds (emulator) spawn often with no daily cap
   /// so the gift can be tried without waiting. Release keeps the real loop.
@@ -59,27 +72,69 @@ abstract final class WispGift {
 
   static bool hasPendingChoice(MetaDepthState md) => md.wispPendingWatchGold > 0;
 
-  /// Gold from one normal floor at the player's current progression.
-  static int perFloorGold(GameState state) {
-    final room = state.currentRoom;
-    final normal = room.type == RoomType.boss
-        ? room.copyWith(type: RoomType.normal)
-        : room;
+  static String _dungeonIdForClearedIndex(int cleared) {
+    final idx = cleared.clamp(0, DungeonCatalog.all.length - 1);
+    return DungeonCatalog.all[idx].id;
+  }
+
+  /// One normal-floor gold payout for [dungeonId] / [floor], with live KEY
+  /// combat level only (dial alone does not inflate hub WISP).
+  static int floorGold(
+    GameState state, {
+    required String dungeonId,
+    required int floor,
+  }) {
+    final room = DungeonRoom(
+      floorNumber: max(1, floor),
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: max(1, floor),
+      enemyCount: 1,
+    );
     final budget = EncounterFactory.roomCombatBudget(
-      normal,
-      dungeonId: state.dungeonId,
-      hardmodeLevel: state.hardmodeLevel,
+      room,
+      dungeonId: dungeonId,
+      hardmodeLevel: Keystone.combatLevel(state),
       ascensionLevel: state.ascensionLevel,
       gearPressure: EncounterFactory.partyGearPressure(state),
     );
     return max(1, EconomyService.applyGoldGain(state, budget.gold));
   }
 
-  static int keepGold(GameState state) =>
-      max(1, perFloorGold(state) * keepFloorMul);
+  /// Gold from one normal floor at the player's current room (legacy helper).
+  static int perFloorGold(GameState state) {
+    final room = state.currentRoom;
+    return floorGold(
+      state,
+      dungeonId: state.dungeonId,
+      floor: room.floorNumber,
+    );
+  }
 
-  static int watchGold(GameState state) =>
-      max(keepGold(state) * 10, perFloorGold(state) * watchFloorMul);
+  /// Better of current floor vs best-cleared zone at [referenceFloor].
+  static int referencePerFloorGold(GameState state) {
+    final current = perFloorGold(state);
+    final bestId = _dungeonIdForClearedIndex(state.highestDungeonCleared);
+    final bestFloor = max(
+      referenceFloor,
+      min(20, max(1, state.currentRoom.floorNumber)),
+    );
+    final best = floorGold(state, dungeonId: bestId, floor: bestFloor);
+    return max(current, best);
+  }
+
+  static int keepGold(GameState state) =>
+      max(1, referencePerFloorGold(state) * keepFloorMul);
+
+  static int watchGold(GameState state) {
+    final ref = referencePerFloorGold(state);
+    final fromFloors = ref * watchFloorMul;
+    final fromKeepBand = keepGold(state) * 10;
+    final rawWallet = state.gold <= 0 ? 0 : state.gold ~/ watchWalletDivisor;
+    final walletCap = max(fromFloors, ref * watchWalletCapFloorMul);
+    final fromWallet = min(rawWallet, walletCap);
+    return max(1, max(fromKeepBand, max(fromFloors, fromWallet)));
+  }
 
   static bool shouldSpawn(MetaDepthState md, int nowMs) {
     if (!md.wispUnlocked) return false;

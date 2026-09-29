@@ -170,9 +170,11 @@ match this doc.
 
 Optional **WISP** drifts on hub or in a dungeon after the first ENTER. Tap it
 where it appears. A small prompt offers a short ad for a **bigger gold pile**
-(no time boost). **NO THANKS** keeps the small pile. The lantern leaves
-when its few seconds are up. Ad-free: big pile on tap. Max **6** taps
-per UTC day in release. Logic: `lib/core/wisp_gift.dart`.
+(no time boost). Amounts use the **best cleared zone** (and about **4% of
+wallet** as a soft floor for WATCH), not the farm floor under your feet.
+**NO THANKS** keeps the small pile. The lantern leaves when its few seconds
+are up. Ad-free: big pile on tap. Max **6** taps per UTC day in release.
+Logic: `lib/core/wisp_gift.dart`.
 
 ## Out of scope (v1)
 
