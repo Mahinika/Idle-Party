@@ -14,19 +14,28 @@ import 'keystone.dart';
 /// Floating WISP: tap for a small gold pile; optional rewarded ad for a
 /// bigger gold pile (no time boost). See plan / AD_POWERUPS.
 ///
-/// Amounts track **best cleared zone** (and a wallet soft floor), not the
-/// farm floor you happen to stand on — otherwise late-game Sandy runs make
-/// a 30s ad pay pocket change.
+/// Amounts track the **best cleared zone** at the **depth this save has
+/// earned**, plus a wallet soft floor for WATCH. A Sandy nostalgia run does
+/// not shrink the pile. A brand-new party is scored on early floors, not
+/// floor 10. Gauntlet depth does not inflate it.
 abstract final class WispGift {
-  static const int keepFloorMul = 3;
-  /// Floors of reference gold for the WATCH pile (before wallet floor).
-  static const int watchFloorMul = 60;
-  /// WATCH is at least ~4% of wallet so endgame always feels worth the ad.
+  /// Fresh WATCH pile, in floors of [earnedReferenceFloor].
+  static const int watchFloorsFresh = 10;
+
+  /// Extra WATCH floors per cleared zone (Sandy = 1 … all 15 = 30).
+  static const int watchFloorsPerZone = 2;
+
+  /// Extra WATCH floors per Ascension level, through AL20.
+  static const int watchFloorsPerAl = 1;
+
+  /// Full clear at AL20: 10 + 15×2 + 20 = 60 floors.
+  static const int watchFloorsCap = 60;
+
+  /// WATCH is at least ~4% of wallet so a long save still feels worth the ad.
   static const int watchWalletDivisor = 25;
+
   /// Wallet floor cannot exceed this many reference floors (anti-whale spike).
   static const int watchWalletCapFloorMul = 120;
-  /// Floor used when scoring the best cleared zone.
-  static const int referenceFloor = 10;
 
   /// Live cadence. Debug builds (emulator) spawn often with no daily cap
   /// so the gift can be tried without waiting. Release keeps the real loop.
@@ -101,34 +110,63 @@ abstract final class WispGift {
     return max(1, EconomyService.applyGoldGain(state, budget.gold));
   }
 
-  /// Gold from one normal floor at the player's current room (legacy helper).
-  static int perFloorGold(GameState state) {
-    final room = state.currentRoom;
-    return floorGold(
-      state,
-      dungeonId: state.dungeonId,
-      floor: room.floorNumber,
-    );
+  /// Cleared caves. `-1` (nothing cleared) is 0. Sandy cleared is 1.
+  static int zonesClearedCount(GameState state) {
+    final cleared = state.highestDungeonCleared;
+    if (cleared < 0) return 0;
+    return (cleared + 1).clamp(0, DungeonCatalog.all.length);
   }
 
-  /// Better of current floor vs best-cleared zone at [referenceFloor].
-  static int referencePerFloorGold(GameState state) {
-    final current = perFloorGold(state);
-    final bestId = _dungeonIdForClearedIndex(state.highestDungeonCleared);
-    final bestFloor = max(
-      referenceFloor,
-      min(20, max(1, state.currentRoom.floorNumber)),
+  /// How many floors of reference gold WATCH pays before the wallet floor.
+  ///
+  /// A new party is about [watchFloorsFresh] floors. Each cleared cave and
+  /// each Ascension level adds a little, up to [watchFloorsCap].
+  static int watchFloorCount(GameState state) {
+    final al = state.ascensionLevel.clamp(0, 20);
+    final raw = watchFloorsFresh +
+        zonesClearedCount(state) * watchFloorsPerZone +
+        al * watchFloorsPerAl;
+    return raw.clamp(watchFloorsFresh, watchFloorsCap);
+  }
+
+  /// Small pile is about a tenth of the WATCH floor count (at least 1).
+  static int keepFloorCount(GameState state) =>
+      max(1, watchFloorCount(state) ~/ 10);
+
+  /// Campaign floor this save has actually reached.
+  ///
+  /// Uses the deeper of this climb and zones cleared, and never past the
+  /// zone boss (`5 + AL`). Floor 1 of a new party stays floor 1. An endless
+  /// Gauntlet floor does not raise it.
+  static int earnedReferenceFloor(GameState state) {
+    final boss = max(1, DungeonCatalog.bossFloor(state.ascensionLevel));
+    final climbed = max(
+      1,
+      max(state.currentRoom.floorNumber, state.highestFloorCleared),
     );
-    final best = floorGold(state, dungeonId: bestId, floor: bestFloor);
-    return max(current, best);
+    final fromZones = max(1, min(boss, zonesClearedCount(state)));
+    return max(min(climbed, boss), fromZones);
+  }
+
+  /// Better of this cave vs the best cleared zone, both at [earnedReferenceFloor].
+  static int referencePerFloorGold(GameState state) {
+    final floor = earnedReferenceFloor(state);
+    final here = floorGold(
+      state,
+      dungeonId: state.dungeonId,
+      floor: floor,
+    );
+    final bestId = _dungeonIdForClearedIndex(state.highestDungeonCleared);
+    final best = floorGold(state, dungeonId: bestId, floor: floor);
+    return max(here, best);
   }
 
   static int keepGold(GameState state) =>
-      max(1, referencePerFloorGold(state) * keepFloorMul);
+      max(1, referencePerFloorGold(state) * keepFloorCount(state));
 
   static int watchGold(GameState state) {
     final ref = referencePerFloorGold(state);
-    final fromFloors = ref * watchFloorMul;
+    final fromFloors = ref * watchFloorCount(state);
     final fromKeepBand = keepGold(state) * 10;
     final rawWallet = state.gold <= 0 ? 0 : state.gold ~/ watchWalletDivisor;
     final walletCap = max(fromFloors, ref * watchWalletCapFloorMul);

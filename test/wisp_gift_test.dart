@@ -135,7 +135,91 @@ void main() {
     // Old math was ~30× sandy floor (~10–15k). New floor is ~4% wallet.
     expect(watch, greaterThanOrEqualTo(state.gold ~/ WispGift.watchWalletDivisor));
     expect(watch, greaterThan(sandyOnly * 30));
-    expect(WispGift.keepGold(state), greaterThan(sandyOnly * WispGift.keepFloorMul));
+    expect(
+      WispGift.keepGold(state),
+      greaterThan(sandyOnly * WispGift.keepFloorCount(state)),
+    );
+  });
+
+  test('fresh watch is ten early floors, not a floor-10 jackpot', () {
+    final state = GameLogic.createInitialState();
+    final floor1 = WispGift.floorGold(state, dungeonId: 'sandy', floor: 1);
+    final floor10 = WispGift.floorGold(state, dungeonId: 'sandy', floor: 10);
+    expect(WispGift.earnedReferenceFloor(state), 1);
+    expect(WispGift.watchFloorCount(state), WispGift.watchFloorsFresh);
+    expect(WispGift.keepFloorCount(state), 1);
+    expect(WispGift.keepGold(state), floor1);
+    expect(WispGift.watchGold(state), floor1 * WispGift.watchFloorsFresh);
+    expect(WispGift.watchGold(state), lessThan(floor10 * 30));
+  });
+
+  test('watch gold grows from a new party to a long save', () {
+    final fresh = GameLogic.createInitialState();
+    final mid = fresh.copyWith(
+      ascensionLevel: 3,
+      highestDungeonCleared: 5,
+      highestFloorCleared: 6,
+      dungeonId: 'hell',
+      gold: 0,
+      currentRoom: const DungeonRoom(
+        floorNumber: 6,
+        roomIndex: 0,
+        type: RoomType.normal,
+        enemyLevel: 6,
+        enemyCount: 2,
+      ),
+    );
+    final late = fresh.copyWith(
+      ascensionLevel: 20,
+      highestDungeonCleared: 14,
+      highestFloorCleared: 25,
+      dungeonId: 'veil',
+      gold: 0,
+      currentRoom: const DungeonRoom(
+        floorNumber: 25,
+        roomIndex: 0,
+        type: RoomType.normal,
+        enemyLevel: 25,
+        enemyCount: 3,
+      ),
+    );
+    final freshWatch = WispGift.watchGold(fresh);
+    final midWatch = WispGift.watchGold(mid);
+    final lateWatch = WispGift.watchGold(late);
+    expect(midWatch, greaterThan(freshWatch * 3));
+    expect(lateWatch, greaterThan(midWatch * 3));
+    expect(WispGift.watchFloorCount(late), WispGift.watchFloorsCap);
+    expect(WispGift.earnedReferenceFloor(late), 25);
+  });
+
+  test('gauntlet floor does not raise the wisp pile', () {
+    var state = GameLogic.createInitialState();
+    state = state.copyWith(
+      ascensionLevel: 4,
+      highestDungeonCleared: 14,
+      highestFloorCleared: 9,
+      dungeonId: 'sandy',
+      gold: 0,
+      currentRoom: const DungeonRoom(
+        floorNumber: 9,
+        roomIndex: 0,
+        type: RoomType.normal,
+        enemyLevel: 9,
+        enemyCount: 3,
+      ),
+    );
+    final deep = state.copyWith(
+      currentRoom: const DungeonRoom(
+        floorNumber: 80,
+        roomIndex: 0,
+        type: RoomType.normal,
+        enemyLevel: 80,
+        enemyCount: 4,
+      ),
+      highestFloorCleared: 80,
+    );
+    expect(WispGift.watchGold(deep), WispGift.watchGold(state));
+    expect(WispGift.earnedReferenceFloor(deep), 9);
   });
 
   test('KEY dial alone does not inflate hub WISP gold', () {

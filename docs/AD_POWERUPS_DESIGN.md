@@ -170,8 +170,11 @@ match this doc.
 
 Optional **WISP** drifts in a dungeon after the first ENTER (not on the hub).
 Tap it where it appears. A small prompt offers a short ad for a **bigger gold
-pile** (no time boost). Amounts use the **best cleared zone** (and about **4%
-of wallet** as a soft floor for WATCH), not the farm floor under your feet.
+pile** (no time boost). Amounts use the **best cleared zone** at the depth
+the save has earned (early floors for a new party, deeper after clears and
+Ascension; about **10** WATCH floors at the start and **60** at a full clear
+on AL20) and about **4% of wallet** as a soft floor for WATCH. Not the farm
+floor under your feet, and not an endless Gauntlet floor.
 **NO THANKS** keeps the small pile. The lantern leaves when its few seconds
 are up. Ad-free: big pile on tap. Max **6** taps per UTC day in release.
 Logic: `lib/core/wisp_gift.dart`.

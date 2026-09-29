@@ -46,8 +46,9 @@ follow `save-migrate`.
   gold pile on tap (no time boost).
 - **WISP choice:** WATCH AD = bigger gold only. NO THANKS = keep the small
   pile. No 1h ×2 gold from WISP.
-- **WISP amounts:** best cleared zone (+ ~4% wallet soft floor for WATCH),
-  not the current farm floor.
+- **WISP amounts:** best cleared zone at earned depth (about 10 WATCH
+  floors for a new party, about 60 at a full clear on AL20) plus ~4% wallet
+  soft floor for WATCH. Not the Sandy farm floor, and not a Gauntlet floor.
 - **WISP cadence (release):** first after 90 s, then every 10 min, visible
   10 s, max 6 taps per UTC day. Debug builds run every 20 s.
 
