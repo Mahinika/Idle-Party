@@ -54,6 +54,7 @@ GameState _enterAshenCrown(
     layoutSeed: layoutSeed,
     bossEvery: 1,
     keyLevel: GameLogic.layoutKeyLevel(next),
+    crowded: GameLogic.layoutCrowded(next),
   );
   final room = floor.first.copyWith(type: RoomType.boss);
   final cleared = next.copyWith(

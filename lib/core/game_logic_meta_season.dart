@@ -369,6 +369,7 @@ GameState _enterDaily(GameState state, {DateTime? now}) {
     dungeonId: dungeonId,
     layoutSeed: seed,
     keyLevel: GameLogic.layoutKeyLevel(cleared),
+    crowded: GameLogic.layoutCrowded(cleared),
   );
   final room = floor.first;
   return cleared.copyWith(

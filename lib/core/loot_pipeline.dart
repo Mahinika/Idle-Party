@@ -679,7 +679,10 @@ abstract final class LootPipeline {
     EnemyUnit? unit,
   }) {
     final gold = unit?.rewardGold ?? 0;
-    final drops = state.inGreaterRift
+    final share = unit?.rewardShare ?? 1.0;
+    final crowdSkip =
+        share < 1.0 && GameLogic.random.nextDouble() >= share;
+    final drops = state.inGreaterRift || crowdSkip
         ? const <LootDrop>[]
         : rollKillLoot(
             state.battleNumber,

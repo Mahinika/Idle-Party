@@ -33,6 +33,7 @@ class EnemyUnit {
     required this.rewardGold,
     this.role = EnemyRole.normal,
     this.archetype = EnemyArchetype.brute,
+    this.rewardShare = 1.0,
   });
 
   final String name;
@@ -42,6 +43,10 @@ class EnemyUnit {
   final int rewardGold;
   final EnemyRole role;
   final EnemyArchetype archetype;
+
+  /// Slice of one kill's XP and loot roll (0.5 when a crowd room splits a
+  /// budget slot into two bodies).
+  final double rewardShare;
 
   // All stat scaling is baked into [stats] by `GameLogic.createEnemyGroup`
   // (single source of truth — avoids double level scaling).
@@ -68,6 +73,7 @@ class EnemyUnit {
     String? name,
     EnemyRole? role,
     EnemyArchetype? archetype,
+    double? rewardShare,
   }) {
     return EnemyUnit(
       name: name ?? this.name,
@@ -77,6 +83,7 @@ class EnemyUnit {
       rewardGold: rewardGold ?? this.rewardGold,
       role: role ?? this.role,
       archetype: archetype ?? this.archetype,
+      rewardShare: rewardShare ?? this.rewardShare,
     );
   }
 
@@ -88,6 +95,7 @@ class EnemyUnit {
     'rewardGold': rewardGold,
     'role': role.name,
     'archetype': archetype.name,
+    'rewardShare': rewardShare,
   };
 
   factory EnemyUnit.fromJson(Map<String, dynamic> json) {
@@ -119,6 +127,10 @@ class EnemyUnit {
       rewardGold: asInt(json['rewardGold']),
       role: enumOr(EnemyRole.values, roleName, EnemyRole.normal),
       archetype: enumOr(EnemyArchetype.values, archName, EnemyArchetype.brute),
+      rewardShare: ((json['rewardShare'] as num?)?.toDouble() ?? 1.0).clamp(
+        0.05,
+        1.0,
+      ),
     );
   }
 }

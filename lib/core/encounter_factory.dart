@@ -186,7 +186,8 @@ abstract final class EncounterFactory {
       EnemyArchetype.swarm => 0,
       EnemyArchetype.brute => 1,
     };
-    return xp;
+    if (enemy.rewardShare >= 1.0) return xp;
+    return max(1, (xp * enemy.rewardShare).round());
   }
 
   /// Extra XP when the kill is above the hero's level (push deeper = faster).
@@ -366,22 +367,27 @@ abstract final class EncounterFactory {
       );
     }
     // Key densifies packs; Swarm multiplies count before key density.
+    final crowd = isBossRoomEarly ? 1 : max(1, room.crowd);
     final baseCount = max(
       1,
       (room.enemyCount *
               ((swarmWeek || gauntletSwarm) ? 1.35 : 1.0))
           .round(),
     );
-    final count = min(
+    // Threat and payout are sized on budget slots (one slot = [crowd] bodies).
+    final slotBase = max(1, (baseCount / crowd).round());
+    final slots = min(
       80,
       max(
         1,
-        (baseCount * Keystone.densityMul(hm) * _riftDensityMul(fromState))
+        (slotBase * Keystone.densityMul(hm) * _riftDensityMul(fromState))
             .round(),
       ),
     );
-    // Full density keep: each body still carries HM-scaled HP/ATK (not diluted).
-    final density = count / baseCount;
+    final count = min(80, max(slots, baseCount));
+    // Full density keep: each slot still carries HM-scaled HP/ATK (not diluted).
+    final density = slots / slotBase;
+    final bodyShare = min(1.0, slots / count);
     var packAttack = (budget.attack * density).round();
     var packHp = (budget.hp * density).round();
     var packGold =
@@ -479,18 +485,29 @@ abstract final class EncounterFactory {
       5 when al == 0 => 0.78,
       _ => 1.0,
     };
+    // Crowd rooms halve the floor too, so two bodies sum to one old body.
     final minHp = max(
-      (55 * earlyMinEase).round().clamp(28, 110),
-      ((90 + level * 42 + (isBossRoom ? 140 : 0)) *
-              (0.75 + gp * 0.25) *
-              earlyMinEase)
+      1,
+      (max(
+                (55 * earlyMinEase).round().clamp(28, 110),
+                ((90 + level * 42 + (isBossRoom ? 140 : 0)) *
+                        (0.75 + gp * 0.25) *
+                        earlyMinEase)
+                    .round(),
+              ) *
+              bodyShare)
           .round(),
     );
     final minAtk = max(
-      (12 * earlyMinEase).round().clamp(6, 28),
-      ((24 + level * 8 + (isBossRoom ? 12 : 0)) *
-              (0.85 + (gp - 1.0) * 0.4) *
-              earlyMinEase)
+      1,
+      (max(
+                (12 * earlyMinEase).round().clamp(6, 28),
+                ((24 + level * 8 + (isBossRoom ? 12 : 0)) *
+                        (0.85 + (gp - 1.0) * 0.4) *
+                        earlyMinEase)
+                    .round(),
+              ) *
+              bodyShare)
           .round(),
     );
 
@@ -567,6 +584,7 @@ abstract final class EncounterFactory {
           rewardGold: rush ? (gold * 3) ~/ 2 : gold,
           role: role,
           archetype: archetype,
+          rewardShare: isBossUnit ? 1.0 : bodyShare,
         ),
       );
     }

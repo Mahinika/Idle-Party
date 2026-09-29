@@ -112,6 +112,7 @@ class FloorBlueprint {
           17,
     );
     final budget = max(0, room.enemyCount);
+    final crowd = max(1, room.crowd);
     final beats = <FloorBeat>[];
     // Separate stream so look rolls never shift the beat rolls above.
     final lookRng = Random(
@@ -144,6 +145,7 @@ class FloorBlueprint {
           kit,
           rng,
           extraCombatRooms: extraCombatRooms,
+          crowd: crowd,
         );
         if (rollWonder && budget >= 4) {
           wonder = style.wonders[lookRng.nextInt(style.wonders.length)];
@@ -173,6 +175,7 @@ class FloorBlueprint {
           rng,
           extraCombatRooms: extraCombatRooms,
           rollWonder: rollWonder,
+          crowd: crowd,
         );
         if (gotWonder) {
           wonder = style.wonders[lookRng.nextInt(style.wonders.length)];
@@ -216,6 +219,7 @@ class FloorBlueprint {
     Random rng, {
     int extraCombatRooms = 0,
     bool rollWonder = false,
+    int crowd = 1,
   }) {
     final useHub =
         budget >= 4 &&
@@ -230,6 +234,7 @@ class FloorBlueprint {
         kit,
         rng,
         extraCombatRooms: extraCombatRooms,
+        crowd: crowd,
       );
     } else {
       beats.add(const FloorBeat(FloorBeatKind.approach));
@@ -239,8 +244,9 @@ class FloorBlueprint {
         kit,
         rng,
         extraCombatRooms: extraCombatRooms,
+        crowd: crowd,
       );
-      _maybeAddSideMainAlcove(beats, budget, kit, rng);
+      _maybeAddSideMainAlcove(beats, budget, kit, rng, crowd: crowd);
     }
 
     final sideAttach = useHub
@@ -264,11 +270,12 @@ class FloorBlueprint {
     ZoneLayoutKit kit,
     Random rng, {
     int extraCombatRooms = 0,
+    int crowd = 1,
   }) {
     var remaining = budget;
 
     if (kit.eliteAlcoveChance > 0 && rng.nextDouble() < kit.eliteAlcoveChance) {
-      final eliteBudget = max(1, min(3, budget ~/ 4));
+      final eliteBudget = max(1, min(3 * crowd, budget ~/ 4));
       beats.add(
         FloorBeat(
           FloorBeatKind.elite,
@@ -297,6 +304,7 @@ class FloorBlueprint {
       kit,
       rng,
       extraCombatRooms: extraCombatRooms,
+      crowd: crowd,
     );
   }
 
@@ -306,6 +314,7 @@ class FloorBlueprint {
     ZoneLayoutKit kit,
     Random rng, {
     int extraCombatRooms = 0,
+    int crowd = 1,
   }) {
     _addMainCombatSpine(
       beats,
@@ -313,6 +322,7 @@ class FloorBlueprint {
       kit,
       rng,
       extraCombatRooms: extraCombatRooms,
+      crowd: crowd,
     );
     final preferTreasure =
         kit.preferTreasureAlcove && rng.nextDouble() < kit.treasureAlcoveChance;
@@ -327,7 +337,9 @@ class FloorBlueprint {
   }
 
   /// How many fight rooms the main spine should carve (staging is separate).
-  static int _mainCombatRooms(int budget, {int extra = 0}) {
+  /// A crowd of 2 fills the same rooms twice as full instead of adding rooms.
+  static int _mainCombatRooms(int bodies, {int extra = 0, int crowd = 1}) {
+    final budget = (bodies / max(1, crowd)).ceil();
     var n = 0;
     if (budget >= 16) {
       n = 5;
@@ -368,8 +380,13 @@ class FloorBlueprint {
     ZoneLayoutKit kit,
     Random rng, {
     int extraCombatRooms = 0,
+    int crowd = 1,
   }) {
-    final rooms = _mainCombatRooms(budget, extra: extraCombatRooms);
+    final rooms = _mainCombatRooms(
+      budget,
+      extra: extraCombatRooms,
+      crowd: crowd,
+    );
     if (rooms == 0) return;
     final shares = _shareBudget(budget, rooms);
     final third = kit.preferChoke || rng.nextDouble() < 0.55
@@ -395,8 +412,13 @@ class FloorBlueprint {
     ZoneLayoutKit kit,
     Random rng, {
     int extraCombatRooms = 0,
+    int crowd = 1,
   }) {
-    final rooms = _mainCombatRooms(budget, extra: extraCombatRooms);
+    final rooms = _mainCombatRooms(
+      budget,
+      extra: extraCombatRooms,
+      crowd: crowd,
+    );
     if (rooms == 0) return;
     final shares = _shareBudget(budget, rooms);
     beats.add(FloorBeat(FloorBeatKind.elite, enemyBudget: shares[0]));
@@ -424,13 +446,14 @@ class FloorBlueprint {
     List<FloorBeat> beats,
     int budget,
     ZoneLayoutKit kit,
-    Random rng,
-  ) {
+    Random rng, {
+    int crowd = 1,
+  }) {
     if (budget < 5) return;
     if (kit.eliteAlcoveChance <= 0 || rng.nextDouble() >= kit.eliteAlcoveChance) {
       return;
     }
-    final eliteBudget = max(1, min(2, budget ~/ 5));
+    final eliteBudget = max(1, min(2 * crowd, budget ~/ 5));
     beats.add(
       FloorBeat(
         FloorBeatKind.elite,

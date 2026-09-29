@@ -2,8 +2,11 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/dungeon_generator.dart';
+import 'package:idle_party/core/encounter_factory.dart';
+import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_room.dart';
+import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/spatial/floor_blueprint.dart';
 import 'package:idle_party/spatial/placement_plan.dart';
 import 'package:idle_party/spatial/tile_map.dart';
@@ -638,6 +641,79 @@ void main() {
     }
     expect(samples, greaterThan(20));
     expect(organic, greaterThan(samples ~/ 5));
+  });
+
+  test('crowd floors double bodies per fight room at the same budget', () {
+    for (final floor in [3, 9]) {
+      DungeonRoom gen({required bool crowded}) =>
+          DungeonGenerator.generateFloorRoom(
+            floorNumber: floor,
+            ascensionLevel: 0,
+            dungeonId: 'goblin',
+            layoutSeed: 11,
+            crowded: crowded,
+          );
+      final solo = gen(crowded: false);
+      final crowd = gen(crowded: true);
+      expect(crowd.crowd, 2);
+      expect(crowd.enemyCount, solo.enemyCount * 2);
+
+      final a = EncounterFactory.createEnemyGroup(solo, dungeonId: 'goblin');
+      final b = EncounterFactory.createEnemyGroup(crowd, dungeonId: 'goblin');
+      expect(b.length, a.length * 2);
+      expect(b.every((e) => e.rewardShare == 0.5), isTrue);
+      int sum(List<EnemyUnit> g, int Function(EnemyUnit) f) =>
+          g.fold<int>(0, (s, e) => s + f(e));
+      expect(sum(b, (e) => e.rewardGold), sum(a, (e) => e.rewardGold));
+      final hpRatio = sum(b, (e) => e.maxHp) / sum(a, (e) => e.maxHp);
+      final atkRatio = sum(b, (e) => e.attack) / sum(a, (e) => e.attack);
+      expect(hpRatio, inInclusiveRange(0.6, 1.6));
+      expect(atkRatio, inInclusiveRange(0.7, 1.4));
+
+      final bpSolo = FloorBlueprint.forRoom(solo, dungeonId: 'goblin');
+      final bpCrowd = FloorBlueprint.forRoom(crowd, dungeonId: 'goblin');
+      int fights(FloorBlueprint bp) =>
+          bp.storyChambers
+              .where((c) => !c.isSide && c.enemyBudget > 0)
+              .length;
+      expect(fights(bpCrowd), fights(bpSolo));
+    }
+  });
+
+  test('boss floors and rifts stay one body per slot', () {
+    final boss = DungeonGenerator.generateFloorRoom(
+      floorNumber: DungeonGenerator.bossFloorFor(0),
+      ascensionLevel: 0,
+      dungeonId: 'sandy',
+    );
+    expect(boss.type, RoomType.boss);
+    expect(boss.crowd, 1);
+    final base = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
+    expect(GameLogic.layoutCrowded(base), isTrue);
+    expect(GameLogic.layoutCrowded(base.copyWith(inRift: true)), isFalse);
+    expect(GameLogic.layoutCrowded(base.copyWith(inGreaterRift: true)), isFalse);
+  });
+
+  test('crowd and rewardShare survive a save round trip', () {
+    const room = DungeonRoom(
+      floorNumber: 3,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 5,
+      enemyCount: 14,
+      crowd: 2,
+    );
+    expect(DungeonRoom.fromJson(room.toJson()).crowd, 2);
+    final legacy = Map<String, dynamic>.from(room.toJson())..remove('crowd');
+    expect(DungeonRoom.fromJson(legacy).crowd, 1);
+    final unit = EncounterFactory.createEnemyGroup(
+      room,
+      dungeonId: 'sandy',
+    ).first;
+    expect(EnemyUnit.fromJson(unit.toJson()).rewardShare, unit.rewardShare);
+    final oldUnit = Map<String, dynamic>.from(unit.toJson())
+      ..remove('rewardShare');
+    expect(EnemyUnit.fromJson(oldUnit).rewardShare, 1.0);
   });
 }
 

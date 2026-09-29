@@ -92,6 +92,7 @@ GameState _enterRift(GameState state, {int? tier}) {
     dungeonId: Rift.dungeonId,
     layoutSeed: layoutSeed,
     keyLevel: t.clamp(0, 20),
+    crowded: false,
   );
   final room = floor.first;
   final cleared = GameLogic._clearKeystoneRun(
@@ -299,6 +300,7 @@ GameState _enterGreaterRift(GameState state, {int? tier}) {
     dungeonId: GreaterRift.dungeonId,
     layoutSeed: layoutSeed,
     keyLevel: t.clamp(0, 20),
+    crowded: false,
   );
   final room = floor.first;
   final cleared = GameLogic._clearKeystoneRun(

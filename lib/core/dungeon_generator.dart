@@ -18,6 +18,7 @@ class DungeonGenerator {
     int layoutSeed = 0,
     int? bossEvery,
     int keyLevel = 0,
+    bool crowded = true,
   }) {
     final random = Random(floorNumber * 7919 + dungeonId.hashCode + layoutSeed);
     final bossFloor = bossFloorFor(ascensionLevel);
@@ -47,15 +48,24 @@ class DungeonGenerator {
       ascensionLevel: ascensionLevel,
       keyLevel: keyLevel,
     );
+    final crowd = crowded ? crowdFor(type) : 1;
 
     return DungeonRoom(
       floorNumber: floorNumber,
       roomIndex: 0,
       type: type,
       enemyLevel: enemyLevel,
-      enemyCount: enemyCount,
+      enemyCount: enemyCount * crowd,
+      crowd: crowd,
     );
   }
+
+  /// Trash and elite floors split each budget slot into two bodies so the
+  /// bigger fight rooms read full. Boss rooms stay a duel plus adds.
+  static int crowdFor(RoomType type) => switch (type) {
+    RoomType.normal || RoomType.elite => 2,
+    RoomType.boss || RoomType.treasure => 1,
+  };
 
   /// Compatibility: returns a 1-element floor list (the current wave).
   static List<DungeonRoom> generateFloor(
@@ -65,6 +75,7 @@ class DungeonGenerator {
     int layoutSeed = 0,
     int? bossEvery,
     int keyLevel = 0,
+    bool crowded = true,
   }) {
     return <DungeonRoom>[
       generateFloorRoom(
@@ -74,6 +85,7 @@ class DungeonGenerator {
         layoutSeed: layoutSeed,
         bossEvery: bossEvery,
         keyLevel: keyLevel,
+        crowded: crowded,
       ),
     ];
   }

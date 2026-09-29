@@ -258,6 +258,10 @@ class GameLogic {
     return state.hardmodeLevel.clamp(0, 20);
   }
 
+  /// Rift and GR kill quotas count bodies, so they keep one body per slot.
+  static bool layoutCrowded(GameState state) =>
+      !state.inRift && !state.inGreaterRift;
+
   /// AL gear skip per level — blunted by loot-find / HM / elite-boss relief.
   static const double ascensionDropPenalty = 0.10;
 
@@ -288,6 +292,7 @@ class GameLogic {
       dungeonId: dungeonId,
       layoutSeed: layoutSeed,
       keyLevel: layoutKeyLevel(primed),
+      crowded: layoutCrowded(primed),
     );
     final room = floor.first;
     return primed.copyWith(
@@ -925,6 +930,7 @@ class GameLogic {
       dungeonId: state.dungeonId,
       layoutSeed: layoutSeed,
       keyLevel: layoutKeyLevel(state),
+      crowded: layoutCrowded(state),
     );
     final firstRoom = floor.first;
     return state.copyWith(
@@ -1463,6 +1469,7 @@ class GameLogic {
       dungeonId: state.dungeonId,
       layoutSeed: layoutSeed,
       keyLevel: layoutKeyLevel(state),
+      crowded: layoutCrowded(state),
     );
     final firstRoom = floor.first;
     return state.copyWith(
@@ -2215,11 +2222,14 @@ class GameLogic {
     List<LootDrop>? recentLoot,
   }) {
     final room = state.currentRoom;
-    final enemiesDefeated = state.enemies.length;
+    final enemiesDefeated = state.enemies
+        .fold<double>(0, (s, e) => s + e.rewardShare)
+        .round();
     final bossesCleared = room.type == RoomType.boss ? 1 : 0;
     final elitesDefeated = state.enemies
         .where((e) => e.role == EnemyRole.elite || e.role == EnemyRole.boss)
-        .length;
+        .fold<double>(0, (s, e) => s + e.rewardShare)
+        .round();
 
     late GameState awarded;
     late List<LootDrop> drops;
@@ -2346,6 +2356,7 @@ class GameLogic {
       layoutSeed: layoutSeed,
       bossEvery: gauntlet ? gauntletBossEvery : null,
       keyLevel: layoutKeyLevel(awarded),
+      crowded: layoutCrowded(awarded),
     );
     final nextRoom = nextFloor.first;
     final gauntletEss = gauntlet
