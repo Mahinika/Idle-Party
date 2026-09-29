@@ -291,7 +291,7 @@ void main() {
     expect(chokeMin, lessThanOrEqualTo(7));
   });
 
-  test('gates seal the full corridor, 4 for a choke and 10 for a hall', () {
+  test('gates seal the full corridor, 2 for a choke and 5 for a hall', () {
     final map = RoomLayouts.forFloor(
       floorNumber: 4,
       room: const DungeonRoom(
@@ -306,9 +306,9 @@ void main() {
     );
     final runs = _gateRuns(map);
     expect(runs, isNotEmpty);
-    expect(runs.every((n) => n == 4 || n == 10), isTrue, reason: '$runs');
-    expect(runs.contains(4), isTrue, reason: '$runs');
-    expect(runs.contains(10), isTrue, reason: '$runs');
+    expect(runs.every((n) => n == 2 || n == 5), isTrue, reason: '$runs');
+    expect(runs.contains(2), isTrue, reason: '$runs');
+    expect(runs.contains(5), isTrue, reason: '$runs');
   });
 
   test('combat floors use a large canvas', () {
@@ -325,8 +325,8 @@ void main() {
         dungeonId: id,
         layoutSeed: 4,
       );
-      expect(map.cols, greaterThanOrEqualTo(250), reason: id);
-      expect(map.rows, greaterThanOrEqualTo(250), reason: id);
+      expect(map.cols, greaterThanOrEqualTo(125), reason: id);
+      expect(map.rows, greaterThanOrEqualTo(125), reason: id);
     }
   });
 

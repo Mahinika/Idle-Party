@@ -332,12 +332,12 @@ abstract final class RoomLayouts {
 
   static (int, int) _mapExtent(DungeonLayoutKind layout, int pressure) {
     final p = pressure.clamp(0, 10);
-    // About 250×250. A little extra at high AL / KEY so later floors still grow.
+    // About 125×125. A little extra at high AL / KEY so later floors still grow.
     return switch (layout) {
       DungeonLayoutKind.hideout ||
       DungeonLayoutKind.arena ||
       DungeonLayoutKind.fort ||
-      DungeonLayoutKind.cave => (250 + p * 2, 250 + p),
+      DungeonLayoutKind.cave => (125 + p * 2, 125 + p),
     };
   }
 
@@ -419,8 +419,8 @@ abstract final class RoomLayouts {
     int pressure = 0,
   }) {
     final extra = pressure.clamp(0, 6);
-    final cols = 250 + extra * 2;
-    final rows = 250 + extra;
+    final cols = 125 + extra * 2;
+    final rows = 125 + extra;
     final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
     void set(int x, int y, TileKind k) {
       if (x >= 0 && y >= 0 && x < cols && y < rows) {
@@ -1394,7 +1394,7 @@ abstract final class RoomLayouts {
 
   /// Carve an L-corridor; return gate tiles at the midpoint choke.
   ///
-  /// Chokes are 4 tiles wide (was 1). Every other hall is 10 (was 3, approach was 5).
+  /// Chokes are 2 tiles wide. Every other hall is 5.
   static List<(int, int)> _carveCorridorWithGate(
     void Function(int, int, TileKind) set,
     int x0,
@@ -1408,8 +1408,8 @@ abstract final class RoomLayouts {
     Random? rng,
     List<_Rect> rooms = const [],
   }) {
-    // Approach halls used to be 5 wide. They join the 10-wide hall.
-    final span = narrow ? 4 : (broad ? 10 : 10);
+    // Approach halls share the 5-wide hall.
+    final span = narrow ? 2 : (broad ? 5 : 5);
     final left = span ~/ 2;
     final right = span - left - 1;
 
