@@ -169,9 +169,9 @@ match this doc.
 ## WISP gift (separate from SCROLLS)
 
 Optional **WISP** drifts on hub or in a dungeon after the first ENTER. Tap it
-where it appears. A small prompt offers a short ad for **10×** gold + **1 hour
-×2 gold** right there. **NO THANKS** keeps the small pile. The lantern leaves
-when its few seconds are up. Ad-free: big pile + hour on tap. Max **6** taps
+where it appears. A small prompt offers a short ad for a **bigger gold pile**
+(no time boost). **NO THANKS** keeps the small pile. The lantern leaves
+when its few seconds are up. Ad-free: big pile on tap. Max **6** taps
 per UTC day in release. Logic: `lib/core/wisp_gift.dart`.
 
 ## Out of scope (v1)

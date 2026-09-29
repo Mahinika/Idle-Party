@@ -9,12 +9,11 @@ import 'economy_service.dart';
 import 'encounter_factory.dart';
 import 'game_state.dart';
 
-/// Floating WISP: tap for a small gold pile; optional rewarded ad on hub for
-/// 10× gold + 1h ×2 gold (Scroll of Gold magnitude). See plan / AD_POWERUPS.
+/// Floating WISP: tap for a small gold pile; optional rewarded ad for a
+/// bigger gold pile (no time boost). See plan / AD_POWERUPS.
 abstract final class WispGift {
   static const int keepFloorMul = 3;
   static const int watchFloorMul = 30;
-  static const int watchGoldHourMs = AdBoost.hourMs;
 
   /// Live cadence. Debug builds (emulator) spawn often with no daily cap
   /// so the gift can be tried without waiting. Release keeps the real loop.
@@ -117,23 +116,14 @@ abstract final class WispGift {
     return creditGold(state.copyWith(metaDepth: md), keep);
   }
 
-  /// After a finished ad (or ad-free auto): grant locked WATCH + 1h gold scroll.
-  static GameState grantWatchReward(GameState state, {int? nowMs}) {
+  /// After a finished ad (or ad-free auto): grant locked WATCH gold only.
+  static GameState grantWatchReward(GameState state) {
     final md = state.metaDepth;
     final pending = md.wispPendingWatchGold;
     if (pending <= 0) return state;
-    final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
-    var goldUntil = md.adGoldUntilMs;
-    final atCap = AdBoost.atStackCap(goldUntil, nowMs: now);
-    if (!atCap) {
-      goldUntil = AdBoost.extendUntil(goldUntil, watchGoldHourMs, nowMs: now);
-    }
-    final legacy = goldUntil > md.adAtkUntilMs ? goldUntil : md.adAtkUntilMs;
     final nextMd = md.copyWith(
       wispPendingWatchGold: 0,
       wispPendingKeepGold: 0,
-      adGoldUntilMs: goldUntil,
-      adBoostUntilMs: legacy,
     );
     return creditGold(state.copyWith(metaDepth: nextMd), pending);
   }
@@ -157,13 +147,9 @@ abstract final class WispGift {
     );
   }
 
-  static bool goldHourAtCap(GameState state, {int? nowMs}) {
-    return AdBoost.atStackCap(state.metaDepth.adGoldUntilMs, nowMs: nowMs);
-  }
-
   static String watchButtonLabel(GameState state) {
     final watch = state.metaDepth.wispPendingWatchGold;
-    return '${_formatGold(watch)} GOLD + 1 HOUR ×2';
+    return '${_formatGold(watch)} GOLD';
   }
 
   static String _formatGold(int n) {

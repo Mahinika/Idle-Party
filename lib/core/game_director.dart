@@ -414,13 +414,11 @@ class GameDirector extends ChangeNotifier {
   void _grantWispWatchReward({bool toast = true}) {
     if (!wispPendingChoice) return;
     final before = _state.gold;
-    final atCap = WispGift.goldHourAtCap(_state);
     _applyUpgrade(WispGift.grantWatchReward(_state));
     final gained = _state.gold - before;
     if (toast) {
       GameAudio.ui();
-      final capNote = atCap ? ' · Gold Rush already at 24h' : '';
-      showToast('WISP · +$gained gold · 1 hour ×2 gold$capNote', life: 2.8);
+      showToast('WISP · +$gained gold', life: 2.8);
     }
     notifyListeners();
     unawaited(_persistFlush());

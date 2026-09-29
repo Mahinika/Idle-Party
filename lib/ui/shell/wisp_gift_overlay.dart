@@ -222,7 +222,6 @@ Future<void> openWispChoiceSheet(
               return const SizedBox.shrink();
             }
             final watchLabel = WispGift.watchButtonLabel(director.state);
-            final atCap = WispGift.goldHourAtCap(director.state);
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.viewInsetsOf(ctx).bottom,
@@ -267,21 +266,10 @@ Future<void> openWispChoiceSheet(
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Watch a short ad for the bigger pile '
-                              'and 1 hour ×2 gold?',
+                              'Watch a short ad for a bigger gold pile? '
+                              'NO THANKS keeps the smaller gift.',
                               style: GameTheme.body(size: 14),
                             ),
-                            if (atCap) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                'Gold Rush is already stacked to 24h — '
-                                'you still get the gold pile.',
-                                style: GameTheme.body(
-                                  size: 11,
-                                  color: GameTheme.parchmentDim,
-                                ),
-                              ),
-                            ],
                             const SizedBox(height: 12),
                             GameButton(
                               label: 'WATCH AD · $watchLabel',

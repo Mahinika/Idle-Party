@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:idle_party/core/ad_boost.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/wisp_gift.dart';
 import 'package:idle_party/models/meta_depth.dart';
@@ -12,37 +11,34 @@ void main() {
     expect(watch, keep * 10);
   });
 
-  test('grant watch adds gold hour and clears pending', () {
+  test('grant watch adds gold only and clears pending', () {
     final now = 1_700_000_000_000;
     var state = GameLogic.createInitialState();
     state = state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         wispPendingWatchGold: 5000,
         wispPendingKeepGold: 500,
+        adGoldUntilMs: now + 1000,
       ),
     );
     final beforeGold = state.gold;
-    state = WispGift.grantWatchReward(state, nowMs: now);
+    final goldUntilBefore = state.metaDepth.adGoldUntilMs;
+    state = WispGift.grantWatchReward(state);
     expect(state.gold, beforeGold + 5000);
     expect(state.metaDepth.wispPendingWatchGold, 0);
-    expect(
-      state.metaDepth.adGoldUntilMs,
-      now + WispGift.watchGoldHourMs,
-    );
+    expect(state.metaDepth.adGoldUntilMs, goldUntilBefore);
   });
 
-  test('gold hour respects 24h stack cap', () {
-    final now = 1_700_000_000_000;
-    final capUntil = now + AdBoost.maxStackMs;
+  test('grant watch never starts Gold Rush', () {
     var state = GameLogic.createInitialState();
     state = state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         wispPendingWatchGold: 100,
-        adGoldUntilMs: capUntil,
+        adGoldUntilMs: 0,
       ),
     );
-    state = WispGift.grantWatchReward(state, nowMs: now);
-    expect(state.metaDepth.adGoldUntilMs, capUntil);
+    state = WispGift.grantWatchReward(state);
+    expect(state.metaDepth.adGoldUntilMs, 0);
     expect(state.gold, greaterThan(0));
   });
 
@@ -94,5 +90,13 @@ void main() {
     expect(md.wispUnlocked, isFalse);
     expect(md.wispGiftClaimsToday, 0);
     expect(md.wispPendingWatchGold, 0);
+  });
+
+  test('watch button label is gold only', () {
+    var state = GameLogic.createInitialState();
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(wispPendingWatchGold: 2500),
+    );
+    expect(WispGift.watchButtonLabel(state), '2,500 GOLD');
   });
 }

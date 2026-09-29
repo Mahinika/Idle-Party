@@ -43,7 +43,9 @@ follow `save-migrate`.
   (`MenuTabs.showScrolls`). One ad = +1 ticket. Magnitudes do not stack;
   time extends up to 24 h.
 - **Ad-free:** hide WATCH, one free ticket per UTC day, WISP gives the big
-  reward on tap.
+  gold pile on tap (no time boost).
+- **WISP choice:** WATCH AD = bigger gold only. NO THANKS = keep the small
+  pile. No 1h ×2 gold from WISP.
 - **WISP cadence (release):** first after 90 s, then every 10 min, visible
   10 s, max 6 taps per UTC day. Debug builds run every 20 s.
 
