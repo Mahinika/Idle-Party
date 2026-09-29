@@ -11,7 +11,7 @@ _Nothing open._
 
 ## Done
 
-- 2026-09-29 · RANKS → PARTY said a public party list is not on Play yet. Party power is now a public Play board.
+<!-- - 2026-09-29 · RANKS → PARTY said a public party list is not on Play yet · fixed in 55a5dd46 -->
 
 <!-- - 2026-09-29 · Daily Run too easy / scale from yesterday push · fixed in 4e2888ff -->
 <!-- - 2026-09-29 · Floors felt huge on the phone · fixed in e802ec62 -->
