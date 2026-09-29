@@ -286,13 +286,12 @@ void main() {
     final chokeMin = choke
         .map((c) => c.w < c.h ? c.w : c.h)
         .reduce((a, b) => a < b ? a : b);
-    // Choke stays the tighter room. Its short side grows with the floor
-    // (the old cap was 7, on a map about half this wide).
+    // Choke stays the tighter room. Short side is a pinch, not a closet.
     expect(chokeMin, lessThanOrEqualTo(approachMin));
-    expect(chokeMin, greaterThan(7));
+    expect(chokeMin, inInclusiveRange(8, 11));
   });
 
-  test('gates seal the full corridor, 2 for a choke and 5 for a hall', () {
+  test('gates seal the full corridor, 3 for a choke and 4 for a hall', () {
     final map = RoomLayouts.forFloor(
       floorNumber: 4,
       room: const DungeonRoom(
@@ -307,9 +306,9 @@ void main() {
     );
     final runs = _gateRuns(map);
     expect(runs, isNotEmpty);
-    expect(runs.every((n) => n == 2 || n == 5), isTrue, reason: '$runs');
-    expect(runs.contains(2), isTrue, reason: '$runs');
-    expect(runs.contains(5), isTrue, reason: '$runs');
+    expect(runs.every((n) => n == 3 || n == 4), isTrue, reason: '$runs');
+    expect(runs.contains(3), isTrue, reason: '$runs');
+    expect(runs.contains(4), isTrue, reason: '$runs');
   });
 
   test('combat floors use a large canvas', () {
@@ -326,13 +325,13 @@ void main() {
         dungeonId: id,
         layoutSeed: 4,
       );
-      expect(map.cols, greaterThanOrEqualTo(125), reason: id);
-      expect(map.rows, greaterThanOrEqualTo(125), reason: id);
+      expect(map.cols, greaterThanOrEqualTo(104), reason: id);
+      expect(map.rows, greaterThanOrEqualTo(66), reason: id);
       final widest = map.chambers.map((c) => c.w).reduce(max);
       final tallest = map.chambers.map((c) => c.h).reduce(max);
-      // Footprints were ~16×11 on the old map. They grow with this floor.
-      expect(widest, greaterThanOrEqualTo(20), reason: id);
-      expect(tallest, greaterThanOrEqualTo(18), reason: id);
+      // One phone view is ~20 tiles. A fight room fills most of it, not two.
+      expect(widest, inInclusiveRange(14, 22), reason: id);
+      expect(tallest, inInclusiveRange(10, 18), reason: id);
     }
   });
 
@@ -350,10 +349,10 @@ void main() {
       layoutSeed: 2,
     );
     final arena = map.chambers.single;
-    expect(arena.w, greaterThan(50));
-    expect(arena.h, greaterThan(40));
-    expect(arena.w, lessThan(map.cols - 8));
-    expect(arena.h, lessThan(map.rows - 4));
+    expect(arena.w, inInclusiveRange(26, 42));
+    expect(arena.h, inInclusiveRange(18, 34));
+    expect(arena.w, lessThan(map.cols - 2));
+    expect(arena.h, lessThan(map.rows - 2));
     expect(
       map.isWalkable(map.spawnPoints.first.$1, map.spawnPoints.first.$2),
       isTrue,

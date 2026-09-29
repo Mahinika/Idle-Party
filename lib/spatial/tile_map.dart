@@ -256,12 +256,9 @@ class _Rect {
 
 enum _RoomSilhouette { rect, oval, diamond, el, plus, chamfer, blob }
 
-/// Footprints below were tuned for a ~56×40 floor. A live map near 125×125
-/// grows the same rooms on both axes so they stay a similar share of the cave.
-(int, int) _scaledRoom(int cols, int rows, int w, int h) {
-  final gw = max(4, (w * cols / 56).round());
-  final gh = max(4, (h * rows / 40).round());
-  return (min(gw, max(4, cols - 8)), min(gh, max(4, rows - 8)));
+/// Keep a footprint on the map. Sizes are already in phone tiles.
+(int, int) _fitRoom(int cols, int rows, int w, int h) {
+  return (min(w, max(4, cols - 8)), min(h, max(4, rows - 8)));
 }
 
 /// Multi-room floor maps (cave / hideout / fort flavours).
@@ -341,12 +338,13 @@ abstract final class RoomLayouts {
 
   static (int, int) _mapExtent(DungeonLayoutKind layout, int pressure) {
     final p = pressure.clamp(0, 10);
-    // About 125×125. A little extra at high AL / KEY so later floors still grow.
+    // A snake of screen-sized rooms. A little extra at high AL / KEY.
+    // Phone view is ~20 tiles, so this stays bigger than one screen.
     return switch (layout) {
       DungeonLayoutKind.hideout ||
       DungeonLayoutKind.arena ||
       DungeonLayoutKind.fort ||
-      DungeonLayoutKind.cave => (125 + p * 2, 125 + p),
+      DungeonLayoutKind.cave => (104 + p * 2, 66 + p),
     };
   }
 
@@ -428,8 +426,9 @@ abstract final class RoomLayouts {
     int pressure = 0,
   }) {
     final extra = pressure.clamp(0, 6);
-    final cols = 125 + extra * 2;
-    final rows = 125 + extra;
+    // The arena is the fight. The map is that oval plus a rim of wall.
+    final cols = 48 + extra * 2;
+    final rows = 40 + extra;
     final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
     void set(int x, int y, TileKind k) {
       if (x >= 0 && y >= 0 && x < cols && y < rows) {
@@ -437,9 +436,8 @@ abstract final class RoomLayouts {
       }
     }
 
-    // The old arena filled a ~36×28 map. Grow that room with this floor
-    // instead of turning the whole cave into one oval.
-    final arena = _scaledRoom(cols, rows, 36, 28);
+    // Wider than a trash room, still about a screen and a half.
+    final arena = _fitRoom(cols, rows, 32, 22);
     final rcx = (cols - 1) / 2.0;
     final rcy = (rows - 1) / 2.0;
     final rx = max(4.0, arena.$1 / 2.0);
@@ -454,10 +452,10 @@ abstract final class RoomLayouts {
       }
     }
     // North / south bays so the arena isn't a flat oval.
-    final bayHalf = max(4, (5 * cols / 56).round());
+    final bayHalf = 5;
     final arenaH = max(8, (ry * 2).round());
-    var bayDepth = max(3, (4 * rows / 40).round());
-    bayDepth = min(bayDepth, max(2, (rows - arenaH - 16) ~/ 2));
+    var bayDepth = 3;
+    bayDepth = min(bayDepth, max(2, (rows - arenaH - 8) ~/ 2));
     final northLip = (rcy - ry).floor();
     final southLip = (rcy + ry).ceil();
     for (var y = northLip - bayDepth; y <= northLip; y++) {
@@ -785,36 +783,34 @@ abstract final class RoomLayouts {
         r.x >= 1 && r.y >= 1 && r.x + r.w <= cols - 2 && r.y + r.h <= rows - 2;
 
     (int, int) sizeFor(FloorBeatKind kind) {
-      (int, int) fit(int w, int h) => _scaledRoom(cols, rows, w, h);
+      (int, int) fit(int w, int h) => _fitRoom(cols, rows, w, h);
       if (tightRooms &&
           kind != FloorBeatKind.treasure &&
           kind != FloorBeatKind.exitHold) {
-        return fit(6 + rng.nextInt(2), 8 + rng.nextInt(2));
+        return fit(8 + rng.nextInt(2), 10 + rng.nextInt(2));
       }
       switch (kind) {
         case FloorBeatKind.approach:
-          return fit(
-            11 + rng.nextInt(4),
-            8 + rng.nextInt(3),
-          ); // hall, not closet
+          // Wide hall. About one phone-width, shallower than it is wide.
+          return fit(15 + rng.nextInt(3), 11 + rng.nextInt(2));
         case FloorBeatKind.hub:
-          return fit(14 + rng.nextInt(3), 10 + rng.nextInt(2));
+          return fit(18 + rng.nextInt(2), 13 + rng.nextInt(2));
         case FloorBeatKind.choke:
-          // Still the tightest room — but a fight can stand in it.
+          // Pinched: one side stays short so it is not another hall.
           if (rng.nextBool()) {
-            return fit(6 + rng.nextInt(2), 9 + rng.nextInt(3));
+            return fit(8 + rng.nextInt(2), 12 + rng.nextInt(3));
           }
-          return fit(9 + rng.nextInt(3), 6 + rng.nextInt(2));
+          return fit(12 + rng.nextInt(3), 8 + rng.nextInt(2));
         case FloorBeatKind.elite:
-          return fit(9 + rng.nextInt(3), 8 + rng.nextInt(3));
+          return fit(14 + rng.nextInt(2), 12 + rng.nextInt(2));
         case FloorBeatKind.treasure:
-          return fit(7 + rng.nextInt(2), 6 + rng.nextInt(2)); // side vault
+          return fit(10 + rng.nextInt(2), 8 + rng.nextInt(2));
         case FloorBeatKind.decoy:
-          return fit(6 + rng.nextInt(2), 5 + rng.nextInt(2));
+          return fit(8 + rng.nextInt(2), 7 + rng.nextInt(2));
         case FloorBeatKind.boss:
-          return fit(12 + rng.nextInt(3), 10 + rng.nextInt(3));
+          return fit(16 + rng.nextInt(2), 13 + rng.nextInt(2));
         case FloorBeatKind.exitHold:
-          return fit(8 + rng.nextInt(3), 8 + rng.nextInt(2));
+          return fit(12 + rng.nextInt(3), 10 + rng.nextInt(2));
       }
     }
 
@@ -857,10 +853,13 @@ abstract final class RoomLayouts {
         final north = i.isEven;
         final spread = kit.verticalSpreadBoost;
         final midRow = rows ~/ 2;
-        final yLo = north ? 2 : max(2, midRow - spread);
-        final yHi = north
-            ? max(3, midRow - h - 1 - spread ~/ 2)
-            : max(yLo + 1, rows - h - 3 - spread ~/ 2);
+        // A lane between the north and south bands so the path can snake
+        // and a hall can cross without the rooms eating each other.
+        final lane = 8 + spread;
+        final northBottom = midRow - lane ~/ 2;
+        final southTop = midRow + (lane - lane ~/ 2);
+        final yLo = north ? 2 : southTop;
+        final yHi = north ? max(yLo, northBottom - h) : max(yLo, rows - h - 3);
         var placed = false;
         for (var attempt = 0; attempt < 64; attempt++) {
           final jx = rng.nextInt(5) - 2;
@@ -955,11 +954,11 @@ abstract final class RoomLayouts {
       var attempts = 0;
       while (rooms.length < fallbackRoomCount && attempts < 160) {
         attempts++;
-        final sized = _scaledRoom(
+        final sized = _fitRoom(
           cols,
           rows,
-          8 + rng.nextInt(5),
-          7 + rng.nextInt(4),
+          12 + rng.nextInt(4),
+          10 + rng.nextInt(3),
         );
         final w = sized.$1;
         final h = sized.$2;
@@ -979,7 +978,7 @@ abstract final class RoomLayouts {
       }
     }
     if (rooms.isEmpty) {
-      final sized = _scaledRoom(cols, rows, 10, 8);
+      final sized = _fitRoom(cols, rows, 14, 11);
       rooms.add(_Rect(2, 2, sized.$1, sized.$2));
       rooms.add(
         _Rect(
@@ -1011,14 +1010,9 @@ abstract final class RoomLayouts {
     final gateList = <GateInfo>[];
     void connect(int from, int to) {
       final nextBeat = roomBeats[to];
-      final fromBeat = roomBeats[from];
       final narrow =
           nextBeat == FloorBeatKind.choke ||
           (kit.preferChoke && nextBeat != FloorBeatKind.approach);
-      final broad =
-          !narrow &&
-          (fromBeat == FloorBeatKind.approach ||
-              nextBeat == FloorBeatKind.approach);
       final gateTiles = _carveCorridorWithGate(
         set,
         rooms[from].cx,
@@ -1026,7 +1020,6 @@ abstract final class RoomLayouts {
         rooms[to].cx,
         rooms[to].cy,
         narrow: narrow,
-        broad: broad,
         horizontalFirst: rng.nextBool(),
         winding: rng.nextDouble() < kit.corridorWindingChance,
         rng: rng,
@@ -1447,7 +1440,7 @@ abstract final class RoomLayouts {
 
   /// Carve an L-corridor; return gate tiles at the midpoint choke.
   ///
-  /// Chokes are 2 tiles wide. Every other hall is 5.
+  /// Chokes are 3 tiles wide. Every other hall is 4.
   static List<(int, int)> _carveCorridorWithGate(
     void Function(int, int, TileKind) set,
     int x0,
@@ -1455,14 +1448,13 @@ abstract final class RoomLayouts {
     int x1,
     int y1, {
     bool narrow = false,
-    bool broad = false,
     bool horizontalFirst = true,
     bool winding = false,
     Random? rng,
     List<_Rect> rooms = const [],
   }) {
-    // Approach halls share the 5-wide hall.
-    final span = narrow ? 2 : (broad ? 5 : 5);
+    // Wide enough for the party. Narrower than a fight room.
+    final span = narrow ? 3 : 4;
     final left = span ~/ 2;
     final right = span - left - 1;
 
