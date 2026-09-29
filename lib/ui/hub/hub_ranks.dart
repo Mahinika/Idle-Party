@@ -70,7 +70,8 @@ class HubRanksFab extends StatelessWidget {
   }
 }
 
-/// Season list with KEY / GAUNTLET / GR switch, kept on the hub.
+/// Season list with KEY / GAUNTLET / GR switch.
+/// Full height, same top edge as GEAR / GOLD — the hub does not peek above.
 Future<void> openHubRanksSheet(
   BuildContext context,
   GameDirector director,
@@ -80,10 +81,14 @@ Future<void> openHubRanksSheet(
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      enableDrag: false,
+      useSafeArea: false,
       backgroundColor: Colors.transparent,
       barrierColor: MenuChrome.scrim,
+      // Drop the Material 3 sheet cap (max width 640) so the panel is edge to edge.
+      constraints: const BoxConstraints(maxWidth: double.infinity),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       builder: (ctx) {
-        final maxH = MediaQuery.sizeOf(ctx).height * 0.72;
         return ListenableBuilder(
           listenable: director,
           builder: (ctx, _) {
@@ -91,72 +96,58 @@ Future<void> openHubRanksSheet(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.viewInsetsOf(ctx).bottom,
               ),
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: maxH,
-                    maxWidth: MediaQuery.sizeOf(ctx).width,
-                  ),
-                  child: Material(
-                    color: MenuChrome.sheet,
-                    borderRadius: MenuChrome.sheetRadius,
-                    clipBehavior: Clip.antiAlias,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: MenuChrome.sheetRadius,
-                        border: Border.all(
-                          color: GameTheme.borderLit.withValues(alpha: 0.45),
-                        ),
-                      ),
-                      child: MenuChrome.playSafeArea(
-                        bottom: true,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              MenuChrome.sheetHandle(),
-                              Row(
-                                children: [
-                                  const GameIcon.asset(
-                                    UiIcon.trophy,
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'RANKS',
-                                      style: GameTheme.menuTitle(size: 18),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'KEY, Gauntlet, Ranked GR, or party power.',
-                                style: GameTheme.body(
-                                  size: 12,
-                                  color: GameTheme.parchmentDim,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  child: PlayGamesBoardsSection(
-                                    director: director,
+              child: SizedBox.expand(
+                key: const Key('hub-ranks-sheet'),
+                child: Material(
+                  color: GameTheme.panel,
+                  child: DecoratedBox(
+                    decoration: MenuChrome.panel(
+                      borderRadius: BorderRadius.zero,
+                      opaque: true,
+                    ),
+                    child: MenuChrome.playSafeArea(
+                      bottom: true,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                const GameIcon.asset(UiIcon.trophy, size: 18),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'RANKS',
+                                    style: GameTheme.menuTitle(size: 18),
                                   ),
                                 ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'KEY, Gauntlet, Ranked GR, or party power.',
+                              style: GameTheme.body(
+                                size: 12,
+                                color: GameTheme.parchmentDim,
                               ),
-                              const SizedBox(height: 8),
-                              GameButton(
-                                label: 'BACK',
-                                style: GameButtonStyle.grey,
-                                dense: true,
-                                onPressed: () => Navigator.of(ctx).pop(),
+                            ),
+                            const SizedBox(height: 8),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: PlayGamesBoardsSection(
+                                  director: director,
+                                ),
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 8),
+                            GameButton(
+                              label: 'BACK',
+                              style: GameButtonStyle.grey,
+                              dense: true,
+                              onPressed: () => Navigator.of(ctx).pop(),
+                            ),
+                          ],
                         ),
                       ),
                     ),

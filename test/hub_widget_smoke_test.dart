@@ -262,7 +262,14 @@ void main() {
     await tester.tap(find.bySemanticsLabel('RANKS. Season boards'));
     await tester.pumpAndSettle();
 
-    expect(find.text('KEY, Gauntlet, Ranked GR, or party power.'), findsOneWidget);
+    expect(
+      find.text('KEY, Gauntlet, Ranked GR, or party power.'),
+      findsOneWidget,
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('hub-ranks-sheet'))),
+      const Size(360, 780),
+    );
     expect(find.text(PlayBoardPreview.notice), findsOneWidget);
     expect(find.text('KEY +20 · 01:30'), findsOneWidget);
 
@@ -278,7 +285,10 @@ void main() {
     await tester.tap(find.text('PARTY'));
     await tester.pumpAndSettle();
     expect(find.text('4800'), findsOneWidget);
-    expect(find.text('Level, worn gear, Ascend, and blessings.'), findsOneWidget);
+    expect(
+      find.text('Level, worn gear, Ascend, and blessings.'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('BACK'));
     await tester.pumpAndSettle();
