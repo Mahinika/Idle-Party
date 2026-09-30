@@ -952,14 +952,79 @@ abstract final class AbilityEffectRunner {
           }
           return true;
         }
-        final lowest = _lowestAlly(world, hero);
-        final lowestFrac = lowest == null || lowest.effectiveMaxHp <= 0
-            ? 1.0
-            : lowest.hp / lowest.effectiveMaxHp;
-        final defendTarget =
-            (!actorIsTank(hero) && lowest != null && lowestFrac <= 0.32)
-            ? lowest
-            : hero;
+        // Text on the button is the contract. These are not a generic wall.
+        if (def.id == AbilityId.dispersion) {
+          spendAndCd(world, hero, def);
+          hero.shieldWallTimer = math.max(hero.shieldWallTimer, 3.5);
+          SpatialCombat.gainRage(hero, 30);
+          announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFB060E0,
+            reducedVfx,
+            important: true,
+          );
+          return true;
+        }
+        if (def.id == AbilityId.divineShield) {
+          spendAndCd(world, hero, def);
+          hero.iceBlockTimer = math.max(hero.iceBlockTimer, 4.0);
+          announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFFFF0C0,
+            reducedVfx,
+            important: true,
+          );
+          return true;
+        }
+        if (def.id == AbilityId.armsRally) {
+          spendAndCd(world, hero, def);
+          for (final ally in world.heroes) {
+            if (!ally.isAlive || ally.isPet) continue;
+            _absorbLowest(world, hero, ally, def.coeff, def.shortLabel);
+          }
+          announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFFFE08A,
+            reducedVfx,
+            important: true,
+          );
+          return true;
+        }
+        if (def.id == AbilityId.enragedRegeneration) {
+          spendAndCd(world, hero, def);
+          hero.shieldWallTimer = math.max(hero.shieldWallTimer, 3.5);
+          _castHeal(world, hero, hero, def, reducedVfx: reducedVfx);
+          return true;
+        }
+        if (def.id == AbilityId.vampiricBlood) {
+          spendAndCd(world, hero, def);
+          final bonus = math.max(6, (hero.maxHp * 0.2).round());
+          hero.bonusMaxHp = math.max(hero.bonusMaxHp, bonus);
+          hero.lastStandTimer = math.max(hero.lastStandTimer, 4.0);
+          hero.hp = math.min(hero.effectiveMaxHp, hero.hp + bonus ~/ 2);
+          announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFC04040,
+            reducedVfx,
+            important: true,
+          );
+          return true;
+        }
+        if (def.id == AbilityId.sacrifice || def.id == AbilityId.shadowWard) {
+          spendAndCd(world, hero, def);
+          _castAbsorb(world, hero, hero, def, reducedVfx: reducedVfx);
+          return true;
+        }
+        // Self walls stay on the caster. Ally saves are named casts.
+        final defendTarget = hero;
         defendTarget.shieldWallTimer = math.max(
           defendTarget.shieldWallTimer,
           3.5,

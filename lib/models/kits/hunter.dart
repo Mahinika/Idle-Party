@@ -142,7 +142,7 @@ const List<ClassAbilityDef> _hunterKit = <ClassAbilityDef>[
       specId: HeroSpecId.marksmanship,
       name: 'Trueshot Aura',
       shortLabel: 'TAura',
-      description: 'Always on: crit lean.',
+      description: 'Always on: harder and faster shots.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: true,

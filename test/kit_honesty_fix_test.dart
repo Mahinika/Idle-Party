@@ -1116,6 +1116,120 @@ void main() {
     }
     expect(failed, isEmpty, reason: 'HUD chips never started CD: $failed');
   });
+
+  test('button names match the spell', () {
+    expect(ClassKits.defFor(AbilityId.ragingBlow)!.name, 'Raging Blow');
+    expect(ClassKits.defFor(AbilityId.ragingBlow)!.shortLabel, 'RBlow');
+    expect(ClassKits.defFor(AbilityId.devastate)!.shortLabel, 'Devast');
+    expect(ClassKits.defFor(AbilityId.dispersion)!.shortLabel, 'Disp');
+    expect(ClassKits.defFor(AbilityId.psychicScream)!.shortLabel, 'Scream');
+    expect(ClassKits.defFor(AbilityId.holyLightAura)!.name, 'Holy Aura');
+    expect(ClassKits.defFor(AbilityId.divineShield)!.shortLabel, 'DShield');
+    expect(
+      ClassKits.defFor(AbilityId.arcanePowerPassive)!.description,
+      isNot(contains('mana')),
+    );
+    expect(ClassKits.defFor(AbilityId.furyExecute)!.name, 'Rampage');
+    expect(ClassKits.defFor(AbilityId.furyExecute)!.gate.executeHpFrac, isNull);
+  });
+
+  test('Dispersion is self DR plus mana', () {
+    final state = _soloSpecParty(HeroSpecId.shadow, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final shadow = world.heroes.firstWhere((h) => !h.isPet);
+    shadow
+      ..rage = 10
+      ..hp = (shadow.maxHp * 0.2).round()
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(shadow, except: AbilityId.dispersion);
+
+    var fired = false;
+    for (var i = 0; i < 40; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((shadow.abilityCd[AbilityId.dispersion.name] ?? 0) > 0) {
+        fired = true;
+        break;
+      }
+      shadow
+        ..hp = (shadow.maxHp * 0.2).round()
+        ..rage = 10;
+    }
+    expect(fired, isTrue);
+    expect(shadow.shieldWallTimer, greaterThan(0));
+    expect(shadow.rage, greaterThan(10));
+  });
+
+  test('Divine Shield immunizes the paladin', () {
+    final state = _soloSpecParty(HeroSpecId.retribution, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final ret = world.heroes.firstWhere((h) => !h.isPet);
+    ret
+      ..rage = 100
+      ..hp = (ret.maxHp * 0.2).round()
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(ret, except: AbilityId.divineShield);
+
+    var fired = false;
+    for (var i = 0; i < 40; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (ret.iceBlockTimer > 0) {
+        fired = true;
+        break;
+      }
+      ret
+        ..hp = (ret.maxHp * 0.2).round()
+        ..rage = 100;
+    }
+    expect(fired, isTrue);
+  });
+
+  test('Rallying Cry shields the party', () {
+    final state = _soloSpecParty(HeroSpecId.arms, level: 15);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final arms = world.heroes.firstWhere((h) => !h.isPet);
+    final ally = SpatialActor(
+      id: 'ally',
+      name: 'Ally',
+      team: SpatialTeam.hero,
+      x: arms.x,
+      y: arms.y,
+      hp: 40,
+      maxHp: 200,
+      attack: 10,
+      defense: 1,
+      moveSpeed: 0,
+      attackRange: 1,
+      attackCooldown: 1,
+    );
+    world.heroes.add(ally);
+    arms
+      ..rage = 100
+      ..hp = (arms.maxHp * 0.2).round()
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(arms, except: AbilityId.armsRally);
+
+    var fired = false;
+    for (var i = 0; i < 40; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((arms.abilityCd[AbilityId.armsRally.name] ?? 0) > 0) {
+        fired = true;
+        break;
+      }
+      arms
+        ..hp = (arms.maxHp * 0.2).round()
+        ..rage = 100;
+      ally.hp = 40;
+    }
+    expect(fired, isTrue);
+    expect(arms.absorbShield, greaterThan(0));
+    expect(ally.absorbShield, greaterThan(0));
+  });
 }
 
 GameState _soloSpecParty(HeroSpecId specId, {required int level}) {

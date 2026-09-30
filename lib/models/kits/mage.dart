@@ -210,7 +210,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
       specId: HeroSpecId.arcane,
       name: 'Arcane Brilliance',
       shortLabel: 'Brill',
-      description: 'Always on: mana lean.',
+      description: 'Always on: slightly harder casts.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: true,
