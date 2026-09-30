@@ -6,7 +6,10 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-text = Path('lib/models/class_ability.dart').read_text(encoding='utf-8')
+_models = Path('lib/models')
+_chunks = [p.read_text(encoding='utf-8') for p in sorted((_models / 'kits').glob('*.dart'))]
+_chunks.append((_models / 'class_ability.dart').read_text(encoding='utf-8'))
+text = '\n'.join(_chunks)
 parts = re.split(r'ClassAbilityDef\(', text)[1:]
 
 rows = []
