@@ -17,7 +17,8 @@ emulator and no browser.
 
 1. `py -3 tool/gear_lookbook.py`
 2. Read the PNGs under `tool/out/lookbook/` with vision. Start with
-   `fit_kit.png` (one full kit per body) and `fit_materials.png`.
+   `fit_compare.png` and `fit_weapons.png` when several pieces are worn
+   together. Then `fit_kit.png` and `fit_materials.png`.
 3. Open the family sheet that matches the change:
    - `{family}_armor.png` — helm, chest, legs, cloak
    - `{family}_snap.png` — hands, then shoulder
@@ -25,6 +26,14 @@ emulator and no browser.
    - `{family}_weapons_b.png` — bow, shield, frill, wand, gun, crossbow, polearm, fist, thrown
 4. Cells run left to right in `EquipmentModelCatalog.variants` order.
    Bodies in `fit_kit.png` are warrior, healer, mage, rogue.
+   `fit_compare.png` rows are the same four bodies. Columns are bare,
+   armor (helm chest legs), layers (armor plus shoulder cloak hands),
+   armed (layers plus that body's weapon), pair (layers plus sword and
+   shield, wand and book, or two daggers).
+   `fit_weapons.png` is the same four bodies in helm, chest, and hands,
+   then one weapon per column: sword, dagger, staff, bow, wand, gun,
+   polearm, shield, frill. Staff, polearm, bow, gun, and crossbow are
+   two-hand, so an off-hand worn with them is hidden.
    `fit_materials.png` top row is warrior native, warrior leather, rogue
    native, rogue mail, mage native, mage leather. Bottom row is healer
    cloth, leather, mail, plate.
@@ -37,8 +46,8 @@ emulator and no browser.
 - Chest, legs, and cloak stay on the torso and the legs.
 - Shoulders rest on the shoulder, not beside the head.
 - A weapon's grip is in the hand. An off-hand item is in the off hand.
-- One piece at a time can look looser than the same piece in `fit_kit.png`.
-  Judge both.
+- One piece at a time can look looser than the same piece in `fit_kit.png`
+  or `fit_compare.png`. Judge the single piece and the worn set.
 
 The gold marks above each doll are labels. In a test run they can draw as
 blocks. Trust the file name and the row order above.

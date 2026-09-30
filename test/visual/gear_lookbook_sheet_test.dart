@@ -68,6 +68,9 @@ void main() {
       const Size(760, 280),
     );
 
+    await _saveCompare(tester, outDir);
+    await _saveWeaponCompare(tester, outDir);
+
     await _saveSheet(
       tester,
       '$outDir/fit_materials.png',
@@ -147,6 +150,115 @@ Future<void> _saveFamily(
     _column(rows),
     Size(cols * 124 + 24, bases.length * 150 + 48),
   );
+}
+
+/// Stacks pieces on one body so a worn set can be compared with a bare one.
+///
+/// Rows are warrior, healer, mage, rogue.
+/// Columns: bare, armor, layers, armed, pair.
+Future<void> _saveCompare(WidgetTester tester, String outDir) {
+  const armor = ['helm_t0', 'chest_t0', 'legs_t0'];
+  const layers = [
+    ...armor,
+    'shoulder_t0',
+    'cloak_t0',
+    'hands_t0',
+  ];
+  return _saveSheet(
+    tester,
+    '$outDir/fit_compare.png',
+    _column([
+      _caption('COMPARE  bare  armor  layers  armed  pair'),
+      for (final family in BodyFamily.values)
+        _row([
+          _mixCell(family, 'bare', const []),
+          _mixCell(family, 'armor', armor),
+          _mixCell(family, 'layers', layers),
+          _mixCell(family, 'armed', [...layers, _familyWeapon(family)]),
+          _mixCell(
+            family,
+            'pair',
+            [...layers, ..._familyPair(family)],
+            offHandWeapon: _familyOffWeapon(family),
+          ),
+        ]),
+    ]),
+    const Size(5 * 124 + 24, 4 * 150 + 48),
+  );
+}
+
+/// Same dressed body, one weapon at a time, so hands can be compared.
+///
+/// Rows are warrior, healer, mage, rogue.
+/// Columns: sword, dagger, staff, bow, wand, gun, polearm, shield, frill.
+Future<void> _saveWeaponCompare(WidgetTester tester, String outDir) {
+  const dress = ['helm_t0', 'chest_t0', 'hands_t0'];
+  const weapons = [
+    'sword_t0',
+    'dagger_t0',
+    'staff_t0',
+    'bow_t0',
+    'wand_t0',
+    'gun_t0',
+    'polearm_t0',
+    'shield_t0',
+    'frill_t0',
+  ];
+  return _saveSheet(
+    tester,
+    '$outDir/fit_weapons.png',
+    _column([
+      _caption('DRESSED  sword dagger staff bow wand gun polearm shield frill'),
+      for (final family in BodyFamily.values)
+        _row([
+          for (final id in weapons)
+            _mixCell(family, id, [...dress, id]),
+        ]),
+    ]),
+    const Size(9 * 124 + 24, 4 * 150 + 48),
+  );
+}
+
+String _familyWeapon(BodyFamily family) => switch (family) {
+  BodyFamily.warrior => 'sword_t0',
+  BodyFamily.rogue => 'dagger_t0',
+  BodyFamily.mage => 'staff_t0',
+  BodyFamily.healer => 'wand_t0',
+};
+
+/// Main-hand piece of the pair column. A two-hand weapon would hide the book.
+List<String> _familyPair(BodyFamily family) => switch (family) {
+  BodyFamily.warrior => const ['sword_t0', 'shield_t0'],
+  BodyFamily.healer => const ['wand_t0', 'frill_t0'],
+  BodyFamily.mage => const ['wand_t0', 'frill_t0'],
+  BodyFamily.rogue => const ['dagger_t0'],
+};
+
+String? _familyOffWeapon(BodyFamily family) =>
+    family == BodyFamily.rogue ? 'dagger_t0' : null;
+
+Widget _mixCell(
+  BodyFamily family,
+  String label,
+  List<String> visualSetIds, {
+  String? offHandWeapon,
+}) {
+  final items = <EquipmentSlot, EquipmentItem>{};
+  for (final id in visualSetIds) {
+    final item = gearLookbookItem(id, null);
+    items[item.slot] = item;
+  }
+  if (offHandWeapon != null) {
+    final item = gearLookbookItem(offHandWeapon, null, asOffHand: true);
+    items[item.slot] = item;
+  }
+  final hero = PartyHero.starting(
+    name: 'Mix',
+    specId: gearLookbookSpec(family),
+    id: 'mix-${family.name}-$label',
+    equipped: items,
+  );
+  return _frame(label, HeroDollSprite(hero: hero, size: 96));
 }
 
 Widget _kitCell(BodyFamily family) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/hero.dart';
 import '../../models/hero_spec.dart';
 import '../../models/loot.dart';
+import '../../models/proficiency.dart';
 import '../../visual/body_family.dart';
 import '../../visual/equipment_model_catalog.dart';
 import '../../visual/owned_gear_assets.dart';
@@ -190,44 +191,59 @@ HeroSpecId gearLookbookSpec(BodyFamily family) => switch (family) {
 
 /// Same item the debug lookbook paints. The sheet tool uses this so a
 /// picture on disk matches the phone.
-EquipmentItem gearLookbookItem(String visualSetId, ArmorType? material) {
+///
+/// [asOffHand] puts a weapon in the off hand. Staff, polearm, bow, gun, and
+/// crossbow are two-hand, so the game hides an off-hand worn with them.
+EquipmentItem gearLookbookItem(
+  String visualSetId,
+  ArmorType? material, {
+  bool asOffHand = false,
+}) {
   final base = EquipmentModelCatalog.baseToken(visualSetId);
-  final slot = switch (base) {
-    'helm' => EquipmentSlot.head,
-    'chest' => EquipmentSlot.chest,
-    'legs' => EquipmentSlot.legs,
-    'cloak' => EquipmentSlot.cloak,
-    'hands' => EquipmentSlot.hands,
-    'shoulder' => EquipmentSlot.shoulder,
-    'shield' || 'frill' => EquipmentSlot.offHand,
-    _ => EquipmentSlot.weapon,
+  final slot = asOffHand
+      ? EquipmentSlot.offHand
+      : switch (base) {
+          'helm' => EquipmentSlot.head,
+          'chest' => EquipmentSlot.chest,
+          'legs' => EquipmentSlot.legs,
+          'cloak' => EquipmentSlot.cloak,
+          'hands' => EquipmentSlot.hands,
+          'shoulder' => EquipmentSlot.shoulder,
+          'shield' || 'frill' => EquipmentSlot.offHand,
+          _ => EquipmentSlot.weapon,
+        };
+  final weaponType = switch (base) {
+    'sword' => WeaponType.sword,
+    'staff' => WeaponType.staff,
+    'dagger' => WeaponType.dagger,
+    'mace' => WeaponType.mace,
+    'axe' => WeaponType.axe,
+    'bow' => WeaponType.bow,
+    'wand' => WeaponType.wand,
+    'gun' => WeaponType.gun,
+    'crossbow' => WeaponType.crossbow,
+    'polearm' => WeaponType.polearm,
+    'fist' => WeaponType.fist,
+    'thrown' => WeaponType.thrown,
+    _ => null,
   };
   return EquipmentItem(
-    id: 'look-$visualSetId',
+    id: 'look-$visualSetId${asOffHand ? '-off' : ''}',
     name: visualSetId,
     slot: slot,
     rarity: LootRarity.common,
     visualSetId: visualSetId,
     armorType: material,
-    weaponType: switch (base) {
-      'sword' => WeaponType.sword,
-      'staff' => WeaponType.staff,
-      'dagger' => WeaponType.dagger,
-      'mace' => WeaponType.mace,
-      'axe' => WeaponType.axe,
-      'bow' => WeaponType.bow,
-      'wand' => WeaponType.wand,
-      'gun' => WeaponType.gun,
-      'crossbow' => WeaponType.crossbow,
-      'polearm' => WeaponType.polearm,
-      'fist' => WeaponType.fist,
-      'thrown' => WeaponType.thrown,
-      _ => null,
-    },
-    offHandKind: switch (base) {
-      'shield' => OffHandKind.shield,
-      'frill' => OffHandKind.frill,
-      _ => null,
-    },
+    weaponType: weaponType,
+    handed: weaponType == null
+        ? null
+        : ClassProficiency.defaultHanded(weaponType),
+    offHandKind: asOffHand
+        ? OffHandKind.weapon
+        : switch (base) {
+            'shield' => OffHandKind.shield,
+            'frill' => OffHandKind.frill,
+            _ => null,
+          },
   );
 }
