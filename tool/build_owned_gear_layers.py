@@ -1367,7 +1367,15 @@ def run_build() -> None:
 def prepare_stage() -> None:
     """Fresh copy of the art. Generated PNGs go; _src and _authored stay."""
     if STAGE_CHAR.exists():
-        shutil.rmtree(STAGE_CHAR)
+        # Windows can keep a staged PNG open for a moment.
+        for attempt in range(20):
+            try:
+                shutil.rmtree(STAGE_CHAR)
+                break
+            except OSError:
+                if attempt == 19:
+                    raise
+                time.sleep(0.25)
     shutil.copytree(LIVE_CHAR, STAGE_CHAR)
     for family in FAMILIES:
         for path in (STAGE_CHAR / family).glob("*.png"):
