@@ -13,3 +13,14 @@ Agent-owned paste files. Play stays the install path. No GitHub Releases.
 | [docs/STORE_LISTING.md](../../../docs/STORE_LISTING.md) | en-US title / short / full |
 
 Owner time, after the **2026-09-27** look: the week is not a clip batch and not 8–10 mails. The pipe that lined up with installs is one `r/incremental_games` post (next slot **2026-10-18**, GIF + one Play link). Comment on other threads until that slot. Shorts and creator mail stay in these files for when that bet is named again.
+
+## Directories
+
+Same players as the Reddit post. Not a second sub, not paid installs.
+
+| Site | Status |
+|------|--------|
+| [topincrementalgames.com/games/idle-party](https://www.topincrementalgames.com/games/idle-party) | Live. Play link works. No cover. Unclaimed. |
+| [IdleDB](https://idledb.com/submit-game) | Submitted **2026-09-30**. Review pending. Follow-up may hit cognifoxstudio@gmail.com. Do not submit again. |
+
+galaxy.click is browser games only. Do not put a web build there.
