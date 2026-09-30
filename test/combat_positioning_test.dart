@@ -661,6 +661,118 @@ void main() {
     expect(landed.$1, lessThan(4));
     expect(map.isWalkableWorld(landed.$1, landed.$2), isTrue);
   });
+
+  test('nobody shoots through a wall or a pinched corner', () {
+    final blocked = _lane(wallAt: 5);
+    final mage = _hero(id: 'mage', spec: HeroSpecId.fire, x: 2.5, y: 3.5);
+    mage.attack = 80;
+    mage.attackCooldown = 0.3;
+    final foe = _foe(
+      id: 'foe',
+      archetype: EnemyArchetype.ranged,
+      x: 7.5,
+      y: 3.5,
+      ranged: true,
+      attackRange: 6,
+      moveSpeed: 0,
+    );
+    foe.attack = 80;
+    final blockedWorld = SpatialWorld(
+      map: blocked,
+      heroes: [mage],
+      enemies: [foe],
+      projectiles: <SpatialProjectile>[],
+      groundLoot: [],
+      isTreasure: false,
+      pets: <SpatialActor>[],
+    );
+    final heroHp = mage.hp;
+    final foeHp = foe.hp;
+    _run(blockedWorld, 1.5);
+    expect(foe.hp, foeHp, reason: 'mage shot the foe through the wall');
+    expect(mage.hp, heroHp, reason: 'archer shot the mage through the wall');
+
+    final openMage = _hero(id: 'mage', spec: HeroSpecId.fire, x: 2.5, y: 3.5);
+    openMage.attack = 80;
+    openMage.attackCooldown = 0.3;
+    final openFoe = _foe(
+      id: 'foe',
+      archetype: EnemyArchetype.brute,
+      x: 7.5,
+      y: 3.5,
+      moveSpeed: 0,
+    );
+    final openWorld = SpatialWorld(
+      map: _lane(),
+      heroes: [openMage],
+      enemies: [openFoe],
+      projectiles: <SpatialProjectile>[],
+      groundLoot: [],
+      isTreasure: false,
+      pets: <SpatialActor>[],
+    );
+    _run(openWorld, 1.5);
+    expect(openFoe.hp, lessThan(openFoe.maxHp));
+
+    const cols = 6;
+    const rows = 6;
+    final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
+    void floor(int x, int y) => tiles[y * cols + x] = TileKind.floor;
+    floor(1, 2);
+    floor(1, 1);
+    floor(2, 1);
+    floor(3, 1);
+    floor(3, 2);
+    floor(3, 3);
+    floor(2, 3);
+    final cornerMage = _hero(id: 'mage', spec: HeroSpecId.fire, x: 1.5, y: 2.5);
+    cornerMage.attack = 80;
+    cornerMage.moveSpeed = 0;
+    cornerMage.attackCooldown = 0.3;
+    final cornerFoe = _foe(
+      id: 'foe',
+      archetype: EnemyArchetype.brute,
+      x: 2.5,
+      y: 3.5,
+      moveSpeed: 0,
+    );
+    final corner = SpatialWorld(
+      map: TileMap(
+        cols: cols,
+        rows: rows,
+        tiles: tiles,
+        spawnPoints: const [(1, 2)],
+        exitPoint: (3, 3),
+        enemySpawns: const [(2, 3)],
+      ),
+      heroes: [cornerMage],
+      enemies: [cornerFoe],
+      projectiles: <SpatialProjectile>[],
+      groundLoot: [],
+      isTreasure: false,
+      pets: <SpatialActor>[],
+    );
+    _run(corner, 1.2);
+    expect(cornerFoe.hp, cornerFoe.maxHp, reason: 'shot clipped the corner');
+  });
+}
+
+TileMap _lane({int? wallAt}) {
+  const cols = 10;
+  const rows = 6;
+  final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
+  for (var x = 1; x <= 8; x++) {
+    if (x == wallAt) continue;
+    tiles[3 * cols + x] = TileKind.floor;
+  }
+  return TileMap(
+    cols: cols,
+    rows: rows,
+    tiles: tiles,
+    spawnPoints: const [(2, 3)],
+    exitPoint: (8, 3),
+    enemySpawns: const [(7, 3)],
+  );
 }
 
 TileMap _hallIntoRoom() {

@@ -11,6 +11,8 @@ _Nothing open._
 
 ## Done
 
+<!-- - 2026-09-30 · Shots and swings connected through walls -->
+
 <!-- - 2026-09-30 · Mage ran ahead of the party; tank and healer stuck on wall corners · fixed in fea97e26 -->
 
 <!-- - 2026-09-29 · Dungeons felt empty after the bigger floors (2–3 foes per room) · fixed in fb9926eb -->
