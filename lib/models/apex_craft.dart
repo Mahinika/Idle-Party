@@ -320,7 +320,7 @@ abstract final class ApexCraft {
   }
 
   /// Apex recipes skip off-hand when specs in the pair disagree or all use 2H
-  /// (Blood DK, Arms vs Fury, BM/MM vs Survival, Ret 2H, …).
+  /// (Blood DK, Arms vs Fury, Hunter bow, Ret 2H, …).
   static List<EquipmentSlot> craftSlotsFor(
     HeroClassId classId,
     SpecRoleTag role,
@@ -496,7 +496,8 @@ abstract final class ApexCraft {
       SpecRoleTag.caster => 'Arcana',
     };
     final slotLabel = switch (slot) {
-      EquipmentSlot.weapon => 'Edge',
+      EquipmentSlot.weapon =>
+        classId == HeroClassId.hunter ? 'Bow' : 'Edge',
       EquipmentSlot.offHand => switch (apexOffHandKind(classId, role)) {
         OffHandKind.shield => 'Bulwark',
         OffHandKind.frill => 'Tome',
@@ -697,11 +698,11 @@ abstract final class ApexCraft {
       HeroSpecId.unholy => (WeaponType.sword, WeaponHanded.twoHand),
       HeroSpecId.fury ||
       HeroSpecId.frostDk ||
-      HeroSpecId.enhancement ||
-      HeroSpecId.survival => (WeaponType.axe, WeaponHanded.oneHand),
+      HeroSpecId.enhancement => (WeaponType.axe, WeaponHanded.oneHand),
       HeroSpecId.blood => (WeaponType.mace, WeaponHanded.twoHand),
       HeroSpecId.beastMastery ||
       HeroSpecId.marksmanship ||
+      HeroSpecId.survival => (WeaponType.bow, WeaponHanded.twoHand),
       HeroSpecId.feral ||
       HeroSpecId.guardian => (WeaponType.polearm, WeaponHanded.twoHand),
       HeroSpecId.assassination ||

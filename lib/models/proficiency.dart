@@ -129,11 +129,7 @@ class ClassProficiency {
         _ => false,
       },
       HeroClassId.hunter => switch (type) {
-        WeaponType.axe ||
-        WeaponType.sword ||
-        WeaponType.polearm ||
-        WeaponType.staff => true,
-        WeaponType.dagger || WeaponType.fist => handed == WeaponHanded.oneHand,
+        WeaponType.bow || WeaponType.crossbow || WeaponType.gun => true,
         _ => false,
       },
       HeroClassId.rogue => switch (type) {
@@ -185,13 +181,12 @@ class ClassProficiency {
     _ => false,
   };
 
-  /// Off-hand *weapon* (not shield): Rogue, Fury, Enhancement, Frost DK, Survival.
+  /// Off-hand *weapon* (not shield): Rogue, Fury, Enhancement, Frost DK.
   static bool canDualWield(HeroSpecDef spec) =>
       spec.classId == HeroClassId.rogue ||
       spec.id == HeroSpecId.fury ||
       spec.id == HeroSpecId.enhancement ||
-      spec.id == HeroSpecId.frostDk ||
-      spec.id == HeroSpecId.survival;
+      spec.id == HeroSpecId.frostDk;
 
   /// Shields: Warrior, Paladin, Shaman. Not DK / Druid / Hunter.
   static bool canUseShield(HeroSpecDef spec) => switch (spec.classId) {

@@ -338,9 +338,7 @@ class EquipmentFactory {
       HeroClassId.paladin => spec.id == HeroSpecId.retribution
           ? _pick2hAxeSwordMacePole(roll)
           : _pick1hAxeSwordMace(roll),
-      HeroClassId.hunter => spec.id == HeroSpecId.survival
-          ? _pickHunter1h(roll)
-          : _pickHunter2h(roll),
+      HeroClassId.hunter => (WeaponType.bow, WeaponHanded.twoHand),
       HeroClassId.rogue => _pickRogue1h(roll),
       HeroClassId.priest => roll < 0.55
           ? (WeaponType.staff, WeaponHanded.twoHand)
@@ -378,19 +376,6 @@ class EquipmentFactory {
     if (roll < 0.7) return (WeaponType.axe, WeaponHanded.twoHand);
     if (roll < 0.88) return (WeaponType.mace, WeaponHanded.twoHand);
     return (WeaponType.polearm, WeaponHanded.twoHand);
-  }
-
-  static (WeaponType, WeaponHanded) _pickHunter1h(double roll) {
-    if (roll < 0.4) return (WeaponType.axe, WeaponHanded.oneHand);
-    if (roll < 0.7) return (WeaponType.sword, WeaponHanded.oneHand);
-    if (roll < 0.88) return (WeaponType.dagger, WeaponHanded.oneHand);
-    return (WeaponType.fist, WeaponHanded.oneHand);
-  }
-
-  static (WeaponType, WeaponHanded) _pickHunter2h(double roll) {
-    if (roll < 0.45) return (WeaponType.polearm, WeaponHanded.twoHand);
-    if (roll < 0.75) return (WeaponType.staff, WeaponHanded.twoHand);
-    return (WeaponType.axe, WeaponHanded.twoHand);
   }
 
   static (WeaponType, WeaponHanded) _pickRogue1h(double roll) {

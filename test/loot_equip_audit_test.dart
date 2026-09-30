@@ -164,6 +164,9 @@ void main() {
       ascensionLevel: 3,
     );
     expect(hunt.attackBonus, 0);
+    expect(hunt.weaponType, WeaponType.bow);
+    expect(hunt.handed, WeaponHanded.twoHand);
+    expect(hunt.name, contains('Bow'));
     expect(hunt.agilityBonus, greaterThan(hunt.strengthBonus));
 
     final fire = ApexCraft.buildItem(

@@ -197,16 +197,17 @@ abstract final class StarterGear {
       itemLevel: 5,
     );
 
-    EquipmentItem bow() => EquipmentItem(
-      id: 'start_${tag}_rng',
-      name: '${spec.shortLabel} Bow',
-      slot: EquipmentSlot.ranged,
-      rarity: LootRarity.common,
-      weaponType: WeaponType.bow,
-      handed: WeaponHanded.twoHand,
-      agilityBonus: 2,
-      itemLevel: 5,
-    );
+    EquipmentItem bow({required EquipmentSlot slot, required String id}) =>
+        EquipmentItem(
+          id: id,
+          name: '${spec.shortLabel} Bow',
+          slot: slot,
+          rarity: LootRarity.common,
+          weaponType: WeaponType.bow,
+          handed: WeaponHanded.twoHand,
+          agilityBonus: 2,
+          itemLevel: 5,
+        );
 
     EquipmentItem wand() => EquipmentItem(
       id: 'start_${tag}_rng',
@@ -274,15 +275,12 @@ abstract final class StarterGear {
         ranged: null,
       ),
       HeroSpecId.retribution => (weapon: twoSword, offHand: null, ranged: null),
-      HeroSpecId.beastMastery || HeroSpecId.marksmanship => (
-        weapon: twoPole,
-        offHand: null,
-        ranged: bow(),
-      ),
+      HeroSpecId.beastMastery ||
+      HeroSpecId.marksmanship ||
       HeroSpecId.survival => (
-        weapon: oneAxe,
-        offHand: sidearm(WeaponType.axe),
-        ranged: bow(),
+        weapon: bow(slot: EquipmentSlot.weapon, id: 'start_${tag}_mh'),
+        offHand: null,
+        ranged: bow(slot: EquipmentSlot.ranged, id: 'start_${tag}_rng'),
       ),
       HeroSpecId.assassination ||
       HeroSpecId.combat ||

@@ -33,7 +33,7 @@ void main() {
       OffHandKind.frill,
     );
 
-    // Hunter BM/MM/SV disagree (2H vs DW) → no shared OH.
+    // Hunter main hand is a two-hand bow, so there is no off-hand.
     expect(
       ApexCraft.apexOffHandKind(HeroClassId.hunter, SpecRoleTag.rangedDps),
       isNull,

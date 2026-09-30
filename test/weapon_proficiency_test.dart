@@ -67,7 +67,8 @@ void main() {
     expect(can(HeroSpecId.shadow, mh(WeaponType.sword)), isFalse);
     expect(can(HeroSpecId.discipline, mh(WeaponType.mace)), isTrue);
     expect(can(HeroSpecId.beastMastery, mh(WeaponType.mace)), isFalse);
-    expect(can(HeroSpecId.beastMastery, mh(WeaponType.polearm)), isTrue);
+    expect(can(HeroSpecId.beastMastery, mh(WeaponType.polearm)), isFalse);
+    expect(can(HeroSpecId.beastMastery, mh(WeaponType.bow)), isTrue);
     expect(can(HeroSpecId.restorationShaman, mh(WeaponType.sword)), isFalse);
     expect(can(HeroSpecId.enhancement, mh(WeaponType.axe)), isTrue);
   });
@@ -116,7 +117,7 @@ void main() {
         HeroSpecId.survival,
         oh(OffHandKind.weapon, weaponType: WeaponType.axe),
       ),
-      isTrue,
+      isFalse,
     );
     expect(
       can(
