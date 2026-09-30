@@ -80,6 +80,22 @@ void main() {
       KenneyAssets.enemyCrystalMite,
     );
     expect(
+      KenneyAssets.enemySpriteForCodexName('Rime Bat'),
+      KenneyAssets.enemyCrystalMite,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Shard Slinger'),
+      KenneyAssets.enemyRimeMite,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Glacier Chanter'),
+      KenneyAssets.enemyRimeWraith,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Brass Bulwark'),
+      KenneyAssets.enemyBrassBrute,
+    );
+    expect(
       KenneyAssets.enemySpriteForCodexName('Ice Caster'),
       KenneyAssets.enemyCrystalWraith,
     );

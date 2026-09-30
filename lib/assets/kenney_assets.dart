@@ -539,8 +539,7 @@ abstract final class KenneyAssets {
       'tide adept' ||
       'razor eel' ||
       'needle urchin' => enemyTideMite,
-      'crystal mite' || 'frost wisp' => enemyCrystalMite,
-      'rime bat' => enemyRimeMite,
+      'crystal mite' || 'frost wisp' || 'rime bat' => enemyCrystalMite,
       // Zone trash with its own art (see lib/models/zone_art.dart).
       'brine mite' || 'reef tick' => enemyTideMite,
       'sand skitter' || 'glass skitter' => enemySandyMite,
@@ -582,9 +581,9 @@ abstract final class KenneyAssets {
       'frost crusher' ||
       'glass bulwark' ||
       'rime guard' => enemyRimeBrute,
-      'shard slinger' || 'rime spitter' => enemyGhost,
+      'shard slinger' || 'rime spitter' => enemyRimeMite,
       'glass fang' || 'frost blade' => enemyRimeMite,
-      'glacier chanter' || 'stillfrost adept' => enemyGhost,
+      'glacier chanter' || 'stillfrost adept' => enemyRimeWraith,
       'bile slime' || 'fen tick' || 'spore flea' => enemyFenMite,
       'fen brute' ||
       'mire crusher' ||
@@ -595,7 +594,7 @@ abstract final class KenneyAssets {
       'fen chanter' || 'mire adept' => enemyCultist,
       'cog mite' || 'rust tick' || 'brass flea' => enemyBrassMite,
       'vault bruiser' || 'cog crusher' => enemyCyclops,
-      'brass bulwark' || 'cog guard' => enemyGolem,
+      'brass bulwark' || 'cog guard' => enemyBrassBrute,
       'spark spitter' || 'coil slinger' => enemyBat,
       'razor cog' || 'spring fang' => enemyBrassMite,
       'clock chanter' || 'brass adept' => enemyCultist,

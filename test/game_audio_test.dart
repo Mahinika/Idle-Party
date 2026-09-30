@@ -258,6 +258,13 @@ void main() {
   });
 
   test('every cave has a mood bed and the folder stays under 10 MB', () {
+    expect(AudioAssets.moodForDungeon('sandy'), ZoneMood.warm);
+    expect(AudioAssets.moodForDungeon('goblin'), ZoneMood.warm);
+    expect(AudioAssets.moodForDungeon('king'), ZoneMood.dark);
+    expect(
+      AudioAssets.moodForDungeon('tide'),
+      isNot(AudioAssets.moodForDungeon('fen')),
+    );
     for (final dungeon in DungeonCatalog.all) {
       final mood = AudioAssets.moodForDungeon(dungeon.id);
       expect(

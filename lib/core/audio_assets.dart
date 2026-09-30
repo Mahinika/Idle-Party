@@ -28,9 +28,9 @@ abstract final class AudioAssets {
   static const maxCatalogBytes = 10 * 1024 * 1024;
 
   static ZoneMood moodForDungeon(String dungeonId) => switch (dungeonId) {
-    'underworld' || 'dead' || 'hell' => ZoneMood.dark,
+    'king' || 'underworld' || 'dead' || 'hell' || 'fen' => ZoneMood.dark,
     'crystal' || 'rime' => ZoneMood.ice,
-    'tide' || 'fen' || 'grove' => ZoneMood.wet,
+    'tide' || 'grove' => ZoneMood.wet,
     'ember' || 'brass' || 'storm' || 'veil' => ZoneMood.storm,
     _ => ZoneMood.warm,
   };

@@ -788,7 +788,7 @@ abstract final class ZoneArt {
         tank: CustomAssets.enemyRimeBrute,
         ranged: CustomAssets.enemyRimeMite,
         glass: CustomAssets.enemyRimeMite,
-        support: CustomAssets.enemyBat,
+        support: CustomAssets.enemyRimeWraith,
       ),
     ),
     'fen': _customZone(
