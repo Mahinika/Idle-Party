@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Looks gate from tool/check_paper_doll_facit.py (live armor stack vs _src).
+@Tags(['facit'])
 void main() {
   test('paper-doll facit gate passes for all families', () {
     final root = Directory.current;
@@ -22,6 +23,22 @@ void main() {
       reason: 'stdout:\n${result.stdout}\nstderr:\n${result.stderr}',
     );
   }, timeout: const Timeout(Duration(minutes: 5)));
+
+  test('facit selftest catches a bad picture of each kind', () {
+    final python = _pythonExecutable();
+    expect(python, isNotNull);
+    final result = Process.runSync(
+      python!,
+      ['tool/check_paper_doll_facit.py', '--selftest'],
+      workingDirectory: Directory.current.path,
+      runInShell: true,
+    );
+    expect(
+      result.exitCode,
+      0,
+      reason: 'stdout:\n${result.stdout}\nstderr:\n${result.stderr}',
+    );
+  });
 }
 
 String? _pythonExecutable() {

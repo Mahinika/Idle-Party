@@ -1,0 +1,4527 @@
+[
+  {
+    "check": "full_stack",
+    "file": "assets/custom/char/mage/gear/helm_broad_idle.png",
+    "key": "hair-uncovered"
+  },
+  {
+    "check": "full_stack",
+    "file": "assets/custom/char/mage/gear/helm_ironcrown_idle.png",
+    "key": "hair-uncovered"
+  },
+  {
+    "check": "full_stack",
+    "file": "assets/custom/char/mage/gear/helm_mail_t0_idle.png",
+    "key": "hair-uncovered"
+  },
+  {
+    "check": "full_stack",
+    "file": "assets/custom/char/mage/gear/helm_t0_idle.png",
+    "key": "hair-uncovered"
+  },
+  {
+    "check": "full_stack",
+    "file": "assets/custom/char/mage/gear/helm_visored_idle.png",
+    "key": "hair-uncovered"
+  },
+  {
+    "check": "full_stack",
+    "file": "assets/custom/char/mage/gear/helm_warlock_broad_idle.png",
+    "key": "hair-uncovered"
+  },
+  {
+    "check": "full_stack",
+    "file": "assets/custom/char/mage/gear/helm_warlock_t0_idle.png",
+    "key": "hair-uncovered"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/healer/gear/boots_leather_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/healer/gear/boots_leather_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/healer/gear/boots_mail_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/healer/gear/boots_mail_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/healer/gear/boots_plate_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/healer/gear/boots_plate_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/healer/gear/boots_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/healer/gear/boots_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/mage/gear/boots_leather_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/mage/gear/boots_leather_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/mage/gear/boots_mail_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/mage/gear/boots_mail_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/mage/gear/boots_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/mage/gear/boots_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/rogue/gear/boots_mail_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/rogue/gear/boots_mail_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/rogue/gear/boots_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/rogue/gear/boots_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/warrior/gear/boots_leather_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/warrior/gear/boots_leather_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/warrior/gear/boots_t0_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "icon_parity",
+    "file": "assets/custom/char/warrior/gear/boots_t2_icon.png",
+    "key": "same-as-legs"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_plate_broad_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_plate_broad_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_plate_short_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_plate_short_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_plate_t0_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_plate_t0_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_plate_t2_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/chest_plate_t2_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_mail_broad_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_mail_t0_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_mail_t2_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_plate_broad_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_plate_short_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_plate_t0_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/cloak_plate_t2_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_plate_broad_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_plate_broad_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_plate_short_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_plate_short_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_plate_t0_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_plate_t0_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_plate_t2_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/hands_plate_t2_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_plate_broad_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_plate_broad_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_plate_short_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_plate_short_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_plate_t0_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_plate_t0_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/helm_plate_t2_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_plate_broad_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_plate_broad_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_plate_short_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_plate_short_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_plate_short_idle.png",
+    "key": "plate-rivets"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_plate_t0_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_plate_t0_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_plate_t2_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/legs_plate_t2_idle.png",
+    "key": "plate-highlight"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/shoulder_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/shoulder_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/shoulder_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/shoulder_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_broad_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_short_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_t0_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_t2_idle.png",
+    "key": "plate-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/chest_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/chest_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/chest_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/chest_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/cloak_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/cloak_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/cloak_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/cloak_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/cloak_mail_broad_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/cloak_mail_t0_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/cloak_mail_t2_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/hands_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/hands_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/hands_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/hands_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/helm_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/helm_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/helm_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/helm_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/legs_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/legs_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/legs_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/legs_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_short_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_t0_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_t2_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/rogue/gear/cloak_mail_broad_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/rogue/gear/cloak_mail_t0_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/rogue/gear/cloak_mail_t2_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/rogue/gear/shoulder_mail_broad_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/rogue/gear/shoulder_mail_short_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/rogue/gear/shoulder_mail_t0_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/rogue/gear/shoulder_mail_t2_idle.png",
+    "key": "mail-dither"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/chest_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/chest_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/chest_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/chest_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/hands_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/hands_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/hands_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/hands_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/helm_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/helm_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/helm_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/helm_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/legs_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/legs_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/legs_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/legs_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/shoulder_leather_broad_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/shoulder_leather_short_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/shoulder_leather_t0_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "material",
+    "file": "assets/custom/char/warrior/gear/shoulder_leather_t2_idle.png",
+    "key": "leather-seams"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/dagger_nightbite",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/dagger_shadowfang",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/dagger_t0",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/dagger_venomkiss",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/frill_embercodex",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/frill_prism",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/frill_soulcodex",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/frill_t0",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/mace_lightbringer",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/shield_aegis",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/staff_frostfire",
+    "key": "too-short"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/staff_nethercore",
+    "key": "too-short"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/staff_t0",
+    "key": "too-short"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/staff_voidspire",
+    "key": "too-short"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/sword_emberfang",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/sword_runebound",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/sword_t0",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/sword_thunderfury",
+    "key": "too-long"
+  },
+  {
+    "check": "proportion",
+    "file": "gear/sword_warglaive",
+    "key": "too-long"
+  },
+  {
+    "check": "readability",
+    "file": "gear/axe_bloodhowl",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/axe_goreblade",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/axe_stormcleave",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/bow_ashflight",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/bow_eagle",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/bow_windpierce",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/dagger_nightbite",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/dagger_shadowfang",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/dagger_venomkiss",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/frill_embercodex",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/frill_prism",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/frill_soulcodex",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/mace_dawnbreak",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/mace_soulhammer",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/shield_frostwall",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/shield_ironwall",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/staff_frostfire",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/staff_nethercore",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/staff_voidspire",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/sword_emberfang",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/sword_runebound",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/sword_thunderfury",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "gear/sword_warglaive",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "healer/gear/shoulder",
+    "key": "t2-matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "mage/gear/helm_visored",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "mage/gear/shoulder",
+    "key": "t2-matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "rogue/gear/helm_visored",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "rogue/gear/shoulder",
+    "key": "t2-matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "warrior/gear/helm_visored",
+    "key": "matches-t0"
+  },
+  {
+    "check": "readability",
+    "file": "warrior/gear/shoulder",
+    "key": "t2-matches-t0"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/axe_bloodhowl_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/axe_bloodhowl_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/axe_goreblade_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/axe_goreblade_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/axe_stormcleave_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/axe_stormcleave_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/axe_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/axe_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/bow_ashflight_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/bow_ashflight_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/bow_eagle_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/bow_eagle_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/bow_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/bow_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/bow_windpierce_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/bow_windpierce_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/dagger_nightbite_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/dagger_nightbite_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/dagger_shadowfang_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/dagger_shadowfang_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/dagger_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/dagger_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/dagger_venomkiss_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/dagger_venomkiss_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_embercodex_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_embercodex_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_embercodex_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_prism_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_prism_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_prism_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_soulcodex_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_soulcodex_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_soulcodex_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/frill_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/mace_dawnbreak_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/mace_lightbringer_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/mace_soulhammer_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/mace_soulhammer_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/mace_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/mace_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/shield_aegis_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/shield_frostwall_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/shield_frostwall_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/shield_ironwall_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/shield_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/shield_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/staff_frostfire_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/staff_frostfire_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/staff_nethercore_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/staff_nethercore_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/staff_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/staff_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/staff_voidspire_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/staff_voidspire_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/sword_emberfang_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/sword_emberfang_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/sword_runebound_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/sword_runebound_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/sword_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/sword_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/sword_thunderfury_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/sword_thunderfury_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/sword_warglaive_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/gear/sword_warglaive_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_plate_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_plate_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_plate_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_plate_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_plate_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_plate_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_plate_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_plate_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/chest_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_mail_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_plate_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/cloak_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_mail_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_plate_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/hands_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_ironcrown_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_ironcrown_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_mail_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_plate_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_plate_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_plate_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_plate_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_plate_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_plate_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_plate_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_plate_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_plate_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_visored_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_visored_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_wingcrest_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/helm_wingcrest_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_mail_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_plate_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/legs_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_mail_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_mail_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_mail_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_mail_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_plate_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/healer/gear/shoulder_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/chest_warlock_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_mail_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/cloak_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_mail_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/hands_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_ironcrown_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_mail_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_visored_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_visored_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_warlock_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_wingcrest_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/helm_wingcrest_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_mail_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/legs_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_short_idle.png",
+    "key": "black-outline"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/mage/gear/shoulder_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/chest_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/chest_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/chest_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/chest_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/chest_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/chest_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/chest_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/chest_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/chest_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/chest_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_mail_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/cloak_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_mail_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/hands_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_ironcrown_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_ironcrown_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_mail_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_visored_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_visored_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_visored_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_wingcrest_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_wingcrest_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/helm_wingcrest_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/legs_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/legs_mail_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/legs_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/legs_mail_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/legs_mail_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/legs_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/legs_mail_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/legs_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/legs_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/shoulder_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/shoulder_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/shoulder_mail_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/shoulder_mail_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/shoulder_mail_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/shoulder_mail_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/shoulder_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/rogue/gear/shoulder_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_deathknight_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_deathknight_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_deathknight_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_deathknight_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_deathknight_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_deathknight_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_deathknight_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_deathknight_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_deathknight_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_deathknight_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_paladin_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_paladin_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_paladin_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_paladin_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_paladin_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_paladin_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_paladin_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_paladin_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/chest_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/cloak_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/hands_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_deathknight_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_deathknight_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_deathknight_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_deathknight_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_deathknight_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_deathknight_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_deathknight_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_deathknight_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_deathknight_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_ironcrown_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_ironcrown_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_leather_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_paladin_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_paladin_broad_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_paladin_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_paladin_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_paladin_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_paladin_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_paladin_t0_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_paladin_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_paladin_t2_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_paladin_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_short_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_short_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_visored_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_visored_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_wingcrest_idle.png",
+    "key": "off-palette"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/helm_wingcrest_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/legs_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/legs_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/legs_leather_broad_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/legs_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/legs_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/legs_leather_t0_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/legs_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/legs_leather_t2_idle.png",
+    "key": "flat-light"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/legs_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/legs_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/shoulder_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/shoulder_leather_broad_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/shoulder_leather_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/shoulder_leather_t0_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/shoulder_leather_t2_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "style",
+    "file": "assets/custom/char/warrior/gear/shoulder_short_idle.png",
+    "key": "too-many-colors"
+  },
+  {
+    "check": "unique",
+    "file": "healer/helm:doll:helm_broad|helm_ironcrown",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "healer/helm:doll:helm_t0|helm_visored",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "healer/helm:doll:helm_t2|helm_wingcrest",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "healer/helm:icon:helm_broad|helm_ironcrown",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "healer/shoulder:doll:shoulder_t0|shoulder_t2",
+    "key": "same-bytes"
+  },
+  {
+    "check": "unique",
+    "file": "healer/shoulder:icon:shoulder_t0|shoulder_t2",
+    "key": "same-bytes"
+  },
+  {
+    "check": "unique",
+    "file": "mage/helm:doll:helm_broad|helm_ironcrown",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "mage/helm:doll:helm_t0|helm_visored",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "mage/helm:doll:helm_t2|helm_wingcrest",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "mage/helm:icon:helm_broad|helm_ironcrown",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "mage/helm:icon:helm_t0|helm_visored",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "mage/helm:icon:helm_t2|helm_wingcrest",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "mage/shoulder:doll:shoulder_t0|shoulder_t2",
+    "key": "same-bytes"
+  },
+  {
+    "check": "unique",
+    "file": "mage/shoulder:icon:shoulder_t0|shoulder_t2",
+    "key": "same-bytes"
+  },
+  {
+    "check": "unique",
+    "file": "rogue/helm:doll:helm_broad|helm_ironcrown",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "rogue/helm:doll:helm_t0|helm_visored",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "rogue/helm:icon:helm_broad|helm_ironcrown",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "rogue/helm:icon:helm_t0|helm_visored",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "rogue/shoulder:doll:shoulder_t0|shoulder_t2",
+    "key": "same-bytes"
+  },
+  {
+    "check": "unique",
+    "file": "rogue/shoulder:icon:shoulder_t0|shoulder_t2",
+    "key": "same-bytes"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:doll:axe_bloodhowl|axe_goreblade",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:doll:axe_bloodhowl|axe_stormcleave",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:doll:axe_bloodhowl|axe_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:doll:axe_goreblade|axe_stormcleave",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:doll:axe_goreblade|axe_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:doll:axe_stormcleave|axe_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:icon:axe_bloodhowl|axe_goreblade",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:icon:axe_bloodhowl|axe_stormcleave",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:icon:axe_bloodhowl|axe_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:icon:axe_goreblade|axe_stormcleave",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:icon:axe_goreblade|axe_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/axe:icon:axe_stormcleave|axe_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:doll:bow_ashflight|bow_eagle",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:doll:bow_ashflight|bow_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:doll:bow_ashflight|bow_windpierce",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:doll:bow_eagle|bow_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:doll:bow_eagle|bow_windpierce",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:doll:bow_t0|bow_windpierce",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:icon:bow_ashflight|bow_eagle",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:icon:bow_ashflight|bow_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:icon:bow_ashflight|bow_windpierce",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:icon:bow_eagle|bow_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:icon:bow_eagle|bow_windpierce",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/bow:icon:bow_t0|bow_windpierce",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:doll:dagger_nightbite|dagger_shadowfang",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:doll:dagger_nightbite|dagger_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:doll:dagger_nightbite|dagger_venomkiss",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:doll:dagger_shadowfang|dagger_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:doll:dagger_shadowfang|dagger_venomkiss",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:doll:dagger_t0|dagger_venomkiss",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:icon:dagger_nightbite|dagger_shadowfang",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:icon:dagger_nightbite|dagger_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:icon:dagger_nightbite|dagger_venomkiss",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:icon:dagger_shadowfang|dagger_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:icon:dagger_shadowfang|dagger_venomkiss",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/dagger:icon:dagger_t0|dagger_venomkiss",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:doll:frill_embercodex|frill_prism",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:doll:frill_embercodex|frill_soulcodex",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:doll:frill_embercodex|frill_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:doll:frill_prism|frill_soulcodex",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:doll:frill_prism|frill_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:doll:frill_soulcodex|frill_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:icon:frill_embercodex|frill_prism",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:icon:frill_embercodex|frill_soulcodex",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:icon:frill_embercodex|frill_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:icon:frill_prism|frill_soulcodex",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:icon:frill_prism|frill_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/frill:icon:frill_soulcodex|frill_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/mace:doll:mace_dawnbreak|mace_soulhammer",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/mace:doll:mace_dawnbreak|mace_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/mace:doll:mace_soulhammer|mace_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/mace:icon:mace_dawnbreak|mace_soulhammer",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/mace:icon:mace_dawnbreak|mace_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/mace:icon:mace_soulhammer|mace_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/shield:doll:shield_frostwall|shield_ironwall",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/shield:doll:shield_frostwall|shield_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/shield:doll:shield_ironwall|shield_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/shield:icon:shield_frostwall|shield_ironwall",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/shield:icon:shield_frostwall|shield_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/shield:icon:shield_ironwall|shield_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:doll:staff_frostfire|staff_nethercore",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:doll:staff_frostfire|staff_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:doll:staff_frostfire|staff_voidspire",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:doll:staff_nethercore|staff_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:doll:staff_nethercore|staff_voidspire",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:doll:staff_t0|staff_voidspire",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:icon:staff_frostfire|staff_nethercore",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:icon:staff_frostfire|staff_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:icon:staff_frostfire|staff_voidspire",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:icon:staff_nethercore|staff_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:icon:staff_nethercore|staff_voidspire",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/staff:icon:staff_t0|staff_voidspire",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:doll:sword_emberfang|sword_runebound",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:doll:sword_emberfang|sword_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:doll:sword_emberfang|sword_thunderfury",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:doll:sword_emberfang|sword_warglaive",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:doll:sword_runebound|sword_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:doll:sword_runebound|sword_thunderfury",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:doll:sword_runebound|sword_warglaive",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:doll:sword_t0|sword_thunderfury",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:doll:sword_t0|sword_warglaive",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:doll:sword_thunderfury|sword_warglaive",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:icon:sword_emberfang|sword_runebound",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:icon:sword_emberfang|sword_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:icon:sword_emberfang|sword_thunderfury",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:icon:sword_emberfang|sword_warglaive",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:icon:sword_runebound|sword_t0",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:icon:sword_runebound|sword_thunderfury",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:icon:sword_runebound|sword_warglaive",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:icon:sword_t0|sword_thunderfury",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:icon:sword_t0|sword_warglaive",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "shared/sword:icon:sword_thunderfury|sword_warglaive",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "warrior/helm:doll:helm_broad|helm_ironcrown",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "warrior/helm:doll:helm_t0|helm_visored",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "warrior/helm:doll:helm_t2|helm_wingcrest",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "warrior/helm:icon:helm_broad|helm_ironcrown",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "warrior/helm:icon:helm_t0|helm_visored",
+    "key": "same-squint"
+  },
+  {
+    "check": "unique",
+    "file": "warrior/shoulder:doll:shoulder_t0|shoulder_t2",
+    "key": "same-bytes"
+  },
+  {
+    "check": "unique",
+    "file": "warrior/shoulder:icon:shoulder_t0|shoulder_t2",
+    "key": "same-bytes"
+  }
+]
