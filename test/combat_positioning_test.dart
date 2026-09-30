@@ -555,6 +555,112 @@ void main() {
       }
     }
   });
+
+  test('party walks around a pinched corner instead of sticking on it', () {
+    const cols = 6;
+    const rows = 6;
+    final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
+    void floor(int x, int y) => tiles[y * cols + x] = TileKind.floor;
+    // Start touches the foe only through a diagonal pair of walls.
+    floor(1, 2);
+    floor(1, 1);
+    floor(2, 1);
+    floor(3, 1);
+    floor(3, 2);
+    floor(3, 3);
+    floor(2, 3);
+    final tank = _hero(id: 'tank', spec: HeroSpecId.protection, x: 1.5, y: 2.5);
+    final heal = _hero(id: 'heal', spec: HeroSpecId.discipline, x: 1.35, y: 2.3);
+    final mage = _hero(id: 'mage', spec: HeroSpecId.fire, x: 1.6, y: 2.55);
+    final foe = _foe(
+      id: 'foe',
+      archetype: EnemyArchetype.brute,
+      x: 2.5,
+      y: 3.5,
+      moveSpeed: 0,
+    );
+    final world = SpatialWorld(
+      map: TileMap(
+        cols: cols,
+        rows: rows,
+        tiles: tiles,
+        spawnPoints: const [(1, 2)],
+        exitPoint: (3, 3),
+        enemySpawns: const [(2, 3)],
+      ),
+      heroes: [tank, heal, mage],
+      enemies: [foe],
+      projectiles: <SpatialProjectile>[],
+      groundLoot: [],
+      isTreasure: false,
+      pets: <SpatialActor>[],
+    );
+    expect(
+      SpatialCombat.hasClearCorridor(
+        world.map,
+        world.openGateIds,
+        1,
+        2,
+        2,
+        3,
+        tight: true,
+      ),
+      isFalse,
+    );
+    _run(world, 6);
+    final tankD = _dist(tank, foe);
+    expect(tankD, lessThan(1.7), reason: 'tank ${tank.x},${tank.y}');
+    final shareSide =
+        (tank.x - foe.x).abs() < 0.85 || (tank.y - foe.y).abs() < 0.85;
+    expect(shareSide, isTrue, reason: 'tank still on the diagonal');
+    expect(_dist(heal, tank), lessThan(2.6), reason: 'heal ${heal.x},${heal.y}');
+    expect(
+      SpatialCombat.hasClearCorridor(
+        world.map,
+        world.openGateIds,
+        mage.x.floor(),
+        mage.y.floor(),
+        foe.x.floor(),
+        foe.y.floor(),
+        tight: true,
+      ),
+      isTrue,
+      reason: 'mage ${mage.x},${mage.y}',
+    );
+    expect(
+      _dist(mage, foe),
+      greaterThan(tankD + 0.25),
+      reason: 'mage ${mage.x},${mage.y}',
+    );
+  });
+
+  test('blink and charge stop at a wall', () {
+    const cols = 8;
+    const rows = 5;
+    final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
+    for (var x = 1; x <= 6; x++) {
+      if (x == 4) continue;
+      tiles[2 * cols + x] = TileKind.floor;
+    }
+    final map = TileMap(
+      cols: cols,
+      rows: rows,
+      tiles: tiles,
+      spawnPoints: const [(1, 2)],
+      exitPoint: (6, 2),
+      enemySpawns: const [(6, 2)],
+    );
+    final landed = SpatialCombat.clampAlongWalk(
+      map,
+      const <int>{},
+      1.5,
+      2.5,
+      6.5,
+      2.5,
+    );
+    expect(landed.$1, lessThan(4));
+    expect(map.isWalkableWorld(landed.$1, landed.$2), isTrue);
+  });
 }
 
 TileMap _hallIntoRoom() {

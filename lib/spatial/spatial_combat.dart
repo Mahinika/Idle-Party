@@ -3528,6 +3528,25 @@ abstract final class SpatialCombat {
         hold = 0.45;
       }
 
+      // Casters and healers stay behind the tank on the way in. A long
+      // shot used to let the mage walk the corner first while the front
+      // line shoved itself into the wall.
+      if (!guiding &&
+          target != null &&
+          packAnchor != null &&
+          hero.id != packAnchor.id &&
+          CombatPresence.isBackliner(hero)) {
+        final heroD = actorDist(hero, target);
+        final tankD = actorDist(packAnchor, target);
+        if (tankD > 0.4 && heroD + 1.45 < tankD) {
+          final ux = (target.x - packAnchor.x) / tankD;
+          final uy = (target.y - packAnchor.y) / tankD;
+          tx = packAnchor.x - ux * 0.85;
+          ty = packAnchor.y - uy * 0.85;
+          hold = 0.4;
+        }
+      }
+
       // Healers that lost the tank around a corner, or drifted off, close
       // back in. A straight offset behind the tank is often the hallway.
       if (packAnchor != null && isHealer && hero.id != packAnchor.id) {
@@ -4811,8 +4830,10 @@ abstract final class SpatialCombat {
     // and corridor approaches make progress instead of freezing.
     final wx = waypoint?.$1 ?? tx;
     final wy = waypoint?.$2 ?? ty;
-    var dx = wx - a.x;
-    var dy = wy - a.y;
+    final pathDx = wx - a.x;
+    final pathDy = wy - a.y;
+    var dx = pathDx;
+    var dy = pathDy;
 
     if (separateFrom != null) {
       var sx = 0.0;
@@ -4844,6 +4865,25 @@ abstract final class SpatialCombat {
     }
     var desiredVx = dx / len * speed;
     var desiredVy = dy / len * speed;
+    if (_stepIsPinned(world, a, desiredVx, desiredVy, dt)) {
+      // Ally push into a wall was cancelling the path. Walk the waypoint.
+      final pLen = math.sqrt(pathDx * pathDx + pathDy * pathDy);
+      if (pLen > 0.001) {
+        desiredVx = pathDx / pLen * speed;
+        desiredVy = pathDy / pLen * speed;
+      }
+      if (_stepIsPinned(world, a, desiredVx, desiredVy, dt)) {
+        if (pathDx.abs() >= pathDy.abs()) {
+          desiredVx = pathDx.sign * speed;
+          desiredVy = 0;
+        } else {
+          desiredVx = 0;
+          desiredVy = pathDy.sign * speed;
+        }
+      }
+      a.vx = desiredVx;
+      a.vy = desiredVy;
+    }
     // Short remaining distance: ease so we don't overshoot the hold ring.
     if (dist < speed * 0.2) {
       final ease = (dist / math.max(0.05, speed * 0.2)).clamp(0.15, 1.0);
@@ -4970,7 +5010,7 @@ abstract final class SpatialCombat {
     gy = goal.$2;
     if (sx == gx && sy == gy) return (gx + 0.5, gy + 0.5);
 
-    if (hasClearCorridor(map, openGateIds, sx, sy, gx, gy)) {
+    if (hasClearCorridor(map, openGateIds, sx, sy, gx, gy, tight: true)) {
       return (gx + 0.5, gy + 0.5);
     }
 
@@ -5013,14 +5053,17 @@ abstract final class SpatialCombat {
 
   static int _key(int x, int y, int cols) => y * cols + x;
 
+  /// [tight] rejects a diagonal step unless both shoulder tiles are open.
+  /// A loose line still "sees" through that corner and pins walkers on it.
   static bool hasClearCorridor(
     TileMap map,
     Set<int> openGateIds,
     int x0,
     int y0,
     int x1,
-    int y1,
-  ) {
+    int y1, {
+    bool tight = false,
+  }) {
     var x = x0;
     var y = y0;
     final dx = (x1 - x0).abs();
@@ -5028,19 +5071,90 @@ abstract final class SpatialCombat {
     final sx = x0 < x1 ? 1 : -1;
     final sy = y0 < y1 ? 1 : -1;
     var err = dx - dy;
-    while (true) {
+    var guard = 0;
+    while (guard++ < 512) {
       if (!map.isWalkable(x, y, openGateIds: openGateIds)) return false;
       if (x == x1 && y == y1) return true;
       final e2 = 2 * err;
+      final prevX = x;
+      final prevY = y;
+      var steppedX = false;
+      var steppedY = false;
       if (e2 > -dy) {
         err -= dy;
         x += sx;
+        steppedX = true;
       }
       if (e2 < dx) {
         err += dx;
         y += sy;
+        steppedY = true;
+      }
+      if (!steppedX && !steppedY) return false;
+      if (tight && steppedX && steppedY) {
+        final shoulderX = map.isWalkable(x, prevY, openGateIds: openGateIds);
+        final shoulderY = map.isWalkable(prevX, y, openGateIds: openGateIds);
+        // Either wall shoulder blocks a body. Cutting it pins the walker.
+        if (!shoulderX || !shoulderY) return false;
       }
     }
+    return false;
+  }
+
+  /// Landing for Charge / Blink. Stops at the last tile that does not
+  /// cross a wall, including a diagonal corner.
+  static (double, double) clampAlongWalk(
+    TileMap map,
+    Set<int> openGateIds,
+    double x0,
+    double y0,
+    double x1,
+    double y1,
+  ) {
+    bool clear(double x, double y) {
+      if (!map.isWalkableWorld(x, y, openGateIds: openGateIds)) return false;
+      return hasClearCorridor(
+        map,
+        openGateIds,
+        x0.floor(),
+        y0.floor(),
+        x.floor(),
+        y.floor(),
+        tight: true,
+      );
+    }
+
+    if (clear(x1, y1)) {
+      return snapToWalkable(map, openGateIds, x1, y1);
+    }
+    var bestX = x0;
+    var bestY = y0;
+    const steps = 8;
+    for (var i = 1; i <= steps; i++) {
+      final t = i / steps;
+      final x = x0 + (x1 - x0) * t;
+      final y = y0 + (y1 - y0) * t;
+      if (!clear(x, y)) break;
+      bestX = x;
+      bestY = y;
+    }
+    return (bestX, bestY);
+  }
+
+  static bool _stepIsPinned(
+    SpatialWorld world,
+    SpatialActor a,
+    double vx,
+    double vy,
+    double dt,
+  ) {
+    if (dt <= 0) return false;
+    final nx = a.x + vx * dt;
+    final ny = a.y + vy * dt;
+    if (world.canWalk(nx, ny)) return false;
+    if (world.canWalk(nx, a.y)) return false;
+    if (world.canWalk(a.x, ny)) return false;
+    return true;
   }
 
   static List<SpatialProjectile> _firePattern({

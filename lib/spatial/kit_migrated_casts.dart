@@ -115,9 +115,11 @@ abstract final class KitNamedCasts {
         }
         if (len > 0.1) {
           final stop = math.max(0.55, hero.attackRange * 0.85);
-          final snapped = SpatialCombat.snapToWalkable(
+          final snapped = SpatialCombat.clampAlongWalk(
             world.map,
             world.openGateIds,
+            hero.x,
+            hero.y,
             focus.x - (dx / len) * stop,
             focus.y - (dy / len) * stop,
           );
@@ -620,9 +622,11 @@ abstract final class KitNamedCasts {
           );
         }
         if (away > 0.1) {
-          final snapped = SpatialCombat.snapToWalkable(
+          final snapped = SpatialCombat.clampAlongWalk(
             world.map,
             world.openGateIds,
+            hero.x,
+            hero.y,
             hero.x + (awayX / away) * 2.2,
             hero.y + (awayY / away) * 2.2,
           );

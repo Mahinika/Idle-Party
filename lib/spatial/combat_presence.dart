@@ -643,6 +643,7 @@ abstract final class CombatPresence {
       fromY.floor(),
       toX.floor(),
       toY.floor(),
+      tight: true,
     );
   }
 
@@ -896,6 +897,11 @@ abstract final class CombatPresence {
         fallbackX: anchor.x,
         fallbackY: anchor.y,
       );
+      // A diagonal floor tile can "touch" the foe through two walls.
+      // Path around instead of holding there.
+      if (!_clearSight(world, g.$1, g.$2, target.x, target.y)) {
+        return (x: target.x, y: target.y, hold: 0.4);
+      }
       return (x: g.$1, y: g.$2, hold: 0.16);
     }
 
