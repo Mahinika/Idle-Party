@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:games_services/games_services.dart';
 
 import 'flutter_test_env_stub.dart'
@@ -222,7 +223,10 @@ abstract final class PlayGamesBridge {
     }
   }
 
-  /// Top season ranks for the in-game KEY list. Never opens the Play screen.
+  static const MethodChannel _ranksChannel = MethodChannel('idle_party/ranks');
+
+  /// Full public board for the in-game list. Never opens the Play screen.
+  /// Play returns 25 scores per page; Android keeps paging until the board ends.
   static Future<PlayBoardSnapshot> loadBoard({
     required PlayBoardKind kind,
     required String monthKey,
@@ -240,14 +244,12 @@ abstract final class PlayGamesBridge {
       return PlayBoardSnapshot.error;
     }
     try {
-      final scores = await Leaderboards.loadLeaderboardScores(
-        androidLeaderboardID: id,
-        scope: PlayerScope.global,
-        timeScope: TimeScope.allTime,
-        maxResults: 10,
-        forceRefresh: true,
+      final loaded = await _ranksChannel.invokeMethod<List<dynamic>>(
+        'loadAll',
+        <String, String>{'id': id},
       );
-      if (scores == null) return PlayBoardSnapshot.error;
+      if (loaded == null) return PlayBoardSnapshot.error;
+      final scores = PlayBoardRaw.fromChannel(loaded);
       PlayBoardRaw? you;
       try {
         final mine = await Leaderboards.getPlayerScoreObject(
@@ -270,16 +272,7 @@ abstract final class PlayGamesBridge {
       return PlayBoardSnapshot(
         rows: PlayBoardList.rows(
           kind: kind,
-          scores: [
-            for (final row in scores)
-              PlayBoardRaw(
-                rank: row.rank,
-                name: row.scoreHolder.displayName,
-                rawScore: row.rawScore,
-                playerId: row.scoreHolder.playerID,
-                scoreTag: row.token,
-              ),
-          ],
+          scores: scores,
           you: you,
           yourPartyName: yourPartyName,
         ),

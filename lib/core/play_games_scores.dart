@@ -84,6 +84,30 @@ class PlayBoardRaw {
 
   /// Play Games score tag. Holds the party name when this build submitted it.
   final String? scoreTag;
+
+  /// Rows from the Android rank channel. Skips malformed maps.
+  static List<PlayBoardRaw> fromChannel(List<dynamic> raw) {
+    final out = <PlayBoardRaw>[];
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final rank = item['rank'];
+      final score = item['rawScore'];
+      if (rank is! num || score is! num) continue;
+      final name = item['name'];
+      final playerId = item['playerId'];
+      final scoreTag = item['scoreTag'];
+      out.add(
+        PlayBoardRaw(
+          rank: rank.toInt(),
+          name: name is String ? name : '',
+          rawScore: score.toInt(),
+          playerId: playerId is String && playerId.isNotEmpty ? playerId : null,
+          scoreTag: scoreTag is String && scoreTag.isNotEmpty ? scoreTag : null,
+        ),
+      );
+    }
+    return out;
+  }
 }
 
 /// One row on the in-game season board.
@@ -152,7 +176,7 @@ abstract final class PlayBoardList {
     );
   }
 
-  /// Top rows, plus your rank at the bottom when it sits outside that list.
+  /// Every loaded row, plus your rank at the bottom when it is missing.
   static List<PlayBoardRow> rows({
     required PlayBoardKind kind,
     required List<PlayBoardRaw> scores,

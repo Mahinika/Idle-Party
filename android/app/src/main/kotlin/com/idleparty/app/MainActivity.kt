@@ -7,6 +7,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val screenChannel = "idle_party/screen"
+    private val ranksChannel = "idle_party/ranks"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -27,6 +28,16 @@ class MainActivity : FlutterActivity() {
                             }
                         }
                         result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ranksChannel)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "loadAll" -> {
+                        val id = call.argument<String>("id") ?: ""
+                        PlayRankBoard.loadAll(this, id, result)
                     }
                     else -> result.notImplemented()
                 }

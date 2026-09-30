@@ -7,6 +7,29 @@ import 'package:idle_party/core/play_leaderboard_ids.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
+  test('rank channel keeps every party row', () {
+    final rows = PlayBoardRaw.fromChannel(const [
+      {
+        'rank': 1,
+        'name': 'Lantern',
+        'rawScore': 4800,
+        'playerId': 'p1',
+        'scoreTag': 'Lantern',
+      },
+      {
+        'rank': 11,
+        'name': 'Moth',
+        'rawScore': 900,
+        'playerId': 'p11',
+      },
+      {'rank': 'bad', 'rawScore': 1},
+    ]);
+    expect(rows, hasLength(2));
+    expect(rows.last.rank, 11);
+    expect(rows.last.name, 'Moth');
+    expect(rows.last.playerId, 'p11');
+  });
+
   group('PlayGamesScores', () {
     test('encode prefers higher KEY over faster lower KEY', () {
       final lowFast = PlayGamesScores.encodeTimedKey(keyLevel: 5, clearMs: 1000);
