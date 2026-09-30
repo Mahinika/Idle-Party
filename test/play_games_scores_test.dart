@@ -279,7 +279,11 @@ void main() {
         PlayLeaderboardIds.greaterRiftId('2026-09'),
         'CgkIhuXGvNocEAIQAw',
       );
-      expect(PlayLeaderboardIds.hasGreaterRiftBoard('2026-08'), isFalse);
+      expect(PlayLeaderboardIds.hasGreaterRiftBoard('2026-08'), isTrue);
+      expect(
+        PlayLeaderboardIds.greaterRiftId('2026-08'),
+        PlayLeaderboardIds.greaterRiftId('2026-09'),
+      );
     });
 
     test('party power board is an all-time Play id', () {

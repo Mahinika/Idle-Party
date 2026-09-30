@@ -2112,8 +2112,8 @@ abstract final class SpatialCombat {
           team: SpatialTeam.hero,
           x: leader.x - 0.55,
           y: leader.y + 0.45,
-          hp: 1,
-          maxHp: 1,
+          hp: _petBodyHp(leader),
+          maxHp: _petBodyHp(leader),
           attack: math.max(1, pet.totalAttackBonus),
           defense: 0,
           moveSpeed: _petTravelSpeed(leader, leader),
@@ -2142,8 +2142,8 @@ abstract final class SpatialCombat {
           team: SpatialTeam.hero,
           x: h.x - 0.45,
           y: h.y + 0.4,
-          hp: 1,
-          maxHp: 1,
+          hp: _petBodyHp(h),
+          maxHp: _petBodyHp(h),
           attack: math.max(2, (h.attack * atkScale).round()),
           defense: 0,
           moveSpeed: _petTravelSpeed(h, h),
@@ -2285,8 +2285,8 @@ abstract final class SpatialCombat {
           team: SpatialTeam.hero,
           x: owner.x - 0.4 + ox,
           y: owner.y + 0.35 + oy,
-          hp: 1,
-          maxHp: 1,
+          hp: _petBodyHp(owner),
+          maxHp: _petBodyHp(owner),
           attack: math.max(1, (owner.attack * atkScale).round()),
           defense: 0,
           moveSpeed: _petTravelSpeed(owner, owner),
@@ -2417,8 +2417,8 @@ abstract final class SpatialCombat {
           team: SpatialTeam.hero,
           x: prevPet?.x ?? (leader.x - 0.55),
           y: prevPet?.y ?? (leader.y + 0.45),
-          hp: 1,
-          maxHp: 1,
+          hp: _keptPetHp(prevPet, leader),
+          maxHp: _petBodyHp(leader),
           attack: math.max(1, pet.totalAttackBonus),
           defense: 0,
           moveSpeed: _petTravelSpeed(leader, leader),
@@ -2454,8 +2454,8 @@ abstract final class SpatialCombat {
           team: SpatialTeam.hero,
           x: prevClass?.x ?? (h.x - 0.45),
           y: prevClass?.y ?? (h.y + 0.4),
-          hp: 1,
-          maxHp: 1,
+          hp: _keptPetHp(prevClass, h),
+          maxHp: _petBodyHp(h),
           attack: math.max(2, (h.attack * atkScale).round()),
           defense: 0,
           moveSpeed: _petTravelSpeed(h, h),
@@ -3461,7 +3461,7 @@ abstract final class SpatialCombat {
           }
         }
       }
-      final target = _focusHero(enemy, world.heroes);
+      final target = _focusHero(enemy, world.heroes, pets: world.pets);
       if (target == null) continue;
 
       if (enemy.stunTimer > 0) {
@@ -4353,6 +4353,15 @@ abstract final class SpatialCombat {
     return (state: nextState, gold: goldFromKills);
   }
 
+  static int _petBodyHp(SpatialActor owner) =>
+      math.max(12, (owner.maxHp * 0.35).round());
+
+  static int _keptPetHp(SpatialActor? prev, SpatialActor owner) {
+    final body = _petBodyHp(owner);
+    if (prev == null || prev.hp <= 0 || prev.maxHp <= 1) return body;
+    return math.min(prev.hp, body);
+  }
+
   /// Owner's forged move speed, plus catch-up when the pet has fallen behind.
   /// Roots on the owner do not freeze the pet.
   static double _petTravelSpeed(SpatialActor pet, SpatialActor owner) {
@@ -4901,7 +4910,7 @@ abstract final class SpatialCombat {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (e.forcedTargetTimer > 0) continue;
-      final focus = _focusHero(e, world.heroes);
+      final focus = _focusHero(e, world.heroes, pets: world.pets);
       if (focus == null || focus.id == tank.id) continue;
       final d = actorDist(tank, e);
       if (d < best && d <= 5.5) {
@@ -4929,8 +4938,9 @@ abstract final class SpatialCombat {
   /// Enemies focus the tank when possible (aggro toward frontliner).
   static SpatialActor? _focusHero(
     SpatialActor enemy,
-    List<SpatialActor> heroes,
-  ) {
+    List<SpatialActor> heroes, {
+    List<SpatialActor> pets = const [],
+  }) {
     if (enemy.forcedTargetTimer > 0 && enemy.forcedTargetId != null) {
       for (final h in heroes) {
         if (h.isAlive && h.id == enemy.forcedTargetId) return h;
@@ -4950,10 +4960,15 @@ abstract final class SpatialCombat {
     }
     // Tanks hold a wider soft-taunt leash so packs stick to them.
     final leash = tank != null ? 4.0 : 2.5;
-    if (tank != null && actorDist(enemy, tank) < bestD + leash) {
-      return tank;
+    final hero = tank != null && actorDist(enemy, tank) < bestD + leash
+        ? tank
+        : nearest;
+    if (hero == null) return null;
+    for (final p in pets) {
+      if (p.hp <= 0 || p.dormant || p.vanishTimer > 0) continue;
+      if (actorDist(enemy, p) + 0.2 < actorDist(enemy, hero)) return p;
     }
-    return nearest;
+    return hero;
   }
 
   static double actorDist(SpatialActor a, SpatialActor b) =>

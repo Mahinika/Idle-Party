@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../core/game_logic.dart';
 import '../models/class_ability.dart';
 import '../models/combat_ratings.dart';
+import '../models/hero_spec.dart';
 import 'spatial_combat.dart';
 
 /// Named helpers for rare kit casts. Dispatch is [AbilityCustomId] on the def —
@@ -563,20 +564,22 @@ abstract final class KitNamedCasts {
           }
         } else {
           final bolt = math.max(2, (hero.attack * 0.7).round());
-          for (var i = 0; i < 3; i++) {
-            SpatialCombat.addProjectile(
-              world,
-              SpatialCombat.spellBolt(
-                from: hero,
-                to: focus!,
-                damage: bolt,
-                style: SpellBoltStyle.holy,
-                label: i == 0 ? 'PENANCE' : null,
-                labelArgb: 0xFFFFF0A0,
-                delay: i * 0.18,
-              ),
-            );
-          }
+          SpatialCombat.addProjectile(
+            world,
+            SpatialCombat.spellBolt(
+              from: hero,
+              to: focus!,
+              damage: bolt,
+              style: SpellBoltStyle.holy,
+              label: 'PENANCE',
+              labelArgb: 0xFFFFF0A0,
+            ),
+          );
+          hero.channelTicksLeft = 2;
+          hero.channelAmount = bolt;
+          hero.channelTargetId = focus.id;
+          hero.channelKind = 'hit';
+          hero.channelAcc = 0;
           SpatialCombat.healLowestAlly(
             world,
             math.max(4, (bolt * 0.9 * hero.kitHealMul).round()),
@@ -841,6 +844,10 @@ abstract final class KitNamedCasts {
       case AbilityCustomId.vanish:
         AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.vanishTimer = math.max(hero.vanishTimer, 3.5);
+        hero.abilityCd.removeWhere((k, _) => k != AbilityId.vanish.name);
+        if (hero.heroSpecId == HeroSpecId.subtlety) {
+          hero.buffTimers['opener'] = 4.0;
+        }
         for (final e in world.enemies) {
           if (e.forcedTargetId == hero.id) {
             e.forcedTargetId = null;
@@ -863,6 +870,7 @@ abstract final class KitNamedCasts {
         hero.vanishTimer = math.max(hero.vanishTimer, 3.5);
         hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 6.0);
         hero.combustionTimer = math.max(hero.combustionTimer, 3.5);
+        hero.buffTimers['opener'] = 4.0;
         for (final e in world.enemies) {
           if (e.forcedTargetId == hero.id) {
             e.forcedTargetId = null;
@@ -893,7 +901,9 @@ abstract final class KitNamedCasts {
           );
         var prevX = hero.x;
         var prevY = hero.y;
-        for (final e in spree.take(2)) {
+        final hops = spree.take(5).toList();
+        final hopShare = hops.length <= 2 ? 1.0 : 2 / hops.length;
+        for (final e in hops) {
           if (!SpatialCombat.canShoot(world, hero.x, hero.y, e.x, e.y)) {
             continue;
           }
@@ -902,6 +912,7 @@ abstract final class KitNamedCasts {
               2,
               (hero.attack *
                       def.coeff *
+                      hopShare *
                       AbilityEffectRunner.abilityOutScale(hero))
                   .round(),
             ),

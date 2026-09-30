@@ -41,7 +41,16 @@ abstract final class AbilityEffectRunner {
         id == AbilityId.deathAndDecayBlood ||
         id == AbilityId.deathAndDecayUnholy ||
         id == AbilityId.hurricane ||
-        id == AbilityId.mindSear;
+        id == AbilityId.mindSear ||
+        id == AbilityId.flamestrike ||
+        id == AbilityId.consecration ||
+        id == AbilityId.consecrationHoly ||
+        id == AbilityId.earthquake ||
+        id == AbilityId.magmaTotem ||
+        id == AbilityId.hellfire ||
+        id == AbilityId.starfall ||
+        id == AbilityId.handOfGuldan ||
+        id == AbilityId.feralThrash;
   }
 
   static int _abilityPower(SpatialActor hero, ClassAbilityDef def) {
@@ -683,7 +692,21 @@ abstract final class AbilityEffectRunner {
         return true;
       case AbilityEffectKind.heal:
         // Blood Rune Tap / Guardian FR are self-sustain, not party triage.
-        if (def.id == AbilityId.runeTap || def.id == AbilityId.frenziedRegen) {
+        if (def.id == AbilityId.runeTap) {
+          if (!_allyNeedsHeal(hero)) return false;
+          spendAndCd(world, hero, def);
+          final dumped = hero.rage;
+          hero.rage = 0;
+          _healLowest(
+            world,
+            hero,
+            hero,
+            def.coeff * (1 + dumped / 45),
+            def.shortLabel,
+          );
+          return true;
+        }
+        if (def.id == AbilityId.frenziedRegen) {
           if (!_allyNeedsHeal(hero)) return false;
           spendAndCd(world, hero, def);
           _castHeal(world, hero, hero, def, reducedVfx: reducedVfx);
@@ -760,6 +783,24 @@ abstract final class AbilityEffectRunner {
           return true;
         }
         spendAndCd(world, hero, def);
+        if (def.id == AbilityId.shadowstep && focus != null && focus.hp > 0) {
+          final dx = focus.x - hero.x;
+          final dy = focus.y - hero.y;
+          final len = math.sqrt(dx * dx + dy * dy);
+          if (len > 0.2) {
+            final stop = math.max(0.7, hero.attackRange * 0.8);
+            final snapped = SpatialCombat.clampAlongWalk(
+              world.map,
+              world.openGateIds,
+              hero.x,
+              hero.y,
+              focus.x - (dx / len) * stop,
+              focus.y - (dy / len) * stop,
+            );
+            hero.x = snapped.$1;
+            hero.y = snapped.$2;
+          }
+        }
         _selfBuff(hero, def);
         announce(world, hero, def.shortLabel, 0xFF90E0FF, reducedVfx);
         if (world.spawnPersistentVfx) {
@@ -810,9 +851,16 @@ abstract final class AbilityEffectRunner {
           if (nearby.isEmpty) return false;
           spendAndCd(world, hero, def);
           final rootDur = 2.4 + hero.kitRootBonus;
+          final freeze =
+              def.id == AbilityId.frostNovaMage ||
+              def.id == AbilityId.hungeringCold;
           for (final e in nearby) {
-            applyEnemyRoot(e, rootDur);
-            e.attackSlowTimer = math.max(e.attackSlowTimer, 3.0);
+            if (freeze) {
+              applyEnemyStun(e, rootDur);
+            } else {
+              applyEnemyRoot(e, rootDur);
+              e.attackSlowTimer = math.max(e.attackSlowTimer, 3.0);
+            }
           }
           hero.attackFlash = 0.14;
           announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
@@ -937,9 +985,13 @@ abstract final class AbilityEffectRunner {
           hero.vanishTimer = math.max(hero.vanishTimer, 2.2);
           hero.shieldWallTimer = math.max(hero.shieldWallTimer, 1.5);
           for (final e in world.enemies) {
-            if (e.forcedTargetId == hero.id) {
+            final wasOnHunter = e.forcedTargetId == hero.id;
+            if (wasOnHunter) {
               e.forcedTargetId = null;
               e.forcedTargetTimer = 0;
+            }
+            if (wasOnHunter || SpatialCombat.actorDist(hero, e) < 3.2) {
+              e.fireCooldown = math.max(e.fireCooldown, 1.2);
             }
           }
           announce(
@@ -1135,6 +1187,30 @@ abstract final class AbilityEffectRunner {
   static String _abilityKey(ClassAbilityDef def) =>
       '${def.id.name} ${def.shortLabel} ${def.name}'.toLowerCase();
 
+  static int _windowRaw(SpatialActor hero, ClassAbilityDef def, int raw) {
+    var v = raw.toDouble();
+    if ((hero.buffTimers['arcanePower'] ?? 0) > 0 &&
+        (def.boltStyle == SpellBoltStyle.arcane ||
+            def.id == AbilityId.arcaneBlast ||
+            def.id == AbilityId.arcaneMissiles ||
+            def.id == AbilityId.arcaneExplosion)) {
+      v *= 1.22;
+    }
+    if ((hero.buffTimers['coldBlood'] ?? 0) > 0 &&
+        (def.id == AbilityId.envenom ||
+            def.id == AbilityId.rupture ||
+            def.id == AbilityId.garrote ||
+            def.id == AbilityId.mutilate ||
+            def.id == AbilityId.fanOfKnives)) {
+      v *= 1.22;
+    }
+    if ((hero.buffTimers['opener'] ?? 0) > 0 &&
+        hero.heroSpecId == HeroSpecId.subtlety) {
+      v *= 1.15;
+    }
+    return math.max(2, v.round());
+  }
+
   /// Outgoing scale for kit casts. Casters get [SpatialCombat.casterAbilityTax]
   /// because Int-based ability spam outpaced melee Str kits on mid-band sims.
   static double abilityOutScale(SpatialActor hero) {
@@ -1174,9 +1250,14 @@ abstract final class AbilityEffectRunner {
     );
     final spellCrit = hero.spellCrit > 0 && rng.nextInt(100) < hero.spellCrit;
     if (spellCrit) raw = math.max(2, (raw * 1.5).round());
-    // Damage amp window (Vendetta / Cold Blood / Arcane Power).
+    // Vendetta / Combustion still use combustionTimer. Cold Blood and
+    // Arcane Power are their own windows so they do not amp white swings.
     if (hero.combustionTimer > 0) {
       raw = math.max(2, (raw * 1.22).round());
+    }
+    raw = _windowRaw(hero, def, raw);
+    if (def.id == AbilityId.haunt && enemy.bleedDps > 0) {
+      enemy.bleedDps = math.max(1.0, enemy.bleedDps * 1.25);
     }
     // Arcane Blast stacks; Missiles dump.
     if (def.id == AbilityId.arcaneBlast) {
@@ -1237,7 +1318,44 @@ abstract final class AbilityEffectRunner {
     if (!SpatialCombat.canShoot(world, hero.x, hero.y, enemy.x, enemy.y)) {
       return;
     }
+    if (def.id == AbilityId.backstab) {
+      final dx = enemy.x - hero.x;
+      final dy = enemy.y - hero.y;
+      final len = math.sqrt(dx * dx + dy * dy);
+      if (len > 0.2) {
+        final side = SpatialCombat.clampAlongWalk(
+          world.map,
+          world.openGateIds,
+          hero.x,
+          hero.y,
+          enemy.x + (-dy / len) * 0.85,
+          enemy.y + (dx / len) * 0.85,
+        );
+        hero.x = side.$1;
+        hero.y = side.$2;
+      }
+    }
     final tint = SpatialCombat.burstArgbForStyle(style);
+    if (def.id == AbilityId.arcaneMissiles) {
+      final slice = math.max(1, (raw / 3).round());
+      raw = slice;
+      hero.channelTicksLeft = 2;
+      hero.channelAmount = slice;
+      hero.channelTargetId = enemy.id;
+      hero.channelKind = 'hit';
+      hero.channelAcc = 0;
+    }
+    if (def.id == AbilityId.obliterate ||
+        def.id == AbilityId.stormstrike ||
+        def.id == AbilityId.lavaLash) {
+      final follow = math.max(1, (raw * 0.4).round());
+      raw = math.max(1, raw - follow);
+      hero.channelTicksLeft = 1;
+      hero.channelAmount = follow;
+      hero.channelTargetId = enemy.id;
+      hero.channelKind = 'hit';
+      hero.channelAcc = 0;
+    }
     hero.attackFlash = 0.16;
 
     if (def.id == AbilityId.mindFlay) {
@@ -1468,6 +1586,26 @@ abstract final class AbilityEffectRunner {
       id: def.id,
       radius: 0.85,
     );
+    if (def.id == AbilityId.thunderstorm) {
+      for (final e in world.enemies) {
+        if (e.hp <= 0 || e.dormant) continue;
+        if (SpatialCombat.actorDist(hero, e) > 2.8) continue;
+        final dx = e.x - hero.x;
+        final dy = e.y - hero.y;
+        final len = math.sqrt(dx * dx + dy * dy);
+        if (len < 0.05) continue;
+        final snapped = SpatialCombat.clampAlongWalk(
+          world.map,
+          world.openGateIds,
+          hero.x,
+          hero.y,
+          e.x + (dx / len) * 1.5,
+          e.y + (dy / len) * 1.5,
+        );
+        e.x = snapped.$1;
+        e.y = snapped.$2;
+      }
+    }
 
     final shape =
         def.aoeShape ??
@@ -1489,7 +1627,8 @@ abstract final class AbilityEffectRunner {
           hops: switch (def.id) {
             AbilityId.multiShot ||
             AbilityId.multiShotMm ||
-            AbilityId.multiShotSurv => _aoeHitCap,
+            AbilityId.multiShotSurv ||
+            AbilityId.volley => 16,
             _ => 4,
           },
           reducedVfx: reducedVfx,
@@ -1534,7 +1673,7 @@ abstract final class AbilityEffectRunner {
         ? focus
         : SpatialCombat.nearestActiveEnemy(hero, world.enemies);
     final used = <String>{};
-    while (cursor != null && targets.length < 4) {
+    while (cursor != null && targets.length < 6) {
       targets.add(cursor);
       used.add(cursor.id);
       SpatialActor? next;
@@ -1619,10 +1758,11 @@ abstract final class AbilityEffectRunner {
     required int hops,
     required bool reducedVfx,
   }) {
-    final raw = math.max(
+    var raw = math.max(
       2,
       (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
+    raw = _windowRaw(hero, def, raw);
     final anchor = focus != null && focus.hp > 0 && !focus.dormant
         ? focus
         : hero;
@@ -1661,10 +1801,11 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
   }) {
     final radius = style == SpellBoltStyle.lightning ? 3.0 : 2.6;
-    final raw = math.max(
+    var raw = math.max(
       2,
       (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
+    raw = _windowRaw(hero, def, raw);
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.18;
 
@@ -1783,10 +1924,11 @@ abstract final class AbilityEffectRunner {
     required bool reducedVfx,
   }) {
     final radius = style == SpellBoltStyle.lightning ? 3.2 : 2.9;
-    final raw = math.max(
+    var raw = math.max(
       2,
       (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
+    raw = _windowRaw(hero, def, raw);
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
     final pack = _aoeAnchor(world, hero, focus);
@@ -1817,7 +1959,10 @@ abstract final class AbilityEffectRunner {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (SpatialCombat.distPoint(ax, ay, e.x, e.y) > radius) continue;
-      if (i >= _aoeHitCap) break;
+      final rainCap = def.id == AbilityId.volley || def.id == AbilityId.starfall
+          ? 16
+          : _aoeHitCap;
+      if (i >= rainCap) break;
       SpatialCombat.addProjectile(
         world,
         SpatialCombat.spellBoltBetween(
@@ -1825,7 +1970,9 @@ abstract final class AbilityEffectRunner {
           y0: e.y - 1.35 - rng.nextDouble() * 0.35,
           x1: e.x,
           y1: e.y,
-          damage: raw,
+          damage: def.id == AbilityId.starfall
+              ? math.max(1, (raw * 0.72).round())
+              : raw,
           style: style,
           team: SpatialTeam.hero,
           casterId: hero.id,
@@ -1897,10 +2044,11 @@ abstract final class AbilityEffectRunner {
     final radius =
         def.vfx?.groundRadius ??
         (style == SpellBoltStyle.lightning ? 3.0 : 2.7);
-    final raw = math.max(
+    var raw = math.max(
       2,
       (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
+    raw = _windowRaw(hero, def, raw);
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
     final anchor = _aoeAnchor(world, hero, focus);
@@ -1985,7 +2133,10 @@ abstract final class AbilityEffectRunner {
       final fromX = world.canWalk(ox, oy) ? ox : hero.x;
       final fromY = world.canWalk(ox, oy) ? oy : hero.y;
       if (!SpatialCombat.canShoot(world, fromX, fromY, e.x, e.y)) continue;
-      if (hitCount >= (def.id == AbilityId.fanOfKnives ? 24 : _aoeHitCap)) {
+      if (hitCount >=
+          (def.id == AbilityId.fanOfKnives
+              ? 48
+              : _aoeHitCap)) {
         break;
       }
       final wasAlive = e.hp > 0;
@@ -2676,6 +2827,14 @@ abstract final class AbilityEffectRunner {
             AbilitySelfBuffKind.block => 6.0,
             AbilitySelfBuffKind.absorb => 3.0,
           };
+    if (def.id == AbilityId.coldBlood) {
+      hero.buffTimers['coldBlood'] = dur;
+      return;
+    }
+    if (def.id == AbilityId.arcanePower) {
+      hero.buffTimers['arcanePower'] = dur;
+      return;
+    }
     switch (kind) {
       case AbilitySelfBuffKind.haste:
         hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, dur);

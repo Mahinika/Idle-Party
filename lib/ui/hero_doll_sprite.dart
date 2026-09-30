@@ -25,11 +25,15 @@ class HeroDollSprite extends StatefulWidget {
     this.partyIndex = 0,
     this.size = 32,
     this.walkFrame = 0,
+    this.demonForm = false,
   });
 
   final PartyHero hero;
   final int partyIndex;
   final double size;
+
+  /// Demonology metamorphosis tint. Hub GEAR leaves this off.
+  final bool demonForm;
 
   /// Reserved for future walk-frame previews (idle in GEAR for now).
   final int walkFrame;
@@ -206,6 +210,16 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
           child: child,
         );
       }
+    }
+
+    if (widget.demonForm) {
+      child = ColorFiltered(
+        colorFilter: const ColorFilter.mode(
+          Color(0xFF8040C0),
+          BlendMode.modulate,
+        ),
+        child: child,
+      );
     }
 
     if (HeroIdentity.hasStanceBody(widget.hero.specId)) {

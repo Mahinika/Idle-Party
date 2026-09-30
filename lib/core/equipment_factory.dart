@@ -985,8 +985,8 @@ class EquipmentFactory {
 
     final pool = <String>[
       for (final id in switch (tag) {
-        // Heals ignore haste (ability CDs are wall-clock) — Mp5/Crit first.
-        SpecRoleTag.healer => const ['mp5', 'crit', 'mastery'],
+        // Mp5 first. Crit and Haste split the second line (heals use haste).
+        SpecRoleTag.healer => const ['mp5', 'crit', 'haste'],
         SpecRoleTag.caster => const ['crit', 'mastery'],
         SpecRoleTag.tank => const ['mastery', 'crit'],
         SpecRoleTag.meleeDps ||
@@ -1000,6 +1000,15 @@ class EquipmentFactory {
             resolvedSlot == EquipmentSlot.hands)) {
       pool.remove('mastery');
       pool.insert(0, 'mastery');
+    }
+
+    if (tag == SpecRoleTag.healer && random.nextBool()) {
+      final critAt = pool.indexOf('crit');
+      final hasteAt = pool.indexOf('haste');
+      if (critAt >= 0 && hasteAt >= 0) {
+        pool[critAt] = 'haste';
+        pool[hasteAt] = 'crit';
+      }
     }
 
     int secondaryLines() {

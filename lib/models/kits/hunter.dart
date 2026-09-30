@@ -178,6 +178,7 @@ const List<ClassAbilityDef> _hunterKit = <ClassAbilityDef>[
       shortLabel: 'Aimed',
       description: 'Heavy carefully aimed bolt.',
       unlockLevel: 5,
+      castDelaySeconds: 1.5,
       cooldown: 6.5,
       resourceCost: 18,
       effect: AbilityEffectKind.damage,

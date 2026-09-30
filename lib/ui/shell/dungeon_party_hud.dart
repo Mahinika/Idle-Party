@@ -764,6 +764,8 @@ class _PartyRow extends StatelessWidget {
                     hero: hero,
                     partyIndex: index,
                     size: 20,
+                    demonForm: hero.specId == HeroSpecId.demonology &&
+                        (kitActor?.combustionTimer ?? 0) > 0,
                   ),
                 ),
               ),
@@ -830,6 +832,8 @@ class _PartyRow extends StatelessWidget {
                 hero: hero,
                 partyIndex: index,
                 size: phone ? 26 : (compact ? 22 : 28),
+                demonForm: hero.specId == HeroSpecId.demonology &&
+                    (kitActor?.combustionTimer ?? 0) > 0,
               ),
               SizedBox(width: phone ? 4 : 5),
               Expanded(

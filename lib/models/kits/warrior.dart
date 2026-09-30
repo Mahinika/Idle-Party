@@ -413,7 +413,7 @@ const List<ClassAbilityDef> _warriorKit = <ClassAbilityDef>[
       tier: AbilityCastTier.passive,
       passiveOutMul: 2.12,
       passiveHasteMul: 1.12,
-      passiveInMul: 1.06,
+      passiveInMul: 1.22,
     ),
     ClassAbilityDef(
       id: AbilityId.bloodthirst,

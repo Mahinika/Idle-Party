@@ -16,7 +16,7 @@ abstract final class PlayLeaderboardIds {
         '2026-08': (
           timedKey: 'CgkIhuXGvNocEAIQAA',
           gauntlet: 'CgkIhuXGvNocEAIQAQ',
-          greaterRift: '',
+          greaterRift: 'CgkIhuXGvNocEAIQAw',
         ),
         // Reuse Aug KEY/Gauntlet until Console creates distinct Sep KEY/Gauntlet
         // boards. GR uses the Sep Console board (publish via Games Publishing).
