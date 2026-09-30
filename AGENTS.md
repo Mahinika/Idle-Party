@@ -149,7 +149,7 @@ stamina is STA.
 | Menus | `lib/core/menu_router.dart`, `lib/ui/shell/menu_surface.dart`, `app_bottom_bar.dart` |
 | Hub / chase | `lib/ui/hub_screen.dart`, `lib/core/hub_chase.dart`, `lib/core/chase_contract.dart` |
 | Art helpers | `lib/assets/custom_assets.dart`, `lib/assets/kenney_assets.dart` |
-| Gear art | `tool/gear_style.py`, `tool/facit/`, rule `gear-art-standard`, skill `gear-art` |
+| Gear art | `tool/gear_style.py`, `tool/facit/`, `tool/gear_lookbook.py`, rule `gear-art-standard`, skill `gear-art`, skill `gear-lookbook` |
 | UI tokens | `lib/ui/theme.dart`, `docs/UI_THEME.md` |
 | Emulator look | `py -3 tool/adb_see.py` (UI tree, tap-by-label, `[IP]` log) |
 

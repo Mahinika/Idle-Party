@@ -27,8 +27,10 @@ Numbers live in `tool/gear_style.py`. The rule is
    facit. Look at `tool/out/facit/` if a contact sheet was written.
 4. `py -3 tool/check_paper_doll_facit.py --no-lock --only style,unique,proportion,icon_parity`
    with `IDLE_PARTY_CHAR_ROOT` pointed at the stage.
-5. On the A56, MORE → SETTINGS → DEV: GEAR LOOKBOOK. Compare at phone
-   size. PNG changes need a full `flutter run`, not hot reload.
+5. Check that the piece sits on the body with skill `gear-lookbook`
+   (`py -3 tool/gear_lookbook.py`). The A56 lookbook (MORE → SETTINGS →
+   DEV: GEAR LOOKBOOK) is for when the owner should look. PNG changes
+   need a full `flutter run`, not hot reload.
 6. `py -3 tool/build_owned_gear_layers.py --publish` only when the staged
    facit is green. Then `py -3 tool/audit_anchors.py` if a hand item moved.
 
