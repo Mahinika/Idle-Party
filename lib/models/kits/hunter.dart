@@ -148,8 +148,8 @@ const List<ClassAbilityDef> _hunterKit = <ClassAbilityDef>[
       showInHud: true,
       effect: AbilityEffectKind.passive,
       tier: AbilityCastTier.passive,
-      passiveOutMul: 1.16,
-      passiveHasteMul: 1.06,
+      passiveOutMul: 1.08,
+      passiveHasteMul: 1.04,
     ),
     ClassAbilityDef(
       id: AbilityId.steadyShot,

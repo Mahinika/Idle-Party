@@ -365,7 +365,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
       effect: AbilityEffectKind.passive,
       tier: AbilityCastTier.passive,
       passiveInMul: 0.92,
-      passiveOutMul: 1.12,
+      passiveOutMul: 1.06,
       passiveRootBonus: 0.5,
     ),
     ClassAbilityDef(

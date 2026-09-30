@@ -50,7 +50,7 @@ removed the ban on a whale ladder, gacha, and BiS-for-cash.
 
 Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as tickets.
 
-**New SKUs need Play Console create + Activate** before live prices show. Console still only has the five 2026-09-10 SKUs (`starter_boost_6h` / `boost_12h` / `ad_free` / `day_boost_24h` / `supporter_qol`). Add the eight `perm_scroll_*` ids (`perm_scroll_atk` … `perm_scrolls_all`). Sideload BUY still grants in debug via the existing preview path.
+**New SKUs need Play Console create + Activate** before live prices show. Console still only has the five 2026-09-10 SKUs (`starter_boost_6h` / `boost_12h` / `ad_free` / `day_boost_24h` / `supporter_qol`). Until Play returns a product, SHOP shows **NOT ON PLAY** instead of a price and a buy. Add the eight `perm_scroll_*` ids (`perm_scroll_atk` … `perm_scrolls_all`). Sideload BUY still grants in debug via the existing preview path.
 
 ## Relation to existing systems
 

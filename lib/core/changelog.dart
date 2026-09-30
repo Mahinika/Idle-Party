@@ -96,7 +96,7 @@ abstract final class ChangelogCatalog {
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight — this patch gives each cave its own music and a clearer hit, spell, and button sound.',
       added: <String>[
-        'Five cave songs: warm, dark, ice, wet, and storm. Sandy, Goblin, and King share the warm one.',
+        'Five cave songs: warm, dark, ice, wet, and storm. Sandy and Goblin share the warm one. King\'s Fort and Blightfen use the dark song.',
       ],
       changed: <String>[
         'Hits, spells, loot, level-up, and boss landings are fuller. A hurt hero, a heal, a shield, and a boss wind-up each have their own sound.',
