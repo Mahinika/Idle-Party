@@ -72,6 +72,7 @@ abstract final class CharacterVisualPainter {
     required Map<String, ui.Image> images,
     required CharacterVisualPose pose,
     double alpha = 1,
+    Set<CharacterLayerId>? onlyLayers,
   }) {
     final basePaint = Paint()
       ..filterQuality = FilterQuality.none
@@ -113,6 +114,7 @@ abstract final class CharacterVisualPainter {
     }
 
     for (final layer in pose.orderedLayers()) {
+      if (onlyLayers != null && !onlyLayers.contains(layer.id)) continue;
       if (layer.id == CharacterLayerId.body) {
         final bodySrc = Rect.fromLTWH(
           0,
@@ -267,6 +269,36 @@ abstract final class CharacterVisualPainter {
   ///
   /// Walk = step bob, hit = recoil on the idle clip, cast = lift (not a
   /// lunge), death = a drop past the fade.
+  /// Where [paintOwnedHero] puts a hand anchor on screen, after the step
+  /// and the lean. Unflipped poses only.
+  static Offset ownedHandPoint(
+    CharacterVisualPose pose,
+    Offset center,
+    double size,
+    AnchorId id,
+  ) {
+    final ap = AnchorTables.lookup(
+      anim: pose.anim.kind,
+      frame: pose.anim.frame,
+      id: id,
+      flipX: false,
+      profile: BodyAnchorProfile.owned,
+      family: pose.bodyFamily,
+    ).scaled(size);
+    final step = ownedStepOffset(pose, size);
+    var p = Offset(center.dx + ap.x + step.dx, center.dy + ap.y + step.dy);
+    final lean = ownedLeanRadians(pose);
+    if (lean != 0) {
+      final pivot = center.translate(0, size * 0.36);
+      final dx = p.dx - pivot.dx;
+      final dy = p.dy - pivot.dy;
+      final c = math.cos(lean);
+      final s = math.sin(lean);
+      p = Offset(pivot.dx + c * dx - s * dy, pivot.dy + s * dx + c * dy);
+    }
+    return p;
+  }
+
   static Offset ownedStepOffset(CharacterVisualPose pose, double size) =>
       clipMotion(
         pose.anim.kind,

@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
@@ -16,6 +17,8 @@ import 'package:idle_party/ui/shell/dev_gear_lookbook.dart';
 import 'package:idle_party/visual/body_family.dart';
 import 'package:idle_party/visual/equipment_model_catalog.dart';
 import 'package:idle_party/visual/owned_gear_assets.dart';
+
+import 'lookbook_measure.dart';
 
 /// Renders the debug lookbook to PNGs under tool/out/lookbook/.
 ///
@@ -30,6 +33,7 @@ void main() {
     final outfits = _outfits();
     final scope = _scope();
     final onlyFamily = _scopeFamily();
+    await tester.runAsync(_loadFont);
     await tester.runAsync(_precache);
 
     final families = BodyFamily.values.where(
@@ -141,7 +145,33 @@ void main() {
     );
     }
   }, timeout: const Timeout(Duration(minutes: 5)));
+
+  testWidgets('measure gear lookbook dolls', (tester) async {
+    if (!const bool.fromEnvironment('LOOKBOOK')) return;
+    await tester.runAsync(
+      () => writeLookbookMeasure('tool/out/lookbook', _outfits()),
+    );
+  }, timeout: const Timeout(Duration(minutes: 5)));
 }
+
+/// The test font draws every letter as a block. A real font makes the
+/// labels readable. Missing fonts keep the blocks; order still holds.
+Future<void> _loadFont() async {
+  for (final path in const [
+    'C:/Windows/Fonts/arial.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/System/Library/Fonts/Supplemental/Arial.ttf',
+  ]) {
+    final file = File(path);
+    if (!file.existsSync()) continue;
+    final loader = FontLoader(_font)
+      ..addFont(Future.value(ByteData.sublistView(file.readAsBytesSync())));
+    await loader.load();
+    return;
+  }
+}
+
+const _font = 'LookbookSans';
 
 Future<void> _saveFamily(
   WidgetTester tester,
@@ -208,7 +238,6 @@ Future<void> _saveCompare(
         ]),
     ]),
     const Size(5 * 124 + 24, 4 * 150 + 48),
-    also: ['$outDir/fit_compare.png'],
   );
 }
 
@@ -357,14 +386,14 @@ Future<void> _saveSheet(
   WidgetTester tester,
   String path,
   Widget sheet,
-  Size size, {
-  List<String> also = const [],
-}) async {
+  Size size,
+) async {
   await tester.binding.setSurfaceSize(size);
   final key = GlobalKey();
   await tester.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(fontFamily: _font),
       home: Scaffold(
         backgroundColor: const Color(0xFF16141C),
         body: Align(
@@ -392,10 +421,7 @@ Future<void> _saveSheet(
     () => image!.toByteData(format: ui.ImageByteFormat.png),
   );
   image!.dispose();
-  final png = bytes!.buffer.asUint8List();
-  for (final target in [path, ...also]) {
-    File(target).writeAsBytesSync(png);
-  }
+  File(path).writeAsBytesSync(bytes!.buffer.asUint8List());
 }
 
 Map<String, dynamic> _outfits() =>

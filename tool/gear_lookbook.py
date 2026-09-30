@@ -3,12 +3,14 @@
 Same dolls as MORE → SETTINGS → DEV: GEAR LOOKBOOK. No emulator, no browser.
 Pictures land in tool/out/lookbook/.
 
-Default is the summary sheet plus the sit counts. Pass --all for every
-sheet, or --weapons, --armor, or --body <family> for one slice.
+Default is the summary sheet plus the fit counts. The counts always cover
+every weapon and armor model, every material, and five poses. Pass --all
+for every sheet, or --weapons, --armor, or --body <family> for one slice.
 """
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -36,11 +38,23 @@ def _scope(argv: list[str]) -> str:
     return "summary"
 
 
+def _keep_last_dolls(out: Path) -> None:
+    """The last run's doll pictures become the 'before' in diff.png."""
+    dolls = out / "dolls"
+    prev = out / "dolls_prev"
+    if not dolls.exists() or not any(dolls.iterdir()):
+        return
+    if prev.exists():
+        shutil.rmtree(prev)
+    dolls.rename(prev)
+
+
 def main() -> int:
     scope = _scope(sys.argv[1:])
     out = ROOT / "tool" / "out" / "lookbook"
     out.mkdir(parents=True, exist_ok=True)
     (out / "scope.txt").write_text(scope + "\n", encoding="utf-8")
+    _keep_last_dolls(out)
     # flutter on Windows is a .bat. CreateProcess will not run it unless
     # the command goes through the shell.
     result = subprocess.run(
