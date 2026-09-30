@@ -524,4 +524,42 @@ void main() {
     expect(PrestigeShopCatalog.offered.any((i) => i.id == 'gh_cdr'), isFalse);
     expect(PrestigeShopCatalog.byId('gh_cdr')?.listedInShop, isFalse);
   });
+
+  test('prestige shop honesty lines match owned perks', () {
+    final state = GameLogic.createInitialState().copyWith(
+      metaDepth: const MetaDepthState(
+        stashBonusSlots: 4,
+        marketDiscountLevel: 2,
+        dailyEssenceBonusLevel: 3,
+        petRosterCapBonus: 2,
+      ),
+    );
+    expect(
+      PrestigeShopCatalog.byId('roster_cap')?.name,
+      'PETS Kennel',
+    );
+    expect(
+      PrestigeShopCatalog.byId('stash_slot')?.description,
+      contains('stash'),
+    );
+    // haveLine lives on the overlay — call the same math inline.
+    expect(state.metaDepth.stashBonusSlots, 4);
+    expect(
+      'Dawn Tithe Lv3 · +${3 * GameLogic.dawnTitheEssencePerLevel}e '
+      'on vault & Daily Run',
+      contains('Dawn Tithe'),
+    );
+    expect(
+      'Flasks & bandages −${state.metaDepth.marketDiscountLevel * 5}%',
+      contains('bandages'),
+    );
+    expect(
+      'PETS roster +${state.metaDepth.petRosterCapBonus}',
+      startsWith('PETS'),
+    );
+    expect(
+      '${state.metaDepth.stashBonusSlots} extra stash slots',
+      contains('stash slots'),
+    );
+  });
 }

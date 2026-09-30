@@ -141,8 +141,8 @@ class HubChase {
         kind: HubChaseKind.claimDailyVault,
         title: 'Claim Daily Vault',
         detail: best >= 2 && keyTalk
-            ? 'Claim $pay (KEY +$best timed today). Covers your next camp upgrade.$bonusBit'
-            : 'Claim $pay. Covers your next camp upgrade.$bonusBit',
+            ? 'Claim $pay + 1 Cinder (KEY +$best timed today). Covers your next camp upgrade.$bonusBit'
+            : 'Claim $pay + 1 Cinder. Covers your next camp upgrade.$bonusBit',
         // READY chip owns urgency — no "N ready" progress echo.
         progressLabel: null,
         urgency: HubChaseUrgency.ready,
@@ -157,8 +157,8 @@ class HubChase {
             ? 'Claim quest reward'
             : 'Claim quest rewards',
         detail: completeMissions == 1
-            ? 'Tap CLAIM QUESTS for gold and essence.'
-            : 'Tap CLAIM QUESTS for gold and essence ($completeMissions).',
+            ? 'Tap CLAIM QUESTS for gold and essence. Chain of 3 pays +5e.'
+            : 'Tap CLAIM QUESTS for gold and essence ($completeMissions). Chain of 3 pays +5e.',
         progressLabel: null,
         urgency: HubChaseUrgency.ready,
       );
@@ -252,6 +252,7 @@ class HubChase {
         title: 'Rebuild your bag',
         detail:
             'Farm early floors in $zoneName and re-equip the party. '
+            'Worn non-Apex became starter; Apex stayed. '
             'Zones stay open — gold, bag, GOLD tracks, and floor progress reset on Ascend.',
         progressLabel: '$pct% geared',
         zoneId: zoneId,
@@ -350,11 +351,12 @@ class HubChase {
       if (wantVaultStart) return _dailyVaultStartChase(state);
       if (GameLogic.showDailyRunOnHub(state) &&
           !MetaSystems.isDailyClaimedToday(state, now: clock)) {
-        return const HubChase(
+        final runPay = GameLogic.dailyRunRewardLabel(state);
+        return HubChase(
           kind: HubChaseKind.dailyRun,
           title: 'Clear Daily Run',
           detail:
-              'One free seeded floor for +25e — separate from Daily Vault '
+              'One free seeded floor for $runPay — separate from Daily Vault '
               'and Quests.',
           progressLabel: 'Available',
         );
@@ -362,11 +364,12 @@ class HubChase {
     } else {
       if (wantVaultStart) return _dailyVaultStartChase(state);
       if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
-        return const HubChase(
+        final runPay = GameLogic.dailyRunRewardLabel(state);
+        return HubChase(
           kind: HubChaseKind.dailyRun,
           title: 'Clear Daily Run',
           detail:
-              'One free seeded floor for +25e — separate from Daily Vault '
+              'One free seeded floor for $runPay — separate from Daily Vault '
               'and Quests.',
           progressLabel: 'Available',
         );
@@ -612,15 +615,11 @@ class HubChase {
         : GameLogic.isoWeekKey(clock);
     final week = LocalSeasonCatalog.forWeekKey(weekKey);
     if (!week.hasGoal) return null;
-    // KEY-only weeks stay quiet until party-max-level endgame unlock.
-    if ((week.grTierTarget > 0 || week.ashenClearTarget) &&
-        !GameLogic.endgameUnlocked(state)) {
-      return null;
-    }
-    if (week.timedKeyTarget > 0 &&
-        week.gauntletFloorTarget <= 0 &&
-        week.grTierTarget <= 0 &&
-        !week.ashenClearTarget &&
+    // Gauntlet / GR / Ashen / KEY week goals need endgame unlock.
+    if ((week.gauntletFloorTarget > 0 ||
+            week.grTierTarget > 0 ||
+            week.ashenClearTarget ||
+            week.timedKeyTarget > 0) &&
         !GameLogic.endgameUnlocked(state)) {
       return null;
     }
@@ -719,13 +718,14 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.clearFloors,
       title: almost
-          ? 'Almost party Lv${GameLogic.maxHeroLevel}'
-          : 'Level the party to ${GameLogic.maxHeroLevel}',
+          ? 'Almost every hero Lv${GameLogic.maxHeroLevel}'
+          : 'Level every hero to ${GameLogic.maxHeroLevel}',
       detail: almost
           ? 'Lowest hero Lv$minLv — a few more combat levels unlock KEY, '
-                'Gauntlet, Ranked GR, Farm Rift, and Ashen Crown.'
+                'Gauntlet, Ranked GR, Farm Rift, Ashen Crown, and Craft Trial.'
           : 'Heroes Lv$minLv–$maxLv. Combat XP until every hero is '
-                '${GameLogic.maxHeroLevel} unlocks KEY, Gauntlet, Ranked GR, Farm Rift, and Ashen.',
+                '${GameLogic.maxHeroLevel} unlocks KEY, Gauntlet, Ranked GR, '
+                'Farm Rift, Ashen, and Craft Trial.',
       progressLabel: minLv == maxLv
           ? 'Lv$minLv/${GameLogic.maxHeroLevel}'
           : 'Lv$minLv–$maxLv/${GameLogic.maxHeroLevel}',
@@ -1013,7 +1013,7 @@ class HubChase {
           kind: HubChaseKind.unlockZone,
           title: 'Unlock ${d.name}',
           detail:
-              'Clear $prevName (or reach party Lv$need) to open the path. '
+              'Clear $prevName (or reach mean party Lv$need) to open the path. '
               'PATH farms the open prior zone.',
           urgency: HubChaseUrgency.almost,
           zoneId: d.id,

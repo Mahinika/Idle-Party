@@ -33,6 +33,15 @@ abstract final class PlayLeaderboardIds {
         ),
       };
 
+  /// Soft honesty when this month reuses an older Console board id.
+  static String? reusedBoardNotice(String monthKey) {
+    if (monthKey == '2026-09' || monthKey == '2026-10') {
+      return 'This month reuses August KEY / Gauntlet / Ranked GR boards '
+          'until Console adds distinct ids.';
+    }
+    return null;
+  }
+
   /// Player-facing honesty when boards cannot open a real Play leaderboard.
   static const String boardsNeedPlayMessage =
       'Boards need a Play install + sign-in';

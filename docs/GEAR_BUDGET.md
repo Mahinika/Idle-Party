@@ -35,17 +35,18 @@ Configured in `EquipStatWeights.lootShares` / `forSpec` (`lib/models/equip_stat_
 | Str melee | Str + Sta | Crit, Mastery |
 | Agi melee / hunter | Agi + Sta (+ some Str) | Crit, Mastery |
 | Caster | Int + Sta + Spell Power | Crit, Mastery |
-| Healer | Int + Sta + SP + Spirit | **Mp5, Crit** (Mastery leftover) |
+| Healer | Int + Sta + SP + Spirit | **Mp5, Crit, Haste** (≤2 lines) |
 
 Rules:
 
 - At most **two** secondaries on new loot.
-- Healer loot fills **Mp5 then Crit** (weapons/gloves do not haste-first). Haste is affix-only, not the default secondary pool.
+- Healer loot fills **Mp5 first**, then **Crit or Haste** (50/50 swap of the second line). Haste shortens heal cooldowns.
 - Loot Crit is **half** the raw secondary amount (`lootCritPercent`) so a full endgame set sits under the **75%** combat cap (Auto Equip still fades Crit from sheet 70→75).
 - **No Move** on loot budget.
 - Affinity on an item is **drop bias / tooltip flavour**, not equip-score.
 - **Armor type is a hard `canEquip` gate** (plate / mail / leather / cloth per class). Auto Equip never scores a Paladin into leather.
 - **Weapons / off-hand / ranged are the same hard gate** (WotLK class lists). Auto Equip never puts a dagger on a Paladin or a bow on a Death Knight.
+- Display iLvl past **100** is soft-capped (`EquipmentFactory.softCapItemLevel`: 100 + 35% of the overflow) so Crystal / Gauntlet / soulbound stay readable; budget follows the shown iLvl.
 
 Combat conversion (must stay aligned with equip weights):
 
@@ -61,7 +62,7 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 
 **Counts**
 
-- Role-weighted stat mass (Str/Agi/Sta/Int/Spi/SP/Armor/Crit/Haste/Mp5/flat ATK) — same DNA as `EquipStatWeights.forSpec`.
+- Role-weighted stat mass (Str/Agi/Sta/Int/Spi/SP/Armor/Crit/Haste/Mp5/flat ATK) — same DNA as `EquipStatWeights.forSpec`. Mastery on gear scores as Crit×0.85 (see `GearScorer`).
 - **Crit fades** once the hero's sheet crit is 70+ (zero at the 75 combat cap) so Auto Equip does not chase a clamped stat.
 - Gear effects that spend real effect value (lifesteal, crit, haste, …).
 - Apex tier bonus (soul-kept craft power).
@@ -88,20 +89,27 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 
 ## Set / Apex / Merge
 
-- **Set 2pc/4pc:** real combat bonuses only; shown on tooltips. No ghost BiS points.
-- **Apex:** own tier + hard-lock vs normal drops. Stats use the same
+- **Set 2pc/4pc:** real combat bonuses only; shown on tooltips
+  (2pc +3 Sta / cloth +3 Spi; 4pc +6 Sta +2 Crit / cloth +6 Spi +4 SP + 10%
+  set proc). No ghost BiS points.
+- **Apex:** own tier + hard-lock vs normal drops. Primaries use the same
   `lootShares` split as dungeon drops (no parallel Attack Power dump —
-  `attackBonus` is flat sheet ATK, ~2× a Strength point).
+  `attackBonus` is flat sheet ATK, ~2× a Strength point). Fixed secondaries
+  by role: **DPS Crit + Haste**; **healers Mp5 + Crit + Haste** (three lines);
+  tanks Mastery + Crit. Cannot MERGE — rank under CRAFT.
 - **Merge:** identity (`setId`, affixes) from **primary** only; fuel adds ~50%
   stats. RESULT preview shows the SCORE jump. If both pieces have an on-item
-  effect, the stronger value wins.
+  effect, the stronger value wins. Apex inputs are blocked.
 - **Charms (trinkets):** always roll an on-item effect (other slots still use
   rarity chance). Charm names match the CHARM slot.
 
 ## Player-facing copy
 
-- iLvl is the readable power size.
+- iLvl is the readable power size (soft-capped past 100).
 - Green **UPGRADE** / bag **BEST** / **EQUIP N** means Auto Equip would wear that piece.
+- MARKET **UPGRADE** badge only when the listing is affordable; **GAP FILL**
+  marks a targeted slot fill that is not yet a budget upgrade.
+- Player UI says **Haste** (not ASPD) for attack-speed %.
 - Guides / What’s New should stay honest to this contract.
 
 ## Code ownership (Factory vs Service vs Pipeline)

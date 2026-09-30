@@ -874,10 +874,10 @@ void main() {
     // No "GO" floater — CLEAR corner + HOLD already say what's next.
   });
 
-  test('brass boss telegraphs WIND-UP then SLAM', () {
+  test('brass boss telegraphs CRUSH', () {
     final seen = _bossTellTexts('brass');
-    expect(seen.contains('WIND-UP'), isTrue);
-    expect(seen.contains('SLAM'), isTrue);
+    expect(seen.contains('CRUSH'), isTrue);
+    expect(seen.contains('WIND-UP'), isFalse);
     expect(seen.contains('PULSE'), isFalse);
   });
 
@@ -944,9 +944,9 @@ void main() {
     expect(knocked, isTrue);
   });
 
-  test('week-1 Goblin boss shouts RALLY, not PULSE', () {
+  test('week-1 Goblin boss shouts HEAL, not PULSE', () {
     final seen = _bossTellTexts('goblin');
-    expect(seen.contains('RALLY'), isTrue);
+    expect(seen.contains('HEAL'), isTrue);
     expect(seen.contains('WIND-UP'), isFalse);
     expect(seen.contains('PULSE'), isFalse);
     expect(seen.contains('SLAM'), isFalse);
@@ -965,12 +965,12 @@ void main() {
     expect(rime.contains('WIND-UP'), isFalse);
   });
 
-  test('ashen crown boss uses CROWN / SLAM / IGNITE kit', () {
+  test('ashen crown boss uses CROWN / SLAM / SLOW kit', () {
     final seen = _bossTellTexts(
       'ember',
       inWorldBoss: true,
     );
-    expect(seen.contains('CROWN') || seen.contains('IGNITE'), isTrue);
+    expect(seen.contains('CROWN') || seen.contains('SLOW'), isTrue);
     expect(seen.contains('SLAM'), isTrue);
   });
 
@@ -1000,7 +1000,7 @@ void main() {
     expect(grove.contains('ROOT'), isTrue);
     expect(grove.contains('WIND-UP'), isFalse);
     final veil = _bossTellTexts('veil');
-    expect(veil.contains('SILK'), isTrue);
+    expect(veil.contains('SLOW'), isTrue);
     expect(veil.contains('WIND-UP'), isFalse);
   });
 
@@ -1016,13 +1016,13 @@ void main() {
     expect(tide.contains('WAVE'), isTrue);
     expect(tide.contains('WIND-UP'), isFalse);
     final ember = _bossTellTexts('ember');
-    expect(ember.contains('IGNITE'), isTrue);
+    expect(ember.contains('HEX'), isTrue);
     expect(ember.contains('WIND-UP'), isFalse);
     final fen = _bossTellTexts('fen');
     expect(fen.contains('SPIT'), isTrue);
     expect(fen.contains('WIND-UP'), isFalse);
     final under = _bossTellTexts('underworld');
-    expect(under.contains('BEAM'), isTrue);
+    expect(under.contains('WEAK'), isTrue);
     expect(under.contains('WIND-UP'), isFalse);
   });
 
@@ -1392,7 +1392,7 @@ void main() {
     expect(rooted, isTrue);
   });
 
-  test('healthy elite tank shouts HOLD in King\'s Fort', () {
+  test('healthy elite tank shouts RALLY in King\'s Fort', () {
     var state = GameLogic.createInitialState(now: DateTime(2026, 9, 18));
     final room = DungeonRoom(
       floorNumber: 3,
@@ -1423,7 +1423,7 @@ void main() {
       state = step.state;
       seen.addAll(world.floaters.map((f) => f.text));
     }
-    expect(seen.contains('HOLD'), isTrue);
+    expect(seen.contains('RALLY'), isTrue);
     expect(seen.contains('HOWL'), isFalse);
   });
 

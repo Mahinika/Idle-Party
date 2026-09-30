@@ -128,7 +128,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'spire_late',
       name: 'Late Spire Push',
-      blurb: 'Climb Gauntlet to floor 20 this week.',
+      blurb: 'Lifetime best ever — climb Gauntlet to floor 20 (lifetime PB).',
       weekKey: '2026-W35',
       affixOverride: 'iron',
       gauntletFloorTarget: 20,
@@ -148,7 +148,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'ember_climb',
       name: 'Ember Climb',
-      blurb: 'Climb Gauntlet to floor 25 this week.',
+      blurb: 'Lifetime best ever — climb Gauntlet to floor 25 (lifetime PB).',
       weekKey: '2026-W37',
       affixOverride: 'fortune',
       gauntletFloorTarget: 25,
@@ -178,7 +178,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'spire_push',
       name: 'Spire Push',
-      blurb: 'Climb Gauntlet to floor 15 this season of climbs.',
+      blurb: 'Lifetime best ever — climb Gauntlet to floor 15 (lifetime PB).',
       weekKey: '2026-W40',
       affixOverride: 'elite',
       gauntletFloorTarget: 15,
@@ -218,7 +218,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'ranked_gr3',
       name: 'Ranked GR Push',
-      blurb: 'Board week — clear Ranked GR3 (no mid-run gear).',
+      blurb: 'Lifetime best ever — reach Ranked GR3 (no mid-run gear).',
       weekKey: '2026-W44',
       affixOverride: 'tyrannical',
       grTierTarget: 3,
@@ -238,7 +238,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'ranked_gr5',
       name: 'GR Ladder',
-      blurb: 'Mothveil ranked — reach GR5 on the board ladder.',
+      blurb: 'Lifetime best ever — reach Ranked GR5 (Mothveil ladder).',
       weekKey: '2026-W46',
       affixOverride: 'fortified',
       grTierTarget: 5,
@@ -268,7 +268,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'ranked_gr3_b',
       name: 'Ranked GR Push II',
-      blurb: 'Board week — clear Ranked GR3 (no mid-run gear).',
+      blurb: 'Lifetime best ever — reach Ranked GR3 (no mid-run gear).',
       weekKey: '2026-W49',
       affixOverride: 'tyrannical',
       grTierTarget: 3,
@@ -288,7 +288,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'spire_push_2',
       name: 'Spire Push II',
-      blurb: 'Gauntlet week — reach floor 15 in the Crystal Spire.',
+      blurb: 'Lifetime best ever — climb Gauntlet to floor 15 (lifetime PB).',
       weekKey: '2026-W51',
       affixOverride: 'fortified',
       gauntletFloorTarget: 15,
@@ -298,7 +298,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'ranked_gr5_b',
       name: 'GR Ladder II',
-      blurb: 'Mothveil ranked — reach GR5 on the board ladder.',
+      blurb: 'Lifetime best ever — reach Ranked GR5 (Mothveil ladder).',
       weekKey: '2026-W52',
       affixOverride: 'fortified',
       grTierTarget: 5,

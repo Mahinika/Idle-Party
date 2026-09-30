@@ -106,8 +106,8 @@ class EssenceKeepPanel extends StatelessWidget {
           children: [
             for (final entry in <(int, String, String)>[
               (0, 'BAL', 'Balanced smash'),
-              (1, 'FOCUS', 'Smaller smash'),
-              (2, 'WIDE', 'Wider smash'),
+              (1, 'FOCUS', 'Smaller + stronger (~+22% dmg · −18% radius)'),
+              (2, 'WIDE', 'Wider + weaker (~−12% dmg · +22% radius)'),
             ]) ...[
               if (entry.$1 > 0) const SizedBox(width: 6),
               Expanded(
@@ -131,7 +131,7 @@ class EssenceKeepPanel extends StatelessWidget {
               padding: const EdgeInsets.only(top: 3),
               child: GameButton(
                 label: GodHandMastery.ready(state, m.$1)
-                    ? 'CLAIM · ${m.$2} · ${GodHandMastery.progressLabel(state, m.$1)}'
+                    ? 'CLAIM · ${m.$2} · +12e · ${GodHandMastery.progressLabel(state, m.$1)}'
                     : '${m.$2} · ${GodHandMastery.progressLabel(state, m.$1)}',
                 style: GameButtonStyle.grey,
                 dense: true,
@@ -172,7 +172,9 @@ class EssenceKeepPanel extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 3),
                 child: GameButton(
-                  label: 'LIGHT ${n.$2} — ${n.$3} · ${n.$4} pts',
+                  label:
+                      'LIGHT ${n.$2} — ${BlessingConstellation.effectLabel(n.$1)} · '
+                      '${n.$3} · ${n.$4} pts',
                   style: GameButtonStyle.grey,
                   dense: true,
                   onPressed: () => director.lightConstellationNode(n.$1),

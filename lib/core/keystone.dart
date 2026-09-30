@@ -43,11 +43,11 @@ abstract final class Keystone {
     final id = weekCaveId(weeklyKey);
     final tell = EnemyFlavor.bossTell(id);
     final name = DungeonCatalog.byId(id).name;
-    return 'Boss tell: $tell on $name';
+    return 'PATH boss stays · week packs/tell $tell from $name';
   }
 
-  /// KEY unlocks when every active hero is at [heroLevelGate] (endgame).
-  /// Keep in sync with [GameLogic.maxHeroLevel].
+  /// Legacy AL helper only — KEY unlock is [heroLevelGate] / [maxForState].
+  /// Keep [minAscension] so old callers do not break; do not gate KEY on AL.
   static const int minAscension = 20;
   static const int heroLevelGate = 100;
 
@@ -208,14 +208,14 @@ abstract final class Keystone {
   };
 
   static String blurb(String affix) => switch (affix) {
-    'glass' => 'Fragile foes, hit harder',
+    'glass' => 'Fragile foes hit harder — execute low-HP heroes',
     'swarm' => 'More enemies',
     'elite' => 'Tougher packs',
     'fortune' => 'More gold',
     'iron' => 'Harder, richer',
     'fortified' => 'Trash packs tougher',
     'tyrannical' => 'Bosses tougher',
-    'boss_rush' => 'Elite-heavy pulls',
+    'boss_rush' => 'Tougher elite packs (not extra bosses)',
     'no_flask' => 'Flasks disabled',
     _ => affix,
   };
@@ -223,18 +223,19 @@ abstract final class Keystone {
   /// Soft / Hard / Brutal — for KEY affix risk chips in the KEY tab.
   static String riskTier(String affix) {
     final b = blurb(affix).toLowerCase();
+    // Glass executes low HP — not a soft week despite fragile packs.
     if (affix == 'fortune' ||
-        affix == 'glass' ||
-        b.contains('more gold') ||
-        b.contains('fragile')) {
+        b.contains('more gold')) {
       return 'Soft';
     }
     if (affix == 'tyrannical' ||
         affix == 'boss_rush' ||
         affix == 'no_flask' ||
-        b.contains('boss') ||
         b.contains('flask')) {
       return 'Brutal';
+    }
+    if (affix == 'glass' || b.contains('fragile') || b.contains('execute')) {
+      return 'Hard';
     }
     return 'Hard';
   }
@@ -248,10 +249,10 @@ abstract final class Keystone {
       return 'Tyrannical bosses — keep a Healer ready.';
     }
     if (affixes.contains('glass')) {
-      return 'Glass packs — burst before they execute low HP.';
+      return 'Glass foes hit harder and execute low-HP heroes — burst them down.';
     }
     if (affixes.contains('fortified')) {
-      return 'Fortified trash — steady damage beats armor stacks.';
+      return 'Fortified trash — dig through tougher packs.';
     }
     if (affixes.contains('boss_rush')) {
       return 'Boss Rush — focus elites before they stack.';

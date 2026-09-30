@@ -109,7 +109,7 @@ class SpecMastery {
   static String playerLabel(SpecMasteryKind kind) => switch (kind) {
         SpecMasteryKind.strikesOfOpportunity => 'Strikes',
         SpecMasteryKind.unshackledFury => 'Fury',
-        SpecMasteryKind.criticalBlock => 'Crit Block',
+        SpecMasteryKind.criticalBlock => 'Block Chance',
         SpecMasteryKind.illuminatedHealing => 'Illuminate',
         SpecMasteryKind.divineBulwark => 'Bulwark',
         SpecMasteryKind.handOfLight => 'Hand of Light',

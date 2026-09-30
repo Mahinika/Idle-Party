@@ -344,7 +344,7 @@ class HubUrgentRow extends StatelessWidget {
     // One hub row — rest surface on MORE / ESSENCE badges.
     if (showVault) {
       return GameButton(
-        label: 'CLAIM VAULT  +${vaultClaimEssence}e',
+        label: 'CLAIM VAULT  +${vaultClaimEssence}e · +1 Cinder',
         style: GameButtonStyle.brown,
         primary: true,
         onPressed: onClaimDailyVault,

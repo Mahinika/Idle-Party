@@ -92,6 +92,8 @@ class EquipStatWeights {
       (name: 'Spell Power', w: w.sp),
       (name: 'Armor', w: w.armor),
       (name: 'Crit', w: w.crit),
+      // Scorer uses Mastery × crit×0.85 — same DNA for the tip.
+      (name: 'Mastery', w: w.crit * 0.85),
       (name: 'Haste', w: w.aspd),
       (name: 'Mp5', w: w.mp5),
     ]..sort((a, b) => b.w.compareTo(a.w));
@@ -103,7 +105,8 @@ class EquipStatWeights {
 
   /// One-line player pitch for tooltips.
   static String priorityBlurb(HeroSpecDef spec) {
-    final labels = priorityLabels(spec);
+    // Four labels so Mastery (scored as Crit×0.85) can sit with Crit/Haste.
+    final labels = priorityLabels(spec, max: 4);
     if (labels.isEmpty) return 'For ${spec.shortLabel}: balanced stats';
     return 'For ${spec.shortLabel}: ${labels.join(' · ')}';
   }

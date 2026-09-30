@@ -20,6 +20,7 @@ abstract final class Rift {
   static const int minTier = 1;
 
   /// Same endgame gate as KEY / Gauntlet.
+  /// Legacy AL field — Rift unlock is party-max-level endgame, not AL20.
   static const int minAscension = 20;
 
   /// Zone art — Stormwake (not Crystal Spire; that is Infinity Gauntlet).

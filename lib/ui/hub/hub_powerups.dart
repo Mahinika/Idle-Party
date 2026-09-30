@@ -260,7 +260,9 @@ Future<void> openPowerupsSheet(
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Watch for a ticket, then spend it here.',
+                          adFree
+                              ? 'Ad-free: claim a free daily ticket, then spend it here.'
+                              : 'Watch for a ticket, then spend it here.',
                           style: GameTheme.body(
                             size: 12,
                             color: GameTheme.parchmentDim,

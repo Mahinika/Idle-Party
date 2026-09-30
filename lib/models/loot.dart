@@ -299,7 +299,7 @@ class EquipmentItem {
     if (mp5Bonus != 0) parts.add('+$mp5Bonus Mp5');
     if (critChanceBonus != 0) parts.add('+$critChanceBonus% CRIT');
     if (masteryBonus != 0) parts.add('+$masteryBonus Mastery');
-    if (attackSpeedBonus != 0) parts.add('+$attackSpeedBonus% ASPD');
+    if (attackSpeedBonus != 0) parts.add('+$attackSpeedBonus% Haste');
     if (moveSpeedBonus != 0) parts.add('+$moveSpeedBonus% MOVE');
     if (effectLabel.isNotEmpty) parts.add(effectLabel);
     if (setId != null && setId!.isNotEmpty) {

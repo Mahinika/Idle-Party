@@ -40,7 +40,7 @@ abstract final class AchievementCatalog {
     ),
     AchievementDef(
       id: 'first_ascend',
-      title: 'Reborn',
+      title: 'First Ascend',
       description: 'Ascend for the first time.',
       essenceReward: 8,
       category: AchievementCategory.meta,
@@ -376,7 +376,7 @@ abstract final class AchievementCatalog {
     AchievementDef(
       id: 'relic_all',
       title: 'Reliquary',
-      description: 'Unlock all Forge relics.',
+      description: 'Unlock 6 relics (half the relic shelf).',
       essenceReward: 18,
       category: AchievementCategory.meta,
     ),
@@ -397,7 +397,7 @@ abstract final class AchievementCatalog {
     AchievementDef(
       id: 'weekly_clear',
       title: 'Weekender',
-      description: 'Claim a daily vault reward.',
+      description: 'Claim the Daily Vault once.',
       essenceReward: 10,
       category: AchievementCategory.meta,
     ),

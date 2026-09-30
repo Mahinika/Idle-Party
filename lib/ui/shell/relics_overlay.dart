@@ -40,8 +40,8 @@ class RelicsOverlay extends StatelessWidget {
         if (state.unlockedRelics.isEmpty) ...[
           const SizedBox(height: 8),
           Text(
-            'No relics yet. Embers come from bosses, Ascend, and the Daily Vault '
-            '— discover your first relic here.',
+            'No relics yet. Embers from bosses, Ascend, and salvage. '
+            'Cinders from Daily Vault — discover your first relic here.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),

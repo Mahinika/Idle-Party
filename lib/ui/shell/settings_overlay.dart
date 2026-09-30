@@ -336,8 +336,9 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           onChanged: director.setAlwaysShowEnemyHp,
         ),
         Text(
-          'Changes combat damage floaters and bark colors only — not map art. '
-          'Chamber dots already use shape (square / diamond / circle).',
+          'Combat floaters and bark colors shift. Map wash may also shift '
+          'slightly so green caves stay apart from red. Chamber dots already '
+          'use shape (square / diamond / circle).',
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),

@@ -217,8 +217,8 @@ void main() {
   test('swarm / glass / tank tells are unique per zone', () {
     expect(EnemyFlavor.swarmTell('sandy'), 'PILE');
     expect(EnemyFlavor.glassTell('tide'), 'PIERCE');
-    expect(EnemyFlavor.tankHowlTell('king'), 'HOLD');
-    expect(EnemyFlavor.tankFortifyTell('brass'), 'BOLT');
+    expect(EnemyFlavor.tankHowlTell('king'), 'RALLY');
+    expect(EnemyFlavor.tankFortifyTell('brass'), 'SHIELD');
     final swarm = {for (final d in DungeonCatalog.all) EnemyFlavor.swarmTell(d.id)};
     final glass = {for (final d in DungeonCatalog.all) EnemyFlavor.glassTell(d.id)};
     expect(swarm.length, DungeonCatalog.all.length);
@@ -243,13 +243,17 @@ void main() {
     expect(EnemyFlavor.rangedTell('storm'), 'JOLT');
     expect(EnemyFlavor.rangedTell('veil'), 'WEB');
     expect(EnemyFlavor.rangedTell('goblin'), 'HEX');
+    expect(EnemyFlavor.rangedTell('sandy'), 'SLOW');
+    expect(EnemyFlavor.rangedTell('grove'), 'ROOT');
   });
 
   test('support tells are zone-readable, not a raw +heal', () {
     expect(EnemyFlavor.supportTell('grove'), 'GROW');
     expect(EnemyFlavor.supportTell('goblin'), 'TOTEM');
-    expect(EnemyFlavor.supportTell('veil'), 'WEAVE');
+    expect(EnemyFlavor.supportTell('veil'), 'MEND');
     expect(EnemyFlavor.supportTell('sandy'), 'MEND');
+    expect(EnemyFlavor.supportTell('brass'), 'RALLY');
+    expect(EnemyFlavor.supportTell('fen'), 'DRAIN');
   });
 
   test('every zone has unique elite names, not generic Golem', () {
@@ -264,10 +268,14 @@ void main() {
   });
 
   test('boss tells are unique per zone', () {
-    expect(EnemyFlavor.bossTell('brass'), 'WIND-UP');
+    expect(EnemyFlavor.bossTell('brass'), 'CRUSH');
     expect(EnemyFlavor.bossTell('tide'), 'WAVE');
     expect(EnemyFlavor.bossTell('fen'), 'SPIT');
     expect(EnemyFlavor.bossTell('sandy'), 'SLAM');
+    expect(EnemyFlavor.bossTell('goblin'), 'HEAL');
+    expect(EnemyFlavor.bossTell('ember'), 'HEX');
+    expect(EnemyFlavor.bossTell('veil'), 'SLOW');
+    expect(EnemyFlavor.bossTell('underworld'), 'WEAK');
     final tells = {for (final d in DungeonCatalog.all) EnemyFlavor.bossTell(d.id)};
     expect(tells.length, DungeonCatalog.all.length);
     expect(tells.contains('PULSE'), isFalse);
@@ -278,7 +286,7 @@ void main() {
     expect(EnemyFlavor.gauntletTellCycle.toSet().length, 15);
     expect(EnemyFlavor.gauntletBossTell(5), 'SHARD');
     expect(EnemyFlavor.gauntletBossTell(10), 'WAVE');
-    expect(EnemyFlavor.gauntletBossTell(15), 'WIND-UP');
+    expect(EnemyFlavor.gauntletBossTell(15), 'CRUSH');
     expect(EnemyFlavor.gauntletBossTell(10), isNot(EnemyFlavor.gauntletBossTell(5)));
     expect(EnemyFlavor.gauntletBossTell(80), 'SHARD');
   });

@@ -408,7 +408,12 @@ abstract final class EncounterFactory {
     }
     final riftThreat = _riftThreatMul(fromState);
     final dungeon = DungeonCatalog.byId(id);
-    final bossName = dungeon.bossName;
+    final inGauntlet = fromState?.inGauntlet ?? false;
+    final bossName = inGauntlet
+        ? DungeonCatalog.byId(
+            EnemyFlavor.gauntletBossDungeonId(room.floorNumber),
+          ).bossName
+        : dungeon.bossName;
     final zone = dungeon.number;
     final rng = Random(level * 9173 + id.hashCode + room.type.index * 41);
     final isBossRoom = isBossRoomEarly;

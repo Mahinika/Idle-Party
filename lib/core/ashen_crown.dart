@@ -18,7 +18,7 @@ class AshenWeekKit {
   String get title => '$venueName Crown';
 
   String get weekLine =>
-      'This week: $title. Telegraph $telegraph, then SLAM / IGNITE.';
+      'This week: $title. Telegraph $telegraph, then smash after telegraph.';
 }
 
 /// Weekly ticket solo boss **Ashen Crown**.
@@ -43,10 +43,10 @@ abstract final class AshenCrown {
   static const List<AshenWeekKit> weekKits = <AshenWeekKit>[
     AshenWeekKit(dungeonId: 'ember', telegraph: 'CROWN'),
     AshenWeekKit(dungeonId: 'tide', telegraph: 'WAVE'),
-    AshenWeekKit(dungeonId: 'brass', telegraph: 'WIND-UP'),
-    AshenWeekKit(dungeonId: 'goblin', telegraph: 'RALLY'),
+    AshenWeekKit(dungeonId: 'brass', telegraph: 'CRUSH'),
+    AshenWeekKit(dungeonId: 'goblin', telegraph: 'HEAL'),
     AshenWeekKit(dungeonId: 'king', telegraph: 'DECREE'),
-    AshenWeekKit(dungeonId: 'underworld', telegraph: 'BEAM'),
+    AshenWeekKit(dungeonId: 'underworld', telegraph: 'WEAK'),
     AshenWeekKit(dungeonId: 'dead', telegraph: 'FADE'),
     AshenWeekKit(dungeonId: 'hell', telegraph: 'TENTACLE'),
     AshenWeekKit(dungeonId: 'crystal', telegraph: 'SHARD'),
@@ -54,7 +54,7 @@ abstract final class AshenCrown {
     AshenWeekKit(dungeonId: 'storm', telegraph: 'BOLT'),
     AshenWeekKit(dungeonId: 'rime', telegraph: 'FROST'),
     AshenWeekKit(dungeonId: 'fen', telegraph: 'SPIT'),
-    AshenWeekKit(dungeonId: 'veil', telegraph: 'SILK'),
+    AshenWeekKit(dungeonId: 'veil', telegraph: 'SLOW'),
     AshenWeekKit(dungeonId: 'sandy', telegraph: 'BURY'),
   ];
 

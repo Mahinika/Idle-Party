@@ -661,6 +661,9 @@ class _InventoryDockState extends State<InventoryDock>
       if (primary == null || secondary == null) {
         return 'Add one more item of the same slot from BAG.';
       }
+      if (primary.isApex || secondary.isApex) {
+        return 'Apex gear cannot MERGE — upgrade it under MORE → CRAFT.';
+      }
       if (!canCombine) {
         return 'Slots must match — clear one and pick the same gear type.';
       }
@@ -821,7 +824,13 @@ class _InventoryDockState extends State<InventoryDock>
         primary != null &&
         secondary != null &&
         GameLogic.canCombine(primary, secondary);
-    final cost = canCombine ? GameLogic.combineCost(primary, secondary) : 0;
+    final cost = canCombine
+        ? GameLogic.combineCost(
+            primary,
+            secondary,
+            combinatorLuck: state.metaDepth.combinatorLuck,
+          )
+        : 0;
     final preview = canCombine
         ? GameLogic.previewCombine(primary, secondary)
         : null;

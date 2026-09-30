@@ -122,6 +122,10 @@ void main() {
     expect(proc!.tag, 'CAVERN');
     expect(proc.chance, greaterThan(0));
     expect(GearSets.setBonusBlurb(full.equipped), contains('4pc'));
+    expect(GearSets.setBonusBlurb(full.equipped), contains('+6 Sta'));
+    expect(GearSets.setBonusBlurb(full.equipped), contains('+2 Crit'));
+    expect(GearSets.twoPieceBonusText('sandy_plate'), '+3 Sta');
+    expect(GearSets.fourPieceBonusText('sandy_cloth'), contains('+4 SP'));
   });
 
   test('soulbound primaries feed meta attack', () {
@@ -315,6 +319,31 @@ void main() {
     expect(merged.setId, 'sandy_plate');
     expect(merged.name.toLowerCase(), contains('savage'));
     expect(merged.name.toLowerCase(), contains('bear'));
+  });
+
+  test('merge keeps the higher masteryBonus', () {
+    final primary = EquipmentItem(
+      id: 'p_m',
+      name: 'Master Chest',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.rare,
+      armorType: ArmorType.plate,
+      strengthBonus: 4,
+      masteryBonus: 3,
+      itemLevel: 20,
+    );
+    final secondary = EquipmentItem(
+      id: 's_m',
+      name: 'Fuel Chest',
+      slot: EquipmentSlot.chest,
+      rarity: LootRarity.uncommon,
+      armorType: ArmorType.plate,
+      strengthBonus: 2,
+      masteryBonus: 7,
+      itemLevel: 12,
+    );
+    final merged = GameLogic.mergeEquipment(primary, secondary);
+    expect(merged.masteryBonus, 7);
   });
 
   test('merge does not inherit setId from fuel-only secondary', () {

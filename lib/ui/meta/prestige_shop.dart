@@ -21,19 +21,23 @@ class PrestigeShopOverlay extends StatelessWidget {
   static String haveLine(GameState state, String id) {
     final md = state.metaDepth;
     return switch (id) {
-      'stash_slot' => '${md.stashBonusSlots} extra bag slots',
+      'stash_slot' => '${md.stashBonusSlots} extra stash slots',
       'combine_luck' => 'Luck ${md.combinatorLuck}/5',
       'torch_keep' => '+${state.torchOfflineGoldPercent}% hub AFK gold',
       'gh_cdr' =>
         'CD ${state.godHandCooldownSeconds.toStringAsFixed(1)}s · BLESSING',
-      'roster_cap' => 'Roster +${md.petRosterCapBonus}',
+      'roster_cap' => 'PETS roster +${md.petRosterCapBonus}',
       'loadout_slot' =>
         'Legacy purchase (unused extra slots)',
-      'flask_discount' => 'Flasks −${md.marketDiscountLevel * 5}%',
+      'flask_discount' =>
+        'Flasks & bandages −${md.marketDiscountLevel * 5}%',
       'filter_span' => 'Auto-sell iLvl ${GameLogic.maxAutoSellIlvlCap(state)}',
       'offline_ledger' => 'Welcome Back ${3 + md.offlineHighlightBonus} rows',
       'legacy_spark' => 'Legacy ATK +${md.legacyPoints}',
-      'daily_essence' => 'Vault +${GameLogic.dailyVaultClaimEssence(state)}e',
+      'daily_essence' =>
+        'Dawn Tithe Lv${md.dailyEssenceBonusLevel} · '
+        '+${md.dailyEssenceBonusLevel * GameLogic.dawnTitheEssencePerLevel}e '
+        'on vault & Daily Run',
       'gauntlet_gold' => '+${md.gauntletGoldBonusLevel * 4}% Gauntlet gold',
       _ => '',
     };

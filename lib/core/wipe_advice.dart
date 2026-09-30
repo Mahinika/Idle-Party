@@ -91,6 +91,9 @@ abstract final class WipeAdvice {
   /// Short nudge under the wipe advice when the fix lives in hub menus.
   static String? hubHintFor(String adviceLine) {
     if (adviceLine.isEmpty) return null;
+    if (adviceLine.contains('Farm Rift') && adviceLine.contains('ENDGAME')) {
+      return 'HUB → ENDGAME to lower the Farm Rift tier';
+    }
     if (adviceLine.contains('dial down') ||
         adviceLine.contains('may be high')) {
       return 'HUB → KEY to lower the dial';
@@ -119,6 +122,9 @@ abstract final class WipeAdvice {
   /// Menu to open after RETURN when the tip names a hub fix.
   static NavIntent? hubNavFor(String adviceLine) {
     if (adviceLine.isEmpty) return null;
+    if (adviceLine.contains('Farm Rift') && adviceLine.contains('ENDGAME')) {
+      return null;
+    }
     if (adviceLine.contains('dial down') ||
         adviceLine.contains('may be high')) {
       return const NavIntent(route: MenuRoute.key);
@@ -205,6 +211,12 @@ abstract final class WipeAdvice {
   /// One-line FARM/PUSH reminder on the wipe panel (hub INFO has detail).
   static String? modeLineFor(GameState state) {
     if (state.inGauntlet || state.inAnyRiftMode) return null;
+    if (GameLogic.plainPlayerChrome(state)) {
+      if (state.dungeonMode == DungeonMode.farm) {
+        return 'Repeat loops this floor for loot. See INFO.';
+      }
+      return 'Next climbs after each clear. See INFO.';
+    }
     if (state.dungeonMode == DungeonMode.farm) {
       return 'FARM loops this floor for loot. See INFO.';
     }
@@ -220,7 +232,7 @@ abstract final class WipeAdvice {
     }
     return GameLogic.plainPlayerChrome(state)
         ? 'Long-press the fight — steer party + smash'
-        : 'Tap God Hand — steer party + AOE smash';
+        : 'Long-press the fight or tap the fist — steer party + AOE smash';
   }
 
   /// English line for the dungeon wipe panel, or null if we must stay quiet.
@@ -268,7 +280,7 @@ abstract final class WipeAdvice {
     }
     if (state.inRift && fight.leftover >= 0.35) {
       final tier = state.riftTier > 0 ? state.riftTier : state.metaDepth.riftBestTier;
-      return 'Farm Rift R$tier may be high — dial down on KEY';
+      return 'Farm Rift R$tier may be high — dial Farm Rift tier on ENDGAME';
     }
 
     if (state.hardmodeLevel > 0 &&

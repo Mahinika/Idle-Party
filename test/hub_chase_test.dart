@@ -283,7 +283,7 @@ void main() {
     expect(chase.kind, HubChaseKind.clearFloors);
     expect(
       chase.title,
-      contains('Level the party to ${GameLogic.maxHeroLevel}'),
+      contains('Level every hero to ${GameLogic.maxHeroLevel}'),
     );
     expect(chase.urgency, HubChaseUrgency.normal);
     expect(chase.detail.toUpperCase(), contains('KEY'));
@@ -309,7 +309,7 @@ void main() {
       96,
     );
     final chase = HubChase.forState(state, now: now);
-    expect(chase.title, contains('Almost party Lv${GameLogic.maxHeroLevel}'));
+    expect(chase.title, contains('Almost every hero Lv${GameLogic.maxHeroLevel}'));
     expect(chase.urgency, HubChaseUrgency.almost);
     expect(chase.kind, isNot(HubChaseKind.dailyVaultProgress));
   });
@@ -962,7 +962,7 @@ void main() {
         );
         final chase = HubChase.forState(state, now: now);
         expect(chase.kind, HubChaseKind.clearFloors);
-        expect(chase.title.toLowerCase(), contains('level the party'));
+        expect(chase.title.toLowerCase(), contains('level every hero'));
         expect(chase.kind, isNot(HubChaseKind.dailyRun));
         expect(chase.kind, isNot(HubChaseKind.ascend));
       },
@@ -1011,7 +1011,7 @@ void main() {
       );
       final chase = HubChase.forState(state, now: now);
       expect(chase.kind, HubChaseKind.clearFloors);
-      expect(chase.title.toLowerCase(), contains('level the party'));
+      expect(chase.title.toLowerCase(), contains('level every hero'));
       expect(chase.kind, isNot(HubChaseKind.willRank));
     });
 

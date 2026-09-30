@@ -8,7 +8,7 @@ abstract final class StoryLore {
   static const String introTagline = 'Your party fights while you watch.';
 
   static const String introSubline =
-      'Your party keeps fighting offline — gold and progress bank while you are away.';
+      'Hub AFK banks gold and essence while you are away. Leave mid-dungeon and the party keeps fighting offline.';
 
   static const String studioName = 'Cognifox Studio';
 
@@ -81,9 +81,13 @@ abstract final class StoryLore {
     return 'A new gate: ${def.name}.';
   }
 
-  static String dailyRun(String dungeonId, {int floor = 1}) {
+  static String dailyRun(
+    String dungeonId, {
+    int floor = 1,
+    int rewardEssence = 25,
+  }) {
     final def = DungeonCatalog.byId(dungeonId);
-    return "Daily echo — ${def.name} F$floor. Clear 1 floor · +25e";
+    return 'Daily echo — ${def.name} F$floor. Clear 1 floor · +${rewardEssence}e';
   }
 
   static String ascendConfirmBody({
@@ -93,6 +97,7 @@ abstract final class StoryLore {
     int godHandLevel = 0,
     int blessingsAfter = 1,
     bool unlockCombatRogue = false,
+    int emberGain = 0,
   }) {
     final bless =
         'Blessing: +${GameLogic.ascendBlessingAtk} ATK · '
@@ -100,15 +105,22 @@ abstract final class StoryLore {
         '+${GameLogic.ascendBlessingVit} STA · '
         '+${GameLogic.ascendBlessingGoldPct}% gold, forever'
         '${blessingsAfter > 1 ? ' (now ×$blessingsAfter)' : ''}.';
-    final gain = 'You get AL$nextAl and +${rewardEssence}e.\n\n$bless';
+    final emberBit = emberGain > 0 ? ' · +$emberGain Embers' : '';
+    final gain =
+        'You get AL$nextAl and +${rewardEssence}e$emberBit.\n\n$bless';
     final stay =
-        'Party levels, open caves, and worn Apex stay. Gold, other bag gear, GOLD tracks, and floor progress reset.';
+        'Keep: party levels/XP, open caves, essence, relics, pets, soulbound, '
+        'shop buys, tickets, Star Nodes, Apex, God Hand, settings. '
+        'Worn non-Apex becomes starter gear. Gold, bag, GOLD tracks, and floor '
+        'progress reset. Embers stay.';
     final kits = AscendRoadmap.kitUnlockSummary(nextAl, maxNames: 3);
     final String? neu;
     if (unlockCombatRogue) {
       neu = 'New: Combat Rogue joins the roster.';
     } else if (nextAl == 2 && kits != null) {
-      neu = 'New kits: $kits. 5th party slot in ESSENCE.';
+      neu =
+          'New kits: $kits. 5th party slot — buy for '
+          '${GameLogic.partySlot5EssenceCost}e in ESSENCE.';
     } else if (kits != null) {
       neu = 'New kits: $kits.';
     } else {
@@ -140,7 +152,9 @@ abstract final class StoryLore {
   }) {
     assert(godHandLevel >= 0);
     return 'AL stays ${GameLogic.maxAscensionLevel}. Blessing stays ×$blessings.\n\n'
-        'Party levels and open caves stay. Gold, bag, GOLD tracks, and floor progress reset.\n\n'
+        'Keep: party levels/XP, open caves, essence, relics, pets, soulbound, '
+        'shop buys, tickets, Star Nodes, Apex, God Hand, settings. '
+        'Gold, bag, GOLD tracks, and floor progress reset.\n\n'
         'You get +${rewardEssence}e and 1 STAR NODES point.\n\n'
         'Rebuild the bag by looting.';
   }
@@ -153,6 +167,6 @@ abstract final class StoryLore {
 
   static const String loreTipTitle = 'THE ROAD';
   static const String loreTipBody =
-      'More caves wait after this one. Beat bosses to open the road. '
-      'Later you can Ascend — same party, empty bag, stronger Blessing.';
+      'More caves wait after this one. Beat bosses or grow party mean level '
+      'to open the road. Later you can Ascend — same party, empty bag, stronger Blessing.';
 }

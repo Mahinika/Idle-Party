@@ -3801,6 +3801,33 @@ void main() {
     expect(state.sanctuaryDefenseLevel, 1);
     expect(state.effectiveHeroDefense(hero), greaterThan(beforeDef));
   });
+
+  test('MERGE cost applies combinatorLuck the same as the spend path', () {
+    final a = EquipmentItem(
+      id: 'a',
+      name: 'A',
+      slot: EquipmentSlot.ring,
+      rarity: LootRarity.common,
+      attackBonus: 3,
+    );
+    final b = EquipmentItem(
+      id: 'b',
+      name: 'B',
+      slot: EquipmentSlot.ring,
+      rarity: LootRarity.common,
+      attackBonus: 2,
+    );
+    final base = GameLogic.combineCost(a, b);
+    final lucky = GameLogic.combineCost(a, b, combinatorLuck: 3);
+    expect(lucky, base - 9);
+    expect(lucky, greaterThanOrEqualTo(1));
+  });
+
+  test('forge MOVE/HASTE/CRIT gains are 2 points each', () {
+    expect(GameLogic.forgeMoveGain, 2);
+    expect(GameLogic.forgeHasteGain, 2);
+    expect(GameLogic.forgeCritGain, 2);
+  });
 }
 
 GameState _withPartyMaxLevel(GameState state) => state.copyWith(

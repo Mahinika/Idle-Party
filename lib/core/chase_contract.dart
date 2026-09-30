@@ -42,7 +42,10 @@ class ChaseContract {
   String get whyLine {
     if (kind == HubChaseKind.clearFloors) {
       final t = title;
-      if (t.startsWith('Almost party') || t.startsWith('Level the party')) {
+      if (t.startsWith('Almost every hero') ||
+          t.startsWith('Almost party') ||
+          t.startsWith('Level every hero') ||
+          t.startsWith('Level the party')) {
         return 'Why: those levels open the hunts.';
       }
       if (t.startsWith('Rebuild')) return 'Why: re-equip after Ascend.';

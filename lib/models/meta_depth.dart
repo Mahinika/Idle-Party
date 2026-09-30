@@ -56,8 +56,8 @@ abstract final class PrestigeShopCatalog {
     ),
     PrestigeShopItem(
       id: 'roster_cap',
-      name: 'Beast Kennel',
-      description: '+2 pet roster capacity.',
+      name: 'PETS Kennel',
+      description: '+2 PETS roster capacity.',
       cost: 50,
       minAl: 5,
     ),

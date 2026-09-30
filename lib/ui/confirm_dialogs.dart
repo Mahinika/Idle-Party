@@ -4,6 +4,7 @@ import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/ashen_crown.dart';
+import '../core/blessing_constellation.dart';
 import '../core/meta_systems.dart';
 import '../core/rift.dart';
 import '../core/greater_rift.dart';
@@ -61,6 +62,7 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
                 godHandLevel: state.godHandLevel,
                 blessingsAfter: state.metaDepth.ascendBlessings + 1,
                 unlockCombatRogue: state.ascensionLevel == 0,
+                emberGain: 4 + nextAl,
               ),
               style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),
@@ -177,16 +179,18 @@ Future<void> confirmLeaveDungeon(
   String? keyTimer,
 }) async {
   final plain = state != null && GameLogic.plainPlayerChrome(state);
+  const banked =
+      'Banked gear, gold, and essence stay.';
   final String body;
   if (plain) {
     body = floorCleared
-        ? 'Leave to hub now? Floor is clear — banked gear and gold stay. '
+        ? 'Leave to hub now? Floor is clear — $banked '
             'Next enter starts fresh from hub.'
         : 'Leave to hub now? This floor’s fight restarts when you come back. '
-            'Gear and gold you already got stay.';
+            'Gear, gold, and essence you already got stay.';
   } else if (floorCleared) {
     body =
-        'Leave to hub now? Floor is clear (stairs ready) — banked gear and gold stay. '
+        'Leave to hub now? Floor is clear (stairs ready) — $banked '
         'Next enter starts a fresh floor from hub.';
   } else if (keystoneActive) {
     final timerBit = (keyTimer != null && keyTimer.isNotEmpty)
@@ -194,15 +198,15 @@ Future<void> confirmLeaveDungeon(
         : ' KEY timer stops.';
     body =
         'Leave to hub now? KEY run ends —$timerBit '
-        'Chamber progress is lost. Gear and gold already banked stay.';
+        'Chamber progress is lost. $banked';
   } else if (state != null && state.dungeonMode == DungeonMode.farm) {
     body =
         'Leave to hub now? FARM loop on this floor stops — you restart '
-        'from hub (not mid-loop). Gear and gold already banked stay.';
+        'from hub (not mid-loop). $banked';
   } else {
     body =
         'Leave to hub now? This floor’s chamber progress is lost '
-        '(PUSH climb resets from hub). Gear and gold already banked stay.';
+        '(PUSH climb resets from hub). $banked';
   }
   WebClickBridge.pushLayer();
   try {
@@ -372,6 +376,8 @@ Future<void> confirmDailyRun(
   if (director.isDailyClaimedToday) return;
   final dungeonId = director.dailyDungeonId;
   final echoFloor = director.dailyEchoFloor;
+  final rewardE = GameLogic.dailyRunClaimEssence(director.state);
+  final rewardLabel = GameLogic.dailyRunRewardLabel(director.state, plain: true);
   WebClickBridge.pushLayer();
   try {
     final ok = await showDialog<bool>(
@@ -384,12 +390,16 @@ Future<void> confirmDailyRun(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              StoryLore.dailyRun(dungeonId, floor: echoFloor),
+              StoryLore.dailyRun(
+                dungeonId,
+                floor: echoFloor,
+                rewardEssence: rewardE,
+              ),
               style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),
             const SizedBox(height: 8),
             Text(
-              'Reward: +25 essence',
+              'Reward: $rewardLabel',
               style: GameTheme.body(size: 15, color: GameTheme.torchHot),
             ),
             const SizedBox(height: 8),
@@ -453,7 +463,8 @@ Future<void> confirmAshenCrown(
                   '${kit.weekLine}\n\n'
                   'Wipe or leave returns to hub. Learn the fight safely.'
               : 'Weekly ticket boss in ${kit.venueName}. First clear this week pays '
-                  '+${AshenCrown.essenceReward}e.\n\n'
+                  '+${AshenCrown.essenceReward}e, title ${AshenCrown.titleReward}, '
+                  'and +${BlessingConstellation.ashenCrownPointReward} STAR point.\n\n'
                   '${kit.weekLine}\n\n'
                   'Tickets left: $tickets. Wipe or leave before the clear '
                   'returns the ticket. After the paid clear, use PRACTICE '

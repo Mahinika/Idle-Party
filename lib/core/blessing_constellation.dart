@@ -73,6 +73,19 @@ abstract final class BlessingConstellation {
   static bool isLit(GameState state, String id) =>
       state.metaDepth.constellationNodes.contains(id);
 
+  static String effectLabel(String id) => switch (id) {
+        'off_atk' => '+3% ATK',
+        'off_crit' => '+2 crit',
+        'off_boss' => '+4% boss ATK',
+        'def_armor' => '+12 DEF',
+        'def_sta' => '+40 STA',
+        'def_block' => '+5% block',
+        'for_gold' => '+3% gold',
+        'for_loot' => '+5% loot',
+        'for_key' => '+5% KEY par',
+        _ => '',
+      };
+
   static GameState lightNode(GameState state, String id) {
     var next = ensure(state);
     if (!unlocked(next) || isLit(next, id)) return next;

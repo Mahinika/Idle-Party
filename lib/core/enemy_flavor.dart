@@ -134,7 +134,7 @@ abstract final class EnemyFlavor {
   static String gauntletBossTell(int floor) =>
       bossTell(gauntletBossDungeonId(floor));
 
-  /// Trash support tell — same heal, zone-readable label.
+  /// Trash support tell — same heal / totem / drain, zone-readable label.
   static String supportTell(String dungeonId) => switch (dungeonId) {
     'sandy' => 'MEND',
     'goblin' => 'TOTEM',
@@ -144,13 +144,13 @@ abstract final class EnemyFlavor {
     'hell' => 'RITE',
     'crystal' => 'MEND',
     'tide' => 'TIDE',
-    'ember' => 'STIR',
+    'ember' => 'MEND',
     'grove' => 'GROW',
     'storm' => 'MEND',
     'rime' => 'MEND',
-    'fen' => 'OOZE',
-    'brass' => 'OIL',
-    'veil' => 'WEAVE',
+    'fen' => 'DRAIN',
+    'brass' => 'RALLY',
+    'veil' => 'MEND',
     _ => 'MEND',
   };
 
@@ -161,7 +161,7 @@ abstract final class EnemyFlavor {
     'king' => 'HEW',
     'underworld' => 'REND',
     'dead' => 'CRUSH',
-    'hell' => 'SEAR',
+    'hell' => 'SLAM',
     'crystal' => 'SPLIT',
     'tide' => 'SURGE',
     'ember' => 'SLAG',
@@ -180,7 +180,7 @@ abstract final class EnemyFlavor {
     'goblin' => 'MOB',
     'king' => 'RUSH',
     'underworld' => 'SWARM',
-    'dead' => 'RISE',
+    'dead' => 'HEAP',
     'hell' => 'BURST',
     'crystal' => 'SPARK',
     'tide' => 'SURF',
@@ -189,7 +189,7 @@ abstract final class EnemyFlavor {
     'storm' => 'GUST',
     'rime' => 'FLURRY',
     'fen' => 'BOIL',
-    'brass' => 'TICK',
+    'brass' => 'PRESS',
     'veil' => 'FLIT',
     _ => 'SURROUND',
   };
@@ -207,18 +207,18 @@ abstract final class EnemyFlavor {
     'ember' => 'CHAR',
     'grove' => 'THORN',
     'storm' => 'ZAP',
-    'rime' => 'ICE',
+    'rime' => 'SNAP',
     'fen' => 'BITE',
     'brass' => 'SHEAR',
     'veil' => 'SLICE',
     _ => 'EXECUTE',
   };
 
-  /// Elite tank shout while healthy.
+  /// Elite tank shout while healthy — enrages nearby allies.
   static String tankHowlTell(String dungeonId) => switch (dungeonId) {
     'sandy' => 'HISS',
     'goblin' => 'HOWL',
-    'king' => 'HOLD',
+    'king' => 'RALLY',
     'underworld' => 'ROAR',
     'dead' => 'WAIL',
     'hell' => 'BELLOW',
@@ -234,7 +234,7 @@ abstract final class EnemyFlavor {
     _ => 'HOWL',
   };
 
-  /// Tank last-stand shield.
+  /// Tank last-stand shield (bonus HP), zone-readable label.
   static String tankFortifyTell(String dungeonId) => switch (dungeonId) {
     'sandy' => 'SHELL',
     'goblin' => 'BRACE',
@@ -249,7 +249,7 @@ abstract final class EnemyFlavor {
     'storm' => 'BRACE',
     'rime' => 'ICE',
     'fen' => 'MUCK',
-    'brass' => 'BOLT',
+    'brass' => 'SHIELD',
     'veil' => 'COCOON',
     _ => 'FORTIFY',
   };
@@ -270,18 +270,18 @@ abstract final class EnemyFlavor {
     _ => SupportJob.heal,
   };
 
-  /// Trash ranged tell — same slow chip, zone-readable label.
+  /// Trash ranged tell — matches [rangedJob], zone-readable label.
   static String rangedTell(String dungeonId) => switch (dungeonId) {
-    'sandy' => 'SPIT',
+    'sandy' => 'SLOW',
     'goblin' => 'HEX',
-    'king' => 'SLOW',
+    'king' => 'HALT',
     'underworld' => 'CURSE',
-    'dead' => 'WANE',
+    'dead' => 'HEX',
     'hell' => 'HEX',
     'crystal' => 'PING',
     'tide' => 'NET',
-    'ember' => 'CINDER',
-    'grove' => 'SPORE',
+    'ember' => 'SLOW',
+    'grove' => 'ROOT',
     'storm' => 'JOLT',
     'rime' => 'CHILL',
     'fen' => 'MUCK',
@@ -290,23 +290,23 @@ abstract final class EnemyFlavor {
     _ => 'HEX',
   };
 
-  /// Combat floater for that zone's unique boss tell.
+  /// Combat floater for that zone's unique boss tell (matches resolve job).
   static String bossTell(String dungeonId) => switch (dungeonId) {
     'sandy' => 'SLAM',
-    'goblin' => 'RALLY',
+    'goblin' => 'HEAL',
     'king' => 'DECREE',
-    'underworld' => 'BEAM',
+    'underworld' => 'WEAK',
     'dead' => 'MEND',
     'hell' => 'TENTACLE',
     'crystal' => 'SHARD',
     'tide' => 'WAVE',
-    'ember' => 'IGNITE',
+    'ember' => 'HEX',
     'grove' => 'ROOT',
     'storm' => 'BOLT',
     'rime' => 'FROST',
     'fen' => 'SPIT',
-    'brass' => 'WIND-UP',
-    'veil' => 'SILK',
+    'brass' => 'CRUSH',
+    'veil' => 'SLOW',
     _ => 'PULSE',
   };
 

@@ -95,7 +95,11 @@ class _BeastOverlayState extends State<BeastOverlay> {
       PetPassive.healBoost => 'HEAL',
     };
     final v = pet.passiveValue(dungeonId: pet.affinityDungeonId);
-    return '$name${v > 0 ? ' +$v' : ''}';
+    final percent = pet.passive == PetPassive.goldFind ||
+        pet.passive == PetPassive.lootFind ||
+        pet.passive == PetPassive.xpFind;
+    if (v <= 0) return name;
+    return percent ? '$name +$v%' : '$name +$v';
   }
 
   static String _affinityLabel(String dungeonId) {
@@ -119,8 +123,9 @@ class _BeastOverlayState extends State<BeastOverlay> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Favorite species: +1 ATK and a stronger passive while that pet is ACTIVE. '
-          'Bond +1 ATK every 5 ranks. Frames are looks only.',
+          'Favorite while ACTIVE: +1 ATK. Find passives (gold/loot/XP) get a '
+          'stronger %; mitigate and heal bump too. Bond +1 ATK every 5 ranks. '
+          'Frames are looks only.',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -218,7 +223,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                                     '${pet.hasNickname ? '${pet.speciesName}  ' : ''}'
                                     'Lv${pet.level}  ATK +${pet.totalAttackBonus}'
                                     '${passive.isEmpty ? '' : '  $passive'}'
-                                    '  · aff ${_affinityLabel(pet.affinityDungeonId)}'
+                                    '  · affinity ${_affinityLabel(pet.affinityDungeonId)}'
                                     '${pet.bondLevel > 0 ? '  bond${pet.bondLevel}' : ''}',
                                     style: GameTheme.body(
                                       size: 13,

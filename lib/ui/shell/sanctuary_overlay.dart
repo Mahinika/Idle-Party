@@ -103,7 +103,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
             _campTrackCard(state, track, effectiveBuy)
         else
           Text(
-            'War Altar, Life Well, Aegis, and Lore Font appear here once Essence unlocks.',
+            'Gold Find, War Altar, Life Well, Aegis, and Lore Font appear here once Essence unlocks.',
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
         const SizedBox(height: 12),
@@ -146,7 +146,9 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     String? detail;
     if (track == 'gold') {
       final hubDelta = GoldIncome.nextGoldFindDeltaPerMinute(state);
-      detail = 'Next +${hubDelta}g/min hub';
+      detail = 'Next +${hubDelta}g/min hub · also +% combat gold find';
+    } else if (track == 'power') {
+      detail = 'Also raises hub AFK essence rate';
     }
 
     late final Widget trailing;

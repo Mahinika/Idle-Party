@@ -241,7 +241,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              'Boss Rush: elite-heavy pulls · No Flask: healing flasks disabled',
+              'Boss Rush: tougher elite packs (not extra bosses) · No Flask: healing flasks disabled',
               textAlign: TextAlign.center,
               style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
             ),
@@ -255,7 +255,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              'Tiny: run with 3 heroes max — harder, smaller party',
+              'Tiny: 3 heroes max · +2e on clear (not a harder threat)',
               textAlign: TextAlign.center,
               style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
             ),
@@ -273,7 +273,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             ),
           ],
           Text(
-            'Party power ${GameLogic.partyPowerScore(state)}',
+            'Party power ${GameLogic.partyPowerScore(state)} · '
+            'levels, worn gear, Ascend, blessings, Apex, endgame unlock',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.mossLit),
           ),
@@ -323,7 +324,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 if (vaultReady) ...[
                   const SizedBox(height: 6),
                   GameButton(
-                    label: 'CLAIM VAULT  +${vaultE}e',
+                    label: 'CLAIM VAULT  +${vaultE}e · +1 Cinder',
                     onPressed: director.claimDailyVault,
                   ),
                 ],
@@ -343,7 +344,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           const SizedBox(height: 2),
           Text(
             !GameLogic.endgameUnlocked(state)
-                ? 'KEY unlocks when every hero is Lv${GameLogic.maxHeroLevel}, with Gauntlet and Ranked GR.'
+                ? 'KEY unlocks when every hero is Lv${GameLogic.maxHeroLevel}, '
+                    'with Gauntlet, Ranked GR, Farm Rift, Ashen, and Craft Trial.'
                 : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2. Keys keep going past +${Keystone.campaignCap}.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),

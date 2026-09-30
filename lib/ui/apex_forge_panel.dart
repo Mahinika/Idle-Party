@@ -239,7 +239,8 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Tap a hero, pick a slot, then CRAFT. Weapon R1 first. Keeps through Ascend.',
+          'Tap a hero, pick a slot, then CRAFT. Weapon R1 first. Keeps through Ascend. '
+          'DPS roll Crit + Haste; healers Mp5 + Crit + Haste.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),

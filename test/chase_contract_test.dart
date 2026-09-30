@@ -83,11 +83,11 @@ void main() {
     },
   );
 
-  test('almost party Lv100 why is the hunts, not grow-the-party', () {
+  test('almost every hero Lv100 why is the hunts, not grow-the-party', () {
     final contract = ChaseContract(
       chase: const HubChase(
         kind: HubChaseKind.clearFloors,
-        title: 'Almost party Lv100',
+        title: 'Almost every hero Lv100',
         detail: 'Lowest hero Lv97',
       ),
     );

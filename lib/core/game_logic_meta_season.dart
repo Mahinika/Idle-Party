@@ -343,9 +343,7 @@ GameState _claimDailyIfEligible(
   if (day == null) return state;
   if (probe.dungeonId != MetaSystems.dailyDungeonId(day)) return state;
   if (probe.layoutSeed != MetaSystems.dailySeed(day)) return state;
-  final dailyEssenceReward = 25 +
-      state.metaDepth.dailyEssenceBonusLevel *
-          GameLogic.dawnTitheEssencePerLevel;
+  final dailyEssenceReward = GameLogic.dailyRunClaimEssence(state);
   return state.copyWith(
     dailyClaimed: true,
     essence: state.essence + dailyEssenceReward,

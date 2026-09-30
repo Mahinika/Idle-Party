@@ -341,6 +341,10 @@ extension GameDirectorCombatLoop on GameDirector {
           clearLine = essDelta > 0
               ? 'Spire F$floorNo · +${goldDelta}g · +${essDelta}e'
               : 'Spire F$floorNo · +${goldDelta}g';
+        } else if (essDelta > 0) {
+          clearLine = goldDelta > 0
+              ? 'F$floorNo CLEAR · +${goldDelta}g · +${essDelta}e'
+              : 'F$floorNo CLEAR · +${essDelta}e';
         }
         if (leveled) {
           clearLine = '$clearLine · LEVEL UP';

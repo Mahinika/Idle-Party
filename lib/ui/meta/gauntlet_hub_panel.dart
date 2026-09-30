@@ -27,14 +27,14 @@ class GauntletHubPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'INFINITY GAUNTLET · CLIMB',
+          'GAUNTLET · CLIMB',
           style: GameTheme.body(size: 13, color: GameTheme.torchHot),
         ),
         const SizedBox(height: 4),
         Text(
           best <= 0
-              ? 'Boss every 5 floors. Each boss has its own tell.'
-              : 'Best clear F$best. Boss every 5 floors.',
+              ? 'Boss every 5 floors. Crystal Warden — tells cycle each boss.'
+              : 'Best clear F$best. Crystal Warden — tells cycle each boss.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),

@@ -701,6 +701,30 @@ class _PartyRow extends StatelessWidget {
     return ' · $line';
   }
 
+  /// Brief crowd-control chip when the hero is slowed or rooted.
+  String? _ccChipLabel(SpatialActor? s) {
+    if (s == null || !s.isAlive) return null;
+    if (s.rootTimer > 0) return 'ROOT';
+    if (s.attackSlowTimer > 0) return 'SLOW';
+    return null;
+  }
+
+  Widget _ccChip(SpatialActor? s) {
+    final label = _ccChipLabel(s);
+    if (label == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(left: 3),
+      child: Text(
+        label,
+        maxLines: 1,
+        style: GameTheme.pixel(
+          size: GameTheme.hudPixel,
+          color: label == 'ROOT' ? GameTheme.mossLit : GameTheme.torchHot,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final frac = maxHp <= 0 ? 0.0 : (liveHp / maxHp).clamp(0.0, 1.0);
@@ -792,14 +816,21 @@ class _PartyRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(1),
-                    child: LinearProgressIndicator(
-                      value: frac,
-                      minHeight: 2.5,
-                      backgroundColor: GameTheme.hudHpFill,
-                      color: hpColor,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(1),
+                          child: LinearProgressIndicator(
+                            value: frac,
+                            minHeight: 2.5,
+                            backgroundColor: GameTheme.hudHpFill,
+                            color: hpColor,
+                          ),
+                        ),
+                      ),
+                      _ccChip(kitActor),
+                    ],
                   ),
                 ],
               ),
@@ -867,14 +898,21 @@ class _PartyRow extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: phone ? 1 : 2),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(1),
-                      child: LinearProgressIndicator(
-                        value: frac,
-                        minHeight: phone ? 2.5 : (compact ? 3.5 : 4.5),
-                        backgroundColor: GameTheme.hudHpFill,
-                        color: hpColor,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(1),
+                            child: LinearProgressIndicator(
+                              value: frac,
+                              minHeight: phone ? 2.5 : (compact ? 3.5 : 4.5),
+                              backgroundColor: GameTheme.hudHpFill,
+                              color: hpColor,
+                            ),
+                          ),
+                        ),
+                        _ccChip(kitActor),
+                      ],
                     ),
                     const SizedBox(height: 1),
                     if (!inCombat)

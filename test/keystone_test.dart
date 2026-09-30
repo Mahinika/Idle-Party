@@ -183,6 +183,35 @@ void main() {
     );
   });
 
+  test('Daily Run reward includes Dawn Tithe', () {
+    final base = GameLogic.createInitialState();
+    expect(GameLogic.dailyRunClaimEssence(base), 25);
+    expect(GameLogic.dailyRunRewardLabel(base), '+25e');
+    final tithed = base.copyWith(
+      metaDepth: base.metaDepth.copyWith(dailyEssenceBonusLevel: 2),
+    );
+    expect(GameLogic.dailyRunClaimEssence(tithed), 35);
+    expect(GameLogic.dailyRunRewardLabel(tithed), '+35e');
+  });
+
+  test('CLAIM VAULT also grants one Cinder', () {
+    final now = DateTime.utc(2026, 8, 9, 12);
+    final day = MetaSystems.dailyDateKey(now);
+    final month = GameLogic.isoMonthKey(now);
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      metaDepth: MetaDepthState(
+        dailyVaultDate: day,
+        dailyVaultClears: 1,
+        dailyBestTimedKey: 0,
+        dailyVaultClaimed: false,
+        cinders: 0,
+        claimedSeasonRewards: [month],
+      ),
+    );
+    final claimed = GameLogic.claimDailyVault(state, now: now);
+    expect(claimed.metaDepth.cinders, 1);
+  });
+
   test('CLAIM VAULT preview includes unclaimed season bonus', () {
     final now = DateTime.utc(2026, 8, 9, 12);
     final day = MetaSystems.dailyDateKey(now);

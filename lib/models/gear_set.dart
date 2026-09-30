@@ -195,6 +195,15 @@ abstract final class GearSets {
     return (chance: 0.10, damageMul: 1.35, tag: tag, argb: argb);
   }
 
+  /// Honest 2pc line for tooltips (Sta or Spi).
+  static String twoPieceBonusText(String setId) =>
+      isClothSet(setId) ? '+3 Spi' : '+3 Sta';
+
+  /// Honest 4pc line for tooltips (Sta/Crit or Spi/SP + set proc).
+  static String fourPieceBonusText(String setId) => isClothSet(setId)
+      ? '+6 Spi · +4 SP · 10% set proc on auto'
+      : '+6 Sta · +2 Crit · 10% set proc on auto';
+
   /// Short UI blurb for the dominant worn set.
   static String? setBonusBlurb(Map<EquipmentSlot, EquipmentItem> equipped) {
     final id = primarySetId(equipped);
@@ -203,9 +212,9 @@ abstract final class GearSets {
     if (n < 2) return null;
     final name = displayName(id);
     if (n >= 4) {
-      return '$name 4pc · +stats · 10% set proc on auto';
+      return '$name 4pc · ${fourPieceBonusText(id)}';
     }
-    return '$name 2pc · +stats';
+    return '$name 2pc · ${twoPieceBonusText(id)}';
   }
 
   /// Legacy hook — upgrade path no longer adds flat set points (GEAR_BUDGET).

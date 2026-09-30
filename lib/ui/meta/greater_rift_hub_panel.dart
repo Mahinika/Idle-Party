@@ -17,7 +17,7 @@ class GreaterRiftHubPanel extends StatelessWidget {
     final state = director.state;
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
-        'GREATER RIFT unlocks when every hero is Lv${GameLogic.maxHeroLevel} — '
+        'Ranked GR unlocks when every hero is Lv${GameLogic.maxHeroLevel} — '
         'ranked Mothveil progress + Guardian under the timer (no mid-run gear).',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -28,7 +28,7 @@ class GreaterRiftHubPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'GREATER RIFT · RANKED',
+          'Ranked GR',
           style: GameTheme.body(size: 13, color: GameTheme.torchHot),
         ),
         const SizedBox(height: 4),

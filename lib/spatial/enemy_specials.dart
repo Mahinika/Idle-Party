@@ -1090,7 +1090,7 @@ void _bossPulseLike(
   }
 }
 
-/// Ashen Crown — telegraph slam + IGNITE chip (not generic ember boss only).
+/// Ashen Crown — telegraph, then SLAM smash or focus SLOW (not a burn).
 void _tickAshenBossKit(
   SpatialWorld world,
   SpatialActor enemy,
@@ -1154,7 +1154,7 @@ void _tickAshenBossKit(
   _bossTell(
     world,
     enemy,
-    text: 'IGNITE',
+    text: 'SLOW',
     argb: 0xFFFF7030,
     radius: 1.0,
     reducedVfx: reducedVfx,

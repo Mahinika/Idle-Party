@@ -39,6 +39,8 @@ void main() {
   test('intro sells offline party progress, not another game', () {
     expect(StoryLore.introTagline.toLowerCase(), contains('party'));
     expect(StoryLore.introSubline.toLowerCase(), contains('offline'));
+    expect(StoryLore.introSubline.toLowerCase(), contains('hub afk'));
+    expect(StoryLore.introSubline.toLowerCase(), contains('essence'));
     expect(StoryLore.introSubline.toLowerCase(), isNot(contains('no other game')));
     final intro = StoryLore.introBeats.map((b) => '${b.title} ${b.body}').join(' ');
     expect(intro.toLowerCase(), isNot(contains('fifteen')));

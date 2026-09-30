@@ -190,6 +190,13 @@ void main() {
     expect(blurb.toLowerCase(), contains('stamina'));
   });
 
+  test('priorityBlurb includes Mastery when scored for DPS', () {
+    final blurb = EquipStatWeights.priorityBlurb(
+      HeroSpecs.def(HeroSpecId.arms),
+    );
+    expect(blurb, contains('Mastery'));
+  });
+
   test('Arms: equal-stat plate and cloth score the same (budget honesty)', () {
     final arms = hero(HeroSpecId.arms);
     final plate = item(str: 8, sta: 4, armorType: ArmorType.plate);

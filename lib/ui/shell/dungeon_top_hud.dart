@@ -420,7 +420,7 @@ class DungeonTopHud extends StatelessWidget {
         final extra = anomaly != null
             ? '\n${GauntletAnomalies.oneLiner(anomaly)}'
             : treasure
-            ? '\nTreasure floor — no anomaly this landing.'
+            ? '\nTreasure floor (every 6th) — no anomaly this landing.'
             : '';
         final nextBit = nextAnom != null ? ' Next anomaly F$nextAnom.' : '';
         final pbBit = pb > 0 ? ' PB F$pb.' : '';

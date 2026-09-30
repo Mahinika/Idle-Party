@@ -113,9 +113,12 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
         '+${GameLogic.forgeDefenseGain} DEF next',
       PartyUpgradeType.vitality =>
         '+${GameLogic.forgeVitalityGain} STA next',
-      PartyUpgradeType.moveSpeed => '+5% MOVE next',
-      PartyUpgradeType.attackSpeed => '+5% HASTE next',
-      PartyUpgradeType.crit => '+5% CRIT next',
+      PartyUpgradeType.moveSpeed =>
+        '+${GameLogic.forgeMoveGain}% MOVE next',
+      PartyUpgradeType.attackSpeed =>
+        '+${GameLogic.forgeHasteGain}% HASTE next',
+      PartyUpgradeType.crit =>
+        '+${GameLogic.forgeCritGain}% CRIT next',
       PartyUpgradeType.mastery => '+1 MASTERY next',
     };
   }

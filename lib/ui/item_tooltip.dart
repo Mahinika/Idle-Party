@@ -56,11 +56,12 @@ class ItemTooltipCard extends StatelessWidget {
     final slotLabel =
         CharacterEquipPanel.slotLabels[item.slot] ?? item.slot.name;
     final type = _typeLine(item);
-    final binding = item.isApex
+    // No BoE bind system — only special keep-gear gets a binding line.
+    final String? binding = item.isApex
         ? 'Apex · survives Ascend'
         : item.id.startsWith('soulbound_')
         ? 'Heirloom (legacy)'
-        : 'Binds when equipped';
+        : null;
 
     EquipmentItem? worn;
     var intoSlot = item.slot;
@@ -126,9 +127,12 @@ class ItemTooltipCard extends StatelessWidget {
           : GearSets.wornCount(hero!.equipped, setId);
       final name = GearSets.displayName(setId);
       setHeader = '$name ($wornCount/4)';
-      setLines.add((text: '2 piece: +stats', active: wornCount >= 2));
       setLines.add((
-        text: '4 piece: +stats · 10% set proc on auto',
+        text: '2 piece: ${GearSets.twoPieceBonusText(setId)}',
+        active: wornCount >= 2,
+      ));
+      setLines.add((
+        text: '4 piece: ${GearSets.fourPieceBonusText(setId)}',
         active: wornCount >= 4,
       ));
     }
@@ -177,10 +181,11 @@ class ItemTooltipCard extends StatelessWidget {
                   delta: comparing ? ilvlDelta : null,
                   emphasizeDelta: true,
                 ),
-                Text(
-                  binding,
-                  style: GameTheme.body(size: 12, color: GameTheme.parchment),
-                ),
+                if (binding != null)
+                  Text(
+                    binding,
+                    style: GameTheme.body(size: 12, color: GameTheme.parchment),
+                  ),
                 if (item.isApex)
                   Text(
                     'Apex Rank ${item.apexRank}'

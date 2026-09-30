@@ -19,6 +19,7 @@ abstract final class GreaterRift {
   /// Practical endless bound (save / Play encode / overflow).
   static const int maxTier = kEndlessLadderBound;
   static const int minTier = 1;
+  /// Legacy AL field — Ranked GR unlock is party-max-level endgame, not AL20.
   static const int minAscension = 20;
   /// Zone art — Mothveil (prestige; not Crystal Spire Gauntlet / Stormwake farm).
   static const String dungeonId = 'veil';

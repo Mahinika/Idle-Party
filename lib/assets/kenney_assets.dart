@@ -505,7 +505,7 @@ abstract final class KenneyAssets {
       // Catalog bosses — must match enemySpriteForRole(boss, dungeonId:).
       'earth kraken' => enemyBossSandy,
       'hobgoblin lord' => enemyBossGoblin,
-      'corrupt king' => enemyBoss,
+      'corrupt king' => CustomAssets.enemyBossKing,
       'beholder' => enemyBossUnderworld,
       'the no-one' => enemyBossDead,
       'cthulhu' || 'chtulu' => enemyHellBoss,

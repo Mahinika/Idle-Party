@@ -41,6 +41,17 @@ class BossTellDef {
 /// Numbers copied from the old per-cave resolve switch.
 abstract final class BossTells {
   static const Map<String, BossTellDef> byDungeon = {
+    /// Brass Mainspring — radius crush (was default SLAM after WIND-UP).
+    'brass': BossTellDef(
+      shape: BossTellShape.radius,
+      radius: 2.8,
+      atkMul: 0.8,
+      cdLive: 8,
+      cdAfk: 9,
+      argb: 0xFFFFB040,
+      ringRadius: 1.5,
+      scaleCooldown: true,
+    ),
     'veil': BossTellDef(
       shape: BossTellShape.radius,
       radius: 3.6,

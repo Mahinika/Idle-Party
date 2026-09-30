@@ -685,7 +685,7 @@ class GameLogic {
     final prestBonus = prestige * sanctuaryPrestigeKeepAmount(track);
     final total = soft + prestBonus;
     final unit = switch (track) {
-      'gold' => '% gold find',
+      'gold' => '% gold find (hub + combat)',
       'power' => ' ATK',
       'vitality' => ' STA',
       'defense' => ' DEF',
@@ -1898,6 +1898,20 @@ class GameLogic {
   /// Extra vault / Daily Run essence per Dawn Tithe shop level.
   static const int dawnTitheEssencePerLevel = 5;
 
+  /// Daily Run clear base essence before Dawn Tithe.
+  static const int dailyRunBaseEssence = 25;
+
+  /// Daily Run claim payout (base + Dawn Tithe). Matches [_claimDailyIfEligible].
+  static int dailyRunClaimEssence(GameState state) =>
+      dailyRunBaseEssence +
+      state.metaDepth.dailyEssenceBonusLevel * dawnTitheEssencePerLevel;
+
+  /// Player-facing Daily Run reward (`+25e` or `+30e` with Dawn Tithe).
+  static String dailyRunRewardLabel(GameState state, {bool plain = false}) {
+    final e = dailyRunClaimEssence(state);
+    return plain ? '+$e essence' : '+${e}e';
+  }
+
   /// Daily vault claim payout (timed-key table + Dawn Tithe).
   static int dailyVaultClaimEssence(GameState state) =>
       _dailyVaultClaimEssence(state);
@@ -2236,6 +2250,9 @@ class GameLogic {
           preLeave,
           BlessingConstellation.apexTrialPointReward,
         );
+        LogicNotices.addMetaPayoffs(const [
+          'Craft Trial · +20e · +1 STAR point',
+        ]);
       }
       final def = DungeonCatalog.byId(preLeave.dungeonId);
       var progressed = preLeave.copyWith(
@@ -3470,8 +3487,8 @@ class OfflineProgressResult {
       }
       if (roomsCleared > 0) {
         return roomsCleared == 1
-            ? 'Your party cleared a room while you were away.'
-            : 'Your party cleared $roomsCleared rooms while you were away.';
+            ? 'Your party cleared a floor while you were away.'
+            : 'Your party cleared $roomsCleared floors while you were away.';
       }
       if (gearFinds > 0) {
         return gearFinds == 1
@@ -3512,7 +3529,7 @@ class OfflineProgressResult {
       ranked.add((3, 'Floor progress', '+$highestFloorDelta'));
     }
     if (roomsCleared > 0) {
-      ranked.add((4, 'Rooms cleared', '$roomsCleared'));
+      ranked.add((4, 'Floors cleared', '$roomsCleared'));
     }
     if (essenceGained > 0) {
       ranked.add((5, 'Essence earned', '+$essenceGained'));

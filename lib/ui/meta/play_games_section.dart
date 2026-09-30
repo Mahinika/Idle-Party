@@ -325,7 +325,8 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         if (kind == PlayBoardKind.partyPower) ...[
           const SizedBox(height: 4),
           Text(
-            'Level, worn gear, Ascend, and blessings.',
+            'Levels, worn gear, Ascend, blessings, Apex vault/worn, '
+            'and an endgame unlock bonus.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         ],
@@ -383,6 +384,15 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
               : 'A new record sends itself while you are signed in. Cloud save: SETTINGS.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
+        if (!preview &&
+            kind != PlayBoardKind.partyPower &&
+            PlayLeaderboardIds.reusedBoardNotice(month) != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            PlayLeaderboardIds.reusedBoardNotice(month)!,
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          ),
+        ],
       ],
     );
   }
@@ -489,7 +499,8 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
         const SizedBox(height: 4),
         Text(
           GameLogic.showKeystoneJargon(widget.director.state)
-              ? 'Season $month · cloud backup. Boards: KEY.'
+              ? 'Season $month · cloud backup. Boards: KEY, Gauntlet, Ranked GR '
+                  '(Sep/Oct may share Console board IDs).'
               : 'Season $month · cloud backup.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),

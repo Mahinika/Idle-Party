@@ -282,7 +282,7 @@ class ClassProficiency {
         if (armor == ArmorType.mail &&
             spec?.classId == HeroClassId.hunter &&
             level < 40) {
-          return 'Requires Mail (40+)';
+          return 'Too early for mail until 40';
         }
         return '$label cannot equip ${armor.name}';
       }

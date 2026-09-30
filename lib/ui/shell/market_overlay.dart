@@ -77,6 +77,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
           label: state.gold >= flaskCost
               ? 'BUY FLASK · ${flaskCost}g'
               : 'FLASK · NEED ${flaskCost}g',
+          tip: 'Heals the whole party when HP is low (auto in AFK).',
           dense: true,
           onPressed:
               state.gold >= flaskCost ? director.buyMarketFlask : null,
@@ -84,6 +85,10 @@ class _MarketOverlayState extends State<MarketOverlay> {
         const SizedBox(height: 6),
         Text(
           _marketHealCount(state),
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+        Text(
+          'Flask: party heal · Bandage: one hero most hurt',
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
@@ -103,6 +108,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
             Expanded(
               child: GameButton(
                 label: 'BANDAGE · ${bandageCost}g',
+                tip: 'Heals the one hero who needs it most.',
                 style: GameButtonStyle.grey,
                 dense: true,
                 onPressed: state.gold >= bandageCost
@@ -188,12 +194,17 @@ class _MarketOverlayState extends State<MarketOverlay> {
     final item = listing.item;
     final upgradeHero = _upgradeHeroName(state, listing);
     final isUpgrade = upgradeHero != null;
+    final isGapFill =
+        !isUpgrade && MarketListingsService.isGapFillListing(state, listing);
     final wornCompare = _wornCompareLine(state, listing);
     final canBuy = state.gold >= listing.priceGold;
+    final showUpgradeBadge = isUpgrade && canBuy;
     final subtitle = isUpgrade
         ? (wornCompare != null
               ? '$upgradeHero · $wornCompare'
               : '$upgradeHero · upgrade')
+        : isGapFill
+        ? 'GAP FILL · ${_slotLabel(listing.slot)} · iLvl ${item.effectiveItemLevel}'
         : '${_slotLabel(listing.slot)} · iLvl ${item.effectiveItemLevel}';
 
     return Padding(
@@ -209,7 +220,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
           decoration: MenuChrome.listCard(
-            selected: isUpgrade,
+            selected: showUpgradeBadge || isGapFill,
             borderColor: rarityBorderColor(item.rarity).withValues(alpha: 0.85),
           ),
           child: Row(
@@ -222,12 +233,21 @@ class _MarketOverlayState extends State<MarketOverlay> {
                   children: [
                     Row(
                       children: [
-                        if (isUpgrade) ...[
+                        if (showUpgradeBadge) ...[
                           Text(
                             'UPGRADE',
                             style: GameTheme.pixel(
                               size: 6,
                               color: GameTheme.mossLit,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ] else if (isGapFill) ...[
+                          Text(
+                            'GAP FILL',
+                            style: GameTheme.pixel(
+                              size: 6,
+                              color: GameTheme.torchHot,
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -251,7 +271,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
                       subtitle,
                       style: GameTheme.body(
                         size: 11,
-                        color: isUpgrade
+                        color: showUpgradeBadge
                             ? GameTheme.mossLit
                             : GameTheme.parchmentDim,
                       ),
@@ -268,7 +288,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
                     : 'Need ${formatCount(listing.priceGold)}g',
                 style: GameTheme.body(
                   size: 13,
-                  color: canBuy && isUpgrade
+                  color: canBuy && showUpgradeBadge
                       ? GameTheme.torchHot
                       : GameTheme.parchmentDim,
                 ),

@@ -446,6 +446,7 @@ abstract final class GearCleanup {
       attackSpeedBonus:
           primary.attackSpeedBonus + ((secondary.attackSpeedBonus * 50) ~/ 100),
       moveSpeedBonus: 0,
+      masteryBonus: max(primary.masteryBonus, secondary.masteryBonus),
       pattern: pattern,
       effectId: effectId,
       effectValue: effectValue,

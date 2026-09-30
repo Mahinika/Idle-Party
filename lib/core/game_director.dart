@@ -1341,8 +1341,8 @@ class GameDirector extends ChangeNotifier {
       GameAudio.uiTab();
       showToast(
         _state.dungeonMode == DungeonMode.farm
-            ? 'FARM — loop this floor for loot'
-            : 'PUSH — clear to advance deeper',
+            ? 'FARM — loop this floor for loot · 0 essence'
+            : 'PUSH — clear to advance · +1e clear · +2e boss',
         life: 2.2,
       );
     }
@@ -1353,7 +1353,9 @@ class GameDirector extends ChangeNotifier {
       showToast(
         _state.inGauntlet
             ? 'Gauntlet — no floor jump (endless climb; wipe/leave → hub)'
-            : 'Rift — no floor jump (timer run; leave → hub)',
+            : _state.inGreaterRift
+            ? 'Ranked GR — no floor jump (timer run; leave → hub)'
+            : 'Farm Rift — no floor jump (kill-quota run; leave → hub)',
         life: 2.0,
       );
       return;
@@ -1684,7 +1686,7 @@ class GameDirector extends ChangeNotifier {
       showToast(
         _state.inDungeon
             ? 'Leave the dungeon first'
-            : 'Craft Trial needs party Lv${GameLogic.maxHeroLevel}',
+            : 'Craft Trial needs every hero Lv${GameLogic.maxHeroLevel}',
         life: 2.6,
       );
       return;
@@ -1697,7 +1699,11 @@ class GameDirector extends ChangeNotifier {
     }
     _state = GameLogic.startApexTrial(_state);
     notifyListeners();
-    showToast('Craft Trial — non-Apex gear ignored', life: 2.6);
+    showToast(
+      'Craft Trial — every hero Lv${GameLogic.maxHeroLevel} · '
+      'non-Apex gear ignored',
+      life: 2.6,
+    );
   }
 
   void lightConstellationNode(String id) {

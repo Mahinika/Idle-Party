@@ -16,27 +16,61 @@ void main() {
   test('intro and ascend copy stay short and present', () {
     expect(StoryLore.introTagline, contains('party'));
     expect(StoryLore.introSubline.toLowerCase(), contains('offline'));
+    expect(StoryLore.introSubline.toLowerCase(), contains('hub afk'));
+    expect(StoryLore.introSubline.toLowerCase(), contains('essence'));
+    expect(StoryLore.introSubline.toLowerCase(), contains('mid-dungeon'));
     expect(StoryLore.introBeats.first.body.toLowerCase(), contains('help'));
     expect(StoryLore.studioName, 'Cognifox Studio');
     expect(StoryLore.introBeats, hasLength(1));
     expect(StoryLore.introBeats.first.title, 'IDLE PARTY');
     expect(StoryLore.introBeats.first.body.toLowerCase(), contains('fight'));
     expect(StoryLore.introBeats.first.body.toLowerCase(), isNot(contains('boss')));
+    expect(StoryLore.loreTipBody.toLowerCase(), contains('party mean level'));
     final body = StoryLore.ascendConfirmBody(
       rewardEssence: 7,
       nextAl: 1,
       milestoneBonus: 2,
       godHandLevel: 3,
+      emberGain: 5,
     );
     expect(body, contains('+7e'));
     expect(body, contains('AL1'));
     expect(body, contains('+5 ATK'));
     expect(body, contains('forever'));
-    expect(body, contains('caves stay'));
+    expect(body, contains('starter'));
+    expect(body, contains('Keep:'));
+    expect(body, contains('essence'));
+    expect(body, contains('relics'));
+    expect(body, contains('pets'));
+    expect(body, contains('soulbound'));
+    expect(body, contains('Apex'));
+    expect(body, contains('Embers stay'));
+    expect(body, contains('+5 Embers'));
     expect(body, contains('GOLD tracks'));
     expect(body, contains('floor progress'));
     expect(body, isNot(contains('AL power')));
-    expect(body.length, lessThan(520));
+    expect(body.length, lessThan(720));
+  });
+
+  test('Daily Run lore uses the actual reward essence', () {
+    expect(
+      StoryLore.dailyRun('sandy', floor: 3, rewardEssence: 30),
+      contains('+30e'),
+    );
+    expect(
+      StoryLore.dailyRun('sandy', floor: 3, rewardEssence: 30),
+      isNot(contains('+25e')),
+    );
+  });
+
+  test('AL2 Ascend confirm names the 80e ESSENCE 5th slot', () {
+    final body = StoryLore.ascendConfirmBody(
+      rewardEssence: 12,
+      nextAl: 2,
+      unlockCombatRogue: false,
+    );
+    expect(body, contains('80e'));
+    expect(body, contains('ESSENCE'));
   });
 
   test('reborn confirm matches prestige wipe without extra Blessing', () {
@@ -50,6 +84,8 @@ void main() {
     expect(body, contains('+64e'));
     expect(body, contains('STAR NODES'));
     expect(body, contains('floor progress'));
+    expect(body, contains('relics'));
+    expect(body, contains('pets'));
     expect(body.toLowerCase(), contains('rebuild'));
     expect(body, isNot(contains('Keep: hero')));
   });
