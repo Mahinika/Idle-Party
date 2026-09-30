@@ -357,7 +357,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
       specId: HeroSpecId.frostMage,
       name: 'Frost Armor',
       shortLabel: 'FArmor',
-      description: 'Always on: chill defense.',
+      description: 'Always on: chill defense + harder hits.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: true,

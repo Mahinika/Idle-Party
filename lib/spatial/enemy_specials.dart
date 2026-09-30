@@ -4,6 +4,7 @@ import '../core/ashen_crown.dart';
 import '../core/boss_tells.dart';
 import '../core/enemy_flavor.dart';
 import '../core/gauntlet_anomaly.dart';
+import '../core/keystone.dart';
 import '../models/enemy.dart';
 import 'spatial_combat.dart';
 
@@ -52,59 +53,47 @@ void showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
   if (leader == null) return;
   final x = leader.x;
   final y = leader.y - 0.8;
-  if (world.gauntletAnomaly != null) {
+  var row = 0.0;
+  void banner(String text, int argb, {double life = 1.1}) {
     SpatialCombat.spawnFloater(
       world,
       x: x,
-      y: y - 0.35,
-      text: GauntletAnomalies.chip(world.gauntletAnomaly!),
-      argb: 0xFFE8D090,
-      life: 1.15,
+      y: y - row,
+      text: text,
+      argb: argb,
+      life: life,
       priority: 2,
     );
+    row += 0.35;
+  }
+
+  if (world.gauntletAnomaly != null) {
+    banner(GauntletAnomalies.chip(world.gauntletAnomaly!), 0xFFE8D090, life: 1.15);
+  }
+  // Fortified = tougher trash packs (HP/damage), not armor.
+  if (_worldHasAffix(world, 'fortified')) {
+    banner('TOUGHER PACKS', 0xFF80C0FF);
   }
   if (_worldHasAffix(world, 'swarm')) {
-    SpatialCombat.spawnFloater(
-      world,
-      x: x,
-      y: y,
-      text: 'SWARM',
-      argb: 0xFFFFA040,
-      life: 1.1,
-      priority: 2,
-    );
-  }
-  if (_worldHasAffix(world, 'fortified')) {
-    SpatialCombat.spawnFloater(
-      world,
-      x: x,
-      y: y - 0.35,
-      text: 'FORTIFIED',
-      argb: 0xFF80C0FF,
-      life: 1.1,
-      priority: 2,
-    );
+    banner('SWARM', 0xFFFFA040);
   }
   if (_worldHasAffix(world, 'tyrannical') && !reducedVfx) {
-    SpatialCombat.spawnFloater(
-      world,
-      x: x,
-      y: y - 0.7,
-      text: 'TYRANNICAL',
-      argb: 0xFFFF6060,
-      life: 1.0,
-      priority: 2,
-    );
+    banner('TYRANNICAL', 0xFFFF6060, life: 1.0);
   }
-  if (world.keystoneWeekDungeonId.isNotEmpty) {
-    SpatialCombat.spawnFloater(
-      world,
-      x: x,
-      y: y - 1.05,
-      text: EnemyFlavor.bossTell(world.keystoneWeekDungeonId),
-      argb: 0xFFE8D090,
+  // Remaining KEY affixes — brief chip each (skip ones already shouted).
+  const shouted = {'fortified', 'swarm', 'tyrannical'};
+  for (final affix in world.keystoneRunAffixes) {
+    if (shouted.contains(affix)) continue;
+    if (reducedVfx && affix != 'glass' && affix != 'no_flask') continue;
+    banner(Keystone.label(affix).toUpperCase(), 0xFFC0D0E8, life: 1.0);
+  }
+  // Week cave tell once on the boss floor — not every trash floor.
+  final bossFloor = world.enemies.any((e) => e.role == EnemyRole.boss);
+  if (bossFloor && world.keystoneWeekDungeonId.isNotEmpty) {
+    banner(
+      EnemyFlavor.bossTell(world.keystoneWeekDungeonId),
+      0xFFE8D090,
       life: 1.2,
-      priority: 2,
     );
   }
 }
@@ -1090,7 +1079,7 @@ void _bossPulseLike(
   }
 }
 
-/// Ashen Crown — telegraph, then SLAM smash or focus SLOW (not a burn).
+/// Ashen Crown — week telegraph, then smash (same word) or focus slow.
 void _tickAshenBossKit(
   SpatialWorld world,
   SpatialActor enemy,
@@ -1099,6 +1088,8 @@ void _tickAshenBossKit(
   required bool reducedVfx,
 }) {
   if (enemy.telegraphTimer > 0) return;
+
+  final kit = AshenCrown.kitByDungeonId(world.dungeonId);
 
   if (enemy.telegraphSlam) {
     enemy.telegraphSlam = false;
@@ -1111,10 +1102,11 @@ void _tickAshenBossKit(
       reducedVfx: reducedVfx,
     );
     enemy.specialCd = _bossCooldownSec(world, world.afkAssist ? 6.5 : 5.5);
+    // Re-shout the week telegraph (PATH bosses re-show their tell) — not SLAM.
     _bossTell(
       world,
       enemy,
-      text: 'SLAM',
+      text: kit.telegraph,
       argb: 0xFFFFB040,
       radius: 1.6,
       reducedVfx: reducedVfx,
@@ -1132,7 +1124,7 @@ void _tickAshenBossKit(
     _bossTell(
       world,
       enemy,
-      text: AshenCrown.kitByDungeonId(world.dungeonId).telegraph,
+      text: kit.telegraph,
       argb: 0xFFFF9040,
       radius: 1.35,
       reducedVfx: reducedVfx,
@@ -1151,6 +1143,7 @@ void _tickAshenBossKit(
   );
   focus.attackSlowTimer = math.max(focus.attackSlowTimer, 3.5);
   enemy.specialCd = _bossCooldownSec(world, world.afkAssist ? 7.5 : 6.5);
+  // Focus chip always slows — shout the honest CC word.
   _bossTell(
     world,
     enemy,

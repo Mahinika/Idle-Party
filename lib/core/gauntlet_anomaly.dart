@@ -33,7 +33,7 @@ abstract final class GauntletAnomalies {
     GauntletAnomaly.swarmUprising =>
       'More enemies gather — expect heavy swarms.',
     GauntletAnomaly.bossEcho =>
-      'A fragment of a past boss tell echoes here.',
+      'A borrowed boss tell echoes on this floor.',
     GauntletAnomaly.gateGauntlet =>
       'Sealed chambers — clear each gate to push.',
   };

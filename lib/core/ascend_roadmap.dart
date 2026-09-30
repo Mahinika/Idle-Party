@@ -68,7 +68,7 @@ abstract final class AscendRoadmap {
     if (al == GameLogic.maxAscensionLevel) {
       final kits = kitUnlockSummary(al);
       final cap =
-          'Ascension cap · level every hero to ${GameLogic.maxHeroLevel} for KEY / Gauntlet / Rifts';
+          'Ascension cap · level every active hero to ${GameLogic.maxHeroLevel} for KEY / Gauntlet / Rifts';
       return kits == null ? cap : '$kits · $cap';
     }
 
@@ -92,7 +92,7 @@ abstract final class AscendRoadmap {
   /// Next meaningful goal from the player’s **current** AL (before Ascend).
   static String nextGoalLine(int currentAl) {
     if (currentAl >= GameLogic.maxAscensionLevel) {
-      return 'Endgame when every hero is Lv${GameLogic.maxHeroLevel}: '
+      return 'Endgame when every active hero is Lv${GameLogic.maxHeroLevel}: '
           'endless KEY / Ranked GR, Gauntlet, Rifts, Ashen, boards';
     }
     for (var al = currentAl + 1; al <= GameLogic.maxAscensionLevel; al++) {
@@ -116,7 +116,7 @@ abstract final class AscendRoadmap {
   /// Compact teaser for TODAY / hub chase detail.
   static String chaseTeaser(int currentAl) {
     if (currentAl >= GameLogic.maxAscensionLevel) {
-      return 'Every hero Lv${GameLogic.maxHeroLevel} · KEY · Gauntlet · Rifts · Ashen · boards';
+      return 'Every active hero Lv${GameLogic.maxHeroLevel} · KEY · Gauntlet · Rifts · Ashen · boards';
     }
     for (var al = currentAl + 1; al <= GameLogic.maxAscensionLevel; al++) {
       final unlock = unlockAtAl(al);

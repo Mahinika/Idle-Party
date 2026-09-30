@@ -123,9 +123,10 @@ class _BeastOverlayState extends State<BeastOverlay> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Favorite while ACTIVE: +1 ATK. Find passives (gold/loot/XP) get a '
-          'stronger %; mitigate and heal bump too. Bond +1 ATK every 5 ranks. '
-          'Frames are looks only.',
+          'SET ACTIVE picks the pet that fights. FAVORITE only boosts that '
+          'species while it is ACTIVE: +1 ATK and +5% on find passives '
+          '(gold/loot/XP); mitigate and heal bump too. Affinity +25% in that '
+          'cave. Bond +1 ATK every 5 ranks. Frames are looks only.',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -223,7 +224,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                                     '${pet.hasNickname ? '${pet.speciesName}  ' : ''}'
                                     'Lv${pet.level}  ATK +${pet.totalAttackBonus}'
                                     '${passive.isEmpty ? '' : '  $passive'}'
-                                    '  · affinity ${_affinityLabel(pet.affinityDungeonId)}'
+                                    '  · ${_affinityLabel(pet.affinityDungeonId)} +25%'
                                     '${pet.bondLevel > 0 ? '  bond${pet.bondLevel}' : ''}',
                                     style: GameTheme.body(
                                       size: 13,

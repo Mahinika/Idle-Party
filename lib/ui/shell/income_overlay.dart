@@ -21,8 +21,8 @@ class CampRatesSection extends StatelessWidget {
       children: [
         Text(
           run > 0
-              ? 'Hub ${GoldIncome.perMinuteLabel(hub)} · essence about 1 per 12 min after 10 min (War Altar helps) · Run ${GoldIncome.perMinuteLabel(run)}'
-              : 'Hub ${GoldIncome.perMinuteLabel(hub)} · essence about 1 per 12 min after 10 min (War Altar helps) · Run — enter a dungeon',
+              ? 'Hub ${GoldIncome.perMinuteLabel(hub)} · essence ~1 per 12 min after 10 min (War Altar speeds it) · Run ${GoldIncome.perMinuteLabel(run)}'
+              : 'Hub ${GoldIncome.perMinuteLabel(hub)} · essence ~1 per 12 min after 10 min (War Altar speeds it) · Run — enter a dungeon',
           style: GameTheme.body(size: 14, color: GameTheme.mossLit),
         ),
         // Two chips only — full multiplier dump lived in one dense line (#55).

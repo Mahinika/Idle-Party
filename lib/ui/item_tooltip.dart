@@ -7,6 +7,7 @@ import '../core/game_state.dart';
 import '../models/equip_stat_weights.dart';
 import '../models/gear_set.dart';
 import '../models/hero.dart';
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import 'character_equip_panel.dart';
 import 'game_theme.dart';
@@ -121,20 +122,69 @@ class ItemTooltipCard extends StatelessWidget {
     String? setHeader;
     final setLines = <({String text, bool active})>[];
     final setId = item.setId;
+    var dualSetNote = false;
     if (setId != null && setId.isNotEmpty) {
-      final wornCount = hero == null
+      var wornCount = hero == null
           ? 0
           : GearSets.wornCount(hero!.equipped, setId);
+      // Unequipped candidate: count it if it would add a set piece.
+      if (hero != null) {
+        final alreadyWorn = hero!.equipped.values.any((e) => e.id == item.id);
+        if (!alreadyWorn && GearSets.setSlots.contains(item.slot)) {
+          final slotPiece = hero!.equipped[item.slot];
+          if (slotPiece?.setId != setId) wornCount++;
+        }
+      }
       final name = GearSets.displayName(setId);
       setHeader = '$name ($wornCount/4)';
+      final primaryId = hero == null
+          ? setId
+          : GearSets.primarySetId(hero!.equipped);
+      // Simulate primary after equipping candidate into an empty/other set slot.
+      var payingId = primaryId;
+      if (hero != null &&
+          !hero!.equipped.values.any((e) => e.id == item.id) &&
+          GearSets.setSlots.contains(item.slot)) {
+        final probe = Map<EquipmentSlot, EquipmentItem>.from(hero!.equipped);
+        probe[item.slot] = item;
+        payingId = GearSets.primarySetId(probe) ?? setId;
+        final otherSets = <String>{};
+        for (final slot in GearSets.setSlots) {
+          final id = probe[slot]?.setId;
+          if (id != null && id.isNotEmpty) otherSets.add(id);
+        }
+        if (otherSets.length > 1) {
+          var twoPlus = 0;
+          for (final id in otherSets) {
+            if (GearSets.wornCount(probe, id) >= 2) twoPlus++;
+          }
+          dualSetNote = twoPlus > 1;
+        }
+      } else if (hero != null) {
+        final counts = <String, int>{};
+        for (final slot in GearSets.setSlots) {
+          final id = hero!.equipped[slot]?.setId;
+          if (id == null || id.isEmpty) continue;
+          counts[id] = (counts[id] ?? 0) + 1;
+        }
+        dualSetNote = counts.values.where((n) => n >= 2).length > 1;
+      }
+      final pays = payingId == null || payingId == setId;
+      final role = hero?.gearAffinity;
       setLines.add((
         text: '2 piece: ${GearSets.twoPieceBonusText(setId)}',
-        active: wornCount >= 2,
+        active: pays && wornCount >= 2,
       ));
       setLines.add((
-        text: '4 piece: ${GearSets.fourPieceBonusText(setId)}',
-        active: wornCount >= 4,
+        text: '4 piece: ${GearSets.fourPieceBonusText(setId, role: role)}',
+        active: pays && wornCount >= 4,
       ));
+      if (dualSetNote) {
+        setLines.add((
+          text: 'Only one set pays (primary 2pc/4pc)',
+          active: false,
+        ));
+      }
     }
 
     final wornSlotLabel =
@@ -189,7 +239,7 @@ class ItemTooltipCard extends StatelessWidget {
                 if (item.isApex)
                   Text(
                     'Apex Rank ${item.apexRank}'
-                    '${item.apexClassId != null ? ' · ${item.apexClassId}' : ''}',
+                    '${item.apexClassId != null ? ' · ${_apexClassLabel(item.apexClassId!)}' : ''}',
                     style: GameTheme.body(size: 12, color: _gold),
                   ),
                 if (alreadyEquipped) ...[
@@ -458,15 +508,22 @@ class ItemTooltipCard extends StatelessWidget {
 
   static String _weaponSwingLine(EquipmentItem item) {
     final pattern = switch (item.pattern) {
-      ProjectilePattern.single => 'Single',
-      ProjectilePattern.spread => 'Spread',
-      ProjectilePattern.arc => 'Arc',
-      ProjectilePattern.pierce => 'Pierce',
+      ProjectilePattern.single => 'Single (one bolt)',
+      ProjectilePattern.spread => 'Spread (fan)',
+      ProjectilePattern.arc => 'Arc (curve)',
+      ProjectilePattern.pierce => 'Pierce (through)',
     };
     if (item.attackBonus > 0) {
       return 'Attack +${item.attackBonus} · $pattern';
     }
     return 'Pattern: $pattern';
+  }
+
+  static String _apexClassLabel(String raw) {
+    for (final id in HeroClassId.values) {
+      if (id.name == raw) return HeroSpecs.classLabel(id);
+    }
+    return _titleCase(raw);
   }
 
   /// Union of candidate + worn stats so lost stats show as red deltas.

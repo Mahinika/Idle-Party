@@ -194,9 +194,18 @@ class MenuAlerts {
         PartyUpgradeType.values[GameLogic.recommendedForgeUpgrade(state)];
     final cost = GameLogic.upgradeCostFor(state, forgeType);
     if (state.gold >= cost) {
+      final name = switch (forgeType) {
+        PartyUpgradeType.attack => 'ATK',
+        PartyUpgradeType.defense => 'DEF',
+        PartyUpgradeType.vitality => 'STA',
+        PartyUpgradeType.moveSpeed => 'MOVE',
+        PartyUpgradeType.attackSpeed => 'HASTE',
+        PartyUpgradeType.crit => 'CRIT',
+        PartyUpgradeType.mastery => 'MASTERY',
+      };
       return MenuAlert(
         count: 1,
-        reason: 'BEST ${forgeType.name.toUpperCase()} affordable',
+        reason: 'BEST $name affordable',
       );
     }
     return MenuAlert.quiet;

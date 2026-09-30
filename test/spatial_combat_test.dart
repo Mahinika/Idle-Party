@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/dungeon_generator.dart';
+import 'package:idle_party/core/enemy_flavor.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/keystone.dart';
 import 'package:idle_party/models/class_ability.dart';
@@ -11,6 +12,7 @@ import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/models/stats.dart';
 import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/spatial/tile_map.dart';
@@ -965,19 +967,20 @@ void main() {
     expect(rime.contains('WIND-UP'), isFalse);
   });
 
-  test('ashen crown boss uses CROWN / SLAM / SLOW kit', () {
+  test('ashen crown boss uses week telegraph on smash, not SLAM', () {
     final seen = _bossTellTexts(
       'ember',
       inWorldBoss: true,
     );
-    expect(seen.contains('CROWN') || seen.contains('SLOW'), isTrue);
-    expect(seen.contains('SLAM'), isTrue);
+    expect(seen.contains('CROWN'), isTrue);
+    expect(seen.contains('SLAM'), isFalse);
+    expect(seen.contains('SLOW') || seen.contains('CROWN'), isTrue);
   });
 
-  test('ashen crown in Tidehold shouts WAVE then SLAM', () {
+  test('ashen crown in Tidehold shouts WAVE then WAVE smash', () {
     final seen = _bossTellTexts('tide', inWorldBoss: true);
     expect(seen.contains('WAVE'), isTrue);
-    expect(seen.contains('SLAM'), isTrue);
+    expect(seen.contains('SLAM'), isFalse);
     expect(seen.contains('PULSE'), isFalse);
   });
 
@@ -1064,6 +1067,95 @@ void main() {
     final step = SpatialCombat.step(world, state, dt: 0.05);
     final texts = step.world.floaters.map((f) => f.text).toSet();
     expect(texts.contains('SWARM'), isTrue);
+  });
+
+  test('KEY Fortified banner says tougher packs; leftover affixes show', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
+    final room = DungeonRoom(
+      floorNumber: 1,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 5,
+      enemyCount: 2,
+    );
+    state = state.copyWith(
+      dungeonId: 'sandy',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: GameLogic.createEnemyGroup(room, dungeonId: 'sandy'),
+      inDungeon: true,
+      keystoneRunActive: true,
+      keystoneRunAffixes: const ['fortified', 'glass', 'no_flask'],
+      metaDepth: state.metaDepth.copyWith(weeklyKey: _weekKeyForCave('tide')),
+    );
+    var world = SpatialCombat.build(state);
+    for (final e in world.enemies) {
+      e.dormant = false;
+    }
+    final step = SpatialCombat.step(world, state, dt: 0.05);
+    final texts = step.world.floaters.map((f) => f.text).toSet();
+    expect(texts.contains('TOUGHER PACKS'), isTrue);
+    expect(texts.contains('GLASS'), isTrue);
+    expect(texts.contains('NO FLASK'), isTrue);
+    // Week tell stays quiet on trash floors.
+    expect(texts.contains('WAVE'), isFalse);
+  });
+
+  test('glass execute auto floater uses zone glassTell, not GLASS', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12));
+    final room = DungeonRoom(
+      floorNumber: 2,
+      roomIndex: 0,
+      type: RoomType.normal,
+      enemyLevel: 8,
+      enemyCount: 1,
+    );
+    final base = GameLogic.createEnemyGroup(room, dungeonId: 'tide').first;
+    final glass = base.copyWith(
+      archetype: EnemyArchetype.glass,
+      role: EnemyRole.normal,
+      stats: Stats.enemy(
+        attack: 80,
+        defense: base.stats.defense,
+        maxHp: base.stats.maxHp,
+      ),
+    );
+    state = state.copyWith(
+      dungeonId: 'tide',
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: [glass],
+      inDungeon: true,
+      heroes: [
+        for (final h in state.heroes)
+          h.copyWith(currentHp: max(1, h.maxHp ~/ 5)),
+      ],
+    );
+    var world = SpatialCombat.build(state);
+    for (final e in world.enemies) {
+      e.dormant = false;
+      e.x = world.heroes.first.x + 0.8;
+      e.y = world.heroes.first.y;
+      e.fireCooldown = 0;
+    }
+    for (final h in world.heroes) {
+      h.hp = (h.maxHp * 0.2).round().clamp(1, h.maxHp);
+    }
+    String? glassText;
+    for (var i = 0; i < 40; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.1);
+      world = step.world;
+      state = step.state;
+      for (final f in world.floaters) {
+        if (f.text == EnemyFlavor.glassTell('tide') || f.text == 'EXECUTE') {
+          glassText = f.text;
+          break;
+        }
+      }
+      if (glassText != null) break;
+    }
+    expect(glassText, isNotNull, reason: 'expected glassTell or EXECUTE floater');
+    expect(glassText == 'GLASS', isFalse);
   });
 
   test('awake sandy pack shouts PILE before anyone is in melee', () {

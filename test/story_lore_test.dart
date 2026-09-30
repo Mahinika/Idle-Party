@@ -40,6 +40,10 @@ void main() {
     expect(body, contains('starter'));
     expect(body, contains('Keep:'));
     expect(body, contains('essence'));
+    expect(body, contains('Embers'));
+    expect(body, contains('Cinders'));
+    expect(body, contains('CAMP'));
+    expect(body, contains('unlocked specs'));
     expect(body, contains('relics'));
     expect(body, contains('pets'));
     expect(body, contains('soulbound'));
@@ -49,7 +53,7 @@ void main() {
     expect(body, contains('GOLD tracks'));
     expect(body, contains('floor progress'));
     expect(body, isNot(contains('AL power')));
-    expect(body.length, lessThan(720));
+    expect(body.length, lessThan(820));
   });
 
   test('Daily Run lore uses the actual reward essence', () {
@@ -84,6 +88,10 @@ void main() {
     expect(body, contains('+64e'));
     expect(body, contains('STAR NODES'));
     expect(body, contains('floor progress'));
+    expect(body, contains('Embers'));
+    expect(body, contains('Cinders'));
+    expect(body, contains('CAMP'));
+    expect(body, contains('unlocked specs'));
     expect(body, contains('relics'));
     expect(body, contains('pets'));
     expect(body.toLowerCase(), contains('rebuild'));

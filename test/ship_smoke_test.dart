@@ -39,6 +39,8 @@ void main() {
     ]);
     expect(DungeonCatalog.byId('tide').name, 'Sunken Tidehold');
     expect(DungeonCatalog.byId('ember').name, 'Ashen Vault');
+    expect(DungeonCatalog.byId('ember').hubMapTag, 'VAULT');
+    expect(DungeonCatalog.byId('crystal').hubMapTag, 'CRYSTAL');
     expect(DungeonCatalog.byId('grove').name, 'Hollow Grove');
     expect(DungeonCatalog.byId('storm').name, 'Stormwake Hollow');
     expect(DungeonCatalog.byId('rime').name, 'Rimeglass Rift');

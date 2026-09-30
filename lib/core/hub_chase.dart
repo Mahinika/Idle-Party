@@ -452,8 +452,9 @@ class HubChase {
         title: 'Done for today',
         detail:
             'Vault, Daily, and KEY dial settled — soft rest. '
-            'Optional Spire PB ${pb.progressLabel ?? 'open'} on KEY · BOARDS.',
-        progressLabel: 'BOARDS',
+            'Optional Spire PB ${pb.progressLabel ?? 'open'} on ENDGAME · Gauntlet '
+            '(Farm Rift / Ranked GR stay open too).',
+        progressLabel: pb.progressLabel ?? 'GAUNTLET',
       );
     }
     return pb;
@@ -473,9 +474,11 @@ class HubChase {
       title: 'Clear ${kit.title}',
       detail: tickets == 1
           ? '${kit.weekLine} 1 ticket. First clear pays '
-                '+${AshenCrown.essenceReward}e. PRACTICE free after.'
+                '+${AshenCrown.essenceReward}e, title ${AshenCrown.titleReward}, '
+                '+1 STAR. PRACTICE free after.'
           : '${kit.weekLine} $tickets tickets. One paid clear/week '
-                '(+${AshenCrown.essenceReward}e); PRACTICE free after.',
+                '(+${AshenCrown.essenceReward}e, title ${AshenCrown.titleReward}, '
+                '+1 STAR); PRACTICE free after.',
       progressLabel: tickets == 1 ? '1 ticket' : '$tickets tickets',
       urgency: tickets <= 1 ? HubChaseUrgency.almost : HubChaseUrgency.normal,
     );
@@ -586,7 +589,7 @@ class HubChase {
         return HubChase(
           kind: HubChaseKind.monthGoal,
           title: 'Almost · ${month.name}',
-          detail: 'Finish the month pass for +${month.essenceReward}e.',
+          detail: _monthPassDetail(month),
           progressLabel: LocalSeasonCatalog.monthProgressLabel(state, month),
           urgency: HubChaseUrgency.almost,
         );
@@ -630,8 +633,8 @@ class HubChase {
         kind: HubChaseKind.weekGoal,
         title: 'Claim ${week.name}',
         detail:
-            'Week goal done — reward auto-claims on hub sync '
-            '(+${week.essenceReward}e).',
+            'Week goal done · +${week.essenceReward}e — tap CLAIM WEEK '
+            '(also claims on hub sync).',
         progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
         urgency: HubChaseUrgency.ready,
       );
@@ -657,6 +660,18 @@ class HubChase {
           '${_weekRhythmPrefix(state, clock)}${week.blurb} · +${week.essenceReward}e',
       progressLabel: LocalSeasonCatalog.weekProgressLabel(state, week),
     );
+  }
+
+  static String _monthPassDetail(LocalSeasonMonth month) {
+    if (month.grTierTarget > 0 && month.timedKeyTarget <= 0) {
+      return 'Finish Ranked GR${month.grTierTarget} this month for '
+          '+${month.essenceReward}e.';
+    }
+    if (month.timedKeyTarget > 0 && month.grTierTarget <= 0) {
+      return 'Finish timed KEY +${month.timedKeyTarget} this month for '
+          '+${month.essenceReward}e.';
+    }
+    return 'Finish the month pass for +${month.essenceReward}e.';
   }
 
   /// Next KEY after endgame unlock, until preferred key hits the campaign stop.
@@ -718,12 +733,12 @@ class HubChase {
     return HubChase(
       kind: HubChaseKind.clearFloors,
       title: almost
-          ? 'Almost every hero Lv${GameLogic.maxHeroLevel}'
-          : 'Level every hero to ${GameLogic.maxHeroLevel}',
+          ? 'Almost every active hero Lv${GameLogic.maxHeroLevel}'
+          : 'Level every active hero to ${GameLogic.maxHeroLevel}',
       detail: almost
-          ? 'Lowest hero Lv$minLv — a few more combat levels unlock KEY, '
+          ? 'Lowest active hero Lv$minLv — a few more combat levels unlock KEY, '
                 'Gauntlet, Ranked GR, Farm Rift, Ashen Crown, and Craft Trial.'
-          : 'Heroes Lv$minLv–$maxLv. Combat XP until every hero is '
+          : 'Active party Lv$minLv–$maxLv. Combat XP until every active hero is '
                 '${GameLogic.maxHeroLevel} unlocks KEY, Gauntlet, Ranked GR, '
                 'Farm Rift, Ashen, and Craft Trial.',
       progressLabel: minLv == maxLv
@@ -843,8 +858,10 @@ class HubChase {
         kind: HubChaseKind.willRank,
         title: almost ? 'Almost ${entry.$2}' : 'Chase ${entry.$2}',
         detail: need == 1
-            ? '1 point to ${entry.$2} (+${pay}e). Points from codex, pets, relics, achievements, trophies.'
-            : '$need points to ${entry.$2} (+${pay}e). Points from codex, pets, relics, achievements, trophies.',
+            ? '1 point to ${entry.$2} (+${pay}e). Points from codex, pets, relics, '
+                  'achievements, trophies, titles.'
+            : '$need points to ${entry.$2} (+${pay}e). Points from codex, pets, '
+                  'relics, achievements, trophies, titles.',
         progressLabel: '$score/$threshold',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
@@ -876,9 +893,10 @@ class HubChase {
                   : 'Gauntlet floor $floor'),
         detail: best <= 0
             ? 'Gauntlet — boss every 5 floors; wipe or leave '
-                  'returns to hub. Climb for +${pay}e.'
-            : 'Best F$best — $need floors to F$floor (+${pay}e). '
-                  'Boss every 5; wipe → hub.',
+                  'returns to hub. Milestone F$floor pays +${pay}e '
+                  '(floors also pay small essence).'
+            : 'Best F$best — $need floors to milestone F$floor (+${pay}e). '
+                  'Boss every 5; wipe → hub. Floors also pay small essence.',
         progressLabel: 'F$best → F$floor',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );

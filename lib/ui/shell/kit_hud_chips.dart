@@ -76,6 +76,7 @@ abstract final class KitHudChips {
       AbilityId.shieldWall => s.shieldWallTimer > 0,
       AbilityId.lastStand => s.lastStandTimer > 0,
       AbilityId.shieldSlam => s.queuedShieldSlam,
+      AbilityId.revenge => s.revengeReady,
       AbilityId.shockwave => s.shockwaveFlash > 0,
       AbilityId.powerWordShield => s.absorbShield > 0,
       AbilityId.prayerOfMending => s.pomCharges > 0,

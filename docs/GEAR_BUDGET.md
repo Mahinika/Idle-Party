@@ -81,7 +81,7 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 `isMeaningfulEquipUpgrade`:
 
 1. `newScore - curScore <= 0` → not an upgrade.
-2. Empty slot → fill only if score/mass clears a level-scaled floor (`emptySlotWorthFilling`).
+2. Empty slot → fill only if score/mass clears a level-scaled floor (`emptySlotWorthFilling`). Preferred-armor is **not** a soft empty-fill path (hard `canEquip` only).
 3. Worn slot → delta must clear `max(6, ~3% of curScore)` (AL20 / level 50+: `max(8, ~4%)`); lower-iLvl candidates need a stricter real-stat jump.
 4. Non-Apex never replaces Apex.
 
@@ -91,7 +91,8 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 
 - **Set 2pc/4pc:** real combat bonuses only; shown on tooltips
   (2pc +3 Sta / cloth +3 Spi; 4pc +6 Sta +2 Crit / cloth +6 Spi +4 SP + 10%
-  set proc). No ghost BiS points.
+  set proc). Dual 2+2: **only the primary set pays**. Role extras on 4pc:
+  warrior +4 Armor, rogue +2 Haste, healer +2 Spi, mage +2 SP. No ghost BiS points.
 - **Apex:** own tier + hard-lock vs normal drops. Primaries use the same
   `lootShares` split as dungeon drops (no parallel Attack Power dump —
   `attackBonus` is flat sheet ATK, ~2× a Strength point). Fixed secondaries
@@ -100,8 +101,8 @@ Used by `specEquipScore` / `slotEquipScore` / BiS / Auto Equip.
 - **Merge:** identity (`setId`, affixes) from **primary** only; fuel adds ~50%
   stats. RESULT preview shows the SCORE jump. If both pieces have an on-item
   effect, the stronger value wins. Apex inputs are blocked.
-- **Charms (trinkets):** always roll an on-item effect (other slots still use
-  rarity chance). Charm names match the CHARM slot.
+- **Charms:** always roll an on-item effect (other slots still use
+  rarity chance). Player UI says **Charm** (not Trinket) for the two charm slots.
 
 ## Player-facing copy
 
@@ -138,4 +139,5 @@ Keep new gear features on the right side of this line:
 - **Loot Crit is not 1:1.** ~13 DPS slots × raw % overshoots the **75%** combat clamp and wastes budget. New drops / MERGE / Apex must use `EquipmentFactory.lootCritPercent`. Worn pre-1.12.153 gear stays fat until replaced; combat still clamps.
 - **`PartyHero.gearCritChance` hard-caps at 40** (`_softCapStat` 18/40). A 70% chest does not make sheet 70. GOLD BEST skip-CRIT (`critScoreSoftSheet`) needs forge CRIT. Tests: even-spend gold, then leave CRIT one buy behind.
 - **Mastery divisor:** `SpecMastery.masteryPointsFrom` — do not restore Cata `/ (90 + level×4)` (L100 = dust). Target ~6% generic damage from ~60 rating at L100 (`1 + p * 0.002`).
-- GOLD TRACKS have **no max**; MOVE/HASTE/CRIT use a soft knee (`· SOFT` in UI). “Essence is done” at AL20 was Relics T3 and KEEP caps, not forge.
+- GOLD TRACKS have **no max**; MOVE/HASTE soft past 40 and CRIT soft past 25 use a soft knee (`· SOFT` in UI). Next-% labels show the reduced sheet gain after the knee. “Essence is done” at AL20 was Relics T3 and KEEP caps, not forge.
+- AUTO MERGE pairs by raw `powerScore` (not role BiS score) and skips keep/BiS bag pieces.

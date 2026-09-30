@@ -543,18 +543,18 @@ abstract final class EnemyFlavor {
     'hell': {
       EnemyArchetype.swarm: ['Hellspawn', 'Cinder Rat'],
       EnemyArchetype.brute: ['Infernal Brute', 'Flame Guard'],
-      EnemyArchetype.tank: ['Molten Golem', 'Ash Colossus'],
+      EnemyArchetype.tank: ['Molten Golem', 'Ash Behemoth'],
       EnemyArchetype.ranged: ['Fire Cultist', 'Ember Archer'],
       EnemyArchetype.glass: ['Flame Assassin', 'Cinder Blade'],
       EnemyArchetype.support: ['Hell Chanter', 'Rift Priest'],
     },
     'crystal': {
-      EnemyArchetype.swarm: ['Frost Wisp', 'Rime Bat'],
-      EnemyArchetype.brute: ['Glacial Brute', 'Shard Brawler'],
+      EnemyArchetype.swarm: ['Frost Wisp', 'Prism Bat'],
+      EnemyArchetype.brute: ['Glacial Brute', 'Crystal Brawler'],
       EnemyArchetype.tank: ['Crystal Golem', 'Frozen Bulwark'],
       EnemyArchetype.ranged: ['Ice Caster', 'Frost Slinger'],
       EnemyArchetype.glass: ['Splinter Blade', 'Shatter Fang'],
-      EnemyArchetype.support: ['Rime Chanter', 'Frost Adept'],
+      EnemyArchetype.support: ['Prism Chanter', 'Frost Adept'],
     },
     'tide': {
       EnemyArchetype.swarm: ['Brine Mite', 'Reef Tick'],

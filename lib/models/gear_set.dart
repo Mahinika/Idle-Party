@@ -199,20 +199,33 @@ abstract final class GearSets {
   static String twoPieceBonusText(String setId) =>
       isClothSet(setId) ? '+3 Spi' : '+3 Sta';
 
-  /// Honest 4pc line for tooltips (Sta/Crit or Spi/SP + set proc).
-  static String fourPieceBonusText(String setId) => isClothSet(setId)
-      ? '+6 Spi · +4 SP · 10% set proc on auto'
-      : '+6 Sta · +2 Crit · 10% set proc on auto';
+  /// Honest 4pc line for tooltips (Sta/Crit or Spi/SP + set proc + role extras).
+  static String fourPieceBonusText(String setId, {HeroRole? role}) {
+    final base = isClothSet(setId)
+        ? '+6 Spi · +4 SP · 10% set proc on auto'
+        : '+6 Sta · +2 Crit · 10% set proc on auto';
+    final extra = switch (role) {
+      HeroRole.warrior => ' · +4 Armor',
+      HeroRole.rogue => ' · +2 Haste',
+      HeroRole.healer => ' · +2 Spi',
+      HeroRole.mage => ' · +2 SP',
+      null => '',
+    };
+    return '$base$extra';
+  }
 
   /// Short UI blurb for the dominant worn set.
-  static String? setBonusBlurb(Map<EquipmentSlot, EquipmentItem> equipped) {
+  static String? setBonusBlurb(
+    Map<EquipmentSlot, EquipmentItem> equipped, {
+    HeroRole? role,
+  }) {
     final id = primarySetId(equipped);
     if (id == null) return null;
     final n = wornCount(equipped, id);
     if (n < 2) return null;
     final name = displayName(id);
     if (n >= 4) {
-      return '$name 4pc · ${fourPieceBonusText(id)}';
+      return '$name 4pc · ${fourPieceBonusText(id, role: role)}';
     }
     return '$name 2pc · ${twoPieceBonusText(id)}';
   }

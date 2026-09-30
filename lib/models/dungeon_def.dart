@@ -19,6 +19,8 @@ class DungeonDef {
   final DungeonLayoutKind layout;
   final String bossId;
   final String bossName;
+  /// Legacy gold gate used only for save migration / tests — never show in
+  /// player UI (zones unlock by party mean level or prior clear).
   final int unlockPrice;
 
   /// Short hub flavor line (also mirrored in [StoryLore.dungeonBlurb]).
@@ -32,9 +34,9 @@ class DungeonDef {
     'underworld' => 'UNDER',
     'dead' => 'DEAD',
     'hell' => 'HELL',
-    'crystal' => 'SPIRE',
+    'crystal' => 'CRYSTAL',
     'tide' => 'TIDE',
-    'ember' => 'ASHEN',
+    'ember' => 'VAULT',
     'grove' => 'GROVE',
     'storm' => 'STORM',
     'rime' => 'RIME',

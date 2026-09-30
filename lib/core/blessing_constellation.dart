@@ -82,7 +82,7 @@ abstract final class BlessingConstellation {
         'def_block' => '+5% block',
         'for_gold' => '+3% gold',
         'for_loot' => '+5% loot',
-        'for_key' => '+5% KEY par',
+        'for_key' => '+5% longer KEY timer',
         _ => '',
       };
 

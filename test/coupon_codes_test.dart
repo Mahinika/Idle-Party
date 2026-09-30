@@ -27,6 +27,19 @@ void main() {
     expect(again.state.metaDepth.shopPermScrolls, AdBoost.permAll);
   });
 
+  test('alreadyOwned forever scrolls do not burn FOREVERSCROLLS', () {
+    var state = GameLogic.createInitialState(now: now);
+    final bundle = ShopCatalog.offered.firstWhere(
+      (e) => e.id == 'perm_scrolls_all',
+    );
+    state = ShopBilling.applyPurchase(state, bundle);
+    expect(ShopBilling.isOwned(state, bundle), isTrue);
+    final result = CouponCodes.redeem(state, 'FOREVERSCROLLS');
+    expect(result.status, CouponRedeemStatus.alreadyOwned);
+    expect(result.state.metaDepth.redeemedCoupons, isEmpty);
+    expect(identical(result.state, state), isTrue);
+  });
+
   test('unknown coupon does not change the save', () {
     final state = GameLogic.createInitialState(now: now);
     final bad = CouponCodes.redeem(state, 'not-a-code');

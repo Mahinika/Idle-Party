@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/assets/kenney_assets.dart';
 import 'package:idle_party/core/dungeon_generator.dart';
+import 'package:idle_party/core/enemy_flavor.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/gauntlet_anomaly.dart';
 import 'package:idle_party/models/enemy.dart';
@@ -51,6 +53,34 @@ void main() {
     expect(echo.gauntletAnomaly, GauntletAnomaly.bossEcho);
     expect(echo.enemies.where((e) => e.bossEcho), hasLength(1));
     expect(echo.enemies.any((e) => e.role == EnemyRole.boss), isFalse);
+  });
+
+  test('ECHO one-liner does not claim a past boss on early floors', () {
+    expect(
+      GauntletAnomalies.oneLiner(GauntletAnomaly.bossEcho).toLowerCase(),
+      isNot(contains('past')),
+    );
+    expect(
+      GauntletAnomalies.oneLiner(GauntletAnomaly.bossEcho).toLowerCase(),
+      contains('borrowed'),
+    );
+  });
+
+  test('Gauntlet boss sprite follows gauntletBossDungeonId', () {
+    // F10 cycles off Crystal to Tide — sprite must match Tide Leviathan art.
+    final world = _gauntletWorld(10);
+    final boss = world.enemies.firstWhere((e) => e.role == EnemyRole.boss);
+    expect(boss.name, 'Tide Leviathan');
+    final expectedId = EnemyFlavor.gauntletBossDungeonId(10);
+    expect(expectedId, 'tide');
+    final expectedSprite = KenneyAssets.enemySpriteForRole(
+      EnemyRole.boss,
+      dungeonId: expectedId,
+    );
+    expect(
+      KenneyAssets.enemySpriteCatalog[boss.assetIndex],
+      expectedSprite,
+    );
   });
 
   test('Gauntlet gate floor asks for extra combat chambers', () {

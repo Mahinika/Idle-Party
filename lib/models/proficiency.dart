@@ -22,7 +22,8 @@ class ClassProficiency {
   ) {
     if (spec.classId == HeroClassId.hunter) {
       if (level < 40) return type == ArmorType.leather;
-      return type == ArmorType.mail;
+      // Mail preferred at 40+, leather still legal (matches armorTypes).
+      return type == ArmorType.mail || type == ArmorType.leather;
     }
     return spec.armorTypes.contains(type);
   }

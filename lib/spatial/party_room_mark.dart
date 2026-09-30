@@ -47,7 +47,7 @@ class PartyFloorMark {
 
   static String _line(PartyRoomMark kind, String name) => switch (kind) {
     PartyRoomMark.breach => '$name smashed a way through.',
-    PartyRoomMark.shrine => '$name lit a shrine.',
+    PartyRoomMark.shrine => '$name found a shrine — look only.',
     PartyRoomMark.focus => '$name set a crystal.',
     PartyRoomMark.stash => '$name tucked a stash.',
   };

@@ -94,6 +94,15 @@ abstract final class WipeAdvice {
     if (adviceLine.contains('Farm Rift') && adviceLine.contains('ENDGAME')) {
       return 'HUB → ENDGAME to lower the Farm Rift tier';
     }
+    if (adviceLine.contains('GR') && adviceLine.contains('ENDGAME')) {
+      return 'HUB → ENDGAME to pick a lower GR tier';
+    }
+    if (adviceLine.contains('Spire climb')) {
+      return 'HUB → ENDGAME · Gauntlet to retry lower floors';
+    }
+    if (adviceLine.contains('Ashen Crown')) {
+      return 'HUB → KEY or ENDGAME · try PRACTICE free';
+    }
     if (adviceLine.contains('dial down') ||
         adviceLine.contains('may be high')) {
       return 'HUB → KEY to lower the dial';
@@ -122,7 +131,17 @@ abstract final class WipeAdvice {
   /// Menu to open after RETURN when the tip names a hub fix.
   static NavIntent? hubNavFor(String adviceLine) {
     if (adviceLine.isEmpty) return null;
+    if (adviceLine.contains('Ashen Crown')) {
+      return const NavIntent(route: MenuRoute.key);
+    }
+    // Farm Rift / GR / Gauntlet: hub map only — no MenuRoute for ENDGAME.
     if (adviceLine.contains('Farm Rift') && adviceLine.contains('ENDGAME')) {
+      return null;
+    }
+    if (adviceLine.contains('GR') && adviceLine.contains('ENDGAME')) {
+      return null;
+    }
+    if (adviceLine.contains('Spire climb')) {
       return null;
     }
     if (adviceLine.contains('dial down') ||
@@ -150,16 +169,27 @@ abstract final class WipeAdvice {
     return null;
   }
 
-  /// Short wipe-panel CTA when [hubNavFor] has a destination.
+  /// Short wipe-panel CTA when [hubNavFor] has a destination, or endgame hub-only.
   static String? hubCtaLabelFor(String adviceLine) {
     final nav = hubNavFor(adviceLine);
-    if (nav == null) return null;
-    if (nav.route == MenuRoute.key) return 'OPEN KEY';
-    if (nav.goldPanel == GoldPanel.market) return 'OPEN GOLD';
-    if (nav.route == MenuRoute.shop) return 'OPEN SHOP';
-    if (nav.gear == GearPanel.bag) return 'OPEN BAG';
-    if (nav.route == MenuRoute.gear) return 'OPEN GEAR';
-    if (nav.route == MenuRoute.gold) return 'OPEN GOLD';
+    if (nav != null) {
+      if (nav.route == MenuRoute.key) return 'OPEN KEY';
+      if (nav.goldPanel == GoldPanel.market) return 'OPEN GOLD';
+      if (nav.route == MenuRoute.shop) return 'OPEN SHOP';
+      if (nav.gear == GearPanel.bag) return 'OPEN BAG';
+      if (nav.route == MenuRoute.gear) return 'OPEN GEAR';
+      if (nav.route == MenuRoute.gold) return 'OPEN GOLD';
+    }
+    // Endgame modes: brown CTA still returns to hub (no ENDGAME menu route).
+    if (adviceLine.contains('Farm Rift') && adviceLine.contains('ENDGAME')) {
+      return 'OPEN ENDGAME';
+    }
+    if (adviceLine.contains('GR') && adviceLine.contains('ENDGAME')) {
+      return 'OPEN ENDGAME';
+    }
+    if (adviceLine.contains('Spire climb')) {
+      return 'OPEN ENDGAME';
+    }
     return null;
   }
 
@@ -225,11 +255,10 @@ abstract final class WipeAdvice {
 
   /// Nudge God Hand after repeated wipes on the same floor (commit path — no redesign).
   static String? godHandHintFor(GameState state) {
-    if (state.wipeStreakCount < 2 ||
-        state.inGauntlet ||
-        state.inAnyRiftMode) {
+    if (state.wipeStreakCount < 2 || state.inAnyRiftMode) {
       return null;
     }
+    // Gauntlet keeps God Hand — same long-press / fist as normal caves.
     return GameLogic.plainPlayerChrome(state)
         ? 'Long-press the fight — steer party + smash'
         : 'Long-press the fight or tap the fist — steer party + AOE smash';

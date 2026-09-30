@@ -10,7 +10,7 @@ Play charts + idle/RPG listing peers: [`tool/store_listing/growth/PLAY_LISTING_P
 
 Sources: Play Console Help (preview assets), ASO / CRO guides 2025–2026
 (ASOMobile, AppDrift, InspiringApps), plus Idle Party prefs (phone-only,
-fairness, cheap convenience SHOP).
+fairness, fair SHOP with SCROLLS / Cinder packs / ad-free).
 
 | Rank | Asset | Why it moves installs |
 |------|--------|------------------------|
@@ -98,20 +98,20 @@ BUILD YOUR PARTY
 • Battle through 15 dungeon zones filled with room chests, enemies, and bosses.
 
 IDLE PROGRESS, REAL COMBAT
-• Watch the party fight on its own. Tap the fight to help. Leave a dungeon whenever you want and continue when you are ready — the cave crawl is the same fight AFK.
+• Watch the party fight on its own. Long-press the fight, or tap the fist, to help. Leave a dungeon whenever you want and continue when you are ready — the cave crawl is the same fight AFK.
 • TODAY puts your next useful goal on the main button: claim, equip, or enter.
 • Day-one menus stay small until gold, the shop, and essence mean something.
 
 KEEP GROWING
 • Ascend to unlock more heroes and permanent upgrades. Your party stays; the run bag resets.
-• Reach level 100 to open challenging endgame modes: KEYSTONE, Infinity Gauntlet, Rifts, and Greater Rifts.
+• Reach level 100 to open challenging endgame modes: KEYSTONE, Gauntlet, Rifts, and Greater Rifts.
 • Take on daily, weekly, and long-term quests.
 • Optional Google Play Games adds cloud save and seasonal leaderboards.
 
 FAIR PLAY
 • Single-player — no Idle Party account required.
 • Optional rewarded ads (hub SCROLLS) grant timed scrolls and never interrupt a fight.
-• Optional SHOP sells cheap convenience only (forever SCROLLS, ad-free, small QoL) — not pay-to-win gear.
+• Optional SHOP sells forever SCROLLS, ad-free, and Cinder packs — not pay-to-win gear.
 • Privacy policy covers optional Play Games, ads, and analytics.
 • Designed for portrait phones.
 
@@ -134,9 +134,10 @@ Live Production: **1.12.191 (221)** until Google publishes. **1.12.192+222** sen
 
 ### Full description honesty (SHOP)
 
-SHOP convenience (boosts / ad-free / QoL) is live in Console — the FAIR PLAY
+SHOP forever SCROLLS / ad-free / Cinder packs are live in Console — the FAIR PLAY
 line above is accurate. Do **not** imply whale packs, gacha, or BiS-for-cash.
-SCROLLS ads remain the free path to the same boost power.
+SCROLLS ads remain the free path to the same boost power; Cinders also come
+from the Daily Vault and Ad Tickets.
 
 ### Screenshot plan (Play phone carousel)
 

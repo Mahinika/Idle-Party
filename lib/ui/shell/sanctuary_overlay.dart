@@ -146,9 +146,20 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     String? detail;
     if (track == 'gold') {
       final hubDelta = GoldIncome.nextGoldFindDeltaPerMinute(state);
-      detail = 'Next +${hubDelta}g/min hub · also +% combat gold find';
+      final campPct = GameLogic.sanctuaryTrackBonusAt(
+        'gold',
+        state.sanctuaryGoldLevel + 1,
+      );
+      final nowPct = GameLogic.sanctuaryTrackBonusAt(
+        'gold',
+        state.sanctuaryGoldLevel,
+      );
+      final combatDelta = campPct - nowPct;
+      detail =
+          'Next +${hubDelta}g/min hub · combat gold find +$combatDelta% '
+          '(soft-capped with other finds)';
     } else if (track == 'power') {
-      detail = 'Also raises hub AFK essence rate';
+      detail = 'Also raises hub AFK essence rate (War Altar shortens the wait)';
     }
 
     late final Widget trailing;

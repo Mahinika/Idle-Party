@@ -24,7 +24,7 @@ class ShopDock extends StatefulWidget {
   static String convenienceLine({required bool showEssence}) {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
     return 'Free tickets are SCROLLS on the hub. '
-        'Forever scrolls here skip the watch. '
+        'Forever scrolls and Cinder packs are here. '
         'Gold is under GOLD.$essenceBit';
   }
 

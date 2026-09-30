@@ -317,6 +317,12 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           value: state.colorblindMode,
           onChanged: director.setColorblindMode,
         ),
+        Text(
+          'Combat floaters and bark colors shift. Map wash may also shift '
+          'slightly so green caves stay apart from red. Chamber dots already '
+          'use shape (square / diamond / circle).',
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
         const SizedBox(height: 8),
         _SettingsToggle(
           label: 'Hide heal numbers',
@@ -335,16 +341,12 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           value: state.alwaysShowEnemyHp,
           onChanged: director.setAlwaysShowEnemyHp,
         ),
-        Text(
-          'Combat floaters and bark colors shift. Map wash may also shift '
-          'slightly so green caves stay apart from red. Chamber dots already '
-          'use shape (square / diamond / circle).',
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
         const SizedBox(height: 8),
         GameButton(
           label: 'RESET DISPLAY DEFAULTS',
-          tip: 'Text 100% · Zoom Normal · Full VFX · Music Low · sound on',
+          tip:
+              'Text 100% · Zoom Normal · Full VFX · colorblind off · '
+              'heal numbers on · Music Low · sound on · haptics on',
           style: GameButtonStyle.grey,
           onPressed: _resetDisplayDefaults,
         ),

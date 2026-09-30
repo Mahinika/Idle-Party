@@ -41,7 +41,7 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'torch_keep',
       name: 'Keep Torch',
-      description: '+8% hub AFK gold per level (sanctuary idle).',
+      description: '+8% hub AFK gold per level (hub-only sanctuary idle — not combat).',
       cost: 35,
       minAl: 3,
     ),
@@ -81,7 +81,7 @@ abstract final class PrestigeShopCatalog {
       id: 'filter_span',
       name: 'Junk Magnifier',
       description:
-          '+8 auto-sell / auto-disassemble iLvl ceiling in Settings (max +40).',
+          '+8 auto-sell / auto-scrap iLvl ceiling in Settings (max +40).',
       cost: 45,
       minAl: 6,
     ),
@@ -102,7 +102,8 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'daily_essence',
       name: 'Dawn Tithe',
-      description: '+5e per level on Daily vault and Daily Run claims.',
+      description:
+          '+5e per level on Daily Vault and Daily Run claims (Lv0 = +0 until bought).',
       cost: 50,
       minAl: 8,
     ),
@@ -206,7 +207,7 @@ abstract final class GauntletMilestones {
 /// Ascend titles unlocked at AL milestones.
 abstract final class AscendTitles {
   static const Map<int, String> byAl = <int, String>{
-    1: 'Reborn',
+    1: 'First Rise',
     5: 'Warden',
     10: 'Spireborn',
     15: 'Deep Will',

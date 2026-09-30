@@ -163,4 +163,14 @@ void main() {
       );
     }
   });
+
+  test('RevengeReady lights buffActive for PROT Revenge chip', () {
+    final s = hero(HeroSpecId.protection)..revengeReady = true;
+    final revenge = ClassKits.all.firstWhere((a) => a.id == AbilityId.revenge);
+    expect(KitHudChips.buffActive(revenge, s), isTrue);
+    final slam = ClassKits.all.firstWhere((a) => a.id == AbilityId.shieldSlam);
+    expect(KitHudChips.buffActive(slam, s), isFalse);
+    s.queuedShieldSlam = true;
+    expect(KitHudChips.buffActive(slam, s), isTrue);
+  });
 }

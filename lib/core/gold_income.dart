@@ -147,9 +147,15 @@ abstract final class GoldIncome {
       );
 
   /// Hub AFK essence stays slow — CAMP/KEEP buys are permanent.
+  ///
+  /// After a 10-min gate: about 1e per 12.5 min at War Altar 0. Each Altar
+  /// level shortens the interval so deltas actually credit power (the old
+  /// flat `power~/2` canceled in every live tick).
   static int essenceDue(int totalSec, int sanctuaryPowerLevel) {
     if (totalSec < 600) return 0;
-    return (totalSec ~/ 750) + (sanctuaryPowerLevel ~/ 2);
+    final power = sanctuaryPowerLevel < 0 ? 0 : sanctuaryPowerLevel;
+    final interval = max(450, 750 - power * 25);
+    return totalSec ~/ interval;
   }
 
   /// Credit hub AFK for [seconds], banking leftover seconds toward the next

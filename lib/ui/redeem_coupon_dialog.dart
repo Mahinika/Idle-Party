@@ -59,34 +59,46 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
         'REDEEM CODE',
         style: GameTheme.body(size: 16, color: GameTheme.parchment),
       ),
-      content: TextField(
-        controller: _ctrl,
-        autofocus: true,
-        textCapitalization: TextCapitalization.characters,
-        textInputAction: TextInputAction.done,
-        autocorrect: false,
-        enableSuggestions: false,
-        style: GameTheme.body(size: 15, color: GameTheme.parchment),
-        cursorColor: GameTheme.torchHot,
-        onSubmitted: (_) => _submit(),
-        decoration: InputDecoration(
-          hintText: 'Enter code',
-          hintStyle: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
-          filled: true,
-          fillColor: GameTheme.panelInset,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Try FOREVERSCROLLS for all forever scrolls (same as the SHOP bundle). '
+            'Already owned forever scrolls will not burn the code.',
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            borderSide: BorderSide(color: GameTheme.border),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _ctrl,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            textInputAction: TextInputAction.done,
+            autocorrect: false,
+            enableSuggestions: false,
+            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            cursorColor: GameTheme.torchHot,
+            onSubmitted: (_) => _submit(),
+            decoration: InputDecoration(
+              hintText: 'Enter code',
+              hintStyle: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+              filled: true,
+              fillColor: GameTheme.panelInset,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                borderSide: BorderSide(color: GameTheme.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                borderSide: BorderSide(color: GameTheme.torch),
+              ),
+            ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            borderSide: BorderSide(color: GameTheme.torch),
-          ),
-        ),
+        ],
       ),
       actions: [
         MenuChrome.dialogCancel(

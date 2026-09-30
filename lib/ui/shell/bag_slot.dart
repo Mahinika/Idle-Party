@@ -35,7 +35,7 @@ class _BagSlot extends StatelessWidget {
       EquipmentSlot.cloak => 'Back',
       EquipmentSlot.neck => 'Neck',
       EquipmentSlot.ring || EquipmentSlot.ring2 => 'Ring',
-      EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'Trink',
+      EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'Charm',
       EquipmentSlot.consumable => 'Flask',
     };
   }

@@ -109,8 +109,9 @@ abstract final class StoryLore {
     final gain =
         'You get AL$nextAl and +${rewardEssence}e$emberBit.\n\n$bless';
     final stay =
-        'Keep: party levels/XP, open caves, essence, relics, pets, soulbound, '
-        'shop buys, tickets, Star Nodes, Apex, God Hand, settings. '
+        'Keep: party levels/XP, open caves, essence, Embers, Cinders, relics, '
+        'CAMP, unlocked specs, pets, soulbound, shop buys, tickets, Star Nodes, '
+        'Apex, God Hand, settings. '
         'Worn non-Apex becomes starter gear. Gold, bag, GOLD tracks, and floor '
         'progress reset. Embers stay.';
     final kits = AscendRoadmap.kitUnlockSummary(nextAl, maxNames: 3);
@@ -152,15 +153,16 @@ abstract final class StoryLore {
   }) {
     assert(godHandLevel >= 0);
     return 'AL stays ${GameLogic.maxAscensionLevel}. Blessing stays ×$blessings.\n\n'
-        'Keep: party levels/XP, open caves, essence, relics, pets, soulbound, '
-        'shop buys, tickets, Star Nodes, Apex, God Hand, settings. '
+        'Keep: party levels/XP, open caves, essence, Embers, Cinders, relics, '
+        'CAMP, unlocked specs, pets, soulbound, shop buys, tickets, Star Nodes, '
+        'Apex, God Hand, settings. '
         'Gold, bag, GOLD tracks, and floor progress reset.\n\n'
         'You get +${rewardEssence}e and 1 STAR NODES point.\n\n'
         'Rebuild the bag by looting.';
   }
 
   static String rebornToast({required int essence}) {
-    return 'Reborn · bag reset · +${essence}e';
+    return 'Reborn · bag reset · +${essence}e · +1 STAR';
   }
 
   static const String shadeJoins = 'Shade the Rogue answers the call.';

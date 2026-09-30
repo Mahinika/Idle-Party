@@ -360,6 +360,14 @@ void main() {
     expect(Keystone.blurb('boss_rush').toLowerCase(), contains('elite'));
   });
 
+  test('Iron Fortune Elite Swarm blurbs are richer than one word', () {
+    expect(Keystone.blurb('swarm').length, greaterThan(12));
+    expect(Keystone.blurb('elite').length, greaterThan(12));
+    expect(Keystone.blurb('fortune').toLowerCase(), contains('gold'));
+    expect(Keystone.blurb('iron').toLowerCase(), contains('gold'));
+    expect(Keystone.blurb('swarm').toLowerCase(), isNot(equals('more enemies')));
+  });
+
   test('No Flask blocks a healing flask', () {
     final flask = GameLogic.createEquipment(
       slot: EquipmentSlot.consumable,

@@ -929,7 +929,7 @@ class GameState {
   }
 
   CombatRatings ratingsFor(PartyHero hero) {
-    // Apex Trial: non-Apex gear contributes 0 (bag untouched).
+    // Craft Trial: non-Apex gear contributes 0 (bag untouched).
     final apexOnly = apexTrialActive;
     int fold(int Function(EquipmentItem i) read) {
       var s = 0;
@@ -1006,6 +1006,17 @@ class GameState {
     final p = points.toDouble();
     if (p <= softAt) return p;
     return softAt + (p - softAt) * 0.35;
+  }
+
+  /// Sheet-% gained by buying [gain] forge points from [points] (after soft knee).
+  static double softForgeNextGain(
+    int points,
+    int gain, {
+    double softAt = 40,
+  }) {
+    if (gain <= 0) return 0;
+    return softForgePercent(points + gain, softAt: softAt) -
+        softForgePercent(points, softAt: softAt);
   }
 
   double effectiveHeroAttackSpeed(PartyHero hero) {

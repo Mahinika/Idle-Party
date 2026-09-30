@@ -27,9 +27,23 @@ part 'bag_combine_slot.dart';
 
 class InventoryDock extends StatefulWidget {
   /// MERGE footer. BiS waits until first-hour plain chrome lifts.
-  static String mergeFooterHint({required bool plainEnglish}) => plainEnglish
-      ? 'Same-slot junk pairs → one stronger piece. Uses gold.'
-      : 'Same-slot junk pairs → one stronger piece (skips upgrades). Uses gold.';
+  static String mergeFooterHint({
+    required bool plainEnglish,
+    int keptCount = 0,
+    List<String> keptNames = const [],
+  }) {
+    if (plainEnglish) {
+      return 'Same-slot junk pairs → one stronger piece. Uses gold.';
+    }
+    final base =
+        'Same-slot junk pairs → one stronger piece (skips upgrades). Uses gold. '
+        'AUTO MERGE picks by raw powerScore.';
+    if (keptCount <= 0) return base;
+    final sample = keptNames.isEmpty
+        ? ''
+        : ' · e.g. ${keptNames.join(', ')}';
+    return '$base Skips $keptCount keep${keptCount == 1 ? '' : 's'}$sample.';
+  }
 
   const InventoryDock({
     super.key,
@@ -635,14 +649,26 @@ class _InventoryDockState extends State<InventoryDock>
   }
 
   int _mergeScore(EquipmentItem item) {
-    final wearer = state.heroes.isEmpty ? null : state.heroes.first;
-    if (wearer == null) return item.powerScore;
-    return GearScorer.roleEquipScore(
-      wearer.gearAffinity,
-      item,
-      specId: wearer.specId,
-      level: wearer.level,
-    );
+    if (state.heroes.isEmpty) return item.powerScore;
+    var best = item.powerScore;
+    for (final wearer in state.heroes) {
+      if (!ClassProficiency.canEquip(
+        role: wearer.gearAffinity,
+        level: wearer.level,
+        item: item,
+        specId: wearer.specId,
+      )) {
+        continue;
+      }
+      final score = GearScorer.roleEquipScore(
+        wearer.gearAffinity,
+        item,
+        specId: wearer.specId,
+        level: wearer.level,
+      );
+      if (score > best) best = score;
+    }
+    return best;
   }
 
   Widget _toolsTab({
@@ -798,6 +824,8 @@ class _InventoryDockState extends State<InventoryDock>
           Text(
             InventoryDock.mergeFooterHint(
               plainEnglish: GameLogic.plainPlayerChrome(state),
+              keptCount: GearService.autoMergeKeptCount(state),
+              keptNames: GearService.autoMergeKeptNames(state),
             ),
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),

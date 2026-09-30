@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/keystone.dart';
+import '../core/market_service.dart';
 import '../models/combat_ratings.dart';
 import '../models/gear_set.dart';
 import '../models/hero.dart';
@@ -100,6 +102,14 @@ class CharacterEquipPanel extends StatelessWidget {
     EquipmentSlot.trinket2: 'CHARM2',
     EquipmentSlot.consumable: 'FLASK',
   };
+
+  /// Slot chip when a bandage fills the consumable slot.
+  static String consumableSlotLabel(EquipmentItem? item) {
+    if (item != null && MarketService.isBandageConsumable(item)) {
+      return 'BANDAGE';
+    }
+    return 'FLASK';
+  }
 
   /// Paper-doll label for an empty or filled off-hand (shield / tome / weapon).
   static String offHandLabel(
@@ -374,8 +384,8 @@ class CharacterEquipPanel extends StatelessWidget {
                     SizedBox(height: slotGap),
                     Text(
                       'Heirloom (legacy) ${state.soulboundItem!.name}'
-                      '${state.metaDepth.soulboundRefine > 0 ? ' · r${state.metaDepth.soulboundRefine}' : ''}',
-                      maxLines: 1,
+                      '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine} (+${state.soulboundRefineAttackBonus} ATK · +${state.soulboundRefineDefenseBonus} DEF)' : ''}',
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: GameTheme.body(size: 11, color: GameTheme.mossLit),
@@ -409,24 +419,43 @@ class CharacterEquipPanel extends StatelessWidget {
                           ),
                         );
                       }
-                      if (!ClassProficiency.canUseShield(hero.spec)) {
-                        return const SizedBox.shrink();
-                      }
-                      final hasShield =
-                          hero.itemIn(EquipmentSlot.offHand)?.offHandKind ==
-                          OffHandKind.shield;
-                      if (hasShield) return const SizedBox.shrink();
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text(
-                          'Off-hand needs a shield',
-                          textAlign: TextAlign.center,
-                          style: GameTheme.body(
-                            size: 11,
-                            color: GameTheme.torchHot,
-                          ),
-                        ),
+                      final preferred = ClassProficiency.preferredOffHandKind(
+                        hero.spec,
                       );
+                      final oh = hero.itemIn(EquipmentSlot.offHand);
+                      if (preferred == OffHandKind.shield) {
+                        if (oh?.offHandKind == OffHandKind.shield) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            'Off-hand needs a shield',
+                            textAlign: TextAlign.center,
+                            style: GameTheme.body(
+                              size: 11,
+                              color: GameTheme.torchHot,
+                            ),
+                          ),
+                        );
+                      }
+                      if (preferred == OffHandKind.weapon) {
+                        if (oh?.offHandKind == OffHandKind.weapon) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            'Off-hand needs a dual-wield weapon',
+                            textAlign: TextAlign.center,
+                            style: GameTheme.body(
+                              size: 11,
+                              color: GameTheme.torchHot,
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
                     },
                   ),
                   SizedBox(height: slotGap),
@@ -446,7 +475,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Main · Off · Ranged · Trinkets · Flask',
+                    'Main · Off · Ranged · Charms · Flask',
                     textAlign: TextAlign.center,
                     style: GameTheme.body(
                       size: compact ? 10 : 11,
@@ -557,7 +586,7 @@ class CharacterEquipPanel extends StatelessWidget {
         if (compact)
           MenuChrome.fold(
             title: 'HERO STATS',
-            subtitle: 'ATK $atk · DEF $def · HP $maxHp',
+            subtitle: 'ATK $atk · Armor $def · HP $maxHp',
             expandLabel: 'All stats',
             collapseLabel: 'Combat only',
             initiallyExpanded: false,
@@ -618,6 +647,13 @@ class CharacterEquipPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
+          if (((_avgDisplayItemLevel(hero) ?? 0) >= 100) ||
+              ((_minDisplayItemLevel(hero) ?? 0) >= 100))
+            Text(
+              'iLvl past 100 soft-caps — shown value is the budget size.',
+              textAlign: TextAlign.center,
+              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            ),
         ],
       ],
     );
@@ -638,13 +674,16 @@ class CharacterEquipPanel extends StatelessWidget {
         : SpecMastery.playerLabel(kind);
     final combat = <(String, String)>[
       ('DMG', '$atk'),
-      ('DEF', '$def'),
+      ('Armor', '$def'),
       ('HP', '$maxHp'),
       ('CRIT', '${state.effectiveHeroCrit(hero)}%'),
     ];
     if (!includeExtended) return combat;
     final avg = _avgDisplayItemLevel(hero);
     final minIl = _minDisplayItemLevel(hero);
+    final keyBonus = state.hardmodeLevel > 0
+        ? Keystone.lootItemLevelBonus(state.hardmodeLevel)
+        : 0;
     return [
       ('STR', '${ratings.strength}'),
       ('AGI', '${ratings.agility}'),
@@ -657,6 +696,7 @@ class CharacterEquipPanel extends StatelessWidget {
       ('LS', '${hero.gearLifestealPercent}%'),
       if (avg != null) ('iLvl avg', '$avg'),
       if (minIl != null && minIl != avg) ('iLvl min', '$minIl'),
+      if (keyBonus > 0) ('KEY loot', '+$keyBonus iLvl'),
     ];
   }
 
@@ -780,6 +820,8 @@ class PaperDollSlot extends StatelessWidget {
     );
     final short = slot == EquipmentSlot.offHand
         ? CharacterEquipPanel.offHandLabel(ohKind, lockedByTwoHand: blockedOh)
+        : slot == EquipmentSlot.consumable
+        ? CharacterEquipPanel.consumableSlotLabel(item)
         : (CharacterEquipPanel.slotLabels[slot] ?? slot.name);
     final a11y = blockedOh
         ? 'Off-hand empty — two-hand weapon equipped. Tap bag to swap 1H and off-hand.'

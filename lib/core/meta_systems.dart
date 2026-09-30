@@ -240,13 +240,7 @@ abstract final class MetaSystems {
         'gauntlet_10': (s) => s.metaDepth.gauntletBestFloor >= 10,
         'casts_100': (s) => s.metaDepth.lifetimeAbilityCasts >= 100,
         'floors_50': (s) => s.metaDepth.lifetimeFloorClears >= 50,
-        'relic_all': (s) =>
-            s.hasRelic('war_banner') &&
-            s.hasRelic('iron_ward') &&
-            s.hasRelic('phoenix_ember') &&
-            s.hasRelic('god_hand_focus') &&
-            s.hasRelic('chamber_luck') &&
-            s.hasRelic('iron_will'),
+        'relic_all': (s) => s.unlockedRelics.length >= 6,
         'sanctuary_12': (s) =>
             s.sanctuaryGoldLevel >= 12 ||
             s.sanctuaryPowerLevel >= 12 ||

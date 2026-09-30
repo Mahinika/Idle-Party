@@ -229,6 +229,19 @@ void main() {
     }
   });
 
+  test('fen floor mood is mire, not Bone Galleries', () {
+    for (var seed = 0; seed < 40; seed++) {
+      final theme = _map('fen', seed).floorTheme;
+      expect(theme, isNotNull);
+      expect(theme!.label.toLowerCase(), isNot(contains('bone')));
+      expect(
+        theme == FloorTheme.mire || theme == FloorTheme.flooded,
+        isTrue,
+        reason: 'fen seed $seed got ${theme.label}',
+      );
+    }
+  });
+
   test('every zone ships a PNG for every prop kind', () {
     for (final zone in CustomAssets.customDungeonZones) {
       for (final kind in MapPropKind.values) {

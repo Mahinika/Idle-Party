@@ -4,6 +4,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/hero_identity.dart';
+import '../../core/market_service.dart';
 import '../../core/party_meter.dart';
 import '../../models/class_ability.dart';
 import '../../models/enemy.dart';
@@ -81,11 +82,12 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
       final state = widget.director.state;
       // Stay bright only while someone is critically low — map stays readable
       // mid-fight when the party is healthy.
-      for (var i = 0; i < state.heroes.length; i++) {
+      for (var i = 0; i < state.combatHeroes.length; i++) {
         final s = _spatialFor(world, i);
-        final hp = s?.hp ?? state.heroes[i].currentHp;
+        final hp = s?.hp ?? state.combatHeroes[i].currentHp;
         final maxHp =
-            s?.effectiveMaxHp ?? state.effectiveHeroMaxHp(state.heroes[i]);
+            s?.effectiveMaxHp ??
+            state.effectiveHeroMaxHp(state.combatHeroes[i]);
         if (maxHp > 0 && hp > 0 && hp / maxHp <= 0.35) {
           _scheduleFade(phone: phone);
           return;
@@ -156,18 +158,20 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     const fullWidth = 118.0;
     final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
     final rowHeight = 26.0 * textScale;
-    final heroCount = state.heroes.length;
+    // Tiny challenge: strip matches combat heroes only (bench stays off HUD).
+    final party = state.combatHeroes;
+    final heroCount = party.length;
     var partyCritical = false;
     final bossFight =
         world != null &&
         world.enemies.any(
           (e) => e.hp > 0 && !e.dormant && e.role == EnemyRole.boss,
         );
-    for (var i = 0; i < state.heroes.length; i++) {
+    for (var i = 0; i < party.length; i++) {
       final s = _spatialFor(world, i);
-      final hp = s?.hp ?? state.heroes[i].currentHp;
+      final hp = s?.hp ?? party[i].currentHp;
       final maxHp =
-          s?.effectiveMaxHp ?? state.effectiveHeroMaxHp(state.heroes[i]);
+          s?.effectiveMaxHp ?? state.effectiveHeroMaxHp(party[i]);
       if (maxHp <= 0) continue;
       if (hp <= 0) {
         if (bossFight ||
@@ -191,8 +195,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     }
 
     final selected = widget.selectedHeroIndex;
-    final kitHero = (selected >= 0 && selected < state.heroes.length)
-        ? state.heroes[selected]
+    final kitHero = (selected >= 0 && selected < party.length)
+        ? party[selected]
         : null;
     final kitActor = (selected >= 0) ? _spatialFor(world, selected) : null;
     final showSideKit = _kitOpen &&
@@ -229,14 +233,14 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                     height: rowHeight,
                     child: ClipRect(
                       child: WebClickScope(
-                        label: state.heroes[i].name,
+                        label: party[i].name,
                         onPressed: () => _onHeroTap(i),
                         child: Semantics(
                           button: true,
                           selected: widget.selectedHeroIndex == i,
                           label:
-                              '${state.heroes[i].name} '
-                              '${state.heroes[i].displayRoleLabel(plainEnglish: plainEnglish)} — tap for kit, '
+                              '${party[i].name} '
+                              '${party[i].displayRoleLabel(plainEnglish: plainEnglish)} — tap for kit, '
                               'long-press for gear',
                           onTap: () => _onHeroTap(i),
                           onLongPress: _onLongPressGear,
@@ -249,7 +253,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                               borderRadius: BorderRadius.circular(3),
                               child: _PartyRow(
                                 index: i,
-                                hero: state.heroes[i],
+                                hero: party[i],
                                 plainEnglish: plainEnglish,
                                 selected: widget.selectedHeroIndex == i,
                                 kitOpen: false,
@@ -260,12 +264,12 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                                     false,
                                 liveHp: () {
                                   final s = _spatialFor(world, i);
-                                  return s?.hp ?? state.heroes[i].currentHp;
+                                  return s?.hp ?? party[i].currentHp;
                                 }(),
                                 maxHp: () {
                                   final s = _spatialFor(world, i);
                                   return s?.effectiveMaxHp ??
-                                      state.effectiveHeroMaxHp(state.heroes[i]);
+                                      state.effectiveHeroMaxHp(party[i]);
                                 }(),
                                 spatial: _spatialFor(world, i),
                                 world: world,
@@ -338,16 +342,47 @@ class DungeonFlaskButton extends StatelessWidget {
   /// Gap + rule + tap row. Kit panel bottom inset matches this.
   static const double stripReserve = 40;
 
-  static int flaskCount(GameState state) {
+  static int flaskCount(GameState state) => healConsumableCount(state);
+
+  /// Usable party heals in slots + bag (flasks and bandages).
+  static int healConsumableCount(GameState state) {
     var n = 0;
     for (final h in state.heroes) {
-      final c = h.itemIn(EquipmentSlot.consumable);
-      if (c != null && c.iconId == 'flask') n++;
+      if (h.itemIn(EquipmentSlot.consumable) != null) n++;
     }
     for (final g in state.gearStash) {
-      if (g.slot == EquipmentSlot.consumable && g.iconId == 'flask') n++;
+      if (g.slot == EquipmentSlot.consumable) n++;
     }
     return n;
+  }
+
+  static ({int flasks, int bandages}) healConsumableSplit(GameState state) {
+    var flasks = 0;
+    var bandages = 0;
+    void tally(EquipmentItem? c) {
+      if (c == null) return;
+      if (MarketService.isBandageConsumable(c)) {
+        bandages++;
+      } else {
+        flasks++;
+      }
+    }
+
+    for (final h in state.heroes) {
+      tally(h.itemIn(EquipmentSlot.consumable));
+    }
+    for (final g in state.gearStash) {
+      if (g.slot == EquipmentSlot.consumable) tally(g);
+    }
+    return (flasks: flasks, bandages: bandages);
+  }
+
+  /// Player label when the next usable heal is a bandage / flask mix.
+  static String healButtonLabel(GameState state) {
+    final split = healConsumableSplit(state);
+    if (split.flasks <= 0 && split.bandages > 0) return 'BANDAGE';
+    if (split.bandages > 0 && split.flasks > 0) return 'FLASK·BANDAGE';
+    return 'FLASK';
   }
 
   static bool partyCritical(GameDirector director) {
@@ -358,8 +393,8 @@ class DungeonFlaskButton extends StatelessWidget {
         world.enemies.any(
           (e) => e.hp > 0 && !e.dormant && e.role == EnemyRole.boss,
         );
-    for (var i = 0; i < state.heroes.length; i++) {
-      final hero = state.heroes[i];
+    for (var i = 0; i < state.combatHeroes.length; i++) {
+      final hero = state.combatHeroes[i];
       SpatialActor? s;
       if (world != null) {
         for (final a in world.heroes) {
@@ -390,11 +425,12 @@ class DungeonFlaskButton extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final urgent = partyCritical(director);
-    final count = flaskCount(state);
+    final count = healConsumableCount(state);
+    final buttonWord = healButtonLabel(state);
     final countLabel = ' · $count';
     final semanticsLabel = urgent
-        ? 'Use healing flask$countLabel, party critical'
-        : 'Use healing flask$countLabel';
+        ? 'Use healing $buttonWord$countLabel, party critical'
+        : 'Use healing $buttonWord$countLabel';
     final labelColor = urgent ? GameTheme.torchHot : GameTheme.parchment;
     return SizedBox(
       height: stripReserve,
@@ -442,7 +478,7 @@ class DungeonFlaskButton extends StatelessWidget {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              'FLASK',
+                              buttonWord,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: GameTheme.pixel(
@@ -701,25 +737,31 @@ class _PartyRow extends StatelessWidget {
     return ' · $line';
   }
 
-  /// Brief crowd-control chip when the hero is slowed or rooted.
-  String? _ccChipLabel(SpatialActor? s) {
-    if (s == null || !s.isAlive) return null;
-    if (s.rootTimer > 0) return 'ROOT';
-    if (s.attackSlowTimer > 0) return 'SLOW';
-    return null;
+  /// Brief crowd-control chips when the hero is rooted, slowed, or hexed.
+  List<String> _ccChipLabels(SpatialActor? s) {
+    if (s == null || !s.isAlive) return const [];
+    final out = <String>[];
+    if (s.rootTimer > 0) out.add('ROOT');
+    if (s.attackSlowTimer > 0) out.add('SLOW');
+    if (s.demoShoutTimer > 0) out.add('HEX');
+    return out;
   }
 
-  Widget _ccChip(SpatialActor? s) {
-    final label = _ccChipLabel(s);
-    if (label == null) return const SizedBox.shrink();
+  Widget _ccChips(SpatialActor? s) {
+    final labels = _ccChipLabels(s);
+    if (labels.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(left: 3),
       child: Text(
-        label,
+        labels.join('·'),
         maxLines: 1,
         style: GameTheme.pixel(
           size: GameTheme.hudPixel,
-          color: label == 'ROOT' ? GameTheme.mossLit : GameTheme.torchHot,
+          color: labels.contains('ROOT')
+              ? GameTheme.mossLit
+              : labels.contains('HEX')
+              ? GameTheme.bloodLit
+              : GameTheme.torchHot,
         ),
       ),
     );
@@ -829,7 +871,7 @@ class _PartyRow extends StatelessWidget {
                           ),
                         ),
                       ),
-                      _ccChip(kitActor),
+                      _ccChips(kitActor),
                     ],
                   ),
                 ],
@@ -911,7 +953,7 @@ class _PartyRow extends StatelessWidget {
                             ),
                           ),
                         ),
-                        _ccChip(kitActor),
+                        _ccChips(kitActor),
                       ],
                     ),
                     const SizedBox(height: 1),
@@ -1152,12 +1194,19 @@ class _InlineAbilityChip extends StatelessWidget {
     final onCd = cdLeft > 0.05;
     final noRage = rage + 0.001 < ability.resourceCost;
     final isCast = ability.resolvedFireMode == AbilityFireMode.cast;
+    final isSwingRider =
+        ability.resolvedFireMode == AbilityFireMode.swingRider;
     final justFired = ability.justFiredHud(cdLeft);
     final execFrac = ability.gate.executeHpFrac;
     final execWaiting = execFrac != null && focusHpFrac > execFrac;
     final bombWaiting = ability.gate.livingBombRefresh && bombUp;
     final softGated = execWaiting || bombWaiting;
-    final ready = isCast && !gated && !onCd && !noRage && !softGated;
+    // Cast CD ready, or swing-rider armed (RevengeReady / queued Slam).
+    final ready = !gated &&
+        !onCd &&
+        !noRage &&
+        !softGated &&
+        (isCast || (isSwingRider && activeBuff));
     final border = justFired
         ? GameTheme.torchHot
         : activeBuff

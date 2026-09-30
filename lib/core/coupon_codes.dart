@@ -37,17 +37,18 @@ abstract final class CouponCodes {
     final bundle = ShopCatalog.offered.firstWhere(
       (e) => e.id == 'perm_scrolls_all',
     );
+    // Already owned via SHOP — do not burn the code on this save.
+    if (ShopBilling.isOwned(state, bundle)) {
+      return CouponRedeemOutcome(
+        state: state,
+        status: CouponRedeemStatus.alreadyOwned,
+      );
+    }
     final stamped = state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         redeemedCoupons: [...used, id],
       ),
     );
-    if (ShopBilling.isOwned(state, bundle)) {
-      return CouponRedeemOutcome(
-        state: stamped,
-        status: CouponRedeemStatus.alreadyOwned,
-      );
-    }
     return CouponRedeemOutcome(
       state: ShopBilling.applyPurchase(stamped, bundle),
       status: CouponRedeemStatus.granted,

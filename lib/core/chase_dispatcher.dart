@@ -164,9 +164,9 @@ abstract final class ChaseDispatcher {
           pickZone: true,
         );
       case HubChaseKind.willRank:
-        return const ChasePlan(label: 'CODEX', op: ChaseOp.navMoreInfo);
+        return const ChasePlan(label: 'CODEX · PETS', op: ChaseOp.navMoreInfo);
       case HubChaseKind.doneForToday:
-        return const ChasePlan(label: 'KEY · BOARDS', op: ChaseOp.navKey);
+        return const ChasePlan(label: 'GAUNTLET', op: ChaseOp.confirmGauntlet);
     }
   }
 

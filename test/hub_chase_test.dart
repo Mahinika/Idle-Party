@@ -283,7 +283,7 @@ void main() {
     expect(chase.kind, HubChaseKind.clearFloors);
     expect(
       chase.title,
-      contains('Level every hero to ${GameLogic.maxHeroLevel}'),
+      contains('Level every active hero to ${GameLogic.maxHeroLevel}'),
     );
     expect(chase.urgency, HubChaseUrgency.normal);
     expect(chase.detail.toUpperCase(), contains('KEY'));
@@ -309,7 +309,7 @@ void main() {
       96,
     );
     final chase = HubChase.forState(state, now: now);
-    expect(chase.title, contains('Almost every hero Lv${GameLogic.maxHeroLevel}'));
+    expect(chase.title, contains('Almost every active hero Lv${GameLogic.maxHeroLevel}'));
     expect(chase.urgency, HubChaseUrgency.almost);
     expect(chase.kind, isNot(HubChaseKind.dailyVaultProgress));
   });
@@ -771,7 +771,8 @@ void main() {
     // Vault + Daily + KEY dial settled + week not cliff → soft session rest.
     expect(chase.kind, HubChaseKind.doneForToday);
     expect(chase.title, contains('Done for today'));
-    expect(chase.detail.toLowerCase(), contains('boards'));
+    expect(chase.detail.toLowerCase(), contains('gauntlet'));
+    expect(chase.progressLabel, isNot(contains('BOARDS')));
   });
 
   test('KEY +21 stays off tonight\'s hub job', () {
@@ -912,7 +913,7 @@ void main() {
     expect(chase.kind, HubChaseKind.keystone);
     expect(
       chase.detail,
-      "Tonight's KEY +2: more enemies, clock ${Keystone.formatTimer(Keystone.parTimeMs(bossFloor: GameLogic.bossFloorFor(state), key: 2))}.",
+      "Tonight's KEY +2: denser packs — more bodies per room, clock ${Keystone.formatTimer(Keystone.parTimeMs(bossFloor: GameLogic.bossFloorFor(state), key: 2))}.",
     );
     expect(chase.detail, isNot(contains('Shield')));
   });
@@ -962,7 +963,7 @@ void main() {
         );
         final chase = HubChase.forState(state, now: now);
         expect(chase.kind, HubChaseKind.clearFloors);
-        expect(chase.title.toLowerCase(), contains('level every hero'));
+        expect(chase.title.toLowerCase(), contains('level every active hero'));
         expect(chase.kind, isNot(HubChaseKind.dailyRun));
         expect(chase.kind, isNot(HubChaseKind.ascend));
       },
@@ -1011,7 +1012,7 @@ void main() {
       );
       final chase = HubChase.forState(state, now: now);
       expect(chase.kind, HubChaseKind.clearFloors);
-      expect(chase.title.toLowerCase(), contains('level every hero'));
+      expect(chase.title.toLowerCase(), contains('level every active hero'));
       expect(chase.kind, isNot(HubChaseKind.willRank));
     });
 

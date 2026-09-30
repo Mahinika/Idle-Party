@@ -190,11 +190,11 @@ void main() {
     router.open(MenuRoute.more, more: MoreSection.quests);
     expect(router.jobHint.toLowerCase(), contains('daily'));
     router.open(MenuRoute.shop);
-    expect(router.jobHint.toLowerCase(), contains('boost'));
+    expect(router.jobHint.toLowerCase(), contains('cinder'));
     expect(router.jobHint.toLowerCase(), contains('ad-free'));
     router.open(MenuRoute.gold, gold: GoldPanel.market);
     expect(router.jobHint.toLowerCase(), contains('flask'));
     router.open(MenuRoute.essence, essence: EssencePanel.relics);
-    expect(router.jobHint.toLowerCase(), contains('relic'));
+    expect(router.jobHint.toLowerCase(), contains('ember'));
   });
 }

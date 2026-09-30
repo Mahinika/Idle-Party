@@ -273,7 +273,8 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
       specId: HeroSpecId.assassination,
       name: 'Cold Blood',
       shortLabel: 'Cold',
-      description: 'Self damage window for poisons and finishers.',
+      description:
+          'Damage window — amps Mutilate, Fan of Knives, Garrote, Rupture, and Envenom.',
       unlockLevel: 11,
       cooldown: 35,
       effect: AbilityEffectKind.selfBuff,
@@ -348,7 +349,8 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
       specId: HeroSpecId.subtlety,
       name: 'Master of Subtlety',
       shortLabel: 'Subtle',
-      description: 'Always on haste. Shadow Dance makes the next hits the opener.',
+      description:
+          'Always on: harder hits + haste. Shadow Dance makes the next hits the opener.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: true,

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../core/audio_assets.dart';
 import '../core/blessing_constellation.dart';
 import '../core/combat_feel.dart';
+import '../core/enemy_flavor.dart';
 import '../core/game_logic.dart';
 import '../core/gauntlet_anomaly.dart';
 import '../core/game_state.dart';
@@ -2084,7 +2085,14 @@ abstract final class SpatialCombat {
                     ? 0.78
                     : (enemy.archetype == EnemyArchetype.swarm ? 0.85 : 0.95)),
           assetIndex: KenneyAssets.enemySpriteCatalogIndex(
-            KenneyAssets.enemySpriteFor(enemy, dungeonId: state.dungeonId),
+            KenneyAssets.enemySpriteFor(
+              enemy,
+              dungeonId: enemy.role == EnemyRole.boss && state.inGauntlet
+                  ? EnemyFlavor.gauntletBossDungeonId(
+                      state.currentRoom.floorNumber,
+                    )
+                  : state.dungeonId,
+            ),
           ),
           role: enemy.role,
           archetype: enemy.archetype,
@@ -3520,11 +3528,16 @@ abstract final class SpatialCombat {
         if (glassExecute || keyGlass) {
           raw = math.max(1, (raw * (glassExecute ? 1.35 : 1.2)).round());
           if (!reducedVfx || world.spawnPersistentVfx) {
+            final flavor = world.keystoneWeekDungeonId.isNotEmpty
+                ? world.keystoneWeekDungeonId
+                : world.dungeonId;
             spawnFloater(
               world,
               x: target.x,
               y: target.y - 0.5,
-              text: 'GLASS',
+              text: glassExecute
+                  ? EnemyFlavor.glassTell(flavor)
+                  : 'EXECUTE',
               argb: 0xFFB0E0FF,
               life: 0.75,
               priority: 2,

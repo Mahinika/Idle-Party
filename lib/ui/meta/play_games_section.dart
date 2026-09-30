@@ -500,7 +500,7 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
         Text(
           GameLogic.showKeystoneJargon(widget.director.state)
               ? 'Season $month · cloud backup. Boards: KEY, Gauntlet, Ranked GR '
-                  '(Sep/Oct may share Console board IDs).'
+                  '(Oct reuses Aug KEY/Gauntlet + Sep GR Console ids).'
               : 'Season $month · cloud backup.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),

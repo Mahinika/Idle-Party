@@ -120,20 +120,20 @@ Idle Party is a portrait idle RPG and dungeon crawl. The camera stays on your he
 - Battle through 15 dungeon zones filled with room chests, enemies, and bosses.
 
 ## Idle progress, real combat
-- Watch the party fight on its own. Tap the fight to help. Leave a dungeon whenever you want and continue when you are ready — the cave crawl is the same fight AFK.
+- Watch the party fight on its own. Long-press the fight, or tap the fist, to help. Leave a dungeon whenever you want and continue when you are ready — the cave crawl is the same fight AFK.
 - TODAY puts your next useful goal on the main button: claim, equip, or enter.
 - Day-one menus stay small until gold, the shop, and essence mean something.
 
 ## Keep growing
 - Ascend to unlock more heroes and permanent upgrades. Your party stays; the run bag resets.
-- Reach level 100 to open challenging endgame modes: KEYSTONE, Infinity Gauntlet, Rifts, and Greater Rifts.
+- Reach level 100 to open challenging endgame modes: KEYSTONE, Gauntlet, Rifts, and Greater Rifts.
 - Take on daily, weekly, and long-term quests.
 - Optional Google Play Games adds cloud save and seasonal leaderboards.
 
 ## Fair play
 - Single-player — no Idle Party account required.
 - Optional rewarded ads (hub SCROLLS) grant timed scrolls and never interrupt a fight.
-- Optional SHOP sells cheap convenience only (boosts, ad-free, small QoL) — not pay-to-win gear.
+- Optional SHOP sells forever SCROLLS, ad-free, and Cinder packs — not pay-to-win gear.
 
 Start your party and take one more floor.
 
@@ -162,7 +162,7 @@ itch.io page: https://cognifox-studio.itch.io/idle-party
 Android on Google Play (free, single-player, no account):
 https://play.google.com/store/apps/details?id=com.idleparty.app
 
-Fair SHOP (convenience only) and optional hub SCROLLS ads — nothing interrupts combat.
+Fair SHOP (SCROLLS / Cinder packs / ad-free) and optional hub SCROLLS ads — nothing interrupts combat.
 
 Trailer:
 ```

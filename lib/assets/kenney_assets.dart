@@ -521,6 +521,7 @@ abstract final class KenneyAssets {
       'crystal golem' ||
       'frozen bulwark' ||
       'glacial brute' ||
+      'crystal brawler' ||
       'shard brawler' => enemyCrystalBrute,
       'shell leviathan' ||
       'barnacle guard' ||
@@ -529,17 +530,21 @@ abstract final class KenneyAssets {
       'crystal wraith' ||
       'ice caster' ||
       'frost slinger' ||
+      'prism chanter' ||
       'rime chanter' ||
       'frost adept' ||
       'splinter blade' ||
       'shatter fang' => enemyCrystalWraith,
-      'spume spitter' ||
-      'salt slinger' ||
+      'spume spitter' || 'salt slinger' => enemyTideMite,
+      // Tide glass/support fight as slime (ZoneArt).
       'depth chanter' ||
       'tide adept' ||
       'razor eel' ||
-      'needle urchin' => enemyTideMite,
-      'crystal mite' || 'frost wisp' || 'rime bat' => enemyCrystalMite,
+      'needle urchin' => enemySlime,
+      'crystal mite' ||
+      'frost wisp' ||
+      'prism bat' ||
+      'rime bat' => enemyCrystalMite,
       // Zone trash with its own art (see lib/models/zone_art.dart).
       'brine mite' || 'reef tick' => enemyTideMite,
       'sand skitter' || 'glass skitter' => enemySandyMite,
@@ -556,11 +561,10 @@ abstract final class KenneyAssets {
       'slag brawler' ||
       'basalt golem' ||
       'ember bulwark' => enemyEmberBrute,
-      'spark caster' ||
-      'cinder slinger' ||
-      'ash chanter' ||
-      'ember adept' => enemyCultist,
-      'char blade' || 'soot fang' => enemyRat,
+      'spark caster' || 'cinder slinger' => enemyEmberMite,
+      // Ember support fight as spider (ZoneArt).
+      'ash chanter' || 'ember adept' => enemySpider,
+      'char blade' || 'soot fang' => enemyEmberMite,
       'grove brute' || 'timber crusher' => enemyGroveBrute,
       'hollow guard' || 'bark bulwark' => enemyGroveMite,
       'spore bat' ||
@@ -604,34 +608,38 @@ abstract final class KenneyAssets {
       'dust spitter' || 'silk slinger' => enemyBat,
       'wing fang' || 'veil blade' => enemySpider,
       'moth chanter' || 'veil adept' => enemyCultist,
-      'cave slime' || 'drip ooze' || 'sand mite' => enemySlime,
-      'spit bat' || 'cavern spitter' => enemyBat,
+      // Sandy swarm fight as sandy mite (ZoneArt).
+      'cave slime' || 'drip ooze' || 'sand mite' => enemySandyMite,
+      'spit bat' || 'cavern spitter' => enemySandyRanged,
       'needle rat' || 'sneak rat' => enemyRat,
       'rock crab' || 'cave brute' => enemySandyBrute,
       'shellback' || 'stone maw' => enemySandyTank,
-      'goblin thug' || 'clubber' || 'club champion' || 'lord thug' => enemyGoblinTank,
-      'fort sentry' ||
-      'hall guard' ||
+      // Goblin brute fight as spider; elite club champion as goblin elite.
+      'goblin thug' || 'clubber' || 'lord thug' => enemySpider,
+      'club champion' => enemyGoblinElite,
+      'fort sentry' || 'hall guard' => enemyKingGuard,
       'elite brute' ||
       'bone brute' ||
-      'crypt brute' ||
-      'infernal brute' ||
-      'flame guard' => enemyCyclops,
+      'crypt brute' => enemyCyclops,
+      'infernal brute' || 'flame guard' => enemyHellBrute,
       'obsidian golem' || 'pit guard' => enemyUnderworldTank,
       'tomb shield' || 'ossuary guard' => enemyDeadTank,
-      'molten golem' || 'ash colossus' => enemyHellBrute,
+      'molten golem' ||
+      'ash behemoth' ||
+      'ash colossus' => enemyHellBrute,
+      'bulwark golem' || 'iron ward' || 'gate knight' => enemyGolem,
+      // Goblin elite fight art (ZoneArt.elite).
       'stash bulwark' ||
-      'bulwark golem' ||
-      'iron ward' ||
-      'gate knight' => enemyGolem,
+      'raid pack' ||
+      'raid slinger' ||
+      'coin cutter' ||
+      'hex hag' => enemyGoblinElite,
       'hideout guard' ||
       'scrap shield' ||
       'lord guard' => enemyCyclops,
       'hex cultist' ||
       'glow cultist' ||
       'mire shaman' ||
-      'court mage' ||
-      'banner cleric' ||
       'cult chanter' ||
       'rift adept' ||
       'necro acolyte' ||
@@ -639,11 +647,12 @@ abstract final class KenneyAssets {
       'fire cultist' ||
       'hell chanter' ||
       'rift priest' => enemyCultist,
-      'hex witch' ||
-      'totem caller' ||
-      'hex hag' ||
-      'lord hexer' => enemyGhost,
-      'hex spider' => enemySpider,
+      // King support fight as king mite (ZoneArt).
+      'court mage' || 'banner cleric' => enemyKingMite,
+      // Goblin trash support fight as cultist (ZoneArt).
+      'hex witch' || 'totem caller' || 'lord hexer' => enemyCultist,
+      // Underworld ranged fight as underworld mite (ZoneArt).
+      'hex spider' || 'soul spitter' => enemyUnderworldMite,
       'wailing ghost' ||
       'specter blade' ||
       'pale reaper' ||
@@ -651,7 +660,6 @@ abstract final class KenneyAssets {
       'blood stalker' ||
       'cutthroat' ||
       'knife kin' ||
-      'coin cutter' ||
       'lord blade' ||
       'loot snatcher' ||
       'royal assassin' ||
@@ -660,15 +668,12 @@ abstract final class KenneyAssets {
       'wisp blade' ||
       'flame assassin' ||
       'cinder blade' => enemyRat,
-      'stash guard' || 'raid pack' || 'lord pack' => enemyGoblinMite,
-      'goblin slinger' ||
-      'dart rascal' ||
-      'raid slinger' ||
-      'lord slinger' => enemyGoblinRanged,
-      'crossbowman' ||
-      'tower archer' ||
-      'ember archer' ||
-      'bone archer' ||
+      'stash guard' || 'lord pack' => enemyGoblinMite,
+      'goblin slinger' || 'dart rascal' || 'lord slinger' => enemyGoblinRanged,
+      // King ranged fight as cultist (ZoneArt).
+      'crossbowman' || 'tower archer' => enemyCultist,
+      'ember archer' => enemyHellMite,
+      'bone archer' => enemyDeadMite,
       'warden archer' => enemyBat,
       'underworld imp' => enemyCultist,
       'warden shield' || 'warden guard' || 'warden adept' => enemyGolem,
@@ -680,6 +685,74 @@ abstract final class KenneyAssets {
       'hydra kin' || 'bog ward' => enemyFenElite,
       'mainspring kin' || 'cog ward' => enemyBrassElite,
       'monarch kin' || 'cocoon ward' => enemyVeilElite,
+      // Elite names → zone elite fight art.
+      'hatch bulwark' ||
+      'burrow spitter' ||
+      'sand razor' ||
+      'cave hexer' ||
+      'mite alpha' ||
+      'kraken kin' => enemySandyBrute,
+      'throne ward' ||
+      'keep marksman' ||
+      'crown blade' ||
+      'court hexer' ||
+      'hall swarm' ||
+      'gate champion' => enemyKingGuard,
+      'pit colossus' ||
+      'eye cultist' ||
+      'shade razor' ||
+      'shrine chanter' ||
+      'imp tide' ||
+      'cyclops kin' => enemyUnderworldElite,
+      'ossuary ward' ||
+      'wail caller' ||
+      'pale razor' ||
+      'grave hexer' ||
+      'bone tide' ||
+      'crypt champion' => enemyGhost,
+      'cinder cultist' ||
+      'infernal razor' ||
+      'gate priest' ||
+      'spawn tide' ||
+      'flame champion' => enemyHellElite,
+      'shard ward' ||
+      'spire caster' ||
+      'splinter razor' ||
+      'frost hexer' ||
+      'wisp tide' ||
+      'glacier champion' => enemyCrystalWraith,
+      'brine caller' ||
+      'razor eel alpha' ||
+      'depth hexer' ||
+      'tide swarm' => enemyCrab,
+      'spark caller' ||
+      'char razor' ||
+      'ash hexer' ||
+      'cinder swarm' => enemyEmberElite,
+      'spore caller' ||
+      'thorn razor' ||
+      'wyrd hexer' ||
+      'root swarm' => enemyGroveElite,
+      'volt caller' ||
+      'zephyr razor' ||
+      'tempest hexer' ||
+      'spark swarm' => enemyStormWraith,
+      'shard caller' ||
+      'glass razor' ||
+      'glacier hexer' ||
+      'rime swarm' => enemyRimeWraith,
+      'bile caller' ||
+      'rot razor' ||
+      'mire hexer' ||
+      'spore swarm' => enemyFenElite,
+      'coil caller' ||
+      'spring razor' ||
+      'clock hexer' ||
+      'cog swarm' => enemyBrassElite,
+      'silk caller' ||
+      'wing razor' ||
+      'moth hexer' ||
+      'dust swarm' => enemyVeilElite,
       _ => null,
     };
     if (mapped != null) return mapped;

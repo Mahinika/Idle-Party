@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/ashen_crown.dart';
 import 'package:idle_party/core/enemy_flavor.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/keystone.dart';
@@ -289,6 +290,22 @@ void main() {
     expect(EnemyFlavor.gauntletBossTell(15), 'CRUSH');
     expect(EnemyFlavor.gauntletBossTell(10), isNot(EnemyFlavor.gauntletBossTell(5)));
     expect(EnemyFlavor.gauntletBossTell(80), 'SHARD');
+  });
+
+  test('Ashen week telegraphs match PATH bossTell except Crown week', () {
+    for (final kit in AshenCrown.weekKits) {
+      if (kit.dungeonId == 'ember') {
+        expect(kit.telegraph, 'CROWN');
+        continue;
+      }
+      expect(
+        kit.telegraph,
+        EnemyFlavor.bossTell(kit.dungeonId),
+        reason: kit.dungeonId,
+      );
+    }
+    expect(AshenCrown.kitByDungeonId('sandy').weekLine, contains('SLAM'));
+    expect(AshenCrown.kitByDungeonId('sandy').weekLine, contains('smash'));
   });
 
   test('week-1 Sandy leans brawlers; Goblin leans glass and support', () {

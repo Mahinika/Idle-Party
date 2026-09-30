@@ -1642,7 +1642,7 @@ class GameDirector extends ChangeNotifier {
       showToast(
         GameLogic.endgameUnlocked(_state)
             ? 'Leave the dungeon first'
-            : 'Ashen Crown unlocks when every hero is Lv${GameLogic.maxHeroLevel}',
+            : 'Ashen Crown unlocks when every active hero is Lv${GameLogic.maxHeroLevel}',
         life: 2.4,
       );
       return;
@@ -1686,7 +1686,7 @@ class GameDirector extends ChangeNotifier {
       showToast(
         _state.inDungeon
             ? 'Leave the dungeon first'
-            : 'Craft Trial needs every hero Lv${GameLogic.maxHeroLevel}',
+            : 'Craft Trial needs every active hero Lv${GameLogic.maxHeroLevel}',
         life: 2.6,
       );
       return;
@@ -1700,7 +1700,7 @@ class GameDirector extends ChangeNotifier {
     _state = GameLogic.startApexTrial(_state);
     notifyListeners();
     showToast(
-      'Craft Trial — every hero Lv${GameLogic.maxHeroLevel} · '
+      'Craft Trial — every active hero Lv${GameLogic.maxHeroLevel} · '
       'non-Apex gear ignored',
       life: 2.6,
     );
@@ -1813,7 +1813,7 @@ class GameDirector extends ChangeNotifier {
     if (!GameLogic.canEnterGauntlet(_state)) {
       showToast(
         !GameLogic.endgameUnlocked(_state)
-            ? 'Gauntlet unlocks when every hero is Lv${GameLogic.maxHeroLevel}'
+            ? 'Gauntlet unlocks when every active hero is Lv${GameLogic.maxHeroLevel}'
             : 'Leave the dungeon first',
         life: 2.0,
       );
@@ -1842,7 +1842,7 @@ class GameDirector extends ChangeNotifier {
     if (!GameLogic.canEnterRift(_state)) {
       showToast(
         !GameLogic.endgameUnlocked(_state)
-            ? 'Rift unlocks when every hero is Lv${GameLogic.maxHeroLevel}'
+            ? 'Rift unlocks when every active hero is Lv${GameLogic.maxHeroLevel}'
             : 'Leave the dungeon first',
         life: 2.0,
       );
@@ -1878,7 +1878,7 @@ class GameDirector extends ChangeNotifier {
     if (!GameLogic.canEnterGreaterRift(_state)) {
       showToast(
         !GameLogic.endgameUnlocked(_state)
-            ? 'Greater Rift unlocks when every hero is Lv${GameLogic.maxHeroLevel}'
+            ? 'Greater Rift unlocks when every active hero is Lv${GameLogic.maxHeroLevel}'
             : 'Leave the dungeon first',
         life: 2.0,
       );

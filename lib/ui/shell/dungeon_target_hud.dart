@@ -298,14 +298,12 @@ class TargetCornerHud extends StatelessWidget {
               Text(
                 GameLogic.plainPlayerChrome(state)
                     ? 'Finish this room to go deeper'
-                    : 'Gate closed — chamber locked',
+                    : 'Clear this room to open the door',
                 style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
               ),
             if (_hasDormantAhead(world))
               Text(
-                GameLogic.plainPlayerChrome(state)
-                    ? 'More rooms ahead'
-                    : 'Next chamber dormant',
+                'More rooms ahead',
                 style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
               ),
             if (coachLine != null)

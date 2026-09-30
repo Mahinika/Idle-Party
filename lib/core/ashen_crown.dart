@@ -18,7 +18,7 @@ class AshenWeekKit {
   String get title => '$venueName Crown';
 
   String get weekLine =>
-      'This week: $title. Telegraph $telegraph, then smash after telegraph.';
+      'This week: $title. Telegraph $telegraph, then smash.';
 }
 
 /// Weekly ticket solo boss **Ashen Crown**.
@@ -47,7 +47,7 @@ abstract final class AshenCrown {
     AshenWeekKit(dungeonId: 'goblin', telegraph: 'HEAL'),
     AshenWeekKit(dungeonId: 'king', telegraph: 'DECREE'),
     AshenWeekKit(dungeonId: 'underworld', telegraph: 'WEAK'),
-    AshenWeekKit(dungeonId: 'dead', telegraph: 'FADE'),
+    AshenWeekKit(dungeonId: 'dead', telegraph: 'MEND'),
     AshenWeekKit(dungeonId: 'hell', telegraph: 'TENTACLE'),
     AshenWeekKit(dungeonId: 'crystal', telegraph: 'SHARD'),
     AshenWeekKit(dungeonId: 'grove', telegraph: 'ROOT'),
@@ -55,7 +55,7 @@ abstract final class AshenCrown {
     AshenWeekKit(dungeonId: 'rime', telegraph: 'FROST'),
     AshenWeekKit(dungeonId: 'fen', telegraph: 'SPIT'),
     AshenWeekKit(dungeonId: 'veil', telegraph: 'SLOW'),
-    AshenWeekKit(dungeonId: 'sandy', telegraph: 'BURY'),
+    AshenWeekKit(dungeonId: 'sandy', telegraph: 'SLAM'),
   ];
 
   static AshenWeekKit kitFor({DateTime? now, String? weekKey}) {

@@ -70,12 +70,12 @@ void combatUpdateChambers(
             radius: 0.55,
           );
         }
-        // Priority floater — still paints on Lite VFX.
+        // Priority floater — still paints on Lite VFX. Plain door word.
         SpatialCombat.spawnFloater(
           world,
           x: gate.x + 0.5,
           y: gate.y - 0.45,
-          text: 'OPEN →',
+          text: 'OPEN',
           argb: SpatialCombat._floaterGold,
           life: 0.95,
           priority: 2,

@@ -205,7 +205,7 @@ Sideload and web stay quiet. Code: `PlayStoreUpdate`, `PlayReviewAsk`.
 
 **Party power (all-time):** Android ID `CgkIhuXGvNocEAIQBA` (`Party Power`). Larger score wins. Published 2026-09-29. The client submits the current party power while signed in and lists it on hub **RANKS → PARTY**.
 
-**2026-10:** no KEY / Gauntlet / Greater Rift ids yet. A signed-in player still sees PARTY. Season chips stay hidden, and RANKS says those boards are not on Play yet, until the Android ids are pasted into `play_leaderboard_ids.dart`. Do not reuse the August or September ids for October scores.
+**2026-10:** intentionally reuses August KEY (`CgkIhuXGvNocEAIQAA`) / Gauntlet (`CgkIhuXGvNocEAIQAQ`) and September Ranked GR (`CgkIhuXGvNocEAIQAw`) until distinct October Console boards exist. Wired in `play_leaderboard_ids.dart`. A signed-in player still sees PARTY. SETTINGS and RANKS show a soft reuse notice — do not invent new Console IDs in docs ahead of Console.
 
 Suggested Description (en-US):
 

@@ -40,9 +40,9 @@ enum VfxQuality {
   String get settingsHint => switch (this) {
     VfxQuality.full => 'All combat effects',
     VfxQuality.lite =>
-        'Discs, auras, crits, heals, BLOCK, flask — routine hits off',
+        'Discs, auras, crits, heals, BLOCK, flask, tells — routine hits off',
     VfxQuality.minimal =>
-        'Reduce motion — discs and auras off, smash still flashes',
+        'Reduce motion — discs and auras off; tells and smash still flash',
   };
 
   VfxQuality get next => switch (this) {

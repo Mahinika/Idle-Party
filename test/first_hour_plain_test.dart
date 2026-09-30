@@ -309,6 +309,14 @@ void main() {
     expect(world.body.toLowerCase(), contains('tidehold'));
     expect(world.body.toLowerCase(), contains('party mean level'));
     expect(world.body.toLowerCase(), contains('gold does not unlock'));
+    expect(world.body.toLowerCase(), contains('every active hero'));
+    expect(world.body.toLowerCase(), contains('mean alone is not enough'));
+    final ascend = early.firstWhere((t) => t.id == 'ascend');
+    expect(ascend.body, contains('Embers'));
+    expect(ascend.body, contains('Cinders'));
+    expect(ascend.body, contains('CAMP'));
+    final weekly = early.firstWhere((t) => t.id == 'weekly');
+    expect(weekly.body.toLowerCase(), contains('+ 1 cinder'));
   });
 
   test('early guides name Daily Vault and skip ISO week', () {
@@ -320,6 +328,7 @@ void main() {
     expect(weekly.title, 'DAILY VAULT');
     expect(weekly.body.toUpperCase(), isNot(contains('ISO')));
     expect(weekly.body, contains('UTC midnight'));
+    expect(weekly.body.toLowerCase(), contains('+ 1 cinder'));
   });
 
   test('AL20 INFO shows the endgame-bridge topic before KEY unlocks', () {

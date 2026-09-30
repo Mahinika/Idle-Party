@@ -241,7 +241,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              'Boss Rush: tougher elite packs (not extra bosses) · No Flask: healing flasks disabled',
+              'Boss Rush: tougher elite packs (not extra bosses) · +2e on clear · '
+              'No Flask: healing flasks disabled · +2e on clear',
               textAlign: TextAlign.center,
               style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
             ),
@@ -266,7 +267,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             const SizedBox(height: 4),
             Text(
               'PB · Rush +${state.metaDepth.challengeBestBossRushKey} · '
-              'Flask +${state.metaDepth.challengeBestNoFlaskKey} · '
+              'No Flask +${state.metaDepth.challengeBestNoFlaskKey} · '
               'Tiny +${state.metaDepth.challengeBestTinyKey}',
               textAlign: TextAlign.center,
               style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
@@ -274,7 +275,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           ],
           Text(
             'Party power ${GameLogic.partyPowerScore(state)} · '
-            'levels, worn gear, Ascend, blessings, Apex, endgame unlock',
+            'levels, worn gear, Ascend, blessings, Apex, Full Bench, endgame unlock',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.mossLit),
           ),
@@ -344,7 +345,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           const SizedBox(height: 2),
           Text(
             !GameLogic.endgameUnlocked(state)
-                ? 'KEY unlocks when every hero is Lv${GameLogic.maxHeroLevel}, '
+                ? 'KEY unlocks when every active hero is Lv${GameLogic.maxHeroLevel}, '
                     'with Gauntlet, Ranked GR, Farm Rift, Ashen, and Craft Trial.'
                 : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2. Keys keep going past +${Keystone.campaignCap}.',
             textAlign: TextAlign.center,

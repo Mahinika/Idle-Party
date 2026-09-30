@@ -48,7 +48,10 @@ void main() {
   test('daily vault and hub essence pace up at endgame', () {
     expect(Keystone.dailyVaultEssence(12), 64);
     expect(Keystone.dailyVaultEssence(0), 16);
-    expect(GoldIncome.essenceDue(3600, 12), 4 + 6);
+    // 1h hub AFK: base ~4e; War Altar 12 shortens interval so more ticks.
+    expect(GoldIncome.essenceDue(3600, 0), 4);
+    expect(GoldIncome.essenceDue(3600, 12), greaterThan(GoldIncome.essenceDue(3600, 0)));
+    expect(GoldIncome.essenceDue(3600, 12), 8);
     expect(GameLogic.pushClearEssence(boss: false), 1);
     expect(GameLogic.pushClearEssence(boss: true), 2);
     var deep = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 22));

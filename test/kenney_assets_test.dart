@@ -80,7 +80,7 @@ void main() {
       KenneyAssets.enemyCrystalMite,
     );
     expect(
-      KenneyAssets.enemySpriteForCodexName('Rime Bat'),
+      KenneyAssets.enemySpriteForCodexName('Prism Bat'),
       KenneyAssets.enemyCrystalMite,
     );
     expect(
@@ -117,22 +117,65 @@ void main() {
     );
   });
 
-  test('sandy swarm codex names map to slime not hash lottery', () {
+  test('sandy swarm codex names map to sandy mite fight art', () {
     expect(
       KenneyAssets.enemySpriteForCodexName('Cave Slime'),
-      KenneyAssets.enemySlime,
+      KenneyAssets.enemySandyMite,
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Drip Ooze'),
-      KenneyAssets.enemySlime,
+      KenneyAssets.enemySandyMite,
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Spit Bat'),
-      KenneyAssets.enemyBat,
+      KenneyAssets.enemySandyRanged,
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Blood Stalker'),
       KenneyAssets.enemyRat,
+    );
+  });
+
+  test('named trash maps to zone fight art', () {
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Goblin Thug'),
+      KenneyAssets.enemySpider,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Hex Spider'),
+      KenneyAssets.enemyUnderworldMite,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Soul Spitter'),
+      KenneyAssets.enemyUnderworldMite,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Crossbowman'),
+      KenneyAssets.enemyCultist,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Court Mage'),
+      KenneyAssets.enemyKingMite,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Hex Witch'),
+      KenneyAssets.enemyCultist,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Ash Chanter'),
+      KenneyAssets.enemySpider,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Razor Eel'),
+      KenneyAssets.enemySlime,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Ash Behemoth'),
+      KenneyAssets.enemyHellBrute,
+    );
+    expect(
+      KenneyAssets.enemySpriteForCodexName('Ash Colossus'),
+      KenneyAssets.enemyHellBrute,
     );
   });
 }

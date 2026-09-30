@@ -819,7 +819,7 @@ class ChamberDots extends StatelessWidget {
       },
       child: Tooltip(
         message:
-            'Tap: chamber overview · square done · diamond here · circle ahead',
+            'Tap: room map · square done · diamond here · circle ahead',
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1010,7 +1010,7 @@ class GodHandRing extends StatelessWidget {
     final label = ready
         ? (readyLabel ??
               (urgent
-                  ? 'God Hand ready — TAP to steer + smash'
+                  ? 'God Hand ready — long-press or fist to steer + smash'
                   : 'God Hand ready'))
         : (coolingLabel ?? 'Cooling ${cooldown.toStringAsFixed(1)}s');
     final action = onTap != null && ready ? onTap : null;

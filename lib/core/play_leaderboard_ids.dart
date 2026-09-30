@@ -25,7 +25,7 @@ abstract final class PlayLeaderboardIds {
           gauntlet: 'CgkIhuXGvNocEAIQAQ',
           greaterRift: 'CgkIhuXGvNocEAIQAw',
         ),
-        // Reuse September KEY / Gauntlet / Ranked GR until October Console ids exist.
+        // Reuse Aug KEY/Gauntlet + Sep GR until Console creates distinct Oct boards.
         '2026-10': (
           timedKey: 'CgkIhuXGvNocEAIQAA',
           gauntlet: 'CgkIhuXGvNocEAIQAQ',
@@ -35,9 +35,13 @@ abstract final class PlayLeaderboardIds {
 
   /// Soft honesty when this month reuses an older Console board id.
   static String? reusedBoardNotice(String monthKey) {
-    if (monthKey == '2026-09' || monthKey == '2026-10') {
-      return 'This month reuses August KEY / Gauntlet / Ranked GR boards '
-          'until Console adds distinct ids.';
+    if (monthKey == '2026-09') {
+      return 'September KEY / Gauntlet reuse August Console ids; '
+          'Ranked GR uses the September board.';
+    }
+    if (monthKey == '2026-10') {
+      return 'October reuses August KEY / Gauntlet and September Ranked GR '
+          'Console ids until distinct October boards exist.';
     }
     return null;
   }

@@ -376,7 +376,7 @@ abstract final class AchievementCatalog {
     AchievementDef(
       id: 'relic_all',
       title: 'Reliquary',
-      description: 'Unlock 6 relics (half the relic shelf).',
+      description: 'Own 6 of 12 relics on the shelf (half the shelf).',
       essenceReward: 18,
       category: AchievementCategory.meta,
     ),
@@ -396,7 +396,7 @@ abstract final class AchievementCatalog {
     ),
     AchievementDef(
       id: 'weekly_clear',
-      title: 'Weekender',
+      title: 'Daily Vaulted',
       description: 'Claim the Daily Vault once.',
       essenceReward: 10,
       category: AchievementCategory.meta,

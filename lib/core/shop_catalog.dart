@@ -176,8 +176,9 @@ abstract final class ShopCatalog {
       id: 'ad_free',
       name: 'Ad-free welcome',
       description:
-          'Permanent — hide SCROLLS ads, +2 Ad Tickets once, a free '
-          'ticket claim once per UTC day, and WISP bonus gold without watching.',
+          'Permanent — hide SCROLLS ads and remove WATCH AD earn. '
+          '+2 Ad Tickets once, a free ticket claim once per UTC day, '
+          'and WISP bonus gold without watching.',
       priceLabel: '\$2.99',
       kind: ShopOfferKind.adFree,
       boostHours: 0,

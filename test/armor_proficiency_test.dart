@@ -53,11 +53,18 @@ void main() {
     expect(can(HeroSpecId.guardian, ArmorType.plate), isFalse);
   });
 
-  test('hunter leather until 40, then mail only', () {
+  test('hunter leather until 40, then mail preferred with leather still legal', () {
     expect(can(HeroSpecId.beastMastery, ArmorType.leather, level: 1), isTrue);
     expect(can(HeroSpecId.beastMastery, ArmorType.mail, level: 1), isFalse);
-    expect(can(HeroSpecId.beastMastery, ArmorType.leather, level: 40), isFalse);
+    expect(can(HeroSpecId.beastMastery, ArmorType.leather, level: 40), isTrue);
     expect(can(HeroSpecId.beastMastery, ArmorType.mail, level: 40), isTrue);
+    expect(
+      ClassProficiency.preferredArmor(
+        HeroSpecs.def(HeroSpecId.beastMastery),
+        40,
+      ),
+      ArmorType.mail,
+    );
   });
 
   test('shaman mail only; cloth casters cloth only', () {

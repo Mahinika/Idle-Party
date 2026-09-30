@@ -209,11 +209,11 @@ abstract final class Keystone {
 
   static String blurb(String affix) => switch (affix) {
     'glass' => 'Fragile foes hit harder — execute low-HP heroes',
-    'swarm' => 'More enemies',
-    'elite' => 'Tougher packs',
-    'fortune' => 'More gold',
-    'iron' => 'Harder, richer',
-    'fortified' => 'Trash packs tougher',
+    'swarm' => 'Denser packs — more bodies per room',
+    'elite' => 'Packs hit harder and soak more',
+    'fortune' => 'Extra gold on clears (same fight threat)',
+    'iron' => 'Longer, richer fights — packs tankier, more gold',
+    'fortified' => 'Tougher trash packs (HP/damage), not armor',
     'tyrannical' => 'Bosses tougher',
     'boss_rush' => 'Tougher elite packs (not extra bosses)',
     'no_flask' => 'Flasks disabled',

@@ -261,7 +261,7 @@ Future<void> openPowerupsSheet(
                         const SizedBox(height: 4),
                         Text(
                           adFree
-                              ? 'Ad-free: claim a free daily ticket, then spend it here.'
+                              ? 'Ad-free: no WATCH AD earn — claim one free daily ticket, then spend here.'
                               : 'Watch for a ticket, then spend it here.',
                           style: GameTheme.body(
                             size: 12,

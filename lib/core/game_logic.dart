@@ -2239,7 +2239,14 @@ class GameLogic {
     if (!farmLoop && clearedBoss && !gauntlet && !rift) {
       var preLeave = awarded;
       if (state.inWorldBoss) {
+        final beforeAshen = preLeave.metaDepth.worldBossClearedWeek;
         preLeave = AshenCrown.onBossClear(preLeave);
+        if (!beforeAshen && preLeave.metaDepth.worldBossClearedWeek) {
+          LogicNotices.addMetaPayoffs([
+            '${AshenCrown.titleReward} · +${AshenCrown.essenceReward}e · '
+            '+1 STAR point',
+          ]);
+        }
       }
       if (state.apexTrialActive && !preLeave.metaDepth.apexTrialCleared) {
         preLeave = preLeave.copyWith(
@@ -3421,7 +3428,7 @@ class OfflineProgressResult {
   /// One honest line: hub sanctuary vs dungeon fight — not mixed up.
   String get afkWhereLine => wasInDungeon
       ? 'Left mid-dungeon · party kept fighting (AFK assist)'
-      : 'Rested at the hub · sanctuary gold, and essence after a while · no combat';
+      : 'Rested at the hub · sanctuary gold right away · essence after 10 min · no combat';
 
   /// Banner + Welcome Back share this gate.
   /// Gold / clears show even under 20s; other rewards need ≥20s away.

@@ -57,6 +57,17 @@ void main() {
     );
   });
 
+  test('gear art standard names files that exist', () {
+    final rule = File('.cursor/rules/gear-art-standard.mdc').readAsStringSync();
+    final skill = File('.cursor/skills/gear-art/SKILL.md').readAsStringSync();
+    for (final text in <String>[rule, skill]) {
+      expect(text, contains('tool/gear_style.py'));
+      expect(text, contains('tool/check_paper_doll_facit.py'));
+    }
+    expect(File('tool/gear_style.py').existsSync(), isTrue);
+    expect(File('tool/check_paper_doll_facit.py').existsSync(), isTrue);
+  });
+
   test('AGENTS.md carries no block managed by another app', () {
     expect(
       File('AGENTS.md').readAsStringSync(),

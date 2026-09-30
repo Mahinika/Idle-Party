@@ -314,9 +314,9 @@ class AdBuffOffer {
     AdBuffId.speed =>
       '+${AdBoost.speedPercent}% dungeon speed · ${AdBoost.splitHours}h',
     AdBuffId.bundle =>
-      'ATK + gold · ${AdBoost.hoursPerAd}h',
+      '+${AdBoost.attackPercent}% ATK · ×${AdBoost.goldMul} gold · ${AdBoost.hoursPerAd}h',
     AdBuffId.offline =>
-      'Next AFK gold ×${AdBoost.awayGoldMul}',
+      'Next Welcome Back ×${AdBoost.awayGoldMul} · timed (Forever Rest is SHOP)',
   };
 }
 
@@ -383,7 +383,8 @@ abstract final class AdBuffCatalog {
       id: AdBuffId.offline,
       label: 'Scroll of Rest',
       blurb:
-          'Next Welcome Back gold ×${AdBoost.awayGoldMul} (expires in 24h if unused)',
+          'Next Welcome Back gold ×${AdBoost.awayGoldMul} (one shot, 24h to use). '
+          'Forever Rest in SHOP is always-on — not this ticket.',
       ticketCost: 1,
       durationMs: AdBoost.maxStackMs,
     ),

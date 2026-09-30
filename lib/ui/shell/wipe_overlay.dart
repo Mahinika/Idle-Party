@@ -191,7 +191,7 @@ class DungeonWipePanel extends StatelessWidget {
                         WipeAdvice.hubCtaLabelFor(state.wipeAdviceLine);
                     final fixNav =
                         WipeAdvice.hubNavFor(state.wipeAdviceLine);
-                    if (fixLabel == null || fixNav == null) {
+                    if (fixLabel == null) {
                       return GameButton(
                         label: state.inGauntlet || state.inAnyRiftMode
                             ? 'HUB'
@@ -209,8 +209,9 @@ class DungeonWipePanel extends StatelessWidget {
                           tip: WipeAdvice.hubHintFor(state.wipeAdviceLine),
                           style: GameButtonStyle.brown,
                           primary: true,
-                          onPressed: () =>
-                              director.hubAfterWipe(openMenu: fixNav),
+                          onPressed: () => director.hubAfterWipe(
+                            openMenu: fixNav,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         GameButton(

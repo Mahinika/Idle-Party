@@ -39,6 +39,11 @@ enum FloorTheme {
     FloorDecalKind.boneDust,
     FloorDecalKind.cracks,
   ], 0x0A405848),
+  mire('Blight Mire', [
+    FloorDecalKind.puddle,
+    FloorDecalKind.moss,
+    FloorDecalKind.roots,
+  ], 0x0C406028),
   gilded('Gilded Halls', [
     FloorDecalKind.grate,
     FloorDecalKind.cracks,
@@ -296,11 +301,11 @@ class ZoneFloorStyle {
     ),
     'fen': ZoneFloorStyle(
       silhouettes: [RoomSilhouette.el, RoomSilhouette.oval],
-      themes: [FloorTheme.bone, FloorTheme.bone, FloorTheme.ritual],
-      vignettes: [PropVignetteKind.crypt, PropVignetteKind.ruin, PropVignetteKind.shrine],
-      wonders: [WonderKind.giantSkeleton],
+      themes: [FloorTheme.mire, FloorTheme.mire, FloorTheme.flooded],
+      vignettes: [PropVignetteKind.ruin, PropVignetteKind.camp, PropVignetteKind.shrine],
+      wonders: [WonderKind.soulWell],
       particles: AmbientParticleKind.spores,
-      setpieceDecal: FloorDecalKind.boneDust,
+      setpieceDecal: FloorDecalKind.puddle,
       accentArgb: 0xFFD0E050,
       organicEdges: true,
     ),

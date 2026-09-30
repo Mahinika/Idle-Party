@@ -6,7 +6,6 @@ import '../../models/hero.dart';
 import '../../models/hero_spec.dart';
 import '../../models/loot.dart';
 import '../../models/proficiency.dart';
-import '../starter_gear.dart';
 import 'gear_equip.dart';
 
 /// Budget-honest equip scoring and upgrade predicates (GEAR_BUDGET).
@@ -422,6 +421,7 @@ abstract final class GearScorer {
         item.spellPowerBonus * w.sp +
         item.resolvedArmor * w.armor +
         item.critChanceBonus * w.crit * critW +
+        item.masteryBonus * w.crit * 0.85 * critW +
         item.attackSpeedBonus * w.aspd +
         item.attackBonus * w.flatAtk;
   }
@@ -440,11 +440,6 @@ abstract final class GearScorer {
     if (mass >= 28 && nearLevel) return true;
     if (ilvl >= minIlvl && mass >= 10) return true;
     if (ilvl >= minIlvl + 4 && mass >= 6) return true;
-
-    final spec = hero.spec;
-    final preferred = StarterGear.preferredArmorForSpec(spec, hero.level);
-    final armorOk = preferred != null && item.armorType == preferred;
-    if (armorOk && nearLevel && mass >= 16) return true;
     return false;
   }
 

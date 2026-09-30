@@ -392,6 +392,50 @@ void main() {
       WipeAdvice.godHandHintFor(state),
       contains('Long-press the fight or tap the fist'),
     );
+    // Gauntlet still nudges God Hand; rifts stay quiet.
+    state = state.copyWith(inGauntlet: true);
+    expect(WipeAdvice.godHandHintFor(state), contains('Long-press'));
+    state = state.copyWith(inGauntlet: false, inRift: true);
+    expect(WipeAdvice.godHandHintFor(state), isNull);
+  });
+
+  test('endgame wipe CTAs point at hub ENDGAME or KEY', () {
+    expect(
+      WipeAdvice.hubCtaLabelFor(
+        'Farm Rift R3 may be high — dial Farm Rift tier on ENDGAME',
+      ),
+      'OPEN ENDGAME',
+    );
+    expect(
+      WipeAdvice.hubHintFor(
+        'Farm Rift R3 may be high — dial Farm Rift tier on ENDGAME',
+      ),
+      contains('ENDGAME'),
+    );
+    expect(
+      WipeAdvice.hubCtaLabelFor(
+        'GR12 is steep — leave and retry from hub ENDGAME',
+      ),
+      'OPEN ENDGAME',
+    );
+    expect(
+      WipeAdvice.hubCtaLabelFor(
+        'Spire climb is steep — PB F40; next milestone F50',
+      ),
+      'OPEN ENDGAME',
+    );
+    expect(
+      WipeAdvice.hubCtaLabelFor(
+        'Ashen Crown hits hard — try PRACTICE free, then spend a ticket',
+      ),
+      'OPEN KEY',
+    );
+    expect(
+      WipeAdvice.hubNavFor(
+        'Ashen Crown hits hard — try PRACTICE free, then spend a ticket',
+      )?.route,
+      MenuRoute.key,
+    );
   });
 
   test('unused flask is a proven wipe line when leftover is high', () {

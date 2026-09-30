@@ -132,7 +132,7 @@ class EssenceKeepPanel extends StatelessWidget {
               child: GameButton(
                 label: GodHandMastery.ready(state, m.$1)
                     ? 'CLAIM · ${m.$2} · +12e · ${GodHandMastery.progressLabel(state, m.$1)}'
-                    : '${m.$2} · ${GodHandMastery.progressLabel(state, m.$1)}',
+                    : '${m.$2} · +12e · ${GodHandMastery.progressLabel(state, m.$1)}',
                 style: GameButtonStyle.grey,
                 dense: true,
                 onPressed: GodHandMastery.ready(state, m.$1)
@@ -168,7 +168,15 @@ class EssenceKeepPanel extends StatelessWidget {
               style: GameTheme.body(size: 11, color: GameTheme.mossLit),
             ),
           for (final n in BlessingConstellation.nodes)
-            if (!BlessingConstellation.isLit(state, n.$1))
+            if (BlessingConstellation.isLit(state, n.$1))
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Text(
+                  'LIT ${n.$2} — ${BlessingConstellation.effectLabel(n.$1)}',
+                  style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+                ),
+              )
+            else
               Padding(
                 padding: const EdgeInsets.only(top: 3),
                 child: GameButton(
@@ -202,7 +210,7 @@ class EssenceKeepPanel extends StatelessWidget {
           ),
           Text(
             '${state.soulboundItem!.name}'
-            '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine}' : ''}',
+            '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine} (+${state.soulboundRefineAttackBonus} ATK · +${state.soulboundRefineDefenseBonus} DEF)' : ''}',
             style: GameTheme.body(size: 13, color: GameTheme.mossLit),
           ),
         ],

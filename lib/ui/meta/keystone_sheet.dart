@@ -30,7 +30,7 @@ class KeystoneSheet extends StatelessWidget {
       HubChaseKind.gauntletMilestone => 'Hub hunt · Gauntlet',
       HubChaseKind.riftMilestone => 'Hub hunt · Farm Rift',
       HubChaseKind.greaterRiftMilestone => 'Hub hunt · Ranked GR',
-      HubChaseKind.doneForToday => 'Hub hunt · soft rest · BOARDS',
+      HubChaseKind.doneForToday => 'Hub hunt · soft rest · GAUNTLET',
       HubChaseKind.ashenCrown => 'Hub hunt · Ashen Crown',
       _ => '',
     };

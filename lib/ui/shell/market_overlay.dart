@@ -5,6 +5,7 @@ import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/gear/gear_scorer.dart';
 import '../../core/market_listings_service.dart';
+import '../../core/market_service.dart';
 import '../../models/hero.dart';
 import '../../models/loot.dart';
 import '../../models/market_listing.dart';
@@ -136,6 +137,12 @@ class _MarketOverlayState extends State<MarketOverlay> {
           ],
         ),
         const SizedBox(height: 8),
+
+        Text(
+          'GAP FILL = empty slot piece (not a budget upgrade). UPGRADE = stronger than worn.',
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 6),
 
         if (listings.isEmpty)
           Padding(
@@ -304,7 +311,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
     return switch (slot) {
       EquipmentSlot.offHand => 'OFF',
       EquipmentSlot.ring || EquipmentSlot.ring2 => 'RING',
-      EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'TRINKET',
+      EquipmentSlot.trinket || EquipmentSlot.trinket2 => 'CHARM',
       _ => slot.name.toUpperCase(),
     };
   }
@@ -374,22 +381,20 @@ class _MarketOverlayState extends State<MarketOverlay> {
   static String _marketHealCount(GameState state) {
     var flasks = 0;
     var bandages = 0;
-    for (final h in state.heroes) {
-      final c = h.itemIn(EquipmentSlot.consumable);
-      if (c == null) continue;
-      if (c.iconId == 'flask') {
-        flasks++;
-      } else {
+    void tally(EquipmentItem? c) {
+      if (c == null || c.slot != EquipmentSlot.consumable) return;
+      if (MarketService.isBandageConsumable(c)) {
         bandages++;
+      } else {
+        flasks++;
       }
     }
+
+    for (final h in state.heroes) {
+      tally(h.itemIn(EquipmentSlot.consumable));
+    }
     for (final g in state.gearStash) {
-      if (g.slot != EquipmentSlot.consumable) continue;
-      if (g.iconId == 'flask') {
-        flasks++;
-      } else {
-        bandages++;
-      }
+      tally(g);
     }
     return 'Have ${_marketCount(flasks, 'flask', 'flasks')} · '
         '${_marketCount(bandages, 'bandage', 'bandages')}';

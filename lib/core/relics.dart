@@ -109,7 +109,7 @@ abstract final class RelicCatalog {
     RelicDef(
       id: RelicIds.porchLantern,
       name: 'Porch Lantern',
-      blurb: 'More gold while you are away.',
+      blurb: 'More hub AFK / Welcome Back gold while you are away.',
       effect: RelicEffect.offlineGold,
       perTier: 6,
     ),

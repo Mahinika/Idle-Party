@@ -50,7 +50,7 @@ class HubMetaPulse extends StatelessWidget {
         chaseKind != HubChaseKind.claimDailyVault) {
       bits.add(
         state.hardmodeLevel <= 0
-            ? 'KEY +0 · dial on KEY'
+            ? 'KEY dial on KEY tab'
             : 'KEY +${state.hardmodeLevel}',
       );
     }
@@ -71,11 +71,11 @@ class HubMetaPulse extends StatelessWidget {
     if (GameLogic.showDailyRunOnHub(state)) {
       if (chaseKind == HubChaseKind.dailyVaultProgress ||
           chaseKind == HubChaseKind.claimDailyVault) {
-        bits.add('not Daily Run / not Quests');
+        bits.add('Daily Run & Quests separate');
       } else if (chaseKind == HubChaseKind.dailyRun) {
-        bits.add('not Vault / not Quests');
+        bits.add('Vault & Quests separate');
       } else if (chaseKind == HubChaseKind.claimMissions) {
-        bits.add('not Vault / not Daily Run');
+        bits.add('Vault & Daily Run separate');
       }
     }
 

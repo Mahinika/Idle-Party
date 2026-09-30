@@ -133,7 +133,7 @@ abstract final class KitNamedCasts {
         SpatialCombat.announceCast(
           world,
           hero,
-          text: 'CHARGE',
+          text: def.shortLabel,
           argb: 0xFFE0C070,
           reducedVfx: reducedVfx,
           burstArgb: 0x88D0A050,
@@ -164,7 +164,7 @@ abstract final class KitNamedCasts {
             world,
             x: hero.x,
             y: hero.y - 0.5,
-            text: 'SHIELD BLOCK',
+            text: def.shortLabel,
             argb: 0xFF9AD0FF,
             life: 0.55,
           );
@@ -179,7 +179,7 @@ abstract final class KitNamedCasts {
         SpatialCombat.announceCast(
           world,
           hero,
-          text: 'SHIELD SLAM',
+          text: def.shortLabel,
           argb: 0xFFB0D0FF,
           reducedVfx: reducedVfx,
           burstArgb: 0x8890C0FF,
@@ -219,7 +219,7 @@ abstract final class KitNamedCasts {
             world,
             x: hero.x,
             y: hero.y - 0.55,
-            text: 'DEMO SHOUT',
+            text: def.shortLabel,
             argb: 0xFFFF8866,
             life: 0.7,
           );
@@ -244,7 +244,7 @@ abstract final class KitNamedCasts {
             world,
             x: hero.x,
             y: hero.y - 0.55,
-            text: 'COMMANDING',
+            text: def.shortLabel,
             argb: 0xFFFFD070,
             life: 0.75,
           );
@@ -364,7 +364,7 @@ abstract final class KitNamedCasts {
             world,
             x: target.x,
             y: target.y - 0.5,
-            text: 'PAIN SUPP',
+            text: def.shortLabel,
             argb: 0xFFFF9090,
             life: 0.7,
           );
@@ -391,7 +391,7 @@ abstract final class KitNamedCasts {
             world,
             x: hero.x,
             y: hero.y - 0.5,
-            text: 'FORTITUDE',
+            text: def.shortLabel,
             argb: 0xFFFFE8A0,
             life: 0.65,
           );
@@ -591,7 +591,7 @@ abstract final class KitNamedCasts {
         SpatialCombat.announceCast(
           world,
           hero,
-          text: 'PENANCE',
+          text: def.shortLabel,
           argb: 0xFFFFF0A0,
           reducedVfx: reducedVfx,
           burstArgb: 0xAAFFE080,
@@ -606,7 +606,7 @@ abstract final class KitNamedCasts {
         SpatialCombat.announceCast(
           world,
           hero,
-          text: 'ICE BLOCK',
+          text: def.shortLabel,
           argb: 0xFFA0E8FF,
           reducedVfx: reducedVfx,
           burstArgb: 0xAA80D0FF,
@@ -647,7 +647,7 @@ abstract final class KitNamedCasts {
         SpatialCombat.announceCast(
           world,
           hero,
-          text: 'BLINK',
+          text: def.shortLabel,
           argb: 0xFFC0A0FF,
           reducedVfx: reducedVfx,
           burstArgb: 0xAAC080FF,

@@ -326,7 +326,7 @@ class MenuRouter extends ChangeNotifier {
 
     },
 
-    MenuRoute.shop => 'Boosts · ad-free',
+    MenuRoute.shop => 'SCROLLS · Cinders · ad-free',
 
     MenuRoute.essence => switch (_essencePanel) {
 
@@ -334,7 +334,7 @@ class MenuRouter extends ChangeNotifier {
 
       EssencePanel.keep => 'God Hand · Blessing · Ascend',
 
-      EssencePanel.relics => 'Relics that keep on Ascend',
+      EssencePanel.relics => 'Embers discover · Cinders vault',
 
       EssencePanel.pets => 'Hatch and level pets',
 

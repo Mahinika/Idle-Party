@@ -26,7 +26,8 @@ Games and Firebase are there and in `docs/PRIVACY.md`.
 decompiled code. See `.cursor/rules/product-locks.mdc`.
 
 **Doll:** `paintOwnedHero` plus `docs/CHARACTER_VISUALS.md` and skill
-`character-paper-doll`. Gear and race clips are owned PNGs. Enemies are a
+`character-paper-doll`. Gear pictures follow skill `gear-art` and
+`tool/gear_style.py`. Gear and race clips are owned PNGs. Enemies are a
 separate art pass.
 
 ## Build and verify
@@ -148,6 +149,7 @@ stamina is STA.
 | Menus | `lib/core/menu_router.dart`, `lib/ui/shell/menu_surface.dart`, `app_bottom_bar.dart` |
 | Hub / chase | `lib/ui/hub_screen.dart`, `lib/core/hub_chase.dart`, `lib/core/chase_contract.dart` |
 | Art helpers | `lib/assets/custom_assets.dart`, `lib/assets/kenney_assets.dart` |
+| Gear art | `tool/gear_style.py`, `tool/facit/`, rule `gear-art-standard`, skill `gear-art` |
 | UI tokens | `lib/ui/theme.dart`, `docs/UI_THEME.md` |
 | Emulator look | `py -3 tool/adb_see.py` (UI tree, tap-by-label, `[IP]` log) |
 
@@ -165,7 +167,7 @@ stamina is STA.
 
 ## Ascend
 
-**Keeps:** hero levels/XP, open zones, essence, relics, pets, sanctuary,
+**Keeps:** hero levels/XP, open zones, essence, Embers, Cinders, relics, pets, sanctuary,
 God Hand, Apex, soulbound, settings, unlocked specs, full `metaDepth`
 (bests, blessings, constellation, Craft Trial, ad tickets and timers,
 shop entitlements, coupons, Play opt-in).
@@ -178,7 +180,7 @@ Blessing stacks, STAR NODES, and REBORN: `lib/core/blessing_constellation.dart`
 and skill `save-migrate`. REBORN is optional and never a TODAY chase.
 Dungeon unlock is party mean level, not lifetime gold.
 
-God Hand: tap steer + AOE under ESSENCE → BLESSING (BAL / FOCUS / WIDE).
+God Hand: long-press the fight or tap the fist + AOE under ESSENCE → BLESSING (BAL / FOCUS / WIDE).
 Change direction only when the owner names it.
 
 **Balance:** fairness first. CI fails on DPS `HIGH` (±20% vs median share).

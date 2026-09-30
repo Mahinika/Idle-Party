@@ -19,7 +19,7 @@ void main() {
     );
     expect(
       PartyFloorMark.pick(specs: starter, names: names, floorNumber: 2)?.line,
-      'Grace lit a shrine.',
+      'Grace found a shrine — look only.',
     );
     expect(
       PartyFloorMark.pick(specs: starter, names: names, floorNumber: 3)?.line,

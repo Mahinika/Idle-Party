@@ -58,15 +58,21 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     PartyUpgradeType.vitality => '+${state.vitalityBonus}',
     PartyUpgradeType.moveSpeed =>
       '+${GameState.softForgePercent(state.moveSpeedBonus).round()}%'
-      '${state.moveSpeedBonus >= 40 ? ' · cap' : ''}',
+      '${state.moveSpeedBonus >= 40 ? ' · SOFT' : ''}',
     PartyUpgradeType.attackSpeed =>
       '+${GameState.softForgePercent(state.attackSpeedBonus).round()}%'
-      '${state.attackSpeedBonus >= 40 ? ' · cap' : ''}',
+      '${state.attackSpeedBonus >= 40 ? ' · SOFT' : ''}',
     PartyUpgradeType.crit =>
       '+${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%'
-      '${state.critBonus >= 25 ? ' · cap' : ''}',
+      '${state.critBonus >= 25 ? ' · SOFT' : ''}',
     PartyUpgradeType.mastery => '+${state.masteryBonus}',
   };
+
+  static String _fmtSoftNextPct(double gain) {
+    if (gain <= 0) return '+0%';
+    if ((gain - gain.round()).abs() < 0.05) return '+${gain.round()}%';
+    return '+${gain.toStringAsFixed(1)}%';
+  }
 
   Widget _upgradeRow({
     required GameState state,
@@ -94,7 +100,11 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       dense: true,
       trailing: GameButton(
         label: buyLabel,
-        tip: recommended ? 'Recommended BEST track for your gold' : null,
+        tip: recommended
+            ? 'BEST = cheapest track that still lifts party power'
+            : (type == PartyUpgradeType.crit && state.critBonus >= 25
+                ? 'CRIT soft-caps past 25 — each buy adds less sheet %'
+                : null),
         expanded: false,
         dense: true,
         onPressed: onPressed,
@@ -114,12 +124,13 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       PartyUpgradeType.vitality =>
         '+${GameLogic.forgeVitalityGain} STA next',
       PartyUpgradeType.moveSpeed =>
-        '+${GameLogic.forgeMoveGain}% MOVE next',
+        '${_fmtSoftNextPct(GameState.softForgeNextGain(state.moveSpeedBonus, GameLogic.forgeMoveGain))} MOVE next',
       PartyUpgradeType.attackSpeed =>
-        '+${GameLogic.forgeHasteGain}% HASTE next',
+        '${_fmtSoftNextPct(GameState.softForgeNextGain(state.attackSpeedBonus, GameLogic.forgeHasteGain))} HASTE next',
       PartyUpgradeType.crit =>
-        '+${GameLogic.forgeCritGain}% CRIT next',
-      PartyUpgradeType.mastery => '+1 MASTERY next',
+        '${_fmtSoftNextPct(GameState.softForgeNextGain(state.critBonus, GameLogic.forgeCritGain, softAt: 25))} CRIT next',
+      PartyUpgradeType.mastery =>
+        '+${GameLogic.forgeMasteryGain} MASTERY next',
     };
   }
 
@@ -149,7 +160,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
               label: GameLogic.canForgeGoldSpendEven(state)
                   ? 'SPEND ALL · EVEN'
                   : 'SPEND ALL · EVEN · Need gold',
-              tip: 'Splits wallet gold round-robin across every track',
+              tip: 'Splits wallet gold round-robin across every track. '
+                  'MOVE/HASTE soft past 40 · CRIT soft past 25.',
               style: GameButtonStyle.grey,
               dense: true,
               onPressed: GameLogic.canForgeGoldSpendEven(state)

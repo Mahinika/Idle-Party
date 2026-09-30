@@ -25,7 +25,7 @@ Typical save data may include party progress, gear, gold/meta currency, settings
 
 If you sign in with **Google Play Games**:
 
-- **Leaderboards:** the app may submit opt-in scores to Google’s leaderboard service, and show those public Play Games names and ranks inside **RANKS**. Seasonal boards: best timed KEY + clear time, best Infinity Gauntlet floor, and best Greater Rift tier + clear time for the calendar month. All-time board: party power (level, worn gear, Ascend, and blessings).
+- **Leaderboards:** the app may submit opt-in scores to Google’s leaderboard service, and show those public Play Games names and ranks inside **RANKS**. Seasonal boards: best timed KEY + clear time, best Gauntlet floor, and best Greater Rift tier + clear time for the calendar month. All-time board: party power (level, worn gear, Ascend, and blessings).
 - **Cloud save:** the app may upload a progress snapshot to Google Play Games **Saved Games** so you can restore after reinstall or on another device signed into the same Play Games profile.
 - Google hosts that data under Play Games / your Google account. Idle Party does not run its own cloud save or leaderboard server.
 
@@ -72,8 +72,8 @@ Hub **SCROLLS → TIP A FRIEND** is optional:
 
 ## Optional real-money SHOP (Android / Google Play)
 
-Bottom-tab **SHOP** may offer cheap convenience packs (timed Full Boost, ad-free,
-small QoL). Purchases go through **Google Play Billing**. Google processes the
+Bottom-tab **SHOP** may offer forever SCROLLS, ad-free, and Cinder packs
+(the same slow relic currency you also earn from the Daily Vault). Purchases go through **Google Play Billing**. Google processes the
 payment; Idle Party does not run its own payment server. Purchase ownership for
 one-time packs is stored in your local save (and optional Play Games cloud save
 if you opt in). Sideloaded APKs cannot complete Play Billing buys.

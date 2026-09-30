@@ -83,13 +83,33 @@ void main() {
     expect(md.hubAfkSec, 0);
   });
 
-  test('10 minutes of hub AFK can grant essence', () {
+  test('10 minutes of hub AFK opens the essence gate; first tick at ~12.5 min', () {
     var state = GameLogic.createInitialState(
       now: DateTime.utc(2026, 8, 20),
-    ).copyWith(sanctuaryPowerLevel: 2);
+    ).copyWith(sanctuaryPowerLevel: 0);
     final startE = state.essence;
     state = GoldIncome.applyHubIdle(state, 600);
+    expect(state.essence, startE);
+    state = GoldIncome.applyHubIdle(state, 150);
     expect(state.essence, greaterThan(startE));
+  });
+
+  test('War Altar raises ongoing hub AFK essence rate', () {
+    final base = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 20));
+    final plainStart = base.essence;
+    final poweredStart = base.essence;
+    final plain = GoldIncome.applyHubIdle(base, 3600);
+    final powered = GoldIncome.applyHubIdle(
+      base.copyWith(sanctuaryPowerLevel: 12),
+      3600,
+    );
+    expect(powered.essence - poweredStart, greaterThan(plain.essence - plainStart));
+    expect(
+      GoldIncome.essenceDue(3600, 12) - GoldIncome.essenceDue(1800, 12),
+      greaterThan(
+        GoldIncome.essenceDue(3600, 0) - GoldIncome.essenceDue(1800, 0),
+      ),
+    );
   });
 
   test('run gold/min uses credited samples after warmup, not a burst', () {

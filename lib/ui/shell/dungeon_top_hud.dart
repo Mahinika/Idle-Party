@@ -10,6 +10,7 @@ import '../../core/menu_alerts.dart';
 import '../../models/dungeon_mode.dart';
 import '../../models/dungeon_room.dart';
 import '../../models/enemy.dart';
+import '../../spatial/floor_blueprint.dart';
 import '../../spatial/spatial_combat.dart';
 import '../coach_pulse.dart';
 import '../first_session_tips.dart';
@@ -23,7 +24,15 @@ import 'wallet_strip.dart';
 /// Floor mood name between fights ("Frozen Halls"); the pack job wins mid-fight.
 String _floorMoodBit(SpatialWorld world) {
   final theme = world.map.floorTheme;
-  return theme == null ? '' : ' · ${theme.label}';
+  final mood = theme == null ? '' : ' · ${theme.label}';
+  final hasShrine = world.map.chambers.any(
+    (c) => c.beatKind == FloorBeatKind.shrine,
+  );
+  final awakeFight = world.enemies.any((e) => e.isAlive && !e.dormant);
+  if (hasShrine && !awakeFight) {
+    return '$mood · Shrine';
+  }
+  return mood;
 }
 
 String _packJobBit(SpatialWorld? world) {
@@ -47,12 +56,12 @@ String _packJobBit(SpatialWorld? world) {
       ? world.keystoneWeekDungeonId
       : world.dungeonId;
   final jobs = <PackJob>{
-    for (final e in awake)
+    for (var i = 0; i < awake.length; i++)
       EnemyFlavor.packJobFor(
-        index: pack.indexOf(e),
-        count: pack.length,
+        index: i,
+        count: awake.length,
         type: roomType,
-        isBossUnit: e.role == EnemyRole.boss,
+        isBossUnit: awake[i].role == EnemyRole.boss,
         dungeonId: flavorId,
       ),
   };
@@ -349,7 +358,14 @@ class DungeonTopHud extends StatelessWidget {
         : awaitingExit
         ? '$zoneShort · F$floor · GO stairs'
         : state.inGauntlet
-        ? 'CLIMB'
+        ? () {
+            for (final e in state.enemies) {
+              if (e.role == EnemyRole.boss && !e.isDefeated) {
+                return 'CLIMB · ${e.name}';
+              }
+            }
+            return 'CLIMB';
+          }()
         : state.inRift
         ? 'STORMWAKE · FARM R${state.riftTier}'
         : state.inGreaterRift

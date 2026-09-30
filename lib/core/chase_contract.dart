@@ -43,8 +43,10 @@ class ChaseContract {
     if (kind == HubChaseKind.clearFloors) {
       final t = title;
       if (t.startsWith('Almost every hero') ||
+          t.startsWith('Almost every active hero') ||
           t.startsWith('Almost party') ||
           t.startsWith('Level every hero') ||
+          t.startsWith('Level every active hero') ||
           t.startsWith('Level the party')) {
         return 'Why: those levels open the hunts.';
       }
@@ -73,7 +75,8 @@ class ChaseContract {
       HubChaseKind.ashenCrown => 'Why: weekly Ashen ticket.',
       HubChaseKind.unlockZone => 'Why: next cave in reach.',
       HubChaseKind.clearFloors => 'Why: push this cave.',
-      HubChaseKind.willRank => 'Why: Will rank payday close.',
+      HubChaseKind.willRank =>
+        'Why: ${chase.title} — Will titles from CODEX / pets / relics.',
       HubChaseKind.doneForToday => 'Why: dailies settled — rest OK.',
     };
   }
@@ -101,7 +104,7 @@ class ChaseContract {
           ? chase.progressLabel!.replaceFirst('RANK GR', 'RANKED GR')
           : 'RANKED GR',
     HubChaseKind.ashenCrown => 'ASHEN CROWN',
-    HubChaseKind.doneForToday => 'KEY · BOARDS',
+    HubChaseKind.doneForToday => 'GAUNTLET',
     HubChaseKind.unlockZone => zoneId != null ? 'PATH' : null,
     _ => null,
   };

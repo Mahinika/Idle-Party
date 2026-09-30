@@ -2,7 +2,7 @@
 
 **Your party keeps fighting while you watch — or while you’re away.**
 
-Idle Party is a cozy-but-crunchy **idle RPG**: a hero party crawls spatial dungeon floors, clears chambers, farms loot, and grows stronger between runs. Tap in for God Hand moments, or let the corridor combat cook offline.
+Idle Party is a cozy-but-crunchy **idle RPG**: a hero party crawls spatial dungeon floors, clears chambers, farms loot, and grows stronger between runs. Long-press the fight, or tap the fist, for God Hand moments, or let the corridor combat cook offline.
 
 <p align="center">
   <img src="tool/art_backups/app_icon.png" alt="Idle Party app icon — pixel torch and party crest" width="160" />
@@ -39,9 +39,9 @@ Painted pixel dungeons, torchlight, dark charcoal and gold. [Kenney](https://ken
 - **Real dungeon crawling, not a fake progress bar** — multi-chamber maps, gates that open after clears, and a party that actually walks the floor.
 - **A full party with class kits** — 10 classes and **31 specs**. Pick your starters on New Game; unlock more via Ascend and clears. Abilities, buffs, and a live DPS share meter.
 - **Farm or Push** — milk a floor for loot, or shove deeper until the wipe. Your call.
-- **God Hand** — tap the map to steer and smash. Upgrade it with essence.
+- **God Hand** — long-press the fight, or tap the fist, to steer and smash. Upgrade it with essence.
 - **Gear that feels good** — equip, auto-equip, merge in the combinator (BAG Scrap / Sell junk / Loadouts chrome is hidden).
-- **Meta that survives Ascend** — sanctuary, relics, pets, prestige shop, contracts, weekly modifiers, achievements, codex.
+- **Meta that survives Ascend** — sanctuary, Embers/Cinders relics, pets, prestige shop, contracts, weekly modifiers, achievements, codex.
 - **Offline progress that respects the dungeon** — come back to gold, floors, and a clear summary.
 
 ---

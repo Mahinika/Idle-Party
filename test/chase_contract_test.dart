@@ -87,7 +87,7 @@ void main() {
     final contract = ChaseContract(
       chase: const HubChase(
         kind: HubChaseKind.clearFloors,
-        title: 'Almost every hero Lv100',
+        title: 'Almost every active hero Lv100',
         detail: 'Lowest hero Lv97',
       ),
     );
