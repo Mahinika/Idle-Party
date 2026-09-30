@@ -120,6 +120,14 @@ class _ShopDockState extends State<ShopDock>
     );
   }
 
+  bool _playLists(ShopCatalogItem item) =>
+      !ShopStore.productsReady || ShopStore.storeLists(item.id);
+
+  String _priceLabel(ShopCatalogItem item) {
+    if (!_playLists(item)) return 'Not on Play';
+    return ShopStore.storePriceLabel(item.id) ?? item.priceLabel;
+  }
+
   Widget _page({
     required String hint,
     required String storeLine,
@@ -146,11 +154,11 @@ class _ShopDockState extends State<ShopDock>
           _ShopRow(
             item: items[i],
             owned: ShopBilling.isOwned(state, items[i]),
-            priceLabel:
-                ShopStore.storePriceLabel(items[i].id) ?? items[i].priceLabel,
+            priceLabel: _priceLabel(items[i]),
+            listed: _playLists(items[i]),
             compact: compact && items[i].permMask != AdBoost.permAll,
             primary: items[i].permMask == AdBoost.permAll,
-            onBuy: () => _buy(items[i]),
+            onBuy: _playLists(items[i]) ? () => _buy(items[i]) : null,
           ),
         ],
         if (showAccountActions) ...[
@@ -191,6 +199,7 @@ class _ShopRow extends StatelessWidget {
     required this.owned,
     required this.priceLabel,
     required this.onBuy,
+    this.listed = true,
     this.compact = false,
     this.primary = false,
   });
@@ -198,7 +207,8 @@ class _ShopRow extends StatelessWidget {
   final ShopCatalogItem item;
   final bool owned;
   final String priceLabel;
-  final VoidCallback onBuy;
+  final VoidCallback? onBuy;
+  final bool listed;
   final bool compact;
   final bool primary;
 
@@ -301,13 +311,17 @@ class _ShopRow extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: GameButton(
-              label: owned ? 'OWNED' : 'BUY',
-              style: primary && !owned
+              label: owned
+                  ? 'OWNED'
+                  : listed
+                  ? 'BUY'
+                  : 'NOT ON PLAY',
+              style: primary && !owned && listed
                   ? GameButtonStyle.brown
                   : GameButtonStyle.grey,
               expanded: false,
               dense: true,
-              onPressed: owned ? null : onBuy,
+              onPressed: owned || !listed ? null : onBuy,
             ),
           ),
         ],

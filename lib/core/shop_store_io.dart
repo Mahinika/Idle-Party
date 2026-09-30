@@ -18,6 +18,8 @@ bool _androidStore = false;
 
 String? storePriceLabel(String productId) => _products[productId]?.price;
 
+bool storeLists(String productId) => _products.containsKey(productId);
+
 bool get _platformOk {
   if (test_env.inFlutterTestProcess()) return false;
   if (kIsWeb) return false;

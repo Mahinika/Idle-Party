@@ -3,6 +3,8 @@ bool productsReady = false;
 
 String? storePriceLabel(String productId) => null;
 
+bool storeLists(String productId) => false;
+
 Future<void> warmup({
   required void Function(String productId) onGranted,
   void Function(String message)? onMessage,

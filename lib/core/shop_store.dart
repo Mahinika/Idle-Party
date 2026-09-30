@@ -13,6 +13,10 @@ abstract final class ShopStore {
   static String? storePriceLabel(String productId) =>
       impl.storePriceLabel(productId);
 
+  /// True when Play returned this product. False while the catalog is still
+  /// loading, or when this build cannot ask Play.
+  static bool storeLists(String productId) => impl.storeLists(productId);
+
   /// Listen to [purchaseStream] and query product details.
   static Future<void> warmup({
     required void Function(String productId) onGranted,
