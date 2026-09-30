@@ -360,6 +360,7 @@ class HubChase {
         );
       }
     } else {
+      if (wantVaultStart) return _dailyVaultStartChase(state);
       if (!MetaSystems.isDailyClaimedToday(state, now: clock)) {
         return const HubChase(
           kind: HubChaseKind.dailyRun,
@@ -370,7 +371,6 @@ class HubChase {
           progressLabel: 'Available',
         );
       }
-      if (wantVaultStart) return _dailyVaultStartChase(state);
     }
 
     // Midgame: levels unlock KEY (under Daily when the vault is still empty).

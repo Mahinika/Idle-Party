@@ -16,7 +16,7 @@ abstract final class StoryLore {
   static const introBeats = <({String title, String body})>[
     (
       title: 'IDLE PARTY',
-      body: 'They fight without you. Send them in. Tap the fight to help.',
+      body: 'They fight without you. Send them in. Long-press the fight, or tap the fist, to help.',
     ),
   ];
 

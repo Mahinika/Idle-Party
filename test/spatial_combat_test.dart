@@ -958,7 +958,7 @@ void main() {
     expect(king.contains('WIND-UP'), isFalse);
     expect(king.contains('PULSE'), isFalse);
     final dead = _bossTellTexts('dead');
-    expect(dead.contains('FADE'), isTrue);
+    expect(dead.contains('MEND'), isTrue);
     expect(dead.contains('WIND-UP'), isFalse);
     final rime = _bossTellTexts('rime');
     expect(rime.contains('FROST'), isTrue);

@@ -219,7 +219,7 @@ abstract final class WipeAdvice {
       return null;
     }
     return GameLogic.plainPlayerChrome(state)
-        ? 'Tap the fight — steer party + smash'
+        ? 'Long-press the fight — steer party + smash'
         : 'Tap God Hand — steer party + AOE smash';
   }
 

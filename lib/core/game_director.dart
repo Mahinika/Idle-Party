@@ -1640,7 +1640,7 @@ class GameDirector extends ChangeNotifier {
       showToast(
         GameLogic.endgameUnlocked(_state)
             ? 'Leave the dungeon first'
-            : 'Ashen Crown unlocks at party level ${GameLogic.maxHeroLevel}',
+            : 'Ashen Crown unlocks when every hero is Lv${GameLogic.maxHeroLevel}',
         life: 2.4,
       );
       return;
@@ -1807,7 +1807,7 @@ class GameDirector extends ChangeNotifier {
     if (!GameLogic.canEnterGauntlet(_state)) {
       showToast(
         !GameLogic.endgameUnlocked(_state)
-            ? 'Gauntlet unlocks at party level ${GameLogic.maxHeroLevel}'
+            ? 'Gauntlet unlocks when every hero is Lv${GameLogic.maxHeroLevel}'
             : 'Leave the dungeon first',
         life: 2.0,
       );
@@ -1836,7 +1836,7 @@ class GameDirector extends ChangeNotifier {
     if (!GameLogic.canEnterRift(_state)) {
       showToast(
         !GameLogic.endgameUnlocked(_state)
-            ? 'Rift unlocks at party level ${GameLogic.maxHeroLevel}'
+            ? 'Rift unlocks when every hero is Lv${GameLogic.maxHeroLevel}'
             : 'Leave the dungeon first',
         life: 2.0,
       );
@@ -1872,7 +1872,7 @@ class GameDirector extends ChangeNotifier {
     if (!GameLogic.canEnterGreaterRift(_state)) {
       showToast(
         !GameLogic.endgameUnlocked(_state)
-            ? 'Greater Rift unlocks at party level ${GameLogic.maxHeroLevel}'
+            ? 'Greater Rift unlocks when every hero is Lv${GameLogic.maxHeroLevel}'
             : 'Leave the dungeon first',
         life: 2.0,
       );

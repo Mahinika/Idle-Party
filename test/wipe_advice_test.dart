@@ -381,7 +381,7 @@ void main() {
     state = GameLogic.notePartyWipe(state, atkLack());
     expect(
       WipeAdvice.godHandHintFor(state),
-      contains('Tap the fight'),
+      contains('Long-press the fight'),
     );
     state = state.copyWith(bossVictories: 1);
     expect(

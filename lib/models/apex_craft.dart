@@ -628,10 +628,12 @@ abstract final class ApexCraft {
     var crit = 0;
     var aspd = 0;
     var mp5 = 0;
+    var mastery = 0;
     final secTier = max(0, (baseIlvl - 5) ~/ 18);
     switch (role) {
       case SpecRoleTag.tank:
         crit = 2 + rank + secTier ~/ 2;
+        mastery = 1 + rank ~/ 2;
       case SpecRoleTag.healer:
         mp5 = 2 + rank + secTier ~/ 2;
         crit = 1 + rank + secTier ~/ 3;
@@ -664,6 +666,7 @@ abstract final class ApexCraft {
       critChanceBonus: crit,
       attackSpeedBonus: aspd,
       mp5Bonus: mp5,
+      masteryBonus: mastery,
       itemLevel: baseIlvl,
       armorType: armorType,
       weaponType: weaponType,

@@ -96,7 +96,7 @@ void main() {
     expect(basics.body.toLowerCase(), contains('healer'));
     expect(basics.body.toLowerCase(), contains('damage'));
     expect(basics.body.toLowerCase(), contains('enter dungeon'));
-    expect(basics.body.toLowerCase(), contains('tap the fight'));
+    expect(basics.body.toLowerCase(), contains('long-press the fight'));
     expect(basics.body.toUpperCase(), isNot(contains('FORGE')));
     expect(basics.body.toUpperCase(), isNot(contains('MARKET')));
     expect(basics.body.toUpperCase(), isNot(contains('ESSENCE')));
@@ -127,7 +127,7 @@ void main() {
     final combat = early.firstWhere((t) => t.id == 'combat');
     expect(combat.body.toUpperCase(), isNot(contains('METER')));
     expect(combat.body.toLowerCase(), isNot(contains('tank')));
-    expect(combat.body.toLowerCase(), contains('tap the fight'));
+    expect(combat.body.toLowerCase(), contains('long-press the fight'));
     final bag = early.firstWhere((t) => t.id == 'bag_equip');
     expect(bag.body.toUpperCase(), isNot(contains('ESSENCE')));
     expect(bag.body.toUpperCase(), isNot(contains('BIS')));
@@ -462,22 +462,14 @@ void main() {
     expect(GameLogic.plainPlayerChrome(afterFloor), isTrue);
 
     expect(
-      JobsOverlay.introLine(showEssence: false, chainCount: 0).toUpperCase(),
-      isNot(contains('ESSENCE')),
+      JobsOverlay.introLine(chainCount: 0),
+      contains('+5e'),
     );
     expect(
-      JobsOverlay.introLine(showEssence: false, chainCount: 0),
-      isNot(contains('+5e')),
-    );
-    expect(JobsOverlay.rewardLine(gold: 40, essence: 3, showEssence: false), '+40g');
-    expect(
-      JobsOverlay.rewardLine(gold: 40, essence: 3, showEssence: true),
+      JobsOverlay.rewardLine(gold: 40, essence: 3),
       '+40g +3e',
     );
-    expect(
-      JobsOverlay.chainClaimLabel(showEssence: false).toUpperCase(),
-      isNot(contains('E')),
-    );
+    expect(JobsOverlay.chainClaimLabel(), 'CLAIM · chain +5e');
 
     expect(
       InventoryDock.mergeFooterHint(plainEnglish: true).toUpperCase(),

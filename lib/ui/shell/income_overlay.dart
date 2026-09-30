@@ -21,8 +21,8 @@ class CampRatesSection extends StatelessWidget {
       children: [
         Text(
           run > 0
-              ? 'Hub ${GoldIncome.perMinuteLabel(hub)} · Run ${GoldIncome.perMinuteLabel(run)}'
-              : 'Hub ${GoldIncome.perMinuteLabel(hub)} · Run — enter a dungeon',
+              ? 'Hub ${GoldIncome.perMinuteLabel(hub)} · essence about 1 per 12 min after 10 min · Run ${GoldIncome.perMinuteLabel(run)}'
+              : 'Hub ${GoldIncome.perMinuteLabel(hub)} · essence about 1 per 12 min after 10 min · Run — enter a dungeon',
           style: GameTheme.body(size: 14, color: GameTheme.mossLit),
         ),
         // Two chips only — full multiplier dump lived in one dense line (#55).

@@ -623,7 +623,7 @@ class _PartyRow extends StatelessWidget {
   final bool kitOpen;
   final bool compact;
   final bool phone;
-  /// Phone dungeon strip: fixed height, no kit / XP / companion lines.
+  /// Phone dungeon strip: companion name sits on the role line.
   final bool stripOnly;
   final bool inCombat;
   final SpatialActor? spatial;
@@ -694,6 +694,12 @@ class _PartyRow extends StatelessWidget {
 
   bool _abilityBuffActive(ClassAbilityDef ability, SpatialActor s) =>
       KitHudChips.buffActive(ability, s);
+
+  String _stripCompanion() {
+    final line = _companionLine(spatial, world, hero.specId);
+    if (line == null || line.isEmpty) return '';
+    return ' · $line';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -777,7 +783,7 @@ class _PartyRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '$roleShort L${hero.level}',
+                    '$roleShort L${hero.level}${_stripCompanion()}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GameTheme.pixel(

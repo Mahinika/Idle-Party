@@ -370,14 +370,14 @@ class DungeonTopHud extends StatelessWidget {
             content: Text(
               mode == DungeonMode.farm
                   ? (plain
-                        ? 'Repeat stays on this floor after clear for more loot.\n\n'
+                        ? 'Repeat stays on this floor after clear for more loot. No essence.\n\n'
                               'You are mid-fight — switch anyway?'
-                        : 'FARM loops the same floor after clear for more loot.\n\n'
+                        : 'FARM loops the same floor after clear for more loot. No essence.\n\n'
                               'You are mid-fight — switch anyway?')
                   : (plain
-                        ? 'Next advances toward the boss after each clear.\n\n'
+                        ? 'Next advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
                               'You are mid-fight — switch anyway?'
-                        : 'PUSH advances toward the boss after each clear.\n\n'
+                        : 'PUSH advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
                               'You are mid-fight — switch anyway?'),
               style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),
@@ -527,8 +527,8 @@ class DungeonTopHud extends StatelessWidget {
                 Semantics(
                   button: true,
                   label: plain
-                      ? 'Tap the fight — steer your party smash'
-                      : 'God Hand — tap to smash and steer',
+                      ? 'Long-press the fight, or tap the fist'
+                      : 'God Hand — long-press the fight or tap the fist',
                   child: CoachPulse(
                     active: coachGod != null,
                     child: GodHandRing(
@@ -539,7 +539,7 @@ class DungeonTopHud extends StatelessWidget {
                       readyLabel:
                           coachGod ??
                           (plain
-                              ? 'Tap the fight — steer your party smash'
+                              ? 'Long-press the fight, or tap the fist'
                               : null),
                       coolingLabel: plain
                           ? 'Cooling ${world.godHandCooldown.toStringAsFixed(1)}s'

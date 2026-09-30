@@ -75,7 +75,7 @@ void main() {
     );
     expect(
       FirstSessionTips.lineFor(state, CoachTarget.godhand, inDungeon: true),
-      'Tap the fight — BAL smash',
+      'Long-press the fight — BAL smash',
     );
   });
 

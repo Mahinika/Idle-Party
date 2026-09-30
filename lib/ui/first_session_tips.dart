@@ -44,8 +44,8 @@ class FirstSessionTips extends StatelessWidget {
     ),
     (
       id: 'godhand',
-      title: 'Tap the fight',
-      body: 'Tap the fight where enemies are.',
+      title: 'Long-press the fight',
+      body: 'Long-press the fight, or tap the fist.',
     ),
     (
       id: 'farm_push',
@@ -133,8 +133,8 @@ class FirstSessionTips extends StatelessWidget {
     if (hint.id == 'godhand') {
       final mode = godHandModeLabel(s);
       return GameLogic.plainPlayerChrome(s)
-          ? 'Tap the fight — $mode smash'
-          : 'God Hand · $mode — tap to steer + smash';
+          ? 'Long-press the fight — $mode smash'
+          : 'God Hand · $mode — long-press the fight or tap the fist';
     }
     return hint.line;
   }

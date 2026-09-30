@@ -99,7 +99,7 @@ abstract final class GameGuides {
     body:
         'You have a small party of heroes. They fight on their own.\n\n'
         '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
-        '• Watch them clear rooms. Tap the fight when you want to help.\n'
+        '• Watch them clear rooms. Long-press the fight, or tap the fist, when you want to help.\n'
         '• The hunt line on the hub always names the next job — start there.\n'
         '• A number on GEAR means better items wait in BAG.\n'
         '• Starter jobs: Shield, Healer, Damage. You do not need another RPG.',
@@ -126,7 +126,7 @@ abstract final class GameGuides {
         'Each floor is a few rooms. The party walks and fights on its own.\n\n'
         '• Clear a room to open the next.\n'
         '• When enemies are down, loot banks and they walk to the stairs.\n'
-        '• Tap the fight when you want to smash and steer.\n'
+        '• Long-press the fight, or tap the fist, when you want to smash and steer.\n'
         '• HP strip is bottom-left — tap a hero for their kit.\n'
         '• Target chip is top-right (name + HP).',
   );
@@ -184,7 +184,7 @@ abstract final class GameGuides {
     body:
         'You have a small party of heroes. They fight on their own.\n\n'
         '• Tap ENTER DUNGEON to start (or continue) a cave.\n'
-        '• Watch them clear rooms. Tap the fight when you want to help.\n'
+        '• Watch them clear rooms. Long-press the fight, or tap the fist, when you want to help.\n'
         '• The hunt line on the hub always names the next job — start there.\n'
         '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (tracks + '
         'market), SHOP (real-money convenience store), ESSENCE (tracks / '
@@ -267,7 +267,8 @@ abstract final class GameGuides {
         '• Confirm / toast show the next unlock (Combat Rogue, 5th slot…).\n'
         '• Also raises Ascension Level (AL: +ATK/STA/DEF and +10% gold per level) and pays essence.\n'
         '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
-        'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
+        'Apex, soulbound gear, shop buys, ad tickets, Star Nodes, settings, unlocked specs, '
+        '5th party slot, lifetime gold.\n'
         '• Reset: wallet gold, GOLD → FORGE, bag and worn drops, market, floor height '
         '(starter gear back on).\n'
         '• Boss victories toward the next Ascend clear.\n'
@@ -365,7 +366,7 @@ abstract final class GameGuides {
       body:
           'You have a small party of heroes. They fight on their own.\n\n'
           '• Tap ENTER DUNGEON to start the first cave (Sandy Caverns).\n'
-          '• Watch them clear rooms. Tap the fight when you want to help.\n'
+          '• Watch them clear rooms. Long-press the fight, or tap the fist, when you want to help.\n'
           '• The hunt line on the hub always names the next job — start there.\n'
           '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (run power + '
           'market), SHOP (real-money convenience store), ESSENCE (CAMP / '
@@ -685,7 +686,7 @@ abstract final class GameGuides {
       id: 'rift',
       title: 'FARM RIFT',
       body:
-          'Loot farm rift at party level ${GameLogic.maxHeroLevel} — not Ranked GR.\n\n'
+          'Loot farm rift when every hero is Lv${GameLogic.maxHeroLevel} — not Ranked GR.\n\n'
           '• Kills fill a progress bar; at 100% a Rift Guardian spawns — defeat it to clear.\n'
           '• No fail timer (elapsed is display-only). Leave/wipe before the Guardian dies = small consolation.\n'
           '• Gold and gear drop during the run; success also pays essence + gold.\n'
@@ -698,7 +699,7 @@ abstract final class GameGuides {
       id: 'greater_rift',
       title: 'RANKED GR',
       body:
-          'Ranked GR at party level ${GameLogic.maxHeroLevel} — '
+          'Ranked GR when every hero is Lv${GameLogic.maxHeroLevel} — '
           'Mothveil Greater-style, harder than Farm Rift.\n\n'
           '• Kills fill progress; at 100% a Rift Guardian spawns — defeat it before the par timer.\n'
           '• Mid-run: gold OK, no gear drops — big essence + gold on clear. '
@@ -896,7 +897,8 @@ abstract final class GameGuides {
           '• Confirm / toast show the next Ascend unlock (Combat Rogue, 5th slot…).\n'
           '• Also raises Ascension Level (AL: +ATK/STA/DEF and +10% gold per level) and pays essence.\n'
           '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
-          'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
+        'Apex, soulbound gear, shop buys, ad tickets, Star Nodes, settings, unlocked specs, '
+        '5th party slot, lifetime gold.\n'
           '• Reset: wallet gold, GOLD → FORGE, bag and worn drops, market, floor height '
           '(starter gear back on).\n'
           '• Boss victories toward the next Ascend clear.\n'

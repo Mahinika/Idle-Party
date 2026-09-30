@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/gear/gear_scorer.dart';
 import '../../core/gear_service.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
@@ -633,6 +634,17 @@ class _InventoryDockState extends State<InventoryDock>
     );
   }
 
+  int _mergeScore(EquipmentItem item) {
+    final wearer = state.heroes.isEmpty ? null : state.heroes.first;
+    if (wearer == null) return item.powerScore;
+    return GearScorer.roleEquipScore(
+      wearer.gearAffinity,
+      item,
+      specId: wearer.specId,
+      level: wearer.level,
+    );
+  }
+
   Widget _toolsTab({
     required EquipmentItem? primary,
     required EquipmentItem? secondary,
@@ -708,13 +720,14 @@ class _InventoryDockState extends State<InventoryDock>
                   preview == null
                       ? 'RESULT  —'
                       : () {
+                          final score = _mergeScore(preview);
                           final delta = primary == null
                               ? 0
-                              : preview.powerScore - primary.powerScore;
+                              : score - _mergeScore(primary);
                           final jump = delta > 0 ? '  +$delta' : '';
                           return 'RESULT  ${GameLogic.rarityNames[preview.rarity]}'
                               '  i${preview.effectiveItemLevel}'
-                              '  SCORE ${preview.powerScore}$jump';
+                              '  SCORE $score$jump';
                         }(),
                   textAlign: TextAlign.center,
                   style: GameTheme.body(
