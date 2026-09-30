@@ -338,7 +338,7 @@ class EquipmentFactory {
       HeroClassId.paladin => spec.id == HeroSpecId.retribution
           ? _pick2hAxeSwordMacePole(roll)
           : _pick1hAxeSwordMace(roll),
-      HeroClassId.hunter => (WeaponType.bow, WeaponHanded.twoHand),
+      HeroClassId.hunter => _pickHunterWeapon(roll),
       HeroClassId.rogue => _pickRogue1h(roll),
       HeroClassId.priest => roll < 0.55
           ? (WeaponType.staff, WeaponHanded.twoHand)
@@ -392,13 +392,22 @@ class EquipmentFactory {
     return (WeaponType.dagger, WeaponHanded.oneHand);
   }
 
+  static const List<WeaponType> hunterWeapons = <WeaponType>[
+    WeaponType.bow,
+    WeaponType.crossbow,
+    WeaponType.gun,
+  ];
+
+  /// Bow, crossbow, and gun are the same hunter weapon: two-hand, either slot.
+  static (WeaponType, WeaponHanded) _pickHunterWeapon(double roll) {
+    final i = roll < 1 / 3 ? 0 : (roll < 2 / 3 ? 1 : 2);
+    return (hunterWeapons[i], WeaponHanded.twoHand);
+  }
+
   static WeaponType rangedForSpec(HeroSpecDef spec) {
     return switch (spec.classId) {
-      HeroClassId.hunter => [
-        WeaponType.bow,
-        WeaponType.crossbow,
-        WeaponType.gun,
-      ][random.nextInt(3)],
+      HeroClassId.hunter =>
+        hunterWeapons[random.nextInt(hunterWeapons.length)],
       HeroClassId.warrior || HeroClassId.rogue => WeaponType.thrown,
       _ => WeaponType.wand,
     };

@@ -69,6 +69,8 @@ void main() {
     expect(can(HeroSpecId.beastMastery, mh(WeaponType.mace)), isFalse);
     expect(can(HeroSpecId.beastMastery, mh(WeaponType.polearm)), isFalse);
     expect(can(HeroSpecId.beastMastery, mh(WeaponType.bow)), isTrue);
+    expect(can(HeroSpecId.beastMastery, mh(WeaponType.crossbow)), isTrue);
+    expect(can(HeroSpecId.beastMastery, mh(WeaponType.gun)), isTrue);
     expect(can(HeroSpecId.restorationShaman, mh(WeaponType.sword)), isFalse);
     expect(can(HeroSpecId.enhancement, mh(WeaponType.axe)), isTrue);
   });
@@ -298,6 +300,24 @@ void main() {
         }
       }
     }
+  });
+
+  test('hunter loot main hand is a bow, crossbow, or gun', () {
+    final seen = <WeaponType>{};
+    for (var i = 0; i < 30; i++) {
+      EquipmentFactory.random = Random(i + 3);
+      final rolled = EquipmentFactory.mainHandForSpec(
+        HeroSpecs.def(HeroSpecId.beastMastery),
+      );
+      expect(rolled.$2, WeaponHanded.twoHand);
+      expect(EquipmentFactory.hunterWeapons, contains(rolled.$1));
+      seen.add(rolled.$1);
+      final ranged = EquipmentFactory.rangedForSpec(
+        HeroSpecs.def(HeroSpecId.marksmanship),
+      );
+      expect(EquipmentFactory.hunterWeapons, contains(ranged));
+    }
+    expect(seen, EquipmentFactory.hunterWeapons.toSet());
   });
 
   test('shield kits start 1H+shield and never loot a two-hander', () {
