@@ -23,13 +23,6 @@ class DevGearLookbook extends StatefulWidget {
 class _DevGearLookbookState extends State<DevGearLookbook> {
   ArmorType? _material;
 
-  static const _specs = <BodyFamily, HeroSpecId>{
-    BodyFamily.warrior: HeroSpecId.protection,
-    BodyFamily.rogue: HeroSpecId.combat,
-    BodyFamily.mage: HeroSpecId.fire,
-    BodyFamily.healer: HeroSpecId.discipline,
-  };
-
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -153,10 +146,10 @@ class _LookCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = _item(visualSetId, material);
+    final item = gearLookbookItem(visualSetId, material);
     final hero = PartyHero.starting(
       name: 'Look',
-      specId: _DevGearLookbookState._specs[family]!,
+      specId: gearLookbookSpec(family),
       id: 'look-${family.name}-$visualSetId-${material?.name ?? 'native'}',
       equipped: {item.slot: item},
     );
@@ -185,45 +178,56 @@ class _LookCell extends StatelessWidget {
     );
   }
 
-  static EquipmentItem _item(String visualSetId, ArmorType? material) {
-    final base = EquipmentModelCatalog.baseToken(visualSetId);
-    final slot = switch (base) {
-      'helm' => EquipmentSlot.head,
-      'chest' => EquipmentSlot.chest,
-      'legs' => EquipmentSlot.legs,
-      'cloak' => EquipmentSlot.cloak,
-      'hands' => EquipmentSlot.hands,
-      'shoulder' => EquipmentSlot.shoulder,
-      'shield' || 'frill' => EquipmentSlot.offHand,
-      _ => EquipmentSlot.weapon,
-    };
-    return EquipmentItem(
-      id: 'look-$visualSetId',
-      name: visualSetId,
-      slot: slot,
-      rarity: LootRarity.common,
-      visualSetId: visualSetId,
-      armorType: material,
-      weaponType: switch (base) {
-        'sword' => WeaponType.sword,
-        'staff' => WeaponType.staff,
-        'dagger' => WeaponType.dagger,
-        'mace' => WeaponType.mace,
-        'axe' => WeaponType.axe,
-        'bow' => WeaponType.bow,
-        'wand' => WeaponType.wand,
-        'gun' => WeaponType.gun,
-        'crossbow' => WeaponType.crossbow,
-        'polearm' => WeaponType.polearm,
-        'fist' => WeaponType.fist,
-        'thrown' => WeaponType.thrown,
-        _ => null,
-      },
-      offHandKind: switch (base) {
-        'shield' => OffHandKind.shield,
-        'frill' => OffHandKind.frill,
-        _ => null,
-      },
-    );
-  }
+}
+
+/// Spec the debug lookbook uses for each body.
+HeroSpecId gearLookbookSpec(BodyFamily family) => switch (family) {
+  BodyFamily.warrior => HeroSpecId.protection,
+  BodyFamily.rogue => HeroSpecId.combat,
+  BodyFamily.mage => HeroSpecId.fire,
+  BodyFamily.healer => HeroSpecId.discipline,
+};
+
+/// Same item the debug lookbook paints. The sheet tool uses this so a
+/// picture on disk matches the phone.
+EquipmentItem gearLookbookItem(String visualSetId, ArmorType? material) {
+  final base = EquipmentModelCatalog.baseToken(visualSetId);
+  final slot = switch (base) {
+    'helm' => EquipmentSlot.head,
+    'chest' => EquipmentSlot.chest,
+    'legs' => EquipmentSlot.legs,
+    'cloak' => EquipmentSlot.cloak,
+    'hands' => EquipmentSlot.hands,
+    'shoulder' => EquipmentSlot.shoulder,
+    'shield' || 'frill' => EquipmentSlot.offHand,
+    _ => EquipmentSlot.weapon,
+  };
+  return EquipmentItem(
+    id: 'look-$visualSetId',
+    name: visualSetId,
+    slot: slot,
+    rarity: LootRarity.common,
+    visualSetId: visualSetId,
+    armorType: material,
+    weaponType: switch (base) {
+      'sword' => WeaponType.sword,
+      'staff' => WeaponType.staff,
+      'dagger' => WeaponType.dagger,
+      'mace' => WeaponType.mace,
+      'axe' => WeaponType.axe,
+      'bow' => WeaponType.bow,
+      'wand' => WeaponType.wand,
+      'gun' => WeaponType.gun,
+      'crossbow' => WeaponType.crossbow,
+      'polearm' => WeaponType.polearm,
+      'fist' => WeaponType.fist,
+      'thrown' => WeaponType.thrown,
+      _ => null,
+    },
+    offHandKind: switch (base) {
+      'shield' => OffHandKind.shield,
+      'frill' => OffHandKind.frill,
+      _ => null,
+    },
+  );
 }

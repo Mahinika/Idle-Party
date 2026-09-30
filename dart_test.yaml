@@ -7,3 +7,5 @@ tags:
     timeout: 60m
   facit:
     timeout: 5m
+  lookbook:
+    timeout: 5m
