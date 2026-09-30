@@ -22,6 +22,7 @@ import '../models/vfx_quality.dart';
 import '../assets/kenney_assets.dart';
 import 'combat_avoidance.dart';
 import 'hideout_stash.dart';
+import 'party_room_mark.dart';
 import 'tile_map.dart';
 
 import 'ability_effects.dart';
@@ -1788,6 +1789,7 @@ abstract final class SpatialCombat {
       room.floorNumber,
       inGauntlet: state.inGauntlet,
     );
+    final fighting = state.combatHeroes;
     final map = RoomLayouts.forFloor(
       floorNumber: room.floorNumber,
       room: room,
@@ -1799,11 +1801,16 @@ abstract final class SpatialCombat {
       pressureBonus: GauntletAnomalies.layoutPressureBonus(anomaly),
       extraCombatRooms: GauntletAnomalies.extraCombatRooms(anomaly),
       tightRooms: GauntletAnomalies.tightRooms(anomaly),
+      partyMark: PartyFloorMark.pick(
+        specs: [for (final h in fighting) h.spec],
+        names: [for (final h in fighting) h.name],
+        floorNumber: room.floorNumber,
+      ),
     );
     final isTreasure = room.type == RoomType.treasure || state.enemies.isEmpty;
 
     final heroes = <SpatialActor>[];
-    final party = state.combatHeroes;
+    final party = fighting;
     for (var i = 0; i < party.length; i++) {
       final hero = party[i];
       final spawn = i < map.spawnPoints.length

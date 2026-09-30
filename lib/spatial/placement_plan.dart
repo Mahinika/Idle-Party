@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models/dungeon_room.dart';
 import 'floor_blueprint.dart';
 import 'floor_theme.dart';
+import 'party_room_mark.dart';
 import 'prop_vignettes.dart';
 import 'tile_map.dart';
 import 'zone_layout_kit.dart';
@@ -17,11 +18,15 @@ class PlacementPlan {
     required this.props,
     required this.lootChestPoints,
     required this.violations,
+    this.partyMarkLine,
   });
 
   final List<MapProp> props;
   final List<(int x, int y)> lootChestPoints;
   final List<String> violations;
+
+  /// Set when the party's trace actually fit in the first room.
+  final String? partyMarkLine;
 
   bool get isValid => violations.isEmpty;
 
@@ -39,6 +44,7 @@ class PlacementPlan {
     required Random rng,
     List<GateInfo> gates = const <GateInfo>[],
     Map<int, (int, int)> anchors = const <int, (int, int)>{},
+    PartyFloorMark? partyMark,
   }) {
     final violations = <String>[];
     final blocked = <int>{};
@@ -67,10 +73,14 @@ class PlacementPlan {
       return t == TileKind.floor || t == TileKind.spawn || t == TileKind.exit;
     }
 
-    bool isWall(int x, int y) => !inMap(x, y) || tiles[key(x, y)] == TileKind.wall;
+    bool isWall(int x, int y) =>
+        !inMap(x, y) || tiles[key(x, y)] == TileKind.wall;
 
     bool touchesWall(int x, int y) =>
-        isWall(x + 1, y) || isWall(x - 1, y) || isWall(x, y + 1) || isWall(x, y - 1);
+        isWall(x + 1, y) ||
+        isWall(x - 1, y) ||
+        isWall(x, y + 1) ||
+        isWall(x, y - 1);
 
     final used = <int>{};
     final props = <MapProp>[];
@@ -82,10 +92,18 @@ class PlacementPlan {
         !used.contains(key(x, y)) &&
         tiles[key(x, y)] != TileKind.exit;
 
-    bool place(int x, int y, MapPropKind kind, {bool hero = false}) {
+    bool place(
+      int x,
+      int y,
+      MapPropKind kind, {
+      bool hero = false,
+      bool partyMark = false,
+    }) {
       if (!free(x, y)) return false;
       used.add(key(x, y));
-      props.add(MapProp(x: x, y: y, kind: kind, hero: hero));
+      props.add(
+        MapProp(x: x, y: y, kind: kind, hero: hero, partyMark: partyMark),
+      );
       return true;
     }
 
@@ -177,9 +195,15 @@ class PlacementPlan {
           : PropVignettes.heroFor(beat, kit, blueprint.wonder, rng);
       final centred =
           beat == FloorBeatKind.shrine || beat == FloorBeatKind.wonder;
-      final anchor = anchors[c.index] ??
-          (centred ? (c.cx, c.cy) : (c.cx, c.y + 1));
-      final cell = nearestFree(c, anchor.$1, anchor.$2, edge: !centred && anchors[c.index] == null) ??
+      final anchor =
+          anchors[c.index] ?? (centred ? (c.cx, c.cy) : (c.cx, c.y + 1));
+      final cell =
+          nearestFree(
+            c,
+            anchor.$1,
+            anchor.$2,
+            edge: !centred && anchors[c.index] == null,
+          ) ??
           nearestFree(c, anchor.$1, anchor.$2);
       if (cell == null) continue;
       place(cell.$1, cell.$2, heroKind, hero: true);
@@ -232,12 +256,36 @@ class PlacementPlan {
     final style = kit.style;
     for (final c in chambers) {
       final beat = c.beatKind;
-      if (beat == FloorBeatKind.shrine || beat == FloorBeatKind.wonder) continue;
+      if (beat == FloorBeatKind.shrine || beat == FloorBeatKind.wonder) {
+        continue;
+      }
       final kind = beat == FloorBeatKind.elite
           ? PropVignetteKind.crypt
           : style.vignettes[rng.nextInt(style.vignettes.length)];
       final pieces = PropVignettes.build(kind, rng);
       _placeVignette(c, pieces, free, touchesWall, place, rng);
+    }
+
+    // —— Party trace in the room you walk into. One cluster, no extra rooms.
+    String? partyLine;
+    if (partyMark != null) {
+      final rooms = <Chamber>[
+        for (final c in chambers)
+          if (c.beatKind == FloorBeatKind.approach) c,
+        for (final c in chambers)
+          if (c.beatKind != FloorBeatKind.approach &&
+              c.beatKind != FloorBeatKind.shrine &&
+              c.beatKind != FloorBeatKind.wonder &&
+              c.beatKind != FloorBeatKind.boss)
+            c,
+      ];
+      final pieces = PartyFloorMark.pieces(partyMark.kind);
+      for (final c in rooms) {
+        if (_placePartyMark(c, pieces, free, touchesWall, place)) {
+          partyLine = partyMark.line;
+          break;
+        }
+      }
     }
 
     // —— Sparse clumped clutter (calm rooms so the hero stands out) ——
@@ -248,7 +296,9 @@ class PlacementPlan {
           ]
         : const [MapPropKind.rubble];
     bool wet(MapPropKind k) =>
-        k == MapPropKind.water || k == MapPropKind.lava || k == MapPropKind.fountain;
+        k == MapPropKind.water ||
+        k == MapPropKind.lava ||
+        k == MapPropKind.fountain;
     final perChamberMin = max(2, kit.clutterPerChamberMin - 1);
     for (final c in chambers) {
       var count = props.where((p) => c.containsTile(p.x, p.y)).length;
@@ -269,7 +319,11 @@ class PlacementPlan {
         for (var i = 0; i < clump; i++) {
           var k = kind;
           if (wet(k) && !touchesWall(cx, cy)) k = MapPropKind.rubble;
-          if (place(cx, cy, i == 0 ? k : clutterPool[rng.nextInt(clutterPool.length)])) {
+          if (place(
+            cx,
+            cy,
+            i == 0 ? k : clutterPool[rng.nextInt(clutterPool.length)],
+          )) {
             count++;
           }
           final step = rng.nextBool() ? (1, 0) : (0, 1);
@@ -313,6 +367,7 @@ class PlacementPlan {
       props: List<MapProp>.unmodifiable(props),
       lootChestPoints: List<(int, int)>.unmodifiable(chests),
       violations: List<String>.unmodifiable(violations),
+      partyMarkLine: partyLine,
     );
   }
 
@@ -326,7 +381,7 @@ class PlacementPlan {
   static void _wonderExtras(
     WonderKind? wonder,
     (int, int) at,
-    bool Function(int, int, MapPropKind, {bool hero}) place,
+    bool Function(int, int, MapPropKind, {bool hero, bool partyMark}) place,
     Random rng,
   ) {
     final (x, y) = at;
@@ -338,7 +393,11 @@ class PlacementPlan {
         }
       case WonderKind.hoard:
         for (final o in const [(-1, 1), (1, 1), (0, 2), (-2, -1), (2, -1)]) {
-          place(x + o.$1, y + o.$2, rng.nextBool() ? MapPropKind.pot : MapPropKind.sacks);
+          place(
+            x + o.$1,
+            y + o.$2,
+            rng.nextBool() ? MapPropKind.pot : MapPropKind.sacks,
+          );
         }
       case WonderKind.soulWell:
         place(x, y - 2, MapPropKind.statue);
@@ -354,7 +413,7 @@ class PlacementPlan {
     List<VignettePiece> pieces,
     bool Function(int, int) free,
     bool Function(int, int) touchesWall,
-    bool Function(int, int, MapPropKind, {bool hero}) place,
+    bool Function(int, int, MapPropKind, {bool hero, bool partyMark}) place,
     Random rng,
   ) {
     for (var attempt = 0; attempt < 40; attempt++) {
@@ -375,6 +434,36 @@ class PlacementPlan {
       }
       return;
     }
+  }
+
+  /// Wall cluster for the party trace. Scans the room so it lands when a
+  /// wall run is free, instead of hoping a random vignette slot fits.
+  static bool _placePartyMark(
+    Chamber c,
+    List<VignettePiece> pieces,
+    bool Function(int, int) free,
+    bool Function(int, int) touchesWall,
+    bool Function(int, int, MapPropKind, {bool hero, bool partyMark}) place,
+  ) {
+    final need = max(2, (pieces.length * 0.6).ceil());
+    for (var y = c.y; y < c.y + c.h; y++) {
+      for (var x = c.x; x < c.x + c.w; x++) {
+        if (!free(x, y) || !touchesWall(x, y)) continue;
+        final down = !touchesWall(x, y + 1);
+        var fits = 0;
+        for (final p in pieces) {
+          final px = x + p.dx;
+          final py = y + (down ? p.dy : -p.dy);
+          if (c.containsTile(px, py) && free(px, py)) fits++;
+        }
+        if (fits < need) continue;
+        for (final p in pieces) {
+          place(x + p.dx, y + (down ? p.dy : -p.dy), p.kind, partyMark: true);
+        }
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Straight lines of gate cells (one corridor seal each).

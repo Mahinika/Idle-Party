@@ -271,8 +271,9 @@ decals (never on gate / exit) and returns one anchor per purposeful room
 **Placement.** Order in `PlacementPlan.build`: room chest → one hero per
 chamber (+ symmetric flank) → door sconces on both wall ends of every gate
 run → torches beside the stairs → one vignette per room
-(`prop_vignettes.dart`) → sparse clumped clutter, then a floor-wide top-up
-so most props still hug walls.
+(`prop_vignettes.dart`) → one party trace in the approach room
+(`party_room_mark.dart`, the hero this floor leaves a mark) → sparse
+clumped clutter, then a floor-wide top-up so most props still hug walls.
 
 **Props.** 11 new `MapPropKind`s (altar, statue, bookshelf, banner,
 crystalCluster, cauldron, sacks, chains, signatureA, signatureB, chestOpen).

@@ -7,6 +7,7 @@ import '../assets/kenney_assets.dart';
 import 'floor_blueprint.dart';
 import 'floor_decals.dart';
 import 'floor_theme.dart';
+import 'party_room_mark.dart';
 import 'placement_plan.dart';
 import 'room_silhouette.dart';
 import 'zone_layout_kit.dart';
@@ -74,6 +75,7 @@ class MapProp {
     required this.y,
     required this.kind,
     this.hero = false,
+    this.partyMark = false,
   });
 
   final int x;
@@ -82,6 +84,9 @@ class MapProp {
 
   /// The one landmark per chamber that is bigger, lit, and meant to be seen.
   final bool hero;
+
+  /// Part of the party's trace in the first room. Not a second landmark.
+  final bool partyMark;
 }
 
 /// A carved room on the floor map.
@@ -148,6 +153,7 @@ class TileMap {
     this.decals = const <FloorDecal>[],
     this.floorTheme,
     this.wonder,
+    this.partyMarkLine,
   });
 
   final int cols;
@@ -180,6 +186,9 @@ class TileMap {
 
   /// Set when this floor has a wonder room.
   final WonderKind? wonder;
+
+  /// English line for the party's trace in the first room. Null if none fit.
+  final String? partyMarkLine;
 
   bool inBounds(int x, int y) => x >= 0 && y >= 0 && x < cols && y < rows;
 
@@ -313,6 +322,7 @@ abstract final class RoomLayouts {
     int pressureBonus = 0,
     int extraCombatRooms = 0,
     bool tightRooms = false,
+    PartyFloorMark? partyMark,
   }) {
     final def = DungeonCatalog.byId(dungeonId);
     final seed =
@@ -364,6 +374,7 @@ abstract final class RoomLayouts {
       room: room,
       extraCombatRooms: extraCombatRooms,
       tightRooms: tightRooms,
+      partyMark: partyMark,
     );
   }
 
@@ -396,6 +407,7 @@ abstract final class RoomLayouts {
     required Random rng,
     required DungeonRoom room,
     FloorBlueprint? blueprint,
+    PartyFloorMark? partyMark,
   }) {
     final story =
         blueprint ??
@@ -428,6 +440,7 @@ abstract final class RoomLayouts {
       rng: rng,
       gates: gates,
       anchors: decalPlan.anchors,
+      partyMark: partyMark,
     );
     final props = plan.props.isNotEmpty
         ? plan.props
@@ -460,6 +473,7 @@ abstract final class RoomLayouts {
       decals: decalPlan.decals,
       floorTheme: story.theme,
       wonder: story.wonder,
+      partyMarkLine: plan.partyMarkLine,
     );
   }
 
@@ -679,6 +693,7 @@ abstract final class RoomLayouts {
     required DungeonRoom room,
     int extraCombatRooms = 0,
     bool tightRooms = false,
+    PartyFloorMark? partyMark,
   }) {
     final blueprint = FloorBlueprint.forRoom(
       room,
@@ -1178,6 +1193,7 @@ abstract final class RoomLayouts {
       rng: rng,
       room: room,
       blueprint: blueprint,
+      partyMark: partyMark,
     );
   }
 

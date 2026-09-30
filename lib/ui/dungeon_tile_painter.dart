@@ -332,8 +332,25 @@ class _TileRoomPainter extends CustomPainter {
             ),
         );
       }
+      // Party trace sits between clutter and the room landmark.
+      if (prop.partyMark &&
+          !prop.hero &&
+          !DungeonEnvironment.isTorchProp(prop.kind) &&
+          !reducedVfx) {
+        canvas.drawCircle(
+          c.translate(0, -tile * 0.12),
+          tile * 0.55,
+          Paint()
+            ..shader = ui.Gradient.radial(
+              c.translate(0, -tile * 0.12),
+              tile * 0.55,
+              const [Color(0x44F0B038), Color(0x00E08828)],
+              const [0.0, 1.0],
+            ),
+        );
+      }
       // One hero per room is big and lit; everything else stays calm.
-      drawSprite(img, c, prop.hero ? 1.3 : 0.80);
+      drawSprite(img, c, prop.hero ? 1.3 : (prop.partyMark ? 1.05 : 0.80));
     }
 
     paintChamberReveal(canvas, tile, originX, originY);

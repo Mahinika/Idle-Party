@@ -110,7 +110,7 @@ class DungeonTopHud extends StatelessWidget {
           (state.inGauntlet || state.inAnyRiftMode)
               ? 'Gauntlet — no floor jump'
               : 'Floor · F$floor'
-                  '${GameLogic.showKeystoneJargon(state) && state.keystoneRunActive ? ' · KEY+${state.keystoneRunLevel}' : ''}',
+                    '${GameLogic.showKeystoneJargon(state) && state.keystoneRunActive ? ' · KEY+${state.keystoneRunLevel}' : ''}',
           style: GameTheme.pixel(
             size: GameTheme.hudPixel,
             color: GameTheme.torchHot,
@@ -129,15 +129,15 @@ class DungeonTopHud extends StatelessWidget {
             here
                 ? 'F$f · here'
                 : unlocked
-                    ? 'F$f'
-                    : 'F$f · locked',
+                ? 'F$f'
+                : 'F$f · locked',
             style: GameTheme.pixel(
               size: GameTheme.hudPixel,
               color: here
                   ? GameTheme.torchHot
                   : unlocked
-                      ? GameTheme.parchment
-                      : GameTheme.parchmentDim,
+                  ? GameTheme.parchment
+                  : GameTheme.parchmentDim,
             ),
           ),
         ),
@@ -194,10 +194,7 @@ class DungeonTopHud extends StatelessWidget {
       items.add(
         PopupMenuItem(
           value: 'more',
-          child: Text(
-            'MORE',
-            style: GameTheme.pixel(size: GameTheme.hudPixel),
-          ),
+          child: Text('MORE', style: GameTheme.pixel(size: GameTheme.hudPixel)),
         ),
       );
       items.add(
@@ -213,11 +210,12 @@ class DungeonTopHud extends StatelessWidget {
     return items;
   }
 
-    void _requestTravel(BuildContext context, int target) {
+  void _requestTravel(BuildContext context, int target) {
     final world = director.spatial;
     final alive = world?.enemies.any((e) => e.isAlive) ?? false;
     // Mid-chamber: living pack, damaged/killed enemies, loot on ground, or timer.
-    final midFloor = world != null &&
+    final midFloor =
+        world != null &&
         (alive ||
             world.combatElapsed > 1.0 ||
             world.groundLoot.isNotEmpty ||
@@ -226,7 +224,8 @@ class DungeonTopHud extends StatelessWidget {
       director.travelToFloor(target);
       return;
     }
-    final keyNote = GameLogic.showKeystoneJargon(state) &&
+    final keyNote =
+        GameLogic.showKeystoneJargon(state) &&
             (state.keystoneRunActive || state.hardmodeLevel > 0)
         ? '\n\nKEY timer keeps running — a jump can burn the par.'
         : '';
@@ -238,13 +237,13 @@ class DungeonTopHud extends StatelessWidget {
         content: Text(
           alive
               ? 'Enemies are still alive on this floor.\n\n'
-                  'Jump to F$target anyway? Loot on the ground is lost and '
-                  'chamber progress resets.'
-                  '$keyNote'
+                    'Jump to F$target anyway? Loot on the ground is lost and '
+                    'chamber progress resets.'
+                    '$keyNote'
               : 'This floor is mid-run.\n\n'
-                  'Jump to F$target anyway? Loot still on the ground is lost '
-                  'and chamber progress resets.'
-                  '$keyNote',
+                    'Jump to F$target anyway? Loot still on the ground is lost '
+                    'and chamber progress resets.'
+                    '$keyNote',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),
         ),
         actions: [
@@ -305,7 +304,8 @@ class DungeonTopHud extends StatelessWidget {
     final showClaimChip = claimable > 0;
     final softcap = GameLogic.levelsUntilSoftcap(state);
     final bagUpgrades = MenuAlerts.bagUpgradeCount(state);
-    final showSoftcap = softcap > 0 &&
+    final showSoftcap =
+        softcap > 0 &&
         !state.inGauntlet &&
         bagUpgrades < 5 &&
         (state.wipeStreakCount >= 1 || softcap >= 4);
@@ -324,23 +324,28 @@ class DungeonTopHud extends StatelessWidget {
     final keyBit = !jargon
         ? ''
         : state.keystoneRunActive
-            ? ' · KEY +${state.keystoneRunLevel}'
-            : (state.hardmodeLevel > 0 ? ' · KEY +${state.hardmodeLevel}' : '');
+        ? ' · KEY +${state.keystoneRunLevel}'
+        : (state.hardmodeLevel > 0 ? ' · KEY +${state.hardmodeLevel}' : '');
     // Timer is its own chip — never ellipsis behind zone/KEY in placeLine.
     final keyTimerLabel = state.keystoneRunActive
         ? Keystone.formatTimer(state.keystoneTimerMs)
         : null;
     final zoneShort = () {
       final parts = dungeonName.split(RegExp(r"[\s']+"));
-      final word =
-          parts.firstWhere((p) => p.isNotEmpty, orElse: () => dungeonName);
+      final word = parts.firstWhere(
+        (p) => p.isNotEmpty,
+        orElse: () => dungeonName,
+      );
       return word.length > 10 ? word.substring(0, 10) : word;
     }();
     final awaitingExit = director.spatial?.awaitingExit == true;
+    final partyLine = state.isPartyDefeated || awaitingExit
+        ? null
+        : world?.map.partyMarkLine;
     final placeLine = state.isPartyDefeated
         ? (state.inGauntlet || state.inAnyRiftMode
-            ? 'WIPED · End → hub'
-            : 'WIPED · Retry / Hub')
+              ? 'WIPED · End → hub'
+              : 'WIPED · Retry / Hub')
         : awaitingExit
         ? '$zoneShort · F$floor · GO stairs'
         : state.inGauntlet
@@ -365,15 +370,15 @@ class DungeonTopHud extends StatelessWidget {
             content: Text(
               mode == DungeonMode.farm
                   ? (plain
-                      ? 'Repeat stays on this floor after clear for more loot.\n\n'
-                          'You are mid-fight — switch anyway?'
-                      : 'FARM loops the same floor after clear for more loot.\n\n'
-                          'You are mid-fight — switch anyway?')
+                        ? 'Repeat stays on this floor after clear for more loot.\n\n'
+                              'You are mid-fight — switch anyway?'
+                        : 'FARM loops the same floor after clear for more loot.\n\n'
+                              'You are mid-fight — switch anyway?')
                   : (plain
-                      ? 'Next advances toward the boss after each clear.\n\n'
-                          'You are mid-fight — switch anyway?'
-                      : 'PUSH advances toward the boss after each clear.\n\n'
-                          'You are mid-fight — switch anyway?'),
+                        ? 'Next advances toward the boss after each clear.\n\n'
+                              'You are mid-fight — switch anyway?'
+                        : 'PUSH advances toward the boss after each clear.\n\n'
+                              'You are mid-fight — switch anyway?'),
               style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),
             actions: [
@@ -403,10 +408,7 @@ class DungeonTopHud extends StatelessWidget {
       if (state.inGauntlet) {
         final floor = state.currentRoom.floorNumber;
         final nextBoss = GauntletAnomalies.nextBossFloor(floor);
-        final anomaly = GauntletAnomalies.forFloor(
-          floor,
-          inGauntlet: true,
-        );
+        final anomaly = GauntletAnomalies.forFloor(floor, inGauntlet: true);
         final nextAnom = GauntletAnomalies.nextAnomalyFloor(floor);
         final pb = state.metaDepth.gauntletBestFloor;
         final treasure = GauntletAnomalies.isTreasureFloor(floor);
@@ -420,9 +422,7 @@ class DungeonTopHud extends StatelessWidget {
             : treasure
             ? '\nTreasure floor — no anomaly this landing.'
             : '';
-        final nextBit = nextAnom != null
-            ? ' Next anomaly F$nextAnom.'
-            : '';
+        final nextBit = nextAnom != null ? ' Next anomaly F$nextAnom.' : '';
         final pbBit = pb > 0 ? ' PB F$pb.' : '';
         return DungeonModeChip(
           label: chip,
@@ -446,7 +446,8 @@ class DungeonTopHud extends StatelessWidget {
               label: GameLogic.dungeonModeChipLabel(DungeonMode.farm, state),
               selected: farm,
               dense: true,
-              tip: coachFarm ??
+              tip:
+                  coachFarm ??
                   GameLogic.dungeonModeChipTip(DungeonMode.farm, state),
               onTap: () {
                 director.dismissTip('farm_push');
@@ -461,7 +462,8 @@ class DungeonTopHud extends StatelessWidget {
               label: GameLogic.dungeonModeChipLabel(DungeonMode.push, state),
               selected: !farm,
               dense: true,
-              tip: coachFarm ??
+              tip:
+                  coachFarm ??
                   GameLogic.dungeonModeChipTip(DungeonMode.push, state),
               onTap: () {
                 director.dismissTip('farm_push');
@@ -534,7 +536,8 @@ class DungeonTopHud extends StatelessWidget {
                       maxCooldown: state.godHandCooldownSeconds,
                       urgent: state.wipeStreakCount >= 2,
                       dense: true,
-                      readyLabel: coachGod ??
+                      readyLabel:
+                          coachGod ??
                           (plain
                               ? 'Tap the fight — steer your party smash'
                               : null),
@@ -566,8 +569,7 @@ class DungeonTopHud extends StatelessWidget {
                     tooltip: 'Floor',
                     padding: EdgeInsets.zero,
                     color: GameTheme.stoneDeep,
-                    onSelected: (value) =>
-                        _onFloorMenu(context, value, floor),
+                    onSelected: (value) => _onFloorMenu(context, value, floor),
                     itemBuilder: (context) =>
                         _floorMenuItems(floor: floor, includeExtras: false),
                     child: Center(
@@ -584,6 +586,13 @@ class DungeonTopHud extends StatelessWidget {
               ),
             ],
           ),
+          if (partyLine != null && coachLine == null)
+            Text(
+              partyLine,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+            ),
           if (coachLine != null)
             Padding(
               padding: const EdgeInsets.only(top: 2, right: 4),
@@ -713,7 +722,6 @@ class DungeonTopHud extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class MissionClaimChip extends StatelessWidget {
@@ -742,9 +750,7 @@ class MissionClaimChip extends StatelessWidget {
           onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(3),
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: GameTheme.minTouch,
-            ),
+            constraints: BoxConstraints(minHeight: GameTheme.minTouch),
             child: Container(
               padding: EdgeInsets.symmetric(
                 horizontal: dense ? 6 : 8,
