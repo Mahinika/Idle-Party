@@ -1110,6 +1110,9 @@ abstract final class AbilityEffectRunner {
         : (def.id == AbilityId.killCommand && pet != null
               ? false
               : (hero.ranged || SpatialCombat.actorDist(hero, enemy) > 2.2));
+    if (!SpatialCombat.canShoot(world, hero.x, hero.y, enemy.x, enemy.y)) {
+      return;
+    }
     final tint = SpatialCombat.burstArgbForStyle(style);
 
     hero.attackFlash = 0.16;
@@ -1279,6 +1282,9 @@ abstract final class AbilityEffectRunner {
       defense: enemy.effectiveDefense,
       attackerAttack: hero.attack,
     );
+    if (!SpatialCombat.canShoot(world, hero.x, hero.y, enemy.x, enemy.y)) {
+      return;
+    }
     SpatialCombat.hurtEnemy(enemy, dealt);
     SpatialCombat.recordHeroDamage(hero, dealt);
     SpatialCombat.applyTankSoftThreat(hero, enemy);
@@ -1552,6 +1558,7 @@ abstract final class AbilityEffectRunner {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (SpatialCombat.actorDist(hero, e) > radius) continue;
+      if (!SpatialCombat.canShoot(world, hero.x, hero.y, e.x, e.y)) continue;
       if (i >= _aoeHitCap) break;
       // Cone of Cold / chill AoE: slow attack cadence.
       if (def.id == AbilityId.coneOfCold) {
@@ -1826,6 +1833,9 @@ abstract final class AbilityEffectRunner {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (SpatialCombat.distPoint(ox, oy, e.x, e.y) > radius) continue;
+      final fromX = world.canWalk(ox, oy) ? ox : hero.x;
+      final fromY = world.canWalk(ox, oy) ? oy : hero.y;
+      if (!SpatialCombat.canShoot(world, fromX, fromY, e.x, e.y)) continue;
       if (hitCount >= _aoeHitCap) break;
       final wasAlive = e.hp > 0;
       final dealt = CombatRatings.mitigateByArmor(

@@ -3347,7 +3347,9 @@ abstract final class SpatialCombat {
       enemy.fireCooldown -= dt * slowRate;
 
       final afterDist = actorDist(enemy, target);
-      if (enemy.fireCooldown <= 0 && afterDist <= enemy.attackRange) {
+      if (enemy.fireCooldown <= 0 &&
+          afterDist <= enemy.attackRange &&
+          canShoot(world, enemy.x, enemy.y, target.x, target.y)) {
         enemy.fireCooldown = enemy.attackCooldown;
         // Armor matters as a percent — more DEF always helps, never immune.
         var raw = CombatRatings.mitigateByArmor(
@@ -3600,7 +3602,9 @@ abstract final class SpatialCombat {
       final dist = actorDist(hero, target);
       hero.fireCooldown -=
           dt * hero.attackSpeedMul * (hero.attackSlowTimer > 0 ? 0.65 : 1.0);
-      if (hero.fireCooldown <= 0 && dist <= hero.attackRange) {
+      if (hero.fireCooldown <= 0 &&
+          dist <= hero.attackRange &&
+          canShoot(world, hero.x, hero.y, target.x, target.y)) {
         hero.fireCooldown = hero.attackCooldown;
         final partyHero =
             hero.assetIndex >= 0 && hero.assetIndex < nextState.heroes.length
@@ -3641,17 +3645,9 @@ abstract final class SpatialCombat {
             priority: 1,
           );
         }
-        final hasLos = hasClearCorridor(
-          world.map,
-          world.openGateIds,
-          hero.x.floor(),
-          hero.y.floor(),
-          target.x.floor(),
-          target.y.floor(),
-        );
-        // Melee and point-blank / blocked LOS: resolve instantly so corner
-        // walls can't soft-lock a floor.
-        final useDirect = !hero.ranged || dist <= 1.35 || !hasLos;
+        // Melee and point-blank resolve on the spot. A blocked shot does not
+        // reach this branch — the wall check above already refused it.
+        final useDirect = !hero.ranged || dist <= 1.35;
         if (useDirect) {
           final wasAlive = target.hp > 0;
           var hitDmg = damage;
@@ -3710,6 +3706,7 @@ abstract final class SpatialCombat {
             for (final e in world.enemies) {
               if (e.id == target.id || e.hp <= 0 || e.dormant) continue;
               if (actorDist(hero, e) > 2.2) continue;
+              if (!canShoot(world, hero.x, hero.y, e.x, e.y)) continue;
               final frac = switch (hero.heroSpecId) {
                 HeroSpecId.combat => 0.40,
                 HeroSpecId.arms => 0.38,
@@ -4031,6 +4028,7 @@ abstract final class SpatialCombat {
             final dx = p.x - v.x;
             final dy = p.y - v.y;
             if (dx * dx + dy * dy >= hitR2) continue;
+            if (!canShoot(world, p.x, p.y, v.x, v.y)) continue;
             final wasAlive = v.hp > 0;
             final int dealt;
             if (v.team == SpatialTeam.hero) {
@@ -4271,7 +4269,9 @@ abstract final class SpatialCombat {
         separateFrom: allies,
       );
       pet.fireCooldown -= dt;
-      if (pet.fireCooldown <= 0 && actorDist(pet, target) <= pet.attackRange) {
+      if (pet.fireCooldown <= 0 &&
+          actorDist(pet, target) <= pet.attackRange &&
+          canShoot(world, pet.x, pet.y, target.x, target.y)) {
         pet.fireCooldown = pet.attackCooldown;
         final wasAlive = target.hp > 0;
         final petHit = CombatRatings.mitigateByArmor(
@@ -4381,7 +4381,8 @@ abstract final class SpatialCombat {
     final rng = GameLogic.random;
     for (final enemy in world.enemies) {
       if (enemy.hp <= 0 || enemy.dormant) continue;
-      if (distPoint(tileX, tileY, enemy.x, enemy.y) <= radius) {
+      if (distPoint(tileX, tileY, enemy.x, enemy.y) <= radius &&
+          canShoot(world, tileX, tileY, enemy.x, enemy.y)) {
         final wasAlive = enemy.hp > 0;
         hurtEnemy(enemy, damage);
         if (state.vfxQuality != VfxQuality.minimal) {
@@ -4468,30 +4469,41 @@ abstract final class SpatialCombat {
   static void _unlockIfEnemiesUnreachable(SpatialWorld world) =>
       combatUnlockIfEnemiesUnreachable(world);
 
-  /// Projectiles die on solid walls, but graze open corners so diagonal
-  /// point-blank shots aren't eaten by tile floors.
+  /// Projectiles die on walls. An open corner (both shoulders are floor)
+  /// still lets a diagonal bolt pass so it is not eaten by the tile edge.
   static bool _projectileCanTravel(SpatialWorld world, double x, double y) {
     if (world.canWalk(x, y)) return true;
     final fx = x.floor();
     final fy = y.floor();
     final lx = x - fx;
     final ly = y - fy;
-    // Near a corner: allow if both adjacent cardinals are walkable.
     if (lx < 0.2 || lx > 0.8 || ly < 0.2 || ly > 0.8) {
       final ox = lx < 0.5 ? fx - 1 : fx + 1;
       final oy = ly < 0.5 ? fy - 1 : fy + 1;
       final sideX = world.canWalkTile(ox, fy);
       final sideY = world.canWalkTile(fx, oy);
       if (sideX && sideY) return true;
-      if (sideX && world.canWalkTile(fx, fy + (ly < 0.5 ? -1 : 1))) {
-        return true;
-      }
-      if (sideY && world.canWalkTile(fx + (lx < 0.5 ? -1 : 1), fy)) {
-        return true;
-      }
     }
     return false;
   }
+
+  /// A shot, swing, or bolt connects only when the straight step does not
+  /// cross a wall, including a diagonal corner.
+  static bool canShoot(
+    SpatialWorld world,
+    double x0,
+    double y0,
+    double x1,
+    double y1,
+  ) => hasClearCorridor(
+    world.map,
+    world.openGateIds,
+    x0.floor(),
+    y0.floor(),
+    x1.floor(),
+    y1.floor(),
+    tight: true,
+  );
 
   /// Apply any remaining ground loot into state and clear the pile.
   /// Used when exit starts early (AFK) or right before roomCleared.

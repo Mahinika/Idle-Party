@@ -366,7 +366,8 @@ void tickEnemySpecials(
     }
   } else if (enemy.archetype == EnemyArchetype.glass &&
       focus.hp < focus.effectiveMaxHp * 0.35 &&
-      SpatialCombat.actorDist(enemy, focus) <= 4.2) {
+      SpatialCombat.actorDist(enemy, focus) <= 4.2 &&
+      SpatialCombat.canShoot(world, enemy.x, enemy.y, focus.x, focus.y)) {
     var chip = math.max(2, (enemy.effectiveAttack * 0.55).round());
     if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
     SpatialCombat.applyHeroIncomingDamage(
@@ -465,6 +466,7 @@ void _resolveBruteCrash(
   for (final h in world.heroes) {
     if (!h.isAlive) continue;
     if (SpatialCombat.actorDist(enemy, h) > radius) continue;
+    if (!SpatialCombat.canShoot(world, enemy.x, enemy.y, h.x, h.y)) continue;
     var chip = math.max(
       elite ? 2 : 1,
       (enemy.effectiveAttack * (elite ? 0.35 : 0.22)).round(),
@@ -569,6 +571,9 @@ void _tickSupportSpecial(
 
   if (job == SupportJob.drain) {
     if (SpatialCombat.actorDist(enemy, focus) > 5.5) return;
+    if (!SpatialCombat.canShoot(world, enemy.x, enemy.y, focus.x, focus.y)) {
+      return;
+    }
     var chip = math.max(1, (enemy.effectiveAttack * 0.18).round());
     if (world.afkAssist) chip = math.max(1, (chip * 0.4).round());
     SpatialCombat.applyHeroIncomingDamage(
@@ -635,6 +640,9 @@ void _tickRangedSpecial(
   required bool reducedVfx,
 }) {
   if (SpatialCombat.actorDist(enemy, focus) > 5.5) return;
+  if (!SpatialCombat.canShoot(world, enemy.x, enemy.y, focus.x, focus.y)) {
+    return;
+  }
   switch (EnemyFlavor.rangedJob(flavor)) {
     case RangedJob.root:
       focus.rootTimer = math.max(focus.rootTimer, 1.55);
@@ -1167,6 +1175,7 @@ bool _bossChipInRadius(
   for (final h in world.heroes) {
     if (!h.isAlive) continue;
     if (SpatialCombat.actorDist(enemy, h) > radius) continue;
+    if (!SpatialCombat.canShoot(world, enemy.x, enemy.y, h.x, h.y)) continue;
     _bossChipHero(
       world,
       enemy,

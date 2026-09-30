@@ -870,6 +870,9 @@ abstract final class KitNamedCasts {
         var prevX = hero.x;
         var prevY = hero.y;
         for (final e in spree.take(2)) {
+          if (!SpatialCombat.canShoot(world, hero.x, hero.y, e.x, e.y)) {
+            continue;
+          }
           final hit = CombatRatings.mitigateByArmor(
             rawDamage: math.max(
               2,
