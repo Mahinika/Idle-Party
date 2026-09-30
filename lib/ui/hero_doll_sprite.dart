@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../assets/custom_assets.dart';
-import '../core/hero_identity.dart';
 import '../models/hero.dart';
 import '../visual/body_family.dart';
 import '../visual/character_visual_painter.dart';
@@ -229,19 +228,6 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
         colorFilter: const ColorFilter.mode(
           Color(0xFF8040C0),
           BlendMode.modulate,
-        ),
-        child: child,
-      );
-    }
-
-    if (HeroIdentity.hasStanceBody(widget.hero.specId)) {
-      child = DecoratedBox(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Color(HeroIdentity.ownedBodyTintArgb(widget.hero.specId)),
-            width: widget.size < 28 ? 2 : 3,
-          ),
         ),
         child: child,
       );
