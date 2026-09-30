@@ -252,6 +252,7 @@ abstract final class GearScorer {
                 item.spellPowerBonus * w.sp +
                 item.resolvedArmor * w.armor +
                 item.critChanceBonus * w.crit * critW +
+                item.masteryBonus * w.crit * 0.85 +
                 item.attackSpeedBonus * w.aspd +
                 item.moveSpeedBonus * w.move +
                 item.mp5Bonus * w.mp5)

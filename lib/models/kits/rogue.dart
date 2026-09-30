@@ -347,7 +347,7 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
       specId: HeroSpecId.subtlety,
       name: 'Master of Subtlety',
       shortLabel: 'Subtle',
-      description: 'Always on haste. Vanish makes the next hits the opener.',
+      description: 'Always on haste. Shadow Dance makes the next hits the opener.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: true,

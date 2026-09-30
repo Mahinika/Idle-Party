@@ -123,7 +123,7 @@ abstract final class GameGuides {
     id: 'combat',
     title: 'COMBAT',
     body:
-        'Each floor is one fight. The party walks and fights on its own.\n\n'
+        'Each floor is a few rooms. The party walks and fights on its own.\n\n'
         '• Clear a room to open the next.\n'
         '• When enemies are down, loot banks and they walk to the stairs.\n'
         '• Tap the fight when you want to smash and steer.\n'
@@ -265,7 +265,7 @@ abstract final class GameGuides {
         '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
         '+8% gold (stacks forever). See ESSENCE lasting buys. Separate from Star Nodes.\n'
         '• Confirm / toast show the next unlock (Combat Rogue, 5th slot…).\n'
-        '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
+        '• Also raises Ascension Level (AL: +ATK/STA/DEF and +10% gold per level) and pays essence.\n'
         '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
         'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
         '• Reset: wallet gold, GOLD → FORGE, bag and worn drops, market, floor height '
@@ -286,11 +286,11 @@ abstract final class GameGuides {
         '• Quests — Daily / Bounty / Side / Week / Contract board; '
         'CLAIM QUESTS when ready.\n\n'
         '• Early on: the hub hunt tells you to grow the party in the starter zone. '
-        'Daily Run and vault-start wait until you have beaten a boss (or Ascended).\n'
+        'Daily Run waits until your first Ascend. Vault-start waits until you have beaten a boss (or Ascended).\n'
         '• Fill today’s Daily Vault with one PUSH clear (not a FARM loop), then claim essence.\n'
         '• The hub hunt and offline Up next share one chase (claim → READY → '
         'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
-        '• Welcome-back says where you were: hub = sanctuary gold only; '
+        '• Welcome-back says where you were: hub = sanctuary gold, plus essence after a while; '
         'mid-dungeon = party kept fighting with AFK assist. Then one wow line, '
         'a few highlights, then Up next.\n'
         '• The hub hunt flashes READY / ALMOST when a claim or Ascend is close.\n'
@@ -402,7 +402,7 @@ abstract final class GameGuides {
       body:
           'Tap SCROLLS on the hub map. Optional. Watch a short ad '
           'for 1 Ad Ticket, then spend tickets on timed scrolls.\n\n'
-          '• TIP A FRIEND: 10 Ad Tickets when a friend installs and opens the app, up to 30. If they already play, they enter your code on SCROLLS.\n\n'
+          '• TIP A FRIEND: 10 Ad Tickets per friend who installs with your code (or enters it on SCROLLS), up to 30 friends.\n\n'
           '• Scroll of Damage: +${AdBoost.attackPercent}% attack for ${AdBoost.splitHours} hours (1 ticket).\n'
           '• Scroll of Gold: ×${AdBoost.goldMul} gold (kills, chests, hub AFK) for ${AdBoost.splitHours} hours (1 ticket).\n'
           '• Scroll of XP: +${AdBoost.xpPercent}% party XP for ${AdBoost.splitHours} hours (1 ticket).\n'
@@ -431,7 +431,7 @@ abstract final class GameGuides {
           '• Zones unlock by party mean level or prior clear — gold does not unlock them.\n'
           '• Locked zones dim on the map; the caption under the map shows '
           'party level progress (have / need).\n'
-          '• At party Lv${GameLogic.maxHeroLevel}, hub PATH and ENDGAME tabs open. '
+          '• PATH is always on the hub. The ENDGAME tab appears from Ascend 20 or a hero at Lv80, still locked until every hero is Lv${GameLogic.maxHeroLevel}. '
           'ENDGAME is its own map (Gauntlet, Ranked GR, Farm Rift, Ashen Crown) — '
           'not under Mothveil, not a 16th dungeon. Tap a hunt, then ENTER. '
           'Farm Rift and Ranked GR pick the number on ENTER. '
@@ -670,7 +670,7 @@ abstract final class GameGuides {
     ),
     GuideTopic(
       id: 'gauntlet',
-      title: 'INFINITY GAUNTLET',
+      title: 'GAUNTLET',
       body:
           'Unlocks when every active hero reaches level ${GameLogic.maxHeroLevel} (endgame).\n\n'
           '• Endless Crystal Spire climb — not a 16th PATH cave; each floor gets harder.\n'
@@ -741,7 +741,7 @@ abstract final class GameGuides {
           '• Buy flasks and bandages with gold.\n'
           '• Clear a full bag with BAG → CLEAN BAG, MERGE, or BAG → FILTERS.\n'
           '• Keep at least one flask for tough floors and bosses.\n'
-          '• Bottom-tab SHOP is the real-money store (cheap boosts / ad-free on '
+          '• Bottom-tab SHOP is the real-money store (forever scrolls / ad-free on '
           'Play installs) — not this market.',
     ),
     GuideTopic(
@@ -770,7 +770,7 @@ abstract final class GameGuides {
           '• God Hand cooldown upgrades live only under God Hand on BLESSING (one door).\n'
           '• Purchases survive Ascend.\n'
           '• Unlock higher offerings as Ascension Level rises.\n'
-          '• Bottom-tab SHOP is real-money store (cheap boosts / ad-free) — not these essence buys.',
+          '• Bottom-tab SHOP is real-money store (forever scrolls / ad-free) — not these essence buys.',
     ),
     GuideTopic(
       id: 'jobs',
@@ -805,23 +805,23 @@ abstract final class GameGuides {
           'Keystone affixes still rotate each ISO week (numbers + which cave’s '
           'jobs/tell KEY borrows). The vault is daily.\n\n'
           '• Early on: the hub hunt tells you to grow the party in the starter zone. '
-          'Daily Run and vault-start wait until you have beaten a boss (or Ascended).\n'
+          'Daily Run waits until your first Ascend. Vault-start waits until you have beaten a boss (or Ascended).\n'
           '• Fill today’s Daily Vault with one PUSH clear (not a FARM loop), then claim essence.\n'
-          '• At party Lv${GameLogic.maxHeroLevel}: KEY unlocks — time a KEY +2 (or higher) for a bigger '
+          '• When every hero is Lv${GameLogic.maxHeroLevel}: KEY unlocks — time a KEY +2 (or higher) for a bigger '
           'vault claim. The hub hunt may chase KEY / Gauntlet / Ranked GR / Farm Rift.\n'
           '• The hub hunt and offline Up next share one chase (claim → READY → '
           'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
-          '• Welcome-back says where you were: hub = sanctuary gold only; '
+          '• Welcome-back says where you were: hub = sanctuary gold, plus essence after a while; '
           'mid-dungeon = party kept fighting with AFK assist. Then one wow line, '
           'a few highlights, then Up next.\n'
           '• The hub hunt flashes READY / ALMOST when a claim or Ascend is close.\n'
           '• First vault claim of each calendar month also pays a season bonus.\n'
-          '• Each ISO week has a named local season beat (KEY +2 or Gauntlet floor) '
+          '• Each ISO week has a named local season beat (timed KEY, Gauntlet, Ranked GR, or Ashen Crown) '
           '— the hub hunt may chase it after party Lv${GameLogic.maxHeroLevel}; claim pays essence + title.\n'
           '• See AL20 VS ENDGAME for all four season clocks (UTC day / ISO week / '
           'calendar month / Play month).\n'
           '• Progress resets at UTC midnight.\n'
-          '• Will ranks and Gauntlet F25/50/100 grant one-time essence when unlocked.',
+          '• Will ranks and Gauntlet F25/50/100/150/200 grant one-time essence when unlocked.',
     ),
     GuideTopic(
       id: 'armor_sets',
@@ -863,8 +863,8 @@ abstract final class GameGuides {
       title: 'KEY RUNS',
       body:
           'Mythic+-style keys from the hub KEY tab '
-          '(party Lv${GameLogic.maxHeroLevel}) — unlocks at '
-          'party level ${GameLogic.maxHeroLevel}.\n\n'
+          '(every hero at Lv${GameLogic.maxHeroLevel}) — unlocks when '
+          'every active hero is level ${GameLogic.maxHeroLevel}.\n\n'
           '• Endgame only: set key before you enter a normal zone dungeon.\n'
           '• Key level has no stop at +20 — time under par to push the next KEY.\n'
           '• Affixes lock on enter (weekly numbers + this week’s cave jobs / '
@@ -874,7 +874,7 @@ abstract final class GameGuides {
           '• Idle-friendly timer: AFK time counts; beat the boss under par to TIMED upgrade.\n'
           '• Overtime = depleted (clear still counts, no key upgrade).\n'
           '• Daily vault: 1 clear or timed KEY +2 — claim once per day.\n'
-          '• Optional Boss Rush / No Flask / Tiny add extra challenge + essence.\n'
+          '• Optional Boss Rush / No Flask / Tiny each add +2 essence on a clear.\n'
           '• Affixes show in the fight: SWARM / FORTIFIED / TYRANNICAL banners; '
           'Glass packs execute low HP; Fortified trash stacks armor mid-fight.\n'
           '• Higher keys drop higher iLvl gear (KEY +10 is +20 iLvl) and pay '
@@ -894,7 +894,7 @@ abstract final class GameGuides {
           '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
           '+8% gold (stacks forever). See ESSENCE → BLESSING. Separate from Star Nodes.\n'
           '• Confirm / toast show the next Ascend unlock (Combat Rogue, 5th slot…).\n'
-          '• Also raises Ascension Level (AL: +ATK/STA/+10% gold per level) and pays essence.\n'
+          '• Also raises Ascension Level (AL: +ATK/STA/DEF and +10% gold per level) and pays essence.\n'
           '• Keep: hero levels/XP, open zones, essence, relics, sanctuary, pets, God Hand, '
           'Apex, unlocked specs, 5th party slot, lifetime gold.\n'
           '• Reset: wallet gold, GOLD → FORGE, bag and worn drops, market, floor height '

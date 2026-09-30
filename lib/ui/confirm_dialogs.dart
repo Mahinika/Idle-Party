@@ -55,7 +55,7 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
             title: 'Ascend?',
             content: Text(
               StoryLore.ascendConfirmBody(
-                rewardEssence: baseReward + milestone,
+                rewardEssence: baseReward + milestone + MetaSystems.ascendStreakEssence(state),
                 nextAl: nextAl,
                 milestoneBonus: milestone,
                 godHandLevel: state.godHandLevel,

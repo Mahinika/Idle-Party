@@ -2417,14 +2417,11 @@ class GameLogic {
         trophies.add(before.dungeonId);
       }
     }
-    // Daily vault: push clears (or any boss). Gauntlet clears count in endgame.
-    // Farm loops never mint vault progress.
+    // Daily vault: PUSH clears. Gauntlet clears count in endgame.
+    // Farm loops never mint vault progress, including a FARM boss.
     final gauntletVault = before.inGauntlet && endgameUnlocked(before);
     final vaultBump =
-        (!farmLoop && (!before.inGauntlet || gauntletVault)) ||
-            (bossKill > 0 && !before.inGauntlet)
-        ? 1
-        : 0;
+        (!farmLoop && (!before.inGauntlet || gauntletVault)) ? 1 : 0;
     // PUSH peaks feed tomorrow's Daily Run floor (not farm / ladders / daily).
     final wasDaily = MetaSystems.isActiveDailyRun(before);
     if (!farmLoop &&
@@ -3407,7 +3404,7 @@ class OfflineProgressResult {
   /// One honest line: hub sanctuary vs dungeon fight — not mixed up.
   String get afkWhereLine => wasInDungeon
       ? 'Left mid-dungeon · party kept fighting (AFK assist)'
-      : 'Rested at the hub · sanctuary gold only · no combat';
+      : 'Rested at the hub · sanctuary gold, and essence after a while · no combat';
 
   /// Banner + Welcome Back share this gate.
   /// Gold / clears show even under 20s; other rewards need ≥20s away.

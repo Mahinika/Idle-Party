@@ -204,7 +204,7 @@ class HubEndgameMap extends StatelessWidget {
                 top: 6,
                 child: Text(
                   locked
-                      ? 'Party Lv${GameLogic.maxHeroLevel} unlocks these hunts'
+                      ? 'Every hero at Lv${GameLogic.maxHeroLevel} unlocks these hunts'
                       : HubEndgameAct.mapUnlockLine,
                   textAlign: TextAlign.center,
                   maxLines: 2,

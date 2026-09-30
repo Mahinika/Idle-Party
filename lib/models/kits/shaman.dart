@@ -154,7 +154,7 @@ const List<ClassAbilityDef> _shamanKit = <ClassAbilityDef>[
       specId: HeroSpecId.elemental,
       name: 'Earth Shock',
       shortLabel: 'EShock',
-      description: 'Signature interrupt hit.',
+      description: 'Hit that delays the foe special.',
       unlockLevel: 11,
       cooldown: 6,
       resourceCost: 18,

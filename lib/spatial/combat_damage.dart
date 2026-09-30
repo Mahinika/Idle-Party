@@ -58,6 +58,9 @@ int combatApplyHeroIncomingDamage(
   if (dealt <= 0) return 0;
 
   var mul = hero.kitInMul;
+  if ((hero.buffTimers['deathWish'] ?? 0) > 0) {
+    mul *= 1.18;
+  }
   if (hero.shieldWallTimer > 0) {
     mul *= 0.45;
   }

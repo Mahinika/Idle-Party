@@ -205,7 +205,8 @@ class HubChase {
             MetaSystems.ascendMilestoneReward(
               state.ascensionLevel,
               state.ascensionLevel + 1,
-            );
+            ) +
+            MetaSystems.ascendStreakEssence(state);
         final nextAl = state.ascensionLevel + 1;
         final unlock = AscendRoadmap.unlockAtAl(nextAl);
         final unlockBit = unlock != null ? ' · AL$nextAl unlocks $unlock' : '';
@@ -722,9 +723,9 @@ class HubChase {
           : 'Level the party to ${GameLogic.maxHeroLevel}',
       detail: almost
           ? 'Lowest hero Lv$minLv — a few more combat levels unlock KEY, '
-                'Gauntlet, and Ranked GR.'
-          : 'Heroes Lv$minLv–$maxLv. Combat XP to '
-                '${GameLogic.maxHeroLevel} unlocks KEY, Gauntlet, and Ranked GR.',
+                'Gauntlet, Ranked GR, Farm Rift, and Ashen Crown.'
+          : 'Heroes Lv$minLv–$maxLv. Combat XP until every hero is '
+                '${GameLogic.maxHeroLevel} unlocks KEY, Gauntlet, Ranked GR, Farm Rift, and Ashen.',
       progressLabel: minLv == maxLv
           ? 'Lv$minLv/${GameLogic.maxHeroLevel}'
           : 'Lv$minLv–$maxLv/${GameLogic.maxHeroLevel}',

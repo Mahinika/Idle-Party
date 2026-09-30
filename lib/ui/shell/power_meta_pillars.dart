@@ -205,7 +205,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
               label: row.rowLabel,
               tip: switch (row) {
                 MoreSection.quests => 'Daily, bounty, side, and week jobs',
-                MoreSection.craft => 'Apex and the Craft Trial',
+                MoreSection.craft => 'Apex gear',
                 _ => null,
               },
               style: GameButtonStyle.grey,

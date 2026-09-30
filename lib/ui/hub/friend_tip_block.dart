@@ -41,7 +41,7 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Share Idle Party. You get 10 Ad Tickets (the number above) when a friend installs and opens the app. Spend them on the scrolls below.',
+          'Share Idle Party. You get 10 Ad Tickets (the number above) when a friend installs with your code, or enters it on SCROLLS. Spend them on the scrolls below.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (md.friendClaimsPaid > 0) ...[

@@ -134,7 +134,7 @@ abstract final class ShopCatalog {
       id: 'perm_scroll_rest',
       name: 'Forever Scroll of Rest',
       description:
-          'Always on: Welcome Back gold ×${AdBoost.awayGoldMul}. Same as the SCROLLS ticket, forever.',
+          'Always on: every Welcome Back uses gold ×${AdBoost.awayGoldMul}. Not a one-shot ticket.',
       priceLabel: '\$0.99',
       kind: ShopOfferKind.permScroll,
       oneTime: true,

@@ -343,7 +343,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           const SizedBox(height: 2),
           Text(
             !GameLogic.endgameUnlocked(state)
-                ? 'KEY unlocks at party level ${GameLogic.maxHeroLevel} with Gauntlet and Ranked GR.'
+                ? 'KEY unlocks when every hero is Lv${GameLogic.maxHeroLevel}, with Gauntlet and Ranked GR.'
                 : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2. Keys keep going past +${Keystone.campaignCap}.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),

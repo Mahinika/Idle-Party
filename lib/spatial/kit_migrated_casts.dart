@@ -12,9 +12,10 @@ abstract final class KitNamedCasts {
   static bool pyroblastReady(SpatialActor hero) {
     final pyro = ClassKits.defFor(AbilityId.pyroblast);
     if (pyro == null) return false;
+    final free = hero.hotStreakReady;
     return ClassKits.isUnlocked(AbilityId.pyroblast, hero.heroLevel) &&
         SpatialCombat.abilityCdLeft(hero, AbilityId.pyroblast) <= 0 &&
-        hero.rage + 0.001 >= pyro.resourceCost;
+        (free || hero.rage + 0.001 >= pyro.resourceCost);
   }
 
   static SpatialActor? packLeader(SpatialWorld world, SpatialActor self) {
@@ -630,13 +631,15 @@ abstract final class KitNamedCasts {
           );
         }
         if (away > 0.1) {
+          final prefer = math.max(2.2, hero.attackRange * 0.9);
+          final step = (away - prefer).clamp(-2.4, 2.4);
           final snapped = SpatialCombat.clampAlongWalk(
             world.map,
             world.openGateIds,
             hero.x,
             hero.y,
-            hero.x + (awayX / away) * 2.2,
-            hero.y + (awayY / away) * 2.2,
+            hero.x + (awayX / away) * step,
+            hero.y + (awayY / away) * step,
           );
           hero.x = snapped.$1;
           hero.y = snapped.$2;

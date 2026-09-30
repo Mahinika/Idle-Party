@@ -102,7 +102,7 @@ abstract final class StoryLore {
         '${blessingsAfter > 1 ? ' (now ×$blessingsAfter)' : ''}.';
     final gain = 'You get AL$nextAl and +${rewardEssence}e.\n\n$bless';
     final stay =
-        'Party levels and open caves stay. Gold, bag, GOLD tracks, and floor progress reset.';
+        'Party levels, open caves, and worn Apex stay. Gold, other bag gear, GOLD tracks, and floor progress reset.';
     final kits = AscendRoadmap.kitUnlockSummary(nextAl, maxNames: 3);
     final String? neu;
     if (unlockCombatRogue) {

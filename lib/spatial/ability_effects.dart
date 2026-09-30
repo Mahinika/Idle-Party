@@ -192,7 +192,9 @@ abstract final class AbilityEffectRunner {
       if (d.requiresShield && !hasShield) return false;
       if (hero.castingTimer > 0) return false;
       if (SpatialCombat.abilityCdLeft(hero, d.id) > 0) return false;
-      if (hero.rage + 0.001 < d.resourceCost) return false;
+      final freePyro =
+          d.id == AbilityId.pyroblast && hero.hotStreakReady;
+      if (!freePyro && hero.rage + 0.001 < d.resourceCost) return false;
       return true;
     }
 
@@ -746,7 +748,9 @@ abstract final class AbilityEffectRunner {
           CombatPresence.onEmergencyHeal(world, hero, reducedVfx: reducedVfx);
           return true;
         }
-        final ally = _lowestAlly(world, hero);
+        final ally = def.id == AbilityId.desperatePrayer
+            ? hero
+            : _lowestAlly(world, hero);
         if (ally == null) return false;
         spendAndCd(world, hero, def);
         _castHeal(world, hero, ally, def, reducedVfx: reducedVfx);
@@ -783,7 +787,9 @@ abstract final class AbilityEffectRunner {
           return true;
         }
         spendAndCd(world, hero, def);
-        if (def.id == AbilityId.shadowstep && focus != null && focus.hp > 0) {
+        if ((def.id == AbilityId.shadowstep || def.id == AbilityId.demonCharge) &&
+            focus != null &&
+            focus.hp > 0) {
           final dx = focus.x - hero.x;
           final dy = focus.y - hero.y;
           final len = math.sqrt(dx * dx + dy * dy);
@@ -890,6 +896,10 @@ abstract final class AbilityEffectRunner {
         }
         final grant = def.coeff > 0 ? def.coeff : 20.0;
         SpatialCombat.gainRage(hero, grant);
+        if (def.id == AbilityId.tigersFury) {
+          hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 6);
+          hero.buffTimers['buff'] = 6;
+        }
         announce(world, hero, def.shortLabel, 0xFFE0C040, reducedVfx);
         return true;
       case AbilityEffectKind.emergencyDefend:
@@ -910,7 +920,7 @@ abstract final class AbilityEffectRunner {
           );
           return true;
         }
-        if (def.id == AbilityId.deterrence) {
+        if (def.id == AbilityId.deterrence || def.id == AbilityId.soulburn) {
           _castAbsorb(world, hero, hero, def, reducedVfx: reducedVfx);
           return true;
         }
@@ -1268,6 +1278,9 @@ abstract final class AbilityEffectRunner {
       hero.arcaneCharges = 0;
       raw = math.max(2, (raw * (1.0 + charges * 0.2)).round());
     }
+    if (def.id == AbilityId.frostbolt) {
+      enemy.attackSlowTimer = math.max(enemy.attackSlowTimer, 2.0);
+    }
     if (def.id == AbilityId.earthShock) {
       enemy.specialCd = math.max(enemy.specialCd, 3.0);
     }
@@ -1347,7 +1360,8 @@ abstract final class AbilityEffectRunner {
     }
     if (def.id == AbilityId.obliterate ||
         def.id == AbilityId.stormstrike ||
-        def.id == AbilityId.lavaLash) {
+        def.id == AbilityId.lavaLash ||
+        def.id == AbilityId.mutilate) {
       final follow = math.max(1, (raw * 0.4).round());
       raw = math.max(1, raw - follow);
       hero.channelTicksLeft = 1;
@@ -2585,6 +2599,7 @@ abstract final class AbilityEffectRunner {
       AbilityId.rake ||
       AbilityId.rend ||
       AbilityId.garrote ||
+      AbilityId.hemorrhage ||
       AbilityId.rupture ||
       AbilityId.serpentSting ||
       AbilityId.lacerate ||
@@ -2637,6 +2652,7 @@ abstract final class AbilityEffectRunner {
     final dpsFrac = switch (def.id) {
       AbilityId.rip => 0.22,
       AbilityId.rake || AbilityId.garrote => 0.14,
+      AbilityId.hemorrhage => 0.08,
       AbilityId.rupture => 0.18,
       AbilityId.serpentSting => 0.12,
       AbilityId.lacerate => 0.13,
@@ -2841,6 +2857,9 @@ abstract final class AbilityEffectRunner {
       case AbilitySelfBuffKind.amp:
         hero.combustionTimer = math.max(hero.combustionTimer, dur);
         hero.buffTimers['buff'] = dur;
+        if (def.id == AbilityId.deathWish) {
+          hero.buffTimers['deathWish'] = dur;
+        }
       case AbilitySelfBuffKind.healAmp:
         hero.buffTimers['favor'] = dur;
       case AbilitySelfBuffKind.cleave:

@@ -196,7 +196,7 @@ const List<ClassAbilityDef> _hunterKit = <ClassAbilityDef>[
       specId: HeroSpecId.marksmanship,
       name: 'Chimera Shot',
       shortLabel: 'Chim',
-      description: 'Nature + frost hybrid hit.',
+      description: 'Nature shot.',
       unlockLevel: 7,
       cooldown: 8,
       resourceCost: 20,

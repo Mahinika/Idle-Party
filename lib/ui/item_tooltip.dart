@@ -466,7 +466,7 @@ class ItemTooltipCard extends StatelessWidget {
 
   /// Union of candidate + worn stats so lost stats show as red deltas.
   /// Primary = Armor + Str/Agi/Sta/Int/Spi/SP (+ legacy AP).
-  /// Secondary = Crit / Haste / Mp5 / Move (WotLK-lite ratings).
+  /// Secondary = Crit / Mastery / Haste / Mp5 / Move (WotLK-lite ratings).
   static List<({String name, int value, int delta, bool primary})>
   _compareStatRows(EquipmentItem item, EquipmentItem? worn) {
     final rows = <({String name, int value, int delta, bool primary})>[];
@@ -512,6 +512,12 @@ class ItemTooltipCard extends StatelessWidget {
       'Crit %',
       item.critChanceBonus,
       worn?.critChanceBonus ?? 0,
+      primary: false,
+    );
+    add(
+      'Mastery',
+      item.masteryBonus,
+      worn?.masteryBonus ?? 0,
       primary: false,
     );
     add(

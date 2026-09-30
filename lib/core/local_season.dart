@@ -168,7 +168,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'swarm_surge',
       name: 'Swarm Surge',
-      blurb: 'More foes — fill the vault under Swarm pressure.',
+      blurb: 'Harder packs — time a timed KEY +2 under Swarm.',
       weekKey: '2026-W39',
       affixOverride: 'swarm',
       timedKeyTarget: 2,
@@ -228,7 +228,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'ashen_night',
       name: 'Crown Night',
-      blurb: 'Boss week — clear Ashen Crown once (ticket or PRACTICE after).',
+      blurb: 'Boss week — clear Ashen Crown once with a ticket.',
       weekKey: '2026-W45',
       affixOverride: 'boss_rush',
       ashenClearTarget: true,
@@ -278,7 +278,7 @@ abstract final class LocalSeasonCatalog {
     LocalSeasonWeek(
       id: 'ashen_night_2',
       name: 'Crown Night II',
-      blurb: 'Boss week — clear Ashen Crown once (ticket or PRACTICE after).',
+      blurb: 'Boss week — clear Ashen Crown once with a ticket.',
       weekKey: '2026-W50',
       affixOverride: 'boss_rush',
       ashenClearTarget: true,

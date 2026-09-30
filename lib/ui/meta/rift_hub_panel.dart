@@ -17,7 +17,7 @@ class RiftHubPanel extends StatelessWidget {
     final state = director.state;
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
-        'FARM RIFT unlocks at party level ${GameLogic.maxHeroLevel} — '
+        'FARM RIFT unlocks when every hero is Lv${GameLogic.maxHeroLevel} — '
         'Stormwake progress bar + Guardian (loot mid-run; not Spire climb).',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

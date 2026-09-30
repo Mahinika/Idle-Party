@@ -106,8 +106,8 @@ class EssenceKeepPanel extends StatelessWidget {
           children: [
             for (final entry in <(int, String, String)>[
               (0, 'BAL', 'Balanced smash'),
-              (1, 'FOCUS', 'Single-target burst'),
-              (2, 'WIDE', 'Wide arc'),
+              (1, 'FOCUS', 'Smaller smash'),
+              (2, 'WIDE', 'Wider smash'),
             ]) ...[
               if (entry.$1 > 0) const SizedBox(width: 6),
               Expanded(

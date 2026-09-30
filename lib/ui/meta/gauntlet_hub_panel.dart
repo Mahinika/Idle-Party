@@ -16,7 +16,7 @@ class GauntletHubPanel extends StatelessWidget {
     final state = director.state;
     if (!GameLogic.endgameUnlocked(state)) {
       return Text(
-        'INFINITY GAUNTLET unlocks at party level ${GameLogic.maxHeroLevel}. '
+        'GAUNTLET unlocks when every hero is Lv${GameLogic.maxHeroLevel}. '
         'Boss every 5 floors.',
         textAlign: TextAlign.center,
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),

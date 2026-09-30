@@ -15,7 +15,7 @@ class ForgeOverlay extends StatefulWidget {
   /// GOLD footer. ESSENCE waits until that tab exists.
   static String resetHint({required bool plain, required bool showCamp}) {
     if (plain) {
-      return 'Run gold power resets when you start over. Tap BEST when unsure.';
+      return 'Run gold power resets when you start over. Buy the row tagged BEST when unsure.';
     }
     if (showCamp) {
       return 'GOLD → FORGE + bag gold wipe on Ascend. Blessing KEEP stays on ESSENCE.';

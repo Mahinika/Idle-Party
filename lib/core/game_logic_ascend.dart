@@ -64,7 +64,7 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
       ? state.metaDepth.ascendStreak + 1
       : 0;
   final bestStreak = max(state.metaDepth.bestAscendStreak, streak);
-  final streakEssence = streak > 0 && streak % 3 == 0 ? (10 + streak * 2) : 0;
+  final streakEssence = MetaSystems.ascendStreakEssence(state);
   final preservedEssence =
       state.essence +
       GameLogic.ascendEssenceReward(nextLevel) +

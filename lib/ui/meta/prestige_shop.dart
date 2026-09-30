@@ -29,7 +29,7 @@ class PrestigeShopOverlay extends StatelessWidget {
       'roster_cap' => 'Roster +${md.petRosterCapBonus}',
       'loadout_slot' =>
         'Legacy purchase (unused extra slots)',
-      'flask_discount' => 'Market −${md.marketDiscountLevel * 5}%',
+      'flask_discount' => 'Flasks −${md.marketDiscountLevel * 5}%',
       'filter_span' => 'Auto-sell iLvl ${GameLogic.maxAutoSellIlvlCap(state)}',
       'offline_ledger' => 'Welcome Back ${3 + md.offlineHighlightBonus} rows',
       'legacy_spark' => 'Legacy ATK +${md.legacyPoints}',

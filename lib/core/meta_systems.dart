@@ -336,6 +336,15 @@ abstract final class MetaSystems {
     return total;
   }
 
+  /// Extra essence on every 3rd no-wipe Ascend. Same number the grant uses.
+  static int ascendStreakEssence(GameState state) {
+    final streak = state.metaDepth.noWipeAscendReady
+        ? state.metaDepth.ascendStreak + 1
+        : 0;
+    if (streak <= 0 || streak % 3 != 0) return 0;
+    return 10 + streak * 2;
+  }
+
   /// Extra essence on floor clear during a keystone run / personal extras.
   /// Farm loops must not mint this (would be unbounded AFK essence).
   static int challengeClearEssenceBonus(
@@ -346,6 +355,7 @@ abstract final class MetaSystems {
     var bonus = 0;
     if (state.challengeBossRush) bonus += 2;
     if (state.challengeNoFlask) bonus += 2;
+    if (state.challengeTiny) bonus += 2;
     final key = state.keystoneRunActive ? state.keystoneRunLevel : 0;
     bonus += key.clamp(0, Keystone.campaignCap);
     return bonus;

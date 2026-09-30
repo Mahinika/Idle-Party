@@ -350,9 +350,9 @@ class MenuRouter extends ChangeNotifier {
 
       MoreSection.credits => 'Art credits',
 
-      MoreSection.craft => 'Apex · Craft Trial',
+      MoreSection.craft => 'Apex gear',
 
-      MoreSection.quests => 'Daily · Bounty · Side · Week',
+      MoreSection.quests => 'Daily · Bounty · Side · Week · Contract',
 
     },
 
