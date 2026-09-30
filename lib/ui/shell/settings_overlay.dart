@@ -16,6 +16,7 @@ import '../meta/play_games_section.dart';
 import '../meta/save_transfer.dart';
 import '../redeem_coupon_dialog.dart';
 import 'bag_cleanup_filters.dart';
+import 'dev_gear_lookbook.dart';
 import 'whats_new_overlay.dart';
 
 class SettingsOverlay extends StatefulWidget {
@@ -488,6 +489,18 @@ class _SettingsOverlayState extends State<SettingsOverlay>
             label: 'DEV: FAKE PLAY UPDATE',
             style: GameButtonStyle.grey,
             onPressed: director.debugForcePlayUpdateNotice,
+          ),
+          const SizedBox(height: 8),
+          GameButton(
+            label: 'DEV: GEAR LOOKBOOK',
+            style: GameButtonStyle.grey,
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const DevGearLookbook(),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 8),
           GameButton(
