@@ -182,21 +182,28 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
     final month = md.leaderboardSeasonKey.isNotEmpty
         ? md.leaderboardSeasonKey
         : GameLogic.isoMonthKey(DateTime.now().toUtc());
+    final playSupported = PlayGamesBridge.isSupported;
+    final monthBoards = PlayLeaderboardIds.hasBoards(month);
     final boardsReady = PlayLeaderboardIds.boardsAvailable(
       month,
-      playGamesSupported: PlayGamesBridge.isSupported,
+      playGamesSupported: playSupported,
     );
     // Opt-in alone is not enough — need a real signed-in session so we do
     // not paint an empty rank list.
     final signedInLive = PlayGamesBridge.isSignedInCached;
     final showLiveBoards = boardsReady && signedInLive;
+    // All-time party power stays up when the new month has no Console ids.
+    final partyLive = playSupported &&
+        signedInLive &&
+        PlayLeaderboardIds.hasPartyPowerBoard &&
+        !monthBoards;
     // Debug playtest (emulator) can flip the three lists without Play sign-in.
-    // Release builds keep the sign-in gate.
-    final preview = kDebugMode && !showLiveBoards;
+    // A month with no Console ids stays honest instead of a fake season list.
+    final preview = kDebugMode && !showLiveBoards && !partyLive && monthBoards;
 
     // Sideload / missing IDs / signed out: honesty only — no dead
     // KEY/GR board buttons that look like an empty live leaderboard.
-    if (!showLiveBoards && !preview) {
+    if (!showLiveBoards && !preview && !partyLive) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -206,10 +213,13 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           ),
           const SizedBox(height: 6),
           Text(
-            PlayLeaderboardIds.boardsNeedPlayMessage,
+            PlayLeaderboardIds.unavailableMessage(
+              playGamesSupported: playSupported,
+              monthKey: month,
+            ),
             style: GameTheme.body(size: 13, color: GameTheme.parchment),
           ),
-          if (boardsReady && !signedInLive) ...[
+          if (playSupported && !signedInLive) ...[
             const SizedBox(height: 8),
             GameButton(
               label: 'SIGN IN TO RANK',
@@ -227,12 +237,16 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
     }
 
     final grBoardReady =
-        preview || PlayLeaderboardIds.hasGreaterRiftBoard(month);
+        !partyLive &&
+        (preview || PlayLeaderboardIds.hasGreaterRiftBoard(month));
     final partyBoardReady = preview || PlayLeaderboardIds.hasPartyPowerBoard;
-    final kind = !grBoardReady && _kind == PlayBoardKind.greaterRift
+    final seasonChips = !partyLive && (showLiveBoards || preview);
+    final kind = partyLive
+        ? PlayBoardKind.partyPower
+        : !grBoardReady && _kind == PlayBoardKind.greaterRift
         ? PlayBoardKind.timedKey
         : _kind;
-    if (showLiveBoards &&
+    if ((showLiveBoards || partyLive) &&
         (kind != PlayBoardKind.partyPower || partyBoardReady)) {
       _queueLoad(month, kind);
     }
@@ -266,26 +280,36 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
+        if (partyLive)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              PlayLeaderboardIds.monthBoardsPendingMessage,
+              style: GameTheme.body(size: 13, color: GameTheme.parchment),
+            ),
+          ),
         Wrap(
           spacing: 6,
           runSpacing: 6,
           children: [
-            MenuChrome.chip(
-              label: 'KEY',
-              selected: kind == PlayBoardKind.timedKey,
-              onTap: () => _select(PlayBoardKind.timedKey),
-            ),
-            MenuChrome.chip(
-              label: 'GAUNTLET',
-              selected: kind == PlayBoardKind.gauntlet,
-              onTap: () => _select(PlayBoardKind.gauntlet),
-            ),
-            if (grBoardReady)
+            if (seasonChips) ...[
               MenuChrome.chip(
-                label: 'GR',
-                selected: kind == PlayBoardKind.greaterRift,
-                onTap: () => _select(PlayBoardKind.greaterRift),
+                label: 'KEY',
+                selected: kind == PlayBoardKind.timedKey,
+                onTap: () => _select(PlayBoardKind.timedKey),
               ),
+              MenuChrome.chip(
+                label: 'GAUNTLET',
+                selected: kind == PlayBoardKind.gauntlet,
+                onTap: () => _select(PlayBoardKind.gauntlet),
+              ),
+              if (grBoardReady)
+                MenuChrome.chip(
+                  label: 'GR',
+                  selected: kind == PlayBoardKind.greaterRift,
+                  onTap: () => _select(PlayBoardKind.greaterRift),
+                ),
+            ],
             MenuChrome.chip(
               label: 'PARTY',
               selected: kind == PlayBoardKind.partyPower,

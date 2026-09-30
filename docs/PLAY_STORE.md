@@ -205,6 +205,8 @@ Sideload and web stay quiet. Code: `PlayStoreUpdate`, `PlayReviewAsk`.
 
 **Party power (all-time):** Android ID `CgkIhuXGvNocEAIQBA` (`Party Power`). Larger score wins. Published 2026-09-29. The client submits the current party power while signed in and lists it on hub **RANKS → PARTY**.
 
+**2026-10:** no KEY / Gauntlet / Greater Rift ids yet. A signed-in player still sees PARTY. Season chips stay hidden, and RANKS says those boards are not on Play yet, until the Android ids are pasted into `play_leaderboard_ids.dart`. Do not reuse the August or September ids for October scores.
+
 Suggested Description (en-US):
 
 > Grow a party of classic fantasy heroes, farm dungeons while you are away, and chase KEYSTONE, Gauntlet, and Ascend. Optional Play Games leaderboards and cloud save.

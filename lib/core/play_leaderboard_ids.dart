@@ -31,6 +31,21 @@ abstract final class PlayLeaderboardIds {
   static const String boardsNeedPlayMessage =
       'Boards need a Play install + sign-in';
 
+  /// Play can run, but this calendar month has no Console board ids yet.
+  static const String monthBoardsPendingMessage =
+      "This month's KEY, Gauntlet, and Ranked GR boards are not on Play yet.";
+
+  /// Why RANKS cannot show the season lists. Party power is separate.
+  static String unavailableMessage({
+    required bool playGamesSupported,
+    required String monthKey,
+  }) {
+    if (!playGamesSupported || hasBoards(monthKey)) {
+      return boardsNeedPlayMessage;
+    }
+    return monthBoardsPendingMessage;
+  }
+
   static String timedKeyId(String monthKey) =>
       byMonth[monthKey]?.timedKey ?? '';
 

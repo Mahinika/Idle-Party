@@ -296,6 +296,31 @@ void main() {
       );
     });
 
+    test('a month without Console ids does not pretend Play is missing', () {
+      expect(PlayLeaderboardIds.hasBoards('2026-10'), isFalse);
+      expect(
+        PlayLeaderboardIds.unavailableMessage(
+          playGamesSupported: true,
+          monthKey: '2026-10',
+        ),
+        PlayLeaderboardIds.monthBoardsPendingMessage,
+      );
+      expect(
+        PlayLeaderboardIds.unavailableMessage(
+          playGamesSupported: false,
+          monthKey: '2026-10',
+        ),
+        PlayLeaderboardIds.boardsNeedPlayMessage,
+      );
+      expect(
+        PlayLeaderboardIds.unavailableMessage(
+          playGamesSupported: true,
+          monthKey: '2026-09',
+        ),
+        PlayLeaderboardIds.boardsNeedPlayMessage,
+      );
+    });
+
     test('legacy save defaults Play Games fields', () {
       final md = MetaDepthState.fromJson(<String, dynamic>{
         'gauntletBestFloor': 3,
