@@ -1,8 +1,8 @@
-/// afterFileEdit: mark repo dirty when game/docs/agent files change.
+/// afterFileEdit: mark this chat dirty when game/docs/agent files change.
 import 'dart:convert';
 import 'dart:io';
 
-const _dirtyPath = '.cursor/hooks/.verify-dirty';
+import 'verify_dirty.dart';
 
 void main() async {
   final raw = await stdin.transform(utf8.decoder).join();
@@ -11,24 +11,14 @@ void main() async {
     payload = jsonDecode(raw.isEmpty ? '{}' : raw) as Map<String, dynamic>;
   } catch (_) {}
 
+  final chatId = conversationId(payload);
   final path = _pathFrom(payload);
-  if (path == null || !_shouldMark(path)) {
+  if (chatId == null || path == null || !_shouldMark(path)) {
     stdout.write('{}');
     return;
   }
 
-  final dirty = File(_dirtyPath);
-  dirty.parent.createSync(recursive: true);
-  final normalized = path.replaceAll('\\', '/');
-  final existing = dirty.existsSync() ? dirty.readAsStringSync() : '';
-  if (existing.contains(normalized)) {
-    stdout.write('{}');
-    return;
-  }
-  dirty.writeAsStringSync(
-    '${existing.isEmpty ? '${DateTime.now().toIso8601String()}\n' : existing}'
-    '$normalized\n',
-  );
+  addDirtyPath(chatId, path.replaceAll('\\', '/'));
   stdout.write('{}');
 }
 

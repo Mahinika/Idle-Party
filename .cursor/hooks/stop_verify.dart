@@ -1,11 +1,13 @@
-/// stop: if code was edited, run flutter analyze (+ changelog sync, ship smoke,
-/// or share-fast when those areas moved).
+/// stop: if *this chat* edited code, run flutter analyze (+ changelog sync,
+/// ship smoke, or share-fast when those areas moved).
 /// On failure, emit followup_message so the agent fixes without owner typing "fix it".
-/// When green, nudge once if files edited this batch are still uncommitted.
+/// When green, nudge once if files edited in this chat are still uncommitted.
+/// Other chats' edits stay on their own list.
 import 'dart:convert';
 import 'dart:io';
 
-const _dirtyPath = '.cursor/hooks/.verify-dirty';
+import 'verify_dirty.dart';
+
 const _maxOut = 3500;
 
 Future<void> main() async {
@@ -21,13 +23,19 @@ Future<void> main() async {
     return;
   }
 
-  final dirty = File(_dirtyPath);
-  if (!dirty.existsSync()) {
+  final chatId = conversationId(payload);
+  if (chatId == null) {
     _emit(<String, dynamic>{});
     return;
   }
 
-  final dirtyText = dirty.readAsStringSync();
+  final dirtyPaths = dirtyPathsFor(chatId);
+  if (dirtyPaths.isEmpty) {
+    _emit(<String, dynamic>{});
+    return;
+  }
+
+  final dirtyText = dirtyPaths.join('\n');
   final needChangelog = _touchesChangelog(dirtyText);
   final needShipSmoke = _touchesChase(dirtyText);
 
@@ -96,9 +104,7 @@ Future<void> main() async {
     }
   }
 
-  try {
-    dirty.deleteSync();
-  } catch (_) {}
+  clearDirtyChat(chatId);
 
   final pending = await _uncommitted(dirtyText);
   if (pending.isNotEmpty) {
@@ -118,7 +124,7 @@ Future<void> main() async {
 Future<List<String>> _uncommitted(String dirtyText) async {
   final root = '${Directory.current.path.replaceAll('\\', '/')}/'.toLowerCase();
   final paths = <String>{};
-  for (final line in dirtyText.split('\n').skip(1)) {
+  for (final line in dirtyText.split('\n')) {
     var p = line.trim().replaceAll('\\', '/');
     if (p.isEmpty) continue;
     if (p.toLowerCase().startsWith(root)) p = p.substring(root.length);
