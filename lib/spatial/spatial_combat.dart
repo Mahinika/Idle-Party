@@ -134,6 +134,13 @@ void applyEnemyRoot(SpatialActor enemy, double baseDuration) {
   enemy.ccRootDrLevel = math.min(3, dr + 1);
 }
 
+/// Root plus a real stop: no swing and no special until it ends.
+void applyEnemyStun(SpatialActor enemy, double baseDuration) {
+  applyEnemyRoot(enemy, baseDuration);
+  if (enemy.rootTimer <= 0) return;
+  enemy.stunTimer = math.max(enemy.stunTimer, enemy.rootTimer);
+}
+
 void _syncHeroCataStats(SpatialActor actor, PartyHero hero, GameState state) {
   final ratings = state.ratingsFor(hero);
   actor.attack = state.effectiveHeroAttack(hero);
@@ -152,6 +159,7 @@ void _syncHeroCataStats(SpatialActor actor, PartyHero hero, GameState state) {
       BlessingConstellation.blockChanceAdd(state);
   actor.uncrittable = hero.spec.isTank;
   actor.defense = state.effectiveHeroDefense(hero);
+  actor.spellCrit = state.effectiveHeroCrit(hero).clamp(0, 75);
 }
 
 class SpatialActor {
@@ -206,6 +214,9 @@ class SpatialActor {
   int maxHp;
   int attack;
   int defense;
+
+  /// Gear crit chance (0–75). Kit spells and heals roll this, not only whites.
+  int spellCrit = 5;
   int physicalAttack;
   int spellPower;
   double dodgePercent;
@@ -415,6 +426,9 @@ class SpatialActor {
   int sunderStacks = 0;
   double sunderTimer = 0;
 
+  /// Hard stop: cannot move, swing, or use a special.
+  double stunTimer = 0;
+
   /// Demoralizing Shout: reduced attack while > 0.
   double demoShoutTimer = 0;
 
@@ -476,7 +490,7 @@ class SpatialActor {
     var m = 1.0;
     if (sprintTimer > 0) m *= 1.28;
     if (enrageTimer > 0 && team == SpatialTeam.enemy) m *= 1.25;
-    if (rootTimer > 0) m = 0;
+    if (rootTimer > 0 || stunTimer > 0) m = 0;
     if (iceBlockTimer > 0) m = 0;
     if (vanishTimer > 0) m *= 1.2;
     if ((buffTimers['haste'] ?? 0) > 0) m *= 1.12;
@@ -1479,6 +1493,9 @@ abstract final class SpatialCombat {
         a.bleedAbilityId = null;
       }
     }
+    if (a.stunTimer > 0) {
+      a.stunTimer = math.max(0, a.stunTimer - dt);
+    }
     if (a.rootTimer > 0) {
       a.rootTimer = math.max(0, a.rootTimer - dt);
     } else if (a.ccRootDrLevel > 0) {
@@ -1994,7 +2011,7 @@ abstract final class SpatialCombat {
           maxHp: 1,
           attack: math.max(1, pet.totalAttackBonus),
           defense: 0,
-          moveSpeed: 3.8,
+          moveSpeed: _petTravelSpeed(leader, leader),
           attackRange: 1.35,
           attackCooldown: 0.8,
           isPet: true,
@@ -2024,7 +2041,7 @@ abstract final class SpatialCombat {
           maxHp: 1,
           attack: math.max(2, (h.attack * atkScale).round()),
           defense: 0,
-          moveSpeed: 3.6,
+          moveSpeed: _petTravelSpeed(h, h),
           attackRange: 1.4,
           attackCooldown: 0.85,
           isPet: true,
@@ -2167,7 +2184,7 @@ abstract final class SpatialCombat {
           maxHp: 1,
           attack: math.max(1, (owner.attack * atkScale).round()),
           defense: 0,
-          moveSpeed: 3.7,
+          moveSpeed: _petTravelSpeed(owner, owner),
           attackRange: 1.35,
           attackCooldown: 0.75,
           isPet: true,
@@ -2299,7 +2316,7 @@ abstract final class SpatialCombat {
           maxHp: 1,
           attack: math.max(1, pet.totalAttackBonus),
           defense: 0,
-          moveSpeed: 3.8,
+          moveSpeed: _petTravelSpeed(leader, leader),
           attackRange: 1.35,
           attackCooldown: 0.8,
           isPet: true,
@@ -2336,7 +2353,7 @@ abstract final class SpatialCombat {
           maxHp: 1,
           attack: math.max(2, (h.attack * atkScale).round()),
           defense: 0,
-          moveSpeed: 3.6,
+          moveSpeed: _petTravelSpeed(h, h),
           attackRange: 1.4,
           attackCooldown: 0.85,
           isPet: true,
@@ -2499,6 +2516,8 @@ abstract final class SpatialCombat {
     to.hotAcc = from.hotAcc;
     to.hotCasterId = from.hotCasterId;
     to.rootTimer = from.rootTimer;
+    to.spellCrit = from.spellCrit;
+    to.stunTimer = from.stunTimer;
     to.ccRootDrLevel = from.ccRootDrLevel;
     to.castingTimer = from.castingTimer;
     to.castingDuration = from.castingDuration;
@@ -3331,6 +3350,20 @@ abstract final class SpatialCombat {
       }
       final target = _focusHero(enemy, world.heroes);
       if (target == null) continue;
+
+      if (enemy.stunTimer > 0) {
+        _steerActor(
+          enemy,
+          enemy.x,
+          enemy.y,
+          0,
+          world,
+          dt: dt,
+          holdDistance: 0,
+          separateFrom: world.enemies,
+        );
+        continue;
+      }
 
       // Enemy specials (heal / enrage / unique boss tell). A melee wind-up
       // plants the body so the cave word shows before the chip.
@@ -4207,6 +4240,17 @@ abstract final class SpatialCombat {
     return (state: nextState, gold: goldFromKills);
   }
 
+  /// Owner's forged move speed, plus catch-up when the pet has fallen behind.
+  /// Roots on the owner do not freeze the pet.
+  static double _petTravelSpeed(SpatialActor pet, SpatialActor owner) {
+    final rooted = owner.rootTimer > 0 || owner.iceBlockTimer > 0;
+    final stat = owner.moveSpeed * (rooted ? 1.0 : owner.moveSpeedMul);
+    final pace = math.sqrt(owner.vx * owner.vx + owner.vy * owner.vy);
+    final gap = distPoint(pet.x, pet.y, owner.x, owner.y);
+    final catchUp = gap > 2.4 ? 1.35 : (gap > 1.15 ? 1.12 : 1.0);
+    return math.max(stat, pace) * catchUp;
+  }
+
   /// Pets: follow their owner, then hit whatever the party is hitting.
   static ({GameState state, int gold}) _stepPets(
     SpatialWorld world,
@@ -4233,6 +4277,7 @@ abstract final class SpatialCombat {
     for (final pet in world.pets) {
       if (petLeader == null) break;
       final leashOwner = _heroById(world, pet.petOwnerId) ?? petLeader;
+      pet.moveSpeed = _petTravelSpeed(pet, leashOwner);
       final ownerFocus = HeroFocus.stickyEnemy(leashOwner, world);
       final target = ownerFocus ?? nearestActiveEnemy(pet, world.enemies);
       if (target == null) {
