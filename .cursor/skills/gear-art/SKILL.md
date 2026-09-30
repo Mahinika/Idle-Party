@@ -34,6 +34,29 @@ Numbers live in `tool/gear_style.py`. The rule is
 6. `py -3 tool/build_owned_gear_layers.py --publish` only when the staged
    facit is green. Then `py -3 tool/audit_anchors.py` if a hand item moved.
 
+## Where a new piece has to sit
+
+The build seats shoulders onto the idle, walk, and attack bodies, and
+moves short gloves as one piece so a leather stripe stays a stripe.
+`tool/gen_owned_gear_grips.py` aims a blade up and out, tips a bow the
+same way, and holds a shield by its top rim. The attack swing chambers
+out, off the face. Draw the picture so those steps have something to
+hold:
+
+- A glove's hand is the top of the picture. The bottom half is the
+  forearm and lands below the fist.
+- A pauldron overlaps the shoulder on the idle body. A pad drawn beside
+  the head will still miss the walk clip, where the arms sit higher.
+- A bow is tall. Leave the string on the side away from the cheek, not
+  bowed back across the face.
+- A shield hangs down from the hand. The wide part is the top, not the
+  middle.
+- One overlay is shared by idle, walk, and attack. Do not draw a second
+  picture per pose.
+
+After the build, `py -3 tool/gear_lookbook.py` must flag nothing. Fix
+the picture or the grip. Do not raise a mark limit to hide a flag.
+
 ## Do not
 
 - Recolor a model and call it new.
