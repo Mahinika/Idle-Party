@@ -1,6 +1,7 @@
 @Tags(['lookbook'])
 library;
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -9,10 +10,12 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/ui/decoded_image_cache.dart';
 import 'package:idle_party/ui/hero_doll_sprite.dart';
 import 'package:idle_party/ui/shell/dev_gear_lookbook.dart';
 import 'package:idle_party/visual/body_family.dart';
 import 'package:idle_party/visual/equipment_model_catalog.dart';
+import 'package:idle_party/visual/owned_gear_assets.dart';
 
 /// Renders the debug lookbook to PNGs under tool/out/lookbook/.
 ///
@@ -24,53 +27,66 @@ void main() {
 
     const outDir = 'tool/out/lookbook';
     Directory(outDir).createSync(recursive: true);
+    final outfits = _outfits();
+    final scope = _scope();
+    final onlyFamily = _scopeFamily();
+    await tester.runAsync(_precache);
 
-    for (final family in BodyFamily.values) {
-      await _saveFamily(tester, outDir, family, 'armor', const [
-        'helm',
-        'chest',
-        'legs',
-        'cloak',
-      ]);
-      await _saveFamily(tester, outDir, family, 'snap', const [
-        'hands',
-        'shoulder',
-      ]);
-      await _saveFamily(tester, outDir, family, 'weapons_a', const [
-        'sword',
-        'staff',
-        'dagger',
-        'mace',
-        'axe',
-      ]);
-      await _saveFamily(tester, outDir, family, 'weapons_b', const [
-        'bow',
-        'shield',
-        'frill',
-        'wand',
-        'gun',
-        'crossbow',
-        'polearm',
-        'fist',
-        'thrown',
-      ]);
+    final families = BodyFamily.values.where(
+      (family) => onlyFamily == null || family.name == onlyFamily,
+    );
+    if (scope == 'all' || scope == 'body' || scope == 'armor') {
+      for (final family in families) {
+        final sheets = (outfits['sheets'] as Map).cast<String, dynamic>();
+        for (final entry in sheets.entries) {
+          if (!_wantsSheet(scope, entry.key)) continue;
+          await _saveFamily(
+            tester,
+            outDir,
+            family,
+            entry.key,
+            (entry.value as List).cast<String>(),
+          );
+        }
+      }
+    }
+    if (scope == 'weapons') {
+      final sheets = (outfits['sheets'] as Map).cast<String, dynamic>();
+      for (final family in families) {
+        for (final key in ['weapons_a', 'weapons_b']) {
+          await _saveFamily(
+            tester,
+            outDir,
+            family,
+            key,
+            (sheets[key] as List).cast<String>(),
+          );
+        }
+      }
     }
 
-    await _saveSheet(
-      tester,
-      '$outDir/fit_kit.png',
-      _column([
-        _caption('FULL KIT  helm chest legs shoulder + family weapon'),
-        _row([
-          for (final family in BodyFamily.values) _kitCell(family),
+    if (scope == 'all') {
+      await _saveSheet(
+        tester,
+        '$outDir/fit_kit.png',
+        _column([
+          _caption('FULL KIT  helm chest legs shoulder + family weapon'),
+          _row([
+            for (final family in BodyFamily.values) _kitCell(outfits, family),
+          ]),
         ]),
-      ]),
-      const Size(760, 280),
-    );
+        const Size(760, 280),
+      );
+    }
 
-    await _saveCompare(tester, outDir);
-    await _saveWeaponCompare(tester, outDir);
+    if (scope == 'summary' || scope == 'all') {
+      await _saveCompare(tester, outDir, outfits);
+    }
+    if (scope == 'weapons' || scope == 'all') {
+      await _saveWeaponCompare(tester, outDir, outfits);
+    }
 
+    if (scope == 'all' || scope == 'armor') {
     await _saveSheet(
       tester,
       '$outDir/fit_materials.png',
@@ -123,6 +139,7 @@ void main() {
       ]),
       const Size(900, 520),
     );
+    }
   }, timeout: const Timeout(Duration(minutes: 5)));
 }
 
@@ -154,36 +171,44 @@ Future<void> _saveFamily(
 
 /// Stacks pieces on one body so a worn set can be compared with a bare one.
 ///
-/// Rows are warrior, healer, mage, rogue.
-/// Columns: bare, armor, layers, armed, pair.
-Future<void> _saveCompare(WidgetTester tester, String outDir) {
-  const armor = ['helm_t0', 'chest_t0', 'legs_t0'];
-  const layers = [
-    ...armor,
-    'shoulder_t0',
-    'cloak_t0',
-    'hands_t0',
-  ];
+/// Rows follow [tool/lookbook_outfits.json]. Columns: bare, armor, layers,
+/// armed, pair. This is the summary sheet.
+Future<void> _saveCompare(
+  WidgetTester tester,
+  String outDir,
+  Map<String, dynamic> outfits,
+) {
+  final layers = (outfits['layers'] as List).cast<String>();
+  final families = (outfits['families'] as List).cast<String>();
+  final weapons = (outfits['familyWeapon'] as Map).cast<String, dynamic>();
+  final pairs = (outfits['pair'] as Map).cast<String, dynamic>();
   return _saveSheet(
     tester,
-    '$outDir/fit_compare.png',
+    '$outDir/fit_summary.png',
     _column([
-      _caption('COMPARE  bare  armor  layers  armed  pair'),
-      for (final family in BodyFamily.values)
+      _caption('SUMMARY  bare  armor  layers  armed  pair'),
+      for (final name in families)
         _row([
-          _mixCell(family, 'bare', const []),
-          _mixCell(family, 'armor', armor),
-          _mixCell(family, 'layers', layers),
-          _mixCell(family, 'armed', [...layers, _familyWeapon(family)]),
+          _mixCell(_family(name), 'bare', const []),
+          _mixCell(_family(name), 'armor', (outfits['armor'] as List).cast<String>()),
+          _mixCell(_family(name), 'layers', layers),
+          _mixCell(_family(name), 'armed', [
+            ...layers,
+            weapons[name] as String,
+          ]),
           _mixCell(
-            family,
+            _family(name),
             'pair',
-            [...layers, ..._familyPair(family)],
-            offHandWeapon: _familyOffWeapon(family),
+            [
+              ...layers,
+              ...((pairs[name] as Map)['pieces'] as List).cast<String>(),
+            ],
+            offHandWeapon: (pairs[name] as Map)['offHand'] as String?,
           ),
         ]),
     ]),
     const Size(5 * 124 + 24, 4 * 150 + 48),
+    also: ['$outDir/fit_compare.png'],
   );
 }
 
@@ -191,51 +216,31 @@ Future<void> _saveCompare(WidgetTester tester, String outDir) {
 ///
 /// Rows are warrior, healer, mage, rogue.
 /// Columns: sword, dagger, staff, bow, wand, gun, polearm, shield, frill.
-Future<void> _saveWeaponCompare(WidgetTester tester, String outDir) {
-  const dress = ['helm_t0', 'chest_t0', 'hands_t0'];
-  const weapons = [
-    'sword_t0',
-    'dagger_t0',
-    'staff_t0',
-    'bow_t0',
-    'wand_t0',
-    'gun_t0',
-    'polearm_t0',
-    'shield_t0',
-    'frill_t0',
-  ];
+Future<void> _saveWeaponCompare(
+  WidgetTester tester,
+  String outDir,
+  Map<String, dynamic> outfits,
+) {
+  final dress = (outfits['dress'] as List).cast<String>();
+  final weapons = (outfits['weapons'] as List).cast<String>();
+  final families = (outfits['families'] as List).cast<String>();
   return _saveSheet(
     tester,
     '$outDir/fit_weapons.png',
     _column([
       _caption('DRESSED  sword dagger staff bow wand gun polearm shield frill'),
-      for (final family in BodyFamily.values)
+      for (final name in families)
         _row([
           for (final id in weapons)
-            _mixCell(family, id, [...dress, id]),
+            _mixCell(_family(name), id, [...dress, id]),
         ]),
     ]),
-    const Size(9 * 124 + 24, 4 * 150 + 48),
+    Size(weapons.length * 124 + 24, families.length * 150 + 48),
   );
 }
 
-String _familyWeapon(BodyFamily family) => switch (family) {
-  BodyFamily.warrior => 'sword_t0',
-  BodyFamily.rogue => 'dagger_t0',
-  BodyFamily.mage => 'staff_t0',
-  BodyFamily.healer => 'wand_t0',
-};
-
-/// Main-hand piece of the pair column. A two-hand weapon would hide the book.
-List<String> _familyPair(BodyFamily family) => switch (family) {
-  BodyFamily.warrior => const ['sword_t0', 'shield_t0'],
-  BodyFamily.healer => const ['wand_t0', 'frill_t0'],
-  BodyFamily.mage => const ['wand_t0', 'frill_t0'],
-  BodyFamily.rogue => const ['dagger_t0'],
-};
-
-String? _familyOffWeapon(BodyFamily family) =>
-    family == BodyFamily.rogue ? 'dagger_t0' : null;
+BodyFamily _family(String name) =>
+    BodyFamily.values.firstWhere((family) => family.name == name);
 
 Widget _mixCell(
   BodyFamily family,
@@ -261,13 +266,9 @@ Widget _mixCell(
   return _frame(label, HeroDollSprite(hero: hero, size: 96));
 }
 
-Widget _kitCell(BodyFamily family) {
-  final weapon = switch (family) {
-    BodyFamily.warrior => 'sword_t0',
-    BodyFamily.rogue => 'dagger_t0',
-    BodyFamily.mage => 'staff_t0',
-    BodyFamily.healer => 'wand_t0',
-  };
+Widget _kitCell(Map<String, dynamic> outfits, BodyFamily family) {
+  final weapon =
+      (outfits['familyWeapon'] as Map)[family.name] as String? ?? 'sword_t0';
   final items = <EquipmentSlot, EquipmentItem>{
     EquipmentSlot.head: gearLookbookItem('helm_t0', null),
     EquipmentSlot.chest: gearLookbookItem('chest_t0', null),
@@ -356,8 +357,9 @@ Future<void> _saveSheet(
   WidgetTester tester,
   String path,
   Widget sheet,
-  Size size,
-) async {
+  Size size, {
+  List<String> also = const [],
+}) async {
   await tester.binding.setSurfaceSize(size);
   final key = GlobalKey();
   await tester.pumpWidget(
@@ -372,10 +374,15 @@ Future<void> _saveSheet(
       ),
     ),
   );
-  await tester.pump();
-  await tester.runAsync(
-    () => Future<void>.delayed(const Duration(milliseconds: 500)),
-  );
+  // Pump so each decode step can finish, and let real IO run between
+  // pumps. A warm cache usually needs one pass, not a fixed half-second.
+  final sw = Stopwatch()..start();
+  while (HeroDollSprite.pendingLoads > 0 && sw.elapsedMilliseconds < 2000) {
+    await tester.pump();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 16)),
+    );
+  }
   await tester.pump();
 
   final boundary =
@@ -385,5 +392,49 @@ Future<void> _saveSheet(
     () => image!.toByteData(format: ui.ImageByteFormat.png),
   );
   image!.dispose();
-  File(path).writeAsBytesSync(bytes!.buffer.asUint8List());
+  final png = bytes!.buffer.asUint8List();
+  for (final target in [path, ...also]) {
+    File(target).writeAsBytesSync(png);
+  }
+}
+
+Map<String, dynamic> _outfits() =>
+    jsonDecode(File('tool/lookbook_outfits.json').readAsStringSync())
+        as Map<String, dynamic>;
+
+String _scope() {
+  final file = File('tool/out/lookbook/scope.txt');
+  if (!file.existsSync()) return 'summary';
+  final parts = file.readAsStringSync().trim().split(RegExp(r'\s+'));
+  return parts.isEmpty ? 'summary' : parts.first;
+}
+
+String? _scopeFamily() {
+  final file = File('tool/out/lookbook/scope.txt');
+  if (!file.existsSync()) return null;
+  final parts = file.readAsStringSync().trim().split(RegExp(r'\s+'));
+  if (parts.length < 2 || parts.first != 'body') return null;
+  return parts[1];
+}
+
+bool _wantsSheet(String scope, String group) {
+  if (scope == 'all' || scope == 'body') return true;
+  if (scope == 'armor') return group == 'armor' || group == 'snap';
+  return false;
+}
+
+Future<void> _precache() async {
+  final paths = <String>{
+    for (final family in BodyFamily.values)
+      BodyFamilyCatalog.defFor(family).idleAsset,
+    for (final path in OwnedGearAssets.allAssetPaths)
+      if (path.endsWith('_idle.png') || path.endsWith('_dye.png')) path,
+  };
+  await Future.wait(paths.map((path) async {
+    try {
+      await DecodedImageCache.load(path, targetWidth: 128);
+    } catch (_) {
+      // A missing optional dye must not blank the whole sheet.
+    }
+  }));
 }

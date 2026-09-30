@@ -2,6 +2,9 @@
 
 Same dolls as MORE → SETTINGS → DEV: GEAR LOOKBOOK. No emulator, no browser.
 Pictures land in tool/out/lookbook/.
+
+Default is the summary sheet plus the sit counts. Pass --all for every
+sheet, or --weapons, --armor, or --body <family> for one slice.
 """
 
 from __future__ import annotations
@@ -13,7 +16,31 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _scope(argv: list[str]) -> str:
+    if "--all" in argv:
+        return "all"
+    if "--weapons" in argv:
+        return "weapons"
+    if "--armor" in argv:
+        return "armor"
+    if "--body" in argv:
+        index = argv.index("--body")
+        if index + 1 >= len(argv):
+            print("ange en kropp: warrior, healer, mage eller rogue")
+            raise SystemExit(2)
+        family = argv[index + 1]
+        if family not in {"warrior", "healer", "mage", "rogue"}:
+            print(f"okänd kropp: {family}")
+            raise SystemExit(2)
+        return f"body {family}"
+    return "summary"
+
+
 def main() -> int:
+    scope = _scope(sys.argv[1:])
+    out = ROOT / "tool" / "out" / "lookbook"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "scope.txt").write_text(scope + "\n", encoding="utf-8")
     # flutter on Windows is a .bat. CreateProcess will not run it unless
     # the command goes through the shell.
     result = subprocess.run(
@@ -21,11 +48,9 @@ def main() -> int:
         cwd=ROOT,
         shell=True,
     )
-    out = ROOT / "tool" / "out" / "lookbook"
     if result.returncode != 0:
         return result.returncode
-    print(f"sheets in {out}")
-    # Same outfits, four sit counts each. Numbers next to the pictures.
+    print(f"sheets in {out}  ({scope})")
     measured = subprocess.run(
         "py -3 tool/measure_lookbook.py",
         cwd=ROOT,

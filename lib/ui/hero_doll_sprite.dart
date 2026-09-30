@@ -38,6 +38,9 @@ class HeroDollSprite extends StatefulWidget {
   /// Reserved for future walk-frame previews (idle in GEAR for now).
   final int walkFrame;
 
+  /// Dolls still decoding. The lookbook waits on this instead of a fixed delay.
+  static int pendingLoads = 0;
+
   @override
   State<HeroDollSprite> createState() => _HeroDollSpriteState();
 }
@@ -84,6 +87,15 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
   }
 
   Future<void> _reload() async {
+    HeroDollSprite.pendingLoads++;
+    try {
+      await _reloadBody();
+    } finally {
+      HeroDollSprite.pendingLoads--;
+    }
+  }
+
+  Future<void> _reloadBody() async {
     final gen = ++_loadGen;
     final useForm = CustomAssets.hasUniqueHeroSprite(widget.hero.specId);
     if (useForm) {

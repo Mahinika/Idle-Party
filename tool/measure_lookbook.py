@@ -14,6 +14,7 @@ Writes tool/out/lookbook/measure.txt. Pictures stay the judge of shape.
 
 from __future__ import annotations
 
+import json
 import math
 import re
 from pathlib import Path
@@ -25,7 +26,10 @@ from paper_doll_paths import CHAR, REPO
 ROOT = REPO
 W = 128
 ALPHA = 40
-OUT = ROOT / "tool" / "out" / "lookbook" / "measure.txt"
+OUT_DIR = ROOT / "tool" / "out" / "lookbook"
+OUT = OUT_DIR / "measure.txt"
+OUTFITS = ROOT / "tool" / "lookbook_outfits.json"
+FLAGS = OUT_DIR / "flags"
 HAND_R = 8
 # A few pixels of a thin blade can graze the cheek. More than this is a clash.
 FACE_MAX = 12
@@ -37,27 +41,13 @@ OPEN_MIN = 0.35
 TWO_HAND = {"staff", "polearm", "bow", "gun", "crossbow"}
 ARMOR = {"helm", "chest", "legs", "cloak", "hands", "shoulder"}
 OFF_ITEM = {"shield", "frill"}
-
-# Keep these lists in step with test/visual/gear_lookbook_sheet_test.dart.
-ARMOR_IDS = ["helm_t0", "chest_t0", "legs_t0"]
-LAYER_IDS = [*ARMOR_IDS, "shoulder_t0", "cloak_t0", "hands_t0"]
-DRESS_IDS = ["helm_t0", "chest_t0", "hands_t0"]
-WEAPON_IDS = [
-    "sword_t0",
-    "dagger_t0",
-    "staff_t0",
-    "bow_t0",
-    "wand_t0",
-    "gun_t0",
-    "polearm_t0",
-    "shield_t0",
-    "frill_t0",
-]
-FAMILY_WEAPON = {
-    "warrior": "sword_t0",
-    "healer": "wand_t0",
-    "mage": "staff_t0",
-    "rogue": "dagger_t0",
+PAINT_ORDER = {
+    "legs": 0,
+    "chest": 1,
+    "cloak": 2,
+    "shoulder": 3,
+    "hands": 4,
+    "helm": 5,
 }
 
 
@@ -184,23 +174,26 @@ def _on(pts: list[tuple[float, float]], mask: set[tuple[int, int]]) -> int:
     return sum(1 for x, y in pts if (int(x), int(y)) in mask)
 
 
-def _outfits() -> list[tuple[str, str, list[str], str | None]]:
-    """family, label, pieces, off-hand weapon stem."""
+def _load_outfits() -> dict:
+    return json.loads(OUTFITS.read_text(encoding="utf-8"))
+
+
+def _outfits(data: dict) -> list[tuple[str, str, list[str], str | None]]:
+    """family, label, pieces, off-hand weapon stem. Same file as the sheets."""
     rows: list[tuple[str, str, list[str], str | None]] = []
-    families = ["warrior", "healer", "mage", "rogue"]
-    for fam in families:
+    layers = list(data["layers"])
+    dress = list(data["dress"])
+    for fam in data["families"]:
         rows.append((fam, "bare", [], None))
-        rows.append((fam, "armor", list(ARMOR_IDS), None))
-        rows.append((fam, "layers", list(LAYER_IDS), None))
-        rows.append((fam, "armed", [*LAYER_IDS, FAMILY_WEAPON[fam]], None))
-        if fam == "warrior":
-            rows.append((fam, "pair", [*LAYER_IDS, "sword_t0", "shield_t0"], None))
-        elif fam == "rogue":
-            rows.append((fam, "pair", [*LAYER_IDS, "dagger_t0"], "dagger_t0"))
-        else:
-            rows.append((fam, "pair", [*LAYER_IDS, "wand_t0", "frill_t0"], None))
-        for wid in WEAPON_IDS:
-            rows.append((fam, wid, [*DRESS_IDS, wid], None))
+        rows.append((fam, "armor", list(data["armor"]), None))
+        rows.append((fam, "layers", list(layers), None))
+        rows.append((fam, "armed", [*layers, data["familyWeapon"][fam]], None))
+        pair = data["pair"][fam]
+        rows.append(
+            (fam, "pair", [*layers, *pair["pieces"]], pair.get("offHand"))
+        )
+        for wid in data["weapons"]:
+            rows.append((fam, wid, [*dress, wid], None))
     return rows
 
 
@@ -305,33 +298,173 @@ def _cell(value: float | None, ratio: bool = False) -> str:
     return f"{int(value):4d}"
 
 
+def _mark_set(text: str) -> dict[str, set[str]]:
+    found: dict[str, set[str]] = {}
+    for line in text.splitlines():
+        if len(line) < 22 or line.startswith("doll") or line.startswith("jämfört"):
+            continue
+        if line.endswith("flagged") or line.startswith("wrote"):
+            continue
+        name = line[:20].strip()
+        if " " not in name:
+            continue
+        tail = line[20:]
+        found[name] = set(re.findall(r"FACE|HAND|OFF|HAIR|COVERED", tail))
+    return found
+
+
+def _delta(previous: str, current: dict[str, set[str]]) -> str:
+    if not previous.strip():
+        return "jämfört med förra: ingen förra mätning"
+    old = _mark_set(previous)
+    worse: list[str] = []
+    better: list[str] = []
+    names = sorted(set(old) | set(current))
+    for name in names:
+        gained = current.get(name, set()) - old.get(name, set())
+        lost = old.get(name, set()) - current.get(name, set())
+        if gained:
+            worse.append(f"{name} +{'+'.join(sorted(gained))}")
+        elif lost:
+            better.append(f"{name} -{'-'.join(sorted(lost))}")
+    if worse:
+        extra = f" ; bättre {', '.join(better)}" if better else ""
+        return "jämfört med förra: sämre  " + ", ".join(worse) + extra
+    if better:
+        return "jämfört med förra: bättre  " + ", ".join(better)
+    return "jämfört med förra: oförändrat"
+
+
+def _paint(
+    canvas: Image.Image,
+    im: Image.Image,
+    pts: list[tuple[int, int]],
+    placed: list[tuple[float, float]] | None,
+) -> None:
+    src = im.load()
+    dst = canvas.load()
+    if placed is None:
+        for x, y in pts:
+            pixel = src[x, y]
+            if pixel[3] >= ALPHA:
+                dst[x, y] = pixel
+        return
+    for (x, y), (dx, dy) in zip(pts, placed):
+        xi, yi = int(dx), int(dy)
+        if 0 <= xi < W and 0 <= yi < W:
+            dst[xi, yi] = src[x, y]
+
+
+def _save_flag(
+    family: str,
+    label: str,
+    pieces: list[str],
+    off_weapon: str | None,
+    fists: dict[str, tuple[tuple[float, float], tuple[float, float]]],
+    grips: dict[str, tuple[float, float]],
+    rest: dict[str, float],
+    rest_off: dict[str, float],
+) -> None:
+    main_hand, off_hand = fists[family]
+    canvas = Image.open(CHAR / family / "body_idle.png").convert("RGBA")
+    mains: list[str] = []
+    offs: list[str] = []
+    armor: list[str] = []
+    for stem in pieces:
+        kind = _base(stem)
+        if kind in OFF_ITEM:
+            offs.append(stem)
+        elif kind in ARMOR:
+            armor.append(stem)
+        else:
+            mains.append(stem)
+    if off_weapon:
+        offs.append(off_weapon)
+    if any(_base(stem) in TWO_HAND for stem in mains):
+        offs = []
+    armor.sort(key=lambda stem: PAINT_ORDER.get(_base(stem), 9))
+    for stem in armor:
+        path = _art(family, stem)
+        if path is None:
+            continue
+        im = Image.open(path).convert("RGBA")
+        _paint(canvas, im, _opaque(im), None)
+    for stem in mains:
+        _paint_hand(canvas, family, stem, grips, rest.get(stem, 0.0), main_hand)
+    for stem in offs:
+        rot = rest_off.get(stem, 0.0) if off_weapon and stem == off_weapon else 0.0
+        _paint_hand(canvas, family, stem, grips, rot, off_hand)
+    dot = canvas.load()
+    for hand in (main_hand, off_hand):
+        ax = int(round(64 + hand[0] * W))
+        ay = int(round(64 + hand[1] * W))
+        for yy in range(ay - 1, ay + 2):
+            for xx in range(ax - 1, ax + 2):
+                if 0 <= xx < W and 0 <= yy < W:
+                    dot[xx, yy] = (255, 40, 40, 255)
+    FLAGS.mkdir(parents=True, exist_ok=True)
+    safe = label.replace(" ", "_")
+    big = canvas.resize((W * 3, W * 3), Image.NEAREST)
+    big.save(FLAGS / f"{family}_{safe}.png")
+
+
+def _paint_hand(
+    canvas: Image.Image,
+    family: str,
+    stem: str,
+    grips: dict[str, tuple[float, float]],
+    rot: float,
+    hand: tuple[float, float],
+) -> None:
+    path = _art(family, stem)
+    if path is None or stem not in grips:
+        return
+    im = Image.open(path).convert("RGBA")
+    pts = _opaque(im)
+    _paint(canvas, im, pts, _placed(pts, grips[stem], rot, hand))
+
+
 def main() -> int:
+    data = _load_outfits()
     fists = _fists()
     grips, rest, rest_off = _grips()
     masks = {
         fam: _head_masks(Image.open(CHAR / fam / "body_idle.png").convert("RGBA"))
         for fam in fists
     }
+    previous = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
+    if FLAGS.exists():
+        for old in FLAGS.glob("*.png"):
+            old.unlink()
     lines = [
         "doll                  face  hand   off  hair  open  marks",
     ]
+    current: dict[str, set[str]] = {}
     flagged = 0
-    for family, label, pieces, off_weapon in _outfits():
+    for family, label, pieces, off_weapon in _outfits(data):
         row = _score_one(
             family, pieces, off_weapon, fists, grips, rest, rest_off, masks
         )
         marks = _marks(row)
+        name = f"{family} {label}"
+        current[name] = set(marks.split()) if marks else set()
         if marks:
             flagged += 1
-        name = f"{family} {label}"
+            _save_flag(
+                family, label, pieces, off_weapon, fists, grips, rest, rest_off
+            )
         lines.append(
             f"{name:20s}  {_cell(row['face'])}  {_cell(row['hand'])}  "
             f"{_cell(row['off'])}  {_cell(row['hair'], True)}  "
             f"{_cell(row['open'], True)}  {marks}"
         )
+    header = _delta(previous, current)
+    lines.insert(0, header)
     lines.append(f"{flagged} dolls flagged")
+    if flagged:
+        lines.append(f"felbilder i {FLAGS.relative_to(ROOT)}")
     text = "\n".join(lines) + "\n"
-    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text, encoding="utf-8")
     print(text, end="")
     print(f"wrote {OUT.relative_to(ROOT)}")

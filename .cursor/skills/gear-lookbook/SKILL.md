@@ -15,34 +15,39 @@ count file. No emulator and no browser.
 
 ## Workflow
 
-1. `py -3 tool/gear_lookbook.py`
-2. Read `tool/out/lookbook/measure.txt` first. Each doll is scored on
-   face, hand, off, hair, and open in that one pass. A mark means that
-   count is off: FACE (blade on the face), HAND or OFF (nothing in that
-   hand), HAIR (helm misses the hair), COVERED (helm hides the face).
-   A dash means that piece is not worn. Then read the PNGs. Start with
-   `fit_compare.png` and `fit_weapons.png` when several pieces are worn
-   together. Then `fit_kit.png` and `fit_materials.png`.
-3. Open the family sheet that matches the change:
+1. `py -3 tool/gear_lookbook.py` for the summary. Add `--all` only for a
+   full pass. `--weapons`, `--armor`, or `--body warrior` (healer, mage,
+   rogue) render just that slice. Outfits live in `tool/lookbook_outfits.json`.
+2. Read the first line of `tool/out/lookbook/measure.txt`. It says
+   `bättre`, `sämre`, `oförändrat`, or that there was no previous run.
+   Each doll is scored on face, hand, off, hair, and open. A mark means
+   that count is off: FACE (blade on the face), HAND or OFF (nothing in
+   that hand), HAIR (helm misses the hair), COVERED (helm hides the face).
+   A dash means that piece is not worn.
+3. If any doll is flagged, read only `tool/out/lookbook/flags/*.png`.
+   Those are the small pictures. Do not open a wide sheet to find them.
+4. Read `fit_summary.png` for the worn sets. Rows are warrior, healer,
+   mage, rogue. Columns are bare, armor (helm chest legs), layers
+   (armor plus shoulder cloak hands), armed (layers plus that body's
+   weapon), pair (layers plus sword and shield, wand and book, or two
+   daggers).
+5. Open a detail sheet only when the change needs it (`--weapons`,
+   `--armor`, `--body`, or `--all`):
    - `{family}_armor.png` — helm, chest, legs, cloak
    - `{family}_snap.png` — hands, then shoulder
    - `{family}_weapons_a.png` — sword, staff, dagger, mace, axe
    - `{family}_weapons_b.png` — bow, shield, frill, wand, gun, crossbow, polearm, fist, thrown
-4. Cells run left to right in `EquipmentModelCatalog.variants` order.
-   Bodies in `fit_kit.png` are warrior, healer, mage, rogue.
-   `fit_compare.png` rows are the same four bodies. Columns are bare,
-   armor (helm chest legs), layers (armor plus shoulder cloak hands),
-   armed (layers plus that body's weapon), pair (layers plus sword and
-   shield, wand and book, or two daggers).
-   `fit_weapons.png` is the same four bodies in helm, chest, and hands,
-   then one weapon per column: sword, dagger, staff, bow, wand, gun,
-   polearm, shield, frill. Staff, polearm, bow, gun, and crossbow are
-   two-hand, so an off-hand worn with them is hidden.
-   `fit_materials.png` top row is warrior native, warrior leather, rogue
-   native, rogue mail, mage native, mage leather. Bottom row is healer
-   cloth, leather, mail, plate.
-5. If a sheet is too wide to judge one piece, crop that cell and read the
-   crop. Do not guess from a thumbnail of the whole sheet.
+   - `fit_weapons.png` — helm, chest, and hands, then sword, dagger,
+     staff, bow, wand, gun, polearm, shield, frill
+   - `fit_kit.png` — one full kit per body
+   - `fit_materials.png` — top row warrior native, warrior leather, rogue
+     native, rogue mail, mage native, mage leather. Bottom row healer
+     cloth, leather, mail, plate
+   Cells run left to right in `EquipmentModelCatalog.variants` order.
+   Staff, polearm, bow, gun, and crossbow are two-hand, so an off-hand
+   worn with them is hidden.
+6. If a detail sheet is too wide to judge one piece, crop that cell and
+   read the crop. Do not guess from a thumbnail of the whole sheet.
 
 ## What "sits" means
 

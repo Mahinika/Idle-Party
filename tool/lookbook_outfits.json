@@ -1,0 +1,25 @@
+{
+  "families": ["warrior", "healer", "mage", "rogue"],
+  "armor": ["helm_t0", "chest_t0", "legs_t0"],
+  "layers": ["helm_t0", "chest_t0", "legs_t0", "shoulder_t0", "cloak_t0", "hands_t0"],
+  "dress": ["helm_t0", "chest_t0", "hands_t0"],
+  "weapons": ["sword_t0", "dagger_t0", "staff_t0", "bow_t0", "wand_t0", "gun_t0", "polearm_t0", "shield_t0", "frill_t0"],
+  "familyWeapon": {
+    "warrior": "sword_t0",
+    "healer": "wand_t0",
+    "mage": "staff_t0",
+    "rogue": "dagger_t0"
+  },
+  "pair": {
+    "warrior": {"pieces": ["sword_t0", "shield_t0"], "offHand": null},
+    "healer": {"pieces": ["wand_t0", "frill_t0"], "offHand": null},
+    "mage": {"pieces": ["wand_t0", "frill_t0"], "offHand": null},
+    "rogue": {"pieces": ["dagger_t0"], "offHand": "dagger_t0"}
+  },
+  "sheets": {
+    "armor": ["helm", "chest", "legs", "cloak"],
+    "snap": ["hands", "shoulder"],
+    "weapons_a": ["sword", "staff", "dagger", "mace", "axe"],
+    "weapons_b": ["bow", "shield", "frill", "wand", "gun", "crossbow", "polearm", "fist", "thrown"]
+  }
+}
