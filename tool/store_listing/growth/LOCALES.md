@@ -1,8 +1,8 @@
-# Idle Party — Play listing locales (GATED)
+# Idle Party — Play listing locales (LIVE)
 
-**Do not paste into Play Console until the owner says yes.**
+**Committed to Play Console:** 2026-09-25 (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`).
 
-Live policy in [docs/STORE_LISTING.md](../../../docs/STORE_LISTING.md): default **en-US only**.
+Live policy in [docs/STORE_LISTING.md](../../../docs/STORE_LISTING.md): default **en-US** + 9 localized store metadata languages.
 In-game copy stays **English** either way. Screenshots stay English until traffic exists.
 
 If approved: add these as extra store listing translations (metadata only). No stuffing. No “#1”. No “free” in the **title**. Play link stays `com.idleparty.app`.
