@@ -75,7 +75,7 @@ the middle band.
 | FACE | weapon over the face while standing or walking (> 12 px) |
 | SWING | weapon over the face in windup, strike, or cast (> 40 px) |
 | SHIELD | shield or tome over the face (> 40 px) |
-| HAND / OFF | grip misses the fist (< 6 px inside an 8 px disk) |
+| HAND / OFF | grip misses the hand (< 6 px inside an 8 px disk). Bare skin uses the fist. Worn gloves use the outer rim of that glove |
 | COVERED | helm leaves < 35% of the face showing |
 | LIFT | helm touches the head with < 8 px |
 | FLOAT | > 50% of the pauldron has nothing under it |

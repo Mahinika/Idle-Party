@@ -1,0 +1,184 @@
+#!/usr/bin/env python3
+"""Generate lib/visual/owned_glove_tips.dart from each family's hand overlays.
+
+The weapon stays on the bare fist. A worn glove is longer than that fist,
+so the grip moves to the outer rim of the glove that is actually on.
+
+Do not hand-edit the Dart file. Run this script.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+from PIL import Image
+
+from paper_doll_paths import CHAR, REPO
+
+OUT = REPO / "lib" / "visual" / "owned_glove_tips.dart"
+ANCHORS = REPO / "lib" / "visual" / "anchor_table.dart"
+ALPHA = 40
+# Outer rim is the last few pixels of the glove, not a single spike.
+RIM = 3
+# Smaller than a pixel is the bare fist already. Leave it out.
+MIN_SHIFT = 1 / 128
+
+
+def _fists() -> dict[str, tuple[tuple[float, float], tuple[float, float]]]:
+    text = ANCHORS.read_text(encoding="utf-8")
+    found: dict[str, tuple[tuple[float, float], tuple[float, float]]] = {}
+    for match in re.finditer(
+        r"BodyFamily\.(\w+):\s*_FamilyFists\(\s*"
+        r"idleMain:\s*\(([^)]+)\),\s*"
+        r"idleOff:\s*\(([^)]+)\)",
+        text,
+    ):
+        main = tuple(float(part.strip()) for part in match.group(2).split(","))
+        off = tuple(float(part.strip()) for part in match.group(3).split(","))
+        found[match.group(1)] = (main, off)  # type: ignore[assignment]
+    if set(found) != {"warrior", "healer", "mage", "rogue"}:
+        raise SystemExit(f"fist parse missed a family: {sorted(found)}")
+    return found
+
+
+def _islands(pts: list[tuple[int, int]]) -> list[list[tuple[int, int]]]:
+    left = set(pts)
+    islands: list[list[tuple[int, int]]] = []
+    while left:
+        start = left.pop()
+        island = [start]
+        queue = [start]
+        while queue:
+            x, y = queue.pop()
+            for nxt in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                if nxt in left:
+                    left.discard(nxt)
+                    island.append(nxt)
+                    queue.append(nxt)
+        islands.append(island)
+    return islands
+
+
+def _rim(
+    pts: list[tuple[int, int]], outward: int, fist_y: float
+) -> tuple[float, float] | None:
+    if not pts:
+        return None
+    island = max(_islands(pts), key=len)
+    if outward > 0:
+        edge = max(x for x, _y in island)
+        rim = [(x, y) for x, y in island if x >= edge - (RIM - 1)]
+    else:
+        edge = min(x for x, _y in island)
+        rim = [(x, y) for x, y in island if x <= edge + (RIM - 1)]
+    # The plate rim is taller than the palm. Hold at the palm's height
+    # when that row reaches the outer edge.
+    near = [p for p in rim if abs(p[1] + 0.5 - fist_y) <= 6]
+    if near:
+        cx = sum(x + 0.5 for x, _y in near) / len(near)
+        cy = sum(y + 0.5 for _x, y in near) / len(near)
+        return cx, cy
+    # The outer edge misses the palm row. Slide out, stay at palm height.
+    cx = sum(x + 0.5 for x, _y in rim) / len(rim)
+    return cx, fist_y
+
+
+def _shift(
+    tip: tuple[float, float] | None, fist: tuple[float, float]
+) -> tuple[float, float]:
+    if tip is None:
+        return 0.0, 0.0
+    dx = (tip[0] - 64) / 128 - fist[0]
+    dy = (tip[1] - 64) / 128 - fist[1]
+    if abs(dx) < MIN_SHIFT and abs(dy) < MIN_SHIFT:
+        return 0.0, 0.0
+    return dx, dy
+
+
+def _hands() -> list[tuple[str, tuple[float, float], tuple[float, float]]]:
+    fists = _fists()
+    rows: list[tuple[str, tuple[float, float], tuple[float, float]]] = []
+    for family, (main_fist, off_fist) in fists.items():
+        gear = CHAR / family / "gear"
+        if not gear.is_dir():
+            continue
+        for path in sorted(gear.glob("hands_*_idle.png")):
+            im = Image.open(path).convert("RGBA")
+            px = im.load()
+            right: list[tuple[int, int]] = []
+            left: list[tuple[int, int]] = []
+            for y in range(im.height):
+                for x in range(im.width):
+                    if px[x, y][3] < ALPHA:
+                        continue
+                    if x >= 64:
+                        right.append((x, y))
+                    else:
+                        left.append((x, y))
+            main = _shift(
+                _rim(right, 1, 64 + main_fist[1] * 128), main_fist
+            )
+            off = _shift(
+                _rim(left, -1, 64 + off_fist[1] * 128), off_fist
+            )
+            if main == (0.0, 0.0) and off == (0.0, 0.0):
+                continue
+            set_id = path.name[: -len("_idle.png")]
+            rows.append((f"{family}/{set_id}", main, off))
+    return rows
+
+
+def _offset(pair: tuple[float, float]) -> str:
+    x = 0.0 if abs(pair[0]) < 0.00005 else pair[0]
+    y = 0.0 if abs(pair[1]) < 0.00005 else pair[1]
+    return f"Offset({x:.4f}, {y:.4f})"
+
+
+def main() -> None:
+    rows = _hands()
+    main_lines = [f"    '{key}': {_offset(main)}," for key, main, _off in rows]
+    off_lines = [f"    '{key}': {_offset(off)}," for key, _main, off in rows]
+    text = "\n".join(
+        [
+            "// GENERATED by tool/gen_owned_glove_tips.py — do not hand-edit.",
+            "// Extra shift from the bare fist to the outer rim of a worn glove.",
+            "// Missing key means the glove already ends on the fist.",
+            "",
+            "import 'dart:ui' show Offset;",
+            "",
+            "import 'body_family.dart';",
+            "import 'owned_gear_grips.dart';",
+            "",
+            "/// Where a worn glove sticks out past the skin hand.",
+            "abstract final class OwnedGloveTips {",
+            "  static const Map<String, Offset> mainByKey = {",
+            *main_lines,
+            "  };",
+            "",
+            "  static const Map<String, Offset> offByKey = {",
+            *off_lines,
+            "  };",
+            "",
+            "  /// Fractions of the 128 sprite. Add to the skin fist.",
+            "  static Offset shiftFor(",
+            "    String? assetPath,",
+            "    BodyFamily? family, {",
+            "    required bool offHand,",
+            "  }) {",
+            "    if (assetPath == null || family == null) return Offset.zero;",
+            "    final id = OwnedGearGrips.visualSetIdFromAsset(assetPath);",
+            "    if (id == null) return Offset.zero;",
+            "    final map = offHand ? offByKey : mainByKey;",
+            "    return map['${family.name}/$id'] ?? Offset.zero;",
+            "  }",
+            "}",
+            "",
+        ]
+    )
+    OUT.write_text(text, encoding="utf-8", newline="\n")
+    print(f"wrote {len(rows)} glove tips -> {OUT.relative_to(REPO)}")
+
+
+if __name__ == "__main__":
+    main()

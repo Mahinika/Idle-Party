@@ -12,6 +12,7 @@ import 'character_visual_pose.dart';
 import 'hero_anim_controller.dart';
 import 'owned_gear_assets.dart';
 import 'owned_gear_grips.dart';
+import 'owned_glove_tips.dart';
 import 'hero_anim_state.dart';
 
 /// Canvas painter for modular layered heroes (dungeon path).
@@ -208,9 +209,12 @@ abstract final class CharacterVisualPainter {
         } else if (layer.anchorId == AnchorId.offHand) {
           rot += pose.offHandExtraRotation;
         }
-        final ax = center.dx + ap.x;
-        final ay = center.dy + ap.y;
         final offHand = layer.anchorId == AnchorId.offHand;
+        // The skin fist is under the glove. Hold the weapon at the glove's
+        // outer rim, or a plate hand looks like it grew past the grip.
+        final glove = wornGloveShift(pose, offHand: offHand);
+        final ax = center.dx + ap.x + glove.dx * size;
+        final ay = center.dy + ap.y + glove.dy * size;
         final grip = OwnedGearGrips.forAsset(
           asset,
           offHand: offHand,
@@ -291,14 +295,32 @@ abstract final class CharacterVisualPainter {
     return Offset(size * 8 / 128, size * 13 / 128);
   }
 
+  /// Extra shift from the skin fist to the outer rim of a worn glove.
+  /// Fractions of the sprite. Bare hands stay at zero.
+  static Offset wornGloveShift(
+    CharacterVisualPose pose, {
+    required bool offHand,
+  }) {
+    for (final layer in pose.layers) {
+      if (layer.id != CharacterLayerId.gloves) continue;
+      return OwnedGloveTips.shiftFor(
+        layer.ownedAsset,
+        pose.bodyFamily,
+        offHand: offHand,
+      );
+    }
+    return Offset.zero;
+  }
+
   /// Where [paintOwnedHero] puts a hand anchor on screen, after the step
-  /// and the lean. Unflipped poses only.
+  /// and the lean. Unflipped poses only. [gloveShift] is the worn-glove rim.
   static Offset ownedHandPoint(
     CharacterVisualPose pose,
     Offset center,
     double size,
-    AnchorId id,
-  ) {
+    AnchorId id, {
+    Offset gloveShift = Offset.zero,
+  }) {
     final ap = AnchorTables.lookup(
       anim: pose.anim.kind,
       frame: pose.anim.frame,
@@ -308,7 +330,10 @@ abstract final class CharacterVisualPainter {
       family: pose.bodyFamily,
     ).scaled(size);
     final step = ownedStepOffset(pose, size);
-    var p = Offset(center.dx + ap.x + step.dx, center.dy + ap.y + step.dy);
+    var p = Offset(
+      center.dx + ap.x + gloveShift.dx * size + step.dx,
+      center.dy + ap.y + gloveShift.dy * size + step.dy,
+    );
     final lean = ownedLeanRadians(pose);
     if (lean != 0) {
       final pivot = center.translate(0, size * 0.36);

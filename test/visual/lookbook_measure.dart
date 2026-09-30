@@ -201,9 +201,10 @@ Future<Map<String, ui.Image>> _loadAll() async {
 }
 
 class _Render {
-  _Render(this.rgba);
+  _Render(this.rgba, this.side);
 
   final Uint8List rgba;
+  final int side;
 
   bool on(int i) => rgba[i * 4 + 3] >= _alpha;
 }
@@ -214,11 +215,13 @@ Future<_Render> _render(
   Map<String, ui.Image> images, {
   Set<CharacterLayerId>? only,
   File? png,
+  int pad = 0,
 }) async {
+  final side = _size + pad * 2;
   final recorder = ui.PictureRecorder();
   CharacterVisualPainter.paintOwnedHero(
     Canvas(recorder),
-    const Offset(_size / 2, _size / 2),
+    Offset(side / 2, side / 2),
     _size.toDouble(),
     body: body,
     images: images,
@@ -226,7 +229,7 @@ Future<_Render> _render(
     onlyLayers: only,
   );
   final picture = recorder.endRecording();
-  final image = await picture.toImage(_size, _size);
+  final image = await picture.toImage(side, side);
   picture.dispose();
   final raw = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
   if (png != null) {
@@ -234,7 +237,7 @@ Future<_Render> _render(
     png.writeAsBytesSync(encoded!.buffer.asUint8List());
   }
   image.dispose();
-  return _Render(raw!.buffer.asUint8List());
+  return _Render(raw!.buffer.asUint8List(), side);
 }
 
 /// Hair and face pixels, plus the body silhouette, for one body and pose.
@@ -374,44 +377,63 @@ Future<Map<String, dynamic>> _measure(
     return _render(pose, body, images, only: ids);
   }
 
-  final main = await layer({CharacterLayerId.mainHand});
-  final off = await layer({CharacterLayerId.offHand});
+  // A swung blade leaves the 128 body square. The grip check needs the
+  // margin the dungeon canvas already has.
+  const handPad = 48;
+  Future<_Render?> handLayer(Set<CharacterLayerId> ids) async {
+    if (!ids.any((id) => _has(pose, id))) return null;
+    return _render(pose, body, images, only: ids, pad: handPad);
+  }
+
+  final main = await handLayer({CharacterLayerId.mainHand});
+  final off = await handLayer({CharacterLayerId.offHand});
   final helm = await layer({CharacterLayerId.head});
   final shoulders = await layer({CharacterLayerId.shoulders});
   final armor = await layer(_armorLayers);
   final torso = await layer({CharacterLayerId.torso});
 
   const center = Offset(_size / 2, _size / 2);
+  final handOrigin = Offset(handPad.toDouble(), handPad.toDouble());
   final mainFist = CharacterVisualPainter.ownedHandPoint(
     pose,
     center,
     _size.toDouble(),
     AnchorId.mainHand,
-  );
+    gloveShift: CharacterVisualPainter.wornGloveShift(pose, offHand: false),
+  ) + handOrigin;
   final offFist = CharacterVisualPainter.ownedHandPoint(
     pose,
     center,
     _size.toDouble(),
     AnchorId.offHand,
-  );
+    gloveShift: CharacterVisualPainter.wornGloveShift(pose, offHand: true),
+  ) + handOrigin;
 
   // A shield or tome is held in front of the body and may cover a cheek.
   // Blades and staves are counted apart from it.
   final offIsWeapon = doll.offWeapon != null;
+  bool onBody(int i, _Render? layer) {
+    if (layer == null) return false;
+    if (layer.side == _size) return layer.on(i);
+    final x = i % _size + handPad;
+    final y = i ~/ _size + handPad;
+    return layer.on(y * layer.side + x);
+  }
+
   var face = 0;
   var shield = 0;
   for (final i in head.face) {
-    final offOn = off?.on(i) ?? false;
-    if ((main?.on(i) ?? false) || (offIsWeapon && offOn)) face++;
+    final offOn = onBody(i, off);
+    if (onBody(i, main) || (offIsWeapon && offOn)) face++;
     if (!offIsWeapon && offOn) shield++;
   }
 
   int nearFist(_Render r, Offset fist) {
     var n = 0;
-    for (var i = 0; i < _size * _size; i++) {
+    for (var i = 0; i < r.side * r.side; i++) {
       if (!r.on(i)) continue;
-      final dx = i % _size + 0.5 - fist.dx;
-      final dy = i ~/ _size + 0.5 - fist.dy;
+      final dx = i % r.side + 0.5 - fist.dx;
+      final dy = i ~/ r.side + 0.5 - fist.dy;
       if (dx * dx + dy * dy <= _handR * _handR) n++;
     }
     return n;
@@ -445,8 +467,8 @@ Future<Map<String, dynamic>> _measure(
         ? null
         : _apart(shoulders, [head.body, if (torso != null) _mask(torso)], 2),
     'spill': armor == null ? null : _apart(armor, [head.body], 4),
-    'fist': [mainFist.dx, mainFist.dy],
-    'offFist': [offFist.dx, offFist.dy],
+    'fist': [mainFist.dx - handPad, mainFist.dy - handPad],
+    'offFist': [offFist.dx - handPad, offFist.dy - handPad],
   };
 }
 

@@ -44,7 +44,9 @@ out, off the face. Draw the picture so those steps have something to
 hold:
 
 - A glove's hand is the top of the picture. The bottom half is the
-  forearm and lands below the fist.
+  forearm and lands below the fist. A worn glove moves the weapon out
+  to that glove's outer rim (`tool/gen_owned_glove_tips.py`). The bare
+  fist does not move.
 - A pauldron overlaps the shoulder on the idle body. A pad drawn beside
   the head will still miss the walk clip, where the arms sit higher.
 - A bow is tall. Leave the string on the side away from the cheek, not

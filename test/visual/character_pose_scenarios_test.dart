@@ -16,6 +16,7 @@ import 'package:idle_party/visual/equipment_model_catalog.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
 import 'package:idle_party/visual/owned_gear_assets.dart';
 import 'package:idle_party/visual/owned_gear_grips.dart';
+import 'package:idle_party/visual/owned_glove_tips.dart';
 
 PartyHero nakedWarrior() => PartyHero.starting(
   name: 'Aegis',
@@ -699,6 +700,25 @@ void main() {
     expect(pose.bodyFamily, BodyFamily.warrior);
     expect(pose.anchor(AnchorId.mainHand).y, closeTo(0.035, 0.001));
     expect(pose.anchor(AnchorId.mainHand).x, closeTo(0.238, 0.001));
+  });
+
+  test('worn plate glove moves the grip to the outer rim', () {
+    final shift = OwnedGloveTips.shiftFor(
+      'assets/custom/char/warrior/gear/hands_t0_idle.png',
+      BodyFamily.warrior,
+      offHand: false,
+    );
+    expect(shift.dx, greaterThan(0.15));
+    expect(shift.dy.abs(), lessThan(0.05));
+    final bare = CharacterVisualPainter.wornGloveShift(
+      CharacterVisualPose.resolve(
+        hero: nakedWarrior(),
+        anim: idle,
+        owned: true,
+      ),
+      offHand: false,
+    );
+    expect(bare, Offset.zero);
   });
 
   test('owned cape paints behind the body', () {
