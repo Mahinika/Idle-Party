@@ -112,9 +112,10 @@ class CharacterVisualPose {
     if (anim.kind == HeroAnimKind.attack) {
       return AnchorTables.attackSwingRotation(anim.progress);
     }
-    // Cast reuses the attack body clip. Raise the weapon so it is not a swing.
+    // Cast reuses the attack body clip. Lift the weapon outward so the
+    // raise does not lay the blade across the face.
     if (anim.kind == HeroAnimKind.cast) {
-      return -1.15 * math.sin(anim.progress * math.pi);
+      return 0.55 * math.sin(anim.progress * math.pi);
     }
     // Walk has one body clip — swing the held weapon so steps read as motion.
     if (anim.kind == HeroAnimKind.walk) {

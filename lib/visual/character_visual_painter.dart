@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/hero.dart';
 import '../ui/hero_paper_doll.dart';
 import 'anchor_table.dart';
+import 'body_family.dart';
 import 'character_layer.dart';
 import 'character_visual_pose.dart';
 import 'hero_anim_controller.dart';
@@ -219,9 +220,13 @@ abstract final class CharacterVisualPainter {
           dst.left + grip.dx * size,
           dst.top + grip.dy * size,
         );
-        final shifted = dst.shift(
+        var shifted = dst.shift(
           Offset(ax - gripOnFull.dx, ay - gripOnFull.dy),
         );
+        // A bow's string curves back toward the cheek. Hold it out and down.
+        if (!offHand && asset.contains('/bow_')) {
+          shifted = shifted.shift(Offset(size * 0.12, size * 0.06));
+        }
         canvas.save();
         canvas.translate(ax, ay);
         canvas.rotate(rot);
@@ -231,7 +236,17 @@ abstract final class CharacterVisualPainter {
         continue;
       }
 
-      canvas.drawImageRect(img, src, layerDst, p);
+      // The rogue attack clip drops the head. Same-origin helms are drawn
+      // for the idle head, so follow the head or a large helm covers the face.
+      final helmShift = layer.id == CharacterLayerId.head
+          ? _rogueAttackHelmShift(pose, size)
+          : Offset.zero;
+      canvas.drawImageRect(
+        img,
+        src,
+        helmShift == Offset.zero ? layerDst : layerDst.shift(helmShift),
+        p,
+      );
       final dyeMaskPath = layer.dyeMaskAsset;
       final dyeTint = layer.dyeTint;
       if (dyeMaskPath != null && dyeTint != null) {
@@ -250,7 +265,7 @@ abstract final class CharacterVisualPainter {
               dyeImg.width.toDouble(),
               dyeImg.height.toDouble(),
             ),
-            dst,
+            helmShift == Offset.zero ? dst : dst.shift(helmShift),
             dyePaint,
           );
         }
@@ -265,10 +280,17 @@ abstract final class CharacterVisualPainter {
     }
   }
 
-  /// Whole-doll offset that fakes motion the single body clip cannot show.
-  ///
-  /// Walk = step bob, hit = recoil on the idle clip, cast = lift (not a
-  /// lunge), death = a drop past the fade.
+  /// Rogue's attack clip draws the head lower and to the right of idle.
+  /// Helms are idle-aligned, so they follow that shift on attack and cast.
+  static Offset _rogueAttackHelmShift(CharacterVisualPose pose, double size) {
+    if (pose.bodyFamily != BodyFamily.rogue) return Offset.zero;
+    final kind = pose.anim.kind;
+    if (kind != HeroAnimKind.attack && kind != HeroAnimKind.cast) {
+      return Offset.zero;
+    }
+    return Offset(size * 8 / 128, size * 13 / 128);
+  }
+
   /// Where [paintOwnedHero] puts a hand anchor on screen, after the step
   /// and the lean. Unflipped poses only.
   static Offset ownedHandPoint(
@@ -299,6 +321,7 @@ abstract final class CharacterVisualPainter {
     return p;
   }
 
+  /// Walk bobs, hit recoils, cast lifts, death drops. Idle stays put.
   static Offset ownedStepOffset(CharacterVisualPose pose, double size) =>
       clipMotion(
         pose.anim.kind,

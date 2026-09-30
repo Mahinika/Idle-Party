@@ -274,6 +274,13 @@ def write_shoulders(family: str) -> int:
         master = auth / f"{stem}_master.png"
         if master.exists():
             out = _load(master)
+        from paper_doll_seat import seat_on_bodies
+
+        clips = [
+            _load(ROOT / family / f"body_{anim}.png")
+            for anim in ("idle", "walk", "attack")
+        ]
+        out = seat_on_bodies(out, clips)
         out.save(gear / f"{stem}_idle.png")
         n += 1
         for mat in MATERIALS[family]:

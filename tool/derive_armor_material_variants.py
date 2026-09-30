@@ -199,7 +199,22 @@ def derive_slot(
     else:
         donor_im = load_native(family, slot, tier, anim)
     # Keep the donor's silhouette. Paint the material's surface on it.
-    return paint_material(donor_im, material)
+    painted = paint_material(donor_im, material)
+    if slot in ("hands", "shoulder") and anim == "idle":
+        from paper_doll_seat import seat_on_bodies
+
+        clips = [
+            Image.open(ROOT / family / f"body_{name}.png").convert("RGBA")
+            for name in ("idle", "walk", "attack")
+            if (ROOT / family / f"body_{name}.png").exists()
+        ]
+        if clips:
+            painted = (
+                seat_on_bodies(painted, clips)
+                if slot == "shoulder"
+                else seat_on_bodies(painted, clips[:1])
+            )
+    return painted
 
 
 def write_boots_icon(legs: Image.Image, dest: Path) -> None:

@@ -57,6 +57,10 @@ def short(family: str, slot: str) -> Image.Image:
         return keep_rows(piece, y0, y0 + h * 0.5)
     if slot == "cloak":
         return keep_rows(piece, y0, y0 + h * 0.42)
+    # Gloves hang from the fist. The hand is the top of the gauntlet;
+    # the bottom half is the forearm and sits below the hand.
+    if slot == "hands":
+        return keep_rows(piece, y0, y0 + h * 0.45)
     return keep_rows(piece, y0 + h * 0.5, y1)
 
 

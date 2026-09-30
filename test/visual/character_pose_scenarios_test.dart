@@ -980,9 +980,10 @@ void main() {
       CharacterVisualPainter.ownedStepOffset(posed(HeroAnimKind.death, 1), 64).dy,
       greaterThan(4),
     );
+    // The cast lifts the weapon out, past the strike, and off the face.
     expect(
       posed(HeroAnimKind.cast, 0.5).mainHandExtraRotation,
-      lessThan(posed(HeroAnimKind.attack, 0.5).mainHandExtraRotation),
+      greaterThan(posed(HeroAnimKind.attack, 0.5).mainHandExtraRotation),
     );
     final blocking = posed(HeroAnimKind.idle, 0).withAnim(
       const HeroAnimPose(kind: HeroAnimKind.idle, frame: 0, blocking: true),

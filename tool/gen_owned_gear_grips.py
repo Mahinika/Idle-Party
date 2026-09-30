@@ -2,8 +2,9 @@
 """Generate lib/visual/owned_gear_grips.dart from char/gear/*_idle.png.
 
 The grip is the middle of the handle, on an opaque pixel. A pointed weapon
-also gets a rest angle so the tip points up and out of the hand. Shields,
-frills, bows, and fists stay upright.
+gets a rest angle so the tip points up and out. A bow tips the same way so
+its string clears the cheek. A shield is held by its top rim so it hangs
+below the hand. Fists stay upright.
 
 Do not hand-edit the Dart file. Run this script.
 """
@@ -92,7 +93,11 @@ def _grip_px(im: Image.Image, stem: str) -> tuple[float, float] | None:
     _, top, _, bottom = bbox
     if stem.startswith("bow_"):
         point = _bow_stave(im)
-    elif stem.startswith(("shield_", "frill_", "fist_", "thrown_")):
+    elif stem.startswith(("shield_", "frill_")):
+        # Hold the top rim so the shield hangs below the hand, not over the face.
+        band = max(6, int((bottom - top) * 0.22))
+        point = _section_center(im, top, top + band)
+    elif stem.startswith(("fist_", "thrown_")):
         point = _section_center(im, top, bottom)
     else:
         point = _section_center(im, bottom - HANDLE_BAND, bottom) or (
@@ -130,8 +135,15 @@ def _farthest(
 
 def _rest(im: Image.Image, stem: str, gx: float, gy: float, outward: float) -> float:
     """Clockwise radians that aim the tip up-and-out. Flutter rotate is clockwise."""
-    if stem.startswith(("shield_", "frill_", "fist_", "bow_", "thrown_")):
+    if stem.startswith(("shield_", "frill_", "fist_", "thrown_")):
         return 0.0
+    if stem.startswith("bow_"):
+        # A vertical stave crosses the cheek. Tip the upper limb outward.
+        desired = math.atan2(-1.0, 0.55 if outward > 0 else -0.55)
+        tip = _farthest(im, gx, gy)
+        if tip is None:
+            return 0.0
+        return _wrap(desired - math.atan2(tip[1] - gy, tip[0] - gx))
     tip = _farthest(im, gx, gy)
     if tip is None or tip[2] < MIN_REACH * MIN_REACH:
         return 0.0
