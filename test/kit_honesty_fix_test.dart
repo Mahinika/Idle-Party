@@ -1100,7 +1100,7 @@ void main() {
     );
     expect(
       ClassKits.defFor(AbilityId.livingBomb)!.resolvedFireMode,
-      AbilityFireMode.dotTick,
+      AbilityFireMode.cast,
     );
     expect(
       ClassKits.defFor(AbilityId.prayerOfMending)!.resolvedFireMode,

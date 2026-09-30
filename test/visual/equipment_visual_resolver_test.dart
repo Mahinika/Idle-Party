@@ -793,6 +793,37 @@ void main() {
       expect(EquipmentVisualResolver.resolveId(item), 'sword_thunderfury');
     });
 
+    test('an old wand stamped as a staff keeps that picture', () {
+      final item = GameLogic.createEquipment(
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.rare,
+        battleNumber: 5,
+        bias: HeroRole.mage,
+      ).copyWith(
+        weaponType: WeaponType.wand,
+        visualSetId: 'staff_frostfire',
+      );
+      expect(EquipmentVisualResolver.resolveId(item), 'staff_frostfire');
+      expect(
+        OwnedGearAssets.pathFor(
+          visualSetId: EquipmentVisualResolver.resolveId(item),
+          family: BodyFamily.mage,
+          anim: HeroAnimKind.idle,
+        ),
+        'assets/custom/char/gear/staff_frostfire_idle.png',
+      );
+    });
+
+    test('a new wand uses its own picture', () {
+      final item = GameLogic.createEquipment(
+        slot: EquipmentSlot.weapon,
+        rarity: LootRarity.common,
+        battleNumber: 1,
+        bias: HeroRole.mage,
+      ).copyWith(weaponType: WeaponType.wand, clearVisualSetId: true);
+      expect(EquipmentVisualResolver.resolveId(item), 'wand_t0');
+    });
+
     test('mismatched stem is coerced to weapon art', () {
       final item = GameLogic.createEquipment(
         slot: EquipmentSlot.weapon,
