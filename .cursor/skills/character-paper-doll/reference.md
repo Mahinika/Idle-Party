@@ -41,8 +41,9 @@ Read when baking layers, a facit gate fails, or tuning authored overrides.
   carry them; helm = face window. Rarity wash only on t0.
 - Materials take the donor family's piece by landmarks (chin/feet, helm by
   face), never stretched to the body box.
-- Grips must sit on **opaque** pixels (handle centroid; bows mid-shape).
-  Never hand-edit `owned_gear_grips.dart` — regenerate it
+- Grips sit on **opaque** pixels (middle of the handle; a bow on its stave).
+  A blade's rest angle points up and out. Never hand-edit
+  `owned_gear_grips.dart` — regenerate it
 - Dungeon precache uses `dollOverlayPaths`, not `allAssetPaths` (icons are
   GEAR/BAG only)
 - Leftover walk/attack under `gear/_authored/` may exist as art archive — not

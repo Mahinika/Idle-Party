@@ -291,9 +291,9 @@ void main() {
       profile: BodyAnchorProfile.owned,
       family: BodyFamily.mage,
     );
-    expect(warrior.y, closeTo(0.088, 0.001));
-    expect(mage.y, closeTo(0.146, 0.001));
-    // Gloves are the idle overlay, so walk keeps the same palm.
+    expect(warrior.y, closeTo(0.035, 0.001));
+    expect(mage.y, closeTo(0.024, 0.001));
+    // The skin hand is one point. Walk keeps it; gloves do not slide.
     final mageWalk = AnchorTables.lookup(
       anim: HeroAnimKind.walk,
       frame: 1,
@@ -697,8 +697,8 @@ void main() {
       owned: true,
     );
     expect(pose.bodyFamily, BodyFamily.warrior);
-    expect(pose.anchor(AnchorId.mainHand).y, closeTo(0.088, 0.001));
-    expect(pose.anchor(AnchorId.mainHand).x, closeTo(0.424, 0.001));
+    expect(pose.anchor(AnchorId.mainHand).y, closeTo(0.035, 0.001));
+    expect(pose.anchor(AnchorId.mainHand).x, closeTo(0.238, 0.001));
   });
 
   test('owned cape paints behind the body', () {

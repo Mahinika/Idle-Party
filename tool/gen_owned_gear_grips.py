@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """Generate lib/visual/owned_gear_grips.dart from char/gear/*_idle.png.
 
-Weapons: grip = centroid of the handle pixels (bottom of the art).
-Bows, shields and frills: grip = centroid of all pixels (held mid-shape).
+The grip is the middle of the handle, on an opaque pixel. A pointed weapon
+also gets a rest angle so the tip points up and out of the hand. Shields,
+frills, bows, and fists stay upright.
 
-Both land on **opaque** pixels. A bbox center is empty air on diagonal art
-(sword, bow, staff), which used to hang the weapon beside the hand.
+Do not hand-edit the Dart file. Run this script.
 """
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from PIL import Image
@@ -20,34 +21,39 @@ ROOT = REPO
 GEAR = CHAR / "gear"
 OUT = ROOT / "lib" / "visual" / "owned_gear_grips.dart"
 ALPHA = 40
-
-# Handle band: bottom slice of the art the hand can close around.
 HANDLE_BAND = 14
+# Shorter than this (thrown star, fist) has no blade to aim.
+MIN_REACH = 22
 
 
-def _centroid(
+def _section_center(
     im: Image.Image, y0: int, y1: int
 ) -> tuple[float, float] | None:
+    """Middle of the opaque span on the middle row of the band.
+
+    A mass centroid sits on the heavy side of a thin shaft (the left edge
+    of a staff). The span middle is the handle the hand closes around.
+    """
     px = im.load()
-    sx = sy = n = 0
+    mids: list[tuple[float, int]] = []
     for y in range(max(0, y0), min(im.height, y1)):
-        for x in range(im.width):
-            if px[x, y][3] >= ALPHA:
-                sx += x
-                sy += y
-                n += 1
-    if n == 0:
+        xs = [x for x in range(im.width) if px[x, y][3] >= ALPHA]
+        if xs:
+            mids.append(((xs[0] + xs[-1]) / 2, y))
+    if not mids:
         return None
-    return (sx / n, sy / n)
+    return mids[len(mids) // 2]
 
 
 def _snap_to_opaque(
     im: Image.Image, x: float, y: float
 ) -> tuple[float, float]:
-    """Nearest opaque pixel — a centroid can still fall in a hole."""
+    """Nearest opaque pixel — a span middle can still fall in a hole."""
     px = im.load()
-    if px[int(x), int(y)][3] >= ALPHA:
-        return (x, y)
+    xi = min(max(int(round(x)), 0), im.width - 1)
+    yi = min(max(int(round(y)), 0), im.height - 1)
+    if px[xi, yi][3] >= ALPHA:
+        return (float(xi), float(yi))
     best = (x, y)
     best_d = None
     for yy in range(im.height):
@@ -61,36 +67,90 @@ def _snap_to_opaque(
     return best
 
 
-def grip_uv(
-    im: Image.Image, *, off_hand: bool, mid_grip: bool = False
-) -> tuple[float, float] | None:
+def _bow_stave(im: Image.Image) -> tuple[float, float] | None:
+    """The straight limb, not the string. The fullest column is the stave."""
+    px = im.load()
+    bbox = im.getbbox()
+    if bbox is None:
+        return None
+    counts = [0] * im.width
+    for y in range(bbox[1], bbox[3]):
+        for x in range(im.width):
+            if px[x, y][3] >= ALPHA:
+                counts[x] += 1
+    if max(counts) == 0:
+        return None
+    x = max(range(im.width), key=lambda i: counts[i])
+    ys = [y for y in range(im.height) if px[x, y][3] >= ALPHA]
+    return (float(x), float(ys[len(ys) // 2]))
+
+
+def _grip_px(im: Image.Image, stem: str) -> tuple[float, float] | None:
     bbox = im.getbbox()
     if bbox is None:
         return None
     _, top, _, bottom = bbox
-    if mid_grip:
-        # Mass centroid drifts into a heavy bow head — use the shape's
-        # mid-height row band instead so the hand sits on the middle.
-        mid = (top + bottom) // 2
-        point = _centroid(im, mid - 4, mid + 5) or _centroid(im, top, bottom)
-    elif off_hand:
-        point = _centroid(im, top, bottom)
+    if stem.startswith("bow_"):
+        point = _bow_stave(im)
+    elif stem.startswith(("shield_", "frill_", "fist_", "thrown_")):
+        point = _section_center(im, top, bottom)
     else:
-        # Handle first; fall back to the whole shape for flat art.
-        point = _centroid(im, bottom - HANDLE_BAND, bottom) or _centroid(
-            im, top, bottom
+        point = _section_center(im, bottom - HANDLE_BAND, bottom) or (
+            _section_center(im, top, bottom)
         )
     if point is None:
         return None
-    x, y = _snap_to_opaque(im, point[0], point[1])
-    return (x / 128, y / 128)
+    return _snap_to_opaque(im, point[0], point[1])
+
+
+def _wrap(angle: float) -> float:
+    while angle > math.pi:
+        angle -= 2 * math.pi
+    while angle < -math.pi:
+        angle += 2 * math.pi
+    return angle
+
+
+def _farthest(
+    im: Image.Image, gx: float, gy: float
+) -> tuple[float, float, float] | None:
+    px = im.load()
+    best = None
+    best_d = -1.0
+    for y in range(im.height):
+        for x in range(im.width):
+            if px[x, y][3] < ALPHA:
+                continue
+            d = (x - gx) ** 2 + (y - gy) ** 2
+            if d > best_d:
+                best_d = d
+                best = (float(x), float(y), d)
+    return best
+
+
+def _rest(im: Image.Image, stem: str, gx: float, gy: float, outward: float) -> float:
+    """Clockwise radians that aim the tip up-and-out. Flutter rotate is clockwise."""
+    if stem.startswith(("shield_", "frill_", "fist_", "bow_", "thrown_")):
+        return 0.0
+    tip = _farthest(im, gx, gy)
+    if tip is None or tip[2] < MIN_REACH * MIN_REACH:
+        return 0.0
+    current = math.atan2(tip[1] - gy, tip[0] - gx)
+    if stem.startswith(("gun_", "crossbow_")):
+        desired = math.atan2(-0.08, 1.0 if outward > 0 else -1.0)
+    elif stem.startswith(("staff_", "polearm_")):
+        desired = math.atan2(-1.0, 0.12 if outward > 0 else -0.12)
+    else:
+        desired = math.atan2(-1.0, outward)
+    return _wrap(desired - current)
 
 
 def main() -> None:
     lines: list[str] = [
         "// GENERATED by tool/gen_owned_gear_grips.py — do not hand-edit.",
-        "// Weapons: handle-pixel centroid. Shields/frills: shape centroid.",
-        "// Always an opaque pixel, so the hand never grabs empty air.",
+        "// Grip: middle of the handle, on an opaque pixel.",
+        "// Rest: clockwise radians so a blade points up and out.",
+        "// restOff aims the same art up and out from the left hand.",
         "",
         "import 'dart:ui' show Offset;",
         "",
@@ -98,26 +158,38 @@ def main() -> None:
         "abstract final class OwnedGearGrips {",
         "  static const Map<String, Offset> byVisualSetId = {",
     ]
+    rests: list[str] = []
+    rests_off: list[str] = []
 
     count = 0
     for path in sorted(GEAR.glob("*_idle.png")):
         stem = path.name.removesuffix("_idle.png")
         im = Image.open(path).convert("RGBA")
-        off = stem.startswith(("shield_", "frill_"))
-        # A bow is held at its middle, not by the lower limb.
-        # Bows are held mid-limb. A fist closes around its middle.
-        # Gun and crossbow use the stock, which is the bottom band.
-        mid = stem.startswith("bow_") or stem.startswith("fist_")
-        grip = grip_uv(im, off_hand=off, mid_grip=mid)
+        grip = _grip_px(im, stem)
         if grip is None:
             continue
         gx, gy = grip
-        lines.append(f"    '{stem}': Offset({gx:.4f}, {gy:.4f}),")
+        rest = _rest(im, stem, gx, gy, 0.40)
+        rest_off = _rest(im, stem, gx, gy, -0.40)
+        lines.append(f"    '{stem}': Offset({gx / 128:.4f}, {gy / 128:.4f}),")
+        rests.append(f"    '{stem}': {rest:.4f},")
+        rests_off.append(f"    '{stem}': {rest_off:.4f},")
         count += 1
-        print(f"{stem:28s} grip=({gx:.3f},{gy:.3f})")
+        print(
+            f"{stem:28s} grip=({gx / 128:.3f},{gy / 128:.3f}) "
+            f"rest={rest:+.2f} off={rest_off:+.2f}"
+        )
 
     lines.extend(
         [
+            "  };",
+            "",
+            "  static const Map<String, double> restByVisualSetId = {",
+            *rests,
+            "  };",
+            "",
+            "  static const Map<String, double> restOffByVisualSetId = {",
+            *rests_off,
             "  };",
             "",
             "  static const Offset mainHandFallback = Offset(0.75, 0.82);",
@@ -148,6 +220,17 @@ def main() -> None:
             "      return offHand ? offHandFallback : mainHandFallback;",
             "    }",
             "    return forVisualSetId(id, offHand: offHand);",
+            "  }",
+            "",
+            "  /// Idle twist added on top of the hand anchor's swing.",
+            "  static double restForAsset(",
+            "    String assetPath, {",
+            "    required bool offHand,",
+            "  }) {",
+            "    final id = visualSetIdFromAsset(assetPath);",
+            "    if (id == null) return 0;",
+            "    final map = offHand ? restOffByVisualSetId : restByVisualSetId;",
+            "    return map[id] ?? 0;",
             "  }",
             "}",
             "",

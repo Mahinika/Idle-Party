@@ -207,10 +207,12 @@ abstract final class CharacterVisualPainter {
         }
         final ax = center.dx + ap.x;
         final ay = center.dy + ap.y;
+        final offHand = layer.anchorId == AnchorId.offHand;
         final grip = OwnedGearGrips.forAsset(
           asset,
-          offHand: layer.anchorId == AnchorId.offHand,
+          offHand: offHand,
         );
+        rot += OwnedGearGrips.restForAsset(asset, offHand: offHand);
         final gripOnFull = Offset(
           dst.left + grip.dx * size,
           dst.top + grip.dy * size,

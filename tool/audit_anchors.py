@@ -47,24 +47,27 @@ def shipped_fists() -> dict[str, dict[str, tuple[float, float]]]:
 
 
 def glove_palm(fam: str, side: str) -> tuple[float, float] | None:
-    """Outer palm of the t2 glove. The weapon pivot, center origin."""
-    path = CHAR / fam / "gear" / "hands_t2_idle.png"
-    if not path.exists():
-        path = CHAR / fam / "gear" / "hands_t0_idle.png"
-    im = Image.open(path).convert("RGBA")
+    """Skin hand on the idle body. The weapon pivot, center origin.
+
+    Plate gloves stick out past this point. The pivot stays on the sleeve
+    so a bare hand and a gauntlet share one grip.
+    """
+    im = Image.open(CHAR / fam / "body_idle.png").convert("RGBA")
     px = im.load()
+    pts = [
+        (x, y)
+        for y in range(45, 82)
+        for x in range(128)
+        if px[x, y][3] >= 40
+    ]
+    if not pts:
+        return None
     if side == "R":
-        pts = [(x, y) for y in range(128) for x in range(80, 128) if px[x, y][3] >= 40]
-        if not pts:
-            return None
         extreme = max(p[0] for p in pts)
-        band = [p for p in pts if p[0] >= extreme - 14]
+        band = [p for p in pts if p[0] >= extreme - 12]
     else:
-        pts = [(x, y) for y in range(128) for x in range(0, 48) if px[x, y][3] >= 40]
-        if not pts:
-            return None
         extreme = min(p[0] for p in pts)
-        band = [p for p in pts if p[0] <= extreme + 14]
+        band = [p for p in pts if p[0] <= extreme + 12]
     mx = sum(p[0] for p in band) / len(band)
     my = sum(p[1] for p in band) / len(band)
     return (mx / 128.0 - 0.5, my / 128.0 - 0.5)
