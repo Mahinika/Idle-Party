@@ -88,9 +88,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
             ),
             MenuChrome.chip(label: 'Camp tracks', selected: campOpen),
             Text(
-              GameLogic.partyMeanLevel(state) < 12
-                  ? '${state.essence}e · survive Ascend · reset at Lv12+'
-                  : '${state.essence}e · survive Ascend',
+              '${state.essence}e · survive Ascend',
               style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
             ),
           ],
@@ -102,7 +100,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
         const SizedBox(height: 8),
         if (campOpen)
           for (final track in _tracks)
-            _campTrackCard(context, state, track, effectiveBuy)
+            _campTrackCard(state, track, effectiveBuy)
         else
           Text(
             'War Altar, Life Well, Aegis, and Lore Font appear here once Essence unlocks.',
@@ -131,23 +129,15 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     );
   }
 
-  Widget _campTrackCard(
-    BuildContext context,
-    GameState state,
-    String track,
-    int buyLevels,
-  ) {
+  Widget _campTrackCard(GameState state, String track, int buyLevels) {
     final level = _levelOf(state, track);
     final prestige = _prestigeOf(state, track);
     final cost = GameLogic.sanctuaryCost(level);
-    final keepShort = GameLogic.sanctuaryPrestigeKeepShort(track);
     final currentBonus = GameLogic.sanctuaryBonusLabel(
       track,
       level,
       prestige: prestige,
     );
-    final canPrestige = level >= 12;
-    final prestigeGain = GameLogic.sanctuaryPrestigeEssenceGain(level);
     final maxForTrack = GameLogic.sanctuaryBulkAffordableLevels(state, track);
     // clamp(1, 0) throws when this track costs more than the wallet.
     final buyN = maxForTrack < 1 ? 1 : buyLevels.clamp(1, maxForTrack);
@@ -203,52 +193,8 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       subtitle: 'Lv$level · $currentBonus'
           '${prestige > 0 ? ' · P$prestige' : ''}',
       detail: detail,
-      selected: canPrestige,
       dense: true,
       trailing: trailing,
-      below: canPrestige
-          ? GameButton(
-              label: 'Reset · keep $keepShort · +${prestigeGain}e',
-              style: GameButtonStyle.grey,
-              dense: true,
-              onPressed: () async {
-                final ok = await showDialog<bool>(
-                  context: context,
-                  barrierColor: MenuChrome.scrim,
-                  builder: (ctx) => MenuChrome.dialog(
-                    title: 'Reset this track?',
-                    content: Text(
-                      'Resets this track to Lv1. Keeps $keepShort forever '
-                      'and refunds ${prestigeGain}e.\n\n'
-                      'Not Ascend — only this track.',
-                      style: GameTheme.body(
-                        size: 15,
-                        color: GameTheme.parchment,
-                      ),
-                    ),
-                    actions: [
-                      GameButton(
-                        label: 'CANCEL',
-                        style: GameButtonStyle.grey,
-                        expanded: false,
-                        onPressed: () => Navigator.pop(ctx, false),
-                      ),
-                      GameButton(
-                        label: 'RESET',
-                        style: GameButtonStyle.red,
-                        expanded: false,
-                        onPressed: () => Navigator.pop(ctx, true),
-                      ),
-                    ],
-                  ),
-                );
-                if (ok == true) {
-                  director.prestigeSanctuaryTrack(track);
-                  setState(() {});
-                }
-              },
-            )
-          : null,
     );
   }
 }

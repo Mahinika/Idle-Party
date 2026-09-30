@@ -2549,20 +2549,6 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  void prestigeSanctuaryTrack(String track) {
-    final beforeEssence = _state.essence;
-    _applyUpgrade(GameLogic.prestigeSanctuaryTrack(_state, track));
-    if (_state.essence > beforeEssence) {
-      final name = GameLogic.sanctuaryNames[track] ?? track;
-      GameAudio.ui();
-      showToast(
-        '$name prestiged · keep ${GameLogic.sanctuaryPrestigeKeepShort(track)} · '
-        '+${_state.essence - beforeEssence}e',
-        life: 2.8,
-      );
-    }
-  }
-
   void upgradeGodHandCd() {
     final before = _state.metaDepth.godHandCdLevel;
     _applyUpgrade(GameLogic.upgradeGodHandCd(_state));

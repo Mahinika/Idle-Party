@@ -2668,11 +2668,6 @@ void main() {
     final label = GameLogic.sanctuaryBonusLabel('gold', 40, prestige: 2);
     expect(label, contains('+${soft + 6}%'));
     expect(label, contains('P2'));
-    expect(GameLogic.sanctuaryPrestigeKeepShort('gold'), '+3% gold');
-    expect(GameLogic.sanctuaryPrestigeKeepShort('power'), '+1 ATK');
-    expect(GameLogic.sanctuaryPrestigeKeepShort('vitality'), '+12 STA');
-    expect(GameLogic.sanctuaryPrestigeKeepShort('xp'), '+2% XP');
-    expect(GameLogic.sanctuaryPrestigeEssenceGain(12), 37);
     expect(GameLogic.sanctuaryTrackBonusAt('power', 1), 1);
     expect(
       GameLogic.sanctuaryTrackBonusAt('vitality', 1),
@@ -3399,15 +3394,12 @@ void main() {
     expect(state.sanctuaryGoldLevel, 13);
     expect(state.sanctuaryGoldBonusPercent, greaterThanOrEqualTo(beforeBonus));
 
-    // Prestige remains optional compress from Lv12+.
-    final prestiged = GameLogic.prestigeSanctuaryTrack(state, 'gold');
-    expect(prestiged.sanctuaryGoldLevel, 0);
-    expect(prestiged.metaDepth.sanctuaryGoldPrestige, 1);
-    expect(
-      prestiged.essence,
-      state.essence + GameLogic.sanctuaryPrestigeEssenceGain(13),
+    // Old saves can still carry a prestige stack. It adds, and the level stays.
+    final kept = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(sanctuaryGoldPrestige: 1),
     );
-    expect(prestiged.sanctuaryGoldBonusPercent, 3);
+    expect(kept.sanctuaryGoldLevel, 13);
+    expect(kept.sanctuaryGoldBonusPercent, state.sanctuaryGoldBonusPercent + 3);
   });
 
   test('infinity gauntlet unlocks at party max level and escalates', () {

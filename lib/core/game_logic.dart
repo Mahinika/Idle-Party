@@ -639,10 +639,7 @@ class GameLogic {
   /// print unbounded CAMP/KEEP power. Boss pays more than a trash floor.
   static int pushClearEssence({required bool boss}) => boss ? 2 : 1;
 
-  /// Essence paid back when prestigging a track at [level] (Lv12+).
-  static int sanctuaryPrestigeEssenceGain(int level) => 25 + level;
-
-  /// Forever bonus added per prestige stack (does not soft-cap).
+  /// Forever bonus added per prestige stack already on a save (does not soft-cap).
   static int sanctuaryPrestigeKeepAmount(String track) => switch (track) {
     'gold' => 3,
     'xp' => 2,
@@ -650,16 +647,6 @@ class GameLogic {
     'vitality' => sanctuaryVitalityPerLevel,
     'defense' => sanctuaryDefensePerLevel,
     _ => 0,
-  };
-
-  /// Short keep line for CAMP buttons (English).
-  static String sanctuaryPrestigeKeepShort(String track) => switch (track) {
-    'gold' => '+3% gold',
-    'power' => '+$sanctuaryPowerPerLevel ATK',
-    'vitality' => '+$sanctuaryVitalityPerLevel STA',
-    'defense' => '+$sanctuaryDefensePerLevel DEF',
-    'xp' => '+2% XP',
-    _ => '',
   };
 
   /// Softcapped track bonus only (no prestige). Used for "next level" labels.
@@ -816,71 +803,6 @@ class GameLogic {
       if (identical(next, before)) break;
     }
     return next;
-  }
-
-  /// Optional compress: reset track to 0 for essence + lasting prestige bonus.
-  /// Available from level 12+; tracks may also keep leveling infinitely.
-  static GameState prestigeSanctuaryTrack(GameState state, String track) {
-    final level = switch (track) {
-      'gold' => state.sanctuaryGoldLevel,
-      'power' => state.sanctuaryPowerLevel,
-      'vitality' => state.sanctuaryVitalityLevel,
-      'defense' => state.sanctuaryDefenseLevel,
-      'xp' => state.metaDepth.sanctuaryXpLevel,
-      _ => -1,
-    };
-    if (level < 12) return state;
-    final essenceGain = sanctuaryPrestigeEssenceGain(level);
-    final md = state.metaDepth;
-    final nextMd = switch (track) {
-      'gold' => md.copyWith(
-        sanctuaryGoldPrestige: md.sanctuaryGoldPrestige + 1,
-      ),
-      'power' => md.copyWith(
-        sanctuaryPowerPrestige: md.sanctuaryPowerPrestige + 1,
-      ),
-      'vitality' => md.copyWith(
-        sanctuaryVitalityPrestige: md.sanctuaryVitalityPrestige + 1,
-      ),
-      'defense' => md.copyWith(
-        sanctuaryDefensePrestige: md.sanctuaryDefensePrestige + 1,
-      ),
-      'xp' => md.copyWith(
-        sanctuaryXpLevel: 0,
-        sanctuaryXpPrestige: md.sanctuaryXpPrestige + 1,
-      ),
-      _ => md,
-    };
-    final next = switch (track) {
-      'gold' => state.copyWith(
-        sanctuaryGoldLevel: 0,
-        essence: state.essence + essenceGain,
-        metaDepth: nextMd,
-      ),
-      'power' => state.copyWith(
-        sanctuaryPowerLevel: 0,
-        essence: state.essence + essenceGain,
-        metaDepth: nextMd,
-      ),
-      'vitality' => state.copyWith(
-        sanctuaryVitalityLevel: 0,
-        essence: state.essence + essenceGain,
-        metaDepth: nextMd,
-      ),
-      'defense' => state.copyWith(
-        sanctuaryDefenseLevel: 0,
-        essence: state.essence + essenceGain,
-        metaDepth: nextMd,
-      ),
-      'xp' => state.copyWith(
-        essence: state.essence + essenceGain,
-        metaDepth: nextMd,
-      ),
-      _ => state,
-    };
-    return MetaSystems.evaluateAchievements(
-      next.copyWith(lastUpdated: DateTime.now()),
-    );
   }
 
   static GameState setActiveTitle(GameState state, String title) {

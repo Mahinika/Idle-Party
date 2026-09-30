@@ -594,7 +594,7 @@ abstract final class GameGuides {
           '• Ascend Blessing — stacks each Ascend (+ATK/DEF/STA/gold forever). '
           'Readout on ESSENCE → BLESSING. Not Star Nodes.\n'
           '• ESSENCE CAMP + relics + pets — forever power bought with essence. '
-          'CAMP / RELICS / PETS tabs; sanctuary reset-for-essence is optional.\n\n'
+          'CAMP / RELICS / PETS tabs.\n\n'
           'Gear, Apex, AL flats, and Star Nodes add sheet power on top. '
           'After Ascend, rebuild GOLD → FORGE first — Blessing and essence shelves stay.',
     ),
@@ -656,7 +656,7 @@ abstract final class GameGuides {
       body:
           'ESSENCE tab. Four places: CAMP, BLESSING, RELICS, PETS.\n\n'
           '• CAMP: Gold Find, War Altar, Life Well, Aegis, Lore Font — spend essence '
-          'on lasting rates/power. Optional reset from Lv12 keeps a small forever bonus.\n'
+          'on lasting rates/power.\n'
           '• BLESSING: God Hand damage/CD/style, Ascend Blessing readout, Star Nodes, lasting QoL buys '
           '(AL-gated), constellation at AL20, optional REBORN. '
           'Not the bottom-tab SHOP (real-money convenience).\n'
