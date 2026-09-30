@@ -127,8 +127,19 @@ covers them.
 
 Do **not** invent armor or mass weapon variants with `ImageDraw`.
 `generate_item_model_variants.py` refuses to copy masters into live gear.
-Named weapons keep the painted t0 silhouette and only shift hue
-(`tool/derive_weapon_hue_variants.py`). A flat fill is not a finished weapon.
+Each named weapon is its own silhouette (a hook in
+`tool/author_gear_standard.py`), not a hue shift.
+`tool/derive_weapon_hue_variants.py` always refuses to write. A flat fill
+is not a finished weapon.
+
+## Gear art standard
+
+Pixel size, ink, light, ramps, and proportions live in `tool/gear_style.py`.
+The rule is `.cursor/rules/gear-art-standard.mdc`. Cloth, leather, mail, and
+plate keep different surfaces. Two active models must not share one icon and
+one doll graphic. Shared hand forms are sword, staff, dagger, mace, axe, bow,
+shield, frill, plus wand, gun, crossbow, polearm, fist, and thrown (`*_t0`).
+`shoulder_t2` is a larger pauldron than `shoulder_t0`, not the same picture.
 
 Slot / BAG icons: `*_icon.png` (bbox crop of the same idle overlay), built
 by `tool/make_gear_slot_icons.py` at the end of `build_owned_gear_layers.py`.
@@ -287,6 +298,10 @@ Full workflow: `.cursor/skills/character-paper-doll/SKILL.md`.
 11. `tool/paper_doll_lock.json` pins a hash per shipped PNG — any generator run
    that reshapes art fails here. `build_owned_gear_layers.py --publish`
    relocks after a green publish; commit the lock.
+12. Style, material surface, unique silhouettes, phone readability, icon
+    parity, and hand proportions (`tool/facit/`). Thresholds live in
+    `tool/gear_style.py`. `tool/facit_known_debt.json` stays empty unless a
+    full check still lists a real miss; never add rows by hand.
 
 ## Drawing a new style
 

@@ -86,6 +86,10 @@ def icon_stems(family: str) -> list[str]:
         for mat in MATERIALS[family]:
             out.append(f"{SHOULDER_SLOT}_{mat}_{cut}")
     out.extend(NAMED_HELMS)
+    for mark in CLASS_MARKS.get(family, ()):
+        for slot in CLASS_SLOTS:
+            for cut in CUTS:
+                out.append(f"{slot}_{mark}_{cut}")
     for tier in TIERS:
         out.append(f"boots_{tier}")
         for mat in MATERIALS[family]:
@@ -100,6 +104,7 @@ def dye_mask_files(family: str) -> set[str]:
     for look in looks:
         for cut in CUTS:
             files.add(f"chest_{look}{cut}_dye.png")
+            files.add(f"chest_{look}{cut}_dye_icon.png")
     return files
 
 

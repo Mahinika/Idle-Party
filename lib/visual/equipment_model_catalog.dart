@@ -22,6 +22,12 @@ abstract final class EquipmentModelCatalog {
     'bow',
     'shield',
     'frill',
+    'wand',
+    'gun',
+    'crossbow',
+    'polearm',
+    'fist',
+    'thrown',
   ];
 
   /// Family armor under `assets/custom/char/<family>/gear/`.
@@ -120,6 +126,12 @@ abstract final class EquipmentModelCatalog {
       'frill_soulcodex',
       'frill_embercodex',
     ],
+    'wand': ['wand_t0'],
+    'gun': ['gun_t0'],
+    'crossbow': ['crossbow_t0'],
+    'polearm': ['polearm_t0'],
+    'fist': ['fist_t0'],
+    'thrown': ['thrown_t0'],
     'helm': [
       'helm_t0',
       'helm_t2',
@@ -143,16 +155,31 @@ abstract final class EquipmentModelCatalog {
 
   /// Art stem for a weapon type (loot + paint must agree).
   ///
-  /// Distinct stems only when we ship matching overlays. Wand→staff and
-  /// gun/crossbow→bow share silhouettes but use authored variants for spice.
+  /// Each weapon type has its own picture. [legacyArtStem] is the old
+  /// borrowed picture, kept so a save from before the split still looks
+  /// the same.
   static String? weaponArtStem(WeaponType? wt) => switch (wt) {
-    WeaponType.staff || WeaponType.wand => 'staff',
-    WeaponType.dagger || WeaponType.fist || WeaponType.thrown => 'dagger',
+    WeaponType.staff => 'staff',
+    WeaponType.wand => 'wand',
+    WeaponType.dagger => 'dagger',
+    WeaponType.fist => 'fist',
+    WeaponType.thrown => 'thrown',
     WeaponType.mace => 'mace',
-    WeaponType.axe || WeaponType.polearm => 'axe',
-    WeaponType.bow || WeaponType.crossbow || WeaponType.gun => 'bow',
+    WeaponType.axe => 'axe',
+    WeaponType.polearm => 'polearm',
+    WeaponType.bow => 'bow',
+    WeaponType.crossbow => 'crossbow',
+    WeaponType.gun => 'gun',
     WeaponType.sword => 'sword',
     null => null,
+  };
+
+  static String? legacyArtStem(WeaponType? wt) => switch (wt) {
+    WeaponType.wand => 'staff',
+    WeaponType.gun || WeaponType.crossbow => 'bow',
+    WeaponType.polearm => 'axe',
+    WeaponType.fist || WeaponType.thrown => 'dagger',
+    _ => null,
   };
 
   static String baseToken(String visualSetId) {

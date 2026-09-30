@@ -74,10 +74,13 @@ BAG icons for short/broad come from the same idle overlay (not a t0 loan).
 **Snap-ons:** named helms (`helm_ironcrown` / `visored` / `wingcrest`) and
 shoulder overlays use the same display-id path as named weapons. Cloth dye is
 a chest sash/tabard mask painted at runtime (`*_dye.png`), not a PNG per drop.
-6. Hand art moved? `py tool/gen_owned_gear_grips.py`, then
+6. Gear pictures (a new weapon, helm, or material) follow skill `gear-art`:
+   a hook, then `style_lock` from `tool/gear_style.py`. No hue-only copy,
+   no flat fill, no weapon outside the proportion table.
+7. Hand art moved? `py tool/gen_owned_gear_grips.py`, then
    `py tool/audit_anchors.py` (findings must be empty).
-7. Only then full `flutter run` on A56 (PNG bytes need a rebuild, not hot reload).
-8. Dart tests prove paths/layers; **facit gate proves looks**.
+8. Only then full `flutter run` on A56 (PNG bytes need a rebuild, not hot reload).
+9. Dart tests prove paths/layers; **facit gate proves looks**.
 
 For Must rules, authored overrides, and A56 checks, read
 **[reference.md](reference.md)** when baking layers or a facit fails.

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import 'body_family.dart';
 import 'character_layer.dart';
@@ -54,6 +55,9 @@ abstract final class EquipmentVisualResolver {
       final actualStem = EquipmentModelCatalog.baseToken(vis);
       final expectedStem = EquipmentModelCatalog.baseToken(derived);
       if (actualStem == expectedStem) return vis;
+      // Old saves stamped the borrowed picture (a wand that still says staff).
+      final legacy = EquipmentModelCatalog.legacyArtStem(item.weaponType);
+      if (legacy != null && actualStem == legacy) return vis;
       // A mismatched named hand model cannot be trusted; every shared family
       // has a guaranteed t0 asset. Armor can keep its derived t0/t2 silhouette.
       if (EquipmentModelCatalog.sharedBases.contains(expectedStem)) {
@@ -176,6 +180,7 @@ abstract final class EquipmentVisualResolver {
   static String? ownedIconPathFor(
     EquipmentItem item, {
     BodyFamily? family,
+    HeroClassId? heroClass,
   }) {
     final fam = family ?? BodyFamilyCatalog.familyForAffinity(item.affinity);
     if (item.slot == EquipmentSlot.boots) {
@@ -196,6 +201,7 @@ abstract final class EquipmentVisualResolver {
       family: fam,
       anim: HeroAnimKind.idle,
       armorType: item.armorType,
+      heroClass: heroClass,
     );
     if (idle == null) return null;
     return idle.replaceFirst('_idle.png', '_icon.png');
@@ -444,6 +450,60 @@ abstract final class EquipmentVisualResolver {
             useAnchor: true,
             anchor: 'mainHand',
             iconKey: 'axe',
+          ),
+          'wand_t$t': EquipmentVisualDef(
+            id: 'wand_t$t',
+            layer: CharacterLayerId.mainHand,
+            atlasCol: 42,
+            atlasRow: 0,
+            useAnchor: true,
+            anchor: 'mainHand',
+            iconKey: 'staff',
+          ),
+          'gun_t$t': EquipmentVisualDef(
+            id: 'gun_t$t',
+            layer: CharacterLayerId.mainHand,
+            atlasCol: 54,
+            atlasRow: 0,
+            useAnchor: true,
+            anchor: 'mainHand',
+            iconKey: 'bow',
+          ),
+          'crossbow_t$t': EquipmentVisualDef(
+            id: 'crossbow_t$t',
+            layer: CharacterLayerId.mainHand,
+            atlasCol: 54,
+            atlasRow: 4,
+            useAnchor: true,
+            anchor: 'mainHand',
+            iconKey: 'bow',
+          ),
+          'polearm_t$t': EquipmentVisualDef(
+            id: 'polearm_t$t',
+            layer: CharacterLayerId.mainHand,
+            atlasCol: 48,
+            atlasRow: 4,
+            useAnchor: true,
+            anchor: 'mainHand',
+            iconKey: 'axe',
+          ),
+          'fist_t$t': EquipmentVisualDef(
+            id: 'fist_t$t',
+            layer: CharacterLayerId.mainHand,
+            atlasCol: 48,
+            atlasRow: 0,
+            useAnchor: true,
+            anchor: 'mainHand',
+            iconKey: 'dagger',
+          ),
+          'thrown_t$t': EquipmentVisualDef(
+            id: 'thrown_t$t',
+            layer: CharacterLayerId.mainHand,
+            atlasCol: 48,
+            atlasRow: 0,
+            useAnchor: true,
+            anchor: 'mainHand',
+            iconKey: 'dagger',
           ),
           'bow_t$t': EquipmentVisualDef(
             id: 'bow_t$t',

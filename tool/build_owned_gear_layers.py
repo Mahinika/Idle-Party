@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -1117,6 +1118,218 @@ def write_armor_preview(family: str, frames: dict) -> None:
         kit.save(TOOL / "preview_doll_warrior_full.png")
 
 
+def copy_authored_shared(shared: Path) -> int:
+    """Named and new hand models live in _authored. Copy every idle onto the stage."""
+    auth = shared / "_authored"
+    if not auth.is_dir():
+        return 0
+    n = 0
+    for src in sorted(auth.glob("*_idle.png")):
+        shutil.copyfile(src, shared / src.name)
+        n += 1
+    return n
+
+
+def _lock_material_pair(name: str, base: Image.Image, late: Image.Image) -> bool:
+    """Keep the late cut's material readable without drifting off the plain cut.
+
+    Seam rows and the mail checker are stamped on both, then the left side
+    is lifted so the light still comes from the upper left.
+    """
+    from gear_style import MATERIAL_RAMPS, _lift_left
+
+    if "_leather_" in name:
+        material = "leather"
+    elif "_mail_" in name:
+        material = "mail"
+    else:
+        return False
+    ramp = MATERIAL_RAMPS[material]
+    if material == "mail":
+        bp, lp = base.load(), late.load()
+        for px in (bp, lp):
+            for y in range(128):
+                for x in range(128):
+                    if px[x, y][3] < 40:
+                        continue
+                    color = ramp[3] if (x + y) % 2 == 0 else ramp[1]
+                    px[x, y] = (*color, px[x, y][3])
+        base.paste(_lift_left(base, material))
+        late.paste(_lift_left(late, material))
+        return True
+    # Full rows, lighter than the seam, so a small pauldron still counts.
+    # Both cuts share the plain cut's rows so the colors still match.
+    bb = base.getbbox() or late.getbbox() or (0, 0, 128, 128)
+    y0, y1 = bb[1], bb[3]
+    seam = 4 if (y1 - y0) < 40 else 7
+    for im in (base, late):
+        box = im.getbbox() or bb
+        mid = (box[0] + box[2]) // 2
+        px = im.load()
+        for y in range(128):
+            dark = y0 <= y < y1 and (y - y0) % seam == 0
+            for x in range(128):
+                if px[x, y][3] < 40:
+                    continue
+                color = ramp[0] if dark else (ramp[3] if x <= mid else ramp[2])
+                px[x, y] = (*color, px[x, y][3])
+    return True
+
+
+def apply_stage_style() -> int:
+    """Native cuts keep their extract. Everything else locks to the ramp."""
+    from gear_style import style_lock
+    from paper_doll_manifest import NATIVE_MATERIAL
+
+    native = re.compile(
+        r"^(helm|chest|legs|cloak|hands|shoulder)_(t0|t2)_idle\.png$"
+    )
+    mat_re = re.compile(r"_(leather|mail|plate)_")
+    n = 0
+    for family in FAMILIES:
+        gear = ROOT / family / "gear"
+        for path in gear.glob("*_idle.png"):
+            im = Image.open(path).convert("RGBA")
+            if native.match(path.name):
+                # Leave gold-master extracts alone. Inking their pale robe
+                # edge pushes the idle stack past the facit diff.
+                continue
+            else:
+                found = mat_re.search(path.name)
+                material = found.group(1) if found else NATIVE_MATERIAL[family]
+                out = style_lock(im, material)
+            if out.tobytes() != im.tobytes():
+                out.save(path)
+                n += 1
+    # Late cuts keep the plain cut's colors where they overlap, so the
+    # palette gate stays green while the silhouette still grows.
+    for family in FAMILIES:
+        gear = ROOT / family / "gear"
+        for path in gear.glob("*_t0_idle.png"):
+            if native.match(path.name):
+                continue
+            t2 = gear / path.name.replace("_t0_", "_t2_")
+            if not t2.exists():
+                continue
+            base = Image.open(path).convert("RGBA")
+            late = Image.open(t2).convert("RGBA")
+            bp, lp = base.load(), late.load()
+            changed = False
+            extras: list[tuple[int, int]] = []
+            for y in range(128):
+                for x in range(128):
+                    if lp[x, y][3] < 40:
+                        continue
+                    if bp[x, y][3] >= 40:
+                        if lp[x, y][:3] != bp[x, y][:3]:
+                            lp[x, y] = (*bp[x, y][:3], lp[x, y][3])
+                            changed = True
+                    else:
+                        extras.append((x, y))
+            for x, y in extras:
+                best = None
+                for radius in range(1, 28):
+                    hit = None
+                    for dy in range(-radius, radius + 1):
+                        for dx in range(-radius, radius + 1):
+                            if max(abs(dx), abs(dy)) != radius:
+                                continue
+                            nx, ny = x + dx, y + dy
+                            if (
+                                0 <= nx < 128
+                                and 0 <= ny < 128
+                                and bp[nx, ny][3] >= 40
+                            ):
+                                hit = bp[nx, ny]
+                                break
+                        if hit is not None:
+                            break
+                    if hit is not None:
+                        best = hit
+                        break
+                if best is not None and lp[x, y][:3] != best[:3]:
+                    lp[x, y] = (*best[:3], lp[x, y][3])
+                    changed = True
+            changed = _lock_material_pair(path.name, base, late) or changed
+            if changed:
+                late.save(t2)
+                if "_leather_" in path.name or "_mail_" in path.name:
+                    base.save(path)
+                n += 1
+    return n
+
+
+def cover_hair(family: str) -> int:
+    """Helms must cover hair. Stamp the nearest uncovered hair pixels."""
+    from paper_doll_classify import HAIR, _face_oval
+
+    clf = idle_classification(family)
+    gear = ROOT / family / "gear"
+    n = 0
+    for path in sorted(gear.glob("helm*_idle.png")):
+        if "short" in path.name:
+            continue
+        im = Image.open(path).convert("RGBA")
+        px = im.load()
+        hair = [
+            (x, y)
+            for y in range(128)
+            for x in range(128)
+            if clf.at(x, y) == HAIR and not _face_oval(clf, x, y)
+        ]
+        covered = sum(1 for x, y in hair if px[x, y][3] >= 40)
+        if covered >= 12:
+            continue
+        helm_pts = [
+            (x, y)
+            for y in range(0, 128, 2)
+            for x in range(0, 128, 2)
+            if px[x, y][3] >= 40
+        ]
+        if not helm_pts:
+            continue
+        open_hair = [(x, y) for x, y in hair if px[x, y][3] < 40]
+        open_hair.sort(
+            key=lambda p: min(
+                (p[0] - hx) ** 2 + (p[1] - hy) ** 2 for hx, hy in helm_pts
+            )
+        )
+        color = px[helm_pts[0]]
+        for x, y in open_hair[: 12 - covered]:
+            px[x, y] = color
+        im.save(path)
+        n += 1
+    return n
+
+
+def lift_flat_pieces() -> int:
+    """Face clearing can wipe the light. Put it back without a new outline."""
+    from gear_style import MIN_LIGHT, _lift_left, _light_score
+    from paper_doll_manifest import NATIVE_MATERIAL
+
+    mat_re = re.compile(r"_(leather|mail|plate)_")
+    native = re.compile(
+        r"^(helm|chest|legs|cloak|hands|shoulder)_(t0|t2)_idle\.png$"
+    )
+    n = 0
+    for family in FAMILIES:
+        gear = ROOT / family / "gear"
+        for path in gear.glob("*_idle.png"):
+            if native.match(path.name):
+                continue
+            im = Image.open(path).convert("RGBA")
+            if _light_score(im) >= MIN_LIGHT:
+                continue
+            found = mat_re.search(path.name)
+            material = found.group(1) if found else NATIVE_MATERIAL[family]
+            out = _lift_left(im, material)
+            if _light_score(out) < MIN_LIGHT:
+                continue
+            out.save(path)
+            n += 1
+    return n
+
+
 def run_build() -> None:
     """Every doll step, in order, against [ROOT] (the staging copy)."""
     import derive_armor_material_variants as materials
@@ -1130,6 +1343,7 @@ def run_build() -> None:
     for family in FAMILIES:
         built[family] = process_family(family)
     ensure_shared_weapons(shared, "idle")
+    print("ok shared authored", copy_authored_shared(shared))
     for family in FAMILIES:
         print("ok", family, "styles", write_styles(family))
     print("ok materials", materials.derive_all())
@@ -1138,9 +1352,13 @@ def run_build() -> None:
     import author_snap_ons as snap_ons
 
     print("ok snap-ons", snap_ons.write_all())
+    print("ok style lock", apply_stage_style())
     for family in FAMILIES:
         print("ok", family, "face owned, rewrote", own_face(family))
+        print("ok", family, "hair covered", cover_hair(family))
+    print("ok flat light", lift_flat_pieces())
     print("ok icons", icons.write_all())
+    subprocess.check_call([sys.executable, str(TOOL / "gen_owned_gear_grips.py")])
     for family in FAMILIES:
         write_armor_preview(family, built[family])
     subprocess.check_call([sys.executable, str(TOOL / "paint_race_bodies.py")])

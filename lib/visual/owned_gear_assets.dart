@@ -36,6 +36,12 @@ abstract final class OwnedGearAssets {
     'bow_t0',
     'shield_t0',
     'frill_t0',
+    'wand_t0',
+    'gun_t0',
+    'crossbow_t0',
+    'polearm_t0',
+    'fist_t0',
+    'thrown_t0',
   ];
 
   static const Set<String> _sharedStems = {
@@ -47,6 +53,12 @@ abstract final class OwnedGearAssets {
     'bow',
     'shield',
     'frill',
+    'wand',
+    'gun',
+    'crossbow',
+    'polearm',
+    'fist',
+    'thrown',
   };
 
   static bool isCatalogTierId(String visualSetId) =>
@@ -78,7 +90,8 @@ abstract final class OwnedGearAssets {
         stem == 'legs' ||
         stem == 'helm' ||
         stem == 'cloak' ||
-        stem == 'hands') {
+        stem == 'hands' ||
+        stem == 'shoulder') {
       return t >= 2 ? '${stem}_t2' : '${stem}_t0';
     }
     return '${stem}_t0';
@@ -315,6 +328,7 @@ abstract final class OwnedGearAssets {
             out.add(icon(family, stem));
             if (slot == 'chest') {
               out.add('$root/${family.name}/gear/${stem}_dye.png');
+              out.add('$root/${family.name}/gear/${stem}_dye_icon.png');
             }
           }
         }
@@ -325,6 +339,7 @@ abstract final class OwnedGearAssets {
         for (final slot in kClassMarkSlots) {
           for (final cut in kArmorCuts) {
             out.add(familyGear(family, '${slot}_${mark}_$cut', 'idle'));
+            out.add(icon(family, '${slot}_${mark}_$cut'));
           }
         }
       }

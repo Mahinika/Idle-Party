@@ -14,8 +14,10 @@ from pathlib import Path
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[1]
-GEAR = ROOT / "assets" / "custom" / "char" / "gear"
+from paper_doll_paths import CHAR, REPO
+
+ROOT = REPO
+GEAR = CHAR / "gear"
 OUT = ROOT / "lib" / "visual" / "owned_gear_grips.dart"
 ALPHA = 40
 
@@ -103,7 +105,10 @@ def main() -> None:
         im = Image.open(path).convert("RGBA")
         off = stem.startswith(("shield_", "frill_"))
         # A bow is held at its middle, not by the lower limb.
-        grip = grip_uv(im, off_hand=off, mid_grip=stem.startswith("bow_"))
+        # Bows are held mid-limb. A fist closes around its middle.
+        # Gun and crossbow use the stock, which is the bottom band.
+        mid = stem.startswith("bow_") or stem.startswith("fist_")
+        grip = grip_uv(im, off_hand=off, mid_grip=mid)
         if grip is None:
             continue
         gx, gy = grip

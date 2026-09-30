@@ -87,6 +87,53 @@ Future<void> main() async {
     }
   }
 
+  if (_touchesGear(dirtyText)) {
+    final visual = await _run(
+      'flutter',
+      <String>['test', 'test/visual', '--exclude-tags', 'facit'],
+    );
+    if (visual.exitCode != 0) {
+      _emit(<String, dynamic>{
+        'followup_message':
+            'Stop-hook: visual tests failed after a gear edit. Fix the '
+            'resolver or the asset list, then re-run '
+            '`flutter test test/visual --exclude-tags facit`.\n\n'
+            '${_trim(visual.combined)}',
+      });
+      return;
+    }
+    final sw = Stopwatch()..start();
+    final facit = await _run(
+      'py',
+      <String>[
+        '-3',
+        'tool/check_paper_doll_facit.py',
+        '--fast',
+        '--no-lock',
+      ],
+    );
+    sw.stop();
+    if (sw.elapsed.inSeconds > 120) {
+      _emit(<String, dynamic>{
+        'followup_message':
+            'Stop-hook: facit --fast took ${sw.elapsed.inSeconds}s, '
+            'so it is not a stop-hook gate. Run '
+            '`py -3 tool/check_paper_doll_facit.py --no-lock` once before '
+            'you call the gear done.',
+      });
+      return;
+    }
+    if (facit.exitCode != 0) {
+      _emit(<String, dynamic>{
+        'followup_message':
+            'Stop-hook: paper-doll facit failed. Fix the art and re-run '
+            '`py -3 tool/check_paper_doll_facit.py --fast --no-lock`.\n\n'
+            '${_trim(facit.combined)}',
+      });
+      return;
+    }
+  }
+
   if (_touchesKits(dirtyText)) {
     final share = await _run(
       'flutter',
@@ -161,6 +208,23 @@ bool _touchesKits(String dirtyText) {
     'kit_migrated_casts.dart',
     'spatial_combat.dart',
     'class_balance',
+  ];
+  for (final n in needles) {
+    if (t.contains(n)) return true;
+  }
+  return false;
+}
+
+bool _touchesGear(String dirtyText) {
+  final t = dirtyText.toLowerCase().replaceAll('\\', '/');
+  const needles = <String>[
+    'assets/custom/char/',
+    'tool/facit/',
+    'tool/gear_style.py',
+    'tool/build_owned_gear_layers.py',
+    'tool/author_gear_standard.py',
+    'tool/check_paper_doll_facit.py',
+    'lib/visual/',
   ];
   for (final n in needles) {
     if (t.contains(n)) return true;

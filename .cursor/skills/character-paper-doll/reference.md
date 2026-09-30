@@ -34,7 +34,9 @@ Read when baking layers, a facit gate fails, or tuning authored overrides.
 - Four cuts per slot: t0, t2 (grown t0), and the drawn styles short and broad.
   Short/broad are their own silhouettes, not another t2 and not a rescale.
   No hue-only copies per slot (the old 20 `vNN` cuts are gone; old saves map
-  onto the four).
+  onto the four). A new weapon or helm model follows `gear-art`: its own
+  silhouette, then `style_lock`. Flat fills and out-of-proportion weapons fail
+  the facit.
 - Base body owns face, eyes, and haircut on every anim. Armor overlays never
   carry them; helm = face window. Rarity wash only on t0.
 - Materials take the donor family's piece by landmarks (chin/feet, helm by

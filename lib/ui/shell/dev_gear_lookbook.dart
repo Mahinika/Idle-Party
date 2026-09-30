@@ -40,13 +40,11 @@ class _DevGearLookbookState extends State<DevGearLookbook> {
           backgroundColor: GameTheme.stoneDeep,
           foregroundColor: GameTheme.parchment,
           title: const Text('GEAR LOOKBOOK'),
-          bottom: const TabBar(
+          bottom: TabBar(
             isScrollable: true,
             tabs: [
-              Tab(text: 'WARRIOR'),
-              Tab(text: 'ROGUE'),
-              Tab(text: 'MAGE'),
-              Tab(text: 'HEALER'),
+              for (final family in BodyFamily.values)
+                Tab(text: family.name.toUpperCase()),
             ],
           ),
         ),
@@ -213,6 +211,12 @@ class _LookCell extends StatelessWidget {
         'mace' => WeaponType.mace,
         'axe' => WeaponType.axe,
         'bow' => WeaponType.bow,
+        'wand' => WeaponType.wand,
+        'gun' => WeaponType.gun,
+        'crossbow' => WeaponType.crossbow,
+        'polearm' => WeaponType.polearm,
+        'fist' => WeaponType.fist,
+        'thrown' => WeaponType.thrown,
         _ => null,
       },
       offHandKind: switch (base) {

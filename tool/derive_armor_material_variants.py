@@ -190,17 +190,21 @@ def derive_slot(
             im = register_helm_to_head(im, src, face, box)
         return im
 
-    convert = CONVERTERS[material]
+    from gear_style import paint_material
+
     donor = remap_source_family(material, family)
     if donor != family:
         donor_im = load_donor(donor, slot, tier, anim, material)
-        return convert(register_to_body(donor_im, donor, family, slot))
-    return convert(load_native(family, slot, tier, anim))
+        donor_im = register_to_body(donor_im, donor, family, slot)
+    else:
+        donor_im = load_native(family, slot, tier, anim)
+    # Keep the donor's silhouette. Paint the material's surface on it.
+    return paint_material(donor_im, material)
 
 
 def write_boots_icon(legs: Image.Image, dest: Path) -> None:
     boots = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
-    boots.paste(legs.crop((0, 72, 128, 128)), (0, 72))
+    boots.paste(legs.crop((0, 100, 128, 128)), (0, 100))
     bbox = boots.getbbox()
     if bbox is None:
         return

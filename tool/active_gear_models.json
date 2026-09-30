@@ -7,7 +7,13 @@
     "axe": ["axe_t0", "axe_goreblade", "axe_bloodhowl", "axe_stormcleave"],
     "bow": ["bow_t0", "bow_eagle", "bow_windpierce", "bow_ashflight"],
     "shield": ["shield_t0", "shield_aegis", "shield_ironwall", "shield_frostwall"],
-    "frill": ["frill_t0", "frill_prism", "frill_soulcodex", "frill_embercodex"]
+    "frill": ["frill_t0", "frill_prism", "frill_soulcodex", "frill_embercodex"],
+    "wand": ["wand_t0"],
+    "gun": ["gun_t0"],
+    "crossbow": ["crossbow_t0"],
+    "polearm": ["polearm_t0"],
+    "fist": ["fist_t0"],
+    "thrown": ["thrown_t0"]
   },
   "family": {
     "helm": ["helm_t0", "helm_t2", "helm_short", "helm_broad", "helm_ironcrown", "helm_visored", "helm_wingcrest"],
@@ -17,5 +23,5 @@
     "hands": ["hands_t0", "hands_t2", "hands_short", "hands_broad"],
     "shoulder": ["shoulder_t0", "shoulder_t2", "shoulder_short", "shoulder_broad"]
   },
-  "planned": ["wand_t0", "gun_t0", "crossbow_t0", "polearm_t0", "fist_t0", "thrown_t0"]
+  "planned": []
 }

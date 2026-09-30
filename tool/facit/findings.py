@@ -42,6 +42,22 @@ def save_debt(findings: list[Finding]) -> None:
     DEBT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
+def _logical(text: str) -> str:
+    """Stage and live art must share one debt key.
+
+    The build checks a copy under tool/out/doll_stage/char. The snapshot
+    was taken from assets/custom/char.
+    """
+    return (
+        text.replace("\\", "/")
+        .replace("tool/out/doll_stage/char", "assets/custom/char")
+    )
+
+
+def _logical_finding(f: Finding) -> Finding:
+    return Finding(f.check, _logical(f.file), _logical(f.key))
+
+
 def apply_debt(
     findings: list[Finding],
     *,
@@ -54,6 +70,7 @@ def apply_debt(
     produces. [write] replaces the list (one-shot snapshot). [prune] drops
     resolved entries and never adds.
     """
+    findings = [_logical_finding(f) for f in findings]
     current = {(f.check, f.file, f.key): f for f in findings}
     if write:
         save_debt(list(current.values()))

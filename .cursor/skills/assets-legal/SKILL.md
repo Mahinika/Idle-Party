@@ -49,6 +49,7 @@ New sprite:
 - [ ] 4. Wire resolvers (hero/enemy/portrait/pet/equipment) if needed
 - [ ] 5. UI via helper + KenneySprite / FilterQuality.none
 - [ ] 6. asset_catalog / custom_assets tests still pass
+- [ ] 7. Doll gear goes through skill `gear-art` (not a one-off PNG)
 ```
 
 ## Correct vs wrong

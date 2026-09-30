@@ -111,10 +111,13 @@ def write_named_helms(family: str) -> int:
         accent = _load(masters[accent_key])
         mixed = _composite_owned(base, accent, keep_face=True)
         out = ImageEnhance.Contrast(_ramp(mixed, ramp)).enhance(1.08)
+        master = auth / f"{name}_master.png"
+        if master.exists():
+            out = _load(master)
+        else:
+            out = _helm_motif(out, name)
         live = gear / f"{name}_idle.png"
-        authored = auth / f"{name}_idle.png"
         out.save(live)
-        out.save(authored)
         n += 1
     return n
 
@@ -129,13 +132,80 @@ def _swollen_core(core: Image.Image, radius: int = 3) -> Image.Image:
     return out
 
 
+def _helm_motif(im: Image.Image, name: str) -> Image.Image:
+    """A chunky crown, visor, or wings so the named helm is not a recolor."""
+    out = im.copy()
+    px = out.load()
+    bb = out.getbbox()
+    if bb is None:
+        return out
+    x0, y0, x1, y1 = bb
+    cx = (x0 + x1) // 2
+    color = (168, 156, 142, 255)
+
+    def put(x: int, y: int) -> None:
+        if 0 <= x < N and 0 <= y < N:
+            px[x, y] = color
+
+    if name == "helm_ironcrown":
+        # Hoods already touch the top of the canvas, so the crown hangs
+        # below the brim. Gaps cut into the hood get filled back in.
+        for dx in (-20, 0, 20):
+            left = max(2, min(N - 12, cx + dx - 4))
+            for dy in range(22):
+                for ox in range(8):
+                    put(left + ox, min(N - 1, y1 - 2 + dy))
+    elif name == "helm_visored":
+        for side in (-1, 1):
+            for dy in range(22):
+                for ox in range(8):
+                    put(cx + side * (16 + ox), y0 + 4 + dy)
+        for x in range(x0 + 4, x1 - 4):
+            if abs(x - cx) < 10:
+                continue
+            for dy in range(5):
+                put(x, max(0, y0 - 2) + dy)
+    elif name == "helm_wingcrest":
+        # Feathers hang below the helm. Sideways wings fall off the canvas
+        # on wide hoods.
+        for side in (-1, 1):
+            ox = x0 + 8 if side < 0 else x1 - 14
+            ox = max(2, min(N - 16, ox))
+            for dy in range(26):
+                span = 8 if dy < 16 else 4
+                for t in range(span):
+                    put(ox + t, min(N - 1, y1 - 6 + dy))
+    return out
+
+
+def _grow_pauldron(im: Image.Image, passes: int) -> Image.Image:
+    """Add a rim so the late pauldron is a bigger shape than the plain one."""
+    out = im
+    for _ in range(passes):
+        alpha = out.split()[-1].filter(ImageFilter.MaxFilter(3))
+        grown = Image.new("RGBA", (N, N), (0, 0, 0, 0))
+        gp, sp, ap = grown.load(), out.load(), alpha.load()
+        for y in range(N):
+            for x in range(N):
+                if ap[x, y] == 0:
+                    continue
+                if sp[x, y][3] >= 40:
+                    gp[x, y] = sp[x, y]
+                    continue
+                for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < N and 0 <= ny < N and sp[nx, ny][3] >= 40:
+                        gp[x, y] = sp[nx, ny]
+                        break
+        out = grown
+    return out
+
+
 def write_shoulders(family: str) -> int:
     gear = ROOT / family / "gear"
     auth = gear / "_authored"
     auth.mkdir(parents=True, exist_ok=True)
     core = _load(gear / "chest_t0_idle.png")
-    swollen = _swollen_core(core, radius=4)
-    sp = swollen.load()
     n = 0
     # Donor per cut: prefer matching chest cut, fall back to broad then t2.
     donors = {
@@ -145,6 +215,9 @@ def write_shoulders(family: str) -> int:
         "broad": ["chest_broad_idle.png", "chest_t2_idle.png"],
     }
     for cut in CUTS:
+        # t2 swells further, so the pauldron left outside the chest is a new shape.
+        swollen = _swollen_core(core, radius=8 if cut == "t2" else 4)
+        sp = swollen.load()
         donor = None
         for name in donors[cut]:
             p = gear / name
@@ -192,18 +265,23 @@ def write_shoulders(family: str) -> int:
             from derive_armor_material_variants import thicken
 
             out = thicken(out, passes=2)
+        if cut == "t2":
+            out = _grow_pauldron(out, passes=5)
+        elif cut == "short":
+            # A one-pixel pauldron is only outline, so mail and leather vanish.
+            out = _grow_pauldron(out, passes=4)
         stem = f"shoulder_{cut}"
+        master = auth / f"{stem}_master.png"
+        if master.exists():
+            out = _load(master)
         out.save(gear / f"{stem}_idle.png")
-        out.save(auth / f"{stem}_idle.png")
         n += 1
         for mat in MATERIALS[family]:
-            # Material shoulders: ramp the native pauldron (shape first).
-            from derive_armor_material_variants import CONVERTERS
+            from gear_style import paint_material
 
-            mat_im = CONVERTERS[mat](out)
+            mat_im = paint_material(out, mat)
             mstem = f"shoulder_{mat}_{cut}"
             mat_im.save(gear / f"{mstem}_idle.png")
-            mat_im.save(auth / f"{mstem}_idle.png")
             n += 1
     return n
 
@@ -241,8 +319,6 @@ def write_dye_masks(family: str) -> int:
             if not src.exists():
                 continue
             mask = dye_mask_from_chest(_load(src))
-            if mask.getbbox() is None:
-                continue
             dest = gear / f"chest_{look}{cut}_dye.png"
             mask.save(dest)
             n += 1

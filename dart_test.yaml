@@ -5,3 +5,5 @@
 tags:
   sim:
     timeout: 60m
+  facit:
+    timeout: 5m

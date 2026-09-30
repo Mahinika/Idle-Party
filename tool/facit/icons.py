@@ -11,7 +11,7 @@ from paper_doll_manifest import FAMILIES
 from paper_doll_paths import CHAR, REPO, TOOL
 
 
-def _icon_for(idle: Image.Image, name: str) -> Image.Image | None:
+def _icon_for(idle: Image.Image, name: str, folder) -> Image.Image | None:
     token = name.split("_", 1)[0]
     if token == "hands":
         min_op = 24
@@ -19,7 +19,15 @@ def _icon_for(idle: Image.Image, name: str) -> Image.Image | None:
         min_op = 12
     else:
         min_op = 40
-    return make_icon(idle, min_opaque=min_op)
+    im = idle
+    # Same crop the icon writer uses: cloaks hide these feet.
+    if name.startswith("legs_") and folder.parent.name in ("healer", "mage"):
+        im = idle.copy()
+        px = im.load()
+        for y in range(116, im.height):
+            for x in range(im.width):
+                px[x, y] = (0, 0, 0, 0)
+    return make_icon(im, min_opaque=min_op)
 
 
 def _boot_icon(legs: Image.Image) -> Image.Image | None:
@@ -42,7 +50,11 @@ def check_icon_parity() -> list[Finding]:
             icon_path = idle_path.with_name(idle_path.name.replace("_idle.png", "_icon.png"))
             if not icon_path.exists():
                 continue
-            expect = _icon_for(Image.open(idle_path).convert("RGBA"), idle_path.name)
+            expect = _icon_for(
+                Image.open(idle_path).convert("RGBA"),
+                idle_path.name.removesuffix("_idle.png"),
+                folder,
+            )
             rel = icon_path.relative_to(REPO).as_posix()
             if expect is None:
                 out.append(Finding("icon_parity", rel, "empty-crop"))

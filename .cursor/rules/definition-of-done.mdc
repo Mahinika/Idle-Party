@@ -14,6 +14,9 @@ Before you tell the owner a coding task is finished:
    - What's New or version: `changelog_sync_test`.
    - Hub, chase, guides, or the first hour: `ship_smoke_test`, plus
      `first_hour_plain_test` when those screens changed.
+   - Gear art or `lib/visual`: green facit (`py -3 tool/check_paper_doll_facit.py`)
+     and `flutter test test/visual`. If a hand picture moved, `py -3 tool/audit_anchors.py`
+     has no findings.
 3. **Honesty:** text the player sees matches what the game does (English
    in-game).
 4. **Legal:** no foreign dumps. Art goes through `CustomAssets` /

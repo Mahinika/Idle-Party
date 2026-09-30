@@ -1,0 +1,62 @@
+---
+description: One pixel style for Idle Party gear. Numbers live in tool/gear_style.py. Use when editing doll gear, the facit, or lib/visual.
+alwaysApply: false
+globs:
+  - assets/custom/char/**
+  - tool/*gear*.py
+  - tool/paper_doll*.py
+  - tool/facit/**
+  - tool/check_paper_doll_facit.py
+  - lib/visual/**
+---
+
+# Gear art standard (Idle Party)
+
+Numbers (ink, light, ramps, proportions, gate limits) live only in
+`tool/gear_style.py`. This file says what they mean. Do not copy the
+numbers into docs or rules.
+
+## One picture
+
+Pixel art on a 128×128 canvas, same origin as the body. One warm ink
+contour, never pure black. Light comes from the upper left. Stay on the
+material ramp. Detail is a few handmade marks, not a noisy texture.
+Silhouettes must still differ at BAG size (26 px) and in the dungeon.
+
+Cloth, leather, mail, and plate stay different surfaces: soft folds,
+dark seam rows, a ring checker, hard plate with a highlight and a few
+rivets. A hue shift of the same shape is not a new material.
+
+## Model versus copy
+
+A model is one `visualSetId` shape (sword_t0, sword_thunderfury,
+helm_ironcrown). Two active models must not share the same icon and the
+same paper-doll graphic. A random drop with different stats is not a new
+model. Color alone is not a new model. Each model needs its own
+silhouette or a handmade hook.
+
+## Icon and doll
+
+The BAG icon is a crop of the same idle overlay the doll paints.
+Rarity tint and cloth dye use the same modulate on the icon and the
+doll. A class mark shows on the equipped icon when the wearer is known.
+BAG with no wearer shows the base model. Boots are the foot band of the
+legs overlay, not a second drawing.
+
+## Hard rules
+
+- Owned art under `assets/custom/` only. No foreign dumps.
+- One renderer: `paintOwnedHero` and `EquipmentIcon`. No second doll.
+- Only `tool/build_owned_gear_layers.py` writes live doll PNGs. New
+  scripts write `_src` or `_authored`.
+- Face and hair stay on the body. Gear layers do not repaint them.
+- No new or removed save fields. Do not rename a `visualSetId`.
+- Legacy mappings keep working (old stamps, borrowed weapon stems).
+- No `ImageDraw` ellipses or flat placeholders. No hue-only models.
+- No upscaled pixel blocks. No hand-edits of `paper_doll_lock.json` or
+  `owned_gear_grips.dart`.
+- Do not `--relock` over a red facit. Do not lower a gate to go green.
+- Do not add entries to `tool/facit_known_debt.json`. Shrink it only
+  with `--prune-debt` after a full check.
+
+Workflow: skill `gear-art`.

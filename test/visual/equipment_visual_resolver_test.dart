@@ -389,18 +389,20 @@ void main() {
     }
   });
 
-  test('thrown resolves to dagger art, not a bow', () {
-    final item = GameLogic.createEquipment(
+  test('thrown uses its own picture, and an old dagger stamp stays', () {
+    final fresh = GameLogic.createEquipment(
       slot: EquipmentSlot.ranged,
       rarity: LootRarity.common,
       battleNumber: 1,
       bias: HeroRole.warrior,
     ).copyWith(weaponType: WeaponType.thrown, visualSetId: 'bow_longshot');
-    expect(EquipmentVisualResolver.resolveId(item), 'dagger_t0');
+    expect(EquipmentVisualResolver.resolveId(fresh), 'thrown_t0');
     expect(
-      EquipmentVisualResolver.ownedIconPathFor(item),
-      'assets/custom/char/gear/dagger_t0_icon.png',
+      EquipmentVisualResolver.ownedIconPathFor(fresh),
+      'assets/custom/char/gear/thrown_t0_icon.png',
     );
+    final oldSave = fresh.copyWith(visualSetId: 'dagger_shadowfang');
+    expect(EquipmentVisualResolver.resolveId(oldSave), 'dagger_shadowfang');
   });
 
   test('explicit visualSetId wins over derive', () {

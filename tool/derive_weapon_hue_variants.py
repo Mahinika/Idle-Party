@@ -185,16 +185,10 @@ def write_one(new_id: str, src_id: str, mode: str) -> None:
 
 
 def main() -> None:
-    import sys
+    from paper_doll_paths import refuse_live_writer
 
-    if "--write-flat" not in sys.argv:
-        from paper_doll_paths import refuse_live_writer
-
-        refuse_live_writer("derive_weapon_hue_variants.py")
-    for new_id, src_id, mode in VARIANTS:
-        if new_id in SKIP_WRITE or new_id not in FLAT_IDS:
-            continue
-        write_one(new_id, src_id, mode)
+    # A hue shift is not a new weapon. Recipes live in author_gear_standard.
+    refuse_live_writer("derive_weapon_hue_variants.py")
 
 
 if __name__ == "__main__":

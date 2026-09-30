@@ -235,18 +235,109 @@ def apply_light(im: Image.Image, material: str) -> Image.Image:
             idx = ramp.index(current) if current in ramp else len(ramp) // 2
             # Nudge one step. Upper-left gets lighter; the pattern stays.
             t = 1.0 - ((x - x0) + (y - y0)) / span
-            if t > 0.66:
+            if t > 0.55:
                 idx += 1
-            elif t < 0.33:
+            elif t < 0.45:
                 idx -= 1
             idx = max(0, min(len(ramp) - 1, idx))
             dp[x, y] = (*ramp[idx], 255)
     return out
 
 
+def on_ramp(im: Image.Image, material: str) -> bool:
+    """True when every opaque pixel is already an allowed color.
+
+    A second style_lock must not nudge the light again.
+    """
+    allowed = set(allowed_colors(material))
+    px = im.convert("RGBA").load()
+    w, h = im.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a < 40:
+                continue
+            if (r, g, b) not in allowed:
+                return False
+    return True
+
+
+def _light_score(im: Image.Image) -> float:
+    """Same upper-left correlation the facit uses."""
+    px = im.convert("RGBA").load()
+    w, h = im.size
+    xs: list[int] = []
+    ys: list[int] = []
+    lums: list[float] = []
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a < 40:
+                continue
+            xs.append(x)
+            ys.append(y)
+            lums.append(0.299 * r + 0.587 * g + 0.114 * b)
+    if len(lums) < 8:
+        return 1.0
+    cx = sum(xs) / len(xs)
+    cy = sum(ys) / len(ys)
+    mean_l = sum(lums) / len(lums)
+    num = den_l = den_p = 0.0
+    for x, y, lum in zip(xs, ys, lums):
+        pos = -((x - cx) + (y - cy))
+        dl = lum - mean_l
+        num += dl * pos
+        den_l += dl * dl
+        den_p += pos * pos
+    if den_l <= 0 or den_p <= 0:
+        return 0.0
+    return num / ((den_l * den_p) ** 0.5)
+
+
 def style_lock(im: Image.Image, material: str = "plate") -> Image.Image:
     """Quantize, light from the upper left, then a 1 px ink contour."""
-    return apply_outline(apply_light(quantize_to_ramp(im, material), material))
+    src = im.convert("RGBA")
+    if on_ramp(src, material):
+        out = apply_outline(src)
+    else:
+        out = apply_outline(apply_light(quantize_to_ramp(src, material), material))
+    for _ in range(2):
+        if _light_score(out) >= MIN_LIGHT:
+            return out
+        out = apply_outline(apply_light(out, material))
+    if _light_score(out) < MIN_LIGHT:
+        # Outlining again would ink the lighter edge and flatten the light.
+        out = _lift_left(out, material)
+    return out
+
+
+def _lift_left(im: Image.Image, material: str) -> Image.Image:
+    """Last resort so a thin bar still has light from the upper left."""
+    src = im.convert("RGBA")
+    out = src.copy()
+    sp, dp = src.load(), out.load()
+    bb = src.getbbox()
+    if bb is None:
+        return out
+    x0, _, x1, _ = bb
+    mid = (x0 + x1) // 2
+    ramp = MATERIAL_RAMPS[material if material in MATERIAL_RAMPS else "plate"]
+    w, h = src.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = sp[x, y]
+            if a < 40:
+                continue
+            if (r, g, b) == INK:
+                if x <= mid:
+                    dp[x, y] = (*ramp[min(2, len(ramp) - 1)], 255)
+                continue
+            current, _ = _nearest((r, g, b), list(ramp))
+            idx = ramp.index(current) if current in ramp else 1
+            idx += 1 if x <= mid else -1
+            idx = max(0, min(len(ramp) - 1, idx))
+            dp[x, y] = (*ramp[idx], 255)
+    return out
 
 
 def repair_outline(im: Image.Image) -> Image.Image:
@@ -271,6 +362,44 @@ def repair_outline(im: Image.Image) -> Image.Image:
     return out
 
 
+def _edge_share(im: Image.Image) -> float:
+    px = im.load()
+    w, h = im.size
+    opaque = edge = 0
+    for y in range(h):
+        for x in range(w):
+            if px[x, y][3] < 40:
+                continue
+            opaque += 1
+            if any(
+                nx < 0 or ny < 0 or nx >= w or ny >= h or px[nx, ny][3] < 40
+                for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1))
+            ):
+                edge += 1
+    return edge / max(1, opaque)
+
+
+def _thicken(im: Image.Image, passes: int) -> Image.Image:
+    """Grow a lacy silhouette so plate reads as a solid piece, not cloth."""
+    out = im.copy()
+    w, h = out.size
+    for _ in range(passes):
+        px = out.load()
+        add = []
+        for y in range(h):
+            for x in range(w):
+                if px[x, y][3] >= 40:
+                    continue
+                if any(
+                    0 <= nx < w and 0 <= ny < h and px[nx, ny][3] >= 40
+                    for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1))
+                ):
+                    add.append((x, y))
+        for x, y in add:
+            px[x, y] = (255, 255, 255, 255)
+    return out
+
+
 def paint_material(mask: Image.Image, material: str) -> Image.Image:
     """Fill [mask]'s opaque pixels with that material's surface language.
 
@@ -278,6 +407,12 @@ def paint_material(mask: Image.Image, material: str) -> Image.Image:
     mail = ring dither. plate = hard plates, highlight, rivets.
     """
     src = mask.convert("RGBA")
+    if material == "plate":
+        # A lacy edge reads as cloth and also trips the dither gate.
+        for _ in range(6):
+            if _edge_share(src) <= 0.12:
+                break
+            src = _thicken(src, 1)
     out = Image.new("RGBA", src.size, (0, 0, 0, 0))
     sp, dp = src.load(), out.load()
     ramp = MATERIAL_RAMPS[material if material in MATERIAL_RAMPS else "plate"]
@@ -292,41 +427,51 @@ def paint_material(mask: Image.Image, material: str) -> Image.Image:
             if material == "mail":
                 color = ramp[3] if (x + y) % 2 == 0 else ramp[1]
             elif material == "leather":
-                color = ramp[0] if (y - y0) % 7 == 0 else ramp[2]
-                if (y - y0) % 7 == 3 and (x - x0) % 9 == 0:
+                seam = 4 if (y1 - y0) < 40 else 7
+                color = ramp[0] if (y - y0) % seam == 0 else ramp[2]
+                if (y - y0) % seam == max(1, seam // 2) and (x - x0) % 9 == 0:
                     color = gold[2]
             elif material == "cloth":
                 fold = ((x - x0) // 6) % 2
                 color = ramp[3] if fold else ramp[2]
             else:
-                # plate
-                t = 1.0 - ((x - x0) + (y - y0)) / max(1, (x1 - x0) + (y1 - y0))
-                color = ramp[4] if t > 0.62 else ramp[2]
-                on_edge = False
-                near = False
-                for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-                    nx, ny = x + dx, y + dy
-                    if nx < 0 or ny < 0 or nx >= w or ny >= h or sp[nx, ny][3] < 40:
-                        on_edge = True
-                        break
-                if not on_edge:
-                    for dy in range(-3, 4):
-                        for dx in range(-3, 4):
-                            nx, ny = x + dx, y + dy
-                            if (
-                                nx < 0
-                                or ny < 0
-                                or nx >= w
-                                or ny >= h
-                                or sp[nx, ny][3] < 40
-                            ):
-                                near = True
-                                break
-                        if near:
-                            break
-                if near and not on_edge and (x + y) % 8 == 0:
-                    color = gold[3]
-                elif on_edge:
-                    color = gold[1]
+                color = ramp[2]
             dp[x, y] = (*color, 255)
+    if material == "plate":
+        # One solid highlight in the upper left. A speckled highlight
+        # counts as dither; a block does not.
+        lit = []
+        for y in range(h):
+            for x in range(w):
+                if sp[x, y][3] < 40:
+                    continue
+                t = 1.0 - ((x - x0) + (y - y0)) / max(1, (x1 - x0) + (y1 - y0))
+                lit.append((t, x, y))
+        lit.sort(reverse=True)
+        for _, x, y in lit[: max(4, len(lit) // 12)]:
+            dp[x, y] = (*ramp[4], 255)
+    if material == "plate":
+        # A few inset rivets, far apart so they do not read as dither.
+        interior = []
+        for y in range(2, h - 2):
+            for x in range(2, w - 2):
+                if sp[x, y][3] < 40:
+                    continue
+                if any(
+                    sp[x + dx, y + dy][3] < 40
+                    for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2))
+                ):
+                    continue
+                interior.append((x, y))
+        dark = [p for p in interior if dp[p][:3] != ramp[4]]
+        picks = dark or interior
+        if picks:
+            step = max(1, len(picks) // 4)
+            placed = 0
+            for i in range(0, len(picks), step):
+                x, y = picks[i]
+                dp[x, y] = (*gold[3], 255)
+                placed += 1
+                if placed >= 4:
+                    break
     return style_lock(out, material)

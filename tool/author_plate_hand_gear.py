@@ -14,8 +14,6 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from make_gear_slot_icons import make_icon
-
 ROOT = Path(__file__).resolve().parents[1]
 GEAR = ROOT / "assets" / "custom" / "char" / "gear"
 AUTH = GEAR / "_authored"
@@ -222,14 +220,10 @@ def paint_shield() -> Image.Image:
 
 
 def save_set(set_id: str, im: Image.Image) -> None:
+    """Masters only. The gear build copies them onto the doll."""
     AUTH.mkdir(parents=True, exist_ok=True)
-    for anim in ("idle", "walk", "attack"):
-        im.save(AUTH / f"{set_id}_{anim}.png")
-    im.save(GEAR / f"{set_id}_idle.png")
-    icon = make_icon(im)
-    if icon is not None:
-        icon.save(GEAR / f"{set_id}_icon.png")
-    print("wrote", set_id)
+    im.save(AUTH / f"{set_id}_idle.png")
+    print("wrote", set_id, "master")
 
 
 def main() -> None:

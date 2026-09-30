@@ -154,7 +154,9 @@ def check_style() -> list[Finding]:
     for path in sorted(shared.glob("*_idle.png")):
         rel = path.relative_to(REPO).as_posix()
         base = path.name.split("_", 1)[0]
-        material = "wood" if base in ("bow", "staff", "wand") else "plate"
+        material = (
+            "wood" if base in ("bow", "staff", "wand", "polearm") else "plate"
+        )
         if base == "frill":
             material = "cloth"
         for key in authored_problems(Image.open(path), material):
