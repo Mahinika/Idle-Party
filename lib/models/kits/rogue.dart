@@ -272,7 +272,7 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
       specId: HeroSpecId.assassination,
       name: 'Cold Blood',
       shortLabel: 'Cold',
-      description: 'Self crit amp window for poisons and finishers.',
+      description: 'Self damage window for poisons and finishers.',
       unlockLevel: 11,
       cooldown: 35,
       effect: AbilityEffectKind.selfBuff,
