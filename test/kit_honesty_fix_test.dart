@@ -1083,6 +1083,10 @@ void main() {
       AbilityFireMode.swingRider,
     );
     expect(
+      ClassKits.defFor(AbilityId.eviscerateSub)!.resolvedFireMode,
+      AbilityFireMode.swingRider,
+    );
+    expect(
       ClassKits.defFor(AbilityId.shieldSlam)!.resolvedFireMode,
       AbilityFireMode.swingRider,
     );
@@ -1229,6 +1233,59 @@ void main() {
     expect(fired, isTrue);
     expect(arms.absorbShield, greaterThan(0));
     expect(ally.absorbShield, greaterThan(0));
+  });
+
+  test('Premeditation grants combo points, not energy', () {
+    final state = _soloSpecParty(HeroSpecId.subtlety, level: 12);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final rogue = world.heroes.firstWhere((h) => !h.isPet);
+    rogue
+      ..rage = 40
+      ..comboPoints = 0
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(rogue, except: AbilityId.premeditation);
+
+    var fired = false;
+    for (var i = 0; i < 40; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((rogue.abilityCd[AbilityId.premeditation.name] ?? 0) > 0) {
+        fired = true;
+        break;
+      }
+      rogue.rage = 40;
+    }
+    expect(fired, isTrue);
+    expect(rogue.comboPoints, greaterThanOrEqualTo(2));
+    expect(rogue.rage, lessThan(50));
+  });
+
+  test('Garrote delays the foe special and leaves a bleed', () {
+    final state = _soloSpecParty(HeroSpecId.assassination, level: 12);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final rogue = world.heroes.firstWhere((h) => !h.isPet);
+    target.specialCd = 0;
+    rogue
+      ..rage = 100
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(rogue, except: AbilityId.garrote);
+
+    var fired = false;
+    for (var i = 0; i < 40; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if ((rogue.abilityCd[AbilityId.garrote.name] ?? 0) > 0) {
+        fired = true;
+        break;
+      }
+      rogue.rage = 100;
+      target.specialCd = 0;
+    }
+    expect(fired, isTrue);
+    expect(target.specialCd, greaterThanOrEqualTo(2.5));
+    expect(target.bleedTimer, greaterThan(0));
   });
 }
 

@@ -825,6 +825,12 @@ abstract final class AbilityEffectRunner {
         return true;
       case AbilityEffectKind.grantResource:
         spendAndCd(world, hero, def);
+        if (def.id == AbilityId.premeditation) {
+          final gain = def.coeff > 0 ? def.coeff.round() : 2;
+          hero.comboPoints = math.min(5, hero.comboPoints + gain);
+          announce(world, hero, def.shortLabel, 0xFFE0C040, reducedVfx);
+          return true;
+        }
         final grant = def.coeff > 0 ? def.coeff : 20.0;
         SpatialCombat.gainRage(hero, grant);
         announce(world, hero, def.shortLabel, 0xFFE0C040, reducedVfx);
@@ -1146,6 +1152,7 @@ abstract final class AbilityEffectRunner {
         hero.comboPoints = math.min(5, hero.comboPoints + 2);
       } else if (def.id == AbilityId.garrote) {
         hero.comboPoints = math.min(5, hero.comboPoints + 1);
+        enemy.specialCd = math.max(enemy.specialCd, 2.5);
       } else if (def.id == AbilityId.envenom) {
         final pts = hero.comboPoints;
         hero.comboPoints = 0;
