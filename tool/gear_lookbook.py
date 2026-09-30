@@ -14,14 +14,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
+    # flutter on Windows is a .bat. CreateProcess will not run it unless
+    # the command goes through the shell.
     result = subprocess.run(
-        [
-            "flutter",
-            "test",
-            "test/visual/gear_lookbook_sheet_test.dart",
-            "--dart-define=LOOKBOOK=true",
-        ],
+        "flutter test test/visual/gear_lookbook_sheet_test.dart --dart-define=LOOKBOOK=true",
         cwd=ROOT,
+        shell=True,
     )
     out = ROOT / "tool" / "out" / "lookbook"
     if result.returncode == 0:
