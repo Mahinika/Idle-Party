@@ -317,7 +317,7 @@ abstract final class KitNamedCasts {
           reducedVfx: reducedVfx,
         );
         for (final e in wave) {
-          e.rootTimer = math.max(e.rootTimer, 2.2 + hero.kitRootBonus);
+          applyEnemyStun(e, 2.2);
         }
         return true;
 
@@ -530,7 +530,7 @@ abstract final class KitNamedCasts {
             5,
             (hero.attack * def.coeff * hero.kitHealMul).round(),
           );
-          for (var i = 0; i < 3; i++) {
+          for (var i = 0; i < 1; i++) {
             final before = mend.hp;
             mend.hp = math.min(mend.effectiveMaxHp, mend.hp + tick);
             final gained = mend.hp - before;
@@ -546,6 +546,11 @@ abstract final class KitNamedCasts {
               priority: 2,
             );
           }
+          hero.channelTicksLeft = 2;
+          hero.channelAmount = tick;
+          hero.channelTargetId = mend.id;
+          hero.channelKind = 'heal';
+          hero.channelAcc = 0;
           if (!reducedVfx) {
             SpatialCombat.spawnBurst(
               world,
@@ -722,6 +727,20 @@ abstract final class KitNamedCasts {
         );
         for (final e in _enemiesAround(world, hero, 2.7)) {
           e.attackSlowTimer = math.max(e.attackSlowTimer, 2.5);
+          final dx = e.x - hero.x;
+          final dy = e.y - hero.y;
+          final len = math.sqrt(dx * dx + dy * dy);
+          if (len < 0.05) continue;
+          final snapped = SpatialCombat.clampAlongWalk(
+            world.map,
+            world.openGateIds,
+            hero.x,
+            hero.y,
+            e.x + (dx / len) * 1.5,
+            e.y + (dy / len) * 1.5,
+          );
+          e.x = snapped.$1;
+          e.y = snapped.$2;
         }
         return true;
 
@@ -735,11 +754,11 @@ abstract final class KitNamedCasts {
           (hero.attack * def.coeff * AbilityEffectRunner.abilityOutScale(hero))
               .round(),
         );
-        if (hero.combustionTimer > 0) ball = (ball * 1.05).round();
-        // Hot Streak: two Fireball crits unlock a free Pyroblast.
-        final isCrit = GameLogic.random.nextInt(100) < 28;
+        if (hero.combustionTimer > 0) ball = (ball * 1.22).round();
+        final isCrit =
+            hero.spellCrit > 0 && GameLogic.random.nextInt(100) < hero.spellCrit;
         if (isCrit) {
-          ball = (ball * 1.75).round();
+          ball = math.max(2, (ball * 1.5).round());
           hero.hotStreakStack = math.min(2, hero.hotStreakStack + 1);
           if (hero.hotStreakStack >= 2) {
             hero.hotStreakReady = true;
@@ -784,7 +803,10 @@ abstract final class KitNamedCasts {
           (hero.attack * def.coeff * AbilityEffectRunner.abilityOutScale(hero))
               .round(),
         );
-        if (hero.combustionTimer > 0) pyro = (pyro * 1.08).round();
+        if (hero.combustionTimer > 0) pyro = (pyro * 1.22).round();
+        final pyroCrit =
+            hero.spellCrit > 0 && GameLogic.random.nextInt(100) < hero.spellCrit;
+        if (pyroCrit) pyro = math.max(3, (pyro * 1.5).round());
         SpatialCombat.addProjectile(
           world,
           SpatialCombat.spellBolt(
@@ -792,6 +814,7 @@ abstract final class KitNamedCasts {
             to: focus,
             damage: pyro,
             style: SpellBoltStyle.fire,
+            isCrit: pyroCrit,
             label: 'PYRO',
             labelArgb: 0xFFFF5020,
           ),
@@ -839,6 +862,7 @@ abstract final class KitNamedCasts {
         AbilityEffectRunner.spendAndCd(world, hero, def);
         hero.vanishTimer = math.max(hero.vanishTimer, 3.5);
         hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 6.0);
+        hero.combustionTimer = math.max(hero.combustionTimer, 3.5);
         for (final e in world.enemies) {
           if (e.forcedTargetId == hero.id) {
             e.forcedTargetId = null;
@@ -898,8 +922,16 @@ abstract final class KitNamedCasts {
           final wasAlive = e.hp > 0;
           SpatialCombat.hurtEnemy(e, hit);
           SpatialCombat.recordHeroDamage(hero, hit);
-          hero.x = e.x;
-          hero.y = e.y;
+          final snapped = SpatialCombat.clampAlongWalk(
+            world.map,
+            world.openGateIds,
+            hero.x,
+            hero.y,
+            e.x,
+            e.y,
+          );
+          hero.x = snapped.$1;
+          hero.y = snapped.$2;
           prevX = e.x;
           prevY = e.y;
           SpatialCombat.spawnSlash(world, from: hero, to: e, isCrit: true);

@@ -429,6 +429,14 @@ class SpatialActor {
   /// Hard stop: cannot move, swing, or use a special.
   double stunTimer = 0;
 
+  /// Remaining channel pulses (Penance / Mind Flay) after the first hit.
+  int channelTicksLeft = 0;
+  double channelAcc = 0;
+  int channelAmount = 0;
+  String channelTargetId = '';
+  /// `heal` or `hit`.
+  String channelKind = '';
+
   /// Demoralizing Shout: reduced attack while > 0.
   double demoShoutTimer = 0;
 
@@ -724,6 +732,8 @@ class SpatialGroundFx {
     required this.life,
     required this.maxLife,
     this.kind = SpatialGroundFxKind.disc,
+    this.tickDamage = 0,
+    this.ownerId = '',
   });
 
   double x;
@@ -733,6 +743,11 @@ class SpatialGroundFx {
   double life;
   double maxLife;
   final SpatialGroundFxKind kind;
+
+  /// Damage each pulse while the disc is up. 0 = picture only.
+  int tickDamage;
+  double tickAcc = 0;
+  String ownerId;
 }
 
 class SpatialWorld {
@@ -1277,6 +1292,8 @@ abstract final class SpatialCombat {
     double radius = 2.7,
     double life = 4.5,
     SpatialGroundFxKind kind = SpatialGroundFxKind.disc,
+    int tickDamage = 0,
+    String ownerId = '',
   }) {
     if (world.groundFx.length >= _maxGroundFx) {
       world.groundFx.removeAt(0);
@@ -1290,6 +1307,8 @@ abstract final class SpatialCombat {
         life: life,
         maxLife: life,
         kind: kind,
+        tickDamage: tickDamage,
+        ownerId: ownerId,
       ),
     );
   }
@@ -1731,6 +1750,92 @@ abstract final class SpatialCombat {
     SpatialActor hero,
     int baseDamage,
   ) => combatClassAttackMods(world, hero, baseDamage);
+
+  static ({GameState state, int gold}) _tickBurningGround(
+    SpatialWorld world,
+    GameState state,
+    {required double dt, required math.Random rng}
+  ) {
+    var gold = 0;
+    for (final g in world.groundFx) {
+      if (g.tickDamage <= 0) continue;
+      g.tickAcc += dt;
+      if (g.tickAcc < 0.7) continue;
+      g.tickAcc -= 0.7;
+      final owner = _heroById(world, g.ownerId);
+      for (final e in world.enemies) {
+        if (e.hp <= 0 || e.dormant) continue;
+        if (distPoint(g.x, g.y, e.x, e.y) > g.radius) continue;
+        final dealt = CombatRatings.mitigateByArmor(
+          rawDamage: g.tickDamage,
+          defense: e.effectiveDefense,
+          attackerAttack: owner?.attack ?? g.tickDamage,
+        );
+        final wasAlive = e.hp > 0;
+        hurtEnemy(e, dealt);
+        if (owner != null) recordHeroDamage(owner, dealt);
+        if (wasAlive && e.hp <= 0) {
+          final killed = onEnemyKilled(world, state, e, rng);
+          gold += killed.gold;
+          state = killed.state;
+        }
+      }
+    }
+    for (final hero in world.heroes) {
+      if (hero.channelTicksLeft <= 0) continue;
+      hero.channelAcc += dt;
+      if (hero.channelAcc < 0.4) continue;
+      hero.channelAcc -= 0.4;
+      hero.channelTicksLeft -= 1;
+      if (hero.channelKind == 'heal') {
+        SpatialActor? ally;
+        for (final h in world.heroes) {
+          if (h.id == hero.channelTargetId && h.isAlive) {
+            ally = h;
+            break;
+          }
+        }
+        if (ally != null) {
+          final before = ally.hp;
+          ally.hp = math.min(
+            ally.effectiveMaxHp,
+            ally.hp + hero.channelAmount,
+          );
+          final gained = ally.hp - before;
+          if (gained > 0) recordHeroHeal(hero, gained);
+        }
+      } else {
+        SpatialActor? foe;
+        for (final e in world.enemies) {
+          if (e.id == hero.channelTargetId && e.hp > 0 && !e.dormant) {
+            foe = e;
+            break;
+          }
+        }
+        if (foe != null) {
+          final wasAlive = foe.hp > 0;
+          final dealt = CombatRatings.mitigateByArmor(
+            rawDamage: hero.channelAmount,
+            defense: foe.effectiveDefense,
+            attackerAttack: hero.attack,
+          );
+          hurtEnemy(foe, dealt);
+          recordHeroDamage(hero, dealt);
+          if (wasAlive && foe.hp <= 0) {
+            final killed = onEnemyKilled(world, state, foe, rng);
+            gold += killed.gold;
+            state = killed.state;
+          }
+        }
+      }
+      if (hero.channelTicksLeft <= 0) {
+        hero.channelAmount = 0;
+        hero.channelTargetId = '';
+        hero.channelKind = '';
+      }
+    }
+    return (state: state, gold: gold);
+  }
 
   static void _tickFloaters(SpatialWorld world, double dt) {
     for (final f in world.floaters) {
@@ -2518,6 +2623,11 @@ abstract final class SpatialCombat {
     to.rootTimer = from.rootTimer;
     to.spellCrit = from.spellCrit;
     to.stunTimer = from.stunTimer;
+    to.channelTicksLeft = from.channelTicksLeft;
+    to.channelAcc = from.channelAcc;
+    to.channelAmount = from.channelAmount;
+    to.channelTargetId = from.channelTargetId;
+    to.channelKind = from.channelKind;
     to.ccRootDrLevel = from.ccRootDrLevel;
     to.castingTimer = from.castingTimer;
     to.castingDuration = from.castingDuration;
@@ -3194,6 +3304,9 @@ abstract final class SpatialCombat {
     nextState = _stepGroundLoot(world, nextState, dt);
 
     _tickFloaters(world, dt);
+    final burns = _tickBurningGround(world, nextState, dt: dt, rng: rng);
+    nextState = burns.state;
+    goldFromKills += burns.gold;
 
     nextState = _syncHp(nextState, world);
 

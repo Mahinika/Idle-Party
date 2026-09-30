@@ -324,8 +324,7 @@ class EquipStatWeights {
     flatAtk: 30.0,
   );
 
-  /// Heal throughput uses same ATK pool as casters; Spi/Mp5 are regen only.
-  /// Haste is last — heals ignore it (ability CDs are wall-clock).
+  /// Heal throughput uses the same ATK pool as casters. Haste shortens heals.
   static const _healer = EquipStatWeights(
     str: 0,
     agi: 1.0,
@@ -335,7 +334,7 @@ class EquipStatWeights {
     sp: 5.5,
     armor: 1.0,
     crit: 4.0,
-    aspd: 1.5,
+    aspd: 3.2,
     move: 1.0,
     mp5: 5.0,
     flatAtk: 30.0,
@@ -351,7 +350,7 @@ class EquipStatWeights {
     sp: 5.5,
     armor: 1.0,
     crit: 5.5,
-    aspd: 1.5,
+    aspd: 3.0,
     move: 1.0,
     mp5: 5.0,
     flatAtk: 30.0,

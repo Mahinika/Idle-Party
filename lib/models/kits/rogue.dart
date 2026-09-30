@@ -437,7 +437,7 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
       specId: HeroSpecId.subtlety,
       name: 'Shadow Dance',
       shortLabel: 'SDance',
-      description: 'Vanish into shadow — haste openers.',
+      description: 'Vanish, then your next hits are the opener.',
       unlockLevel: 11,
       cooldown: 40,
       resourceCost: 15,

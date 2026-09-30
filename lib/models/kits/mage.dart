@@ -444,7 +444,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
       resourceCost: 16,
       effect: AbilityEffectKind.aoe,
       tier: AbilityCastTier.filler,
-      coeff: 0.90,
+      coeff: 0.78,
       boltStyle: SpellBoltStyle.frost,
       vfx: AbilityVfxSpec(
         boltStyle: SpellBoltStyle.frost,

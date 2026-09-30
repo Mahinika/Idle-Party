@@ -271,7 +271,7 @@ void main() {
     expect(mp5Hits, greaterThan(hasteHits));
   });
 
-  test('healer Apex spends Mp5 not Haste', () {
+  test('healer Apex spends Mp5 and a little Haste', () {
     final disc = ApexCraft.buildItem(
       classId: HeroClassId.priest,
       role: SpecRoleTag.healer,
@@ -279,8 +279,8 @@ void main() {
       rank: 1,
       ascensionLevel: 3,
     );
-    expect(disc.mp5Bonus, greaterThan(0));
-    expect(disc.attackSpeedBonus, 0);
+    expect(disc.mp5Bonus, greaterThan(disc.attackSpeedBonus));
+    expect(disc.attackSpeedBonus, greaterThan(0));
     expect(disc.critChanceBonus, greaterThan(0));
   });
 

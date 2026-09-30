@@ -633,9 +633,9 @@ abstract final class ApexCraft {
       case SpecRoleTag.tank:
         crit = 2 + rank + secTier ~/ 2;
       case SpecRoleTag.healer:
-        // Heals ignore haste — Mp5 + a little crit, same honesty as dungeon loot.
         mp5 = 2 + rank + secTier ~/ 2;
         crit = 1 + rank + secTier ~/ 3;
+        aspd = 1 + rank ~/ 2;
       case SpecRoleTag.meleeDps:
         crit = 3 + rank * 2 + secTier ~/ 2;
         aspd = 2 + rank + secTier ~/ 2;
@@ -644,6 +644,7 @@ abstract final class ApexCraft {
         aspd = 3 + rank + secTier ~/ 2;
       case SpecRoleTag.caster:
         crit = 3 + rank * 2 + secTier ~/ 2;
+        aspd = 2 + rank ~/ 2;
     }
     crit = EquipmentFactory.lootCritPercent(crit);
 

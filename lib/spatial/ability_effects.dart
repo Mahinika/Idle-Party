@@ -35,6 +35,15 @@ abstract final class AbilityEffectRunner {
   /// Pack storms stop at this many bodies so a 20-clump does not 3× Combat.
   static const int _aoeHitCap = 8;
 
+  static bool _burningGround(AbilityId id) {
+    return id == AbilityId.blizzard ||
+        id == AbilityId.rainOfFire ||
+        id == AbilityId.deathAndDecayBlood ||
+        id == AbilityId.deathAndDecayUnholy ||
+        id == AbilityId.hurricane ||
+        id == AbilityId.mindSear;
+  }
+
   static int _abilityPower(SpatialActor hero, ClassAbilityDef def) {
     if (ClassAbilityDef.inferUsesSpellPower(def)) {
       return hero.spellPower > 0 ? hero.spellPower : hero.attack;
@@ -837,6 +846,26 @@ abstract final class AbilityEffectRunner {
         return true;
       case AbilityEffectKind.emergencyDefend:
         spendAndCd(world, hero, def);
+        if (def.id == AbilityId.cloakOfShadows) {
+          hero.rootTimer = 0;
+          hero.stunTimer = 0;
+          hero.attackSlowTimer = 0;
+          hero.bleedTimer = 0;
+          hero.shieldWallTimer = math.max(hero.shieldWallTimer, 3.5);
+          announce(
+            world,
+            hero,
+            def.shortLabel,
+            0xFFB8D4FF,
+            reducedVfx,
+            important: true,
+          );
+          return true;
+        }
+        if (def.id == AbilityId.deterrence) {
+          _castAbsorb(world, hero, hero, def, reducedVfx: reducedVfx);
+          return true;
+        }
         // Preparation: reset other kit CDs (Prep stays on CD).
         if (def.id == AbilityId.preparation) {
           final spec = hero.heroSpecId;
@@ -1158,6 +1187,9 @@ abstract final class AbilityEffectRunner {
       hero.arcaneCharges = 0;
       raw = math.max(2, (raw * (1.0 + charges * 0.2)).round());
     }
+    if (def.id == AbilityId.earthShock) {
+      enemy.specialCd = math.max(enemy.specialCd, 3.0);
+    }
     // Frost Ice Lance shatters rooted targets.
     if (def.id == AbilityId.iceLance && enemy.rootTimer > 0) {
       raw = math.max(2, (raw * 1.75).round());
@@ -1206,8 +1238,17 @@ abstract final class AbilityEffectRunner {
       return;
     }
     final tint = SpatialCombat.burstArgbForStyle(style);
-
     hero.attackFlash = 0.16;
+
+    if (def.id == AbilityId.mindFlay) {
+      final slice = math.max(2, (raw / 3).round());
+      raw = slice;
+      hero.channelTicksLeft = 2;
+      hero.channelAmount = slice;
+      hero.channelTargetId = enemy.id;
+      hero.channelKind = 'hit';
+      hero.channelAcc = 0;
+    }
     SpatialCombat.setAttackAnim(hero, enemy, 0.22);
     announce(world, hero, def.shortLabel, tint, reducedVfx);
     _applyDamageSideEffects(world, hero, def, rawEstimate: raw);
@@ -1804,6 +1845,19 @@ abstract final class AbilityEffectRunner {
       );
       i++;
     }
+    if (_burningGround(def.id)) {
+      SpatialCombat.spawnGroundFx(
+        world,
+        x: ax,
+        y: ay,
+        argb: (argb & 0x00FFFFFF) | 0x55000000,
+        radius: radius,
+        life: 2.4,
+        kind: SpellVfx.groundKindFor(style: style, id: def.id),
+        tickDamage: math.max(1, raw ~/ 10),
+        ownerId: hero.id,
+      );
+    }
   }
 
   /// Sit a pack disc on the clump, not the edge target a kiting caster sees.
@@ -1918,6 +1972,8 @@ abstract final class AbilityEffectRunner {
           radius: vfx?.groundRadius ?? radius,
           life: discLife ?? 2.5,
           kind: SpellVfx.groundKindFor(style: style, id: def.id),
+          tickDamage: _burningGround(def.id) ? math.max(1, raw ~/ 10) : 0,
+          ownerId: hero.id,
         );
       }
     }
@@ -1929,10 +1985,15 @@ abstract final class AbilityEffectRunner {
       final fromX = world.canWalk(ox, oy) ? ox : hero.x;
       final fromY = world.canWalk(ox, oy) ? oy : hero.y;
       if (!SpatialCombat.canShoot(world, fromX, fromY, e.x, e.y)) continue;
-      if (hitCount >= _aoeHitCap) break;
+      if (hitCount >= (def.id == AbilityId.fanOfKnives ? 24 : _aoeHitCap)) {
+        break;
+      }
       final wasAlive = e.hp > 0;
+      final pulse = _burningGround(def.id)
+          ? math.max(1, (raw * 0.72).round())
+          : raw;
       final dealt = CombatRatings.mitigateByArmor(
-        rawDamage: raw,
+        rawDamage: pulse,
         defense: e.effectiveDefense,
         attackerAttack: hero.attack,
       );
