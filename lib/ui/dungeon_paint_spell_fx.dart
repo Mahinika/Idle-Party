@@ -1,7 +1,7 @@
 part of 'spatial_dungeon_view.dart';
 
 /// Additive light under spells, plus the sparks those spells leave behind.
-extension DungeonPaintSpellFx on _TileRoomPainter {
+extension _DungeonPaintSpellFx on _TileRoomPainter {
   static final Paint _glow = Paint()..blendMode = BlendMode.plus;
   static final Paint _spark = Paint();
 

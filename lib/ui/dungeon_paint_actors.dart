@@ -1,6 +1,6 @@
 part of 'spatial_dungeon_view.dart';
 
-extension DungeonPaintActors on _TileRoomPainter {
+extension _DungeonPaintActors on _TileRoomPainter {
   void paintDungeonActors(
     Canvas canvas,
     double tile,

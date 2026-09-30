@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/class_ability.dart';
-import 'package:idle_party/models/spell_bolt_style.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 
 /// Styles that already lived on the ability and beat the id switch.
