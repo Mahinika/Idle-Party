@@ -1,9 +1,11 @@
+@Tags(['facit'])
+library;
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
 /// Looks gate from tool/check_paper_doll_facit.py (live armor stack vs _src).
-@Tags(['facit'])
 void main() {
   test('paper-doll facit gate passes for all families', () {
     final root = Directory.current;
