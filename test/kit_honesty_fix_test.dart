@@ -1287,6 +1287,99 @@ void main() {
     expect(target.specialCd, greaterThanOrEqualTo(2.5));
     expect(target.bleedTimer, greaterThan(0));
   });
+
+  test('Cheap Shot stuns so the foe cannot swing', () {
+    final state = _soloSpecParty(HeroSpecId.subtlety, level: 12);
+    var world = SpatialCombat.build(state);
+    final target = _soloEnemy(world);
+    final rogue = world.heroes.firstWhere((h) => !h.isPet);
+    rogue
+      ..rage = 100
+      ..x = target.x - 1.2
+      ..y = target.y;
+    _padAbilityCds(rogue, except: AbilityId.cheapShot);
+
+    var fired = false;
+    for (var i = 0; i < 40; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (target.stunTimer > 0) {
+        fired = true;
+        break;
+      }
+      rogue.rage = 100;
+    }
+    expect(fired, isTrue);
+  });
+
+  test('Holy Wrath stuns the pack', () {
+    final state = _soloSpecParty(HeroSpecId.protPaladin, level: 12);
+    var world = SpatialCombat.build(state);
+    final foes = world.enemies.where((e) => e.hp > 0).take(2).toList();
+    expect(foes.length, 2);
+    for (final e in world.enemies) {
+      if (!foes.contains(e)) {
+        e
+          ..hp = 0
+          ..dormant = true;
+      }
+    }
+    final pal = world.heroes.firstWhere((h) => !h.isPet);
+    pal
+      ..rage = 100
+      ..x = foes.first.x - 1.2
+      ..y = foes.first.y;
+    foes[1]
+      ..x = foes.first.x + 0.6
+      ..y = foes.first.y
+      ..hp = math.max(foes[1].hp, 400);
+    _padAbilityCds(pal, except: AbilityId.holyWrath);
+
+    var stunned = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (foes.first.stunTimer > 0) {
+        stunned = true;
+        break;
+      }
+      pal.rage = 100;
+    }
+    expect(stunned, isTrue);
+  });
+
+  test('Shadowfury stuns the pack', () {
+    final state = _soloSpecParty(HeroSpecId.destruction, level: 12);
+    var world = SpatialCombat.build(state);
+    final foes = world.enemies.where((e) => e.hp > 0).take(2).toList();
+    expect(foes.length, 2);
+    for (final e in world.enemies) {
+      if (!foes.contains(e)) {
+        e
+          ..hp = 0
+          ..dormant = true;
+      }
+    }
+    final lock = world.heroes.firstWhere((h) => !h.isPet);
+    lock
+      ..rage = 100
+      ..x = foes.first.x - 1.2
+      ..y = foes.first.y;
+    foes[1]
+      ..x = foes.first.x + 0.6
+      ..y = foes.first.y
+      ..hp = math.max(foes[1].hp, 400);
+    _padAbilityCds(lock, except: AbilityId.shadowfury);
+
+    var stunned = false;
+    for (var i = 0; i < 50; i++) {
+      world = SpatialCombat.step(world, state, dt: 0.1).world;
+      if (foes.first.stunTimer > 0) {
+        stunned = true;
+        break;
+      }
+      lock.rage = 100;
+    }
+    expect(stunned, isTrue);
+  });
 }
 
 GameState _soloSpecParty(HeroSpecId specId, {required int level}) {

@@ -319,12 +319,24 @@ void main() {
       );
     });
 
+    test('October reuses September board ids', () {
+      expect(PlayLeaderboardIds.hasBoards('2026-10'), isTrue);
+      expect(
+        PlayLeaderboardIds.timedKeyId('2026-10'),
+        PlayLeaderboardIds.timedKeyId('2026-09'),
+      );
+      expect(
+        PlayLeaderboardIds.greaterRiftId('2026-10'),
+        PlayLeaderboardIds.greaterRiftId('2026-09'),
+      );
+    });
+
     test('a month without Console ids does not pretend Play is missing', () {
-      expect(PlayLeaderboardIds.hasBoards('2026-10'), isFalse);
+      expect(PlayLeaderboardIds.hasBoards('2026-11'), isFalse);
       expect(
         PlayLeaderboardIds.unavailableMessage(
           playGamesSupported: true,
-          monthKey: '2026-10',
+          monthKey: '2026-11',
         ),
         PlayLeaderboardIds.monthBoardsPendingMessage,
       );

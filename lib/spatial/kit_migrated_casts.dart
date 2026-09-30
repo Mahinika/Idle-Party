@@ -1016,6 +1016,7 @@ abstract final class KitNamedCasts {
         if (focus == null || focus.hp <= 0) return false;
         AbilityEffectRunner.spendAndCd(world, hero, def);
         focus.rootTimer = 2.0 + hero.comboPoints * 0.25 + hero.kitRootBonus;
+        focus.stunTimer = math.max(focus.stunTimer, focus.rootTimer);
         hero.comboPoints = 0;
         if (!reducedVfx) {
           SpatialCombat.spawnSpark(

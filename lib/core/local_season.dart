@@ -260,6 +260,16 @@ abstract final class LocalSeasonCatalog {
       mirrorSeedSalt: 12,
     ),
     LocalSeasonMonth(
+      id: 'storm_month',
+      name: 'Storm Month',
+      monthKey: '2026-10',
+      titleReward: 'Storm Season',
+      timedKeyTarget: 10,
+      essenceReward: 28,
+      mirrorZoneId: 'storm',
+      mirrorSeedSalt: 13,
+    ),
+    LocalSeasonMonth(
       id: 'ember_month',
       name: 'Ember Month',
       titleReward: 'Ember Season',

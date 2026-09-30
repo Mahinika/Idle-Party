@@ -25,6 +25,12 @@ abstract final class PlayLeaderboardIds {
           gauntlet: 'CgkIhuXGvNocEAIQAQ',
           greaterRift: 'CgkIhuXGvNocEAIQAw',
         ),
+        // Reuse September KEY / Gauntlet / Ranked GR until October Console ids exist.
+        '2026-10': (
+          timedKey: 'CgkIhuXGvNocEAIQAA',
+          gauntlet: 'CgkIhuXGvNocEAIQAQ',
+          greaterRift: 'CgkIhuXGvNocEAIQAw',
+        ),
       };
 
   /// Player-facing honesty when boards cannot open a real Play leaderboard.

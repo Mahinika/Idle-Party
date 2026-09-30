@@ -306,10 +306,15 @@ extension _DungeonPaintActors on _TileRoomPainter {
                 BodyFamilyCatalog.familyFor(partyHero),
               )
             : 1.0;
-        final scale = (formImg != null
+        var scale = (formImg != null
                 ? 1.42
                 : (usingOwnedBody ? 1.72 * read : 0.95)) *
             (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
+        if (partyHero.specId == HeroSpecId.demonology &&
+            hero.combustionTimer > 0) {
+          tint = const Color(0xFF8040C0);
+          scale *= 1.12;
+        }
         final motion = CharacterVisualPainter.clipMotion(
           anim.kind,
           anim.progress,

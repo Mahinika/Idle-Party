@@ -512,7 +512,7 @@ abstract final class GameGuides {
           '• Stats: plate wants Strength, leather/mail damage wants Agility, '
           'casters want Intellect and Spell Power. Spirit is mana, not damage. '
           'Secondaries are Crit / Mastery / Mp5 — new drops keep ≤2 (no Move). '
-          'Healers roll Mp5 then Crit (Haste is affix-only — heals do not haste). '
+          'Healers roll Mp5 then Crit. Haste shortens heal cooldowns. '
           'Near 75% crit, EQUIP stops chasing more Crit.\n'
           '• Armor type is a hard gate: Warrior / Paladin / DK wear plate; '
           'Hunter starts leather then mail at 40; Shaman mail; Rogue leather; '

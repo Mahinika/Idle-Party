@@ -938,6 +938,24 @@ abstract final class AbilityEffectRunner {
           hero.sprintTimer = math.max(hero.sprintTimer, 3.5);
           hero.shieldWallTimer = math.max(hero.shieldWallTimer, 2.0);
           hero.powerInfusionTimer = math.max(hero.powerInfusionTimer, 3.0);
+          final foe = (focus != null && focus.hp > 0) ? focus : null;
+          if (foe != null) {
+            final awayX = hero.x - foe.x;
+            final awayY = hero.y - foe.y;
+            final away = math.sqrt(awayX * awayX + awayY * awayY);
+            if (away > 0.1) {
+              final snapped = SpatialCombat.clampAlongWalk(
+                world.map,
+                world.openGateIds,
+                hero.x,
+                hero.y,
+                hero.x + (awayX / away) * 2.4,
+                hero.y + (awayY / away) * 2.4,
+              );
+              hero.x = snapped.$1;
+              hero.y = snapped.$2;
+            }
+          }
           announce(
             world,
             hero,
@@ -1125,6 +1143,8 @@ abstract final class AbilityEffectRunner {
       (raw * SpecMastery.damageMul(masteryView(hero), def, masteryView(enemy)))
           .round(),
     );
+    final spellCrit = hero.spellCrit > 0 && rng.nextInt(100) < hero.spellCrit;
+    if (spellCrit) raw = math.max(2, (raw * 1.5).round());
     // Damage amp window (Vendetta / Cold Blood / Arcane Power).
     if (hero.combustionTimer > 0) {
       raw = math.max(2, (raw * 1.22).round());
@@ -1247,7 +1267,7 @@ abstract final class AbilityEffectRunner {
     SpatialCombat.hurtEnemy(enemy, dealt);
     SpatialCombat.recordHeroDamage(hero, dealt);
     SpatialCombat.applyTankSoftThreat(hero, enemy);
-    SpatialCombat.spawnSlash(world, from: hero, to: enemy, isCrit: false);
+    SpatialCombat.spawnSlash(world, from: hero, to: enemy, isCrit: spellCrit);
     if (dealt > 0) {
       SpatialCombat.noteFeelHit(
         world,
@@ -1670,6 +1690,7 @@ abstract final class AbilityEffectRunner {
           attackerAttack: hero.attack,
         );
         SpatialCombat.hurtEnemy(e, dealt);
+        if (def.id == AbilityId.holyWrath) applyEnemyStun(e, 1.8);
         SpatialCombat.recordHeroDamage(hero, dealt);
         SpatialCombat.applyTankSoftThreat(hero, e);
         if (dealt > 0) {
@@ -1916,6 +1937,7 @@ abstract final class AbilityEffectRunner {
         attackerAttack: hero.attack,
       );
       SpatialCombat.hurtEnemy(e, dealt);
+      if (def.id == AbilityId.shadowfury) applyEnemyStun(e, 1.8);
       SpatialCombat.recordHeroDamage(hero, dealt);
       SpatialCombat.applyTankSoftThreat(hero, e);
       if (dealt > 0) {
@@ -1968,6 +1990,32 @@ abstract final class AbilityEffectRunner {
   }) {
     final style = SpatialCombat.boltStyleForAbility(hero, def: def);
     applyEnemyRoot(focus, 2.2 + hero.kitRootBonus);
+    if (def.id == AbilityId.cheapShot) {
+      focus.stunTimer = math.max(focus.stunTimer, focus.rootTimer);
+    }
+    if (def.id == AbilityId.typhoon) {
+      for (final e in world.enemies) {
+        if (e.hp <= 0 || e.dormant) continue;
+        if (SpatialCombat.actorDist(hero, e) > 2.8) continue;
+        if (!identical(e, focus)) {
+          applyEnemyRoot(e, 2.2 + hero.kitRootBonus);
+        }
+        final dx = e.x - hero.x;
+        final dy = e.y - hero.y;
+        final len = math.sqrt(dx * dx + dy * dy);
+        if (len < 0.05) continue;
+        final snapped = SpatialCombat.clampAlongWalk(
+          world.map,
+          world.openGateIds,
+          hero.x,
+          hero.y,
+          e.x + (dx / len) * 1.5,
+          e.y + (dy / len) * 1.5,
+        );
+        e.x = snapped.$1;
+        e.y = snapped.$2;
+      }
+    }
     hero.attackFlash = 0.14;
     announce(world, hero, def.shortLabel, 0xFF80D0FF, reducedVfx);
 
@@ -2079,7 +2127,13 @@ abstract final class AbilityEffectRunner {
     ClassAbilityDef def,
   ) {
     SpatialCombat.spendRage(hero, def.resourceCost);
-    SpatialCombat.startAbilityCd(world, hero, def.id, def.cooldown);
+    var cd = def.cooldown;
+    if (def.effect == AbilityEffectKind.heal ||
+        def.effect == AbilityEffectKind.emergencyHeal) {
+      final haste = math.max(1.0, hero.attackSpeedMul);
+      cd = def.cooldown / haste;
+    }
+    SpatialCombat.startAbilityCd(world, hero, def.id, cd);
   }
 
   static void announce(
@@ -2469,7 +2523,11 @@ abstract final class AbilityEffectRunner {
         : (1.0 - ally.hp / ally.effectiveMaxHp).clamp(0.0, 1.0);
     final healMul =
         SpecMastery.healMul(masteryView(caster), missing) * caster.kitHealMul;
-    final amount = math.max(4, (_healPower(caster) * coeff * healMul).round());
+    var amount = math.max(4, (_healPower(caster) * coeff * healMul).round());
+    if (caster.spellCrit > 0 &&
+        math.Random().nextInt(100) < caster.spellCrit) {
+      amount = math.max(4, (amount * 1.5).round());
+    }
     final before = ally.hp;
     ally.hp = math.min(ally.effectiveMaxHp, ally.hp + amount);
     final gained = ally.hp - before;

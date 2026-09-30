@@ -22,6 +22,7 @@ void main() {
     expect(LocalSeasonCatalog.forWeekKey('2026-W36').id, 'veil_tempo');
     expect(LocalSeasonCatalog.forWeekKey('2026-W37').id, 'ember_climb');
     expect(LocalSeasonCatalog.forMonthKey('2026-08').id, 'veil_month');
+    expect(LocalSeasonCatalog.forMonthKey('2026-10').id, 'storm_month');
   });
 
   test('week affix override applied on ensureWeeklyContract', () {
