@@ -10,13 +10,17 @@ description: >-
 
 # Gear lookbook (Idle Party)
 
-Same dolls as MORE → SETTINGS → DEV: GEAR LOOKBOOK. Pictures only. No
-emulator and no browser.
+Same dolls as MORE → SETTINGS → DEV: GEAR LOOKBOOK. Pictures plus one
+count file. No emulator and no browser.
 
 ## Workflow
 
 1. `py -3 tool/gear_lookbook.py`
-2. Read the PNGs under `tool/out/lookbook/` with vision. Start with
+2. Read `tool/out/lookbook/measure.txt` first. Each doll is scored on
+   face, hand, off, hair, and open in that one pass. A mark means that
+   count is off: FACE (blade on the face), HAND or OFF (nothing in that
+   hand), HAIR (helm misses the hair), COVERED (helm hides the face).
+   A dash means that piece is not worn. Then read the PNGs. Start with
    `fit_compare.png` and `fit_weapons.png` when several pieces are worn
    together. Then `fit_kit.png` and `fit_materials.png`.
 3. Open the family sheet that matches the change:

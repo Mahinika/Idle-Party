@@ -22,9 +22,16 @@ def main() -> int:
         shell=True,
     )
     out = ROOT / "tool" / "out" / "lookbook"
-    if result.returncode == 0:
-        print(f"sheets in {out}")
-    return result.returncode
+    if result.returncode != 0:
+        return result.returncode
+    print(f"sheets in {out}")
+    # Same outfits, four sit counts each. Numbers next to the pictures.
+    measured = subprocess.run(
+        "py -3 tool/measure_lookbook.py",
+        cwd=ROOT,
+        shell=True,
+    )
+    return measured.returncode
 
 
 if __name__ == "__main__":
