@@ -655,6 +655,47 @@ void main() {
     expect(pose.layers.any((l) => l.id == CharacterLayerId.offHand), isFalse);
   });
 
+  test('owned off-hand weapon keeps its own hand', () {
+    final hero = nakedWarrior().copyWith(
+      equipped: {
+        EquipmentSlot.weapon: GameLogic.createEquipment(
+          slot: EquipmentSlot.weapon,
+          rarity: LootRarity.common,
+          battleNumber: 2,
+          bias: HeroRole.rogue,
+        ).copyWith(
+          weaponType: WeaponType.dagger,
+          handed: WeaponHanded.oneHand,
+          visualSetId: 'dagger_t0',
+        ),
+        EquipmentSlot.offHand: GameLogic.createEquipment(
+          slot: EquipmentSlot.offHand,
+          rarity: LootRarity.common,
+          battleNumber: 2,
+          bias: HeroRole.rogue,
+        ).copyWith(
+          weaponType: WeaponType.dagger,
+          handed: WeaponHanded.oneHand,
+          offHandKind: OffHandKind.weapon,
+          visualSetId: 'dagger_t0',
+        ),
+      },
+    );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: idle,
+      owned: true,
+    );
+    final main = pose.layers.where((l) => l.id == CharacterLayerId.mainHand);
+    final off = pose.layers.where((l) => l.id == CharacterLayerId.offHand);
+    expect(main, hasLength(1));
+    expect(off, hasLength(1));
+    expect(main.single.anchorId, AnchorId.mainHand);
+    expect(off.single.anchorId, AnchorId.offHand);
+    expect(main.single.ownedAsset, contains('dagger_t0'));
+    expect(off.single.ownedAsset, contains('dagger_t0'));
+  });
+
   test('owned hand items are grip-anchored', () {
     final hero = nakedWarrior().copyWith(
       equipped: {

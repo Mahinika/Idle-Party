@@ -1131,49 +1131,14 @@ def copy_authored_shared(shared: Path) -> int:
 
 
 def _lock_material_pair(name: str, base: Image.Image, late: Image.Image) -> bool:
-    """Keep the late cut's material readable without drifting off the plain cut.
+    """The painted plates already carry the material. Do not flatten them.
 
-    Seam rows and the mail checker are stamped on both, then the left side
-    is lifted so the light still comes from the upper left.
+    An earlier pass replaced mail with two greys and leather with a
+    barcode, which is why a hunter read as a cloud. Overlapping late-cut
+    pixels already copied the plain cut's colors above.
     """
-    from gear_style import MATERIAL_RAMPS, _lift_left
-
-    if "_leather_" in name:
-        material = "leather"
-    elif "_mail_" in name:
-        material = "mail"
-    else:
-        return False
-    ramp = MATERIAL_RAMPS[material]
-    if material == "mail":
-        bp, lp = base.load(), late.load()
-        for px in (bp, lp):
-            for y in range(128):
-                for x in range(128):
-                    if px[x, y][3] < 40:
-                        continue
-                    color = ramp[3] if (x + y) % 2 == 0 else ramp[1]
-                    px[x, y] = (*color, px[x, y][3])
-        base.paste(_lift_left(base, material))
-        late.paste(_lift_left(late, material))
-        return True
-    # Full rows, lighter than the seam, so a small pauldron still counts.
-    # Both cuts share the plain cut's rows so the colors still match.
-    bb = base.getbbox() or late.getbbox() or (0, 0, 128, 128)
-    y0, y1 = bb[1], bb[3]
-    seam = 4 if (y1 - y0) < 40 else 7
-    for im in (base, late):
-        box = im.getbbox() or bb
-        mid = (box[0] + box[2]) // 2
-        px = im.load()
-        for y in range(128):
-            dark = y0 <= y < y1 and (y - y0) % seam == 0
-            for x in range(128):
-                if px[x, y][3] < 40:
-                    continue
-                color = ramp[0] if dark else (ramp[3] if x <= mid else ramp[2])
-                px[x, y] = (*color, px[x, y][3])
-    return True
+    del name, base, late
+    return False
 
 
 def apply_stage_style() -> int:
@@ -1302,6 +1267,59 @@ def cover_hair(family: str) -> int:
     return n
 
 
+def finish_material_signatures() -> int:
+    """The late cut and the face pass can wipe a stitch row or a ring."""
+    from gear_style import (
+        add_plate_bands,
+        brighten_leather_growth,
+        ensure_material_signature,
+    )
+
+    n = 0
+    mat_re = re.compile(r"_(leather|mail|plate)_")
+    for family in FAMILIES:
+        gear = ROOT / family / "gear"
+        for path in gear.glob("*_idle.png"):
+            found = mat_re.search(path.name)
+            if found is None:
+                continue
+            im = Image.open(path).convert("RGBA")
+            out = ensure_material_signature(im, found.group(1))
+            if found.group(1) == "plate":
+                out = add_plate_bands(out)
+            if out.tobytes() != im.tobytes():
+                out.save(path)
+                n += 1
+    # Signature stamps can push the late cut off the plain cut's colors.
+    for family in FAMILIES:
+        gear = ROOT / family / "gear"
+        for path in gear.glob("*_t0_idle.png"):
+            if mat_re.search(path.name) is None:
+                continue
+            t2 = gear / path.name.replace("_t0_", "_t2_")
+            if not t2.exists():
+                continue
+            base = Image.open(path).convert("RGBA")
+            late = Image.open(t2).convert("RGBA")
+            bp, lp = base.load(), late.load()
+            changed = False
+            for y in range(128):
+                for x in range(128):
+                    if lp[x, y][3] < 40 or bp[x, y][3] < 40:
+                        continue
+                    if lp[x, y][:3] != bp[x, y][:3]:
+                        lp[x, y] = (*bp[x, y][:3], lp[x, y][3])
+                        changed = True
+            grown = brighten_leather_growth(base, late)
+            if grown.tobytes() != Image.open(t2).convert("RGBA").tobytes():
+                grown.save(t2)
+                n += 1
+            elif changed:
+                late.save(t2)
+                n += 1
+    return n
+
+
 def lift_flat_pieces() -> int:
     """Face clearing can wipe the light. Put it back without a new outline."""
     from gear_style import MIN_LIGHT, _lift_left, _light_score
@@ -1357,6 +1375,7 @@ def run_build() -> None:
         print("ok", family, "face owned, rewrote", own_face(family))
         print("ok", family, "hair covered", cover_hair(family))
     print("ok flat light", lift_flat_pieces())
+    print("ok material signature", finish_material_signatures())
     print("ok icons", icons.write_all())
     subprocess.check_call([sys.executable, str(TOOL / "gen_owned_gear_grips.py")])
     for family in FAMILIES:

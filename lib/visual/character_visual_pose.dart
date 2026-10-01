@@ -349,7 +349,13 @@ class CharacterVisualPose {
         hero.itemIn(EquipmentSlot.weapon) ?? hero.itemIn(EquipmentSlot.ranged);
     final hideOff = main?.handed == WeaponHanded.twoHand;
     if (!hideOff) {
-      addItem(hero.itemIn(EquipmentSlot.offHand));
+      // A dagger's catalog layer is the main hand. Without this, the
+      // off-hand weapon takes that layer and the real main hand is dropped,
+      // so dual wield draws one blade.
+      addItem(
+        hero.itemIn(EquipmentSlot.offHand),
+        layer: CharacterLayerId.offHand,
+      );
     }
     addItem(main, layer: CharacterLayerId.mainHand);
 

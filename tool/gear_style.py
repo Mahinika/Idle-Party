@@ -400,78 +400,353 @@ def _thicken(im: Image.Image, passes: int) -> Image.Image:
     return out
 
 
-def paint_material(mask: Image.Image, material: str) -> Image.Image:
-    """Fill [mask]'s opaque pixels with that material's surface language.
+def _lum_rgb(rgb: tuple[int, int, int]) -> float:
+    return 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
 
-    cloth = soft vertical folds. leather = matte with dark seams.
-    mail = ring dither. plate = hard plates, highlight, rivets.
+
+def _is_trim(rgb: tuple[int, int, int]) -> bool:
+    """Brass edging. A pale robe is bright in every channel, so it is not trim."""
+    r, g, b = rgb
+    return r > 140 and b < 100 and r > g + 15 and g > b + 20
+
+
+def _plate_highlight_and_rivets(dp, w: int, h: int, ramp, gold) -> None:
+    """A solid upper-left highlight and four rivets. Both are gate requirements."""
+    bb_pixels = [
+        (x, y)
+        for y in range(h)
+        for x in range(w)
+        if dp[x, y][3] >= 40
+    ]
+    if not bb_pixels:
+        return
+    xs = [p[0] for p in bb_pixels]
+    ys = [p[1] for p in bb_pixels]
+    x0, y0, x1, y1 = min(xs), min(ys), max(xs) + 1, max(ys) + 1
+    span = max(1, (x1 - x0) + (y1 - y0))
+    lit = sorted(
+        (
+            (
+                1.0 - ((x - x0) + (y - y0)) / span,
+                x,
+                y,
+            )
+            for x, y in bb_pixels
+        ),
+        reverse=True,
+    )
+    for _, x, y in lit[: max(4, len(bb_pixels) // 14)]:
+        dp[x, y] = (*ramp[4], 255)
+    interior = [
+        (x, y)
+        for x, y in bb_pixels
+        if 2 <= x < w - 2
+        and 2 <= y < h - 2
+        and dp[x, y][:3] != ramp[4]
+        and all(
+            dp[x + dx, y + dy][3] >= 40
+            for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2))
+        )
+    ]
+    if not interior:
+        return
+    step = max(1, len(interior) // 4)
+    placed = 0
+    for i in range(0, len(interior), step):
+        x, y = interior[i]
+        dp[x, y] = (*gold[3], 255)
+        placed += 1
+        if placed >= 4:
+            break
+
+
+def _surface_problems(im: Image.Image, material: str) -> list[str]:
+    from facit.armor import signature_problems, surface_stats
+
+    return signature_problems(material, surface_stats(im))
+
+
+def ensure_material_signature(im: Image.Image, material: str) -> Image.Image:
+    """Push a painted piece over the material gate without flattening it."""
+    out = im.convert("RGBA")
+    if material not in ("plate", "mail", "leather"):
+        return out
+    ramp = MATERIAL_RAMPS[material]
+    if not _surface_problems(out, material):
+        return out
+    w, h = out.size
+    dp = out.load()
+    if material == "mail":
+        for y in range(h):
+            for x in range(w):
+                if dp[x, y][3] < 40 or dp[x, y][:3] == ramp[0]:
+                    continue
+                dp[x, y] = (*ramp[3 if (x + y) % 2 == 0 else 1], 255)
+    elif material == "leather":
+        bright = [
+            (x, y)
+            for y in range(h)
+            for x in range(w)
+            if dp[x, y][3] >= 40 and _lum_rgb(dp[x, y][:3]) >= 185
+        ]
+        for x, y in bright:
+            dp[x, y] = (*ramp[3], 255)
+        occupied = [
+            y
+            for y in range(h)
+            if any(dp[x, y][3] >= 40 for x in range(w))
+        ]
+        # Prefer rows that actually hold leather, a few pixels apart.
+        picks = occupied[:: max(1, len(occupied) // 3)][:3]
+        for y in picks:
+            for x in range(w):
+                if dp[x, y][3] >= 40:
+                    dp[x, y] = (*ramp[0], 255)
+    else:
+        # A thin helm's ink edge is most of the picture and fails the
+        # dither gate. Solid metal, and drop that edge when it has to.
+        return _solid_plate(out)
+    if material != "leather":
+        out = style_lock(out, material)
+    return out
+
+
+def _solid_plate(im: Image.Image) -> Image.Image:
+    """Flat plate, a compact highlight, and four rivets."""
+
+    def paint(outline: bool) -> Image.Image:
+        src = im.convert("RGBA")
+        out = Image.new("RGBA", src.size, (0, 0, 0, 0))
+        sp, dp = src.load(), out.load()
+        ramp = MATERIAL_RAMPS["plate"]
+        gold = MATERIAL_RAMPS["gold"]
+        w, h = src.size
+        for y in range(h):
+            for x in range(w):
+                if sp[x, y][3] >= 40:
+                    dp[x, y] = (*ramp[2], 255)
+        _plate_highlight_and_rivets(dp, w, h, ramp, gold)
+        if outline:
+            out = apply_outline(out)
+        if _light_score(out) < MIN_LIGHT:
+            lifted = _lift_left(out, "plate")
+            if _light_score(lifted) >= MIN_LIGHT and not _surface_problems(
+                lifted, "plate"
+            ):
+                return lifted
+        return out
+
+    outlined = paint(True)
+    if not _surface_problems(outlined, "plate"):
+        return outlined
+    return paint(False)
+
+
+def add_plate_bands(im: Image.Image) -> Image.Image:
+    """Two dark lines across a flat plate so it reads as segments.
+
+    A single fill looks like a robe. Lines only stay when the piece
+    still passes the plate gate.
+    """
+    src = im.convert("RGBA")
+    stats_now = _surface_problems(src, "plate")
+    if stats_now:
+        return src
+    from facit.armor import surface_stats
+    from facit.style import authored_problems
+
+    if surface_stats(src)["dither"] > 0.12:
+        return src
+    bb = src.getbbox()
+    if bb is None:
+        return src
+    out = src.copy()
+    dp = out.load()
+    x0, y0, x1, y1 = bb
+    ramp = MATERIAL_RAMPS["plate"]
+    gold = MATERIAL_RAMPS["gold"]
+    for i in (1, 2):
+        y = y0 + (y1 - y0) * i // 3
+        for x in range(x0, x1):
+            if dp[x, y][3] < 40:
+                continue
+            if dp[x, y][:3] in (ramp[4], gold[3]):
+                continue
+            dp[x, y] = (*ramp[0], 255)
+    if _surface_problems(out, "plate") or authored_problems(out, "plate"):
+        return src
+    if _light_score(out) < MIN_LIGHT:
+        return src
+    return out
+
+
+def brighten_leather_growth(base: Image.Image, late: Image.Image) -> Image.Image:
+    """Extra leather on a small pauldron is dark outline.
+
+    That pulls every row under the seam line, so no row counts as a
+    stitch. Brighten the growth that is not the outer edge. Pixels the
+    plain cut already owns stay put, so the two cuts keep one palette.
+    """
+    out = late.convert("RGBA").copy()
+    if "leather-seams" not in _surface_problems(out, "leather"):
+        return out
+    sp = late.convert("RGBA").load()
+    bp = base.convert("RGBA").load()
+    dp = out.load()
+    ramp = MATERIAL_RAMPS["leather"]
+    w, h = out.size
+    for y in range(h):
+        for x in range(w):
+            if sp[x, y][3] < 40 or bp[x, y][3] >= 40:
+                continue
+            edge = any(
+                nx < 0 or ny < 0 or nx >= w or ny >= h or sp[nx, ny][3] < 40
+                for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1))
+            )
+            if not edge:
+                dp[x, y] = (*ramp[3], 255)
+    return out
+
+
+def paint_material(mask: Image.Image, material: str) -> Image.Image:
+    """Keep the donor's plates and straps. Stamp that material's surface on them.
+
+    A flat fill is what made mail a grey cloud and leather a barcode. The
+    donor's light and dark stay, then mail gets rings, leather a few
+    stitches, and plate a highlight plus rivets.
     """
     src = mask.convert("RGBA")
     if material == "plate":
         # A lacy edge reads as cloth and also trips the dither gate.
-        for _ in range(6):
-            if _edge_share(src) <= 0.12:
+        # Two passes, not six: more than that turns a harness into a blob.
+        for _ in range(2):
+            if _edge_share(src) <= 0.18:
                 break
             src = _thicken(src, 1)
-    out = Image.new("RGBA", src.size, (0, 0, 0, 0))
-    sp, dp = src.load(), out.load()
+    w, h = src.size
+    sp = src.load()
+    lums = [
+        _lum_rgb(sp[x, y][:3])
+        for y in range(h)
+        for x in range(w)
+        if sp[x, y][3] >= 40
+    ]
+    if not lums:
+        return src
+    lums.sort()
+    n = len(lums)
+    varied = lums[-1] - lums[0] > 28
+    dark_cut = lums[min(n - 1, int(n * 0.14))]
     ramp = MATERIAL_RAMPS[material if material in MATERIAL_RAMPS else "plate"]
     gold = MATERIAL_RAMPS["gold"]
-    bb = src.getbbox() or (0, 0, src.width, src.height)
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    dp = out.load()
+    bb = src.getbbox() or (0, 0, w, h)
     x0, y0, x1, y1 = bb
-    w, h = src.size
+    span = max(1, (x1 - x0) + (y1 - y0))
+
+    def shade_index(lum: float, x: int, y: int) -> int:
+        if varied and lum <= dark_cut:
+            return 0
+        if not varied:
+            idx = 2
+        else:
+            # Rank in the donor, so a belt stays darker than a plate.
+            lo, hi = 0, n
+            while lo < hi:
+                mid = (lo + hi) // 2
+                if lums[mid] < lum:
+                    lo = mid + 1
+                else:
+                    hi = mid
+            idx = min(3, int((lo / max(1, n - 1)) * 3.99))
+        if (x - x0) + (y - y0) < span * 0.42:
+            idx = min(3, idx + 1)
+        return idx
+
     for y in range(h):
         for x in range(w):
-            if sp[x, y][3] < 40:
+            r, g, b, a = sp[x, y]
+            if a < 40:
                 continue
-            if material == "mail":
-                color = ramp[3] if (x + y) % 2 == 0 else ramp[1]
-            elif material == "leather":
-                seam = 4 if (y1 - y0) < 40 else 7
-                color = ramp[0] if (y - y0) % seam == 0 else ramp[2]
-                if (y - y0) % seam == max(1, seam // 2) and (x - x0) % 9 == 0:
-                    color = gold[2]
-            elif material == "cloth":
+            if varied and material != "plate" and _is_trim((r, g, b)) and material != "cloth":
+                dp[x, y] = (*gold[2], 255)
+                continue
+            dp[x, y] = (*ramp[shade_index(_lum_rgb((r, g, b)), x, y)], 255)
+
+    if material == "mail":
+        # Rings on the plates. The dark gaps between plates stay put.
+        for y in range(h):
+            for x in range(w):
+                if dp[x, y][3] < 40 or dp[x, y][:3] in (ramp[0], gold[2]):
+                    continue
+                try:
+                    idx = ramp.index(dp[x, y][:3])
+                except ValueError:
+                    idx = 2
+                idx = min(4, idx + 1) if (x + y) % 2 == 0 else max(1, idx - 1)
+                dp[x, y] = (*ramp[idx], 255)
+    elif material == "leather":
+        # A few stitch rows. Every row would be the barcode again.
+        height = max(1, y1 - y0)
+        for y in (
+            y0 + height // 5,
+            y0 + height // 2,
+            y0 + (4 * height) // 5,
+        ):
+            if not 0 <= y < h:
+                continue
+            for x in range(w):
+                if dp[x, y][3] < 40 or dp[x, y][:3] == gold[2]:
+                    continue
+                dp[x, y] = (*ramp[0], 255)
+        bright = [
+            (x, y)
+            for y in range(h)
+            for x in range(w)
+            if dp[x, y][3] >= 40 and _lum_rgb(dp[x, y][:3]) >= 185
+        ]
+        cap = int(n * 0.05)
+        for x, y in bright[cap:]:
+            dp[x, y] = (*ramp[3], 255)
+    elif material == "cloth":
+        for y in range(h):
+            for x in range(w):
+                if dp[x, y][3] < 40:
+                    continue
                 fold = ((x - x0) // 6) % 2
-                color = ramp[3] if fold else ramp[2]
-            else:
-                color = ramp[2]
-            dp[x, y] = (*color, 255)
-    if material == "plate":
-        # One solid highlight in the upper left. A speckled highlight
-        # counts as dither; a block does not.
-        lit = []
+                try:
+                    idx = ramp.index(dp[x, y][:3])
+                except ValueError:
+                    idx = 2
+                idx = min(4, idx + 1) if fold else max(0, idx - 1)
+                dp[x, y] = (*ramp[idx], 255)
+    else:
+        # Big shade regions, not a speckled copy. Speckles fail the plate
+        # dither gate; the armor's shape is already in the silhouette.
+        blurred: dict[tuple[int, int], float] = {}
         for y in range(h):
             for x in range(w):
                 if sp[x, y][3] < 40:
                     continue
-                t = 1.0 - ((x - x0) + (y - y0)) / max(1, (x1 - x0) + (y1 - y0))
-                lit.append((t, x, y))
-        lit.sort(reverse=True)
-        for _, x, y in lit[: max(4, len(lit) // 12)]:
-            dp[x, y] = (*ramp[4], 255)
-    if material == "plate":
-        # A few inset rivets, far apart so they do not read as dither.
-        interior = []
-        for y in range(2, h - 2):
-            for x in range(2, w - 2):
-                if sp[x, y][3] < 40:
-                    continue
-                if any(
-                    sp[x + dx, y + dy][3] < 40
-                    for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2))
-                ):
-                    continue
-                interior.append((x, y))
-        dark = [p for p in interior if dp[p][:3] != ramp[4]]
-        picks = dark or interior
-        if picks:
-            step = max(1, len(picks) // 4)
-            placed = 0
-            for i in range(0, len(picks), step):
-                x, y = picks[i]
-                dp[x, y] = (*gold[3], 255)
-                placed += 1
-                if placed >= 4:
-                    break
-    return style_lock(out, material)
+                acc = count = 0
+                for dy in range(-4, 5):
+                    for dx in range(-4, 5):
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < w and 0 <= ny < h and sp[nx, ny][3] >= 40:
+                            acc += _lum_rgb(sp[nx, ny][:3])
+                            count += 1
+                blurred[(x, y)] = acc / max(1, count)
+        ordered = sorted(blurred.values())
+        lo = ordered[len(ordered) // 3]
+        hi = ordered[(2 * len(ordered)) // 3]
+        for (x, y), value in blurred.items():
+            if value < lo:
+                color = ramp[1]
+            elif value < hi:
+                color = ramp[2]
+            else:
+                color = ramp[3]
+            dp[x, y] = (*color, 255)
+        _plate_highlight_and_rivets(dp, w, h, ramp, gold)
+    return ensure_material_signature(style_lock(out, material), material)

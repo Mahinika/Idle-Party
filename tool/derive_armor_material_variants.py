@@ -190,15 +190,32 @@ def derive_slot(
             im = register_helm_to_head(im, src, face, box)
         return im
 
-    from gear_style import paint_material
+    from gear_style import MIN_SQUINT_SIL_DIFF, _thicken, paint_material
 
     donor = remap_source_family(material, family)
-    if donor != family:
+    # A cloak or glove copied from another body lands in pieces beside the
+    # arms. Grow this body's own piece so the material still reads as a
+    # different cut, and it stays on the limb it was drawn for.
+    if donor != family and slot in ("cloak", "hands"):
+        from facit.checks_v1 import silhouette_diff, squint_silhouette_diff
+
+        native = load_native(family, slot, tier, anim)
+        donor_im = native
+        # Face clearing later eats some of the grown edge, so aim above the gate.
+        for _ in range(5):
+            if (
+                silhouette_diff(native, donor_im) >= 0.22
+                and squint_silhouette_diff(native, donor_im)
+                >= MIN_SQUINT_SIL_DIFF
+            ):
+                break
+            donor_im = _thicken(donor_im, 1)
+    elif donor != family:
         donor_im = load_donor(donor, slot, tier, anim, material)
         donor_im = register_to_body(donor_im, donor, family, slot)
     else:
         donor_im = load_native(family, slot, tier, anim)
-    # Keep the donor's silhouette. Paint the material's surface on it.
+    # Keep the donor's shading. Paint the material's surface on it.
     painted = paint_material(donor_im, material)
     if slot in ("hands", "shoulder") and anim == "idle":
         from paper_doll_seat import seat_on_bodies
