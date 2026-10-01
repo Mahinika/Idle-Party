@@ -4,6 +4,7 @@
 
 1 spring, 2 hopp, 3 sving, B shows the bones.
 If a window cannot open, writes tool/out/skel_demo/warrior_skel.gif.
+py -3 tool/skel_demo/play.py --marks writes an 8x grip sheet and pixel counts.
 """
 
 from __future__ import annotations
@@ -139,6 +140,32 @@ def _order(meta: dict, world: dict[str, tuple[float, float, float]]) -> list[str
             continue
         names.append(name)
     return names
+
+
+def _placed(
+    meta: dict,
+    images: dict[str, Image.Image],
+    name: str,
+    world: dict[str, tuple[float, float, float]],
+) -> tuple[Image.Image, int, int]:
+    part = next(p for p in meta["parts"] if p["name"] == name)
+    im = images[name]
+    wx, wy, rot = world[part["bone"]]
+    spun, piv = _spin(im, (part["pivot"][0], part["pivot"][1]), rot)
+    ox = int(round(ORIGIN[0] + wx - piv[0]))
+    oy = int(round(ORIGIN[1] + wy - piv[1]))
+    return spun, ox, oy
+
+
+def _opaque(im: Image.Image, ox: int, oy: int) -> set[tuple[int, int]]:
+    px = im.load()
+    w, h = im.size
+    out: set[tuple[int, int]] = set()
+    for y in range(h):
+        for x in range(w):
+            if px[x, y][3] > 80:
+                out.add((ox + x, oy + y))
+    return out
 
 
 def render(
@@ -328,6 +355,105 @@ def _cal(meta: dict, images: dict[str, Image.Image]) -> None:
     print(path)
 
 
+def _marks(meta: dict, images: dict[str, Image.Image]) -> None:
+    """8x sheet: grip cross, fist box, and how many pixels actually touch."""
+    world = world_bones(meta, {}, (0.0, 0.0))
+    masks = {name: _opaque(*_placed(meta, images, name, world)) for name in ("hand_l", "hand_r", "fore_l", "fore_r", "sword", "shield")}
+    sword_on_hand = len(masks["sword"] & masks["hand_r"])
+    shield_on_arm = len(masks["shield"] & (masks["hand_l"] | masks["fore_l"]))
+    hand_bottom = max(y for _, y in masks["hand_r"])
+    pommel_below = sum(1 for _, y in masks["sword"] if y > hand_bottom)
+    gap = _rim_gap(masks["shield"], masks["fore_l"] | masks["hand_l"])
+    lines = [
+        f"sword pixels inside the right fist: {sword_on_hand}",
+        f"sword pixels below the fist: {pommel_below}",
+        f"shield pixels on the left arm: {shield_on_arm}",
+        f"open pixels between shield rim and left arm: {gap}",
+        f"sword grip: {world['sword'][0]:.1f}, {world['sword'][1]:.1f}",
+        f"shield grip: {world['shield'][0]:.1f}, {world['shield'][1]:.1f}",
+    ]
+    zoom = 8
+    crops = [
+        _mark_crop(meta, images, world, masks, "hand_r", "sword", zoom),
+        _mark_crop(meta, images, world, masks, "hand_l", "shield", zoom),
+    ]
+    pad = 8
+    sheet = Image.new("RGB", (crops[0].width + crops[1].width + pad * 3, crops[0].height + 78), (22, 16, 14))
+    draw = ImageDraw.Draw(sheet)
+    sheet.paste(crops[0], (pad, 8))
+    sheet.paste(crops[1], (crops[0].width + pad * 2, 8))
+    for i, line in enumerate(lines):
+        draw.text((pad, crops[0].height + 14 + i * 10), line, fill=(232, 215, 176))
+    path = OUT / "marks.png"
+    sheet.save(path)
+    (OUT / "marks.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print("\n".join(lines))
+    print(path)
+
+
+def _rim_gap(weapon: set[tuple[int, int]], arm: set[tuple[int, int]]) -> int:
+    """Widest empty run, in pixels, between the weapon and the arm on one row."""
+    if not weapon or not arm:
+        return -1
+    rows_w: dict[int, tuple[int, int]] = {}
+    rows_a: dict[int, tuple[int, int]] = {}
+    for x, y in weapon:
+        lo, hi = rows_w.get(y, (x, x))
+        rows_w[y] = (min(lo, x), max(hi, x))
+    for x, y in arm:
+        lo, hi = rows_a.get(y, (x, x))
+        rows_a[y] = (min(lo, x), max(hi, x))
+    worst = 0
+    for y, (a0, a1) in rows_a.items():
+        span = rows_w.get(y)
+        if span is None:
+            continue
+        w0, w1 = span
+        if w1 < a0:
+            worst = max(worst, a0 - w1 - 1)
+        elif a1 < w0:
+            worst = max(worst, w0 - a1 - 1)
+    return worst
+
+
+def _mark_crop(
+    meta: dict,
+    images: dict[str, Image.Image],
+    world: dict[str, tuple[float, float, float]],
+    masks: dict[str, set[tuple[int, int]]],
+    hand: str,
+    bone: str,
+    zoom: int,
+) -> Image.Image:
+    frame = render(meta, images, {}, (0, 0))
+    hx0 = min(x for x, _ in masks[hand])
+    hy0 = min(y for _, y in masks[hand])
+    hx1 = max(x for x, _ in masks[hand])
+    hy1 = max(y for _, y in masks[hand])
+    x0 = hx0 - 18
+    y0 = hy0 - 22
+    x1 = hx1 + 19
+    y1 = hy1 + 23
+    crop = frame.crop((x0, y0, x1, y1)).resize(((x1 - x0) * zoom, (y1 - y0) * zoom), Image.Resampling.NEAREST)
+    draw = ImageDraw.Draw(crop)
+    _box(draw, masks[hand], x0, y0, zoom, (80, 220, 120))
+    gx = int(round(ORIGIN[0] + world[bone][0]))
+    gy = int(round(ORIGIN[1] + world[bone][1]))
+    cx, cy = (gx - x0) * zoom + zoom // 2, (gy - y0) * zoom + zoom // 2
+    arm = 10
+    draw.line((cx - arm, cy, cx + arm, cy), fill=(255, 210, 60), width=2)
+    draw.line((cx, cy - arm, cx, cy + arm), fill=(255, 210, 60), width=2)
+    return crop.convert("RGB")
+
+
+def _box(draw: ImageDraw.ImageDraw, pts: set[tuple[int, int]], x0: int, y0: int, zoom: int, color: tuple[int, int, int]) -> None:
+    left = (min(x for x, _ in pts) - x0) * zoom
+    top = (min(y for _, y in pts) - y0) * zoom
+    right = (max(x for x, _ in pts) - x0 + 1) * zoom - 1
+    bottom = (max(y for _, y in pts) - y0 + 1) * zoom - 1
+    draw.rectangle((left, top, right, bottom), outline=color)
+
+
 def _window(meta: dict, clips: dict, images: dict[str, Image.Image]) -> None:
     import tkinter as tk
 
@@ -392,6 +518,9 @@ def main() -> None:
         return
     if "--gif" in sys.argv:
         _gif(meta, clips, images)
+        return
+    if "--marks" in sys.argv:
+        _marks(meta, images)
         return
     try:
         import tkinter as tk
