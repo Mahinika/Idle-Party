@@ -21,8 +21,6 @@ from families import DRAW_PLATE, DRAW_ROBE, FAMILIES, LIMB_PARENT, RACES, SEXES,
 
 ROOT = Path(__file__).resolve().parents[2]
 CANVAS = 128
-PAD = 2
-PAD_REACH = 5
 VERSION = 1
 
 PART_COLORS = {
@@ -178,38 +176,6 @@ def bone_rests(parts: dict[str, set[tuple[int, int]]]) -> dict[str, tuple[float,
     return rests
 
 
-def _pad_masks(
-    px,
-    primary_parts: dict[str, set[tuple[int, int]]],
-    rests: dict[str, tuple[float, float]],
-) -> dict[str, set[tuple[int, int]]]:
-    """Child also owns a few already-opaque pixels toward the parent, near the pivot."""
-    masks = {name: set(pts) for name, pts in primary_parts.items()}
-    for name, (_parent, (dx, dy)) in LIMB_PARENT.items():
-        pts = primary_parts.get(name)
-        if not pts or name not in rests:
-            continue
-        px_j, py_j = rests[name]
-        edge = []
-        for x, y in pts:
-            if (x - px_j) ** 2 + (y - py_j) ** 2 > PAD_REACH * PAD_REACH:
-                continue
-            nx, ny = x + dx, y + dy
-            if (nx, ny) not in pts:
-                edge.append((x, y))
-        for x, y in edge:
-            for step in range(1, PAD + 1):
-                qx, qy = x + dx * step, y + dy * step
-                if not (0 <= qx < CANVAS and 0 <= qy < CANVAS):
-                    break
-                if (qx, qy) in masks[name]:
-                    break
-                if px[qx, qy][3] <= 20:
-                    break
-                masks[name].add((qx, qy))
-    return masks
-
-
 def _rle(pts: set[tuple[int, int]]) -> list[list[int]]:
     rows: dict[int, list[int]] = {}
     for x, y in pts:
@@ -265,9 +231,8 @@ def bake(cut: FamilyCut) -> dict:
         if not pts:
             raise SystemExit(f"{cut.name} part {name} is empty")
     rests = bone_rests(opaque_parts)
-    masks = _pad_masks(px, opaque_parts, rests)
-    for name, pts in primary_parts.items():
-        masks[name] = pts | masks.get(name, set())
+    # One label per pixel. A joint pad would paint soft cloth twice and darken it.
+    masks = {name: set(pts) for name, pts in primary_parts.items()}
     parents = _parents(draw)
     bones = {
         name: {

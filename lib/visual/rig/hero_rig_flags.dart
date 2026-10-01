@@ -8,6 +8,7 @@ abstract final class HeroRigFlags {
     BodyFamily.warrior,
     BodyFamily.rogue,
     BodyFamily.mage,
+    BodyFamily.healer,
   };
 
   static bool use(BodyFamily? family) =>

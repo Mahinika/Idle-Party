@@ -91,6 +91,14 @@ void main() {
       role: HeroRole.mage,
     );
   });
+
+  test('healer rest matches the paper doll', () async {
+    await _expectRest(
+      family: BodyFamily.healer,
+      spec: HeroSpecId.holyPriest,
+      role: HeroRole.healer,
+    );
+  });
 }
 
 Future<void> _expectRest({

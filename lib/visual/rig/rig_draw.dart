@@ -37,6 +37,17 @@ abstract final class HeroRigDraw {
     if (tint != null) {
       paint.colorFilter = ui.ColorFilter.mode(tint, ui.BlendMode.modulate);
     }
+    if (bone.deg.abs() < 0.05) {
+      final left = (RigData.origin + bone.x - piece.pivotX).roundToDouble();
+      final top = (RigData.origin + bone.y - piece.pivotY).roundToDouble();
+      canvas.drawImageRect(
+        atlas.image,
+        piece.rect,
+        ui.Rect.fromLTWH(left, top, piece.rect.width, piece.rect.height),
+        paint,
+      );
+      return;
+    }
     canvas.drawAtlas(
       atlas.image,
       [
