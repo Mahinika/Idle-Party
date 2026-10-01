@@ -753,23 +753,30 @@ def book(
 def bow(
     height: int, *, recurve: bool = False, wings: bool = False, arrow: bool = False
 ) -> Image.Image:
+    """A thick stave and a wrapped grip. The string stays off the cheek."""
     im = _blank()
     pts: set[tuple[int, int]] = set()
-    top, bot = 20, 20 + height
-    cx = 96
+    top, bot = 22, 22 + height
+    cx = 92
     for i, y in enumerate(range(top, bot)):
         t = i / max(1, height)
-        bend = int(16 * (1 - (2 * t - 1) ** 2))
-        if recurve and (t < 0.12 or t > 0.88):
-            bend -= 6
+        bend = int(20 * (1 - (2 * t - 1) ** 2))
+        if recurve:
+            # Tips kick back toward the string without leaving the limb.
+            if t < 0.22:
+                bend -= int(round(8 * (1 - t / 0.22)))
+            elif t > 0.78:
+                bend -= int(round(8 * ((t - 0.78) / 0.22)))
         x = cx - bend
-        pts |= _disk(x, y, 2)
+        # The middle is the handle. The limbs stay thinner than that.
+        pts |= _disk(x, y, 5 if 0.40 <= t <= 0.60 else 3)
     _put(im, pts)
-    _put_mark(im, {(cx + 2, y) for y in range(top, bot)}, "string")
+    # The string meets the tips and stays on the far side of the stave.
+    _put_mark(im, {(cx + 4, y) for y in range(top, bot)}, "string")
     if wings:
         for y in (top + 14, bot - 14):
             t = (y - top) / max(1, height)
-            bend = int(16 * (1 - (2 * t - 1) ** 2))
+            bend = int(20 * (1 - (2 * t - 1) ** 2))
             limb_x = cx - bend
             _put_mark(im, _disk(limb_x - 12, y, 6), "gold")
             _put_mark(im, _thick(_line(limb_x - 12, y, limb_x, y), 2), "gold")

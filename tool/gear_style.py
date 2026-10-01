@@ -558,13 +558,13 @@ def add_plate_bands(im: Image.Image) -> Image.Image:
     if surface_stats(src)["dither"] > 0.12:
         return src
     # A breastplate already has gold lines. Extra bands would cut them.
-    gold = MATERIAL_RAMPS["gold"][3]
+    trim = {MATERIAL_RAMPS["gold"][2], MATERIAL_RAMPS["gold"][3]}
     gp = src.load()
     gold_n = sum(
         1
         for y in range(src.height)
         for x in range(src.width)
-        if gp[x, y][3] >= 40 and gp[x, y][:3] == gold
+        if gp[x, y][3] >= 40 and gp[x, y][:3] in trim
     )
     if gold_n >= 8:
         return src
@@ -588,6 +588,55 @@ def add_plate_bands(im: Image.Image) -> Image.Image:
         return src
     if _light_score(out) < MIN_LIGHT:
         return src
+    return out
+
+
+def continue_plate_growth(base: Image.Image, late: Image.Image) -> Image.Image:
+    """Extra plate on the late cut keeps the plain cut's color.
+
+    Painting that fringe on its own adds a second set of edges, and the
+    dither gate fails. Each new pixel takes the nearest plain-cut color.
+    A piece that already passes, or would fail another plate gate, stays.
+    """
+    src_im = late.convert("RGBA")
+    if not _surface_problems(src_im, "plate"):
+        return src_im
+    out = src_im.copy()
+    src = base.convert("RGBA")
+    sp, lp, dp = src.load(), src_im.load(), out.load()
+    w, h = out.size
+    cell = 8
+    buckets: dict[tuple[int, int], list[tuple[int, int]]] = {}
+    for y in range(h):
+        for x in range(w):
+            if sp[x, y][3] >= 40:
+                buckets.setdefault((x // cell, y // cell), []).append((x, y))
+    if not buckets:
+        return src_im
+    for y in range(h):
+        for x in range(w):
+            if lp[x, y][3] < 40 or sp[x, y][3] >= 40:
+                continue
+            cx, cy = x // cell, y // cell
+            best: tuple[int, int] | None = None
+            best_d = 10**9
+            for rad in range(0, 16):
+                for gy in range(cy - rad, cy + rad + 1):
+                    for gx in range(cx - rad, cx + rad + 1):
+                        if rad and max(abs(gx - cx), abs(gy - cy)) != rad:
+                            continue
+                        for px, py in buckets.get((gx, gy), ()):
+                            dist = (px - x) ** 2 + (py - y) ** 2
+                            if dist < best_d:
+                                best_d = dist
+                                best = (px, py)
+                if best is not None and best_d <= (rad * cell) ** 2:
+                    break
+            if best is None:
+                continue
+            dp[x, y] = (*sp[best][:3], lp[x, y][3])
+    if _surface_problems(out, "plate"):
+        return src_im
     return out
 
 
@@ -620,16 +669,22 @@ def brighten_leather_growth(base: Image.Image, late: Image.Image) -> Image.Image
 
 
 def _paint_plate_shape(mask: Image.Image) -> Image.Image:
-    """Keep the breastplate and the helmet. A flat fill turned them into a robe.
+    """Keep the breastplate, and the dark plates inside it.
 
-    Gold stays where the donor drew a trim line. An ink edge on every
-    plate gap trips the dither gate, so the gaps themselves are the drawing.
+    A flat fill turned the cross and the belt into one grey field. A
+    shadow pixel stays dark only when its neighbors agree, so specks do
+    not blow the dither gate. Gold stays on the donor's trim lines.
     """
     src = mask.convert("RGBA")
     w, h = src.size
     sp = src.load()
     ramp = MATERIAL_RAMPS["plate"]
     gold = MATERIAL_RAMPS["gold"]
+    lum: list[list[float | None]] = [[None] * w for _ in range(h)]
+    for y in range(h):
+        for x in range(w):
+            if sp[x, y][3] >= 40:
+                lum[y][x] = _lum_rgb(sp[x, y][:3])
     out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     dp = out.load()
     neighbors = (
@@ -642,11 +697,24 @@ def _paint_plate_shape(mask: Image.Image) -> Image.Image:
         (-1, 1),
         (1, 1),
     )
+    dark_cut = 40.0
     for y in range(h):
         for x in range(w):
-            if sp[x, y][3] < 40:
+            if lum[y][x] is None:
                 continue
-            color = ramp[2]
+            seen = 0
+            dark = 0
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    nx, ny = x + dx, y + dy
+                    if not (0 <= nx < w and 0 <= ny < h):
+                        continue
+                    if lum[ny][nx] is None:
+                        continue
+                    seen += 1
+                    if lum[ny][nx] <= dark_cut:
+                        dark += 1
+            color = ramp[0] if seen and dark / seen >= 0.65 else ramp[2]
             if _is_trim(sp[x, y][:3]):
                 friends = sum(
                     1
@@ -657,7 +725,7 @@ def _paint_plate_shape(mask: Image.Image) -> Image.Image:
                     and _is_trim(sp[x + dx, y + dy][:3])
                 )
                 if friends >= 1:
-                    color = gold[3]
+                    color = gold[2]
             dp[x, y] = (*color, 255)
     _plate_highlight_and_rivets(dp, w, h, ramp, gold)
     if (

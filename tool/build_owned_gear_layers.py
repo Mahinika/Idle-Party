@@ -1272,6 +1272,7 @@ def finish_material_signatures() -> int:
     from gear_style import (
         add_plate_bands,
         brighten_leather_growth,
+        continue_plate_growth,
         ensure_material_signature,
     )
 
@@ -1310,6 +1311,9 @@ def finish_material_signatures() -> int:
                     if lp[x, y][:3] != bp[x, y][:3]:
                         lp[x, y] = (*bp[x, y][:3], lp[x, y][3])
                         changed = True
+            if "_plate_" in path.name:
+                late = continue_plate_growth(base, late)
+                changed = True
             grown = brighten_leather_growth(base, late)
             if grown.tobytes() != Image.open(t2).convert("RGBA").tobytes():
                 grown.save(t2)
