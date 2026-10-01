@@ -5,6 +5,7 @@
 1 spring, 2 hopp, 3 sving, B shows the bones.
 If a window cannot open, writes tool/out/skel_demo/warrior_skel.gif.
 py -3 tool/skel_demo/play.py --marks writes an 8x grip sheet and pixel counts.
+py -3 tool/skel_demo/play.py --abilities plays each warrior ability. Add --gif to write the film.
 """
 
 from __future__ import annotations
@@ -483,6 +484,75 @@ def _box(draw: ImageDraw.ImageDraw, pts: set[tuple[int, int]], x0: int, y0: int,
     draw.rectangle((left, top, right, bottom), outline=color)
 
 
+def _ability_gif(meta: dict, images: dict[str, Image.Image], abilities: list[tuple[str, dict]]) -> None:
+    frames: list[Image.Image] = []
+    for name, clip in abilities:
+        steps = max(6, int(round(clip["length"] * 10)))
+        for i in range(steps):
+            angles, root = sample_clip(clip, clip["length"] * i / steps)
+            big = _labeled(_scale(render(meta, images, angles, root)), name)
+            frames.append(big.quantize(colors=64, dither=Image.Dither.NONE))
+    path = OUT / "warrior_abilities.gif"
+    frames[0].save(
+        path,
+        save_all=True,
+        append_images=frames[1:],
+        duration=80,
+        loop=0,
+        disposal=2,
+    )
+    print(path)
+
+
+def _labeled(frame: Image.Image, name: str) -> Image.Image:
+    bar_h = 18 * SCALE
+    bar = Image.new("RGB", (frame.width, bar_h), BG[:3])
+    small = Image.new("RGB", (frame.width // SCALE, 18), BG[:3])
+    ImageDraw.Draw(small).text((4, 2), name, fill=(232, 215, 176))
+    bar.paste(small.resize((frame.width, bar_h), Image.Resampling.NEAREST), (0, 0))
+    out = Image.new("RGB", (frame.width, frame.height + bar_h), BG[:3])
+    out.paste(bar, (0, 0))
+    out.paste(frame.convert("RGB"), (0, bar_h))
+    return out
+
+
+def _ability_window(meta: dict, images: dict[str, Image.Image], abilities: list[tuple[str, dict]]) -> None:
+    import tkinter as tk
+
+    state = {"i": 0, "t0": time.perf_counter()}
+    root = tk.Tk()
+    root.title("Krigare — förmågor")
+    root.configure(bg="#16110f")
+    photo = tk.PhotoImage(data=_png_bytes(_scale(render(meta, images, {}, (0, 0)))))
+    view = tk.Label(root, image=photo, bg="#16110f", bd=0)
+    view.pack()
+    caption = tk.Label(root, text="", fg="#e8d7b0", bg="#16110f", font=("Segoe UI", 12))
+    caption.pack(pady=(0, 8))
+
+    def step(delta: int) -> None:
+        state["i"] = (state["i"] + delta) % len(abilities)
+        state["t0"] = time.perf_counter()
+
+    root.bind("<Left>", lambda _e: step(-1))
+    root.bind("<Right>", lambda _e: step(1))
+
+    def tick() -> None:
+        name, clip = abilities[state["i"]]
+        elapsed = time.perf_counter() - state["t0"]
+        if elapsed >= clip["length"]:
+            step(1)
+            elapsed = 0.0
+        angles, root_off = sample_clip(clip, elapsed)
+        img = tk.PhotoImage(data=_png_bytes(_scale(render(meta, images, angles, root_off))))
+        view.configure(image=img)
+        view.image = img
+        caption.configure(text=f"{name}     {state['i'] + 1}/{len(abilities)}     vänster / höger")
+        root.after(33, tick)
+
+    root.after(33, tick)
+    root.mainloop()
+
+
 def _window(meta: dict, clips: dict, images: dict[str, Image.Image]) -> None:
     import tkinter as tk
 
@@ -544,6 +614,22 @@ def main() -> None:
         return
     if "--sheet" in sys.argv:
         _sheet(meta, clips, images)
+        return
+    if "--abilities" in sys.argv:
+        from abilities import ABILITIES
+
+        if "--gif" in sys.argv:
+            _ability_gif(meta, images, ABILITIES)
+            return
+        try:
+            import tkinter as tk
+        except ImportError:
+            _ability_gif(meta, images, ABILITIES)
+            return
+        try:
+            _ability_window(meta, images, ABILITIES)
+        except tk.TclError:
+            _ability_gif(meta, images, ABILITIES)
         return
     if "--gif" in sys.argv:
         _gif(meta, clips, images)
