@@ -173,8 +173,8 @@ def bone_rests(parts: dict[str, set[tuple[int, int]]]) -> dict[str, tuple[float,
         "shin_r": _top_center(parts["shin_r"]),
         "foot_l": _top_center(parts["foot_l"]),
         "foot_r": _top_center(parts["foot_r"]),
-        "shield": _fist(parts["hand_l"], 2, 0),
-        "sword": _fist(parts["hand_r"], -6, -1),
+        "shield": _fist(parts["hand_l"], 16, -4),
+        "sword": _fist(parts["hand_r"], -10, -10),
     }
     return rests
 
@@ -358,7 +358,7 @@ def build(quiet: bool = False) -> dict:
         }
     )
     body = [name for name in DRAW if not name.startswith("hand_")]
-    draw = [*body, "shield", "sword", "hand_l", "hand_r"]
+    draw = [*body, "shield", "hand_l", "hand_r", "sword"]
     meta = {
         "canvas": [128, 128],
         "source": "assets/custom/char/warrior/_src/body_idle.png",
