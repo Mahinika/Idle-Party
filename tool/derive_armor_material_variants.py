@@ -172,6 +172,35 @@ def load_donor(
     return Image.open(native).convert("RGBA")
 
 
+def clip_cloak_to_body(cloak: Image.Image, family: str) -> Image.Image:
+    """Drop cape pixels that sit away from the body.
+
+    A rogue cape copied onto a robed body becomes a second coat. The
+    part that touches the body stays, so the cape still shows at the sides.
+    """
+    body = Image.open(ROOT / family / "body_idle.png").convert("RGBA")
+    bp = body.load()
+    out = cloak.convert("RGBA").copy()
+    dp = out.load()
+    w, h = out.size
+    for y in range(h):
+        for x in range(w):
+            if dp[x, y][3] < 40:
+                continue
+            near = False
+            for dy in range(-6, 7):
+                for dx in range(-6, 7):
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < w and 0 <= ny < h and bp[nx, ny][3] >= 40:
+                        near = True
+                        break
+                if near:
+                    break
+            if not near:
+                dp[x, y] = (0, 0, 0, 0)
+    return out
+
+
 def derive_slot(
     family: str,
     slot: str,
@@ -193,10 +222,16 @@ def derive_slot(
     from gear_style import MIN_SQUINT_SIL_DIFF, _thicken, paint_material
 
     donor = remap_source_family(material, family)
-    # A cloak or glove copied from another body lands in pieces beside the
-    # arms. Grow this body's own piece so the material still reads as a
-    # different cut, and it stays on the limb it was drawn for.
-    if donor != family and slot in ("cloak", "hands"):
+    # A robe copied forward stays a robe. Plate and leather capes come
+    # from the body that already wears that material, and leather is
+    # clipped so it does not become a second coat.
+    if donor != family and slot == "cloak" and material in ("plate", "leather"):
+        donor_im = register_to_body(
+            load_donor(donor, slot, tier, anim, material), donor, family, slot
+        )
+        if material == "leather":
+            donor_im = clip_cloak_to_body(donor_im, family)
+    elif donor != family and slot in ("cloak", "hands"):
         from facit.checks_v1 import silhouette_diff, squint_silhouette_diff
 
         native = load_native(family, slot, tier, anim)

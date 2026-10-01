@@ -557,6 +557,17 @@ def add_plate_bands(im: Image.Image) -> Image.Image:
 
     if surface_stats(src)["dither"] > 0.12:
         return src
+    # A breastplate already has gold lines. Extra bands would cut them.
+    gold = MATERIAL_RAMPS["gold"][3]
+    gp = src.load()
+    gold_n = sum(
+        1
+        for y in range(src.height)
+        for x in range(src.width)
+        if gp[x, y][3] >= 40 and gp[x, y][:3] == gold
+    )
+    if gold_n >= 8:
+        return src
     bb = src.getbbox()
     if bb is None:
         return src
@@ -608,6 +619,58 @@ def brighten_leather_growth(base: Image.Image, late: Image.Image) -> Image.Image
     return out
 
 
+def _paint_plate_shape(mask: Image.Image) -> Image.Image:
+    """Keep the breastplate and the helmet. A flat fill turned them into a robe.
+
+    Gold stays where the donor drew a trim line. An ink edge on every
+    plate gap trips the dither gate, so the gaps themselves are the drawing.
+    """
+    src = mask.convert("RGBA")
+    w, h = src.size
+    sp = src.load()
+    ramp = MATERIAL_RAMPS["plate"]
+    gold = MATERIAL_RAMPS["gold"]
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    dp = out.load()
+    neighbors = (
+        (-1, 0),
+        (1, 0),
+        (0, -1),
+        (0, 1),
+        (-1, -1),
+        (1, -1),
+        (-1, 1),
+        (1, 1),
+    )
+    for y in range(h):
+        for x in range(w):
+            if sp[x, y][3] < 40:
+                continue
+            color = ramp[2]
+            if _is_trim(sp[x, y][:3]):
+                friends = sum(
+                    1
+                    for dx, dy in neighbors
+                    if 0 <= x + dx < w
+                    and 0 <= y + dy < h
+                    and sp[x + dx, y + dy][3] >= 40
+                    and _is_trim(sp[x + dx, y + dy][:3])
+                )
+                if friends >= 1:
+                    color = gold[3]
+            dp[x, y] = (*color, 255)
+    _plate_highlight_and_rivets(dp, w, h, ramp, gold)
+    if (
+        not _surface_problems(out, "plate")
+        and _light_score(out) >= MIN_LIGHT
+    ):
+        from facit.style import authored_problems
+
+        if not authored_problems(out, "plate"):
+            return out
+    return _solid_plate(src)
+
+
 def paint_material(mask: Image.Image, material: str) -> Image.Image:
     """Keep the donor's plates and straps. Stamp that material's surface on them.
 
@@ -615,14 +678,9 @@ def paint_material(mask: Image.Image, material: str) -> Image.Image:
     donor's light and dark stay, then mail gets rings, leather a few
     stitches, and plate a highlight plus rivets.
     """
-    src = mask.convert("RGBA")
     if material == "plate":
-        # A lacy edge reads as cloth and also trips the dither gate.
-        # Two passes, not six: more than that turns a harness into a blob.
-        for _ in range(2):
-            if _edge_share(src) <= 0.18:
-                break
-            src = _thicken(src, 1)
+        return _paint_plate_shape(mask)
+    src = mask.convert("RGBA")
     w, h = src.size
     sp = src.load()
     lums = [
