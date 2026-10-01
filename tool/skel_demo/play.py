@@ -372,18 +372,20 @@ def _marks(meta: dict, images: dict[str, Image.Image]) -> None:
         f"sword grip: {world['sword'][0]:.1f}, {world['sword'][1]:.1f}",
         f"shield grip: {world['shield'][0]:.1f}, {world['shield'][1]:.1f}",
     ]
+    hilt = _hilt(meta, images, world)
+    lines.append(f"hilt pixels inside the right fist: {len(hilt & masks['hand_r'])} of {len(hilt)}")
     zoom = 8
     crops = [
-        _mark_crop(meta, images, world, masks, "hand_r", "sword", zoom),
+        _mark_crop(meta, images, world, masks, "hand_r", "sword", zoom, extra=hilt),
         _mark_crop(meta, images, world, masks, "hand_l", "shield", zoom),
     ]
     pad = 8
-    sheet = Image.new("RGB", (crops[0].width + crops[1].width + pad * 3, crops[0].height + 78), (22, 16, 14))
+    sheet = Image.new("RGB", (crops[0].width + crops[1].width + pad * 3, max(c.height for c in crops) + 88), (22, 16, 14))
     draw = ImageDraw.Draw(sheet)
     sheet.paste(crops[0], (pad, 8))
     sheet.paste(crops[1], (crops[0].width + pad * 2, 8))
     for i, line in enumerate(lines):
-        draw.text((pad, crops[0].height + 14 + i * 10), line, fill=(232, 215, 176))
+        draw.text((pad, max(c.height for c in crops) + 14 + i * 10), line, fill=(232, 215, 176))
     path = OUT / "marks.png"
     sheet.save(path)
     (OUT / "marks.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -416,6 +418,25 @@ def _rim_gap(weapon: set[tuple[int, int]], arm: set[tuple[int, int]]) -> int:
     return worst
 
 
+def _hilt(
+    meta: dict,
+    images: dict[str, Image.Image],
+    world: dict[str, tuple[float, float, float]],
+) -> set[tuple[int, int]]:
+    """Brown handle pixels. That is the part the fist is meant to cover."""
+    im, ox, oy = _placed(meta, images, "sword", world)
+    px = im.load()
+    hold = {(92, 62, 22), (72, 44, 24)}
+    out: set[tuple[int, int]] = set()
+    w, h = im.size
+    for y in range(h):
+        for x in range(w):
+            color = px[x, y]
+            if color[3] > 80 and color[:3] in hold:
+                out.add((ox + x, oy + y))
+    return out
+
+
 def _mark_crop(
     meta: dict,
     images: dict[str, Image.Image],
@@ -424,6 +445,7 @@ def _mark_crop(
     hand: str,
     bone: str,
     zoom: int,
+    extra: set[tuple[int, int]] | None = None,
 ) -> Image.Image:
     frame = render(meta, images, {}, (0, 0))
     hx0 = min(x for x, _ in masks[hand])
@@ -434,9 +456,16 @@ def _mark_crop(
     y0 = hy0 - 22
     x1 = hx1 + 19
     y1 = hy1 + 23
+    if extra:
+        x0 = min(x0, min(x for x, _ in extra) - 4)
+        y0 = min(y0, min(y for _, y in extra) - 4)
+        x1 = max(x1, max(x for x, _ in extra) + 5)
+        y1 = max(y1, max(y for _, y in extra) + 5)
     crop = frame.crop((x0, y0, x1, y1)).resize(((x1 - x0) * zoom, (y1 - y0) * zoom), Image.Resampling.NEAREST)
     draw = ImageDraw.Draw(crop)
     _box(draw, masks[hand], x0, y0, zoom, (80, 220, 120))
+    if extra:
+        _box(draw, extra, x0, y0, zoom, (80, 170, 255))
     gx = int(round(ORIGIN[0] + world[bone][0]))
     gy = int(round(ORIGIN[1] + world[bone][1]))
     cx, cy = (gx - x0) * zoom + zoom // 2, (gy - y0) * zoom + zoom // 2
