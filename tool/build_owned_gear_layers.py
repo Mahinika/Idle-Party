@@ -1324,6 +1324,70 @@ def finish_material_signatures() -> int:
     return n
 
 
+def cover_color(material: str, x: int, y: int) -> tuple[int, int, int]:
+    """Mail keeps its rings. Plate and leather stay a solid field."""
+    from gear_style import MATERIAL_RAMPS
+
+    ramp = MATERIAL_RAMPS[material]
+    if material == "mail":
+        # Dark rings. A light checker on the skirt flattens the upper-left light.
+        return ramp[1] if (x + y) % 2 == 0 else ramp[0]
+    return ramp[2]
+
+
+def cover_tinted_body() -> int:
+    """Armor covers the tinted cloth. A spec color was showing through the gaps.
+
+    New pixels land on the chest, or on the legs once the chest has ended.
+    Hands, helms, and shoulders stay put so grips and faces do not move.
+    """
+    from paper_doll_manifest import CUTS, MATERIALS
+
+    n = 0
+    for family, materials in MATERIALS.items():
+        body_path = ROOT / family / "body_idle.png"
+        tint_path = ROOT / family / "body_tint_idle.png"
+        if not body_path.exists() or not tint_path.exists():
+            continue
+        body = Image.open(body_path).convert("RGBA")
+        tint = Image.open(tint_path).convert("RGBA")
+        bp, tp = body.load(), tint.load()
+        gear = ROOT / family / "gear"
+        for material in materials:
+            for cut in CUTS:
+                paths = {}
+                images = {}
+                for slot in ("chest", "legs", "shoulder", "hands", "helm"):
+                    path = gear / f"{slot}_{material}_{cut}_idle.png"
+                    if path.exists():
+                        paths[slot] = path
+                        images[slot] = Image.open(path).convert("RGBA")
+                if "chest" not in images and "legs" not in images:
+                    continue
+                px = {slot: im.load() for slot, im in images.items()}
+
+                def covered(x: int, y: int) -> bool:
+                    return any(layer[x, y][3] >= 40 for layer in px.values())
+
+                chest_box = images["chest"].getbbox() if "chest" in images else None
+                split = chest_box[3] - 4 if chest_box else 80
+                changed = {slot: False for slot in images}
+                for y in range(128):
+                    for x in range(128):
+                        if tp[x, y][3] < 40 or bp[x, y][3] < 40 or covered(x, y):
+                            continue
+                        slot = "legs" if y >= split and "legs" in images else "chest"
+                        if slot not in images:
+                            slot = "legs" if "legs" in images else "chest"
+                        px[slot][x, y] = (*cover_color(material, x, y), 255)
+                        changed[slot] = True
+                for slot, did in changed.items():
+                    if did:
+                        images[slot].save(paths[slot])
+                        n += 1
+    return n
+
+
 def lift_flat_pieces() -> int:
     """Face clearing can wipe the light. Put it back without a new outline."""
     from gear_style import MIN_LIGHT, _lift_left, _light_score
@@ -1379,6 +1443,9 @@ def run_build() -> None:
         print("ok", family, "face owned, rewrote", own_face(family))
         print("ok", family, "hair covered", cover_hair(family))
     print("ok flat light", lift_flat_pieces())
+    print("ok body covered", cover_tinted_body())
+    for family in FAMILIES:
+        print("ok", family, "face owned again", own_face(family))
     print("ok material signature", finish_material_signatures())
     print("ok icons", icons.write_all())
     subprocess.check_call([sys.executable, str(TOOL / "gen_owned_gear_grips.py")])
