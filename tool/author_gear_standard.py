@@ -233,50 +233,156 @@ def _fuller(im: Image.Image) -> None:
             px[x, y] = dark
 
 
-def _grain(im: Image.Image) -> None:
-    wood = set(MATERIAL_RAMPS["wood"])
-    dark = (*MATERIAL_RAMPS["wood"][0], 255)
+def _axis(bb: tuple[int, int, int, int]):
+    """Grip sits at the bottom-right of these pictures, tip at the top-left."""
+    x0, y0, x1, y1 = bb
+    dx, dy = (x0 - x1), (y0 - y1)
+    length = max(1.0, (dx * dx + dy * dy) ** 0.5)
+    return x1, y1, dx / length, dy / length, -dy / length, dx / length
+
+
+def _bevel(im: Image.Image) -> None:
+    """One bright face and one dark face, so a blade is not one wash."""
+    plate = MATERIAL_RAMPS["plate"]
+    known = set(plate)
+    bb = im.getbbox()
+    if bb is None:
+        return
+    ox, oy, ux, uy, pxu, pyu = _axis(bb)
     px = im.load()
     for y in range(N):
         for x in range(N):
-            if px[x, y][3] < 40 or px[x, y][:3] not in wood:
+            rgb = px[x, y][:3]
+            if rgb not in known:
                 continue
-            if y % 4 == 0:
-                px[x, y] = dark
+            side = (x - ox) * pxu + (y - oy) * pyu
+            if abs(side) < 2:
+                continue
+            idx = plate.index(rgb)
+            idx = min(len(plate) - 1, idx + 1) if side < 0 else max(0, idx - 1)
+            px[x, y] = (*plate[idx], 255)
 
 
-def _rivets(im: Image.Image) -> None:
+def _inlay(im: Image.Image) -> None:
+    """A gold line down the middle of the steel."""
     plate = set(MATERIAL_RAMPS["plate"])
-    dark = MATERIAL_RAMPS["plate"][0]
-    gold = (*MATERIAL_RAMPS["gold"][3], 255)
+    gold = (*MATERIAL_RAMPS["gold"][2], 255)
     dist = _distances(im)
+    px = im.load()
+    ridge = []
+    for y in range(N):
+        for x in range(N):
+            if px[x, y][:3] not in plate or dist[y][x] < 3:
+                continue
+            if any(
+                0 <= x + dx < N
+                and 0 <= y + dy < N
+                and dist[y + dy][x + dx] > dist[y][x]
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
+            ):
+                continue
+            ridge.append((x, y))
+    for x, y in ridge:
+        for dx, dy in ((0, 0), (1, 0), (0, 1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < N and 0 <= ny < N and px[nx, ny][:3] in plate:
+                px[nx, ny] = gold
+
+
+def _segments(im: Image.Image) -> None:
+    """Dark breaks across the steel, the way armor is separate plates."""
+    plate = set(MATERIAL_RAMPS["plate"])
+    seam = (*MATERIAL_RAMPS["plate"][0], 255)
+    bb = im.getbbox()
+    if bb is None:
+        return
+    ox, oy, ux, uy, _, _ = _axis(bb)
+    px = im.load()
+    for y in range(N):
+        for x in range(N):
+            if px[x, y][:3] not in plate:
+                continue
+            t = (x - ox) * ux + (y - oy) * uy
+            if int(t) % 20 < 3 and t > 8:
+                px[x, y] = seam
+
+
+def _wraps(im: Image.Image) -> None:
+    """Cord around a wood grip. Shafts get gold rings instead."""
+    wood = set(MATERIAL_RAMPS["wood"])
+    dark = (*MATERIAL_RAMPS["wood"][0], 255)
+    px = im.load()
+    ys = [y for y in range(N) for x in range(N) if px[x, y][:3] in wood]
+    if len(ys) < 8:
+        return
+    y0, y1 = min(ys), max(ys)
+    if y1 - y0 < 8:
+        return
+    for frac in (0.28, 0.55, 0.8):
+        yb = y0 + int((y1 - y0) * frac)
+        for y in (yb, yb + 1):
+            for x in range(N):
+                if 0 <= y < N and px[x, y][:3] in wood:
+                    px[x, y] = dark
+
+
+def _rings(im: Image.Image) -> None:
+    """Gold collars on a wood shaft, far enough apart to read as parts."""
+    wood = set(MATERIAL_RAMPS["wood"])
+    gold = (*MATERIAL_RAMPS["gold"][2], 255)
     px = im.load()
     bb = im.getbbox()
     if bb is None:
         return
     _, y0, _, y1 = bb
-    mid = (y0 + y1) // 2
-    picks = []
+    span = max(1, y1 - y0)
+    for frac in (0.22, 0.48, 0.74):
+        yb = y0 + int(span * frac)
+        for y in range(yb, yb + 4):
+            for x in range(N):
+                if 0 <= y < N and px[x, y][:3] in wood:
+                    px[x, y] = gold
+
+
+def _stud(px, x: int, y: int) -> None:
+    ring = (*MATERIAL_RAMPS["gold"][0], 255)
+    center = (*MATERIAL_RAMPS["gold"][3], 255)
+    for dy in range(-2, 3):
+        for dx in range(-2, 3):
+            if dx * dx + dy * dy > 5:
+                continue
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < N and 0 <= ny < N and px[nx, ny][3] >= 40:
+                px[nx, ny] = center if dx * dx + dy * dy <= 1 else ring
+
+
+def _studs(im: Image.Image, points: list[tuple[int, int]]) -> None:
+    px = im.load()
+    for x, y in points:
+        if 0 <= x < N and 0 <= y < N and px[x, y][3] >= 40:
+            _stud(px, x, y)
+
+
+def _guard_studs(im: Image.Image) -> None:
+    """Rivets on the thick gold, not on the hairline edge or the inlay."""
+    gold = set(MATERIAL_RAMPS["gold"])
+    px = im.load()
+    pts = []
     for y in range(2, N - 2):
         for x in range(2, N - 2):
-            if y > mid or dist[y][x] < 2 or px[x, y][:3] not in plate:
+            if px[x, y][:3] not in gold:
                 continue
-            if px[x, y][:3] == dark:
-                continue
-            picks.append((x, y))
-    if not picks:
+            packed = 0
+            for dy in range(-2, 3):
+                for dx in range(-2, 3):
+                    if px[x + dx, y + dy][:3] in gold:
+                        packed += 1
+            if packed >= 14:
+                pts.append((x, y))
+    if len(pts) < 6:
         return
-    step = max(1, len(picks) // 4)
-    placed = 0
-    for i in range(0, len(picks), step):
-        x, y = picks[i]
-        if px[x, y][3] >= 40:
-            px[x, y] = gold
-            if x + 1 < N and px[x + 1, y][3] >= 40:
-                px[x + 1, y] = gold
-        placed += 1
-        if placed >= 4:
-            break
+    pts.sort()
+    _studs(im, [pts[len(pts) // 5], pts[(4 * len(pts)) // 5]])
 
 
 def _shade(im: Image.Image, material: str, kind: str) -> Image.Image:
@@ -289,33 +395,36 @@ def _shade(im: Image.Image, material: str, kind: str) -> Image.Image:
         return out
     x0, y0, x1, y1 = bb
     span = max(1, (x1 - x0) + (y1 - y0))
-    cloth = MATERIAL_RAMPS["cloth"]
     for y in range(N):
         for x in range(N):
             if sp[x, y][3] < 40:
                 continue
             marker = sp[x, y][:3]
             ramp = _ramp_for(marker, material)
-            if marker == _GRAY[:3] and material == "cloth":
-                fold = cloth[3] if ((x - x0) // 5) % 2 else cloth[1]
-                t = 1.0 - ((x - x0) + (y - y0)) / span
-                color = cloth[-1] if t > 0.65 else cloth[0] if t < 0.28 else fold
-            else:
-                color = _band(x, y, x0, y0, span, ramp)
+            color = _band(x, y, x0, y0, span, ramp)
             dp[x, y] = (*color, 255)
     if kind == "blade":
-        _fuller(out)
+        _bevel(out)
+        _inlay(out)
+        _segments(out)
+        _wraps(out)
+    elif kind == "plate":
+        _bevel(out)
+        _segments(out)
+        _wraps(out)
     elif kind in ("shield", "shield-gem"):
         _shield_face(out, gem=kind == "shield-gem")
-    if kind in ("blade", "plate", "bow", "wood", "book"):
-        _grain(out)
-    if kind == "book":
-        _book_spine(out)
+    elif kind == "book":
+        _book_cover(out)
+    elif kind in ("wood", "bow"):
+        _rings(out)
     if kind == "bow":
         _bow_nocks(out)
     _lit_and_shadow(out)
-    if material == "plate":
-        _rivets(out)
+    if kind in ("blade", "plate"):
+        _guard_studs(out)
+    elif kind in ("shield", "shield-gem"):
+        _shield_studs(out)
     return style_lock(out, material)
 
 
@@ -340,24 +449,110 @@ def _shield_face(im: Image.Image, *, gem: bool) -> None:
                 t = 1.0 - ((x - x0) + (y - y0)) / span
                 color = ramp[1] if t > 0.45 else ramp[0]
             px[x, y] = (*color, 255)
+    # Horizontal plates, like the chest. The cross is laid on top.
+    seam = (*MATERIAL_RAMPS["plate"][0], 255)
+    for y in range(y0 + 6, y1 - 6):
+        if (y - y0) % 10 >= 2:
+            continue
+        for x in range(x0 + 4, x1 - 4):
+            if px[x, y][3] >= 40 and dist[y][x] >= 5:
+                px[x, y] = seam
     cx, cy = (x0 + x1) // 2, (y0 + y1) // 2
     gold_mid = (*MATERIAL_RAMPS["gold"][1], 255)
     gold_hi = (*MATERIAL_RAMPS["gold"][3], 255)
     for y in range(y0 + 6, y1 - 6):
-        for x in (cx - 1, cx):
+        for x in range(cx - 1, cx + 2):
             if 0 <= x < N and px[x, y][3] >= 40:
                 px[x, y] = gold_mid
     for x in range(x0 + 6, x1 - 6):
-        for y in (cy - 1, cy):
+        for y in range(cy - 1, cy + 2):
             if 0 <= y < N and px[x, y][3] >= 40:
                 px[x, y] = gold_mid
-    for x, y in _disk(cx, cy, 4):
+    for x, y in _disk(cx, cy, 5):
         if 0 <= x < N and 0 <= y < N and px[x, y][3] >= 40:
             px[x, y] = gold_hi
     if gem:
         for x, y in _disk(cx, cy, 2):
             if 0 <= x < N and 0 <= y < N and px[x, y][3] >= 40:
                 px[x, y] = (*MATERIAL_RAMPS["gem"][-1], 255)
+
+
+def _shield_studs(im: Image.Image) -> None:
+    bb = im.getbbox()
+    if bb is None:
+        return
+    x0, y0, x1, y1 = bb
+    px = im.load()
+    spots = []
+    for sx, sy in (
+        (x0 + 10, y0 + 10),
+        (x1 - 11, y0 + 10),
+        (x0 + 10, y1 - 11),
+        (x1 - 11, y1 - 11),
+    ):
+        found = None
+        for r in range(0, 18):
+            for y in range(sy - r, sy + r + 1):
+                for x in range(sx - r, sx + r + 1):
+                    if 0 <= x < N and 0 <= y < N and px[x, y][3] >= 40:
+                        found = (x, y)
+                        break
+                if found:
+                    break
+            if found:
+                break
+        if found:
+            spots.append(found)
+    _studs(im, spots)
+
+
+def _book_cover(im: Image.Image) -> None:
+    """A bound cover: dark border, pale panel, gold corners, a clasp gem."""
+    bb = im.getbbox()
+    if bb is None:
+        return
+    x0, y0, x1, y1 = bb
+    px = im.load()
+    cloth = MATERIAL_RAMPS["cloth"]
+    cloth_set = set(cloth)
+    border = (*cloth[0], 255)
+    panel_hi = (*cloth[-1], 255)
+    panel_lo = (*cloth[3], 255)
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            if px[x, y][:3] not in cloth_set:
+                continue
+            edge = x < x0 + 4 or y < y0 + 4 or x >= x1 - 4 or y >= y1 - 4
+            if edge:
+                px[x, y] = border
+            else:
+                px[x, y] = panel_hi if x + y < (x0 + y0 + x1 + y1) / 2 else panel_lo
+    gold = (*MATERIAL_RAMPS["gold"][2], 255)
+    gold_hi = (*MATERIAL_RAMPS["gold"][3], 255)
+    for cx, cy, sx, sy in (
+        (x0 + 2, y0 + 2, 1, 1),
+        (x1 - 3, y0 + 2, -1, 1),
+        (x0 + 2, y1 - 3, 1, -1),
+        (x1 - 3, y1 - 3, -1, -1),
+    ):
+        for i in range(8):
+            for t in range(3):
+                for x, y in ((cx + sx * i, cy + sy * t), (cx + sx * t, cy + sy * i)):
+                    if 0 <= x < N and 0 <= y < N and px[x, y][3] >= 40:
+                        px[x, y] = gold
+    # Spine, then a raised clasp in the middle of the cover.
+    sx = x0 + max(4, (x1 - x0) // 3)
+    for y in range(y0 + 5, y1 - 5):
+        for x in (sx, sx + 1):
+            if 0 <= x < N and px[x, y][:3] in cloth_set:
+                px[x, y] = border
+    mx, my = (x0 + x1) // 2, (y0 + y1) // 2
+    for x, y in _disk(mx, my, 4):
+        if 0 <= x < N and 0 <= y < N and px[x, y][3] >= 40:
+            px[x, y] = gold
+    for x, y in _disk(mx, my, 2):
+        if 0 <= x < N and 0 <= y < N and px[x, y][3] >= 40:
+            px[x, y] = gold_hi
 
 
 def _book_spine(im: Image.Image) -> None:
