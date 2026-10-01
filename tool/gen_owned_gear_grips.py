@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Generate lib/visual/owned_gear_grips.dart from char/gear/*_idle.png.
 
-The grip is the middle of the handle, on an opaque pixel. A pointed weapon
-gets a rest angle so the tip points up and out. A bow tips the same way so
-its string clears the cheek. A shield is held by its top rim so it hangs
-below the hand. Fists stay upright.
+Each weapon picks its own hold on an opaque pixel. A blade, axe, mace, or
+wand is held in the handle, in from the butt, so the pommel hangs past the
+fist. A staff or polearm is held up the shaft, not at the end. A bow is held
+on the stave. A shield hangs from its top rim. The rest angle aims that
+weapon's tip up and out.
 
 Do not hand-edit the Dart file. Run this script.
 """
@@ -22,7 +23,19 @@ ROOT = REPO
 GEAR = CHAR / "gear"
 OUT = ROOT / "lib" / "visual" / "owned_gear_grips.dart"
 ALPHA = 40
-HANDLE_BAND = 14
+# How far from the butt toward the tip the hand closes. The butt stays
+# past the fist, so the weapon looks held instead of perched on the knuckle.
+HOLD_FROM_BUTT = {
+    "sword_": 0.22,
+    "dagger_": 0.28,
+    "axe_": 0.20,
+    "mace_": 0.30,
+    "wand_": 0.45,
+    "staff_": 0.36,
+    "polearm_": 0.32,
+    "gun_": 0.30,
+    "crossbow_": 0.24,
+}
 # Shorter than this (thrown star, fist) has no blade to aim.
 MIN_REACH = 22
 
@@ -86,26 +99,64 @@ def _bow_stave(im: Image.Image) -> tuple[float, float] | None:
     return (float(x), float(ys[len(ys) // 2]))
 
 
-def _grip_px(im: Image.Image, stem: str) -> tuple[float, float] | None:
+def _ends(im: Image.Image) -> tuple[tuple[int, int], tuple[int, int]] | None:
+    """Tip is the upper-left end. Butt is the lower-right end."""
+    px = im.load()
+    pts = [
+        (x, y)
+        for y in range(im.height)
+        for x in range(im.width)
+        if px[x, y][3] >= ALPHA
+    ]
+    if not pts:
+        return None
+    tip = min(pts, key=lambda p: (p[0] + p[1], p[1], p[0]))
+    butt = max(pts, key=lambda p: (p[0] + p[1], p[1], p[0]))
+    return tip, butt
+
+
+def _hold_from_butt(stem: str) -> float | None:
+    for prefix, along in HOLD_FROM_BUTT.items():
+        if stem.startswith(prefix):
+            return along
+    return None
+
+
+def _along(
+    im: Image.Image, butt: tuple[int, int], tip: tuple[int, int], along: float
+) -> tuple[float, float]:
+    """A point on the weapon, `along` of the way from the butt to the tip."""
+    x = butt[0] + (tip[0] - butt[0]) * along
+    y = butt[1] + (tip[1] - butt[1]) * along
+    return _snap_to_opaque(im, x, y)
+
+
+def _grip_px(
+    im: Image.Image, stem: str
+) -> tuple[tuple[float, float] | None, tuple[int, int] | None]:
+    """Grip pixel, and the tip the rest angle should aim."""
     bbox = im.getbbox()
     if bbox is None:
-        return None
+        return None, None
     _, top, _, bottom = bbox
     if stem.startswith("bow_"):
         point = _bow_stave(im)
-    elif stem.startswith(("shield_", "frill_")):
+        return (None if point is None else _snap_to_opaque(im, *point)), None
+    if stem.startswith(("shield_", "frill_")):
         # Hold the top rim so the shield hangs below the hand, not over the face.
         band = max(6, int((bottom - top) * 0.22))
         point = _section_center(im, top, top + band)
-    elif stem.startswith(("fist_", "thrown_")):
+        return (None if point is None else _snap_to_opaque(im, *point)), None
+    if stem.startswith(("fist_", "thrown_")):
         point = _section_center(im, top, bottom)
-    else:
-        point = _section_center(im, bottom - HANDLE_BAND, bottom) or (
-            _section_center(im, top, bottom)
-        )
-    if point is None:
-        return None
-    return _snap_to_opaque(im, point[0], point[1])
+        return (None if point is None else _snap_to_opaque(im, *point)), None
+    ends = _ends(im)
+    along = _hold_from_butt(stem)
+    if ends is None or along is None:
+        point = _section_center(im, top, bottom)
+        return (None if point is None else _snap_to_opaque(im, *point)), None
+    tip, butt = ends
+    return _along(im, butt, tip, along), tip
 
 
 def _wrap(angle: float) -> float:
@@ -133,7 +184,14 @@ def _farthest(
     return best
 
 
-def _rest(im: Image.Image, stem: str, gx: float, gy: float, outward: float) -> float:
+def _rest(
+    im: Image.Image,
+    stem: str,
+    gx: float,
+    gy: float,
+    outward: float,
+    aim: tuple[int, int] | None = None,
+) -> float:
     """Clockwise radians that aim the tip up-and-out. Flutter rotate is clockwise."""
     if stem.startswith(("shield_", "frill_", "fist_", "thrown_")):
         return 0.0
@@ -144,10 +202,13 @@ def _rest(im: Image.Image, stem: str, gx: float, gy: float, outward: float) -> f
         if tip is None:
             return 0.0
         return _wrap(desired - math.atan2(tip[1] - gy, tip[0] - gx))
-    tip = _farthest(im, gx, gy)
-    if tip is None or tip[2] < MIN_REACH * MIN_REACH:
-        return 0.0
-    current = math.atan2(tip[1] - gy, tip[0] - gx)
+    if aim is not None:
+        current = math.atan2(aim[1] - gy, aim[0] - gx)
+    else:
+        tip = _farthest(im, gx, gy)
+        if tip is None or tip[2] < MIN_REACH * MIN_REACH:
+            return 0.0
+        current = math.atan2(tip[1] - gy, tip[0] - gx)
     if stem.startswith(("gun_", "crossbow_")):
         desired = math.atan2(-0.08, 1.0 if outward > 0 else -1.0)
     elif stem.startswith(("staff_", "polearm_")):
@@ -160,7 +221,7 @@ def _rest(im: Image.Image, stem: str, gx: float, gy: float, outward: float) -> f
 def main() -> None:
     lines: list[str] = [
         "// GENERATED by tool/gen_owned_gear_grips.py — do not hand-edit.",
-        "// Grip: middle of the handle, on an opaque pixel.",
+        "// Grip: that weapon's hold, on an opaque pixel. The butt hangs past it.",
         "// Rest: clockwise radians so a blade points up and out.",
         "// restOff aims the same art up and out from the left hand.",
         "",
@@ -177,12 +238,12 @@ def main() -> None:
     for path in sorted(GEAR.glob("*_idle.png")):
         stem = path.name.removesuffix("_idle.png")
         im = Image.open(path).convert("RGBA")
-        grip = _grip_px(im, stem)
+        grip, aim = _grip_px(im, stem)
         if grip is None:
             continue
         gx, gy = grip
-        rest = _rest(im, stem, gx, gy, 0.40)
-        rest_off = _rest(im, stem, gx, gy, -0.40)
+        rest = _rest(im, stem, gx, gy, 0.40, aim)
+        rest_off = _rest(im, stem, gx, gy, -0.40, aim)
         lines.append(f"    '{stem}': Offset({gx / 128:.4f}, {gy / 128:.4f}),")
         rests.append(f"    '{stem}': {rest:.4f},")
         rests_off.append(f"    '{stem}': {rest_off:.4f},")

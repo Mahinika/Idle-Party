@@ -186,8 +186,9 @@ Facing is **L/R flipX only**. Enemies unchanged in Phase 3.
   `py tool/gen_owned_gear_grips.py` and remeasure the palms in
   `AnchorTables`. Do not shift the PNGs.
   Audit: `py tool/audit_anchors.py`.
-  Grips are **opaque-pixel** points: handle centroid for melee/staves, shape
-  mid-height for bows, shape centroid for shields/frills. A bbox center is
+  Grips are **opaque-pixel** points: in from the butt for blades, axes,
+  maces, and wands, up the shaft for staves and polearms, mid-stave for bows,
+  top rim for shields. A bbox center is
   empty air on diagonal art — that hung ten weapons beside the fist.
   A large shift onto the hand anchor is normal; the painter does not clip to
   the 128 box, so long weapons reach past the hero square.
