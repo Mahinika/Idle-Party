@@ -401,8 +401,15 @@ class _HubScreenState extends State<HubScreen>
     final vaultOwnedByChase =
         chase.kind == HubChaseKind.claimDailyVault ||
         chase.kind == HubChaseKind.dailyVaultProgress;
+    // Ascend stays a button even when TODAY is gear, KEY, or a ready claim.
+    final showAscendButton = HubUrgentRow.wantsAscendButton(
+      canAscend: canAscend,
+      chaseKind: chase.kind,
+    );
     final showUrgentRow =
-        chase.urgency != HubChaseUrgency.ready && !(endgameHunt && !canAscend);
+        showAscendButton ||
+        (chase.urgency != HubChaseUrgency.ready &&
+            !(endgameHunt && !canAscend));
 
     final keyDialLevel = chase.kind == HubChaseKind.keystone
         ? (chase.keyLevel ?? state.hardmodeLevel)
@@ -496,18 +503,13 @@ class _HubScreenState extends State<HubScreen>
             ],
           ),
         ],
-        if (showUrgentRow)
+        if (showUrgentRow) ...[
+          const SizedBox(height: 4),
           HubUrgentRow(
             claimable: state.missions.where((m) => m.canClaim).length,
             canAscend: canAscend,
-            ascendLabel: canAscend
-                ? (GameLogic.endgameUnlocked(state)
-                      ? 'ASCEND · optional'
-                      : 'ASCEND  +${GameLogic.ascendEssenceReward(state.ascensionLevel + 1) + MetaSystems.ascendMilestoneReward(state.ascensionLevel, state.ascensionLevel + 1) + MetaSystems.ascendStreakEssence(state)}e')
-                : null,
-            hideAscend: // FEEL 050
-                chase.kind == HubChaseKind.ascend ||
-                chase.kind == HubChaseKind.dailyRun,
+            ascendLabel: canAscend ? _ascendHubButtonLabel(state) : null,
+            hideAscend: chase.kind == HubChaseKind.ascend,
             hideVaultClaim: vaultOwnedByChase,
             hideVaultProgress: vaultOwnedByChase,
             hideMissionClaim: chase.kind == HubChaseKind.claimMissions,
@@ -530,12 +532,24 @@ class _HubScreenState extends State<HubScreen>
             vaultClaimEssence: GameLogic.dailyVaultClaimPreviewEssence(state),
             onClaimDailyVault: director.claimDailyVault,
           ),
+        ],
       ],
     );
   }
 
   bool _showPowerupsFab() =>
       MenuTabs.showScrolls(state) && AdBoost.showHubFab(state.metaDepth);
+
+  String _ascendHubButtonLabel(GameState state) {
+    final reward =
+        GameLogic.ascendEssenceReward(state.ascensionLevel + 1) +
+        MetaSystems.ascendMilestoneReward(
+          state.ascensionLevel,
+          state.ascensionLevel + 1,
+        ) +
+        MetaSystems.ascendStreakEssence(state);
+    return 'ASCEND  +${reward}e';
+  }
 
   /// Party line plus bosses left this run. The count stays visible when the
   /// place name is long.

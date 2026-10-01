@@ -16,6 +16,55 @@ import 'package:idle_party/ui/shell/scroll_buff_stack.dart';
 void main() {
   final now = DateTime.utc(2026, 8, 22);
 
+  testWidgets('ready Ascend stays a button beside other hub jobs', (
+    tester,
+  ) async {
+    expect(
+      HubUrgentRow.wantsAscendButton(
+        canAscend: true,
+        chaseKind: HubChaseKind.keystone,
+      ),
+      isTrue,
+    );
+    expect(
+      HubUrgentRow.wantsAscendButton(
+        canAscend: true,
+        chaseKind: HubChaseKind.equipBag,
+      ),
+      isTrue,
+    );
+    expect(
+      HubUrgentRow.wantsAscendButton(
+        canAscend: true,
+        chaseKind: HubChaseKind.ascend,
+      ),
+      isFalse,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: HubUrgentRow(
+            claimable: 0,
+            canAscend: true,
+            ascendLabel: 'ASCEND  +19e',
+            onContracts: () {},
+            onAscend: () {},
+            dailyClaimed: true,
+            onDaily: () {},
+            weeklyReady: false,
+            weeklyProgress: 0,
+            weeklyClaimed: true,
+            weeklyBestTimedKey: 0,
+            vaultClaimEssence: 0,
+            onClaimDailyVault: () {},
+          ),
+        ),
+      ),
+    );
+    expect(find.text('ASCEND  +19e'), findsOneWidget);
+  });
+
   testWidgets('HubTodayCard shows READY chip for claim chase', (tester) async {
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.ensureWeeklyContract(state, now: now);
