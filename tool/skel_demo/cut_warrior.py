@@ -357,8 +357,7 @@ def build(quiet: bool = False) -> dict:
             "pivot": [round(SWORD_GRIP[0], 2), round(SWORD_GRIP[1], 2)],
         }
     )
-    body = [name for name in DRAW if not name.startswith("hand_")]
-    draw = [*body, "shield", "hand_l", "hand_r", "sword"]
+    draw = [*DRAW, "shield", "sword"]
     meta = {
         "canvas": [128, 128],
         "source": "assets/custom/char/warrior/_src/body_idle.png",
