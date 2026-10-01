@@ -13,6 +13,8 @@ description: >-
 Legal: [assets-legal](../assets-legal/SKILL.md). Live look: [a56-playtest](../a56-playtest/SKILL.md).
 Full contract: `docs/CHARACTER_VISUALS.md`.
 
+Flagged families paint through the cutout rig instead of this still doll. See [hero-rig](../hero-rig/SKILL.md).
+
 GEAR, dungeon, and party HUD share `CharacterVisualPainter.paintOwnedHero`
 (`CharacterVisualPose.resolve(..., owned: true)`). Do **not** add a second
 painter, Kenney 16×16 stickers on owned bodies, or Offset sockets on armor.

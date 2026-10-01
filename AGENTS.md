@@ -25,10 +25,11 @@ Games and Firebase are there and in `docs/PRIVACY.md`.
 **Legal:** owned `assets/custom/` only. No foreign dumps, sprites, audio, or
 decompiled code. See `.cursor/rules/product-locks.mdc`.
 
-**Doll:** `paintOwnedHero` plus `docs/CHARACTER_VISUALS.md` and skill
-`character-paper-doll`. Gear pictures follow skill `gear-art` and
-`tool/gear_style.py`. Gear and race clips are owned PNGs. Enemies are a
-separate art pass.
+**Doll:** cutout rig in `lib/visual/rig/` (`HeroRigPainter`) for families in
+`HeroRigFlags`. `paintOwnedHero` is the fallback. See
+`docs/CHARACTER_VISUALS.md` and skill `hero-rig`. Gear pictures follow skill
+`gear-art` and `tool/gear_style.py`. Gear and race clips are owned PNGs.
+Enemies are a separate art pass.
 
 ## Build and verify
 

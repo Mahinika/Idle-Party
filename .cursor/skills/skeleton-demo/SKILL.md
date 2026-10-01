@@ -11,7 +11,7 @@ description: >-
 
 # Skeleton demo (outside the game)
 
-The demo is not the doll. Do not edit `lib/`, live PNGs, or `owned_gear_grips.dart`.
+The demo is not the doll. The in-game rig is [hero-rig](../hero-rig/SKILL.md). Do not edit `lib/`, live PNGs, or `owned_gear_grips.dart`.
 
 | What | Where |
 |------|--------|

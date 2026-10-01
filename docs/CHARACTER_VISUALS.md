@@ -26,9 +26,11 @@ paper-doll stack. **No gear overlays** on form bodies — the silhouette is the
 kit identity. Generated via `tool/gen_druid_form_sprites.py` for moonkin/tree;
 feral/guardian/shadow are authored.
 
-**GEAR, party HUD, and dungeon** all use `CharacterVisualPainter.paintOwnedHero`
-with the same pose (`CharacterVisualPose.resolve(..., owned: true)`) when on
-the paper-doll path (not form sprites).
+**GEAR, party HUD, and dungeon** paint through the cutout rig when the
+family is in `HeroRigFlags`. Everyone else, and the first frames before the
+part atlas is ready, still use `CharacterVisualPainter.paintOwnedHero` with
+the same pose (`CharacterVisualPose.resolve(..., owned: true)`). Form sprites
+stay on their own PNG.
 
 **Spec identity:** four bodies serve 31 specs. The owned body is drawn as
 authored, so skin, hair, and cloth keep that picture's palette.
@@ -331,3 +333,24 @@ the step bob stays live. Dungeon precaches bodies + cloth tint masks +
 - GEAR doll: same helm / weapon / shield as dungeon for that hero.
 - Flip when the party faces left (dungeon).
 - Enemies still use prior art.
+
+## Skeleton rig (primary)
+
+Families in `HeroRigFlags` (`lib/visual/rig/hero_rig_flags.dart`) are cut into
+bones and posed. The paper doll stays the fallback, including the lookbook,
+until the owner says to remove it.
+
+- The part map is baked from `assets/custom/char/<family>/_src/body_idle.png`
+  into `assets/custom/rig/<family>.json`. The same map splits the live idle
+  undertunic and every 128 same-origin overlay. Walk and attack body PNGs are
+  not drawn on this path.
+- Robes (mage, healer) add a `skirt` bone. Their leg angles stay within 12
+  degrees so the hem does not kick open.
+- Draw order is the cape (one rigid piece on the torso), then each bone's
+  layers, then weapons in front. The weapon follows the bone under the idle
+  fist pixel (`handBones` in the JSON).
+- The rig is drawn at 1 source pixel = 1 pixel into a 256 image, then scaled
+  up with nearest-neighbor. Limb poses step at 16 fps. World movement stays
+  smooth.
+- `py -3 tool/rig/bake_rig.py <family>` writes the JSON and a preview under
+  `tool/out/rig/`. Do not put rig files under `assets/custom/char/<family>/`.
