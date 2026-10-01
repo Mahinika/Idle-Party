@@ -10,7 +10,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/models/hero.dart';
+import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/models/proficiency.dart';
 import 'package:idle_party/ui/decoded_image_cache.dart';
 import 'package:idle_party/ui/hero_doll_sprite.dart';
 import 'package:idle_party/ui/shell/dev_gear_lookbook.dart';
@@ -85,6 +87,7 @@ void main() {
 
     if (scope == 'summary' || scope == 'all') {
       await _saveCompare(tester, outDir, outfits);
+      await _saveClassSheet(tester, outDir);
     }
     if (scope == 'weapons' || scope == 'all') {
       await _saveWeaponCompare(tester, outDir, outfits);
@@ -241,6 +244,40 @@ Future<void> _saveCompare(
   );
 }
 
+/// One row per class. Specs that share a body, armor, and weapons collapse
+/// into one doll. Weapons match the starter kit in `StarterGear`.
+Future<void> _saveClassSheet(WidgetTester tester, String outDir) {
+  const layers = [
+    'helm_t0',
+    'chest_t0',
+    'legs_t0',
+    'shoulder_t0',
+    'cloak_t0',
+    'hands_t0',
+  ];
+  final rows = <Widget>[
+    _caption('CLASSES  armor and the weapon that spec starts with'),
+  ];
+  var widest = 1;
+  for (final classId in HeroClassId.values) {
+    final kits = _classLooks(classId);
+    if (kits.length > widest) widest = kits.length;
+    final armor = kits.first.armor.name;
+    rows.add(
+      _row([
+        _classTag(HeroSpecs.classLabel(classId), armor),
+        for (final kit in kits) _classCell(kit, layers),
+      ]),
+    );
+  }
+  return _saveSheet(
+    tester,
+    '$outDir/fit_classes.png',
+    _column(rows),
+    Size(128 + widest * 136 + 16, HeroClassId.values.length * 156 + 44),
+  );
+}
+
 /// Same dressed body, one weapon at a time, so hands can be compared.
 ///
 /// Rows are warrior, healer, mage, rogue.
@@ -270,6 +307,236 @@ Future<void> _saveWeaponCompare(
 
 BodyFamily _family(String name) =>
     BodyFamily.values.firstWhere((family) => family.name == name);
+
+/// Heaviest armor the class wears. Hunters start in leather and take mail
+/// at 40, so the sheet shows the mail they grow into.
+ArmorType _classArmor(HeroSpecDef spec) {
+  final level = spec.classId == HeroClassId.hunter ? 40 : 1;
+  return ClassProficiency.preferredArmor(spec, level)!;
+}
+
+/// Starter weapon from `StarterGear._weaponLoadout`, as lookbook art.
+({
+  String weaponId,
+  WeaponHanded handed,
+  String? offId,
+  bool offIsWeapon,
+  String blurb,
+})
+_starterLook(HeroSpecId id) {
+  const sword2 = (
+    weaponId: 'sword_t0',
+    handed: WeaponHanded.twoHand,
+    offId: null,
+    offIsWeapon: false,
+    blurb: '2H sword',
+  );
+  const axes = (
+    weaponId: 'axe_t0',
+    handed: WeaponHanded.oneHand,
+    offId: 'axe_t0',
+    offIsWeapon: true,
+    blurb: 'two axes',
+  );
+  const maceShield = (
+    weaponId: 'mace_t0',
+    handed: WeaponHanded.oneHand,
+    offId: 'shield_t0',
+    offIsWeapon: false,
+    blurb: 'mace and shield',
+  );
+  const daggers = (
+    weaponId: 'dagger_t0',
+    handed: WeaponHanded.oneHand,
+    offId: 'dagger_t0',
+    offIsWeapon: true,
+    blurb: 'two daggers',
+  );
+  const maceBook = (
+    weaponId: 'mace_t0',
+    handed: WeaponHanded.oneHand,
+    offId: 'frill_t0',
+    offIsWeapon: false,
+    blurb: 'mace and book',
+  );
+  const staff = (
+    weaponId: 'staff_t0',
+    handed: WeaponHanded.twoHand,
+    offId: null,
+    offIsWeapon: false,
+    blurb: 'staff',
+  );
+  const mace2 = (
+    weaponId: 'mace_t0',
+    handed: WeaponHanded.twoHand,
+    offId: null,
+    offIsWeapon: false,
+    blurb: '2H mace',
+  );
+  const pole = (
+    weaponId: 'polearm_t0',
+    handed: WeaponHanded.twoHand,
+    offId: null,
+    offIsWeapon: false,
+    blurb: 'polearm',
+  );
+  const bow = (
+    weaponId: 'bow_t0',
+    handed: WeaponHanded.twoHand,
+    offId: null,
+    offIsWeapon: false,
+    blurb: 'bow',
+  );
+  return switch (id) {
+    HeroSpecId.protection ||
+    HeroSpecId.holyPaladin ||
+    HeroSpecId.protPaladin ||
+    HeroSpecId.elemental ||
+    HeroSpecId.restorationShaman => maceShield,
+    HeroSpecId.arms || HeroSpecId.retribution || HeroSpecId.unholy => sword2,
+    HeroSpecId.fury || HeroSpecId.frostDk || HeroSpecId.enhancement => axes,
+    HeroSpecId.beastMastery ||
+    HeroSpecId.marksmanship ||
+    HeroSpecId.survival => bow,
+    HeroSpecId.assassination ||
+    HeroSpecId.combat ||
+    HeroSpecId.subtlety => daggers,
+    HeroSpecId.discipline || HeroSpecId.holyPriest => maceBook,
+    HeroSpecId.blood => mace2,
+    HeroSpecId.feral || HeroSpecId.guardian => pole,
+    _ => staff,
+  };
+}
+
+List<_ClassLook> _classLooks(HeroClassId classId) {
+  final specs = HeroSpecs.forClass(classId);
+  final mixed =
+      specs.map((id) => HeroSpecs.def(id).gearAffinity).toSet().length > 1;
+  final grouped = <String, _ClassLook>{};
+  for (final id in specs) {
+    final spec = HeroSpecs.def(id);
+    final look = _starterLook(id);
+    final armor = _classArmor(spec);
+    final key =
+        '${spec.gearAffinity.name}|${armor.name}|${look.weaponId}|${look.handed.name}|${look.offId}|${look.offIsWeapon}';
+    final name = spec.name.split(' ').first;
+    final existing = grouped[key];
+    if (existing == null) {
+      grouped[key] = _ClassLook(
+        specId: id,
+        names: [name],
+        armor: armor,
+        weaponId: look.weaponId,
+        handed: look.handed,
+        offId: look.offId,
+        offIsWeapon: look.offIsWeapon,
+        blurb: mixed ? '${spec.gearAffinity.name} · ${look.blurb}' : look.blurb,
+      );
+    } else {
+      existing.names.add(name);
+    }
+  }
+  final kits = grouped.values.toList();
+  final coverWholeClass = kits.length == 1 && kits.single.names.length == specs.length;
+  if (coverWholeClass) kits.single.names.clear();
+  return kits;
+}
+
+Widget _classTag(String name, String armor) {
+  return SizedBox(
+    width: 120,
+    height: 140,
+    child: Padding(
+      padding: const EdgeInsets.only(left: 10, top: 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            name,
+            maxLines: 2,
+            style: const TextStyle(color: Color(0xFFF4E4C4), fontSize: 13),
+          ),
+          Text(
+            armor,
+            style: const TextStyle(color: Color(0xFFE6C36A), fontSize: 11),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _classCell(_ClassLook kit, List<String> layers) {
+  final items = <EquipmentSlot, EquipmentItem>{};
+  for (final id in layers) {
+    final item = gearLookbookItem(id, kit.armor);
+    items[item.slot] = item;
+  }
+  items[EquipmentSlot.weapon] = gearLookbookItem(
+    kit.weaponId,
+    null,
+  ).copyWith(handed: kit.handed);
+  final offId = kit.offId;
+  if (offId != null) {
+    items[EquipmentSlot.offHand] = gearLookbookItem(
+      offId,
+      null,
+      asOffHand: kit.offIsWeapon,
+    );
+  }
+  final hero = PartyHero.starting(
+    name: kit.names.isEmpty ? 'Class' : kit.names.first,
+    specId: kit.specId,
+    id: 'class-${kit.specId.name}-${kit.weaponId}',
+    equipped: items,
+  );
+  final title = kit.names.join(' · ');
+  return SizedBox(
+    width: 132,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          style: const TextStyle(color: Color(0xFFE6C36A), fontSize: 9),
+        ),
+        Text(
+          kit.blurb,
+          maxLines: 1,
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          style: const TextStyle(color: Color(0xFFB7A48A), fontSize: 9),
+        ),
+        HeroDollSprite(hero: hero, size: 96, forcePaperDoll: true),
+      ],
+    ),
+  );
+}
+
+class _ClassLook {
+  _ClassLook({
+    required this.specId,
+    required this.names,
+    required this.armor,
+    required this.weaponId,
+    required this.handed,
+    required this.offId,
+    required this.offIsWeapon,
+    required this.blurb,
+  });
+
+  final HeroSpecId specId;
+  final List<String> names;
+  final ArmorType armor;
+  final String weaponId;
+  final WeaponHanded handed;
+  final String? offId;
+  final bool offIsWeapon;
+  final String blurb;
+}
 
 Widget _mixCell(
   BodyFamily family,

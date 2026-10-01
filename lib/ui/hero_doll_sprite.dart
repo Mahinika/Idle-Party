@@ -25,6 +25,7 @@ class HeroDollSprite extends StatefulWidget {
     this.size = 32,
     this.walkFrame = 0,
     this.demonForm = false,
+    this.forcePaperDoll = false,
   });
 
   final PartyHero hero;
@@ -33,6 +34,10 @@ class HeroDollSprite extends StatefulWidget {
 
   /// Demonology metamorphosis tint. Hub GEAR leaves this off.
   final bool demonForm;
+
+  /// Draw the undertunic and worn gear even for a spec whose fight picture
+  /// is a form (Druid, Shadow). Hub and dungeon leave this off.
+  final bool forcePaperDoll;
 
   /// Reserved for future walk-frame previews (idle in GEAR for now).
   final int walkFrame;
@@ -65,6 +70,7 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
         oldWidget.hero.gearAffinity != widget.hero.gearAffinity ||
         oldWidget.hero.race != widget.hero.race ||
         oldWidget.hero.sex != widget.hero.sex ||
+        oldWidget.forcePaperDoll != widget.forcePaperDoll ||
         !_sameEquipKeys(oldWidget.hero, widget.hero)) {
       _reload();
     }
@@ -96,7 +102,9 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
 
   Future<void> _reloadBody() async {
     final gen = ++_loadGen;
-    final useForm = CustomAssets.hasUniqueHeroSprite(widget.hero.specId);
+    final useForm =
+        !widget.forcePaperDoll &&
+        CustomAssets.hasUniqueHeroSprite(widget.hero.specId);
     if (useForm) {
       final formPath = CustomAssets.heroForSpec(widget.hero.specId);
       ui.Image? form;

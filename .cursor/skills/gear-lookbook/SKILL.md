@@ -35,7 +35,10 @@ count file. No emulator and no browser.
 4. Read `fit_summary.png` for worn sets (rows warrior, healer, mage,
    rogue; columns bare, armor, layers, armed, pair) and `fit_poses.png`
    for the same armed and pair outfits in idle, walk, windup, strike, and
-   cast.
+   cast. Read `fit_classes.png` for all ten classes in their armor,
+   holding the weapon that spec starts with. Specs that share a body,
+   armor, and weapons are one doll. Druid and Shadow are drawn as the
+   person with gear on, because their fight picture hides the clothes.
 5. Open a detail sheet only when the change needs it (`--weapons`,
    `--armor`, `--body`, or `--all`):
    - `{family}_armor.png`: helm, chest, legs, cloak
