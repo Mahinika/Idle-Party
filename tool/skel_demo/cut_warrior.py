@@ -15,10 +15,12 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "assets" / "custom" / "char" / "warrior" / "_src" / "body_idle.png"
 SWORD_SRC = ROOT / "assets" / "custom" / "char" / "gear" / "sword_t0_idle.png"
 SHIELD_SRC = ROOT / "assets" / "custom" / "char" / "gear" / "shield_t0_idle.png"
-# Grip on the weapon picture, and the clockwise rest turn, from OwnedGearGrips.
-SWORD_GRIP = (0.7422 * 128, 0.6797 * 128)
-SHIELD_GRIP = (0.2188 * 128, 0.4766 * 128)
-SWORD_REST_DEG = 1.1289 * 180.0 / 3.141592653589793
+# Hold points on the weapon pictures. The sword grip is the brown handle.
+# The shield is held on its inner rim so the disc covers the arm.
+SWORD_GRIP = (95.0, 87.0)
+SHIELD_GRIP = (44.0, 80.0)
+# Straight up from this arm. The doll's 65° rest leans the blade out of the fist.
+SWORD_REST_DEG = 48.0
 OUT = ROOT / "tool" / "out" / "skel_demo"
 PARTS = OUT / "parts"
 
@@ -171,8 +173,8 @@ def bone_rests(parts: dict[str, set[tuple[int, int]]]) -> dict[str, tuple[float,
         "shin_r": _top_center(parts["shin_r"]),
         "foot_l": _top_center(parts["foot_l"]),
         "foot_r": _top_center(parts["foot_r"]),
-        "shield": _fist(parts["hand_l"], 10, -4),
-        "sword": _fist(parts["hand_r"], -2, 1),
+        "shield": _fist(parts["hand_l"], 2, 0),
+        "sword": _fist(parts["hand_r"], -6, -1),
     }
     return rests
 
@@ -355,7 +357,8 @@ def build(quiet: bool = False) -> dict:
             "pivot": [round(SWORD_GRIP[0], 2), round(SWORD_GRIP[1], 2)],
         }
     )
-    draw = [*DRAW, "shield", "sword"]
+    body = [name for name in DRAW if not name.startswith("hand_")]
+    draw = [*body, "shield", "sword", "hand_l", "hand_r"]
     meta = {
         "canvas": [128, 128],
         "source": "assets/custom/char/warrior/_src/body_idle.png",
