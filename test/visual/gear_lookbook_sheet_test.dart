@@ -244,8 +244,8 @@ Future<void> _saveCompare(
   );
 }
 
-/// One row per class. Specs that share a body, armor, and weapons collapse
-/// into one doll. Weapons match the starter kit in `StarterGear`.
+/// Two columns so every class fits on one screen. Specs that share a body,
+/// armor, and weapons collapse into one doll. Weapons match `StarterGear`.
 Future<void> _saveClassSheet(WidgetTester tester, String outDir) {
   const layers = [
     'helm_t0',
@@ -255,26 +255,51 @@ Future<void> _saveClassSheet(WidgetTester tester, String outDir) {
     'cloak_t0',
     'hands_t0',
   ];
-  final rows = <Widget>[
-    _caption('CLASSES  armor and the weapon that spec starts with'),
-  ];
-  var widest = 1;
-  for (final classId in HeroClassId.values) {
-    final kits = _classLooks(classId);
-    if (kits.length > widest) widest = kits.length;
-    final armor = kits.first.armor.name;
-    rows.add(
-      _row([
-        _classTag(HeroSpecs.classLabel(classId), armor),
-        for (final kit in kits) _classCell(kit, layers),
-      ]),
-    );
+  const cellW = 132.0;
+  const tagW = 120.0;
+  final classes = HeroClassId.values;
+  final mid = (classes.length + 1) ~/ 2;
+
+  List<Widget> columnFor(List<HeroClassId> ids) {
+    return [
+      for (final classId in ids)
+        _row([
+          _classTag(
+            HeroSpecs.classLabel(classId),
+            _classLooks(classId).first.armor.name,
+          ),
+          for (final kit in _classLooks(classId)) _classCell(kit, layers),
+        ]),
+    ];
   }
+
+  double widthOf(List<HeroClassId> ids) {
+    var kits = 1;
+    for (final classId in ids) {
+      final n = _classLooks(classId).length;
+      if (n > kits) kits = n;
+    }
+    return tagW + kits * cellW;
+  }
+
+  final left = classes.sublist(0, mid);
+  final right = classes.sublist(mid);
+  final leftW = widthOf(left);
+  final rightW = widthOf(right);
   return _saveSheet(
     tester,
     '$outDir/fit_classes.png',
-    _column(rows),
-    Size(128 + widest * 136 + 16, HeroClassId.values.length * 156 + 44),
+    _column([
+      _caption('CLASSES  armor and the weapon that spec starts with'),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: leftW, child: Column(children: columnFor(left))),
+          SizedBox(width: rightW, child: Column(children: columnFor(right))),
+        ],
+      ),
+    ]),
+    Size(leftW + rightW + 8, mid * 156 + 44),
   );
 }
 
