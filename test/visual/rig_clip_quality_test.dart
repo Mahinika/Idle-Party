@@ -159,6 +159,10 @@ void main() {
   test('posed rogue grows no whiskers', () async {
     await _expectNoNewIslands(BodyFamily.rogue, HeroSpecId.assassination);
   });
+
+  test('posed mage grows no whiskers', () async {
+    await _expectNoNewIslands(BodyFamily.mage, HeroSpecId.arcane);
+  });
 }
 
 Future<void> _expectNoNewIslands(BodyFamily family, HeroSpecId spec) async {

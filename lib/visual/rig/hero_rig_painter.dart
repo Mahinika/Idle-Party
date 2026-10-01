@@ -191,7 +191,7 @@ abstract final class HeroRigPainter {
     required RigData rig,
     bool offHand = false,
   }) {
-    final sample = RigSampler.sample(pose.anim);
+    final sample = RigSampler.sample(pose.anim, robe: rig.bones.containsKey('skirt'));
     final world = RigSolver.world(rig, sample.pose);
     final point = HeroRigDraw.gripPoint(rig, world, pose, offHand: offHand);
     final scale = size / RigData.canvas;
@@ -208,7 +208,7 @@ abstract final class HeroRigPainter {
     required CharacterVisualPose pose,
     required String heroId,
   }) {
-    final sample = RigSampler.sample(pose.anim);
+    final sample = RigSampler.sample(pose.anim, robe: rig.bones.containsKey('skirt'));
     final hash = pose.equipHash;
     if (_equip[heroId] != hash) {
       _frames.removeWhere((key, image) {

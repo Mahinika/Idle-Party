@@ -4,7 +4,11 @@ import '../body_family.dart';
 abstract final class HeroRigFlags {
   static const enabled = true;
 
-  static const families = {BodyFamily.warrior, BodyFamily.rogue};
+  static const families = {
+    BodyFamily.warrior,
+    BodyFamily.rogue,
+    BodyFamily.mage,
+  };
 
   static bool use(BodyFamily? family) =>
       enabled && family != null && families.contains(family);

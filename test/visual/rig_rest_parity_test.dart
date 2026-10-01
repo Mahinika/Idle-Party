@@ -83,6 +83,14 @@ void main() {
       role: HeroRole.rogue,
     );
   });
+
+  test('mage rest matches the paper doll', () async {
+    await _expectRest(
+      family: BodyFamily.mage,
+      spec: HeroSpecId.arcane,
+      role: HeroRole.mage,
+    );
+  });
 }
 
 Future<void> _expectRest({
