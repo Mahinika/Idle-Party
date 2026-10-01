@@ -86,4 +86,18 @@ void main() {
     expect(posed.pose.angles['upper_l']!, lessThan(plain.pose.angles['upper_l']! - 20));
     expect(posed.pose.angles['fore_l']!, lessThan(plain.pose.angles['fore_l']! - 10));
   });
+
+  test('a named ability replaces the plain attack clip', () {
+    const swing = HeroAnimPose(kind: HeroAnimKind.attack, frame: 0, progress: 0.5);
+    const strike = HeroAnimPose(
+      kind: HeroAnimKind.attack,
+      frame: 0,
+      progress: 0.5,
+      abilityName: 'mortalStrike',
+    );
+    final plain = RigSampler.sample(swing);
+    final named = RigSampler.sample(strike, abilityName: strike.abilityName);
+    expect(named.clip, 'mortalStrike');
+    expect(named.pose.angles['sword']!, lessThan(plain.pose.angles['sword'] ?? 0));
+  });
 }

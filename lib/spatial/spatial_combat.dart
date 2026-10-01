@@ -289,6 +289,9 @@ class SpatialActor {
   /// Brief cast VFX timer (seconds remaining) for cast anim.
   double castFlash = 0;
 
+  /// Which ability the rig should pose while a flash is up. Not saved.
+  AbilityId? animAbility;
+
   /// Brief hit flinch timer (seconds remaining).
   double hitFlash = 0;
 
@@ -1865,6 +1868,7 @@ abstract final class SpatialCombat {
       if (a.hitFlash > 0) {
         a.hitFlash = (a.hitFlash - dt).clamp(0, 1);
       }
+      if (a.attackFlash <= 0 && a.castFlash <= 0) a.animAbility = null;
     }
 
     for (final a in world.heroes) {
@@ -2547,6 +2551,7 @@ abstract final class SpatialCombat {
   static void _copyHeroRuntime(SpatialActor from, SpatialActor to) {
     to.attackFlash = from.attackFlash;
     to.castFlash = from.castFlash;
+    to.animAbility = from.animAbility;
     to.hitFlash = from.hitFlash;
     to.attackAimX = from.attackAimX;
     to.attackAimY = from.attackAimY;

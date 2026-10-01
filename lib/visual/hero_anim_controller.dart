@@ -55,6 +55,7 @@ abstract final class HeroAnimController {
         frame: _frameFor(HeroAnimKind.attack, progress),
         progress: progress,
         blocking: blocking,
+        abilityName: signals.abilityName,
       );
     }
     if (signals.casting || signals.castFlash > 0.02) {
@@ -66,6 +67,7 @@ abstract final class HeroAnimController {
         frame: _frameFor(HeroAnimKind.cast, progress),
         progress: progress,
         blocking: blocking,
+        abilityName: signals.abilityName,
       );
     }
     if (signals.victory) {

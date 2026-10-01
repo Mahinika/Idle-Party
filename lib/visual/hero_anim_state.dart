@@ -17,6 +17,7 @@ class HeroAnimPose {
     this.locked = false,
     this.progress = 0,
     this.blocking = false,
+    this.abilityName,
   });
 
   final HeroAnimKind kind;
@@ -32,6 +33,9 @@ class HeroAnimPose {
 
   /// Shield raised this frame — tilts the off-hand, does not change the clip.
   final bool blocking;
+
+  /// Ability dart name while its flash is running. Not saved.
+  final String? abilityName;
 }
 
 /// Combat → animation input. No sprite knowledge.
@@ -47,6 +51,7 @@ class HeroAnimSignals {
     this.castFlash = 0,
     this.hitFlash = 0,
     this.blocking = false,
+    this.abilityName,
   });
 
   final bool moving;
@@ -67,4 +72,7 @@ class HeroAnimSignals {
 
   /// Off-hand shield is up (Shield Block / Holy Shield).
   final bool blocking;
+
+  /// Ability dart name for this frame's flash. Empty for a plain swing.
+  final String? abilityName;
 }

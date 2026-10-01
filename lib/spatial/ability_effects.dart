@@ -82,6 +82,7 @@ abstract final class AbilityEffectRunner {
     hero.castingTimer = math.max(hero.castingTimer, delay);
     hero.pendingCastDef = def.id.name;
     hero.castFlash = math.max(hero.castFlash, math.min(0.35, delay));
+    hero.animAbility = def.id;
   }
 
   /// Returns ability cast count this tick (also increments
@@ -1248,6 +1249,7 @@ abstract final class AbilityEffectRunner {
       hero.castingTimer = math.max(hero.castingTimer, delay);
       hero.pendingCastDef = def.id.name;
       hero.castFlash = math.max(hero.castFlash, math.min(0.35, delay));
+      hero.animAbility = def.id;
     }
     var raw = math.max(
       2,

@@ -164,9 +164,6 @@ abstract final class RigClips {
     HeroAnimKind.idle => idle,
   };
 
-  /// Filled in by the ability reel. Null until that clip exists.
-  static RigClip? forAbility(String? name) => null;
-
   static RigPose sample(RigClip clip, double seconds) {
     final length = clip.length <= 0 ? 0.01 : clip.length;
     final u = clip.loop ? (seconds % length) / length : (seconds / length).clamp(0.0, 1.0);

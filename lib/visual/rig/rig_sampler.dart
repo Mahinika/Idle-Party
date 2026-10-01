@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../hero_anim_state.dart';
+import 'rig_ability_clips.dart';
 import 'rig_clips.dart';
 import 'rig_pose.dart';
 
@@ -25,7 +26,7 @@ abstract final class RigSampler {
     String? abilityName,
     bool robe = false,
   }) {
-    final clip = RigClips.forAbility(abilityName) ?? RigClips.forKind(anim.kind);
+    final clip = RigAbilityClips.forName(abilityName) ?? RigClips.forKind(anim.kind);
     final time = _quantized(clip, anim.progress);
     var pose = RigClips.sample(clip, time.seconds);
     if (anim.blocking && clip.name != 'block') {
