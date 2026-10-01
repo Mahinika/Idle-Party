@@ -95,6 +95,7 @@ flutter:
     - assets/custom/char/rogue/
     - assets/custom/char/rogue/gear/
     - assets/custom/char/gear/
+    - assets/custom/rig/
     - assets/custom/ui/
     - assets/custom/ui/chrome/
     - assets/custom/ui/backdrops/
