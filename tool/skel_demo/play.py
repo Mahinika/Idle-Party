@@ -19,8 +19,8 @@ from PIL import Image, ImageDraw
 from cut_warrior import OUT, build
 
 CLIPS_PATH = Path(__file__).resolve().parent / "warrior_clips.json"
-FRAME = (176, 176)
-ORIGIN = (24, 40)
+FRAME = (248, 208)
+ORIGIN = (64, 48)
 SCALE = 4
 BG = (22, 16, 14, 255)
 BONE = (232, 196, 92, 255)
@@ -88,7 +88,7 @@ def world_bones(meta: dict, angles: dict[str, float], root_off: tuple[float, flo
             return memo[name]
         bone = bones[name]
         parent = bone["parent"]
-        local = float(angles.get(name, 0.0))
+        local = float(bone.get("restRot", 0.0)) + float(angles.get(name, 0.0))
         rx, ry = bone["rest"]
         if parent is None:
             memo[name] = (rx + root_off[0], ry + root_off[1], local)

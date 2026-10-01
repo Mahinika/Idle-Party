@@ -13,6 +13,12 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "assets" / "custom" / "char" / "warrior" / "_src" / "body_idle.png"
+SWORD_SRC = ROOT / "assets" / "custom" / "char" / "gear" / "sword_t0_idle.png"
+SHIELD_SRC = ROOT / "assets" / "custom" / "char" / "gear" / "shield_t0_idle.png"
+# Grip on the weapon picture, and the clockwise rest turn, from OwnedGearGrips.
+SWORD_GRIP = (0.7422 * 128, 0.6797 * 128)
+SHIELD_GRIP = (0.2188 * 128, 0.4766 * 128)
+SWORD_REST_DEG = 1.1289 * 180.0 / 3.141592653589793
 OUT = ROOT / "tool" / "out" / "skel_demo"
 PARTS = OUT / "parts"
 
@@ -165,8 +171,17 @@ def bone_rests(parts: dict[str, set[tuple[int, int]]]) -> dict[str, tuple[float,
         "shin_r": _top_center(parts["shin_r"]),
         "foot_l": _top_center(parts["foot_l"]),
         "foot_r": _top_center(parts["foot_r"]),
+        "shield": _fist(parts["hand_l"], 10, -4),
+        "sword": _fist(parts["hand_r"], -2, 1),
     }
     return rests
+
+
+def _fist(pts: set[tuple[int, int]], dx: float = 0, dy: float = 0) -> tuple[float, float]:
+    """Center of the gauntlet, where the grip sits."""
+    xs = [x for x, _ in pts]
+    ys = [y for _, y in pts]
+    return (sum(xs) / len(xs) + dx, sum(ys) / len(ys) + dy)
 
 
 def _extrude(
@@ -219,6 +234,14 @@ def _write_part(
         out[x, y] = color
     path.parent.mkdir(parents=True, exist_ok=True)
     im.save(path)
+
+
+def _copy_weapon(src: Path, dest: Path) -> None:
+    im = Image.open(src).convert("RGBA")
+    if im.size != (128, 128):
+        raise SystemExit(f"weapon must be 128x128: {src}")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    im.save(dest)
 
 
 def _debug(parts: dict[str, set[tuple[int, int]]], path: Path) -> None:
@@ -294,11 +317,14 @@ def build(quiet: bool = False) -> dict:
         "shin_r": "thigh_r",
         "foot_l": "shin_l",
         "foot_r": "shin_r",
+        "shield": "hand_l",
+        "sword": "hand_r",
     }
     bones = {
         name: {"parent": parents[name], "rest": [round(rests[name][0], 2), round(rests[name][1], 2)]}
         for name in parents
     }
+    bones["sword"]["restRot"] = round(SWORD_REST_DEG, 2)
     part_rows = []
     for name in DRAW:
         bone = "torso" if name == "torso" else name
@@ -311,12 +337,31 @@ def build(quiet: bool = False) -> dict:
                 "pivot": pivot,
             }
         )
+    _copy_weapon(SWORD_SRC, PARTS / "sword.png")
+    _copy_weapon(SHIELD_SRC, PARTS / "shield.png")
+    part_rows.append(
+        {
+            "name": "shield",
+            "file": "parts/shield.png",
+            "bone": "shield",
+            "pivot": [round(SHIELD_GRIP[0], 2), round(SHIELD_GRIP[1], 2)],
+        }
+    )
+    part_rows.append(
+        {
+            "name": "sword",
+            "file": "parts/sword.png",
+            "bone": "sword",
+            "pivot": [round(SWORD_GRIP[0], 2), round(SWORD_GRIP[1], 2)],
+        }
+    )
+    draw = [*DRAW, "shield", "sword"]
     meta = {
         "canvas": [128, 128],
         "source": "assets/custom/char/warrior/_src/body_idle.png",
         "bones": bones,
         "parts": part_rows,
-        "draw": DRAW,
+        "draw": draw,
     }
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "parts_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")

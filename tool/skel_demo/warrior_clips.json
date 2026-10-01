@@ -17,8 +17,8 @@
           "foot_r": -6,
           "upper_l": 38,
           "fore_l": 28,
-          "upper_r": 40,
-          "fore_r": 24,
+          "upper_r": 14,
+          "fore_r": 8,
           "pauldron_l": 4,
           "pauldron_r": -4
         }
@@ -51,10 +51,10 @@
           "thigh_r": -34,
           "shin_r": 40,
           "foot_r": -16,
-          "upper_l": -40,
-          "fore_l": -24,
-          "upper_r": -38,
-          "fore_r": -28,
+          "upper_l": -18,
+          "fore_l": -10,
+          "upper_r": -14,
+          "fore_r": -8,
           "pauldron_l": -4,
           "pauldron_r": 4
         }
@@ -169,44 +169,40 @@
     "keys": [
       {"t": 0.0, "root": [0, 0], "bones": {}},
       {
-        "t": 0.24,
-        "root": [-1, 1],
+        "t": 0.22,
+        "root": [-1, 0],
         "bones": {
-          "torso": 8,
-          "head": -4,
-          "upper_r": -42,
-          "fore_r": -48,
-          "hand_r": -8,
-          "pauldron_r": -6,
-          "upper_l": 10,
-          "thigh_l": 8,
-          "thigh_r": -6
+          "torso": 6,
+          "head": -3,
+          "upper_r": 18,
+          "fore_r": -26,
+          "sword": -18,
+          "upper_l": 8,
+          "thigh_r": -4
         }
       },
       {
         "t": 0.4,
-        "root": [2, 0],
+        "root": [1, 1],
         "bones": {
-          "torso": -14,
-          "head": 6,
-          "upper_r": 52,
-          "fore_r": 18,
-          "hand_r": 6,
-          "pauldron_r": 6,
-          "upper_l": -12,
-          "thigh_l": -6,
-          "thigh_r": 10
+          "torso": -12,
+          "head": 5,
+          "upper_r": -12,
+          "fore_r": -8,
+          "sword": -40,
+          "upper_l": 6,
+          "thigh_l": 6,
+          "thigh_r": -4
         }
       },
       {
         "t": 0.56,
-        "root": [1, 1],
+        "root": [1, 0],
         "bones": {
-          "torso": -6,
-          "head": 3,
-          "upper_r": 28,
-          "fore_r": 8,
-          "pauldron_r": 3,
+          "torso": -4,
+          "head": 2,
+          "upper_r": 10,
+          "sword": 16,
           "thigh_r": 4
         }
       },
