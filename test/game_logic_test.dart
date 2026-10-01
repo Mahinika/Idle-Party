@@ -529,6 +529,15 @@ void main() {
 
     final ready = initial.copyWith(bossVictories: 1);
     expect(GameLogic.canAscend(ready), isTrue);
+    expect(GameLogic.ascendTrackLabel(initial), 'Ascend 0/1');
+    expect(GameLogic.ascendTrackLabel(ready), 'Ascend ready');
+    final mid = initial.copyWith(ascensionLevel: 2, bossVictories: 1);
+    expect(GameLogic.ascendTrackLabel(mid), 'Ascend 1/3');
+    final atCap = initial.copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
+      bossVictories: 4,
+    );
+    expect(GameLogic.ascendTrackLabel(atCap), isEmpty);
   });
 
   test('AL20 is max Ascension — no further Ascend even with bosses', () {

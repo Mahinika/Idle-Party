@@ -537,6 +537,43 @@ class _HubScreenState extends State<HubScreen>
   bool _showPowerupsFab() =>
       MenuTabs.showScrolls(state) && AdBoost.showHubFab(state.metaDepth);
 
+  /// Party line plus bosses left this run. The count stays visible when the
+  /// place name is long.
+  Widget _hubAscendTrack(GameState state) {
+    final track = GameLogic.ascendTrackLabel(state);
+    final place =
+        '${state.partyName} · Boss on F${GameLogic.bossFloorFor(state)}';
+    final placeStyle = GameTheme.body(size: 12, color: GameTheme.parchmentDim);
+    if (track.isEmpty) {
+      return Text(
+        place,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: placeStyle,
+      );
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            place,
+            textAlign: TextAlign.end,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: placeStyle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          track,
+          maxLines: 1,
+          style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_trackedAscension != state.ascensionLevel ||
@@ -629,16 +666,7 @@ class _HubScreenState extends State<HubScreen>
                                 showBlessingStacks: MenuTabs.showKeep(state),
                               ),
                               const SizedBox(height: 2),
-                              Text(
-                                '${state.partyName} · Boss on F${GameLogic.bossFloorFor(state)}',
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GameTheme.body(
-                                  size: 12,
-                                  color: GameTheme.parchmentDim,
-                                ),
-                              ),
+                              _hubAscendTrack(state),
                               if (director.offlineSummary != null) ...[
                                 SizedBox(height: short ? 4 : 8),
                                 HubOfflineBanner(

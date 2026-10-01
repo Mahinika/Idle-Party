@@ -342,6 +342,7 @@ void main() {
       isTrue,
     );
     expect(find.textContaining('The Ember Guard · Boss on F'), findsOneWidget);
+    expect(find.text('Ascend 0/1'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 500));
   });
 

@@ -894,6 +894,15 @@ class GameLogic {
       !isMaxAscension(state) &&
       state.bossVictories >= bossesRequiredForAscension(state.ascensionLevel);
 
+  /// Hub tracker: bosses this run until the next Ascend. Empty at the AL cap.
+  static String ascendTrackLabel(GameState state) {
+    if (isMaxAscension(state)) return '';
+    final need = bossesRequiredForAscension(state.ascensionLevel);
+    final have = state.bossVictories.clamp(0, need);
+    if (have >= need) return 'Ascend ready';
+    return 'Ascend $have/$need';
+  }
+
   /// Hub / Ascend pick: NEXT frontier zone, else deepest unlocked.
   static String recommendedDungeonId(GameState state) {
     final mirror = LocalSeasonCatalog.mirrorZoneId(state);
