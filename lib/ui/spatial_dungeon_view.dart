@@ -27,6 +27,8 @@ import '../visual/character_visual_painter.dart';
 import '../visual/character_visual_pose.dart';
 import '../visual/hero_anim_controller.dart';
 import '../visual/owned_gear_assets.dart';
+import '../visual/rig/hero_rig_library.dart';
+import '../visual/rig/hero_rig_painter.dart';
 import '../visual/hero_anim_state.dart';
 import '../assets/custom_assets.dart';
 import '../assets/kenney_assets.dart';
@@ -495,6 +497,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       for (var i = 0; i < bodyPaths.length; i++)
         if (bodyImages[i] != null) MapEntry(bodyPaths[i], bodyImages[i]!),
     ];
+    await HeroRigLibrary.loadEnabled();
     if (!mounted || gen != _loadGen) return;
     if (bodyEntries.isNotEmpty) {
       setState(() {

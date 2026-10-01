@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import '../assets/custom_assets.dart';
 import '../models/hero.dart';
 import '../visual/body_family.dart';
-import '../visual/character_visual_painter.dart';
+import '../visual/rig/hero_rig_library.dart';
+import '../visual/rig/hero_rig_painter.dart';
 import '../visual/owned_gear_assets.dart';
 import '../visual/character_visual_pose.dart';
 import '../visual/hero_anim_state.dart';
@@ -133,6 +134,7 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
     final overlays = <String, ui.Image>{};
     try {
       body = await DecodedImageCache.load(bodyPath, targetWidth: decodeW);
+      await HeroRigLibrary.load(BodyFamilyCatalog.familyFor(widget.hero));
       // Paint body stub ASAP so GEAR never stalls on empty (#98).
       if (mounted && gen == _loadGen) {
         setState(() {
@@ -299,13 +301,14 @@ class _OwnedDollPainter extends CustomPainter {
       partyIndex: partyIndex,
       owned: true,
     );
-    CharacterVisualPainter.paintOwnedHero(
+    HeroRigPainter.paintOwned(
       canvas,
       Offset(size.width / 2, size.height / 2),
       size.shortestSide,
       body: body,
       images: overlays,
       pose: pose,
+      heroId: hero.id,
     );
   }
 

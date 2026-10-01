@@ -341,7 +341,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
               partyIndex: idx,
               owned: true,
             );
-            CharacterVisualPainter.paintOwnedHero(
+            HeroRigPainter.paintOwned(
               canvas,
               c,
               tile * scale,
@@ -349,6 +349,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
               images: bodyByPath,
               pose: ownedPose,
               alpha: paintAlpha,
+              heroId: hero.id,
             );
           } else {
             drawSprite(

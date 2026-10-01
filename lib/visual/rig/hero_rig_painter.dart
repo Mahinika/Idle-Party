@@ -2,10 +2,12 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import '../body_family.dart';
 import '../character_layer.dart';
 import '../character_visual_painter.dart';
 import '../character_visual_pose.dart';
 import '../owned_gear_assets.dart';
+import 'hero_rig_library.dart';
 import 'rig_data.dart';
 import 'rig_draw.dart';
 import 'rig_part_cache.dart';
@@ -25,6 +27,46 @@ abstract final class HeroRigPainter {
     final pending = List<Future<void>>.of(_strips);
     _strips.clear();
     await Future.wait(pending);
+  }
+
+  static void paintOwned(
+    ui.Canvas canvas,
+    ui.Offset center,
+    double size, {
+    required ui.Image body,
+    required Map<String, ui.Image> images,
+    required CharacterVisualPose pose,
+    double alpha = 1,
+    String heroId = '',
+  }) {
+    final family = pose.bodyFamily;
+    final rig = family == null ? null : HeroRigLibrary.peek(family);
+    final idleKey = family == null ? null : BodyFamilyCatalog.catalog[family]?.idleAsset;
+    final idle = idleKey == null ? null : images[idleKey];
+    if (rig != null && idle != null && idleKey != null) {
+      paint(
+        canvas,
+        center,
+        size,
+        bodyImage: idle,
+        bodyKey: idleKey,
+        images: images,
+        pose: pose,
+        rig: rig,
+        alpha: alpha,
+        heroId: heroId,
+      );
+      return;
+    }
+    CharacterVisualPainter.paintOwnedHero(
+      canvas,
+      center,
+      size,
+      body: body,
+      images: images,
+      pose: pose,
+      alpha: alpha,
+    );
   }
 
   static Future<void> warm({
