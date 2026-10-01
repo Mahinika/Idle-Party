@@ -242,18 +242,21 @@ def bake(cut: FamilyCut) -> dict:
     grid = flood_primary(opaque)
     draw = DRAW_ROBE if cut.skirt else DRAW_PLATE
     primary_parts: dict[str, set[tuple[int, int]]] = {name: set() for name in draw}
+    # Every canvas pixel belongs to the nearest body part, so a thinner
+    # undertunic still has a bone where the plate had a gap.
     for y in range(CANVAS):
         for x in range(CANVAS):
             name = grid[y][x]
             if name in primary_parts:
-                # Primary coverage is the opaque body. The flood fills air.
-                if (x, y) in opaque:
-                    primary_parts[name].add((x, y))
-    for name, pts in primary_parts.items():
+                primary_parts[name].add((x, y))
+    opaque_parts = {name: {p for p in pts if p in opaque} for name, pts in primary_parts.items()}
+    for name, pts in opaque_parts.items():
         if not pts:
             raise SystemExit(f"{cut.name} part {name} is empty")
-    rests = bone_rests(primary_parts)
-    masks = _pad_masks(px, primary_parts, rests)
+    rests = bone_rests(opaque_parts)
+    masks = _pad_masks(px, opaque_parts, rests)
+    for name, pts in primary_parts.items():
+        masks[name] = pts | masks.get(name, set())
     parents = _parents(draw)
     bones = {
         name: {
@@ -269,7 +272,7 @@ def bake(cut: FamilyCut) -> dict:
         "canvas": [CANVAS, CANVAS],
         "bones": bones,
         "parts": {name: _rle(masks[name]) for name in draw},
-        "primary": {name: _rle(primary_parts[name]) for name in draw},
+        "primary": {name: _rle(opaque_parts[name]) for name in draw},
         "drawOrder": draw,
         "rigidLayers": {"cape": "torso"},
         "handBones": {
@@ -282,13 +285,13 @@ def bake(cut: FamilyCut) -> dict:
     path = out_dir / f"{cut.name}.json"
     path.write_text(json.dumps(meta, separators=(",", ":")), encoding="utf-8")
     _preview(cut, src, grid, primary_parts)
-    labeled = sum(len(pts) for pts in primary_parts.values())
+    opaque_n = sum(len(pts) for pts in opaque_parts.values())
     print(
-        f"{cut.name} opaque {len(opaque)} labeled {labeled} "
+        f"{cut.name} opaque {len(opaque)} labeled {opaque_n} "
         f"hands {meta['handBones']} -> {path}"
     )
-    if labeled != len(opaque):
-        raise SystemExit(f"{cut.name} primary labels {labeled} != opaque {len(opaque)}")
+    if opaque_n != len(opaque):
+        raise SystemExit(f"{cut.name} primary labels {opaque_n} != opaque {len(opaque)}")
     return meta
 
 
