@@ -77,17 +77,28 @@ def _leg_name(cut: FamilyCut, side: str, y: int) -> str:
     return f"foot_{side}"
 
 
+def _arm_side(cut: FamilyCut, x: int, y: int, segs: list[tuple[int, int]]) -> str | None:
+    """Left or right arm, or None when this pixel is body."""
+    if y < cut.arm_y:
+        return None
+    sleeve_end = cut.sleeve_end or cut.leg_y
+    if y >= sleeve_end:
+        return None
+    if len(segs) >= 3 and (x <= segs[0][1] or x >= segs[-1][0]):
+        return "l" if x <= segs[0][1] else "r"
+    if cut.torso_x1 and (x < cut.torso_x0 or x > cut.torso_x1):
+        return "l" if x < cut.torso_x0 else "r"
+    return None
+
+
 def _name_at(cut: FamilyCut, x: int, y: int, segs: list[tuple[int, int]]) -> str:
-    if cut.skirt and cut.arm_y <= y < cut.hem_y:
-        if not (len(segs) >= 3 and (x <= segs[0][1] or x >= segs[-1][0])):
-            return "skirt"
     if y >= cut.leg_y:
         return _leg_name(cut, "l" if x < cut.leg_split_x else "r", y)
-    if y >= cut.arm_y and len(segs) >= 3:
-        if x <= segs[0][1]:
-            return _arm_name(cut, "l", y)
-        if x >= segs[-1][0]:
-            return _arm_name(cut, "r", y)
+    side = _arm_side(cut, x, y, segs)
+    if side:
+        return _arm_name(cut, side, y)
+    if cut.skirt and cut.arm_y <= y < cut.hem_y:
+        return "skirt"
     if y <= cut.head_y or (y <= cut.head_chin_y and cut.chin_x0 <= x <= cut.chin_x1):
         return "head"
     if y < cut.arm_y and x < cut.pauldron_x_l:

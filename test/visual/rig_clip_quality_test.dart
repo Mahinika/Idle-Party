@@ -155,6 +155,94 @@ void main() {
       reason: 'grip left $boneName',
     );
   });
+
+  test('posed rogue grows no whiskers', () async {
+    await _expectNoNewIslands(BodyFamily.rogue, HeroSpecId.assassination);
+  });
+}
+
+Future<void> _expectNoNewIslands(BodyFamily family, HeroSpecId spec) async {
+  final rig = RigData.parse(
+    family.name,
+    jsonDecode(File('assets/custom/rig/${family.name}.json').readAsStringSync()) as Map<String, dynamic>,
+  );
+  final hero = PartyHero.starting(
+    name: 'Shade',
+    specId: spec,
+    stats: PartyHero.startingStatsForSpec(spec),
+  ).copyWith(equipped: StarterGear.forSpec(spec));
+  final bodyPath = BodyFamilyCatalog.catalog[family]!.idleAsset;
+  final body = await _png(bodyPath);
+  final idlePose = CharacterVisualPose.resolve(
+    hero: hero,
+    anim: const HeroAnimPose(kind: HeroAnimKind.idle, frame: 0),
+    owned: true,
+  );
+  final images = <String, ui.Image>{};
+  for (final layer in idlePose.layers) {
+    final path = layer.ownedAsset;
+    if (path != null && File(path).existsSync()) images[path] = await _png(path);
+  }
+  final tint = idlePose.bodyTintAsset;
+  if (tint != null && File(tint).existsSync()) images[tint] = await _png(tint);
+  await HeroRigPainter.warm(
+    rig: rig,
+    bodyImage: body,
+    bodyKey: bodyPath,
+    images: images,
+    pose: idlePose,
+  );
+
+  Future<ui.Image> shoot(HeroAnimPose anim) async {
+    final framed = CharacterVisualPose.resolve(hero: hero, anim: anim, owned: true);
+    void draw() {
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+      HeroRigPainter.paint(
+        canvas,
+        const ui.Offset(128, 128),
+        128,
+        bodyImage: body,
+        bodyKey: bodyPath,
+        images: images,
+        pose: framed,
+        rig: rig,
+        heroId: '${family.name}-clips',
+      );
+      recorder.endRecording().dispose();
+    }
+
+    draw();
+    await HeroRigPainter.settle();
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    HeroRigPainter.paint(
+      canvas,
+      const ui.Offset(128, 128),
+      128,
+      bodyImage: body,
+      bodyKey: bodyPath,
+      images: images,
+      pose: framed,
+      rig: rig,
+      heroId: '${family.name}-clips',
+    );
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(256, 256);
+    picture.dispose();
+    return image;
+  }
+
+  final restMask = await _mask(await shoot(const HeroAnimPose(kind: HeroAnimKind.idle, frame: 0)));
+  for (final kind in HeroAnimKind.values) {
+    final clip = RigClips.forKind(kind);
+    final steps = (clip.length * RigSampler.fps).ceil().clamp(1, 24);
+    for (var step = 0; step < steps; step++) {
+      final shot = await shoot(HeroAnimPose(kind: kind, frame: 0, progress: step / steps));
+      final islands = await _newIslands(shot, restMask);
+      expect(islands, 0, reason: '${family.name} ${kind.name}@$step');
+    }
+  }
 }
 
 Future<List<bool>> _mask(ui.Image image) async {

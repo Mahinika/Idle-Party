@@ -69,70 +69,90 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('warrior rest matches the paper doll', () async {
-    final rig = RigData.parse(
-      'warrior',
-      jsonDecode(File('assets/custom/rig/warrior.json').readAsStringSync()) as Map<String, dynamic>,
+    await _expectRest(
+      family: BodyFamily.warrior,
+      spec: HeroSpecId.protection,
+      role: HeroRole.warrior,
     );
-    final naked = PartyHero.starting(
-      name: 'Aegis',
-      specId: HeroSpecId.protection,
-      stats: PartyHero.startingStatsForSpec(HeroSpecId.protection),
+  });
+
+  test('rogue rest matches the paper doll', () async {
+    await _expectRest(
+      family: BodyFamily.rogue,
+      spec: HeroSpecId.assassination,
+      role: HeroRole.rogue,
     );
-    final chest = GameLogic.createEquipment(
-      slot: EquipmentSlot.chest,
-      rarity: LootRarity.common,
-      battleNumber: 1,
-      bias: HeroRole.warrior,
-    ).copyWith(visualSetId: 'chest_broad');
-    final legs = GameLogic.createEquipment(
-      slot: EquipmentSlot.legs,
-      rarity: LootRarity.common,
-      battleNumber: 1,
-      bias: HeroRole.warrior,
-    ).copyWith(visualSetId: 'legs_short');
-    final heroes = {
-      'empty': naked,
-      'starter': naked.copyWith(equipped: StarterGear.forSpec(HeroSpecId.protection)),
-      'broad': naked.copyWith(equipped: {EquipmentSlot.chest: chest, EquipmentSlot.legs: legs}),
-    };
-    final bodyPath = BodyFamilyCatalog.catalog[BodyFamily.warrior]!.idleAsset;
-    final body = await _png(bodyPath);
-    for (final entry in heroes.entries) {
-      final pose = CharacterVisualPose.resolve(hero: entry.value, anim: _idle, owned: true);
-      final images = await _imagesFor(pose);
-      await HeroRigPainter.warm(
-        rig: rig,
+  });
+}
+
+Future<void> _expectRest({
+  required BodyFamily family,
+  required HeroSpecId spec,
+  required HeroRole role,
+}) async {
+  final rig = RigData.parse(
+    family.name,
+    jsonDecode(File('assets/custom/rig/${family.name}.json').readAsStringSync()) as Map<String, dynamic>,
+  );
+  final naked = PartyHero.starting(
+    name: 'Aegis',
+    specId: spec,
+    stats: PartyHero.startingStatsForSpec(spec),
+  );
+  final chest = GameLogic.createEquipment(
+    slot: EquipmentSlot.chest,
+    rarity: LootRarity.common,
+    battleNumber: 1,
+    bias: role,
+  ).copyWith(visualSetId: 'chest_broad');
+  final legs = GameLogic.createEquipment(
+    slot: EquipmentSlot.legs,
+    rarity: LootRarity.common,
+    battleNumber: 1,
+    bias: role,
+  ).copyWith(visualSetId: 'legs_short');
+  final heroes = {
+    'empty': naked,
+    'starter': naked.copyWith(equipped: StarterGear.forSpec(spec)),
+    'broad': naked.copyWith(equipped: {EquipmentSlot.chest: chest, EquipmentSlot.legs: legs}),
+  };
+  final bodyPath = BodyFamilyCatalog.catalog[family]!.idleAsset;
+  final body = await _png(bodyPath);
+  for (final entry in heroes.entries) {
+    final pose = CharacterVisualPose.resolve(hero: entry.value, anim: _idle, owned: true);
+    final images = await _imagesFor(pose);
+    await HeroRigPainter.warm(
+      rig: rig,
+      bodyImage: body,
+      bodyKey: bodyPath,
+      images: images,
+      pose: pose,
+    );
+    const center = ui.Offset(128, 128);
+    final doll = _shot(
+      (canvas) => CharacterVisualPainter.paintOwnedHero(
+        canvas,
+        center,
+        128,
+        body: body,
+        images: images,
+        pose: pose,
+      ),
+    );
+    final rigged = _shot(
+      (canvas) => HeroRigPainter.paint(
+        canvas,
+        center,
+        128,
         bodyImage: body,
         bodyKey: bodyPath,
         images: images,
         pose: pose,
-      );
-      const center = ui.Offset(128, 128);
-      final doll = _shot(
-        (canvas) => CharacterVisualPainter.paintOwnedHero(
-          canvas,
-          center,
-          128,
-          body: body,
-          images: images,
-          pose: pose,
-        ),
-      );
-      final rigged = _shot(
-        (canvas) => HeroRigPainter.paint(
-          canvas,
-          center,
-          128,
-          bodyImage: body,
-          bodyKey: bodyPath,
-          images: images,
-          pose: pose,
-          rig: rig,
-          heroId: entry.key,
-        ),
-      );
-      final delta = await _diff(doll, rigged);
-      expect(delta, lessThanOrEqualTo(8), reason: entry.key);
-    }
-  });
+        rig: rig,
+        heroId: '${family.name}-${entry.key}',
+      ),
+    );
+    final delta = await _diff(doll, rigged);
+    expect(delta, lessThanOrEqualTo(8), reason: '${family.name} ${entry.key}');
+  }
 }

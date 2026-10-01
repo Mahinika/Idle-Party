@@ -25,6 +25,11 @@ class FamilyCut:
     leg_split_x: int
     thigh_y: int
     shin_y: int
+    # Connected silhouettes (cape, robe) have no arm gap. Pixels outside this
+    # torso column, from arm_y down to sleeve_end, are the arms.
+    torso_x0: int = 0
+    torso_x1: int = 0
+    sleeve_end: int = 0
     # Robes: pixels from the waist down to the hem, inside the cloth, are skirt.
     skirt: bool = False
     hem_y: int = 0
@@ -54,19 +59,21 @@ FAMILIES: dict[str, FamilyCut] = {
     ),
     "rogue": FamilyCut(
         name="rogue",
-        head_y=38,
-        head_chin_y=48,
-        chin_x0=40,
-        chin_x1=88,
-        arm_y=64,
-        upper_y=74,
+        head_y=32,
+        head_chin_y=40,
+        chin_x0=42,
+        chin_x1=86,
+        arm_y=44,
+        upper_y=66,
         fore_y=84,
         pauldron_x_l=40,
         pauldron_x_r=88,
-        leg_y=92,
+        leg_y=102,
         leg_split_x=64,
-        thigh_y=106,
-        shin_y=116,
+        thigh_y=112,
+        shin_y=120,
+        torso_x0=46,
+        torso_x1=82,
         main_fist=(0.212, -0.004),
         off_fist=(-0.221, -0.006),
     ),
