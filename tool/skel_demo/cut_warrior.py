@@ -174,7 +174,7 @@ def bone_rests(parts: dict[str, set[tuple[int, int]]]) -> dict[str, tuple[float,
         "foot_l": _top_center(parts["foot_l"]),
         "foot_r": _top_center(parts["foot_r"]),
         "shield": _fist(parts["hand_l"], 16, -4),
-        "sword": _fist(parts["hand_r"], 0, -1),
+        "sword": _fist(parts["hand_r"], 0, -6),
     }
     return rests
 
