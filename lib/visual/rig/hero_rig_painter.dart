@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -22,7 +21,7 @@ abstract final class HeroRigPainter {
   static const source = RigData.frame;
 
   /// GEAR dolls listen, so a frame that finishes after the first paint shows up.
-  static final frameTick = ChangeNotifier();
+  static final frameTick = _FrameTick();
 
   static final Map<String, ui.Image> _frames = {};
   static final Map<String, String> _equip = {};
@@ -169,7 +168,7 @@ abstract final class HeroRigPainter {
         );
       }
     }
-    frameTick.notifyListeners();
+    frameTick.ping();
   }
 
   /// Gear with soft edges or a one-pixel hole, keyed by asset path.
@@ -351,7 +350,7 @@ abstract final class HeroRigPainter {
       return;
     }
     _frames[key] = clean;
-    frameTick.notifyListeners();
+    frameTick.ping();
   }
 
   static Future<ui.Image> _decode(Uint8List pixels, int width, int height) {
@@ -480,14 +479,16 @@ abstract final class HeroRigPainter {
       );
     }
     for (final part in rig.drawOrder) {
-      if (bodyAtlas != null)
+      if (bodyAtlas != null) {
         HeroRigDraw.part(canvas, bodyAtlas, part, world, null);
+      }
       if (tintAtlas != null && pose.bodyTint != null) {
         HeroRigDraw.part(canvas, tintAtlas, part, world, pose.bodyTint);
       }
       for (final layer in pose.orderedLayers()) {
-        if (HeroRigDraw.isWeapon(layer) || layer.id == CharacterLayerId.cape)
+        if (HeroRigDraw.isWeapon(layer) || layer.id == CharacterLayerId.cape) {
           continue;
+        }
         if (layer.id == CharacterLayerId.body) continue;
         final path = layer.ownedAsset;
         final atlas = path == null
@@ -495,8 +496,9 @@ abstract final class HeroRigPainter {
             : RigPartCache.peek(
                 RigPartCache.key(path, rig.family, layer.cropTop, 1),
               );
-        if (atlas != null)
+        if (atlas != null) {
           HeroRigDraw.part(canvas, atlas, part, world, layer.tint);
+        }
         final dyePath = layer.dyeMaskAsset;
         final dye = dyePath == null
             ? null
@@ -538,4 +540,8 @@ abstract final class HeroRigPainter {
       cropBottom: cropBottom,
     );
   }
+}
+
+final class _FrameTick extends ChangeNotifier {
+  void ping() => notifyListeners();
 }
