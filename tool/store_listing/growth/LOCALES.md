@@ -1,7 +1,6 @@
 # Idle Party — Play listing locales (LIVE)
 
-**Committed to Play Console:** 2026-09-25 (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`).
-**2026-10-02:** shorts say the game text is English. `pl-PL` is ready to paste; it is not on Play until the listing is submitted.
+**Committed to Play Console:** 2026-10-02 (`es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`, `pl-PL`). Shorts say the game text is English. `sv-SE` stayed on the 2026-09-25 text.
 
 Live policy in [docs/STORE_LISTING.md](../../../docs/STORE_LISTING.md): default **en-US** + 9 localized store metadata languages.
 In-game copy stays **English** either way. Screenshots stay English until traffic exists.
@@ -336,7 +335,5 @@ Cognifox Studio · cognifoxstudio@gmail.com
 
 ## Operator
 
-1. Owner says **paste locales**.
-2. Play Console → store listing → add translations.
-3. Tick STORE_LISTING rule 6 to “en-US default + listed locales.”
-4. Do not translate in-game UI.
+1. Submitted **2026-10-02** for the locales in this file. `sv-SE` was not in this file, so it was left as-is.
+2. Do not translate in-game UI.

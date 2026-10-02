@@ -50,8 +50,9 @@ Until the owner names a different bet:
   not traffic.
 - Next acquisition post can still be the **2026-10-18**
   `r/incremental_games` slot. Do not fill the weeks with more subs.
-- Store shorts now say the game is in English (`LOCALES.md`, including
-  `pl-PL` ready to paste). In-game text stays English.
+- Store shorts now say the game is in English. Submitted to Play
+  **2026-10-02**, including `pl-PL`. `sv-SE` stayed on the 25 Sep text.
+  In-game text stays English.
 - The Play rating card was already after the first boss or first Ascend.
   Leave it there. Do not ask on the install. Review email notifications
   were off on the 2 Oct look; they are on for every star and for updated

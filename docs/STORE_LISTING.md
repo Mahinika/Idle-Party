@@ -34,8 +34,8 @@ fairness, fair SHOP with SCROLLS / Cinder packs / ad-free).
    catalog exist (`docs/SHOP_MONETIZATION.md`).
 6. **Store metadata localized** — default locale **en-US** + 9 store
    metadata locales (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`, `pl-PL`)
-   with the short line saying the game text is English. `pl-PL` is copy-ready;
-   the rest were committed 2026-09-25 and the English notice is ready to paste.
+   with the short line saying the game text is English. Submitted
+   **2026-10-02**, including `pl-PL`. `sv-SE` is still the 2026-09-25 text.
    In-game UI and
    screenshot captions stay English. Extra metadata reference lives in
    [`tool/store_listing/growth/LOCALES.md`](../tool/store_listing/growth/LOCALES.md).
