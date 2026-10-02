@@ -106,6 +106,7 @@ class GameState {
     this.ambienceVolume = 0.20,
     this.musicVolume = 0.22,
     this.vfxQuality = VfxQuality.full,
+    this.combatPace = 1,
     this.autoSellMaxPower = 48,
     this.autoSellMaxRarity = 1,
     this.autoDisassembleMaxIlvl = 48,
@@ -340,6 +341,9 @@ class GameState {
 
   /// Combat VFX detail (full / lite / minimal).
   final VfxQuality vfxQuality;
+
+  /// Live fight speed, 1 or 2. Wall-clock only — offline catch-up ignores it.
+  final int combatPace;
 
   /// True when VFX is lite or minimal (spawn gates skip bursts/floaters).
   bool get reducedVfx => vfxQuality.reduced;
@@ -1009,11 +1013,7 @@ class GameState {
   }
 
   /// Sheet-% gained by buying [gain] forge points from [points] (after soft knee).
-  static double softForgeNextGain(
-    int points,
-    int gain, {
-    double softAt = 40,
-  }) {
+  static double softForgeNextGain(int points, int gain, {double softAt = 40}) {
     if (gain <= 0) return 0;
     return softForgePercent(points + gain, softAt: softAt) -
         softForgePercent(points, softAt: softAt);
@@ -1141,6 +1141,7 @@ class GameState {
     double? ambienceVolume,
     double? musicVolume,
     VfxQuality? vfxQuality,
+    int? combatPace,
     bool? reducedVfx,
     int? autoSellMaxPower,
     int? autoSellMaxRarity,
@@ -1285,6 +1286,7 @@ class GameState {
           (reducedVfx == null
               ? this.vfxQuality
               : (reducedVfx ? VfxQuality.lite : VfxQuality.full)),
+      combatPace: (combatPace ?? this.combatPace).clamp(1, 2),
       autoSellMaxPower: autoSellMaxPower ?? this.autoSellMaxPower,
       autoSellMaxRarity: autoSellMaxRarity ?? this.autoSellMaxRarity,
       autoDisassembleMaxIlvl:
@@ -1453,6 +1455,7 @@ class GameState {
     'ambienceVolume': ambienceVolume,
     'musicVolume': musicVolume,
     'vfxQuality': vfxQuality.name,
+    'combatPace': combatPace,
     'reducedVfx': reducedVfx,
     'autoSellMaxPower': autoSellMaxPower,
     'autoSellMaxRarity': autoSellMaxRarity,
@@ -1720,6 +1723,7 @@ class GameState {
         json['vfxQuality'],
         legacyReduced: json['reducedVfx'] as bool?,
       ),
+      combatPace: _jsonInt(json['combatPace'], 1).clamp(1, 2),
       autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 48),
       autoSellMaxRarity: _jsonInt(json['autoSellMaxRarity'], 1).clamp(0, 4),
       autoDisassembleMaxIlvl: _jsonInt(json['autoDisassembleMaxIlvl'], 48),

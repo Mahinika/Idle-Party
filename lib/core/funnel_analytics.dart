@@ -29,6 +29,23 @@ abstract final class FunnelAnalytics {
   static const d1Return = 'd1_return';
   static const timeToCombat = 'time_to_combat';
 
+  /// Screens before a save exists. Logged by [BootFunnel], not [onNewInstall],
+  /// because the people who leave never get a [GameState].
+  static const bootIntroShown = 'boot_intro_shown';
+  static const startMenuShown = 'start_menu_shown';
+  static const newGameShown = 'new_game_shown';
+  static const newGameConfirmed = 'new_game_confirmed';
+
+  /// Welcome Back paid gold. The ping ask waits for this.
+  static const offlineGold = 'offline_gold';
+
+  static const List<String> bootNames = <String>[
+    bootIntroShown,
+    startMenuShown,
+    newGameShown,
+    newGameConfirmed,
+  ];
+
   /// Mandate names plus the seconds-to-combat companion event.
   static const List<String> allNames = <String>[
     firstOpen,
@@ -141,6 +158,14 @@ abstract final class FunnelAnalytics {
   static FunnelTick onFirstBoss(GameState state) {
     if (has(state, firstBoss)) return FunnelTick.none(state);
     return FunnelTick(_mark(state, firstBoss), const [FunnelHit(firstBoss)]);
+  }
+
+  /// First Welcome Back that paid gold. Once per install.
+  static FunnelTick onOfflineGold(GameState state) {
+    if (has(state, offlineGold)) return FunnelTick.none(state);
+    return FunnelTick(_mark(state, offlineGold), const [
+      FunnelHit(offlineGold),
+    ]);
   }
 
   /// Catch-up after offline / crash: emit missing progress events (no TTC).

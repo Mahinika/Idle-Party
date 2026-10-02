@@ -62,8 +62,9 @@ class GameLogic {
   static const String godHandFocusRelic = RelicIds.godHandFocus;
   static const String chamberLuckRelic = RelicIds.chamberLuck;
   static const String ironWillRelic = RelicIds.ironWill;
-  static List<String> get relicOrder =>
-      [for (final def in RelicCatalog.all) def.id];
+  static List<String> get relicOrder => [
+    for (final def in RelicCatalog.all) def.id,
+  ];
   static const Map<LootRarity, String> rarityNames = <LootRarity, String>{
     LootRarity.common: 'Common',
     LootRarity.uncommon: 'Uncommon',
@@ -346,10 +347,7 @@ class GameLogic {
       personalNoFlask: state.challengeNoFlask,
     );
     final par =
-        (Keystone.parTimeMs(
-                  bossFloor: bossFloorFor(state),
-                  key: key,
-                ) *
+        (Keystone.parTimeMs(bossFloor: bossFloorFor(state), key: key) *
                 BlessingConstellation.keyParMul(state))
             .round();
     return state.copyWith(
@@ -1725,7 +1723,8 @@ class GameLogic {
     return unlockRelic(state, id);
   }
 
-  static int relicTierUpgradeCost(int nextTier) => RelicCatalog.tierCost(nextTier);
+  static int relicTierUpgradeCost(int nextTier) =>
+      RelicCatalog.tierCost(nextTier);
 
   static GameState upgradeRelicTier(GameState state, String relicId) {
     if (!state.hasRelic(relicId) || RelicCatalog.byId(relicId) == null) {
@@ -1759,9 +1758,7 @@ class GameLogic {
     if (state.metaDepth.cinders < salvageCinderCost) return state;
     final index = relicOrder.indexOf(relicId);
     final tier = state.relicTierOf(relicId);
-    final refund = index < 0
-        ? 0
-        : RelicCatalog.embersSpent(index, tier) ~/ 2;
+    final refund = index < 0 ? 0 : RelicCatalog.embersSpent(index, tier) ~/ 2;
     final unlocked = [
       for (final id in state.unlockedRelics)
         if (id != relicId) id,
@@ -2119,11 +2116,34 @@ class GameLogic {
         (WipeAdvice.isImmediate(advice) || count >= WipeAdvice.streakNeeded)) {
       line = advice;
     }
+    if (line.isEmpty) {
+      final preview = state.copyWith(
+        wipeStreakKey: key,
+        wipeStreakCount: count,
+      );
+      if (earlyWipeDamageMul(preview) < 1) {
+        line = 'This floor hits softer now. Try again.';
+      }
+    }
     return state.copyWith(
       wipeStreakKey: key,
       wipeStreakCount: count,
       wipeAdviceLine: line,
     );
+  }
+
+  /// Before the first boss, Sandy's first floors ease off after repeat wipes.
+  /// 1 means no change. Offline and live share it so a retry is the same fight.
+  static double earlyWipeDamageMul(GameState state) {
+    if (state.bossVictories > 0 || state.ascensionLevel > 0) return 1;
+    if (state.dungeonId != 'sandy') return 1;
+    if (state.currentRoom.floorNumber > 3) return 1;
+    if (state.wipeStreakKey != wipeFloorKey(state)) return 1;
+    final n = state.wipeStreakCount;
+    if (n >= 6) return 0.6;
+    if (n >= 4) return 0.7;
+    if (n >= 2) return 0.85;
+    return 1;
   }
 
   static int recommendedForgeUpgrade(GameState state) {
@@ -2268,7 +2288,7 @@ class GameLogic {
         if (!beforeAshen && preLeave.metaDepth.worldBossClearedWeek) {
           LogicNotices.addMetaPayoffs([
             '${AshenCrown.titleReward} · +${AshenCrown.essenceReward}e · '
-            '+1 STAR point',
+                '+1 STAR point',
           ]);
         }
       }
@@ -2468,8 +2488,9 @@ class GameLogic {
     // Daily vault: PUSH clears. Gauntlet clears count in endgame.
     // Farm loops never mint vault progress, including a FARM boss.
     final gauntletVault = before.inGauntlet && endgameUnlocked(before);
-    final vaultBump =
-        (!farmLoop && (!before.inGauntlet || gauntletVault)) ? 1 : 0;
+    final vaultBump = (!farmLoop && (!before.inGauntlet || gauntletVault))
+        ? 1
+        : 0;
     // PUSH peaks feed tomorrow's Daily Run floor (not farm / ladders / daily).
     final wasDaily = MetaSystems.isActiveDailyRun(before);
     if (!farmLoop &&
@@ -3528,7 +3549,10 @@ class OfflineProgressResult {
       }
     }
     if (wasInDungeon) {
-      if (goldGained > 0 || essenceGained > 0) {
+      if (goldGained > 0) {
+        return 'Your party kept fighting the dungeon and earned $goldGained gold while you were away.';
+      }
+      if (essenceGained > 0) {
         return 'Your party kept fighting the dungeon while you were away.';
       }
       return 'Your party held the dungeon floor while you were away.';
@@ -3538,7 +3562,10 @@ class OfflineProgressResult {
           ? 'Your party found new gear while you were away.'
           : 'Your party found gear while you were away.';
     }
-    if (goldGained > 0 || essenceGained > 0) {
+    if (goldGained > 0) {
+      return 'Your party earned $goldGained gold while you were away.';
+    }
+    if (essenceGained > 0) {
       return 'Gold kept coming in while you were away.';
     }
     return 'Welcome back.';

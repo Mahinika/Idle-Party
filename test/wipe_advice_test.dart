@@ -165,7 +165,8 @@ void main() {
 
     state = GameLogic.notePartyWipe(state, fight);
     expect(state.wipeStreakCount, 2);
-    expect(state.wipeAdviceLine, '');
+    expect(state.wipeAdviceLine, 'This floor hits softer now. Try again.');
+    expect(GameLogic.earlyWipeDamageMul(state), 0.85);
     expect(
       WipeAdvice.lineFor(state: state, fight: fight, wipeStreak: 2),
       isNull,
@@ -173,7 +174,7 @@ void main() {
 
     state = GameLogic.notePartyWipe(state, fight);
     expect(state.wipeStreakCount, 3);
-    expect(state.wipeAdviceLine, '');
+    expect(state.wipeAdviceLine, 'This floor hits softer now. Try again.');
   });
 
   test('proven GOLD ATK still fires at streak 2', () {
@@ -186,9 +187,9 @@ void main() {
   });
 
   test('GOLD ATK/DEF after first reward names the GOLD tab', () {
-    var state = GameLogic.createInitialState(now: now).copyWith(
-      highestFloorCleared: 1,
-    );
+    var state = GameLogic.createInitialState(
+      now: now,
+    ).copyWith(highestFloorCleared: 1);
     const melt = WipeFightSnapshot(
       waveHp: 8000,
       remainingHp: 6000,
@@ -252,16 +253,15 @@ void main() {
       wipeStreakCount: beforeClear.wipeStreakCount,
     );
     // Same rule as _applyMetaProgress: only clear when streak key matches.
-    final kept = beforeClear.wipeStreakKey.isEmpty ||
+    final kept =
+        beforeClear.wipeStreakKey.isEmpty ||
             beforeClear.wipeStreakKey == GameLogic.wipeFloorKey(beforeClear)
         ? GameLogic.clearWipeStreak(afterClear)
         : afterClear;
     expect(kept.wipeStreakKey, 'sandy:5');
     expect(kept.wipeStreakCount, 1);
 
-    kept.copyWith(
-      currentRoom: kept.currentRoom.copyWith(floorNumber: 5),
-    );
+    kept.copyWith(currentRoom: kept.currentRoom.copyWith(floorNumber: 5));
     var again = GameLogic.notePartyWipe(
       kept.copyWith(currentRoom: kept.currentRoom.copyWith(floorNumber: 5)),
       atkLack(),
@@ -288,17 +288,13 @@ void main() {
       WipeAdvice.lineFor(state: state, fight: atkLack()),
       contains('Equip better'),
     );
-    expect(
-      WipeAdvice.lineFor(state: state, fight: atkLack()),
-      contains('BAG'),
-    );
+    expect(WipeAdvice.lineFor(state: state, fight: atkLack()), contains('BAG'));
   });
 
   test('GEAR panels for AL20 veteran include ROSTER not dead loadouts', () {
-    final veteran = GameLogic.createInitialState(now: now).copyWith(
-      ascensionLevel: 20,
-      highestDungeonCleared: 14,
-    );
+    final veteran = GameLogic.createInitialState(
+      now: now,
+    ).copyWith(ascensionLevel: 20, highestDungeonCleared: 14);
     expect(MenuTabs.showMerge(veteran), isTrue);
     expect(MenuTabs.showRoster(veteran), isTrue);
     final tabs = MenuRouter.visibleGearPanels(veteran);
@@ -311,11 +307,7 @@ void main() {
     var state = GameLogic.createInitialState(now: now);
     state = GameLogic.enterDungeon(state, dungeonId: 'brass');
     state = GameLogic.ensureMarketListings(
-      state.copyWith(
-        ascensionLevel: 20,
-        gold: 500_000,
-        hardmodeLevel: 12,
-      ),
+      state.copyWith(ascensionLevel: 20, gold: 500_000, hardmodeLevel: 12),
       nowMs: 1_750_000_000_000,
     );
     expect(MarketListingsService.hasAffordableUpgradeListing(state), isTrue);
@@ -334,14 +326,8 @@ void main() {
       WipeAdvice.hubHintFor('Equip the better item in BAG'),
       contains('BAG'),
     );
-    expect(
-      WipeAdvice.hubCtaLabelFor('Upgrade ATK in GOLD'),
-      'OPEN GOLD',
-    );
-    expect(
-      WipeAdvice.hubNavFor('Upgrade ATK in GOLD')?.route,
-      MenuRoute.gold,
-    );
+    expect(WipeAdvice.hubCtaLabelFor('Upgrade ATK in GOLD'), 'OPEN GOLD');
+    expect(WipeAdvice.hubNavFor('Upgrade ATK in GOLD')?.route, MenuRoute.gold);
     expect(
       WipeAdvice.hubHintFor('Upgrade ATK in GOLD'),
       contains('GOLD tracks'),
@@ -350,18 +336,12 @@ void main() {
       WipeAdvice.hubCtaLabelFor('Equip the better item in BAG'),
       'OPEN BAG',
     );
-    expect(
-      WipeAdvice.hubCtaLabelFor(WipeAdvice.gearWearLine),
-      'OPEN GEAR',
-    );
+    expect(WipeAdvice.hubCtaLabelFor(WipeAdvice.gearWearLine), 'OPEN GEAR');
     expect(
       WipeAdvice.hubNavFor(WipeAdvice.gearWearLine)?.route,
       MenuRoute.gear,
     );
-    expect(
-      WipeAdvice.hubHintFor(WipeAdvice.gearWearLine),
-      contains('GEAR'),
-    );
+    expect(WipeAdvice.hubHintFor(WipeAdvice.gearWearLine), contains('GEAR'));
   });
 
   test('wipe mode line names FARM/PUSH and INFO', () {
@@ -383,10 +363,7 @@ void main() {
     expect(WipeAdvice.godHandHintFor(state), isNull);
     state = GameLogic.notePartyWipe(state, atkLack());
     state = GameLogic.notePartyWipe(state, atkLack());
-    expect(
-      WipeAdvice.godHandHintFor(state),
-      contains('Long-press the fight'),
-    );
+    expect(WipeAdvice.godHandHintFor(state), contains('Long-press the fight'));
     state = state.copyWith(bossVictories: 1);
     expect(
       WipeAdvice.godHandHintFor(state),

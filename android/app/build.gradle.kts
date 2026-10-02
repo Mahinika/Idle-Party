@@ -69,6 +69,13 @@ android {
 
     buildTypes {
         release {
+            // Play's R8 recommendation. Flutter embedding keep-rules live in proguard-rules.pro.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             // Use key.properties when present; otherwise debug keys for local `flutter run --release`.
             signingConfig = if (hasReleaseKeystore) {
                 signingConfigs.getByName("release")

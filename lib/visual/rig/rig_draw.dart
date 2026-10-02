@@ -15,7 +15,8 @@ import 'rig_pose.dart';
 /// Draws one posed part, a rigid cape, or a gripped weapon into the 256 frame.
 abstract final class HeroRigDraw {
   static bool isWeapon(ResolvedLayer layer) =>
-      layer.id == CharacterLayerId.mainHand || layer.id == CharacterLayerId.offHand;
+      layer.id == CharacterLayerId.mainHand ||
+      layer.id == CharacterLayerId.offHand;
 
   static void part(
     ui.Canvas canvas,
@@ -127,8 +128,12 @@ abstract final class HeroRigDraw {
       ..filterQuality = ui.FilterQuality.none
       ..isAntiAlias = false;
     if (layer.tint != null) {
-      paint.colorFilter = ui.ColorFilter.mode(layer.tint!, ui.BlendMode.modulate);
+      paint.colorFilter = ui.ColorFilter.mode(
+        layer.tint!,
+        ui.BlendMode.modulate,
+      );
     }
+    if (!rot.isFinite || !placed.x.isFinite || !placed.y.isFinite) return;
     canvas.save();
     canvas.translate(placed.x, placed.y);
     canvas.rotate(rot);
@@ -155,7 +160,8 @@ abstract final class HeroRigDraw {
     bool off,
     String? asset,
   ) {
-    final boneName = rig.handBones[off ? 'off' : 'main'] ?? (off ? 'hand_l' : 'hand_r');
+    final boneName =
+        rig.handBones[off ? 'off' : 'main'] ?? (off ? 'hand_l' : 'hand_r');
     final bone = world[boneName];
     final rest = rig.bones[boneName];
     if (bone == null || rest == null) return null;

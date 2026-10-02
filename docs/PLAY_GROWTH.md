@@ -1,6 +1,62 @@
 # Idle Party — Play growth (what we can do)
 
-**Updated:** 2026-09-28 · Category stays **Role Playing** (idle fantasy RPG).  
+**Updated:** 2026-10-02 · Category stays **Role Playing** (idle fantasy RPG).
+
+### What 2 Oct changes
+
+Window **4 Sep–1 Oct** (Play grow page, device). **10,400** device
+impressions, **242** acquisitions, **83** first opens, **90** monthly
+active devices. Listing conversion **26.65%**. **0** experiments.
+**+154** exploration acquisitions / 90 days. D7 retained devices: **1**.
+AAD/AAM **19.97%** (Play flagged, −28.9% vs the prior 28 days). User
+loss **23.68%**.
+
+Traffic source is now **Explore Google Play** (about 80–100% of each
+day in the last week, 14–22 acquisitions a day). Paid-and-direct is a
+handful. No campaign is running. The 18 Sep Reddit post is no longer
+the engine.
+
+Installed audience kept climbing after 22 Sep: **55** devices on 25 Sep
+(US 16, Germany 4, France 4, Japan 4). First opens in that window
+include Brazil, Cuba, Indonesia, and Poland.
+
+Firebase, same 28 days: **352 / 180 / 40** active users (28d / 7d / 1d),
+**26m 49s** per active user, **1.2** engaged sessions, crash-free
+**100%**. Cohort week 0 100%, week 1 **12.8%**, week 2 9.7%, week 3
+**0%**. Events: `first_open` 351, `app_ready` 256, `first_enter` 247,
+`party_wipe` 1,187 on 89 users, `session_start` 2.09 per user.
+
+Rating **3.667** from **6** (DE/NL/US 5★, AR 3★, JP/UA 2★). Text
+reviews unchanged: gear 5★, speed request 4★, Russian “not interesting”
+2★. Review notifications in Console were off on this look.
+
+Play vitals API: two crashes in September, one user each. Version code
+**214** (24 Sep) and **222** (30 Sep), both SIGABRT in Impeller on
+Android 16. Crash-rate card is still a dash. One crash on 222 is
+`impeller::Canvas::GetLocalCoverageLimit` during a Vulkan frame.
+
+Download size on the app-size card is about **37 MB** against a **141 MB**
+peer median. Size is not the leak. Play still recommends edge-to-edge,
+bitmap downsampling, and R8 on 1.12.193.
+
+AdMob last 7 days **9.06 kr**, **438** requests, **13** impressions,
+match rate **80.8%**. September **12.82 kr**. Payout identity, PIN, and
+bank still open. Play IAP was **12.0 kr** on the 27 Sep look; this look
+did not re-read the revenue card.
+
+Until the owner names a different bet:
+
+- Do not buy installs. The leak is open-after-install and day-2 return,
+  not traffic.
+- Next acquisition post can still be the **2026-10-18**
+  `r/incremental_games` slot. Do not fill the weeks with more subs.
+- Store shorts now say the game is in English (`LOCALES.md`, including
+  `pl-PL` ready to paste). In-game text stays English.
+- The Play rating card was already after the first boss or first Ascend.
+  Leave it there. Do not ask on the install. Review email notifications
+  were off on the 2 Oct look; they are on for every star and for updated
+  reviews as of that afternoon.
+
 Do **not** chase Casual / Battle Royale / sandbox search volume.
 
 **Standing principles:** [`GROWTH_MANDATE.md`](GROWTH_MANDATE.md) — no numbered

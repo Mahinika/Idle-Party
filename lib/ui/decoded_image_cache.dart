@@ -22,9 +22,19 @@ abstract final class DecodedImageCache {
     return _inflight.putIfAbsent(key, () async {
       try {
         final data = await rootBundle.load(asset);
+        final bytes = data.buffer.asUint8List();
+        var capW = targetWidth;
+        if (capW == null) {
+          final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
+          final descriptor = await ui.ImageDescriptor.encoded(buffer);
+          final natural = descriptor.width;
+          descriptor.dispose();
+          buffer.dispose();
+          if (natural > 512) capW = 512;
+        }
         final codec = await ui.instantiateImageCodec(
-          data.buffer.asUint8List(),
-          targetWidth: targetWidth,
+          bytes,
+          targetWidth: capW,
           targetHeight: targetHeight,
         );
         final frame = await codec.getNextFrame();

@@ -1,11 +1,19 @@
 package com.idleparty.app
 
+import android.os.Bundle
 import android.view.WindowManager
+import androidx.core.view.WindowCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Play's edge-to-edge check. Bars stay hidden by the Flutter immersive lock.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+    }
+
     private val screenChannel = "idle_party/screen"
     private val ranksChannel = "idle_party/ranks"
 

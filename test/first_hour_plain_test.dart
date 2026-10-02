@@ -149,6 +149,21 @@ void main() {
     expect(tip.body, isNot(contains('Combat Rogue')));
   });
 
+  test('PLAY drops a new party straight into Sandy', () async {
+    final director = GameDirector.preview();
+    await director.boot();
+    await director.startNewGame(
+      HeroSpecs.starterUnlocked,
+      partyName: 'The Party',
+    );
+    director.enterDungeon();
+    expect(director.state.inDungeon, isTrue);
+    expect(director.state.dungeonId, 'sandy');
+    expect(director.state.heroes, hasLength(3));
+    expect(director.state.combatPace, 1);
+    director.dispose();
+  });
+
   test('hub job tip enters Sandy instead of a second GOT IT tap', () async {
     final director = GameDirector.preview();
     await director.boot();

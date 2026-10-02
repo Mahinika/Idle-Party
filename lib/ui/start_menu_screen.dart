@@ -20,6 +20,7 @@ class StartMenuScreen extends StatefulWidget {
     required this.onContinue,
     required this.onNewGame,
     required this.onRestore,
+    this.onPlay,
     this.saveSummary,
     this.onSettings,
     this.canStartNewGame = true,
@@ -30,6 +31,10 @@ class StartMenuScreen extends StatefulWidget {
   final VoidCallback onContinue;
   final VoidCallback onNewGame;
   final VoidCallback onRestore;
+
+  /// First launch, no save: one tap starts the default party in the cave.
+  /// [onNewGame] stays as CUSTOMIZE.
+  final VoidCallback? onPlay;
   final VoidCallback? onSettings;
 
   /// Party name + zone when a save exists, e.g. "The Ember Guard · Sandy Caverns".
@@ -66,10 +71,14 @@ class _StartMenuScreenState extends State<StartMenuScreen>
       vsync: this,
       duration: const Duration(milliseconds: 480),
     );
-    Future<void>.delayed(const Duration(milliseconds: 400), () {
-      if (!mounted || _finishing) return;
-      setState(() => _inputUnlocked = true);
-    });
+    if (widget.onPlay != null) {
+      _inputUnlocked = true;
+    } else {
+      Future<void>.delayed(const Duration(milliseconds: 400), () {
+        if (!mounted || _finishing) return;
+        setState(() => _inputUnlocked = true);
+      });
+    }
   }
 
   @override
@@ -80,10 +89,10 @@ class _StartMenuScreenState extends State<StartMenuScreen>
     super.dispose();
   }
 
-  Future<void> _choose(VoidCallback action) async {
+  Future<void> _choose(VoidCallback action, {bool instant = false}) async {
     if (!_inputUnlocked || _finishing || !mounted) return;
     _finishing = true;
-    await _exit.forward();
+    if (!instant) await _exit.forward();
     if (mounted) action();
   }
 
@@ -215,6 +224,27 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                   GameButton(
                                     label: 'NEW GAME',
                                     style: GameButtonStyle.grey,
+                                    onPressed: _inputUnlocked
+                                        ? _pressNewGame
+                                        : null,
+                                  ),
+                                ] else if (widget.onPlay != null) ...[
+                                  GameButton(
+                                    label: 'PLAY',
+                                    style: GameButtonStyle.brown,
+                                    primary: true,
+                                    onPressed: _inputUnlocked
+                                        ? () => _choose(
+                                            widget.onPlay!,
+                                            instant: true,
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  GameButton(
+                                    label: 'CUSTOMIZE',
+                                    style: GameButtonStyle.grey,
+                                    tip: 'Pick class, race, and a party name',
                                     onPressed: _inputUnlocked
                                         ? _pressNewGame
                                         : null,

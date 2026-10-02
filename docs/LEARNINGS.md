@@ -6,6 +6,15 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-02 — Play finds the game; the leak is after install
+
+- **Organic Play browse is the engine now.** 4 Sep–1 Oct: 10,400 device impressions, 242 acquisitions, 83 first opens, listing conversion 26.65%, +154 exploration acquisitions / 90 days. Last week was 80–100% “Explore Google Play” per day. Reddit is not the wave anymore. Do not buy installs, do not cut another Shorts batch.
+- **The hole is after the install.** Firebase `first_open` 351 → `app_ready` 256 → `first_enter` 247. People who play stay a long time (26m 49s, above the RPG band) but only 1.2 engaged sessions, and Play D7 retained devices is still 1. Week-1 cohort 12.8%, week 3 is 0.
+- **New installs are not English-first.** First opens from Brazil, Cuba, Indonesia, Poland. 5★ sit on expensive phones (US/NL/DE); 2–3★ sit on Galaxy A06, realme 11, Galaxy S22 with Russian/Japanese/Spanish UI. Store shorts now say the game text is English. In-game copy stays English.
+- **Download size is not the leak.** Play’s own card is about 37 MB against a 141 MB peer median. Do not spend a batch shrinking the AAB.
+- **AdMob is not a growth lever.** Last 7 days 9.06 kr, 438 requests, 13 impressions. September 12.82 kr. Identity, PIN, and bank are still open. Ignore eCPM.
+- **Ping ask waits for Welcome Back gold**, not the first loot of the same sitting. The 2026-09-12 “after first loot” line is superseded for the card only; SETTINGS can still show the toggle after first loot.
+
 ## 2026-09-27 — first real traffic
 
 - **One Reddit post moved installs. Shorts and the listing clip did not.** Devices sat at 9–16 until 18 Sep (`r/incremental_games`), then stuck near 42. 101 of 107 acquisitions in the 28-day window fell on 11–20 Sep. Later posts did not repeat it. YouTube: 2 subscribers, best Short 57 views, live listing preview 1 view. 107 installs became 32 first opens and 30 monthly active devices; D7 still empty — do not buy UA or spend the week on another Shorts batch. Listing conversion at this traffic is 25%, not the old 73% on a handful of visitors. Firebase’s 218 includes test runs; Play’s 30 is the player count. Paste: `PLAY_GROWTH.md`.

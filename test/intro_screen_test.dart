@@ -90,9 +90,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 950));
   });
 
-  testWidgets('first launch plays the cave beat after Cognifox Studio', (
-    tester,
-  ) async {
+  testWidgets('first launch skips the intro and offers PLAY', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final director = GameDirector(
       InMemoryGameStorage(),
@@ -109,16 +107,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 150));
 
     expect(director.hasExistingSave, isFalse);
-    expect(find.byType(CognifoxStudioMark), findsOneWidget);
+    expect(find.byType(BootIntroScreen), findsNothing);
+    expect(find.byType(StartMenuScreen), findsOneWidget);
+    expect(find.text('PLAY'), findsOneWidget);
+    expect(find.text('CUSTOMIZE'), findsOneWidget);
+    expect(find.text('CONTINUE'), findsNothing);
 
-    await tester.pump(BootIntroScreen.studioDuration);
-    await tester.pump(const Duration(milliseconds: 80));
-    expect(find.text(StoryLore.introBeats.first.title), findsOneWidget);
-    expect(find.text(StoryLore.introBeats.first.body), findsOneWidget);
-    expect(find.byType(StartMenuScreen), findsNothing);
-    await tester.tap(find.text('SKIP'));
+    await tester.tap(find.text('PLAY'));
     await tester.pump();
-    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(director.state.inDungeon, isTrue);
+    expect(director.state.dungeonId, 'sandy');
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets(
@@ -314,16 +314,18 @@ void main() {
     await tester.pumpWidget(
       MyApp(director: director, autoStartLoop: false, showIntro: true),
     );
-    await skipBootIntro(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.byType(StartMenuScreen), findsOneWidget);
     expect(find.text('CONTINUE'), findsNothing);
-    expect(find.text('NEW GAME'), findsOneWidget);
+    expect(find.text('PLAY'), findsOneWidget);
+    expect(find.text('CUSTOMIZE'), findsOneWidget);
     expect(find.text('SAVE 1'), findsNothing);
     expect(find.text('RESTORE SAVE'), findsOneWidget);
     expect(director.hasExistingSave, isFalse);
 
-    await tester.tap(find.text('NEW GAME'));
+    await tester.tap(find.text('CUSTOMIZE'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -359,9 +361,10 @@ void main() {
     await tester.pumpWidget(
       MyApp(director: director, autoStartLoop: false, showIntro: true),
     );
-    await skipBootIntro(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
 
-    await tester.tap(find.text('NEW GAME'));
+    await tester.tap(find.text('CUSTOMIZE'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 

@@ -312,6 +312,13 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           onCycle: director.cycleVfxQuality,
         ),
         const SizedBox(height: 8),
+        _SettingsCycle(
+          label: state.combatPace >= 2 ? 'Fight speed 2×' : 'Fight speed 1×',
+          hint:
+              'How fast the cave plays. Gold while you are away does not change.',
+          onCycle: director.cycleCombatPace,
+        ),
+        const SizedBox(height: 8),
         _SettingsToggle(
           label: 'Colorblind-friendly combat numbers',
           value: state.colorblindMode,

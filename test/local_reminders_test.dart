@@ -14,11 +14,7 @@ GameState _afterFirstLoot({bool inDungeon = false}) {
     GameLogic.createInitialState(now: now),
     now,
   ).state;
-  state = FunnelAnalytics.onFirstEnter(
-    state,
-    now,
-    dungeonId: 'sandy',
-  ).state;
+  state = FunnelAnalytics.onFirstEnter(state, now, dungeonId: 'sandy').state;
   state = FunnelAnalytics.onFirstReward(state).state;
   if (inDungeon) {
     state = state.copyWith(inDungeon: true);
@@ -44,12 +40,20 @@ void main() {
     expect(LocalReminders.shouldOfferOptIn(state), isFalse);
   });
 
-  test('after first loot on the hub, offer once — never in combat', () {
+  test('first loot is not the ping — wait until gold came in while away', () {
     final hub = _afterFirstLoot();
+    expect(LocalReminders.shouldOfferOptIn(hub), isFalse);
+    expect(LocalReminders.showSettingsToggle(hub), isTrue);
+  });
+
+  test('after welcome-back gold on the hub, offer once — never in combat', () {
+    final hub = FunnelAnalytics.onOfflineGold(_afterFirstLoot()).state;
     expect(LocalReminders.shouldOfferOptIn(hub), isTrue);
     expect(LocalReminders.showSettingsToggle(hub), isTrue);
     expect(
-      LocalReminders.shouldOfferOptIn(_afterFirstLoot(inDungeon: true)),
+      LocalReminders.shouldOfferOptIn(
+        FunnelAnalytics.onOfflineGold(_afterFirstLoot(inDungeon: true)).state,
+      ),
       isFalse,
     );
 
@@ -64,10 +68,16 @@ void main() {
     final opted = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
     final pings = LocalReminders.plan(opted, now);
     expect(pings, hasLength(2));
-    expect(pings.map((p) => p.id).toSet(), {LocalPing.goldId, LocalPing.caveId});
+    expect(pings.map((p) => p.id).toSet(), {
+      LocalPing.goldId,
+      LocalPing.caveId,
+    });
     expect(pings.first.fireAt.difference(now), LocalReminders.goldDelay);
     expect(pings.last.fireAt.difference(now), LocalReminders.caveDelay);
-    final blob = pings.map((p) => '${p.title} ${p.body}').join(' ').toLowerCase();
+    final blob = pings
+        .map((p) => '${p.title} ${p.body}')
+        .join(' ')
+        .toLowerCase();
     expect(blob, contains('gold'));
     expect(blob, isNot(contains('key')));
     expect(blob, isNot(contains('essence')));
@@ -116,20 +126,28 @@ void main() {
     expect(state.metaDepth.notifyPrompted, isTrue);
   });
 
-  test('background pause records the plan; resume drops unsent futures', () async {
-    final opted = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
-    final director = GameDirector.preview(initialState: opted);
-    addTearDown(director.dispose);
-    director.setAppPaused(true);
-    await Future<void>.delayed(Duration.zero);
-    expect(director.state.metaDepth.notifyPingMs, isNotEmpty);
-    expect(director.state.metaDepth.notifyPingMs.length, lessThanOrEqualTo(2));
-    director.setAppPaused(false);
-    await Future<void>.delayed(Duration.zero);
-    expect(director.state.metaDepth.notifyPingMs, isEmpty);
-  });
+  test(
+    'background pause records the plan; resume drops unsent futures',
+    () async {
+      final opted = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
+      final director = GameDirector.preview(initialState: opted);
+      addTearDown(director.dispose);
+      director.setAppPaused(true);
+      await Future<void>.delayed(Duration.zero);
+      expect(director.state.metaDepth.notifyPingMs, isNotEmpty);
+      expect(
+        director.state.metaDepth.notifyPingMs.length,
+        lessThanOrEqualTo(2),
+      );
+      director.setAppPaused(false);
+      await Future<void>.delayed(Duration.zero);
+      expect(director.state.metaDepth.notifyPingMs, isEmpty);
+    },
+  );
 
-  testWidgets('NOT NOW marks prompted and does not enable pings', (tester) async {
+  testWidgets('NOT NOW marks prompted and does not enable pings', (
+    tester,
+  ) async {
     final director = GameDirector.preview(initialState: _afterFirstLoot());
     addTearDown(director.dispose);
     await tester.pumpWidget(
@@ -152,7 +170,9 @@ void main() {
     expect(director.state.metaDepth.notifyOptIn, isFalse);
   });
 
-  testWidgets('YES closes the card before OS permission returns', (tester) async {
+  testWidgets('YES closes the card before OS permission returns', (
+    tester,
+  ) async {
     final director = GameDirector.preview(initialState: _afterFirstLoot());
     addTearDown(director.dispose);
     await tester.pumpWidget(

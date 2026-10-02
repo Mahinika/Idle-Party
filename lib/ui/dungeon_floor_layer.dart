@@ -36,7 +36,10 @@ abstract final class _FloorLayerCache {
     final w = (map.cols * bakeTile).round();
     final h = (map.rows * bakeTile).round();
     final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()));
+    final canvas = Canvas(
+      recorder,
+      Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()),
+    );
     p.paintStaticTerrain(
       canvas,
       tile: bakeTile,
@@ -76,21 +79,29 @@ abstract final class _FloorLookState {
 
   /// Carved cells of [c] in tile units (row runs), so the dim never spills
   /// onto the cave backdrop around a round room.
-  static Path carvedPath(TileMap map, Chamber c) => _carved.putIfAbsent(c.index, () {
-    final path = Path();
-    for (var y = c.y; y < c.y + c.h; y++) {
-      var run = -1;
-      for (var x = c.x; x <= c.x + c.w; x++) {
-        final carved = x < c.x + c.w && map.at(x, y) != TileKind.wall;
-        if (carved && run < 0) run = x;
-        if (!carved && run >= 0) {
-          path.addRect(Rect.fromLTWH(run.toDouble(), y.toDouble(), (x - run).toDouble(), 1));
-          run = -1;
+  static Path carvedPath(TileMap map, Chamber c) =>
+      _carved.putIfAbsent(c.index, () {
+        final path = Path();
+        for (var y = c.y; y < c.y + c.h; y++) {
+          var run = -1;
+          for (var x = c.x; x <= c.x + c.w; x++) {
+            final carved = x < c.x + c.w && map.at(x, y) != TileKind.wall;
+            if (carved && run < 0) run = x;
+            if (!carved && run >= 0) {
+              path.addRect(
+                Rect.fromLTWH(
+                  run.toDouble(),
+                  y.toDouble(),
+                  (x - run).toDouble(),
+                  1,
+                ),
+              );
+              run = -1;
+            }
+          }
         }
-      }
-    }
-    return path;
-  });
+        return path;
+      });
 }
 
 extension _DungeonFloorLayer on _TileRoomPainter {
@@ -158,12 +169,13 @@ extension _DungeonFloorLayer on _TileRoomPainter {
               !DungeonEnvironment.wallTouchesCarved(map, x, y)) {
             continue;
           }
-          final img = wallVariants[_TileRoomPainter._hashPick(
-            x,
-            y,
-            layoutSeed + 17,
-            wallVariants.length,
-          )];
+          final img =
+              wallVariants[_TileRoomPainter._hashPick(
+                x,
+                y,
+                layoutSeed + 17,
+                wallVariants.length,
+              )];
           _drawWallCaps(canvas, x, y, dst, tile, img);
           if (DungeonEnvironment.isCarved(map.at(x, y + 1))) {
             _drawWallFace(canvas, dst, tile, img);
@@ -250,7 +262,12 @@ extension _DungeonFloorLayer on _TileRoomPainter {
     );
     _TileRoomPainter._fillPaint.color = const Color(0x40000000);
     canvas.drawRect(
-      Rect.fromLTWH(face.left, face.bottom - tile * 0.18, face.width, tile * 0.18),
+      Rect.fromLTWH(
+        face.left,
+        face.bottom - tile * 0.18,
+        face.width,
+        tile * 0.18,
+      ),
       _TileRoomPainter._fillPaint,
     );
   }
@@ -288,15 +305,24 @@ extension _DungeonFloorLayer on _TileRoomPainter {
         for (var i = 0; i < 4; i++) {
           final px = ((h >> (i * 3)) % 12) + 2.0;
           final py = ((h >> (i * 3 + 7)) % 12) + 2.0;
-          canvas.drawRect(Rect.fromLTWH(at(px, py).dx, at(px, py).dy, 3 * u, 2 * u), paint);
+          canvas.drawRect(
+            Rect.fromLTWH(at(px, py).dx, at(px, py).dy, 3 * u, 2 * u),
+            paint,
+          );
         }
         paint.color = const Color(0x5070C048);
-        canvas.drawRect(Rect.fromLTWH(at(7, 7).dx, at(7, 7).dy, 2 * u, 2 * u), paint);
+        canvas.drawRect(
+          Rect.fromLTWH(at(7, 7).dx, at(7, 7).dy, 2 * u, 2 * u),
+          paint,
+        );
       case FloorDecalKind.puddle:
         paint.color = const Color(0x5A1C4868);
         canvas.drawOval(r.deflate(2.5 * u), paint);
         paint.color = const Color(0x40A8D8F0);
-        canvas.drawRect(Rect.fromLTWH(at(5, 6).dx, at(5, 6).dy, 4 * u, u), paint);
+        canvas.drawRect(
+          Rect.fromLTWH(at(5, 6).dx, at(5, 6).dy, 4 * u, u),
+          paint,
+        );
       case FloorDecalKind.runeCircle:
         stroke.color = accent.withValues(alpha: 0.75);
         final c = r.center;
@@ -346,7 +372,15 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       case FloorDecalKind.bridge:
         paint.color = const Color(0xB0604024);
         for (var i = 0; i < 3; i++) {
-          canvas.drawRect(Rect.fromLTWH(r.left + u, r.top + (1 + i * 5) * u, r.width - 2 * u, 4 * u), paint);
+          canvas.drawRect(
+            Rect.fromLTWH(
+              r.left + u,
+              r.top + (1 + i * 5) * u,
+              r.width - 2 * u,
+              4 * u,
+            ),
+            paint,
+          );
         }
         paint.color = const Color(0x50000000);
         canvas.drawRect(Rect.fromLTWH(r.left, r.top, u, r.height), paint);
@@ -357,7 +391,10 @@ extension _DungeonFloorLayer on _TileRoomPainter {
         paint.color = const Color(0x40FFFFFF);
         canvas.drawRect(Rect.fromLTWH(r.left, r.top, r.width, 2 * u), paint);
         paint.color = const Color(0x80000000);
-        canvas.drawRect(Rect.fromLTWH(r.left, r.bottom - 3 * u, r.width, 3 * u), paint);
+        canvas.drawRect(
+          Rect.fromLTWH(r.left, r.bottom - 3 * u, r.width, 3 * u),
+          paint,
+        );
         stroke.color = accent.withValues(alpha: 0.5);
         canvas.drawRect(r.deflate(u), stroke);
       case FloorDecalKind.roots:
@@ -367,8 +404,18 @@ extension _DungeonFloorLayer on _TileRoomPainter {
         canvas.drawPath(
           Path()
             ..moveTo(at(0, 5).dx, at(0, 5).dy)
-            ..quadraticBezierTo(at(7, 1).dx, at(7, 1).dy, at(9, 8).dx, at(9, 8).dy)
-            ..quadraticBezierTo(at(11, 14).dx, at(11, 14).dy, at(16, 11).dx, at(16, 11).dy),
+            ..quadraticBezierTo(
+              at(7, 1).dx,
+              at(7, 1).dy,
+              at(9, 8).dx,
+              at(9, 8).dy,
+            )
+            ..quadraticBezierTo(
+              at(11, 14).dx,
+              at(11, 14).dy,
+              at(16, 11).dx,
+              at(16, 11).dy,
+            ),
           stroke,
         );
       case FloorDecalKind.cobweb:
@@ -380,8 +427,20 @@ extension _DungeonFloorLayer on _TileRoomPainter {
         canvas.drawLine(at(3, 5), at(10, 3), stroke);
       case FloorDecalKind.sandDrift:
         stroke.color = const Color(0x40F8E0A8);
-        canvas.drawArc(Rect.fromLTWH(at(1, 4).dx, at(1, 4).dy, 12 * u, 6 * u), math.pi, math.pi, false, stroke);
-        canvas.drawArc(Rect.fromLTWH(at(4, 9).dx, at(4, 9).dy, 11 * u, 5 * u), math.pi, math.pi, false, stroke);
+        canvas.drawArc(
+          Rect.fromLTWH(at(1, 4).dx, at(1, 4).dy, 12 * u, 6 * u),
+          math.pi,
+          math.pi,
+          false,
+          stroke,
+        );
+        canvas.drawArc(
+          Rect.fromLTWH(at(4, 9).dx, at(4, 9).dy, 11 * u, 5 * u),
+          math.pi,
+          math.pi,
+          false,
+          stroke,
+        );
       case FloorDecalKind.gearInlay:
         stroke.color = const Color(0x90C89830);
         final c = r.center;
@@ -397,16 +456,30 @@ extension _DungeonFloorLayer on _TileRoomPainter {
         }
       case FloorDecalKind.ash:
         paint.color = const Color(0x40706868);
-        canvas.drawOval(Rect.fromLTWH(at(2, 5).dx, at(2, 5).dy, 11 * u, 6 * u), paint);
+        canvas.drawOval(
+          Rect.fromLTWH(at(2, 5).dx, at(2, 5).dy, 11 * u, 6 * u),
+          paint,
+        );
         paint.color = const Color(0x30A09890);
-        canvas.drawRect(Rect.fromLTWH(at(6, 7).dx, at(6, 7).dy, 2 * u, u), paint);
+        canvas.drawRect(
+          Rect.fromLTWH(at(6, 7).dx, at(6, 7).dy, 2 * u, u),
+          paint,
+        );
       case FloorDecalKind.carpet:
         paint.color = const Color(0xB0781820);
-        final inner = Rect.fromLTWH(r.left + 2 * u, r.top, r.width - 4 * u, r.height);
+        final inner = Rect.fromLTWH(
+          r.left + 2 * u,
+          r.top,
+          r.width - 4 * u,
+          r.height,
+        );
         canvas.drawRect(inner, paint);
         paint.color = const Color(0xD0D8B048);
         canvas.drawRect(Rect.fromLTWH(inner.left, r.top, u, r.height), paint);
-        canvas.drawRect(Rect.fromLTWH(inner.right - u, r.top, u, r.height), paint);
+        canvas.drawRect(
+          Rect.fromLTWH(inner.right - u, r.top, u, r.height),
+          paint,
+        );
       case FloorDecalKind.scorch:
         paint.color = const Color(0x50000000);
         canvas.drawOval(r.deflate(2 * u), paint);
@@ -417,16 +490,25 @@ extension _DungeonFloorLayer on _TileRoomPainter {
         for (var i = 0; i < 3; i++) {
           final px = ((h >> (i * 4)) % 11) + 2.0;
           final py = ((h >> (i * 4 + 9)) % 11) + 2.0;
-          canvas.drawRect(Rect.fromLTWH(at(px, py).dx, at(px, py).dy, 3 * u, u), paint);
+          canvas.drawRect(
+            Rect.fromLTWH(at(px, py).dx, at(px, py).dy, 3 * u, u),
+            paint,
+          );
         }
       case FloorDecalKind.coins:
         for (var i = 0; i < 4; i++) {
           final px = ((h >> (i * 3)) % 11) + 2.0;
           final py = ((h >> (i * 3 + 8)) % 11) + 2.0;
           paint.color = const Color(0xFFD8A830);
-          canvas.drawRect(Rect.fromLTWH(at(px, py).dx, at(px, py).dy, 3 * u, 2 * u), paint);
+          canvas.drawRect(
+            Rect.fromLTWH(at(px, py).dx, at(px, py).dy, 3 * u, 2 * u),
+            paint,
+          );
           paint.color = const Color(0xFFFFE890);
-          canvas.drawRect(Rect.fromLTWH(at(px, py).dx, at(px, py).dy, u, u), paint);
+          canvas.drawRect(
+            Rect.fromLTWH(at(px, py).dx, at(px, py).dy, u, u),
+            paint,
+          );
         }
       case FloorDecalKind.starlight:
         paint.shader = ui.Gradient.radial(
@@ -439,11 +521,17 @@ extension _DungeonFloorLayer on _TileRoomPainter {
   }
 
   /// Warm torch pools + the hero's accent light (dynamic, view-culled).
-  void paintFloorLights(Canvas canvas, double tile, Offset Function(double, double) center) {
+  void paintFloorLights(
+    Canvas canvas,
+    double tile,
+    Offset Function(double, double) center,
+  ) {
     if (vfxQuality == VfxQuality.minimal) return;
     final map = world.map;
     final accent = Color(ZoneFloorStyle.byId(dungeonId).accentArgb);
-    final flicker = reducedVfx ? 1.0 : 0.92 + 0.08 * math.sin(visualFrame * 0.09);
+    final flicker = reducedVfx
+        ? 1.0
+        : 0.92 + 0.08 * math.sin(visualFrame * 0.09);
     final finale = _FloorLookState.exitOpenedAt;
     final sinceExit = finale == null ? 9999 : visualFrame - finale;
     final flare = sinceExit < 120 ? 1.0 + 0.8 * (1 - sinceExit / 120) : 1.0;
@@ -460,12 +548,13 @@ extension _DungeonFloorLayer on _TileRoomPainter {
         boost = flare;
       }
       final radius = tile * (torch ? 2.2 : 2.8) * flicker * boost;
-      final color = torch ? const Color(0x38F0A040) : accent.withValues(alpha: 0.26);
-      paint.shader = ui.Gradient.radial(
-        c,
-        radius,
-        [color, color.withValues(alpha: 0)],
-      );
+      final color = torch
+          ? const Color(0x38F0A040)
+          : accent.withValues(alpha: 0.26);
+      paint.shader = ui.Gradient.radial(c, radius, [
+        color,
+        color.withValues(alpha: 0),
+      ]);
       canvas.drawCircle(c, radius, paint);
     }
     // Wonder starlight: a slow shaft from the broken ceiling.
@@ -473,21 +562,30 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       if (d.kind != FloorDecalKind.starlight) continue;
       final c = center(d.x + d.w / 2, d.y + d.h / 2);
       if (!_inView(d.x + 0.5, d.y + 0.5, pad: 4)) continue;
-      final breathe = reducedVfx ? 1.0 : 0.85 + 0.15 * math.sin(visualFrame * 0.015);
-      paint.shader = ui.Gradient.linear(
-        c.translate(0, -tile * 4),
-        c,
-        [const Color(0x00D8E8FF), const Color(0x38D8E8FF)],
-      );
+      final breathe = reducedVfx
+          ? 1.0
+          : 0.85 + 0.15 * math.sin(visualFrame * 0.015);
+      paint.shader = ui.Gradient.linear(c.translate(0, -tile * 4), c, [
+        const Color(0x00D8E8FF),
+        const Color(0x38D8E8FF),
+      ]);
       canvas.drawRect(
-        Rect.fromCenter(center: c.translate(0, -tile * 2), width: tile * 2.4 * breathe, height: tile * 4.5),
+        Rect.fromCenter(
+          center: c.translate(0, -tile * 2),
+          width: tile * 2.4 * breathe,
+          height: tile * 4.5,
+        ),
         paint,
       );
     }
   }
 
   /// Slow shimmer on water / lava props and wet decals (soft fascination).
-  void paintShimmer(Canvas canvas, double tile, Offset Function(double, double) center) {
+  void paintShimmer(
+    Canvas canvas,
+    double tile,
+    Offset Function(double, double) center,
+  ) {
     if (reducedVfx) return;
     final map = world.map;
     final paint = Paint();
@@ -498,9 +596,13 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       if (!_inView(prop.x + 0.5, prop.y + 0.5)) continue;
       final phase = visualFrame * 0.022 + prop.x * 0.7 + prop.y * 0.4;
       final a = 0.10 + 0.08 * math.sin(phase);
-      paint.color = (lava ? const Color(0xFFFFB050) : const Color(0xFFD0F4FF)).withValues(alpha: a);
+      paint.color = (lava ? const Color(0xFFFFB050) : const Color(0xFFD0F4FF))
+          .withValues(alpha: a);
       final c = center(prop.x + 0.5, prop.y + 0.62);
-      canvas.drawOval(Rect.fromCenter(center: c, width: tile * 0.62, height: tile * 0.22), paint);
+      canvas.drawOval(
+        Rect.fromCenter(center: c, width: tile * 0.62, height: tile * 0.22),
+        paint,
+      );
     }
     for (final d in map.decals) {
       final wet = d.kind == FloorDecalKind.puddle;
@@ -509,9 +611,15 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       if (!_inView(d.x + 0.5, d.y + 0.5)) continue;
       final phase = visualFrame * 0.02 + d.x * 0.9 + d.y * 0.5;
       final a = (hot ? 0.10 : 0.07) * (0.5 + 0.5 * math.sin(phase));
-      paint.color = (hot ? const Color(0xFFFF9030) : const Color(0xFFE0F8FF)).withValues(alpha: a);
+      paint.color = (hot ? const Color(0xFFFF9030) : const Color(0xFFE0F8FF))
+          .withValues(alpha: a);
       canvas.drawRect(
-        Rect.fromLTWH(center(d.x.toDouble(), d.y.toDouble()).dx, center(d.x.toDouble(), d.y.toDouble()).dy, tile, tile),
+        Rect.fromLTWH(
+          center(d.x.toDouble(), d.y.toDouble()).dx,
+          center(d.x.toDouble(), d.y.toDouble()).dy,
+          tile,
+          tile,
+        ),
         paint,
       );
     }
@@ -519,7 +627,14 @@ extension _DungeonFloorLayer on _TileRoomPainter {
 
   /// Rooms the party has not reached stay dim (a glimpse, not a black box)
   /// and fade up when a hero walks in.
-  void paintChamberReveal(Canvas canvas, double tile, double originX, double originY) {
+  void paintChamberReveal(
+    Canvas canvas,
+    double tile,
+    double originX,
+    double originY,
+  ) {
+    if (vfxQuality == VfxQuality.minimal) return;
+    if (!tile.isFinite || tile <= 0) return;
     final map = world.map;
     if (map.chambers.length < 2) return;
     _FloorLookState.sync(map);
@@ -552,7 +667,11 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       }
       if (reducedVfx && at != null) dim = 0;
       if (dim <= 0.01) continue;
-      if (!_inView(c.cx.toDouble(), c.cy.toDouble(), pad: math.max(c.w, c.h).toDouble())) {
+      if (!_inView(
+        c.cx.toDouble(),
+        c.cy.toDouble(),
+        pad: math.max(c.w, c.h).toDouble(),
+      )) {
         continue;
       }
       paint.color = Color.fromRGBO(4, 3, 8, dim);
@@ -565,7 +684,11 @@ extension _DungeonFloorLayer on _TileRoomPainter {
   }
 
   /// Stairs unlock: a soft ring rolls out once (peak-end — the finish is a scene).
-  void paintExitFinale(Canvas canvas, double tile, Offset Function(double, double) center) {
+  void paintExitFinale(
+    Canvas canvas,
+    double tile,
+    Offset Function(double, double) center,
+  ) {
     final opened = _FloorLookState.exitOpenedAt;
     if (opened == null || reducedVfx) return;
     final t = (visualFrame - opened) / 90.0;
@@ -578,14 +701,10 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       ..color = const Color(0xFFFFE8A0).withValues(alpha: 0.55 * (1 - t));
     canvas.drawCircle(c, tile * (0.6 + t * 4.5), paint);
     final fill = Paint()
-      ..shader = ui.Gradient.radial(
-        c,
-        tile * 2.4,
-        [
-          const Color(0xFFFFE0A0).withValues(alpha: 0.30 * (1 - t)),
-          const Color(0x00FFE0A0),
-        ],
-      )
+      ..shader = ui.Gradient.radial(c, tile * 2.4, [
+        const Color(0xFFFFE0A0).withValues(alpha: 0.30 * (1 - t)),
+        const Color(0x00FFE0A0),
+      ])
       ..blendMode = BlendMode.plus;
     canvas.drawCircle(c, tile * 2.4, fill);
   }

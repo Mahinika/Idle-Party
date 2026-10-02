@@ -538,6 +538,14 @@ class DungeonTopHud extends StatelessWidget {
                 ),
               ],
               modeRow(),
+              const SizedBox(width: 4),
+              DungeonModeChip(
+                label: state.combatPace >= 2 ? '2×' : '1×',
+                selected: state.combatPace >= 2,
+                dense: true,
+                tip: 'Fight speed. Loot and time away stay the same.',
+                onTap: director.cycleCombatPace,
+              ),
               if (world != null) ...[
                 const SizedBox(width: 4),
                 Semantics(

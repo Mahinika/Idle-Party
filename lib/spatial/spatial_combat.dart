@@ -1034,6 +1034,9 @@ abstract final class SpatialCombat {
   static bool compactNumbers = false;
   static bool alwaysShowEnemyHp = true;
 
+  /// Incoming-damage scale after repeat wipes on early Sandy. 1 = unchanged.
+  static double earlyWipeMercy = 1;
+
   /// SETTINGS “Hide heal numbers” drops numeric heals only — not tell words.
   static bool suppressHealFloater({required String text, required int argb}) {
     if (!hideHealFloaters) return false;
@@ -3081,6 +3084,7 @@ abstract final class SpatialCombat {
   }) {
     relicBossDamageMul = state.relicBossDamageMul;
     relicLowHpDr = state.relicLowHpDr;
+    earlyWipeMercy = GameLogic.earlyWipeDamageMul(state);
     var nextState = state;
     var goldFromKills = 0;
     final rng = GameLogic.random;

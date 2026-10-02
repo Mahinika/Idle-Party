@@ -24,7 +24,9 @@ extension GameDirectorCombatLoop on GameDirector {
       _rebuildSpatial();
     }
 
-    final steps = _debugTimeScale.round().clamp(1, 20);
+    final pace = _state.combatPace.clamp(1, 2);
+    final steps = (_debugTimeScale * pace).round().clamp(1, 20);
+    final tickWatch = Stopwatch()..start();
     var playedLoot = false;
     for (var step = 0; step < steps; step++) {
       if (_awaitingWipeChoice ||
@@ -470,6 +472,9 @@ extension GameDirectorCombatLoop on GameDirector {
 
       _bumpCombatFrame();
     }
+
+    tickWatch.stop();
+    _noteFightBudget(tickWatch.elapsedMilliseconds);
 
     _uiThrottle++;
     if (!_runIncomeFrozen && _state.inDungeon && _uiThrottle % 60 == 0) {

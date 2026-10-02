@@ -58,6 +58,9 @@ int combatApplyHeroIncomingDamage(
   if (dealt <= 0) return 0;
 
   var mul = hero.kitInMul;
+  if (SpatialCombat.earlyWipeMercy < 1) {
+    mul *= SpatialCombat.earlyWipeMercy;
+  }
   if ((hero.buffTimers['deathWish'] ?? 0) > 0) {
     mul *= 1.18;
   }
@@ -280,9 +283,7 @@ int combatHurtEnemy(SpatialActor enemy, int dealt, {bool soft = false}) {
     dealt = math.max(1, (dealt * SpatialCombat.relicBossDamageMul).round());
   }
   enemy.hp = math.max(0, enemy.hp - dealt);
-  final life = soft
-      ? 0.07
-      : (enemy.role == EnemyRole.boss ? 0.16 : 0.11);
+  final life = soft ? 0.07 : (enemy.role == EnemyRole.boss ? 0.16 : 0.11);
   enemy.hitFlash = math.max(enemy.hitFlash, life);
   return dealt;
 }

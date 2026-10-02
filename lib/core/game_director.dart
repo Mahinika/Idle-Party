@@ -352,6 +352,32 @@ class GameDirector extends ChangeNotifier {
   double _debugTimeScale = 1;
   double get debugTimeScale => _debugTimeScale;
 
+  /// Player picked Full/Lite/Minimal. Auto-ease must not override that.
+  bool _vfxPinned = false;
+  int _slowFightTicks = 0;
+
+  /// Cheap phones: a few slow fight ticks drop Full to Lite once.
+  void _noteFightBudget(int elapsedMs) {
+    if (_vfxPinned || _state.vfxQuality != VfxQuality.full) return;
+    if (!_state.inDungeon) return;
+    if (elapsedMs > 48) {
+      _slowFightTicks++;
+      if (_slowFightTicks >= 12) {
+        _slowFightTicks = 0;
+        setVfxQuality(VfxQuality.lite, fromUser: false);
+        showToast('Picture eased so the fight stays smooth', life: 2.4);
+      }
+    } else if (_slowFightTicks > 0) {
+      _slowFightTicks--;
+    }
+  }
+
+  void cycleCombatPace() {
+    final next = _state.combatPace >= 2 ? 1 : 2;
+    _applyUpgrade(_state.copyWith(combatPace: next));
+    showToast(next >= 2 ? 'Fight speed 2×' : 'Fight speed 1×', life: 1.4);
+  }
+
   void setDebugTimeScale(double scale) {
     final next = scale.clamp(1, 20).toDouble();
     if (next == _debugTimeScale) return;
@@ -823,14 +849,27 @@ class GameDirector extends ChangeNotifier {
 
     final elapsed = DateTime.now().difference(saved.lastUpdated);
     final offline = await GameLogic.applyOfflineProgressAsync(saved, elapsed);
+    var caught = offline.state;
     if (offline.hasSummary) {
       uiFeedback.presentOffline(offline);
+      if (offline.goldGained > 0) {
+        final tick = FunnelAnalytics.onOfflineGold(caught);
+        caught = tick.state;
+        for (final hit in tick.events) {
+          unawaited(
+            AppAnalytics.logEvent(
+              hit.name,
+              hit.params.isEmpty ? null : hit.params,
+            ),
+          );
+        }
+      }
       // Hub shows a tappable banner; toast only when loading mid-dungeon.
       if (saved.inDungeon) {
         showToast(offline.headline, life: 5);
       }
     }
-    return offline.state;
+    return caught;
   }
 
   Future<void> _installCaughtUp(GameState loaded) async {
@@ -1440,7 +1479,8 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(_state.copyWith(keepScreenAwake: enabled));
   }
 
-  void setVfxQuality(VfxQuality value) {
+  void setVfxQuality(VfxQuality value, {bool fromUser = true}) {
+    if (fromUser) _vfxPinned = true;
     _applyUpgrade(_state.copyWith(vfxQuality: value));
   }
 
@@ -1605,6 +1645,7 @@ class GameDirector extends ChangeNotifier {
         dungeonZoom: DungeonZoom.normal,
         clearDungeonViewCols: true,
         vfxQuality: VfxQuality.full,
+        combatPace: 1,
         colorblindMode: false,
         hideHealFloaters: false,
         compactCombatNumbers: false,

@@ -47,12 +47,14 @@ abstract final class LocalReminders {
         state.ascensionLevel >= 1;
   }
 
-  /// In-game card — hub only, after first loot, never install, never combat.
+  /// Hub card after gold actually came in while away — the promise is real.
+  /// Never on install, never in combat, never before that Welcome Back.
   static bool shouldOfferOptIn(GameState state) {
     if (state.inDungeon) return false;
     if (state.metaDepth.notifyPrompted || state.metaDepth.notifyOptIn) {
       return false;
     }
+    if (!FunnelAnalytics.has(state, FunnelAnalytics.offlineGold)) return false;
     return milestoneReached(state);
   }
 

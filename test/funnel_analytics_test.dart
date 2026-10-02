@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/app_analytics.dart';
+import 'package:idle_party/core/boot_funnel.dart';
 import 'package:idle_party/core/funnel_analytics.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/hero_spec.dart';
 
 void main() {
@@ -30,15 +33,15 @@ void main() {
   test('new install emits first_open then app_ready once', () {
     final state = GameLogic.createInitialState(now: install);
     final first = FunnelAnalytics.onNewInstall(state, install);
+    expect(first.events.map((e) => e.name), [
+      FunnelAnalytics.firstOpen,
+      FunnelAnalytics.appReady,
+    ]);
     expect(
-      first.events.map((e) => e.name),
-      [FunnelAnalytics.firstOpen, FunnelAnalytics.appReady],
+      first.state.metaDepth.funnelInstallMs,
+      install.millisecondsSinceEpoch,
     );
-    expect(first.state.metaDepth.funnelInstallMs, install.millisecondsSinceEpoch);
-    expect(
-      FunnelAnalytics.onNewInstall(first.state, install).events,
-      isEmpty,
-    );
+    expect(FunnelAnalytics.onNewInstall(first.state, install).events, isEmpty);
   });
 
   test('first_enter logs seconds_to_combat once', () {
@@ -112,10 +115,9 @@ void main() {
   });
 
   test('legacy save backfills funnel flags without emitting', () {
-    final veteran = GameLogic.createInitialState(now: install).copyWith(
-      lifetimeGoldEarned: 9000,
-      bossVictories: 4,
-    );
+    final veteran = GameLogic.createInitialState(
+      now: install,
+    ).copyWith(lifetimeGoldEarned: 9000, bossVictories: 4);
     final tick = FunnelAnalytics.onExistingSession(veteran, install);
     expect(tick.events, isEmpty);
     expect(tick.state.metaDepth.funnelInstallMs, greaterThan(0));
@@ -161,46 +163,68 @@ void main() {
       ascended.metaDepth.funnelLogged,
       contains(FunnelAnalytics.firstEnter),
     );
-    expect(ascended.metaDepth.funnelInstallMs, loaded.metaDepth.funnelInstallMs);
+    expect(
+      ascended.metaDepth.funnelInstallMs,
+      loaded.metaDepth.funnelInstallMs,
+    );
   });
 
-  test('New Game then enter dungeon records the funnel via AppAnalytics', () async {
+  test(
+    'New Game then enter dungeon records the funnel via AppAnalytics',
+    () async {
+      final hits = <String>[];
+      AppAnalytics.debugSink = (name, _) => hits.add(name);
+
+      final director = GameDirector(
+        InMemoryGameStorage(),
+        enableSpatialLoop: false,
+      );
+      await director.boot();
+      await director.startNewGame(HeroSpecs.starterUnlocked);
+      expect(
+        hits,
+        containsAll([FunnelAnalytics.firstOpen, FunnelAnalytics.appReady]),
+      );
+      director.enterDungeon(dungeonId: 'sandy');
+      expect(hits, contains(FunnelAnalytics.firstEnter));
+      expect(hits, contains(FunnelAnalytics.timeToCombat));
+      expect(
+        director.state.metaDepth.funnelLogged,
+        containsAll([
+          FunnelAnalytics.firstOpen,
+          FunnelAnalytics.appReady,
+          FunnelAnalytics.firstEnter,
+          FunnelAnalytics.timeToCombat,
+        ]),
+      );
+      director.dispose();
+    },
+  );
+
+  test('boot screens log once per install', () async {
+    SharedPreferences.setMockInitialValues({});
     final hits = <String>[];
     AppAnalytics.debugSink = (name, _) => hits.add(name);
+    await BootFunnel.note(FunnelAnalytics.startMenuShown);
+    await BootFunnel.note(FunnelAnalytics.startMenuShown);
+    expect(hits, [FunnelAnalytics.startMenuShown]);
+  });
 
-    final director = GameDirector(
-      InMemoryGameStorage(),
-      enableSpatialLoop: false,
-    );
-    await director.boot();
-    await director.startNewGame(HeroSpecs.starterUnlocked);
+  test('fight speed is 1 or 2 and old saves stay at 1', () {
+    final fast = GameLogic.createInitialState().copyWith(combatPace: 2);
+    expect(GameState.fromJson(fast.toJson()).combatPace, 2);
+    final old = Map<String, dynamic>.from(fast.toJson())..remove('combatPace');
+    expect(GameState.fromJson(old).combatPace, 1);
     expect(
-      hits,
-      containsAll([FunnelAnalytics.firstOpen, FunnelAnalytics.appReady]),
+      GameLogic.createInitialState().copyWith(combatPace: 9).combatPace,
+      2,
     );
-    director.enterDungeon(dungeonId: 'sandy');
-    expect(hits, contains(FunnelAnalytics.firstEnter));
-    expect(hits, contains(FunnelAnalytics.timeToCombat));
-    expect(
-      director.state.metaDepth.funnelLogged,
-      containsAll([
-        FunnelAnalytics.firstOpen,
-        FunnelAnalytics.appReady,
-        FunnelAnalytics.firstEnter,
-        FunnelAnalytics.timeToCombat,
-      ]),
-    );
-    director.dispose();
   });
 
   test('AppAnalytics no-ops safely under flutter test', () async {
     await AppAnalytics.init();
     await AppAnalytics.syncConsent();
-    await AppAnalytics.enterDungeon(
-      dungeonId: 'sandy',
-      keyLevel: 0,
-      floor: 1,
-    );
+    await AppAnalytics.enterDungeon(dungeonId: 'sandy', keyLevel: 0, floor: 1);
     await AppAnalytics.leaveDungeon(dungeonId: 'sandy', floor: 1);
     await AppAnalytics.partyWipe(dungeonId: 'sandy', floor: 1, streak: 1);
     await AppAnalytics.ascend(fromAl: 0, toAl: 1);

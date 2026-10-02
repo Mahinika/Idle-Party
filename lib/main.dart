@@ -6,6 +6,8 @@ import 'package:flutter/semantics.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/app_analytics.dart';
+import 'core/boot_funnel.dart';
+import 'core/funnel_analytics.dart';
 import 'core/equipment_factory.dart';
 import 'core/gear/drop_tables.dart';
 import 'core/game_director.dart';
@@ -285,11 +287,20 @@ class _GameHomePageState extends State<GameHomePage>
   }
 
   void _enterAfterBootChecks() {
+    final firstRun = widget.showIntro && !_director.hasAnySave;
     setState(() {
-      _phase = widget.showIntro ? _AppPhase.bootIntro : _AppPhase.play;
+      _phase = !widget.showIntro
+          ? _AppPhase.play
+          : firstRun
+          ? _AppPhase.startMenu
+          : _AppPhase.bootIntro;
     });
     if (_phase == _AppPhase.play) {
       _director.ensureCombatLoop();
+    } else if (_phase == _AppPhase.bootIntro) {
+      unawaited(BootFunnel.note(FunnelAnalytics.bootIntroShown));
+    } else if (_phase == _AppPhase.startMenu) {
+      unawaited(BootFunnel.note(FunnelAnalytics.startMenuShown));
     }
   }
 
@@ -355,7 +366,29 @@ class _GameHomePageState extends State<GameHomePage>
     if (empty < 0) return;
     _director.armNewGameSlot(empty);
     _menuBeforeNewGame = _phase;
+    unawaited(BootFunnel.note(FunnelAnalytics.newGameShown));
     setState(() => _phase = _AppPhase.newGamePicker);
+  }
+
+  /// No save yet: default party, straight into Sandy. Class and race wait.
+  Future<void> _playDefaultParty() async {
+    if (_phase != _AppPhase.startMenu) return;
+    final empty = _director.saveSlots.indexWhere((slot) => !slot.occupied);
+    if (empty < 0) {
+      _savesFull();
+      return;
+    }
+    _director.armNewGameSlot(empty);
+    await _director.startNewGame(
+      HeroSpecs.starterUnlocked,
+      partyName: 'The Party',
+    );
+    if (!mounted) return;
+    unawaited(BootFunnel.note(FunnelAnalytics.newGameConfirmed));
+    _director.clearPendingStartMenu();
+    _director.enterDungeon();
+    setState(() => _phase = _AppPhase.play);
+    _director.ensureCombatLoop();
   }
 
   String? _continueSummary() {
@@ -490,6 +523,7 @@ class _GameHomePageState extends State<GameHomePage>
       partySexes: sexes,
     );
     if (!mounted) return;
+    unawaited(BootFunnel.note(FunnelAnalytics.newGameConfirmed));
     _director.clearPendingStartMenu();
     setState(() => _phase = _AppPhase.play);
     _director.ensureCombatLoop();
@@ -529,6 +563,7 @@ class _GameHomePageState extends State<GameHomePage>
           onFinished: () {
             _director.dismissTip(BootIntroScreen.storyTipId);
             if (!mounted) return;
+            unawaited(BootFunnel.note(FunnelAnalytics.startMenuShown));
             setState(() => _phase = _AppPhase.startMenu);
           },
         ),
@@ -544,6 +579,9 @@ class _GameHomePageState extends State<GameHomePage>
           canStartNewGame: _director.saveSlots.any((slot) => !slot.occupied),
           onContinue: _openSavePicker,
           onNewGame: _openNewGamePicker,
+          onPlay: _director.hasAnySave
+              ? null
+              : () => unawaited(_playDefaultParty()),
           onSavesFull: _savesFull,
           onRestore: () => unawaited(_restoreSave()),
           onSettings: () {
