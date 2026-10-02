@@ -149,19 +149,11 @@ void main() {
     final s = math.sin(rad);
     final lx = restBone.restX + c * dx - s * dy;
     final ly = restBone.restY + s * dx + c * dy;
-    // The plate rim's average can fall in a one-pixel crack in the hand mask.
-    var onHand = false;
-    final gx = lx.round();
-    final gy = ly.round();
-    for (var dy = -1; dy <= 1 && !onHand; dy++) {
-      for (var dx = -1; dx <= 1; dx++) {
-        if (rig.contains(gx + dx, gy + dy, boneName)) {
-          onHand = true;
-          break;
-        }
-      }
-    }
-    expect(onHand, isTrue, reason: 'grip left $boneName');
+    expect(
+      rig.contains(lx.round(), ly.round(), boneName),
+      isTrue,
+      reason: 'grip left $boneName',
+    );
   });
 
   test('posed rogue grows no whiskers', () async {

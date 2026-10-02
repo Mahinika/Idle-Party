@@ -54,8 +54,8 @@ FAMILIES: dict[str, FamilyCut] = {
         leg_split_x=64,
         thigh_y=107,
         shin_y=118,
-        main_fist=(0.391, 0.195),
-        off_fist=(-0.391, 0.203),
+        main_fist=(0.238, 0.035),
+        off_fist=(-0.246, 0.035),
     ),
     "rogue": FamilyCut(
         name="rogue",

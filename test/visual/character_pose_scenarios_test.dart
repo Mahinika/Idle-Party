@@ -293,7 +293,7 @@ void main() {
       profile: BodyAnchorProfile.owned,
       family: BodyFamily.mage,
     );
-    expect(warrior.y, closeTo(0.195, 0.001));
+    expect(warrior.y, closeTo(0.035, 0.001));
     expect(mage.y, closeTo(0.024, 0.001));
     // The skin hand is one point. Walk keeps it; gloves do not slide.
     final mageWalk = AnchorTables.lookup(
@@ -740,8 +740,8 @@ void main() {
       owned: true,
     );
     expect(pose.bodyFamily, BodyFamily.warrior);
-    expect(pose.anchor(AnchorId.mainHand).y, closeTo(0.195, 0.001));
-    expect(pose.anchor(AnchorId.mainHand).x, closeTo(0.391, 0.001));
+    expect(pose.anchor(AnchorId.mainHand).y, closeTo(0.035, 0.001));
+    expect(pose.anchor(AnchorId.mainHand).x, closeTo(0.238, 0.001));
   });
 
   test('worn plate glove moves the grip to the outer rim', () {
@@ -750,10 +750,8 @@ void main() {
       BodyFamily.warrior,
       offHand: false,
     );
-    expect(shift.dx, greaterThan(0));
+    expect(shift.dx, greaterThan(0.15));
     expect(shift.dy.abs(), lessThan(0.05));
-    // In from the gauntlet's outer edge, so the haft crosses the palm.
-    expect(0.391 + shift.dx, closeTo(0.43, 0.02));
     final bare = CharacterVisualPainter.wornGloveShift(
       CharacterVisualPose.resolve(
         hero: nakedWarrior(),

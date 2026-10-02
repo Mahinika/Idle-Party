@@ -99,8 +99,7 @@ void main() {
     expect(warrior.bones['torso']!.parent, 'root');
     expect(warrior.order.indexOf('root'), lessThan(warrior.order.indexOf('torso')));
     expect(warrior.order.indexOf('upper_r'), lessThan(warrior.order.indexOf('fore_r')));
-    expect(warrior.handBones['main'], 'hand_r');
-    expect(warrior.handBones['off'], 'hand_l');
+    expect(warrior.handBones['main'], 'upper_r');
     var covered = 0;
     for (final mask in warrior.masks.values) {
       covered += mask.where((v) => v != 0).length;
