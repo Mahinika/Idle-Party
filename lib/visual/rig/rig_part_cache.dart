@@ -29,6 +29,9 @@ class RigAtlas {
 /// Splits a 128 overlay by the family part map. Keyed by path, family, and crop.
 abstract final class RigPartCache {
   static final Map<String, RigAtlas> _ready = {};
+
+  /// Weapon images after the haft is joined. The still doll reads these too.
+  static final Map<String, ui.Image> prepared = {};
   static final Map<String, Future<RigAtlas>> _pending = {};
 
   static String key(String path, String family, double cropTop, double cropBottom) =>
@@ -59,12 +62,180 @@ abstract final class RigPartCache {
   ///
   /// Returns [image] when nothing changed. A face window stays open: a clear
   /// pixel is filled only when three neighbors on the cross are already solid.
-  static Future<ui.Image> solidImage(ui.Image image) async {
+  static Future<ui.Image> solidImage(
+    ui.Image image, {
+    bool thicken = false,
+    bool join = false,
+  }) async {
     final raw = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (raw == null) return image;
     final bytes = Uint8List.fromList(raw.buffer.asUint8List());
-    if (!sealBytes(bytes, image.width, image.height)) return image;
+    final sealed = sealBytes(bytes, image.width, image.height);
+    final grown = thicken && thickenLines(bytes, image.width, image.height);
+    final joined = join && joinGaps(bytes, image.width, image.height);
+    if (!sealed && !grown && !joined) return image;
     return _image(bytes, image.width, image.height);
+  }
+
+  /// Joins two parts of one sprite when only a step or two of empty pixels
+  /// sits between them. A blade and its haft that miss by a diagonal read
+  /// as a broken weapon. A wider opening stays open.
+  static bool joinGaps(Uint8List bytes, int width, int height) {
+    final count = width * height;
+    final owner = List<int>.filled(count, -1);
+    final parts = <List<int>>[];
+    for (var i = 0; i < count; i++) {
+      if (owner[i] != -1 || bytes[i * 4 + 3] < 128) continue;
+      final id = parts.length;
+      final cells = <int>[i];
+      owner[i] = id;
+      var cursor = 0;
+      while (cursor < cells.length) {
+        final here = cells[cursor++];
+        final x = here % width;
+        final y = here ~/ width;
+        for (final step in const [(1, 0), (-1, 0), (0, 1), (0, -1)]) {
+          final nx = x + step.$1;
+          final ny = y + step.$2;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+          final next = ny * width + nx;
+          if (owner[next] != -1 || bytes[next * 4 + 3] < 128) continue;
+          owner[next] = id;
+          cells.add(next);
+        }
+      }
+      if (cells.length >= 8) parts.add(cells);
+    }
+    var changed = false;
+    for (var a = 0; a < parts.length; a++) {
+      for (var b = a + 1; b < parts.length; b++) {
+        var best = 99;
+        var from = 0;
+        var to = 0;
+        for (final left in parts[a]) {
+          final lx = left % width;
+          final ly = left ~/ width;
+          for (final right in parts[b]) {
+            final gap = (lx - right % width).abs();
+            final gy = (ly - right ~/ width).abs();
+            final dist = gap > gy ? gap : gy;
+            if (dist >= best) continue;
+            best = dist;
+            from = left;
+            to = right;
+            if (best <= 1) break;
+          }
+          if (best <= 1) break;
+        }
+        if (best > 2) continue;
+        changed = _bridge(bytes, width, from, to) || changed;
+      }
+    }
+    return changed;
+  }
+
+  /// A dark outline pixel hides the joint. Use a brighter neighbor instead.
+  static int _vivid(Uint8List bytes, int width, int pixel) {
+    final x0 = pixel % width;
+    final y0 = pixel ~/ width;
+    var best = pixel * 4;
+    var lum = bytes[best] + bytes[best + 1] + bytes[best + 2];
+    final height = bytes.length ~/ (width * 4);
+    for (var dy = -2; dy <= 2; dy++) {
+      for (var dx = -2; dx <= 2; dx++) {
+        final x = x0 + dx;
+        final y = y0 + dy;
+        if (x < 0 || y < 0 || x >= width || y >= height) continue;
+        final index = (y * width + x) * 4;
+        if (bytes[index + 3] < 128) continue;
+        final next = bytes[index] + bytes[index + 1] + bytes[index + 2];
+        if (next <= lum) continue;
+        lum = next;
+        best = index;
+      }
+    }
+    return best;
+  }
+
+  static bool _bridge(Uint8List bytes, int width, int from, int to) {
+    final x0 = from % width;
+    final y0 = from ~/ width;
+    final x1 = to % width;
+    final y1 = to ~/ width;
+    final dx = (x1 - x0).abs();
+    final dy = (y1 - y0).abs();
+    final steps = dx > dy ? dx : dy;
+    if (steps == 0 || steps > 2) return false;
+    final src = _vivid(bytes, width, from);
+    var changed = false;
+    void paint(int x, int y) {
+      if (x < 0 || y < 0) return;
+      final index = (y * width + x) * 4;
+      if (index < 0 || index + 3 >= bytes.length || bytes[index + 3] >= 128) {
+        return;
+      }
+      bytes[index] = bytes[src];
+      bytes[index + 1] = bytes[src + 1];
+      bytes[index + 2] = bytes[src + 2];
+      bytes[index + 3] = bytes[src + 3];
+      changed = true;
+    }
+
+    if (steps == 1) {
+      paint(x0, y1);
+      paint(x1, y0);
+      return changed;
+    }
+    final midX = (x0 + x1) ~/ 2;
+    final midY = (y0 + y1) ~/ 2;
+    // Two pixels, so a later turn does not snap the joint back open.
+    paint(midX, midY);
+    paint(midX + 1, midY);
+    paint(midX, midY + 1);
+    return changed;
+  }
+
+  /// Gives a one-pixel line a second pixel so a turn does not snap it.
+  ///
+  /// Nearest-neighbor rotation drops a one-pixel string into specks, and
+  /// those specks are then deleted. A line pixel (two solid neighbors or
+  /// fewer) copies itself into one empty side. A face window stays open.
+  static bool thickenLines(Uint8List bytes, int width, int height) {
+    final prior = Uint8List.fromList(bytes);
+    var changed = false;
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        final index = (y * width + x) * 4;
+        if (prior[index + 3] < 128) continue;
+        var solid = 0;
+        final holes = <int>[];
+        for (final step in const [
+          (1, 0),
+          (-1, 0),
+          (0, 1),
+          (0, -1),
+        ]) {
+          final nx = x + step.$1;
+          final ny = y + step.$2;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+          final next = (ny * width + nx) * 4;
+          if (prior[next + 3] >= 128) {
+            solid++;
+          } else {
+            holes.add(next);
+          }
+        }
+        if (solid > 2 || holes.isEmpty) continue;
+        final hole = holes.first;
+        if (bytes[hole + 3] >= 128) continue;
+        bytes[hole] = prior[index];
+        bytes[hole + 1] = prior[index + 1];
+        bytes[hole + 2] = prior[index + 2];
+        bytes[hole + 3] = prior[index + 3];
+        changed = true;
+      }
+    }
+    return changed;
   }
 
   /// True when [bytes] changed. [bytes] is tightly packed RGBA.

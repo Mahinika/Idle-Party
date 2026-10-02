@@ -282,12 +282,12 @@ class _FormDollPainter extends CustomPainter {
 }
 
 class _OwnedDollPainter extends CustomPainter {
-  const _OwnedDollPainter({
+  _OwnedDollPainter({
     required this.body,
     required this.overlays,
     required this.hero,
     required this.partyIndex,
-  });
+  }) : super(repaint: HeroRigPainter.frameTick);
 
   final ui.Image body;
   final Map<String, ui.Image> overlays;

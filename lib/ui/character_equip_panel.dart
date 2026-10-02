@@ -158,7 +158,7 @@ class CharacterEquipPanel extends StatelessWidget {
     final hero = heroes[index];
     final slotSize = compact ? 40.0 : 46.0;
     final slotGap = compact ? 4.0 : 5.0;
-    final dollSize = compact ? 96.0 : 120.0;
+    final dollSize = compact ? 96.0 : 128.0;
     final weaponSize = compact ? 44.0 : 50.0;
 
     final atk = state.effectiveHeroAttack(hero);

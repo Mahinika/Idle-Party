@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
+
 import '../body_family.dart';
 import '../character_layer.dart';
 import '../character_visual_painter.dart';
@@ -18,6 +20,9 @@ import 'rig_sampler.dart';
 /// Paints one hero into a 256 source image (1 pixel = 1 texel), then scales it up.
 abstract final class HeroRigPainter {
   static const source = RigData.frame;
+
+  /// GEAR dolls listen, so a frame that finishes after the first paint shows up.
+  static final frameTick = ChangeNotifier();
 
   static final Map<String, ui.Image> _frames = {};
   static final Map<String, String> _equip = {};
@@ -140,7 +145,12 @@ abstract final class HeroRigPainter {
       final path = layer.ownedAsset;
       final image = path == null ? null : images[path];
       if (path == null || image == null) continue;
-      final solid = await _solidOf(path, image);
+      final solid = await _solidOf(
+        path,
+        image,
+        thicken: path.contains('/bow_'),
+        join: HeroRigDraw.isWeapon(layer),
+      );
       if (_weapon(layer) || layer.id == CharacterLayerId.cape) continue;
       await _atlas(
         rig,
@@ -159,13 +169,24 @@ abstract final class HeroRigPainter {
         );
       }
     }
+    frameTick.notifyListeners();
   }
 
   /// Gear with soft edges or a one-pixel hole, keyed by asset path.
-  static Future<ui.Image> _solidOf(String path, ui.Image image) async {
+  static Future<ui.Image> _solidOf(
+    String path,
+    ui.Image image, {
+    bool thicken = false,
+    bool join = false,
+  }) async {
     final hit = _solid[path];
     if (hit != null) return hit;
-    final sealed = await RigPartCache.solidImage(image);
+    final sealed = await RigPartCache.solidImage(
+      image,
+      thicken: thicken,
+      join: join,
+    );
+    if (join || thicken) RigPartCache.prepared[path] = sealed;
     return _solid[path] ??= sealed;
   }
 
@@ -244,11 +265,8 @@ abstract final class HeroRigPainter {
       canvas.scale(-1, 1);
       canvas.translate(-center.dx, -center.dy);
     }
-    final dst = ui.Rect.fromCenter(
-      center: center,
-      width: size * 2,
-      height: size * 2,
-    );
+    final span = CharacterVisualPainter.pixelSpan(size);
+    final dst = CharacterVisualPainter.alignedRect(center, span * 2);
     canvas.drawImageRect(
       frame,
       ui.Rect.fromLTWH(0, 0, source.toDouble(), source.toDouble()),
@@ -333,6 +351,7 @@ abstract final class HeroRigPainter {
       return;
     }
     _frames[key] = clean;
+    frameTick.notifyListeners();
   }
 
   static Future<ui.Image> _decode(Uint8List pixels, int width, int height) {

@@ -12,6 +12,7 @@ import 'character_visual_pose.dart';
 import 'shadowform.dart';
 import 'hero_anim_controller.dart';
 import 'owned_gear_assets.dart';
+import 'rig/rig_part_cache.dart';
 import 'owned_gear_grips.dart';
 import 'owned_glove_tips.dart';
 import 'hero_anim_state.dart';
@@ -67,6 +68,39 @@ abstract final class CharacterVisualPainter {
   }
 
   /// Denser owned body + matching 128×128 gear overlays (GEAR and dungeon).
+  /// Size where each of the 128 art pixels lands on a whole device pixel.
+  ///
+  /// A 120-wide doll on a 3× phone is 2.8 device pixels per art pixel, so
+  /// nearest-neighbor drops lines out of the plate. Snap to the nearest fit
+  /// unless that would resize a tiny chip by more than 30%.
+  static double pixelSpan(double size) {
+    final dpr =
+        ui.PlatformDispatcher.instance.implicitView?.devicePixelRatio ?? 1.0;
+    if (dpr <= 0 || !dpr.isFinite || !size.isFinite || size <= 0) return size;
+    final k = (size * dpr / 128).round().clamp(1, 4);
+    final snapped = k * 128 / dpr;
+    if ((snapped - size).abs() > size * 0.30) return size;
+    return snapped;
+  }
+
+  /// [size] is the art span. The rect origin sits on a device pixel.
+  static Rect pixelRect(Offset center, double size) =>
+      alignedRect(center, pixelSpan(size));
+
+  /// Places [span] on whole device pixels. Does not change [span].
+  static Rect alignedRect(Offset center, double span) {
+    final dpr =
+        ui.PlatformDispatcher.instance.implicitView?.devicePixelRatio ?? 1.0;
+    double snap(double v) =>
+        dpr <= 0 || !dpr.isFinite ? v : (v * dpr).round() / dpr;
+    return Rect.fromLTWH(
+      snap(center.dx - span / 2),
+      snap(center.dy - span / 2),
+      span,
+      span,
+    );
+  }
+
   static void paintOwnedHero(
     Canvas canvas,
     Offset center,
@@ -81,7 +115,7 @@ abstract final class CharacterVisualPainter {
       ..filterQuality = FilterQuality.none
       ..isAntiAlias = false
       ..color = Color.fromRGBO(255, 255, 255, alpha);
-    final dst = Rect.fromCenter(center: center, width: size, height: size);
+    final dst = pixelRect(center, size);
 
     ui.Image? overlayImage(String? path) {
       if (path == null) return null;
@@ -170,7 +204,9 @@ abstract final class CharacterVisualPainter {
       }
       if (!kOwnedGearOverlayLayers.contains(layer.id)) continue;
       final asset = layer.ownedAsset;
-      final img = overlayImage(asset);
+      final img = asset == null
+          ? overlayImage(asset)
+          : RigPartCache.prepared[asset] ?? overlayImage(asset);
       if (img == null) continue;
       final p = Paint()
         ..filterQuality = FilterQuality.none
@@ -244,6 +280,9 @@ abstract final class CharacterVisualPainter {
         canvas.rotate(rot);
         canvas.translate(-ax, -ay);
         canvas.drawImageRect(img, src, shifted, p);
+        if (!offHand && asset.contains('/bow_')) {
+          canvas.drawImageRect(img, src, shifted.shift(const Offset(1, 0)), p);
+        }
         canvas.restore();
         continue;
       }

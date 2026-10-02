@@ -139,6 +139,11 @@ abstract final class HeroRigDraw {
     canvas.rotate(rot);
     canvas.translate(-grip.dx * image.width, -grip.dy * image.height);
     canvas.drawImage(image, ui.Offset.zero, paint);
+    // A one-pixel string vanishes under nearest rotation. A second copy,
+    // one pixel over, keeps the line in the turn. Confirmed for bows.
+    if (layer.ownedAsset!.contains('/bow_')) {
+      canvas.drawImage(image, const ui.Offset(1, 0), paint);
+    }
     canvas.restore();
   }
 

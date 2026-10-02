@@ -46,6 +46,55 @@ void main() {
     expect(open[(3 * 7 + 3) * 4 + 3], 0);
   });
 
+  test('a one-pixel line grows a second pixel and a face window stays open', () {
+    final line = Uint8List(5 * 5 * 4);
+    for (var y = 1; y <= 3; y++) {
+      final index = (y * 5 + 2) * 4;
+      line[index + 3] = 255;
+    }
+    expect(RigPartCache.thickenLines(line, 5, 5), isTrue);
+    var solid = 0;
+    for (var i = 3; i < line.length; i += 4) {
+      if (line[i] == 255) solid++;
+    }
+    expect(solid, greaterThan(3));
+
+    final open = Uint8List(7 * 7 * 4);
+    for (var y = 0; y < 7; y++) {
+      for (var x = 0; x < 7; x++) {
+        final window = x >= 2 && x <= 4 && y >= 2 && y <= 4;
+        if (window) continue;
+        open[(y * 7 + x) * 4 + 3] = 255;
+      }
+    }
+    RigPartCache.thickenLines(open, 7, 7);
+    expect(open[(3 * 7 + 3) * 4 + 3], 0);
+  });
+
+  test('a two-pixel weapon gap joins and a wide gap stays open', () {
+    final close = Uint8List(16 * 16 * 4);
+    void dot(Uint8List bytes, int x, int y) {
+      final index = (y * 16 + x) * 4;
+      bytes[index + 3] = 255;
+    }
+
+    for (var i = 0; i < 8; i++) {
+      dot(close, i, 2);
+    }
+    for (var i = 0; i < 8; i++) {
+      dot(close, 2 + i, 4);
+    }
+    expect(RigPartCache.joinGaps(close, 16, 16), isTrue);
+    expect(close[(3 * 16 + 1) * 4 + 3], 255);
+
+    final wide = Uint8List(16 * 16 * 4);
+    for (var i = 0; i < 8; i++) {
+      dot(wide, i, 0);
+      dot(wide, i, 6);
+    }
+    expect(RigPartCache.joinGaps(wide, 16, 16), isFalse);
+  });
+
   test('every part mask covers its opaque pixels and parents come first', () {
     expect(warrior.bones['torso']!.parent, 'root');
     expect(warrior.order.indexOf('root'), lessThan(warrior.order.indexOf('torso')));
