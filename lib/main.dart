@@ -480,12 +480,14 @@ class _GameHomePageState extends State<GameHomePage>
   Future<void> _confirmNewGame(
     List<HeroSpecId> specs,
     String partyName,
-    List<HeroRace> races,
-  ) async {
+    List<HeroRace> races, {
+    List<HeroSex>? sexes,
+  }) async {
     await _director.startNewGame(
       specs,
       partyName: partyName,
       partyRaces: races,
+      partySexes: sexes,
     );
     if (!mounted) return;
     _director.clearPendingStartMenu();

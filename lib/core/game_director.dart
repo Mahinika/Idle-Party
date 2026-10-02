@@ -908,6 +908,7 @@ class GameDirector extends ChangeNotifier {
     String? partyName,
     HeroRace partyRace = HeroRace.human,
     List<HeroRace>? partyRaces,
+    List<HeroSex>? partySexes,
   }) async {
     _friendEpoch++;
     final slot = (_pendingNewGameSlot ?? _activeSlot).clamp(
@@ -926,6 +927,7 @@ class GameDirector extends ChangeNotifier {
       partyName: partyName,
       partyRace: partyRace,
       partyRaces: partyRaces,
+      partySexes: partySexes,
     );
     _hasExistingSave = true;
     _noteFunnelSession(newInstall: true);

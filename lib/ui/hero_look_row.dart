@@ -5,7 +5,7 @@ import 'game_theme.dart';
 import 'hero_doll_sprite.dart';
 import 'menu_chrome.dart';
 
-/// LOOK race grid (Cataclysm 12). Sex follows the kit family (healer female).
+/// LOOK race grid (Cataclysm 12). New Party picks sex on the same tab.
 class HeroLookRow extends StatelessWidget {
   const HeroLookRow({
     super.key,
@@ -56,9 +56,9 @@ class HeroLookRow extends StatelessWidget {
                 final colW =
                     (constraints.maxWidth - gap * (columns - 1)) / columns;
                 final rows = (races.length / columns).ceil();
-                final rowH =
-                    ((constraints.maxHeight - gap * (rows - 1)) / rows)
-                        .clamp(40.0, 52.0);
+                final raw =
+                    (constraints.maxHeight - gap * (rows - 1)) / rows;
+                final rowH = raw.clamp(0.0, 120.0);
                 return Wrap(
                   spacing: gap,
                   runSpacing: gap,
@@ -136,16 +136,14 @@ class _RaceCell extends StatelessWidget {
           decoration: MenuChrome.cardBox(selected: selected, inset: true),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-            child: Column(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final dollSize = (constraints.maxHeight - 16).clamp(20.0, 96.0);
+                return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (doll != null)
-                  Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: HeroDollSprite(hero: doll!, size: 32),
-                    ),
-                  ),
+                  HeroDollSprite(hero: doll!, size: dollSize),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
@@ -160,6 +158,8 @@ class _RaceCell extends StatelessWidget {
                   ),
                 ),
               ],
+            );
+              },
             ),
           ),
         ),

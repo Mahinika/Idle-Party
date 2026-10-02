@@ -426,6 +426,19 @@ void main() {
       HeroRace.human,
     );
     expect(
+      state.heroes.firstWhere((h) => h.specId == HeroSpecId.protection).sex,
+      HeroSex.male,
+    );
+    expect(
+      state.heroes.firstWhere((h) => h.specId == HeroSpecId.discipline).sex,
+      HeroSex.female,
+    );
+    final femaleWarrior = GameLogic.createInitialState(
+      now: DateTime(2026, 9, 19),
+      partySexes: const [HeroSex.female, HeroSex.male, HeroSex.male],
+    );
+    expect(femaleWarrior.heroes.first.sex, HeroSex.female);
+    expect(
       state.heroes.firstWhere((h) => h.specId == HeroSpecId.fire).race,
       HeroRace.nightElf,
     );

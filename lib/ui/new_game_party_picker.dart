@@ -15,8 +15,8 @@ import 'menu_chrome.dart';
 
 /// Pick exactly [GameLogic.starterPartySize] unique specs for a new run.
 ///
-/// Each slot keeps its own [HeroRace]. The editor under the cards switches
-/// between **CLASS** (starter kits only) and **RACE** (Cataclysm races).
+/// Each slot keeps its own [HeroRace] and [HeroSex]. The editor under the
+/// cards switches between **CLASS** (starter kits only) and **RACE**.
 class NewGamePartyPicker extends StatefulWidget {
   const NewGamePartyPicker({
     super.key,
@@ -28,8 +28,9 @@ class NewGamePartyPicker extends StatefulWidget {
   final void Function(
     List<HeroSpecId> specs,
     String partyName,
-    List<HeroRace> races,
-  )
+    List<HeroRace> races, {
+    List<HeroSex>? sexes,
+  })
   onConfirm;
   final VoidCallback onBack;
   final List<HeroSpecId>? initialSpecs;
@@ -49,6 +50,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   bool _nameError = false;
   String? _pickHint;
   late final List<HeroRace> _looks;
+  late final List<HeroSex> _sexes;
 
   @override
   void initState() {
@@ -59,8 +61,13 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       GameLogic.starterPartySize,
       HeroRace.human,
     );
+    _sexes = List<HeroSex>.filled(
+      GameLogic.starterPartySize,
+      HeroSex.male,
+    );
     for (var i = 0; i < _slots.length && i < seed.length; i++) {
       _slots[i] = seed[i];
+      _sexes[i] = HeroSex.defaultFor(HeroSpecs.def(seed[i]).gearAffinity);
     }
     _filter = _classForSlot(0);
     _nameCtrl = TextEditingController();
@@ -121,7 +128,12 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       );
       if (ok != true || !mounted) return;
     }
-    widget.onConfirm([for (final s in _slots) s!], name, List.of(_looks));
+    widget.onConfirm(
+      [for (final s in _slots) s!],
+      name,
+      List.of(_looks),
+      sexes: List.of(_sexes),
+    );
   }
 
   bool get _ready =>
@@ -191,6 +203,9 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     setState(() {
       _pickHint = null;
       _slots[_activeSlot] = id;
+      _sexes[_activeSlot] = HeroSex.defaultFor(
+        HeroSpecs.def(id).gearAffinity,
+      );
       final next = _nextEmptySlot(after: _activeSlot);
       if (next != null) {
         _activeSlot = next;
@@ -203,11 +218,13 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
 
   PartyHero _previewHero(HeroSpecId specId, HeroRace race, {int? slot}) {
     final def = HeroSpecs.def(specId);
+    final index = slot ?? _activeSlot;
     return PartyHero.starting(
       name: def.defaultName,
       specId: specId,
       race: race,
-      id: 'new_party_${slot ?? _activeSlot}_${specId.name}',
+      sex: _sexes[index],
+      id: 'new_party_${index}_${specId.name}_${_sexes[index].name}',
       // Same stack as after START — bare undertunic alone looks like a stick.
       equipped: StarterGear.forSpec(specId),
     );
@@ -355,20 +372,49 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   decoration: MenuChrome.panel(opaque: true),
                   child: _tab == _PartyEditTab.raceTab
                       ? Padding(
-                          padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
-                          child: HeroLookRow(
-                            value: _looks[_activeSlot],
-                            compact: true,
-                            title: 'RACE',
-                            columns: 4,
-                            dollFor: (race) => _previewHero(
-                              _slots[_activeSlot] ??
-                                  HeroSpecs.starterUnlocked.first,
-                              race,
-                            ),
-                            onChanged: (race) => setState(
-                              () => _looks[_activeSlot] = race,
-                            ),
+                          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  for (final sex in HeroSex.values)
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        child: GameButton(
+                                          label: sex.name.toUpperCase(),
+                                          dense: true,
+                                          style: _sexes[_activeSlot] == sex
+                                              ? GameButtonStyle.brown
+                                              : GameButtonStyle.grey,
+                                          onPressed: () => setState(
+                                            () => _sexes[_activeSlot] = sex,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Expanded(
+                                child: HeroLookRow(
+                                  value: _looks[_activeSlot],
+                                  compact: true,
+                                  title: 'RACE',
+                                  columns: 4,
+                                  dollFor: (race) => _previewHero(
+                                    _slots[_activeSlot] ??
+                                        HeroSpecs.starterUnlocked.first,
+                                    race,
+                                  ),
+                                  onChanged: (race) => setState(
+                                    () => _looks[_activeSlot] = race,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         )
                       : Column(

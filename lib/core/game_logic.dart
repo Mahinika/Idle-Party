@@ -111,6 +111,7 @@ class GameLogic {
     String? partyName,
     HeroRace partyRace = HeroRace.human,
     List<HeroRace>? partyRaces,
+    List<HeroSex>? partySexes,
   }) {
     final timestamp = now ?? DateTime.now();
     final layoutSeed = newLayoutSeed();
@@ -123,6 +124,7 @@ class GameLogic {
     final firstRoom = floor.first;
     final specs = _normalizeStarterSpecs(partySpecs);
     final races = _normalizeStarterRaces(partyRaces, specs.length, partyRace);
+    final sexes = _normalizeStarterSexes(partySexes, specs);
     final roster = <PartyHero>[
       for (var i = 0; i < specs.length; i++)
         PartyHero.starting(
@@ -131,6 +133,7 @@ class GameLogic {
           stats: PartyHero.startingStatsForSpec(specs[i]),
           equipped: StarterGear.forSpec(specs[i]),
           race: races[i],
+          sex: sexes[i],
         ),
     ];
     var state = GameState(
@@ -225,6 +228,18 @@ class GameLogic {
         i < partyRaces.length ? partyRaces[i] : fallback,
     ];
     return out;
+  }
+
+  /// Parallel sexes for New Game. A missing entry keeps the kit default
+  /// (healer female, every other family male).
+  static List<HeroSex?> _normalizeStarterSexes(
+    List<HeroSex>? partySexes,
+    List<HeroSpecId> specs,
+  ) {
+    return [
+      for (var i = 0; i < specs.length; i++)
+        partySexes != null && i < partySexes.length ? partySexes[i] : null,
+    ];
   }
 
   /// New Game path: only [HeroSpecs.starterUnlocked] may be chosen.

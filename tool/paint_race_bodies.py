@@ -105,7 +105,7 @@ RACES: tuple[RaceLook, ...] = (
         (220, 96, 160),
         (250, 248, 240),
         ears=True,
-        ear_length=7,
+        ear_length=14,
     ),
     RaceLook(
         "draenei",
@@ -333,6 +333,7 @@ def apply_race_on_labels(
 def _paint_features(op, clf, look: RaceLook, *, female: bool, skin: tuple[int, int, int]) -> None:
     fx, fy, face_half, chin = clf.fx, clf.fy, clf.face_half, clf.chin_y
     occupied = {(x, y) for y in range(128) for x in range(128) if op[x, y][3] > 16}
+    hat = clf.family in ("mage", "healer")
     if look.ears:
         _paint_ears(
             op,
@@ -344,14 +345,15 @@ def _paint_features(op, clf, look: RaceLook, *, female: bool, skin: tuple[int, i
             skin=skin,
             occupied=occupied,
             length=look.ear_length if not female else max(6, look.ear_length - 2),
-            soft_edge=clf.family in ("mage", "healer"),
+            soft_edge=hat,
+            hat=hat,
         )
     if look.tusks:
         _paint_tusks(op, fx, fy, face_half, chin, skin)
     if look.horns_up:
-        _paint_horns_up(op, fx, fy, face_half)
+        _paint_horns_up(op, fx, fy, face_half, hat=hat)
     if look.horns_side:
-        _paint_horns_side(op, fx, fy, face_half)
+        _paint_horns_side(op, fx, fy, face_half, hat=hat)
     if look.beard:
         _paint_beard(op, fx, face_half, chin, look.hair_m if not female else look.hair_f)
     if look.fur:
@@ -373,9 +375,12 @@ def _paint_ears(
     occupied: set[tuple[int, int]],
     length: int,
     soft_edge: bool,
+    hat: bool,
 ) -> None:
-    width = 3.0 if female else 4.2
-    lift = max(5, length - 4)
+    # Thick enough to survive the party chip. Hats cover the crown, so ears
+    # stay at the cheek. Plate helms leave the sides open.
+    width = 3.6 if female else 4.4
+    lift = 0 if hat else 3
     # Anchor on the cheek. Far pixels are leftover hood specks, not the face.
     left_edge = int(fx)
     right_edge = int(fx)
@@ -391,8 +396,8 @@ def _paint_ears(
     for side in (-1, 1):
         ax = (left_edge - 1) if side < 0 else (right_edge + 1)
         ay = fy - 2.0
-        tx = ax + side * (length + 10)
-        ty = ay - lift
+        tx = ax + side * (length + 6)
+        ty = ay + (2 if hat else -lift)
         steps = max(8, int(length + 6))
         for i in range(steps + 1):
             t = i / steps
@@ -439,38 +444,40 @@ def _paint_tusks(op, fx, fy, face_half, chin, skin) -> None:
             _stamp(op, cx, cy, 1.7 - t * 0.6, shade_from(skin, ivory, strength=0.35))
 
 
-def _paint_horns_up(op, fx, fy, face_half) -> None:
-    """Flare past the closed helm. The crown of the canvas is already plate."""
+def _paint_horns_up(op, fx, fy, face_half, *, hat: bool) -> None:
+    """Flare past the helm. A wide hat covers anything above the cheek."""
     bone = (220, 214, 198)
     for side in (-1, 1):
-        ax = fx + side * (face_half * 0.85)
-        ay = fy - 4
-        for i in range(10):
-            t = i / 9
-            cx = ax + side * (3 + t * 20)
-            cy = ay - t * 5
-            _stamp(op, cx, cy, 2.1 - t * 1.0, bone)
+        ax = fx + side * (face_half * 0.8)
+        ay = fy - (0 if hat else 2)
+        for i in range(12):
+            t = i / 11
+            cx = ax + side * (3 + t * 16)
+            cy = ay + (2 if hat else -t * 6)
+            _stamp(op, cx, cy, 2.7 - t * 1.0, bone)
 
 
-def _paint_horns_side(op, fx, fy, face_half) -> None:
+def _paint_horns_side(op, fx, fy, face_half, *, hat: bool) -> None:
     bone = (210, 190, 150)
     for side in (-1, 1):
-        ax = fx + side * (face_half * 0.7)
-        ay = fy - 1
-        for i in range(11):
-            t = i / 10
-            cx = ax + side * (4 + t * 22)
-            cy = ay - t * 2
-            _stamp(op, cx, cy, 2.4 - t * 1.1, bone)
+        ax = fx + side * (face_half * 0.65)
+        ay = fy - (0 if hat else 1)
+        for i in range(12):
+            t = i / 11
+            cx = ax + side * (3 + t * 18)
+            cy = ay + (3 if hat else -t * 2)
+            _stamp(op, cx, cy, 2.9 - t * 1.1, bone)
 
 
 def _paint_beard(op, fx, face_half, chin, hair: tuple[int, int, int]) -> None:
-    """Chin beard in the helm's face window."""
-    for i in range(7):
-        t = i / 6
-        cy = chin - 1 + t * 4
-        half = face_half * (0.62 - t * 0.22)
-        _stamp(op, fx, cy, half * 0.45, hair)
+    """Chin beard in the helm's face window, wide enough for the party chip."""
+    for i in range(6):
+        t = i / 5
+        cy = chin - 2 + t * 6
+        half = face_half * (0.55 - t * 0.15)
+        _stamp(op, fx - half, cy, 2.6, hair)
+        _stamp(op, fx, cy, 3.0, hair)
+        _stamp(op, fx + half, cy, 2.6, hair)
 
 
 def _paint_muzzle(op, fx, face_half, chin, skin: tuple[int, int, int]) -> None:

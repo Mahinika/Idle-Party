@@ -409,7 +409,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: NewGamePartyPicker(
-          onConfirm: (_, _, _) => started = true,
+          onConfirm: (_, _, _, {sexes}) => started = true,
           onBack: () {},
         ),
       ),
@@ -434,7 +434,7 @@ void main() {
         MaterialApp(
           home: NewGamePartyPicker(
             initialSpecs: const [],
-            onConfirm: (_, _, _) {},
+            onConfirm: (_, _, _, {sexes}) {},
             onBack: () {},
           ),
         ),
