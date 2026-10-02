@@ -68,8 +68,10 @@ Track closed testers who **install from Play** and stay opted in:
 From `docs/STORE_LISTING.md` — use when Console asks for release notes:
 
 ```
-• Heroes step when they walk and run. The weapon stays in the hand.
-• Mages and healers take a shorter step so the robe stays down.
+• Heroes move their arms and legs. A walk lifts a foot and swings the opposite arm.
+• Armor reads as mail, leather, or holy plate. Weapons sit in the hand.
+• Shots and swings stop at walls. The party no longer sticks on corners.
+• The hub shows how many bosses are left until the next Ascend.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys

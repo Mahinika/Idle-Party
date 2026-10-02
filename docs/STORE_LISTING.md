@@ -126,8 +126,10 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 Live Production: **1.12.192 (222)** (`completed` on the API, **2026-10-01**). Next candidate **1.12.193+223** is local only, not uploaded. Notes for that build:
 
 ```
-• Heroes step when they walk and run. The weapon stays in the hand.
-• Mages and healers take a shorter step so the robe stays down.
+• Heroes move their arms and legs. A walk lifts a foot and swings the opposite arm.
+• Armor reads as mail, leather, or holy plate. Weapons sit in the hand.
+• Shots and swings stop at walls. The party no longer sticks on corners.
+• The hub shows how many bosses are left until the next Ascend.
 ```
 
 ### Full description honesty (SHOP)
