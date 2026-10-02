@@ -336,8 +336,8 @@ abstract final class CustomAssets {
   };
 
   /// Specs with authored unique PNGs (order matches [uniqueHeroSpecPaths]).
+  /// Shadow uses the priest paper doll with a purple cloth tint.
   static const List<HeroSpecId> uniqueHeroSpecs = [
-    HeroSpecId.shadow,
     HeroSpecId.feral,
     HeroSpecId.guardian,
     HeroSpecId.balance,
@@ -346,7 +346,6 @@ abstract final class CustomAssets {
 
   /// Spec-unique bodies when present; else class body ([HeroIdentity] tint).
   static String heroForSpec(HeroSpecId specId) => switch (specId) {
-    HeroSpecId.shadow => heroShadow,
     HeroSpecId.feral => heroFeral,
     HeroSpecId.guardian => heroGuardian,
     HeroSpecId.balance => heroMoonkin,
@@ -355,7 +354,6 @@ abstract final class CustomAssets {
   };
 
   static bool hasUniqueHeroSprite(HeroSpecId specId) => switch (specId) {
-    HeroSpecId.shadow ||
     HeroSpecId.feral ||
     HeroSpecId.guardian ||
     HeroSpecId.balance ||

@@ -57,8 +57,9 @@ abstract final class HeroIdentity {
       // Druid (feral/guardian/balance/resto use unique form sprites — tint skipped)
       HeroSpecId.balance => 0xFFE0C060,
       HeroSpecId.restorationDruid => 0xFF90E090,
+      HeroSpecId.shadow => 0xFFB070E8,
       // Unique-sprite specs listed for exhaustiveness; early return above.
-      HeroSpecId.shadow || HeroSpecId.feral || HeroSpecId.guardian => null,
+      HeroSpecId.feral || HeroSpecId.guardian => null,
     };
   }
 

@@ -24,6 +24,24 @@ void main() {
     );
   });
 
+  test('shadow uses the priest body, not the mage body', () {
+    final shadow = PartyHero.starting(
+      name: 'S',
+      specId: HeroSpecId.shadow,
+      stats: PartyHero.startingStatsForSpec(HeroSpecId.shadow),
+    );
+    final disc = PartyHero.starting(
+      name: 'D',
+      specId: HeroSpecId.discipline,
+      stats: PartyHero.startingStatsForSpec(HeroSpecId.discipline),
+    );
+    expect(BodyFamilyCatalog.familyFor(shadow), BodyFamily.healer);
+    expect(
+      BodyFamilyCatalog.familyFor(shadow),
+      BodyFamilyCatalog.familyFor(disc),
+    );
+  });
+
   test('all families expose walk and attack clips', () {
     final mage = PartyHero.starting(
       name: 'M',

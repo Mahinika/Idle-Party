@@ -283,7 +283,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
           signals,
           walkPhase: walkPhase,
         );
-        // Unique form PNG (Druid forms / Shadow) → owned paper-doll → class PNG.
+        // Unique form PNG (Druid forms) → owned paper-doll → class PNG.
+        // Shadow is the priest doll with a purple cloth tint.
         final useFormSprite =
             CustomAssets.hasUniqueHeroSprite(partyHero.specId);
         final formImg =

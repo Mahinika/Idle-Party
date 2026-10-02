@@ -213,8 +213,12 @@ void main() {
     );
   });
 
-  test('Shadow Feral Guardian Balance Resto have unique hero sprites', () {
-    expect(CustomAssets.heroForSpec(HeroSpecId.shadow), CustomAssets.heroShadow);
+  test('Feral Guardian Balance Resto have unique hero sprites', () {
+    expect(CustomAssets.hasUniqueHeroSprite(HeroSpecId.shadow), isFalse);
+    expect(
+      CustomAssets.heroForSpec(HeroSpecId.shadow),
+      CustomAssets.heroHealer,
+    );
     expect(CustomAssets.heroForSpec(HeroSpecId.feral), CustomAssets.heroFeral);
     expect(
       CustomAssets.heroForSpec(HeroSpecId.guardian),

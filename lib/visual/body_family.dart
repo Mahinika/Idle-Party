@@ -1,4 +1,5 @@
 import '../models/hero.dart';
+import '../models/hero_spec.dart';
 import 'hero_anim_state.dart';
 
 /// Owned denser body families (Phase 3). Maps gear affinity → atlas folder.
@@ -60,8 +61,11 @@ class BodyFamilyDef {
 
 /// Resolves [PartyHero] → owned denser body family + asset paths.
 abstract final class BodyFamilyCatalog {
-  static BodyFamily familyFor(PartyHero hero) =>
-      familyForAffinity(hero.gearAffinity.name);
+  static BodyFamily familyFor(PartyHero hero) {
+    // Shadow keeps caster loot, but the doll is the priest body in purple.
+    if (hero.specId == HeroSpecId.shadow) return BodyFamily.healer;
+    return familyForAffinity(hero.gearAffinity.name);
+  }
 
   static BodyFamily familyForAffinity(String? affinity) => switch (affinity) {
     'healer' => BodyFamily.healer,

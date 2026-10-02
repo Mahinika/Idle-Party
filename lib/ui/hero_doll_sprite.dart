@@ -16,8 +16,9 @@ import 'kenney_sprite.dart';
 
 /// GEAR / party HUD: owned body + same 128×128 gear overlays as dungeon.
 ///
-/// Specs with [CustomAssets.hasUniqueHeroSprite] (Druid forms, Shadow) draw
-/// the form PNG only — no undertunic or gear overlays.
+/// Specs with [CustomAssets.hasUniqueHeroSprite] (Druid forms) draw
+/// the form PNG only — no undertunic or gear overlays. Shadow uses the
+/// priest paper doll with a purple cloth tint.
 class HeroDollSprite extends StatefulWidget {
   const HeroDollSprite({
     super.key,
