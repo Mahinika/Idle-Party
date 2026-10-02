@@ -1385,7 +1385,147 @@ def cover_tinted_body() -> int:
                     if did:
                         images[slot].save(paths[slot])
                         n += 1
+        n += _cover_native_gaps(family, bp, tp)
     return n
+
+
+def _cover_native_gaps(
+    family: str,
+    bp,
+    tp,
+) -> int:
+    """Close spec-colored holes in the family's own t0 and t2.
+
+    Short and broad stay as drawn. A new pixel copies the armor beside
+    it. Hands, helms, and shoulders are not rewritten.
+    """
+    from paper_doll_manifest import NATIVE_MATERIAL
+
+    front = ("chest", "legs", "shoulder", "hands", "helm")
+    write_on = ("chest", "legs")
+    gear = ROOT / family / "gear"
+    material = NATIVE_MATERIAL[family]
+    n = 0
+    for cut in ("t0", "t2"):
+        paths = {}
+        images = {}
+        for slot in front:
+            path = gear / f"{slot}_{cut}_idle.png"
+            if path.exists():
+                paths[slot] = path
+                images[slot] = Image.open(path).convert("RGBA")
+        if "chest" not in images and "legs" not in images:
+            continue
+        px = {slot: im.load() for slot, im in images.items()}
+        orig: list[list[tuple[str, tuple[int, int, int]] | None]] = [
+            [None] * 128 for _ in range(128)
+        ]
+        for slot, layer in px.items():
+            for y in range(128):
+                for x in range(128):
+                    if layer[x, y][3] >= 40:
+                        orig[y][x] = (slot, layer[x, y][:3])
+        chest_box = images["chest"].getbbox() if "chest" in images else None
+        split = chest_box[3] - 4 if chest_box else 80
+        legs_top = images["legs"].getbbox()[1] if "legs" in images else split
+        changed = {slot: False for slot in images}
+        for y in range(128):
+            for x in range(128):
+                if tp[x, y][3] < 40 or bp[x, y][3] < 40 or orig[y][x] is not None:
+                    continue
+                hit = _nearest_armor(orig, x, y, write_on)
+                if hit is None:
+                    slot = "legs" if y >= legs_top and "legs" in images else "chest"
+                    rgb = cover_color(material, x, y)
+                else:
+                    slot, rgb = hit
+                    if slot not in write_on or slot not in images:
+                        slot = "legs" if y >= split and "legs" in images else "chest"
+                    if slot == "legs" and y < legs_top and "chest" in images:
+                        slot = "chest"
+                if slot not in images:
+                    slot = "legs" if "legs" in images else "chest"
+                px[slot][x, y] = (*rgb, 255)
+                changed[slot] = True
+        for slot, did in changed.items():
+            if did and slot in write_on:
+                images[slot].save(paths[slot])
+                n += 1
+    for slot in write_on:
+        t0 = gear / f"{slot}_t0_idle.png"
+        t2 = gear / f"{slot}_t2_idle.png"
+        if t0.exists() and t2.exists() and _lengthen_late_cut(t0, t2):
+            n += 1
+    return n
+
+
+def _nearest_armor(
+    orig: list[list[tuple[str, tuple[int, int, int]] | None]],
+    x: int,
+    y: int,
+    write_on: tuple[str, ...],
+) -> tuple[str, tuple[int, int, int]] | None:
+    """Nearest chest or legs pixel on the same row or column."""
+    for dist in range(1, 28):
+        found: list[tuple[str, tuple[int, int, int]]] = []
+        for nx, ny in ((x - dist, y), (x + dist, y), (x, y - dist), (x, y + dist)):
+            if nx < 0 or ny < 0 or nx >= 128 or ny >= 128:
+                continue
+            hit = orig[ny][nx]
+            if hit is not None:
+                found.append(hit)
+        if not found:
+            continue
+        for hit in found:
+            if hit[0] in write_on:
+                return hit
+        return found[0]
+    return None
+
+
+def _lengthen_late_cut(t0_path: Path, t2_path: Path) -> bool:
+    """Drop the late hem a couple of pixels when the two cuts squint the same.
+
+    Filling the plain cut can erase the only difference that still showed
+    at bag size. The extra rows copy the pixel above them.
+    """
+    from facit.armor import _thumb
+    from facit.checks_v1 import squint_silhouette_diff
+    from gear_style import BAG_ICON_PX, DUNGEON_HERO_PX, MIN_READ_DIFF
+
+    t0 = Image.open(t0_path).convert("RGBA")
+    t2 = Image.open(t2_path).convert("RGBA")
+
+    def readable(late: Image.Image) -> bool:
+        for size in (BAG_ICON_PX, DUNGEON_HERO_PX):
+            diff = squint_silhouette_diff(_thumb(t0, size), _thumb(late, size), size)
+            if diff < MIN_READ_DIFF + 0.015:
+                return False
+        return True
+
+    if readable(t2):
+        return False
+    px = t2.load()
+    changed = False
+    for _ in range(3):
+        add: list[tuple[int, int, tuple[int, int, int]]] = []
+        for y in range(1, 127):
+            for x in range(1, 127):
+                if px[x, y][3] >= 40:
+                    continue
+                up = px[x, y - 1]
+                if up[3] >= 40:
+                    add.append((x, y, up[:3]))
+        if not add:
+            break
+        for x, y, rgb in add:
+            px[x, y] = (*rgb, 255)
+        changed = True
+        if readable(t2):
+            break
+    if changed:
+        t2.save(t2_path)
+    return changed
 
 
 def lift_flat_pieces() -> int:
