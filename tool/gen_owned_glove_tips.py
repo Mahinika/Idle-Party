@@ -61,7 +61,7 @@ def _islands(pts: list[tuple[int, int]]) -> list[list[tuple[int, int]]]:
 
 
 def _rim(
-    pts: list[tuple[int, int]], outward: int, fist_y: float
+    pts: list[tuple[int, int]], outward: int, fist_y: float, *, palm: bool
 ) -> tuple[float, float] | None:
     if not pts:
         return None
@@ -72,8 +72,21 @@ def _rim(
     else:
         edge = min(x for x, _y in island)
         rim = [(x, y) for x, y in island if x <= edge + (RIM - 1)]
-    # The plate rim is taller than the palm. Hold at the palm's height
-    # when that row reaches the outer edge.
+    # A tall plate gauntlet is widest above the palm. Hold on the palm
+    # row, a few pixels in from that row's edge, so the haft crosses the
+    # hand instead of clearing the glove.
+    if palm:
+        row = [p for p in island if abs(p[1] + 0.5 - fist_y) <= 2]
+        if row:
+            if outward > 0:
+                edge = max(x for x, _y in row)
+                hold = edge - 6
+            else:
+                edge = min(x for x, _y in row)
+                hold = edge + 6
+            band = [y for x, y in row if abs(x - edge) <= 2]
+            cy = (sum(band) / len(band) + 0.5) if band else fist_y
+            return float(hold) + 0.5, cy
     near = [p for p in rim if abs(p[1] + 0.5 - fist_y) <= 6]
     if near:
         cx = sum(x + 0.5 for x, _y in near) / len(near)
@@ -117,10 +130,12 @@ def _hands() -> list[tuple[str, tuple[float, float], tuple[float, float]]]:
                     else:
                         left.append((x, y))
             main = _shift(
-                _rim(right, 1, 64 + main_fist[1] * 128), main_fist
+                _rim(right, 1, 64 + main_fist[1] * 128, palm=family == "warrior"),
+                main_fist,
             )
             off = _shift(
-                _rim(left, -1, 64 + off_fist[1] * 128), off_fist
+                _rim(left, -1, 64 + off_fist[1] * 128, palm=family == "warrior"),
+                off_fist,
             )
             if main == (0.0, 0.0) and off == (0.0, 0.0):
                 continue
