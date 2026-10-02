@@ -42,15 +42,69 @@ abstract final class RigPartCache {
     required String cacheKey,
     double cropTop = 0,
     double cropBottom = 1,
+    bool seal = false,
   }) {
     final hit = _ready[cacheKey];
     if (hit != null) return Future.value(hit);
     return _pending.putIfAbsent(cacheKey, () async {
-      final atlas = await _build(image, rig, cropTop, cropBottom);
+      final source = seal ? await solidImage(image) : image;
+      final atlas = await _build(source, rig, cropTop, cropBottom);
       _ready[cacheKey] = atlas;
       _pending.remove(cacheKey);
       return atlas;
     });
+  }
+
+  /// A one-pixel hole in the plate fills in.
+  ///
+  /// Returns [image] when nothing changed. A face window stays open: a clear
+  /// pixel is filled only when three neighbors on the cross are already solid.
+  static Future<ui.Image> solidImage(ui.Image image) async {
+    final raw = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (raw == null) return image;
+    final bytes = Uint8List.fromList(raw.buffer.asUint8List());
+    if (!sealBytes(bytes, image.width, image.height)) return image;
+    return _image(bytes, image.width, image.height);
+  }
+
+  /// True when [bytes] changed. [bytes] is tightly packed RGBA.
+  static bool sealBytes(Uint8List bytes, int width, int height) {
+    var changed = false;
+    for (var pass = 0; pass < 4; pass++) {
+      final prior = Uint8List.fromList(bytes);
+      var step = false;
+      for (var y = 1; y < height - 1; y++) {
+        for (var x = 1; x < width - 1; x++) {
+          final index = (y * width + x) * 4;
+          if (prior[index + 3] > 40) continue;
+          final cols = <int>[];
+          for (final next in [
+            index - 4,
+            index + 4,
+            index - width * 4,
+            index + width * 4,
+          ]) {
+            if (prior[next + 3] <= 40) continue;
+            cols.add(next);
+          }
+          if (cols.length < 3) continue;
+          cols.sort((a, b) {
+            final left = prior[a] + prior[a + 1] + prior[a + 2];
+            final right = prior[b] + prior[b + 1] + prior[b + 2];
+            return left.compareTo(right);
+          });
+          final pick = cols[cols.length ~/ 2];
+          bytes[index] = prior[pick];
+          bytes[index + 1] = prior[pick + 1];
+          bytes[index + 2] = prior[pick + 2];
+          bytes[index + 3] = 255;
+          step = true;
+        }
+      }
+      if (!step) break;
+      changed = true;
+    }
+    return changed;
   }
 
   static Future<RigAtlas> _build(

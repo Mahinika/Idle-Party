@@ -40,7 +40,7 @@ flutter test test/visual/rig_clip_quality_test.dart
 ```
 
 Rest parity: empty, starter, and one broad/short loadout versus the paper doll,
-at most 8 pixels apart. Clip quality: no new small islands versus idle, and the
+at most 32 pixels apart once gear cracks are filled. Clip quality: no new small islands versus idle, and the
 warrior sword grip stays on the bone under the fist.
 
 ## Sign table

@@ -21,6 +21,7 @@ abstract final class HeroRigPainter {
 
   static final Map<String, ui.Image> _frames = {};
   static final Map<String, String> _equip = {};
+  static final Map<String, ui.Image> _solid = {};
   static final List<Future<void>> _strips = [];
 
   /// Race idle when that clip is loaded, otherwise the family idle.
@@ -139,19 +140,33 @@ abstract final class HeroRigPainter {
       final path = layer.ownedAsset;
       final image = path == null ? null : images[path];
       if (path == null || image == null) continue;
+      final solid = await _solidOf(path, image);
       if (_weapon(layer) || layer.id == CharacterLayerId.cape) continue;
       await _atlas(
         rig,
-        image,
+        solid,
         RigPartCache.key(path, rig.family, layer.cropTop, 1),
         cropTop: layer.cropTop,
       );
       final dyePath = layer.dyeMaskAsset;
       final dye = dyePath == null ? null : images[dyePath];
       if (dyePath != null && dye != null) {
-        await _atlas(rig, dye, RigPartCache.key(dyePath, rig.family, 0, 1));
+        final solidDye = await _solidOf(dyePath, dye);
+        await _atlas(
+          rig,
+          solidDye,
+          RigPartCache.key(dyePath, rig.family, 0, 1),
+        );
       }
     }
+  }
+
+  /// Gear with soft edges or a one-pixel hole, keyed by asset path.
+  static Future<ui.Image> _solidOf(String path, ui.Image image) async {
+    final hit = _solid[path];
+    if (hit != null) return hit;
+    final sealed = await RigPartCache.solidImage(image);
+    return _solid[path] ??= sealed;
   }
 
   static bool ready({
@@ -306,8 +321,9 @@ abstract final class HeroRigPainter {
     final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (data == null || _frames[key] != image) return;
     final bytes = data.buffer.asUint8List();
+    final closed = _closeCracks(bytes, source);
     final kill = _slivers(bytes, source);
-    if (kill.isEmpty) return;
+    if (!closed && kill.isEmpty) return;
     for (final index in kill) {
       bytes[index * 4 + 3] = 0;
     }
@@ -329,6 +345,44 @@ abstract final class HeroRigPainter {
       done.complete,
     );
     return done.future;
+  }
+
+  /// Fills a one-pixel crack a rotation leaves inside the plate.
+  ///
+  /// A clear pixel is filled only when three neighbors on the cross are
+  /// already solid, so the gap between an arm and the chest stays open.
+  static bool _closeCracks(Uint8List bytes, int size) {
+    var changed = false;
+    for (var pass = 0; pass < 2; pass++) {
+      final prior = Uint8List.fromList(bytes);
+      var step = false;
+      for (var y = 1; y < size - 1; y++) {
+        for (var x = 1; x < size - 1; x++) {
+          final index = (y * size + x) * 4;
+          if (prior[index + 3] > 40) continue;
+          final cols = <int>[];
+          for (final next in [index - 4, index + 4, index - size * 4, index + size * 4]) {
+            if (prior[next + 3] <= 40) continue;
+            cols.add(next);
+          }
+          if (cols.length < 3) continue;
+          cols.sort((a, b) {
+            final la = prior[a] + prior[a + 1] + prior[a + 2];
+            final lb = prior[b] + prior[b + 1] + prior[b + 2];
+            return la.compareTo(lb);
+          });
+          final pick = cols[cols.length ~/ 2];
+          bytes[index] = prior[pick];
+          bytes[index + 1] = prior[pick + 1];
+          bytes[index + 2] = prior[pick + 2];
+          bytes[index + 3] = 255;
+          step = true;
+        }
+      }
+      if (!step) break;
+      changed = true;
+    }
+    return changed;
   }
 
   /// Connected specks a rotation leaves behind. The plate itself is never this small.
@@ -395,7 +449,7 @@ abstract final class HeroRigPainter {
           );
     for (final layer in pose.orderedLayers()) {
       if (layer.id != CharacterLayerId.cape) continue;
-      final image = images[layer.ownedAsset];
+      final image = _gearImage(layer.ownedAsset, images);
       if (image == null) continue;
       HeroRigDraw.rigid(
         canvas,
@@ -435,10 +489,15 @@ abstract final class HeroRigPainter {
     }
     for (final layer in pose.orderedLayers()) {
       if (!HeroRigDraw.isWeapon(layer)) continue;
-      final image = images[layer.ownedAsset];
+      final image = _gearImage(layer.ownedAsset, images);
       if (image == null || layer.ownedAsset == null) continue;
       HeroRigDraw.weapon(canvas, image, layer, rig, world, rigPose, pose);
     }
+  }
+
+  static ui.Image? _gearImage(String? path, Map<String, ui.Image> images) {
+    if (path == null) return null;
+    return _solid[path] ?? images[path];
   }
 
   static bool _weapon(ResolvedLayer layer) =>

@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
 import 'package:idle_party/visual/rig/rig_clips.dart';
 import 'package:idle_party/visual/rig/rig_data.dart';
+import 'package:idle_party/visual/rig/rig_part_cache.dart';
 import 'package:idle_party/visual/rig/rig_pose.dart';
 import 'package:idle_party/visual/rig/rig_sampler.dart';
 
@@ -14,6 +16,34 @@ void main() {
   setUpAll(() {
     final raw = File('assets/custom/rig/warrior.json').readAsStringSync();
     warrior = RigData.parse('warrior', jsonDecode(raw) as Map<String, dynamic>);
+  });
+
+  test('a one-pixel hole in gear fills and a face window stays open', () {
+    final bytes = Uint8List(5 * 5 * 4);
+    for (var y = 0; y < 5; y++) {
+      for (var x = 0; x < 5; x++) {
+        final index = (y * 5 + x) * 4;
+        final hole = x == 2 && y == 2;
+        if (hole) continue;
+        bytes[index] = 40;
+        bytes[index + 1] = 44;
+        bytes[index + 2] = 48;
+        bytes[index + 3] = 255;
+      }
+    }
+    expect(RigPartCache.sealBytes(bytes, 5, 5), isTrue);
+    expect(bytes[(2 * 5 + 2) * 4 + 3], 255);
+    final open = Uint8List(7 * 7 * 4);
+    for (var y = 0; y < 7; y++) {
+      for (var x = 0; x < 7; x++) {
+        final index = (y * 7 + x) * 4;
+        final window = x >= 2 && x <= 4 && y >= 2 && y <= 4;
+        if (window) continue;
+        open[index + 3] = 255;
+      }
+    }
+    expect(RigPartCache.sealBytes(open, 7, 7), isFalse);
+    expect(open[(3 * 7 + 3) * 4 + 3], 0);
   });
 
   test('every part mask covers its opaque pixels and parents come first', () {

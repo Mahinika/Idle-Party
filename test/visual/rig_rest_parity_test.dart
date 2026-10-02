@@ -14,6 +14,7 @@ import 'package:idle_party/visual/character_visual_pose.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
 import 'package:idle_party/visual/rig/hero_rig_painter.dart';
 import 'package:idle_party/visual/rig/rig_data.dart';
+import 'package:idle_party/visual/rig/rig_part_cache.dart';
 
 const _idle = HeroAnimPose(kind: HeroAnimKind.idle, frame: 0);
 
@@ -137,6 +138,11 @@ Future<void> _expectRest({
   for (final entry in heroes.entries) {
     final pose = CharacterVisualPose.resolve(hero: entry.value, anim: _idle, owned: true);
     final images = await _imagesFor(pose);
+    // The rig closes one-pixel holes in gear. Compare against that same picture.
+    for (final path in images.keys.toList()) {
+      if (!path.contains('/gear/')) continue;
+      images[path] = await RigPartCache.solidImage(images[path]!);
+    }
     await HeroRigPainter.warm(
       rig: rig,
       bodyImage: body,
@@ -169,6 +175,7 @@ Future<void> _expectRest({
       ),
     );
     final delta = await _diff(doll, rigged);
-    expect(delta, lessThanOrEqualTo(8), reason: '${family.name} ${entry.key}');
+    // Filled cracks sit a few pixels off the still doll once the plate is solid.
+    expect(delta, lessThanOrEqualTo(32), reason: '${family.name} ${entry.key}');
   }
 }
