@@ -22,6 +22,48 @@ abstract final class HeroRigPainter {
   static final Map<String, String> _equip = {};
   static final List<Future<void>> _strips = [];
 
+  /// Race idle when that clip is loaded, otherwise the family idle.
+  ///
+  /// The bone map is the idle pose. A walk frame must not be cut with it,
+  /// and the family human clip must not replace a chosen race.
+  static String? pickRigBody({
+    required String? raceIdle,
+    required String? familyIdle,
+    required bool Function(String path) loaded,
+  }) {
+    if (raceIdle != null && loaded(raceIdle)) return raceIdle;
+    if (familyIdle != null && loaded(familyIdle)) return familyIdle;
+    return null;
+  }
+
+  static String? rigBodyKey(
+    CharacterVisualPose pose,
+    Map<String, ui.Image> images,
+  ) {
+    final family = pose.bodyFamily;
+    return pickRigBody(
+      raceIdle: pose.bodyIdleAsset,
+      familyIdle: family == null
+          ? null
+          : BodyFamilyCatalog.catalog[family]?.idleAsset,
+      loaded: images.containsKey,
+    );
+  }
+
+  /// Idle cloth mask for [bodyKey] when it is loaded. Spec color then stays
+  /// on the same clip the bones were cut from.
+  static String? tintForRigBody(
+    CharacterVisualPose pose,
+    String bodyKey,
+    Map<String, ui.Image> images,
+  ) {
+    final idleTint = BodyFamilyDef.tintMaskForBodyAsset(bodyKey);
+    if (images.containsKey(idleTint)) return idleTint;
+    final posed = pose.bodyTintAsset;
+    if (posed != null && images.containsKey(posed)) return posed;
+    return null;
+  }
+
   /// Waits until cached frames have dropped 1px rotation debris.
   static Future<void> settle() async {
     final pending = List<Future<void>>.of(_strips);
@@ -41,7 +83,7 @@ abstract final class HeroRigPainter {
   }) {
     final family = pose.bodyFamily;
     final rig = family == null ? null : HeroRigLibrary.peek(family);
-    final idleKey = family == null ? null : BodyFamilyCatalog.catalog[family]?.idleAsset;
+    final idleKey = rigBodyKey(pose, images);
     final idle = idleKey == null ? null : images[idleKey];
     if (rig != null && idle != null && idleKey != null) {
       paint(
@@ -77,7 +119,7 @@ abstract final class HeroRigPainter {
     required CharacterVisualPose pose,
   }) async {
     await _atlas(rig, bodyImage, RigPartCache.key(bodyKey, rig.family, 0, 1));
-    final tintPath = pose.bodyTintAsset;
+    final tintPath = tintForRigBody(pose, bodyKey, images);
     final tint = tintPath == null ? null : images[tintPath];
     if (tint != null && tintPath != null) {
       await _atlas(
@@ -227,7 +269,7 @@ abstract final class HeroRigPainter {
       _equip[heroId] = hash;
     }
     final cacheKey =
-        '$heroId|$hash|${sample.clip}|${sample.stepIndex}|${pose.bodyTint}|${pose.anim.blocking}';
+        '$heroId|$hash|$bodyKey|${sample.clip}|${sample.stepIndex}|${pose.bodyTint}|${pose.anim.blocking}';
     final cached = _frames[cacheKey];
     if (cached != null) return cached;
     final world = RigSolver.world(rig, sample.pose);
@@ -314,7 +356,7 @@ abstract final class HeroRigPainter {
     Map<String, ui.Image> images,
   ) {
     final bodyAtlas = RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1));
-    final tintPath = pose.bodyTintAsset;
+    final tintPath = tintForRigBody(pose, bodyKey, images);
     final tintAtlas = tintPath == null
         ? null
         : RigPartCache.peek(

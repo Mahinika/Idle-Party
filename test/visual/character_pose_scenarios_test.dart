@@ -17,6 +17,7 @@ import 'package:idle_party/visual/hero_anim_state.dart';
 import 'package:idle_party/visual/owned_gear_assets.dart';
 import 'package:idle_party/visual/owned_gear_grips.dart';
 import 'package:idle_party/visual/owned_glove_tips.dart';
+import 'package:idle_party/visual/rig/hero_rig_painter.dart';
 
 PartyHero nakedWarrior() => PartyHero.starting(
   name: 'Aegis',
@@ -926,11 +927,48 @@ void main() {
       owned: true,
     );
     expect(pose.bodyTintAsset, 'assets/custom/char/warrior/human_m_body_tint_walk.png');
+    expect(
+      pose.bodyIdleAsset,
+      'assets/custom/char/warrior/human_m_body_idle.png',
+    );
     for (final layer in pose.layers.where((l) => l.id != CharacterLayerId.body)) {
       expect(layer.ownedAsset, isNotNull);
       expect(layer.ownedAsset, isNot(contains('kenney')));
       expect(layer.ownedAsset, contains('_idle.png'));
     }
+  });
+
+  test('rig prefers the race idle over the family body', () {
+    const race = 'assets/custom/char/warrior/nightelf_f_body_idle.png';
+    const family = 'assets/custom/char/warrior/body_idle.png';
+    final hero = PartyHero.starting(
+      name: 'Aegis',
+      specId: HeroSpecId.protection,
+      race: HeroRace.nightElf,
+      sex: HeroSex.female,
+    );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: const HeroAnimPose(kind: HeroAnimKind.walk, frame: 0),
+      owned: true,
+    );
+    expect(pose.bodyIdleAsset, race);
+    expect(
+      HeroRigPainter.pickRigBody(
+        raceIdle: pose.bodyIdleAsset,
+        familyIdle: family,
+        loaded: (path) => path == race || path == family,
+      ),
+      race,
+    );
+    expect(
+      HeroRigPainter.pickRigBody(
+        raceIdle: pose.bodyIdleAsset,
+        familyIdle: family,
+        loaded: (path) => path == family,
+      ),
+      family,
+    );
   });
 
   test('owned gear path list is unique and includes shared sword', () {

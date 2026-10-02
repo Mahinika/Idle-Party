@@ -66,6 +66,7 @@ class CharacterVisualPose {
     this.bodyFamily,
     this.bodyTint,
     this.bodyTintAsset,
+    this.bodyIdleAsset,
   });
 
   final List<ResolvedLayer> layers;
@@ -85,6 +86,10 @@ class CharacterVisualPose {
   /// Cloth-only grayscale mask; keeps spec color off skin, hair and face ink.
   final String? bodyTintAsset;
 
+  /// Idle undertunic for this hero's race and sex. The rig cuts parts from
+  /// the idle pose, so a walk frame must not replace this.
+  final String? bodyIdleAsset;
+
   /// Same layers, fresher clip progress — bob and weapon swing read live even
   /// though the cache only keys on kind/frame.
   CharacterVisualPose withAnim(HeroAnimPose next) => CharacterVisualPose(
@@ -97,6 +102,7 @@ class CharacterVisualPose {
     bodyFamily: bodyFamily,
     bodyTint: bodyTint,
     bodyTintAsset: bodyTintAsset,
+    bodyIdleAsset: bodyIdleAsset,
   );
 
   AnchorPose anchor(AnchorId id) => AnchorTables.lookup(
@@ -380,6 +386,7 @@ class CharacterVisualPose {
         ),
       ),
       bodyTintAsset: BodyFamilyCatalog.tintMaskAssetFor(hero, anim.kind),
+      bodyIdleAsset: BodyFamilyCatalog.assetFor(hero, HeroAnimKind.idle),
     );
   }
 
@@ -566,7 +573,7 @@ abstract final class CharacterVisualPoseCache {
     final equipHash = CharacterVisualPose.equipHashOf(hero);
     final key =
         '$equipHash|${hero.specId.name}|${anim.kind.name}|${anim.frame}'
-        '|$flipX|$partyIndex|$owned';
+        '|$flipX|$partyIndex|$owned|${hero.race.name}|${hero.sex.name}';
     final existing = _byHero[heroId];
     if (existing != null && existing.key == key) {
       return existing.pose.anim.progress == anim.progress

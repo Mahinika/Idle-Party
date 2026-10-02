@@ -342,7 +342,8 @@ until the owner says to remove it.
 
 - The part map is baked from `assets/custom/char/<family>/_src/body_idle.png`
   into `assets/custom/rig/<family>.json`. The same map splits the live idle
-  undertunic and every 128 same-origin overlay. Walk and attack body PNGs are
+  undertunic and every 128 same-origin overlay. The idle clip is that hero's
+  race and sex when the image is loaded. Walk and attack body PNGs are
   not drawn on this path.
 - Robes (mage, healer) add a `skirt` bone. Their leg angles stay within 12
   degrees so the hem does not kick open.
