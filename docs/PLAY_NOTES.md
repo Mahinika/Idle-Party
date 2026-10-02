@@ -11,7 +11,7 @@ _Nothing open._
 
 ## Done
 
-<!-- - 2026-10-02 · Gear on heroes looked like pixels were missing · fixed in this batch -->
+<!-- - 2026-10-02 · Gear on heroes looked like pixels were missing · fixed in 2b4fb328 -->
 
 <!-- - 2026-09-30 · Shots and swings connected through walls · fixed in d21738c9 -->
 
