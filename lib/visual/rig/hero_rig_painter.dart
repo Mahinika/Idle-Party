@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -126,7 +126,12 @@ abstract final class HeroRigPainter {
       await _atlas(
         rig,
         tint,
-        RigPartCache.key(tintPath, rig.family, 0, OwnedGearAssets.undertunicShoeTop),
+        RigPartCache.key(
+          tintPath,
+          rig.family,
+          0,
+          OwnedGearAssets.undertunicShoeTop,
+        ),
         cropBottom: OwnedGearAssets.undertunicShoeTop,
       );
     }
@@ -155,7 +160,8 @@ abstract final class HeroRigPainter {
     required Map<String, ui.Image> images,
     required CharacterVisualPose pose,
   }) {
-    if (RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1)) == null) {
+    if (RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1)) ==
+        null) {
       return false;
     }
     for (final layer in pose.orderedLayers()) {
@@ -180,7 +186,10 @@ abstract final class HeroRigPainter {
     double alpha = 1,
     String heroId = '',
   }) {
-    if (!size.isFinite || size <= 0 || !center.dx.isFinite || !center.dy.isFinite) {
+    if (!size.isFinite ||
+        size <= 0 ||
+        !center.dx.isFinite ||
+        !center.dy.isFinite) {
       return;
     }
     if (!ready(rig: rig, bodyKey: bodyKey, images: images, pose: pose)) {
@@ -220,7 +229,11 @@ abstract final class HeroRigPainter {
       canvas.scale(-1, 1);
       canvas.translate(-center.dx, -center.dy);
     }
-    final dst = ui.Rect.fromCenter(center: center, width: size * 2, height: size * 2);
+    final dst = ui.Rect.fromCenter(
+      center: center,
+      width: size * 2,
+      height: size * 2,
+    );
     canvas.drawImageRect(
       frame,
       ui.Rect.fromLTWH(0, 0, source.toDouble(), source.toDouble()),
@@ -308,7 +321,13 @@ abstract final class HeroRigPainter {
 
   static Future<ui.Image> _decode(Uint8List pixels, int width, int height) {
     final done = Completer<ui.Image>();
-    ui.decodeImageFromPixels(pixels, width, height, ui.PixelFormat.rgba8888, done.complete);
+    ui.decodeImageFromPixels(
+      pixels,
+      width,
+      height,
+      ui.PixelFormat.rgba8888,
+      done.complete,
+    );
     return done.future;
   }
 
@@ -360,12 +379,19 @@ abstract final class HeroRigPainter {
     String bodyKey,
     Map<String, ui.Image> images,
   ) {
-    final bodyAtlas = RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1));
+    final bodyAtlas = RigPartCache.peek(
+      RigPartCache.key(bodyKey, rig.family, 0, 1),
+    );
     final tintPath = tintForRigBody(pose, bodyKey, images);
     final tintAtlas = tintPath == null
         ? null
         : RigPartCache.peek(
-            RigPartCache.key(tintPath, rig.family, 0, OwnedGearAssets.undertunicShoeTop),
+            RigPartCache.key(
+              tintPath,
+              rig.family,
+              0,
+              OwnedGearAssets.undertunicShoeTop,
+            ),
           );
     for (final layer in pose.orderedLayers()) {
       if (layer.id != CharacterLayerId.cape) continue;
@@ -381,18 +407,23 @@ abstract final class HeroRigPainter {
       );
     }
     for (final part in rig.drawOrder) {
-      if (bodyAtlas != null) HeroRigDraw.part(canvas, bodyAtlas, part, world, null);
+      if (bodyAtlas != null)
+        HeroRigDraw.part(canvas, bodyAtlas, part, world, null);
       if (tintAtlas != null && pose.bodyTint != null) {
         HeroRigDraw.part(canvas, tintAtlas, part, world, pose.bodyTint);
       }
       for (final layer in pose.orderedLayers()) {
-        if (HeroRigDraw.isWeapon(layer) || layer.id == CharacterLayerId.cape) continue;
+        if (HeroRigDraw.isWeapon(layer) || layer.id == CharacterLayerId.cape)
+          continue;
         if (layer.id == CharacterLayerId.body) continue;
         final path = layer.ownedAsset;
         final atlas = path == null
             ? null
-            : RigPartCache.peek(RigPartCache.key(path, rig.family, layer.cropTop, 1));
-        if (atlas != null) HeroRigDraw.part(canvas, atlas, part, world, layer.tint);
+            : RigPartCache.peek(
+                RigPartCache.key(path, rig.family, layer.cropTop, 1),
+              );
+        if (atlas != null)
+          HeroRigDraw.part(canvas, atlas, part, world, layer.tint);
         final dyePath = layer.dyeMaskAsset;
         final dye = dyePath == null
             ? null
@@ -411,7 +442,8 @@ abstract final class HeroRigPainter {
   }
 
   static bool _weapon(ResolvedLayer layer) =>
-      layer.id == CharacterLayerId.mainHand || layer.id == CharacterLayerId.offHand;
+      layer.id == CharacterLayerId.mainHand ||
+      layer.id == CharacterLayerId.offHand;
 
   static Future<RigAtlas> _atlas(
     RigData rig,
