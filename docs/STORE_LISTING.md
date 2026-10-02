@@ -123,7 +123,7 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Live Production: **1.12.192 (222)** (`completed` on the API, **2026-10-01**). Next candidate **1.12.193+223** is local only, not uploaded. Notes for that build:
+Live Production: **1.12.192 (222)** until Google publishes. **1.12.193+223** sent for review **2026-10-02**, full rollout. Notes used on that upload:
 
 ```
 • Heroes move their arms and legs. A walk lifts a foot and swings the opposite arm.

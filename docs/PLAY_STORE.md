@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | API peek **2026-10-01**: **1.12.192 (222)** status `completed` (full rollout). **1.12.193+223** is built locally and not uploaded. |
+| Production | ⏳ review | **1.12.192 (222)** still live. **1.12.193 (223)** uploaded **2026-10-02** and sent for review, full rollout. Managed publishing is off. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -61,7 +61,9 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Signed Production AAB **1.12.192+222** uploaded via Play API and sent for review (full rollout). Console: *Ändringarna granskas* — Produktion **1.12.192**, starta fullständig lansering. Pre-checks up to about 12 minutes. Live store build remains **1.12.191 (221)** until Google publishes.
 - [x] API peek **2026-10-01**: Production **1.12.192 (222)** status `completed`.
 - [x] Owner asked for Play release prep (**2026-10-01**), not the upload.
-- [x] Signed Production AAB **1.12.193+223** built locally (`app-release.aab`, 98 MB). Not uploaded. Phone screenshots are still the 2026-09-18 pack.
+- [x] Signed Production AAB **1.12.193+223** built locally (`app-release.aab`, 98 MB). Phone screenshots are still the 2026-09-18 pack.
+- [x] Owner asked upload of Production **1.12.193+223** (**2026-10-02**).
+- [x] Signed Production AAB **1.12.193+223** uploaded via Play API and sent for review (full rollout). Console: *Ändringarna granskas* — Produktion **1.12.193**, starta fullständig lansering. Pre-checks up to about 14 minutes. Live store build remains **1.12.192 (222)** until Google publishes.
 
 ### Production upload paste (en-US release notes)
 
