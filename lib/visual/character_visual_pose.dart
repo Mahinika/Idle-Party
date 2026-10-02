@@ -67,6 +67,7 @@ class CharacterVisualPose {
     this.bodyTint,
     this.bodyTintAsset,
     this.bodyIdleAsset,
+    this.shadowform = false,
   });
 
   final List<ResolvedLayer> layers;
@@ -90,6 +91,9 @@ class CharacterVisualPose {
   /// the idle pose, so a walk frame must not replace this.
   final String? bodyIdleAsset;
 
+  /// Whole figure, gear included, drawn as a dark violet shadow.
+  final bool shadowform;
+
   /// Same layers, fresher clip progress — bob and weapon swing read live even
   /// though the cache only keys on kind/frame.
   CharacterVisualPose withAnim(HeroAnimPose next) => CharacterVisualPose(
@@ -103,6 +107,7 @@ class CharacterVisualPose {
     bodyTint: bodyTint,
     bodyTintAsset: bodyTintAsset,
     bodyIdleAsset: bodyIdleAsset,
+    shadowform: shadowform,
   );
 
   AnchorPose anchor(AnchorId id) => AnchorTables.lookup(
@@ -387,6 +392,7 @@ class CharacterVisualPose {
       ),
       bodyTintAsset: BodyFamilyCatalog.tintMaskAssetFor(hero, anim.kind),
       bodyIdleAsset: BodyFamilyCatalog.assetFor(hero, HeroAnimKind.idle),
+      shadowform: hero.specId == HeroSpecId.shadow,
     );
   }
 

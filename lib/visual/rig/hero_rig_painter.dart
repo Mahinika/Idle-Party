@@ -7,6 +7,7 @@ import '../character_layer.dart';
 import '../character_visual_painter.dart';
 import '../character_visual_pose.dart';
 import '../owned_gear_assets.dart';
+import '../shadowform.dart';
 import 'hero_rig_library.dart';
 import 'rig_data.dart';
 import 'rig_draw.dart';
@@ -179,6 +180,9 @@ abstract final class HeroRigPainter {
     double alpha = 1,
     String heroId = '',
   }) {
+    if (!size.isFinite || size <= 0 || !center.dx.isFinite || !center.dy.isFinite) {
+      return;
+    }
     if (!ready(rig: rig, bodyKey: bodyKey, images: images, pose: pose)) {
       warm(
         rig: rig,
@@ -209,6 +213,7 @@ abstract final class HeroRigPainter {
       ..filterQuality = ui.FilterQuality.none
       ..isAntiAlias = false
       ..color = ui.Color.fromRGBO(255, 255, 255, alpha);
+    if (pose.shadowform) paint.colorFilter = Shadowform.wash;
     canvas.save();
     if (pose.flipX) {
       canvas.translate(center.dx, center.dy);

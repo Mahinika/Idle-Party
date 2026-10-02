@@ -72,6 +72,53 @@ void main() {
     expect(at(3, 3), [180, 45, 11, 255]);
     expect(at(4, 4), [40, 36, 70, 255]);
   });
+
+  test('shadowform turns gold gear into a dark violet silhouette', () async {
+    const n = 8;
+    final body = Uint8List(n * n * 4);
+    void put(int x, int y, int r, int g, int b) {
+      final i = (y * n + x) * 4;
+      body[i] = r;
+      body[i + 1] = g;
+      body[i + 2] = b;
+      body[i + 3] = 255;
+    }
+
+    put(2, 2, 240, 210, 80);
+    final bodyImg = await _image(n, body);
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, n.toDouble(), n.toDouble()),
+      Paint()..color = const Color(0xFF102030),
+    );
+    CharacterVisualPainter.paintOwnedHero(
+      canvas,
+      const Offset(n / 2, n / 2),
+      n.toDouble(),
+      body: bodyImg,
+      images: const {},
+      pose: const CharacterVisualPose(
+        layers: [
+          ResolvedLayer(id: CharacterLayerId.body, col: 0, row: 0),
+        ],
+        anim: HeroAnimPose(kind: HeroAnimKind.idle, frame: 0),
+        flipX: false,
+        layerOrder: [CharacterLayerId.body],
+        shadowform: true,
+      ),
+    );
+    final shot = await recorder.endRecording().toImage(n, n);
+    final data = await shot.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final px = data!.buffer.asUint8List();
+    final i = (2 * n + 2) * 4;
+    final r = px[i];
+    final g = px[i + 1];
+    final b = px[i + 2];
+    expect(b, greaterThan(r));
+    expect(b, greaterThan(g));
+    expect(r + g + b, lessThan(220));
+  });
 }
 
 Future<ui.Image> _image(int n, Uint8List rgba) async {

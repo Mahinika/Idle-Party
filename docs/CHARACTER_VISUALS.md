@@ -24,8 +24,9 @@ moonkin, Feral cat, Guardian bear, Restoration tree), dungeon / GEAR / party
 HUD draw the owned 96×96 form PNG from `assets/custom/heroes/` instead of the
 paper-doll stack. **No gear overlays** on form bodies — the silhouette is the
 kit identity. Generated via `tool/gen_druid_form_sprites.py` for moonkin/tree;
-feral and guardian are authored. Shadow uses the priest (healer) paper doll
-with the purple cloth tint.
+feral and guardian are authored. Shadow uses the priest (healer) paper doll,
+then a dark see-through violet over the whole figure, gear included, the way
+Wrath Shadowform keeps the armor silhouette.
 
 **GEAR, party HUD, and dungeon** paint through the cutout rig when the
 family is in `HeroRigFlags`. Everyone else, and the first frames before the

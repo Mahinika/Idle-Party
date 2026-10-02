@@ -9,6 +9,7 @@ import 'anchor_table.dart';
 import 'body_family.dart';
 import 'character_layer.dart';
 import 'character_visual_pose.dart';
+import 'shadowform.dart';
 import 'hero_anim_controller.dart';
 import 'owned_gear_assets.dart';
 import 'owned_gear_grips.dart';
@@ -113,6 +114,13 @@ abstract final class CharacterVisualPainter {
       if (step != Offset.zero) {
         canvas.translate(step.dx, step.dy);
       }
+    }
+
+    if (pose.shadowform) {
+      canvas.saveLayer(
+        dst.inflate(size),
+        Paint()..colorFilter = Shadowform.wash,
+      );
     }
 
     for (final layer in pose.orderedLayers()) {
@@ -275,6 +283,8 @@ abstract final class CharacterVisualPainter {
         }
       }
     }
+
+    if (pose.shadowform) canvas.restore();
 
     if (step != Offset.zero || lean != 0) {
       canvas.restore();
