@@ -11,6 +11,8 @@ _Nothing open._
 
 ## Done
 
+<!-- - 2026-10-02 · Weapon sat above the warrior's hand · the grip was on the upper arm · fixed in fbf4c98b -->
+
 <!-- - 2026-10-02 · Gear on heroes looked like pixels were missing · the stormcleave axe haft did not meet the blade · fixed in ae2e18a6 -->
 
 <!-- - 2026-09-30 · Shots and swings connected through walls · fixed in d21738c9 -->
