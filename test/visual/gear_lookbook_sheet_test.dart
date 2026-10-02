@@ -88,6 +88,7 @@ void main() {
     if (scope == 'summary' || scope == 'all') {
       await _saveCompare(tester, outDir, outfits);
       await _saveClassSheet(tester, outDir);
+      await _saveRaceSheets(tester, outDir, outfits);
     }
     if (scope == 'weapons' || scope == 'all') {
       await _saveWeaponCompare(tester, outDir, outfits);
@@ -147,7 +148,7 @@ void main() {
       const Size(900, 520),
     );
     }
-  }, timeout: const Timeout(Duration(minutes: 5)));
+  }, timeout: const Timeout(Duration(minutes: 8)));
 
   testWidgets('measure gear lookbook dolls', (tester) async {
     if (!const bool.fromEnvironment('LOOKBOOK')) return;
@@ -241,6 +242,92 @@ Future<void> _saveCompare(
         ]),
     ]),
     const Size(5 * 124 + 24, 4 * 150 + 48),
+  );
+}
+
+/// One sheet per body. Columns are the twelve races. Rows are male, then female.
+/// Each doll wears the full t0 set and that body's weapon.
+Future<void> _saveRaceSheets(
+  WidgetTester tester,
+  String outDir,
+  Map<String, dynamic> outfits,
+) async {
+  const layers = [
+    'helm_t0',
+    'chest_t0',
+    'legs_t0',
+    'shoulder_t0',
+    'cloak_t0',
+    'hands_t0',
+  ];
+  final weapons = (outfits['familyWeapon'] as Map).cast<String, dynamic>();
+  const cellW = 108.0;
+  final races = HeroRace.values;
+  final width = races.length * cellW + 72;
+  for (final family in BodyFamily.values) {
+    final weapon = weapons[family.name] as String;
+    await _saveSheet(
+      tester,
+      '$outDir/fit_races_${family.name}.png',
+      _column([
+        _caption(
+          '${family.name.toUpperCase()}  male then female  full kit + $weapon',
+        ),
+        _row([
+          const SizedBox(width: 64),
+          for (final race in races) _raceTag(race.shortLabel),
+        ]),
+        for (final sex in HeroSex.values)
+          _row([
+            _raceTag(sex.name, width: 64),
+            for (final race in races)
+              _raceCell(family, race, sex, layers, weapon),
+          ]),
+      ]),
+      Size(width, 2 * 132 + 64),
+    );
+  }
+}
+
+Widget _raceTag(String label, {double width = 108}) {
+  return SizedBox(
+    width: width,
+    height: 18,
+    child: Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.fade,
+      softWrap: false,
+      style: const TextStyle(color: Color(0xFFE6C36A), fontSize: 9),
+    ),
+  );
+}
+
+Widget _raceCell(
+  BodyFamily family,
+  HeroRace race,
+  HeroSex sex,
+  List<String> layers,
+  String weaponId,
+) {
+  final items = <EquipmentSlot, EquipmentItem>{};
+  for (final id in layers) {
+    final item = gearLookbookItem(id, null);
+    items[item.slot] = item;
+  }
+  items[EquipmentSlot.weapon] = gearLookbookItem(weaponId, null);
+  final hero = PartyHero.starting(
+    name: '${race.assetKey} ${sex.assetKey}',
+    specId: gearLookbookSpec(family),
+    id: 'race-${family.name}-${race.assetKey}-${sex.assetKey}',
+    equipped: items,
+    race: race,
+    sex: sex,
+  );
+  return SizedBox(
+    width: 108,
+    height: 120,
+    child: HeroDollSprite(hero: hero, size: 96),
   );
 }
 
@@ -745,6 +832,9 @@ Future<void> _precache() async {
   final paths = <String>{
     for (final family in BodyFamily.values)
       BodyFamilyCatalog.defFor(family).idleAsset,
+    for (final look in BodyFamilyCatalog.authoredRaceLooks)
+      'assets/custom/char/${look.family.name}/'
+          '${look.race.assetKey}_${look.sex.assetKey}_body_idle.png',
     for (final path in OwnedGearAssets.allAssetPaths)
       if (path.endsWith('_idle.png') || path.endsWith('_dye.png')) path,
   };

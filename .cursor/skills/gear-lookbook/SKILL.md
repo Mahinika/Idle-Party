@@ -39,6 +39,9 @@ count file. No emulator and no browser.
    holding the weapon that spec starts with. Specs that share a body,
    armor, and weapons are one doll. Druid and Shadow are drawn as the
    person with gear on, because their fight picture hides the clothes.
+   Read `fit_races_<family>.png` (warrior, healer, mage, rogue) for all
+   twelve races, male on the first row and female on the second, in that
+   body's full kit.
 5. Open a detail sheet only when the change needs it (`--weapons`,
    `--armor`, `--body`, or `--all`):
    - `{family}_armor.png`: helm, chest, legs, cloak
