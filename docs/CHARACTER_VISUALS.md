@@ -1,6 +1,10 @@
 # Character visuals (layered dungeon heroes)
 
-Idle Party heroes use a **paper-doll** path when an owned body is available:
+The live hero is the cutout skeleton (`HeroRigPainter`) for warrior, rogue,
+mage, and healer (`HeroRigFlags`). GEAR, the dungeon, and the party HUD
+paint through it. The still paper doll (`paintOwnedHero`) is the fallback
+before that atlas is ready, and the picture the lookbook measures. The
+skeleton is cut from these same pictures:
 
 1. **Undertunic base** from `assets/custom/char/<family>/body_<anim>.png`
    (skin + hair + simple cloth — never naked). Race/sex clips sit beside
@@ -28,11 +32,10 @@ feral and guardian are authored. Shadow uses the priest (healer) paper doll,
 then a dark see-through violet over the whole figure, gear included, the way
 Wrath Shadowform keeps the armor silhouette.
 
-**GEAR, party HUD, and dungeon** paint through the cutout rig when the
-family is in `HeroRigFlags`. Everyone else, and the first frames before the
-part atlas is ready, still use `CharacterVisualPainter.paintOwnedHero` with
-the same pose (`CharacterVisualPose.resolve(..., owned: true)`). Form sprites
-stay on their own PNG.
+The first frames before the part atlas is ready still use
+`CharacterVisualPainter.paintOwnedHero` with the same pose
+(`CharacterVisualPose.resolve(..., owned: true)`). Form sprites stay on
+their own PNG.
 
 **Spec identity:** four bodies serve 31 specs. The owned body is drawn as
 authored, so skin, hair, and cloth keep that picture's palette.

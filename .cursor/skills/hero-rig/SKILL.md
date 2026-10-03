@@ -4,15 +4,17 @@ description: >-
   Idle Party in-game cutout skeleton for heroes. Use when a hero's limbs,
   weapons, or ability pose look wrong, when baking a family rig, or when the
   owner says skelettet i spelet, dockan rör sig fel, or the rig. Do not use
-  for the outside-the-game demo (skeleton-demo), drawing gear pixels
-  (gear-art), or one missing cast (add-ability).
+  for seating a helm, chest, or pauldron (armor-placement), weapon grips
+  (weapon-grip-placement), the outside-the-game demo (skeleton-demo),
+  drawing gear pixels (gear-art), or one missing cast (add-ability).
 ---
 
 # Hero rig (in the game)
 
-The live families in `HeroRigFlags` paint through `lib/visual/rig/`.
-`paintOwnedHero` is the fallback until the part atlas is ready, and for any
-family not in the flag set. Form sprites are unchanged.
+This is the primary draw. Warrior, rogue, mage, and healer paint through
+`lib/visual/rig/`. `paintOwnedHero` is the still paper doll: the fallback
+until the part atlas is ready, and the picture the lookbook measures.
+Form sprites are unchanged.
 
 ## Bake
 

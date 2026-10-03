@@ -1,0 +1,17 @@
+---
+description: The live hero is the cutout skeleton. The paper doll is the fallback and the lookbook.
+alwaysApply: true
+---
+
+# Hero draw (Idle Party)
+
+The player sees the cutout skeleton (`HeroRigPainter`) for warrior, rogue,
+mage, and healer. GEAR, the dungeon, and the party HUD all paint through it.
+
+The still paper doll (`paintOwnedHero`) is the fallback before that atlas
+is ready, and the picture the lookbook measures. A green lookbook is the
+rest pose.
+
+Judge a moving hero on the skeleton. Use the paper doll for the pictures
+the bones are cut from, and for the rest check. Form sprites stay on their
+own PNG.

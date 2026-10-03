@@ -1,11 +1,12 @@
 ---
 name: character-paper-doll
 description: >-
-  Idle Party owned hero paper-doll: undertunic body plus 128×128 gear overlays
-  in GEAR, dungeon, and party HUD. Use when the doll looks wrong, gear is
-  invisible, helm/hair is wrong, or when editing body_*.png / paintOwnedHero.
-  Swedish: "dockan" / "gear syns inte" / "undertunic". Do not use for zone
-  enemy art (zone-art-identity).
+  Idle Party still paper doll: the undertunic and 128×128 overlays the
+  skeleton is cut from, and the fallback before that atlas is ready. Use
+  when editing body_*.png / paintOwnedHero, or when gear is invisible on
+  the still stack. Swedish: "undertunic" / "gear syns inte". Do not use
+  for the moving hero (hero-rig), seating a drawn helm, chest, or pauldron
+  (armor-placement), or zone enemy art (zone-art-identity).
 ---
 
 # Character paper-doll (Idle Party)
@@ -13,11 +14,12 @@ description: >-
 Legal: [assets-legal](../assets-legal/SKILL.md). Live look: [a56-playtest](../a56-playtest/SKILL.md).
 Full contract: `docs/CHARACTER_VISUALS.md`.
 
-Flagged families paint through the cutout rig instead of this still doll. See [hero-rig](../hero-rig/SKILL.md).
+The live hero is the cutout skeleton. See [hero-rig](../hero-rig/SKILL.md).
+This skill is the still picture those bones are cut from.
 
-GEAR, dungeon, and party HUD share `CharacterVisualPainter.paintOwnedHero`
-(`CharacterVisualPose.resolve(..., owned: true)`). Do **not** add a second
-painter, Kenney 16×16 stickers on owned bodies, or Offset sockets on armor.
+`paintOwnedHero` is the fallback until the skeleton atlas is ready, and the
+painter the lookbook measures. Do **not** add a second painter, Kenney
+16×16 stickers on owned bodies, or Offset sockets on armor.
 
 ## Root cause (why dolls looked weird)
 

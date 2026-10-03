@@ -5,14 +5,16 @@ description: >-
   and worn gloves across every body and pose. Use when a weapon floats beside
   the hand, sits on the sleeve, misses the palm, or the owner says "vapnet
   sitter fel", "svävar bredvid handen", "kolla alla vapen", "placeringar på
-  vapen", or "greppet". Do not use for drawing a weapon model (gear-art), a
-  broad doll audit (gear-lookbook), or ability animation poses (hero-rig).
+  vapen", or "greppet". Do not use for helm, chest, legs, cloak, or
+  shoulders (armor-placement), drawing a weapon model (gear-art), a broad
+  doll audit (gear-lookbook), or ability animation poses (hero-rig).
 ---
 
 # Weapon grip placement
 
-A passing `HAND` mark is not proof. The grip must cross the visible hand or
-the painted glove palm in the pictures.
+The player sees the skeleton. The lookbook checks the still doll. A passing
+`HAND` mark is not proof. The grip must cross the visible hand or the
+painted glove palm in the pictures.
 
 There are two different points. Do not make them the same number:
 
