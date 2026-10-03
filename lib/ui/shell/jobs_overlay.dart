@@ -31,6 +31,18 @@ class JobsOverlay extends StatelessWidget {
     _ => 'CONTRACT',
   };
 
+  /// Badge already names the slot — drop Daily:/Week:/Contract: from the line.
+  static String displayTitle(Mission mission, int index) {
+    final raw = mission.title;
+    return switch (index) {
+      0 => raw.startsWith('Daily: ') ? raw.substring(7) : raw,
+      1 => raw.replaceFirst(RegExp(r'^Bounty \d+: '), ''),
+      3 => raw.startsWith('Week: ') ? raw.substring(6) : raw,
+      4 => raw.startsWith('Contract: ') ? raw.substring(10) : raw,
+      _ => raw,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
@@ -102,7 +114,9 @@ class JobsOverlay extends StatelessWidget {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        mission.title,
+                        displayTitle(mission, index),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: GameTheme.body(
                           size: 16,
                           color: switch (mission.tier) {

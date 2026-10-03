@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
-import '../first_session_tips.dart';
 import '../../models/enemy.dart';
 import '../../spatial/spatial_combat.dart';
 import '../../assets/kenney_assets.dart';
@@ -127,19 +126,6 @@ class TargetCornerHud extends StatelessWidget {
 
     final enemy = focus;
     final awaitingExit = world?.awaitingExit == true;
-    final coachLine = () {
-      final god = FirstSessionTips.lineFor(
-        state,
-        CoachTarget.godhand,
-        inDungeon: true,
-      );
-      if (god != null) return god;
-      return FirstSessionTips.lineFor(
-        state,
-        CoachTarget.farmPush,
-        inDungeon: true,
-      );
-    }();
     // After clear, don't keep a dead fight frame — CLEAR owns the corner
     // while walking / HOLD.
     if (awaitingExit && !state.isPartyDefeated) {
@@ -306,14 +292,7 @@ class TargetCornerHud extends StatelessWidget {
                 'More rooms ahead',
                 style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
               ),
-            if (coachLine != null)
-              Text(
-                coachLine,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(size: 10, color: GameTheme.torchHot),
-              ),
-],
+          ],
         ),
       ),
     );

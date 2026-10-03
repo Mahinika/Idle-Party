@@ -526,85 +526,90 @@ class DungeonTopHud extends StatelessWidget {
                   ),
                 ),
               ),
-              if (keyTimerLabel != null) ...[
-                const SizedBox(width: 4),
-                Text(
-                  keyTimerLabel,
-                  maxLines: 1,
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
-                    color: GameTheme.torchHot,
-                  ),
-                ),
-              ],
-              modeRow(),
-              const SizedBox(width: 4),
-              DungeonModeChip(
-                label: state.combatPace >= 2 ? '2×' : '1×',
-                selected: state.combatPace >= 2,
-                dense: true,
-                tip: 'Fight speed. Loot and time away stay the same.',
-                onTap: director.cycleCombatPace,
-              ),
-              if (world != null) ...[
-                const SizedBox(width: 4),
-                Semantics(
-                  button: true,
-                  label: plain
-                      ? 'Long-press the fight, or tap the fist'
-                      : 'God Hand — long-press the fight or tap the fist',
-                  child: CoachPulse(
-                    active: coachGod != null,
-                    child: GodHandRing(
-                      cooldown: world.godHandCooldown,
-                      maxCooldown: state.godHandCooldownSeconds,
-                      urgent: state.wipeStreakCount >= 2,
-                      dense: true,
-                      readyLabel:
-                          coachGod ??
-                          (plain
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (keyTimerLabel != null) ...[
+                        const SizedBox(width: 4),
+                        Text(
+                          keyTimerLabel,
+                          maxLines: 1,
+                          style: GameTheme.pixel(
+                            size: GameTheme.hudPixel,
+                            color: GameTheme.torchHot,
+                          ),
+                        ),
+                      ],
+                      modeRow(),
+                      const SizedBox(width: 4),
+                      DungeonModeChip(
+                        label: state.combatPace >= 2 ? '2×' : '1×',
+                        selected: state.combatPace >= 2,
+                        dense: true,
+                        tip: 'Fight speed. Loot and time away stay the same.',
+                        onTap: director.cycleCombatPace,
+                      ),
+                      if (world != null) ...[
+                        const SizedBox(width: 4),
+                        Semantics(
+                          button: true,
+                          label: plain
                               ? 'Long-press the fight, or tap the fist'
-                              : null),
-                      coolingLabel: plain
-                          ? 'Cooling ${world.godHandCooldown.toStringAsFixed(1)}s'
-                          : 'Cooling ${world.godHandCooldown.toStringAsFixed(1)}s',
-                      onTap: () => director.godHandAtFocus(),
-                    ),
-                  ),
-                ),
-              ],
-              if (showClaimChip) ...[
-                const SizedBox(width: 2),
-                MissionClaimChip(
-                  count: claimable,
-                  dense: true,
-                  onTap: _claimAllReadyMissions,
-                  onLongPress: onOpenContracts,
-                ),
-              ],
-              SizedBox(
-                width: 32,
-                height: 30,
-                child: Semantics(
-                  button: true,
-                  label: 'Floor menu',
-                  excludeSemantics: true,
-                  child: PopupMenuButton<String>(
-                    tooltip: 'Floor',
-                    padding: EdgeInsets.zero,
-                    color: GameTheme.stoneDeep,
-                    onSelected: (value) => _onFloorMenu(context, value, floor),
-                    itemBuilder: (context) =>
-                        _floorMenuItems(floor: floor, includeExtras: false),
-                    child: Center(
-                      child: Text(
-                        state.inGauntlet ? '...' : 'F$floor',
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: GameTheme.torchHot,
+                              : 'God Hand — long-press the fight or tap the fist',
+                          child: CoachPulse(
+                            active: coachGod != null,
+                            child: GodHandRing(
+                              cooldown: world.godHandCooldown,
+                              maxCooldown: state.godHandCooldownSeconds,
+                              urgent: state.wipeStreakCount >= 2,
+                              dense: true,
+                              readyLabel:
+                                  coachGod ??
+                                  (plain
+                                      ? 'Long-press the fight, or tap the fist'
+                                      : null),
+                              coolingLabel: plain
+                                  ? 'Cooling ${world.godHandCooldown.toStringAsFixed(1)}s'
+                                  : 'Cooling ${world.godHandCooldown.toStringAsFixed(1)}s',
+                              onTap: () => director.godHandAtFocus(),
+                            ),
+                          ),
+                        ),
+                      ],
+                      SizedBox(
+                        width: 32,
+                        height: 30,
+                        child: Semantics(
+                          button: true,
+                          label: 'Floor menu',
+                          excludeSemantics: true,
+                          child: PopupMenuButton<String>(
+                            tooltip: 'Floor',
+                            padding: EdgeInsets.zero,
+                            color: GameTheme.stoneDeep,
+                            onSelected: (value) =>
+                                _onFloorMenu(context, value, floor),
+                            itemBuilder: (context) => _floorMenuItems(
+                              floor: floor,
+                              includeExtras: false,
+                            ),
+                            child: Center(
+                              child: Text(
+                                state.inGauntlet ? '...' : 'F$floor',
+                                style: GameTheme.pixel(
+                                  size: GameTheme.hudPixel,
+                                  color: GameTheme.torchHot,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
@@ -647,14 +652,23 @@ class DungeonTopHud extends StatelessWidget {
             ),
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: WalletStrip(
-                gold: state.gold,
-                essence: state.essence,
-                dense: true,
-                showEssence: MenuTabs.showCamp(state),
-              ),
+            child: Row(
+              children: [
+                WalletStrip(
+                  gold: state.gold,
+                  essence: state.essence,
+                  dense: true,
+                  showEssence: MenuTabs.showCamp(state),
+                ),
+                const Spacer(),
+                if (showClaimChip)
+                  MissionClaimChip(
+                    count: claimable,
+                    dense: true,
+                    onTap: _claimAllReadyMissions,
+                    onLongPress: onOpenContracts,
+                  ),
+              ],
             ),
           ),
           if (!state.inGauntlet &&

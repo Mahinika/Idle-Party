@@ -12,6 +12,7 @@ import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
+import 'package:idle_party/models/mission.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/ui/first_session_tips.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
@@ -496,6 +497,36 @@ void main() {
       '+40g +3e',
     );
     expect(JobsOverlay.chainClaimLabel(), 'CLAIM · chain +5e');
+    expect(
+      JobsOverlay.displayTitle(
+        const Mission(
+          id: 't',
+          type: MissionType.defeatEnemies,
+          title: 'Daily: Defeat 30',
+          target: 30,
+          progress: 30,
+          goldReward: 1,
+          essenceReward: 1,
+        ),
+        0,
+      ),
+      'Defeat 30',
+    );
+    expect(
+      JobsOverlay.displayTitle(
+        const Mission(
+          id: 'c',
+          type: MissionType.timedKeys,
+          title: 'Contract: Time 1 KEY',
+          target: 1,
+          progress: 0,
+          goldReward: 1,
+          essenceReward: 1,
+        ),
+        4,
+      ),
+      'Time 1 KEY',
+    );
 
     expect(
       InventoryDock.mergeFooterHint(plainEnglish: true).toUpperCase(),
@@ -531,5 +562,15 @@ void main() {
       MenuAlerts.bagCleanButtonTip(withEssence).toUpperCase(),
       contains('ESSENCE'),
     );
+  });
+
+  test('spec chips stay uppercase', () {
+    for (final spec in HeroSpecs.all) {
+      expect(
+        spec.shortLabel,
+        spec.shortLabel.toUpperCase(),
+        reason: spec.id.name,
+      );
+    }
   });
 }
