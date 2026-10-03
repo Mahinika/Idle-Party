@@ -218,7 +218,7 @@ extension GameDirectorCombatLoop on GameDirector {
         _toastBagCleanup(
           cleared > 0
               ? 'Bag cleared $cleared junk — keep farming'
-              : 'Bag full — oldest loot → essence',
+              : 'Bag full — nothing safe to scrap',
           life: cleared > 0 ? 2.4 : 2.2,
         );
       }

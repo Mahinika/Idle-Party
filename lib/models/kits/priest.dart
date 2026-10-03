@@ -262,7 +262,7 @@ const List<ClassAbilityDef> _priestKit = <ClassAbilityDef>[
       specId: HeroSpecId.holyPriest,
       name: 'Holy Nova',
       shortLabel: 'HNova',
-      description: 'Party heal pulse.',
+      description: 'Party heal pulse — no enemy damage (disc is look-only).',
       unlockLevel: 11,
       cooldown: 10,
       resourceCost: 20,

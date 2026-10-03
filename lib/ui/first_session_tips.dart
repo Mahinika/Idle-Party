@@ -40,7 +40,7 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'hub_enter',
       title: 'ENTER DUNGEON',
-      body: 'Tap ENTER DUNGEON for the next floor.',
+      body: 'Tap ENTER DUNGEON. The cave starts on floor 1.',
     ),
     (
       id: 'godhand',

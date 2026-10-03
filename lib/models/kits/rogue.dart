@@ -186,7 +186,7 @@ const List<ClassAbilityDef> _rogueKit = <ClassAbilityDef>[
       specId: HeroSpecId.assassination,
       name: 'Improved Poisons',
       shortLabel: 'Poison',
-      description: 'Always on: toxin-lean damage.',
+      description: 'Always on: more damage. Does not apply a poison.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: true,

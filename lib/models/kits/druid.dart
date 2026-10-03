@@ -670,7 +670,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
       specId: HeroSpecId.restorationDruid,
       name: 'Nature\'s Swiftness',
       shortLabel: 'Swift',
-      description: 'Emergency big heal.',
+      description: 'Emergency big heal — not an instant next cast.',
       unlockLevel: 12,
       cooldown: 45,
       effect: AbilityEffectKind.emergencyHeal,

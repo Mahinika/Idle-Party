@@ -489,14 +489,14 @@ abstract final class LocalSeasonCatalog {
     if (week.gauntletFloorTarget > 0) {
       final best = state.metaDepth.gauntletBestFloor;
       final need = week.gauntletFloorTarget;
-      if (best >= need) return 'Done · best F$best';
-      return 'F$best → F$need';
+      if (best >= need) return 'Done · lifetime best F$best';
+      return 'lifetime F$best → F$need';
     }
     if (week.grTierTarget > 0) {
       final best = state.metaDepth.grBestTier;
       final need = week.grTierTarget;
-      if (best >= need) return 'Done · GR$best';
-      return 'GR$best → GR$need';
+      if (best >= need) return 'Done · lifetime GR$best';
+      return 'lifetime GR$best → GR$need';
     }
     if (week.ashenClearTarget) {
       return state.metaDepth.worldBossClearedWeek

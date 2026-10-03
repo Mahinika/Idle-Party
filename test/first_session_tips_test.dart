@@ -120,7 +120,7 @@ void main() {
     );
     expect(
       FirstSessionTips.lineFor(state, CoachTarget.enter, inDungeon: false),
-      'Tap ENTER DUNGEON for the next floor.',
+      'Tap ENTER DUNGEON. The cave starts on floor 1.',
     );
     final afterEnter = state.copyWith(seenTips: [
       'first_run',

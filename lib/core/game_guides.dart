@@ -704,7 +704,7 @@ abstract final class GameGuides {
       body:
           'Unlocks when every active hero reaches level ${GameLogic.maxHeroLevel} (endgame).\n\n'
           '• Endless Crystal Spire climb — not a 16th PATH cave; each floor gets harder.\n'
-          '• Boss every 5 floors — named Crystal Warden; tells cycle (SHARD, WAVE, '
+          '• Boss every 5 floors — the picture stays Crystal Warden; the tell word cycles (SHARD, WAVE, '
           'CRUSH, …) from other caves and scale past F100 (faster).\n'
           '• Between bosses (F3, F8, F13, …) the floor can squeeze, swarm, echo a '
           'boss tell, or add extra gates. Treasure floors every 6th floor (F6, F12, …) '

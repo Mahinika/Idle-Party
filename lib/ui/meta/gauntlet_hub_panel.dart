@@ -33,8 +33,8 @@ class GauntletHubPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           best <= 0
-              ? 'Boss every 5 floors. Crystal Warden — tells cycle each boss.'
-              : 'Best clear F$best. Crystal Warden — tells cycle each boss.',
+              ? 'Boss every 5 floors. Picture stays Crystal Warden; the tell word cycles.'
+              : 'Best clear F$best. Picture stays Crystal Warden; the tell word cycles.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),

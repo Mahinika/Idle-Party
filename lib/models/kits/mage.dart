@@ -305,7 +305,7 @@ const List<ClassAbilityDef> _mageKit = <ClassAbilityDef>[
       specId: HeroSpecId.arcane,
       name: 'Presence of Mind',
       shortLabel: 'PMind',
-      description: 'Self haste.',
+      description: 'Self haste — not an instant next cast.',
       unlockLevel: 11,
       cooldown: 30,
       resourceCost: 10,
