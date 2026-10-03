@@ -11,6 +11,8 @@ _Nothing open._
 
 ## Done
 
+<!-- - 2026-10-03 · Weapons floated beside hands on several dolls · every grip now crosses the painted palm · fixed in PENDING -->
+
 <!-- - 2026-10-02 · Weapon sat above the warrior's hand · grip was on the sleeve; fist now under the gauntlet · fixed in e489f5ef -->
 
 <!-- - 2026-10-02 · Gear on heroes looked like pixels were missing · the stormcleave axe haft did not meet the blade · fixed in ae2e18a6 -->

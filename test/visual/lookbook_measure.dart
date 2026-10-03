@@ -387,6 +387,12 @@ Future<Map<String, dynamic>> _measure(
 
   final main = await handLayer({CharacterLayerId.mainHand});
   final off = await handLayer({CharacterLayerId.offHand});
+  final holdingHand = await _render(
+    pose,
+    body,
+    images,
+    only: {CharacterLayerId.body, CharacterLayerId.gloves},
+  );
   final helm = await layer({CharacterLayerId.head});
   final shoulders = await layer({CharacterLayerId.shoulders});
   final armor = await layer(_armorLayers);
@@ -438,6 +444,10 @@ Future<Map<String, dynamic>> _measure(
     }
     return n;
   }
+  final localMainFist = mainFist - handOrigin;
+  final localOffFist = offFist - handOrigin;
+  final mainContact = nearFist(holdingHand, localMainFist);
+  final offContact = nearFist(holdingHand, localOffFist);
 
   double? hair;
   double? open;
@@ -458,8 +468,12 @@ Future<Map<String, dynamic>> _measure(
     'file': 'dolls/$file',
     'face': face,
     'shield': off == null || offIsWeapon ? null : shield,
-    'hand': main == null ? null : nearFist(main, mainFist),
-    'off': off == null ? null : nearFist(off, offFist),
+    'hand': main == null
+        ? null
+        : math.min(nearFist(main, mainFist), mainContact),
+    'off': off == null
+        ? null
+        : math.min(nearFist(off, offFist), offContact),
     'hair': hair,
     'open': open,
     'touch': helm == null ? null : _touching(helm, head.body),

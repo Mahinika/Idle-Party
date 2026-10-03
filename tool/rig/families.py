@@ -33,7 +33,8 @@ class FamilyCut:
     # Robes: pixels from the waist down to the hem, inside the cloth, are skirt.
     skirt: bool = False
     hem_y: int = 0
-    # Idle fist, center origin, fraction of 128. The bone under that pixel holds the weapon.
+    # T0 glove palm, center origin, fraction of 128. The bone under that
+    # pixel carries a worn weapon through rig poses.
     main_fist: tuple[float, float] = (0.0, 0.0)
     off_fist: tuple[float, float] = (0.0, 0.0)
 
@@ -54,8 +55,8 @@ FAMILIES: dict[str, FamilyCut] = {
         leg_split_x=64,
         thigh_y=107,
         shin_y=118,
-        main_fist=(0.391, 0.195),
-        off_fist=(-0.391, 0.203),
+        main_fist=(0.382, 0.195),
+        off_fist=(-0.385, 0.203),
     ),
     "rogue": FamilyCut(
         name="rogue",
@@ -74,8 +75,8 @@ FAMILIES: dict[str, FamilyCut] = {
         shin_y=120,
         torso_x0=46,
         torso_x1=82,
-        main_fist=(0.212, -0.004),
-        off_fist=(-0.221, -0.006),
+        main_fist=(0.314, 0.180),
+        off_fist=(-0.320, 0.180),
     ),
     # Robe hem sits above the shoes. Legs only exist below the hem.
     "mage": FamilyCut(
@@ -98,8 +99,8 @@ FAMILIES: dict[str, FamilyCut] = {
         sleeve_end=88,
         skirt=True,
         hem_y=116,
-        main_fist=(0.212, 0.024),
-        off_fist=(-0.224, 0.071),
+        main_fist=(0.342, 0.174),
+        off_fist=(-0.328, 0.172),
     ),
     "healer": FamilyCut(
         name="healer",
@@ -121,8 +122,8 @@ FAMILIES: dict[str, FamilyCut] = {
         sleeve_end=92,
         skirt=True,
         hem_y=118,
-        main_fist=(0.214, 0.030),
-        off_fist=(-0.225, 0.029),
+        main_fist=(0.346, 0.146),
+        off_fist=(-0.342, 0.146),
     ),
 }
 

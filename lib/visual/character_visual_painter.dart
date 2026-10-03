@@ -254,8 +254,8 @@ abstract final class CharacterVisualPainter {
           rot += pose.offHandExtraRotation;
         }
         final offHand = layer.anchorId == AnchorId.offHand;
-        // The skin fist is under the glove. Hold the weapon at the glove's
-        // outer rim, or a plate hand looks like it grew past the grip.
+        // The skin fist is under the glove. Move the grip into the painted
+        // palm so the haft crosses the hand instead of floating beside it.
         final glove = wornGloveShift(pose, offHand: offHand);
         final ax = center.dx + ap.x + glove.dx * size;
         final ay = center.dy + ap.y + glove.dy * size;
@@ -344,7 +344,7 @@ abstract final class CharacterVisualPainter {
     return Offset(size * 8 / 128, size * 13 / 128);
   }
 
-  /// Extra shift from the skin fist to the outer rim of a worn glove.
+  /// Extra shift from the skin fist into the palm of a worn glove.
   /// Fractions of the sprite. Bare hands stay at zero.
   static Offset wornGloveShift(
     CharacterVisualPose pose, {
@@ -362,7 +362,7 @@ abstract final class CharacterVisualPainter {
   }
 
   /// Where [paintOwnedHero] puts a hand anchor on screen, after the step
-  /// and the lean. Unflipped poses only. [gloveShift] is the worn-glove rim.
+  /// and the lean. Unflipped poses only. [gloveShift] is the worn-glove palm.
   static Offset ownedHandPoint(
     CharacterVisualPose pose,
     Offset center,

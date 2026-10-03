@@ -47,28 +47,7 @@ def shipped_fists() -> dict[str, dict[str, tuple[float, float]]]:
 
 
 def glove_palm(fam: str, side: str) -> tuple[float, float] | None:
-    """Skin hand on the idle body. The weapon pivot, center origin.
-
-    Uses the rig source body when present: the live undertunic is thinner
-    than the palm a gauntlet covers. Warrior's fist is that lower palm,
-    not the sleeve tip.
-    """
-    if fam == "warrior":
-        # Palm under the gauntlet on the rig source (live undertunic is thinner).
-        im = Image.open(CHAR / fam / "_src" / "body_idle.png").convert("RGBA")
-        px = im.load()
-        x0, x1 = (100, 126) if side == "R" else (0, 28)
-        pts = [
-            (x, y)
-            for y in range(84, 96)
-            for x in range(x0, x1)
-            if px[x, y][3] >= 40
-        ]
-        if not pts:
-            return None
-        mx = sum(p[0] for p in pts) / len(pts)
-        my = sum(p[1] for p in pts) / len(pts)
-        return (mx / 128.0 - 0.5, my / 128.0 - 0.5)
+    """Visible skin hand on the idle undertunic, center origin."""
     im = Image.open(CHAR / fam / "body_idle.png").convert("RGBA")
     px = im.load()
     pts = [
