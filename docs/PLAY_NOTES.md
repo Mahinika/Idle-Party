@@ -7,9 +7,11 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Open
 
-- 2026-10-02 · Weapon sat above the warrior's hand. Moving the grip down into the gauntlet failed the fist check, which keeps that point on the sleeve. The grip is back on the sleeve.
+_Nothing open._
 
 ## Done
+
+<!-- - 2026-10-02 · Weapon sat above the warrior's hand · grip was on the sleeve; fist now under the gauntlet · fixed in 4774b4ff -->
 
 <!-- - 2026-10-02 · Gear on heroes looked like pixels were missing · the stormcleave axe haft did not meet the blade · fixed in ae2e18a6 -->
 

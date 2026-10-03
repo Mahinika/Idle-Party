@@ -113,17 +113,17 @@ abstract final class AnchorTables {
 
   /// Skin hand on the idle body, center origin. The same point for every clip.
   ///
-  /// The outer rim of a plate glove sits in empty air beside the sleeve, so a
-  /// weapon pivoted there missed a bare hand. Gauntlets still cover this palm.
+  /// Warrior's fist is the palm under the gauntlet (hand bone), not the sleeve.
+  /// A worn glove then shifts to that glove's outer rim (owned glove tips).
   /// Walk and attack keep it too: those clips do not move the glove.
   static const Map<BodyFamily, _FamilyFists> _familyFists = {
     BodyFamily.warrior: _FamilyFists(
-      idleMain: (0.238, 0.035),
-      idleOff: (-0.246, 0.035),
-      walkMain: (0.238, 0.035),
-      walkOff: (-0.246, 0.035),
-      attackMain: (0.238, 0.035),
-      attackOff: (-0.246, 0.035),
+      idleMain: (0.391, 0.195),
+      idleOff: (-0.391, 0.203),
+      walkMain: (0.391, 0.195),
+      walkOff: (-0.391, 0.203),
+      attackMain: (0.391, 0.195),
+      attackOff: (-0.391, 0.203),
     ),
     BodyFamily.rogue: _FamilyFists(
       idleMain: (0.212, -0.004),
