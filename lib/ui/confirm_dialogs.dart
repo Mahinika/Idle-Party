@@ -262,7 +262,8 @@ Future<void> confirmGauntletRun(
       builder: (ctx) => MenuChrome.dialog(
         title: 'Gauntlet?',
         content: Text(
-          'Boss every 5 floors. Each boss has its own tell. '
+          'Boss every 5 floors. Portrait stays Crystal Warden; '
+          'the tell word cycles (SHARD, WAVE, …). '
           'Leave or a wipe returns you to the hub.\n\n'
           'Best clear: F$best',
           style: GameTheme.body(size: 15, color: GameTheme.parchment),

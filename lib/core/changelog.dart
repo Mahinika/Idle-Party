@@ -115,7 +115,7 @@ abstract final class ChangelogCatalog {
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
         'Race still locks after New Game START.',
-        'KEY waits until the party is Lv100.',
+        'KEY waits until every active hero is Lv100.',
         'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
         'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
       ],
@@ -143,7 +143,7 @@ abstract final class ChangelogCatalog {
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
         'Race still locks after New Game START.',
-        'KEY waits until the party is Lv100.',
+        'KEY waits until every active hero is Lv100.',
         'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
         'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
       ],
@@ -167,7 +167,7 @@ abstract final class ChangelogCatalog {
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
         'Race still locks after New Game START.',
-        'KEY waits until the party is Lv100.',
+        'KEY waits until every active hero is Lv100.',
         'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
         'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
       ],
@@ -193,7 +193,7 @@ abstract final class ChangelogCatalog {
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
         'Race still locks after New Game START.',
-        'KEY waits until the party is Lv100.',
+        'KEY waits until every active hero is Lv100.',
         'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
         'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
       ],
@@ -216,7 +216,7 @@ abstract final class ChangelogCatalog {
         'Race still locks after New Game START.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
-        'KEY waits until the party is Lv100.',
+        'KEY waits until every active hero is Lv100.',
         'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
         'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
       ],
@@ -239,7 +239,7 @@ abstract final class ChangelogCatalog {
         'Race still locks after New Game START.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
-        'KEY waits until the party is Lv100.',
+        'KEY waits until every active hero is Lv100.',
         'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
         'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
       ],
@@ -249,63 +249,63 @@ abstract final class ChangelogCatalog {
       bullets: <String>[
         'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight.',
         'Worn gear shows its real item level, and CLEAN says when it would sell an upgrade. A piece you take off stays in the bag. ENTER KEY uses the dial you set. At Lv100, KEY is one night\'s job. The hub, shop, and bag use one main button.',
-        'Race still locks after New Game START. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). At party Lv100, MORE → CRAFT still runs a monthly Craft Trial. KEY waits until the party is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
+        'Race still locks after New Game START. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). At party Lv100, MORE → CRAFT still runs a monthly Craft Trial. KEY waits until every active hero is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.186',
       bullets: <String>[
         'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight. ESSENCE → RELICS are unique finds: Embers from bosses and Ascend discover and level them. Cinders are a slow glow — one from the Daily Vault, two Ad Tickets, or a cheap pouch — used to salvage or trade a few Embers each week. At party Lv100, MORE → CRAFT still runs a monthly Craft Trial (Apex gear only).',
-        'Race still locks after New Game START. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEY waits until the party is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
+        'Race still locks after New Game START. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). KEY waits until every active hero is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.185',
       bullets: <String>[
         'Your party fights on its own. After the first floor, the hub hunt names the next floor so you know what to push before the boss.',
-        'After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100. Caves stay snappier in crowded fights, and stacked mobs unstick instead of gluing together. Race still locks after New Game START. KEY waits until the party is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
+        'After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100. Caves stay snappier in crowded fights, and stacked mobs unstick instead of gluing together. Race still locks after New Game START. KEY waits until every active hero is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.184',
       bullets: <String>[
         'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
-        'Caves stay snappier in crowded fights, and stacked mobs unstick instead of gluing together. Race still locks after New Game START. KEY waits until the party is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
+        'Caves stay snappier in crowded fights, and stacked mobs unstick instead of gluing together. Race still locks after New Game START. KEY waits until every active hero is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.183',
       bullets: <String>[
         'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
-        'Caves fight differently: Sandy piles up front, Tide nets the mid room, Brass stacks elites. Pack jobs shout their own tells, and bosses telegraph that tell — Tide WAVE, Fen SPIT, Brass still WIND-UP then SLAM. Race still locks after New Game START. KEY waits until the party is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
+        'Caves fight differently: Sandy piles up front, Tide nets the mid room, Brass stacks elites. Pack jobs shout their own tells, and bosses telegraph that tell — Tide WAVE, Fen SPIT, Brass still WIND-UP then SLAM. Race still locks after New Game START. KEY waits until every active hero is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.182',
       bullets: <String>[
         'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
-        'GEAR and the cave now show loot on the doll: uncommon steel, rare bulk, epic gold, and more distinct weapons. Race still locks after New Game START. Sandy packs spit and crash; the first boss winds up then SLAM. Form kits keep their silhouette. KEY waits until the party is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
+        'GEAR and the cave now show loot on the doll: uncommon steel, rare bulk, epic gold, and more distinct weapons. Race still locks after New Game START. Sandy packs spit and crash; the first boss winds up then SLAM. Form kits keep their silhouette. KEY waits until every active hero is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.181',
       bullets: <String>[
         'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
-        'Sandy packs spit and crash; the first boss winds up then SLAM. New Game LOOK picks a race (Human through Goblin) per hero — it stays locked after START. Form kits keep their silhouette. KEY waits until the party is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
+        'Sandy packs spit and crash; the first boss winds up then SLAM. New Game LOOK picks a race (Human through Goblin) per hero — it stays locked after START. Form kits keep their silhouette. KEY waits until every active hero is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.180',
       bullets: <String>[
         'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
-        'Sandy packs spit and crash; the first boss winds up then SLAM. New Game and GEAR LOOK pick a race (Human through Goblin) per hero. Form kits keep their silhouette. KEY waits until the party is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
+        'Sandy packs spit and crash; the first boss winds up then SLAM. New Game and GEAR LOOK pick a race (Human through Goblin) per hero. Form kits keep their silhouette. KEY waits until every active hero is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
       version: '1.12.179',
       bullets: <String>[
         'Your party fights on its own. After the first cave, keep leveling the party — the extra hunts wait until everyone is Lv100.',
-        'New Game and GEAR LOOK pick a race (Human through Goblin) per hero. Form kits keep their silhouette. KEY waits until the party is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
+        'New Game and GEAR LOOK pick a race (Human through Goblin) per hero. Form kits keep their silhouette. KEY waits until every active hero is Lv100. Ranked GR packs still scale with rank only — GOLD → FORGE does not buff monsters. After GR20 each rank multiplies toughness so GR239 is not GR25. PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
@@ -1101,7 +1101,7 @@ abstract final class ChangelogCatalog {
       version: '1.12.68',
       bullets: <String>[
         'Menu consolidation: POWER drops INCOME — hub gold/min and Gold Find live on CAMP only (FORGE / MARKET / CAMP / SHOP). MARKET is buy-only with a BAG link; sell and CLEAN stay in PARTY → BAG.',
-        'Endgame META opens on KEY first when party is Lv100; META badge nudges KEY dial below cap. Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN. TODAY still owns Gauntlet / Ranked GR / KEY hunts.',
+        'Endgame META opens on KEY first when every active hero is Lv100; META badge nudges KEY dial below cap. Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN. TODAY still owns Gauntlet / Ranked GR / KEY hunts.',
         'PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
       ],
     ),
@@ -1153,7 +1153,7 @@ abstract final class ChangelogCatalog {
       version: '1.12.60',
       bullets: <String>[
         'Ascend is prestige again: your party stays (levels, open zones, Apex, Blessing) but gold, forge, bag drops, market, and floors reset. TODAY says Rebuild your bag — not ENTER KEY — until you loot real gear. AL 20 BLESSING has optional REBORN (same wipe, no extra Blessing).',
-        'KEY / Gauntlet / Ranked GR still unlock at party Lv100. PATH still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+        'KEY / Gauntlet / Ranked GR still unlock when every active hero is Lv100. PATH still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
     ),
     ChangelogRelease(
@@ -1161,20 +1161,20 @@ abstract final class ChangelogCatalog {
       bullets: <String>[
         'Was briefly claim-only (kept gold/gear/floors); 1.12.60 restored prestige '
             'Ascend bag wipe — keep levels/zones/Apex, rebuild the bag. (superseded)',
-        'KEY / Gauntlet / Ranked GR still unlock at party Lv100. PATH still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+        'KEY / Gauntlet / Ranked GR still unlock when every active hero is Lv100. PATH still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
     ),
     ChangelogRelease(
       version: '1.12.58',
       bullets: <String>[
         'Combat XP: harder kills (enemy above your hero level) pay more XP; heroes behind the party catch up faster. Push deeper floors to level quicker.',
-        'KEY / Gauntlet / Ranked GR still unlock at party Lv100. PATH still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
+        'KEY / Gauntlet / Ranked GR still unlock when every active hero is Lv100. PATH still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
     ),
     ChangelogRelease(
       version: '1.12.57',
       bullets: <String>[
-        'Ascend Blessing packs are stronger: each Ascend keeps +5 ATK · +20 DEF · +60 STA · +8% gold (was +2/+8/+24/+3%). Existing Blessing stacks use the new rates. KEY / Gauntlet / Ranked GR still unlock at party Lv100.',
+        'Ascend Blessing packs are stronger: each Ascend keeps +5 ATK · +20 DEF · +60 STA · +8% gold (was +2/+8/+24/+3%). Existing Blessing stacks use the new rates. KEY / Gauntlet / Ranked GR still unlock when every active hero is Lv100.',
         'First Ascend on a new save is optional - TODAY leads Daily / farming after the first boss; Ascend stays on the hub as a side button.',
         'PATH still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
@@ -1200,7 +1200,7 @@ abstract final class ChangelogCatalog {
       version: '1.12.54',
       bullets: <String>[
         'Endgame pack: month season pass, extended QUESTS bounty (to 25k kills), Tiny challenge, Party Power score, Ashen Crown world boss, Blessing Constellation (AL 20), Craft Trial, God Hand mastery, and Full Bench roster exhibition.',
-        'Mirror weeks reuse season affix + layout seed on existing zones — no separate mode. KEY / Gauntlet / farm Rifts / Ranked GR still unlock at party Lv100.',
+        'Mirror weeks reuse season affix + layout seed on existing zones — no separate mode. KEY / Gauntlet / farm Rifts / Ranked GR still unlock when every active hero is Lv100.',
         'PATH still runs Sandy Caverns through Mothveil Hollow (Stormwake, Rimeglass, Blightfen, Brassvault, Tidehold, Ashen Vault, Hollow Grove on the road).',
       ],
     ),
