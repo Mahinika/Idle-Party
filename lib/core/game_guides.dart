@@ -536,7 +536,7 @@ abstract final class GameGuides {
           'Weapon crits hit harder than spell crits. '
           'Near 75% crit, EQUIP stops chasing more Crit.\n'
           '• Armor type is a hard gate: Warrior / Paladin / DK wear plate; '
-          'Hunter starts leather then mail at 40; Shaman mail; Rogue leather; '
+          'Hunter wears leather, and mail from 40 (leather still legal); Shaman mail; Rogue leather; '
           'Druid leather (cloth OK); Priest / Mage / Warlock cloth. '
           'EQUIP never puts the wrong material on a hero.\n'
           '• Weapons are a hard gate too: Paladin no daggers, Priest no swords, '

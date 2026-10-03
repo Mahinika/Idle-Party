@@ -88,7 +88,7 @@ const List<ClassAbilityDef> _warriorKit = <ClassAbilityDef>[
       specId: HeroSpecId.protection,
       name: 'Devastate',
       shortLabel: 'Devast',
-      description: 'Shield strike that applies Sunder; may reset Shield Slam.',
+      description: 'Shield strike that applies Sunder; may reset Shield Slam. Requires shield.',
       unlockLevel: 6,
       cooldown: 2.8,
       resourceCost: 15,

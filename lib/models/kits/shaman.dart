@@ -9,7 +9,7 @@ const List<ClassAbilityDef> _shamanKit = <ClassAbilityDef>[
       specId: HeroSpecId.elemental,
       name: 'Elemental Focus',
       shortLabel: 'EFocus',
-      description: 'Always on: personal spell power + haste.',
+      description: 'Always on: spell power and +10% haste.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: true,

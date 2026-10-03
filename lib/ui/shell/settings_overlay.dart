@@ -353,7 +353,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           label: 'RESET DISPLAY DEFAULTS',
           tip:
               'Text 100% · Zoom Normal · Full VFX · colorblind off · '
-              'heal numbers on · Music Low · sound on · haptics on',
+              'heal numbers on. Also resets SOUND: Music Low · sound on · haptics on',
           style: GameButtonStyle.grey,
           onPressed: _resetDisplayDefaults,
         ),
