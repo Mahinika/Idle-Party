@@ -6,7 +6,8 @@ description: >-
   the BAG icon does not match the doll, or the owner says "gear ser olika
   ut", "två svärd ser likadana ut", "ikonen matchar inte dockan", "ny
   vapenmodell", or "ny hjälm". Do not use for the body pipeline
-  (character-paper-doll), enemy sprites (enemy-art), or a cave that looks
+  (character-paper-doll), placement-only grip fixes
+  (weapon-grip-placement), enemy sprites (enemy-art), or a cave that looks
   like its neighbor (zone-art-identity).
 ---
 

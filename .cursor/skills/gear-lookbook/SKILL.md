@@ -2,10 +2,11 @@
 name: gear-lookbook
 description: >-
   Renders the Idle Party gear lookbook to PNGs and reads them to see if
-  gear sits on each body. Use when gear looks loose, a weapon misses the
-  hand, or the owner says "hur sitter gear", "sitter fel på kroppen",
-  "kolla dockan", or "lookbook". Do not use for drawing pixels (gear-art),
-  the owner's phone look (a56-playtest), or enemy sprites (enemy-art).
+  gear sits on each body. Use for a broad doll audit or when the owner says
+  "hur sitter gear", "sitter fel på kroppen", "kolla dockan", or "lookbook".
+  Do not use to correct weapon grips (weapon-grip-placement), draw pixels
+  (gear-art), judge the owner's phone look (a56-playtest), or edit enemies
+  (enemy-art).
 ---
 
 # Gear lookbook (Idle Party)
