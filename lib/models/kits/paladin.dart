@@ -324,7 +324,7 @@ const List<ClassAbilityDef> _paladinKit = <ClassAbilityDef>[
       specId: HeroSpecId.retribution,
       name: 'Seal of Command',
       shortLabel: 'Seal',
-      description: 'Always on: bonus strike power.',
+      description: 'Always on: 3.75× outgoing damage.',
       unlockLevel: 1,
       cooldown: 0,
       showInHud: true,

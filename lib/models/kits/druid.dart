@@ -258,7 +258,7 @@ const List<ClassAbilityDef> _druidKit = <ClassAbilityDef>[
       specId: HeroSpecId.feral,
       name: 'Swipe',
       shortLabel: 'Swipe',
-      description: 'Cat claw sweep — builds a combo point.',
+      description: 'Claw disc around you — builds a combo point.',
       unlockLevel: 7,
       cooldown: 7,
       resourceCost: 18,

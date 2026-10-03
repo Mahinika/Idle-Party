@@ -424,7 +424,7 @@ abstract final class AchievementCatalog {
     ),
     AchievementDef(
       id: 'hidden_egg',
-      title: 'Shell Surprise',
+      title: 'Ten Hatches',
       description: 'Hatch 10 pets lifetime.',
       essenceReward: 6,
       category: AchievementCategory.collector,

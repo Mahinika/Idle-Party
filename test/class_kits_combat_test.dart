@@ -5,9 +5,48 @@ import 'package:idle_party/core/hero_identity.dart';
 import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
+import 'package:idle_party/models/spec_mastery.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 
 void main() {
+  test('tooltip names cast time and DoT hold', () {
+    expect(
+      ClassKits.defFor(AbilityId.aimedShot)!.tooltipMessage,
+      contains('Cast 1.5s'),
+    );
+    expect(
+      ClassKits.defFor(AbilityId.fireball)!.tooltipMessage,
+      contains('Cast 1.8s'),
+    );
+    expect(
+      ClassKits.defFor(AbilityId.pyroblast)!.tooltipMessage,
+      contains('Cast 2.4s'),
+    );
+    expect(
+      ClassKits.defFor(AbilityId.bloodBoil)!.tooltipMessage,
+      contains('Holds while the DoT still has time'),
+    );
+    expect(
+      ClassKits.defFor(AbilityId.moonfire)!.tooltipMessage,
+      contains('Holds while the DoT still has time'),
+    );
+    final seal = ClassKits.defFor(AbilityId.sealOfCommand)!;
+    expect(seal.description, contains('3.75×'));
+    expect(ClassKits.defFor(AbilityId.coneOfCold)!.name, 'Frost Disc');
+    expect(
+      ClassKits.defFor(AbilityId.multiShot)!.description,
+      contains('Fan'),
+    );
+    expect(
+      ClassKits.defFor(AbilityId.feralSwipe)!.description,
+      contains('disc'),
+    );
+    expect(
+      SpecMastery.playerLabel(SpecMasteryKind.hunterVsWild),
+      'Damage',
+    );
+  });
+
   test('every ability has usable tooltip copy', () {
     for (final def in ClassKits.all) {
       expect(def.name, isNotEmpty);

@@ -57,7 +57,7 @@ const List<ClassAbilityDef> _hunterKit = <ClassAbilityDef>[
       specId: HeroSpecId.beastMastery,
       name: 'Multi-Shot',
       shortLabel: 'Multi',
-      description: 'AoE around focus.',
+      description: 'Fan of arrows at the focus.',
       unlockLevel: 7,
       cooldown: 6,
       resourceCost: 14,

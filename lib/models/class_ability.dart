@@ -675,7 +675,15 @@ class ClassAbilityDef {
       AbilityFireMode.onHitBounce => ' · On hit',
       _ => '',
     };
-    return '$name\n$description\n$cd$cost$shield$mode';
+    final delay = castDelaySeconds >= 0.4
+        ? (castDelaySeconds == castDelaySeconds.roundToDouble()
+              ? ' · Cast ${castDelaySeconds.round()}s'
+              : ' · Cast ${castDelaySeconds.toStringAsFixed(1)}s')
+        : '';
+    final hold = gate.maintainDot
+        ? ' · Holds while the DoT still has time'
+        : '';
+    return '$name\n$description\n$cd$cost$shield$mode$delay$hold';
   }
 
   /// Party HUD: gold flash for the first beat after a dump/panic fires.
