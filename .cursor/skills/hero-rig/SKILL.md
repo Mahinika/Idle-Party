@@ -3,10 +3,11 @@ name: hero-rig
 description: >-
   Idle Party in-game cutout skeleton for heroes. Use when a hero's limbs,
   weapons, or ability pose look wrong, when baking a family rig, or when the
-  owner says skelettet i spelet, dockan rör sig fel, or the rig. Do not use
-  for seating a helm, chest, or pauldron (armor-placement), weapon grips
-  (weapon-grip-placement), the outside-the-game demo (skeleton-demo),
-  drawing gear pixels (gear-art), or one missing cast (add-ability).
+  owner says skelettet i spelet, dockan rör sig fel, "delarna ser konstiga ut",
+  or the rig. Do not use for seating a helm, chest, or pauldron
+  (armor-placement), weapon grips (weapon-grip-placement), the
+  outside-the-game demo (skeleton-demo), drawing gear pixels (gear-art),
+  or one missing cast (add-ability).
 ---
 
 # Hero rig (in the game)
@@ -29,9 +30,15 @@ and `<family>_races.png`. Do not put rig files under `assets/custom/char/<family
 (the facit treats them as orphans). Do not edit live PNGs, `paper_doll_lock.json`,
 or `owned_gear_grips.dart` by hand.
 
-Look at the parts preview before adding a family to `HeroRigFlags`. Head, arms,
-and legs must sit on the body. Robes need a `skirt` bone and legs only below
-the hem.
+The parts picture is the dressed doll with a light bone tint. Head, arms,
+and legs must sit on that body. A flat color block is the wrong view.
+
+- A hat or hood above the shoulders is the whole head. The chin is not the skirt.
+- The skirt is only the cloth below the sleeves. The chest stays the torso.
+- A cloak stays on the torso. `arm_width` keeps only the outer limb as the arm.
+  A cloak tip beside the pants stays on the body. The shoes stay feet.
+- The bake must print `hand_r` and `hand_l`. A fist on `torso` means the arm
+  is too thin. An empty pauldron is fine when the hood took those pixels.
 
 ## Tests
 

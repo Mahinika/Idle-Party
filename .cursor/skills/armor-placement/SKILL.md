@@ -48,8 +48,8 @@ py -3 tool/gear_lookbook.py --armor
 ```
 
 Read `measure.txt`, then `fit_summary.png`. That is the rest pose. Then
-read `tool/out/rig/<family>_parts.png` after a bake. Head, shoulders, and
-legs must sit on the body there.
+read `tool/out/rig/<family>_parts.png` after a bake. A sliced hat, face,
+or cloak is the bone cut (`hero-rig`), not a gear pixel.
 
 - Still doll wrong, skeleton at rest also wrong: the picture's pixels are
   in the wrong place.
