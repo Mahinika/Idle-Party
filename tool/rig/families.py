@@ -26,10 +26,13 @@ class FamilyCut:
     thigh_y: int
     shin_y: int
     # Connected silhouettes (cape, robe) have no arm gap. Pixels outside this
-    # torso column, from arm_y down to sleeve_end, are the arms.
+    # torso column, from arm_y down to sleeve_end, are the arms. arm_width
+    # keeps a hanging cloak on the torso and leaves only the outer limb
+    # as the arm. 0 means the whole side is the arm.
     torso_x0: int = 0
     torso_x1: int = 0
     sleeve_end: int = 0
+    arm_width: int = 0
     # Robes: pixels from the waist down to the hem, inside the cloth, are skirt.
     skirt: bool = False
     hem_y: int = 0
@@ -75,6 +78,7 @@ FAMILIES: dict[str, FamilyCut] = {
         shin_y=120,
         torso_x0=46,
         torso_x1=82,
+        arm_width=18,
         main_fist=(0.314, 0.180),
         off_fist=(-0.320, 0.180),
     ),

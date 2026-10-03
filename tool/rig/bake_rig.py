@@ -75,6 +75,13 @@ def _leg_name(cut: FamilyCut, side: str, y: int) -> str:
     return f"foot_{side}"
 
 
+def _outer_edge(segs: list[tuple[int, int]], x: int) -> tuple[int, int] | None:
+    for start, end in segs:
+        if start <= x <= end:
+            return start, end
+    return None
+
+
 def _arm_side(cut: FamilyCut, x: int, y: int, segs: list[tuple[int, int]]) -> str | None:
     """Left or right arm, or None when this pixel is body."""
     if y < cut.arm_y:
@@ -85,24 +92,52 @@ def _arm_side(cut: FamilyCut, x: int, y: int, segs: list[tuple[int, int]]) -> st
     if len(segs) >= 3 and (x <= segs[0][1] or x >= segs[-1][0]):
         return "l" if x <= segs[0][1] else "r"
     if cut.torso_x1 and (x < cut.torso_x0 or x > cut.torso_x1):
-        return "l" if x < cut.torso_x0 else "r"
+        side = "l" if x < cut.torso_x0 else "r"
+        if cut.arm_width:
+            edge = _outer_edge(segs, x)
+            if edge is None:
+                return None
+            start, end = edge
+            if side == "l" and x > start + cut.arm_width:
+                return None
+            if side == "r" and x < end - cut.arm_width:
+                return None
+        return side
     return None
 
 
 def _name_at(cut: FamilyCut, x: int, y: int, segs: list[tuple[int, int]]) -> str:
+    # A hat or hood above the shoulders is the whole head, not a box on the face.
+    if cut.skirt and y < cut.arm_y and y <= cut.head_chin_y:
+        return "head"
+    # The face stays on the head. A robe must not claim the chin.
+    if y <= cut.head_y or (y <= cut.head_chin_y and cut.chin_x0 <= x <= cut.chin_x1):
+        return "head"
     if y >= cut.leg_y:
+        edge = _outer_edge(segs, x)
+        leg_in_row = any(
+            not (end < cut.torso_x0 or start > cut.torso_x1) for start, end in segs
+        )
+        # A cloak tip beside the pants stays on the body. The shoes do not.
+        if (
+            cut.torso_x1
+            and leg_in_row
+            and edge is not None
+            and (edge[1] < cut.torso_x0 or edge[0] > cut.torso_x1)
+        ):
+            return "torso"
         return _leg_name(cut, "l" if x < cut.leg_split_x else "r", y)
     side = _arm_side(cut, x, y, segs)
     if side:
         return _arm_name(cut, side, y)
-    if cut.skirt and cut.arm_y <= y < cut.hem_y:
-        return "skirt"
-    if y <= cut.head_y or (y <= cut.head_chin_y and cut.chin_x0 <= x <= cut.chin_x1):
-        return "head"
     if y < cut.arm_y and x < cut.pauldron_x_l:
         return "pauldron_l"
     if y < cut.arm_y and x > cut.pauldron_x_r:
         return "pauldron_r"
+    # The skirt is the cloth below the sleeves. The chest stays the torso.
+    waist = cut.sleeve_end or cut.hem_y
+    if cut.skirt and waist <= y < cut.hem_y:
+        return "skirt"
     return "torso"
 
 
@@ -228,8 +263,11 @@ def bake(cut: FamilyCut) -> dict:
                 primary_parts[name].add((x, y))
     opaque_parts = {name: {p for p in pts if p in opaque} for name, pts in primary_parts.items()}
     for name, pts in opaque_parts.items():
-        if not pts:
-            raise SystemExit(f"{cut.name} part {name} is empty")
+        if pts:
+            continue
+        if name.startswith("pauldron_"):
+            continue
+        raise SystemExit(f"{cut.name} part {name} is empty")
     rests = bone_rests(opaque_parts)
     # One label per pixel. A joint pad would paint soft cloth twice and darken it.
     masks = {name: set(pts) for name, pts in primary_parts.items()}
@@ -284,9 +322,31 @@ def _preview(
     src_px = src.load()
     for y in range(CANVAS):
         for x in range(CANVAS):
-            if src_px[x, y][3] > 20:
-                color = PART_COLORS.get(grid[y][x], (255, 0, 255))
-                sp[x, y] = (*color, 255)
+            r, g, b, a = src_px[x, y]
+            if a <= 20:
+                continue
+            color = PART_COLORS.get(grid[y][x], (255, 0, 255))
+            edge = False
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < CANVAS and 0 <= ny < CANVAS and grid[ny][nx] != grid[y][x]:
+                    if src_px[nx, ny][3] > 20:
+                        edge = True
+                        break
+            if edge:
+                sp[x, y] = (
+                    (r + color[0]) // 2,
+                    (g + color[1]) // 2,
+                    (b + color[2]) // 2,
+                    255,
+                )
+            else:
+                sp[x, y] = (
+                    (r * 2 + color[0]) // 3,
+                    (g * 2 + color[1]) // 3,
+                    (b * 2 + color[2]) // 3,
+                    255,
+                )
     big = sheet.resize((CANVAS * 8, CANVAS * 8), Image.Resampling.NEAREST)
     big.save(out / f"{cut.name}_parts.png")
     _race_sheet(cut, grid, out)
