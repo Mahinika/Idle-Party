@@ -75,7 +75,7 @@ Robe legs stay within 12 degrees.
 - Draw weapons last, in front of the body. The cape is one rigid piece on
   the torso, behind the body.
 - Poses step at 16 fps into a 256 image, then scale with nearest-neighbor.
-- Each pixel has one bone. A second owner darkens soft cloth at rest.
+- A hands picture follows the arm even where the body map says chest, shoulder, or leg. A helm follows the head, including the brim. A chest collar that overlaps the chin stays on the head, or the face covers it.
 - Ability poses live in `lib/visual/rig/rig_ability_clips.dart`. The actor's
   `animAbility` is visual only and is not saved. Other classes fall back to
   attack or cast.

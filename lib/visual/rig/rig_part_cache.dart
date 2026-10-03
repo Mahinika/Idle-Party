@@ -51,11 +51,100 @@ abstract final class RigPartCache {
     if (hit != null) return Future.value(hit);
     return _pending.putIfAbsent(cacheKey, () async {
       final source = seal ? await solidImage(image) : image;
-      final atlas = await _build(source, rig, cropTop, cropBottom);
+      final atlas = await _build(source, rig, cacheKey, cropTop, cropBottom);
       _ready[cacheKey] = atlas;
       _pending.remove(cacheKey);
       return atlas;
     });
+  }
+
+  /// Hands stay on the arm, and a helm stays on the head. The body map
+  /// underneath does not change. A chest collar stays on the head: moving
+  /// it to the torso draws it under the face and hides the neckline.
+  static String claimFor(String path) {
+    final name = path.replaceAll('\\', '/').split('/').last;
+    if (name.startsWith('hands_')) return 'hands';
+    if (name.startsWith('helm_')) return 'helm';
+    return '';
+  }
+
+  static const armParts = {
+    'upper_l',
+    'upper_r',
+    'fore_l',
+    'fore_r',
+    'hand_l',
+    'hand_r',
+  };
+
+  /// Which bone draws the pixel at [index] for this picture.
+  static String? partAt({
+    required RigData rig,
+    required List<String?> body,
+    required List<String?> nearestArm,
+    required int index,
+    required String claim,
+  }) {
+    final owned = index >= 0 && index < body.length ? body[index] : null;
+    if (claim == 'helm' && rig.bones.containsKey('head')) return 'head';
+    if (claim == 'hands') {
+      if (owned != null && armParts.contains(owned)) return owned;
+      final arm = index >= 0 && index < nearestArm.length ? nearestArm[index] : null;
+      return arm ?? owned;
+    }
+    return owned;
+  }
+
+  static List<String?> bodyParts(RigData rig) {
+    final body = List<String?>.filled(RigData.canvas * RigData.canvas, null);
+    for (final part in rig.drawOrder) {
+      final mask = rig.masks[part];
+      if (mask == null) continue;
+      for (var i = 0; i < mask.length && i < body.length; i++) {
+        if (mask[i] != 0 && body[i] == null) body[i] = part;
+      }
+    }
+    return body;
+  }
+
+  /// Nearest upper arm, forearm, or hand, so a gauntlet pixel on the chest
+  /// still bends with that arm.
+  static List<String?> nearestArms(RigData rig) {
+    final canvas = RigData.canvas;
+    final owner = List<String?>.filled(canvas * canvas, null);
+    final queue = <int>[];
+    for (final part in armParts) {
+      final mask = rig.masks[part];
+      if (mask == null) continue;
+      for (var i = 0; i < mask.length && i < owner.length; i++) {
+        if (mask[i] == 0 || owner[i] != null) continue;
+        owner[i] = part;
+        queue.add(i);
+      }
+    }
+    var head = 0;
+    while (head < queue.length) {
+      final i = queue[head++];
+      final part = owner[i];
+      if (part == null) continue;
+      final x = i % canvas;
+      final y = i ~/ canvas;
+      for (final step in const [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ]) {
+        final nx = x + step[0];
+        final ny = y + step[1];
+        if (nx < 0 || ny < 0 || nx >= canvas || ny >= canvas) continue;
+        final j = ny * canvas + nx;
+        if (owner[j] != null) continue;
+        owner[j] = part;
+        queue.add(j);
+      }
+    }
+    return owner;
   }
 
   /// A one-pixel hole in the plate fills in.
@@ -281,6 +370,7 @@ abstract final class RigPartCache {
   static Future<RigAtlas> _build(
     ui.Image image,
     RigData rig,
+    String cacheKey,
     double cropTop,
     double cropBottom,
   ) async {
@@ -293,27 +383,33 @@ abstract final class RigPartCache {
     final height = image.height;
     final y0 = (cropTop * RigData.canvas).floor().clamp(0, RigData.canvas);
     final y1 = (cropBottom * RigData.canvas).ceil().clamp(0, RigData.canvas);
-    final pieces = <_Draft>[];
-    for (final part in rig.drawOrder) {
-      final mask = rig.masks[part];
-      if (mask == null) continue;
-      var minX = width;
-      var minY = height;
-      var maxX = -1;
-      var maxY = -1;
-      for (var y = y0; y < y1 && y < height; y++) {
-        for (var x = 0; x < width && x < RigData.canvas; x++) {
-          if (mask[y * RigData.canvas + x] == 0) continue;
-          final alpha = bytes[(y * width + x) * 4 + 3];
-          if (alpha == 0) continue;
-          if (x < minX) minX = x;
-          if (y < minY) minY = y;
-          if (x > maxX) maxX = x;
-          if (y > maxY) maxY = y;
+    final claim = claimFor(cacheKey);
+    final body = bodyParts(rig);
+    final arms = claim == 'hands' ? nearestArms(rig) : const <String?>[];
+    final boxes = <String, _Draft>{};
+    for (var y = y0; y < y1 && y < height; y++) {
+      for (var x = 0; x < width && x < RigData.canvas; x++) {
+        if (bytes[(y * width + x) * 4 + 3] == 0) continue;
+        final part = partAt(
+          rig: rig,
+          body: body,
+          nearestArm: arms,
+          index: y * RigData.canvas + x,
+          claim: claim,
+        );
+        if (part == null || rig.bones[part] == null) continue;
+        final box = boxes[part];
+        if (box == null) {
+          boxes[part] = _Draft(part, x, y, x, y);
+        } else {
+          box.grow(x, y);
         }
       }
-      if (maxX < 0) continue;
-      pieces.add(_Draft(part, minX, minY, maxX, maxY));
+    }
+    final pieces = <_Draft>[];
+    for (final part in rig.drawOrder) {
+      final box = boxes[part];
+      if (box != null) pieces.add(box);
     }
     if (pieces.isEmpty) {
       final empty = await _image(Uint8List(4), 1, 1);
@@ -329,8 +425,15 @@ abstract final class RigPartCache {
         for (var x = 0; x < piece.w; x++) {
           final sx = piece.minX + x;
           final sy = piece.minY + y;
-          if (sy >= height || sx >= width) continue;
-          if (rig.masks[piece.part]![sy * RigData.canvas + sx] == 0) continue;
+          if (sy >= height || sx >= width || sx >= RigData.canvas) continue;
+          final part = partAt(
+            rig: rig,
+            body: body,
+            nearestArm: arms,
+            index: sy * RigData.canvas + sx,
+            claim: claim,
+          );
+          if (part != piece.part) continue;
           final src = (sy * width + sx) * 4;
           final dst = ((y * atlasW) + cursor + x) * 4;
           pixels[dst] = bytes[src];
@@ -370,11 +473,18 @@ class _Draft {
   _Draft(this.part, this.minX, this.minY, this.maxX, this.maxY);
 
   final String part;
-  final int minX;
-  final int minY;
-  final int maxX;
-  final int maxY;
+  int minX;
+  int minY;
+  int maxX;
+  int maxY;
 
   int get w => maxX - minX + 1;
   int get h => maxY - minY + 1;
+
+  void grow(int x, int y) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
 }

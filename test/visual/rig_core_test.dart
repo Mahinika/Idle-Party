@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
@@ -179,5 +180,43 @@ void main() {
     final named = RigSampler.sample(strike, abilityName: strike.abilityName);
     expect(named.clip, 'mortalStrike');
     expect(named.pose.angles['sword']!, lessThan(plain.pose.angles['sword'] ?? 0));
+  });
+
+  test('gloves and helms follow the arm and the head', () async {
+    Future<Set<String>> parts(RigData rig, String asset) async {
+      final codec = await ui.instantiateImageCodec(File(asset).readAsBytesSync());
+      final frame = await codec.getNextFrame();
+      codec.dispose();
+      final atlas = await RigPartCache.cut(
+        image: frame.image,
+        rig: rig,
+        cacheKey: 'claim|0|1|$asset',
+      );
+      return atlas.pieces.map((piece) => piece.part).toSet();
+    }
+
+    RigData family(String name) {
+      final raw = File('assets/custom/rig/$name.json').readAsStringSync();
+      return RigData.parse(name, jsonDecode(raw) as Map<String, dynamic>);
+    }
+
+    final warriorGloves = await parts(
+      warrior,
+      'assets/custom/char/warrior/gear/hands_t0_idle.png',
+    );
+    expect(warriorGloves, isNotEmpty);
+    expect(warriorGloves.every(RigPartCache.armParts.contains), isTrue);
+
+    final rogueGloves = await parts(
+      family('rogue'),
+      'assets/custom/char/rogue/gear/hands_t0_idle.png',
+    );
+    expect(rogueGloves.every(RigPartCache.armParts.contains), isTrue);
+
+    final mageHelm = await parts(
+      family('mage'),
+      'assets/custom/char/mage/gear/helm_t0_idle.png',
+    );
+    expect(mageHelm, {'head'});
   });
 }
