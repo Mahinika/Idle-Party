@@ -200,7 +200,7 @@ Three buckets — use in copy, section labels, and guides (not a new palette):
 | **TODAY** | Session habits & claims | vault, jobs, daily run, hub TODAY |
 | **ACCOUNT** | Essence / forever meta | essence, CAMP, KEEP, Apex, codex |
 
-Helpers: `sectionLabelScoped(title, scope: …)` tints the header; do **not** show RUN / TODAY / ACCOUNT chips in menus. Plain `sectionLabel` when scope is obvious.
+Helpers: `sectionLabelScoped(title, scope: …)` tints the header. Plain `sectionLabel` when scope is obvious. A tab may show a tiny scope word under its label via `bridgedTabScoped`. Do **not** put RUN / TODAY / ACCOUNT chips in the menu body.
 
 **Hub stack (phone):** TODAY text → at most **one brown** primary + **one grey** secondary under it; everything else tertiary/link/chip. MetaPulse crumbs hide when TODAY is READY/ALMOST.
 
@@ -213,11 +213,11 @@ Helpers: `sectionLabelScoped(title, scope: …)` tints the header; do **not** sh
 **Surfaces:** `MenuChrome.panel`, `scrim`, `cardBox`, `listCard`, `hubPanel` (hub banners), `hudWell` (party / target HUD), `sheetRadius`  
 **Radii:** `GameTheme.radiusSm` (8) / `radiusMd` (12) / `radiusLg` (18) / `radiusHud` (4)  
 **Type:** `menuTitle` (Cinzel) · `body` (VT323) · `sectionLabel` / `sectionLabelScoped` · `button` · `pixel` (HUD/tags only)  
-**Color:** `parchment` / `parchmentDim` · `torch` / `torchHot` · `mossLit` · `scopeRun/Today/Account` · `rarity*` · `tooltip*` (item tips) · `buttonBrown*` / `buttonGrey*` / `buttonRed*` · `hudWell*` / `hudFlask*` · `riftBar*` (Farm / Ranked GR D3-style fill)  
+**Color:** `parchment` / `parchmentDim` · `torch` / `torchHot` · `mossLit` · `scopeRun/Today/Account` · `rarity*` · `tooltip*` (item tips) · `buttonBrown*` / `buttonGrey*` / `buttonRed*` · `hudWell*` / `hudFlask*` · `riftBar*` (Farm / Ranked GR D3-style fill) · `navGear` / `navGold` / `navShop` / `navEssence` / `navKey` / `navMore` / `navLeave` (one fill per bottom-bar slot)  
 **Icons:** `GameIcon.asset(UiIcon.settings)` / `UiIcon.key` (PNG) or `GameIcon.glyph` for add/close/arrows/scroll — never Material `Icons` or emoji in chrome. TODAY buttons are plain English (`ENTER KEY`, `GAUNTLET`, `RIFT`). Hub SCROLLS uses `UiGlyph.scroll` on the FAB. Active buffs use owned `UiIcon` sprites (sword / coin / tome / boots / chest / wand / campfire) stacked above the FAB and above dungeon FLASK.  
 **Touch:** `minTouch` 44 · `primaryTouch` 48  
 
-**Tokens:** also `MenuChrome.toggleMark`, `slider`, `fold` for settings / Apex / What’s New. **`MenuChrome.playSafeArea`** — hub / dungeon / start / intro share the full-height GEAR top edge (no status-bar letterbox). Play bottom inset stays on `AppBottomBar`.
+**Helpers:** `sheetHandle` (grip on a sheet) · `stepperButton` (+/−) · `dialog` / `dialogCancel` (confirm) · `statRow` (`label … value`) · `toggleMark`, `slider`, `fold` (settings / Apex / What’s New). **`MenuChrome.playSafeArea`** — hub / dungeon / start / intro share the full-height GEAR top edge (no status-bar letterbox). Play bottom inset stays on `AppBottomBar`.
 
 ---
 
@@ -251,7 +251,7 @@ Overflow stripes = layout bug, not “theme says no.”
 Do **not** force GEAR sheet chrome onto:
 
 - Combat / dungeon HUD  
-- Bottom nav  
+- Bottom nav — `AppBottomBar` keeps the `nav*` slot fills (shop stays blue, leave stays red). Do not restyle those slots as brown `GameButton`s  
 - Start menu / intro / new-game picker  
 - Hub world-path scene (caption + chase stack are hub-native)  
 - Item tooltips (long-press on phone; compact compare in bag)
