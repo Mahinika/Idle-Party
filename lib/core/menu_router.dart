@@ -706,5 +706,21 @@ class MenuRouter extends ChangeNotifier {
 
   ];
 
+
+
+  /// MORE tab rail — same family as GEAR (QUESTS / CRAFT then INFO).
+
+  static List<MoreSection> visibleMoreSections(GameState s) => <MoreSection>[
+
+    ...visibleMoreMetaRows(s),
+
+    MoreSection.info,
+
+    MoreSection.settings,
+
+    MoreSection.credits,
+
+  ];
+
 }
 

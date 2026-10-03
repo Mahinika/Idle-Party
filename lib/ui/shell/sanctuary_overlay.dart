@@ -156,10 +156,9 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       );
       final combatDelta = campPct - nowPct;
       detail =
-          'Next +${hubDelta}g/min hub · combat gold find +$combatDelta% '
-          '(soft-capped with other finds)';
+          'Next +${hubDelta}g/min hub · +$combatDelta% find';
     } else if (track == 'power') {
-      detail = 'Also raises hub AFK essence rate (War Altar shortens the wait)';
+      detail = 'Speeds hub AFK essence';
     }
 
     late final Widget trailing;

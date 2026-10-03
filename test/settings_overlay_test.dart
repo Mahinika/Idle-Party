@@ -115,6 +115,37 @@ void main() {
     await tester.pump();
     expect(find.text('Earth Kraken'), findsOneWidget);
     expect(find.text('MONSTERS (1)'), findsOneWidget);
+    expect(find.text('QUESTS'), findsOneWidget);
+    expect(find.text('BACK'), findsNothing);
+  });
+
+  testWidgets('MORE quests is a tab, not a BACK sheet', (tester) async {
+    final state = GameLogic.createInitialState().copyWith(
+      highestFloorCleared: 1,
+    );
+    final director = GameDirector.preview(initialState: state);
+    addTearDown(director.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 360,
+            height: 700,
+            child: MoreList(
+              director: director,
+              section: MoreSection.quests,
+              onSectionChanged: (_) {},
+              onOpenWhatsNew: () {},
+              onClose: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('BACK'), findsNothing);
+    expect(find.textContaining('claim while you dungeon'), findsOneWidget);
   });
 }
 

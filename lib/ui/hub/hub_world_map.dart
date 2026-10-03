@@ -234,7 +234,8 @@ class ZonePathMap extends StatelessWidget {
     Offset(0.86, 0.34), // veil — moth woods
   ];
 
-  static String _statusWord({
+  /// Overlay word on a ring. Continent art already names the land.
+  static String ringLabel({
     required bool unlocked,
     required bool cleared,
     required bool selected,
@@ -268,7 +269,7 @@ class ZonePathMap extends StatelessWidget {
           Positioned.fill(
             child: ExcludeSemantics(
               child: ColorFiltered(
-                // Dim baked continent labels so HERE / NEXT / hubMapTag win (#6).
+                // Dim baked continent labels so HERE / NEXT win.
                 colorFilter: ColorFilter.mode(
                   const Color(0xFF0A0C12).withValues(alpha: 0.32),
                   BlendMode.darken,
@@ -299,22 +300,13 @@ class ZonePathMap extends StatelessWidget {
           final selected = d.id == selectedId;
           final frontier =
               unlocked && !cleared && d.number == highestCleared + 1;
-          final statusWord = _statusWord(
+          final statusWord = ringLabel(
             unlocked: unlocked,
             cleared: cleared,
             selected: selected,
             frontier: frontier,
           );
-          // HERE/NEXT alone when present; short tag only on open uncleared
-          // caves that are not the frontier (#7).
-          final mapTag = unlocked &&
-                  !cleared &&
-                  statusWord.isEmpty
-              ? d.hubMapTag
-              : '';
-          final labelH = (statusWord.isEmpty && mapTag.isEmpty)
-              ? 0.0
-              : statusH;
+          final labelH = statusWord.isEmpty ? 0.0 : statusH;
           final cx = anchor.dx * mapW;
           final cy = anchor.dy * mapH;
           final left = (cx - hitSize / 2).clamp(0.0, mapW - hitSize).toDouble();
@@ -336,7 +328,7 @@ class ZonePathMap extends StatelessWidget {
                 cleared: cleared,
                 selected: selected,
                 pulse: selected ? pulse : null,
-                statusWord: statusWord.isNotEmpty ? statusWord : mapTag,
+                statusWord: statusWord,
                 onTap: () => onSelect(d.id),
               ),
             ),

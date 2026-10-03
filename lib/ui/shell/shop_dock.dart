@@ -157,7 +157,6 @@ class _ShopDockState extends State<ShopDock>
             priceLabel: _priceLabel(items[i]),
             listed: _playLists(items[i]),
             compact: compact && items[i].permMask != AdBoost.permAll,
-            primary: items[i].permMask == AdBoost.permAll,
             onBuy: _playLists(items[i]) ? () => _buy(items[i]) : null,
           ),
         ],
@@ -201,7 +200,6 @@ class _ShopRow extends StatelessWidget {
     required this.onBuy,
     this.listed = true,
     this.compact = false,
-    this.primary = false,
   });
 
   final ShopCatalogItem item;
@@ -210,7 +208,6 @@ class _ShopRow extends StatelessWidget {
   final VoidCallback? onBuy;
   final bool listed;
   final bool compact;
-  final bool primary;
 
   static String? assetFor(ShopCatalogItem item) {
     if (item.permMask == AdBoost.permAll) return UiIcon.star;
@@ -316,9 +313,7 @@ class _ShopRow extends StatelessWidget {
                   : listed
                   ? 'BUY'
                   : 'NOT ON PLAY',
-              style: primary && !owned && listed
-                  ? GameButtonStyle.brown
-                  : GameButtonStyle.grey,
+              style: GameButtonStyle.grey,
               expanded: false,
               dense: true,
               onPressed: owned || !listed ? null : onBuy,

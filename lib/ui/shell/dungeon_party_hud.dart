@@ -23,6 +23,58 @@ import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 import 'kit_hud_chips.dart';
 
+/// Spec chip + level so `PROT L27` does not ellipsis in the party strip.
+class PartyHudSpecLine extends StatelessWidget {
+  const PartyHudSpecLine({
+    super.key,
+    required this.spec,
+    required this.level,
+    required this.color,
+    this.extra = '',
+  });
+
+  final String spec;
+  final int level;
+  final Color color;
+  final String extra;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Flexible(
+          child: Text(
+            spec,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.pixel(size: GameTheme.hudPixel, color: color),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          'L$level',
+          maxLines: 1,
+          style: GameTheme.pixel(size: GameTheme.hudPixel, color: color),
+        ),
+        if (extra.isNotEmpty) ...[
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              extra,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.pixel(
+                size: GameTheme.hudPixel,
+                color: GameTheme.parchmentDim,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class PartyCornerHud extends StatefulWidget {
   const PartyCornerHud({
     super.key,
@@ -554,14 +606,10 @@ class _KitSidePanel extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              '$roleShort L${hero.level}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.pixel(
-                size: GameTheme.hudPixel,
-                color: GameTheme.torchHot,
-              ),
+            PartyHudSpecLine(
+              spec: roleShort,
+              level: hero.level,
+              color: GameTheme.torchHot,
             ),
             if (plainEnglish) ...[
               const SizedBox(height: 1),
@@ -731,12 +779,6 @@ class _PartyRow extends StatelessWidget {
   bool _abilityBuffActive(ClassAbilityDef ability, SpatialActor s) =>
       KitHudChips.buffActive(ability, s);
 
-  String _stripCompanion() {
-    final line = _companionLine(spatial, world, hero.specId);
-    if (line == null || line.isEmpty) return '';
-    return ' · $line';
-  }
-
   /// Brief crowd-control chips when the hero is rooted, slowed, or hexed.
   List<String> _ccChipLabels(SpatialActor? s) {
     if (s == null || !s.isAlive) return const [];
@@ -848,14 +890,11 @@ class _PartyRow extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '$roleShort L${hero.level}${_stripCompanion()}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
-                      color: GameTheme.parchment,
-                    ),
+                  PartyHudSpecLine(
+                    spec: roleShort,
+                    level: hero.level,
+                    color: GameTheme.parchment,
+                    extra: _companionLine(spatial, world, hero.specId) ?? '',
                   ),
                   const SizedBox(height: 2),
                   Row(
@@ -919,25 +958,19 @@ class _PartyRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      () {
+                    PartyHudSpecLine(
+                      spec: roleShort,
+                      level: hero.level,
+                      color: GameTheme.parchment,
+                      extra: () {
                         final kind = SpecMastery.kindFor(hero.specId);
-                        if (kind == null || !showKit) {
-                          return '$roleShort L${hero.level}';
-                        }
+                        if (kind == null || !showKit) return '';
                         final pts = SpecMastery.masteryPointsFrom(
                           hero.gearMasteryBonus,
                           hero.level,
                         ).round();
-                        return '$roleShort L${hero.level} · '
-                            '${SpecMastery.playerLabel(kind)} $pts';
+                        return '${SpecMastery.playerLabel(kind)} $pts';
                       }(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.pixel(
-                        size: GameTheme.hudPixel,
-                        color: GameTheme.parchment,
-                      ),
                     ),
                     SizedBox(height: phone ? 1 : 2),
                     Row(

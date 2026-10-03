@@ -13,6 +13,7 @@ import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/zone_art.dart';
 import 'package:idle_party/spatial/tile_map.dart';
+import 'package:idle_party/ui/hub/hub_world_map.dart';
 import 'package:idle_party/ui/hub_screen.dart';
 
 /// Fast honesty checks: world path, unlock rules, guides, release version.
@@ -73,6 +74,36 @@ void main() {
     expect(at('veil').dx, greaterThan(at('king').dx));
     // Ash isles sit south.
     expect(at('hell').dy, greaterThan(at('king').dy));
+  });
+
+  test('World Path rings only say HERE or NEXT', () {
+    expect(
+      ZonePathMap.ringLabel(
+        unlocked: true,
+        cleared: false,
+        selected: true,
+        frontier: true,
+      ),
+      'HERE',
+    );
+    expect(
+      ZonePathMap.ringLabel(
+        unlocked: true,
+        cleared: false,
+        selected: false,
+        frontier: true,
+      ),
+      'NEXT',
+    );
+    expect(
+      ZonePathMap.ringLabel(
+        unlocked: true,
+        cleared: false,
+        selected: false,
+        frontier: false,
+      ),
+      isEmpty,
+    );
   });
 
   test('endgame map is four hunts on a separate board', () {

@@ -69,7 +69,7 @@ class PowerUpgradeRow extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            dense ? '$title $subtitle' : title,
+                            title,
                             style: GameTheme.body(
                               size: titleSize,
                               color: GameTheme.parchment,
@@ -105,18 +105,16 @@ class PowerUpgradeRow extends StatelessWidget {
                         ],
                       ],
                     ),
-                    if (!dense) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: GameTheme.body(
-                          size: subSize,
-                          color: GameTheme.parchmentDim,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: GameTheme.body(
+                        size: subSize,
+                        color: GameTheme.parchmentDim,
                       ),
-                    ],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     if (detail != null)
                       Text(
                         detail!,
@@ -124,7 +122,7 @@ class PowerUpgradeRow extends StatelessWidget {
                           size: dense ? 11 : 12,
                           color: GameTheme.mossLit,
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                   ],

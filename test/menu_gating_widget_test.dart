@@ -77,9 +77,14 @@ void main() {
         MenuRoute.more,
       ]),
     );
+    expect(MenuRouter.visibleMoreMetaRows(early), isEmpty);
     expect(
-      MenuRouter.visibleMoreMetaRows(early),
-      isEmpty,
+      MenuRouter.visibleMoreSections(early),
+      equals(const [
+        MoreSection.info,
+        MoreSection.settings,
+        MoreSection.credits,
+      ]),
     );
     expect(MenuTabs.showQuests(early), isFalse);
 
@@ -99,6 +104,15 @@ void main() {
     expect(
       MenuRouter.visibleMoreMetaRows(afterFloor),
       equals(const [MoreSection.quests]),
+    );
+    expect(
+      MenuRouter.visibleMoreSections(afterFloor),
+      equals(const [
+        MoreSection.quests,
+        MoreSection.info,
+        MoreSection.settings,
+        MoreSection.credits,
+      ]),
     );
 
     final afterBoss = early.copyWith(bossVictories: 1, highestFloorCleared: 1);
@@ -134,6 +148,16 @@ void main() {
       equals(const [
         MoreSection.quests,
         MoreSection.craft,
+      ]),
+    );
+    expect(
+      MenuRouter.visibleMoreSections(afterAscend),
+      equals(const [
+        MoreSection.quests,
+        MoreSection.craft,
+        MoreSection.info,
+        MoreSection.settings,
+        MoreSection.credits,
       ]),
     );
     expect(
