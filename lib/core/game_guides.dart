@@ -744,7 +744,8 @@ abstract final class GameGuides {
           'Same list on KEY · BOARDS. Play install + sign-in. '
           'The list stays in the game. Local PB also stays on hub ENDGAME.\n'
           '• Fail the par clock: the run is depleted — keep your best tier, '
-          'small consolation essence, retry from hub ENDGAME. Leave mid-run also pays consolation.\n'
+          'consolation essence (at least 1, about a third of the tier), retry from hub ENDGAME. '
+          'Leave mid-run pays the same consolation.\n'
           '• The hub hunt chases Ranked GR before Farm Rift. ENTER opens arrows to pick any GR.',
     ),
     GuideTopic(

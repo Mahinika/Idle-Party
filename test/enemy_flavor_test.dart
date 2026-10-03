@@ -253,7 +253,7 @@ void main() {
     expect(EnemyFlavor.supportTell('goblin'), 'TOTEM');
     expect(EnemyFlavor.supportTell('veil'), 'MEND');
     expect(EnemyFlavor.supportTell('sandy'), 'MEND');
-    expect(EnemyFlavor.supportTell('brass'), 'RALLY');
+    expect(EnemyFlavor.supportTell('brass'), 'TOTEM');
     expect(EnemyFlavor.supportTell('fen'), 'DRAIN');
   });
 

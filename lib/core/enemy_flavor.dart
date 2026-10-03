@@ -149,7 +149,7 @@ abstract final class EnemyFlavor {
     'storm' => 'MEND',
     'rime' => 'MEND',
     'fen' => 'DRAIN',
-    'brass' => 'RALLY',
+    'brass' => 'TOTEM',
     'veil' => 'MEND',
     _ => 'MEND',
   };
