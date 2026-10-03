@@ -212,12 +212,26 @@ Helpers: `sectionLabelScoped(title, scope: …)` tints the header. Plain `sectio
 
 **Surfaces:** `MenuChrome.panel`, `scrim`, `cardBox`, `listCard`, `hubPanel` (hub banners), `hudWell` (party / target HUD), `sheetRadius`  
 **Radii:** `GameTheme.radiusSm` (8) / `radiusMd` (12) / `radiusLg` (18) / `radiusHud` (4)  
-**Type:** `menuTitle` (Cinzel) · `body` (VT323) · `sectionLabel` / `sectionLabelScoped` · `button` · `pixel` (HUD/tags only)  
+**Type:** `menuTitle` 18 (Cinzel) · `body` 17 (VT323) · `button` 20 · `sectionLabel` / `sectionLabelScoped` · `pixel` (HUD/tags only, never under `hudPixel` 9). In-game text scale multiplies the phone’s own scale (`composeTextScaler`, clamped 0.80–1.40). Do not replace the OS scaler.  
 **Color:** `parchment` / `parchmentDim` · `torch` / `torchHot` · `mossLit` · `scopeRun/Today/Account` · `rarity*` · `tooltip*` (item tips) · `buttonBrown*` / `buttonGrey*` / `buttonRed*` · `hudWell*` / `hudFlask*` · `riftBar*` (Farm / Ranked GR D3-style fill) · `navGear` / `navGold` / `navShop` / `navEssence` / `navKey` / `navMore` / `navLeave` (one fill per bottom-bar slot)  
 **Icons:** `GameIcon.asset(UiIcon.settings)` / `UiIcon.key` (PNG) or `GameIcon.glyph` for add/close/arrows/scroll — never Material `Icons` or emoji in chrome. TODAY buttons are plain English (`ENTER KEY`, `GAUNTLET`, `RIFT`). Hub SCROLLS uses `UiGlyph.scroll` on the FAB. Active buffs use owned `UiIcon` sprites (sword / coin / tome / boots / chest / wand / campfire) stacked above the FAB and above dungeon FLASK.  
-**Touch:** `minTouch` 44 · `primaryTouch` 48  
+**Touch:** `minTouch` 44 · `primaryTouch` 48 · `edgeGap` 12 (screen edge) · `clusterGap` 8 (between taps). Do not invent a third gap. A target that meets 44 px but sits flush against its neighbor still mis-taps.
 
 **Helpers:** `sheetHandle` (grip on a sheet) · `stepperButton` (+/−) · `dialog` / `dialogCancel` (confirm) · `statRow` (`label … value`) · `toggleMark`, `slider`, `fold` (settings / Apex / What’s New). **`MenuChrome.playSafeArea`** — hub / dungeon / start / intro share the full-height GEAR top edge (no status-bar letterbox). Play bottom inset stays on `AppBottomBar`.
+
+---
+
+## Phone habits
+
+Mapped from mobile-game and accessibility practice onto tokens this game already has.
+
+**States.** A phone has pressed and disabled, not hover. Disabled uses `buttonDisabled*`. If the action exists but cannot run yet, keep the control and say why on the row or in a toast. Hide it only when this screen never offers it.
+
+**Notices.** `FeedbackToast` sits up the screen, clear of the thumb, not under the finger. Hide it while a full menu is open.
+
+**Empty.** One sentence: what is missing, and the next place to go. Not a warning mark. Bag: “Bag empty — farm for loot or try GOLD → MARKET.”
+
+**Color and motion.** Combat already pairs shape with color, and colorblind mode retints floaters. Do not add a second menu palette. New fight motion respects `VfxQuality.minimal` (Settings: Minimal VFX).
 
 ---
 
@@ -267,6 +281,8 @@ Do **not** force GEAR sheet chrome onto:
 - **Three+ brown full-width CTAs** on one hub view
 - Global alert banners on every tab when only one tab owns the message
 - Hover-only affordances on shipping phone UI
+- A disabled button with no reason on the row or in a toast
+- Padding that is not `edgeGap` or `clusterGap`
 
 ---
 
