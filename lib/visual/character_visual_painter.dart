@@ -414,9 +414,10 @@ abstract final class CharacterVisualPainter {
   }) {
     final p = progress.clamp(0.0, 1.0);
     return switch (kind) {
+      // Side sway plus one smooth rise per step. A hard bounce read as a twitch.
       HeroAnimKind.walk => Offset(
-        math.sin(p * math.pi * 2) * size * 0.04,
-        -(math.sin(p * math.pi * 2).abs()) * size * 0.07,
+        math.sin(p * math.pi * 2) * size * 0.025,
+        -(1 - math.cos(p * math.pi * 4)) * 0.5 * size * 0.04,
       ),
       HeroAnimKind.hit => Offset(
         -size * 0.10 * (1 - p),

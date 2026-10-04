@@ -78,7 +78,10 @@ extension _DungeonPaintActors on _TileRoomPainter {
           (1 + flash * 0.18 + hit * 0.12);
       final moving = enemy.vx.abs() > 0.05 || enemy.vy.abs() > 0.05;
       if (moving && enemy.isAlive) {
-        final phase = ((enemy.x + enemy.y).abs() * 2.5 + visualFrame * 0.08) % 1.0;
+        final phase = HeroAnimController.walkPhase(
+          visualFrame,
+          offset: (enemy.id.hashCode.abs() % 100) / 100,
+        );
         c += CharacterVisualPainter.clipMotion(
           HeroAnimKind.walk,
           phase,
@@ -277,8 +280,10 @@ extension _DungeonPaintActors on _TileRoomPainter {
           hitFlash: hero.hitFlash,
           abilityName: hero.animAbility?.name,
         );
-        final walkPhase =
-            ((hero.x + hero.y).abs() * 2.5 + visualFrame * 0.08) % 1.0;
+        final walkPhase = HeroAnimController.walkPhase(
+          visualFrame,
+          offset: (hero.partyIndex ?? idx) * 0.37,
+        );
         final anim = HeroAnimController.snapshot(
           signals,
           walkPhase: walkPhase,

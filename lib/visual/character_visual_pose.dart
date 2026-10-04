@@ -128,9 +128,9 @@ class CharacterVisualPose {
     if (anim.kind == HeroAnimKind.cast) {
       return 0.55 * math.sin(anim.progress * math.pi);
     }
-    // Walk has one body clip — swing the held weapon so steps read as motion.
+    // A small follow-through. The skeleton already swings the arm.
     if (anim.kind == HeroAnimKind.walk) {
-      return math.sin(anim.progress * math.pi * 2) * 0.28;
+      return math.sin(anim.progress * math.pi * 2) * 0.14;
     }
     return 0;
   }

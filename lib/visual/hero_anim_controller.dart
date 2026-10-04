@@ -8,6 +8,18 @@ import 'hero_anim_state.dart';
 /// Stateless by design — the dungeon repaints from combat flash timers, so
 /// there is no per-hero clip clock to keep.
 abstract final class HeroAnimController {
+  /// Two-step cycle per visual frame. The dungeon clock is ~60 Hz, so this
+  /// is about 1.8 cycles a second — a walk, not a kick.
+  static const walkCyclesPerFrame = 0.03;
+
+  /// Phase in 0–1 that only moves forward. World position must not drive
+  /// this: `abs(x + y)` runs the clip backward when a hero walks the other way.
+  static double walkPhase(int visualFrame, {double offset = 0}) {
+    final turns = visualFrame * walkCyclesPerFrame + offset;
+    final wrapped = turns % 1.0;
+    return wrapped < 0 ? wrapped + 1.0 : wrapped;
+  }
+
   /// Kenney body columns: 0 = idle/stand, 1 = walk/attack lean.
   static int _frameFor(HeroAnimKind kind, double progress) => switch (kind) {
     HeroAnimKind.idle => 0,

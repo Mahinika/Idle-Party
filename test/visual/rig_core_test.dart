@@ -154,6 +154,34 @@ void main() {
     expect(c.stepIndex, greaterThan(a.stepIndex));
   });
 
+  test('a walk step keeps each knee bent one way', () {
+    double bone(RigPose pose, String name) => pose.angles[name] ?? 0;
+    final frames = (RigClips.walk.length * RigSampler.fps).round();
+    final steps = <RigPose>[
+      for (var i = 0; i < frames; i++)
+        RigSampler.sample(
+          HeroAnimPose(kind: HeroAnimKind.walk, frame: 0, progress: i / frames),
+        ).pose,
+    ];
+    const limbs = ['thigh_l', 'thigh_r', 'shin_l', 'shin_r', 'upper_l', 'upper_r'];
+    for (final pose in steps) {
+      expect(bone(pose, 'shin_l'), lessThanOrEqualTo(0.5));
+      expect(bone(pose, 'shin_r'), greaterThanOrEqualTo(-0.5));
+      expect(bone(pose, 'thigh_l').abs(), lessThan(22));
+      expect(bone(pose, 'thigh_r').abs(), lessThan(22));
+      expect(bone(pose, 'upper_l').abs(), lessThan(22));
+      expect(bone(pose, 'upper_r').abs(), lessThan(22));
+    }
+    for (var i = 0; i < steps.length; i++) {
+      final a = steps[i];
+      final b = steps[(i + 1) % steps.length];
+      for (final name in limbs) {
+        expect((bone(b, name) - bone(a, name)).abs(), lessThan(12));
+      }
+      expect((b.rootY - a.rootY).abs(), lessThan(1.5));
+    }
+  });
+
   test('a block pulls the shield arm in over the walk', () {
     const walking = HeroAnimPose(kind: HeroAnimKind.walk, frame: 0, progress: 0);
     const raised = HeroAnimPose(

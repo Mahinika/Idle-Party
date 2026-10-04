@@ -9,6 +9,17 @@ void main() {
     expect(pose.locked, isFalse);
   });
 
+  test('walk phase only steps forward', () {
+    final a = HeroAnimController.walkPhase(40, offset: 0.2);
+    final b = HeroAnimController.walkPhase(41, offset: 0.2);
+    final step = (b - a + 1) % 1;
+    expect(step, closeTo(HeroAnimController.walkCyclesPerFrame, 0.0001));
+    expect(
+      HeroAnimController.walkPhase(10, offset: 0.1),
+      isNot(HeroAnimController.walkPhase(10, offset: 0.5)),
+    );
+  });
+
   test('moving walks and cycles frames with the phase', () {
     final early = HeroAnimController.snapshot(
       const HeroAnimSignals(moving: true),
