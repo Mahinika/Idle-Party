@@ -53,7 +53,6 @@ abstract final class GameTheme {
   static const Color hudSpiritText = Color(0xFFFFF0A8);
   static const Color hudManaText = Color(0xFF80C0FF);
   static const Color hudFarmGreen = Color(0xFF3A5018);
-  static const Color hudMapCaption = Color(0xFF1A1410);
 
   /// RUN / TODAY / ACCOUNT scope tones (hub + POWER section headers).
   static const Color scopeRun = mossLit;
@@ -72,9 +71,6 @@ abstract final class GameTheme {
   static const Color borderLit = Color(0xFFC9A24A);
   static const Color accentInfo = Color(0xFF6EB6FF);
   static const Color accentWarn = Color(0xFFFFB454);
-
-  /// Dark ink for light Kenney button faces.
-  static const Color onLight = Color(0xFF121820);
 
   /// Drop shadows — use these instead of one-off `Color(0x88…)`.
   static const Color shadow = Color(0x99000000);
@@ -119,7 +115,6 @@ abstract final class GameTheme {
   static const Color riftBarTrack = Color(0xFF1A1020);
   static const Color riftBarPace = Color(0xFF6EB6FF);
   static const Color hudFlaskUrgent = Color(0xEE4A2010);
-  static const Color hudFlaskIdle = Color(0xDD2A1810);
   static const Color hudRowSelected = Color(0x331C1812);
 
   /// Feedback toast fills (celebrate / danger gradient ends).

@@ -463,7 +463,6 @@ abstract final class CustomAssets {
   static const String tileDoorOpen = '$_fallback/tiles/door_open.png';
   static const String tileDoorArch = '$_fallback/tiles/door_arch.png';
   static const String tileFxTarget = '$_fallback/tiles/fx_target.png';
-  static const String tileFxIdle = '$_fallback/tiles/fx_idle.png';
   static const String tileFxSlash = '$_fallback/tiles/fx_slash.png';
   static const String tileFxClaw = '$_fallback/tiles/fx_claw.png';
   static const String propBarrel = '$_fallback/props/barrel.png';
@@ -501,37 +500,8 @@ abstract final class CustomAssets {
   static const String propSignatureA = '$_fallback/props/signature_a.png';
   static const String propSignatureB = '$_fallback/props/signature_b.png';
   static const String uiPanelBrown = '$_root/ui/chrome/panel_brown.png';
-  static const String uiPanelBeige = '$_root/ui/chrome/panel_beige.png';
-  static const String uiPanelInsetBrown = '$_root/ui/chrome/panel_inset_brown.png';
-  static const String uiPanelBorder = '$_root/ui/chrome/panel_border.png';
-  static const String uiButtonBrown = '$_root/ui/chrome/button_brown.png';
-  static const String uiButtonGrey = '$_root/ui/chrome/button_grey.png';
-  static const String uiButtonRed = '$_root/ui/chrome/button_red.png';
-  static const String uiHexagonBrown = '$_root/ui/chrome/hexagon_brown.png';
-  static const String uiHexagonBrownDark =
-      '$_root/ui/chrome/hexagon_brown_dark.png';
   static const String uiProgressGreen = '$_root/ui/chrome/progress_green.png';
-  static const String uiProgressGreenBorder =
-      '$_root/ui/chrome/progress_green_border.png';
-  static const String uiProgressRed = '$_root/ui/chrome/progress_red.png';
-  static const String uiProgressRedBorder =
-      '$_root/ui/chrome/progress_red_border.png';
-  static const String uiProgressBlue = '$_root/ui/chrome/progress_blue.png';
-  static const String uiProgressBlueBorder =
-      '$_root/ui/chrome/progress_blue_border.png';
-  static const String uiProgressWhite = '$_root/ui/chrome/progress_white.png';
-  static const String uiBarBackLeft = '$_root/ui/chrome/bar_back_left.png';
   static const String uiBarBackMid = '$_root/ui/chrome/bar_back_mid.png';
-  static const String uiBarBackRight = '$_root/ui/chrome/bar_back_right.png';
-  static const String uiBarGreenLeft = '$_root/ui/chrome/bar_green_left.png';
-  static const String uiBarGreenMid = '$_root/ui/chrome/bar_green_mid.png';
-  static const String uiBarGreenRight = '$_root/ui/chrome/bar_green_right.png';
-  static const String uiBarRedLeft = '$_root/ui/chrome/bar_red_left.png';
-  static const String uiBarRedMid = '$_root/ui/chrome/bar_red_mid.png';
-  static const String uiBarRedRight = '$_root/ui/chrome/bar_red_right.png';
-  static const String uiBarYellowLeft = '$_root/ui/chrome/bar_yellow_left.png';
-  static const String uiBarYellowMid = '$_root/ui/chrome/bar_yellow_mid.png';
-  static const String uiBarYellowRight = '$_root/ui/chrome/bar_yellow_right.png';
 
   /// Shipped zones with owned floor/wall/prop art.
   static const Set<String> customDungeonZones = {

@@ -230,10 +230,8 @@ abstract final class GearSets {
     return '$name 2pc · ${twoPieceBonusText(id)}';
   }
 
-  /// Legacy hook — upgrade path no longer adds flat set points (GEAR_BUDGET).
+  /// Upgrade path no longer adds flat set points (GEAR_BUDGET).
   /// Set power comes from real 2pc/4pc combat bonuses only.
-  static const int maxEquipScoreBonus = 0;
-
   static int equipScoreBonus({
     required Map<EquipmentSlot, EquipmentItem> equipped,
     required EquipmentItem candidate,

@@ -12,7 +12,6 @@ abstract final class Keystone {
 
   /// Practical endless bound (save / Play encode / overflow).
   static const int maxLevel = kEndlessLadderBound;
-  static const int minActiveLevel = 1;
 
   /// Pool for the week's primary affix (also used as secondary at higher keys).
   static const List<String> weeklyPool = <String>[

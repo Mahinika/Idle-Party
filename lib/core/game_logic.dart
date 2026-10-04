@@ -943,9 +943,6 @@ class GameLogic {
   static const int alDefensePerLevel = 4;
   static const int alVitalityPerLevel = 12;
 
-  static const int relicAttackPerTier = 4;
-  static const int relicDefensePerTier = 16;
-  static const int relicVitalityPerTier = 48;
   static const int relicMitigatePerTier = 8;
   static const int relicMaxTier = 6;
 

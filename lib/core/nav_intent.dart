@@ -16,9 +16,6 @@ class NavIntent {
   final EssencePanel? essencePanel;
   final MoreSection? more;
 
-  /// Real-money store tab (catalog live; billing soon).
-  static const NavIntent shop = NavIntent(route: MenuRoute.shop);
-
   static const NavIntent gold = NavIntent(route: MenuRoute.gold);
 
   /// Gold market (flasks / listings) — under GOLD.
@@ -27,32 +24,8 @@ class NavIntent {
     goldPanel: GoldPanel.market,
   );
 
-  static const NavIntent essence = NavIntent(route: MenuRoute.essence);
-
-  /// BLESSING (God Hand / REBORN) — under ESSENCE.
-  static const NavIntent essenceKeep = NavIntent(
-    route: MenuRoute.essence,
-    essencePanel: EssencePanel.keep,
-  );
-
-  /// Lasting essence buys — under ESSENCE → BLESSING.
-  static const NavIntent essenceShop = NavIntent(
-    route: MenuRoute.essence,
-    essencePanel: EssencePanel.keep,
-  );
-
-  static const NavIntent relics = NavIntent(
-    route: MenuRoute.essence,
-    essencePanel: EssencePanel.relics,
-  );
-
   static const NavIntent quests = NavIntent(
     route: MenuRoute.more,
     more: MoreSection.quests,
-  );
-
-  static const NavIntent whatsNew = NavIntent(
-    route: MenuRoute.more,
-    more: MoreSection.info,
   );
 }

@@ -231,39 +231,10 @@ abstract final class KenneyAssets {
   static String get coinGold => CustomAssets.iconCoinGold;
   static String get ring => CustomAssets.iconRing;
 
-  // —— UI panels & buttons ——
+  // —— UI panels and bars the screens still paint ——
   static const String panelBrown = CustomAssets.uiPanelBrown;
-  static const String panelBeige = CustomAssets.uiPanelBeige;
-  static const String panelInsetBrown = CustomAssets.uiPanelInsetBrown;
-  static const String panelBorder = CustomAssets.uiPanelBorder;
-  static const String buttonBrown = CustomAssets.uiButtonBrown;
-  static const String buttonGrey = CustomAssets.uiButtonGrey;
-  static const String buttonRed = CustomAssets.uiButtonRed;
-  static const String hexagonBrown = CustomAssets.uiHexagonBrown;
-  static const String hexagonBrownDark = CustomAssets.uiHexagonBrownDark;
-
-  // —— Progress bars (rounded) ——
   static const String progressGreen = CustomAssets.uiProgressGreen;
-  static const String progressGreenBorder = CustomAssets.uiProgressGreenBorder;
-  static const String progressRed = CustomAssets.uiProgressRed;
-  static const String progressRedBorder = CustomAssets.uiProgressRedBorder;
-  static const String progressBlue = CustomAssets.uiProgressBlue;
-  static const String progressBlueBorder = CustomAssets.uiProgressBlueBorder;
-  static const String progressWhite = CustomAssets.uiProgressWhite;
-
-  // —— HP bar segments ——
-  static const String barBackLeft = CustomAssets.uiBarBackLeft;
   static const String barBackMid = CustomAssets.uiBarBackMid;
-  static const String barBackRight = CustomAssets.uiBarBackRight;
-  static const String barGreenLeft = CustomAssets.uiBarGreenLeft;
-  static const String barGreenMid = CustomAssets.uiBarGreenMid;
-  static const String barGreenRight = CustomAssets.uiBarGreenRight;
-  static const String barRedLeft = CustomAssets.uiBarRedLeft;
-  static const String barRedMid = CustomAssets.uiBarRedMid;
-  static const String barRedRight = CustomAssets.uiBarRedRight;
-  static const String barYellowLeft = CustomAssets.uiBarYellowLeft;
-  static const String barYellowMid = CustomAssets.uiBarYellowMid;
-  static const String barYellowRight = CustomAssets.uiBarYellowRight;
 
   // —— Icons ——
   static String get iconCoin => CustomAssets.iconCoinGold;

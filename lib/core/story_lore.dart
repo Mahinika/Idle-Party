@@ -165,9 +165,6 @@ abstract final class StoryLore {
     return 'Reborn · bag reset · +${essence}e · +1 STAR';
   }
 
-  static const String shadeJoins = 'Shade the Rogue answers the call.';
-
-  static const String loreTipTitle = 'THE ROAD';
   static const String loreTipBody =
       'More caves wait after this one. Beat bosses or grow party mean level '
       'to open the road. Later you can Ascend — same party, empty bag, stronger Blessing.';

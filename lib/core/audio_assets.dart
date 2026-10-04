@@ -104,11 +104,6 @@ abstract final class AudioAssets {
     'spell_poison': _letters('spell_poison', 'abcdef'),
   };
 
-  /// First variant path per id (compat / single-source lookups).
-  static final Map<String, String> sfxById = <String, String>{
-    for (final e in sfxVariants.entries) e.key: e.value.first,
-  };
-
   /// Combat feel ids that share combat-mix gates (weapon + spell + crit/kill).
   static const Set<String> combatFeelIds = <String>{
     'hit_blade',
@@ -141,14 +136,6 @@ abstract final class AudioAssets {
     'enemy_die_flesh',
     'enemy_die_bone',
     'enemy_die_stone',
-  };
-
-  static const Set<String> meleeFeelIds = <String>{
-    'hit_blade',
-    'hit_axe',
-    'hit_blunt',
-    'hit_dagger',
-    'hit_fist',
   };
 
   static const Set<String> bowFeelIds = <String>{'hit_bow'};
