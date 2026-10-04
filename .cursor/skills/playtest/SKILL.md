@@ -92,12 +92,17 @@ reading for after `report`.
 py -3 tool/playtest_run.py report
 ```
 
-The report warns if the round was under 8 minutes or a screen was never
-opened. Read the UI tree and the findings first. Open a PNG only when a
-finding mentions pixels, when the screen is on the look-extra list, or when
-you are judging gear, the party, or the fight.
+The report says **tool check** when the round was under 8 minutes or a
+screen on the list was never opened. That file is proof the tool ran. It
+is not a list of what is wrong with the game. Stop there. Do not research
+or fix those readings.
 
-Three questions for every screen, even ones that were OK last time:
+A full round still lists findings. Open that finding's snap PNG before it
+counts. If the picture does not show the same thing, the tool misread.
+Drop it. Do not research it and do not fix it. What the player sees wins.
+
+Three questions for every screen you actually opened, even ones that were
+OK last time:
 
 - **Code.** Read the screen's code (`MenuRouter`, the widget,
   `GameLogic`) and compare it to the saved tree, `[IP]` state, and toasts.
@@ -121,11 +126,12 @@ that disagree with the save.
 
 ## Research
 
-For each finding that is not a trivial cosmetic fix, search the web
-(WebSearch / WebFetch). About 5 minutes a finding, and about 20 minutes for
-the whole round. Prefer Material, Android accessibility, Flutter docs and
-issues, and published game-UX talks. Save 1–3 sources with one sentence
-each. Ideas only: no assets or code from outside the repo.
+For each finding the picture agrees with, and that is not a trivial
+cosmetic fix, search the web (WebSearch / WebFetch). About 5 minutes a
+finding, and about 20 minutes for the whole round. Prefer Material,
+Android accessibility, Flutter docs and issues, and published game-UX
+talks. Save 1–3 sources with one sentence each. Ideas only: no assets or
+code from outside the repo.
 
 Group findings that are the same pattern and research the group once.
 

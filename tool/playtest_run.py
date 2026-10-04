@@ -448,17 +448,25 @@ def render_report(session: dict, screens: dict, now: float) -> str:
     minutes, seconds = divmod(elapsed, 60)
     seen = seen_screens(session)
     missing = missing_coverage(session.get("stage") or "mid", seen, screens)
-    lines = [
-        "# Playtest report",
-        "",
-        f"Scope: {session.get('scope') or '(continue the current save)'}",
-        f"Stage: {session.get('stage') or 'unknown'}",
-        f"Played: {minutes}m {seconds:02d}s",
-        "",
-    ]
-    if elapsed < SHORT_SECONDS:
-        lines.append("WARNING: round was under 8 minutes.")
-        lines.append("")
+    tool_check = elapsed < SHORT_SECONDS or bool(missing)
+    lines = ["# Playtest report", ""]
+    if tool_check:
+        lines.extend(
+            [
+                "This is a tool check, not a verdict on the game.",
+                "The result is that the tool ran: pictures, a tree, and this file.",
+                "Do not research or fix the readings below.",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            f"Scope: {session.get('scope') or '(continue the current save)'}",
+            f"Stage: {session.get('stage') or 'unknown'}",
+            f"Played: {minutes}m {seconds:02d}s",
+            "",
+        ]
+    )
     extra = session.get("look_extra") or []
     if extra:
         lines.append("Look extra:")
@@ -478,7 +486,16 @@ def render_report(session: dict, screens: dict, now: float) -> str:
     else:
         lines.append("No Welcome back (away was too short, or nothing was earned).")
     lines.append("")
-    lines.append("## Screens")
+    if tool_check:
+        lines.append("## Unconfirmed")
+        lines.append("")
+        lines.append("Open the snap PNG before any line counts.")
+        lines.append("If the picture does not show it, the tool misread.")
+    else:
+        lines.append("## Screens")
+        lines.append("")
+        lines.append("A finding counts only when its snap PNG shows the same thing.")
+        lines.append("If the picture disagrees, the tool misread. Do not research or fix that line.")
     lines.append("")
     by_screen: dict[str, list[dict]] = {}
     for finding in session.get("findings", []):
@@ -491,8 +508,8 @@ def render_report(session: dict, screens: dict, now: float) -> str:
         lines.append("_No screens yet._")
     for name in names:
         items = by_screen.get(name, [])
+        lines.append(f"### {name}")
         if items:
-            lines.append(f"### {name}")
             for item in items:
                 count = item.get("count", 1)
                 suffix = f" ×{count}" if count > 1 else ""
@@ -500,17 +517,13 @@ def render_report(session: dict, screens: dict, now: float) -> str:
                     f"- {item.get('id')} · {item.get('type')} · {item.get('sev')} · "
                     f"{item.get('rule')}{suffix}: {item.get('message')}"
                 )
-            lines.append("")
         else:
-            lines.append(f"### {name}")
             lines.append("- OK (nothing flagged on this visit)")
-            lines.append("")
+        lines.append("")
     sheet = session.get("fight_sheet")
     if sheet:
         lines.append(f"Fight sheet: `{sheet}`")
         lines.append("")
-    lines.append("Open the PNG only when a finding names pixels, gear, the party, or the fight.")
-    lines.append("")
     return "\n".join(lines)
 
 

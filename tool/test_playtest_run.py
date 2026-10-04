@@ -123,8 +123,20 @@ def test_findings_collapse_and_report_warns_when_short():
     add_finding(session, rule="touch_small", screen="gear", label="SELL", message="small")
     assert session["findings"][0]["count"] == 2
     text = render_report(session, {"coverage": {"early": ["hub"]}}, now=1010)
-    assert "WARNING: round was under 8 minutes." in text
+    assert "tool check" in text
+    assert "not a verdict" in text
     assert "Not opened: hub" in text
+    assert "Unconfirmed" in text
+    full = {
+        "next_id": 1,
+        "findings": [],
+        "snaps": [{"screen": "hub", "covers": ["hub"]}],
+        "stage": "early",
+        "play_started": 1000,
+    }
+    verdict = render_report(full, {"coverage": {"early": ["hub"]}}, now=1600)
+    assert "tool check" not in verdict
+    assert "snap PNG shows the same thing" in verdict
 
 
 def test_memory_roundtrip_shape():
