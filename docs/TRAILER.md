@@ -97,17 +97,17 @@ emulator save. Do not reuse the 2026-09-20 combat raw (~13 fps).
 The 9:16 film fills the frame (no blurred border). 16:9 keeps its soft
 background and is only the reserve if Play refuses a portrait embed.
 
-- Play listing uses a **YouTube URL only** (not direct MP4). Live unlisted on
+- Play listing uses a **YouTube URL only** (not direct MP4). Live public on
   **Cognifox Studio** (`@CognifoxStudio`):
-  `https://www.youtube.com/watch?v=UHLG28lHmPs`
-  (relinked **2026-09-11**; old personal upload `fiZjJ9S9l4A` superseded).
-  **2026-09-26:** local montage is Sandy crawl, Gauntlet, Greater Rift,
-  Hell's Gate, a short AFK card, then the title (~28s, ~30 fps). Rebuild
-  locally, then replace YT when ads/visibility pass Play. Do not reuse the
-  ~13 fps `gameplay_combat_raw.mp4`.
+  `https://www.youtube.com/watch?v=cyBlN3HCR48`
+  (set **2026-10-04**; previous unlisted `UHLG28lHmPs`; old personal upload
+  `fiZjJ9S9l4A` superseded). The file is the 9:16 Sandy crawl
+  (`idle_party_preview_9x16.mp4`, ~22s). YouTube filed it as a Short. The
+  Play field uses the watch URL. 16:9 stays the reserve if Play refuses the
+  portrait embed. Do not reuse the ~13 fps `gameplay_combat_raw.mp4`.
 - **Feed Short** (public combat ad, Cognifox Studio **2026-09-12**):
   `https://www.youtube.com/shorts/l9jWy29YwJM`
-  Related video in Studio → unlisted Play preview `UHLG28lHmPs`.
+  Related video in Studio → Play preview `cyBlN3HCR48`.
 - **Listing 9:16 Short** (older Play-trailer crop, still public):
   `https://www.youtube.com/shorts/wdnrXCYLtZE`
   (The 2026-09-11 upload `0zKNQKg6kaQ` is 16:9, so YouTube treats it as a
@@ -174,4 +174,4 @@ py -3 tool/store_listing/build_hook_clips.py
 Recipe: [`tool/store_listing/growth/hooks_batch.json`](../tool/store_listing/growth/hooks_batch.json).
 
 Live public Short: `https://www.youtube.com/shorts/l9jWy29YwJM`.
-Related video in Studio → Play listing preview `UHLG28lHmPs`.
+Related video in Studio → Play listing preview `cyBlN3HCR48`.

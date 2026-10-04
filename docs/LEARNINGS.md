@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-04 — listing preview is the 9:16 Sandy crawl
+
+- Live Play preview is public `cyBlN3HCR48` (`watch?v=`, oEmbed before the swap). YouTube filed the 9:16 film as a Short. Content ID found no claim. Ads stay off. Previous unlisted clip `UHLG28lHmPs`. Do not point the listing at `XfKog5CAiUs`.
+
 ## 2026-10-02 — Play finds the game; the leak is after install
 
 - **Organic Play browse is the engine now.** 4 Sep–1 Oct: 10,400 device impressions, 242 acquisitions, 83 first opens, listing conversion 26.65%, +154 exploration acquisitions / 90 days. Last week was 80–100% “Explore Google Play” per day. Reddit is not the wave anymore. Do not buy installs, do not cut another Shorts batch.

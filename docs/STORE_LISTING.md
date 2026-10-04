@@ -227,7 +227,7 @@ Locales in `growth/LOCALES.md` stay gated until you say paste.
 | Phone screenshots 1–8 | `tool/store_listing/out/` + `marketing/` per table (shots 1–2 recaptured with party-centered camera) |
 | Icon 512 | `out/play_icon_512.png` |
 | Feature graphic | `marketing/01_feature_graphic_1024x500.png` |
-| Preview video | `https://www.youtube.com/watch?v=UHLG28lHmPs` (unlisted, Cognifox, ads off). File: `preview/idle_party_preview_16x9.mp4`. 9:16 is Shorts only. |
+| Preview video | `https://www.youtube.com/watch?v=cyBlN3HCR48` (public, Cognifox, ads off, embed on). File: `preview/idle_party_preview_9x16.mp4`. YouTube treats it as a Short. 16:9 stays the reserve if Play refuses the portrait embed. |
 | Store listing experiment | Deferred until listing traffic is large enough |
 
 Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in first 10 s).
@@ -243,9 +243,10 @@ Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in fi
   (`tool/store_listing/out/play_ready/` → Console `01_play_combat_a` …
   `08_play_ascend`). Order: combat a/b → TODAY chase → GEAR → party → zone →
   AFK → Ascend. Console: *Ändringarna granskas* (snabbkontroller then review).
-- Listing preview URL: `https://www.youtube.com/watch?v=UHLG28lHmPs` (set **2026-09-26**).
+- Listing preview URL: `https://www.youtube.com/watch?v=cyBlN3HCR48` (set **2026-10-04**, public).
   Older Cognifox upload `XfKog5CAiUs` stays unused (Play rejected that embed).
-  File: `preview/idle_party_preview_16x9.mp4` (9:16 is Shorts only).
+  Previous unlisted clip `UHLG28lHmPs`.
+  File: `preview/idle_party_preview_9x16.mp4` (YouTube Short). 16:9 is the reserve.
 - Icon `play_icon_512.png`. Developer: **Cognifox Studio**.
 - Growth ops: [`PLAY_GROWTH.md`](PLAY_GROWTH.md). Feed Short:
   `https://www.youtube.com/shorts/l9jWy29YwJM`. Older 9:16 Short:
