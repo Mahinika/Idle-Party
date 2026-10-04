@@ -213,24 +213,22 @@ extension GameDirectorCombatLoop on GameDirector {
           unstickBag: true,
           mergeFirst: true,
         );
-        LogicNotices.takeBagCleanup();
+        final cleanup = LogicNotices.takeBagCleanup();
         final cleared = beforeClean - _state.gearStash.length;
+        final spend = cleanup.merged > 0
+            ? ' · merged ${cleanup.merged} (-${cleanup.goldSpent}g)'
+            : '';
         _toastBagCleanup(
           cleared > 0
-              ? 'Bag cleared $cleared junk — keep farming'
-              : MenuAlerts.bagFullCombatLine(_state),
+              ? 'Bag cleared $cleared junk$spend — keep farming'
+              : '${MenuAlerts.bagFullCombatLine(_state)}$spend',
           life: cleared > 0 ? 2.4 : 2.2,
         );
       }
       final cleanup = LogicNotices.takeBagCleanup();
-      if (!cleanup.isEmpty && !bagFullHandled) {
-        final bits = <String>[
-          if (cleanup.sold > 0)
-            'sold ${cleanup.sold} (+${cleanup.goldGained}g)',
-          if (cleanup.scrapped > 0)
-            'scrap ${cleanup.scrapped} (+${cleanup.essenceGained}e)',
-        ];
-        _toastBagCleanup('Bag unstuck · ${bits.join(' · ')}', life: 1.8);
+      final line = cleanup.combatLine;
+      if (line != null && !bagFullHandled) {
+        _toastBagCleanup(line, life: 1.8);
       }
       _lastStashLen = _state.gearStash.length;
 

@@ -7,6 +7,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/session_telemetry.dart';
 import 'package:idle_party/models/meta_depth.dart';
+import 'package:idle_party/ui/game_button.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
 import 'package:idle_party/core/play_games_scores.dart';
 import 'package:idle_party/ui/hub/hub_powerups.dart';
@@ -63,6 +64,10 @@ void main() {
       ),
     );
     expect(find.text('ASCEND  +19e'), findsOneWidget);
+    expect(
+      tester.widget<GameButton>(find.byType(GameButton)).style,
+      GameButtonStyle.ghost,
+    );
   });
 
   testWidgets('HubTodayCard shows READY chip for claim chase', (tester) async {

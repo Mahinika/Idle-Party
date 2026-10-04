@@ -149,6 +149,7 @@ abstract final class CustomAssets {
   static const String iconBoots = '$_root/icons/boots.png';
   static const String iconGloves = '$_root/icons/gloves.png';
   static const String iconRing = '$_root/icons/ring.png';
+  static const String iconRingRunic = '$_root/icons/ring_runic.png';
   static const String iconShoulders = '$_root/icons/shoulders.png';
   static const String iconBelt = '$_root/icons/belt.png';
   static const String iconNeck = '$_root/icons/neck.png';

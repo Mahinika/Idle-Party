@@ -496,8 +496,8 @@ abstract final class RoomLayouts {
       }
     }
 
-    // Wider than a trash room, still about a screen and a half.
-    final arena = _fitRoom(cols, rows, 32, 22);
+    // Mid zoom shows about 20 tiles. The oval is that one fight.
+    final arena = _fitRoom(cols, rows, 18, 13);
     final rcx = (cols - 1) / 2.0;
     final rcy = (rows - 1) / 2.0;
     final rx = max(4.0, arena.$1 / 2.0);
@@ -512,9 +512,9 @@ abstract final class RoomLayouts {
       }
     }
     // North / south bays so the arena isn't a flat oval.
-    final bayHalf = 5;
+    final bayHalf = 3;
     final arenaH = max(8, (ry * 2).round());
-    var bayDepth = 3;
+    var bayDepth = 2;
     bayDepth = min(bayDepth, max(2, (rows - arenaH - 8) ~/ 2));
     final northLip = (rcy - ry).floor();
     final southLip = (rcy + ry).ceil();

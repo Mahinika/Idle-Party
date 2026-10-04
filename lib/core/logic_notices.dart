@@ -17,6 +17,8 @@ class BagCleanupReceipt {
     this.goldGained = 0,
     this.scrapped = 0,
     this.essenceGained = 0,
+    this.merged = 0,
+    this.goldSpent = 0,
   });
 
   final int sold;
@@ -24,7 +26,24 @@ class BagCleanupReceipt {
   final int scrapped;
   final int essenceGained;
 
-  bool get isEmpty => sold == 0 && scrapped == 0;
+  /// Junk pairs combined while the bag cleaned itself.
+  final int merged;
+
+  /// Gold those combines spent. A floor clear can still toast a gain.
+  final int goldSpent;
+
+  bool get isEmpty => sold == 0 && scrapped == 0 && merged == 0;
+
+  /// Player line for one cleanup pass. Empty when nothing happened.
+  String? get combatLine {
+    final bits = <String>[
+      if (sold > 0) 'sold $sold (+${goldGained}g)',
+      if (scrapped > 0) 'scrap $scrapped (+${essenceGained}e)',
+      if (merged > 0) 'merged $merged (-${goldSpent}g)',
+    ];
+    if (bits.isEmpty) return null;
+    return 'Bag unstuck · ${bits.join(' · ')}';
+  }
 }
 
 abstract final class LogicNotices {
@@ -48,6 +67,8 @@ abstract final class LogicNotices {
       goldGained: gold,
       scrapped: _bag.scrapped,
       essenceGained: _bag.essenceGained,
+      merged: _bag.merged,
+      goldSpent: _bag.goldSpent,
     );
   }
 
@@ -57,6 +78,20 @@ abstract final class LogicNotices {
       goldGained: _bag.goldGained,
       scrapped: scrapped,
       essenceGained: essence,
+      merged: _bag.merged,
+      goldSpent: _bag.goldSpent,
+    );
+  }
+
+  static void recordAutoMerge({required int merged, required int goldSpent}) {
+    if (merged <= 0 && goldSpent <= 0) return;
+    _bag = BagCleanupReceipt(
+      sold: _bag.sold,
+      goldGained: _bag.goldGained,
+      scrapped: _bag.scrapped,
+      essenceGained: _bag.essenceGained,
+      merged: merged,
+      goldSpent: goldSpent,
     );
   }
 

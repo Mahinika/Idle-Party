@@ -328,7 +328,7 @@ class HubUrgentRow extends StatelessWidget {
   final bool hideMissionClaim;
   final bool hideDaily;
 
-  /// Red ASCEND under the hub action, unless TODAY's own button is already Ascend.
+  /// Quiet ASCEND under the hub action, unless TODAY's own button is already Ascend.
   static bool wantsAscendButton({
     required bool canAscend,
     required HubChaseKind chaseKind,
@@ -351,7 +351,7 @@ class HubUrgentRow extends StatelessWidget {
     final ascendButton = showAscend
         ? GameButton(
             label: ascendLabel!,
-            style: GameButtonStyle.red,
+            style: GameButtonStyle.ghost,
             dense: true,
             onPressed: onAscend,
           )
@@ -360,8 +360,8 @@ class HubUrgentRow extends StatelessWidget {
     final Widget? other = showVault
         ? GameButton(
             label: 'CLAIM VAULT  +${vaultClaimEssence}e · +1 Cinder',
-            style: GameButtonStyle.brown,
-            primary: true,
+            style: GameButtonStyle.ghost,
+            dense: true,
             onPressed: onClaimDailyVault,
           )
         : showMissions
@@ -369,7 +369,8 @@ class HubUrgentRow extends StatelessWidget {
             label: claimable == 1
                 ? 'CLAIM QUESTS'
                 : 'CLAIM QUESTS ($claimable)',
-            style: GameButtonStyle.brown,
+            style: GameButtonStyle.ghost,
+            dense: true,
             onPressed: onContracts,
           )
         : showDaily

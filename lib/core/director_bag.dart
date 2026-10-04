@@ -134,8 +134,12 @@ extension GameDirectorBag on GameDirector {
     final cleared = beforeLen - _state.gearStash.length;
     final gold = _state.gold - beforeGold;
     final ess = _state.essence - beforeEss;
-    if (cleared > 0) {
-      final bits = <String>[if (gold > 0) '+${gold}g', if (ess > 0) '+${ess}e'];
+    if (cleared > 0 || gold < 0) {
+      final bits = <String>[
+        if (gold > 0) '+${gold}g',
+        if (gold < 0) '${gold}g',
+        if (ess > 0) '+${ess}e',
+      ];
       showToast(
         bits.isEmpty
             ? 'Cleaned $cleared junk'
@@ -151,7 +155,9 @@ extension GameDirectorBag on GameDirector {
   void autoMergeJunk() {
     final kept = GameLogic.autoMergeKeptCount(_state);
     final sample = GameLogic.autoMergeKeptNames(_state);
+    final beforeGold = _state.gold;
     final result = GameLogic.autoMergeJunk(_state);
+    LogicNotices.takeBagCleanup();
     if (result.merges <= 0) {
       if (kept > 0 && sample.isNotEmpty) {
         final tail = kept > sample.length ? ' +${kept - sample.length}' : '';
@@ -162,9 +168,11 @@ extension GameDirectorBag on GameDirector {
       return;
     }
     _applyUpgrade(result.state);
+    final spent = beforeGold - result.state.gold;
     var msg = result.merges == 1
         ? 'Auto-merged 1 pair'
         : 'Auto-merged ${result.merges} pairs';
+    if (spent > 0) msg += ' · -${spent}g';
     if (kept > 0 && sample.isNotEmpty) {
       final tail = kept > sample.length ? ' +${kept - sample.length}' : '';
       msg += ' · skipped ${sample.join(', ')}$tail';

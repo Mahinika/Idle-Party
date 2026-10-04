@@ -22,7 +22,7 @@ number again without a before and after on the A56 (`owner-preferences`).
 | Knob | Value | Where |
 |------|-------|-------|
 | Floor canvas | `104 + p×2` × `66 + p`, `p = layoutPressure` 0–10 (AL/4 + KEY/4) | `lib/spatial/tile_map.dart` `RoomLayouts._mapExtent` |
-| Boss map / oval | `48 + e×2` × `40 + e` (e ≤ 6); oval 32×22 | `tile_map.dart` `_bossArena` |
+| Boss map / oval | `48 + e×2` × `40 + e` (e ≤ 6); oval 18×13 | `tile_map.dart` `_bossArena` |
 | Room sizes | fixed phone tiles per beat, clamped only to the map | `tile_map.dart` `sizeFor` → `_fitRoom` |
 | Approach / hub / elite | 15–17×11–12 / 18–19×13–14 / 14–15×12–13 | same |
 | Choke | 8–9 × 12–14 (or turned) | same |

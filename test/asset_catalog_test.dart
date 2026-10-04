@@ -35,6 +35,7 @@ void main() {
       CustomAssets.iconBoots,
       CustomAssets.iconGloves,
       CustomAssets.iconRing,
+      CustomAssets.iconRingRunic,
       CustomAssets.iconShoulders,
       CustomAssets.iconBelt,
       CustomAssets.iconNeck,

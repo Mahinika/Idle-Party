@@ -106,7 +106,7 @@ Varje beat mappar till **rumstaggar** som `RoomLayouts` förstår:
 | `shrine` | quiet side room (~10–11×9–10), symmetric | rune circle + altar, 0 enemies |
 | `wonder` | rare side room (~13–14×11–12) | hoard / skeleton / starfall / soul well |
 | `setpiece` | last main fight (~16–17×12–13), symmetric | dais + zone signature props |
-| `boss` | oval arena (~32×22) with short north/south bays | inset, not the whole cave |
+| `boss` | oval arena (~18×13) with short north/south bays | one phone at mid zoom |
 | `exitHold` | exit landing (~12–14×10–11) | stairs/boss stairs |
 
 Main path **zigzags** north/south across a lane while progressing east. Treasure alcoves

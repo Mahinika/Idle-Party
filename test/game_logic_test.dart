@@ -1369,8 +1369,13 @@ void main() {
     }
     state = state.copyWith(gearStash: <EquipmentItem>[junkA, junkB]);
 
+    LogicNotices.reset();
     final result = GameLogic.autoMergeJunk(state);
+    final notice = LogicNotices.takeBagCleanup();
     expect(result.merges, 1);
+    expect(notice.merged, 1);
+    expect(notice.goldSpent, state.gold - result.state.gold);
+    expect(notice.combatLine, contains('merged 1'));
     expect(result.state.gearStash, hasLength(1));
     expect(result.state.gold, lessThan(state.gold));
     expect(result.state.gearStash.first.id, isNot(anyOf(junkA.id, junkB.id)));

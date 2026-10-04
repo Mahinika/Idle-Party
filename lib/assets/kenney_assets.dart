@@ -1008,6 +1008,25 @@ abstract final class KenneyAssets {
     LootRarity.legendary => chestClosed,
   };
 
+  /// Mage rings (Runic, Arcane, …) use a notched band. Plate rings keep
+  /// the round red gem so two rare rings are not the same picture.
+  static const _runicRingWords = <String>{
+    'spark',
+    'arcane',
+    'runic',
+    'astral',
+    'voidforged',
+    'rune',
+  };
+
+  static String ringIconForName(String name) {
+    final words = name.toLowerCase().split(RegExp(r'[^a-z]+'));
+    for (final word in words) {
+      if (_runicRingWords.contains(word)) return CustomAssets.iconRingRunic;
+    }
+    return CustomAssets.iconRing;
+  }
+
   static String equipmentIconFor(EquipmentItem item, {BodyFamily? family}) {
     final owned = EquipmentVisualResolver.ownedIconPathFor(
       item,
@@ -1087,7 +1106,7 @@ abstract final class KenneyAssets {
       EquipmentSlot.cloak => cloak,
       EquipmentSlot.boots => boots,
       EquipmentSlot.neck => CustomAssets.iconNeck,
-      EquipmentSlot.ring || EquipmentSlot.ring2 => CustomAssets.iconRing,
+      EquipmentSlot.ring || EquipmentSlot.ring2 => ringIconForName(item.name),
       EquipmentSlot.trinket ||
       EquipmentSlot.trinket2 => CustomAssets.iconTrinket,
       EquipmentSlot.consumable => switch (item.rarity) {
@@ -1160,7 +1179,7 @@ abstract final class KenneyAssets {
     if (lower.contains('axe')) return axe;
     if (lower.contains('hammer') || lower.contains('mace')) return hammer;
     if (lower.contains('ring') || lower.contains('band')) {
-      return CustomAssets.iconRing;
+      return ringIconForName(name);
     }
     if (lower.contains('amulet') ||
         lower.contains('neck') ||

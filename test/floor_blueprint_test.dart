@@ -360,8 +360,8 @@ void main() {
       layoutSeed: 2,
     );
     final arena = map.chambers.single;
-    expect(arena.w, inInclusiveRange(26, 42));
-    expect(arena.h, inInclusiveRange(18, 34));
+    expect(arena.w, inInclusiveRange(16, 22));
+    expect(arena.h, inInclusiveRange(12, 22));
     expect(arena.w, lessThan(map.cols - 2));
     expect(arena.h, lessThan(map.rows - 2));
     expect(

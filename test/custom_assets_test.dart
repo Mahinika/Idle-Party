@@ -6,6 +6,7 @@ import 'package:idle_party/models/pet.dart';
 import 'package:idle_party/spatial/tile_map.dart';
 import 'package:idle_party/assets/custom_assets.dart';
 import 'package:idle_party/assets/kenney_assets.dart';
+import 'package:idle_party/models/loot.dart';
 
 void main() {
   test('custom identity assets exist on disk', () {
@@ -21,6 +22,7 @@ void main() {
       CustomAssets.iconBoots,
       CustomAssets.iconGloves,
       CustomAssets.iconRing,
+      CustomAssets.iconRingRunic,
       CustomAssets.iconShoulders,
       CustomAssets.iconBelt,
       CustomAssets.iconNeck,
@@ -191,5 +193,23 @@ void main() {
         CustomAssets.enemyGolem,
       ]),
     );
+  });
+
+  test('Aegis and Runic rings use different pictures', () {
+    EquipmentItem ring(String name) => EquipmentItem(
+      id: name,
+      name: name,
+      slot: EquipmentSlot.ring,
+      rarity: LootRarity.rare,
+    );
+    expect(
+      KenneyAssets.equipmentIconFor(ring('Aegis Ring')),
+      CustomAssets.iconRing,
+    );
+    expect(
+      KenneyAssets.equipmentIconFor(ring('Runic Ring')),
+      CustomAssets.iconRingRunic,
+    );
+    expect(CustomAssets.iconRing, isNot(CustomAssets.iconRingRunic));
   });
 }

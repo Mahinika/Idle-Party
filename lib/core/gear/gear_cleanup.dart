@@ -533,6 +533,7 @@ abstract final class GearCleanup {
   }) {
     var next = state;
     var merges = 0;
+    var spent = 0;
     while (merges < maxMerges) {
       EquipmentItem? base;
       EquipmentItem? fuel;
@@ -577,8 +578,10 @@ abstract final class GearCleanup {
       if (next.gold >= goldBefore) {
         break;
       }
+      spent += goldBefore - next.gold;
       merges++;
     }
+    LogicNotices.recordAutoMerge(merged: merges, goldSpent: spent);
     return (state: next, merges: merges);
   }
 
