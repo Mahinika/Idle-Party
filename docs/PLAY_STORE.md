@@ -70,6 +70,7 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Preview URL swapped **2026-10-04** (no AAB) to public `https://www.youtube.com/watch?v=cyBlN3HCR48` on all 11 listing locales. oEmbed confirmed first. Content ID: no claim.
 - [x] Owner asked upload of Production **1.12.194+224** (**2026-10-04**).
 - [x] Signed Production AAB **1.12.194+224** uploaded via Play API and sent for review (full rollout). Track reads `completed`. Public page still names **1.12.193** until Google publishes.
+- [x] Discord #announcements posted the **1.12.194** patch notes (**2026-10-05**). Topic says the store still shows **1.12.193**.
 
 ### Production upload paste (en-US release notes)
 
