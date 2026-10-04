@@ -578,7 +578,12 @@ class _HubScreenState extends State<HubScreen>
             style: placeStyle,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
+        Text(
+          '·',
+          style: placeStyle,
+        ),
+        const SizedBox(width: 8),
         Text(
           track,
           maxLines: 1,

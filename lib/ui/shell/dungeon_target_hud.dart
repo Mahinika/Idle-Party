@@ -200,14 +200,17 @@ class TargetCornerHud extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              role.isEmpty ? label : '$role · $label',
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.pixel(
-                size: GameTheme.hudPixel,
-                color: titleColor,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                role.isEmpty ? label : '$role · $label',
+                maxLines: 1,
+                softWrap: false,
+                style: GameTheme.pixel(
+                  size: GameTheme.hudPixel,
+                  color: titleColor,
+                ),
               ),
             ),
             if (enemy != null) ...[

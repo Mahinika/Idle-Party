@@ -8,6 +8,10 @@ with the commit hash. Read Open at the start of a batch.
 ## Open
 
 - 2026-10-04 · The hub shows three big buttons at once (CLAIM QUESTS, ENTER DUNGEON, ASCEND) · ux · forvirrar · one filled button, the rest quieter (Material 3: one high-emphasis button per screen). Left open: that is a whole-screen layout, so it waits for a before and after.
+- 2026-10-04 · Zone names painted on the continent crash into each other (BLIGHT over GREENH, ASHL over ASH) · visuellt · forvirrar · redraw those names on the map picture so they do not sit on top of each other. Left open: that is the whole map picture, so it waits for a before and after.
+- 2026-10-04 · Gold fell during a Stormwake clear (about 13,200 down to 12,072) while the clear lines only added a few hundred · kod · forvirrar · find the silent spend and name it in a toast. Left open: no single spend showed up in the log this round.
+- 2026-10-04 · Aegis Ring and Runic Ring use the same red ring picture · visuellt · kosmetiskt · give those two rings different pictures (gear art). Left open: that is a drawing pass, not a one-line fix.
+- 2026-10-04 · The boss room is a long empty stair and the party is a small pile in the middle · visuellt · forvirrar · tighten that room so the fight fills the phone. Left open: room size is a whole-floor change, so it waits for a before and after.
 
 ## Done
 

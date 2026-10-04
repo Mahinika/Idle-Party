@@ -29,6 +29,7 @@ import 'gear_service.dart';
 import 'hero_identity.dart';
 import 'gold_income.dart';
 import 'logic_notices.dart';
+import 'menu_alerts.dart';
 import 'meta_systems.dart';
 import 'party_name_filter.dart';
 import 'play_games_bridge.dart';
@@ -338,6 +339,12 @@ class GameDirector extends ChangeNotifier {
 
   SpatialWorld? get spatial => _spatial;
 
+  /// Party-strip tests attach a fight so a status chip can overflow the row.
+  @visibleForTesting
+  void debugAttachSpatial(SpatialWorld? world) {
+    _spatial = world;
+  }
+
   /// Increments each spatial sim step — used by combat painter dirty-checks.
   int get visualFrame => _visualFrame;
 
@@ -583,7 +590,7 @@ class GameDirector extends ChangeNotifier {
     NoticeKind kind = NoticeKind.tip,
   }) {
     if (!uiFeedback.showToast(message, life: life, kind: kind)) return;
-    DebugPlayLog.toast(uiFeedback.toast ?? message);
+    DebugPlayLog.toast(message);
     _ensureUiTimer();
     notifyListeners();
   }

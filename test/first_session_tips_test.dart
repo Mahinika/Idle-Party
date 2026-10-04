@@ -79,6 +79,18 @@ void main() {
     );
   });
 
+  test('an ascended save does not keep the first-fight God Hand line', () {
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      inDungeon: true,
+      ascensionLevel: 3,
+      seenTips: const ['first_run'],
+    );
+    expect(
+      FirstSessionTips.lineFor(state, CoachTarget.godhand, inDungeon: true),
+      isNull,
+    );
+  });
+
   test('multi-system tip ids never queue as coach cards', () {
     final base = GameLogic.createInitialState(now: now);
     final state = base.copyWith(

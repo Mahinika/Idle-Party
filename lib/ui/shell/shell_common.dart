@@ -29,6 +29,20 @@ String formatCount(int n) {
   return '$n';
 }
 
+/// Gold with a g suffix. Commas past 999 so a k-suffix never glues into "kg".
+String formatGold(int n) {
+  if (n >= 1000000) return '${formatCount(n)} g';
+  final negative = n < 0;
+  final s = n.abs().toString();
+  final buf = StringBuffer();
+  if (negative) buf.write('-');
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+    buf.write(s[i]);
+  }
+  return '${buf}g';
+}
+
 bool isSoulboundItem(EquipmentItem item) => item.id.startsWith('soulbound_');
 
 bool isUpgradeForAny(GameState state, EquipmentItem item) =>

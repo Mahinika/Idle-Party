@@ -26,6 +26,10 @@ void main() {
     // New games are marked as having seen the current changelog.
     expect(MetaSystems.hasUnseenChangelog(state), isFalse);
     expect(alerts.more.isQuiet, isTrue);
+    expect(
+      MenuAlerts.bagFullCombatLine(state),
+      'Bag full — nothing safe to scrap',
+    );
   });
 
   test('bag upgrades count on GEAR and name the EQUIP action', () {
@@ -37,6 +41,8 @@ void main() {
     expect(alert.reason.toUpperCase(), contains('EQUIP'));
     expect(alert.reason.toLowerCase(), contains('party'));
     expect(MenuAlerts.bagUpgradeCount(state), alert.count);
+    expect(MenuAlerts.bagFullCombatLine(state), contains('EQUIP'));
+    expect(MenuAlerts.bagFullCombatLine(state), contains('GEAR'));
   });
 
   test('GEAR hint admits when upgrades are for other heroes', () {

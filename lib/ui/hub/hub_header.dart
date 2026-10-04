@@ -303,10 +303,7 @@ class HubHeader extends StatelessWidget {
   String _alPillLabel() {
     if (plainChrome) return '';
     if (ascensionLevel < GameLogic.maxAscensionLevel) {
-      final bless = showBlessingStacks && blessingStacks > 0
-          ? ' · Blessing ×$blessingStacks'
-          : '';
-      return 'AL $ascensionLevel$bless';
+      return 'AL $ascensionLevel';
     }
     return HubHeader.alCapPillLabel(
       ascensionLevel: ascensionLevel,
@@ -314,6 +311,18 @@ class HubHeader extends StatelessWidget {
       blessingStacks: blessingStacks,
       showBlessingStacks: showBlessingStacks,
     );
+  }
+
+  /// Full AL line for the reader. The painted pill stays short so it fits.
+  String _alPillSemantics() {
+    if (plainChrome) return '';
+    if (ascensionLevel < GameLogic.maxAscensionLevel) {
+      final bless = showBlessingStacks && blessingStacks > 0
+          ? ', Blessing ×$blessingStacks'
+          : '';
+      return 'Ascend, AL $ascensionLevel$bless';
+    }
+    return 'Ascend, ${_alPillLabel()}';
   }
 
   @override
@@ -333,10 +342,14 @@ class HubHeader extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Center(
-              child: HubStatPill(
-                icon: UiIcon.ascend,
-                caption: 'Ascend',
-                label: _alPillLabel(),
+              child: Semantics(
+                label: _alPillSemantics(),
+                excludeSemantics: true,
+                child: HubStatPill(
+                  icon: UiIcon.ascend,
+                  caption: 'Ascend',
+                  label: _alPillLabel(),
+                ),
               ),
             ),
           ),

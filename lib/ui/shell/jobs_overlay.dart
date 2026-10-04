@@ -12,7 +12,7 @@ class JobsOverlay extends StatelessWidget {
 
   /// Header + chain line. The 3rd claim always pays +5 essence.
   static String introLine({required int chainCount}) {
-    return 'QUESTS — claim while you dungeon.\n'
+    return 'QUESTS — claim here or in the dungeon.\n'
         'Chain $chainCount/3 · 3rd pays +5e.';
   }
 

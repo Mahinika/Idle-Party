@@ -145,7 +145,7 @@ void main() {
     );
     await tester.pump();
     expect(find.text('BACK'), findsNothing);
-    expect(find.textContaining('claim while you dungeon'), findsOneWidget);
+    expect(find.textContaining('claim here or in the dungeon'), findsOneWidget);
   });
 }
 

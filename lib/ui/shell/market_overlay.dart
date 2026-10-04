@@ -59,7 +59,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
           )
         else ...[
           GameButton(
-            label: 'REROLL · ${formatCount(refreshCost)}g',
+            label: 'REROLL · ${formatGold(refreshCost)}',
             style: GameButtonStyle.grey,
             dense: true,
             onPressed: state.gold >= refreshCost
@@ -221,7 +221,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
         onTap: canBuy
             ? () => director.buyMarketListing(listing.id)
             : () => director.showToast(
-                'Need ${formatCount(listing.priceGold)}g',
+                'Need ${formatGold(listing.priceGold)}',
                 life: 1.6,
               ),
         child: Container(
@@ -291,8 +291,8 @@ class _MarketOverlayState extends State<MarketOverlay> {
               const SizedBox(width: 8),
               Text(
                 canBuy
-                    ? '${formatCount(listing.priceGold)}g'
-                    : 'Need ${formatCount(listing.priceGold)}g',
+                    ? formatGold(listing.priceGold)
+                    : 'Need ${formatGold(listing.priceGold)}',
                 style: GameTheme.body(
                   size: 13,
                   color: canBuy && showUpgradeBadge

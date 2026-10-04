@@ -308,4 +308,12 @@ void main() {
     );
     expect(GearCleanup.partyWornIlvl(state), 77);
   });
+
+  test('gold suffix never reads as kilograms', () {
+    expect(formatGold(573), '573g');
+    expect(formatGold(1543), '1,543g');
+    expect(formatGold(28000), '28,000g');
+    expect(formatGold(28000), isNot(contains('kg')));
+    expect(formatGold(1200000), '1.2M g');
+  });
 }

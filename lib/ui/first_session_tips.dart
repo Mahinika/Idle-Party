@@ -158,6 +158,9 @@ class FirstSessionTips extends StatelessWidget {
       }
       if (tip.id == 'godhand') {
         if (!inDungeon) continue;
+        // A later run already knows the fight. The line stayed up for a
+        // whole clear when the fist was never tapped.
+        if (s.ascensionLevel > 0 || s.bossVictories > 0) continue;
         return tip.id;
       }
       if (tip.id == 'farm_push') {

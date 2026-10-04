@@ -336,6 +336,16 @@ class MenuAlerts {
     return n;
   }
 
+  /// Combat toast when a drop fills the last slot and nothing may be scrapped.
+  static String bagFullCombatLine(GameState state) {
+    final n = bagUpgradeCount(state);
+    if (n > 0) {
+      final noun = n == 1 ? 'upgrade' : 'upgrades';
+      return 'Bag full — $n $noun. Open GEAR and tap EQUIP';
+    }
+    return 'Bag full — nothing safe to scrap';
+  }
+
   static String bagStatusLine(GameState state) {
     if (bagUpgradeCount(state) > 0) return '';
     if (GearService.isBagJammed(state) && !isBagFull(state)) {

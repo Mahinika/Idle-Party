@@ -209,7 +209,9 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     // Thin strip: reclaim map; kit opens beside the strip (not expanding rows).
     const fullWidth = 118.0;
     final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
-    final rowHeight = 26.0 * textScale;
+    // Name line + gap + bar/CC line. 26px overflowed by 4 on the boss.
+    // Name line + gap + bar/CC line. 26px overflowed by 4 on the boss.
+    final rowHeight = 32.0 * textScale;
     // Tiny challenge: strip matches combat heroes only (bench stays off HUD).
     final party = state.combatHeroes;
     final heroCount = party.length;
@@ -896,7 +898,7 @@ class _PartyRow extends StatelessWidget {
                     color: GameTheme.parchment,
                     extra: _companionLine(spatial, world, hero.specId) ?? '',
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Row(
                     children: [
                       Expanded(
