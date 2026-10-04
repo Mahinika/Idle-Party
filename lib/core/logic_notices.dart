@@ -115,9 +115,6 @@ abstract final class LogicNotices {
     return out;
   }
 
-  /// Peek without consuming — for a panel that mirrors the same lines.
-  static List<String> get metaPayoffs => _metaPayoffs;
-
   static void setMetaPayoffs(List<String> lines) =>
       _metaPayoffs = List<String>.unmodifiable(lines);
 

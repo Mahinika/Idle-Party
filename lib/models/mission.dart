@@ -53,9 +53,6 @@ class Mission {
   /// Ready to claim on the board (complete and not already claimed).
   bool get canClaim => isComplete && !claimed;
 
-  double get progressFraction =>
-      target <= 0 ? 1 : (progress / target).clamp(0.0, 1.0);
-
   Mission copyWith({
     String? id,
     MissionType? type,

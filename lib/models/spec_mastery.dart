@@ -60,8 +60,6 @@ class MasteryCombatant {
 
   double get hpFrac => maxHp <= 0 ? 1.0 : hp / maxHp;
 
-  double get missingHpFrac => (1.0 - hpFrac).clamp(0.0, 1.0);
-
   double get manaFrac => (rage / 100).clamp(0.0, 1.0);
 }
 

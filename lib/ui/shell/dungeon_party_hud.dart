@@ -396,8 +396,6 @@ class DungeonFlaskButton extends StatelessWidget {
   /// Gap + rule + tap row. Kit panel bottom inset matches this.
   static const double stripReserve = 40;
 
-  static int flaskCount(GameState state) => healConsumableCount(state);
-
   /// Usable party heals in slots + bag (flasks and bandages).
   static int healConsumableCount(GameState state) {
     var n = 0;

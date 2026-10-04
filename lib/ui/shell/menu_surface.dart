@@ -184,7 +184,6 @@ class _MenuSurfaceState extends State<MenuSurface> {
           onSectionChanged: (sec) => router.moreSection = sec,
           onOpenWhatsNew: () => WhatsNewOverlay.show(context, d),
           onClose: router.close,
-          bagFiltersScrollNonce: router.session.bagFiltersScrollNonce,
         ),
         MenuRoute.none => const SizedBox.shrink(),
       },

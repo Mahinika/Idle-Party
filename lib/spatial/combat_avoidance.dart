@@ -1,8 +1,5 @@
 import 'dart:math';
 
-import '../models/hero_spec.dart';
-import '../models/spec_mastery.dart';
-
 /// Cataclysm-style avoidance + CC diminishing returns (idle-tuned).
 class CombatAvoidance {
   CombatAvoidance._();
@@ -100,14 +97,4 @@ class AvoidanceResult {
   final bool blocked;
 
   bool get avoided => dodged || parried;
-}
-
-/// Populate mastery-derived block chance on a hero view.
-double masteryBlockChance({
-  required HeroSpecId? specId,
-  required double masteryPoints,
-}) {
-  return SpecMastery.blockChance(
-    MasteryCombatant(specId: specId, masteryPoints: masteryPoints),
-  );
 }

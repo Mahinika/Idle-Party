@@ -39,7 +39,6 @@ enum AbilityFireMode {
   cast,
   swingRider,
   onBlock,
-  dotTick,
   onHitBounce,
   passive,
 }
@@ -671,7 +670,6 @@ class ClassAbilityDef {
     final mode = switch (resolvedFireMode) {
       AbilityFireMode.swingRider => ' · Next auto',
       AbilityFireMode.onBlock => ' · After block',
-      AbilityFireMode.dotTick => ' · DoT tick',
       AbilityFireMode.onHitBounce => ' · On hit',
       _ => '',
     };

@@ -950,12 +950,6 @@ class SpatialWorld {
 
   bool get allHeroesDead => heroes.isEmpty || heroes.every((h) => h.hp <= 0);
 
-  bool get allChambersCleared {
-    if (map.chambers.isEmpty) return allEnemiesDead;
-    return clearedChambers.length >= map.chambers.length ||
-        (allEnemiesDead && openGateIds.length >= map.gates.length);
-  }
-
   SpatialActor? get leader {
     for (final h in heroes) {
       if (h.hp > 0 && actorIsTank(h)) return h;

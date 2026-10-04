@@ -29,7 +29,6 @@ class MoreList extends StatefulWidget {
     required this.onSectionChanged,
     required this.onOpenWhatsNew,
     required this.onClose,
-    this.bagFiltersScrollNonce = 0,
     this.initialInfoPane = 0,
   });
 
@@ -38,7 +37,6 @@ class MoreList extends StatefulWidget {
   final ValueChanged<MoreSection> onSectionChanged;
   final VoidCallback onOpenWhatsNew;
   final VoidCallback onClose;
-  final int bagFiltersScrollNonce;
 
   /// 0 guide, 1 codex, 2 trophies. The hub CODEX button asks for 1.
   final int initialInfoPane;
@@ -127,7 +125,6 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
       MoreSection.settings => SettingsOverlay(
         director: d,
         onClose: widget.onClose,
-        bagFiltersScrollNonce: widget.bagFiltersScrollNonce,
       ),
       MoreSection.credits => SingleChildScrollView(
         padding: const EdgeInsets.all(8),

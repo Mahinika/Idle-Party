@@ -8,7 +8,6 @@ class NavIntent {
     this.goldPanel,
     this.essencePanel,
     this.more,
-    this.scrollBagFilters = false,
   });
 
   final MenuRoute route;
@@ -16,13 +15,6 @@ class NavIntent {
   final GoldPanel? goldPanel;
   final EssencePanel? essencePanel;
   final MoreSection? more;
-  final bool scrollBagFilters;
-
-  static const NavIntent bagFilters = NavIntent(
-    route: MenuRoute.more,
-    more: MoreSection.settings,
-    scrollBagFilters: true,
-  );
 
   /// Real-money store tab (catalog live; billing soon).
   static const NavIntent shop = NavIntent(route: MenuRoute.shop);

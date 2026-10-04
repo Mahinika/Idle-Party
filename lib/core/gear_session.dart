@@ -10,7 +10,6 @@ class GearSession extends ChangeNotifier {
   int _equipHeroIndex = 0;
   int _abilityHeroIndex = 0;
   EquipmentSlot? _bagSlotFilter;
-  int _bagFiltersScrollNonce = 0;
 
   String? get selectedItemId => _selectedItemId;
   String? get combineA => _combineA;
@@ -18,7 +17,6 @@ class GearSession extends ChangeNotifier {
   int get equipHeroIndex => _equipHeroIndex;
   int get abilityHeroIndex => _abilityHeroIndex;
   EquipmentSlot? get bagSlotFilter => _bagSlotFilter;
-  int get bagFiltersScrollNonce => _bagFiltersScrollNonce;
 
   void selectItem(String? id) {
     _selectedItemId = _selectedItemId == id ? null : id;
@@ -52,11 +50,6 @@ class GearSession extends ChangeNotifier {
   void clearBagSlotFilter() {
     if (_bagSlotFilter == null) return;
     _bagSlotFilter = null;
-    notifyListeners();
-  }
-
-  void bumpBagFiltersScroll() {
-    _bagFiltersScrollNonce++;
     notifyListeners();
   }
 

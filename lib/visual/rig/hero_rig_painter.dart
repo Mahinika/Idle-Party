@@ -275,28 +275,6 @@ abstract final class HeroRigPainter {
     canvas.restore();
   }
 
-  /// Grip point on screen, after the rig and the facing flip.
-  static ui.Offset handPoint({
-    required ui.Offset center,
-    required double size,
-    required CharacterVisualPose pose,
-    required RigData rig,
-    bool offHand = false,
-  }) {
-    final sample = RigSampler.sample(
-      pose.anim,
-      abilityName: pose.anim.abilityName,
-      robe: rig.bones.containsKey('skirt'),
-    );
-    final world = RigSolver.world(rig, sample.pose);
-    final point = HeroRigDraw.gripPoint(rig, world, pose, offHand: offHand);
-    final scale = size / RigData.canvas;
-    var dx = (point.dx - (RigData.origin + RigData.canvas / 2)) * scale;
-    final dy = (point.dy - (RigData.origin + RigData.canvas / 2)) * scale;
-    if (pose.flipX) dx = -dx;
-    return ui.Offset(center.dx + dx, center.dy + dy);
-  }
-
   static ui.Image _frame({
     required RigData rig,
     required String bodyKey,

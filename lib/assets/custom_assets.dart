@@ -646,8 +646,6 @@ abstract final class CustomAssets {
     ];
   }
 
-  /// Tide showcase aliases (tests / docs).
-  static List<String> get tideDungeonAssetPaths => dungeonAssetPathsFor('tide');
   static String get tidePropWater =>
       '${dungeonZoneRoot('tide')}/props/water.png';
 

@@ -64,9 +64,6 @@ abstract final class KenneyAssets {
 
   // —— Floors (verified sheet cells) ——
   static String get floorDirt => tile(0);
-  static String get floorDirtAlt1 => tile(1);
-  static String get floorDirtAlt2 => tile(2);
-  static String get floorDirtAlt3 => tile(3);
 
   /// Pebbled dirt — preferred when we want readable texture.
   static String get floorDirtDetail => tile(24);
@@ -74,25 +71,15 @@ abstract final class KenneyAssets {
   /// Clean sand (no baked wall-lip). Legacy edged sand is tile 30 — do not use as floor fill.
   static String get floorSand => tile(48);
   static String get floorSandWorn => tile(49);
-  static String get floorSandAlt1 => tile(49);
-  static String get floorSandAlt2 => tile(49);
   static String get floorStone => tile(42);
-  static String get floorStoneAlt1 => tile(42);
-  static String get floorStoneAlt2 => tile(42);
 
   // —— Walls / doors / stairs ——
   static String get wallStone => tile(40);
-  static String get wallStoneAlt1 => tile(57);
   static String get wallBanner => tile(29);
-  static String get wallBannerAlt => tile(28);
-  static String get doorArch => tile(6);
   static String get doorClosed => tile(45);
-  static String get doorVariant => tile(46);
   static String get doorOpen => tile(47);
-  static String get stairsDown => tile(17);
   static String get stairs => tile(18);
   static String get stairsBoss => CustomAssets.tileStairsBoss;
-  static String get exitPad => tile(19);
   static String get trapSpikes => tile(41);
 
   // —— Hazards / markers ——
@@ -100,8 +87,6 @@ abstract final class KenneyAssets {
 
   /// Warm red floor stain (distinct from spike trap tile 41).
   static String get hazardLava => tile(12);
-  static String get corridorActive => tile(60);
-  static String get corridorInactive => CustomAssets.tileFxIdle;
   static String get target => tile(60);
   static String get slash => tile(61);
   static String get claw => tile(62);
@@ -124,7 +109,6 @@ abstract final class KenneyAssets {
   static String get propRubble => tile(79);
   static String get chestClosed => tile(89);
   static String get chestOpen => tile(90);
-  static String get chestMimic => tile(92);
 
   /// Wall fountain / glow — Tiny Dungeon has no free-standing torch sprite.
   static String get torch => tile(8);
@@ -134,14 +118,9 @@ abstract final class KenneyAssets {
 
   // —— Heroes (custom intro-matched pixel art) ——
   static String get heroWizard => CustomAssets.heroWizard;
-  static String get heroVillager => CustomAssets.heroKnight;
-  static String get heroBearded => CustomAssets.heroPaladin;
-  static String get heroSoldier => CustomAssets.heroHunter;
   static String get heroRogue => CustomAssets.heroRogue;
   static String get heroKnight => CustomAssets.heroKnight;
-  static String get heroWoman => CustomAssets.heroHealer;
   static String get heroHealer => CustomAssets.heroHealer;
-  static String get heroElder => CustomAssets.heroWizard;
 
   // —— Enemies (custom identity sprites; Tiny Dungeon tiles kept as fallback IDs) ——
   static String get enemySlime => CustomAssets.enemySlime;
@@ -225,13 +204,9 @@ abstract final class KenneyAssets {
   static String get swordAlt => CustomAssets.iconSwordAlt;
   static String get hammer => CustomAssets.iconMace;
   static String get axe => CustomAssets.iconAxe;
-  static String get potionGrey => CustomAssets.iconFlaskGrey;
   static String get potionGreen => CustomAssets.iconFlaskGreen;
   static String get potionRed => CustomAssets.iconFlask;
   static String get potionBlue => CustomAssets.iconFlaskBlue;
-  static String get vialGrey => CustomAssets.iconFlaskGrey;
-  static String get vialGreen => CustomAssets.iconFlaskGreen;
-  static String get vialRed => CustomAssets.iconFlask;
   static String get vialBlue => CustomAssets.iconFlaskPurple;
   static String get staff => CustomAssets.iconStaff;
   static String get staffBlue => CustomAssets.iconStaffBlue;

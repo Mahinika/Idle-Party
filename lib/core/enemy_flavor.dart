@@ -14,8 +14,6 @@ extension PackJobHud on PackJob {
         PackJob.elite => 'elite',
         PackJob.mixed => 'mixed',
       };
-
-  String hudBit({required bool plain}) => plain ? plainHudBit() : name;
 }
 
 /// Ranged trash crowd-control — same ~6s cadence, zone-tinted effect.

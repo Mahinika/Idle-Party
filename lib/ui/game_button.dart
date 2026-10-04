@@ -5,7 +5,7 @@ import 'web_click_bridge.dart';
 
 enum GameButtonStyle { brown, grey, red, ghost }
 
-/// Action button. Prefer this name; [KenneyButton] is the same widget.
+/// Action button.
 class GameButton extends StatelessWidget {
   const GameButton({
     super.key,
@@ -174,9 +174,3 @@ class GameButton extends StatelessWidget {
     );
   }
 }
-
-/// Old name — same widget as [GameButton].
-typedef KenneyButton = GameButton;
-
-/// Old name — same enum as [GameButtonStyle].
-typedef KenneyButtonStyle = GameButtonStyle;

@@ -44,17 +44,6 @@ void main() {
     expect(find.text('JOIN DISCORD'), findsOneWidget);
   });
 
-  testWidgets('bag cleanup deep link opens the BAG tab', (tester) async {
-    final director = GameDirector.preview();
-    addTearDown(director.dispose);
-
-    await tester.pumpWidget(_host(director, bagFiltersScrollNonce: 1));
-    await tester.pumpAndSettle();
-
-    expect(find.text('AUTO-SELL · GOLD'), findsOneWidget);
-    expect(find.text('Mute all sound'), findsNothing);
-  });
-
   testWidgets('ACCOUNT shows away reminders after first loot', (tester) async {
     final now = DateTime.utc(2026, 9, 12, 14);
     var state = FunnelAnalytics.onNewInstall(
@@ -149,7 +138,7 @@ void main() {
   });
 }
 
-Widget _host(GameDirector director, {int bagFiltersScrollNonce = 0}) {
+Widget _host(GameDirector director) {
   return MaterialApp(
     home: Scaffold(
       body: SizedBox(
@@ -158,7 +147,6 @@ Widget _host(GameDirector director, {int bagFiltersScrollNonce = 0}) {
         child: SettingsOverlay(
           director: director,
           onClose: () {},
-          bagFiltersScrollNonce: bagFiltersScrollNonce,
         ),
       ),
     ),

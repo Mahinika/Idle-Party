@@ -490,7 +490,6 @@ abstract final class MenuTabs {
       s.essence >= GameLogic.hatchPetCost(s);
   static bool showCodex(GameState s) => _clearedAFloor(s);
 
-  /// SETTINGS + What's New stay in MORE from day one.
-  static bool showSettings(GameState s) => true;
+  /// What's New stays in MORE from day one.
   static bool showWhatsNew(GameState s) => true;
 }

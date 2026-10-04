@@ -570,9 +570,6 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
-  /// Await the latest save write (lifecycle / tests).
-  Future<void> flushSave() => _persistFlush();
-
   String? get toast => uiFeedback.toast;
 
   NoticeKind get noticeKind => uiFeedback.noticeKind;
@@ -1425,57 +1422,12 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(_state.copyWith(sfxVolume: value.clamp(0.0, 1.0)));
   }
 
-  void cycleSfxVolume() {
-    const steps = <double>[0.0, 0.35, 0.7, 1.0];
-    final cur = _state.sfxVolume;
-    var best = 0;
-    var bestDist = 999.0;
-    for (var i = 0; i < steps.length; i++) {
-      final d = (steps[i] - cur).abs();
-      if (d < bestDist) {
-        bestDist = d;
-        best = i;
-      }
-    }
-    setSfxVolume(steps[(best + 1) % steps.length]);
-  }
-
   void setAmbienceVolume(double value) {
     _applyUpgrade(_state.copyWith(ambienceVolume: value.clamp(0.0, 1.0)));
   }
 
-  void cycleAmbienceVolume() {
-    const steps = <double>[0.0, 0.15, 0.25, 0.45];
-    final cur = _state.ambienceVolume;
-    var best = 0;
-    var bestDist = 999.0;
-    for (var i = 0; i < steps.length; i++) {
-      final d = (steps[i] - cur).abs();
-      if (d < bestDist) {
-        bestDist = d;
-        best = i;
-      }
-    }
-    setAmbienceVolume(steps[(best + 1) % steps.length]);
-  }
-
   void setMusicVolume(double value) {
     _applyUpgrade(_state.copyWith(musicVolume: value.clamp(0.0, 1.0)));
-  }
-
-  void cycleMusicVolume() {
-    const steps = <double>[0.0, 0.2, 0.4, 0.65];
-    final cur = _state.musicVolume;
-    var best = 0;
-    var bestDist = 999.0;
-    for (var i = 0; i < steps.length; i++) {
-      final d = (steps[i] - cur).abs();
-      if (d < bestDist) {
-        bestDist = d;
-        best = i;
-      }
-    }
-    setMusicVolume(steps[(best + 1) % steps.length]);
   }
 
   void setHapticsEnabled(bool enabled) {
@@ -2341,14 +2293,6 @@ class GameDirector extends ChangeNotifier {
     unawaited(_persistFlush());
   }
 
-  void dismissAllTips(Iterable<String> tipIds) {
-    final updated = GameLogic.dismissTips(_state, tipIds);
-    if (identical(updated, _state)) return;
-    _state = updated;
-    notifyListeners();
-    unawaited(_persistFlush());
-  }
-
   void hatchPet() {
     if (_state.ownedPets.length >= _state.metaDepth.basePetRosterCap) {
       showToast('Roster full', life: 1.8);
@@ -2556,12 +2500,6 @@ class GameDirector extends ChangeNotifier {
         showToast('$name Lv$after · $bonus', life: 2.4);
       }
     }
-  }
-
-  void upgradeSanctuaryGoldBulk({
-    int maxLevels = GoldIncome.sanctuaryGoldBulkMax,
-  }) {
-    upgradeSanctuaryBulk('gold', maxLevels: maxLevels);
   }
 
   void upgradeSanctuaryBulk(

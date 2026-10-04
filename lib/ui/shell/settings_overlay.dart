@@ -24,11 +24,9 @@ class SettingsOverlay extends StatefulWidget {
     super.key,
     required this.director,
     required this.onClose,
-    this.bagFiltersScrollNonce = 0,
   });
   final GameDirector director;
   final VoidCallback onClose;
-  final int bagFiltersScrollNonce;
 
   /// ACCOUNT session-log hint. God Hand waits until first-hour chrome lifts.
   static String sessionLogHint({required bool plain}) => plain
@@ -48,7 +46,6 @@ class _SettingsOverlayState extends State<SettingsOverlay>
   GameDirector get director => widget.director;
   GameState get state => director.state;
   late final TabController _tabs;
-  int _seenBagFiltersScrollNonce = 0;
 
   static const List<(String, double)> _textPresets = <(String, double)>[
     ('S', 0.85),
@@ -62,28 +59,10 @@ class _SettingsOverlayState extends State<SettingsOverlay>
     super.initState();
     _tabs = TabController(length: _SettingsPage.values.length, vsync: this)
       ..addListener(_onTabChanged);
-    _maybeScrollToBagFilters();
   }
 
   void _onTabChanged() {
     if (!_tabs.indexIsChanging && mounted) setState(() {});
-  }
-
-  @override
-  void didUpdateWidget(covariant SettingsOverlay oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.bagFiltersScrollNonce != oldWidget.bagFiltersScrollNonce) {
-      _maybeScrollToBagFilters();
-    }
-  }
-
-  void _maybeScrollToBagFilters() {
-    if (widget.bagFiltersScrollNonce <= _seenBagFiltersScrollNonce) return;
-    _seenBagFiltersScrollNonce = widget.bagFiltersScrollNonce;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _tabs.animateTo(_SettingsPage.bag.index);
-    });
   }
 
   @override

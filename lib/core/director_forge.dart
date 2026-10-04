@@ -2,10 +2,6 @@ part of 'game_director.dart';
 
 /// Gold forge tracks. Menus still call these on the director.
 extension GameDirectorForge on GameDirector {
-  void applyTraining() {
-    // Gold Train removed — levels come from combat XP only (cap maxHeroLevel).
-  }
-
   void upgradeAttack({ForgeGoldSpendMode mode = ForgeGoldSpendMode.one}) {
     _upgradePartyTrack(PartyUpgradeType.attack, mode: mode);
   }

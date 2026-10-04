@@ -782,19 +782,6 @@ class GameState {
   /// KEY dial cap once the active party is at max hero level (0 before).
   int get effectiveMaxHardmode => Keystone.maxForState(this);
 
-  /// Sum of all heroes' gear attack (UI / power checks).
-  int get equipmentAttackBonus =>
-      heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus) +
-      soulboundAttackBonus;
-
-  int get equipmentDefenseBonus =>
-      heroes.fold<int>(0, (s, h) => s + h.gearDefenseBonus) +
-      soulboundDefenseBonus;
-
-  int get equipmentVitalityBonus =>
-      heroes.fold<int>(0, (s, h) => s + h.gearVitalityBonus) +
-      soulboundVitalityBonus;
-
   int get gearGoldFindPercent {
     var pct = heroes.fold<int>(0, (s, h) => s + h.gearGoldFindPercent);
     if (soulboundItem?.effectId == GearEffectId.goldFind) {
@@ -864,12 +851,6 @@ class GameState {
   List<EnemyUnit> get aliveEnemies =>
       enemies.where((enemy) => !enemy.isDefeated).toList();
 
-  bool get areEnemiesDefeated => enemies.every((enemy) => enemy.isDefeated);
-
-  int get partyDefenseBonus => totalDefenseBonus;
-
-  int get partyVitalityBonus => totalVitalityBonus;
-
   bool get isPartyDefeated => aliveHeroes == 0;
 
   bool get hasLivingCaster => heroes.any(
@@ -878,9 +859,6 @@ class GameState {
 
   bool get hasLivingHealer =>
       heroes.any((hero) => hero.isAlive && hero.spec.isHealer);
-
-  bool get hasLivingTank =>
-      heroes.any((hero) => hero.isAlive && hero.spec.isTank);
 
   /// Max floor the party may enter (cleared + frontier).
   int get maxReachableFloor => max(1, highestFloorCleared + 1);
@@ -917,19 +895,6 @@ class GameState {
       }
     }
     return 0;
-  }
-
-  EquipmentItem? equippedFor(EquipmentSlot slot) {
-    for (final hero in heroes) {
-      final item = hero.itemIn(slot);
-      if (item != null) return item;
-    }
-    return equipped[slot];
-  }
-
-  EquipmentItem? equippedOn(int heroIndex, EquipmentSlot slot) {
-    if (heroIndex < 0 || heroIndex >= heroes.length) return null;
-    return heroes[heroIndex].itemIn(slot);
   }
 
   CombatRatings ratingsFor(PartyHero hero) {
@@ -982,11 +947,6 @@ class GameState {
   }
 
   int effectiveHeroAttack(PartyHero hero) => ratingsFor(hero).effectiveAttack;
-
-  int effectiveHeroPhysicalAttack(PartyHero hero) =>
-      ratingsFor(hero).physicalAttack;
-
-  int effectiveHeroSpellPower(PartyHero hero) => ratingsFor(hero).spellPower;
 
   int effectiveHeroDefense(PartyHero hero) => ratingsFor(hero).defense;
 

@@ -191,9 +191,6 @@ class _TicketBadge extends StatelessWidget {
   }
 }
 
-/// Legacy name kept for older call sites — same as [HubPowerupsFab].
-typedef HubPowerupsCard = HubPowerupsFab;
-
 /// Bottom sheet: earn tickets (WATCH) + spend on buffs.
 Future<void> openPowerupsSheet(
   BuildContext context,

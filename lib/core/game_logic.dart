@@ -76,14 +76,6 @@ class GameLogic {
     for (final def in RelicCatalog.all) def.id: def.name,
   };
 
-  static Map<String, String> get relicDescriptions => <String, String>{
-    for (final def in RelicCatalog.all) def.id: def.blurb,
-  };
-
-  /// Discover cost of the next unowned relic, keyed for old call sites.
-  static int discoverCostFor(GameState state) =>
-      RelicCatalog.discoverCost(state.unlockedRelics.length);
-
   static String relicPerTierPayout(String relicId) =>
       RelicCatalog.byId(relicId)?.payoutAt(1) ?? '';
 
@@ -91,17 +83,6 @@ class GameLogic {
     final def = RelicCatalog.byId(relicId);
     if (def == null) return '';
     return def.payoutAt(state.relicTierOf(relicId));
-  }
-
-  /// One line of owned relic bonuses, or null if none.
-  static String? relicKeepSummary(GameState state) {
-    final bits = <String>[
-      for (final id in state.unlockedRelics)
-        if (relicOwnedPayout(state, id).isNotEmpty)
-          '${relicNames[id]} ${relicOwnedPayout(state, id)}',
-    ];
-    if (bits.isEmpty) return null;
-    return 'Relics · ${bits.join(' · ')}';
   }
 
   static const int starterPartySize = 3;
@@ -2070,16 +2051,6 @@ class GameLogic {
       seenTips: [...state.seenTips, tipId],
       lastUpdated: DateTime.now(),
     );
-  }
-
-  static GameState dismissTips(GameState state, Iterable<String> tipIds) {
-    final seen = {...state.seenTips};
-    var changed = false;
-    for (final id in tipIds) {
-      if (seen.add(id)) changed = true;
-    }
-    if (!changed) return state;
-    return state.copyWith(seenTips: seen.toList(), lastUpdated: DateTime.now());
   }
 
   static String wipeFloorKey(GameState state) {

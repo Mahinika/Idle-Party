@@ -242,17 +242,4 @@ abstract final class EquipmentModelCatalog {
     if (list.isEmpty) return resolvedBaseId;
     return list[rng.nextInt(list.length)];
   }
-
-  static Iterable<String> get allSharedVariantIds sync* {
-    for (final base in sharedBases) {
-      yield* variants[base] ?? const <String>[];
-    }
-  }
-
-  /// Precache / catalog: only extract tiers, not legacy generated names.
-  static Iterable<String> get allFamilyVariantIds sync* {
-    for (final base in familyBases) {
-      yield* variants[base] ?? const <String>[];
-    }
-  }
 }

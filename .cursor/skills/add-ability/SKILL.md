@@ -20,8 +20,7 @@ HeroSpecDef → ClassAbilityDef → SpatialCombat.step
 Every spec uses the same picker. Rare casts are named helpers in
 `lib/spatial/kit_migrated_casts.dart` (`KitNamedCasts`), pointed at from
 `ClassAbilityDef.customId` — not a second combat engine. Shared cast helpers
-live on public `SpatialCombat` / `AbilityEffectRunner` (see
-`lib/spatial/combat_primitives.dart`).
+live on public `SpatialCombat` / `AbilityEffectRunner`.
 
 ## Source of truth
 
@@ -31,7 +30,7 @@ live on public `SpatialCombat` / `AbilityEffectRunner` (see
 | Kits | `lib/models/class_ability.dart` + `lib/models/kits/<class>.dart` |
 | Effects | `lib/spatial/ability_effects.dart` |
 | Named casts | `lib/spatial/kit_migrated_casts.dart` |
-| Cast surface | `lib/spatial/combat_primitives.dart` (exports) |
+| Cast surface | `lib/spatial/spatial_combat.dart` (exports) |
 | Combat | `lib/spatial/spatial_combat.dart` |
 | HUD | `lib/ui/shell/dungeon_party_hud.dart` |
 | Offline | `GameLogic.simulateSpatialOffline` |

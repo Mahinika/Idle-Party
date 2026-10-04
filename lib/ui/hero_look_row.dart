@@ -167,8 +167,3 @@ class _RaceCell extends StatelessWidget {
     );
   }
 }
-
-/// New Game: LOOK is per selected hero slot.
-String newGameLookHint(HeroRace race) {
-  return 'LOOK for the selected hero · ${race.label}.';
-}

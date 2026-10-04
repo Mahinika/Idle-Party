@@ -89,10 +89,6 @@ class EquipmentFactory {
   static List<ItemAffixDef> _prefixes = _fallbackPrefixes;
   static List<ItemAffixDef> _suffixes = _fallbackSuffixes;
 
-  /// Legacy string list for tests that inspect prefix names.
-  static List<String> get affixPrefixes =>
-      List<String>.unmodifiable(_prefixes.map((a) => a.name));
-
   static List<ItemAffixDef> get affixPrefixDefs => _prefixes;
   static List<ItemAffixDef> get affixSuffixDefs => _suffixes;
 

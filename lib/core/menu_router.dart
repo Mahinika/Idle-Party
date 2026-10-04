@@ -78,12 +78,6 @@ extension MoreSectionLabel on MoreSection {
 
   };
 
-
-
-  bool get isMetaOverlay =>
-
-      this == MoreSection.craft || this == MoreSection.quests;
-
 }
 
 
@@ -194,8 +188,6 @@ class MenuRouter extends ChangeNotifier {
 
   void apply(NavIntent intent) {
 
-    if (intent.scrollBagFilters) session.bumpBagFiltersScroll();
-
     open(
 
       intent.route,
@@ -211,12 +203,6 @@ class MenuRouter extends ChangeNotifier {
     );
 
   }
-
-
-
-  /// BAG -> FILTERS: MORE · SETTINGS, scrolled to bag cleanup controls.
-
-  void openBagFilters() => apply(NavIntent.bagFilters);
 
 
 
