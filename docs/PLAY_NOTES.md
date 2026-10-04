@@ -9,6 +9,8 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Done
 
+<!-- - 2026-10-04 · The dungeon stuttered at the start · the phone view paints first, and hero pictures no longer pile up in the opening seconds · fixed in 3d878349 -->
+
 <!-- - 2026-10-04 · The hub showed three big buttons at once · only the chase stays filled; Ascend and the other jobs are quiet · fixed in 6312542a -->
 
 <!-- - 2026-10-04 · Zone names on the continent sat on each other · BLIGHT, GREENH, ASH, and CROWN are spaced apart · fixed in 6312542a -->
