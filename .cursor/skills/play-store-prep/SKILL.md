@@ -100,5 +100,6 @@ Cursor browser, read **[reference.md](reference.md)** when you reach that step.
 - Privacy copy: `docs/PRIVACY.md`
 - Tag → APK/AAB: `.github/workflows/build-apk.yml`
 - Hub chrome before screenshots: `hub-smoke` / `screenshotting-changelog`
+- Phone shots and the Sandy preview: `store-listing-shoot`
 - Browser phone metrics: `browser-playtest`
 - itch.io page + community post: `tool/store_listing/itch/PAGE.md`

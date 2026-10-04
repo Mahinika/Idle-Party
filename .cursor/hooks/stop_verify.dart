@@ -134,6 +134,24 @@ Future<void> main() async {
     }
   }
 
+  if (_touchesListing(dirtyText)) {
+    final listing = await _run(
+      'flutter',
+      <String>['test', 'test/store_listing_plan_test.dart'],
+    );
+    if (listing.exitCode != 0) {
+      _emit(<String, dynamic>{
+        'followup_message':
+            'Stop-hook: store listing plan test failed. The Play shots or '
+            'the preview video no longer match the first-minute cave. '
+            'Fix the plan (skill store-listing-shoot) and re-run '
+            '`flutter test test/store_listing_plan_test.dart`.\n\n'
+            '${_trim(listing.combined)}',
+      });
+      return;
+    }
+  }
+
   if (_touchesKits(dirtyText)) {
     final share = await _run(
       'flutter',
@@ -225,6 +243,22 @@ bool _touchesGear(String dirtyText) {
     'tool/author_gear_standard.py',
     'tool/check_paper_doll_facit.py',
     'lib/visual/',
+  ];
+  for (final n in needles) {
+    if (t.contains(n)) return true;
+  }
+  return false;
+}
+
+bool _touchesListing(String dirtyText) {
+  final t = dirtyText.toLowerCase().replaceAll('\\', '/');
+  const needles = <String>[
+    'lib/visual/',
+    'lib/ui/shell/',
+    'lib/spatial/',
+    'hero_rig',
+    'paint_owned_hero',
+    'store_listing',
   ];
   for (final n in needles) {
     if (t.contains(n)) return true;

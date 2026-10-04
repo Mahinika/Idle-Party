@@ -17,6 +17,9 @@ Before you tell the owner a coding task is finished:
    - Gear art or `lib/visual`: green facit (`py -3 tool/check_paper_doll_facit.py`)
      and `flutter test test/visual`. If a hand picture moved, `py -3 tool/audit_anchors.py`
      has no findings.
+   - Hero picture or hub chrome: `store_listing_plan_test`. If the Play shots
+     no longer match this build, reshoot (`store-listing-shoot`) before calling
+     the page done.
 3. **Honesty:** text the player sees matches what the game does (English
    in-game).
 4. **Legal:** no foreign dumps. Art goes through `CustomAssets` /
