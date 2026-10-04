@@ -279,6 +279,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
           castFlash: hero.castFlash,
           hitFlash: hero.hitFlash,
           abilityName: hero.animAbility?.name,
+          poseTime: hero.poseTime,
+          poseHold: hero.poseHold,
         );
         final walkPhase = HeroAnimController.walkPhase(
           visualFrame,

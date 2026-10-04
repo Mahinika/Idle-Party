@@ -1,4 +1,5 @@
 import 'hero_anim_state.dart';
+import 'rig/rig_ability_clips.dart';
 
 /// Pure-Dart animation resolver for dungeon heroes.
 ///
@@ -58,6 +59,8 @@ abstract final class HeroAnimController {
         blocking: blocking,
       );
     }
+    final named = _namedPose(signals, blocking);
+    if (named != null) return named;
     if (signals.attacking || signals.attackFlash > 0.02) {
       final progress = signals.attackFlash > 0
           ? (1 - (signals.attackFlash / 0.22).clamp(0.0, 1.0))
@@ -103,6 +106,24 @@ abstract final class HeroAnimController {
       kind: HeroAnimKind.idle,
       frame: 0,
       blocking: blocking,
+    );
+  }
+
+  /// A kit pose plays for its own length, not the short hit flash.
+  static HeroAnimPose? _namedPose(HeroAnimSignals signals, bool blocking) {
+    final name = signals.abilityName;
+    if (name == null || signals.poseHold <= 0 || signals.poseTime >= signals.poseHold) {
+      return null;
+    }
+    final clip = RigAbilityClips.forName(name);
+    if (clip == null) return null;
+    final progress = (signals.poseTime / clip.length).clamp(0.0, 1.0);
+    return HeroAnimPose(
+      kind: HeroAnimKind.attack,
+      frame: _frameFor(HeroAnimKind.attack, progress),
+      progress: progress,
+      blocking: blocking,
+      abilityName: name,
     );
   }
 }

@@ -52,6 +52,8 @@ class HeroAnimSignals {
     this.hitFlash = 0,
     this.blocking = false,
     this.abilityName,
+    this.poseTime = 0,
+    this.poseHold = 0,
   });
 
   final bool moving;
@@ -75,4 +77,8 @@ class HeroAnimSignals {
 
   /// Ability dart name for this frame's flash. Empty for a plain swing.
   final String? abilityName;
+
+  /// Seconds into a named pose, and how long it should keep playing.
+  final double poseTime;
+  final double poseHold;
 }

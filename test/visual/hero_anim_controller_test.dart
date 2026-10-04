@@ -51,6 +51,45 @@ void main() {
     expect(pose.locked, isTrue);
   });
 
+  test('a named pose plays through while the hero is still moving', () {
+    final pose = HeroAnimController.snapshot(
+      const HeroAnimSignals(
+        moving: true,
+        abilityName: 'mortalStrike',
+        poseTime: 0.2,
+        poseHold: 0.8,
+      ),
+    );
+    expect(pose.kind, HeroAnimKind.attack);
+    expect(pose.abilityName, 'mortalStrike');
+    expect(pose.progress, closeTo(0.25, 0.02));
+  });
+
+  test('a finished pose lets the walk return', () {
+    final pose = HeroAnimController.snapshot(
+      const HeroAnimSignals(
+        moving: true,
+        abilityName: 'mortalStrike',
+        poseTime: 0.8,
+        poseHold: 0.8,
+      ),
+      walkPhase: 0.2,
+    );
+    expect(pose.kind, HeroAnimKind.walk);
+  });
+
+  test('a hit still beats a named pose', () {
+    final pose = HeroAnimController.snapshot(
+      const HeroAnimSignals(
+        hit: true,
+        abilityName: 'mortalStrike',
+        poseTime: 0.2,
+        poseHold: 0.8,
+      ),
+    );
+    expect(pose.kind, HeroAnimKind.hit);
+  });
+
   test('priority: hit beats attack and walk', () {
     final pose = HeroAnimController.snapshot(
       const HeroAnimSignals(moving: true, attackFlash: 0.2, hitFlash: 0.1),

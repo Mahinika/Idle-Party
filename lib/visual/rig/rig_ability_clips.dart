@@ -19,7 +19,7 @@ abstract final class RigAbilityClips {
     keys: [
       RigKey(0.0),
       RigKey(0.25, rootX: 6, rootY: 2, bones: {'torso': -14, 'upper_l': -36, 'fore_l': -10, 'upper_r': 22, 'sword': 12, 'thigh_l': 28, 'shin_l': -30, 'thigh_r': -8}),
-      RigKey(0.55, rootX: 16, rootY: 0, bones: {'torso': -8, 'upper_l': -20, 'upper_r': -16, 'sword': -36, 'thigh_l': -6, 'thigh_r': 24, 'shin_r': -20}),
+      RigKey(0.55, rootX: 16, rootY: 0, bones: {'torso': -8, 'upper_l': -20, 'upper_r': -16, 'sword': -36, 'thigh_l': -6, 'thigh_r': 24, 'shin_r': 18}),
       RigKey(1.0),
     ],
   );
@@ -198,11 +198,11 @@ abstract final class RigAbilityClips {
     name: 'bladestorm',
     length: 0.9,
     keys: [
-      RigKey(0.0, bones: {'upper_r': -8, 'sword': 0}),
-      RigKey(0.25, bones: {'torso': 10, 'upper_r': -16, 'sword': 70}),
-      RigKey(0.5, bones: {'torso': -10, 'upper_r': -16, 'sword': 150}),
-      RigKey(0.75, bones: {'torso': 10, 'upper_r': -16, 'sword': 230}),
-      RigKey(1.0, bones: {'sword': 300}),
+      RigKey(0.0, bones: {'upper_r': -12, 'upper_l': 12, 'sword': -8}),
+      RigKey(0.25, bones: {'torso': 14, 'upper_r': -28, 'upper_l': 22, 'sword': 22}),
+      RigKey(0.5, bones: {'torso': -14, 'upper_r': 16, 'upper_l': -24, 'sword': -30}),
+      RigKey(0.75, bones: {'torso': 14, 'upper_r': -28, 'upper_l': 22, 'sword': 22}),
+      RigKey(1.0, bones: {'sword': -8, 'upper_r': -8}),
     ],
   );
 
@@ -242,9 +242,10 @@ abstract final class RigAbilityClips {
     length: 0.7,
     keys: [
       RigKey(0.0),
-      RigKey(0.2, bones: {'upper_r': 14, 'sword': -28}),
-      RigKey(0.35),
-      RigKey(0.55, bones: {'torso': -8, 'upper_r': -12, 'sword': -40}),
+      RigKey(0.22, bones: {'torso': 6, 'upper_r': 16, 'fore_r': -8, 'sword': -10}),
+      RigKey(0.42, bones: {'torso': -8, 'upper_r': -10, 'fore_r': -4, 'sword': -36}),
+      RigKey(0.62, bones: {'torso': 4, 'upper_r': 10, 'sword': -8}),
+      RigKey(0.85, bones: {'torso': -6, 'upper_r': -8, 'sword': -32}),
       RigKey(1.0),
     ],
   );
@@ -253,10 +254,10 @@ abstract final class RigAbilityClips {
     name: 'whirlwind',
     length: 0.85,
     keys: [
-      RigKey(0.0, bones: {'upper_l': 20, 'upper_r': -20}),
-      RigKey(0.33, bones: {'torso': 16, 'upper_l': 28, 'upper_r': -28, 'sword': 80}),
-      RigKey(0.66, bones: {'torso': -16, 'upper_l': 28, 'upper_r': -28, 'sword': 170}),
-      RigKey(1.0, bones: {'sword': 250}),
+      RigKey(0.0, bones: {'upper_l': 16, 'upper_r': -16, 'sword': -6}),
+      RigKey(0.35, bones: {'torso': 12, 'upper_l': 32, 'upper_r': -32, 'sword': 18}),
+      RigKey(0.7, bones: {'torso': -12, 'upper_l': -8, 'upper_r': 20, 'sword': -36}),
+      RigKey(1.0),
     ],
   );
 
@@ -265,9 +266,10 @@ abstract final class RigAbilityClips {
     length: 0.7,
     keys: [
       RigKey(0.0),
-      RigKey(0.2, bones: {'upper_r': -10, 'sword': -32}),
-      RigKey(0.35, bones: {'sword': 8}),
-      RigKey(0.55, bones: {'torso': -8, 'upper_r': -16, 'sword': -44}),
+      RigKey(0.2, bones: {'torso': 8, 'upper_r': 18, 'sword': -6}),
+      RigKey(0.4, bones: {'torso': -10, 'upper_r': -16, 'sword': -40}),
+      RigKey(0.58, bones: {'torso': 6, 'upper_r': 12, 'sword': -8}),
+      RigKey(0.8, bones: {'torso': -12, 'upper_r': -18, 'sword': -46}),
       RigKey(1.0),
     ],
   );
@@ -298,11 +300,12 @@ abstract final class RigAbilityClips {
     length: 0.85,
     keys: [
       RigKey(0.0),
-      RigKey(0.2, bones: {'sword': -30, 'upper_r': -8}),
-      RigKey(0.35, bones: {'sword': 6}),
-      RigKey(0.55, bones: {'sword': -38, 'torso': -6}),
-      RigKey(0.7, bones: {'sword': 4}),
-      RigKey(0.9, bones: {'sword': -48, 'torso': -10, 'upper_r': -14}),
+      RigKey(0.15, bones: {'torso': 6, 'upper_r': 14, 'sword': -4}),
+      RigKey(0.3, bones: {'torso': -6, 'upper_r': -8, 'sword': -34}),
+      RigKey(0.45, bones: {'torso': 4, 'upper_r': 8, 'sword': -8}),
+      RigKey(0.6, bones: {'torso': -8, 'upper_r': -12, 'sword': -40}),
+      RigKey(0.75, bones: {'torso': 4, 'upper_r': 8, 'sword': -6}),
+      RigKey(0.9, bones: {'torso': -12, 'upper_r': -16, 'sword': -50}),
       RigKey(1.0),
     ],
   );
@@ -363,4 +366,7 @@ abstract final class RigAbilityClips {
     'furyRecklessness' => furyRecklessness,
     _ => null,
   };
+
+  /// How long a named pose should stay up. Zero when this ability has no clip.
+  static double holdFor(String? name) => forName(name)?.length ?? 0;
 }

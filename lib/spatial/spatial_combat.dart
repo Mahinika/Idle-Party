@@ -21,6 +21,7 @@ import '../models/spec_mastery.dart';
 import '../models/spell_bolt_style.dart';
 import '../models/vfx_quality.dart';
 import '../assets/kenney_assets.dart';
+import '../visual/rig/rig_ability_clips.dart';
 import 'combat_avoidance.dart';
 import 'hideout_stash.dart';
 import 'party_room_mark.dart';
@@ -289,8 +290,12 @@ class SpatialActor {
   /// Brief cast VFX timer (seconds remaining) for cast anim.
   double castFlash = 0;
 
-  /// Which ability the rig should pose while a flash is up. Not saved.
+  /// Which ability the rig should pose. Not saved.
   AbilityId? animAbility;
+
+  /// Seconds into [animAbility]'s pose, and how long that pose should hold.
+  double poseTime = 0;
+  double poseHold = 0;
 
   /// Brief hit flinch timer (seconds remaining).
   double hitFlash = 0;
@@ -1627,6 +1632,12 @@ abstract final class SpatialCombat {
   ) {
     if (cd > 0) a.abilityCd[id.name] = cd;
     world.pendingAbilityCasts++;
+    final hold = RigAbilityClips.holdFor(id.name);
+    if (hold > 0) {
+      a.animAbility = id;
+      a.poseTime = 0;
+      a.poseHold = hold;
+    }
   }
 
   static void spendRage(SpatialActor a, int cost) {
@@ -1865,7 +1876,13 @@ abstract final class SpatialCombat {
       if (a.hitFlash > 0) {
         a.hitFlash = (a.hitFlash - dt).clamp(0, 1);
       }
-      if (a.attackFlash <= 0 && a.castFlash <= 0) a.animAbility = null;
+      if (a.poseHold > 0) a.poseTime += dt;
+      final flashGone = a.attackFlash <= 0 && a.castFlash <= 0;
+      final poseGone = a.poseHold <= 0 || a.poseTime >= a.poseHold;
+      if (flashGone && poseGone) {
+        a.animAbility = null;
+        a.poseHold = 0;
+      }
     }
 
     for (final a in world.heroes) {
@@ -2549,6 +2566,8 @@ abstract final class SpatialCombat {
     to.attackFlash = from.attackFlash;
     to.castFlash = from.castFlash;
     to.animAbility = from.animAbility;
+    to.poseTime = from.poseTime;
+    to.poseHold = from.poseHold;
     to.hitFlash = from.hitFlash;
     to.attackAimX = from.attackAimX;
     to.attackAimY = from.attackAimY;
