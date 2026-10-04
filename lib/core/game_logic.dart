@@ -57,8 +57,6 @@ class GameLogic {
   static Random random = Random();
 
   static const String warBannerRelic = RelicIds.warBanner;
-  static const String ironWardRelic = RelicIds.ironWard;
-  static const String phoenixEmberRelic = RelicIds.phoenixEmber;
   static const String godHandFocusRelic = RelicIds.godHandFocus;
   static const String chamberLuckRelic = RelicIds.chamberLuck;
   static const String ironWillRelic = RelicIds.ironWill;

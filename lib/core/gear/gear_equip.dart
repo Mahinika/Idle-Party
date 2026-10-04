@@ -80,9 +80,6 @@ abstract final class GearEquip {
     );
   }
 
-  static GameState stampMissingVisualSetIds(GameState state) =>
-      normalizeVisualSetIds(state);
-
   /// Slots a stash piece may fill (rings/trinkets share dual slots).
   static List<EquipmentSlot> equipTargetsFor(EquipmentItem item) {
     return switch (item.slot) {

@@ -58,13 +58,6 @@ class EnemyUnit {
 
   bool get isDefeated => currentHp <= 0;
 
-  EnemyUnit takeDamage(int damage) {
-    final nextHp = currentHp - damage;
-    return copyWith(currentHp: nextHp.clamp(0, maxHp));
-  }
-
-  EnemyUnit healToFull() => copyWith(currentHp: maxHp);
-
   EnemyUnit copyWith({
     int? level,
     int? currentHp,

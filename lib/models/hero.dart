@@ -343,19 +343,12 @@ class PartyHero {
 
   String get passiveLabel => ClassKits.kitSummaryForSpec(specId, level);
 
-  PartyHero takeDamage(int damage) {
-    final nextHp = currentHp - damage;
-    return copyWith(currentHp: nextHp.clamp(0, maxHp));
-  }
-
   PartyHero healToFull() => copyWith(currentHp: maxHp);
 
   PartyHero levelUp() {
     if (level >= 100) return copyWith(xp: 0);
     return copyWith(level: level + 1, xp: 0, currentHp: maxHp + 5);
   }
-
-  PartyHero train() => levelUp();
 
   PartyHero copyWith({
     String? id,

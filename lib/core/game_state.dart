@@ -835,13 +835,6 @@ class GameState {
   int get totalAttackBonus =>
       metaAttackBonus + heroes.fold<int>(0, (s, h) => s + h.gearAttackBonus);
 
-  int get totalDefenseBonus =>
-      metaDefenseBonus + heroes.fold<int>(0, (s, h) => s + h.gearDefenseBonus);
-
-  int get totalVitalityBonus =>
-      metaVitalityBonus +
-      heroes.fold<int>(0, (s, h) => s + h.gearVitalityBonus);
-
   int get totalAttack => heroes
       .where((hero) => hero.isAlive)
       .fold<int>(0, (sum, hero) => sum + effectiveHeroAttack(hero));
