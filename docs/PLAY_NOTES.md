@@ -15,6 +15,20 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Done
 
+<!-- - 2026-10-04 · Market reroll read 28.0kg · gold now shows 28,000g · fixed in 35f3139a -->
+
+<!-- - 2026-10-04 · A full bag said nothing safe to scrap while upgrades waited · the toast now says open GEAR and tap EQUIP · fixed in 35f3139a -->
+
+<!-- - 2026-10-04 · The party row showed BOTTOM OVERFLOWED BY 4.0 on a boss · the row fits the status chip · fixed in 35f3139a -->
+
+<!-- - 2026-10-04 · The enemy card clipped the name (STORM TYRA..., ZEPHYR BL...) · the name scales down to fit · fixed in 35f3139a -->
+
+<!-- - 2026-10-04 · Quests said claim while you dungeon · the line now says claim here or in the dungeon · fixed in 35f3139a -->
+
+<!-- - 2026-10-04 · The God Hand tip stayed up for a whole clear on an AL3 save · that first-fight line stops after a boss or an ascend · fixed in 35f3139a -->
+
+<!-- - 2026-10-04 · Boss on F8 sat against Ascend ready, and the header clipped to Ascend AL 3... · a dot separates the two facts and the pill shows AL 3 · fixed in 35f3139a -->
+
 <!-- - 2026-10-04 · MORE said 4 quest claims while the quest list had 3 · the daily vault is no longer counted as a quest · fixed in 037b1dde -->
 
 <!-- - 2026-10-04 · A wipe said Shade while the party row said COM · the tip now includes the row label · fixed in 037b1dde -->

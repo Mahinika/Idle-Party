@@ -37,6 +37,16 @@
       "date": "2026-10-04",
       "pattern": "The hub shows the chase, ENTER DUNGEON, and ASCEND as three big buttons",
       "rule": ""
+    },
+    {
+      "date": "2026-10-04",
+      "pattern": "A k gold suffix glued to g reads as kilograms",
+      "rule": "none"
+    },
+    {
+      "date": "2026-10-04",
+      "pattern": "A full-bag toast that does not name EQUIP leaves the upgrades sitting there",
+      "rule": "none"
     }
   ],
   "ok": [
@@ -60,6 +70,13 @@
       "date": "2026-10-04",
       "commit": "2890e01a",
       "streak": 2
+    },
+    {
+      "screen": "market",
+      "stage": "mid",
+      "date": "2026-10-04",
+      "commit": "35f3139a",
+      "streak": 1
     }
   ]
 }

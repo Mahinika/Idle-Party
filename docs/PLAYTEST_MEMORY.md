@@ -18,6 +18,8 @@ Baselines live in `tool/playtest_baseline/`.
 - 2026-10-04 · A QUESTS count that includes the daily vault disagrees with CLAIM QUESTS · rule: none
 - 2026-10-04 · Wipe advice that only uses the hero name disagrees with the PROT or COM row · rule: none
 - 2026-10-04 · The hub shows the chase, ENTER DUNGEON, and ASCEND as three big buttons · rule: none
+- 2026-10-04 · A k gold suffix glued to g reads as kilograms · rule: none
+- 2026-10-04 · A full-bag toast that does not name EQUIP leaves the upgrades sitting there · rule: none
 
 ## OK
 
@@ -26,3 +28,4 @@ Baselines live in `tool/playtest_baseline/`.
 | gold | mid | 2026-10-04 | 2890e01a | 2 |
 | essence | mid | 2026-10-04 | 2890e01a | 2 |
 | shop | mid | 2026-10-04 | 2890e01a | 2 |
+| market | mid | 2026-10-04 | 35f3139a | 1 |
