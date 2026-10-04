@@ -8,6 +8,8 @@ import 'package:idle_party/core/audio_variation_bank.dart';
 import 'package:idle_party/core/combat_feel.dart';
 import 'package:idle_party/core/game_audio.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/music_playlist.dart';
+import 'package:idle_party/core/music_score.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/loot.dart';
@@ -257,7 +259,7 @@ void main() {
     expect(decoded.soundMuted, isFalse);
   });
 
-  test('every cave has a mood bed and the folder stays under 10 MB', () {
+  test('every cave has a mood bed and the folder stays under 25 MB', () {
     expect(AudioAssets.moodForDungeon('sandy'), ZoneMood.warm);
     expect(AudioAssets.moodForDungeon('goblin'), ZoneMood.warm);
     expect(AudioAssets.moodForDungeon('king'), ZoneMood.dark);
@@ -288,6 +290,160 @@ void main() {
       if (entity is File) bytes += entity.lengthSync();
     }
     expect(bytes, lessThan(AudioAssets.maxCatalogBytes));
+  });
+
+  test('a bank never plays the same take twice in a row', () {
+    final bank = AudioVariationBank([
+      AudioVariation(id: 'a', path: 'p/a.wav'),
+      AudioVariation(id: 'b', path: 'p/b.wav'),
+      AudioVariation(id: 'c', path: 'p/c.wav'),
+    ]);
+    final rng = Random(7);
+    var previous = '';
+    for (var i = 0; i < 40; i++) {
+      final id = bank.pick(rng).id;
+      expect(id, isNot(previous));
+      previous = id;
+    }
+  });
+
+  test('launch ids cover bows and spells and skip plain weapons', () {
+    expect(AudioAssets.launchIdFor(SpellBoltStyle.arrow), 'bow_release');
+    expect(AudioAssets.launchIdFor(SpellBoltStyle.fire), 'cast_fire');
+    expect(AudioAssets.launchIdFor(SpellBoltStyle.frost), 'cast_frost');
+    expect(AudioAssets.launchIdFor(SpellBoltStyle.weapon), isNull);
+    expect(AudioAssets.sfxVariants['bow_release'], hasLength(4));
+    for (final id in AudioAssets.launchIds) {
+      expect(AudioAssets.sfxVariants.containsKey(id), isTrue, reason: id);
+      expect(File(AudioAssets.sfxVariants[id]!.first).existsSync(), isTrue);
+    }
+  });
+
+  test('a hero arrow and spell queue a launch; enemies stay quiet', () {
+    final state = GameLogic.createInitialState(now: DateTime(2026, 10, 4));
+    final world = _quietWorld();
+    SpatialCombat.addProjectile(
+      world,
+      SpatialProjectile(
+        x: 2,
+        y: 2,
+        vx: 3,
+        vy: 0,
+        damage: 4,
+        team: SpatialTeam.hero,
+        style: SpellBoltStyle.arrow,
+      ),
+    );
+    final shot = SpatialCombat.step(world, state, dt: 0.05);
+    expect(shot.feelLaunches, <String>['bow_release']);
+
+    final magic = _quietWorld();
+    SpatialCombat.addProjectile(
+      magic,
+      SpatialProjectile(
+        x: 2,
+        y: 2,
+        vx: 3,
+        vy: 0,
+        damage: 4,
+        team: SpatialTeam.hero,
+        style: SpellBoltStyle.fire,
+        delay: 0.2,
+      ),
+    );
+    final waiting = SpatialCombat.step(magic, state, dt: 0.05);
+    expect(waiting.feelLaunches, isEmpty);
+    SpatialStepResult? heard;
+    for (var i = 0; i < 8; i++) {
+      heard = SpatialCombat.step(magic, state, dt: 0.05);
+      if (heard.feelLaunches.isNotEmpty) break;
+    }
+    expect(heard!.feelLaunches, <String>['cast_fire']);
+
+    final enemy = _quietWorld();
+    SpatialCombat.addProjectile(
+      enemy,
+      SpatialProjectile(
+        x: 2,
+        y: 2,
+        vx: -1,
+        vy: 0,
+        damage: 4,
+        team: SpatialTeam.enemy,
+        style: SpellBoltStyle.arrow,
+      ),
+    );
+    expect(
+      SpatialCombat.step(enemy, state, dt: 0.05).feelLaunches,
+      isEmpty,
+    );
+
+    final offline = _quietWorld(afk: true);
+    SpatialCombat.addProjectile(
+      offline,
+      SpatialProjectile(
+        x: 2,
+        y: 2,
+        vx: 3,
+        vy: 0,
+        damage: 4,
+        team: SpatialTeam.hero,
+        style: SpellBoltStyle.frost,
+      ),
+    );
+    expect(
+      SpatialCombat.step(offline, state, dt: 0.05).feelLaunches,
+      isEmpty,
+    );
+  });
+
+  test('playlist never repeats a song and prefers the least played', () {
+    final playlist = MusicPlaylist();
+    final rng = Random(3);
+    const tracks = <String>['a', 'b', 'c'];
+    final seen = <String>[
+      for (var i = 0; i < 12; i++) playlist.pick('hub', tracks, rng),
+    ];
+    for (var i = 1; i < seen.length; i++) {
+      expect(seen[i], isNot(seen[i - 1]));
+    }
+    final counts = <String, int>{};
+    for (final id in seen) {
+      counts[id] = (counts[id] ?? 0) + 1;
+    }
+    expect(counts.length, 3);
+    final values = counts.values.toList()..sort();
+    expect(values.last - values.first, lessThanOrEqualTo(1));
+    expect(playlist.startFraction(Random(1), const Duration(seconds: 20)), 0);
+  });
+
+  test('bed length comes from the song when the score is told', () {
+    final score = MusicScore();
+    final start = DateTime(2026, 10, 4);
+    score.setPlace(MusicPlace.hub, start);
+    score.setBedLimit(const Duration(seconds: 5));
+    expect(score.tick(start.add(const Duration(seconds: 4))), isFalse);
+    expect(score.tick(start.add(const Duration(seconds: 5))), isTrue);
+    expect(score.cue, MusicCue.rest);
+  });
+
+  test('attribution names every shipped audio file', () {
+    final note = File(
+      'assets/custom/audio/ATTRIBUTION.md',
+    ).readAsStringSync();
+    final mentioned = RegExp(
+      r'`((?:sfx|music|ambience)/[^`]+)`',
+    ).allMatches(note).map((m) => 'assets/custom/audio/${m.group(1)}').toSet();
+    final onDisk = <String>{};
+    for (final entity in Directory(
+      'assets/custom/audio',
+    ).listSync(recursive: true)) {
+      if (entity is! File) continue;
+      final path = entity.path.replaceAll('\\', '/');
+      if (!path.endsWith('.ogg') && !path.endsWith('.mp3')) continue;
+      onDisk.add(path.substring(path.indexOf('assets/custom/audio/')));
+    }
+    expect(mentioned, onDisk);
   });
 
   test('offline fights stay silent and a live step drains cues', () {

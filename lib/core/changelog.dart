@@ -86,10 +86,27 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.193';
+  static const String currentVersion = '1.12.194';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.12.194',
+      date: 'Oct 4, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON, then tap the fight — swords, bows, and spells now sound like the weapons they are.',
+      changed: <String>[
+        'Sound overhaul: real weapon, bow and spell sounds, more music.',
+        'A bowstring plays when an arrow leaves, and a spell plays when it is cast.',
+        'Hub and caves rotate songs, with a quiet stretch between them.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.193',
       date: 'Oct 1, 2026',

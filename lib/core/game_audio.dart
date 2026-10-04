@@ -10,6 +10,7 @@ import '../models/loot.dart';
 import 'audio_assets.dart';
 import 'audio_variation_bank.dart';
 import 'combat_feel.dart';
+import 'music_playlist.dart';
 import 'music_score.dart';
 
 enum AmbienceKind { none, hub, dungeon }
@@ -47,11 +48,18 @@ abstract final class GameAudio {
   static final Map<String, AudioSource> _sourcesByPath =
       <String, AudioSource>{};
   static AudioSource? _hubAmb;
-  static AudioSource? _hubMusic;
+  static final Map<String, AudioSource> _byPath = <String, AudioSource>{};
+  static final MusicPlaylist _playlist = MusicPlaylist();
+  static String? _trackPath;
   static final Map<ZoneMood, AudioSource> _moodAmb = <ZoneMood, AudioSource>{};
-  static final Map<ZoneMood, AudioSource> _moodMusic = <ZoneMood, AudioSource>{};
   static ZoneMood _audibleMood = ZoneMood.warm;
-  static AudioSource? _bossMusic;
+  static bool _encounterHot = false;
+  static final List<DateTime> _launchWindowAt = <DateTime>[];
+  static DateTime? _lastLaunchAt;
+
+  /// Phone-friendly cap. Music and air are protected so hits can steal the rest.
+  static const voiceCap = 24;
+  static const dropQuietLayersAt = 18;
   static AudioSource? _resolveMusic;
   static AudioSource? _downMusic;
   static SoundHandle? _ambienceHandle;
@@ -113,6 +121,16 @@ abstract final class GameAudio {
     'hit_dagger': 0.85,
     'hit_fist': 0.86,
     'hit_bow': 0.84,
+    'bow_release': 0.80,
+    'cast_fire': 0.74,
+    'cast_frost': 0.74,
+    'cast_holy': 0.72,
+    'cast_shadow': 0.74,
+    'cast_arcane': 0.74,
+    'cast_nature': 0.72,
+    'cast_lightning': 0.76,
+    'cast_demon': 0.76,
+    'cast_poison': 0.72,
     'spell_fire': 0.86,
     'spell_frost': 0.86,
     'spell_holy': 0.84,
@@ -124,10 +142,10 @@ abstract final class GameAudio {
     'spell_poison': 0.84,
     'swish_melee': 0.55,
     'swish_bow': 0.50,
-    'mat_flesh': 0.45,
-    'mat_bone': 0.42,
-    'mat_wet': 0.40,
-    'mat_stone': 0.48,
+    'mat_flesh': 0.82,
+    'mat_bone': 0.78,
+    'mat_wet': 0.74,
+    'mat_stone': 0.80,
   };
 
   /// Test hook: counts play attempts that passed mute/rate-limit gates.
@@ -150,6 +168,12 @@ abstract final class GameAudio {
     _lastUiAt = null;
     _lastCueAt.clear();
     _audibleMood = ZoneMood.warm;
+    _encounterHot = false;
+    _launchWindowAt.clear();
+    _lastLaunchAt = null;
+    _trackPath = null;
+    _playlist.reset();
+    AudioVariationCatalog.resetMemory();
     _sfxReady = false;
     _warmFuture = null;
     _scoreTimer?.cancel();
@@ -176,8 +200,11 @@ abstract final class GameAudio {
       if (!soloud.isInitialized) {
         await soloud.init();
       }
+      soloud.setMaxActiveVoiceCount(voiceCap);
       _hubAmb = await soloud.loadAsset(AudioAssets.hubAmbience);
-      _hubMusic = await soloud.loadAsset(AudioAssets.hubMusic);
+      for (final path in AudioAssets.hubTracks) {
+        await _loadPath(path);
+      }
       _ready = true;
     } catch (e, st) {
       _initFailed = true;
@@ -202,11 +229,6 @@ abstract final class GameAudio {
           await Future<void>.delayed(Duration.zero);
         }
       }
-      for (final mood in ZoneMood.values) {
-        await _ensureMood(mood);
-        await Future<void>.delayed(Duration.zero);
-      }
-      _bossMusic ??= await soloud.loadAsset(AudioAssets.bossMusic);
       _resolveMusic ??= await soloud.loadAsset(AudioAssets.resolveMusic);
       _downMusic ??= await soloud.loadAsset(AudioAssets.downMusic);
       _sfxReady = true;
@@ -224,14 +246,62 @@ abstract final class GameAudio {
 
   static Future<void> _ensureMood(ZoneMood mood) async {
     if (!_ready || _initFailed) return;
-    if (_moodAmb.containsKey(mood) && _moodMusic.containsKey(mood)) return;
     try {
       final soloud = SoLoud.instance;
-      _moodAmb[mood] ??= await soloud.loadAsset(AudioAssets.dungeonAmbience(mood));
-      _moodMusic[mood] ??= await soloud.loadAsset(AudioAssets.dungeonMusic(mood));
+      _moodAmb[mood] ??= await soloud.loadAsset(
+        AudioAssets.dungeonAmbience(mood),
+      );
+      for (final path in AudioAssets.dungeonTracks(mood)) {
+        await _loadPath(path);
+      }
+      for (final path in AudioAssets.bossTracks) {
+        await _loadPath(path);
+      }
     } catch (e, st) {
       debugPrint('GameAudio mood load failed: $e\n$st');
     }
+  }
+
+  static Future<AudioSource?> _loadPath(String path) async {
+    final cached = _byPath[path];
+    if (cached != null) return cached;
+    if (!_ready || _initFailed) return null;
+    try {
+      final source = await SoLoud.instance.loadAsset(path);
+      _byPath[path] = source;
+      return source;
+    } catch (e, st) {
+      debugPrint('GameAudio load failed: $e\n$st');
+      return null;
+    }
+  }
+
+  /// Drops songs that are not part of the place the party is in.
+  static Future<void> _dropUnusedTracks(Set<String> keep) async {
+    if (!_ready) return;
+    final drop = _byPath.keys.where((path) => !keep.contains(path)).toList();
+    for (final path in drop) {
+      final source = _byPath.remove(path);
+      if (source == null) continue;
+      try {
+        await SoLoud.instance.disposeSource(source);
+      } catch (e, st) {
+        debugPrint('GameAudio dispose track failed: $e\n$st');
+      }
+    }
+  }
+
+  static Set<String> _tracksForPlace() {
+    if (_score.place == MusicPlace.hub) {
+      return AudioAssets.hubTracks.toSet();
+    }
+    if (_score.place == MusicPlace.dungeon) {
+      return <String>{
+        ...AudioAssets.dungeonTracks(_score.mood),
+        ...AudioAssets.bossTracks,
+      };
+    }
+    return <String>{?_trackPath};
   }
 
   static void disposeEngine() {
@@ -243,12 +313,12 @@ abstract final class GameAudio {
       debugPrint('GameAudio disposeEngine failed: $e\n$st');
     }
     _sourcesByPath.clear();
+    _byPath.clear();
+    _trackPath = null;
     _hubAmb = null;
-    _hubMusic = null;
     _moodAmb.clear();
-    _moodMusic.clear();
     _audibleMood = ZoneMood.warm;
-    _bossMusic = null;
+    _encounterHot = false;
     _resolveMusic = null;
     _downMusic = null;
     _scoreTimer?.cancel();
@@ -339,6 +409,56 @@ abstract final class GameAudio {
     _playLayer(id, volumeMul: 1.0, pan: 0.0, speedMul: 1.0);
   }
 
+  /// Arrow string or spell cast. Separate limiter so shots do not eat hits.
+  static void playLaunch(String id) {
+    if (muted || !AudioAssets.launchIds.contains(id)) return;
+    final now = DateTime.now();
+    if (!_admitLaunch(now)) return;
+    debugPlayCount++;
+    _hapticFor(id.startsWith('cast_') ? 'spell_fire' : 'hit_bow');
+    _playLayer(id, volumeMul: 1.0, pan: 0.0, speedMul: 1.0);
+  }
+
+  static bool _admitLaunch(DateTime now) {
+    final last = _lastLaunchAt ?? _epoch;
+    // Casts and bow releases share one short gap so a volley stays readable.
+    if (now.difference(last) < const Duration(milliseconds: 120)) return false;
+    _launchWindowAt.removeWhere((t) => now.difference(t) >= combatWindow);
+    if (_launchWindowAt.length >= combatWindowMax) return false;
+    _lastLaunchAt = now;
+    _launchWindowAt.add(now);
+    return true;
+  }
+
+  /// UI and body chirps yield when the phone is already full of hits.
+  static bool _shouldDrop(String id) {
+    final quiet =
+        id.startsWith('mat_') || id.startsWith('swish_') || id.startsWith('ui_');
+    if (!quiet) return false;
+    try {
+      return SoLoud.instance.getActiveVoiceCount() >= dropQuietLayersAt;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Fight is up: cave air steps back so hits read. Returns over about 1.5s.
+  static void setEncounterHot(bool hot) {
+    if (_encounterHot == hot) return;
+    _encounterHot = hot;
+    final handle = _ambienceHandle;
+    if (handle == null || !_ready || muted) return;
+    try {
+      SoLoud.instance.fadeVolume(
+        handle,
+        _effectiveAmbienceVolume(),
+        const Duration(milliseconds: 1500),
+      );
+    } catch (e, st) {
+      debugPrint('GameAudio encounter duck failed: $e\n$st');
+    }
+  }
+
   /// Layered combat hit: optional swish → impact → soft material chirp.
   static void playCombatHit(CombatFeelHit hit) {
     if (muted) return;
@@ -362,9 +482,10 @@ abstract final class GameAudio {
     final isSpell = id.startsWith('spell_');
 
     if (hit.withSwish && !isSpell) {
+      // Follow-through sits about 10 dB under the weapon contact.
       _playLayer(
         CombatFeel.swishIdFor(id),
-        volumeMul: volMul * 0.85,
+        volumeMul: volMul * 0.32,
         pan: pan,
         speedMul: speedMul,
         heavy: hit.heavy,
@@ -385,9 +506,10 @@ abstract final class GameAudio {
       );
       // Material chirps are physical-only — spells keep school identity.
       if (!isSpell) {
+        // Body layer sits about 3 dB under the weapon contact.
         _playLayer(
           CombatFeel.materialSfxId(hit.material),
-          volumeMul: volMul * 0.7,
+          volumeMul: volMul * 0.71,
           pan: pan * 0.8,
           speedMul: speedMul,
           heavy: false,
@@ -410,6 +532,7 @@ abstract final class GameAudio {
     bool heavy = false,
   }) {
     if (!_ready) return;
+    if (_shouldDrop(id)) return;
     final bank = AudioVariationCatalog.banks[id];
     if (bank == null || bank.isEmpty) return;
     try {
@@ -486,6 +609,7 @@ abstract final class GameAudio {
         ? _score.syncBoss(active: bossFight, floor: floor, now: now)
         : false;
     _ambience = kind;
+    if (kind != AmbienceKind.dungeon) _encounterHot = false;
     if (!_ready || muted || _backgroundPaused) {
       if (muted) stopAmbience();
       return;
@@ -585,11 +709,14 @@ abstract final class GameAudio {
     if (ambSource == null) return;
     try {
       debugBackgroundStartCount++;
-      _ambienceHandle = SoLoud.instance.play(
+      final handle = SoLoud.instance.play(
         ambSource,
         volume: _effectiveAmbienceVolume(),
         looping: true,
       );
+      SoLoud.instance.setProtectVoice(handle, true);
+      _ambienceHandle = handle;
+      unawaited(_dropOtherAmbience());
     } catch (e, st) {
       _ambienceHandle = null;
       debugPrint('GameAudio ambience start failed: $e\n$st');
@@ -611,6 +738,9 @@ abstract final class GameAudio {
     final fade = _fadeFor(stem);
     _releaseHandle(previous, fade);
     if (stem == MusicStem.none) return;
+    if (_isPlaylist(stem)) {
+      _trackPath = _pickTrack(stem);
+    }
     await _ensureStem(stem);
     if (gen != _fadeGen || muted || _backgroundPaused) return;
     final source = _sourceFor(stem);
@@ -619,18 +749,45 @@ abstract final class GameAudio {
       return;
     }
     try {
-      final handle = SoLoud.instance.play(
+      final soloud = SoLoud.instance;
+      var start = Duration.zero;
+      if (stem == MusicStem.hub || stem == MusicStem.dungeon) {
+        final length = soloud.getLength(source);
+        final fraction = _playlist.startFraction(_rng, length);
+        start = Duration(
+          milliseconds: (length.inMilliseconds * fraction).round(),
+        );
+        final remain = length - start;
+        _score.setBedLimit(
+          remain < const Duration(seconds: 4)
+              ? const Duration(seconds: 4)
+              : remain,
+        );
+      }
+      final handle = soloud.play(
         source,
         volume: 0.001,
         looping: _loops(stem),
+        paused: start > Duration.zero,
       );
+      if (start > Duration.zero) {
+        soloud.seek(handle, start);
+        soloud.setPause(handle, false);
+      }
       if (gen != _fadeGen) {
         _releaseHandle(handle, Duration.zero);
         return;
       }
+      soloud.setProtectVoice(handle, true);
       _musicHandle = handle;
       if (stem == MusicStem.dungeon) _audibleMood = _score.mood;
-      SoLoud.instance.fadeVolume(handle, _musicGain(stem), fade);
+      soloud.fadeVolume(handle, _musicGain(stem), fade);
+      unawaited(
+        Future<void>.delayed(fade, () async {
+          if (!_ready) return;
+          await _dropUnusedTracks(_tracksForPlace());
+        }),
+      );
     } catch (e, st) {
       _musicHandle = null;
       _playing = MusicStem.none;
@@ -644,11 +801,17 @@ abstract final class GameAudio {
       final soloud = SoLoud.instance;
       switch (stem) {
         case MusicStem.hub:
-          _hubMusic ??= await soloud.loadAsset(AudioAssets.hubMusic);
+          for (final path in AudioAssets.hubTracks) {
+            await _loadPath(path);
+          }
         case MusicStem.dungeon:
           await _ensureMood(_score.mood);
+          final path = _trackPath;
+          if (path != null) await _loadPath(path);
         case MusicStem.boss:
-          _bossMusic ??= await soloud.loadAsset(AudioAssets.bossMusic);
+          for (final path in AudioAssets.bossTracks) {
+            await _loadPath(path);
+          }
         case MusicStem.resolve:
           _resolveMusic ??= await soloud.loadAsset(AudioAssets.resolveMusic);
         case MusicStem.down:
@@ -661,19 +824,47 @@ abstract final class GameAudio {
     }
   }
 
+  static bool _isPlaylist(MusicStem stem) =>
+      stem == MusicStem.hub ||
+      stem == MusicStem.dungeon ||
+      stem == MusicStem.boss;
+
+  static String _pickTrack(MusicStem stem) => switch (stem) {
+    MusicStem.hub => _playlist.pick('hub', AudioAssets.hubTracks, _rng),
+    MusicStem.dungeon => _playlist.pick(
+      'dungeon-${_score.mood.name}',
+      AudioAssets.dungeonTracks(_score.mood),
+      _rng,
+    ),
+    MusicStem.boss => _playlist.pick('boss', AudioAssets.bossTracks, _rng),
+    _ => AudioAssets.hubMusic,
+  };
+
   static AudioSource? _sourceFor(MusicStem stem) => switch (stem) {
-    MusicStem.hub => _hubMusic,
-    MusicStem.dungeon => _moodMusic[_score.mood],
-    MusicStem.boss => _bossMusic,
+    MusicStem.hub || MusicStem.dungeon || MusicStem.boss =>
+      _trackPath == null ? null : _byPath[_trackPath],
     MusicStem.resolve => _resolveMusic,
     MusicStem.down => _downMusic,
     MusicStem.none => null,
   };
 
-  static bool _loops(MusicStem stem) =>
-      stem == MusicStem.hub ||
-      stem == MusicStem.dungeon ||
-      stem == MusicStem.boss;
+  /// Beds play once and then rest. Boss holds until the fight ends.
+  static bool _loops(MusicStem stem) => stem == MusicStem.boss;
+
+  static Future<void> _dropOtherAmbience() async {
+    if (!_ready) return;
+    final keep = _ambience == AmbienceKind.dungeon ? _score.mood : null;
+    final drop = _moodAmb.keys.where((mood) => mood != keep).toList();
+    for (final mood in drop) {
+      final source = _moodAmb.remove(mood);
+      if (source == null) continue;
+      try {
+        await SoLoud.instance.disposeSource(source);
+      } catch (e, st) {
+        debugPrint('GameAudio ambience dispose failed: $e\n$st');
+      }
+    }
+  }
 
   static double _stemGain(MusicStem stem) => switch (stem) {
     MusicStem.boss => 1.08,
@@ -786,8 +977,11 @@ abstract final class GameAudio {
     }
   }
 
-  static double _effectiveAmbienceVolume() =>
-      muted ? 0.0 : ambienceVolume.clamp(0.0, 1.0);
+  static double _effectiveAmbienceVolume() {
+    if (muted) return 0.0;
+    final base = ambienceVolume.clamp(0.0, 1.0);
+    return _encounterHot ? base * 0.62 : base;
+  }
 
   static double _effectiveMusicVolume() =>
       muted ? 0.0 : musicVolume.clamp(0.0, 1.0);

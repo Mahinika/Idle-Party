@@ -25,8 +25,20 @@ class CombatFeelHit {
   /// Crit / heavy impact — slightly louder, deeper pitch.
   final bool heavy;
 
-  /// Play a short swish/release before the impact (melee + bow).
+  /// Play a short swish before the impact (melee only).
+  /// Bows use a release sound when the arrow leaves, not on the hit.
   final bool withSwish;
+}
+
+/// A projectile leaving a hero's hand. [delay] counts down in seconds.
+class CombatFeelLaunch {
+  const CombatFeelLaunch(this.id, {this.delay = 0});
+
+  final String id;
+  final double delay;
+
+  CombatFeelLaunch advanced(double dt) =>
+      CombatFeelLaunch(id, delay: delay - dt);
 }
 
 /// Target-body material layer for soft impact chirps.

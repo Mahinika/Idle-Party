@@ -27,6 +27,10 @@ class MusicScore {
   DateTime anchor = DateTime.fromMillisecondsSinceEpoch(0);
   Duration _quietFor = hubQuiet;
 
+  /// How long the current song should be heard. Set from the file length.
+  /// Null uses [hubBed] / [dungeonBed].
+  Duration? bedLimit;
+
   static const hubBed = Duration(seconds: 32);
   static const hubQuiet = Duration(seconds: 20);
   static const dungeonBed = Duration(seconds: 48);
@@ -55,6 +59,14 @@ class MusicScore {
     holdFloor = null;
     anchor = DateTime.fromMillisecondsSinceEpoch(0);
     _quietFor = hubQuiet;
+    bedLimit = null;
+  }
+
+  /// Remaining length of the song that just started, after any mid-start.
+  void setBedLimit(Duration value) {
+    bedLimit = value < const Duration(seconds: 4)
+        ? const Duration(seconds: 4)
+        : value;
   }
 
   /// Scene change (hub ↔ cave). Starts that place's bed so the new room
@@ -63,6 +75,7 @@ class MusicScore {
     if (next == place) return false;
     place = next;
     holdFloor = null;
+    bedLimit = null;
     if (next == MusicPlace.none) {
       _enter(MusicCue.rest, now, quiet: hubQuiet);
     } else {
@@ -75,6 +88,7 @@ class MusicScore {
   bool setMood(ZoneMood next) {
     if (next == mood) return false;
     mood = next;
+    bedLimit = null;
     return place == MusicPlace.dungeon;
   }
 
@@ -128,7 +142,8 @@ class MusicScore {
     final elapsed = now.difference(anchor);
     switch (cue) {
       case MusicCue.bed:
-        final limit = place == MusicPlace.hub ? hubBed : dungeonBed;
+        final limit =
+            bedLimit ?? (place == MusicPlace.hub ? hubBed : dungeonBed);
         if (elapsed < limit) return false;
         _enter(
           MusicCue.rest,

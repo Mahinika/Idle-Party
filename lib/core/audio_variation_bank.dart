@@ -35,17 +35,29 @@ class AudioVariationBank {
 
   final List<AudioVariation> variations;
 
+  /// Last index played, so the same take never fires twice in a row.
+  int? _lastIndex;
+
   bool get isEmpty => variations.isEmpty;
 
+  void forget() {
+    _lastIndex = null;
+  }
+
   /// Weighted random; [heavy] biases toward later (aggressiver) variants.
+  /// With two or more takes, the previous take is skipped.
   AudioVariation pick(Random rng, {bool heavy = false}) {
     if (variations.isEmpty) {
       throw StateError('AudioVariationBank is empty');
     }
-    if (variations.length == 1) return variations.first;
+    if (variations.length == 1) {
+      _lastIndex = 0;
+      return variations.first;
+    }
 
     var total = 0.0;
     final weights = List<double>.generate(variations.length, (i) {
+      if (i == _lastIndex) return 0.0;
       final base = variations[i].weight;
       if (!heavy) return base;
       // Later letters → slightly heavier transient profile.
@@ -55,18 +67,35 @@ class AudioVariationBank {
     for (final w in weights) {
       total += w;
     }
-    var roll = rng.nextDouble() * total;
-    for (var i = 0; i < variations.length; i++) {
-      if (roll < weights[i]) return variations[i];
-      roll -= weights[i];
+    var chosen = 0;
+    if (total <= 0) {
+      chosen = (_lastIndex! + 1) % variations.length;
+    } else {
+      var roll = rng.nextDouble() * total;
+      for (var i = 0; i < variations.length; i++) {
+        if (weights[i] <= 0) continue;
+        if (roll < weights[i]) {
+          chosen = i;
+          break;
+        }
+        roll -= weights[i];
+        chosen = i;
+      }
     }
-    return variations.last;
+    _lastIndex = chosen;
+    return variations[chosen];
   }
 }
 
 /// Static banks built from [AudioAssets.sfxVariants] + per-index profiles.
 abstract final class AudioVariationCatalog {
   static final Map<String, AudioVariationBank> banks = _buildBanks();
+
+  static void resetMemory() {
+    for (final bank in banks.values) {
+      bank.forget();
+    }
+  }
 
   static Map<String, AudioVariationBank> _buildBanks() {
     final out = <String, AudioVariationBank>{};
@@ -79,7 +108,8 @@ abstract final class AudioVariationCatalog {
   static AudioVariationBank _bankFor(String playId, List<String> paths) {
     if (paths.isEmpty) return AudioVariationBank(const []);
 
-    final isSpell = playId.startsWith('spell_');
+    final isSpell =
+        playId.startsWith('spell_') || playId.startsWith('cast_');
     final isHit = playId.startsWith('hit');
     final isSwish = playId.startsWith('swish_');
 

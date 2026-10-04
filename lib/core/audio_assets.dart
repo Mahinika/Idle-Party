@@ -7,9 +7,9 @@ enum ZoneMood { warm, dark, ice, wet, storm }
 
 /// Asset paths for Idle Party audio (core-safe — no ui/ imports).
 ///
-/// SFX and cave beds are owned procedural OGG (`tool/audio_synth`).
-/// Hub music stays the CC0 Heavenly Loop. The old cave loop
-/// `music/dungeon.mp3` stays on disk as the A/B spare and is not played.
+/// Combat SFX are mastered CC0 recordings. Menu and loot stay owned synth.
+/// Each place has several CC0 or owned songs and does not loop one file.
+/// `music/dungeon.mp3` stays on disk as the spare and is not played.
 abstract final class AudioAssets {
   static const customSfxRoot = 'assets/custom/audio/sfx';
   static const ambienceRoot = 'assets/custom/audio/ambience';
@@ -22,10 +22,27 @@ abstract final class AudioAssets {
   static const legacyDungeonMusic = '$musicRoot/dungeon.mp3';
 
   static const bossMusic = '$musicRoot/boss.ogg';
+  static const bossFairy = '$musicRoot/boss_fairy.ogg';
   static const resolveMusic = '$musicRoot/resolve.ogg';
   static const downMusic = '$musicRoot/down.ogg';
+  static const hubTown = '$musicRoot/hub_town.ogg';
+  static const hubMystical = '$musicRoot/hub_mystical.ogg';
+  static const darkDungeon = '$musicRoot/dark_dungeon.ogg';
+  static const darkWhispers = '$musicRoot/dark_whispers.ogg';
+  static const iceRealm = '$musicRoot/ice_realm.ogg';
+  static const iceCrystal = '$musicRoot/ice_crystal.ogg';
 
-  static const maxCatalogBytes = 10 * 1024 * 1024;
+  /// Hub songs. Heavenly Loop stays; the others are CC0 town themes.
+  static const List<String> hubTracks = <String>[
+    hubMusic,
+    hubTown,
+    hubMystical,
+  ];
+
+  /// Boss bed, then a second CC0 fight. Boss still loops until the fight ends.
+  static const List<String> bossTracks = <String>[bossMusic, bossFairy];
+
+  static const maxCatalogBytes = 25 * 1024 * 1024;
 
   static ZoneMood moodForDungeon(String dungeonId) => switch (dungeonId) {
     'king' || 'underworld' || 'dead' || 'hell' || 'fen' => ZoneMood.dark,
@@ -37,6 +54,16 @@ abstract final class AudioAssets {
 
   static String dungeonMusic(ZoneMood mood) =>
       '$musicRoot/bed_${mood.name}.ogg';
+
+  /// Songs for one cave mood. The owned bed stays. Later songs are CC0.
+  /// A cave never plays the same song twice in a row.
+  static List<String> dungeonTracks(ZoneMood mood) => switch (mood) {
+    ZoneMood.warm => <String>[dungeonMusic(mood), hubTown, hubMystical],
+    ZoneMood.dark => <String>[dungeonMusic(mood), darkDungeon, darkWhispers],
+    ZoneMood.ice => <String>[dungeonMusic(mood), iceRealm, iceCrystal],
+    ZoneMood.wet => <String>[dungeonMusic(mood), darkWhispers],
+    ZoneMood.storm => <String>[dungeonMusic(mood), darkDungeon],
+  };
 
   static String dungeonAmbience(ZoneMood mood) =>
       '$ambienceRoot/${mood.name}.ogg';
@@ -102,6 +129,45 @@ abstract final class AudioAssets {
     'spell_lightning': _letters('spell_lightning', 'abcdef'),
     'spell_demon': _letters('spell_demon', 'abcdef'),
     'spell_poison': _letters('spell_poison', 'abcdef'),
+    'bow_release': _letters('bow_release', 'abcd'),
+    'cast_fire': _letters('cast_fire', 'abc'),
+    'cast_frost': _letters('cast_frost', 'abc'),
+    'cast_holy': _letters('cast_holy', 'abc'),
+    'cast_shadow': _letters('cast_shadow', 'abc'),
+    'cast_arcane': _letters('cast_arcane', 'abc'),
+    'cast_nature': _letters('cast_nature', 'abc'),
+    'cast_lightning': _letters('cast_lightning', 'abc'),
+    'cast_demon': _letters('cast_demon', 'abc'),
+    'cast_poison': _letters('cast_poison', 'abc'),
+  };
+
+  /// Arrow release and spell casts. Not combat impacts — own rate limit.
+  static const Set<String> launchIds = <String>{
+    'bow_release',
+    'cast_fire',
+    'cast_frost',
+    'cast_holy',
+    'cast_shadow',
+    'cast_arcane',
+    'cast_nature',
+    'cast_lightning',
+    'cast_demon',
+    'cast_poison',
+  };
+
+  /// Hero projectile leaving the hand. Null for a plain weapon bolt.
+  static String? launchIdFor(SpellBoltStyle style) => switch (style) {
+    SpellBoltStyle.arrow => 'bow_release',
+    SpellBoltStyle.fire => 'cast_fire',
+    SpellBoltStyle.frost => 'cast_frost',
+    SpellBoltStyle.holy => 'cast_holy',
+    SpellBoltStyle.shadow => 'cast_shadow',
+    SpellBoltStyle.arcane => 'cast_arcane',
+    SpellBoltStyle.nature => 'cast_nature',
+    SpellBoltStyle.lightning => 'cast_lightning',
+    SpellBoltStyle.demon => 'cast_demon',
+    SpellBoltStyle.poison => 'cast_poison',
+    SpellBoltStyle.weapon => null,
   };
 
   /// Combat feel ids that share combat-mix gates (weapon + spell + crit/kill).
@@ -229,14 +295,14 @@ abstract final class AudioAssets {
     };
   }
 
-  static final List<String> allCatalogPaths = <String>[
+  static final List<String> allCatalogPaths = <String>{
     for (final variants in sfxVariants.values) ...variants,
     hubAmbience,
     for (final mood in ZoneMood.values) dungeonAmbience(mood),
-    hubMusic,
-    for (final mood in ZoneMood.values) dungeonMusic(mood),
-    bossMusic,
+    ...hubTracks,
+    for (final mood in ZoneMood.values) ...dungeonTracks(mood),
+    ...bossTracks,
     resolveMusic,
     downMusic,
-  ];
+  }.toList();
 }

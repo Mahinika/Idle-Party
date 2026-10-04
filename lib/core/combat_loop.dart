@@ -181,6 +181,12 @@ extension GameDirectorCombatLoop on GameDirector {
           GameAudio.playCombatHit(hit);
         }
       }
+      for (final launch in result.feelLaunches) {
+        GameAudio.playLaunch(launch);
+      }
+      GameAudio.setEncounterHot(
+        result.world.enemies.any((e) => e.hp > 0 && !e.dormant),
+      );
       for (final cue in result.audioCues) {
         GameAudio.playCue(cue);
       }

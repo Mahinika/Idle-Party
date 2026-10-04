@@ -42,6 +42,7 @@ part 'combat_damage.dart';
 part 'floor_flow.dart';
 part 'spell_look.dart';
 part 'combat_audio_cues.dart';
+part 'combat_audio_feel.dart';
 
 enum SpatialTeam { hero, enemy }
 
@@ -806,6 +807,7 @@ class SpatialWorld {
     this.pendingFeelPickups = 0,
     this.pendingFeelStairs = 0,
     List<CombatFeelHit>? pendingFeelHits,
+    List<CombatFeelLaunch>? pendingFeelLaunches,
     List<String>? pendingAudioCues,
     this.pendingVacuumLootLine,
     this.godHandRadius = 1.8,
@@ -823,6 +825,7 @@ class SpatialWorld {
        groundFx = groundFx ?? <SpatialGroundFx>[],
        spellSparks = spellSparks ?? <SpellSpark>[],
        pendingFeelHits = pendingFeelHits ?? <CombatFeelHit>[],
+       pendingFeelLaunches = pendingFeelLaunches ?? <CombatFeelLaunch>[],
        pendingAudioCues = pendingAudioCues ?? <String>[];
 
   final TileMap map;
@@ -932,6 +935,9 @@ class SpatialWorld {
   /// Combat-hit feel events this step (weapon / spell; rate-limited in audio).
   final List<CombatFeelHit> pendingFeelHits;
 
+  /// Arrow releases and spell casts waiting to be heard.
+  final List<CombatFeelLaunch> pendingFeelLaunches;
+
   /// One-shot body cues for this step (`enemy_hit`, `boss_tell`, …).
   /// Offline (`afkAssist`) never queues these.
   final List<String> pendingAudioCues;
@@ -987,6 +993,7 @@ class SpatialStepResult {
     this.stairsOpened = false,
     this.vacuumLootLine,
     this.feelHits = const <CombatFeelHit>[],
+    this.feelLaunches = const <String>[],
     this.audioCues = const <String>[],
   });
 
@@ -1005,6 +1012,9 @@ class SpatialStepResult {
 
   /// Combat hit feel events (blade / bow / spell_*) for this step.
   final List<CombatFeelHit> feelHits;
+
+  /// Arrow releases and spell casts drained this step.
+  final List<String> feelLaunches;
 
   /// Body cues drained from [SpatialWorld.pendingAudioCues] this step.
   final List<String> audioCues;
@@ -1222,6 +1232,7 @@ abstract final class SpatialCombat {
 
   static void addProjectile(SpatialWorld world, SpatialProjectile p) {
     world.projectiles.add(p);
+    CombatAudioFeel.noteProjectile(world, p);
     if (world.projectiles.length > _maxProjectiles) {
       world.projectiles.removeRange(
         0,
@@ -2546,6 +2557,9 @@ abstract final class SpatialCombat {
         pendingFeelPickups: world.pendingFeelPickups,
         pendingFeelStairs: world.pendingFeelStairs,
         pendingFeelHits: List<CombatFeelHit>.from(world.pendingFeelHits),
+        pendingFeelLaunches: List<CombatFeelLaunch>.from(
+          world.pendingFeelLaunches,
+        ),
         pendingAudioCues: List<String>.from(world.pendingAudioCues),
         pendingVacuumLootLine: world.pendingVacuumLootLine,
         floaters: world.floaters,
@@ -2982,6 +2996,12 @@ abstract final class SpatialCombat {
     world.pendingFeelStairs = 0;
     final feelHits = List<CombatFeelHit>.from(world.pendingFeelHits);
     world.pendingFeelHits.clear();
+    final feelLaunches = <String>[];
+    world.pendingFeelLaunches.removeWhere((launch) {
+      if (launch.delay > 0) return false;
+      feelLaunches.add(launch.id);
+      return true;
+    });
     final audioCues = List<String>.from(world.pendingAudioCues);
     world.pendingAudioCues.clear();
     final vacuumLine = world.pendingVacuumLootLine;
@@ -3000,6 +3020,7 @@ abstract final class SpatialCombat {
       stairsOpened: stairs > 0,
       vacuumLootLine: vacuumLine,
       feelHits: feelHits,
+      feelLaunches: feelLaunches,
       audioCues: audioCues,
     );
   }
@@ -3056,7 +3077,7 @@ abstract final class SpatialCombat {
         panBias: panBias,
         material: CombatFeel.materialFor(target.archetype),
         heavy: heavy,
-        withSwish: !isSpell,
+        withSwish: !isSpell && sfxId != 'hit_bow',
       ),
     );
   }
@@ -3095,6 +3116,7 @@ abstract final class SpatialCombat {
     GameState state, {
     required double dt,
   }) {
+    CombatAudioFeel.tick(world, dt);
     relicBossDamageMul = state.relicBossDamageMul;
     relicLowHpDr = state.relicLowHpDr;
     earlyWipeMercy = GameLogic.earlyWipeDamageMul(state);
