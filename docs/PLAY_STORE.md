@@ -17,7 +17,7 @@ Package id: **`com.idleparty.app`**
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 KEY/Gauntlet wired; 2026-09 Greater Rift `CgkIhuXGvNocEAIQAw` and all-time Party Power `CgkIhuXGvNocEAIQBA` published 2026-09-29. OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. |
 | Store listing copy (EN + 9 locales) | ✅ live | Default locale **en-US** + 9 translations committed **2026-09-25** (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`). In-game UI stays English. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
-| Screenshots + feature graphic | ⏳ review | New **8 phone shots** swapped + submitted **2026-09-18** (`play_ready` pack: combat first). Console: *Ändringarna granskas*. Feature graphic unchanged. |
+| Screenshots + feature graphic | ⏳ review | **8 A56 phone shots** (Sandy fight, walk, TODAY, gear, party, path, welcome, ascend) plus feature graphic `feature_20261004.png` submitted **2026-10-04**. Console: *Ändringarna granskas* (quick checks, then review). Icon left in place — the new 512 PNG is the same file already on the listing. Preview URL still `UHLG28lHmPs` until the new Sandy clip is on YouTube. |
 | Listing assets freshness | shots 2026-10-04 @ 1.12.194 · video 2026-10-04 @ 1.12.194 · icon 2026-10-04 @ 1.12.194 · feature 2026-10-04 @ 1.12.194 | Phone shots and the Sandy preview are this build. `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than one patch. |
 | Preview video (YouTube) | ✅ sent | All 10 listings point at Cognifox unlisted `UHLG28lHmPs` (`https://www.youtube.com/watch?v=UHLG28lHmPs`), committed **2026-09-26**. Embed works. Previous live `OMWXbgGBFMA`. `XfKog5CAiUs` stays unused (Play rejected that embed). |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
@@ -66,6 +66,7 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Owner asked upload of Production **1.12.193+223** (**2026-10-02**).
 - [x] Signed Production AAB **1.12.193+223** uploaded via Play API and sent for review (full rollout). Console: *Ändringarna granskas* — Produktion **1.12.193**, starta fullständig lansering. Pre-checks up to about 14 minutes. Live store build remains **1.12.192 (222)** until Google publishes.
 - [x] Production **1.12.193 (223)** published (API peek **2026-10-02**). Discord #announcements posted the patch notes.
+- [x] Store listing graphics submitted **2026-10-04** (no AAB): 8 A56 phone shots in order, feature graphic replaced. Console: *Ändringarna granskas*. YouTube URL left as `UHLG28lHmPs`.
 
 ### Production upload paste (en-US release notes)
 

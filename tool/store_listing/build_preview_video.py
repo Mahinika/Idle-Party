@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build Idle Party Play Store preview videos (16:9 + 9:16).
 
-Shot list from docs/TRAILER.md. Uses owned marketing stills + hub.ogg.
+Shot list from docs/TRAILER.md. Portrait crawl uses owned bed_warm.ogg.
 Requires ffmpeg on PATH (or FFMPEG_BIN). Captions are burned with Pillow
 (Windows-safe) before ffmpeg assemble.
 

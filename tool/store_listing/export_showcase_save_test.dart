@@ -210,6 +210,43 @@ void main() {
     print('wrote ${out.path} (${out.lengthSync()} bytes)');
   });
 
+  test('export load-stable showcase hub', () {
+    // Phone load runs stateFromJson, which stamps "now" the first time it
+    // adds a missing spec. A second load must keep the clock, or Welcome
+    // Back never sees the hours we write into the prefs.
+    final clock = DateTime.utc(2026, 8, 20, 12);
+    final migrated = GameLogic.stateFromJson(showcaseState().toJson());
+    final stable = migrated.copyWith(
+      lastUpdated: clock,
+      bossVictories: 0,
+      inDungeon: false,
+      soundMuted: true,
+      dungeonZoom: DungeonZoom.close,
+      seenChangelogVersion: MetaSystems.currentVersion,
+      seenTips: [
+        for (final t in FirstSessionTips.tips) t.id,
+        'discord_thanks',
+      ],
+      metaDepth: migrated.metaDepth.copyWith(
+        pendingHeroReveals: const [],
+        notifyPrompted: true,
+        reviewPrompted: true,
+      ),
+    );
+    final again = GameLogic.stateFromJson(stable.toJson());
+    expect(again.lastUpdated, stable.lastUpdated);
+    expect(again.heroRoster.length, stable.heroRoster.length);
+    final out = File('tool/store_listing/showcase_stable.json');
+    out.writeAsStringSync(jsonEncode(stable.toJson()));
+    final fromDisk = GameLogic.stateFromJson(
+      jsonDecode(out.readAsStringSync()) as Map<String, dynamic>,
+    );
+    expect(fromDisk.lastUpdated, clock);
+    expect(fromDisk.heroRoster.length, stable.heroRoster.length);
+    // ignore: avoid_print
+    print('wrote ${out.path} (${stable.heroRoster.length} heroes)');
+  });
+
   test('export first-minute combat save json', () {
     final out = File('tool/store_listing/first_minute_save.json');
     out.parent.createSync(recursive: true);

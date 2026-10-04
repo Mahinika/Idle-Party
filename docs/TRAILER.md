@@ -61,36 +61,41 @@ not the lead.
 
 | Sec | Shot | On-screen (≤6 words) |
 |-----|------|----------------------|
-| 0–6 | Sandy crawl: party walks and fights | Your party keeps fighting |
-| 6–11 | Crystal Spire Gauntlet | Climb the Gauntlet |
-| 11–17 | Mothveil Greater Rift | Ranked Greater Rift |
-| 17–23 | Hell's Gate | Hell's Gate |
-| 23–25 | AFK marketing card | Progress while you're away |
-| 25–28 | Title lockup | Idle Party |
+| 0–8 | Sandy crawl: party walks and fights | IDLE PARTY / Your party fights on its own |
+| 8–14 | Same cave: pack drops, they walk on | (no extra line) |
+| 14–20 | Leave, one second of TODAY, back in the cave | Leave. They keep going. |
+| 20–24 | Title over the same cave | Idle Party |
 
-Music: soft dungeon / parchment mood. No voice-over required. End on title —
-no “Download now” hard sell if it fights the tone.
+One cave. Gauntlet, Greater Rift, and Hell's Gate stay in the long
+description, not in the first 20 seconds. A new player does not see them
+until the whole party is level 100.
+
+Music: owned Sandy bed `assets/custom/audio/music/bed_warm.ogg` (synth from
+`tool/audio_synth`). Do **not** use `hub.ogg` here — that file is the CC0
+track “Heavenly Loop”, not owned, and a Content ID claim can force ads on.
+No voice-over. The clip must still make sense muted. End on the title over
+the cave — no “Download now”.
 
 ### Export
 
 ```powershell
 # Needs ffmpeg on PATH (winget install --id Gyan.FFmpeg -e)
 py -3 tool/store_listing/build_preview_video.py
-# → tool/store_listing/preview/idle_party_preview_16x9.mp4  (~30s, Play/YouTube)
-# → tool/store_listing/preview/idle_party_preview_9x16.mp4  (~30s, ads tests)
+# → tool/store_listing/preview/idle_party_preview_16x9.mp4  (reserve if Play refuses portrait)
+# → tool/store_listing/preview/idle_party_preview_9x16.mp4  (24s, store page)
 ```
 
-Music: owned `assets/custom/audio/music/hub.ogg`. A56 fight recordings:
-`preview/gameplay_{crawl,gauntlet,gr,hell}_raw.mp4`; if missing, the builder
-falls back to tracked `tool/store_listing/marketing/` cards. Raw clips and
-preview MP4s are gitignored — regenerate locally before Console upload.
+Music: owned `assets/custom/audio/music/bed_warm.ogg`. The portrait film is
+one Sandy crawl, `preview/gameplay_crawl_raw.mp4`. The builder stops if that
+clip or the music file is missing. Raw clips and preview MP4s are gitignored
+— regenerate locally before Console upload.
 
 Capture on A56 at 1080×2340 with `adb shell screenrecord` (~30 fps). Saves
 come from `export_showcase_save_test.dart` (Zoom · Close). Record with
 `py -3 tool/store_listing/capture_preview_beats.py`, then restore the
 emulator save. Do not reuse the 2026-09-20 combat raw (~13 fps).
-The 16:9 render puts the real phone capture beside the English promise; 9:16
-keeps the whole phone UI visible.
+The 9:16 film fills the frame (no blurred border). 16:9 keeps its soft
+background and is only the reserve if Play refuses a portrait embed.
 
 - Play listing uses a **YouTube URL only** (not direct MP4). Live unlisted on
   **Cognifox Studio** (`@CognifoxStudio`):
@@ -143,7 +148,7 @@ Do not put a store CTA on the Play listing trailer.
 | First frame | Live combat (party centered) | Hook: *Your party fights even while you're away* |
 | Picture | 16:9 listing + 9:16 phone-in-frame | intro + three zones + outro, 1080×1920 |
 | On-screen | Chase / AFK / lockup beats | away hook → build / push / return → *Download free* |
-| Music | owned `hub.ogg` | owned `dungeon.mp3` |
+| Music | owned `bed_warm.ogg` | owned `dungeon.mp3` |
 
 ```powershell
 # A56: three showcase combat saves (hell / crystal / mothveil), Zoom · Close

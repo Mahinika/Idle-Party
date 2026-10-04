@@ -26,15 +26,17 @@ OUT = ROOT / "tool" / "store_listing" / "out"
 
 # (raw_name, caption, crop_bias_y) — bias 0=top, 1=bottom of source.
 # Shots 1–2 = new-save first minute of combat (growth mandate listing pack).
+# Shots 1–3 are the new-save Sandy minute. 4–8 are the AL3 showcase hub.
+# Captions stay in the top band (CAPTION_H / 1920 ≈ 11%, under Play's 20%).
 SHOTS = [
     ("01_combat_a.png", "Your party fights on its own", 0.45),
-    ("02_combat_b.png", "Same fight while you are away", 0.48),
-    ("01_hub.png", "Always know today’s chase", 0.28),
-    ("02_combat.png", "Your party keeps fighting", 0.42),
-    ("03_gear.png", "Build and equip your party", 0.08),
-    ("04_meta.png", "Keep power when you Ascend", 0.08),
-    ("05_zone.png", "Explore the World Path", 0.32),
-    ("06_power.png", "Upgrade every run", 0.08),
+    ("02_combat_b.png", "They keep fighting while you are away", 0.48),
+    ("03_hub_today.png", "One clear goal when you return", 0.22),
+    ("04_gear.png", "Build and equip your party", 0.08),
+    ("05_party.png", "Shield, healer, damage", 0.28),
+    ("06_path.png", "Explore the World Path", 0.32),
+    ("07_return.png", "Come back to loot", 0.18),
+    ("08_ascend.png", "Ascend. Your party stays.", 0.12),
 ]
 
 W, H = 1080, 1920

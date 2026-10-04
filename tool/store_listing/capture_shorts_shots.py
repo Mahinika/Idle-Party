@@ -9,7 +9,7 @@ import subprocess
 import sys
 import threading
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -27,28 +27,37 @@ def adb(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     )
 
 
-def write_prefs(save_json: Path, dest_xml: Path) -> None:
+def write_prefs(
+    save_json: Path, dest_xml: Path, ahead_minutes: int = 15
+) -> None:
     data = json.loads(save_json.read_text(encoding="utf-8"))
     # Future stamp so boot cannot open Welcome Back over the crawl.
-    data["lastUpdated"] = (
-        datetime.now(timezone.utc) + timedelta(minutes=15)
-    ).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    # A negative stamp is the Welcome Back shot (loot while you were away).
+    stamp = datetime.now() + timedelta(minutes=ahead_minutes)
+    # Local wall time, no Z. A Zulu stamp was credited as a few seconds.
+    data["lastUpdated"] = stamp.strftime("%Y-%m-%dT%H:%M:%S.000")
     data["dungeonZoom"] = "close"
     data["soundMuted"] = True
     data["dungeonMode"] = "push"
     raw = json.dumps(data, separators=(",", ":"))
+    # Android's prefs parser needs quotes escaped, matching a real save file.
+    escaped = html.escape(raw, quote=True)
+    # The live app loads slot 0, not the legacy v2 blob, once slots exist.
     xml = (
         "<?xml version='1.0' encoding='utf-8' standalone='yes' ?>\n"
         "<map>\n"
-        f'<string name="flutter.idle_party_save_v2">{html.escape(raw, quote=False)}</string>\n'
+        f'<string name="flutter.idle_party_save_v2">{escaped}</string>\n'
+        f'<string name="flutter.idle_party_save_slot_0">{escaped}</string>\n'
+        '<long name="flutter.idle_party_active_slot" value="1" />\n'
+        '<boolean name="flutter.idle_party_slots_ready" value="true" />\n'
         "</map>\n"
     )
     dest_xml.write_text(xml, encoding="utf-8")
 
 
-def inject(save_json: Path) -> None:
+def inject(save_json: Path, ahead_minutes: int = 15) -> None:
     xml_path = PREVIEW / "showcase_entered_prefs.xml"
-    write_prefs(save_json, xml_path)
+    write_prefs(save_json, xml_path, ahead_minutes=ahead_minutes)
     adb("shell", "am", "force-stop", PKG)
     adb("push", str(xml_path), "/data/local/tmp/showcase_prefs.xml")
     adb(
