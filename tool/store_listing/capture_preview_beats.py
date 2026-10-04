@@ -28,19 +28,27 @@ SHOTS = [
 
 
 def backup_prefs() -> None:
-    result = adb(
-        "exec-out",
-        "run-as",
-        "com.idleparty.app",
-        "cat",
-        "shared_prefs/FlutterSharedPreferences.xml",
+    # Bytes, not text. A text redirect on Windows rewrites the save as UTF-16.
+    proc = subprocess.run(
+        [
+            "adb",
+            "-s",
+            SERIAL,
+            "exec-out",
+            "run-as",
+            "com.idleparty.app",
+            "cat",
+            "shared_prefs/FlutterSharedPreferences.xml",
+        ],
+        capture_output=True,
         check=False,
     )
-    if result.returncode == 0 and result.stdout.strip().startswith("<?xml"):
-        BACKUP.write_text(result.stdout, encoding="utf-8")
-        print("backed up prefs", BACKUP.stat().st_size)
+    if proc.returncode == 0 and proc.stdout.startswith(b"<?xml"):
+        BACKUP.write_bytes(proc.stdout)
+        print("backed up prefs", len(proc.stdout))
     else:
-        print("no prefs backup", result.returncode, result.stderr[:200])
+        err = proc.stderr.decode("utf-8", errors="replace")[:200]
+        print("no prefs backup", proc.returncode, err)
 
 
 def restore_prefs() -> None:
@@ -233,6 +241,25 @@ def wait_hub() -> str:
     return ""
 
 
+def settle_rig() -> None:
+    """Let the cutout skeleton replace the paper doll, off the recording.
+
+    The fight paints the still doll until the atlas is cut. That takes a
+    few seconds, and a fresh enter pays it again. Sit through both before
+    screenrecord starts, so the clip opens on the real heroes.
+    """
+    time.sleep(9)
+    adb("shell", "input", "tap", "945", "2257", check=False)
+    print("prewarm LEAVE")
+    time.sleep(0.9)
+    adb("shell", "input", "tap", "540", "1460", check=False)
+    print("prewarm RETURN")
+    time.sleep(1.6)
+    adb("shell", "input", "tap", "540", "2060", check=False)
+    print("prewarm ENTER")
+    time.sleep(9)
+
+
 def crawl_story() -> None:
     """One Sandy take: fight, leave, a beat of TODAY, back in the same cave.
 
@@ -252,7 +279,9 @@ def crawl_story() -> None:
     # ENTER DUNGEON on the first-minute hub.
     adb("shell", "input", "tap", "540", "2060", check=False)
     print("tap ENTER")
-    time.sleep(8)
+    # The re-enter paints the doll again for several seconds. Stay long
+    # enough that the skeleton is back before the recording ends.
+    time.sleep(14)
 
 
 def capture_one(save_json: Path, dest_mp4: Path) -> None:
@@ -260,15 +289,17 @@ def capture_one(save_json: Path, dest_mp4: Path) -> None:
     inject(save_json)
     if not wait_fight():
         raise SystemExit(f"never reached a fight for {save_json.name}")
+    crawl = "crawl" in dest_mp4.name
+    if crawl:
+        settle_rig()
     remote = "/sdcard/preview_beat.mp4"
     adb("shell", "rm", "-f", remote, check=False)
-    crawl = "crawl" in dest_mp4.name
     story = threading.Thread(
         target=crawl_story if crawl else god_hand_taps,
         daemon=True,
     )
     story.start()
-    limit = "28" if crawl else "8"
+    limit = "36" if crawl else "8"
     print("record", dest_mp4.name, limit + "s")
     subprocess.run(
         [

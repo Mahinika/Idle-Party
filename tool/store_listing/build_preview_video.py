@@ -31,6 +31,9 @@ MUSIC = ROOT / "assets" / "custom" / "audio" / "music" / "bed_warm.ogg"
 # Trim starts match crawl_story() in capture_preview_beats.py.
 # Play: real fight in the first 10s, muted autoplay, ~80% the first hour.
 # Endgame hunts stay out of the first 20 seconds.
+# In-points skip the paper-doll seconds. The rig replaces that still a few
+# seconds after each enter; the recording waits the first one out, and the
+# re-enter flash (about 16–21s of the raw) is not used.
 BEATS: list[tuple[float, str | None, str, str, float]] = [
     (
         8.0,
@@ -40,25 +43,32 @@ BEATS: list[tuple[float, str | None, str, str, float]] = [
         0.4,
     ),
     (
-        6.0,
+        5.0,
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "",
         8.0,
     ),
     (
-        6.0,
+        2.2,
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "Leave. They keep going.",
-        13.5,
+        13.3,
+    ),
+    (
+        5.0,
+        "preview/gameplay_crawl_raw.mp4",
+        "marketing/03_party_fights_1080x1920.png",
+        "",
+        22.0,
     ),
     (
         4.0,
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "Idle Party",
-        20.0,
+        27.0,
     ),
 ]
 
