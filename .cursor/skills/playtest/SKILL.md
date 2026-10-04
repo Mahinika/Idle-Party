@@ -30,9 +30,13 @@ scope: same round, about half the time on that part.
 
 ## Before the 10 minutes
 
-1. Read [docs/PLAYTEST_MEMORY.md](../../docs/PLAYTEST_MEMORY.md) (what was
-   good, patterns to hunt) and the Open section of
-   [docs/PLAY_NOTES.md](../../docs/PLAY_NOTES.md).
+1. Read [docs/PLAYTEST_MEMORY.md](../../docs/PLAYTEST_MEMORY.md) and the
+   Open section of [docs/PLAY_NOTES.md](../../docs/PLAY_NOTES.md). From
+   memory, name what the last round actually opened and what is **OK**.
+   Then pick the round: something that was not just tested and is not OK.
+   An OK screen is not the point of the round. Open it only if the path
+   runs through it. A **good** picture is a baseline, not a reason to
+   spend the round there again.
 2. Follow [a56-playtest](../a56-playtest/SKILL.md) until **this** batch is
    the build on the emulator. Keep the save. Do not `adb uninstall`.
 3. Start the round:
