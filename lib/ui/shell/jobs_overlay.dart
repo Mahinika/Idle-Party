@@ -10,10 +10,10 @@ class JobsOverlay extends StatelessWidget {
   const JobsOverlay({super.key, required this.director});
   final GameDirector director;
 
-  /// Header + chain line. The 3rd claim always pays +5 essence.
+  /// One line so the last claim is not pushed under the bottom bar.
+  /// The 3rd claim always pays +5 essence.
   static String introLine({required int chainCount}) {
-    return 'QUESTS — claim here or in the dungeon.\n'
-        'Chain $chainCount/3 · 3rd pays +5e.';
+    return 'Claim here or in the dungeon. Chain $chainCount/3 · +5e';
   }
 
   static String rewardLine({required int gold, required int essence}) {
@@ -52,6 +52,8 @@ class JobsOverlay extends StatelessWidget {
       children: [
         Text(
           introLine(chainCount: state.metaDepth.jobChainCount),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (claimable > 0) ...[
@@ -74,8 +76,8 @@ class JobsOverlay extends StatelessWidget {
 
   Widget _questCard(Mission mission, int index) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       decoration: MenuChrome.listCard(
         borderColor: switch (mission.tier) {
           2 => GameTheme.bloodLit,
@@ -84,6 +86,7 @@ class JobsOverlay extends StatelessWidget {
         },
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Column(
@@ -131,18 +134,11 @@ class JobsOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Progress ${mission.progress}/${mission.target}',
+                  'Progress ${mission.progress}/${mission.target}'
+                  ' · ${rewardLine(gold: mission.goldReward, essence: mission.essenceReward)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(size: 14),
-                ),
-                Text(
-                  rewardLine(
-                    gold: mission.goldReward,
-                    essence: mission.essenceReward,
-                  ),
-                  style: GameTheme.body(
-                    size: 13,
-                    color: GameTheme.parchmentDim,
-                  ),
                 ),
                 const SizedBox(height: 6),
                 ClipRRect(

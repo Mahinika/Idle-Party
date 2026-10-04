@@ -110,6 +110,7 @@ def run_checks(
 ) -> list[CheckFinding]:
     found: list[CheckFinding] = []
     found.extend(_touch(nodes))
+    found.extend(_clipped_by_nav(nodes))
     found.extend(_offscreen(nodes))
     found.extend(_overlap(nodes))
     found.extend(_duplicates(nodes))
@@ -152,6 +153,43 @@ def _touch(nodes: list[Node]) -> list[CheckFinding]:
                 message=(
                     f"Tap target {width}×{height}px is under {MIN_TOUCH_PX}px "
                     f"({MIN_TOUCH_PX // PX_PER_DP} dp) on a side"
+                ),
+            )
+        )
+    return out
+
+
+_NAV_LABELS = {"gear", "gold", "shop", "essence", "more", "leave", "key"}
+
+
+def _clipped_by_nav(nodes: list[Node]) -> list[CheckFinding]:
+    """A short action sitting on the bottom bar was sliced, not a small button."""
+    nav_tops = [
+        node.y1
+        for node in nodes
+        if node.clickable and node.label.strip().casefold() in _NAV_LABELS
+    ]
+    if not nav_tops:
+        return []
+    nav_top = min(nav_tops)
+    out: list[CheckFinding] = []
+    for node in nodes:
+        if not node.clickable:
+            continue
+        if node.label.strip().casefold() in _NAV_LABELS:
+            continue
+        height = node.y2 - node.y1
+        if height >= MIN_TOUCH_PX:
+            continue
+        if node.y2 < nav_top - 48 or node.y1 >= nav_top:
+            continue
+        out.append(
+            CheckFinding(
+                rule="clipped_by_nav",
+                label=node.label,
+                message=(
+                    f"{node.label} is cut against the bottom bar "
+                    f"({height}px tall, bar starts at {nav_top})"
                 ),
             )
         )

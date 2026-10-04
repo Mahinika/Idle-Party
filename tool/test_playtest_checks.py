@@ -24,6 +24,27 @@ def test_small_tap_target_is_flagged():
     assert "touch_small" in rules(found)
 
 
+def test_claim_cut_by_the_bottom_bar():
+    found = run_checks(
+        [
+            node("CLAIM", 790, 2063, 1007, 2144),
+            node("GEAR", 6, 2181, 220, 2334),
+            node("MORE", 860, 2181, 1074, 2334),
+        ]
+    )
+    assert "clipped_by_nav" in rules(found)
+
+
+def test_full_claim_above_the_bar_is_quiet():
+    found = run_checks(
+        [
+            node("CLAIM", 790, 1900, 1007, 2040),
+            node("GEAR", 6, 2181, 220, 2334),
+        ]
+    )
+    assert "clipped_by_nav" not in rules(found)
+
+
 def test_large_tap_target_is_quiet():
     found = run_checks([node("ENTER DUNGEON", 80, 1800, 1000, 2000)])
     assert "touch_small" not in rules(found)

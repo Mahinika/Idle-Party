@@ -33,6 +33,7 @@ import '../visual/hero_anim_state.dart';
 import '../assets/custom_assets.dart';
 import '../assets/kenney_assets.dart';
 import 'decoded_image_cache.dart';
+import 'dungeon_art_warmup.dart';
 import 'dungeon_environment.dart';
 import 'game_theme.dart';
 import 'kenney_sprite.dart';
@@ -193,6 +194,29 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     _pinchCols.value = null;
   }
 
+  Future<void> _applyHeroes(int gen, Future<List<ui.Image>> pending) async {
+    final heroes = await pending;
+    if (!mounted || gen != _loadGen || _sharedLoaded) return;
+    _hero0 = heroes[0];
+    _hero1 = heroes[1];
+    _hero2 = heroes[2];
+    _hero3 = heroes[3];
+    _heroesByClass
+      ..clear()
+      ..[HeroClassId.warrior] = heroes[0]
+      ..[HeroClassId.priest] = heroes[1]
+      ..[HeroClassId.mage] = heroes[2]
+      ..[HeroClassId.rogue] = heroes[3]
+      ..[HeroClassId.paladin] = heroes[4]
+      ..[HeroClassId.hunter] = heroes[5]
+      ..[HeroClassId.deathKnight] = heroes[6]
+      ..[HeroClassId.shaman] = heroes[7]
+      ..[HeroClassId.warlock] = heroes[8]
+      ..[HeroClassId.druid] = heroes[9];
+    _sharedLoaded = true;
+    setState(() {});
+  }
+
   Future<void> _loadImages(String dungeonId) async {
     final gen = ++_loadGen;
     // Keep painting prior tiles while a zone switch loads — never blank mid-fight.
@@ -228,61 +252,34 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     // Heroes, vignettes and signature pieces can use any kind, not just clutter.
     final propKinds = MapPropKind.values.toSet();
 
-    // Shared combat icons — critical paint set first so resume never sticks
-    // on "Loading floor…" while hundreds of paper-doll PNGs decode.
+    // Stairs, doors, and pickup icons first. Hero portraits decode beside
+    // that, so the floor is not stuck on "Loading floor…" while they land.
     if (!_sharedLoaded) {
-      final critical = await Future.wait([
-        load(KenneyAssets.stairs, targetWidth: 64),
-        load(KenneyAssets.stairsBoss, targetWidth: 64),
-        load(KenneyAssets.doorClosed, targetWidth: 64),
-        load(KenneyAssets.doorOpen, targetWidth: 64),
-        load(KenneyAssets.heroKnight, targetWidth: 128),
-        load(KenneyAssets.heroHealer, targetWidth: 128),
-        load(KenneyAssets.heroWizard, targetWidth: 128),
-        load(KenneyAssets.heroRogue, targetWidth: 128),
-        load(CustomAssets.heroPaladin, targetWidth: 128),
-        load(CustomAssets.heroHunter, targetWidth: 128),
-        load(CustomAssets.heroDeathKnight, targetWidth: 128),
-        load(CustomAssets.heroShaman, targetWidth: 128),
-        load(CustomAssets.heroWarlock, targetWidth: 128),
-        load(CustomAssets.heroDruid, targetWidth: 128),
-        load(KenneyAssets.chestClosed, targetWidth: 64),
-        load(KenneyAssets.coinGold, targetWidth: 48),
-        load(KenneyAssets.sword, targetWidth: 48),
-        load(KenneyAssets.vialBlue, targetWidth: 48),
+      final heroFuture = Future.wait([
+        for (final asset in DungeonArtWarmup.heroes())
+          load(asset.path, targetWidth: asset.width),
+      ]);
+      if (floorPaths.isNotEmpty) {
+        unawaited(loadSoft(floorPaths.first, targetWidth: 64));
+      }
+      if (wallPaths.isNotEmpty) {
+        unawaited(loadSoft(wallPaths.first, targetWidth: 64));
+      }
+      final gate = await Future.wait([
+        for (final asset in DungeonArtWarmup.paintGate())
+          load(asset.path, targetWidth: asset.width),
       ]);
       if (!mounted || gen != _loadGen) return;
 
-      var i = 0;
-      _stairs = critical[i++];
-      _stairsBoss = critical[i++];
-      _doorClosed = critical[i++];
-      _doorOpen = critical[i++];
-      _hero0 = critical[i++];
-      _hero1 = critical[i++];
-      _hero2 = critical[i++];
-      _hero3 = critical[i++];
-      _heroesByClass
-        ..clear()
-        ..[HeroClassId.warrior] = _hero0
-        ..[HeroClassId.priest] = _hero1
-        ..[HeroClassId.mage] = _hero2
-        ..[HeroClassId.rogue] = _hero3
-        ..[HeroClassId.paladin] = critical[i++]
-        ..[HeroClassId.hunter] = critical[i++]
-        ..[HeroClassId.deathKnight] = critical[i++]
-        ..[HeroClassId.shaman] = critical[i++]
-        ..[HeroClassId.warlock] = critical[i++]
-        ..[HeroClassId.druid] = critical[i++];
-      _chest = critical[i++];
-      _coin = critical[i++];
-      _sword = critical[i++];
-      _vial = critical[i++];
-      _sharedLoaded = true;
-      if (mounted) {
-        setState(() {});
-        _syncTilesReady();
-      }
+      _stairs = gate[0];
+      _stairsBoss = gate[1];
+      _doorClosed = gate[2];
+      _doorOpen = gate[3];
+      _chest = gate[4];
+      _coin = gate[5];
+      _sword = gate[6];
+      _vial = gate[7];
+      unawaited(_applyHeroes(gen, heroFuture));
     }
 
     // Zone floors/walls ASAP — paint after the first pair so enter never sticks

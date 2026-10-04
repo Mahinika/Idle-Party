@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 
 import '../core/chase_contract.dart';
@@ -20,6 +22,7 @@ import '../models/vfx_quality.dart';
 import 'confirm_dialogs.dart';
 import 'chase_bind.dart';
 import 'cave_atmosphere.dart';
+import 'dungeon_art_warmup.dart';
 import 'dungeon_environment.dart';
 import 'game_theme.dart';
 import 'kenney_button.dart';
@@ -154,6 +157,7 @@ class _HubScreenState extends State<HubScreen>
       });
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      unawaited(DungeonArtWarmup.warm(director.state.dungeonId));
       director.ensureMarketListings();
       await _maybeShowOffline();
       // FEEL 298

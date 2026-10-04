@@ -135,6 +135,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
       ),
       MoreSection.craft => CraftOverlay(director: d),
       MoreSection.quests => SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 12),
         child: JobsOverlay(director: d),
       ),
     };
