@@ -1,0 +1,582 @@
+[
+  {
+    "label": "GEAR Equip the party 8 for this hero \u00b7 39 party \u2014 tap EQUIP",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 0,
+    "y1": 0,
+    "x2": 1080,
+    "y2": 2184
+  },
+  {
+    "label": "PARTY WIPED RETRY retreats to F7 (still PUSH). HUB ends the run. PUSH climbs after each clear. See INFO. Equip better gear on Shade +38 more (BAG) Pack 30% left \u00b7 75385 dealt \u00b7 18629 taken HUB \u2192 BAG to equip the upgrade WIPED \u00b7 Retry / Hub God Hand \u00b7 BAL \u2014 long-press the fight or tap the fist",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 0,
+    "y1": 0,
+    "x2": 1080,
+    "y2": 2340
+  },
+  {
+    "label": "Dungeon map \u2014 tap to pin target while fighting; long-press for God Hand; pinch with two fingers to zoom; fist button also works",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 0,
+    "y1": 0,
+    "x2": 1080,
+    "y2": 2340
+  },
+  {
+    "label": "God Hand \u2014 long-press the fight or tap the fist",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 929,
+    "y1": 6,
+    "x2": 1009,
+    "y2": 87
+  },
+  {
+    "label": "God Hand \u00b7 BAL \u2014 long-press the fight or tap the fist",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 929,
+    "y1": 6,
+    "x2": 1009,
+    "y2": 87
+  },
+  {
+    "label": "\u21bb FARM. LOOP FARM \u2014 loop this floor after clear for loot",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 546,
+    "y1": 16,
+    "x2": 690,
+    "y2": 77
+  },
+  {
+    "label": "\u25b2 PUSH. CLIMB PUSH \u2014 advance floors toward the boss",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 698,
+    "y1": 16,
+    "x2": 843,
+    "y2": 77
+  },
+  {
+    "label": "2\u00d7. Fight speed. Loot and time away stay the same.",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 851,
+    "y1": 16,
+    "x2": 921,
+    "y2": 77
+  },
+  {
+    "label": "Floor menu",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 1009,
+    "y1": 16,
+    "x2": 1074,
+    "y2": 77
+  },
+  {
+    "label": "Claim 3 quests",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 754,
+    "y1": 138,
+    "x2": 1074,
+    "y2": 270
+  },
+  {
+    "label": "CLOSE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 871,
+    "y1": 151,
+    "x2": 1040,
+    "y2": 290
+  },
+  {
+    "label": "Gold 91.7k, Essence 4,457 91.7k 4,457",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 18,
+    "y1": 156,
+    "x2": 534,
+    "y2": 252
+  },
+  {
+    "label": "Gold 91.7k, Essence 4,457 91.7k 4,457",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 40,
+    "y1": 163,
+    "x2": 664,
+    "y2": 277
+  },
+  {
+    "label": "GEAR Tab 1 of 4",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 49,
+    "y1": 326,
+    "x2": 172,
+    "y2": 470
+  },
+  {
+    "label": "BAG Tab 2 of 4",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 172,
+    "y1": 326,
+    "x2": 280,
+    "y2": 470
+  },
+  {
+    "label": "MERGE Tab 3 of 4",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 280,
+    "y1": 326,
+    "x2": 419,
+    "y2": 470
+  },
+  {
+    "label": "ROSTER Tab 4 of 4",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 419,
+    "y1": 326,
+    "x2": 575,
+    "y2": 470
+  },
+  {
+    "label": "PROT \u00b7 L30",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 46,
+    "y1": 527,
+    "x2": 230,
+    "y2": 647
+  },
+  {
+    "label": "EQUIP 39. One tap: equip all 39 upgrades now",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 527,
+    "x2": 1034,
+    "y2": 2156
+  },
+  {
+    "label": "DISC \u00b7 L30",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 242,
+    "y1": 527,
+    "x2": 424,
+    "y2": 647
+  },
+  {
+    "label": "FIRE \u00b7 L30",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 436,
+    "y1": 527,
+    "x2": 617,
+    "y2": 647
+  },
+  {
+    "label": "COM \u00b7 L30",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 629,
+    "y1": 527,
+    "x2": 798,
+    "y2": 647
+  },
+  {
+    "label": "SHDW \u00b7 L28",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 810,
+    "y1": 527,
+    "x2": 991,
+    "y2": 647
+  },
+  {
+    "label": "Protection Warrior",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 237,
+    "y1": 659,
+    "x2": 843,
+    "y2": 713
+  },
+  {
+    "label": "Previous hero",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 671,
+    "x2": 178,
+    "y2": 803
+  },
+  {
+    "label": "Next hero",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 902,
+    "y1": 671,
+    "x2": 1034,
+    "y2": 803
+  },
+  {
+    "label": "L30",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 496,
+    "y1": 713,
+    "x2": 584,
+    "y2": 761
+  },
+  {
+    "label": "\u00b7 iLvl 35 \u00b7 min 5 \u00b7 WIPED",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 311,
+    "y1": 767,
+    "x2": 769,
+    "y2": 815
+  },
+  {
+    "label": "Bulwark Plate Helm 45",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 833,
+    "x2": 178,
+    "y2": 965
+  },
+  {
+    "label": "Shadow Amulet 45",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 902,
+    "y1": 833,
+    "x2": 1034,
+    "y2": 965
+  },
+  {
+    "label": "Bulwark Plate Pauldrons 51",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 977,
+    "x2": 178,
+    "y2": 1109
+  },
+  {
+    "label": "Spark Cloak 19",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 902,
+    "y1": 977,
+    "x2": 1034,
+    "y2": 1109
+  },
+  {
+    "label": "RETRY \u2192 F7. Retreats to last cleared floor (PUSH)",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 108,
+    "y1": 1093,
+    "x2": 972,
+    "y2": 1244
+  },
+  {
+    "label": "Guard Plate Chestguard 43",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 1121,
+    "x2": 178,
+    "y2": 1253
+  },
+  {
+    "label": "Bulwark Plate Bracers 43",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 902,
+    "y1": 1121,
+    "x2": 1034,
+    "y2": 1253
+  },
+  {
+    "label": "Guard Sword 43",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 393,
+    "y1": 1223,
+    "x2": 525,
+    "y2": 1355
+  },
+  {
+    "label": "Bulwark Tower Shield 45",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 555,
+    "y1": 1223,
+    "x2": 687,
+    "y2": 1355
+  },
+  {
+    "label": "Guard Plate Gloves 5",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 1265,
+    "x2": 178,
+    "y2": 1397
+  },
+  {
+    "label": "Guard Plate Belt 5",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 902,
+    "y1": 1265,
+    "x2": 1034,
+    "y2": 1397
+  },
+  {
+    "label": "CLEAN BAG. Clears weak drops so new loot can fit",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 108,
+    "y1": 1268,
+    "x2": 972,
+    "y2": 1407
+  },
+  {
+    "label": "PROT Thrown 5",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 258,
+    "y1": 1367,
+    "x2": 390,
+    "y2": 1499
+  },
+  {
+    "label": "Guard Trinket 5",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 402,
+    "y1": 1367,
+    "x2": 534,
+    "y2": 1499
+  },
+  {
+    "label": "Guard Charm 5",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 546,
+    "y1": 1367,
+    "x2": 678,
+    "y2": 1499
+  },
+  {
+    "label": "Empty FLASK \u2014 browse bag",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 690,
+    "y1": 1367,
+    "x2": 822,
+    "y2": 1499
+  },
+  {
+    "label": "Guard Plate Legguards 25",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 1409,
+    "x2": 178,
+    "y2": 1541
+  },
+  {
+    "label": "Bulwark Ring 51",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 902,
+    "y1": 1409,
+    "x2": 1034,
+    "y2": 1541
+  },
+  {
+    "label": "OPEN BAG. HUB \u2192 BAG to equip the upgrade",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 108,
+    "y1": 1431,
+    "x2": 972,
+    "y2": 1582
+  },
+  {
+    "label": "Main \u00b7 Off \u00b7 Ranged \u00b7 Charms \u00b7 Flask",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 311,
+    "y1": 1505,
+    "x2": 770,
+    "y2": 1541
+  },
+  {
+    "label": "Guard Plate Boots 5",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 1553,
+    "x2": 178,
+    "y2": 1685
+  },
+  {
+    "label": "Guard Ring 37",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 902,
+    "y1": 1553,
+    "x2": 1034,
+    "y2": 1685
+  },
+  {
+    "label": "HUB",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 108,
+    "y1": 1606,
+    "x2": 972,
+    "y2": 1745
+  },
+  {
+    "label": "HERO STATS ATK 120 \u00b7 Armor 211 \u00b7 HP 2208 All stats",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 46,
+    "y1": 1703,
+    "x2": 1034,
+    "y2": 1832
+  },
+  {
+    "label": "GEAR",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 6,
+    "y1": 2190,
+    "x2": 184,
+    "y2": 2337
+  },
+  {
+    "label": "GOLD",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 184,
+    "y1": 2190,
+    "x2": 362,
+    "y2": 2337
+  },
+  {
+    "label": "SHOP",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 362,
+    "y1": 2190,
+    "x2": 540,
+    "y2": 2337
+  },
+  {
+    "label": "ESSENCE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 540,
+    "y1": 2190,
+    "x2": 718,
+    "y2": 2337
+  },
+  {
+    "label": "MORE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 718,
+    "y1": 2190,
+    "x2": 896,
+    "y2": 2337
+  },
+  {
+    "label": "LEAVE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 896,
+    "y1": 2190,
+    "x2": 1074,
+    "y2": 2337
+  }
+]

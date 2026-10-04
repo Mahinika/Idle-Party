@@ -146,12 +146,7 @@ class MenuAlerts {
           shop: MenuAlert.quiet,
           essence: MenuAlert.quiet,
           key: MenuAlert.quiet,
-          more: moreAlert(
-            state,
-            omitVault:
-                chaseKind == HubChaseKind.claimDailyVault ||
-                chaseKind == HubChaseKind.dailyVaultProgress,
-          ),
+          more: moreAlert(state),
         ),
         _ => forState(state),
       };
@@ -276,8 +271,10 @@ class MenuAlerts {
     return MenuAlert.quiet;
   }
 
-  static MenuAlert moreAlert(GameState state, {bool omitVault = false}) {
-    final quests = questsAlert(state, omitVault: omitVault);
+  /// Quest claims only. The daily vault is the hub CLAIM VAULT button, so it
+  /// must not inflate a line that says QUESTS.
+  static MenuAlert moreAlert(GameState state) {
+    final quests = questsAlert(state, omitVault: true);
     if (MetaSystems.hasUnseenChangelog(state)) {
       if (!quests.isQuiet) {
         return MenuAlert(

@@ -1,5 +1,53 @@
 {
-  "good": [],
-  "learned": [],
-  "ok": []
+  "good": [
+    {
+      "date": "2026-10-04",
+      "screen": "gear",
+      "stage": "mid",
+      "why": "EQUIP is the one filled button and the doll sits in the card",
+      "image": "tool/playtest_baseline/gear__mid.png"
+    },
+    {
+      "date": "2026-10-04",
+      "screen": "bag",
+      "stage": "mid",
+      "why": "BAG FULL, EQUIP, and CLEAN say what to do",
+      "image": "tool/playtest_baseline/bag__mid.png"
+    }
+  ],
+  "learned": [
+    {
+      "date": "2026-10-04",
+      "pattern": "A QUESTS count that includes the daily vault disagrees with CLAIM QUESTS",
+      "rule": ""
+    },
+    {
+      "date": "2026-10-04",
+      "pattern": "Wipe advice that only uses the hero name disagrees with the PROT or COM row",
+      "rule": ""
+    }
+  ],
+  "ok": [
+    {
+      "screen": "gold",
+      "stage": "mid",
+      "date": "2026-10-04",
+      "commit": "a42c9da2",
+      "streak": 1
+    },
+    {
+      "screen": "essence",
+      "stage": "mid",
+      "date": "2026-10-04",
+      "commit": "a42c9da2",
+      "streak": 1
+    },
+    {
+      "screen": "shop",
+      "stage": "mid",
+      "date": "2026-10-04",
+      "commit": "a42c9da2",
+      "streak": 1
+    }
+  ]
 }

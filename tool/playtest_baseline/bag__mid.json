@@ -1,0 +1,482 @@
+[
+  {
+    "label": "BAG 39 upgrades \u2014 EQUIP 39 39 better items in bag \u2014 tap EQUIP 39",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 0,
+    "y1": 0,
+    "x2": 1080,
+    "y2": 2184
+  },
+  {
+    "label": "PARTY WIPED RETRY retreats to F7 (still PUSH). HUB ends the run. PUSH climbs after each clear. See INFO. Equip better gear on Shade +38 more (BAG) Pack 30% left \u00b7 75385 dealt \u00b7 18629 taken HUB \u2192 BAG to equip the upgrade WIPED \u00b7 Retry / Hub God Hand \u00b7 BAL \u2014 long-press the fight or tap the fist",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 0,
+    "y1": 0,
+    "x2": 1080,
+    "y2": 2340
+  },
+  {
+    "label": "Dungeon map \u2014 tap to pin target while fighting; long-press for God Hand; pinch with two fingers to zoom; fist button also works",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 0,
+    "y1": 0,
+    "x2": 1080,
+    "y2": 2340
+  },
+  {
+    "label": "God Hand \u2014 long-press the fight or tap the fist",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 929,
+    "y1": 6,
+    "x2": 1009,
+    "y2": 87
+  },
+  {
+    "label": "God Hand \u00b7 BAL \u2014 long-press the fight or tap the fist",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 929,
+    "y1": 6,
+    "x2": 1009,
+    "y2": 87
+  },
+  {
+    "label": "\u21bb FARM. LOOP FARM \u2014 loop this floor after clear for loot",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 546,
+    "y1": 16,
+    "x2": 690,
+    "y2": 77
+  },
+  {
+    "label": "\u25b2 PUSH. CLIMB PUSH \u2014 advance floors toward the boss",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 698,
+    "y1": 16,
+    "x2": 843,
+    "y2": 77
+  },
+  {
+    "label": "2\u00d7. Fight speed. Loot and time away stay the same.",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 851,
+    "y1": 16,
+    "x2": 921,
+    "y2": 77
+  },
+  {
+    "label": "Floor menu",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 1009,
+    "y1": 16,
+    "x2": 1074,
+    "y2": 77
+  },
+  {
+    "label": "Claim 3 quests",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 754,
+    "y1": 138,
+    "x2": 1074,
+    "y2": 270
+  },
+  {
+    "label": "CLOSE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 871,
+    "y1": 151,
+    "x2": 1040,
+    "y2": 290
+  },
+  {
+    "label": "Gold 91.7k, Essence 4,457 91.7k 4,457",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 18,
+    "y1": 156,
+    "x2": 534,
+    "y2": 252
+  },
+  {
+    "label": "Gold 91.7k, Essence 4,457 91.7k 4,457",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 40,
+    "y1": 163,
+    "x2": 664,
+    "y2": 277
+  },
+  {
+    "label": "GEAR Tab 1 of 4",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 49,
+    "y1": 326,
+    "x2": 172,
+    "y2": 470
+  },
+  {
+    "label": "BAG Tab 2 of 4",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 172,
+    "y1": 326,
+    "x2": 280,
+    "y2": 470
+  },
+  {
+    "label": "MERGE Tab 3 of 4",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 280,
+    "y1": 326,
+    "x2": 419,
+    "y2": 470
+  },
+  {
+    "label": "ROSTER Tab 4 of 4",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 419,
+    "y1": 326,
+    "x2": 575,
+    "y2": 470
+  },
+  {
+    "label": "BAG FULL 50 / 50 Tap item to select \u00b7 long-press for tip \u00b7 ADD TO MERGE for MERGE tab.",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 46,
+    "y1": 527,
+    "x2": 1034,
+    "y2": 2156
+  },
+  {
+    "label": "100",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "ProgressBar",
+    "x1": 46,
+    "y1": 593,
+    "x2": 1034,
+    "y2": 608
+  },
+  {
+    "label": "Upgrades",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 620,
+    "x2": 310,
+    "y2": 752
+  },
+  {
+    "label": "Arcane Cloth Pauldrons, item level 59",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 764,
+    "x2": 359,
+    "y2": 980
+  },
+  {
+    "label": "Runic Cloth Bracers, item level 65",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 383,
+    "y1": 764,
+    "x2": 697,
+    "y2": 980
+  },
+  {
+    "label": "Swift Leather Pauldrons, item level 59",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 721,
+    "y1": 764,
+    "x2": 1034,
+    "y2": 980
+  },
+  {
+    "label": "Spark Wand, item level 59",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 1004,
+    "x2": 359,
+    "y2": 1220
+  },
+  {
+    "label": "Spark Cloth Legguards, item level 59",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 383,
+    "y1": 1004,
+    "x2": 697,
+    "y2": 1220
+  },
+  {
+    "label": "Guard Ring, item level 59",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 721,
+    "y1": 1004,
+    "x2": 1034,
+    "y2": 1220
+  },
+  {
+    "label": "RETRY \u2192 F7. Retreats to last cleared floor (PUSH)",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 108,
+    "y1": 1093,
+    "x2": 972,
+    "y2": 1244
+  },
+  {
+    "label": "Arcane Mace, item level 65",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 1244,
+    "x2": 359,
+    "y2": 1460
+  },
+  {
+    "label": "Spark Cloak, item level 61",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 383,
+    "y1": 1244,
+    "x2": 697,
+    "y2": 1460
+  },
+  {
+    "label": "Arcane Cloth Pauldrons, item level 65",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 721,
+    "y1": 1244,
+    "x2": 1034,
+    "y2": 1460
+  },
+  {
+    "label": "CLEAN BAG. Clears weak drops so new loot can fit",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 108,
+    "y1": 1268,
+    "x2": 972,
+    "y2": 1407
+  },
+  {
+    "label": "OPEN BAG. HUB \u2192 BAG to equip the upgrade",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 108,
+    "y1": 1431,
+    "x2": 972,
+    "y2": 1582
+  },
+  {
+    "label": "Ember-Kissed Runic Amulet, item level 69",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 1484,
+    "x2": 359,
+    "y2": 1700
+  },
+  {
+    "label": "Arcane Wand, item level 65",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 383,
+    "y1": 1484,
+    "x2": 697,
+    "y2": 1700
+  },
+  {
+    "label": "Arcane Charm, item level 65",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 721,
+    "y1": 1484,
+    "x2": 1034,
+    "y2": 1700
+  },
+  {
+    "label": "HUB",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 108,
+    "y1": 1606,
+    "x2": 972,
+    "y2": 1745
+  },
+  {
+    "label": "Arcane Cloth Pauldrons, item level 65",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 1724,
+    "x2": 359,
+    "y2": 1921
+  },
+  {
+    "label": "Swift Cloak, item level 51",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 383,
+    "y1": 1724,
+    "x2": 697,
+    "y2": 1921
+  },
+  {
+    "label": "Swift Leather Belt, item level 51",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 721,
+    "y1": 1724,
+    "x2": 1034,
+    "y2": 1921
+  },
+  {
+    "label": "EQUIP 39. One tap: equip all 39 upgrades now",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 46,
+    "y1": 1933,
+    "x2": 367,
+    "y2": 2072
+  },
+  {
+    "label": "CLEAN. Merge, then sell gold and scrap essence for whatever matches FILTERS",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 379,
+    "y1": 1933,
+    "x2": 701,
+    "y2": 2072
+  },
+  {
+    "label": "FILTERS. When bag is near full: sell gold vs scrap essence",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 713,
+    "y1": 1933,
+    "x2": 1034,
+    "y2": 2072
+  },
+  {
+    "label": "GEAR",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 6,
+    "y1": 2190,
+    "x2": 184,
+    "y2": 2337
+  },
+  {
+    "label": "GOLD",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 184,
+    "y1": 2190,
+    "x2": 362,
+    "y2": 2337
+  },
+  {
+    "label": "SHOP",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 362,
+    "y1": 2190,
+    "x2": 540,
+    "y2": 2337
+  },
+  {
+    "label": "ESSENCE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 540,
+    "y1": 2190,
+    "x2": 718,
+    "y2": 2337
+  },
+  {
+    "label": "MORE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 718,
+    "y1": 2190,
+    "x2": 896,
+    "y2": 2337
+  },
+  {
+    "label": "LEAVE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 896,
+    "y1": 2190,
+    "x2": 1074,
+    "y2": 2337
+  }
+]

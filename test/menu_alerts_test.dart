@@ -186,4 +186,24 @@ void main() {
     expect(quiet.shop.isQuiet, isTrue);
     expect(quiet.essence.isQuiet, isTrue);
   });
+
+  test('MORE quest line does not count the daily vault', () {
+    final base = GameLogic.createInitialState(now: now);
+    final first = base.missions.first;
+    final state = base.copyWith(
+      missions: [
+        first.copyWith(progress: first.target),
+        ...base.missions.skip(1),
+      ],
+      metaDepth: base.metaDepth.copyWith(
+        dailyVaultClaimed: false,
+        dailyVaultClears: GameLogic.dailyVaultClearTarget,
+      ),
+    );
+    expect(GameLogic.canClaimDailyVault(state), isTrue);
+    expect(state.missions.where((m) => m.canClaim).length, 1);
+    final alert = MenuAlerts.moreAlert(state);
+    expect(alert.count, 1);
+    expect(alert.reason, '1 claim ready — QUESTS');
+  });
 }

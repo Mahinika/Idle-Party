@@ -284,11 +284,10 @@ void main() {
         ),
       ],
     );
-    expect(
-      WipeAdvice.lineFor(state: state, fight: atkLack()),
-      contains('Equip better'),
-    );
-    expect(WipeAdvice.lineFor(state: state, fight: atkLack()), contains('BAG'));
+    final line = WipeAdvice.lineFor(state: state, fight: atkLack());
+    expect(line, contains('Equip better'));
+    expect(line, contains('BAG'));
+    expect(line, matches(RegExp(r'on .+ \(.+\) \(BAG\)')));
   });
 
   test('GEAR panels for AL20 veteran include ROSTER not dead loadouts', () {

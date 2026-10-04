@@ -205,6 +205,18 @@ abstract final class WipeAdvice {
     return forgeLine;
   }
 
+  static String _wipeHeroTag(GameState state, int heroIndex) {
+    if (heroIndex < 0 || heroIndex >= state.heroes.length) return 'a hero';
+    final hero = state.heroes[heroIndex];
+    final role = hero.displayRoleLabel(
+      plainEnglish: GameLogic.plainPlayerChrome(state),
+    );
+    final name = hero.name.trim();
+    if (name.isEmpty) return role;
+    if (name == role) return name;
+    return '$name ($role)';
+  }
+
   static String _slotLabel(EquipmentSlot slot) => switch (slot) {
         EquipmentSlot.weapon => 'weapon',
         EquipmentSlot.offHand => 'off-hand',
@@ -227,10 +239,7 @@ abstract final class WipeAdvice {
           : 'Equip better gear in BAG';
     }
     final first = plan.first;
-    final heroName =
-        first.heroIndex >= 0 && first.heroIndex < state.heroes.length
-            ? state.heroes[first.heroIndex].name
-            : 'a hero';
+    final heroName = _wipeHeroTag(state, first.heroIndex);
     final slotName = _slotLabel(first.slot);
     if (upgrades == 1) {
       return 'Equip better $slotName on $heroName (BAG)';
