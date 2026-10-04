@@ -23,56 +23,42 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 ROOT = Path(__file__).resolve().parents[2]
 LISTING = Path(__file__).resolve().parent
 OUT = LISTING / "preview"
-MUSIC = ROOT / "assets" / "custom" / "audio" / "music" / "hub.ogg"
+# Owned Sandy bed (tool/audio_synth). Not hub.ogg — that file is CC0
+# "Heavenly Loop" and can pick up a Content ID claim.
+MUSIC = ROOT / "assets" / "custom" / "audio" / "music" / "bed_warm.ogg"
 
-# Gameplay clips are A56 screen recordings in preview/ (gitignored). If they
-# are absent, tracked marketing cards keep the builder reproducible.
-# duration, gameplay, fallback still, caption, source trim start
-# Play Help: fight in the first 10s, about 80% real play, muted autoplay.
-# Visible time is the sum of beat durations (~28s). Each fight clip is an
-# A56 screenrecord at ~26–30 fps (do not reuse the old ~13 fps combat raw).
+# One Sandy crawl. duration, gameplay, fallback still, caption, trim start.
+# Trim starts match crawl_story() in capture_preview_beats.py.
+# Play: real fight in the first 10s, muted autoplay, ~80% the first hour.
+# Endgame hunts stay out of the first 20 seconds.
 BEATS: list[tuple[float, str | None, str, str, float]] = [
     (
-        6.3,
+        8.0,
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
-        "Your party keeps fighting",
-        0.3,
-    ),
-    (
-        5.2,
-        "preview/gameplay_gauntlet_raw.mp4",
-        "marketing/03_party_fights_1080x1920.png",
-        "Climb the Gauntlet",
-        0.9,
-    ),
-    (
-        5.8,
-        "preview/gameplay_gr_raw.mp4",
-        "marketing/03_party_fights_1080x1920.png",
-        "Ranked Greater Rift",
-        0.35,
-    ),
-    (
-        5.2,
-        "preview/gameplay_hell_raw.mp4",
-        "marketing/03_party_fights_1080x1920.png",
-        "Hell's Gate",
+        "IDLE PARTY\nYour party fights on its own",
         0.4,
     ),
     (
-        2.6,
-        None,
-        "marketing/07_afk_progress_1080x1920.png",
-        "Progress while you're away",
-        0.0,
+        6.0,
+        "preview/gameplay_crawl_raw.mp4",
+        "marketing/03_party_fights_1080x1920.png",
+        "",
+        8.0,
     ),
     (
-        2.6,
-        None,
-        "marketing/01_feature_graphic_1024x500.png",
+        6.0,
+        "preview/gameplay_crawl_raw.mp4",
+        "marketing/03_party_fights_1080x1920.png",
+        "Leave. They keep going.",
+        13.5,
+    ),
+    (
+        4.0,
+        "preview/gameplay_crawl_raw.mp4",
+        "marketing/03_party_fights_1080x1920.png",
         "Idle Party",
-        0.0,
+        20.0,
     ),
 ]
 
@@ -171,27 +157,38 @@ def make_video_caption(
 ) -> None:
     overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay, "RGBA")
+    if not caption.strip():
+        overlay.save(path)
+        return
+    lines = caption.split("\n")
     if width > height:
         box = (70, 330, 1070, 720)
         font = load_font(64)
         small = load_font(30)
         draw.rounded_rectangle(box, radius=30, fill=(20, 16, 13, 205))
         draw.text((130, 400), "IDLE PARTY", font=small, fill=(220, 181, 102, 255))
-        bbox = draw.textbbox((0, 0), caption, font=font)
+        bbox = draw.textbbox((0, 0), lines[-1], font=font)
         text_y = 515 - (bbox[3] - bbox[1]) / 2
-        draw.text((130, text_y), caption, font=font, fill=(*CAPTION_FG, 255))
+        draw.text((130, text_y), lines[-1], font=font, fill=(*CAPTION_FG, 255))
     else:
-        box = (70, height - 145, width - 70, height - 25)
-        font = load_font(40)
-        draw.rounded_rectangle(box, radius=24, fill=(20, 16, 13, 220))
-        bbox = draw.textbbox((0, 0), caption, font=font)
-        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        draw.text(
-            ((width - tw) / 2, height - 88 - th / 2),
-            caption,
-            font=font,
-            fill=(*CAPTION_FG, 255),
-        )
+        font = load_font(42)
+        sizes = []
+        for line in lines:
+            bbox = draw.textbbox((0, 0), line, font=font)
+            sizes.append((bbox[2] - bbox[0], bbox[3] - bbox[1]))
+        text_h = sum(h for _, h in sizes) + 8 * (len(lines) - 1)
+        band_h = text_h + 36
+        draw.rectangle((0, 0, width, band_h), fill=(20, 16, 13, 210))
+        y = 16
+        for i, line in enumerate(lines):
+            tw, th = sizes[i]
+            draw.text(
+                ((width - tw) / 2, y),
+                line,
+                font=font,
+                fill=(*CAPTION_FG, 255),
+            )
+            y += th + 8
     overlay.save(path)
 
 
@@ -207,25 +204,30 @@ def make_gameplay_mp4(
     start: float,
 ) -> None:
     if width > height:
+        # Landscape reserve: phone beside the promise. Play may refuse portrait.
         fg_h = 980
         fg_w = 452
         fg_x = 1320
         fg_y = (height - fg_h) // 2
+        fc = (
+            f"[0:v]trim=start={start}:duration={duration},setpts=PTS-STARTPTS,"
+            f"fps={FPS},"
+            f"tpad=stop_mode=clone:stop_duration=1,split=2[bg][fg];"
+            f"[bg]scale={width}:{height}:force_original_aspect_ratio=increase,"
+            f"crop={width}:{height},gblur=sigma=24,eq=brightness=-0.25:saturation=0.65[bg2];"
+            f"[fg]scale={fg_w}:{fg_h}:force_original_aspect_ratio=decrease[fg2];"
+            f"[bg2][fg2]overlay={fg_x}:{fg_y}[base];"
+            f"[base][1:v]overlay=0:0:shortest=1,format=yuv420p[vout]"
+        )
     else:
-        fg_h = 1760
-        fg_w = 812
-        fg_x = (width - fg_w) // 2
-        fg_y = 0
-    fc = (
-        f"[0:v]trim=start={start}:duration={duration},setpts=PTS-STARTPTS,"
-        f"fps={FPS},"
-        f"tpad=stop_mode=clone:stop_duration=1,split=2[bg][fg];"
-        f"[bg]scale={width}:{height}:force_original_aspect_ratio=increase,"
-        f"crop={width}:{height},gblur=sigma=24,eq=brightness=-0.25:saturation=0.65[bg2];"
-        f"[fg]scale={fg_w}:{fg_h}:force_original_aspect_ratio=decrease[fg2];"
-        f"[bg2][fg2]overlay={fg_x}:{fg_y}[base];"
-        f"[base][1:v]overlay=0:0:shortest=1,format=yuv420p[vout]"
-    )
+        # Portrait listing clip fills the frame. No blur matte, no black bars.
+        fc = (
+            f"[0:v]trim=start={start}:duration={duration},setpts=PTS-STARTPTS,"
+            f"fps={FPS},"
+            f"scale={width}:{height}:force_original_aspect_ratio=increase,"
+            f"crop={width}:{height}[base];"
+            f"[base][1:v]overlay=0:0:shortest=1,format=yuv420p[vout]"
+        )
     cmd = [
         ffmpeg,
         "-y",
@@ -339,9 +341,11 @@ def mux_audio(
     ffmpeg: str, video: Path, music: Path, dest: Path, total: float
 ) -> None:
     fade_out_start = max(0.0, total - 1.5)
+    # loudnorm replaces the old 0.28 duck so YouTube does not leave the
+    # clip quieter than other store pages. Fades stay 1.2s in / 1.5s out.
     af = (
         f"afade=t=in:st=0:d=1.2,afade=t=out:st={fade_out_start:.2f}:d=1.5,"
-        f"volume=0.28"
+        f"loudnorm=I=-16:TP=-1.5:LRA=11"
     )
     cmd = [
         ffmpeg,
@@ -384,6 +388,11 @@ def build_aspect(ffmpeg: str, *, width: int, height: int, label: str) -> Path:
             clip_dur = dur + (XFADE if i < len(BEATS) - 1 else 0)
             dest = tmp_path / f"beat_{i:02d}.mp4"
             video = LISTING / video_rel if video_rel else None
+            if video is not None and not video.exists():
+                raise SystemExit(
+                    f"missing gameplay {video} — record it on the A56. "
+                    "Refusing a still-card stand-in."
+                )
             if video is not None and video.exists():
                 caption_png = tmp_path / f"caption_{i:02d}.png"
                 make_video_caption(
@@ -424,11 +433,11 @@ def build_aspect(ffmpeg: str, *, width: int, height: int, label: str) -> Path:
         concat_xfade(ffmpeg, clips, silent, durs)
         total = sum(durs) - XFADE * (len(durs) - 1)
         final = OUT / f"idle_party_preview_{label}.mp4"
-        if MUSIC.exists():
-            mux_audio(ffmpeg, silent, MUSIC, final, total)
-        else:
-            shutil.copy(silent, final)
-            print(f"WARN: no music at {MUSIC}")
+        if not MUSIC.exists():
+            raise SystemExit(
+                f"missing music {MUSIC} — refusing a silent preview"
+            )
+        mux_audio(ffmpeg, silent, MUSIC, final, total)
 
         meta = {
             "file": final.name,

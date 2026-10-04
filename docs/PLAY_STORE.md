@@ -18,6 +18,7 @@ Package id: **`com.idleparty.app`**
 | Store listing copy (EN + 9 locales) | ✅ live | Default locale **en-US** + 9 translations committed **2026-09-25** (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`). In-game UI stays English. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ⏳ review | New **8 phone shots** swapped + submitted **2026-09-18** (`play_ready` pack: combat first). Console: *Ändringarna granskas*. Feature graphic unchanged. |
+| Listing assets freshness | shots 2026-10-04 @ 1.12.194 · video 2026-10-04 @ 1.12.194 · icon 2026-10-04 @ 1.12.194 · feature 2026-10-04 @ 1.12.194 | Phone shots and the Sandy preview are this build. `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than one patch. |
 | Preview video (YouTube) | ✅ sent | All 10 listings point at Cognifox unlisted `UHLG28lHmPs` (`https://www.youtube.com/watch?v=UHLG28lHmPs`), committed **2026-09-26**. Embed works. Previous live `OMWXbgGBFMA`. `XfKog5CAiUs` stays unused (Play rejected that embed). |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |

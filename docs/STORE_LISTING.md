@@ -153,22 +153,29 @@ shots. High-res icon: `out/play_icon_512.png` (owned `app_icon`).
 | Icon | `out/play_icon_512.png` | Owned cave-party mark (same as launcher) |
 | Feature | `marketing/01_feature_graphic_1024x500.png` | IDLE PARTY · Party fights AFK. |
 | 1 | `out/01_01_combat_a.png` | Your party fights on its own |
-| 2 | `out/02_02_combat_b.png` | Same fight while you are away |
-| 3 | `marketing/02_todays_chase_1080x1920.png` | Always know today's chase |
-| 4 | `out/03_03_gear.png` | Build and equip your party |
-| 5 | `marketing/05_build_party_1080x1920.png` | 10 classes. 31 specs. |
-| 6 | `out/05_05_zone.png` | Explore the World Path |
-| 7 | `marketing/07_afk_progress_1080x1920.png` | Progress while you're away |
-| 8 | `marketing/09_ascend_1080x1920.png` | Ascend. Keep your power. |
+| 2 | `out/02_02_combat_b.png` | They keep fighting while you are away |
+| 3 | `out/03_03_hub_today.png` | One clear goal when you return |
+| 4 | `out/04_04_gear.png` | Build and equip your party |
+| 5 | `out/05_05_party.png` | Shield, healer, damage |
+| 6 | `out/06_06_path.png` | Explore the World Path |
+| 7 | `out/07_07_return.png` | Come back to loot |
+| 8 | `out/08_08_ascend.png` | Ascend. Your party stays. |
 
-Shots **1–2** are a **new-save** Sandy floor (starter Shield / Healer / Damage),
-not KEY / Gauntlet / AL20 chrome. Capture:
+Shots **1–3** are phone UI from a **new-save** Sandy floor (starter Shield /
+Healer / Damage), not KEY / Gauntlet / AL20 chrome. Shots **4–8** are the
+AL3 showcase hub. Endgame hunts do not lead the carousel or the first 20
+seconds of the preview video.
+
+Capture on the A56 (the phone is the product; web is only the fallback):
 
 1. `flutter test tool/store_listing/export_showcase_save_test.dart`
-2. `flutter build web --release` and serve `build/web` on `:8080`
-3. `py -3 tool/store_listing/capture_first_minute.py`
-4. `py -3 tool/store_listing/compose_shots.py`
-5. `py -3 tool/store_listing/make_listing_icon.py`
+2. `py -3 tool/store_listing/capture_a56_shots.py`
+3. `py -3 tool/store_listing/compose_shots.py`
+4. `py -3 tool/store_listing/make_listing_icon.py`
+5. `py -3 tool/store_listing/make_feature_graphic.py`
+
+`capture_first_minute.py` remains when no emulator is running. It is not
+the default.
 
 Console paste of those files is a **separate** owner box.
 
