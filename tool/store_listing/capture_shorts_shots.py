@@ -37,6 +37,8 @@ def write_prefs(
     # Local wall time, no Z. A Zulu stamp was credited as a few seconds.
     data["lastUpdated"] = stamp.strftime("%Y-%m-%dT%H:%M:%S.000")
     data["dungeonZoom"] = "close"
+    # Same pinch a player can make. 16 tiles leaves the party small on a phone crop.
+    data["dungeonViewCols"] = 12
     data["soundMuted"] = True
     data["dungeonMode"] = "push"
     raw = json.dumps(data, separators=(",", ":"))

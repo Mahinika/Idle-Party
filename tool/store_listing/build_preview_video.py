@@ -31,9 +31,11 @@ MUSIC = ROOT / "assets" / "custom" / "audio" / "music" / "bed_warm.ogg"
 # Trim starts match crawl_story() in capture_preview_beats.py.
 # Play: real fight in the first 10s, muted autoplay, ~80% the first hour.
 # Endgame hunts stay out of the first 20 seconds.
-# In-points skip the paper-doll seconds. The rig replaces that still a few
-# seconds after each enter; the recording waits the first one out, and the
-# re-enter flash (about 16–21s of the raw) is not used.
+# In-points are from the 12-tile retake. The return-to-hub card is at 13.0s,
+# the map is clear by 13.6s, and "Loading floor" is on screen at 15.15s.
+# The crossfade is 0.2s, so the hub clip must end before that black frame.
+# The re-enter paints the paper doll until about 26s. The title starts once
+# the level-up text has cleared and the party is readable.
 BEATS: list[tuple[float, str | None, str, str, float]] = [
     (
         8.0,
@@ -43,37 +45,37 @@ BEATS: list[tuple[float, str | None, str, str, float]] = [
         0.4,
     ),
     (
-        5.0,
+        6.8,
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "",
-        8.0,
+        5.5,
     ),
     (
-        2.2,
+        1.1,
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "Leave. They keep going.",
-        13.3,
+        13.65,
     ),
     (
-        5.0,
+        2.4,
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "",
-        22.0,
+        26.0,
     ),
     (
-        4.0,
+        3.6,
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "Idle Party",
-        27.0,
+        30.8,
     ),
 ]
 
 FPS = 30
-XFADE = 0.55
+XFADE = 0.2
 BG_RGB = (26, 20, 16)  # charcoal parchment
 CAPTION_FG = (245, 230, 200)
 BAND_H = 120

@@ -122,6 +122,8 @@ GameState firstMinuteCombatState() {
     seenTips: [...tipIds, 'discord_thanks'],
     soundMuted: true,
     dungeonZoom: DungeonZoom.close,
+    // Pinch-close. 16 tiles leaves the party small in a store crop.
+    dungeonViewCols: 12,
     seenChangelogVersion: MetaSystems.currentVersion,
     lastUpdated: now,
     metaDepth: entered.metaDepth.copyWith(notifyPrompted: true),
