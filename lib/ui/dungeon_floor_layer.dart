@@ -1,40 +1,165 @@
 part of 'spatial_dungeon_view.dart';
 
-/// Static terrain (floor, wall rims + faces, beat tint, decals) baked once per
-/// map at 16 px a tile, then blitted with the camera. Keeps the per-frame
-/// cost flat while floors carry far more detail.
+/// Static terrain (floor, wall rims + faces, beat tint, decals) baked per map
+/// at 16 px a tile, then blitted with the camera.
+///
+/// A floor is much bigger than the phone. Rasterizing all of it in the first
+/// paint (`toImageSync` of the whole map) froze the opening of every floor.
+/// Until the strips that cover the camera are ready, only the phone view is
+/// drawn. The rest of the map is rasterized one short strip at a time.
 abstract final class _FloorLayerCache {
   static const double bakeTile = 16;
+  static const int _rowsPerBand = 3;
 
   static TileMap? _map;
   static ui.Image? _floorKey;
   static ui.Image? _wallKey;
   static RoomType? _roomType;
   static bool? _colorblind;
-  static ui.Image? _image;
+  static int _gen = 0;
+  static int _flightTicket = 0;
   static bool _failed = false;
+  static List<ui.Image?> _bands = [];
+  static Future<void>? _bandFlight;
+  static bool _bandQueued = false;
 
-  static ui.Image? imageFor(_TileRoomPainter p) {
+  static final Paint _blit = Paint()..filterQuality = FilterQuality.none;
+
+  static bool _fresh(_TileRoomPainter p) {
     final map = p.world.map;
     final floorKey = p.floorVariants.isEmpty ? null : p.floorVariants.first;
     final wallKey = p.wallVariants.isEmpty ? null : p.wallVariants.first;
-    final fresh =
-        identical(_map, map) &&
+    return identical(_map, map) &&
         identical(_floorKey, floorKey) &&
         identical(_wallKey, wallKey) &&
         _roomType == p.roomType &&
         _colorblind == SpatialCombat.colorblindMode;
-    if (fresh) return _failed ? null : _image;
-    _image?.dispose();
-    _image = null;
-    _map = map;
-    _floorKey = floorKey;
-    _wallKey = wallKey;
+  }
+
+  static void _reset(_TileRoomPainter p) {
+    _gen++;
+    for (final band in _bands) {
+      band?.dispose();
+    }
+    _bands = [];
+    _flightTicket++;
+    _bandFlight = null;
+    _bandQueued = false;
+    _map = p.world.map;
+    _floorKey = p.floorVariants.isEmpty ? null : p.floorVariants.first;
+    _wallKey = p.wallVariants.isEmpty ? null : p.wallVariants.first;
     _roomType = p.roomType;
     _colorblind = SpatialCombat.colorblindMode;
     _failed = false;
+    final rows = _map!.rows;
+    final count = rows <= 0 ? 0 : (rows + _rowsPerBand - 1) ~/ _rowsPerBand;
+    _bands = List<ui.Image?>.filled(count, null);
+  }
+
+  /// Draws baked strips. Until they cover the camera, only the phone view is
+  /// painted (same 16 px grid, so the handoff does not shimmer).
+  static void paint(
+    Canvas canvas,
+    _TileRoomPainter p,
+    double tile,
+    double originX,
+    double originY,
+    int x0,
+    int x1,
+    int y0,
+    int y1,
+  ) {
+    if (!_fresh(p)) _reset(p);
+    if (_failed || _map == null || x1 <= x0 || y1 <= y0 || !_covers(y0, y1)) {
+      if (!_failed && _map != null && x1 > x0 && y1 > y0) {
+        _kickBand(p, y0, y1);
+      }
+      if (_failed || _map == null) {
+        p.paintStaticTerrain(
+          canvas,
+          tile: tile,
+          originX: originX,
+          originY: originY,
+          x0: x0,
+          x1: x1,
+          y0: y0,
+          y1: y1,
+        );
+        return;
+      }
+      _paintVisible(canvas, p, tile, originX, originY, x0, x1, y0, y1);
+      return;
+    }
+    _kickBand(p, y0, y1);
+    _blitBands(canvas, tile, originX, originY);
+  }
+
+  static void _paintVisible(
+    Canvas canvas,
+    _TileRoomPainter p,
+    double tile,
+    double originX,
+    double originY,
+    int x0,
+    int x1,
+    int y0,
+    int y1,
+  ) {
+    canvas.save();
+    canvas.translate(originX, originY);
+    final scale = tile / bakeTile;
+    if (scale.isFinite && scale > 0) canvas.scale(scale, scale);
+    p.paintStaticTerrain(
+      canvas,
+      tile: bakeTile,
+      originX: 0,
+      originY: 0,
+      x0: x0,
+      x1: x1,
+      y0: y0,
+      y1: y1,
+    );
+    canvas.restore();
+  }
+
+  static bool _covers(int y0, int y1) {
+    if (_bands.isEmpty) return false;
+    final rows = _map?.rows ?? 0;
+    for (var y = y0; y < y1; y++) {
+      if (y < 0 || y >= rows) continue;
+      final index = y ~/ _rowsPerBand;
+      if (index < 0 || index >= _bands.length || _bands[index] == null) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static void _kickBand(_TileRoomPainter p, int y0, int y1) {
+    if (_bandFlight != null || _bandQueued || _failed || _map == null) return;
+    final index = _nextBand(y0, y1);
+    if (index == null) return;
+    final gen = _gen;
+    _bandQueued = true;
+    // After this frame, so the opening paint only draws what the phone shows.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _bandQueued = false;
+      if (gen != _gen || _bandFlight != null || _failed || _map == null) {
+        return;
+      }
+      _recordBand(p, index, gen);
+    });
+  }
+
+  static void _recordBand(_TileRoomPainter p, int index, int gen) {
+    final map = _map;
+    if (map == null || gen != _gen) return;
+    final top = index * _rowsPerBand;
+    final bottom = math.min(top + _rowsPerBand, map.rows);
     final w = (map.cols * bakeTile).round();
-    final h = (map.rows * bakeTile).round();
+    final h = ((bottom - top) * bakeTile).round();
+    if (w <= 0 || h <= 0 || index < 0 || index >= _bands.length) return;
+    if (_bands[index] != null) return;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(
       recorder,
@@ -44,21 +169,72 @@ abstract final class _FloorLayerCache {
       canvas,
       tile: bakeTile,
       originX: 0,
-      originY: 0,
+      originY: -top * bakeTile,
       x0: 0,
       x1: map.cols,
-      y0: 0,
-      y1: map.rows,
+      y0: top,
+      y1: bottom,
     );
     final picture = recorder.endRecording();
-    try {
-      _image = picture.toImageSync(w, h);
-    } catch (_) {
-      _failed = true;
-    } finally {
-      picture.dispose();
+    final ticket = ++_flightTicket;
+    _bandFlight = Future<void>(() async {
+      try {
+        final image = await picture.toImage(w, h);
+        if (gen != _gen || index >= _bands.length) {
+          image.dispose();
+          return;
+        }
+        final previous = _bands[index];
+        _bands[index] = image;
+        previous?.dispose();
+      } catch (_) {
+        if (gen == _gen) _failed = true;
+      } finally {
+        picture.dispose();
+        if (ticket == _flightTicket) _bandFlight = null;
+      }
+    });
+  }
+
+  /// Camera strip first, then the rest of the floor in order.
+  static int? _nextBand(int y0, int y1) {
+    int? later;
+    for (var i = 0; i < _bands.length; i++) {
+      if (_bands[i] != null) continue;
+      final top = i * _rowsPerBand;
+      final rows = _map?.rows ?? 0;
+      final bottom = math.min(top + _rowsPerBand, rows);
+      if (bottom > y0 && top < y1) return i;
+      later ??= i;
     }
-    return _image;
+    return later;
+  }
+
+  static void _blitBands(
+    Canvas canvas,
+    double tile,
+    double originX,
+    double originY,
+  ) {
+    final cols = _map?.cols ?? 0;
+    final rows = _map?.rows ?? 0;
+    for (var i = 0; i < _bands.length; i++) {
+      final image = _bands[i];
+      if (image == null) continue;
+      final top = i * _rowsPerBand;
+      final bottom = math.min(top + _rowsPerBand, rows);
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+        Rect.fromLTWH(
+          originX,
+          originY + top * tile,
+          cols * tile,
+          (bottom - top) * tile,
+        ),
+        _blit,
+      );
+    }
   }
 }
 

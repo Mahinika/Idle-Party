@@ -26,7 +26,13 @@ abstract final class HeroRigPainter {
   static final Map<String, ui.Image> _frames = {};
   static final Map<String, String> _equip = {};
   static final Map<String, ui.Image> _solid = {};
+  static final Map<String, ui.Image> _lastByHero = {};
   static final List<Future<void>> _strips = [];
+  static Future<void> _stripGate = Future<void>.value();
+  static Future<void> _warmGate = Future<void>.value();
+  static final Map<String, Future<void>> _warming = {};
+  static int _spreadToken = -1;
+  static int _spreadBakes = 0;
 
   /// Race idle when that clip is loaded, otherwise the family idle.
   ///
@@ -86,6 +92,8 @@ abstract final class HeroRigPainter {
     required CharacterVisualPose pose,
     double alpha = 1,
     String heroId = '',
+    bool spreadFrames = false,
+    int frameToken = 0,
   }) {
     final family = pose.bodyFamily;
     final rig = family == null ? null : HeroRigLibrary.peek(family);
@@ -103,6 +111,8 @@ abstract final class HeroRigPainter {
         rig: rig,
         alpha: alpha,
         heroId: heroId,
+        spreadFrames: spreadFrames,
+        frameToken: frameToken,
       );
       return;
     }
@@ -118,6 +128,33 @@ abstract final class HeroRigPainter {
   }
 
   static Future<void> warm({
+    required RigData rig,
+    required ui.Image bodyImage,
+    required String bodyKey,
+    required Map<String, ui.Image> images,
+    required CharacterVisualPose pose,
+  }) {
+    // Party enter used to cut every hero's atlas at once (GPU readback).
+    // The fight paints every frame, so the same warm must not queue again.
+    final key = '$bodyKey|${rig.family}|${pose.equipHash}';
+    final existing = _warming[key];
+    if (existing != null) return existing;
+    final run = _warmGate.then(
+      (_) => _warmNow(
+        rig: rig,
+        bodyImage: bodyImage,
+        bodyKey: bodyKey,
+        images: images,
+        pose: pose,
+      ),
+    );
+    _warmGate = run.catchError((Object _) {});
+    _warming[key] = run;
+    run.whenComplete(() => _warming.remove(key));
+    return run;
+  }
+
+  static Future<void> _warmNow({
     required RigData rig,
     required ui.Image bodyImage,
     required String bodyKey,
@@ -220,6 +257,8 @@ abstract final class HeroRigPainter {
     required RigData rig,
     double alpha = 1,
     String heroId = '',
+    bool spreadFrames = false,
+    int frameToken = 0,
   }) {
     if (!size.isFinite ||
         size <= 0 ||
@@ -252,7 +291,21 @@ abstract final class HeroRigPainter {
       images: images,
       pose: pose,
       heroId: heroId,
+      spread: spreadFrames,
+      frameToken: frameToken,
     );
+    if (frame == null) {
+      CharacterVisualPainter.paintOwnedHero(
+        canvas,
+        center,
+        size,
+        body: bodyImage,
+        images: images,
+        pose: pose,
+        alpha: alpha,
+      );
+      return;
+    }
     final paint = ui.Paint()
       ..filterQuality = ui.FilterQuality.none
       ..isAntiAlias = false
@@ -275,12 +328,14 @@ abstract final class HeroRigPainter {
     canvas.restore();
   }
 
-  static ui.Image _frame({
+  static ui.Image? _frame({
     required RigData rig,
     required String bodyKey,
     required Map<String, ui.Image> images,
     required CharacterVisualPose pose,
     required String heroId,
+    bool spread = false,
+    int frameToken = 0,
   }) {
     final sample = RigSampler.sample(
       pose.anim,
@@ -295,11 +350,23 @@ abstract final class HeroRigPainter {
         return true;
       });
       _equip[heroId] = hash;
+      _lastByHero.remove(heroId);
     }
     final cacheKey =
         '$heroId|$hash|$bodyKey|${sample.clip}|${sample.stepIndex}|${pose.bodyTint}|${pose.anim.blocking}';
     final cached = _frames[cacheKey];
-    if (cached != null) return cached;
+    if (cached != null) {
+      _lastByHero[heroId] = cached;
+      return cached;
+    }
+    if (spread) {
+      if (_spreadToken != frameToken) {
+        _spreadToken = frameToken;
+        _spreadBakes = 0;
+      }
+      if (_spreadBakes >= 1) return _lastByHero[heroId];
+      _spreadBakes++;
+    }
     final world = RigSolver.world(rig, sample.pose);
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder);
@@ -308,8 +375,17 @@ abstract final class HeroRigPainter {
     final image = picture.toImageSync(source, source);
     picture.dispose();
     _frames[cacheKey] = image;
-    _strips.add(_strip(cacheKey, image));
+    _lastByHero[heroId] = image;
+    _strips.add(_enqueueStrip(cacheKey, image));
     return image;
+  }
+
+  /// One GPU readback at a time. A new floor used to read every fresh pose
+  /// back in parallel and stall the opening of the fight.
+  static Future<void> _enqueueStrip(String key, ui.Image image) {
+    final done = _stripGate.then((_) => _strip(key, image));
+    _stripGate = done.catchError((Object _) {});
+    return done;
   }
 
   static Future<void> _strip(String key, ui.Image image) async {

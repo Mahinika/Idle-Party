@@ -359,6 +359,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
               pose: ownedPose,
               alpha: paintAlpha,
               heroId: hero.id,
+              spreadFrames: true,
+              frameToken: visualFrame,
             );
           } else {
             drawSprite(

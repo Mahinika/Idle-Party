@@ -111,28 +111,19 @@ class _TileRoomPainter extends CustomPainter {
     final startY = camera.camY.floor().clamp(0, world.rows - 1);
     final endY = (camera.camY + camera.visibleRows).ceil().clamp(0, world.rows);
 
-    // Static terrain: one baked image per map; live per-tile path if baking fails.
-    final baked = _FloorLayerCache.imageFor(this);
-    if (baked != null) {
-      final paint = Paint()..filterQuality = FilterQuality.none;
-      canvas.drawImageRect(
-        baked,
-        Rect.fromLTWH(0, 0, baked.width.toDouble(), baked.height.toDouble()),
-        Rect.fromLTWH(originX, originY, world.cols * tile, world.rows * tile),
-        paint,
-      );
-    } else {
-      paintStaticTerrain(
-        canvas,
-        tile: tile,
-        originX: originX,
-        originY: originY,
-        x0: startX,
-        x1: endX,
-        y0: startY,
-        y1: endY,
-      );
-    }
+    // Static terrain: the phone view first, then the rest of the floor in
+    // strips. A full-map raster here used to hitch the opening of every floor.
+    _FloorLayerCache.paint(
+      canvas,
+      this,
+      tile,
+      originX,
+      originY,
+      startX,
+      endX,
+      startY,
+      endY,
+    );
 
     // Live tiles: doors and the stairs change state mid-floor.
     for (final gate in world.map.gates) {

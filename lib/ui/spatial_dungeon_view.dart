@@ -402,6 +402,24 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     });
   }
 
+  /// Decodes [jobs] a few at a time so the fight can paint between them.
+  Future<List<T>> _loadInSlices<T>(
+    int gen,
+    List<Future<T> Function()> jobs, {
+    int size = 4,
+  }) async {
+    final out = <T>[];
+    for (var i = 0; i < jobs.length; i += size) {
+      if (!mounted || gen != _loadGen) return out;
+      final end = math.min(i + size, jobs.length);
+      out.addAll(await Future.wait([for (var j = i; j < end; j++) jobs[j]()]));
+      if (end < jobs.length) {
+        await Future<void>.delayed(const Duration(milliseconds: 8));
+      }
+    }
+    return out;
+  }
+
   Future<void> _loadDeferredSharedArt(
     int gen, {
     required Future<ui.Image> Function(
@@ -464,12 +482,27 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
     ];
     final uniqueHeroPaths = CustomAssets.uniqueHeroSpecPaths;
 
-    final shared = await Future.wait([
-      ...lootPaths.map((a) => load(a, targetWidth: 64)),
-      ...petPaths.map((a) => load(a, targetWidth: 96)),
-      ...uniqueHeroPaths.map((a) => load(a, targetWidth: 128)),
+    // A few pictures at a time. Decoding the whole catalog at once stalled
+    // the first seconds of a dungeon.
+    final shared = await _loadInSlices(gen, [
+      ...lootPaths.map(
+        (a) =>
+            () => load(a, targetWidth: 64),
+      ),
+      ...petPaths.map(
+        (a) =>
+            () => load(a, targetWidth: 96),
+      ),
+      ...uniqueHeroPaths.map(
+        (a) =>
+            () => load(a, targetWidth: 128),
+      ),
     ]);
-    if (!mounted || gen != _loadGen) return;
+    final sharedCount =
+        lootPaths.length + petPaths.length + uniqueHeroPaths.length;
+    if (!mounted || gen != _loadGen || shared.length != sharedCount) {
+      return;
+    }
 
     var i = 0;
     _lootByPath
@@ -490,9 +523,16 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
       ...BodyFamilyCatalog.allAssetPaths,
       ...OwnedGearAssets.dollOverlayPaths,
     ];
-    final bodyImages = await Future.wait(
-      bodyPaths.map((path) => loadSoft(path, targetWidth: 128)),
+    final bodyImages = await _loadInSlices(
+      gen,
+      bodyPaths
+          .map(
+            (path) =>
+                () => loadSoft(path, targetWidth: 128),
+          )
+          .toList(),
     );
+    if (bodyImages.length != bodyPaths.length) return;
     final bodyEntries = <MapEntry<String, ui.Image>>[
       for (var i = 0; i < bodyPaths.length; i++)
         if (bodyImages[i] != null) MapEntry(bodyPaths[i], bodyImages[i]!),
