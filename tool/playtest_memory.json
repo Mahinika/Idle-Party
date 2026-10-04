@@ -13,6 +13,13 @@
       "stage": "mid",
       "why": "BAG FULL, EQUIP, and CLEAN say what to do",
       "image": "tool/playtest_baseline/bag__mid.png"
+    },
+    {
+      "date": "2026-10-04",
+      "screen": "more",
+      "stage": "mid",
+      "why": "One quest claim on the hub matches one CLAIM on the list",
+      "image": "tool/playtest_baseline/more__mid.png"
     }
   ],
   "learned": [
@@ -25,6 +32,11 @@
       "date": "2026-10-04",
       "pattern": "Wipe advice that only uses the hero name disagrees with the PROT or COM row",
       "rule": ""
+    },
+    {
+      "date": "2026-10-04",
+      "pattern": "The hub shows the chase, ENTER DUNGEON, and ASCEND as three big buttons",
+      "rule": ""
     }
   ],
   "ok": [
@@ -32,22 +44,22 @@
       "screen": "gold",
       "stage": "mid",
       "date": "2026-10-04",
-      "commit": "a42c9da2",
-      "streak": 1
+      "commit": "2890e01a",
+      "streak": 2
     },
     {
       "screen": "essence",
       "stage": "mid",
       "date": "2026-10-04",
-      "commit": "a42c9da2",
-      "streak": 1
+      "commit": "2890e01a",
+      "streak": 2
     },
     {
       "screen": "shop",
       "stage": "mid",
       "date": "2026-10-04",
-      "commit": "a42c9da2",
-      "streak": 1
+      "commit": "2890e01a",
+      "streak": 2
     }
   ]
 }

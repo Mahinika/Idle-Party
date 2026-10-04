@@ -7,7 +7,7 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Open
 
-- 2026-10-04 · The hub shows several big buttons at once (CLAIM VAULT, ENTER DUNGEON, ASCEND, CLAIM QUESTS) · ux · forvirrar · one filled button, the rest quieter (Material 3: one high-emphasis button per screen). Left open: that is a whole-screen layout, so it waits for a before and after.
+- 2026-10-04 · The hub shows three big buttons at once (CLAIM QUESTS, ENTER DUNGEON, ASCEND) · ux · forvirrar · one filled button, the rest quieter (Material 3: one high-emphasis button per screen). Left open: that is a whole-screen layout, so it waits for a before and after.
 
 ## Done
 
