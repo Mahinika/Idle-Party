@@ -18,7 +18,7 @@
       "date": "2026-10-04",
       "screen": "more",
       "stage": "mid",
-      "why": "One quest claim on the hub matches one CLAIM on the list",
+      "why": "Contract CLAIM sits whole above the bar",
       "image": "tool/playtest_baseline/more__mid.png"
     }
   ],
@@ -47,6 +47,16 @@
       "date": "2026-10-04",
       "pattern": "A full-bag toast that does not name EQUIP leaves the upgrades sitting there",
       "rule": "none"
+    },
+    {
+      "date": "2026-10-04",
+      "pattern": "a claim button sliced by the bottom bar",
+      "rule": "clipped_by_nav"
+    },
+    {
+      "date": "2026-10-04",
+      "pattern": "the first dungeon paint waited on hero portraits",
+      "rule": ""
     }
   ],
   "ok": [
@@ -54,8 +64,8 @@
       "screen": "gold",
       "stage": "mid",
       "date": "2026-10-04",
-      "commit": "2890e01a",
-      "streak": 2
+      "commit": "2b337844",
+      "streak": 3
     },
     {
       "screen": "essence",
@@ -76,6 +86,27 @@
       "stage": "mid",
       "date": "2026-10-04",
       "commit": "35f3139a",
+      "streak": 1
+    },
+    {
+      "screen": "hub",
+      "stage": "mid",
+      "date": "2026-10-04",
+      "commit": "2b337844",
+      "streak": 1
+    },
+    {
+      "screen": "gear",
+      "stage": "mid",
+      "date": "2026-10-04",
+      "commit": "2b337844",
+      "streak": 1
+    },
+    {
+      "screen": "bag",
+      "stage": "mid",
+      "date": "2026-10-04",
+      "commit": "2b337844",
       "streak": 1
     }
   ]

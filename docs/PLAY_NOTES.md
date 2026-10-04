@@ -9,6 +9,10 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Done
 
+<!-- - 2026-10-04 · The contract CLAIM on QUESTS was cut off by the bottom bar · the last card stays whole above the menu · fixed in 2b337844 -->
+
+<!-- - 2026-10-04 · Entering a dungeon showed a blank Loading floor… · the floor paints before the hero portraits, and the hub starts those pictures early · fixed in 2b337844 -->
+
 <!-- - 2026-10-04 · The dungeon stuttered at the start · the phone view paints first, and hero pictures no longer pile up in the opening seconds · fixed in 3d878349 -->
 
 <!-- - 2026-10-04 · The hub showed three big buttons at once · only the chase stays filled; Ascend and the other jobs are quiet · fixed in 6312542a -->
