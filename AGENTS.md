@@ -47,7 +47,8 @@ Tag `sim` is nightly (`.github/workflows/sim-nightly.yml`), not missing CI.
 Share-fast: `flutter test test/class_balance_share_fast_test.dart`.
 
 Skills live under `.cursor/skills/`. Slash: `/init` resyncs this file and
-the rules; `/repo auditandcleaning` is analysis only.
+the rules; `/repo auditandcleaning` is analysis only. `/playtest` continues
+the emulator save for about 10 minutes and writes what it finds.
 
 Hooks (`.cursor/hooks.json`): **sessionStart** injects the owner **Now:**
 line plus the Play-upload lock, and deletes `playshots/` images older than
@@ -154,6 +155,7 @@ stamina is STA.
 | Gear art | `tool/gear_style.py`, `tool/facit/`, `tool/gear_lookbook.py`, rule `gear-art-standard`, skill `gear-art`, skill `gear-lookbook` |
 | UI tokens | `lib/ui/theme.dart`, `docs/UI_THEME.md` |
 | Emulator look | `py -3 tool/adb_see.py` (UI tree, tap-by-label, `[IP]` log) |
+| Playtest | `py -3 tool/playtest_run.py`, `docs/PLAYTEST_MEMORY.md` |
 
 ## Conventions
 

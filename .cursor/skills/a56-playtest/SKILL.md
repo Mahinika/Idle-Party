@@ -127,5 +127,6 @@ edits still has the old isolate — that is not “the new build”.
 ## Related
 
 - Hub checklist on this device: `hub-smoke`
+- Ten-minute fault round: `playtest`
 - Agent-driven web clicks: `browser-playtest` (fallback)
 - Analyze/tests: `flutter-verify`

@@ -1,0 +1,49 @@
+{
+  "coverage": {
+    "early": ["hub", "path", "dungeon", "gear", "gold", "essence", "more"],
+    "mid": ["hub", "path", "dungeon", "gear", "bag", "gold", "essence", "more", "shop"],
+    "endgame": ["hub", "path", "dungeon", "gear", "bag", "gold", "essence", "more", "shop", "key"]
+  },
+  "screens": {
+    "hub": {
+      "files": ["lib/ui/hub_screen.dart", "lib/ui/hub/", "lib/core/hub_chase.dart", "lib/core/chase_contract.dart"],
+      "mask": []
+    },
+    "path": {
+      "files": ["lib/ui/hub/hub_world_map.dart", "lib/ui/hub/hub_endgame_map.dart"],
+      "mask": []
+    },
+    "dungeon": {
+      "files": ["lib/ui/spatial_dungeon_view.dart", "lib/ui/is2_shell.dart", "lib/spatial/", "lib/ui/shell/dungeon_"],
+      "mask": [[0.0, 0.14, 1.0, 0.78]]
+    },
+    "gear": {
+      "files": ["lib/ui/character_equip_panel.dart", "lib/visual/", "lib/ui/hero_paper_doll.dart", "lib/ui/hero_doll_sprite.dart"],
+      "mask": []
+    },
+    "bag": {
+      "files": ["lib/ui/shell/inventory_dock.dart", "lib/ui/shell/bag_"],
+      "mask": []
+    },
+    "gold": {
+      "files": ["lib/ui/shell/gold_dock.dart", "lib/ui/shell/forge_overlay.dart", "lib/ui/shell/market_overlay.dart"],
+      "mask": []
+    },
+    "essence": {
+      "files": ["lib/ui/shell/essence_dock.dart", "lib/ui/shell/essence_keep_panel.dart", "lib/core/blessing_constellation.dart"],
+      "mask": []
+    },
+    "more": {
+      "files": ["lib/ui/shell/settings_overlay.dart", "lib/ui/guides_overlay.dart", "lib/ui/shell/jobs_overlay.dart", "lib/ui/shell/craft_overlay.dart"],
+      "mask": []
+    },
+    "shop": {
+      "files": ["lib/ui/shell/shop_dock.dart"],
+      "mask": []
+    },
+    "key": {
+      "files": ["lib/ui/meta/keystone_sheet.dart", "lib/ui/meta/gauntlet_hub_panel.dart", "lib/ui/meta/rift_hub_panel.dart", "lib/ui/meta/greater_rift_hub_panel.dart", "lib/ui/meta/ashen_crown_hub_panel.dart"],
+      "mask": []
+    }
+  }
+}

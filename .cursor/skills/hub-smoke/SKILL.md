@@ -64,3 +64,4 @@ After ~4 failed clicks on the same control, stop. Report: screen, last label tri
 
 - Changelog honesty: `test/changelog_sync_test.dart`
 - Cadence: `docs/CONTENT_CADENCE.md`
+- Full phone round: skill `playtest` (`/playtest`)

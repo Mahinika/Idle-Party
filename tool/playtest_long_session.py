@@ -7,22 +7,18 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import time
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tool"))
+from playtest_checks import JARGON
+
 OUT = ROOT / "tool" / "out" / "long_session"
 URL = "http://localhost:8085/"
-
-# Words a brand-new player might not understand in the first hour
-JARGON = re.compile(
-    r"\b(AL\d+|KEY\+?\d*|Gauntlet|Rift|Ascend|Blessing|Apex|God Hand|"
-    r"FORGE|KEEP|Essence|\+\d+e\b|Mythic|Will of|KEYSTONE|REBORN|"
-    r"WotLK|ilvl|iLvl|affix)\b",
-    re.I,
-)
 
 
 def buttons(page) -> list[str]:
