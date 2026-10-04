@@ -706,6 +706,10 @@ _SEM_RECT = re.compile(
     r"Rect\.fromLTRB\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)"
 )
 _SEM_SCALE = re.compile(r"scaled by\s+([0-9.]+)x")
+_SEM_MATRIX = re.compile(
+    r"with transform\s*\[\[([^\]]+)\]\s*;\s*\[([^\]]+)\]\s*;\s*\[([^\]]+)\]\s*;\s*\[([^\]]+)\]\]",
+    re.S,
+)
 _SEM_LABEL = re.compile(r'label:\s*"(.*?)"', re.S)
 _SEM_ACTIONS = re.compile(r"actions:\s*([^\n]+)")
 _BOX = re.compile(r"^[\s│├└┬┤┼╭╮╯╰─]+")
@@ -716,28 +720,70 @@ def _plain_semantics(part: str) -> str:
     return "\n".join(_BOX.sub("", line) for line in part.splitlines())
 
 
+def _matrix_rows(plain: str) -> list[list[float]] | None:
+    match = _SEM_MATRIX.search(plain)
+    if match is None:
+        return None
+    rows = []
+    for group in match.groups():
+        rows.append([float(piece) for piece in group.split(",")])
+    if len(rows) != 4 or any(len(row) != 4 for row in rows):
+        return None
+    return rows
+
+
+def _map_rect(rect: tuple[float, float, float, float], rows: list[list[float]]) -> tuple[float, float, float, float]:
+    """Flutter prints the matrix with the translation in the last column."""
+    xs: list[float] = []
+    ys: list[float] = []
+    for x, y in ((rect[0], rect[1]), (rect[2], rect[1]), (rect[0], rect[3]), (rect[2], rect[3])):
+        xs.append(rows[0][0] * x + rows[0][1] * y + rows[0][3])
+        ys.append(rows[1][0] * x + rows[1][1] * y + rows[1][3])
+    return min(xs), min(ys), max(xs), max(ys)
+
+
 def parse_semantics(text: str) -> list[Node]:
     """Turn a Flutter semantics dump into the same nodes the UI dump uses.
 
-    Child rects are in logical pixels. A "scaled by 3.0x" line is the phone's
-    pixel ratio, so bounds come out in the 1080×2340 space the checks expect.
+    A child rect is in its parent's space. A "with transform" matrix moves a
+    local box onto the screen before the 3x phone scale is applied.
     """
-    scale = 1.0
+    marks = list(_SEM_NODE.finditer(text))
     found: list[Node] = []
-    for part in _SEM_NODE.split(text)[1:]:
-        plain = _plain_semantics(part)
-        rect = _SEM_RECT.search(plain)
-        if rect is None:
+    # depth, origin x, origin y, phone scale
+    stack: list[tuple[int, float, float, float]] = [(-1, 0.0, 0.0, 1.0)]
+    for index, mark in enumerate(marks):
+        line_start = text.rfind("\n", 0, mark.start()) + 1
+        next_line = (
+            text.rfind("\n", 0, marks[index + 1].start()) + 1
+            if index + 1 < len(marks)
+            else len(text)
+        )
+        depth = mark.start() - line_start
+        plain = _plain_semantics(text[line_start:next_line])
+        rect_match = _SEM_RECT.search(plain)
+        if rect_match is None:
             continue
-        if match := _SEM_SCALE.search(plain):
-            scale = float(match.group(1)) or 1.0
+        rect = tuple(float(rect_match.group(i)) for i in range(1, 5))
+        rows = _matrix_rows(plain)
+        if rows is not None:
+            rect = _map_rect(rect, rows)
+        while stack[-1][0] >= depth:
+            stack.pop()
+        _parent_depth, ox, oy, parent_scale = stack[-1]
+        logical = (ox + rect[0], oy + rect[1], ox + rect[2], oy + rect[3])
+        scale_match = _SEM_SCALE.search(plain)
+        scale = float(scale_match.group(1)) if scale_match else parent_scale
+        if scale <= 0:
+            scale = parent_scale or 1.0
+        stack.append((depth, logical[0], logical[1], scale))
         label_match = _SEM_LABEL.search(plain)
         label = " ".join(label_match.group(1).split()) if label_match else ""
         if not label:
             continue
         actions = _SEM_ACTIONS.search(plain)
         clickable = actions is not None and "tap" in actions.group(1)
-        box = tuple(int(round(float(rect.group(i)) * scale)) for i in range(1, 5))
+        box = tuple(int(round(value * scale)) for value in logical)
         found.append(
             Node(label, clickable, False, "Semantics", box[0], box[1], box[2], box[3])
         )

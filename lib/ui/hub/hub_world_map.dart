@@ -90,13 +90,19 @@ class SelectedZoneCaption extends StatelessWidget {
           button: true,
           label: '${_oneLineUnlocked()}. Tap for zone details',
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => _showDetail(context),
-            child: Text(
-              _oneLineUnlocked(),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+              child: Center(
+                child: Text(
+                  _oneLineUnlocked(),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+                ),
+              ),
             ),
           ),
         );

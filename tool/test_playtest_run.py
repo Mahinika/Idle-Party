@@ -148,16 +148,25 @@ SemanticsNode#0
    │ │ actions: tap
    │ │ flags: isButton
    │ │ label: "GEAR"
-   └─SemanticsNode#3
-     │ Rect.fromLTRB(12.0, 700.0, 40.0, 730.0)
+   │ └─SemanticsNode#3
+   │     Rect.fromLTRB(0.0, 0.0, 28.0, 30.0)
+   │     actions: tap
+   │     label: "GEAR"
+   └─SemanticsNode#4
+     │ Rect.fromLTRB(0.0, 0.0, 100.0, 40.0) with transform
+     │ [[1.0,0.0,0.0,12.0];
+     │ [0.0,1.0,0.0,400.0];
+     │ [0.0,0.0,1.0,0.0]; [0.0,0.0,0.0,1.0]]
      │ actions: tap
-     │ label: "GEAR"
+     │ label: "CLAIM QUESTS"
 """
     nodes = parse_semantics(text)
     gear = [node for node in nodes if node.label == "GEAR"]
     assert len(gear) == 1
     assert gear[0].clickable
     assert (gear[0].x1, gear[0].y1, gear[0].x2, gear[0].y2) == (36, 2100, 240, 2280)
+    claim = next(node for node in nodes if node.label == "CLAIM QUESTS")
+    assert (claim.x1, claim.y1) == (36, 1200)
 
 
 def test_log_hits_keep_the_game_and_skip_the_phone():
