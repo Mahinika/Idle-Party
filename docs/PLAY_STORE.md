@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | **1.12.193 (223)** published (API **2026-10-02**), full rollout. Managed publishing is off. |
+| Production | ⏳ review | **1.12.194 (224)** uploaded via API **2026-10-04**, full rollout. Track reads `completed`. Public page still names **1.12.193** until Google publishes. Managed publishing is off. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -17,7 +17,7 @@ Package id: **`com.idleparty.app`**
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 KEY/Gauntlet wired; 2026-09 Greater Rift `CgkIhuXGvNocEAIQAw` and all-time Party Power `CgkIhuXGvNocEAIQBA` published 2026-09-29. OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. |
 | Store listing copy (EN + 9 locales) | ✅ live | Default locale **en-US** + 9 translations committed **2026-09-25** (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`). In-game UI stays English. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
-| Screenshots + feature graphic | ⏳ review | **8 A56 phone shots** (Sandy fight, walk, TODAY, gear, party, path, welcome, ascend) plus feature graphic `feature_20261004.png` submitted **2026-10-04**. Console: *Ändringarna granskas* (quick checks, then review). Icon left in place — the new 512 PNG is the same file already on the listing. |
+| Screenshots + feature graphic | ✅ live | **8 A56 phone shots** and feature graphic `feature_20261004.png` are on the public page **2026-10-04**. Tablet shots are still the older title screen, hub menu, and FARM/PUSH floor. |
 | Listing assets freshness | shots 2026-10-04 @ 1.12.194 · video 2026-10-04 @ 1.12.194 · icon 2026-10-04 @ 1.12.194 · feature 2026-10-04 @ 1.12.194 | Phone shots and the Sandy preview are this build. `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than one patch. |
 | Preview video (YouTube) | ✅ sent | Every listing locale (11, including `pl-PL`) points at public Cognifox `cyBlN3HCR48` (`https://www.youtube.com/watch?v=cyBlN3HCR48`), committed **2026-10-04**. oEmbed works. Ads off, embed on, not for kids. YouTube filed the 9:16 film as a Short. Previous unlisted `UHLG28lHmPs`. `XfKog5CAiUs` stays unused (Play rejected that embed). |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
@@ -68,16 +68,17 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Production **1.12.193 (223)** published (API peek **2026-10-02**). Discord #announcements posted the patch notes.
 - [x] Store listing graphics submitted **2026-10-04** (no AAB): 8 A56 phone shots in order, feature graphic replaced. Console: *Ändringarna granskas*. YouTube URL left as `UHLG28lHmPs` in that graphics submit.
 - [x] Preview URL swapped **2026-10-04** (no AAB) to public `https://www.youtube.com/watch?v=cyBlN3HCR48` on all 11 listing locales. oEmbed confirmed first. Content ID: no claim.
+- [x] Owner asked upload of Production **1.12.194+224** (**2026-10-04**).
+- [x] Signed Production AAB **1.12.194+224** uploaded via Play API and sent for review (full rollout). Track reads `completed`. Public page still names **1.12.193** until Google publishes.
 
 ### Production upload paste (en-US release notes)
 
-From `docs/STORE_LISTING.md` — use when Console asks for release notes:
+Notes sent with **1.12.194 (224)**:
 
 ```
-• Heroes move their arms and legs. A walk lifts a foot and swings the opposite arm.
-• Armor reads as mail, leather, or holy plate. Weapons sit in the hand.
-• Shots and swings stop at walls. The party no longer sticks on corners.
-• The hub shows how many bosses are left until the next Ascend.
+• Swords, bows, and spells sound like the weapons they are.
+• A bowstring plays when an arrow leaves, and a spell plays when it is cast.
+• The hub and caves rotate songs, with a quiet stretch between them.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys

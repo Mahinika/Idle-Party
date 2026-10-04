@@ -125,13 +125,12 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Live Production: **1.12.193 (223)** published **2026-10-02**. Notes used on that upload:
+Live Production on the public page: **1.12.193 (223)** until Google publishes **1.12.194 (224)** (uploaded **2026-10-04**, full rollout). Notes sent with 224:
 
 ```
-• Heroes move their arms and legs. A walk lifts a foot and swings the opposite arm.
-• Armor reads as mail, leather, or holy plate. Weapons sit in the hand.
-• Shots and swings stop at walls. The party no longer sticks on corners.
-• The hub shows how many bosses are left until the next Ascend.
+• Swords, bows, and spells sound like the weapons they are.
+• A bowstring plays when an arrow leaves, and a spell plays when it is cast.
+• The hub and caves rotate songs, with a quiet stretch between them.
 ```
 
 ### Full description honesty (SHOP)
