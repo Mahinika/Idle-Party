@@ -1,6 +1,37 @@
 # Idle Party — Play growth (what we can do)
 
-**Updated:** 2026-10-02 · Category stays **Role Playing** (idle fantasy RPG).
+**Updated:** 2026-10-05 · Category stays **Role Playing** (idle fantasy RPG).
+
+### What 5 Oct changes
+
+Window **7 Sep–4 Oct** (Play grow page, device). **17,100** device
+impressions, **279** acquisitions, **101** first opens, **98** monthly
+active devices. Listing conversion **16.88%**. **0** experiments.
+**+196** exploration acquisitions / 90 days. D7 retained devices: **1**.
+
+Compared with the 2 Oct window (4 Sep–1 Oct): impressions **10,400 →
+17,100**, acquisitions **242 → 279**, first opens **83 → 101**, monthly
+active **90 → 98**, conversion **26.65% → 16.88%**. D7 is still **1**.
+About **36%** of device acquisitions opened (101 / 279). The last days
+in the window are still mostly **Explore Google Play** (often 80–100%
+of that day’s installs). 2–3 Oct were **6** installs each.
+
+Account home, users, last 30 days (updated **4 Oct**): installed
+audience **72**, user acquisitions **276**, rating **3.667**, gross
+**12 SEK**. Do not mix these with the device funnel above.
+
+Play vitals through **4 Oct**: no new crashes. The only non-zero days
+are still **23 Sep** version **214** (1 report, 1 user) and **30 Sep**
+version **222** (1 report, 1 user). No ANR rows. Crash-rate card is
+still a dash. Reviews API for the last week is empty. Rating is still
+**3.667** from **6** users (DE/NL/US 5★, AR 3★, JP/UA 2★). Production
+live is **1.12.194 (224)**, published **4 Oct**. This look did not
+re-read Firebase or AdMob.
+
+Until the owner names a different bet, the 2 Oct bets still hold: do
+not buy installs. The leak is still open-after-install and day-7, and
+the listing now converts worse while Explore shows the page to more
+people.
 
 ### What 2 Oct changes
 
