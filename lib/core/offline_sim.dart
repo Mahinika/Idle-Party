@@ -35,7 +35,10 @@ class OfflineSim {
       threatScale: _threatScale,
       afkAssist: ticketBoss ? false : _afkAssist,
     );
-    _maxSteps = min(12000, max(240, _maxFloors * 420));
+    _maxSteps = min(
+      OfflineProgress.offlineStepCapFor(state),
+      max(240, _maxFloors * 420),
+    );
   }
 
   /// Steps to run between yields — ~4 ms of work on a mid phone.
@@ -75,7 +78,10 @@ class OfflineSim {
 
   static int _budget(GameState state, int seconds) {
     if (!state.inDungeon || seconds <= 0) return 0;
-    var maxFloors = GameLogic.offlineFloorBudget(seconds);
+    var maxFloors = GameLogic.offlineFloorBudget(
+      seconds,
+      roomCap: OfflineProgress.offlineRoomCapFor(state),
+    );
     // Gauntlet AFK: hard soft-cap so offline can't mint endless climb rewards.
     if (state.inGauntlet) maxFloors = min(maxFloors, 6);
     // Rift / Greater Rift AFK: short wave budget — timer/kills resolve the run.

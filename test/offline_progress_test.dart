@@ -237,6 +237,25 @@ void main() {
     expect(over.secondsApplied, GoldIncome.hubChestCapSec);
     expect(over.awayForSeconds, 30 * 3600);
     expect(over.state.gold, full.state.gold);
+
+    final owned = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(shopLongAway: true),
+    );
+    final longFull = OfflineProgress.applyOfflineProgress(
+      owned,
+      const Duration(hours: 24),
+    );
+    final longOver = OfflineProgress.applyOfflineProgress(
+      owned,
+      const Duration(hours: 30),
+    );
+    expect(longFull.secondsApplied, GoldIncome.hubChestLongSec);
+    expect(longFull.hubChestStopped, isFalse);
+    expect(longOver.hubChestStopped, isTrue);
+    expect(longOver.secondsApplied, GoldIncome.hubChestLongSec);
+    expect(longOver.state.gold, longFull.state.gold);
+    expect(longFull.state.gold, greaterThan(full.state.gold));
+    expect(longOver.afkWhereLine.toLowerCase(), contains('24 hours'));
     expect(over.headline, 'Gold full · stopped at 12h');
     expect(over.welcomeLead.toLowerCase(), contains('stopped'));
     expect(over.welcomeLead.toLowerCase(), isNot(contains('sanctuary')));

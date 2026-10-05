@@ -52,14 +52,24 @@ abstract final class GoldIncome {
   /// are not this chest — the player is here. Dungeon offline stays separate.
   static const int hubChestCapSec = 12 * 3600;
 
+  /// Hub chest after SHOP Long Away.
+  static const int hubChestLongSec = 24 * 3600;
+
   static int get hubChestCapHours => hubChestCapSec ~/ 3600;
+
+  static int hubChestCapSecFor(GameState state) =>
+      state.metaDepth.shopLongAway ? hubChestLongSec : hubChestCapSec;
+
+  static int hubChestCapHoursFor(GameState state) =>
+      hubChestCapSecFor(state) ~/ 3600;
 
   /// What the party earns if the player leaves. Hub rate is steady gold.
   /// A cave keeps the fight going instead — that is not a second gold rate.
   static String awayPromise(GameState state) {
     final rate = perMinuteLabel(hubGoldPerMinute(state));
+    final hours = hubChestCapHoursFor(state);
     return 'While you are away the hub pays $rate for up to '
-        '$hubChestCapHours hours, then it stops. '
+        '$hours hours, then it stops. '
         'Leave the party in a cave and they keep fighting.';
   }
 
@@ -67,7 +77,7 @@ abstract final class GoldIncome {
 
   /// Tiny hub header suffix next to gold (full line in income sheet).
   static String hubRateCompact(GameState state) =>
-      '+${hubGoldPerMinute(state)}/m · ${hubChestCapHours}h';
+      '+${hubGoldPerMinute(state)}/m · ${hubChestCapHoursFor(state)}h';
 
   /// Rolling combat gold/min from credited samples (not a DPS formula).
   static const int sessionWindowMs = 120000;

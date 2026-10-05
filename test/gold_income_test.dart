@@ -11,6 +11,11 @@ void main() {
     expect(GoldIncome.hubRateLine(state), contains('g/min'));
     expect(GoldIncome.awayPromise(state), contains('While you are away'));
     expect(GoldIncome.awayPromise(state), contains('12 hours'));
+    final owned = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(shopLongAway: true),
+    );
+    expect(GoldIncome.awayPromise(owned), contains('24 hours'));
+    expect(GoldIncome.hubRateCompact(owned), contains('24h'));
     expect(GoldIncome.awayPromise(state).toLowerCase(), contains('stops'));
     expect(GoldIncome.awayPromise(state).toLowerCase(), contains('cave'));
     expect(GoldIncome.hubRateCompact(state), contains('12h'));

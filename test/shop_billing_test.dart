@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/ad_boost.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/gear/gear_stash.dart';
+import 'package:idle_party/core/gold_income.dart';
+import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/core/shop_billing.dart';
 import 'package:idle_party/core/shop_catalog.dart';
 import 'package:idle_party/models/meta_depth.dart';
@@ -136,6 +138,7 @@ void main() {
     );
     expect(ShopCatalog.extraPacks.map((e) => e.id), [
       'ad_free',
+      'long_away',
       'cinder_pouch',
       'supporter_qol',
     ]);
@@ -155,5 +158,36 @@ void main() {
   test('old saves default shopPermScrolls to 0', () {
     expect(const MetaDepthState().shopPermScrolls, 0);
     expect(MetaDepthState.fromJson(const {}).shopPermScrolls, 0);
+    expect(const MetaDepthState().shopLongAway, isFalse);
+    expect(MetaDepthState.fromJson(const {}).shopLongAway, isFalse);
+  });
+
+  test('long away is once, owned, and kept on ascend', () {
+    var state = GameLogic.createInitialState(now: now);
+    final item = ShopCatalog.byId['long_away']!;
+    expect(item.oneTime, isTrue);
+    expect(item.isConsumable, isFalse);
+    expect(item.priceLabel, '\$4.99');
+    state = ShopBilling.applyPurchase(state, item, now: now);
+    expect(state.metaDepth.shopLongAway, isTrue);
+    expect(ShopBilling.isOwned(state, item), isTrue);
+    expect(GoldIncome.hubChestCapSecFor(state), 24 * 3600);
+    expect(OfflineProgress.dungeonAwayCapSec(state), 16 * 3600);
+    expect(OfflineProgress.offlineRoomCapFor(state), 240);
+    expect(OfflineProgress.offlineStepCapFor(state), 24000);
+    final again = ShopBilling.applyPurchase(state, item, now: now);
+    expect(again.metaDepth.shopLongAway, isTrue);
+    final round = GameLogic.stateFromJson(state.toJson());
+    expect(round.metaDepth.shopLongAway, isTrue);
+    final ascended = GameLogic.ascend(
+      state.copyWith(bossVictories: 1),
+      now: now,
+    );
+    expect(ascended.metaDepth.shopLongAway, isTrue);
+    expect(
+      GameLogic.offlineFloorBudget(16 * 3600, roomCap: 240),
+      240,
+    );
+    expect(GameLogic.offlineFloorBudget(8 * 3600), lessThanOrEqualTo(120));
   });
 }

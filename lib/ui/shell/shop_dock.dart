@@ -106,7 +106,8 @@ class _ShopDockState extends State<ShopDock>
                     compact: true,
                   ),
                   _page(
-                    hint: 'Ad-free and a small thank-you pack. No extra combat class.',
+                    hint:
+                        'Ad-free, longer time away, and a small thank-you. No extra combat class.',
                     storeLine: storeLine,
                     items: ShopCatalog.extraPacks,
                     compact: false,
@@ -214,6 +215,7 @@ class _ShopRow extends StatelessWidget {
   static String? assetFor(ShopCatalogItem item) {
     if (item.permMask == AdBoost.permAll) return UiIcon.star;
     if (item.kind == ShopOfferKind.adFree) return UiIcon.heart;
+    if (item.kind == ShopOfferKind.longAway) return UiIcon.campfire;
     if (item.kind == ShopOfferKind.supporterQol) return UiIcon.trophy;
     if (item.kind == ShopOfferKind.boostHours) return UiIcon.flask;
     if (item.kind == ShopOfferKind.cinders) return UiIcon.gold;
@@ -242,6 +244,7 @@ class _ShopRow extends StatelessWidget {
       ShopOfferKind.boostHours =>
         '+${item.boostHours}h${item.oneTime ? ' · once' : ''}',
       ShopOfferKind.adFree => 'permanent',
+      ShopOfferKind.longAway => '16h cave · 24h chest · once',
       ShopOfferKind.supporterQol =>
         '+${item.bagSlots} bag · +${item.boostHours}h · once',
       ShopOfferKind.cinders => '${item.cinderGrant} Cinders',

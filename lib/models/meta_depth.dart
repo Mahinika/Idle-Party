@@ -336,6 +336,7 @@ class MetaDepthState {
     this.shopStarterClaimed = false,
     this.shopBagBonusSlots = 0,
     this.shopPermScrolls = 0,
+    this.shopLongAway = false,
     this.redeemedCoupons = const <String>[],
     this.monthPassKey = '',
     this.monthlyBestTimedKey = 0,
@@ -657,6 +658,9 @@ class MetaDepthState {
   /// Bitmask of forever SCROLLS from SHOP (same % as tickets, no extra power).
   final int shopPermScrolls;
 
+  /// SHOP Long Away: dungeon catch-up 16h and hub chest 24h. Survives Ascend.
+  final bool shopLongAway;
+
   /// Coupon ids already redeemed on this save. Survives Ascend.
   final List<String> redeemedCoupons;
 
@@ -850,6 +854,7 @@ class MetaDepthState {
     bool? shopStarterClaimed,
     int? shopBagBonusSlots,
     int? shopPermScrolls,
+    bool? shopLongAway,
     List<String>? redeemedCoupons,
     String? monthPassKey,
     int? monthlyBestTimedKey,
@@ -1017,6 +1022,7 @@ class MetaDepthState {
       shopStarterClaimed: shopStarterClaimed ?? this.shopStarterClaimed,
       shopBagBonusSlots: shopBagBonusSlots ?? this.shopBagBonusSlots,
       shopPermScrolls: shopPermScrolls ?? this.shopPermScrolls,
+      shopLongAway: shopLongAway ?? this.shopLongAway,
       redeemedCoupons: redeemedCoupons ?? this.redeemedCoupons,
       monthPassKey: monthPassKey ?? this.monthPassKey,
       monthlyBestTimedKey: monthlyBestTimedKey ?? this.monthlyBestTimedKey,
@@ -1178,6 +1184,7 @@ class MetaDepthState {
     'shopStarterClaimed': shopStarterClaimed,
     'shopBagBonusSlots': shopBagBonusSlots,
     'shopPermScrolls': shopPermScrolls,
+    'shopLongAway': shopLongAway,
     'redeemedCoupons': redeemedCoupons,
     'monthPassKey': monthPassKey,
     'monthlyBestTimedKey': monthlyBestTimedKey,
@@ -1412,6 +1419,7 @@ class MetaDepthState {
         0,
         127,
       ),
+      shopLongAway: (json['shopLongAway'] as bool?) ?? false,
       redeemedCoupons:
           (json['redeemedCoupons'] as List<dynamic>?)?.cast<String>() ??
           const [],

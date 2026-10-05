@@ -83,8 +83,10 @@ Notes sent with **1.12.194 (224)**:
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys
-(see `docs/SHOP_MONETIZATION.md`). **IAP SKUs (2026-09-10):** all five product
+(see `docs/SHOP_MONETIZATION.md`). **IAP SKUs (2026-09-10):** five product
 ids exist in Console and were **activated 2026-09-10** (1 purchase option each).
+**`long_away` activated 2026-10-05** ($4.99, option `long-away`). The live
+binary does not offer it until a build that contains the row ships.
 Smoke on a Play-installed build; restart the app so Billing refreshes.
 
 ### Production AAB upload checklist (agent + owner)

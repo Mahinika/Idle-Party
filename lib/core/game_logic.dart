@@ -3138,8 +3138,8 @@ class GameLogic {
   ) => OfflineProgress.applyOfflineProgress(state, elapsed);
   static GameState applyHubIdleProgress(GameState state, int seconds) =>
       OfflineProgress.applyHubIdleProgress(state, seconds);
-  static int offlineFloorBudget(int seconds) =>
-      OfflineProgress.offlineFloorBudget(seconds);
+  static int offlineFloorBudget(int seconds, {int roomCap = 120}) =>
+      OfflineProgress.offlineFloorBudget(seconds, roomCap: roomCap);
   static ({GameState state, int roomsCleared}) simulateSpatialOffline(
     GameState state,
     int seconds,

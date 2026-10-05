@@ -20,6 +20,9 @@ enum ShopOfferKind {
 
   /// Repeatable Cinder pack. Same relics a player can earn.
   cinders,
+
+  /// One-time longer away: 16h cave catch-up and a 24h hub gold chest.
+  longAway,
 }
 
 class ShopCatalogItem {
@@ -195,6 +198,16 @@ abstract final class ShopCatalog {
       boostHours: 24,
     ),
     ShopCatalogItem(
+      id: 'long_away',
+      name: 'Long Away',
+      description:
+          'Story caves catch up for 16 hours instead of 8 and fight twice as far. '
+          'Hub gold fills for 24 hours instead of 12. Gauntlet and rifts stay short. Once.',
+      priceLabel: '\$4.99',
+      kind: ShopOfferKind.longAway,
+      oneTime: true,
+    ),
+    ShopCatalogItem(
       id: 'cinder_pouch',
       name: 'Cinder pouch',
       description:
@@ -240,6 +253,7 @@ abstract final class ShopCatalog {
       .where(
         (e) =>
             e.kind == ShopOfferKind.adFree ||
+            e.kind == ShopOfferKind.longAway ||
             e.kind == ShopOfferKind.supporterQol ||
             e.kind == ShopOfferKind.cinders,
       )

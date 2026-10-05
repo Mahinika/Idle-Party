@@ -44,13 +44,14 @@ removed the ban on a whale ladder, gacha, and BiS-for-cash.
 | `boost_12h` | Consumable | $1.99 | +12h Full Boost | Legacy — restore only |
 | `ad_free` | Non-consumable | $2.99 | Ad-free + +2 tickets once | Hide WATCH; daily CLAIM TICKET (UTC) |
 | `day_boost_24h` | Consumable | $2.99 | +24h Full Boost | Legacy — restore only |
-| `supporter_qol` | Non-consumable | $4.99 | +4 bag slots + 12h + thank-you | Ceiling; **no extra combat class** |
+| `supporter_qol` | Non-consumable | $4.99 | +4 bag slots + 12h + thank-you | **no extra combat class** |
+| `long_away` | Non-consumable | $4.99 | Story-cave catch-up 16h (free 8h) and hub chest 24h (free 12h) | Same fight, twice the away window. Gauntlet and rifts stay on their short AFK caps. Once per save |
 | `perm_scroll_atk` (and gold/xp/move/loot/haste/rest) | Non-consumable | $0.99 | Forever that SCROLLS effect | Same % as tickets |
 | `perm_scrolls_all` | Non-consumable | $4.99 | All seven forever scrolls | Cheaper than 7×$0.99 |
 
 Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as tickets.
 
-**New SKUs need Play Console create + Activate** before live prices show. Console still only has the five 2026-09-10 SKUs (`starter_boost_6h` / `boost_12h` / `ad_free` / `day_boost_24h` / `supporter_qol`). Until Play returns a product, SHOP shows **NOT ON PLAY** instead of a price and a buy. Add the eight `perm_scroll_*` ids (`perm_scroll_atk` … `perm_scrolls_all`). Sideload BUY still grants in debug via the existing preview path.
+**New SKUs need Play Console create + Activate** before live prices show. Console has the five 2026-09-10 SKUs plus `long_away` (**activated 2026-10-05**, purchase option `long-away`, $4.99, legacy-compatible). Until Play returns a product, SHOP shows **NOT ON PLAY** instead of a price and a buy. The eight `perm_scroll_*` ids (`perm_scroll_atk` … `perm_scrolls_all`) and `cinder_pouch` are still not in Console. Sideload BUY still grants in debug via the existing preview path. Prices can take hours to show on a Play-installed build, and the current production binary does not list `long_away` until a build that contains it ships.
 
 ## Relation to existing systems
 
@@ -93,6 +94,7 @@ SHOP UI: **BUY** / **OWNED** + **RESTORE PURCHASES**.
 | `shopStarterClaimed` | One-time starter pack used |
 | `shopBagBonusSlots` | Extra bag slots from supporter QoL |
 | `shopPermScrolls` | Bitmask of forever SCROLLS from SHOP |
+| `shopLongAway` | Long Away owned: 16h cave catch-up, 24h hub chest |
 
 See also: [AD_POWERUPS_DESIGN.md](AD_POWERUPS_DESIGN.md),
 [CONTENT_CADENCE.md](CONTENT_CADENCE.md), owner preferences (cheap convenience

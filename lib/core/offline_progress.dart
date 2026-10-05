@@ -13,16 +13,53 @@ import 'offline_sim.dart';
 /// `test/offline_sim_slice_test.dart` for the guarantee that slicing changes
 /// no numbers.
 abstract final class OfflineProgress {
+  /// Free cave catch-up. Long Away raises this to [dungeonAwayLongSec].
+  static const int dungeonAwayBaseSec = 8 * 3600;
+
+  /// Cave catch-up after SHOP Long Away.
+  static const int dungeonAwayLongSec = 16 * 3600;
+
+  /// Room budget for a free overnight. The raw clock would clear far more.
+  static const int offlineRoomBaseCap = 120;
+
+  /// Room budget after Long Away. Twice the free overnight, still compressed.
+  static const int offlineRoomLongCap = 240;
+
+  /// Step budget for a free catch-up. Keeps boot from replaying a whole night.
+  static const int offlineStepBaseCap = 12000;
+
+  /// Step budget after Long Away, so the longer clock still fights further.
+  static const int offlineStepLongCap = 24000;
+
+  static bool longAwayOwned(GameState state) => state.metaDepth.shopLongAway;
+
+  static int dungeonAwayCapSec(GameState state) =>
+      longAwayOwned(state) ? dungeonAwayLongSec : dungeonAwayBaseSec;
+
+  static int offlineRoomCapFor(GameState state) =>
+      longAwayOwned(state) ? offlineRoomLongCap : offlineRoomBaseCap;
+
+  static int offlineStepCapFor(GameState state) =>
+      longAwayOwned(state) ? offlineStepLongCap : offlineStepBaseCap;
+
+  /// Seconds this absence may credit. Hub and cave use different caps.
+  static int creditedAwaySec(GameState state, int away) {
+    if (away <= 0) return 0;
+    return state.inDungeon
+        ? min(away, dungeonAwayCapSec(state))
+        : min(away, GoldIncome.hubChestCapSecFor(state));
+  }
+
   /// Result of crediting AFK time on boot / resume.
   /// Same credit as [applyOfflineProgress], but the dungeon replay runs in
   /// slices with the frame handed back between them — boot stays paintable
-  /// even after a full 8h absence.
+  /// even after a full night away.
   static Future<OfflineProgressResult> applyOfflineProgressAsync(
     GameState state,
     Duration elapsed,
   ) async {
     final away = elapsed.inSeconds;
-    final seconds = away.clamp(0, 8 * 3600);
+    final seconds = creditedAwaySec(state, away);
     if (seconds == 0 || !state.inDungeon) {
       return applyOfflineProgress(state, elapsed);
     }
@@ -45,8 +82,8 @@ abstract final class OfflineProgress {
     GameState state,
     Duration elapsed,
   ) {
-    // Dungeon catch-up stays an 8h fight. Hub gold is its own chest: it
-    // fills for [GoldIncome.hubChestCapSec], then stops.
+    // Dungeon catch-up is an 8h fight, 16h with Long Away. Hub gold is its
+    // own chest: 12h, or 24h with Long Away, then it stops.
     final away = max(0, elapsed.inSeconds);
     if (away == 0) {
       final next = state.copyWith(lastUpdated: DateTime.now());
@@ -61,9 +98,8 @@ abstract final class OfflineProgress {
         wasInDungeon: state.inDungeon,
       );
     }
-    final seconds = state.inDungeon
-        ? min(away, 8 * 3600)
-        : min(away, GoldIncome.hubChestCapSec);
+    final seconds = creditedAwaySec(state, away);
+    final hubCap = state.inDungeon ? 0 : GoldIncome.hubChestCapSecFor(state);
 
     var roomsCleared = 0;
     late GameState progressed;
@@ -82,7 +118,7 @@ abstract final class OfflineProgress {
       progressed: applyAwayBonus(state, progressed),
       seconds: seconds,
       secondsAway: away,
-      hubChestCapSec: state.inDungeon ? 0 : GoldIncome.hubChestCapSec,
+      hubChestCapSec: hubCap,
       roomsCleared: roomsCleared,
       wasInDungeon: state.inDungeon,
     );
@@ -140,16 +176,20 @@ abstract final class OfflineProgress {
 
   /// How many room clears offline combat may award for [seconds] away.
   /// Front-loaded for the first 30 minutes, then half rate, hard-capped.
-  static int offlineFloorBudget(int seconds) {
+  /// Free play caps at [offlineRoomBaseCap]. Long Away uses [offlineRoomLongCap].
+  static int offlineFloorBudget(
+    int seconds, {
+    int roomCap = offlineRoomBaseCap,
+  }) {
     if (seconds <= 0) return 0;
     // ~1 clear / 40s for the first 30 minutes (5m≈7, 30m≈45).
     if (seconds <= 30 * 60) {
-      return max(1, seconds ~/ 40);
+      return max(1, min(roomCap, seconds ~/ 40));
     }
     const firstBand = (30 * 60) ~/ 40; // 45
     // After 30m: ~1 clear / 80s (1h≈45+22, 8h≈45+337 → cap).
     final extra = (seconds - 30 * 60) ~/ 80;
-    return min(120, firstBand + extra);
+    return min(roomCap, firstBand + extra);
   }
 
   /// Replays in-dungeon combat while offline using [SpatialCombat] (same

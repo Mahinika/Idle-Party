@@ -68,6 +68,9 @@ abstract final class ShopBilling {
         md = md.copyWith(
           shopPermScrolls: md.shopPermScrolls | item.permMask,
         );
+      case ShopOfferKind.longAway:
+        if (md.shopLongAway) return state;
+        md = md.copyWith(shopLongAway: true);
     }
     return state.copyWith(metaDepth: md);
   }
@@ -83,6 +86,7 @@ abstract final class ShopBilling {
       ShopOfferKind.permScroll =>
         item.permMask != 0 &&
         (md.shopPermScrolls & item.permMask) == item.permMask,
+      ShopOfferKind.longAway => md.shopLongAway,
     };
   }
 }
