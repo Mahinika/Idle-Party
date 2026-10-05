@@ -18,6 +18,15 @@ import 'rift.dart';
 import 'greater_rift.dart';
 import 'ashen_crown.dart';
 
+/// Names today's check-in prize in front of the vault sentence.
+String _checkInLead(GameState state, String detail) {
+  if (!GameLogic.checkInActive(state) || state.metaDepth.dailyVaultClaimed) {
+    return detail;
+  }
+  final pay = GameLogic.checkInPayout(state);
+  return '${pay.name} · ${pay.prize}. $detail';
+}
+
 /// Kind of hub "today" chase - claimables first, then progress goals.
 enum HubChaseKind {
   /// Daily vault ready to claim ([GameLogic.claimDailyVault]).
@@ -138,12 +147,13 @@ class HubChase {
           ? ' Includes +${GameLogic.seasonWeeklyBonusEssence}e month bonus.'
           : '';
       final keyTalk = GameLogic.showKeystoneJargon(state);
+      final vaultLine = best >= 2 && keyTalk
+          ? 'Claim $pay + 1 Cinder (KEY +$best timed today). Covers your next camp upgrade.$bonusBit'
+          : 'Claim $pay + 1 Cinder. Covers your next camp upgrade.$bonusBit';
       return HubChase(
         kind: HubChaseKind.claimDailyVault,
         title: 'Claim Daily Vault',
-        detail: best >= 2 && keyTalk
-            ? 'Claim $pay + 1 Cinder (KEY +$best timed today). Covers your next camp upgrade.$bonusBit'
-            : 'Claim $pay + 1 Cinder. Covers your next camp upgrade.$bonusBit',
+        detail: _checkInLead(state, vaultLine),
         // READY chip owns urgency — no "N ready" progress echo.
         progressLabel: null,
         urgency: HubChaseUrgency.ready,
@@ -266,12 +276,14 @@ class HubChase {
         !md.dailyVaultClaimed &&
         md.dailyVaultClears < GameLogic.dailyVaultClearTarget &&
         md.dailyBestTimedKey == 1) {
-      return const HubChase(
+      return HubChase(
         kind: HubChaseKind.dailyVaultProgress,
         title: 'Daily Vault halfway — KEY +2',
-        detail:
-            'Timed KEY +1 already counts. Time KEY +2 to fill and claim '
-            'Daily Vault (not Daily Run).',
+        detail: _checkInLead(
+          state,
+          'Timed KEY +1 already counts. Time KEY +2 to fill and claim '
+          'Daily Vault (not Daily Run).',
+        ),
         progressLabel: 'KEY +1',
         urgency: HubChaseUrgency.almost,
         keyLevel: 2,
@@ -809,14 +821,15 @@ class HubChase {
   /// One player-facing daily habit: clear a cave, then claim on the hub.
   static HubChase _dailyVaultStartChase(GameState state) {
     final keyTalk = GameLogic.showKeystoneJargon(state);
+    final vaultLine = keyTalk
+        ? 'One PUSH floor for Daily Vault essence '
+              '(FARM does not count), or time KEY +2 under par for a bigger claim.'
+        : 'One PUSH clear fills today\'s reward. FARM loops do not. '
+              'Then claim on the hub.';
     return HubChase(
       kind: HubChaseKind.dailyVaultProgress,
       title: keyTalk ? 'Start Daily Vault' : 'Clear one cave today',
-      detail: keyTalk
-          ? 'One PUSH floor for Daily Vault essence '
-                '(FARM does not count), or time KEY +2 under par for a bigger claim.'
-          : 'One PUSH clear fills today\'s reward. FARM loops do not. '
-                'Then claim on the hub.',
+      detail: _checkInLead(state, vaultLine),
       progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
     );
   }

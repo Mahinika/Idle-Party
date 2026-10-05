@@ -249,6 +249,7 @@ class MetaDepthState {
     this.dailyVaultClears = 0,
     this.dailyBestTimedKey = 0,
     this.dailyVaultClaimed = false,
+    this.checkInDay = 1,
     this.pushPeakDate = '',
     this.pushPeakFloor = 0,
     this.prevPushPeakDate = '',
@@ -422,6 +423,11 @@ class MetaDepthState {
 
   /// Whether today's vault was claimed.
   final bool dailyVaultClaimed;
+
+  /// Next check-in day (1–7) paid on the next Daily Vault claim after a boss.
+  /// Advances only on that claim. A missed UTC day does not reset it.
+  /// Day 7 wraps back to 1. Survives Ascend with the rest of meta.
+  final int checkInDay;
 
   /// UTC date key for today's best PUSH floor clear (Daily Run scaling).
   final String pushPeakDate;
@@ -757,6 +763,7 @@ class MetaDepthState {
     int? dailyVaultClears,
     int? dailyBestTimedKey,
     bool? dailyVaultClaimed,
+    int? checkInDay,
     String? pushPeakDate,
     int? pushPeakFloor,
     String? prevPushPeakDate,
@@ -912,6 +919,7 @@ class MetaDepthState {
       dailyVaultClears: dailyVaultClears ?? this.dailyVaultClears,
       dailyBestTimedKey: dailyBestTimedKey ?? this.dailyBestTimedKey,
       dailyVaultClaimed: dailyVaultClaimed ?? this.dailyVaultClaimed,
+      checkInDay: checkInDay ?? this.checkInDay,
       pushPeakDate: pushPeakDate ?? this.pushPeakDate,
       pushPeakFloor: pushPeakFloor ?? this.pushPeakFloor,
       prevPushPeakDate: prevPushPeakDate ?? this.prevPushPeakDate,
@@ -1083,6 +1091,7 @@ class MetaDepthState {
     'dailyVaultClears': dailyVaultClears,
     'dailyBestTimedKey': dailyBestTimedKey,
     'dailyVaultClaimed': dailyVaultClaimed,
+    'checkInDay': checkInDay,
     'pushPeakDate': pushPeakDate,
     'pushPeakFloor': pushPeakFloor,
     'prevPushPeakDate': prevPushPeakDate,
@@ -1254,6 +1263,7 @@ class MetaDepthState {
       dailyBestTimedKey: ((json['dailyBestTimedKey'] as num?)?.toInt() ?? 0)
           .clamp(0, kEndlessLadderBound),
       dailyVaultClaimed: (json['dailyVaultClaimed'] as bool?) ?? false,
+      checkInDay: ((json['checkInDay'] as num?)?.toInt() ?? 1).clamp(1, 7),
       pushPeakDate: (json['pushPeakDate'] as String?) ?? '',
       pushPeakFloor: ((json['pushPeakFloor'] as num?)?.toInt() ?? 0).clamp(
         0,

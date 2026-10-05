@@ -22,6 +22,9 @@ Future<void> showOfflineProgressDialog(
   final summary = director.offlineSummary;
   if (summary == null) return;
   final contract = ChaseContract.fromState(summary.state);
+  final checkInLine = GameLogic.checkInWelcomeLine(summary.state);
+  final showCheckIn =
+      checkInLine.isNotEmpty && !contract.detail.contains('Check-in');
   final chase = contract.chase;
   final rows = summary.highlightRows;
 
@@ -104,6 +107,13 @@ Future<void> showOfflineProgressDialog(
                 GoldIncome.awayPromise(summary.state),
                 style: GameTheme.body(size: 13, color: GameTheme.mossLit),
               ),
+              if (showCheckIn) ...[
+                const SizedBox(height: 6),
+                Text(
+                  checkInLine,
+                  style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+                ),
+              ],
               if (rows.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 for (final row in rows)

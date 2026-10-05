@@ -23,6 +23,7 @@ import 'dungeon_generator.dart';
 import 'economy_service.dart';
 import 'blessing_constellation.dart';
 import 'game_state.dart';
+import 'check_in.dart';
 import 'keystone.dart';
 import 'logic_notices.dart';
 import 'rift.dart';
@@ -1939,6 +1940,28 @@ class GameLogic {
   /// Daily vault claim payout (timed-key table + Dawn Tithe).
   static int dailyVaultClaimEssence(GameState state) =>
       _dailyVaultClaimEssence(state);
+
+  /// Check-in prizes start after the first boss or Ascend.
+  static bool checkInActive(GameState state) => showDailyChase(state);
+
+  static CheckInPayout checkInPayout(GameState state, {int? day}) {
+    final zone = max(1, state.highestDungeonCleared + 1);
+    return CheckIn.payout(
+      day: day ?? state.metaDepth.checkInDay,
+      sanctuaryCost: cheapestSanctuaryNextCost(state),
+      zoneScale: zone,
+    );
+  }
+
+  /// Welcome Back line. Empty in the first hour.
+  /// After today's vault is claimed, names tomorrow's prize.
+  static String checkInWelcomeLine(GameState state) {
+    if (!checkInActive(state)) return '';
+    final pay = checkInPayout(state);
+    return state.metaDepth.dailyVaultClaimed
+        ? pay.tomorrowLine
+        : pay.waitingLine;
+  }
 
   /// Essence shown on CLAIM VAULT — same as [claimDailyVault], including
   /// the first-of-month season bonus when it is still unclaimed.

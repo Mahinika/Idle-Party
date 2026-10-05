@@ -322,6 +322,14 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                     color: GameTheme.parchmentDim,
                   ),
                 ),
+                if (GameLogic.checkInActive(state)) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    GameLogic.checkInWelcomeLine(state),
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+                  ),
+                ],
                 if (vaultReady) ...[
                   const SizedBox(height: 6),
                   GameButton(

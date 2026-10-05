@@ -27,6 +27,8 @@ ALMOST always beats Daily / KEY habit / vault-start grind. First hour push beats
 
 **Daily ordlista (three systems):** Daily Vault (UTC claim) · Daily Run (+25e floor scaled from yesterday's PUSH peak + 1) · Quests Daily (MORE board). Never collapse them into one “daily” button.
 
+**Check-in:** rides the Daily Vault claim after the first boss or Ascend. Days 1–6 pay a large prize, day 7 a jackpot. The row advances only on claim, so a missed UTC day does not reset it. Not a fourth daily.
+
 **Rift consolidation:** TODAY chases **Ranked GR** before **Farm Rift** (`_farmRiftChaseReady` — GR1 clear or GR milestones done). Ranked GR next rank lives on hub ENDGAME; Farm Rift dial stays on KEY. Farm Rift is not deleted.
 
 **Season clocks:** UTC day (vault/run) · ISO week (KEY affix + week goal) · calendar month (vault bonus) · Play month (boards). Hub meta pulse crumbs (`KEY +N`, `Week · …`) stay off when the hunt is already KEY / Gauntlet / Ranked GR / Farm Rift / Ashen. An unfilled Daily Vault still shows `Vault n/target` under that hunt. One hunt still wins.

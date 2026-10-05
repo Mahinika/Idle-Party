@@ -154,6 +154,9 @@ int _dailyVaultClaimPreviewEssence(GameState state, {DateTime? now}) {
       !state.metaDepth.claimedSeasonRewards.contains(month)) {
     gain += GameLogic.seasonWeeklyBonusEssence;
   }
+  if (GameLogic.checkInActive(state)) {
+    gain += GameLogic.checkInPayout(state).essence;
+  }
   return gain;
 }
 
@@ -202,6 +205,13 @@ GameState _claimDailyVault(GameState state, {DateTime? now}) {
   final month = GameLogic.isoMonthKey((now ?? DateTime.now()).toUtc());
   final notices = <String>[];
   final titles = List<String>.from(md.titles);
+  final checkIn = GameLogic.checkInActive(next)
+      ? GameLogic.checkInPayout(next)
+      : null;
+  if (checkIn != null) {
+    essenceGain += checkIn.essence;
+    notices.add('${checkIn.name} · ${checkIn.prize}');
+  }
   if (month.isNotEmpty && !seasonClaims.contains(month)) {
     seasonClaims.add(month);
     essenceGain += GameLogic.seasonWeeklyBonusEssence;
@@ -216,9 +226,16 @@ GameState _claimDailyVault(GameState state, {DateTime? now}) {
   LogicNotices.setMetaPayoffs(notices);
   next = next.copyWith(
     essence: next.essence + essenceGain,
+    gold: next.gold + (checkIn?.gold ?? 0),
+    lifetimeGoldEarned: next.lifetimeGoldEarned + (checkIn?.gold ?? 0),
     metaDepth: md.copyWith(
       dailyVaultClaimed: true,
-      cinders: md.cinders + 1,
+      cinders: min(9999, md.cinders + 1 + (checkIn?.cinders ?? 0)),
+      embers: md.embers + (checkIn?.embers ?? 0),
+      adTickets: min(9999, md.adTickets + (checkIn?.adTickets ?? 0)),
+      checkInDay: checkIn == null
+          ? md.checkInDay
+          : CheckIn.nextDay(checkIn.day),
       claimedSeasonRewards: seasonClaims,
       titles: titles,
     ),

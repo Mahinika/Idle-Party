@@ -164,6 +164,8 @@ abstract final class GameGuides {
         '• Tap ENTER DUNGEON and beat a floor.\n'
         '• The hub hunt says Clear one cave today until the vault fills.\n'
         '• Then CLAIM VAULT for essence + 1 Cinder.\n'
+        '• That claim also pays Check-in. Days 1–6 are a large prize. '
+        'Day 7 is a jackpot. A missed day does not reset the row.\n'
         '• Daily Vault progress resets at UTC midnight. That is the daily job.',
   );
 
@@ -172,7 +174,8 @@ abstract final class GameGuides {
     title: 'DAILY VAULT',
     body:
         'One dungeon clear fills today\'s Daily Vault, then CLAIM VAULT '
-        'for essence + 1 Cinder.\n\n'
+        'for essence + 1 Cinder, plus Check-in '
+        '(days 1–6 a large prize, day 7 a jackpot; a missed day does not reset the row).\n\n'
         '• The hub hunt names this job until you claim.\n'
         '• First Daily Vault claim of each calendar month also pays a season bonus.\n'
         '• Daily Vault resets at UTC midnight.\n'
@@ -299,7 +302,7 @@ abstract final class GameGuides {
         '• Fill today’s Daily Vault with one PUSH clear (not a FARM loop), then claim '
         'essence + 1 Cinder.\n'
         '• CLAIM VAULT pays the timed-key essence table, plus Dawn Tithe, plus enough for one CAMP upgrade, '
-        'plus 1 Cinder. First claim of each calendar month also pays a season bonus.\n'
+        'plus 1 Cinder, plus Check-in (days 1–6 a large prize, day 7 a jackpot; a missed day does not reset the row). First claim of each calendar month also pays a season bonus.\n'
         '• The hub hunt and offline Up next share one chase (claim → READY → '
         'ALMOST → grind) — same title whether you are in the hub or returning from AFK.\n'
         '• Welcome-back says where you were: hub = sanctuary gold, plus essence after a while; '
@@ -849,7 +852,7 @@ abstract final class GameGuides {
           '• Fill today’s Daily Vault with one PUSH clear (not a FARM loop), a timed KEY +2, '
           'or a Gauntlet clear, then claim essence + 1 Cinder.\n'
           '• CLAIM VAULT pays the timed-key essence table, plus Dawn Tithe, plus enough for one CAMP upgrade, '
-          'plus 1 Cinder. First claim of each calendar month also pays a season bonus.\n'
+          'plus 1 Cinder, plus Check-in (days 1–6 a large prize, day 7 a jackpot; a missed day does not reset the row). First claim of each calendar month also pays a season bonus.\n'
           '• When every active hero is Lv${GameLogic.maxHeroLevel}: KEY unlocks — time a KEY +2 (or higher) for a bigger '
           'vault claim. The hub hunt may chase KEY / Gauntlet / Ranked GR / Farm Rift.\n'
           '• The hub hunt and offline Up next share one chase (claim → READY → '

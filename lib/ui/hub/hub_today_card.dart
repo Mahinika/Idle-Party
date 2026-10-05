@@ -213,7 +213,7 @@ class HubTodayCard extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 chase.detail,
-                maxLines: 2,
+                maxLines: 4,
                 overflow: TextOverflow.ellipsis,
                 style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
               ),
