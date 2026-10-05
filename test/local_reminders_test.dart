@@ -40,24 +40,24 @@ void main() {
     expect(LocalReminders.shouldOfferOptIn(state), isFalse);
   });
 
-  test('first loot is not the ping — wait until gold came in while away', () {
+  test('first loot is not the ping — wait until hub gold is ticking', () {
     final hub = _afterFirstLoot();
     expect(LocalReminders.shouldOfferOptIn(hub), isFalse);
     expect(LocalReminders.showSettingsToggle(hub), isTrue);
   });
 
-  test('after welcome-back gold on the hub, offer once — never in combat', () {
-    final hub = FunnelAnalytics.onOfflineGold(_afterFirstLoot()).state;
-    expect(LocalReminders.shouldOfferOptIn(hub), isTrue);
-    expect(LocalReminders.showSettingsToggle(hub), isTrue);
+  test('once hub gold is ticking, offer once — never in a fight', () {
+    final ticking = _afterFirstLoot().copyWith(
+      metaDepth: _afterFirstLoot().metaDepth.copyWith(hubAfkSec: 60),
+    );
+    expect(LocalReminders.shouldOfferOptIn(ticking), isTrue);
+    expect(LocalReminders.showSettingsToggle(ticking), isTrue);
     expect(
-      LocalReminders.shouldOfferOptIn(
-        FunnelAnalytics.onOfflineGold(_afterFirstLoot(inDungeon: true)).state,
-      ),
+      LocalReminders.shouldOfferOptIn(ticking.copyWith(inDungeon: true)),
       isFalse,
     );
 
-    final dismissed = LocalReminders.setOptIn(hub, enabled: false);
+    final dismissed = LocalReminders.setOptIn(ticking, enabled: false);
     expect(LocalReminders.shouldOfferOptIn(dismissed), isFalse);
     expect(dismissed.metaDepth.notifyPrompted, isTrue);
     expect(dismissed.metaDepth.notifyOptIn, isFalse);
@@ -83,6 +83,7 @@ void main() {
     expect(blob, isNot(contains('essence')));
     expect(blob, isNot(contains('combat')));
     expect(LocalReminders.optInBody.toLowerCase(), contains('settings'));
+    expect(LocalReminders.optInBody.toLowerCase(), contains('12 hours'));
     expect(LocalReminders.optInBody.toLowerCase(), isNot(contains('key')));
   });
 

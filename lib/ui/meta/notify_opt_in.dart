@@ -10,7 +10,7 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 
-/// One-time hub card after first loot. Never install, never combat.
+/// One-time hub card once sanctuary gold is ticking. Never install, never combat.
 class NotifyOptInOverlay extends StatelessWidget {
   const NotifyOptInOverlay({super.key, required this.director});
 

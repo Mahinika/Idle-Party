@@ -1,6 +1,7 @@
 import 'funnel_analytics.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'gold_income.dart';
 
 /// One scheduled away ping (id is stable so gold/cave overwrite themselves).
 class LocalPing {
@@ -30,8 +31,9 @@ abstract final class LocalReminders {
   static const String caveBodyNew = 'Your party is ready when you are.';
   static const String caveBodyDaily = 'One cave is waiting today.';
   static const String optInTitle = 'A quiet ping?';
-  static const String optInBody =
-      'Want a reminder when gold is waiting, or when a cave is ready? '
+  static String get optInBody =>
+      'Want a reminder when hub gold is waiting, or when a cave is ready? '
+      'Gold fills for ${GoldIncome.hubChestCapHours} hours, then stops. '
       'At most a couple a day. Never during a fight. Turn off anytime in SETTINGS.';
 
   static bool milestoneReached(GameState state) {
@@ -47,14 +49,14 @@ abstract final class LocalReminders {
         state.ascensionLevel >= 1;
   }
 
-  /// Hub card after gold actually came in while away — the promise is real.
-  /// Never on install, never in combat, never before that Welcome Back.
+  /// Hub card once sanctuary gold is actually ticking.
+  /// Never on install, never in a fight, never before the chest has started.
   static bool shouldOfferOptIn(GameState state) {
     if (state.inDungeon) return false;
     if (state.metaDepth.notifyPrompted || state.metaDepth.notifyOptIn) {
       return false;
     }
-    if (!FunnelAnalytics.has(state, FunnelAnalytics.offlineGold)) return false;
+    if (state.metaDepth.hubAfkSec <= 0) return false;
     return milestoneReached(state);
   }
 

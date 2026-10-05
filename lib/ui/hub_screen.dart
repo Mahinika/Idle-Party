@@ -16,6 +16,7 @@ import '../core/hub_chase.dart';
 import '../core/hub_endgame_act.dart';
 import '../core/hub_primary_cta.dart';
 import '../core/keystone.dart';
+import '../core/local_reminders.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
 import '../models/vfx_quality.dart';
@@ -77,6 +78,7 @@ class _HubScreenState extends State<HubScreen>
   bool _offeredWhatsNew = false;
   bool _offeredDiscordThanks = false;
   bool _offeredNotifyOptIn = false;
+  bool _notifyWatch = false;
   bool _offeredPlayReview = false;
   bool _userPickedZone = false;
   bool _showEndgameMap = false;
@@ -156,6 +158,7 @@ class _HubScreenState extends State<HubScreen>
         _torch.repeat(reverse: true);
       });
     });
+    director.addListener(_onDirectorForNotify);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       unawaited(DungeonArtWarmup.warm(director.state.dungeonId));
       director.ensureMarketListings();
@@ -164,9 +167,19 @@ class _HubScreenState extends State<HubScreen>
       await Future<void>.delayed(const Duration(milliseconds: 450));
       if (!mounted) return;
       // One overlay card per hub visit after offline summary.
-      if (await _maybeShowWhatsNew()) return;
-      if (await _maybeShowDiscordThanks()) return;
-      if (await _maybeShowNotifyOptIn()) return;
+      if (await _maybeShowWhatsNew()) {
+        _notifyWatch = true;
+        return;
+      }
+      if (await _maybeShowDiscordThanks()) {
+        _notifyWatch = true;
+        return;
+      }
+      if (await _maybeShowNotifyOptIn()) {
+        _notifyWatch = true;
+        return;
+      }
+      _notifyWatch = true;
       await _maybeShowPlayReview();
     });
   }
@@ -204,9 +217,17 @@ class _HubScreenState extends State<HubScreen>
     return true;
   }
 
+  void _onDirectorForNotify() {
+    if (!_notifyWatch || !mounted || _offeredNotifyOptIn) return;
+    if (director.offlineSummary != null) return;
+    if (!LocalReminders.shouldOfferOptIn(director.state)) return;
+    unawaited(_maybeShowNotifyOptIn());
+  }
+
   Future<bool> _maybeShowNotifyOptIn() async {
     if (_offeredNotifyOptIn || !mounted) return false;
     if (director.state.inDungeon) return false;
+    if (director.offlineSummary != null) return false;
     if (!NotifyOptInOverlay.shouldOffer(director)) return false;
     _offeredNotifyOptIn = true;
     await NotifyOptInOverlay.show(context, director);
@@ -228,6 +249,7 @@ class _HubScreenState extends State<HubScreen>
 
   @override
   void dispose() {
+    director.removeListener(_onDirectorForNotify);
     _torch.dispose();
     super.dispose();
   }
