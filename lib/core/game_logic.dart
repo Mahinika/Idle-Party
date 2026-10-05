@@ -264,8 +264,25 @@ class GameLogic {
     for (final d in DungeonCatalog.all) d.id: d.name,
   };
 
-  static int bossFloorFor(GameState state) =>
-      DungeonGenerator.bossFloorFor(state.ascensionLevel);
+  /// First kill sits on the next floor after the gold, so one sitting can
+  /// reach it. Later climbs use [DungeonGenerator.bossFloorFor] (5 + AL).
+  static const int firstBossFloor = 2;
+
+  static bool firstBossPending(GameState state) =>
+      state.ascensionLevel <= 0 &&
+      state.bossVictories <= 0 &&
+      state.metaDepth.lifetimeBossKills <= 0;
+
+  static int bossFloorFor(GameState state) => firstBossPending(state)
+      ? firstBossFloor
+      : DungeonGenerator.bossFloorFor(state.ascensionLevel);
+
+  /// Zone pushes pass this so floor 2 is the boss only while [firstBossPending].
+  /// Gauntlet and rifts keep their own boss cadence.
+  static int? pushBossFloor(GameState state) {
+    if (state.inGauntlet || state.inAnyRiftMode) return null;
+    return bossFloorFor(state);
+  }
 
   static GameState enterDungeon(GameState state, {String dungeonId = 'sandy'}) {
     final def = DungeonCatalog.byId(dungeonId);
@@ -281,13 +298,21 @@ class GameLogic {
     final mirrorSalt = LocalSeasonCatalog.mirrorLayoutSeed(state);
     final layoutSeed = mirrorSalt == 0 ? baseSeed : baseSeed ^ mirrorSalt;
     final primed = _beginKeystoneRun(ensureWeeklyContract(state));
+    final bossAt = bossFloorFor(primed);
+    final resume =
+        primed.dungeonMode != DungeonMode.farm &&
+        firstBossPending(primed) &&
+        primed.highestFloorCleared > 0 &&
+        primed.highestFloorCleared < bossAt;
+    final startFloor = resume ? primed.highestFloorCleared + 1 : 1;
     final floor = DungeonGenerator.generateFloor(
-      1,
+      startFloor,
       ascensionLevel: primed.ascensionLevel,
       dungeonId: dungeonId,
       layoutSeed: layoutSeed,
       keyLevel: layoutKeyLevel(primed),
       crowded: layoutCrowded(primed),
+      bossFloor: bossAt,
     );
     final room = floor.first;
     return primed.copyWith(
@@ -295,7 +320,7 @@ class GameLogic {
       inGauntlet: false,
       dungeonId: dungeonId,
       dungeonMode: primed.dungeonMode,
-      highestFloorCleared: 0,
+      highestFloorCleared: resume ? primed.highestFloorCleared : 0,
       currentRoom: room,
       dungeonFloor: floor,
       enemies: createEnemyGroup(room, dungeonId: dungeonId, fromState: primed),
@@ -845,6 +870,7 @@ class GameLogic {
       layoutSeed: layoutSeed,
       keyLevel: layoutKeyLevel(state),
       crowded: layoutCrowded(state),
+      bossFloor: pushBossFloor(state),
     );
     final firstRoom = floor.first;
     return state.copyWith(
@@ -1390,6 +1416,7 @@ class GameLogic {
       layoutSeed: layoutSeed,
       keyLevel: layoutKeyLevel(state),
       crowded: layoutCrowded(state),
+      bossFloor: pushBossFloor(state),
     );
     final firstRoom = floor.first;
     return state.copyWith(
@@ -2313,6 +2340,7 @@ class GameLogic {
       bossEvery: gauntlet ? gauntletBossEvery : null,
       keyLevel: layoutKeyLevel(awarded),
       crowded: layoutCrowded(awarded),
+      bossFloor: pushBossFloor(awarded),
     );
     final nextRoom = nextFloor.first;
     final gauntletEss = gauntlet

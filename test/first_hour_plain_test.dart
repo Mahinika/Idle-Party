@@ -83,7 +83,7 @@ void main() {
     expect(chase.detail.toLowerCase(), contains('floor 2'));
     expect(chase.detail.toLowerCase(), contains('boss'));
     expect(chase.detail.toLowerCase(), isNot(contains('enter the cave')));
-    expect(chase.progressLabel, 'Floor 1/5');
+    expect(chase.progressLabel, 'Floor 1/2');
     expect(chase.title.toUpperCase(), isNot(contains('KEY')));
 
     final contract = ChaseContract.fromState(state, now: now);

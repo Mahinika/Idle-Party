@@ -19,12 +19,13 @@ class DungeonGenerator {
     int? bossEvery,
     int keyLevel = 0,
     bool crowded = true,
+    int? bossFloor,
   }) {
     final random = Random(floorNumber * 7919 + dungeonId.hashCode + layoutSeed);
-    final bossFloor = bossFloorFor(ascensionLevel);
+    final bossAt = bossFloor ?? bossFloorFor(ascensionLevel);
     final isBoss = bossEvery != null && bossEvery > 0
         ? floorNumber > 0 && floorNumber % bossEvery == 0
-        : floorNumber == bossFloor;
+        : floorNumber == bossAt;
     final isTreasure = !isBoss && floorNumber % 6 == 0;
     // Elites often after the early ramp; rare before F4.
     final eliteChance = floorNumber <= 3 ? 0.14 : 0.38;
@@ -76,6 +77,7 @@ class DungeonGenerator {
     int? bossEvery,
     int keyLevel = 0,
     bool crowded = true,
+    int? bossFloor,
   }) {
     return <DungeonRoom>[
       generateFloorRoom(
@@ -86,6 +88,7 @@ class DungeonGenerator {
         bossEvery: bossEvery,
         keyLevel: keyLevel,
         crowded: crowded,
+        bossFloor: bossFloor,
       ),
     ];
   }

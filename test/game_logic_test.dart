@@ -2634,6 +2634,47 @@ void main() {
     expect(map.at(0, 0), TileKind.wall);
   });
 
+  test('first boss is the next floor, then the climb uses 5 plus ascension', () {
+    final fresh = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+    expect(GameLogic.firstBossPending(fresh), isTrue);
+    expect(GameLogic.bossFloorFor(fresh), 2);
+    expect(DungeonGenerator.bossFloorFor(0), 5);
+
+    final run = GameLogic.enterDungeon(fresh);
+    expect(run.currentRoom.floorNumber, 1);
+    expect(run.currentRoom.type, isNot(RoomType.boss));
+
+    final afterGold = GameLogic.completeCurrentRoom(
+      run,
+      goldGain: 10,
+      skipLootRoll: true,
+    );
+    expect(afterGold.inDungeon, isTrue);
+    expect(afterGold.currentRoom.floorNumber, 2);
+    expect(afterGold.currentRoom.type, RoomType.boss);
+    expect(afterGold.highestFloorCleared, 1);
+
+    final left = GameLogic.leaveDungeon(afterGold);
+    final resumed = GameLogic.enterDungeon(left);
+    expect(resumed.currentRoom.floorNumber, 2);
+    expect(resumed.currentRoom.type, RoomType.boss);
+    expect(resumed.highestFloorCleared, 1);
+
+    final won = GameLogic.completeCurrentRoom(
+      resumed,
+      goldGain: 20,
+      skipLootRoll: true,
+    );
+    expect(won.inDungeon, isFalse);
+    expect(won.bossVictories, greaterThan(0));
+    expect(GameLogic.bossFloorFor(won), 5);
+
+    final nextRun = GameLogic.enterDungeon(won);
+    expect(nextRun.currentRoom.floorNumber, 1);
+    expect(nextRun.highestFloorCleared, 0);
+    expect(nextRun.currentRoom.type, isNot(RoomType.boss));
+  });
+
   test('bossFloor formula is 5 plus ascension', () {
     expect(DungeonGenerator.bossFloorFor(0), 5);
     expect(DungeonGenerator.bossFloorFor(2), 7);

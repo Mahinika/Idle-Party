@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
@@ -20,13 +21,18 @@ void main() {
     void probe(String label, GameState base, {int trials = 10}) {
       report.writeln('\n## $label');
       rates[label] = <int, double>{};
-      for (final floor in [1, 2, 3, 5, GameLogic.bossFloorFor(base)]) {
+      final campaignBoss = DungeonGenerator.bossFloorFor(base.ascensionLevel);
+      for (final floor in [1, 2, 3, 5, campaignBoss]) {
         var clears = 0;
         var wipes = 0;
         var timeouts = 0;
         var hpSum = 0.0;
+        // The first kill is on floor 2. The wall check stays the 5+AL boss.
+        final climb = floor == campaignBoss && GameLogic.firstBossPending(base)
+            ? base.copyWith(bossVictories: 1)
+            : base;
         for (var t = 0; t < trials; t++) {
-          var state = GameLogic.enterDungeon(base, dungeonId: 'sandy');
+          var state = GameLogic.enterDungeon(climb, dungeonId: 'sandy');
           state = GameLogic.setDungeonMode(state, DungeonMode.push);
           if (floor > 1) {
             state = state.copyWith(highestFloorCleared: floor);
@@ -95,11 +101,12 @@ void main() {
 
     // —— CI gates (attrition difficulty, not one-shots / not trivia) ——
     final freshF1 = rates['FRESH']![1]!;
-    final freshBoss = rates['FRESH']![GameLogic.bossFloorFor(fresh)]!;
+    final campaignBoss = DungeonGenerator.bossFloorFor(fresh.ascensionLevel);
+    final freshBoss = rates['FRESH']![campaignBoss]!;
     final gear10F1 = rates['GEAR10']![1]!;
-    final gear10Boss = rates['GEAR10']![GameLogic.bossFloorFor(fresh)]!;
+    final gear10Boss = rates['GEAR10']![campaignBoss]!;
     final midF1 = rates['MID']![1]!;
-    final midBoss = rates['MID']![GameLogic.bossFloorFor(fresh)]!;
+    final midBoss = rates['MID']![campaignBoss]!;
 
     // Fresh can sometimes clear F1, but should not always wipe.
     expect(freshF1, greaterThanOrEqualTo(0.2));

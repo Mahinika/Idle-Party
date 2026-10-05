@@ -24,7 +24,7 @@ A separate offline simulator is allowed if the owner names it. Otherwise offline
 
 ## Floor / chamber model
 
-- One combat wave per floor; boss on `5 + ascensionLevel` (`DungeonCatalog.bossFloor`)
+- One combat wave per floor; boss on `5 + ascensionLevel` (`DungeonCatalog.bossFloor`). A save that has never killed a boss meets that boss on floor 2 (`GameLogic.bossFloorFor`), and re-entering continues that climb.
 - Generation: **FloorBlueprint** (`floor_blueprint.dart`) → **PlacementPlan** (`placement_plan.dart`) → **ZoneLayoutKit** (`zone_layout_kit.dart`) → `RoomLayouts` / `SpatialCombat.build`
 - Multi-chamber maps + corridor gates: `lib/spatial/tile_map.dart` (`RoomLayouts`, `TileKind.gate`)
 - Later chambers start **dormant**; wake when prior chambers clear (`_updateChambers`)

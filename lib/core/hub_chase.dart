@@ -782,8 +782,10 @@ class HubChase {
           ? 'Grow the party — ${dungeon.name}'
           : 'Push ${dungeon.name}',
       detail: firstHourAfterFloor
-          ? 'Floor $floorsDone paid out. Enter again and push floor $nextFloor — '
-                'the boss is on floor $bossFloor.'
+          ? (nextFloor >= bossFloor
+                ? 'Floor $floorsDone paid out. The boss is next, on floor $bossFloor.'
+                : 'Floor $floorsDone paid out. Enter again and push floor $nextFloor — '
+                      'the boss is on floor $bossFloor.')
           : firstHour
           ? 'Enter the cave. Your party fights on its own. Get stronger and beat the boss.'
           : bossesLeft > 0

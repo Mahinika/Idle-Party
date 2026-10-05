@@ -372,7 +372,7 @@ class DungeonTopHud extends StatelessWidget {
         ? 'MOTHVEIL · RANK GR${state.grTier}'
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).title
-        : '$zoneShort · F$floor$keyBit${_packJobBit(world)}${_keyAffixBit(state)}';
+        : '$zoneShort · F$floor$keyBit${_packJobBit(world)}${_keyAffixBit(state)}${_firstBossBit(state, floor)}';
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);
       if (fighting && state.dungeonMode != mode) {
@@ -813,4 +813,14 @@ class MissionClaimChip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// First climb only: say the boss is this floor or the next one.
+String _firstBossBit(GameState state, int floor) {
+  if (!GameLogic.firstBossPending(state)) return '';
+  if (state.inGauntlet || state.inAnyRiftMode || state.inWorldBoss) return '';
+  final boss = GameLogic.bossFloorFor(state);
+  if (floor == boss) return ' · BOSS';
+  if (floor + 1 == boss) return ' · BOSS NEXT';
+  return '';
 }
