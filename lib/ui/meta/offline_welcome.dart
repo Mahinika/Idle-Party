@@ -99,7 +99,7 @@ Future<void> showOfflineProgressDialog(
               ),
               const SizedBox(height: 6),
               Text(
-                'Away for ${OfflineProgressResult.formatOfflineDuration(summary.secondsApplied)} · ${summary.welcomeLead}',
+                'Away for ${OfflineProgressResult.formatOfflineDuration(summary.awayForSeconds)} · ${summary.welcomeLead}',
                 style: GameTheme.body(size: 14, color: GameTheme.parchment),
               ),
               const SizedBox(height: 6),

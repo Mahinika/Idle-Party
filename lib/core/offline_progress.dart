@@ -21,7 +21,8 @@ abstract final class OfflineProgress {
     GameState state,
     Duration elapsed,
   ) async {
-    final seconds = elapsed.inSeconds.clamp(0, 8 * 3600);
+    final away = elapsed.inSeconds;
+    final seconds = away.clamp(0, 8 * 3600);
     if (seconds == 0 || !state.inDungeon) {
       return applyOfflineProgress(state, elapsed);
     }
@@ -44,9 +45,10 @@ abstract final class OfflineProgress {
     GameState state,
     Duration elapsed,
   ) {
-    // Soft wall: up to 8h of absence is credited (diminishing via floor budget).
-    final seconds = elapsed.inSeconds.clamp(0, 8 * 3600);
-    if (seconds == 0) {
+    // Dungeon catch-up stays an 8h fight. Hub gold is its own chest: it
+    // fills for [GoldIncome.hubChestCapSec], then stops.
+    final away = max(0, elapsed.inSeconds);
+    if (away == 0) {
       final next = state.copyWith(lastUpdated: DateTime.now());
       return OfflineProgressResult(
         state: next,
@@ -59,6 +61,9 @@ abstract final class OfflineProgress {
         wasInDungeon: state.inDungeon,
       );
     }
+    final seconds = state.inDungeon
+        ? min(away, 8 * 3600)
+        : min(away, GoldIncome.hubChestCapSec);
 
     var roomsCleared = 0;
     late GameState progressed;
@@ -76,6 +81,8 @@ abstract final class OfflineProgress {
       before: state,
       progressed: applyAwayBonus(state, progressed),
       seconds: seconds,
+      secondsAway: away,
+      hubChestCapSec: state.inDungeon ? 0 : GoldIncome.hubChestCapSec,
       roomsCleared: roomsCleared,
       wasInDungeon: state.inDungeon,
     );
@@ -88,6 +95,8 @@ abstract final class OfflineProgress {
     required GameState before,
     required GameState progressed,
     required int seconds,
+    int secondsAway = 0,
+    int hubChestCapSec = 0,
     required int roomsCleared,
     required bool wasInDungeon,
   }) {
@@ -98,6 +107,8 @@ abstract final class OfflineProgress {
     return OfflineProgressResult(
       state: next,
       secondsApplied: seconds,
+      secondsAway: secondsAway,
+      hubChestCapSec: hubChestCapSec,
       goldGained: next.gold - before.gold,
       essenceGained: next.essence - before.essence,
       roomsCleared: roomsCleared,

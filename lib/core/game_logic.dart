@@ -3467,6 +3467,8 @@ class OfflineProgressResult {
     this.levelsGained = 0,
     this.gearFinds = 0,
     this.wasInDungeon = false,
+    this.secondsAway = 0,
+    this.hubChestCapSec = 0,
   });
 
   static const int maxHighlightRows = 3;
@@ -3484,6 +3486,23 @@ class OfflineProgressResult {
   /// True when AFK started mid-dungeon (SpatialCombat catch-up), not hub.
   final bool wasInDungeon;
 
+  /// Real absence. [secondsApplied] is the credited slice (hub chest or 8h fight).
+  final int secondsAway;
+
+  /// Hub sanctuary chest length. 0 on a dungeon catch-up.
+  final int hubChestCapSec;
+
+  /// Clock shown on Welcome Back. The real absence when the chest stopped.
+  int get awayForSeconds =>
+      hubChestStopped && secondsAway > 0 ? secondsAway : secondsApplied;
+
+  /// Hub gold filled the chest and later time paid nothing.
+  bool get hubChestStopped =>
+      !wasInDungeon && hubChestCapSec > 0 && secondsAway > hubChestCapSec;
+
+  /// Hours named on the hub chest. Hand-built results use the live 12h cap.
+  int get hubChestHours => (hubChestCapSec > 0 ? hubChestCapSec : 12 * 3600) ~/ 3600;
+
   bool get foughtWhileAway =>
       wasInDungeon &&
       (roomsCleared > 0 ||
@@ -3495,7 +3514,7 @@ class OfflineProgressResult {
   /// One honest line: hub sanctuary vs dungeon fight — not mixed up.
   String get afkWhereLine => wasInDungeon
       ? 'Left mid-dungeon · party kept fighting (AFK assist)'
-      : 'Rested at the hub · sanctuary gold right away · essence after 10 min · no combat';
+      : 'Rested at the hub · gold fills for $hubChestHours hours, then stops · essence after 10 min · no combat';
 
   /// Banner + Welcome Back share this gate.
   /// Gold / clears show even under 20s; other rewards need ≥20s away.
@@ -3531,6 +3550,7 @@ class OfflineProgressResult {
     }
     if (levelsGained > 0) return 'Party grew · Away $away';
     if (wasInDungeon) return 'Party fought · Away $away';
+    if (hubChestStopped) return 'Gold full · stopped at ${hubChestHours}h';
     return 'Gold while away · Away $away';
   }
 
@@ -3585,6 +3605,10 @@ class OfflineProgressResult {
           : 'Your party found gear while you were away.';
     }
     if (goldGained > 0) {
+      if (hubChestStopped) {
+        return 'Gold filled for $hubChestHours hours and then stopped. '
+            'Your party earned $goldGained gold.';
+      }
       return 'Your party earned $goldGained gold while you were away.';
     }
     if (essenceGained > 0) {
@@ -3615,7 +3639,14 @@ class OfflineProgressResult {
       ranked.add((5, 'Essence earned', '+$essenceGained'));
     }
     if (goldGained > 0) {
-      ranked.add((6, wasInDungeon ? 'Combat gold' : 'Gold', '+${goldGained}g'));
+      final goldValue = hubChestStopped
+          ? '+${goldGained}g · full'
+          : '+${goldGained}g';
+      ranked.add((
+        6,
+        wasInDungeon ? 'Combat gold' : 'Gold',
+        goldValue,
+      ));
     }
     ranked.sort((a, b) => a.$1.compareTo(b.$1));
     final take =
@@ -3629,6 +3660,11 @@ class OfflineProgressResult {
       final m = seconds ~/ 60;
       final s = seconds % 60;
       return s == 0 ? '${m}m' : '${m}m ${s}s';
+    }
+    if (seconds >= 48 * 3600) {
+      final d = seconds ~/ 86400;
+      final h = (seconds % 86400) ~/ 3600;
+      return h == 0 ? '${d}d' : '${d}d ${h}h';
     }
     final h = seconds ~/ 3600;
     final m = (seconds % 3600) ~/ 60;

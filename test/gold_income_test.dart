@@ -10,9 +10,18 @@ void main() {
     expect(GoldIncome.hubGoldPerMinute(state), GoldIncome.hubRawPerMinute(state));
     expect(GoldIncome.hubRateLine(state), contains('g/min'));
     expect(GoldIncome.awayPromise(state), contains('While you are away'));
+    expect(GoldIncome.awayPromise(state), contains('12 hours'));
+    expect(GoldIncome.awayPromise(state).toLowerCase(), contains('stops'));
     expect(GoldIncome.awayPromise(state).toLowerCase(), contains('cave'));
-    expect(GoldIncome.hubRateCompact(state), contains('away'));
+    expect(GoldIncome.hubRateCompact(state), contains('12h'));
     expect(GoldIncome.multiplierLine(state), 'Gold +0%');
+  });
+
+  test('an open hub keeps paying after the away chest would stop', () {
+    final state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 20));
+    final chest = GoldIncome.applyHubIdle(state, GoldIncome.hubChestCapSec);
+    final longer = GoldIncome.applyHubIdle(state, 20 * 3600);
+    expect(longer.gold, greaterThan(chest.gold));
   });
 
   test('1s ticks bank remainder then match a 60s apply', () {

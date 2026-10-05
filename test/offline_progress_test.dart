@@ -4,6 +4,7 @@ import 'package:idle_party/core/chase_contract.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
+import 'package:idle_party/core/gold_income.dart';
 import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/ui/meta/offline_welcome.dart';
 
@@ -209,5 +210,40 @@ void main() {
     expect(find.textContaining('Daily Run'), findsNothing);
     expect(find.textContaining('KEY'), findsNothing);
     expect(find.text('NICE'), findsOneWidget);
+  });
+
+  test('hub gold fills for 12 hours and then stops', () {
+    final state = GameLogic.createInitialState(now: DateTime.utc(2026, 9, 10));
+    final full = OfflineProgress.applyOfflineProgress(
+      state,
+      const Duration(hours: 12),
+    );
+    final over = OfflineProgress.applyOfflineProgress(
+      state,
+      const Duration(hours: 30),
+    );
+    final two = OfflineProgress.applyOfflineProgress(
+      state,
+      const Duration(hours: 2),
+    );
+    final paid = OfflineProgress.applyHubIdleProgress(
+      state,
+      GoldIncome.hubChestCapSec,
+    );
+
+    expect(full.hubChestStopped, isFalse);
+    expect(full.state.gold, paid.gold);
+    expect(over.hubChestStopped, isTrue);
+    expect(over.secondsApplied, GoldIncome.hubChestCapSec);
+    expect(over.awayForSeconds, 30 * 3600);
+    expect(over.state.gold, full.state.gold);
+    expect(over.headline, 'Gold full · stopped at 12h');
+    expect(over.welcomeLead.toLowerCase(), contains('stopped'));
+    expect(over.welcomeLead.toLowerCase(), isNot(contains('sanctuary')));
+    expect(over.highlightRows.map((e) => e.$2).join(' '), contains('full'));
+    expect(over.afkWhereLine.toLowerCase(), contains('12 hours'));
+    expect(two.hubChestStopped, isFalse);
+    expect(two.state.gold, lessThan(full.state.gold));
+    expect(two.headline, startsWith('Gold while away'));
   });
 }

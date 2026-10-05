@@ -48,11 +48,18 @@ abstract final class GoldIncome {
 
   static String perMinuteLabel(int goldPerMin) => '${goldPerMin}g/min';
 
+  /// Hub sanctuary gold while the app is closed. Live ticks on the open hub
+  /// are not this chest — the player is here. Dungeon offline stays separate.
+  static const int hubChestCapSec = 12 * 3600;
+
+  static int get hubChestCapHours => hubChestCapSec ~/ 3600;
+
   /// What the party earns if the player leaves. Hub rate is steady gold.
   /// A cave keeps the fight going instead — that is not a second gold rate.
   static String awayPromise(GameState state) {
     final rate = perMinuteLabel(hubGoldPerMinute(state));
-    return 'While you are away the hub pays $rate. '
+    return 'While you are away the hub pays $rate for up to '
+        '$hubChestCapHours hours, then it stops. '
         'Leave the party in a cave and they keep fighting.';
   }
 
@@ -60,7 +67,7 @@ abstract final class GoldIncome {
 
   /// Tiny hub header suffix next to gold (full line in income sheet).
   static String hubRateCompact(GameState state) =>
-      '+${hubGoldPerMinute(state)}/m away';
+      '+${hubGoldPerMinute(state)}/m · ${hubChestCapHours}h';
 
   /// Rolling combat gold/min from credited samples (not a DPS formula).
   static const int sessionWindowMs = 120000;
