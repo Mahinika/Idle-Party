@@ -25,8 +25,19 @@ are still **23 Sep** version **214** (1 report, 1 user) and **30 Sep**
 version **222** (1 report, 1 user). No ANR rows. Crash-rate card is
 still a dash. Reviews API for the last week is empty. Rating is still
 **3.667** from **6** users (DE/NL/US 5★, AR 3★, JP/UA 2★). Production
-live is **1.12.194 (224)**, published **4 Oct**. This look did not
-re-read Firebase or AdMob.
+live is **1.12.194 (224)**, published **4 Oct**. AdMob was not
+re-read.
+
+Firebase, same window **7 Sep–4 Oct** (includes test runs; Play first
+opens in this window were **101**): **396** active users, **173** in the
+last 7 days, **27** in the last day. New users **395**, returning users
+**97**. `session_start` **2.35** per user. Event users: `first_open`
+**395**, `app_ready` **292**, `first_enter` **282**, `first_reward`
+**268**, `first_boss` **103**, `ascend` **68** (286 events),
+`party_wipe` **99** users (1,541 events). `offline_gold` **1** user.
+`d1_return` is absent. `app_remove` **222** users. Boot events
+(`boot_intro_shown`, `new_game_shown`) are on **2–4** users, so the
+title screen is not readable for this window.
 
 Until the owner names a different bet, the 2 Oct bets still hold: do
 not buy installs. The leak is still open-after-install and day-7, and
