@@ -6,6 +6,7 @@ import 'package:flutter/semantics.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/app_analytics.dart';
+import 'core/remote_tune_boot.dart';
 import 'core/boot_funnel.dart';
 import 'core/funnel_analytics.dart';
 import 'core/equipment_factory.dart';
@@ -27,12 +28,17 @@ import 'ui/shell/play_shell.dart';
 import 'ui/start_menu_screen.dart';
 import 'ui/web_click_bridge.dart';
 
+Future<void> _bootFirebase() async {
+  await AppAnalytics.init();
+  await RemoteTuneBoot.refresh();
+}
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // Fire-and-forget before first frame — phone product is edge-to-edge game UI.
   unawaited(lockImmersiveUi());
   // Android + google-services.json only; no-op elsewhere / missing config.
-  unawaited(AppAnalytics.init());
+  unawaited(_bootFirebase());
   runApp(const MyApp());
   // Expose the semantics DOM overlay on web so browser automation / a11y
   // tools can click buttons (CanvasKit has no real DOM widgets otherwise).

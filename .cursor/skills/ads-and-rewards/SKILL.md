@@ -18,6 +18,7 @@ after the ad is fully watched and dismissed.
 | Piece | Path |
 |-------|------|
 | Unit ids (test in debug, live in release) | `lib/core/ad_config.dart` `AdConfig` |
+| Lantern cadence + which SHOP row is lit | `lib/core/remote_tune.dart` `RemoteTune` |
 | Show / warm up / privacy form | `lib/core/ad_rewarded.dart` (+ `_io` Android, `_stub` web/tests) |
 | WISP rules and gold math | `lib/core/wisp_gift.dart` `WispGift` |
 | WISP runtime | `GameDirector.tickWisp` / `tapWispGift` / `watchWispGiftAd` |
@@ -50,7 +51,11 @@ follow `save-migrate`.
   floors for a new party, about 60 at a full clear on AL20) plus ~4% wallet
   soft floor for WATCH. Not the Sandy farm floor, and not a Gauntlet floor.
 - **WISP cadence (release):** first after 90 s, then every 10 min, visible
-  10 s, max 6 taps per UTC day. Debug builds run every 20 s.
+  10 s, max 6 taps per UTC day. Those are the shipped defaults. Firebase
+  Remote Config can replace them inside the ranges in `RemoteTune` (gold
+  piles stay in code). Debug builds stay on the 20 s loop until a published
+  WISP number differs. Empty `shop_featured_id` keeps the forever-scrolls
+  bundle lit.
 
 ## Test it
 

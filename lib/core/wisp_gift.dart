@@ -10,6 +10,7 @@ import 'economy_service.dart';
 import 'encounter_factory.dart';
 import 'game_state.dart';
 import 'keystone.dart';
+import 'remote_tune.dart';
 
 /// Floating WISP: tap for a small gold pile; optional rewarded ad for a
 /// bigger gold pile (no time boost). See plan / AD_POWERUPS.
@@ -42,10 +43,20 @@ abstract final class WispGift {
   static const int releaseDailyCap = 6;
   static const int releaseFirstDelayMs = 90 * 1000;
   static const int releaseIntervalMs = 10 * 60 * 1000;
-  static int get dailyCap => kDebugMode ? 1000000 : releaseDailyCap;
-  static int get firstDelayMs => kDebugMode ? 20 * 1000 : releaseFirstDelayMs;
-  static int get intervalMs => kDebugMode ? 20 * 1000 : releaseIntervalMs;
-  static const int visibleMs = 10 * 1000;
+  static const int releaseVisibleMs = 10 * 1000;
+
+  /// Debug stays on the fast loop until Firebase publishes a WISP number
+  /// inside [RemoteTune]'s allowed range. Release always reads that tune,
+  /// which starts as these constants.
+  static bool get _useFastDebugLoop => kDebugMode && !RemoteTune.wispFromRemote;
+  static int get dailyCap =>
+      _useFastDebugLoop ? 1000000 : RemoteTune.wispDailyCap;
+  static int get firstDelayMs =>
+      _useFastDebugLoop ? 20 * 1000 : RemoteTune.wispFirstDelayMs;
+  static int get intervalMs =>
+      _useFastDebugLoop ? 20 * 1000 : RemoteTune.wispIntervalMs;
+  static int get visibleMs =>
+      _useFastDebugLoop ? releaseVisibleMs : RemoteTune.wispVisibleMs;
 
   static bool get unlimitedToday => kDebugMode;
 

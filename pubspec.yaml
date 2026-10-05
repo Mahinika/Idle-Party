@@ -54,6 +54,7 @@ dependencies:
   cloud_firestore: ^6.10.0
   crypto: ^3.0.7
   android_id: ^0.5.2+1
+  firebase_remote_config: ^6.7.0
 
 dev_dependencies:
   flutter_test:

@@ -157,6 +157,20 @@ enter/leave dungeon, Ascend, party wipe. UMP consent gates collection
 
 DebugView (optional): `adb shell setprop debug.firebase.analytics.app com.idleparty.app` then `flutter run` on a device/emulator.
 
+### Remote Config (owner)
+
+Same Firebase project. The Android app fetches after the ads consent check. A missing template, a failed fetch, or a number outside the allowed range keeps the shipped game. Gold piles are not keys.
+
+| Key | Type | Shipped | Allowed |
+|-----|------|---------|---------|
+| `wisp_daily_cap` | Number | 6 | 1–12 |
+| `wisp_first_delay_sec` | Number | 90 | 15–3600 |
+| `wisp_interval_sec` | Number | 600 | 60–3600 |
+| `wisp_visible_sec` | Number | 10 | 5–30 |
+| `shop_featured_id` | String | empty | a SHOP product id, such as `ad_free` |
+
+Empty `shop_featured_id` keeps the forever-scrolls bundle highlighted. Publish the template in Firebase for a change to ship. Debug `flutter run` keeps the fast lantern until a WISP number above actually differs. Release reads at most every 12 hours. A successful fetch logs `remote_tune`.
+
 ### Rewarded ads / AdMob (how money actually arrives)
 
 Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not through Idle Party servers.

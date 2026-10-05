@@ -6,6 +6,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'ad_config.dart';
 import 'ad_rewarded.dart';
 import 'app_analytics.dart';
+import 'remote_tune_boot.dart';
 import 'immersive_ui.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart' as test_env;
@@ -45,6 +46,7 @@ Future<void> showPrivacyOptions() async {
   });
   await done.future.timeout(const Duration(seconds: 30), onTimeout: () {});
   unawaited(AppAnalytics.syncConsent());
+  unawaited(RemoteTuneBoot.refresh());
   unawaited(lockImmersiveUi());
 }
 

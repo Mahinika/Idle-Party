@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/ad_boost.dart';
 import '../../core/game_director.dart';
 import '../../core/menu_alerts.dart';
+import '../../core/remote_tune.dart';
 import '../../core/shop_billing.dart';
 import '../../core/shop_catalog.dart';
 import '../../core/shop_store.dart';
@@ -136,6 +137,7 @@ class _ShopDockState extends State<ShopDock>
     bool showAccountActions = false,
   }) {
     final state = widget.director.state;
+    final shown = RemoteTune.pin(items);
     return ListView(
       padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
       children: [
@@ -149,15 +151,15 @@ class _ShopDockState extends State<ShopDock>
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 10),
-        for (var i = 0; i < items.length; i++) ...[
+        for (var i = 0; i < shown.length; i++) ...[
           if (i > 0) const SizedBox(height: 8),
           _ShopRow(
-            item: items[i],
-            owned: ShopBilling.isOwned(state, items[i]),
-            priceLabel: _priceLabel(items[i]),
-            listed: _playLists(items[i]),
-            compact: compact && items[i].permMask != AdBoost.permAll,
-            onBuy: _playLists(items[i]) ? () => _buy(items[i]) : null,
+            item: shown[i],
+            owned: ShopBilling.isOwned(state, shown[i]),
+            priceLabel: _priceLabel(shown[i]),
+            listed: _playLists(shown[i]),
+            compact: compact && shown[i].permMask != AdBoost.permAll,
+            onBuy: _playLists(shown[i]) ? () => _buy(shown[i]) : null,
           ),
         ],
         if (showAccountActions) ...[
@@ -263,7 +265,7 @@ class _ShopRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mark = assetFor(item);
-    final featured = item.permMask == AdBoost.permAll;
+    final featured = RemoteTune.highlights(item);
     return Container(
       padding: EdgeInsets.all(compact ? 8 : 10),
       decoration: MenuChrome.listCard(selected: owned || featured),
