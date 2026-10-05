@@ -14,8 +14,8 @@ extension GameDirectorCombatLoop on GameDirector {
     if (_uiPaused) {
       return;
     }
-    // Hard pause while the app is backgrounded.
-    if (_appPaused) {
+    // Hard pause while the app is backgrounded, or while resume credits the gap.
+    if (_appPaused || _awayCreditInFlight) {
       return;
     }
 
@@ -32,6 +32,7 @@ extension GameDirectorCombatLoop on GameDirector {
       if (_awaitingWipeChoice ||
           _uiPaused ||
           _appPaused ||
+          _awayCreditInFlight ||
           !_state.inDungeon ||
           _spatial == null) {
         break;

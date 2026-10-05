@@ -236,8 +236,9 @@ void main() {
     expect(LocalReminders.shouldOfferOptIn(state), isFalse);
   });
 
-  test('first-hour vault ready stays off TODAY until a boss', () {
+  test('first-hour vault ready can be claimed before a boss', () {
     var state = GameLogic.createInitialState(now: now);
+    state = GameLogic.ensureWeeklyContract(state, now: now);
     state = state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         dailyVaultClears: GameLogic.dailyVaultClearTarget,
@@ -245,10 +246,20 @@ void main() {
       ),
     );
     expect(GameLogic.plainPlayerChrome(state), isTrue);
+    expect(GameLogic.showDailyChase(state), isFalse);
+    expect(MenuTabs.showShop(state), isFalse);
+    expect(GameLogic.showDailyVault(state), isTrue);
     expect(GameLogic.canClaimDailyVault(state), isTrue);
     final chase = HubChase.forState(state, now: now);
-    expect(chase.kind, HubChaseKind.clearFloors);
-    expect(chase.title, contains('Grow the party'));
+    expect(chase.kind, HubChaseKind.claimDailyVault);
+    final claimed = GameLogic.claimDailyVault(state, now: now);
+    expect(claimed.metaDepth.dailyVaultClaimed, isTrue);
+    expect(claimed.essence, greaterThan(state.essence));
+    expect(GameLogic.showDailyVault(claimed), isFalse);
+    expect(
+      HubChase.forState(claimed, now: now).kind,
+      HubChaseKind.clearFloors,
+    );
   });
 
   test('first-hour bag upgrades stay on the cave, not EQUIP', () {

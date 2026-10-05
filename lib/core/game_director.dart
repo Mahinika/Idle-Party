@@ -135,6 +135,13 @@ class GameDirector extends ChangeNotifier {
 
   /// Hard pause while the app is backgrounded (separate from menu [uiPaused]).
   bool _appPaused = false;
+
+  /// Resume is replaying the gap. Combat and hub idle wait so they cannot
+  /// spend the same seconds twice.
+  bool _awayCreditInFlight = false;
+
+  /// Shorter than this is an app switch, not a Welcome Back.
+  static const int _awayCreditMinSec = 60;
   final UiFeedback uiFeedback = UiFeedback();
   int? _playUpdateVersionCode;
   bool _mandatoryPlayUpdateRequired = false;
@@ -559,15 +566,72 @@ class GameDirector extends ChangeNotifier {
   }
 
   /// Freeze dungeon combat while the app is backgrounded; flush save on pause.
+  ///
+  /// Hub idle is the clock that moves [GameState.lastUpdated]. It stops here
+  /// so a phone that keeps the process alive still has a real gap to credit.
+  /// The toast timer does not touch that clock.
   void setAppPaused(bool paused) {
     if (_appPaused == paused) return;
     _appPaused = paused;
     if (paused) {
+      _syncHubIdleTimer();
       unawaited(_persistFlush());
       unawaited(_syncAwayReminders(backgrounded: true));
     } else {
+      unawaited(_resumeFromBackground());
+    }
+  }
+
+  /// Credit time spent backgrounded, then note the day-2 funnel.
+  ///
+  /// Cold start already does this in [boot]. A process Android kept alive
+  /// used to skip it, so Welcome Back, the ping ask, and `d1_return` never ran.
+  Future<void> _resumeFromBackground() async {
+    if (!_isLoading) {
+      final elapsed = DateTime.now().difference(_state.lastUpdated);
+      if (elapsed.inSeconds >= _awayCreditMinSec) {
+        _awayCreditInFlight = true;
+        try {
+          final credited = await _creditAway(_state, showCard: true);
+          _state = credited;
+          if (_state.inDungeon) {
+            _rebuildSpatial();
+          } else {
+            _spatialTimer?.cancel();
+            _spatialTimer = null;
+            _spatial = null;
+          }
+          notifyListeners();
+        } finally {
+          _awayCreditInFlight = false;
+        }
+      }
+      if (!_appPaused) {
+        _noteFunnelSession(newInstall: false);
+        _syncHubIdleTimer();
+        unawaited(_persistFlush());
+      }
+    }
+    if (!_appPaused) {
       unawaited(_syncAwayReminders(backgrounded: false));
     }
+  }
+
+  /// Rewind clocks in tests. Does not credit gold.
+  @visibleForTesting
+  void debugStampAway({Duration? lastUpdatedAgo, int? funnelInstallMs}) {
+    var next = _state;
+    if (lastUpdatedAgo != null) {
+      next = next.copyWith(
+        lastUpdated: DateTime.now().subtract(lastUpdatedAgo),
+      );
+    }
+    if (funnelInstallMs != null) {
+      next = next.copyWith(
+        metaDepth: next.metaDepth.copyWith(funnelInstallMs: funnelInstallMs),
+      );
+    }
+    _state = next;
   }
 
   String? get toast => uiFeedback.toast;
@@ -660,7 +724,12 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _syncHubIdleTimer() {
-    final want = enableSpatialLoop && !_isLoading && !_state.inDungeon;
+    final want =
+        enableSpatialLoop &&
+        !_isLoading &&
+        !_appPaused &&
+        !_awayCreditInFlight &&
+        !_state.inDungeon;
     if (!want) {
       _hubIdleTimer?.cancel();
       _hubIdleTimer = null;
@@ -673,7 +742,10 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _tickHubIdle() {
-    if (_isLoading || _state.inDungeon) {
+    if (_isLoading ||
+        _state.inDungeon ||
+        _appPaused ||
+        _awayCreditInFlight) {
       _syncHubIdleTimer();
       return;
     }
@@ -851,11 +923,25 @@ class GameDirector extends ChangeNotifier {
       notifyListeners();
     }
 
+    return _creditAway(saved, showCard: true);
+  }
+
+  /// Apply the gap since [saved.lastUpdated]. Same path for cold start and resume.
+  Future<GameState> _creditAway(
+    GameState saved, {
+    required bool showCard,
+  }) async {
     final elapsed = DateTime.now().difference(saved.lastUpdated);
     final offline = await GameLogic.applyOfflineProgressAsync(saved, elapsed);
     var caught = offline.state;
     if (offline.hasSummary) {
-      uiFeedback.presentOffline(offline);
+      if (showCard) {
+        uiFeedback.presentOffline(offline);
+        // Hub shows a tappable banner; toast only when loading mid-dungeon.
+        if (saved.inDungeon) {
+          showToast(offline.headline, life: 5);
+        }
+      }
       if (offline.goldGained > 0) {
         final tick = FunnelAnalytics.onOfflineGold(caught);
         caught = tick.state;
@@ -867,10 +953,6 @@ class GameDirector extends ChangeNotifier {
             ),
           );
         }
-      }
-      // Hub shows a tappable banner; toast only when loading mid-dungeon.
-      if (saved.inDungeon) {
-        showToast(offline.headline, life: 5);
       }
     }
     return caught;

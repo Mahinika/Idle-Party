@@ -99,7 +99,8 @@ class MenuAlerts {
         more: MenuAlert.quiet,
       );
     }
-    if (GameLogic.plainPlayerChrome(state)) {
+    if (GameLogic.plainPlayerChrome(state) &&
+        !GameLogic.showDailyVault(state)) {
       final upgrades = bagUpgradeCount(state);
       if (upgrades <= 0) return none;
       return MenuAlerts(
@@ -245,7 +246,9 @@ class MenuAlerts {
       count += jobs;
       reasons.add(jobs == 1 ? '1 quest done' : '$jobs quests done');
     }
-    if (!omitVault && GameLogic.canClaimDailyVault(state)) {
+    if (!omitVault &&
+        GameLogic.showDailyVault(state) &&
+        GameLogic.canClaimDailyVault(state)) {
       count++;
       reasons.add('daily vault ready');
     }

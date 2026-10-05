@@ -29,7 +29,7 @@ class HubMetaPulse extends StatelessWidget {
     HubChaseUrgency chaseUrgency = HubChaseUrgency.normal,
     DateTime? now,
   }) {
-    if (!GameLogic.showDailyChase(state)) return const [];
+    if (!GameLogic.showDailyVault(state)) return const [];
     // Endgame hunts stay the one job, but an unfilled vault stays visible.
     if (hubChaseOwnsEndgameRow(chaseKind)) {
       if (state.metaDepth.dailyVaultClaimed ||

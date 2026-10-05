@@ -5,6 +5,7 @@ import '../../core/chase_contract.dart';
 import '../../core/chase_dispatcher.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/gold_income.dart';
 import '../../core/hub_chase.dart';
 import '../chase_bind.dart';
 import '../game_theme.dart';
@@ -97,6 +98,11 @@ Future<void> showOfflineProgressDialog(
               Text(
                 'Away for ${OfflineProgressResult.formatOfflineDuration(summary.secondsApplied)} · ${summary.welcomeLead}',
                 style: GameTheme.body(size: 14, color: GameTheme.parchment),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                GoldIncome.awayPromise(summary.state),
+                style: GameTheme.body(size: 13, color: GameTheme.mossLit),
               ),
               if (rows.isNotEmpty) ...[
                 const SizedBox(height: 10),

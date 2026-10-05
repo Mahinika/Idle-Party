@@ -9,6 +9,9 @@ void main() {
     expect(GoldIncome.hubRawPerMinute(state), 10);
     expect(GoldIncome.hubGoldPerMinute(state), GoldIncome.hubRawPerMinute(state));
     expect(GoldIncome.hubRateLine(state), contains('g/min'));
+    expect(GoldIncome.awayPromise(state), contains('While you are away'));
+    expect(GoldIncome.awayPromise(state).toLowerCase(), contains('cave'));
+    expect(GoldIncome.hubRateCompact(state), contains('away'));
     expect(GoldIncome.multiplierLine(state), 'Gold +0%');
   });
 

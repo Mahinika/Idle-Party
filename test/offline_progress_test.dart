@@ -167,6 +167,8 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('Welcome back!'), findsOneWidget);
+    expect(find.textContaining('While you are away'), findsOneWidget);
+    expect(find.textContaining('keep fighting'), findsOneWidget);
     expect(find.textContaining('Up next:'), findsOneWidget);
     expect(find.textContaining('AFK'), findsNothing);
     expect(find.textContaining('Sanctuary'), findsNothing);

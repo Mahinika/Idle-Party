@@ -1957,6 +1957,11 @@ class GameLogic {
   static bool showDailyChase(GameState state) =>
       state.ascensionLevel > 0 || state.bossVictories > 0;
 
+  /// Vault claim is on the hub once today's clear is banked, even before a boss.
+  /// SHOP, the rating ask, and plain chrome still wait for [showDailyChase].
+  static bool showDailyVault(GameState state) =>
+      showDailyChase(state) || canClaimDailyVault(state);
+
   /// Daily Run is extra — not the day-2–7 job. Hub hunt and DAILY RUN chrome
   /// wait until first Ascend (or endgame). Until then TODAY is one cave clear.
   static bool showDailyRunOnHub(GameState state) =>

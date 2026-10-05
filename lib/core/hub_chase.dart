@@ -119,8 +119,9 @@ class HubChase {
     final md = state.metaDepth;
     final clock = now ?? DateTime.now().toUtc();
 
-    // First hour: keep TODAY on grow-the-party — vault/quests wait until a boss.
-    final firstHourQuiet = !GameLogic.showDailyChase(state);
+    // First hour: keep TODAY on grow-the-party. A vault already filled by a
+    // clear can be claimed before the boss. Quests still wait.
+    final firstHourQuiet = !GameLogic.showDailyVault(state);
 
     if (!firstHourQuiet && GameLogic.canClaimDailyVault(state)) {
       final best = md.dailyBestTimedKey;
