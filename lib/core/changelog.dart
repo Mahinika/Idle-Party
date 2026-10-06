@@ -97,6 +97,7 @@ abstract final class ChangelogCatalog {
           'Your party fights on its own. Tap ENTER DUNGEON. Gold and essence menus stay hidden until you beat the first boss.',
       changed: <String>[
         'Before the first boss the bottom bar is GEAR and MORE only, even after the first coins.',
+        'The first wipe before that boss wears better bag gear and fights the same floor again.',
         'A wipe that names a menu has a button that opens that menu. A flask tip opens GOLD.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',

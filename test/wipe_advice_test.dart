@@ -453,4 +453,34 @@ void main() {
     final state = GameLogic.createInitialState(now: now);
     expect(WipeAdvice.lineFor(state: state, fight: fight), contains('flask'));
   });
+
+  test('first wipe before the boss wears bag gear and continues', () {
+    final base = GameLogic.createInitialState(now: now);
+    const upgrade = EquipmentItem(
+      id: 'up_1',
+      name: 'Cave Sword',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      attackBonus: 40,
+      itemLevel: 20,
+    );
+    final first = base.copyWith(
+      wipeStreakCount: 1,
+      gearStash: const [upgrade],
+    );
+    expect(MenuAlerts.bagUpgradeCount(first), greaterThan(0));
+    expect(WipeAdvice.wearUpgradesAndContinue(first), isTrue);
+    expect(
+      WipeAdvice.wearUpgradesAndContinue(first.copyWith(wipeStreakCount: 2)),
+      isFalse,
+    );
+    expect(
+      WipeAdvice.wearUpgradesAndContinue(first.copyWith(bossVictories: 1)),
+      isFalse,
+    );
+    expect(
+      WipeAdvice.wearUpgradesAndContinue(base.copyWith(wipeStreakCount: 1)),
+      isFalse,
+    );
+  });
 }

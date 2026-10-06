@@ -246,7 +246,6 @@ extension GameDirectorCombatLoop on GameDirector {
       }
 
       if (result.partyWiped) {
-        _awaitingWipeChoice = true;
         _spatialTimer?.cancel();
         _spatialTimer = null;
         GameAudio.wipe();
@@ -281,7 +280,9 @@ extension GameDirectorCombatLoop on GameDirector {
             ),
           );
         }
+        if (_wearUpgradesAndFightOn()) return;
         // No WIPED toast — DungeonWipePanel + top HUD already say it.
+        _awaitingWipeChoice = true;
         _notifyShell();
         return;
       }

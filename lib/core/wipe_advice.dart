@@ -66,6 +66,17 @@ abstract final class WipeAdvice {
   /// GOLD ATK/STA track tips wait for two wipes on the same floor.
   static const int streakNeeded = 2;
 
+  /// Before the first boss, the first wipe on a floor wears bag upgrades
+  /// and the party fights that same floor again.
+  static bool wearUpgradesAndContinue(GameState state) {
+    if (GameLogic.showDailyChase(state)) return false;
+    if (state.inGauntlet || state.inAnyRiftMode || state.inWorldBoss) {
+      return false;
+    }
+    if (state.wipeStreakCount != 1) return false;
+    return MenuAlerts.bagUpgradeCount(state) > 0;
+  }
+
   /// Honest fight crumb under the advice line (does not replace it).
   static String scanLine(WipeFightSnapshot fight) {
     final pct = (fight.leftover * 100).clamp(0, 100).round();

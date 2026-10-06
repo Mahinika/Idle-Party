@@ -5,6 +5,8 @@ import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('syncPartyFromState keeps enemy HP and hero positions', () {
     var state = GameLogic.enterDungeon(
       GameLogic.createInitialState(now: DateTime(2026, 7, 27)),
@@ -84,6 +86,50 @@ void main() {
 
     expect(director.spatial!.heroes.first.x, closeTo(heroX, 0.001));
     expect(director.spatial!.enemies.first.hp, enemyHp);
+  });
+
+  test('first wipe wears the bag upgrade and fights the same floor', () async {
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState().copyWith(
+        highestFloorCleared: 1,
+      ),
+    );
+    await director.boot();
+    director.enterDungeon(dungeonId: 'sandy');
+    final floor = director.state.currentRoom.floorNumber;
+    expect(floor, 2);
+    const upgrade = EquipmentItem(
+      id: 'cave_sword',
+      name: 'Cave Sword',
+      slot: EquipmentSlot.weapon,
+      rarity: LootRarity.rare,
+      attackBonus: 40,
+      itemLevel: 20,
+    );
+    director.debugInjectStash(const [upgrade]);
+    for (final hero in director.spatial!.heroes) {
+      hero.hp = 0;
+    }
+    director.spatialTick();
+
+    expect(director.awaitingWipeChoice, isFalse);
+    expect(director.state.inDungeon, isTrue);
+    expect(director.state.currentRoom.floorNumber, floor);
+    expect(director.state.wipeStreakCount, 1);
+    expect(
+      director.state.heroes.any(
+        (hero) => hero.equipped.values.any((item) => item.id == 'cave_sword'),
+      ),
+      isTrue,
+    );
+    expect(director.toast, 'Better gear on — fight on');
+
+    for (final hero in director.spatial!.heroes) {
+      hero.hp = 0;
+    }
+    director.spatialTick();
+    expect(director.awaitingWipeChoice, isTrue);
+    expect(director.state.currentRoom.floorNumber, floor);
   });
 
   test('silent tile flag does not notify while the dungeon view unmounts', () {

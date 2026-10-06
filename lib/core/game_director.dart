@@ -1208,6 +1208,33 @@ class GameDirector extends ChangeNotifier {
     unawaited(_persistFlush());
   }
 
+  /// First wipe before the boss: wear bag upgrades and fight this floor again.
+  bool _wearUpgradesAndFightOn() {
+    if (!WipeAdvice.wearUpgradesAndContinue(_state)) return false;
+    final result = GameLogic.autoEquipBetterGearResult(_state);
+    if (result.equipped <= 0) return false;
+    final floor = _state.currentRoom.floorNumber;
+    _state = GameLogic.restartFloor(result.state).copyWith(
+      lastUpdated: DateTime.now(),
+      wipeAdviceLine: '',
+    );
+    final n = result.equipped;
+    showToast(
+      n == 1 ? 'Better gear on — fight on' : '$n better pieces on — fight on',
+      life: 2.6,
+    );
+    DebugPlayLog.event('wipe', 'wore $n · fight on F$floor');
+    GameAudio.equip();
+    _rebuildSpatial();
+    if (enableSpatialLoop) {
+      _startSpatialLoop();
+    }
+    _beginFloorClock();
+    notifyListeners();
+    unawaited(_persistFlush());
+    return true;
+  }
+
   void retryAfterWipe() {
     if (!_awaitingWipeChoice) return;
     // Gauntlet has no floor retry — same as hub exit.
