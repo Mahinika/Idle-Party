@@ -113,6 +113,9 @@ abstract final class WipeAdvice {
         adviceLine.startsWith('GOLD:')) {
       return 'HUB → GOLD → MARKET for the listing';
     }
+    if (adviceLine.startsWith('Use a flask')) {
+      return 'HUB → GOLD → MARKET for a flask';
+    }
     if (adviceLine.startsWith('Equip')) {
       return 'HUB → BAG to equip the upgrade';
     }
@@ -154,6 +157,9 @@ abstract final class WipeAdvice {
         adviceLine.startsWith('GOLD:')) {
       return NavIntent.market;
     }
+    if (adviceLine.startsWith('Use a flask')) {
+      return NavIntent.market;
+    }
     if (adviceLine.startsWith('Equip')) {
       return const NavIntent(route: MenuRoute.gear, gear: GearPanel.bag);
     }
@@ -180,6 +186,7 @@ abstract final class WipeAdvice {
       if (nav.route == MenuRoute.gear) return 'OPEN GEAR';
       if (nav.route == MenuRoute.gold) return 'OPEN GOLD';
     }
+    if (adviceLine.startsWith('Use a flask')) return 'OPEN GOLD';
     // Endgame modes: brown CTA still returns to hub (no ENDGAME menu route).
     if (adviceLine.contains('Farm Rift') && adviceLine.contains('ENDGAME')) {
       return 'OPEN ENDGAME';

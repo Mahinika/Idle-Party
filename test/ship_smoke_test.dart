@@ -457,4 +457,17 @@ void main() {
     expect(chase.title.toLowerCase(), contains('grow'));
     expect(GameLogic.showDailyChase(state), isFalse);
   });
+
+  test('bottom bar stays GEAR and MORE until the first boss', () {
+    final now = DateTime.utc(2026, 8, 8, 12);
+    final early = GameLogic.createInitialState(now: now).copyWith(
+      highestFloorCleared: 3,
+      lifetimeGoldEarned: 30,
+      essence: 3,
+    );
+    expect(MenuTabs.showGold(early), isFalse);
+    expect(MenuTabs.showCamp(early), isFalse);
+    expect(MenuTabs.showShop(early), isFalse);
+    expect(MenuTabs.showGold(early.copyWith(bossVictories: 1)), isTrue);
+  });
 }

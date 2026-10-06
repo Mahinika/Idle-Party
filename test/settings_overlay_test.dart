@@ -134,7 +134,7 @@ void main() {
     );
     await tester.pump();
     expect(find.text('BACK'), findsNothing);
-    expect(find.textContaining('claim here or in the dungeon'), findsOneWidget);
+    expect(find.textContaining('Claim here or in the dungeon'), findsOneWidget);
   });
 }
 

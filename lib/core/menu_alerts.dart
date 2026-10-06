@@ -462,10 +462,13 @@ abstract final class MenuTabs {
   static bool showRoster(GameState s) =>
       s.ascensionLevel >= 1 || s.metaDepth.pendingHeroReveals.isNotEmpty;
 
-  static bool showCamp(GameState s) => s.ascensionLevel >= 1 || s.essence > 0;
+  /// ESSENCE stays off the bar until the first boss, even if a clear paid essence.
+  static bool showCamp(GameState s) =>
+      GameLogic.showDailyChase(s) &&
+      (s.ascensionLevel >= 1 || s.essence > 0);
 
-  /// GOLD tab — after the first reward (loot / floor / boss).
-  static bool showGold(GameState s) => GameLogic.earnedFirstReward(s);
+  /// GOLD tab — after the first boss (or first Ascend), not the first coin.
+  static bool showGold(GameState s) => GameLogic.showDailyChase(s);
 
   /// Real-money SHOP — after the first boss (or first Ascend).
   static bool showShop(GameState s) => GameLogic.showDailyChase(s);

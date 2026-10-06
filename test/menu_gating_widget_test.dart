@@ -88,15 +88,18 @@ void main() {
     );
     expect(MenuTabs.showQuests(early), isFalse);
 
-    final afterFloor = early.copyWith(highestFloorCleared: 1);
-    expect(MenuTabs.showGold(afterFloor), isTrue);
+    final afterFloor = early.copyWith(
+      highestFloorCleared: 1,
+      lifetimeGoldEarned: 20,
+      essence: 1,
+    );
+    expect(MenuTabs.showGold(afterFloor), isFalse);
     expect(MenuTabs.showShop(afterFloor), isFalse);
     expect(MenuTabs.showCamp(afterFloor), isFalse);
     expect(
       MenuRouter.visibleHubTabs(afterFloor),
       equals(const [
         MenuRoute.gear,
-        MenuRoute.gold,
         MenuRoute.more,
       ]),
     );

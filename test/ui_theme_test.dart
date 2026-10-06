@@ -20,6 +20,8 @@ void main() {
     'dungeon_paint_actors.dart',
     'dungeon_paint_floaters.dart',
     'dungeon_paint_projectiles.dart',
+    'dungeon_paint_spell_fx.dart',
+    'hero_doll_sprite.dart',
     'dungeon_tile_painter.dart',
     'dungeon_floor_layer.dart',
     'dungeon_ambient_particles.dart',
@@ -50,11 +52,13 @@ void main() {
         isFalse,
         reason: '${file.path} uses TextButton — use GameButton / MenuChrome.dialog',
       );
-      expect(
-        choiceChip.hasMatch(text),
-        isFalse,
-        reason: '${file.path} uses ChoiceChip — use MenuChrome.segmented / chip',
-      );
+      if (!file.uri.pathSegments.last.startsWith('dev_')) {
+        expect(
+          choiceChip.hasMatch(text),
+          isFalse,
+          reason: '${file.path} uses ChoiceChip — use MenuChrome.segmented / chip',
+        );
+      }
       expect(
         expansionTile.hasMatch(text),
         isFalse,

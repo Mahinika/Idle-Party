@@ -11,6 +11,13 @@ import 'package:idle_party/ui/first_session_tips.dart';
 import 'package:idle_party/ui/game_theme.dart';
 import 'package:idle_party/ui/shell/app_bottom_bar.dart';
 
+/// Floor lights and coach pulses never go idle, so dungeon menus cannot
+/// use [WidgetTester.pumpAndSettle].
+Future<void> pumpSheet(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
 /// Hub cards (thanks / reminders / what's new) sit on a scrim. Dismiss so
 /// the bottom bar can be tapped.
 Future<void> dismissHubPrompts(WidgetTester tester) async {
@@ -87,6 +94,7 @@ void main() {
       lastDailyDate: '2099-01-01',
       dailyClaimed: true,
       metaDepth: GameLogic.createInitialState().metaDepth.copyWith(
+        reviewPrompted: true,
         dailyVaultClaimed: true,
         gauntletBestFloor: 100,
         claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
@@ -152,29 +160,31 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     // Floor art stays on "Loading floor…" in widget tests. The bar is the chrome.
+    // Gold and essence stay hidden until the first boss, even after a clear.
     expect(find.text('GEAR'), findsWidgets);
-    expect(find.text('GOLD'), findsWidgets);
-    expect(find.text('ESSENCE'), findsWidgets);
+    expect(find.text('MORE'), findsWidgets);
+    expect(find.text('GOLD'), findsNothing);
+    expect(find.text('ESSENCE'), findsNothing);
     expect(find.text('LEAVE'), findsOneWidget);
 
     await tester.tap(find.text('GEAR').last);
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     expect(find.textContaining('GEAR'), findsWidgets);
     expect(find.text('HERO STATS'), findsOneWidget);
     expect(find.textContaining('iLvl'), findsWidgets);
 
     await tester.tap(find.text('CLOSE'));
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
 
     await tester.tap(find.text('GEAR').last);
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     await tester.tap(find.text('BAG'));
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     expect(find.text('BAG'), findsWidgets);
     expect(find.text('MERGE'), findsOneWidget);
 
     await tester.tap(find.text('MERGE'));
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     expect(find.textContaining('MERGE'), findsWidgets);
   });
 
@@ -199,12 +209,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     await tester.tap(find.text('GEAR').last);
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     expect(find.text('CLOSE'), findsOneWidget);
 
     final handled = await tester.binding.handlePopRoute();
     expect(handled, isTrue);
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     expect(find.text('CLOSE'), findsNothing);
     expect(find.text('LEAVE'), findsOneWidget);
   });
@@ -225,16 +235,16 @@ void main() {
     expect(GameTheme.isCompactWidth(tester.element(find.text('GEAR').last)), isTrue);
 
     await tester.tap(find.text('GEAR').last);
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     expect(find.textContaining('GEAR'), findsWidgets);
 
     await tester.tap(find.text('CLOSE'));
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
 
     await tester.tap(find.text('GEAR').last);
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     await tester.tap(find.text('BAG'));
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     expect(find.textContaining('BAG'), findsWidgets);
     // First hour: only GEAR / BAG — advanced tabs unlock later.
     expect(find.text('MERGE'), findsNothing);
@@ -308,9 +318,9 @@ void main() {
     expect(GameTheme.isPhoneWidth(tester.element(find.text('GEAR').last)), isTrue);
 
     await tester.tap(find.text('GEAR').last);
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     await tester.tap(find.text('BAG'));
-    await tester.pumpAndSettle();
+    await pumpSheet(tester);
     expect(find.textContaining('BAG'), findsWidgets);
     // GEAR is doll + OPEN BAG — not a side-by-side bag pane.
     expect(find.text('OPEN BAG'), findsNothing); // BAG tab is open, not GEAR
@@ -322,6 +332,7 @@ void main() {
         highestFloorCleared: 1,
         lifetimeGoldEarned: 100,
         gold: 500,
+        bossVictories: 1,
       ),
     );
     tester.view.physicalSize = const Size(360, 780);

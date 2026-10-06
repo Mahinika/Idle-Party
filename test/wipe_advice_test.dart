@@ -189,7 +189,7 @@ void main() {
   test('GOLD ATK/DEF after first reward names the GOLD tab', () {
     var state = GameLogic.createInitialState(
       now: now,
-    ).copyWith(highestFloorCleared: 1);
+    ).copyWith(highestFloorCleared: 1, bossVictories: 1);
     const melt = WipeFightSnapshot(
       waveHp: 8000,
       remainingHp: 6000,
@@ -411,6 +411,33 @@ void main() {
         'Ashen Crown hits hard — try PRACTICE free, then spend a ticket',
       )?.route,
       MenuRoute.key,
+    );
+  });
+
+  test('every menu wipe line has a button that opens that menu', () {
+    const lines = <String>[
+      'Upgrade ATK in GOLD',
+      'Upgrade DEF in GOLD',
+      'Upgrade STA in GOLD',
+      'Equip the better item in BAG',
+      'Equip better gear in BAG',
+      WipeAdvice.gearWearLine,
+      'Get stronger in GEAR',
+      'GOLD: Sword · 10g',
+      'Use a flask — party melted with potions left',
+      'KEY +8 may be high — dial down on KEY',
+      'Spire climb is steep — leave and retry from hub (lower floors)',
+      'Farm Rift R3 may be high — dial Farm Rift tier on ENDGAME',
+      'GR5 is steep — leave and retry from hub ENDGAME',
+      'Ashen Crown hits hard — try PRACTICE free, then spend a ticket',
+    ];
+    for (final line in lines) {
+      expect(WipeAdvice.hubCtaLabelFor(line), isNotNull, reason: line);
+      expect(WipeAdvice.hubHintFor(line), isNotNull, reason: line);
+    }
+    expect(
+      WipeAdvice.hubCtaLabelFor('This floor is too far — retry a lower floor'),
+      isNull,
     );
   });
 

@@ -140,10 +140,9 @@ void main() {
       'farm_push',
       'hub_enter',
     ]);
-    expect(
-      FirstSessionTips.nextTipId(afterEnter, inDungeon: false),
-      'forge',
-    );
+    expect(FirstSessionTips.nextTipId(afterEnter, inDungeon: false), isNull);
+    final bossed = afterEnter.copyWith(bossVictories: 1);
+    expect(FirstSessionTips.nextTipId(bossed, inDungeon: false), 'forge');
   });
 
   test('first-run coach is at most two beats before first reward', () {
@@ -191,9 +190,12 @@ void main() {
       ],
     );
     expect(FirstSessionTips.earnedFirstReward(afterFloor), isTrue);
-    expect(MenuTabs.showGold(afterFloor), isTrue);
+    expect(MenuTabs.showGold(afterFloor), isFalse);
+    expect(FirstSessionTips.nextTipId(afterFloor, inDungeon: false), isNull);
+    final afterBoss = afterFloor.copyWith(bossVictories: 1);
+    expect(MenuTabs.showGold(afterBoss), isTrue);
     expect(
-      FirstSessionTips.nextTipId(afterFloor, inDungeon: false),
+      FirstSessionTips.nextTipId(afterBoss, inDungeon: false),
       'forge',
     );
   });
@@ -213,7 +215,14 @@ void main() {
     final afterEnter = base.copyWith(
       seenTips: const ['first_run', 'godhand', 'farm_push', 'hub_enter'],
     );
-    expect(FirstSessionTips.nextTipId(afterEnter, inDungeon: false), 'forge');
+    expect(FirstSessionTips.nextTipId(afterEnter, inDungeon: false), isNull);
+    expect(
+      FirstSessionTips.nextTipId(
+        afterEnter.copyWith(bossVictories: 1),
+        inDungeon: false,
+      ),
+      'forge',
+    );
     final withBag = afterEnter.copyWith(
       gearStash: [
         EquipmentItem(

@@ -1,5 +1,6 @@
 import 'app_analytics_stub.dart'
     if (dart.library.io) 'app_analytics_io.dart' as impl;
+import 'debug_play_log.dart';
 
 /// Soft Firebase Analytics facade. No-op on web / tests / missing config.
 abstract final class AppAnalytics {
@@ -16,6 +17,7 @@ abstract final class AppAnalytics {
     Map<String, Object>? params,
   ]) async {
     debugSink?.call(name, params);
+    DebugPlayLog.funnel(name, params);
     await impl.logEvent(name, params);
   }
 

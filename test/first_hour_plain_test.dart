@@ -298,6 +298,36 @@ void main() {
     expect(crumbs.join(' ').toUpperCase(), isNot(contains('KEY')));
   });
 
+  test('preview party keeps GEAR and MORE until the first boss', () async {
+    final director = GameDirector.preview();
+    await director.boot();
+    await director.startNewGame(HeroSpecs.starterUnlocked);
+    director.enterDungeon();
+    expect(director.state.bossVictories, 0);
+    expect(
+      MenuRouter.visibleDungeonTabs(director.state),
+      equals(const [MenuRoute.gear, MenuRoute.more]),
+    );
+    final paid = director.state.copyWith(
+      lifetimeGoldEarned: 12,
+      highestFloorCleared: 2,
+      essence: 2,
+    );
+    expect(paid.bossVictories, 0);
+    expect(
+      MenuRouter.visibleHubTabs(paid),
+      equals(const [MenuRoute.gear, MenuRoute.more]),
+    );
+    expect(
+      MenuRouter.visibleDungeonTabs(paid),
+      equals(const [MenuRoute.gear, MenuRoute.more]),
+    );
+    final bossed = paid.copyWith(bossVictories: 1);
+    expect(MenuRouter.visibleHubTabs(bossed), contains(MenuRoute.gold));
+    expect(MenuRouter.visibleHubTabs(bossed), contains(MenuRoute.shop));
+    director.dispose();
+  });
+
   test('first-hour bottom bar is GEAR and MORE until unlock', () {
     final fresh = GameLogic.createInitialState(now: now);
     expect(
@@ -306,8 +336,18 @@ void main() {
     );
     expect(MenuTabs.showShop(fresh), isFalse);
     expect(MenuTabs.showScrolls(fresh), isFalse);
-    expect(MenuRouter.visibleHubTabs(fresh.copyWith(highestFloorCleared: 1)),
-      contains(MenuRoute.gold),
+    final beforeBoss = fresh.copyWith(
+      highestFloorCleared: 4,
+      lifetimeGoldEarned: 40,
+      essence: 4,
+    );
+    expect(
+      MenuRouter.visibleHubTabs(beforeBoss),
+      equals(const [MenuRoute.gear, MenuRoute.more]),
+    );
+    expect(
+      MenuRouter.visibleDungeonTabs(beforeBoss),
+      equals(const [MenuRoute.gear, MenuRoute.more]),
     );
     expect(MenuTabs.showShop(fresh.copyWith(bossVictories: 1)), isTrue);
     expect(MenuTabs.showScrolls(fresh.copyWith(bossVictories: 1)), isTrue);
@@ -562,7 +602,7 @@ void main() {
     );
 
     final withEssence = fresh.copyWith(essence: 8, highestFloorCleared: 1);
-    expect(MenuTabs.showCamp(withEssence), isTrue);
+    expect(MenuTabs.showCamp(withEssence), isFalse);
     expect(MenuAlerts.bagPanelHint(withEssence), isEmpty);
 
     expect(MenuAlerts.bagEquipIdleTip(fresh).toUpperCase(), isNot(contains('BIS')));
@@ -571,6 +611,12 @@ void main() {
         isNot(contains('ESSENCE')));
     expect(
       MenuAlerts.bagCleanButtonTip(withEssence).toUpperCase(),
+      isNot(contains('ESSENCE')),
+    );
+    final afterBoss = withEssence.copyWith(bossVictories: 1);
+    expect(MenuTabs.showCamp(afterBoss), isTrue);
+    expect(
+      MenuAlerts.bagCleanButtonTip(afterBoss).toUpperCase(),
       contains('ESSENCE'),
     );
   });

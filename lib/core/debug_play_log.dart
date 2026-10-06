@@ -29,6 +29,37 @@ abstract final class DebugPlayLog {
 
   static void toast(String message) => event('toast', message);
 
+  /// Once-per-install growth events, so a phone log can time the funnel.
+  static const funnelNames = <String>{
+    'boot_intro_shown',
+    'start_menu_shown',
+    'new_game_shown',
+    'new_game_confirmed',
+    'first_open',
+    'app_ready',
+    'first_enter',
+    'time_to_combat',
+    'first_reward',
+    'first_boss',
+    'd1_return',
+    'offline_gold',
+    'party_wipe',
+    'review_offer',
+    'review_prompt',
+  };
+
+  static void funnel(String name, [Map<String, Object>? params]) {
+    if (!funnelNames.contains(name)) return;
+    if (params == null || params.isEmpty) {
+      event('funnel', name);
+      return;
+    }
+    final bits = [
+      for (final e in params.entries) '${e.key}=${e.value}',
+    ];
+    event('funnel', '$name ${bits.join(' ')}');
+  }
+
   static String bootDetail(GameState s) {
     final chase = ChaseContract.fromState(s);
     final where = s.inDungeon

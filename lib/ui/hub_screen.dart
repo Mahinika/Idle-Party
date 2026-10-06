@@ -3,6 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 
 import '../core/chase_contract.dart';
+import '../core/debug_play_log.dart';
 import '../core/menu_alerts.dart';
 import '../core/chase_dispatcher.dart';
 import '../core/ad_boost.dart';
@@ -243,6 +244,7 @@ class _HubScreenState extends State<HubScreen>
     if (director.state.inDungeon) return false;
     if (!PlayReviewAskOverlay.shouldOffer(director)) return false;
     _offeredPlayReview = true;
+    DebugPlayLog.event('funnel', 'review_offer');
     await PlayReviewAskOverlay.show(context, director);
     return true;
   }

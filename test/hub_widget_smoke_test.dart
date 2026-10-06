@@ -340,7 +340,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('4800'), findsOneWidget);
     expect(
-      find.text('Level, worn gear, Ascend, and blessings.'),
+      find.textContaining('Levels, worn gear, Ascend, blessings'),
       findsOneWidget,
     );
 
