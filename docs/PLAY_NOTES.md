@@ -9,7 +9,7 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Done
 
-<!-- - 2026-10-06 · Before the first boss the bar showed GOLD and ESSENCE as soon as coins dropped, and a wipe only named BAG · a new save now reaches the fight in 30s (was 137s, mostly the consent sheet) and the bar stays GEAR and MORE after the first coins; the wipe button opens the bag · fixed in PENDING -->
+<!-- - 2026-10-06 · Before the first boss the bar showed GOLD and ESSENCE as soon as coins dropped, and a wipe only named BAG · a new save now reaches the fight in 30s (was 137s, mostly the consent sheet) and the bar stays GEAR and MORE after the first coins; the wipe button opens the bag · fixed in fdb2f1b9 -->
 
 <!-- - 2026-10-04 · The contract CLAIM on QUESTS was cut off by the bottom bar · the last card stays whole above the menu · fixed in 2b337844 -->
 
