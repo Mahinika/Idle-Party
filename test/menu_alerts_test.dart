@@ -122,7 +122,7 @@ void main() {
     expect(alert.reason.toLowerCase(), contains('claim'));
   });
 
-  test('full bag without upgrades points at CLEAN BAG', () {
+  test('full bag without upgrades points at SELL JUNK', () {
     final base = GameLogic.createInitialState(now: now);
     final cap = GameLogic.maxGearStashFor(base);
     final junk = List<EquipmentItem>.generate(
@@ -139,7 +139,7 @@ void main() {
     expect(MenuAlerts.partyAlert(state).reason, contains('sells filter matches'));
     expect(MenuAlerts.gearEquipHint(state, 0), contains('sells filter matches'));
     expect(MenuAlerts.bagStatusLine(state), isNot(contains('MERGE')));
-    expect(MenuAlerts.bagPanelHint(state), contains('CLEAN BAG'));
+    expect(MenuAlerts.bagPanelHint(state), contains('SELL JUNK'));
     expect(MenuAlerts.bagPanelHint(state).toUpperCase(), isNot(contains('ESSENCE')));
   });
 

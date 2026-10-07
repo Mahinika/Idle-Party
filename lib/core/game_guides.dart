@@ -9,6 +9,7 @@ abstract final class GameGuides {
   /// Early topics before the first boss (plain chrome).
   static const Set<String> firstHourTopicIds = {
     'basics',
+    'away',
     'combat',
     'party',
     'bag_equip',
@@ -148,9 +149,9 @@ abstract final class GameGuides {
     title: 'BAG & GEAR',
     body:
         'Loot drops on the floor, then goes to BAG.\n\n'
-        '• A number on GEAR means better items wait — open BAG and tap EQUIP.\n'
-        '• BAG: view stash. EQUIP wears upgrades. CLEAN BAG sells filter matches '
-        '(including upgrades) for gold — keeps Apex and soulbound.\n'
+        '• A number on GEAR means better items wait — open BAG and tap EQUIP BEST.\n'
+        '• BAG: view stash. EQUIP BEST wears the better pieces, only when you tap it. '
+        'SELL JUNK sells what FILTERS match, for gold.\n'
         '• FILTERS (when the bag is filling): auto-sell weak drops for gold.\n'
         '• Compare ATK / DEF / STA. Worn pieces you replace go back to the bag.',
   );
@@ -399,6 +400,15 @@ abstract final class GameGuides {
           'are just the three starter jobs: Shield, Healer, Damage.',
     ),
     GuideTopic(
+      id: 'away',
+      title: 'AWAY',
+      body:
+          'The party keeps going when you close the app.\n\n'
+          '• In a cave, they keep fighting while the app is closed.\n'
+          '• On the hub, gold gathers while you are away.\n'
+          '• Come back and you will see Welcome back.',
+    ),
+    GuideTopic(
       id: 'dailies',
       title: 'THREE DAILIES',
       body:
@@ -531,7 +541,7 @@ abstract final class GameGuides {
           'Loot drops on the floor, then goes to your stash (BAG).\n\n'
           '• Upgrades stay in BAG until you equip them — GEAR badge shows how '
           'many are better; open BAG and tap EQUIP (or equip one by one).\n'
-          '• BAG: view and equip stash gear. CLEAN BAG sells gold then scraps essence using FILTERS.\n'
+          '• BAG: view and equip stash gear. SELL JUNK sells gold then scraps essence using FILTERS.\n'
           '• Stats: plate wants Strength, leather/mail damage wants Agility, '
           'casters want Intellect and Spell Power. Spirit is mana, not damage. '
           'Secondaries are Crit / Mastery / Haste / Mp5 — new drops keep ≤2 (no Move). '
@@ -553,7 +563,7 @@ abstract final class GameGuides {
           'numbers stay readable — budget follows the shown iLvl.\n'
           '• GEAR: paper-doll per hero — UNEQUIP worn pieces, EQUIP from bag.\n'
           '• Tap an empty GEAR slot to open BAG filtered to that slot.\n'
-          '• EQUIP follows budget stats. Green UPGRADE / EQUIP N is '
+          '• EQUIP follows budget stats. Green UPGRADE / EQUIP BEST N is '
           'exactly what EQUIP wears (not a maybe-better crumb). '
           'Will not swap to clearly lower iLvl without a real power jump; '
           '1H+off-hand can beat a lonely 2H.\n'
@@ -562,7 +572,7 @@ abstract final class GameGuides {
           'plus a 10% set proc on autos.\n'
           '• BAG → FILTERS: auto-sell weak drops for gold, '
           'auto-disassemble for essence (iLvl + rarity filters).\n'
-          '• CLEAN BAG (BAG button): sells/scraps FILTERS matches — including '
+          '• SELL JUNK (BAG button): sells/scraps FILTERS matches — including '
           'BiS and upgrades — keeps Apex and soulbound only.\n'
           '• Near-full bag: light auto-clean while looting (still protects upgrades).\n'
           '• EQUIP, UPGRADE, and BEST follow Score. ATK / DEF / STA sit beside it. Swapped pieces return to the bag.',
@@ -780,7 +790,7 @@ abstract final class GameGuides {
           '• The hub hunt can chase Market when an affordable listing beats your gear.\n'
           '• Wipe advice may point at GOLD when listings beat GOLD → FORGE for the same gap.\n'
           '• Buy flasks and bandages with gold.\n'
-          '• Clear a full bag with BAG → CLEAN BAG, MERGE, or BAG → FILTERS.\n'
+          '• Clear a full bag with BAG → SELL JUNK, MERGE, or BAG → FILTERS.\n'
           '• Keep at least one flask for tough floors and bosses.\n'
           '• Bottom-tab SHOP is the real-money store (forever SCROLLS / Cinder packs / '
           'ad-free on Play installs) — not this market.',

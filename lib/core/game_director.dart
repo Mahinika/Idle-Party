@@ -37,6 +37,7 @@ import 'rift.dart';
 import 'greater_rift.dart';
 import 'play_games_scores.dart';
 import 'play_review_ask.dart';
+import 'away_fight_tip.dart';
 import 'play_store_update.dart';
 import 'screen_awake.dart';
 import 'shop_billing.dart';
@@ -108,6 +109,12 @@ class GameDirector extends ChangeNotifier {
   Timer? _bootWarmup;
   Timer? _hubIdleTimer;
   int _battleToken = 0;
+
+  /// Bumps only in [_rebuildSpatial]. The dungeon view snaps and fades on it.
+  int _floorEpoch = 0;
+
+  /// New floor (or a fresh enter). Not God Hand, not a flask heal.
+  int get floorEpoch => _floorEpoch;
   int _uiThrottle = 0;
   int _visualFrame = 0;
   final List<(int ms, int gold)> _runGoldSamples = <(int, int)>[];
@@ -1098,6 +1105,7 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _rebuildSpatial() {
+    _floorEpoch++;
     hudFocusEnemyId = null;
     final ticketAshenCrown = _state.inWorldBoss && !_state.worldBossPractice;
     _spatial = SpatialCombat.build(
@@ -1393,6 +1401,9 @@ class GameDirector extends ChangeNotifier {
 
   void enterDungeon({String dungeonId = 'sandy'}) {
     if (_isLoading) return;
+    if (GameLogic.showDailyChase(_state)) {
+      _state = AwayFightTip.markSeen(_state);
+    }
     _awaitingWipeChoice = false;
     _flushHubIdle();
     var entered = GameLogic.dismissTip(
@@ -2163,6 +2174,11 @@ class GameDirector extends ChangeNotifier {
         'result': 'later',
       }),
     );
+  }
+
+  /// The away-fight line stays until they tap it or enter another cave.
+  void dismissAwayFightTip() {
+    _applyNotify(AwayFightTip.markSeen(_state));
   }
 
   /// Debug cold-start gate — pretends Play has a newer build.

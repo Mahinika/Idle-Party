@@ -434,7 +434,7 @@ class ItemTooltipCard extends StatelessWidget {
                 if (!alreadyEquipped) ...[
                   const SizedBox(height: 6),
                   Text(
-                    'BAG → CLEAN or FILTERS clears junk',
+                    'BAG → SELL JUNK or FILTERS clears junk',
                     style: GameTheme.body(
                       size: 11,
                       color: GameTheme.parchmentDim,

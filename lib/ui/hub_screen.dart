@@ -7,6 +7,7 @@ import '../core/debug_play_log.dart';
 import '../core/menu_alerts.dart';
 import '../core/chase_dispatcher.dart';
 import '../core/ad_boost.dart';
+import '../core/away_fight_tip.dart';
 import '../core/game_director.dart';
 import '../core/game_guides.dart';
 import '../core/game_logic.dart';
@@ -460,6 +461,12 @@ class _HubScreenState extends State<HubScreen>
               CoachTarget.enter,
               inDungeon: false,
             );
+            final awayLine = AwayFightTip.shouldShow(
+              state,
+              bossStairs: false,
+            )
+                ? AwayFightTip.line
+                : null;
             final enterFamily = HubPrimaryCta.isEnterFamilyLabel(primaryLabel);
             final showCoach = coachEnter != null && enterFamily;
             final readyContract = ChaseContract(chase: chase);
@@ -469,6 +476,11 @@ class _HubScreenState extends State<HubScreen>
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (awayLine != null)
+                  GestureDetector(
+                    onTap: director.dismissAwayFightTip,
+                    child: CoachLine(awayLine),
+                  ),
                 if (showCoach) CoachLine(coachEnter),
                 AnimatedBuilder(
                   animation: _torch,

@@ -365,6 +365,7 @@ class MetaDepthState {
     this.notifyPrompted = false,
     this.notifyPingMs = const <int>[],
     this.reviewPrompted = false,
+    this.awayFightTipSeen = false,
     this.friendCode = '',
     this.friendClaimsPaid = 0,
     this.friendInviteUsed = '',
@@ -710,6 +711,10 @@ class MetaDepthState {
   /// Survives Ascend. Never tied to loot.
   final bool reviewPrompted;
 
+  /// True after the one-time "they keep fighting if you close the app" line.
+  /// Survives Ascend. Old saves default to false and can still see it.
+  final bool awayFightTipSeen;
+
   /// This save's friend-invite code. Survives Ascend. Empty until shared.
   final String friendCode;
 
@@ -882,6 +887,7 @@ class MetaDepthState {
     bool? notifyPrompted,
     List<int>? notifyPingMs,
     bool? reviewPrompted,
+    bool? awayFightTipSeen,
     String? friendCode,
     int? friendClaimsPaid,
     String? friendInviteUsed,
@@ -1056,6 +1062,7 @@ class MetaDepthState {
       notifyPrompted: notifyPrompted ?? this.notifyPrompted,
       notifyPingMs: notifyPingMs ?? this.notifyPingMs,
       reviewPrompted: reviewPrompted ?? this.reviewPrompted,
+      awayFightTipSeen: awayFightTipSeen ?? this.awayFightTipSeen,
       friendCode: friendCode ?? this.friendCode,
       friendClaimsPaid: friendClaimsPaid ?? this.friendClaimsPaid,
       friendInviteUsed: friendInviteUsed ?? this.friendInviteUsed,
@@ -1212,6 +1219,7 @@ class MetaDepthState {
     'notifyPrompted': notifyPrompted,
     'notifyPingMs': notifyPingMs,
     'reviewPrompted': reviewPrompted,
+    'awayFightTipSeen': awayFightTipSeen,
     'friendCode': friendCode,
     'friendClaimsPaid': friendClaimsPaid,
     'friendInviteUsed': friendInviteUsed,
@@ -1482,6 +1490,7 @@ class MetaDepthState {
               .toList() ??
           const <int>[],
       reviewPrompted: (json['reviewPrompted'] as bool?) ?? false,
+      awayFightTipSeen: (json['awayFightTipSeen'] as bool?) ?? false,
       friendCode: _friendCode(json['friendCode'] as String?),
       friendClaimsPaid: ((json['friendClaimsPaid'] as num?)?.toInt() ?? 0)
           .clamp(0, 30),

@@ -7,10 +7,10 @@ import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/ui/first_session_tips.dart';
 
 /// Removed chrome must not come back as a tab, button, or day-one lesson.
+/// SELL JUNK is the bag button (it used to say CLEAN).
 void main() {
   const forbiddenLabels = <String>{
     'LOADOUTS',
-    'SELL JUNK',
     'SCRAP',
     'GEAR SELL',
   };
@@ -27,7 +27,7 @@ void main() {
     expect(GearPanel.values.map((e) => e.name), isNot(contains('sell')));
   });
 
-  test('UI buttons never restore Sell junk / Scrap / LOADOUTS / GEAR Sell', () {
+  test('UI buttons never restore Scrap / LOADOUTS / GEAR Sell', () {
     final labelRe = RegExp(r"label:\s*'([^']+)'");
     final files = Directory('lib/ui')
         .listSync(recursive: true)

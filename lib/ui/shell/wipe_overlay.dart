@@ -176,8 +176,8 @@ class DungeonWipePanel extends StatelessWidget {
                       label:
                           state.gearStash.length >=
                               GameLogic.maxGearStashFor(state)
-                          ? 'CLEAN BAG'
-                          : 'CLEAN BAG (near full)',
+                          ? 'SELL JUNK'
+                          : 'SELL JUNK (near full)',
                       tip:
                           'Clears weak drops so new loot can fit',
                       style: GameButtonStyle.grey,

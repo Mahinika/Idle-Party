@@ -531,12 +531,12 @@ class HubChase {
           : '$upgrades better items waiting',
       detail: upgrades == 1
           ? (named != null
-                ? '$named is in BAG — tap EQUIP 1.'
-                : 'Tap EQUIP 1 before you go deeper.')
+                ? '$named is in BAG — tap EQUIP BEST 1.'
+                : 'Tap EQUIP BEST 1 before you go deeper.')
           : (named != null
-                ? 'Tap EQUIP $upgrades (first: $named).'
-                : 'Tap EQUIP $upgrades — upgrades waiting.'),
-      progressLabel: upgrades == 1 ? 'EQUIP 1' : 'EQUIP $upgrades',
+                ? 'Tap EQUIP BEST $upgrades (first: $named).'
+                : 'Tap EQUIP BEST $upgrades — upgrades waiting.'),
+      progressLabel: upgrades == 1 ? 'EQUIP BEST 1' : 'EQUIP BEST $upgrades',
       urgency: HubChaseUrgency.ready,
     );
   }

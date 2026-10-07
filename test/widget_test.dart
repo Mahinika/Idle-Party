@@ -298,7 +298,7 @@ void main() {
     await tester.tap(find.bySemanticsLabel('GEAR $upgrades waiting'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('EQUIP $upgrades'), findsWidgets);
+    expect(find.text('EQUIP BEST $upgrades'), findsWidgets);
   });
 
   testWidgets('wide desktop viewport still opens overlays', (WidgetTester tester) async {

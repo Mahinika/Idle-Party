@@ -92,4 +92,78 @@ void main() {
     expect(focus.x, 12);
     expect(focus.y, 10);
   });
+
+  test('ease snaps on a new floor and on a huge jump', () {
+    final fresh = dungeonCamEase(
+      prevX: 0,
+      prevY: 0,
+      targetX: 5,
+      targetY: 4,
+      newWorld: true,
+    );
+    expect(fresh.x, 5);
+    expect(fresh.y, 4);
+    final first = dungeonCamEase(
+      prevX: null,
+      prevY: null,
+      targetX: 2,
+      targetY: 3,
+      newWorld: false,
+    );
+    expect(first.x, 2);
+    expect(first.y, 3);
+    final far = dungeonCamEase(
+      prevX: 0,
+      prevY: 0,
+      targetX: 40,
+      targetY: 0,
+      newWorld: false,
+    );
+    expect(far.x, 40);
+  });
+
+  test('ease follows a walk without lag', () {
+    final eased = dungeonCamEase(
+      prevX: 1,
+      prevY: 1,
+      targetX: 1.1,
+      targetY: 1.05,
+      newWorld: false,
+    );
+    expect(eased.x, 1.1);
+    expect(eased.y, 1.05);
+  });
+
+  test('ease glides toward a pack shift, never past it, and arrives', () {
+    var x = 0.0;
+    var y = 0.0;
+    for (var i = 0; i < 8; i++) {
+      final eased = dungeonCamEase(
+        prevX: x,
+        prevY: y,
+        targetX: 4,
+        targetY: 0,
+        newWorld: false,
+      );
+      expect(eased.x, lessThanOrEqualTo(4));
+      expect(eased.x, greaterThan(x));
+      x = eased.x;
+      y = eased.y;
+    }
+    expect(x, greaterThan(1));
+    expect(x, lessThan(4));
+    for (var i = 0; i < 90; i++) {
+      final eased = dungeonCamEase(
+        prevX: x,
+        prevY: y,
+        targetX: 3,
+        targetY: -2,
+        newWorld: false,
+      );
+      x = eased.x;
+      y = eased.y;
+    }
+    expect(x, closeTo(3, 0.01));
+    expect(y, closeTo(-2, 0.01));
+  });
 }

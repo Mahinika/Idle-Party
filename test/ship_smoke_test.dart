@@ -305,8 +305,8 @@ void main() {
     final market = GameGuides.topics.firstWhere((t) => t.id == 'market');
     expect(market.body.toLowerCase(), contains('listings'));
     expect(market.body.toLowerCase(), contains('hub hunt'));
-    expect(market.body.toLowerCase(), contains('clean bag'));
-    expect(market.body.toLowerCase(), isNot(contains('sell junk')));
+    expect(market.body.toLowerCase(), contains('sell junk'));
+    expect(market.body.toLowerCase(), isNot(contains('clean bag')));
   });
 
   test('Gauntlet / KEY / Rift gates use party max level and What’s New version is non-empty', () {

@@ -312,7 +312,7 @@ abstract final class WipeAdvice {
     if (bag != null) return bag;
 
     if (state.gearStash.length >= GameLogic.maxGearStashFor(state) - 1) {
-      return 'Bag nearly full — equip upgrades or CLEAN BAG';
+      return 'Bag nearly full — equip upgrades or SELL JUNK';
     }
 
     if (state.inWorldBoss && fight.leftover >= 0.20) {

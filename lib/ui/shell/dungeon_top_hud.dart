@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/ashen_crown.dart';
+import '../../core/away_fight_tip.dart';
 import '../../core/enemy_flavor.dart';
 import '../../core/gauntlet_anomaly.dart';
 import '../../core/game_director.dart';
@@ -329,7 +330,13 @@ class DungeonTopHud extends StatelessWidget {
       CoachTarget.farmPush,
       inDungeon: true,
     );
-    final coachLine = coachGod ?? coachFarm;
+    final bossStairs =
+        world?.awaitingExit == true && state.currentRoom.type == RoomType.boss;
+    final awayLine = coachGod == null &&
+            AwayFightTip.shouldShow(state, bossStairs: bossStairs)
+        ? AwayFightTip.line
+        : null;
+    final coachLine = coachGod ?? awayLine ?? coachFarm;
     final keyBit = !jargon
         ? ''
         : state.keystoneRunActive
@@ -623,14 +630,17 @@ class DungeonTopHud extends StatelessWidget {
               style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
             ),
           if (coachLine != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 2, right: 4),
-              child: Text(
-                coachLine,
-                textAlign: TextAlign.right,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+            GestureDetector(
+              onTap: awayLine != null ? director.dismissAwayFightTip : null,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2, right: 4),
+                child: Text(
+                  coachLine,
+                  textAlign: TextAlign.right,
+                  maxLines: awayLine != null ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+                ),
               ),
             ),
           if (state.inRift)

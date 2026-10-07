@@ -28,14 +28,14 @@ class BagCleanupFilters extends StatelessWidget {
     final showMarket = MenuTabs.showGold(state);
     final jargon = !GameLogic.plainPlayerChrome(state);
     final keepLine = jargon
-        ? 'CLEAN sells every filter match, including BiS and upgrades. Keeps Apex and soulbound.'
-        : 'CLEAN sells every filter match, including upgrades. Keeps Apex and soulbound.';
+        ? 'SELL JUNK sells every filter match, including BiS and upgrades. Keeps Apex and soulbound.'
+        : 'SELL JUNK sells every filter match, including upgrades. Keeps Apex and soulbound.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (compact) ...[
           Text(
-            'CLEAN BAG uses these rules. $keepLine',
+            'SELL JUNK uses these rules. $keepLine',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 10),
@@ -84,7 +84,7 @@ class BagCleanupFilters extends StatelessWidget {
         if (state.autoSellMaxPower > 0) ...[
           const SizedBox(height: 4),
           Text(
-            'CLEAN would sell ${GearCleanup.cleanSellPreviewCount(state)} stash items',
+            'SELL JUNK would sell ${GearCleanup.cleanSellPreviewCount(state)} stash items',
             style: GameTheme.body(size: 12, color: GameTheme.mossLit),
           ),
         ],
@@ -133,19 +133,19 @@ class BagCleanupFilters extends StatelessWidget {
 
   static String _sellRule(GameState state) {
     if (state.autoSellMaxPower <= 0) {
-      return 'Junk sold for coins when the bag is near full or you CLEAN. '
+      return 'Junk sold for coins when the bag is near full or you SELL JUNK. '
           'Off = never auto-sells.';
     }
     final cap =
         'Sells iLvl 1–${state.autoSellMaxPower} at or below the rarity cap.';
     final worn = GearCleanup.partyWornIlvl(state);
     if (worn == null) {
-      return 'Junk sold for coins when the bag is near full or you CLEAN. $cap';
+      return 'Junk sold for coins when the bag is near full or you SELL JUNK. $cap';
     }
     final vs = state.autoSellMaxPower >= worn
         ? ' Worn gear is about i$worn, so this cap can sell upgrades.'
         : ' Worn gear is about i$worn.';
-    return 'Junk sold for coins when the bag is near full or you CLEAN. $cap$vs';
+    return 'Junk sold for coins when the bag is near full or you SELL JUNK. $cap$vs';
   }
 
   static String _footer({
@@ -154,8 +154,8 @@ class BagCleanupFilters extends StatelessWidget {
     required bool showMarket,
   }) {
     final sell = compact
-        ? 'CLEAN BAG: sell gold first'
-        : 'Pickup & CLEAN BAG: sell gold first (≤iLvl + rarity)';
+        ? 'SELL JUNK: sell gold first'
+        : 'Pickup & SELL JUNK: sell gold first (≤iLvl + rarity)';
     final scrap = showScrap
         ? (compact
               ? ', then scrap leftovers that match'

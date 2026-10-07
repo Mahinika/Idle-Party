@@ -21,6 +21,49 @@ import 'dart:math' as math;
   return (camX: camX, camY: camY);
 }
 
+/// Glide the camera toward [targetX]/[targetY].
+///
+/// A walk (gap at most [followSlack]) snaps, so the party does not lag.
+/// A pack waking up is a medium jump and eases in. A new floor or a huge
+/// jump snaps. The step is always a fraction of the remaining gap, so the
+/// camera never passes the target.
+({double x, double y}) dungeonCamEase({
+  required double? prevX,
+  required double? prevY,
+  required double targetX,
+  required double targetY,
+  required bool newWorld,
+  double followSlack = 0.35,
+  double snapDistance = 10,
+  double catchFraction = 0.12,
+}) {
+  if (newWorld || prevX == null || prevY == null) {
+    return (x: targetX, y: targetY);
+  }
+  final dx = targetX - prevX;
+  final dy = targetY - prevY;
+  final dist = math.sqrt(dx * dx + dy * dy);
+  if (dist <= followSlack || dist >= snapDistance) {
+    return (x: targetX, y: targetY);
+  }
+  final step = dist * catchFraction.clamp(0.01, 0.95);
+  return (x: prevX + dx / dist * step, y: prevY + dy / dist * step);
+}
+
+/// Punch applied after the eased camera, so a glide is not shaken early.
+({double x, double y}) dungeonCamShake({
+  required double x,
+  required double y,
+  required double shakeAmp,
+  required int visualFrame,
+}) {
+  if (shakeAmp <= 0.02) return (x: x, y: y);
+  return (
+    x: x + math.sin(visualFrame * 1.7) * shakeAmp,
+    y: y + math.cos(visualFrame * 2.3) * shakeAmp * 0.85,
+  );
+}
+
 ({double x, double y}) dungeonPartyFocus({
   required Iterable<({double x, double y, bool alive, int index})> heroes,
   required double mapCenterX,

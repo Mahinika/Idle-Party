@@ -103,8 +103,10 @@ void main() {
       );
       expect(
         t.body.toUpperCase(),
-        isNot(contains('SELL JUNK')),
-        reason: '${t.id} should not teach a Sell junk button',
+        t.id == 'bag_equip' || t.id == 'market'
+            ? contains('SELL JUNK')
+            : isNot(contains('SELL JUNK')),
+        reason: '${t.id} names SELL JUNK only on the bag button',
       );
       expect(
         t.body.toUpperCase(),

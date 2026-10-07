@@ -344,7 +344,7 @@ class MenuAlerts {
     final n = bagUpgradeCount(state);
     if (n > 0) {
       final noun = n == 1 ? 'upgrade' : 'upgrades';
-      return 'Bag full — $n $noun. Open GEAR and tap EQUIP';
+      return 'Bag full — $n $noun. Open GEAR and tap EQUIP BEST';
     }
     return 'Bag full — nothing safe to scrap';
   }
@@ -353,14 +353,14 @@ class MenuAlerts {
     if (bagUpgradeCount(state) > 0) return '';
     if (GearService.isBagJammed(state) && !isBagFull(state)) {
       final mergeBit = MenuTabs.showMerge(state)
-          ? '; CLEAN BAG or MERGE'
-          : '; CLEAN BAG';
+          ? '; SELL JUNK or MERGE'
+          : '; SELL JUNK';
       return 'Nearly full — FILTERS may junk weak gear$mergeBit';
     }
     if (!isBagFull(state)) return '';
-    if (state.gearStash.isEmpty) return 'Bag is full — CLEAN BAG';
+    if (state.gearStash.isEmpty) return 'Bag is full — SELL JUNK';
     final merge = MenuTabs.showMerge(state) ? ' or MERGE' : '';
-    return 'Bag full — CLEAN BAG sells filter matches$merge';
+    return 'Bag full — SELL JUNK sells filter matches$merge';
   }
 
   /// BAG panel idle line. Empty in the first hour unless the bag is jammed.
@@ -374,10 +374,10 @@ class MenuAlerts {
     if (!jammed && !full) return '';
     if (MenuTabs.showCamp(state)) {
       return full
-          ? 'CLEAN BAG: gold first, then essence from leftovers'
-          : 'CLEAN BAG: sell for gold first, then scrap for essence';
+          ? 'SELL JUNK: gold first, then essence from leftovers'
+          : 'SELL JUNK: sell for gold first, then scrap for essence';
     }
-    return 'CLEAN BAG: sell for gold';
+    return 'SELL JUNK: sell for gold';
   }
 
   static String bagEquipIdleTip(GameState state) {
@@ -385,12 +385,12 @@ class MenuAlerts {
     final merge = MenuTabs.showMerge(state);
     if (GameLogic.plainPlayerChrome(state)) {
       return merge
-          ? 'No upgrades in bag — CLEAN BAG or MERGE junk'
-          : 'No upgrades in bag — CLEAN BAG';
+          ? 'No upgrades in bag — SELL JUNK or MERGE junk'
+          : 'No upgrades in bag — SELL JUNK';
     }
     return merge
-        ? 'No BiS upgrades in bag — CLEAN BAG or MERGE junk'
-        : 'No BiS upgrades in bag — CLEAN BAG';
+        ? 'No BiS upgrades in bag — SELL JUNK or MERGE junk'
+        : 'No BiS upgrades in bag — SELL JUNK';
   }
 
   static String bagCleanButtonTip(GameState state) {

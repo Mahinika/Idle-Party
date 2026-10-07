@@ -32,9 +32,14 @@ extension _DungeonPaintActors on _TileRoomPainter {
       }
     }
 
-    void drawBar(Offset c, int hp, int maxHp, double width) {
+    void drawBar(Offset c, int hp, int maxHp, double width, double scale) {
       final frac = maxHp <= 0 ? 0.0 : (hp / maxHp).clamp(0.0, 1.0);
-      final top = c.dy - tile * 0.55;
+      final barH = DungeonBarLayout.barHeight(tile);
+      final top = DungeonBarLayout.top(
+        centerY: c.dy,
+        tile: tile,
+        scale: scale,
+      );
       final left = c.dx - width / 2;
       final cb = SpatialCombat.colorblindMode;
       final Color fill;
@@ -45,16 +50,16 @@ extension _DungeonPaintActors on _TileRoomPainter {
       } else {
         fill = cb ? const Color(0xFF009E73) : const Color(0xFFE05050);
       }
-      canvas.drawRRect(
+        canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(left, top, width, 4),
+          Rect.fromLTWH(left, top, width, barH),
           const Radius.circular(1),
         ),
         Paint()..color = const Color(0xAA000000),
       );
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(left, top, width * frac, 4),
+          Rect.fromLTWH(left, top, width * frac, barH),
           const Radius.circular(1),
         ),
         Paint()..color = fill,
@@ -217,7 +222,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
         if (SpatialCombat.alwaysShowEnemyHp ||
             enemy.hp < enemy.maxHp ||
             enemy.hp <= 0) {
-          drawBar(c, enemy.hp, enemy.maxHp, tile * 0.85);
+          drawBar(c, enemy.hp, enemy.maxHp, tile * 0.85, scale);
         }
       }
     }
@@ -265,6 +270,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
       final flipX = (aimX - hero.x) < -0.15;
       final alpha = hero.isAlive ? 1.0 : 0.25;
       final paintAlpha = hero.vanishTimer > 0 ? 0.35 : alpha;
+      var scale = 0.95;
       if (partyHero != null) {
         paintStanceBodyMark(canvas, c, tile, partyHero.specId);
         final moving = hero.vx.abs() > 0.05 || hero.vy.abs() > 0.05;
@@ -315,7 +321,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
                 BodyFamilyCatalog.familyFor(partyHero),
               )
             : 1.0;
-        var scale = (formImg != null
+        scale = (formImg != null
                 ? 1.42
                 : (usingOwnedBody ? 1.72 * read : 0.95)) *
             (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
@@ -675,7 +681,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
         );
       }
       if (hero.isAlive) {
-        drawBar(c, hero.hp, hero.effectiveMaxHp, tile * 0.8);
+        drawBar(c, hero.hp, hero.effectiveMaxHp, tile * 0.8, scale);
       }
     }
 

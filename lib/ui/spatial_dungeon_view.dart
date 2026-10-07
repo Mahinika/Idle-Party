@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
+import 'dungeon_bar_layout.dart';
 import 'dungeon_camera.dart';
 import '../core/game_logic.dart';
 import '../core/hero_identity.dart';
@@ -68,7 +69,8 @@ class SpatialDungeonView extends StatefulWidget {
   State<SpatialDungeonView> createState() => _SpatialDungeonViewState();
 }
 
-class _SpatialDungeonViewState extends State<SpatialDungeonView> {
+class _SpatialDungeonViewState extends State<SpatialDungeonView>
+    with SingleTickerProviderStateMixin {
   final Map<int, Offset> _pinchPointers = {};
   double? _pinchBaseDist;
   double? _pinchBaseCols;
@@ -101,6 +103,19 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   String? _loadedDungeonId;
   bool _sharedLoaded = false;
 
+  /// Last floor rebuild we painted. A new epoch snaps the camera and fades in.
+  /// God Hand and flask heals replace the world object without a new epoch.
+  int? _floorEpoch;
+  double? _easeCamX;
+  double? _easeCamY;
+  late final AnimationController _floorFade;
+
+  /// 1 = the new floor is still dark. Read by the map overlay.
+  double _floorCover = 0;
+
+  /// Held until the fade controller actually starts, so a tick cannot clear it.
+  bool _armFade = false;
+
   /// Zone floor/enemy decode finished (partial OK — never block forever).
   bool _zoneArtReady = false;
   int _loadGen = 0;
@@ -123,6 +138,10 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
   @override
   void initState() {
     super.initState();
+    _floorFade = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    )..value = 1;
     widget.director.setDungeonTilesReady(false);
     _loadImages(widget.director.state.dungeonId);
   }
@@ -139,6 +158,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
 
   @override
   void dispose() {
+    _floorFade.dispose();
     _pinchCols.dispose();
     // The tree is already locked while this view unmounts. A notify here
     // throws setState-during-build on every leave.
@@ -568,18 +588,65 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                     listenable: Listenable.merge([
                       widget.director.combatFrame,
                       _pinchCols,
+                      _floorFade,
                     ]),
                     builder: (context, _) {
                       final world = widget.director.spatial;
                       final room = widget.director.state.currentRoom;
-                      final camera = _TileCamera.forWorld(
+                      final target = _TileCamera.forWorld(
                         world,
                         constraints,
                         targetCols:
                             _pinchCols.value ?? widget.director.state.viewCols,
-                        shake: widget.director.combatShake,
-                        visualFrame: widget.director.visualFrame,
                         pinHeroIndex: widget.director.cameraHeroIndex,
+                      );
+                      final epoch = widget.director.floorEpoch;
+                      final newFloor = epoch != _floorEpoch;
+                      if (newFloor) {
+                        _floorEpoch = epoch;
+                        final minimal =
+                            widget.director.state.vfxQuality ==
+                            VfxQuality.minimal;
+                        if (minimal) {
+                          _floorCover = 0;
+                          _armFade = false;
+                        } else {
+                          _floorCover = 1;
+                          _armFade = true;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!mounted) return;
+                            _armFade = false;
+                            _floorFade.forward(from: 0);
+                          });
+                        }
+                      } else if (_armFade) {
+                        _floorCover = 1;
+                      } else {
+                        _floorCover = (1 - _floorFade.value).clamp(0.0, 1.0);
+                      }
+                      final eased = dungeonCamEase(
+                        prevX: _easeCamX,
+                        prevY: _easeCamY,
+                        targetX: target.camX,
+                        targetY: target.camY,
+                        newWorld: newFloor,
+                      );
+                      _easeCamX = eased.x;
+                      _easeCamY = eased.y;
+                      final shaken = dungeonCamShake(
+                        x: eased.x,
+                        y: eased.y,
+                        shakeAmp: widget.director.combatShake > 0.02
+                            ? widget.director.combatShake * 0.38
+                            : 0,
+                        visualFrame: widget.director.visualFrame,
+                      );
+                      final camera = _TileCamera(
+                        camX: shaken.x,
+                        camY: shaken.y,
+                        tileSize: target.tileSize,
+                        visibleCols: target.visibleCols,
+                        visibleRows: target.visibleRows,
                       );
                       return Stack(
                         fit: StackFit.expand,
@@ -775,6 +842,16 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView> {
                               ),
                             ),
                           ),
+                          if (_floorCover > 0.01)
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: ColoredBox(
+                                  color: GameTheme.stoneDeep.withValues(
+                                    alpha: _floorCover,
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       );
                     },

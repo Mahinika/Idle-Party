@@ -150,8 +150,8 @@ class _InventoryDockState extends State<InventoryDock>
         final upgrades = MenuAlerts.bagUpgradeCount(state);
         if (upgrades > 0) {
           return upgrades == 1
-              ? '1 better item in bag — tap EQUIP 1'
-              : '$upgrades better items in bag — tap EQUIP $upgrades';
+              ? '1 better item in bag — tap EQUIP BEST 1'
+              : '$upgrades better items in bag — tap EQUIP BEST $upgrades';
         }
         return MenuAlerts.bagStatusLine(state);
       case GearPanel.merge:
@@ -213,7 +213,7 @@ class _InventoryDockState extends State<InventoryDock>
   Widget _autoEquipButton({bool dense = false, bool expanded = true}) {
     final upgrades = MenuAlerts.bagUpgradeCount(state);
     return GameButton(
-      label: upgrades > 0 ? 'EQUIP $upgrades' : 'EQUIP',
+      label: upgrades > 0 ? 'EQUIP BEST $upgrades' : 'EQUIP',
       tip: upgrades > 0
           ? 'One tap: equip all $upgrades upgrades now'
           : MenuAlerts.bagEquipIdleTip(state),
@@ -451,7 +451,7 @@ class _InventoryDockState extends State<InventoryDock>
                     : '${filteredSlots.length} in bag',
                 style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
               ),
-              MenuChrome.chip(label: 'CLEAR', onTap: onClearBagSlotFilter),
+              MenuChrome.chip(label: 'ALL SLOTS', onTap: onClearBagSlotFilter),
             ],
           ],
         ),
@@ -553,7 +553,7 @@ class _InventoryDockState extends State<InventoryDock>
             const SizedBox(width: 4),
             Expanded(
               child: GameButton(
-                label: 'CLEAN',
+                label: 'SELL JUNK',
                 tip: MenuAlerts.bagCleanButtonTip(state),
                 onPressed: state.gearStash.isEmpty ? null : onCleanBag,
                 style: GameButtonStyle.grey,

@@ -360,15 +360,15 @@ class MenuRouter extends ChangeNotifier {
 
             ? 'Bag empty — farm drops or try MARKET'
 
-            : 'No upgrades in bag — CLEAN or MERGE junk';
+            : 'No upgrades in bag — SELL JUNK or MERGE junk';
 
       }
 
       return n == 1
 
-          ? '1 upgrade — EQUIP 1'
+          ? '1 upgrade — EQUIP BEST 1'
 
-          : '$n upgrades — EQUIP $n';
+          : '$n upgrades — EQUIP BEST $n';
 
     }
 
