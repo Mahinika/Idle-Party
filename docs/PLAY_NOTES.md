@@ -7,12 +7,15 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Open
 
-- 2026-10-07 · Play review (ja, 4★) · Health bars sit across hero eyes, like a blindfold
-- 2026-10-07 · Play review (ja, 4★) · New floors and new enemies cut in instantly
-- 2026-10-07 · Play review (ja, 4★) · Nothing in the first hour says the party keeps fighting when the app is closed
-- 2026-10-07 · Play review (ja, 4★) · GEAR buttons CLEAR, CLEAN, and EQUIP are easy to mix up
-
 ## Done
+
+<!-- - 2026-10-07 · Play review (ja, 4★) · Health bars sat across hero eyes · bars now sit above the head · fixed in ff58713b -->
+
+<!-- - 2026-10-07 · Play review (ja, 4★) · New floors and new enemies cut in instantly · the camera glides when a pack wakes, and a new floor fades in · fixed in ff58713b -->
+
+<!-- - 2026-10-07 · Play review (ja, 4★) · Nothing in the first hour said the party keeps fighting when the app is closed · a guide and one line after the first boss say so · fixed in ff58713b -->
+
+<!-- - 2026-10-07 · Play review (ja, 4★) · GEAR mixed up CLEAR, CLEAN, and EQUIP · the buttons now say ALL SLOTS, SELL JUNK, and EQUIP BEST · fixed in ff58713b -->
 
 <!-- - 2026-10-06 · Before the first boss the bar showed GOLD and ESSENCE as soon as coins dropped, and a wipe only named BAG · a new save now reaches the fight in 30s (was 137s, mostly the consent sheet) and the bar stays GEAR and MORE after the first coins; the wipe button opens the bag · fixed in fdb2f1b9 -->
 
