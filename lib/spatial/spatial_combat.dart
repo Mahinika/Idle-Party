@@ -25,6 +25,7 @@ import '../visual/rig/rig_ability_clips.dart';
 import 'combat_avoidance.dart';
 import 'hideout_stash.dart';
 import 'party_room_mark.dart';
+import 'room_happening.dart';
 import 'tile_map.dart';
 
 import 'ability_effects.dart';
@@ -43,6 +44,7 @@ part 'floor_flow.dart';
 part 'spell_look.dart';
 part 'combat_audio_cues.dart';
 part 'combat_audio_feel.dart';
+part 'room_happening_step.dart';
 
 enum SpatialTeam { hero, enemy }
 
@@ -444,6 +446,7 @@ class SpatialActor {
   double channelAcc = 0;
   int channelAmount = 0;
   String channelTargetId = '';
+
   /// `heal` or `hit`.
   String channelKind = '';
 
@@ -769,6 +772,7 @@ class SpatialWorld {
     required this.groundLoot,
     required this.isTreasure,
     this.treasureOpen = false,
+    this.happeningSpent = false,
     this.treasureTimer = 0,
     this.awaitingExit = false,
     this.exitWaitTimer = 0,
@@ -875,6 +879,9 @@ class SpatialWorld {
   /// Mirrors [GameState.spawnPersistentVfx] — discs + aura rings on Full/Lite.
   bool spawnPersistentVfx = true;
   bool treasureOpen;
+
+  /// The chest, trap, or altar in the first room already fired this visit.
+  bool happeningSpent;
   double treasureTimer;
   bool awaitingExit;
 
@@ -1776,9 +1783,10 @@ abstract final class SpatialCombat {
 
   static ({GameState state, int gold}) _tickBurningGround(
     SpatialWorld world,
-    GameState state,
-    {required double dt, required math.Random rng}
-  ) {
+    GameState state, {
+    required double dt,
+    required math.Random rng,
+  }) {
     var gold = 0;
     for (final g in world.groundFx) {
       if (g.tickDamage <= 0) continue;
@@ -1820,10 +1828,7 @@ abstract final class SpatialCombat {
         }
         if (ally != null) {
           final before = ally.hp;
-          ally.hp = math.min(
-            ally.effectiveMaxHp,
-            ally.hp + hero.channelAmount,
-          );
+          ally.hp = math.min(ally.effectiveMaxHp, ally.hp + hero.channelAmount);
           final gained = ally.hp - before;
           if (gained > 0) recordHeroHeal(hero, gained);
         }
@@ -2269,6 +2274,7 @@ abstract final class SpatialCombat {
       projectiles: <SpatialProjectile>[],
       groundLoot: groundLoot,
       isTreasure: isTreasure,
+      happeningSpent: RoomHappening.alreadyClaimed(state),
       treasureTimer: isTreasure ? 1.2 : 0,
       activeChamber: firstCombat,
       clearedChambers: <int>{0},
@@ -2518,6 +2524,7 @@ abstract final class SpatialCombat {
         projectiles: world.projectiles,
         groundLoot: world.groundLoot,
         isTreasure: world.isTreasure,
+        happeningSpent: world.happeningSpent,
         treasureOpen: world.treasureOpen,
         treasureTimer: world.treasureTimer,
         awaitingExit: world.awaitingExit,
@@ -3319,6 +3326,7 @@ abstract final class SpatialCombat {
     );
     nextState = party.state;
     goldFromKills += party.gold;
+    nextState = roomHappeningTick(world, nextState);
 
     // Pets follow their owner (meta pet / class pet) when set, else party leader.
     final pets = _stepPets(
@@ -3579,9 +3587,7 @@ abstract final class SpatialCombat {
               world,
               x: target.x,
               y: target.y - 0.5,
-              text: glassExecute
-                  ? EnemyFlavor.glassTell(flavor)
-                  : 'EXECUTE',
+              text: glassExecute ? EnemyFlavor.glassTell(flavor) : 'EXECUTE',
               argb: 0xFFB0E0FF,
               life: 0.75,
               priority: 2,

@@ -5,6 +5,7 @@ import 'floor_blueprint.dart';
 import 'floor_theme.dart';
 import 'party_room_mark.dart';
 import 'prop_vignettes.dart';
+import 'room_happening.dart';
 import 'tile_map.dart';
 import 'zone_layout_kit.dart';
 
@@ -45,6 +46,7 @@ class PlacementPlan {
     List<GateInfo> gates = const <GateInfo>[],
     Map<int, (int, int)> anchors = const <int, (int, int)>{},
     PartyFloorMark? partyMark,
+    RoomHappeningKind? happening,
   }) {
     final violations = <String>[];
     final blocked = <int>{};
@@ -98,11 +100,19 @@ class PlacementPlan {
       MapPropKind kind, {
       bool hero = false,
       bool partyMark = false,
+      bool happening = false,
     }) {
       if (!free(x, y)) return false;
       used.add(key(x, y));
       props.add(
-        MapProp(x: x, y: y, kind: kind, hero: hero, partyMark: partyMark),
+        MapProp(
+          x: x,
+          y: y,
+          kind: kind,
+          hero: hero,
+          partyMark: partyMark,
+          happening: happening,
+        ),
       );
       return true;
     }
@@ -184,9 +194,104 @@ class PlacementPlan {
       }
     }
 
+    // —— One walk-up in the first room (chest, trap, or altar) ——
+    int? happeningChamber;
+    if (happening != null) {
+      Chamber? entry;
+      for (final c in chambers) {
+        if (c.index != 0) continue;
+        entry = c;
+        break;
+      }
+      if (entry != null &&
+          entry.beatKind != FloorBeatKind.boss &&
+          entry.beatKind != FloorBeatKind.exitHold) {
+        (int, int)? onThePath(Chamber room) {
+          if (spawnPoints.isEmpty) return null;
+          final origin = spawnPoints.first;
+          if (enemySpawns.isEmpty) return null;
+          (int, int)? foe;
+          var best = 1 << 30;
+          for (final e in enemySpawns) {
+            if (room.containsTile(e.$1, e.$2)) continue;
+            final dist = (e.$1 - origin.$1).abs() + (e.$2 - origin.$2).abs();
+            if (dist < best) {
+              best = dist;
+              foe = e;
+            }
+          }
+          if (foe == null) return null;
+          bool pass(int x, int y) {
+            if (!inMap(x, y)) return false;
+            final t = tiles[key(x, y)];
+            return t == TileKind.floor ||
+                t == TileKind.spawn ||
+                t == TileKind.exit ||
+                t == TileKind.gate;
+          }
+
+          final start = key(origin.$1, origin.$2);
+          final goal = key(foe.$1, foe.$2);
+          final prev = <int, int>{start: -1};
+          final queue = <int>[start];
+          var found = false;
+          for (var qi = 0; qi < queue.length; qi++) {
+            final cur = queue[qi];
+            if (cur == goal) {
+              found = true;
+              break;
+            }
+            final x = cur % cols;
+            final y = cur ~/ cols;
+            const dirs = <(int, int)>[(1, 0), (-1, 0), (0, 1), (0, -1)];
+            for (final d in dirs) {
+              final nx = x + d.$1;
+              final ny = y + d.$2;
+              if (!pass(nx, ny)) continue;
+              final nk = key(nx, ny);
+              if (prev.containsKey(nk)) continue;
+              prev[nk] = cur;
+              queue.add(nk);
+            }
+          }
+          if (!found) return null;
+          final towardGate = <(int, int)>[];
+          var cur = prev[goal] ?? -1;
+          while (cur != -1 && cur != start) {
+            final x = cur % cols;
+            final y = cur ~/ cols;
+            if (room.containsTile(x, y) && isFloor(x, y)) {
+              towardGate.add((x, y));
+            }
+            cur = prev[cur] ?? -1;
+          }
+          // towardGate runs from the fight back to the spawn.
+          for (final p in towardGate.reversed) {
+            final dist = (p.$1 - origin.$1).abs() + (p.$2 - origin.$2).abs();
+            if (dist < 3 || !free(p.$1, p.$2)) continue;
+            return p;
+          }
+          return null;
+        }
+
+        final cell = onThePath(entry);
+        if (cell != null) {
+          final kind = switch (happening) {
+            RoomHappeningKind.chest => MapPropKind.chest,
+            RoomHappeningKind.trap => MapPropKind.trap,
+            RoomHappeningKind.altar => MapPropKind.altar,
+          };
+          if (place(cell.$1, cell.$2, kind, hero: true, happening: true)) {
+            happeningChamber = entry.index;
+          }
+        }
+      }
+    }
+
     // —— One hero per chamber (+ symmetric flank) ——
     for (final c in chambers) {
       final beat = c.beatKind;
+      if (happeningChamber != null && c.index == happeningChamber) continue;
       if (beat == FloorBeatKind.treasure && chestChambers.contains(c.index)) {
         continue;
       }

@@ -101,6 +101,7 @@ class GameState {
     this.apexVault = const <EquipmentItem>[],
     this.godHandLevel = 0,
     this.layoutSeed = 0,
+    this.roomHappeningClaim = '',
     this.soundMuted = false,
     this.sfxVolume = 0.45,
     this.ambienceVolume = 0.20,
@@ -326,6 +327,10 @@ class GameState {
 
   /// Salt for procedural floor layout / encounter rolls (changes each visit).
   final int layoutSeed;
+
+  /// Chest, trap, or altar already taken this visit. Empty if none.
+  /// Resets on Ascend. Old saves load as empty.
+  final String roomHappeningClaim;
 
   /// Settings — survive Ascend.
   final bool soundMuted;
@@ -1089,6 +1094,7 @@ class GameState {
     List<EquipmentItem>? apexVault,
     int? godHandLevel,
     int? layoutSeed,
+    String? roomHappeningClaim,
     bool? soundMuted,
     double? sfxVolume,
     double? ambienceVolume,
@@ -1230,6 +1236,7 @@ class GameState {
       apexVault: apexVault ?? this.apexVault,
       godHandLevel: godHandLevel ?? this.godHandLevel,
       layoutSeed: layoutSeed ?? this.layoutSeed,
+      roomHappeningClaim: roomHappeningClaim ?? this.roomHappeningClaim,
       soundMuted: soundMuted ?? this.soundMuted,
       sfxVolume: sfxVolume ?? this.sfxVolume,
       ambienceVolume: ambienceVolume ?? this.ambienceVolume,
@@ -1403,6 +1410,7 @@ class GameState {
     'apexVault': apexVault.map((item) => item.toJson()).toList(),
     'godHandLevel': godHandLevel,
     'layoutSeed': layoutSeed,
+    'roomHappeningClaim': roomHappeningClaim,
     'soundMuted': soundMuted,
     'sfxVolume': sfxVolume,
     'ambienceVolume': ambienceVolume,
@@ -1661,6 +1669,7 @@ class GameState {
           const <EquipmentItem>[],
       godHandLevel: _jsonInt(json['godHandLevel']),
       layoutSeed: _jsonInt(json['layoutSeed']),
+      roomHappeningClaim: json['roomHappeningClaim'] as String? ?? '',
       soundMuted: (json['soundMuted'] as bool?) ?? false,
       sfxVolume: ((json['sfxVolume'] as num?)?.toDouble() ?? 0.45).clamp(
         0.0,

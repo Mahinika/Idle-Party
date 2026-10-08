@@ -24,6 +24,7 @@ const ascendResetKeys = <String>{
   'loadouts',
   'highestFloorCleared',
   'lastFloorClearSec',
+  'roomHappeningClaim',
 };
 
 /// Flat JSON keys Ascend copies through unchanged.
@@ -62,50 +63,50 @@ void main() {
       slot: EquipmentSlot.head,
       rarity: LootRarity.common,
     );
-    final before = GameLogic.createInitialState(
-      now: DateTime.utc(2026, 9, 1),
-      partyName: 'The Ember Guard',
-    ).copyWith(
-      bossVictories: 1,
-      gold: 4321,
-      lifetimeGoldEarned: 9000,
-      essence: 40,
-      attackBonus: 3,
-      defenseBonus: 4,
-      vitalityBonus: 5,
-      moveSpeedBonus: 2,
-      attackSpeedBonus: 2,
-      critBonus: 1,
-      masteryBonus: 6,
-      highestFloorCleared: 4,
-      lastFloorClearSec: 80,
-      highestDungeonCleared: 2,
-      godHandLevel: 2,
-      gearStash: [item],
-      marketListings: [
-        MarketListing(
-          id: 'm1',
-          item: item,
-          priceGold: 50,
-          targetHeroIndex: -1,
-          slot: EquipmentSlot.head,
-        ),
-      ],
-      loadouts: [
-        const GearLoadout(
-          id: 'l1',
-          name: 'Farm',
-          heroSlotItemIds: [<String, String>{}],
-        ),
-      ],
-      recentLoot: [
-        const LootDrop(name: 'scrap', amount: 1, rarity: LootRarity.common),
-      ],
-      equipped: {EquipmentSlot.head: item},
-      metaDepth: const MetaDepthState(
-        constellationNodes: ['for_gold'],
-      ),
-    );
+    final before =
+        GameLogic.createInitialState(
+          now: DateTime.utc(2026, 9, 1),
+          partyName: 'The Ember Guard',
+        ).copyWith(
+          bossVictories: 1,
+          gold: 4321,
+          lifetimeGoldEarned: 9000,
+          essence: 40,
+          attackBonus: 3,
+          defenseBonus: 4,
+          vitalityBonus: 5,
+          moveSpeedBonus: 2,
+          attackSpeedBonus: 2,
+          critBonus: 1,
+          masteryBonus: 6,
+          highestFloorCleared: 4,
+          lastFloorClearSec: 80,
+          roomHappeningClaim: 'sandy:p:1',
+          highestDungeonCleared: 2,
+          godHandLevel: 2,
+          gearStash: [item],
+          marketListings: [
+            MarketListing(
+              id: 'm1',
+              item: item,
+              priceGold: 50,
+              targetHeroIndex: -1,
+              slot: EquipmentSlot.head,
+            ),
+          ],
+          loadouts: [
+            const GearLoadout(
+              id: 'l1',
+              name: 'Farm',
+              heroSlotItemIds: [<String, String>{}],
+            ),
+          ],
+          recentLoot: [
+            const LootDrop(name: 'scrap', amount: 1, rarity: LootRarity.common),
+          ],
+          equipped: {EquipmentSlot.head: item},
+          metaDepth: const MetaDepthState(constellationNodes: ['for_gold']),
+        );
 
     final beforeJson = before.toJson();
     expect(beforeJson.containsKey('run'), isFalse);
@@ -134,6 +135,7 @@ void main() {
     expect(afterJson['loadouts'], isEmpty);
     expect(afterJson['highestFloorCleared'], 0);
     expect(afterJson['lastFloorClearSec'], 0);
+    expect(afterJson['roomHappeningClaim'], '');
 
     for (final key in ascendKeepKeys) {
       expect(afterJson[key], beforeJson[key], reason: key);

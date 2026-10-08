@@ -287,10 +287,14 @@ class _TileRoomPainter extends CustomPainter {
       if (!_inView(prop.x + 0.5, prop.y + 0.5, pad: 1.25)) continue;
       var kind = prop.kind;
       if (kind == MapPropKind.chest) {
-        final socket = chestPoints.indexOf((prop.x, prop.y));
-        if (socket >= 0 &&
-            !world.groundLoot.any((l) => l.chestSocket == socket)) {
+        if (prop.happening && world.happeningSpent) {
           kind = MapPropKind.chestOpen;
+        } else {
+          final socket = chestPoints.indexOf((prop.x, prop.y));
+          if (socket >= 0 &&
+              !world.groundLoot.any((l) => l.chestSocket == socket)) {
+            kind = MapPropKind.chestOpen;
+          }
         }
       }
       final img = propImages[kind] ?? propImages[prop.kind];

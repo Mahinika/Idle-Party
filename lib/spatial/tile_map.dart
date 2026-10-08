@@ -9,6 +9,7 @@ import 'floor_decals.dart';
 import 'floor_theme.dart';
 import 'party_room_mark.dart';
 import 'placement_plan.dart';
+import 'room_happening.dart';
 import 'room_silhouette.dart';
 import 'zone_layout_kit.dart';
 
@@ -76,6 +77,7 @@ class MapProp {
     required this.kind,
     this.hero = false,
     this.partyMark = false,
+    this.happening = false,
   });
 
   final int x;
@@ -87,6 +89,9 @@ class MapProp {
 
   /// Part of the party's trace in the first room. Not a second landmark.
   final bool partyMark;
+
+  /// The one chest, trap, or altar the party walks onto. Not a second landmark.
+  final bool happening;
 }
 
 /// A carved room on the floor map.
@@ -441,6 +446,7 @@ abstract final class RoomLayouts {
       gates: gates,
       anchors: decalPlan.anchors,
       partyMark: partyMark,
+      happening: RoomHappening.forRoom(room),
     );
     final props = plan.props.isNotEmpty
         ? plan.props
