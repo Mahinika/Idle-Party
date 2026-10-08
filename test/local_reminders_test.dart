@@ -40,16 +40,22 @@ void main() {
     expect(LocalReminders.shouldOfferOptIn(state), isFalse);
   });
 
-  test('first loot is not the ping — wait until hub gold is ticking', () {
+  test('first loot is not the ping — wait until the first boss', () {
     final hub = _afterFirstLoot();
     expect(LocalReminders.shouldOfferOptIn(hub), isFalse);
+    expect(
+      LocalReminders.shouldOfferOptIn(
+        hub.copyWith(
+          metaDepth: hub.metaDepth.copyWith(hubAfkSec: 60),
+        ),
+      ),
+      isFalse,
+    );
     expect(LocalReminders.showSettingsToggle(hub), isTrue);
   });
 
-  test('once hub gold is ticking, offer once — never in a fight', () {
-    final ticking = _afterFirstLoot().copyWith(
-      metaDepth: _afterFirstLoot().metaDepth.copyWith(hubAfkSec: 60),
-    );
+  test('after the first boss, offer once — never in a fight', () {
+    final ticking = _afterFirstLoot().copyWith(bossVictories: 1);
     expect(LocalReminders.shouldOfferOptIn(ticking), isTrue);
     expect(LocalReminders.showSettingsToggle(ticking), isTrue);
     expect(

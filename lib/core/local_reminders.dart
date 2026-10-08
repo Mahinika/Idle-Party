@@ -29,10 +29,11 @@ abstract final class LocalReminders {
   static const String title = 'Idle Party';
   static const String goldBody = 'Gold kept coming in. Come pick it up.';
   static const String caveBodyNew = 'Your party is ready when you are.';
-  static const String caveBodyDaily = 'One cave is waiting today.';
+  static const String caveBodyDaily =
+      'Tomorrow\'s prize is waiting. Open and claim it.';
   static const String optInTitle = 'A quiet ping?';
   static String get optInBody =>
-      'Want a reminder when hub gold is waiting, or when a cave is ready? '
+      'Want a reminder when tomorrow\'s prize is waiting, or when hub gold is waiting? '
       'Gold fills for ${GoldIncome.hubChestCapHours} hours, then stops. '
       'At most a couple a day. Never during a fight. Turn off anytime in SETTINGS.';
 
@@ -49,15 +50,14 @@ abstract final class LocalReminders {
         state.ascensionLevel >= 1;
   }
 
-  /// Hub card once sanctuary gold is actually ticking.
-  /// Never on install, never in a fight, never before the chest has started.
+  /// Hub card once the first boss is down, so the phone can pull them back.
+  /// Never on install, never on first loot, never in a fight.
   static bool shouldOfferOptIn(GameState state) {
     if (state.inDungeon) return false;
     if (state.metaDepth.notifyPrompted || state.metaDepth.notifyOptIn) {
       return false;
     }
-    if (state.metaDepth.hubAfkSec <= 0) return false;
-    return milestoneReached(state);
+    return GameLogic.showDailyChase(state);
   }
 
   /// SETTINGS row after the milestone (or after they already answered).

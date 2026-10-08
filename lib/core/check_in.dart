@@ -41,6 +41,19 @@ class CheckInPayout {
 
   /// After today's vault is already claimed.
   String get tomorrowLine => 'Tomorrow · $name · $prize.';
+
+  /// One short reward for the hub line and the away ping.
+  String get hookPrize {
+    if (jackpot) return 'the 7/7 jackpot';
+    final parts = <String>[];
+    if (essence > 0) parts.add('+${_comma(essence)} essence');
+    if (gold > 0) parts.add('+${_comma(gold)} gold');
+    if (embers > 0) parts.add('+${_comma(embers)} Embers');
+    if (cinders > 0) parts.add('+${_comma(cinders)} Cinders');
+    if (adTickets > 0) parts.add('+${_comma(adTickets)} Ad Tickets');
+    if (parts.length <= 1) return parts.isEmpty ? prize : parts.single;
+    return '${parts[0]} and ${parts[1]}';
+  }
 }
 
 abstract final class CheckIn {

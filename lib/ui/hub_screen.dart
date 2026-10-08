@@ -164,6 +164,7 @@ class _HubScreenState extends State<HubScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       unawaited(DungeonArtWarmup.warm(director.state.dungeonId));
       director.ensureMarketListings();
+      director.armAwayPromise();
       await _maybeShowOffline();
       // FEEL 298
       await Future<void>.delayed(const Duration(milliseconds: 450));
@@ -465,7 +466,7 @@ class _HubScreenState extends State<HubScreen>
               state,
               bossStairs: false,
             )
-                ? AwayFightTip.line
+                ? AwayFightTip.lineFor(state)
                 : null;
             final enterFamily = HubPrimaryCta.isEnterFamilyLabel(primaryLabel);
             final showCoach = coachEnter != null && enterFamily;
@@ -476,11 +477,7 @@ class _HubScreenState extends State<HubScreen>
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (awayLine != null)
-                  GestureDetector(
-                    onTap: director.dismissAwayFightTip,
-                    child: CoachLine(awayLine),
-                  ),
+                if (awayLine != null) CoachLine(awayLine, maxLines: 2),
                 if (showCoach) CoachLine(coachEnter),
                 AnimatedBuilder(
                   animation: _torch,

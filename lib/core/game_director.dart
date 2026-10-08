@@ -1401,9 +1401,6 @@ class GameDirector extends ChangeNotifier {
 
   void enterDungeon({String dungeonId = 'sandy'}) {
     if (_isLoading) return;
-    if (GameLogic.showDailyChase(_state)) {
-      _state = AwayFightTip.markSeen(_state);
-    }
     _awaitingWipeChoice = false;
     _flushHubIdle();
     var entered = GameLogic.dismissTip(
@@ -2176,7 +2173,14 @@ class GameDirector extends ChangeNotifier {
     );
   }
 
-  /// The away-fight line stays until they tap it or enter another cave.
+  /// Stamp the tomorrow line on the UTC day the first boss is already down.
+  void armAwayPromise() {
+    final next = AwayFightTip.arm(_state, DateTime.now());
+    if (identical(next, _state)) return;
+    _applyNotify(next);
+  }
+
+  /// Legacy dismiss. The appointment now hides on the next UTC day.
   void dismissAwayFightTip() {
     _applyNotify(AwayFightTip.markSeen(_state));
   }

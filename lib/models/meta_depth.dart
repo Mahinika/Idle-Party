@@ -366,6 +366,7 @@ class MetaDepthState {
     this.notifyPingMs = const <int>[],
     this.reviewPrompted = false,
     this.awayFightTipSeen = false,
+    this.awayPromiseUtc = '',
     this.friendCode = '',
     this.friendClaimsPaid = 0,
     this.friendInviteUsed = '',
@@ -715,6 +716,11 @@ class MetaDepthState {
   /// Survives Ascend. Old saves default to false and can still see it.
   final bool awayFightTipSeen;
 
+  /// UTC day (`yyyy-mm-dd`) the tomorrow appointment was armed.
+  /// Empty until the first boss. The next day hides the hub line.
+  /// Survives Ascend. Old saves default to empty.
+  final String awayPromiseUtc;
+
   /// This save's friend-invite code. Survives Ascend. Empty until shared.
   final String friendCode;
 
@@ -888,6 +894,7 @@ class MetaDepthState {
     List<int>? notifyPingMs,
     bool? reviewPrompted,
     bool? awayFightTipSeen,
+    String? awayPromiseUtc,
     String? friendCode,
     int? friendClaimsPaid,
     String? friendInviteUsed,
@@ -1063,6 +1070,7 @@ class MetaDepthState {
       notifyPingMs: notifyPingMs ?? this.notifyPingMs,
       reviewPrompted: reviewPrompted ?? this.reviewPrompted,
       awayFightTipSeen: awayFightTipSeen ?? this.awayFightTipSeen,
+      awayPromiseUtc: awayPromiseUtc ?? this.awayPromiseUtc,
       friendCode: friendCode ?? this.friendCode,
       friendClaimsPaid: friendClaimsPaid ?? this.friendClaimsPaid,
       friendInviteUsed: friendInviteUsed ?? this.friendInviteUsed,
@@ -1220,6 +1228,7 @@ class MetaDepthState {
     'notifyPingMs': notifyPingMs,
     'reviewPrompted': reviewPrompted,
     'awayFightTipSeen': awayFightTipSeen,
+    'awayPromiseUtc': awayPromiseUtc,
     'friendCode': friendCode,
     'friendClaimsPaid': friendClaimsPaid,
     'friendInviteUsed': friendInviteUsed,
@@ -1491,6 +1500,7 @@ class MetaDepthState {
           const <int>[],
       reviewPrompted: (json['reviewPrompted'] as bool?) ?? false,
       awayFightTipSeen: (json['awayFightTipSeen'] as bool?) ?? false,
+      awayPromiseUtc: json['awayPromiseUtc'] as String? ?? '',
       friendCode: _friendCode(json['friendCode'] as String?),
       friendClaimsPaid: ((json['friendClaimsPaid'] as num?)?.toInt() ?? 0)
           .clamp(0, 30),

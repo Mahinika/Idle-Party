@@ -13,32 +13,49 @@ void main() {
     expect(AwayFightTip.shouldShow(state, bossStairs: true), isTrue);
   });
 
-  test('after the first boss the hub shows the line once', () {
+  test('after the first boss the hub names tomorrow for that day', () {
     final fresh = GameLogic.createInitialState(now: now);
     final hub = fresh.copyWith(bossVictories: 1);
-    expect(AwayFightTip.shouldShow(hub, bossStairs: false), isTrue);
-    expect(AwayFightTip.line.toLowerCase(), contains('close the app'));
-    expect(AwayFightTip.line.toLowerCase(), contains('keeps fighting'));
+    expect(AwayFightTip.shouldShow(hub, bossStairs: false, now: now), isTrue);
+    final text = AwayFightTip.lineFor(hub).toLowerCase();
+    expect(text, contains('tomorrow'));
+    expect(text, contains('essence'));
+    expect(text, contains('keeps fighting'));
+
+    final armed = AwayFightTip.arm(hub, now);
+    expect(armed.metaDepth.awayPromiseUtc, '2026-10-07');
+    expect(AwayFightTip.shouldShow(armed, bossStairs: false, now: now), isTrue);
+    final nextDay = DateTime.utc(2026, 10, 8, 12);
+    expect(
+      AwayFightTip.shouldShow(armed, bossStairs: false, now: nextDay),
+      isFalse,
+    );
+
+    final round = MetaDepthState.fromJson(armed.metaDepth.toJson());
+    expect(round.awayPromiseUtc, '2026-10-07');
+    expect(MetaDepthState.fromJson(const {}).awayPromiseUtc, isEmpty);
 
     final seen = AwayFightTip.markSeen(hub);
-    expect(AwayFightTip.shouldShow(seen, bossStairs: false), isFalse);
-    expect(AwayFightTip.shouldShow(seen, bossStairs: true), isFalse);
-
-    final round = MetaDepthState.fromJson(seen.metaDepth.toJson());
-    expect(round.awayFightTipSeen, isTrue);
-    expect(MetaDepthState.fromJson(const {}).awayFightTipSeen, isFalse);
+    expect(AwayFightTip.shouldShow(seen, bossStairs: false, now: now), isFalse);
   });
 
-  test('ascend keeps the away line as seen', () {
+  test('ascend keeps the away appointment', () {
     final fresh = GameLogic.createInitialState(now: now);
-    final seen = fresh.copyWith(
-      bossVictories: 1,
-      essence: 40,
-      metaDepth: fresh.metaDepth.copyWith(awayFightTipSeen: true),
+    final armed = AwayFightTip.arm(fresh.copyWith(bossVictories: 1, essence: 40), now);
+    final ascended = GameLogic.ascend(
+      armed,
+      now: now.add(const Duration(days: 1)),
     );
-    final ascended = GameLogic.ascend(seen, now: now.add(const Duration(days: 1)));
-    expect(ascended.metaDepth.awayFightTipSeen, isTrue);
+    expect(ascended.metaDepth.awayPromiseUtc, '2026-10-07');
     expect(ascended.ascensionLevel, 1);
+    expect(
+      AwayFightTip.shouldShow(
+        ascended,
+        bossStairs: false,
+        now: now.add(const Duration(days: 1)),
+      ),
+      isFalse,
+    );
   });
 
   test('first hour guide says the party keeps fighting', () {

@@ -334,7 +334,7 @@ class DungeonTopHud extends StatelessWidget {
         world?.awaitingExit == true && state.currentRoom.type == RoomType.boss;
     final awayLine = coachGod == null &&
             AwayFightTip.shouldShow(state, bossStairs: bossStairs)
-        ? AwayFightTip.line
+        ? AwayFightTip.lineFor(state)
         : null;
     final coachLine = coachGod ?? awayLine ?? coachFarm;
     final keyBit = !jargon
@@ -630,17 +630,14 @@ class DungeonTopHud extends StatelessWidget {
               style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
             ),
           if (coachLine != null)
-            GestureDetector(
-              onTap: awayLine != null ? director.dismissAwayFightTip : null,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 2, right: 4),
-                child: Text(
-                  coachLine,
-                  textAlign: TextAlign.right,
-                  maxLines: awayLine != null ? 2 : 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 11, color: GameTheme.torchHot),
-                ),
+            Padding(
+              padding: const EdgeInsets.only(top: 2, right: 4),
+              child: Text(
+                coachLine,
+                textAlign: TextAlign.right,
+                maxLines: awayLine != null ? 2 : 1,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.body(size: 11, color: GameTheme.torchHot),
               ),
             ),
           if (state.inRift)

@@ -77,9 +77,10 @@ class _CoachPulseState extends State<CoachPulse>
 
 /// One short line above a coach target (hub ENTER / bottom tabs).
 class CoachLine extends StatelessWidget {
-  const CoachLine(this.text, {super.key});
+  const CoachLine(this.text, {super.key, this.maxLines = 1});
 
   final String text;
+  final int maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +89,7 @@ class CoachLine extends StatelessWidget {
       child: Text(
         text,
         textAlign: TextAlign.center,
-        maxLines: 1,
+        maxLines: maxLines,
         overflow: TextOverflow.ellipsis,
         style: GameTheme.body(size: 12, color: GameTheme.torchHot),
       ),

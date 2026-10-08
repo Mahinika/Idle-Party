@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-08 — tomorrow has to be named before they close
+
+- The ping card waited for Welcome Back gold. Almost nobody came back, so the ask never ran (`offline_gold` was 1 user, D7 was 1). After the first boss the hub now names tomorrow's check-in prize for the rest of that UTC day, and the quiet ping is offered then. Still never on install, never on first loot, never in a fight.
+
 ## 2026-10-04 — listing preview is the 9:16 Sandy crawl
 
 - Live Play preview is public `cyBlN3HCR48` (`watch?v=`, oEmbed before the swap). YouTube filed the 9:16 film as a Short. Content ID found no claim. Ads stay off. Previous unlisted clip `UHLG28lHmPs`. Do not point the listing at `XfKog5CAiUs`.

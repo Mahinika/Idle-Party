@@ -406,7 +406,8 @@ abstract final class GameGuides {
           'The party keeps going when you close the app.\n\n'
           '• In a cave, they keep fighting while the app is closed.\n'
           '• On the hub, gold gathers while you are away.\n'
-          '• Come back and you will see Welcome back.',
+          '• Come back and you will see Welcome back.\n'
+          '• After the first boss, the hub names tomorrow\'s prize.',
     ),
     GuideTopic(
       id: 'dailies',
