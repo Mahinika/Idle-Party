@@ -3,7 +3,7 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'gold_income.dart';
 
-/// One scheduled away ping (id is stable so gold/cave overwrite themselves).
+/// One scheduled away ping (id is stable so each kind overwrites itself).
 class LocalPing {
   const LocalPing({
     required this.id,
@@ -13,7 +13,9 @@ class LocalPing {
   });
 
   static const goldId = 1;
-  static const caveId = 2;
+  static const morningId = 2;
+  static const petId = 3;
+  static const eveningId = 4;
 
   final int id;
   final DateTime fireAt;
@@ -21,21 +23,33 @@ class LocalPing {
   final String body;
 }
 
-/// Growth-mandate local reminders: opt-in after a milestone, ≤2/UTC day.
+/// Silent chest line shown while hub gold fills. Not a ping.
+class ChestTray {
+  const ChestTray({required this.fullAt, required this.body});
+
+  static const id = 5;
+  static const title = 'Gold filling';
+
+  final DateTime fullAt;
+  final String body;
+}
+
+/// Growth-mandate local reminders: opt-in after a milestone, ≤2 pings per UTC day.
 abstract final class LocalReminders {
   static const int maxPerUtcDay = 2;
-  static const Duration goldDelay = Duration(hours: 4);
-  static const Duration caveDelay = Duration(hours: 18);
+  static const Duration horizon = Duration(hours: 36);
+  static const Duration slotLead = Duration(minutes: 45);
+  static const int morningHour = 8;
+  static const int eveningHour = 20;
   static const String title = 'Idle Party';
-  static const String goldBody = 'Gold kept coming in. Come pick it up.';
   static const String caveBodyNew = 'Your party is ready when you are.';
-  static const String caveBodyDaily =
-      'Tomorrow\'s prize is waiting. Open and claim it.';
   static const String optInTitle = 'A quiet ping?';
+
   static String get optInBody =>
-      'Want a reminder when tomorrow\'s prize is waiting, or when hub gold is waiting? '
+      'A quiet chest line stays up while hub gold fills, and goes away when you open the game. '
       'Gold fills for ${GoldIncome.hubChestCapHours} hours, then stops. '
-      'At most a couple a day. Never during a fight. Turn off anytime in SETTINGS.';
+      'At most a couple of pings a day: when the chest is full, and in the morning or evening when a prize is waiting. '
+      'Never during a fight. Turn off anytime in SETTINGS.';
 
   static bool milestoneReached(GameState state) {
     final reward =
@@ -66,8 +80,36 @@ abstract final class LocalReminders {
       state.metaDepth.notifyPrompted ||
       state.metaDepth.notifyOptIn;
 
-  static String caveBodyFor(GameState state) =>
-      GameLogic.showDailyChase(state) ? caveBodyDaily : caveBodyNew;
+  static String appointmentBody(GameState state) {
+    if (!GameLogic.showDailyChase(state)) return caveBodyNew;
+    final pay = GameLogic.checkInPayout(state);
+    if (state.metaDepth.dailyVaultClaimed) {
+      return 'Tomorrow: ${pay.name}, ${pay.hookPrize}.';
+    }
+    return '${pay.name} is waiting. ${pay.hookPrize}.';
+  }
+
+  static String chestFullBody(GameState state) {
+    final gold = _chestGold(state);
+    return '${GoldIncome.groupDigits(gold)} gold is waiting. '
+        'The chest is full and takes no more.';
+  }
+
+  static String chestFillBody(GameState state) {
+    final gold = _chestGold(state);
+    return 'Chest fills to ${GoldIncome.groupDigits(gold)} gold, then stops.';
+  }
+
+  /// Ongoing tray while the hub chest fills. Null in a fight.
+  static ChestTray? chestTray(GameState state, DateTime now) {
+    if (!state.metaDepth.notifyOptIn) return null;
+    if (!milestoneReached(state)) return null;
+    if (state.inDungeon) return null;
+    return ChestTray(
+      fullAt: now.add(Duration(seconds: GoldIncome.hubChestCapSecFor(state))),
+      body: chestFillBody(state),
+    );
+  }
 
   static List<LocalPing> plan(GameState state, DateTime now) {
     if (!state.metaDepth.notifyOptIn) return const [];
@@ -76,34 +118,67 @@ abstract final class LocalReminders {
       for (final ms in state.metaDepth.notifyPingMs)
         if (ms <= now.millisecondsSinceEpoch) ms,
     ];
-    final out = <LocalPing>[];
-    final goldAt = now.add(goldDelay);
-    if (_countOnUtcDay(fired, goldAt) < maxPerUtcDay) {
-      out.add(
-        LocalPing(
+    final candidates = <({LocalPing ping, int rank})>[];
+    final petAt = _petFireAt(state, now);
+    if (petAt != null) {
+      candidates.add((
+        ping: LocalPing(
+          id: LocalPing.petId,
+          fireAt: petAt,
+          title: title,
+          body: _petBody(state),
+        ),
+        rank: 0,
+      ));
+    }
+    if (!state.inDungeon) {
+      final fullAt = now.add(
+        Duration(seconds: GoldIncome.hubChestCapSecFor(state)),
+      );
+      candidates.add((
+        ping: LocalPing(
           id: LocalPing.goldId,
-          fireAt: goldAt,
+          fireAt: fullAt,
           title: title,
-          body: goldBody,
+          body: chestFullBody(state),
         ),
-      );
+        rank: 1,
+      ));
     }
-    final caveAt = now.add(caveDelay);
-    final counted = [
-      ...fired,
-      ...out.map((p) => p.fireAt.millisecondsSinceEpoch),
-    ];
-    if (_countOnUtcDay(counted, caveAt) < maxPerUtcDay) {
-      out.add(
-        LocalPing(
-          id: LocalPing.caveId,
-          fireAt: caveAt,
+    final prize = appointmentBody(state);
+    for (final slot in <(int, int)>[
+      (morningHour, LocalPing.morningId),
+      (eveningHour, LocalPing.eveningId),
+    ]) {
+      final at = nextClock(now, slot.$1);
+      if (at.difference(now) < slotLead) continue;
+      candidates.add((
+        ping: LocalPing(
+          id: slot.$2,
+          fireAt: at,
           title: title,
-          body: caveBodyFor(state),
+          body: prize,
         ),
-      );
+        rank: 2,
+      ));
     }
-    return out;
+    candidates.sort((a, b) {
+      final rank = a.rank.compareTo(b.rank);
+      if (rank != 0) return rank;
+      return a.ping.fireAt.compareTo(b.ping.fireAt);
+    });
+    final counted = <int>[...fired];
+    final accepted = <LocalPing>[];
+    for (final candidate in candidates) {
+      final at = candidate.ping.fireAt;
+      if (!at.isAfter(now)) continue;
+      if (at.difference(now) > horizon) continue;
+      if (_countOnUtcDay(counted, at) >= maxPerUtcDay) continue;
+      accepted.add(candidate.ping);
+      counted.add(at.millisecondsSinceEpoch);
+    }
+    accepted.sort((a, b) => a.fireAt.compareTo(b.fireAt));
+    return accepted;
   }
 
   static GameState recordPlan(
@@ -160,6 +235,40 @@ abstract final class LocalReminders {
   static DateTime utcDay(DateTime t) {
     final u = t.toUtc();
     return DateTime.utc(u.year, u.month, u.day);
+  }
+
+  /// Next [hour]:00 in the same zone as [now]. At least [slotLead] ahead.
+  static DateTime nextClock(DateTime now, int hour) {
+    final DateTime slot;
+    if (now.isUtc) {
+      slot = DateTime.utc(now.year, now.month, now.day, hour);
+    } else {
+      slot = DateTime(now.year, now.month, now.day, hour);
+    }
+    if (slot.isAfter(now.add(slotLead))) return slot;
+    return slot.add(const Duration(days: 1));
+  }
+
+  static int _chestGold(GameState state) => GoldIncome.hubGoldForSeconds(
+    state,
+    GoldIncome.hubChestCapSecFor(state),
+  );
+
+  static DateTime? _petFireAt(GameState state, DateTime now) {
+    final endsMs = state.metaDepth.petErrandEndsMs;
+    final id = state.metaDepth.petErrandPetId;
+    if (id.isEmpty || endsMs <= 0) return null;
+    final at = DateTime.fromMillisecondsSinceEpoch(endsMs, isUtc: now.isUtc);
+    if (!at.isAfter(now)) return null;
+    return at;
+  }
+
+  static String _petBody(GameState state) {
+    final id = state.metaDepth.petErrandPetId;
+    for (final pet in state.ownedPets) {
+      if (pet.id == id) return '${pet.name} is home. Open and claim.';
+    }
+    return 'Your pet is home. Open and claim.';
   }
 
   static int _countOnUtcDay(List<int> pingMs, DateTime fireAt) {

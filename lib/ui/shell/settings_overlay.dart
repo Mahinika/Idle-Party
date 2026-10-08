@@ -385,8 +385,8 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           MenuChrome.sectionLabelScoped('REMINDERS', scope: MenuScope.account),
           const SizedBox(height: 4),
           Text(
-            'Quiet pings when gold is waiting or a cave is ready. '
-            'At most a couple a day. Never during a fight.',
+            'A quiet chest line while hub gold fills, plus at most a couple of pings a day. '
+            'Never during a fight.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 8),

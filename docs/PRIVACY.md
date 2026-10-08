@@ -20,7 +20,7 @@ Typical save data may include party progress, gear, gold/meta currency, settings
 
 **Optional local session notes:** in **MORE → SETTINGS** you may turn on a short on-device session log and copy it to the clipboard. That log is **not** uploaded to Idle Party or Firebase; it stays on your device until you clear app storage or uninstall.
 
-**Optional away reminders:** after your first combat loot, the app may ask if you want a quiet local ping when gold is waiting or a cave is ready (at most a couple a day, never during a fight). That uses the Android notification permission **only if you tap YES**. Reminders stay on the device; Idle Party does not send them through a server. Turn them off in **MORE → SETTINGS → ACCOUNT**. Declining or turning them off may log an anonymous `notify_opt_out` analytics event (same Firebase path as other optional events).
+**Optional away reminders:** after your first boss, the app may ask if you want a quiet chest line while hub gold fills (it goes away when you open the game) and at most a couple of local pings a day, when the chest is full or in the morning or evening when a prize is waiting. Never during a fight. That uses the Android notification permission **only if you tap YES**. Reminders stay on the device; Idle Party does not send them through a server. Turn them off in **MORE → SETTINGS → ACCOUNT**. Declining or turning them off may log an anonymous `notify_opt_out` analytics event (same Firebase path as other optional events).
 
 ## Optional Play Games (leaderboards + cloud save)
 

@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 
 import '../../core/chase_contract.dart';
 import '../../core/chase_dispatcher.dart';
+import '../../core/comeback_chest.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/gold_income.dart';
 import '../../core/hub_chase.dart';
+import '../../core/pet_service.dart';
 import '../chase_bind.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -20,13 +22,25 @@ Future<void> showOfflineProgressDialog(
   GameDirector director,
 ) async {
   final summary = director.offlineSummary;
-  if (summary == null) return;
-  final contract = ChaseContract.fromState(summary.state);
-  final checkInLine = GameLogic.checkInWelcomeLine(summary.state);
+  final rewardState = summary?.state ?? director.state;
+  final now = DateTime.now();
+  if (summary == null && !GameLogic.returnCardWaiting(rewardState, now)) {
+    return;
+  }
+  final contract = ChaseContract.fromState(rewardState);
+  final checkInLine = GameLogic.checkInWelcomeLine(rewardState);
   final showCheckIn =
       checkInLine.isNotEmpty && !contract.detail.contains('Check-in');
   final chase = contract.chase;
-  final rows = summary.highlightRows;
+  final rows = summary?.highlightRows ?? const <(String, String)>[];
+  final lead = summary?.lootLead;
+  final chestLine = ComebackChest.waitingLine(
+    rewardState,
+    sanctuaryCost: GameLogic.cheapestSanctuaryNextCost(rewardState),
+  );
+  final petLine = PetService.errandReady(rewardState, now)
+      ? '${PetService.errandPet(rewardState)?.name ?? 'Your pet'} is home.'
+      : '';
 
   final nav = PlayNav.maybeOf(context);
   final plan = ChaseDispatcher.plan(
@@ -45,8 +59,6 @@ Future<void> showOfflineProgressDialog(
   VoidCallback? readyAction;
   if (plan.op != ChaseOp.none) {
     readyAction = () {
-      director.dismissOfflineSummary();
-      Navigator.pop(context);
       if (nav != null) {
         runChasePlan(
           context: context,
@@ -81,6 +93,7 @@ Future<void> showOfflineProgressDialog(
   WebClickBridge.pushLayer();
   await showDialog<void>(
     context: context,
+    barrierDismissible: false,
     barrierColor: MenuChrome.scrim,
     builder: (ctx) => MenuChrome.dialog(
       title: 'Welcome back!',
@@ -93,20 +106,43 @@ Future<void> showOfflineProgressDialog(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                summary.afkWhereLine,
-                style: GameTheme.body(size: 15, color: GameTheme.torchHot),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Away for ${OfflineProgressResult.formatOfflineDuration(summary.awayForSeconds)} · ${summary.welcomeLead}',
-                style: GameTheme.body(size: 14, color: GameTheme.parchment),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                GoldIncome.awayPromise(summary.state),
-                style: GameTheme.body(size: 13, color: GameTheme.mossLit),
-              ),
+              if (lead != null) ...[
+                Text(
+                  lead,
+                  style: GameTheme.body(size: 16, color: GameTheme.torchHot),
+                ),
+                const SizedBox(height: 6),
+              ],
+              if (summary != null) ...[
+                Text(
+                  'Away for ${OfflineProgressResult.formatOfflineDuration(summary.awayForSeconds)} · ${summary.welcomeLead}',
+                  style: GameTheme.body(size: 14, color: GameTheme.parchment),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  summary.afkWhereLine,
+                  style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  GoldIncome.awayPromise(summary.state),
+                  style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+                ),
+              ],
+              if (chestLine.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  chestLine,
+                  style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+                ),
+              ],
+              if (petLine.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  petLine,
+                  style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+                ),
+              ],
               if (showCheckIn) ...[
                 const SizedBox(height: 6),
                 Text(
@@ -117,7 +153,8 @@ Future<void> showOfflineProgressDialog(
               if (rows.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 for (final row in rows)
-                  MenuChrome.statRow(label: row.$1, value: row.$2),
+                  if (lead == null || !_lootAlreadySaid(row.$1))
+                    MenuChrome.statRow(label: row.$1, value: row.$2),
               ],
               const SizedBox(height: 10),
               Text(
@@ -150,14 +187,21 @@ Future<void> showOfflineProgressDialog(
           GameButton(
             label: readyLabel,
             expanded: false,
-            style: GameButtonStyle.brown,
-            onPressed: readyAction,
+            style: GameButtonStyle.grey,
+            onPressed: () {
+              director.claimReturnRewards();
+              director.dismissOfflineSummary();
+              Navigator.pop(ctx);
+              readyAction?.call();
+            },
           ),
         ],
         GameButton(
-          label: 'NICE',
+          label: 'CLAIM',
           expanded: false,
+          style: GameButtonStyle.brown,
           onPressed: () {
+            director.claimReturnRewards();
             director.dismissOfflineSummary();
             Navigator.pop(ctx);
           },
@@ -166,3 +210,9 @@ Future<void> showOfflineProgressDialog(
     ),
   ).whenComplete(WebClickBridge.popLayer);
 }
+
+bool _lootAlreadySaid(String label) =>
+    label == 'Gold' ||
+    label == 'Combat gold' ||
+    label == 'Floors cleared' ||
+    label == 'New gear';

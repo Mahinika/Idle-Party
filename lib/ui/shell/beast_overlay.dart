@@ -3,6 +3,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/party_name_filter.dart';
+import '../../core/pet_service.dart';
 import '../../models/dungeon_def.dart';
 import '../../models/pet.dart';
 import '../../assets/custom_assets.dart';
@@ -116,6 +117,26 @@ class _BeastOverlayState extends State<BeastOverlay> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (PetService.errandActive(state)) ...[
+          Text(
+            PetService.statusLine(state, DateTime.now()),
+            style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+          ),
+          if (PetService.errandReady(state, DateTime.now())) ...[
+            const SizedBox(height: 6),
+            GameButton(
+              label: 'CLAIM',
+              onPressed: director.claimPetErrand,
+            ),
+          ],
+          const SizedBox(height: 8),
+        ] else if (state.ownedPets.isNotEmpty) ...[
+          Text(
+            'Send one pet out for 4, 8, or 12 hours.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 8),
+        ],
         Text(
           'Roster ${state.ownedPets.length}/$cap',
           textAlign: TextAlign.center,
@@ -255,15 +276,38 @@ class _BeastOverlayState extends State<BeastOverlay> {
                       onPressed: () => _promptRename(pet),
                     ),
                     const SizedBox(height: 6),
+                    if (!PetService.errandActive(state)) ...[
+                      Row(
+                        children: [
+                          for (final hours in PetService.errandHours) ...[
+                            if (hours != 4) const SizedBox(width: 6),
+                            Expanded(
+                              child: GameButton(
+                                label: '${hours}h',
+                                dense: true,
+                                style: GameButtonStyle.grey,
+                                onPressed: () =>
+                                    director.sendPetErrand(pet.id, hours),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                    ],
                     Row(
                       children: [
                         Expanded(
                           child: GameButton(
-                            label: state.activePet?.id == pet.id
+                            label: state.metaDepth.petErrandPetId == pet.id
+                                ? 'OUT'
+                                : state.activePet?.id == pet.id
                                 ? 'ACTIVE'
                                 : 'SET ACTIVE',
                             style: GameButtonStyle.grey,
-                            onPressed: state.activePet?.id == pet.id
+                            onPressed:
+                                state.activePet?.id == pet.id ||
+                                    state.metaDepth.petErrandPetId == pet.id
                                 ? null
                                 : () => director.setActivePet(pet.id),
                           ),
@@ -289,13 +333,17 @@ class _BeastOverlayState extends State<BeastOverlay> {
                       children: [
                         Expanded(
                           child: GameButton(
-                            label: pet.id == _mergeA || pet.id == _mergeB
+                            label: state.metaDepth.petErrandPetId == pet.id
+                                ? 'OUT'
+                                : pet.id == _mergeA || pet.id == _mergeB
                                 ? 'MERGING'
                                 : 'MERGE',
                             style: pet.id == _mergeA || pet.id == _mergeB
                                 ? GameButtonStyle.brown
                                 : GameButtonStyle.grey,
-                            onPressed: () => _toggleMerge(pet.id),
+                            onPressed: state.metaDepth.petErrandPetId == pet.id
+                                ? null
+                                : () => _toggleMerge(pet.id),
                           ),
                         ),
                         const SizedBox(width: 6),

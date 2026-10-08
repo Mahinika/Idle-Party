@@ -4,7 +4,9 @@ import 'package:idle_party/core/funnel_analytics.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/gold_income.dart';
 import 'package:idle_party/core/local_reminders.dart';
+import 'package:idle_party/models/pet.dart';
 import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/ui/meta/notify_opt_in.dart';
 
@@ -69,17 +71,35 @@ void main() {
     expect(dismissed.metaDepth.notifyOptIn, isFalse);
   });
 
-  test('opt-in plans at most two pings and never names KEY or ESSENCE', () {
+  test('opt-in plans chest full and morning or evening, never KEY', () {
     final now = DateTime.utc(2026, 9, 12, 8);
     final opted = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
     final pings = LocalReminders.plan(opted, now);
-    expect(pings, hasLength(2));
-    expect(pings.map((p) => p.id).toSet(), {
-      LocalPing.goldId,
-      LocalPing.caveId,
-    });
-    expect(pings.first.fireAt.difference(now), LocalReminders.goldDelay);
-    expect(pings.last.fireAt.difference(now), LocalReminders.caveDelay);
+    expect(pings.map((p) => p.id), contains(LocalPing.goldId));
+    expect(
+      pings.map((p) => p.id),
+      containsAll([LocalPing.morningId, LocalPing.eveningId]),
+    );
+    final byDay = <DateTime, int>{};
+    for (final ping in pings) {
+      expect(ping.fireAt.difference(now) <= LocalReminders.horizon, isTrue);
+      final day = LocalReminders.utcDay(ping.fireAt);
+      byDay[day] = (byDay[day] ?? 0) + 1;
+    }
+    expect(byDay.values.every((n) => n <= LocalReminders.maxPerUtcDay), isTrue);
+    final gold = pings.firstWhere((p) => p.id == LocalPing.goldId);
+    expect(
+      gold.fireAt.difference(now),
+      Duration(seconds: GoldIncome.hubChestCapSec),
+    );
+    final amount = GoldIncome.groupDigits(
+      GoldIncome.hubGoldForSeconds(opted, GoldIncome.hubChestCapSec),
+    );
+    expect(gold.body, contains(amount));
+    expect(gold.body.toLowerCase(), contains('full'));
+    final tray = LocalReminders.chestTray(opted, now);
+    expect(tray, isNotNull);
+    expect(tray!.body, contains(amount));
     final blob = pings
         .map((p) => '${p.title} ${p.body}')
         .join(' ')
@@ -90,7 +110,56 @@ void main() {
     expect(blob, isNot(contains('combat')));
     expect(LocalReminders.optInBody.toLowerCase(), contains('settings'));
     expect(LocalReminders.optInBody.toLowerCase(), contains('12 hours'));
+    expect(LocalReminders.optInBody.toLowerCase(), contains('chest'));
     expect(LocalReminders.optInBody.toLowerCase(), isNot(contains('key')));
+  });
+
+  test('after the first boss the prize ping names the check-in', () {
+    final now = DateTime.utc(2026, 9, 12, 8);
+    final opted = LocalReminders.setOptIn(
+      _afterFirstLoot().copyWith(bossVictories: 1),
+      enabled: true,
+    );
+    final pings = LocalReminders.plan(opted, now);
+    final prize = pings.where(
+      (p) => p.id == LocalPing.morningId || p.id == LocalPing.eveningId,
+    );
+    expect(prize, isNotEmpty);
+    expect(prize.first.body, contains('Check-in'));
+    expect(prize.first.body.toLowerCase(), contains('essence'));
+    expect(prize.first.body.toLowerCase(), isNot(contains('key')));
+  });
+
+  test('a dungeon leave does not promise hub gold', () {
+    final now = DateTime.utc(2026, 9, 12, 8);
+    final opted = LocalReminders.setOptIn(
+      _afterFirstLoot(inDungeon: true),
+      enabled: true,
+    );
+    final pings = LocalReminders.plan(opted, now);
+    expect(pings.where((p) => p.id == LocalPing.goldId), isEmpty);
+    expect(LocalReminders.chestTray(opted, now), isNull);
+  });
+
+  test('a pet coming home keeps a ping slot over the evening prize', () {
+    final now = DateTime.utc(2026, 9, 12, 8);
+    const pet = Pet(
+      id: 'cave_bat_1',
+      name: 'Cave Bat',
+      attackBonus: 3,
+      speciesId: 'cave_bat',
+    );
+    var state = _afterFirstLoot().copyWith(ownedPets: const [pet]);
+    state = GameLogic.sendPetErrand(state, pet.id, 4, now: now);
+    state = LocalReminders.setOptIn(state, enabled: true);
+    final pings = LocalReminders.plan(state, now);
+    expect(pings.map((p) => p.id), contains(LocalPing.petId));
+    expect(pings.map((p) => p.id), contains(LocalPing.goldId));
+    expect(pings.map((p) => p.id), isNot(contains(LocalPing.eveningId)));
+    expect(
+      pings.firstWhere((p) => p.id == LocalPing.petId).body,
+      contains('Cave Bat is home'),
+    );
   });
 
   test('UTC day cap skips a same-day gold ping when two already fired', () {
@@ -106,7 +175,7 @@ void main() {
     );
     final pings = LocalReminders.plan(state, now);
     expect(pings, hasLength(1));
-    expect(pings.single.id, LocalPing.caveId);
+    expect(pings.single.id, LocalPing.morningId);
     expect(
       LocalReminders.utcDay(pings.single.fireAt),
       isNot(LocalReminders.utcDay(now)),
@@ -144,7 +213,7 @@ void main() {
       expect(director.state.metaDepth.notifyPingMs, isNotEmpty);
       expect(
         director.state.metaDepth.notifyPingMs.length,
-        lessThanOrEqualTo(2),
+        lessThanOrEqualTo(4),
       );
       director.setAppPaused(false);
       await Future<void>.delayed(Duration.zero);

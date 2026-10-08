@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models/pet.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'gold_income.dart';
 import 'meta_systems.dart';
 import 'party_name_filter.dart';
 
@@ -72,6 +73,8 @@ abstract final class PetService {
       if (pet.id == petIdB) b = pet;
     }
     if (a == null || b == null) return false;
+    final out = state.metaDepth.petErrandPetId;
+    if (out.isNotEmpty && (out == petIdA || out == petIdB)) return false;
     if (a.resolvedSpecies != b.resolvedSpecies) return false;
     if (a.rarity != b.rarity) return false;
     if (a.rarity == PetRarity.legendary) return false;
@@ -224,6 +227,7 @@ abstract final class PetService {
   }
 
   static GameState setActivePet(GameState state, String petId) {
+    if (state.metaDepth.petErrandPetId == petId) return state;
     Pet? match;
     for (final pet in state.ownedPets) {
       if (pet.id == petId) {
@@ -235,6 +239,102 @@ abstract final class PetService {
       return state;
     }
     return state.copyWith(activePet: match, lastUpdated: DateTime.now());
+  }
+
+  static const List<int> errandHours = <int>[4, 8, 12];
+
+  static bool errandActive(GameState state) =>
+      state.metaDepth.petErrandPetId.isNotEmpty &&
+      state.metaDepth.petErrandEndsMs > 0;
+
+  static bool errandReady(GameState state, DateTime now) =>
+      errandActive(state) &&
+      state.metaDepth.petErrandEndsMs <= now.millisecondsSinceEpoch;
+
+  static Pet? errandPet(GameState state) {
+    final id = state.metaDepth.petErrandPetId;
+    if (id.isEmpty) return null;
+    for (final pet in state.ownedPets) {
+      if (pet.id == id) return pet;
+    }
+    return null;
+  }
+
+  /// One pet at a time. The active pet leaves the party until the prize is claimed.
+  static GameState sendErrand(
+    GameState state,
+    String petId,
+    int hours, {
+    DateTime? now,
+  }) {
+    if (errandActive(state)) return state;
+    if (!errandHours.contains(hours)) return state;
+    Pet? pet;
+    for (final owned in state.ownedPets) {
+      if (owned.id == petId) {
+        pet = owned;
+        break;
+      }
+    }
+    if (pet == null) return state;
+    final clock = now ?? DateTime.now();
+    final gold = GoldIncome.hubGoldPerMinute(state) * 15 * hours;
+    final baseEssence = switch (hours) {
+      4 => 15,
+      8 => 40,
+      _ => 80,
+    };
+    final essence = max(
+      1,
+      (baseEssence * PetCatalog.rarityPassiveMult(pet.rarity)).round(),
+    );
+    final embers = hours == 12 ? 2 : 0;
+    final clearActive = state.activePet?.id == petId;
+    return state.copyWith(
+      clearActivePet: clearActive,
+      metaDepth: state.metaDepth.copyWith(
+        petErrandPetId: petId,
+        petErrandEndsMs: clock
+            .add(Duration(hours: hours))
+            .millisecondsSinceEpoch,
+        petErrandHours: hours,
+        petErrandGold: gold,
+        petErrandEssence: essence,
+        petErrandEmbers: embers,
+      ),
+      lastUpdated: clock,
+    );
+  }
+
+  static GameState claimErrand(GameState state, {DateTime? now}) {
+    if (!errandReady(state, now ?? DateTime.now())) return state;
+    final md = state.metaDepth;
+    return state.copyWith(
+      gold: state.gold + md.petErrandGold,
+      essence: state.essence + md.petErrandEssence,
+      metaDepth: md.copyWith(
+        embers: md.embers + md.petErrandEmbers,
+        petErrandPetId: '',
+        petErrandEndsMs: 0,
+        petErrandHours: 0,
+        petErrandGold: 0,
+        petErrandEssence: 0,
+        petErrandEmbers: 0,
+      ),
+      lastUpdated: now ?? DateTime.now(),
+    );
+  }
+
+  static String statusLine(GameState state, DateTime now) {
+    if (!errandActive(state)) return '';
+    final name = errandPet(state)?.name ?? 'Your pet';
+    if (errandReady(state, now)) return '$name is home.';
+    final leftMs = state.metaDepth.petErrandEndsMs - now.millisecondsSinceEpoch;
+    final left = Duration(milliseconds: leftMs < 0 ? 0 : leftMs);
+    final h = left.inHours;
+    final m = left.inMinutes.remainder(60);
+    final when = h > 0 ? '${h}h ${m}m' : '${m}m';
+    return '$name is out · back in $when.';
   }
 
   static int petLevelUpCost(Pet pet) => 15 + pet.level * 10;

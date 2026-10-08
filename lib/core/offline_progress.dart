@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import '../models/loot.dart';
 import '../spatial/spatial_combat.dart';
+import 'comeback_chest.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'gold_income.dart';
@@ -73,6 +75,7 @@ abstract final class OfflineProgress {
       before: state,
       progressed: applyAwayBonus(state, sim.state),
       seconds: seconds,
+      secondsAway: away,
       roomsCleared: sim.roomsCleared,
       wasInDungeon: true,
     );
@@ -136,8 +139,10 @@ abstract final class OfflineProgress {
     required int roomsCleared,
     required bool wasInDungeon,
   }) {
-    final next = progressed.copyWith(
-      offlineSecondsRecovered: progressed.offlineSecondsRecovered + seconds,
+    final awayForChest = secondsAway > 0 ? secondsAway : seconds;
+    final noted = ComebackChest.noteAbsence(progressed, awayForChest);
+    final next = noted.copyWith(
+      offlineSecondsRecovered: noted.offlineSecondsRecovered + seconds,
       lastUpdated: DateTime.now(),
     );
     return OfflineProgressResult(
@@ -155,8 +160,22 @@ abstract final class OfflineProgress {
         0,
         999,
       ),
+      rareFinds: (_rareGearCount(next) - _rareGearCount(before)).clamp(0, 999),
       wasInDungeon: wasInDungeon,
     );
+  }
+
+  static int _rareGearCount(GameState state) {
+    var n = 0;
+    for (final item in state.gearStash) {
+      if (item.rarity.index >= LootRarity.rare.index) n++;
+    }
+    for (final hero in state.heroRoster) {
+      for (final item in hero.equipped.values) {
+        if (item.rarity.index >= LootRarity.rare.index) n++;
+      }
+    }
+    return n;
   }
 
   static int _partyLevelSum(GameState state) =>

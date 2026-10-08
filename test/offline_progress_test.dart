@@ -173,7 +173,8 @@ void main() {
     expect(find.textContaining('Up next:'), findsOneWidget);
     expect(find.textContaining('AFK'), findsNothing);
     expect(find.textContaining('Sanctuary'), findsNothing);
-    expect(find.text('NICE'), findsOneWidget);
+    expect(find.text('CLAIM'), findsOneWidget);
+    expect(find.textContaining('40 gold'), findsWidgets);
   });
 
   testWidgets('day-2–7 Welcome Back Up next is one cave today', (tester) async {
@@ -209,7 +210,8 @@ void main() {
     expect(find.textContaining('Up next: Clear one cave today'), findsOneWidget);
     expect(find.textContaining('Daily Run'), findsNothing);
     expect(find.textContaining('KEY'), findsNothing);
-    expect(find.text('NICE'), findsOneWidget);
+    expect(find.text('CLAIM'), findsOneWidget);
+    expect(find.textContaining('40 gold'), findsWidgets);
   });
 
   test('hub gold fills for 12 hours and then stops', () {

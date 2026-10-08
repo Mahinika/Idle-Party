@@ -32,6 +32,7 @@ import 'logic_notices.dart';
 import 'menu_alerts.dart';
 import 'meta_systems.dart';
 import 'party_name_filter.dart';
+import 'pet_service.dart';
 import 'play_games_bridge.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
@@ -1679,9 +1680,10 @@ class GameDirector extends ChangeNotifier {
     if (backgrounded) {
       final now = DateTime.now();
       final pings = LocalReminders.plan(_state, now);
+      final tray = LocalReminders.chestTray(_state, now);
       final next = LocalReminders.recordPlan(_state, pings, now: now);
       if (!identical(next, _state)) _applyNotify(next);
-      await LocalNotify.schedule(pings);
+      await LocalNotify.present(pings: pings, tray: tray);
     } else {
       await LocalNotify.cancelAll();
       final next = LocalReminders.clearFuture(_state, DateTime.now());
@@ -2536,6 +2538,32 @@ class GameDirector extends ChangeNotifier {
 
   void setActivePet(String petId) {
     _applyUpgrade(GameLogic.setActivePet(_state, petId));
+  }
+
+  void sendPetErrand(String petId, int hours) {
+    if (PetService.errandActive(_state)) {
+      showToast('A pet is already out', life: 1.8);
+      return;
+    }
+    final next = GameLogic.sendPetErrand(_state, petId, hours);
+    if (identical(next, _state)) return;
+    // Apply even while boot is still loading, same as the ping card.
+    _applyNotify(next);
+    final pet = PetService.errandPet(_state);
+    showToast('${pet?.name ?? 'Pet'} is out for $hours hours', life: 2.2);
+  }
+
+  void claimPetErrand() {
+    final next = GameLogic.claimPetErrand(_state);
+    if (identical(next, _state)) return;
+    _applyNotify(next);
+    showToast('Pet prize claimed', life: 1.8);
+  }
+
+  void claimReturnRewards() {
+    final next = GameLogic.claimReturnRewards(_state);
+    if (identical(next, _state)) return;
+    _applyNotify(next);
   }
 
   void renamePet(String petId, String rawName) {

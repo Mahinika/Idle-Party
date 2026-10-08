@@ -188,7 +188,9 @@ class _HubScreenState extends State<HubScreen>
   }
 
   Future<void> _maybeShowOffline() async {
-    if (_offlineDialogShown || !mounted || director.offlineSummary == null) {
+    if (_offlineDialogShown || !mounted) return;
+    if (director.offlineSummary == null &&
+        !GameLogic.returnCardWaiting(director.state)) {
       return;
     }
     _offlineDialogShown = true;

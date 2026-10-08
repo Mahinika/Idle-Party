@@ -10,7 +10,12 @@ import 'local_reminders.dart';
 const _channelId = 'idle_party_away';
 const _channelName = 'Away reminders';
 const _channelDesc =
-    'Gold and cave reminders while you are away. At most a couple a day.';
+    'Gold and prize reminders while you are away. At most a couple a day.';
+
+const _chestChannelId = 'idle_party_chest';
+const _chestChannelName = 'Gold filling';
+const _chestChannelDesc =
+    'A quiet line while hub gold fills. It goes away when you open the game.';
 
 final FlutterLocalNotificationsPlugin _plugin =
     FlutterLocalNotificationsPlugin();
@@ -56,37 +61,64 @@ Future<bool> requestPermission() async {
   }
 }
 
-Future<void> schedule(List<LocalPing> pings) async {
+Future<void> present({
+  required List<LocalPing> pings,
+  ChestTray? tray,
+}) async {
   if (!_androidLive) return;
   await init();
   _ensureTz();
   await _plugin.cancelAll();
-  if (pings.isEmpty) return;
-  const details = NotificationDetails(
+  if (pings.isNotEmpty) {
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _channelId,
+        _channelName,
+        channelDescription: _channelDesc,
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+        playSound: false,
+        enableVibration: false,
+        category: AndroidNotificationCategory.reminder,
+      ),
+    );
+    final nowUtc = tz.TZDateTime.now(tz.UTC);
+    for (final ping in pings) {
+      final when = tz.TZDateTime.from(ping.fireAt.toUtc(), tz.UTC);
+      if (!when.isAfter(nowUtc)) continue;
+      await _plugin.zonedSchedule(
+        ping.id,
+        ping.title,
+        ping.body,
+        when,
+        details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    }
+  }
+  final chest = tray;
+  if (chest == null) return;
+  final details = NotificationDetails(
     android: AndroidNotificationDetails(
-      _channelId,
-      _channelName,
-      channelDescription: _channelDesc,
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
+      _chestChannelId,
+      _chestChannelName,
+      channelDescription: _chestChannelDesc,
+      importance: Importance.low,
+      priority: Priority.low,
       playSound: false,
       enableVibration: false,
-      category: AndroidNotificationCategory.reminder,
+      silent: true,
+      ongoing: true,
+      autoCancel: false,
+      onlyAlertOnce: true,
+      showWhen: true,
+      when: chest.fullAt.millisecondsSinceEpoch,
+      usesChronometer: true,
+      chronometerCountDown: true,
+      category: AndroidNotificationCategory.status,
     ),
   );
-  final nowUtc = tz.TZDateTime.now(tz.UTC);
-  for (final ping in pings) {
-    final when = tz.TZDateTime.from(ping.fireAt.toUtc(), tz.UTC);
-    if (!when.isAfter(nowUtc)) continue;
-    await _plugin.zonedSchedule(
-      ping.id,
-      ping.title,
-      ping.body,
-      when,
-      details,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-    );
-  }
+  await _plugin.show(ChestTray.id, ChestTray.title, chest.body, details);
 }
 
 Future<void> cancelAll() async {

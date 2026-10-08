@@ -8,7 +8,10 @@ abstract final class LocalNotify {
 
   static Future<bool> requestPermission() => impl.requestPermission();
 
-  static Future<void> schedule(List<LocalPing> pings) => impl.schedule(pings);
+  static Future<void> present({
+    required List<LocalPing> pings,
+    ChestTray? tray,
+  }) => impl.present(pings: pings, tray: tray);
 
   static Future<void> cancelAll() => impl.cancelAll();
 }

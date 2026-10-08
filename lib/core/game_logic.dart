@@ -24,6 +24,7 @@ import 'economy_service.dart';
 import 'blessing_constellation.dart';
 import 'game_state.dart';
 import 'check_in.dart';
+import 'comeback_chest.dart';
 import 'keystone.dart';
 import 'logic_notices.dart';
 import 'rift.dart';
@@ -3169,6 +3170,27 @@ class GameLogic {
   static int petLevelUpCost(Pet pet) => PetService.petLevelUpCost(pet);
   static GameState levelUpPet(GameState state, String petId) =>
       PetService.levelUpPet(state, petId);
+  static GameState sendPetErrand(
+    GameState state,
+    String petId,
+    int hours, {
+    DateTime? now,
+  }) => PetService.sendErrand(state, petId, hours, now: now);
+  static GameState claimPetErrand(GameState state, {DateTime? now}) =>
+      PetService.claimErrand(state, now: now);
+  static bool petErrandReady(GameState state, [DateTime? now]) =>
+      PetService.errandReady(state, now ?? DateTime.now());
+  static bool returnCardWaiting(GameState state, [DateTime? now]) =>
+      ComebackChest.isPending(state) || petErrandReady(state, now);
+
+  /// Pays a waiting comeback chest and a pet that is already home.
+  static GameState claimReturnRewards(GameState state, {DateTime? now}) {
+    final chest = ComebackChest.claim(
+      state,
+      sanctuaryCost: cheapestSanctuaryNextCost(state),
+    );
+    return PetService.claimErrand(chest, now: now);
+  }
 
   // —— Missions: moved to mission_board.dart ——
   static List<Mission> createMissionBoard({
@@ -3466,6 +3488,7 @@ class OfflineProgressResult {
     required this.bossDelta,
     this.levelsGained = 0,
     this.gearFinds = 0,
+    this.rareFinds = 0,
     this.wasInDungeon = false,
     this.secondsAway = 0,
     this.hubChestCapSec = 0,
@@ -3482,6 +3505,9 @@ class OfflineProgressResult {
   final int bossDelta;
   final int levelsGained;
   final int gearFinds;
+
+  /// Rare or better pieces gained while away. A subset of new gear.
+  final int rareFinds;
 
   /// True when AFK started mid-dungeon (SpatialCombat catch-up), not hub.
   final bool wasInDungeon;
@@ -3615,6 +3641,44 @@ class OfflineProgressResult {
       return 'Gold kept coming in while you were away.';
     }
     return 'Welcome back.';
+  }
+
+  /// First line on Welcome Back: floors, rare gear, gold. Null when none landed.
+  String? get lootLead {
+    final bits = <String>[];
+    if (roomsCleared > 0) {
+      bits.add(
+        roomsCleared == 1 ? '1 floor cleared' : '$roomsCleared floors cleared',
+      );
+    }
+    if (rareFinds > 0) {
+      bits.add(
+        rareFinds == 1 ? '1 rare in the bag' : '$rareFinds rare in the bag',
+      );
+    } else if (gearFinds > 0) {
+      bits.add(
+        gearFinds == 1
+            ? '1 new piece in the bag'
+            : '$gearFinds new pieces in the bag',
+      );
+    }
+    if (goldGained > 0) {
+      bits.add('${groupedCount(goldGained)} gold');
+    }
+    if (bits.isEmpty) return null;
+    return bits.join(' · ');
+  }
+
+  static String groupedCount(int n) {
+    final negative = n < 0;
+    final s = n.abs().toString();
+    final buf = StringBuffer();
+    if (negative) buf.write('-');
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+      buf.write(s[i]);
+    }
+    return buf.toString();
   }
 
   /// Top reward rows for the welcome dialog — bosses / levels first.

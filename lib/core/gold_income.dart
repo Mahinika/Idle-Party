@@ -63,6 +63,19 @@ abstract final class GoldIncome {
   static int hubChestCapHoursFor(GameState state) =>
       hubChestCapSecFor(state) ~/ 3600;
 
+  /// Commas past 999. `8640` → `8,640`.
+  static String groupDigits(int n) {
+    final negative = n < 0;
+    final s = n.abs().toString();
+    final buf = StringBuffer();
+    if (negative) buf.write('-');
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+      buf.write(s[i]);
+    }
+    return buf.toString();
+  }
+
   /// What the party earns if the player leaves. Hub rate is steady gold.
   /// A cave keeps the fight going instead — that is not a second gold rate.
   static String awayPromise(GameState state) {

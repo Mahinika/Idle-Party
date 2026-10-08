@@ -372,6 +372,13 @@ class MetaDepthState {
     this.friendInviteUsed = '',
     this.friendReferrerChecked = false,
     this.friendReferrerTries = 0,
+    this.petErrandPetId = '',
+    this.petErrandEndsMs = 0,
+    this.petErrandHours = 0,
+    this.petErrandGold = 0,
+    this.petErrandEssence = 0,
+    this.petErrandEmbers = 0,
+    this.comebackTier = 0,
   });
 
   final int sanctuaryXpLevel;
@@ -738,6 +745,24 @@ class MetaDepthState {
   /// How many times this save has read the Play install referrer.
   final int friendReferrerTries;
 
+  /// Pet sent out from PETS. Empty when none is out. Survives Ascend.
+  final String petErrandPetId;
+
+  /// Epoch ms when [petErrandPetId] comes home. 0 when none is out.
+  final int petErrandEndsMs;
+
+  /// 4, 8, or 12. 0 when none is out.
+  final int petErrandHours;
+
+  /// Prize locked in when the pet was sent.
+  final int petErrandGold;
+  final int petErrandEssence;
+  final int petErrandEmbers;
+
+  /// 0, 3, 7, or 14. A long-absence chest waiting to be claimed.
+  /// Survives Ascend. Old saves default to 0.
+  final int comebackTier;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -900,6 +925,13 @@ class MetaDepthState {
     String? friendInviteUsed,
     bool? friendReferrerChecked,
     int? friendReferrerTries,
+    String? petErrandPetId,
+    int? petErrandEndsMs,
+    int? petErrandHours,
+    int? petErrandGold,
+    int? petErrandEssence,
+    int? petErrandEmbers,
+    int? comebackTier,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -1077,6 +1109,13 @@ class MetaDepthState {
       friendReferrerChecked:
           friendReferrerChecked ?? this.friendReferrerChecked,
       friendReferrerTries: friendReferrerTries ?? this.friendReferrerTries,
+      petErrandPetId: petErrandPetId ?? this.petErrandPetId,
+      petErrandEndsMs: petErrandEndsMs ?? this.petErrandEndsMs,
+      petErrandHours: petErrandHours ?? this.petErrandHours,
+      petErrandGold: petErrandGold ?? this.petErrandGold,
+      petErrandEssence: petErrandEssence ?? this.petErrandEssence,
+      petErrandEmbers: petErrandEmbers ?? this.petErrandEmbers,
+      comebackTier: comebackTier ?? this.comebackTier,
     );
   }
 
@@ -1234,6 +1273,13 @@ class MetaDepthState {
     'friendInviteUsed': friendInviteUsed,
     'friendReferrerChecked': friendReferrerChecked,
     'friendReferrerTries': friendReferrerTries,
+    'petErrandPetId': petErrandPetId,
+    'petErrandEndsMs': petErrandEndsMs,
+    'petErrandHours': petErrandHours,
+    'petErrandGold': petErrandGold,
+    'petErrandEssence': petErrandEssence,
+    'petErrandEmbers': petErrandEmbers,
+    'comebackTier': comebackTier,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -1508,6 +1554,13 @@ class MetaDepthState {
       friendReferrerChecked: (json['friendReferrerChecked'] as bool?) ?? false,
       friendReferrerTries: ((json['friendReferrerTries'] as num?)?.toInt() ?? 0)
           .clamp(0, 30),
+      petErrandPetId: json['petErrandPetId'] as String? ?? '',
+      petErrandEndsMs: (json['petErrandEndsMs'] as num?)?.toInt() ?? 0,
+      petErrandHours: (json['petErrandHours'] as num?)?.toInt() ?? 0,
+      petErrandGold: (json['petErrandGold'] as num?)?.toInt() ?? 0,
+      petErrandEssence: (json['petErrandEssence'] as num?)?.toInt() ?? 0,
+      petErrandEmbers: (json['petErrandEmbers'] as num?)?.toInt() ?? 0,
+      comebackTier: (json['comebackTier'] as num?)?.toInt() ?? 0,
     );
   }
 
