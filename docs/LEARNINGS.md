@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — an unclaimed vault does not survive the night
+
+- The away line said today's prize still waits tomorrow. The UTC day roll clears an unclaimed vault, so the prize was gone. The line now says to claim it before the day ends. Tomorrow is named only after that claim.
+
 ## 2026-10-09 — the first boss was a wall in front of tomorrow
 
 - A fresh party cleared floor 1 at full health and wiped on the floor 2 boss on every seed. A short forge and ten pieces of loot still wiped. Only a much stronger party won. GOLD is hidden until that kill, so the forge path was not available. The boss is now three bodies a new party can beat (about 60% health left). The floor 5 boss stays a wall.

@@ -125,9 +125,30 @@ void main() {
       (p) => p.id == LocalPing.morningId || p.id == LocalPing.eveningId,
     );
     expect(prize, isNotEmpty);
-    expect(prize.first.body, contains('Check-in'));
-    expect(prize.first.body.toLowerCase(), contains('essence'));
+    expect(prize.first.body.toLowerCase(), contains('one cave'));
+    expect(prize.first.body.toLowerCase(), isNot(contains('check-in')));
     expect(prize.first.body.toLowerCase(), isNot(contains('key')));
+
+    final ready = opted.copyWith(
+      metaDepth: opted.metaDepth.copyWith(
+        dailyVaultClears: GameLogic.dailyVaultClearTarget,
+      ),
+    );
+    final readyPing = LocalReminders.plan(ready, now).firstWhere(
+      (p) => p.id == LocalPing.morningId || p.id == LocalPing.eveningId,
+    );
+    expect(readyPing.body.toLowerCase(), contains('claim'));
+    expect(readyPing.body.toLowerCase(), contains('before the day ends'));
+    expect(readyPing.body.toLowerCase(), contains('essence'));
+
+    final claimed = opted.copyWith(
+      metaDepth: opted.metaDepth.copyWith(dailyVaultClaimed: true),
+    );
+    final claimedPing = LocalReminders.plan(claimed, now).firstWhere(
+      (p) => p.id == LocalPing.morningId || p.id == LocalPing.eveningId,
+    );
+    expect(claimedPing.body, contains('Check-in'));
+    expect(claimedPing.body.toLowerCase(), contains('tomorrow'));
   });
 
   test('a dungeon leave does not promise hub gold', () {

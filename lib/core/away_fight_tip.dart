@@ -40,13 +40,20 @@ abstract final class AwayFightTip {
 
   /// Prize first, so a one-line hub clip still names what waits.
   /// [onHub] picks the gold line before check-in exists.
+  ///
+  /// An unclaimed vault is wiped at the UTC day roll, so that prize is
+  /// today or it is gone. Tomorrow is named only after the claim.
   static String lineFor(GameState state, {bool onHub = false}) {
     if (!GameLogic.checkInActive(state)) return onHub ? hubLine : line;
     final pay = GameLogic.checkInPayout(state);
-    final hook = state.metaDepth.dailyVaultClaimed
-        ? 'Tomorrow pays ${pay.hookPrize}.'
-        : 'Today\'s ${pay.hookPrize} still waits tomorrow.';
-    return '$hook Your party keeps fighting.';
+    if (GameLogic.canClaimDailyVault(state)) {
+      return 'Claim ${pay.hookPrize} before the day ends. '
+          'Your party keeps fighting.';
+    }
+    if (state.metaDepth.dailyVaultClaimed) {
+      return 'Tomorrow pays ${pay.hookPrize}. Your party keeps fighting.';
+    }
+    return 'One cave fills the vault. Your party keeps fighting.';
   }
 
   /// Stamp today the first time the appointment can show. Later days hide it.

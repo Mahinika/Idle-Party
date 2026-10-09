@@ -86,7 +86,10 @@ abstract final class LocalReminders {
     if (state.metaDepth.dailyVaultClaimed) {
       return 'Tomorrow: ${pay.name}, ${pay.hookPrize}.';
     }
-    return '${pay.name} is waiting. ${pay.hookPrize}.';
+    if (GameLogic.canClaimDailyVault(state)) {
+      return 'Claim ${pay.hookPrize} before the day ends.';
+    }
+    return 'One cave fills today\'s vault.';
   }
 
   static String chestFullBody(GameState state) {

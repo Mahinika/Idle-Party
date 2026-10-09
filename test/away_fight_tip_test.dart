@@ -34,7 +34,27 @@ void main() {
     final fresh = GameLogic.createInitialState(now: now);
     final hub = fresh.copyWith(bossVictories: 1);
     expect(AwayFightTip.shouldShow(hub, bossStairs: false, now: now), isTrue);
-    final text = AwayFightTip.lineFor(hub, onHub: true).toLowerCase();
+    final empty = AwayFightTip.lineFor(hub, onHub: true).toLowerCase();
+    expect(empty, contains('one cave'));
+    expect(empty, contains('keeps fighting'));
+    expect(empty, isNot(contains('tomorrow')));
+    expect(empty, isNot(contains('on the hub')));
+
+    final ready = hub.copyWith(
+      metaDepth: hub.metaDepth.copyWith(
+        dailyVaultClears: GameLogic.dailyVaultClearTarget,
+      ),
+    );
+    final claim = AwayFightTip.lineFor(ready, onHub: true).toLowerCase();
+    expect(claim, contains('claim'));
+    expect(claim, contains('essence'));
+    expect(claim, contains('before the day ends'));
+    expect(claim, isNot(contains('tomorrow')));
+
+    final claimed = hub.copyWith(
+      metaDepth: hub.metaDepth.copyWith(dailyVaultClaimed: true),
+    );
+    final text = AwayFightTip.lineFor(claimed, onHub: true).toLowerCase();
     expect(text, contains('tomorrow'));
     expect(text, contains('essence'));
     expect(text, contains('keeps fighting'));
