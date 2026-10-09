@@ -955,7 +955,11 @@ class GameLogic {
   }
 
   /// Essence granted when ascending into [newLevel].
-  static int ascendEssenceReward(int newLevel) => 4 + (newLevel * 3);
+  ///
+  /// Shown reward at AL1 is 10 with the milestone. AL2 is 30, triple that,
+  /// the top of a +50–200% step. Later levels keep this same essence step.
+  static int ascendEssenceReward(int newLevel) =>
+      7 + (max(1, newLevel) - 1) * 23;
 
   /// Flat ATK granted per Ascend Blessing stack (~2.5 forge ATK buys that keep).
   static const int ascendBlessingAtk = 5;

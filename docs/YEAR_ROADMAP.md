@@ -73,7 +73,8 @@ Teman och spelarproblem. Inga låsta feature-namn.
   ungefär +50–200 % prestige-valuta. En koll på Ascend, inte ett nytt
   system. 2015 års speed-multiplier är ett exempel, inte ett paket att
   lägga in. Koll 9 okt: andra Blessing är +100 % mot den första, tredje
-  är +50 %. Essence-steget 7 till 10 är +43 %. Siffrorna står.
+  är +50 %. Essence som Ascend visar gick från 10 till 10. Den andra
+  visar nu 30, tre gånger den första.
 - **När ett läge tar stopp** — hubbens ordning efter KEY: Gauntlet, sedan
   Ranked GR, sedan Farm Rift, sedan Ashen Crown (`CHASE_CONTRACT.md`).
 - **Listing när du namnger det** — en tillgång, minst en vecka så både

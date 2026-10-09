@@ -1,16 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/meta_systems.dart';
 
 /// Next Ascend should feel like a clear step up, not a flat stipend.
 void main() {
   final now = DateTime.utc(2026, 10, 6, 12);
 
-  test('second Ascend pays about 50 to 200 percent more than the first', () {
-    // The repeating stipend (not the one-time AL1 milestone) is the step
-    // the player feels on every reset. 10/7 is about +43%, inside the band.
-    final firstStipend = GameLogic.ascendEssenceReward(1);
-    final secondStipend = GameLogic.ascendEssenceReward(2);
-    expect(secondStipend / firstStipend, inInclusiveRange(1.4, 3.0));
+  int shownReward(int newLevel) =>
+      GameLogic.ascendEssenceReward(newLevel) +
+      MetaSystems.ascendMilestoneReward(newLevel - 1, newLevel);
+
+  test('second Ascend pays 50 to 200 percent more than the first shows', () {
+    // The confirm dialog shows stipend plus milestone, not the one-time
+    // achievement. 10 then 30 is triple, the top of the band.
+    expect(shownReward(1), 10);
+    expect(shownReward(2), 30);
+    expect(shownReward(2) / shownReward(1), inInclusiveRange(1.5, 3.0));
 
     var state = GameLogic.createInitialState(now: now);
     state = state.copyWith(bossVictories: 9);
@@ -18,14 +23,14 @@ void main() {
     state = GameLogic.ascend(state, now: now);
     final firstGain = state.essence - before;
     expect(state.ascensionLevel, 1);
-    expect(firstGain, greaterThanOrEqualTo(firstStipend));
+    expect(firstGain, greaterThan(shownReward(1)));
 
     state = state.copyWith(bossVictories: 9);
     final mid = state.essence;
     state = GameLogic.ascend(state, now: now);
     final secondGain = state.essence - mid;
     expect(state.ascensionLevel, 2);
-    expect(secondGain, greaterThanOrEqualTo(secondStipend));
-    expect(secondGain, greaterThan(firstGain - 4));
+    expect(secondGain, greaterThanOrEqualTo(shownReward(2)));
+    expect(secondGain, greaterThan(firstGain));
   });
 }

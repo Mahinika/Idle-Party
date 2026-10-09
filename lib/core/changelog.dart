@@ -97,6 +97,7 @@ abstract final class ChangelogCatalog {
           'Your party fights on its own. Tap ENTER DUNGEON. Gold and essence menus stay hidden until you beat the first boss.',
       changed: <String>[
         'The first boss, on floor 2, is a fight a new party can finish.',
+        'The second Ascend pays more essence than the first. The reward it shows is triple the first one.',
         'After that boss, if today\'s reward is already claimed, the hub says tomorrow is one cave until the first Ascend.',
         'Welcome Back says one cave fills an empty vault. It says the prize is waiting only when CLAIM is ready.',
         'Before the first Ascend, a boss that falls while you are away does not tell you to Ascend.',

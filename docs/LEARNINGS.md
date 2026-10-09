@@ -6,9 +6,9 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
-## 2026-10-09 — Ascend already sits in the Blessing band
+## 2026-10-09 — the second Ascend paid the same essence as the first
 
-- The next reset was checked against +50 to +200 percent prestige currency. The second Blessing is +100 percent of the first, and the third is +50 percent. The essence stipend goes from 7 to 10 (+43 percent). The numbers stay. No new prestige curve.
+- The shown reward was 10 essence both times (7 plus a 3 milestone, then a flat 10). The first reset also paid one-time achievements, so the wallet got 23 and the next reset got 10. The second shown reward is now 30, triple the first, and more than the first reset put in the wallet. Later resets keep that same essence step. Blessing was already +100 percent, then +50 percent.
 
 ## 2026-10-09 — the October post waits
 
