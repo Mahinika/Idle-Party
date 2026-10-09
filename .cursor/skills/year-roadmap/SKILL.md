@@ -3,23 +3,26 @@ name: year-roadmap
 description: >-
   Rebuilds Idle Party’s 12-month owner plan from studio seats, Play paste,
   and graded web research. Use when the owner says "Uppdatera 1års roadmap",
-  "1årsplan", "årsroadmap", or "100 källor". Do not use for vague "vad
-  härnäst" / "gör bättre" (ask once), routine implement/analyze/commit, or
-  Play AAB upload.
+  "1årsplan", "årsroadmap", or "100 källor", or when the direction of the
+  next months is the decision. Do not use to pick one next batch when the
+  sources on disk cover the hole, for routine implement/analyze/commit, or
+  for Play AAB upload.
 ---
 
 # Year roadmap (Idle Party)
 
-Owner-only planning pass. **Not a standing program.** Next code batch starts
-only when the owner names a line from the plan in a **new** chat.
+Planning pass. **Not a standing program.** The sources file is evidence for
+the next pick (`.cursor/rules/independent-calls.mdc`). After a rewrite the
+same chat may build the plan's first slice.
 
 Reserve slash if the phrase is missed: `/year-roadmap`.
 
 ## When not to use
 
-- Vague “vad härnäst” / “gör bättre” → ask once; do not invent a numbered plan
+- Picking one next batch when `docs/YEAR_ROADMAP_SOURCES.md` already covers
+  the hole → open a few A pages if needed, then build (`independent-calls`)
 - Routine implement, analyze, commit, or Play upload
-- Restoring a standing program when the owner did not ask for the year plan
+- Inventing a numbered program
 
 ## Steps
 
@@ -52,9 +55,10 @@ Reserve slash if the phrase is missed: `/year-roadmap`.
 4. **Rewrite** `docs/YEAR_ROADMAP.md` in Swedish. Game terms stay English
    (KEY, Gauntlet, Ranked GR, Farm Rift, Ashen Crown). No invented Console %.
 
-5. **Handoff** — short Swedish: what must be first, what remains as themes,
-   that examples and **Senare** are unbooked. **Do not ship a game batch in
-   this chat.** Owner names the next slice in a new chat.
+5. **Build or hand off** — you may build the first **Nu** slice in this chat
+   and follow `independent-calls` (checks, local commit, stop rules). Then
+   hand off in short Swedish: what came first, what remains as themes, and
+   that examples and **Senare** are unbooked.
 
 ## Plan shape
 
@@ -70,12 +74,13 @@ Reserve slash if the phrase is missed: `/year-roadmap`.
 
 EP locks scope. Game Director orders content (visible holes first, then
 KEY → Gauntlet → Farm Rift → Ranked GR → Ashen). UX / Tech / Art / Marketing
-veto only. Craft Trial stays MORE → CRAFT. New zone / class / hunt only when
-the owner names them.
+veto only. Craft Trial stays MORE → CRAFT. A new zone / class / hunt may go in
+**Nu** when the owner names it, or when an A source and a hole in this game
+agree.
 
 ## Gotchas
 
 - Three horizons, not four equal quarters
 - No numeric D1/D7 targets while Console n is tiny
 - Listing A/B waits for real traffic
-- Same chat never starts the Nu build
+- A source counts only if it was opened in this chat and has a URL

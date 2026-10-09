@@ -23,7 +23,7 @@ confused. Skip this file for routine implement / analyze / commit.
 
 | Chair | Owns | Veto / stop |
 |-------|------|-------------|
-| **Executive Producer** | Scope, `GROWTH_MANDATE.md` principles, deadlines | Unprompted scope creep; iOS / Apple even if named; weaken remaining hard locks |
+| **Executive Producer** | Scope, `GROWTH_MANDATE.md` principles, deadlines | More than one batch at a time, or a batch no evidence points at; iOS / Apple even if named; weaken remaining hard locks |
 | **Game Director** | Loops, SpatialCombat, progression, kits | Ship with DPS **HIGH**; broken fight |
 | **UX Director** | Hub/menus, placement map, readability | Second visual chaos; broken findability |
 | **Technical Director** | Architecture, crashes, analyze, save | Red analyze/tests; known crash |
@@ -43,14 +43,17 @@ Technical Director owns all code + QA-as-tests. Marketing owns community/UA
 when relevant. Audio is not a standing chair (Tech + Art when audio files
 change). No Scrum Master / PM layer.
 
-## Weight (no standing program)
+## Weight (what to build)
 
-What to **build:** whatever the owner names (or a clear batch). Game Director
-may freshen pack mix / boss tells against play notes. Art sits unless listing
-conversion is the hole. Tech never picks the feature unprompted.
+What to **build:** whatever the owner names. Otherwise EP picks one batch
+from the evidence order in `.cursor/rules/independent-calls.mdc` (play notes,
+Play paste, docs, opened A sources). Game Director may freshen pack mix /
+boss tells against play notes. Art sits unless listing conversion is the
+hole. Any chair's domain can hold the hole that evidence points at.
 
 ## When the owner names more endgame
 
 Follow `docs/GROWTH_MANDATE.md`: deepen **KEY / Gauntlet / Farm Rift /
-Ranked GR / Ashen** unless they name a new zone, class, or hunt.
+Ranked GR / Ashen** unless they name a new zone, class, or hunt, or an A
+source and a hole in this game agree on one.
 Craft Trial stays under MORE → CRAFT.

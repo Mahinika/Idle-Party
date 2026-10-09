@@ -1,0 +1,75 @@
+---
+description: The agent picks and builds the next batch from checked facts (play notes, Play paste, graded sources). It does not ask what to build. Locks, done bar, and honest numbers still hold.
+alwaysApply: true
+---
+
+# Independent calls from checked facts (Idle Party)
+
+**Confirmed:** 2026-10-09 by the owner. This replaces "owner names the work",
+"vague goal → ask once", "Tech never picks the feature", "the year plan does
+not pick the batch", "the source chat never builds", and "new zone / class /
+hunt only when named". If the owner names a goal in a turn, that goal wins.
+
+You choose what to build next and you build it. Do not ask which feature,
+"what next?", or "ska jag fortsätta?".
+
+## Facts before the pick
+
+Decide from evidence, in this order:
+
+1. Open notes in `docs/PLAY_NOTES.md`.
+2. This game's Play paste in `docs/PLAY_GROWTH.md`. Never invent Console
+ percentages. While the sample is small, set no numeric D1 or D7 target.
+3. `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md`, and
+ `docs/YEAR_ROADMAP_SOURCES.md`.
+4. Facts from other game developers, graded as in `.cursor/skills/year-roadmap`.
+
+A source counts only if you opened it in this chat and can name the URL.
+If you could not open it, it is not a fact; decide from this game's notes.
+
+| Grade | Use |
+|---|---|
+| A | May change what you build. Play Help, GameAnalytics annual, CHI / Frommel, Pecorella, a studio's own postmortem or docs |
+| B | An example only after a hole in this game is already clear |
+| C | Must not decide. Playio, recycled AppsFlyer 2022, "up to 25%", battle-pass calendars |
+
+Name the player problem the source measured. Fit the fix to this game: the
+party walks the room, one reason to come back tomorrow, one Ascend loop.
+Another game shipping a feature is not by itself a reason. When this game's
+notes and an article disagree, follow this game.
+
+Rebuild the 100-source year file only when the direction of the next months
+is the decision. Otherwise use the sources on disk and open a few A pages
+if they do not cover the hole.
+
+## What you may decide
+
+Pick one batch and build it before you pick again. A new zone, class, hunt,
+God Hand direction, second sim, IAP, or gacha is allowed when an A source and
+a hole in this game agree. Hard locks (`product-locks.mdc`) never move.
+Never run `/init` or clean the repo unasked. Change GEAR or endgame copy only
+when play notes say it lies. Do not create PROJECT_INDEX, ARCHITECTURE,
+ROADMAP, DEVELOPMENT_STATUS, or a second changelog.
+
+## Loop
+
+Finish the batch, run `definition-of-done.mdc`, commit locally when green.
+Push / PR / tag follow `owner-preferences.mdc`. Then pick the next batch from
+the same evidence and continue.
+
+Stop and wait, without starting another feature, when:
+
+- the owner should look at the phone (the A56 already runs this batch)
+- a whole screen or floor is about to change size, speed, or layout (show a
+ before and an after on the A56 and let the owner pick)
+- a lock, a missing credential, or an unopened source blocks a safe next step
+
+An audit is the job only when the owner asked for one. Picking a direction
+ends in a build in the same chat, unless you are writing the year plan; after
+a year-plan rewrite you may build its first slice.
+
+## Handoff
+
+At most 5 lines in Swedish: what you chose, the source title and why it
+applied, what changed, and what to try on a new save. Add an endgame save
+only if endgame changed. Report only results you saw. Then wait.

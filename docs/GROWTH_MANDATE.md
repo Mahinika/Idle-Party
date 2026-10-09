@@ -5,6 +5,8 @@
 class / God Hand / UA / git push / wipe-save), and UX hard rules (flat
 nav / hide-until-unlock / ≤90 s) removed by owner. **Play AAB upload still
 requires owner ask.**
+**Updated:** 2026-10-09 — the agent picks the next batch from checked facts
+(`.cursor/rules/independent-calls.mdc`). Owner-named goals still win.
 History: [LEARNINGS.md](LEARNINGS.md) · [PLAY_GROWTH.md](PLAY_GROWTH.md).
 
 North star: **främlingar på Play blir spelare.**
@@ -19,9 +21,12 @@ Hard locks: [`.cursor/rules/product-locks.mdc`](../.cursor/rules/product-locks.m
 
 ## Default work
 
-**Owner names the work** (or a clear batch). No standing program. Vague
-“gör bättre / vad härnäst” → ask once; do not invent a numbered program; do
-not restore AL20 hub polish as the default.
+**2026-10-09:** a goal the owner names wins. Otherwise the agent picks one
+batch from checked facts and builds it (`.cursor/rules/independent-calls.mdc`):
+play notes, then the Play paste, then these docs, then A-grade sources it
+opened. Vague “gör bättre / vad härnäst” is the same pick, not a question.
+Do not invent a numbered program; do not restore AL20 hub polish as the
+default.
 
 ## Time-to-value (guidance, not a hard lock)
 
@@ -43,23 +48,26 @@ early and hide chrome until it matters when it does not fight the named goal.
 
 - iOS / Apple release (never, even if a plan names it); web-as-product; GitHub Releases as a player funnel
 - Inventing numbered “Program N” roadmaps unless the owner asks for one
+- Asking the owner “what next?” when the evidence can pick the batch
 
 Owner **2026-09-26** removed these stops: AL20 polish as a forbidden default,
 a second fight sim, gacha / BiS-for-cash / whale, and god-object work as
 something the quarter may not be.
 
-## Year roadmap (owner ask only)
+## Year roadmap
 
-When the owner says **Uppdatera 1års roadmap**, follow
-`.cursor/skills/year-roadmap/`. Output lives in
+When the owner says **Uppdatera 1års roadmap**, or the direction of the next
+months is the decision, follow `.cursor/skills/year-roadmap/`. Output lives in
 [YEAR_ROADMAP.md](YEAR_ROADMAP.md) (sources:
-[YEAR_ROADMAP_SOURCES.md](YEAR_ROADMAP_SOURCES.md)). That file does **not**
-pick the next code batch — the owner names a line first.
+[YEAR_ROADMAP_SOURCES.md](YEAR_ROADMAP_SOURCES.md)). The sources file is
+evidence for the next pick. After a rewrite the same chat may build the
+first slice.
 
-## Endgame (when owner names it)
+## Endgame
 
 Prefer deepening the **five hunts** (KEY / Gauntlet / Farm Rift / Ranked GR /
-Ashen) when the ask is “mer endgame.” New zone / class / hunt OK when named.
+Ashen) when the ask is “mer endgame.” New zone / class / hunt OK when named,
+or when an A-grade source and a hole in this game agree.
 Monthly **Craft Trial** (MORE → CRAFT) is not a sixth ENDGAME hunt.
 
 ## Metrics (owner / Console — do not fake)

@@ -1,8 +1,9 @@
 # Idle Party — 1års roadmap
 
 **Uppdaterad:** 2026-09-27 (ny svep)  
-**Inte ett stående program.** Nästa kodbatch startar först när du namnger
-en rad här i en **ny** chatt.  
+**Inte ett stående program.** Agenten väljer nästa batch från kollade fakta
+(`.cursor/rules/independent-calls.mdc`); den här filen och källfilen är
+underlag för valet. Ett mål du namnger vinner.  
 Källor (A/B/C): [YEAR_ROADMAP_SOURCES.md](YEAR_ROADMAP_SOURCES.md).
 
 North star: främlingar på Play blir spelare (`GROWTH_MANDATE.md`).  

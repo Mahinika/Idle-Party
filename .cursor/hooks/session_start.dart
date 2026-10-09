@@ -24,7 +24,7 @@ void main() {
 String _nowLine() {
   final file = File('.cursor/rules/owner-preferences.mdc');
   if (!file.existsSync()) {
-    return 'Owner names the work (no standing program).';
+    return _fallback;
   }
   for (final line in file.readAsLinesSync()) {
     final t = line.trim();
@@ -34,8 +34,12 @@ String _nowLine() {
       return t.substring(i + marker.length).trim();
     }
   }
-  return 'Owner names the work (no standing program).';
+  return _fallback;
 }
+
+const _fallback =
+    'The agent picks and builds the next batch from checked facts '
+    '(independent-calls.mdc).';
 
 void _pruneOldShots() {
   final dir = Directory(_shotDir);

@@ -44,7 +44,7 @@ Keep the steering shape:
    - **Keep** six studio seats; do not restore a 40-role org
    - Key systems: `GameDirector`, `GameLogic`, `SpatialCombat`, hub/dungeon UI, `DungeonCatalog`, `metaDepth`, Ascend keep/reset
    - Docs that claim “current”: `docs/PLAY_STORE.md`, `docs/CONTENT_CADENCE.md`,
-     `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md` (owner names work; no standing program)
+     `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md` (agent picks from checked facts per `independent-calls`; no numbered program)
    - Optional fast honesty: `flutter test test/ship_smoke_test.dart` and/or MCP `changelog_check` / `zone_identity` if helpful
 
 2. **Diff claims vs code**
@@ -54,7 +54,7 @@ Keep the steering shape:
    - Build/verify commands, MCP server name, skill list
    - Live look is `a56-playtest` (Samsung A56 emulator), not web-server tabs
    - Owner prefs (language, Play vs sideload, commit/propose behavior) — update only if product reality changed
-   - **Keep** owner-names-work default. The one AL20 sentence lives in `owner-preferences`.
+   - **Keep** `independent-calls.mdc` as the pick-the-batch rule (owner-named goals win). Do not restore "owner names the work" or "vague → ask once".
 
 3. **Edit**
    - Update **`AGENTS.md`** so architecture + conventions + tooling match code

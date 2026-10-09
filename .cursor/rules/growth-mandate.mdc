@@ -7,7 +7,9 @@ alwaysApply: false
 
 Read `docs/GROWTH_MANDATE.md`. Do not copy it into other rules.
 
-Owner names the work. A vague “gör bättre / vad härnäst” asks once.
+A goal the owner names wins. Otherwise, or on a vague “gör bättre / vad
+härnäst”, pick and build one batch from checked facts
+(`.cursor/rules/independent-calls.mdc`). Do not ask what to build.
 Numbers and why: `docs/PLAY_GROWTH.md`, `docs/LEARNINGS.md`.
-“Uppdatera 1års roadmap” → `.cursor/skills/year-roadmap/` (not a standing
-program; the plan file does not pick the next batch).
+“Uppdatera 1års roadmap” → `.cursor/skills/year-roadmap/`. The plan is
+evidence for the pick, not a standing program.

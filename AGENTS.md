@@ -10,6 +10,8 @@ Idle Party is a working Flutter idle RPG. Original Dart. Owned pixel art in
 
 Work style, locks, and Swedish handoff live in `.cursor/rules/`. Do not
 restate them here. Growth principles: `docs/GROWTH_MANDATE.md`.
+The agent picks the next batch from checked facts
+(`.cursor/rules/independent-calls.mdc`); a goal the owner names wins.
 
 **UI:** portrait phones, reference Samsung A56 (360×780). Live look is the
 AVD `Samsung_A56` via `a56-playtest`. The agent reads that device with
@@ -185,7 +187,8 @@ and skill `save-migrate`. REBORN is optional and never a TODAY chase.
 Dungeon unlock is party mean level, not lifetime gold.
 
 God Hand: long-press the fight or tap the fist + AOE under ESSENCE → BLESSING (BAL / FOCUS / WIDE).
-Change direction only when the owner names it.
+Change direction when the owner names it, or when an A-grade source and a
+hole in this game agree (`.cursor/rules/independent-calls.mdc`).
 
 **Balance:** fairness first. CI fails on DPS `HIGH` (±20% vs median share).
 Iterate with share-fast before kit number work is done.

@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — the agent picks the batch from checked facts
+
+- Owner: the agent chooses and builds the next batch without asking, from play notes → Play paste → growth docs → A-grade sources it opened (URL named). Replaces "owner names the work", "vague → ask once", "the year plan does not pick", and "new zone / class / hunt only when named". Owner-named goals and hard locks still win. Rule: `.cursor/rules/independent-calls.mdc`.
+
 ## 2026-10-08 — tomorrow has to be named before they close
 
 - The ping card waited for Welcome Back gold. Almost nobody came back, so the ask never ran (`offline_gold` was 1 user, D7 was 1). After the first boss the hub now names tomorrow's check-in prize for the rest of that UTC day, and the quiet ping is offered then. Still never on install, never on first loot, never in a fight.

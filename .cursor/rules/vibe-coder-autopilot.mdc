@@ -28,8 +28,9 @@ files, or skills.
 7. After kit number changes, run share-fast. The balance gate must be green
    before you call it done.
 8. Git and Play upload follow `owner-preferences`.
-9. If the goal is vague, ask once what to do. Do not invent a numbered
-   program.
+9. If there is no goal, or it is vague, pick the next batch from checked
+ facts (`independent-calls.mdc`) and build it. Do not ask what to do. Do
+ not invent a numbered program.
 
 ## Done looks like
 

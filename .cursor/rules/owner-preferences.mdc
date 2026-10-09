@@ -5,15 +5,17 @@ alwaysApply: true
 
 # Owner preferences (Idle Party)
 
-Source: the owner, who vibe-codes. Last sync: **2026-09-15**.
+Source: the owner, who vibe-codes. Last sync: **2026-10-09**.
 Locks: `.cursor/rules/product-locks.mdc`. Growth principles:
-`docs/GROWTH_MANDATE.md`.
+`docs/GROWTH_MANDATE.md`. How to pick work:
+`.cursor/rules/independent-calls.mdc`.
 
-**Now:** no standing program. Owner names the work. **Never Play AAB without owner ask.** AL20 polish is allowed when they name it.
+**Now:** the agent picks and builds the next batch from checked facts (independent-calls). A goal the owner names wins. **Never Play AAB without owner ask.**
 
-## When the goal is vague
+## When there is no goal, or it is vague
 
-Ask once what to do. Do not invent a numbered program.
+Pick one batch from the evidence in `independent-calls.mdc` and build it.
+Do not ask what to do. Do not invent a numbered program.
 
 When they say "mer endgame" and name no new content, deepen KEY,
 Gauntlet, Rift, Greater Rift, and Ashen. The monthly Craft Trial
@@ -48,8 +50,8 @@ Done with the commit that fixes it. Read Open at the start of a batch.
 4. Before a big change to look or feel (sizes, speeds, or the layout of a
    whole screen or floor), show the owner a before and an after on the A56
    and let them pick. Then build on the pick. Small tweaks need no preview.
-5. Hand off in at most 5 lines: what changed and what to look for. Then
-   wait.
+5. Hand off in at most 5 lines: what you chose and the source, what
+ changed, and what to look for. Then wait.
 6. **Git:** when analyze and tests are green, **commit locally** without
    asking. Push, open a PR, or tag when the batch needs it, also without
    asking. **Never upload an AAB to Google Play unless the owner asks in
@@ -70,7 +72,8 @@ Done with the commit that fixes it. Read Open at the start of a batch.
 | Decide alone | Never |
 |--------------|--------|
 | Skills, files, analyze/tests, splits, dead non-save code | Weaken Legal / IP or Cursor safety |
-| New zone / class / God Hand direction / scaled UA / IAP, a second sim, or gacha when they name it | Invent a numbered program they did not ask for |
+| The next batch, from the evidence in `independent-calls.mdc` | Invent a numbered program they did not ask for |
+| New zone / class / hunt / God Hand direction / scaled UA / IAP, a second sim, or gacha when they name it, or when an A source and a hole in this game agree | |
 | Commit, push, PR, tag when green | Force-push; skip hooks; point players at GitHub Releases; **upload Play AAB without owner ask** |
 | A56 look / hub smoke; listing docs; wipe test save if needed; Console paste | |
 
