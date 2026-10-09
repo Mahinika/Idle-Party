@@ -227,10 +227,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Welcome back!'), findsOneWidget);
     expect(find.textContaining('Up next: Clear one cave today'), findsOneWidget);
+    expect(find.textContaining('While you are away the hub pays'), findsOneWidget);
     expect(find.textContaining('Daily Run'), findsNothing);
     expect(find.textContaining('KEY'), findsNothing);
     expect(find.text('CLAIM'), findsOneWidget);
     expect(find.textContaining('40 gold'), findsWidgets);
+  });
+
+  testWidgets('a cave Welcome Back does not say the hub was paying', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 8, 8);
+    final state = GameLogic.createInitialState(now: now).copyWith(
+      inDungeon: true,
+      bossVictories: 1,
+    );
+    final summary = OfflineProgressResult(
+      state: state,
+      secondsApplied: 3600,
+      goldGained: 0,
+      essenceGained: 0,
+      roomsCleared: 0,
+      highestFloorDelta: 0,
+      bossDelta: 0,
+      wasInDungeon: true,
+    );
+    final director = GameDirector.preview();
+    director.uiFeedback.presentOffline(summary);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('kept fighting in the cave'), findsOneWidget);
+    expect(find.textContaining('While you are away the hub pays'), findsNothing);
+    expect(find.textContaining('On the hub, gold gathers'), findsOneWidget);
   });
 
   test('hub gold fills for 12 hours and then stops', () {

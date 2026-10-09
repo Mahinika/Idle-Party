@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — Welcome Back taught the hub gold rate from inside the cave
+
+- The return card always said the hub pays gold per minute, even when the party had been in a cave, where gold does not gather. A cave return now says the party kept fighting. The hub rate stays on a hub return.
+
 ## 2026-10-09 — Welcome Back sent the first boss to Ascend
 
 - A boss that fell while the player was away said Ascend moved, including the first one. Until the first Ascend, that line only says a boss fell. The hub job stays one cave.

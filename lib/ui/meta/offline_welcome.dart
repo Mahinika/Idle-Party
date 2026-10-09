@@ -125,7 +125,10 @@ Future<void> showOfflineProgressDialog(
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  GoldIncome.awayPromise(summary.state),
+                  GoldIncome.awayPromise(
+                    summary.state,
+                    wasInDungeon: summary.wasInDungeon,
+                  ),
                   style: GameTheme.body(size: 13, color: GameTheme.mossLit),
                 ),
               ],

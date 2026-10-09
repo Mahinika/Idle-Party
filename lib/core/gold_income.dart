@@ -78,9 +78,15 @@ abstract final class GoldIncome {
 
   /// What the party earns if the player leaves. Hub rate is steady gold.
   /// A cave keeps the fight going instead — that is not a second gold rate.
-  static String awayPromise(GameState state) {
-    final rate = perMinuteLabel(hubGoldPerMinute(state));
+  /// [wasInDungeon] is the place they actually left. The hub rate is not
+  /// the story when the party was in a cave.
+  static String awayPromise(GameState state, {bool wasInDungeon = false}) {
     final hours = hubChestCapHoursFor(state);
+    if (wasInDungeon) {
+      return 'Your party kept fighting in the cave. '
+          'On the hub, gold gathers for up to $hours hours, then it stops.';
+    }
+    final rate = perMinuteLabel(hubGoldPerMinute(state));
     return 'While you are away the hub pays $rate for up to '
         '$hours hours, then it stops. '
         'Leave the party in a cave and they keep fighting.';

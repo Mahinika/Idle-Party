@@ -18,6 +18,14 @@ void main() {
     expect(GoldIncome.hubRateCompact(owned), contains('24h'));
     expect(GoldIncome.awayPromise(state).toLowerCase(), contains('stops'));
     expect(GoldIncome.awayPromise(state).toLowerCase(), contains('cave'));
+    expect(
+      GoldIncome.awayPromise(state, wasInDungeon: true),
+      contains('kept fighting in the cave'),
+    );
+    expect(
+      GoldIncome.awayPromise(state, wasInDungeon: true),
+      isNot(contains('While you are away the hub pays')),
+    );
     expect(GoldIncome.hubRateCompact(state), contains('12h'));
     expect(GoldIncome.multiplierLine(state), 'Gold +0%');
   });
