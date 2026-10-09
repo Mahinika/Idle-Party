@@ -19,8 +19,11 @@ void main() {
     int levels = 0,
     int gear = 0,
     bool wasInDungeon = false,
+    int ascension = 0,
   }) {
-    final state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 8));
+    final state = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 8, 8),
+    ).copyWith(ascensionLevel: ascension);
     return OfflineProgressResult(
       state: state,
       secondsApplied: seconds,
@@ -77,6 +80,12 @@ void main() {
     );
     expect(r.welcomeLead.toLowerCase(), contains('boss'));
     expect(r.welcomeLead.toLowerCase(), isNot(contains('rooms')));
+    expect(r.welcomeLead.toLowerCase(), isNot(contains('ascend')));
+  });
+
+  test('after the first Ascend a boss while away says Ascend moved', () {
+    final r = result(bosses: 1, ascension: 1, wasInDungeon: true);
+    expect(r.welcomeLead.toLowerCase(), contains('ascend'));
   });
 
   test('welcomeLead prefers party levels over rooms when no boss', () {

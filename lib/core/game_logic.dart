@@ -3592,7 +3592,10 @@ class OfflineProgressResult {
 
   String get _welcomeLeadCore {
     if (bossDelta > 0) {
-      if (state.ascensionLevel >= GameLogic.maxAscensionLevel) {
+      // Before the first Ascend, TODAY is one cave. Naming Ascend here
+      // sends a new player at the prestige button.
+      if (state.ascensionLevel == 0 ||
+          state.ascensionLevel >= GameLogic.maxAscensionLevel) {
         return bossDelta == 1
             ? 'A boss fell while you were away.'
             : '$bossDelta bosses fell while you were away.';

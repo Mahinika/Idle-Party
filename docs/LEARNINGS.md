@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — Welcome Back sent the first boss to Ascend
+
+- A boss that fell while the player was away said Ascend moved, including the first one. Until the first Ascend, that line only says a boss fell. The hub job stays one cave.
+
 ## 2026-10-09 — Welcome Back said the prize was already waiting
 
 - After a night away the vault is empty, but Welcome Back said the check-in waits on the vault. That line now says one cave fills it, and names the prize. "Waits on the vault" is only when CLAIM is ready.
