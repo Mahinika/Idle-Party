@@ -1,31 +1,37 @@
 # Idle Party — 1års roadmap
 
-**Uppdaterad:** 2026-09-27 (ny svep)  
+**Uppdaterad:** 2026-10-09 (ny svep)  
 **Inte ett stående program.** Agenten väljer nästa batch från kollade fakta
 (`.cursor/rules/10-what-to-build.mdc`); den här filen och källfilen är
 underlag för valet. Ett mål du namnger vinner.  
 Källor (A/B/C): [YEAR_ROADMAP_SOURCES.md](YEAR_ROADMAP_SOURCES.md).
+Den här svepen: A=35, B=35, C=30.
 
 North star: främlingar på Play blir spelare (`GROWTH_MANDATE.md`).  
 Tillväxtordning: crash-free → listing → D1 → D7 → betyg → pytteliten UA.  
-Inga numeriska D1/D7-mål. Paste 2026-09-27: 4 910 visningar, 107
-installationer, listing ungefär 25 %, 32 första öppningar, 30 månadsaktiva
-enheter, D7 fortfarande tom. Play har inget D1-tal.
+Inga numeriska D1/D7-mål. Paste 2026-10-09, enheter, 11 sep–8 okt:
+19 500 visningar, 308 förvärv, 121 första öppningar, 138 månadsaktiva,
+listing conversion 15,84 %, D7 kvarvarande enheter fortfarande 1.
+Play har inget D1-tal. Krasch-kortet är ett streck, inte ett mätt 0 %.
 
-A-källorna den här svepen flyttade inte **Nu**. Första öppning är en egen
-räknare (enhet som öppnat inom 180 dagar efter install), inte ett känt
-datatapp 2026. Ett listing-test mäter klick på butikssidan, inte den
-öppningen. Median-sessionen 2025 är 3,1–3,5 minuter (GameAnalytics
-2026-rapport), kortare än förra årets 5–6 minuter. Det är marknadskontext,
-inte en timer, och det är inte ett skäl att göra första gången längre.
-Unlisted preview är tillåten. En annan Play-yta (YouTube på listningen och
-Games-fliken) kräver publik video och är inte det här fönstrets jobb.
+A-källorna den här svepen flyttade inte **Nu**. Play Help räknar första
+öppning och 7-dagars kvarvaro som enheter, och statistiksidan har inget
+D1-mått. Grow-hjälpen och statistik-hjälpen anger inte samma fönster
+(150 respektive 180 dagar). Det är inte ett skäl att rätta pasten.
+Ett listing-test mäter klick på butikssidan, inte vem som startar efter
+install. Median-sessionen 2025 är 3,1–3,5 minuter (GameAnalytics
+2026-rapport). Det är marknadskontext, inte en timer, och det är inte
+ett skäl att göra första gången längre. Frommel: dagliga belöningar kan
+kännas som ett jobb. Ingen ny daglig kalender. Pecorella flyttar inte
+Ascend eller offline-taket in i det här fönstret. Aldrig iOS, även om
+Melvor namnger en Apple-release.
 
-Jämfört med What’s New t.o.m. **1.12.187** är de här redan skeppade och
-inte nästa skiva: krypet och ENTER, nästa våning efter första clear, en
-TODAY-jakt, Welcome Back, relics, cinders, Craft Trial, KEY på en natt,
-och preview-videon som öppnar med fight. Vitals-kollen 27 sep visade inga
-krasch-rader och inga ANR-rader. Det är inte ett påhittat 0 %.
+Redan i det osläppta **1.12.195**, och därför inte nästa skiva: första
+bossen går att vinna, TODAY säger en grotta imorgon tills första Ascend,
+CLAIM sitter i grottan, ett ohämtat valv nollställs vid midnatt, Welcome
+Back säger inte att ett tomt valv redan väntar, och den första bossen
+säger inte Ascend. Produktion är fortfarande **1.12.194**. Vitals 9 okt
+var inte ett rött kort.
 
 ---
 
@@ -37,16 +43,17 @@ krasch sitter i alla tre. Ingen fjärde feature.
 1. **18 oktober-inlägget** — What’s New ändras inte. Nästa förvärv är
    `r/incremental_games` med GIF, en Play-länk och kort text. Inte fler
    subreddits, inte en ny Shorts-batch, inte köpta installs. Listing-test
-   väntar: det lagar inte 107 installationer mot 32 öppningar.
+   väntar: det lagar inte 308 förvärv mot 121 öppningar.
 
 2. **Första gången stannar kort** — ledet för en främling förblir *Your
    party fights on its own. Tap ENTER DUNGEON.* Om du namnger en kodrad är
    den en koll att en ny save hinner ett slag, inte en längre intro och
    inte ett nytt system.
 
-3. **Imorgon är ett jobb** — bara om återkomsten ljuger. What’s New som en
-   ny spelare kan läsa: kom tillbaka, en grotta är jobbet. Frommel: lägg
-   inte en daglig kalender ovanpå Daily Vault. Ingen andra daily.
+3. **Welcome Back säger rätt plats** — bara om återkomsten ljuger. Stod
+   partyt i grottan ska kortet säga att de fortsatte slåss, inte att
+   hubben betalade guld per minut. På hubben samlas guld, och det tar
+   stopp. Frommel: lägg inte en daglig kalender ovanpå Daily Vault.
 
 Gauntlet, Farm Rift, Ranked GR och Ashen Crown är inte det här fönstret.
 KEY-meningen är redan skeppad.
@@ -84,8 +91,8 @@ Avsikt. Inte löfte. Förbi månad 6 är det en hypotes.
   du namnger det.
 - Pytteliten UA först när en organisk öppning är känd och inte skräp.
   D30 är sist.
-- YouTube på Games-fliken (publik video, uppladdad inom 21 dagar) bara om
-  Play ens erbjuder ytan. Preview-fältet får vara unlisted.
+- YouTube på Games-fliken (publik video) bara om Play ens erbjuder ytan.
+  Preview-fältet får vara unlisted.
 
 ---
 
@@ -98,7 +105,7 @@ Obokade exempel (A/B). Varje rad: vad · varför · var · veto.
    stoppar om det tränger undan det hålet.
 2. **YouTube på listningen, publik och utan annonser** — annan yta än
    preview-videon · listing · Marketing stoppar om unlisted preview byts
-   ut, eller om annonser slås på. Sidan säger att ytan kräver eligibility.
+   ut, eller om annonser slås på.
 3. **Gauntlet läsbar när KEY-natten är klar** — när KEY tar stopp ·
    Gauntlet · UX stoppar kaos. Game Director stoppar om fighten bryts
    eller DPS blir HIGH.
@@ -131,11 +138,11 @@ Det här är spärrar från researchen, inte från dina lås.
 - “Upp till 25 %”, “+25 % revenue”, “upp till 50 % av onboarding”
 - D1 under 20 % eller under 25 % som en spärr mot att synas
 - Battle-pass eller tre lager event-kalender som default
-- Playio om ~60 sekunder till kärnan som hard lock
-- Listing-test som bot för 107 installationer mot 32 öppningar
+- Listing-test som bot för 308 förvärv mot 121 öppningar
 - Royalty-free sprite-paket
-- Krasch eller ANR som Play flaggar röd — då väntar innehåll. Paste 27 sep
+- Krasch eller ANR som Play flaggar röd — då väntar innehåll. Paste 9 okt
   var inte röd
+- En Apple-release för att ett annat spel namnger den
 
 Aldrig iOS eller en Apple-release, inte ens om en plan namnger det.
 GitHub Releases som installväg, engelska i spelet, och Play-uppladdning
