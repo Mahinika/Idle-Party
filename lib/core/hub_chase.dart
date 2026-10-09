@@ -823,19 +823,14 @@ class HubChase {
     );
   }
 
-  /// After the first boss, once today's vault is claimed, while the party
-  /// is still new. One cave tomorrow — not the road to level 100.
+  /// After the first boss, once today's vault is claimed, until the first
+  /// Ascend. One session is enough to pass a few levels, and that must not
+  /// turn TODAY into the road to level 100.
   static HubChase? _tomorrowCaveChase(GameState state) {
     if (state.ascensionLevel != 0 || state.bossVictories <= 0) return null;
     if (!state.metaDepth.dailyVaultClaimed) return null;
     if (!GameLogic.checkInActive(state)) return null;
-    final heroes = state.heroes;
-    if (heroes.isEmpty) return null;
-    final minLv = heroes.fold<int>(
-      heroes.first.level,
-      (m, h) => min(m, h.level),
-    );
-    if (minLv > 8) return null;
+    if (state.heroes.isEmpty) return null;
     final pay = GameLogic.checkInPayout(state);
     return HubChase(
       kind: HubChaseKind.dailyVaultProgress,

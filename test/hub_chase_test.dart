@@ -973,6 +973,23 @@ void main() {
       },
     );
 
+    test('AL0 still says one cave tomorrow after the party gains levels', () {
+      final state = _withHeroLevels(
+        GameLogic.createInitialState(now: now).copyWith(
+          bossVictories: 1,
+          metaDepth: GameLogic.createInitialState(
+            now: now,
+          ).metaDepth.copyWith(dailyVaultClaimed: true),
+        ),
+        9,
+      );
+      final chase = HubChase.forState(state, now: now);
+      expect(chase.title, 'Tomorrow: one cave');
+      expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
+      expect(chase.detail.toUpperCase(), isNot(contains('GAUNTLET')));
+      expect(chase.kind, isNot(HubChaseKind.clearFloors));
+    });
+
     test('S3 Daily done, vault empty: fill Daily Vault', () {
       final state = GameLogic.createInitialState(now: now).copyWith(
         ascensionLevel: 1,

@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — level 100 showed up the same day
+
+- One early floor is about one hero level. After level 8, TODAY named the road to 100 and the endgame list. Until the first Ascend, a claimed vault still says tomorrow is one cave.
+
 ## 2026-10-09 — the ping never asked in the cave
 
 - After the first boss the party stays in the cave, so the quiet-ping card on the hub never ran. It now asks once when a floor is clear. A live fight still does not ask.
