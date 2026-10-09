@@ -953,7 +953,7 @@ void main() {
     });
 
     test(
-      'S2 vault already claimed: level the party, not Daily Run or Ascend',
+      'S2 vault already claimed: tomorrow is one cave, not level 100',
       () {
         final state = GameLogic.createInitialState(now: now).copyWith(
           bossVictories: 1,
@@ -962,8 +962,12 @@ void main() {
           ).metaDepth.copyWith(dailyVaultClaimed: true),
         );
         final chase = HubChase.forState(state, now: now);
-        expect(chase.kind, HubChaseKind.clearFloors);
-        expect(chase.title.toLowerCase(), contains('level every active hero'));
+        expect(chase.kind, HubChaseKind.dailyVaultProgress);
+        expect(chase.title, 'Tomorrow: one cave');
+        expect(chase.detail.toLowerCase(), contains('tomorrow'));
+        expect(chase.detail.toLowerCase(), contains('one cave'));
+        expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
+        expect(chase.detail.toUpperCase(), isNot(contains('GAUNTLET')));
         expect(chase.kind, isNot(HubChaseKind.dailyRun));
         expect(chase.kind, isNot(HubChaseKind.ascend));
       },

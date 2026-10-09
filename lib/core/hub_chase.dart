@@ -389,6 +389,11 @@ class HubChase {
       }
     }
 
+    // The day the first boss falls, today's vault is often already claimed.
+    // Name tomorrow's cave. The level-100 grind waits until the party grows.
+    final tomorrow = _tomorrowCaveChase(state);
+    if (tomorrow != null) return tomorrow;
+
     // Midgame: levels unlock KEY (under Daily when the vault is still empty).
     if (levelPush != null) return levelPush;
 
@@ -815,6 +820,29 @@ class HubChase {
           : 'Ascend ${state.bossVictories}/$bossesNeed',
       urgency: urgency,
       zoneId: dungeonId,
+    );
+  }
+
+  /// After the first boss, once today's vault is claimed, while the party
+  /// is still new. One cave tomorrow — not the road to level 100.
+  static HubChase? _tomorrowCaveChase(GameState state) {
+    if (state.ascensionLevel != 0 || state.bossVictories <= 0) return null;
+    if (!state.metaDepth.dailyVaultClaimed) return null;
+    if (!GameLogic.checkInActive(state)) return null;
+    final heroes = state.heroes;
+    if (heroes.isEmpty) return null;
+    final minLv = heroes.fold<int>(
+      heroes.first.level,
+      (m, h) => min(m, h.level),
+    );
+    if (minLv > 8) return null;
+    final pay = GameLogic.checkInPayout(state);
+    return HubChase(
+      kind: HubChaseKind.dailyVaultProgress,
+      title: 'Tomorrow: one cave',
+      detail: 'Tomorrow pays ${pay.hookPrize}. One cave fills the vault.',
+      progressLabel: 'Tomorrow',
+      zoneId: GameLogic.recommendedDungeonId(state),
     );
   }
 
