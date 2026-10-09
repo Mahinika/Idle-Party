@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — later Ascends fell back under half again
+
+- The second shown reward is 30 and the third is 58, both inside the band. The fourth was only 76, about a third more. From that step on, each shown reward is at least half again the one before. The last Ascend shows 57,653 essence.
+
 ## 2026-10-09 — the second Ascend paid the same essence as the first
 
 - The shown reward was 10 essence both times (7 plus a 3 milestone, then a flat 10). The first reset also paid one-time achievements, so the wallet got 23 and the next reset got 10. The second shown reward is now 30, triple the first, and more than the first reset put in the wallet. Later resets keep that same essence step. Blessing was already +100 percent, then +50 percent.

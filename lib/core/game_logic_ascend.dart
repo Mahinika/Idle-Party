@@ -1,5 +1,33 @@
 part of 'game_logic.dart';
 
+/// Shown Ascend essence (stipend + milestone) for [level].
+///
+/// AL1 is 10 and AL2 is 30. Later levels keep the linear step when it is
+/// already half again, and lift the rest to that floor.
+int _ascendShownEssence(int level) {
+  final n = level.clamp(1, GameLogic.maxAscensionLevel);
+  var shown = 10;
+  if (n == 1) return shown;
+  for (var lv = 2; lv <= n; lv++) {
+    final linear =
+        7 +
+        (lv - 1) * 23 +
+        MetaSystems.ascendMilestoneReward(lv - 1, lv);
+    final halfAgain = (shown * 3 + 1) ~/ 2;
+    shown = linear > halfAgain ? linear : halfAgain;
+  }
+  return shown;
+}
+
+/// Repeating essence, without the one-time milestone the dialog adds back.
+int _ascendEssenceStipend(int newLevel) {
+  final level = newLevel.clamp(1, GameLogic.maxAscensionLevel);
+  final stipend =
+      _ascendShownEssence(level) -
+      MetaSystems.ascendMilestoneReward(level - 1, level);
+  return stipend < 1 ? 1 : stipend;
+}
+
 /// Prestige wipe shared by Ascend and AL20 Reborn: gold, forge, drops, floors.
 /// Keeps hero levels, zone clears, Apex, relics, and other meta.
 GameState _applyPrestigeRunWipe(GameState state) {

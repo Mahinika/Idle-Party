@@ -74,7 +74,7 @@ Teman och spelarproblem. Inga låsta feature-namn.
   system. 2015 års speed-multiplier är ett exempel, inte ett paket att
   lägga in. Koll 9 okt: andra Blessing är +100 % mot den första, tredje
   är +50 %. Essence som Ascend visar gick från 10 till 10. Den andra
-  visar nu 30, tre gånger den första.
+  visar 30. Från den fjärde är varje nästa belöning minst hälften till.
 - **När ett läge tar stopp** — hubbens ordning efter KEY: Gauntlet, sedan
   Ranked GR, sedan Farm Rift, sedan Ashen Crown (`CHASE_CONTRACT.md`).
 - **Listing när du namnger det** — en tillgång, minst en vecka så både

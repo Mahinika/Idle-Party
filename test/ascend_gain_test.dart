@@ -33,4 +33,19 @@ void main() {
     expect(secondGain, greaterThanOrEqualTo(shownReward(2)));
     expect(secondGain, greaterThan(firstGain));
   });
+
+  test('every later Ascend shows at least half again the one before', () {
+    int shown(int level) =>
+        GameLogic.ascendEssenceReward(level) +
+        MetaSystems.ascendMilestoneReward(level - 1, level);
+
+    expect(shown(3), 58);
+    expect(shown(4), 87);
+    expect(shown(20), 57653);
+    for (var level = 1; level < GameLogic.maxAscensionLevel; level++) {
+      final ratio = shown(level + 1) / shown(level);
+      expect(ratio, inInclusiveRange(1.5, 3.0), reason: 'AL$level → AL${level + 1}');
+      expect(GameLogic.ascendEssenceReward(level), greaterThan(0));
+    }
+  });
 }
