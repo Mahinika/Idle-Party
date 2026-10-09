@@ -1,5 +1,5 @@
 ---
-description: Ship bar (analyze, matching tests, honest copy, legal art, docs). Git and Play upload live in owner-preferences.
+description: Ship bar (analyze, matching tests, honest copy, legal art, docs). Git and Play upload live in 20-how-we-work.
 alwaysApply: true
 ---
 
@@ -28,7 +28,7 @@ Before you tell the owner a coding task is finished:
    tooling changed, update `AGENTS.md` (or run `/init`). Standing growth
    principles live in `docs/GROWTH_MANDATE.md`.
 
-Git and the phone handoff live in `owner-preferences`.
+Git and the phone handoff live in `20-how-we-work`.
 
 Skip heavy mid-band sims unless the task is balance. Skip the A56 for pure
 logic, unless the owner should look on the phone (then push this batch

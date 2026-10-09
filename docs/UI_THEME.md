@@ -3,7 +3,7 @@
 **Purpose:** shared **tokens and patterns** so menus feel like one game — not a straitjacket on layout, copy, or UX. When clarity needs a new row, scroll, or hub-specific chrome, **ship it** using tokens below.
 
 **IA + flat nav + feature placement** (Game UX Director): see
-[`.cursor/rules/game-ux-director.mdc`](../.cursor/rules/game-ux-director.mdc).
+[`.cursor/rules/where-screens-live.mdc`](../.cursor/rules/where-screens-live.mdc).
 Bottom destinations are **GEAR · GOLD · SHOP · ESSENCE · MORE · KEY** via
 `MenuRouter` — not a free-form submenu tree. RUN / TODAY / ACCOUNT below are
 **copy scopes**, not bottom tabs.

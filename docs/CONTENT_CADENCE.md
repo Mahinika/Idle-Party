@@ -42,7 +42,7 @@ the goal needs them.
 | Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
 | Stor rewrite vs small ship | Small ship + synlig What’s New a new player can read |
 | Vagt “gör bättre” vs explicit bredare mål | Ask once. Do not restore AL20 |
-| Två stolar oense | `.cursor/rules/studio-seats.mdc` — ett beslut. Ägaren om målet är namngivet, annars EP. Varje stol stoppar bara sitt eget veto |
+| Två stolar oense | `.cursor/rules/decide-a-fork.mdc` — ett beslut. Ägaren om målet är namngivet, annars EP. Varje stol stoppar bara sitt eget veto |
 
 ## Non-goals (unless the batch needs them)
 

@@ -55,15 +55,15 @@ building from play notes while you wait. Never invent the missing numbers.
 
 Pick one batch and build it before you pick again. A new zone, class, hunt,
 God Hand direction, second sim, IAP, or gacha is allowed when an A source and
-a hole in this game agree. Hard locks (`product-locks.mdc`) never move.
+a hole in this game agree. Hard locks (`00-locks.mdc`) never move.
 Never run `/init` or clean the repo unasked. Change GEAR or endgame copy only
 when play notes say it lies. Do not create PROJECT_INDEX, ARCHITECTURE,
 ROADMAP, DEVELOPMENT_STATUS, or a second changelog.
 
 ## Loop
 
-Finish the batch, run `definition-of-done.mdc`, commit locally when green.
-Push / PR / tag follow `owner-preferences.mdc`. Then pick the next batch from
+Finish the batch, run `30-done.mdc`, commit locally when green.
+Push / PR / tag follow `20-how-we-work.mdc`. Then pick the next batch from
 the same evidence and continue.
 
 Stop and wait, without starting another feature, when:

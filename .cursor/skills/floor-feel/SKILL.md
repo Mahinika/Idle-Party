@@ -17,7 +17,7 @@ Rule of thumb: at the default zoom, one fight room is about one A56 screen.
 
 Floors swung from ~55×40 to ~250×250, then halved, then scaled rooms with
 the map, then landed here. Do not grow the canvas or scale rooms with floor
-number again without a before and after on the A56 (`owner-preferences`).
+number again without a before and after on the A56 (`20-how-we-work`).
 
 | Knob | Value | Where |
 |------|-------|-------|

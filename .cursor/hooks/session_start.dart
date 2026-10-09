@@ -22,7 +22,7 @@ void main() {
 }
 
 String _nowLine() {
-  final file = File('.cursor/rules/owner-preferences.mdc');
+  final file = File('.cursor/rules/20-how-we-work.mdc');
   if (!file.existsSync()) {
     return _fallback;
   }
@@ -39,7 +39,7 @@ String _nowLine() {
 
 const _fallback =
     'The agent picks and builds the next batch from checked facts '
-    '(independent-calls.mdc).';
+    '(10-what-to-build.mdc).';
 
 void _pruneOldShots() {
   final dir = Directory(_shotDir);

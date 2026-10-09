@@ -6,7 +6,7 @@ alwaysApply: false
 
 # UI theme
 
-**IA / placement** → `.cursor/rules/game-ux-director.mdc`
+**IA / placement** → `.cursor/rules/where-screens-live.mdc`
 (placement map; flat nav / hide-until-unlock / ≤90 s are not hard locks).
 This rule is **tokens + chrome patterns** only.
 

@@ -1,32 +1,46 @@
 ---
-description: Idle Party work style (batches, verify loop, git). Product locks live in product-locks.mdc.
+description: How the agent works for a vibe-coding owner. Plain Swedish, picks its own tools and skills, large batches, verify, git, and the phone handoff.
 alwaysApply: true
 ---
 
-# Owner preferences (Idle Party)
+# How we work (Idle Party)
 
 Source: the owner, who vibe-codes. Last sync: **2026-10-09**.
-Locks: `.cursor/rules/product-locks.mdc`. Growth principles:
-`docs/GROWTH_MANDATE.md`. How to pick work:
-`.cursor/rules/independent-calls.mdc`.
+Order when rules disagree: `00-locks` → `10-what-to-build` → this file →
+`30-done`. Growth principles: `docs/GROWTH_MANDATE.md`.
 
-**Now:** the agent picks and builds the next batch from checked facts (independent-calls). A goal the owner names wins. **Never Play AAB without owner ask.**
+**Now:** the agent picks and builds the next batch from checked facts (10-what-to-build). A goal the owner names wins. **Never Play AAB without owner ask.**
 
-## When there is no goal, or it is vague
+## Talking to the owner
 
-Pick one batch from the evidence in `independent-calls.mdc` and build it.
-Do not ask what to do. Do not invent a numbered program.
+- They give everyday goals. They do not name APIs, files, or skills.
+- Talk in plain, short Swedish (or their language). If a technical word is
+  needed, add one plain synonym. In-game text stays English.
+- Pick skills, tools, tests, and commands yourself. Follow the project skill
+  whose description matches the task. Do not ask "ska jag använda X?" or how
+  to code it.
+- Do not explain which tools you used unless they ask "hur gjorde du?".
+- For a product, risk, or design fork, read `decide-a-fork` quietly and make
+  one decision. If unclear whether they mean menus or combat ("two different
+  games"), the Executive Producer decides. No chair vote. Prefer shipping
+  something playable.
 
-When they say "mer endgame" and name no new content, deepen KEY,
-Gauntlet, Rift, Greater Rift, and Ashen. The monthly Craft Trial
-(MORE → CRAFT) is not a sixth ENDGAME hunt.
+## What to work on
 
-Do not run `/init` or clean up the repo unless they ask. Never iOS or
-Apple. Change GEAR or endgame copy only when play notes say it lies.
+No goal, or a vague one: pick one batch from the evidence in
+`10-what-to-build.mdc` and build it. Do not ask what to do. Do not invent a
+numbered program.
+
+"Mer endgame" with no new content named: deepen KEY, Gauntlet, Rift,
+Greater Rift, and Ashen. The monthly Craft Trial (MORE → CRAFT) is not a
+sixth ENDGAME hunt.
+
+Do not run `/init` or clean up the repo unless they ask. Change GEAR or
+endgame copy only when play notes say it lies.
 
 Play notes usually come from a new save. Write each note into
-`docs/PLAY_NOTES.md` under Open when the owner gives it, and move it to
-Done with the commit that fixes it. Read Open at the start of a batch.
+`docs/PLAY_NOTES.md` under Open when the owner gives it, and move it to Done
+with the commit that fixes it. Read Open at the start of a batch.
 
 ## UI and distribution (facts)
 
@@ -42,16 +56,18 @@ Done with the commit that fixes it. Read Open at the start of a batch.
 ## Work loop
 
 1. Work in large batches you can finish alone.
-2. Before handoff, verify: analyze plus the matching tests, and hub smoke
-   or the A56 if UI changed.
+2. Before handoff, verify with `30-done`: analyze plus the matching tests,
+   and hub smoke or the A56 if UI changed. After kit number changes,
+   share-fast and the balance gate must be green.
 3. If the owner should look at the phone, push this batch to the A56 first
    (`a56-playtest`, hot restart or relaunch). Do not ask them to look while
    the emulator still runs a session from before the edits.
 4. Before a big change to look or feel (sizes, speeds, or the layout of a
    whole screen or floor), show the owner a before and an after on the A56
    and let them pick. Then build on the pick. Small tweaks need no preview.
-5. Hand off in at most 5 lines: what you chose and the source, what
- changed, and what to look for. Then wait.
+5. Hand off in at most 5 lines: what you chose and the source, what changed,
+   and a short test list for a new save. Add an endgame save only if endgame
+   changed. Then wait.
 6. **Git:** when analyze and tests are green, **commit locally** without
    asking. Push, open a PR, or tag when the batch needs it, also without
    asking. **Never upload an AAB to Google Play unless the owner asks in
@@ -72,15 +88,12 @@ Done with the commit that fixes it. Read Open at the start of a batch.
 | Decide alone | Never |
 |--------------|--------|
 | Skills, files, analyze/tests, splits, dead non-save code | Weaken Legal / IP or Cursor safety |
-| The next batch, from the evidence in `independent-calls.mdc` | Invent a numbered program they did not ask for |
+| The next batch, from the evidence in `10-what-to-build.mdc` | Invent a numbered program they did not ask for |
 | New zone / class / hunt / God Hand direction / scaled UA / IAP, a second sim, or gacha when they name it, or when an A source and a hole in this game agree | |
 | Commit, push, PR, tag when green | Force-push; skip hooks; point players at GitHub Releases; **upload Play AAB without owner ask** |
 | A56 look / hub smoke; listing docs; wipe test save if needed; Console paste | |
 
-If it is unclear whether the owner means the menus or combat ("two
-different games"), read `.cursor/rules/studio-seats.mdc` quietly and make
-one decision. The Executive Producer decides if they did not name the goal.
-No chair vote. Prefer shipping something playable.
+Ask the owner only when this table does not let you decide.
 
 ## Feel reminders
 

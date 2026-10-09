@@ -143,9 +143,9 @@ Group findings that are the same pattern and research the group once.
 
 Each finding gets a type (`kod` / `ux` / `visuellt`), a severity
 (`blockerar` / `forvirrar` / `kosmetiskt`), and **one** fix with its source.
-A design fork: read `studio-seats` quietly and pick once. A big change to
+A design fork: read `decide-a-fork` quietly and pick once. A big change to
 how a screen looks or feels is shown on the A56 before and after, and the
-owner picks, before you build on (`owner-preferences`).
+owner picks, before you build on (`20-how-we-work`).
 
 Write Open notes in `docs/PLAY_NOTES.md`:
 
@@ -153,7 +153,7 @@ Write Open notes in `docs/PLAY_NOTES.md`:
 
 Fix in order: blocks, confuses, cosmetic. Each fix gets a Flutter test or a
 new rule in `tool/playtest_checks.py`, so it cannot come back quietly.
-Verify with the matching tests from `definition-of-done`.
+Verify with the matching tests from `30-done`.
 
 Re-run the same path on the A56 with this batch:
 

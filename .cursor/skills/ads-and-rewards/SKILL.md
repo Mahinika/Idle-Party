@@ -38,7 +38,7 @@ follow `save-migrate`.
   48×48 touch box, pixel cage glyph with a soft warm torch glow (pulses;
   hard disc under Minimal VFX) and a bright flame tip. No black outline.
   Spot stays `Alignment(0.84, -0.58)`. New size or spot is still a big look
-  change — show a before and after on the A56 first (`owner-preferences`).
+  change — show a before and after on the A56 first (`20-how-we-work`).
 - **Where the WISP shows:** dungeon only (never hub). Ad runs where tapped.
 - **SCROLLS:** never start an ad mid-fight. Hub FAB shows with SHOP
   (`MenuTabs.showScrolls`). One ad = +1 ticket. Magnitudes do not stack;

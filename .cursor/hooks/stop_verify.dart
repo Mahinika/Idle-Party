@@ -177,7 +177,7 @@ Future<void> main() async {
       'followup_message':
           'Stop-hook: checks are green, but files edited this batch are not '
           'committed:\n${pending.join('\n')}\n\n'
-          'Commit them locally (owner-preferences), or tell the owner in one '
+          'Commit them locally (20-how-we-work), or tell the owner in one '
           'line why they stay open.',
     });
     return;

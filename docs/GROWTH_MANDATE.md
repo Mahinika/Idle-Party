@@ -6,7 +6,7 @@ class / God Hand / UA / git push / wipe-save), and UX hard rules (flat
 nav / hide-until-unlock / ≤90 s) removed by owner. **Play AAB upload still
 requires owner ask.**
 **Updated:** 2026-10-09 — the agent picks the next batch from checked facts
-(`.cursor/rules/independent-calls.mdc`). Owner-named goals still win.
+(`.cursor/rules/10-what-to-build.mdc`). Owner-named goals still win.
 History: [LEARNINGS.md](LEARNINGS.md) · [PLAY_GROWTH.md](PLAY_GROWTH.md).
 
 North star: **främlingar på Play blir spelare.**
@@ -16,13 +16,13 @@ default batch driver.
 
 Live listing ops: [PLAY_GROWTH.md](PLAY_GROWTH.md) ·
 [STORE_LISTING.md](STORE_LISTING.md) · [PLAY_STORE.md](PLAY_STORE.md).
-Decision policy: [`.cursor/rules/studio-seats.mdc`](../.cursor/rules/studio-seats.mdc).
-Hard locks: [`.cursor/rules/product-locks.mdc`](../.cursor/rules/product-locks.mdc).
+Decision policy: [`.cursor/rules/decide-a-fork.mdc`](../.cursor/rules/decide-a-fork.mdc).
+Hard locks: [`.cursor/rules/00-locks.mdc`](../.cursor/rules/00-locks.mdc).
 
 ## Default work
 
 **2026-10-09:** a goal the owner names wins. Otherwise the agent picks one
-batch from checked facts and builds it (`.cursor/rules/independent-calls.mdc`):
+batch from checked facts and builds it (`.cursor/rules/10-what-to-build.mdc`):
 play notes, then the Play paste, then these docs, then A-grade sources it
 opened. Vague “gör bättre / vad härnäst” is the same pick, not a question.
 Do not invent a numbered program; do not restore AL20 hub polish as the
@@ -85,5 +85,5 @@ SpatialCombat is the current fight sim. A second sim is not forbidden.
 
 ## Studio seats
 
-Six veto domains, one decider — `.cursor/rules/studio-seats.mdc`.
+Six veto domains, one decider — `.cursor/rules/decide-a-fork.mdc`.
 Owner if they named the goal, otherwise EP. No chair vote.

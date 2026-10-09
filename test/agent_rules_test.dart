@@ -52,7 +52,7 @@ void main() {
 
   test('the session hook still finds the Now line', () {
     expect(
-      File('.cursor/rules/owner-preferences.mdc').readAsStringSync(),
+      File('.cursor/rules/20-how-we-work.mdc').readAsStringSync(),
       contains('**Now:**'),
     );
   });

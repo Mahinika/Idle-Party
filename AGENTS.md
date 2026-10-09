@@ -11,7 +11,7 @@ Idle Party is a working Flutter idle RPG. Original Dart. Owned pixel art in
 Work style, locks, and Swedish handoff live in `.cursor/rules/`. Do not
 restate them here. Growth principles: `docs/GROWTH_MANDATE.md`.
 The agent picks the next batch from checked facts
-(`.cursor/rules/independent-calls.mdc`); a goal the owner names wins.
+(`.cursor/rules/10-what-to-build.mdc`); a goal the owner names wins.
 
 **UI:** portrait phones, reference Samsung A56 (360×780). Live look is the
 AVD `Samsung_A56` via `a56-playtest`. The agent reads that device with
@@ -25,7 +25,7 @@ UPDATE**, and the one-time rating ask are in `docs/PLAY_STORE.md`. Play
 Games and Firebase are there and in `docs/PRIVACY.md`.
 
 **Legal:** owned `assets/custom/` only. No foreign dumps, sprites, audio, or
-decompiled code. See `.cursor/rules/product-locks.mdc`.
+decompiled code. See `.cursor/rules/00-locks.mdc`.
 
 **Doll:** the live hero is the cutout skeleton (`HeroRigPainter`) for
 warrior, rogue, mage, and healer. `paintOwnedHero` is the still paper doll:
@@ -188,7 +188,7 @@ Dungeon unlock is party mean level, not lifetime gold.
 
 God Hand: long-press the fight or tap the fist + AOE under ESSENCE → BLESSING (BAL / FOCUS / WIDE).
 Change direction when the owner names it, or when an A-grade source and a
-hole in this game agree (`.cursor/rules/independent-calls.mdc`).
+hole in this game agree (`.cursor/rules/10-what-to-build.mdc`).
 
 **Balance:** fairness first. CI fails on DPS `HIGH` (±20% vs median share).
 Iterate with share-fast before kit number work is done.

@@ -20,7 +20,7 @@ description: >-
 - Offline: `GameLogic.simulateSpatialOffline` → same `build`/`step` (`threatScale: 1.0`, `afkAssist: true`, VFX forced to `minimal`)
 - Hub AFK (`!inDungeon`) = sanctuary gold only — **no** combat
 
-A separate offline simulator is allowed if the owner names it, or an A source and a hole in this game agree (`independent-calls`). Otherwise offline uses the same `build` / `step`.
+A separate offline simulator is allowed if the owner names it, or an A source and a hole in this game agree (`10-what-to-build`). Otherwise offline uses the same `build` / `step`.
 
 ## Floor / chamber model
 

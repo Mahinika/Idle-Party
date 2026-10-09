@@ -12,7 +12,7 @@ description: >-
 # Year roadmap (Idle Party)
 
 Planning pass. **Not a standing program.** The sources file is evidence for
-the next pick (`.cursor/rules/independent-calls.mdc`). After a rewrite the
+the next pick (`.cursor/rules/10-what-to-build.mdc`). After a rewrite the
 same chat may build the plan's first slice.
 
 Reserve slash if the phrase is missed: `/year-roadmap`.
@@ -20,7 +20,7 @@ Reserve slash if the phrase is missed: `/year-roadmap`.
 ## When not to use
 
 - Picking one next batch when `docs/YEAR_ROADMAP_SOURCES.md` already covers
-  the hole → open a few A pages if needed, then build (`independent-calls`)
+  the hole → open a few A pages if needed, then build (`10-what-to-build`)
 - Routine implement, analyze, commit, or Play upload
 - Inventing a numbered program
 
@@ -28,8 +28,8 @@ Reserve slash if the phrase is missed: `/year-roadmap`.
 
 1. **Read studio truth** — `docs/GROWTH_MANDATE.md`, `docs/CONTENT_CADENCE.md`,
    `docs/LEARNINGS.md`, `docs/PLAY_GROWTH.md`, `docs/CHASE_CONTRACT.md`
-   (hunt order only), `.cursor/rules/studio-seats.mdc`,
-   `.cursor/rules/product-locks.mdc`, and `docs/YEAR_ROADMAP.md` if present.
+   (hunt order only), `.cursor/rules/decide-a-fork.mdc`,
+   `.cursor/rules/00-locks.mdc`, and `docs/YEAR_ROADMAP.md` if present.
    Diff “done” against What’s New / changelog — do not trust the old plan
    blindly.
 
@@ -56,7 +56,7 @@ Reserve slash if the phrase is missed: `/year-roadmap`.
    (KEY, Gauntlet, Ranked GR, Farm Rift, Ashen Crown). No invented Console %.
 
 5. **Build or hand off** — you may build the first **Nu** slice in this chat
-   and follow `independent-calls` (checks, local commit, stop rules). Then
+   and follow `10-what-to-build` (checks, local commit, stop rules). Then
    hand off in short Swedish: what came first, what remains as themes, and
    that examples and **Senare** are unbooked.
 

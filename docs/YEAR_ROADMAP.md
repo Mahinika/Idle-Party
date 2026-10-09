@@ -2,7 +2,7 @@
 
 **Uppdaterad:** 2026-09-27 (ny svep)  
 **Inte ett stående program.** Agenten väljer nästa batch från kollade fakta
-(`.cursor/rules/independent-calls.mdc`); den här filen och källfilen är
+(`.cursor/rules/10-what-to-build.mdc`); den här filen och källfilen är
 underlag för valet. Ett mål du namnger vinner.  
 Källor (A/B/C): [YEAR_ROADMAP_SOURCES.md](YEAR_ROADMAP_SOURCES.md).
 

@@ -1,14 +1,14 @@
 # Idle Party — studio learnings
 
 **Dated:** 2026-09-12. Decisions live in `GROWTH_MANDATE.md` +
-`.cursor/rules/studio-seats.mdc`. This file is **why** — so the next session
+`.cursor/rules/decide-a-fork.mdc`. This file is **why** — so the next session
 does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
 ## 2026-10-09 — the agent picks the batch from checked facts
 
-- Owner: the agent chooses and builds the next batch without asking, from play notes → Play paste → growth docs → A-grade sources it opened (URL named). Replaces "owner names the work", "vague → ask once", "the year plan does not pick", and "new zone / class / hunt only when named". Owner-named goals and hard locks still win. Rule: `.cursor/rules/independent-calls.mdc`.
+- Owner: the agent chooses and builds the next batch without asking, from play notes → Play paste → growth docs → A-grade sources it opened (URL named). Replaces "owner names the work", "vague → ask once", "the year plan does not pick", and "new zone / class / hunt only when named". Owner-named goals and hard locks still win. Rule: `.cursor/rules/10-what-to-build.mdc`.
 
 ## 2026-10-08 — tomorrow has to be named before they close
 
