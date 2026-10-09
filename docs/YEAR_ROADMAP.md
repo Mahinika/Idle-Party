@@ -78,6 +78,7 @@ Teman och spelarproblem. Inga låsta feature-namn.
 - **När ett läge tar stopp** — hubbens ordning efter KEY: Gauntlet, sedan
   Ranked GR, sedan Farm Rift, sedan Ashen Crown (`CHASE_CONTRACT.md`).
   Första Gauntlet-jobbet namnger nästa boss. Priset på våning 25 står kvar.
+  Ranked GR och Farm Rift namnger nästa rank. Priset på rank 5 står kvar.
 - **Listing när du namnger det** — en tillgång, minst en vecka så både
   vardag och helg finns med. Play räknar själv hur många klick som krävs.
   Med den här volymen lovar en vecka inget resultat. Inte “upp till 25 %”.

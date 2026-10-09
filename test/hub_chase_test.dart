@@ -675,7 +675,12 @@ void main() {
     );
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.riftMilestone);
-    expect(chase.title, contains('Farm Rift'));
+    expect(chase.title, 'First Farm Rift');
+    expect(chase.progressLabel, 'R0 → R1');
+    expect(
+      chase.detail,
+      contains('+${RiftMilestones.essenceForTier(5)}e'),
+    );
   });
 
   test('Farm Rift waits until Ranked GR has a clear', () {
@@ -698,6 +703,12 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, isNot(HubChaseKind.riftMilestone));
     expect(chase.kind, HubChaseKind.greaterRiftMilestone);
+    expect(chase.title, 'First Ranked GR');
+    expect(chase.progressLabel, 'GR0 → GR1');
+    expect(
+      chase.detail,
+      contains('+${GreaterRiftMilestones.essenceForTier(5)}e'),
+    );
   });
 
   test('AL20 sub-max party chase names the Lv100 gate, not AL20', () {

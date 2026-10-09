@@ -100,6 +100,7 @@ abstract final class ChangelogCatalog {
         'The second Ascend pays more essence than the first. The reward it shows is triple the first one.',
         'Each Ascend after that shows at least half again the essence of the one before.',
         'After KEY, the hub names the next Gauntlet boss. The floor 25 prize stays on the card.',
+        'Ranked GR and Farm Rift name the next rank. The rank 5 prize stays on the card.',
         'After that boss, if today\'s reward is already claimed, the hub says tomorrow is one cave until the first Ascend.',
         'Welcome Back says one cave fills an empty vault. It says the prize is waiting only when CLAIM is ready.',
         'Before the first Ascend, a boss that falls while you are away does not tell you to Ascend.',

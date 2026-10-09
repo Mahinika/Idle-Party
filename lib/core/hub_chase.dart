@@ -1001,15 +1001,27 @@ class HubChase {
       if (claimed.contains(id)) continue;
       if (best >= tier) continue;
       final need = tier - best;
-      final almost = need <= 2 && best > 0;
+      final next = Rift.nextOfferTier(best);
+      final target = next < tier ? next : tier;
+      final onMilestone = target == tier;
+      final almost = onMilestone && need <= 2 && best > 0;
       final pay = RiftMilestones.essenceForTier(tier);
       return HubChase(
         kind: HubChaseKind.riftMilestone,
-        title: almost ? 'Almost Farm Rift R$tier' : 'Farm Rift R$tier',
-        detail: best <= 0
-            ? 'Farm Rift in Stormwake — pick R on ENTER (progress bar → Guardian + loot mid-run; +${pay}e at R$tier).'
-            : 'Best R$best — $need farm tiers to R$tier (+${pay}e). Not Spire climb.',
-        progressLabel: 'R$best → R$tier',
+        title: onMilestone
+            ? (almost ? 'Almost Farm Rift R$tier' : 'Farm Rift R$tier')
+            : (best <= 0 ? 'First Farm Rift' : 'Farm Rift R$target'),
+        detail: onMilestone
+            ? (best <= 0
+                  ? 'Farm Rift in Stormwake — pick R on ENTER (progress bar → Guardian + loot mid-run; +${pay}e at R$tier).'
+                  : 'Best R$best — $need farm tiers to R$tier (+${pay}e). Not Spire climb.')
+            : (best <= 0
+                  ? 'Clear R$target in Stormwake. Pick R on ENTER. '
+                        'Milestone R$tier pays +${pay}e. Guardian and loot mid-run.'
+                  : 'Best R$best. Next is R$target. '
+                        'Milestone R$tier pays +${pay}e ($need tiers). '
+                        'Guardian and loot mid-run.'),
+        progressLabel: 'R$best → R$target',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
     }
@@ -1038,15 +1050,27 @@ class HubChase {
       if (claimed.contains(id)) continue;
       if (best >= tier) continue;
       final need = tier - best;
-      final almost = need <= 2 && best > 0;
+      final next = GreaterRift.nextOfferTier(best);
+      final target = next < tier ? next : tier;
+      final onMilestone = target == tier;
+      final almost = onMilestone && need <= 2 && best > 0;
       final pay = GreaterRiftMilestones.essenceForTier(tier);
       return HubChase(
         kind: HubChaseKind.greaterRiftMilestone,
-        title: almost ? 'Almost Ranked GR$tier' : 'Ranked GR$tier',
-        detail: best <= 0
-            ? 'Mothveil Ranked GR — no mid-run gear (+${pay}e at GR$tier). Not Spire climb.'
-            : 'Best GR$best — $need ranks to GR$tier (+${pay}e). No mid-run gear.',
-        progressLabel: 'GR$best → GR$tier',
+        title: onMilestone
+            ? (almost ? 'Almost Ranked GR$tier' : 'Ranked GR$tier')
+            : (best <= 0 ? 'First Ranked GR' : 'Ranked GR$target'),
+        detail: onMilestone
+            ? (best <= 0
+                  ? 'Mothveil Ranked GR — no mid-run gear (+${pay}e at GR$tier). Not Spire climb.'
+                  : 'Best GR$best — $need ranks to GR$tier (+${pay}e). No mid-run gear.')
+            : (best <= 0
+                  ? 'Clear Ranked GR$target in Mothveil. '
+                        'Milestone GR$tier pays +${pay}e. No mid-run gear.'
+                  : 'Best GR$best. Next is Ranked GR$target. '
+                        'Milestone GR$tier pays +${pay}e ($need ranks). '
+                        'No mid-run gear.'),
+        progressLabel: 'GR$best → GR$target',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
     }

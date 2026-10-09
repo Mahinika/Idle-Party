@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — Ranked GR and Farm Rift opened on rank 5
+
+- A new Ranked GR and a new Farm Rift named rank 5. The card now names the next rank, starting at 1. The rank 5 prize stays in the detail.
+
 ## 2026-10-09 — the first Gauntlet job was floor 25
 
 - After KEY, TODAY named the floor 25 prize before the player had a boss to beat. Bosses are every 5 floors. The card now names the next boss. The floor 25 prize stays in the detail.
