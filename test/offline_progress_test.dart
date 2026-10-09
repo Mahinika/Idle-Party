@@ -41,6 +41,16 @@ void main() {
     expect(result(essence: 3, seconds: 10).hasSummary, isFalse);
     expect(result(essence: 3, seconds: 20).hasSummary, isTrue);
     expect(result(seconds: 60).hasSummary, isFalse);
+    expect(result(seconds: 59, wasInDungeon: true).hasSummary, isFalse);
+    final held = result(seconds: 60, wasInDungeon: true);
+    expect(held.hasSummary, isTrue);
+    expect(held.goldGained, 0);
+    expect(held.roomsCleared, 0);
+    expect(held.headline, startsWith('Dungeon held'));
+    expect(
+      held.welcomeLead.toLowerCase(),
+      contains('held the dungeon floor'),
+    );
   });
 
   test('banner headline is wow + away, not a number dump', () {

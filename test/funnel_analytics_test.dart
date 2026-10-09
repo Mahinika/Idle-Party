@@ -88,6 +88,20 @@ void main() {
     expect(FunnelAnalytics.onFirstBoss(boss.state).events, isEmpty);
   });
 
+  test('offline_hold fires once when the card paid no gold', () {
+    var state = FunnelAnalytics.onNewInstall(
+      GameLogic.createInitialState(now: install),
+      install,
+    ).state;
+    final hold = FunnelAnalytics.onOfflineHold(state);
+    expect(hold.events.single.name, FunnelAnalytics.offlineHold);
+    expect(hold.events.single.params['gold'], 0);
+    expect(FunnelAnalytics.onOfflineHold(hold.state).events, isEmpty);
+    expect(FunnelAnalytics.has(hold.state, FunnelAnalytics.offlineGold), isFalse);
+    final paid = FunnelAnalytics.onOfflineGold(hold.state);
+    expect(paid.events.single.name, FunnelAnalytics.offlineGold);
+  });
+
   test('d1_return fires on the next UTC day, not the same day', () {
     var state = FunnelAnalytics.onNewInstall(
       GameLogic.createInitialState(now: install),

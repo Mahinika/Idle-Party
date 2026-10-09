@@ -3544,6 +3544,8 @@ class OfflineProgressResult {
 
   /// Banner + Welcome Back share this gate.
   /// Gold / clears show even under 20s; other rewards need ≥20s away.
+  /// A cave that was held for at least a minute still opens the card when
+  /// nothing finished. The hub with no payout stays quiet.
   bool get hasSummary {
     final earned =
         goldGained > 0 ||
@@ -3553,7 +3555,7 @@ class OfflineProgressResult {
         bossDelta > 0 ||
         levelsGained > 0 ||
         gearFinds > 0;
-    if (!earned) return false;
+    if (!earned) return wasInDungeon && secondsApplied >= 60;
     if (goldGained > 0 ||
         roomsCleared > 0 ||
         bossDelta > 0 ||
@@ -3575,7 +3577,11 @@ class OfflineProgressResult {
           : 'Bosses fell · Away $away';
     }
     if (levelsGained > 0) return 'Party grew · Away $away';
-    if (wasInDungeon) return 'Party fought · Away $away';
+    if (wasInDungeon) {
+      final held =
+          !foughtWhileAway && goldGained == 0 && essenceGained == 0;
+      return held ? 'Dungeon held · Away $away' : 'Party fought · Away $away';
+    }
     if (hubChestStopped) return 'Gold full · stopped at ${hubChestHours}h';
     return 'Gold while away · Away $away';
   }

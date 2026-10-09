@@ -39,6 +39,9 @@ abstract final class FunnelAnalytics {
   /// Welcome Back paid gold. The ping ask waits for this.
   static const offlineGold = 'offline_gold';
 
+  /// Welcome Back opened with no gold. Once per install.
+  static const offlineHold = 'offline_hold';
+
   static const List<String> bootNames = <String>[
     bootIntroShown,
     startMenuShown,
@@ -165,6 +168,15 @@ abstract final class FunnelAnalytics {
     if (has(state, offlineGold)) return FunnelTick.none(state);
     return FunnelTick(_mark(state, offlineGold), const [
       FunnelHit(offlineGold),
+    ]);
+  }
+
+  /// First Welcome Back with no gold. Once per install. Does not rename
+  /// [d1Return] or stand in for [offlineGold].
+  static FunnelTick onOfflineHold(GameState state) {
+    if (has(state, offlineHold)) return FunnelTick.none(state);
+    return FunnelTick(_mark(state, offlineHold), const [
+      FunnelHit(offlineHold, {'gold': 0}),
     ]);
   }
 

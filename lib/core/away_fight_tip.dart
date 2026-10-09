@@ -1,21 +1,29 @@
+import 'funnel_analytics.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'meta_systems.dart';
 
 /// The appointment to open again tomorrow.
 ///
-/// Before the first boss is banked, the stairs only say the party keeps
-/// fighting. After that, the hub names tomorrow's check-in prize for the
-/// rest of that UTC day. A tap does not clear it. The next UTC day hides it.
+/// Before the first boss, the cave says the party keeps fighting, and the
+/// hub says gold only gathers there. After the boss, the hub names
+/// tomorrow's check-in prize for the rest of that UTC day. A tap does not
+/// clear it. The next UTC day hides it.
 abstract final class AwayFightTip {
   static const String line =
       'Close the app anytime. Your party keeps fighting.';
 
-  /// [bossStairs] is the walk to the stairs after the first boss, before
-  /// the victory is banked and the hub opens.
+  /// Hub, after they have entered once and before the first boss.
+  /// Fighting continues only in the cave.
+  static const String hubLine =
+      'Leave them in the cave and they keep fighting. On the hub, gold gathers.';
+
+  /// [inCave] is the live dungeon, including floor 1. [bossStairs] is the
+  /// walk to the stairs after the first boss, before the hub opens.
   static bool shouldShow(
     GameState state, {
     required bool bossStairs,
+    bool inCave = false,
     DateTime? now,
   }) {
     if (state.metaDepth.awayFightTipSeen) return false;
@@ -25,12 +33,15 @@ abstract final class AwayFightTip {
       if (armed != MetaSystems.dailyDateKey(clock)) return false;
     }
     if (GameLogic.showDailyChase(state)) return true;
-    return bossStairs && GameLogic.firstBossPending(state);
+    if (!GameLogic.firstBossPending(state)) return false;
+    if (inCave || bossStairs) return true;
+    return FunnelAnalytics.has(state, FunnelAnalytics.firstEnter);
   }
 
   /// Prize first, so a one-line hub clip still names what waits.
-  static String lineFor(GameState state) {
-    if (!GameLogic.checkInActive(state)) return line;
+  /// [onHub] picks the gold line before check-in exists.
+  static String lineFor(GameState state, {bool onHub = false}) {
+    if (!GameLogic.checkInActive(state)) return onHub ? hubLine : line;
     final pay = GameLogic.checkInPayout(state);
     final hook = state.metaDepth.dailyVaultClaimed
         ? 'Tomorrow pays ${pay.hookPrize}.'

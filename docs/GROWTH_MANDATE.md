@@ -73,9 +73,9 @@ Monthly **Craft Trial** (MORE → CRAFT) is not a sixth ENDGAME hunt.
 ## Metrics (owner / Console — do not fake)
 
 Honest order: crash-free → listing conversion → D1 → D7 → rating → then
-tiny UA / D30. Latest paste (**2026-09-27**): crash-free, listing converts
-at 25% once traffic exists, first open is the hole (107 installs → 32
-opens), D7 still empty, no tiny UA. Play has no D1 metric —
+tiny UA / D30. Latest paste (**2026-10-09**): crash-rate card still a
+dash, listing conversion **15.84%**, 308 device acquisitions → 121 first
+opens, D7 retained devices still **1**. Play has no D1 metric —
 see [PLAY_GROWTH.md](PLAY_GROWTH.md).
 
 ## Quality gate (still)

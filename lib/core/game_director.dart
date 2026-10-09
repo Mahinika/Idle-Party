@@ -950,17 +950,19 @@ class GameDirector extends ChangeNotifier {
           showToast(offline.headline, life: 5);
         }
       }
-      if (offline.goldGained > 0) {
-        final tick = FunnelAnalytics.onOfflineGold(caught);
-        caught = tick.state;
-        for (final hit in tick.events) {
-          unawaited(
-            AppAnalytics.logEvent(
-              hit.name,
-              hit.params.isEmpty ? null : hit.params,
-            ),
-          );
-        }
+      final tick = offline.goldGained > 0
+          ? FunnelAnalytics.onOfflineGold(caught)
+          : offline.wasInDungeon
+          ? FunnelAnalytics.onOfflineHold(caught)
+          : FunnelTick.none(caught);
+      caught = tick.state;
+      for (final hit in tick.events) {
+        unawaited(
+          AppAnalytics.logEvent(
+            hit.name,
+            hit.params.isEmpty ? null : hit.params,
+          ),
+        );
       }
     }
     return caught;

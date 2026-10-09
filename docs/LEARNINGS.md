@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — day 7 is still one device
+
+- Window 11 Sep–8 Oct: 19,500 impressions, 308 acquisitions, 121 first opens, 138 monthly active, listing conversion 15.84% (was 16.88%), D7 retained devices still 1. The last days are still mostly Explore, at about 6–11 installs a day. Do not buy installs. A Japanese 4★ on 7 Oct said the game does not feel idle. The cave now says the party keeps fighting when the app closes, the hub says only gold gathers there, and a held floor with nothing finished still opens Welcome Back.
+
 ## 2026-10-09 — the agent picks the batch from checked facts
 
 - Owner: the agent chooses and builds the next batch without asking, from play notes → Play paste → growth docs → A-grade sources it opened (URL named). Replaces "owner names the work", "vague → ask once", "the year plan does not pick", and "new zone / class / hunt only when named". Owner-named goals and hard locks still win. Rule: `.cursor/rules/10-what-to-build.mdc`.

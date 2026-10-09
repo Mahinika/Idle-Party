@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/away_fight_tip.dart';
+import 'package:idle_party/core/funnel_analytics.dart';
 import 'package:idle_party/core/game_guides.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/meta_depth.dart';
@@ -7,20 +8,37 @@ import 'package:idle_party/models/meta_depth.dart';
 void main() {
   final now = DateTime.utc(2026, 10, 7, 12);
 
-  test('new save does not show the away line', () {
+  test('new save hides the hub line until they have entered', () {
     final state = GameLogic.createInitialState(now: now);
     expect(AwayFightTip.shouldShow(state, bossStairs: false), isFalse);
     expect(AwayFightTip.shouldShow(state, bossStairs: true), isTrue);
+    expect(
+      AwayFightTip.shouldShow(state, bossStairs: false, inCave: true),
+      isTrue,
+    );
+    expect(AwayFightTip.lineFor(state), AwayFightTip.line);
+    expect(AwayFightTip.lineFor(state, onHub: true), AwayFightTip.hubLine);
+    expect(AwayFightTip.hubLine.toLowerCase(), contains('gold'));
+    expect(AwayFightTip.hubLine.toLowerCase(), contains('cave'));
+
+    final entered = FunnelAnalytics.onFirstEnter(
+      state,
+      now,
+      dungeonId: 'sandy',
+    ).state;
+    expect(AwayFightTip.shouldShow(entered, bossStairs: false), isTrue);
+    expect(AwayFightTip.lineFor(entered, onHub: true), AwayFightTip.hubLine);
   });
 
   test('after the first boss the hub names tomorrow for that day', () {
     final fresh = GameLogic.createInitialState(now: now);
     final hub = fresh.copyWith(bossVictories: 1);
     expect(AwayFightTip.shouldShow(hub, bossStairs: false, now: now), isTrue);
-    final text = AwayFightTip.lineFor(hub).toLowerCase();
+    final text = AwayFightTip.lineFor(hub, onHub: true).toLowerCase();
     expect(text, contains('tomorrow'));
     expect(text, contains('essence'));
     expect(text, contains('keeps fighting'));
+    expect(text, isNot(contains('on the hub')));
 
     final armed = AwayFightTip.arm(hub, now);
     expect(armed.metaDepth.awayPromiseUtc, '2026-10-07');

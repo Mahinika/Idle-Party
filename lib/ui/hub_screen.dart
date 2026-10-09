@@ -468,7 +468,7 @@ class _HubScreenState extends State<HubScreen>
               state,
               bossStairs: false,
             )
-                ? AwayFightTip.lineFor(state)
+                ? AwayFightTip.lineFor(state, onHub: true)
                 : null;
             final enterFamily = HubPrimaryCta.isEnterFamilyLabel(primaryLabel);
             final showCoach = coachEnter != null && enterFamily;

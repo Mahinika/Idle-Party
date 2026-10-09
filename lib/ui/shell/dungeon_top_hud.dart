@@ -333,7 +333,11 @@ class DungeonTopHud extends StatelessWidget {
     final bossStairs =
         world?.awaitingExit == true && state.currentRoom.type == RoomType.boss;
     final awayLine = coachGod == null &&
-            AwayFightTip.shouldShow(state, bossStairs: bossStairs)
+            AwayFightTip.shouldShow(
+              state,
+              bossStairs: bossStairs,
+              inCave: true,
+            )
         ? AwayFightTip.lineFor(state)
         : null;
     final coachLine = coachGod ?? awayLine ?? coachFarm;

@@ -43,6 +43,7 @@ abstract final class DebugPlayLog {
     'first_boss',
     'd1_return',
     'offline_gold',
+    'offline_hold',
     'party_wipe',
     'review_offer',
     'review_prompt',

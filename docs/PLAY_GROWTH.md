@@ -1,6 +1,50 @@
 # Idle Party — Play growth (what we can do)
 
-**Updated:** 2026-10-05 · Category stays **Role Playing** (idle fantasy RPG).
+**Updated:** 2026-10-09 · Category stays **Role Playing** (idle fantasy RPG).
+
+### What 9 Oct changes
+
+Window **11 Sep–8 Oct** (Play grow page, device, last 28 days). **19,500**
+device impressions, **308** acquisitions, **121** first opens, **138**
+monthly active devices. Listing conversion **15.84%**. **0** experiments.
+**+218** exploration acquisitions / 90 days. D7 retained devices: **1**
+(0% versus the prior window).
+
+Compared with the 5 Oct window (7 Sep–4 Oct): impressions **17,100 →
+19,500**, acquisitions **279 → 308**, first opens **101 → 121**, monthly
+active **98 → 138**, conversion **16.88% → 15.84%**. D7 is still **1**.
+About **39%** of device acquisitions opened (121 / 308), up from about
+**36%**. The last days in the window are still mostly **Explore Google
+Play**: 2 Oct **7**, 3 Oct **8**, 4 Oct **10** explore plus **1**
+unattributed, 5 Oct **5** explore plus **1** unattributed. 1 Oct was
+**20** explore and **3** paid-and-direct. 18–19 Sep is still the
+paid-and-direct spike (19 Sep: **19** paid of **29**). No campaign is
+running.
+
+Account home, users, last 30 days (seen **9 Oct**; the app row still
+says last updated **4 Oct**): installed audience **78**, user
+acquisitions **296**, rating **3.714**, gross **12 SEK**. Do not mix
+these with the device funnel above.
+
+Play vitals overview **9 Oct**: user-perceived crash rate and ANR rate
+are both a dash (**no data**). Not a red card. The error-count API
+through **8 Oct** still has the old one-user crashes (**23 Sep** version
+**214**, **30 Sep** version **222**) plus new one-user rows on version
+**224**: ANR **5 Oct**, ANR **7 Oct**, crash **7 Oct**. The crash-rate
+query returned no rows. Do not read that as a measured 0%.
+
+Reviews API for the last week: one review. Japanese **4★** on
+**1.12.194**, **7 Oct**, a tablet. It says the game has no Japanese and
+does not feel idle, that floors cut in instantly, and that health bars
+sit on the eyes. No developer reply. Production track is still
+**1.12.194 (224)**, status `completed`. Firebase and AdMob were not
+re-read.
+
+Until the owner names a different bet, do not buy installs. The leak is
+still open-after-install and day-7. The listing converts worse while
+Explore shows the page to more people. The next acquisition post is
+still the **2026-10-18** `r/incremental_games` slot. A listing test
+stays one asset, one week, and only when named.
 
 ### What 5 Oct changes
 
