@@ -74,6 +74,11 @@ void main() {
     expect(state.metaDepth.checkInDay, 4);
     expect(GameLogic.checkInWelcomeLine(state), contains('Check-in 4/7'));
     expect(GameLogic.checkInWelcomeLine(state), contains('Cinders'));
+    expect(GameLogic.checkInWelcomeLine(state).toLowerCase(), contains('one cave'));
+    expect(
+      GameLogic.checkInWelcomeLine(state).toLowerCase(),
+      isNot(contains('waits on the vault')),
+    );
   });
 
   test('first-hour vault claim does not start check-in', () {
@@ -103,6 +108,7 @@ void main() {
     expect(chase.title, 'Claim Daily Vault');
     expect(chase.detail, contains('Check-in 7/7 jackpot'));
     expect(chase.detail, contains('Ad Tickets'));
+    expect(GameLogic.checkInWelcomeLine(state), contains('waits on the vault'));
 
     final claimed = GameLogic.claimDailyVault(state, now: now);
     expect(GameLogic.checkInWelcomeLine(claimed), startsWith('Tomorrow · Check-in 1/7'));

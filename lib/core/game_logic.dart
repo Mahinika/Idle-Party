@@ -1955,13 +1955,14 @@ class GameLogic {
   }
 
   /// Welcome Back line. Empty in the first hour.
-  /// After today's vault is claimed, names tomorrow's prize.
+  /// A prize waits on the vault only when it can be claimed now.
+  /// An empty vault needs one cave. After the claim, names tomorrow.
   static String checkInWelcomeLine(GameState state) {
     if (!checkInActive(state)) return '';
     final pay = checkInPayout(state);
-    return state.metaDepth.dailyVaultClaimed
-        ? pay.tomorrowLine
-        : pay.waitingLine;
+    if (state.metaDepth.dailyVaultClaimed) return pay.tomorrowLine;
+    if (canClaimDailyVault(state)) return pay.waitingLine;
+    return 'One cave fills the vault. Then ${pay.name}: ${pay.prize}.';
   }
 
   /// Essence shown on CLAIM VAULT — same as [claimDailyVault], including

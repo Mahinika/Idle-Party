@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — Welcome Back said the prize was already waiting
+
+- After a night away the vault is empty, but Welcome Back said the check-in waits on the vault. That line now says one cave fills it, and names the prize. "Waits on the vault" is only when CLAIM is ready.
+
 ## 2026-10-09 — level 100 showed up the same day
 
 - One early floor is about one hero level. After level 8, TODAY named the road to 100 and the endgame list. Until the first Ascend, a claimed vault still says tomorrow is one cave.

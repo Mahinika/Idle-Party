@@ -98,6 +98,7 @@ abstract final class ChangelogCatalog {
       changed: <String>[
         'The first boss, on floor 2, is a fight a new party can finish.',
         'After that boss, if today\'s reward is already claimed, the hub says tomorrow is one cave until the first Ascend.',
+        'Welcome Back says one cave fills an empty vault. It says the prize is waiting only when CLAIM is ready.',
         'An unclaimed vault prize does not wait until tomorrow. The line says to claim it before the day ends.',
         'CLAIM sits on the cave while the vault is ready, so the prize is not stuck on the hub.',
         'After the first boss, the quiet ping asks once when a floor is clear, not only back on the hub.',
