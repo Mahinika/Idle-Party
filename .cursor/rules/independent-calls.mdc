@@ -42,6 +42,15 @@ Rebuild the 100-source year file only when the direction of the next months
 is the decision. Otherwise use the sources on disk and open a few A pages
 if they do not cover the hole.
 
+**No hole left:** when no play note is open and every hole the Play paste
+shows is already fixed in code, the direction is the decision. Rewrite the
+year plan with `.cursor/skills/year-roadmap`, then build its first **Nu**
+slice in the same chat.
+
+**Old numbers:** when the newest Play paste in `docs/PLAY_GROWTH.md` is
+older than 14 days, ask the owner once for a new paste before the pick. Keep
+building from play notes while you wait. Never invent the missing numbers.
+
 ## What you may decide
 
 Pick one batch and build it before you pick again. A new zone, class, hunt,
