@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — the October post waits
+
+- Owner: skip the r/incremental_games post for now. It stays the next acquisition. It is not the current batch.
+
 ## 2026-10-09 — Welcome Back taught the hub gold rate from inside the cave
 
 - The return card always said the hub pays gold per minute, even when the party had been in a cave, where gold does not gather. A cave return now says the party kept fighting. The hub rate stays on a hub return.

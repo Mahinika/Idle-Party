@@ -43,7 +43,8 @@ krasch sitter i alla tre. Ingen fjärde feature.
 1. **18 oktober-inlägget** — What’s New ändras inte. Nästa förvärv är
    `r/incremental_games` med GIF, en Play-länk och kort text. Inte fler
    subreddits, inte en ny Shorts-batch, inte köpta installs. Listing-test
-   väntar: det lagar inte 308 förvärv mot 121 öppningar.
+   väntar: det lagar inte 308 förvärv mot 121 öppningar. Du sa 9 okt att
+   inlägget väntar just nu. Det är inte den här batchen.
 
 2. **Första gången stannar kort** — ledet för en främling förblir *Your
    party fights on its own. Tap ENTER DUNGEON.* Om du namnger en kodrad är
