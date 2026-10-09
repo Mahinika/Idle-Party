@@ -921,22 +921,33 @@ class HubChase {
         continue;
       }
       final need = floor - best;
-      final almost = need <= 5 && best > 0;
+      final nextBoss = (best ~/ 5 + 1) * 5;
+      final target = nextBoss < floor ? nextBoss : floor;
+      final onMilestone = target == floor;
+      final almost = onMilestone && need <= 5 && best > 0;
       final pay = GauntletMilestones.essenceForFloor(floor);
       return HubChase(
         kind: HubChaseKind.gauntletMilestone,
-        title: best <= 0
-            ? 'First Gauntlet Spire'
-            : (almost
+        title: onMilestone
+            ? (almost
                   ? 'Almost Gauntlet floor $floor'
-                  : 'Gauntlet floor $floor'),
-        detail: best <= 0
-            ? 'Gauntlet — boss every 5 floors; wipe or leave '
-                  'returns to hub. Milestone F$floor pays +${pay}e '
-                  '(floors also pay small essence).'
-            : 'Best F$best — $need floors to milestone F$floor (+${pay}e). '
-                  'Boss every 5; wipe → hub. Floors also pay small essence.',
-        progressLabel: 'F$best → F$floor',
+                  : 'Gauntlet floor $floor')
+            : (best <= 0
+                  ? 'First Gauntlet boss'
+                  : 'Gauntlet boss on floor $target'),
+        detail: onMilestone
+            ? 'Best F$best — $need floors to milestone F$floor (+${pay}e). '
+                  'Boss every 5; wipe → hub. Floors also pay small essence.'
+            : (best <= 0
+                  ? 'Boss on floor $target, then every 5 floors. '
+                        'Milestone F$floor pays +${pay}e. '
+                        'Floors also pay a little essence. '
+                        'Wipe or leave returns to the hub.'
+                  : 'Best F$best. Next boss is floor $target. '
+                        'Milestone F$floor pays +${pay}e ($need floors). '
+                        'Floors also pay a little essence. '
+                        'Wipe or leave returns to the hub.'),
+        progressLabel: 'F$best → F$target',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
     }

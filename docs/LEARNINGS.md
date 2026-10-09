@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — the first Gauntlet job was floor 25
+
+- After KEY, TODAY named the floor 25 prize before the player had a boss to beat. Bosses are every 5 floors. The card now names the next boss. The floor 25 prize stays in the detail.
+
 ## 2026-10-09 — later Ascends fell back under half again
 
 - The second shown reward is 30 and the third is 58, both inside the band. The fourth was only 76, about a third more. From that step on, each shown reward is at least half again the one before. The last Ascend shows 57,653 essence.

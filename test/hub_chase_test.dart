@@ -200,11 +200,40 @@ void main() {
     expect(state.collectionScore, greaterThanOrEqualTo(320));
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.gauntletMilestone);
-    expect(chase.title, contains('25'));
+    expect(chase.title, contains('15'));
     expect(
       chase.detail,
       contains('+${GauntletMilestones.essenceForFloor(25)}e'),
     );
+    expect(chase.progressLabel, 'F10 → F15');
+  });
+
+  test('a new Gauntlet names the first boss, and keeps the floor 25 prize', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = _withPartyMaxLevel(
+      state.copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        metaDepth: state.metaDepth.copyWith(
+          dailyVaultClaimed: true,
+          gauntletBestFloor: 0,
+        ),
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        achievements: [for (var i = 0; i < 160; i++) 'ach_$i'],
+        highestDungeonCleared: 8,
+        lifetimeGoldEarned: 5_000_000,
+      ),
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.gauntletMilestone);
+    expect(chase.title, 'First Gauntlet boss');
+    expect(chase.progressLabel, 'F0 → F5');
+    expect(
+      chase.detail,
+      contains('+${GauntletMilestones.essenceForFloor(25)}e'),
+    );
+    expect(chase.detail, contains('F25'));
   });
 
   test('normal zone unlock does not beat pushing the current dungeon', () {
