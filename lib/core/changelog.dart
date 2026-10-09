@@ -96,6 +96,7 @@ abstract final class ChangelogCatalog {
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. Gold and essence menus stay hidden until you beat the first boss.',
       changed: <String>[
+        'The first boss, on floor 2, is a fight a new party can finish.',
         'In the cave, a line says the party keeps fighting if you close the app. On the hub, gold gathers.',
         'A minute in the cave with nothing finished still opens Welcome Back.',
         'Before the first boss the bottom bar is GEAR and MORE only, even after the first coins.',

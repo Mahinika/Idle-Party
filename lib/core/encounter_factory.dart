@@ -60,8 +60,8 @@ abstract final class EncounterFactory {
       ascensionLevel: ascensionLevel,
     );
     final threat = hmThreat * alThreat;
-    // Early attrition ramp: F1–F3 clearable for fresh parties; first AL0 boss
-    // must be beatable after a short Sandy farm (LIGHT), not MID-only.
+    // Early attrition ramp: F1–F3 clearable for fresh parties. The floor 5
+    // boss stays a wall. The opening boss is floor 2 and is eased below.
     final earlyEase = switch (level) {
       1 => 0.94,
       2 => 0.90,
@@ -77,10 +77,17 @@ abstract final class EncounterFactory {
     final curve = level + ((level * level) ~/ 12);
     final midFloor = max(0, level - 2);
     final midHpBump = midFloor * midFloor * 12;
-    // First Sandy boss: softer flats so AUTO-equipped F1–4 loot is enough.
+    // AL0 bosses through floor 5 use softer flats than a late-zone boss.
+    // Floor 2 is the first kill. A full boss budget there wiped every fresh,
+    // lightly forged, and ten-loot party in the probe.
     final firstSandyBoss = isBoss && ascensionLevel == 0 && level <= 5;
-    final bossFlatHp = firstSandyBoss ? 280 : (isBoss ? 600 : 0);
-    final bossFlatAtk = firstSandyBoss ? 10 : (isBoss ? 22 : 0);
+    final openingBoss = isBoss && ascensionLevel == 0 && level == 2;
+    final bossFlatHp = openingBoss
+        ? 80
+        : (firstSandyBoss ? 280 : (isBoss ? 600 : 0));
+    final bossFlatAtk = openingBoss
+        ? 4
+        : (firstSandyBoss ? 10 : (isBoss ? 22 : 0));
     final attack =
         ((((42 + bossFlatAtk + (isElite ? 10 : 0)) + curve * 5.5) *
                     diff *
@@ -89,6 +96,9 @@ abstract final class EncounterFactory {
                 threat *
                 (1.0 + (gp - 1.0) * 0.7))
             .round();
+    // 0.55 still left an 816 HP boss against 41 attack. A short forge
+    // could win; a new party could not, and GOLD is hidden until this kill.
+    final openingBossEase = openingBoss ? 0.32 : 1.0;
     final hp =
         ((((380 + level * 62 + (level ~/ 2) * 55 + midHpBump) +
                         bossFlatHp +
@@ -108,7 +118,11 @@ abstract final class EncounterFactory {
                 hmGold)
             .round();
 
-    return (attack: attack, hp: hp, gold: gold);
+    return (
+      attack: max(1, (attack * openingBossEase).round()),
+      hp: max(1, (hp * openingBossEase).round()),
+      gold: gold,
+    );
   }
 
   /// Slice of [partyGearPressure] that actually scales this floor.
@@ -482,20 +496,24 @@ abstract final class EncounterFactory {
 
     // Absolute floor so a single woken mob is never free.
     // Early floors ease the floor so fresh parties aren't deleted by min-stats.
+    final openingBoss = isBossRoom && al == 0 && level == 2;
     final earlyMinEase = switch (level) {
       1 => 0.52,
+      2 when openingBoss => 0.45,
       2 => 0.60,
       3 => 0.68,
       4 => 0.80,
       5 when al == 0 => 0.78,
       _ => 1.0,
     };
+    final bossMinHp = openingBoss ? 36 : (isBossRoom ? 140 : 0);
+    final bossMinAtk = openingBoss ? 4 : (isBossRoom ? 12 : 0);
     // Crowd rooms halve the floor too, so two bodies sum to one old body.
     final minHp = max(
       1,
       (max(
                 (55 * earlyMinEase).round().clamp(28, 110),
-                ((90 + level * 42 + (isBossRoom ? 140 : 0)) *
+                ((90 + level * 42 + bossMinHp) *
                         (0.75 + gp * 0.25) *
                         earlyMinEase)
                     .round(),
@@ -507,7 +525,7 @@ abstract final class EncounterFactory {
       1,
       (max(
                 (12 * earlyMinEase).round().clamp(6, 28),
-                ((24 + level * 8 + (isBossRoom ? 12 : 0)) *
+                ((24 + level * 8 + bossMinAtk) *
                         (0.85 + (gp - 1.0) * 0.4) *
                         earlyMinEase)
                     .round(),
@@ -563,7 +581,7 @@ abstract final class EncounterFactory {
       final defense =
           ((skew.def +
                       (partyLevel ~/ 3) +
-                      (isBossUnit ? 6 : 0) +
+                      (isBossUnit ? (openingBoss ? 2 : 6) : 0) +
                       (role == EnemyRole.elite ? 2 : 0) +
                       (rush && !isBossUnit ? 2 : 0)) *
                   (0.7 + gp * 0.3))

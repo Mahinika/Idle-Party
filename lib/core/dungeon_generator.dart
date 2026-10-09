@@ -111,6 +111,14 @@ class DungeonGenerator {
       ascensionLevel: ascensionLevel,
       keyLevel: keyLevel,
     );
+    // The first kill is this floor. A 6-body pack wiped a fresh party,
+    // a short forge, and ten loot upgrades. Boss plus two adds.
+    if (type == RoomType.boss &&
+        floor == 2 &&
+        ascensionLevel == 0 &&
+        keyLevel == 0) {
+      return 3;
+    }
     return switch (type) {
       RoomType.boss => (6 + random.nextInt(2) + p).clamp(6, 14),
       RoomType.elite => max(

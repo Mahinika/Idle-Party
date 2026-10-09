@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — the first boss was a wall in front of tomorrow
+
+- A fresh party cleared floor 1 at full health and wiped on the floor 2 boss on every seed. A short forge and ten pieces of loot still wiped. Only a much stronger party won. GOLD is hidden until that kill, so the forge path was not available. The boss is now three bodies a new party can beat (about 60% health left). The floor 5 boss stays a wall.
+
 ## 2026-10-09 — day 7 is still one device
 
 - Window 11 Sep–8 Oct: 19,500 impressions, 308 acquisitions, 121 first opens, 138 monthly active, listing conversion 15.84% (was 16.88%), D7 retained devices still 1. The last days are still mostly Explore, at about 6–11 installs a day. Do not buy installs. A Japanese 4★ on 7 Oct said the game does not feel idle. The cave now says the party keeps fighting when the app closes, the hub says only gold gathers there, and a held floor with nothing finished still opens Welcome Back.
