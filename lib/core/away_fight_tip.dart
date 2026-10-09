@@ -44,12 +44,11 @@ abstract final class AwayFightTip {
   /// An unclaimed vault is wiped at the UTC day roll, so that prize is
   /// today or it is gone. Tomorrow is named only after the claim.
   static String lineFor(GameState state, {bool onHub = false}) {
+    if (GameLogic.canClaimDailyVault(state)) {
+      return 'Tap CLAIM before the day ends. Your party keeps fighting.';
+    }
     if (!GameLogic.checkInActive(state)) return onHub ? hubLine : line;
     final pay = GameLogic.checkInPayout(state);
-    if (GameLogic.canClaimDailyVault(state)) {
-      return 'Claim ${pay.hookPrize} before the day ends. '
-          'Your party keeps fighting.';
-    }
     if (state.metaDepth.dailyVaultClaimed) {
       return 'Tomorrow pays ${pay.hookPrize}. Your party keeps fighting.';
     }

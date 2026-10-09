@@ -46,8 +46,7 @@ void main() {
       ),
     );
     final claim = AwayFightTip.lineFor(ready, onHub: true).toLowerCase();
-    expect(claim, contains('claim'));
-    expect(claim, contains('essence'));
+    expect(claim, contains('tap claim'));
     expect(claim, contains('before the day ends'));
     expect(claim, isNot(contains('tomorrow')));
 

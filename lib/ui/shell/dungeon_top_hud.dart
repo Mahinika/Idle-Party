@@ -672,6 +672,8 @@ class DungeonTopHud extends StatelessWidget {
                   showEssence: MenuTabs.showCamp(state),
                 ),
                 const Spacer(),
+                if (GameLogic.canClaimDailyVault(state))
+                  _VaultClaimChip(onTap: director.claimDailyVault),
                 if (showClaimChip)
                   MissionClaimChip(
                     count: claimable,
@@ -768,6 +770,47 @@ class DungeonTopHud extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _VaultClaimChip extends StatelessWidget {
+  const _VaultClaimChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Claim the vault before the day ends',
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(3),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: GameTheme.minTouch),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: GameTheme.hudFarmGreen,
+                borderRadius: BorderRadius.circular(3),
+                border: Border.all(color: GameTheme.clear),
+              ),
+              child: Text(
+                'CLAIM',
+                style: GameTheme.pixel(
+                  size: GameTheme.hudPixel,
+                  color: GameTheme.clear,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

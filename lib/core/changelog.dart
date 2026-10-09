@@ -99,6 +99,7 @@ abstract final class ChangelogCatalog {
         'The first boss, on floor 2, is a fight a new party can finish.',
         'After that boss, if today\'s reward is already claimed, the hub says tomorrow is one cave.',
         'An unclaimed vault prize does not wait until tomorrow. The line says to claim it before the day ends.',
+        'CLAIM sits on the cave while the vault is ready, so the prize is not stuck on the hub.',
         'In the cave, a line says the party keeps fighting if you close the app. On the hub, gold gathers.',
         'A minute in the cave with nothing finished still opens Welcome Back.',
         'Before the first boss the bottom bar is GEAR and MORE only, even after the first coins.',
