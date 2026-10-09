@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — the ping never asked in the cave
+
+- After the first boss the party stays in the cave, so the quiet-ping card on the hub never ran. It now asks once when a floor is clear. A live fight still does not ask.
+
 ## 2026-10-09 — an unclaimed vault does not survive the night
 
 - The away line said today's prize still waits tomorrow. The UTC day roll clears an unclaimed vault, so the prize was gone. The line now says to claim it before the day ends. Tomorrow is named only after that claim. The claim button lived only on the hub, so a party that stayed in the cave never saw it. CLAIM now sits on the cave while the vault is ready.

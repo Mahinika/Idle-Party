@@ -64,6 +64,27 @@ void main() {
       LocalReminders.shouldOfferOptIn(ticking.copyWith(inDungeon: true)),
       isFalse,
     );
+    expect(
+      LocalReminders.shouldOfferOnFloorClear(
+        ticking.copyWith(inDungeon: true),
+        floorClear: false,
+      ),
+      isFalse,
+    );
+    expect(
+      LocalReminders.shouldOfferOnFloorClear(
+        ticking.copyWith(inDungeon: true),
+        floorClear: true,
+      ),
+      isTrue,
+    );
+    expect(
+      LocalReminders.shouldOfferOnFloorClear(
+        _afterFirstLoot().copyWith(inDungeon: true),
+        floorClear: true,
+      ),
+      isFalse,
+    );
 
     final dismissed = LocalReminders.setOptIn(ticking, enabled: false);
     expect(LocalReminders.shouldOfferOptIn(dismissed), isFalse);

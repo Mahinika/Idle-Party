@@ -5,10 +5,12 @@ import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
 import '../core/keystone.dart';
+import '../core/local_reminders.dart';
 import '../core/menu_alerts.dart';
 import '../core/menu_router.dart';
 import '../core/nav_intent.dart';
 import 'confirm_dialogs.dart';
+import 'meta/notify_opt_in.dart';
 import 'cave_atmosphere.dart';
 import '../assets/custom_assets.dart';
 import 'game_theme.dart';
@@ -43,6 +45,42 @@ class _Is2ShellState extends State<Is2Shell> {
   GameState get state => widget.director.state;
   MenuRouter get router => widget.router;
   bool _dpsMeterOpen = false;
+  bool _offeredPing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.director.addListener(_onClearForPing);
+  }
+
+  @override
+  void dispose() {
+    widget.director.removeListener(_onClearForPing);
+    super.dispose();
+  }
+
+  /// One ask after the boss, when the floor is clear. Not while a pack is up.
+  void _onClearForPing() {
+    if (_offeredPing || !mounted || router.isOpen) return;
+    final director = widget.director;
+    if (!LocalReminders.shouldOfferOnFloorClear(
+      director.state,
+      floorClear: director.spatial?.awaitingExit == true,
+    )) {
+      return;
+    }
+    if (!director.pauseExitForPrompt()) return;
+    _offeredPing = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        director.releaseExitPrompt();
+        return;
+      }
+      NotifyOptInOverlay.show(context, director).whenComplete(
+        director.releaseExitPrompt,
+      );
+    });
+  }
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;

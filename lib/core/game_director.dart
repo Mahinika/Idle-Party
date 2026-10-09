@@ -1293,6 +1293,21 @@ class GameDirector extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Keep the cleared floor still while the away-ping card is up.
+  bool pauseExitForPrompt() {
+    final spatial = _spatial;
+    if (spatial == null || !spatial.awaitingExit) return false;
+    spatial.exitHoldSec = 45;
+    return true;
+  }
+
+  /// Let the party walk the stairs after the card closes.
+  void releaseExitPrompt() {
+    final spatial = _spatial;
+    if (spatial == null || !spatial.awaitingExit) return;
+    if (spatial.exitHoldSec > 0) spatial.exitHoldSec = 0;
+  }
+
   /// Prefer an enemy under a map tap for the target HUD (within ~1.6 tiles).
   void setHudFocusAtWorld(double tileX, double tileY) {
     final spatial = _spatial;

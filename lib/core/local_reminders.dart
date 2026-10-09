@@ -74,6 +74,19 @@ abstract final class LocalReminders {
     return GameLogic.showDailyChase(state);
   }
 
+  /// Same ask on a cleared floor. The pack is dead, so this is not a fight.
+  /// A live cave still waits.
+  static bool shouldOfferOnFloorClear(
+    GameState state, {
+    required bool floorClear,
+  }) {
+    if (!floorClear || state.isPartyDefeated) return false;
+    if (state.metaDepth.notifyPrompted || state.metaDepth.notifyOptIn) {
+      return false;
+    }
+    return GameLogic.showDailyChase(state);
+  }
+
   /// SETTINGS row after the milestone (or after they already answered).
   static bool showSettingsToggle(GameState state) =>
       milestoneReached(state) ||
