@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-09 — Ascend already sits in the Blessing band
+
+- The next reset was checked against +50 to +200 percent prestige currency. The second Blessing is +100 percent of the first, and the third is +50 percent. The essence stipend goes from 7 to 10 (+43 percent). The numbers stay. No new prestige curve.
+
 ## 2026-10-09 — the October post waits
 
 - Owner: skip the r/incremental_games post for now. It stays the next acquisition. It is not the current batch.
