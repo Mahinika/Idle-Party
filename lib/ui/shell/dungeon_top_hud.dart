@@ -359,7 +359,12 @@ class DungeonTopHud extends StatelessWidget {
             )
         ? AwayFightTip.lineFor(state)
         : null;
-    final coachLine = coachGod ?? awayLine ?? coachFarm;
+    final coachLine = AwayFightTip.caveCoach(
+      wiped: director.awaitingWipeChoice,
+      godhand: coachGod,
+      away: awayLine,
+      farm: coachFarm,
+    );
     final keyBit = !jargon
         ? ''
         : state.keystoneRunActive

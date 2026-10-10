@@ -104,4 +104,25 @@ void main() {
     expect(away.body.toLowerCase(), contains('gold'));
     expect(away.body.toUpperCase(), isNot(contains('ESSENCE')));
   });
+
+  test('a wipe hides the line that says the party keeps fighting', () {
+    expect(
+      AwayFightTip.caveCoach(
+        wiped: true,
+        godhand: null,
+        away: AwayFightTip.line,
+        farm: 'Switch',
+      ),
+      isNull,
+    );
+    expect(
+      AwayFightTip.caveCoach(
+        wiped: false,
+        godhand: null,
+        away: AwayFightTip.line,
+        farm: 'Switch',
+      ),
+      AwayFightTip.line,
+    );
+  });
 }

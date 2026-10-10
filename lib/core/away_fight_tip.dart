@@ -38,6 +38,17 @@ abstract final class AwayFightTip {
     return FunnelAnalytics.has(state, FunnelAnalytics.firstEnter);
   }
 
+  /// Death card owns the cave. "Keeps fighting" is a lie while the party is dead.
+  static String? caveCoach({
+    required bool wiped,
+    required String? godhand,
+    required String? away,
+    required String? farm,
+  }) {
+    if (wiped) return null;
+    return godhand ?? away ?? farm;
+  }
+
   /// Prize first, so a one-line hub clip still names what waits.
   /// [onHub] picks the gold line before check-in exists.
   ///
