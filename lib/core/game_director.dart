@@ -947,10 +947,7 @@ class GameDirector extends ChangeNotifier {
     if (offline.hasSummary) {
       if (showCard) {
         uiFeedback.presentOffline(offline);
-        // Hub shows a tappable banner; toast only when loading mid-dungeon.
-        if (saved.inDungeon) {
-          showToast(offline.headline, life: 5);
-        }
+        // The cave opens the same Welcome Back card. A toast would cover it.
       }
       final tick = offline.goldGained > 0
           ? FunnelAnalytics.onOfflineGold(caught)

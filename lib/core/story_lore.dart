@@ -5,7 +5,7 @@ import 'game_logic.dart';
 /// Short fiction lines for Idle Party — no dialogue trees, just flavor
 /// on existing UI rails (intro, hub, toasts, ascend).
 abstract final class StoryLore {
-  static const String introTagline = 'Your party fights while you watch.';
+  static const String introTagline = 'Your party keeps fighting when you leave.';
 
   static const String introSubline =
       'Hub AFK banks gold and essence while you are away. Leave mid-dungeon and the party keeps fighting offline.';
@@ -16,7 +16,7 @@ abstract final class StoryLore {
   static const introBeats = <({String title, String body})>[
     (
       title: 'IDLE PARTY',
-      body: 'They fight without you. Send them in. Long-press the fight, or tap the fist, to help.',
+      body: 'They fight without you. Send them in.',
     ),
   ];
 

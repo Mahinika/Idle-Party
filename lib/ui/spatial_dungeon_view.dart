@@ -56,11 +56,10 @@ class SpatialDungeonView extends StatefulWidget {
 
   final GameDirector director;
 
-  /// Map TalkBack. First hour matches the fist chip (tap the fight).
+  /// Map TalkBack. The first floor does not teach the fist.
   static String mapSemanticsLabel({required bool plain}) => plain
-      ? 'Dungeon map — tap to pin target while fighting; '
-            'long-press to smash and steer; pinch with two fingers to zoom; '
-            'fist button also works'
+      ? 'Dungeon map — tap to pin a target while the party fights; '
+            'pinch with two fingers to zoom'
       : 'Dungeon map — tap to pin target while fighting; '
             'long-press for God Hand; pinch with two fingers to zoom; '
             'fist button also works';

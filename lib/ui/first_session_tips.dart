@@ -133,7 +133,7 @@ class FirstSessionTips extends StatelessWidget {
     if (hint.id == 'godhand') {
       final mode = godHandModeLabel(s);
       return GameLogic.plainPlayerChrome(s)
-          ? 'Long-press the fight — $mode smash'
+          ? 'Long-press the fight.'
           : 'God Hand · $mode — long-press the fight or tap the fist';
     }
     return hint.line;
@@ -157,7 +157,7 @@ class FirstSessionTips extends StatelessWidget {
         return tip.id;
       }
       if (tip.id == 'godhand') {
-        if (!inDungeon) continue;
+        if (!inDungeon || !leftPorch(s)) continue;
         // A later run already knows the fight. The line stayed up for a
         // whole clear when the fist was never tapped.
         if (s.ascensionLevel > 0 || s.bossVictories > 0) continue;

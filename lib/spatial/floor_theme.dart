@@ -68,8 +68,38 @@ enum FloorTheme {
     FloorDecalKind.sandDrift,
     FloorDecalKind.cracks,
   ], 0x0CE0A050),
+  buried('Buried Halls', [
+    FloorDecalKind.sandDrift,
+    FloorDecalKind.cracks,
+    FloorDecalKind.ash,
+  ], 0x0C806030),
+  raider('Raider Dens', [
+    FloorDecalKind.coins,
+    FloorDecalKind.ash,
+    FloorDecalKind.cracks,
+  ], 0x0C406020),
+  glade('Glade Hollows', [
+    FloorDecalKind.roots,
+    FloorDecalKind.moss,
+    FloorDecalKind.starlight,
+  ], 0x0C308028),
+  cinder('Cinder Halls', [
+    FloorDecalKind.ash,
+    FloorDecalKind.scorch,
+    FloorDecalKind.grate,
+  ], 0x10C06010),
+  brine('Brine Halls', [
+    FloorDecalKind.puddle,
+    FloorDecalKind.puddle,
+    FloorDecalKind.moss,
+  ], 0x10208CA0),
+  bog('Bog Galleries', [
+    FloorDecalKind.roots,
+    FloorDecalKind.moss,
+    FloorDecalKind.puddle,
+  ], 0x0C406028),
   crystalline('Crystal Galleries', [
-    FloorDecalKind.iceSheen,
+    FloorDecalKind.starlight,
     FloorDecalKind.cracks,
   ], 0x0E60A0F0);
 
@@ -187,7 +217,12 @@ class ZoneFloorStyle {
   static const Map<String, ZoneFloorStyle> _byId = {
     'sandy': ZoneFloorStyle(
       silhouettes: [RoomSilhouette.oval, RoomSilhouette.chamfer],
-      themes: [FloorTheme.drifted, FloorTheme.drifted, FloorTheme.torchlit, FloorTheme.collapsed],
+      themes: [
+        FloorTheme.drifted,
+        FloorTheme.drifted,
+        FloorTheme.collapsed,
+        FloorTheme.buried,
+      ],
       vignettes: [PropVignetteKind.storage, PropVignetteKind.camp, PropVignetteKind.ruin],
       wonders: [WonderKind.hoard, WonderKind.giantSkeleton],
       particles: AmbientParticleKind.dust,
@@ -197,7 +232,7 @@ class ZoneFloorStyle {
     ),
     'goblin': ZoneFloorStyle(
       silhouettes: [RoomSilhouette.blob, RoomSilhouette.el],
-      themes: [FloorTheme.torchlit, FloorTheme.torchlit, FloorTheme.collapsed, FloorTheme.overgrown],
+      themes: [FloorTheme.raider, FloorTheme.raider, FloorTheme.raider],
       vignettes: [PropVignetteKind.camp, PropVignetteKind.camp, PropVignetteKind.storage, PropVignetteKind.crypt],
       wonders: [WonderKind.hoard],
       particles: AmbientParticleKind.motes,
@@ -216,7 +251,7 @@ class ZoneFloorStyle {
     ),
     'underworld': ZoneFloorStyle(
       silhouettes: [RoomSilhouette.plus, RoomSilhouette.diamond],
-      themes: [FloorTheme.ritual, FloorTheme.ritual, FloorTheme.collapsed],
+      themes: [FloorTheme.ritual, FloorTheme.ritual],
       vignettes: [PropVignetteKind.shrine, PropVignetteKind.crypt, PropVignetteKind.ruin],
       wonders: [WonderKind.soulWell, WonderKind.starfall],
       particles: AmbientParticleKind.motes,
@@ -225,7 +260,7 @@ class ZoneFloorStyle {
     ),
     'dead': ZoneFloorStyle(
       silhouettes: [RoomSilhouette.diamond, RoomSilhouette.blob],
-      themes: [FloorTheme.bone, FloorTheme.bone, FloorTheme.collapsed, FloorTheme.ritual],
+      themes: [FloorTheme.bone, FloorTheme.bone, FloorTheme.collapsed],
       vignettes: [PropVignetteKind.crypt, PropVignetteKind.crypt, PropVignetteKind.ruin],
       wonders: [WonderKind.giantSkeleton],
       particles: AmbientParticleKind.dust,
@@ -249,12 +284,12 @@ class ZoneFloorStyle {
       vignettes: [PropVignetteKind.ruin, PropVignetteKind.library, PropVignetteKind.shrine],
       wonders: [WonderKind.starfall],
       particles: AmbientParticleKind.motes,
-      setpieceDecal: FloorDecalKind.iceSheen,
+      setpieceDecal: FloorDecalKind.starlight,
       accentArgb: 0xFF90D8FF,
     ),
     'tide': ZoneFloorStyle(
       silhouettes: [RoomSilhouette.oval, RoomSilhouette.el],
-      themes: [FloorTheme.flooded, FloorTheme.flooded, FloorTheme.overgrown],
+      themes: [FloorTheme.flooded, FloorTheme.flooded, FloorTheme.brine],
       vignettes: [PropVignetteKind.storage, PropVignetteKind.ruin, PropVignetteKind.shrine],
       wonders: [WonderKind.hoard, WonderKind.soulWell],
       particles: AmbientParticleKind.bubbles,
@@ -264,7 +299,7 @@ class ZoneFloorStyle {
     ),
     'ember': ZoneFloorStyle(
       silhouettes: [RoomSilhouette.chamfer, RoomSilhouette.blob],
-      themes: [FloorTheme.torchlit, FloorTheme.collapsed, FloorTheme.gilded],
+      themes: [FloorTheme.cinder, FloorTheme.cinder, FloorTheme.cinder],
       vignettes: [PropVignetteKind.forge, PropVignetteKind.forge, PropVignetteKind.storage],
       wonders: [WonderKind.hoard],
       particles: AmbientParticleKind.sparks,
@@ -273,7 +308,7 @@ class ZoneFloorStyle {
     ),
     'grove': ZoneFloorStyle(
       silhouettes: [RoomSilhouette.blob, RoomSilhouette.oval],
-      themes: [FloorTheme.overgrown, FloorTheme.overgrown, FloorTheme.overgrown],
+      themes: [FloorTheme.overgrown, FloorTheme.overgrown, FloorTheme.glade],
       vignettes: [PropVignetteKind.camp, PropVignetteKind.ruin, PropVignetteKind.shrine],
       wonders: [WonderKind.starfall, WonderKind.giantSkeleton],
       particles: AmbientParticleKind.spores,
@@ -301,11 +336,11 @@ class ZoneFloorStyle {
     ),
     'fen': ZoneFloorStyle(
       silhouettes: [RoomSilhouette.el, RoomSilhouette.oval],
-      themes: [FloorTheme.mire, FloorTheme.mire, FloorTheme.flooded],
+      themes: [FloorTheme.mire, FloorTheme.mire, FloorTheme.bog],
       vignettes: [PropVignetteKind.ruin, PropVignetteKind.camp, PropVignetteKind.shrine],
       wonders: [WonderKind.soulWell],
-      particles: AmbientParticleKind.spores,
-      setpieceDecal: FloorDecalKind.puddle,
+      particles: AmbientParticleKind.motes,
+      setpieceDecal: FloorDecalKind.roots,
       accentArgb: 0xFFD0E050,
       organicEdges: true,
     ),

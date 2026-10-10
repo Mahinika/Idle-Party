@@ -139,7 +139,7 @@ void main() {
   test('named trash maps to zone fight art', () {
     expect(
       KenneyAssets.enemySpriteForCodexName('Goblin Thug'),
-      KenneyAssets.enemySpider,
+      KenneyAssets.enemyGoblinTank,
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Hex Spider'),
@@ -171,11 +171,11 @@ void main() {
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Ash Behemoth'),
-      KenneyAssets.enemyHellBrute,
+      KenneyAssets.enemyEmberBrute,
     );
     expect(
       KenneyAssets.enemySpriteForCodexName('Ash Colossus'),
-      KenneyAssets.enemyHellBrute,
+      KenneyAssets.enemyEmberBrute,
     );
   });
 }

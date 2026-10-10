@@ -8,7 +8,7 @@ developer demo, not a source-repo promo, and not a feature tour.
 
 ## One line
 
-Your party fights while you watch. Tap to help. Grow stronger. No other game
+Your party keeps fighting when you leave. Grow stronger. No other game
 required.
 
 ## Scenes (keep this order)

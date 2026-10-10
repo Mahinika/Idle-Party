@@ -97,6 +97,7 @@ abstract final class ChangelogCatalog {
           'Your party fights on its own. Tap ENTER DUNGEON. Gold and essence menus stay hidden until you beat the first boss.',
       changed: <String>[
         'The first boss, on floor 2, is a fight a new party can finish.',
+        'On the first floor the party fights on its own. Repeat, Next, and the fist wait until that floor is clear.',
         'The second Ascend pays more essence than the first. The reward it shows is triple the first one.',
         'Each Ascend after that shows at least half again the essence of the one before.',
         'After KEY, the hub names the next Gauntlet boss. The floor 25 prize stays on the card.',

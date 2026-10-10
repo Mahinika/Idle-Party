@@ -29,6 +29,7 @@ class DungeonWipePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
+    final plain = GameLogic.plainPlayerChrome(state);
     final modeLine = WipeAdvice.modeLineFor(state);
     return ColoredBox(
       color: MenuChrome.scrim,
@@ -59,6 +60,8 @@ class DungeonWipePanel extends StatelessWidget {
                         ? 'Ranked GR ends. Best GR${state.metaDepth.grBestTier}. Hub ENDGAME → pick GR again (no mid-run gear).'
                         : state.inRift
                         ? 'Farm Rift ends. Best R${state.metaDepth.riftBestTier}. Hub → farm Stormwake again (loot mid-run).'
+                        : plain
+                        ? 'RETRY sends them in again. HUB leaves the cave.'
                         : dailyEcho
                         ? 'RETRY this floor. HUB ends the run.'
                         : farm
@@ -112,7 +115,7 @@ class DungeonWipePanel extends StatelessWidget {
                         color: GameTheme.torchHot,
                       ),
                     ),
-                    if (director.spatial != null) ...[
+                    if (!plain && director.spatial != null) ...[
                       const SizedBox(height: 6),
                       Text(
                         WipeAdvice.scanLine(
@@ -153,7 +156,9 @@ class DungeonWipePanel extends StatelessWidget {
                                   ? 'RETRY → F$safe'
                                   : 'RETRY FLOOR';
                             }(),
-                      tip: (farm || dailyEcho)
+                      tip: plain
+                          ? 'Sends them in again'
+                          : (farm || dailyEcho)
                           ? 'Restarts this floor'
                           : () {
                               final safe = state.highestFloorCleared.clamp(

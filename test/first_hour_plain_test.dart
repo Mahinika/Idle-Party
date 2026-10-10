@@ -526,6 +526,14 @@ void main() {
       isNot(contains('GOD HAND')),
     );
     expect(
+      SpatialDungeonView.mapSemanticsLabel(plain: true).toUpperCase(),
+      isNot(contains('FIST')),
+    );
+    expect(
+      SpatialDungeonView.mapSemanticsLabel(plain: true).toUpperCase(),
+      isNot(contains('SMASH')),
+    );
+    expect(
       SpatialDungeonView.mapSemanticsLabel(plain: false).toUpperCase(),
       contains('GOD HAND'),
     );

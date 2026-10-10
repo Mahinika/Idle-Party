@@ -64,18 +64,20 @@ void main() {
     expect(FirstSessionTips.nextTipId(state, inDungeon: false), isNull);
   });
 
-  test('dungeon first tip is tap the fight, not Repeat/Next', () {
+  test('dungeon God Hand tip waits until floor 1 is clear', () {
     final state = GameLogic.createInitialState(now: now).copyWith(
       inDungeon: true,
       seenTips: const ['first_run'],
     );
+    expect(FirstSessionTips.nextTipId(state, inDungeon: true), isNull);
+    final cleared = state.copyWith(highestFloorCleared: 1);
     expect(
-      FirstSessionTips.nextTipId(state, inDungeon: true),
+      FirstSessionTips.nextTipId(cleared, inDungeon: true),
       'godhand',
     );
     expect(
-      FirstSessionTips.lineFor(state, CoachTarget.godhand, inDungeon: true),
-      'Long-press the fight — BAL smash',
+      FirstSessionTips.lineFor(cleared, CoachTarget.godhand, inDungeon: true),
+      'Long-press the fight.',
     );
   });
 
@@ -154,8 +156,10 @@ void main() {
     );
     final afterHub = fresh.copyWith(seenTips: const ['first_run']);
     expect(FirstSessionTips.nextTipId(afterHub, inDungeon: false), isNull);
+    expect(FirstSessionTips.nextTipId(afterHub, inDungeon: true), isNull);
+    final cleared = afterHub.copyWith(highestFloorCleared: 1);
     expect(
-      FirstSessionTips.nextTipId(afterHub, inDungeon: true),
+      FirstSessionTips.nextTipId(cleared, inDungeon: true),
       'godhand',
     );
     final both = afterHub.copyWith(seenTips: const ['first_run', 'godhand']);
@@ -253,7 +257,7 @@ void main() {
     expect(director.state.seenTips, contains('first_run'));
     expect(
       FirstSessionTips.nextTipId(director.state, inDungeon: true),
-      'godhand',
+      isNull,
     );
     director.dispose();
   });

@@ -19,7 +19,10 @@ void main() {
     expect(StoryLore.introSubline.toLowerCase(), contains('hub afk'));
     expect(StoryLore.introSubline.toLowerCase(), contains('essence'));
     expect(StoryLore.introSubline.toLowerCase(), contains('mid-dungeon'));
-    expect(StoryLore.introBeats.first.body.toLowerCase(), contains('help'));
+    expect(StoryLore.introTagline.toLowerCase(), contains('when you leave'));
+    expect(StoryLore.introBeats.first.body.toLowerCase(), contains('without you'));
+    expect(StoryLore.introBeats.first.body.toLowerCase(), contains('send them in'));
+    expect(StoryLore.introBeats.first.body.toLowerCase(), isNot(contains('fist')));
     expect(StoryLore.studioName, 'Cognifox Studio');
     expect(StoryLore.introBeats, hasLength(1));
     expect(StoryLore.introBeats.first.title, 'IDLE PARTY');

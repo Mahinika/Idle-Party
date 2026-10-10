@@ -270,13 +270,43 @@ void main() {
     expect(roomPlaceWordAt(chambers, 5, 5), isNull);
   });
 
+  test('neighbor caves do not share their first floor theme', () {
+    final ids = [for (final d in DungeonCatalog.all) d.id];
+    for (var i = 0; i < ids.length - 1; i++) {
+      final a = ZoneFloorStyle.byId(ids[i]).themes.first;
+      final b = ZoneFloorStyle.byId(ids[i + 1]).themes.first;
+      expect(a, isNot(b), reason: '${ids[i]} next to ${ids[i + 1]}');
+    }
+    expect(ZoneFloorStyle.byId('sandy').themes, isNot(contains(FloorTheme.torchlit)));
+    expect(ZoneFloorStyle.byId('goblin').themes, isNot(contains(FloorTheme.torchlit)));
+    expect(ZoneFloorStyle.byId('goblin').themes, isNot(contains(FloorTheme.collapsed)));
+    expect(ZoneFloorStyle.byId('goblin').themes, isNot(contains(FloorTheme.overgrown)));
+    expect(ZoneFloorStyle.byId('grove').themes.toSet().length, greaterThan(1));
+    expect(ZoneFloorStyle.byId('ember').themes, isNot(contains(FloorTheme.torchlit)));
+    expect(ZoneFloorStyle.byId('ember').themes, isNot(contains(FloorTheme.gilded)));
+    expect(ZoneFloorStyle.byId('tide').themes, isNot(contains(FloorTheme.overgrown)));
+    expect(
+      ZoneFloorStyle.byId('crystal').setpieceDecal,
+      isNot(FloorDecalKind.iceSheen),
+    );
+    expect(ZoneFloorStyle.byId('rime').setpieceDecal, FloorDecalKind.iceSheen);
+    expect(ZoneFloorStyle.byId('fen').particles, isNot(AmbientParticleKind.spores));
+    expect(ZoneFloorStyle.byId('fen').setpieceDecal, FloorDecalKind.roots);
+    expect(ZoneFloorStyle.byId('fen').themes, isNot(contains(FloorTheme.flooded)));
+    expect(ZoneFloorStyle.byId('dead').themes, isNot(contains(FloorTheme.ritual)));
+    expect(
+      ZoneFloorStyle.byId('underworld').themes,
+      isNot(contains(FloorTheme.collapsed)),
+    );
+  });
+
   test('fen floor mood is mire, not Bone Galleries', () {
     for (var seed = 0; seed < 40; seed++) {
       final theme = _map('fen', seed).floorTheme;
       expect(theme, isNotNull);
       expect(theme!.label.toLowerCase(), isNot(contains('bone')));
       expect(
-        theme == FloorTheme.mire || theme == FloorTheme.flooded,
+        theme == FloorTheme.mire || theme == FloorTheme.bog,
         isTrue,
         reason: 'fen seed $seed got ${theme.label}',
       );

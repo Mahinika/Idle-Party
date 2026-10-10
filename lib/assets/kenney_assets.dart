@@ -539,19 +539,19 @@ abstract final class KenneyAssets {
       'mire crusher' ||
       'bog bulwark' ||
       'fen guard' => enemyFenBrute,
-      'bile spitter' || 'fen slinger' => enemyBat,
+      'bile spitter' || 'fen slinger' => enemyFenMite,
       'rot fang' || 'mire blade' => enemyFenMite,
       'fen chanter' || 'mire adept' => enemyCultist,
       'cog mite' || 'rust tick' || 'brass flea' => enemyBrassMite,
       'vault bruiser' || 'cog crusher' => enemyCyclops,
       'brass bulwark' || 'cog guard' => enemyBrassBrute,
-      'spark spitter' || 'coil slinger' => enemyBat,
+      'spark spitter' || 'coil slinger' => enemyBrassMite,
       'razor cog' || 'spring fang' => enemyBrassMite,
       'clock chanter' || 'brass adept' => enemyCultist,
       'dust moth' || 'veil mite' || 'silk flea' => enemyVeilMite,
       'silk bruiser' || 'veil crusher' || 'cocoon guard' || 'veil bulwark' =>
         enemyVeilBrute,
-      'dust spitter' || 'silk slinger' => enemyBat,
+      'dust spitter' || 'silk slinger' => enemyVeilMite,
       'wing fang' || 'veil blade' => enemySpider,
       'moth chanter' || 'veil adept' => enemyCultist,
       // Sandy swarm fight as sandy mite (ZoneArt).
@@ -560,8 +560,8 @@ abstract final class KenneyAssets {
       'needle rat' || 'sneak rat' => enemyRat,
       'rock crab' || 'cave brute' => enemySandyBrute,
       'shellback' || 'stone maw' => enemySandyTank,
-      // Goblin brute fight as spider; elite club champion as goblin elite.
-      'goblin thug' || 'clubber' || 'lord thug' => enemySpider,
+      // Goblin brute fight as a goblin body; elite club champion stays elite.
+      'goblin thug' || 'clubber' || 'lord thug' => enemyGoblinTank,
       'club champion' => enemyGoblinElite,
       'fort sentry' || 'hall guard' => enemyKingGuard,
       'elite brute' ||
@@ -572,7 +572,7 @@ abstract final class KenneyAssets {
       'tomb shield' || 'ossuary guard' => enemyDeadTank,
       'molten golem' ||
       'ash behemoth' ||
-      'ash colossus' => enemyHellBrute,
+      'ash colossus' => enemyEmberBrute,
       'bulwark golem' || 'iron ward' || 'gate knight' => enemyGolem,
       // Goblin elite fight art (ZoneArt.elite).
       'stash bulwark' ||
