@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/spatial/tile_map.dart';
@@ -26,7 +27,8 @@ SpatialActor _hero({
     attackCooldown: 1.0,
     heroRole: def.gearAffinity,
     heroSpecId: spec,
-    ranged: def.roleTag == SpecRoleTag.rangedDps ||
+    ranged:
+        def.roleTag == SpecRoleTag.rangedDps ||
         def.roleTag == SpecRoleTag.caster ||
         def.roleTag == SpecRoleTag.healer,
     preferredRange: def.preferredRange,
@@ -38,6 +40,8 @@ SpatialActor _enemy({
   required double x,
   required double y,
   int hp = 100,
+  int? maxHp,
+  EnemyRole role = EnemyRole.normal,
 }) {
   return SpatialActor(
     id: id,
@@ -46,12 +50,13 @@ SpatialActor _enemy({
     x: x,
     y: y,
     hp: hp,
-    maxHp: hp,
+    maxHp: maxHp ?? hp,
     attack: 8,
     defense: 2,
     moveSpeed: 1.4,
     attackRange: 1.1,
     attackCooldown: 1.2,
+    role: role,
   );
 }
 
@@ -95,18 +100,8 @@ SpatialWorld _world({
 
 void main() {
   test('DPS peels the extra mob pressing the tank, not the nearest', () {
-    final tank = _hero(
-      id: 'tank',
-      spec: HeroSpecId.protection,
-      x: 4,
-      y: 5,
-    );
-    final dps = _hero(
-      id: 'dps',
-      spec: HeroSpecId.fire,
-      x: 3,
-      y: 5,
-    );
+    final tank = _hero(id: 'tank', spec: HeroSpecId.protection, x: 4, y: 5);
+    final dps = _hero(id: 'dps', spec: HeroSpecId.fire, x: 3, y: 5);
     // A sits on the tank (nearest) but is not an "extra".
     final nearest = _enemy(id: 'nearest', x: 4.4, y: 5);
     // B is farther but forced onto the tank → peel target.
@@ -114,10 +109,7 @@ void main() {
     peeler.forcedTargetId = tank.id;
     peeler.forcedTargetTimer = 3.0;
 
-    final world = _world(
-      heroes: [tank, dps],
-      enemies: [nearest, peeler],
-    );
+    final world = _world(heroes: [tank, dps], enemies: [nearest, peeler]);
 
     final focus = SpatialCombat.pickSmartFocusForTest(dps, world);
     expect(focus?.id, 'peeler');
@@ -125,18 +117,8 @@ void main() {
   });
 
   test('sticky focus holds across small score noise', () {
-    final tank = _hero(
-      id: 'tank',
-      spec: HeroSpecId.protection,
-      x: 4,
-      y: 5,
-    );
-    final dps = _hero(
-      id: 'dps',
-      spec: HeroSpecId.arms,
-      x: 3.5,
-      y: 5,
-    );
+    final tank = _hero(id: 'tank', spec: HeroSpecId.protection, x: 4, y: 5);
+    final dps = _hero(id: 'dps', spec: HeroSpecId.arms, x: 3.5, y: 5);
     final a = _enemy(id: 'a', x: 5.2, y: 5);
     final b = _enemy(id: 'b', x: 5.4, y: 5.1);
     a.forcedTargetId = tank.id;
@@ -212,6 +194,45 @@ void main() {
     expect(step.roomCleared || step.world.awaitingExit, isTrue);
   });
 
+  test('DPS finishes a dying foe before peeling a fresh extra', () {
+    final tank = _hero(id: 'tank', spec: HeroSpecId.protection, x: 4, y: 5);
+    final dps = _hero(id: 'dps', spec: HeroSpecId.arms, x: 3.2, y: 5);
+    final dying = _enemy(id: 'dying', x: 4.4, y: 5, hp: 15, maxHp: 100);
+    final fresh = _enemy(id: 'fresh', x: 5.5, y: 5);
+    fresh.forcedTargetId = tank.id;
+    fresh.forcedTargetTimer = 3;
+
+    final world = _world(heroes: [tank, dps], enemies: [dying, fresh]);
+    final focus = SpatialCombat.pickSmartFocusForTest(dps, world);
+    expect(focus?.id, 'dying');
+  });
+
+  test('a boss across the room still outranks the trash in front', () {
+    final dps = _hero(id: 'dps', spec: HeroSpecId.arms, x: 4, y: 5);
+    final trash = _enemy(id: 'trash', x: 5.2, y: 5);
+    final boss = _enemy(id: 'boss', x: 4, y: 12, role: EnemyRole.boss);
+    final world = _world(heroes: [dps], enemies: [trash, boss]);
+    expect(SpatialCombat.pickSmartFocusForTest(dps, world)?.id, 'boss');
+  });
+
+  test('an in-range boss still beats healthy trash', () {
+    final dps = _hero(id: 'dps', spec: HeroSpecId.arms, x: 4, y: 5);
+    final trash = _enemy(id: 'trash', x: 5.0, y: 5.8);
+    final boss = _enemy(id: 'boss', x: 5.2, y: 5, role: EnemyRole.boss);
+    final world = _world(heroes: [dps], enemies: [trash, boss]);
+    expect(SpatialCombat.pickSmartFocusForTest(dps, world)?.id, 'boss');
+  });
+
+  test('DPS peels an add standing on the healer', () {
+    final tank = _hero(id: 'tank', spec: HeroSpecId.protection, x: 4, y: 5.5);
+    final healer = _hero(id: 'healer', spec: HeroSpecId.discipline, x: 4, y: 2);
+    final dps = _hero(id: 'dps', spec: HeroSpecId.fire, x: 6.5, y: 5);
+    final main = _enemy(id: 'main', x: 4.6, y: 5.5);
+    final add = _enemy(id: 'add', x: 4, y: 2.7);
+    final world = _world(heroes: [tank, healer, dps], enemies: [main, add]);
+    expect(SpatialCombat.pickSmartFocusForTest(dps, world)?.id, 'add');
+  });
+
   test('pet prefers owner sticky focus over nearest', () {
     final hunter = _hero(
       id: 'hunter',
@@ -219,12 +240,7 @@ void main() {
       x: 4,
       y: 5,
     );
-    final tank = _hero(
-      id: 'tank',
-      spec: HeroSpecId.protection,
-      x: 5,
-      y: 5,
-    );
+    final tank = _hero(id: 'tank', spec: HeroSpecId.protection, x: 5, y: 5);
     final nearest = _enemy(id: 'near', x: 4.5, y: 5);
     final peel = _enemy(id: 'peel', x: 8, y: 5);
     peel.forcedTargetId = tank.id;

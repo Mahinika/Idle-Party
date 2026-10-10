@@ -193,8 +193,7 @@ abstract final class AbilityEffectRunner {
       if (d.requiresShield && !hasShield) return false;
       if (hero.castingTimer > 0) return false;
       if (SpatialCombat.abilityCdLeft(hero, d.id) > 0) return false;
-      final freePyro =
-          d.id == AbilityId.pyroblast && hero.hotStreakReady;
+      final freePyro = d.id == AbilityId.pyroblast && hero.hotStreakReady;
       if (!freePyro && hero.rage + 0.001 < d.resourceCost) return false;
       return true;
     }
@@ -203,8 +202,18 @@ abstract final class AbilityEffectRunner {
     final aroundFocus = focus == null
         ? 0
         : SpatialCombat.countNearbyEnemies(focus, world);
-    // Ranged kits kite outside self-radius; packs around the focus still count.
+    // Disc hits can see a clump the 3.2 bubble misses. Signature choice keeps
+    // the bubble, so a ground spell does not steal the turn from a nuke.
+    final aimedHits =
+        AoeAim.bestDisc(
+          world: world,
+          hero: hero,
+          focus: focus,
+          radius: 2.8,
+        )?.hits ??
+        0;
     final pack = math.max(nearby, aroundFocus);
+    final fightPack = math.max(pack, aimedHits);
     final focusHpFrac = focus == null || focus.maxHp <= 0
         ? 1.0
         : focus.hp / focus.maxHp;
@@ -295,11 +304,20 @@ abstract final class AbilityEffectRunner {
             g.executeHpFrac != null && focusHpFrac <= g.executeHpFrac!;
         if (!packOk && !execOk && !focusElite) return false;
       } else if (g.packMin > 0) {
-        if (pack < g.packMin && !(g.packMin <= 2 && pack == 1 && focusElite)) {
+        if (fightPack < g.packMin &&
+            !(g.packMin <= 2 && fightPack == 1 && focusElite)) {
           return false;
         }
       } else if (d.effect == AbilityEffectKind.aoe) {
-        if (pack < 2 && !(pack == 1 && focusElite)) return false;
+        if (fightPack < 2 && !(fightPack == 1 && focusElite)) return false;
+      }
+
+      // Ground, rain, and self-novas wait until the spell would actually hit.
+      // anyCombatWindow already allows a wounded or elite single target.
+      if (d.effect == AbilityEffectKind.aoe &&
+          !g.anyCombatWindow &&
+          !_aoeWouldLand(world, hero, focus, d, focusElite: focusElite)) {
+        return false;
       }
 
       if (g.executeHpFrac != null &&
@@ -311,7 +329,14 @@ abstract final class AbilityEffectRunner {
       final hold =
           g.holdLongCdOnTrash ??
           (d.tier == AbilityCastTier.signature && d.cooldown >= 30);
-      if (hold && !focusElite && nearby < 3 && focusHpFrac > 0.4) {
+      // A ground or rain signature cares about the clump, not the caster's feet.
+      final holdCount =
+          d.effect == AbilityEffectKind.aoe &&
+              (_shapeOf(d) == AbilityAoeShape.ground ||
+                  _shapeOf(d) == AbilityAoeShape.rain)
+          ? fightPack
+          : nearby;
+      if (hold && !focusElite && holdCount < 3 && focusHpFrac > 0.4) {
         return false;
       }
 
@@ -320,7 +345,7 @@ abstract final class AbilityEffectRunner {
           focus.bleedTimer > 3.5 &&
           focus.bleedAbilityId == d.id.name) {
         // Pack dumps still recast Howling / Blood Boil; ST keeps the refresh skip.
-        if (pack < 3 || d.effect != AbilityEffectKind.aoe) {
+        if (fightPack < 3 || d.effect != AbilityEffectKind.aoe) {
           return false;
         }
       }
@@ -473,7 +498,7 @@ abstract final class AbilityEffectRunner {
           if (aHeal != bHeal) return aHeal ? -1 : 1;
         }
         // DoT maintain on ST. Packs dump AoE instead of refreshing one DoT.
-        if (pack < 3 && focus != null && focus.bleedTimer < 2.0) {
+        if (fightPack < 3 && focus != null && focus.bleedTimer < 2.0) {
           final aDot = a.gate.maintainDot;
           final bDot = b.gate.maintainDot;
           if (aDot != bDot) return aDot ? -1 : 1;
@@ -481,11 +506,11 @@ abstract final class AbilityEffectRunner {
         // Prefer AoE in packs, ST otherwise — before combo dumps / ST builders.
         final aAoe = a.effect == AbilityEffectKind.aoe;
         final bAoe = b.effect == AbilityEffectKind.aoe;
-        if (pack >= 2 && aAoe != bAoe) return aAoe ? -1 : 1;
-        if (pack < 2 && aAoe != bAoe) return aAoe ? 1 : -1;
+        if (fightPack >= 2 && aAoe != bAoe) return aAoe ? -1 : 1;
+        if (fightPack < 2 && aAoe != bAoe) return aAoe ? 1 : -1;
         // Arcane: packs dump Explosion; ST builds Blast, then Missiles.
         if (hero.heroSpecId == HeroSpecId.arcane) {
-          if (pack >= 2) {
+          if (fightPack >= 2) {
             final aAe = a.id == AbilityId.arcaneExplosion;
             final bAe = b.id == AbilityId.arcaneExplosion;
             if (aAe != bAe) return aAe ? -1 : 1;
@@ -500,7 +525,7 @@ abstract final class AbilityEffectRunner {
           }
         }
         // Frost: dump Blizzard/Cone in packs instead of locking into Frostbolt.
-        if (hero.heroSpecId == HeroSpecId.frostMage && pack >= 2) {
+        if (hero.heroSpecId == HeroSpecId.frostMage && fightPack >= 2) {
           final aPack =
               a.id == AbilityId.blizzard || a.id == AbilityId.coneOfCold;
           final bPack =
@@ -508,7 +533,7 @@ abstract final class AbilityEffectRunner {
           if (aPack != bPack) return aPack ? -1 : 1;
         }
         // Destruction: Rain / Shadowfury instead of Incinerate in packs.
-        if (hero.heroSpecId == HeroSpecId.destruction && pack >= 2) {
+        if (hero.heroSpecId == HeroSpecId.destruction && fightPack >= 2) {
           final aPack =
               a.id == AbilityId.rainOfFire || a.id == AbilityId.shadowfury;
           final bPack =
@@ -516,14 +541,14 @@ abstract final class AbilityEffectRunner {
           if (aPack != bPack) return aPack ? -1 : 1;
         }
         // Assassin / Feral finishers are ST — packs already picked AoE above.
-        if (pack < 2 &&
+        if (fightPack < 2 &&
             hero.heroSpecId == HeroSpecId.assassination &&
             hero.comboPoints >= 4) {
           final aEnv = a.id == AbilityId.envenom;
           final bEnv = b.id == AbilityId.envenom;
           if (aEnv != bEnv) return aEnv ? -1 : 1;
         }
-        if (pack < 2 &&
+        if (fightPack < 2 &&
             hero.heroSpecId == HeroSpecId.feral &&
             hero.comboPoints >= 3) {
           final aBite = a.id == AbilityId.ferociousBite;
@@ -562,6 +587,59 @@ abstract final class AbilityEffectRunner {
           SpecResource.energy => 11.0,
           SpecResource.runic => 9.0,
         };
+    }
+  }
+
+  static AbilityAoeShape _shapeOf(ClassAbilityDef def) {
+    return def.aoeShape ??
+        (def.vfx?.groundDisc == true
+            ? AbilityAoeShape.ground
+            : AbilityAoeShape.nova);
+  }
+
+  /// Same radii the cast uses, so the gate and the landing agree.
+  static double _impactRadius(SpatialActor hero, ClassAbilityDef def) {
+    final style = SpatialCombat.boltStyleForAbility(hero, def: def);
+    return switch (_shapeOf(def)) {
+      AbilityAoeShape.rain => style == SpellBoltStyle.lightning ? 3.2 : 2.9,
+      AbilityAoeShape.ground =>
+        def.vfx?.groundRadius ??
+            (style == SpellBoltStyle.lightning ? 3.0 : 2.7),
+      AbilityAoeShape.nova => style == SpellBoltStyle.lightning ? 3.0 : 2.6,
+      AbilityAoeShape.fan || AbilityAoeShape.chain => 2.8,
+    };
+  }
+
+  static bool _aoeWouldLand(
+    SpatialWorld world,
+    SpatialActor hero,
+    SpatialActor? focus,
+    ClassAbilityDef def, {
+    required bool focusElite,
+  }) {
+    final shape = _shapeOf(def);
+    final radius = _impactRadius(hero, def);
+    final need = math.max(def.gate.packMin, 2);
+    switch (shape) {
+      case AbilityAoeShape.nova:
+        final hits = AoeAim.novaHits(world, hero, radius);
+        if (hits >= need) return true;
+        return focusElite && hits >= 1;
+      case AbilityAoeShape.ground:
+      case AbilityAoeShape.rain:
+        final hits =
+            AoeAim.bestDisc(
+              world: world,
+              hero: hero,
+              focus: focus,
+              radius: radius,
+            )?.hits ??
+            0;
+        if (hits >= need) return true;
+        return focusElite && hits >= 1 && def.gate.packMin <= 2;
+      case AbilityAoeShape.fan:
+      case AbilityAoeShape.chain:
+        return true;
     }
   }
 
@@ -788,7 +866,8 @@ abstract final class AbilityEffectRunner {
           return true;
         }
         spendAndCd(world, hero, def);
-        if ((def.id == AbilityId.shadowstep || def.id == AbilityId.demonCharge) &&
+        if ((def.id == AbilityId.shadowstep ||
+                def.id == AbilityId.demonCharge) &&
             focus != null &&
             focus.hp > 0) {
           final dx = focus.x - hero.x;
@@ -1670,7 +1749,7 @@ abstract final class AbilityEffectRunner {
     }
   }
 
-  /// Chain Lightning — bolts hop focus → nearest → nearest…
+  /// Chain Lightning — longest hop path. A tie keeps the current focus.
   static void _chainLightning(
     SpatialWorld world,
     SpatialActor hero,
@@ -1684,26 +1763,7 @@ abstract final class AbilityEffectRunner {
       2,
       (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
-    final targets = <SpatialActor>[];
-    SpatialActor? cursor = focus != null && focus.hp > 0 && !focus.dormant
-        ? focus
-        : SpatialCombat.nearestActiveEnemy(hero, world.enemies);
-    final used = <String>{};
-    while (cursor != null && targets.length < 6) {
-      targets.add(cursor);
-      used.add(cursor.id);
-      SpatialActor? next;
-      var best = 3.6;
-      for (final e in world.enemies) {
-        if (e.hp <= 0 || e.dormant || used.contains(e.id)) continue;
-        final d = SpatialCombat.actorDist(cursor, e);
-        if (d < best) {
-          best = d;
-          next = e;
-        }
-      }
-      cursor = next;
-    }
+    final targets = AoeAim.chainTargets(world: world, hero: hero, focus: focus);
     if (targets.isEmpty) {
       _novaStrike(world, hero, def, style, rng, reducedVfx: reducedVfx);
       return;
@@ -1779,9 +1839,26 @@ abstract final class AbilityEffectRunner {
       (hero.attack * def.coeff * abilityOutScale(hero)).round(),
     );
     raw = _windowRaw(hero, def, raw);
-    final anchor = focus != null && focus.hp > 0 && !focus.dormant
-        ? focus
-        : hero;
+    final clump = AoeAim.bestDisc(
+      world: world,
+      hero: hero,
+      focus: focus,
+      radius: 2.6,
+    );
+    var anchor = focus != null && focus.hp > 0 && !focus.dormant ? focus : hero;
+    if (clump != null && clump.hits >= 2) {
+      SpatialActor? nearest;
+      var nearestD = double.infinity;
+      for (final e in world.enemies) {
+        if (e.hp <= 0 || e.dormant) continue;
+        final dist = SpatialCombat.distPoint(clump.x, clump.y, e.x, e.y);
+        if (dist < nearestD) {
+          nearestD = dist;
+          nearest = e;
+        }
+      }
+      if (nearest != null) anchor = nearest;
+    }
     final enemies = world.enemies.where((e) => e.hp > 0 && !e.dormant).toList()
       ..sort(
         (a, b) => SpatialCombat.actorDist(
@@ -1939,7 +2016,7 @@ abstract final class AbilityEffectRunner {
     math.Random rng, {
     required bool reducedVfx,
   }) {
-    final radius = style == SpellBoltStyle.lightning ? 3.2 : 2.9;
+    final radius = _impactRadius(hero, def);
     var raw = math.max(
       2,
       (hero.attack * def.coeff * abilityOutScale(hero)).round(),
@@ -1947,9 +2024,14 @@ abstract final class AbilityEffectRunner {
     raw = _windowRaw(hero, def, raw);
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
-    final pack = _aoeAnchor(world, hero, focus);
-    final ax = pack.$1;
-    final ay = pack.$2;
+    final placed = AoeAim.bestDisc(
+      world: world,
+      hero: hero,
+      focus: focus,
+      radius: radius,
+    );
+    final ax = placed?.x ?? (focus != null && focus.hp > 0 ? focus.x : hero.x);
+    final ay = placed?.y ?? (focus != null && focus.hp > 0 ? focus.y : hero.y);
 
     if (!reducedVfx) {
       SpatialCombat.spawnBurst(
@@ -2023,30 +2105,6 @@ abstract final class AbilityEffectRunner {
     }
   }
 
-  /// Sit a pack disc on the clump, not the edge target a kiting caster sees.
-  static (double, double) _aoeAnchor(
-    SpatialWorld world,
-    SpatialActor hero,
-    SpatialActor? focus,
-  ) {
-    final ranged = (hero.preferredRange ?? 0) >= 3.2;
-    final seed = ranged && focus != null && focus.hp > 0 && !focus.dormant
-        ? focus
-        : hero;
-    var sx = 0.0;
-    var sy = 0.0;
-    var n = 0;
-    for (final e in world.enemies) {
-      if (e.hp <= 0 || e.dormant) continue;
-      if (SpatialCombat.actorDist(seed, e) > 4.2) continue;
-      sx += e.x;
-      sy += e.y;
-      n++;
-    }
-    if (n <= 0) return (seed.x, seed.y);
-    return (sx / n, sy / n);
-  }
-
   /// Consecration / WW / Bladestorm / Blood Boil — ground pulse, no bolt spam.
   static void _groundNova(
     SpatialWorld world,
@@ -2057,9 +2115,7 @@ abstract final class AbilityEffectRunner {
     math.Random rng, {
     required bool reducedVfx,
   }) {
-    final radius =
-        def.vfx?.groundRadius ??
-        (style == SpellBoltStyle.lightning ? 3.0 : 2.7);
+    final radius = _impactRadius(hero, def);
     var raw = math.max(
       2,
       (hero.attack * def.coeff * abilityOutScale(hero)).round(),
@@ -2067,9 +2123,14 @@ abstract final class AbilityEffectRunner {
     raw = _windowRaw(hero, def, raw);
     final argb = SpatialCombat.burstArgbForStyle(style);
     hero.attackFlash = 0.2;
-    final anchor = _aoeAnchor(world, hero, focus);
-    final ox = anchor.$1;
-    final oy = anchor.$2;
+    final placed = AoeAim.bestDisc(
+      world: world,
+      hero: hero,
+      focus: focus,
+      radius: radius,
+    );
+    final ox = placed?.x ?? (focus != null && focus.hp > 0 ? focus.x : hero.x);
+    final oy = placed?.y ?? (focus != null && focus.hp > 0 ? focus.y : hero.y);
 
     SpellVfx.spawnCast(
       world,
@@ -2149,10 +2210,7 @@ abstract final class AbilityEffectRunner {
       final fromX = world.canWalk(ox, oy) ? ox : hero.x;
       final fromY = world.canWalk(ox, oy) ? oy : hero.y;
       if (!SpatialCombat.canShoot(world, fromX, fromY, e.x, e.y)) continue;
-      if (hitCount >=
-          (def.id == AbilityId.fanOfKnives
-              ? 48
-              : _aoeHitCap)) {
+      if (hitCount >= (def.id == AbilityId.fanOfKnives ? 48 : _aoeHitCap)) {
         break;
       }
       final wasAlive = e.hp > 0;
@@ -2754,8 +2812,7 @@ abstract final class AbilityEffectRunner {
     final healMul =
         SpecMastery.healMul(masteryView(caster), missing) * caster.kitHealMul;
     var amount = math.max(4, (_healPower(caster) * coeff * healMul).round());
-    if (caster.spellCrit > 0 &&
-        math.Random().nextInt(100) < caster.spellCrit) {
+    if (caster.spellCrit > 0 && math.Random().nextInt(100) < caster.spellCrit) {
       amount = math.max(4, (amount * 1.5).round());
     }
     final before = ally.hp;

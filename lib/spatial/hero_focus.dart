@@ -1,6 +1,6 @@
 part of 'spatial_combat.dart';
 
-/// Hero target pick: peel extras off the tank, sticky focus, nearest fallback.
+/// Hero target pick: finish a dying foe, peel extras off the tank, sticky focus.
 ///
 /// Kept as a `part` so [SpatialCombat.step] stays the only combat authority.
 abstract final class HeroFocus {
@@ -19,6 +19,18 @@ abstract final class HeroFocus {
 
   /// Light assist on the tank's nearest active enemy (was +40/+12).
   static const double assistTankNearest = 18;
+
+  /// In-range prey this hurt is finished before a fresh peel.
+  static const double finishHpFrac = 0.22;
+
+  static const double finishBonus = 48;
+
+  /// Non-tank score when an add is standing on the healer, not the tank.
+  /// Beats a fresh peel. An in-range boss still wins.
+  static const double rescueHealer = 90;
+
+  /// Tank still picks that add up, but a boss in reach stays ahead of it.
+  static const double tankRescueHealer = 50;
 
   static SpatialActor? nearestActiveEnemy(
     SpatialActor self,
@@ -109,7 +121,8 @@ abstract final class HeroFocus {
 
     final sticky = stickyEnemy(self, world);
     if (sticky != null) {
-      final stickyScore = scores[sticky.id] ??
+      final stickyScore =
+          scores[sticky.id] ??
           _scoreEnemy(
             self,
             sticky,
@@ -150,12 +163,16 @@ abstract final class HeroFocus {
     }
 
     score += switch (e.role) {
-      EnemyRole.boss => 130,
-      EnemyRole.elite => 55,
-      EnemyRole.normal => 0,
+      EnemyRole.boss => 130.0,
+      EnemyRole.elite => 55.0,
+      EnemyRole.normal => 0.0,
     };
-    // Finish wounded targets.
+    // Finish wounded targets. A nearly dead one in reach beats a fresh peel.
     score += (1.0 - hpFrac) * 60;
+    if (inRange && hpFrac <= finishHpFrac) {
+      score += finishBonus;
+    }
+    score += _backlineRescue(self, e, world, tank);
 
     // Threat on backline (healers / casters).
     if (e.forcedTargetTimer > 0 && e.forcedTargetId != null) {
@@ -202,5 +219,38 @@ abstract final class HeroFocus {
     score += CombatPresence.impatienceFocusBias(self, d);
 
     return score;
+  }
+
+  /// Add standing on a healer while the tank is farther away.
+  static double _backlineRescue(
+    SpatialActor self,
+    SpatialActor e,
+    SpatialWorld world,
+    SpatialActor? tank,
+  ) {
+    SpatialActor? pressed;
+    var pressedD = double.infinity;
+    var pressedHealer = false;
+    for (final h in world.heroes) {
+      if (!h.isAlive) continue;
+      if (tank != null && h.id == tank.id) continue;
+      final healer = actorIsHealer(h);
+      final caster =
+          h.ranged ||
+          (h.heroSpecId != null &&
+              HeroSpecs.def(h.heroSpecId!).roleTag == SpecRoleTag.caster);
+      if (!healer && !caster) continue;
+      final dist = SpatialCombat.actorDist(e, h);
+      if (dist >= pressedD) continue;
+      pressedD = dist;
+      pressed = h;
+      pressedHealer = healer;
+    }
+    if (pressed == null || pressedD > 2.2) return 0;
+    if (tank != null && pressedD + 1.2 >= SpatialCombat.actorDist(e, tank)) {
+      return 0;
+    }
+    if (!pressedHealer) return actorIsTank(self) ? 0 : 32;
+    return actorIsTank(self) ? tankRescueHealer : rescueHealer;
   }
 }

@@ -35,6 +35,7 @@ export 'kit_migrated_casts.dart' show KitNamedCasts;
 export '../models/spell_bolt_style.dart';
 
 part 'hero_focus.dart';
+part 'aoe_aim.dart';
 part 'combat_presence.dart';
 part 'spell_vfx.dart';
 part 'spell_particles.dart';

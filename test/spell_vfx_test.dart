@@ -242,6 +242,8 @@ void main() {
     );
     world = SpatialCombat.step(world, state, dt: 0.01).world;
     expect(world.spawnPersistentVfx, isTrue);
+    // The opening step can touch a floor chest. This check is the cast.
+    world.bursts.clear();
 
     final target = world.enemies.first
       ..dormant = false
