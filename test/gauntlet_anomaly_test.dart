@@ -38,6 +38,15 @@ void main() {
     expect(GauntletAnomalies.nextBossFloor(3), 5);
     expect(GauntletAnomalies.nextAnomalyFloor(3), 8);
     expect(GauntletAnomalies.isTreasureFloor(18), isTrue);
+    expect(GauntletAnomalies.climbPlaceLine(1), 'CLIMB · boss F5');
+    expect(GauntletAnomalies.climbPlaceLine(2), 'CLIMB · boss F5');
+    expect(GauntletAnomalies.climbPlaceLine(4), 'CLIMB · boss F5');
+    expect(GauntletAnomalies.climbPlaceLine(3), 'CLIMB · TIGHT');
+    expect(
+      GauntletAnomalies.climbPlaceLine(5, liveBossName: 'Spire Warden'),
+      'CLIMB · Spire Warden',
+    );
+    expect(GauntletAnomalies.climbPlaceLine(5), 'CLIMB · boss F5');
   });
 
   test('Gauntlet swarm floor packs denser than the prior non-anomaly floor', () {

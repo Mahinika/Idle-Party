@@ -10,6 +10,8 @@ import 'package:idle_party/core/local_season.dart';
 import 'package:idle_party/core/mission_board.dart';
 import 'package:idle_party/core/party_power.dart';
 import 'package:idle_party/core/ashen_crown.dart';
+import 'package:idle_party/core/greater_rift.dart';
+import 'package:idle_party/core/rift.dart';
 import 'package:idle_party/models/dungeon_def.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/dungeon_room.dart';
@@ -123,6 +125,12 @@ void main() {
       AshenCrown.weekKits.map((k) => k.telegraph).toSet().length,
       AshenCrown.weekKits.length,
     );
+    expect(
+      AshenCrown.kitByDungeonId('sandy').roomLine,
+      'Sandy Caverns Crown · SLAM',
+    );
+    expect(Rift.roomLine(1), 'STORMWAKE · FARM R1 · loot · no fail timer');
+    expect(GreaterRift.roomLine(1), 'MOTHVEIL · RANK GR1 · no gear · clock');
     var state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 24));
     state = state.copyWith(
       heroRoster: [

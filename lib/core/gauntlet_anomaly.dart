@@ -63,6 +63,17 @@ abstract final class GauntletAnomalies {
     return ((floor ~/ bossEvery) + 1) * bossEvery;
   }
 
+  /// Place line while climbing. A living boss keeps its name. An anomaly
+  /// floor names the squeeze. Other floors name the next boss.
+  static String climbPlaceLine(int floor, {String? liveBossName}) {
+    final boss = liveBossName?.trim() ?? '';
+    if (boss.isNotEmpty) return 'CLIMB · $boss';
+    if (floor > 0 && floor % bossEvery == 0) return 'CLIMB · boss F$floor';
+    final anomaly = forFloor(floor, inGauntlet: true);
+    if (anomaly != null) return 'CLIMB · ${chip(anomaly)}';
+    return 'CLIMB · boss F${nextBossFloor(floor)}';
+  }
+
   static int? nextAnomalyFloor(int floor) {
     for (var f = floor + 1; f <= floor + 12; f++) {
       if (forFloor(f, inGauntlet: true) != null) return f;

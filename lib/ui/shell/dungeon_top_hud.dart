@@ -6,7 +6,9 @@ import '../../core/gauntlet_anomaly.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/greater_rift.dart';
 import '../../core/keystone.dart';
+import '../../core/rift.dart';
 import '../../core/menu_alerts.dart';
 import '../../models/dungeon_mode.dart';
 import '../../models/dungeon_room.dart';
@@ -370,19 +372,24 @@ class DungeonTopHud extends StatelessWidget {
         ? '$zoneShort · F$floor · GO stairs'
         : state.inGauntlet
         ? () {
+            String? bossName;
             for (final e in state.enemies) {
               if (e.role == EnemyRole.boss && !e.isDefeated) {
-                return 'CLIMB · ${e.name}';
+                bossName = e.name;
+                break;
               }
             }
-            return 'CLIMB';
+            return GauntletAnomalies.climbPlaceLine(
+              floor,
+              liveBossName: bossName,
+            );
           }()
         : state.inRift
-        ? 'STORMWAKE · FARM R${state.riftTier}'
+        ? Rift.roomLine(state.riftTier)
         : state.inGreaterRift
-        ? 'MOTHVEIL · RANK GR${state.grTier}'
+        ? GreaterRift.roomLine(state.grTier)
         : state.inWorldBoss
-        ? AshenCrown.kitByDungeonId(state.dungeonId).title
+        ? AshenCrown.kitByDungeonId(state.dungeonId).roomLine
         : '$zoneShort · F$floor$keyBit${_packJobBit(world)}${_keyAffixBit(state)}${_firstBossBit(state, floor)}';
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);

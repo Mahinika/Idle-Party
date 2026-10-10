@@ -54,6 +54,10 @@ abstract final class GreaterRift {
   static String hubTitle(int bestCleared) =>
       'Ranked GR${nextOfferTier(bestCleared)}';
 
+  /// Fight place line: Mothveil clock, no gear mid-run.
+  static String roomLine(int tier) =>
+      'MOTHVEIL · RANK GR$tier · no gear · clock';
+
   static bool isHubEnterLabel(String label) =>
       RegExp(r'^RANKED GR\d*$').hasMatch(label);
 

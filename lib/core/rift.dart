@@ -38,6 +38,10 @@ abstract final class Rift {
   static int nextOfferTier(int bestCleared) =>
       clampTier(max(minTier, bestCleared + 1));
 
+  /// Fight place line: Stormwake farm, loot mid-run, no fail timer.
+  static String roomLine(int tier) =>
+      'STORMWAKE · FARM R$tier · loot · no fail timer';
+
   /// Picker starts on last pick, else last clear (so R20 opens on 20, not 1).
   static int pickerStart({required int preferred, required int bestCleared}) {
     final maxSel = maxSelectableTier(bestCleared);

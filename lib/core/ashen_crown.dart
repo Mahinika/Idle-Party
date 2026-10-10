@@ -17,6 +17,9 @@ class AshenWeekKit {
 
   String get title => '$venueName Crown';
 
+  /// On screen for the whole fight, before the boss shouts the word.
+  String get roomLine => '$title · $telegraph';
+
   String get weekLine =>
       'This week: $title. Telegraph $telegraph, then smash.';
 }
