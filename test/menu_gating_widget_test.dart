@@ -2,9 +2,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/ui/shell/inventory_dock.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 22);
+
+  test('a waiting kit does not steal an explicit BAG open', () {
+    expect(
+      InventoryDock.meetShouldSteal(GearPanel.bag, revealJustArrived: false),
+      isFalse,
+    );
+    expect(
+      InventoryDock.meetShouldSteal(GearPanel.bag, revealJustArrived: true),
+      isTrue,
+    );
+    expect(
+      InventoryDock.meetShouldSteal(GearPanel.gear, revealJustArrived: false),
+      isTrue,
+    );
+    expect(
+      InventoryDock.meetShouldSteal(GearPanel.roster, revealJustArrived: false),
+      isFalse,
+    );
+  });
 
   test('AL20 veteran sees GEAR BAG MERGE ROSTER panels', () {
     final veteran = GameLogic.createInitialState(now: now).copyWith(

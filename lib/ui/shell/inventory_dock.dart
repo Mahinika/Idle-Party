@@ -45,6 +45,17 @@ class InventoryDock extends StatefulWidget {
     return '$base Skips $keptCount keep${keptCount == 1 ? '' : 's'}$sample.';
   }
 
+  /// A waiting kit opens ROSTER. An explicit BAG open stays on the bag
+  /// (wipe OPEN BAG). A kit that arrives while the bag is open still meets.
+  static bool meetShouldSteal(
+    GearPanel panel, {
+    required bool revealJustArrived,
+  }) {
+    if (panel == GearPanel.roster) return false;
+    if (panel == GearPanel.bag && !revealJustArrived) return false;
+    return true;
+  }
+
   const InventoryDock({
     super.key,
     required this.state,
@@ -176,10 +187,15 @@ class _InventoryDockState extends State<InventoryDock>
     _maybeOpenRosterForMeet();
   }
 
-  void _maybeOpenRosterForMeet() {
+  void _maybeOpenRosterForMeet({bool revealJustArrived = false}) {
     if (!MenuTabs.showRoster(state)) return;
     if (state.metaDepth.pendingHeroReveals.isEmpty) return;
-    if (widget.panel == GearPanel.roster) return;
+    if (!InventoryDock.meetShouldSteal(
+      widget.panel,
+      revealJustArrived: revealJustArrived,
+    )) {
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       widget.onPanelChanged(GearPanel.roster);
@@ -195,11 +211,10 @@ class _InventoryDockState extends State<InventoryDock>
     if (widget.panel != GearPanel.bag && _upgradesOnlyFilter) {
       _upgradesOnlyFilter = false;
     }
-    if (oldWidget.state.metaDepth.pendingHeroReveals.length <
-            state.metaDepth.pendingHeroReveals.length ||
-        (state.metaDepth.pendingHeroReveals.isNotEmpty &&
-            widget.panel != GearPanel.roster)) {
-      _maybeOpenRosterForMeet();
+    final grew = oldWidget.state.metaDepth.pendingHeroReveals.length <
+        state.metaDepth.pendingHeroReveals.length;
+    if (grew) {
+      _maybeOpenRosterForMeet(revealJustArrived: true);
     }
   }
 
