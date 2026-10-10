@@ -3,8 +3,9 @@ name: systematic-debugging
 description: >-
   Methodical Idle Party debugging: reproduce, isolate (SpatialCombat vs UI vs
   save), hypothesize, verify with GameDirector.preview / flutter test / playtest.
-  Use when stuck on a bug, live vs offline diverge, or symptoms span layers. Do
-  not use for a known missing cast (add-ability) or CI-only red (babysitting-pr).
+  Use when stuck on a bug, live vs offline diverge, symptoms span layers, or
+  the owner says "konstig bugg" / "det har slutat funka". Do not use for a
+  known missing cast (add-ability) or CI-only red (babysitting-pr).
 ---
 
 # Systematic debugging (Idle Party)
@@ -26,7 +27,7 @@ Don't randomly edit combat. Evidence first.
 | Gold/loot/essence wrong | GameLogic | `game_logic.dart`, drop rolls |
 | Lost on Ascend / load | Save migrate | `save-migrate`, `meta_depth` / `game_state` |
 | Button / tip / overlay | UI | `hub_screen`, `is2_shell`, `first_session_tips` |
-| Offline ≠ live | AFK path | `simulateSpatialOffline` must use SpatialCombat.step |
+| Offline ≠ live | AFK path | `lib/core/offline_progress.dart` (`simulateSpatialOffline`) must use SpatialCombat.step |
 
 Binary search: comment/disable half of a ticker or gate path only when safe; prefer logging + tests.
 
@@ -51,3 +52,8 @@ Minimal root-cause fix + regression test when practical. Re-run the reproduce pa
 - Immutable state via `copyWith` in GameLogic
 - No Riverpod — ChangeNotifier paths
 - 15 minutes stuck → re-isolate; document tried hypotheses
+
+## Done when
+
+- A test reproduces the bug and now passes.
+- The fix went through the skill that owns that layer, and its `30-done` checks are green.

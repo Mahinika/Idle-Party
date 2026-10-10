@@ -35,8 +35,8 @@ Keep the steering shape:
 - Do not paste growth, AL20, or Play-upload essays back into every rule.
 - Do not restore `init-slash` or `repo-audit-slash`. Slash entry is
   `.cursor/commands/` plus the skill (`disable-model-invocation: true`).
-- Do not restore a skill map in `20-how-we-work` or
-  `suggesting-skills`. Owner phrases live in each skill `description`.
+- Do not restore a skill map in `20-how-we-work` or a `suggesting-skills`
+  skill. Owner phrases live in each skill `description`.
 
 ## Procedure
 
@@ -75,7 +75,6 @@ Keep the steering shape:
 ## Out of scope for /init
 
 - Large refactors, balance retunes, new content
-- Pushing unless the user already said yes this turn (local commit when green is OK)
 - Rewriting or treating `docs/archive/audits/` snapshots as current kit truth (archive
   only; re-run `class-audit` for live verdicts)
 

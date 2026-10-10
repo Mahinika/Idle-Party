@@ -73,3 +73,9 @@ heuristics, often a bat. That is how "Goblin Slinger shows a bat" happened
 - Pets must never reuse an enemy path (`zone_art_test`).
 - The `hideout_stash_test` title still says "combat bat" but asserts the
   goblin ranged sprite.
+
+## Done when
+
+- `flutter test test/asset_catalog_test.dart test/custom_assets_test.dart test/dungeon_environment_test.dart` is green.
+- Every new picture is an owned file under `assets/custom/`, reached through `CustomAssets` / `KenneyAssets` (no raw `assets/...` in UI).
+- The new picture was seen on the A56 (in a fight and in CODEX for enemies).

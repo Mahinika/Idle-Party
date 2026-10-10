@@ -30,7 +30,8 @@ gh run view <RUN_ID> --log-failed
 | Failure | Local command |
 |---------|----------------|
 | Analyze | `flutter analyze lib test --no-fatal-infos` |
-| Unit tests | `flutter test` (or the failing file) |
+| Unit tests | `flutter test --exclude-tags sim` (or the failing file) |
+| Paper-doll facit | `py -3 tool/paper_doll_classify.py` then `py -3 tool/check_paper_doll_facit.py` |
 | Balance HIGH | `flutter test test/class_balance_gate_test.dart` + share-fast iterate |
 | Changelog sync | `flutter test test/changelog_sync_test.dart` |
 

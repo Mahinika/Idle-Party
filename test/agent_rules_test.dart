@@ -9,6 +9,34 @@ void main() {
       .where((f) => f.path.endsWith('.mdc'))
       .toList();
 
+  final skillDirs = Directory('.cursor/skills')
+      .listSync()
+      .whereType<Directory>()
+      .toList();
+
+  String baseName(FileSystemEntity e) =>
+      e.uri.pathSegments.where((s) => s.isNotEmpty).last;
+
+  Map<String, String> skillFront(Directory d) {
+    final lines = File('${d.path}/SKILL.md').readAsLinesSync();
+    expect(lines.first.trim(), '---', reason: d.path);
+    final end = lines.indexWhere((l) => l.trim() == '---', 1);
+    expect(end, greaterThan(0), reason: '${d.path}: frontmatter not closed');
+    final out = <String, String>{};
+    String? key;
+    for (final l in lines.sublist(1, end)) {
+      final m = RegExp(r'^([\w-]+):\s*(.*)$').firstMatch(l);
+      if (m != null) {
+        key = m.group(1)!;
+        final v = m.group(2)!.trim();
+        out[key] = (v == '>-' || v == '>' || v == '|') ? '' : v;
+      } else if (key != null) {
+        out[key] = '${out[key]} ${l.trim()}'.trim();
+      }
+    }
+    return out;
+  }
+
   test('every rule has a one-line description Cursor can read', () {
     expect(rules, isNotEmpty);
     for (final f in rules) {
@@ -36,9 +64,21 @@ void main() {
     }
   });
 
-  test('rules and AGENTS.md only point at rules and skills that exist', () {
+  test('rules, skills, commands, and AGENTS.md only point at rules and skills that exist', () {
     final ref = RegExp(r'\.cursor/(rules/[\w-]+\.mdc|skills/[\w-]+)');
-    for (final f in <File>[...rules, File('AGENTS.md')]) {
+    final docs = <File>[
+      ...rules,
+      File('AGENTS.md'),
+      ...Directory('.cursor/skills')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.md')),
+      ...Directory('.cursor/commands')
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.md')),
+    ];
+    for (final f in docs) {
       for (final m in ref.allMatches(f.readAsStringSync())) {
         final path = '.cursor/${m.group(1)}';
         expect(
@@ -73,5 +113,70 @@ void main() {
       File('AGENTS.md').readAsStringSync(),
       isNot(contains('pandaos-managed')),
     );
+  });
+
+  test('every skill has a SKILL.md whose name matches its folder', () {
+    expect(skillDirs, isNotEmpty);
+    for (final d in skillDirs) {
+      expect(File('${d.path}/SKILL.md').existsSync(), isTrue, reason: d.path);
+      final front = skillFront(d);
+      expect(front['name'], baseName(d), reason: d.path);
+      expect(
+        front['description'] ?? '',
+        isNotEmpty,
+        reason: '${d.path}: missing description',
+      );
+    }
+  });
+
+  test('skills the model picks say when not to use them', () {
+    for (final d in skillDirs) {
+      final front = skillFront(d);
+      if (front['disable-model-invocation'] == 'true') continue;
+      expect(
+        front['description'],
+        contains('Do not'),
+        reason: '${d.path}: add "Do not use for ... (sibling-skill)"',
+      );
+    }
+  });
+
+  test('skill descriptions only name skills and rules that exist', () {
+    final known = <String>{
+      ...skillDirs.map(baseName),
+      ...rules.map((f) => baseName(f).replaceFirst('.mdc', '')),
+    };
+    final ref = RegExp(r'\(([a-z0-9]+(?:-[a-z0-9]+)+)\)');
+    for (final d in skillDirs) {
+      final desc = skillFront(d)['description'] ?? '';
+      for (final m in ref.allMatches(desc)) {
+        expect(
+          known,
+          contains(m.group(1)),
+          reason: '${d.path} names a missing skill (${m.group(1)})',
+        );
+      }
+    }
+  });
+
+  test('skills only name repo files that exist', () {
+    final path = RegExp(
+      r'(?<![\w/.-])((?:lib|test|tool|docs|assets)/[\w./-]+\.(?:dart|py|md|json|png|yml))',
+    );
+    final docs = Directory('.cursor/skills')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.md'));
+    for (final f in docs) {
+      for (final m in path.allMatches(f.readAsStringSync())) {
+        final p = m.group(1)!;
+        if (p.contains('tool/out/') || p.contains('playshots/')) continue;
+        expect(
+          FileSystemEntity.typeSync(p),
+          isNot(FileSystemEntityType.notFound),
+          reason: '${f.path} names missing $p',
+        );
+      }
+    }
   });
 }

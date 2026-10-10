@@ -4,8 +4,9 @@ description: >-
   Idle Party ads and rewards: AdMob rewarded ads, the gold WISP lantern,
   SCROLLS Ad Tickets, ad-free / supporter entitlements, and UMP consent.
   Use when the owner talks about lyktan, WISP, reklam, ad tickets, SCROLLS,
-  ad-free, AdMob, or "belöning". Do not use for Play Console listing or
-  AdMob revenue reads (play-store-prep) or SHOP prices alone.
+  ad-free, AdMob, "belöning", or SHOP purchases ("köp", "pris", IAP, Play
+  Billing, packs). Do not use for Play Console listing or AdMob revenue
+  reads (play-store-prep).
 ---
 
 # Ads and rewards (Idle Party)
@@ -75,3 +76,22 @@ follow `save-migrate`.
 - `docs/PLAY_STORE.md` still has old "POWERUPS / 1 ad = 3 hours" wording.
   Fix it when you touch that doc.
 - Pet `xp_wisp` and the frost wisp enemy are unrelated to the lantern.
+
+## SHOP purchases
+
+| Role | Path |
+|------|------|
+| Catalog and product ids | `lib/core/shop_catalog.dart` (`ShopCatalog`) |
+| Grant after buy / restore | `lib/core/shop_billing.dart` (`ShopBilling`) |
+| Play Billing facade | `lib/core/shop_store.dart` (no-op on web and tests) |
+| SHOP tab | `lib/ui/shell/shop_dock.dart` |
+| Design | `docs/SHOP_MONETIZATION.md` |
+
+The comment "no whale packs, no gacha" in `shop_catalog.dart` is older than
+the locks: since 2026-09-26 gacha, BiS-for-cash, and whale packs are allowed
+(`00-locks`). A new offer still needs a test in `test/shop_billing_test.dart`.
+
+## Done when
+
+- `flutter analyze lib test --no-fatal-infos` is clean and the tests above are green.
+- The WISP or ad button was tried on the A56 with a test ad only (never a real ad).

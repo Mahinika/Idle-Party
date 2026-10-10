@@ -17,7 +17,7 @@ Short visual QA after Patch Notes / daily vault / MORE / guides / God Hand style
 Combat early is nice; not a hard lock.
 
 **Default setup:** [a56-playtest](../a56-playtest/SKILL.md) (Samsung A56
-emulator). Skip boot story → CONTINUE / NEW GAME → dismiss tips. Tap through
+emulator). Skip boot story → CONTINUE / NEW GAME (coach hints sit on the real control; nothing to dismiss). Tap through
 the checklist on the emulator.
 
 Web + `WebClickBridge` only if Android cannot run — see
@@ -35,13 +35,13 @@ flutter test test/ship_smoke_test.dart test/changelog_sync_test.dart
 |---|--------|-----|
 | 1 | Hub loads | PATH is the continent atlas, not a scroll of nodes. `ENTER DUNGEON` present |
 | 2 | Hub hunt | Hunt line under the map (READY/ALMOST when close); no TODAY stamp |
-| 2b | Week affix | Line above the hunt: `Week · …` when `weeklyModifier` is set |
+| 2b | Week goal | Line on the TODAY card: `Week · …` (`LocalSeasonCatalog.weekProgressLabel`, `lib/ui/hub/hub_today_card.dart`) |
 | 2c | Daily CTA | When the hunt is Daily, only the hunt **DAILY** button (no duplicate **DAILY RUN**) |
-| 3 | Daily vault claim | Vault filled (1 clear or timed KEY +2): `CLAIM VAULT`; toast says **Daily vault claimed** |
-| 4 | MORE badge | Unseen changelog → `★` on **MORE** (`MenuAlerts.more.star`); claimable quests → count badge on **MORE** |
+| 3 | Daily vault claim | Vault filled (1 clear or timed KEY +2): `CLAIM VAULT`; toast starts **Daily Vault claimed · +** |
+| 4 | MORE badge | Unseen changelog → `★` on **MORE** (`MenuAlerts.moreAlert(state).star`); claimable quests → count badge on **MORE** |
 | 5 | Patch Notes | Open MORE → INFO → PATCH NOTES; version matches `MetaSystems.currentVersion`; sections only when that release has lines |
 | 6 | Guides | MORE → INFO → topics labeled `Guide · …`; WORLD PATH mentions Tidehold/Ashen/Grove |
-| 7 | God Hand tip | Enter dungeon once; tip mentions BAL/FOCUS/WIDE or ESSENCE → BLESSING |
+| 7 | God Hand tip | Enter dungeon once; coach line reads `God Hand · <mode> — long-press the fight or tap the fist` (`first_session_tips.dart`) |
 | 8 | GEAR tabs | GEAR shows GEAR + BAG early; MERGE / ROSTER unlock later — no LOADOUTS tab |
 | 9 | Overlay hygiene | Open MORE/CODEX then ENTER: return to hub must not leave sheet stuck open |
 | 10 | SCROLLS glyph | After first boss: rolled-scroll overlay bottom-right on the map (not in the header). Tap → SCROLLS sheet |
@@ -65,3 +65,9 @@ After ~4 failed clicks on the same control, stop. Report: screen, last label tri
 - Changelog honesty: `test/changelog_sync_test.dart`
 - Cadence: `docs/CONTENT_CADENCE.md`
 - Full phone round: skill `playtest` (`/playtest`)
+
+## Done when
+
+- `flutter test test/ship_smoke_test.dart test/changelog_sync_test.dart test/first_hour_plain_test.dart` is green.
+- Every checklist row was looked at on the A56 running this batch.
+- Anything wrong is written under Open in `docs/PLAY_NOTES.md`.

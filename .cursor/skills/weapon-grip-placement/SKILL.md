@@ -93,3 +93,9 @@ reload.
 - Do not move the bare fist onto the gauntlet. Use the worn-glove shift.
 - Do not lower a mark limit or widen a test tolerance to hide a float.
 - Do not treat the undertunic weapon sheets as the dressed result.
+
+## Done when
+
+- `py -3 tool/check_paper_doll_facit.py` is green and `flutter test test/visual` passes.
+- A hand picture moved: `py -3 tool/audit_anchors.py` has no findings.
+- A green lookbook only proves the rest pose. Judge a moving hero on the skeleton (`HeroRigPainter`) on the A56.

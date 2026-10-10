@@ -2,7 +2,7 @@
 name: spatial-combat-change
 description: >-
   Guides combat, chamber, gate, AI, enemy packs/tells, and offline changes
-  where SpatialCombat is the single authority. Use when combat feels wrong,
+  in SpatialCombat, the current fight sim. Use when combat feels wrong,
   AFK catch-up diverges, chambers/gates misbehave, enemies feel the same
   (fiender tråkiga / samma PULSE / packs feel identical), rooms feel square
   (fyrkantiga golv), or editing spatial_combat / ability_effects /
@@ -17,8 +17,8 @@ description: >-
 
 - **Only** `SpatialCombat.build` / `SpatialCombat.step` (`lib/spatial/spatial_combat.dart`) for live and in-dungeon offline combat.
 - Live: `GameDirector` ~60Hz → `step`
-- Offline: `GameLogic.simulateSpatialOffline` → same `build`/`step` (`threatScale: 1.0`, `afkAssist: true`, VFX forced to `minimal`)
-- Hub AFK (`!inDungeon`) = sanctuary gold only — **no** combat
+- Offline: `GameLogic.simulateSpatialOffline` (body in `lib/core/offline_progress.dart`) → same `build`/`step` (`threatScale: 1.0`, `afkAssist: true`, VFX forced to `minimal`)
+- Hub AFK (`!inDungeon`) = gold plus slow essence — **no** combat
 
 A separate offline simulator is allowed if the owner names it, or an A source and a hole in this game agree (`10-what-to-build`). Otherwise offline uses the same `build` / `step`.
 
@@ -55,7 +55,7 @@ A separate offline simulator is allowed if the owner names it, or an A source an
 | Zone packs / names / mix | `lib/core/enemy_flavor.dart` + `encounter_factory.dart` |
 | Enemy specials / boss tells | `lib/spatial/enemy_specials.dart` + `lib/core/boss_tells.dart` (repeated shape). Unique tells stay named functions |
 | Chambers / gates / blueprint | `floor_blueprint.dart`, `placement_plan.dart`, `zone_layout_kit.dart`, `tile_map.dart`, `spatial_combat.dart` |
-| Offline catch-up | `game_logic.dart` (call sites only) |
+| Offline catch-up | `lib/core/offline_progress.dart` (`game_logic.dart` call sites only) |
 | Live loop / rebuild | `game_director.dart` |
 | Presentation only | `spatial_dungeon_view.dart` |
 
@@ -80,9 +80,15 @@ flutter test test/class_kits_combat_test.dart test/kit_passives_test.dart
 
 ```
 Spatial change:
-- [ ] Single authority preserved (no offline fork)
+- [ ] Live and offline still share `build` / `step` (no offline fork)
 - [ ] Chamber/gate wake still safe
 - [ ] Tests via preview + SpatialCombat.build/step
 - [ ] New hub enter (Ashen / Gauntlet / Rift / Daily) asserts `director.spatial != null`
 - [ ] flutter analyze + combat tests green
 ```
+
+## Done when
+
+- `flutter analyze lib test --no-fatal-infos` is clean and the kit tests above are green.
+- Kit numbers moved: `flutter test test/class_balance_share_fast_test.dart` and `flutter test test/class_balance_gate_test.dart` are green (no HIGH).
+- HUD, guides, and PATCH NOTES still say what the kit does.

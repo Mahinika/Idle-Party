@@ -68,3 +68,9 @@ the picture or the grip. Do not raise a mark limit to hide a flag.
 - Paint the face or the hair on a gear layer.
 - Lower a threshold in `tool/gear_style.py` to go green.
 - Add rows to `tool/facit_known_debt.json`.
+
+## Done when
+
+- `py -3 tool/check_paper_doll_facit.py` is green and `flutter test test/visual` passes.
+- A hand picture moved: `py -3 tool/audit_anchors.py` has no findings.
+- A green lookbook only proves the rest pose. Judge a moving hero on the skeleton (`HeroRigPainter`) on the A56.

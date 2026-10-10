@@ -25,25 +25,25 @@ Promote repeated muscle memory into a named skill so future sessions load it aut
 ```yaml
 ---
 name: <slug>
-description: WHAT it does. Use when [triggers + 1–2 Swedish phrases]. Do not use when [sibling skill].
+description: WHAT it does. Use when [triggers + 1–2 Swedish phrases]. Do not use for [job] (sibling-skill).
 ---
 ```
 
-3. **Body** — When to use · numbered steps with real commands · Notes / when not to use.
+3. **Body** — When to use · numbered steps with real commands · Notes · end with `## Done when` (2–4 lines: only the `30-done` checks this skill needs).
 4. **Point at repo truth** — `AGENTS.md`, `docs/CONTENT_CADENCE.md`, existing skills. Do not duplicate version numbers.
-5. **Validate** — description is third person, WHAT + WHEN + Do not use when; no secrets; no machine-only paths; no Windows backslashes.
+5. **Validate** — description is third person, WHAT + WHEN + `Do not use for … (sibling-skill)`; every `(sibling-skill)` exists; no secrets; no machine-only paths; no Windows backslashes. Run `flutter test test/agent_rules_test.dart`.
 6. **Tell the user** where the file lives.
 
 ## 2026 conventions (Idle Party)
 
-- **Description** is the only catalog text — write third person, WHAT + Use when + Do not use when; include Swedish trigger phrases the owner actually says.
+- **Description** is the only catalog text — write third person, WHAT + Use when + `Do not use for … (sibling-skill)`; include Swedish trigger phrases the owner actually says. `test/agent_rules_test.dart` fails if a model-picked skill has no `Do not` or names a missing `(skill)`.
 - **`disable-model-invocation: true`** only for slash commands (`/init`, `/repo auditandcleaning`). Domain skills auto-load.
 - **No `paths`** in this repo — the owner vibe-codes without opening specific files.
 - **Body** under ~120 lines when possible; one default command path (not a menu of equals).
 - **Over ~120 lines of detail** → `reference.md` one hop away with “Read when …”.
 - **Gotchas** beat textbook filler — only what the agent would get wrong without the skill.
 - Prefer Flutter commands: `flutter analyze lib test --no-fatal-infos`, `flutter test …`
-- Combat → link `spatial-combat-change`; art → `assets-legal` / `zone-art-identity`; saves → `save-migrate`
+- Combat → link `spatial-combat-change`; art → `assets-legal`, `gear-art`, `enemy-art`, `zone-art-identity`; saves → `save-migrate`
 - Keep skills **lean**; one workflow per skill
 
 ## Skills vs rules vs hooks
@@ -57,5 +57,5 @@ description: WHAT it does. Use when [triggers + 1–2 Swedish phrases]. Do not u
 ## Notes
 
 - Update an existing skill instead of duplicating
-- Put the owner's phrases in that skill's `description`. Do not add a central map in `suggesting-skills` or `20-how-we-work`.
+- Put the owner's phrases in that skill's `description`. Do not add a central skill map anywhere (no map skill, nothing in `20-how-we-work`).
 - Project skills live under `.cursor/skills/` (tracked via gitignore exceptions)

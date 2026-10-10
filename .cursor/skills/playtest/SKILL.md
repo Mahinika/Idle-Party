@@ -6,7 +6,7 @@ description: >-
   igenom, kolla allt som är fel, rörigt, ser snett ut, or känns dåligt.
   Finds what disagrees with the code, what is correct but bad for the
   player, and art that looks wrong. Do not use for DPS-only balance
-  (share-fast), one broken cast (add-ability), or a Play upload.
+  (grinding-until-pass), one broken cast (add-ability), or a Play upload.
 ---
 
 # Playtest (Idle Party)
@@ -47,12 +47,7 @@ py -3 tool/playtest_run.py start --new
 py -3 tool/playtest_run.py start --scope GEAR
 ```
 
-`start` copies the save, cold-starts the app (a live `flutter run` may
-drop; leave it dropped until the round is over; `[IP]` still lands in
-logcat), taps CONTINUE, then the occupied save, and checks Welcome back
-against the save. If CONTINUE is missing it says so and uses PLAY / a new
-game. Hub smoke's checklist is the hub part of this round, not a
-separate pass.
+What `start` does: [reference.md](reference.md) § What start does.
 
 ## The 10 minutes
 
@@ -73,12 +68,7 @@ py -3 tool/playtest_run.py fight 240
 py -3 tool/playtest_run.py note "two primaries on the hub" --type ux --sev forvirrar
 ```
 
-`fight` takes a picture every 20 seconds and builds one contact sheet.
-Read that sheet, not every fight frame.
-
-The hub and a fight keep moving, so `uiautomator dump` often gives up.
-The tool then reads the Flutter semantics tree from the debug VM. A snap
-can still have a tree. A release build has no VM, so the tree stays empty.
+Fight sheets and the UI tree fallback: [reference.md](reference.md) § Fight sheet and UI tree.
 
 Cover the list `status` prints. It depends on the save: early, mid, or
 endgame (party mean level 100 or AL20). An OK from last time is **not** a
@@ -105,45 +95,17 @@ A full round still lists findings. Open that finding's snap PNG before it
 counts. If the picture does not show the same thing, the tool misread.
 Drop it. Do not research it and do not fix it. What the player sees wins.
 
-Three questions for every screen you actually opened, even ones that were
-OK last time:
-
-- **Code.** Read the screen's code (`MenuRouter`, the widget,
-  `GameLogic`) and compare it to the saved tree, `[IP]` state, and toasts.
-  Wrong number, a button that does nothing, copy that lies, or a lock that
-  disagrees with `AGENTS.md`.
-- **Player.** This counts even when the code is right. Is the next step
-  obvious within about 3 seconds? Is there one main action? How many taps
-  to get there? Is the text readable at 360 px? What do empty, loading, and
-  error look like? Would a new player know that word?
-- **Picture.** Look at the PNG and any diff image. Crooked, floating,
-  clipped, overlapping, wrong scale, blurry pixels. What the player sees
-  wins over what the code claims. Hand the fix to the skill that owns it:
-  `armor-placement`, `weapon-grip-placement`, `gear-art`, `hero-rig`,
-  `enemy-art`, `floor-feel`, `zone-art-identity`, `docs/UI_THEME.md`,
-  `spatial-combat-change`.
-
-Buttons smaller than the game's own tap size (44 dp, `GameTheme.minTouch`)
-are already flagged. So are off-screen nodes, overlapping buttons, duplicate
-labels, a screen with no way on, jargon on an AL0 save, and header numbers
-that disagree with the save.
+Three questions and the flags already caught: [reference.md](reference.md) § What counts as a finding.
 
 ## Research
 
-For each finding the picture agrees with, and that is not a trivial
-cosmetic fix, search the web (WebSearch / WebFetch). About 5 minutes a
-finding, and about 20 minutes for the whole round. Prefer Material,
-Android accessibility, Flutter docs and issues, and published game-UX
-talks. Save 1–3 sources with one sentence each. Ideas only: no assets or
-code from outside the repo.
-
-Group findings that are the same pattern and research the group once.
+For each finding the picture agrees with, research it (about 5 minutes each, 20 for the round). Rules: [reference.md](reference.md) § Research.
 
 ## Decide, log, fix
 
 Each finding gets a type (`kod` / `ux` / `visuellt`), a severity
 (`blockerar` / `forvirrar` / `kosmetiskt`), and **one** fix with its source.
-A design fork: read `decide-a-fork` quietly and pick once. A big change to
+A design fork: read the rule `.cursor/rules/decide-a-fork.mdc` quietly and pick once. A big change to
 how a screen looks or feels is shown on the A56 before and after, and the
 owner picks, before you build on (`20-how-we-work`).
 
@@ -166,24 +128,13 @@ the reason.
 
 ## Memory for the next round
 
-```bash
-py -3 tool/playtest_run.py good hub "One obvious ENTER DUNGEON"
-py -3 tool/playtest_run.py ok gear
-py -3 tool/playtest_run.py learn "numbers in buttons clip at 360 px" --rule touch_small
-```
+Before hand off, store 3–5 good / ok / learn notes. Commands: [reference.md](reference.md) § Memory for the next round.
 
-- `good` stores a baseline picture and tree (`tool/playtest_baseline/`).
-  Next time, a missing button, a big move, a new main button, or a changed
-  picture (fight field and changing numbers masked out) becomes a finding.
-  Replace a baseline only when the screen was changed on purpose and is
-  better. `good` resets the stale counter.
-- `ok` records the commit. It never means skip. After 3 OKs the next round
-  asks for a fresh baseline. If the screen's files changed since that
-  commit, it is listed under look extra.
-- `learn` stores the pattern, not only the one bug. A pattern that can be
-  measured from the UI tree becomes a rule in `playtest_checks.py`.
+## Done when
 
-Keep about 3–5 new "good" notes per round, not a diary of every button.
+- `py -3 tool/playtest_run.py report` ran after a full round (not a tool check).
+- Every finding the picture agrees with is fixed or written under Open in `docs/PLAY_NOTES.md`.
+- Fixes pass the matching `30-done` tests, and `after` re-ran their path on the A56.
 
 ## Hand off
 
@@ -196,5 +147,4 @@ played** (a new save only if this round used `--new`). Then wait.
 Use [browser-playtest](../browser-playtest/SKILL.md) and say that the
 automatic checks did not run. Never upload an AAB.
 
-Pillow is required for picture diffs: `py -3 -m pip install pillow`.
-Checks without a phone: `py -3 -m pytest tool/test_playtest_checks.py tool/test_playtest_imgdiff.py tool/test_playtest_run.py`
+Checks without a phone: [reference.md](reference.md).

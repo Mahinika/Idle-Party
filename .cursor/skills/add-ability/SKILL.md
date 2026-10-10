@@ -3,7 +3,11 @@ name: add-ability
 description: >-
   Wires Idle Party hero abilities end-to-end (AbilityId, ClassAbilityDef,
   AbilityEffectRunner, HUD, VFX, tests). Use when adding or fixing a kit
-  ability, spell, passive, taunt, a new spell, a broken kit, or when an ability shows in HUD but never fires.
+  ability, spell, passive, taunt, or a broken kit, when an ability shows in
+  HUD but never fires, or when the owner says "förmågan funkar inte" /
+  "HUD men kastar inte". Do not use for enemy AI or packs
+  (spatial-combat-change), a whole-class identity audit (class-audit), or
+  DPS-only trim (grinding-until-pass).
 ---
 
 # Add ability (Idle Party)
@@ -33,7 +37,7 @@ live on public `SpatialCombat` / `AbilityEffectRunner`.
 | Cast surface | `lib/spatial/spatial_combat.dart` (exports) |
 | Combat | `lib/spatial/spatial_combat.dart` |
 | HUD | `lib/ui/shell/dungeon_party_hud.dart` |
-| Offline | `GameLogic.simulateSpatialOffline` |
+| Offline | `GameLogic.simulateSpatialOffline` → `lib/core/offline_progress.dart` |
 | Guides (copy only) | `lib/core/game_guides.dart` |
 
 ## Checklist
@@ -56,7 +60,7 @@ Add ability:
 
 - `specId:` required — `forSpec` never falls back
 - `effect` + `tier` + `coeff` + `cooldown` + `resourceCost` + `unlockLevel`
-- `fireMode:` `cast` (default) · `swingRider` · `onBlock` · `dotTick` · `onHitBounce` · `passive`
+- `fireMode:` `cast` (default) · `swingRider` · `onBlock` · `onHitBounce` · `passive`
 - `showInHud: false` for passives and white-hit dumps that never cast (Combat Eviscerate)
 - HUD shows `showsInHud` rows; ready-glow is only for `fireMode.cast`
 - `requiresShield` when needed
@@ -96,3 +100,9 @@ Add ability:
 | `test/spell_vfx_test.dart` | Bolt styles |
 
 **Cast recipe:** `SpatialCombat.build` → place near enemies → fill `rage` → zero `abilityCd[id.name]` → `step` loop → assert HP/CD/timers.
+
+## Done when
+
+- `flutter analyze lib test --no-fatal-infos` is clean and the kit tests above are green.
+- Kit numbers moved: `flutter test test/class_balance_share_fast_test.dart` and `flutter test test/class_balance_gate_test.dart` are green (no HIGH).
+- HUD, guides, and PATCH NOTES still say what the kit does.

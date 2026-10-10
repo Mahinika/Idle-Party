@@ -106,7 +106,7 @@ With a normal 1 tank / 1 heal / 2 DPS party: clear job, acceptable overlap, no s
 
 Start with silhouette/form/persistent state, then inspect hero sprite, form
 animations, chips, `SpellBoltStyle`, bursts, maintain/AoE/emergency telegraphs,
-`reducedVfx`, and a11y at ~390×844. Silent signature or wrong art = **P0/P1**.
+`reducedVfx`, and a11y at 360×780 (Samsung A56). Silent signature or wrong art = **P0/P1**.
 
 ## Numbers
 

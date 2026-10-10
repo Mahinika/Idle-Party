@@ -6,7 +6,7 @@ description: >-
   graphic. Use when the store page, screenshots, preview video, or feature
   graphic are stale, or when hero art or hub chrome changed and the Play shots
   would lie. Do not upload an AAB. Do not use Flutter web unless the emulator
-  cannot run.
+  cannot run. Do not use for Play Console, reviews, or the API (play-store-prep).
 ---
 
 # Store listing shoot (Idle Party)
@@ -56,3 +56,9 @@ new URL in the Play preview field.
 
 Update the freshness row in `docs/PLAY_STORE.md` to this version and date.
 `flutter test test/store_listing_plan_test.dart` must pass.
+
+## Done when
+
+- `flutter test test/store_listing_plan_test.dart` is green.
+- The shots show this build's hub and hero (version matches PATCH NOTES).
+- No AAB was uploaded.

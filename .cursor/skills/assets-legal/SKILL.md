@@ -5,8 +5,10 @@ description: >-
   CustomAssets and KenneyAssets helpers (the Kenney name is legacy),
   FilterQuality.none, no commercial dumps or foreign packs. Use when adding
   sprites, icons, portraits, backdrops, pets, or any assets path in UI.
-  Do not use for paper-doll layering (character-paper-doll) or a cave that
-  looks like its neighbor (zone-art-identity).
+  Swedish: "inga främmande sprites", "får vi använda den här bilden?".
+  Do not use for paper-doll layering (character-paper-doll), drawing gear
+  (gear-art), enemy pictures (enemy-art), or a cave that looks like its
+  neighbor (zone-art-identity).
 ---
 
 # Assets & legal (Idle Party)
@@ -67,3 +69,9 @@ Image.asset(KenneyAssets.iconSword); // missing FilterQuality.none
 Do not hardcode `'assets/...'` in UI; use helpers.
 
 Owned denser heroes (undertunic + 128 overlays): [character-paper-doll](../character-paper-doll/SKILL.md).
+
+## Done when
+
+- `flutter test test/asset_catalog_test.dart test/custom_assets_test.dart test/dungeon_environment_test.dart` is green.
+- Every new picture is an owned file under `assets/custom/`, reached through `CustomAssets` / `KenneyAssets` (no raw `assets/...` in UI).
+- The new picture was seen on the A56 (in a fight and in CODEX for enemies).

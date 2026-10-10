@@ -79,3 +79,9 @@ Robe legs stay within 12 degrees.
 - Ability poses live in `lib/visual/rig/rig_ability_clips.dart`. The actor's
   `animAbility` is visual only and is not saved. Other classes fall back to
   attack or cast.
+
+## Done when
+
+- `py -3 tool/check_paper_doll_facit.py` is green and `flutter test test/visual` passes.
+- A hand picture moved: `py -3 tool/audit_anchors.py` has no findings.
+- A green lookbook only proves the rest pose. Judge a moving hero on the skeleton (`HeroRigPainter`) on the A56.

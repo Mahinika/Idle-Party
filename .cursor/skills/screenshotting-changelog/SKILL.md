@@ -44,14 +44,17 @@ Short bullets. One fact each. Summary states what this patch is for.
 
 Put endgame, KEY, and zone recap in `changed` (or another section), not in `summary`.
 
-## Honesty the tests already lock
+## Honesty
 
-The newest release, summary included, must still mention:
+`changelog_sync_test` locks these in the newest release, summary included:
 
 - Shipped zone names (Tidehold, Ashen, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault, Mothveil)
 - Craft Trial
 - Race still locks after New Game START (and must not say GEAR LOOK)
-- Ranked GR, `Rebuild your bag`, and REBORN
+
+Not locked by that test, but must stay true wherever the notes mention them:
+Ranked GR, `Rebuild your bag`, and REBORN (`ship_smoke_test` checks the
+guides, not the notes).
 
 Those lines are the world as it is, not a claim that this patch invented them.
 
@@ -83,3 +86,8 @@ Live look on the Samsung A56 emulator ([a56-playtest](../a56-playtest/SKILL.md))
 - No player-facing change and no version bump.
 - Do not rewrite old releases into sections.
 - Do not bump the version only to rename the screen.
+
+## Done when
+
+- The three Check tests are green.
+- PATCH NOTES on the A56 shows the new version, date, summary, and only sections that have lines.

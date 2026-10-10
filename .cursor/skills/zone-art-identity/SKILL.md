@@ -3,8 +3,9 @@ name: zone-art-identity
 description: >-
   Checklist so Idle Party dungeon zones read as distinct (not crystal/hell
   reskins). Use when a cave looks like its neighbor, or the owner says a zone
-  "looks the same". Do not use for full dungeon catalog wiring (new-dungeon)
-  or for pack jobs and boss tells (spatial-combat-change).
+  "looks the same" / "grottan ser ut som den förra". Do not use for full
+  dungeon catalog wiring (new-dungeon), pack jobs and boss tells
+  (spatial-combat-change), or drawing one enemy sprite (enemy-art).
 ---
 
 # Zone art identity (Idle Party)
@@ -26,7 +27,7 @@ For each new `dungeonId`, verify against the closest old zone (e.g. tide ≠ cry
 | Boss sprite | `ZoneArt` via `KenneyAssets.enemySpriteForRole` | Owned PNG, not the neighbor's boss |
 | Codex name map | `enemySpriteForCodexName` | Boss name → **same** asset as combat boss role |
 | Trash/elite | `enemySpriteFor` archetypes | Mix differs (swarm/brute/ranged) |
-| Ambient wash | `dungeon_environment.dart` | Clear hue/alpha vs neighbor |
+| Ambient wash | `lib/ui/dungeon_environment.dart` | Clear hue/alpha vs neighbor |
 | Floor/wall/props | `CustomAssets` (catalog name `KenneyAssets`) | Props/floor differ from the neighbor |
 | Hub icon | `dungeonIconFor` | Not identical to neighbor |
 
@@ -61,3 +62,9 @@ flutter test test/asset_catalog_test.dart test/dungeon_environment_test.dart
 
 - [new-dungeon](../new-dungeon/SKILL.md)
 - `test/asset_catalog_test.dart` (codex ↔ combat boss)
+
+## Done when
+
+- `flutter test test/asset_catalog_test.dart test/custom_assets_test.dart test/dungeon_environment_test.dart` is green.
+- Every new picture is an owned file under `assets/custom/`, reached through `CustomAssets` / `KenneyAssets` (no raw `assets/...` in UI).
+- The new picture was seen on the A56 (in a fight and in CODEX for enemies).

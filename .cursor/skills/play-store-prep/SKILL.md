@@ -51,7 +51,7 @@ Play prep:
 - [ ] 2. pubspec versionName ↔ MetaSystems.currentVersion
 - [ ] 3. Privacy + data safety match PRIVACY.md
 - [ ] 4. Listing copy from STORE_LISTING.md
-- [ ] 5. Screenshots current (hub-smoke / screenshotting-changelog)
+- [ ] 5. Screenshots, preview video, and feature graphic current (`store-listing-shoot`)
 - [ ] 6. Signed AAB built (owner asked)
 - [ ] 7. Upload via reference.md recipe when ready
 ```
@@ -99,7 +99,13 @@ Cursor browser, read **[reference.md](reference.md)** when you reach that step.
 
 - Privacy copy: `docs/PRIVACY.md`
 - Tag → APK/AAB: `.github/workflows/build-apk.yml`
-- Hub chrome before screenshots: `hub-smoke` / `screenshotting-changelog`
+- Hub chrome before screenshots: `hub-smoke`
 - Phone shots and the Sandy preview: `store-listing-shoot`
 - Browser phone metrics: `browser-playtest`
 - itch.io page + community post: `tool/store_listing/itch/PAGE.md`
+
+## Done when
+
+- The Operator status table in `docs/PLAY_STORE.md` is honest.
+- `pubspec.yaml` versionName equals `MetaSystems.currentVersion`.
+- No AAB was uploaded unless the owner asked in this turn.

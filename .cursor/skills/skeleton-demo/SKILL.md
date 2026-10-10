@@ -4,8 +4,8 @@ description: >-
   Runs and adjusts the outside-the-game warrior skeleton demo (rigid
   cutouts, sword, shield, ability clips). Use when the owner says skelett,
   skeleton demo, förmågor on the rig, svärdplacering, skölden sitter fel,
-  or "titta igen" at tool/out/skel_demo. Do not use for the live paper doll
-  (character-paper-doll), one kit cast (add-ability), or the fight sim
+  or "titta igen" at tool/out/skel_demo. Do not use for the in-game
+  skeleton (hero-rig), one kit cast (add-ability), or the fight sim
   (spatial-combat-change).
 ---
 
@@ -57,3 +57,8 @@ A tuck is `thigh_l` positive, `thigh_r` negative, `shin_l` negative, `shin_r` po
 ## Abilities
 
 Clips live in `tool/skel_demo/abilities.py`. Names and order match `lib/models/kits/warrior.dart`. Each clip is a readable pose, not the combat numbers. Add a name there, then render `--abilities --gif`.
+
+## Done when
+
+- `py -3 tool/skel_demo/play.py --marks` shows every grip and joint mark on its center.
+- Nothing under `lib/` or the live PNGs changed. A fix for the game goes through `hero-rig`.

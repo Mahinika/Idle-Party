@@ -44,9 +44,10 @@ Helpers: `tool/store_listing/`.
 # 1) First-minute combat save (Sandy F1) + optional AL3 showcase
 flutter test tool/store_listing/export_showcase_save_test.dart
 
-# 2) Listing shots still use Flutter web on :8080 (Playwright).
-#    Daily playtest is the A56 emulator — see a56-playtest.
-# 3) Capture raw 1080×2340 first-minute combat
+# 2) Default: shoot on the A56 emulator. Follow the store-listing-shoot skill
+#    (tool/store_listing/capture_a56_shots.py). The web steps below are the
+#    fallback only when the emulator cannot run.
+# 3) Fallback: capture raw 1080×2340 first-minute combat on Flutter web
 py -3 tool/store_listing/capture_first_minute.py
 
 # 4) Compose 1080×1920 with top caption band + 512 icon
@@ -66,7 +67,7 @@ py -3 tool/store_listing/make_listing_icon.py
    (plain JSON → CONTINUE stays disabled / “No save yet”).
    First-minute combat: `add_init_script` *before* boot so autosave cannot
    overwrite; bump `lastUpdated` or Welcome Back eats the first frame.
-4. **Prefer Playwright + `__idlePartyClick`** over widget-test `toImage` (Google Fonts)
+4. **Web fallback only:** prefer Playwright + `__idlePartyClick` over widget-test `toImage` (Google Fonts)
    or Cursor CDP alone (harder file IO). Phone viewport **360×780 @ DPR 3**.
 5. **Material `TabBar` needs bridge** — wrap labels with `MenuChrome.bridgedTab`
    (GEAR / GOLD / ESSENCE sub-tabs) or clicks never leave INCOME/BAG.

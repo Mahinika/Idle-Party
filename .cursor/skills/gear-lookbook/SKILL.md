@@ -101,3 +101,9 @@ undertunic. Neither is a mark by itself.
   Drawing and the facit stay in skill `gear-art`.
 - Raise a mark limit in `tool/measure_lookbook.py` to make a flag go away.
   Fix the art or the grip, or tell the owner what the flag shows.
+
+## Done when
+
+- `py -3 tool/check_paper_doll_facit.py` is green and `flutter test test/visual` passes.
+- A hand picture moved: `py -3 tool/audit_anchors.py` has no findings.
+- A green lookbook only proves the rest pose. Judge a moving hero on the skeleton (`HeroRigPainter`) on the A56.

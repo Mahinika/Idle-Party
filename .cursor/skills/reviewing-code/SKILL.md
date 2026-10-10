@@ -97,3 +97,8 @@ Must fix
 - Restore AL20 as the default work slice
 - Approve weakening the live-light HIGH gate without an explicit product decision
 - Implement the fixes unless the owner asked this turn
+
+## Done when
+
+- Each finding names file, line, and which `AGENTS.md` / rule line it breaks.
+- Blocks and nits are listed separately, and the verdict is ready-to-merge or not.

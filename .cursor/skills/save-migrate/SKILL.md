@@ -4,7 +4,8 @@ description: >-
   Adds or migrates Idle Party GameState fields safely (toJson/fromJson
   defaults, Ascend keep/reset, SharedPreferences). Use when adding
   persistent state, meta, Ascend behavior, save load, export/import, or when
-  the owner says save / ascend / lost progress.
+  the owner says save / ascend / lost progress / "sparningen försvann".
+  Do not use for hub or menu text that saves nothing new (hub-smoke).
 ---
 
 # Save / migrate (Idle Party)
@@ -15,10 +16,10 @@ description: >-
 |------|------|
 | State + serialize | `lib/core/game_state.dart` |
 | Load / Ascend / v1 migrate | `lib/core/game_logic.dart` (`stateFromJson`, `ascend`) |
-| Prefs I/O | `lib/core/game_director.dart` (`SharedPreferencesGameStorage`) |
+| Prefs I/O | `lib/core/game_storage.dart` (`SharedPreferencesGameStorage`) |
 | Meta bundle | `lib/models/meta_depth.dart` |
 
-**Prefs:** write `idle_party_save_v2`; read v2 else legacy `idle_party_save_v1`.  
+**Prefs:** five slots `idle_party_save_slot_0` … `_4`; the active one is `idle_party_active_slot`. Autosave writes the active slot and mirrors it to `idle_party_save_v2` for older builds. The first run copies an old `idle_party_save_v2` / `idle_party_save_v1` into slot 0 (SAVE 1).  
 **Load:** always `GameLogic.stateFromJson` (not raw `GameState.fromJson`).  
 **Save version:** written as `4`; migration is **field presence / defaults**, not a version switch.
 
@@ -66,3 +67,8 @@ flutter test test/save_load_test.dart test/meta_systems_test.dart test/meta_dept
 ```
 
 Use `GameDirector.preview()` for in-memory tests.
+
+## Done when
+
+- `flutter analyze lib test --no-fatal-infos` is clean and the tests above are green.
+- An old save without the new field loads (legacy-missing test) and the field survives or resets on Ascend as intended.

@@ -12,7 +12,7 @@ description: >-
 
 # Armor on the skeleton
 
-All four bodies paint through the cutout skeleton (`HeroRigFlags`). The
+All four bodies paint through the cutout skeleton (`HeroRigPainter`; `HeroRigFlags` lists which families are on). The
 still paper doll is the fallback before that atlas is ready. The lookbook
 paints the still doll, so a green sheet is the rest pose, not the moving
 hero.
@@ -85,3 +85,9 @@ when the owner should look.
   `_src`. The live body is the undertunic.
 - Do not give one pixel two bones.
 - Do not raise a mark limit to hide a float.
+
+## Done when
+
+- `py -3 tool/check_paper_doll_facit.py` is green and `flutter test test/visual` passes.
+- A hand picture moved: `py -3 tool/audit_anchors.py` has no findings.
+- A green lookbook only proves the rest pose. Judge a moving hero on the skeleton (`HeroRigPainter`) on the A56.

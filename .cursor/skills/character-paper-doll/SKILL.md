@@ -4,9 +4,10 @@ description: >-
   Idle Party still paper doll: the undertunic and 128×128 overlays the
   skeleton is cut from, and the fallback before that atlas is ready. Use
   when editing body_*.png / paintOwnedHero, or when gear is invisible on
-  the still stack. Swedish: "undertunic" / "gear syns inte". Do not use
-  for the moving hero (hero-rig), seating a drawn helm, chest, or pauldron
-  (armor-placement), or zone enemy art (zone-art-identity).
+  the still stack. Swedish: "undertunic", "gear syns inte", "dockan ser
+  fel ut i GEAR". Do not use for the moving hero (hero-rig), seating a
+  drawn helm, chest, or pauldron (armor-placement), weapon grips
+  (weapon-grip-placement), or enemy sprites (enemy-art).
 ---
 
 # Character paper-doll (Idle Party)
@@ -46,7 +47,7 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
 ## Workflow (mandatory order)
 
 1. Drop / update dressed `_src/body_*.png` (owned art, same 128 origin).
-2. Run `py tool/build_owned_gear_layers.py` — the **only** doll writer. It
+2. Run `py -3 tool/build_owned_gear_layers.py` — the **only** doll writer. It
    builds everything in `tool/out/doll_stage/char` (bodies with the face and
    haircut, cloth-only tint masks, t0/t2, short/broad styles, materials,
    class marks, icons, race clips), runs facit there, and leaves live art
@@ -54,13 +55,13 @@ Weapons / shields are often **not** in `_src`. They need authored overlays under
    The file list is `tool/paper_doll_manifest.py`. Do not run
    `derive_armor_material_variants.py` or `make_gear_slot_icons.py` alone —
    they are build steps. There is no `derive_armor_variants.py` any more.
-3. Inspect `tool/preview_doll_<family>.png` (armor stack). Must read as the same
+3. Inspect `tool/preview_doll_<family>.png` and `tool/out/facit/preview_doll_<family>*.png` (armor stack). Must read as the same
    character as `_src`, not a grey mushroom head.
-4. Rogue native leather (body + helm): `py tool/upgrade_native_body_src.py rogue`
-   then `py tool/refresh_native_gear.py`. Mage/healer:
-   `py tool/upgrade_native_body_src.py mage` (hat pixels are kept). Both only
+4. Rogue native leather (body + helm): `py -3 tool/upgrade_native_body_src.py rogue`
+   then `py -3 tool/refresh_native_gear.py`. Mage/healer:
+   `py -3 tool/upgrade_native_body_src.py mage` (hat pixels are kept). Both only
    write inputs (`_src`, `_authored`); build and publish after.
-5. `py tool/check_paper_doll_facit.py` checks live art: idle stack vs `_src`,
+5. `py -3 tool/check_paper_doll_facit.py` checks live art: idle stack vs `_src`,
    face ownership, styles, manifest, and the lock. The build already ran it
    on the staged copy; publish relocks. Never relock over a red facit.
 
@@ -81,8 +82,8 @@ a chest sash/tabard mask painted at runtime (`*_dye.png`), not a PNG per drop.
 6. Gear pictures (a new weapon, helm, or material) follow skill `gear-art`:
    a hook, then `style_lock` from `tool/gear_style.py`. No hue-only copy,
    no flat fill, no weapon outside the proportion table.
-7. Hand art moved? `py tool/gen_owned_gear_grips.py`, then
-   `py tool/audit_anchors.py` (findings must be empty).
+7. Hand art moved? `py -3 tool/gen_owned_gear_grips.py`, then
+   `py -3 tool/audit_anchors.py` (findings must be empty).
 8. Only then full `flutter run` on A56 (PNG bytes need a rebuild, not hot reload).
 9. Dart tests prove paths/layers; **facit gate proves looks**.
 
@@ -97,17 +98,17 @@ For Must rules, authored overrides, and A56 checks, read
 - Auto-strip armor luminance onto body (brown plate blocks)
 - **Invent** helm / cape / chest / legs with `ImageDraw` shapes
 - Ghost t0 on empty slots. Jewelry/flask on the body
-- `py tool/process_char_bodies.py` (it refuses; it used to crop bodies)
+- `py -3 tool/process_char_bodies.py` (it refuses; it used to crop bodies)
 - Declare done from “layer paths exist” alone — facit / preview must pass
 - Tune placeholder ellipses to chase A56 symptoms
 
 ## Tests
 
 ```bash
-py tool/build_owned_gear_layers.py
-py tool/gen_owned_gear_grips.py   # only when hand art moved
-py tool/check_paper_doll_facit.py # add --relock after deliberate art changes
-py tool/audit_anchors.py
+py -3 tool/build_owned_gear_layers.py
+py -3 tool/gen_owned_gear_grips.py   # only when hand art moved
+py -3 tool/check_paper_doll_facit.py # add --relock after deliberate art changes
+py -3 tool/audit_anchors.py
 flutter test test/visual
 ```
 
@@ -115,3 +116,9 @@ Common chest must add a torso layer (`chest_t0_*.png`). Empty chest = body only.
 Jewelry = no body layer. Every `OwnedGearAssets.allAssetPaths` file exists.
 Facit gate must pass for all four families (idle stack vs `_src/body_idle`).
 Dungeon walk/attack = poser body + same idle overlays as GEAR.
+
+## Done when
+
+- `py -3 tool/check_paper_doll_facit.py` is green and `flutter test test/visual` passes.
+- A hand picture moved: `py -3 tool/audit_anchors.py` has no findings.
+- A green lookbook only proves the rest pose. Judge a moving hero on the skeleton (`HeroRigPainter`) on the A56.

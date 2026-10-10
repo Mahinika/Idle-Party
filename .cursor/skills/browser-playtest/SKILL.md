@@ -5,7 +5,7 @@ description: >-
   WebClickBridge when the agent must click in Cursor's browser, Android cannot
   run, or a web click path should become a Playwright script under
   `tool/playtest_*.py`. Do not use for the owner's live look or judging UI
-  (a56-playtest) or combat balance (share-fast).
+  (a56-playtest) or combat balance (grinding-until-pass).
 ---
 
 # Browser playtest (Idle Party)
@@ -74,9 +74,9 @@ Do **not** rely on raw canvas coordinate clicks alone; full-bleed art used to st
 | Step | Action |
 |------|--------|
 | Title | `SKIP` (boot story) → `CONTINUE` or `NEW GAME` → `START` (confirm `OVERWRITE` if prompted) |
-| Tips | `SKIP ALL TIPS` or `GOT IT` |
+| Tips | One-line coach hints sit on the real control; nothing to dismiss. `GOT IT` only closes the PATCH NOTES overlay |
 | Hub | `ENTER DUNGEON` |
-| Dungeon | `FARM` / `PUSH` (tip may say LOOP FARM / CLIMB PUSH), `God Hand ready`, `Use healing flask`, `GEAR` / `GOLD` / `ESSENCE` / `MORE` / `LEAVE` |
+| Dungeon | `FARM` / `PUSH` (coach line: `FARM loops loot. PUSH climbs.`), `God Hand ready`, `Use healing FLASK` or `Use healing BANDAGE`, `GEAR` / `GOLD` / `ESSENCE` / `MORE` / `LEAVE` |
 
 After each click: wait briefly, new snapshot/screenshot, then decide. Stop after ~4 failed attempts on the same control; report what you saw.
 
@@ -105,13 +105,9 @@ Settings (debug builds): **DEV: SPEED 1x (tap → 10x)** toggles the same knob.
 
 If bridge missing: hard-reload after `flutter run` (hot restart may be enough; full relaunch if not).
 
-## Faster playtests
-
-After boot, set `window.__idlePartySetSpeed(10)` so combat runs ~10 sim steps per frame. Keep UI clicks at normal cadence; only dungeon combat is accelerated.
-
 ## Hub polish smoke
 
-After hub / What’s New / weekly / guides changes, follow **hub-smoke** (`.cursor/skills/hub-smoke/SKILL.md`) — short checklist for MORE badge, weekly n/3, GEAR tabs, and God Hand tip.
+Hub checklist: `hub-smoke` (run it on the A56; use this skill only as its web fallback).
 
 ## Record a flow as a script
 
@@ -147,3 +143,9 @@ Browser playtest:
 - [ ] screenshot evidence of result
 - [ ] unlock
 ```
+
+## Done when
+
+- The flow ran at 360×780 and a screenshot shows the result.
+- A flow needed again is a script under `tool/playtest_*.py`.
+- The report says the A56 checks did not run.

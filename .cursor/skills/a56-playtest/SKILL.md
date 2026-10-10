@@ -4,7 +4,8 @@ description: >-
   Default live look for Idle Party: Samsung A56 Android emulator + flutter run
   (hot reload). Use when the owner should see the app, after UI/hub/dungeon
   chrome, when the owner says "show me the app" / "visa spelet", or instead
-  of Flutter web in a browser tab.
+  of Flutter web in a browser tab. Do not use for the ten-minute fault
+  round (playtest) or the hub checklist (hub-smoke).
 ---
 
 # A56 playtest (Idle Party)
@@ -51,19 +52,10 @@ Stacked `flutter run -d web-server` on 8080 / 8082–8088 is how we showed
 **old UI**. If you find several of those, kill them. Keep **one** Android
 `flutter run`.
 
-## Recreate the AVD (only if missing)
+## AVD missing or slow
 
-```bash
-avdmanager create avd -n Samsung_A56 -k "system-images;android-36;google_apis;x86_64" -d pixel_6 --force
-```
-
-Then set in `~/.android/avd/Samsung_A56.avd/config.ini`:
-
-- `hw.lcd.width=1080` · `hw.lcd.height=2340` · `hw.lcd.density=480`
-- `hw.device.manufacturer=Samsung` · `hw.device.name=Galaxy A56`
-- `showDeviceFrame=no` · `skin.name=1080x2340`
-
-Google does not ship One UI. **Screen size** is what we need.
+Recreate it or fix its RAM (keep 6G, then cold-boot once): read
+[reference.md](reference.md).
 
 ## See the app (ADB)
 
@@ -130,3 +122,8 @@ edits still has the old isolate — that is not “the new build”.
 - Ten-minute fault round: `playtest`
 - Agent-driven web clicks: `browser-playtest` (fallback)
 - Analyze/tests: `flutter-verify`
+
+## Done when
+
+- One `flutter run` on the A56 is attached and runs this batch (hot restart, or a new run after asset changes).
+- No `web-server` tab is left running.
