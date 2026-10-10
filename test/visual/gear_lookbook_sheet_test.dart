@@ -785,7 +785,7 @@ Future<void> _saveSheet(
   // Pump so each decode step can finish, and let real IO run between
   // pumps. A warm cache usually needs one pass, not a fixed half-second.
   final sw = Stopwatch()..start();
-  while (HeroDollSprite.pendingLoads > 0 && sw.elapsedMilliseconds < 2000) {
+  while (HeroDollSprite.pendingLoads > 0 && sw.elapsedMilliseconds < 8000) {
     await tester.pump();
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 16)),

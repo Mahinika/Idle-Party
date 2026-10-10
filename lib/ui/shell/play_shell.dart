@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 
 import '../../core/chase_dispatcher.dart';
@@ -10,6 +12,7 @@ import '../../core/menu_router.dart';
 import '../confirm_dialogs.dart';
 import '../feedback_toast.dart';
 import '../first_session_tips.dart';
+import '../../visual/rig/hero_rig_painter.dart';
 import '../hub_screen.dart';
 import '../is2_shell.dart';
 import 'app_bottom_bar.dart';
@@ -44,6 +47,7 @@ class _PlayShellState extends State<PlayShell> {
     _inDungeon = director.state.inDungeon;
     router.addListener(_onRouter);
     _syncPause();
+    unawaited(HeroRigPainter.warmParty(director.state.heroes));
   }
 
   @override
@@ -58,6 +62,9 @@ class _PlayShellState extends State<PlayShell> {
       router.close();
       final nav = director.takePendingHubNav();
       if (nav != null) router.apply(nav);
+    }
+    if (!_inDungeon && now) {
+      unawaited(HeroRigPainter.warmParty(director.state.heroes));
     }
     if (_inDungeon != now) {
       _inDungeon = now;

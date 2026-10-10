@@ -136,13 +136,6 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
     try {
       body = await DecodedImageCache.load(bodyPath, targetWidth: decodeW);
       await HeroRigLibrary.load(BodyFamilyCatalog.familyFor(widget.hero));
-      // Paint body stub ASAP so GEAR never stalls on empty (#98).
-      if (mounted && gen == _loadGen) {
-        setState(() {
-          _formPath = null;
-          _body = body;
-        });
-      }
       final pose = CharacterVisualPose.resolve(
         hero: widget.hero,
         anim: const HeroAnimPose(kind: HeroAnimKind.idle, frame: 0),
@@ -186,6 +179,14 @@ class _HeroDollSpriteState extends State<HeroDollSprite> {
       debugPrint('HeroDollSprite body/overlays load failed: $e\n$st');
     }
 
+    if (!mounted || gen != _loadGen) return;
+    // Stay on the class picture until the skeleton is cut. Painting the
+    // body early showed the still doll for several seconds.
+    try {
+      await HeroRigPainter.warmHero(widget.hero);
+    } catch (e, st) {
+      debugPrint('HeroDollSprite rig warm failed: $e\n$st');
+    }
     if (!mounted || gen != _loadGen) return;
     setState(() {
       _formPath = null;

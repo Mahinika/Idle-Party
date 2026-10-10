@@ -3,10 +3,13 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 
+import '../../models/hero.dart';
+import '../../ui/decoded_image_cache.dart';
 import '../body_family.dart';
 import '../character_layer.dart';
 import '../character_visual_painter.dart';
 import '../character_visual_pose.dart';
+import '../hero_anim_state.dart';
 import '../owned_gear_assets.dart';
 import '../shadowform.dart';
 import 'hero_rig_library.dart';
@@ -124,6 +127,57 @@ abstract final class HeroRigPainter {
       images: images,
       pose: pose,
       alpha: alpha,
+    );
+  }
+
+  /// Cuts the active party's skeletons before the dungeon paints them.
+  ///
+  /// The first dungeon frames used to show the still paper doll while each
+  /// layer waited on a GPU readback. Starting this on the hub, and waiting
+  /// for it before the owned bodies go up, keeps that doll off the fight.
+  static Future<void> warmParty(Iterable<PartyHero> heroes) async {
+    for (final hero in heroes) {
+      try {
+        await warmHero(hero);
+      } catch (_) {}
+    }
+  }
+
+  static Future<void> warmHero(PartyHero hero) async {
+    final family = BodyFamilyCatalog.familyFor(hero);
+    await HeroRigLibrary.load(family);
+    final rig = HeroRigLibrary.peek(family);
+    if (rig == null) return;
+    const idle = HeroAnimPose(kind: HeroAnimKind.idle, frame: 0);
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: idle,
+      owned: true,
+    );
+    final paths = <String>{
+      if (pose.bodyIdleAsset != null) pose.bodyIdleAsset!,
+      BodyFamilyCatalog.assetFor(hero, HeroAnimKind.idle),
+      if (pose.bodyTintAsset != null) pose.bodyTintAsset!,
+      for (final layer in pose.orderedLayers()) ...[
+        if (layer.ownedAsset != null) layer.ownedAsset!,
+        if (layer.dyeMaskAsset != null) layer.dyeMaskAsset!,
+      ],
+    };
+    final images = <String, ui.Image>{};
+    for (final path in paths) {
+      try {
+        images[path] = await DecodedImageCache.load(path, targetWidth: 128);
+      } catch (_) {}
+    }
+    final bodyKey = rigBodyKey(pose, images);
+    final body = bodyKey == null ? null : images[bodyKey];
+    if (bodyKey == null || body == null) return;
+    await warm(
+      rig: rig,
+      bodyImage: body,
+      bodyKey: bodyKey,
+      images: images,
+      pose: pose,
     );
   }
 
