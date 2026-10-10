@@ -23,6 +23,7 @@ till Ranked GR. I fighten säger Gauntlet nästa boss, Ranked GR klocka
 utan gear, Farm Rift loot utan fail-timer, och Ashen veckans ord.
 En choke säger CHOKE, en skattkammare CHEST, en shrine SHRINE.
 Partyraden i grottan visar varje hjältes namn.
+Gauntlet väljs som MIGHT, WARD eller GREED innan klättringen.
 Produktion är fortfarande **1.12.194**.
 
 ---

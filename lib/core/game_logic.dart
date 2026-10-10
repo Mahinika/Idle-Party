@@ -23,6 +23,7 @@ import 'dungeon_generator.dart';
 import 'economy_service.dart';
 import 'blessing_constellation.dart';
 import 'game_state.dart';
+import 'gauntlet_pact.dart';
 import 'check_in.dart';
 import 'comeback_chest.dart';
 import 'keystone.dart';
@@ -563,7 +564,8 @@ class GameLogic {
   /// floors. Wipe or leave returns to hub. Not a 16th PATH zone.
   static const int gauntletBossEvery = 5;
 
-  static GameState enterGauntlet(GameState state) => _enterGauntlet(state);
+  static GameState enterGauntlet(GameState state, {GauntletPact? pact}) =>
+      _enterGauntlet(state, pact: pact);
 
   static bool canEnterRift(GameState state) =>
       endgameUnlocked(state) && !state.inDungeon;
@@ -2378,7 +2380,10 @@ class GameLogic {
     );
     final nextRoom = nextFloor.first;
     final gauntletEss = gauntlet
-        ? gauntletEssenceForFloor(room.floorNumber, boss: clearedBoss)
+        ? GauntletPacts.essence(
+            gauntletEssenceForFloor(room.floorNumber, boss: clearedBoss),
+            GauntletPacts.parse(awarded.gauntletPact),
+          )
         : 0;
     var progressed = awarded.copyWith(
       gold: awarded.gold + goldAwarded,

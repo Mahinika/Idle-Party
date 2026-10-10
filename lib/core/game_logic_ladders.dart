@@ -40,7 +40,7 @@ GameState _recordGauntletRun(
   );
 }
 
-GameState _enterGauntlet(GameState state) {
+GameState _enterGauntlet(GameState state, {GauntletPact? pact}) {
   if (!GameLogic.canEnterGauntlet(state)) return state;
   const dungeonId = 'crystal';
   final layoutSeed = GameLogic.newLayoutSeed();
@@ -70,6 +70,7 @@ GameState _enterGauntlet(GameState state) {
         fromState: cleared.copyWith(inGauntlet: true),
       ),
       layoutSeed: layoutSeed,
+      gauntletPact: pact == null ? '' : pact.name,
       heroes: cleared.heroes
           .map(
             (hero) =>

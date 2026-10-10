@@ -3,6 +3,7 @@ import '../../core/ashen_crown.dart';
 import '../../core/away_fight_tip.dart';
 import '../../core/enemy_flavor.dart';
 import '../../core/gauntlet_anomaly.dart';
+import '../../core/gauntlet_pact.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
@@ -395,10 +396,13 @@ class DungeonTopHud extends StatelessWidget {
                 break;
               }
             }
-            return GauntletAnomalies.climbPlaceLine(
+            final line = GauntletAnomalies.climbPlaceLine(
               floor,
               liveBossName: bossName,
             );
+            final pact = GauntletPacts.parse(state.gauntletPact);
+            if (pact == null) return line;
+            return '$line · ${GauntletPacts.title(pact)}';
           }()
         : state.inRift
         ? Rift.roomLine(state.riftTier)

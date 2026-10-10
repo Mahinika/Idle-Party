@@ -16,6 +16,7 @@ import '../models/pet.dart';
 import '../models/vfx_quality.dart';
 import 'ad_boost.dart';
 import 'blessing_constellation.dart';
+import 'gauntlet_pact.dart';
 import 'keystone.dart';
 import 'party_name_filter.dart';
 import 'relics.dart';
@@ -102,6 +103,7 @@ class GameState {
     this.godHandLevel = 0,
     this.layoutSeed = 0,
     this.roomHappeningClaim = '',
+    this.gauntletPact = '',
     this.soundMuted = false,
     this.sfxVolume = 0.45,
     this.ambienceVolume = 0.20,
@@ -331,6 +333,9 @@ class GameState {
   /// Chest, trap, or altar already taken this visit. Empty if none.
   /// Resets on Ascend. Old saves load as empty.
   final String roomHappeningClaim;
+
+  /// This Gauntlet climb: might, ward, or greed. Empty outside a chosen climb.
+  final String gauntletPact;
 
   /// Settings — survive Ascend.
   final bool soundMuted;
@@ -944,9 +949,21 @@ class GameState {
     return sheet.withAttackPercent(atkPct);
   }
 
-  int effectiveHeroAttack(PartyHero hero) => ratingsFor(hero).effectiveAttack;
+  int effectiveHeroAttack(PartyHero hero) {
+    final base = ratingsFor(hero).effectiveAttack;
+    if (!inGauntlet) return base;
+    final scaled = base * GauntletPacts.attackMul(GauntletPacts.parse(gauntletPact));
+    return scaled.round();
+  }
 
-  int effectiveHeroDefense(PartyHero hero) => ratingsFor(hero).defense;
+  int effectiveHeroDefense(PartyHero hero) {
+    final base = ratingsFor(hero).defense;
+    if (!inGauntlet) return base;
+    final scaled =
+        base * GauntletPacts.defenseMul(GauntletPacts.parse(gauntletPact));
+    final rounded = scaled.round();
+    return rounded < 1 ? 1 : rounded;
+  }
 
   int effectiveHeroMaxHp(PartyHero hero) => ratingsFor(hero).maxHp;
 
@@ -1095,6 +1112,7 @@ class GameState {
     int? godHandLevel,
     int? layoutSeed,
     String? roomHappeningClaim,
+    String? gauntletPact,
     bool? soundMuted,
     double? sfxVolume,
     double? ambienceVolume,
@@ -1237,6 +1255,7 @@ class GameState {
       godHandLevel: godHandLevel ?? this.godHandLevel,
       layoutSeed: layoutSeed ?? this.layoutSeed,
       roomHappeningClaim: roomHappeningClaim ?? this.roomHappeningClaim,
+      gauntletPact: gauntletPact ?? this.gauntletPact,
       soundMuted: soundMuted ?? this.soundMuted,
       sfxVolume: sfxVolume ?? this.sfxVolume,
       ambienceVolume: ambienceVolume ?? this.ambienceVolume,
@@ -1411,6 +1430,7 @@ class GameState {
     'godHandLevel': godHandLevel,
     'layoutSeed': layoutSeed,
     'roomHappeningClaim': roomHappeningClaim,
+    'gauntletPact': gauntletPact,
     'soundMuted': soundMuted,
     'sfxVolume': sfxVolume,
     'ambienceVolume': ambienceVolume,
@@ -1670,6 +1690,7 @@ class GameState {
       godHandLevel: _jsonInt(json['godHandLevel']),
       layoutSeed: _jsonInt(json['layoutSeed']),
       roomHappeningClaim: json['roomHappeningClaim'] as String? ?? '',
+      gauntletPact: json['gauntletPact'] as String? ?? '',
       soundMuted: (json['soundMuted'] as bool?) ?? false,
       sfxVolume: ((json['sfxVolume'] as num?)?.toDouble() ?? 0.45).clamp(
         0.0,

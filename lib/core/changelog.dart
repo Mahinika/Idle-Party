@@ -107,6 +107,7 @@ abstract final class ChangelogCatalog {
         'Ashen Crown shows the week\'s telegraph on the fight line before the boss shouts it.',
         'Standing in a choke says CHOKE, a treasure room says CHEST, and a shrine says SHRINE.',
         'The party row in a cave shows each hero\'s name.',
+        'Gauntlet asks you to pick a climb: MIGHT hits harder, WARD takes less, GREED pays double essence and the party is softer.',
         'After that boss, if today\'s reward is already claimed, the hub says tomorrow is one cave until the first Ascend.',
         'Welcome Back says one cave fills an empty vault. It says the prize is waiting only when CLAIM is ready.',
         'Before the first Ascend, a boss that falls while you are away does not tell you to Ascend.',

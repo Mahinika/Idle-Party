@@ -33,13 +33,18 @@ class GauntletHubPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           best <= 0
-              ? 'Boss every 5 floors. Picture stays Crystal Warden; the tell word cycles.'
-              : 'Best clear F$best. Picture stays Crystal Warden; the tell word cycles.',
+              ? 'Pick a climb. Boss every 5 floors.'
+              : 'Best clear F$best. Pick a climb. Boss every 5 floors.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'MIGHT hits harder. WARD takes less. GREED pays double essence and the party is softer.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         GameButton(
-          label: 'ENTER GAUNTLET',
+          label: 'CHOOSE A CLIMB',
           style: GameButtonStyle.brown,
           onPressed: GameLogic.canEnterGauntlet(state)
               ? () => confirmGauntletRun(context, director)

@@ -4,6 +4,7 @@ import 'package:idle_party/core/dungeon_generator.dart';
 import 'package:idle_party/core/enemy_flavor.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/gauntlet_anomaly.dart';
+import 'package:idle_party/core/gauntlet_pact.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/spatial/floor_blueprint.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
@@ -118,6 +119,41 @@ void main() {
       greaterThan(base.storyChambers.length),
     );
     expect(_gauntletWorld(38).map.gates, isNotEmpty);
+  });
+
+  test('a Gauntlet climb can hit harder, take less, or pay double essence', () {
+    final baseEss = GameLogic.gauntletEssenceForFloor(5, boss: true);
+    expect(GauntletPacts.essence(baseEss, GauntletPact.greed), baseEss * 2);
+    expect(GauntletPacts.essence(baseEss, GauntletPact.might), baseEss);
+    expect(GauntletPacts.attackMul(GauntletPact.might), 1.2);
+    expect(GauntletPacts.defenseMul(GauntletPact.ward), 1.25);
+    expect(GauntletPacts.defenseMul(GauntletPact.greed), 0.85);
+
+    var state = GameLogic.createInitialState(now: DateTime.utc(2026, 10, 10));
+    state = state.copyWith(
+      heroRoster: [
+        for (final h in state.heroRoster)
+          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+      ],
+    );
+    final hero = state.heroes.first;
+    final atk = state.effectiveHeroAttack(hero);
+    final def = state.effectiveHeroDefense(hero);
+    final might = GameLogic.enterGauntlet(state, pact: GauntletPact.might);
+    final ward = GameLogic.enterGauntlet(state, pact: GauntletPact.ward);
+    final greed = GameLogic.enterGauntlet(state, pact: GauntletPact.greed);
+    expect(might.gauntletPact, 'might');
+    expect(might.effectiveHeroAttack(might.heroes.first), (atk * 1.2).round());
+    expect(
+      ward.effectiveHeroDefense(ward.heroes.first),
+      (def * 1.25).round(),
+    );
+    expect(
+      greed.effectiveHeroDefense(greed.heroes.first),
+      (def * 0.85).round(),
+    );
+    final raw = state.toJson()..remove('gauntletPact');
+    expect(GameLogic.stateFromJson(raw).gauntletPact, '');
   });
 }
 

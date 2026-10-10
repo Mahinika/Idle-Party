@@ -24,6 +24,7 @@ import 'debug_play_log.dart';
 import 'funnel_analytics.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'gauntlet_pact.dart';
 import 'game_storage.dart';
 import 'gear_service.dart';
 import 'hero_identity.dart';
@@ -1946,7 +1947,7 @@ class GameDirector extends ChangeNotifier {
   int get dailyEchoFloor =>
       MetaSystems.dailyEchoFloor(_state, DateTime.now().toUtc());
 
-  void enterGauntlet() {
+  void enterGauntlet({GauntletPact? pact}) {
     if (_isLoading) return;
     if (!GameLogic.canEnterGauntlet(_state)) {
       showToast(
@@ -1958,7 +1959,7 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     _flushHubIdle();
-    _state = GameLogic.enterGauntlet(_state);
+    _state = GameLogic.enterGauntlet(_state, pact: pact);
     _lastStashLen = _state.gearStash.length;
     _autosaveAccum = 0;
     _beginRunIncomeSession();
@@ -1967,8 +1968,11 @@ class GameDirector extends ChangeNotifier {
       _startSpatialLoop();
     }
     _syncHubIdleTimer();
+    final chosen = GauntletPacts.parse(_state.gauntletPact);
     showToast(
-      'Gauntlet climb · Crystal Spire · best F${_state.metaDepth.gauntletBestFloor}',
+      chosen == null
+          ? 'Gauntlet climb · Crystal Spire · best F${_state.metaDepth.gauntletBestFloor}'
+          : 'Gauntlet ${GauntletPacts.title(chosen)} · ${GauntletPacts.blurb(chosen)}',
       life: 3.0,
     );
     notifyListeners();
