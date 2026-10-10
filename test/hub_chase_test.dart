@@ -711,6 +711,29 @@ void main() {
     );
   });
 
+  test('after Gauntlet floor 100 the hub names Ranked GR', () {
+    final state = _withPartyMaxLevel(
+      GameLogic.createInitialState(now: now).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+        hardmodeLevel: GameLogic.maxAscensionLevel,
+        lastDailyDate: MetaSystems.dailyDateKey(now),
+        dailyClaimed: true,
+        metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
+          dailyVaultClaimed: true,
+          gauntletBestFloor: GauntletMilestones.campaignFloor,
+          claimedGauntletMilestones: const ['f25', 'f50', 'f100'],
+          grBestTier: 0,
+        ),
+        highestDungeonCleared: 14,
+        lifetimeGoldEarned: 50_000_000,
+      ),
+    );
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.greaterRiftMilestone);
+    expect(chase.title, 'First Ranked GR');
+    expect(chase.title, isNot(contains('150')));
+  });
+
   test('AL20 sub-max party chase names the Lv100 gate, not AL20', () {
     final base = GameLogic.createInitialState(now: now);
     final state = base.copyWith(

@@ -192,6 +192,10 @@ abstract final class WillRanks {
 abstract final class GauntletMilestones {
   static const floors = <int>[25, 50, 100, 150, 200];
 
+  /// TODAY follows Spire through this floor, then Ranked GR. Later floors
+  /// are a personal best once the other hunts are quiet.
+  static const int campaignFloor = 100;
+
   static int essenceForFloor(int floor) => switch (floor) {
     25 => 22,
     50 => 45,

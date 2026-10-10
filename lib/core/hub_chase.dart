@@ -915,6 +915,7 @@ class HubChase {
     final best = state.metaDepth.gauntletBestFloor;
     final claimed = state.metaDepth.claimedGauntletMilestones;
     for (final floor in GauntletMilestones.floors) {
+      if (floor > GauntletMilestones.campaignFloor) continue;
       final id = GauntletMilestones.claimId(floor);
       if (claimed.contains(id)) continue;
       if (best >= floor) {
@@ -958,8 +959,7 @@ class HubChase {
   static HubChase? _gauntletPbChase(GameState state) {
     if (!GameLogic.endgameUnlocked(state)) return null;
     final best = state.metaDepth.gauntletBestFloor;
-    final last = GauntletMilestones.floors.last;
-    if (best < last) return null;
+    if (best < GauntletMilestones.campaignFloor) return null;
     final nextBoss = ((best ~/ 5) + 1) * 5;
     final nextMilestone = GauntletMilestones.floors
         .where((f) => f > best)

@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-10 — Gauntlet kept the night past floor 100
+
+- The hunt order says Spire is the job through floor 100, then Ranked GR. Floors 150 and 200 were still the hub job, so Ranked GR waited until floor 200. After floor 100 the hub now names Ranked GR. Later Spire floors stay a personal best when the other hunts are quiet.
+
 ## 2026-10-09 — Ranked GR and Farm Rift opened on rank 5
 
 - A new Ranked GR and a new Farm Rift named rank 5. The card now names the next rank, starting at 1. The rank 5 prize stays in the detail.
