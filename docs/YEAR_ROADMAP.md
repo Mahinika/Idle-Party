@@ -22,6 +22,7 @@ Rift namnger nästa rank, och efter Gauntlet våning 100 går hubben vidare
 till Ranked GR. I fighten säger Gauntlet nästa boss, Ranked GR klocka
 utan gear, Farm Rift loot utan fail-timer, och Ashen veckans ord.
 En choke säger CHOKE, en skattkammare CHEST, en shrine SHRINE.
+Partyraden i grottan visar varje hjältes namn.
 Produktion är fortfarande **1.12.194**.
 
 ---

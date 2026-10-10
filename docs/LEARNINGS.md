@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-10 — the party row names the person
+
+- The floor sentence already used a hero's name, and the row said Shield or PROT. The row now shows the name, so the person on the floor and the row are the same. The kit chip still says the role.
+
 ## 2026-10-10 — the room you are standing in has a word
 
 - The floor already had a job (choke, treasure, shrine) but the fight line named the pack. Standing in that room now says CHOKE, CHEST, or SHRINE. Other rooms still name the pack.

@@ -23,7 +23,16 @@ import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 import 'kit_hud_chips.dart';
 
-/// Spec chip + level so `PROT L27` does not ellipsis in the party strip.
+/// The person on the crawl strip. An empty name falls back to the role.
+String partyStripName(PartyHero hero, {required bool plainEnglish}) {
+  final name = hero.name.trim();
+  if (name.isEmpty) {
+    return hero.displayRoleLabel(plainEnglish: plainEnglish);
+  }
+  return name;
+}
+
+/// Name + level on the crawl strip. A long name ellipsizes; the level stays.
 class PartyHudSpecLine extends StatelessWidget {
   const PartyHudSpecLine({
     super.key,
@@ -812,8 +821,8 @@ class _PartyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final frac = maxHp <= 0 ? 0.0 : (liveHp / maxHp).clamp(0.0, 1.0);
-    // Keep full shortLabel (PROT/COMBAT/…) — only ellipsis if the strip is tiny.
-    final roleShort = hero.displayRoleLabel(plainEnglish: plainEnglish);
+    // The person, so the row matches the name left on the floor.
+    final who = partyStripName(hero, plainEnglish: plainEnglish);
     final kitActor = spatial;
     final showKit =
         !stripOnly && kitOpen && kitActor != null && kitActor.isAlive;
@@ -891,7 +900,7 @@ class _PartyRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   PartyHudSpecLine(
-                    spec: roleShort,
+                    spec: who,
                     level: hero.level,
                     color: GameTheme.parchment,
                     extra: _companionLine(spatial, world, hero.specId) ?? '',
@@ -959,7 +968,7 @@ class _PartyRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     PartyHudSpecLine(
-                      spec: roleShort,
+                      spec: who,
                       level: hero.level,
                       color: GameTheme.parchment,
                       extra: () {
