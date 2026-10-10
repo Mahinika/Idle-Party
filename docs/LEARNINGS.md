@@ -10,6 +10,10 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
 - The Spire was one climb with different words. Before you enter you now pick MIGHT (hit harder), WARD (take less), or GREED (double essence, softer party). The party still fights on its own after the pick.
 
+## 2026-10-10 — the first Gauntlet night is four squeezes
+
+- Floors 1–4 are tight corridors, a swarm, a borrowed boss tell, and extra gates. Floor 5 is the boss. Wipe or leave already returned to the hub. Later floors still squeeze only on the old rhythm.
+
 ## 2026-10-10 — the party row names the person
 
 - The floor sentence already used a hero's name, and the row said Shield or PROT. The row now shows the name, so the person on the floor and the row are the same. The kit chip still says the role.

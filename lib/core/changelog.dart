@@ -102,7 +102,7 @@ abstract final class ChangelogCatalog {
         'After KEY, the hub names the next Gauntlet boss. The floor 25 prize stays on the card.',
         'Ranked GR and Farm Rift name the next rank. The rank 5 prize stays on the card.',
         'After Gauntlet floor 100, the hub moves on to Ranked GR. Later Spire floors stay a personal best.',
-        'A Gauntlet climb names the next boss. Floor 3 still names the Spire squeeze.',
+        'The first Gauntlet night is four floors, then a boss: tight corridors, a swarm, a borrowed boss tell, and extra gates. Later floors still squeeze on the old rhythm. Wipe or leave still returns to the hub.',
         'Ranked GR in the fight says no gear and a clock. Farm Rift says loot and no fail timer.',
         'Ashen Crown shows the week\'s telegraph on the fight line before the boss shouts it.',
         'Standing in a choke says CHOKE, a treasure room says CHEST, and a shrine says SHRINE.',

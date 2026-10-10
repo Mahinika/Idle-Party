@@ -23,6 +23,9 @@ till Ranked GR. I fighten säger Gauntlet nästa boss, Ranked GR klocka
 utan gear, Farm Rift loot utan fail-timer, och Ashen veckans ord.
 En choke säger CHOKE, en skattkammare CHEST, en shrine SHRINE.
 Partyraden i grottan visar varje hjältes namn.
+Första Gauntlet-natten är våning 1–4: trångt, svärm, eko, grindar.
+Våning 5 är boss. Wipe eller leave går till hubben. Senare våningar
+klämmer fortfarande bara på den gamla rytmen.
 Gauntlet väljs som MIGHT, WARD eller GREED innan klättringen.
 Produktion är fortfarande **1.12.194**.
 
@@ -33,11 +36,9 @@ Produktion är fortfarande **1.12.194**.
 Tre rubriker. En per släpp om du namnger raden. Slack för analyze sitter
 i alla tre. Ingen fjärde feature.
 
-1. **Gauntlet är ett torn** — inne i fighten, inte bara på hubbkortet.
-   Boss var 5:e våning. Mellan bossarna klämmer Spire (TIGHT, SWARM,
-   ECHO, GATES). Wipe eller leave går tillbaka till hubben. Första skivan
-   är våning 1–5: en ny Spire-natt ska kännas som tornet innan priset på
-   våning 25.
+1. **Gauntlet är ett torn** — första natten (våning 1–5) sitter redan i
+   1.12.195. Kvar: samma fyra kläm mellan senare bossar, inte bara den
+   gamla rytmen, så tornet håller efter priset på våning 25.
 
 2. **Ranked GR och Farm Rift är olika nätter** — Ranked GR är en klocka
    i Mothveil, ingen gear mitt i runnet. Farm Rift är Stormwake, loot

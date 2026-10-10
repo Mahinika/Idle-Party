@@ -8,17 +8,46 @@ import 'package:idle_party/core/gauntlet_pact.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/spatial/floor_blueprint.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
+import 'package:idle_party/spatial/tile_map.dart';
 
 void main() {
-  test('Gauntlet anomalies skip boss floors and cycle on F3/8/13/18', () {
-    expect(GauntletAnomalies.forFloor(5, inGauntlet: true), isNull);
-    expect(GauntletAnomalies.forFloor(10, inGauntlet: true), isNull);
-    expect(GauntletAnomalies.forFloor(1, inGauntlet: true), isNull);
-    expect(GauntletAnomalies.forFloor(3, inGauntlet: false), isNull);
+  test('Gauntlet opening night is four squeezes then a boss', () {
+    expect(GauntletAnomalies.forFloor(1, inGauntlet: false), isNull);
     expect(
-      GauntletAnomalies.forFloor(3, inGauntlet: true),
+      GauntletAnomalies.forFloor(1, inGauntlet: true),
       GauntletAnomaly.tightCorridors,
     );
+    expect(
+      GauntletAnomalies.forFloor(2, inGauntlet: true),
+      GauntletAnomaly.swarmUprising,
+    );
+    expect(
+      GauntletAnomalies.forFloor(3, inGauntlet: true),
+      GauntletAnomaly.bossEcho,
+    );
+    expect(
+      GauntletAnomalies.forFloor(4, inGauntlet: true),
+      GauntletAnomaly.gateGauntlet,
+    );
+    expect(GauntletAnomalies.forFloor(5, inGauntlet: true), isNull);
+    expect(GauntletAnomalies.forFloor(6, inGauntlet: true), isNull);
+    expect(GauntletAnomalies.forFloor(7, inGauntlet: true), isNull);
+    expect(GauntletAnomalies.climbPlaceLine(1), 'CLIMB · TIGHT');
+    expect(GauntletAnomalies.climbPlaceLine(2), 'CLIMB · SWARM');
+    expect(GauntletAnomalies.climbPlaceLine(3), 'CLIMB · ECHO');
+    expect(GauntletAnomalies.climbPlaceLine(4), 'CLIMB · GATES');
+    expect(GauntletAnomalies.climbPlaceLine(5), 'CLIMB · boss F5');
+    expect(
+      GauntletAnomalies.climbPlaceLine(5, liveBossName: 'Spire Warden'),
+      'CLIMB · Spire Warden',
+    );
+    expect(GauntletAnomalies.nextBossFloor(1), 5);
+    expect(GauntletAnomalies.nextAnomalyFloor(1), 2);
+    expect(GauntletAnomalies.nextAnomalyFloor(4), 8);
+  });
+
+  test('Gauntlet anomalies skip boss floors and cycle after the opening night', () {
+    expect(GauntletAnomalies.forFloor(10, inGauntlet: true), isNull);
     expect(
       GauntletAnomalies.forFloor(8, inGauntlet: true),
       GauntletAnomaly.swarmUprising,
@@ -37,17 +66,62 @@ void main() {
       GauntletAnomaly.tightCorridors,
     );
     expect(GauntletAnomalies.nextBossFloor(3), 5);
-    expect(GauntletAnomalies.nextAnomalyFloor(3), 8);
+    expect(GauntletAnomalies.nextAnomalyFloor(3), 4);
     expect(GauntletAnomalies.isTreasureFloor(18), isTrue);
-    expect(GauntletAnomalies.climbPlaceLine(1), 'CLIMB · boss F5');
-    expect(GauntletAnomalies.climbPlaceLine(2), 'CLIMB · boss F5');
-    expect(GauntletAnomalies.climbPlaceLine(4), 'CLIMB · boss F5');
-    expect(GauntletAnomalies.climbPlaceLine(3), 'CLIMB · TIGHT');
-    expect(
-      GauntletAnomalies.climbPlaceLine(5, liveBossName: 'Spire Warden'),
-      'CLIMB · Spire Warden',
+  });
+
+  test('opening night tight floor is narrower than a later plain floor', () {
+    final tight = _gauntletWorld(1);
+    final plain = _gauntletWorld(7);
+    expect(tight.gauntletAnomaly, GauntletAnomaly.tightCorridors);
+    expect(plain.gauntletAnomaly, isNull);
+    final tightRooms = _fightChambers(tight);
+    final plainRooms = _fightChambers(plain);
+    expect(tightRooms, isNotEmpty);
+    expect(plainRooms, isNotEmpty);
+    final tightWide = tightRooms.map((c) => c.w).reduce((a, b) => a > b ? a : b);
+    final plainWide = plainRooms.map((c) => c.w).reduce((a, b) => a > b ? a : b);
+    expect(tightWide, lessThanOrEqualTo(9));
+    expect(tightWide, lessThan(plainWide));
+  });
+
+  test('opening night swarm packs denser than the same floor without it', () {
+    final room = DungeonGenerator.generateFloorRoom(
+      floorNumber: 2,
+      ascensionLevel: 0,
+      dungeonId: 'crystal',
+      layoutSeed: 42,
+      bossEvery: GameLogic.gauntletBossEvery,
     );
-    expect(GauntletAnomalies.climbPlaceLine(5), 'CLIMB · boss F5');
+    final state = GameLogic.createInitialState(now: DateTime(2026, 9, 19));
+    final swarm = GameLogic.createEnemyGroup(
+      room,
+      dungeonId: 'crystal',
+      fromState: state.copyWith(inGauntlet: true, dungeonId: 'crystal'),
+    );
+    final plain = GameLogic.createEnemyGroup(
+      room,
+      dungeonId: 'crystal',
+      fromState: state.copyWith(inGauntlet: false, dungeonId: 'crystal'),
+    );
+    expect(swarm.length, greaterThan(plain.length));
+    expect(_gauntletWorld(2).gauntletAnomaly, GauntletAnomaly.swarmUprising);
+  });
+
+  test('opening night echo marks one trash tell on floor 3', () {
+    final echo = _gauntletWorld(3);
+    expect(echo.gauntletAnomaly, GauntletAnomaly.bossEcho);
+    expect(echo.enemies.where((e) => e.bossEcho), hasLength(1));
+    expect(echo.enemies.any((e) => e.role == EnemyRole.boss), isFalse);
+  });
+
+  test('opening night gate floor has gates before the first boss', () {
+    final gates = _gauntletWorld(4);
+    final boss = _gauntletWorld(5);
+    expect(gates.gauntletAnomaly, GauntletAnomaly.gateGauntlet);
+    expect(gates.map.gates, isNotEmpty);
+    expect(boss.gauntletAnomaly, isNull);
+    expect(boss.enemies.any((e) => e.role == EnemyRole.boss), isTrue);
   });
 
   test('Gauntlet swarm floor packs denser than the prior non-anomaly floor', () {
@@ -155,6 +229,17 @@ void main() {
     final raw = state.toJson()..remove('gauntletPact');
     expect(GameLogic.stateFromJson(raw).gauntletPact, '');
   });
+}
+
+List<Chamber> _fightChambers(SpatialWorld world) {
+  return world.map.chambers
+      .where(
+        (c) =>
+            c.beatKind != null &&
+            !c.beatKind!.isQuiet &&
+            c.beatKind != FloorBeatKind.exitHold,
+      )
+      .toList();
 }
 
 SpatialWorld _gauntletWorld(int floor) {
