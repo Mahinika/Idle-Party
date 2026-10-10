@@ -34,12 +34,19 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
           style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
         ),
         if (widget.state != null &&
-            !GameLogic.plainPlayerChrome(widget.state!) &&
             !GameLogic.showDailyRunOnHub(widget.state!)) ...[
-          const SizedBox(height: 6),
-          Text(
-            'Today: clear one cave, then CLAIM VAULT.',
-            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+          Builder(
+            builder: (context) {
+              final line = GameLogic.checkInWelcomeLine(widget.state!);
+              if (line.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  line,
+                  style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+                ),
+              );
+            },
           ),
         ],
         const SizedBox(height: 10),

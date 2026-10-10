@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
+import '../models/achievement_def.dart';
 import '../models/apex_craft.dart';
 import '../models/dungeon_mode.dart';
 import '../models/dungeon_room.dart';
@@ -3194,12 +3195,19 @@ class GameDirector extends ChangeNotifier {
   void _announceAchievementUnlocks(GameState before, GameState after) {
     if (after.achievements.length <= before.achievements.length) return;
     final known = before.achievements.toSet();
+    var gain = 0;
+    var fresh = 0;
     for (final id in after.achievements) {
       if (known.contains(id)) continue;
-      GameAudio.achievement();
-      showToast('Achievement unlocked!', life: 2.8);
-      break;
+      fresh++;
+      gain += AchievementCatalog.byId(id)?.essenceReward ?? 0;
     }
+    if (fresh == 0) return;
+    GameAudio.achievement();
+    showToast(
+      gain > 0 ? 'Achievement unlocked · +${gain}e' : 'Achievement unlocked!',
+      life: 2.8,
+    );
   }
 
   @override

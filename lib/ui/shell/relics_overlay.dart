@@ -9,6 +9,8 @@ import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 
+String _pile(int n, String one, String many) => '$n ${n == 1 ? one : many}';
+
 /// ESSENCE → Relics. Discover and level with Embers. Cinders salvage.
 class RelicsOverlay extends StatelessWidget {
   const RelicsOverlay({super.key, required this.director});
@@ -26,13 +28,15 @@ class RelicsOverlay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${md.embers} Embers · ${md.cinders} Cinders · survive Ascend',
+          '${_pile(md.embers, 'Ember', 'Embers')} · '
+          '${_pile(md.cinders, 'Cinder', 'Cinders')} · survive Ascend',
           style: GameTheme.body(size: 13, color: GameTheme.torchHot),
         ),
         const SizedBox(height: 8),
         if (next != null)
           GameButton(
-            label: 'DISCOVER ${next.name} · $discoverCost Embers',
+            label:
+                'DISCOVER ${next.name} · ${_pile(discoverCost, 'Ember', 'Embers')}',
             onPressed: md.embers >= discoverCost
                 ? () => director.unlockRelic(next.id)
                 : null,

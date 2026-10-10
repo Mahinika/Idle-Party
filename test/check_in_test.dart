@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/check_in.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -5,6 +6,7 @@ import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/meta_depth.dart';
+import 'package:idle_party/ui/guides_overlay.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 9, 12);
@@ -120,6 +122,19 @@ void main() {
         zoneScale: 1,
       ).essence,
     );
+  });
+
+  testWidgets('the guide names the vault that is actually waiting', (tester) async {
+    final state = ready(now);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(height: 640, child: GuidesOverlay(state: state)),
+        ),
+      ),
+    );
+    expect(find.textContaining('waits on the vault'), findsOneWidget);
+    expect(find.textContaining('clear one cave, then CLAIM VAULT'), findsNothing);
   });
 
   test('legacy saves start on day 1 and the day round-trips', () {
