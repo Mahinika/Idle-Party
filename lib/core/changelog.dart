@@ -92,7 +92,7 @@ abstract final class ChangelogCatalog {
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: '1.12.195',
-      date: 'Oct 6, 2026',
+      date: 'Oct 11, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. Gold and essence menus stay hidden until you beat the first boss.',
       changed: <String>[
@@ -102,7 +102,7 @@ abstract final class ChangelogCatalog {
         'After KEY, the hub names the next Gauntlet boss. The floor 25 prize stays on the card.',
         'Ranked GR and Farm Rift name the next rank. The rank 5 prize stays on the card.',
         'After Gauntlet floor 100, the hub moves on to Ranked GR. Later Spire floors stay a personal best.',
-        'The first Gauntlet night is four floors, then a boss: tight corridors, a swarm, a borrowed boss tell, and extra gates. Later floors still squeeze on the old rhythm. Wipe or leave still returns to the hub.',
+        'The first Gauntlet run is four floors, then a boss: tight corridors, a swarm, a borrowed boss tell, and extra gates. Later floors repeat one of those squeezes, on F8, F13, and so on. Wipe or leave still returns to the hub.',
         'Ranked GR in the fight says no gear and a clock. Farm Rift says loot and no fail timer.',
         'Ashen Crown shows the week\'s telegraph on the fight line before the boss shouts it.',
         'Standing in a choke says CHOKE, a treasure room says CHEST, and a shrine says SHRINE.',

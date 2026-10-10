@@ -271,6 +271,49 @@ void main() {
     expect(find.textContaining('On the hub, gold gathers'), findsOneWidget);
   });
 
+  testWidgets('a ready vault is the one claim on Welcome Back', (tester) async {
+    final now = DateTime.utc(2026, 10, 9, 12);
+    final fresh = GameLogic.ensureWeeklyContract(
+      GameLogic.createInitialState(now: now),
+      now: now,
+    );
+    final ready = fresh.copyWith(
+      metaDepth: fresh.metaDepth.copyWith(
+        dailyVaultClears: GameLogic.dailyVaultClearTarget,
+        dailyVaultClaimed: false,
+      ),
+    );
+    final director = GameDirector.preview(initialState: ready);
+    addTearDown(director.dispose);
+    director.uiFeedback.presentOffline(
+      OfflineProgressResult(
+        state: ready,
+        secondsApplied: 3600,
+        goldGained: 10,
+        essenceGained: 0,
+        roomsCleared: 0,
+        highestFloorDelta: 0,
+        bossDelta: 0,
+        wasInDungeon: true,
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('CLOSE'), findsOneWidget);
+    expect(find.text('CLAIM'), findsNothing);
+    expect(find.textContaining('CLAIM VAULT'), findsOneWidget);
+  });
+
   test('hub gold fills for 12 hours and then stops', () {
     final state = GameLogic.createInitialState(now: DateTime.utc(2026, 9, 10));
     final full = OfflineProgress.applyOfflineProgress(

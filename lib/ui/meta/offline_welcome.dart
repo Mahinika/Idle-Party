@@ -89,6 +89,10 @@ Future<void> showOfflineProgressDialog(
           chase.kind == HubChaseKind.clearFloors ||
           chase.kind == HubChaseKind.dailyVaultProgress ||
           chase.kind == HubChaseKind.marketUpgrade);
+  // Two buttons that both say CLAIM read as the same tap. The job stays
+  // the brown one. Closing without that job is CLOSE.
+  final chaseIsClaim =
+      showChaseCta && readyLabel.toUpperCase().contains('CLAIM');
 
   WebClickBridge.pushLayer();
   await showDialog<void>(
@@ -186,7 +190,7 @@ Future<void> showOfflineProgressDialog(
         ),
       ),
       actions: [
-        if (showChaseCta) ...[
+        if (showChaseCta && !chaseIsClaim)
           GameButton(
             label: readyLabel,
             expanded: false,
@@ -198,15 +202,26 @@ Future<void> showOfflineProgressDialog(
               readyAction?.call();
             },
           ),
-        ],
+        if (chaseIsClaim)
+          GameButton(
+            label: 'CLOSE',
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () {
+              director.claimReturnRewards();
+              director.dismissOfflineSummary();
+              Navigator.pop(ctx);
+            },
+          ),
         GameButton(
-          label: 'CLAIM',
+          label: chaseIsClaim ? readyLabel : 'CLAIM',
           expanded: false,
           style: GameButtonStyle.brown,
           onPressed: () {
             director.claimReturnRewards();
             director.dismissOfflineSummary();
             Navigator.pop(ctx);
+            if (chaseIsClaim) readyAction?.call();
           },
         ),
       ],

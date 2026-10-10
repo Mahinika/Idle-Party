@@ -381,6 +381,12 @@ class DungeonTopHud extends StatelessWidget {
     final partyLine = state.isPartyDefeated || awaitingExit
         ? null
         : world?.map.partyMarkLine;
+    // Boss hint wins the one line. Pack job plus "N next" pushed "BOSS NEXT"
+    // into the Repeat chip on a 360-wide phone.
+    final bossBit = _firstBossBit(state, floor);
+    final fightBit = bossBit.isNotEmpty
+        ? bossBit
+        : '${_packJobBit(world)}${_keyAffixBit(state)}';
     final placeLine = state.isPartyDefeated
         ? (state.inGauntlet || state.inAnyRiftMode
               ? 'WIPED · End → hub'
@@ -410,7 +416,7 @@ class DungeonTopHud extends StatelessWidget {
         ? GreaterRift.roomLine(state.grTier)
         : state.inWorldBoss
         ? AshenCrown.kitByDungeonId(state.dungeonId).roomLine
-        : '$zoneShort · F$floor$keyBit${_packJobBit(world)}${_keyAffixBit(state)}${_firstBossBit(state, floor)}';
+        : '$zoneShort · F$floor$keyBit$fightBit';
     void setMode(DungeonMode mode) {
       final fighting = (world?.enemies.any((e) => e.isAlive) ?? false);
       if (fighting && state.dungeonMode != mode) {
@@ -692,13 +698,18 @@ class DungeonTopHud extends StatelessWidget {
             padding: const EdgeInsets.only(top: 2),
             child: Row(
               children: [
-                WalletStrip(
-                  gold: state.gold,
-                  essence: state.essence,
-                  dense: true,
-                  showEssence: MenuTabs.showCamp(state),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: WalletStrip(
+                      gold: state.gold,
+                      essence: state.essence,
+                      dense: true,
+                      showEssence: MenuTabs.showCamp(state),
+                    ),
+                  ),
                 ),
-                const Spacer(),
                 if (GameLogic.canClaimDailyVault(state))
                   _VaultClaimChip(onTap: director.claimDailyVault),
                 if (showClaimChip)
