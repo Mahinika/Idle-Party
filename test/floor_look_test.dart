@@ -229,6 +229,47 @@ void main() {
     }
   });
 
+  test('standing in a choke, chest, or shrine names that room', () {
+    const chambers = [
+      Chamber(
+        index: 0,
+        x: 0,
+        y: 0,
+        w: 3,
+        h: 3,
+        beatKind: FloorBeatKind.choke,
+      ),
+      Chamber(
+        index: 1,
+        x: 4,
+        y: 0,
+        w: 3,
+        h: 3,
+        beatKind: FloorBeatKind.treasure,
+      ),
+      Chamber(
+        index: 2,
+        x: 0,
+        y: 4,
+        w: 3,
+        h: 3,
+        beatKind: FloorBeatKind.shrine,
+      ),
+      Chamber(
+        index: 3,
+        x: 4,
+        y: 4,
+        w: 3,
+        h: 3,
+        beatKind: FloorBeatKind.approach,
+      ),
+    ];
+    expect(roomPlaceWordAt(chambers, 1, 1), 'CHOKE');
+    expect(roomPlaceWordAt(chambers, 5, 1), 'CHEST');
+    expect(roomPlaceWordAt(chambers, 1, 5), 'SHRINE');
+    expect(roomPlaceWordAt(chambers, 5, 5), isNull);
+  });
+
   test('fen floor mood is mire, not Bone Galleries', () {
     for (var seed = 0; seed < 40; seed++) {
       final theme = _map('fen', seed).floorTheme;

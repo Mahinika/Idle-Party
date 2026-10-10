@@ -124,6 +124,15 @@ class Chamber {
       containsTile(wx.floor(), wy.floor());
 }
 
+/// The room word under a world point, when that room has one.
+String? roomPlaceWordAt(List<Chamber> chambers, double x, double y) {
+  for (final c in chambers) {
+    final word = c.beatKind?.placeWord;
+    if (word != null && c.containsWorld(x, y)) return word;
+  }
+  return null;
+}
+
 /// Gate blocking a corridor until [opensAfterChamber] is cleared.
 class GateInfo {
   const GateInfo({

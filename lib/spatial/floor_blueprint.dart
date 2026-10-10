@@ -30,6 +30,15 @@ extension FloorBeatKindLook on FloorBeatKind {
       this == FloorBeatKind.treasure ||
       this == FloorBeatKind.shrine ||
       this == FloorBeatKind.wonder;
+
+  /// One HUD word while the party is standing in this room.
+  /// Approach, hub, and a normal pack stay on the pack word.
+  String? get placeWord => switch (this) {
+    FloorBeatKind.choke => 'CHOKE',
+    FloorBeatKind.treasure => 'CHEST',
+    FloorBeatKind.shrine => 'SHRINE',
+    _ => null,
+  };
 }
 
 /// Main spine vs side alcove off hub or last main chamber.

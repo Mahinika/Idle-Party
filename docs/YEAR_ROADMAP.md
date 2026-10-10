@@ -19,7 +19,10 @@ bossen går att vinna, TODAY säger en grotta imorgon tills första Ascend,
 CLAIM sitter i grottan, Welcome Back säger rätt plats, Ascend visar minst
 hälften till i essence, Gauntlet namnger nästa boss, Ranked GR och Farm
 Rift namnger nästa rank, och efter Gauntlet våning 100 går hubben vidare
-till Ranked GR. Produktion är fortfarande **1.12.194**.
+till Ranked GR. I fighten säger Gauntlet nästa boss, Ranked GR klocka
+utan gear, Farm Rift loot utan fail-timer, och Ashen veckans ord.
+En choke säger CHOKE, en skattkammare CHEST, en shrine SHRINE.
+Produktion är fortfarande **1.12.194**.
 
 ---
 

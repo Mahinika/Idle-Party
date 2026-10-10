@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-10 — the room you are standing in has a word
+
+- The floor already had a job (choke, treasure, shrine) but the fight line named the pack. Standing in that room now says CHOKE, CHEST, or SHRINE. Other rooms still name the pack.
+
 ## 2026-10-10 — the year plan builds the game
 
 - Owner: the next year plan is development of the game. Play numbers, the listing, and posts do not pick the next slice. The 9 Oct source file stays as an archive.

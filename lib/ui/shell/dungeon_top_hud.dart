@@ -15,6 +15,7 @@ import '../../models/dungeon_room.dart';
 import '../../models/enemy.dart';
 import '../../spatial/floor_blueprint.dart';
 import '../../spatial/spatial_combat.dart';
+import '../../spatial/tile_map.dart';
 import '../coach_pulse.dart';
 import '../first_session_tips.dart';
 import '../game_theme.dart';
@@ -38,16 +39,31 @@ String _floorMoodBit(SpatialWorld world) {
   return mood;
 }
 
+String? _partyRoomWord(SpatialWorld world) {
+  if (world.heroes.isEmpty) return null;
+  final hero = world.heroes.firstWhere(
+    (h) => h.hp > 0,
+    orElse: () => world.heroes.first,
+  );
+  return roomPlaceWordAt(world.map.chambers, hero.x, hero.y);
+}
+
 String _packJobBit(SpatialWorld? world) {
   if (world == null) return '';
+  final room = _partyRoomWord(world);
   final pack = world.enemies;
-  if (pack.isEmpty) return _floorMoodBit(world);
+  if (pack.isEmpty) return room != null ? ' · $room' : _floorMoodBit(world);
   if (world.awaitingExit) return '';
   final awake = pack.where((e) => !e.dormant && e.isAlive).toList();
   final sleep = pack.where((e) => e.dormant && e.isAlive).length;
-  if (awake.isEmpty && sleep <= 0) return _floorMoodBit(world);
+  if (awake.isEmpty && sleep <= 0) {
+    return room != null ? ' · $room' : _floorMoodBit(world);
+  }
   final next = sleep > 0 ? ' · $sleep next' : '';
-  if (awake.isEmpty) return '${_floorMoodBit(world)}$next';
+  if (awake.isEmpty) {
+    return room != null ? ' · $room$next' : '${_floorMoodBit(world)}$next';
+  }
+  if (room != null) return ' · $room$next';
   final bossRoom = pack.any((e) => e.role == EnemyRole.boss);
   final eliteRoom = pack.any((e) => e.role == EnemyRole.elite);
   final roomType = bossRoom
