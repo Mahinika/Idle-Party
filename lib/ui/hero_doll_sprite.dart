@@ -303,12 +303,15 @@ class _OwnedDollPainter extends CustomPainter {
       partyIndex: partyIndex,
       owned: true,
     );
+    final images = Map<String, ui.Image>.of(overlays);
+    final idle = pose.bodyIdleAsset;
+    if (idle != null) images[idle] = body;
     HeroRigPainter.paintOwned(
       canvas,
       Offset(size.width / 2, size.height / 2),
       size.shortestSide,
       body: body,
-      images: overlays,
+      images: images,
       pose: pose,
       heroId: hero.id,
     );

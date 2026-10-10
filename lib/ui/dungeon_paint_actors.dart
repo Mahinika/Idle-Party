@@ -356,7 +356,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
               partyIndex: idx,
               owned: true,
             );
-            HeroRigPainter.paintOwned(
+            final drew = HeroRigPainter.paintOwned(
               canvas,
               c,
               tile * scale,
@@ -368,6 +368,26 @@ extension _DungeonPaintActors on _TileRoomPainter {
               spreadFrames: true,
               frameToken: visualFrame,
             );
+            if (!drew) {
+              final standIn = heroesBySpec[partyHero.specId] ??
+                  heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
+              final argb = HeroIdentity.tintArgb(partyHero.specId);
+              drawSprite(
+                standIn ?? bodyImg,
+                c,
+                standIn == null
+                    ? scale
+                    : 0.95 *
+                        (1 +
+                            flash *
+                                (hero.heroRole == HeroRole.warrior
+                                    ? 0.32
+                                    : 0.2)),
+                alpha: paintAlpha,
+                tint: argb == null ? tint : Color(argb),
+                flipX: flipX,
+              );
+            }
           } else {
             drawSprite(
               bodyImg,

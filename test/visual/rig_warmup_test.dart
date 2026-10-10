@@ -55,5 +55,30 @@ void main() {
       ),
       isTrue,
     );
+
+    for (final kind in [HeroAnimKind.walk, HeroAnimKind.attack]) {
+      final moving = CharacterVisualPose.resolve(
+        hero: hero,
+        anim: HeroAnimPose(kind: kind, frame: 0),
+        owned: true,
+      );
+      for (final layer in moving.orderedLayers()) {
+        final path = layer.ownedAsset;
+        if (path == null || images.containsKey(path)) continue;
+        try {
+          images[path] = await DecodedImageCache.load(path, targetWidth: 128);
+        } catch (_) {}
+      }
+      expect(
+        HeroRigPainter.ready(
+          rig: rig,
+          bodyKey: bodyKey,
+          images: images,
+          pose: moving,
+        ),
+        isTrue,
+        reason: '${kind.name} still needs a cut the idle warm did not make',
+      );
+    }
   });
 }

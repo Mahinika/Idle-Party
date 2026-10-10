@@ -238,8 +238,9 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
 
   Future<void> _loadImages(String dungeonId) async {
     final gen = ++_loadGen;
-    // Cut skeletons while floors decode, so the first hero paint is the rig.
-    final rigWarm = HeroRigPainter.warmParty(widget.director.state.heroes);
+    // Cut skeletons while floors decode. The fight paints the rig as soon as
+    // the body atlas exists, so this does not hold the owned pictures back.
+    unawaited(HeroRigPainter.warmParty(widget.director.state.heroes));
     // Keep painting prior tiles while a zone switch loads — never blank mid-fight.
     Future<ui.Image> load(
       String asset, {
@@ -355,12 +356,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
     // Deferred shared catalog (loot icons, pets, paper-doll overlays).
     if (_lootByPath.isEmpty || _bodyByPath.isEmpty) {
       unawaited(
-        _loadDeferredSharedArt(
-          gen,
-          load: load,
-          loadSoft: loadSoft,
-          rigWarm: rigWarm,
-        ),
+        _loadDeferredSharedArt(gen, load: load, loadSoft: loadSoft),
       );
     }
 
@@ -459,7 +455,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
       int? targetHeight,
     })
     loadSoft,
-    required Future<void> rigWarm,
   }) async {
     final lootPaths = <String>{
       KenneyAssets.chestClosed,
@@ -564,7 +559,6 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
         if (bodyImages[i] != null) MapEntry(bodyPaths[i], bodyImages[i]!),
     ];
     await HeroRigLibrary.loadEnabled();
-    await rigWarm;
     if (!mounted || gen != _loadGen) return;
     if (bodyEntries.isNotEmpty) {
       setState(() {
@@ -597,6 +591,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                   ListenableBuilder(
                     listenable: Listenable.merge([
                       widget.director.combatFrame,
+                      HeroRigPainter.frameTick,
                       _pinchCols,
                       _floorFade,
                     ]),

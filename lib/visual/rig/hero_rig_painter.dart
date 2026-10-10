@@ -30,6 +30,7 @@ abstract final class HeroRigPainter {
   static final Map<String, String> _equip = {};
   static final Map<String, ui.Image> _solid = {};
   static final Map<String, ui.Image> _lastByHero = {};
+  static final Map<String, int> _stamp = {};
   static final List<Future<void>> _strips = [];
   static Future<void> _stripGate = Future<void>.value();
   static Future<void> _warmGate = Future<void>.value();
@@ -86,7 +87,9 @@ abstract final class HeroRigPainter {
     await Future.wait(pending);
   }
 
-  static void paintOwned(
+  /// True when the cutout was drawn. False leaves the caller on the class
+  /// picture. The still doll is not a stand-in once this family has a rig.
+  static bool paintOwned(
     ui.Canvas canvas,
     ui.Offset center,
     double size, {
@@ -103,7 +106,7 @@ abstract final class HeroRigPainter {
     final idleKey = rigBodyKey(pose, images);
     final idle = idleKey == null ? null : images[idleKey];
     if (rig != null && idle != null && idleKey != null) {
-      paint(
+      return paint(
         canvas,
         center,
         size,
@@ -117,7 +120,6 @@ abstract final class HeroRigPainter {
         spreadFrames: spreadFrames,
         frameToken: frameToken,
       );
-      return;
     }
     CharacterVisualPainter.paintOwnedHero(
       canvas,
@@ -128,6 +130,7 @@ abstract final class HeroRigPainter {
       pose: pose,
       alpha: alpha,
     );
+    return true;
   }
 
   /// Cuts the active party's skeletons before the dungeon paints them.
@@ -215,21 +218,29 @@ abstract final class HeroRigPainter {
     required Map<String, ui.Image> images,
     required CharacterVisualPose pose,
   }) async {
-    await _atlas(rig, bodyImage, RigPartCache.key(bodyKey, rig.family, 0, 1));
+    final bodyCache = RigPartCache.key(bodyKey, rig.family, 0, 1);
+    if (RigPartCache.peek(bodyCache) == null) {
+      await _atlas(rig, bodyImage, bodyCache);
+    }
+    // The fight can draw the skeleton from the body cut. Gear fills in after.
+    frameTick.ping();
     final tintPath = tintForRigBody(pose, bodyKey, images);
     final tint = tintPath == null ? null : images[tintPath];
     if (tint != null && tintPath != null) {
-      await _atlas(
-        rig,
-        tint,
-        RigPartCache.key(
-          tintPath,
-          rig.family,
-          0,
-          OwnedGearAssets.undertunicShoeTop,
-        ),
-        cropBottom: OwnedGearAssets.undertunicShoeTop,
+      final tintKey = RigPartCache.key(
+        tintPath,
+        rig.family,
+        0,
+        OwnedGearAssets.undertunicShoeTop,
       );
+      if (RigPartCache.peek(tintKey) == null) {
+        await _atlas(
+          rig,
+          tint,
+          tintKey,
+          cropBottom: OwnedGearAssets.undertunicShoeTop,
+        );
+      }
     }
     for (final layer in pose.orderedLayers()) {
       final path = layer.ownedAsset;
@@ -242,21 +253,18 @@ abstract final class HeroRigPainter {
         join: HeroRigDraw.isWeapon(layer),
       );
       if (_weapon(layer) || layer.id == CharacterLayerId.cape) continue;
-      await _atlas(
-        rig,
-        solid,
-        RigPartCache.key(path, rig.family, layer.cropTop, 1),
-        cropTop: layer.cropTop,
-      );
+      final gearKey = RigPartCache.key(path, rig.family, layer.cropTop, 1);
+      if (RigPartCache.peek(gearKey) == null) {
+        await _atlas(rig, solid, gearKey, cropTop: layer.cropTop);
+      }
       final dyePath = layer.dyeMaskAsset;
       final dye = dyePath == null ? null : images[dyePath];
       if (dyePath != null && dye != null) {
-        final solidDye = await _solidOf(dyePath, dye);
-        await _atlas(
-          rig,
-          solidDye,
-          RigPartCache.key(dyePath, rig.family, 0, 1),
-        );
+        final dyeKey = RigPartCache.key(dyePath, rig.family, 0, 1);
+        if (RigPartCache.peek(dyeKey) == null) {
+          final solidDye = await _solidOf(dyePath, dye);
+          await _atlas(rig, solidDye, dyeKey);
+        }
       }
     }
     frameTick.ping();
@@ -300,7 +308,7 @@ abstract final class HeroRigPainter {
     return true;
   }
 
-  static void paint(
+  static bool paint(
     ui.Canvas canvas,
     ui.Offset center,
     double size, {
@@ -318,9 +326,13 @@ abstract final class HeroRigPainter {
         size <= 0 ||
         !center.dx.isFinite ||
         !center.dy.isFinite) {
-      return;
+      return false;
     }
-    if (!ready(rig: rig, bodyKey: bodyKey, images: images, pose: pose)) {
+    final bodyCut =
+        RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1)) !=
+            null;
+    if (!bodyCut ||
+        !ready(rig: rig, bodyKey: bodyKey, images: images, pose: pose)) {
       warm(
         rig: rig,
         bodyImage: bodyImage,
@@ -328,17 +340,11 @@ abstract final class HeroRigPainter {
         images: images,
         pose: pose,
       );
-      CharacterVisualPainter.paintOwnedHero(
-        canvas,
-        center,
-        size,
-        body: bodyImage,
-        images: images,
-        pose: pose,
-        alpha: alpha,
-      );
-      return;
     }
+    // A missing glove used to keep the whole hero on the still doll while
+    // the rest of the atlas was already cut. Draw the skeleton as soon as
+    // the body exists. Gear layers paint when their cuts land.
+    if (!bodyCut) return false;
     final frame = _frame(
       rig: rig,
       bodyKey: bodyKey,
@@ -348,18 +354,7 @@ abstract final class HeroRigPainter {
       spread: spreadFrames,
       frameToken: frameToken,
     );
-    if (frame == null) {
-      CharacterVisualPainter.paintOwnedHero(
-        canvas,
-        center,
-        size,
-        body: bodyImage,
-        images: images,
-        pose: pose,
-        alpha: alpha,
-      );
-      return;
-    }
+    if (frame == null) return false;
     final paint = ui.Paint()
       ..filterQuality = ui.FilterQuality.none
       ..isAntiAlias = false
@@ -380,6 +375,7 @@ abstract final class HeroRigPainter {
       paint,
     );
     canvas.restore();
+    return true;
   }
 
   static ui.Image? _frame({
@@ -405,6 +401,13 @@ abstract final class HeroRigPainter {
       });
       _equip[heroId] = hash;
       _lastByHero.remove(heroId);
+      _stamp.remove(heroId);
+    }
+    final stamp = _cutStamp(rig, bodyKey, pose);
+    final previousStamp = _stamp[heroId];
+    if (previousStamp != stamp) {
+      if (previousStamp != null) _dropFrames(heroId, keep: _lastByHero[heroId]);
+      _stamp[heroId] = stamp;
     }
     final cacheKey =
         '$heroId|$hash|$bodyKey|${sample.clip}|${sample.stepIndex}|${pose.bodyTint}|${pose.anim.blocking}';
@@ -418,8 +421,12 @@ abstract final class HeroRigPainter {
         _spreadToken = frameToken;
         _spreadBakes = 0;
       }
-      if (_spreadBakes >= 1) return _lastByHero[heroId];
-      _spreadBakes++;
+      // The first pose of each hero bakes immediately. Later poses share
+      // one bake per frame so a new step does not stall the fight. A hero
+      // that already has a skeleton keeps it. Never substitute the still doll.
+      final hasLast = _lastByHero[heroId] != null;
+      if (hasLast && _spreadBakes >= 1) return _lastByHero[heroId];
+      if (hasLast) _spreadBakes++;
     }
     final world = RigSolver.world(rig, sample.pose);
     final recorder = ui.PictureRecorder();
@@ -428,10 +435,43 @@ abstract final class HeroRigPainter {
     final picture = recorder.endRecording();
     final image = picture.toImageSync(source, source);
     picture.dispose();
+    final previous = _lastByHero[heroId];
     _frames[cacheKey] = image;
     _lastByHero[heroId] = image;
+    if (previous != null &&
+        !identical(previous, image) &&
+        !_frames.values.any((cached) => identical(cached, previous))) {
+      previous.dispose();
+    }
     _strips.add(_enqueueStrip(cacheKey, image));
     return image;
+  }
+
+  /// How many body and gear cuts this pose can draw. A new cut drops the
+  /// cached pose so armor appears on the skeleton already on screen.
+  static int _cutStamp(RigData rig, String bodyKey, CharacterVisualPose pose) {
+    var stamp = RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1)) ==
+            null
+        ? 0
+        : 1;
+    for (final layer in pose.orderedLayers()) {
+      if (_weapon(layer) || layer.id == CharacterLayerId.cape) continue;
+      final path = layer.ownedAsset;
+      if (path == null) continue;
+      if (RigPartCache.peek(RigPartCache.key(path, rig.family, layer.cropTop, 1)) !=
+          null) {
+        stamp++;
+      }
+    }
+    return stamp;
+  }
+
+  static void _dropFrames(String heroId, {ui.Image? keep}) {
+    _frames.removeWhere((key, image) {
+      if (!key.startsWith('$heroId|')) return false;
+      if (!identical(image, keep)) image.dispose();
+      return true;
+    });
   }
 
   /// One GPU readback at a time. A new floor used to read every fresh pose
