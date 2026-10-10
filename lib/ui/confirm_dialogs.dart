@@ -204,6 +204,22 @@ Future<void> confirmLeaveDungeon(
     body =
         'Leave to hub now? FARM loop on this floor stops — you restart '
         'from hub (not mid-loop). $banked';
+  } else if (state != null && state.inGauntlet) {
+    body =
+        'Leave to hub now? This Gauntlet run ends. Chamber progress is lost. '
+        '$banked';
+  } else if (state != null && state.inGreaterRift) {
+    body =
+        'Leave to hub now? This Ranked GR run ends. Chamber progress is lost. '
+        '$banked';
+  } else if (state != null && state.inRift) {
+    body =
+        'Leave to hub now? This Farm Rift run ends. Chamber progress is lost. '
+        '$banked';
+  } else if (state != null && state.inWorldBoss) {
+    body =
+        'Leave to hub now? This Ashen Crown fight ends. Chamber progress is lost. '
+        '$banked';
   } else {
     body =
         'Leave to hub now? This floor’s chamber progress is lost '
