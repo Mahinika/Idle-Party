@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-10 — the year plan builds the game
+
+- Owner: the next year plan is development of the game. Play numbers, the listing, and posts do not pick the next slice. The 9 Oct source file stays as an archive.
+
 ## 2026-10-10 — Gauntlet kept the night past floor 100
 
 - The hunt order says Spire is the job through floor 100, then Ranked GR. Floors 150 and 200 were still the hub job, so Ranked GR waited until floor 200. After floor 100 the hub now names Ranked GR. Later Spire floors stay a personal best when the other hunts are quiet.

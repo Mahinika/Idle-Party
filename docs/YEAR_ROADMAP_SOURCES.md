@@ -2,6 +2,8 @@
 **Pass:** 2026-10-09 (fresh)
 **Counts:** A=35 B=35 C=30 (sum 100)
 
+**2026-10-10:** Ägaren bad om en årsplan som bygger spelet. Den här filen väljer inte **Nu**. Den ligger kvar som arkiv om en butiksfråga kommer upp.
+
 Every row was opened this pass, repo files are not rows, and no Play Console percentage was invented.
 
 | # | Grade | Seen | URL | One-sentence claim |
