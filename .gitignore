@@ -112,8 +112,11 @@ IdleSword*
 # Local MCP venv
 /tool/mcp_idle_party/.venv/
 
-# PandaOS local install (skills and config stay tracked)
-.pandaos/node_modules/
+# PandaOS is unused. Ignore a leftover install if the app writes one.
+.pandaos/
+.agents/
+.claude/*
+!.claude/settings.json
 
 # Local Play AAB CORS helper (often has a machine-specific path)
 /tool/_serve_aab_cors.py
