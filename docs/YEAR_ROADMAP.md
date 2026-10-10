@@ -7,11 +7,12 @@ du namnger vinner.
 Källfilen från 9 okt ([YEAR_ROADMAP_SOURCES.md](YEAR_ROADMAP_SOURCES.md))
 är arkiv. Den väljer inte nästa skiva.
 
-Den här planen bygger spelet. En batch är en natt spelaren kan spela:
+Den här planen bygger spelet. En batch är en session (ett sittande):
 partyt i rummet, en jakt, eller Ascend. Visningar, öppningar, betyg och
 inlägg väntar tills du namnger dem.
 
-Tre pelare: partyt går i rummet, en natt har ett jobb, Ascend är en reset.
+Tre pelare: partyt går i rummet, en daily (dagens jobb) är ett jobb,
+Ascend är en reset.
 Craft Trial stannar på MORE → CRAFT. Aldrig iOS.
 
 Redan i det osläppta **1.12.195**, och därför inte nästa skiva: första
@@ -23,7 +24,7 @@ till Ranked GR. I fighten säger Gauntlet nästa boss, Ranked GR klocka
 utan gear, Farm Rift loot utan fail-timer, och Ashen veckans ord.
 En choke säger CHOKE, en skattkammare CHEST, en shrine SHRINE.
 Partyraden i grottan visar varje hjältes namn.
-Första Gauntlet-natten är våning 1–4: trångt, svärm, eko, grindar.
+Första Gauntlet-runnet (ett varv) är våning 1–4: trångt, svärm, eko, grindar.
 Våning 5 är boss. Wipe eller leave går till hubben. Senare våningar
 klämmer fortfarande bara på den gamla rytmen.
 Gauntlet väljs som MIGHT, WARD eller GREED innan klättringen.
@@ -36,18 +37,18 @@ Produktion är fortfarande **1.12.194**.
 Tre rubriker. En per släpp om du namnger raden. Slack för analyze sitter
 i alla tre. Ingen fjärde feature.
 
-1. **Gauntlet är ett torn** — första natten (våning 1–5) sitter redan i
+1. **Gauntlet är ett torn** — första runnet (våning 1–5) sitter redan i
    1.12.195. Kvar: samma fyra kläm mellan senare bossar, inte bara den
    gamla rytmen, så tornet håller efter priset på våning 25.
 
-2. **Ranked GR och Farm Rift är olika nätter** — Ranked GR är en klocka
+2. **Ranked GR och Farm Rift är olika runs** — Ranked GR är en klocka
    i Mothveil, ingen gear mitt i runnet. Farm Rift är Stormwake, loot
    mitt i, ingen fail-timer. Skivan gör den skillnaden synlig i rummet.
 
 3. **Ashen Crown är veckans boss** — en biljett, en redan skeppad grotta
    den veckan, telegraphen innan smash, PRACTICE efteråt. Inte en ny zon.
 
-KEY-natten är redan ett jobb. Hubbens ordning efter den står kvar:
+KEY är redan daily-jobbet. Hubbens ordning efter den står kvar:
 Gauntlet till våning 100, sedan Ranked GR, Farm Rift, Ashen Crown.
 
 ---
@@ -62,9 +63,9 @@ Teman. Inga låsta feature-namn.
 - **Ascend** — essence stiger redan minst hälften till varje reset.
   Blessing är den bestående kraften. Ingen ny prestige och ingen ny
   daglig kalender.
-- **Jakterna i ordning** — KEY är nattjobbet. Sedan Gauntlet, Ranked GR,
+- **Jakterna i ordning** — KEY är daily-jobbet. Sedan Gauntlet, Ranked GR,
   Farm Rift, Ashen Crown. Varje jakt fördjupas när den föregående redan
-  känns som sin egen natt.
+  känns som sitt eget run.
 
 ---
 
@@ -128,6 +129,6 @@ i produktlåsen.
 ## Studio seats
 
 EP låser scope: de här 6–8 veckorna är fighten i jakterna, Gauntlet först.
-Game Director ordnar innehåll: KEY är nattjobbet, sedan Gauntlet, Ranked GR,
+Game Director ordnar innehåll: KEY är daily-jobbet, sedan Gauntlet, Ranked GR,
 Farm Rift, Ashen Crown. UX / Tech / Art / Marketing veto bara. Du vinner
 när du namnger målet.

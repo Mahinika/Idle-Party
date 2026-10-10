@@ -84,3 +84,5 @@ agree.
 - No numeric D1/D7 targets while Console n is tiny
 - Listing A/B waits for real traffic
 - A source counts only if it was opened in this chat and has a URL
+- Owner-facing words are session, daily, and run
+  (`.cursor/rules/play-words.mdc`). Do not write natt for those
