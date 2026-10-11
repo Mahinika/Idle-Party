@@ -263,7 +263,7 @@ class FriendReferralSync {
           if (!identical(paid, next)) {
             final gained = paid.metaDepth.adTickets - next.metaDepth.adTickets;
             next = paid;
-            return _maybeClaimReferrer(
+            return await _maybeClaimReferrer(
               next,
               deviceId,
               toast: gained > 0 ? '$gained Ad Tickets from a friend' : null,
