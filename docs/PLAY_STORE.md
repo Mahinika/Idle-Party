@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ⏳ review | **1.12.194 (224)** uploaded via API **2026-10-04**, full rollout. Track reads `completed`. Public page still names **1.12.193** until Google publishes. Managed publishing is off. |
+| Production | ✅ live | **1.12.194 (224)** full rollout, track `completed` (Play paste **2026-10-09**; the store row last updated **4 Oct**). The 4 Oct note that the public page still named **1.12.193** is stale. Managed publishing is off. Next candidate **1.12.195 (225)** is not uploaded. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -18,7 +18,7 @@ Package id: **`com.idleparty.app`**
 | Store listing copy (EN + 9 locales) | ✅ live | Default locale **en-US** + 9 translations committed **2026-09-25** (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`). In-game UI stays English. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ✅ live | **8 A56 phone shots** and feature graphic `feature_20261004.png` are on the public page **2026-10-04**. Tablet shots are still the older title screen, hub menu, and FARM/PUSH floor. |
-| Listing assets freshness | shots 2026-10-04 @ 1.12.194 · video 2026-10-04 @ 1.12.194 · icon 2026-10-04 @ 1.12.194 · feature 2026-10-04 @ 1.12.194 | Phone shots and the Sandy preview are this build. `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than one patch. |
+| Listing assets freshness | shots 2026-10-04 @ 1.12.194 · video 2026-10-04 @ 1.12.194 · icon 2026-10-04 @ 1.12.194 · feature 2026-10-04 @ 1.12.194 | Phone shots and the Sandy preview match live **1.12.194**. They are one patch behind the **1.12.195** candidate. `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than one patch. |
 | Preview video (YouTube) | ✅ sent | Every listing locale (11, including `pl-PL`) points at public Cognifox `cyBlN3HCR48` (`https://www.youtube.com/watch?v=cyBlN3HCR48`), committed **2026-10-04**. oEmbed works. Ads off, embed on, not for kids. YouTube filed the 9:16 film as a Short. Previous unlisted `UHLG28lHmPs`. `XfKog5CAiUs` stays unused (Play rejected that embed). |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
@@ -80,6 +80,15 @@ Notes sent with **1.12.194 (224)**:
 • Swords, bows, and spells sound like the weapons they are.
 • A bowstring plays when an arrow leaves, and a spell plays when it is cast.
 • The hub and caves rotate songs, with a quiet stretch between them.
+```
+
+Notes for the next upload, **1.12.195 (225)**. Not sent. 287 characters:
+
+```
+• The first floor fights on its own. The first boss is one a new party can finish.
+• Welcome Back says when the vault prize is waiting, and CLAIM sits on the cave.
+• Health bars sit above the hero, and a new floor fades in.
+• The first Gauntlet run is four different floors, then a boss.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys

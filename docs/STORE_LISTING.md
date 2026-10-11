@@ -125,12 +125,21 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Live Production on the public page: **1.12.193 (223)** until Google publishes **1.12.194 (224)** (uploaded **2026-10-04**, full rollout). Notes sent with 224:
+Live Production: **1.12.194 (224)**, full rollout, track `completed` (Play paste **2026-10-09**). Notes sent with 224:
 
 ```
 • Swords, bows, and spells sound like the weapons they are.
 • A bowstring plays when an arrow leaves, and a spell plays when it is cast.
 • The hub and caves rotate songs, with a quiet stretch between them.
+```
+
+Notes for the next upload, **1.12.195 (225)**. Not sent. 287 characters:
+
+```
+• The first floor fights on its own. The first boss is one a new party can finish.
+• Welcome Back says when the vault prize is waiting, and CLAIM sits on the cave.
+• Health bars sit above the hero, and a new floor fades in.
+• The first Gauntlet run is four different floors, then a boss.
 ```
 
 ### Full description honesty (SHOP)
