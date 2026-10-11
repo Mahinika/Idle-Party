@@ -1,10 +1,36 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 
 import '../tool/sim_harness.dart';
 
 void main() {
+  test('light F5 is the boss, and floor 2 stays the new-player boss', () {
+    seedEquipmentRng(1);
+    var later = createPartyState(partySpecs: const [
+      HeroSpecId.protection,
+      HeroSpecId.discipline,
+      HeroSpecId.fire,
+    ]);
+    later = prepareSimParty(later, band: 'light', partyLevel: 12);
+    later = enterFloor(later, dungeonId: 'sandy', floor: 5, seed: 1);
+    expect(later.currentRoom.type, RoomType.boss);
+    expect(later.currentRoom.floorNumber, 5);
+    expect(later.bossVictories, 1);
+
+    var first = createPartyState(partySpecs: const [
+      HeroSpecId.protection,
+      HeroSpecId.discipline,
+      HeroSpecId.fire,
+    ]);
+    first = prepareSimParty(first, band: 'light', partyLevel: 12);
+    first = enterFloor(first, dungeonId: 'sandy', floor: 2, seed: 1);
+    expect(first.currentRoom.type, RoomType.boss);
+    expect(first.currentRoom.floorNumber, 2);
+    expect(first.bossVictories, 0);
+  });
+
   test('live mode uses flasks and God Hand like the director', () {
     seedEquipmentRng(7);
     var state = createPartyState(partySpecs: const [

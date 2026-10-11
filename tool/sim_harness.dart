@@ -274,6 +274,17 @@ GameState enterFloor(
   var state = GameLogic.enterDungeon(base, dungeonId: dungeonId);
   state = GameLogic.setDungeonMode(state, DungeonMode.push);
   if (floor > 1) {
+    // A fresh sim party has never recorded a boss, so it still looks like a
+    // new save whose boss is on floor 2. The light gate jumps to F5, which
+    // then became a trash pack and AoE kits took the whole share. A leveled
+    // party is past that first kill. Floor 2 itself stays the new-player boss.
+    if (floor != GameLogic.firstBossFloor &&
+        GameLogic.firstBossPending(state)) {
+      state = state.copyWith(
+        bossVictories: 1,
+        metaDepth: state.metaDepth.copyWith(lifetimeBossKills: 1),
+      );
+    }
     // Unlock travel up to [floor], then jump there (AL boards e.g. F21).
     state = state.copyWith(highestFloorCleared: max(0, floor - 1));
     if (GameLogic.canTravelToFloor(state, floor)) {
