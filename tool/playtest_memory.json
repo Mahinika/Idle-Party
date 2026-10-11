@@ -57,15 +57,20 @@
       "date": "2026-10-04",
       "pattern": "the first dungeon paint waited on hero portraits",
       "rule": ""
+    },
+    {
+      "date": "2026-10-11",
+      "pattern": "Live gold climbs during a round, so it will not match the gold saved at the start",
+      "rule": ""
     }
   ],
   "ok": [
     {
       "screen": "gold",
       "stage": "mid",
-      "date": "2026-10-04",
-      "commit": "2b337844",
-      "streak": 3
+      "date": "2026-10-11",
+      "commit": "25dd4546",
+      "streak": 4
     },
     {
       "screen": "essence",
@@ -77,9 +82,9 @@
     {
       "screen": "shop",
       "stage": "mid",
-      "date": "2026-10-04",
-      "commit": "2890e01a",
-      "streak": 2
+      "date": "2026-10-11",
+      "commit": "25dd4546",
+      "streak": 3
     },
     {
       "screen": "market",
@@ -91,23 +96,23 @@
     {
       "screen": "hub",
       "stage": "mid",
-      "date": "2026-10-04",
-      "commit": "2b337844",
-      "streak": 1
+      "date": "2026-10-11",
+      "commit": "25dd4546",
+      "streak": 2
     },
     {
       "screen": "gear",
       "stage": "mid",
-      "date": "2026-10-04",
-      "commit": "2b337844",
-      "streak": 1
+      "date": "2026-10-11",
+      "commit": "25dd4546",
+      "streak": 2
     },
     {
       "screen": "bag",
       "stage": "mid",
-      "date": "2026-10-04",
-      "commit": "2b337844",
-      "streak": 1
+      "date": "2026-10-11",
+      "commit": "25dd4546",
+      "streak": 2
     }
   ]
 }

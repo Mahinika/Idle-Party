@@ -22,15 +22,16 @@ Baselines live in `tool/playtest_baseline/`.
 - 2026-10-04 · A full-bag toast that does not name EQUIP leaves the upgrades sitting there · rule: none
 - 2026-10-04 · a claim button sliced by the bottom bar · rule: clipped_by_nav
 - 2026-10-04 · the first dungeon paint waited on hero portraits · rule: none
+- 2026-10-11 · Live gold climbs during a round, so it will not match the gold saved at the start · rule: none
 
 ## OK
 
 | Screen | Stage | Date | Commit | Streak |
 | --- | --- | --- | --- | --- |
-| gold | mid | 2026-10-04 | 2b337844 | 3 |
+| gold | mid | 2026-10-11 | 25dd4546 | 4 |
 | essence | mid | 2026-10-04 | 2890e01a | 2 |
-| shop | mid | 2026-10-04 | 2890e01a | 2 |
+| shop | mid | 2026-10-11 | 25dd4546 | 3 |
 | market | mid | 2026-10-04 | 35f3139a | 1 |
-| hub | mid | 2026-10-04 | 2b337844 | 1 |
-| gear | mid | 2026-10-04 | 2b337844 | 1 |
-| bag | mid | 2026-10-04 | 2b337844 | 1 |
+| hub | mid | 2026-10-11 | 25dd4546 | 2 |
+| gear | mid | 2026-10-11 | 25dd4546 | 2 |
+| bag | mid | 2026-10-11 | 25dd4546 | 2 |
