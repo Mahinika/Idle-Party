@@ -133,7 +133,7 @@ Live Production: **1.12.194 (224)**, full rollout, track `completed` (Play paste
 • The hub and caves rotate songs, with a quiet stretch between them.
 ```
 
-Notes for the next upload, **1.12.195 (225)**. Not sent. 287 characters:
+Notes sent with **1.12.195 (225)** on **2026-10-11**. In review, not live yet. 287 characters:
 
 ```
 • The first floor fights on its own. The first boss is one a new party can finish.

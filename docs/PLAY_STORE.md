@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | **1.12.194 (224)** full rollout, track `completed` (Play paste **2026-10-09**; the store row last updated **4 Oct**). The 4 Oct note that the public page still named **1.12.193** is stale. Managed publishing is off. Next candidate **1.12.195 (225)** is not uploaded. |
+| Production | ✅ live | **1.12.194 (224)** is the published build. **1.12.195 (225)** was uploaded **2026-10-11** and is `in review` (full rollout). Live stays **1.12.194** until Google publishes. Managed publishing is off. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -71,6 +71,9 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Owner asked upload of Production **1.12.194+224** (**2026-10-04**).
 - [x] Signed Production AAB **1.12.194+224** uploaded via Play API and sent for review (full rollout). Track reads `completed`. Public page still names **1.12.193** until Google publishes.
 - [x] Discord #announcements posted the **1.12.194** patch notes (**2026-10-05**). Topic says the store still shows **1.12.193**.
+- [x] Signed Production AAB **1.12.195+225** built locally **2026-10-11** (`app-release.aab`, 106.5 MB).
+- [x] Owner asked upload of Production **1.12.195+225** (**2026-10-11**).
+- [x] Signed Production AAB **1.12.195+225** uploaded via Play API and sent for review (full rollout). API: **1.12.195 (225)** `in review`. Live store build remains **1.12.194 (224)** until Google publishes.
 
 ### Production upload paste (en-US release notes)
 
@@ -82,7 +85,7 @@ Notes sent with **1.12.194 (224)**:
 • The hub and caves rotate songs, with a quiet stretch between them.
 ```
 
-Notes for the next upload, **1.12.195 (225)**. Not sent. 287 characters:
+Notes sent with **1.12.195 (225)** on **2026-10-11**. In review, not live yet. 287 characters:
 
 ```
 • The first floor fights on its own. The first boss is one a new party can finish.
