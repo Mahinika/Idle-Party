@@ -53,7 +53,7 @@ py -3 tool/store_listing/capture_first_minute.py
 # 4) Compose 1080×1920 with top caption band + 512 icon
 py -3 tool/store_listing/compose_shots.py
 py -3 tool/store_listing/make_listing_icon.py
-# → tool/store_listing/out/01_01_combat_a.png, 02_02_combat_b.png, play_icon_512.png
+# Output is the composed phone shots plus the 512 icon, next to the script.
 ```
 
 ### Lessons (do not re-learn)

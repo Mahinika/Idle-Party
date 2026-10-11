@@ -19,15 +19,27 @@ Future<void> pumpSheet(WidgetTester tester) async {
 }
 
 /// Hub cards (thanks / reminders / what's new) sit on a scrim. Dismiss so
-/// the bottom bar can be tapped.
+/// the bottom bar can be tapped. A card can land on the frame after the
+/// last one closes, so look twice before giving up.
 Future<void> dismissHubPrompts(WidgetTester tester) async {
   for (var i = 0; i < 4; i++) {
+    await tester.pump();
     Finder? target;
     for (final label in ['MAYBE LATER', 'NOT NOW', 'GOT IT']) {
       final found = find.text(label);
       if (found.evaluate().isNotEmpty) {
         target = found;
         break;
+      }
+    }
+    if (target == null) {
+      await tester.pump();
+      for (final label in ['MAYBE LATER', 'NOT NOW', 'GOT IT']) {
+        final found = find.text(label);
+        if (found.evaluate().isNotEmpty) {
+          target = found;
+          break;
+        }
       }
     }
     if (target == null) return;

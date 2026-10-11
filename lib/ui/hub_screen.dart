@@ -1,4 +1,4 @@
-import 'dart:async' show unawaited;
+import 'dart:async' show Completer, unawaited;
 
 import 'package:flutter/material.dart';
 
@@ -80,8 +80,11 @@ class _HubScreenState extends State<HubScreen>
   bool _offeredWhatsNew = false;
   bool _offeredDiscordThanks = false;
   bool _offeredNotifyOptIn = false;
+  bool _optInScheduled = false;
   bool _notifyWatch = false;
   bool _offeredPlayReview = false;
+  bool _promptsAfterMenu = false;
+  bool _offeringCards = false;
   bool _userPickedZone = false;
   bool _showEndgameMap = false;
   int? _trackedAscension;
@@ -161,6 +164,7 @@ class _HubScreenState extends State<HubScreen>
       });
     });
     director.addListener(_onDirectorForNotify);
+    router.addListener(_onMenuForPrompts);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       unawaited(DungeonArtWarmup.warm(director.state.dungeonId));
       director.ensureMarketListings();
@@ -169,8 +173,28 @@ class _HubScreenState extends State<HubScreen>
       // FEEL 298
       await Future<void>.delayed(const Duration(milliseconds: 450));
       if (!mounted) return;
-      // One overlay card per hub visit after offline summary.
+      await _offerHubCards();
+    });
+  }
+
+  /// One overlay card per hub visit. A card never covers GOLD or another
+  /// open menu; it waits until that menu closes.
+  Future<void> _offerHubCards() async {
+    if (_offeringCards || !mounted) return;
+    if (router.isOpen) {
+      _promptsAfterMenu = true;
+      _notifyWatch = true;
+      return;
+    }
+    _offeringCards = true;
+    _promptsAfterMenu = false;
+    try {
       if (await _maybeShowWhatsNew()) {
+        _notifyWatch = true;
+        return;
+      }
+      if (!mounted || router.isOpen) {
+        _promptsAfterMenu = router.isOpen;
         _notifyWatch = true;
         return;
       }
@@ -178,13 +202,31 @@ class _HubScreenState extends State<HubScreen>
         _notifyWatch = true;
         return;
       }
+      if (!mounted || router.isOpen) {
+        _promptsAfterMenu = router.isOpen;
+        _notifyWatch = true;
+        return;
+      }
       if (await _maybeShowNotifyOptIn()) {
+        _notifyWatch = true;
+        return;
+      }
+      if (!mounted || router.isOpen) {
+        _promptsAfterMenu = router.isOpen;
         _notifyWatch = true;
         return;
       }
       _notifyWatch = true;
       await _maybeShowPlayReview();
-    });
+    } finally {
+      _offeringCards = false;
+    }
+  }
+
+  void _onMenuForPrompts() {
+    if (!_promptsAfterMenu || router.isOpen || !mounted) return;
+    _promptsAfterMenu = false;
+    unawaited(_offerHubCards());
   }
 
   Future<void> _maybeShowOffline() async {
@@ -206,6 +248,10 @@ class _HubScreenState extends State<HubScreen>
     if (chase.urgency == HubChaseUrgency.ready) return false;
     await Future<void>.delayed(const Duration(milliseconds: 1400));
     if (!mounted || _offeredWhatsNew) return false;
+    if (router.isOpen) {
+      _promptsAfterMenu = true;
+      return false;
+    }
     if (director.state.inDungeon) return false;
     if (!MetaSystems.hasUnseenChangelog(director.state)) return false;
     _offeredWhatsNew = true;
@@ -230,13 +276,36 @@ class _HubScreenState extends State<HubScreen>
   }
 
   Future<bool> _maybeShowNotifyOptIn() async {
-    if (_offeredNotifyOptIn || !mounted) return false;
+    if (_offeredNotifyOptIn || _optInScheduled || !mounted) return false;
+    if (router.isOpen) {
+      _promptsAfterMenu = true;
+      return false;
+    }
     if (director.state.inDungeon) return false;
     if (director.offlineSummary != null) return false;
     if (!NotifyOptInOverlay.shouldOffer(director)) return false;
-    _offeredNotifyOptIn = true;
-    await NotifyOptInOverlay.show(context, director);
-    return true;
+    // Show on the next frame. GOLD opened in this same turn stays on top
+    // otherwise: the card was pushed while the hub was still clear.
+    _optInScheduled = true;
+    final shown = Completer<bool>();
+    WidgetsBinding.instance.scheduleFrame();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _optInScheduled = false;
+      if (!mounted ||
+          router.isOpen ||
+          director.state.inDungeon ||
+          director.offlineSummary != null ||
+          !NotifyOptInOverlay.shouldOffer(director)) {
+        if (router.isOpen) _promptsAfterMenu = true;
+        if (!shown.isCompleted) shown.complete(false);
+        return;
+      }
+      _offeredNotifyOptIn = true;
+      NotifyOptInOverlay.show(context, director).whenComplete(() {
+        if (!shown.isCompleted) shown.complete(true);
+      });
+    });
+    return shown.future;
   }
 
   Future<bool> _maybeShowPlayReview() async {
@@ -245,6 +314,10 @@ class _HubScreenState extends State<HubScreen>
     if (!PlayReviewAskOverlay.shouldOffer(director)) return false;
     await Future<void>.delayed(const Duration(milliseconds: 1400));
     if (!mounted || _offeredPlayReview) return false;
+    if (router.isOpen) {
+      _promptsAfterMenu = true;
+      return false;
+    }
     if (director.state.inDungeon) return false;
     if (!PlayReviewAskOverlay.shouldOffer(director)) return false;
     _offeredPlayReview = true;
@@ -256,6 +329,7 @@ class _HubScreenState extends State<HubScreen>
   @override
   void dispose() {
     director.removeListener(_onDirectorForNotify);
+    router.removeListener(_onMenuForPrompts);
     _torch.dispose();
     super.dispose();
   }
