@@ -73,8 +73,6 @@ follow `save-migrate`.
 - Skip or failed ad on WISP drops the pending watch pile for that tap.
 - SCROLLS and WISP share one rewarded unit and one preload.
 - Warmup starts ~2 s after boot; the first WATCH may say loading.
-- `docs/PLAY_STORE.md` still has old "POWERUPS / 1 ad = 3 hours" wording.
-  Fix it when you touch that doc.
 - Pet `xp_wisp` and the frost wisp enemy are unrelated to the lantern.
 
 ## SHOP purchases
@@ -87,9 +85,9 @@ follow `save-migrate`.
 | SHOP tab | `lib/ui/shell/shop_dock.dart` |
 | Design | `docs/SHOP_MONETIZATION.md` |
 
-The comment "no whale packs, no gacha" in `shop_catalog.dart` is older than
-the locks: since 2026-09-26 gacha, BiS-for-cash, and whale packs are allowed
-(`00-locks`). A new offer still needs a test in `test/shop_billing_test.dart`.
+Today's catalog is cheap convenience. Since 2026-09-26 gacha, BiS-for-cash,
+and whale packs are allowed (`00-locks`). A new offer still needs a test in
+`test/shop_billing_test.dart`.
 
 ## Done when
 

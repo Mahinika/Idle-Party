@@ -200,7 +200,7 @@ Hub **POWERUPS** is already in the game. Payouts go **AdMob → your bank**, not
 2. Fix AdMob / AdSense **payment profile** banner if still red.
 3. Optional later: US-state privacy message (not required for EU-first ship).
 
-**Code fix (2026-08-22):** rewarded show used to finish when the ad *opened*, dispose the ad, and skip the hour. It now waits until the ad is dismissed and only then grants POWERUPS. Duration: **1 ad = 3 hours** (stacks to 24h).
+**Code fix (2026-08-22):** rewarded show used to finish when the ad *opened*, dispose the ad, and skip the reward. It now waits until the ad is dismissed and only then grants it. One ad is **+1 SCROLLS ticket**. A ticket buys a 2h scroll, or two tickets buy a 4h Full Boost. Time extends up to 24h. A WISP watch pays gold, not a time boost.
 
 **Play Console (2026-08-21):**
 

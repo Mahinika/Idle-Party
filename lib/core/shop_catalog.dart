@@ -69,8 +69,9 @@ class ShopCatalogItem {
       kind == ShopOfferKind.cinders;
 }
 
-/// Cheap convenience ladder — no whale packs, no gacha.
-/// Prices tuned so larger packs are better $/hour than smaller ones.
+/// Today's offers are a cheap convenience ladder. Larger packs are a
+/// better $/hour than smaller ones. A stronger paid offer is allowed
+/// when the owner names it (see docs/SHOP_MONETIZATION.md).
 abstract final class ShopCatalog {
   static const List<ShopCatalogItem> offered = [
     ShopCatalogItem(
