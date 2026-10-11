@@ -9,6 +9,12 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Done
 
+<!-- - 2026-10-11 · A reopened wipe said 0 dealt and 0 taken · the card keeps the damage from that fight · fixed in b20f78b5 -->
+
+<!-- - 2026-10-11 · BLESSING was titled KEEP and said not the bottom-tab SHOP · the sheet is BLESSING and the buys stay after Ascend · fixed in b20f78b5 -->
+
+<!-- - 2026-10-11 · Pets with nothing hatched opened on SET ACTIVE rules · the empty roster starts at No pets yet · fixed in b20f78b5 -->
+
 <!-- - 2026-10-07 · Play review (ja, 4★) · Health bars sat across hero eyes · bars now sit above the head · fixed in ff58713b -->
 
 <!-- - 2026-10-07 · Play review (ja, 4★) · New floors and new enemies cut in instantly · the camera glides when a pack wakes, and a new floor fades in · fixed in ff58713b -->
