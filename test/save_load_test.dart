@@ -46,6 +46,7 @@ void main() {
       wipeStreakKey: 'sandy:3',
       wipeStreakCount: 3,
       wipeAdviceLine: 'Upgrade ATK in FORGE',
+      wipeScanLine: 'Pack 40% left · 1200 dealt · 800 taken',
     );
     state = GameLogic.ensureRogueHero(state);
 
@@ -95,6 +96,7 @@ void main() {
     expect(decoded.wipeStreakKey, 'sandy:3');
     expect(decoded.wipeStreakCount, 3);
     expect(decoded.wipeAdviceLine, 'Upgrade ATK in FORGE');
+    expect(decoded.wipeScanLine, 'Pack 40% left · 1200 dealt · 800 taken');
     expect(decoded.heroes.length, state.heroes.length);
     // Load may run syncSpecUnlocks and bump lastUpdated.
     expect(!decoded.lastUpdated.isBefore(state.lastUpdated), isTrue);
@@ -276,10 +278,12 @@ void main() {
     json.remove('wipeStreakKey');
     json.remove('wipeStreakCount');
     json.remove('wipeAdviceLine');
+    json.remove('wipeScanLine');
     final loaded = GameLogic.stateFromJson(json);
     expect(loaded.wipeStreakKey, '');
     expect(loaded.wipeStreakCount, 0);
     expect(loaded.wipeAdviceLine, '');
+    expect(loaded.wipeScanLine, '');
   });
 
   test('title screen does not persist until New Game', () async {

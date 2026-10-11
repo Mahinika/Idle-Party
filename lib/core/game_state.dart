@@ -164,6 +164,7 @@ class GameState {
     this.wipeStreakKey = '',
     this.wipeStreakCount = 0,
     this.wipeAdviceLine = '',
+    this.wipeScanLine = '',
     this.sessionTelemetryOptIn = false,
     this.sessionTelemetryLog = const <String>[],
   }) : run = RunBag(
@@ -528,6 +529,10 @@ class GameState {
 
   /// Dungeon wipe-panel line after stacked wipes; empty if the sim is unsure.
   final String wipeAdviceLine;
+
+  /// Pack leftover and damage from the wipe that wrote [wipeAdviceLine].
+  /// A fresh fight world after reopen has zeros, so the card reads this.
+  final String wipeScanLine;
 
   /// Opt-in local session log (SETTINGS). Never uploaded by Idle Party.
   final bool sessionTelemetryOptIn;
@@ -1175,6 +1180,7 @@ class GameState {
     String? wipeStreakKey,
     int? wipeStreakCount,
     String? wipeAdviceLine,
+    String? wipeScanLine,
     bool? sessionTelemetryOptIn,
     List<String>? sessionTelemetryLog,
     bool clearEquipped = false,
@@ -1324,6 +1330,7 @@ class GameState {
       wipeStreakKey: wipeStreakKey ?? this.wipeStreakKey,
       wipeStreakCount: wipeStreakCount ?? this.wipeStreakCount,
       wipeAdviceLine: wipeAdviceLine ?? this.wipeAdviceLine,
+      wipeScanLine: wipeScanLine ?? this.wipeScanLine,
       sessionTelemetryOptIn:
           sessionTelemetryOptIn ?? this.sessionTelemetryOptIn,
       sessionTelemetryLog: sessionTelemetryLog ?? this.sessionTelemetryLog,
@@ -1491,7 +1498,8 @@ class GameState {
     'seenChangelogVersion': seenChangelogVersion,
     'wipeStreakKey': wipeStreakKey,
     'wipeStreakCount': wipeStreakCount,
-    'wipeAdviceLine': wipeAdviceLine,
+      'wipeAdviceLine': wipeAdviceLine,
+    'wipeScanLine': wipeScanLine,
     'sessionTelemetryOptIn': sessionTelemetryOptIn,
     'sessionTelemetryLog': sessionTelemetryLog,
   };
@@ -1803,6 +1811,7 @@ class GameState {
       wipeStreakKey: (json['wipeStreakKey'] as String?) ?? '',
       wipeStreakCount: _jsonInt(json['wipeStreakCount']),
       wipeAdviceLine: (json['wipeAdviceLine'] as String?) ?? '',
+      wipeScanLine: (json['wipeScanLine'] as String?) ?? '',
       sessionTelemetryOptIn: (json['sessionTelemetryOptIn'] as bool?) ?? false,
       sessionTelemetryLog:
           (json['sessionTelemetryLog'] as List<dynamic>?)?.cast<String>() ??

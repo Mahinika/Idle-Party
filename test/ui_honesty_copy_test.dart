@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/ad_boost.dart';
 import 'package:idle_party/core/blessing_constellation.dart';
 import 'package:idle_party/core/friend_referral.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/play_leaderboard_ids.dart';
 import 'package:idle_party/core/shop_catalog.dart';
@@ -9,6 +11,8 @@ import 'package:idle_party/core/story_lore.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/ui/meta/prestige_shop.dart';
+import 'package:idle_party/ui/shell/beast_overlay.dart';
+import 'package:idle_party/ui/shell/essence_keep_panel.dart';
 
 void main() {
   test('prestige haveLine is honest about Dawn Tithe / Apothecary / stash', () {
@@ -110,5 +114,41 @@ void main() {
       PrestigeShopOverlay.haveLine(state, 'daily_essence'),
       contains('+0e'),
     );
+  });
+
+  testWidgets('BLESSING buys stay in player words', (tester) async {
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState().copyWith(ascensionLevel: 1),
+    );
+    addTearDown(director.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: EssenceKeepPanel(director: director),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('These stay after Ascend.'), findsOneWidget);
+    expect(find.textContaining('bottom-tab'), findsNothing);
+  });
+
+  testWidgets('an empty pet roster skips the fight rules', (tester) async {
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState(),
+    );
+    addTearDown(director.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(child: BeastOverlay(director: director)),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('No pets yet'), findsOneWidget);
+    expect(find.textContaining('SET ACTIVE'), findsNothing);
   });
 }

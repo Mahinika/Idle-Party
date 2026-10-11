@@ -258,7 +258,7 @@ class MenuRouter extends ChangeNotifier {
 
       EssencePanel.tracks => 'ESSENCE',
 
-      EssencePanel.keep => 'KEEP',
+      EssencePanel.keep => 'BLESSING',
 
       EssencePanel.relics => 'RELICS',
 

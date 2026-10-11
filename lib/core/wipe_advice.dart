@@ -83,6 +83,18 @@ abstract final class WipeAdvice {
     return 'Pack $pct% left · ${fight.damageDealt} dealt · ${fight.damageTaken} taken';
   }
 
+  /// The card's damage line. Prefer the snapshot saved at the wipe.
+  /// A reopened world still has leftover pack HP and zero hero damage.
+  static String? shownScanLine({
+    required String saved,
+    WipeFightSnapshot? live,
+  }) {
+    if (saved.isNotEmpty) return saved;
+    if (live == null) return null;
+    if (live.damageDealt <= 0 && live.damageTaken <= 0) return null;
+    return scanLine(live);
+  }
+
   /// First-hour stand-in when GOLD tracks are still hidden (DEF, wipe 1).
   static const String gearWearLine = 'Wear loot in GEAR';
 

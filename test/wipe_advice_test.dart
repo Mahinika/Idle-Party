@@ -227,9 +227,32 @@ void main() {
     state = GameLogic.notePartyWipe(state, atkLack());
     state = GameLogic.notePartyWipe(state, atkLack());
     expect(state.wipeAdviceLine, isNotEmpty);
+    expect(state.wipeScanLine, 'Pack 70% left · 3000 dealt · 400 taken');
     state = GameLogic.clearWipeStreak(state);
     expect(state.wipeStreakCount, 0);
     expect(state.wipeAdviceLine, '');
+    expect(state.wipeScanLine, '');
+  });
+
+  test('a reopened wipe keeps the saved damage line', () {
+    const saved = 'Pack 33% left · 57917 dealt · 27658 taken';
+    const reopened = WipeFightSnapshot(
+      waveHp: 10000,
+      remainingHp: 5000,
+      damageDealt: 0,
+      damageTaken: 0,
+      partyMaxHp: 400,
+      elapsedSec: 0,
+    );
+    expect(
+      WipeAdvice.shownScanLine(saved: saved, live: reopened),
+      saved,
+    );
+    expect(WipeAdvice.shownScanLine(saved: '', live: reopened), isNull);
+    expect(
+      WipeAdvice.shownScanLine(saved: '', live: atkLack()),
+      'Pack 70% left · 3000 dealt · 400 taken',
+    );
   });
 
   test('clearing a lower floor after push retreat keeps the wall streak', () {

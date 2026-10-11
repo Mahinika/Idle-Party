@@ -142,15 +142,17 @@ class _BeastOverlayState extends State<BeastOverlay> {
           textAlign: TextAlign.center,
           style: GameTheme.menuTitle(size: 16, color: GameTheme.torchHot),
         ),
-        const SizedBox(height: 4),
-        Text(
-          'SET ACTIVE picks the pet that fights. FAVORITE only boosts that '
-          'species while it is ACTIVE: +1 ATK and about +5% on find passives '
-          '(at least +1 on small bonuses). Mitigate and heal bump too. Affinity +25% in that '
-          'cave. Bond +1 ATK every 5 ranks. Frames are looks only.',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
+        if (state.ownedPets.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            'SET ACTIVE picks the pet that fights. FAVORITE only boosts that '
+            'species while it is ACTIVE: +1 ATK and about +5% on find passives '
+            '(at least +1 on small bonuses). Mitigate and heal bump too. Affinity +25% in that '
+            'cave. Bond +1 ATK every 5 ranks. Frames are looks only.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ],
         if (state.metaDepth.favoritePetSpecies.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(

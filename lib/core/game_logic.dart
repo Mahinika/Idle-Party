@@ -2126,6 +2126,7 @@ class GameLogic {
       wipeStreakKey: '',
       wipeStreakCount: 0,
       wipeAdviceLine: '',
+      wipeScanLine: '',
     );
   }
 
@@ -2158,6 +2159,7 @@ class GameLogic {
       wipeStreakKey: key,
       wipeStreakCount: count,
       wipeAdviceLine: line,
+      wipeScanLine: WipeAdvice.scanLine(fight),
     );
   }
 

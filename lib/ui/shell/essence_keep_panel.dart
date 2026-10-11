@@ -145,7 +145,7 @@ class EssenceKeepPanel extends StatelessWidget {
         if (MenuTabs.showShop(state)) ...[
           _label('PERMANENT BUYS'),
           Text(
-            'AL-gated QoL · not the bottom-tab SHOP',
+            'These stay after Ascend.',
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 4),

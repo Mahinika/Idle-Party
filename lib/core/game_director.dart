@@ -1227,6 +1227,7 @@ class GameDirector extends ChangeNotifier {
     _state = GameLogic.restartFloor(result.state).copyWith(
       lastUpdated: DateTime.now(),
       wipeAdviceLine: '',
+      wipeScanLine: '',
     );
     final n = result.equipped;
     showToast(

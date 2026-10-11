@@ -145,6 +145,9 @@ abstract final class ChangelogCatalog {
       fixed: <String>[
         'A wipe hides the line that says the party keeps fighting.',
         'OPEN BAG on a wipe opens the bag, even when a new hero is waiting.',
+        'A wipe you reopen still shows that fight\'s damage, not zeros.',
+        'BLESSING keeps that name. Permanent buys say they stay after Ascend.',
+        'With no pets, PETS starts at the hatch, not the fight rules.',
       ],
     ),
     ChangelogRelease(

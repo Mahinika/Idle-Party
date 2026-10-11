@@ -115,18 +115,24 @@ class DungeonWipePanel extends StatelessWidget {
                         color: GameTheme.torchHot,
                       ),
                     ),
-                    if (!plain && director.spatial != null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        WipeAdvice.scanLine(
-                          WipeFightSnapshot.fromWorld(director.spatial!),
+                    if (!plain) ...[
+                      if (WipeAdvice.shownScanLine(
+                            saved: state.wipeScanLine,
+                            live: director.spatial == null
+                                ? null
+                                : WipeFightSnapshot.fromWorld(director.spatial!),
+                          )
+                          case final scan?) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          scan,
+                          textAlign: TextAlign.center,
+                          style: GameTheme.body(
+                            size: 12,
+                            color: GameTheme.parchmentDim,
+                          ),
                         ),
-                        textAlign: TextAlign.center,
-                        style: GameTheme.body(
-                          size: 12,
-                          color: GameTheme.parchmentDim,
-                        ),
-                      ),
+                      ],
                     ],
                     if (WipeAdvice.hubHintFor(state.wipeAdviceLine) !=
                         null) ...[

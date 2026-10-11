@@ -243,5 +243,7 @@ void main() {
     expect(router.jobHint.toLowerCase(), contains('flask'));
     router.open(MenuRoute.essence, essence: EssencePanel.relics);
     expect(router.jobHint.toLowerCase(), contains('ember'));
+    router.open(MenuRoute.essence, essence: EssencePanel.keep);
+    expect(router.title, 'BLESSING');
   });
 }
