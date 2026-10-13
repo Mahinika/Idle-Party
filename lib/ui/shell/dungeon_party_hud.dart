@@ -22,6 +22,7 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 import 'kit_hud_chips.dart';
+import 'shell_common.dart';
 
 /// The person on the crawl strip. An empty name falls back to the role.
 String partyStripName(PartyHero hero, {required bool plainEnglish}) {
@@ -105,8 +106,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _idleFade = Duration(seconds: 8);
   static const _idleFadePhone = Duration(seconds: 3);
   static const _fullOpacity = 1.0;
-  static const _dimOpacity = 0.42;
-  static const _dimOpacityPhone = 0.32;
+  static const _dimOpacity = 0.72;
+  static const _dimOpacityPhone = 0.72;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
@@ -216,7 +217,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final world = widget.director.spatial;
     final plainEnglish = GameLogic.plainPlayerChrome(state);
     // Thin strip: reclaim map; kit opens beside the strip (not expanding rows).
-    const fullWidth = 118.0;
+    const fullWidth = 146.0;
     final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
     // Name line + gap + bar/CC line. 26px overflowed by 4 on the boss.
     // Name line + gap + bar/CC line. 26px overflowed by 4 on the boss.
@@ -538,13 +539,17 @@ class DungeonFlaskButton extends StatelessWidget {
                           GameIcon.asset(UiIcon.flask, size: 16),
                           const SizedBox(width: 4),
                           Expanded(
-                            child: Text(
-                              buttonWord,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GameTheme.pixel(
-                                size: GameTheme.hudPixel,
-                                color: labelColor,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                buttonWord,
+                                maxLines: 1,
+                                softWrap: false,
+                                style: GameTheme.pixel(
+                                  size: GameTheme.hudPixel,
+                                  color: labelColor,
+                                ),
                               ),
                             ),
                           ),
@@ -607,8 +612,9 @@ class _KitSidePanel extends StatelessWidget {
     );
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 148),
-      child: Container(
+      constraints: const BoxConstraints(maxWidth: 132, maxHeight: 148),
+      child: SingleChildScrollView(
+        child: Container(
         padding: const EdgeInsets.fromLTRB(6, 4, 6, 5),
         decoration: MenuChrome.hudWell(),
         child: Column(
@@ -685,6 +691,7 @@ class _KitSidePanel extends StatelessWidget {
             ],
           ],
         ),
+      ),
       ),
     );
   }
@@ -1258,9 +1265,7 @@ class _InlineAbilityChip extends StatelessWidget {
         : gated
         ? GameTheme.blood
         : GameTheme.border;
-    final cdText = cdLeft < 10
-        ? cdLeft.toStringAsFixed(1)
-        : cdLeft.round().toString();
+    final cdText = formatCombatSeconds(cdLeft);
     final String label;
     if (gated) {
       label = '${ability.shortLabel}! (shield)';

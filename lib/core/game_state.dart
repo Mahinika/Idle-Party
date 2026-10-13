@@ -153,11 +153,12 @@ class GameState {
     this.colorblindMode = false,
     this.hideHealFloaters = false,
     this.compactCombatNumbers = false,
-    this.alwaysShowEnemyHp = true,
+    this.alwaysShowEnemyHp = false,
     this.uiTextScale = 1.0,
     this.dungeonZoom = DungeonZoom.normal,
     this.dungeonViewCols,
     this.hapticsEnabled = true,
+    this.screenShake = true,
     this.keepScreenAwake = true,
     this.lastDailyDate,
     this.dailyClaimed = false,
@@ -514,6 +515,9 @@ class GameState {
 
   /// Phone vibration on combat / UI cues (independent of mute).
   final bool hapticsEnabled;
+
+  /// Camera punch on crits and God Hand. Off skips the shake. Kept on Ascend.
+  final bool screenShake;
 
   /// Keep the screen on while in a dungeon (Android).
   final bool keepScreenAwake;
@@ -1184,6 +1188,7 @@ class GameState {
     double? dungeonViewCols,
     bool clearDungeonViewCols = false,
     bool? hapticsEnabled,
+    bool? screenShake,
     bool? keepScreenAwake,
     String? lastDailyDate,
     bool? dailyClaimed,
@@ -1336,6 +1341,7 @@ class GameState {
           ? null
           : (dungeonViewCols ?? this.dungeonViewCols),
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
+      screenShake: screenShake ?? this.screenShake,
       keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       lastDailyDate: lastDailyDate ?? this.lastDailyDate,
       dailyClaimed: dailyClaimed ?? this.dailyClaimed,
@@ -1507,6 +1513,7 @@ class GameState {
     'dungeonZoom': dungeonZoom.name,
     if (dungeonViewCols != null) 'dungeonViewCols': dungeonViewCols,
     'hapticsEnabled': hapticsEnabled,
+    'screenShake': screenShake,
     'keepScreenAwake': keepScreenAwake,
     if (lastDailyDate != null) 'lastDailyDate': lastDailyDate,
     'dailyClaimed': dailyClaimed,
@@ -1811,7 +1818,7 @@ class GameState {
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
       hideHealFloaters: (json['hideHealFloaters'] as bool?) ?? false,
       compactCombatNumbers: (json['compactCombatNumbers'] as bool?) ?? false,
-      alwaysShowEnemyHp: (json['alwaysShowEnemyHp'] as bool?) ?? true,
+      alwaysShowEnemyHp: (json['alwaysShowEnemyHp'] as bool?) ?? false,
       uiTextScale: ((json['uiTextScale'] as num?)?.toDouble() ?? 1.0).clamp(
         kUiTextScaleMin,
         kUiTextScaleMax,
@@ -1821,6 +1828,7 @@ class GameState {
           ? null
           : DungeonZoom.clampCols((json['dungeonViewCols'] as num).toDouble()),
       hapticsEnabled: (json['hapticsEnabled'] as bool?) ?? true,
+      screenShake: (json['screenShake'] as bool?) ?? true,
       keepScreenAwake: (json['keepScreenAwake'] as bool?) ?? true,
       lastDailyDate: json['lastDailyDate'] as String?,
       dailyClaimed: (json['dailyClaimed'] as bool?) ?? false,

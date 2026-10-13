@@ -55,11 +55,11 @@ class DungeonWipePanel extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     state.inGauntlet
-                        ? 'Gauntlet climb ends. PB F${state.metaDepth.gauntletBestFloor}. Hub → climb Crystal Spire again.'
+                        ? 'Climb ends. PB F${state.metaDepth.gauntletBestFloor}.'
                         : state.inGreaterRift
-                        ? 'Ranked GR ends. Best GR${state.metaDepth.grBestTier}. Hub ENDGAME → pick GR again (no mid-run gear).'
+                        ? 'Ranked GR ends. Best GR${state.metaDepth.grBestTier}.'
                         : state.inRift
-                        ? 'Farm Rift ends. Best R${state.metaDepth.riftBestTier}. Hub → farm Stormwake again (loot mid-run).'
+                        ? 'Farm Rift ends. Best R${state.metaDepth.riftBestTier}.'
                         : plain
                         ? 'They go again in a moment. HUB leaves the cave.'
                         : dailyEcho
@@ -113,46 +113,62 @@ class DungeonWipePanel extends StatelessWidget {
                     ),
                   ],
                   if (state.wipeAdviceLine.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      state.wipeAdviceLine,
-                      textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 15,
-                        color: GameTheme.torchHot,
-                      ),
-                    ),
-                    if (!plain) ...[
-                      if (WipeAdvice.shownScanLine(
-                            saved: state.wipeScanLine,
-                            live: director.spatial == null
-                                ? null
-                                : WipeFightSnapshot.fromWorld(director.spatial!),
-                          )
-                          case final scan?) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          scan,
-                          textAlign: TextAlign.center,
-                          style: GameTheme.body(
-                            size: 12,
-                            color: GameTheme.parchmentDim,
-                          ),
-                        ),
-                      ],
-                    ],
-                    if (WipeAdvice.hubHintFor(state.wipeAdviceLine) !=
-                        null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        WipeAdvice.hubHintFor(state.wipeAdviceLine)!,
+                    const SizedBox(height: 6),
+                    ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: const EdgeInsets.only(bottom: 4),
+                      initiallyExpanded: false,
+                      title: Text(
+                        'Why?',
                         textAlign: TextAlign.center,
                         style: GameTheme.body(
-                          size: 13,
-                          color: GameTheme.parchmentDim,
+                          size: 14,
+                          color: GameTheme.torchHot,
                         ),
                       ),
-                    ],
+                      children: [
+                        Text(
+                          state.wipeAdviceLine,
+                          textAlign: TextAlign.center,
+                          style: GameTheme.body(
+                            size: 14,
+                            color: GameTheme.torchHot,
+                          ),
+                        ),
+                        if (!plain)
+                          if (WipeAdvice.shownScanLine(
+                                saved: state.wipeScanLine,
+                                live: director.spatial == null
+                                    ? null
+                                    : WipeFightSnapshot.fromWorld(
+                                        director.spatial!,
+                                      ),
+                              )
+                              case final scan?) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              scan,
+                              textAlign: TextAlign.center,
+                              style: GameTheme.body(
+                                size: 12,
+                                color: GameTheme.parchmentDim,
+                              ),
+                            ),
+                          ],
+                        if (WipeAdvice.hubHintFor(state.wipeAdviceLine)
+                            case final hint?) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            hint,
+                            textAlign: TextAlign.center,
+                            style: GameTheme.body(
+                              size: 13,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                   const SizedBox(height: 14),
                   ValueListenableBuilder<int>(

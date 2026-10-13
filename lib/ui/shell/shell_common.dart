@@ -43,6 +43,12 @@ String formatGold(int n) {
   return '${buf}g';
 }
 
+/// One countdown voice: tenths under 10s, whole seconds after that.
+String formatCombatSeconds(double seconds) {
+  if (seconds >= 10) return '${seconds.round()}s';
+  return '${seconds.toStringAsFixed(1)}s';
+}
+
 bool isSoulboundItem(EquipmentItem item) => item.id.startsWith('soulbound_');
 
 bool isUpgradeForAny(GameState state, EquipmentItem item) =>

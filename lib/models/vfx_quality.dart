@@ -28,8 +28,10 @@ enum VfxQuality {
 
   bool get showProjectileTrails => this == VfxQuality.full;
 
-  /// Fancy loot pulse rings (rare+).
+  /// Fancy loot pulse rings (rare+). Lite keeps the ring, not the magnet line.
   bool get showLootPulse => this == VfxQuality.full;
+
+  bool get showRareLootRing => this != VfxQuality.minimal;
 
   String get settingsLabel => switch (this) {
     VfxQuality.full => 'Full VFX',

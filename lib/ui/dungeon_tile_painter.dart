@@ -68,12 +68,39 @@ class _TileRoomPainter extends CustomPainter {
   bool get showTrails => vfxQuality.showProjectileTrails;
   bool get showLootPulse => vfxQuality.showLootPulse;
 
+  bool get showRareLootRing => vfxQuality.showRareLootRing;
+
   Size? _vignetteSize;
   String? _vignetteDungeonId;
   Paint? _vignettePaint;
   // Static so reuse survives CustomPainter recreation each frame.
   static final Paint _fillPaint = Paint();
   static final Paint _strokePaint = Paint()..style = PaintingStyle.stroke;
+  static final Paint _fxFill = Paint();
+  static final Paint _fxStroke = Paint()..style = PaintingStyle.stroke;
+  static final Path _fxPath = Path();
+
+  Paint _fill(Color color) {
+    _fxFill
+      ..style = PaintingStyle.fill
+      ..color = color;
+    return _fxFill;
+  }
+
+  Paint _stroke(
+    Color color,
+    double width, {
+    StrokeCap cap = StrokeCap.butt,
+    StrokeJoin join = StrokeJoin.miter,
+  }) {
+    _fxStroke
+      ..style = PaintingStyle.stroke
+      ..strokeCap = cap
+      ..strokeJoin = join
+      ..strokeWidth = width
+      ..color = color;
+    return _fxStroke;
+  }
   static final TextPainter _goLabelPainter = TextPainter(
     textDirection: TextDirection.ltr,
   );
@@ -399,7 +426,8 @@ class _TileRoomPainter extends CustomPainter {
           canvas.drawLine(c, hc, _strokePaint);
         }
       }
-      if (showLootPulse && loot.drop.rarity.index >= LootRarity.rare.index) {
+      if ((showLootPulse || showRareLootRing) &&
+          loot.drop.rarity.index >= LootRarity.rare.index) {
         _strokePaint
           ..color = glow.withValues(alpha: 0.35)
           ..strokeWidth = 2;
@@ -480,19 +508,19 @@ class _TileRoomPainter extends CustomPainter {
     SpatialGroundFxKind kind,
     double life,
   ) {
-    final stroke = Paint()
-      ..color = color.withValues(alpha: 0.6 * frac)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(1.5, tile * 0.06);
     canvas.drawCircle(
       c,
       r,
-      Paint()
-        ..color = const Color(0x99100C08).withValues(alpha: 0.85 * frac)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(3.2, tile * 0.11),
+      _stroke(
+        const Color(0x99100C08).withValues(alpha: 0.85 * frac),
+        math.max(3.2, tile * 0.11),
+      ),
     );
-    canvas.drawCircle(c, r, stroke);
+    canvas.drawCircle(
+      c,
+      r,
+      _stroke(color.withValues(alpha: 0.6 * frac), math.max(1.5, tile * 0.06)),
+    );
     switch (kind) {
       case SpatialGroundFxKind.disc:
         return;
@@ -506,24 +534,26 @@ class _TileRoomPainter extends CustomPainter {
               c.dx + math.cos(a) * r * 0.92,
               c.dy + math.sin(a) * r * 0.92,
             ),
-            Paint()
-              ..color = const Color(0xAAFFF6C0).withValues(alpha: 0.55 * frac)
-              ..strokeWidth = math.max(1.2, tile * 0.045)
-              ..strokeCap = StrokeCap.round,
+            _stroke(
+              const Color(0xAAFFF6C0).withValues(alpha: 0.55 * frac),
+              math.max(1.2, tile * 0.045),
+              cap: StrokeCap.round,
+            ),
           );
         }
         canvas.drawCircle(
           c,
           r * 0.38,
-          Paint()
-            ..color = const Color(0x66FFF0A0).withValues(alpha: 0.45 * frac)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = math.max(1.4, tile * 0.05),
+          _stroke(
+            const Color(0x66FFF0A0).withValues(alpha: 0.45 * frac),
+            math.max(1.4, tile * 0.05),
+          ),
         );
       case SpatialGroundFxKind.frost:
         for (var i = 0; i < 6; i++) {
           final a = i * math.pi / 3 + life * 0.4;
-          final p = Path()
+          final p = _fxPath
+            ..reset()
             ..moveTo(
               c.dx + math.cos(a) * r * 0.25,
               c.dy + math.sin(a) * r * 0.25,
@@ -539,8 +569,7 @@ class _TileRoomPainter extends CustomPainter {
             ..close();
           canvas.drawPath(
             p,
-            Paint()
-              ..color = const Color(0x88C8F0FF).withValues(alpha: 0.45 * frac),
+            _fill(const Color(0x88C8F0FF).withValues(alpha: 0.45 * frac)),
           );
         }
       case SpatialGroundFxKind.fire:
@@ -555,8 +584,7 @@ class _TileRoomPainter extends CustomPainter {
               width: r * 0.55,
               height: r * 0.38,
             ),
-            Paint()
-              ..color = const Color(0x66FF5018).withValues(alpha: 0.4 * frac),
+            _fill(const Color(0x66FF5018).withValues(alpha: 0.4 * frac)),
           );
         }
       case SpatialGroundFxKind.rain:
@@ -568,29 +596,29 @@ class _TileRoomPainter extends CustomPainter {
           canvas.drawLine(
             Offset(c.dx + ox, c.dy + oy - r * 0.22 * drop),
             Offset(c.dx + ox, c.dy + oy + r * 0.12),
-            Paint()
-              ..color = color.withValues(alpha: 0.7 * frac)
-              ..strokeWidth = math.max(1.2, tile * 0.04)
-              ..strokeCap = StrokeCap.round,
+            _stroke(
+              color.withValues(alpha: 0.7 * frac),
+              math.max(1.2, tile * 0.04),
+              cap: StrokeCap.round,
+            ),
           );
         }
       case SpatialGroundFxKind.shadow:
         canvas.drawCircle(
           c,
           r * 0.55,
-          Paint()
-            ..color = const Color(0x55201040).withValues(alpha: 0.5 * frac),
+          _fill(const Color(0x55201040).withValues(alpha: 0.5 * frac)),
         );
         canvas.drawArc(
           Rect.fromCircle(center: c, radius: r * 0.72),
           life,
           2.2,
           false,
-          Paint()
-            ..color = const Color(0xAA9050D0).withValues(alpha: 0.55 * frac)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = math.max(2, tile * 0.07)
-            ..strokeCap = StrokeCap.round,
+          _stroke(
+            const Color(0xAA9050D0).withValues(alpha: 0.55 * frac),
+            math.max(2, tile * 0.07),
+            cap: StrokeCap.round,
+          ),
         );
       case SpatialGroundFxKind.nature:
         for (var i = 0; i < 5; i++) {
@@ -604,8 +632,7 @@ class _TileRoomPainter extends CustomPainter {
               width: r * 0.28,
               height: r * 0.16,
             ),
-            Paint()
-              ..color = const Color(0x882EAA55).withValues(alpha: 0.5 * frac),
+            _fill(const Color(0x882EAA55).withValues(alpha: 0.5 * frac)),
           );
         }
       case SpatialGroundFxKind.poison:
@@ -617,8 +644,7 @@ class _TileRoomPainter extends CustomPainter {
               c.dy + math.sin(a) * r * 0.45,
             ),
             r * 0.12,
-            Paint()
-              ..color = const Color(0xAAE4F04A).withValues(alpha: 0.55 * frac),
+            _fill(const Color(0xAAE4F04A).withValues(alpha: 0.55 * frac)),
           );
         }
       case SpatialGroundFxKind.steel:
@@ -629,18 +655,18 @@ class _TileRoomPainter extends CustomPainter {
             a,
             1.4,
             false,
-            Paint()
-              ..color = const Color(0xCCFFE08A).withValues(alpha: 0.55 * frac)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = math.max(2, tile * 0.08)
-              ..strokeCap = StrokeCap.round,
+            _stroke(
+              const Color(0xCCFFE08A).withValues(alpha: 0.55 * frac),
+              math.max(2, tile * 0.08),
+              cap: StrokeCap.round,
+            ),
           );
         }
       case SpatialGroundFxKind.blood:
         canvas.drawCircle(
           c,
           r * 0.42,
-          Paint()..color = color.withValues(alpha: 0.28 * frac),
+          _fill(color.withValues(alpha: 0.28 * frac)),
         );
         for (var i = 0; i < 5; i++) {
           final a = i * 1.25 + 0.4;
@@ -650,8 +676,7 @@ class _TileRoomPainter extends CustomPainter {
               c.dy + math.sin(a) * r * 0.55,
             ),
             r * 0.1,
-            Paint()
-              ..color = const Color(0xCCE03040).withValues(alpha: 0.7 * frac),
+            _fill(const Color(0xCCE03040).withValues(alpha: 0.7 * frac)),
           );
         }
     }
@@ -667,11 +692,11 @@ class _TileRoomPainter extends CustomPainter {
     final c = center(burst.x, burst.y);
     final r = tile * burst.radius * (0.78 + (1 - alpha) * 0.32);
     final color = Color(burst.argb);
-    final ink = Paint()
-      ..color = const Color(0xE6100C08).withValues(alpha: alpha)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(3.4, tile * 0.13)
-      ..strokeCap = StrokeCap.round;
+    final ink = _stroke(
+      const Color(0xE6100C08).withValues(alpha: alpha),
+      math.max(3.4, tile * 0.13),
+      cap: StrokeCap.round,
+    );
     switch (burst.kind) {
       case SpatialBurstKind.beam:
         final end = burst.x2 != null && burst.y2 != null
@@ -682,7 +707,9 @@ class _TileRoomPainter extends CustomPainter {
         final len = math.sqrt(dx * dx + dy * dy) + 0.001;
         final nx = -dy / len;
         final ny = dx / len;
-        final zig = Path()..moveTo(c.dx, c.dy);
+        final zig = _fxPath
+          ..reset()
+          ..moveTo(c.dx, c.dy);
         for (var i = 1; i <= 4; i++) {
           final t = i / 5;
           final side = (i.isOdd ? 1.0 : -1.0) * r * 0.42;
@@ -692,25 +719,25 @@ class _TileRoomPainter extends CustomPainter {
         canvas.drawPath(zig, ink);
         canvas.drawPath(
           zig,
-          Paint()
-            ..color = color.withValues(alpha: alpha * 0.95)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = math.max(2.4, tile * 0.09)
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round,
+          _stroke(
+            color.withValues(alpha: alpha * 0.95),
+            math.max(2.4, tile * 0.09),
+            cap: StrokeCap.round,
+            join: StrokeJoin.round,
+          ),
         );
         canvas.drawPath(
           zig,
-          Paint()
-            ..color = Colors.white.withValues(alpha: alpha)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = math.max(1.1, tile * 0.04)
-            ..strokeCap = StrokeCap.round,
+          _stroke(
+            Colors.white.withValues(alpha: alpha),
+            math.max(1.1, tile * 0.04),
+            cap: StrokeCap.round,
+          ),
         );
         canvas.drawCircle(
           end,
           r * 0.42,
-          Paint()..color = Colors.white.withValues(alpha: alpha),
+          _fill(Colors.white.withValues(alpha: alpha)),
         );
       case SpatialBurstKind.rain:
         for (var i = 0; i < 8; i++) {
@@ -723,24 +750,27 @@ class _TileRoomPainter extends CustomPainter {
           canvas.drawLine(
             a0,
             a1,
-            Paint()
-              ..color = const Color(0xCC100C08).withValues(alpha: alpha)
-              ..strokeWidth = math.max(3.0, tile * 0.1)
-              ..strokeCap = StrokeCap.round,
+            _stroke(
+              const Color(0xCC100C08).withValues(alpha: alpha),
+              math.max(3.0, tile * 0.1),
+              cap: StrokeCap.round,
+            ),
           );
           canvas.drawLine(
             a0,
             a1,
-            Paint()
-              ..color = color.withValues(alpha: alpha)
-              ..strokeWidth = math.max(1.6, tile * 0.055)
-              ..strokeCap = StrokeCap.round,
+            _stroke(
+              color.withValues(alpha: alpha),
+              math.max(1.6, tile * 0.055),
+              cap: StrokeCap.round,
+            ),
           );
         }
       case SpatialBurstKind.shards:
         for (var i = 0; i < 6; i++) {
           final a = i * math.pi / 3 + (1 - alpha) * 0.4;
-          final p = Path()
+          final p = _fxPath
+            ..reset()
             ..moveTo(
               c.dx + math.cos(a) * r * 1.25,
               c.dy + math.sin(a) * r * 1.25,
@@ -756,21 +786,22 @@ class _TileRoomPainter extends CustomPainter {
             ..close();
           canvas.drawPath(
             p,
-            Paint()..color = const Color(0xDD100C08).withValues(alpha: alpha),
+            _fill(const Color(0xDD100C08).withValues(alpha: alpha)),
           );
-          canvas.drawPath(p, Paint()..color = color.withValues(alpha: alpha));
+          canvas.drawPath(p, _fill(color.withValues(alpha: alpha)));
         }
         canvas.drawCircle(
           c,
           r * 0.3,
-          Paint()..color = Colors.white.withValues(alpha: alpha),
+          _fill(Colors.white.withValues(alpha: alpha)),
         );
       case SpatialBurstKind.flame:
         // Petals bias upward so fire reads as rising, not a tinted disc.
         for (var i = 0; i < 5; i++) {
           final a = -1.15 + i * 0.55 + (1 - alpha) * 0.2;
           final lift = r * 0.35 * (1 - alpha);
-          final p = Path()
+          final p = _fxPath
+            ..reset()
             ..moveTo(c.dx, c.dy + r * 0.15)
             ..quadraticBezierTo(
               c.dx + math.cos(a + 0.35) * r * 0.45,
@@ -786,17 +817,17 @@ class _TileRoomPainter extends CustomPainter {
             );
           canvas.drawPath(
             p,
-            Paint()..color = const Color(0xBB100C08).withValues(alpha: alpha),
+            _fill(const Color(0xBB100C08).withValues(alpha: alpha)),
           );
           canvas.drawPath(
             p,
-            Paint()..color = color.withValues(alpha: alpha * 0.88),
+            _fill(color.withValues(alpha: alpha * 0.88)),
           );
         }
         canvas.drawCircle(
           c,
           r * 0.34,
-          Paint()..color = const Color(0xFFFFF0A0).withValues(alpha: alpha),
+          _fill(const Color(0xFFFFF0A0).withValues(alpha: alpha)),
         );
       case SpatialBurstKind.cross:
         final arm = r * 1.15;
@@ -810,10 +841,11 @@ class _TileRoomPainter extends CustomPainter {
           Offset(c.dx + arm * 0.75, c.dy - arm * 0.12),
           ink,
         );
-        final holy = Paint()
-          ..color = color.withValues(alpha: alpha)
-          ..strokeWidth = math.max(2.4, tile * 0.1)
-          ..strokeCap = StrokeCap.round;
+        final holy = _stroke(
+          color.withValues(alpha: alpha),
+          math.max(2.4, tile * 0.1),
+          cap: StrokeCap.round,
+        );
         canvas.drawLine(
           Offset(c.dx, c.dy - arm),
           Offset(c.dx, c.dy + arm * 0.55),
@@ -827,7 +859,7 @@ class _TileRoomPainter extends CustomPainter {
         canvas.drawCircle(
           c,
           r * 0.3,
-          Paint()..color = Colors.white.withValues(alpha: alpha),
+          _fill(Colors.white.withValues(alpha: alpha)),
         );
       case SpatialBurstKind.poison:
         for (var i = 0; i < 5; i++) {
@@ -839,17 +871,17 @@ class _TileRoomPainter extends CustomPainter {
           );
           canvas.drawOval(
             Rect.fromCenter(center: drip, width: r * 0.32, height: r * 0.62),
-            Paint()..color = const Color(0xCC100C08).withValues(alpha: alpha),
+            _fill(const Color(0xCC100C08).withValues(alpha: alpha)),
           );
           canvas.drawOval(
             Rect.fromCenter(center: drip, width: r * 0.24, height: r * 0.5),
-            Paint()..color = color.withValues(alpha: alpha * 0.9),
+            _fill(color.withValues(alpha: alpha * 0.9)),
           );
         }
         canvas.drawCircle(
           c,
           r * 0.26,
-          Paint()..color = const Color(0xAAE8FFC0).withValues(alpha: alpha),
+          _fill(const Color(0xAAE8FFC0).withValues(alpha: alpha)),
         );
       case SpatialBurstKind.skull:
         final head = Rect.fromCenter(
@@ -859,31 +891,31 @@ class _TileRoomPainter extends CustomPainter {
         );
         canvas.drawOval(
           head.inflate(r * 0.08),
-          Paint()..color = const Color(0xDD100C08).withValues(alpha: alpha),
+          _fill(const Color(0xDD100C08).withValues(alpha: alpha)),
         );
         canvas.drawOval(
           head,
-          Paint()..color = color.withValues(alpha: alpha * 0.92),
+          _fill(color.withValues(alpha: alpha * 0.92)),
         );
         canvas.drawCircle(
           Offset(c.dx - r * 0.3, c.dy - r * 0.18),
           r * 0.2,
-          Paint()..color = const Color(0xFF100C08).withValues(alpha: alpha),
+          _fill(const Color(0xFF100C08).withValues(alpha: alpha)),
         );
         canvas.drawCircle(
           Offset(c.dx + r * 0.3, c.dy - r * 0.18),
           r * 0.2,
-          Paint()..color = const Color(0xFF100C08).withValues(alpha: alpha),
+          _fill(const Color(0xFF100C08).withValues(alpha: alpha)),
         );
         canvas.drawCircle(
           Offset(c.dx - r * 0.3, c.dy - r * 0.18),
           r * 0.08,
-          Paint()..color = const Color(0xFFFFE080).withValues(alpha: alpha),
+          _fill(const Color(0xFFFFE080).withValues(alpha: alpha)),
         );
         canvas.drawCircle(
           Offset(c.dx + r * 0.3, c.dy - r * 0.18),
           r * 0.08,
-          Paint()..color = const Color(0xFFFFE080).withValues(alpha: alpha),
+          _fill(const Color(0xFFFFE080).withValues(alpha: alpha)),
         );
         canvas.drawArc(
           Rect.fromCenter(
@@ -894,16 +926,16 @@ class _TileRoomPainter extends CustomPainter {
           0.25,
           math.pi - 0.5,
           false,
-          Paint()
-            ..color = const Color(0xEE100C08).withValues(alpha: alpha)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = math.max(2, tile * 0.07),
+          _stroke(
+            const Color(0xEE100C08).withValues(alpha: alpha),
+            math.max(2, tile * 0.07),
+          ),
         );
       default:
         canvas.drawCircle(
           c,
           r,
-          Paint()..color = color.withValues(alpha: alpha * 0.7),
+          _fill(color.withValues(alpha: alpha * 0.7)),
         );
     }
   }

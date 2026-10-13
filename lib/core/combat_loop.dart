@@ -358,7 +358,8 @@ extension GameDirectorCombatLoop on GameDirector {
           bestDrop: bestDrop,
         );
         if (leveled) {
-          clearLine = '$clearLine · LEVEL UP';
+          final n = leveledHeroes.length;
+          clearLine = n > 1 ? '$clearLine · LEVEL UP ×$n' : '$clearLine · LEVEL UP';
           GameAudio.levelUp();
         }
         final matGrants = LogicNotices.takeCraftMats();

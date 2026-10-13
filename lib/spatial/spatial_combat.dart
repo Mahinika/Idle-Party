@@ -1062,6 +1062,8 @@ abstract final class SpatialCombat {
     return int.tryParse(body) != null;
   }
 
+  static String compactCount(int n) => _compactFloaterText('$n');
+
   static String _compactFloaterText(String text) {
     final plus = text.startsWith('+');
     final body = plus ? text.substring(1) : text;
@@ -1195,17 +1197,15 @@ abstract final class SpatialCombat {
     math.Random? rng,
   }) {
     if (dealt <= 0) return;
+    // One unused roll keeps boss tells and crits on the same stream as when
+    // routine hits were sometimes hidden. The number still always shows.
+    rng?.nextDouble();
     final ability = abilityArgb != null;
-    // Skip most white hits so a 5-man pack doesn't wallpaper the phone.
-    if (!isCrit && !ability) {
-      final r = rng ?? math.Random();
-      if (r.nextDouble() > 0.28) return;
-    }
     spawnFloater(
       world,
       x: x,
       y: y,
-      text: '$dealt',
+      text: isCrit ? 'CRIT $dealt' : '$dealt',
       argb: isCrit ? _floaterCrit : (abilityArgb ?? floaterDamage),
       life: isCrit ? 0.55 : (ability ? 0.45 : 0.32),
       priority: isCrit ? 2 : (ability ? 1 : 0),
@@ -1234,7 +1234,11 @@ abstract final class SpatialCombat {
           dropAt = i;
         }
       }
-      world.floaters.removeAt(dropAt);
+      final last = world.floaters.length - 1;
+      if (dropAt != last) {
+        world.floaters[dropAt] = world.floaters[last];
+      }
+      world.floaters.removeLast();
     }
   }
 
@@ -3159,6 +3163,18 @@ abstract final class SpatialCombat {
       world.treasureTimer -= dt;
       if (world.treasureTimer <= 0) {
         world.treasureOpen = true;
+        final cell = world.map.lootChestPoints.isEmpty
+            ? world.map.exitPoint
+            : world.map.lootChestPoints.first;
+        spawnBurst(
+          world,
+          x: cell.$1 + 0.5,
+          y: cell.$2 + 0.5,
+          argb: 0xFFFFE08A,
+          radius: 0.7,
+          life: 0.4,
+        );
+        world.pendingFeelPickups += 1;
         // Chest gold paid once in completeCurrentRoom via treasureGoldBudget.
         return _stepResult(
           world,
@@ -4048,7 +4064,7 @@ abstract final class SpatialCombat {
       world.awaitingExit = true;
       world.exitWaitTimer = 0;
       world.pendingFeelStairs++;
-      if (!reducedVfx) {
+      if (!reducedVfx || world.spawnPersistentVfx) {
         final ex = world.map.exitPoint.$1 + 0.5;
         final ey = world.map.exitPoint.$2 + 0.5;
         spawnRing(
@@ -4127,7 +4143,7 @@ abstract final class SpatialCombat {
         final goldPickup = resolved?.outcome == LootOutcome.gold;
         final item = loot.drop.equipment;
         final label = salvaged
-            ? 'FULL +${resolved.essenceGained}e'
+            ? 'Bag full · +${resolved.essenceGained}e'
             : (item != null
                   ? item.combatPopLabel
                   : (goldPickup || loot.kind == GroundLootKind.gold
@@ -4778,6 +4794,28 @@ abstract final class SpatialCombat {
     final rewardGold = payout.gold;
     _noteFeelKill(world);
     combatNoteAudioCue(world, combatEnemyDieCue(enemy));
+    final quietDeath = state.vfxQuality == VfxQuality.minimal;
+    if (!quietDeath && enemy.role == EnemyRole.boss) {
+      spawnFloater(
+        world,
+        x: enemy.x,
+        y: enemy.y - 0.85,
+        text: 'BOSS DOWN',
+        argb: _floaterCrit,
+        life: 1.55,
+        priority: 3,
+      );
+    } else if (!quietDeath && enemy.role == EnemyRole.elite) {
+      spawnFloater(
+        world,
+        x: enemy.x,
+        y: enemy.y - 0.7,
+        text: 'ELITE DOWN',
+        argb: _floaterGold,
+        life: 1.15,
+        priority: 2,
+      );
+    }
     if (!state.reducedVfx) {
       if (enemy.role == EnemyRole.boss) {
         spawnRing(
@@ -4796,15 +4834,6 @@ abstract final class SpatialCombat {
           radius: 0.85,
           life: 0.38,
         );
-        spawnFloater(
-          world,
-          x: enemy.x,
-          y: enemy.y - 0.85,
-          text: 'BOSS DOWN',
-          argb: _floaterCrit,
-          life: 1.55,
-          priority: 2,
-        );
       } else if (enemy.role == EnemyRole.elite) {
         spawnRing(
           world,
@@ -4813,15 +4842,6 @@ abstract final class SpatialCombat {
           argb: _floaterGold,
           radius: 0.95,
           life: 0.36,
-        );
-        spawnFloater(
-          world,
-          x: enemy.x,
-          y: enemy.y - 0.7,
-          text: 'ELITE DOWN',
-          argb: _floaterGold,
-          life: 1.15,
-          priority: 2,
         );
       } else {
         spawnBurst(
@@ -4835,6 +4855,8 @@ abstract final class SpatialCombat {
       }
     }
     final drops = payout.drops;
+    String? bestGear;
+    var bestRarity = -1;
     for (var i = 0; i < drops.length; i++) {
       final drop = drops[i];
       final angle = (i / math.max(1, drops.length)) * math.pi * 2;
@@ -4845,46 +4867,31 @@ abstract final class SpatialCombat {
           drop: drop,
         ),
       );
-      if (drop.isEquipment) {
-        // One LOOT! per kill pack — skip extras when the screen is already busy.
-        final busyLoot = world.floaters
-            .where((f) => f.text == 'LOOT!' || f.priority >= 2)
-            .length;
-        if (busyLoot < 2) {
-          spawnFloater(
-            world,
-            x: enemy.x + 0.2 + i * 0.05,
-            y: enemy.y - 0.15,
-            text: 'LOOT!',
-            argb: _floaterGear,
-            life: 0.95,
-            priority: 2,
-          );
-        }
+      final item = drop.equipment;
+      if (item != null && item.rarity.index >= bestRarity) {
+        bestRarity = item.rarity.index;
+        final name = item.combatPopLabel;
+        bestGear = name.isEmpty ? item.name : name;
       }
     }
-    if (rewardGold > 0) {
+    final payoff = <String>[
+      if (bestGear != null && bestGear.isNotEmpty) bestGear,
+      if (rewardGold > 0) '+${rewardGold}g',
+      if (unit != null && payout.xp > 0) '+${payout.xp} XP',
+    ];
+    if (payoff.isNotEmpty) {
       spawnFloater(
         world,
         x: enemy.x,
         y: enemy.y - 0.55,
-        text: '+${rewardGold}g',
-        argb: _floaterGold,
+        text: payoff.join(' · '),
+        argb: bestGear != null ? _floaterGear : _floaterGold,
         life: 1.15,
-        priority: 1,
+        priority: bestRarity >= LootRarity.epic.index ? 3 : 1,
       );
     }
     final next = payout.state;
     if (unit != null) {
-      spawnFloater(
-        world,
-        x: enemy.x - 0.15,
-        y: enemy.y - 0.75,
-        text: '+${payout.xp}XP',
-        argb: _floaterXp,
-        life: 0.85,
-        priority: 0,
-      );
       var leveledFloater = false;
       for (final i in payout.leveled) {
         if (!leveledFloater) {
@@ -4894,7 +4901,9 @@ abstract final class SpatialCombat {
             world,
             x: world.heroes.length > i ? world.heroes[i].x : enemy.x,
             y: (world.heroes.length > i ? world.heroes[i].y : enemy.y) - 0.9,
-            text: 'LEVEL UP!',
+            text: payout.leveled.length > 1
+                ? 'LEVEL UP ×${payout.leveled.length}'
+                : 'LEVEL UP!',
             argb: _floaterXp,
             life: 1.45,
             priority: 2,

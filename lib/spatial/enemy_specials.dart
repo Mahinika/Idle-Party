@@ -427,7 +427,7 @@ void _armMeleeTell(
       text: text,
       argb: argb,
       life: 0.95,
-      priority: reducedVfx ? 2 : 0,
+      priority: 3,
     );
     if (world.spawnPersistentVfx) {
       SpatialCombat.spawnRing(

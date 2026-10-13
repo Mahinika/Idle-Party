@@ -73,6 +73,15 @@ abstract final class CombatPresence {
     double separationWeight = 1.4,
     double stepBudget = 0.08,
   }) {
+    if (world.awaitingExit) {
+      final ex = world.map.exitPoint.$1 + 0.5;
+      final ey = world.map.exitPoint.$2 + 0.5;
+      updateFacing(a, ex, ey, dt);
+      final decay = math.exp(-8.0 * dt);
+      a.vx *= decay;
+      a.vy *= decay;
+      return;
+    }
     final phase =
         world.combatElapsed * idleJitterSpeed + a.assetIndex * 1.73;
     final jx = math.cos(phase) * idleJitterScale;

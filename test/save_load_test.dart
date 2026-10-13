@@ -521,7 +521,7 @@ void main() {
     final legacy = GameLogic.stateFromJson(missing);
     expect(legacy.hideHealFloaters, isFalse);
     expect(legacy.compactCombatNumbers, isFalse);
-    expect(legacy.alwaysShowEnemyHp, isTrue);
+    expect(legacy.alwaysShowEnemyHp, isFalse);
 
     final ascended = GameLogic.ascend(
       loaded.copyWith(bossVictories: 1),

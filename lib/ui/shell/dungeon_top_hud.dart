@@ -18,6 +18,7 @@ import '../../spatial/floor_blueprint.dart';
 import '../../spatial/spatial_combat.dart';
 import '../../spatial/tile_map.dart';
 import '../coach_pulse.dart';
+import 'shell_common.dart';
 import '../first_session_tips.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -392,9 +393,8 @@ class DungeonTopHud extends StatelessWidget {
     // Boss hint wins the one line. Pack job plus "N next" pushed "BOSS NEXT"
     // into the Repeat chip on a 360-wide phone.
     final bossBit = _firstBossBit(state, floor);
-    final fightBit = bossBit.isNotEmpty
-        ? bossBit
-        : '${_packJobBit(world)}${_keyAffixBit(state)}';
+    final affixLine = _keyAffixBit(state).replaceFirst(' · ', '');
+    final fightBit = bossBit.isNotEmpty ? bossBit : _packJobBit(world);
     final placeLine = state.isPartyDefeated
         ? (state.inGauntlet || state.inAnyRiftMode
               ? 'WIPED · End → hub'
@@ -481,10 +481,10 @@ class DungeonTopHud extends StatelessWidget {
         final pb = state.metaDepth.gauntletBestFloor;
         final treasure = GauntletAnomalies.isTreasureFloor(floor);
         final chip = anomaly != null
-            ? 'GAUNTLET F$floor · ${GauntletAnomalies.chip(anomaly)}'
+            ? 'F$floor · ${GauntletAnomalies.chip(anomaly)}'
             : treasure
-            ? 'GAUNTLET F$floor · LOOT'
-            : 'GAUNTLET F$floor';
+            ? 'F$floor · LOOT'
+            : 'F$floor';
         final extra = anomaly != null
             ? '\n${GauntletAnomalies.oneLiner(anomaly)}'
             : treasure
@@ -566,16 +566,31 @@ class DungeonTopHud extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  placeLine,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 11,
-                    color: awaitingExit || state.isPartyDefeated
-                        ? GameTheme.clear
-                        : GameTheme.parchment,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      placeLine,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 11,
+                        color: awaitingExit || state.isPartyDefeated
+                            ? GameTheme.clear
+                            : GameTheme.parchment,
+                      ),
+                    ),
+                    if (affixLine.isNotEmpty)
+                      Text(
+                        affixLine,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.body(
+                          size: 11,
+                          color: GameTheme.parchmentDim,
+                        ),
+                      ),
+                  ],
                 ),
               ),
               if (showFightTools)
@@ -625,9 +640,8 @@ class DungeonTopHud extends StatelessWidget {
                                     (plain
                                         ? 'Long-press the fight, or tap the fist'
                                         : null),
-                                coolingLabel: plain
-                                    ? 'Cooling ${world.godHandCooldown.toStringAsFixed(1)}s'
-                                    : 'Cooling ${world.godHandCooldown.toStringAsFixed(1)}s',
+                                coolingLabel:
+                                    'Cooling ${formatCombatSeconds(world.godHandCooldown)}',
                                 onTap: () => director.godHandAtFocus(),
                               ),
                             ),

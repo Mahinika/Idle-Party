@@ -1036,7 +1036,7 @@ abstract final class GameAudio {
       case 'spell_lightning':
       case 'spell_demon':
       case 'spell_poison':
-        _haptic(HapticFeedback.selectionClick);
+        _haptic(HapticFeedback.selectionClick, light: true);
       case 'kill':
       case 'crit':
       case 'flask':
@@ -1045,11 +1045,11 @@ abstract final class GameAudio {
         _haptic(HapticFeedback.mediumImpact);
       case 'loot':
       case 'unlock':
-        _haptic(HapticFeedback.lightImpact);
+        _haptic(HapticFeedback.lightImpact, light: true);
       case 'enemy_hit':
       case 'shield':
       case 'heal':
-        _haptic(HapticFeedback.selectionClick);
+        _haptic(HapticFeedback.selectionClick, light: true);
       case 'hero_down':
       case 'boss_tell':
       case 'enrage':
@@ -1063,8 +1063,20 @@ abstract final class GameAudio {
     }
   }
 
-  static void _haptic(Future<void> Function() pulse) {
+  static bool coalesceLightHaptics = false;
+  static DateTime? _lastLightHaptic;
+
+  static void _haptic(Future<void> Function() pulse, {bool light = false}) {
     if (!hapticsEnabled) return;
+    if (light && coalesceLightHaptics) {
+      final now = DateTime.now();
+      final last = _lastLightHaptic;
+      if (last != null &&
+          now.difference(last) < const Duration(milliseconds: 200)) {
+        return;
+      }
+      _lastLightHaptic = now;
+    }
     pulse();
   }
 

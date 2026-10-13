@@ -205,15 +205,16 @@ class _Is2ShellState extends State<Is2Shell> {
                       ),
                       Positioned(
                         right: hudSide,
-                        top: 2,
+                        top: 22,
                         child: TargetCornerHud(director: d),
                       ),
                       Positioned(
                         left: 0,
                         right: 0,
                         top: bossIntroBannerTop(
-                          MediaQuery.textScalerOf(context).scale(1),
-                        ),
+                              MediaQuery.textScalerOf(context).scale(1),
+                            ) +
+                            (state.keystoneRunActive ? 22 : 0),
                         child: ListenableBuilder(
                           listenable: d.combatFrame,
                           builder: (context, _) {

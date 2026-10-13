@@ -108,7 +108,34 @@ extension _DungeonPaintActors on _TileRoomPainter {
             ..strokeWidth = math.max(1.8, tile * 0.07),
         );
       }
-      drawSprite(img, c, scale, alpha: enemy.isAlive ? 1 : 0.2);
+      if (!enemy.isAlive && hit <= 0.02) continue;
+      if (isElite && enemy.isAlive) {
+        canvas.drawCircle(
+          c,
+          tile * 0.46,
+          Paint()
+            ..color = const Color(0xFFFFD070)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1.6, tile * 0.06),
+        );
+      }
+      if (enemy.telegraphTimer > 0 && enemy.isAlive) {
+        final wind = (enemy.telegraphTimer / 1.55).clamp(0.15, 1.0);
+        canvas.drawCircle(
+          c,
+          tile * (0.7 + (1 - wind) * 0.25),
+          Paint()
+            ..color = const Color(0xCCFF5030).withValues(alpha: 0.35 + wind * 0.4)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(2.2, tile * 0.08),
+        );
+      }
+      drawSprite(
+        img,
+        c,
+        scale,
+        alpha: enemy.isAlive ? 1 : hit.clamp(0.0, 0.45),
+      );
       if (hit > 0.02 && enemy.isAlive) {
         canvas.drawCircle(
           c,
@@ -219,16 +246,14 @@ extension _DungeonPaintActors on _TileRoomPainter {
             Paint()..color = const Color(0x44FF5020),
           );
         }
-        if (SpatialCombat.alwaysShowEnemyHp ||
-            enemy.hp < enemy.maxHp ||
-            enemy.hp <= 0) {
+        if (SpatialCombat.alwaysShowEnemyHp || enemy.hp < enemy.maxHp) {
           drawBar(c, enemy.hp, enemy.maxHp, tile * 0.85, scale);
         }
       }
     }
 
     var castLabelsPainted = 0;
-    const maxCastLabels = 1;
+    const maxCastLabels = 2;
     for (final hero in world.heroes) {
       final idx = hero.assetIndex
           .clamp(0, math.max(0, party.length - 1))
@@ -330,12 +355,19 @@ extension _DungeonPaintActors on _TileRoomPainter {
           tint = const Color(0xFF8040C0);
           scale *= 1.12;
         }
-        final motion = CharacterVisualPainter.clipMotion(
+        var motion = CharacterVisualPainter.clipMotion(
           anim.kind,
           anim.progress,
           tile * scale,
           flipX: flipX,
         );
+        // A leash yank back to the tank is a fast slide. Soften the picture
+        // only — the sim still owns the real position.
+        if (hero.heroRole != HeroRole.warrior &&
+            hero.heroRole != HeroRole.healer &&
+            hero.vx.abs() + hero.vy.abs() > 2.2) {
+          motion *= 0.45;
+        }
         if (formImg != null) {
           // Persistent form bodies — no gear overlays (silhouette is the kit).
           // Same step bob as the paper doll so a walk is not a frozen PNG.
@@ -653,7 +685,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
         final raw = castId == null ? null : ClassKits.defFor(castId)?.shortLabel;
         if (raw != null && raw.isNotEmpty) {
           castLabelsPainted++;
-          final label = raw.length > 6 ? raw.substring(0, 6) : raw;
+          final label = raw.length > 16 ? raw.substring(0, 16) : raw;
           final tp = _TileRoomPainter._floaterPainter;
           final size = tile * 0.18;
           tp.text = TextSpan(

@@ -7,6 +7,7 @@ import '../../assets/kenney_assets.dart';
 import '../kenney_sprite.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
+import 'shell_common.dart';
 
 /// Top inset for the short boss callout, under the corner frames.
 ///
@@ -186,7 +187,7 @@ class TargetCornerHud extends StatelessWidget {
         : (role == 'ELITE' ? GameTheme.torch : GameTheme.parchment);
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 188.0),
+      constraints: const BoxConstraints(maxWidth: 160.0),
       child: Container(
         padding: const EdgeInsets.fromLTRB(6, 2, 6, 3),
         decoration: MenuChrome.hudWell(
@@ -244,7 +245,9 @@ class TargetCornerHud extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              '${enemy.hp}',
+                              SpatialCombat.compactNumbers
+                                  ? SpatialCombat.compactCount(enemy.hp)
+                                  : '${enemy.hp}',
                               style: GameTheme.body(
                                 size: 11,
                                 color: GameTheme.parchmentDim,
@@ -267,10 +270,10 @@ class TargetCornerHud extends StatelessWidget {
               ),
               if (enemy.livingBombTimer > 0)
                 Text(
-                  'BOMB · ${enemy.livingBombTimer.toStringAsFixed(1)}s',
+                  'BOMB · ${formatCombatSeconds(enemy.livingBombTimer)}',
                   maxLines: 1,
                   style: GameTheme.pixel(
-                    size: 6,
+                    size: GameTheme.hudPixel,
                     color: GameTheme.torchHot,
                   ),
                 ),
@@ -302,9 +305,9 @@ class TargetCornerHud extends StatelessWidget {
   }
 
   static String _stairsHint(SpatialWorld? world) {
-    if (world == null) return 'Walk to stairs';
+    if (world == null) return 'GO stairs';
     final leader = world.leader;
-    if (leader == null) return 'Walk to stairs';
+    if (leader == null) return 'GO stairs';
     final ex = world.map.exitPoint.$1 + 0.5;
     final ey = world.map.exitPoint.$2 + 0.5;
     final dx = ex - leader.x;
@@ -314,7 +317,7 @@ class TargetCornerHud extends StatelessWidget {
     String horiz = dx.abs() < 0.35 ? '' : (dx > 0 ? 'E' : 'W');
     String vert = dy.abs() < 0.35 ? '' : (dy > 0 ? 'N' : 'S');
     final dir = '$vert$horiz';
-    return dir.isEmpty ? 'Walk to stairs' : 'Stairs · $dir';
+    return dir.isEmpty ? 'GO stairs' : 'GO stairs · $dir';
   }
 
   static bool _gateLocked(SpatialWorld? world) {

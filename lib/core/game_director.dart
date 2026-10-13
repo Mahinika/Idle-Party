@@ -738,7 +738,7 @@ class GameDirector extends ChangeNotifier {
 
   /// Light camera punch — skipped on Minimal VFX (reduce motion).
   void pulseCombatShake(double amount) {
-    if (_state.vfxQuality == VfxQuality.minimal) return;
+    if (!_state.screenShake || _state.vfxQuality == VfxQuality.minimal) return;
     final next = amount.clamp(0.0, 1.0);
     if (next > combatShake) combatShake = next;
   }
@@ -1412,7 +1412,18 @@ class GameDirector extends ChangeNotifier {
         _state.isPartyDefeated) {
       return;
     }
-    if (_spatial!.godHandCooldown > 0) return;
+    if (_spatial!.godHandCooldown > 0) {
+      GameAudio.uiDeny();
+      SpatialCombat.spawnRing(
+        _spatial!,
+        x: tileX,
+        y: tileY,
+        argb: 0x88FF8060,
+        radius: 0.7,
+        life: 0.28,
+      );
+      return;
+    }
     final before = _state;
     final result = SpatialCombat.godHand(
       _spatial!,
@@ -1430,8 +1441,12 @@ class GameDirector extends ChangeNotifier {
       _flushQuestReadyToast(life: 1.8);
     }
     _noteLifetimeGold(before, _state);
-    GameAudio.crit();
-    pulseCombatShake(0.72);
+    if (result.kills > 0) {
+      GameAudio.crit();
+      pulseCombatShake(0.72);
+    } else {
+      GameAudio.uiDeny();
+    }
     _announceAbilityUnlocks(before, _state);
     _announceAchievementUnlocks(before, _state);
     if (result.kills > 0) {
@@ -1605,6 +1620,10 @@ class GameDirector extends ChangeNotifier {
 
   void setHapticsEnabled(bool enabled) {
     _applyUpgrade(_state.copyWith(hapticsEnabled: enabled));
+  }
+
+  void setScreenShake(bool enabled) {
+    _applyUpgrade(_state.copyWith(screenShake: enabled));
   }
 
   void setKeepScreenAwake(bool enabled) {
@@ -1803,7 +1822,8 @@ class GameDirector extends ChangeNotifier {
         colorblindMode: false,
         hideHealFloaters: false,
         compactCombatNumbers: false,
-        alwaysShowEnemyHp: true,
+        alwaysShowEnemyHp: false,
+        screenShake: true,
         hapticsEnabled: true,
         keepScreenAwake: true,
         soundMuted: false,
@@ -3192,6 +3212,7 @@ class GameDirector extends ChangeNotifier {
     SpatialCombat.colorblindMode = _state.colorblindMode;
     SpatialCombat.hideHealFloaters = _state.hideHealFloaters;
     SpatialCombat.compactNumbers = _state.compactCombatNumbers;
+    GameAudio.coalesceLightHaptics = _state.vfxQuality != VfxQuality.full;
     SpatialCombat.alwaysShowEnemyHp = _state.alwaysShowEnemyHp;
     unawaited(
       ScreenAwake.setEnabled(_state.keepScreenAwake && _state.inDungeon),

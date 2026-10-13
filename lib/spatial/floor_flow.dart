@@ -21,7 +21,7 @@ void combatUpdateChambers(
     );
     if (hasLivingEnemy) break;
     world.clearedChambers.add(next);
-    if (!reducedVfx) {
+    if (!reducedVfx || world.spawnPersistentVfx) {
       for (final chamber in world.map.chambers) {
         if (chamber.index != next) continue;
         SpatialCombat.spawnRing(
@@ -50,7 +50,7 @@ void combatUpdateChambers(
           break;
         }
       }
-      if (!reducedVfx) {
+      if (!reducedVfx || world.spawnPersistentVfx) {
         SpatialCombat.spawnRing(
           world,
           x: gate.x + 0.5,
@@ -112,12 +112,23 @@ void combatUpdateChambers(
 }
 
 void combatOpenAllGatesAndWake(SpatialWorld world) {
+  var opened = false;
   for (final gate in world.map.gates) {
-    world.openGateIds.add(gate.id);
+    if (world.openGateIds.add(gate.id)) opened = true;
   }
   for (final enemy in world.enemies) {
     if (enemy.hp > 0) enemy.dormant = false;
   }
+  if (!opened) return;
+  SpatialCombat.spawnFloater(
+    world,
+    x: world.map.exitPoint.$1 + 0.5,
+    y: world.map.exitPoint.$2 + 0.5,
+    text: 'Path opened',
+    argb: SpatialCombat.floaterTell,
+    life: 1.1,
+    priority: 2,
+  );
 }
 
 /// Opens remaining gates when any *active* living enemy is unreachable.

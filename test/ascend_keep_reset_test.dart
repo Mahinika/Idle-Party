@@ -51,6 +51,7 @@ const ascendKeepKeys = <String>{
   'alwaysShowEnemyHp',
   'uiTextScale',
   'hapticsEnabled',
+  'screenShake',
   'keepScreenAwake',
   'sessionTelemetryOptIn',
 };

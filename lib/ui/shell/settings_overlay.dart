@@ -206,6 +206,12 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           value: state.hapticsEnabled,
           onChanged: director.setHapticsEnabled,
         ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
+          label: 'Screen shake',
+          value: state.screenShake,
+          onChanged: director.setScreenShake,
+        ),
       ],
     );
   }

@@ -42,7 +42,7 @@ void main() {
     expect(state.heroRoster.every((h) => h.race == HeroRace.human), isTrue);
     expect(state.hideHealFloaters, isFalse);
     expect(state.compactCombatNumbers, isFalse);
-    expect(state.alwaysShowEnemyHp, isTrue);
+    expect(state.alwaysShowEnemyHp, isFalse);
   });
 
   test('save version is read from the file, not guessed', () {

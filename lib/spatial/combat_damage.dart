@@ -283,7 +283,11 @@ int combatHurtEnemy(SpatialActor enemy, int dealt, {bool soft = false}) {
     dealt = math.max(1, (dealt * SpatialCombat.relicBossDamageMul).round());
   }
   enemy.hp = math.max(0, enemy.hp - dealt);
-  final life = soft ? 0.07 : (enemy.role == EnemyRole.boss ? 0.16 : 0.11);
+  final life = enemy.hp <= 0
+      ? 0.45
+      : soft
+      ? 0.12
+      : (enemy.role == EnemyRole.boss ? 0.28 : 0.22);
   enemy.hitFlash = math.max(enemy.hitFlash, life);
   return dealt;
 }

@@ -723,8 +723,8 @@ void main() {
     final afterXp = result.state.heroes.fold<int>(0, (sum, h) => sum + h.xp);
     expect(result.gold, unit.rewardGold);
     expect(afterXp, greaterThan(beforeXp));
-    expect(world.floaters.any((f) => f.text.endsWith('g')), isTrue);
-    expect(world.floaters.any((f) => f.text.endsWith('XP')), isTrue);
+    expect(world.floaters.any((f) => f.text.contains('g')), isTrue);
+    expect(world.floaters.any((f) => f.text.contains('XP')), isTrue);
   });
 
   test('white-hit last-kill counts as a kill pop, not only God Hand', () {

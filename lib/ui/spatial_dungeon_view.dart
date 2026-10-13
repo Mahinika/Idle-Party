@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_director.dart';
 import 'dungeon_bar_layout.dart';
+import 'shell/shell_common.dart';
 import 'dungeon_camera.dart';
 import '../core/game_logic.dart';
 import '../core/hero_identity.dart';
@@ -1027,7 +1028,7 @@ class GodHandRing extends StatelessWidget {
               (urgent
                   ? 'God Hand ready — long-press or fist to steer + smash'
                   : 'God Hand ready'))
-        : (coolingLabel ?? 'Cooling ${cooldown.toStringAsFixed(1)}s');
+        : (coolingLabel ?? 'Cooling ${formatCombatSeconds(cooldown)}');
     final action = onTap != null && ready ? onTap : null;
     final box = dense ? 40.0 : GameTheme.minTouch;
     final ring = dense ? 26.0 : 28.0;
