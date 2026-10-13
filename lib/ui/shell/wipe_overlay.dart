@@ -61,21 +61,28 @@ class DungeonWipePanel extends StatelessWidget {
                         : state.inRift
                         ? 'Farm Rift ends. Best R${state.metaDepth.riftBestTier}. Hub → farm Stormwake again (loot mid-run).'
                         : plain
-                        ? 'RETRY sends them in again. HUB leaves the cave.'
+                        ? 'They go again in a moment. HUB leaves the cave.'
                         : dailyEcho
                         ? 'RETRY this floor. HUB ends the run.'
                         : farm
                         ? 'RETRY restarts F${state.currentRoom.floorNumber}. HUB ends the run.'
                         : () {
-                            final safe = state.highestFloorCleared.clamp(
-                              1,
-                              999,
-                            );
                             final cur = state.currentRoom.floorNumber;
-                            if (safe >= cur) {
-                              return 'RETRY restarts F$cur (still PUSH). HUB ends the run.';
+                            final uncleared =
+                                cur > state.highestFloorCleared;
+                            if (uncleared &&
+                                state.wipeStreakCount >=
+                                    GameLogic.pushWipesBeforeFarm) {
+                              final safe = state.highestFloorCleared.clamp(
+                                1,
+                                999,
+                              );
+                              return 'Two wipes on F$cur. Farming F$safe, then back here.';
                             }
-                            return 'RETRY retreats to F$safe (still PUSH). HUB ends the run.';
+                            if (uncleared) {
+                              return 'Same floor again. A second wipe farms the floor below.';
+                            }
+                            return 'RETRY restarts F$cur. HUB ends the run.';
                           }(),
                     textAlign: TextAlign.center,
                     style: GameTheme.body(
@@ -148,6 +155,23 @@ class DungeonWipePanel extends StatelessWidget {
                     ],
                   ],
                   const SizedBox(height: 14),
+                  ValueListenableBuilder<int>(
+                    valueListenable: director.wipeAutoSeconds,
+                    builder: (context, seconds, _) {
+                      if (seconds <= 0) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          'Fighting again in $seconds',
+                          textAlign: TextAlign.center,
+                          style: GameTheme.body(
+                            size: 13,
+                            color: GameTheme.torchHot,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   if (!state.inGauntlet && !state.inAnyRiftMode)
                     GameButton(
                       label: (farm || dailyEcho)

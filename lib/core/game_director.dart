@@ -133,6 +133,10 @@ class GameDirector extends ChangeNotifier {
   /// Combat map + corner HUD; bumps every spatial tick (~60 Hz).
   final ValueNotifier<int> combatFrame = ValueNotifier(0);
   bool _awaitingWipeChoice = false;
+  Timer? _wipeAutoTimer;
+
+  /// Seconds until a wipe retries on its own. 0 means no countdown.
+  final ValueNotifier<int> wipeAutoSeconds = ValueNotifier(0);
 
   /// Soft-pause spatial sim while inventory / meta menus are open.
   bool _uiPaused = false;
@@ -1129,8 +1133,37 @@ class GameDirector extends ChangeNotifier {
 
   void _notifyShell() => notifyListeners();
 
+  void _cancelWipeAuto() {
+    _wipeAutoTimer?.cancel();
+    _wipeAutoTimer = null;
+    if (wipeAutoSeconds.value != 0) wipeAutoSeconds.value = 0;
+  }
+
+  /// Normal caves retry themselves. Gauntlet, rifts, and Daily Run wait.
+  void _armWipeAutoContinue() {
+    _cancelWipeAuto();
+    if (_state.inGauntlet ||
+        _state.inAnyRiftMode ||
+        MetaSystems.isActiveDailyRun(_state)) {
+      return;
+    }
+    wipeAutoSeconds.value = 3;
+    _wipeAutoTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final next = wipeAutoSeconds.value - 1;
+      if (next > 0) {
+        wipeAutoSeconds.value = next;
+        return;
+      }
+      timer.cancel();
+      _wipeAutoTimer = null;
+      wipeAutoSeconds.value = 0;
+      if (_awaitingWipeChoice) retryAfterWipe();
+    });
+  }
+
   void _handleWipe() {
     _awaitingWipeChoice = false;
+    _cancelWipeAuto();
     if (_state.inGauntlet) {
       final floor = _state.currentRoom.floorNumber;
       _state = GameLogic.exitToHubHealed(_state);
@@ -1188,24 +1221,20 @@ class GameDirector extends ChangeNotifier {
       unawaited(_persistFlush());
       return;
     }
+    final farmingBack = _state.wipeStreakCount >= GameLogic.pushWipesBeforeFarm &&
+        _state.dungeonMode == DungeonMode.push &&
+        _state.currentRoom.floorNumber > _state.highestFloorCleared;
+    _state = GameLogic.continueAfterWipe(
+      _state,
+    ).copyWith(lastUpdated: DateTime.now());
     if (MetaSystems.isActiveDailyRun(_state)) {
-      _state = GameLogic.restartFloor(
-        _state,
-      ).copyWith(lastUpdated: DateTime.now());
       showToast('Daily echo restarted — fight on', life: 2.5);
-    } else if (_state.dungeonMode == DungeonMode.push &&
-        _state.currentRoom.floorNumber > _state.highestFloorCleared) {
-      _state = GameLogic.retreatFromFailedPush(
-        _state,
-      ).copyWith(lastUpdated: DateTime.now());
+    } else if (farmingBack && _state.pushResumeFloor > 0) {
       showToast(
-        'Retreated to floor ${_state.currentRoom.floorNumber} — still PUSH',
+        'Farming floor ${_state.currentRoom.floorNumber} — then F${_state.pushResumeFloor}',
         life: 3,
       );
     } else {
-      _state = GameLogic.restartFloor(
-        _state,
-      ).copyWith(lastUpdated: DateTime.now());
       showToast('Floor restarted — fight on', life: 2.5);
     }
     GameAudio.uiConfirm();
@@ -1259,6 +1288,7 @@ class GameDirector extends ChangeNotifier {
   void hubAfterWipe({NavIntent? openMenu}) {
     if (!_awaitingWipeChoice) return;
     _awaitingWipeChoice = false;
+    _cancelWipeAuto();
     _state = GameLogic.exitToHubHealed(_state);
     _spatialTimer?.cancel();
     _spatialTimer = null;
@@ -3211,6 +3241,8 @@ class GameDirector extends ChangeNotifier {
   @override
   void dispose() {
     _spatialTimer?.cancel();
+    _wipeAutoTimer?.cancel();
+    wipeAutoSeconds.dispose();
     _uiTimer?.cancel();
     _bootWarmup?.cancel();
     _hubIdleTimer?.cancel();

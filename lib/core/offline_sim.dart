@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import '../models/dungeon_mode.dart';
 import '../models/hero.dart';
 import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
@@ -186,13 +185,8 @@ class OfflineSim {
           _rebuildWorld();
           continue;
         }
-        if (_current.dungeonMode == DungeonMode.push &&
-            _current.currentRoom.floorNumber > _current.highestFloorCleared) {
-          _current = GameLogic.retreatFromFailedPush(_current);
-          _done = true;
-          break;
-        }
-        _current = GameLogic.restartFloor(_current);
+        _current = GameLogic.noteOfflineWipe(_current);
+        _current = GameLogic.continueAfterWipe(_current);
         if (!_current.inDungeon) {
           _done = true;
           break;

@@ -283,6 +283,7 @@ extension GameDirectorCombatLoop on GameDirector {
         if (_wearUpgradesAndFightOn()) return;
         // No WIPED toast — DungeonWipePanel + top HUD already say it.
         _awaitingWipeChoice = true;
+        _armWipeAutoContinue();
         _notifyShell();
         return;
       }

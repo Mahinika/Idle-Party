@@ -444,6 +444,7 @@ class GameLogic {
             inWorldBoss: false,
             worldBossPractice: false,
             apexTrialActive: false,
+            pushResumeFloor: 0,
             heroes: heroes,
             lastUpdated: DateTime.now(),
           ),
@@ -895,8 +896,11 @@ class GameLogic {
     );
   }
 
+  /// Wipes on one new PUSH floor before the party farms the floor below.
+  static const int pushWipesBeforeFarm = 2;
+
   /// Failed push: retreat to the highest cleared floor (or floor 1).
-  /// Keeps PUSH mode so Retry does not silently switch to FARM.
+  /// Keeps PUSH mode so a caller can still choose to push.
   static GameState retreatFromFailedPush(GameState state) {
     final safeFloor = max(1, state.highestFloorCleared);
     return travelToFloor(
@@ -905,6 +909,41 @@ class GameLogic {
       ),
       safeFloor,
     );
+  }
+
+  /// Offline wipe tally. Live wipes already go through [notePartyWipe].
+  static GameState noteOfflineWipe(GameState state) {
+    final key = wipeFloorKey(state);
+    final count = state.wipeStreakKey == key ? state.wipeStreakCount + 1 : 1;
+    return state.copyWith(wipeStreakKey: key, wipeStreakCount: count);
+  }
+
+  /// Keep fighting after a wipe.
+  /// One miss on a new floor retries it. Two misses farm the floor below
+  /// until that floor clears once, then PUSH returns to the missed floor.
+  /// Gauntlet and rifts still end. Daily Run still restarts its floor.
+  static GameState continueAfterWipe(GameState state) {
+    if (state.inGauntlet || state.inAnyRiftMode) {
+      return exitToHubHealed(state);
+    }
+    if (MetaSystems.isActiveDailyRun(state)) {
+      return restartFloor(state);
+    }
+    final cur = state.currentRoom.floorNumber;
+    final pushingNew =
+        state.dungeonMode == DungeonMode.push && cur > state.highestFloorCleared;
+    if (pushingNew && state.wipeStreakCount >= pushWipesBeforeFarm) {
+      final safe = max(1, state.highestFloorCleared);
+      return travelToFloor(
+        state.copyWith(
+          dungeonMode: DungeonMode.farm,
+          pushResumeFloor: cur,
+          metaDepth: state.metaDepth.copyWith(noWipeAscendReady: false),
+        ),
+        safe,
+      );
+    }
+    return restartFloor(state);
   }
 
   /// Bosses needed this run before Ascend unlocks.
@@ -2368,7 +2407,11 @@ class GameLogic {
       );
     }
 
-    final targetFloor = farmLoop ? room.floorNumber : room.floorNumber + 1;
+    final resumePush =
+        farmLoop && awarded.pushResumeFloor > room.floorNumber;
+    final targetFloor = resumePush
+        ? awarded.pushResumeFloor
+        : (farmLoop ? room.floorNumber : room.floorNumber + 1);
     final layoutSeed = newLayoutSeed();
     final nextFloor = DungeonGenerator.generateFloor(
       targetFloor,
@@ -2388,6 +2431,8 @@ class GameLogic {
           )
         : 0;
     var progressed = awarded.copyWith(
+      dungeonMode: resumePush ? DungeonMode.push : awarded.dungeonMode,
+      pushResumeFloor: resumePush ? 0 : awarded.pushResumeFloor,
       gold: awarded.gold + goldAwarded,
       lifetimeGoldEarned: awarded.lifetimeGoldEarned + goldAwarded,
       essence: awarded.essence + gauntletEss,

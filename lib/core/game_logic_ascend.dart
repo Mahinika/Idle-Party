@@ -206,6 +206,7 @@ GameState _ascendGameState(GameState state, {DateTime? now}) {
     wipeStreakCount: 0,
     wipeAdviceLine: '',
     wipeScanLine: '',
+    pushResumeFloor: 0,
     lastUpdated: now ?? DateTime.now(),
   );
 
@@ -242,6 +243,7 @@ GameState _rebornAtCapGameState(GameState state, {DateTime? now}) {
     wipeStreakCount: 0,
     wipeAdviceLine: '',
     wipeScanLine: '',
+    pushResumeFloor: 0,
     lastUpdated: now ?? DateTime.now(),
   );
   withMeta = BlessingConstellation.grantPoints(withMeta, 1);

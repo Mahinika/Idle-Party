@@ -163,6 +163,7 @@ class GameState {
     this.seenChangelogVersion = '',
     this.wipeStreakKey = '',
     this.wipeStreakCount = 0,
+    this.pushResumeFloor = 0,
     this.wipeAdviceLine = '',
     this.wipeScanLine = '',
     this.sessionTelemetryOptIn = false,
@@ -526,6 +527,10 @@ class GameState {
 
   /// Consecutive live wipes on [wipeStreakKey]. Resets on a floor clear.
   final int wipeStreakCount;
+
+  /// Uncleared PUSH floor to return to after one clear of the floor below.
+  /// 0 means the party is not farming back from a wipe.
+  final int pushResumeFloor;
 
   /// Dungeon wipe-panel line after stacked wipes; empty if the sim is unsure.
   final String wipeAdviceLine;
@@ -1179,6 +1184,7 @@ class GameState {
     String? seenChangelogVersion,
     String? wipeStreakKey,
     int? wipeStreakCount,
+    int? pushResumeFloor,
     String? wipeAdviceLine,
     String? wipeScanLine,
     bool? sessionTelemetryOptIn,
@@ -1329,6 +1335,7 @@ class GameState {
       seenChangelogVersion: seenChangelogVersion ?? this.seenChangelogVersion,
       wipeStreakKey: wipeStreakKey ?? this.wipeStreakKey,
       wipeStreakCount: wipeStreakCount ?? this.wipeStreakCount,
+      pushResumeFloor: pushResumeFloor ?? this.pushResumeFloor,
       wipeAdviceLine: wipeAdviceLine ?? this.wipeAdviceLine,
       wipeScanLine: wipeScanLine ?? this.wipeScanLine,
       sessionTelemetryOptIn:
@@ -1498,6 +1505,7 @@ class GameState {
     'seenChangelogVersion': seenChangelogVersion,
     'wipeStreakKey': wipeStreakKey,
     'wipeStreakCount': wipeStreakCount,
+    'pushResumeFloor': pushResumeFloor,
       'wipeAdviceLine': wipeAdviceLine,
     'wipeScanLine': wipeScanLine,
     'sessionTelemetryOptIn': sessionTelemetryOptIn,
@@ -1810,6 +1818,7 @@ class GameState {
       seenChangelogVersion: (json['seenChangelogVersion'] as String?) ?? '',
       wipeStreakKey: (json['wipeStreakKey'] as String?) ?? '',
       wipeStreakCount: _jsonInt(json['wipeStreakCount']),
+      pushResumeFloor: _jsonInt(json['pushResumeFloor']),
       wipeAdviceLine: (json['wipeAdviceLine'] as String?) ?? '',
       wipeScanLine: (json['wipeScanLine'] as String?) ?? '',
       sessionTelemetryOptIn: (json['sessionTelemetryOptIn'] as bool?) ?? false,
