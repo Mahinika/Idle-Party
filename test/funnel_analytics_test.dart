@@ -98,8 +98,12 @@ void main() {
     expect(hold.events.single.params['gold'], 0);
     expect(FunnelAnalytics.onOfflineHold(hold.state).events, isEmpty);
     expect(FunnelAnalytics.has(hold.state, FunnelAnalytics.offlineGold), isFalse);
-    final paid = FunnelAnalytics.onOfflineGold(hold.state);
+    final paid = FunnelAnalytics.onOfflineGold(hold.state, gold: 40);
     expect(paid.events.single.name, FunnelAnalytics.offlineGold);
+    expect(paid.events.single.params['gold'], 40);
+    final again = FunnelAnalytics.onOfflineGold(paid.state, gold: 12);
+    expect(again.events.single.params['gold'], 12);
+    expect(FunnelAnalytics.has(again.state, FunnelAnalytics.offlineGold), isTrue);
   });
 
   test('d1_return fires on the next UTC day, not the same day', () {

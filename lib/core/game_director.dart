@@ -954,7 +954,7 @@ class GameDirector extends ChangeNotifier {
         // The cave opens the same Welcome Back card. A toast would cover it.
       }
       final tick = offline.goldGained > 0
-          ? FunnelAnalytics.onOfflineGold(caught)
+          ? FunnelAnalytics.onOfflineGold(caught, gold: offline.goldGained)
           : offline.wasInDungeon
           ? FunnelAnalytics.onOfflineHold(caught)
           : FunnelTick.none(caught);

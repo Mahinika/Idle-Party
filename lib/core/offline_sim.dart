@@ -55,11 +55,15 @@ class OfflineSim {
   int _maxSteps = 0;
   int _step = 0;
   int _floorsCleared = 0;
+  int _kills = 0;
   int _abilityCasts = 0;
+  bool _stoppedOnWipe = false;
   bool _done = false;
 
   bool get done => _done;
   int get roomsCleared => _floorsCleared;
+  int get kills => _kills;
+  bool get stoppedOnWipe => _stoppedOnWipe;
 
   /// State with the player's own VFX setting restored and casts credited.
   GameState get state {
@@ -112,6 +116,7 @@ class OfflineSim {
       final result = SpatialCombat.step(_world, _current, dt: _dt);
       _world = result.world;
       _current = result.state;
+      _kills += result.kills;
       if (result.goldFromKills > 0) {
         _current = GameLogic.creditCombatGold(_current, result.goldFromKills);
       }
@@ -180,6 +185,7 @@ class OfflineSim {
         // Gauntlet / Rift wipe always ends the run (same as live hub exit).
         if (_current.inGauntlet || _current.inAnyRiftMode) {
           _current = GameLogic.exitToHubHealed(_current);
+          _stoppedOnWipe = true;
           _done = true;
           break;
         }
@@ -195,6 +201,7 @@ class OfflineSim {
         _current = GameLogic.noteOfflineWipe(_current);
         _current = GameLogic.continueAfterWipe(_current);
         if (!_current.inDungeon) {
+          _stoppedOnWipe = true;
           _done = true;
           break;
         }

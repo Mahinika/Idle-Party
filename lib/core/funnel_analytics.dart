@@ -163,12 +163,12 @@ abstract final class FunnelAnalytics {
     return FunnelTick(_mark(state, firstBoss), const [FunnelHit(firstBoss)]);
   }
 
-  /// First Welcome Back that paid gold. Once per install.
-  static FunnelTick onOfflineGold(GameState state) {
-    if (has(state, offlineGold)) return FunnelTick.none(state);
-    return FunnelTick(_mark(state, offlineGold), const [
-      FunnelHit(offlineGold),
-    ]);
+  /// Welcome Back gold. The funnel mark is once per install. The event
+  /// fires on every return so the gold number stays readable.
+  static FunnelTick onOfflineGold(GameState state, {int gold = 0}) {
+    final event = FunnelHit(offlineGold, {'gold': gold});
+    if (has(state, offlineGold)) return FunnelTick(state, [event]);
+    return FunnelTick(_mark(state, offlineGold), [event]);
   }
 
   /// First Welcome Back with no gold. Once per install. Does not rename

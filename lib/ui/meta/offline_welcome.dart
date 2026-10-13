@@ -127,6 +127,16 @@ Future<void> showOfflineProgressDialog(
                   summary.afkWhereLine,
                   style: GameTheme.body(size: 13, color: GameTheme.mossLit),
                 ),
+                if (summary.awayReport.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    summary.awayReport,
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.parchment,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 6),
                 Text(
                   GoldIncome.awayPromise(

@@ -3205,7 +3205,12 @@ class GameLogic {
       OfflineProgress.applyHubIdleProgress(state, seconds);
   static int offlineFloorBudget(int seconds, {int roomCap = 120}) =>
       OfflineProgress.offlineFloorBudget(seconds, roomCap: roomCap);
-  static ({GameState state, int roomsCleared}) simulateSpatialOffline(
+  static ({
+    GameState state,
+    int roomsCleared,
+    int kills,
+    bool stoppedOnWipe,
+  }) simulateSpatialOffline(
     GameState state,
     int seconds,
   ) => OfflineProgress.simulateSpatialOffline(state, seconds);
@@ -3553,6 +3558,9 @@ class OfflineProgressResult {
     this.levelsGained = 0,
     this.gearFinds = 0,
     this.rareFinds = 0,
+    this.kills = 0,
+    this.bestDrop = '',
+    this.stoppedOnWipe = false,
     this.wasInDungeon = false,
     this.secondsAway = 0,
     this.hubChestCapSec = 0,
@@ -3572,6 +3580,15 @@ class OfflineProgressResult {
 
   /// Rare or better pieces gained while away. A subset of new gear.
   final int rareFinds;
+
+  /// Enemies the catch-up sim killed. 0 on a hub rest.
+  final int kills;
+
+  /// Name of the rarest new piece. Empty when nothing new landed.
+  final String bestDrop;
+
+  /// The catch-up ended because a hunt wipe sent the party home.
+  final bool stoppedOnWipe;
 
   /// True when AFK started mid-dungeon (SpatialCombat catch-up), not hub.
   final bool wasInDungeon;
@@ -3600,6 +3617,35 @@ class OfflineProgressResult {
           bossDelta > 0 ||
           levelsGained > 0 ||
           gearFinds > 0);
+
+  /// Why the catch-up stopped, when the cap or a wipe cut it short.
+  String get stopReason {
+    if (stoppedOnWipe) return 'Stopped on a wipe';
+    if (wasInDungeon && secondsAway > secondsApplied && secondsApplied > 0) {
+      final hours = secondsApplied ~/ 3600;
+      return 'Stopped at the ${hours}h fight cap';
+    }
+    if (hubChestStopped) {
+      return 'Stopped when the chest filled';
+    }
+    return '';
+  }
+
+  /// Floors, kills, levels, best drop, and why the catch-up stopped.
+  String get awayReport {
+    final bits = <String>[];
+    if (roomsCleared > 0) {
+      bits.add(roomsCleared == 1 ? '1 floor' : '$roomsCleared floors');
+    }
+    if (kills > 0) bits.add(kills == 1 ? '1 kill' : '$kills kills');
+    if (levelsGained > 0) {
+      bits.add(levelsGained == 1 ? '1 level' : '$levelsGained levels');
+    }
+    if (bestDrop.isNotEmpty) bits.add('Best $bestDrop');
+    final why = stopReason;
+    if (why.isNotEmpty) bits.add(why);
+    return bits.join(' · ');
+  }
 
   /// One honest line: hub sanctuary vs dungeon fight — not mixed up.
   String get afkWhereLine => wasInDungeon

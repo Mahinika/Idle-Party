@@ -77,6 +77,8 @@ abstract final class OfflineProgress {
       seconds: seconds,
       secondsAway: away,
       roomsCleared: sim.roomsCleared,
+      kills: sim.kills,
+      stoppedOnWipe: sim.stoppedOnWipe,
       wasInDungeon: true,
     );
   }
@@ -105,6 +107,8 @@ abstract final class OfflineProgress {
     final hubCap = state.inDungeon ? 0 : GoldIncome.hubChestCapSecFor(state);
 
     var roomsCleared = 0;
+    var kills = 0;
+    var stoppedOnWipe = false;
     late GameState progressed;
     if (state.inDungeon) {
       // Idle-friendly keystone: AFK time counts on the timer.
@@ -112,6 +116,8 @@ abstract final class OfflineProgress {
       final sim = simulateSpatialOffline(timed, seconds);
       progressed = sim.state;
       roomsCleared = sim.roomsCleared;
+      kills = sim.kills;
+      stoppedOnWipe = sim.stoppedOnWipe;
     } else {
       // Hub AFK: sanctuary idle gold only — no ghost combat / boss farms.
       progressed = applyHubIdleProgress(state, seconds);
@@ -123,6 +129,8 @@ abstract final class OfflineProgress {
       secondsAway: away,
       hubChestCapSec: hubCap,
       roomsCleared: roomsCleared,
+      kills: kills,
+      stoppedOnWipe: stoppedOnWipe,
       wasInDungeon: state.inDungeon,
     );
   }
@@ -137,6 +145,8 @@ abstract final class OfflineProgress {
     int secondsAway = 0,
     int hubChestCapSec = 0,
     required int roomsCleared,
+    int kills = 0,
+    bool stoppedOnWipe = false,
     required bool wasInDungeon,
   }) {
     final awayForChest = secondsAway > 0 ? secondsAway : seconds;
@@ -153,6 +163,9 @@ abstract final class OfflineProgress {
       goldGained: next.gold - before.gold,
       essenceGained: next.essence - before.essence,
       roomsCleared: roomsCleared,
+      kills: kills,
+      bestDrop: _bestNewGearName(before, next),
+      stoppedOnWipe: stoppedOnWipe,
       highestFloorDelta: next.highestFloorCleared - before.highestFloorCleared,
       bossDelta: next.bossVictories - before.bossVictories,
       levelsGained: _partyLevelSum(next) - _partyLevelSum(before),
@@ -214,15 +227,54 @@ abstract final class OfflineProgress {
   /// Replays in-dungeon combat while offline using [SpatialCombat] (same
   /// authority as live play). See [OfflineSim] — boot runs the same walk in
   /// slices so a long absence cannot freeze the app on return.
-  static ({GameState state, int roomsCleared}) simulateSpatialOffline(
+  static ({
+    GameState state,
+    int roomsCleared,
+    int kills,
+    bool stoppedOnWipe,
+  }) simulateSpatialOffline(
     GameState state,
     int seconds,
   ) {
     if (!state.inDungeon || seconds <= 0) {
-      return (state: state, roomsCleared: 0);
+      return (
+        state: state,
+        roomsCleared: 0,
+        kills: 0,
+        stoppedOnWipe: false,
+      );
     }
     final sim = OfflineSim(state, seconds)..runAll();
-    return (state: sim.state, roomsCleared: sim.roomsCleared);
+    return (
+      state: sim.state,
+      roomsCleared: sim.roomsCleared,
+      kills: sim.kills,
+      stoppedOnWipe: sim.stoppedOnWipe,
+    );
+  }
+
+  static String _bestNewGearName(GameState before, GameState after) {
+    final beforeIds = <String>{
+      for (final item in before.gearStash) item.id,
+      for (final hero in before.heroRoster)
+        for (final item in hero.equipped.values) item.id,
+    };
+    EquipmentItem? best;
+    void consider(EquipmentItem item) {
+      if (beforeIds.contains(item.id)) return;
+      if (best == null || item.rarity.index > best!.rarity.index) {
+        best = item;
+      }
+    }
+    for (final item in after.gearStash) {
+      consider(item);
+    }
+    for (final hero in after.heroRoster) {
+      for (final item in hero.equipped.values) {
+        consider(item);
+      }
+    }
+    return best?.name ?? '';
   }
 
   /// Nearest awake enemy to living party centroid, or null if none.
