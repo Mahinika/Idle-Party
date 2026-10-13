@@ -6,6 +6,7 @@ import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/gold_income.dart';
 import 'package:idle_party/core/local_reminders.dart';
+import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/models/pet.dart';
 import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/ui/meta/notify_opt_in.dart';
@@ -42,9 +43,13 @@ void main() {
     expect(LocalReminders.shouldOfferOptIn(state), isFalse);
   });
 
-  test('first loot is not the ping — wait until the first boss', () {
+  test('first loot is not the ping — wait until a floor is cleared', () {
     final hub = _afterFirstLoot();
     expect(LocalReminders.shouldOfferOptIn(hub), isFalse);
+    expect(
+      LocalReminders.shouldOfferOptIn(hub.copyWith(highestFloorCleared: 1)),
+      isTrue,
+    );
     expect(
       LocalReminders.shouldOfferOptIn(
         hub.copyWith(
@@ -118,6 +123,7 @@ void main() {
     );
     expect(gold.body, contains(amount));
     expect(gold.body.toLowerCase(), contains('full'));
+    expect(pings.map((p) => p.id), isNot(contains(LocalPing.capId)));
     final tray = LocalReminders.chestTray(opted, now);
     expect(tray, isNotNull);
     expect(tray!.body, contains(amount));
@@ -133,6 +139,25 @@ void main() {
     expect(LocalReminders.optInBody.toLowerCase(), contains('12 hours'));
     expect(LocalReminders.optInBody.toLowerCase(), contains('chest'));
     expect(LocalReminders.optInBody.toLowerCase(), isNot(contains('key')));
+  });
+
+  test('a live cave schedules the fight cap ping', () {
+    final now = DateTime.utc(2026, 9, 12, 8);
+    final cave = LocalReminders.setOptIn(
+      _afterFirstLoot(inDungeon: true).copyWith(
+        highestFloorCleared: 1,
+        lastUpdated: now,
+      ),
+      enabled: true,
+    );
+    final pings = LocalReminders.plan(cave, now);
+    final cap = pings.where((p) => p.id == LocalPing.capId);
+    expect(cap, isNotEmpty);
+    expect(cap.first.body, 'Your party hit the 8h cap.');
+    expect(
+      cap.first.fireAt.difference(now),
+      Duration(seconds: OfflineProgress.dungeonAwayCapSec(cave)),
+    );
   });
 
   test('after the first boss the prize ping names the check-in', () {

@@ -59,7 +59,7 @@ class _Is2ShellState extends State<Is2Shell> {
     super.dispose();
   }
 
-  /// One ask after the boss, when the floor is clear. Not while a pack is up.
+  /// One ask after a cleared floor, when the pack is dead. Not while a pack is up.
   void _onClearForPing() {
     if (_offeredPing || !mounted || router.isOpen) return;
     final director = widget.director;

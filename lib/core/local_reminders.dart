@@ -2,6 +2,7 @@ import 'funnel_analytics.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'gold_income.dart';
+import 'offline_progress.dart';
 
 /// One scheduled away ping (id is stable so each kind overwrites itself).
 class LocalPing {
@@ -16,6 +17,7 @@ class LocalPing {
   static const morningId = 2;
   static const petId = 3;
   static const eveningId = 4;
+  static const capId = 6;
 
   final int id;
   final DateTime fireAt;
@@ -49,6 +51,7 @@ abstract final class LocalReminders {
       'A quiet chest line stays up while hub gold fills, and goes away when you open the game. '
       'Gold fills for ${GoldIncome.hubChestCapHours} hours, then stops. '
       'At most a couple of pings a day: when the chest is full, and in the morning or evening when a prize is waiting. '
+      'A cave fight pings once if it hits the time cap. '
       'Never during a fight. Turn off anytime in SETTINGS.';
 
   static bool milestoneReached(GameState state) {
@@ -64,18 +67,24 @@ abstract final class LocalReminders {
         state.ascensionLevel >= 1;
   }
 
-  /// Hub card once the first boss is down, so the phone can pull them back.
+  /// A floor is done, or a boss fell. Loot alone is not enough.
+  static bool _playedAFloor(GameState state) =>
+      state.highestFloorCleared >= 1 ||
+      state.metaDepth.lifetimeFloorClears >= 1 ||
+      state.bossVictories > 0;
+
+  /// Hub card after the first cleared floor, once they have left the cave.
   /// Never on install, never on first loot, never in a fight.
   static bool shouldOfferOptIn(GameState state) {
     if (state.inDungeon) return false;
     if (state.metaDepth.notifyPrompted || state.metaDepth.notifyOptIn) {
       return false;
     }
-    return GameLogic.showDailyChase(state);
+    return _playedAFloor(state);
   }
 
-  /// Same ask on a cleared floor. The pack is dead, so this is not a fight.
-  /// A live cave still waits.
+  /// Same ask when a later floor is clear. The first floor's stairs still
+  /// wait — the hub card covers leaving the cave.
   static bool shouldOfferOnFloorClear(
     GameState state, {
     required bool floorClear,
@@ -84,7 +93,7 @@ abstract final class LocalReminders {
     if (state.metaDepth.notifyPrompted || state.metaDepth.notifyOptIn) {
       return false;
     }
-    return GameLogic.showDailyChase(state);
+    return _playedAFloor(state);
   }
 
   /// SETTINGS row after the milestone (or after they already answered).
@@ -143,6 +152,20 @@ abstract final class LocalReminders {
           fireAt: petAt,
           title: title,
           body: _petBody(state),
+        ),
+        rank: 0,
+      ));
+    }
+    if (state.inDungeon) {
+      final capSec = OfflineProgress.dungeonAwayCapSec(state);
+      final capAt = state.lastUpdated.add(Duration(seconds: capSec));
+      final hours = capSec ~/ 3600;
+      candidates.add((
+        ping: LocalPing(
+          id: LocalPing.capId,
+          fireAt: capAt,
+          title: title,
+          body: 'Your party hit the ${hours}h cap.',
         ),
         rank: 0,
       ));
