@@ -24,6 +24,7 @@ import 'economy_service.dart';
 import 'blessing_constellation.dart';
 import 'game_state.dart';
 import 'gauntlet_pact.dart';
+import 'gauntlet_trophies.dart';
 import 'check_in.dart';
 import 'comeback_chest.dart';
 import 'keystone.dart';
@@ -2483,6 +2484,12 @@ class GameLogic {
       );
     }
     progressed = _applyMetaProgress(state, progressed, drops);
+    if (gauntlet) {
+      progressed = GauntletTrophies.onSqueezeClear(
+        progressed,
+        floor: room.floorNumber,
+      );
+    }
 
     // Daily echo ends after the first clear (reward claimed) — no PUSH climb.
     if (wasDaily && progressed.dailyClaimed) {

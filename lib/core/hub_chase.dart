@@ -7,6 +7,7 @@ import '../models/meta_depth.dart';
 import 'ascend_roadmap.dart';
 import 'encounter_factory.dart';
 import 'game_logic.dart';
+import 'gauntlet_trophies.dart';
 import 'game_state.dart';
 import 'hero_identity.dart';
 import 'keystone.dart';
@@ -936,18 +937,19 @@ class HubChase {
             : (best <= 0
                   ? 'First Gauntlet boss'
                   : 'Gauntlet boss on floor $target'),
-        detail: onMilestone
-            ? 'Best F$best — $need floors to milestone F$floor (+${pay}e). '
-                  'Boss every 5; wipe → hub. Floors also pay small essence.'
-            : (best <= 0
-                  ? 'Boss on floor $target, then every 5 floors. '
-                        'Milestone F$floor pays +${pay}e. '
-                        'Floors also pay a little essence. '
-                        'Wipe or leave returns to the hub.'
-                  : 'Best F$best. Next boss is floor $target. '
-                        'Milestone F$floor pays +${pay}e ($need floors). '
-                        'Floors also pay a little essence. '
-                        'Wipe or leave returns to the hub.'),
+        detail: (onMilestone
+                ? 'Best F$best — $need floors to milestone F$floor (+${pay}e). '
+                      'Boss every 5; wipe → hub. Floors also pay small essence.'
+                : (best <= 0
+                      ? 'Boss on floor $target, then every 5 floors. '
+                            'Milestone F$floor pays +${pay}e. '
+                            'Floors also pay a little essence. '
+                            'Wipe or leave returns to the hub.'
+                      : 'Best F$best. Next boss is floor $target. '
+                            'Milestone F$floor pays +${pay}e ($need floors). '
+                            'Floors also pay a little essence. '
+                            'Wipe or leave returns to the hub.')) +
+            GauntletTrophies.todayBit(state),
         progressLabel: 'F$best → F$target',
         urgency: almost ? HubChaseUrgency.almost : HubChaseUrgency.normal,
       );
@@ -975,7 +977,8 @@ class HubChase {
           : 'Push toward F$nextMilestone',
       detail:
           'Endgame ladder quiet — PB F$best · next boss F$nextBoss'
-          '$milestoneBit. Boss every 5; wipe or leave → hub.',
+          '$milestoneBit. Boss every 5; wipe or leave → hub.'
+          '${GauntletTrophies.todayBit(state)}',
       progressLabel: 'PB F$best → F$nextBoss',
       urgency: HubChaseUrgency.normal,
     );

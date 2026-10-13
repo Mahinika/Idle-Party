@@ -273,6 +273,7 @@ class MetaDepthState {
     this.lifetimeAscends = 0,
     this.highestHardmodeCleared = 0,
     this.gauntletBestFloor = 0,
+    this.spireTrophies = const <String>[],
     this.lifetimeGauntletFloors = 0,
     this.codexClaims = const <String>[],
     this.soulboundRefine = 0,
@@ -481,6 +482,9 @@ class MetaDepthState {
 
   /// Best Infinity Gauntlet floor cleared (meta — survives Ascend).
   final int gauntletBestFloor;
+
+  /// Squeeze×pact cells, `might:tightCorridors`. Kept across Ascend.
+  final List<String> spireTrophies;
 
   /// Lifetime gauntlet floor clears.
   final int lifetimeGauntletFloors;
@@ -827,6 +831,7 @@ class MetaDepthState {
     int? lifetimeAscends,
     int? highestHardmodeCleared,
     int? gauntletBestFloor,
+    List<String>? spireTrophies,
     int? lifetimeGauntletFloors,
     int? riftBestTier,
     int? riftPreferredTier,
@@ -994,6 +999,7 @@ class MetaDepthState {
       highestHardmodeCleared:
           highestHardmodeCleared ?? this.highestHardmodeCleared,
       gauntletBestFloor: gauntletBestFloor ?? this.gauntletBestFloor,
+      spireTrophies: spireTrophies ?? this.spireTrophies,
       lifetimeGauntletFloors:
           lifetimeGauntletFloors ?? this.lifetimeGauntletFloors,
       riftBestTier: riftBestTier ?? this.riftBestTier,
@@ -1175,6 +1181,7 @@ class MetaDepthState {
     'lifetimeAscends': lifetimeAscends,
     'highestHardmodeCleared': highestHardmodeCleared,
     'gauntletBestFloor': gauntletBestFloor,
+    'spireTrophies': spireTrophies,
     'lifetimeGauntletFloors': lifetimeGauntletFloors,
     'riftBestTier': riftBestTier,
     'riftPreferredTier': riftPreferredTier,
@@ -1367,6 +1374,11 @@ class MetaDepthState {
             kEndlessLadderBound,
           ),
       gauntletBestFloor: (json['gauntletBestFloor'] as num?)?.toInt() ?? 0,
+      spireTrophies:
+          (json['spireTrophies'] as List<dynamic>?)
+              ?.map((e) => '$e')
+              .toList() ??
+          const <String>[],
       lifetimeGauntletFloors:
           (json['lifetimeGauntletFloors'] as num?)?.toInt() ?? 0,
       riftBestTier: ((json['riftBestTier'] as num?)?.toInt() ?? 0).clamp(
