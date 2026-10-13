@@ -131,18 +131,32 @@ void combatUnlockIfEnemiesUnreachable(SpatialWorld world) {
 /// Used when exit starts early (AFK) or right before roomCleared.
 GameState combatVacuumGroundLoot(SpatialWorld world, GameState state) {
   if (world.groundLoot.isEmpty) return state;
-  final drops = <LootDrop>[for (final loot in world.groundLoot) loot.drop];
+  final drops = <LootDrop>[];
   final names = <String>[];
-  for (final drop in drops) {
-    if (!drop.isEquipment) continue;
-    if (names.length >= 4) break;
-    final item = drop.equipment;
-    final label = item != null ? item.combatPopLabel : drop.name;
+  var sx = 0.0;
+  var sy = 0.0;
+  for (final loot in world.groundLoot) {
+    sx += loot.x;
+    sy += loot.y;
+    drops.add(loot.drop);
+    if (!loot.drop.isEquipment || names.length >= 4) continue;
+    final item = loot.drop.equipment;
+    final label = item != null ? item.combatPopLabel : loot.drop.name;
     if (label.isNotEmpty && !names.contains(label)) names.add(label);
   }
+  final n = world.groundLoot.length;
   world.groundLoot.clear();
   final granted = GameLogic.grantLoot(state, drops);
-  world.pendingFeelPickups += drops.length;
+  // One suck, one sound — not a sting per coin.
+  world.pendingFeelPickups += 1;
+  SpatialCombat.spawnBurst(
+    world,
+    x: sx / n,
+    y: sy / n,
+    argb: 0xCCFFE08A,
+    radius: 0.9,
+    life: 0.42,
+  );
   final bits = <String>[...names];
   if (granted.receipt.goldGained > 0) {
     bits.add('+${granted.receipt.goldGained}g');

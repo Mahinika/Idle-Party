@@ -6,6 +6,7 @@ extension GameDirectorCombatLoop on GameDirector {
     if (_isLoading || !_state.inDungeon || _spatial == null) {
       return;
     }
+    _maybeBossIntroSting();
     // Freeze sim while wipe modal is up (avoids toast/SFX spam).
     if (_awaitingWipeChoice) {
       return;
@@ -343,18 +344,19 @@ extension GameDirectorCombatLoop on GameDirector {
         _state = MetaSystems.evaluateAchievements(_state);
         final goldDelta = _state.gold - beforeClear.gold;
         final essDelta = _state.essence - beforeClear.essence;
-        var clearLine = goldDelta > 0
-            ? 'F$floorNo CLEAR · +${goldDelta}g'
-            : 'F$floorNo CLEAR';
-        if (beforeClear.inGauntlet) {
-          clearLine = essDelta > 0
-              ? 'Spire F$floorNo · +${goldDelta}g · +${essDelta}e'
-              : 'Spire F$floorNo · +${goldDelta}g';
-        } else if (essDelta > 0) {
-          clearLine = goldDelta > 0
-              ? 'F$floorNo CLEAR · +${goldDelta}g · +${essDelta}e'
-              : 'F$floorNo CLEAR · +${essDelta}e';
-        }
+        final xpDelta = (partyXpBank(_state) - _floorXpSnapshot).clamp(
+          0,
+          9999999,
+        );
+        final bestDrop = bestNewDropName(beforeClear, _state);
+        var clearLine = floorClearRecap(
+          floor: floorNo,
+          gold: goldDelta,
+          xp: xpDelta,
+          essence: essDelta,
+          gauntlet: beforeClear.inGauntlet,
+          bestDrop: bestDrop,
+        );
         if (leveled) {
           clearLine = '$clearLine · LEVEL UP';
           GameAudio.levelUp();
@@ -362,7 +364,7 @@ extension GameDirectorCombatLoop on GameDirector {
         final matGrants = LogicNotices.takeCraftMats();
         final floorLoot = LogicNotices.takeFloorLootLine();
         final floorEquip = LogicNotices.takeFloorEquipLine();
-        final clearExtra = floorLoot ?? floorEquip;
+        final clearExtra = bestDrop == null ? (floorLoot ?? floorEquip) : null;
         if (clearExtra != null && (clearLine.length + clearExtra.length) < 70) {
           clearLine = '$clearLine · $clearExtra';
         }
@@ -497,6 +499,14 @@ extension GameDirectorCombatLoop on GameDirector {
     }
   }
 
+  void _maybeBossIntroSting() {
+    final world = _spatial;
+    if (world == null || world.bossBannerTimer <= 0) return;
+    if (_bossIntroHeard || world.bossBannerTimer < 2.0) return;
+    _bossIntroHeard = true;
+    GameAudio.bossIntro();
+  }
+
   void _syncFightMusic() {
     if (!_state.inDungeon || _awaitingWipeChoice) return;
     GameAudio.syncBossFight(
@@ -504,6 +514,72 @@ extension GameDirectorCombatLoop on GameDirector {
       floor: _state.currentRoom.floorNumber,
     );
   }
+}
+
+/// Party XP as a bank (filled pools plus the current bar).
+int partyXpBank(GameState state) {
+  var sum = 0;
+  for (final hero in state.heroes) {
+    var bank = hero.xp;
+    final cap = hero.level.clamp(1, GameLogic.maxHeroLevel);
+    for (var lv = 1; lv < cap; lv++) {
+      bank += GameLogic.xpPoolForLevel(lv);
+    }
+    sum += bank;
+  }
+  return sum;
+}
+
+/// Short floor-clear line: gold, XP, and the best new drop.
+String floorClearRecap({
+  required int floor,
+  required int gold,
+  required int xp,
+  int essence = 0,
+  bool gauntlet = false,
+  String? bestDrop,
+}) {
+  final bits = <String>[gauntlet ? 'Spire F$floor' : 'F$floor CLEAR'];
+  if (gold > 0) bits.add('+${gold}g');
+  if (xp > 0) bits.add('+$xp XP');
+  if (essence > 0) bits.add('+${essence}e');
+  final drop = bestDrop?.trim() ?? '';
+  if (drop.isNotEmpty) {
+    bits.add(drop.length > 22 ? '${drop.substring(0, 21)}…' : drop);
+  }
+  return bits.join(' · ');
+}
+
+/// Rarest piece that was not on the save before this clear.
+String? bestNewDropName(GameState before, GameState after) {
+  final old = <String>{
+    for (final item in before.gearStash) item.id,
+    for (final hero in before.heroes)
+      for (final item in hero.equipped.values) item.id,
+  };
+  EquipmentItem? best;
+  void consider(EquipmentItem item) {
+    if (old.contains(item.id)) return;
+    final current = best;
+    if (current == null ||
+        item.rarity.index > current.rarity.index ||
+        (item.rarity.index == current.rarity.index &&
+            item.effectiveItemLevel > current.effectiveItemLevel)) {
+      best = item;
+    }
+  }
+
+  for (final item in after.gearStash) {
+    consider(item);
+  }
+  for (final hero in after.heroes) {
+    for (final item in hero.equipped.values) {
+      consider(item);
+    }
+  }
+  if (best == null) return null;
+  final name = best!.name.trim();
+  return name.isEmpty ? best!.combatPopLabel : name;
 }
 
 LootRarity _bestNewLootRarity(GameState before, GameState after) {

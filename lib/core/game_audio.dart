@@ -1083,6 +1083,9 @@ abstract final class GameAudio {
   static void levelUp() => play('level');
   static void wipe() => play('wipe');
   static void boss() => play('boss');
+
+  /// Boss room just opened. Same sting as [boss], when the banner arms.
+  static void bossIntro() => play('boss');
   static void clear() => play('clear');
   static void unlock() => play('unlock');
   static void ui() => uiTap();

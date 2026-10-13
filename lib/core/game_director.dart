@@ -127,6 +127,12 @@ class GameDirector extends ChangeNotifier {
   int? _lastFloorClearSec;
   DateTime? _floorStartedAt;
 
+  /// Party XP bank when this floor started, so the clear banner can say the gain.
+  int _floorXpSnapshot = 0;
+
+  /// Boss appear sting already played for the banner that is up.
+  bool _bossIntroHeard = false;
+
   /// This process's clock for seconds-to-combat (set on New Game / continue).
   int _funnelSessionReadyMs = 0;
 
@@ -805,6 +811,8 @@ class GameDirector extends ChangeNotifier {
 
   void _beginFloorClock() {
     _floorStartedAt = DateTime.now();
+    _floorXpSnapshot = partyXpBank(_state);
+    _bossIntroHeard = false;
   }
 
   void _freezeRunIncome() {
