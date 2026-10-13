@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | **1.12.194 (224)** is the published build. **1.12.195 (225)** was uploaded **2026-10-11** and is `in review` (full rollout). Live stays **1.12.194** until Google publishes. Managed publishing is off. |
+| Production | ✅ live | **1.12.194 (224)** is the published build. **1.12.195 (225)** was uploaded **2026-10-11** and is `in review` (full rollout). **1.13.0 (226)** was built locally **2026-10-13** and is not uploaded. Live stays **1.12.194** until Google publishes. Managed publishing is off. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -18,7 +18,7 @@ Package id: **`com.idleparty.app`**
 | Store listing copy (EN + 9 locales) | ✅ live | Default locale **en-US** + 9 translations committed **2026-09-25** (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`). In-game UI stays English. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ✅ live | **8 A56 phone shots** and feature graphic `feature_20261004.png` are on the public page **2026-10-04**. Tablet shots are still the older title screen, hub menu, and FARM/PUSH floor. |
-| Listing assets freshness | shots 2026-10-04 @ 1.12.194 · video 2026-10-04 @ 1.12.194 · icon 2026-10-04 @ 1.12.194 · feature 2026-10-04 @ 1.12.194 | Phone shots and the Sandy preview match live **1.12.194**. They are one patch behind the **1.12.195** candidate. `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than one patch. |
+| Listing assets freshness | shots 2026-10-13 @ 1.13.0 · video 2026-10-13 @ 1.13.0 · icon 2026-10-13 @ 1.13.0 · feature 2026-10-13 @ 1.13.0 | Phone shots, Sandy preview, icon, and feature graphic were reshot locally **2026-10-13** for **1.13.0**. Not uploaded. `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than one patch. |
 | Preview video (YouTube) | ✅ sent | Every listing locale (11, including `pl-PL`) points at public Cognifox `cyBlN3HCR48` (`https://www.youtube.com/watch?v=cyBlN3HCR48`), committed **2026-10-04**. oEmbed works. Ads off, embed on, not for kids. YouTube filed the 9:16 film as a Short. Previous unlisted `UHLG28lHmPs`. `XfKog5CAiUs` stays unused (Play rejected that embed). |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
@@ -74,6 +74,7 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Signed Production AAB **1.12.195+225** built locally **2026-10-11** (`app-release.aab`, 106.5 MB).
 - [x] Owner asked upload of Production **1.12.195+225** (**2026-10-11**).
 - [x] Signed Production AAB **1.12.195+225** uploaded via Play API and sent for review (full rollout). API: **1.12.195 (225)** `in review`. Live store build remains **1.12.194 (224)** until Google publishes.
+- [x] Signed Production AAB **1.13.0+226** built locally **2026-10-13** (`app-release.aab`, 106.7 MB). Not uploaded.
 
 ### Production upload paste (en-US release notes)
 
@@ -83,6 +84,15 @@ Notes sent with **1.12.194 (224)**:
 • Swords, bows, and spells sound like the weapons they are.
 • A bowstring plays when an arrow leaves, and a spell plays when it is cast.
 • The hub and caves rotate songs, with a quiet stretch between them.
+```
+
+Notes ready for **1.13.0 (226)**. Not sent. Upload only when asked:
+
+```
+• After a wipe the party stands back up. Two misses farm the floor below.
+• AUTO EQUIP wears a stronger piece while they fight.
+• Welcome Back says what they did while you were away.
+• The Spire has trophies. A full row grants a title. All 12 grant 1 STAR.
 ```
 
 Notes sent with **1.12.195 (225)** on **2026-10-11**. In review, not live yet. 287 characters:

@@ -89,6 +89,11 @@ A second sim is not forbidden (owner 2026-09-26).
 plus slow essence, not combat. PUSH clear +1 essence, boss +2; FARM and
 Gauntlet pay 0.
 
+A PUSH wipe counts down 3 seconds and continues. Two fails on the same new
+floor farm the floor below until one clear, then push again. Offline farms
+that safe floor instead of stopping. Gauntlet, Rifts, and the daily keep
+their own rules.
+
 **Content:** 10 classes / 31 specs · 15 zones through Mothveil Hollow.
 Hero cap `maxHeroLevel` 100 (combat XP only). Ascend cap AL20.
 Endgame (KEY, Gauntlet, Rifts, Greater Rifts, Ashen, Craft Trial) unlocks
@@ -97,7 +102,7 @@ when the **active party is all Lv100**, not at AL20 alone.
 | Hunt | Where |
 |------|--------|
 | KEYSTONE | Hub KEY. No KEY tab before party Lv100. |
-| Gauntlet | Endless Crystal Spire. Boss every 5 floors. |
+| Gauntlet | Endless Crystal Spire. Boss every 5 floors. Spire Trophies: each squeeze under each pact, kept on Ascend. |
 | Rifts | Stormwake Hollow. No fail timer. |
 | Greater Rifts | Mothveil Hollow. Timed. Local season PB. |
 | Ashen Crown | Weekly ticket. Rotates shipped caves. Not zone 16. |
@@ -168,6 +173,7 @@ stamina is STA.
 - Sprite paths go through `CustomAssets` or `KenneyAssets`. `assets/data/*.json` from core is fine. Pixel sprites use `FilterQuality.none`.
 - LOADOUTS tab is hidden. Armor 2pc/4pc are sets, not loadouts.
 - BiS / UPGRADE use budget score only (`docs/GEAR_BUDGET.md`).
+- AUTO EQUIP (GEAR, on by default) wears a budget upgrade during the fight and while the app is closed. Ranked GR stays manual. Kept on Ascend.
 - Split a giant file when a change needs a home. Do not grow `game_logic` / `spatial_combat`. New HUD goes under `lib/ui/shell/`.
 - SpatialCombat is the current fight sim. A second sim is not forbidden.
 
@@ -175,8 +181,8 @@ stamina is STA.
 
 **Keeps:** hero levels/XP, open zones, essence, Embers, Cinders, relics, pets, sanctuary,
 God Hand, Apex, soulbound, settings, unlocked specs, full `metaDepth`
-(bests, blessings, constellation, Craft Trial, ad tickets and timers,
-shop entitlements, coupons, Play opt-in).
+(bests, blessings, constellation, Craft Trial, Spire Trophies, ad tickets and timers,
+shop entitlements, coupons, Play opt-in), plus AUTO EQUIP.
 
 **Resets:** wallet gold, forge tracks, worn/stash drops, market, loadouts,
 `highestFloorCleared`. Sets `freshPrestige`. Clears boss victories, wipe

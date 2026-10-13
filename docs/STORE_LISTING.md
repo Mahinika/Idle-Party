@@ -133,6 +133,15 @@ Live Production: **1.12.194 (224)**, full rollout, track `completed` (Play paste
 • The hub and caves rotate songs, with a quiet stretch between them.
 ```
 
+Notes ready for **1.13.0 (226)**. Not sent. Upload only when asked:
+
+```
+• After a wipe the party stands back up. Two misses farm the floor below.
+• AUTO EQUIP wears a stronger piece while they fight.
+• Welcome Back says what they did while you were away.
+• The Spire has trophies. A full row grants a title. All 12 grant 1 STAR.
+```
+
 Notes sent with **1.12.195 (225)** on **2026-10-11**. In review, not live yet. 287 characters:
 
 ```

@@ -39,6 +39,72 @@ SHOWCASE = LISTING / "showcase_save.json"
 STABLE = LISTING / "showcase_stable.json"
 
 
+def tap_low(xml: str, label: str) -> bool:
+    """Tap near the bottom of the largest node that contains this label.
+
+    Patch Notes exposes one Dismiss node for the whole card. Its center is
+    the body text, and GOT IT sits at the bottom of that card.
+    """
+    best: tuple[int, int, int, int, int] | None = None
+    for node in re.findall(r"<node\b[^>]*>", xml):
+        blob = " ".join(re.findall(r'(?:text|content-desc)="([^"]*)"', node))
+        if label not in blob:
+            continue
+        bounds = re.search(
+            r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',
+            node,
+        )
+        if bounds is None:
+            continue
+        x1, y1, x2, y2 = (int(v) for v in bounds.groups())
+        area = max(0, x2 - x1) * max(0, y2 - y1)
+        if area < 8000:
+            continue
+        if best is None or area > best[0]:
+            best = (area, x1, y1, x2, y2)
+    if best is None:
+        return False
+    _, x1, y1, x2, y2 = best
+    x = (x1 + x2) // 2
+    y = y1 + int((y2 - y1) * 0.86)
+    adb("shell", "input", "tap", str(x), str(y), check=False)
+    print("tap low", label, x, y)
+    return True
+
+
+def tap_exact(xml: str, label: str) -> bool:
+    """Tap the largest node whose own text is this label, not a longer one."""
+    best: tuple[int, int, int] | None = None
+    for node in re.findall(r"<node\b[^>]*>", xml):
+        texts = re.findall(r'(?:text|content-desc)="([^"]*)"', node)
+        if label not in texts and not any(t.startswith(f"{label} ") for t in texts):
+            continue
+        bounds = re.search(
+            r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',
+            node,
+        )
+        if bounds is None:
+            continue
+        x1, y1, x2, y2 = (int(v) for v in bounds.groups())
+        area = max(0, x2 - x1) * max(0, y2 - y1)
+        if area < 2000:
+            continue
+        if best is None or area > best[0]:
+            best = (area, (x1 + x2) // 2, (y1 + y2) // 2)
+    if best is None:
+        return False
+    adb(
+        "shell",
+        "input",
+        "tap",
+        str(best[1]),
+        str(best[2]),
+        check=False,
+    )
+    print("tap", label, best[1], best[2])
+    return True
+
+
 def tap_node(xml: str, label: str) -> bool:
     for node in re.findall(r"<node\b[^>]*>", xml):
         if f'content-desc="{label}"' not in node and f'text="{label}"' not in node:
@@ -164,7 +230,21 @@ def shoot_first_minute() -> None:
     xml = wait_any(("RETURN",), timeout=12)
     if not xml or not tap_node(screen_text() or xml, "RETURN"):
         raise SystemExit("RETURN not on the leave confirm")
-    time.sleep(2.5)
+    time.sleep(1.2)
+    # A new version opens Patch Notes over the hub. The listing shot is TODAY.
+    # The button reads GOT IT; semantics often say Dismiss.
+    for _ in range(6):
+        xml = screen_text()
+        if xml and "PATCH NOTES" not in xml and "ENTER DUNGEON" in xml:
+            break
+        if (
+            tap_low(xml, "GOT IT")
+            or tap_exact(xml, "GOT IT")
+            or tap_exact(xml, "Dismiss")
+        ):
+            time.sleep(1.2)
+            continue
+        time.sleep(0.5)
     screencap("03_hub_today.png")
 
 
@@ -223,14 +303,30 @@ def shoot_showcase() -> None:
     open_played_slot()
     time.sleep(0.8)
     screencap("07_return.png")
-    # NICE is the lower button on Welcome Back. ASCEND +16e sits between
-    # ENTER DUNGEON (label ~1800) and DAILY RUN (~2064).
-    adb("shell", "input", "tap", "540", "1670", check=False)
-    print("tap NICE")
-    time.sleep(1.1)
-    adb("shell", "input", "tap", "540", "1948", check=False)
-    print("tap ASCEND")
-    time.sleep(0.8)
+    xml = screen_text()
+    for label in ("NICE", "CLAIM", "GOT IT"):
+        if tap_exact(xml, label):
+            break
+    opened = False
+    deadline = time.time() + 10
+    while time.time() < deadline:
+        xml = screen_text()
+        if not xml:
+            time.sleep(0.6)
+            continue
+        if "WELCOME BACK" in xml or "Welcome back" in xml:
+            time.sleep(0.4)
+            continue
+        if tap_exact(xml, "ASCEND"):
+            opened = True
+            break
+        time.sleep(0.5)
+    if not opened:
+        # The hub dump goes blank while the card closes. ASCEND sits under
+        # ENTER DUNGEON on this phone.
+        adb("shell", "input", "tap", "540", "1888", check=False)
+        print("tap ASCEND fallback")
+        time.sleep(1.0)
     screencap("08_ascend.png")
 
 

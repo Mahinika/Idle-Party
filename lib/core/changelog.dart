@@ -86,10 +86,40 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.12.195';
+  static const String currentVersion = '1.13.0';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.13.0',
+      date: 'Oct 13, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. After a wipe they stand back up, and better gear goes on while they fight.',
+      added: <String>[
+        'AUTO EQUIP in GEAR wears a stronger piece during the fight, and while the app is closed.',
+        'Spire Trophies sit on the Gauntlet card. Each squeeze under each pact pays essence the first time. A full row grants a title. All 12 grant 1 STAR.',
+      ],
+      changed: <String>[
+        'After a wipe the party counts down and fights again. Two misses on a new floor farm the floor below, then push that floor.',
+        'While the app is closed, a wipe farms the safe floor instead of stopping.',
+        'Welcome Back lists floors, kills, levels, the best drop, and why the catch-up stopped.',
+        'The quiet ping asks after the first cleared floor. A closed cave pings once if it hits the time cap.',
+        'A cleared floor shows a short line with gold, XP, and the best drop. Loot is sucked in once.',
+        'Crits say CRIT. A boss room plays its sound when it opens.',
+        'Screen shake has its own switch. Enemy health bars hide until that foe is hurt.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+      fixed: <String>[
+        'The party row on a phone no longer clips names.',
+        'Boss warnings stay on top of other fight text.',
+        'A full bag says Bag full.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.12.195',
       date: 'Oct 11, 2026',
