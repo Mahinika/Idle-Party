@@ -76,8 +76,8 @@ class _MarketOverlayState extends State<MarketOverlay> {
         const SizedBox(height: 10),
         GameButton(
           label: state.gold >= flaskCost
-              ? 'BUY FLASK · ${flaskCost}g'
-              : 'FLASK · NEED ${flaskCost}g',
+              ? 'BUY FLASK · ${formatGold(flaskCost)}'
+              : 'FLASK · NEED ${formatGold(flaskCost)}',
           tip: 'Heals the whole party when HP is low (auto in AFK).',
           dense: true,
           onPressed:
@@ -97,7 +97,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
           children: [
             Expanded(
               child: GameButton(
-                label: 'BUY 3 · ${flaskCost * 3}g',
+                label: 'BUY 3 · ${formatGold(flaskCost * 3)}',
                 style: GameButtonStyle.grey,
                 dense: true,
                 onPressed: state.gold >= flaskCost * 3
@@ -108,7 +108,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
             const SizedBox(width: 6),
             Expanded(
               child: GameButton(
-                label: 'BANDAGE · ${bandageCost}g',
+                label: 'BANDAGE · ${formatGold(bandageCost)}',
                 tip: 'Heals the one hero who needs it most.',
                 style: GameButtonStyle.grey,
                 dense: true,
@@ -124,13 +124,15 @@ class _MarketOverlayState extends State<MarketOverlay> {
         Row(
           children: [
             MenuChrome.chip(
-              label: upgradeCount > 0 ? 'Upgrades · $upgradeCount' : 'Upgrades',
+              label: upgradeCount > 0
+                  ? 'UPGRADES · $upgradeCount'
+                  : 'UPGRADES',
               selected: _upgradesOnly,
               onTap: () => setState(() => _upgradesOnly = true),
             ),
             const SizedBox(width: 6),
             MenuChrome.chip(
-              label: 'All gear',
+              label: 'ALL GEAR',
               selected: !_upgradesOnly,
               onTap: () => setState(() => _upgradesOnly = false),
             ),
@@ -158,6 +160,21 @@ class _MarketOverlayState extends State<MarketOverlay> {
                     size: 14,
                     color: GameTheme.parchmentDim,
                   ),
+                ),
+                const SizedBox(height: 8),
+                GameButton(
+                  label: _upgradesOnly ? 'ALL GEAR' : 'REROLL',
+                  style: GameButtonStyle.grey,
+                  dense: true,
+                  expanded: false,
+                  onPressed: _upgradesOnly
+                      ? () => setState(() => _upgradesOnly = false)
+                      : (state.gold >= refreshCost
+                            ? director.refreshMarketListings
+                            : null),
+                  tip: _upgradesOnly
+                      ? 'Show every listing, not only upgrades'
+                      : 'Pay gold for a new stock',
                 ),
               ],
             ),
@@ -216,7 +233,12 @@ class _MarketOverlayState extends State<MarketOverlay> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: GestureDetector(
+      child: Semantics(
+        button: true,
+        label: canBuy
+            ? 'Buy ${item.name}, ${formatGold(listing.priceGold)}'
+            : '${item.name}, need ${formatGold(listing.priceGold)}',
+        child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: canBuy
             ? () => director.buyMarketListing(listing.id)
@@ -303,6 +325,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

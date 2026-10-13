@@ -8,6 +8,7 @@ import '../../assets/kenney_assets.dart';
 import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_common.dart';
 
 /// Discovered enemies / items grid — purely cosmetic Codex.
 class CodexOverlay extends StatefulWidget {
@@ -74,7 +75,7 @@ class _CodexOverlayState extends State<CodexOverlay> {
               final label = claimed
                   ? '${entry.value.pct}%'
                   : ready
-                  ? '${entry.value.pct}% +${entry.value.reward}e'
+                  ? '${entry.value.pct}% +${formatCount(entry.value.reward)}e'
                   : '${entry.value.pct}%';
               return GameButton(
                 label: label,

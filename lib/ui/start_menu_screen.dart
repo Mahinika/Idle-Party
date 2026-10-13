@@ -71,14 +71,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
       vsync: this,
       duration: const Duration(milliseconds: 480),
     );
-    if (widget.onPlay != null) {
-      _inputUnlocked = true;
-    } else {
-      Future<void>.delayed(const Duration(milliseconds: 400), () {
-        if (!mounted || _finishing) return;
-        setState(() => _inputUnlocked = true);
-      });
-    }
+    _inputUnlocked = true;
   }
 
   @override

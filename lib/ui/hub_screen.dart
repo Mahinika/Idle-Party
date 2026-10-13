@@ -37,6 +37,7 @@ import '../core/menu_router.dart';
 import 'coach_pulse.dart';
 import 'first_session_tips.dart';
 import 'shell/discord_thanks_overlay.dart';
+import 'shell/shell_common.dart';
 import 'shell/whats_new_overlay.dart';
 import 'hub/hub_endgame_map.dart';
 import 'hub/hub_header.dart';
@@ -661,7 +662,7 @@ class _HubScreenState extends State<HubScreen>
           state.ascensionLevel + 1,
         ) +
         MetaSystems.ascendStreakEssence(state);
-    return 'ASCEND  +${reward}e';
+    return 'ASCEND  +${formatCount(reward)}e';
   }
 
   /// Party line plus bosses left this run. The count stays visible when the
@@ -783,6 +784,8 @@ class _HubScreenState extends State<HubScreen>
                                   MenuRoute.more,
                                   more: MoreSection.settings,
                                 ),
+                                onOpenAscend: () =>
+                                    confirmAscend(context, director),
                                 incomeLine: GoldIncome.hubRateLine(state),
                                 hubGoldRate: hubChaseOwnsEndgameRow(chase.kind)
                                     ? null
@@ -866,6 +869,11 @@ class _HubScreenState extends State<HubScreen>
                                                     .metaDepth.gauntletBestFloor,
                                                 riftBestTier:
                                                     state.metaDepth.riftBestTier,
+                                                onLockedTap: endgameUnlocked
+                                                    ? null
+                                                    : () => director.showToast(
+                                                        'Every hero at Lv${GameLogic.maxHeroLevel} unlocks these hunts',
+                                                      ),
                                                 onSelectHunt: endgameUnlocked
                                                     ? (hunt) =>
                                                         setState(() {

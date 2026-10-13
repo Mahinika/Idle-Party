@@ -20,10 +20,14 @@ class CampRatesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          run > 0
-              ? 'Hub ${GoldIncome.perMinuteLabel(hub)} · essence ~1 per 12 min after 10 min (War Altar speeds it) · Run ${GoldIncome.perMinuteLabel(run)}'
-              : 'Hub ${GoldIncome.perMinuteLabel(hub)} · essence ~1 per 12 min after 10 min (War Altar speeds it) · Run — enter a dungeon',
+          'Hub ${GoldIncome.perMinuteLabel(hub)}',
           style: GameTheme.body(size: 14, color: GameTheme.mossLit),
+        ),
+        Text(
+          run > 0
+              ? 'Essence ~1 per 12 min after 10 min. Run ${GoldIncome.perMinuteLabel(run)}.'
+              : 'Essence ~1 per 12 min after 10 min. Run — enter a dungeon.',
+          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         // Two chips only — full multiplier dump lived in one dense line (#55).
         Wrap(

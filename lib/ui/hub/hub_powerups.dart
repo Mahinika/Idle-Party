@@ -306,31 +306,32 @@ Future<void> openPowerupsSheet(
                           ),
                         ),
                         const SizedBox(height: 10),
-                        MenuChrome.sectionLabelScoped(
-                          'EARN',
-                          scope: MenuScope.today,
-                        ),
-                        _EarnBlock(
-                          adFree: adFree,
-                          canDaily: canDaily,
-                          realAds: realAds,
-                          onClaimDaily: director.claimAdFreeDailyTicket,
-                          onWatch: () {
-                            unawaited(director.watchPowerupAd());
-                          },
-                          onPreview: director.grantPowerupHour,
-                        ),
-                        const SizedBox(height: 8),
-                        FriendTipBlock(director: director),
-                        const SizedBox(height: 10),
-                        MenuChrome.sectionLabelScoped(
-                          'USE',
-                          scope: MenuScope.today,
-                        ),
                         Expanded(
                           child: SingleChildScrollView(
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                MenuChrome.sectionLabelScoped(
+                                  'EARN',
+                                  scope: MenuScope.today,
+                                ),
+                                _EarnBlock(
+                                  adFree: adFree,
+                                  canDaily: canDaily,
+                                  realAds: realAds,
+                                  onClaimDaily: director.claimAdFreeDailyTicket,
+                                  onWatch: () {
+                                    unawaited(director.watchPowerupAd());
+                                  },
+                                  onPreview: director.grantPowerupHour,
+                                ),
+                                const SizedBox(height: 8),
+                                FriendTipBlock(director: director),
+                                const SizedBox(height: 10),
+                                MenuChrome.sectionLabelScoped(
+                                  'USE',
+                                  scope: MenuScope.today,
+                                ),
                                 for (final offer in AdBuffCatalog.offered) ...[
                                   _BuffRow(
                                     offer: offer,

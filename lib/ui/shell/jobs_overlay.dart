@@ -5,6 +5,7 @@ import '../../models/mission.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import 'shell_common.dart';
 
 class JobsOverlay extends StatelessWidget {
   const JobsOverlay({super.key, required this.director});
@@ -17,8 +18,8 @@ class JobsOverlay extends StatelessWidget {
   }
 
   static String rewardLine({required int gold, required int essence}) {
-    if (essence <= 0) return '+${gold}g';
-    return '+${gold}g +${essence}e';
+    if (essence <= 0) return '+${formatGold(gold)}';
+    return '+${formatGold(gold)} +${formatCount(essence)}e';
   }
 
   static String chainClaimLabel() => 'CLAIM · chain +5e';
@@ -56,6 +57,13 @@ class JobsOverlay extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
+        if (claimable == 0) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Clear floors to fill these. Claim when a bar is full.',
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ],
         if (claimable > 0) ...[
           const SizedBox(height: 8),
           GameButton(
@@ -85,92 +93,89 @@ class JobsOverlay extends StatelessWidget {
           _ => GameTheme.border.withValues(alpha: 0.9),
         },
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: GameTheme.panelInset,
-                        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-                        border: Border.all(
-                          color: GameTheme.border.withValues(alpha: 0.8),
-                        ),
-                      ),
-                      child: Text(
-                        _slotBadge(index),
-                        style: GameTheme.pixel(
-                          size: 9,
-                          color: GameTheme.torchHot,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        displayTitle(mission, index),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GameTheme.body(
-                          size: 16,
-                          color: switch (mission.tier) {
-                            2 => GameTheme.bloodLit,
-                            1 => GameTheme.torchHot,
-                            _ => GameTheme.parchment,
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Progress ${mission.progress}/${mission.target}'
-                  ' · ${rewardLine(gold: mission.goldReward, essence: mission.essenceReward)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 14),
-                ),
-                const SizedBox(height: 6),
-                ClipRRect(
+                decoration: BoxDecoration(
+                  color: GameTheme.panelInset,
                   borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-                  child: LinearProgressIndicator(
-                    value: mission.target <= 0
-                        ? 0
-                        : (mission.progress / mission.target).clamp(0.0, 1.0),
-                    minHeight: 8,
-                    backgroundColor: GameTheme.panelInset,
-                    color: mission.canClaim || mission.claimed
-                        ? GameTheme.mossLit
-                        : GameTheme.torchHot,
+                  border: Border.all(
+                    color: GameTheme.border.withValues(alpha: 0.8),
                   ),
                 ),
-              ],
+                child: Text(
+                  _slotBadge(index),
+                  style: GameTheme.pixel(
+                    size: 9,
+                    color: GameTheme.torchHot,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  displayTitle(mission, index),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.body(
+                    size: 16,
+                    color: switch (mission.tier) {
+                      2 => GameTheme.bloodLit,
+                      1 => GameTheme.torchHot,
+                      _ => GameTheme.parchment,
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Progress ${mission.progress}/${mission.target}'
+            ' · ${rewardLine(gold: mission.goldReward, essence: mission.essenceReward)}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.body(size: 14),
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: LinearProgressIndicator(
+              value: mission.target <= 0
+                  ? 0
+                  : (mission.progress / mission.target).clamp(0.0, 1.0),
+              minHeight: 8,
+              backgroundColor: GameTheme.panelInset,
+              color: mission.canClaim || mission.claimed
+                  ? GameTheme.mossLit
+                  : GameTheme.torchHot,
             ),
           ),
-          const SizedBox(width: 8),
-          if (mission.canClaim || mission.claimed)
-            GameButton(
-              label: mission.claimed
-                  ? 'CLAIMED'
-                  : (director.state.metaDepth.jobChainCount == 2
-                        ? chainClaimLabel()
-                        : 'CLAIM'),
-              onPressed: mission.canClaim
-                  ? () => director.claimMission(mission.id)
-                  : null,
-              style: GameButtonStyle.grey,
-              expanded: false,
+          if (mission.canClaim || mission.claimed) ...[
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerRight,
+              child: GameButton(
+                label: mission.claimed
+                    ? 'CLAIMED'
+                    : (director.state.metaDepth.jobChainCount == 2
+                          ? chainClaimLabel()
+                          : 'CLAIM'),
+                onPressed: mission.canClaim
+                    ? () => director.claimMission(mission.id)
+                    : null,
+                style: GameButtonStyle.grey,
+                expanded: false,
+              ),
             ),
+          ],
         ],
       ),
     );

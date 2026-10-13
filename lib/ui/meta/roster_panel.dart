@@ -8,6 +8,7 @@ import '../../models/hero_spec.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_common.dart';
 
 class TeamCompositionOverlay extends StatefulWidget {
   const TeamCompositionOverlay({super.key, required this.director});
@@ -93,8 +94,8 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           GameButton(
             label: state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
                     state.essence >= GameLogic.partySlot5EssenceCost
-                ? 'UNLOCK SLOT 5 · ${GameLogic.partySlot5EssenceCost}e'
-                : '${GameLogic.partySlot5EssenceCost} essence · needs Ascend ${GameLogic.partySlot5MinAscension}',
+                ? 'UNLOCK SLOT 5 · ${formatCount(GameLogic.partySlot5EssenceCost)}e'
+                : '${formatCount(GameLogic.partySlot5EssenceCost)}e · needs Ascend ${GameLogic.partySlot5MinAscension}',
             style: GameButtonStyle.brown,
             dense: true,
             onPressed:

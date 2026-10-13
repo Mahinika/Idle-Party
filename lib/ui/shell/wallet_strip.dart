@@ -38,7 +38,7 @@ class WalletStrip extends StatelessWidget {
     final gap = dense ? 6.0 : 8.0;
     final iconSize = dense ? 20.0 : 24.0;
     final textSize = dense ? 18.0 : 22.0;
-    final goldLabel = 'Gold ${formatCount(gold)}';
+    final goldLabel = 'Gold ${formatGold(gold)}';
     final label = showEssence
         ? '$goldLabel, Essence ${formatCount(essence)}'
         : goldLabel;
@@ -50,7 +50,7 @@ class WalletStrip extends StatelessWidget {
         children: [
           _WalletChip(
             icon: UiIcon.gold,
-            label: formatCount(gold),
+            label: formatGold(gold),
             suffix: goldRateSuffix,
             onTap: onGoldRateTap,
             tone: GameTheme.torchHot,

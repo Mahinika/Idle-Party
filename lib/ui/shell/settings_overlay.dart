@@ -78,7 +78,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
       context: context,
       barrierColor: MenuChrome.scrim,
       builder: (ctx) => MenuChrome.dialog(
-        title: 'Reset game?',
+        title: 'RESET SAVE?',
         content: Text(
           'Export this save first (ACCOUNT below) if you want a backup. '
           'This save slot will be wiped. Your other saves stay.',

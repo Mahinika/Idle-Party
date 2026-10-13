@@ -146,7 +146,8 @@ void main() {
       keptCount: 2,
       keptNames: const ['Iron Cap', 'Hide Belt'],
     );
-    expect(jargon.toLowerCase(), contains('powerscore'));
+    expect(jargon.toLowerCase(), contains('raw power'));
+    expect(jargon.toLowerCase(), isNot(contains('powerscore')));
     expect(jargon, contains('Iron Cap'));
     expect(jargon, contains('Skips 2'));
   });

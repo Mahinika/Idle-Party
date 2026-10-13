@@ -7,6 +7,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import 'power_upgrade_row.dart';
+import 'shell_common.dart';
 
 class ForgeOverlay extends StatefulWidget {
   const ForgeOverlay({super.key, required this.director});
@@ -18,9 +19,9 @@ class ForgeOverlay extends StatefulWidget {
       return 'Run gold power resets when you start over. Buy the row tagged BEST when unsure.';
     }
     if (showCamp) {
-      return 'GOLD → FORGE + bag gold wipe on Ascend. Blessing KEEP stays on ESSENCE.';
+      return 'GOLD → FORGE + bag gold wipe on Ascend. BLESSING stays on ESSENCE.';
     }
-    return 'GOLD → FORGE + bag gold wipe on Ascend. Blessing KEEP stays.';
+    return 'GOLD → FORGE + bag gold wipe on Ascend. BLESSING stays.';
   }
 
   @override
@@ -85,12 +86,13 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     final nextDelta = _nextRankDelta(state, type);
     final String buyLabel;
     if (onPressed == null) {
-      buyLabel = '${cost}g';
+      buyLabel = formatGold(cost);
     } else if (_spendMode == ForgeGoldSpendMode.one) {
-      buyLabel = '${cost}g';
+      buyLabel = formatGold(cost);
     } else {
-      buyLabel = '${preview.buys}× · ${preview.spent}g';
+      buyLabel = '${preview.buys}× · ${formatGold(preview.spent)}';
     }
+    final shortGold = cost > state.gold ? cost - state.gold : 0;
     return PowerUpgradeRow(
       accent: _forgeAccent(type),
       title: _forgeName(type),
@@ -100,7 +102,9 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       dense: true,
       trailing: GameButton(
         label: buyLabel,
-        tip: recommended
+        tip: onPressed == null && shortGold > 0
+            ? 'Need ${formatGold(shortGold)} more'
+            : recommended
             ? 'BEST = cheapest track that still lifts party power'
             : (type == PartyUpgradeType.crit && state.critBonus >= 25
                 ? 'CRIT soft-caps past 25 — each buy adds less sheet %'
@@ -198,8 +202,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                   'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
                   'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%  '
                   'MASTERY +${state.masteryBonus}',
-          maxLines: 3,
-          overflow: TextOverflow.visible,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           softWrap: true,
           style: GameTheme.body(size: 12, color: GameTheme.parchment),
         ),
@@ -213,7 +217,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
         const SizedBox(height: 4),
         if (canBuyAny) ...[
           MenuChrome.segmented(
-            dense: true,
+            dense: false,
             labels: const ['×1', 'Bulk'],
             selectedIndex: _spendMode == ForgeGoldSpendMode.one ? 0 : 1,
             onSelect: (i) {

@@ -60,10 +60,14 @@ class _CombineSlot extends StatelessWidget {
                   ],
                 ),
               ),
-              GameIcon.glyph(
-                UiGlyph.close,
-                size: 12,
-                color: GameTheme.parchmentDim,
+              Semantics(
+                button: true,
+                label: 'Clear merge slot',
+                child: GameIcon.glyph(
+                  UiGlyph.close,
+                  size: 16,
+                  color: GameTheme.parchmentDim,
+                ),
               ),
             ] else
               Expanded(

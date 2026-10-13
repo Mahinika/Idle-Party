@@ -108,7 +108,7 @@ class _GoldDockState extends State<GoldDock> with TickerProviderStateMixin {
         if (showMarketIntro) ...[
           const SizedBox(height: 6),
           Text(
-            'This run · Market — flasks and upgrade listings spend gold only',
+            'THIS RUN · MARKET — flasks and listings spend gold only',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),

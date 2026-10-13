@@ -59,7 +59,8 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
         'REDEEM CODE',
         style: GameTheme.body(size: 16, color: GameTheme.parchment),
       ),
-      content: Column(
+      content: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -99,6 +100,7 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
             ),
           ),
         ],
+        ),
       ),
       actions: [
         MenuChrome.dialogCancel(

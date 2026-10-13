@@ -37,6 +37,9 @@ class RelicsOverlay extends StatelessWidget {
           GameButton(
             label:
                 'DISCOVER ${next.name} · ${_pile(discoverCost, 'Ember', 'Embers')}',
+            tip: md.embers >= discoverCost
+                ? null
+                : 'Need ${discoverCost - md.embers} more Embers',
             onPressed: md.embers >= discoverCost
                 ? () => director.unlockRelic(next.id)
                 : null,

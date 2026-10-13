@@ -100,7 +100,7 @@ Future<void> showOfflineProgressDialog(
     barrierDismissible: false,
     barrierColor: MenuChrome.scrim,
     builder: (ctx) => MenuChrome.dialog(
-      title: 'Welcome back!',
+      title: 'WELCOME BACK',
       content: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.sizeOf(ctx).height * 0.55,

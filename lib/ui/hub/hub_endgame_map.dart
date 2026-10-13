@@ -120,11 +120,15 @@ class HubEndgameMap extends StatelessWidget {
     this.gauntletBestFloor = 0,
     this.riftBestTier = 0,
     this.locked = false,
+    this.onLockedTap,
   });
 
   final HubEndgameHunt? selectedHunt;
   final ValueChanged<HubEndgameHunt>? onSelectHunt;
   final bool locked;
+
+  /// Toast the unlock rule when a locked hunt marker is tapped.
+  final VoidCallback? onLockedTap;
   final Animation<double>? pulse;
   final int grBestTier;
   final int gauntletBestFloor;
@@ -276,7 +280,9 @@ class HubEndgameMap extends StatelessWidget {
         selected: selected,
         pulse: selected && !locked ? pulse : null,
         statusWord: locked ? 'LOCK' : statusWord,
-        onTap: locked ? () {} : () => onSelectHunt?.call(node.hunt),
+        onTap: locked
+            ? () => onLockedTap?.call()
+            : () => onSelectHunt?.call(node.hunt),
       ),
     );
   }

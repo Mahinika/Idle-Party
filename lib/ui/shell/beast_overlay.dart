@@ -145,10 +145,9 @@ class _BeastOverlayState extends State<BeastOverlay> {
         if (state.ownedPets.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(
-            'SET ACTIVE picks the pet that fights. FAVORITE only boosts that '
-            'species while it is ACTIVE: +1 ATK and about +5% on find passives '
-            '(at least +1 on small bonuses). Mitigate and heal bump too. Affinity +25% in that '
-            'cave. Bond +1 ATK every 5 ranks. Frames are looks only.',
+            'SET ACTIVE is the pet that fights.\n'
+            'FAVORITE boosts that species while it is ACTIVE.\n'
+            'Affinity +25% in its cave. Bond +1 ATK every 5 ranks.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
@@ -185,7 +184,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                 ? (GameLogic.canMergePets(state, _mergeA!, _mergeB!)
                       ? 'CONFIRM — both become one higher-rarity pet'
                       : 'Need the same species and same rarity (legendary cannot merge)')
-                : 'Tap MERGE on two same-species pets of the same rarity',
+                : 'Pick two same-species pets, then CONFIRM MERGE',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),

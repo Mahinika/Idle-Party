@@ -9,6 +9,7 @@ import '../confirm_dialogs.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../meta/prestige_shop.dart';
+import 'shell_common.dart';
 
 /// Forever essence spends — God Hand, Blessing, permanent buys, REBORN.
 class EssenceKeepPanel extends StatelessWidget {
@@ -42,7 +43,7 @@ class EssenceKeepPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${state.essence}e · keeps on Ascend',
+          '${formatCount(state.essence)}e · keeps on Ascend',
           style: GameTheme.body(size: 15, color: GameTheme.torchHot),
         ),
         Text(
@@ -80,7 +81,10 @@ class EssenceKeepPanel extends StatelessWidget {
           children: [
             Expanded(
               child: GameButton(
-                label: 'Damage · ${dmgCost}e',
+                label: 'Damage · ${formatCount(dmgCost)}e',
+                tip: state.essence >= dmgCost
+                    ? null
+                    : 'Need ${formatCount(dmgCost - state.essence)}e more',
                 dense: true,
                 onPressed: state.essence >= dmgCost
                     ? director.upgradeGodHand
@@ -90,7 +94,12 @@ class EssenceKeepPanel extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: GameButton(
-                label: cdMaxed ? 'CD · MAX' : 'CD · ${cdCost}e',
+                label: cdMaxed ? 'CD · MAX' : 'CD · ${formatCount(cdCost)}e',
+                tip: cdMaxed
+                    ? 'Cooldown is maxed'
+                    : (state.essence >= cdCost
+                          ? null
+                          : 'Need ${formatCount(cdCost - state.essence)}e more'),
                 dense: true,
                 onPressed: cdMaxed
                     ? null

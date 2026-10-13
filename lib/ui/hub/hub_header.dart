@@ -58,6 +58,8 @@ class HubOfflineBanner extends StatelessWidget {
               Expanded(
                 child: Text(
                   text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(
                     size: 12,
                     color: GameTheme.mossLit,
@@ -182,7 +184,7 @@ Future<void> showHubIncomeSheet(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     MenuChrome.sheetHandle(),
-                    Text('Income', style: GameTheme.menuTitle(size: 18)),
+                    Text('INCOME', style: GameTheme.menuTitle(size: 18)),
                     const SizedBox(height: 8),
                     Text(
                       incomeLine,
@@ -237,6 +239,7 @@ class HubHeader extends StatelessWidget {
     required this.collectionScore,
     required this.displayTitle,
     required this.onOpenSettings,
+    this.onOpenAscend,
     required this.incomeLine,
     required this.multiplierLine,
     this.dimIncome = false,
@@ -255,6 +258,9 @@ class HubHeader extends StatelessWidget {
   final int collectionScore;
   final String displayTitle;
   final VoidCallback onOpenSettings;
+
+  /// Opens the Ascend confirm. The pill looks like a control, so it is one.
+  final VoidCallback? onOpenAscend;
   final String incomeLine;
   final String multiplierLine;
   final bool dimIncome;
@@ -344,11 +350,22 @@ class HubHeader extends StatelessWidget {
             child: Center(
               child: Semantics(
                 label: _alPillSemantics(),
+                button: onOpenAscend != null,
                 excludeSemantics: true,
-                child: HubStatPill(
-                  icon: UiIcon.ascend,
-                  caption: 'Ascend',
-                  label: _alPillLabel(),
+                child: InkWell(
+                  onTap: onOpenAscend,
+                  borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 6,
+                    ),
+                    child: HubStatPill(
+                      icon: UiIcon.ascend,
+                      caption: 'Ascend',
+                      label: _alPillLabel(),
+                    ),
+                  ),
                 ),
               ),
             ),

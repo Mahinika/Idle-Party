@@ -469,7 +469,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           )
         else ...[
           GameButton(
-            label: 'AUTO EQUIP ALL',
+            label: 'EQUIP ALL',
             style: GameButtonStyle.grey,
             onPressed: () {
               director.autoEquipAllApex();

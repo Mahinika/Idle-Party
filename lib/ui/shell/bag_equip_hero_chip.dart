@@ -40,7 +40,10 @@ class _EquipHeroChip extends StatelessWidget {
               : (cmp.powerDelta < 0
                     ? GameTheme.statDown
                     : GameTheme.parchmentDim));
-    return InkWell(
+    return Semantics(
+      button: true,
+      label: 'Equip on ${hero.displayRoleLabel(plainEnglish: plainEnglish)}',
+      child: InkWell(
       onTap: onTap,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
@@ -114,6 +117,7 @@ class _EquipHeroChip extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

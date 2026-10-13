@@ -265,13 +265,15 @@ class AppBottomBarItem extends StatelessWidget {
                         children: [
                           icon,
                           SizedBox(height: dense ? 2 : 3),
-                          Text(
-                            label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GameTheme.body(
-                              size: labelSize,
-                              color: labelColor,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              style: GameTheme.body(
+                                size: dense ? 11 : labelSize,
+                                color: labelColor,
+                              ),
                             ),
                           ),
                         ],

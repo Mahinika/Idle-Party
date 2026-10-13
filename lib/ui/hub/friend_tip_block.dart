@@ -41,7 +41,7 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Share Idle Party. You get ${FriendReferral.ticketsPerFriend} Ad Tickets when a friend installs with your code, or enters it on SCROLLS — up to ${FriendReferral.maxFriends} friends. Spend them on the scrolls below.',
+          'Share your code. You get ${FriendReferral.ticketsPerFriend} Ad Tickets per friend, up to ${FriendReferral.maxFriends}.',
           style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (md.friendClaimsPaid > 0) ...[
@@ -84,8 +84,14 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
                 dense: true,
                 onPressed: () {
                   final raw = _code.text;
-                  _code.clear();
-                  unawaited(widget.director.applyFriendCode(raw));
+                  unawaited(() async {
+                    await widget.director.applyFriendCode(raw);
+                    if (!mounted) return;
+                    if (widget.director.state.metaDepth.friendInviteUsed
+                        .isNotEmpty) {
+                      _code.clear();
+                    }
+                  }());
                 },
               ),
             ],

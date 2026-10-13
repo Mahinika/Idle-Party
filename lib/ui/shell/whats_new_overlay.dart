@@ -131,8 +131,7 @@ class WhatsNewOverlay extends StatelessWidget {
           section('NEW', release.added),
           section('CHANGES', release.changed),
           section('FIXES', release.fixed),
-          section('TECHNICAL', release.technical),
-          section('KNOWN ISSUES', release.known),
+          section('STILL OPEN', release.known),
           const SizedBox(height: 8),
         ],
       );

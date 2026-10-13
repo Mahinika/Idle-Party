@@ -10,6 +10,7 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import 'income_overlay.dart';
 import 'power_upgrade_row.dart';
+import 'shell_common.dart';
 
 class SanctuaryOverlay extends StatefulWidget {
   const SanctuaryOverlay({super.key, required this.director});
@@ -88,7 +89,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
             ),
             MenuChrome.chip(label: 'Camp tracks', selected: campOpen),
             Text(
-              '${state.essence}e · survive Ascend',
+              '${formatCount(state.essence)}e · survive Ascend',
               style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
             ),
           ],

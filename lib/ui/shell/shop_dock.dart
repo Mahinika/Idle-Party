@@ -286,14 +286,26 @@ class _ShopRow extends StatelessWidget {
                 const SizedBox(width: 8),
               ],
               Expanded(
-                child: Text(
-                  shortTitle(item),
-                  style: GameTheme.body(size: 15, color: GameTheme.torchHot),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      shortTitle(item),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(size: 15, color: GameTheme.torchHot),
+                    ),
+                    Text(
+                      priceLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 13,
+                        color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                priceLabel,
-                style: GameTheme.body(size: 14, color: GameTheme.parchment),
               ),
             ],
           ),
@@ -318,6 +330,11 @@ class _ShopRow extends StatelessWidget {
                   : listed
                   ? 'BUY'
                   : 'NOT ON PLAY',
+              tip: owned
+                  ? 'Already on this save'
+                  : listed
+                  ? null
+                  : 'Not sold in this Play build',
               style: GameButtonStyle.grey,
               expanded: false,
               dense: true,

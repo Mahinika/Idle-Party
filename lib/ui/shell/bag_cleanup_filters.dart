@@ -26,10 +26,8 @@ class BagCleanupFilters extends StatelessWidget {
   Widget build(BuildContext context) {
     final showScrap = MenuTabs.showCamp(state);
     final showMarket = MenuTabs.showGold(state);
-    final jargon = !GameLogic.plainPlayerChrome(state);
-    final keepLine = jargon
-        ? 'SELL JUNK sells every filter match, including BiS and upgrades. Keeps Apex and soulbound.'
-        : 'SELL JUNK sells every filter match, including upgrades. Keeps Apex and soulbound.';
+    final keepLine =
+        'SELL JUNK sells every filter match, including upgrades. Keeps Apex and soulbound.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

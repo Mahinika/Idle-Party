@@ -186,7 +186,7 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('Welcome back!'), findsOneWidget);
+    expect(find.text('WELCOME BACK'), findsOneWidget);
     expect(find.textContaining('While you are away'), findsOneWidget);
     expect(find.textContaining('keep fighting'), findsOneWidget);
     expect(find.textContaining('Up next:'), findsOneWidget);
@@ -225,7 +225,7 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('Welcome back!'), findsOneWidget);
+    expect(find.text('WELCOME BACK'), findsOneWidget);
     expect(find.textContaining('Up next: Clear one cave today'), findsOneWidget);
     expect(find.textContaining('While you are away the hub pays'), findsOneWidget);
     expect(find.textContaining('Daily Run'), findsNothing);

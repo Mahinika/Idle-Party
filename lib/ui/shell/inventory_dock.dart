@@ -37,7 +37,7 @@ class InventoryDock extends StatefulWidget {
     }
     final base =
         'Same-slot junk pairs → one stronger piece (skips upgrades). Uses gold. '
-        'AUTO MERGE picks by raw powerScore.';
+        'AUTO MERGE picks by raw power.';
     if (keptCount <= 0) return base;
     final sample = keptNames.isEmpty
         ? ''
@@ -447,8 +447,8 @@ class _InventoryDockState extends State<InventoryDock>
           runSpacing: 4,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            MenuChrome.chip(
-              label: 'Upgrades',
+              MenuChrome.chip(
+              label: 'UPGRADES',
               selected: _upgradesOnlyFilter,
               onTap: () => setState(
                 () => _upgradesOnlyFilter = !_upgradesOnlyFilter,
@@ -576,23 +576,19 @@ class _InventoryDockState extends State<InventoryDock>
                 expanded: true,
               ),
             ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: GameButton(
-                label: 'FILTERS',
-                tip: MenuAlerts.bagFiltersButtonTip(
-                  state,
-                  showing: _showFilters,
-                ),
-                onPressed: () => setState(() => _showFilters = !_showFilters),
-                style: _showFilters
-                    ? GameButtonStyle.brown
-                    : GameButtonStyle.grey,
-                dense: true,
-                expanded: true,
-              ),
-            ),
           ],
+        ),
+        const SizedBox(height: 4),
+        GameButton(
+          label: 'FILTERS',
+          tip: MenuAlerts.bagFiltersButtonTip(
+            state,
+            showing: _showFilters,
+          ),
+          onPressed: () => setState(() => _showFilters = !_showFilters),
+          style: _showFilters ? GameButtonStyle.brown : GameButtonStyle.grey,
+          dense: true,
+          expanded: true,
         ),
         if (mergeOpen && selectedId != null) ...[
           const SizedBox(height: 4),
@@ -649,6 +645,8 @@ class _InventoryDockState extends State<InventoryDock>
             mergeOpen
                 ? 'Tap item to select · long-press for tip · ADD TO MERGE for MERGE tab.'
                 : 'Tap item to select · long-press for tip.',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         if (state.gearStash.isEmpty)
@@ -709,7 +707,7 @@ class _InventoryDockState extends State<InventoryDock>
         return 'Slots must match — clear one and pick the same gear type.';
       }
       if (!goldOk) {
-        return 'Need $cost gold to merge (have ${state.gold}).';
+        return 'Need ${formatGold(cost)} to merge (have ${formatGold(state.gold)}).';
       }
       return 'Ready — MERGE spends both and makes one stronger piece.';
     }();

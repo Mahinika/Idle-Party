@@ -219,7 +219,7 @@ class CharacterEquipPanel extends StatelessWidget {
       children: [
         if (showHeroStrip) ...[
           SizedBox(
-            height: compact ? 40 : GameTheme.minTouch,
+            height: GameTheme.minTouch,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: heroes.length,
@@ -231,7 +231,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   onTap: () => onSelectHero(i),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      minHeight: compact ? 40 : GameTheme.minTouch,
+                      minHeight: GameTheme.minTouch,
                     ),
                     child: Container(
                       padding: EdgeInsets.symmetric(
@@ -252,7 +252,7 @@ class CharacterEquipPanel extends StatelessWidget {
                             const SizedBox(width: 6),
                           ],
                           Text(
-                            '${h.displayRoleLabel(plainEnglish: GameLogic.plainPlayerChrome(state))} · L${h.level}',
+                            '${h.displayRoleLabel(plainEnglish: GameLogic.plainPlayerChrome(state))} · Lv${h.level}',
                             style: GameTheme.body(
                               size: compact ? 10 : 11,
                               color: GameTheme.torchHot,

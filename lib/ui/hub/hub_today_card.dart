@@ -8,6 +8,7 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_common.dart';
 
 class HubMetaPulse extends StatelessWidget {
   const HubMetaPulse({
@@ -128,7 +129,7 @@ class HubMetaPulse extends StatelessWidget {
         child: Text(
           bits.join(' · '),
           textAlign: TextAlign.center,
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
@@ -229,11 +230,11 @@ class HubTodayCard extends StatelessWidget {
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 8),
               Align(
-                alignment: Alignment.centerRight,
+                alignment: ready ? Alignment.center : Alignment.centerRight,
                 child: GameButton(
                   label: actionLabel!,
                   style: GameButtonStyle.grey,
-                  expanded: false,
+                  expanded: ready,
                   onPressed: onAction,
                 ),
               ),
@@ -359,7 +360,9 @@ class HubUrgentRow extends StatelessWidget {
 
     final Widget? other = showVault
         ? GameButton(
-            label: 'CLAIM VAULT  +${vaultClaimEssence}e · +1 Cinder',
+            label: 'CLAIM VAULT',
+            tip:
+                '+${formatCount(vaultClaimEssence)} essence · +1 Cinder',
             style: GameButtonStyle.ghost,
             dense: true,
             onPressed: onClaimDailyVault,

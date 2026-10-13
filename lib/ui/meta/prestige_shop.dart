@@ -48,7 +48,10 @@ class PrestigeShopOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = director.state;
-    final offered = PrestigeShopCatalog.offered;
+    final offered = [
+      for (final item in PrestigeShopCatalog.offered)
+        if (item.id != 'loadout_slot') item,
+    ];
     final buyable = <PrestigeShopItem>[];
     final locked = <PrestigeShopItem>[];
     final maxed = <PrestigeShopItem>[];
