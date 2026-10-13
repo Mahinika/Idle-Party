@@ -560,6 +560,19 @@ class _InventoryDockState extends State<InventoryDock>
                 ),
         ),
         const SizedBox(height: 4),
+        GameButton(
+          label: state.autoEquipUpgrades ? 'AUTO EQUIP ON' : 'AUTO EQUIP OFF',
+          tip: state.autoEquipUpgrades
+              ? 'Wears upgrades during the fight and while the app is closed. Tap to stop.'
+              : 'Tap to wear upgrades during the fight and while the app is closed.',
+          style: state.autoEquipUpgrades
+              ? GameButtonStyle.brown
+              : GameButtonStyle.grey,
+          dense: true,
+          onPressed: () =>
+              widget.director.setAutoEquipUpgrades(!state.autoEquipUpgrades),
+        ),
+        const SizedBox(height: 4),
         Row(
           children: [
             Expanded(

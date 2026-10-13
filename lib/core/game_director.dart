@@ -1603,6 +1603,27 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(_state.copyWith(keepScreenAwake: enabled));
   }
 
+  void setAutoEquipUpgrades(bool enabled) {
+    _applyUpgrade(_state.copyWith(autoEquipUpgrades: enabled));
+  }
+
+  /// Wear budget upgrades without rebuilding the floor.
+  void _maybeAutoEquip() {
+    if (!_state.autoEquipUpgrades ||
+        _state.inGreaterRift ||
+        _awaitingWipeChoice ||
+        _state.gearStash.isEmpty) {
+      return;
+    }
+    final result = GameLogic.autoEquipBetterGearResult(_state);
+    if (result.equipped <= 0) return;
+    _state = result.state;
+    final spatial = _spatial;
+    if (spatial != null) {
+      _spatial = SpatialCombat.syncPartyFromState(spatial, _state);
+    }
+  }
+
   void setVfxQuality(VfxQuality value, {bool fromUser = true}) {
     if (fromUser) _vfxPinned = true;
     _applyUpgrade(_state.copyWith(vfxQuality: value));

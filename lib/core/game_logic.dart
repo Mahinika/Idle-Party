@@ -3114,6 +3114,13 @@ class GameLogic {
     GameState state,
   ) => GearService.autoEquipBetterGearResult(state);
 
+  /// Wear ready upgrades when AUTO EQUIP is on. Ranked GR never swaps mid-run.
+  static GameState maybeAutoEquip(GameState state) {
+    if (!state.autoEquipUpgrades || state.inGreaterRift) return state;
+    if (state.gearStash.isEmpty) return state;
+    return autoEquipBetterGearResult(state).state;
+  }
+
   static bool autoEquipWouldWear(
     GameState state,
     String itemId, {

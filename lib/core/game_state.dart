@@ -110,6 +110,7 @@ class GameState {
     this.musicVolume = 0.22,
     this.vfxQuality = VfxQuality.full,
     this.combatPace = 1,
+    this.autoEquipUpgrades = true,
     this.autoSellMaxPower = 48,
     this.autoSellMaxRarity = 1,
     this.autoDisassembleMaxIlvl = 48,
@@ -362,6 +363,10 @@ class GameState {
 
   /// Ground discs + buff aura rings (Full + Lite).
   bool get spawnPersistentVfx => vfxQuality.spawnPersistentFx;
+
+  /// Wear budget upgrades during a fight and while the app is closed.
+  /// Ranked GR stays manual. Kept across Ascend.
+  final bool autoEquipUpgrades;
 
   /// Auto-sell *drops on pickup* / bag cleanup when itemLevel ≤ this (0 = off).
   /// Legacy field name — treat as auto-sell max item level. Pays **gold**.
@@ -1130,6 +1135,7 @@ class GameState {
     VfxQuality? vfxQuality,
     int? combatPace,
     bool? reducedVfx,
+    bool? autoEquipUpgrades,
     int? autoSellMaxPower,
     int? autoSellMaxRarity,
     int? autoDisassembleMaxIlvl,
@@ -1278,6 +1284,7 @@ class GameState {
               ? this.vfxQuality
               : (reducedVfx ? VfxQuality.lite : VfxQuality.full)),
       combatPace: (combatPace ?? this.combatPace).clamp(1, 2),
+      autoEquipUpgrades: autoEquipUpgrades ?? this.autoEquipUpgrades,
       autoSellMaxPower: autoSellMaxPower ?? this.autoSellMaxPower,
       autoSellMaxRarity: autoSellMaxRarity ?? this.autoSellMaxRarity,
       autoDisassembleMaxIlvl:
@@ -1452,6 +1459,7 @@ class GameState {
     'vfxQuality': vfxQuality.name,
     'combatPace': combatPace,
     'reducedVfx': reducedVfx,
+    'autoEquipUpgrades': autoEquipUpgrades,
     'autoSellMaxPower': autoSellMaxPower,
     'autoSellMaxRarity': autoSellMaxRarity,
     'autoDisassembleMaxIlvl': autoDisassembleMaxIlvl,
@@ -1723,6 +1731,7 @@ class GameState {
         legacyReduced: json['reducedVfx'] as bool?,
       ),
       combatPace: _jsonInt(json['combatPace'], 1).clamp(1, 2),
+      autoEquipUpgrades: (json['autoEquipUpgrades'] as bool?) ?? true,
       autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 48),
       autoSellMaxRarity: _jsonInt(json['autoSellMaxRarity'], 1).clamp(0, 4),
       autoDisassembleMaxIlvl: _jsonInt(json['autoDisassembleMaxIlvl'], 48),

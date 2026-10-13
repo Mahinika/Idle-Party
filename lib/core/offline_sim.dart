@@ -160,6 +160,13 @@ class OfflineSim {
 
       // Keep AFK sim lean — strip accumulated VFX lists periodically.
       if (step % 40 == 0) {
+        if (_current.autoEquipUpgrades && !_current.inGreaterRift) {
+          final worn = GameLogic.autoEquipBetterGearResult(_current);
+          if (worn.equipped > 0) {
+            _current = worn.state;
+            _world = SpatialCombat.syncPartyFromState(_world, _current);
+          }
+        }
         _world.floaters.clear();
         _world.bursts.clear();
         _world.groundFx.clear();

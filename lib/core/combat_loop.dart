@@ -487,6 +487,9 @@ extension GameDirectorCombatLoop on GameDirector {
     if (!_runIncomeFrozen && _state.inDungeon && _uiThrottle % 60 == 0) {
       _refreshRunGpm(DateTime.now().millisecondsSinceEpoch);
     }
+    if (_state.inDungeon && _uiThrottle % 90 == 0) {
+      _maybeAutoEquip();
+    }
     _syncFightMusic();
     // Shell chrome (~10 Hz); map/HUD corners listen to [combatFrame] at 60 Hz.
     if (_uiThrottle % GameDirector._shellNotifyEvery == 0) {
