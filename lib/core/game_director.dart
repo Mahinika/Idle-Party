@@ -1471,6 +1471,19 @@ class GameDirector extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Welcome Back in a failed push: farm the floor they can clear.
+  void continueClearableFloor() {
+    if (!_state.inDungeon) return;
+    final next = GameLogic.returnToClearableFloor(_state);
+    if (next.currentRoom.floorNumber == _state.currentRoom.floorNumber &&
+        next.dungeonMode == _state.dungeonMode) {
+      return;
+    }
+    _state = next;
+    _rebuildSpatial();
+    notifyListeners();
+  }
+
   void enterDungeon({String dungeonId = 'sandy'}) {
     if (_isLoading) return;
     _awaitingWipeChoice = false;

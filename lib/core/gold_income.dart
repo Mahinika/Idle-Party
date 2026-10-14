@@ -83,8 +83,7 @@ abstract final class GoldIncome {
   static String awayPromise(GameState state, {bool wasInDungeon = false}) {
     final hours = hubChestCapHoursFor(state);
     if (wasInDungeon) {
-      return 'Your party kept fighting in the cave. '
-          'On the hub, gold gathers for up to $hours hours, then it stops.';
+      return 'Your party kept fighting in the cave.';
     }
     final rate = perMinuteLabel(hubGoldPerMinute(state));
     return 'While you are away the hub pays $rate for up to '

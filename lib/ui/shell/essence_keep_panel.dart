@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/blessing_constellation.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/game_state.dart';
 import '../../core/god_hand_mastery.dart';
 import '../../core/menu_alerts.dart';
 import '../confirm_dialogs.dart';
@@ -10,6 +11,23 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../meta/prestige_shop.dart';
 import 'shell_common.dart';
+
+String _blessingLine(GameState state) {
+  const next = 'Next Ascend adds +5 ATK, +20 DEF, +60 STA, +8% gold.';
+  final capped = GameLogic.isMaxAscension(state);
+  if (state.metaDepth.ascendBlessings <= 0) {
+    return capped
+        ? 'Ascend Blessing: none yet.'
+        : 'Ascend Blessing: none yet. $next';
+  }
+  final now =
+      'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '
+      '+${state.ascendBlessingAttackBonus} ATK · '
+      '+${state.ascendBlessingDefenseBonus} DEF · '
+      '+${state.ascendBlessingVitalityBonus} STA · '
+      '+${state.ascendBlessingGoldPercent}% gold.';
+  return capped ? now : '$now $next';
+}
 
 /// Forever essence spends — God Hand, Blessing, permanent buys, REBORN.
 class EssenceKeepPanel extends StatelessWidget {
@@ -52,13 +70,7 @@ class EssenceKeepPanel extends StatelessWidget {
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         Text(
-          state.metaDepth.ascendBlessings <= 0
-              ? 'Ascend Blessing: none yet (each Ascend stacks power + gold)'
-              : 'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '
-                    '+${state.ascendBlessingAttackBonus} ATK · '
-                    '+${state.ascendBlessingDefenseBonus} DEF · '
-                    '+${state.ascendBlessingVitalityBonus} STA · '
-                    '+${state.ascendBlessingGoldPercent}% gold',
+          _blessingLine(state),
           style: GameTheme.body(size: 12, color: GameTheme.mossLit),
         ),
         if (GameLogic.canAscend(state))

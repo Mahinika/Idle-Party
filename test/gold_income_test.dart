@@ -19,6 +19,10 @@ void main() {
     expect(GoldIncome.awayPromise(state).toLowerCase(), contains('stops'));
     expect(GoldIncome.awayPromise(state).toLowerCase(), contains('cave'));
     expect(
+      GoldIncome.awayPromise(state, wasInDungeon: true).toLowerCase(),
+      isNot(contains('hub pays')),
+    );
+    expect(
       GoldIncome.awayPromise(state, wasInDungeon: true),
       contains('kept fighting in the cave'),
     );

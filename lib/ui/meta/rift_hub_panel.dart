@@ -24,6 +24,9 @@ class RiftHubPanel extends StatelessWidget {
       );
     }
     final best = state.metaDepth.riftBestTier;
+    final next = Rift.nextOfferTier(best);
+    final gold = Rift.successGold(next);
+    final essence = Rift.successEssence(next);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -34,7 +37,8 @@ class RiftHubPanel extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'ENTER opens the R picker — any R. Gold + gear mid-run. '
-          'Endless after R${Rift.campaignCap}. Best R$best.',
+          'Endless after R${Rift.campaignCap}. Best R$best. '
+          'Next R$next pays +${gold}g and +${essence}e.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),

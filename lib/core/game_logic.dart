@@ -3213,11 +3213,40 @@ class GameLogic {
       OfflineProgress.applyHubIdleProgress(state, seconds);
   static int offlineFloorBudget(int seconds, {int roomCap = 120}) =>
       OfflineProgress.offlineFloorBudget(seconds, roomCap: roomCap);
+  /// Welcome Back: a new PUSH floor they already failed is not this sitting.
+  /// Farm the highest cleared floor so the return can finish a floor.
+  static GameState returnToClearableFloor(GameState state) {
+    if (!state.inDungeon ||
+        state.inGauntlet ||
+        state.inAnyRiftMode ||
+        state.inWorldBoss) {
+      return state;
+    }
+    if (state.dungeonMode == DungeonMode.farm) return state;
+    final cur = state.currentRoom.floorNumber;
+    if (cur <= state.highestFloorCleared) return state;
+    final hurt =
+        state.heroes.isNotEmpty &&
+        state.heroes.every(
+          (h) => h.currentHp <= state.effectiveHeroMaxHp(h) * 0.4,
+        );
+    if (state.wipeStreakCount < 1 && !hurt) return state;
+    final safe = max(1, state.highestFloorCleared);
+    return travelToFloor(
+      state.copyWith(
+        dungeonMode: DungeonMode.farm,
+        pushResumeFloor: cur,
+      ),
+      safe,
+    );
+  }
+
   static ({
     GameState state,
     int roomsCleared,
     int kills,
     bool stoppedOnWipe,
+    bool farmedSafeFloor,
   }) simulateSpatialOffline(
     GameState state,
     int seconds,
@@ -3569,6 +3598,7 @@ class OfflineProgressResult {
     this.kills = 0,
     this.bestDrop = '',
     this.stoppedOnWipe = false,
+    this.farmedSafeFloor = false,
     this.wasInDungeon = false,
     this.secondsAway = 0,
     this.hubChestCapSec = 0,
@@ -3597,6 +3627,9 @@ class OfflineProgressResult {
 
   /// The catch-up ended because a hunt wipe sent the party home.
   final bool stoppedOnWipe;
+
+  /// Two misses on a new floor, so the closed app farmed the floor below.
+  final bool farmedSafeFloor;
 
   /// True when AFK started mid-dungeon (SpatialCombat catch-up), not hub.
   final bool wasInDungeon;
@@ -3694,6 +3727,7 @@ class OfflineProgressResult {
           ? 'Boss fell · Away $away'
           : 'Bosses fell · Away $away';
     }
+    if (farmedSafeFloor) return 'Farmed the safe floor · Away $away';
     if (levelsGained > 0) return 'Party grew · Away $away';
     if (wasInDungeon) {
       final held =
@@ -3725,6 +3759,9 @@ class OfflineProgressResult {
       return levelsGained == 1
           ? 'Your party gained a level while you were away.'
           : 'Your party gained $levelsGained levels while you were away.';
+    }
+    if (farmedSafeFloor) {
+      return 'Your party farmed the safe floor while the app was closed.';
     }
     if (foughtWhileAway) {
       if (highestFloorDelta > 0) {

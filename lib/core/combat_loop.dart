@@ -358,9 +358,19 @@ extension GameDirectorCombatLoop on GameDirector {
           bestDrop: bestDrop,
         );
         if (leveled) {
-          final n = leveledHeroes.length;
-          clearLine = n > 1 ? '$clearLine · LEVEL UP ×$n' : '$clearLine · LEVEL UP';
+          final name = _state.heroes[leveledHeroes.first].name;
+          final extra = leveledHeroes.length - 1;
+          final who = extra > 0 ? '$name +$extra leveled' : '$name leveled';
+          if ((clearLine.length + who.length) < 72) {
+            clearLine = '$clearLine · $who';
+          }
           GameAudio.levelUp();
+        }
+        if (wasBoss && _state.inDungeon) {
+          final nextBit = 'Next F${floorNo + 1}';
+          if ((clearLine.length + nextBit.length) < 72) {
+            clearLine = '$clearLine · $nextBit';
+          }
         }
         final matGrants = LogicNotices.takeCraftMats();
         final floorLoot = LogicNotices.takeFloorLootLine();
@@ -461,8 +471,20 @@ extension GameDirectorCombatLoop on GameDirector {
           _spatial = null;
           _freezeRunIncome();
           if (beforeClear.dungeonMode == DungeonMode.push && wasBoss) {
+            String? opened;
+            if (_state.highestDungeonCleared > beforeDungeon) {
+              for (final d in DungeonCatalog.all) {
+                if (d.number == _state.highestDungeonCleared + 1) {
+                  opened = d.id;
+                  break;
+                }
+              }
+            }
             presentClear(
-              'ZONE DONE · ${DungeonCatalog.byId(beforeClear.dungeonId).name}',
+              StoryLore.bossNextLine(
+                clearedId: beforeClear.dungeonId,
+                nextDungeonId: opened,
+              ),
               life: 2.8,
             );
           } else {

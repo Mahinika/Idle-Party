@@ -19,6 +19,7 @@ import '../core/hub_endgame_act.dart';
 import '../core/hub_primary_cta.dart';
 import '../core/keystone.dart';
 import '../core/local_reminders.dart';
+import '../core/pet_service.dart';
 import '../core/meta_systems.dart';
 import '../models/dungeon_def.dart';
 import '../models/vfx_quality.dart';
@@ -411,12 +412,11 @@ class _HubScreenState extends State<HubScreen>
     final contract = ChaseContract.fromState(state);
     final chase = contract.chase;
     // FEEL 040: KEY enter zone matches map HERE.
-    if (chase.kind == HubChaseKind.keystone &&
-        chase.zoneId != null &&
+    if (chase.zoneId != null &&
         !_userPickedZone &&
+        !_showEndgameMap &&
         _selectedId != chase.zoneId) {
       _selectedHunt = null;
-      _showEndgameMap = false;
       _selectedId = chase.zoneId!;
     }
     final (actionLabel, onAction) = _chaseAction(context, chase);
@@ -531,6 +531,16 @@ class _HubScreenState extends State<HubScreen>
           hideDetail: short,
           hideWhy: true,
         ),
+        if (PetService.errandActive(state)) ...[
+          SizedBox(height: short ? 2 : 4),
+          Text(
+            PetService.statusLine(state, DateTime.now()),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+          ),
+        ],
         SizedBox(height: short ? 4 : 6),
         Builder(
           builder: (context) {

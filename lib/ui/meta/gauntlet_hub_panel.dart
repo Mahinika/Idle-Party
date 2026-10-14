@@ -41,6 +41,13 @@ class GauntletHubPanel extends StatelessWidget {
               : 'Best clear F$best. Pick a climb. Boss every 5 floors.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
+        if (_nextBossPayLine(best) case final pay?) ...[
+          const SizedBox(height: 4),
+          Text(
+            pay,
+            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+          ),
+        ],
         const SizedBox(height: 4),
         Text(
           'MIGHT hits harder. WARD takes less. GREED pays double essence and the party is softer.',
@@ -106,11 +113,26 @@ class _SpireTrophyGrid extends StatelessWidget {
                 ),
             ],
           ),
+          if (GauntletTrophies.oneShortLine(state, pact) case final short
+              when short.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              short,
+              style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+            ),
+          ],
           const SizedBox(height: 4),
         ],
       ],
     );
   }
+}
+
+String? _nextBossPayLine(int best) {
+  final nextBoss = (best ~/ 5 + 1) * 5;
+  if (nextBoss != 5 && nextBoss != 10 && nextBoss != 15) return null;
+  final pay = GameLogic.gauntletEssenceForFloor(nextBoss, boss: true);
+  return 'Floor $nextBoss boss pays +$pay essence.';
 }
 
 class _TrophyCell extends StatelessWidget {

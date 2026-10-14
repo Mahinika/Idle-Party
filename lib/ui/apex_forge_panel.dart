@@ -308,14 +308,33 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
               final clearedThisMonth =
                   state.metaDepth.apexTrialMonthKey == month &&
                   state.metaDepth.apexTrialCleared;
-              return GameButton(
-                label: clearedThisMonth
-                    ? 'CRAFT TRIAL · cleared this month'
-                    : 'START CRAFT TRIAL (craft gear only)',
-                style: GameButtonStyle.grey,
-                onPressed: clearedThisMonth || state.inDungeon
-                    ? null
-                    : director.startApexTrial,
+              final apexNames = <String>[
+                for (final hero in state.heroes)
+                  for (final item in hero.equipped.values)
+                    if (item.isApex) item.name,
+              ];
+              final apexLine = apexNames.isEmpty
+                  ? 'This month the trial counts Apex only. None is worn yet.'
+                  : 'This month the trial counts ${apexNames.take(2).join(', ')}.';
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    apexLine,
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                  ),
+                  const SizedBox(height: 6),
+                  GameButton(
+                    label: clearedThisMonth
+                        ? 'CRAFT TRIAL · cleared this month'
+                        : 'START CRAFT TRIAL (craft gear only)',
+                    style: GameButtonStyle.grey,
+                    onPressed: clearedThisMonth || state.inDungeon
+                        ? null
+                        : director.startApexTrial,
+                  ),
+                ],
               );
             },
           ),

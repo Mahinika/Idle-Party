@@ -24,6 +24,10 @@ class GreaterRiftHubPanel extends StatelessWidget {
       );
     }
     final best = state.metaDepth.grBestTier;
+    final bestMs = state.metaDepth.seasonBestGrClearMs;
+    final bestTime = bestMs > 0
+        ? GreaterRift.formatTimer(bestMs)
+        : 'no clear yet';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -35,7 +39,7 @@ class GreaterRiftHubPanel extends StatelessWidget {
         Text(
           'ENTER opens the GR picker — any GR. '
           'Clock · no gear mid-run. Endless after GR${GreaterRift.campaignCap}. '
-          'Best GR$best.',
+          'Best GR$best · $bestTime.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),

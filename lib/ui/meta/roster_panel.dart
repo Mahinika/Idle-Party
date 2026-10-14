@@ -90,6 +90,23 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           ),
           const SizedBox(height: 6),
         ],
+        if (!state.metaDepth.partySlot5Unlocked &&
+            state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
+            maxSlots < 5) ...[
+          _ActiveSlotChip(
+            index: 4,
+            hero: null,
+            selected: false,
+            locked: state.inDungeon,
+            emptyLabel:
+                'EMPTY · ${formatCount(GameLogic.partySlot5EssenceCost)}e',
+            onTap: state.inDungeon ||
+                    state.essence < GameLogic.partySlot5EssenceCost
+                ? null
+                : () => director.unlockPartySlot5(),
+          ),
+          const SizedBox(height: 6),
+        ],
         if (!state.metaDepth.partySlot5Unlocked && maxSlots < 5) ...[
           GameButton(
             label: state.ascensionLevel >= GameLogic.partySlot5MinAscension &&
@@ -171,6 +188,7 @@ class _ActiveSlotChip extends StatelessWidget {
     required this.locked,
     this.onTap,
     this.onClear,
+    this.emptyLabel,
   });
 
   final int index;
@@ -179,11 +197,12 @@ class _ActiveSlotChip extends StatelessWidget {
   final bool locked;
   final VoidCallback? onTap;
   final VoidCallback? onClear;
+  final String? emptyLabel;
 
   @override
   Widget build(BuildContext context) {
     final label = hero == null
-        ? 'SLOT ${index + 1}'
+        ? (emptyLabel ?? 'SLOT ${index + 1}')
         : '${hero!.name} · ${hero!.spec.name}';
     return Row(
       children: [

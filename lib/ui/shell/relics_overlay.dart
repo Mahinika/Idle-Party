@@ -35,8 +35,9 @@ class RelicsOverlay extends StatelessWidget {
         const SizedBox(height: 8),
         if (next != null)
           GameButton(
-            label:
-                'DISCOVER ${next.name} · ${_pile(discoverCost, 'Ember', 'Embers')}',
+            label: md.embers >= discoverCost
+                ? 'DISCOVER ${next.name} · ${_pile(discoverCost, 'Ember', 'Embers')}'
+                : 'DISCOVER ${next.name} · need ${discoverCost - md.embers} more Embers',
             tip: md.embers >= discoverCost
                 ? null
                 : 'Need ${discoverCost - md.embers} more Embers',
@@ -125,7 +126,12 @@ class _OwnedRelic extends StatelessWidget {
           if (tier < RelicCatalog.maxTier) ...[
             const SizedBox(height: 6),
             GameButton(
-              label: 'T$nextTier · ${def?.payoutAt(1) ?? ''} · $tierCost Embers',
+              label: state.metaDepth.embers >= tierCost
+                  ? 'T$nextTier · ${def?.payoutAt(1) ?? ''} · $tierCost Embers'
+                  : 'Need ${tierCost - state.metaDepth.embers} more Embers',
+              tip: state.metaDepth.embers >= tierCost
+                  ? null
+                  : 'Need ${tierCost - state.metaDepth.embers} more Embers',
               style: GameButtonStyle.grey,
               onPressed: state.metaDepth.embers >= tierCost
                   ? () => director.upgradeRelicTier(relicId)
@@ -134,7 +140,12 @@ class _OwnedRelic extends StatelessWidget {
           ],
           const SizedBox(height: 6),
           GameButton(
-            label: 'SALVAGE · ${GameLogic.salvageCinderCost} Cinders',
+            label: state.metaDepth.cinders >= GameLogic.salvageCinderCost
+                ? 'SALVAGE · ${GameLogic.salvageCinderCost} Cinders'
+                : 'Need ${GameLogic.salvageCinderCost - state.metaDepth.cinders} more Cinders',
+            tip: state.metaDepth.cinders >= GameLogic.salvageCinderCost
+                ? null
+                : 'Need ${GameLogic.salvageCinderCost - state.metaDepth.cinders} more Cinders',
             style: GameButtonStyle.red,
             onPressed: state.metaDepth.cinders >= GameLogic.salvageCinderCost
                 ? () => director.salvageRelic(relicId)

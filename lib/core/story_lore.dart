@@ -76,6 +76,17 @@ abstract final class StoryLore {
     };
   }
 
+  /// One line after a boss: the next cave, or floor 1 of the cave they cleared.
+  static String bossNextLine({
+    required String clearedId,
+    String? nextDungeonId,
+  }) {
+    if (nextDungeonId != null && nextDungeonId.isNotEmpty) {
+      return 'Next cave: ${DungeonCatalog.byId(nextDungeonId).name}.';
+    }
+    return 'Next: ${DungeonCatalog.byId(clearedId).name} floor 1.';
+  }
+
   static String unlockedNextZone(String newDungeonId) {
     final def = DungeonCatalog.byId(newDungeonId);
     return 'A new gate: ${def.name}.';

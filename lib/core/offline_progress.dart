@@ -79,6 +79,7 @@ abstract final class OfflineProgress {
       roomsCleared: sim.roomsCleared,
       kills: sim.kills,
       stoppedOnWipe: sim.stoppedOnWipe,
+      farmedSafeFloor: sim.farmedSafeFloor,
       wasInDungeon: true,
     );
   }
@@ -109,6 +110,7 @@ abstract final class OfflineProgress {
     var roomsCleared = 0;
     var kills = 0;
     var stoppedOnWipe = false;
+    var farmedSafeFloor = false;
     late GameState progressed;
     if (state.inDungeon) {
       // Idle-friendly keystone: AFK time counts on the timer.
@@ -118,6 +120,7 @@ abstract final class OfflineProgress {
       roomsCleared = sim.roomsCleared;
       kills = sim.kills;
       stoppedOnWipe = sim.stoppedOnWipe;
+      farmedSafeFloor = sim.farmedSafeFloor;
     } else {
       // Hub AFK: sanctuary idle gold only — no ghost combat / boss farms.
       progressed = applyHubIdleProgress(state, seconds);
@@ -131,6 +134,7 @@ abstract final class OfflineProgress {
       roomsCleared: roomsCleared,
       kills: kills,
       stoppedOnWipe: stoppedOnWipe,
+      farmedSafeFloor: farmedSafeFloor,
       wasInDungeon: state.inDungeon,
     );
   }
@@ -147,6 +151,7 @@ abstract final class OfflineProgress {
     required int roomsCleared,
     int kills = 0,
     bool stoppedOnWipe = false,
+    bool farmedSafeFloor = false,
     required bool wasInDungeon,
   }) {
     final awayForChest = secondsAway > 0 ? secondsAway : seconds;
@@ -166,6 +171,7 @@ abstract final class OfflineProgress {
       kills: kills,
       bestDrop: _bestNewGearName(before, next),
       stoppedOnWipe: stoppedOnWipe,
+      farmedSafeFloor: farmedSafeFloor,
       highestFloorDelta: next.highestFloorCleared - before.highestFloorCleared,
       bossDelta: next.bossVictories - before.bossVictories,
       levelsGained: _partyLevelSum(next) - _partyLevelSum(before),
@@ -232,6 +238,7 @@ abstract final class OfflineProgress {
     int roomsCleared,
     int kills,
     bool stoppedOnWipe,
+    bool farmedSafeFloor,
   }) simulateSpatialOffline(
     GameState state,
     int seconds,
@@ -242,6 +249,7 @@ abstract final class OfflineProgress {
         roomsCleared: 0,
         kills: 0,
         stoppedOnWipe: false,
+        farmedSafeFloor: false,
       );
     }
     final sim = OfflineSim(state, seconds)..runAll();
@@ -250,6 +258,7 @@ abstract final class OfflineProgress {
       roomsCleared: sim.roomsCleared,
       kills: sim.kills,
       stoppedOnWipe: sim.stoppedOnWipe,
+      farmedSafeFloor: sim.farmedSafeFloor,
     );
   }
 

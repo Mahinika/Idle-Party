@@ -41,17 +41,20 @@ class RiftProgressHud extends StatelessWidget {
     final needle = farm
         ? 0.0
         : RiftProgress.timeSpent01(timerMs: timerMs, parMs: parMs);
+    final overPar = !farm && parMs > 0 && timerMs >= parMs;
+    final leftMs = (parMs - timerMs).clamp(0, parMs);
     final clock = farm
         ? Rift.formatTimer(timerMs)
-        : GreaterRift.formatTimer((parMs - timerMs).clamp(0, parMs));
+        : overPar
+        ? '0:00 LEFT'
+        : '${GreaterRift.formatTimer(leftMs)} LEFT';
     final title = farm ? 'FARM R$tier' : 'GR$tier';
     final pct = guardianActive ? 'GUARDIAN' : RiftProgress.percentLabel(fill);
-    final overPar = !farm && parMs > 0 && timerMs >= parMs;
     final semantics = farm
         ? '$title $pct · $clock elapsed · no fail timer · not ranked'
         : overPar
         ? '$title $pct · par failed · depleted if Guardian is still up'
-        : '$title $pct · $clock left${pace.isEmpty ? '' : ' · $pace'}';
+        : '$title $pct · $clock${pace.isEmpty ? '' : ' · $pace'}';
 
     return Semantics(
       label: semantics,
@@ -117,10 +120,10 @@ class RiftProgressHud extends StatelessWidget {
               clock,
               maxLines: 1,
               style: GameTheme.pixel(
-                size: GameTheme.hudPixel,
-                color: !farm && pace == 'BEHIND'
+                size: farm ? GameTheme.hudPixel : 12,
+                color: !farm && (pace == 'BEHIND' || overPar)
                     ? GameTheme.bloodLit
-                    : GameTheme.parchmentDim,
+                    : (farm ? GameTheme.parchmentDim : GameTheme.parchment),
               ),
             ),
           ],

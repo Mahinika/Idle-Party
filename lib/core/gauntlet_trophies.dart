@@ -50,6 +50,16 @@ abstract final class GauntletTrophies {
     return null;
   }
 
+  /// One sentence when a pact row is a single squeeze short. Empty otherwise.
+  static String oneShortLine(GameState state, GauntletPact pact) {
+    final missing = <GauntletAnomaly>[
+      for (final squeeze in squeezes)
+        if (!owned(state, pact, squeeze)) squeeze,
+    ];
+    if (missing.length != 1) return '';
+    return '${GauntletPacts.title(pact)} needs ${GauntletAnomalies.chip(missing.single)}.';
+  }
+
   /// Sentence for TODAY while Gauntlet is the chase. Empty when unused.
   static String todayBit(GameState state) {
     final next = nextMissing(state);

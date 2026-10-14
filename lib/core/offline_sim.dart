@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import '../models/dungeon_mode.dart';
 import '../models/hero.dart';
 import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
@@ -58,12 +59,14 @@ class OfflineSim {
   int _kills = 0;
   int _abilityCasts = 0;
   bool _stoppedOnWipe = false;
+  bool _farmedSafeFloor = false;
   bool _done = false;
 
   bool get done => _done;
   int get roomsCleared => _floorsCleared;
   int get kills => _kills;
   bool get stoppedOnWipe => _stoppedOnWipe;
+  bool get farmedSafeFloor => _farmedSafeFloor;
 
   /// State with the player's own VFX setting restored and casts credited.
   GameState get state {
@@ -198,8 +201,15 @@ class OfflineSim {
           _rebuildWorld();
           continue;
         }
+        final beforeFloor = _current.currentRoom.floorNumber;
+        final beforeMode = _current.dungeonMode;
         _current = GameLogic.noteOfflineWipe(_current);
         _current = GameLogic.continueAfterWipe(_current);
+        if (_current.dungeonMode == DungeonMode.farm &&
+            beforeMode == DungeonMode.push &&
+            _current.currentRoom.floorNumber < beforeFloor) {
+          _farmedSafeFloor = true;
+        }
         if (!_current.inDungeon) {
           _stoppedOnWipe = true;
           _done = true;

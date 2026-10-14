@@ -221,7 +221,10 @@ Future<void> showOfflineProgressDialog(
             director.claimReturnRewards();
             director.dismissOfflineSummary();
             Navigator.pop(ctx);
-            if (director.state.inDungeon) return;
+            if (director.state.inDungeon) {
+              director.continueClearableFloor();
+              return;
+            }
             final id = GameLogic.recommendedDungeonId(director.state);
             if (nav != null) {
               nav.onEnterDungeon(id);

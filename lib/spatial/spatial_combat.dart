@@ -3737,6 +3737,29 @@ abstract final class SpatialCombat {
       }
 
       var speedMul = hero.moveSpeedMul;
+      final place = roomPlaceWordAt(world.map.chambers, hero.x, hero.y);
+      if (place == 'CHOKE') {
+        speedMul *= 0.62;
+      }
+      if (place == 'SHRINE' &&
+          hero.team == SpatialTeam.hero &&
+          !hero.isPet &&
+          (hero.buffTimers['shrine'] ?? 0) <= 0) {
+        hero.buffTimers['shrine'] = 14;
+        final heal = math.max(4, (hero.maxHp * 0.08).round());
+        final before = hero.hp;
+        hero.hp = math.min(hero.effectiveMaxHp, hero.hp + heal);
+        final gained = hero.hp - before;
+        spawnFloater(
+          world,
+          x: hero.x,
+          y: hero.y - 0.7,
+          text: gained > 0 ? 'BLESSED +$gained' : 'BLESSED',
+          argb: 0xFF70E0A0,
+          life: 1.2,
+          priority: 2,
+        );
+      }
       // Low HP: limp toward healer / behind the tank instead of holding the line.
       if (!guiding) {
         CombatPresence.tryEmergencyRetreat(

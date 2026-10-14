@@ -270,7 +270,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('kept fighting in the cave'), findsOneWidget);
     expect(find.textContaining('While you are away the hub pays'), findsNothing);
-    expect(find.textContaining('On the hub, gold gathers'), findsOneWidget);
+    expect(find.textContaining('On the hub, gold gathers'), findsNothing);
   });
 
   testWidgets('a ready vault is the one claim on Welcome Back', (tester) async {
