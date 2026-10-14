@@ -208,9 +208,11 @@ abstract final class GearService {
   static GameState autoEquipBetterGear(GameState state) =>
       GearBiSPlanner.autoEquipBetterGear(state);
 
-  static ({GameState state, int equipped}) autoEquipBetterGearResult(
-    GameState state,
-  ) => GearBiSPlanner.autoEquipBetterGearResult(state);
+  static ({GameState state, int equipped, List<String> names})
+  autoEquipBetterGearResult(GameState state) =>
+      GearBiSPlanner.autoEquipBetterGearResult(state);
+
+  static String wornLine(List<String> names) => GearBiSPlanner.wornLine(names);
 
   static bool autoEquipWouldWear(
     GameState state,

@@ -101,10 +101,14 @@ extension GameDirectorBag on GameDirector {
       final cleared = beforeLen - _state.gearStash.length;
       final gold = _state.gold - beforeGold;
       final ess = _state.essence - beforeEss;
+      final worn = GearService.wornLine(result.names);
       final bits = <String>[
-        result.equipped == 1
-            ? 'Equipped 1 upgrade'
-            : 'Equipped ${result.equipped} upgrades',
+        if (worn.isNotEmpty)
+          worn
+        else
+          result.equipped == 1
+              ? 'Equipped 1 upgrade'
+              : 'Equipped ${result.equipped} upgrades',
         if (cleared > 0) 'cleaned $cleared',
         if (gold > 0) '+${gold}g',
         if (ess > 0) '+${ess}e',

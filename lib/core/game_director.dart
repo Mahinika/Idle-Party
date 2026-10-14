@@ -1267,8 +1267,9 @@ class GameDirector extends ChangeNotifier {
       wipeScanLine: '',
     );
     final n = result.equipped;
+    final worn = GearService.wornLine(result.names);
     showToast(
-      n == 1 ? 'Better gear on — fight on' : '$n better pieces on — fight on',
+      worn.isEmpty ? 'Better gear on — fight on' : '$worn — fight on',
       life: 2.6,
     );
     DebugPlayLog.event('wipe', 'wore $n · fight on F$floor');
@@ -1644,6 +1645,8 @@ class GameDirector extends ChangeNotifier {
     }
     final result = GameLogic.autoEquipBetterGearResult(_state);
     if (result.equipped <= 0) return;
+    final worn = GearService.wornLine(result.names);
+    if (worn.isNotEmpty) showToast(worn, life: 2.2);
     _state = result.state;
     final spatial = _spatial;
     if (spatial != null) {

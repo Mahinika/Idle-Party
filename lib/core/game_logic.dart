@@ -2359,7 +2359,7 @@ class GameLogic {
         if (!beforeAshen && preLeave.metaDepth.worldBossClearedWeek) {
           LogicNotices.addMetaPayoffs([
             '${AshenCrown.titleReward} · +${AshenCrown.essenceReward}e · '
-                '+1 STAR point',
+                '+1 STAR point · PRACTICE is free',
           ]);
         }
       }
@@ -2668,8 +2668,9 @@ class GameLogic {
         }
       } else {
         outcome = 'depleted';
+        final overMs = before.keystoneTimerMs - before.keystoneParMs;
         keystoneNotices.add(
-          'KEY +$key depleted (${Keystone.formatTimer(before.keystoneTimerMs)} / ${Keystone.formatTimer(before.keystoneParMs)})',
+          'KEY +$key depleted · ${Keystone.formatTimer(overMs)} over par',
         );
       }
     }
@@ -3117,9 +3118,9 @@ class GameLogic {
   static GameState autoEquipBetterGear(GameState state) =>
       GearService.autoEquipBetterGear(state);
 
-  static ({GameState state, int equipped}) autoEquipBetterGearResult(
-    GameState state,
-  ) => GearService.autoEquipBetterGearResult(state);
+  static ({GameState state, int equipped, List<String> names})
+  autoEquipBetterGearResult(GameState state) =>
+      GearService.autoEquipBetterGearResult(state);
 
   /// Wear ready upgrades when AUTO EQUIP is on. Ranked GR never swaps mid-run.
   static GameState maybeAutoEquip(GameState state) {

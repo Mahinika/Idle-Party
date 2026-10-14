@@ -1,10 +1,8 @@
 /// Infinity Gauntlet floor modifiers. Same SpatialCombat — not a second hunt.
 ///
-/// The first night (floors 1–4) is one squeeze each, then a boss on 5:
-/// tight corridors, a swarm, a borrowed boss tell, extra gates.
-/// Later squeezes land where [floor] % 5 == 3 (8, 13, 23, …) so they never
-/// collide with bosses every 5. Treasure floors (every 6th) stay clear.
-/// Cycle is deterministic from floor number.
+/// Between every boss the four squeezes each take a floor: tight corridors,
+/// a swarm, a borrowed boss tell, extra gates. The order rotates after each
+/// boss. Boss floors stay clear. Cycle is deterministic from floor number.
 enum GauntletAnomaly {
   tightCorridors,
   swarmUprising,
@@ -26,10 +24,11 @@ abstract final class GauntletAnomalies {
   static GauntletAnomaly? forFloor(int floor, {required bool inGauntlet}) {
     if (!inGauntlet || floor <= 0) return null;
     if (floor % bossEvery == 0) return null;
-    if (floor % 6 == 0) return null;
-    if (floor <= openingNight.length) return openingNight[floor - 1];
-    if (floor % bossEvery != 3) return null;
-    return GauntletAnomaly.values[(floor ~/ bossEvery) % 4];
+    // Floors 1–4, 6–9, 11–14, … are the four squeezes. Slot 4 is the boss.
+    final slot = floor % bossEvery;
+    final cycle = (floor - 1) ~/ bossEvery;
+    final index = (slot - 1 + cycle) % openingNight.length;
+    return openingNight[index];
   }
 
   static String chip(GauntletAnomaly a) => switch (a) {

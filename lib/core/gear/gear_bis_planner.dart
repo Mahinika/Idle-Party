@@ -278,24 +278,29 @@ abstract final class GearBiSPlanner {
     return plan.any((step) => step.itemId == itemId && step.delta >= bestDelta);
   }
 
-  static int countNewlyWornFromStash(GameState before, GameState after) {
-    final fromBag = <String>{for (final item in before.gearStash) item.id};
-    if (fromBag.isEmpty) return 0;
-    var n = 0;
+  static List<String> namesNewlyWornFromStash(GameState before, GameState after) {
+    final fromBag = <String, String>{
+      for (final item in before.gearStash) item.id: item.name,
+    };
+    if (fromBag.isEmpty) return const [];
+    final names = <String>[];
     for (final hero in after.heroes) {
       for (final item in hero.equipped.values) {
-        if (fromBag.contains(item.id)) n++;
+        final name = fromBag[item.id];
+        if (name != null && name.isNotEmpty) names.add(name);
       }
     }
-    return n;
+    return names;
   }
+
+  static int countNewlyWornFromStash(GameState before, GameState after) =>
+      namesNewlyWornFromStash(before, after).length;
 
   static GameState autoEquipBetterGear(GameState state) =>
       autoEquipBetterGearResult(state).state;
 
-  static ({GameState state, int equipped}) autoEquipBetterGearResult(
-    GameState state,
-  ) {
+  static ({GameState state, int equipped, List<String> names})
+  autoEquipBetterGearResult(GameState state) {
     var next = state;
     for (var pass = 0; pass < 8; pass++) {
       final sigBefore = gearPlanSignature(next);
@@ -305,7 +310,15 @@ abstract final class GearBiSPlanner {
       }
     }
     next = next.copyWith(lastUpdated: DateTime.now());
-    return (state: next, equipped: countNewlyWornFromStash(state, next));
+    final names = namesNewlyWornFromStash(state, next);
+    return (state: next, equipped: names.length, names: names);
+  }
+
+  /// One line for the piece AUTO EQUIP just wore.
+  static String wornLine(List<String> names) {
+    if (names.isEmpty) return '';
+    if (names.length == 1) return '${names.first} on';
+    return '${names.first} on · +${names.length - 1}';
   }
 
   static GameState autoEquipPass(GameState state) {
