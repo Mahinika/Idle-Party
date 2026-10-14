@@ -326,6 +326,63 @@ void main() {
     expect(saw4, isTrue);
   });
 
+  test('the open hall between fights fits one phone view', () {
+    const ids = <String>[
+      'sandy',
+      'goblin',
+      'king',
+      'underworld',
+      'dead',
+      'hell',
+      'crystal',
+      'tide',
+      'ember',
+      'grove',
+      'storm',
+      'rime',
+      'fen',
+      'brass',
+      'veil',
+    ];
+    for (final id in ids) {
+      for (final floor in <int>[1, 3, 4, 5]) {
+        for (var seed = 0; seed < 6; seed++) {
+          final map = RoomLayouts.forFloor(
+            floorNumber: floor,
+            room: DungeonRoom(
+              floorNumber: floor,
+              roomIndex: 0,
+              type: RoomType.normal,
+              enemyLevel: 8,
+              enemyCount: 8,
+            ),
+            dungeonId: id,
+            layoutSeed: seed,
+          );
+          final mains = map.chambers.where((c) => !c.side).toList();
+          for (var i = 1; i < mains.length; i++) {
+            final hall = _openHall(mains[i - 1], mains[i]);
+            expect(
+              hall,
+              lessThanOrEqualTo(12),
+              reason: '$id F$floor seed $seed hall $hall',
+            );
+          }
+          if (map.chambers.any((c) => c.beatKind == FloorBeatKind.hub)) {
+            continue;
+          }
+          final runs = _gateRuns(map);
+          if (runs.isEmpty) continue;
+          expect(
+            runs.every((n) => n == 3 || n == 4),
+            isTrue,
+            reason: '$id F$floor seed $seed $runs',
+          );
+        }
+      }
+    }
+  });
+
   test('combat floors use a large canvas', () {
     for (final id in <String>['sandy', 'goblin', 'king', 'dead', 'crystal']) {
       final map = RoomLayouts.forFloor(
@@ -721,54 +778,77 @@ void main() {
   });
 }
 
+/// Tiles of open hall between two room rectangles. An L counts both legs.
+int _openHall(Chamber a, Chamber b) {
+  final gapX = a.x + a.w <= b.x
+      ? b.x - (a.x + a.w)
+      : b.x + b.w <= a.x
+      ? a.x - (b.x + b.w)
+      : 0;
+  final gapY = a.y + a.h <= b.y
+      ? b.y - (a.y + a.h)
+      : b.y + b.h <= a.y
+      ? a.y - (b.y + b.h)
+      : 0;
+  if (gapX == 0) return gapY;
+  if (gapY == 0) return gapX;
+  return gapX + gapY;
+}
+
 /// Length of each straight gate line. A sealed corridor is one run.
+///
+/// Two seals can share a row without touching. Those are separate lines.
 List<int> _gateRuns(TileMap map) {
-  final used = <int>{};
-  final runs = <int>[];
   final gates = map.gates;
+  final seen = <int>{};
+  final runs = <int>[];
   for (var i = 0; i < gates.length; i++) {
-    if (!used.add(i)) continue;
-    final g = gates[i];
-    var horizontal = 1;
-    var vertical = 1;
-    for (final other in gates) {
-      if (other.y == g.y && (other.x - g.x).abs() == 1) horizontal++;
-      if (other.x == g.x && (other.y - g.y).abs() == 1) vertical++;
-    }
-    // Count the full line, not just immediate neighbors, once per line.
-    if (horizontal >= vertical) {
-      final line = gates.where((e) => e.y == g.y).toList()
-        ..sort((a, b) => a.x.compareTo(b.x));
-      var run = 1;
-      for (var k = 1; k < line.length; k++) {
-        if (line[k].x == line[k - 1].x + 1) {
-          run++;
-        } else {
-          runs.add(run);
-          run = 1;
+    if (!seen.add(i)) continue;
+    final stack = <int>[i];
+    final comp = <int>[];
+    while (stack.isNotEmpty) {
+      final cur = stack.removeLast();
+      comp.add(cur);
+      for (var j = 0; j < gates.length; j++) {
+        if (seen.contains(j)) continue;
+        final dx = (gates[j].x - gates[cur].x).abs();
+        final dy = (gates[j].y - gates[cur].y).abs();
+        if (dx + dy == 1) {
+          seen.add(j);
+          stack.add(j);
         }
       }
-      runs.add(run);
-      for (var j = 0; j < gates.length; j++) {
-        if (gates[j].y == g.y) used.add(j);
-      }
-    } else {
-      final line = gates.where((e) => e.x == g.x).toList()
-        ..sort((a, b) => a.y.compareTo(b.y));
-      var run = 1;
-      for (var k = 1; k < line.length; k++) {
-        if (line[k].y == line[k - 1].y + 1) {
-          run++;
-        } else {
-          runs.add(run);
-          run = 1;
+    }
+    final xs = comp.map((k) => gates[k].x).toSet();
+    final ys = comp.map((k) => gates[k].y).toSet();
+    if (xs.length == 1 || ys.length == 1) {
+      runs.add(comp.length);
+      continue;
+    }
+    void addLines(Map<int, List<int>> grouped) {
+      for (final line in grouped.values) {
+        line.sort();
+        var run = 1;
+        for (var n = 1; n < line.length; n++) {
+          if (line[n] == line[n - 1] + 1) {
+            run++;
+          } else {
+            if (run > 1) runs.add(run);
+            run = 1;
+          }
         }
-      }
-      runs.add(run);
-      for (var j = 0; j < gates.length; j++) {
-        if (gates[j].x == g.x) used.add(j);
+        if (run > 1) runs.add(run);
       }
     }
+
+    final byY = <int, List<int>>{};
+    final byX = <int, List<int>>{};
+    for (final k in comp) {
+      byY.putIfAbsent(gates[k].y, () => []).add(gates[k].x);
+      byX.putIfAbsent(gates[k].x, () => []).add(gates[k].y);
+    }
+    addLines(byY);
+    addLines(byX);
   }
   return runs;
 }

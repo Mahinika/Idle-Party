@@ -103,6 +103,7 @@ class Chamber {
     required this.w,
     required this.h,
     this.beatKind,
+    this.side = false,
   });
 
   final int index;
@@ -113,6 +114,9 @@ class Chamber {
 
   /// Floor story beat for this chamber (null on legacy / special arenas).
   final FloorBeatKind? beatKind;
+
+  /// Branched alcove. The main path is the chambers where this is false.
+  final bool side;
 
   int get cx => x + w ~/ 2;
   int get cy => y + h ~/ 2;
@@ -798,40 +802,51 @@ abstract final class RoomLayouts {
       ];
       final spine = mainBeats.isEmpty ? storyBeats : mainBeats;
 
+      // One phone view is about 20 tiles. The open hall between rooms stays
+      // inside that, so the next pack is the next glance. A full gate still
+      // needs those tiles outside both rooms.
+      const hallGap = 6;
+      var dir = 1;
       for (var i = 0; i < spine.length; i++) {
         final beat = spine[i];
         final size = sizeFor(beat.kind);
         final w = size.$1;
         final h = size.$2;
-        final t = spine.length == 1 ? 0.0 : i / (spine.length - 1);
-        final minX = 2;
-        final maxX = max(minX, cols - w - 3);
-        final preferX = (minX + t * (maxX - minX)).round();
-        final north = i.isEven;
-        final spread = kit.verticalSpreadBoost;
-        final midRow = rows ~/ 2;
-        // A lane between the north and south bands so the path can snake
-        // and a hall can cross without the rooms eating each other.
-        final lane = 8 + spread;
-        final northBottom = midRow - lane ~/ 2;
-        final southTop = midRow + (lane - lane ~/ 2);
-        final yLo = north ? 2 : southTop;
-        final yHi = north ? max(yLo, northBottom - h) : max(yLo, rows - h - 3);
         var placed = false;
-        for (var attempt = 0; attempt < 64; attempt++) {
-          final jx = rng.nextInt(5) - 2;
-          final x = (preferX + jx).clamp(1, cols - w - 2);
-          final ySpan = max(1, yHi - yLo);
-          final y = (yLo + rng.nextInt(ySpan)).clamp(1, rows - h - 2);
-          if (tryPlaceRoom(_Rect(x, y, w, h), beat.kind)) {
-            placed = true;
-            break;
+        if (rooms.isEmpty) {
+          final y = ((rows - h) ~/ 2).clamp(2, rows - h - 2);
+          placed = tryPlaceRoom(_Rect(2, y, w, h), beat.kind);
+        } else {
+          final prev = rooms.last;
+          final forwardX = dir > 0
+              ? prev.x + prev.w + hallGap
+              : prev.x - hallGap - w;
+          // A small step off the line, still overlapping the previous room
+          // on the other axis, so the open hall stays one leg.
+          final nudge = i.isOdd ? 6 : -4;
+          final candidates = <_Rect>[
+            _Rect(forwardX, prev.y + nudge, w, h),
+            _Rect(forwardX, prev.y, w, h),
+            _Rect(forwardX, prev.y - 2, w, h),
+            _Rect(forwardX, prev.y + 2, w, h),
+            _Rect(prev.x, prev.y + prev.h + hallGap, w, h),
+            _Rect(prev.x, prev.y - hallGap - h, w, h),
+            _Rect(prev.x + 2, prev.y + prev.h + hallGap, w, h),
+            _Rect(prev.x - 2, prev.y + prev.h + hallGap, w, h),
+          ];
+          for (final cand in candidates) {
+            if (tryPlaceRoom(cand, beat.kind)) {
+              placed = true;
+              if (cand.x != forwardX) dir = -dir;
+              break;
+            }
           }
         }
-        if (!placed) {
-          for (var attempt = 0; attempt < 80; attempt++) {
-            final x = 1 + rng.nextInt(max(1, cols - w - 2));
-            final y = 1 + rng.nextInt(max(1, rows - h - 2));
+        if (!placed && rooms.isNotEmpty) {
+          final prev = rooms.last;
+          for (var attempt = 0; attempt < 40; attempt++) {
+            final x = prev.x + rng.nextInt(w + hallGap) - hallGap;
+            final y = prev.y + rng.nextInt(h + hallGap) - hallGap;
             if (tryPlaceRoom(_Rect(x, y, w, h), beat.kind)) {
               placed = true;
               break;
@@ -1059,6 +1074,7 @@ abstract final class RoomLayouts {
           w: rooms[i].w,
           h: rooms[i].h,
           beatKind: roomBeats[i],
+          side: sideFlags[i],
         ),
     ];
 
@@ -1598,9 +1614,11 @@ abstract final class RoomLayouts {
       return false;
     }
 
+    final carved = <String>{};
     void paint(int x, int y, {required bool center}) {
       if (!center && deepInRoom(x, y)) return;
       set(x, y, TileKind.floor);
+      carved.add('$x,$y');
     }
 
     void carveWide(int x, int y, {required bool horizontal}) {
@@ -1704,17 +1722,51 @@ abstract final class RoomLayouts {
     }
     if (path.length < 3) return const <(int, int)>[];
 
-    final mid = path[path.length ~/ 2];
+    bool spanClear(int i) {
+      if (i <= 0 || i >= path.length - 1) return false;
+      final mx = path[i].$1;
+      final my = path[i].$2;
+      final horizontal = path[i - 1].$2 == my;
+      // A corner reads as the incoming leg. The seal has to be tiles
+      // the corridor actually opened, or the run collapses to one tile.
+      if (path[i - 1].$1 != mx && path[i - 1].$2 != my) return false;
+      for (var d = -left; d <= right; d++) {
+        final gx = horizontal ? mx : mx + d;
+        final gy = horizontal ? my + d : my;
+        if (!carved.contains('$gx,$gy')) return false;
+        if (deepInRoom(gx, gy)) return false;
+      }
+      return true;
+    }
+
+    // The middle of the center-to-center path can sit inside the wider room.
+    // The seal belongs in the open hall, across the full width.
+    var midIndex = path.length ~/ 2;
+    if (!spanClear(midIndex)) {
+      var found = -1;
+      for (var d = 1; d < path.length; d++) {
+        final before = midIndex - d;
+        final after = midIndex + d;
+        if (before > 0 && spanClear(before)) {
+          found = before;
+          break;
+        }
+        if (after < path.length - 1 && spanClear(after)) {
+          found = after;
+          break;
+        }
+      }
+      if (found < 0) return const <(int, int)>[];
+      midIndex = found;
+    }
+    final mid = path[midIndex];
     final mx = mid.$1;
     final my = mid.$2;
-    final midIndex = path.length ~/ 2;
-    final prev = path[midIndex - 1];
-    final horizontal = prev.$2 == my;
+    final horizontal = path[midIndex - 1].$2 == my;
     final gates = <(int, int)>[];
     for (var d = -left; d <= right; d++) {
       final gx = horizontal ? mx : mx + d;
       final gy = horizontal ? my + d : my;
-      if (d != 0 && deepInRoom(gx, gy)) continue;
       gates.add((gx, gy));
     }
     return gates;

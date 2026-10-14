@@ -91,8 +91,8 @@ void main() {
   test('current patch notes name the version, date, and sections', () {
     final release = MetaSystems.releases.first;
     expect(release.summary, isNotNull);
-    expect(release.date, 'Oct 13, 2026');
-    expect(release.versionLine, 'VERSION ${release.version} — Oct 13, 2026');
+    expect(release.date, 'Oct 14, 2026');
+    expect(release.versionLine, 'VERSION ${release.version} — Oct 14, 2026');
     expect(release.changed, isNotEmpty);
     expect(release.technical, isEmpty);
     expect(release.known, isEmpty);

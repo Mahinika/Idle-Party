@@ -27,6 +27,7 @@ number again without a before and after on the A56 (`20-how-we-work`).
 | Approach / hub / elite | 15–17×11–12 / 18–19×13–14 / 14–15×12–13 | same |
 | Choke | 8–9 × 12–14 (or turned) | same |
 | Halls / chokes | 4 / 3 tiles wide | `_carveCorridorWithGate` |
+| Open hall between spine rooms | 6 tiles, overlapping on the other axis | `tile_map.dart` `hallGap` |
 | Fight room count | from enemy budget: 1–5 (≥16 enemies → 5), plus `extra` rooms, capped at 6 | `lib/spatial/floor_blueprint.dart` `_mainCombatRooms` |
 | Camera | NEAR 16 / MID 20 / FAR 24 cols; pinch 12–36, saved as `dungeonViewCols` | `lib/models/dungeon_zoom.dart`, `spatial_dungeon_view.dart` |
 | Terrain bake | 16 px per tile | `lib/ui/dungeon_floor_layer.dart` |
@@ -61,12 +62,15 @@ bump from AL/KEY pressure. Room size does not.
   bump; the oval is fixed.
 - `fallbackRoomCount` only runs when the blueprint carve fails.
 - The camera does not clamp to the map on purpose.
-- Stepping rooms closer so the next pack fits one screen put the gate
-  midpoint inside a room. The carve then dropped tiles and left a 1-wide
-  seal, and "gates seal the full corridor" failed. Revert that placement.
-  A shorter hall still seals 3 tiles on a choke and 4 on a hall. The A56
-  before-and-after still applies, and the gate test stays green in the
-  same change.
+- The open hall between spine rooms is 6 tiles (`hallGap` in
+  `tile_map.dart`). Rooms still overlap on the other axis, so that hall
+  is one leg and stays inside one phone view. A gate is stamped only
+  where that full span was carved as floor and sits outside both rooms.
+  Pulling the midpoint into a room drops side tiles and leaves a 1-wide
+  seal. Do not spread rooms across the canvas to get the old long hall
+  back. "the open hall between fights fits one phone view" and "gates
+  seal the full corridor" stay green in the same change. The A56
+  before-and-after still applies.
 
 ## Done when
 
