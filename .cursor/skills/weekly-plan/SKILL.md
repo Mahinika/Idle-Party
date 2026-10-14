@@ -15,18 +15,31 @@ One ISO week, one file under `docs/weeks/`. That file is the only answer to
 "vad är planen för vecka N". A question reads that file alone. A new file
 is fed only by the reads under **Write a missing plan**.
 
-The week file is the template below. Keep its headings, rules, and section
-order. Fill dates, the version, the one sentence, and the rows. A week
-holds content and fixes that can be ready by Sunday, and at least one new
-feature that makes people want to play and keep playing. Leave a numbered
-line blank only when no source supports another change. Do not invent rows
-to reach 10.
+The week file is the short template below. Rules stay in this skill. Do not
+copy them into the week file. A week holds content and fixes that can be
+ready by Sunday, and at least one new feature that makes people want to
+play and keep playing.
 
 Never upload an AAB here. Upload only when the owner asks in that turn
 (`play-store-prep`). Never post to Discord unless they ask in that turn.
 In-game Patch Notes are `screenshotting-changelog`.
 
 Folder note: `docs/weeks/README.md`.
+
+## Rules
+
+- Up to 10 player-visible rows. Leave no blank numbers.
+- Each row is `Måste · Content — change — why the player cares — status`, or the same with `Fix` or `Nytt`. Drop `Måste ·` when the row may slip.
+- Status is `ej klar`, `spelbar`, or `flyttad`.
+- At most five rows are **Måste**. Those are the Sunday announcement, in that order.
+- At least one row is **Nytt**: a development to add, not a change already in an unsent build. It makes the game more attractive to start, or gives a reason to keep playing. Read the three pillars in `docs/GROWTH_MANDATE.md` and **Nu** in `docs/YEAR_ROADMAP.md`. Do not add a new zone, class, hunt, or gacha unless Nu or the owner already named it.
+- **Content** and **Fix** are what should be ready by Sunday.
+- A new idea mid-week goes under **Inte den här veckan**. Only a critical bug may take a planned slot. The row it displaces becomes `flyttad`.
+- This ISO week or the next: status **Aktiv**. Any later Monday: **Tidigt utkast**, and only the rows the sources support.
+- Sunday means submitted to Play, not approved. The plan is Swedish. Player text is English.
+- One English sentence a new player understands. Keep KEY, Gauntlet, and Ascend out of it unless they named that as the week.
+- Store shots only when heroes, the hub, or the combat screen will look different. That is a row, not a standing section.
+- Play lines and Discord are written on Sunday, from **Måste** rows whose status is `spelbar`. Do not put empty drafts in the file on Monday.
 
 ## Which week
 
@@ -52,245 +65,99 @@ File name is the printed token plus `.md` inside `docs/weeks/`. Week 51 of
 
 | They said | Do |
 |---|---|
-| vad är planen / planen för vecka N | Read that file. Reply in Swedish with the status, the **Måste** rows, the other planned changes, the one sentence, player value, and which Sunday boxes are checked. Missing file: say there is no plan. Do not write one. |
+| vad är planen / planen för vecka N | Read that file. Reply in Swedish with status, the **Måste** rows, the other rows, and the one sentence. Missing file: say there is no plan. Do not write one. |
 | gör en veckoplan, file exists | Show it. Change a row only when they named the change. |
 | gör en veckoplan, file missing | Write it from the template, show it, stop. Do not start building the rows. |
-| onsdagskoll | Open that week's file. Fill **Onsdag — verklighetskoll**. A row that will not finish goes under **Flyttat till nästa vecka** in that section. A moved **Måste** row keeps that mark, and drops out of the Play and Discord drafts. |
-
-A new idea mid-week goes under **Inte den här veckan**. Only a critical bug
-may take a planned slot. The row it displaces moves with the Wednesday
-leftovers.
+| onsdagskoll | Tick **Onsdag**. A row that will not finish becomes `flyttad` and moves under **Inte den här veckan**, still marked **Måste** if it was. |
 
 ## Write a missing plan
 
 Read these. No web search. Do not run the year-roadmap skill.
 
 1. Open section of `docs/PLAY_NOTES.md`.
-2. Previous week file, if it exists: **Inte den här veckan** and both **Flyttat till nästa vecka** sections.
+2. Previous week file, if it exists: **Inte den här veckan**.
 3. Newest release in `lib/core/changelog.dart`. Do not list a change the live Play build already has. Changes in an unsent build still go on the list.
-4. Operator status in `docs/PLAY_STORE.md`: which build is live, and which is in review. Do not invent Console numbers.
-5. The **Nu** section of `docs/YEAR_ROADMAP.md` only.
+4. Operator status in `docs/PLAY_STORE.md`: which build is live, and which is in review. Do not invent Console numbers. If the Play API track read disagrees, trust the track and say the doc is behind.
+5. The **Nu** section of `docs/YEAR_ROADMAP.md` only, plus the three pillars in `docs/GROWTH_MANDATE.md` for the **Nytt** row.
 6. Play reviews through the Play API (`play-store-prep` reference, § Play API). The API returns about the last week only. Read only. Reply only when the owner names that review.
 7. Discord #bugs through the Discord tools (`user-omnicord`, read messages). Read only. Never post, reply, or react here.
 
-If a read fails, write **inte läst** next to that source under **Varför
-just det här**. Do not guess what it said.
+If a read fails, write **inte läst** next to that source. Do not guess what it said.
 
-Then write the file:
+Then write the file. Version aim: the next patch after `pubspec.yaml` `version:` and after any build already in review. Do not bump it here. **Förra** is the newest build sent to Production and its state: ute, i granskning, or byggd men inte inskickad.
 
-1. Status. This ISO week or the next: **Aktiv plan för veckan**. Any later Monday: **Tidigt utkast**. An early draft only gets rows those reads support. Leave the other numbers blank.
-2. Every player-visible change the live build does not have, up to 10. Words they used in this turn win. If they only named the week, draft from the reads above. One roadmap headline does not end the list.
-3. Tag each filled row **Content.**, **Fix.**, or **Nytt.** At least one row is **Nytt.** That row is a development to add, not a change already sitting in an unsent build. Read the three pillars in `docs/GROWTH_MANDATE.md` and **Nu**. It makes the game more attractive to start, or gives a reason to keep playing: the party in the room, coming back tomorrow, or the one prestige loop. Name that reason under **Spelarvärde**. Do not add a new zone, class, hunt, or gacha unless Nu or the owner already named it.
-4. At most five rows start with **Måste.** Those rows are the Play lines and the Discord bullets, in the same order. A row without that mark may move and stays out of the announcement.
-5. Anything past 10 goes under **Inte den här veckan**.
-6. One English sentence a new player understands. Keep KEY, Gauntlet, and Ascend out of that sentence unless they named that as the week.
-7. **Varför just det här** names each source and its date. **Spelarvärde** is Swedish.
-8. Version aim: the next patch after `pubspec.yaml` `version:` and after any build already in review. Do not bump the version here.
-9. **Förra veckans version:** the newest build sent to Production and its state, from Operator status: live, in review, or built and not sent.
-10. **Telefontest:** three steps a brand-new save can reach, one per **Måste** row where that fits. Add one endgame-save step only when a **Måste** row changes endgame.
-11. **Butiksbilder** stays as written in the template. Add a store-shot row only when heroes, the hub, or the combat screen will look different to the player.
-12. Wednesday, **Under veckan**, Sunday, and **Utfall** start unchecked and blank.
+**Telefontest:** three steps a new save can reach, tied to **Måste** rows where that fits. Add one endgame-save step only when a **Måste** row changes endgame.
+
+Onsdag, Söndag, and Utfall start unchecked. No Play or Discord block yet.
 
 ## Template
 
-Copy this into the week file.
-
 ````markdown
-# Veckoplan — Idle Party
+# Vecka NN
 
-**Status:** Aktiv plan för veckan.
-**Rytm:** Måndag sätts planen. Söndag är jobbet klart, Play-uppdatering skickas in och Discord-annons postas.
+**Status:** Aktiv
+**Datum:** YYYY-MM-DD – YYYY-MM-DD
+**Version:** 1.x.y
+**Förra:** 1.x.y (ute)
+**En mening:** 
 
-Regler:
-- Planen innehåller upp till 10 spelarsynliga förändringar.
-- Nya idéer som inte ryms skrivs under "Inte den här veckan".
-- Endast kritiska buggar får tränga sig före planerat arbete.
-- Söndag betyder att versionen är inskickad till Google Play, inte att Google redan godkänt den.
-- AAB laddas bara upp när du säger till.
-- In-game text, Patch Notes, Play-rader och Discord-annons skrivs på engelska.
-- Planen skrivs på svenska.
-- Status är **Aktiv plan för veckan** när måndagen är den här veckan eller nästa. Längre fram är status **Tidigt utkast**, och tomma rader lämnas tomma.
-- Högst fem rader börjar med **Måste.** De ska med i Play-raderna och Discord. Övriga rader får flyttas utan att annonsen nämner dem.
-- Varje rad märks **Content.**, **Fix.** eller **Nytt.** Content och fixar ska vara redo på söndag. Minst en rad är **Nytt.**: en utveckling som gör spelet mer attraktivt, eller som gör att spelaren vill fortsätta.
+## Att göra
 
----
-
-## Vecka
-
-- **Måndag:** ÅÅÅÅ-MM-DD
-- **Söndag:** ÅÅÅÅ-MM-DD
-- **Version vi siktar på:** 1.x.y
-- **Förra veckans version:** 1.x.y (ute / i granskning / byggd men inte inskickad)
-- **En mening en ny spelare förstår:**
-
----
-
-## Måndag — det här ska vara klart på söndag
-
-### Funktioner och förbättringar
-
-1. 
-2. 
-3. 
-4. 
-5. 
-6. 
-7. 
-8. 
-9. 
-10.
-
-Högst fem rader börjar med **Måste.** Varje rad märks också **Content.**, **Fix.** eller **Nytt.**
-
----
+1. Måste · Content — … — … — ej klar
+2. Måste · Nytt — … — … — ej klar
 
 ## Inte den här veckan
 
 -
--
--
--
--
 
----
-
-## Varför just det här
-
-Källa och datum: öppna PLAY_NOTES, förra veckans överblivna rader, senaste Patch Notes, vad som ligger inne på Play, Nu i årsplanen, Play-recensioner, Discord #bugs, eller egen observation. En källa som inte gick att läsa står som **inte läst**. Ingen webbsökning.
-
--
--
--
-
----
-
-## Spelarvärde
-
-Varför spelaren bryr sig.
-
--
--
--
-
----
-
-## Onsdag — verklighetskoll
-
-- [ ] Planen håller fortfarande.
-- [ ] Versionnumret känns realistiskt.
-- [ ] Inget behöver flyttas.
-
-**Flyttat till nästa vecka:**
-
--
--
-
----
-
-## Under veckan
-
-Bocka av när något är spelbart.
-
-- [ ] 1
-- [ ] 2
-- [ ] 3
-- [ ] 4
-- [ ] 5
-- [ ] 6
-- [ ] 7
-- [ ] 8
-- [ ] 9
-- [ ] 10
-
----
-
-## Telefontest (ny save)
-
-Tre steg du gör på telefonen innan du säger till om AAB.
+## Telefontest
 
 1. 
-2. 
-3. 
 
----
+## Onsdag
 
-## Söndag — släpp
+- [ ] Planen håller
+- [ ] Versionen är realistisk
+- [ ] Inget behöver flyttas
 
-- [ ] Planerade förändringar är klara eller medvetet flyttade
-- [ ] Patch Notes på engelska (MORE → INFO → PATCH NOTES)
-- [ ] Play-rader klara
-- [ ] Du har gått igenom telefontestet
-- [ ] Du har sagt till att ladda upp AAB
-- [ ] AAB inskickad till Production
+## Söndag
+
+- [ ] Måste-raderna är spelbara eller flyttade
+- [ ] Patch Notes på engelska
+- [ ] Telefontestet är gjort
+- [ ] Du har sagt till om AAB
+- [ ] AAB inskickad
 - [ ] Discord #announcements postad
 
----
+**Släppt som:**
 
-## Utfall
-
-- **Släppt som:** 1.x.y
-
-### Flyttat till nästa vecka
+## Källor
 
 -
--
--
-
----
-
-## Play-rader (engelska)
-
-Sammanfattning av de viktigaste förändringarna spelaren märker.
-
-```text
-•
-•
-•
-•
-•
-```
-
----
-
-## Discord (engelska)
-
-```text
-**Idle Party 1.x.y**
-
-•
-•
-•
-•
-•
-
-Play: https://play.google.com/store/apps/details?id=com.idleparty.app
-
-Google is reviewing this update. The Play Store may still show the previous version for a while.
-```
-
----
-
-## Butiksbilder
-
-Uppdateras bara när spelare tydligt ser skillnad i:
-- Hjältar
-- Hubb
-- Stridsskärm
-
-Inte som del av varje veckosläpp.
 ````
 
 ## Sunday
 
 When they say this week is shipping ("släpp veckan", "det är söndag"):
 
-- Open that week's file. Tick a box only when that step is actually done.
-- Fill **Utfall**. **Släppt som** is the version submitted. Leftovers go under **Flyttat till nästa vecka** there. A moved **Måste** row keeps that mark.
-- Play lines and Discord list only **Måste** rows that are done. Leave an unfinished **Måste** row out of the announcement.
-- Read the Production track again. If an earlier build is still in review, the announcement names the version players will get, not only the one sent today.
+- Tick a Sunday box only when that step is done.
+- Set **Släppt som** to the version submitted. Leftover **Måste** rows become `flyttad`.
+- Then write **Play** and **Discord** from **Måste** rows that are `spelbar`, in order, in English. One bullet each. Same facts.
+
+```text
+**Idle Party 1.x.y**
+
+• 
+
+Play: https://play.google.com/store/apps/details?id=com.idleparty.app
+
+Google is reviewing this update. The Play Store may still show the previous version for a while.
+```
+
+- Read the Production track again. If an earlier build is still in review, the announcement names the version players will get.
 - Do not upload. Do not post unless they asked in that turn.
 
 ## Done when
 
-- A "gör" ask left the week file on disk, using the template. A "vad är planen" ask quoted that file, or said it is missing.
+- A "gör" ask left the short week file on disk. A "vad är planen" ask quoted that file, or said it is missing.
 - No AAB was uploaded and no Discord post was sent.
