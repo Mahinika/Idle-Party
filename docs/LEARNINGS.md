@@ -8,7 +8,7 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
 ## 2026-10-14 — a phone row waits for the phone
 
-- Facit and a tile count are not the look. This week the hall row was marked from a measurement, then the A56 still showed the next pack off the screen. A row about the picture stays unfinished until a screenshot in that chat shows it.
+- A tile count is not the look when the question is whether the next pack fits the screen. This week the hall row was marked from a measurement, then the A56 still showed it off the edge. Grip, helm, icon, and which monster picture a neighbor uses stay on facit and the path test: the fight draws them too small to judge.
 - Pulling the rooms together to shorten that hall put the gate inside a room and left a one-tile seal. The gate test wins. The hall stays long until both the screen and the full-width gate pass.
 
 ## 2026-10-14 — the week file sits in the pick
