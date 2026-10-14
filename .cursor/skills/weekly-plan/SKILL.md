@@ -67,6 +67,11 @@ Read these. No web search. Do not run the year-roadmap skill.
 3. Newest release in `lib/core/changelog.dart`. Do not plan a change that release already shipped.
 4. Operator status in `docs/PLAY_STORE.md`: which build is live, and which is in review. Do not invent Console numbers.
 5. The **Nu** section of `docs/YEAR_ROADMAP.md` only.
+6. Play reviews through the Play API (`play-store-prep` reference, § Play API). The API returns about the last week only. Read only. Reply only when the owner names that review.
+7. Discord #bugs through the Discord tools (`user-omnicord`, read messages). Read only. Never post, reply, or react here.
+
+If a read fails, write **inte läst** next to that source under **Varför
+just det här**. Do not guess what it said.
 
 Then write the file:
 
@@ -77,8 +82,10 @@ Then write the file:
 5. One English sentence a new player understands. Keep KEY, Gauntlet, and Ascend out of that sentence unless they named that as the week.
 6. **Varför just det här** names each source and its date. **Spelarvärde** is Swedish.
 7. Version aim: the next patch after `pubspec.yaml` `version:` and after any build already in review. Do not bump the version here.
-8. **Butiksbilder** stays as written in the template. Add a store-shot row only when heroes, the hub, or the combat screen will look different to the player.
-9. Wednesday, **Under veckan**, Sunday, and **Utfall** start unchecked and blank.
+8. **Förra veckans version:** the newest build sent to Production and its state, from Operator status: live, in review, or built and not sent.
+9. **Telefontest:** three steps a brand-new save can reach, one per **Måste** row where that fits. Add one endgame-save step only when a **Måste** row changes endgame.
+10. **Butiksbilder** stays as written in the template. Add a store-shot row only when heroes, the hub, or the combat screen will look different to the player.
+11. Wednesday, **Under veckan**, Sunday, and **Utfall** start unchecked and blank.
 
 ## Template
 
@@ -108,6 +115,7 @@ Regler:
 - **Måndag:** ÅÅÅÅ-MM-DD
 - **Söndag:** ÅÅÅÅ-MM-DD
 - **Version vi siktar på:** 1.x.y
+- **Förra veckans version:** 1.x.y (ute / i granskning / byggd men inte inskickad)
 - **En mening en ny spelare förstår:**
 
 ---
@@ -143,7 +151,7 @@ Högst fem rader börjar med **Måste.**
 
 ## Varför just det här
 
-Källa och datum: öppna PLAY_NOTES, förra veckans överblivna rader, senaste Patch Notes, vad som ligger inne på Play, Nu i årsplanen, eller egen observation. Ingen webbsökning.
+Källa och datum: öppna PLAY_NOTES, förra veckans överblivna rader, senaste Patch Notes, vad som ligger inne på Play, Nu i årsplanen, Play-recensioner, Discord #bugs, eller egen observation. En källa som inte gick att läsa står som **inte läst**. Ingen webbsökning.
 
 -
 -
@@ -191,12 +199,22 @@ Bocka av när något är spelbart.
 
 ---
 
+## Telefontest (ny save)
+
+Tre steg du gör på telefonen innan du säger till om AAB.
+
+1. 
+2. 
+3. 
+
+---
+
 ## Söndag — släpp
 
 - [ ] Planerade förändringar är klara eller medvetet flyttade
 - [ ] Patch Notes på engelska (MORE → INFO → PATCH NOTES)
 - [ ] Play-rader klara
-- [ ] Du har tittat på bygget
+- [ ] Du har gått igenom telefontestet
 - [ ] Du har sagt till att ladda upp AAB
 - [ ] AAB inskickad till Production
 - [ ] Discord #announcements postad
@@ -264,6 +282,7 @@ When they say this week is shipping ("släpp veckan", "det är söndag"):
 - Open that week's file. Tick a box only when that step is actually done.
 - Fill **Utfall**. **Släppt som** is the version submitted. Leftovers go under **Flyttat till nästa vecka** there. A moved **Måste** row keeps that mark.
 - Play lines and Discord list only **Måste** rows that are done. Leave an unfinished **Måste** row out of the announcement.
+- Read the Production track again. If an earlier build is still in review, the announcement names the version players will get, not only the one sent today.
 - Do not upload. Do not post unless they asked in that turn.
 
 ## Done when
