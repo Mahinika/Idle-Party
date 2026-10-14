@@ -16,9 +16,11 @@ One ISO week, one file under `docs/weeks/`. That file is the only answer to
 is fed only by the reads under **Write a missing plan**.
 
 The week file is the template below. Keep its headings, rules, and section
-order. Fill dates, the version, the one sentence, and the rows. Leave a
-numbered line blank only when no source supports another change. Do not
-invent rows to reach 10.
+order. Fill dates, the version, the one sentence, and the rows. A week
+holds content and fixes that can be ready by Sunday, and at least one new
+feature that makes people want to play and keep playing. Leave a numbered
+line blank only when no source supports another change. Do not invent rows
+to reach 10.
 
 Never upload an AAB here. Upload only when the owner asks in that turn
 (`play-store-prep`). Never post to Discord unless they ask in that turn.
@@ -78,15 +80,16 @@ Then write the file:
 
 1. Status. This ISO week or the next: **Aktiv plan för veckan**. Any later Monday: **Tidigt utkast**. An early draft only gets rows those reads support. Leave the other numbers blank.
 2. Every player-visible change the live build does not have, up to 10. Words they used in this turn win. If they only named the week, draft from the reads above. One roadmap headline does not end the list.
-3. At most five rows start with **Måste.** Those rows are the Play lines and the Discord bullets, in the same order. A row without that mark may move and stays out of the announcement.
-4. Anything past 10 goes under **Inte den här veckan**.
-5. One English sentence a new player understands. Keep KEY, Gauntlet, and Ascend out of that sentence unless they named that as the week.
-6. **Varför just det här** names each source and its date. **Spelarvärde** is Swedish.
-7. Version aim: the next patch after `pubspec.yaml` `version:` and after any build already in review. Do not bump the version here.
-8. **Förra veckans version:** the newest build sent to Production and its state, from Operator status: live, in review, or built and not sent.
-9. **Telefontest:** three steps a brand-new save can reach, one per **Måste** row where that fits. Add one endgame-save step only when a **Måste** row changes endgame.
-10. **Butiksbilder** stays as written in the template. Add a store-shot row only when heroes, the hub, or the combat screen will look different to the player.
-11. Wednesday, **Under veckan**, Sunday, and **Utfall** start unchecked and blank.
+3. Tag each filled row **Content.**, **Fix.**, or **Nytt.** At least one row is **Nytt.** That row is a development to add, not a change already sitting in an unsent build. Read the three pillars in `docs/GROWTH_MANDATE.md` and **Nu**. It makes the game more attractive to start, or gives a reason to keep playing: the party in the room, coming back tomorrow, or the one prestige loop. Name that reason under **Spelarvärde**. Do not add a new zone, class, hunt, or gacha unless Nu or the owner already named it.
+4. At most five rows start with **Måste.** Those rows are the Play lines and the Discord bullets, in the same order. A row without that mark may move and stays out of the announcement.
+5. Anything past 10 goes under **Inte den här veckan**.
+6. One English sentence a new player understands. Keep KEY, Gauntlet, and Ascend out of that sentence unless they named that as the week.
+7. **Varför just det här** names each source and its date. **Spelarvärde** is Swedish.
+8. Version aim: the next patch after `pubspec.yaml` `version:` and after any build already in review. Do not bump the version here.
+9. **Förra veckans version:** the newest build sent to Production and its state, from Operator status: live, in review, or built and not sent.
+10. **Telefontest:** three steps a brand-new save can reach, one per **Måste** row where that fits. Add one endgame-save step only when a **Måste** row changes endgame.
+11. **Butiksbilder** stays as written in the template. Add a store-shot row only when heroes, the hub, or the combat screen will look different to the player.
+12. Wednesday, **Under veckan**, Sunday, and **Utfall** start unchecked and blank.
 
 ## Template
 
@@ -108,6 +111,7 @@ Regler:
 - Planen skrivs på svenska.
 - Status är **Aktiv plan för veckan** när måndagen är den här veckan eller nästa. Längre fram är status **Tidigt utkast**, och tomma rader lämnas tomma.
 - Högst fem rader börjar med **Måste.** De ska med i Play-raderna och Discord. Övriga rader får flyttas utan att annonsen nämner dem.
+- Varje rad märks **Content.**, **Fix.** eller **Nytt.** Content och fixar ska vara redo på söndag. Minst en rad är **Nytt.**: en utveckling som gör spelet mer attraktivt, eller som gör att spelaren vill fortsätta.
 
 ---
 
@@ -136,7 +140,7 @@ Regler:
 9. 
 10.
 
-Högst fem rader börjar med **Måste.**
+Högst fem rader börjar med **Måste.** Varje rad märks också **Content.**, **Fix.** eller **Nytt.**
 
 ---
 
