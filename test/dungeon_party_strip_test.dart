@@ -43,6 +43,45 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('a long party name scales down and the level stays full size', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 146,
+            child: PartyHudSpecLine(
+              spec: 'Shadeveil',
+              level: 100,
+              color: Colors.white,
+              extra: 'Stormwolf',
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Shadeveil'), findsOneWidget);
+    expect(find.text('L100'), findsOneWidget);
+    final name = tester.widget<Text>(find.text('Shadeveil'));
+    expect(name.overflow, isNot(TextOverflow.ellipsis));
+    expect(
+      find.ancestor(
+        of: find.text('Shadeveil'),
+        matching: find.byType(FittedBox),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.ancestor(
+        of: find.text('L100'),
+        matching: find.byType(FittedBox),
+      ),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   test('an empty hero name falls back to the role word', () {
     final hero = PartyHero.starting(
       name: '   ',

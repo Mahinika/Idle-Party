@@ -103,6 +103,8 @@ abstract final class ChangelogCatalog {
         'After a wipe the party counts down and fights again. Two misses on a new floor farm the floor below, then push that floor.',
         'While the app is closed, a wipe farms the safe floor instead of stopping.',
         'Welcome Back lists floors, kills, levels, the best drop, and why the catch-up stopped.',
+        'Welcome Back\'s main button goes back into the cave. On the hub it enters the dungeon. In the cave it continues the fight.',
+        'After Ascend, the toast and the hub say the next run is faster. Blessing stays on that run.',
         'The quiet ping asks after the first cleared floor. A closed cave pings once if it hits the time cap.',
         'A cleared floor shows a short line with gold, XP, and the best drop. Loot is sucked in once.',
         'Crits say CRIT. A boss room plays its sound when it opens.',

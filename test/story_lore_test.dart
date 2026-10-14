@@ -70,6 +70,14 @@ void main() {
     );
   });
 
+  test('Ascend toast says the next run is faster', () {
+    final toast = StoryLore.ascendToast(al: 2, milestoneBonus: 4, blessings: 2);
+    expect(toast.toLowerCase(), contains('next run is faster'));
+    expect(toast, contains('AL2'));
+    expect(toast, contains('Blessing ×2'));
+    expect(toast, isNot(equals('+4e')));
+  });
+
   test('AL2 Ascend confirm names the 80e ESSENCE 5th slot', () {
     final body = StoryLore.ascendConfirmBody(
       rewardEssence: 12,

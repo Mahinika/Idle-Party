@@ -143,7 +143,8 @@ abstract final class StoryLore {
     final unlock = AscendRoadmap.unlockAtAl(al);
     final unlockBit = unlock != null ? ' · $unlock' : '';
     final mile = milestoneBonus > 0 ? ' · +${milestoneBonus}e' : '';
-    return 'Ascended · AL$al$bless$unlockBit$mile';
+    // Blessing attack stays, and a fresh bag eases the same floors.
+    return 'Ascended · AL$al$bless · next run is faster$unlockBit$mile';
   }
 
   static String rebornConfirmBody({

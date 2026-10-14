@@ -161,8 +161,8 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Away 14 days'), findsOneWidget);
-    expect(find.text('CLAIM'), findsOneWidget);
-    await tester.tap(find.text('CLAIM'));
+    expect(find.text('ENTER DUNGEON'), findsOneWidget);
+    await tester.tap(find.text('ENTER DUNGEON'));
     await tester.pumpAndSettle();
     expect(director.state.metaDepth.comebackTier, 0);
     expect(director.state.gold, greaterThan(state.gold));

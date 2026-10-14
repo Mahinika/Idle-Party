@@ -999,6 +999,7 @@ void main() {
     expect(chase.title, contains('Rebuild your bag'));
     expect(chase.progressLabel, contains('% geared'));
     expect(chase.detail.toLowerCase(), contains('farm early'));
+    expect(chase.detail.toLowerCase(), contains('faster'));
     expect(chase.detail.toLowerCase(), isNot(contains('kit pressure')));
   });
 

@@ -33,7 +33,7 @@ String partyStripName(PartyHero hero, {required bool plainEnglish}) {
   return name;
 }
 
-/// Name + level on the crawl strip. A long name ellipsizes; the level stays.
+/// Name + level on the crawl strip. A long name scales down; the level stays.
 class PartyHudSpecLine extends StatelessWidget {
   const PartyHudSpecLine({
     super.key,
@@ -53,11 +53,15 @@ class PartyHudSpecLine extends StatelessWidget {
     return Row(
       children: [
         Flexible(
-          child: Text(
-            spec,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.pixel(size: GameTheme.hudPixel, color: color),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              spec,
+              maxLines: 1,
+              softWrap: false,
+              style: GameTheme.pixel(size: GameTheme.hudPixel, color: color),
+            ),
           ),
         ),
         const SizedBox(width: 4),

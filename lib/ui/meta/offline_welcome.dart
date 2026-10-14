@@ -82,6 +82,7 @@ Future<void> showOfflineProgressDialog(
   }
 
   final showChaseCta = readyAction != null &&
+      plan.op != ChaseOp.enter &&
       (chase.urgency == HubChaseUrgency.ready ||
           chase.urgency == HubChaseUrgency.almost ||
           hubChaseOwnsEndgameRow(chase.kind) ||
@@ -89,10 +90,10 @@ Future<void> showOfflineProgressDialog(
           chase.kind == HubChaseKind.clearFloors ||
           chase.kind == HubChaseKind.dailyVaultProgress ||
           chase.kind == HubChaseKind.marketUpgrade);
-  // Two buttons that both say CLAIM read as the same tap. The job stays
-  // the brown one. Closing without that job is CLOSE.
-  final chaseIsClaim =
-      showChaseCta && readyLabel.toUpperCase().contains('CLAIM');
+  // The brown button is the cave. A claim stays on the grey button so the
+  // prize is still one tap, and the next press is the fight.
+  final inCave = director.state.inDungeon;
+  final returnLabel = inCave ? 'CONTINUE' : 'ENTER DUNGEON';
 
   WebClickBridge.pushLayer();
   await showDialog<void>(
@@ -200,7 +201,7 @@ Future<void> showOfflineProgressDialog(
         ),
       ),
       actions: [
-        if (showChaseCta && !chaseIsClaim)
+        if (showChaseCta)
           GameButton(
             label: readyLabel,
             expanded: false,
@@ -212,26 +213,21 @@ Future<void> showOfflineProgressDialog(
               readyAction?.call();
             },
           ),
-        if (chaseIsClaim)
-          GameButton(
-            label: 'CLOSE',
-            expanded: false,
-            style: GameButtonStyle.grey,
-            onPressed: () {
-              director.claimReturnRewards();
-              director.dismissOfflineSummary();
-              Navigator.pop(ctx);
-            },
-          ),
         GameButton(
-          label: chaseIsClaim ? readyLabel : 'CLAIM',
+          label: returnLabel,
           expanded: false,
           style: GameButtonStyle.brown,
           onPressed: () {
             director.claimReturnRewards();
             director.dismissOfflineSummary();
             Navigator.pop(ctx);
-            if (chaseIsClaim) readyAction?.call();
+            if (director.state.inDungeon) return;
+            final id = GameLogic.recommendedDungeonId(director.state);
+            if (nav != null) {
+              nav.onEnterDungeon(id);
+            } else if (ChaseDispatcher.zoneUnlocked(director.state, id)) {
+              director.enterDungeon(dungeonId: id);
+            }
           },
         ),
       ],

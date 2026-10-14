@@ -192,7 +192,8 @@ void main() {
     expect(find.textContaining('Up next:'), findsOneWidget);
     expect(find.textContaining('AFK'), findsNothing);
     expect(find.textContaining('Sanctuary'), findsNothing);
-    expect(find.text('CLAIM'), findsOneWidget);
+    expect(find.text('ENTER DUNGEON'), findsOneWidget);
+    expect(find.text('CLAIM'), findsNothing);
     expect(find.textContaining('40 gold'), findsWidgets);
   });
 
@@ -230,7 +231,8 @@ void main() {
     expect(find.textContaining('While you are away the hub pays'), findsOneWidget);
     expect(find.textContaining('Daily Run'), findsNothing);
     expect(find.textContaining('KEY'), findsNothing);
-    expect(find.text('CLAIM'), findsOneWidget);
+    expect(find.text('ENTER DUNGEON'), findsOneWidget);
+    expect(find.text('CLAIM'), findsNothing);
     expect(find.textContaining('40 gold'), findsWidgets);
   });
 
@@ -309,9 +311,71 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('CLOSE'), findsOneWidget);
+    expect(find.text('ENTER DUNGEON'), findsOneWidget);
+    expect(find.text('CLOSE'), findsNothing);
     expect(find.text('CLAIM'), findsNothing);
     expect(find.textContaining('CLAIM VAULT'), findsOneWidget);
+  });
+
+  testWidgets('Welcome Back on the hub enters the cave', (tester) async {
+    final director = GameDirector.preview();
+    await director.boot();
+    director.uiFeedback.presentOffline(result(gold: 40, essence: 2));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(director.state.inDungeon, isFalse);
+    await tester.tap(find.text('ENTER DUNGEON'));
+    await tester.pumpAndSettle();
+    expect(director.state.inDungeon, isTrue);
+    expect(director.offlineSummary, isNull);
+    director.dispose();
+  });
+
+  testWidgets('Welcome Back in the cave continues the fight', (tester) async {
+    final fighting = GameLogic.enterDungeon(GameLogic.createInitialState());
+    final director = GameDirector.preview(initialState: fighting);
+    addTearDown(director.dispose);
+    director.uiFeedback.presentOffline(
+      OfflineProgressResult(
+        state: fighting,
+        secondsApplied: 120,
+        goldGained: 0,
+        essenceGained: 0,
+        roomsCleared: 0,
+        highestFloorDelta: 0,
+        bossDelta: 0,
+        wasInDungeon: true,
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('CONTINUE'), findsOneWidget);
+    expect(find.text('ENTER DUNGEON'), findsNothing);
+    final floor = director.state.currentRoom.floorNumber;
+    await tester.tap(find.text('CONTINUE'));
+    await tester.pumpAndSettle();
+    expect(director.state.inDungeon, isTrue);
+    expect(director.state.currentRoom.floorNumber, floor);
   });
 
   test('hub gold fills for 12 hours and then stops', () {

@@ -263,6 +263,7 @@ class HubChase {
         kind: HubChaseKind.clearFloors,
         title: 'Rebuild your bag',
         detail:
+            'Blessing stayed, so this run is faster. '
             'Farm early floors in $zoneName and re-equip the party. '
             'Worn non-Apex became starter; Apex stayed. '
             'Zones stay open — gold, bag, GOLD tracks, and floor progress reset on Ascend.',
