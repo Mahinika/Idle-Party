@@ -1,9 +1,12 @@
 ---
 description: Ship bar (analyze, matching tests, honest copy, legal art, docs). Git and Play upload live in 20-how-we-work.
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Definition of done (Idle Party)
+
+The always-on page is `20-how-we-work.mdc`. Open this file when you are
+verifying a coding task.
 
 Before you tell the owner a coding task is finished:
 

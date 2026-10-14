@@ -1,59 +1,18 @@
 ---
-description: Six veto domains for a design fork (two games, whose call, or scope versus fight versus findability). One decider, no vote. Skip for routine implement, analyze, and commit.
+description: One decision on a design fork (two games, whose call, or scope versus fight versus findability). No chairs. Skip for routine implement, analyze, and commit.
 alwaysApply: false
 ---
 
-# Studio seats (Idle Party)
+# One decision (Idle Party)
 
-One owner + agents. **Six chairs** are six veto domains, not a cast.
-Do not invent Lead/Scrum/Network/UA departments. Do not role-play a
-panel, and do not take a vote. On a fork: **one** decision.
-Name the winning chair in at most one sentence if the owner would be
-confused. Skip this file for routine implement / analyze / commit.
-
-## Who decides
+Skip this file for routine implement, analyze, and commit.
 
 1. The owner named the goal → that goal wins.
-2. Otherwise **Executive Producer** picks one outcome.
-3. Any other chair may stop that pick only on its own hard stop below.
-   A stop blocks the ship. It is not a vote, and chairs do not form a
-   bloc (including EP + UX + Marketing).
+2. Otherwise one pick, from the evidence order in
+   `.cursor/rules/10-what-to-build.mdc`.
+3. Hard locks in `.cursor/rules/00-locks.mdc` still hold, including never
+   iOS and never an AAB upload unless the owner asks in that turn.
 
-## Chairs
-
-| Chair | Owns | Veto / stop |
-|-------|------|-------------|
-| **Executive Producer** | Scope, `GROWTH_MANDATE.md` principles, deadlines | More than one batch at a time, or a batch no evidence points at; iOS / Apple even if named; weaken remaining hard locks |
-| **Game Director** | Loops, SpatialCombat, progression, kits | Ship with DPS **HIGH**; broken fight |
-| **UX Director** | Hub/menus, placement map, readability | Second visual chaos; broken findability |
-| **Technical Director** | Architecture, crashes, analyze, save | Red analyze/tests; known crash |
-| **Art Director** | Owned art, doll, listing **icon**, shot framing | Foreign dumps; listing shots **1–2** that are not the live crawl |
-| **Marketing** | Listing copy, reviews, ASO | GitHub Releases as funnel; a listing that lies |
-
-Art vs Marketing: shots **1–2** are the live crawl (same rule as
-`docs/STORE_LISTING.md`). Later shots may show gear, the doll, or the
-path when they are the live game. Marketing stops copy that claims
-something else. If those clash, EP picks; both hard stops still hold.
-
-## Reports (this studio)
-
-EP over every director. Game Director owns all design hats (systems, combat,
-level, economy). UX Director owns UI + UX. Art Director owns all art hats.
-Technical Director owns all code + QA-as-tests. Marketing owns community/UA
-when relevant. Audio is not a standing chair (Tech + Art when audio files
-change). No Scrum Master / PM layer.
-
-## Weight (what to build)
-
-What to **build:** whatever the owner names. Otherwise EP picks one batch
-from the evidence order in `.cursor/rules/10-what-to-build.mdc` (play notes,
-Play paste, docs, opened A sources). Game Director may freshen pack mix /
-boss tells against play notes. Art sits unless listing conversion is the
-hole. Any chair's domain can hold the hole that evidence points at.
-
-## When the owner names more endgame
-
-Follow `docs/GROWTH_MANDATE.md`: deepen **KEY / Gauntlet / Farm Rift /
-Ranked GR / Ashen** unless they name a new zone, class, or hunt, or an A
-source and a hole in this game agree on one.
-Craft Trial stays under MORE → CRAFT.
+No chairs, no vote, and no second decider. Prefer shipping something
+playable. "Mer endgame" deepens KEY, Gauntlet, Farm Rift, Ranked GR, and
+Ashen. Craft Trial stays under MORE → CRAFT.

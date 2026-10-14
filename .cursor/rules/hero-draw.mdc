@@ -1,9 +1,12 @@
 ---
 description: The live hero is the cutout skeleton. The paper doll is the fallback and the lookbook.
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Hero draw (Idle Party)
+
+The always-on page says the live hero is the cutout skeleton. This file is
+the full draw rule.
 
 The player sees the cutout skeleton (`HeroRigPainter`) for warrior, rogue,
 mage, and healer. GEAR, the dungeon, and the party HUD all paint through it.

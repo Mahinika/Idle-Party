@@ -19,9 +19,11 @@ Make `AGENTS.md` and `.cursor/rules/*.mdc` accurate for **today’s** codebase a
 
 Keep the steering shape:
 
-- Always-on rules carry a number that shows who wins on a conflict:
-  `00-locks` → `10-what-to-build` → `20-how-we-work` → `30-done`. Keep one
-  file per concern. Do not split `20-how-we-work` back into two files.
+- `20-how-we-work.mdc` is the only always-on page (chase, locks, next job,
+  done). `00-locks`, `10-what-to-build`, `30-done`, `play-words`, and
+  `hero-draw` stay the full record with `alwaysApply: false`. Do not turn
+  those five back into always-on rules. Do not split the always-on page
+  into the old four-file stack.
 - Play-upload lock stays in `00-locks`, `20-how-we-work`, and
   `session_start.dart` only.
 - `growth`, `decide-a-fork`, and `where-screens-live` stay
@@ -44,7 +46,7 @@ Keep the steering shape:
    - `pubspec.yaml` version ↔ `MetaSystems.currentVersion` / What’s New
    - `AGENTS.md` (architecture, meta, combat authority, build/test, MCP/skills)
    - `.cursor/rules/` (`00-locks`, `10-what-to-build`, `20-how-we-work`, `30-done`, `growth`, `decide-a-fork`, `where-screens-live`, others)
-   - **Keep** six studio seats; do not restore a 40-role org
+   - **Keep** one decision and no chairs (`decide-a-fork`). Do not restore studio seats or a 40-role org
    - Key systems: `GameDirector`, `GameLogic`, `SpatialCombat`, hub/dungeon UI, `DungeonCatalog`, `metaDepth`, Ascend keep/reset
    - Docs that claim “current”: `docs/PLAY_STORE.md`, `docs/CONTENT_CADENCE.md`,
      `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md` (agent picks from checked facts per `10-what-to-build`; no numbered program)

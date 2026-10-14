@@ -1,9 +1,11 @@
 ---
 description: Call a sitting a session, tomorrow's job a daily, and one climb a run. Never call those a night.
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Play words (Idle Party)
+
+The always-on page names these three words. This file is the full list.
 
 Confirmed by the owner **2026-10-10**. "Natt" is confusing. Do not use it
 for a sitting, the reason to come back tomorrow, or one climb of a hunt.

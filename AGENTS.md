@@ -8,10 +8,9 @@ Idle Party is a working Flutter idle RPG. Original Dart. Owned pixel art in
 (`MetaSystems.currentVersion` reads it). What’s New lives in
 `lib/core/meta_systems.dart`. Do not hardcode the number here.
 
-Work style, locks, and Swedish handoff live in `.cursor/rules/`. Do not
-restate them here. Growth principles: `docs/GROWTH_MANDATE.md`.
-The agent picks the next batch from checked facts
-(`.cursor/rules/10-what-to-build.mdc`); a goal the owner names wins.
+The always-on page is `.cursor/rules/20-how-we-work.mdc`. Do not restate it
+here. The full pick is `.cursor/rules/10-what-to-build.mdc`. Growth
+principles: `docs/GROWTH_MANDATE.md`. A goal the owner names wins.
 
 **UI:** portrait phones, reference Samsung A56 (360×780). Live look is the
 AVD `Samsung_A56` via `a56-playtest`. The agent reads that device with

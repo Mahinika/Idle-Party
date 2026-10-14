@@ -83,7 +83,7 @@ see [PLAY_GROWTH.md](PLAY_GROWTH.md).
 `flutter analyze` / matching tests / live-light DPS gate. Fairness first.
 SpatialCombat is the current fight sim. A second sim is not forbidden.
 
-## Studio seats
+## One decision
 
-Six veto domains, one decider — `.cursor/rules/decide-a-fork.mdc`.
-Owner if they named the goal, otherwise EP. No chair vote.
+One pick, no chairs — `.cursor/rules/decide-a-fork.mdc`.
+Owner if they named the goal, otherwise the evidence order.
