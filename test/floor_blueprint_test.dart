@@ -314,7 +314,11 @@ void main() {
       if (map.chambers.any((c) => c.beatKind == FloorBeatKind.hub)) continue;
       final runs = _gateRuns(map);
       expect(runs, isNotEmpty);
-      expect(runs.every((n) => n == 3 || n == 4), isTrue, reason: '$runs');
+      expect(
+        runs.every((n) => n == 3 || n == 4),
+        isTrue,
+        reason: 'seed $seed $runs',
+      );
       saw3 |= runs.contains(3);
       saw4 |= runs.contains(4);
     }

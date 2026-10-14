@@ -357,7 +357,7 @@ abstract final class ZoneArt {
         tank: CustomAssets.enemyGoblinTank,
         ranged: CustomAssets.enemyGoblinRanged,
         glass: CustomAssets.enemySnake,
-        support: CustomAssets.enemyCultist,
+        support: CustomAssets.enemyGoblinRanged,
       ),
     ),
     'king': _customZone(
@@ -444,7 +444,7 @@ abstract final class ZoneArt {
         tank: CustomAssets.enemyUnderworldTank,
         ranged: CustomAssets.enemyUnderworldMite,
         glass: CustomAssets.enemyUnderworldMite,
-        support: CustomAssets.enemyCultist,
+        support: CustomAssets.enemyUnderworldTank,
       ),
     ),
     'dead': _customZone(

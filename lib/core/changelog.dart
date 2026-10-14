@@ -122,6 +122,7 @@ abstract final class ChangelogCatalog {
         'The hub says when a pet on an errand comes home.',
         'Craft Trial names the Apex it counts before you start.',
         'PATH follows the cave TODAY names. Locked lands stay quiet.',
+        'A neighbor cave does not reuse the cultist picture from the cave beside it.',
         'The quiet ping asks after the first cleared floor. A closed cave pings once if it hits the time cap.',
         'A cleared floor shows a short line with gold, XP, and the best drop. Loot is sucked in once.',
         'Crits say CRIT. A boss room plays its sound when it opens.',
