@@ -17,7 +17,8 @@ is fed only by the reads under **Write a missing plan**.
 
 The week file is the template below. Keep its headings, rules, and section
 order. Fill dates, the version, the one sentence, and the rows. Leave a
-numbered line blank when that slot has no change. Do not pad the week to 10.
+numbered line blank only when no source supports another change. Do not
+invent rows to reach 10.
 
 Never upload an AAB here. Upload only when the owner asks in that turn
 (`play-store-prep`). Never post to Discord unless they ask in that turn.
@@ -64,7 +65,7 @@ Read these. No web search. Do not run the year-roadmap skill.
 
 1. Open section of `docs/PLAY_NOTES.md`.
 2. Previous week file, if it exists: **Inte den här veckan** and both **Flyttat till nästa vecka** sections.
-3. Newest release in `lib/core/changelog.dart`. Do not plan a change that release already shipped.
+3. Newest release in `lib/core/changelog.dart`. Do not list a change the live Play build already has. Changes in an unsent build still go on the list.
 4. Operator status in `docs/PLAY_STORE.md`: which build is live, and which is in review. Do not invent Console numbers.
 5. The **Nu** section of `docs/YEAR_ROADMAP.md` only.
 6. Play reviews through the Play API (`play-store-prep` reference, § Play API). The API returns about the last week only. Read only. Reply only when the owner names that review.
@@ -76,7 +77,7 @@ just det här**. Do not guess what it said.
 Then write the file:
 
 1. Status. This ISO week or the next: **Aktiv plan för veckan**. Any later Monday: **Tidigt utkast**. An early draft only gets rows those reads support. Leave the other numbers blank.
-2. Up to 10 player-visible changes. Words they used in this turn win. If they only named the week, draft from the reads above.
+2. Every player-visible change the live build does not have, up to 10. Words they used in this turn win. If they only named the week, draft from the reads above. One roadmap headline does not end the list.
 3. At most five rows start with **Måste.** Those rows are the Play lines and the Discord bullets, in the same order. A row without that mark may move and stays out of the announcement.
 4. Anything past 10 goes under **Inte den här veckan**.
 5. One English sentence a new player understands. Keep KEY, Gauntlet, and Ascend out of that sentence unless they named that as the week.
