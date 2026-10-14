@@ -5,7 +5,7 @@ alwaysApply: true
 
 # How we work (Idle Party)
 
-Source: the owner, who vibe-codes. Last sync: **2026-10-09**.
+Source: the owner, who vibe-codes. Last sync: **2026-10-14**.
 Order when rules disagree: `00-locks` → `10-what-to-build` → this file →
 `30-done`. Growth principles: `docs/GROWTH_MANDATE.md`.
 
@@ -67,7 +67,9 @@ with the commit that fixes it. Read Open at the start of a batch.
    and let them pick. Then build on the pick. Small tweaks need no preview.
 5. Hand off in at most 5 lines: what you chose and the source, what changed,
    and a short test list for a new save. Add an endgame save only if endgame
-   changed. Then wait.
+   changed. Wait only when the owner should look at the phone, a whole
+   screen or floor needs a before-and-after, or a lock or missing fact
+   blocks the next step. Otherwise pick the next batch and continue.
 6. **Git:** when analyze and tests are green, **commit locally** without
    asking. Push, open a PR, or tag when the batch needs it, also without
    asking. **Never upload an AAB to Google Play unless the owner asks in
