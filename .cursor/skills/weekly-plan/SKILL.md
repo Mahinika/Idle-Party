@@ -32,7 +32,7 @@ Folder note: `docs/weeks/README.md`.
 - Each row is `Måste · Content — change — why the player cares — status`, or the same with `Fix` or `Nytt`. Drop `Måste ·` when the row may slip.
 - Status is `ej klar`, `spelbar`, or `flyttad`.
 - At most five rows are **Måste**. Those are the Sunday announcement, in that order.
-- At least one row is **Nytt**: a development to add, not a change already in an unsent build. It makes the game more attractive to start, or gives a reason to keep playing. Read the three pillars in `docs/GROWTH_MANDATE.md` and **Nu** in `docs/YEAR_ROADMAP.md`. Do not add a new zone, class, hunt, or gacha unless Nu or the owner already named it.
+- At least one row is **Nytt**, and more when the evidence supports them. A **Nytt** row can be something this game does not have yet. It comes from what another game or a developer measured, fitted to this game. Read `docs/YEAR_ROADMAP_SOURCES.md` first. If those grades do not cover the hole, open a few pages. A source counts only if you opened it in this chat and can name the URL. Grade A may add the row. Grade B is an example only after a hole in this game is already clear. Grade C must not decide. Name the player problem the source measured. Fit it to the three pillars in `docs/GROWTH_MANDATE.md`: the party walks the room, one reason to come back tomorrow, one Ascend loop. Another game shipping a feature is not by itself a reason. When this game's notes disagree, follow this game. **Nu** in `docs/YEAR_ROADMAP.md` is one source, not a ceiling. At most one **Nytt** row is **Måste**, so Sunday stays a promise that can ship. A new zone, class, hunt, or gacha still waits until the owner names it, or an A source and a hole in this game agree.
 - **Content** and **Fix** are what should be ready by Sunday.
 - A new idea mid-week goes under **Inte den här veckan**. Only a critical bug may take a planned slot. The row it displaces becomes `flyttad`.
 - This ISO week or the next: status **Aktiv**. Any later Monday: **Tidigt utkast**, and only the rows the sources support.
@@ -72,13 +72,13 @@ File name is the printed token plus `.md` inside `docs/weeks/`. Week 51 of
 
 ## Write a missing plan
 
-Read these. No web search. Do not run the year-roadmap skill.
+Read these. Do not rebuild the 100-source year file. Do not run the year-roadmap skill.
 
 1. Open section of `docs/PLAY_NOTES.md`.
 2. Previous week file, if it exists: **Inte den här veckan**.
 3. Newest release in `lib/core/changelog.dart`. Do not list a change the live Play build already has. Changes in an unsent build still go on the list.
 4. Operator status in `docs/PLAY_STORE.md`: which build is live, and which is in review. Do not invent Console numbers. If the Play API track read disagrees, trust the track and say the doc is behind.
-5. The **Nu** section of `docs/YEAR_ROADMAP.md` only, plus the three pillars in `docs/GROWTH_MANDATE.md` for the **Nytt** row.
+5. The **Nu** section of `docs/YEAR_ROADMAP.md`, the three pillars in `docs/GROWTH_MANDATE.md`, and graded rows in `docs/YEAR_ROADMAP_SOURCES.md`. Open a few pages when the file does not cover the hole. Put each **Nytt** source under **Källor** with grade, title, and URL.
 6. Play reviews through the Play API (`play-store-prep` reference, § Play API). The API returns about the last week only. Read only. Reply only when the owner names that review.
 7. Discord #bugs through the Discord tools (`user-omnicord`, read messages). Read only. Never post, reply, or react here.
 
