@@ -9,7 +9,12 @@ contracts: [CHASE_CONTRACT.md](CHASE_CONTRACT.md) ·
 [GEAR_BUDGET.md](GEAR_BUDGET.md) · [FLOOR_BLUEPRINT.md](FLOOR_BLUEPRINT.md) ·
 [PLAY_GROWTH.md](PLAY_GROWTH.md).
 
-## Cadence (every 2–3 weeks)
+## Cadence
+
+**Week plan (owner 2026-10-14):** Monday writes one ISO week. Sunday that
+plan ships: Play update submitted, Discord announcement. The file under
+`docs/weeks/` is the answer to "vad är planen för vecka N". Skill
+`weekly-plan`.
 
 Each tagged `1.x.y` release should include:
 

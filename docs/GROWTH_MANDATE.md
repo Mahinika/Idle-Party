@@ -42,7 +42,7 @@ early and hide chrome until it matters when it does not fight the named goal.
 ## Hold (shipped; prefer not to regress)
 
 - Funnel events live (`first_open` → … → `d1_return` + time-to-combat)
-- Cadence 2–3 weeks; What’s New lead for a **new** player; DPS HIGH fails CI
+- Weekly plan in `docs/weeks/` (Monday write, Sunday ship); What’s New lead for a **new** player; DPS HIGH fails CI
 
 ## Stop doing
 

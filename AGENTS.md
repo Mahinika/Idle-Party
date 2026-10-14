@@ -63,7 +63,7 @@ Owner play notes live in `docs/PLAY_NOTES.md`.
 
 MCP: `.cursor/mcp.json` → `idle-party` (`tool/mcp_idle_party/`).
 
-Cadence: `docs/CONTENT_CADENCE.md`. Chase: `docs/CHASE_CONTRACT.md`. Gear
+Cadence: `docs/CONTENT_CADENCE.md`. Week plans: `docs/weeks/`. Chase: `docs/CHASE_CONTRACT.md`. Gear
 math: `docs/GEAR_BUDGET.md`. Floors: `docs/FLOOR_BLUEPRINT.md`.
 
 ## Architecture
