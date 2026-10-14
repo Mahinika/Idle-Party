@@ -12,8 +12,8 @@ description: >-
 # Weekly plan (Idle Party)
 
 One ISO week, one file under `docs/weeks/`. That file is the only answer to
-"vad är planen för vecka N". Do not answer from the year roadmap, play
-notes, or an earlier chat. Those may feed a new file. They are not the plan.
+"vad är planen för vecka N". A question reads that file alone. A new file
+is fed only by the reads under **Write a missing plan**.
 
 The week file is the template below. Keep its headings, rules, and section
 order. Fill dates, the version, the one sentence, and the rows. Leave a
@@ -49,10 +49,10 @@ File name is the printed token plus `.md` inside `docs/weeks/`. Week 51 of
 
 | They said | Do |
 |---|---|
-| vad är planen / planen för vecka N | Read that file. Reply in Swedish with the planned changes, the one sentence, player value, and which Sunday boxes are checked. Missing file: say there is no plan. Do not write one. |
+| vad är planen / planen för vecka N | Read that file. Reply in Swedish with the status, the **Måste** rows, the other planned changes, the one sentence, player value, and which Sunday boxes are checked. Missing file: say there is no plan. Do not write one. |
 | gör en veckoplan, file exists | Show it. Change a row only when they named the change. |
 | gör en veckoplan, file missing | Write it from the template, show it, stop. Do not start building the rows. |
-| onsdagskoll | Open that week's file. Fill **Onsdag — verklighetskoll**. A row that will not finish goes under **Flyttat till nästa vecka** in that section. |
+| onsdagskoll | Open that week's file. Fill **Onsdag — verklighetskoll**. A row that will not finish goes under **Flyttat till nästa vecka** in that section. A moved **Måste** row keeps that mark, and drops out of the Play and Discord drafts. |
 
 A new idea mid-week goes under **Inte den här veckan**. Only a critical bug
 may take a planned slot. The row it displaces moves with the Wednesday
@@ -60,13 +60,23 @@ leftovers.
 
 ## Write a missing plan
 
-1. Read the Open section of `docs/PLAY_NOTES.md`. If the previous week file exists, read **Inte den här veckan** and both **Flyttat till nästa vecka** sections.
-2. Up to 10 player-visible changes that can be done by that Sunday. Words they used in this turn win. If they only named the week, draft from those notes.
-3. Anything past 10 goes under **Inte den här veckan**.
-4. One English sentence a new player understands. Keep KEY, Gauntlet, and Ascend out of that sentence unless they named that as the week.
-5. **Varför just det här** and **Spelarvärde** in Swedish. Name the play note or what they said.
-6. Version aim: read `pubspec.yaml` `version:` and name the next patch. Do not bump it here.
-7. Play lines and the Discord block: the changes a player will notice, English, at most the five bullets in the template. Drafts, not sent.
+Read these. No web search. Do not run the year-roadmap skill.
+
+1. Open section of `docs/PLAY_NOTES.md`.
+2. Previous week file, if it exists: **Inte den här veckan** and both **Flyttat till nästa vecka** sections.
+3. Newest release in `lib/core/changelog.dart`. Do not plan a change that release already shipped.
+4. Operator status in `docs/PLAY_STORE.md`: which build is live, and which is in review. Do not invent Console numbers.
+5. The **Nu** section of `docs/YEAR_ROADMAP.md` only.
+
+Then write the file:
+
+1. Status. This ISO week or the next: **Aktiv plan för veckan**. Any later Monday: **Tidigt utkast**. An early draft only gets rows those reads support. Leave the other numbers blank.
+2. Up to 10 player-visible changes. Words they used in this turn win. If they only named the week, draft from the reads above.
+3. At most five rows start with **Måste.** Those rows are the Play lines and the Discord bullets, in the same order. A row without that mark may move and stays out of the announcement.
+4. Anything past 10 goes under **Inte den här veckan**.
+5. One English sentence a new player understands. Keep KEY, Gauntlet, and Ascend out of that sentence unless they named that as the week.
+6. **Varför just det här** names each source and its date. **Spelarvärde** is Swedish.
+7. Version aim: the next patch after `pubspec.yaml` `version:` and after any build already in review. Do not bump the version here.
 8. **Butiksbilder** stays as written in the template. Add a store-shot row only when heroes, the hub, or the combat screen will look different to the player.
 9. Wednesday, **Under veckan**, Sunday, and **Utfall** start unchecked and blank.
 
@@ -88,6 +98,8 @@ Regler:
 - AAB laddas bara upp när du säger till.
 - In-game text, Patch Notes, Play-rader och Discord-annons skrivs på engelska.
 - Planen skrivs på svenska.
+- Status är **Aktiv plan för veckan** när måndagen är den här veckan eller nästa. Längre fram är status **Tidigt utkast**, och tomma rader lämnas tomma.
+- Högst fem rader börjar med **Måste.** De ska med i Play-raderna och Discord. Övriga rader får flyttas utan att annonsen nämner dem.
 
 ---
 
@@ -115,6 +127,8 @@ Regler:
 9. 
 10.
 
+Högst fem rader börjar med **Måste.**
+
 ---
 
 ## Inte den här veckan
@@ -129,7 +143,7 @@ Regler:
 
 ## Varför just det här
 
-Anteckning från speltestning, PLAY_NOTES eller egen observation.
+Källa och datum: öppna PLAY_NOTES, förra veckans överblivna rader, senaste Patch Notes, vad som ligger inne på Play, Nu i årsplanen, eller egen observation. Ingen webbsökning.
 
 -
 -
@@ -248,9 +262,9 @@ Inte som del av varje veckosläpp.
 When they say this week is shipping ("släpp veckan", "det är söndag"):
 
 - Open that week's file. Tick a box only when that step is actually done.
-- Fill **Utfall**. **Släppt som** is the version submitted. Leftovers go under **Flyttat till nästa vecka** there.
+- Fill **Utfall**. **Släppt som** is the version submitted. Leftovers go under **Flyttat till nästa vecka** there. A moved **Måste** row keeps that mark.
+- Play lines and Discord list only **Måste** rows that are done. Leave an unfinished **Måste** row out of the announcement.
 - Do not upload. Do not post unless they asked in that turn.
-- Do not send a half announcement.
 
 ## Done when
 
