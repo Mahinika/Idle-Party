@@ -7,6 +7,8 @@ nav / hide-until-unlock / ≤90 s) removed by owner. **Play AAB upload still
 requires owner ask.**
 **Updated:** 2026-10-09 — the agent picks the next batch from checked facts
 (`.cursor/rules/10-what-to-build.mdc`). Owner-named goals still win.
+**Updated:** 2026-10-14 — the active week file sits in that order, after
+open play notes and before the Play paste.
 History: [LEARNINGS.md](LEARNINGS.md) · [PLAY_GROWTH.md](PLAY_GROWTH.md).
 
 North star: **främlingar på Play blir spelare.**
@@ -23,8 +25,9 @@ Hard locks: [`.cursor/rules/00-locks.mdc`](../.cursor/rules/00-locks.mdc).
 
 **2026-10-09:** a goal the owner names wins. Otherwise the agent picks one
 batch from checked facts and builds it (`.cursor/rules/10-what-to-build.mdc`):
-play notes, then the Play paste, then these docs, then A-grade sources it
-opened. Vague “gör bättre / vad härnäst” is the same pick, not a question.
+open play notes, then the active week file, then the Play paste, then
+these docs, then A-grade sources it opened. Vague “gör bättre / vad
+härnäst” is the same pick, not a question.
 Do not invent a numbered program; do not restore AL20 hub polish as the
 default.
 

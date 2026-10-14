@@ -6,6 +6,10 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-14 — the week file sits in the pick
+
+- The 10 Oct line that Play numbers do not pick the next slice is history. The pick now reads open play notes, then the active week file, then the Play paste, then the growth docs. The year plan is evidence, not a standing program.
+
 ## 2026-10-10 — a Gauntlet climb is a choice
 
 - The Spire was one climb with different words. Before you enter you now pick MIGHT (hit harder), WARD (take less), or GREED (double essence, softer party). The party still fights on its own after the pick.

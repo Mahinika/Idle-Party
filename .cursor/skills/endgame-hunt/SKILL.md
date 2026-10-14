@@ -36,7 +36,7 @@ Name the player problem first (Open notes in `docs/PLAY_NOTES.md`, or
 ## Gotchas
 
 - Hub → hunt enter must start the floor: `GameDirector._rebuildSpatial()` + `_startSpatialLoop()`, or the view stays on **Loading floor…**. Ashen hit this in 1.12.152 (see `spatial-combat-change`).
-- FARM and Gauntlet pay 0 essence. PUSH clear +1, boss +2 (`AGENTS.md`).
+- A PUSH clear pays +1 essence, a PUSH boss +2. FARM pays that mint 0. Gauntlet pays its own floor essence, doubled under GREED, and does not use the PUSH mint (`AGENTS.md`).
 - The hub ENDGAME map is not dungeon #16 and not a row under the 15-zone path. Hunts reuse existing caves.
 - Ashen save fields still use `worldBoss*` JSON keys. Keep them for old saves (`save-migrate`).
 - Craft Trial stays MORE → CRAFT.

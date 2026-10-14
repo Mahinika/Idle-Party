@@ -5,8 +5,8 @@ Idle Party is a working Flutter idle RPG. Original Dart. Owned pixel art in
 
 **Ship version:** `pubspec.yaml` `version:` name must match
 `ChangelogCatalog.currentVersion` in `lib/core/changelog.dart`
-(`MetaSystems.currentVersion` reads it). What’s New lives in
-`lib/core/meta_systems.dart`. Do not hardcode the number here.
+(`MetaSystems` re-exports it). What’s New is that catalog. Do not
+hardcode the number here.
 
 The always-on page is `.cursor/rules/20-how-we-work.mdc`. Do not restate it
 here. The full pick is `.cursor/rules/10-what-to-build.mdc`. Growth
@@ -74,7 +74,8 @@ main.dart
      ├─ Hub (!inDungeon) → HubScreen
      └─ Dungeon → Is2Shell → SpatialDungeonView
          + AppBottomBar GEAR / GOLD / SHOP / ESSENCE / MORE
-           (first hour: GEAR + MORE; endgame hub: + KEY; dungeon: + LEAVE)
+           (until the first boss or first Ascend: GEAR + MORE;
+            endgame hub: KEY after MORE; dungeon: + LEAVE)
 ```
 
 GOLD = FORGE + MARKET. SHOP = forever SCROLLS + ad-free / supporter (hour
@@ -85,8 +86,9 @@ Hub POWERUPS stay on the hub.
 **SpatialCombat** is the current fight sim, including in-dungeon offline.
 A second sim is not forbidden (owner 2026-09-26).
 (`afkAssist: true`, `GameLogic.simulateSpatialOffline`). Hub AFK is gold
-plus slow essence, not combat. PUSH clear +1 essence, boss +2; FARM and
-Gauntlet pay 0.
+plus slow essence, not combat. A PUSH clear pays +1 essence, a PUSH boss
++2. FARM pays that mint 0. Gauntlet pays its own floor essence, doubled
+under GREED, and does not use the PUSH mint.
 
 A PUSH wipe counts down 3 seconds and continues. Two fails on the same new
 floor farm the floor below until one clear, then push again. Offline farms
@@ -95,13 +97,15 @@ their own rules.
 
 **Content:** 10 classes / 31 specs · 15 zones through Mothveil Hollow.
 Hero cap `maxHeroLevel` 100 (combat XP only). Ascend cap AL20.
+The active party is 4. A fifth slot unlocks at AL2 for 80 essence and
+stays on Ascend. Race locks after New Game START. Class can still change.
 Endgame (KEY, Gauntlet, Rifts, Greater Rifts, Ashen, Craft Trial) unlocks
 when the **active party is all Lv100**, not at AL20 alone.
 
 | Hunt | Where |
 |------|--------|
 | KEYSTONE | Hub KEY. No KEY tab before party Lv100. |
-| Gauntlet | Endless Crystal Spire. Boss every 5 floors. Spire Trophies: each squeeze under each pact, kept on Ascend. |
+| Gauntlet | Endless Crystal Spire. Pick MIGHT, WARD, or GREED. Boss every 5 floors. After floor 100 the hub names Ranked GR; later floors stay a personal best. Spire Trophies: each squeeze under each pact, kept on Ascend. |
 | Rifts | Stormwake Hollow. No fail timer. |
 | Greater Rifts | Mothveil Hollow. Timed. Local season PB. |
 | Ashen Crown | Weekly ticket. Rotates shipped caves. Not zone 16. |

@@ -21,17 +21,17 @@ You choose what to build next and you build it. Do not ask which feature,
 Decide from evidence, in this order:
 
 1. Open notes in `docs/PLAY_NOTES.md`.
-2. This game's Play paste in `docs/PLAY_GROWTH.md`. Never invent Console
+2. The active week file in `docs/weeks/` (status Aktiv).
+3. This game's Play paste in `docs/PLAY_GROWTH.md`. Never invent Console
  percentages. While the sample is small, set no numeric D1 or D7 target.
-3. `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md`, and
+4. `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md`, and
  `docs/YEAR_ROADMAP_SOURCES.md`.
-4. Facts from other game developers, graded as in `.cursor/skills/year-roadmap`.
+5. Facts from other game developers, graded as in `.cursor/skills/year-roadmap`.
 
 A source counts only if you opened it in this chat and can name the URL.
 If you could not open it, it is not a fact; decide from this game's notes.
 
-**This week:** before a new direction, read the active file in `docs/weeks/`
-(status Aktiv). Build the first row this build does not already do,
+**This week:** build the first row this build does not already do,
 **Måste** first. A row the current patch notes already describe, and the
 code already does, is not a batch. When every **Måste** row is already what
 this build does, and Play's newest submitted build is older, stop new

@@ -1,8 +1,9 @@
 # Idle Party — monthly content cadence
 
 **Standing principles:** [GROWTH_MANDATE.md](GROWTH_MANDATE.md) — no numbered
-programs; owner names work. This file is the **tag rhythm** (balance + What’s
-New). Do not restore AL20.
+programs. A goal the owner names wins; otherwise the pick is
+[10-what-to-build](../.cursor/rules/10-what-to-build.mdc). This file is the
+**tag rhythm** (balance + What’s New). Do not restore AL20.
 
 Optional background: [archive/TOP_GAMES_RESEARCH.md](archive/TOP_GAMES_RESEARCH.md). Live
 contracts: [CHASE_CONTRACT.md](CHASE_CONTRACT.md) ·
@@ -19,11 +20,12 @@ plan ships: Play update submitted, Discord announcement. The file under
 Each tagged `1.x.y` release should include:
 
 1. **One visible slice** — What’s New in **one sentence a new player understands**.
-   Owner names the slice (first session / listing / crawl / named endgame).
+   A goal the owner names wins. Otherwise the slice is the week row this
+   build does not already do.
 2. **Balance pass** — iterate with share-only, then gate:
    - Fast: `flutter test test/class_balance_share_fast_test.dart` (or `--focus=specA,specB` via harness args)
    - CI: `test/class_balance_gate_test.dart` (live light, fails on DPS `**HIGH**`)
-3. **Release notes** — What’s New in `lib/core/meta_systems.dart`; `test/changelog_sync_test.dart` keeps pubspec ↔ version ↔ zone tokens honest.
+3. **Release notes** — What’s New in `lib/core/changelog.dart` (`ChangelogCatalog`; `MetaSystems` re-exports it); `test/changelog_sync_test.dart` keeps pubspec ↔ version ↔ zone tokens honest.
 
 ### Success-spår (hold)
 
@@ -41,12 +43,12 @@ the goal needs them.
 | Om ni tvekar mellan … | Välj |
 |------------------------|------|
 | AL20 polish vs first session | First-hour chrome + time-to-combat (`GROWTH_MANDATE.md`) |
-| Ny spec vs polisha kit | Ask if they want a new spec; otherwise trim HIGH |
-| Ny zon vs listing/onboarding | Prefer listing + first session unless they asked for a zon |
+| Ny spec vs polisha kit | Trim HIGH unless they named a new spec, or an A source and a hole here agree |
+| Ny zon vs listing/onboarding | Prefer listing + first session unless they named a zone, or an A source and a hole here agree |
 | Cool affinity-nudge vs budget | Budget |
 | Skippa test “för att CI flakar” | Fixa kontraktet — gutta inte |
 | Stor rewrite vs small ship | Small ship + synlig What’s New a new player can read |
-| Vagt “gör bättre” vs explicit bredare mål | Ask once. Do not restore AL20 |
+| Vagt “gör bättre” vs explicit bredare mål | Pick from the evidence order. Do not restore AL20 |
 | Två vägar | `.cursor/rules/decide-a-fork.mdc` — ett beslut. Ägaren om målet är namngivet, annars bevisordningen |
 
 ## Non-goals (unless the batch needs them)
@@ -54,7 +56,8 @@ the goal needs them.
 - iOS / Apple (never) or web-as-product
 
 A second fight sim, gacha / whale packs, and a god-object quarter are allowed
-when the owner names them (2026-09-26).
+when the owner names them, or when an A source and a hole in this game agree
+(2026-09-26, pick rule 2026-10-09).
 
 ## Checklist before tagging
 
