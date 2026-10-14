@@ -15,10 +15,11 @@ One ISO week, one file under `docs/weeks/`. That file is the only answer to
 "vad är planen för vecka N". A question reads that file alone. A new file
 is fed only by the reads under **Write a missing plan**.
 
-The week file is the short template below. Rules stay in this skill. Do not
-copy them into the week file. A week holds content and fixes that can be
-ready by Sunday, and at least one new feature that makes people want to
-play and keep playing.
+The week file is the template below. Rules stay in this skill. Do not
+copy them into the week file. A week lists 50 primary rows. Sunday ships
+the ones that are `spelbar`. The rest stay on the list until they are
+`spelbar` or `flyttad`. At least one row is a new feature that makes
+people want to play and keep playing.
 
 Never upload an AAB here. Upload only when the owner asks in that turn
 (`play-store-prep`). Never post to Discord unless they ask in that turn.
@@ -28,11 +29,10 @@ Folder note: `docs/weeks/README.md`.
 
 ## Rules
 
-- Up to 10 player-visible rows. Leave no blank numbers.
-- Each row is `Måste · Content — change — why the player cares — status`, or the same with `Fix` or `Nytt`. Drop `Måste ·` when the row may slip.
+- Exactly 50 primary rows under **Att göra**. Leave no blank numbers. Every row is **Måste**. Those rows are the week's work, in that order, and the Sunday announcement is the ones whose status is `spelbar`.
+- Each row is `Måste · Content — change — why the player cares — status`, or the same with `Fix` or `Nytt`.
 - Status is `ej klar`, `spelbar`, or `flyttad`.
-- At most five rows are **Måste**. Those are the Sunday announcement, in that order.
-- At least one row is **Nytt**, and more when the evidence supports them. A **Nytt** row can be something this game does not have yet. It comes from what another game or a developer measured, fitted to this game. Read `docs/YEAR_ROADMAP_SOURCES.md` first. If those grades do not cover the hole, open a few pages. A source counts only if you opened it in this chat and can name the URL. Grade A may add the row. Grade B is an example only after a hole in this game is already clear. Grade C must not decide. Name the player problem the source measured. Fit it to the three pillars in `docs/GROWTH_MANDATE.md`: the party walks the room, one reason to come back tomorrow, one Ascend loop. Another game shipping a feature is not by itself a reason. When this game's notes disagree, follow this game. **Nu** in `docs/YEAR_ROADMAP.md` is one source, not a ceiling. At most one **Nytt** row is **Måste**, so Sunday stays a promise that can ship. A new zone, class, hunt, or gacha still waits until the owner names it, or an A source and a hole in this game agree.
+- At least one row is **Nytt**, and more when the evidence supports them. A **Nytt** row can be something this game does not have yet. It comes from what another game or a developer measured, fitted to this game. Read `docs/YEAR_ROADMAP_SOURCES.md` first. If those grades do not cover the hole, open a few pages. A source counts only if you opened it in this chat and can name the URL. Grade A may add the row. Grade B is an example only after a hole in this game is already clear. Grade C must not decide. Name the player problem the source measured. Fit it to the three pillars in `docs/GROWTH_MANDATE.md`: the party walks the room, one reason to come back tomorrow, one Ascend loop. Another game shipping a feature is not by itself a reason. When this game's notes disagree, follow this game. **Nu** in `docs/YEAR_ROADMAP.md` is one source, not a ceiling. A new zone, class, hunt, or gacha still waits until the owner names it, or an A source and a hole in this game agree.
 - **Content** and **Fix** are what should be ready by Sunday.
 - A new idea mid-week goes under **Inte den här veckan**. Only a critical bug may take a planned slot. The row it displaces becomes `flyttad`.
 - This ISO week or the next: status **Aktiv**. Any later Monday: **Tidigt utkast**, and only the rows the sources support.
@@ -105,6 +105,9 @@ Onsdag, Söndag, and Utfall start unchecked. No Play or Discord block yet.
 
 1. Måste · Content — … — … — ej klar
 2. Måste · Nytt — … — … — ej klar
+3. Måste · … — … — … — ej klar
+…
+50. Måste · Content — … — … — ej klar
 
 ## Inte den här veckan
 
@@ -159,5 +162,5 @@ Google is reviewing this update. The Play Store may still show the previous vers
 
 ## Done when
 
-- A "gör" ask left the short week file on disk. A "vad är planen" ask quoted that file, or said it is missing.
+- A "gör" ask left the week file on disk, with 50 primary rows. A "vad är planen" ask quoted that file, or said it is missing.
 - No AAB was uploaded and no Discord post was sent.
