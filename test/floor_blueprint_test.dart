@@ -367,6 +367,13 @@ void main() {
               lessThanOrEqualTo(12),
               reason: '$id F$floor seed $seed hall $hall',
             );
+            if (floor == 1 && i == 1) {
+              expect(
+                _verticalHall(mains[0], mains[1]),
+                isTrue,
+                reason: '$id F1 seed $seed first hall should run north/south',
+              );
+            }
           }
           if (map.chambers.any((c) => c.beatKind == FloorBeatKind.hub)) {
             continue;
@@ -776,6 +783,13 @@ void main() {
       ..remove('rewardShare');
     expect(EnemyUnit.fromJson(oldUnit).rewardShare, 1.0);
   });
+}
+
+/// True when the rooms overlap on X and the gap is north/south.
+bool _verticalHall(Chamber a, Chamber b) {
+  final overlapX = a.x < b.x + b.w && b.x < a.x + a.w;
+  final separatedY = a.y + a.h <= b.y || b.y + b.h <= a.y;
+  return overlapX && separatedY;
 }
 
 /// Tiles of open hall between two room rectangles. An L counts both legs.

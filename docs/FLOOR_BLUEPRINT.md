@@ -111,11 +111,12 @@ Varje beat mappar till **rumstaggar** som `RoomLayouts` förstår:
 
 Main path **zigzags** north/south across a lane while progressing east. Treasure alcoves
 **branch** off the last main chamber — exit stays on the spine. Canvas is
-about 104×66. Halls are 4 tiles wide, chokes 3. Spine rooms sit 6 tiles
-apart and still overlap on the other axis, so the open hall is one leg
-inside one phone view. The gate is that full width, and only where the
-span was carved outside both rooms. A phone camera (~20 cols) sees the
-fight and the next pack, not the whole floor.
+about 104×66. Halls are 4 tiles wide, chokes 3. Spine rooms step 4 tiles
+north or south and still overlap on X, so the open hall is one leg on
+the tall axis. An east step hides the next pack beside a fight room.
+The gate is that full width, and only where the span was carved outside
+both rooms. A phone camera (~20 cols, taller than that) sees the fight
+and the next pack, not the whole floor.
 
 **Zon-kit** (data, inte if-träd överallt):
 

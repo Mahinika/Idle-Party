@@ -9,7 +9,7 @@ Do not grow this into a 500-point audit. New lessons: one bullet + date.
 ## 2026-10-14 — a phone row waits for the phone
 
 - A tile count is not the look when the question is whether the next pack fits the screen. This week the hall row was marked from a measurement, then the A56 still showed it off the edge. Grip, helm, icon, and which monster picture a neighbor uses stay on facit and the path test: the fight draws them too small to judge.
-- Pulling rooms so the gate midpoint lands inside a room left a one-tile seal. The hall that fits is a 6-tile gap that still overlaps on the other axis, and the gate is stamped only on a full span carved outside both rooms. Do not spread the spine across the canvas again.
+- Pulling rooms so the gate midpoint lands inside a room left a one-tile seal. A 6-tile gap east still hid the next pack: a fight room is almost as wide as the 20-column view. The hall that fits runs 4 tiles north or south, still overlapping on X, and the gate is stamped only on a full span carved outside both rooms.
 
 ## 2026-10-14 — the week file sits in the pick
 

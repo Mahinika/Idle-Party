@@ -790,7 +790,7 @@ abstract final class RoomLayouts {
       return true;
     }
 
-    // Beat-driven carve: main path zigzags east; side alcoves branch off hub/last main.
+    // Beat-driven carve: main path steps along the tall axis; side alcoves branch off.
     if (storyBeats.length >= 2) {
       final mainBeats = [
         for (final b in storyBeats)
@@ -802,10 +802,10 @@ abstract final class RoomLayouts {
       ];
       final spine = mainBeats.isEmpty ? storyBeats : mainBeats;
 
-      // One phone view is about 20 tiles. The open hall between rooms stays
-      // inside that, so the next pack is the next glance. A full gate still
-      // needs those tiles outside both rooms.
-      const hallGap = 6;
+      // A phone is about 20 tiles wide and taller than that. An east hall
+      // hides the next pack beside a fight room. The open hall runs
+      // north/south, still one leg, and the gate sits in that gap.
+      const hallGap = 4;
       var dir = 1;
       for (var i = 0; i < spine.length; i++) {
         final beat = spine[i];
@@ -814,30 +814,32 @@ abstract final class RoomLayouts {
         final h = size.$2;
         var placed = false;
         if (rooms.isEmpty) {
-          final y = ((rows - h) ~/ 2).clamp(2, rows - h - 2);
-          placed = tryPlaceRoom(_Rect(2, y, w, h), beat.kind);
+          final x = ((cols - w) ~/ 2).clamp(2, cols - w - 2);
+          placed = tryPlaceRoom(_Rect(x, 2, w, h), beat.kind);
         } else {
           final prev = rooms.last;
-          final forwardX = dir > 0
-              ? prev.x + prev.w + hallGap
-              : prev.x - hallGap - w;
-          // A small step off the line, still overlapping the previous room
-          // on the other axis, so the open hall stays one leg.
-          final nudge = i.isOdd ? 6 : -4;
+          final forwardY = dir > 0
+              ? prev.y + prev.h + hallGap
+              : prev.y - hallGap - h;
+          // A small step sideways, still overlapping on X, so the hall is
+          // one vertical leg and the next pack stays in the portrait view.
+          final nudge = i.isOdd ? 3 : -2;
+          final eastX = prev.x + prev.w + hallGap;
+          final westX = prev.x - hallGap - w;
           final candidates = <_Rect>[
-            _Rect(forwardX, prev.y + nudge, w, h),
-            _Rect(forwardX, prev.y, w, h),
-            _Rect(forwardX, prev.y - 2, w, h),
-            _Rect(forwardX, prev.y + 2, w, h),
-            _Rect(prev.x, prev.y + prev.h + hallGap, w, h),
-            _Rect(prev.x, prev.y - hallGap - h, w, h),
-            _Rect(prev.x + 2, prev.y + prev.h + hallGap, w, h),
-            _Rect(prev.x - 2, prev.y + prev.h + hallGap, w, h),
+            _Rect(prev.x + nudge, forwardY, w, h),
+            _Rect(prev.x, forwardY, w, h),
+            _Rect(prev.x - 2, forwardY, w, h),
+            _Rect(prev.x + 2, forwardY, w, h),
+            _Rect(eastX, prev.y, w, h),
+            _Rect(westX, prev.y, w, h),
+            _Rect(eastX, prev.y + 2, w, h),
+            _Rect(westX, prev.y - 2, w, h),
           ];
           for (final cand in candidates) {
             if (tryPlaceRoom(cand, beat.kind)) {
               placed = true;
-              if (cand.x != forwardX) dir = -dir;
+              if (cand.y != forwardY) dir = -dir;
               break;
             }
           }
