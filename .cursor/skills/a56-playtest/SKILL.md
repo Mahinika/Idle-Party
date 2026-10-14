@@ -75,6 +75,13 @@ py -3 tool/adb_see.py log
 `tap` / `swipe` / `text` / `key` act, wait, then print the new tree. Match
 buttons by their label. Do not hard-code a tap coordinate when a label exists.
 
+The map and the fight never sit still, so `uiautomator` often says it could
+not get idle state and the tree is the previous screen. If the dump and a
+screenshot disagree, do not tap from the tree. Shot first, measure the
+button on that PNG, then tap that coordinate. A stale tap this week opened
+MORE and claimed quests on the save. Do not tap CLAIM, ASCEND, or ERASE
+unless that screenshot shows the button and that tap is the job.
+
 Take a PNG only when pixels matter (doll, gear art, color, overlap):
 
 ```bash
@@ -126,4 +133,4 @@ edits still has the old isolate — that is not “the new build”.
 ## Done when
 
 - One `flutter run` on the A56 is attached and runs this batch (hot restart, or a new run after asset changes).
-- No `web-server` tab is left running.
+- No `web-server` tab is left running.

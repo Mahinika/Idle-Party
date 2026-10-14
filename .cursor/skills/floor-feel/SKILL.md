@@ -61,8 +61,14 @@ bump from AL/KEY pressure. Room size does not.
   bump; the oval is fixed.
 - `fallbackRoomCount` only runs when the blueprint carve fails.
 - The camera does not clamp to the map on purpose.
+- Stepping rooms closer so the next pack fits one screen put the gate
+  midpoint inside a room. The carve then dropped tiles and left a 1-wide
+  seal, and "gates seal the full corridor" failed. Revert that placement.
+  A shorter hall still seals 3 tiles on a choke and 4 on a hall. The A56
+  before-and-after still applies, and the gate test stays green in the
+  same change.
 
 ## Done when
 
 - The Verify tests above are green and the size table here matches `docs/FLOOR_BLUEPRINT.md`.
-- A size change was shown on the A56 before and after, and the owner picked.
+- A size change was shown on the A56 before and after, and the owner picked.

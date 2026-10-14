@@ -6,6 +6,11 @@ does not re-litigate and fall back to AL20 polish.
 
 Do not grow this into a 500-point audit. New lessons: one bullet + date.
 
+## 2026-10-14 — a phone row waits for the phone
+
+- Facit and a tile count are not the look. This week the hall row was marked from a measurement, then the A56 still showed the next pack off the screen. A row about the picture stays unfinished until a screenshot in that chat shows it.
+- Pulling the rooms together to shorten that hall put the gate inside a room and left a one-tile seal. The gate test wins. The hall stays long until both the screen and the full-width gate pass.
+
 ## 2026-10-14 — the week file sits in the pick
 
 - The 10 Oct line that Play numbers do not pick the next slice is history. The pick now reads open play notes, then the active week file, then the Play paste, then the growth docs. The year plan is evidence, not a standing program.
