@@ -328,7 +328,7 @@ extension GameDirectorCombatLoop on GameDirector {
         if (wasBoss) {
           _applyFunnelTick(FunnelAnalytics.onFirstBoss(_state), persist: false);
         }
-        // Level / achievement toasts wait — one clear banner owns the beat.
+        // Floor gold / XP / drops stay in the bottom log. Toasts are unlocks.
         final leveledHeroes = <int>[];
         for (var i = 0; i < _state.heroes.length; i++) {
           final oldLevel = i < beforeClear.heroes.length
@@ -393,7 +393,8 @@ extension GameDirectorCombatLoop on GameDirector {
         if (questReady != null && (clearLine.length + questReady.length) < 72) {
           clearLine = '$clearLine · $questReady';
         }
-        // KEY TIMED / depleted owns the clear banner (bigger than F CLEAR).
+        // Floor payoff is the bottom log. KEY still uses the one toast slot.
+        noteLoot(clearLine);
         final keyBanner = payoffNotices.cast<String?>().firstWhere(
           (n) =>
               n != null &&
@@ -405,17 +406,12 @@ extension GameDirectorCombatLoop on GameDirector {
           presentClear(keyBanner, life: timed ? 4.0 : 3.6);
           final rest = payoffNotices.where((n) => n != keyBanner).toList();
           if (rest.isNotEmpty) {
-            // After banner — toast only if something KEY-adjacent remains.
             showToast(rest.join(' · '), life: 2.6);
           } else if (questReady != null) {
             showToast(questReady, life: 2.4);
           }
-        } else {
-          presentClear(clearLine, life: 2.8);
-          // Rare extras only — never restate F CLEAR / gold / loot.
-          if (payoffNotices.isNotEmpty) {
-            showToast(payoffNotices.join(' · '), life: 2.6);
-          }
+        } else if (payoffNotices.isNotEmpty) {
+          showToast(payoffNotices.join(' · '), life: 2.6);
         }
         // Ability unlocks (not bare LEVEL UP) — one line if any.
         if (leveled) {

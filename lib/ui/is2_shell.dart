@@ -16,6 +16,7 @@ import '../assets/custom_assets.dart';
 import 'game_theme.dart';
 import 'menu_chrome.dart';
 import 'spatial_dungeon_view.dart';
+import 'shell/dungeon_loot_log.dart';
 import 'shell/dungeon_party_hud.dart';
 import 'shell/dungeon_target_hud.dart';
 import 'shell/dungeon_top_hud.dart';
@@ -76,9 +77,10 @@ class _Is2ShellState extends State<Is2Shell> {
         director.releaseExitPrompt();
         return;
       }
-      NotifyOptInOverlay.show(context, director).whenComplete(
-        director.releaseExitPrompt,
-      );
+      NotifyOptInOverlay.show(
+        context,
+        director,
+      ).whenComplete(director.releaseExitPrompt);
     });
   }
 
@@ -137,6 +139,19 @@ class _Is2ShellState extends State<Is2Shell> {
   Widget _buildBody(GameDirector d) {
     final hudSide = GameTheme.edgeGap;
     final partyBottom = GameTheme.combatHudBottom(context);
+    final textScale = MediaQuery.textScalerOf(
+      context,
+    ).scale(1).clamp(1.0, 1.35);
+    // Party strip (and the buff column beside it). Log sits just above both.
+    final partyRows = d.state.combatHeroes.length.clamp(1, 5);
+    final partyStrip =
+        partyRows * 32.0 * textScale +
+        (GameLogic.canUseConsumable(d.state)
+            ? DungeonFlaskButton.stripReserve
+            : 0);
+    const buffClear = 44.0 + 168.0;
+    final lootLogBottom =
+        partyBottom + (partyStrip > buffClear ? partyStrip : buffClear) + 8;
 
     return Stack(
       fit: StackFit.expand,
@@ -159,100 +174,109 @@ class _Is2ShellState extends State<Is2Shell> {
         MenuChrome.playSafeArea(
           child: Column(
             children: [
-              if (!d.dungeonTilesReady) const SizedBox.shrink()
+              if (!d.dungeonTilesReady)
+                const SizedBox.shrink()
               else
-              DungeonTopHud(
-                state: state,
-                director: d,
-                onOpenSettings: () => router.open(
-                  MenuRoute.more,
-                  more: MoreSection.settings,
+                DungeonTopHud(
+                  state: state,
+                  director: d,
+                  onOpenSettings: () =>
+                      router.open(MenuRoute.more, more: MoreSection.settings),
+                  onOpenMore: () => router.open(MenuRoute.more),
+                  onOpenKey: MenuTabs.showKey(state)
+                      ? () => router.open(MenuRoute.key)
+                      : null,
+                  onOpenContracts: () => router.apply(NavIntent.quests),
+                  onOpenForge: () => router.open(MenuRoute.gold),
+                  onOpenParty: () => router.toggleGear(GearPanel.gear),
                 ),
-                onOpenMore: () => router.open(MenuRoute.more),
-                onOpenKey: MenuTabs.showKey(state)
-                    ? () => router.open(MenuRoute.key)
-                    : null,
-                onOpenContracts: () => router.apply(NavIntent.quests),
-                onOpenForge: () => router.open(MenuRoute.gold),
-                onOpenParty: () => router.toggleGear(GearPanel.gear),
-              ),
               Expanded(
                 child: d.dungeonTilesReady
                     ? Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (!d.awaitingWipeChoice) ...[
-                      if (_dpsMeterOpen)
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            child: ColoredBox(
-                              color: GameTheme.hudDimSoft,
+                        fit: StackFit.expand,
+                        children: [
+                          if (!d.awaitingWipeChoice) ...[
+                            if (_dpsMeterOpen)
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: ColoredBox(
+                                    color: GameTheme.hudDimSoft,
+                                  ),
+                                ),
+                              ),
+                            Positioned(
+                              left: hudSide,
+                              top: 2,
+                              child: GameLogic.plainPlayerChrome(state)
+                                  ? const SizedBox.shrink()
+                                  : DpsMeter(
+                                      director: d,
+                                      onOpenChanged: (open) {
+                                        if (_dpsMeterOpen == open) return;
+                                        setState(() => _dpsMeterOpen = open);
+                                      },
+                                    ),
                             ),
-                          ),
-                        ),
-                      Positioned(
-                        left: hudSide,
-                        top: 2,
-                        child: GameLogic.plainPlayerChrome(state)
-                            ? const SizedBox.shrink()
-                            : DpsMeter(
-                                director: d,
-                                onOpenChanged: (open) {
-                                  if (_dpsMeterOpen == open) return;
-                                  setState(() => _dpsMeterOpen = open);
+                            Positioned(
+                              right: hudSide,
+                              top: 22,
+                              child: TargetCornerHud(director: d),
+                            ),
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              top:
+                                  bossIntroBannerTop(
+                                    MediaQuery.textScalerOf(context).scale(1),
+                                  ) +
+                                  (state.keystoneRunActive ? 22 : 0),
+                              child: ListenableBuilder(
+                                listenable: d.combatFrame,
+                                builder: (context, _) {
+                                  final world = d.spatial;
+                                  if (_dpsMeterOpen ||
+                                      world == null ||
+                                      world.bossBannerTimer <= 0) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return BossIntroBanner(
+                                    name: world.bossBannerName,
+                                  );
                                 },
                               ),
-                      ),
-                      Positioned(
-                        right: hudSide,
-                        top: 22,
-                        child: TargetCornerHud(director: d),
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        top: bossIntroBannerTop(
-                              MediaQuery.textScalerOf(context).scale(1),
-                            ) +
-                            (state.keystoneRunActive ? 22 : 0),
-                        child: ListenableBuilder(
-                          listenable: d.combatFrame,
-                          builder: (context, _) {
-                            final world = d.spatial;
-                            if (_dpsMeterOpen ||
-                                world == null ||
-                                world.bossBannerTimer <= 0) {
-                              return const SizedBox.shrink();
-                            }
-                            return BossIntroBanner(name: world.bossBannerName);
-                          },
-                        ),
-                      ),
-                      Positioned(
-                        left: hudSide,
-                        bottom: partyBottom,
-                        child: PartyCornerHud(
-                          director: d,
-                          selectedHeroIndex: router.session.abilityHeroIndex,
-                          onSelectHero: (i) {
-                            router.session.abilityHeroIndex = i;
-                            d.cameraHeroIndex = i;
-                          },
-                          onOpenEquip: () =>
-                              router.toggleGear(GearPanel.gear),
-                        ),
-                      ),
-                      Positioned(
-                        right: hudSide,
-                        bottom: partyBottom + 44,
-                        child: ScrollBuffStack(
-                          meta: d.state.metaDepth,
-                          maxHeight: 168,
-                        ),
-                      ),
-                    ],
-                  ],
-                )
+                            ),
+                            Positioned(
+                              left: hudSide,
+                              bottom: partyBottom,
+                              child: PartyCornerHud(
+                                director: d,
+                                selectedHeroIndex:
+                                    router.session.abilityHeroIndex,
+                                onSelectHero: (i) {
+                                  router.session.abilityHeroIndex = i;
+                                  d.cameraHeroIndex = i;
+                                },
+                                onOpenEquip: () =>
+                                    router.toggleGear(GearPanel.gear),
+                              ),
+                            ),
+                            Positioned(
+                              left: hudSide,
+                              right: hudSide,
+                              bottom: lootLogBottom,
+                              child: DungeonLootLog(lines: d.lootLog),
+                            ),
+                            Positioned(
+                              right: hudSide,
+                              bottom: partyBottom + 44,
+                              child: ScrollBuffStack(
+                                meta: d.state.metaDepth,
+                                maxHeight: 168,
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
                     : const SizedBox.shrink(),
               ),
             ],
@@ -260,9 +284,7 @@ class _Is2ShellState extends State<Is2Shell> {
         ),
         if (router.isOpen)
           const Positioned.fill(
-            child: IgnorePointer(
-              child: ColoredBox(color: GameTheme.hudDim),
-            ),
+            child: IgnorePointer(child: ColoredBox(color: GameTheme.hudDim)),
           ),
       ],
     );

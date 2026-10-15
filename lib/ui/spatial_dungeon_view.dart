@@ -356,9 +356,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
 
     // Deferred shared catalog (loot icons, pets, paper-doll overlays).
     if (_lootByPath.isEmpty || _bodyByPath.isEmpty) {
-      unawaited(
-        _loadDeferredSharedArt(gen, load: load, loadSoft: loadSoft),
-      );
+      unawaited(_loadDeferredSharedArt(gen, load: load, loadSoft: loadSoft));
     }
 
     final catalog = KenneyAssets.enemySpriteCatalog;
@@ -862,8 +860,8 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                       );
                     },
                   ),
-                  // Floor celebrate notice paints via PlayShell FeedbackToast
-                  // (one ephemeral slot — tip / celebrate / danger).
+                  // Floor payoff is the bottom loot log. Tips and KEY still
+                  // use PlayShell FeedbackToast.
                   DungeonOfflineChrome(director: widget.director),
                   if (widget.director.awaitingWipeChoice)
                     DungeonWipePanel(

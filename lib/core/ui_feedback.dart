@@ -27,6 +27,10 @@ class UiFeedback {
   OfflineProgressResult? _offlineSummary;
   double _offlineSummaryLife = 0;
 
+  /// Last floor payoffs, oldest first. Stays until a newer line pushes it out.
+  static const int lootLogCap = 5;
+  final List<String> _lootLog = <String>[];
+
   /// Active notice text (any kind).
   String? get toast => _life > 0 ? _message : null;
 
@@ -40,10 +44,26 @@ class UiFeedback {
   OfflineProgressResult? get offlineSummary =>
       _offlineSummaryLife > 0 ? _offlineSummary : null;
 
+  /// Floor gold / XP / essence lines. Newest last. Not the green toast.
+  List<String> get lootLog => List<String>.unmodifiable(_lootLog);
+
+  /// Adds one floor payoff. Drops the oldest past [lootLogCap].
+  /// Same line twice in a row is one entry (clear can fire twice).
+  bool pushLootLine(String line) {
+    final text = line.trim();
+    if (text.isEmpty) return false;
+    if (_lootLog.isNotEmpty && _lootLog.last == text) return false;
+    _lootLog.add(text);
+    if (_lootLog.length > lootLogCap) {
+      _lootLog.removeRange(0, _lootLog.length - lootLogCap);
+    }
+    return true;
+  }
+
+  void clearLootLog() => _lootLog.clear();
+
   bool get hasActiveTimers =>
-      _life > 0 ||
-      _pendingTip != null ||
-      _offlineSummaryLife > 0;
+      _life > 0 || _pendingTip != null || _offlineSummaryLife > 0;
 
   bool get toastWasShowing => _message != null || _life > 0;
 
@@ -117,7 +137,11 @@ class UiFeedback {
     }
   }
 
-  bool _setNotice(String message, {required double life, required NoticeKind kind}) {
+  bool _setNotice(
+    String message, {
+    required double life,
+    required NoticeKind kind,
+  }) {
     final now = DateTime.now();
     // Celebrate (CLEAR) needs a longer window — floor clear can fire twice
     // in the same beat from stairs + room-complete.

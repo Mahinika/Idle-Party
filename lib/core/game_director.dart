@@ -681,6 +681,17 @@ class GameDirector extends ChangeNotifier {
     showToast(text, life: life, kind: NoticeKind.celebrate);
   }
 
+  /// Last five floor payoffs, oldest first. Painted as the dungeon loot log.
+  List<String> get lootLog => uiFeedback.lootLog;
+
+  /// Quiet floor payoff. Does not take the toast slot.
+  void noteLoot(String text) {
+    if (!uiFeedback.pushLootLine(text)) return;
+    notifyListeners();
+  }
+
+  void clearLootLog() => uiFeedback.clearLootLog();
+
   String? _questReadyLine() {
     final n = LogicNotices.takeQuestReady();
     if (n <= 0) return null;
@@ -762,10 +773,7 @@ class GameDirector extends ChangeNotifier {
   }
 
   void _tickHubIdle() {
-    if (_isLoading ||
-        _state.inDungeon ||
-        _appPaused ||
-        _awayCreditInFlight) {
+    if (_isLoading || _state.inDungeon || _appPaused || _awayCreditInFlight) {
       _syncHubIdleTimer();
       return;
     }
@@ -1229,7 +1237,8 @@ class GameDirector extends ChangeNotifier {
       unawaited(_persistFlush());
       return;
     }
-    final farmingBack = _state.wipeStreakCount >= GameLogic.pushWipesBeforeFarm &&
+    final farmingBack =
+        _state.wipeStreakCount >= GameLogic.pushWipesBeforeFarm &&
         _state.dungeonMode == DungeonMode.push &&
         _state.currentRoom.floorNumber > _state.highestFloorCleared;
     _state = GameLogic.continueAfterWipe(
@@ -1486,6 +1495,7 @@ class GameDirector extends ChangeNotifier {
 
   void enterDungeon({String dungeonId = 'sandy'}) {
     if (_isLoading) return;
+    clearLootLog();
     _awaitingWipeChoice = false;
     _flushHubIdle();
     var entered = GameLogic.dismissTip(
@@ -1536,6 +1546,7 @@ class GameDirector extends ChangeNotifier {
   }
 
   void leaveDungeon() {
+    clearLootLog();
     hudFocusEnemyId = null;
     cameraHeroIndex = null;
     _dungeonTilesReady = false;
