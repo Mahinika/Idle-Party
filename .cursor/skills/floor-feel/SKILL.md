@@ -61,7 +61,10 @@ bump from AL/KEY pressure. Room size does not.
 - The test named "boss arena grows with the floor" only sees the pressure
   bump; the oval is fixed.
 - `fallbackRoomCount` only runs when the blueprint carve fails.
-- The camera does not clamp to the map on purpose.
+- The camera does not clamp to the map on purpose. When the floor is
+  clear it pulls toward the stairs (`dungeonStairsFocus`) so the exit
+  sits under the HUD. A party-only center left King's Fort floor 1
+  stairs north of the picture while the header said GO stairs.
 - The open hall between spine rooms is 4 tiles north/south (`hallGap`
   in `tile_map.dart`). Rooms still overlap on X, so that hall is one
   leg. An east hall hides the next pack: a fight room is almost as wide

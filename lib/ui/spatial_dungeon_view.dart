@@ -1213,7 +1213,23 @@ class _TileCamera {
         .where((e) => e.hp > 0 && !e.dormant)
         .map((e) => (x: e.x, y: e.y, alive: true));
     final inFight = awakeEnemies.isNotEmpty;
-    final focus = inFight
+    final party = dungeonPartyFocus(
+      heroes: heroRows,
+      mapCenterX: world.cols / 2,
+      mapCenterY: world.rows / 2,
+      pinIndex: pinHeroIndex,
+    );
+    final exit = world.map.exitPoint;
+    final focus = world.awaitingExit
+        ? dungeonStairsFocus(
+            partyX: party.x,
+            partyY: party.y,
+            exitX: exit.$1 + 0.5,
+            exitY: exit.$2 + 0.5,
+            visibleCols: cols,
+            visibleRows: visibleRows,
+          )
+        : inFight
         ? dungeonCombatFocus(
             heroes: heroRows,
             awakeEnemies: awakeEnemies,
@@ -1224,12 +1240,7 @@ class _TileCamera {
             maxShiftX: cols * 0.18,
             maxShiftY: visibleRows * 0.14,
           )
-        : dungeonPartyFocus(
-            heroes: heroRows,
-            mapCenterX: world.cols / 2,
-            mapCenterY: world.rows / 2,
-            pinIndex: pinHeroIndex,
-          );
+        : party;
     final origin = dungeonCamOrigin(
       focusX: focus.x,
       focusY: focus.y,

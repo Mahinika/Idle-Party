@@ -135,3 +135,64 @@ import 'dart:math' as math;
   final shiftY = ((cy - party.y) * bias).clamp(-maxShiftY.abs(), maxShiftY.abs());
   return (x: party.x + shiftX, y: party.y + shiftY);
 }
+
+/// Pull the cleared floor toward the stairs so the exit sits under the HUD.
+///
+/// The party stays in the same clear area. If the gap is longer than the
+/// phone, the stairs stay in frame and the party sits on the near edge.
+({double x, double y}) dungeonStairsFocus({
+  required double partyX,
+  required double partyY,
+  required double exitX,
+  required double exitY,
+  required double visibleCols,
+  required double visibleRows,
+  double topInset = 8,
+  double bottomInset = 6,
+  double sideInset = 2,
+}) {
+  double axis({
+    required double party,
+    required double exit,
+    required double half,
+    required double insetTowardExit,
+    required double insetTowardParty,
+  }) {
+    final towardExit = (half - insetTowardExit).clamp(1.0, half);
+    final towardParty = (half - insetTowardParty).clamp(1.0, half);
+    if (exit <= party) {
+      final maxFocus = exit + towardExit;
+      final minFocus = party - towardParty;
+      if (minFocus <= maxFocus) {
+        return ((party + exit) / 2).clamp(minFocus, maxFocus);
+      }
+      return maxFocus;
+    }
+    final minFocus = exit - towardExit;
+    final maxFocus = party + towardParty;
+    if (minFocus <= maxFocus) {
+      return ((party + exit) / 2).clamp(minFocus, maxFocus);
+    }
+    return minFocus;
+  }
+
+  final halfX = math.max(1.0, visibleCols / 2);
+  final halfY = math.max(1.0, visibleRows / 2);
+  final stairsNorth = exitY <= partyY;
+  return (
+    x: axis(
+      party: partyX,
+      exit: exitX,
+      half: halfX,
+      insetTowardExit: sideInset,
+      insetTowardParty: sideInset,
+    ),
+    y: axis(
+      party: partyY,
+      exit: exitY,
+      half: halfY,
+      insetTowardExit: stairsNorth ? topInset : bottomInset,
+      insetTowardParty: stairsNorth ? bottomInset : topInset,
+    ),
+  );
+}

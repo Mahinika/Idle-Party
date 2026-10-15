@@ -72,6 +72,33 @@ void main() {
     expect(focus.y, closeTo(28.5, 0.01));
   });
 
+  test('cleared floor pulls north stairs under the HUD and keeps the party', () {
+    final focus = dungeonStairsFocus(
+      partyX: 20,
+      partyY: 40,
+      exitX: 22,
+      exitY: 26,
+      visibleCols: 20,
+      visibleRows: 36,
+    );
+    final halfY = 18.0;
+    expect(focus.y - 26, lessThanOrEqualTo(halfY - 8));
+    expect(40 - focus.y, lessThanOrEqualTo(halfY - 6));
+    expect(focus.y, lessThan(40));
+  });
+
+  test('stairs stay in frame when the exit is farther than the phone', () {
+    final focus = dungeonStairsFocus(
+      partyX: 10,
+      partyY: 50,
+      exitX: 10,
+      exitY: 4,
+      visibleCols: 20,
+      visibleRows: 36,
+    );
+    expect(focus.y - 4, lessThanOrEqualTo(18 - 8));
+  });
+
   test('nearby pack nudges focus but stays within the shift cap', () {
     final focus = dungeonCombatFocus(
       heroes: [
