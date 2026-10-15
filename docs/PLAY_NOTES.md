@@ -9,6 +9,8 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Done
 
+<!-- - 2026-10-15 · The fight hitched when the phone fell behind · the clock stays on the screen refresh, and torch light is one soft disc · fixed in d7391276 -->
+
 <!-- - 2026-10-11 · A reopened wipe said 0 dealt and 0 taken · the card keeps the damage from that fight · fixed in b20f78b5 -->
 
 <!-- - 2026-10-11 · BLESSING was titled KEEP and said not the bottom-tab SHOP · the sheet is BLESSING and the buys stay after Ascend · fixed in b20f78b5 -->
