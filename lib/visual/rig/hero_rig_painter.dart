@@ -35,6 +35,9 @@ abstract final class HeroRigPainter {
   static Future<void> _stripGate = Future<void>.value();
   static Future<void> _warmGate = Future<void>.value();
   static final Map<String, Future<void>> _warming = {};
+  static final ui.Paint _blit = ui.Paint()
+    ..filterQuality = ui.FilterQuality.none
+    ..isAntiAlias = false;
   static int _spreadToken = -1;
   static int _spreadBakes = 0;
 
@@ -329,8 +332,7 @@ abstract final class HeroRigPainter {
       return false;
     }
     final bodyCut =
-        RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1)) !=
-            null;
+        RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1)) != null;
     if (!bodyCut ||
         !ready(rig: rig, bodyKey: bodyKey, images: images, pose: pose)) {
       warm(
@@ -355,11 +357,11 @@ abstract final class HeroRigPainter {
       frameToken: frameToken,
     );
     if (frame == null) return false;
-    final paint = ui.Paint()
-      ..filterQuality = ui.FilterQuality.none
-      ..isAntiAlias = false
-      ..color = ui.Color.fromRGBO(255, 255, 255, alpha);
-    if (pose.shadowform) paint.colorFilter = Shadowform.wash;
+    _blit
+      ..color = alpha >= 1
+          ? const ui.Color(0xFFFFFFFF)
+          : ui.Color.fromRGBO(255, 255, 255, alpha)
+      ..colorFilter = pose.shadowform ? Shadowform.wash : null;
     canvas.save();
     if (pose.flipX) {
       canvas.translate(center.dx, center.dy);
@@ -372,7 +374,7 @@ abstract final class HeroRigPainter {
       frame,
       ui.Rect.fromLTWH(0, 0, source.toDouble(), source.toDouble()),
       dst,
-      paint,
+      _blit,
     );
     canvas.restore();
     return true;
@@ -450,15 +452,17 @@ abstract final class HeroRigPainter {
   /// How many body and gear cuts this pose can draw. A new cut drops the
   /// cached pose so armor appears on the skeleton already on screen.
   static int _cutStamp(RigData rig, String bodyKey, CharacterVisualPose pose) {
-    var stamp = RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1)) ==
-            null
+    var stamp =
+        RigPartCache.peek(RigPartCache.key(bodyKey, rig.family, 0, 1)) == null
         ? 0
         : 1;
     for (final layer in pose.orderedLayers()) {
       if (_weapon(layer) || layer.id == CharacterLayerId.cape) continue;
       final path = layer.ownedAsset;
       if (path == null) continue;
-      if (RigPartCache.peek(RigPartCache.key(path, rig.family, layer.cropTop, 1)) !=
+      if (RigPartCache.peek(
+            RigPartCache.key(path, rig.family, layer.cropTop, 1),
+          ) !=
           null) {
         stamp++;
       }
@@ -527,7 +531,12 @@ abstract final class HeroRigPainter {
           final index = (y * size + x) * 4;
           if (prior[index + 3] > 40) continue;
           final cols = <int>[];
-          for (final next in [index - 4, index + 4, index - size * 4, index + size * 4]) {
+          for (final next in [
+            index - 4,
+            index + 4,
+            index - size * 4,
+            index + size * 4,
+          ]) {
             if (prior[next + 3] <= 40) continue;
             cols.add(next);
           }

@@ -2,7 +2,7 @@ part of 'game_director.dart';
 
 /// Dungeon clock (~60 Hz). Tick order stays on this path.
 extension GameDirectorCombatLoop on GameDirector {
-  void tickDungeonClock() {
+  void tickDungeonClock({int extraSteps = 0}) {
     if (_isLoading || !_state.inDungeon || _spatial == null) {
       return;
     }
@@ -26,7 +26,8 @@ extension GameDirectorCombatLoop on GameDirector {
     }
 
     final pace = _state.combatPace.clamp(1, 2);
-    final steps = (_debugTimeScale * pace).round().clamp(1, 20);
+    final catchUp = extraSteps.clamp(0, 1);
+    final steps = ((_debugTimeScale * pace).round() + catchUp).clamp(1, 20);
     final tickWatch = Stopwatch()..start();
     var playedLoot = false;
     for (var step = 0; step < steps; step++) {
@@ -502,7 +503,8 @@ extension GameDirectorCombatLoop on GameDirector {
     }
 
     tickWatch.stop();
-    _noteFightBudget(tickWatch.elapsedMilliseconds);
+    _lastCombatTickMs = tickWatch.elapsedMilliseconds;
+    _noteFightBudget(_lastCombatTickMs);
 
     _uiThrottle++;
     if (!_runIncomeFrozen && _state.inDungeon && _uiThrottle % 60 == 0) {

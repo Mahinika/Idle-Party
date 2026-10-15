@@ -75,6 +75,9 @@ class _TileRoomPainter extends CustomPainter {
   Paint? _vignettePaint;
   // Static so reuse survives CustomPainter recreation each frame.
   static final Paint _fillPaint = Paint();
+  static final Paint _spritePaint = Paint()
+    ..filterQuality = FilterQuality.none
+    ..isAntiAlias = false;
   static final Paint _strokePaint = Paint()..style = PaintingStyle.stroke;
   static final Paint _fxFill = Paint();
   static final Paint _fxStroke = Paint()..style = PaintingStyle.stroke;
@@ -101,6 +104,7 @@ class _TileRoomPainter extends CustomPainter {
       ..color = color;
     return _fxStroke;
   }
+
   static final TextPainter _goLabelPainter = TextPainter(
     textDirection: TextDirection.ltr,
   );
@@ -275,11 +279,7 @@ class _TileRoomPainter extends CustomPainter {
         final c = Offset(originX + g.x * tile, originY + g.y * tile);
         final r = tile * g.radius;
         final color = Color(g.argb);
-        canvas.drawCircle(
-          c,
-          r,
-          Paint()..color = color.withValues(alpha: 0.18 * frac),
-        );
+        canvas.drawCircle(c, r, _fill(color.withValues(alpha: 0.18 * frac)));
         _paintGroundKind(canvas, c, r, color, frac, tile, g.kind, g.life);
       }
     }
@@ -331,27 +331,24 @@ class _TileRoomPainter extends CustomPainter {
       final c = center(prop.x + 0.5, prop.y + (prop.hero ? 0.35 : 0.5));
       if (!onWall) {
         // Soft ground shadow so clutter reads against flat floor tiles.
+        _fillPaint.color = DungeonEnvironment.propShadow(dungeonId);
         canvas.drawOval(
           Rect.fromCenter(
             center: c.translate(0, tile * (prop.hero ? 0.42 : 0.18)),
             width: tile * (prop.hero ? 0.9 : 0.55),
             height: tile * (prop.hero ? 0.3 : 0.22),
           ),
-          Paint()..color = DungeonEnvironment.propShadow(dungeonId),
+          _fillPaint,
         );
       }
       if (DungeonEnvironment.isTorchProp(prop.kind) && !reducedVfx) {
         final pulse = 0.85 + 0.15 * math.sin(visualFrame * 0.12);
-        canvas.drawCircle(
+        _SoftGlow.blit(
+          canvas,
           c.translate(0, -tile * 0.18),
           tile * 0.72 * pulse,
-          Paint()
-            ..shader = ui.Gradient.radial(
-              c.translate(0, -tile * 0.18),
-              tile * 0.72 * pulse,
-              const [Color(0x55F0B038), Color(0x18E08828), Color(0x00E08828)],
-              const [0.0, 0.45, 1.0],
-            ),
+          const Color(0x55F0B038),
+          blend: BlendMode.srcOver,
         );
       }
       // Party trace sits between clutter and the room landmark.
@@ -359,16 +356,12 @@ class _TileRoomPainter extends CustomPainter {
           !prop.hero &&
           !DungeonEnvironment.isTorchProp(prop.kind) &&
           !reducedVfx) {
-        canvas.drawCircle(
+        _SoftGlow.blit(
+          canvas,
           c.translate(0, -tile * 0.12),
           tile * 0.55,
-          Paint()
-            ..shader = ui.Gradient.radial(
-              c.translate(0, -tile * 0.12),
-              tile * 0.55,
-              const [Color(0x44F0B038), Color(0x00E08828)],
-              const [0.0, 1.0],
-            ),
+          const Color(0x44F0B038),
+          blend: BlendMode.srcOver,
         );
       }
       // One hero per room is big and lit; everything else stays calm.
@@ -819,10 +812,7 @@ class _TileRoomPainter extends CustomPainter {
             p,
             _fill(const Color(0xBB100C08).withValues(alpha: alpha)),
           );
-          canvas.drawPath(
-            p,
-            _fill(color.withValues(alpha: alpha * 0.88)),
-          );
+          canvas.drawPath(p, _fill(color.withValues(alpha: alpha * 0.88)));
         }
         canvas.drawCircle(
           c,
@@ -893,10 +883,7 @@ class _TileRoomPainter extends CustomPainter {
           head.inflate(r * 0.08),
           _fill(const Color(0xDD100C08).withValues(alpha: alpha)),
         );
-        canvas.drawOval(
-          head,
-          _fill(color.withValues(alpha: alpha * 0.92)),
-        );
+        canvas.drawOval(head, _fill(color.withValues(alpha: alpha * 0.92)));
         canvas.drawCircle(
           Offset(c.dx - r * 0.3, c.dy - r * 0.18),
           r * 0.2,
@@ -932,11 +919,7 @@ class _TileRoomPainter extends CustomPainter {
           ),
         );
       default:
-        canvas.drawCircle(
-          c,
-          r,
-          _fill(color.withValues(alpha: alpha * 0.7)),
-        );
+        canvas.drawCircle(c, r, _fill(color.withValues(alpha: alpha * 0.7)));
     }
   }
 
@@ -1029,13 +1012,14 @@ class _TileRoomPainter extends CustomPainter {
     double alpha = 1,
     Color? tint,
   }) {
-    final paint = Paint()
-      ..filterQuality = FilterQuality.none
-      ..color = Color.fromRGBO(255, 255, 255, alpha);
-    if (tint != null) {
-      paint.colorFilter = ColorFilter.mode(tint, BlendMode.modulate);
-    }
-    canvas.drawImageRect(image, src, dst, paint);
+    _spritePaint
+      ..color = alpha >= 1
+          ? const Color(0xFFFFFFFF)
+          : Color.fromRGBO(255, 255, 255, alpha)
+      ..colorFilter = tint == null
+          ? null
+          : ColorFilter.mode(tint, BlendMode.modulate);
+    canvas.drawImageRect(image, src, dst, _spritePaint);
   }
 
   void _drawImage(

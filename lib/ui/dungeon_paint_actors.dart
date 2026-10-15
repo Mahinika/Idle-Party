@@ -1,5 +1,7 @@
 part of 'spatial_dungeon_view.dart';
 
+final Paint _actorBarPaint = Paint()..isAntiAlias = false;
+
 extension _DungeonPaintActors on _TileRoomPainter {
   void paintDungeonActors(
     Canvas canvas,
@@ -35,11 +37,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
     void drawBar(Offset c, int hp, int maxHp, double width, double scale) {
       final frac = maxHp <= 0 ? 0.0 : (hp / maxHp).clamp(0.0, 1.0);
       final barH = DungeonBarLayout.barHeight(tile);
-      final top = DungeonBarLayout.top(
-        centerY: c.dy,
-        tile: tile,
-        scale: scale,
-      );
+      final top = DungeonBarLayout.top(centerY: c.dy, tile: tile, scale: scale);
       final left = c.dx - width / 2;
       final cb = SpatialCombat.colorblindMode;
       final Color fill;
@@ -50,19 +48,21 @@ extension _DungeonPaintActors on _TileRoomPainter {
       } else {
         fill = cb ? const Color(0xFF009E73) : const Color(0xFFE05050);
       }
-        canvas.drawRRect(
+      _actorBarPaint.color = const Color(0xAA000000);
+      canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(left, top, width, barH),
           const Radius.circular(1),
         ),
-        Paint()..color = const Color(0xAA000000),
+        _actorBarPaint,
       );
+      _actorBarPaint.color = fill;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(left, top, width * frac, barH),
           const Radius.circular(1),
         ),
-        Paint()..color = fill,
+        _actorBarPaint,
       );
     }
 
@@ -125,7 +125,9 @@ extension _DungeonPaintActors on _TileRoomPainter {
           c,
           tile * (0.7 + (1 - wind) * 0.25),
           Paint()
-            ..color = const Color(0xCCFF5030).withValues(alpha: 0.35 + wind * 0.4)
+            ..color = const Color(
+              0xCCFF5030,
+            ).withValues(alpha: 0.35 + wind * 0.4)
             ..style = PaintingStyle.stroke
             ..strokeWidth = math.max(2.2, tile * 0.08),
         );
@@ -317,23 +319,20 @@ extension _DungeonPaintActors on _TileRoomPainter {
           visualFrame,
           offset: (hero.partyIndex ?? idx) * 0.37,
         );
-        final anim = HeroAnimController.snapshot(
-          signals,
-          walkPhase: walkPhase,
-        );
+        final anim = HeroAnimController.snapshot(signals, walkPhase: walkPhase);
         // Unique form PNG (Druid forms) → owned paper-doll → class PNG.
         // Shadow is the priest doll with a purple cloth tint.
-        final useFormSprite =
-            CustomAssets.hasUniqueHeroSprite(partyHero.specId);
-        final formImg =
-            useFormSprite ? heroesBySpec[partyHero.specId] : null;
+        final useFormSprite = CustomAssets.hasUniqueHeroSprite(
+          partyHero.specId,
+        );
+        final formImg = useFormSprite ? heroesBySpec[partyHero.specId] : null;
         final bodyPath = BodyFamilyCatalog.assetFor(partyHero, anim.kind);
-        ui.Image? bodyImg =
-            useFormSprite ? null : bodyByPath[bodyPath];
+        ui.Image? bodyImg = useFormSprite ? null : bodyByPath[bodyPath];
         final usingOwnedBody = bodyImg != null;
         Color? tint;
         if (bodyImg == null && formImg == null) {
-          bodyImg = heroesBySpec[partyHero.specId] ??
+          bodyImg =
+              heroesBySpec[partyHero.specId] ??
               heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
           final argb = HeroIdentity.tintArgb(partyHero.specId);
           if (argb != null) tint = Color(argb);
@@ -346,9 +345,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
                 BodyFamilyCatalog.familyFor(partyHero),
               )
             : 1.0;
-        scale = (formImg != null
-                ? 1.42
-                : (usingOwnedBody ? 1.72 * read : 0.95)) *
+        scale =
+            (formImg != null ? 1.42 : (usingOwnedBody ? 1.72 * read : 0.95)) *
             (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
         if (partyHero.specId == HeroSpecId.demonology &&
             hero.combustionTimer > 0) {
@@ -401,7 +399,8 @@ extension _DungeonPaintActors on _TileRoomPainter {
               frameToken: visualFrame,
             );
             if (!drew) {
-              final standIn = heroesBySpec[partyHero.specId] ??
+              final standIn =
+                  heroesBySpec[partyHero.specId] ??
                   heroesByClass[HeroIdentity.spriteClassFor(partyHero.specId)];
               final argb = HeroIdentity.tintArgb(partyHero.specId);
               drawSprite(
@@ -410,11 +409,11 @@ extension _DungeonPaintActors on _TileRoomPainter {
                 standIn == null
                     ? scale
                     : 0.95 *
-                        (1 +
-                            flash *
-                                (hero.heroRole == HeroRole.warrior
-                                    ? 0.32
-                                    : 0.2)),
+                          (1 +
+                              flash *
+                                  (hero.heroRole == HeroRole.warrior
+                                      ? 0.32
+                                      : 0.2)),
                 alpha: paintAlpha,
                 tint: argb == null ? tint : Color(argb),
                 flipX: flipX,
@@ -433,10 +432,9 @@ extension _DungeonPaintActors on _TileRoomPainter {
         } else {
           final img = heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
           if (img != null) {
-            final scale = 0.95 *
-                (1 +
-                    flash *
-                        (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
+            final scale =
+                0.95 *
+                (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
             drawSprite(img, c, scale, alpha: paintAlpha, flipX: flipX);
           }
         }
@@ -682,7 +680,9 @@ extension _DungeonPaintActors on _TileRoomPainter {
             break;
           }
         }
-        final raw = castId == null ? null : ClassKits.defFor(castId)?.shortLabel;
+        final raw = castId == null
+            ? null
+            : ClassKits.defFor(castId)?.shortLabel;
         if (raw != null && raw.isNotEmpty) {
           castLabelsPainted++;
           final label = raw.length > 16 ? raw.substring(0, 16) : raw;
@@ -696,18 +696,15 @@ extension _DungeonPaintActors on _TileRoomPainter {
             ),
           );
           tp.layout(maxWidth: tile * 2.2);
-          tp.paint(
-            canvas,
-            Offset(c.dx - tp.width / 2, c.dy + tile * 0.42),
-          );
+          tp.paint(canvas, Offset(c.dx - tp.width / 2, c.dy + tile * 0.42));
         }
       }
       if (hero.isAlive &&
           showGuide &&
           hero.castingTimer > 0.02 &&
           hero.castingDuration > 0.05) {
-        final progress =
-            (1.0 - (hero.castingTimer / hero.castingDuration)).clamp(0.0, 1.0);
+        final progress = (1.0 - (hero.castingTimer / hero.castingDuration))
+            .clamp(0.0, 1.0);
         final ringR = tile * 0.52;
         final rect = Rect.fromCircle(center: c, radius: ringR);
         canvas.drawArc(
@@ -762,7 +759,12 @@ extension _DungeonPaintActors on _TileRoomPainter {
           ..strokeWidth = math.max(1.4, tile * 0.055),
       );
       final scale =
-          (isClass ? 0.78 : isTemp ? 0.72 : 0.68) * (1 + flash * 0.22);
+          (isClass
+              ? 0.78
+              : isTemp
+              ? 0.72
+              : 0.68) *
+          (1 + flash * 0.22);
       drawSprite(petImg ?? coin, c, scale);
       if (flash > 0.02) {
         canvas.drawCircle(

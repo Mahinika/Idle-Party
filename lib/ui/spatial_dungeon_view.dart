@@ -113,6 +113,12 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
   /// 1 = the new floor is still dark. Read by the map overlay.
   double _floorCover = 0;
 
+  /// Latest map camera. Taps read this so the gesture tree is not rebuilt
+  /// on every fight frame.
+  double _liveCamX = 0;
+  double _liveCamY = 0;
+  double _liveTile = 1;
+
   /// Held until the fade controller actually starts, so a tick cannot clear it.
   bool _armFade = false;
 
@@ -570,6 +576,32 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
     }
   }
 
+  void _pinPartyCenter() {
+    if (widget.director.awaitingWipeChoice) return;
+    if (widget.director.state.isPartyDefeated) {
+      widget.director.reviveParty();
+      return;
+    }
+    final world = widget.director.spatial;
+    final fighting = world?.enemies.any((e) => e.isAlive) ?? false;
+    if (!fighting || world == null) return;
+    final alive = world.heroes.where((h) => h.hp > 0).toList();
+    if (alive.isEmpty) return;
+    var cx = 0.0;
+    var cy = 0.0;
+    for (final h in alive) {
+      cx += h.x;
+      cy += h.y;
+    }
+    widget.director.setHudFocusAtWorld(cx / alive.length, cy / alive.length);
+  }
+
+  Offset? _worldAt(Offset local) {
+    final tile = _liveTile;
+    if (!tile.isFinite || tile <= 0) return null;
+    return Offset(_liveCamX + local.dx / tile, _liveCamY + local.dy / tile);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = widget.director.state;
@@ -585,195 +617,133 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
               return Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Live map + boss banner only — wipe/offline chrome stay on
-                  // the ~10 Hz director notify (see GameDirector._shellNotifyEvery).
-                  ListenableBuilder(
-                    listenable: Listenable.merge([
-                      widget.director.combatFrame,
-                      HeroRigPainter.frameTick,
-                      _pinchCols,
-                      _floorFade,
-                    ]),
-                    builder: (context, _) {
-                      final world = widget.director.spatial;
-                      final room = widget.director.state.currentRoom;
-                      final target = _TileCamera.forWorld(
-                        world,
-                        constraints,
-                        targetCols:
-                            _pinchCols.value ?? widget.director.state.viewCols,
-                        pinHeroIndex: widget.director.cameraHeroIndex,
-                      );
-                      final epoch = widget.director.floorEpoch;
-                      final newFloor = epoch != _floorEpoch;
-                      if (newFloor) {
-                        _floorEpoch = epoch;
-                        final minimal =
-                            widget.director.state.vfxQuality ==
-                            VfxQuality.minimal;
-                        if (minimal) {
-                          _floorCover = 0;
-                          _armFade = false;
-                        } else {
-                          _floorCover = 1;
-                          _armFade = true;
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (!mounted) return;
-                            _armFade = false;
-                            _floorFade.forward(from: 0);
-                          });
-                        }
-                      } else if (_armFade) {
-                        _floorCover = 1;
-                      } else {
-                        _floorCover = (1 - _floorFade.value).clamp(0.0, 1.0);
-                      }
-                      final eased = dungeonCamEase(
-                        prevX: _easeCamX,
-                        prevY: _easeCamY,
-                        targetX: target.camX,
-                        targetY: target.camY,
-                        newWorld: newFloor,
-                      );
-                      _easeCamX = eased.x;
-                      _easeCamY = eased.y;
-                      final shaken = dungeonCamShake(
-                        x: eased.x,
-                        y: eased.y,
-                        shakeAmp: widget.director.combatShake > 0.02
-                            ? widget.director.combatShake * 0.38
-                            : 0,
-                        visualFrame: widget.director.visualFrame,
-                      );
-                      final camera = _TileCamera(
-                        camX: shaken.x,
-                        camY: shaken.y,
-                        tileSize: target.tileSize,
-                        visibleCols: target.visibleCols,
-                        visibleRows: target.visibleRows,
-                      );
-                      return Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          WebClickScope(
-                            label: 'Dungeon map',
-                            onPressed: () {
-                              if (widget.director.awaitingWipeChoice) return;
-                              if (widget.director.state.isPartyDefeated) {
-                                widget.director.reviveParty();
-                                return;
-                              }
-                              // Mid-fight: pin nearest to party. Idle/clear: fist only.
-                              final fighting =
-                                  world?.enemies.any((e) => e.isAlive) ?? false;
-                              if (!fighting || world == null) return;
-                              final alive = world.heroes
-                                  .where((h) => h.hp > 0)
-                                  .toList();
-                              if (alive.isEmpty) return;
-                              var cx = 0.0;
-                              var cy = 0.0;
-                              for (final h in alive) {
-                                cx += h.x;
-                                cy += h.y;
-                              }
-                              widget.director.setHudFocusAtWorld(
-                                cx / alive.length,
-                                cy / alive.length,
+                  // Pinch and taps stay outside the fight clock. Only the paint
+                  // follows combatFrame (~60 Hz). Wipe chrome stays on the
+                  // shell notify (see GameDirector._shellNotifyEvery).
+                  WebClickScope(
+                    label: 'Dungeon map',
+                    onPressed: _pinPartyCenter,
+                    child: Semantics(
+                      button: true,
+                      label: SpatialDungeonView.mapSemanticsLabel(
+                        plain: GameLogic.plainPlayerChrome(
+                          widget.director.state,
+                        ),
+                      ),
+                      onTap: _pinPartyCenter,
+                      onLongPress: widget.director.godHandAtFocus,
+                      child: Listener(
+                        behavior: HitTestBehavior.deferToChild,
+                        onPointerDown: _pinchDown,
+                        onPointerMove: _pinchMove,
+                        onPointerUp: _pinchUp,
+                        onPointerCancel: _pinchUp,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTapDown: (details) {
+                            if (_pinching) return;
+                            if (widget.director.awaitingWipeChoice) return;
+                            if (widget.director.state.isPartyDefeated) {
+                              widget.director.reviveParty();
+                              return;
+                            }
+                            final at = _worldAt(details.localPosition);
+                            if (at == null) return;
+                            final fighting =
+                                widget.director.spatial?.enemies.any(
+                                  (e) => e.isAlive,
+                                ) ??
+                                false;
+                            if (fighting) {
+                              widget.director.setHudFocusAtWorld(at.dx, at.dy);
+                            }
+                          },
+                          onLongPressStart: (details) {
+                            if (_pinching) return;
+                            if (widget.director.awaitingWipeChoice) return;
+                            if (widget.director.state.isPartyDefeated) return;
+                            final at = _worldAt(details.localPosition);
+                            if (at == null) return;
+                            widget.director.godHandAtWorld(at.dx, at.dy);
+                          },
+                          child: ListenableBuilder(
+                            listenable: Listenable.merge([
+                              widget.director.combatFrame,
+                              HeroRigPainter.frameTick,
+                              _pinchCols,
+                              _floorFade,
+                            ]),
+                            builder: (context, _) {
+                              final world = widget.director.spatial;
+                              final room = widget.director.state.currentRoom;
+                              final target = _TileCamera.forWorld(
+                                world,
+                                constraints,
+                                targetCols:
+                                    _pinchCols.value ??
+                                    widget.director.state.viewCols,
+                                pinHeroIndex: widget.director.cameraHeroIndex,
                               );
-                            },
-                            child: Semantics(
-                              button: true,
-                              label: SpatialDungeonView.mapSemanticsLabel(
-                                plain: GameLogic.plainPlayerChrome(
-                                  widget.director.state,
-                                ),
-                              ),
-                              onTap: () {
-                                if (widget.director.awaitingWipeChoice) return;
-                                if (widget.director.state.isPartyDefeated) {
-                                  widget.director.reviveParty();
-                                  return;
+                              final epoch = widget.director.floorEpoch;
+                              final newFloor = epoch != _floorEpoch;
+                              if (newFloor) {
+                                _floorEpoch = epoch;
+                                final minimal =
+                                    widget.director.state.vfxQuality ==
+                                    VfxQuality.minimal;
+                                if (minimal) {
+                                  _floorCover = 0;
+                                  _armFade = false;
+                                } else {
+                                  _floorCover = 1;
+                                  _armFade = true;
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    if (!mounted) return;
+                                    _armFade = false;
+                                    _floorFade.forward(from: 0);
+                                  });
                                 }
-                                final fighting =
-                                    world?.enemies.any((e) => e.isAlive) ??
-                                    false;
-                                if (!fighting || world == null) return;
-                                final alive = world.heroes
-                                    .where((h) => h.hp > 0)
-                                    .toList();
-                                if (alive.isEmpty) return;
-                                var cx = 0.0;
-                                var cy = 0.0;
-                                for (final h in alive) {
-                                  cx += h.x;
-                                  cy += h.y;
-                                }
-                                widget.director.setHudFocusAtWorld(
-                                  cx / alive.length,
-                                  cy / alive.length,
+                              } else if (_armFade) {
+                                _floorCover = 1;
+                              } else {
+                                _floorCover = (1 - _floorFade.value).clamp(
+                                  0.0,
+                                  1.0,
                                 );
-                              },
-                              onLongPress: widget.director.godHandAtFocus,
-                              child: Listener(
-                                behavior: HitTestBehavior.deferToChild,
-                                onPointerDown: _pinchDown,
-                                onPointerMove: _pinchMove,
-                                onPointerUp: _pinchUp,
-                                onPointerCancel: _pinchUp,
-                                child: GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onTapDown: (details) {
-                                    if (_pinching) return;
-                                    if (widget.director.awaitingWipeChoice) {
-                                      return;
-                                    }
-                                    if (widget.director.state.isPartyDefeated) {
-                                      widget.director.reviveParty();
-                                      return;
-                                    }
-                                    final tileX =
-                                        camera.camX +
-                                        details.localPosition.dx /
-                                            camera.tileSize;
-                                    final tileY =
-                                        camera.camY +
-                                        details.localPosition.dy /
-                                            camera.tileSize;
-                                    // Mid-pack: pin target HUD — fist / long-press for GH.
-                                    final fighting =
-                                        world?.enemies.any((e) => e.isAlive) ??
-                                        false;
-                                    if (fighting) {
-                                      widget.director.setHudFocusAtWorld(
-                                        tileX,
-                                        tileY,
-                                      );
-                                    }
-                                    // Idle / clear: map tap does not fire God Hand.
-                                  },
-                                  onLongPressStart: (details) {
-                                    if (_pinching) return;
-                                    if (widget.director.awaitingWipeChoice) {
-                                      return;
-                                    }
-                                    if (widget.director.state.isPartyDefeated) {
-                                      return;
-                                    }
-                                    final tileX =
-                                        camera.camX +
-                                        details.localPosition.dx /
-                                            camera.tileSize;
-                                    final tileY =
-                                        camera.camY +
-                                        details.localPosition.dy /
-                                            camera.tileSize;
-                                    widget.director.godHandAtWorld(
-                                      tileX,
-                                      tileY,
-                                    );
-                                  },
-                                  child: world == null || !_canPaintFloor
+                              }
+                              final eased = dungeonCamEase(
+                                prevX: _easeCamX,
+                                prevY: _easeCamY,
+                                targetX: target.camX,
+                                targetY: target.camY,
+                                newWorld: newFloor,
+                              );
+                              _easeCamX = eased.x;
+                              _easeCamY = eased.y;
+                              final shaken = dungeonCamShake(
+                                x: eased.x,
+                                y: eased.y,
+                                shakeAmp: widget.director.combatShake > 0.02
+                                    ? widget.director.combatShake * 0.38
+                                    : 0,
+                                visualFrame: widget.director.visualFrame,
+                              );
+                              _liveCamX = shaken.x;
+                              _liveCamY = shaken.y;
+                              _liveTile = target.tileSize;
+                              final camera = _TileCamera(
+                                camX: shaken.x,
+                                camY: shaken.y,
+                                tileSize: target.tileSize,
+                                visibleCols: target.visibleCols,
+                                visibleRows: target.visibleRows,
+                              );
+                              return Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  world == null || !_canPaintFloor
                                       ? ColoredBox(
                                           color: GameTheme.stone,
                                           child: Center(
@@ -842,23 +812,23 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                             ),
                                           ),
                                         ),
-                                ),
-                              ),
-                            ),
+                                  if (_floorCover > 0.01)
+                                    Positioned.fill(
+                                      child: IgnorePointer(
+                                        child: ColoredBox(
+                                          color: GameTheme.stoneDeep.withValues(
+                                            alpha: _floorCover,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
                           ),
-                          if (_floorCover > 0.01)
-                            Positioned.fill(
-                              child: IgnorePointer(
-                                child: ColoredBox(
-                                  color: GameTheme.stoneDeep.withValues(
-                                    alpha: _floorCover,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
+                        ),
+                      ),
+                    ),
                   ),
                   // Floor payoff is the bottom loot log. Tips and KEY still
                   // use PlayShell FeedbackToast.

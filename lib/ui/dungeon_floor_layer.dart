@@ -1,5 +1,54 @@
 part of 'spatial_dungeon_view.dart';
 
+/// One soft white disc, tinted and blitted. A fresh radial shader every torch
+/// every frame used to stall the fight on the phone GPU.
+abstract final class _SoftGlow {
+  static const int _n = 128;
+  static ui.Image? _disc;
+  static final Paint _blit = Paint()..filterQuality = FilterQuality.low;
+
+  static ui.Image _image() {
+    final cached = _disc;
+    if (cached != null) return cached;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final side = _n.toDouble();
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, side, side),
+      Paint()
+        ..shader = ui.Gradient.radial(
+          Offset(side / 2, side / 2),
+          side / 2,
+          const [Color(0xFFFFFFFF), Color(0x00FFFFFF)],
+        ),
+    );
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(_n, _n);
+    picture.dispose();
+    return _disc = image;
+  }
+
+  static void blit(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Color color, {
+    BlendMode blend = BlendMode.plus,
+  }) {
+    if (!radius.isFinite || radius <= 0.5) return;
+    _blit
+      ..blendMode = blend
+      ..colorFilter = ColorFilter.mode(color, BlendMode.modulate);
+    final side = _n.toDouble();
+    canvas.drawImageRect(
+      _image(),
+      Rect.fromLTWH(0, 0, side, side),
+      Rect.fromCircle(center: center, radius: radius),
+      _blit,
+    );
+  }
+}
+
 /// Static terrain (floor, wall rims + faces, beat tint, decals) baked per map
 /// at 16 px a tile, then blitted with the camera.
 ///
@@ -711,7 +760,6 @@ extension _DungeonFloorLayer on _TileRoomPainter {
     final finale = _FloorLookState.exitOpenedAt;
     final sinceExit = finale == null ? 9999 : visualFrame - finale;
     final flare = sinceExit < 120 ? 1.0 + 0.8 * (1 - sinceExit / 120) : 1.0;
-    final paint = Paint()..blendMode = BlendMode.plus;
     for (final prop in map.props) {
       final torch = DungeonEnvironment.isTorchProp(prop.kind);
       if (!torch && !prop.hero) continue;
@@ -727,11 +775,7 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       final color = torch
           ? const Color(0x38F0A040)
           : accent.withValues(alpha: 0.26);
-      paint.shader = ui.Gradient.radial(c, radius, [
-        color,
-        color.withValues(alpha: 0),
-      ]);
-      canvas.drawCircle(c, radius, paint);
+      _SoftGlow.blit(canvas, c, radius, color);
     }
     // Wonder starlight: a slow shaft from the broken ceiling.
     for (final d in map.decals) {
@@ -741,6 +785,7 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       final breathe = reducedVfx
           ? 1.0
           : 0.85 + 0.15 * math.sin(visualFrame * 0.015);
+      final paint = Paint()..blendMode = BlendMode.plus;
       paint.shader = ui.Gradient.linear(c.translate(0, -tile * 4), c, [
         const Color(0x00D8E8FF),
         const Color(0x38D8E8FF),

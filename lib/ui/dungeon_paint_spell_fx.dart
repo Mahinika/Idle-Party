@@ -2,7 +2,6 @@ part of 'spatial_dungeon_view.dart';
 
 /// Additive light under spells, plus the sparks those spells leave behind.
 extension _DungeonPaintSpellFx on _TileRoomPainter {
-  static final Paint _glow = Paint()..blendMode = BlendMode.plus;
   static final Paint _spark = Paint();
 
   void paintSpellGlow(
@@ -18,11 +17,7 @@ extension _DungeonPaintSpellFx on _TileRoomPainter {
 
     void pool(Offset c, double radius, Color color) {
       if (radius < 2) return;
-      _glow.shader = ui.Gradient.radial(c, radius, [
-        color.withValues(alpha: strength),
-        color.withValues(alpha: 0),
-      ]);
-      canvas.drawCircle(c, radius, _glow);
+      _SoftGlow.blit(canvas, c, radius, color.withValues(alpha: strength));
     }
 
     for (final burst in world.bursts) {
@@ -44,7 +39,6 @@ extension _DungeonPaintSpellFx on _TileRoomPainter {
         Color(SpatialCombat.burstArgbForStyle(bolt.style)),
       );
     }
-    _glow.shader = null;
   }
 
   void paintSpellSparks(

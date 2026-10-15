@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../models/achievement_def.dart';
 import '../models/apex_craft.dart';
@@ -108,6 +109,15 @@ class GameDirector extends ChangeNotifier {
   );
   SpatialWorld? _spatial;
   Timer? _spatialTimer;
+
+  /// One sim tick is already waiting for the next screen refresh.
+  bool _combatFrameQueued = false;
+
+  /// Timer fires that landed before that refresh. At most one is caught up.
+  int _droppedCombatTicks = 0;
+
+  /// Last fight tick, so a slow phone does not stack steps to catch up.
+  int _lastCombatTickMs = 0;
   Timer? _uiTimer;
   Timer? _bootWarmup;
   Timer? _hubIdleTimer;
@@ -1118,11 +1128,39 @@ class GameDirector extends ChangeNotifier {
     }
   }
 
+  /// Fight should advance. A pause does not ask the screen for another frame.
+  bool get _combatClockShouldPump {
+    if (_isLoading || !_state.inDungeon || _spatial == null) return false;
+    if (_awaitingWipeChoice || _uiPaused || _appPaused || _awayCreditInFlight) {
+      return false;
+    }
+    return true;
+  }
+
   void _startSpatialLoop() {
     _spatialTimer?.cancel();
-    // ~60 Hz sim; combatFrame drives map paint; shell HUD is throttled.
-    _spatialTimer = Timer.periodic(_spatialPeriod, (_) {
-      spatialTick();
+    _combatFrameQueued = false;
+    _droppedCombatTicks = 0;
+    // Wall clock asks for a step. The step itself runs on the next refresh,
+    // so two asks in one frame do not stack a hitch. Map paint follows
+    // [combatFrame]; shell HUD stays on [_shellNotifyEvery].
+    _spatialTimer = Timer.periodic(_spatialPeriod, (timer) {
+      if (!identical(_spatialTimer, timer)) return;
+      if (!_combatClockShouldPump) return;
+      if (_combatFrameQueued) {
+        if (_droppedCombatTicks < 1) _droppedCombatTicks++;
+        return;
+      }
+      _combatFrameQueued = true;
+      final binding = SchedulerBinding.instance;
+      binding.scheduleFrameCallback((_) {
+        if (!identical(_spatialTimer, timer)) return;
+        _combatFrameQueued = false;
+        final extra = _lastCombatTickMs > 22 ? 0 : _droppedCombatTicks;
+        _droppedCombatTicks = 0;
+        spatialTick(extraSteps: extra);
+      });
+      binding.scheduleFrame();
     });
   }
 
@@ -1144,8 +1182,11 @@ class GameDirector extends ChangeNotifier {
     combatFrame.value = _visualFrame;
   }
 
-  /// Real-time spatial combat step (~60 Hz). Only while in a dungeon.
-  void spatialTick() => tickDungeonClock();
+  /// Real-time spatial combat step, once per screen refresh while in a dungeon.
+  ///
+  /// [extraSteps] catches up a single dropped ask without a second paint.
+  void spatialTick({int extraSteps = 0}) =>
+      tickDungeonClock(extraSteps: extraSteps);
 
   void _notifyShell() => notifyListeners();
 
@@ -3318,6 +3359,8 @@ class GameDirector extends ChangeNotifier {
   @override
   void dispose() {
     _spatialTimer?.cancel();
+    _spatialTimer = null;
+    _combatFrameQueued = false;
     _wipeAutoTimer?.cancel();
     wipeAutoSeconds.dispose();
     _uiTimer?.cancel();
