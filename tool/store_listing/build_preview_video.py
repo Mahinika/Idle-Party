@@ -42,35 +42,35 @@ BEATS: list[tuple[float, str | None, str, str, float]] = [
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "IDLE PARTY\nYour party fights on its own",
-        0.4,
+        0.2,
+    ),
+    (
+        3.6,
+        "preview/gameplay_crawl_raw.mp4",
+        "marketing/03_party_fights_1080x1920.png",
+        "",
+        8.2,
+    ),
+    (
+        1.8,
+        "preview/gameplay_crawl_raw.mp4",
+        "marketing/03_party_fights_1080x1920.png",
+        "Leave. They keep going.",
+        12.4,
     ),
     (
         6.8,
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "",
-        5.5,
+        21.8,
     ),
     (
-        1.1,
-        "preview/gameplay_crawl_raw.mp4",
-        "marketing/03_party_fights_1080x1920.png",
-        "Leave. They keep going.",
-        13.65,
-    ),
-    (
-        2.4,
-        "preview/gameplay_crawl_raw.mp4",
-        "marketing/03_party_fights_1080x1920.png",
-        "",
-        26.0,
-    ),
-    (
-        3.6,
+        3.2,
         "preview/gameplay_crawl_raw.mp4",
         "marketing/03_party_fights_1080x1920.png",
         "Idle Party",
-        30.8,
+        28.6,
     ),
 ]
 
@@ -232,12 +232,13 @@ def make_gameplay_mp4(
             f"[base][1:v]overlay=0:0:shortest=1,format=yuv420p[vout]"
         )
     else:
-        # Portrait listing clip fills the frame. No blur matte, no black bars.
+        # Portrait listing clip fills the frame. Crop y=180..2100 so both the
+        # top LEVEL UP banner and all three heroes + FLASK stay inside the frame.
         fc = (
             f"[0:v]trim=start={start}:duration={duration},setpts=PTS-STARTPTS,"
             f"fps={FPS},"
-            f"scale={width}:{height}:force_original_aspect_ratio=increase,"
-            f"crop={width}:{height}[base];"
+            f"scale={width}:-1,"
+            f"crop={width}:{height}:0:180[base];"
             f"[base][1:v]overlay=0:0:shortest=1,format=yuv420p[vout]"
         )
     cmd = [
