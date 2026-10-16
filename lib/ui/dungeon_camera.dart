@@ -131,8 +131,14 @@ import 'dart:math' as math;
   final cx = ex / n;
   final cy = ey / n;
   final bias = packBias.clamp(0.0, 0.55);
-  final shiftX = ((cx - party.x) * bias).clamp(-maxShiftX.abs(), maxShiftX.abs());
-  final shiftY = ((cy - party.y) * bias).clamp(-maxShiftY.abs(), maxShiftY.abs());
+  final shiftX = ((cx - party.x) * bias).clamp(
+    -maxShiftX.abs(),
+    maxShiftX.abs(),
+  );
+  final shiftY = ((cy - party.y) * bias).clamp(
+    -maxShiftY.abs(),
+    maxShiftY.abs(),
+  );
   return (x: party.x + shiftX, y: party.y + shiftY);
 }
 
@@ -213,6 +219,33 @@ bool dungeonSharesFrame({
   return (partyX - packX).abs() <= spanX && (partyY - packY).abs() <= spanY;
 }
 
+/// The pack or chest sits in the picture above the party card.
+///
+/// [dungeonSharesFrame] still answers "could one tall view hold both".
+/// The card covers the bottom of the stage, so a goal ten tiles south of
+/// the party can pass that test and still be hidden.
+bool dungeonPackInClearView({
+  required double partyX,
+  required double partyY,
+  required double packX,
+  required double packY,
+  required double visibleCols,
+  required double visibleRows,
+  double cardRows = 14,
+  double marginX = 2,
+  double topMargin = 5,
+}) {
+  final halfX = math.max(1.0, visibleCols / 2 - marginX);
+  if ((packX - partyX).abs() > halfX) return false;
+  final dy = packY - partyY;
+  if (dy >= 0) {
+    final south = math.max(2.0, visibleRows / 2 - cardRows);
+    return dy <= south;
+  }
+  final north = math.max(2.0, visibleRows / 2 - topMargin);
+  return -dy <= north;
+}
+
 bool _spans(double a, double b, double p, double pad) {
   final lo = math.min(a, b) - pad;
   final hi = math.max(a, b) + pad;
@@ -286,7 +319,7 @@ bool _spans(double a, double b, double p, double pad) {
   required Iterable<({double x, double y})> closedGates,
   required double visibleCols,
   required double visibleRows,
-  double bottomInset = 9,
+  double bottomInset = 18,
 }) {
   return dungeonGateFocus(
         partyX: partyX,

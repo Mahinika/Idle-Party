@@ -97,6 +97,7 @@ abstract final class ChangelogCatalog {
           'Your party fights on its own. Tap ENTER DUNGEON. The next fight fits on the phone.',
       changed: <String>[
         'The walk to the next pack fits on one screen. The gate still fills the opening. When the next pack does not fit, that closed gate stays on screen.',
+        'A chest floor opens on the chest. After two wipes, that safe floor shows the chest instead of an empty hall.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
         'Race still locks after New Game START.',

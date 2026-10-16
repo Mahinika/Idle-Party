@@ -2,8 +2,10 @@ import 'dart:async' show unawaited;
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../core/debug_play_log.dart';
 import '../core/game_director.dart';
 import 'dungeon_bar_layout.dart';
 import 'shell/shell_common.dart';
@@ -1138,6 +1140,8 @@ class _GodHandRingPainter extends CustomPainter {
       oldDelegate.ready != ready;
 }
 
+String _lastCamLog = '';
+
 class _TileCamera {
   const _TileCamera({
     required this.camX,
@@ -1200,28 +1204,71 @@ class _TileCamera {
         farPack = (x: e.x, y: e.y);
       }
     }
-    // The party card covers the bottom of the stage. A pack in that band
-    // is not on screen yet.
-    final safeRows = math.max(10.0, visibleRows - 10);
-    final sharesPack =
-        farPack != null &&
-        dungeonSharesFrame(
+    ({double x, double y})? chest;
+    ({double x, double y})? shrineAltar;
+    var shrineD = 30.0;
+    for (final p in world.map.props) {
+      if (p.kind == MapPropKind.chest &&
+          chest == null &&
+          (p.hero || p.happening)) {
+        chest = (x: p.x + 0.5, y: p.y + 0.5);
+      }
+      if (farPack == null || p.kind != MapPropKind.altar || !p.hero) continue;
+      final inShrine = world.map.chambers.any(
+        (c) => c.beatKind == FloorBeatKind.shrine && c.containsTile(p.x, p.y),
+      );
+      if (!inShrine) continue;
+      final dx = p.x + 0.5 - farPack.x;
+      final dy = p.y + 0.5 - farPack.y;
+      final d = math.sqrt(dx * dx + dy * dy);
+      if (d < shrineD) {
+        shrineD = d;
+        shrineAltar = (x: p.x + 0.5, y: p.y + 0.5);
+      }
+    }
+    if (farPack != null && shrineAltar == null) {
+      for (final c in world.map.chambers) {
+        if (c.beatKind != FloorBeatKind.shrine) continue;
+        final dx = c.cx + 0.5 - farPack.x;
+        final dy = c.cy + 0.5 - farPack.y;
+        final d = math.sqrt(dx * dx + dy * dy);
+        if (d < shrineD) {
+          shrineD = d;
+          shrineAltar = (x: c.cx + 0.5, y: c.cy + 0.5);
+        }
+      }
+    }
+    chest ??= () {
+      for (final p in world.map.props) {
+        if (p.kind == MapPropKind.chest) {
+          return (x: p.x + 0.5, y: p.y + 0.5);
+        }
+      }
+      return null;
+    }();
+    // A chest floor has no pack. A shrine beside the fight is the far edge
+    // of that same picture. Either one, hidden by the party card, used to
+    // leave the floor opening on an empty hall.
+    final goal = shrineAltar ?? farPack ?? chest;
+    final clear =
+        goal != null &&
+        dungeonPackInClearView(
           partyX: party.x,
           partyY: party.y,
-          packX: farPack.x,
-          packY: farPack.y,
+          packX: goal.x,
+          packY: goal.y,
           visibleCols: cols,
-          visibleRows: safeRows,
+          visibleRows: visibleRows,
         );
     final closedGates = world.map.gates
         .where((g) => !world.openGateIds.contains(g.id))
         .map((g) => (x: g.x + 0.5, y: g.y + 0.5));
-    final gateFocus = !world.awaitingExit && farPack != null && !sharesPack
+    final gateFocus = !world.awaitingExit && goal != null && !clear
         ? dungeonNextFocus(
             partyX: party.x,
             partyY: party.y,
-            packX: farPack.x,
-            packY: farPack.y,
+            packX: goal.x,
+            packY: goal.y,
             closedGates: closedGates,
             visibleCols: cols,
             visibleRows: visibleRows,
@@ -1249,17 +1296,30 @@ class _TileCamera {
                       maxShiftY: visibleRows * 0.14,
                     )
                   : party);
-    final focus = world.awaitingExit || gateFocus != null
+    final shrinePull = shrineAltar != null && goal == shrineAltar;
+    final focus = world.awaitingExit || (gateFocus != null && !shrinePull)
         ? raw
         : dungeonIncludeParty(
             focusX: raw.x,
             focusY: raw.y,
-            heroes: heroRows
-                .where((h) => h.alive)
-                .map((h) => (x: h.x, y: h.y)),
+            heroes: heroRows.where((h) => h.alive).map((h) => (x: h.x, y: h.y)),
             visibleCols: cols,
             visibleRows: visibleRows,
           );
+    if (kDebugMode && goal != null) {
+      final key =
+          '${party.y.toStringAsFixed(1)}>${goal.y.toStringAsFixed(1)}:$clear';
+      if (key != _lastCamLog) {
+        _lastCamLog = key;
+        DebugPlayLog.event(
+          'cam',
+          'rows=${visibleRows.toStringAsFixed(1)} '
+              'cols=${cols.toStringAsFixed(1)} clear=$clear '
+              'partyY=${party.y.toStringAsFixed(1)} '
+              'goalY=${goal.y.toStringAsFixed(1)}',
+        );
+      }
+    }
     final origin = dungeonCamOrigin(
       focusX: focus.x,
       focusY: focus.y,

@@ -145,6 +145,39 @@ void main() {
     expect(map, isNotNull, reason: 'expected goblin floor with shrine alcove');
   });
 
+  test('a shrine blesses the fight beside it, not the entrance hall', () {
+    final chambers = [
+      const Chamber(
+        index: 0,
+        x: 40,
+        y: 4,
+        w: 16,
+        h: 12,
+        beatKind: FloorBeatKind.approach,
+      ),
+      const Chamber(
+        index: 1,
+        x: 40,
+        y: 20,
+        w: 16,
+        h: 12,
+        beatKind: FloorBeatKind.elite,
+      ),
+      const Chamber(
+        index: 2,
+        x: 40,
+        y: 36,
+        w: 10,
+        h: 10,
+        beatKind: FloorBeatKind.shrine,
+        side: true,
+      ),
+    ];
+    expect(shrineBlessesHero(chambers, 48, 26), isTrue);
+    expect(shrineBlessesHero(chambers, 45, 40), isTrue);
+    expect(shrineBlessesHero(chambers, 48, 8), isFalse);
+  });
+
   test('rime kit prefers treasure alcoves vs fen choke', () {
     final rime = ZoneLayoutKit.forId('rime');
     final fen = ZoneLayoutKit.forId('fen');
@@ -741,9 +774,7 @@ void main() {
       final bpSolo = FloorBlueprint.forRoom(solo, dungeonId: 'goblin');
       final bpCrowd = FloorBlueprint.forRoom(crowd, dungeonId: 'goblin');
       int fights(FloorBlueprint bp) =>
-          bp.storyChambers
-              .where((c) => !c.isSide && c.enemyBudget > 0)
-              .length;
+          bp.storyChambers.where((c) => !c.isSide && c.enemyBudget > 0).length;
       expect(fights(bpCrowd), fights(bpSolo));
     }
   });
@@ -759,7 +790,10 @@ void main() {
     final base = GameLogic.createInitialState(now: DateTime(2026, 9, 29));
     expect(GameLogic.layoutCrowded(base), isTrue);
     expect(GameLogic.layoutCrowded(base.copyWith(inRift: true)), isFalse);
-    expect(GameLogic.layoutCrowded(base.copyWith(inGreaterRift: true)), isFalse);
+    expect(
+      GameLogic.layoutCrowded(base.copyWith(inGreaterRift: true)),
+      isFalse,
+    );
   });
 
   test('crowd and rewardShare survive a save round trip', () {

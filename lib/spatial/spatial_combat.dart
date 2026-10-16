@@ -3741,7 +3741,7 @@ abstract final class SpatialCombat {
       if (place == 'CHOKE') {
         speedMul *= 0.62;
       }
-      if (place == 'SHRINE' &&
+      if (shrineBlessesHero(world.map.chambers, hero.x, hero.y) &&
           hero.team == SpatialTeam.hero &&
           !hero.isPet &&
           (hero.buffTimers['shrine'] ?? 0) <= 0) {

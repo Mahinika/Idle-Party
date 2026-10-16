@@ -128,6 +128,46 @@ class Chamber {
       containsTile(wx.floor(), wy.floor());
 }
 
+int _chamberGap(int a0, int a1, int b0, int b1) {
+  if (a1 <= b0) return b0 - a1;
+  if (b1 <= a0) return a0 - b1;
+  return 0;
+}
+
+/// Standing in a shrine, or in the fight the shrine opens beside.
+bool shrineBlessesHero(List<Chamber> chambers, double x, double y) {
+  if (roomPlaceWordAt(chambers, x, y) == 'SHRINE') return true;
+  Chamber? here;
+  for (final c in chambers) {
+    if (c.containsWorld(x, y)) {
+      here = c;
+      break;
+    }
+  }
+  if (here == null) return false;
+  if (here.beatKind == FloorBeatKind.exitHold ||
+      here.beatKind == FloorBeatKind.approach) {
+    return false;
+  }
+  for (final shrine in chambers) {
+    if (shrine.beatKind != FloorBeatKind.shrine) continue;
+    final gapX = _chamberGap(
+      here.x,
+      here.x + here.w,
+      shrine.x,
+      shrine.x + shrine.w,
+    );
+    final gapY = _chamberGap(
+      here.y,
+      here.y + here.h,
+      shrine.y,
+      shrine.y + shrine.h,
+    );
+    if (gapX <= 6 && gapY <= 6) return true;
+  }
+  return false;
+}
+
 /// The room word under a world point, when that room has one.
 String? roomPlaceWordAt(List<Chamber> chambers, double x, double y) {
   for (final c in chambers) {
@@ -866,9 +906,23 @@ abstract final class RoomLayouts {
           if (!sideFlags[i]) parentIdx = i;
         }
         for (final beat in sideBeats) {
-          final sideParentIdx = beat.attach == FloorBeatAttach.sideHub
+          var sideParentIdx = beat.attach == FloorBeatAttach.sideHub
               ? 0
               : parentIdx;
+          if (beat.kind == FloorBeatKind.shrine) {
+            for (var i = 0; i < rooms.length; i++) {
+              if (sideFlags[i]) continue;
+              final kind = roomBeats[i];
+              if (kind == null ||
+                  kind.isQuiet ||
+                  kind == FloorBeatKind.approach ||
+                  kind == FloorBeatKind.exitHold) {
+                continue;
+              }
+              sideParentIdx = i;
+              break;
+            }
+          }
           final parent = rooms[sideParentIdx.clamp(0, rooms.length - 1)];
           final size = sizeFor(beat.kind);
           final w = size.$1;

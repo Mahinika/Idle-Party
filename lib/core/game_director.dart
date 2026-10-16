@@ -17,6 +17,7 @@ import '../models/market_listing.dart';
 import '../models/meta_depth.dart';
 import '../models/pet.dart';
 import '../models/vfx_quality.dart';
+import '../spatial/floor_blueprint.dart';
 import '../spatial/spatial_combat.dart';
 import 'game_audio.dart';
 import 'ad_boost.dart';
@@ -438,9 +439,18 @@ class GameDirector extends ChangeNotifier {
   bool _debugHoldCombat = false;
   bool get debugHoldCombat => _debugHoldCombat;
 
+  /// Debug builds: freeze the next floor rebuild, then clear.
+  bool _debugHoldNextRebuild = false;
+
   void toggleDebugHoldCombat() {
     _debugHoldCombat = !_debugHoldCombat;
     showToast(_debugHoldCombat ? 'Dev hold on' : 'Dev hold off', life: 1.2);
+    notifyListeners();
+  }
+
+  void debugHoldNextFloor() {
+    _debugHoldNextRebuild = true;
+    showToast('Dev hold next floor', life: 1.2);
     notifyListeners();
   }
 
@@ -1195,6 +1205,36 @@ class GameDirector extends ChangeNotifier {
       afkAssist: ticketAshenCrown ? false : null,
     );
     _battleToken = _state.battleNumber;
+    if (kDebugMode && _debugHoldNextRebuild) {
+      _debugHoldNextRebuild = false;
+      _debugHoldCombat = true;
+    }
+    if (kDebugMode && _spatial != null) {
+      final world = _spatial!;
+      final shrine = world.map.chambers.any(
+        (c) => c.beatKind == FloorBeatKind.shrine,
+      );
+      var far = 0.0;
+      if (world.heroes.isNotEmpty) {
+        final party = world.heroes.firstWhere(
+          (h) => !h.isPet,
+          orElse: () => world.heroes.first,
+        );
+        for (final enemy in world.enemies) {
+          if (enemy.hp <= 0) continue;
+          final dx = enemy.x - party.x;
+          final dy = enemy.y - party.y;
+          final d = math.sqrt(dx * dx + dy * dy);
+          if (far == 0 || d < far) far = d;
+        }
+      }
+      DebugPlayLog.event(
+        'layout',
+        'F${_state.currentRoom.floorNumber} '
+            '${_state.dungeonId} shrine=$shrine '
+            'far=${far.toStringAsFixed(1)} hold=$_debugHoldCombat',
+      );
+    }
   }
 
   void _bumpCombatFrame() {

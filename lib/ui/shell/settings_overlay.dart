@@ -518,6 +518,17 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           ),
           const SizedBox(height: 8),
           GameButton(
+            label: 'DEV: HOLD NEXT',
+            style: GameButtonStyle.grey,
+            onPressed: state.inDungeon
+                ? () {
+                    director.debugHoldNextFloor();
+                    widget.onClose();
+                  }
+                : null,
+          ),
+          const SizedBox(height: 8),
+          GameButton(
             label: 'DEV: DOWN PARTY',
             style: GameButtonStyle.grey,
             onPressed: state.inDungeon

@@ -11,7 +11,11 @@ void main() {
     );
     expect(cam.camX, 4 - 10);
     expect(cam.camY, 3 - 18);
-    expect(cam.camY, lessThan(0), reason: 'short floor: camera looks above y=0');
+    expect(
+      cam.camY,
+      lessThan(0),
+      reason: 'short floor: camera looks above y=0',
+    );
   });
 
   test('party focus is centroid of living heroes', () {
@@ -72,20 +76,23 @@ void main() {
     expect(focus.y, closeTo(28.5, 0.01));
   });
 
-  test('cleared floor pulls north stairs under the HUD and keeps the party', () {
-    final focus = dungeonStairsFocus(
-      partyX: 20,
-      partyY: 40,
-      exitX: 22,
-      exitY: 26,
-      visibleCols: 20,
-      visibleRows: 36,
-    );
-    final halfY = 18.0;
-    expect(focus.y - 26, lessThanOrEqualTo(halfY - 8));
-    expect(40 - focus.y, lessThanOrEqualTo(halfY - 6));
-    expect(focus.y, lessThan(40));
-  });
+  test(
+    'cleared floor pulls north stairs under the HUD and keeps the party',
+    () {
+      final focus = dungeonStairsFocus(
+        partyX: 20,
+        partyY: 40,
+        exitX: 22,
+        exitY: 26,
+        visibleCols: 20,
+        visibleRows: 36,
+      );
+      final halfY = 18.0;
+      expect(focus.y - 26, lessThanOrEqualTo(halfY - 8));
+      expect(40 - focus.y, lessThanOrEqualTo(halfY - 6));
+      expect(focus.y, lessThan(40));
+    },
+  );
 
   test('stairs stay in frame when the exit is farther than the phone', () {
     final focus = dungeonStairsFocus(
@@ -101,9 +108,7 @@ void main() {
 
   test('nearby pack nudges focus but stays within the shift cap', () {
     final focus = dungeonCombatFocus(
-      heroes: [
-        (x: 10.0, y: 10.0, alive: true, index: 0),
-      ],
+      heroes: [(x: 10.0, y: 10.0, alive: true, index: 0)],
       awakeEnemies: [
         (x: 18.0, y: 10.0, alive: true),
         (x: 50.0, y: 10.0, alive: true),
@@ -194,6 +199,31 @@ void main() {
     expect(y, closeTo(-2, 0.01));
   });
 
+  test('a goal under the party card is not in the clear view', () {
+    expect(
+      dungeonPackInClearView(
+        partyX: 50,
+        partyY: 8,
+        packX: 52,
+        packY: 18,
+        visibleCols: 20,
+        visibleRows: 36,
+      ),
+      isFalse,
+    );
+    expect(
+      dungeonPackInClearView(
+        partyX: 50,
+        partyY: 8,
+        packX: 52,
+        packY: 12,
+        visibleCols: 20,
+        visibleRows: 36,
+      ),
+      isTrue,
+    );
+  });
+
   test('a pack that fits shares the frame and does not steal the gate', () {
     expect(
       dungeonSharesFrame(
@@ -242,10 +272,7 @@ void main() {
       partyY: 9,
       packX: 34,
       packY: 8,
-      closedGates: [
-        (x: 51, y: 16),
-        (x: 44, y: 9),
-      ],
+      closedGates: [(x: 51, y: 16), (x: 44, y: 9)],
       visibleCols: 20,
       visibleRows: 28,
     );
