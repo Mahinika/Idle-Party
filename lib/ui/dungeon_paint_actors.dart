@@ -633,6 +633,17 @@ extension _DungeonPaintActors on _TileRoomPainter {
       if (showAuras) {
         final shieldT = hero.buffTimers['shield'] ?? 0;
         final buffT = hero.buffTimers['buff'] ?? 0;
+        final shrineT = hero.buffTimers['shrine'] ?? 0;
+        if (shrineT > 0) {
+          canvas.drawCircle(
+            c,
+            tile * 0.55,
+            Paint()
+              ..color = const Color(0x8870E0A0)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = math.max(1.5, tile * 0.06),
+          );
+        }
         if (shieldT > 0 &&
             hero.shieldBlockTimer <= 0 &&
             hero.shieldWallTimer <= 0 &&

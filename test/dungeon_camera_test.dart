@@ -193,4 +193,90 @@ void main() {
     expect(x, closeTo(3, 0.01));
     expect(y, closeTo(-2, 0.01));
   });
+
+  test('a pack that fits shares the frame and does not steal the gate', () {
+    expect(
+      dungeonSharesFrame(
+        partyX: 10,
+        partyY: 20,
+        packX: 12,
+        packY: 28,
+        visibleCols: 20,
+        visibleRows: 32,
+      ),
+      isTrue,
+    );
+    expect(
+      dungeonGateFocus(
+        partyX: 10,
+        partyY: 20,
+        packX: 12,
+        packY: 28,
+        closedGates: [(x: 11, y: 24)],
+        visibleCols: 20,
+        visibleRows: 32,
+      ),
+      isNull,
+    );
+  });
+
+  test('when the pack does not fit the closed gate stays in frame', () {
+    final focus = dungeonGateFocus(
+      partyX: 10,
+      partyY: 40,
+      packX: 10,
+      packY: 8,
+      closedGates: [(x: 10, y: 24)],
+      visibleCols: 20,
+      visibleRows: 22,
+    );
+    expect(focus, isNotNull);
+    final halfY = 11.0;
+    expect(focus!.y - 24, lessThanOrEqualTo(halfY - 8));
+    expect(focus.y, lessThan(40));
+  });
+
+  test('an east pack keeps the gate between them', () {
+    final focus = dungeonGateFocus(
+      partyX: 52,
+      partyY: 9,
+      packX: 34,
+      packY: 8,
+      closedGates: [
+        (x: 51, y: 16),
+        (x: 44, y: 9),
+      ],
+      visibleCols: 20,
+      visibleRows: 28,
+    );
+    expect(focus, isNotNull);
+    expect((focus!.x - 44).abs(), lessThanOrEqualTo(10));
+    expect((focus.y - 9).abs(), lessThanOrEqualTo(8));
+  });
+
+  test('a far pack with no gate on the hall still enters the frame', () {
+    final focus = dungeonNextFocus(
+      partyX: 50,
+      partyY: 10,
+      packX: 50,
+      packY: 40,
+      closedGates: [(x: 12, y: 12)],
+      visibleCols: 20,
+      visibleRows: 28,
+    );
+    final halfY = 14.0;
+    expect((40 - focus.y).abs(), lessThanOrEqualTo(halfY - 6));
+  });
+
+  test('a hero at the edge is pulled back inside the phone', () {
+    final framed = dungeonIncludeParty(
+      focusX: 10,
+      focusY: 8,
+      heroes: [(x: 10, y: 20)],
+      visibleCols: 20,
+      visibleRows: 22,
+    );
+    final halfY = 11.0;
+    expect(20 - framed.y, lessThanOrEqualTo(halfY - 4.5));
+  });
 }

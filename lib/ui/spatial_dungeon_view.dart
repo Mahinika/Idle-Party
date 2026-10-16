@@ -1188,7 +1188,46 @@ class _TileCamera {
       pinIndex: pinHeroIndex,
     );
     final exit = world.map.exitPoint;
-    final focus = world.awaitingExit
+    final living = world.enemies.where((e) => e.hp > 0).toList();
+    ({double x, double y})? farPack;
+    var farD = double.infinity;
+    for (final e in living) {
+      final dx = e.x - party.x;
+      final dy = e.y - party.y;
+      final d = dx * dx + dy * dy;
+      if (d < farD) {
+        farD = d;
+        farPack = (x: e.x, y: e.y);
+      }
+    }
+    // The party card covers the bottom of the stage. A pack in that band
+    // is not on screen yet.
+    final safeRows = math.max(10.0, visibleRows - 10);
+    final sharesPack =
+        farPack != null &&
+        dungeonSharesFrame(
+          partyX: party.x,
+          partyY: party.y,
+          packX: farPack.x,
+          packY: farPack.y,
+          visibleCols: cols,
+          visibleRows: safeRows,
+        );
+    final closedGates = world.map.gates
+        .where((g) => !world.openGateIds.contains(g.id))
+        .map((g) => (x: g.x + 0.5, y: g.y + 0.5));
+    final gateFocus = !world.awaitingExit && farPack != null && !sharesPack
+        ? dungeonNextFocus(
+            partyX: party.x,
+            partyY: party.y,
+            packX: farPack.x,
+            packY: farPack.y,
+            closedGates: closedGates,
+            visibleCols: cols,
+            visibleRows: visibleRows,
+          )
+        : null;
+    final raw = world.awaitingExit
         ? dungeonStairsFocus(
             partyX: party.x,
             partyY: party.y,
@@ -1197,18 +1236,30 @@ class _TileCamera {
             visibleCols: cols,
             visibleRows: visibleRows,
           )
-        : inFight
-        ? dungeonCombatFocus(
-            heroes: heroRows,
-            awakeEnemies: awakeEnemies,
-            mapCenterX: world.cols / 2,
-            mapCenterY: world.rows / 2,
-            pinIndex: pinHeroIndex,
-            nearbyTiles: math.min(cols, visibleRows) * 0.45,
-            maxShiftX: cols * 0.18,
-            maxShiftY: visibleRows * 0.14,
-          )
-        : party;
+        : gateFocus ??
+              (inFight
+                  ? dungeonCombatFocus(
+                      heroes: heroRows,
+                      awakeEnemies: awakeEnemies,
+                      mapCenterX: world.cols / 2,
+                      mapCenterY: world.rows / 2,
+                      pinIndex: pinHeroIndex,
+                      nearbyTiles: math.min(cols, visibleRows) * 0.45,
+                      maxShiftX: cols * 0.18,
+                      maxShiftY: visibleRows * 0.14,
+                    )
+                  : party);
+    final focus = world.awaitingExit || gateFocus != null
+        ? raw
+        : dungeonIncludeParty(
+            focusX: raw.x,
+            focusY: raw.y,
+            heroes: heroRows
+                .where((h) => h.alive)
+                .map((h) => (x: h.x, y: h.y)),
+            visibleCols: cols,
+            visibleRows: visibleRows,
+          );
     final origin = dungeonCamOrigin(
       focusX: focus.x,
       focusY: focus.y,

@@ -12,7 +12,7 @@ extension GameDirectorCombatLoop on GameDirector {
       return;
     }
     // Soft-pause while inventory / meta menus cover the fight.
-    if (_uiPaused) {
+    if (_uiPaused || _debugHoldCombat) {
       return;
     }
     // Hard pause while the app is backgrounded, or while resume credits the gap.

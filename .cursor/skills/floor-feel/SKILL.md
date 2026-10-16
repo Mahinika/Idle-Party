@@ -70,7 +70,9 @@ bump from AL/KEY pressure. Room size does not.
   leg. An east hall hides the next pack: a fight room is almost as wide
   as the 20-column view. A gate is stamped only where that full span was
   carved as floor and sits outside both rooms. Pulling the midpoint into
-  a room drops side tiles and leaves a 1-wide seal. "the open hall
+  a room drops side tiles and leaves a 1-wide seal. When the party and
+  the next pack do not share the phone, the camera keeps that closed
+  gate in frame (`dungeonGateFocus`). Rooms stay full size. "the open hall
   between fights fits one phone view" and "gates seal the full corridor"
   stay green in the same change. The A56 before-and-after still applies.
 

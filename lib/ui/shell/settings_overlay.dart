@@ -507,6 +507,28 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           ),
           const SizedBox(height: 8),
           GameButton(
+            label: director.debugHoldCombat ? 'DEV: RESUME' : 'DEV: HOLD',
+            style: GameButtonStyle.grey,
+            onPressed: state.inDungeon
+                ? () {
+                    director.toggleDebugHoldCombat();
+                    widget.onClose();
+                  }
+                : null,
+          ),
+          const SizedBox(height: 8),
+          GameButton(
+            label: 'DEV: DOWN PARTY',
+            style: GameButtonStyle.grey,
+            onPressed: state.inDungeon
+                ? () {
+                    widget.onClose();
+                    director.debugDownParty();
+                  }
+                : null,
+          ),
+          const SizedBox(height: 8),
+          GameButton(
             label: 'DEV: ENTER GAUNTLET (Lv${GameLogic.maxHeroLevel})',
             style: GameButtonStyle.grey,
             onPressed: state.inDungeon

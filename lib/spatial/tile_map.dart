@@ -823,6 +823,8 @@ abstract final class RoomLayouts {
               : prev.y - hallGap - h;
           // A small step sideways, still overlapping on X, so the hall is
           // one vertical leg and the next pack stays in the portrait view.
+          // East is only the fallback when forward does not fit on the map.
+          // Rooms stay full size so the gate is not pulled into a room.
           final nudge = i.isOdd ? 3 : -2;
           final eastX = prev.x + prev.w + hallGap;
           final westX = prev.x - hallGap - w;

@@ -434,6 +434,26 @@ class GameDirector extends ChangeNotifier {
     setDebugTimeScale(_debugTimeScale >= 9.5 ? 1 : 10);
   }
 
+  /// Debug builds: freeze the fight so a phone shot can catch the first frame.
+  bool _debugHoldCombat = false;
+  bool get debugHoldCombat => _debugHoldCombat;
+
+  void toggleDebugHoldCombat() {
+    _debugHoldCombat = !_debugHoldCombat;
+    showToast(_debugHoldCombat ? 'Dev hold on' : 'Dev hold off', life: 1.2);
+    notifyListeners();
+  }
+
+  /// Debug builds: drop the party so the wipe path can be seen on a phone.
+  void debugDownParty() {
+    final world = _spatial;
+    if (world == null || !_state.inDungeon) return;
+    for (final hero in world.heroes) {
+      if (hero.isPet) continue;
+      hero.hp = 0;
+    }
+  }
+
   /// Test helper: put items in the bag without rebuilding combat.
   @visibleForTesting
   void debugInjectStash(List<EquipmentItem> items) {

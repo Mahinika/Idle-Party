@@ -196,3 +196,140 @@ import 'dart:math' as math;
     ),
   );
 }
+
+/// Party and pack can share one phone view, with room for sprites and HUD.
+bool dungeonSharesFrame({
+  required double partyX,
+  required double partyY,
+  required double packX,
+  required double packY,
+  required double visibleCols,
+  required double visibleRows,
+  double marginX = 2,
+  double marginY = 5,
+}) {
+  final spanX = math.max(0.0, visibleCols - marginX * 2);
+  final spanY = math.max(0.0, visibleRows - marginY * 2);
+  return (partyX - packX).abs() <= spanX && (partyY - packY).abs() <= spanY;
+}
+
+bool _spans(double a, double b, double p, double pad) {
+  final lo = math.min(a, b) - pad;
+  final hi = math.max(a, b) + pad;
+  return p >= lo && p <= hi;
+}
+
+/// When the party and the next pack cannot share the phone, keep the closed
+/// gate in frame. Returns null when they already fit, or no gate sits between
+/// them. Room size is not part of this: the hall stays, the gate wins.
+({double x, double y})? dungeonGateFocus({
+  required double partyX,
+  required double partyY,
+  required double packX,
+  required double packY,
+  required Iterable<({double x, double y})> closedGates,
+  required double visibleCols,
+  required double visibleRows,
+  double bottomInset = 6,
+}) {
+  if (dungeonSharesFrame(
+    partyX: partyX,
+    partyY: partyY,
+    packX: packX,
+    packY: packY,
+    visibleCols: visibleCols,
+    visibleRows: visibleRows,
+  )) {
+    return null;
+  }
+  ({double x, double y})? best;
+  var bestScore = double.infinity;
+  for (final g in closedGates) {
+    // The long axis must cross the gate. The short axis stays inside the
+    // hall, so a closer gate on another leg does not steal the frame.
+    final vertical = (packY - partyY).abs() >= (packX - partyX).abs();
+    final onPath = vertical
+        ? _spans(partyY, packY, g.y, 1.5) &&
+              (g.x - partyX).abs() <= 6 &&
+              (g.x - packX).abs() <= 6
+        : _spans(partyX, packX, g.x, 1.5) &&
+              (g.y - partyY).abs() <= 6 &&
+              (g.y - packY).abs() <= 6;
+    if (!onPath) continue;
+    final dx = g.x - partyX;
+    final dy = g.y - partyY;
+    final score = dx * dx + dy * dy;
+    if (score < bestScore) {
+      bestScore = score;
+      best = (x: g.x, y: g.y);
+    }
+  }
+  if (best == null) return null;
+  return dungeonStairsFocus(
+    partyX: partyX,
+    partyY: partyY,
+    exitX: best.x,
+    exitY: best.y,
+    visibleCols: visibleCols,
+    visibleRows: visibleRows,
+    bottomInset: bottomInset,
+  );
+}
+
+/// Closed gate when one sits between them. Otherwise the pack, so a new
+/// floor does not open on an empty hall.
+({double x, double y}) dungeonNextFocus({
+  required double partyX,
+  required double partyY,
+  required double packX,
+  required double packY,
+  required Iterable<({double x, double y})> closedGates,
+  required double visibleCols,
+  required double visibleRows,
+  double bottomInset = 9,
+}) {
+  return dungeonGateFocus(
+        partyX: partyX,
+        partyY: partyY,
+        packX: packX,
+        packY: packY,
+        closedGates: closedGates,
+        visibleCols: visibleCols,
+        visibleRows: visibleRows,
+        bottomInset: bottomInset,
+      ) ??
+      dungeonStairsFocus(
+        partyX: partyX,
+        partyY: partyY,
+        exitX: packX,
+        exitY: packY,
+        visibleCols: visibleCols,
+        visibleRows: visibleRows,
+        bottomInset: bottomInset,
+      );
+}
+
+/// Pull focus so each hero's sprite stays inside the phone, clear of the HUD.
+({double x, double y}) dungeonIncludeParty({
+  required double focusX,
+  required double focusY,
+  required Iterable<({double x, double y})> heroes,
+  required double visibleCols,
+  required double visibleRows,
+  double marginX = 2.2,
+  double marginY = 4.5,
+}) {
+  var x = focusX;
+  var y = focusY;
+  final halfX = math.max(1.0, visibleCols / 2);
+  final halfY = math.max(1.0, visibleRows / 2);
+  for (final h in heroes) {
+    final loX = h.x - halfX + marginX;
+    final hiX = h.x + halfX - marginX;
+    if (loX <= hiX) x = x.clamp(loX, hiX);
+    final loY = h.y - halfY + marginY;
+    final hiY = h.y + halfY - marginY;
+    if (loY <= hiY) y = y.clamp(loY, hiY);
+  }
+  return (x: x, y: y);
+}
