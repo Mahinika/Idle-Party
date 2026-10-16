@@ -35,8 +35,9 @@ IA copy scopes (labels/guides, not colors): **RUN** · **TODAY** · **ACCOUNT**
 (`MenuChrome.scopeChip` / `sectionLabelScoped`).
 
 Current bottom bar family: **GEAR · GOLD · SHOP · ESSENCE · MORE** (+ **KEY**
-when endgame jargon unlocks; dungeon **LEAVE**). Prefer `MenuRouter` +
-`MenuSurface` + `AppBottomBar`.
+when endgame jargon unlocks; dungeon **LEAVE**). Until the first boss or
+first Ascend the bar is GEAR + MORE. Prefer `MenuRouter` + `MenuSurface` +
+`AppBottomBar`.
 
 ## Before shipping a UI feature
 

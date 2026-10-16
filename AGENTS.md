@@ -84,7 +84,8 @@ QUESTS / CRAFT / SETTINGS / INFO. Redeem code is SHOP and MORE → SETTINGS.
 Hub POWERUPS stay on the hub.
 
 **SpatialCombat** is the current fight sim, including in-dungeon offline.
-A second sim is not forbidden (owner 2026-09-26).
+The live fight steps once per screen refresh, so a late frame does not
+stack another hitch. A second sim is not forbidden (owner 2026-09-26).
 (`afkAssist: true`, `GameLogic.simulateSpatialOffline`). Hub AFK is gold
 plus slow essence, not combat. A PUSH clear pays +1 essence, a PUSH boss
 +2. FARM pays that mint 0. Gauntlet pays its own floor essence, doubled
@@ -97,15 +98,17 @@ their own rules.
 
 **Content:** 10 classes / 31 specs · 15 zones through Mothveil Hollow.
 Hero cap `maxHeroLevel` 100 (combat XP only). Ascend cap AL20.
-The active party is 4. A fifth slot unlocks at AL2 for 80 essence and
-stays on Ascend. Race locks after New Game START. Class can still change.
+A new game starts with 3 heroes. The fourth joins at the first Ascend.
+A fifth slot unlocks at AL2 for 80 essence and stays on Ascend. The
+active party cap is 4 until that buy. Race locks after New Game START.
+Class can still change.
 Endgame (KEY, Gauntlet, Rifts, Greater Rifts, Ashen, Craft Trial) unlocks
 when the **active party is all Lv100**, not at AL20 alone.
 
 | Hunt | Where |
 |------|--------|
 | KEYSTONE | Hub KEY. No KEY tab before party Lv100. |
-| Gauntlet | Endless Crystal Spire. Pick MIGHT, WARD, or GREED. Boss every 5 floors. After floor 100 the hub names Ranked GR; later floors stay a personal best. Spire Trophies: each squeeze under each pact, kept on Ascend. |
+| Gauntlet | Endless Crystal Spire. Pick MIGHT, WARD, or GREED. Boss every 5 floors. Between bosses the floor is one squeeze: tight rooms, a swarm, one echoed tell, or extra gates. After floor 100 the hub names Ranked GR; later floors stay a personal best. Spire Trophies: each squeeze under each pact, kept on Ascend. |
 | Rifts | Stormwake Hollow. No fail timer. |
 | Greater Rifts | Mothveil Hollow. Timed. Local season PB. |
 | Ashen Crown | Weekly ticket. Rotates shipped caves. Not zone 16. |
@@ -142,6 +145,8 @@ fields may remain.
 PATH markers sit on lands. Catalog order is still 0…14.
 
 Floors, chambers, gates, and wipe advice: `docs/FLOOR_BLUEPRINT.md`.
+The open hall runs north and south so the next pack, or its closed gate,
+stays on one phone screen. A chest floor opens on the chest.
 Combat ratings: `docs/GEAR_BUDGET.md` (`CombatRatings`). Player-facing
 stamina is STA.
 

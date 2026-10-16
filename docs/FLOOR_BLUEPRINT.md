@@ -106,14 +106,15 @@ Varje beat mappar till **rumstaggar** som `RoomLayouts` förstår:
 | `shrine` | quiet side room (~10–11×9–10), symmetric | rune circle + altar, 0 enemies |
 | `wonder` | rare side room (~13–14×11–12) | hoard / skeleton / starfall / soul well |
 | `setpiece` | last main fight (~16–17×12–13), symmetric | dais + zone signature props |
-| `boss` | oval arena (~18×13) with short north/south bays | one phone at mid zoom |
+| `boss` | oval arena (~16–17×13–14) with short north/south bays | one phone at mid zoom |
 | `exitHold` | exit landing (~12–14×10–11) | stairs/boss stairs |
 
 Main path **zigzags** north/south across a lane while progressing east. Treasure alcoves
 **branch** off the last main chamber — exit stays on the spine. Canvas is
 about 104×66. Halls are 4 tiles wide, chokes 3. Spine rooms step 4 tiles
 north or south and still overlap on X, so the open hall is one leg on
-the tall axis. An east step hides the next pack beside a fight room.
+the tall axis. East is only the fallback: it hides the next pack beside
+a fight room.
 The gate is that full width, and only where the span was carved outside
 both rooms. A phone camera (~20 cols, taller than that) sees the fight
 and the next pack, not the whole floor.
