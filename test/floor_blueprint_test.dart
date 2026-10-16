@@ -124,6 +124,11 @@ void main() {
       if (decoys.isEmpty) continue;
       map = candidate;
       for (final decoy in decoys) {
+        expect(
+          decoy.side,
+          isFalse,
+          reason: 'shrine stays on the hall seed $seed',
+        );
         final enemiesHere = candidate.enemySpawns.where(
           (e) => decoy.containsTile(e.$1, e.$2),
         );

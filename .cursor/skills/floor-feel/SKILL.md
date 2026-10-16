@@ -74,8 +74,8 @@ bump from AL/KEY pressure. Room size does not.
   the next pack do not share the phone, the camera keeps that closed
   gate in frame (`dungeonGateFocus`). A chest floor has no pack: the
   camera uses the chest the same way, so the party card does not hide
-  it (`dungeonPackInClearView`). A shrine sits beside the first fight
-  and blesses that fight. Rooms stay full size. "the open hall
+  it (`dungeonPackInClearView`). A shrine sits on the hall the party already walks, and blesses
+  that fight. Rooms stay full size. "the open hall
   between fights fits one phone view" and "gates seal the full corridor"
   stay green in the same change. The A56 before-and-after still applies.
 

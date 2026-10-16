@@ -2283,6 +2283,10 @@ abstract final class SpatialCombat {
       treasureTimer: isTreasure ? 1.2 : 0,
       activeChamber: firstCombat,
       clearedChambers: <int>{0},
+      openGateIds: {
+        for (final gate in map.gates)
+          if (gate.opensAfterChamber <= 0) gate.id,
+      },
       pets: pets,
       afkAssist: afkAssist ?? false,
       dungeonId: state.dungeonId,

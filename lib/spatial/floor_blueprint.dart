@@ -86,9 +86,9 @@ class FloorBlueprint {
 
   /// Beats that become carved chambers (exit sits on the last one).
   List<FloorBeat> get storyChambers => [
-        for (final b in beats)
-          if (b.kind != FloorBeatKind.exitHold) b,
-      ];
+    for (final b in beats)
+      if (b.kind != FloorBeatKind.exitHold) b,
+  ];
 
   /// Sum of per-beat enemy budgets (should match [DungeonRoom.enemyCount]).
   int get combatEnemyBudget =>
@@ -167,12 +167,7 @@ class FloorBlueprint {
         } else if (budget >= 5 &&
             kit.shrineAlcoveChance > 0 &&
             lookRng.nextDouble() < kit.shrineAlcoveChance) {
-          beats.add(
-            const FloorBeat(
-              FloorBeatKind.shrine,
-              attach: FloorBeatAttach.sideMain,
-            ),
-          );
+          _seatShrineOnThePath(beats);
         }
         if (rollSetpiece) _promoteSetpiece(beats);
         beats.add(const FloorBeat(FloorBeatKind.exitHold));
@@ -267,10 +262,20 @@ class FloorBlueprint {
       beats.add(FloorBeat(FloorBeatKind.wonder, attach: sideAttach));
       return true;
     }
-    if (rollShrine) {
-      beats.add(FloorBeat(FloorBeatKind.shrine, attach: sideAttach));
-    }
+    if (rollShrine) _seatShrineOnThePath(beats);
     return false;
+  }
+
+  /// The shrine sits on the hall the party already walks, so the portrait
+  /// phone shows the altar with that fight. A west alcove hides it.
+  static void _seatShrineOnThePath(List<FloorBeat> beats) {
+    final insertAt = beats.indexWhere(
+      (b) =>
+          !b.isSide &&
+          (b.kind == FloorBeatKind.approach || b.kind == FloorBeatKind.hub),
+    );
+    if (insertAt < 0) return;
+    beats.insert(insertAt + 1, const FloorBeat(FloorBeatKind.shrine));
   }
 
   static void _addHubSpineAndSides(
@@ -459,7 +464,8 @@ class FloorBlueprint {
     int crowd = 1,
   }) {
     if (budget < 5) return;
-    if (kit.eliteAlcoveChance <= 0 || rng.nextDouble() >= kit.eliteAlcoveChance) {
+    if (kit.eliteAlcoveChance <= 0 ||
+        rng.nextDouble() >= kit.eliteAlcoveChance) {
       return;
     }
     final eliteBudget = max(1, min(2 * crowd, budget ~/ 5));

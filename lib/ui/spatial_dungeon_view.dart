@@ -1205,37 +1205,10 @@ class _TileCamera {
       }
     }
     ({double x, double y})? chest;
-    ({double x, double y})? shrineAltar;
-    var shrineD = 30.0;
     for (final p in world.map.props) {
-      if (p.kind == MapPropKind.chest &&
-          chest == null &&
-          (p.hero || p.happening)) {
+      if (p.kind == MapPropKind.chest && (p.hero || p.happening)) {
         chest = (x: p.x + 0.5, y: p.y + 0.5);
-      }
-      if (farPack == null || p.kind != MapPropKind.altar || !p.hero) continue;
-      final inShrine = world.map.chambers.any(
-        (c) => c.beatKind == FloorBeatKind.shrine && c.containsTile(p.x, p.y),
-      );
-      if (!inShrine) continue;
-      final dx = p.x + 0.5 - farPack.x;
-      final dy = p.y + 0.5 - farPack.y;
-      final d = math.sqrt(dx * dx + dy * dy);
-      if (d < shrineD) {
-        shrineD = d;
-        shrineAltar = (x: p.x + 0.5, y: p.y + 0.5);
-      }
-    }
-    if (farPack != null && shrineAltar == null) {
-      for (final c in world.map.chambers) {
-        if (c.beatKind != FloorBeatKind.shrine) continue;
-        final dx = c.cx + 0.5 - farPack.x;
-        final dy = c.cy + 0.5 - farPack.y;
-        final d = math.sqrt(dx * dx + dy * dy);
-        if (d < shrineD) {
-          shrineD = d;
-          shrineAltar = (x: c.cx + 0.5, y: c.cy + 0.5);
-        }
+        break;
       }
     }
     chest ??= () {
@@ -1246,10 +1219,9 @@ class _TileCamera {
       }
       return null;
     }();
-    // A chest floor has no pack. A shrine beside the fight is the far edge
-    // of that same picture. Either one, hidden by the party card, used to
-    // leave the floor opening on an empty hall.
-    final goal = shrineAltar ?? farPack ?? chest;
+    // A chest floor has no pack. The party card used to hide that chest
+    // and leave the opening on an empty hall.
+    final goal = farPack ?? chest;
     final clear =
         goal != null &&
         dungeonPackInClearView(
@@ -1296,8 +1268,7 @@ class _TileCamera {
                       maxShiftY: visibleRows * 0.14,
                     )
                   : party);
-    final shrinePull = shrineAltar != null && goal == shrineAltar;
-    final focus = world.awaitingExit || (gateFocus != null && !shrinePull)
+    final focus = world.awaitingExit || gateFocus != null
         ? raw
         : dungeonIncludeParty(
             focusX: raw.x,
@@ -1307,16 +1278,32 @@ class _TileCamera {
             visibleRows: visibleRows,
           );
     if (kDebugMode && goal != null) {
+      // dungeonNextFocus also frames the pack. The gate only wins when
+      // the full phone cannot hold both.
+      final gateWon =
+          !world.awaitingExit &&
+          !clear &&
+          dungeonGateFocus(
+                partyX: party.x,
+                partyY: party.y,
+                packX: goal.x,
+                packY: goal.y,
+                closedGates: closedGates,
+                visibleCols: cols,
+                visibleRows: visibleRows,
+              ) !=
+              null;
       final key =
-          '${party.y.toStringAsFixed(1)}>${goal.y.toStringAsFixed(1)}:$clear';
+          '${party.y.toStringAsFixed(0)}>${goal.x.toStringAsFixed(0)},${goal.y.toStringAsFixed(0)}:$clear:$gateWon';
       if (key != _lastCamLog) {
         _lastCamLog = key;
         DebugPlayLog.event(
           'cam',
           'rows=${visibleRows.toStringAsFixed(1)} '
               'cols=${cols.toStringAsFixed(1)} clear=$clear '
-              'partyY=${party.y.toStringAsFixed(1)} '
-              'goalY=${goal.y.toStringAsFixed(1)}',
+              'party=${party.x.toStringAsFixed(1)},${party.y.toStringAsFixed(1)} '
+              'goal=${goal.x.toStringAsFixed(1)},${goal.y.toStringAsFixed(1)} '
+              'gate=$gateWon',
         );
       }
     }
