@@ -55,6 +55,11 @@ def test_offscreen_node_is_flagged():
     assert "offscreen" in rules(found)
 
 
+def test_a_node_fully_below_the_screen_is_quiet():
+    found = run_checks([node("SCROLL ROW", 40, 2400, 1040, 2500)])
+    assert "offscreen" not in rules(found)
+
+
 def test_partial_overlap_is_flagged_and_nesting_is_not():
     overlap = run_checks(
         [

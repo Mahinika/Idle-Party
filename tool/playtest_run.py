@@ -42,9 +42,10 @@ from playtest_checks import (
     SCREEN_H,
     SCREEN_W,
     CheckFinding,
+    numbers_close,
     run_checks,
 )
-from playtest_imgdiff import contact_sheet, diff_images, scale_rect
+from playtest_imgdiff import contact_sheet, diff_images, overflow_banner, scale_rect
 
 ROOT = Path(__file__).resolve().parents[1]
 SHOTS = ROOT / "playshots" / "playtest"
@@ -86,6 +87,7 @@ _SEV = {
     "offline_mismatch": "blockerar",
     "dead_end": "forvirrar",
     "jargon": "kosmetiskt",
+    "overflow_banner": "forvirrar",
 }
 _TYPE = {
     "state_mismatch": "kod",
@@ -95,7 +97,9 @@ _TYPE = {
     "pixels_changed": "visuellt",
     "offscreen": "visuellt",
     "tree_moved": "visuellt",
+    "overflow_banner": "visuellt",
 }
+_WALLET_G = re.compile(r"([\d,]+)\s*g\b", re.I)
 
 
 def fold_ip_state(text: str) -> dict:
@@ -109,8 +113,10 @@ def fold_ip_state(text: str) -> dict:
                 state["al"] = int(match.group(1))
             if match := _GOLD_ABS.search(line):
                 state["gold"] = int(match.group(1))
+                state["gold_fresh"] = False
             if match := _ESSENCE_ABS.search(line):
                 state["essence"] = int(match.group(1))
+                state["essence_fresh"] = False
             if match := _MEAN_ABS.search(line):
                 state["mean_lv"] = int(match.group(1))
             if _DUNGEON.search(line):
@@ -122,6 +128,10 @@ def fold_ip_state(text: str) -> dict:
         elif "[IP] state" in line:
             for key, _before, after in _DELTA.findall(line):
                 state[_DELTA_KEY[key]] = int(after)
+                if key == "gold":
+                    state["gold_fresh"] = True
+                elif key == "e":
+                    state["essence_fresh"] = True
     return state
 
 
@@ -229,6 +239,13 @@ def offline_notes(before: dict, after: dict, welcome: str) -> list[dict]:
         if not match:
             continue
         shown = int(next(group for group in match.groups() if group))
+        if key == "gold":
+            wallet_ok = any(
+                numbers_close(int(raw.replace(",", "")), int(after["gold"]))
+                for raw in _WALLET_G.findall(welcome)
+            )
+            if wallet_ok:
+                continue
         delta = int(after[key]) - int(before[key])
         slack = max(2, int(0.05 * max(shown, 1)))
         if abs(delta - shown) > slack:
@@ -510,12 +527,16 @@ def render_report(session: dict, screens: dict, now: float) -> str:
         items = by_screen.get(name, [])
         lines.append(f"### {name}")
         if items:
+            by_rule: dict[str, list[dict]] = {}
             for item in items:
-                count = item.get("count", 1)
-                suffix = f" ×{count}" if count > 1 else ""
+                by_rule.setdefault(item.get("rule") or "?", []).append(item)
+            for rule, group in by_rule.items():
+                total = sum(int(row.get("count") or 1) for row in group)
+                first = group[0]
+                suffix = f" ×{total}" if total > 1 else ""
                 lines.append(
-                    f"- {item.get('id')} · {item.get('type')} · {item.get('sev')} · "
-                    f"{item.get('rule')}{suffix}: {item.get('message')}"
+                    f"- {first.get('id')} · {first.get('type')} · {first.get('sev')} · "
+                    f"{rule}{suffix}: {first.get('message')}"
                 )
         else:
             lines.append("- OK (nothing flagged on this visit)")
@@ -1386,6 +1407,7 @@ def analyze_snap(folder: Path, snap_id: str) -> None:
     tree = json.loads(tree_path.read_text(encoding="utf-8")) if tree_path.exists() else []
     screen = snap.get("screen") or "hub"
     findings: list[dict] = []
+    png = folder / snap["png"] if snap.get("png") else None
     if not snap.get("dump_ok"):
         findings.append(
             {
@@ -1398,11 +1420,18 @@ def analyze_snap(folder: Path, snap_id: str) -> None:
         )
     else:
         nodes = [node_from_dict(item) for item in tree]
+        check_state = dict(data.get("state") or {})
+        if not check_state.get("gold_fresh"):
+            check_state.pop("gold", None)
+        if not check_state.get("essence_fresh"):
+            check_state.pop("essence", None)
+        check_state.pop("gold_fresh", None)
+        check_state.pop("essence_fresh", None)
         for item in run_checks(
             nodes,
             screen=screen,
             jargon=bool(data.get("jargon")),
-            state=data.get("state") or None,
+            state=check_state or None,
         ):
             findings.append(_from_check(item))
         base_png, base_json = baseline_paths(screen, data.get("stage") or "mid")
@@ -1410,7 +1439,6 @@ def analyze_snap(folder: Path, snap_id: str) -> None:
             baseline = json.loads(base_json.read_text(encoding="utf-8"))
             for item in tree_diff(tree, baseline):
                 findings.append(item)
-        png = folder / snap["png"] if snap.get("png") else None
         if base_png.exists() and png is not None and png.exists():
             masks = _masks_for(screen, png, tree)
             diff_path = folder / f"{snap['id']}-diff.png"
@@ -1428,6 +1456,16 @@ def analyze_snap(folder: Path, snap_id: str) -> None:
                         ),
                     }
                 )
+    if png is not None and png.exists() and overflow_banner(png):
+        findings.append(
+            {
+                "rule": "overflow_banner",
+                "label": screen,
+                "type": "visuellt",
+                "sev": "forvirrar",
+                "message": "Flutter overflow stripe is on the picture",
+            }
+        )
     log_lines = _log_hits(folder)
     cursor = int(data.get("log_cursor") or 0)
     for line in log_lines[cursor:cursor + 30]:
@@ -1698,12 +1736,37 @@ def cmd_swipe(coords: list[str], expect: str) -> int:
     return 0
 
 
+def _tree_labels(folder: Path, snap_id: str) -> list[str]:
+    path = folder / f"{snap_id}.json"
+    if not path.exists():
+        return []
+    try:
+        tree = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(tree, list):
+        return []
+    return [str(item.get("label") or "") for item in tree]
+
+
+def _hub_on_tree(labels: list[str]) -> bool:
+    if not labels:
+        return False
+    enter = any("ENTER DUNGEON" in label for label in labels)
+    leave = any(re.search(r"\bLEAVE\b", label) for label in labels)
+    return enter and not leave
+
+
 def cmd_fight(seconds: int) -> int:
     folder = current_dir()
     deadline = time.time() + max(1, seconds)
     index = 0
     while True:
-        take_snap(folder, f"fight-{index}")
+        snap = take_snap(folder, f"fight-{index}")
+        if _hub_on_tree(_tree_labels(folder, snap["id"])):
+            print("left the floor")
+            index += 1
+            break
         index += 1
         remaining = deadline - time.time()
         if remaining <= 1:
@@ -1792,12 +1855,21 @@ def cmd_good(screen: str, why: str) -> int:
     )
     if snap is None:
         raise SystemExit(f"No picture of {screen} in this round.")
+    tree_src = folder / snap["tree"]
+    tree_list: list = []
+    if tree_src.exists():
+        try:
+            loaded = json.loads(tree_src.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            loaded = None
+        if isinstance(loaded, list):
+            tree_list = loaded
+    if not tree_list:
+        raise SystemExit(f"No button list for {screen}. Snap again, then good.")
     BASELINE.mkdir(parents=True, exist_ok=True)
     png, tree = baseline_paths(screen, stage)
     shutil.copyfile(folder / snap["png"], png)
-    tree_src = folder / snap["tree"]
-    if tree_src.exists():
-        shutil.copyfile(tree_src, tree)
+    shutil.copyfile(tree_src, tree)
     memory = load_memory()
     rel = png.relative_to(ROOT).as_posix()
     kept = [

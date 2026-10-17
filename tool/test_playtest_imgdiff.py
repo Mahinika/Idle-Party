@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from PIL import Image, ImageDraw
 
-from playtest_imgdiff import TILE, diff_images
+from playtest_imgdiff import TILE, diff_images, overflow_banner
 
 
 def _solid(path: Path, color: tuple[int, int, int], box=None, fill=(255, 255, 255)) -> None:
@@ -43,6 +43,26 @@ def test_a_changed_block_is_flagged():
         result = diff_images(left, right, root / "diff.png")
         assert result["changed_tiles"] >= 1
         assert result["changed_frac"] > 0
+
+
+def test_overflow_stripes_count_and_a_gold_block_does_not():
+    with tempfile.TemporaryDirectory() as folder:
+        root = Path(folder)
+        stripe = root / "stripe.png"
+        image = Image.new("RGB", (80, 40), (255, 235, 0))
+        draw = ImageDraw.Draw(image)
+        for offset in range(-40, 80, 6):
+            draw.line([(offset, 0), (offset + 40, 40)], fill=(0, 0, 0), width=2)
+        image.save(stripe)
+        assert overflow_banner(stripe) is True
+
+        dark = root / "dark.png"
+        Image.new("RGB", (80, 40), (10, 10, 10)).save(dark)
+        assert overflow_banner(dark) is False
+
+        gold = root / "gold.png"
+        Image.new("RGB", (80, 40), (255, 180, 40)).save(gold)
+        assert overflow_banner(gold) is False
 
 
 def test_a_masked_change_is_ignored():

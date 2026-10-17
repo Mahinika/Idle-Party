@@ -18,6 +18,30 @@ TILE_DELTA = 24
 MASK_COVER = 0.50
 
 
+def overflow_banner(path: Path) -> bool:
+    """True when the snap shows Flutter's yellow/black overflow stripe."""
+    image = Image.open(path).convert("RGB")
+    width, height = image.size
+    hits = 0
+    for y in range(0, height, 2):
+        run_yellow = 0
+        run_black = 0
+        for x in range(0, width, 2):
+            r, g, b = image.getpixel((x, y))
+            if r > 220 and g > 200 and b < 80:
+                run_yellow += 1
+            elif r < 30 and g < 30 and b < 30:
+                run_black += 1
+            else:
+                if run_yellow >= 3 and run_black >= 3:
+                    hits += 1
+                run_yellow = 0
+                run_black = 0
+        if run_yellow >= 3 and run_black >= 3:
+            hits += 1
+    return hits >= 4
+
+
 def diff_images(
     current_path: Path,
     baseline_path: Path,

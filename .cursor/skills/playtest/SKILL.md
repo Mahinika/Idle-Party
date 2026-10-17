@@ -68,6 +68,8 @@ py -3 tool/playtest_run.py fight 240
 py -3 tool/playtest_run.py note "two primaries on the hub" --type ux --sev forvirrar
 ```
 
+If `fight` prints `left the floor`, the party is on the hub. Enter the dungeon once more and run `fight` again for the time still left of the four minutes. Do not loop a third time.
+
 Fight sheets and the UI tree fallback: [reference.md](reference.md) § Fight sheet and UI tree.
 
 Cover the list `status` prints. It depends on the save: early, mid, or

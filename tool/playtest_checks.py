@@ -199,7 +199,16 @@ def _clipped_by_nav(nodes: list[Node]) -> list[CheckFinding]:
 def _offscreen(nodes: list[Node]) -> list[CheckFinding]:
     out: list[CheckFinding] = []
     slack = OFFSCREEN_SLACK_PX
+    screen_x1, screen_y1 = -slack, -slack
+    screen_x2, screen_y2 = SCREEN_W + slack, SCREEN_H + slack
     for node in nodes:
+        if (
+            node.x2 <= screen_x1
+            or node.x1 >= screen_x2
+            or node.y2 <= screen_y1
+            or node.y1 >= screen_y2
+        ):
+            continue
         if (
             node.x1 >= -slack
             and node.y1 >= -slack

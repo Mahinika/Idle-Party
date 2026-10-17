@@ -45,6 +45,15 @@ I/flutter: [IP] enter · sandy F1 · KEY +0
     assert state["al"] == 0
     assert state["mean_lv"] == 4
     assert state["in_dungeon"] is True
+    assert state.get("gold_fresh") is True
+    assert state.get("essence_fresh") is True
+
+    boot_only = """
+I/flutter: [IP] continue · AL0 · hub · gold 100 · e 5 · chase Fight · bag 2 · meanLv 4
+"""
+    fresh = fold_ip_state(boot_only)
+    assert fresh["gold"] == 100
+    assert fresh.get("gold_fresh") is False
 
 
 def test_stage_and_nav():
@@ -74,6 +83,17 @@ def test_save_slot_prefers_the_named_party_and_skips_empty():
         node("SAVE 2 Empty", 40, 400, 800, 520),
     ]
     assert pick_save_slot(live, "The Party").label.startswith("SAVE 1")
+
+
+def test_welcome_header_wallet_keeps_the_earned_line_quiet():
+    before = {"gold": 693559}
+    after = {"gold": 693587}
+    welcome = (
+        "Welcome back!\n"
+        "Your party earned 299181 gold while you were away.\n"
+        "693,587g in the header."
+    )
+    assert offline_notes(before, after, welcome) == []
 
 
 def test_offline_mismatch_and_quiet_when_the_number_matches():
@@ -137,6 +157,35 @@ def test_findings_collapse_and_report_warns_when_short():
     verdict = render_report(full, {"coverage": {"early": ["hub"]}}, now=1600)
     assert "tool check" not in verdict
     assert "snap PNG shows the same thing" in verdict
+
+
+def test_report_groups_the_same_rule_on_one_line():
+    session = {
+        "next_id": 1,
+        "findings": [],
+        "snaps": [{"screen": "gear", "covers": ["gear"]}],
+        "stage": "early",
+        "play_started": 1000,
+        "scope": "",
+    }
+    add_finding(
+        session,
+        rule="overlap",
+        screen="gear",
+        label="A + B",
+        message="Two buttons overlap, so a tap can hit the wrong one",
+    )
+    add_finding(
+        session,
+        rule="overlap",
+        screen="gear",
+        label="C + D",
+        message="Two buttons overlap, so a tap can hit the wrong one",
+    )
+    text = render_report(session, {"coverage": {"early": ["gear"]}}, now=1600)
+    overlap_lines = [line for line in text.splitlines() if "overlap" in line]
+    assert len(overlap_lines) == 1
+    assert "×2" in overlap_lines[0]
 
 
 def test_memory_roundtrip_shape():
