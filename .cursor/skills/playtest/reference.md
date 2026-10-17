@@ -77,6 +77,12 @@ are already flagged. So are off-screen nodes, overlapping buttons, duplicate
 labels, a screen with no way on, jargon on an AL0 save, and header numbers
 that disagree with the save.
 
+Tree lines (`touch_small`, `overlap`, `duplicate`) are leads, not findings.
+Skip them unless a tap missed that control or the PNG shows two labels on top
+of each other. Also watch for three session things: the party left the floor
+with no clear or wipe toast, a number moved with no toast in the log, or the
+snap's screen name disagrees with the picture.
+
 ## Checks without a phone
 
 Pillow is required for picture diffs: `py -3 -m pip install pillow`.

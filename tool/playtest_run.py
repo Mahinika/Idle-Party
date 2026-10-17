@@ -77,7 +77,9 @@ _NAV = re.compile(r"\[IP\] nav ·\s*(.+)$")
 _LOG_BAD = re.compile(r"E/flutter|FATAL|ANR in|Skipped \d+ frames|Exception")
 _FLUTTER_PID = re.compile(r"flutter\s*\(\s*(\d+)\s*\)", re.I)
 _LOG_PID = re.compile(r"\(\s*(\d+)\s*\)")
-_REFUSE = re.compile(r"\b(overwrite|erase|reborn|redeem|delete)\b", re.I)
+_REFUSE = re.compile(
+    r"\b(overwrite|erase|reborn|redeem|delete|claim vault)\b", re.I
+)
 _WARN = re.compile(r"\b(ascend|scrap|sell)\b", re.I)
 _SAVE_LABEL = re.compile(r"^SAVE [1-5]\b", re.I)
 
@@ -531,6 +533,13 @@ def render_report(session: dict, screens: dict, now: float) -> str:
             for item in items:
                 by_rule.setdefault(item.get("rule") or "?", []).append(item)
             for rule, group in by_rule.items():
+                if rule == "note":
+                    for row in group:
+                        lines.append(
+                            f"- {row.get('id')} · {row.get('type')} · {row.get('sev')} · "
+                            f"{rule}: {row.get('message')}"
+                        )
+                    continue
                 total = sum(int(row.get("count") or 1) for row in group)
                 first = group[0]
                 suffix = f" ×{total}" if total > 1 else ""
@@ -1143,6 +1152,7 @@ def end_logcat(pid: int | None) -> None:
 
 
 def begin_logcat(serial: str, folder: Path) -> int:
+    adb_see.adb(serial, "logcat", "-c", check=False)
     path = folder / "logcat.txt"
     handle = open(path, "w", encoding="utf-8", errors="replace")
     flags = {}
@@ -1554,9 +1564,15 @@ def take_snap(folder: Path, requested: str | None, expect: str = "") -> dict:
     state = dict(data.get("state") or {})
     state.update(fold_ip_state(ip_text))
     nav = latest_nav(ip_text)
-    screen = _screen_for(name, nav, bool(state.get("in_dungeon")), load_screens())
-    covers = [screen]
     labels = nodes or []
+    screen = _screen_for(
+        name,
+        nav,
+        bool(state.get("in_dungeon")),
+        load_screens(),
+        nodes=nodes,
+    )
+    covers = [screen]
     if screen == "hub" and has_any(labels, "ENTER DUNGEON"):
         covers.append("path")
     record = {
@@ -1590,10 +1606,35 @@ def take_snap(folder: Path, requested: str | None, expect: str = "") -> dict:
     return record
 
 
-def _screen_for(name: str, nav: str, in_dungeon: bool, screens: dict) -> str:
+def _hub_on_tree(labels: list[str]) -> bool:
+    if not labels:
+        return False
+    enter = any("ENTER DUNGEON" in label for label in labels)
+    leave = any(re.search(r"\bLEAVE\b", label) for label in labels)
+    return enter and not leave
+
+
+def _screen_for(
+    name: str,
+    nav: str,
+    in_dungeon: bool,
+    screens: dict,
+    nodes: list[Node] | None = None,
+) -> str:
     known = set(screens.get("screens", {}))
     if name in known:
         return name
+    if nodes:
+        labels = [n.label for n in nodes]
+        has_close = any("CLOSE" in label for label in labels)
+        has_enter = any("ENTER DUNGEON" in label for label in labels)
+        has_leave = any(re.search(r"\bLEAVE\b", label) for label in labels)
+        menu_only = has_close and not has_enter and not has_leave
+        if not menu_only:
+            if _hub_on_tree(labels):
+                return "hub"
+            if any(n.clickable and re.search(r"\bLEAVE\b", n.label) for n in nodes):
+                return "dungeon"
     if name.startswith("fight"):
         return "dungeon"
     if nav or in_dungeon:
@@ -1749,14 +1790,6 @@ def _tree_labels(folder: Path, snap_id: str) -> list[str]:
     return [str(item.get("label") or "") for item in tree]
 
 
-def _hub_on_tree(labels: list[str]) -> bool:
-    if not labels:
-        return False
-    enter = any("ENTER DUNGEON" in label for label in labels)
-    leave = any(re.search(r"\bLEAVE\b", label) for label in labels)
-    return enter and not leave
-
-
 def cmd_fight(seconds: int) -> int:
     folder = current_dir()
     deadline = time.time() + max(1, seconds)
@@ -1776,7 +1809,11 @@ def cmd_fight(seconds: int) -> int:
     data = load_session(folder)
     paths = []
     for snap in data["snaps"]:
-        if str(snap.get("name", "")).startswith("fight-") and snap.get("png"):
+        if (
+            str(snap.get("name", "")).startswith("fight-")
+            and snap.get("png")
+            and snap.get("screen") == "dungeon"
+        ):
             paths.append(folder / snap["png"])
     if paths:
         dest = folder / "fight-sheet.png"

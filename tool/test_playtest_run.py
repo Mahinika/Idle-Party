@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from adb_see import Node
 from playtest_run import (
     _log_hits,
+    _screen_for,
     add_finding,
     extra_screens,
     fold_ip_state,
@@ -186,6 +187,42 @@ def test_report_groups_the_same_rule_on_one_line():
     overlap_lines = [line for line in text.splitlines() if "overlap" in line]
     assert len(overlap_lines) == 1
     assert "×2" in overlap_lines[0]
+    add_finding(
+        session,
+        kind="note",
+        rule="note",
+        screen="gear",
+        message="first note",
+        type="ux",
+        sev="forvirrar",
+    )
+    add_finding(
+        session,
+        kind="note",
+        rule="note",
+        screen="gear",
+        message="second note",
+        type="ux",
+        sev="kosmetiskt",
+    )
+    text = render_report(session, {"coverage": {"early": ["gear"]}}, now=1600)
+    assert "first note" in text
+    assert "second note" in text
+
+
+def test_screen_for_trusts_visible_hub_and_dungeon_over_stale_nav():
+    screens = {"screens": {"hub": {}, "dungeon": {}, "key": {}}}
+    hub_nodes = [
+        node("ENTER DUNGEON", 0, 700, 200, 800),
+        node("GEAR", 0, 100, 100, 200),
+    ]
+    assert _screen_for("", "KEY", False, screens, hub_nodes) == "hub"
+    assert _screen_for("fight-1", "", True, screens, hub_nodes) == "hub"
+    dungeon_nodes = [
+        node("LEAVE", 0, 700, 200, 800),
+        node("PUSH", 0, 600, 200, 700),
+    ]
+    assert _screen_for("", "KEY", False, screens, dungeon_nodes) == "dungeon"
 
 
 def test_memory_roundtrip_shape():

@@ -36,7 +36,8 @@ scope: same round, about half the time on that part.
    Then pick the round: something that was not just tested and is not OK.
    An OK screen is not the point of the round. Open it only if the path
    runs through it. A **good** picture is a baseline, not a reason to
-   spend the round there again.
+   spend the round there again. Write one question for this round (for
+   example, whether the walk between rooms fits the phone).
 2. Follow [a56-playtest](../a56-playtest/SKILL.md) until **this** batch is
    the build on the emulator. Keep the save. Do not `adb uninstall`.
 3. Start the round:
@@ -68,7 +69,7 @@ py -3 tool/playtest_run.py fight 240
 py -3 tool/playtest_run.py note "two primaries on the hub" --type ux --sev forvirrar
 ```
 
-If `fight` prints `left the floor`, the party is on the hub. Enter the dungeon once more and run `fight` again for the time still left of the four minutes. Do not loop a third time.
+If `fight` prints `left the floor`, the party is on the hub. Enter the dungeon once more, tap `FARM` if this save clears the boss in seconds, and run `fight` again for the time still left of the four minutes. Do not loop a third time.
 
 Fight sheets and the UI tree fallback: [reference.md](reference.md) § Fight sheet and UI tree.
 

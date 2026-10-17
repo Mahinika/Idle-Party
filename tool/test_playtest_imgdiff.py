@@ -64,6 +64,12 @@ def test_overflow_stripes_count_and_a_gold_block_does_not():
         Image.new("RGB", (80, 40), (255, 180, 40)).save(gold)
         assert overflow_banner(gold) is False
 
+        gold_btn = root / "gold_btn.png"
+        btn = Image.new("RGB", (80, 40), (10, 10, 10))
+        ImageDraw.Draw(btn).rectangle([10, 10, 70, 30], fill=(255, 235, 0))
+        btn.save(gold_btn)
+        assert overflow_banner(gold_btn) is False
+
 
 def test_a_masked_change_is_ignored():
     with tempfile.TemporaryDirectory() as folder:
