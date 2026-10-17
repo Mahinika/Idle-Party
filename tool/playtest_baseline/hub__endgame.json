@@ -1,1 +1,392 @@
-[]
+[
+  {
+    "label": "Settings",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 912,
+    "y1": 24,
+    "x2": 1044,
+    "y2": 156
+  },
+  {
+    "label": "470,729g +418/m \u00b7 12h",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 33,
+    "x2": 422,
+    "y2": 180
+  },
+  {
+    "label": "Gold 470,729g, Essence 174.9k Gold 470,729g. +418/m \u00b7 12h 174.9k",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 33,
+    "x2": 606,
+    "y2": 147
+  },
+  {
+    "label": "Ascend, AL 3, Blessing \u00d73",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 651,
+    "y1": 46,
+    "x2": 885,
+    "y2": 134
+  },
+  {
+    "label": "The Party \u00b7 Boss on F8",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 162,
+    "x2": 799,
+    "y2": 204
+  },
+  {
+    "label": "\u00b7",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 823,
+    "y1": 162,
+    "x2": 838,
+    "y2": 204
+  },
+  {
+    "label": "Ascend ready",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 862,
+    "y1": 162,
+    "x2": 1044,
+    "y2": 204
+  },
+  {
+    "label": "PATH",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 222,
+    "x2": 538,
+    "y2": 354
+  },
+  {
+    "label": "ENDGAME",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 542,
+    "y1": 222,
+    "x2": 1044,
+    "y2": 354
+  },
+  {
+    "label": "Rimeglass Rift, NEXT",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 428,
+    "y1": 372,
+    "x2": 572,
+    "y2": 564
+  },
+  {
+    "label": "Stormwake Hollow, HERE, selected",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 710,
+    "y1": 372,
+    "x2": 854,
+    "y2": 564
+  },
+  {
+    "label": "Crystal Spire,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 246,
+    "y1": 393,
+    "x2": 390,
+    "y2": 537
+  },
+  {
+    "label": "Mothveil Hollow,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 831,
+    "y1": 526,
+    "x2": 975,
+    "y2": 670
+  },
+  {
+    "label": "Hollow Grove,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 549,
+    "y1": 539,
+    "x2": 693,
+    "y2": 683
+  },
+  {
+    "label": "King's Fort,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 166,
+    "y1": 552,
+    "x2": 310,
+    "y2": 696
+  },
+  {
+    "label": "Underworld,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 327,
+    "y1": 579,
+    "x2": 471,
+    "y2": 723
+  },
+  {
+    "label": "RANKS. Season boards",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 864,
+    "y1": 616,
+    "x2": 1044,
+    "y2": 820
+  },
+  {
+    "label": "Sunken Tidehold,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 85,
+    "y1": 672,
+    "x2": 229,
+    "y2": 816
+  },
+  {
+    "label": "Brassvault Deep,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 770,
+    "y1": 672,
+    "x2": 914,
+    "y2": 816
+  },
+  {
+    "label": "City of Dead,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 387,
+    "y1": 685,
+    "x2": 531,
+    "y2": 829
+  },
+  {
+    "label": "Blightfen Mire,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 508,
+    "y1": 712,
+    "x2": 652,
+    "y2": 856
+  },
+  {
+    "label": "Goblin's Hideout,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 307,
+    "y1": 791,
+    "x2": 451,
+    "y2": 935
+  },
+  {
+    "label": "Sandy Caverns,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 166,
+    "y1": 818,
+    "x2": 310,
+    "y2": 962
+  },
+  {
+    "label": "Ashen Vault,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 710,
+    "y1": 818,
+    "x2": 854,
+    "y2": 962
+  },
+  {
+    "label": "SCROLLS. SCROLLS",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 864,
+    "y1": 820,
+    "x2": 1044,
+    "y2": 1036
+  },
+  {
+    "label": "Hell's Gate,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 549,
+    "y1": 844,
+    "x2": 693,
+    "y2": 988
+  },
+  {
+    "label": "Stormwake Hollow. Tap for zone details Stormwake Hollow",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 1048,
+    "x2": 1044,
+    "y2": 1180
+  },
+  {
+    "label": "Next job: Claim Daily Vault. Check-in 6/7 \u00b7 +100 essence \u00b7 +22,000 gold. Claim +131e essence + 1 Cinder. Covers your next camp upgrade.. Next job READY Claim Daily Vault Check-in 6/7 \u00b7 +100 essence \u00b7 +22,000 gold. Claim +131e essence + 1 Cinder. Covers your next camp upgrade.",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 1198,
+    "x2": 1044,
+    "y2": 1501
+  },
+  {
+    "label": "CLAIM VAULT. CLAIM VAULT",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 33,
+    "y1": 1519,
+    "x2": 1047,
+    "y2": 1671
+  },
+  {
+    "label": "ENTER DUNGEON",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 1682,
+    "x2": 1044,
+    "y2": 1822
+  },
+  {
+    "label": "ASCEND +87e",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 1834,
+    "x2": 1044,
+    "y2": 1973
+  },
+  {
+    "label": "CLAIM QUESTS (2)",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 1985,
+    "x2": 1044,
+    "y2": 2124
+  },
+  {
+    "label": "2 to claim \u00b7 Patch Notes",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 24,
+    "y1": 2136,
+    "x2": 1056,
+    "y2": 2175
+  },
+  {
+    "label": "GEAR",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 6,
+    "y1": 2190,
+    "x2": 184,
+    "y2": 2337
+  },
+  {
+    "label": "GOLD",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 184,
+    "y1": 2190,
+    "x2": 362,
+    "y2": 2337
+  },
+  {
+    "label": "SHOP",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 362,
+    "y1": 2190,
+    "x2": 540,
+    "y2": 2337
+  },
+  {
+    "label": "ESSENCE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 540,
+    "y1": 2190,
+    "x2": 718,
+    "y2": 2337
+  },
+  {
+    "label": "MORE \u2605 waiting",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 718,
+    "y1": 2190,
+    "x2": 896,
+    "y2": 2337
+  },
+  {
+    "label": "KEY",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 896,
+    "y1": 2190,
+    "x2": 1074,
+    "y2": 2337
+  }
+]

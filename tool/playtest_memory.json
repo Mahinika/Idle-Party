@@ -25,7 +25,7 @@
       "date": "2026-10-17",
       "screen": "hub",
       "stage": "endgame",
-      "why": "Gold, essence, AL 3, and Settings share the row",
+      "why": "Gold, essence, AL 3, and Settings still share the row",
       "image": "tool/playtest_baseline/hub__endgame.png"
     }
   ],
@@ -74,6 +74,11 @@
       "date": "2026-10-17",
       "pattern": "A six-digit wallet overflows the hub header on a 360px phone",
       "rule": "hub_header_fit"
+    },
+    {
+      "date": "2026-10-17",
+      "pattern": "The yellow-stripe check fires on gold buttons. Trust the picture.",
+      "rule": "overflow_banner"
     }
   ],
   "ok": [
@@ -138,6 +143,27 @@
       "stage": "endgame",
       "date": "2026-10-17",
       "commit": "e580b5c6",
+      "streak": 1
+    },
+    {
+      "screen": "gold",
+      "stage": "endgame",
+      "date": "2026-10-17",
+      "commit": "6e4b8825",
+      "streak": 1
+    },
+    {
+      "screen": "bag",
+      "stage": "endgame",
+      "date": "2026-10-17",
+      "commit": "6e4b8825",
+      "streak": 1
+    },
+    {
+      "screen": "essence",
+      "stage": "endgame",
+      "date": "2026-10-17",
+      "commit": "6e4b8825",
       "streak": 1
     }
   ]
