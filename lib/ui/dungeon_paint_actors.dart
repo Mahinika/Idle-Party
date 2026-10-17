@@ -338,15 +338,19 @@ extension _DungeonPaintActors on _TileRoomPainter {
           if (argb != null) tint = Color(argb);
         }
         bodyImg ??= heroes[hero.assetIndex.clamp(0, heroes.length - 1)];
-        // Form sprites are 96px; owned denser bodies read larger than Kenney.
-        // Plate reads broader than leather at HUD size; forms keep their PNG.
+        // Form sprites are 96px. Owned bodies share one fight size, then
+        // plate reads a little broader than leather. Forms keep their PNG.
         final read = usingOwnedBody
             ? BodyFamilyCatalog.hudReadScale(
                 BodyFamilyCatalog.familyFor(partyHero),
               )
             : 1.0;
         scale =
-            (formImg != null ? 1.42 : (usingOwnedBody ? 1.72 * read : 0.95)) *
+            (formImg != null
+                ? 1.42
+                : (usingOwnedBody
+                      ? BodyFamilyCatalog.fightScale * read
+                      : 0.95)) *
             (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
         if (partyHero.specId == HeroSpecId.demonology &&
             hero.combustionTimer > 0) {
