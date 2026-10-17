@@ -12,6 +12,7 @@ Baselines live in `tool/playtest_baseline/`.
 - 2026-10-04 · gear · mid · EQUIP is the one filled button and the doll sits in the card · `tool/playtest_baseline/gear__mid.png`
 - 2026-10-04 · bag · mid · BAG FULL, EQUIP, and CLEAN say what to do · `tool/playtest_baseline/bag__mid.png`
 - 2026-10-04 · more · mid · Contract CLAIM sits whole above the bar · `tool/playtest_baseline/more__mid.png`
+- 2026-10-17 · hub · endgame · Gold, essence, AL 3, and Settings share the row · `tool/playtest_baseline/hub__endgame.png`
 
 ## Lärt
 
@@ -23,6 +24,7 @@ Baselines live in `tool/playtest_baseline/`.
 - 2026-10-04 · a claim button sliced by the bottom bar · rule: clipped_by_nav
 - 2026-10-04 · the first dungeon paint waited on hero portraits · rule: none
 - 2026-10-11 · Live gold climbs during a round, so it will not match the gold saved at the start · rule: none
+- 2026-10-17 · A six-digit wallet overflows the hub header on a 360px phone · rule: hub_header_fit
 
 ## OK
 
@@ -35,3 +37,5 @@ Baselines live in `tool/playtest_baseline/`.
 | hub | mid | 2026-10-11 | 25dd4546 | 2 |
 | gear | mid | 2026-10-11 | 25dd4546 | 2 |
 | bag | mid | 2026-10-11 | 25dd4546 | 2 |
+| gear | endgame | 2026-10-17 | e580b5c6 | 1 |
+| shop | endgame | 2026-10-17 | e580b5c6 | 1 |

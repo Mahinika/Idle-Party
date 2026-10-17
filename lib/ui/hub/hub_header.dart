@@ -331,54 +331,87 @@ class HubHeader extends StatelessWidget {
     return 'Ascend, ${_alPillLabel()}';
   }
 
+  /// Gold, essence, the AL pill, and Settings share one phone row.
+  /// A six-digit wallet plus the pill used to paint RIGHT OVERFLOWED over
+  /// Settings. Each side keeps a slot and scales down inside it.
+  Widget _scaled(Widget child, {required double maxWidth}) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: 64),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: child,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final rateSuffix = !dimIncome ? hubGoldRate : null;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        WalletStrip(
-          gold: gold,
-          essence: essence,
-          showEssence: showEssence,
-          goldRateSuffix: rateSuffix,
-          onGoldRateTap: rateSuffix != null ? () => _openIncome(context) : null,
-        ),
-        if (!plainChrome) ...[
-          const SizedBox(width: 6),
-          Expanded(
-            child: Center(
-              child: Semantics(
-                label: _alPillSemantics(),
-                button: onOpenAscend != null,
-                excludeSemantics: true,
-                child: InkWell(
-                  onTap: onOpenAscend,
-                  borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 6,
-                    ),
-                    child: HubStatPill(
-                      icon: UiIcon.ascend,
-                      caption: 'Ascend',
-                      label: _alPillLabel(),
+    final wallet = WalletStrip(
+      gold: gold,
+      essence: essence,
+      showEssence: showEssence,
+      goldRateSuffix: rateSuffix,
+      onGoldRateTap: rateSuffix != null ? () => _openIncome(context) : null,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final bounded = width.isFinite;
+        // Settings is a 44dp target. The pill keeps enough for "AL 3".
+        const settings = GameTheme.minTouch;
+        const gap = 6.0;
+        const pillSlot = 96.0;
+        final reserve = plainChrome ? settings : settings + gap + pillSlot;
+        final walletMax = bounded
+            ? (width - reserve).clamp(0.0, width)
+            : width;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (bounded) _scaled(wallet, maxWidth: walletMax) else wallet,
+            if (!plainChrome) ...[
+              const SizedBox(width: gap),
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Semantics(
+                      label: _alPillSemantics(),
+                      button: onOpenAscend != null,
+                      excludeSemantics: true,
+                      child: InkWell(
+                        onTap: onOpenAscend,
+                        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 6,
+                          ),
+                          child: HubStatPill(
+                            icon: UiIcon.ascend,
+                            caption: 'Ascend',
+                            label: _alPillLabel(),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
+            ] else
+              const Spacer(),
+            GameIconButton(
+              label: 'Settings',
+              asset: UiIcon.settings,
+              size: 18,
+              onPressed: onOpenSettings,
             ),
-          ),
-        ] else
-          const Spacer(),
-        GameIconButton(
-          label: 'Settings',
-          asset: UiIcon.settings,
-          size: 18,
-          onPressed: onOpenSettings,
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -401,27 +434,17 @@ class HubStatPill extends StatelessWidget {
       children: [
         GameIcon.asset(icon, size: 14),
         const SizedBox(width: 4),
-        Flexible(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (caption != null) ...[
-                Text(
-                  caption!,
-                  style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
-                ),
-                const SizedBox(width: 3),
-              ],
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 14, color: GameTheme.parchment),
-                ),
-              ),
-            ],
+        if (caption != null) ...[
+          Text(
+            caption!,
+            style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
           ),
+          const SizedBox(width: 3),
+        ],
+        Text(
+          label,
+          maxLines: 1,
+          style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
       ],
     );

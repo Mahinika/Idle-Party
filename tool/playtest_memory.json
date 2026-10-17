@@ -20,6 +20,13 @@
       "stage": "mid",
       "why": "Contract CLAIM sits whole above the bar",
       "image": "tool/playtest_baseline/more__mid.png"
+    },
+    {
+      "date": "2026-10-17",
+      "screen": "hub",
+      "stage": "endgame",
+      "why": "Gold, essence, AL 3, and Settings share the row",
+      "image": "tool/playtest_baseline/hub__endgame.png"
     }
   ],
   "learned": [
@@ -62,6 +69,11 @@
       "date": "2026-10-11",
       "pattern": "Live gold climbs during a round, so it will not match the gold saved at the start",
       "rule": ""
+    },
+    {
+      "date": "2026-10-17",
+      "pattern": "A six-digit wallet overflows the hub header on a 360px phone",
+      "rule": "hub_header_fit"
     }
   ],
   "ok": [
@@ -113,6 +125,20 @@
       "date": "2026-10-11",
       "commit": "25dd4546",
       "streak": 2
+    },
+    {
+      "screen": "gear",
+      "stage": "endgame",
+      "date": "2026-10-17",
+      "commit": "e580b5c6",
+      "streak": 1
+    },
+    {
+      "screen": "shop",
+      "stage": "endgame",
+      "date": "2026-10-17",
+      "commit": "e580b5c6",
+      "streak": 1
     }
   ]
 }
