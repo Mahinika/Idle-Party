@@ -9,7 +9,7 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Done
 
-<!-- - 2026-10-17 · The hub painted RIGHT OVERFLOWED BY 15 over Settings · gold and essence scale down so AL and Settings stay on the row · fixed in this commit -->
+<!-- - 2026-10-17 · The hub painted RIGHT OVERFLOWED BY 15 over Settings · gold and essence scale down so AL and Settings stay on the row · fixed in db75d323 -->
 
 <!-- - 2026-10-15 · The fight hitched when the phone fell behind · the clock stays on the screen refresh, and torch light is one soft disc · fixed in d7391276 -->
 
