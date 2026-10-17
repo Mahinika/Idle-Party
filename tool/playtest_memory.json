@@ -89,6 +89,11 @@
       "date": "2026-10-17",
       "pattern": "A mid-fight FARM question stays on the hub after the party leaves",
       "rule": ""
+    },
+    {
+      "date": "2026-10-17",
+      "pattern": "In melee the five heroes stand on the same spot, so one swing hides the others",
+      "rule": ""
     }
   ],
   "ok": [

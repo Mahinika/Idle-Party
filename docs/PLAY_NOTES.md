@@ -8,6 +8,7 @@ with the commit hash. Read Open at the start of a batch.
 ## Open
 
 - 2026-10-17 · On a fast KEY run, floor-clear lines and item names stack on the party, so the casts are hard to see · visuellt · forvirrar · keep one clear line and fade item names before they cover the heroes (this round's fight pictures)
+- 2026-10-17 · In the melee the five heroes stand on the same spot, so arms and weapons cover each other and one swing is hard to follow · visuellt · forvirrar · stand them in a short line when they fight, so each body can swing (this round's fight pictures; combat text should also stay off the bodies)
 
 ## Done
 

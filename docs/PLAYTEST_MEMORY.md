@@ -28,6 +28,7 @@ Baselines live in `tool/playtest_baseline/`.
 - 2026-10-17 · The yellow-stripe check fires on gold buttons. Trust the picture. · rule: overflow_banner
 - 2026-10-17 · A KEY affix line wider than the phone paints a yellow overflow stripe · rule: none
 - 2026-10-17 · A mid-fight FARM question stays on the hub after the party leaves · rule: none
+- 2026-10-17 · In melee the five heroes stand on the same spot, so one swing hides the others · rule: none
 
 ## OK
 
