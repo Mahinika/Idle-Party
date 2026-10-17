@@ -303,27 +303,16 @@ def shoot_showcase() -> None:
     open_played_slot()
     time.sleep(0.8)
     screencap("07_return.png")
+
+    # Welcome Back's main button is ENTER DUNGEON, so dismissing it walks
+    # into a fight. Load the same hub a minute ahead so the card is gone,
+    # then open ASCEND on the hub.
+    print("inject showcase ascend")
+    inject(showcase_for_shoot(4), ahead_minutes=30)
+    open_played_slot()
+    time.sleep(0.8)
     xml = screen_text()
-    for label in ("NICE", "CLAIM", "GOT IT"):
-        if tap_exact(xml, label):
-            break
-    opened = False
-    deadline = time.time() + 10
-    while time.time() < deadline:
-        xml = screen_text()
-        if not xml:
-            time.sleep(0.6)
-            continue
-        if "WELCOME BACK" in xml or "Welcome back" in xml:
-            time.sleep(0.4)
-            continue
-        if tap_exact(xml, "ASCEND"):
-            opened = True
-            break
-        time.sleep(0.5)
-    if not opened:
-        # The hub dump goes blank while the card closes. ASCEND sits under
-        # ENTER DUNGEON on this phone.
+    if not tap_exact(xml, "ASCEND"):
         adb("shell", "input", "tap", "540", "1888", check=False)
         print("tap ASCEND fallback")
         time.sleep(1.0)

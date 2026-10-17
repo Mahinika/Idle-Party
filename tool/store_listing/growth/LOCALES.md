@@ -41,19 +41,19 @@ ARMA TU GRUPO
 • 15 mazmorras con cofres, enemigos y jefes.
 
 PROGRESO IDLE, COMBATE REAL
-• El grupo pelea solo. Toca para ayudar. Sal cuando quieras.
+• El grupo pelea solo. Mantén pulsado el combate, o toca el puño, para ayudar. Sal cuando quieras.
 • HOY pone el siguiente objetivo útil en el botón principal.
 • Los menús del primer día se quedan pequeños hasta que importan.
 
 SEGUIR CRECIENDO
 • Asciende: el grupo se queda; la bolsa de la runa se reinicia.
-• Al nivel 100: KEYSTONE, Infinity Gauntlet, Rifts y Greater Rifts.
+• Al nivel 100: KEYSTONE, Gauntlet, Rifts y Greater Rifts.
 • Misiones diarias, semanales y largas.
 • Play Games opcional: nube y clasificatorias de temporada.
 
 JUEGO JUSTO
 • Un jugador. Anuncios recompensados opcionales en el hub (SCROLLS), nunca en combate.
-• La TIENDA es conveniencia barata, no pay-to-win.
+• La TIENDA vende SCROLLS permanentes, sin anuncios y packs de Cinders. No es equipo de pago por ganar.
 • Para teléfonos en vertical.
 
 Cognifox Studio · cognifoxstudio@gmail.com
@@ -91,17 +91,17 @@ MONTE SEU GRUPO
 • 15 masmorras com baús, inimigos e chefes.
 
 PROGRESSO IDLE, COMBATE DE VERDADE
-• O grupo luta sozinho. Toque para ajudar. Saia quando quiser.
+• O grupo luta sozinho. Segure a luta, ou toque no punho, para ajudar. Saia quando quiser.
 • HOJE coloca o próximo objetivo útil no botão principal.
 
 CONTINUAR CRESCENDO
 • Ascenda: o grupo fica; a bolsa da run reseta.
-• Nível 100: KEYSTONE, Infinity Gauntlet, Rifts e Greater Rifts.
+• Nível 100: KEYSTONE, Gauntlet, Rifts e Greater Rifts.
 • Play Games opcional.
 
 JOGO JUSTO
 • Anúncios recompensados opcionais no hub, nunca na luta.
-• A LOJA é conveniência barata, não pay-to-win.
+• A LOJA vende SCROLLS permanentes, sem anúncios e packs de Cinders. Não é equipamento pay-to-win.
 • Feito para celular em retrato.
 
 Cognifox Studio · cognifoxstudio@gmail.com

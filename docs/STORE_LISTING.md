@@ -1,6 +1,6 @@
 # Idle Party — store listing (research + copy)
 
-**Updated:** 2026-09-20 · Target: Google Play (en-US) · Honesty first.  
+**Updated:** 2026-10-17 · Target: Google Play (en-US) · Honesty first.  
 Listing A/B (when Play traffic exists): keep screenshot 1–2 as **live SpatialCombat**, not menus. Do not upload a new AAB unless the owner asks.  
 Growth checklist / review templates: [`PLAY_GROWTH.md`](PLAY_GROWTH.md).  
 0 kr discovery pack: [`tool/store_listing/growth/`](../tool/store_listing/growth/).  
@@ -125,30 +125,16 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Live Production: **1.12.194 (224)**, full rollout, track `completed` (Play paste **2026-10-09**). Notes sent with 224:
+Live Production before this upload: **1.12.195 (225)**, track `completed` (API **2026-10-17**). **1.13.0 (226)** was never uploaded. **1.13.1 (227)** was sent **2026-10-17** (track `completed`). The public page can still name **1.12.195** until Google publishes.
+
+Notes sent with **1.13.1 (227)**. These lines also cover the unsent **1.13.0**. en-US, 421 characters:
 
 ```
-• Swords, bows, and spells sound like the weapons they are.
-• A bowstring plays when an arrow leaves, and a spell plays when it is cast.
-• The hub and caves rotate songs, with a quiet stretch between them.
-```
-
-Notes ready for **1.13.0 (226)**. Not sent. Upload only when asked:
-
-```
-• After a wipe the party stands back up. Two misses farm the floor below.
-• AUTO EQUIP wears a stronger piece while they fight.
-• Welcome Back says what they did while you were away.
-• The Spire has trophies. A full row grants a title. All 12 grant 1 STAR.
-```
-
-Notes sent with **1.12.195 (225)** on **2026-10-11**. In review, not live yet. 287 characters:
-
-```
-• The first floor fights on its own. The first boss is one a new party can finish.
-• Welcome Back says when the vault prize is waiting, and CLAIM sits on the cave.
-• Health bars sit above the hero, and a new floor fades in.
-• The first Gauntlet run is four different floors, then a boss.
+• The walk to the next pack fits on one phone screen, with gates and boss rooms in view.
+• After a wipe the party counts down and fights again. Two misses farm the safe floor below, even offline.
+• AUTO EQUIP in GEAR wears stronger drops during the fight and while the app is closed.
+• Shrines on the hall bless the fight, and chest floors open on the chest.
+• Spire Trophies on the Gauntlet card grant titles and 1 STAR.
 ```
 
 ### Full description honesty (SHOP)

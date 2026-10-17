@@ -12,100 +12,111 @@ description: >-
 
 # Play Store prep (Idle Party)
 
-**Fact today:** **Google Play is the primary install path** (production live).
-Do not link players to GitHub Releases (repo may be private). Closed Alpha
-remains for early builds. Source of truth:
+**Fact today:** Google Play is the install path (`com.idleparty.app`).
+Do not link players to GitHub Releases. Source of truth:
 [`docs/PLAY_STORE.md`](../../../docs/PLAY_STORE.md).
+
+The only upload path is the **Play Android Publisher API**
+(`~/.config/idle-party/play-console.json`). One edit holds the images, the
+store text, the AAB, and the production track. Nothing is live until
+`edits.commit`. Read **[reference.md](reference.md)** for the recipe. The
+browser path is a fallback only when that key cannot call the API.
 
 ## When to run this skill
 
-- **Growth mandate** listing pack (screenshots 1–2 = new-save first-minute combat)
-- Owner mentions Play, store listing, privacy, IARC, screenshots, AAB upload
-- Owner mentions Play stats, reviews, or "play console" (use the API section first)
-- Owner mentions itch.io listing / community post (PAGE.md — no APK)
-- Before tagging a release meant for Play closed testing
-- Agent notices store blockers while doing release polish
+- Owner mentions Play, the store listing, privacy, IARC, screenshots, or an AAB
+- Owner mentions Play stats, reviews, or "play console" (read the API first)
+- Owner mentions itch.io (page only — no APK)
+- A release is meant for Play production
 
-Push / tag when the batch needs it. **Play AAB upload only when the owner asks.**
+Push or tag when the batch needs it. **Play AAB upload only when the owner asks that turn.**
+
+## Before an upload
+
+1. Read `tracks/production`. That is the build players have. If a local version
+   between that build and this one was never sent, fold those patch notes into
+   What's New. What's New is `en-US` and at most 500 characters.
+2. Open every composed shot in `tool/store_listing/out/` and the feature
+   graphic in `tool/store_listing/marketing/`. Shot 8 must be the ASCEND?
+   dialog. The feature graphic must show the whole starter party and the pack.
+   Then `flutter test test/store_listing_plan_test.dart` and
+   `flutter test test/changelog_sync_test.dart`.
+3. List images on every listing locale. `sevenInchScreenshots` and
+   `tenInchScreenshots` must be empty. Delete them in this same edit if any
+   remain. Phone shots are the pictures Play should use.
+4. One atomic edit, and only because the owner asked in this turn:
+   `POST /edits` → images, listings, bundle, `tracks/production` →
+   `POST /edits/{id}:commit`. If a step fails, `DELETE` the edit. Do not
+   commit a half edit.
 
 ## Operator status (update `docs/PLAY_STORE.md`)
 
-Keep the **Operator status** table in `PLAY_STORE.md` honest (✅ / ⏳ / ❌).
-Never invent a public privacy host or Play listing URL.
+Keep the Operator status table honest. A track that says `completed` is the
+live build. A commit that just happened is submitted, not live, until a later
+read of `tracks/production` says `completed` for that version. Never invent
+Console numbers.
 
 | Blocker | Ready when… |
 |---------|-------------|
-| Signing secrets | `KEYSTORE_BASE64` + `KEY_PROPERTIES` work for CI tag builds |
-| Privacy URL | URL opens in a normal browser (raw/GitHub blob OK for prep) |
-| Data safety | Form matches [PRIVACY.md](../../../docs/PRIVACY.md): local save, optional Play Games, optional rewarded ads |
-| IARC / rating | Questionnaire done; mild fantasy combat expectations |
-| Listing copy | Idle Party short + full description (English), no Flutter placeholders |
-| Screenshots | Shots 1–2 = new-save Sandy combat + 512 icon from owned `app_icon`; later carousel as in STORE_LISTING.md |
-| Closed Alpha | App `com.idleparty.app`, AAB on Alpha track, testers can install |
+| Signing secrets | Local `android/key.properties` + upload keystore for this build. CI secrets stay out of git |
+| Privacy URL | URL opens in a normal browser |
+| Data safety | Form matches [PRIVACY.md](../../../docs/PRIVACY.md) |
+| IARC / rating | Questionnaire done |
+| Listing copy | [`docs/STORE_LISTING.md`](../../../docs/STORE_LISTING.md) matches the game |
+| Screenshots | Shots 1–2 are new-save Sandy combat. No tablet shots left on the listing |
+| Production | App `com.idleparty.app`, AAB on `production`, owner asked this turn |
 
 ## Checklist
 
 ```
 Play prep:
-- [ ] 1. Operator status table honest in PLAY_STORE.md
-- [ ] 2. pubspec versionName ↔ MetaSystems.currentVersion
-- [ ] 3. Privacy + data safety match PRIVACY.md
-- [ ] 4. Listing copy from STORE_LISTING.md
-- [ ] 5. Screenshots, preview video, and feature graphic current (`store-listing-shoot`)
-- [ ] 6. Signed AAB built (owner asked)
-- [ ] 7. Upload via reference.md recipe when ready
+- [ ] 1. tracks/production read (fold unsent versions into What's New)
+- [ ] 2. pubspec versionName ↔ ChangelogCatalog.currentVersion
+- [ ] 3. Every out/ shot and the feature graphic checked by eye
+- [ ] 4. store_listing_plan_test and changelog_sync_test green
+- [ ] 5. sevenInchScreenshots and tenInchScreenshots empty
+- [ ] 6. Signed AAB built
+- [ ] 7. One edit committed (owner asked this turn)
+- [ ] 8. PLAY_STORE.md says submitted, not live, until the track says completed
 ```
 
 ## itch.io (discovery only)
 
 Play stays the install path. itch is a public page + Play button — **no APK**.
-Copy, live URLs, and image-upload gotchas:
-[`tool/store_listing/itch/PAGE.md`](../../../tool/store_listing/itch/PAGE.md).
-Read **[reference.md](reference.md)** § itch.io when attaching cover/screenshots.
+Copy and image gotchas: [`tool/store_listing/itch/PAGE.md`](../../../tool/store_listing/itch/PAGE.md).
+Read **[reference.md](reference.md)** § itch.io when attaching cover or screenshots.
 
-## Play API (reviews, live version, vitals)
+## Play API reads
 
-Prefer the service account over the browser for reviews, the live version,
-store text, shop products, and crash/ANR. Read **[reference.md](reference.md)**
-§ Play API. Reply only to the review the owner names, in a human voice
-(`docs/LEARNINGS.md`, 2026-09-23). Never commit an edit or upload an AAB
-unless they ask that turn.
-
-## Upload recipes (read on demand)
-
-For screenshot capture, CORS listing upload, AAB attach, and itch images via
-Cursor browser, read **[reference.md](reference.md)** when you reach that step.
+Reviews, the live version, store text, shop products, and crash/ANR come from
+the same key. Reply only to the review the owner names. Never commit an edit
+or upload an AAB unless they ask that turn.
 
 ## Agent do / don't
 
 **Do**
 
-- Point at missing rows in the status table; offer the next concrete ops step
-- Keep versionName / `MetaSystems.currentVersion` / tag `v*` in sync
-- Use the AAB upload recipe in `reference.md` when the owner asks to put a build on Play
+- Trust `tracks/production` over an old sentence in `docs/PLAY_STORE.md`
+- Send phone shots in order `01` … `08` after `deleteall` on that image type
+- Send the existing YouTube URL back when updating a listing, or the video field clears
 
 **Don't**
 
-- Pretend Play production is live when status says otherwise
-- Commit keystores, `key.properties`, or base64 secrets
-  (includes `tool/store_listing/itch/upload/`)
-- Rely on `python` on this Windows box — use `py -3`
-- Waste turns on `DOM.setFileInputFiles` (blocked)
-- Reuse Play Console localhost-CORS against itch.io (HTTPS page — mixed content)
-- Upload an APK to itch or point players at GitHub Releases
-- Block cozy-game features waiting on store chrome
+- Commit keystores, `key.properties`, or the service-account JSON
+- Use `python` on this Windows box — use `py -3`
+- 9:16-crop the 512 icon
+- Leave old tablet shots up
+- Point players at GitHub Releases or upload an APK to itch
+- Commit the edit before images, text, and the bundle are all staged
 
 ## Related
 
 - Privacy copy: `docs/PRIVACY.md`
-- Tag → APK/AAB: `.github/workflows/build-apk.yml`
-- Hub chrome before screenshots: `hub-smoke`
-- Phone shots and the Sandy preview: `store-listing-shoot`
-- Browser phone metrics: `browser-playtest`
-- itch.io page + community post: `tool/store_listing/itch/PAGE.md`
+- Phone shots: `store-listing-shoot`
+- itch.io page: `tool/store_listing/itch/PAGE.md`
 
 ## Done when
 
-- The Operator status table in `docs/PLAY_STORE.md` is honest.
-- `pubspec.yaml` versionName equals `MetaSystems.currentVersion`.
-- No AAB was uploaded unless the owner asked in this turn.
+- `docs/PLAY_STORE.md` matches the last `tracks/production` read.
+- `pubspec.yaml` versionName equals `ChangelogCatalog.currentVersion`.
+- No AAB was uploaded unless the owner asked in this turn.

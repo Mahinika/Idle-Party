@@ -36,7 +36,7 @@ SHOTS = [
     ("05_party.png", "Shield, healer, damage", 0.28),
     ("06_path.png", "Explore the World Path", 0.32),
     ("07_return.png", "Come back to loot", 0.18),
-    ("08_ascend.png", "Ascend. Your party stays.", 0.12),
+    ("08_ascend.png", "Ascend. Your party stays.", 0.32),
 ]
 
 W, H = 1080, 1920

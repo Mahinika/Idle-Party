@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ live | **1.12.194 (224)** is the published build. **1.12.195 (225)** was uploaded **2026-10-11** and is `in review` (full rollout). **1.13.0 (226)** was built locally **2026-10-13** and is not uploaded. Live stays **1.12.194** until Google publishes. Managed publishing is off. |
+| Production | ✅ submitted | **1.13.1 (227)** track `completed` (API **2026-10-17**, full rollout). **1.12.195 (225)** was the previous live build. **1.13.0 (226)** was never uploaded. The public page can still name **1.12.195** until Google publishes. Managed publishing is off. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -17,8 +17,8 @@ Package id: **`com.idleparty.app`**
 | Play Games Services | ✅ | Published. Saved Games on; App ID `986358854278`; 2026-08 KEY/Gauntlet wired; 2026-09 Greater Rift `CgkIhuXGvNocEAIQAw` and all-time Party Power `CgkIhuXGvNocEAIQBA` published 2026-09-29. OAuth + Android credential + test user. Category Role Playing; icon + feature graphic from `app_icon`. |
 | Store listing copy (EN + 9 locales) | ✅ live | Default locale **en-US** + 9 translations committed **2026-09-25** (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`). In-game UI stays English. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
-| Screenshots + feature graphic | ✅ live | **8 A56 phone shots** and feature graphic `feature_20261004.png` are on the public page **2026-10-04**. Tablet shots are still the older title screen, hub menu, and FARM/PUSH floor. |
-| Listing assets freshness | shots 2026-10-17 @ 1.13.1 · video 2026-10-17 @ 1.13.1 · icon 2026-10-17 @ 1.13.1 · feature 2026-10-17 @ 1.13.1 | Phone shots, Sandy preview, icon, and feature graphic were reshot locally **2026-10-17** for **1.13.1**. Not uploaded. `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than one patch. |
+| Screenshots + feature graphic | ✅ submitted | **8** phone shots, the 512 icon, and the feature graphic replaced **2026-10-17** in the same edit as **1.13.1 (227)**. Tablet shots were deleted (6 seven-inch + 6 ten-inch). The public page can lag until Google publishes. |
+| Listing assets freshness | shots 2026-10-17 @ 1.13.1 · video 2026-10-17 @ 1.13.1 · icon 2026-10-17 @ 1.13.1 · feature 2026-10-17 @ 1.13.1 | Phone shots, icon, and feature graphic uploaded **2026-10-17** with the production edit. Sandy preview video URL unchanged. `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than one patch. |
 | Preview video (YouTube) | ✅ sent | Every listing locale (11, including `pl-PL`) points at public Cognifox `cyBlN3HCR48` (`https://www.youtube.com/watch?v=cyBlN3HCR48`), committed **2026-10-04**. oEmbed works. Ads off, embed on, not for kids. YouTube filed the 9:16 film as a Short. Previous unlisted `UHLG28lHmPs`. `XfKog5CAiUs` stays unused (Play rejected that embed). |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
@@ -73,8 +73,11 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Discord #announcements posted the **1.12.194** patch notes (**2026-10-05**). Topic says the store still shows **1.12.193**.
 - [x] Signed Production AAB **1.12.195+225** built locally **2026-10-11** (`app-release.aab`, 106.5 MB).
 - [x] Owner asked upload of Production **1.12.195+225** (**2026-10-11**).
-- [x] Signed Production AAB **1.12.195+225** uploaded via Play API and sent for review (full rollout). API: **1.12.195 (225)** `in review`. Live store build remains **1.12.194 (224)** until Google publishes.
-- [x] Signed Production AAB **1.13.0+226** built locally **2026-10-13** (`app-release.aab`, 106.7 MB). Not uploaded.
+- [x] Signed Production AAB **1.12.195+225** uploaded via Play API and sent for review (full rollout).
+- [x] API read **2026-10-17**: Production **1.12.195 (225)** status `completed`.
+- [x] Signed Production AAB **1.13.0+226** built locally **2026-10-13** (`app-release.aab`, 106.7 MB). Not uploaded. Its notes went out with **1.13.1**.
+- [x] Owner asked upload of Production **1.13.1+227** (**2026-10-17**).
+- [x] Signed Production AAB **1.13.1+227** uploaded via Play API (one edit: 8 phone shots, icon, feature graphic, tablet shots removed, en-US / es-ES / pt-BR text). Track reads `completed`. The public page can still name **1.12.195** until Google publishes.
 
 ### Production upload paste (en-US release notes)
 
@@ -86,22 +89,23 @@ Notes sent with **1.12.194 (224)**:
 • The hub and caves rotate songs, with a quiet stretch between them.
 ```
 
-Notes ready for **1.13.0 (226)**. Not sent. Upload only when asked:
-
-```
-• After a wipe the party stands back up. Two misses farm the floor below.
-• AUTO EQUIP wears a stronger piece while they fight.
-• Welcome Back says what they did while you were away.
-• The Spire has trophies. A full row grants a title. All 12 grant 1 STAR.
-```
-
-Notes sent with **1.12.195 (225)** on **2026-10-11**. In review, not live yet. 287 characters:
+Notes sent with **1.12.195 (225)**. Track `completed` (API **2026-10-17**):
 
 ```
 • The first floor fights on its own. The first boss is one a new party can finish.
 • Welcome Back says when the vault prize is waiting, and CLAIM sits on the cave.
 • Health bars sit above the hero, and a new floor fades in.
 • The first Gauntlet run is four different floors, then a boss.
+```
+
+Notes sent with **1.13.1 (227)** on **2026-10-17**. These lines also cover the unsent **1.13.0**. en-US, 421 characters:
+
+```
+• The walk to the next pack fits on one phone screen, with gates and boss rooms in view.
+• After a wipe the party counts down and fights again. Two misses farm the safe floor below, even offline.
+• AUTO EQUIP in GEAR wears stronger drops during the fight and while the app is closed.
+• Shrines on the hall bless the fight, and chest floors open on the chest.
+• Spire Trophies on the Gauntlet card grant titles and 1 STAR.
 ```
 
 Update release notes when shipping a build that includes Play Billing SHOP buys
@@ -115,7 +119,7 @@ Smoke on a Play-installed build; restart the app so Billing refreshes.
 
 1. Confirm production track unlocked (IARC + ads declarations already submitted).
 2. `flutter build appbundle --release` with upload keystore (or tag `v*` after CI signing verified).
-3. Upload via play-store-prep CORS recipe → Production track (not Alpha).
+3. Upload with the Play Android Publisher API (one edit: images, text, AAB, production track). See `.cursor/skills/play-store-prep/reference.md`.
 4. Release notes from `docs/STORE_LISTING.md` (COMING LATER / POWER wipe honesty).
 5. Update this Operator status table (submitted vs live).
 6. **Do not** upload until the owner played the build and said yes.
@@ -281,7 +285,8 @@ README, or store-facing copy. Daily work stays on `main`.
 
 ## Agent: upload AAB from Cursor
 
-Closed Alpha upload recipe (CORS + `py -3` + fetch into file input — **not**
-`DOM.setFileInputFiles`) lives in `.cursor/skills/play-store-prep/SKILL.md`
-under **Upload signed AAB to closed Alpha**. Update the Operator status table
-after each submit.
+Production upload is one Play Android Publisher API edit. Recipe:
+`.cursor/skills/play-store-prep/reference.md`. The browser CORS path is only
+for when that key cannot call the API. Update the Operator status table
+after each submit. A commit is submitted, not live, until `tracks/production`
+reads `completed` for that version.

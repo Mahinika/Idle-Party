@@ -26,8 +26,14 @@ fallback, not the default.
 4. `py -3 tool/store_listing/compose_shots.py`
 5. `py -3 tool/store_listing/make_listing_icon.py`
 6. `py -3 tool/store_listing/make_feature_graphic.py`
-7. `py -3 tool/store_listing/capture_preview_beats.py crawl`
-8. `py -3 tool/store_listing/build_preview_video.py`
+7. Open and look at all eight PNGs in `tool/store_listing/out/` and at
+   `tool/store_listing/marketing/01_feature_graphic_1024x500.png`.
+   `08_08_ascend.png` must show the ASCEND? dialog, not a fight.
+   The feature graphic must show the whole starter party and the pack,
+   above the bottom edge and under the title plate. Reshoot or recrop
+   before calling the set done.
+8. `py -3 tool/store_listing/capture_preview_beats.py crawl`
+9. `py -3 tool/store_listing/build_preview_video.py`
 
 ## What the page is
 
@@ -43,9 +49,11 @@ fallback, not the default.
 
 ## Upload
 
-Follow `play-store-prep` reference for Console graphics. One PNG at a time.
-Do not 9:16-crop the icon. Do not upload an AAB unless the owner asks that
-turn.
+Follow `play-store-prep`. The Play Android Publisher API sends the eight
+phone shots, the icon, and the feature graphic, and deletes
+`sevenInchScreenshots` and `tenInchScreenshots` in the same edit. Do not
+9:16-crop the icon in Console. Do not upload an AAB unless the owner asks
+that turn.
 
 YouTube (`@CognifoxStudio`) is the owner's login. Hand them
 `tool/store_listing/preview/idle_party_preview_9x16.mp4`. Public, ads off,
@@ -61,4 +69,4 @@ Update the freshness row in `docs/PLAY_STORE.md` to this version and date.
 
 - `flutter test test/store_listing_plan_test.dart` is green.
 - The shots show this build's hub and hero (version matches PATCH NOTES).
-- No AAB was uploaded.
+- No AAB was uploaded.
