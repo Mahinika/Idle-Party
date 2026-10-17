@@ -11,6 +11,10 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Done
 
+<!-- - 2026-10-17 · The KEY affix line painted RIGHT OVERFLOWED over the Soft chip · the line wraps inside the chip · fixed in 72b50a20 -->
+
+<!-- - 2026-10-17 · SWITCH TO FARM stayed on the hub after the party left the floor · the question closes when the fight is over · fixed in 72b50a20 -->
+
 <!-- - 2026-10-17 · The hub painted RIGHT OVERFLOWED BY 15 over Settings · gold and essence scale down so AL and Settings stay on the row · fixed in db75d323 -->
 
 <!-- - 2026-10-15 · The fight hitched when the phone fell behind · the clock stays on the screen refresh, and torch light is one soft disc · fixed in d7391276 -->
