@@ -79,6 +79,16 @@
       "date": "2026-10-17",
       "pattern": "The yellow-stripe check fires on gold buttons. Trust the picture.",
       "rule": "overflow_banner"
+    },
+    {
+      "date": "2026-10-17",
+      "pattern": "A KEY affix line wider than the phone paints a yellow overflow stripe",
+      "rule": ""
+    },
+    {
+      "date": "2026-10-17",
+      "pattern": "A mid-fight FARM question stays on the hub after the party leaves",
+      "rule": ""
     }
   ],
   "ok": [
@@ -164,6 +174,13 @@
       "stage": "endgame",
       "date": "2026-10-17",
       "commit": "6e4b8825",
+      "streak": 1
+    },
+    {
+      "screen": "hub",
+      "stage": "endgame",
+      "date": "2026-10-17",
+      "commit": "fbaa5ba8",
       "streak": 1
     }
   ]

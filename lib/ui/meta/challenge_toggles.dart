@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
@@ -40,7 +39,8 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
       _expanded = true;
       return;
     }
-    final keyOn = widget.director.state.hardmodeLevel > 0 ||
+    final keyOn =
+        widget.director.state.hardmodeLevel > 0 ||
         GameLogic.endgameUnlocked(widget.director.state) ||
         widget.director.state.challengeBossRush ||
         widget.director.state.challengeNoFlask ||
@@ -79,58 +79,57 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
     final chase = ChaseContract.fromState(state);
 
     final headerLabel = _expanded
-        ? (activeBits.isEmpty
-              ? '▾ KEY +0'
-              : '▾ KEY ${activeBits.join(' · ')}')
-        : (activeBits.isEmpty
-              ? '▸ KEY +0'
-              : '▸ KEY ${activeBits.join(' · ')}');
+        ? (activeBits.isEmpty ? '▾ KEY +0' : '▾ KEY ${activeBits.join(' · ')}')
+        : (activeBits.isEmpty ? '▸ KEY +0' : '▸ KEY ${activeBits.join(' · ')}');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (!widget.lockExpanded)
           WebClickScope(
-          label: headerLabel,
-          onPressed: widget.lockExpanded
-              ? null
-              : () => setState(() => _expanded = !_expanded),
-          child: Semantics(
-            button: !widget.lockExpanded,
             label: headerLabel,
-            excludeSemantics: true,
-            child: InkWell(
-              onTap: widget.lockExpanded
-                  ? null
-                  : () => setState(() => _expanded = !_expanded),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Text(
-                      widget.lockExpanded
-                          ? 'KEY'
-                          : (_expanded ? '▾ KEY' : '▸ KEY'),
-                      style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        activeBits.isEmpty ? 'off' : activeBits.join(' · '),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+            onPressed: widget.lockExpanded
+                ? null
+                : () => setState(() => _expanded = !_expanded),
+            child: Semantics(
+              button: !widget.lockExpanded,
+              label: headerLabel,
+              excludeSemantics: true,
+              child: InkWell(
+                onTap: widget.lockExpanded
+                    ? null
+                    : () => setState(() => _expanded = !_expanded),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Text(
+                        widget.lockExpanded
+                            ? 'KEY'
+                            : (_expanded ? '▾ KEY' : '▸ KEY'),
                         style: GameTheme.body(
-                          size: 13,
-                          color: GameTheme.parchmentDim,
+                          size: 12,
+                          color: GameTheme.torchHot,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          activeBits.isEmpty ? 'off' : activeBits.join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.body(
+                            size: 13,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         if (_expanded || widget.lockExpanded) ...[
           const SizedBox(height: 4),
           _HardmodeStepper(
@@ -354,7 +353,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
           Text(
             !GameLogic.endgameUnlocked(state)
                 ? 'KEY unlocks when every active hero is Lv${GameLogic.maxHeroLevel}, '
-                    'with Gauntlet, Ranked GR, Farm Rift, Ashen, and Craft Trial.'
+                      'with Gauntlet, Ranked GR, Farm Rift, Ashen, and Craft Trial.'
                 : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2. Keys keep going past +${Keystone.campaignCap}.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
@@ -448,6 +447,15 @@ class _KeyAffixChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screen = MediaQuery.sizeOf(context).width;
+    final cap = screen - 48 < 160 ? 160.0 : screen - 48;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: cap),
+      child: _chip(),
+    );
+  }
+
+  Widget _chip() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -480,9 +488,13 @@ class _KeyAffixChip extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Text(
-            '$label · $blurb',
-            style: GameTheme.body(size: 11, color: GameTheme.parchment),
+          Flexible(
+            child: Text(
+              '$label · $blurb',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 11, color: GameTheme.parchment),
+            ),
           ),
         ],
       ),

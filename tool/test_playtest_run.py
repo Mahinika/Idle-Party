@@ -223,6 +223,11 @@ def test_screen_for_trusts_visible_hub_and_dungeon_over_stale_nav():
         node("PUSH", 0, 600, 200, 700),
     ]
     assert _screen_for("", "KEY", False, screens, dungeon_nodes) == "dungeon"
+    sheet = [
+        node("CLOSE", 800, 40, 1000, 140),
+        node("ENTER DUNGEON", 40, 1800, 1000, 2000),
+    ]
+    assert _screen_for("", "KEY", False, screens, sheet) == "key"
 
 
 def test_memory_roundtrip_shape():

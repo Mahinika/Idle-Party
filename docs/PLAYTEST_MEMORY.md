@@ -26,6 +26,8 @@ Baselines live in `tool/playtest_baseline/`.
 - 2026-10-11 · Live gold climbs during a round, so it will not match the gold saved at the start · rule: none
 - 2026-10-17 · A six-digit wallet overflows the hub header on a 360px phone · rule: hub_header_fit
 - 2026-10-17 · The yellow-stripe check fires on gold buttons. Trust the picture. · rule: overflow_banner
+- 2026-10-17 · A KEY affix line wider than the phone paints a yellow overflow stripe · rule: none
+- 2026-10-17 · A mid-fight FARM question stays on the hub after the party leaves · rule: none
 
 ## OK
 
@@ -43,3 +45,4 @@ Baselines live in `tool/playtest_baseline/`.
 | gold | endgame | 2026-10-17 | 6e4b8825 | 1 |
 | bag | endgame | 2026-10-17 | 6e4b8825 | 1 |
 | essence | endgame | 2026-10-17 | 6e4b8825 | 1 |
+| hub | endgame | 2026-10-17 | fbaa5ba8 | 1 |

@@ -262,34 +262,37 @@ class DungeonTopHud extends StatelessWidget {
     showDialog<bool>(
       context: context,
       barrierColor: MenuChrome.scrim,
-      builder: (ctx) => MenuChrome.dialog(
-        title: 'Leave this floor?',
-        content: Text(
-          alive
-              ? 'Enemies are still alive on this floor.\n\n'
-                    'Jump to F$target anyway? Loot on the ground is lost and '
-                    'chamber progress resets.'
-                    '$keyNote'
-              : 'This floor is mid-run.\n\n'
-                    'Jump to F$target anyway? Loot still on the ground is lost '
-                    'and chamber progress resets.'
-                    '$keyNote',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+      builder: (ctx) => DismissDialogOnLeave(
+        director: director,
+        child: MenuChrome.dialog(
+          title: 'Leave this floor?',
+          content: Text(
+            alive
+                ? 'Enemies are still alive on this floor.\n\n'
+                      'Jump to F$target anyway? Loot on the ground is lost and '
+                      'chamber progress resets.'
+                      '$keyNote'
+                : 'This floor is mid-run.\n\n'
+                      'Jump to F$target anyway? Loot still on the ground is lost '
+                      'and chamber progress resets.'
+                      '$keyNote',
+            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          ),
+          actions: [
+            GameButton(
+              label: 'CANCEL',
+              style: GameButtonStyle.brown,
+              expanded: false,
+              onPressed: () => Navigator.pop(ctx, false),
+            ),
+            GameButton(
+              label: 'JUMP',
+              style: GameButtonStyle.grey,
+              expanded: false,
+              onPressed: () => Navigator.pop(ctx, true),
+            ),
+          ],
         ),
-        actions: [
-          GameButton(
-            label: 'CANCEL',
-            style: GameButtonStyle.brown,
-            expanded: false,
-            onPressed: () => Navigator.pop(ctx, false),
-          ),
-          GameButton(
-            label: 'JUMP',
-            style: GameButtonStyle.grey,
-            expanded: false,
-            onPressed: () => Navigator.pop(ctx, true),
-          ),
-        ],
       ),
     ).then((ok) {
       if (ok == true) director.travelToFloor(target);
@@ -355,12 +358,9 @@ class DungeonTopHud extends StatelessWidget {
     );
     final bossStairs =
         world?.awaitingExit == true && state.currentRoom.type == RoomType.boss;
-    final awayLine = coachGod == null &&
-            AwayFightTip.shouldShow(
-              state,
-              bossStairs: bossStairs,
-              inCave: true,
-            )
+    final awayLine =
+        coachGod == null &&
+            AwayFightTip.shouldShow(state, bossStairs: bossStairs, inCave: true)
         ? AwayFightTip.lineFor(state)
         : null;
     final coachLine = AwayFightTip.caveCoach(
@@ -431,38 +431,41 @@ class DungeonTopHud extends StatelessWidget {
         showDialog<bool>(
           context: context,
           barrierColor: MenuChrome.scrim,
-          builder: (ctx) => MenuChrome.dialog(
-            title: mode == DungeonMode.farm
-                ? (plain ? 'Switch to Repeat?' : 'Switch to FARM?')
-                : (plain ? 'Switch to Next?' : 'Switch to PUSH?'),
-            content: Text(
-              mode == DungeonMode.farm
-                  ? (plain
-                        ? 'Repeat stays on this floor after clear for more loot. No essence.\n\n'
-                              'You are mid-fight — switch anyway?'
-                        : 'FARM loops the same floor after clear for more loot. No essence.\n\n'
-                              'You are mid-fight — switch anyway?')
-                  : (plain
-                        ? 'Next advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
-                              'You are mid-fight — switch anyway?'
-                        : 'PUSH advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
-                              'You are mid-fight — switch anyway?'),
-              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          builder: (ctx) => DismissDialogOnLeave(
+            director: director,
+            child: MenuChrome.dialog(
+              title: mode == DungeonMode.farm
+                  ? (plain ? 'Switch to Repeat?' : 'Switch to FARM?')
+                  : (plain ? 'Switch to Next?' : 'Switch to PUSH?'),
+              content: Text(
+                mode == DungeonMode.farm
+                    ? (plain
+                          ? 'Repeat stays on this floor after clear for more loot. No essence.\n\n'
+                                'You are mid-fight — switch anyway?'
+                          : 'FARM loops the same floor after clear for more loot. No essence.\n\n'
+                                'You are mid-fight — switch anyway?')
+                    : (plain
+                          ? 'Next advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
+                                'You are mid-fight — switch anyway?'
+                          : 'PUSH advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
+                                'You are mid-fight — switch anyway?'),
+                style: GameTheme.body(size: 15, color: GameTheme.parchment),
+              ),
+              actions: [
+                GameButton(
+                  label: 'CANCEL',
+                  style: GameButtonStyle.grey,
+                  expanded: false,
+                  onPressed: () => Navigator.pop(ctx, false),
+                ),
+                GameButton(
+                  label: 'SWITCH',
+                  style: GameButtonStyle.brown,
+                  expanded: false,
+                  onPressed: () => Navigator.pop(ctx, true),
+                ),
+              ],
             ),
-            actions: [
-              GameButton(
-                label: 'CANCEL',
-                style: GameButtonStyle.grey,
-                expanded: false,
-                onPressed: () => Navigator.pop(ctx, false),
-              ),
-              GameButton(
-                label: 'SWITCH',
-                style: GameButtonStyle.brown,
-                expanded: false,
-                onPressed: () => Navigator.pop(ctx, true),
-              ),
-            ],
           ),
         ).then((ok) {
           if (ok == true) director.setDungeonMode(mode);
@@ -663,10 +666,8 @@ class DungeonTopHud extends StatelessWidget {
                     padding: EdgeInsets.zero,
                     color: GameTheme.stoneDeep,
                     onSelected: (value) => _onFloorMenu(context, value, floor),
-                    itemBuilder: (context) => _floorMenuItems(
-                      floor: floor,
-                      includeExtras: false,
-                    ),
+                    itemBuilder: (context) =>
+                        _floorMenuItems(floor: floor, includeExtras: false),
                     child: Center(
                       child: Text(
                         state.inGauntlet ? '...' : 'F$floor',
@@ -927,6 +928,49 @@ class MissionClaimChip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Closes a mid-fight question when the party is already back on the hub.
+class DismissDialogOnLeave extends StatefulWidget {
+  const DismissDialogOnLeave({
+    super.key,
+    required this.director,
+    required this.child,
+  });
+
+  final GameDirector director;
+  final Widget child;
+
+  @override
+  State<DismissDialogOnLeave> createState() => _DismissDialogOnLeaveState();
+}
+
+class _DismissDialogOnLeaveState extends State<DismissDialogOnLeave> {
+  var _wasInDungeon = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _wasInDungeon = widget.director.state.inDungeon;
+    widget.director.addListener(_onDirector);
+  }
+
+  @override
+  void dispose() {
+    widget.director.removeListener(_onDirector);
+    super.dispose();
+  }
+
+  void _onDirector() {
+    final inside = widget.director.state.inDungeon;
+    final left = _wasInDungeon && !inside;
+    _wasInDungeon = inside;
+    if (!mounted || !left) return;
+    Navigator.of(context, rootNavigator: true).pop(false);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// First climb only: say the boss is this floor or the next one.

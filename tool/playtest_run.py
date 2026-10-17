@@ -1627,10 +1627,8 @@ def _screen_for(
     if nodes:
         labels = [n.label for n in nodes]
         has_close = any("CLOSE" in label for label in labels)
-        has_enter = any("ENTER DUNGEON" in label for label in labels)
-        has_leave = any(re.search(r"\bLEAVE\b", label) for label in labels)
-        menu_only = has_close and not has_enter and not has_leave
-        if not menu_only:
+        # An open sheet keeps CLOSE. The hub's ENTER can still sit in the tree.
+        if not has_close:
             if _hub_on_tree(labels):
                 return "hub"
             if any(n.clickable and re.search(r"\bLEAVE\b", n.label) for n in nodes):

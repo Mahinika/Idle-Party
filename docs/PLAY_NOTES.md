@@ -7,6 +7,8 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Open
 
+- 2026-10-17 · On a fast KEY run, floor-clear lines and item names stack on the party, so the casts are hard to see · visuellt · forvirrar · keep one clear line and fade item names before they cover the heroes (this round's fight pictures)
+
 ## Done
 
 <!-- - 2026-10-17 · The hub painted RIGHT OVERFLOWED BY 15 over Settings · gold and essence scale down so AL and Settings stay on the row · fixed in db75d323 -->
