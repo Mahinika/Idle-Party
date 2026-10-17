@@ -1,6 +1,28 @@
 # Idle Party — Play growth (what we can do)
 
-**Updated:** 2026-10-09 · Category stays **Role Playing** (idle fantasy RPG).
+**Updated:** 2026-10-17 API read. The grow-page paste is still **2026-10-09**. Category stays **Role Playing** (idle fantasy RPG).
+
+### API read 17 Oct
+
+Reviews API, about the last week: **empty**. Nothing to reply to. The 7 Oct Japanese 4★ is older than this window.
+
+Production track: **1.13.1 (227)** `completed`. Alpha still **1.12.133 (163)**. Internal still **1.9.3 (14)**. The public page still names **1.12.195**, updated **11 Oct**, **100+** downloads. No clean rating on that page. Do not reuse the similar-games stars.
+
+Error counts through **16 Oct** (America/Los_Angeles). Crash-rate and ANR-rate queries returned no rows. That is not a measured 0%.
+
+| When | Build | What | Reports | Users |
+|------|--------|------|---------|-------|
+| 23 Sep | 214 | crash | 1 | 1 |
+| 30 Sep | 222 | crash | 1 | 1 |
+| 5, 7, 8, 10 Oct | 224 | ANR | 1 each day | 1 each day |
+| 7 Oct | 224 | crash | 1 | 1 |
+| 13 Oct | 225 | ANR | 12 | 3 |
+| 14 Oct | 225 | ANR | 4 | 1 |
+| 15 Oct | 225 | ANR | 2 | 2 |
+
+Of the **18** ANR reports on **225**, **15** are one tablet, `IRIS_OHYAMA/TE10D1M64` (API 35): 10 on 13 Oct, 4 on 14 Oct, 1 on 15 Oct. The other three are `samsung/a14xm` (1, API 34) and `samsung/r13s` (2, API 36). The largest cluster is input-dispatch timeout in Dart, **11** reports / **2** users, all on 225. Single-user names on the main thread: `MetaSystems.dailyDateKey`, `GearSets.wornCount`, `SpatialCombat._nextWaypoint` (224), `ClassKits.defFor` (224). **227** is not in this window. The one-step-per-frame fix is in that build, not in 225.
+
+Device impressions, acquisitions, first opens, D7, rating average, and revenue are not in this API. Those numbers below are still the **9 Oct** paste.
 
 ### What 9 Oct changes
 
