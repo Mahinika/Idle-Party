@@ -8,8 +8,10 @@ import 'package:idle_party/models/dungeon_def.dart';
 void main() {
   test('currentVersion matches pubspec versionName', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
-    final match = RegExp(r'^version:\s*([0-9]+\.[0-9]+\.[0-9]+)', multiLine: true)
-        .firstMatch(pubspec);
+    final match = RegExp(
+      r'^version:\s*([0-9]+\.[0-9]+\.[0-9]+)',
+      multiLine: true,
+    ).firstMatch(pubspec);
     expect(match, isNotNull, reason: 'pubspec.yaml missing version:');
     final pubVersion = match!.group(1)!;
     expect(
@@ -41,7 +43,8 @@ void main() {
             bullets.contains('ashen') ||
             bullets.contains('vault'),
         isTrue,
-        reason: 'ember dungeon shipped — mention Ashen/Ember/Vault in What’s New',
+        reason:
+            'ember dungeon shipped — mention Ashen/Ember/Vault in What’s New',
       );
     }
     if (ids.contains('grove')) {
@@ -76,7 +79,8 @@ void main() {
       expect(
         bullets.contains('brass') || bullets.contains('brassvault'),
         isTrue,
-        reason: 'brass dungeon shipped — mention Brassvault/Brass in What’s New',
+        reason:
+            'brass dungeon shipped — mention Brassvault/Brass in What’s New',
       );
     }
     if (ids.contains('veil')) {
@@ -91,8 +95,8 @@ void main() {
   test('current patch notes name the version, date, and sections', () {
     final release = MetaSystems.releases.first;
     expect(release.summary, isNotNull);
-    expect(release.date, 'Oct 14, 2026');
-    expect(release.versionLine, 'VERSION ${release.version} — Oct 14, 2026');
+    expect(release.date, 'Oct 18, 2026');
+    expect(release.versionLine, 'VERSION ${release.version} — Oct 18, 2026');
     expect(release.changed, isNotEmpty);
     expect(release.technical, isEmpty);
     expect(release.known, isEmpty);

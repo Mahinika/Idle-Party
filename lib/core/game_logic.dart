@@ -932,7 +932,8 @@ class GameLogic {
     }
     final cur = state.currentRoom.floorNumber;
     final pushingNew =
-        state.dungeonMode == DungeonMode.push && cur > state.highestFloorCleared;
+        state.dungeonMode == DungeonMode.push &&
+        cur > state.highestFloorCleared;
     if (pushingNew && state.wipeStreakCount >= pushWipesBeforeFarm) {
       final safe = max(1, state.highestFloorCleared);
       return travelToFloor(
@@ -1029,6 +1030,13 @@ class GameLogic {
   static const int forgeHasteGain = 2;
   static const int forgeCritGain = 2;
   static const int forgeMasteryGain = 4;
+
+  /// Sheet knee after 40 buys. Raw track points still set the gold price.
+  /// Combat reads [GameState.forgeAttackSheet] and the matching getters.
+  static const double forgeAttackSoftAt = 80;
+  static const double forgeDefenseSoftAt = 320;
+  static const double forgeVitalitySoftAt = 960;
+  static const double forgeMasterySoftAt = 160;
 
   /// CAMP (sanctuary) per-level gains. Same essence cost; Life Well HP must
   /// match War Altar ATK the way FORGE STA matches ATK.
@@ -2408,8 +2416,7 @@ class GameLogic {
       );
     }
 
-    final resumePush =
-        farmLoop && awarded.pushResumeFloor > room.floorNumber;
+    final resumePush = farmLoop && awarded.pushResumeFloor > room.floorNumber;
     final targetFloor = resumePush
         ? awarded.pushResumeFloor
         : (farmLoop ? room.floorNumber : room.floorNumber + 1);
@@ -3213,6 +3220,7 @@ class GameLogic {
       OfflineProgress.applyHubIdleProgress(state, seconds);
   static int offlineFloorBudget(int seconds, {int roomCap = 120}) =>
       OfflineProgress.offlineFloorBudget(seconds, roomCap: roomCap);
+
   /// Welcome Back: a new PUSH floor they already failed is not this sitting.
   /// Farm the highest cleared floor so the return can finish a floor.
   static GameState returnToClearableFloor(GameState state) {
@@ -3233,10 +3241,7 @@ class GameLogic {
     if (state.wipeStreakCount < 1 && !hurt) return state;
     final safe = max(1, state.highestFloorCleared);
     return travelToFloor(
-      state.copyWith(
-        dungeonMode: DungeonMode.farm,
-        pushResumeFloor: cur,
-      ),
+      state.copyWith(dungeonMode: DungeonMode.farm, pushResumeFloor: cur),
       safe,
     );
   }
@@ -3247,10 +3252,9 @@ class GameLogic {
     int kills,
     bool stoppedOnWipe,
     bool farmedSafeFloor,
-  }) simulateSpatialOffline(
-    GameState state,
-    int seconds,
-  ) => OfflineProgress.simulateSpatialOffline(state, seconds);
+  })
+  simulateSpatialOffline(GameState state, int seconds) =>
+      OfflineProgress.simulateSpatialOffline(state, seconds);
 
   // —— Pets: moved to pet_service.dart ——
   static int hatchPetCost(GameState state) => PetService.hatchPetCost(state);
@@ -3649,7 +3653,8 @@ class OfflineProgressResult {
       !wasInDungeon && hubChestCapSec > 0 && secondsAway > hubChestCapSec;
 
   /// Hours named on the hub chest. Hand-built results use the live 12h cap.
-  int get hubChestHours => (hubChestCapSec > 0 ? hubChestCapSec : 12 * 3600) ~/ 3600;
+  int get hubChestHours =>
+      (hubChestCapSec > 0 ? hubChestCapSec : 12 * 3600) ~/ 3600;
 
   bool get foughtWhileAway =>
       wasInDungeon &&
@@ -3730,8 +3735,7 @@ class OfflineProgressResult {
     if (farmedSafeFloor) return 'Farmed the safe floor · Away $away';
     if (levelsGained > 0) return 'Party grew · Away $away';
     if (wasInDungeon) {
-      final held =
-          !foughtWhileAway && goldGained == 0 && essenceGained == 0;
+      final held = !foughtWhileAway && goldGained == 0 && essenceGained == 0;
       return held ? 'Dungeon held · Away $away' : 'Party fought · Away $away';
     }
     if (hubChestStopped) return 'Gold full · stopped at ${hubChestHours}h';
@@ -3870,11 +3874,7 @@ class OfflineProgressResult {
       final goldValue = hubChestStopped
           ? '+${goldGained}g · full'
           : '+${goldGained}g';
-      ranked.add((
-        6,
-        wasInDungeon ? 'Combat gold' : 'Gold',
-        goldValue,
-      ));
+      ranked.add((6, wasInDungeon ? 'Combat gold' : 'Gold', goldValue));
     }
     ranked.sort((a, b) => a.$1.compareTo(b.$1));
     final take =

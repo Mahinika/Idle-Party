@@ -78,14 +78,12 @@ abstract final class GameGuides {
       switch (t.id) {
         'basics' => _midgameBasics,
         'world_path' => _midgameWorldPath,
-        'dailies' => GameLogic.showDailyRunOnHub(state)
-            ? _midgameDailies
-            : _dayTwoDailies,
+        'dailies' =>
+          GameLogic.showDailyRunOnHub(state) ? _midgameDailies : _dayTwoDailies,
         'classes' => _midgameClasses,
         'ascend' => _midgameAscend,
-        'weekly' => GameLogic.showDailyRunOnHub(state)
-            ? _midgameWeekly
-            : _dayTwoWeekly,
+        'weekly' =>
+          GameLogic.showDailyRunOnHub(state) ? _midgameWeekly : _dayTwoWeekly,
         'jobs' => _midgameJobs,
         'daily' => _midgameDaily,
         'apex' => _midgameApex,
@@ -619,7 +617,9 @@ abstract final class GameGuides {
           'ATK, HASTE, and MOVE speed up clears — see Essence for rates. '
           'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
-          'relative upgrade.\n'
+          'relative upgrade. '
+          'Past 40 buys, ATK, DEF, STA, and MASTERY add less on the sheet. '
+          'MOVE and HASTE soften past 40. CRIT softens past 25.\n'
           '• MARKET: flasks, bandages, traveling gear listings.\n'
           '• Essence keeps (Ascend Blessing, God Hand, Star Nodes, 5th slot) live on ESSENCE → BLESSING.\n'
           '• Ascend from the Hub when ready (not from Gold).',

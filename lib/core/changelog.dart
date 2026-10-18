@@ -75,21 +75,32 @@ class ChangelogRelease {
   ChangelogRelease get leadOnly {
     final lines = bullets;
     if (lines.length <= 1) return this;
-    return ChangelogRelease(
-      version: version,
-      date: date,
-      summary: lines.first,
-    );
+    return ChangelogRelease(version: version, date: date, summary: lines.first);
   }
 }
 
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.1';
+  static const String currentVersion = '1.13.2';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.13.2',
+      date: 'Oct 18, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. Extra gold power still buys, and each buy past the early ones adds less.',
+      changed: <String>[
+        'GOLD → FORGE still buys attack, armor, stamina, and mastery. Past 40 buys each one adds less on the sheet. Move, haste, and crit already did.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.13.1',
       date: 'Oct 14, 2026',

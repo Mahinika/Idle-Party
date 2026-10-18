@@ -48,9 +48,7 @@ abstract final class EncounterFactory {
     final alThreatRaw = 1.0 + ascensionLevel.clamp(0, 40) * 0.08;
     // Fresh post-ascend (gear wiped) — soften AL threat until kit rebuilds.
     final freshAscendEase =
-        gearPressure <= freshPrestigeGearMax && ascensionLevel > 0
-        ? 0.65
-        : 1.0;
+        gearPressure <= freshPrestigeGearMax && ascensionLevel > 0 ? 0.65 : 1.0;
     final alThreat = alThreatRaw * freshAscendEase;
     // Fresh early floors: don't let gear-pressure spike packs before F5.
     // AL0 boss: keep mild pressure so farmed loot helps heroes more than enemies.
@@ -270,7 +268,7 @@ abstract final class EncounterFactory {
         if (hero.isAlive) {
           hp = min(
             state.effectiveHeroMaxHp(grown),
-            hp + 5 + state.vitalityBonus ~/ 4,
+            hp + 5 + state.forgeVitalitySheet ~/ 4,
           );
         }
       }
@@ -384,9 +382,7 @@ abstract final class EncounterFactory {
     final crowd = isBossRoomEarly ? 1 : max(1, room.crowd);
     final baseCount = max(
       1,
-      (room.enemyCount *
-              ((swarmWeek || gauntletSwarm) ? 1.35 : 1.0))
-          .round(),
+      (room.enemyCount * ((swarmWeek || gauntletSwarm) ? 1.35 : 1.0)).round(),
     );
     // Threat and payout are sized on budget slots (one slot = [crowd] bodies).
     final slotBase = max(1, (baseCount / crowd).round());
@@ -405,8 +401,7 @@ abstract final class EncounterFactory {
     var packAttack = (budget.attack * density).round();
     var packHp = (budget.hp * density).round();
     var packGold =
-        (budget.gold *
-                (1.0 + (density - 1.0) * Keystone.densityGoldShare))
+        (budget.gold * (1.0 + (density - 1.0) * Keystone.densityGoldShare))
             .round();
     // 5-man parties hit harder — scale threat so early floors stay fair.
     final partySize = fromState?.heroes.length ?? 4;
@@ -449,14 +444,14 @@ abstract final class EncounterFactory {
                       count: count,
                       rng: rng,
                     ))
-                    : EnemyFlavor.pickArchetype(
-                        type: pickType,
-                        isBossUnit: isBossRoom && i == 0,
-                        dungeonId: flavorId,
-                        index: gauntletSwarm ? 0 : i,
-                        count: gauntletSwarm ? 3 : count,
-                        rng: rng,
-                      ),
+            : EnemyFlavor.pickArchetype(
+                type: pickType,
+                isBossUnit: isBossRoom && i == 0,
+                dungeonId: flavorId,
+                index: gauntletSwarm ? 0 : i,
+                count: gauntletSwarm ? 3 : count,
+                rng: rng,
+              ),
     ];
     _ensureSandyOpenerJobs(
       archetypes,

@@ -381,6 +381,84 @@ void main() {
     expect(GameState.softForgePercent(100), lessThan(100));
   });
 
+  test('forge flats soft-knee after 40 buys and keep the raw price', () {
+    final seeded = GameLogic.createInitialState(now: DateTime(2026, 10, 18));
+    final hero = seeded.heroes.first;
+    expect(GameLogic.forgeAttackSoftAt, GameLogic.forgeAttackGain * 40);
+    expect(GameLogic.forgeDefenseSoftAt, GameLogic.forgeDefenseGain * 40);
+    expect(GameLogic.forgeVitalitySoftAt, GameLogic.forgeVitalityGain * 40);
+    expect(GameLogic.forgeMasterySoftAt, GameLogic.forgeMasteryGain * 40);
+
+    final atKnee = seeded.copyWith(
+      attackBonus: GameLogic.forgeAttackSoftAt.round(),
+    );
+    expect(atKnee.forgeAttackSheet, atKnee.attackBonus);
+    expect(
+      atKnee.effectiveHeroAttack(hero) - seeded.effectiveHeroAttack(hero),
+      atKnee.forgeAttackSheet,
+    );
+
+    final past = seeded.copyWith(
+      attackBonus:
+          GameLogic.forgeAttackSoftAt.round() + GameLogic.forgeAttackGain,
+    );
+    expect(past.attackBonus, greaterThan(past.forgeAttackSheet));
+    expect(
+      past.forgeAttackSheet,
+      GameState.softForgePercent(
+        past.attackBonus,
+        softAt: GameLogic.forgeAttackSoftAt,
+      ).round(),
+    );
+    expect(
+      past.effectiveHeroAttack(hero) - seeded.effectiveHeroAttack(hero),
+      past.forgeAttackSheet,
+    );
+    expect(
+      GameLogic.upgradeCostFor(past, PartyUpgradeType.attack),
+      greaterThan(GameLogic.upgradeCostFor(atKnee, PartyUpgradeType.attack)),
+    );
+    expect(
+      GameLogic.forgeTrackTier(past, PartyUpgradeType.attack),
+      past.attackBonus ~/ GameLogic.forgeAttackGain,
+    );
+    expect(
+      GameState.softForgeNextGain(
+        GameLogic.forgeAttackSoftAt.round(),
+        GameLogic.forgeAttackGain,
+        softAt: GameLogic.forgeAttackSoftAt,
+      ),
+      closeTo(GameLogic.forgeAttackGain * 0.35, 0.001),
+    );
+
+    final defPast = seeded.copyWith(
+      defenseBonus:
+          GameLogic.forgeDefenseSoftAt.round() + GameLogic.forgeDefenseGain,
+    );
+    expect(defPast.defenseBonus, greaterThan(defPast.forgeDefenseSheet));
+    expect(
+      defPast.effectiveHeroDefense(hero) - seeded.effectiveHeroDefense(hero),
+      defPast.forgeDefenseSheet,
+    );
+
+    final staPast = seeded.copyWith(
+      vitalityBonus:
+          GameLogic.forgeVitalitySoftAt.round() + GameLogic.forgeVitalityGain,
+    );
+    expect(staPast.vitalityBonus, greaterThan(staPast.forgeVitalitySheet));
+    expect(
+      staPast.effectiveHeroMaxHp(hero) - seeded.effectiveHeroMaxHp(hero),
+      staPast.forgeVitalitySheet,
+    );
+
+    final mastPast = seeded.copyWith(
+      masteryBonus:
+          GameLogic.forgeMasterySoftAt.round() + GameLogic.forgeMasteryGain,
+    );
+    expect(mastPast.masteryBonus, greaterThan(mastPast.forgeMasterySheet));
+    expect(mastPast.ratingsFor(hero).masteryRating, mastPast.forgeMasterySheet);
+  });
+
   test('ascend resets forge tracks', () {
     final ready = GameLogic.createInitialState(now: DateTime(2026, 8, 3))
         .copyWith(
@@ -518,7 +596,10 @@ void main() {
     expect(unlocked.hasRelic(GameLogic.warBannerRelic), isTrue);
     expect(unlocked.metaDepth.embers, 0);
     expect(unlocked.relicBossDamageMul, 1.04);
-    expect(GameLogic.relicPerTierPayout(GameLogic.warBannerRelic), contains('boss'));
+    expect(
+      GameLogic.relicPerTierPayout(GameLogic.warBannerRelic),
+      contains('boss'),
+    );
   });
 
   test('ascension is locked until required bosses are cleared', () {
@@ -2634,46 +2715,49 @@ void main() {
     expect(map.at(0, 0), TileKind.wall);
   });
 
-  test('first boss is the next floor, then the climb uses 5 plus ascension', () {
-    final fresh = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
-    expect(GameLogic.firstBossPending(fresh), isTrue);
-    expect(GameLogic.bossFloorFor(fresh), 2);
-    expect(DungeonGenerator.bossFloorFor(0), 5);
+  test(
+    'first boss is the next floor, then the climb uses 5 plus ascension',
+    () {
+      final fresh = GameLogic.createInitialState(now: DateTime(2026, 7, 4));
+      expect(GameLogic.firstBossPending(fresh), isTrue);
+      expect(GameLogic.bossFloorFor(fresh), 2);
+      expect(DungeonGenerator.bossFloorFor(0), 5);
 
-    final run = GameLogic.enterDungeon(fresh);
-    expect(run.currentRoom.floorNumber, 1);
-    expect(run.currentRoom.type, isNot(RoomType.boss));
+      final run = GameLogic.enterDungeon(fresh);
+      expect(run.currentRoom.floorNumber, 1);
+      expect(run.currentRoom.type, isNot(RoomType.boss));
 
-    final afterGold = GameLogic.completeCurrentRoom(
-      run,
-      goldGain: 10,
-      skipLootRoll: true,
-    );
-    expect(afterGold.inDungeon, isTrue);
-    expect(afterGold.currentRoom.floorNumber, 2);
-    expect(afterGold.currentRoom.type, RoomType.boss);
-    expect(afterGold.highestFloorCleared, 1);
+      final afterGold = GameLogic.completeCurrentRoom(
+        run,
+        goldGain: 10,
+        skipLootRoll: true,
+      );
+      expect(afterGold.inDungeon, isTrue);
+      expect(afterGold.currentRoom.floorNumber, 2);
+      expect(afterGold.currentRoom.type, RoomType.boss);
+      expect(afterGold.highestFloorCleared, 1);
 
-    final left = GameLogic.leaveDungeon(afterGold);
-    final resumed = GameLogic.enterDungeon(left);
-    expect(resumed.currentRoom.floorNumber, 2);
-    expect(resumed.currentRoom.type, RoomType.boss);
-    expect(resumed.highestFloorCleared, 1);
+      final left = GameLogic.leaveDungeon(afterGold);
+      final resumed = GameLogic.enterDungeon(left);
+      expect(resumed.currentRoom.floorNumber, 2);
+      expect(resumed.currentRoom.type, RoomType.boss);
+      expect(resumed.highestFloorCleared, 1);
 
-    final won = GameLogic.completeCurrentRoom(
-      resumed,
-      goldGain: 20,
-      skipLootRoll: true,
-    );
-    expect(won.inDungeon, isFalse);
-    expect(won.bossVictories, greaterThan(0));
-    expect(GameLogic.bossFloorFor(won), 5);
+      final won = GameLogic.completeCurrentRoom(
+        resumed,
+        goldGain: 20,
+        skipLootRoll: true,
+      );
+      expect(won.inDungeon, isFalse);
+      expect(won.bossVictories, greaterThan(0));
+      expect(GameLogic.bossFloorFor(won), 5);
 
-    final nextRun = GameLogic.enterDungeon(won);
-    expect(nextRun.currentRoom.floorNumber, 1);
-    expect(nextRun.highestFloorCleared, 0);
-    expect(nextRun.currentRoom.type, isNot(RoomType.boss));
-  });
+      final nextRun = GameLogic.enterDungeon(won);
+      expect(nextRun.currentRoom.floorNumber, 1);
+      expect(nextRun.highestFloorCleared, 0);
+      expect(nextRun.currentRoom.type, isNot(RoomType.boss));
+    },
+  );
 
   test('bossFloor formula is 5 plus ascension', () {
     expect(DungeonGenerator.bossFloorFor(0), 5);
@@ -3558,10 +3642,7 @@ void main() {
     expect(afterClear.achievements, contains('hm_1'));
     // Gauntlet floor essence + hm_1. Larger AL packs may also unlock first-time
     // combat achievements in the same clear.
-    expect(
-      afterClear.essence,
-      greaterThanOrEqualTo(1 + (2 ~/ 2) + hmReward),
-    );
+    expect(afterClear.essence, greaterThanOrEqualTo(1 + (2 ~/ 2) + hmReward));
     expect(
       afterClear.metaDepth.dailyVaultClears,
       min(GameLogic.dailyVaultClearTarget, vaultBefore + 1),
@@ -3807,10 +3888,7 @@ void main() {
       GameLogic.relicMaxTier,
     );
     expect(state.relicBossDamageMul, closeTo(1.24, 0.001));
-    final blocked = GameLogic.upgradeRelicTier(
-      state,
-      GameLogic.warBannerRelic,
-    );
+    final blocked = GameLogic.upgradeRelicTier(state, GameLogic.warBannerRelic);
     expect(blocked.essence, state.essence);
     expect(
       blocked.metaDepth.relicTierOf(GameLogic.warBannerRelic),
@@ -3819,8 +3897,9 @@ void main() {
   });
 
   test('GOLD BEST skips CRIT when party sheet is at the 70 fade', () {
-    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 12))
-        .copyWith(gold: 500000);
+    var state = GameLogic.createInitialState(
+      now: DateTime(2026, 9, 12),
+    ).copyWith(gold: 500000);
     state = GameLogic.upgradeSpendAllEvenly(state);
     final meanCrit =
         state.heroes.fold<int>(0, (s, h) => s + state.effectiveHeroCrit(h)) /

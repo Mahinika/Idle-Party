@@ -54,20 +54,35 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   };
 
   String _forgeBonus(GameState state, PartyUpgradeType type) => switch (type) {
-    PartyUpgradeType.attack => '+${state.attackBonus}',
-    PartyUpgradeType.defense => '+${state.defenseBonus}',
-    PartyUpgradeType.vitality => '+${state.vitalityBonus}',
+    PartyUpgradeType.attack => _flatSheet(
+      state.forgeAttackSheet,
+      soft: state.attackBonus >= GameLogic.forgeAttackSoftAt,
+    ),
+    PartyUpgradeType.defense => _flatSheet(
+      state.forgeDefenseSheet,
+      soft: state.defenseBonus >= GameLogic.forgeDefenseSoftAt,
+    ),
+    PartyUpgradeType.vitality => _flatSheet(
+      state.forgeVitalitySheet,
+      soft: state.vitalityBonus >= GameLogic.forgeVitalitySoftAt,
+    ),
     PartyUpgradeType.moveSpeed =>
       '+${GameState.softForgePercent(state.moveSpeedBonus).round()}%'
-      '${state.moveSpeedBonus >= 40 ? ' · SOFT' : ''}',
+          '${state.moveSpeedBonus >= 40 ? ' · SOFT' : ''}',
     PartyUpgradeType.attackSpeed =>
       '+${GameState.softForgePercent(state.attackSpeedBonus).round()}%'
-      '${state.attackSpeedBonus >= 40 ? ' · SOFT' : ''}',
+          '${state.attackSpeedBonus >= 40 ? ' · SOFT' : ''}',
     PartyUpgradeType.crit =>
       '+${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%'
-      '${state.critBonus >= 25 ? ' · SOFT' : ''}',
-    PartyUpgradeType.mastery => '+${state.masteryBonus}',
+          '${state.critBonus >= 25 ? ' · SOFT' : ''}',
+    PartyUpgradeType.mastery => _flatSheet(
+      state.forgeMasterySheet,
+      soft: state.masteryBonus >= GameLogic.forgeMasterySoftAt,
+    ),
   };
+
+  String _flatSheet(int sheet, {required bool soft}) =>
+      '+$sheet${soft ? ' · SOFT' : ''}';
 
   static String _fmtSoftNextPct(double gain) {
     if (gain <= 0) return '+0%';
@@ -97,7 +112,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       accent: _forgeAccent(type),
       title: _forgeName(type),
       tag: recommended ? 'BEST' : null,
-      subtitle: '${_forgeBonus(state, type)}${nextDelta == null ? '' : ' · $nextDelta'}',
+      subtitle:
+          '${_forgeBonus(state, type)}${nextDelta == null ? '' : ' · $nextDelta'}',
       selected: recommended,
       dense: true,
       trailing: GameButton(
@@ -106,9 +122,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
             ? 'Need ${formatGold(shortGold)} more'
             : recommended
             ? 'BEST = cheapest track that still lifts party power'
-            : (type == PartyUpgradeType.crit && state.critBonus >= 25
-                ? 'CRIT soft-caps past 25 — each buy adds less sheet %'
-                : null),
+            : _softTip(state, type),
         expanded: false,
         dense: true,
         onPressed: onPressed,
@@ -116,25 +130,77 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     );
   }
 
+  String? _softTip(GameState state, PartyUpgradeType type) {
+    return switch (type) {
+      PartyUpgradeType.attack
+          when state.attackBonus >= GameLogic.forgeAttackSoftAt =>
+        'ATK soft-caps past ${GameLogic.forgeAttackSoftAt.round()} — each buy adds less',
+      PartyUpgradeType.defense
+          when state.defenseBonus >= GameLogic.forgeDefenseSoftAt =>
+        'DEF soft-caps past ${GameLogic.forgeDefenseSoftAt.round()} — each buy adds less',
+      PartyUpgradeType.vitality
+          when state.vitalityBonus >= GameLogic.forgeVitalitySoftAt =>
+        'STA soft-caps past ${GameLogic.forgeVitalitySoftAt.round()} — each buy adds less',
+      PartyUpgradeType.crit when state.critBonus >= 25 =>
+        'CRIT soft-caps past 25 — each buy adds less sheet %',
+      PartyUpgradeType.mastery
+          when state.masteryBonus >= GameLogic.forgeMasterySoftAt =>
+        'MASTERY soft-caps past ${GameLogic.forgeMasterySoftAt.round()} — each buy adds less',
+      _ => null,
+    };
+  }
+
+  String _fmtSoftNextFlat(double gain, String stat) {
+    if (gain <= 0) return '+0 $stat next';
+    if ((gain - gain.round()).abs() < 0.05) {
+      return '+${gain.round()} $stat next';
+    }
+    return '+${gain.toStringAsFixed(1)} $stat next';
+  }
+
   String? _nextRankDelta(GameState state, PartyUpgradeType type) {
     if (!GameLogic.canForgeGoldSpend(state, type, ForgeGoldSpendMode.one)) {
       return null;
     }
     return switch (type) {
-      PartyUpgradeType.attack =>
-        '+${GameLogic.forgeAttackGain} ATK next',
-      PartyUpgradeType.defense =>
-        '+${GameLogic.forgeDefenseGain} DEF next',
-      PartyUpgradeType.vitality =>
-        '+${GameLogic.forgeVitalityGain} STA next',
+      PartyUpgradeType.attack => _fmtSoftNextFlat(
+        GameState.softForgeNextGain(
+          state.attackBonus,
+          GameLogic.forgeAttackGain,
+          softAt: GameLogic.forgeAttackSoftAt,
+        ),
+        'ATK',
+      ),
+      PartyUpgradeType.defense => _fmtSoftNextFlat(
+        GameState.softForgeNextGain(
+          state.defenseBonus,
+          GameLogic.forgeDefenseGain,
+          softAt: GameLogic.forgeDefenseSoftAt,
+        ),
+        'DEF',
+      ),
+      PartyUpgradeType.vitality => _fmtSoftNextFlat(
+        GameState.softForgeNextGain(
+          state.vitalityBonus,
+          GameLogic.forgeVitalityGain,
+          softAt: GameLogic.forgeVitalitySoftAt,
+        ),
+        'STA',
+      ),
       PartyUpgradeType.moveSpeed =>
         '${_fmtSoftNextPct(GameState.softForgeNextGain(state.moveSpeedBonus, GameLogic.forgeMoveGain))} MOVE next',
       PartyUpgradeType.attackSpeed =>
         '${_fmtSoftNextPct(GameState.softForgeNextGain(state.attackSpeedBonus, GameLogic.forgeHasteGain))} HASTE next',
       PartyUpgradeType.crit =>
         '${_fmtSoftNextPct(GameState.softForgeNextGain(state.critBonus, GameLogic.forgeCritGain, softAt: 25))} CRIT next',
-      PartyUpgradeType.mastery =>
-        '+${GameLogic.forgeMasteryGain} MASTERY next',
+      PartyUpgradeType.mastery => _fmtSoftNextFlat(
+        GameState.softForgeNextGain(
+          state.masteryBonus,
+          GameLogic.forgeMasteryGain,
+          softAt: GameLogic.forgeMasterySoftAt,
+        ),
+        'MASTERY',
+      ),
     };
   }
 
@@ -142,13 +208,15 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   Widget build(BuildContext context) {
     final plain = GameLogic.plainPlayerChrome(director.state);
     final state = director.state;
-    final canBuyAny = !(plain &&
-        state.gold <
-            GameLogic.upgradeCostFor(
-              state,
-              PartyUpgradeType.values[
-                  GameLogic.recommendedForgeUpgrade(state)],
-            ));
+    final canBuyAny =
+        !(plain &&
+            state.gold <
+                GameLogic.upgradeCostFor(
+                  state,
+                  PartyUpgradeType.values[GameLogic.recommendedForgeUpgrade(
+                    state,
+                  )],
+                ));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -164,8 +232,10 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
               label: GameLogic.canForgeGoldSpendEven(state)
                   ? 'SPEND ALL · EVEN'
                   : 'SPEND ALL · EVEN · Need gold',
-              tip: 'Splits wallet gold round-robin across every track. '
-                  'MOVE/HASTE soft past 40 · CRIT soft past 25.',
+              tip:
+                  'Splits wallet gold round-robin across every track. '
+                  'ATK, DEF, STA, and MASTERY soften past 40 buys. '
+                  'MOVE and HASTE soften past 40. CRIT softens past 25.',
               style: GameButtonStyle.grey,
               dense: true,
               onPressed: GameLogic.canForgeGoldSpendEven(state)
@@ -182,26 +252,28 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
 
   Widget _classicForgeBody({required bool plain, required bool pinSpendAll}) {
     final state = director.state;
-    final canBuyAny = !(plain &&
-        state.gold <
-            GameLogic.upgradeCostFor(
-              state,
-              PartyUpgradeType.values[
-                  GameLogic.recommendedForgeUpgrade(state)],
-            ));
+    final canBuyAny =
+        !(plain &&
+            state.gold <
+                GameLogic.upgradeCostFor(
+                  state,
+                  PartyUpgradeType.values[GameLogic.recommendedForgeUpgrade(
+                    state,
+                  )],
+                ));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           plain
-              ? 'Bought: ATK +${state.attackBonus} · DEF +${state.defenseBonus} · '
-                  'STA +${state.vitalityBonus}'
-              : 'Bought: ATK +${state.attackBonus}  DEF +${state.defenseBonus}  '
-                  'STA +${state.vitalityBonus}  '
-                  'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%  '
-                  'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
-                  'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%  '
-                  'MASTERY +${state.masteryBonus}',
+              ? 'Bought: ATK +${state.forgeAttackSheet} · DEF +${state.forgeDefenseSheet} · '
+                    'STA +${state.forgeVitalitySheet}'
+              : 'Bought: ATK +${state.forgeAttackSheet}  DEF +${state.forgeDefenseSheet}  '
+                    'STA +${state.forgeVitalitySheet}  '
+                    'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%  '
+                    'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
+                    'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%  '
+                    'MASTERY +${state.forgeMasterySheet}',
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           softWrap: true,

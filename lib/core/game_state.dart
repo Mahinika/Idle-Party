@@ -833,9 +833,28 @@ class GameState {
   ProjectilePattern get weaponPattern =>
       heroes.isEmpty ? ProjectilePattern.single : heroes.first.weaponPattern;
 
+  /// Forge ATK on the sheet. Raw [attackBonus] still prices the track.
+  /// Knee is 80 points (40 buys). Keep in sync with `GameLogic.forgeAttackSoftAt`.
+  int get forgeAttackSheet => softForgePercent(attackBonus, softAt: 80).round();
+
+  /// Forge DEF on the sheet. Knee is 320 (40 buys).
+  /// Keep in sync with `GameLogic.forgeDefenseSoftAt`.
+  int get forgeDefenseSheet =>
+      softForgePercent(defenseBonus, softAt: 320).round();
+
+  /// Forge STA on the sheet. Knee is 960 (40 buys).
+  /// Keep in sync with `GameLogic.forgeVitalitySoftAt`.
+  int get forgeVitalitySheet =>
+      softForgePercent(vitalityBonus, softAt: 960).round();
+
+  /// Forge mastery rating on the sheet. Knee is 160 (40 buys).
+  /// Keep in sync with `GameLogic.forgeMasterySoftAt`.
+  int get forgeMasterySheet =>
+      softForgePercent(masteryBonus, softAt: 160).round();
+
   /// Forge / relics / AL / sanctuary / pet / soulbound — not personal gear.
   int get metaAttackBonus =>
-      attackBonus +
+      forgeAttackSheet +
       ascensionAttackBonus +
       sanctuaryAttackBonus +
       petAttackBonus +
@@ -846,7 +865,7 @@ class GameState {
       ascendBlessingAttackBonus;
 
   int get metaDefenseBonus =>
-      defenseBonus +
+      forgeDefenseSheet +
       ascensionDefenseBonus +
       sanctuaryDefenseBonus +
       soulboundDefenseBonus +
@@ -854,7 +873,7 @@ class GameState {
       ascendBlessingDefenseBonus;
 
   int get metaVitalityBonus =>
-      vitalityBonus +
+      forgeVitalitySheet +
       ascensionVitalityBonus +
       sanctuaryVitalityBonus +
       soulboundVitalityBonus +
@@ -951,7 +970,7 @@ class GameState {
           : hero.gearSpellPowerBonus,
       gearMasteryRating:
           (apexOnly ? fold((i) => i.masteryBonus) : hero.gearMasteryBonus) +
-          masteryBonus,
+          forgeMasterySheet,
       gearArmor: apexOnly ? fold((i) => i.resolvedArmor) : hero.gearArmorBonus,
       gearCrit: apexOnly ? fold((i) => i.critChanceBonus) : hero.gearCritChance,
       gearFlatAttack: apexOnly
@@ -971,7 +990,8 @@ class GameState {
   int effectiveHeroAttack(PartyHero hero) {
     final base = ratingsFor(hero).effectiveAttack;
     if (!inGauntlet) return base;
-    final scaled = base * GauntletPacts.attackMul(GauntletPacts.parse(gauntletPact));
+    final scaled =
+        base * GauntletPacts.attackMul(GauntletPacts.parse(gauntletPact));
     return scaled.round();
   }
 
@@ -1521,7 +1541,7 @@ class GameState {
     'wipeStreakKey': wipeStreakKey,
     'wipeStreakCount': wipeStreakCount,
     'pushResumeFloor': pushResumeFloor,
-      'wipeAdviceLine': wipeAdviceLine,
+    'wipeAdviceLine': wipeAdviceLine,
     'wipeScanLine': wipeScanLine,
     'sessionTelemetryOptIn': sessionTelemetryOptIn,
     'sessionTelemetryLog': sessionTelemetryLog,
