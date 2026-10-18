@@ -7,11 +7,60 @@ import 'package:idle_party/ui/decoded_image_cache.dart';
 import 'package:idle_party/visual/body_family.dart';
 import 'package:idle_party/visual/character_visual_pose.dart';
 import 'package:idle_party/visual/hero_anim_state.dart';
+import 'package:idle_party/visual/rig/hero_rig_flags.dart';
 import 'package:idle_party/visual/rig/hero_rig_library.dart';
 import 'package:idle_party/visual/rig/hero_rig_painter.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('fight skips the still doll until the skeleton can draw', () {
+    final hero = PartyHero.starting(
+      name: 'Aegis',
+      specId: HeroSpecId.protection,
+      stats: PartyHero.startingStatsForSpec(HeroSpecId.protection),
+    );
+    final pose = CharacterVisualPose.resolve(
+      hero: hero,
+      anim: const HeroAnimPose(kind: HeroAnimKind.idle, frame: 0),
+      owned: true,
+    );
+    expect(HeroRigFlags.use(pose.bodyFamily), isTrue);
+    final bodyRecorder = ui.PictureRecorder();
+    final bodyCanvas = ui.Canvas(bodyRecorder);
+    bodyCanvas.drawRect(const ui.Rect.fromLTWH(0, 0, 4, 4), ui.Paint());
+    final bodyPicture = bodyRecorder.endRecording();
+    final body = bodyPicture.toImageSync(4, 4);
+    bodyPicture.dispose();
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    const center = ui.Offset(16, 16);
+    expect(
+      HeroRigPainter.paintOwned(
+        canvas,
+        center,
+        32,
+        body: body,
+        images: const {},
+        pose: pose,
+        allowStillDoll: false,
+      ),
+      isFalse,
+    );
+    expect(
+      HeroRigPainter.paintOwned(
+        canvas,
+        center,
+        32,
+        body: body,
+        images: const {},
+        pose: pose,
+      ),
+      isTrue,
+    );
+    recorder.endRecording().dispose();
+    body.dispose();
+  });
 
   test('party skeleton is cut before the dungeon shows the doll', () async {
     final hero = PartyHero.starting(

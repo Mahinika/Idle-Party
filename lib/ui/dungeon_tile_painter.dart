@@ -1,5 +1,7 @@
 part of 'spatial_dungeon_view.dart';
 
+enum _DungeonPaintLayer { floor, live }
+
 class _TileRoomPainter extends CustomPainter {
   _TileRoomPainter({
     required this.world,
@@ -29,6 +31,8 @@ class _TileRoomPainter extends CustomPainter {
     required this.camera,
     this.vfxQuality = VfxQuality.full,
     required this.visualFrame,
+    required this.floorEpoch,
+    required this.layer,
   });
 
   final SpatialWorld world;
@@ -58,6 +62,8 @@ class _TileRoomPainter extends CustomPainter {
   final _TileCamera camera;
   final VfxQuality vfxQuality;
   final int visualFrame;
+  final int floorEpoch;
+  final _DungeonPaintLayer layer;
 
   bool get reducedVfx => vfxQuality.reduced;
   bool get showAuras => vfxQuality.showActorAuras;
@@ -113,6 +119,7 @@ class _TileRoomPainter extends CustomPainter {
   );
   static double? _goLabelTile;
   static TextStyle? _goLabelStyle;
+  static int _nextPaintLogMs = 0;
 
   static int _hashPick(int x, int y, int seed, int len) {
     if (len <= 0) return 0;
@@ -129,11 +136,31 @@ class _TileRoomPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final timed =
+        layer == _DungeonPaintLayer.live &&
+        (kDebugMode || DebugPlayLog.testSink != null);
+    final watch = Stopwatch();
+    if (timed) watch.start();
+    if (layer == _DungeonPaintLayer.floor) {
+      _paintFloor(canvas, size);
+    } else {
+      _paintLive(canvas, size);
+    }
+    if (!timed) return;
+    watch.stop();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now < _nextPaintLogMs) return;
+    _nextPaintLogMs = now + 1000;
+    DebugPlayLog.event('paint', '${watch.elapsedMilliseconds}ms');
+  }
+
+  /// Baked floor, gates, and the stair sprite. Lights and the GO pulse stay
+  /// on the live layer so they keep their place under the atmosphere wash.
+  void _paintFloor(Canvas canvas, Size size) {
     final tile = camera.tileSize;
     final originX = -camera.camX * tile;
     final originY = -camera.camY * tile;
     final ambient = DungeonEnvironment.ambient(dungeonId);
-    // Let the painted zone backdrop show through void / wall space.
     _fillPaint.color = ambient.withValues(alpha: 0.55);
     canvas.drawRect(Offset.zero & size, _fillPaint);
 
@@ -142,8 +169,6 @@ class _TileRoomPainter extends CustomPainter {
     final startY = camera.camY.floor().clamp(0, world.rows - 1);
     final endY = (camera.camY + camera.visibleRows).ceil().clamp(0, world.rows);
 
-    // Static terrain: the phone view first, then the rest of the floor in
-    // strips. A full-map raster here used to hitch the opening of every floor.
     _FloorLayerCache.paint(
       canvas,
       this,
@@ -156,7 +181,6 @@ class _TileRoomPainter extends CustomPainter {
       endY,
     );
 
-    // Live tiles: doors and the stairs change state mid-floor.
     for (final gate in world.map.gates) {
       final x = gate.x;
       final y = gate.y;
@@ -168,7 +192,6 @@ class _TileRoomPainter extends CustomPainter {
         tile + 0.5,
         tile + 0.5,
       );
-      // Only the center cell of a 3-wide gate strip draws a door sprite.
       if (_isGateDoorCenter(x, y)) {
         final door = gateOpen ? doorOpen : doorClosed;
         final eastWest = DungeonEnvironment.gateRunsEastWest(world.map, x, y);
@@ -177,18 +200,32 @@ class _TileRoomPainter extends CustomPainter {
           _fillPaint.color = const Color(0x44000000);
           canvas.drawRect(dst, _fillPaint);
         } else {
-          // Open door always reads as progress (even Minimal VFX).
           _strokePaint
             ..color = const Color(0x88FFE08A)
             ..strokeWidth = math.max(1.5, tile * 0.06);
           canvas.drawRect(dst.deflate(tile * 0.08), _strokePaint);
         }
       } else if (!gateOpen) {
-        // Side cells: sealed stubs, not extra door panels.
         _fillPaint.color = const Color(0x55000000);
         canvas.drawRect(dst, _fillPaint);
       }
     }
+
+    final (x, y) = world.map.exitPoint;
+    final dst = Rect.fromLTWH(
+      originX + x * tile,
+      originY + y * tile,
+      tile + 0.5,
+      tile + 0.5,
+    );
+    final exitImg = roomType == RoomType.boss ? stairsBoss : stairs;
+    _drawImage(canvas, exitImg, dst);
+  }
+
+  void _paintLive(Canvas canvas, Size size) {
+    final tile = camera.tileSize;
+    final originX = -camera.camX * tile;
+    final originY = -camera.camY * tile;
     {
       final (x, y) = world.map.exitPoint;
       final dst = Rect.fromLTWH(
@@ -197,8 +234,6 @@ class _TileRoomPainter extends CustomPainter {
         tile + 0.5,
         tile + 0.5,
       );
-      final exitImg = roomType == RoomType.boss ? stairsBoss : stairs;
-      _drawImage(canvas, exitImg, dst);
       if (world.awaitingExit) {
         if (showGuide) {
           final pulse = 0.75 + 0.25 * math.sin(visualFrame * 0.18);
@@ -209,7 +244,6 @@ class _TileRoomPainter extends CustomPainter {
           _fillPaint.color = const Color(0x3380FFB0);
           canvas.drawCircle(dst.center, tile * 0.32 * pulse, _fillPaint);
         }
-        // GO stays visible even on Minimal VFX — stairs must stay obvious.
         final goStyle = GameTheme.pixelCached(
           size: math.max(GameTheme.hudPixelComfort, tile * 0.42),
           color: const Color(0xEE80FFB0),
@@ -1041,18 +1075,29 @@ class _TileRoomPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _TileRoomPainter oldDelegate) {
-    return visualFrame != oldDelegate.visualFrame ||
-        dungeonId != oldDelegate.dungeonId ||
-        reducedVfx != oldDelegate.reducedVfx ||
-        vfxQuality != oldDelegate.vfxQuality ||
-        camera.camX != oldDelegate.camera.camX ||
-        camera.camY != oldDelegate.camera.camY ||
-        camera.tileSize != oldDelegate.camera.tileSize ||
-        !identical(world, oldDelegate.world) ||
-        !identical(floorVariants, oldDelegate.floorVariants) ||
-        !identical(enemies, oldDelegate.enemies) ||
-        !identical(heroesByClass, oldDelegate.heroesByClass) ||
-        !identical(heroesBySpec, oldDelegate.heroesBySpec) ||
-        !identical(bodyByPath, oldDelegate.bodyByPath);
+    if (layer != oldDelegate.layer) return true;
+    if (layer == _DungeonPaintLayer.floor) {
+      return dungeonId != oldDelegate.dungeonId ||
+          roomType != oldDelegate.roomType ||
+          floorEpoch != oldDelegate.floorEpoch ||
+          camera.camX != oldDelegate.camera.camX ||
+          camera.camY != oldDelegate.camera.camY ||
+          camera.tileSize != oldDelegate.camera.tileSize ||
+          world.awaitingExit != oldDelegate.world.awaitingExit ||
+          !_sameOpenGates(oldDelegate) ||
+          !identical(floorVariants, oldDelegate.floorVariants) ||
+          !identical(wallVariants, oldDelegate.wallVariants) ||
+          !identical(stairs, oldDelegate.stairs) ||
+          !identical(stairsBoss, oldDelegate.stairsBoss) ||
+          !identical(doorClosed, oldDelegate.doorClosed) ||
+          !identical(doorOpen, oldDelegate.doorOpen);
+    }
+    return visualFrame != oldDelegate.visualFrame;
+  }
+
+  bool _sameOpenGates(_TileRoomPainter other) {
+    final a = world.openGateIds;
+    final b = other.world.openGateIds;
+    return a.length == b.length && a.containsAll(b);
   }
 }

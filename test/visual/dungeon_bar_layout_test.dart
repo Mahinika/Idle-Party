@@ -25,14 +25,15 @@ void main() {
   test('HP bar stays above every body and a form sprite', () {
     for (final family in BodyFamily.values) {
       expectAboveHead(
-        BodyFamilyCatalog.fightScale * BodyFamilyCatalog.hudReadScale(family),
+        DungeonBarLayout.ownedBodyScale *
+            BodyFamilyCatalog.hudReadScale(family),
       );
     }
     expectAboveHead(1.42);
     expectAboveHead(0.95);
     // Attack flash grows the warrior square; the bar must follow that scale.
     expectAboveHead(
-      BodyFamilyCatalog.fightScale *
+      DungeonBarLayout.ownedBodyScale *
           BodyFamilyCatalog.hudReadScale(BodyFamily.warrior) *
           1.32,
     );

@@ -49,6 +49,55 @@ abstract final class _SoftGlow {
   }
 }
 
+/// One vertical shaft, tinted and blitted. A fresh linear shader on every
+/// starlight decal used to allocate a gradient each fight frame.
+abstract final class _StarShaft {
+  static const int _w = 48;
+  static const int _h = 96;
+  static ui.Image? _shaft;
+  static final Paint _blit = Paint()..filterQuality = FilterQuality.low;
+
+  static ui.Image _image() {
+    final cached = _shaft;
+    if (cached != null) return cached;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final width = _w.toDouble();
+    final height = _h.toDouble();
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, width, height),
+      Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(width / 2, 0),
+          Offset(width / 2, height),
+          const [Color(0x00FFFFFF), Color(0xFFFFFFFF)],
+        ),
+    );
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(_w, _h);
+    picture.dispose();
+    return _shaft = image;
+  }
+
+  static void blit(Canvas canvas, Offset center, double width, double height) {
+    if (!width.isFinite || !height.isFinite || width <= 1 || height <= 1) {
+      return;
+    }
+    _blit
+      ..blendMode = BlendMode.plus
+      ..colorFilter = ColorFilter.mode(
+        const Color(0x38D8E8FF),
+        BlendMode.modulate,
+      );
+    canvas.drawImageRect(
+      _image(),
+      Rect.fromLTWH(0, 0, _w.toDouble(), _h.toDouble()),
+      Rect.fromCenter(center: center, width: width, height: height),
+      _blit,
+    );
+  }
+}
+
 /// Static terrain (floor, wall rims + faces, beat tint, decals) baked per map
 /// at 16 px a tile, then blitted with the camera.
 ///
@@ -778,25 +827,18 @@ extension _DungeonFloorLayer on _TileRoomPainter {
       _SoftGlow.blit(canvas, c, radius, color);
     }
     // Wonder starlight: a slow shaft from the broken ceiling.
+    // Lite and Minimal skip it. Full blits one cached shaft.
+    if (reducedVfx) return;
     for (final d in map.decals) {
       if (d.kind != FloorDecalKind.starlight) continue;
       final c = center(d.x + d.w / 2, d.y + d.h / 2);
       if (!_inView(d.x + 0.5, d.y + 0.5, pad: 4)) continue;
-      final breathe = reducedVfx
-          ? 1.0
-          : 0.85 + 0.15 * math.sin(visualFrame * 0.015);
-      final paint = Paint()..blendMode = BlendMode.plus;
-      paint.shader = ui.Gradient.linear(c.translate(0, -tile * 4), c, [
-        const Color(0x00D8E8FF),
-        const Color(0x38D8E8FF),
-      ]);
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: c.translate(0, -tile * 2),
-          width: tile * 2.4 * breathe,
-          height: tile * 4.5,
-        ),
-        paint,
+      final breathe = 0.85 + 0.15 * math.sin(visualFrame * 0.015);
+      _StarShaft.blit(
+        canvas,
+        c.translate(0, -tile * 2),
+        tile * 2.4 * breathe,
+        tile * 4.5,
       );
     }
   }

@@ -24,6 +24,7 @@ import 'ad_boost.dart';
 import 'ad_rewarded.dart';
 import 'app_analytics.dart';
 import 'debug_play_log.dart';
+import 'fight_frame_budget.dart';
 import 'funnel_analytics.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
@@ -119,6 +120,9 @@ class GameDirector extends ChangeNotifier {
 
   /// Last fight tick, so a slow phone does not stack steps to catch up.
   int _lastCombatTickMs = 0;
+
+  /// Next debug `[IP] fight` line. At most once a second.
+  int _nextFightLogMs = 0;
   Timer? _uiTimer;
   Timer? _bootWarmup;
   Timer? _hubIdleTimer;

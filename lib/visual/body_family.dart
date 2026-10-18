@@ -78,12 +78,6 @@ abstract final class BodyFamilyCatalog {
 
   static BodyFamilyDef defForHero(PartyHero hero) => defFor(familyFor(hero));
 
-  /// Dungeon size for an owned body, before [hudReadScale].
-  ///
-  /// The paper doll and the skeleton share this. Near one floor tile, so a
-  /// party fits the hall. A higher number used to step plate up to two tiles.
-  static const fightScale = 1.20;
-
   /// Phone-size read: plate reads broader, leather tighter. Cloth stays mid.
   static double hudReadScale(BodyFamily family) => switch (family) {
     BodyFamily.warrior => 1.10,

@@ -27,7 +27,12 @@ extension GameDirectorCombatLoop on GameDirector {
 
     final pace = _state.combatPace.clamp(1, 2);
     final catchUp = extraSteps.clamp(0, 1);
-    final steps = ((_debugTimeScale * pace).round() + catchUp).clamp(1, 20);
+    final steps = FightFrameBudget.steps(
+      pace: pace,
+      debugScale: _debugTimeScale,
+      catchUp: catchUp,
+      lastSimMs: _lastCombatTickMs,
+    );
     final tickWatch = Stopwatch()..start();
     var playedLoot = false;
     for (var step = 0; step < steps; step++) {
@@ -505,6 +510,7 @@ extension GameDirectorCombatLoop on GameDirector {
     tickWatch.stop();
     _lastCombatTickMs = tickWatch.elapsedMilliseconds;
     _noteFightBudget(_lastCombatTickMs);
+    _logFightBudget(steps);
 
     _uiThrottle++;
     if (!_runIncomeFrozen && _state.inDungeon && _uiThrottle % 60 == 0) {
@@ -518,6 +524,17 @@ extension GameDirectorCombatLoop on GameDirector {
     if (_uiThrottle % GameDirector._shellNotifyEvery == 0) {
       _notifyShell();
     }
+  }
+
+  void _logFightBudget(int steps) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now < _nextFightLogMs) return;
+    _nextFightLogMs = now + 1000;
+    DebugPlayLog.event(
+      'fight',
+      'sim=${_lastCombatTickMs}ms steps=$steps '
+          'pace=${_state.combatPace.clamp(1, 2)} vfx=${_state.vfxQuality.name}',
+    );
   }
 
   void _maybeBossIntroSting() {

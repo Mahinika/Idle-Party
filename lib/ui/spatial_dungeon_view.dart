@@ -742,10 +742,54 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                 visibleCols: target.visibleCols,
                                 visibleRows: target.visibleRows,
                               );
+                              _TileRoomPainter paintLayer(
+                                SpatialWorld ready,
+                                _DungeonPaintLayer layer,
+                              ) => _TileRoomPainter(
+                                world: ready,
+                                party: widget.director.state.heroes,
+                                floorVariants: _floorReady,
+                                wallVariants: _wallReady,
+                                stairs: _zoneStairs ?? _stairs!,
+                                stairsBoss: _zoneStairsBoss ?? _stairsBoss!,
+                                doorClosed: _zoneDoorClosed ?? _doorClosed!,
+                                doorOpen: _zoneDoorOpen ?? _doorOpen!,
+                                propImages: _propImages,
+                                roomType: room.type,
+                                dungeonId: widget.director.state.dungeonId,
+                                layoutSeed: ready.map.layoutSeed,
+                                clearedChambers: ready.clearedChambers,
+                                heroes: <ui.Image?>[
+                                  _hero0,
+                                  _hero1,
+                                  _hero2,
+                                  _hero3,
+                                ],
+                                heroesByClass: _heroesByClass,
+                                heroesBySpec: _heroesBySpec,
+                                bodyByPath: _bodyByPath,
+                                enemies: _enemySprites,
+                                chest: _chest!,
+                                coin: _coin!,
+                                sword: _sword!,
+                                vial: _vial!,
+                                lootByPath: _lootByPath,
+                                petsByPath: _petsByPath,
+                                camera: camera,
+                                vfxQuality: widget.director.state.vfxQuality,
+                                visualFrame: widget.director.visualFrame,
+                                floorEpoch: epoch,
+                                layer: layer,
+                              );
+                              final mapSize = Size(
+                                constraints.maxWidth,
+                                constraints.maxHeight,
+                              );
+                              final ready = world;
                               return Stack(
                                 fit: StackFit.expand,
                                 children: [
-                                  world == null || !_canPaintFloor
+                                  ready == null || !_canPaintFloor
                                       ? ColoredBox(
                                           color: GameTheme.stone,
                                           child: Center(
@@ -759,59 +803,24 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                           ),
                                         )
                                       : RepaintBoundary(
-                                          child: CustomPaint(
-                                            size: Size(
-                                              constraints.maxWidth,
-                                              constraints.maxHeight,
-                                            ),
-                                            painter: _TileRoomPainter(
-                                              world: world,
-                                              party:
-                                                  widget.director.state.heroes,
-                                              floorVariants: _floorReady,
-                                              wallVariants: _wallReady,
-                                              stairs: _zoneStairs ?? _stairs!,
-                                              stairsBoss:
-                                                  _zoneStairsBoss ??
-                                                  _stairsBoss!,
-                                              doorClosed:
-                                                  _zoneDoorClosed ??
-                                                  _doorClosed!,
-                                              doorOpen:
-                                                  _zoneDoorOpen ?? _doorOpen!,
-                                              propImages: _propImages,
-                                              roomType: room.type,
-                                              dungeonId: widget
-                                                  .director
-                                                  .state
-                                                  .dungeonId,
-                                              layoutSeed: world.map.layoutSeed,
-                                              clearedChambers:
-                                                  world.clearedChambers,
-                                              heroes: <ui.Image?>[
-                                                _hero0,
-                                                _hero1,
-                                                _hero2,
-                                                _hero3,
-                                              ],
-                                              heroesByClass: _heroesByClass,
-                                              heroesBySpec: _heroesBySpec,
-                                              bodyByPath: _bodyByPath,
-                                              enemies: _enemySprites,
-                                              chest: _chest!,
-                                              coin: _coin!,
-                                              sword: _sword!,
-                                              vial: _vial!,
-                                              lootByPath: _lootByPath,
-                                              petsByPath: _petsByPath,
-                                              camera: camera,
-                                              vfxQuality: widget
-                                                  .director
-                                                  .state
-                                                  .vfxQuality,
-                                              visualFrame:
-                                                  widget.director.visualFrame,
-                                            ),
+                                          child: Stack(
+                                            fit: StackFit.expand,
+                                            children: [
+                                              CustomPaint(
+                                                size: mapSize,
+                                                painter: paintLayer(
+                                                  ready,
+                                                  _DungeonPaintLayer.floor,
+                                                ),
+                                              ),
+                                              CustomPaint(
+                                                size: mapSize,
+                                                painter: paintLayer(
+                                                  ready,
+                                                  _DungeonPaintLayer.live,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                   if (_floorCover > 0.01)

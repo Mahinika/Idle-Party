@@ -349,7 +349,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
             (formImg != null
                 ? 1.42
                 : (usingOwnedBody
-                      ? BodyFamilyCatalog.fightScale * read
+                      ? DungeonBarLayout.ownedBodyScale * read
                       : 0.95)) *
             (1 + flash * (hero.heroRole == HeroRole.warrior ? 0.32 : 0.2));
         if (partyHero.specId == HeroSpecId.demonology &&
@@ -401,6 +401,7 @@ extension _DungeonPaintActors on _TileRoomPainter {
               heroId: hero.id,
               spreadFrames: true,
               frameToken: visualFrame,
+              allowStillDoll: false,
             );
             if (!drew) {
               final standIn =

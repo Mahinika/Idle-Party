@@ -203,28 +203,26 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
 
     if (showBursts || showPriorityFloaters) {
       final floaters = world.floaters;
-      final tp = _TileRoomPainter._floaterPainter;
       final maxW = tile * 4.4;
       for (var i = 0; i < floaters.length; i++) {
         final floater = floaters[i];
         if (!showBursts && floater.priority < 2) continue;
         if (!_inView(floater.x, floater.y, pad: 0.5)) continue;
         final speech = floater.kind == SpatialFloaterKind.speech;
-        final fadeFor = speech
-            ? 1.35
-            : (floater.priority >= 1 ? 1.15 : 0.7);
+        final fadeFor = speech ? 1.35 : (floater.priority >= 1 ? 1.15 : 0.7);
         final alpha = (floater.life / fadeFor).clamp(0.0, 1.0);
-        final size = tile *
+        final size =
+            tile *
             (speech ? 0.28 : 0.32) *
             SpatialCombat.floaterReadScale(floater.priority);
-        tp.text = TextSpan(
+        final snapped = (alpha * 10).round() / 10.0;
+        final color = Color(floater.argb).withValues(alpha: snapped);
+        final tp = _FloaterLabels.of(
           text: floater.text,
-          style: GameTheme.pixelCached(
-            size: math.max(GameTheme.hudPixel, size),
-            color: Color(floater.argb).withValues(alpha: alpha),
-          ),
+          size: math.max(GameTheme.hudPixel, size),
+          color: color,
+          maxWidth: maxW,
         );
-        tp.layout(maxWidth: maxW);
         final c = center(floater.x, floater.y - (speech ? 0.55 : 0));
         if (speech) {
           final padX = tile * 0.12;
@@ -238,7 +236,9 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
             ),
             Radius.circular(tile * 0.12),
           );
-          _TileRoomPainter._fillPaint.color = const Color(0xCC1A1420).withValues(alpha: alpha);
+          _TileRoomPainter._fillPaint.color = const Color(
+            0xCC1A1420,
+          ).withValues(alpha: alpha);
           canvas.drawRRect(bubble, _TileRoomPainter._fillPaint);
           _TileRoomPainter._strokePaint
             ..color = Color(floater.argb).withValues(alpha: alpha * 0.55)
@@ -251,5 +251,40 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
         tp.paint(canvas, anchor);
       }
     }
+  }
+}
+
+/// Layout cache for damage numbers. One painter per text, so two floaters
+/// in the same frame cannot overwrite each other.
+abstract final class _FloaterLabels {
+  static const int _cap = 24;
+  static final Map<String, TextPainter> _cache = {};
+
+  static TextPainter of({
+    required String text,
+    required double size,
+    required Color color,
+    required double maxWidth,
+  }) {
+    final key =
+        '${size.toStringAsFixed(2)}|${color.toARGB32()}|'
+        '${maxWidth.toStringAsFixed(1)}|$text';
+    final hit = _cache[key];
+    if (hit != null) return hit;
+    if (_cache.length >= _cap) {
+      for (final painter in _cache.values) {
+        painter.dispose();
+      }
+      _cache.clear();
+    }
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: GameTheme.pixelCached(size: size, color: color),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: maxWidth);
+    _cache[key] = painter;
+    return painter;
   }
 }

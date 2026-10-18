@@ -12,6 +12,7 @@ import '../character_visual_pose.dart';
 import '../hero_anim_state.dart';
 import '../owned_gear_assets.dart';
 import '../shadowform.dart';
+import 'hero_rig_flags.dart';
 import 'hero_rig_library.dart';
 import 'rig_data.dart';
 import 'rig_draw.dart';
@@ -103,6 +104,7 @@ abstract final class HeroRigPainter {
     String heroId = '',
     bool spreadFrames = false,
     int frameToken = 0,
+    bool allowStillDoll = true,
   }) {
     final family = pose.bodyFamily;
     final rig = family == null ? null : HeroRigLibrary.peek(family);
@@ -124,6 +126,7 @@ abstract final class HeroRigPainter {
         frameToken: frameToken,
       );
     }
+    if (!allowStillDoll && HeroRigFlags.use(family)) return false;
     CharacterVisualPainter.paintOwnedHero(
       canvas,
       center,

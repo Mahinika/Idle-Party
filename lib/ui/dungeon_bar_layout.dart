@@ -8,6 +8,11 @@ abstract final class DungeonBarLayout {
   /// Track thickness. Scales with the tile, never thinner than 4 px.
   static double barHeight(double tile) => math.max(4.0, tile * 0.08);
 
+  /// Owned hero size in the fight, before the family's phone-size read.
+  ///
+  /// A warrior then reads about as large as an elite. Bosses stay larger.
+  static const ownedBodyScale = 1.15;
+
   /// Y of the bar's top edge. [centerY] is the sprite's draw center.
   ///
   /// The sprite is a square of side `tile * scale`, so the head is at most
