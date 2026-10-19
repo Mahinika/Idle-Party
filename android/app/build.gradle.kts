@@ -76,6 +76,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            // Play reads these from the AAB. Dart stays un-obfuscated.
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
             // Use key.properties when present; otherwise debug keys for local `flutter run --release`.
             signingConfig = if (hasReleaseKeystore) {
                 signingConfigs.getByName("release")

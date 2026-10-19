@@ -19,7 +19,8 @@ matter). Web is Playwright / `WebClickBridge` only.
 
 **Distribution:** Google Play is the install path (`com.idleparty.app`,
 `docs/PLAY_STORE.md`). Do not link players to GitHub Releases. Never upload
-an AAB unless the owner asks that turn. In-app update gate, hub **GET
+an AAB unless the owner asks that turn. A release AAB packages native debug
+symbols (`debugSymbolLevel FULL`). Do not pass `--obfuscate`. In-app update gate, hub **GET
 UPDATE**, and the one-time rating ask are in `docs/PLAY_STORE.md`. Play
 Games and Firebase are there and in `docs/PRIVACY.md`.
 

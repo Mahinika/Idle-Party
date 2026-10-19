@@ -118,7 +118,7 @@ Smoke on a Play-installed build; restart the app so Billing refreshes.
 ### Production AAB upload checklist (agent + owner)
 
 1. Confirm production track unlocked (IARC + ads declarations already submitted).
-2. `flutter build appbundle --release` with upload keystore (or tag `v*` after CI signing verified).
+2. `flutter build appbundle --release` with upload keystore (or tag `v*` after CI signing verified). That release packages native debug symbols (`ndk.debugSymbolLevel FULL`). Do not pass `--obfuscate`. Symbols for 225 cannot be uploaded later.
 3. Upload with the Play Android Publisher API (one edit: images, text, AAB, production track). See `.cursor/skills/play-store-prep/reference.md`.
 4. Release notes from `docs/STORE_LISTING.md` (COMING LATER / POWER wipe honesty).
 5. Update this Operator status table (submitted vs live).

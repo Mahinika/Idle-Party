@@ -1,14 +1,14 @@
 # Idle Party — Play growth (what we can do)
 
-**Updated:** 2026-10-17 API read. The grow-page paste is still **2026-10-09**. Category stays **Role Playing** (idle fantasy RPG).
+**Updated:** 2026-10-19 API read. The grow-page paste is still **2026-10-09**. Category stays **Role Playing** (idle fantasy RPG).
 
-### API read 17 Oct
+### API read 19 Oct
 
-Reviews API, about the last week: **empty**. Nothing to reply to. The 7 Oct Japanese 4★ is older than this window.
+Reviews API: **empty**. It only returns reviews with text from about the last week. Nothing to reply to. The 7 Oct Japanese 4★ is older than this window.
 
-Production track: **1.13.1 (227)** `completed`. Alpha still **1.12.133 (163)**. Internal still **1.9.3 (14)**. The public page still names **1.12.195**, updated **11 Oct**, **100+** downloads. No clean rating on that page. Do not reuse the similar-games stars.
+Production track: **1.13.1 (227)** `completed`. Alpha still **1.12.133 (163)**. Internal still **1.9.3 (14)**. Beta is empty.
 
-Error counts through **16 Oct** (America/Los_Angeles). Crash-rate and ANR-rate queries returned no rows. That is not a measured 0%.
+Error counts **20 Sep–17 Oct** (America/Los_Angeles). Daily crash-rate and ANR-rate queries returned an empty body, including a one-year window. Hourly rows were too sparse and floored to stand in for a 7-day or 28-day rate. That is not a measured 0%.
 
 | When | Build | What | Reports | Users |
 |------|--------|------|---------|-------|
@@ -19,8 +19,17 @@ Error counts through **16 Oct** (America/Los_Angeles). Crash-rate and ANR-rate q
 | 13 Oct | 225 | ANR | 12 | 3 |
 | 14 Oct | 225 | ANR | 4 | 1 |
 | 15 Oct | 225 | ANR | 2 | 2 |
+| 16 Oct | 225 | ANR | 1 | 1 |
 
-Of the **18** ANR reports on **225**, **15** are one tablet, `IRIS_OHYAMA/TE10D1M64` (API 35): 10 on 13 Oct, 4 on 14 Oct, 1 on 15 Oct. The other three are `samsung/a14xm` (1, API 34) and `samsung/r13s` (2, API 36). The largest cluster is input-dispatch timeout in Dart, **11** reports / **2** users, all on 225. Single-user names on the main thread: `MetaSystems.dailyDateKey`, `GearSets.wornCount`, `SpatialCombat._nextWaypoint` (224), `ClassKits.defFor` (224). **227** is not in this window. The one-step-per-frame fix is in that build, not in 225.
+**3** crashes, one each on **214**, **222**, and **224**. **23** ANRs: **4** on **224**, **19** on **225** (1.12.195, 11 Oct). **223** and **227** have no rows. **227** has only been out a few days.
+
+**17** of the **23** ANRs are one tablet, `IRIS_OHYAMA/TE10D1M64` (15 on 225, 2 on 224). The other six: Galaxy S25 FE (`samsung/r13s`) 3, Pixel 6 (`google/oriole`) 2, Galaxy A14 (`samsung/a14xm`) 1.
+
+The largest cluster is an input-dispatch timeout inside Dart, **11** reports / **2** users, all on 225. Those traces never captured an app stack. Single-report names on the main thread include `MetaSystems.dailyDateKey`, `GearSets.wornCount`, `SpatialCombat._nextWaypoint`, and `ClassKits.defFor`. Those are samples from a blocked UI thread, not a measured hot function.
+
+Two of the crashes are the engine. One is a Dart VM assert when a native FFI callback fires after its callable is gone: **2** reports, **2** users, 214 then 224 (Redmi 13 on 24 Sep, Pixel 6 on 8 Oct). The other is an Impeller/Vulkan fatal check: **1** report, 222, Redmi Note 14 5G, 30 Sep. This game's Dart has no `NativeCallable`.
+
+Do not move combat onto an isolate from this pull. A new report on 225 does not change that. Watch **227** and later.
 
 Device impressions, acquisitions, first opens, D7, rating average, and revenue are not in this API. Those numbers below are still the **9 Oct** paste.
 
