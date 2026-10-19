@@ -4,4 +4,6 @@ En ISO-vecka, en fil i den här mappen. Filnamnet är året, `-w`, och veckonumr
 
 Den filen är planen. "Vad är planen för vecka 48" läser den veckans fil.
 
+Den här veckan är Aktiv och har högst sju jobb. Nästa vecka har samma form. En senare vecka är en mening tills den blir nästa. Under varje jobb står tre klart-när.
+
 Skill: `.cursor/skills/weekly-plan/SKILL.md`.

@@ -16,9 +16,9 @@ One ISO week, one file under `docs/weeks/`. That file is the only answer to
 is fed only by the reads under **Write a missing plan**.
 
 The week file is the template below. Rules stay in this skill. Do not
-copy them into the week file. A week lists 50 primary rows. Sunday ships
-the ones that are `spelbar`. The rest stay on the list until they are
-`spelbar` or `flyttad`. At least one row is a new feature that makes
+copy them into the week file. A full week lists one to seven jobs. Sunday
+ships the ones that are `spelbar`. The rest stay on the list until they are
+`spelbar` or `flyttad`. At least one job is a new feature that makes
 people want to play and keep playing.
 
 Never upload an AAB here. Upload only when the owner asks in that turn
@@ -29,17 +29,20 @@ Folder note: `docs/weeks/README.md`.
 
 ## Rules
 
-- Exactly 50 primary rows under **Att göra**. Leave no blank numbers. Every row is **Måste**. Those rows are the week's work, in that order, and the Sunday announcement is the ones whose status is `spelbar`.
+- One to seven numbered rows under **Att göra**. No blank numbers. Every row is **Måste**. Those rows are the week's work, in that order. One job is a complete week. Do not pad the list.
+- A row is one thing a player can point at. The same rule in every cave, rank, or sentence is one row. Do not split it into a row per floor, rank, or line of copy.
+- Under each row, three lines start with `Klart när:`. That is the test for that row. It is not another job. Do not turn a `Klart när` line into its own row. The batch to build is the numbered row.
 - Each row is `Måste · Content — change — why the player cares — status`, or the same with `Fix` or `Nytt`.
 - Status is `ej klar`, `spelbar`, or `flyttad`. A row about whether something fits or reads on the phone (a hall, a clock, a line of text) stays `ej klar` until this chat has an A56 screenshot of it. Grip, helm, icon parity, and which PNG a neighbor uses are settled by facit or a path test: the fight draws them too small to judge. Do not mark the row `spelbar` and write "behöver en titt" under Källor.
 - At least one row is **Nytt**, and more when the evidence supports them. A **Nytt** row can be something this game does not have yet. It comes from what another game or a developer measured, fitted to this game. Read `docs/YEAR_ROADMAP_SOURCES.md` first. If those grades do not cover the hole, open a few pages. A source counts only if you opened it in this chat and can name the URL. Grade A may add the row. Grade B is an example only after a hole in this game is already clear. Grade C must not decide. Name the player problem the source measured. Fit it to the three pillars in `docs/GROWTH_MANDATE.md`: the party walks the room, one reason to come back tomorrow, one Ascend loop. Another game shipping a feature is not by itself a reason. When this game's notes disagree, follow this game. **Nu** in `docs/YEAR_ROADMAP.md` is one source, not a ceiling. A new zone, class, hunt, or gacha still waits until the owner names it, or an A source and a hole in this game agree.
 - **Content** and **Fix** are what should be ready by Sunday.
 - A new idea mid-week goes under **Inte den här veckan**. Only a critical bug may take a planned slot. The row it displaces becomes `flyttad`.
-- This ISO week or the next: status **Aktiv**. Any later Monday: **Tidigt utkast**, and only the rows the sources support.
+- The file whose dates contain today is **Aktiv**. That is the file to build from. The following week is **Nästa**, in the same full shape, and it is not the build target while **Aktiv** still has an `ej klar` row. Any later week is **Tidigt utkast**: status, dates, and **En mening** only. Write its jobs when it becomes **Nästa**.
+- A week file already shipped, or an older file that still lists many rows, stays as the record. Do not rewrite it into this shape unless the owner asks.
 - Sunday means submitted to Play, not approved. The plan is Swedish. Player text is English.
 - One English sentence a new player understands. Keep KEY, Gauntlet, and Ascend out of it unless they named that as the week.
 - Store shots only when heroes, the hub, or the combat screen will look different. That is a row, not a standing section.
-- Play lines and Discord are written on Sunday, from **Måste** rows whose status is `spelbar`. Do not put empty drafts in the file on Monday.
+- Play lines and Discord are written on Sunday, from **Måste** rows whose status is `spelbar`. One bullet per row. Do not put empty drafts in the file on Monday.
 
 ## Which week
 
@@ -65,7 +68,7 @@ File name is the printed token plus `.md` inside `docs/weeks/`. Week 51 of
 
 | They said | Do |
 |---|---|
-| vad är planen / planen för vecka N | Read that file. Reply in Swedish with status, the **Måste** rows, the other rows, and the one sentence. Missing file: say there is no plan. Do not write one. |
+| vad är planen / planen för vecka N | Read that file. Reply in Swedish with status, the **Måste** rows, the **Klart när** lines under them, and the one sentence. A later week: the sentence, and that the jobs are written when it is next. Missing file: say there is no plan. Do not write one. |
 | gör en veckoplan, file exists | Show it. Change a row only when they named the change. |
 | gör en veckoplan, file missing | Write it from the template, show it, stop. Do not start building the rows. |
 | onsdagskoll | Tick **Onsdag**. A row that will not finish becomes `flyttad` and moves under **Inte den här veckan**, still marked **Måste** if it was. |
@@ -84,13 +87,15 @@ Read these. Do not rebuild the 100-source year file. Do not run the year-roadmap
 
 If a read fails, write **inte läst** next to that source. Do not guess what it said.
 
-Then write the file. Version aim: the next patch after `pubspec.yaml` `version:` and after any build already in review. Do not bump it here. **Förra** is the newest build sent to Production and its state: ute, i granskning, or byggd men inte inskickad.
+Then write the file. This week and the next use the full template. A later week is status, dates, and **En mening** only. Version aim: the next patch after `pubspec.yaml` `version:` and after any build already in review. Do not bump it here. **Förra** is the newest build sent to Production and its state: ute, i granskning, or byggd men inte inskickad.
 
-**Telefontest:** three steps a new save can reach, tied to **Måste** rows where that fits. Add one endgame-save step only when a **Måste** row changes endgame.
+**Telefontest:** three steps a new save can reach, tied to **Måste** rows where that fits. When one row covers many caves, the three steps are three places, not three more jobs. Add one endgame-save step only when a **Måste** row changes endgame.
 
 Onsdag, Söndag, and Utfall start unchecked. No Play or Discord block yet.
 
 ## Template
+
+Full week (this week, or the next):
 
 ````markdown
 # Vecka NN
@@ -103,11 +108,10 @@ Onsdag, Söndag, and Utfall start unchecked. No Play or Discord block yet.
 
 ## Att göra
 
-1. Måste · Content — … — … — ej klar
-2. Måste · Nytt — … — … — ej klar
-3. Måste · … — … — … — ej klar
-…
-50. Måste · Content — … — … — ej klar
+1. Måste · Nytt — … — … — ej klar
+   - Klart när: …
+   - Klart när: …
+   - Klart när: …
 
 ## Inte den här veckan
 
@@ -139,13 +143,23 @@ Onsdag, Söndag, and Utfall start unchecked. No Play or Discord block yet.
 -
 ````
 
+The next week uses the same template with **Status:** Nästa. A later week is only this:
+
+````markdown
+# Vecka NN
+
+**Status:** Tidigt utkast
+**Datum:** YYYY-MM-DD – YYYY-MM-DD
+**En mening:** 
+````
+
 ## Sunday
 
 When they say this week is shipping ("släpp veckan", "det är söndag"):
 
 - Tick a Sunday box only when that step is done.
 - Set **Släppt som** to the version submitted. Leftover **Måste** rows become `flyttad`.
-- Then write **Play** and **Discord** from **Måste** rows that are `spelbar`, in order, in English. One bullet each. Same facts.
+- Then write **Play** and **Discord** from **Måste** rows that are `spelbar`, in order, in English. One bullet per row. Same facts.
 
 ```text
 **Idle Party 1.x.y**
@@ -162,5 +176,5 @@ Google is reviewing this update. The Play Store may still show the previous vers
 
 ## Done when
 
-- A "gör" ask left the week file on disk, with 50 primary rows. A "vad är planen" ask quoted that file, or said it is missing.
+- A "gör" ask left the week file on disk. A full week has one to seven rows, each with three **Klart när** lines. A later week has the one sentence. A "vad är planen" ask quoted that file, or said it is missing.
 - No AAB was uploaded and no Discord post was sent.
