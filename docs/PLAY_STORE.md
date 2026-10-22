@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ submitted | **1.13.1 (227)** track `completed` (API **2026-10-17**, full rollout). **1.12.195 (225)** was the previous live build. **1.13.0 (226)** was never uploaded. The public page can still name **1.12.195** until Google publishes. Managed publishing is off. |
+| Production | ✅ submitted | **1.13.2 (228)** track `completed` (API **2026-10-22**, full rollout). **1.13.1 (227)** was the previous live build. The public page can still name **1.13.1** until Google publishes. Managed publishing is off. |
 | CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -78,6 +78,8 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Signed Production AAB **1.13.0+226** built locally **2026-10-13** (`app-release.aab`, 106.7 MB). Not uploaded. Its notes went out with **1.13.1**.
 - [x] Owner asked upload of Production **1.13.1+227** (**2026-10-17**).
 - [x] Signed Production AAB **1.13.1+227** uploaded via Play API (one edit: 8 phone shots, icon, feature graphic, tablet shots removed, en-US / es-ES / pt-BR text). Track reads `completed`. The public page can still name **1.12.195** until Google publishes.
+- [x] Owner asked for a new APK on git and a Play upload (**2026-10-22**).
+- [x] Signed Production AAB **1.13.2+228** built locally (`app-release.aab`, 188.9 MB) and uploaded via Play API (bundle + production track only). Track reads `completed`. The public page can still name **1.13.1** until Google publishes. Git tag `v1.13.2` builds the APK.
 
 ### Production upload paste (en-US release notes)
 
@@ -96,6 +98,14 @@ Notes sent with **1.12.195 (225)**. Track `completed` (API **2026-10-17**):
 • Welcome Back says when the vault prize is waiting, and CLAIM sits on the cave.
 • Health bars sit above the hero, and a new floor fades in.
 • The first Gauntlet run is four different floors, then a boss.
+```
+
+Notes sent with **1.13.2 (228)** on **2026-10-22**. en-US, 235 characters:
+
+```
+• GOLD → FORGE still buys attack, armor, stamina, and mastery. Past 40 buys, each one adds less.
+• Heroes in a fight are smaller, so the party fits the hall.
+• A late frame takes one fight step, so a hitch does not run the fight twice.
 ```
 
 Notes sent with **1.13.1 (227)** on **2026-10-17**. These lines also cover the unsent **1.13.0**. en-US, 421 characters:
