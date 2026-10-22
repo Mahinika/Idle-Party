@@ -79,7 +79,7 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Owner asked upload of Production **1.13.1+227** (**2026-10-17**).
 - [x] Signed Production AAB **1.13.1+227** uploaded via Play API (one edit: 8 phone shots, icon, feature graphic, tablet shots removed, en-US / es-ES / pt-BR text). Track reads `completed`. The public page can still name **1.12.195** until Google publishes.
 - [x] Owner asked for a new APK on git and a Play upload (**2026-10-22**).
-- [x] Signed Production AAB **1.13.2+228** built locally (`app-release.aab`, 188.9 MB) and uploaded via Play API (bundle + production track only). Track reads `completed`. The public page can still name **1.13.1** until Google publishes. Git tag `v1.13.2` builds the APK.
+- [x] Signed Production AAB **1.13.2+228** built locally (`app-release.aab`, 188.9 MB) and uploaded via Play API (bundle + production track only). Track reads `completed`. The public page can still name **1.13.1** until Google publishes. Git tag `v1.13.2` attached an APK and an AAB to the GitHub release; those CI files are debug-signed because `KEYSTORE_BASE64` and `KEY_PROPERTIES` are still empty. Players install the Play build.
 
 ### Production upload paste (en-US release notes)
 
