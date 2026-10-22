@@ -88,11 +88,13 @@ abstract final class ChangelogCatalog {
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: '1.13.2',
-      date: 'Oct 18, 2026',
+      date: 'Oct 22, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. Extra gold power still buys, and each buy past the early ones adds less.',
       changed: <String>[
         'GOLD → FORGE still buys attack, armor, stamina, and mastery. Past 40 buys each one adds less on the sheet. Move, haste, and crit already did.',
+        'Heroes in a fight are smaller, so the party fits the hall.',
+        'A late frame takes one fight step, so a hitch does not run the fight twice.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
         'Race still locks after New Game START.',
