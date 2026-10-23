@@ -246,6 +246,8 @@ void main() {
           seasonBestTimedKey: 5,
           seasonBestTimedClearMs: 90000,
           seasonBestGauntletFloor: 12,
+          seasonBestGrTier: 4,
+          seasonBestGrClearMs: 54000,
         ),
       );
       final next = GameLogic.ensureLeaderboardSeason(
@@ -256,6 +258,8 @@ void main() {
       expect(next.metaDepth.seasonBestTimedKey, 0);
       expect(next.metaDepth.seasonBestTimedClearMs, 0);
       expect(next.metaDepth.seasonBestGauntletFloor, 0);
+      expect(next.metaDepth.seasonBestGrTier, 0);
+      expect(next.metaDepth.seasonBestGrClearMs, 0);
     });
 
     test('2026-08 Play Console board IDs are wired', () {

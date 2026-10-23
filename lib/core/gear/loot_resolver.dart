@@ -85,6 +85,9 @@ abstract final class LootResolver {
 
     for (final drop in drops) {
       final item = drop.equipment;
+      if (item != null && next.inRift) {
+        next = _keepRiftBestDrop(next, item);
+      }
       if (item == null) {
         if (LootPipeline.isWalletGoldDrop(drop)) {
           final gained = EconomyService.applyGoldGain(next, drop.amount);
@@ -161,4 +164,14 @@ abstract final class LootResolver {
     next = GearCleanup.unstickBagIfNeeded(next);
     return (state: next, resolved: resolved, receipt: receipt);
   }
+}
+
+GameState _keepRiftBestDrop(GameState state, EquipmentItem item) {
+  final score = item.rarity.index * 10000 + item.effectiveItemLevel;
+  if (state.riftBestDrop.isNotEmpty && score <= state.riftBestDropScore) {
+    return state;
+  }
+  final name = item.name.trim();
+  if (name.isEmpty) return state;
+  return state.copyWith(riftBestDrop: name, riftBestDropScore: score);
 }

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/greater_rift.dart';
+import 'package:idle_party/core/logic_notices.dart';
 import 'package:idle_party/core/loot_pipeline.dart';
 import 'package:idle_party/core/play_games_scores.dart';
 import 'package:idle_party/core/rift.dart';
@@ -387,6 +388,96 @@ void main() {
     expect(goldOnly.any((d) => d.name == 'Boss Sigil'), isFalse);
     expect(goldOnly.every(LootPipeline.isWalletGoldDrop), isTrue);
   });
+
+  test('a faster Ranked GR clear replaces the best time', () {
+    var state = _rankedReady();
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        seasonBestGrTier: 1,
+        seasonBestGrClearMs: 50000,
+        grBestTier: 1,
+        leaderboardSeasonKey: '2026-10',
+      ),
+    );
+    state = GameLogic.enterGreaterRift(state, tier: 1);
+    state = _guardianDown(state, clearMs: 20000);
+    final resolved = GameLogic.tryResolveGreaterRift(state)!;
+    expect(resolved.metaDepth.seasonBestGrClearMs, 20000);
+    expect(resolved.metaDepth.seasonBestGrTier, 1);
+    final notes = LogicNotices.takeMetaPayoffs().join(' ');
+    expect(notes, contains('Ranked GR1 cleared · 00:20'));
+    expect(notes.contains('par'), isFalse);
+  });
+
+  test('a slower higher Ranked GR does not replace the best time', () {
+    var state = _rankedReady();
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        seasonBestGrTier: 1,
+        seasonBestGrClearMs: 20000,
+        grBestTier: 1,
+        leaderboardSeasonKey: '2026-10',
+      ),
+    );
+    state = GameLogic.enterGreaterRift(state, tier: 2);
+    state = _guardianDown(state, clearMs: 50000);
+    final resolved = GameLogic.tryResolveGreaterRift(state)!;
+    expect(resolved.metaDepth.grBestTier, greaterThanOrEqualTo(2));
+    expect(resolved.metaDepth.seasonBestGrClearMs, 20000);
+    expect(resolved.metaDepth.seasonBestGrTier, 1);
+  });
+
+  test('a Ranked GR clock miss says the seconds over par', () {
+    var state = _rankedReady();
+    state = GameLogic.enterGreaterRift(state, tier: 1);
+    state = GameLogic.noteGreaterRiftKills(state, state.grKillTarget);
+    state = GameLogic.maybeActivateGreaterRiftGuardian(state);
+    state = state.copyWith(grTimerMs: state.grParMs + 12000);
+    LogicNotices.takeMetaPayoffs();
+    final resolved = GameLogic.tryResolveGreaterRift(state);
+    expect(resolved, isNotNull);
+    final notes = LogicNotices.takeMetaPayoffs().join(' ');
+    expect(notes, contains('Ranked GR1 · 00:12 over par'));
+    expect(notes.contains('wipe'), isFalse);
+    expect(notes.contains('failed'), isFalse);
+  });
+
+  test('a Ranked GR party wipe says wipe', () {
+    var state = _rankedReady();
+    state = GameLogic.enterGreaterRift(state, tier: 3);
+    state = state.copyWith(
+      heroes: [
+        for (final hero in state.heroes) hero.copyWith(currentHp: 0),
+      ],
+    );
+    LogicNotices.takeMetaPayoffs();
+    GameLogic.leaveDungeon(state);
+    final notes = LogicNotices.takeMetaPayoffs().join(' ');
+    expect(notes, contains('Ranked GR3 wipe'));
+    expect(notes.contains('over par'), isFalse);
+  });
+
+  test('leaving a live Ranked GR does not say wipe', () {
+    var state = _rankedReady();
+    state = GameLogic.enterGreaterRift(state, tier: 3);
+    LogicNotices.takeMetaPayoffs();
+    GameLogic.leaveDungeon(state);
+    final notes = LogicNotices.takeMetaPayoffs().join(' ');
+    expect(notes, contains('ended'));
+    expect(notes.contains('wipe'), isFalse);
+  });
+}
+
+GameState _rankedReady() => _withPartyMaxLevel(
+      GameLogic.createInitialState(now: DateTime.utc(2026, 10, 23)).copyWith(
+        ascensionLevel: GameLogic.maxAscensionLevel,
+      ),
+    );
+
+GameState _guardianDown(GameState state, {required int clearMs}) {
+  var next = GameLogic.noteGreaterRiftKills(state, state.grKillTarget);
+  next = GameLogic.maybeActivateGreaterRiftGuardian(next);
+  return next.copyWith(grTimerMs: clearMs, enemies: const []);
 }
 
 GameState _withPartyMaxLevel(GameState state) => state.copyWith(

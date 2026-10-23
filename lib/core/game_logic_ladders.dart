@@ -144,7 +144,9 @@ GameState _clearRiftRun(GameState state) {
       state.riftKills == 0 &&
       state.riftProgress01 == 0 &&
       !state.riftGuardianActive &&
-      state.riftOutcome.isEmpty) {
+      state.riftOutcome.isEmpty &&
+      state.riftBestDrop.isEmpty &&
+      state.riftBestDropScore == 0) {
     return state;
   }
   return state.copyWith(
@@ -157,6 +159,8 @@ GameState _clearRiftRun(GameState state) {
     riftProgress01: 0,
     riftGuardianActive: false,
     riftOutcome: '',
+    riftBestDrop: '',
+    riftBestDropScore: 0,
   );
 }
 
@@ -265,10 +269,13 @@ GameState? _tryResolveRift(GameState state) {
 GameState _resolveRiftSuccess(GameState state) {
   if (!state.inRift) return state;
   final tier = Rift.clampTier(state.riftTier);
-  final unlock = Rift.unlockTierAfterSuccess(clearedTier: tier);
   final best = max(state.metaDepth.riftBestTier, tier);
   final essence = Rift.successEssence(tier);
   final gold = Rift.successGold(tier);
+  final drop = state.riftBestDrop.trim();
+  final dropSentence = drop.isEmpty
+      ? 'Stormwake R$tier. Nothing dropped.'
+      : 'Stormwake R$tier. Best drop: ${_shortRiftDrop(drop)}.';
   var next = state.copyWith(
     gold: state.gold + gold,
     essence: state.essence + essence,
@@ -282,12 +289,16 @@ GameState _resolveRiftSuccess(GameState state) {
   );
   next = GameLogic.syncMetaPayoffs(next);
   LogicNotices.addMetaPayoffs([
-    'Rift R$tier cleared · +${essence}e · +${gold}g'
-        '${unlock > tier ? ' · next best R$unlock' : ''}',
+    '$dropSentence +${gold}g. +${essence}e.',
   ]);
   return GameLogic.exitToHubHealed(
     GameLogic.applyMissionProgress(next, riftClears: 1),
   );
+}
+
+String _shortRiftDrop(String name) {
+  if (name.length <= 28) return name;
+  return '${name.substring(0, 27)}…';
 }
 
 GameState _enterGreaterRift(GameState state, {int? tier}) {
@@ -437,17 +448,20 @@ GameState _resolveGreaterRiftSuccess(GameState state) {
   final gold = GreaterRift.successGold(tier);
   final clearMs = next.grTimerMs;
   final md = next.metaDepth;
-  final betterSeason = PlayGamesScores.isBetterTimed(
+  final faster =
+      md.seasonBestGrClearMs <= 0 || clearMs < md.seasonBestGrClearMs;
+  var seasonTier = md.seasonBestGrTier;
+  var seasonMs = md.seasonBestGrClearMs;
+  if (faster) {
+    seasonTier = tier;
+    seasonMs = clearMs;
+  }
+  if (PlayGamesScores.isBetterTimed(
     newKey: tier,
     newClearMs: clearMs,
     bestKey: md.seasonBestGrTier,
     bestClearMs: md.seasonBestGrClearMs,
-  );
-  var seasonTier = md.seasonBestGrTier;
-  var seasonMs = md.seasonBestGrClearMs;
-  if (betterSeason) {
-    seasonTier = tier;
-    seasonMs = clearMs;
+  )) {
     PlayGamesBridge.noteGreaterRiftPb(
       monthKey: md.leaderboardSeasonKey.isNotEmpty
           ? md.leaderboardSeasonKey
@@ -473,8 +487,7 @@ GameState _resolveGreaterRiftSuccess(GameState state) {
   );
   next = GameLogic.syncMetaPayoffs(next);
   LogicNotices.addMetaPayoffs([
-    'Greater Rift GR$tier timed · +${essence}e · +${gold}g'
-        '${unlock > tier + 1 ? ' · skip to GR$unlock' : ''}',
+    'Ranked GR$tier cleared · ${GreaterRift.formatTimer(clearMs)}',
   ]);
   return GameLogic.exitToHubHealed(
     GameLogic.applyMissionProgress(next, greaterRiftClears: 1),
@@ -490,8 +503,9 @@ GameState _resolveGreaterRiftFail(GameState state) {
     essence: state.essence + essence,
     grOutcome: 'depleted',
   );
+  final over = GreaterRift.formatTimer(state.grTimerMs - state.grParMs);
   LogicNotices.addMetaPayoffs([
-    'Greater Rift GR$tier failed · +${essence}e consolation',
+    'Ranked GR$tier · $over over par',
   ]);
   return GameLogic.exitToHubHealed(next);
 }

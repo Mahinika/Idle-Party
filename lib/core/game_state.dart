@@ -142,6 +142,8 @@ class GameState {
     this.riftProgress01 = 0,
     this.riftGuardianActive = false,
     this.riftOutcome = '',
+    this.riftBestDrop = '',
+    this.riftBestDropScore = 0,
     this.grTier = 0,
     this.grTimerMs = 0,
     this.grParMs = 0,
@@ -460,6 +462,12 @@ class GameState {
 
   /// '' | `timed` | `depleted` after farm Rift resolution.
   final String riftOutcome;
+
+  /// Best gear name banked during the open Farm Rift. Empty on old saves.
+  final String riftBestDrop;
+
+  /// Rarity and item level of [riftBestDrop]. 0 when the run has no piece.
+  final int riftBestDropScore;
 
   /// Active Greater Rift tier (0 when not in a GR).
   final int grTier;
@@ -1191,6 +1199,8 @@ class GameState {
     double? riftProgress01,
     bool? riftGuardianActive,
     String? riftOutcome,
+    String? riftBestDrop,
+    int? riftBestDropScore,
     int? grTier,
     int? grTimerMs,
     int? grParMs,
@@ -1343,6 +1353,8 @@ class GameState {
       riftProgress01: riftProgress01 ?? this.riftProgress01,
       riftGuardianActive: riftGuardianActive ?? this.riftGuardianActive,
       riftOutcome: riftOutcome ?? this.riftOutcome,
+      riftBestDrop: riftBestDrop ?? this.riftBestDrop,
+      riftBestDropScore: riftBestDropScore ?? this.riftBestDropScore,
       grTier: grTier ?? this.grTier,
       grTimerMs: grTimerMs ?? this.grTimerMs,
       grParMs: grParMs ?? this.grParMs,
@@ -1517,6 +1529,8 @@ class GameState {
     'riftProgress01': riftProgress01,
     'riftGuardianActive': riftGuardianActive,
     'riftOutcome': riftOutcome,
+    'riftBestDrop': riftBestDrop,
+    'riftBestDropScore': riftBestDropScore,
     'grTier': grTier,
     'grTimerMs': grTimerMs,
     'grParMs': grParMs,
@@ -1824,6 +1838,8 @@ class GameState {
       ),
       riftGuardianActive: (json['riftGuardianActive'] as bool?) ?? false,
       riftOutcome: (json['riftOutcome'] as String?) ?? '',
+      riftBestDrop: (json['riftBestDrop'] as String?) ?? '',
+      riftBestDropScore: (json['riftBestDropScore'] as num?)?.toInt() ?? 0,
       grTier: max(0, (json['grTier'] as num?)?.toInt() ?? 0),
       grTimerMs: max(0, (json['grTimerMs'] as num?)?.toInt() ?? 0),
       grParMs: max(0, (json['grParMs'] as num?)?.toInt() ?? 0),

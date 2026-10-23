@@ -23,11 +23,16 @@ class GreaterRiftHubPanel extends StatelessWidget {
         style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
       );
     }
-    final best = state.metaDepth.grBestTier;
+    final month = state.metaDepth.leaderboardSeasonKey;
+    final seasonTier = state.metaDepth.seasonBestGrTier;
     final bestMs = state.metaDepth.seasonBestGrClearMs;
     final bestTime = bestMs > 0
         ? GreaterRift.formatTimer(bestMs)
-        : 'no clear yet';
+        : 'no time yet';
+    final monthBit = month.isEmpty ? '' : ' · $month';
+    final bestBit = bestMs > 0 && seasonTier > 0
+        ? 'Best GR$seasonTier · $bestTime$monthBit.'
+        : 'Best $bestTime$monthBit.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -37,9 +42,12 @@ class GreaterRiftHubPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'ENTER opens the GR picker — any GR. '
-          'Clock · no gear mid-run. Endless after GR${GreaterRift.campaignCap}. '
-          'Best GR$best · $bestTime.',
+          'Clock · no gear mid-run. Endless after GR${GreaterRift.campaignCap}.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          bestBit,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),

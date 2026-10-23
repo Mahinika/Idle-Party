@@ -2,8 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/keystone.dart';
+import 'package:idle_party/core/logic_notices.dart';
 import 'package:idle_party/core/rift.dart';
 import 'package:idle_party/models/enemy.dart';
+import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/stats.dart';
 
 void main() {
@@ -209,6 +211,47 @@ void main() {
     expect(GameLogic.enterRift(state, tier: 21).riftTier, 21);
     expect(GameLogic.enterRift(state, tier: 50).riftTier, 50);
   });
+
+  test('Farm Rift end names the best drop from the run', () {
+    var state = _openRift(tier: 1);
+    state = GameLogic.grantLoot(state, [
+      _gearDrop('Oak Staff', LootRarity.uncommon),
+      _gearDrop('Iron Helm', LootRarity.rare),
+      _gearDrop('Cloth Cap', LootRarity.common),
+    ]).state;
+    expect(state.riftBestDrop, 'Iron Helm');
+    state = _finishRift(state);
+    LogicNotices.takeMetaPayoffs();
+    final resolved = GameLogic.tryResolveRift(state)!;
+    final notes = LogicNotices.takeMetaPayoffs().join(' ');
+    expect(notes, contains('Stormwake R1. Best drop: Iron Helm.'));
+    expect(notes, contains('+${Rift.successGold(1)}g.'));
+    expect(notes, contains('+${Rift.successEssence(1)}e.'));
+    expect(notes.contains('par'), isFalse);
+    expect(notes.contains('timer'), isFalse);
+    expect(notes.contains('clock'), isFalse);
+    expect(notes.contains('next best'), isFalse);
+    expect(resolved.riftBestDrop, isEmpty);
+  });
+
+  test('Farm Rift end says nothing dropped when the bag stayed empty', () {
+    var state = _finishRift(_openRift(tier: 2));
+    LogicNotices.takeMetaPayoffs();
+    GameLogic.tryResolveRift(state);
+    final notes = LogicNotices.takeMetaPayoffs().join(' ');
+    expect(notes, contains('Stormwake R2. Nothing dropped.'));
+    expect(notes, contains('+${Rift.successGold(2)}g.'));
+    expect(notes, contains('+${Rift.successEssence(2)}e.'));
+    expect(notes.contains('par'), isFalse);
+  });
+
+  test('an old save without a rift drop name loads empty', () {
+    final state = _openRift(tier: 1);
+    final json = state.toJson()..remove('riftBestDrop')..remove('riftBestDropScore');
+    final loaded = GameLogic.stateFromJson(json);
+    expect(loaded.riftBestDrop, isEmpty);
+    expect(loaded.riftBestDropScore, 0);
+  });
 }
 
 GameState _withPartyMaxLevel(GameState state) => state.copyWith(
@@ -216,4 +259,31 @@ GameState _withPartyMaxLevel(GameState state) => state.copyWith(
         for (final h in state.heroRoster)
           h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
       ],
+    );
+
+GameState _openRift({required int tier}) {
+  final state = _withPartyMaxLevel(
+    GameLogic.createInitialState(now: DateTime.utc(2026, 10, 23)).copyWith(
+      ascensionLevel: GameLogic.maxAscensionLevel,
+    ),
+  );
+  return GameLogic.enterRift(state, tier: tier);
+}
+
+GameState _finishRift(GameState state) {
+  var next = GameLogic.noteRiftKills(state, state.riftKillTarget);
+  next = GameLogic.maybeActivateRiftGuardian(next);
+  return next.copyWith(enemies: const <EnemyUnit>[]);
+}
+
+LootDrop _gearDrop(String name, LootRarity rarity) => LootDrop(
+      name: name,
+      amount: 1,
+      rarity: rarity,
+      equipment: EquipmentItem(
+        id: name,
+        name: name,
+        slot: EquipmentSlot.head,
+        rarity: rarity,
+      ),
     );

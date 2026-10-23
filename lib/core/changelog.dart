@@ -82,10 +82,28 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.2';
+  static const String currentVersion = '1.13.3';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.13.3',
+      date: 'Oct 23, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. The party stands in a line, so you can see who is swinging.',
+      changed: <String>[
+        'Heroes in a fight stand in a short line, so a swing is easy to follow.',
+        'A cleared floor leaves one line. An item name fades before it covers a hero.',
+        'A missed Ranked GR says the seconds over par. A clear says the finish time. Only a faster clear replaces the best time, and the card names that month.',
+        'A Farm Rift in Stormwake ends by naming the best drop, or that nothing dropped. Gold and essence are their own sentences.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.13.2',
       date: 'Oct 22, 2026',

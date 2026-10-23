@@ -114,6 +114,55 @@ void _run(SpatialWorld world, double seconds) {
 double _dist(SpatialActor a, SpatialActor b) =>
     math.sqrt(math.pow(a.x - b.x, 2) + math.pow(a.y - b.y, 2));
 
+List<({double x, double y})> _lineGoals({required int count}) {
+  const specs = <HeroSpecId>[
+    HeroSpecId.protection,
+    HeroSpecId.arms,
+    HeroSpecId.fire,
+    HeroSpecId.discipline,
+    HeroSpecId.combat,
+  ];
+  final heroes = <SpatialActor>[
+    for (var i = 0; i < count; i++)
+      _hero(id: 'h$i', spec: specs[i], x: 3.5, y: 5.5),
+  ];
+  final foe = _foe(
+    id: 'foe',
+    archetype: EnemyArchetype.brute,
+    x: 8.5,
+    y: 5.5,
+    moveSpeed: 0,
+  );
+  final world = _world(heroes: heroes, enemies: [foe]);
+  return [
+    for (var i = 0; i < heroes.length; i++)
+      () {
+        final g = CombatPresence.heroFightGoal(
+          hero: heroes[i],
+          target: foe,
+          world: world,
+          packAnchor: heroes.first,
+          index: i,
+          preferred: heroes[i].preferredRange ?? heroes[i].attackRange,
+          hasLos: true,
+        );
+        return (x: g.x, y: g.y);
+      }(),
+  ];
+}
+
+void _expectShortLine(List<({double x, double y})> goals) {
+  for (var i = 0; i < goals.length; i++) {
+    for (var j = i + 1; j < goals.length; j++) {
+      final d = _distPoint(goals[i].x, goals[i].y, goals[j].x, goals[j].y);
+      expect(d, greaterThan(0.72), reason: 'slot $i and $j share a tile');
+      expect(d, lessThan(4.3), reason: 'slot $i and $j left the line');
+    }
+  }
+  final ys = goals.map((g) => g.y).toList()..sort();
+  expect(ys.last - ys.first, greaterThan(0.9));
+}
+
 void main() {
   test('front slot sits between the party and the enemy', () {
     const front = (-1.0, 0.0);
@@ -233,10 +282,11 @@ void main() {
 
     final tankDist = _dist(tank, brute);
     expect(tankDist, lessThan(1.8));
-    expect(_dist(arms, brute), lessThan(2.1));
-    expect(_dist(arms, tank), greaterThan(0.5));
-    expect(_dist(holy, brute), greaterThan(tankDist + 0.35));
-    expect(_dist(fire, brute), greaterThan(tankDist + 1.2));
+    expect(_dist(arms, brute), lessThan(2.2));
+    expect(_dist(arms, tank), greaterThan(0.72));
+    expect(_dist(holy, tank), greaterThan(0.72));
+    expect(_dist(fire, tank), greaterThan(0.72));
+    expect(_dist(holy, fire), greaterThan(0.72));
     expect((arms.y - brute.y).abs(), greaterThan(0.35));
   });
 
@@ -428,7 +478,23 @@ void main() {
       ),
       isTrue,
     );
-    expect(_dist(holy, tank), lessThan(2.4));
+    expect(
+      _dist(holy, tank),
+      greaterThan(0.72),
+      reason: 'holy shares the tank tile ${holy.x},${holy.y}',
+    );
+  });
+
+  test('three heroes hold a short line in front of the foe', () {
+    final goals = _lineGoals(count: 3);
+    expect(goals, hasLength(3));
+    _expectShortLine(goals);
+  });
+
+  test('five heroes hold a short line in front of the foe', () {
+    final goals = _lineGoals(count: 5);
+    expect(goals, hasLength(5));
+    _expectShortLine(goals);
   });
 
   test('generated caves keep the caster in the fight room with a shot', () {
@@ -754,6 +820,139 @@ void main() {
     );
     _run(corner, 1.2);
     expect(cornerFoe.hp, cornerFoe.maxHp, reason: 'shot clipped the corner');
+  });
+
+  test('stacked bodies step onto their own tiles', () {
+    final heroes = [
+      _hero(id: 'h0', spec: HeroSpecId.protection, x: 4.5, y: 5.5),
+      _hero(id: 'h1', spec: HeroSpecId.fire, x: 4.5, y: 5.5),
+      _hero(id: 'h2', spec: HeroSpecId.discipline, x: 4.5, y: 5.5),
+    ];
+    final foe = _foe(
+      id: 'foe',
+      archetype: EnemyArchetype.brute,
+      x: 8.5,
+      y: 5.5,
+      moveSpeed: 0,
+    );
+    final world = _world(heroes: heroes, enemies: [foe]);
+    _run(world, 3);
+    final living = [for (final h in world.heroes) if (h.isAlive && !h.isPet) h];
+    for (var i = 0; i < living.length; i++) {
+      for (var j = i + 1; j < living.length; j++) {
+        expect(
+          _dist(living[i], living[j]),
+          greaterThan(0.95),
+          reason:
+              '${living[i].id} ${living[i].x},${living[i].y} '
+              '${living[j].id} ${living[j].x},${living[j].y}',
+        );
+      }
+    }
+  });
+
+  test('a foe clipped into a wall is pulled out and the rank splits', () {
+    const cols = 10;
+    const rows = 8;
+    final tiles = List<TileKind>.filled(cols * rows, TileKind.wall);
+    for (var y = 2; y <= 5; y++) {
+      for (var x = 2; x <= 7; x++) {
+        tiles[y * cols + x] = TileKind.floor;
+      }
+    }
+    final heroes = [
+      _hero(id: 'h0', spec: HeroSpecId.protection, x: 3.5, y: 4.5),
+      _hero(id: 'h1', spec: HeroSpecId.fire, x: 3.5, y: 4.5),
+      _hero(id: 'h2', spec: HeroSpecId.discipline, x: 3.5, y: 4.5),
+    ];
+    final foe = _foe(
+      id: 'foe',
+      archetype: EnemyArchetype.brute,
+      x: 1.2,
+      y: 3.2,
+      moveSpeed: 0,
+    );
+    final world = SpatialWorld(
+      map: TileMap(
+        cols: cols,
+        rows: rows,
+        tiles: tiles,
+        spawnPoints: const [(3, 4)],
+        exitPoint: (7, 4),
+        enemySpawns: const [(4, 3)],
+      ),
+      heroes: heroes,
+      enemies: [foe],
+      projectiles: <SpatialProjectile>[],
+      groundLoot: [],
+      isTreasure: false,
+      pets: <SpatialActor>[],
+    );
+    expect(world.map.at(foe.x.floor(), foe.y.floor()), TileKind.wall);
+    final state = GameLogic.createInitialState(now: DateTime(2026, 10, 23));
+    SpatialCombat.step(world, state, dt: 0.05);
+    expect(world.map.at(foe.x.floor(), foe.y.floor()), isNot(TileKind.wall));
+    final goals = [
+      for (var i = 0; i < heroes.length; i++)
+        CombatPresence.heroFightGoal(
+          hero: heroes[i],
+          target: foe,
+          world: world,
+          packAnchor: heroes.first,
+          index: i,
+          preferred: heroes[i].preferredRange ?? heroes[i].attackRange,
+          hasLos: true,
+        ),
+    ];
+    _expectShortLine([
+      for (final g in goals) (x: g.x, y: g.y),
+    ]);
+  });
+
+  test('a real floor keeps a gap once the party is on the pack', () {
+    for (final cave in const ['sandy', 'goblin']) {
+      final started = GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime(2026, 10, 23)),
+        dungeonId: cave,
+      );
+      var world = SpatialCombat.build(started);
+      var stepState = started;
+      final gaps = <double>[];
+      var snap = '';
+      for (var i = 0; i < 500; i++) {
+        final step = SpatialCombat.step(world, stepState, dt: 0.05);
+        world = step.world;
+        stepState = step.state;
+        final living = [
+          for (final h in world.heroes)
+            if (h.isAlive && !h.isPet) h,
+        ];
+        if (living.length < 3) continue;
+        final engaged = world.enemies.where((e) => e.isAlive).any(
+          (e) => living.every((h) => _dist(h, e) < 3.2),
+        );
+        if (!engaged) continue;
+        var minD = 99.0;
+        for (var a = 0; a < living.length; a++) {
+          for (var b = a + 1; b < living.length; b++) {
+            minD = math.min(minD, _dist(living[a], living[b]));
+          }
+        }
+        gaps.add(minD);
+        if (gaps.length == 40) {
+          snap = living
+              .map(
+                (h) =>
+                    '${h.name} ${h.x.toStringAsFixed(2)},${h.y.toStringAsFixed(2)}',
+              )
+              .join(' | ');
+        }
+      }
+      expect(gaps.length, greaterThan(30), reason: '$cave never engaged $snap');
+      gaps.sort();
+      final median = gaps[gaps.length ~/ 2];
+      expect(median, greaterThan(0.72), reason: '$cave median $median $snap');
+    }
   });
 }
 

@@ -27,8 +27,9 @@ class UiFeedback {
   OfflineProgressResult? _offlineSummary;
   double _offlineSummaryLife = 0;
 
-  /// Last floor payoffs, oldest first. Stays until a newer line pushes it out.
-  static const int lootLogCap = 5;
+  /// Last floor payoff. A new clear replaces it so lines do not stack
+  /// on the party.
+  static const int lootLogCap = 1;
   final List<String> _lootLog = <String>[];
 
   /// Active notice text (any kind).

@@ -911,6 +911,10 @@ class SpatialWorld {
   /// Seconds of active combat this floor (for DPS meter).
   double combatElapsed;
 
+  /// Fight stands already given out this step, so the next body
+  /// does not take the same tile.
+  final List<(double, double)> fightClaims = <(double, double)>[];
+
   /// Smoothed party facing (toward the fight). Keeps the wedge from twitching.
   double packFaceX = 1;
   double packFaceY = 0;
@@ -3685,6 +3689,15 @@ abstract final class SpatialCombat {
     if (!guiding && packAnchor != null) {
       CombatPresence.refreshPackFacing(world, packAnchor, dt);
     }
+    world.fightClaims.clear();
+    // A body clipped into a wall has no tile a swing can see, so the
+    // whole party piles onto that one point. Put them back on a floor.
+    for (final hero in world.heroes) {
+      if (hero.isAlive) _pullOutOfWall(hero, world);
+    }
+    for (final enemy in world.enemies) {
+      if (enemy.hp > 0) _pullOutOfWall(enemy, world);
+    }
 
     for (var i = 0; i < world.heroes.length; i++) {
       final hero = world.heroes[i];
@@ -3780,19 +3793,31 @@ abstract final class SpatialCombat {
       }
 
       // Keep melee DPS from racing a chamber ahead of the tank.
-      // Impatient kits get a longer leash before the snap-back.
+      // A body beside the tank on the fight line is not ahead.
       if (packAnchor != null &&
           hero.id != packAnchor.id &&
           actorIsMeleeDps(hero) &&
-          actorDist(hero, packAnchor) > CombatPresence.packLeash(hero)) {
-        tx = packAnchor.x;
-        ty = packAnchor.y;
-        hold = 0.45;
+          target != null) {
+        final dx = hero.x - packAnchor.x;
+        final dy = hero.y - packAnchor.y;
+        final fwd = CombatPresence.fightForward(
+          fromX: packAnchor.x,
+          fromY: packAnchor.y,
+          toX: target.x,
+          toY: target.y,
+        );
+        final ahead = dx * fwd.$1 + dy * fwd.$2;
+        if (ahead > CombatPresence.packLeash(hero)) {
+          tx = packAnchor.x;
+          ty = packAnchor.y;
+          hold = 0.45;
+        }
       }
 
       // Casters and healers stay behind the tank on the way in. A long
       // shot used to let the mage walk the corner first while the front
-      // line shoved itself into the wall.
+      // line shoved itself into the wall. Once the tank is in the fight,
+      // the rank stands.
       if (!guiding &&
           target != null &&
           packAnchor != null &&
@@ -3800,7 +3825,7 @@ abstract final class SpatialCombat {
           CombatPresence.isBackliner(hero)) {
         final heroD = actorDist(hero, target);
         final tankD = actorDist(packAnchor, target);
-        if (tankD > 0.4 && heroD + 1.45 < tankD) {
+        if (tankD > 2.2 && heroD + 1.45 < tankD) {
           final ux = (target.x - packAnchor.x) / tankD;
           final uy = (target.y - packAnchor.y) / tankD;
           tx = packAnchor.x - ux * 0.85;
@@ -3825,6 +3850,20 @@ abstract final class SpatialCombat {
           ty = packAnchor.y;
           hold = blindToTank ? 0.4 : 0.75;
         }
+      }
+
+      if (!guiding && target != null) {
+        final stood = CombatPresence.keepApart(
+          world: world,
+          hero: hero,
+          target: target,
+          x: tx,
+          y: ty,
+          claimed: world.fightClaims,
+        );
+        tx = stood.$1;
+        ty = stood.$2;
+        world.fightClaims.add((tx, ty));
       }
 
       _steerActor(
@@ -4205,7 +4244,7 @@ abstract final class SpatialCombat {
             spawnFloater(
               world,
               x: loot.x,
-              y: loot.y - 0.2,
+              y: item != null ? loot.y - 1.45 : loot.y - 0.2,
               text: item != null ? label : _shortFloaterLabel(label),
               argb: salvaged
                   ? _floaterEssence
@@ -4214,7 +4253,7 @@ abstract final class SpatialCombat {
                         : (goldPickup || loot.kind == GroundLootKind.gold
                               ? _floaterGold
                               : _floaterEssence)),
-              life: salvaged || item != null ? 1.4 : 1.15,
+              life: item != null ? 0.42 : (salvaged ? 1.4 : 1.15),
               priority: salvaged || item != null ? 2 : 1,
             );
           }
@@ -4769,22 +4808,77 @@ abstract final class SpatialCombat {
   }
 
   /// A shot, swing, or bolt connects only when the straight step does not
-  /// cross a wall, including a diagonal corner.
+  /// cross a wall, including a diagonal corner. A body clipped into a wall
+  /// is hit from the adjacent floor tile.
   static bool canShoot(
     SpatialWorld world,
     double x0,
     double y0,
     double x1,
     double y1,
-  ) => hasClearCorridor(
-    world.map,
-    world.openGateIds,
-    x0.floor(),
-    y0.floor(),
-    x1.floor(),
-    y1.floor(),
-    tight: true,
-  );
+  ) {
+    final x1i = x1.floor();
+    final y1i = y1.floor();
+    if (hasClearCorridor(
+      world.map,
+      world.openGateIds,
+      x0.floor(),
+      y0.floor(),
+      x1i,
+      y1i,
+      tight: true,
+    )) {
+      return true;
+    }
+    if (world.map.at(x1i, y1i) != TileKind.wall) return false;
+    const dirs = <(int, int)>[(1, 0), (-1, 0), (0, 1), (0, -1)];
+    for (final dir in dirs) {
+      final nx = x1i + dir.$1;
+      final ny = y1i + dir.$2;
+      if (!world.canWalkTile(nx, ny)) continue;
+      if (hasClearCorridor(
+        world.map,
+        world.openGateIds,
+        x0.floor(),
+        y0.floor(),
+        nx,
+        ny,
+        tight: true,
+      )) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Moves a body whose tile is a wall onto the nearest floor tile.
+  static void _pullOutOfWall(SpatialActor a, SpatialWorld world) {
+    if (world.map.at(a.x.floor(), a.y.floor()) != TileKind.wall) return;
+    final fx = a.x.floor();
+    final fy = a.y.floor();
+    (double, double)? best;
+    var bestD = double.infinity;
+    for (var r = 1; r <= 3; r++) {
+      for (var dy = -r; dy <= r; dy++) {
+        for (var dx = -r; dx <= r; dx++) {
+          if (dx.abs() != r && dy.abs() != r) continue;
+          final x = fx + dx + 0.5;
+          final y = fy + dy + 0.5;
+          if (!world.canWalk(x, y)) continue;
+          final d = distPoint(a.x, a.y, x, y);
+          if (d >= bestD) continue;
+          bestD = d;
+          best = (x, y);
+        }
+      }
+      if (best != null) break;
+    }
+    if (best == null) return;
+    a.x = best.$1;
+    a.y = best.$2;
+    a.vx = 0;
+    a.vy = 0;
+  }
 
   /// Apply any remaining ground loot into state and clear the pile.
   /// Used when exit starts early (AFK) or right before roomCleared.
@@ -4902,10 +4996,21 @@ abstract final class SpatialCombat {
       }
     }
     final payoff = <String>[
-      if (bestGear != null && bestGear.isNotEmpty) bestGear,
       if (rewardGold > 0) '+${rewardGold}g',
       if (unit != null && payout.xp > 0) '+${payout.xp} XP',
     ];
+    if (bestGear != null && bestGear.isNotEmpty) {
+      // Above the rank, and gone before it can sit on a body.
+      spawnFloater(
+        world,
+        x: enemy.x,
+        y: enemy.y - 1.45,
+        text: bestGear,
+        argb: _floaterGear,
+        life: 0.42,
+        priority: bestRarity >= LootRarity.epic.index ? 3 : 2,
+      );
+    }
     if (payoff.isNotEmpty) {
       spawnFloater(
         world,

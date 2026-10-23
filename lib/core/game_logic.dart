@@ -408,12 +408,16 @@ class GameLogic {
     }
     if (state.inGreaterRift && state.grOutcome.isEmpty) {
       final essence = GreaterRift.failEssence(state.grTier);
+      final tier = GreaterRift.clampTier(state.grTier);
+      final wiped = state.aliveHeroes == 0;
       working = working.copyWith(
         essence: working.essence + essence,
         grOutcome: 'depleted',
       );
       LogicNotices.addMetaPayoffs([
-        'Greater Rift GR${GreaterRift.clampTier(state.grTier)} ended · +${essence}e',
+        wiped
+            ? 'Ranked GR$tier wipe'
+            : 'Greater Rift GR$tier ended · +${essence}e',
       ]);
     }
     // Ticket spent on enter — refund if leave/wipe before a paid clear.

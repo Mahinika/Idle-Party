@@ -859,9 +859,158 @@ abstract final class CombatPresence {
         (tank.x, tank.y);
   }
 
-  /// In-fight stand point: melee wedge on the enemy. Ranged and healers
-  /// stay inside the fight room on a tile with a clear shot — not at max
-  /// range down the corridor they entered from.
+  /// A later body does not stand on a tile already given to someone
+  /// in front. About one tile of air, so a swing stays visible.
+  static (double, double) keepApart({
+    required SpatialWorld world,
+    required SpatialActor hero,
+    required SpatialActor target,
+    required double x,
+    required double y,
+    required List<(double, double)> claimed,
+  }) {
+    bool clearOf(double px, double py) {
+      for (final c in claimed) {
+        if (SpatialCombat.distPoint(px, py, c.$1, c.$2) < 1.05) return false;
+      }
+      return true;
+    }
+
+    if (clearOf(x, y) && world.canWalk(x, y)) return (x, y);
+
+    final fwd = fightForward(fromX: x, fromY: y, toX: target.x, toY: target.y);
+    final side = (-fwd.$2, fwd.$1);
+    final back = (-fwd.$1, -fwd.$2);
+    (double, double)? loose;
+    for (final dist in const <double>[1.15, 1.55, 2.05]) {
+      final spots = <(double, double)>[
+        (x + side.$1 * dist, y + side.$2 * dist),
+        (x - side.$1 * dist, y - side.$2 * dist),
+        (x + back.$1 * dist, y + back.$2 * dist),
+      ];
+      for (final spot in spots) {
+        if (!world.canWalk(spot.$1, spot.$2)) continue;
+        if (!clearOf(spot.$1, spot.$2)) continue;
+        final seen = _clearSight(world, spot.$1, spot.$2, target.x, target.y);
+        if (!seen) continue;
+        final d = SpatialCombat.distPoint(spot.$1, spot.$2, target.x, target.y);
+        final inRange = d >= 0.45 && d <= hero.attackRange * 0.98;
+        if (inRange) return spot;
+        loose ??= spot;
+      }
+    }
+    return loose ?? (x, y);
+  }
+
+  /// Melee takes the middle of the rank. Ranged and healers take the wings
+  /// so a short reach does not step onto the next body.
+  static int _lineSlot(SpatialActor hero, List<SpatialActor> heroes) {
+    final melee = <SpatialActor>[];
+    final back = <SpatialActor>[];
+    for (final h in heroes) {
+      if (!h.isAlive) continue;
+      if (isBackliner(h)) {
+        back.add(h);
+      } else {
+        melee.add(h);
+      }
+    }
+    final ordered = <SpatialActor>[...melee, ...back];
+    final i = ordered.indexWhere((h) => h.id == hero.id);
+    return i < 0 ? 0 : i;
+  }
+
+  /// Short rank in front of the foe. About one tile between bodies.
+  /// A blocked tile is searched along that rank. A later slot does not
+  /// collapse onto the center body.
+  static (double, double)? _partyLine({
+    required SpatialWorld world,
+    required SpatialActor hero,
+    required SpatialActor target,
+    required SpatialActor anchor,
+    required int index,
+  }) {
+    final listed = world.heroes.any((h) => h.id == hero.id);
+    final slot = listed ? _lineSlot(hero, world.heroes) : (index < 0 ? 0 : index);
+    const gap = 1.0;
+    final lat = wing(slot) * gap;
+    final fwd = _facingFor(
+      world,
+      anchor.x,
+      anchor.y,
+      target.x,
+      target.y,
+    );
+    final back = (-fwd.$1, -fwd.$2);
+
+    (double, double) at(double along, double lateral) => offsetAlong(
+      target.x,
+      target.y,
+      back,
+      along: along,
+      lateral: lateral,
+    );
+
+    final center = at(1.05, 0);
+    bool separated(double x, double y) {
+      if (slot <= 0) return true;
+      return SpatialCombat.distPoint(x, y, center.$1, center.$2) >= 0.72;
+    }
+
+    bool accept(double x, double y) {
+      if (!world.canWalk(x, y)) return false;
+      if (!separated(x, y)) return false;
+      if (!_inFightRoom(world, x, y, target.x, target.y, lip: false)) {
+        return false;
+      }
+      if (!_clearSight(world, x, y, target.x, target.y)) return false;
+      // A stand on the far side of a pinched corner looks clear and then
+      // sticks the body on the clipped tile. Only take a rank point this
+      // body can walk to.
+      if (!SpatialCombat.hasClearCorridor(
+        world.map,
+        world.openGateIds,
+        hero.x.floor(),
+        hero.y.floor(),
+        x.floor(),
+        y.floor(),
+        tight: true,
+      )) {
+        return false;
+      }
+      final d = SpatialCombat.distPoint(x, y, target.x, target.y);
+      if (d < 0.45 || d > hero.attackRange * 0.98) return false;
+      return true;
+    }
+
+    const depths = <double>[1.05, 0.85, 1.3, 0.65, 1.55];
+    for (final depth in depths) {
+      final p = at(depth, lat);
+      if (accept(p.$1, p.$2)) return p;
+    }
+    if (slot > 0) {
+      for (final scale in const <double>[0.9, 0.8, 0.72]) {
+        for (final depth in depths) {
+          final p = at(depth, lat * scale);
+          if (accept(p.$1, p.$2)) return p;
+        }
+      }
+    }
+    final hint = at(1.05, lat == 0 ? 0.0 : lat);
+    return _bestFloorTile(
+      world: world,
+      originX: hint.$1,
+      originY: hint.$2,
+      radius: 3,
+      score: (x, y) {
+        if (!accept(x, y)) return null;
+        return SpatialCombat.distPoint(x, y, hint.$1, hint.$2);
+      },
+    );
+  }
+
+  /// In-fight stand point: one short line across the foe. Ranged and
+  /// healers stay inside the fight room on a tile with a clear shot.
   static ({double x, double y, double hold}) heroFightGoal({
     required SpatialActor hero,
     required SpatialActor target,
@@ -872,6 +1021,15 @@ abstract final class CombatPresence {
     required bool hasLos,
   }) {
     final anchor = packAnchor ?? hero;
+    final line = _partyLine(
+      world: world,
+      hero: hero,
+      target: target,
+      anchor: anchor,
+      index: index,
+    );
+    if (line != null) return (x: line.$1, y: line.$2, hold: 0.16);
+
     final healer = isHealerRole(hero);
     if (healer && packAnchor != null && packAnchor.id != hero.id) {
       final g = _healerPocket(
@@ -881,7 +1039,10 @@ abstract final class CombatPresence {
         target: target,
         index: index,
       );
-      return (x: g.$1, y: g.$2, hold: 0.2);
+      if (index <= 0 ||
+          SpatialCombat.distPoint(g.$1, g.$2, anchor.x, anchor.y) >= 0.72) {
+        return (x: g.$1, y: g.$2, hold: 0.2);
+      }
     }
 
     if (!isBackliner(hero)) {
@@ -901,13 +1062,11 @@ abstract final class CombatPresence {
         cx: target.x,
         cy: target.y,
         front: front,
-        index: meleeSlot(hero, world.heroes),
+        index: index <= 0 ? 0 : index,
         radius: radius,
         fallbackX: anchor.x,
         fallbackY: anchor.y,
       );
-      // A diagonal floor tile can "touch" the foe through two walls.
-      // Path around instead of holding there.
       if (!_clearSight(world, g.$1, g.$2, target.x, target.y)) {
         return (x: target.x, y: target.y, hold: 0.4);
       }

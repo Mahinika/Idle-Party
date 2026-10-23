@@ -25,7 +25,7 @@ void main() {
     },
   );
 
-  test('loot log keeps the last five floor lines', () {
+  test('loot log keeps one floor line', () {
     final ui = UiFeedback();
     expect(ui.pushLootLine('  '), isFalse);
     expect(ui.pushLootLine('F1 CLEAR · +10g'), isTrue);
@@ -33,30 +33,18 @@ void main() {
     for (var floor = 2; floor <= 7; floor++) {
       expect(ui.pushLootLine('F$floor CLEAR · +${floor}0g'), isTrue);
     }
-    expect(ui.lootLog, [
-      'F3 CLEAR · +30g',
-      'F4 CLEAR · +40g',
-      'F5 CLEAR · +50g',
-      'F6 CLEAR · +60g',
-      'F7 CLEAR · +70g',
-    ]);
+    expect(ui.lootLog, ['F7 CLEAR · +70g']);
     ui.clearLootLog();
     expect(ui.lootLog, isEmpty);
   });
 
-  testWidgets('loot log paints the lines, newest last', (tester) async {
+  testWidgets('loot log paints one English floor line', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(
-          body: DungeonLootLog(lines: ['F1 CLEAR · +10g', 'F2 CLEAR · +20g']),
-        ),
+        home: Scaffold(body: DungeonLootLog(lines: ['F2 CLEAR · +20g'])),
       ),
     );
-    expect(find.text('F1 CLEAR · +10g'), findsOneWidget);
     expect(find.text('F2 CLEAR · +20g'), findsOneWidget);
-    final first = tester.getTopLeft(find.text('F1 CLEAR · +10g'));
-    final second = tester.getTopLeft(find.text('F2 CLEAR · +20g'));
-    expect(second.dy, greaterThan(first.dy));
   });
 
   test('danger replaces celebrate immediately', () {
