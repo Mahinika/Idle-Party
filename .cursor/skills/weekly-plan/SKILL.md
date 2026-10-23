@@ -16,10 +16,10 @@ One ISO week, one file under `docs/weeks/`. That file is the only answer to
 is fed only by the reads under **Write a missing plan**.
 
 The week file is the template below. Rules stay in this skill. Do not
-copy them into the week file. A full week lists the checked holes, up to
-seven jobs. Sunday ships the ones that are `spelbar`. The rest stay on the
-list until they are `spelbar` or `flyttad`. At least one job is a new
-feature that makes people want to play and keep playing.
+copy them into the week file. A full week lists exactly 25 jobs. Sunday
+ships the ones that are `spelbar`. The rest stay on the list until they
+are `spelbar` or `flyttad`. At least one job is a new feature that makes
+people want to play and keep playing.
 
 Never upload an AAB here. Upload only when the owner asks in that turn
 (`play-store-prep`). Never post to Discord unless they ask in that turn.
@@ -29,7 +29,7 @@ Folder note: `docs/weeks/README.md`.
 
 ## Rules
 
-- One to seven numbered rows under **Att göra**. No blank numbers. Every row is **Måste**. Those rows are the week's work, in that order. Fill them from the checked holes: open play notes, then jobs already named for this week and the next, then a **Nu** slice this build does not already do. A week is that list, enough that Sunday is a build. A single line of copy is one row, not the week. Stop at seven. If the checked holes are fewer, the list is those holes, and say so under **Källor**. Do not invent a job the sources do not support.
+- Exactly 25 numbered rows under **Att göra**. No blank numbers. Every row is **Måste**. Those rows are the week's work, in that order. Fill the first rows from the checked holes: open play notes, then jobs already named for this week and the next, then a **Nu** slice this build does not already do. When those are fewer than 25, the rest are the next distinct things a player can point at in the crawl and the five hunts, that this build does not already do. Do not stop early. Do not invent a new zone, class, hunt, gacha, or a second sim. A row the code and the patch notes already show is not a row, unless the phone has not shown it and the row is about how it sits.
 - A row is one thing a player can point at. The same rule in every cave, rank, or sentence is one row. Do not split it into a row per floor, rank, or line of copy.
 - Under each row, three lines start with `Klart när:`. That is the test for that row. It is not another job. Do not turn a `Klart när` line into its own row. The batch to build is the numbered row.
 - Each row is `Måste · Content — change — why the player cares — status`, or the same with `Fix` or `Nytt`.
@@ -37,7 +37,7 @@ Folder note: `docs/weeks/README.md`.
 - At least one row is **Nytt**, and more when the evidence supports them. A **Nytt** row can be something this game does not have yet. It comes from what another game or a developer measured, fitted to this game. Read `docs/YEAR_ROADMAP_SOURCES.md` first. If those grades do not cover the hole, open a few pages. A source counts only if you opened it in this chat and can name the URL. Grade A may add the row. Grade B is an example only after a hole in this game is already clear. Grade C must not decide. Name the player problem the source measured. Fit it to the three pillars in `docs/GROWTH_MANDATE.md`: the party walks the room, one reason to come back tomorrow, one Ascend loop. Another game shipping a feature is not by itself a reason. When this game's notes disagree, follow this game. **Nu** in `docs/YEAR_ROADMAP.md` is one source, not a ceiling. A new zone, class, hunt, or gacha still waits until the owner names it, or an A source and a hole in this game agree.
 - **Content** and **Fix** are what should be ready by Sunday.
 - A new idea mid-week goes under **Inte den här veckan**. Only a critical bug may take a planned slot. The row it displaces becomes `flyttad`.
-- The file whose dates contain today is **Aktiv**. That is the file to build from. The following week is **Nästa**, in the same full shape, and it is not the build target while **Aktiv** still has an `ej klar` row. If this week already holds the next week's only checked hole, **Nästa** keeps the sentence and says the jobs are written when a hole is checked. Any later week is **Tidigt utkast**: status, dates, and **En mening** only. Write its jobs when it becomes **Nästa**.
+- The file whose dates contain today is **Aktiv**. That is the file to build from. The following week is **Nästa**, with the same 25 rows, and it is not the build target while **Aktiv** still has an `ej klar` row. Any later week is **Tidigt utkast**: status, dates, and **En mening** only. Write its 25 rows when it becomes **Nästa**. An **Aktiv** week that already lists rows keeps those rows unless the owner asks to refill it.
 - A week file already shipped, or an older file that still lists many rows, stays as the record. Do not rewrite it into this shape unless the owner asks.
 - Sunday means submitted to Play, not approved. The plan is Swedish. Player text is English.
 - One English sentence a new player understands. Keep KEY, Gauntlet, and Ascend out of it unless they named that as the week.
@@ -95,7 +95,7 @@ Onsdag, Söndag, and Utfall start unchecked. No Play or Discord block yet.
 
 ## Template
 
-Full week (this week, or the next):
+Full week (this week, or the next). The list runs from 1 through 25. The block below is the shape of one row:
 
 ````markdown
 # Vecka NN
@@ -176,5 +176,5 @@ Google is reviewing this update. The Play Store may still show the previous vers
 
 ## Done when
 
-- A "gör" ask left the week file on disk. A full week has one to seven rows, each with three **Klart när** lines. A later week has the one sentence. A "vad är planen" ask quoted that file, or said it is missing.
+- A "gör" ask left the week file on disk. A full week has exactly 25 numbered rows, each with three **Klart när** lines. A later week has the one sentence. A "vad är planen" ask quoted that file, or said it is missing.
 - No AAB was uploaded and no Discord post was sent.
