@@ -4,7 +4,9 @@
 
 Det här är planen för det kommande året. Den kan flytta. Det som faktiskt kom står i Patch Notes. Små fixar och balans mellan uppdateringarna står inte här.
 
-En rad säger vart du går, vad du gör där, och vad du tar med dig hem. Den säger inte hur spelet är byggt.
+En rad säger vem den är för, vart du går, vad du gör där, och vad du tar med dig hem.
+
+På Play kan du spela den förra uppdateringen. Nästa är byggd och inte inskickad ännu.
 
 ---
 
@@ -12,7 +14,7 @@ En rad säger vart du går, vad du gör där, och vad du tar med dig hem. Den s�
 
 Du tar med ett party in i en grotta. De går genom rummet och slåss själva. Du trycker ENTER DUNGEON.
 
-Vägen går från Sandy Caverns till Mothveil Hollow. Femton grottor.
+Vägen går från Sandy Caverns till Mothveil Hollow. Femton grottor. Hjältarna är små nog att rummet rymmer dem.
 
 Det finns ett jobb att komma tillbaka till. Efter första bossen är det dagens valv. När alla i partyt är nivå 100 är det KEY.
 
@@ -37,31 +39,35 @@ Craft Trial ligger under MORE → CRAFT. Det är inte en sjätte jakt.
 | När | Vad du får |
 |---|---|
 | Nu | Femton grottor, ett jobb imorgon, fem jakter på nivå 100. |
-| De närmaste uppdateringarna | Partyt syns, och jakterna är lätta att skilja åt. |
-| Senare i år | Grottan, partyt och jakterna, en synlig bit i taget. |
+| De närmaste uppdateringarna | Partyt på en rad, och två olika slut på klockan och looten. |
+| Våren | Tornet går att läsa mellan bossarna, med partyt kvar i bild. |
+| Sommaren | Klockan och looten syns medan varvet pågår, inte bara när det tar slut. |
+| Hösten | Veckans boss varnar innan slaget, och partyt står kvar. |
 | Bara om vi säger det | En ny grotta, en ny klass, eller ett nytt sätt att slåss. |
 
-Inga datum. Ett datum skrivs först när det är bestämt. Fram till dess står årstid eller "de närmaste uppdateringarna".
+Inget datum är satt. En årstid är riktningen, inte en dag.
 
 ---
 
 ## De närmaste uppdateringarna
 
-Tre uppdateringar. En sak var. Inget fjärde löfte.
+Tre uppdateringar. En sak var. Inget fjärde löfte. De två första är redan byggda och väntar på att skickas.
 
-1. **Du ser vem som svingar.** För alla, från första grottan. Partyt står på en rad i fighten. En klarad våning lämnar en rad text. Ett föremålsnamn försvinner innan det täcker en hjälte.
-2. **Klockan och looten är två olika varv.** När alla är nivå 100. Ranked GR säger tiden, och om du missade, hur många sekunder över. Farm Rift säger den bästa dropen, eller att inget föll, och sedan guld och essence i egna meningar.
-3. **Det ryms på telefonen.** För alla. Raden, klockan och droppens namn syns bredvid partyt. En grind, en kista och en boss ryms i samma bild som partyt.
+1. **Du ser vem som svingar.** För alla, från första grottan. Partyt står på en rad i Sandy Caverns. En klarad våning lämnar en rad text. Ett föremålsnamn försvinner innan det täcker en hjälte.
+2. **Klockan och looten är två olika varv.** När alla är nivå 100. Ranked GR i Mothveil säger tiden, och om du missade, hur många sekunder över. Farm Rift i Stormwake säger den bästa dropen, eller att inget föll. Guld och essence kommer i egna meningar.
+3. **Det ryms på telefonen.** För alla, och för fem hjältar när den femte platsen är köpt. Raden håller i dörren, vid en grind, vid en kista och vid första bossen. Vapen syns. Klockan och droppens namn täcker inte kropparna.
 
 ---
 
 ## Senare i år
 
-Kortare. Inga nya namn är låsta.
+Kortare. Inga nya namn. En jakt fördjupas först när den förra redan känns som sitt eget varv.
 
-- Grottan, partyt och utrustningen på kroppen blir tydligare, en sak du kan se i taget.
-- En jakt får mer att göra först när den förra redan känns som sitt eget varv. Ordningen är KEY, Gauntlet, Ranked GR, Farm Rift, Ashen Crown.
-- En klass som vinner för lätt dras tillbaka. Den ska fortfarande kännas som den klassen.
+- **Våren, Gauntlet.** När alla är nivå 100. Mellan bossarna ser du om våningen är trång, en svärm, ett eko eller grindar. Partyt står kvar på rad. Du tar med dig tornets essence.
+- **Sommaren, Ranked GR och Farm Rift.** När alla är nivå 100. I Mothveil ser du klockan under klättringen. I Stormwake ser du den bästa dropen när den faller, inte bara på slutet. En miss säger fortfarande sekunderna över. Loot-varvet har ingen klocka.
+- **Hösten, Ashen Crown.** När alla är nivå 100. En biljett, en grotta du redan kan. Slaget varnar innan det träffar, och varningen täcker inte partyt.
+
+En klass som vinner för lätt dras tillbaka under året. Den ska fortfarande kännas som den klassen. Det är ingen egen uppdatering.
 
 ---
 
