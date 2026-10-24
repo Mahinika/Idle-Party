@@ -1,6 +1,6 @@
 # Roadmaps opened for the year-plan template
 
-**Pass:** 2026-10-24. 72 pages so far. Not 100 yet. This list is only pages opened in this pass.
+**Pass:** 2026-10-24. 104 pages. The pass asked for 100. This list is only pages opened in this pass.
 The player plan is `YEAR_ROADMAP.md`. The older growth file
 `YEAR_ROADMAP_SOURCES.md` stays the store archive.
 
@@ -85,3 +85,35 @@ and prices.
 | 70 | Torchlight: Infinite | https://www.gamespress.com/Torchlight-Infinite-SS14-Launches-Next-Week-Bringing-New-Hero-Trait-Ne |
 | 71 | AFK Journey | https://www.afk.global/afk-journey/patch-notes/1-8-1 |
 | 72 | AFK Arena | https://www.afk.global/afk-arena/news |
+| 73 | Stardew Valley | https://www.stardewvalley.net/whats-in-store-for-stardew-valley/ |
+| 74 | Stardew Valley | https://store.steampowered.com/news/?appgroupname=Stardew%2BValley&appids=413150&feed=steam_community_announcements |
+| 75 | Core Keeper | https://store.steampowered.com/news/app/1621690/view/670621050832162568 |
+| 76 | Valheim | https://valheim.com/faq/ |
+| 77 | Valheim | https://valheim.com/news/word-from-the-devs-what-a-month-/ |
+| 78 | V Rising | https://blog.stunlock.com/dev-update-32-the-next-era/ |
+| 79 | V Rising | https://blog.stunlock.com/dev-update-31-midnight-reflections/ |
+| 80 | Enshrouded | https://enshrouded.com/en-US/news/enshroudeds-road-to-release-2nd-year-anniversary-celebration |
+| 81 | Palworld | https://www.pocketpair.jp/en/game-news/palworld-side-by-side-new-update-coming-winter-2026/ |
+| 82 | Palworld | https://www.pocketpair.jp/en/game-news/palworld-to-exit-early-access-and-officially-release-ver-1-0-in-2026-massive-1-0-update-in-development-surprises-planned-for-the-rest-of-2025/ |
+| 83 | Schedule I | https://trello.com/b/VQQpru3F/schedule-i-roadmap |
+| 84 | Schedule I | https://steamcommunity.com/app/3164500/announcements/ |
+| 85 | Deep Rock Galactic | https://www.deeprockgalactic.com/roadmap |
+| 86 | Deep Rock Galactic | https://store.steampowered.com/news/posts/?appids=548430&enddate=1698242143&feed=steam_community_announcements |
+| 87 | Slay the Spire 2 | https://megacrit.com/news/2026-4-17-neowsletter-issue-21/ |
+| 88 | Slay the Spire 2 | https://megacrit.com/news/2026-8-14-neowsletter-issue-25/ |
+| 89 | Slay the Spire 2 | https://megacrit.com/news/2026-3-13-neowsletter-issue-20/ |
+| 90 | Slay the Spire 2 | https://megacrit.com/news/2026-5-22-neowsletter-issue-22/ |
+| 91 | Balatro | https://localthunk.com/blog/im-slow |
+| 92 | Cult of the Lamb | https://massivemonster.com/blog/cult-of-the-lamb-an-update-from-us |
+| 93 | Hades II | https://www.supergiantgames.com/blog/hades2-warsong-update/ |
+| 94 | Factorio | https://www.factorio.com/blog/post/fff-440 |
+| 95 | Against the Storm | https://eremitegames.com/ats-roadmap/ |
+| 96 | Against the Storm | https://eremitegames.com/roadmap-update-march-2022/ |
+| 97 | Bellwright | https://www.playbellwright.com/news/console-release-and-summer-update |
+| 98 | Oxygen Not Included | https://kleiforums.com/forums/topic/143555-oxygen-not-included-october-2022-roadmap/ |
+| 99 | Astroneer | https://blog.astroneer.space/p/astroneer-development-roadmap-pre-alpha-and-beyond/ |
+| 100 | RimWorld | http://ludeon.com/blog/ |
+| 101 | Halls of Torment | https://steamcommunity.com/app/2218750/discussions/0/4369130369050082674/ |
+| 102 | Dave the Diver | https://steamcommunity.com/app/1868140/allnews/ |
+| 103 | Buckshot Roulette | https://steamcommunity.com/app/2835570/announcements/ |
+| 104 | Risk of Rain 2 | https://store.steampowered.com/news/posts/?appids=632360&enddate=1604419228&feed=steam_community_announcements |
