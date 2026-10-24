@@ -155,8 +155,12 @@ void _expectShortLine(List<({double x, double y})> goals) {
   for (var i = 0; i < goals.length; i++) {
     for (var j = i + 1; j < goals.length; j++) {
       final d = _distPoint(goals[i].x, goals[i].y, goals[j].x, goals[j].y);
-      expect(d, greaterThan(0.72), reason: 'slot $i and $j share a tile');
-      expect(d, lessThan(4.3), reason: 'slot $i and $j left the line');
+      expect(
+        d,
+        greaterThanOrEqualTo(CombatPresence.partyBodyGap - 0.02),
+        reason: 'slot $i and $j share a tile',
+      );
+      expect(d, lessThan(8), reason: 'slot $i and $j left the line');
     }
   }
   final ys = goals.map((g) => g.y).toList()..sort();
@@ -283,10 +287,10 @@ void main() {
     final tankDist = _dist(tank, brute);
     expect(tankDist, lessThan(1.8));
     expect(_dist(arms, brute), lessThan(2.2));
-    expect(_dist(arms, tank), greaterThan(0.72));
-    expect(_dist(holy, tank), greaterThan(0.72));
-    expect(_dist(fire, tank), greaterThan(0.72));
-    expect(_dist(holy, fire), greaterThan(0.72));
+    expect(_dist(arms, tank), greaterThan(CombatPresence.partyBodyGap));
+    expect(_dist(holy, tank), greaterThan(CombatPresence.partyBodyGap));
+    expect(_dist(fire, tank), greaterThan(CombatPresence.partyBodyGap));
+    expect(_dist(holy, fire), greaterThan(CombatPresence.partyBodyGap));
     expect((arms.y - brute.y).abs(), greaterThan(0.35));
   });
 
@@ -480,7 +484,7 @@ void main() {
     );
     expect(
       _dist(holy, tank),
-      greaterThan(0.72),
+      greaterThan(CombatPresence.partyBodyGap),
       reason: 'holy shares the tank tile ${holy.x},${holy.y}',
     );
   });
@@ -933,7 +937,7 @@ void main() {
         minD = math.min(minD, _dist(living[a], living[b]));
       }
     }
-    expect(minD, greaterThan(0.72));
+    expect(minD, greaterThan(CombatPresence.partyBodyGap));
   });
 
   test('Sandy floor 1 entry keeps heroes apart from the first steps', () {
@@ -956,7 +960,7 @@ void main() {
             minD = math.min(minD, _dist(living[a], living[b]));
           }
         }
-        if (minD > 0.72) sawGap = true;
+        if (minD > CombatPresence.partyBodyGap) sawGap = true;
       }
       final step = SpatialCombat.step(world, state, dt: 0.05);
       world = step.world;
@@ -984,10 +988,10 @@ void main() {
             if (h.isAlive && !h.isPet) h,
         ];
         if (living.length < 3) continue;
-        final engaged = world.enemies.where((e) => e.isAlive).any(
-          (e) => living.every((h) => _dist(h, e) < 3.2),
+        final tankIn = world.enemies.where((e) => e.isAlive).any(
+          (e) => living.any((h) => _dist(h, e) < 2.2),
         );
-        if (!engaged) continue;
+        if (!tankIn) continue;
         var minD = 99.0;
         for (var a = 0; a < living.length; a++) {
           for (var b = a + 1; b < living.length; b++) {
@@ -1007,7 +1011,11 @@ void main() {
       expect(gaps.length, greaterThan(30), reason: '$cave never engaged $snap');
       gaps.sort();
       final median = gaps[gaps.length ~/ 2];
-      expect(median, greaterThan(0.72), reason: '$cave median $median $snap');
+      expect(
+        median,
+        greaterThanOrEqualTo(CombatPresence.partyBodyGap - 0.02),
+        reason: '$cave median $median $snap',
+      );
     }
   });
 }

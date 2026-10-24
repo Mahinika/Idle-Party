@@ -5,6 +5,9 @@ part of 'spatial_combat.dart';
 /// Kept as a `part` so [SpatialCombat] stays the only fight authority — this
 /// file only flavors steering / floaters, not damage math.
 abstract final class CombatPresence {
+  /// Center distance so a ~1-tile body and its weapon stay readable.
+  static const double partyBodyGap = 1.45;
+
   static const double idleJitterScale = 0.07;
   static const double idleJitterSpeed = 2.6;
   static const double facingLerp = 9.0;
@@ -383,9 +386,9 @@ abstract final class CombatPresence {
       return 1.05;
     }
     if (tag == SpecRoleTag.meleeDps || hero.heroRole == HeroRole.rogue) {
-      return 0.45;
+      return 0.9;
     }
-    return 0.2;
+    return 0.55;
   }
 
   /// 0, +1, −1, +2, −2… so party index spreads bodies sideways.
@@ -871,7 +874,9 @@ abstract final class CombatPresence {
   }) {
     bool clearOf(double px, double py) {
       for (final c in claimed) {
-        if (SpatialCombat.distPoint(px, py, c.$1, c.$2) < 1.05) return false;
+        if (SpatialCombat.distPoint(px, py, c.$1, c.$2) < partyBodyGap) {
+          return false;
+        }
       }
       return true;
     }
@@ -882,7 +887,7 @@ abstract final class CombatPresence {
     final side = (-fwd.$2, fwd.$1);
     final back = (-fwd.$1, -fwd.$2);
     (double, double)? loose;
-    for (final dist in const <double>[1.15, 1.55, 2.05]) {
+    for (final dist in const <double>[1.45, 1.9, 2.4]) {
       final spots = <(double, double)>[
         (x + side.$1 * dist, y + side.$2 * dist),
         (x - side.$1 * dist, y - side.$2 * dist),
@@ -932,8 +937,12 @@ abstract final class CombatPresence {
   }) {
     final listed = world.heroes.any((h) => h.id == hero.id);
     final slot = listed ? _lineSlot(hero, world.heroes) : (index < 0 ? 0 : index);
-    const gap = 1.0;
+    const gap = partyBodyGap;
     final lat = wing(slot) * gap;
+    final reach = math.max(partyBodyGap, hero.attackRange * 0.9);
+    final latAbs = lat.abs();
+    final spare = reach * reach - latAbs * latAbs;
+    final fitAlong = spare <= 0.05 ? 0.45 : math.sqrt(spare);
     final fwd = _facingFor(
       world,
       anchor.x,
@@ -954,7 +963,8 @@ abstract final class CombatPresence {
     final center = at(1.05, 0);
     bool separated(double x, double y) {
       if (slot <= 0) return true;
-      return SpatialCombat.distPoint(x, y, center.$1, center.$2) >= 0.72;
+      return SpatialCombat.distPoint(x, y, center.$1, center.$2) >=
+          partyBodyGap;
     }
 
     bool accept(double x, double y) {
@@ -983,7 +993,7 @@ abstract final class CombatPresence {
       return true;
     }
 
-    const depths = <double>[1.05, 0.85, 1.3, 0.65, 1.55];
+    final depths = <double>[fitAlong, 0.85, 1.05, 0.65, 1.3];
     for (final depth in depths) {
       final p = at(depth, lat);
       if (accept(p.$1, p.$2)) return p;
@@ -1023,13 +1033,15 @@ abstract final class CombatPresence {
         : (map.exitPoint.$1 + 0.5, map.exitPoint.$2 + 0.5);
     final fwd = fightForward(fromX: ax, fromY: ay, toX: tx, toY: ty);
     final back = (-fwd.$1, -fwd.$2);
-    const gap = 1.05;
+    const gap = partyBodyGap;
     final lat = wing(slotIndex) * gap;
 
     bool ok(double x, double y) {
       if (!map.isWalkableWorld(x, y)) return false;
       for (final c in claimed) {
-        if (SpatialCombat.distPoint(x, y, c.$1, c.$2) < 0.72) return false;
+        if (SpatialCombat.distPoint(x, y, c.$1, c.$2) < partyBodyGap) {
+          return false;
+        }
       }
       return true;
     }
@@ -1096,6 +1108,18 @@ abstract final class CombatPresence {
     );
     if (line != null) return (x: line.$1, y: line.$2, hold: 0.16);
 
+    final far = SpatialCombat.distPoint(hero.x, hero.y, target.x, target.y) >
+        hero.attackRange;
+    if (far && packAnchor != null && hero.id != packAnchor.id) {
+      final march = idleSlot(
+        hero: hero,
+        anchor: packAnchor,
+        world: world,
+        index: index,
+      );
+      return (x: march.x, y: march.y, hold: 0.35);
+    }
+
     final healer = isHealerRole(hero);
     if (healer && packAnchor != null && packAnchor.id != hero.id) {
       final g = _healerPocket(
@@ -1112,6 +1136,15 @@ abstract final class CombatPresence {
     }
 
     if (!isBackliner(hero)) {
+      if (packAnchor != null && hero.id != packAnchor.id) {
+        final march = idleSlot(
+          hero: hero,
+          anchor: packAnchor,
+          world: world,
+          index: index,
+        );
+        return (x: march.x, y: march.y, hold: 0.2);
+      }
       final fwd = _facingFor(
         world,
         anchor.x,
@@ -1180,7 +1213,8 @@ abstract final class CombatPresence {
             toY: toY,
           );
     var depth = packDepth(hero);
-    var lat = wing(index) * 0.48;
+    final latFull = wing(index) * partyBodyGap;
+    var lat = latFull;
     var p = offsetAlong(
       anchor.x,
       anchor.y,
@@ -1188,15 +1222,15 @@ abstract final class CombatPresence {
       along: -depth,
       lateral: lat,
     );
-    // A corner turns "behind the tank" into another hallway. Step in until
-    // the slot can see the anchor.
+    // A corner turns "behind the tank" into another hallway. Shorten the
+    // file before giving up the side step that keeps weapons apart.
     for (var n = 0; n < 4; n++) {
       if (world.canWalk(p.$1, p.$2) &&
           _clearSight(world, p.$1, p.$2, anchor.x, anchor.y)) {
         break;
       }
-      depth *= 0.55;
-      lat *= 0.55;
+      depth *= 0.72;
+      if (n >= 2) lat = latFull * 0.85;
       p = offsetAlong(
         anchor.x,
         anchor.y,

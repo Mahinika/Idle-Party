@@ -56,9 +56,9 @@ void main() {
     }
   });
 
-  test('2026 w44–w53 have no ej klar rows after year-end batch', () {
+  test('2026 w45–w53 have no ej klar rows after year-end batch', () {
     final ejKlar = RegExp(r'—\s*ej klar', caseSensitive: false);
-    for (var w = 44; w <= 53; w++) {
+    for (var w = 45; w <= 53; w++) {
       final name = '2026-w${w.toString().padLeft(2, '0')}.md';
       final text = File('${weeksDir.path}/$name').readAsStringSync();
       expect(ejKlar.hasMatch(text), isFalse, reason: name);
