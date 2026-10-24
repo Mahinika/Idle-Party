@@ -1,6 +1,6 @@
 # Roadmaps opened for the year-plan template
 
-**Pass:** 2026-10-24. Not 100 yet. This list is only pages opened in this pass.
+**Pass:** 2026-10-24. 72 pages so far. Not 100 yet. This list is only pages opened in this pass.
 The player plan is `YEAR_ROADMAP.md`. The older growth file
 `YEAR_ROADMAP_SOURCES.md` stays the store archive.
 
@@ -52,3 +52,36 @@ and prices.
 | 37 | Star Wars: The Old Republic | https://www.swtor.com/info/news/article/20251219 |
 | 38 | Star Wars: The Old Republic | https://www.swtor.com/info/news/article/20260813 |
 | 39 | Blue Protocol: Star Resonance | https://steamcommunity.com/app/3681810/announcements/ |
+| 40 | Path of Exile | https://www.pathofexile.com/forum/view-thread/4010618 |
+| 41 | Path of Exile 2 | https://www.pathofexile.com/forum/view-thread/3931070 |
+| 42 | Path of Exile 2 | https://www.pathofexile.com/forum/view-thread/3999858 |
+| 43 | Diablo IV | https://news.blizzard.com/en-us/article/24189529/the-age-of-hatred-persists-diablo-iv-2025-roadmap |
+| 44 | Diablo IV | https://news.blizzard.com/en-us/article/24280283/join-our-next-developer-update-livestream |
+| 45 | Diablo IV | https://news.blizzard.com/en-us/article/24297205/diablo-iv-what-s-next-panel-recap |
+| 46 | Diablo IV | https://news.blizzard.com/en-us/article/24301509/diablos-next-era-revealed-at-blizzcon-2026-opening-ceremonies-recap |
+| 47 | Last Epoch | https://forum.lastepoch.com/t/looking-ahead-in-last-epoch/80230 |
+| 48 | Grim Dawn | https://forums.crateentertainment.com/t/grim-misadventure-203-obsidian-lore/159919 |
+| 49 | Chronicon | https://steamcommunity.com/app/375480/announcements/ |
+| 50 | Melvor Idle 2 | https://news.melvoridle.com/melvor-idle-2-development-progress-update-march-2026/ |
+| 51 | Melvor Idle 2 | https://news.melvoridle.com/melvor-idle-2-development-progress-update-june-2026/ |
+| 52 | Melvor Idle 2 | https://news.melvoridle.com/melvor-idle-2-development-progress-update-september-2026/ |
+| 53 | IdleOn | https://steamcommunity.com/app/1476970 |
+| 54 | Magic Research | https://steamcommunity.com/app/2311680/announcements/ |
+| 55 | Vampire Survivors | https://steamcommunity.com/app/1794680/announcements/ |
+| 56 | Halls of Torment | https://steamcommunity.com/app/2218750/allnews/ |
+| 57 | Brotato | https://steamcommunity.com/app/1942280/announcements/ |
+| 58 | Soulstone Survivors | https://steamcommunity.com/app/2066020/allnews/ |
+| 59 | Death Must Die | https://steamcommunity.com/app/2334730/announcements/ |
+| 60 | Hades II | https://www.supergiantgames.com/blog/hades2-early-access-is-here/ |
+| 61 | Hades II | https://www.supergiantgames.com/blog/hades2-olympic-update/ |
+| 62 | Hades II | https://www.supergiantgames.com/blog/2/ |
+| 63 | Honkai: Star Rail | https://www.hoyoverse.com/en-us/news/166390 |
+| 64 | Genshin Impact | https://www.hoyoverse.com/en-us/news/166386 |
+| 65 | Genshin Impact | https://genshin.hoyoverse.com/en/news/ |
+| 66 | Zenless Zone Zero | https://www.hoyoverse.com/en-us/news/166759 |
+| 67 | Zenless Zone Zero | https://zenless.hoyoverse.com/en-us/news/165414 |
+| 68 | Wuthering Waves | https://wutheringwaves.kurogames.com/en/main/news |
+| 69 | Wuthering Waves | https://wutheringwaves.kurogames.com/en/main/news/detail/5571 |
+| 70 | Torchlight: Infinite | https://www.gamespress.com/Torchlight-Infinite-SS14-Launches-Next-Week-Bringing-New-Hero-Trait-Ne |
+| 71 | AFK Journey | https://www.afk.global/afk-journey/patch-notes/1-8-1 |
+| 72 | AFK Arena | https://www.afk.global/afk-arena/news |
