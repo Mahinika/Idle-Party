@@ -90,8 +90,9 @@ abstract final class ChangelogCatalog {
       version: '1.13.4',
       date: 'Oct 24, 2026',
       summary:
-          'Your party fights on its own. Tap ENTER DUNGEON.',
+          'Your party fights on its own. Tap ENTER DUNGEON. The party stands apart, so you can see who is swinging.',
       changed: <String>[
+        'Heroes keep a body of space in the hall and in the fight, so a weapon stays visible.',
         'Ranked GR finish time on the KEY card matches the clear line. Farm Rift names the best drop from this run, or that nothing dropped.',
         'A missed Ranked GR says the seconds over par. A clear says the finish time. Only a faster clear replaces the best time.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',

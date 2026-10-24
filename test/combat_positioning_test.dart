@@ -947,26 +947,53 @@ void main() {
     );
     var world = SpatialCombat.build(entered);
     var state = entered;
-    var sawGap = false;
-    for (var i = 0; i < 40; i++) {
+    var samples = 0;
+    var worst = 99.0;
+    var worstStep = -1;
+    var worstSnap = '';
+    var engaged = false;
+    for (var i = 0; i < 800; i++) {
       final living = [
         for (final h in world.heroes)
           if (h.isAlive && !h.isPet) h,
       ];
       if (living.length >= 3) {
+        final onPack = world.enemies.where((e) => e.isAlive).any(
+          (e) => living.any((h) => _dist(h, e) < 2.2),
+        );
+        if (onPack) {
+          engaged = true;
+          break;
+        }
         var minD = 99.0;
         for (var a = 0; a < living.length; a++) {
           for (var b = a + 1; b < living.length; b++) {
             minD = math.min(minD, _dist(living[a], living[b]));
           }
         }
-        if (minD > CombatPresence.partyBodyGap) sawGap = true;
+        if (minD < worst) {
+          worst = minD;
+          worstStep = i;
+          worstSnap = living
+              .map(
+                (h) =>
+                    '${h.name} ${h.x.toStringAsFixed(2)},${h.y.toStringAsFixed(2)}',
+              )
+              .join(' | ');
+        }
+        samples++;
       }
       final step = SpatialCombat.step(world, state, dt: 0.05);
       world = step.world;
       state = step.state;
     }
-    expect(sawGap, isTrue, reason: 'party stacked at Sandy door');
+    expect(samples, greaterThan(5), reason: 'no approach samples');
+    expect(engaged, isTrue, reason: 'never reached the Sandy pack');
+    expect(
+      worst,
+      greaterThanOrEqualTo(CombatPresence.partyBodyGap - 0.02),
+      reason: 'stacked on the way in ($worst) step $worstStep $worstSnap',
+    );
   });
 
   test('a real floor keeps a gap once the party is on the pack', () {

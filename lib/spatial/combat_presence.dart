@@ -904,6 +904,13 @@ abstract final class CombatPresence {
         loose ??= spot;
       }
     }
+    // A side tile in the wall still leaves a step back in the hall.
+    for (final dist in <double>[partyBodyGap, partyBodyGap * 2]) {
+      final spot = (x + back.$1 * dist, y + back.$2 * dist);
+      if (!world.canWalk(spot.$1, spot.$2)) continue;
+      if (!clearOf(spot.$1, spot.$2)) continue;
+      return spot;
+    }
     return loose ?? (x, y);
   }
 
@@ -999,9 +1006,17 @@ abstract final class CombatPresence {
       if (accept(p.$1, p.$2)) return p;
     }
     if (slot > 0) {
-      for (final scale in const <double>[0.9, 0.8, 0.72]) {
-        for (final depth in depths) {
-          final p = at(depth, lat * scale);
+      // Own wing hit a wall. Step back along the hall, then the other
+      // wing one body deeper so it does not land on the hero already there.
+      final staggered = <double>[
+        fitAlong + partyBodyGap,
+        1.05 + partyBodyGap,
+        fitAlong + partyBodyGap * 2,
+      ];
+      final sides = <double>[0, lat, -lat];
+      for (final depth in staggered) {
+        for (final side in sides) {
+          final p = at(depth, side);
           if (accept(p.$1, p.$2)) return p;
         }
       }
@@ -1046,24 +1061,27 @@ abstract final class CombatPresence {
       return true;
     }
 
-    (double, double) hint(double along, double lateral) => offsetAlong(
-          ax,
-          ay,
-          back,
-          along: along,
-          lateral: lateral,
-        );
+    (double, double) hint(
+      (double, double) dir,
+      double along,
+      double lateral,
+    ) =>
+        offsetAlong(ax, ay, dir, along: along, lateral: lateral);
 
-    const depths = <double>[0.85, 1.05, 1.25, 0.65];
-    for (final depth in depths) {
-      final p = hint(depth, lat);
-      if (ok(p.$1, p.$2)) return p;
-    }
-    if (slotIndex > 0) {
-      for (final scale in const <double>[0.9, 0.8, 0.72]) {
-        for (final depth in depths) {
-          final p = hint(depth, lat * scale);
+    const depths = <double>[partyBodyGap, partyBodyGap * 2, 1.05, 0.85];
+    final sides = <double>[lat];
+    if (lat.abs() > 0.05) sides.add(-lat);
+    // Back from the pack first. The door wall is often that way, so the
+    // same ranks are tried one step into the hall.
+    for (final dir in <(double, double)>[back, fwd]) {
+      for (final depth in depths) {
+        for (final side in sides) {
+          final p = hint(dir, depth, side);
           if (ok(p.$1, p.$2)) return p;
+        }
+        if (lat.abs() > 0.05) {
+          final file = hint(dir, depth, 0);
+          if (ok(file.$1, file.$2)) return file;
         }
       }
     }
@@ -1129,8 +1147,8 @@ abstract final class CombatPresence {
         target: target,
         index: index,
       );
-      if (index <= 0 ||
-          SpatialCombat.distPoint(g.$1, g.$2, anchor.x, anchor.y) >= 0.72) {
+      if (SpatialCombat.distPoint(g.$1, g.$2, anchor.x, anchor.y) >=
+          partyBodyGap - 0.02) {
         return (x: g.$1, y: g.$2, hold: 0.2);
       }
     }
@@ -1212,34 +1230,48 @@ abstract final class CombatPresence {
             toX: toX,
             toY: toY,
           );
-    var depth = packDepth(hero);
+    final depth = math.max(packDepth(hero), partyBodyGap);
     final latFull = wing(index) * partyBodyGap;
-    var lat = latFull;
-    var p = offsetAlong(
-      anchor.x,
-      anchor.y,
-      fwd,
-      along: -depth,
-      lateral: lat,
-    );
-    // A corner turns "behind the tank" into another hallway. Shorten the
-    // file before giving up the side step that keeps weapons apart.
-    for (var n = 0; n < 4; n++) {
-      if (world.canWalk(p.$1, p.$2) &&
-          _clearSight(world, p.$1, p.$2, anchor.x, anchor.y)) {
-        break;
-      }
-      depth *= 0.72;
-      if (n >= 2) lat = latFull * 0.85;
-      p = offsetAlong(
+
+    bool open(double along, double lateral) {
+      final q = offsetAlong(
         anchor.x,
         anchor.y,
         fwd,
-        along: -depth,
-        lateral: lat,
+        along: -along,
+        lateral: lateral,
       );
+      if (!world.canWalk(q.$1, q.$2)) return false;
+      if (!_clearSight(world, q.$1, q.$2, anchor.x, anchor.y)) return false;
+      return SpatialCombat.distPoint(q.$1, q.$2, anchor.x, anchor.y) >=
+          partyBodyGap - 0.02;
     }
-    final g = clampGoal(world, p.$1, p.$2, anchor.x, anchor.y);
+
+    (double, double) at(double along, double lateral) => offsetAlong(
+          anchor.x,
+          anchor.y,
+          fwd,
+          along: -along,
+          lateral: lateral,
+        );
+
+    final wings = <double>[latFull];
+    if (latFull.abs() > 0.05) wings.add(-latFull);
+    final depths = <double>[depth, partyBodyGap * 2, partyBodyGap * 3];
+    for (final along in depths) {
+      for (final lat in wings) {
+        if (!open(along, lat)) continue;
+        final q = at(along, lat);
+        return (x: q.$1, y: q.$2);
+      }
+      // Both wings are walls. Stand in the file, one body behind.
+      if (latFull.abs() > 0.05 && open(along, 0)) {
+        final q = at(along, 0);
+        return (x: q.$1, y: q.$2);
+      }
+    }
+    final file = at(partyBodyGap * 2, 0);
+    final g = clampGoal(world, file.$1, file.$2, anchor.x, anchor.y);
     return (x: g.$1, y: g.$2);
   }
 

@@ -3798,8 +3798,14 @@ abstract final class SpatialCombat {
         );
         final ahead = dx * fwd.$1 + dy * fwd.$2;
         if (ahead > CombatPresence.packLeash(hero)) {
-          tx = packAnchor.x;
-          ty = packAnchor.y;
+          final march = CombatPresence.idleSlot(
+            hero: hero,
+            anchor: packAnchor,
+            world: world,
+            index: i,
+          );
+          tx = march.x;
+          ty = march.y;
           hold = 0.45;
         }
       }
@@ -3816,10 +3822,14 @@ abstract final class SpatialCombat {
         final heroD = actorDist(hero, target);
         final tankD = actorDist(packAnchor, target);
         if (tankD > 2.2 && heroD + 1.45 < tankD) {
-          final ux = (target.x - packAnchor.x) / tankD;
-          final uy = (target.y - packAnchor.y) / tankD;
-          tx = packAnchor.x - ux * 0.85;
-          ty = packAnchor.y - uy * 0.85;
+          final march = CombatPresence.idleSlot(
+            hero: hero,
+            anchor: packAnchor,
+            world: world,
+            index: i,
+          );
+          tx = march.x;
+          ty = march.y;
           hold = 0.4;
         }
       }
@@ -3836,8 +3846,14 @@ abstract final class SpatialCombat {
           packAnchor.y.floor(),
         );
         if (blindToTank || actorDist(hero, packAnchor) > 3.2) {
-          tx = packAnchor.x;
-          ty = packAnchor.y;
+          final march = CombatPresence.idleSlot(
+            hero: hero,
+            anchor: packAnchor,
+            world: world,
+            index: i,
+          );
+          tx = march.x;
+          ty = march.y;
           hold = blindToTank ? 0.4 : 0.75;
         }
       }
@@ -3866,6 +3882,7 @@ abstract final class SpatialCombat {
         holdDistance: hold,
         separateFrom: world.heroes,
       );
+      _keepApproachGap(hero, world);
 
       if (hero.heroRole != null) {
         final partyHero =
@@ -5177,6 +5194,74 @@ abstract final class SpatialCombat {
 
   /// Steering: path around walls, hold preferred range, separate from allies.
   /// Soft inertia + idle jitter so holds don't look robotic.
+  /// A later hero does not finish a step on the body in front. A blocked
+  /// side uses the other direction. A slide that would hide the shot stays
+  /// put, so a pinched corner can still keep its caster in the room.
+  static void _keepApproachGap(SpatialActor hero, SpatialWorld world) {
+    if (!hero.isAlive || hero.isPet) return;
+    SpatialActor? foe;
+    var nearest = double.infinity;
+    for (final e in world.enemies) {
+      if (!e.isAlive) continue;
+      final d = distPoint(hero.x, hero.y, e.x, e.y);
+      if (d < nearest) {
+        nearest = d;
+        foe = e;
+      }
+    }
+    final inFight = nearest <= 2.2;
+    final hadShot = foe != null &&
+        hasClearCorridor(
+          world.map,
+          world.openGateIds,
+          hero.x.floor(),
+          hero.y.floor(),
+          foe.x.floor(),
+          foe.y.floor(),
+          tight: true,
+        );
+    for (final other in world.heroes) {
+      if (identical(other, hero) || !other.isAlive || other.isPet) continue;
+      final mine = hero.partyIndex;
+      final theirs = other.partyIndex;
+      if (mine == null || theirs == null || theirs >= mine) continue;
+      final dx = hero.x - other.x;
+      final dy = hero.y - other.y;
+      final d = math.sqrt(dx * dx + dy * dy);
+      if (d >= CombatPresence.partyBodyGap - 0.02) continue;
+      final need = CombatPresence.partyBodyGap - d;
+      final ux = d < 0.05 ? 1.0 : dx / d;
+      final uy = d < 0.05 ? 0.0 : dy / d;
+      bool slide(double sx, double sy) {
+        final nx = hero.x + sx;
+        final ny = hero.y + sy;
+        if (!world.canWalk(nx, ny)) return false;
+        if (inFight &&
+            hadShot &&
+            foe != null &&
+            !hasClearCorridor(
+              world.map,
+              world.openGateIds,
+              nx.floor(),
+              ny.floor(),
+              foe.x.floor(),
+              foe.y.floor(),
+              tight: true,
+            )) {
+          return false;
+        }
+        hero.x = nx;
+        hero.y = ny;
+        return true;
+      }
+
+      if (slide(ux * need, uy * need)) continue;
+      if (slide(-ux * need, -uy * need)) continue;
+      if (slide(ux * need, 0) || slide(0, uy * need)) continue;
+      slide(-ux * need, 0) || slide(0, -uy * need);
+    }
+  }
+
   static void _steerActor(
     SpatialActor a,
     double tx,
