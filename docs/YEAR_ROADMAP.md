@@ -65,7 +65,7 @@ Kortare. Inga nya namn. En jakt fördjupas först när den förra redan känns s
 
 - **Våren, Gauntlet.** När alla är nivå 100. Mellan bossarna ser du om våningen är trång, en svärm, ett eko eller grindar. Partyt står kvar på rad. Du tar med dig tornets essence.
 - **Sommaren, Ranked GR och Farm Rift.** När alla är nivå 100. I Mothveil ser du klockan under klättringen. I Stormwake ser du den bästa dropen när den faller, inte bara på slutet. En miss säger fortfarande sekunderna över. Loot-varvet har ingen klocka.
-- **Hösten, Ashen Crown.** När alla är nivå 100. En biljett, en grotta du redan kan. Slaget varnar innan det träffar, och varningen täcker inte partyt.
+- **Hösten, Ashen Crown.** När alla är nivå 100. Veckans biljetter, och en grotta du redan kan. En wipe lämnar tillbaka biljetten. Practice är gratis. Slaget varnar innan det träffar, och varningen täcker inte partyt.
 
 En klass som vinner för lätt dras tillbaka under året. Den ska fortfarande kännas som den klassen. Det är ingen egen uppdatering.
 
