@@ -231,7 +231,7 @@ bool dungeonPackInClearView({
   required double packY,
   required double visibleCols,
   required double visibleRows,
-  double cardRows = 14,
+  double cardRows = 12,
   double marginX = 2,
   double topMargin = 5,
 }) {

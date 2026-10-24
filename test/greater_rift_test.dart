@@ -392,6 +392,23 @@ void main() {
     expect(goldOnly.every(LootPipeline.isWalletGoldDrop), isTrue);
   });
 
+  test('Ranked GR hub best time uses the same mm:ss as the clear line', () {
+    var state = _rankedReady();
+    state = GameLogic.enterGreaterRift(state, tier: 1);
+    const clearMs = 45000;
+    state = _guardianDown(state, clearMs: clearMs);
+    LogicNotices.takeMetaPayoffs();
+    final resolved = GameLogic.tryResolveGreaterRift(state)!;
+    final fightLine = LogicNotices.takeMetaPayoffs().join(' ');
+    final formatted = GreaterRift.formatTimer(clearMs);
+    expect(fightLine, contains(formatted));
+    expect(resolved.metaDepth.seasonBestGrClearMs, clearMs);
+    expect(
+      GreaterRift.formatTimer(resolved.metaDepth.seasonBestGrClearMs),
+      formatted,
+    );
+  });
+
   test('a faster Ranked GR clear replaces the best time', () {
     var state = _rankedReady();
     state = state.copyWith(

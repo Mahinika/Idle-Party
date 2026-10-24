@@ -245,6 +245,47 @@ void main() {
     expect(notes.contains('par'), isFalse);
   });
 
+  test('a new Farm Rift run starts with no best drop from the last run', () {
+    var state = _openRift(tier: 1);
+    state = GameLogic.grantLoot(state, [
+      _gearDrop('Iron Helm', LootRarity.rare),
+    ]).state;
+    expect(state.riftBestDrop, 'Iron Helm');
+    state = _finishRift(state);
+    GameLogic.tryResolveRift(state);
+    LogicNotices.takeMetaPayoffs();
+    final again = GameLogic.enterRift(
+      GameLogic.exitToHubHealed(state),
+      tier: 1,
+    );
+    expect(again.riftBestDrop, isEmpty);
+    expect(again.riftBestDropScore, 0);
+  });
+
+  test('a worse Farm Rift drop does not replace the best name', () {
+    var state = _openRift(tier: 1);
+    state = GameLogic.grantLoot(state, [
+      _gearDrop('Iron Helm', LootRarity.rare),
+    ]).state;
+    state = GameLogic.grantLoot(state, [
+      _gearDrop('Cloth Cap', LootRarity.common),
+    ]).state;
+    expect(state.riftBestDrop, 'Iron Helm');
+  });
+
+  test('Farm Rift shortens a very long drop name on the end line', () {
+    var state = _openRift(tier: 1);
+    final longName = 'A' * 40;
+    state = GameLogic.grantLoot(state, [
+      _gearDrop(longName, LootRarity.epic),
+    ]).state;
+    state = _finishRift(state);
+    LogicNotices.takeMetaPayoffs();
+    GameLogic.tryResolveRift(state);
+    final notes = LogicNotices.takeMetaPayoffs().join(' ');
+    expect(notes, contains('${'A' * 27}…'));
+  });
+
   test('an old save without a rift drop name loads empty', () {
     final state = _openRift(tier: 1);
     final json = state.toJson()..remove('riftBestDrop')..remove('riftBestDropScore');

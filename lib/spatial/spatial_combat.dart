@@ -1977,35 +1977,28 @@ abstract final class SpatialCombat {
 
     final heroes = <SpatialActor>[];
     final party = fighting;
+    final entrySpawn = map.spawnPoints.isNotEmpty
+        ? map.spawnPoints.first
+        : map.exitPoint;
+    final entryClaims = <(double, double)>[];
     for (var i = 0; i < party.length; i++) {
       final hero = party[i];
-      final spawn = i < map.spawnPoints.length
-          ? map.spawnPoints[i]
-          : map.spawnPoints[i % map.spawnPoints.length];
       final pattern = _patternForHero(hero, state);
       final ranged = hero.spec.ranged;
       final preferred = hero.spec.preferredRange;
-      // Spread party so up to 5 heroes don't stack on one cell.
-      final ox = switch (i) {
-        0 => 0.0,
-        1 => 0.35,
-        2 => -0.35,
-        3 => 0.15,
-        _ => -0.15,
-      };
-      final oy = switch (i) {
-        0 => 0.0,
-        1 => -0.35,
-        2 => 0.35,
-        3 => 0.45,
-        _ => -0.45,
-      };
+      final pos = CombatPresence.heroEntryPosition(
+        map: map,
+        spawnCell: entrySpawn,
+        slotIndex: i,
+        claimed: entryClaims,
+      );
+      entryClaims.add(pos);
       final actor = SpatialActor(
         id: 'hero_$i',
         name: hero.name,
         team: SpatialTeam.hero,
-        x: spawn.$1 + 0.5 + ox,
-        y: spawn.$2 + 0.5 + oy,
+        x: pos.$1,
+        y: pos.$2,
         hp: hero.currentHp,
         maxHp: state.effectiveHeroMaxHp(hero),
         attack: state.effectiveHeroAttack(hero),
@@ -2361,6 +2354,10 @@ abstract final class SpatialCombat {
   static SpatialWorld syncPartyFromState(SpatialWorld world, GameState state) {
     final heroes = <SpatialActor>[];
     final party = state.combatHeroes;
+    final entrySpawn = world.map.spawnPoints.isNotEmpty
+        ? world.map.spawnPoints.first
+        : world.map.exitPoint;
+    final entryClaims = <(double, double)>[];
     for (var i = 0; i < party.length; i++) {
       final hero = party[i];
       SpatialActor? prev;
@@ -2373,32 +2370,25 @@ abstract final class SpatialCombat {
       final pattern = _patternForHero(hero, state);
       final ranged = hero.spec.ranged;
       final preferred = hero.spec.preferredRange;
-      final spawn = i < world.map.spawnPoints.length
-          ? world.map.spawnPoints[i]
-          : (world.map.spawnPoints.isNotEmpty
-                ? world.map.spawnPoints.first
-                : (1, 1));
-      final ox = switch (i) {
-        0 => 0.0,
-        1 => 0.35,
-        2 => -0.35,
-        3 => 0.15,
-        _ => -0.15,
-      };
-      final oy = switch (i) {
-        0 => 0.0,
-        1 => -0.35,
-        2 => 0.35,
-        3 => 0.45,
-        _ => -0.45,
-      };
+      late final (double, double) xy;
+      if (prev != null) {
+        xy = (prev.x, prev.y);
+      } else {
+        xy = CombatPresence.heroEntryPosition(
+          map: world.map,
+          spawnCell: entrySpawn,
+          slotIndex: i,
+          claimed: entryClaims,
+        );
+        entryClaims.add(xy);
+      }
       final maxHp = state.effectiveHeroMaxHp(hero);
       final actor = SpatialActor(
         id: prev?.id ?? 'hero_$i',
         name: hero.name,
         team: SpatialTeam.hero,
-        x: prev?.x ?? (spawn.$1 + 0.5 + ox),
-        y: prev?.y ?? (spawn.$2 + 0.5 + oy),
+        x: xy.$1,
+        y: xy.$2,
         // Prefer live spatial HP (keeps fortitude surplus), but take state HP
         // when higher so flask / hub heals are not overwritten on sync.
         hp: hero.isAlive

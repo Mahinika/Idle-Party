@@ -11,7 +11,7 @@ enum DungeonZoom {
 
   double get targetCols => switch (this) {
     DungeonZoom.close => 16,
-    DungeonZoom.normal => 20,
+    DungeonZoom.normal => 22,
     DungeonZoom.wide => 24,
   };
 

@@ -56,6 +56,15 @@ void main() {
     }
   });
 
+  test('2026 w44–w53 have no ej klar rows after year-end batch', () {
+    final ejKlar = RegExp(r'—\s*ej klar', caseSensitive: false);
+    for (var w = 44; w <= 53; w++) {
+      final name = '2026-w${w.toString().padLeft(2, '0')}.md';
+      final text = File('${weeksDir.path}/$name').readAsStringSync();
+      expect(ejKlar.hasMatch(text), isFalse, reason: name);
+    }
+  });
+
   test('2026 w47–w53 En mening matches YEAR_ROADMAP generator copy', () {
     for (final entry in w47to53En.entries) {
       final name = '2026-w${entry.key.toString().padLeft(2, '0')}.md';

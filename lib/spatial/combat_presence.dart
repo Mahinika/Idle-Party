@@ -1009,6 +1009,72 @@ abstract final class CombatPresence {
     );
   }
 
+  /// Spread heroes at the dungeon door so three–five bodies are not one tile.
+  static (double, double) heroEntryPosition({
+    required TileMap map,
+    required (int, int) spawnCell,
+    required int slotIndex,
+    required List<(double, double)> claimed,
+  }) {
+    final ax = spawnCell.$1 + 0.5;
+    final ay = spawnCell.$2 + 0.5;
+    final (double tx, double ty) = map.enemySpawns.isNotEmpty
+        ? (map.enemySpawns.first.$1 + 0.5, map.enemySpawns.first.$2 + 0.5)
+        : (map.exitPoint.$1 + 0.5, map.exitPoint.$2 + 0.5);
+    final fwd = fightForward(fromX: ax, fromY: ay, toX: tx, toY: ty);
+    final back = (-fwd.$1, -fwd.$2);
+    const gap = 1.05;
+    final lat = wing(slotIndex) * gap;
+
+    bool ok(double x, double y) {
+      if (!map.isWalkableWorld(x, y)) return false;
+      for (final c in claimed) {
+        if (SpatialCombat.distPoint(x, y, c.$1, c.$2) < 0.72) return false;
+      }
+      return true;
+    }
+
+    (double, double) hint(double along, double lateral) => offsetAlong(
+          ax,
+          ay,
+          back,
+          along: along,
+          lateral: lateral,
+        );
+
+    const depths = <double>[0.85, 1.05, 1.25, 0.65];
+    for (final depth in depths) {
+      final p = hint(depth, lat);
+      if (ok(p.$1, p.$2)) return p;
+    }
+    if (slotIndex > 0) {
+      for (final scale in const <double>[0.9, 0.8, 0.72]) {
+        for (final depth in depths) {
+          final p = hint(depth, lat * scale);
+          if (ok(p.$1, p.$2)) return p;
+        }
+      }
+    }
+
+    final cx = spawnCell.$1;
+    final cy = spawnCell.$2;
+    (double, double)? best;
+    var bestScore = double.infinity;
+    for (var dy = -3; dy <= 3; dy++) {
+      for (var dx = -3; dx <= 3; dx++) {
+        final x = cx + dx + 0.5;
+        final y = cy + dy + 0.5;
+        if (!ok(x, y)) continue;
+        final s = SpatialCombat.distPoint(x, y, ax, ay);
+        if (s < bestScore) {
+          bestScore = s;
+          best = (x, y);
+        }
+      }
+    }
+    return best ?? (ax, ay);
+  }
+
   /// In-fight stand point: one short line across the foe. Ranged and
   /// healers stay inside the fight room on a tile with a clear shot.
   static ({double x, double y, double hold}) heroFightGoal({

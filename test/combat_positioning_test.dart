@@ -909,6 +909,62 @@ void main() {
     ]);
   });
 
+  test('offline mid-fight sim keeps the party spread', () {
+    var state = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 10, 24)),
+      dungeonId: 'sandy',
+    );
+    var world = SpatialCombat.build(state);
+    for (var i = 0; i < 120; i++) {
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+    }
+    final sim = GameLogic.simulateSpatialOffline(state, 90);
+    world = SpatialCombat.build(sim.state);
+    final living = [
+      for (final h in world.heroes)
+        if (h.isAlive && !h.isPet) h,
+    ];
+    expect(living.length, greaterThanOrEqualTo(3));
+    var minD = 99.0;
+    for (var a = 0; a < living.length; a++) {
+      for (var b = a + 1; b < living.length; b++) {
+        minD = math.min(minD, _dist(living[a], living[b]));
+      }
+    }
+    expect(minD, greaterThan(0.72));
+  });
+
+  test('Sandy floor 1 entry keeps heroes apart from the first steps', () {
+    final entered = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 10, 24)),
+      dungeonId: 'sandy',
+    );
+    var world = SpatialCombat.build(entered);
+    var state = entered;
+    var sawGap = false;
+    for (var i = 0; i < 40; i++) {
+      final living = [
+        for (final h in world.heroes)
+          if (h.isAlive && !h.isPet) h,
+      ];
+      if (living.length >= 3) {
+        var minD = 99.0;
+        for (var a = 0; a < living.length; a++) {
+          for (var b = a + 1; b < living.length; b++) {
+            minD = math.min(minD, _dist(living[a], living[b]));
+          }
+        }
+        if (minD > 0.72) sawGap = true;
+      }
+      final step = SpatialCombat.step(world, state, dt: 0.05);
+      world = step.world;
+      state = step.state;
+    }
+    expect(sawGap, isTrue, reason: 'party stacked at Sandy door');
+  });
+
   test('a real floor keeps a gap once the party is on the pack', () {
     for (final cave in const ['sandy', 'goblin']) {
       final started = GameLogic.enterDungeon(
