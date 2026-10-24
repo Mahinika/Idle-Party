@@ -1,134 +1,83 @@
-# Idle Party — 1års roadmap
+# Idle Party — året som kommer
 
-**Uppdaterad:** 2026-10-10
-**Inte ett stående program.** Agenten väljer nästa batch från kollade fakta
-(`.cursor/rules/10-what-to-build.mdc`); den här filen är underlag. Ett mål
-du namnger vinner.
-Källfilen från 9 okt ([YEAR_ROADMAP_SOURCES.md](YEAR_ROADMAP_SOURCES.md))
-är arkiv. Den väljer inte nästa skiva.
+**Senast uppdaterad:** 2026-10-24
 
-Den här planen bygger spelet. En batch är en session (ett sittande):
-partyt i rummet, en jakt, eller Ascend. Visningar, öppningar, betyg och
-inlägg väntar tills du namnger dem.
+Det här är planen för det kommande året. Den kan flytta. Det som faktiskt kom står i Patch Notes. Små fixar och balans mellan uppdateringarna står inte här.
 
-Tre pelare: partyt går i rummet, en daily (dagens jobb) är ett jobb,
-Ascend är en reset.
-Craft Trial stannar på MORE → CRAFT. Aldrig iOS.
-
-Redan i det osläppta **1.12.195**, och därför inte nästa skiva: första
-bossen går att vinna, TODAY säger en grotta imorgon tills första Ascend,
-CLAIM sitter i grottan, Welcome Back säger rätt plats, Ascend visar minst
-hälften till i essence, Gauntlet namnger nästa boss, Ranked GR och Farm
-Rift namnger nästa rank, och efter Gauntlet våning 100 går hubben vidare
-till Ranked GR. I fighten säger Gauntlet nästa boss, Ranked GR klocka
-utan gear, Farm Rift loot utan fail-timer, och Ashen veckans ord.
-En choke säger CHOKE, en skattkammare CHEST, en shrine SHRINE.
-Partyraden i grottan visar varje hjältes namn.
-Första Gauntlet-runnet (ett varv) är våning 1–4: trångt, svärm, eko, grindar.
-Våning 5 är boss. Wipe eller leave går till hubben. Senare våningar
-tar en av de fyra klämmorna, på våning 8, 13 och så vidare.
-Gauntlet väljs som MIGHT, WARD eller GREED innan klättringen.
-Produktion är fortfarande **1.12.194**.
+En rad säger vart du går, vad du gör där, och vad du tar med dig hem. Den säger inte hur spelet är byggt.
 
 ---
 
-## Nu (6–8 veckor)
+## I spelet nu
 
-Tre rubriker. En per släpp om du namnger raden. Slack för analyze sitter
-i alla tre. Ingen fjärde feature.
+Du tar med ett party in i en grotta. De går genom rummet och slåss själva. Du trycker ENTER DUNGEON.
 
-1. **Gauntlet är ett torn** — första runnet (våning 1–5) sitter redan i
-   1.12.195, och en kläm återkommer på våning 8, 13 och så vidare.
-   Alla fyra mellan varje boss är inte den här uppdateringen.
+Vägen går från Sandy Caverns till Mothveil Hollow. Femton grottor.
 
-2. **Ranked GR och Farm Rift är olika runs** — Ranked GR är en klocka
-   i Mothveil, ingen gear mitt i runnet. Farm Rift är Stormwake, loot
-   mitt i, ingen fail-timer. Skivan gör den skillnaden synlig i rummet.
+Det finns ett jobb att komma tillbaka till. Efter första bossen är det dagens valv. När alla i partyt är nivå 100 är det KEY.
 
-3. **Ashen Crown är veckans boss** — en biljett, en redan skeppad grotta
-   den veckan, telegraphen innan smash, PRACTICE efteråt. Inte en ny zon.
+När du Ascend börjar väskan och guldet om. Hjältarna stannar. Blessing är kraften som stannar.
 
-KEY är redan daily-jobbet. Hubbens ordning efter den står kvar:
-Gauntlet till våning 100, sedan Ranked GR, Farm Rift, Ashen Crown.
+När alla är nivå 100 finns fem jakter. De spelas olika.
 
----
+| Jakt | Vad du gör |
+|---|---|
+| KEY | Dagens jobb. En grotta, en svårighet du själv höjer. |
+| Gauntlet | Ett torn. Du väljer MIGHT, WARD eller GREED innan klättringen. En boss var femte våning. |
+| Ranked GR | En klocka i Mothveil. Ingen ny utrustning mitt i varvet. |
+| Farm Rift | Loot i Stormwake. Ingen fail-timer. |
+| Ashen Crown | Veckans boss. En biljett. En grotta du redan kan. |
 
-## Sen (till månad 9)
-
-Teman. Inga låsta feature-namn.
-
-- **Crawlen** — våningen, partyt och gear på kroppen. En synlig bit i
-  taget. En ny zon väntar tills du namnger den.
-- **Kits** — identiteten stannar. Ett kit som ligger HIGH trimmas.
-- **Ascend** — essence stiger redan minst hälften till varje reset.
-  Blessing är den bestående kraften. Ingen ny prestige och ingen ny
-  daglig kalender.
-- **Jakterna i ordning** — KEY är daily-jobbet. Sedan Gauntlet, Ranked GR,
-  Farm Rift, Ashen Crown. Varje jakt fördjupas när den föregående redan
-  känns som sitt eget run.
+Craft Trial ligger under MORE → CRAFT. Det är inte en sjätte jakt.
 
 ---
 
-## Senare (månad 9–12)
+## Tidslinje
 
-Avsikt. Inte löfte.
+| När | Vad du får |
+|---|---|
+| Nu | Femton grottor, ett jobb imorgon, fem jakter på nivå 100. |
+| De närmaste uppdateringarna | Partyt syns, och jakterna är lätta att skilja åt. |
+| Senare i år | Grottan, partyt och jakterna, en synlig bit i taget. |
+| Bara om vi säger det | En ny grotta, en ny klass, eller ett nytt sätt att slåss. |
 
-- Året stänger med fem jakter som spelas olika, och en crawl som
-  fortfarande är värd att titta på.
-- Ny zon, klass, hunt, gacha, whale-paket eller en andra fight-sim bara
-  om du namnger det.
-- Butikstest, inlägg och köpta installs ligger utanför den här planen
-  tills du namnger dem.
-
----
-
-## Om du namnger det
-
-Obokade exempel. Varje rad: vad · varför · var · veto.
-
-1. **Gauntlet-anomaly syns i rummet** — tornkänsla · Gauntlet · UX
-   stoppar en textvägg. Game Director stoppar om fighten bryts.
-2. **Ranked GR-klockan läsbar i fighten** — tiden är jakten · Ranked GR ·
-   UX stoppar om klockan ljuger.
-3. **Farm Rift ger gear mitt i runnet, synligt** — skillnad mot Ranked GR ·
-   Farm Rift · Marketing stoppar text som säger att Ranked GR också ger gear.
-4. **Ashen-veckans telegraph innan smash** — veckans boss · Ashen · EP
-   stoppar om det blir en 16:e grotta.
-5. **En ny zon** — bara om du säger vilken · PATH · EP stoppar om den
-   tränger undan en jakt som fortfarande spelas som en vanlig grotta.
-   Art stoppar främmande dumps.
-6. **En ny klass eller spec** — bara om du säger vilken · kits · Game
-   Director stoppar om DPS blir HIGH.
-7. **God Hand-riktning** — bara om du säger vilken · BLESSING · EP
-   stoppar en andra prestige.
-8. **Ett kit som är HIGH trimmas** — fairness · combat · Game Director
-   äger det. Identiteten stannar.
-9. **Gacha eller whale-paket** — bara om du säger det · SHOP · Marketing
-   stoppar copy som påstår att shopen redan har det.
-10. **En andra fight-sim** — bara om du säger det · combat · Tech stoppar
-    röd analyze.
+Inga datum. Ett datum skrivs först när det är bestämt. Fram till dess står årstid eller "de närmaste uppdateringarna".
 
 ---
 
-## Stoppas
+## De närmaste uppdateringarna
 
-- Nästa batch vald för att lyfta visningar, öppningar, D7 eller betyg
-- Listing-test, köpta installs och fler inlägg, tills du namnger dem
-- Genre-tabeller och “upp till 25 %” som mål
-- En battle-pass-kalender ovanpå Daily Vault
-- En ny zon eller klass som default
-- En Apple-release
-- DPS **HIGH**
-- Främmande sprites, ljud eller dumps
+Tre uppdateringar. En sak var. Inget fjärde löfte.
 
-Engelska i spelet, och Play-uppladdning bara när du ber om den, står kvar
-i produktlåsen.
+1. **Du ser vem som svingar.** Partyt står på en rad i fighten. En klarad våning lämnar en rad text. Ett föremålsnamn försvinner innan det täcker en hjälte.
+2. **Klockan och looten är två olika varv.** Ranked GR säger tiden, och om du missade, hur många sekunder över. Farm Rift säger den bästa dropen, eller att inget föll, och sedan guld och essence i egna meningar.
+3. **Det ryms på telefonen.** Raden, klockan och droppens namn syns bredvid partyt. En grind, en kista och en boss ryms i samma bild som partyt.
 
 ---
 
-## Studio seats
+## Senare i år
 
-EP låser scope: de här 6–8 veckorna är fighten i jakterna, Gauntlet först.
-Game Director ordnar innehåll: KEY är daily-jobbet, sedan Gauntlet, Ranked GR,
-Farm Rift, Ashen Crown. UX / Tech / Art / Marketing veto bara. Du vinner
-när du namnger målet.
+Kortare. Inga nya namn är låsta.
+
+- Grottan, partyt och utrustningen på kroppen blir tydligare, en sak du kan se i taget.
+- En jakt får mer att göra först när den förra redan känns som sitt eget varv. Ordningen är KEY, Gauntlet, Ranked GR, Farm Rift, Ashen Crown.
+- En klass som vinner för lätt dras tillbaka. Den ska fortfarande kännas som den klassen.
+
+---
+
+## Bara om vi säger det
+
+Det här är önskemål, inte planen. De räknas först när vi säger vilken.
+
+- En ny grotta.
+- En ny klass.
+- Ett nytt sätt fighten räknas.
+- Gacha eller stora paket i shopen.
+
+---
+
+## Inte i den här planen
+
+- En iPhone-version.
+- En andra daglig kalender ovanpå valvet.
+- En uppdatering vald för att jaga betyg eller visningar.

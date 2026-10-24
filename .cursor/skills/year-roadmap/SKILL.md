@@ -37,13 +37,13 @@ Reserve slash if the phrase is missed: `/year-roadmap`.
    **pastes** grading rules and hard locks (subagents do not inherit user
    rules or skills). It writes `docs/YEAR_ROADMAP_SOURCES.md` with **100
    unique URLs** (no mirrors: `?hl=`, same PDF on two hosts). Return only
-   counts per grade plus A-claims that can reorder **Nu**. Eight search
+   counts per grade plus A-claims that can reorder **De närmaste uppdateringarna**. Eight search
    axes: retention median, genre-table age, Play listing experiments,
    screenshot policy, first session, idle clocks/prestige, daily chores,
    solo cadence.
 
 3. **Grades**
-   - **A** — may reorder **Nu** (Play Help, GameAnalytics annual, CHI/Frommel,
+   - **A** — may reorder **De närmaste uppdateringarna** (Play Help, GameAnalytics annual, CHI/Frommel,
      Pecorella, studio docs)
    - **B** — examples under *Om du namnger det* only
    - **C** — list so they are not reused (Playio, recycled AppsFlyer 2022,
@@ -52,30 +52,48 @@ Reserve slash if the phrase is missed: `/year-roadmap`.
      never iOS / Apple). Gacha, a second sim, and a god-object quarter are not
      automatic stops.
 
-4. **Rewrite** `docs/YEAR_ROADMAP.md` in Swedish. Game terms stay English
-   (KEY, Gauntlet, Ranked GR, Farm Rift, Ashen Crown). No invented Console %.
+4. **Rewrite** `docs/YEAR_ROADMAP.md` in the plan shape below. Swedish.
+   Game terms stay English (KEY, Gauntlet, Ranked GR, Farm Rift, Ashen Crown).
+   No invented Console %. No fake dates.
 
-5. **Build or hand off** — you may build the first **Nu** slice in this chat
+5. **Build or hand off** — you may build the first headline under **De närmaste uppdateringarna** in this chat
    and follow `10-what-to-build` (checks, local commit, stop rules). Then
    hand off in short Swedish: what came first, what remains as themes, and
    that examples and **Senare** are unbooked.
 
 ## Plan shape
 
-- Date + “not a standing program” + link to `YEAR_ROADMAP_SOURCES.md`
-- **Nu** (6–8 weeks) — 2–3 What’s New one-liners; one headline per release;
-  slack for crash / analyze
-- **Sen** (to month 9) — player problems / themes, no locked feature names
-- **Senare** (months 9–12) — intent only; not a promise
-- **Om du namnger det** — 6–10 A/B examples; each names which chair can stop it
-- **Stoppas** — hard locks, rejected C-advice, vitals if red
+Player language. A person who has never read the code can follow it.
+Headlines are places, activities, and what you bring home. Leave out
+engine, files, seats, and veto. Game button names stay English
+(KEY, Gauntlet, Ranked GR, Farm Rift, Ashen Crown). The file stays Swedish.
+
+The first headline under **De närmaste uppdateringarna** is the slice to
+build. That heading replaces the old **Nu**.
+
+- **Senast uppdaterad** and three sentences: this can move, Patch Notes are
+  what shipped, small fixes are not rows.
+- **I spelet nu** — what a player can do today. One plain sentence each for
+  the walk, the caves, the one job tomorrow, Ascend, and the five hunts.
+- **Tidslinje** — a table of when and what you get. No date until one is
+  real. Use "de närmaste uppdateringarna" or a season until then.
+- **De närmaste uppdateringarna** — two or three updates. One headline each,
+  the kind of sentence a new player understands. Under it: where you go,
+  what you do, what you bring home, what is easier to see.
+- **Senare i år** — shorter. No locked new names.
+- **Bara om vi säger det** — wishes, separate so they are not the plan.
+  A new cave, class, fight sim, or gacha waits here until the owner names it.
+- **Inte i den här planen** — the hard locks in player words.
+
+Do not invent a cave, class, or date. Do not lead with a tool or a hire.
+A roadmap that only says the studio is busy reads as empty.
 
 ## Studio seats (one decision)
 
 EP locks scope. Game Director orders content (visible holes first, then
 KEY → Gauntlet → Farm Rift → Ranked GR → Ashen). UX / Tech / Art / Marketing
 veto only. Craft Trial stays MORE → CRAFT. A new zone / class / hunt may go in
-**Nu** when the owner names it, or when an A source and a hole in this game
+**De närmaste uppdateringarna** when the owner names it, or when an A source and a hole in this game
 agree.
 
 ## Gotchas

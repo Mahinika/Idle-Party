@@ -51,8 +51,9 @@ notes and an article disagree, follow this game.
 
 **Week plan (owner 2026-10-14):** a weekly plan uses this same table. What
 worked for other games and developers may become a **Nytt** row when the
-source was opened, graded, and fitted to this game. **Nu** is not the only
-place a new idea may come from.
+source was opened, graded, and fitted to this game. **De närmaste
+uppdateringarna** in the year plan is not the only place a new idea may
+come from.
 
 Rebuild the 100-source year file only when the direction of the next months
 is the decision. Otherwise use the sources on disk and open a few A pages
@@ -61,8 +62,8 @@ if they do not cover the hole.
 **No hole left:** when the active week has no such row, no play note is
 open, and every hole the Play paste shows is already fixed in code, the
 direction is the decision. Rewrite the year plan with
-`.cursor/skills/year-roadmap`, then build its first **Nu** slice in the
-same chat.
+`.cursor/skills/year-roadmap`, then build the first headline under
+**De närmaste uppdateringarna** in the same chat.
 
 **Old numbers:** when the newest Play paste in `docs/PLAY_GROWTH.md` is
 older than 14 days, ask the owner once for a new paste before the pick. Keep
