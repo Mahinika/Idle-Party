@@ -3,7 +3,11 @@
 
 from __future__ import annotations
 
+import argparse
+import re
 from pathlib import Path
+
+from year_week_party_rows import PARTY_BUILDERS
 
 ROOT = Path(__file__).resolve().parents[1]
 WEEKS_DIR = ROOT / "docs" / "weeks"
@@ -272,44 +276,10 @@ def ashen_rows(phase: str) -> list[Row]:
 
 
 def party_rows(kind: str) -> list[Row]:
-    a = "A56 visar det."
-    builders: dict[str, list[Row]] = {
-        "five": [
-            ("Fix", "Femte plats köpt: fem kroppar på rad.", "Fem.", "Slot 5.", "Alla isär.", a),
-            ("Fix", "Yttre slot landar inte på hjälte 0.", "Line.", "Sök längs rad.", "0 fri.", a),
-            ("Content", "Parvis avstånd > 0,72 på riktig våning.", "Test+telefon.", "Mäts.", "Test grönt.", a),
-            ("Content", "keepApart håller ≥1,05 mellan kroppar.", "Sprites.", "Avstånd.", "Vapen fri.", a),
-        ],
-        "weapons": [
-            ("Fix", "Krigarens svärd syns fritt.", "Vapen.", "Svärd.", "Sköld.", a),
-            ("Fix", "Magikerns stav syns fritt.", "Caster.", "Stav.", "Skott.", a),
-            ("Fix", "Healerns fokus syns fritt.", "Healer.", "Ikoner.", "Rad.", a),
-        ],
-        "gate": [
-            ("Content", "Grind + rad + nästa pack i bild.", "Grind.", "Hel.", "Pack.", a),
-            ("Content", "Kistvåning: kista + rad.", "Chest.", "Kista.", "Rad bredvid.", a),
-            ("Content", "Sandy boss + rad i bild.", "Boss.", "Earth Kraken.", "Rad.", a),
-        ],
-        "wipe": [
-            ("Content", "Wipe 3s nedrättning syns.", "Wipe.", "3s.", "Farm floor.", a),
-            ("Content", "Efter nedrättning: rad mot farm-pack.", "Farm.", "Rad.", "Pack.", a),
-        ],
-        "reopen": [
-            ("Content", "Mid-fight reopen visar rad direkt.", "Offline.", "Rad.", "Inte hög.", a),
-        ],
-        "ascend": [
-            ("Content", "Efter Ascend: v1 med tom bag och rad.", "Ascend.", "Rad.", "Tom bag.", a),
-        ],
-        "grcard": [
-            ("Content", "Hub GR-kort visar månad + tid.", "Season.", "Månad.", "mm:ss.", a),
-            ("Content", "Fight och kort samma tid.", "Match.", "Samma ms.", a, "Test grönt."),
-        ],
-    }
-    rows = list(builders.get(kind, []))
-    while len(rows) < 25:
-        n = len(rows) + 1
-        rows.append(("Content", f"Partyrad detalj {n}.", "Rad.", "Syns.", a, "Test grönt."))
-    return pad(rows)
+    rows = list(PARTY_BUILDERS[kind])
+    if len(rows) != 25:
+        raise ValueError(f"party_rows({kind!r}) must be 25 rows, got {len(rows)}")
+    return rows
 
 
 def close_rows() -> list[Row]:
@@ -453,15 +423,34 @@ def render_week(y: int, w: int, dates: str, headline: str, en: str) -> str:
 """
 
 
+def _assert_no_detalj(text: str, fname: str) -> None:
+    if re.search(r"detalj\s+\d+", text, re.I):
+        raise SystemExit(f"{fname} still contains detalj padding")
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--year", type=int, default=0)
+    parser.add_argument("--from-week", type=int, default=0)
+    parser.add_argument("--to-week", type=int, default=0)
+    args = parser.parse_args()
     written = skipped = 0
     for y, w, dates, headline, en in ROADMAP:
+        if args.year and y != args.year:
+            continue
+        if args.from_week and w < args.from_week:
+            continue
+        if args.to_week and w > args.to_week:
+            continue
         fname = f"{y}-w{w:02d}.md"
         path = WEEKS_DIR / fname
         if fname in SKIP and path.exists():
             skipped += 1
             continue
-        path.write_text(render_week(y, w, dates, headline, en), encoding="utf-8")
+        body = render_week(y, w, dates, headline, en)
+        if y == 2026 and 47 <= w <= 53:
+            _assert_no_detalj(body, fname)
+        path.write_text(body, encoding="utf-8")
         written += 1
     print(f"written={written} skipped={skipped}")
 
