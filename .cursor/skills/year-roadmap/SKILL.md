@@ -78,8 +78,10 @@ build. That heading replaces the old **Nu**.
 - **Tidslinje** — a table of when and what you get. No date until one is
   real. Use "de närmaste uppdateringarna" or a season until then.
 - **De närmaste uppdateringarna** — two or three updates. One headline each,
-  the kind of sentence a new player understands. Under it: where you go,
-  what you do, what you bring home, what is easier to see.
+  the kind of sentence a new player understands. Under it: who it is for
+  (everyone, or only when the party is level 100), where you go, what you
+  do, what you bring home, what is easier to see. Say the prize in words
+  (time, a drop, gold, essence). Leave out drop rates and prices.
 - **Senare i år** — shorter. No locked new names.
 - **Bara om vi säger det** — wishes, separate so they are not the plan.
   A new cave, class, fight sim, or gacha waits here until the owner names it.

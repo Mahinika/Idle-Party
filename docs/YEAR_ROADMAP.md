@@ -49,9 +49,9 @@ Inga datum. Ett datum skrivs först när det är bestämt. Fram till dess står 
 
 Tre uppdateringar. En sak var. Inget fjärde löfte.
 
-1. **Du ser vem som svingar.** Partyt står på en rad i fighten. En klarad våning lämnar en rad text. Ett föremålsnamn försvinner innan det täcker en hjälte.
-2. **Klockan och looten är två olika varv.** Ranked GR säger tiden, och om du missade, hur många sekunder över. Farm Rift säger den bästa dropen, eller att inget föll, och sedan guld och essence i egna meningar.
-3. **Det ryms på telefonen.** Raden, klockan och droppens namn syns bredvid partyt. En grind, en kista och en boss ryms i samma bild som partyt.
+1. **Du ser vem som svingar.** För alla, från första grottan. Partyt står på en rad i fighten. En klarad våning lämnar en rad text. Ett föremålsnamn försvinner innan det täcker en hjälte.
+2. **Klockan och looten är två olika varv.** När alla är nivå 100. Ranked GR säger tiden, och om du missade, hur många sekunder över. Farm Rift säger den bästa dropen, eller att inget föll, och sedan guld och essence i egna meningar.
+3. **Det ryms på telefonen.** För alla. Raden, klockan och droppens namn syns bredvid partyt. En grind, en kista och en boss ryms i samma bild som partyt.
 
 ---
 
