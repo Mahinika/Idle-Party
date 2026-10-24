@@ -81,7 +81,7 @@ Read these. Do not rebuild the 100-source year file. Do not run the year-roadmap
 2. Previous week file, if it exists: **Inte den här veckan**.
 3. Newest release in `lib/core/changelog.dart`. Do not list a change the live Play build already has. Changes in an unsent build still go on the list.
 4. Operator status in `docs/PLAY_STORE.md`: which build is live, and which is in review. Do not invent Console numbers. If the Play API track read disagrees, trust the track and say the doc is behind.
-5. **De närmaste uppdateringarna** and **Senare i år** in `docs/YEAR_ROADMAP.md`, the three pillars in `docs/GROWTH_MANDATE.md`, and graded rows in `docs/YEAR_ROADMAP_SOURCES.md`. Open a few pages when the file does not cover the hole. Put each **Nytt** source under **Källor** with grade, title, and URL.
+5. The next week row in the 52-week table in `docs/YEAR_ROADMAP.md`, the three pillars in `docs/GROWTH_MANDATE.md`, and graded rows in `docs/YEAR_ROADMAP_SOURCES.md`. Open a few pages when the file does not cover the hole. Put each **Nytt** source under **Källor** with grade, title, and URL.
 6. Play reviews through the Play API (`play-store-prep` reference, § Play API). The API returns about the last week only. Read only. Reply only when the owner names that review.
 7. Discord #bugs through the Discord tools (`user-omnicord`, read messages). Read only. Never post, reply, or react here.
 
