@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/greater_rift.dart';
@@ -13,6 +15,7 @@ import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/models/stats.dart';
 import 'package:idle_party/spatial/spatial_combat.dart';
+import 'package:idle_party/ui/meta/greater_rift_hub_panel.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 24);
@@ -465,6 +468,36 @@ void main() {
     final notes = LogicNotices.takeMetaPayoffs().join(' ');
     expect(notes, contains('ended'));
     expect(notes.contains('wipe'), isFalse);
+  });
+
+  testWidgets('Ranked GR card fits phone width and names the month', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 780));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final ready = _rankedReady();
+    final state = ready.copyWith(
+      metaDepth: ready.metaDepth.copyWith(
+        leaderboardSeasonKey: '2026-10',
+        seasonBestGrTier: 1,
+        seasonBestGrClearMs: 45000,
+      ),
+    );
+    final director = GameDirector.preview(initialState: state);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: GreaterRiftHubPanel(director: director),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.textContaining('Best GR1'), findsOneWidget);
+    expect(find.textContaining('2026-10'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
 
