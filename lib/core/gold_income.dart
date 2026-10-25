@@ -166,7 +166,7 @@ abstract final class GoldIncome {
       bits.add('Ad ×${AdBoost.goldMul} gold');
     }
     if (AdBoost.atkActive(state.metaDepth)) {
-      bits.add('Ad +${AdBoost.attackPercent}% ATK');
+      bits.add('Ad +${AdBoost.attackPercent}% AP');
     }
     if (bits.isEmpty) return 'Gold +0%';
     return bits.join(' · ');

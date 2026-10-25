@@ -34,7 +34,7 @@ class PrestigeShopOverlay extends StatelessWidget {
       'filter_span' =>
         'Auto-sell / auto-scrap iLvl ${GameLogic.maxAutoSellIlvlCap(state)}',
       'offline_ledger' => 'Welcome Back ${3 + md.offlineHighlightBonus} rows',
-      'legacy_spark' => 'Legacy ATK +${md.legacyPoints}',
+      'legacy_spark' => 'Legacy AP +${md.legacyPoints}',
       'daily_essence' => md.dailyEssenceBonusLevel <= 0
           ? 'Dawn Tithe Lv0 · +0e until first buy (+${GameLogic.dawnTitheEssencePerLevel}e next)'
           : 'Dawn Tithe Lv${md.dailyEssenceBonusLevel} · '

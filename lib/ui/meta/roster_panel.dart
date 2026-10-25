@@ -46,7 +46,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
         if (!hasTank || !hasHeal) ...[
           const SizedBox(height: 6),
           Text(
-            [if (!hasTank) 'No Shield', if (!hasHeal) 'No Healer'].join(' · '),
+            [if (!hasTank) 'No Tank', if (!hasHeal) 'No Healer'].join(' · '),
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.torchHot),
           ),

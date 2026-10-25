@@ -111,8 +111,8 @@ abstract final class StoryLore {
     int emberGain = 0,
   }) {
     final bless =
-        'Blessing: +${GameLogic.ascendBlessingAtk} ATK · '
-        '+${GameLogic.ascendBlessingDef} DEF · '
+        'Blessing: +${GameLogic.ascendBlessingAtk} AP · '
+        '+${GameLogic.ascendBlessingDef} Armor · '
         '+${GameLogic.ascendBlessingVit} STA · '
         '+${GameLogic.ascendBlessingGoldPct}% gold, forever'
         '${blessingsAfter > 1 ? ' (now ×$blessingsAfter)' : ''}.';

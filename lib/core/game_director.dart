@@ -901,8 +901,8 @@ class GameDirector extends ChangeNotifier {
   }
 
   static String _forgeTrackShort(PartyUpgradeType type) => switch (type) {
-    PartyUpgradeType.attack => 'ATK',
-    PartyUpgradeType.defense => 'DEF',
+    PartyUpgradeType.attack => 'AP',
+    PartyUpgradeType.defense => 'Armor',
     PartyUpgradeType.vitality => 'STA',
     PartyUpgradeType.moveSpeed => 'MOVE',
     PartyUpgradeType.attackSpeed => 'HASTE',

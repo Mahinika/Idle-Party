@@ -335,7 +335,7 @@ class PartyHero {
 
   String get roleLabel => spec.shortLabel;
 
-  /// Shield / Healer / Damage before RPG abbreviations unlock.
+  /// Tank / Healer / DPS before RPG abbreviations unlock.
   String displayRoleLabel({required bool plainEnglish}) {
     if (!plainEnglish) return roleLabel;
     return spec.roleTag.plainLabel;

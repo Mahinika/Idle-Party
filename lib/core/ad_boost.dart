@@ -185,7 +185,7 @@ abstract final class AdBoost {
     final restPerm = hasPerm(md, permRest);
     final exp = md.adOfflineMulExpiresMs;
     return [
-      timed(AdBuffId.atk, md.adAtkUntilMs, 'ATK', permAtk),
+      timed(AdBuffId.atk, md.adAtkUntilMs, 'AP', permAtk),
       timed(AdBuffId.gold, md.adGoldUntilMs, 'GOLD', permGold),
       timed(AdBuffId.xp, md.adXpUntilMs, 'XP', permXp),
       timed(AdBuffId.move, md.adMoveUntilMs, 'MOVE', permMove),

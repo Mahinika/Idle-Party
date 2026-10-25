@@ -96,8 +96,8 @@ class _EquipHeroChip extends StatelessWidget {
                 )
               else ...[
                 Text(
-                  'ATK${GameLogic.formatDelta(cmp.atkDelta)} '
-                  'DEF${GameLogic.formatDelta(cmp.defDelta)} '
+                  'AP${GameLogic.formatDelta(cmp.atkDelta)} '
+                  'Armor${GameLogic.formatDelta(cmp.defDelta)} '
                   'STA${GameLogic.formatDelta(cmp.vitDelta)}',
                   style: GameTheme.body(size: 11, color: deltaColor),
                 ),

@@ -55,7 +55,7 @@ class FirstSessionTips extends StatelessWidget {
     (
       id: 'kit_abilities',
       title: 'Abilities',
-      body: 'Tap a hero — kit chips open beside the strip.',
+      body: 'Tap a hero — abilities open beside the strip.',
     ),
     (
       id: 'bag',

@@ -74,10 +74,10 @@ abstract final class BlessingConstellation {
       state.metaDepth.constellationNodes.contains(id);
 
   static String effectLabel(String id) => switch (id) {
-        'off_atk' => '+3% ATK',
+        'off_atk' => '+3% AP',
         'off_crit' => '+2 crit',
-        'off_boss' => '+4% boss ATK',
-        'def_armor' => '+12 DEF',
+        'off_boss' => '+4% boss AP',
+        'def_armor' => '+12 Armor',
         'def_sta' => '+40 STA',
         'def_block' => '+5% block',
         'for_gold' => '+3% gold',

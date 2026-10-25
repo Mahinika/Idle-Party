@@ -187,9 +187,9 @@ void main() {
     expect(find.text('CLASS'), findsOneWidget);
     expect(find.text('RACE'), findsOneWidget);
     expect(find.text('SET'), findsOneWidget);
-    expect(find.text('Shield'), findsWidgets);
+    expect(find.text('Tank'), findsWidgets);
     expect(find.text('Healer'), findsWidgets);
-    expect(find.text('Damage'), findsWidgets);
+    expect(find.text('DPS'), findsWidgets);
     expect(find.text('Party name'), findsOneWidget);
     expect(find.text('The Ember Guard'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
@@ -377,7 +377,9 @@ void main() {
     await tester.pump();
     expect(find.textContaining('Race for PROT'), findsOneWidget);
     expect(
-      find.text('Look only. Class is the kit. Race locks after START.'),
+      find.text(
+        'Look only. Specialization sets the abilities. Race locks after START.',
+      ),
       findsOneWidget,
     );
 
@@ -461,7 +463,10 @@ void main() {
       await tester.pump();
 
       expect(find.textContaining('already picked'), findsOneWidget);
-      expect(find.textContaining('Pick a job for 2 slots'), findsOneWidget);
+      expect(
+        find.textContaining('Pick a specialization for 2 slots'),
+        findsOneWidget,
+      );
       final startButton = tester.widget<GameButton>(
         find.widgetWithText(GameButton, 'START'),
       );

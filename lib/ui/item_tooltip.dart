@@ -399,15 +399,15 @@ class ItemTooltipCard extends StatelessWidget {
                       children: [
                         Text(
                           isUpgrade
-                              ? 'UPGRADE  ATK ${GameLogic.formatDelta(atkDelta)}  DEF ${GameLogic.formatDelta(defDelta)}  STA ${GameLogic.formatDelta(vitDelta)}'
+                              ? 'UPGRADE  AP ${GameLogic.formatDelta(atkDelta)}  Armor ${GameLogic.formatDelta(defDelta)}  STA ${GameLogic.formatDelta(vitDelta)}'
                               : (powerDelta > 0
                                     ? (statsUpgrade
-                                          ? 'ATK ${GameLogic.formatDelta(atkDelta)} · EQUIP keeps another'
+                                          ? 'AP ${GameLogic.formatDelta(atkDelta)} · EQUIP keeps another'
                                           : (worn == null
-                                                ? 'ATK ${GameLogic.formatDelta(atkDelta)} · too weak to fill'
-                                                : 'ATK ${GameLogic.formatDelta(atkDelta)} · not enough to swap'))
+                                                ? 'AP ${GameLogic.formatDelta(atkDelta)} · too weak to fill'
+                                                : 'AP ${GameLogic.formatDelta(atkDelta)} · not enough to swap'))
                                     : (powerDelta < 0
-                                          ? 'WEAKER  ATK ${GameLogic.formatDelta(atkDelta)}  DEF ${GameLogic.formatDelta(defDelta)}  STA ${GameLogic.formatDelta(vitDelta)}'
+                                          ? 'WEAKER  AP ${GameLogic.formatDelta(atkDelta)}  Armor ${GameLogic.formatDelta(defDelta)}  STA ${GameLogic.formatDelta(vitDelta)}'
                                           : 'SAME FIGHT STATS')),
                           textAlign: TextAlign.center,
                           style: GameTheme.body(
@@ -514,7 +514,7 @@ class ItemTooltipCard extends StatelessWidget {
       ProjectilePattern.pierce => 'Pierce (through)',
     };
     if (item.attackBonus > 0) {
-      return 'Attack +${item.attackBonus} · $pattern';
+      return 'Attack Power +${item.attackBonus} · $pattern';
     }
     return 'Pattern: $pattern';
   }
@@ -565,7 +565,7 @@ class ItemTooltipCard extends StatelessWidget {
       primary: true,
     );
     add(
-      'Attack',
+      'Attack Power',
       item.attackBonus,
       worn?.attackBonus ?? 0,
       primary: true,

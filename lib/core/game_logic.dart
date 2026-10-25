@@ -713,9 +713,9 @@ class GameLogic {
     final total = soft + prestBonus;
     final unit = switch (track) {
       'gold' => '% gold find (hub + combat)',
-      'power' => ' ATK',
+      'power' => ' AP',
       'vitality' => ' STA',
-      'defense' => ' DEF',
+      'defense' => ' Armor',
       'xp' => '% XP find',
       _ => '',
     };

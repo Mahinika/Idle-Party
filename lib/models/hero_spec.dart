@@ -22,11 +22,11 @@ enum SpecRoleTag { tank, healer, meleeDps, rangedDps, caster }
 /// Plain English job words for players who never played an RPG.
 extension SpecRoleTagPlain on SpecRoleTag {
   String get plainLabel => switch (this) {
-    SpecRoleTag.tank => 'Shield',
+    SpecRoleTag.tank => 'Tank',
     SpecRoleTag.healer => 'Healer',
-    SpecRoleTag.meleeDps => 'Damage',
-    SpecRoleTag.rangedDps => 'Damage',
-    SpecRoleTag.caster => 'Damage',
+    SpecRoleTag.meleeDps => 'DPS',
+    SpecRoleTag.rangedDps => 'DPS',
+    SpecRoleTag.caster => 'DPS',
   };
 
   String get plainJob => switch (this) {

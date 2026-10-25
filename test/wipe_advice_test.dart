@@ -200,12 +200,12 @@ void main() {
     );
     expect(
       WipeAdvice.lineFor(state: state, fight: melt),
-      'Upgrade DEF in GOLD',
+      'Upgrade Armor in GOLD',
     );
     state = GameLogic.notePartyWipe(state, atkLack());
     expect(state.wipeAdviceLine, '');
     state = GameLogic.notePartyWipe(state, atkLack());
-    expect(state.wipeAdviceLine, 'Upgrade ATK in GOLD');
+    expect(state.wipeAdviceLine, 'Upgrade AP in GOLD');
   });
 
   test('a different floor restarts the streak', () {
@@ -348,10 +348,10 @@ void main() {
       WipeAdvice.hubHintFor('Equip the better item in BAG'),
       contains('BAG'),
     );
-    expect(WipeAdvice.hubCtaLabelFor('Upgrade ATK in GOLD'), 'OPEN GOLD');
-    expect(WipeAdvice.hubNavFor('Upgrade ATK in GOLD')?.route, MenuRoute.gold);
+    expect(WipeAdvice.hubCtaLabelFor('Upgrade AP in GOLD'), 'OPEN GOLD');
+    expect(WipeAdvice.hubNavFor('Upgrade AP in GOLD')?.route, MenuRoute.gold);
     expect(
-      WipeAdvice.hubHintFor('Upgrade ATK in GOLD'),
+      WipeAdvice.hubHintFor('Upgrade AP in GOLD'),
       contains('GOLD tracks'),
     );
     expect(
@@ -439,8 +439,8 @@ void main() {
 
   test('every menu wipe line has a button that opens that menu', () {
     const lines = <String>[
-      'Upgrade ATK in GOLD',
-      'Upgrade DEF in GOLD',
+      'Upgrade AP in GOLD',
+      'Upgrade Armor in GOLD',
       'Upgrade STA in GOLD',
       'Equip the better item in BAG',
       'Equip better gear in BAG',

@@ -300,7 +300,7 @@ class MenuRouter extends ChangeNotifier {
 
       GearPanel.merge => 'Combine same-slot junk',
 
-      GearPanel.roster => 'Meet and swap kits',
+      GearPanel.roster => 'Meet and swap specializations',
 
     },
 

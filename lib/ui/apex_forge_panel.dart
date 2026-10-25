@@ -350,7 +350,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     ];
     if (heroes.isEmpty) {
       return Text(
-        'No active heroes for craft. Open OTHER CLASS below.',
+        'No active heroes for craft. Open Other classes below.',
         style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
       );
     }
@@ -567,7 +567,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
 
   Widget _changeGoalSection(List<SpecRoleTag> roles) {
     return MenuChrome.fold(
-      title: 'OTHER CLASS',
+      title: 'Other classes',
       subtitle:
           '${HeroSpecs.classLabel(_apexClass)} · ${_roleLabel(_apexRole)}',
       children: [

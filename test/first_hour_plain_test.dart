@@ -28,13 +28,13 @@ import 'package:idle_party/ui/spatial_dungeon_view.dart';
 void main() {
   final now = DateTime.utc(2026, 8, 8, 12);
 
-  test('starter jobs use Shield / Healer / Damage, not tank jargon', () {
-    expect(HeroSpecs.def(HeroSpecId.protection).plainRoleLine, contains('Shield'));
+  test('starter roles use Tank / Healer / DPS like WoW', () {
+    expect(HeroSpecs.def(HeroSpecId.protection).plainRoleLine, contains('Tank'));
     expect(HeroSpecs.def(HeroSpecId.discipline).plainRoleLine, contains('Healer'));
-    expect(HeroSpecs.def(HeroSpecId.fire).plainRoleLine, contains('Damage'));
-    expect(SpecRoleTag.tank.plainLabel, 'Shield');
+    expect(HeroSpecs.def(HeroSpecId.fire).plainRoleLine, contains('DPS'));
+    expect(SpecRoleTag.tank.plainLabel, 'Tank');
     expect(SpecRoleTag.healer.plainLabel, 'Healer');
-    expect(SpecRoleTag.meleeDps.plainLabel, 'Damage');
+    expect(SpecRoleTag.meleeDps.plainLabel, 'DPS');
   });
 
   test('intro sells offline party progress, not another game', () {
@@ -95,9 +95,9 @@ void main() {
     final state = GameLogic.createInitialState(now: now);
     final basics = GameGuides.topicsFor(state).firstWhere((t) => t.id == 'basics');
     expect(basics.body.toUpperCase(), isNot(contains('WOTLK')));
-    expect(basics.body.toLowerCase(), contains('shield'));
+    expect(basics.body.toLowerCase(), contains('tank'));
     expect(basics.body.toLowerCase(), contains('healer'));
-    expect(basics.body.toLowerCase(), contains('damage'));
+    expect(basics.body.toLowerCase(), contains('dps'));
     expect(basics.body.toLowerCase(), contains('enter dungeon'));
     expect(basics.body.toLowerCase(), contains('long-press the fight'));
     expect(basics.body.toUpperCase(), isNot(contains('FORGE')));
@@ -108,9 +108,9 @@ void main() {
 
     final party = GameGuides.topicsFor(state).firstWhere((t) => t.id == 'party');
     expect(party.body.toUpperCase(), isNot(contains('WOTLK')));
-    expect(party.body.toLowerCase(), contains('shield'));
+    expect(party.body.toLowerCase(), contains('tank'));
     expect(party.body.toLowerCase(), contains('healer'));
-    expect(party.body.toLowerCase(), contains('damage'));
+    expect(party.body.toLowerCase(), contains('dps'));
     expect(party.body.toUpperCase(), isNot(contains('ROSTER')));
   });
 

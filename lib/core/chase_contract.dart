@@ -62,7 +62,7 @@ class ChaseContract {
       HubChaseKind.claimMissions => 'Why: quests ready on MORE · QUESTS.',
       HubChaseKind.monthGoal => 'Why: month pass ready.',
       HubChaseKind.weekGoal => 'Why: week goal ready.',
-      HubChaseKind.meetHero => 'Why: new kit on ROSTER.',
+      HubChaseKind.meetHero => 'Why: new specialization on ROSTER.',
       HubChaseKind.equipBag => 'Why: stronger gear in BAG.',
       HubChaseKind.marketUpgrade => 'Why: affordable MARKET upgrade.',
       HubChaseKind.ascend => 'Why: Ascend ready — Blessing stacks.',

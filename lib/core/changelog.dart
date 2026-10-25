@@ -92,7 +92,7 @@ abstract final class ChangelogCatalog {
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. Race is the hero\'s look. Music stays on in the hub and in a cave.',
       changed: <String>[
-        'On New Game, RACE says the choice is look only. Class is the kit.',
+        'On New Game, RACE says look only. Specialization sets the abilities.',
         'Race still locks after New Game START.',
         'Music stays on in the hub and in a cave. The next song starts when one ends. It rises for a boss and marks a cleared floor.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',

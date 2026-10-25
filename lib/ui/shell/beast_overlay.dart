@@ -88,7 +88,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
   static String _passiveLabel(Pet pet) {
     if (pet.passive == PetPassive.attack) return '';
     final name = switch (pet.passive) {
-      PetPassive.attack => 'ATK',
+      PetPassive.attack => 'AP',
       PetPassive.goldFind => 'GOLD',
       PetPassive.lootFind => 'LOOT',
       PetPassive.xpFind => 'XP',
@@ -147,7 +147,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
           Text(
             'SET ACTIVE is the pet that fights.\n'
             'FAVORITE boosts that species while it is ACTIVE.\n'
-            'Affinity +25% in its cave. Bond +1 ATK every 5 ranks.',
+            'Affinity +25% in its cave. Bond +1 AP every 5 ranks.',
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
@@ -244,7 +244,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                                   ),
                                   Text(
                                     '${pet.hasNickname ? '${pet.speciesName}  ' : ''}'
-                                    'Lv${pet.level}  ATK +${pet.totalAttackBonus}'
+                                    'Lv${pet.level}  AP +${pet.totalAttackBonus}'
                                     '${passive.isEmpty ? '' : '  $passive'}'
                                     '  · ${_affinityLabel(pet.affinityDungeonId)} +25%'
                                     '${pet.bondLevel > 0 ? '  bond${pet.bondLevel}' : ''}',
@@ -318,7 +318,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                           child: GameButton(
                             label: pet.level >= GameLogic.maxPetLevel
                                 ? 'LEVEL MAX'
-                                : 'LEVEL ${GameLogic.petLevelUpCost(pet)}e · +1 ATK',
+                                : 'LEVEL ${GameLogic.petLevelUpCost(pet)}e · +1 AP',
                             onPressed:
                                 pet.level < GameLogic.maxPetLevel &&
                                     state.essence >=
@@ -375,7 +375,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                             label: pet.bondLevel >= GameLogic.maxPetBondLevel
                                 ? 'BOND MAX'
                                 : 'BOND ${GameLogic.bondPetCost(pet.bondLevel)}e'
-                                      '${(pet.bondLevel + 1) ~/ 5 > pet.bondLevel ~/ 5 ? ' · +1 ATK' : ''}',
+                                      '${(pet.bondLevel + 1) ~/ 5 > pet.bondLevel ~/ 5 ? ' · +1 AP' : ''}',
                             style: GameButtonStyle.grey,
                             onPressed:
                                 pet.bondLevel < GameLogic.maxPetBondLevel &&

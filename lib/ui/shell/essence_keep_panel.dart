@@ -13,7 +13,7 @@ import '../meta/prestige_shop.dart';
 import 'shell_common.dart';
 
 String _blessingLine(GameState state) {
-  const next = 'Next Ascend adds +5 ATK, +20 DEF, +60 STA, +8% gold.';
+  const next = 'Next Ascend adds +5 AP, +20 Armor, +60 STA, +8% gold.';
   final capped = GameLogic.isMaxAscension(state);
   if (state.metaDepth.ascendBlessings <= 0) {
     return capped
@@ -22,8 +22,8 @@ String _blessingLine(GameState state) {
   }
   final now =
       'Ascend Blessing ×${state.metaDepth.ascendBlessings}: '
-      '+${state.ascendBlessingAttackBonus} ATK · '
-      '+${state.ascendBlessingDefenseBonus} DEF · '
+      '+${state.ascendBlessingAttackBonus} AP · '
+      '+${state.ascendBlessingDefenseBonus} Armor · '
       '+${state.ascendBlessingVitalityBonus} STA · '
       '+${state.ascendBlessingGoldPercent}% gold.';
   return capped ? now : '$now $next';
@@ -231,7 +231,7 @@ class EssenceKeepPanel extends StatelessWidget {
           ),
           Text(
             '${state.soulboundItem!.name}'
-            '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine} (+${state.soulboundRefineAttackBonus} ATK · +${state.soulboundRefineDefenseBonus} DEF)' : ''}',
+            '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine} (+${state.soulboundRefineAttackBonus} AP · +${state.soulboundRefineDefenseBonus} Armor)' : ''}',
             style: GameTheme.body(size: 13, color: GameTheme.mossLit),
           ),
         ],

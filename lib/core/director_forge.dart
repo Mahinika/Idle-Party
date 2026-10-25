@@ -86,7 +86,7 @@ extension GameDirectorForge on GameDirector {
       return;
     }
     if (type == PartyUpgradeType.attack && _state.attackBonus > beforeAtk) {
-      showToast(_forgeSpeedToast('ATK'), life: 2.0);
+      showToast(_forgeSpeedToast('AP'), life: 2.0);
     } else if (type == PartyUpgradeType.moveSpeed &&
         _state.moveSpeedBonus > beforeMove) {
       showToast(_forgeSpeedToast('MOVE'), life: 2.0);

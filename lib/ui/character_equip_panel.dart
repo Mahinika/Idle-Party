@@ -384,7 +384,7 @@ class CharacterEquipPanel extends StatelessWidget {
                     SizedBox(height: slotGap),
                     Text(
                       'Heirloom (legacy) ${state.soulboundItem!.name}'
-                      '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine} (+${state.soulboundRefineAttackBonus} ATK · +${state.soulboundRefineDefenseBonus} DEF)' : ''}',
+                      '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine} (+${state.soulboundRefineAttackBonus} AP · +${state.soulboundRefineDefenseBonus} Armor)' : ''}',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
@@ -542,8 +542,8 @@ class CharacterEquipPanel extends StatelessWidget {
                 if (compare != null) ...[
                   const SizedBox(height: 4),
                   Text(
-                    'vs worn  ATK${GameLogic.formatDelta(compare.atkDelta)}'
-                    '  DEF${GameLogic.formatDelta(compare.defDelta)}'
+                    'vs worn  AP${GameLogic.formatDelta(compare.atkDelta)}'
+                    '  Armor${GameLogic.formatDelta(compare.defDelta)}'
                     '  STA${GameLogic.formatDelta(compare.vitDelta)}'
                     '${autoWear ? '  UPGRADE' : ''}',
                     style: GameTheme.body(
@@ -586,7 +586,7 @@ class CharacterEquipPanel extends StatelessWidget {
         if (compact)
           MenuChrome.fold(
             title: 'HERO STATS',
-            subtitle: 'ATK $atk · Armor $def · HP $maxHp',
+            subtitle: 'AP $atk · Armor $def · HP $maxHp',
             expandLabel: 'All stats',
             collapseLabel: 'Combat only',
             initiallyExpanded: false,

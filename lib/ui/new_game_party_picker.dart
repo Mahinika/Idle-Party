@@ -109,7 +109,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
           title: 'Lock race?',
           content: Text(
             'Race is the hero\'s look and locks after START. '
-            'You can still change class later.',
+            'You can still change specialization later.',
             style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
           ),
           actions: [
@@ -144,11 +144,11 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     final empty = _slots.where((s) => s == null).length;
     if (empty > 0) {
       return empty == 1
-          ? 'Pick a job for the last slot — each hero needs a different kit'
-          : 'Pick a job for $empty slots — each hero needs a different kit';
+          ? 'Pick a specialization for the last slot — each hero needs a different one'
+          : 'Pick a specialization for $empty slots — each hero needs a different one';
     }
     if (_slots.map((s) => s!).toSet().length != _slots.length) {
-      return 'Each hero must be a different kit';
+      return 'Each hero must be a different specialization';
     }
     return null;
   }
@@ -172,9 +172,9 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     final hasTank = chosen.any((d) => d.isTank);
     final hasHeal = chosen.any((d) => d.isHealer);
     if (!hasTank && !hasHeal) {
-      return 'No Shield or Healer — the cave will hit much harder';
+      return 'No Tank or Healer — the cave will hit much harder';
     }
-    if (!hasTank) return 'No Shield — enemies hit the whole party more';
+    if (!hasTank) return 'No Tank — enemies hit the whole party more';
     if (!hasHeal) return 'No Healer — buy flasks when someone is low';
     return null;
   }
@@ -353,7 +353,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               const SizedBox(height: 6),
               Text(
                 _tab == _PartyEditTab.classTab
-                    ? 'Class for $_activeKitLabel — Shield / Healer / Damage'
+                    ? 'Specialization for $_activeKitLabel — Tank / Healer / DPS'
                     : 'Race for $_activeKitLabel · ${_looks[_activeSlot].label}',
                 textAlign: TextAlign.center,
                 style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -405,7 +405,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                                   title: 'RACE',
                                   columns: 4,
                                   hint:
-                                      'Look only. Class is the kit. Race locks after START.',
+                                      'Look only. Specialization sets the abilities. Race locks after START.',
                                   dollFor: (race) => _previewHero(
                                     _slots[_activeSlot] ??
                                         HeroSpecs.starterUnlocked.first,
@@ -467,7 +467,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                                     ),
                                   const SizedBox(height: 6),
                                   Text(
-                                    'More kits unlock as you grow.',
+                                    'More specializations unlock as you grow.',
                                     textAlign: TextAlign.center,
                                     style: GameTheme.body(
                                       size: 12,
@@ -564,14 +564,14 @@ class _SlotCard extends StatelessWidget {
                   ),
                 const SizedBox(height: 4),
                 Text(
-                  def?.shortLabel ?? 'Pick a job',
+                  def?.shortLabel ?? 'Pick spec',
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(size: 12, color: GameTheme.parchment),
                 ),
                 Text(
-                  def?.roleTag.plainLabel ?? 'Shield / Healer / Damage',
+                  def?.roleTag.plainLabel ?? 'Tank / Healer / DPS',
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

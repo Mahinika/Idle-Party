@@ -101,7 +101,7 @@ abstract final class GameGuides {
         '• Watch them clear rooms. Long-press the fight, or tap the fist, when you want to help.\n'
         '• The hunt line on the hub always names the next job — start there.\n'
         '• A number on GEAR means better items wait in BAG.\n'
-        '• Starter jobs: Shield, Healer, Damage. You do not need another RPG.',
+        '• Starter roles: Tank, Healer, DPS. You do not need another RPG.',
   );
 
   static const GuideTopic _firstHourWorldPath = GuideTopic(
@@ -126,7 +126,7 @@ abstract final class GameGuides {
         '• Clear a room to open the next.\n'
         '• When enemies are down, loot banks and they walk to the stairs.\n'
         '• Long-press the fight, or tap the fist, when you want to smash and steer.\n'
-        '• HP strip is bottom-left — tap a hero for their kit.\n'
+        '• HP strip is bottom-left — tap a hero for their abilities.\n'
         '• Target chip is top-right (name + HP).',
   );
 
@@ -134,8 +134,8 @@ abstract final class GameGuides {
     id: 'party',
     title: 'PARTY',
     body:
-        'Your party is three jobs: Shield (soaks hits), Healer (keeps people up), '
-        'and Damage (kills enemies).\n\n'
+        'Your party is three roles: Tank (soaks hits), Healer (keeps people up), '
+        'and DPS (kills enemies).\n\n'
         '• Easy start: one of each. You do not need another RPG.\n'
         '• Tap a hero in the HUD for abilities. Chips show when a skill is ready.\n'
         '• The strip shows level so growth is visible mid-fight.\n'
@@ -151,7 +151,7 @@ abstract final class GameGuides {
         '• BAG: view stash. EQUIP BEST wears the better pieces, only when you tap it. '
         'SELL JUNK sells what FILTERS match, for gold.\n'
         '• FILTERS (when the bag is filling): auto-sell weak drops for gold.\n'
-        '• Compare ATK / DEF / STA. Worn pieces you replace go back to the bag.',
+        '• Compare AP / Armor / STA. Worn pieces you replace go back to the bag.',
   );
 
   /// After first boss, before first Ascend — one daily job, not three dailies.
@@ -201,7 +201,7 @@ abstract final class GameGuides {
         '3 better items for the party. No number means nothing to do there.\n'
         '• Menus stay small at the start; more tabs appear as you unlock them.\n'
         '• You do not need to have played another RPG. Names like PROT / DISC / FIRE '
-        'are just the three starter jobs: Shield, Healer, Damage.',
+        'are just the three starter roles: Tank, Healer, DPS.',
   );
 
   static const GuideTopic _midgameWorldPath = GuideTopic(
@@ -244,9 +244,9 @@ abstract final class GameGuides {
 
   static const GuideTopic _midgameClasses = GuideTopic(
     id: 'classes',
-    title: 'CLASS UNLOCKS',
+    title: 'SPECIALIZATION UNLOCKS',
     body:
-        'Ascend grows your roster — the hub hunt and Ascend teasers name the next kits '
+        'Ascend grows your roster — the hub hunt and Ascend teasers name the next specializations '
         'with a short fantasy line plus a Watch… combat hook.\n\n'
         '• AL1: Combat Rogue, Arms, Holy Paladin\n'
         '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot '
@@ -255,7 +255,7 @@ abstract final class GameGuides {
         '• AL4: Survival, Elemental, Enhancement, Balance, Feral\n'
         '• AL5: Blood DK, Frost DK, Guardian\n'
         '• AL6: Affliction, Demonology\n\n'
-        'Some kits also unlock from zone clears or ESSENCE lasting buys — see each '
+        'Some specializations also unlock from zone clears or ESSENCE lasting buys — see each '
         'spec’s unlock hint in GEAR → ROSTER.',
   );
 
@@ -270,10 +270,10 @@ abstract final class GameGuides {
         'gold, GOLD tracks, and floor progress, stronger Ascend Blessing.\n\n'
         '• AL20 is the Ascension cap. More content unlocks when every active hero '
         'reaches level 100 — not from AL20 alone.\n'
-        '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
+        '• Each Ascend grants a lasting Ascend Blessing: +5 AP · +20 Armor · +60 STA · '
         '+8% gold (stacks forever). See ESSENCE lasting buys. Separate from Star Nodes.\n'
         '• Confirm / toast show the next unlock (Combat Rogue, 5th slot…).\n'
-        '• Also raises Ascension Level (AL: +ATK/STA/DEF and +10% gold per level) and pays essence.\n'
+        '• Also raises Ascension Level (AL: +AP/STA/Armor and +10% gold per level) and pays essence.\n'
         '• Keep: hero levels/XP, open zones, essence, Embers, Cinders, relics, CAMP, '
         'pets, God Hand, Apex, soulbound gear, shop buys, ad tickets, Star Nodes, '
         'settings, unlocked specs, 5th party slot, lifetime gold, constellation / meta season.\n'
@@ -352,7 +352,7 @@ abstract final class GameGuides {
         '• Tap a party hero, then a slot — recipe and CRAFT / UPGRADE sit under that.\n'
         '• Tap a recipe mat to lock the farm target (meter sits on the recipe).\n'
         '• Zone Shards are a pool: any dungeon boss shard pays the recipe.\n'
-        '• Materials and vault stay collapsed. OTHER CLASS is only for kits not in the party.\n'
+        '• Materials and vault stay collapsed. Other classes is only for specializations not in the party.\n'
         '• Target meter: every boss clear builds toward a guaranteed mat '
         '(PUSH faster than FARM). Farm any zone — the meter grants what you need.\n'
         '• Craft weapon R1 first, then armor; the button shows CRAFT R1 or the real upgrade rank.\n'
@@ -365,7 +365,7 @@ abstract final class GameGuides {
     title: 'STAR NODES',
     body:
         'At AL20, ESSENCE lasting buys open Star Nodes (spend points).\n\n'
-        '• Not the same as Ascend Blessing stacks (+ATK/DEF/STA/gold each Ascend).\n'
+        '• Not the same as Ascend Blessing stacks (+AP/Armor/STA/gold each Ascend).\n'
         '• Reaching AL20 grants 3 points. Earn more from Ashen Crown, Craft Trial, and REBORN.\n'
         '• Spend points on permanent nodes (crit, gold, block, …) — '
         'that is real combat power, shown on the node.\n'
@@ -395,7 +395,7 @@ abstract final class GameGuides {
           '3 better items for the party. No number means nothing to do there.\n'
           '• Menus stay small at the start; more tabs appear as you unlock them.\n'
           '• You do not need to have played another RPG. Names like PROT / DISC / FIRE '
-          'are just the three starter jobs: Shield, Healer, Damage.',
+          'are just the three starter roles: Tank, Healer, DPS.',
     ),
     GuideTopic(
       id: 'away',
@@ -436,7 +436,7 @@ abstract final class GameGuides {
           '• Scroll of Speed: +${AdBoost.movePercent}% walk speed for ${AdBoost.splitHours} hours (1 ticket).\n'
           '• Scroll of Loot: +${AdBoost.lootFindPercent}% item find for ${AdBoost.splitHours} hours (1 ticket).\n'
           '• Scroll of Haste: +${AdBoost.speedPercent}% dungeon speed for ${AdBoost.splitHours} hours (1 ticket).\n'
-          '• Scroll of Battle: ATK + gold for ${AdBoost.hoursPerAd} hours (2 tickets) — best gold/ATK value.\n'
+          '• Scroll of Battle: AP + gold for ${AdBoost.hoursPerAd} hours (2 tickets) — best gold/AP value.\n'
           '• Scroll of Rest: next Welcome Back gold ×${AdBoost.awayGoldMul} (1 ticket).\n'
           '• Time stacks up to 24 hours per scroll. Magnitudes do not stack higher.\n'
           '• Ads never pop up in a fight. You choose when to watch.\n'
@@ -485,8 +485,8 @@ abstract final class GameGuides {
           '• Settings VFX: Full = all effects; Lite = ground discs, auras, crits, '
           'heals, BLOCK, and flask stay (routine hit numbers and cast bursts off); '
           'Minimal = reduce motion, but a God Hand smash still flashes.\n'
-          '• Party HP strip is bottom-left — tap a hero to open their kit. '
-          'Between fights, tap the same hero again to fold. Mid-fight the kit stays open. '
+          '• Party HP strip is bottom-left — tap a hero to open their abilities. '
+          'Between fights, tap the same hero again to fold. Mid-fight the abilities stay open. '
           'Level and XP sit under HP.\n'
           '• Gold in the top bar ticks up as pickups land.\n'
           '• Target chip is top-right (name + HP).\n'
@@ -529,7 +529,7 @@ abstract final class GameGuides {
           '• Tap a hero in the HUD for abilities; chips show cooldowns '
           '(STREAK, SWEEP / FLURRY, BEACON when those windows are up).\n'
           '• The strip shows level and a thin XP bar so growth is visible mid-fight.\n'
-          '• Resources: Rage / Mana / Energy / Runic — kits spend these.\n'
+          '• Resources: Rage / Mana / Energy / Runic — specializations spend these.\n'
           '• Roster levels and open zones keep on Ascend; bag, gold, and Gold buys reset.\n'
           '• Flask heals the party when you have a potion.',
     ),
@@ -574,7 +574,7 @@ abstract final class GameGuides {
           '• SELL JUNK (BAG button): sells/scraps FILTERS matches — including '
           'BiS and upgrades — keeps Apex and soulbound only.\n'
           '• Near-full bag: light auto-clean while looting (still protects upgrades).\n'
-          '• EQUIP, UPGRADE, and BEST follow Score. ATK / DEF / STA sit beside it. Swapped pieces return to the bag.',
+          '• EQUIP, UPGRADE, and BEST follow Score. AP / Armor / STA sit beside it. Swapped pieces return to the bag.',
     ),
     GuideTopic(
       id: 'combinator',
@@ -608,17 +608,17 @@ abstract final class GameGuides {
       title: 'GOLD',
       body:
           'GOLD tab — spend wallet gold on run power and the market.\n\n'
-          '• FORGE: party ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY. '
+          '• FORGE: party AP/Armor/STA/MOVE/HASTE/CRIT/MASTERY. '
           'Pick ×1 / 5% / 25% / 50% / 100% of wallet gold per tap, or '
           'SPEND ALL · EVEN to split gold round-robin across every track. '
           'Hero levels come from combat XP (max ${GameLogic.maxHeroLevel}). '
           'Harder kills (higher enemy level than the hero) pay more XP; heroes far behind the party catch up faster.\n'
           'Gold FORGE buys reset when you Ascend. '
-          'ATK, HASTE, and MOVE speed up clears — see Essence for rates. '
-          'One gold buy is similar punch: ATK hits, DEF is armor, STA is HP, '
+          'AP, HASTE, and MOVE speed up clears — see Essence for rates. '
+          'One gold buy is similar punch: AP hits, Armor soaks, STA is HP, '
           'HASTE and CRIT are the same percent step. BEST marks the cheapest '
           'relative upgrade. '
-          'Past 40 buys, ATK, DEF, STA, and MASTERY add less on the sheet. '
+          'Past 40 buys, AP, Armor, STA, and MASTERY add less on the sheet. '
           'MOVE and HASTE soften past 40. CRIT softens past 25.\n'
           '• MARKET: flasks, bandages, traveling gear listings.\n'
           '• Essence keeps (Ascend Blessing, God Hand, Star Nodes, 5th slot) live on ESSENCE → BLESSING.\n'
@@ -628,10 +628,10 @@ abstract final class GameGuides {
       id: 'power_shelves',
       title: 'POWER SHELVES',
       body:
-          'ATK / DEF / STA come from three shelves — do not stack them up wrong.\n\n'
+          'AP / Armor / STA come from three shelves — do not stack them up wrong.\n\n'
           '• GOLD tracks (GOLD → FORGE) — run-only power bought with wallet gold. Wipes on Ascend. '
           'Wipe advice points here (or GOLD → MARKET listings) when the sim proves a gap.\n'
-          '• Ascend Blessing — stacks each Ascend (+ATK/DEF/STA/gold forever). '
+          '• Ascend Blessing — stacks each Ascend (+AP/Armor/STA/gold forever). '
           'Readout on ESSENCE → BLESSING. Not Star Nodes.\n'
           '• ESSENCE CAMP + pets — forever power bought with essence (CAMP / PETS).\n'
           '• RELICS — Embers discover and level unique finds (bosses, Ascend, salvage). '
@@ -646,7 +646,7 @@ abstract final class GameGuides {
       body:
           'Two different gates — do not mix them up.\n\n'
           '• AL20 (Ascension cap): raise AL with Ascend, stack Ascend Blessing, '
-          'unlock kits, spend Star Nodes, optional REBORN. Wipes your run bag '
+          'unlock specializations, spend Star Nodes, optional REBORN. Wipes your run bag '
           '(gold, GOLD → FORGE, normal gear).\n'
           '• Party Lv${GameLogic.maxHeroLevel} (endgame): every active hero at max level '
           'unlocks KEY, Gauntlet, Ranked GR, Farm Rifts, '
@@ -668,15 +668,15 @@ abstract final class GameGuides {
           'Endgame ladder on the hub hunt (every active hero Lv${GameLogic.maxHeroLevel}): '
           'KEY habit → Gauntlet → Ranked GR → Farm Rift → Ashen Crown.\n'
           'Those hunts live on the hub ENDGAME tab (its own map, not under the 15 zones).\n\n'
-          'Class unlock ladder (WotLK-shaped AL kits) lives in CLASS UNLOCKS — '
-          'Shield / Healer / Damage starters are plain English; AL1+ names match '
+          'Specialization unlock ladder (WotLK-shaped AL specs) lives in SPECIALIZATION UNLOCKS — '
+          'Tank / Healer / DPS starters are plain English; AL1+ names match '
           'classic specs.',
     ),
     GuideTopic(
       id: 'classes',
-      title: 'CLASS UNLOCKS',
+      title: 'SPECIALIZATION UNLOCKS',
       body:
-          'Ascend grows your roster — the hub hunt and Ascend teasers name the next kits '
+          'Ascend grows your roster — the hub hunt and Ascend teasers name the next specializations '
           'with a short fantasy line plus a Watch… combat hook.\n\n'
           '• AL1: Combat Rogue, Arms, Holy Paladin\n'
           '• AL2: Beast Mastery, Holy Priest, Arcane · 5th party slot '
@@ -689,7 +689,7 @@ abstract final class GameGuides {
           '• Every hero Lv${GameLogic.maxHeroLevel}: KEY, Gauntlet, Farm Rifts, '
           'Ranked GR, and Ashen Crown unlock when every active hero is max level '
           '— AL20 alone is not enough.\n\n'
-          'Some kits also unlock from zone clears or ESSENCE → BLESSING permanent buys — see each '
+          'Some specializations also unlock from zone clears or ESSENCE → BLESSING permanent buys — see each '
           'spec’s unlock hint in GEAR → ROSTER.',
     ),
     GuideTopic(
@@ -706,7 +706,7 @@ abstract final class GameGuides {
           'Cinders from Daily Vault (+1 on claim), two Ad Tickets, or a SHOP pouch — '
           'salvage a relic or trade a few Embers each week. One effect each '
           '(boss damage, low-HP DR, stairs heal, God Hand CD, loot, mitigate, gold, '
-          'offline gold, flask, mana, …), up to T6 — not ATK/DEF/STA auras, not essence buys.\n'
+          'offline gold, flask, mana, …), up to T6 — not AP/Armor/STA auras, not essence buys.\n'
           '• PETS: hatch and level pets when unlocked — active pets deal chip damage '
           '(not cosmetics-only).\n'
           '• Everything here survives Ascend (including Embers and Cinders).\n'
@@ -771,7 +771,7 @@ abstract final class GameGuides {
           '• Tap a recipe mat to lock the farm target (meter sits on the recipe).\n'
           '• Zone Shards are a pool: any dungeon boss shard pays the recipe '
           '(KEY / Rift / late zones count).\n'
-          '• Materials and vault stay collapsed. OTHER CLASS is only for kits not in the party.\n'
+          '• Materials and vault stay collapsed. Other classes is only for specializations not in the party.\n'
           '• Target meter: every boss clear builds toward a guaranteed mat '
           '(PUSH faster than FARM). Farm any zone — the meter grants what you need.\n'
           '• Craft weapon R1 first, then armor; the button shows CRAFT R1 or the real upgrade rank.\n'
@@ -803,9 +803,9 @@ abstract final class GameGuides {
           'ESSENCE → PETS.\n\n'
           '• Hatch and level pets with essence (random species and rarity).\n'
           '• Merge two same-species pets of the same rarity into a higher rarity.\n'
-          '• Favorite while ACTIVE: +1 ATK; find passives (gold/loot/XP) get about '
+          '• Favorite while ACTIVE: +1 AP; find passives (gold/loot/XP) get about '
           '+5% (at least +1 on small bonuses). Mitigate/heal bump too.\n'
-          '• Bond for +1 ATK every 5 ranks (max 25). Frames are looks only.\n'
+          '• Bond for +1 AP every 5 ranks (max 25). Frames are looks only.\n'
           '• Active pet follows in combat and chips damage (cyan hits, ally ring).\n'
           '• Beast Mastery / Demonology / Unholy also bring a class companion '
           '(Hunter Pet / Felguard / Ghoul). Enhancement wolves and Frost Water '
@@ -896,7 +896,7 @@ abstract final class GameGuides {
       title: 'STAR NODES',
       body:
           'At AL20, ESSENCE → BLESSING opens Star Nodes (spend points).\n\n'
-          '• Not the same as Ascend Blessing stacks (+ATK/DEF/STA/gold each Ascend).\n'
+          '• Not the same as Ascend Blessing stacks (+AP/Armor/STA/gold each Ascend).\n'
           '• Reaching AL20 grants 3 points. Earn more from Ashen Crown, Craft Trial, and REBORN.\n'
           '• Spend points on permanent nodes (crit, gold, block, KEY par, …).\n'
           '• Points and lit nodes survive Ascend / REBORN.',
@@ -913,7 +913,7 @@ abstract final class GameGuides {
           'to rehearse the fight.\n'
           '• Confirm before a ticket run. Wipe or leave before the boss pays '
           'back the ticket — only a clear spends it. PRACTICE never spends a ticket.\n'
-          '• Boss kit: the weekly telegraph (CROWN, WAVE, and others), then '
+          '• Boss abilities: the weekly telegraph (CROWN, WAVE, and others), then '
           'smash after telegraph (SLAM / SLOW) — same in PRACTICE.\n'
           '• Each ISO week the Crown visits a different shipped cave — not a 16th dungeon. '
           'Leave or wipe returns you to the hub.',
@@ -954,10 +954,10 @@ abstract final class GameGuides {
           'Ashen Crown, boards) unlocks when every active hero reaches level '
           '${GameLogic.maxHeroLevel} — not from AL20 alone. Daily Vault is separate '
           '(available earlier; not endgame-gated).\n'
-          '• Each Ascend grants a lasting Ascend Blessing: +5 ATK · +20 DEF · +60 STA · '
+          '• Each Ascend grants a lasting Ascend Blessing: +5 AP · +20 Armor · +60 STA · '
           '+8% gold (stacks forever). See ESSENCE → BLESSING. Separate from Star Nodes.\n'
           '• Confirm / toast show the next Ascend unlock (Combat Rogue, 5th slot…).\n'
-          '• Also raises Ascension Level (AL: +ATK/STA/DEF and +10% gold per level) and pays essence.\n'
+          '• Also raises Ascension Level (AL: +AP/STA/Armor and +10% gold per level) and pays essence.\n'
           '• Keep: hero levels/XP, open zones, essence, Embers, Cinders, relics, CAMP, '
           'pets, God Hand, Apex, soulbound gear, shop buys, ad tickets, Star Nodes, '
           'settings, unlocked specs, 5th party slot, lifetime gold, constellation / meta season.\n'
@@ -996,8 +996,8 @@ abstract final class GameGuides {
       id: 'ui',
       title: 'UI TIPS',
       body:
-          '• Party strip (bottom-left) fades after idle — tap a hero for kit. '
-          'Between fights, tap again to fold; mid-fight the kit stays open.\n'
+          '• Party strip (bottom-left) fades after idle — tap a hero for abilities. '
+          'Between fights, tap again to fold; mid-fight the abilities stay open.\n'
           '• Target chip sits top-right (name + HP).\n'
           '• Tap METER (top-left) for party rates: DPS, healer HPS, tank damage taken '
           '(bars match unit; tanks/healers also show their damage).\n'

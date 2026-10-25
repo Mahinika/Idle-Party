@@ -44,8 +44,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   };
 
   String _forgeName(PartyUpgradeType type) => switch (type) {
-    PartyUpgradeType.attack => 'ATK',
-    PartyUpgradeType.defense => 'DEF',
+    PartyUpgradeType.attack => 'AP',
+    PartyUpgradeType.defense => 'Armor',
     PartyUpgradeType.vitality => 'STA',
     PartyUpgradeType.moveSpeed => 'MOVE',
     PartyUpgradeType.attackSpeed => 'HASTE',
@@ -134,10 +134,10 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     return switch (type) {
       PartyUpgradeType.attack
           when state.attackBonus >= GameLogic.forgeAttackSoftAt =>
-        'ATK soft-caps past ${GameLogic.forgeAttackSoftAt.round()} — each buy adds less',
+        'AP soft-caps past ${GameLogic.forgeAttackSoftAt.round()} — each buy adds less',
       PartyUpgradeType.defense
           when state.defenseBonus >= GameLogic.forgeDefenseSoftAt =>
-        'DEF soft-caps past ${GameLogic.forgeDefenseSoftAt.round()} — each buy adds less',
+        'Armor soft-caps past ${GameLogic.forgeDefenseSoftAt.round()} — each buy adds less',
       PartyUpgradeType.vitality
           when state.vitalityBonus >= GameLogic.forgeVitalitySoftAt =>
         'STA soft-caps past ${GameLogic.forgeVitalitySoftAt.round()} — each buy adds less',
@@ -169,7 +169,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           GameLogic.forgeAttackGain,
           softAt: GameLogic.forgeAttackSoftAt,
         ),
-        'ATK',
+        'AP',
       ),
       PartyUpgradeType.defense => _fmtSoftNextFlat(
         GameState.softForgeNextGain(
@@ -177,7 +177,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           GameLogic.forgeDefenseGain,
           softAt: GameLogic.forgeDefenseSoftAt,
         ),
-        'DEF',
+        'Armor',
       ),
       PartyUpgradeType.vitality => _fmtSoftNextFlat(
         GameState.softForgeNextGain(
@@ -234,7 +234,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                   : 'SPEND ALL · EVEN · Need gold',
               tip:
                   'Splits wallet gold round-robin across every track. '
-                  'ATK, DEF, STA, and MASTERY soften past 40 buys. '
+                  'AP, Armor, STA, and MASTERY soften past 40 buys. '
                   'MOVE and HASTE soften past 40. CRIT softens past 25.',
               style: GameButtonStyle.grey,
               dense: true,
@@ -266,9 +266,9 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       children: [
         Text(
           plain
-              ? 'Bought: ATK +${state.forgeAttackSheet} · DEF +${state.forgeDefenseSheet} · '
+              ? 'Bought: AP +${state.forgeAttackSheet} · Armor +${state.forgeDefenseSheet} · '
                     'STA +${state.forgeVitalitySheet}'
-              : 'Bought: ATK +${state.forgeAttackSheet}  DEF +${state.forgeDefenseSheet}  '
+              : 'Bought: AP +${state.forgeAttackSheet}  Armor +${state.forgeDefenseSheet}  '
                     'STA +${state.forgeVitalitySheet}  '
                     'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%  '
                     'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '

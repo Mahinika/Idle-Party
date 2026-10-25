@@ -103,7 +103,7 @@ abstract final class WipeAdvice {
       line.startsWith('Equip') ||
       line == gearWearLine ||
       line.contains('too far') ||
-      line == 'Upgrade DEF in GOLD' ||
+      line == 'Upgrade Armor in GOLD' ||
       line.contains('MARKET has an upgrade') ||
       line.contains('Shop has an upgrade') ||
       line.startsWith('MARKET:') ||
@@ -146,8 +146,8 @@ abstract final class WipeAdvice {
       return 'HUB → GEAR to wear loot';
     }
     if (adviceLine.contains(' in GOLD') ||
-        adviceLine.contains('Upgrade ATK') ||
-        adviceLine.contains('Upgrade DEF') ||
+        adviceLine.contains('Upgrade AP') ||
+        adviceLine.contains('Upgrade Armor') ||
         adviceLine.contains('Upgrade STA')) {
       return 'HUB → GOLD tracks for run power';
     }
@@ -190,8 +190,8 @@ abstract final class WipeAdvice {
       return const NavIntent(route: MenuRoute.gear);
     }
     if (adviceLine.contains(' in GOLD') ||
-        adviceLine.contains('Upgrade ATK') ||
-        adviceLine.contains('Upgrade DEF') ||
+        adviceLine.contains('Upgrade AP') ||
+        adviceLine.contains('Upgrade Armor') ||
         adviceLine.contains('Upgrade STA')) {
       return NavIntent.gold;
     }
@@ -226,7 +226,7 @@ abstract final class WipeAdvice {
   static String _forgeOrMarket(GameState state, String forgeLine) {
     if (!MenuTabs.showGold(state)) {
       // DEF stays first-wipe; ATK/STA still wait for streakNeeded.
-      return forgeLine.contains('DEF') ? gearWearLine : 'Get stronger in GEAR';
+      return forgeLine.contains('Armor') ? gearWearLine : 'Get stronger in GEAR';
     }
     final listing = MarketListingsService.bestAffordableUpgradeListing(state);
     if (listing != null) {
@@ -364,7 +364,7 @@ abstract final class WipeAdvice {
         fight.elapsedSec <= 8 &&
         fight.partyMaxHp > 0 &&
         fight.damageTaken >= fight.partyMaxHp * 0.4) {
-      return _forgeOrMarket(state, 'Upgrade DEF in GOLD');
+      return _forgeOrMarket(state, 'Upgrade Armor in GOLD');
     }
 
     // Sub-half-second wipe with almost-full pack + real HP loss = melt.
@@ -373,7 +373,7 @@ abstract final class WipeAdvice {
         fight.leftover >= 0.85 &&
         fight.partyMaxHp > 0 &&
         fight.damageTaken >= fight.partyMaxHp * 0.5) {
-      return _forgeOrMarket(state, 'Upgrade DEF in GOLD');
+      return _forgeOrMarket(state, 'Upgrade Armor in GOLD');
     }
 
     if (fight.elapsedSec < 0.5 || fight.waveHp < 1 || fight.damageDealt < 1) {
@@ -392,14 +392,14 @@ abstract final class WipeAdvice {
     final ttk = fight.waveHp / dps;
     final atkGap = ttk / fight.elapsedSec;
     if (atkGap >= 1.35 && leftover >= 0.35) {
-      return _forgeOrMarket(state, 'Upgrade ATK in GOLD');
+      return _forgeOrMarket(state, 'Upgrade AP in GOLD');
     }
 
     // DPS was enough to nearly finish; they ran out of body.
     if (atkGap <= 0.75 && leftover < 0.40 && fight.partyMaxHp > 0) {
       final overkill = fight.damageTaken / fight.partyMaxHp;
       if (overkill >= 1.20) {
-        return _forgeOrMarket(state, 'Upgrade DEF in GOLD');
+        return _forgeOrMarket(state, 'Upgrade Armor in GOLD');
       }
       if (overkill <= 1.08) {
         return _forgeOrMarket(state, 'Upgrade STA in GOLD');

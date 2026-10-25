@@ -260,7 +260,7 @@ abstract final class Keystone {
       return 'No Flask — upgrade STA in GOLD first.';
     }
     if (affixes.contains('iron')) {
-      return 'Iron packs — DEF in GOLD helps the longer fights.';
+      return 'Iron packs — Armor in GOLD helps the longer fights.';
     }
     return null;
   }

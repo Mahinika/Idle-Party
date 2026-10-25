@@ -191,8 +191,8 @@ class MenuAlerts {
     final cost = GameLogic.upgradeCostFor(state, forgeType);
     if (state.gold >= cost) {
       final name = switch (forgeType) {
-        PartyUpgradeType.attack => 'ATK',
-        PartyUpgradeType.defense => 'DEF',
+        PartyUpgradeType.attack => 'AP',
+        PartyUpgradeType.defense => 'Armor',
         PartyUpgradeType.vitality => 'STA',
         PartyUpgradeType.moveSpeed => 'MOVE',
         PartyUpgradeType.attackSpeed => 'HASTE',
@@ -418,9 +418,9 @@ class MenuAlerts {
     if (state.metaDepth.pendingHeroReveals.isEmpty) return '';
     if (!MenuTabs.showRoster(state)) return '';
     if (panel == GearPanel.roster) {
-      return 'Tap ADD to put the new kit in the party';
+      return 'Tap ADD to put the new specialization in the party';
     }
-    return 'New kit — open ROSTER tab';
+    return 'New specialization — open ROSTER tab';
   }
 
   static String gearEquipHint(

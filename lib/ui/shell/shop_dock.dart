@@ -255,7 +255,7 @@ class _ShopRow extends StatelessWidget {
   }
 
   static String _permEffect(int mask) => switch (mask) {
-        AdBoost.permAtk => '+${AdBoost.attackPercent}% ATK',
+        AdBoost.permAtk => '+${AdBoost.attackPercent}% AP',
         AdBoost.permGold => '×${AdBoost.goldMul} gold',
         AdBoost.permXp => '+${AdBoost.xpPercent}% XP',
         AdBoost.permMove => '+${AdBoost.movePercent}% walk',

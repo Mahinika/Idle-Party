@@ -308,7 +308,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                           selected: widget.selectedHeroIndex == i,
                           label:
                               '${party[i].name} '
-                              '${party[i].displayRoleLabel(plainEnglish: plainEnglish)} — tap for kit, '
+                              '${party[i].displayRoleLabel(plainEnglish: plainEnglish)} — tap for abilities, '
                               'long-press for gear',
                           onTap: () => _onHeroTap(i),
                           onLongPress: _onLongPressGear,
@@ -1037,7 +1037,8 @@ class _PartyRow extends StatelessWidget {
                     if (showKit) ...[
                       const SizedBox(height: 2),
                       Semantics(
-                        label: 'Kit ${HeroIdentity.fantasyLine(hero.specId)}',
+                        label:
+                            'Specialization ${HeroIdentity.fantasyLine(hero.specId)}',
                         child: Text(
                           HeroIdentity.fantasyLine(hero.specId),
                           maxLines: 1,
