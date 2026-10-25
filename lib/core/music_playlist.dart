@@ -3,7 +3,7 @@ import 'dart:math';
 /// Picks the next song for one place.
 ///
 /// The least-played song goes first, and the song that just finished cannot
-/// come straight back. A long song sometimes starts in a calm middle.
+/// come straight back. Each song starts at the beginning.
 class MusicPlaylist {
   final Map<String, int> _plays = <String, int>{};
   final Map<String, String> _lastByPool = <String, String>{};
@@ -39,13 +39,6 @@ class MusicPlaylist {
     final choice = candidates[rng.nextInt(candidates.length)];
     _remember(pool, choice);
     return choice;
-  }
-
-  /// 0, or about 15–35% into a song longer than 50s.
-  double startFraction(Random rng, Duration length) {
-    if (length < const Duration(seconds: 50)) return 0;
-    if (rng.nextDouble() > 0.35) return 0;
-    return 0.15 + rng.nextDouble() * 0.20;
   }
 
   void _remember(String pool, String track) {

@@ -1,20 +1,19 @@
 import 'audio_assets.dart';
 
-/// Where the party is. Picks the resting bed, not the fight cue.
+/// Where the party is. Picks the bed, not the fight cue.
 enum MusicPlace { none, hub, dungeon }
 
-/// What the score is doing. Boss holds until the fight ends. Bed and rest
-/// trade off so a short loop is not the whole session. Resolve and down are
-/// one-shots: a floor clear lands, a wipe falls, then the ear gets quiet.
+/// What the score is doing. A bed stays on while you stay in that place
+/// and hands off to the next song when the file ends. Boss holds until the
+/// fight ends. Resolve and down are one-shots, then the bed returns.
 enum MusicCue { rest, bed, boss, resolve, down }
 
 /// Which file should be audible. [none] means ambience only.
 enum MusicStem { none, hub, dungeon, boss, resolve, down }
 
-/// Adaptive score clock. Pure — no audio engine. Times are long enough that
-/// hub (~34s) and cave beds are heard once, then sit out, so they do not
-/// grind. A boss interrupts immediately and does not resolve until the
-/// fight ends.
+/// Adaptive score clock. Pure — no audio engine. Hub and cave music do not
+/// go quiet between songs. A boss interrupts immediately and does not
+/// resolve until the fight ends.
 class MusicScore {
   MusicPlace place = MusicPlace.none;
   ZoneMood mood = ZoneMood.warm;
@@ -25,20 +24,15 @@ class MusicScore {
   int? holdFloor;
 
   DateTime anchor = DateTime.fromMillisecondsSinceEpoch(0);
-  Duration _quietFor = hubQuiet;
 
   /// How long the current song should be heard. Set from the file length.
   /// Null uses [hubBed] / [dungeonBed].
   Duration? bedLimit;
 
   static const hubBed = Duration(seconds: 32);
-  static const hubQuiet = Duration(seconds: 20);
   static const dungeonBed = Duration(seconds: 48);
-  static const dungeonQuiet = Duration(seconds: 20);
   static const resolveCue = Duration(milliseconds: 6500);
   static const downCue = Duration(milliseconds: 4800);
-  static const clearQuiet = Duration(seconds: 18);
-  static const wipeQuiet = Duration(seconds: 28);
 
   MusicStem get stem => switch (cue) {
     MusicCue.rest => MusicStem.none,
@@ -58,26 +52,24 @@ class MusicScore {
     cue = MusicCue.rest;
     holdFloor = null;
     anchor = DateTime.fromMillisecondsSinceEpoch(0);
-    _quietFor = hubQuiet;
     bedLimit = null;
   }
 
-  /// Remaining length of the song that just started, after any mid-start.
+  /// Length of the song that just started, from the beginning of the file.
   void setBedLimit(Duration value) {
     bedLimit = value < const Duration(seconds: 4)
         ? const Duration(seconds: 4)
         : value;
   }
 
-  /// Scene change (hub ↔ cave). Starts that place's bed so the new room
-  /// is heard, then the rest cycle takes over.
+  /// Scene change (hub ↔ cave). Starts that place's bed.
   bool setPlace(MusicPlace next, DateTime now) {
     if (next == place) return false;
     place = next;
     holdFloor = null;
     bedLimit = null;
     if (next == MusicPlace.none) {
-      _enter(MusicCue.rest, now, quiet: hubQuiet);
+      _enter(MusicCue.rest, now);
     } else {
       _enter(MusicCue.bed, now);
     }
@@ -116,7 +108,7 @@ class MusicScore {
     return false;
   }
 
-  /// Stairs opened on [floor]. One resolution, then quiet.
+  /// Stairs opened on [floor]. One resolution, then the bed.
   bool noteClear(int floor, DateTime now) {
     if (place != MusicPlace.dungeon) return false;
     if (cue == MusicCue.resolve) {
@@ -128,7 +120,7 @@ class MusicScore {
     return true;
   }
 
-  /// Party wiped. Falling phrase, then a longer quiet than a clear.
+  /// Party wiped. Falling phrase, then the bed.
   bool noteWipe(DateTime now) {
     holdFloor = null;
     if (cue == MusicCue.down) return false;
@@ -136,7 +128,8 @@ class MusicScore {
     return true;
   }
 
-  /// Advance bed / quiet / sting clocks. Boss does not advance itself.
+  /// Advance bed and sting clocks. A finished bed stays on the same stem
+  /// so the next song can start. Boss does not advance itself.
   bool tick(DateTime now) {
     if (place == MusicPlace.none || cue == MusicCue.boss) return false;
     final elapsed = now.difference(anchor);
@@ -145,33 +138,29 @@ class MusicScore {
         final limit =
             bedLimit ?? (place == MusicPlace.hub ? hubBed : dungeonBed);
         if (elapsed < limit) return false;
-        _enter(
-          MusicCue.rest,
-          now,
-          quiet: place == MusicPlace.hub ? hubQuiet : dungeonQuiet,
-        );
-        return true;
-      case MusicCue.rest:
-        if (elapsed < _quietFor) return false;
+        bedLimit = null;
         _enter(MusicCue.bed, now);
         return true;
+      case MusicCue.rest:
+        return false;
       case MusicCue.resolve:
         if (elapsed < resolveCue) return false;
         holdFloor = null;
-        _enter(MusicCue.rest, now, quiet: clearQuiet);
+        bedLimit = null;
+        _enter(MusicCue.bed, now);
         return true;
       case MusicCue.down:
         if (elapsed < downCue) return false;
-        _enter(MusicCue.rest, now, quiet: wipeQuiet);
+        bedLimit = null;
+        _enter(MusicCue.bed, now);
         return true;
       case MusicCue.boss:
         return false;
     }
   }
 
-  void _enter(MusicCue next, DateTime now, {Duration? quiet}) {
+  void _enter(MusicCue next, DateTime now) {
     cue = next;
     anchor = now;
-    if (quiet != null) _quietFor = quiet;
   }
 }

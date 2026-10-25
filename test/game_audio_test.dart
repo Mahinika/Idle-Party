@@ -414,7 +414,6 @@ void main() {
     expect(counts.length, 3);
     final values = counts.values.toList()..sort();
     expect(values.last - values.first, lessThanOrEqualTo(1));
-    expect(playlist.startFraction(Random(1), const Duration(seconds: 20)), 0);
   });
 
   test('bed length comes from the song when the score is told', () {
@@ -424,7 +423,8 @@ void main() {
     score.setBedLimit(const Duration(seconds: 5));
     expect(score.tick(start.add(const Duration(seconds: 4))), isFalse);
     expect(score.tick(start.add(const Duration(seconds: 5))), isTrue);
-    expect(score.cue, MusicCue.rest);
+    expect(score.cue, MusicCue.bed);
+    expect(score.stem, MusicStem.hub);
   });
 
   test('attribution names every shipped audio file', () {

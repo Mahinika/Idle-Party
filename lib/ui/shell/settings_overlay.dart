@@ -160,8 +160,8 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         MenuChrome.sectionLabel('SOUND'),
         const SizedBox(height: 4),
         Text(
-          'Mute turns everything off. Music rests between passages, '
-          'rises for a boss, and resolves when a floor clears. '
+          'Mute turns everything off. Music stays on in the hub and in a cave. '
+          'It rises for a boss and marks a cleared floor. '
           'Ambience is the soft bed underneath. SFX is combat and UI.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),

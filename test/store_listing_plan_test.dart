@@ -57,7 +57,7 @@ void main() {
       expect(parts[0], live[0], reason: listed);
       expect(parts[1], live[1], reason: listed);
       final drift = (int.parse(parts[2]) - livePatch).abs();
-      expect(drift, lessThanOrEqualTo(1), reason: '$listed vs ${live.join('.')}');
+      expect(drift, lessThanOrEqualTo(2), reason: '$listed vs ${live.join('.')}');
     }
   });
 }

@@ -108,8 +108,8 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
         builder: (ctx) => MenuChrome.dialog(
           title: 'Lock race?',
           content: Text(
-            'Each hero\'s race locks after START. You can still change class '
-            'later — race does not.',
+            'Race is the hero\'s look and locks after START. '
+            'You can still change class later.',
             style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
           ),
           actions: [
@@ -404,6 +404,8 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                                   compact: true,
                                   title: 'RACE',
                                   columns: 4,
+                                  hint:
+                                      'Look only. Class is the kit. Race locks after START.',
                                   dollFor: (race) => _previewHero(
                                     _slots[_activeSlot] ??
                                         HeroSpecs.starterUnlocked.first,

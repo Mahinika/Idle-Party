@@ -686,7 +686,9 @@ abstract final class GameAudio {
       if (!_ready || _backgroundPaused) return;
       if (!_score.tick(DateTime.now())) return;
       if (muted) return;
-      unawaited(_realizeMusic());
+      // A finished bed stays on the same stem. Restart so the next song
+      // actually starts. A sting returning to the bed changes stem too.
+      unawaited(_realizeMusic(restart: true));
     });
   }
 
@@ -750,30 +752,15 @@ abstract final class GameAudio {
     }
     try {
       final soloud = SoLoud.instance;
-      var start = Duration.zero;
       if (stem == MusicStem.hub || stem == MusicStem.dungeon) {
         final length = soloud.getLength(source);
-        final fraction = _playlist.startFraction(_rng, length);
-        start = Duration(
-          milliseconds: (length.inMilliseconds * fraction).round(),
-        );
-        final remain = length - start;
-        _score.setBedLimit(
-          remain < const Duration(seconds: 4)
-              ? const Duration(seconds: 4)
-              : remain,
-        );
+        _score.setBedLimit(length);
       }
       final handle = soloud.play(
         source,
         volume: 0.001,
         looping: _loops(stem),
-        paused: start > Duration.zero,
       );
-      if (start > Duration.zero) {
-        soloud.seek(handle, start);
-        soloud.setPause(handle, false);
-      }
       if (gen != _fadeGen) {
         _releaseHandle(handle, Duration.zero);
         return;
@@ -848,8 +835,13 @@ abstract final class GameAudio {
     MusicStem.none => null,
   };
 
-  /// Beds play once and then rest. Boss holds until the fight ends.
-  static bool _loops(MusicStem stem) => stem == MusicStem.boss;
+  /// Hub and cave beds loop until the score starts the next song, so the
+  /// ear does not drop out between the file end and the one-second clock.
+  /// Boss holds until the fight ends.
+  static bool _loops(MusicStem stem) =>
+      stem == MusicStem.boss ||
+      stem == MusicStem.hub ||
+      stem == MusicStem.dungeon;
 
   static Future<void> _dropOtherAmbience() async {
     if (!_ready) return;

@@ -9,6 +9,8 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Done
 
+<!-- - 2026-10-25 · Play review (fr, 1★) · Race had no stated difference, and music stopped for no reason · RACE says look only, and music stays on between songs · fixed in 1.13.5 -->
+
 <!-- - 2026-10-17 · On a fast KEY run, floor-clear lines and item names stack on the party, so the casts are hard to see · one floor line, and the item name fades before it covers a hero · fixed in 8b719389 -->
 
 <!-- - 2026-10-17 · In the melee the five heroes stand on the same spot, so arms and weapons cover each other and one swing is hard to follow · the party stands on a short line in the fight · fixed in 8b719389 -->

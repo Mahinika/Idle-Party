@@ -17,7 +17,7 @@ void main() {
     return score;
   }
 
-  test('hub bed plays once then rests, then returns', () {
+  test('hub bed advances to the next song without going quiet', () {
     final score = hub();
     expect(score.cue, MusicCue.bed);
     expect(score.stem, MusicStem.hub);
@@ -26,18 +26,11 @@ void main() {
       score.tick(t0.add(MusicScore.hubBed - const Duration(seconds: 1))),
       isFalse,
     );
-    expect(score.tick(t0.add(MusicScore.hubBed)), isTrue);
-    expect(score.cue, MusicCue.rest);
-    expect(score.stem, MusicStem.none);
-
-    final rested = t0.add(MusicScore.hubBed);
-    expect(
-      score.tick(rested.add(MusicScore.hubQuiet - const Duration(seconds: 1))),
-      isFalse,
-    );
-    expect(score.tick(rested.add(MusicScore.hubQuiet)), isTrue);
+    final advanced = t0.add(MusicScore.hubBed);
+    expect(score.tick(advanced), isTrue);
     expect(score.cue, MusicCue.bed);
     expect(score.stem, MusicStem.hub);
+    expect(score.tick(advanced), isFalse);
   });
 
   test('a new cave mood asks the dungeon bed to change', () {
@@ -48,13 +41,11 @@ void main() {
     expect(score.stem, MusicStem.dungeon);
   });
 
-  test('cave bed uses the dungeon stem and its own clock', () {
+  test('cave bed stays on the dungeon stem when the song ends', () {
     final score = cave();
     expect(score.stem, MusicStem.dungeon);
     expect(score.tick(t0.add(MusicScore.dungeonBed)), isTrue);
-    expect(score.stem, MusicStem.none);
-    final rested = t0.add(MusicScore.dungeonBed);
-    expect(score.tick(rested.add(MusicScore.dungeonQuiet)), isTrue);
+    expect(score.cue, MusicCue.bed);
     expect(score.stem, MusicStem.dungeon);
   });
 
@@ -96,7 +87,7 @@ void main() {
     expect(score.anchor, cleared);
   });
 
-  test('next trash floor keeps the resolution, then quiet, then the bed', () {
+  test('next trash floor keeps the resolution, then the bed returns', () {
     final score = cave();
     score.syncBoss(active: true, floor: 5, now: t0);
     final cleared = t0.add(const Duration(seconds: 20));
@@ -112,9 +103,7 @@ void main() {
     expect(score.cue, MusicCue.resolve);
 
     expect(score.tick(cleared.add(MusicScore.resolveCue)), isTrue);
-    expect(score.cue, MusicCue.rest);
-    final quiet = cleared.add(MusicScore.resolveCue);
-    expect(score.tick(quiet.add(MusicScore.clearQuiet)), isTrue);
+    expect(score.cue, MusicCue.bed);
     expect(score.stem, MusicStem.dungeon);
   });
 
@@ -133,7 +122,7 @@ void main() {
     expect(score.stem, MusicStem.boss);
   });
 
-  test('wipe falls, stays quiet longer, and a retry boss interrupts', () {
+  test('wipe falls, then the bed returns, and a retry boss interrupts', () {
     final score = cave();
     score.syncBoss(active: true, floor: 5, now: t0);
     final wiped = t0.add(const Duration(seconds: 15));
@@ -150,10 +139,7 @@ void main() {
     expect(score.cue, MusicCue.down);
 
     expect(score.tick(wiped.add(MusicScore.downCue)), isTrue);
-    expect(score.cue, MusicCue.rest);
-    final quiet = wiped.add(MusicScore.downCue);
-    expect(score.tick(quiet.add(MusicScore.clearQuiet)), isFalse);
-    expect(score.tick(quiet.add(MusicScore.wipeQuiet)), isTrue);
+    expect(score.cue, MusicCue.bed);
     expect(score.stem, MusicStem.dungeon);
 
     final again = cave();

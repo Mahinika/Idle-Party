@@ -82,10 +82,26 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.4';
+  static const String currentVersion = '1.13.5';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: '1.13.5',
+      date: 'Oct 25, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. Race is the hero\'s look. Music stays on in the hub and in a cave.',
+      changed: <String>[
+        'On New Game, RACE says the choice is look only. Class is the kit.',
+        'Race still locks after New Game START.',
+        'Music stays on in the hub and in a cave. The next song starts when one ends. It rises for a boss and marks a cleared floor.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.13.4',
       date: 'Oct 24, 2026',
