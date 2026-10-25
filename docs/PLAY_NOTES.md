@@ -9,7 +9,7 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Done
 
-<!-- - 2026-10-25 · Play review (fr, 1★) · Race had no stated difference, and music stopped for no reason · RACE says look only, and music stays on between songs · fixed in 1.13.5 -->
+<!-- - 2026-10-25 · Play review (fr, 1★) · Race had no stated difference, and music stopped for no reason · RACE says look only, and music stays on between songs · fixed in 3c681843 -->
 
 <!-- - 2026-10-17 · On a fast KEY run, floor-clear lines and item names stack on the party, so the casts are hard to see · one floor line, and the item name fades before it covers a hero · fixed in 8b719389 -->
 
