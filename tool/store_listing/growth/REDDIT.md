@@ -10,11 +10,19 @@ Reply to comments the same day. Unique copy per sub — no copy-paste.
 
 ---
 
+## Posted 2026-10-28
+
+| Sub | Notes |
+|-----|-------|
+| r/incremental_games | Owner posted. Title from `2026-10-18-incremental.md`. GIF `2026-10-26-crawl.gif` (Sandy crawl). Flair **Released**. Do **not** cross-post the Reddit “reach more people” suggestions the same day. |
+
+Next own-game post on that sub: not before **2026-11-27** (30-day rule). Reply to comments the same day. Do not open new subs this week.
+
 ## Decision (2026-09-27)
 
 The 18 Sep `r/incremental_games` post is the only one that lined up with installs (devices 16 → about 42, then flat). Public score on **27 Sep** is still **0**, upvote ratio **31%**, 1 comment. `r/IndieGaming` (25 Sep) is also score **0** / **40%** and did not make a second wave. `r/indiegames` was removed by a moderator. `r/SideProject` is still removed by Reddit.
 
-Next own-game post stays **2026-10-18** on `r/incremental_games`. GIF in the post, one Play link, short body. Do not spend the weeks before that on more subs. Comment on other people’s threads if comment karma is still 0.
+The follow-up slot was **2026-10-18**; the owner posted it **2026-10-28**. Comment on other people’s threads if comment karma is still 0.
 
 ## Decision (2026-09-20)
 

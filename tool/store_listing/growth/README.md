@@ -12,7 +12,7 @@ Agent-owned paste files. Play stays the install path. No GitHub Releases.
 | [PLAY_LISTING_PEERS.md](PLAY_LISTING_PEERS.md) | Play charts + idle/RPG listing patterns vs Idle Party |
 | [docs/STORE_LISTING.md](../../../docs/STORE_LISTING.md) | en-US title / short / full |
 
-Owner time, after the **2026-09-27** look: the week is not a clip batch and not 8–10 mails. The pipe that lined up with installs is one `r/incremental_games` post (next slot **2026-10-18**, GIF + one Play link). Comment on other threads until that slot. Shorts and creator mail stay in these files for when that bet is named again.
+Owner time, after the **2026-09-27** look: the week is not a clip batch and not 8–10 mails. The pipe that lined up with installs is one `r/incremental_games` post. That post went up **2026-10-28** (`REDDIT.md`). Next slot there **2026-11-27**. Shorts and creator mail stay in these files for when that bet is named again.
 
 ## Directories
 

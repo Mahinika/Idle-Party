@@ -125,16 +125,16 @@ Privacy: https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md
 
 ### Release notes — Alpha / Production ship line (en-US)
 
-Live Production before this upload: **1.12.195 (225)**, track `completed` (API **2026-10-17**). **1.13.0 (226)** was never uploaded. **1.13.1 (227)** was sent **2026-10-17** (track `completed`). The public page can still name **1.12.195** until Google publishes.
+Live Production before this upload: **1.13.2 (228)**, track `completed` (API **2026-10-28**). **1.13.3 (229)** and **1.13.4 (230)** were never uploaded. **1.13.5 (231)** is the next send.
 
-Notes sent with **1.13.1 (227)**. These lines also cover the unsent **1.13.0**. en-US, 421 characters:
+Notes for **1.13.5 (231)**. These lines also cover the unsent **1.13.3** and **1.13.4**. en-US, under 500 characters:
 
 ```
-• The walk to the next pack fits on one phone screen, with gates and boss rooms in view.
-• After a wipe the party counts down and fights again. Two misses farm the safe floor below, even offline.
-• AUTO EQUIP in GEAR wears stronger drops during the fight and while the app is closed.
-• Shrines on the hall bless the fight, and chest floors open on the chest.
-• Spire Trophies on the Gauntlet card grant titles and 1 STAR.
+• Heroes stand in a short line in the fight, so a swing is easy to follow.
+• Race on New Game is look only. Specialization sets the abilities.
+• Music stays on in the hub and in a cave — the next song starts when one ends.
+• A missed Ranked GR says seconds over par. A clear says the finish time.
+• Farm Rift ends by naming the best drop, or that nothing dropped.
 ```
 
 ### Full description honesty (SHOP)

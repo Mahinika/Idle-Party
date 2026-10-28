@@ -1,6 +1,80 @@
 # Idle Party — Play growth (what we can do)
 
-**Updated:** 2026-10-19 API read. The grow-page paste is still **2026-10-09**. Category stays **Role Playing** (idle fantasy RPG).
+**Updated:** 2026-10-28 grow-page paste + API read. Category stays **Role
+Playing** (idle fantasy RPG).
+
+### What 28 Oct changes
+
+Window **30 Sep–27 Oct** (Play grow page, device, last 28 days). **28,900**
+device impressions (**+137%**), **162** acquisitions (**−33%**), **74**
+first opens (**−34%**), **153** monthly active devices (**+11%**). D7
+retained devices: **9** (0% versus the prior window). **+291** exploration
+acquisitions / 90 days. Listing conversion % was not on this card — do not
+invent it. **0** experiments named.
+
+Compared with the 9 Oct window (11 Sep–8 Oct): impressions **19,500 →
+28,900**, acquisitions **308 → 162**, first opens **121 → 74**, monthly
+active **138 → 153**, D7 **1 → 9**. About **46%** of device acquisitions
+opened (74 / 162), up from about **39%**. Explore is still the discovery
+engine (+291 / 90 days). The mid-September install wave has left this
+28-day window, so acquisitions and first opens look worse while reach is
+higher. Do not read that as “marketing failed today.”
+
+The **2026-10-28** `r/incremental_games` post is **after** this window. It
+cannot show here yet. Leave Shorts and creator mail on hold. Do not buy
+installs. Do not start a listing experiment from this card alone — the
+larger holes are still open-after-install (88 of 162 never opened) and
+week-1 return, even though D7 is no longer a single device.
+
+Until the owner names a different bet: reply on the Reddit thread, put
+**1.13.5** on the A56 when ship is ready, and only upload an AAB when they
+ask.
+
+AdMob App Overview paste **21–27 Oct** (owner, 28 Oct): estimated
+earnings **0.01 kr** (−99.6% vs prior week), **84** requests, **1**
+impression, match rate **85.7%**, eCPM **14.85 kr**. Analytics card:
+**59** active users, sessions/user **1.49**, avg session **5m 21s**,
+ad exposures/session **0.15%**, retention sparkline **0%**. Same shape
+as older AdMob reads (many requests, almost no shows) — preload at boot
+still explains requests without a watched reward. Ignore eCPM at this
+volume. Payout identity / PIN / bank stay owner ops, not a code batch.
+
+### API read 28 Oct
+
+This key can read reviews, the live track, shop products, and crash/ANR
+counts. It **cannot** read the grow-page funnel above.
+
+Production track before the **2026-10-28** upload: **1.13.2 (228)**
+`completed`. **1.13.5 (231)** was submitted the same day (edit committed;
+public page can lag). Alpha still **1.12.133 (163)**. Internal still
+**1.9.3 (14)**. Beta is empty.
+
+Reviews API (about the last week): **one** review. French **1★** on
+**1.13.2 (228)**, **24 Oct**, Galaxy A16. Race difference unclear; music
+starts and stops for no reason. Same review already fixed in-game
+(`3c681843`). No developer reply on the API object yet.
+
+Error counts **30 Sep–28 Oct** (America/Los_Angeles for daily). Versions
+with any row: **222**, **224**, **225** only. **227** and **228** have
+**zero** crash and ANR rows in this window. Last non-zero day is still
+**16 Oct** (ANR on 225). Daily crash-rate and ANR-rate queries returned
+empty bodies through freshness **19 Oct** — that is not a measured 0%.
+
+| When | Build | What | Reports | Users |
+|------|--------|------|---------|-------|
+| 30 Sep | 222 | crash | 1 | 1 |
+| 5, 7, 8, 10 Oct | 224 | ANR | 1 each day | 1 each day |
+| 7 Oct | 224 | crash | 1 | 1 |
+| 13 Oct | 225 | ANR | 12 | 3 |
+| 14 Oct | 225 | ANR | 4 | 1 |
+| 15 Oct | 225 | ANR | 2 | 2 |
+| 16 Oct | 225 | ANR | 1 | 1 |
+
+**2** crashes in this window (**222**, **224**). **23** ANRs: **4** on
+**224**, **19** on **225**. Full-range device split is unchanged from the
+19 Oct look: **17** of **23** ANRs on tablet `IRIS_OHYAMA/TE10D1M64`; the
+rest on Galaxy S25 FE, Pixel 6, Galaxy A14. No new error cluster since
+that look. Watch **228** and later.
 
 ### API read 19 Oct
 
