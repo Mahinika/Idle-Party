@@ -32,6 +32,7 @@ extension GameDirectorSave on GameDirector {
     _persist();
     return _saveChain;
   }
+
   void _applyFunnelTick(FunnelTick tick, {bool persist = true}) {
     if (identical(tick.state, _state) && tick.events.isEmpty) return;
     _state = tick.state;
@@ -55,6 +56,7 @@ extension GameDirectorSave on GameDirector {
         : FunnelAnalytics.onExistingSession(_state, clock);
     _applyFunnelTick(tick, persist: false);
   }
+
   /// Title NEW GAME on an empty file. Ignored once [startNewGame] runs.
   void armNewGameSlot(int index) {
     _pendingNewGameSlot = index.clamp(0, GameStorage.slotCount - 1);
@@ -69,6 +71,7 @@ extension GameDirectorSave on GameDirector {
       _hasExistingSave = false;
     }
   }
+
   void setAppPaused(bool paused) {
     if (_appPaused == paused) return;
     _appPaused = paused;
@@ -132,6 +135,7 @@ extension GameDirectorSave on GameDirector {
     }
     _state = next;
   }
+
   void _syncHubIdleTimer() {
     final want =
         enableSpatialLoop &&
@@ -187,6 +191,7 @@ extension GameDirectorSave on GameDirector {
       seconds,
     ).copyWith(lastUpdated: now);
   }
+
   Future<void> boot({bool deferCombatLoop = false}) async {
     _funnelSessionReadyMs = DateTime.now().millisecondsSinceEpoch;
     try {
@@ -226,8 +231,11 @@ extension GameDirectorSave on GameDirector {
       }
       // Only persist when continuing an existing save (offline catch-up).
       if (_hasExistingSave) {
+        _notePlaySession();
         _noteFunnelSession(newInstall: false);
         await _persistFlush();
+      } else {
+        _notePlaySession();
       }
       _saveSlots = await _storage.listSlots();
       _activeSlot = _storage.activeSlotIndex;
@@ -289,6 +297,7 @@ extension GameDirectorSave on GameDirector {
     if (offline.hasSummary) {
       if (showCard) {
         uiFeedback.presentOffline(offline);
+        noteReviewWelcome(offline);
         // The cave opens the same Welcome Back card. A toast would cover it.
       }
       final tick = offline.goldGained > 0
@@ -349,6 +358,7 @@ extension GameDirectorSave on GameDirector {
     _hasExistingSave = true;
     final caught = await _catchUpSaved(saved, deferCombatLoop: true);
     await _installCaughtUp(caught);
+    _notePlaySession();
     _noteFunnelSession(newInstall: false);
     await _persistFlush();
     _saveSlots = await _storage.listSlots();
@@ -406,6 +416,7 @@ extension GameDirectorSave on GameDirector {
       partySexes: partySexes,
     );
     _hasExistingSave = true;
+    _notePlaySession(newGame: true);
     _noteFunnelSession(newInstall: true);
     _syncDevicePrefs();
     _lastHighestDungeon = _state.highestDungeonCleared;
@@ -417,6 +428,35 @@ extension GameDirectorSave on GameDirector {
     _saveSlots = await _storage.listSlots();
     _directorNotify();
     unawaited(syncFriendReferral());
+  }
+
+  /// One count per cold start. A new game is sitting 1.
+  /// An older save that already cleared the first boss is not treated as
+  /// that player's first sitting.
+  void _notePlaySession({bool newGame = false}) {
+    if (newGame) {
+      _sessionNotedSlots.add(_activeSlot);
+      _bossesAtSessionStart = 0;
+      _sessionBossBaselineSet = true;
+      _reviewWelcome = null;
+      _state = _state.copyWith(
+        metaDepth: _state.metaDepth.copyWith(sessionCount: 1),
+      );
+      return;
+    }
+    if (_sessionNotedSlots.contains(_activeSlot)) return;
+    _sessionNotedSlots.add(_activeSlot);
+    final prior = _state.metaDepth.sessionCount;
+    var next = prior + 1;
+    if (prior == 0 && _hasExistingSave && GameLogic.showDailyChase(_state)) {
+      next = 2;
+    }
+    if (next < 1) next = 1;
+    _state = _state.copyWith(
+      metaDepth: _state.metaDepth.copyWith(sessionCount: next),
+    );
+    _bossesAtSessionStart = _state.bossVictories;
+    _sessionBossBaselineSet = true;
   }
 
   /// Continue from the loaded save into play (no-op if already ready).

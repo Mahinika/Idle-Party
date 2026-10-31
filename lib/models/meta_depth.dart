@@ -41,7 +41,8 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'torch_keep',
       name: 'Keep Torch',
-      description: '+8% hub AFK gold per level (hub-only sanctuary idle — not combat).',
+      description:
+          '+8% hub AFK gold per level (hub-only sanctuary idle — not combat).',
       cost: 35,
       minAl: 3,
     ),
@@ -370,6 +371,9 @@ class MetaDepthState {
     this.notifyPrompted = false,
     this.notifyPingMs = const <int>[],
     this.reviewPrompted = false,
+    this.reviewAskCount = 0,
+    this.reviewSnoozeUntilMs = 0,
+    this.sessionCount = 0,
     this.awayFightTipSeen = false,
     this.awayPromiseUtc = '',
     this.friendCode = '',
@@ -723,9 +727,22 @@ class MetaDepthState {
   /// Fire times (epoch ms) of recent pings — cap ~2 per UTC day.
   final List<int> notifyPingMs;
 
-  /// True after Play in-app review was asked (or SETTINGS RATE ON PLAY).
+  /// True after the player rated, or the ask budget is used up.
   /// Survives Ascend. Never tied to loot.
   final bool reviewPrompted;
+
+  /// How many times the hub rating card was dismissed. Survives Ascend.
+  /// Old saves default to 0.
+  final int reviewAskCount;
+
+  /// UTC epoch ms. The hub card stays quiet until this time. 0 means ready.
+  /// Survives Ascend. Old saves default to 0.
+  final int reviewSnoozeUntilMs;
+
+  /// Cold starts of this save. 1 is the first sitting. Survives Ascend.
+  /// Old saves default to 0 and the next launch counts as a later sitting
+  /// once the first boss is already down.
+  final int sessionCount;
 
   /// True after the one-time "they keep fighting if you close the app" line.
   /// Survives Ascend. Old saves default to false and can still see it.
@@ -927,6 +944,9 @@ class MetaDepthState {
     bool? notifyPrompted,
     List<int>? notifyPingMs,
     bool? reviewPrompted,
+    int? reviewAskCount,
+    int? reviewSnoozeUntilMs,
+    int? sessionCount,
     bool? awayFightTipSeen,
     String? awayPromiseUtc,
     String? friendCode,
@@ -1111,6 +1131,9 @@ class MetaDepthState {
       notifyPrompted: notifyPrompted ?? this.notifyPrompted,
       notifyPingMs: notifyPingMs ?? this.notifyPingMs,
       reviewPrompted: reviewPrompted ?? this.reviewPrompted,
+      reviewAskCount: reviewAskCount ?? this.reviewAskCount,
+      reviewSnoozeUntilMs: reviewSnoozeUntilMs ?? this.reviewSnoozeUntilMs,
+      sessionCount: sessionCount ?? this.sessionCount,
       awayFightTipSeen: awayFightTipSeen ?? this.awayFightTipSeen,
       awayPromiseUtc: awayPromiseUtc ?? this.awayPromiseUtc,
       friendCode: friendCode ?? this.friendCode,
@@ -1277,6 +1300,9 @@ class MetaDepthState {
     'notifyPrompted': notifyPrompted,
     'notifyPingMs': notifyPingMs,
     'reviewPrompted': reviewPrompted,
+    'reviewAskCount': reviewAskCount,
+    'reviewSnoozeUntilMs': reviewSnoozeUntilMs,
+    'sessionCount': sessionCount,
     'awayFightTipSeen': awayFightTipSeen,
     'awayPromiseUtc': awayPromiseUtc,
     'friendCode': friendCode,
@@ -1561,6 +1587,9 @@ class MetaDepthState {
               .toList() ??
           const <int>[],
       reviewPrompted: (json['reviewPrompted'] as bool?) ?? false,
+      reviewAskCount: (json['reviewAskCount'] as num?)?.toInt() ?? 0,
+      reviewSnoozeUntilMs: (json['reviewSnoozeUntilMs'] as num?)?.toInt() ?? 0,
+      sessionCount: (json['sessionCount'] as num?)?.toInt() ?? 0,
       awayFightTipSeen: (json['awayFightTipSeen'] as bool?) ?? false,
       awayPromiseUtc: json['awayPromiseUtc'] as String? ?? '',
       friendCode: _friendCode(json['friendCode'] as String?),

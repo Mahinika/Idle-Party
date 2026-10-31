@@ -173,9 +173,7 @@ extension GameDirectorPlatform on GameDirector {
         case AdWatchResult.rewarded:
           _welcomeBackAdGranted = true;
           final beforeGold = _state.gold;
-          _applyUpgrade(
-            GameLogic.grantWelcomeBackWatchGold(_state, baseGold),
-          );
+          _applyUpgrade(GameLogic.grantWelcomeBackWatchGold(_state, baseGold));
           final gained = _state.gold - beforeGold;
           if (gained <= 0) {
             _welcomeBackAdGranted = false;
@@ -183,9 +181,7 @@ extension GameDirectorPlatform on GameDirector {
           }
           GameAudio.gold();
           showToast('Welcome Back · +$gained gold', life: 2.4);
-          unawaited(
-            AppAnalytics.logEvent('welcome_back_ad', {'gold': gained}),
-          );
+          unawaited(AppAnalytics.logEvent('welcome_back_ad', {'gold': gained}));
           return true;
         case AdWatchResult.skipped:
           showToast(
@@ -231,6 +227,7 @@ extension GameDirectorPlatform on GameDirector {
         dismissWispPending();
     }
   }
+
   Future<void> acceptNotifyOptIn() async {
     _applyNotify(LocalReminders.setOptIn(_state, enabled: true));
     unawaited(AppAnalytics.logEvent('notify_opt_in', {'source': 'card'}));
@@ -406,6 +403,7 @@ extension GameDirectorPlatform on GameDirector {
   Future<void> requestPlayReview({String source = 'card'}) async {
     final already = _state.metaDepth.reviewPrompted;
     _applyNotify(PlayReviewAsk.markPrompted(_state));
+    clearReviewWelcome();
     unawaited(AppAnalytics.logEvent('review_prompt', {'source': source}));
     final sheet = await PlayStoreUpdate.requestInAppReview();
     if (sheet) return;
@@ -416,7 +414,8 @@ extension GameDirectorPlatform on GameDirector {
   }
 
   void dismissPlayReviewAsk() {
-    _applyNotify(PlayReviewAsk.markPrompted(_state));
+    _applyNotify(PlayReviewAsk.snooze(_state));
+    clearReviewWelcome();
     unawaited(
       AppAnalytics.logEvent('review_prompt', {
         'source': 'card',
