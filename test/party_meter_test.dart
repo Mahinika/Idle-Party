@@ -56,7 +56,7 @@ void main() {
     expect(dpsRows.length, 2); // fire + tank damage
     final topDps = dpsRows.firstWhere((r) => r.highlight);
     expect(topDps.bar, 1.0);
-    expect(topDps.tag, 'FIRE');
+    expect(topDps.tag, 'CINDER');
 
     final dtps = snap.rows.where((r) => r.unit == 'dtps').single;
     expect(dtps.bar, 1.0);
@@ -84,10 +84,10 @@ void main() {
     expect(snap.rows, isEmpty);
   });
 
-  test('PartyMeter COMBAT short label is COM', () {
+  test('PartyMeter Alleyblade short label is ALLEY', () {
     expect(
       PartyMeter.heroTag(_hero(id: 'r', spec: HeroSpecId.combat)),
-      'COM',
+      'ALLEY',
     );
   });
 

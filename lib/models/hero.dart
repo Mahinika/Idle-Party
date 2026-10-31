@@ -50,13 +50,13 @@ enum HeroRace {
     HeroRace.dwarf => 'Dwarf',
     HeroRace.nightElf => 'Night Elf',
     HeroRace.gnome => 'Gnome',
-    HeroRace.draenei => 'Draenei',
+    HeroRace.draenei => 'Starhorn',
     HeroRace.worgen => 'Worgen',
     HeroRace.orc => 'Orc',
-    HeroRace.forsaken => 'Forsaken',
+    HeroRace.forsaken => 'Ashborn',
     HeroRace.tauren => 'Tauren',
     HeroRace.troll => 'Troll',
-    HeroRace.bloodElf => 'Blood Elf',
+    HeroRace.bloodElf => 'Dawnsong',
     HeroRace.goblin => 'Goblin',
   };
 
@@ -66,13 +66,13 @@ enum HeroRace {
     HeroRace.dwarf => 'DWARF',
     HeroRace.nightElf => 'N.ELF',
     HeroRace.gnome => 'GNOME',
-    HeroRace.draenei => 'DRAENEI',
+    HeroRace.draenei => 'STAR',
     HeroRace.worgen => 'WORGEN',
     HeroRace.orc => 'ORC',
-    HeroRace.forsaken => 'FORSAKEN',
+    HeroRace.forsaken => 'ASHBORN',
     HeroRace.tauren => 'TAUREN',
     HeroRace.troll => 'TROLL',
-    HeroRace.bloodElf => 'B.ELF',
+    HeroRace.bloodElf => 'DAWN',
     HeroRace.goblin => 'GOBLIN',
   };
 

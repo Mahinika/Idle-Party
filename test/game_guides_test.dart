@@ -46,7 +46,7 @@ void main() {
     expect(sanctuary.body.toLowerCase(), contains('cinders'));
     expect(sanctuary.body.toLowerCase(), contains('not essence buys'));
     final bag = topics.firstWhere((t) => t.id == 'bag_equip');
-    expect(bag.body, contains('Dual-wield is Rogue / Fury / Enhancement / Frost DK'));
+    expect(bag.body, contains('Dual-wield is Cutpurse / Twinrage / Totemstrike / Rimeblade'));
     expect(bag.body, isNot(contains('Survival')));
     expect(bag.body, contains('FILTERS matches'));
     expect(bag.body.toLowerCase(), contains('bis'));
