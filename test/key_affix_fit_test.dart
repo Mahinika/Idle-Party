@@ -20,15 +20,18 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    final now = DateTime.utc(2026, 10, 17);
+    final now = DateTime.now().toUtc();
     final base = GameLogic.createInitialState(now: now);
     final state = base.copyWith(
+      heroes: [
+        for (final hero in base.heroes) hero.copyWith(level: 100, xp: 0),
+      ],
       heroRoster: [
         for (final hero in base.heroRoster) hero.copyWith(level: 100, xp: 0),
       ],
       hardmodeLevel: 4,
       metaDepth: base.metaDepth.copyWith(
-        weeklyKey: '2026-W42',
+        weeklyKey: GameLogic.isoWeekKey(now),
         weeklyModifier: 'iron',
       ),
     );

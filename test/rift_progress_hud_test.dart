@@ -46,7 +46,7 @@ void main() {
       ),
     );
     expect(
-      find.bySemanticsLabel('GR21 10% · 00:50 left · BEHIND'),
+      find.bySemanticsLabel('GR21 10% · 00:50 LEFT · BEHIND'),
       findsOneWidget,
     );
     expect(find.text('GR21'), findsOneWidget);

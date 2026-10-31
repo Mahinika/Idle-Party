@@ -84,8 +84,8 @@ class JobsOverlay extends StatelessWidget {
 
   Widget _questCard(Mission mission, int index) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
       decoration: MenuChrome.listCard(
         borderColor: switch (mission.tier) {
           2 => GameTheme.bloodLit,
@@ -122,7 +122,7 @@ class JobsOverlay extends StatelessWidget {
               Expanded(
                 child: Text(
                   displayTitle(mission, index),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GameTheme.body(
                     size: 16,
@@ -140,11 +140,11 @@ class JobsOverlay extends StatelessWidget {
           Text(
             'Progress ${mission.progress}/${mission.target}'
             ' · ${rewardLine(gold: mission.goldReward, essence: mission.essenceReward)}',
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 14),
+            style: GameTheme.body(size: 13),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           ClipRRect(
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             child: LinearProgressIndicator(
@@ -158,20 +158,24 @@ class JobsOverlay extends StatelessWidget {
                   : GameTheme.torchHot,
             ),
           ),
-          if (mission.canClaim || mission.claimed) ...[
-            const SizedBox(height: 6),
+          if (mission.claimed) ...[
+            const SizedBox(height: 2),
+            Text(
+              'CLAIMED',
+              textAlign: TextAlign.right,
+              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+            ),
+          ] else if (mission.canClaim) ...[
+            const SizedBox(height: 4),
             Align(
               alignment: Alignment.centerRight,
               child: GameButton(
-                label: mission.claimed
-                    ? 'CLAIMED'
-                    : (director.state.metaDepth.jobChainCount == 2
-                          ? chainClaimLabel()
-                          : 'CLAIM'),
-                onPressed: mission.canClaim
-                    ? () => director.claimMission(mission.id)
-                    : null,
+                label: director.state.metaDepth.jobChainCount == 2
+                    ? chainClaimLabel()
+                    : 'CLAIM',
+                onPressed: () => director.claimMission(mission.id),
                 style: GameButtonStyle.grey,
+                dense: true,
                 expanded: false,
               ),
             ),

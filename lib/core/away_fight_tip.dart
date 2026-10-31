@@ -39,13 +39,18 @@ abstract final class AwayFightTip {
   }
 
   /// Death card owns the cave. "Keeps fighting" is a lie while the party is dead.
+  ///
+  /// [firstBoss] is the first Sandy boss still ahead. That climb shows the
+  /// away promise. The fist still teaches the long-press.
   static String? caveCoach({
     required bool wiped,
     required String? godhand,
     required String? away,
     required String? farm,
+    bool firstBoss = false,
   }) {
     if (wiped) return null;
+    if (firstBoss && away != null) return away;
     return godhand ?? away ?? farm;
   }
 

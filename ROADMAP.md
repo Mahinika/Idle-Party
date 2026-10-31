@@ -21,9 +21,8 @@ isolate from the old ANR notes.
 
 1. **Get them to come back.** The cave already keeps fighting while the app
    is closed, and the hub already names one cave for tomorrow. D7 is still
-   9 devices. The next retention slice is making that promise obvious on
-   the first boss, then keeping Welcome Back honest. Do not add a second
-   daily calendar.
+   9 devices. The first-boss coach line now says the party keeps fighting
+   if you close the app. Do not add a second daily calendar.
 2. **Offer the ad when the gold is on screen.** Welcome Back now has an
    optional watch that turns that return’s gold into ×3 — the same number
    as Scroll of Rest. Skip keeps the gold. Ad-free and Forever Rest are

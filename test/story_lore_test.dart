@@ -38,7 +38,7 @@ void main() {
     );
     expect(body, contains('+7e'));
     expect(body, contains('AL1'));
-    expect(body, contains('+5 ATK'));
+    expect(body, contains('+5 AP'));
     expect(body, contains('forever'));
     expect(body, contains('starter'));
     expect(body, contains('Keep:'));

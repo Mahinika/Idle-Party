@@ -114,18 +114,9 @@ class DungeonWipePanel extends StatelessWidget {
                   ],
                   if (state.wipeAdviceLine.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    ExpansionTile(
-                      tilePadding: EdgeInsets.zero,
-                      childrenPadding: const EdgeInsets.only(bottom: 4),
+                    MenuChrome.fold(
+                      title: 'Why?',
                       initiallyExpanded: false,
-                      title: Text(
-                        'Why?',
-                        textAlign: TextAlign.center,
-                        style: GameTheme.body(
-                          size: 14,
-                          color: GameTheme.torchHot,
-                        ),
-                      ),
                       children: [
                         Text(
                           state.wipeAdviceLine,
