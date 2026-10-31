@@ -8,6 +8,7 @@ import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
+import 'shop_billing.dart';
 import 'shop_catalog.dart';
 
 bool storeAvailable = false;
@@ -149,19 +150,24 @@ Future<void> _recoverUnfinishedPurchases() async {
     if (response.error != null) {
       debugPrint('ShopStore queryPastPurchases: ${response.error}');
     }
-    await _handlePurchases(response.pastPurchases);
+    // These rows keep status purchased. Treat them as existing so an old
+    // ad-free or Long Away pack does not toast "Purchased" or log a buy.
+    await _handlePurchases(response.pastPurchases, fromPastQuery: true);
   } catch (e, st) {
     debugPrint('ShopStore queryPastPurchases failed: $e\n$st');
   }
 }
 
-Future<void> _handlePurchases(List<PurchaseDetails> purchases) async {
+Future<void> _handlePurchases(
+  List<PurchaseDetails> purchases, {
+  bool fromPastQuery = false,
+}) async {
   for (final purchase in purchases) {
     final key = _settleKey(purchase);
     final prev = _settleTails[key] ?? Future<void>.value();
-    final next = prev
-        .catchError((Object _) {})
-        .then((_) => _settlePurchase(purchase));
+    final next = prev.catchError((Object _) {}).then(
+      (_) => _settlePurchase(purchase, fromPastQuery: fromPastQuery),
+    );
     _settleTails[key] = next;
     await next;
   }
@@ -179,7 +185,10 @@ String _purchaseKey(PurchaseDetails purchase) {
   return purchase.verificationData.serverVerificationData.trim();
 }
 
-Future<void> _settlePurchase(PurchaseDetails purchase) async {
+Future<void> _settlePurchase(
+  PurchaseDetails purchase, {
+  bool fromPastQuery = false,
+}) async {
   switch (purchase.status) {
     case PurchaseStatus.pending:
       _onMessage?.call('Purchase pending…');
@@ -204,7 +213,10 @@ Future<void> _settlePurchase(PurchaseDetails purchase) async {
           saved = await _onGranted!(
             productId: purchase.productID,
             purchaseId: purchaseId,
-            restored: purchase.status == PurchaseStatus.restored,
+            restored: ShopBilling.countsAsExistingPurchase(
+              fromPastQuery: fromPastQuery,
+              statusRestored: purchase.status == PurchaseStatus.restored,
+            ),
           );
         } catch (e, st) {
           debugPrint('ShopStore grant failed: $e\n$st');

@@ -72,6 +72,14 @@ abstract final class ShopBilling {
   /// is not paid again. An unfinished one is granted by [shouldGrantPurchase].
   static bool grantOnRestore(ShopCatalogItem item) => !item.isConsumable;
 
+  /// Startup [queryPastPurchases] reports [purchased] for packs the player
+  /// already owns. That row is an existing purchase, same as a restore.
+  /// A live buy is neither, so it can toast and log store_purchase.
+  static bool countsAsExistingPurchase({
+    required bool fromPastQuery,
+    required bool statusRestored,
+  }) => fromPastQuery || statusRestored;
+
   static const int grantedPurchaseIdCap = 64;
 
   static bool alreadyGranted(GameState state, String purchaseId) {

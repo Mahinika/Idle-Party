@@ -12,6 +12,7 @@ import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/pet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 void main() {
   test('GameState JSON round-trips core fields', () {
@@ -554,4 +555,41 @@ void main() {
       HeroSex.female,
     );
   });
+
+  test('save returns false when setString returns false', () async {
+    SharedPreferences.setMockInitialValues({});
+    SharedPreferencesStorePlatform.instance = _RejectingPrefsStore();
+    addTearDown(() => SharedPreferences.setMockInitialValues({}));
+    final prefs = await SharedPreferences.getInstance();
+    final storage = SharedPreferencesGameStorage(preferences: prefs);
+    final state = GameLogic.createInitialState(now: DateTime(2026, 10, 31));
+    expect(await storage.save(state), isFalse);
+  });
+
+  test('save propagates a thrown write', () async {
+    SharedPreferences.setMockInitialValues({});
+    SharedPreferencesStorePlatform.instance = _ThrowingPrefsStore();
+    addTearDown(() => SharedPreferences.setMockInitialValues({}));
+    final prefs = await SharedPreferences.getInstance();
+    final storage = SharedPreferencesGameStorage(preferences: prefs);
+    final state = GameLogic.createInitialState(now: DateTime(2026, 10, 31));
+    await expectLater(storage.save(state), throwsA(isA<StateError>()));
+  });
+}
+
+class _RejectingPrefsStore extends InMemorySharedPreferencesStore {
+  _RejectingPrefsStore() : super.empty();
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async =>
+      false;
+}
+
+class _ThrowingPrefsStore extends InMemorySharedPreferencesStore {
+  _ThrowingPrefsStore() : super.empty();
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async {
+    throw StateError('disk full');
+  }
 }
