@@ -83,8 +83,9 @@ Hub **SCROLLS → TIP A FRIEND** is optional:
 
 ## Optional real-money SHOP (Android / Google Play)
 
-Bottom-tab **SHOP** may offer forever SCROLLS, ad-free, and Cinder packs
-(the same slow relic currency you also earn from the Daily Vault). Purchases go through **Google Play Billing**. Google processes the
+Bottom-tab **SHOP** offers ad-free, Long Away, and a Supporter pack. Forever
+scrolls and a Cinder pouch are not listed until Google Play sells that product.
+Purchases go through **Google Play Billing**. Google processes the
 payment; Idle Party does not run its own payment server. Purchase ownership for
 one-time packs is stored in your local save (and optional Play Games cloud save
 if you opt in). Sideloaded APKs cannot complete Play Billing buys.

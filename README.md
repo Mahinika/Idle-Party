@@ -36,7 +36,7 @@ Art in the game is owned and lives under `assets/custom/`. In-game text is Engli
 - **Gear and gold.** GEAR wears budget upgrades (AUTO EQUIP, on by default). GOLD is the forge and the market.
 - **Endgame when every active hero is Lv100.** KEY, Gauntlet, Farm Rift, Ranked Greater Rift, and Ashen Crown. Craft Trial is under MORE → CRAFT, not a hub hunt.
 - **Ascend.** Hero levels, open caves, essence, relics, pets, and shop buys stay. Wallet gold, worn drops, and floor progress reset. Cap is AL20. Blessing stacks stay.
-- **Optional ads and shop.** Rewarded ads are opt-in. SHOP has ad-free, supporter, and scrolls.
+- **Optional ads and shop.** Rewarded ads are opt-in. SHOP sells ad-free, Long Away, and Supporter. Forever scrolls and the Cinder pouch stay off the shelf until Play activates them.
 
 Tabs on the phone: GEAR, GOLD, SHOP, ESSENCE, MORE. Early on, only GEAR and MORE show. God Hand is a long-press on the fight, or the fist.
 
@@ -51,6 +51,7 @@ On this branch, not yet a new Play build:
 - Welcome Back can offer an optional watch after the first boss. A full watch makes that return’s gold ×3. Nothing new is written into the save.
 - Until the first boss dies, the cave coach says the party keeps fighting if you close the app.
 - Clearing a room or boss no longer crashes in the keystone helper. The 1.13.5 binary on Play does not have that crash.
+- SHOP lists Ad-free, Long Away, and Supporter. Forever scrolls and the Cinder pouch stay hidden until Play returns that product. A restore does not pay a consumable twice.
 
 **1.13.5** (notes Oct 25, 2026): the party fights on its own, race is look only, and music stays on in the hub and in a cave.
 

@@ -81,8 +81,9 @@ main.dart
             dungeon: + LEAVE)
 ```
 
-GOLD = FORGE + MARKET. SHOP = forever SCROLLS + ad-free / supporter (hour
-packs are restore-only). ESSENCE = CAMP + BLESSING + relics + pets. MORE =
+GOLD = FORGE + MARKET. SHOP = ad-free, Long Away, and Supporter (hour
+packs restore only; forever scrolls and the Cinder pouch show only after
+Play lists them). ESSENCE = CAMP + BLESSING + relics + pets. MORE =
 QUESTS / CRAFT / SETTINGS / INFO. Redeem code is SHOP and MORE → SETTINGS.
 Hub POWERUPS stay on the hub.
 

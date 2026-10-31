@@ -191,7 +191,7 @@ abstract final class GameGuides {
         '• Watch them clear rooms. Long-press the fight, or tap the fist, when you want to help.\n'
         '• The hunt line on the hub always names the next job — start there.\n'
         '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (tracks + '
-        'market), SHOP (SCROLLS / Cinder packs / ad-free), ESSENCE (tracks / '
+        'market), SHOP (ad-free, Long Away, Supporter), ESSENCE (tracks / '
         'lasting buys / Embers relics / pets), MORE. QUESTS and Craft live as rows '
         'inside MORE when they unlock.\n'
         '• In a dungeon the sixth slot is LEAVE (back to hub).\n'
@@ -382,7 +382,7 @@ abstract final class GameGuides {
           '• Watch them clear rooms. Long-press the fight, or tap the fist, when you want to help.\n'
           '• The hunt line on the hub always names the next job — start there.\n'
           '• Bottom tabs (same bar in hub and dungeon): GEAR, GOLD (run power + '
-          'market), SHOP (SCROLLS / Cinder packs / ad-free), ESSENCE (CAMP / '
+          'market), SHOP (ad-free, Long Away, Supporter), ESSENCE (CAMP / '
           'BLESSING / Embers relics / pets), MORE. QUESTS and Craft live as rows '
           'inside MORE. When the party is max level, KEY joins the hub bar as a '
           'sixth tab after MORE — SHOP stays. In a dungeon the sixth slot is '
@@ -635,7 +635,7 @@ abstract final class GameGuides {
           'Readout on ESSENCE → BLESSING. Not Star Nodes.\n'
           '• ESSENCE CAMP + pets — forever power bought with essence (CAMP / PETS).\n'
           '• RELICS — Embers discover and level unique finds (bosses, Ascend, salvage). '
-          'Cinders come from the Daily Vault, Ad Tickets, or a SHOP pouch — salvage or '
+          'Cinders come from the Daily Vault or Ad Tickets — salvage or '
           'trade a few Embers. Not essence buys.\n\n'
           'Gear, Apex, AL flats, and Star Nodes add sheet power on top. '
           'After Ascend, rebuild GOLD → FORGE first — Blessing and essence shelves stay.',
@@ -701,9 +701,9 @@ abstract final class GameGuides {
           'on lasting rates/power.\n'
           '• BLESSING: God Hand damage/CD/style, Ascend Blessing readout, Star Nodes, lasting QoL buys '
           '(AL-gated), constellation at AL20, optional REBORN. '
-          'Not the bottom-tab SHOP (SCROLLS / Cinder packs / ad-free).\n'
+          'Not the bottom-tab SHOP (ad-free, Long Away, Supporter).\n'
           '• RELICS: Embers discover and level unique finds (bosses, Ascend, salvage). '
-          'Cinders from Daily Vault (+1 on claim), two Ad Tickets, or a SHOP pouch — '
+          'Cinders from Daily Vault (+1 on claim) or two Ad Tickets — '
           'salvage a relic or trade a few Embers each week. One effect each '
           '(boss damage, low-HP DR, stairs heal, God Hand CD, loot, mitigate, gold, '
           'offline gold, flask, mana, …), up to T6 — not AP/Armor/STA auras, not essence buys.\n'
@@ -793,8 +793,8 @@ abstract final class GameGuides {
           '• Buy flasks and bandages with gold.\n'
           '• Clear a full bag with BAG → SELL JUNK, MERGE, or BAG → FILTERS.\n'
           '• Keep at least one flask for tough floors and bosses.\n'
-          '• Bottom-tab SHOP is the real-money store (forever SCROLLS / Cinder packs / '
-          'ad-free on Play installs) — not this market.',
+          '• Bottom-tab SHOP is the real-money store (ad-free, Long Away, and '
+          'Supporter) — not this market.',
     ),
     GuideTopic(
       id: 'pets',
@@ -823,8 +823,8 @@ abstract final class GameGuides {
           '• God Hand cooldown upgrades live only under God Hand on BLESSING (one door).\n'
           '• Purchases survive Ascend.\n'
           '• Unlock higher offerings as Ascension Level rises.\n'
-          '• Bottom-tab SHOP is real-money store (forever SCROLLS / Cinder packs / '
-          'ad-free) — not these essence buys.',
+          '• Bottom-tab SHOP is the real-money store (ad-free, Long Away, and '
+          'Supporter) — not these essence buys.',
     ),
     GuideTopic(
       id: 'jobs',

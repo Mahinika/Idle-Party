@@ -133,7 +133,7 @@ Idle Party is a portrait idle RPG and dungeon crawl. The camera stays on your he
 ## Fair play
 - Single-player — no Idle Party account required.
 - Optional rewarded ads (hub SCROLLS) grant timed scrolls and never interrupt a fight.
-- Optional SHOP sells forever SCROLLS, ad-free, and Cinder packs — not pay-to-win gear.
+- Optional SHOP sells ad-free, Long Away, and a Supporter pack — not pay-to-win gear.
 
 Start your party and take one more floor.
 
@@ -162,7 +162,7 @@ itch.io page: https://cognifox-studio.itch.io/idle-party
 Android on Google Play (free, single-player, no account):
 https://play.google.com/store/apps/details?id=com.idleparty.app
 
-Fair SHOP (SCROLLS / Cinder packs / ad-free) and optional hub SCROLLS ads — nothing interrupts combat.
+Fair SHOP (ad-free, Long Away, Supporter) and optional hub SCROLLS ads — nothing interrupts combat.
 
 Trailer:
 ```

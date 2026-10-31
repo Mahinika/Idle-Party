@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 import 'flutter_test_env_stub.dart'
-    if (dart.library.io) 'flutter_test_env_io.dart' as test_env;
+    if (dart.library.io) 'flutter_test_env_io.dart'
+    as test_env;
 import 'shop_catalog.dart';
 
 bool storeAvailable = false;
@@ -12,7 +13,7 @@ bool productsReady = false;
 
 final Map<String, ProductDetails> _products = {};
 StreamSubscription<List<PurchaseDetails>>? _sub;
-void Function(String productId)? _onGranted;
+void Function(String productId, bool restored)? _onGranted;
 void Function(String message)? _onMessage;
 bool _androidStore = false;
 
@@ -27,7 +28,7 @@ bool get _platformOk {
 }
 
 Future<void> warmup({
-  required void Function(String productId) onGranted,
+  required void Function(String productId, bool restored) onGranted,
   void Function(String message)? onMessage,
 }) async {
   _onGranted = onGranted;
@@ -62,9 +63,7 @@ Future<void> _queryProducts() async {
     );
     _products
       ..clear()
-      ..addEntries(
-        response.productDetails.map((p) => MapEntry(p.id, p)),
-      );
+      ..addEntries(response.productDetails.map((p) => MapEntry(p.id, p)));
     productsReady = _products.isNotEmpty;
     if (response.notFoundIDs.isNotEmpty) {
       debugPrint('ShopStore missing Console SKUs: ${response.notFoundIDs}');
@@ -137,7 +136,10 @@ Future<void> _handlePurchases(List<PurchaseDetails> purchases) async {
         }
       case PurchaseStatus.purchased:
       case PurchaseStatus.restored:
-        _onGranted?.call(purchase.productID);
+        _onGranted?.call(
+          purchase.productID,
+          purchase.status == PurchaseStatus.restored,
+        );
         if (purchase.pendingCompletePurchase) {
           await InAppPurchase.instance.completePurchase(purchase);
         }
