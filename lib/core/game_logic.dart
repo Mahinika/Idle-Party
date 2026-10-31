@@ -55,6 +55,9 @@ part 'game_logic_ascend.dart';
 part 'game_logic_endgame.dart';
 part 'game_logic_ladders.dart';
 part 'game_logic_meta_season.dart';
+part 'game_logic_forge.dart';
+part 'game_logic_party.dart';
+part 'game_logic_dungeon.dart';
 
 class GameLogic {
   /// Injectable randomness for enemy targeting (seed in tests).
@@ -288,194 +291,21 @@ class GameLogic {
     return bossFloorFor(state);
   }
 
-  static GameState enterDungeon(GameState state, {String dungeonId = 'sandy'}) {
-    final def = DungeonCatalog.byId(dungeonId);
-    final unlocked = DungeonCatalog.isUnlocked(
-      dungeonId,
-      partyMeanLevel(state),
-      state.highestDungeonCleared,
-    );
-    if (!unlocked && def.number > 0) {
-      return state;
-    }
-    final baseSeed = newLayoutSeed();
-    final mirrorSalt = LocalSeasonCatalog.mirrorLayoutSeed(state);
-    final layoutSeed = mirrorSalt == 0 ? baseSeed : baseSeed ^ mirrorSalt;
-    final primed = _beginKeystoneRun(ensureWeeklyContract(state));
-    final bossAt = bossFloorFor(primed);
-    final resume =
-        primed.dungeonMode != DungeonMode.farm &&
-        firstBossPending(primed) &&
-        primed.highestFloorCleared > 0 &&
-        primed.highestFloorCleared < bossAt;
-    final startFloor = resume ? primed.highestFloorCleared + 1 : 1;
-    final floor = DungeonGenerator.generateFloor(
-      startFloor,
-      ascensionLevel: primed.ascensionLevel,
-      dungeonId: dungeonId,
-      layoutSeed: layoutSeed,
-      keyLevel: layoutKeyLevel(primed),
-      crowded: layoutCrowded(primed),
-      bossFloor: bossAt,
-    );
-    final room = floor.first;
-    return primed.copyWith(
-      inDungeon: true,
-      inGauntlet: false,
-      dungeonId: dungeonId,
-      dungeonMode: primed.dungeonMode,
-      highestFloorCleared: resume ? primed.highestFloorCleared : 0,
-      currentRoom: room,
-      dungeonFloor: floor,
-      enemies: createEnemyGroup(room, dungeonId: dungeonId, fromState: primed),
-      layoutSeed: layoutSeed,
-      heroes: primed.heroes
-          .map(
-            (hero) => hero.copyWith(currentHp: primed.effectiveHeroMaxHp(hero)),
-          )
-          .toList(),
-      lastUpdated: DateTime.now(),
-    );
-  }
+  static GameState enterDungeon(GameState state, {String dungeonId = 'sandy'}) =>
+      _gameLogicEnterDungeon(state, dungeonId: dungeonId);
 
   /// Locks preferred key + affixes + idle-friendly par timer for a dungeon run.
-  static GameState _beginKeystoneRun(GameState state) {
-    if (!endgameUnlocked(state)) {
-      return _clearKeystoneRun(state.copyWith(hardmodeLevel: 0));
-    }
-    final key = state.hardmodeLevel.clamp(0, state.effectiveMaxHardmode);
-    if (key <= 0) {
-      return _clearKeystoneRun(state);
-    }
-    final affixes = Keystone.affixesFor(
-      key: key,
-      weeklyModifier: state.metaDepth.weeklyModifier,
-      weeklyKey: state.metaDepth.weeklyKey,
-      personalBossRush: state.challengeBossRush,
-      personalNoFlask: state.challengeNoFlask,
-    );
-    final par =
-        (Keystone.parTimeMs(bossFloor: bossFloorFor(state), key: key) *
-                BlessingConstellation.keyParMul(state))
-            .round();
-    return state.copyWith(
-      keystoneRunActive: true,
-      keystoneRunLevel: key,
-      keystoneTimerMs: 0,
-      keystoneParMs: par,
-      keystoneRunAffixes: affixes,
-      keystoneOutcome: '',
-    );
-  }
+  static GameState _beginKeystoneRun(GameState state) => _beginKeystoneRun(state);
 
-  static GameState _clearKeystoneRun(GameState state) {
-    if (!state.keystoneRunActive &&
-        state.keystoneRunLevel == 0 &&
-        state.keystoneTimerMs == 0 &&
-        state.keystoneParMs == 0 &&
-        state.keystoneRunAffixes.isEmpty &&
-        state.keystoneOutcome.isEmpty) {
-      return state;
-    }
-    return state.copyWith(
-      keystoneRunActive: false,
-      keystoneRunLevel: 0,
-      keystoneTimerMs: 0,
-      keystoneParMs: 0,
-      keystoneRunAffixes: const <String>[],
-      keystoneOutcome: '',
-    );
-  }
+  static GameState _clearKeystoneRun(GameState state) => _clearKeystoneRun(state);
 
   /// Advances keystone timer (live ticks or offline). Stops after resolve.
-  static GameState advanceKeystoneTimer(GameState state, int deltaMs) {
-    if (!state.keystoneRunActive || deltaMs <= 0) return state;
-    if (state.keystoneOutcome.isNotEmpty) return state;
-    return state.copyWith(keystoneTimerMs: state.keystoneTimerMs + deltaMs);
-  }
+  static GameState advanceKeystoneTimer(GameState state, int deltaMs) => _gameLogicAdvanceKeystoneTimer(state, deltaMs);
 
-  static GameState leaveDungeon(GameState state) {
-    var working = state;
-    if (state.inRift && state.riftOutcome.isEmpty) {
-      final essence = Rift.failEssence(state.riftTier);
-      working = working.copyWith(
-        essence: working.essence + essence,
-        riftOutcome: 'depleted',
-      );
-      LogicNotices.addMetaPayoffs([
-        'Rift R${Rift.clampTier(state.riftTier)} ended · +${essence}e',
-      ]);
-    }
-    if (state.inGreaterRift && state.grOutcome.isEmpty) {
-      final essence = GreaterRift.failEssence(state.grTier);
-      final tier = GreaterRift.clampTier(state.grTier);
-      final wiped = state.aliveHeroes == 0;
-      working = working.copyWith(
-        essence: working.essence + essence,
-        grOutcome: 'depleted',
-      );
-      LogicNotices.addMetaPayoffs([
-        wiped
-            ? 'Ranked GR$tier wipe'
-            : 'Greater Rift GR$tier ended · +${essence}e',
-      ]);
-    }
-    // Ticket spent on enter — refund if leave/wipe before a paid clear.
-    if (state.inWorldBoss &&
-        !state.worldBossPractice &&
-        !state.metaDepth.worldBossClearedWeek) {
-      final tickets = (working.metaDepth.worldBossTickets + 1).clamp(
-        0,
-        AshenCrown.ticketsPerWeek,
-      );
-      working = working.copyWith(
-        metaDepth: working.metaDepth.copyWith(worldBossTickets: tickets),
-      );
-    }
-    final heroes = [
-      for (final h in working.heroes)
-        h.copyWith(
-          currentHp: h.currentHp.clamp(0, working.effectiveHeroMaxHp(h)),
-        ),
-    ];
-    var next = _clearGreaterRiftRun(
-      _clearRiftRun(
-        _clearKeystoneRun(
-          working.copyWith(
-            inDungeon: false,
-            inGauntlet: false,
-            inRift: false,
-            inGreaterRift: false,
-            inWorldBoss: false,
-            worldBossPractice: false,
-            apexTrialActive: false,
-            pushResumeFloor: 0,
-            heroes: heroes,
-            lastUpdated: DateTime.now(),
-          ),
-        ),
-      ),
-    );
-    if (state.inGauntlet) {
-      next = recordGauntletRun(
-        next,
-        reachedFloor: state.currentRoom.floorNumber,
-      );
-    }
-    return next;
-  }
+  static GameState leaveDungeon(GameState state) => _gameLogicLeaveDungeon(state);
 
   /// Leave dungeon/Gauntlet and restore party HP (wipe / hub exit).
-  static GameState exitToHubHealed(GameState state) {
-    final left = leaveDungeon(state);
-    return left.copyWith(
-      heroes: [
-        for (final h in left.heroes)
-          h.copyWith(currentHp: left.effectiveHeroMaxHp(h)),
-      ],
-      lastUpdated: DateTime.now(),
-    );
-  }
+  static GameState exitToHubHealed(GameState state) => _gameLogicExitToHubHealed(state);
 
   /// Hard Ascend cap (Blessing / kit roadmap). Endgame content uses
   /// [endgameUnlocked] (party at [maxHeroLevel]), not this AL gate.
@@ -841,116 +671,28 @@ class GameLogic {
     );
   }
 
-  static GameState setDungeonMode(GameState state, DungeonMode mode) {
-    if (state.inGauntlet || state.inAnyRiftMode) {
-      // Gauntlet / Rift / Greater Rift are endless PUSH only.
-      return state.copyWith(
-        dungeonMode: DungeonMode.push,
-        lastUpdated: DateTime.now(),
-      );
-    }
-    if (state.dungeonMode == mode) {
-      return state;
-    }
-    return state.copyWith(dungeonMode: mode, lastUpdated: DateTime.now());
-  }
+  static GameState setDungeonMode(GameState state, DungeonMode mode) => _gameLogicSetDungeonMode(state, mode);
 
-  static bool canTravelToFloor(GameState state, int floorNumber) {
-    if (state.inGauntlet || state.inAnyRiftMode) return false;
-    if (floorNumber < 1) {
-      return false;
-    }
-    return floorNumber <= state.maxReachableFloor;
-  }
+  static bool canTravelToFloor(GameState state, int floorNumber) => _gameLogicCanTravelToFloor(state, floorNumber);
 
   /// Jump to an unlocked floor wave (farm/push zone select).
-  static GameState travelToFloor(GameState state, int floorNumber) {
-    if (!canTravelToFloor(state, floorNumber)) {
-      return state;
-    }
-    if (floorNumber == state.currentRoom.floorNumber &&
-        !state.isPartyDefeated) {
-      return state;
-    }
-    final layoutSeed = newLayoutSeed();
-    final floor = DungeonGenerator.generateFloor(
-      floorNumber,
-      ascensionLevel: state.ascensionLevel,
-      dungeonId: state.dungeonId,
-      layoutSeed: layoutSeed,
-      keyLevel: layoutKeyLevel(state),
-      crowded: layoutCrowded(state),
-      bossFloor: pushBossFloor(state),
-    );
-    final firstRoom = floor.first;
-    return state.copyWith(
-      currentRoom: firstRoom,
-      dungeonFloor: floor,
-      enemies: createEnemyGroup(
-        firstRoom,
-        dungeonId: state.dungeonId,
-        fromState: state,
-      ),
-      layoutSeed: layoutSeed,
-      heroes: state.heroes
-          .map(
-            (hero) => hero.copyWith(currentHp: state.effectiveHeroMaxHp(hero)),
-          )
-          .toList(),
-      lastUpdated: DateTime.now(),
-    );
-  }
+  static GameState travelToFloor(GameState state, int floorNumber) => _gameLogicTravelToFloor(state, floorNumber);
 
   /// Wipes on one new PUSH floor before the party farms the floor below.
   static const int pushWipesBeforeFarm = 2;
 
   /// Failed push: retreat to the highest cleared floor (or floor 1).
   /// Keeps PUSH mode so a caller can still choose to push.
-  static GameState retreatFromFailedPush(GameState state) {
-    final safeFloor = max(1, state.highestFloorCleared);
-    return travelToFloor(
-      state.copyWith(
-        metaDepth: state.metaDepth.copyWith(noWipeAscendReady: false),
-      ),
-      safeFloor,
-    );
-  }
+  static GameState retreatFromFailedPush(GameState state) => _gameLogicRetreatFromFailedPush(state);
 
   /// Offline wipe tally. Live wipes already go through [notePartyWipe].
-  static GameState noteOfflineWipe(GameState state) {
-    final key = wipeFloorKey(state);
-    final count = state.wipeStreakKey == key ? state.wipeStreakCount + 1 : 1;
-    return state.copyWith(wipeStreakKey: key, wipeStreakCount: count);
-  }
+  static GameState noteOfflineWipe(GameState state) => _gameLogicNoteOfflineWipe(state);
 
   /// Keep fighting after a wipe.
   /// One miss on a new floor retries it. Two misses farm the floor below
   /// until that floor clears once, then PUSH returns to the missed floor.
   /// Gauntlet and rifts still end. Daily Run still restarts its floor.
-  static GameState continueAfterWipe(GameState state) {
-    if (state.inGauntlet || state.inAnyRiftMode) {
-      return exitToHubHealed(state);
-    }
-    if (MetaSystems.isActiveDailyRun(state)) {
-      return restartFloor(state);
-    }
-    final cur = state.currentRoom.floorNumber;
-    final pushingNew =
-        state.dungeonMode == DungeonMode.push &&
-        cur > state.highestFloorCleared;
-    if (pushingNew && state.wipeStreakCount >= pushWipesBeforeFarm) {
-      final safe = max(1, state.highestFloorCleared);
-      return travelToFloor(
-        state.copyWith(
-          dungeonMode: DungeonMode.farm,
-          pushResumeFloor: cur,
-          metaDepth: state.metaDepth.copyWith(noWipeAscendReady: false),
-        ),
-        safe,
-      );
-    }
-    return restartFloor(state);
-  }
+  static GameState continueAfterWipe(GameState state) => _gameLogicContinueAfterWipe(state);
 
   /// Bosses needed this run before Ascend unlocks.
   /// AL 0 → 1 boss, AL 1 → 2 bosses, etc.
@@ -1239,186 +981,25 @@ class GameLogic {
   }
 
   /// Unlocks Shade (Combat) on the roster when [rogueUnlocked].
-  static GameState ensureRogueHero(GameState state) {
-    if (!state.rogueUnlocked) {
-      return fillMissingStarterGear(state);
-    }
-    var next = state;
-    final combatName = HeroSpecs.ascendUnlockSpec.name;
-    final unlocked = List<String>.from(next.metaDepth.unlockedSpecs);
-    var pending = List<String>.from(next.metaDepth.pendingHeroReveals);
-    final wasMissing =
-        !unlocked.contains(combatName) ||
-        !next.heroRoster.any((h) => h.specId == HeroSpecs.ascendUnlockSpec);
-    if (!unlocked.contains(combatName)) {
-      unlocked.add(combatName);
-      next = next.copyWith(
-        metaDepth: next.metaDepth.copyWith(unlockedSpecs: unlocked),
-      );
-    }
-    if (!next.heroRoster.any((h) => h.specId == HeroSpecs.ascendUnlockSpec)) {
-      final rogue = PartyHero.starting(
-        name: HeroSpecs.def(HeroSpecs.ascendUnlockSpec).defaultName,
-        specId: HeroSpecs.ascendUnlockSpec,
-        stats: PartyHero.startingStatsForSpec(HeroSpecs.ascendUnlockSpec),
-        equipped: StarterGear.forSpec(HeroSpecs.ascendUnlockSpec),
-        level: rosterSeedLevel(next),
-        race: _rosterRace(next),
-      );
-      final roster = [...next.heroRoster, rogue];
-      var active = List<String>.from(next.activeHeroIds);
-      if (active.length < next.maxActivePartySize &&
-          !active.contains(rogue.id)) {
-        active = [...active, rogue.id];
-      }
-      next = next.copyWith(heroRoster: roster, activeHeroIds: active);
-    } else {
-      final combat = next.heroRoster.firstWhere(
-        (h) => h.specId == HeroSpecs.ascendUnlockSpec,
-      );
-      if (!next.activeHeroIds.contains(combat.id) &&
-          next.activeHeroIds.length < next.maxActivePartySize) {
-        next = next.copyWith(activeHeroIds: [...next.activeHeroIds, combat.id]);
-      }
-    }
-    if (wasMissing && !pending.contains(combatName)) {
-      pending = [...pending, combatName];
-      next = next.copyWith(
-        metaDepth: next.metaDepth.copyWith(
-          unlockedSpecs: unlocked,
-          pendingHeroReveals: pending,
-        ),
-      );
-    }
-    return fillMissingStarterGear(next);
-  }
+  static GameState ensureRogueHero(GameState state) => _gameLogicEnsureRogueHero(state);
 
   static const int partySlot5EssenceCost = 80;
   static const int partySlot5MinAscension = 2;
 
   /// Unlocks the 5th active party slot (80e, AL ≥ 2).
-  static GameState unlockPartySlot5(GameState state) {
-    if (state.metaDepth.partySlot5Unlocked) return state;
-    if (state.ascensionLevel < partySlot5MinAscension) return state;
-    if (state.essence < partySlot5EssenceCost) return state;
-    return state.copyWith(
-      essence: state.essence - partySlot5EssenceCost,
-      metaDepth: state.metaDepth.copyWith(partySlot5Unlocked: true),
-      lastUpdated: DateTime.now(),
-    );
-  }
+  static GameState unlockPartySlot5(GameState state) => _gameLogicUnlockPartySlot5(state);
 
   /// Sets the active party lineup by roster hero ids (hub / out of dungeon).
-  static GameState setActiveParty(GameState state, List<String> heroIds) {
-    if (state.inDungeon) return state;
-    final maxSize = state.maxActivePartySize;
-    final seen = <String>{};
-    final next = <String>[];
-    for (final id in heroIds) {
-      if (!seen.add(id)) continue;
-      if (state.rosterHero(id) == null) continue;
-      next.add(id);
-      if (next.length >= maxSize) break;
-    }
-    if (next.isEmpty) return state;
-    return state.copyWith(activeHeroIds: next, lastUpdated: DateTime.now());
-  }
+  static GameState setActiveParty(GameState state, List<String> heroIds) => _gameLogicSetActiveParty(state, heroIds);
 
   /// Whether the player has met the meta gate for [specId].
-  static bool canUnlockSpec(GameState state, HeroSpecId specId) {
-    if (HeroSpecs.starterUnlocked.contains(specId)) return true;
-    if (specId == HeroSpecs.ascendUnlockSpec) {
-      return state.rogueUnlocked || state.ascensionLevel > 0;
-    }
-    final al = state.ascensionLevel;
-    final cleared = state.highestDungeonCleared;
-    return switch (specId) {
-      HeroSpecId.arms => cleared >= 1 || al >= 1,
-      HeroSpecId.fury => cleared >= 0 || al >= 2,
-      HeroSpecId.holyPaladin => al >= 1 || state.essence >= 25,
-      HeroSpecId.protPaladin => al >= 3,
-      HeroSpecId.retribution => cleared >= 2,
-      HeroSpecId.beastMastery => al >= 2,
-      HeroSpecId.marksmanship => cleared >= 3,
-      HeroSpecId.survival => al >= 4,
-      HeroSpecId.assassination => al >= 3,
-      HeroSpecId.subtlety => cleared >= 4,
-      HeroSpecId.holyPriest => al >= 2,
-      HeroSpecId.shadow => cleared >= 5,
-      HeroSpecId.blood || HeroSpecId.frostDk => al >= 5,
-      HeroSpecId.unholy => cleared >= 6,
-      HeroSpecId.elemental || HeroSpecId.enhancement => al >= 4,
-      HeroSpecId.restorationShaman => al >= 3,
-      HeroSpecId.arcane => al >= 2,
-      HeroSpecId.frostMage => al >= 3,
-      HeroSpecId.affliction || HeroSpecId.demonology => al >= 6,
-      HeroSpecId.destruction => cleared >= 5,
-      HeroSpecId.balance || HeroSpecId.feral => al >= 4,
-      HeroSpecId.guardian => al >= 5,
-      HeroSpecId.restorationDruid => al >= 3,
-      _ => false,
-    };
-  }
+  static bool canUnlockSpec(GameState state, HeroSpecId specId) => _gameLogicCanUnlockSpec(state, specId);
 
   /// Auto-unlock every eligible spec into the roster (after clear / ascend).
-  static GameState syncSpecUnlocks(GameState state) {
-    var next = state;
-    for (final def in HeroSpecs.all) {
-      if (canUnlockSpec(next, def.id) && !next.isSpecUnlocked(def.id)) {
-        next = unlockSpec(next, def.id);
-      } else if (canUnlockSpec(next, def.id) &&
-          !next.heroRoster.any((h) => h.specId == def.id)) {
-        next = unlockSpec(next, def.id);
-      }
-    }
-    return next;
-  }
+  static GameState syncSpecUnlocks(GameState state) => _gameLogicSyncSpecUnlocks(state);
 
   /// Unlocks [specId] into meta + adds a starting hero to the roster.
-  static GameState unlockSpec(GameState state, HeroSpecId specId) {
-    if (!canUnlockSpec(state, specId) &&
-        !HeroSpecs.starterUnlocked.contains(specId)) {
-      return state;
-    }
-    if (state.isSpecUnlocked(specId) &&
-        state.heroRoster.any((h) => h.specId == specId)) {
-      return state;
-    }
-    final wasNew =
-        !state.isSpecUnlocked(specId) ||
-        !state.heroRoster.any((h) => h.specId == specId);
-    final unlocked = <String>{
-      ...state.metaDepth.unlockedSpecs,
-      specId.name,
-    }.toList();
-    var pending = List<String>.from(state.metaDepth.pendingHeroReveals);
-    if (wasNew && !pending.contains(specId.name)) {
-      pending = [...pending, specId.name];
-    }
-    var next = state.copyWith(
-      metaDepth: state.metaDepth.copyWith(
-        unlockedSpecs: unlocked,
-        pendingHeroReveals: pending,
-      ),
-      lastUpdated: DateTime.now(),
-    );
-    if (next.heroRoster.any((h) => h.specId == specId)) {
-      return next;
-    }
-    final def = HeroSpecs.def(specId);
-    final hero = PartyHero.starting(
-      name: def.defaultName,
-      specId: specId,
-      stats: PartyHero.startingStatsForSpec(specId),
-      equipped: StarterGear.forSpec(def.id),
-      level: rosterSeedLevel(next),
-      race: _rosterRace(next),
-    );
-    return next.copyWith(
-      heroRoster: [...next.heroRoster, hero],
-      lastUpdated: DateTime.now(),
-    );
-  }
+  static GameState unlockSpec(GameState state, HeroSpecId specId) => _gameLogicUnlockSpec(state, specId);
 
   /// Race stamped on new roster entries so a Night Elf party stays Night Elf.
   static HeroRace _rosterRace(GameState state) =>
@@ -1456,282 +1037,64 @@ class GameLogic {
   }
 
   /// Clears hub “Meet new hero” queue (player opened PARTY / acknowledged).
-  static GameState ackPendingHeroReveals(GameState state) {
-    if (state.metaDepth.pendingHeroReveals.isEmpty) return state;
-    return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(pendingHeroReveals: const <String>[]),
-      lastUpdated: DateTime.now(),
-    );
-  }
+  static GameState ackPendingHeroReveals(GameState state) => _gameLogicAckPendingHeroReveals(state);
 
   /// Restarts the current floor wave with a healed party.
   /// Daily echo keeps today's layout seed so claim + wipe-retry stay valid.
-  static GameState restartFloor(GameState state) {
-    final keepDailySeed = MetaSystems.isActiveDailyRun(state);
-    final layoutSeed = keepDailySeed ? state.layoutSeed : newLayoutSeed();
-    final floor = DungeonGenerator.generateFloor(
-      state.currentRoom.floorNumber,
-      ascensionLevel: state.ascensionLevel,
-      dungeonId: state.dungeonId,
-      layoutSeed: layoutSeed,
-      keyLevel: layoutKeyLevel(state),
-      crowded: layoutCrowded(state),
-      bossFloor: pushBossFloor(state),
-    );
-    final firstRoom = floor.first;
-    return state.copyWith(
-      heroes: state.heroes
-          .map(
-            (hero) => hero.copyWith(currentHp: state.effectiveHeroMaxHp(hero)),
-          )
-          .toList(),
-      enemies: createEnemyGroup(
-        firstRoom,
-        dungeonId: state.dungeonId,
-        fromState: state,
-      ),
-      currentRoom: firstRoom,
-      dungeonFloor: floor,
-      layoutSeed: layoutSeed,
-      metaDepth: state.metaDepth.copyWith(noWipeAscendReady: false),
-    );
-  }
+  static GameState restartFloor(GameState state) => _gameLogicRestartFloor(state);
 
-  static int forgeTrackTier(GameState state, PartyUpgradeType type) {
-    return switch (type) {
-      PartyUpgradeType.attack => state.attackBonus ~/ forgeAttackGain,
-      PartyUpgradeType.defense => state.defenseBonus ~/ forgeDefenseGain,
-      PartyUpgradeType.vitality => state.vitalityBonus ~/ forgeVitalityGain,
-      PartyUpgradeType.moveSpeed => state.moveSpeedBonus ~/ forgeMoveGain,
-      PartyUpgradeType.attackSpeed => state.attackSpeedBonus ~/ forgeHasteGain,
-      PartyUpgradeType.crit => state.critBonus ~/ forgeCritGain,
-      PartyUpgradeType.mastery => state.masteryBonus ~/ forgeMasteryGain,
-    };
-  }
+  static int forgeTrackTier(GameState state, PartyUpgradeType type) => _gameLogicForgeTrackTier(state, type);
 
-  static int upgradeCostFor(GameState state, PartyUpgradeType type) {
-    return 18 +
-        (forgeTrackTier(state, type) * 10) +
-        (state.bossVictories * 5) +
-        (state.ascensionLevel * 25);
-  }
+  static int upgradeCostFor(GameState state, PartyUpgradeType type) => _gameLogicUpgradeCostFor(state, type);
 
   /// Wallet gold budget for a FORGE GOLD spend mode (×1 uses next buy cost).
-  static int forgeGoldBudget(GameState state, ForgeGoldSpendMode mode) {
-    return switch (mode) {
-      ForgeGoldSpendMode.one => 0,
-      ForgeGoldSpendMode.pct5 => (state.gold * 5) ~/ 100,
-      ForgeGoldSpendMode.pct25 => (state.gold * 25) ~/ 100,
-      ForgeGoldSpendMode.pct50 => (state.gold * 50) ~/ 100,
-      ForgeGoldSpendMode.pct100 => state.gold,
-    };
-  }
+  static int forgeGoldBudget(GameState state, ForgeGoldSpendMode mode) => _gameLogicForgeGoldBudget(state, mode);
 
-  static bool canForgeGoldSpend(
-    GameState state,
-    PartyUpgradeType type,
-    ForgeGoldSpendMode mode,
-  ) {
-    final cost = upgradeCostFor(state, type);
-    if (state.gold < cost) {
-      return false;
-    }
-    if (mode == ForgeGoldSpendMode.one) {
-      return true;
-    }
-    return forgeGoldBudget(state, mode) >= cost;
-  }
+  static bool canForgeGoldSpend( GameState state, PartyUpgradeType type, ForgeGoldSpendMode mode, ) => _gameLogicCanForgeGoldSpend(state, type, mode);
 
-  static bool canForgeGoldSpendEven(GameState state) {
-    for (final type in PartyUpgradeType.values) {
-      if (state.gold >= upgradeCostFor(state, type)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  static bool canForgeGoldSpendEven(GameState state) => _gameLogicCanForgeGoldSpendEven(state);
 
   /// How many buys / gold a spend mode would use on [type] from [state].
-  static ({int buys, int spent}) previewForgeGoldSpend(
-    GameState state,
-    PartyUpgradeType type,
-    ForgeGoldSpendMode mode,
-  ) {
-    if (mode == ForgeGoldSpendMode.one) {
-      final cost = upgradeCostFor(state, type);
-      if (state.gold < cost) {
-        return (buys: 0, spent: 0);
-      }
-      return (buys: 1, spent: cost);
-    }
-    final budget = forgeGoldBudget(state, mode);
-    var remaining = min(budget, state.gold);
-    var cur = state;
-    var buys = 0;
-    var spent = 0;
-    for (var i = 0; i < 10000; i++) {
-      final cost = upgradeCostFor(cur, type);
-      if (cost > remaining || cost > cur.gold) {
-        break;
-      }
-      final next = _applyUpgrade(cur, type: type);
-      if (identical(next, cur)) {
-        break;
-      }
-      remaining -= cost;
-      spent += cost;
-      buys += 1;
-      cur = next;
-    }
-    return (buys: buys, spent: spent);
-  }
+  static ({int buys, int spent}) previewForgeGoldSpend( GameState state, PartyUpgradeType type, ForgeGoldSpendMode mode, ) => _gameLogicPreviewForgeGoldSpend(state, type, mode);
 
   /// Buy one track once, or dump a % of wallet gold into that track.
   static GameState upgradeWithSpendMode(
     GameState state, {
     required PartyUpgradeType type,
     required ForgeGoldSpendMode mode,
-  }) {
-    if (mode == ForgeGoldSpendMode.one) {
-      return _applyUpgrade(state, type: type);
-    }
-    final budget = forgeGoldBudget(state, mode);
-    if (budget <= 0) {
-      return state;
-    }
-    return _upgradeWithBudget(state, type: type, budget: budget);
-  }
+  }) =>
+      _gameLogicUpgradeWithSpendMode(state, type: type, mode: mode);
 
   static GameState _upgradeWithBudget(
     GameState state, {
     required PartyUpgradeType type,
     required int budget,
-  }) {
-    var remaining = min(budget, state.gold);
-    var cur = state;
-    for (var i = 0; i < 10000; i++) {
-      final cost = upgradeCostFor(cur, type);
-      if (cost > remaining || cost > cur.gold) {
-        break;
-      }
-      final next = _applyUpgrade(cur, type: type);
-      if (identical(next, cur)) {
-        break;
-      }
-      remaining -= cost;
-      cur = next;
-    }
-    return cur;
-  }
+  }) =>
+      _gameLogicUpgradeWithBudget(state, type: type, budget: budget);
 
   /// Spend wallet gold round-robin across ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY.
-  static GameState upgradeSpendAllEvenly(GameState state) {
-    var cur = state;
-    for (var round = 0; round < 10000; round++) {
-      var bought = false;
-      for (final type in PartyUpgradeType.values) {
-        final cost = upgradeCostFor(cur, type);
-        if (cur.gold < cost) {
-          continue;
-        }
-        final next = _applyUpgrade(cur, type: type);
-        if (!identical(next, cur)) {
-          cur = next;
-          bought = true;
-        }
-      }
-      if (!bought) {
-        break;
-      }
-    }
-    return cur;
-  }
+  static GameState upgradeSpendAllEvenly(GameState state) => _gameLogicUpgradeSpendAllEvenly(state);
 
   /// Gold Train (+1 Lv party-wide) is retired — levels come from combat XP only.
-  static GameState upgradeAttack(GameState state) =>
-      _applyUpgrade(state, type: PartyUpgradeType.attack);
+  static GameState upgradeAttack(GameState state) => _gameLogicUpgradeAttack(state);
 
-  static GameState upgradeDefense(GameState state) =>
-      _applyUpgrade(state, type: PartyUpgradeType.defense);
+  static GameState upgradeDefense(GameState state) => _gameLogicUpgradeDefense(state);
 
-  static GameState upgradeVitality(GameState state) =>
-      _applyUpgrade(state, type: PartyUpgradeType.vitality);
+  static GameState upgradeVitality(GameState state) => _gameLogicUpgradeVitality(state);
 
-  static GameState upgradeMoveSpeed(GameState state) =>
-      _applyUpgrade(state, type: PartyUpgradeType.moveSpeed);
+  static GameState upgradeMoveSpeed(GameState state) => _gameLogicUpgradeMoveSpeed(state);
 
-  static GameState upgradeAttackSpeed(GameState state) =>
-      _applyUpgrade(state, type: PartyUpgradeType.attackSpeed);
+  static GameState upgradeAttackSpeed(GameState state) => _gameLogicUpgradeAttackSpeed(state);
 
-  static GameState upgradeCrit(GameState state) =>
-      _applyUpgrade(state, type: PartyUpgradeType.crit);
+  static GameState upgradeCrit(GameState state) => _gameLogicUpgradeCrit(state);
 
-  static GameState upgradeMastery(GameState state) =>
-      _applyUpgrade(state, type: PartyUpgradeType.mastery);
+  static GameState upgradeMastery(GameState state) => _gameLogicUpgradeMastery(state);
 
   static GameState _applyUpgrade(
     GameState state, {
     required PartyUpgradeType type,
-  }) {
-    final cost = upgradeCostFor(state, type);
-    if (state.gold < cost) {
-      return state;
-    }
-
-    switch (type) {
-      case PartyUpgradeType.attack:
-        return state.copyWith(
-          attackBonus: state.attackBonus + forgeAttackGain,
-          gold: state.gold - cost,
-          lastUpdated: DateTime.now(),
-        );
-      case PartyUpgradeType.defense:
-        return state.copyWith(
-          defenseBonus: state.defenseBonus + forgeDefenseGain,
-          gold: state.gold - cost,
-          lastUpdated: DateTime.now(),
-        );
-      case PartyUpgradeType.vitality:
-        final nextVit = state.vitalityBonus + forgeVitalityGain;
-        final probe = state.copyWith(vitalityBonus: nextVit);
-        final healedHeroes = state.heroes
-            .map(
-              (hero) =>
-                  hero.copyWith(currentHp: probe.effectiveHeroMaxHp(hero)),
-            )
-            .toList();
-        return state.copyWith(
-          vitalityBonus: nextVit,
-          heroes: healedHeroes,
-          gold: state.gold - cost,
-          lastUpdated: DateTime.now(),
-        );
-      case PartyUpgradeType.moveSpeed:
-        return state.copyWith(
-          moveSpeedBonus: state.moveSpeedBonus + forgeMoveGain,
-          gold: state.gold - cost,
-          lastUpdated: DateTime.now(),
-        );
-      case PartyUpgradeType.attackSpeed:
-        return state.copyWith(
-          attackSpeedBonus: state.attackSpeedBonus + forgeHasteGain,
-          gold: state.gold - cost,
-          lastUpdated: DateTime.now(),
-        );
-      case PartyUpgradeType.crit:
-        return state.copyWith(
-          critBonus: state.critBonus + forgeCritGain,
-          gold: state.gold - cost,
-          lastUpdated: DateTime.now(),
-        );
-      case PartyUpgradeType.mastery:
-        return state.copyWith(
-          masteryBonus: state.masteryBonus + forgeMasteryGain,
-          gold: state.gold - cost,
-          lastUpdated: DateTime.now(),
-        );
-    }
-  }
+  }) =>
+      _gameLogicForgeApplyUpgrade(state, type: type);
 
   /// Hearth at the Stairs — a percent of max HP when the exit opens.
   static GameState healPartyAtStairs(GameState state) {
@@ -3227,28 +2590,7 @@ class GameLogic {
 
   /// Welcome Back: a new PUSH floor they already failed is not this sitting.
   /// Farm the highest cleared floor so the return can finish a floor.
-  static GameState returnToClearableFloor(GameState state) {
-    if (!state.inDungeon ||
-        state.inGauntlet ||
-        state.inAnyRiftMode ||
-        state.inWorldBoss) {
-      return state;
-    }
-    if (state.dungeonMode == DungeonMode.farm) return state;
-    final cur = state.currentRoom.floorNumber;
-    if (cur <= state.highestFloorCleared) return state;
-    final hurt =
-        state.heroes.isNotEmpty &&
-        state.heroes.every(
-          (h) => h.currentHp <= state.effectiveHeroMaxHp(h) * 0.4,
-        );
-    if (state.wipeStreakCount < 1 && !hurt) return state;
-    final safe = max(1, state.highestFloorCleared);
-    return travelToFloor(
-      state.copyWith(dungeonMode: DungeonMode.farm, pushResumeFloor: cur),
-      safe,
-    );
-  }
+  static GameState returnToClearableFloor(GameState state) => _gameLogicReturnToClearableFloor(state);
 
   static ({
     GameState state,

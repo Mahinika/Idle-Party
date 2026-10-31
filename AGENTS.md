@@ -158,8 +158,8 @@ stamina is STA.
 
 | Area | Path |
 |------|------|
-| Orchestration | `lib/core/game_director.dart` |
-| Rules | `lib/core/game_logic.dart` (+ ascend / endgame / ladders / meta-season parts) |
+| Orchestration | `lib/core/game_director.dart` (+ save / fight / platform parts) |
+| Rules | `lib/core/game_logic.dart` (+ ascend / endgame / ladders / meta-season / dungeon / party / forge parts) |
 | Offline dungeon | `lib/core/offline_sim.dart`, `lib/core/offline_progress.dart` |
 | State / meta | `lib/core/game_state.dart`, `lib/models/meta_depth.dart` |
 | Changelog | `lib/core/changelog.dart`, `lib/core/meta_systems.dart` |
