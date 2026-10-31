@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// Fonts are bundled under `assets/fonts/`. Never hit fonts.gstatic.com.
+final bool bundledGoogleFonts = () {
+  GoogleFonts.config.allowRuntimeFetching = false;
+  return true;
+}();
+
 /// Shared Idle Party visual tokens. **Color literals live here** — other UI
 /// files should use these names (combat VFX may still paint raw hex).
 abstract final class GameTheme {

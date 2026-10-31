@@ -1,11 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/play_store_update.dart';
+import 'package:idle_party/core/play_update_timeout.dart';
 import 'package:idle_party/ui/hub/hub_header.dart';
 import 'package:idle_party/ui/play_update_required_screen.dart';
 
 void main() {
+  test('Play update probe gives up instead of hanging', () async {
+    expect(playUpdateCheckTimeout, const Duration(seconds: 3));
+    final sw = Stopwatch()..start();
+    await expectLater(
+      boundPlayUpdateCall(
+        Completer<int>().future,
+        timeout: const Duration(milliseconds: 30),
+      ),
+      throwsA(isA<TimeoutException>()),
+    );
+    expect(sw.elapsed, lessThan(const Duration(seconds: 2)));
+  });
+
   test('Play listing URL is English en-US', () {
     expect(PlayStoreUpdate.packageId, 'com.idleparty.app');
     expect(PlayStoreUpdate.listingUri.host, 'play.google.com');
