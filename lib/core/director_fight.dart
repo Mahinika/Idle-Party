@@ -104,7 +104,7 @@ extension GameDirectorFight on GameDirector {
   void spatialTick({int extraSteps = 0}) =>
       tickDungeonClock(extraSteps: extraSteps);
 
-  void _notifyShell() => notifyListeners();
+  void _notifyShell() => _directorNotify();
 
   void _cancelWipeAuto() {
     _wipeAutoTimer?.cancel();
@@ -154,7 +154,7 @@ extension GameDirectorFight on GameDirector {
         showToast(payoffs.join(' · '), life: 3.0);
       }
       GameAudio.uiBack();
-      notifyListeners();
+      _directorNotify();
       unawaited(_persistFlush());
       return;
     }
@@ -172,7 +172,7 @@ extension GameDirectorFight on GameDirector {
         showToast(payoffs.join(' · '), life: 3.0);
       }
       GameAudio.uiBack();
-      notifyListeners();
+      _directorNotify();
       unawaited(_persistFlush());
       return;
     }
@@ -190,7 +190,7 @@ extension GameDirectorFight on GameDirector {
         showToast(payoffs.join(' · '), life: 3.0);
       }
       GameAudio.uiBack();
-      notifyListeners();
+      _directorNotify();
       unawaited(_persistFlush());
       return;
     }
@@ -217,7 +217,7 @@ extension GameDirectorFight on GameDirector {
       _startSpatialLoop();
     }
     _beginFloorClock();
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
   }
 
@@ -245,7 +245,7 @@ extension GameDirectorFight on GameDirector {
       _startSpatialLoop();
     }
     _beginFloorClock();
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
     return true;
   }
@@ -278,7 +278,7 @@ extension GameDirectorFight on GameDirector {
       life: payoffs.isNotEmpty ? 3.0 : 2,
     );
     GameAudio.uiBack();
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
   }
 
@@ -292,7 +292,7 @@ extension GameDirectorFight on GameDirector {
     if (spatial == null || !spatial.awaitingExit) return;
     spatial.exitHoldSec = 0;
     spatial.exitWaitTimer = 99;
-    notifyListeners();
+    _directorNotify();
   }
 
   /// Keep the cleared floor still while the away-ping card is up.
@@ -329,7 +329,7 @@ extension GameDirectorFight on GameDirector {
     if (best == null) return;
     if (hudFocusEnemyId == best.id) return;
     hudFocusEnemyId = best.id;
-    notifyListeners();
+    _directorNotify();
   }
 
   /// God Hand aimed at the nearest live enemy to the party, else party center.
@@ -431,7 +431,7 @@ extension GameDirectorFight on GameDirector {
       'god_hand',
       'kills${result.kills}',
     );
-    notifyListeners();
+    _directorNotify();
   }
 
   /// Welcome Back in a failed push: farm the floor they can clear.
@@ -444,7 +444,7 @@ extension GameDirectorFight on GameDirector {
     }
     _state = next;
     _rebuildSpatial();
-    notifyListeners();
+    _directorNotify();
   }
 
   void enterDungeon({String dungeonId = 'sandy'}) {
@@ -494,7 +494,7 @@ extension GameDirectorFight on GameDirector {
         floor: _state.currentRoom.floorNumber,
       ),
     );
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
     _syncSituationMusic();
   }
@@ -529,7 +529,7 @@ extension GameDirectorFight on GameDirector {
     } else {
       showToast('Returned to hub', life: 2);
     }
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
     _syncSituationMusic();
   }

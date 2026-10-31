@@ -68,7 +68,7 @@ extension GameDirectorPlatform on GameDirector {
       if (_wispVisibleRemainingMs > 0) {
         _wispVisibleRemainingMs = 0;
         _wispSpawnArmed = false;
-        notifyListeners();
+        _directorNotify();
       }
       return;
     }
@@ -94,7 +94,7 @@ extension GameDirectorPlatform on GameDirector {
           if (!_wispTappedThisWindow) {
             _applyUpgrade(WispGift.onWispMissed(_state, nowMs: now));
           }
-          notifyListeners();
+          _directorNotify();
         } else {
           _wispVisibleRemainingMs = next;
         }
@@ -106,7 +106,7 @@ extension GameDirectorPlatform on GameDirector {
         _wispSpawnArmed = true;
         _wispTappedThisWindow = false;
         _wispVisibleRemainingMs = WispGift.visibleMs;
-        notifyListeners();
+        _directorNotify();
       }
     } else {
       _wispSpawnArmed = false;
@@ -127,14 +127,14 @@ extension GameDirectorPlatform on GameDirector {
     if (adFree) {
       _grantWispWatchReward(toast: true);
     }
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
   }
 
   void dismissWispPending() {
     if (!wispPendingChoice) return;
     _applyUpgrade(WispGift.dismissPending(_state));
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
   }
 
@@ -147,7 +147,7 @@ extension GameDirectorPlatform on GameDirector {
       GameAudio.gold();
       showToast('WISP · +$gained gold', life: 2.8);
     }
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
   }
 
@@ -230,7 +230,7 @@ extension GameDirectorPlatform on GameDirector {
   void _applyNotify(GameState updated) {
     if (identical(updated, _state)) return;
     _state = updated;
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
   }
 
@@ -271,7 +271,7 @@ extension GameDirectorPlatform on GameDirector {
       _spatial = null;
     }
     _rememberActiveSummary();
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
     return true;
   }
@@ -295,7 +295,7 @@ extension GameDirectorPlatform on GameDirector {
     final code = await PlayStoreUpdate.availableVersionCode();
     _playUpdateVersionCode = code;
     _mandatoryPlayUpdateRequired = code != null && code > 0;
-    notifyListeners();
+    _directorNotify();
     return _mandatoryPlayUpdateRequired;
   }
 
@@ -321,7 +321,7 @@ extension GameDirectorPlatform on GameDirector {
     final code = await PlayStoreUpdate.availableVersionCode();
     if (code == _playUpdateVersionCode) return;
     _playUpdateVersionCode = code;
-    notifyListeners();
+    _directorNotify();
   }
 
   void dismissPlayUpdateNotice() {
@@ -332,7 +332,7 @@ extension GameDirectorPlatform on GameDirector {
         dismissedPlayUpdateVersionCode: code,
       ),
     );
-    notifyListeners();
+    _directorNotify();
     unawaited(_persistFlush());
   }
 
@@ -387,13 +387,13 @@ extension GameDirectorPlatform on GameDirector {
   void debugForceMandatoryPlayUpdate() {
     _playUpdateVersionCode = 999999;
     _mandatoryPlayUpdateRequired = true;
-    notifyListeners();
+    _directorNotify();
   }
 
   /// Debug hub layout — pretends Play has a newer build.
   void debugForcePlayUpdateNotice() {
     _playUpdateVersionCode = 999999;
-    notifyListeners();
+    _directorNotify();
   }
 
   /// Opt-in Play Games sign-in (leaderboards + cloud). Returns true when signed in.
@@ -411,7 +411,7 @@ extension GameDirectorPlatform on GameDirector {
     _state = _state.copyWith(
       metaDepth: _state.metaDepth.copyWith(playGamesOptIn: true),
     );
-    notifyListeners();
+    _directorNotify();
     final cloud = await PlayGamesBridge.loadCloud();
     if (cloud != null && !_hasExistingSave) {
       _applyCloudRestore(cloud, toast: 'Restored from Play Games');
@@ -440,7 +440,7 @@ extension GameDirectorPlatform on GameDirector {
       _spatial = null;
     }
     _rememberActiveSummary();
-    notifyListeners();
+    _directorNotify();
     showToast(toast, life: 2.6);
   }
 

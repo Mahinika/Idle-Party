@@ -1818,6 +1818,9 @@ class GameDirector extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Part extensions call this; [notifyListeners] is @protected on [ChangeNotifier].
+  void _directorNotify() => notifyListeners();
+
   void _applyUpgrade(GameState updated) {
     if (_isLoading || identical(updated, _state)) {
       return;

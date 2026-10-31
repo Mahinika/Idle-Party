@@ -100,7 +100,7 @@ extension GameDirectorSave on GameDirector {
             _spatialTimer = null;
             _spatial = null;
           }
-          notifyListeners();
+          _directorNotify();
         } finally {
           _awayCreditInFlight = false;
         }
@@ -170,7 +170,7 @@ extension GameDirectorSave on GameDirector {
       _persist();
     }
     if (_state.gold != beforeGold || _state.essence != beforeEssence) {
-      notifyListeners();
+      _directorNotify();
     }
   }
 
@@ -242,7 +242,7 @@ extension GameDirectorSave on GameDirector {
     } finally {
       _isLoading = false;
       _syncHubIdleTimer();
-      notifyListeners();
+      _directorNotify();
       DebugPlayLog.event('boot', DebugPlayLog.bootDetail(_state));
       unawaited(syncFriendReferral());
       unawaited(refreshPlayUpdateNotice());
@@ -271,7 +271,7 @@ extension GameDirectorSave on GameDirector {
     // early notify would flash hub/dungeon under the title card.
     if (!deferCombatLoop) {
       _isLoading = false;
-      notifyListeners();
+      _directorNotify();
     }
 
     return _creditAway(saved, showCard: true);
@@ -334,7 +334,7 @@ extension GameDirectorSave on GameDirector {
     final saved = await _storage.loadSlot(slot);
     if (saved == null) {
       _saveSlots = await _storage.listSlots();
-      notifyListeners();
+      _directorNotify();
       return false;
     }
     _friendEpoch++;
@@ -352,7 +352,7 @@ extension GameDirectorSave on GameDirector {
     await _persistFlush();
     _saveSlots = await _storage.listSlots();
     _syncHubIdleTimer();
-    notifyListeners();
+    _directorNotify();
     unawaited(syncFriendReferral());
     return true;
   }
@@ -374,7 +374,7 @@ extension GameDirectorSave on GameDirector {
     }
     _saveSlots = await _storage.listSlots();
     _syncHubIdleTimer();
-    notifyListeners();
+    _directorNotify();
   }
 
   /// Hard start: create a fresh party in the armed slot (or the active one).
@@ -410,11 +410,11 @@ extension GameDirectorSave on GameDirector {
     _lastHighestDungeon = _state.highestDungeonCleared;
     _ensureUiTimer();
     _syncHubIdleTimer();
-    notifyListeners();
+    _directorNotify();
     DebugPlayLog.event('new_game', DebugPlayLog.bootDetail(_state));
     await _persistFlush();
     _saveSlots = await _storage.listSlots();
-    notifyListeners();
+    _directorNotify();
     unawaited(syncFriendReferral());
   }
 
@@ -424,6 +424,6 @@ extension GameDirectorSave on GameDirector {
     DebugPlayLog.event('continue', DebugPlayLog.bootDetail(_state));
     ensureCombatLoop();
     _syncHubIdleTimer();
-    notifyListeners();
+    _directorNotify();
   }
 }

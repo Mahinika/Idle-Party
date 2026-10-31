@@ -1065,13 +1065,6 @@ class GameLogic {
   }) =>
       _gameLogicUpgradeWithSpendMode(state, type: type, mode: mode);
 
-  static GameState _upgradeWithBudget(
-    GameState state, {
-    required PartyUpgradeType type,
-    required int budget,
-  }) =>
-      _gameLogicUpgradeWithBudget(state, type: type, budget: budget);
-
   /// Spend wallet gold round-robin across ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY.
   static GameState upgradeSpendAllEvenly(GameState state) => _gameLogicUpgradeSpendAllEvenly(state);
 
@@ -1089,12 +1082,6 @@ class GameLogic {
   static GameState upgradeCrit(GameState state) => _gameLogicUpgradeCrit(state);
 
   static GameState upgradeMastery(GameState state) => _gameLogicUpgradeMastery(state);
-
-  static GameState _applyUpgrade(
-    GameState state, {
-    required PartyUpgradeType type,
-  }) =>
-      _gameLogicForgeApplyUpgrade(state, type: type);
 
   /// Hearth at the Stairs — a percent of max HP when the exit opens.
   static GameState healPartyAtStairs(GameState state) {
