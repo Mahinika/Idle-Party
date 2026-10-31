@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/app_analytics.dart';
 import 'package:idle_party/core/funnel_analytics.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -49,6 +50,9 @@ void main() {
 
   test('resume after 2h pays hub gold and offline_gold', () async {
     TestWidgetsFlutterBinding.ensureInitialized();
+    final hits = <String>[];
+    AppAnalytics.debugSink = (name, _) => hits.add(name);
+    addTearDown(() => AppAnalytics.debugSink = null);
     final director = GameDirector.preview();
     addTearDown(director.dispose);
     await director.boot();
@@ -65,6 +69,46 @@ void main() {
       FunnelAnalytics.has(director.state, FunnelAnalytics.offlineGold),
       isTrue,
     );
+    expect(hits, contains('welcome_back'));
+  });
+
+  test('Welcome Back offers the ad only after the first boss', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final hits = <String>[];
+    AppAnalytics.debugSink = (name, _) => hits.add(name);
+    addTearDown(() => AppAnalytics.debugSink = null);
+    final seed = GameLogic.createInitialState().copyWith(bossVictories: 1);
+    final director = GameDirector.preview(initialState: seed);
+    addTearDown(director.dispose);
+    await director.boot();
+    hits.clear();
+    director.setAppPaused(true);
+    director.debugStampAway(lastUpdatedAgo: const Duration(hours: 2));
+    director.setAppPaused(false);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(hits, contains('welcome_back'));
+    expect(hits, contains('welcome_back_ad_offer'));
+  });
+
+  test('a long foreground stint logs session_length on pause', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final hits = <String>[];
+    AppAnalytics.debugSink = (name, params) {
+      hits.add(name);
+      if (name == 'session_length') {
+        expect(params?['seconds'], greaterThanOrEqualTo(15));
+      }
+    };
+    addTearDown(() => AppAnalytics.debugSink = null);
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    await director.boot();
+    director.debugStampForeground(ago: const Duration(seconds: 40));
+    director.setAppPaused(true);
+    expect(hits, ['session_length']);
+    director.setAppPaused(true);
+    expect(hits, ['session_length']);
   });
 
   test('resume after 5s shows no Welcome Back and no offline_gold', () async {
@@ -98,7 +142,10 @@ void main() {
     final director = GameDirector.preview(initialState: seed);
     addTearDown(director.dispose);
     await director.boot();
-    expect(FunnelAnalytics.has(director.state, FunnelAnalytics.d1Return), isFalse);
+    expect(
+      FunnelAnalytics.has(director.state, FunnelAnalytics.d1Return),
+      isFalse,
+    );
     final yesterday = DateTime.utc(
       installed.year,
       installed.month,
@@ -108,7 +155,10 @@ void main() {
     director.debugStampAway(funnelInstallMs: yesterday.millisecondsSinceEpoch);
     director.setAppPaused(false);
     await Future<void>.delayed(Duration.zero);
-    expect(FunnelAnalytics.has(director.state, FunnelAnalytics.d1Return), isTrue);
+    expect(
+      FunnelAnalytics.has(director.state, FunnelAnalytics.d1Return),
+      isTrue,
+    );
     expect(director.offlineSummary, isNull);
   });
 }

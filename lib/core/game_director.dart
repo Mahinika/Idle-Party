@@ -206,6 +206,9 @@ class GameDirector extends ChangeNotifier {
     _reviewWelcome = null;
   }
 
+  /// This foreground stint. Reset when the app resumes.
+  DateTime _foregroundSince = DateTime.now();
+
   /// Shorter than this is an app switch, not a Welcome Back.
   static const int _awayCreditMinSec = 60;
   final UiFeedback uiFeedback = UiFeedback();
@@ -1575,6 +1578,9 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(next);
     GameAudio.ui();
     showToast('Purchased ${item.name}', life: 2.6);
+    if (!restored) {
+      unawaited(AppAnalytics.storePurchase(productId));
+    }
   }
 
   Future<void> buyShopItem(String productId) async {

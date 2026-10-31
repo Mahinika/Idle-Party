@@ -5,13 +5,35 @@ void main() {
   test('AppAnalytics no-ops safely under flutter test', () async {
     await AppAnalytics.init();
     await AppAnalytics.syncConsent();
-    await AppAnalytics.enterDungeon(
-      dungeonId: 'sandy',
-      keyLevel: 0,
-      floor: 1,
-    );
+    await AppAnalytics.enterDungeon(dungeonId: 'sandy', keyLevel: 0, floor: 1);
     await AppAnalytics.leaveDungeon(dungeonId: 'sandy', floor: 1);
     await AppAnalytics.partyWipe(dungeonId: 'sandy', floor: 1, streak: 1);
     await AppAnalytics.ascend(fromAl: 0, toAl: 1);
+    await AppAnalytics.welcomeBack(where: 'hub', seconds: 120, gold: 10);
+    await AppAnalytics.welcomeBackAdOffer();
+    await AppAnalytics.storeView();
+    await AppAnalytics.storePurchase('ad_free');
+    await AppAnalytics.sessionLength(40);
+  });
+
+  test('measurement events keep the documented names', () async {
+    final hits = <String>[];
+    AppAnalytics.debugSink = (name, _) => hits.add(name);
+    try {
+      await AppAnalytics.welcomeBack(where: 'dungeon', seconds: 90, gold: 4);
+      await AppAnalytics.welcomeBackAdOffer();
+      await AppAnalytics.storeView();
+      await AppAnalytics.storePurchase('long_away');
+      await AppAnalytics.sessionLength(40);
+      expect(hits, [
+        'welcome_back',
+        'welcome_back_ad_offer',
+        'store_view',
+        'store_purchase',
+        'session_length',
+      ]);
+    } finally {
+      AppAnalytics.debugSink = null;
+    }
   });
 }

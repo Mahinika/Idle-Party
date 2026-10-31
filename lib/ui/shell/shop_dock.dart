@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/ad_boost.dart';
+import '../../core/app_analytics.dart';
 import '../../core/game_director.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/remote_tune.dart';
@@ -37,6 +38,7 @@ class _ShopDockState extends State<ShopDock> {
   @override
   void initState() {
     super.initState();
+    unawaited(AppAnalytics.storeView());
     unawaited(_refresh());
   }
 
