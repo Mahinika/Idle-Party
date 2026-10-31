@@ -371,11 +371,11 @@ void main() {
     expect(find.byType(NewGamePartyPicker), findsOneWidget);
     await tester.tap(find.text('RACE'));
     await tester.pump();
-    // Slot 0 (PROT) is selected by default — Night Elf only that hero.
+    // Slot 0 (WALL) is selected by default — Night Elf only that hero.
     await tester.ensureVisible(find.text('N.ELF').first);
     await tester.tap(find.text('N.ELF').first);
     await tester.pump();
-    expect(find.textContaining('Race for PROT'), findsOneWidget);
+    expect(find.textContaining('Race for WALL'), findsOneWidget);
     expect(
       find.text(
         'Look only. Specialization sets the abilities. Race locks after START.',
@@ -455,7 +455,7 @@ void main() {
 
       final protInList = find.descendant(
         of: find.byType(ListView),
-        matching: find.textContaining('PROT'),
+        matching: find.textContaining('WALL'),
       );
       await tester.tap(protInList.first);
       await tester.pump();

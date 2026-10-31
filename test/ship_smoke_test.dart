@@ -291,7 +291,8 @@ void main() {
     expect(gates.body.toLowerCase(), contains('daily vault'));
     expect(gates.body.toLowerCase(), contains('daily run'));
     expect(gates.body.toLowerCase(), contains('quests daily'));
-    expect(gates.body.toLowerCase(), contains('wotlk'));
+    expect(gates.body.toLowerCase(), contains('specialization unlocks'));
+    expect(gates.body.toLowerCase(), isNot(contains('wotlk')));
 
     final rift = GameGuides.topics.firstWhere((t) => t.id == 'rift');
     expect(rift.body.toLowerCase(), contains('loot farm rift'));
@@ -345,13 +346,13 @@ void main() {
     expect(vault.body.toUpperCase(), contains('HUB HUNT'));
     expect(vault.body.toUpperCase(), contains('READY'));
 
-    expect(AscendRoadmap.unlockAtAl(1), contains('Combat Rogue'));
-    expect(AscendRoadmap.unlockAtAl(1), contains('Holy Paladin'));
-    expect(AscendRoadmap.unlockAtAl(2), contains('Beast Mastery'));
+    expect(AscendRoadmap.unlockAtAl(1), contains('Alleyblade'));
+    expect(AscendRoadmap.unlockAtAl(1), contains('Dawnward'));
+    expect(AscendRoadmap.unlockAtAl(2), contains('Packbond'));
     expect(AscendRoadmap.unlockAtAl(2), contains('5th party slot'));
     expect(AscendRoadmap.unlockAtAl(2), contains('ESSENCE'));
     expect(GameLogic.partySlot5EssenceCost, 80);
-    expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
+    expect(AscendRoadmap.unlockAtAl(5), contains('Graveward'));
     expect(AscendRoadmap.unlockAtAl(20), contains('Ascension cap'));
     expect(AscendRoadmap.unlockAtAl(20), contains('${GameLogic.maxHeroLevel}'));
     expect(AscendRoadmap.unlockAtAl(20), contains('KEY'));
@@ -369,8 +370,8 @@ void main() {
 
     final classes = GameGuides.topics.firstWhere((t) => t.id == 'classes');
     expect(classes.body, contains('AL2'));
-    expect(classes.body, contains('Beast Mastery'));
-    expect(classes.body, contains('Holy Paladin'));
+    expect(classes.body, contains('Packbond'));
+    expect(classes.body, contains('Dawnward'));
     expect(classes.body, contains('ESSENCE BLESSING'));
 
     final forge = GameGuides.topics.firstWhere((t) => t.id == 'forge');

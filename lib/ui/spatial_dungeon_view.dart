@@ -891,6 +891,7 @@ class DungeonModeChip extends StatelessWidget {
     required this.onTap,
     this.onLongPress,
     this.dense = false,
+    this.prominent = false,
     this.tip,
     this.interactive = true,
     this.maxLabelWidth,
@@ -901,6 +902,9 @@ class DungeonModeChip extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final bool dense;
+
+  /// Fight-speed chip. Stays a fixed size so the top strip cannot shrink it away.
+  final bool prominent;
   final String? tip;
   final bool interactive;
 
@@ -912,17 +916,23 @@ class DungeonModeChip extends StatelessWidget {
     final semanticsLabel = tip == null ? '$label dungeon mode' : '$label. $tip';
     final action = interactive ? onTap : null;
     final child = Container(
-      constraints: BoxConstraints(minHeight: dense ? 30 : GameTheme.minTouch),
+      constraints: BoxConstraints(
+        minHeight: prominent ? 40 : (dense ? 30 : GameTheme.minTouch),
+        minWidth: prominent ? 76 : 0,
+      ),
       padding: EdgeInsets.symmetric(
-        horizontal: dense ? 7 : 8,
+        horizontal: prominent ? 8 : (dense ? 7 : 8),
         vertical: dense ? 4 : 0,
       ),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: selected ? const Color(0xFF3A2810) : const Color(0xFF1A1610),
+        color: selected
+            ? (prominent ? const Color(0xFF6A3E12) : const Color(0xFF3A2810))
+            : const Color(0xFF1A1610),
         borderRadius: BorderRadius.circular(3),
         border: Border.all(
           color: selected ? GameTheme.torchHot : const Color(0xFF4A4030),
+          width: prominent && selected ? 2 : 1,
         ),
       ),
       child: ConstrainedBox(
@@ -932,7 +942,7 @@ class DungeonModeChip extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: GameTheme.pixel(
-            size: GameTheme.hudPixel,
+            size: prominent ? 13 : GameTheme.hudPixel,
             color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
           ),
         ),

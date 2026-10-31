@@ -528,7 +528,7 @@ void main() {
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.meetHero);
     expect(chase.urgency, HubChaseUrgency.ready);
-    expect(chase.title, contains('Combat'));
+    expect(chase.title, contains('Alleyblade'));
     expect(chase.detail.toLowerCase(), contains('blades'));
   });
 

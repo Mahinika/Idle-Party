@@ -390,7 +390,7 @@ abstract final class LocalSeasonCatalog {
   static const Map<int, String> gauntletTitles = <int, String>{
     25: 'Spire Climber',
     50: 'Crystal Warden',
-    100: 'Infinity Bound',
+    100: 'Spirebound',
     150: 'Spire Ascendant',
     200: 'Crystal Sovereign',
   };

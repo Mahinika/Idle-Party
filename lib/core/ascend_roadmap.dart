@@ -13,37 +13,37 @@ abstract final class AscendRoadmap {
   /// Ascend / TODAY “party power” ladder.
   static const Map<int, List<(HeroSpecId id, String label)>> kitUnlocksByAl = {
     1: [
-      (HeroSpecId.combat, 'Combat Rogue'),
-      (HeroSpecId.arms, 'Arms Warrior'),
-      (HeroSpecId.holyPaladin, 'Holy Paladin'),
+      (HeroSpecId.combat, 'Alleyblade'),
+      (HeroSpecId.arms, 'Greatblade'),
+      (HeroSpecId.holyPaladin, 'Dawnward'),
     ],
     2: [
-      (HeroSpecId.beastMastery, 'Beast Mastery'),
-      (HeroSpecId.holyPriest, 'Holy Priest'),
-      (HeroSpecId.arcane, 'Arcane Mage'),
+      (HeroSpecId.beastMastery, 'Packbond'),
+      (HeroSpecId.holyPriest, 'Hymnward'),
+      (HeroSpecId.arcane, 'Prismcast'),
     ],
     3: [
-      (HeroSpecId.protPaladin, 'Protection Paladin'),
-      (HeroSpecId.assassination, 'Assassination'),
-      (HeroSpecId.restorationShaman, 'Resto Shaman'),
-      (HeroSpecId.frostMage, 'Frost Mage'),
-      (HeroSpecId.restorationDruid, 'Resto Druid'),
+      (HeroSpecId.protPaladin, 'Oathwall'),
+      (HeroSpecId.assassination, 'Venomcut'),
+      (HeroSpecId.restorationShaman, 'Tidecall'),
+      (HeroSpecId.frostMage, 'Glacecast'),
+      (HeroSpecId.restorationDruid, 'Bloomward'),
     ],
     4: [
-      (HeroSpecId.survival, 'Survival'),
-      (HeroSpecId.elemental, 'Elemental'),
-      (HeroSpecId.enhancement, 'Enhancement'),
-      (HeroSpecId.balance, 'Balance'),
-      (HeroSpecId.feral, 'Feral'),
+      (HeroSpecId.survival, 'Snarebow'),
+      (HeroSpecId.elemental, 'Stormcall'),
+      (HeroSpecId.enhancement, 'Totemstrike'),
+      (HeroSpecId.balance, 'Moonweft'),
+      (HeroSpecId.feral, 'Clawdance'),
     ],
     5: [
-      (HeroSpecId.blood, 'Blood DK'),
-      (HeroSpecId.frostDk, 'Frost DK'),
-      (HeroSpecId.guardian, 'Guardian'),
+      (HeroSpecId.blood, 'Graveward'),
+      (HeroSpecId.frostDk, 'Rimeblade'),
+      (HeroSpecId.guardian, 'Barkwall'),
     ],
     6: [
-      (HeroSpecId.affliction, 'Affliction'),
-      (HeroSpecId.demonology, 'Demonology'),
+      (HeroSpecId.affliction, 'Hexrot'),
+      (HeroSpecId.demonology, 'Pactimp'),
     ],
   };
 

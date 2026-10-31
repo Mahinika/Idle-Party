@@ -69,7 +69,7 @@ void main() {
 
   test('Holy Paladin is on the AL1 Meet ladder', () {
     expect(AscendRoadmap.ascendLevelForKit(HeroSpecId.holyPaladin), 1);
-    expect(AscendRoadmap.unlockAtAl(1), contains('Holy Paladin'));
+    expect(AscendRoadmap.unlockAtAl(1), contains('Dawnward'));
     expect(
       HeroSpecs.def(HeroSpecId.holyPaladin).unlockHint.toLowerCase(),
       contains('al 1'),

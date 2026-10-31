@@ -4,8 +4,8 @@ import 'package:idle_party/core/game_logic.dart';
 
 void main() {
   test('Ascend roadmap unlocks key AL milestones', () {
-    expect(AscendRoadmap.unlockAtAl(1), contains('Combat Rogue'));
-    expect(AscendRoadmap.unlockAtAl(1), contains('Holy Paladin'));
+    expect(AscendRoadmap.unlockAtAl(1), contains('Alleyblade'));
+    expect(AscendRoadmap.unlockAtAl(1), contains('Dawnward'));
     expect(AscendRoadmap.unlockAtAl(2), contains('5th party'));
     expect(AscendRoadmap.unlockAtAl(2), contains('80e'));
     expect(
@@ -20,11 +20,11 @@ void main() {
       AscendRoadmap.unlockAtAl(GameLogic.maxAscensionLevel),
       contains('KEY'),
     );
-    expect(AscendRoadmap.unlockAtAl(5), contains('Guardian'));
-    expect(AscendRoadmap.unlockAtAl(5), contains('Blood DK'));
-    expect(AscendRoadmap.unlockAtAl(4), contains('Survival'));
+    expect(AscendRoadmap.unlockAtAl(5), contains('Barkwall'));
+    expect(AscendRoadmap.unlockAtAl(5), contains('Graveward'));
+    expect(AscendRoadmap.unlockAtAl(4), contains('Snarebow'));
     expect(AscendRoadmap.unlockAtAl(4), contains('+2 more'));
-    expect(AscendRoadmap.unlockAtAl(6), contains('Affliction'));
+    expect(AscendRoadmap.unlockAtAl(6), contains('Hexrot'));
   });
 
   test('nextGoalLine points at the nearest unlock', () {
