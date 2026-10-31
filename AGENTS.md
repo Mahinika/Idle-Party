@@ -70,13 +70,15 @@ math: `docs/GEAR_BUDGET.md`. Floors: `docs/FLOOR_BLUEPRINT.md`.
 
 ```
 main.dart
- ├─ loading → boot intro → startMenu → optional newGamePicker → play
+ ├─ loading → playUpdateRequired? → boot intro → startMenu
+ │    → pickSave? → newGamePicker? → play
  └─ PlayShell
      ├─ Hub (!inDungeon) → HubScreen
      └─ Dungeon → Is2Shell → SpatialDungeonView
          + AppBottomBar GEAR / GOLD / SHOP / ESSENCE / MORE
-           (until the first boss or first Ascend: GEAR + MORE;
-            endgame hub: KEY after MORE; dungeon: + LEAVE)
+           (early: GEAR + MORE; GOLD/SHOP after first boss or Ascend;
+            ESSENCE when camp matters; endgame hub: KEY after MORE;
+            dungeon: + LEAVE)
 ```
 
 GOLD = FORGE + MARKET. SHOP = forever SCROLLS + ad-free / supporter (hour
@@ -84,13 +86,14 @@ packs are restore-only). ESSENCE = CAMP + BLESSING + relics + pets. MORE =
 QUESTS / CRAFT / SETTINGS / INFO. Redeem code is SHOP and MORE → SETTINGS.
 Hub POWERUPS stay on the hub.
 
-**SpatialCombat** is the current fight sim, including in-dungeon offline.
-The live fight steps once per screen refresh, so a late frame does not
-stack another hitch. A second sim is not forbidden (owner 2026-09-26).
-(`afkAssist: true`, `GameLogic.simulateSpatialOffline`). Hub AFK is gold
-plus slow essence, not combat. A PUSH clear pays +1 essence, a PUSH boss
-+2. FARM pays that mint 0. Gauntlet pays its own floor essence, doubled
-under GREED, and does not use the PUSH mint.
+**SpatialCombat** is the current fight sim, including in-dungeon offline
+via `OfflineSim` → `GameLogic.simulateSpatialOffline` (same authority as
+live play; offline uses `afkAssist` except ticket Ashen Crown). The live
+fight steps once per screen refresh, so a late frame does not stack
+another hitch. A second sim is not forbidden (owner 2026-09-26). Hub AFK is
+gold plus slow essence, not combat. A PUSH clear pays +1 essence, a PUSH
+boss +2. FARM pays that mint 0. Gauntlet pays its own floor essence,
+doubled under GREED, and does not use the PUSH mint.
 
 A PUSH wipe counts down 3 seconds and continues. Two fails on the same new
 floor farm the floor below until one clear, then push again. Offline farms
@@ -157,6 +160,7 @@ stamina is STA.
 |------|------|
 | Orchestration | `lib/core/game_director.dart` |
 | Rules | `lib/core/game_logic.dart` (+ ascend / endgame / ladders / meta-season parts) |
+| Offline dungeon | `lib/core/offline_sim.dart`, `lib/core/offline_progress.dart` |
 | State / meta | `lib/core/game_state.dart`, `lib/models/meta_depth.dart` |
 | Changelog | `lib/core/changelog.dart`, `lib/core/meta_systems.dart` |
 | Zones | `lib/models/dungeon_def.dart` |
