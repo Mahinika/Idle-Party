@@ -1556,31 +1556,67 @@ class GameDirector extends ChangeNotifier {
   Future<void> _warmupShopStore() async {
     if (!ShopBilling.billingReady) return;
     await ShopStore.warmup(
-      onGranted: (productId, restored) =>
-          _onShopPurchaseGranted(productId, restored: restored),
+      onGranted:
+          ({
+            required String productId,
+            required String purchaseId,
+            required bool restored,
+          }) => _onShopPurchaseGranted(
+            productId,
+            purchaseId: purchaseId,
+            restored: restored,
+          ),
       onMessage: (msg) => showToast(msg, life: 2.4),
     );
     notifyListeners();
   }
 
-  void _onShopPurchaseGranted(String productId, {bool restored = false}) {
+  /// True when the grant is saved, or there was nothing new to save.
+  /// False when the cinders changed but this save cannot be written yet —
+  /// the caller must leave the Play purchase unconsumed.
+  Future<bool> _onShopPurchaseGranted(
+    String productId, {
+    required String purchaseId,
+    bool restored = false,
+  }) async {
     final item = ShopCatalog.byId[productId];
-    if (item == null) return;
-    if (restored && !ShopBilling.grantOnRestore(item)) return;
-    final beforeOwned = ShopBilling.isOwned(_state, item);
-    final next = ShopBilling.applyPurchase(_state, item);
-    if (identical(next, _state) && beforeOwned) {
-      // Restore of already-owned non-consumable — quiet ack.
-      showToast('${item.name} restored', life: 2.2);
-      return;
+    if (item == null) return true;
+    final known = ShopBilling.alreadyGranted(_state, purchaseId);
+    if (!ShopBilling.shouldGrantPurchase(
+      item: item,
+      restored: restored,
+      purchaseId: purchaseId,
+      alreadyGranted: known,
+    )) {
+      return true;
     }
-    if (identical(next, _state)) return;
+    final beforeOwned = ShopBilling.isOwned(_state, item);
+    final beforeCinders = _state.metaDepth.cinders;
+    final next = ShopBilling.applyTrackedPurchase(
+      _state,
+      item,
+      purchaseId: purchaseId,
+    );
+    if (identical(next, _state) && beforeOwned) {
+      showToast('${item.name} restored', life: 2.2);
+      return true;
+    }
+    if (identical(next, _state)) return true;
     _applyUpgrade(next);
+    if (!_hasExistingSave) return false;
+    await _persistFlush();
     GameAudio.ui();
-    showToast('Purchased ${item.name}', life: 2.6);
+    final paidCinders = next.metaDepth.cinders > beforeCinders;
+    showToast(
+      restored && !paidCinders
+          ? '${item.name} restored'
+          : 'Purchased ${item.name}',
+      life: 2.6,
+    );
     if (!restored) {
       unawaited(AppAnalytics.storePurchase(productId));
     }
+    return true;
   }
 
   Future<void> buyShopItem(String productId) async {
