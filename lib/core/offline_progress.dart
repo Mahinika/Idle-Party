@@ -2,6 +2,7 @@ import 'dart:math';
 
 import '../models/loot.dart';
 import '../spatial/spatial_combat.dart';
+import 'ad_boost.dart';
 import 'comeback_chest.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
@@ -71,9 +72,11 @@ abstract final class OfflineProgress {
       sim.runSlice(OfflineSim.sliceSteps);
       if (!sim.done) await Future<void>.delayed(Duration.zero);
     }
+    final raw = sim.state;
+    final boosted = applyAwayBonus(state, raw);
     return _offlineResultFrom(
       before: state,
-      progressed: applyAwayBonus(state, sim.state),
+      progressed: boosted,
       seconds: seconds,
       secondsAway: away,
       roomsCleared: sim.roomsCleared,
@@ -81,6 +84,7 @@ abstract final class OfflineProgress {
       stoppedOnWipe: sim.stoppedOnWipe,
       farmedSafeFloor: sim.farmedSafeFloor,
       wasInDungeon: true,
+      awayGoldMultiplied: _restMultipliedGold(state, raw, boosted),
     );
   }
 
@@ -125,9 +129,10 @@ abstract final class OfflineProgress {
       // Hub AFK: sanctuary idle gold only — no ghost combat / boss farms.
       progressed = applyHubIdleProgress(state, seconds);
     }
+    final boosted = applyAwayBonus(state, progressed);
     return _offlineResultFrom(
       before: state,
-      progressed: applyAwayBonus(state, progressed),
+      progressed: boosted,
       seconds: seconds,
       secondsAway: away,
       hubChestCapSec: hubCap,
@@ -136,7 +141,19 @@ abstract final class OfflineProgress {
       stoppedOnWipe: stoppedOnWipe,
       farmedSafeFloor: farmedSafeFloor,
       wasInDungeon: state.inDungeon,
+      awayGoldMultiplied: _restMultipliedGold(state, progressed, boosted),
     );
+  }
+
+  /// True when Scroll of Rest (or Forever Rest) added gold on top of [raw].
+  static bool _restMultipliedGold(
+    GameState before,
+    GameState raw,
+    GameState boosted,
+  ) {
+    if (!AdBoost.awayBonusReady(before.metaDepth)) return false;
+    final plain = raw.gold - before.gold;
+    return plain > 0 && boosted.gold > raw.gold;
   }
 
   static GameState applyAwayBonus(GameState before, GameState progressed) =>
@@ -153,6 +170,7 @@ abstract final class OfflineProgress {
     bool stoppedOnWipe = false,
     bool farmedSafeFloor = false,
     required bool wasInDungeon,
+    bool awayGoldMultiplied = false,
   }) {
     final awayForChest = secondsAway > 0 ? secondsAway : seconds;
     final noted = ComebackChest.noteAbsence(progressed, awayForChest);
@@ -181,6 +199,7 @@ abstract final class OfflineProgress {
       ),
       rareFinds: (_rareGearCount(next) - _rareGearCount(before)).clamp(0, 999),
       wasInDungeon: wasInDungeon,
+      awayGoldMultiplied: awayGoldMultiplied,
     );
   }
 

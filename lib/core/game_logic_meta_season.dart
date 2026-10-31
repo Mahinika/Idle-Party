@@ -376,7 +376,7 @@ GameState _enterDaily(GameState state, {DateTime? now}) {
   final seed = MetaSystems.dailySeed(t);
   final dungeonId = MetaSystems.dailyDungeonId(t);
   final isNewDay = state.lastDailyDate != dateKey;
-  var cleared = GameLogic._clearKeystoneRun(_rollPushPeaks(state, now: t));
+  var cleared = _clearKeystoneRun(_rollPushPeaks(state, now: t));
   final echoFloor = MetaSystems.dailyEchoFloor(cleared, t);
   final floor = DungeonGenerator.generateFloor(
     echoFloor,

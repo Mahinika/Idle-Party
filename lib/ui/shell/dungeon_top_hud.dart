@@ -358,9 +358,13 @@ class DungeonTopHud extends StatelessWidget {
     );
     final bossStairs =
         world?.awaitingExit == true && state.currentRoom.type == RoomType.boss;
+    final firstBoss =
+        GameLogic.firstBossPending(state) &&
+        !state.inGauntlet &&
+        !state.inAnyRiftMode &&
+        !state.inWorldBoss;
     final awayLine =
-        coachGod == null &&
-            AwayFightTip.shouldShow(state, bossStairs: bossStairs, inCave: true)
+        AwayFightTip.shouldShow(state, bossStairs: bossStairs, inCave: true)
         ? AwayFightTip.lineFor(state)
         : null;
     final coachLine = AwayFightTip.caveCoach(
@@ -368,6 +372,7 @@ class DungeonTopHud extends StatelessWidget {
       godhand: coachGod,
       away: awayLine,
       farm: coachFarm,
+      firstBoss: firstBoss,
     );
     final keyBit = !jargon
         ? ''

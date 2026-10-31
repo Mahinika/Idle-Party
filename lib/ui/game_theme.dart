@@ -73,6 +73,9 @@ abstract final class GameTheme {
   static const Color accentWarn = Color(0xFFFFB454);
 
   /// Drop shadows — use these instead of one-off `Color(0x88…)`.
+  /// Drop shadow under dungeon loot lines so they read on the floor.
+  static const Color lootInkShadow = Color(0xE0100C08);
+
   static const Color shadow = Color(0x99000000);
   static const Color shadowMid = Color(0x88000000);
   static const Color shadowSoft = Color(0x66000000);

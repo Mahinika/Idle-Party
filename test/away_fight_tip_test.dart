@@ -105,6 +105,30 @@ void main() {
     expect(away.body.toUpperCase(), isNot(contains('ESSENCE')));
   });
 
+  test('the first boss shows the away line instead of God Hand', () {
+    expect(
+      AwayFightTip.caveCoach(
+        wiped: false,
+        godhand: 'Long-press the fight.',
+        away: AwayFightTip.line,
+        farm: 'Switch',
+        firstBoss: true,
+      ),
+      AwayFightTip.line,
+    );
+    expect(
+      AwayFightTip.caveCoach(
+        wiped: false,
+        godhand: 'Long-press the fight.',
+        away: AwayFightTip.line,
+        farm: 'Switch',
+      ),
+      'Long-press the fight.',
+    );
+    expect(AwayFightTip.line.toLowerCase(), contains('close the app'));
+    expect(AwayFightTip.line.toLowerCase(), contains('keeps fighting'));
+  });
+
   test('a wipe hides the line that says the party keeps fighting', () {
     expect(
       AwayFightTip.caveCoach(

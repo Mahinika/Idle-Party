@@ -12,9 +12,17 @@ void main() {
     final script = File('${root.path}/tool/check_paper_doll_facit.py');
     expect(script.existsSync(), isTrue, reason: 'run from repo root');
     final python = _pythonExecutable();
-    expect(python, isNotNull, reason: 'need python3/py/python for facit');
+    if (python == null) {
+      fail('need python3/py/python for facit');
+    }
+    if (!_pillowInstalled(python)) {
+      markTestSkipped(
+        'Pillow is not installed. pip install pillow, then rerun the facit gate.',
+      );
+      return;
+    }
     final result = Process.runSync(
-      python!,
+      python,
       ['tool/check_paper_doll_facit.py'],
       workingDirectory: root.path,
       runInShell: true,
@@ -28,9 +36,17 @@ void main() {
 
   test('facit selftest catches a bad picture of each kind', () {
     final python = _pythonExecutable();
-    expect(python, isNotNull);
+    if (python == null) {
+      fail('need python3/py/python for facit');
+    }
+    if (!_pillowInstalled(python)) {
+      markTestSkipped(
+        'Pillow is not installed. pip install pillow, then rerun the facit selftest.',
+      );
+      return;
+    }
     final result = Process.runSync(
-      python!,
+      python,
       ['tool/check_paper_doll_facit.py', '--selftest'],
       workingDirectory: Directory.current.path,
       runInShell: true,
@@ -41,6 +57,15 @@ void main() {
       reason: 'stdout:\n${result.stdout}\nstderr:\n${result.stderr}',
     );
   });
+}
+
+bool _pillowInstalled(String python) {
+  final probe = Process.runSync(
+    python,
+    ['-c', 'import PIL'],
+    runInShell: true,
+  );
+  return probe.exitCode == 0;
 }
 
 String? _pythonExecutable() {

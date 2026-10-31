@@ -32,7 +32,7 @@ class DungeonLootLog extends StatelessWidget {
                       ).copyWith(
                         shadows: const [
                           Shadow(
-                            color: Color(0xE0100C08),
+                            color: GameTheme.lootInkShadow,
                             offset: Offset(1, 1),
                           ),
                         ],

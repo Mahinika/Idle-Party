@@ -367,7 +367,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
     expect(find.textContaining('Flask'), findsWidgets);
-    expect(find.textContaining('Upgrades'), findsWidgets);
+    expect(find.textContaining('UPGRADES'), findsWidgets);
   });
 
   testWidgets('SHOP catalog includes forever scrolls and a cheaper bundle', (

@@ -170,7 +170,13 @@ void main() {
     for (final f in docs) {
       for (final m in path.allMatches(f.readAsStringSync())) {
         final p = m.group(1)!;
-        if (p.contains('tool/out/') || p.contains('playshots/')) continue;
+        // Generated shots and sim dumps are gitignored. A clean checkout
+        // does not have them; the store shoot writes the listing PNGs.
+        if (p.contains('tool/out/') ||
+            p.contains('playshots/') ||
+            p.contains('tool/store_listing/out/')) {
+          continue;
+        }
         expect(
           FileSystemEntity.typeSync(p),
           isNot(FileSystemEntityType.notFound),
