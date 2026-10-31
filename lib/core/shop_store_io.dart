@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/billing_client_wrappers.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
@@ -13,9 +15,15 @@ bool productsReady = false;
 
 final Map<String, ProductDetails> _products = {};
 StreamSubscription<List<PurchaseDetails>>? _sub;
-void Function(String productId, bool restored)? _onGranted;
+Future<bool> Function({
+  required String productId,
+  required String purchaseId,
+  required bool restored,
+})?
+_onGranted;
 void Function(String message)? _onMessage;
 bool _androidStore = false;
+final Map<String, Future<void>> _settleTails = {};
 
 String? storePriceLabel(String productId) => _products[productId]?.price;
 
@@ -28,7 +36,12 @@ bool get _platformOk {
 }
 
 Future<void> warmup({
-  required void Function(String productId, bool restored) onGranted,
+  required Future<bool> Function({
+    required String productId,
+    required String purchaseId,
+    required bool restored,
+  })
+  onGranted,
   void Function(String message)? onMessage,
 }) async {
   _onGranted = onGranted;
@@ -46,13 +59,16 @@ Future<void> warmup({
   }
   _androidStore = true;
   _sub ??= iap.purchaseStream.listen(
-    _handlePurchases,
+    (purchases) {
+      unawaited(_handlePurchases(purchases));
+    },
     onError: (Object e) {
       _onMessage?.call('Shop error — try again later.');
       debugPrint('ShopStore purchaseStream: $e');
     },
   );
   await _queryProducts();
+  await _recoverUnfinishedPurchases();
 }
 
 Future<void> _queryProducts() async {
@@ -98,8 +114,12 @@ Future<String?> buy(String productId) async {
   final item = ShopCatalog.byId[productId];
   if (item == null) return 'Unknown pack.';
   final param = PurchaseParam(productDetails: details);
+  // autoConsume would spend the pouch before we save the grant.
   final started = item.isConsumable
-      ? await InAppPurchase.instance.buyConsumable(purchaseParam: param)
+      ? await InAppPurchase.instance.buyConsumable(
+          purchaseParam: param,
+          autoConsume: false,
+        )
       : await InAppPurchase.instance.buyNonConsumable(purchaseParam: param);
   if (!started) return 'Could not open the buy sheet.';
   return null;
@@ -118,32 +138,101 @@ Future<String?> restore() async {
   }
 }
 
+/// Unacknowledged consumables survive a process death. Grant them, save,
+/// then consume. Play does not return a purchase after it is consumed.
+Future<void> _recoverUnfinishedPurchases() async {
+  if (!_androidStore) return;
+  try {
+    final addition = InAppPurchase.instance
+        .getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
+    final response = await addition.queryPastPurchases();
+    if (response.error != null) {
+      debugPrint('ShopStore queryPastPurchases: ${response.error}');
+    }
+    await _handlePurchases(response.pastPurchases);
+  } catch (e, st) {
+    debugPrint('ShopStore queryPastPurchases failed: $e\n$st');
+  }
+}
+
 Future<void> _handlePurchases(List<PurchaseDetails> purchases) async {
   for (final purchase in purchases) {
-    switch (purchase.status) {
-      case PurchaseStatus.pending:
-        _onMessage?.call('Purchase pending…');
-      case PurchaseStatus.error:
-        _onMessage?.call(
-          purchase.error?.message ?? 'Purchase canceled or failed.',
-        );
-        if (purchase.pendingCompletePurchase) {
-          await InAppPurchase.instance.completePurchase(purchase);
+    final key = _settleKey(purchase);
+    final prev = _settleTails[key] ?? Future<void>.value();
+    final next = prev
+        .catchError((Object _) {})
+        .then((_) => _settlePurchase(purchase));
+    _settleTails[key] = next;
+    await next;
+  }
+}
+
+String _settleKey(PurchaseDetails purchase) {
+  final id = _purchaseKey(purchase);
+  if (id.isNotEmpty) return id;
+  return '${purchase.productID}:${purchase.status.name}';
+}
+
+String _purchaseKey(PurchaseDetails purchase) {
+  final order = (purchase.purchaseID ?? '').trim();
+  if (order.isNotEmpty) return order;
+  return purchase.verificationData.serverVerificationData.trim();
+}
+
+Future<void> _settlePurchase(PurchaseDetails purchase) async {
+  switch (purchase.status) {
+    case PurchaseStatus.pending:
+      _onMessage?.call('Purchase pending…');
+    case PurchaseStatus.error:
+      _onMessage?.call(
+        purchase.error?.message ?? 'Purchase canceled or failed.',
+      );
+      if (purchase.pendingCompletePurchase) {
+        await InAppPurchase.instance.completePurchase(purchase);
+      }
+    case PurchaseStatus.canceled:
+      if (purchase.pendingCompletePurchase) {
+        await InAppPurchase.instance.completePurchase(purchase);
+      }
+    case PurchaseStatus.purchased:
+    case PurchaseStatus.restored:
+      final item = ShopCatalog.byId[purchase.productID];
+      final purchaseId = _purchaseKey(purchase);
+      var saved = true;
+      if (item != null && _onGranted != null) {
+        try {
+          saved = await _onGranted!(
+            productId: purchase.productID,
+            purchaseId: purchaseId,
+            restored: purchase.status == PurchaseStatus.restored,
+          );
+        } catch (e, st) {
+          debugPrint('ShopStore grant failed: $e\n$st');
+          saved = false;
         }
-      case PurchaseStatus.canceled:
-        if (purchase.pendingCompletePurchase) {
-          await InAppPurchase.instance.completePurchase(purchase);
-        }
-      case PurchaseStatus.purchased:
-      case PurchaseStatus.restored:
-        _onGranted?.call(
-          purchase.productID,
-          purchase.status == PurchaseStatus.restored,
-        );
-        if (purchase.pendingCompletePurchase) {
-          await InAppPurchase.instance.completePurchase(purchase);
-        }
+      }
+      if (!saved) return;
+      if (item != null && item.isConsumable) {
+        await _consumePurchase(purchase);
+      } else if (purchase.pendingCompletePurchase) {
+        await InAppPurchase.instance.completePurchase(purchase);
+      }
+  }
+}
+
+Future<void> _consumePurchase(PurchaseDetails purchase) async {
+  try {
+    final addition = InAppPurchase.instance
+        .getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
+    final result = await addition.consumePurchase(purchase);
+    if (result.responseCode != BillingResponse.ok) {
+      debugPrint(
+        'ShopStore consume ${purchase.productID}: '
+        '${result.responseCode} ${result.debugMessage}',
+      );
     }
+  } catch (e, st) {
+    debugPrint('ShopStore consume failed: $e\n$st');
   }
 }
 
@@ -151,6 +240,7 @@ Future<void> disposeStore() async {
   await _sub?.cancel();
   _sub = null;
   _products.clear();
+  _settleTails.clear();
   storeAvailable = false;
   productsReady = false;
   _androidStore = false;

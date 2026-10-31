@@ -6,7 +6,12 @@ String? storePriceLabel(String productId) => null;
 bool storeLists(String productId) => false;
 
 Future<void> warmup({
-  required void Function(String productId, bool restored) onGranted,
+  required Future<bool> Function({
+    required String productId,
+    required String purchaseId,
+    required bool restored,
+  })
+  onGranted,
   void Function(String message)? onMessage,
 }) async {}
 

@@ -206,6 +206,71 @@ void main() {
     }
   });
 
+  test('cinder pouch grants once per purchase id', () {
+    var state = GameLogic.createInitialState(now: now);
+    final item = ShopCatalog.byId['cinder_pouch']!;
+    expect(
+      ShopBilling.shouldGrantPurchase(
+        item: item,
+        restored: true,
+        purchaseId: 'GPA.1',
+        alreadyGranted: false,
+      ),
+      isTrue,
+    );
+    state = ShopBilling.applyTrackedPurchase(
+      state,
+      item,
+      purchaseId: 'GPA.1',
+      now: now,
+    );
+    expect(state.metaDepth.cinders, 8);
+    expect(state.metaDepth.grantedShopPurchaseIds, ['GPA.1']);
+    expect(
+      ShopBilling.shouldGrantPurchase(
+        item: item,
+        restored: true,
+        purchaseId: 'GPA.1',
+        alreadyGranted: ShopBilling.alreadyGranted(state, 'GPA.1'),
+      ),
+      isFalse,
+    );
+    final again = ShopBilling.applyTrackedPurchase(
+      state,
+      item,
+      purchaseId: 'GPA.1',
+      now: now,
+    );
+    expect(identical(again, state), isTrue);
+    state = ShopBilling.applyTrackedPurchase(
+      state,
+      item,
+      purchaseId: 'GPA.2',
+      now: now,
+    );
+    expect(state.metaDepth.cinders, 16);
+    expect(state.metaDepth.grantedShopPurchaseIds, ['GPA.1', 'GPA.2']);
+    final round = GameLogic.stateFromJson(state.toJson());
+    expect(round.metaDepth.cinders, 16);
+    expect(round.metaDepth.grantedShopPurchaseIds, ['GPA.1', 'GPA.2']);
+    expect(MetaDepthState.fromJson(const {}).grantedShopPurchaseIds, isEmpty);
+    expect(
+      ShopBilling.shouldGrantPurchase(
+        item: item,
+        restored: true,
+        purchaseId: '',
+        alreadyGranted: false,
+      ),
+      isFalse,
+    );
+    final ascended = GameLogic.ascend(
+      state.copyWith(bossVictories: 1),
+      now: now,
+    );
+    expect(ascended.metaDepth.cinders, 16);
+    expect(ascended.metaDepth.grantedShopPurchaseIds, ['GPA.1', 'GPA.2']);
+  });
+
   test('old saves default shopPermScrolls to 0', () {
     expect(const MetaDepthState().shopPermScrolls, 0);
     expect(MetaDepthState.fromJson(const {}).shopPermScrolls, 0);
@@ -259,7 +324,10 @@ void main() {
       expect(find.text('Ad-free welcome'), findsOneWidget);
       expect(find.text('Long Away'), findsOneWidget);
       expect(find.text('Supporter pack'), findsOneWidget);
-      expect(find.text('BUY'), findsNWidgets(3));
+      expect(find.text('Unavailable'), findsNWidgets(3));
+      expect(find.text('UNAVAILABLE'), findsNWidgets(3));
+      expect(find.text('BUY'), findsNothing);
+      expect(find.textContaining('\$'), findsNothing);
       expect(find.text('NOT ON PLAY'), findsNothing);
       expect(find.textContaining('Forever'), findsNothing);
       expect(find.textContaining('Cinder'), findsNothing);
@@ -271,7 +339,7 @@ void main() {
       expect(find.text('RESTORE'), findsOneWidget);
       expect(find.text('REDEEM CODE'), findsOneWidget);
 
-      await tester.tap(find.text('BUY').first);
+      await tester.tap(find.text('UNAVAILABLE').first);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(director.state.metaDepth.adFree, isFalse);

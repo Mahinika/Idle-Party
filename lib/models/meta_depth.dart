@@ -343,6 +343,7 @@ class MetaDepthState {
     this.shopBagBonusSlots = 0,
     this.shopPermScrolls = 0,
     this.shopLongAway = false,
+    this.grantedShopPurchaseIds = const <String>[],
     this.redeemedCoupons = const <String>[],
     this.monthPassKey = '',
     this.monthlyBestTimedKey = 0,
@@ -682,6 +683,10 @@ class MetaDepthState {
   /// SHOP Long Away: dungeon catch-up 16h and hub chest 24h. Survives Ascend.
   final bool shopLongAway;
 
+  /// Play order ids / purchase tokens already granted. Survives Ascend.
+  /// A repeat of the same id does not pay again. Missing on old saves.
+  final List<String> grantedShopPurchaseIds;
+
   /// Coupon ids already redeemed on this save. Survives Ascend.
   final List<String> redeemedCoupons;
 
@@ -917,6 +922,7 @@ class MetaDepthState {
     int? shopBagBonusSlots,
     int? shopPermScrolls,
     bool? shopLongAway,
+    List<String>? grantedShopPurchaseIds,
     List<String>? redeemedCoupons,
     String? monthPassKey,
     int? monthlyBestTimedKey,
@@ -1098,6 +1104,8 @@ class MetaDepthState {
       shopBagBonusSlots: shopBagBonusSlots ?? this.shopBagBonusSlots,
       shopPermScrolls: shopPermScrolls ?? this.shopPermScrolls,
       shopLongAway: shopLongAway ?? this.shopLongAway,
+      grantedShopPurchaseIds:
+          grantedShopPurchaseIds ?? this.grantedShopPurchaseIds,
       redeemedCoupons: redeemedCoupons ?? this.redeemedCoupons,
       monthPassKey: monthPassKey ?? this.monthPassKey,
       monthlyBestTimedKey: monthlyBestTimedKey ?? this.monthlyBestTimedKey,
@@ -1273,6 +1281,7 @@ class MetaDepthState {
     'shopBagBonusSlots': shopBagBonusSlots,
     'shopPermScrolls': shopPermScrolls,
     'shopLongAway': shopLongAway,
+    'grantedShopPurchaseIds': grantedShopPurchaseIds,
     'redeemedCoupons': redeemedCoupons,
     'monthPassKey': monthPassKey,
     'monthlyBestTimedKey': monthlyBestTimedKey,
@@ -1528,6 +1537,7 @@ class MetaDepthState {
         127,
       ),
       shopLongAway: (json['shopLongAway'] as bool?) ?? false,
+      grantedShopPurchaseIds: _shopPurchaseIds(json['grantedShopPurchaseIds']),
       redeemedCoupons:
           (json['redeemedCoupons'] as List<dynamic>?)?.cast<String>() ??
           const [],
@@ -1644,3 +1654,18 @@ class MetaDepthState {
 /// Retired player title. The list key stays `titles`.
 String _retiredTitle(String raw) =>
     raw == 'Infinity Bound' ? 'Spirebound' : raw;
+
+/// Play purchase ids already granted. Missing or junk → empty. Capped.
+List<String> _shopPurchaseIds(Object? raw) {
+  if (raw is! List) return const [];
+  final ids = <String>[];
+  for (final item in raw) {
+    if (item is! String) continue;
+    final id = item.trim();
+    if (id.isEmpty || ids.contains(id)) continue;
+    ids.add(id);
+  }
+  const cap = 64;
+  if (ids.length <= cap) return ids;
+  return ids.sublist(ids.length - cap);
+}
