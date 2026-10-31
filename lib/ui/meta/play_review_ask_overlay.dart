@@ -11,14 +11,21 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
 
-/// One-time hub card after first boss. No loot for rating.
+/// Hub card on a later sitting, after a boss or a big Welcome Back.
+/// No loot for rating. NOT NOW snoozes; RATE stops the ask.
 class PlayReviewAskOverlay extends StatelessWidget {
   const PlayReviewAskOverlay({super.key, required this.director});
 
   final GameDirector director;
 
   static bool shouldOffer(GameDirector director) {
-    if (!PlayReviewAsk.shouldOffer(director.state)) return false;
+    if (!PlayReviewAsk.shouldOffer(
+      director.state,
+      welcome: director.reviewWelcome,
+      bossThisSession: director.bossClearedThisSession,
+    )) {
+      return false;
+    }
     // Same porch as Discord — never cover the first ENTER tip.
     if (!director.state.seenTips.contains('first_run') &&
         !FirstSessionTips.leftPorch(director.state)) {
@@ -30,35 +37,39 @@ class PlayReviewAskOverlay extends StatelessWidget {
   static Future<void> show(BuildContext context, GameDirector director) {
     WebClickBridge.pushLayer();
     return showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: MenuChrome.scrim,
-      builder: (ctx) {
-        final size = MediaQuery.sizeOf(ctx);
-        final maxW = math.min(380.0, size.width - 32);
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 24,
-          ),
-          child: DecoratedBox(
-            decoration: MenuChrome.panel(),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: maxW,
-                child: PlayReviewAskOverlay(director: director),
+          context: context,
+          barrierDismissible: true,
+          barrierColor: MenuChrome.scrim,
+          builder: (ctx) {
+            final size = MediaQuery.sizeOf(ctx);
+            final maxW = math.min(380.0, size.width - 32);
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 24,
               ),
-            ),
-          ),
-        );
-      },
-    ).then((_) {
-      if (!director.state.metaDepth.reviewPrompted) {
-        director.dismissPlayReviewAsk();
-      }
-    }).whenComplete(WebClickBridge.popLayer);
+              child: DecoratedBox(
+                decoration: MenuChrome.panel(),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: maxW,
+                    child: PlayReviewAskOverlay(director: director),
+                  ),
+                ),
+              ),
+            );
+          },
+        )
+        .then((_) {
+          // RATE sets reviewPrompted first. NOT NOW and a scrim tap snooze.
+          // A second snooze in the same minute does not burn another ask.
+          if (!director.state.metaDepth.reviewPrompted) {
+            director.dismissPlayReviewAsk();
+          }
+        })
+        .whenComplete(WebClickBridge.popLayer);
   }
 
   void _rate(BuildContext context) {

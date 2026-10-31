@@ -183,7 +183,7 @@ Rows marked **+** are the screens added 2026-09-27.
 | 102 | **+** Codex (Will) | A discovered enemy or item shows up; TODAY CODEX CTA opens it | MID |
 | 103 | **+** Achievements | Overlay lists real feats; a met feat can be seen as done | MID · LOGIC |
 | 104 | Local reminders opt-in | Off in first hour; honest later | NEW/MID |
-| 105 | Play rating ask | Never on brand-new save; copy says no reward | NEW · LOGIC |
+| 105 | Play rating ask | Never on the first sitting or a brand-new save; after a boss or a big Welcome Back; copy says no reward | NEW · LOGIC |
 | 106 | Funnel analytics stamps | first_open → app_ready → first_enter → time_to_combat → … | NEW · LOGIC |
 | 107 | In-app update gate / GET UPDATE | Matches Play Store docs; no GitHub Releases push | MID |
 | 108 | English UI throughout checked surfaces | No Swedish leak in player copy | ALL |

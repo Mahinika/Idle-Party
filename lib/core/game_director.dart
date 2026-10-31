@@ -182,6 +182,30 @@ class GameDirector extends ChangeNotifier {
   bool _welcomeBackAdBusy = false;
   bool _welcomeBackAdGranted = false;
 
+  /// Cold starts already counted this process, per save slot.
+  final Set<int> _sessionNotedSlots = <int>{};
+
+  /// Boss kills at the start of this sitting. A later kill is a good moment.
+  bool _sessionBossBaselineSet = false;
+  int _bossesAtSessionStart = 0;
+
+  /// Welcome Back kept for the rating card after the banner timer ends.
+  OfflineProgressResult? _reviewWelcome;
+
+  /// True after a boss kill this sitting. Preview directors stay false.
+  bool get bossClearedThisSession =>
+      _sessionBossBaselineSet && _state.bossVictories > _bossesAtSessionStart;
+
+  OfflineProgressResult? get reviewWelcome => _reviewWelcome;
+
+  void noteReviewWelcome(OfflineProgressResult summary) {
+    _reviewWelcome = summary;
+  }
+
+  void clearReviewWelcome() {
+    _reviewWelcome = null;
+  }
+
   /// Shorter than this is an app switch, not a Welcome Back.
   static const int _awayCreditMinSec = 60;
   final UiFeedback uiFeedback = UiFeedback();

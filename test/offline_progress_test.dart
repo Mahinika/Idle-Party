@@ -50,10 +50,7 @@ void main() {
     expect(held.goldGained, 0);
     expect(held.roomsCleared, 0);
     expect(held.headline, startsWith('Dungeon held'));
-    expect(
-      held.welcomeLead.toLowerCase(),
-      contains('held the dungeon floor'),
-    );
+    expect(held.welcomeLead.toLowerCase(), contains('held the dungeon floor'));
   });
 
   test('banner headline is wow + away, not a number dump', () {
@@ -120,7 +117,8 @@ void main() {
     expect(r.wasInDungeon, isFalse);
     expect(r.foughtWhileAway, isFalse);
     expect(r.afkWhereLine.toLowerCase(), contains('hub'));
-    expect(r.afkWhereLine.toLowerCase(), contains('no combat'));
+    expect(r.afkWhereLine.toLowerCase(), contains('keeps fighting'));
+    expect(r.afkWhereLine.toLowerCase(), isNot(contains('no combat')));
     expect(r.welcomeLead.toLowerCase(), contains('gold'));
     expect(r.welcomeLead.toLowerCase(), isNot(contains('sanctuary')));
     expect(r.headline, startsWith('Gold while away'));
@@ -138,12 +136,7 @@ void main() {
   });
 
   test('welcomeLead never teaches AFK assist', () {
-    final r = result(
-      gold: 80,
-      rooms: 3,
-      floors: 1,
-      wasInDungeon: true,
-    );
+    final r = result(gold: 80, rooms: 3, floors: 1, wasInDungeon: true);
     expect(r.welcomeLead.toUpperCase(), isNot(contains('AFK')));
     expect(r.welcomeLead.toLowerCase(), isNot(contains('assist')));
   });
@@ -200,9 +193,9 @@ void main() {
 
   testWidgets('day-2–7 Welcome Back Up next is one cave today', (tester) async {
     final now = DateTime.utc(2026, 8, 8);
-    final state = GameLogic.createInitialState(now: now).copyWith(
-      bossVictories: 1,
-    );
+    final state = GameLogic.createInitialState(
+      now: now,
+    ).copyWith(bossVictories: 1);
     final summary = OfflineProgressResult(
       state: state,
       secondsApplied: 3600,
@@ -228,8 +221,14 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('WELCOME BACK'), findsOneWidget);
-    expect(find.textContaining('Up next: Clear one cave today'), findsOneWidget);
-    expect(find.textContaining('While you are away the hub pays'), findsOneWidget);
+    expect(
+      find.textContaining('Up next: Clear one cave today'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('While you are away the hub pays'),
+      findsOneWidget,
+    );
     expect(find.textContaining('Daily Run'), findsNothing);
     expect(find.textContaining('KEY'), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
@@ -248,10 +247,9 @@ void main() {
     tester,
   ) async {
     final now = DateTime.utc(2026, 8, 8);
-    final state = GameLogic.createInitialState(now: now).copyWith(
-      inDungeon: true,
-      bossVictories: 1,
-    );
+    final state = GameLogic.createInitialState(
+      now: now,
+    ).copyWith(inDungeon: true, bossVictories: 1);
     final summary = OfflineProgressResult(
       state: state,
       secondsApplied: 3600,
@@ -277,7 +275,10 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.textContaining('kept fighting in the cave'), findsOneWidget);
-    expect(find.textContaining('While you are away the hub pays'), findsNothing);
+    expect(
+      find.textContaining('While you are away the hub pays'),
+      findsNothing,
+    );
     expect(find.textContaining('On the hub, gold gathers'), findsNothing);
   });
 
