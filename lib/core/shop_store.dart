@@ -1,5 +1,4 @@
-import 'shop_store_stub.dart'
-    if (dart.library.io) 'shop_store_io.dart' as impl;
+import 'shop_store_stub.dart' if (dart.library.io) 'shop_store_io.dart' as impl;
 
 /// Play Billing facade for bottom-tab SHOP.
 ///
@@ -18,8 +17,9 @@ abstract final class ShopStore {
   static bool storeLists(String productId) => impl.storeLists(productId);
 
   /// Listen to [purchaseStream] and query product details.
+  /// [onGranted] receives whether Play marked the event a restore.
   static Future<void> warmup({
-    required void Function(String productId) onGranted,
+    required void Function(String productId, bool restored) onGranted,
     void Function(String message)? onMessage,
   }) => impl.warmup(onGranted: onGranted, onMessage: onMessage);
 
@@ -29,7 +29,7 @@ abstract final class ShopStore {
   /// Re-fetch Play product details (SHOP open / after Console activation).
   static Future<void> refreshProducts() => impl.refreshProducts();
 
-  /// Restore non-consumables (ad-free / supporter / starter).
+  /// Restore non-consumables (ad-free, supporter, Long Away, starter).
   static Future<String?> restore() => impl.restore();
 
   static Future<void> dispose() => impl.disposeStore();

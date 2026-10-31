@@ -237,7 +237,6 @@ class GameDirector extends ChangeNotifier {
     return _saveChain;
   }
 
-
   GameState get state => _state;
 
   bool get isLoading => _isLoading;
@@ -260,7 +259,6 @@ class GameDirector extends ChangeNotifier {
     if (empty >= 0) return empty;
     return _activeSlot;
   }
-
 
   SpatialWorld? get spatial => _spatial;
 
@@ -394,7 +392,6 @@ class GameDirector extends ChangeNotifier {
     _wispChoiceOpen = open;
   }
 
-
   /// Freeze dungeon combat while the app is backgrounded; flush save on pause.
   ///
   /// Hub idle is the clock that moves [GameState.lastUpdated]. It stops here
@@ -501,7 +498,6 @@ class GameDirector extends ChangeNotifier {
     if (next > combatShake) combatShake = next;
   }
 
-
   void _beginRunIncomeSession() {
     _runGoldSamples.clear();
     _runGoldPerMinute = 0;
@@ -557,8 +553,6 @@ class GameDirector extends ChangeNotifier {
     PartyUpgradeType.crit => 'CRIT',
     PartyUpgradeType.mastery => 'MASTERY',
   };
-
-
 
   void setSoundMuted(bool muted) {
     _applyUpgrade(_state.copyWith(soundMuted: muted));
@@ -673,7 +667,6 @@ class GameDirector extends ChangeNotifier {
   void setSessionTelemetryOptIn(bool value) {
     _applyUpgrade(SessionTelemetry.setOptIn(_state, value));
   }
-
 
   void clearSessionTelemetry() {
     _applyUpgrade(SessionTelemetry.clearLog(_state));
@@ -1039,7 +1032,6 @@ class GameDirector extends ChangeNotifier {
     }
     enterGauntlet();
   }
-
 
   void buyMarketFlask() {
     final cost = GameLogic.marketFlaskCost(_state);
@@ -1537,15 +1529,17 @@ class GameDirector extends ChangeNotifier {
   Future<void> _warmupShopStore() async {
     if (!ShopBilling.billingReady) return;
     await ShopStore.warmup(
-      onGranted: _onShopPurchaseGranted,
+      onGranted: (productId, restored) =>
+          _onShopPurchaseGranted(productId, restored: restored),
       onMessage: (msg) => showToast(msg, life: 2.4),
     );
     notifyListeners();
   }
 
-  void _onShopPurchaseGranted(String productId) {
+  void _onShopPurchaseGranted(String productId, {bool restored = false}) {
     final item = ShopCatalog.byId[productId];
     if (item == null) return;
+    if (restored && !ShopBilling.grantOnRestore(item)) return;
     final beforeOwned = ShopBilling.isOwned(_state, item);
     final next = ShopBilling.applyPurchase(_state, item);
     if (identical(next, _state) && beforeOwned) {
@@ -1566,6 +1560,18 @@ class GameDirector extends ChangeNotifier {
     }
     final item = ShopCatalog.byId[productId];
     if (item == null) return;
+    if (!ShopCatalog.mayBuy(
+      productId,
+      playLists: ShopStore.storeLists(productId),
+    )) {
+      showToast(
+        item.kind == ShopOfferKind.boostHours
+            ? 'That pack restores only.'
+            : 'Play has not listed this pack yet.',
+        life: 2.8,
+      );
+      return;
+    }
     if (ShopBilling.isOwned(_state, item)) {
       showToast('Already owned', life: 2.0);
       return;

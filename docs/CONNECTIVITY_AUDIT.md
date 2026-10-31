@@ -58,7 +58,7 @@ Rows marked **+** are the screens added 2026-09-27.
 | 12 | Clear Sandy boss (or mid save) | Boss victory counted; leave cave clean | NEW/MID |
 | 13 | Plain chrome lifts after first boss | SHOP / scrolls can appear; KEY still hidden | MID · LOGIC |
 | 14 | GOLD unlocks after first floor clear | Tracks + Market panels both open | MID |
-| 15 | SHOP opens with forever SCROLLS | No fake hour packs as buyable; restore-only hours OK | MID |
+| 15 | SHOP opens with Ad-free, Long Away, and Supporter | No forever scrolls, Cinder pouch, or hour packs as buyable; restore-only hours OK | MID |
 | 16 | ESSENCE tab stays hidden until essence exists | No empty ESSENCE tease | MID · LOGIC |
 | 17 | MORE → INFO early topics | basics / combat / party / bag; no endgame jargon | NEW · LOGIC |
 | 18 | MORE → INFO after boss | Daily Vault named; no ISO week jargon | MID · LOGIC |

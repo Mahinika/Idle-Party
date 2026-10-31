@@ -33,10 +33,7 @@ abstract final class ShopBilling {
       case ShopOfferKind.adFree:
         // Restore must not re-grant welcome tickets.
         if (md.adFree) return state;
-        md = md.copyWith(
-          adFree: true,
-          adTickets: min(9999, md.adTickets + 2),
-        );
+        md = md.copyWith(adFree: true, adTickets: min(9999, md.adTickets + 2));
         if (item.boostHours > 0) {
           md = GameLogic.grantFullBoostHours(
             md,
@@ -57,23 +54,23 @@ abstract final class ShopBilling {
         }
       case ShopOfferKind.cinders:
         if (item.cinderGrant <= 0) return state;
-        md = md.copyWith(
-          cinders: min(9999, md.cinders + item.cinderGrant),
-        );
+        md = md.copyWith(cinders: min(9999, md.cinders + item.cinderGrant));
       case ShopOfferKind.permScroll:
         if (item.permMask == 0) return state;
         if ((md.shopPermScrolls & item.permMask) == item.permMask) {
           return state;
         }
-        md = md.copyWith(
-          shopPermScrolls: md.shopPermScrolls | item.permMask,
-        );
+        md = md.copyWith(shopPermScrolls: md.shopPermScrolls | item.permMask);
       case ShopOfferKind.longAway:
         if (md.shopLongAway) return state;
         md = md.copyWith(shopLongAway: true);
     }
     return state.copyWith(metaDepth: md);
   }
+
+  /// A Play restore re-applies a non-consumable once. A consumable was
+  /// spent on the original purchase and must not pay again.
+  static bool grantOnRestore(ShopCatalogItem item) => !item.isConsumable;
 
   /// SKUs that should appear as owned / disabled after restore.
   static bool isOwned(GameState state, ShopCatalogItem item) {
@@ -85,7 +82,7 @@ abstract final class ShopBilling {
       ShopOfferKind.cinders => false,
       ShopOfferKind.permScroll =>
         item.permMask != 0 &&
-        (md.shopPermScrolls & item.permMask) == item.permMask,
+            (md.shopPermScrolls & item.permMask) == item.permMask,
       ShopOfferKind.longAway => md.shopLongAway,
     };
   }

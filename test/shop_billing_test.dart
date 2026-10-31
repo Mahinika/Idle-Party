@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/ad_boost.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/gear/gear_stash.dart';
 import 'package:idle_party/core/gold_income.dart';
@@ -7,6 +9,7 @@ import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/core/shop_billing.dart';
 import 'package:idle_party/core/shop_catalog.dart';
 import 'package:idle_party/models/meta_depth.dart';
+import 'package:idle_party/ui/shell/shop_dock.dart';
 
 void main() {
   final now = DateTime.utc(2026, 9, 5, 12);
@@ -22,8 +25,9 @@ void main() {
 
   test('starter boost is one-time Full Boost hours', () {
     var state = GameLogic.createInitialState(now: now);
-    final item =
-        ShopCatalog.offered.firstWhere((e) => e.id == 'starter_boost_6h');
+    final item = ShopCatalog.offered.firstWhere(
+      (e) => e.id == 'starter_boost_6h',
+    );
     state = ShopBilling.applyPurchase(state, item, now: now);
     expect(state.metaDepth.shopStarterClaimed, isTrue);
     final until = state.metaDepth.adAtkUntilMs;
@@ -36,8 +40,7 @@ void main() {
   test('supporter_qol adds bag slots once (restore-safe)', () {
     var state = GameLogic.createInitialState(now: now);
     final before = GearStash.maxGearStashFor(state);
-    final item =
-        ShopCatalog.offered.firstWhere((e) => e.id == 'supporter_qol');
+    final item = ShopCatalog.offered.firstWhere((e) => e.id == 'supporter_qol');
     state = ShopBilling.applyPurchase(state, item, now: now);
     expect(state.metaDepth.shopBagBonusSlots, item.bagSlots);
     expect(GearStash.maxGearStashFor(state), before + item.bagSlots);
@@ -50,9 +53,7 @@ void main() {
     final item = ShopCatalog.offered.firstWhere((e) => e.id == 'ad_free');
     state = ShopBilling.applyPurchase(state, item, now: now);
     expect(state.metaDepth.adTickets, 2);
-    state = state.copyWith(
-      metaDepth: state.metaDepth.copyWith(adTickets: 5),
-    );
+    state = state.copyWith(metaDepth: state.metaDepth.copyWith(adTickets: 5));
     state = ShopBilling.applyPurchase(state, item, now: now);
     expect(state.metaDepth.adTickets, 5);
   });
@@ -122,26 +123,76 @@ void main() {
     double usd(ShopCatalogItem item) =>
         double.parse(item.priceLabel.replaceAll(r'$', ''));
     final singles = ShopCatalog.offered.where(
-      (e) => e.kind == ShopOfferKind.permScroll && e.permMask != AdBoost.permAll,
+      (e) =>
+          e.kind == ShopOfferKind.permScroll && e.permMask != AdBoost.permAll,
     );
     expect(ShopCatalog.foreverSingles.length, 7);
     expect(ShopCatalog.foreverBundle.single.id, 'perm_scrolls_all');
     expect(ShopCatalog.timePacks.length, 3); // restore-only, not listed in SHOP
-    final listed = [
-      ...ShopCatalog.foreverBundle,
-      ...ShopCatalog.foreverSingles,
-      ...ShopCatalog.extraPacks,
-    ];
+    expect(ShopCatalog.shelf().map((e) => e.id), [
+      'ad_free',
+      'long_away',
+      'supporter_qol',
+    ]);
     expect(
-      listed.every((e) => e.kind != ShopOfferKind.boostHours),
+      ShopCatalog.shelf().every(
+        (e) =>
+            e.kind != ShopOfferKind.boostHours &&
+            e.kind != ShopOfferKind.permScroll &&
+            e.kind != ShopOfferKind.cinders,
+      ),
       isTrue,
     );
     expect(ShopCatalog.extraPacks.map((e) => e.id), [
       'ad_free',
       'long_away',
-      'cinder_pouch',
       'supporter_qol',
     ]);
+    expect(
+      ShopCatalog.shelf(
+        playListed: {
+          'perm_scroll_atk',
+          'starter_boost_6h',
+          'cinder_pouch',
+          'ad_free',
+        },
+      ).map((e) => e.id),
+      [
+        'perm_scroll_atk',
+        'ad_free',
+        'long_away',
+        'cinder_pouch',
+        'supporter_qol',
+      ],
+    );
+    expect(ShopCatalog.mayBuy('boost_12h', playLists: true), isFalse);
+    expect(ShopCatalog.mayBuy('perm_scroll_atk', playLists: false), isFalse);
+    expect(ShopCatalog.mayBuy('perm_scroll_atk', playLists: true), isTrue);
+    expect(ShopCatalog.mayBuy('cinder_pouch', playLists: false), isFalse);
+    expect(ShopCatalog.mayBuy('ad_free', playLists: false), isTrue);
+    expect(ShopBilling.grantOnRestore(ShopCatalog.byId['ad_free']!), isTrue);
+    expect(ShopBilling.grantOnRestore(ShopCatalog.byId['long_away']!), isTrue);
+    expect(
+      ShopBilling.grantOnRestore(ShopCatalog.byId['supporter_qol']!),
+      isTrue,
+    );
+    expect(
+      ShopBilling.grantOnRestore(ShopCatalog.byId['starter_boost_6h']!),
+      isTrue,
+    );
+    expect(
+      ShopBilling.grantOnRestore(ShopCatalog.byId['perm_scrolls_all']!),
+      isTrue,
+    );
+    expect(ShopBilling.grantOnRestore(ShopCatalog.byId['boost_12h']!), isFalse);
+    expect(
+      ShopBilling.grantOnRestore(ShopCatalog.byId['day_boost_24h']!),
+      isFalse,
+    );
+    expect(
+      ShopBilling.grantOnRestore(ShopCatalog.byId['cinder_pouch']!),
+      isFalse,
+    );
     final bundle = ShopCatalog.byId['perm_scrolls_all']!;
     final singleSum = singles.fold<double>(0, (n, e) => n + usd(e));
     expect(usd(bundle), lessThan(singleSum));
@@ -184,10 +235,58 @@ void main() {
       now: now,
     );
     expect(ascended.metaDepth.shopLongAway, isTrue);
-    expect(
-      GameLogic.offlineFloorBudget(16 * 3600, roomCap: 240),
-      240,
-    );
+    expect(GameLogic.offlineFloorBudget(16 * 3600, roomCap: 240), 240);
     expect(GameLogic.offlineFloorBudget(8 * 3600), lessThanOrEqualTo(120));
+  });
+
+  testWidgets('SHOP shelf is the three Play packs and BUY does not grant', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final director = GameDirector.preview();
+    try {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: ShopDock(director: director)),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Ad-free welcome'), findsOneWidget);
+      expect(find.text('Long Away'), findsOneWidget);
+      expect(find.text('Supporter pack'), findsOneWidget);
+      expect(find.text('BUY'), findsNWidgets(3));
+      expect(find.text('NOT ON PLAY'), findsNothing);
+      expect(find.textContaining('Forever'), findsNothing);
+      expect(find.textContaining('Cinder'), findsNothing);
+      await tester.scrollUntilVisible(
+        find.text('RESTORE'),
+        160,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('RESTORE'), findsOneWidget);
+      expect(find.text('REDEEM CODE'), findsOneWidget);
+
+      await tester.tap(find.text('BUY').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(director.state.metaDepth.adFree, isFalse);
+      expect(director.state.metaDepth.shopLongAway, isFalse);
+      expect(director.state.metaDepth.shopBagBonusSlots, 0);
+
+      await director.buyShopItem('perm_scroll_atk');
+      await director.buyShopItem('cinder_pouch');
+      await director.buyShopItem('boost_12h');
+      await tester.pump();
+      expect(director.state.metaDepth.shopPermScrolls, 0);
+      expect(director.state.metaDepth.cinders, 0);
+      expect(director.state.metaDepth.adAtkUntilMs, 0);
+    } finally {
+      director.dispose();
+    }
   });
 }

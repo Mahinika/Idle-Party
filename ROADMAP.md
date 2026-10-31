@@ -29,10 +29,15 @@ isolate from the old ANR notes.
    not asked. Nothing new is written into the save. Next: keep SCROLLS
    one tap from the hub after the first boss, and do not remove the boot
    preload (that only hides requests; it does not create watches).
-3. **Sell what Play can already charge.** Ad-free, supporter, Long Away,
-   and the forever scrolls that are actually activated. Do not add a SKU
-   the Console does not have (`perm_scroll_*` and `cinder_pouch` still are
-   not). A new pack needs a Play product before the button can take money.
+3. **Sell what Play can already charge.** SHOP now lists Ad-free,
+   Supporter, and Long Away. Forever scrolls and the Cinder pouch stay in
+   the catalog for a code or a restore, and a row appears only after Play
+   returns that product. Hour packs stay restore-only. A restore does not
+   grant a consumable again, and it does not stack Ad-free tickets, bag
+   slots, or Long Away. Do not add a SKU the Console does not have
+   (`perm_scroll_*` and `cinder_pouch` still are not). A new pack needs a
+   Play product before the button can take money. Not in the 1.13.5 Play
+   binary until that build is uploaded.
 4. **Keep the live build stable.** Current main crashes when a room or boss
    clears: `_clearKeystoneRun` called itself. The 1.13.5 binary on Play
    does not have that split. This change calls the real helpers. No

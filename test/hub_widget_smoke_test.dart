@@ -399,8 +399,12 @@ void main() {
     expect(find.text('SCROLLS'), findsWidgets);
     expect(find.text('Ad Tickets'), findsOneWidget);
     expect(
-      find.textContaining('Forever scrolls are bought in SHOP'),
+      find.textContaining('Timed ticket scrolls live here.'),
       findsOneWidget,
+    );
+    expect(
+      find.textContaining('Forever scrolls are bought in SHOP'),
+      findsNothing,
     );
     expect(find.textContaining('Same scrolls'), findsNothing);
     expect(find.text('USE'), findsOneWidget);
