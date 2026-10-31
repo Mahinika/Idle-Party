@@ -2,7 +2,7 @@
 
 Idle Party is a single-player idle RPG. This document describes how the app handles data and is suitable for Google Play Data safety disclosures.
 
-**Last updated:** 2026-10-05.
+**Last updated:** 2026-10-31.
 
 ## Summary
 
@@ -10,7 +10,7 @@ Idle Party is a single-player idle RPG. This document describes how the app hand
 - **Optional Google Play Games.** You may sign in with Play Games for seasonal leaderboards and cloud save. This is opt-in and not required to play.
 - **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **SCROLLS**) for an **Ad Ticket**. You spend tickets on timed scrolls (Scroll of Damage, Scroll of Gold, Scroll of XP, Scroll of Speed, Scroll of Loot, Scroll of Haste, Scroll of Battle, Scroll of Rest). Ads do not play unless you start them. Ad serving uses Google AdMob.
 - **Tip a friend (optional).** From hub **SCROLLS** you may share a Play Store link that contains a short code stored in your save. If a friend installs from that link and opens the app, or types your code, the Android app may send Google **Firebase** a hashed install id, that code, and the time. You get 10 Ad Tickets on your save. No name, no email, and no record of who you texted or emailed. The message itself is sent by the app you pick (Messages, mail, Discord, and so on).
-- **Analytics (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, first dungeon enter, first combat reward, first boss, returning the next day, entering/leaving a dungeon, Ascend, party wipe). This helps Cognifox Studio understand what works. In the **EU/EEA**, collection follows the Google UMP consent prompt (same path as ads; **SETTINGS → AD PRIVACY**). Outside regions where that form is required, Google may allow collection without a separate prompt. Web playtest and builds without Firebase config do not send analytics.
+- **Analytics and crash reports (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, tutorial steps, first dungeon enter, first combat reward, first boss, Welcome Back, SHOP views and purchases, Ascend, session length, party wipe). It may also send crash stack traces to **Firebase Crashlytics**. This helps Cognifox Studio understand what works and what crashes. In the **EU/EEA**, both follow the Google UMP consent prompt (same path as ads; **SETTINGS → AD PRIVACY**). Collection stays off until that check. Outside regions where that form is required, Google may allow collection without a separate prompt. Web playtest and builds without Firebase config do not send analytics or crash reports.
 - **Remote settings (Firebase).** On those same Android builds, after the same consent check, the app may fetch a few game settings from **Google Firebase Remote Config** (how often the dungeon lantern appears, and which SHOP row is highlighted). The fetch does not include your save. If consent is off, or Firebase is missing, the game uses the settings shipped in the app.
 - **Local save by default.** Progress is stored on your device (e.g. SharedPreferences / platform equivalent).
 
@@ -40,7 +40,7 @@ The app may let you **copy a save to the clipboard** or **paste a save from the 
 
 Aside from normal OS / store behavior (install, updates), optional Play Billing
 when you buy from SHOP, optional Play Games calls when you opt in, optional
-Firebase Analytics on Android (see below), optional Firebase Remote Config
+Firebase Analytics and Crashlytics on Android (see below), optional Firebase Remote Config
 on Android after the same consent check (see below), optional friend-invite
 checks on Android (see below), and optional AdMob when you use SCROLLS, Idle
 Party does not require an Idle Party account. Google hosts Firebase. Idle
@@ -55,9 +55,10 @@ On **Android**, if you tap hub **SCROLLS** and watch an ad, Google AdMob may loa
 On **Android** builds that include Firebase configuration (`google-services.json`):
 
 - Google **Firebase Analytics** may receive **anonymous** app events (device/app identifiers under Google’s policies; not an Idle Party login).
-- The SDK may initialize when the app starts (not only when you open SCROLLS). Typical events: session start, first time the game is playable, first dungeon enter (including seconds until combat), first combat gold, first boss, first return on a later UTC day, enter/leave dungeon, Ascend, party wipe, and (if you answer the reminder card) whether away reminders were turned on or off. Events do **not** include your save file or clipboard backups.
-- In the **EU/EEA**, the Google consent form (UMP) also gates analytics collection. You can change or withdraw that consent later in **SETTINGS → AD PRIVACY**.
-- Analytics is not sent from web playtest builds, Flutter tests, or Android builds that lack Firebase config.
+- The SDK may initialize when the app starts (not only when you open SCROLLS). Collection stays off until the consent check. Typical events: session start, session length, first time the game is playable, the boot and new-game steps, first dungeon enter (including seconds until combat), first combat gold, first boss, Welcome Back (and whether a watch was offered or finished), SHOP opened and a purchase granted, first return on a later UTC day, enter/leave dungeon, Ascend, party wipe, and (if you answer the reminder card) whether away reminders were turned on or off. Events do **not** include your save file or clipboard backups.
+- The same consent check gates **Firebase Crashlytics**. A crash may send a stack trace and the app version. It does not send your save or a name.
+- In the **EU/EEA**, the Google consent form (UMP) gates analytics and crash reports. You can change or withdraw that consent later in **SETTINGS → AD PRIVACY**.
+- Analytics and crash reports are not sent from web playtest builds, Flutter tests, or Android builds that lack Firebase config.
 
 Idle Party does not run its own analytics server; Google hosts Firebase.
 

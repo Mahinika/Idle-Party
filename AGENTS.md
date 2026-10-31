@@ -22,7 +22,8 @@ matter). Web is Playwright / `WebClickBridge` only.
 an AAB unless the owner asks that turn. A release AAB packages native debug
 symbols (`debugSymbolLevel FULL`). Do not pass `--obfuscate`. In-app update gate, hub **GET
 UPDATE**, and the rating ask are in `docs/PLAY_STORE.md`. Play
-Games and Firebase are there and in `docs/PRIVACY.md`.
+Games and Firebase are there and in `docs/PRIVACY.md`. Event names
+are in `docs/ANALYTICS.md`.
 
 **Legal:** owned `assets/custom/` only. No foreign dumps, sprites, audio, or
 decompiled code. See `.cursor/rules/00-locks.mdc`.

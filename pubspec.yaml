@@ -46,6 +46,7 @@ dependencies:
   flutter_soloud: ^4.1.7
   firebase_core: ^4.14.0
   firebase_analytics: ^12.5.0
+  firebase_crashlytics: ^5.0.0
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
   share_plus: ^13.3.0
