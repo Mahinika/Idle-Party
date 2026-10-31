@@ -762,7 +762,7 @@ abstract final class KitNamedCasts {
         );
         if (hero.combustionTimer > 0) ball = (ball * 1.22).round();
         final isCrit =
-            hero.spellCrit > 0 && GameLogic.random.nextInt(100) < hero.spellCrit;
+            hero.spellCrit > 0 && rng.nextInt(100) < hero.spellCrit;
         if (isCrit) {
           ball = math.max(2, (ball * 1.5).round());
           hero.hotStreakStack = math.min(2, hero.hotStreakStack + 1);
@@ -811,7 +811,7 @@ abstract final class KitNamedCasts {
         );
         if (hero.combustionTimer > 0) pyro = (pyro * 1.22).round();
         final pyroCrit =
-            hero.spellCrit > 0 && GameLogic.random.nextInt(100) < hero.spellCrit;
+            hero.spellCrit > 0 && rng.nextInt(100) < hero.spellCrit;
         if (pyroCrit) pyro = math.max(3, (pyro * 1.5).round());
         SpatialCombat.addProjectile(
           world,
@@ -934,7 +934,7 @@ abstract final class KitNamedCasts {
             );
           }
           final wasAlive = e.hp > 0;
-          SpatialCombat.hurtEnemy(e, hit);
+          SpatialCombat.hurtEnemy(world, e, hit);
           SpatialCombat.recordHeroDamage(hero, hit);
           final snapped = SpatialCombat.clampAlongWalk(
             world.map,

@@ -58,8 +58,8 @@ int combatApplyHeroIncomingDamage(
   if (dealt <= 0) return 0;
 
   var mul = hero.kitInMul;
-  if (SpatialCombat.earlyWipeMercy < 1) {
-    mul *= SpatialCombat.earlyWipeMercy;
+  if (world.earlyWipeMercy < 1) {
+    mul *= world.earlyWipeMercy;
   }
   if ((hero.buffTimers['deathWish'] ?? 0) > 0) {
     mul *= 1.18;
@@ -78,10 +78,10 @@ int combatApplyHeroIncomingDamage(
       hero.revengeReady = true;
     }
   }
-  if (SpatialCombat.relicLowHpDr > 0 &&
+  if (world.relicLowHpDr > 0 &&
       hero.maxHp > 0 &&
       hero.hp / hero.maxHp < 0.4) {
-    mul *= 1 - SpatialCombat.relicLowHpDr;
+    mul *= 1 - world.relicLowHpDr;
   }
   dealt = math.max(1, (dealt * mul).round());
   if (world.petMitigateFlat > 0) {
@@ -178,8 +178,9 @@ int combatApplyHeroIncomingDamage(
 ({int damage, String? tag, int tagArgb}) combatClassAttackMods(
   SpatialWorld world,
   SpatialActor hero,
-  int baseDamage,
-) {
+  int baseDamage, {
+  required math.Random rng,
+}) {
   // Protection-only auto mods (Revenge / Shield Slam / Defensive Stance).
   // Other warrior-legacy DPS use ClassKits + kitOutMul only.
   if (hero.heroSpecId == HeroSpecId.protection) {
@@ -235,8 +236,7 @@ int combatApplyHeroIncomingDamage(
     }
   }
 
-  if (hero.setProcChance > 0 &&
-      GameLogic.random.nextDouble() < hero.setProcChance) {
+  if (hero.setProcChance > 0 && rng.nextDouble() < hero.setProcChance) {
     damage = math.max(1, (damage * 1.35).round());
     tag = hero.setProcTag ?? 'SET';
     tagArgb = hero.setProcArgb;
@@ -245,7 +245,7 @@ int combatApplyHeroIncomingDamage(
   // Spec mastery white-hit procs (Arms / MM / Combat). Skip finishers.
   if (tag != 'EVIS') {
     final mastery = masteryView(hero);
-    final roll = GameLogic.random.nextDouble();
+    final roll = rng.nextDouble();
     switch (hero.heroSpecId) {
       case HeroSpecId.arms:
         final chance = SpecMastery.extraSwingProcChance(mastery);
@@ -277,10 +277,15 @@ int combatApplyHeroIncomingDamage(
 }
 
 /// Apply damage to an enemy and flash the sprite so hits read on phone.
-int combatHurtEnemy(SpatialActor enemy, int dealt, {bool soft = false}) {
+int combatHurtEnemy(
+  SpatialWorld world,
+  SpatialActor enemy,
+  int dealt, {
+  bool soft = false,
+}) {
   if (dealt <= 0 || enemy.team != SpatialTeam.enemy) return 0;
-  if (enemy.role == EnemyRole.boss && SpatialCombat.relicBossDamageMul > 1) {
-    dealt = math.max(1, (dealt * SpatialCombat.relicBossDamageMul).round());
+  if (enemy.role == EnemyRole.boss && world.relicBossDamageMul > 1) {
+    dealt = math.max(1, (dealt * world.relicBossDamageMul).round());
   }
   enemy.hp = math.max(0, enemy.hp - dealt);
   final life = enemy.hp <= 0

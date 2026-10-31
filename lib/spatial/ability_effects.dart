@@ -1518,7 +1518,7 @@ abstract final class AbilityEffectRunner {
       attackerAttack: hero.attack,
     );
     final wasAlive = enemy.hp > 0;
-    SpatialCombat.hurtEnemy(enemy, dealt);
+    SpatialCombat.hurtEnemy(world, enemy, dealt);
     SpatialCombat.recordHeroDamage(hero, dealt);
     SpatialCombat.applyTankSoftThreat(hero, enemy);
     SpatialCombat.spawnSlash(world, from: hero, to: enemy, isCrit: spellCrit);
@@ -1631,7 +1631,7 @@ abstract final class AbilityEffectRunner {
     if (!SpatialCombat.canShoot(world, hero.x, hero.y, enemy.x, enemy.y)) {
       return;
     }
-    SpatialCombat.hurtEnemy(enemy, dealt);
+    SpatialCombat.hurtEnemy(world, enemy, dealt);
     SpatialCombat.recordHeroDamage(hero, dealt);
     SpatialCombat.applyTankSoftThreat(hero, enemy);
     if (dealt > 0) {
@@ -1964,7 +1964,7 @@ abstract final class AbilityEffectRunner {
           defense: e.effectiveDefense,
           attackerAttack: hero.attack,
         );
-        SpatialCombat.hurtEnemy(e, dealt);
+        SpatialCombat.hurtEnemy(world, e, dealt);
         if (def.id == AbilityId.holyWrath) applyEnemyStun(e, 1.8);
         SpatialCombat.recordHeroDamage(hero, dealt);
         SpatialCombat.applyTankSoftThreat(hero, e);
@@ -2222,7 +2222,7 @@ abstract final class AbilityEffectRunner {
         defense: e.effectiveDefense,
         attackerAttack: hero.attack,
       );
-      SpatialCombat.hurtEnemy(e, dealt);
+      SpatialCombat.hurtEnemy(world, e, dealt);
       if (def.id == AbilityId.shadowfury) applyEnemyStun(e, 1.8);
       SpatialCombat.recordHeroDamage(hero, dealt);
       SpatialCombat.applyTankSoftThreat(hero, e);

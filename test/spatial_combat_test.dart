@@ -1545,6 +1545,40 @@ void main() {
       isTrue,
     );
   });
+
+  test('relic boss damage multiplier stays on each SpatialWorld', () {
+    final room = DungeonRoom(
+      floorNumber: 5,
+      roomIndex: 0,
+      type: RoomType.boss,
+      enemyLevel: 10,
+      enemyCount: 1,
+    );
+    final boss = GameLogic.createEnemyGroup(room, dungeonId: 'sandy').first;
+    expect(boss.role, EnemyRole.boss);
+    final state = GameLogic.createInitialState().copyWith(
+      currentRoom: room,
+      dungeonFloor: [room],
+      enemies: [boss],
+      inDungeon: true,
+    );
+    final worldHigh = SpatialCombat.build(state);
+    final worldLow = SpatialCombat.build(state);
+    worldHigh.relicBossDamageMul = 2.0;
+    worldLow.relicBossDamageMul = 1.0;
+    final bossHigh = worldHigh.enemies.first
+      ..hp = 1000
+      ..maxHp = 1000;
+    final bossLow = worldLow.enemies.first
+      ..hp = 1000
+      ..maxHp = 1000;
+
+    SpatialCombat.hurtEnemy(worldHigh, bossHigh, 100);
+    SpatialCombat.hurtEnemy(worldLow, bossLow, 100);
+
+    expect(bossHigh.hp, 800);
+    expect(bossLow.hp, 900);
+  });
 }
 
 Set<String> _bossTellTexts(

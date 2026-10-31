@@ -877,6 +877,11 @@ class SpatialWorld {
   /// Mirrors [GameState.reducedVfx] for the current step (Full vs Lite/Minimal).
   bool reducedVfx = false;
 
+  /// Per-step combat modifiers from [GameState] (not saved on the world).
+  double relicBossDamageMul = 1;
+  double relicLowHpDr = 0;
+  double earlyWipeMercy = 1;
+
   /// Mirrors [GameState.spawnPersistentVfx] — discs + aura rings on Full/Lite.
   bool spawnPersistentVfx = true;
   bool treasureOpen;
@@ -1054,9 +1059,6 @@ abstract final class SpatialCombat {
   static bool hideHealFloaters = false;
   static bool compactNumbers = false;
   static bool alwaysShowEnemyHp = true;
-
-  /// Incoming-damage scale after repeat wipes on early Sandy. 1 = unchanged.
-  static double earlyWipeMercy = 1;
 
   /// SETTINGS “Hide heal numbers” drops numeric heals only — not tell words.
   static bool suppressHealFloater({required String text, required int argb}) {
@@ -1787,8 +1789,9 @@ abstract final class SpatialCombat {
   static ({int damage, String? tag, int tagArgb}) _classAttackMods(
     SpatialWorld world,
     SpatialActor hero,
-    int baseDamage,
-  ) => combatClassAttackMods(world, hero, baseDamage);
+    int baseDamage, {
+    required math.Random rng,
+  }) => combatClassAttackMods(world, hero, baseDamage, rng: rng);
 
   static ({GameState state, int gold}) _tickBurningGround(
     SpatialWorld world,
@@ -1812,7 +1815,7 @@ abstract final class SpatialCombat {
           attackerAttack: owner?.attack ?? g.tickDamage,
         );
         final wasAlive = e.hp > 0;
-        hurtEnemy(e, dealt);
+        hurtEnemy(world,e, dealt);
         if (owner != null) recordHeroDamage(owner, dealt);
         if (wasAlive && e.hp <= 0) {
           final killed = onEnemyKilled(world, state, e, rng);
@@ -1856,7 +1859,7 @@ abstract final class SpatialCombat {
             defense: foe.effectiveDefense,
             attackerAttack: hero.attack,
           );
-          hurtEnemy(foe, dealt);
+          hurtEnemy(world,foe, dealt);
           recordHeroDamage(hero, dealt);
           if (wasAlive && foe.hp <= 0) {
             final killed = onEnemyKilled(world, state, foe, rng);
@@ -2949,11 +2952,13 @@ abstract final class SpatialCombat {
   }
 
   /// Apply damage to an enemy and flash the sprite so hits read on phone.
-  static double relicBossDamageMul = 1;
-  static double relicLowHpDr = 0;
-
-  static int hurtEnemy(SpatialActor enemy, int dealt, {bool soft = false}) =>
-      combatHurtEnemy(enemy, dealt, soft: soft);
+  static int hurtEnemy(
+    SpatialWorld world,
+    SpatialActor enemy,
+    int dealt, {
+    bool soft = false,
+  }) =>
+      combatHurtEnemy(world, enemy, dealt, soft: soft);
 
   /// Spawn floater when Full VFX, or priority (crit/heal/block) on Lite.
   static bool _allowFloater(VfxQuality quality, {required int priority}) {
@@ -3127,9 +3132,9 @@ abstract final class SpatialCombat {
     required double dt,
   }) {
     CombatAudioFeel.tick(world, dt);
-    relicBossDamageMul = state.relicBossDamageMul;
-    relicLowHpDr = state.relicLowHpDr;
-    earlyWipeMercy = GameLogic.earlyWipeDamageMul(state);
+    world.relicBossDamageMul = state.relicBossDamageMul;
+    world.relicLowHpDr = state.relicLowHpDr;
+    world.earlyWipeMercy = GameLogic.earlyWipeDamageMul(state);
     var nextState = state;
     var goldFromKills = 0;
     final rng = GameLogic.random;
@@ -3433,7 +3438,7 @@ abstract final class SpatialCombat {
             );
           }
           final wasAlive = enemy.hp > 0;
-          hurtEnemy(enemy, tickDmg, soft: true);
+          hurtEnemy(world,enemy, tickDmg, soft: true);
           if (caster != null) recordHeroDamage(caster, tickDmg);
           if (!reducedVfx) {
             spawnFloater(
@@ -3464,7 +3469,7 @@ abstract final class SpatialCombat {
               defense: e.effectiveDefense,
               attackerAttack: caster?.attack ?? boom,
             );
-            hurtEnemy(e, dealt);
+            hurtEnemy(world,e, dealt);
             if (caster != null) recordHeroDamage(caster, dealt);
             if (!reducedVfx) {
               spawnFloater(
@@ -3517,7 +3522,7 @@ abstract final class SpatialCombat {
             );
           }
           final wasAlive = enemy.hp > 0;
-          hurtEnemy(enemy, tickDmg, soft: true);
+          hurtEnemy(world,enemy, tickDmg, soft: true);
           if (caster != null) recordHeroDamage(caster, tickDmg);
           if (!reducedVfx) {
             spawnFloater(
@@ -3926,7 +3931,7 @@ abstract final class SpatialCombat {
         var damage = executeBonus ? (hero.attack * 1.15).round() : hero.attack;
         String? abilityTag;
         var abilityTagArgb = floaterDamage;
-        final mods = _classAttackMods(world, hero, damage);
+        final mods = _classAttackMods(world, hero, damage, rng: rng);
         damage = mods.damage;
         abilityTag = mods.tag;
         abilityTagArgb = mods.tagArgb;
@@ -3963,7 +3968,7 @@ abstract final class SpatialCombat {
             defense: target.effectiveDefense,
             attackerAttack: hero.attack,
           );
-          hurtEnemy(target, dealt);
+          hurtEnemy(world,target, dealt);
           recordHeroDamage(hero, dealt);
           if (dealt > 0) {
             final hitStyle = abilityTag != null
@@ -4019,7 +4024,7 @@ abstract final class SpatialCombat {
                 _ => 0.30,
               };
               final cleave = math.max(1, (dealt * frac).round());
-              hurtEnemy(e, cleave, soft: true);
+              hurtEnemy(world,e, cleave, soft: true);
               recordHeroDamage(hero, cleave);
               extras++;
               if (extras >= maxExtras) break;
@@ -4356,7 +4361,7 @@ abstract final class SpatialCombat {
                 defense: v.effectiveDefense,
                 attackerAttack: caster?.attack ?? hitDmg,
               );
-              hurtEnemy(v, dealt);
+              hurtEnemy(world,v, dealt);
               if (caster != null) {
                 recordHeroDamage(caster, dealt);
                 applyTankSoftThreat(caster, v);
@@ -4606,7 +4611,7 @@ abstract final class SpatialCombat {
           defense: target.effectiveDefense,
           attackerAttack: pet.attack,
         );
-        hurtEnemy(target, petHit);
+        hurtEnemy(world,target, petHit);
         pet.attackFlash = 0.14;
         final owner =
             _heroById(world, pet.petOwnerId) ??
@@ -4711,7 +4716,7 @@ abstract final class SpatialCombat {
       if (distPoint(tileX, tileY, enemy.x, enemy.y) <= radius &&
           canShoot(world, tileX, tileY, enemy.x, enemy.y)) {
         final wasAlive = enemy.hp > 0;
-        hurtEnemy(enemy, damage);
+        hurtEnemy(world,enemy, damage);
         if (state.vfxQuality != VfxQuality.minimal) {
           spawnFloater(
             world,
