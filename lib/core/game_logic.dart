@@ -294,11 +294,6 @@ class GameLogic {
   static GameState enterDungeon(GameState state, {String dungeonId = 'sandy'}) =>
       _gameLogicEnterDungeon(state, dungeonId: dungeonId);
 
-  /// Locks preferred key + affixes + idle-friendly par timer for a dungeon run.
-  static GameState _beginKeystoneRun(GameState state) => _beginKeystoneRun(state);
-
-  static GameState _clearKeystoneRun(GameState state) => _clearKeystoneRun(state);
-
   /// Advances keystone timer (live ticks or offline). Stops after resolve.
   static GameState advanceKeystoneTimer(GameState state, int deltaMs) => _gameLogicAdvanceKeystoneTimer(state, deltaMs);
 
@@ -902,6 +897,22 @@ class GameLogic {
       adAtkUntilMs: atk,
       adGoldUntilMs: gold,
       adBoostUntilMs: legacy,
+    );
+  }
+
+  /// Welcome Back watch: add the rest of ×[AdBoost.awayGoldMul] on gold
+  /// already credited. No new save field. Ad-free and Forever Rest refuse.
+  static GameState grantWelcomeBackWatchGold(GameState state, int baseGold) {
+    if (baseGold <= 0) return state;
+    final md = state.metaDepth;
+    if (md.adFree || AdBoost.hasPerm(md, AdBoost.permRest)) return state;
+    if (!showDailyChase(state)) return state;
+    final extra = baseGold * (AdBoost.awayGoldMul - 1);
+    if (extra <= 0) return state;
+    return state.copyWith(
+      gold: state.gold + extra,
+      lifetimeGoldEarned: state.lifetimeGoldEarned + extra,
+      lastUpdated: DateTime.now(),
     );
   }
 
@@ -2939,6 +2950,7 @@ class OfflineProgressResult {
     this.wasInDungeon = false,
     this.secondsAway = 0,
     this.hubChestCapSec = 0,
+    this.awayGoldMultiplied = false,
   });
 
   static const int maxHighlightRows = 3;
@@ -2976,6 +2988,22 @@ class OfflineProgressResult {
 
   /// Hub sanctuary chest length. 0 on a dungeon catch-up.
   final int hubChestCapSec;
+
+  /// Scroll of Rest or Forever Rest already multiplied [goldGained].
+  final bool awayGoldMultiplied;
+
+  /// Optional rewarded ad on this card. Same ×3 as Scroll of Rest.
+  /// Hidden before the first boss, when this gold is already ×3,
+  /// and for ad-free or Forever Rest.
+  bool get welcomeBackAdOffer {
+    if (goldGained <= 0 || awayGoldMultiplied) return false;
+    final md = state.metaDepth;
+    if (md.adFree || AdBoost.hasPerm(md, AdBoost.permRest)) return false;
+    return GameLogic.showDailyChase(state);
+  }
+
+  String get welcomeBackAdLabel =>
+      'WATCH AD · gold ×${AdBoost.awayGoldMul}';
 
   /// Clock shown on Welcome Back. The real absence when the chest stopped.
   int get awayForSeconds =>

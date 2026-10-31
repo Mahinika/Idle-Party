@@ -283,6 +283,7 @@ extension GameDirectorSave on GameDirector {
     required bool showCard,
   }) async {
     final elapsed = DateTime.now().difference(saved.lastUpdated);
+    _welcomeBackAdGranted = false;
     final offline = await GameLogic.applyOfflineProgressAsync(saved, elapsed);
     var caught = offline.state;
     if (offline.hasSummary) {

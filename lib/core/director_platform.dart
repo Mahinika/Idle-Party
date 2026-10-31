@@ -151,6 +151,60 @@ extension GameDirectorPlatform on GameDirector {
     unawaited(_persistFlush());
   }
 
+  /// Optional Welcome Back watch. Adds the rest of ×[AdBoost.awayGoldMul]
+  /// on [baseGold] already credited. Skip, fail, or ad-free grants nothing.
+  Future<bool> watchWelcomeBackGoldAd(int baseGold) async {
+    if (baseGold <= 0 || _welcomeBackAdGranted || _welcomeBackAdBusy) {
+      return false;
+    }
+    if (_isLoading) return false;
+    final md = _state.metaDepth;
+    if (md.adFree || AdBoost.hasPerm(md, AdBoost.permRest)) return false;
+    if (!GameLogic.showDailyChase(_state)) return false;
+    if (!AdRewarded.realAdsAvailable) {
+      showToast('Ads play on the Android app', life: 2.2);
+      return false;
+    }
+    _welcomeBackAdBusy = true;
+    showToast('Loading ad…', life: 1.4);
+    try {
+      final result = await AdRewarded.showRewarded();
+      switch (result) {
+        case AdWatchResult.rewarded:
+          _welcomeBackAdGranted = true;
+          final beforeGold = _state.gold;
+          _applyUpgrade(
+            GameLogic.grantWelcomeBackWatchGold(_state, baseGold),
+          );
+          final gained = _state.gold - beforeGold;
+          if (gained <= 0) {
+            _welcomeBackAdGranted = false;
+            return false;
+          }
+          GameAudio.gold();
+          showToast('Welcome Back · +$gained gold', life: 2.4);
+          unawaited(
+            AppAnalytics.logEvent('welcome_back_ad', {'gold': gained}),
+          );
+          return true;
+        case AdWatchResult.skipped:
+          showToast(
+            'Watch the whole ad for ×${AdBoost.awayGoldMul} gold',
+            life: 2.2,
+          );
+          return false;
+        case AdWatchResult.failed:
+          showToast('Ad not ready — try again in a bit', life: 2.2);
+          return false;
+        case AdWatchResult.unavailable:
+          showToast('Ads play on the Android app', life: 2.2);
+          return false;
+      }
+    } finally {
+      _welcomeBackAdBusy = false;
+    }
+  }
+
   /// Rewarded ad for the locked WATCH pile. Plays where the lantern was tapped.
   Future<void> watchWispGiftAd() async {
     if (!wispPendingChoice) return;

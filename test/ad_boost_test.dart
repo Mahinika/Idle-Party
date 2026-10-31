@@ -3,6 +3,7 @@ import 'package:idle_party/core/ad_boost.dart';
 import 'package:idle_party/core/encounter_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/gold_income.dart';
+import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
@@ -224,5 +225,84 @@ void main() {
     ]);
     expect(chips.first.timeLabel, '2:00');
     expect(chips[3].timeLabel, '40m');
+  });
+
+  test('welcome back watch adds the rest of ×3 and keeps the old save', () {
+    final fresh = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
+    expect(GameLogic.grantWelcomeBackWatchGold(fresh, 40).gold, fresh.gold);
+
+    final state = fresh.copyWith(
+      bossVictories: 1,
+      gold: 100,
+      lifetimeGoldEarned: 100,
+    );
+    final next = GameLogic.grantWelcomeBackWatchGold(state, 40);
+    expect(next.gold, 180);
+    expect(next.lifetimeGoldEarned, 180);
+    expect(next.metaDepth.adTickets, 0);
+    expect(next.metaDepth.adOfflineMulPending, isFalse);
+    expect(next.metaDepth.toJson().containsKey('welcomeBackAd'), isFalse);
+    final loaded = GameLogic.stateFromJson(next.toJson());
+    expect(loaded.gold, 180);
+    expect(loaded.lifetimeGoldEarned, 180);
+
+    final free = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(adFree: true),
+    );
+    expect(GameLogic.grantWelcomeBackWatchGold(free, 40).gold, free.gold);
+    final forever = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(shopPermScrolls: AdBoost.permRest),
+    );
+    expect(GameLogic.grantWelcomeBackWatchGold(forever, 40).gold, forever.gold);
+    expect(GameLogic.grantWelcomeBackWatchGold(state, 0).gold, state.gold);
+  });
+
+  test('welcome back offers a watch only after a boss and unpaid gold', () {
+    final now = DateTime.utc(2026, 8, 21, 12);
+    final fresh = GameLogic.createInitialState(now: now);
+    final early = OfflineProgress.applyOfflineProgress(
+      fresh,
+      const Duration(hours: 1),
+    );
+    expect(early.goldGained, greaterThan(0));
+    expect(early.awayGoldMultiplied, isFalse);
+    expect(early.welcomeBackAdOffer, isFalse);
+
+    final played = fresh.copyWith(bossVictories: 1);
+    final open = OfflineProgress.applyOfflineProgress(
+      played,
+      const Duration(hours: 1),
+    );
+    expect(open.goldGained, greaterThan(0));
+    expect(open.awayGoldMultiplied, isFalse);
+    expect(open.welcomeBackAdOffer, isTrue);
+    expect(open.welcomeBackAdLabel, 'WATCH AD · gold ×${AdBoost.awayGoldMul}');
+
+    final armed = GameLogic.spendAdBuff(
+      GameLogic.grantAdTicket(played),
+      AdBuffId.offline,
+      nowMs: DateTime.now().millisecondsSinceEpoch,
+    );
+    final tripled = OfflineProgress.applyOfflineProgress(
+      armed,
+      const Duration(hours: 1),
+    );
+    expect(tripled.goldGained, greaterThan(open.goldGained));
+    expect(tripled.awayGoldMultiplied, isTrue);
+    expect(tripled.welcomeBackAdOffer, isFalse);
+    expect(tripled.state.metaDepth.adOfflineMulPending, isFalse);
+
+    final adFree = OfflineProgressResult(
+      state: played.copyWith(
+        metaDepth: played.metaDepth.copyWith(adFree: true),
+      ),
+      secondsApplied: 3600,
+      goldGained: 40,
+      essenceGained: 0,
+      roomsCleared: 0,
+      highestFloorDelta: 0,
+      bossDelta: 0,
+    );
+    expect(adFree.welcomeBackAdOffer, isFalse);
   });
 }

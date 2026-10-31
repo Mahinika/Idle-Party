@@ -194,6 +194,7 @@ void main() {
     expect(find.textContaining('Sanctuary'), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(find.text('CLAIM'), findsNothing);
+    expect(find.textContaining('WATCH AD'), findsNothing);
     expect(find.textContaining('40 gold'), findsWidgets);
   });
 
@@ -233,7 +234,14 @@ void main() {
     expect(find.textContaining('KEY'), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(find.text('CLAIM'), findsNothing);
+    expect(find.textContaining('WATCH AD'), findsOneWidget);
+    expect(find.textContaining('Optional. Watch an ad'), findsOneWidget);
     expect(find.textContaining('40 gold'), findsWidgets);
+    final gold = director.state.gold;
+    await tester.tap(find.textContaining('WATCH AD'));
+    await tester.pump();
+    expect(director.state.gold, gold);
+    expect(find.text('WELCOME BACK'), findsOneWidget);
   });
 
   testWidgets('a cave Welcome Back does not say the hub was paying', (

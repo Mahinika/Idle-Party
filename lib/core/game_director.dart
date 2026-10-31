@@ -178,6 +178,10 @@ class GameDirector extends ChangeNotifier {
   /// spend the same seconds twice.
   bool _awayCreditInFlight = false;
 
+  /// One Welcome Back card watches once. A new absence clears it.
+  bool _welcomeBackAdBusy = false;
+  bool _welcomeBackAdGranted = false;
+
   /// Shorter than this is an app switch, not a Welcome Back.
   static const int _awayCreditMinSec = 60;
   final UiFeedback uiFeedback = UiFeedback();

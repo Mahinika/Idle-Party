@@ -53,7 +53,7 @@ GameState _enterGauntlet(GameState state, {GauntletPact? pact}) {
     keyLevel: 0,
   );
   final room = floor.first;
-  final cleared = GameLogic._clearKeystoneRun(state);
+  final cleared = _clearKeystoneRun(state);
   return MetaSystems.evaluateAchievements(
     cleared.copyWith(
       inDungeon: true,
@@ -96,7 +96,7 @@ GameState _enterRift(GameState state, {int? tier}) {
     crowded: false,
   );
   final room = floor.first;
-  final cleared = GameLogic._clearKeystoneRun(
+  final cleared = _clearKeystoneRun(
     _clearGreaterRiftRun(_clearRiftRun(state)),
   );
   return MetaSystems.evaluateAchievements(
@@ -315,7 +315,7 @@ GameState _enterGreaterRift(GameState state, {int? tier}) {
     crowded: false,
   );
   final room = floor.first;
-  final cleared = GameLogic._clearKeystoneRun(
+  final cleared = _clearKeystoneRun(
     _clearRiftRun(_clearGreaterRiftRun(state)),
   );
   return MetaSystems.evaluateAchievements(

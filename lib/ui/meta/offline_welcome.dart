@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../core/ad_boost.dart';
 import '../../core/chase_contract.dart';
 import '../../core/chase_dispatcher.dart';
 import '../../core/comeback_chest.dart';
@@ -94,6 +95,9 @@ Future<void> showOfflineProgressDialog(
   // prize is still one tap, and the next press is the fight.
   final inCave = director.state.inDungeon;
   final returnLabel = inCave ? 'CONTINUE' : 'ENTER DUNGEON';
+  var showWatch = summary?.welcomeBackAdOffer == true;
+  var watchBusy = false;
+  var adGoldAdded = 0;
 
   WebClickBridge.pushLayer();
   await showDialog<void>(
@@ -174,6 +178,64 @@ Future<void> showOfflineProgressDialog(
                   if (lead == null || !_lootAlreadySaid(row.$1))
                     MenuChrome.statRow(label: row.$1, value: row.$2),
               ],
+              if (summary != null)
+                StatefulBuilder(
+                  builder: (context, setLocal) {
+                    if (adGoldAdded > 0) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Ad added $adGoldAdded gold.',
+                          style: GameTheme.body(
+                            size: 14,
+                            color: GameTheme.torchHot,
+                          ),
+                        ),
+                      );
+                    }
+                    if (!showWatch) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Optional. Watch an ad and this gold becomes ×${AdBoost.awayGoldMul}.',
+                            style: GameTheme.body(
+                              size: 13,
+                              color: GameTheme.parchment,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          GameButton(
+                            label: watchBusy
+                                ? 'LOADING AD…'
+                                : summary.welcomeBackAdLabel,
+                            style: GameButtonStyle.grey,
+                            onPressed: watchBusy
+                                ? null
+                                : () async {
+                                    setLocal(() => watchBusy = true);
+                                    final before = director.state.gold;
+                                    final ok = await director
+                                        .watchWelcomeBackGoldAd(
+                                      summary.goldGained,
+                                    );
+                                    if (!context.mounted) return;
+                                    setLocal(() {
+                                      watchBusy = false;
+                                      if (ok) {
+                                        showWatch = false;
+                                        adGoldAdded = director.state.gold - before;
+                                      }
+                                    });
+                                  },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               const SizedBox(height: 10),
               Text(
                 contract.upNextLine,
