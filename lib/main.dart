@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/app_analytics.dart';
@@ -35,6 +36,19 @@ Future<void> _bootFirebase() async {
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Press Start 2P, VT323, and Cinzel are in assets/fonts/. No runtime fetch.
+  GoogleFonts.config.allowRuntimeFetching = false;
+  LicenseRegistry.addLicense(() async* {
+    const licenses = <String, List<String>>{
+      'assets/fonts/OFL-PressStart2P.txt': ['Press Start 2P'],
+      'assets/fonts/OFL-VT323.txt': ['VT323'],
+      'assets/fonts/OFL-Cinzel.txt': ['Cinzel'],
+    };
+    for (final entry in licenses.entries) {
+      final license = await rootBundle.loadString(entry.key);
+      yield LicenseEntryWithLineBreaks(entry.value, license);
+    }
+  });
   // Fire-and-forget before first frame — phone product is edge-to-edge game UI.
   unawaited(lockImmersiveUi());
   // Android + google-services.json only; no-op elsewhere / missing config.
@@ -247,6 +261,7 @@ class _GameHomePageState extends State<GameHomePage>
     await _director.boot(deferCombatLoop: widget.showIntro);
     if (!mounted) return;
 
+    // Probe is bounded (~3s) in play_store_update_io so offline splash continues.
     final blocked = await _director.checkMandatoryPlayUpdate();
     if (!mounted) return;
     if (blocked) {
