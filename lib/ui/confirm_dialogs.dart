@@ -34,7 +34,7 @@ List<String> ascendWorthLines(GameState state) {
       MetaSystems.ascendStreakEssence(state);
   return [
     'Gain: AL$nextAl and Blessing ${ascendBlessingStackPhrase()}.',
-    'Lose: gold, bag, GOLD tracks, and this run\'s floors.',
+    'Lose: gold, regular gear, market listings, loadouts, GOLD tracks, and this run\'s floors.',
     'Essence: +${formatCount(reward)}e. You keep ${formatCount(state.essence)}e.',
   ];
 }

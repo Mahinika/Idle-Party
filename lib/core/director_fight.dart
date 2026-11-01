@@ -113,11 +113,52 @@ extension GameDirectorFight on GameDirector {
   }
 
   /// Opt-in wipe ad. Stops the 3s retry so the fight does not resume under
-  /// the ad, and does not send the party back in when the ad ends.
+  /// the ad. A finished watch stays on the wipe screen. A timeout arms the
+  /// countdown again.
   Future<void> watchWipeRewardAd() async {
     if (_state.metaDepth.adFree) return;
     _cancelWipeAuto();
-    await watchPowerupAd();
+    if (!AdRewarded.realAdsAvailable) {
+      showToast('Ads play on the Android app', life: 2.2);
+      _rearmWipeAfterAd(AdWatchResult.unavailable);
+      return;
+    }
+    showToast('Loading ad…', life: 1.4);
+    final result = await AdRewarded.showRewarded();
+    switch (result) {
+      case AdWatchResult.rewarded:
+        grantPowerupHour();
+      case AdWatchResult.skipped:
+        showToast(
+          'Watch the whole ad to get ${AdBoost.ticketsPerAd} Ad Ticket',
+          life: 2.2,
+        );
+      case AdWatchResult.failed:
+        showToast('Ad not ready — try again in a bit', life: 2.2);
+      case AdWatchResult.unavailable:
+        showToast('Ads play on the Android app', life: 2.2);
+    }
+    _rearmWipeAfterAd(result);
+  }
+
+  /// Failed or missing ads are a timeout. The 3s retry comes back.
+  /// A finished watch leaves the choice on screen.
+  void _rearmWipeAfterAd(AdWatchResult result) {
+    if (result == AdWatchResult.rewarded || result == AdWatchResult.skipped) {
+      return;
+    }
+    if (!_awaitingWipeChoice) return;
+    _armWipeAutoContinue();
+  }
+
+  @visibleForTesting
+  void debugOpenWipeChoice() {
+    _awaitingWipeChoice = true;
+  }
+
+  @visibleForTesting
+  void debugFinishWipeAd(AdWatchResult result) {
+    _rearmWipeAfterAd(result);
   }
 
   /// Normal caves retry themselves. Gauntlet, rifts, and Daily Run wait.

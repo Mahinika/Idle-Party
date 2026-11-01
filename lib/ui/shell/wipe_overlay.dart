@@ -162,7 +162,6 @@ class DungeonWipePanel extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 14),
-                  _WipeWatchAd(director: director),
                   ValueListenableBuilder<int>(
                     valueListenable: director.wipeAutoSeconds,
                     builder: (context, seconds, _) {
@@ -265,6 +264,8 @@ class DungeonWipePanel extends StatelessWidget {
                       ],
                     );
                   }(),
+                  const SizedBox(height: 16),
+                  _WipeWatchAd(director: director),
                   if (WipeAdvice.godHandHintFor(state) != null) ...[
                     const SizedBox(height: 10),
                     Text(

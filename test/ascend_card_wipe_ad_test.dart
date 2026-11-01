@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/ad_rewarded.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/meta_systems.dart';
@@ -25,7 +26,10 @@ void main() {
         '+${GameLogic.ascendBlessingGoldPct}% gold',
       ),
     );
-    expect(lines[1], 'Lose: gold, bag, GOLD tracks, and this run\'s floors.');
+    expect(
+      lines[1],
+      'Lose: gold, regular gear, market listings, loadouts, GOLD tracks, and this run\'s floors.',
+    );
     final reward =
         GameLogic.ascendEssenceReward(1) +
         MetaSystems.ascendMilestoneReward(0, 1) +
@@ -54,7 +58,9 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Gain: AL1'), findsOneWidget);
-    expect(find.textContaining('Lose: gold, bag'), findsOneWidget);
+    expect(find.textContaining('Lose: gold, regular gear'), findsOneWidget);
+    expect(find.textContaining('market listings'), findsOneWidget);
+    expect(find.textContaining('loadouts'), findsOneWidget);
     expect(find.textContaining('Essence:'), findsOneWidget);
     expect(find.textContaining('Keep:'), findsNothing);
     expect(find.text('CONFIRM ASCEND'), findsOneWidget);
@@ -113,5 +119,18 @@ void main() {
     );
     expect(find.text('PARTY WIPED'), findsOneWidget);
     expect(find.textContaining('WATCH AD'), findsNothing);
+  });
+
+  test('a timed-out wipe ad arms the retry countdown again', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    director.debugOpenWipeChoice();
+    director.debugFinishWipeAd(AdWatchResult.rewarded);
+    expect(director.wipeAutoSeconds.value, 0);
+    director.debugFinishWipeAd(AdWatchResult.failed);
+    expect(director.wipeAutoSeconds.value, 3);
+    director.debugFinishWipeAd(AdWatchResult.unavailable);
+    expect(director.wipeAutoSeconds.value, 3);
   });
 }
