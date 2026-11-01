@@ -8,11 +8,13 @@ alwaysApply: false
 Skip this file for routine implement, analyze, and commit.
 
 1. The owner named the goal → that goal wins.
-2. Otherwise one pick, from the evidence order in
-   `.cursor/rules/10-what-to-build.mdc`.
+2. Otherwise propose 2–3 concrete next ideas (at least one revenue), then
+   pick one and build it, from the evidence order in
+   `.cursor/rules/10-what-to-build.mdc`. Flag new zones, classes, IAP, or
+   gacha in the handoff.
 3. Hard locks in `.cursor/rules/00-locks.mdc` still hold, including never
    iOS and never an AAB upload unless the owner asks in that turn.
 
 No chairs, no vote, and no second decider. Prefer shipping something
-playable. "Mer endgame" deepens KEY, Gauntlet, Farm Rift, Ranked GR, and
-Ashen. Craft Trial stays under MORE → CRAFT.
+playable. Priority is revenue. "Mer endgame" deepens KEY, Gauntlet, Farm
+Rift, Ranked GR, and Ashen. Craft Trial stays under MORE → CRAFT.

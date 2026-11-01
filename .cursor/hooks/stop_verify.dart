@@ -36,6 +36,13 @@ Future<void> main() async {
   }
 
   final dirtyText = dirtyPaths.join('\n');
+
+  if (_onlyDocsOrRules(dirtyText)) {
+    clearDirtyChat(chatId);
+    _emit(<String, dynamic>{});
+    return;
+  }
+
   final needChangelog = _touchesChangelog(dirtyText);
   final needShipSmoke = _touchesChase(dirtyText);
 
@@ -207,6 +214,22 @@ Future<List<String>> _uncommitted(String dirtyText) async {
       .map((l) => l.trimRight())
       .where((l) => l.isNotEmpty && !l.startsWith('warning:'))
       .toList();
+}
+
+bool _onlyDocsOrRules(String dirtyText) {
+  final t = dirtyText.toLowerCase().replaceAll('\\', '/');
+  for (final line in t.split('\n')) {
+    final p = line.trim();
+    if (p.isEmpty) continue;
+    final isDoc = p.contains('/docs/') ||
+        p.contains('.cursor/rules/') ||
+        p.contains('.cursor/hooks/') ||
+        p.contains('.cursor/skills/') ||
+        p.endsWith('.md') ||
+        p.endsWith('.mdc');
+    if (!isDoc) return false;
+  }
+  return true;
 }
 
 bool _touchesChangelog(String dirtyText) {

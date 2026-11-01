@@ -38,8 +38,9 @@ String _nowLine() {
 }
 
 const _fallback =
-    'The agent picks and builds the next batch from checked facts '
-    '(10-what-to-build.mdc).';
+    'Propose 2–3 concrete next ideas (at least one revenue: shop/IAP/'
+    'rewarded ads/retention), then pick one and build it. A goal the owner '
+    'names wins. Never Play AAB without owner ask.';
 
 void _pruneOldShots() {
   final dir = Directory(_shotDir);

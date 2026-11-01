@@ -5,12 +5,12 @@ alwaysApply: true
 
 # How we work (Idle Party)
 
-Source: the owner, who vibe-codes. Last sync: **2026-10-25**.
+Source: the owner, who vibe-codes. Last sync: **2026-11-01**.
 This is the only always-on rule. `00-locks`, `10-what-to-build`,
 `30-done`, `play-words`, and `hero-draw` are the full record. Open them
 when their description matches. If they disagree, this page wins.
 
-**Now:** When this week's must-rows are already in the build and Play is still on an older one, put that build on the A56 and ask once for the upload. Otherwise pick and build the next batch from checked facts. A goal the owner names wins. Never Play AAB without owner ask.
+**Now:** At the start of each session, propose 2–3 concrete next ideas (at least one revenue: shop/IAP/rewarded ads/retention), then pick one and build it. A goal the owner names wins. Never Play AAB without owner ask.
 
 ## Chase
 
@@ -36,32 +36,27 @@ Never weaken these. Dated history: `00-locks.mdc`.
 
 ## Next job
 
-A goal the owner names wins. Otherwise pick one batch and build it. Do not
-ask what to build.
+A goal the owner names wins. Otherwise propose 2–3 concrete next ideas
+(at least one revenue: shop/IAP/rewarded ads/retention), then pick one
+and build it. Do not ask what to build.
 
 Evidence, in order: open notes in `docs/PLAY_NOTES.md`; the active week
 file in `docs/weeks/`; this game's Play paste in `docs/PLAY_GROWTH.md`;
 `docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md`, and
-`docs/YEAR_ROADMAP_SOURCES.md`; facts from other developers only if you
-opened the page in this chat and can name the URL. Grade A may change the
-batch. Grade B is an example after a hole here is already clear. Grade C
-must not decide. Never invent Console percentages. If the paste is older
-than 14 days, ask once for a new one and keep building from play notes.
-
-**This week:** build the first row this build does not already do, **Måste**
-first. A row the current patch notes and the code already do is not a
-batch. When every **Måste** row is already what this build does, and Play's
-newest submitted build is older, stop new systems. Put this build on the
-A56 and ask once for the upload.
+`docs/YEAR_ROADMAP_SOURCES.md`; competitor games and owner play notes
+from other games are valid idea sources; A-grade external facts from
+developers only if you opened the page in this chat and can name the URL.
+Never invent Console percentages. If the paste is older than 14 days, ask
+once for a new one and keep building from play notes.
 
 Player text may say what the code already does. Do not wait for a play
 note. Do not write a sentence the code does not do. Write owner notes into
 `docs/PLAY_NOTES.md` under Open, and move them to Done with the fix.
 
 "Mer endgame" deepens KEY, Gauntlet, Rift, Greater Rift, and Ashen. Craft
-Trial stays under MORE → CRAFT. A new zone, class, hunt, God Hand
-direction, second sim, IAP, or gacha is allowed when they name it, or when
-an A source and a hole in this game agree.
+Trial stays under MORE → CRAFT. Proposing and building a new zone, class,
+hunt, God Hand direction, second sim, IAP, or gacha is allowed when they
+serve revenue/retention; flag them in the handoff.
 
 One decision on a fork. No chairs. `decide-a-fork.mdc` is that sentence.
 Do not run `/init` or clean the repo unasked. Do not create PROJECT_INDEX,
@@ -94,7 +89,15 @@ instead of growing `game_logic`, `spatial_combat`, or a fat shell. New HUD
 goes under `lib/ui/shell/`. Delete unused code that saves do not need.
 Keep JSON fields old saves may still have.
 
-Hand off in at most 5 lines in Swedish: what you chose, why, what changed,
-and what to try on a new save. Wait when they should look at the phone, a
+Hand off in short Swedish: what you chose, why, what changed, and what to
+try on a new save. Always end with 2–3 next-idea suggestions with one-line
+reasons (at least one revenue). Wait when they should look at the phone, a
 whole screen or floor needs a before-and-after, or a lock or missing fact
 blocks the next step. Otherwise pick the next batch and continue.
+
+## Workflow
+
+Code work may be done by Cursor cloud agents via PRs or locally. Releases
+go straight to 100% on Play (few players). A test APK is emulator-smoke-
+tested before the owner phone-tests. Nothing merges or releases before the
+owner's phone test. Priority is revenue.
