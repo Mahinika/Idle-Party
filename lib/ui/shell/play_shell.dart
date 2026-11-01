@@ -14,6 +14,7 @@ import '../feedback_toast.dart';
 import '../first_session_tips.dart';
 import '../../visual/rig/hero_rig_painter.dart';
 import '../hub_screen.dart';
+import '../meta/shop_nudge_dialog.dart';
 import '../is2_shell.dart';
 import 'app_bottom_bar.dart';
 import 'menu_surface.dart';
@@ -40,14 +41,37 @@ class _PlayShellState extends State<PlayShell> {
   GameDirector get director => widget.director;
   MenuRouter get router => widget.router;
   late bool _inDungeon;
+  bool _shopNudgeOpen = false;
 
   @override
   void initState() {
     super.initState();
     _inDungeon = director.state.inDungeon;
     router.addListener(_onRouter);
+    director.addListener(_onShopNudge);
     _syncPause();
     unawaited(HeroRigPainter.warmParty(director.state.heroes));
+  }
+
+  void _onShopNudge() {
+    final pending = director.pendingShopOfferIds;
+    if (_shopNudgeOpen || pending == null || pending.isEmpty || !mounted) {
+      return;
+    }
+    _shopNudgeOpen = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        _shopNudgeOpen = false;
+        return;
+      }
+      final ids = director.takeShopNudge();
+      if (ids == null || ids.isEmpty) {
+        _shopNudgeOpen = false;
+        return;
+      }
+      await showShopNudgeDialog(context, router, ids);
+      _shopNudgeOpen = false;
+    });
   }
 
   @override
@@ -75,6 +99,7 @@ class _PlayShellState extends State<PlayShell> {
   @override
   void dispose() {
     router.removeListener(_onRouter);
+    director.removeListener(_onShopNudge);
     director.setUiPaused(false);
     super.dispose();
   }

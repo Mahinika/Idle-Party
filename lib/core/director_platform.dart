@@ -182,6 +182,7 @@ extension GameDirectorPlatform on GameDirector {
           GameAudio.gold();
           showToast('Welcome Back · +$gained gold', life: 2.4);
           unawaited(AppAnalytics.logEvent('welcome_back_ad', {'gold': gained}));
+          noteRewardedAdWatched();
           return true;
         case AdWatchResult.skipped:
           showToast(
@@ -216,6 +217,7 @@ extension GameDirectorPlatform on GameDirector {
     switch (result) {
       case AdWatchResult.rewarded:
         _grantWispWatchReward();
+        noteRewardedAdWatched();
       case AdWatchResult.skipped:
         showToast('Watch the whole ad for the WISP bonus', life: 2.2);
         dismissWispPending();

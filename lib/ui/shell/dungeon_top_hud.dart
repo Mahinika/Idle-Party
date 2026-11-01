@@ -5,6 +5,7 @@ import '../../core/enemy_flavor.dart';
 import '../../core/gauntlet_anomaly.dart';
 import '../../core/gauntlet_pact.dart';
 import '../../core/game_director.dart';
+import '../../core/shop_nudge.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/greater_rift.dart';
@@ -367,6 +368,7 @@ class DungeonTopHud extends StatelessWidget {
         AwayFightTip.shouldShow(state, bossStairs: bossStairs, inCave: true)
         ? AwayFightTip.lineFor(state)
         : null;
+    final speedLine = ShopNudge.speedCoachLine(state);
     final coachLine = AwayFightTip.caveCoach(
       wiped: director.awaitingWipeChoice,
       godhand: coachGod,
@@ -652,12 +654,21 @@ class DungeonTopHud extends StatelessWidget {
                   ),
                 ),
               const SizedBox(width: 4),
-              DungeonModeChip(
-                label: state.combatPace >= 2 ? 'SPEED 2×' : 'SPEED 1×',
-                selected: state.combatPace >= 2,
-                prominent: true,
-                tip: 'Fight speed. 2× plays the cave faster. Loot and time away stay the same.',
-                onTap: director.cycleCombatPace,
+              CoachPulse(
+                active: speedLine != null,
+                child: DungeonModeChip(
+                  label: state.combatPace >= 2 ? 'SPEED 2×' : 'SPEED 1×',
+                  selected: state.combatPace >= 2,
+                  prominent: true,
+                  tip: speedLine ??
+                      'Fight speed. 2× plays the cave faster. Loot and time away stay the same.',
+                  onTap: () {
+                    director.cycleCombatPace();
+                    if (speedLine != null) {
+                      director.dismissTip(ShopNudge.speedTipId);
+                    }
+                  },
+                ),
               ),
               SizedBox(
                 width: 44,
@@ -687,18 +698,18 @@ class DungeonTopHud extends StatelessWidget {
               ),
             ],
           ),
-          if (partyLine != null && coachLine == null)
+          if (partyLine != null && coachLine == null && speedLine == null)
             Text(
               partyLine,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
             ),
-          if (coachLine != null)
+          if (coachLine != null || speedLine != null)
             Padding(
               padding: const EdgeInsets.only(top: 2, right: 4),
               child: Text(
-                coachLine,
+                coachLine ?? speedLine!,
                 textAlign: TextAlign.right,
                 maxLines: awayLine != null ? 2 : 1,
                 overflow: TextOverflow.ellipsis,

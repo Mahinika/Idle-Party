@@ -21,6 +21,7 @@ import '../spatial/floor_blueprint.dart';
 import '../spatial/spatial_combat.dart';
 import 'game_audio.dart';
 import 'ad_boost.dart';
+import 'shop_nudge.dart';
 import 'ad_rewarded.dart';
 import 'app_analytics.dart';
 import 'debug_play_log.dart';
@@ -312,6 +313,27 @@ class GameDirector extends ChangeNotifier {
 
   /// Player picked Full/Lite/Minimal. Auto-ease must not override that.
   bool _vfxPinned = false;
+
+  /// Ad-free / Forever Rest card waiting for the shell. Cleared when shown.
+  List<String>? _pendingShopOfferIds;
+
+  List<String>? get pendingShopOfferIds => _pendingShopOfferIds;
+
+  /// One finished rewarded ad. The shell shows [pendingShopOfferIds] when set.
+  void noteRewardedAdWatched({DateTime? now}) {
+    final nudge = ShopNudge.noteRewardedAd(_state, now: now);
+    if (nudge.offerIds.isNotEmpty) {
+      _pendingShopOfferIds = List<String>.from(nudge.offerIds);
+    }
+    _applyUpgrade(nudge.state);
+  }
+
+  List<String>? takeShopNudge() {
+    final ids = _pendingShopOfferIds;
+    if (ids == null) return null;
+    _pendingShopOfferIds = null;
+    return ids;
+  }
   int _slowFightTicks = 0;
 
   /// Cheap phones: a few slow fight ticks drop Full to Lite once.
@@ -1763,6 +1785,7 @@ class GameDirector extends ChangeNotifier {
     switch (result) {
       case AdWatchResult.rewarded:
         grantPowerupHour();
+        noteRewardedAdWatched();
       case AdWatchResult.skipped:
         showToast(
           'Watch the whole ad to get ${AdBoost.ticketsPerAd} Ad Ticket',

@@ -323,6 +323,8 @@ class MetaDepthState {
     this.apexTargetProgress = 0,
     this.adBoostUntilMs = 0,
     this.adTickets = 0,
+    this.rewardedAdsWatched = 0,
+    this.shopNudgeAtMs = 0,
     this.adAtkUntilMs = 0,
     this.adGoldUntilMs = 0,
     this.adXpUntilMs = 0,
@@ -623,6 +625,12 @@ class MetaDepthState {
   /// Ad Tickets banked from rewarded ads / SHOP. Survives Ascend.
   final int adTickets;
 
+  /// Finished rewarded ads (SCROLLS, WISP, Welcome Back). Survives Ascend.
+  final int rewardedAdsWatched;
+
+  /// Last time the ad-free / Forever Rest card was shown. 0 = never.
+  final int shopNudgeAtMs;
+
   /// Sharp Edge (+ATK%) end millis. Survives Ascend.
   final int adAtkUntilMs;
 
@@ -902,6 +910,8 @@ class MetaDepthState {
     int? apexTargetProgress,
     int? adBoostUntilMs,
     int? adTickets,
+    int? rewardedAdsWatched,
+    int? shopNudgeAtMs,
     int? adAtkUntilMs,
     int? adGoldUntilMs,
     int? adXpUntilMs,
@@ -1083,6 +1093,8 @@ class MetaDepthState {
       apexTargetProgress: apexTargetProgress ?? this.apexTargetProgress,
       adBoostUntilMs: adBoostUntilMs ?? this.adBoostUntilMs,
       adTickets: adTickets ?? this.adTickets,
+      rewardedAdsWatched: rewardedAdsWatched ?? this.rewardedAdsWatched,
+      shopNudgeAtMs: shopNudgeAtMs ?? this.shopNudgeAtMs,
       adAtkUntilMs: adAtkUntilMs ?? this.adAtkUntilMs,
       adGoldUntilMs: adGoldUntilMs ?? this.adGoldUntilMs,
       adXpUntilMs: adXpUntilMs ?? this.adXpUntilMs,
@@ -1261,6 +1273,8 @@ class MetaDepthState {
     'apexTargetProgress': apexTargetProgress,
     'adBoostUntilMs': adBoostUntilMs,
     'adTickets': adTickets,
+    'rewardedAdsWatched': rewardedAdsWatched,
+    'shopNudgeAtMs': shopNudgeAtMs,
     'adAtkUntilMs': adAtkUntilMs,
     'adGoldUntilMs': adGoldUntilMs,
     'adXpUntilMs': adXpUntilMs,
@@ -1506,6 +1520,9 @@ class MetaDepthState {
       apexTargetProgress: (json['apexTargetProgress'] as num?)?.toInt() ?? 0,
       adBoostUntilMs: adMig.legacy,
       adTickets: ((json['adTickets'] as num?)?.toInt() ?? 0).clamp(0, 9999),
+      rewardedAdsWatched:
+          ((json['rewardedAdsWatched'] as num?)?.toInt() ?? 0).clamp(0, 99999),
+      shopNudgeAtMs: (json['shopNudgeAtMs'] as num?)?.toInt() ?? 0,
       adAtkUntilMs: adMig.atk,
       adGoldUntilMs: adMig.gold,
       adXpUntilMs: (json['adXpUntilMs'] as num?)?.toInt() ?? 0,
