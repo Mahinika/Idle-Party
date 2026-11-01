@@ -171,6 +171,45 @@ extension GameDirectorFight on GameDirector {
       return;
     }
     if (!_awaitingWipeChoice) return;
+    _applyWipeReviveOutcome(
+      analyticsName: 'wipe_revive_ad',
+      analyticsParams: {
+        'dungeon_id': _state.dungeonId,
+        'floor': _state.currentRoom.floorNumber,
+        'gauntlet': _state.inGauntlet,
+      },
+    );
+  }
+
+  /// Same floor, 50% HP, once per run — paid with Cinders (Ad-free friendly).
+  Future<void> spendCindersWipeRevive() async {
+    if (!GameLogic.canWipeReviveWithCinders(_state)) return;
+    _cancelWipeAuto();
+    final before = _state.metaDepth.cinders;
+    _state = GameLogic.spendCindersForWipeRevive(_state);
+    if (_state.metaDepth.cinders >= before) {
+      showToast(
+        'Need ${GameLogic.wipeReviveCinderCost} Cinders to revive',
+        life: 2.2,
+      );
+      return;
+    }
+    if (!_awaitingWipeChoice) return;
+    _applyWipeReviveOutcome(
+      analyticsName: 'wipe_revive_cinders',
+      analyticsParams: {
+        'dungeon_id': _state.dungeonId,
+        'floor': _state.currentRoom.floorNumber,
+        'gauntlet': _state.inGauntlet,
+        'cost': GameLogic.wipeReviveCinderCost,
+      },
+    );
+  }
+
+  void _applyWipeReviveOutcome({
+    required String analyticsName,
+    required Map<String, Object> analyticsParams,
+  }) {
     _state = GameLogic.revertLiveWipeStreak(_state);
     _state = GameLogic.markWipeReviveUsed(_state);
     final world = _spatial;
@@ -180,13 +219,7 @@ extension GameDirectorFight on GameDirector {
       _state = GameLogic.healPartyHalfHp(_state);
     }
     _awaitingWipeChoice = false;
-    unawaited(
-      AppAnalytics.logEvent('wipe_revive_ad', {
-        'dungeon_id': _state.dungeonId,
-        'floor': _state.currentRoom.floorNumber,
-        'gauntlet': _state.inGauntlet,
-      }),
-    );
+    unawaited(AppAnalytics.logEvent(analyticsName, analyticsParams));
     showToast('Party revived — fight on', life: 2.4);
     GameAudio.uiConfirm();
     if (enableSpatialLoop) {

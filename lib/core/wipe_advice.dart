@@ -19,6 +19,8 @@ class WipeFightSnapshot {
     required this.damageTaken,
     required this.partyMaxHp,
     required this.elapsedSec,
+    this.meleeTaken = 0,
+    this.rangedOrSpellTaken = 0,
   });
 
   /// Awake (non-dormant) enemy max HP this floor, including dead ones.
@@ -28,6 +30,8 @@ class WipeFightSnapshot {
   final int damageTaken;
   final int partyMaxHp;
   final double elapsedSec;
+  final int meleeTaken;
+  final int rangedOrSpellTaken;
 
   double get leftover => waveHp <= 0 ? 0 : remainingHp / waveHp;
 
@@ -41,10 +45,14 @@ class WipeFightSnapshot {
     }
     var dealt = 0;
     var taken = 0;
+    var melee = 0;
+    var ranged = 0;
     var maxHp = 0;
     for (final h in world.heroes) {
       dealt += h.damageDealt;
       taken += h.damageTaken;
+      melee += h.meleeDamageTaken;
+      ranged += h.rangedOrSpellDamageTaken;
       maxHp += h.maxHp;
     }
     return WipeFightSnapshot(
@@ -54,6 +62,8 @@ class WipeFightSnapshot {
       damageTaken: taken,
       partyMaxHp: maxHp,
       elapsedSec: world.combatElapsed,
+      meleeTaken: melee,
+      rangedOrSpellTaken: ranged,
     );
   }
 }
@@ -80,7 +90,25 @@ abstract final class WipeAdvice {
   /// Honest fight crumb under the advice line (does not replace it).
   static String scanLine(WipeFightSnapshot fight) {
     final pct = (fight.leftover * 100).clamp(0, 100).round();
-    return 'Pack $pct% left · ${fight.damageDealt} dealt · ${fight.damageTaken} taken';
+    final taken = _takenBreakdown(fight);
+    return 'Pack $pct% left · ${fight.damageDealt} dealt · $taken';
+  }
+
+  static String _takenBreakdown(WipeFightSnapshot fight) {
+    final total = fight.damageTaken;
+    if (total <= 0) return '0 taken';
+    final melee = fight.meleeTaken.clamp(0, total);
+    final ranged = fight.rangedOrSpellTaken.clamp(0, total);
+    if (melee + ranged <= 0) return '$total taken';
+    if (ranged <= 0) {
+      return 'Taken: ${((melee / total) * 100).round()}% melee';
+    }
+    if (melee <= 0) {
+      return 'Taken: ${((ranged / total) * 100).round()}% ranged/tells';
+    }
+    final mp = ((melee / total) * 100).round().clamp(0, 100);
+    final rp = (100 - mp).clamp(0, 100);
+    return 'Taken: $mp% melee · $rp% ranged/tells';
   }
 
   /// The card's damage line. Prefer the snapshot saved at the wipe.

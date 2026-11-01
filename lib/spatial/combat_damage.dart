@@ -104,7 +104,7 @@ int combatApplyHeroIncomingDamage(
       );
     }
     if (dealt <= 0) {
-      SpatialCombat._recordHeroTaken(hero, held);
+      SpatialCombat._recordHeroTaken(hero, held, isMelee: isMelee);
       if (absorbed > 0) combatNoteAudioCue(world, 'shield');
       return absorbed;
     }
@@ -114,7 +114,7 @@ int combatApplyHeroIncomingDamage(
     combatNoteAudioCue(world, hero.hp <= 0 ? 'hero_down' : 'enemy_hit');
   }
   held += dealt;
-  SpatialCombat._recordHeroTaken(hero, held);
+  SpatialCombat._recordHeroTaken(hero, held, isMelee: isMelee);
   hero.spiritRegenPaused = 5.0;
   if (dealt > 0) {
     hero.hitFlash = math.max(hero.hitFlash, 0.14);

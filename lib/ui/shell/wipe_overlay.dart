@@ -270,6 +270,7 @@ class DungeonWipePanel extends StatelessWidget {
                   }(),
                   const SizedBox(height: 16),
                   _WipeReviveAd(director: director),
+                  _WipeReviveCinders(director: director),
                   _WipeWatchAd(director: director),
                   if (WipeAdvice.godHandHintFor(state) != null) ...[
                     const SizedBox(height: 10),
@@ -335,6 +336,32 @@ class _WipeReviveAdState extends State<_WipeReviveAd> {
                 await widget.director.watchWipeReviveAd();
                 if (mounted) setState(() => _busy = false);
               },
+      ),
+    );
+  }
+}
+
+/// Cinder revive — same rules as ad revive; primary path for Ad-free.
+class _WipeReviveCinders extends StatelessWidget {
+  const _WipeReviveCinders({required this.director});
+
+  final GameDirector director;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = director.state;
+    if (!GameLogic.canWipeReviveWithCinders(state)) {
+      return const SizedBox.shrink();
+    }
+    final cost = GameLogic.wipeReviveCinderCost;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GameButton(
+        label: 'REVIVE · $cost CINDERS',
+        tip: '50% HP · same floor · once this run · wipe streak unchanged',
+        style: GameButtonStyle.brown,
+        primary: state.metaDepth.adFree,
+        onPressed: () => director.spendCindersWipeRevive(),
       ),
     );
   }

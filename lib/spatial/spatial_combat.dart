@@ -481,6 +481,8 @@ class SpatialActor {
   int damageDealt = 0;
   int healingDone = 0;
   int damageTaken = 0;
+  int meleeDamageTaken = 0;
+  int rangedOrSpellDamageTaken = 0;
 
   /// Root / stun (Frost Nova, Kidney Shot).
   double rootTimer = 0;
@@ -2700,6 +2702,8 @@ abstract final class SpatialCombat {
     to.damageDealt = from.damageDealt;
     to.healingDone = from.healingDone;
     to.damageTaken = from.damageTaken;
+    to.meleeDamageTaken = from.meleeDamageTaken;
+    to.rangedOrSpellDamageTaken = from.rangedOrSpellDamageTaken;
     to.buffTimers
       ..clear()
       ..addAll(from.buffTimers);
@@ -2978,9 +2982,14 @@ abstract final class SpatialCombat {
     healer.healingDone += gained;
   }
 
-  static void _recordHeroTaken(SpatialActor hero, int taken) {
+  static void _recordHeroTaken(SpatialActor hero, int taken, {required bool isMelee}) {
     if (taken <= 0 || hero.isPet || hero.team != SpatialTeam.hero) return;
     hero.damageTaken += taken;
+    if (isMelee) {
+      hero.meleeDamageTaken += taken;
+    } else {
+      hero.rangedOrSpellDamageTaken += taken;
+    }
   }
 
   static SpatialActor? _heroById(SpatialWorld world, String? id) {

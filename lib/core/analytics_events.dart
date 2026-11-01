@@ -26,6 +26,8 @@ abstract final class AnalyticsEvents {
   static const scrollWellFree = 'scroll_well_free';
   static const scrollWellAd = 'scroll_well_ad';
 
+  static const questReroll = 'quest_reroll';
+
   static const notifyOpen = 'notify_open';
 
   /// Matches [FirstSessionTips.tips] ids (coach only, not boot intro).
@@ -44,6 +46,7 @@ abstract final class AnalyticsEvents {
   static const placementWispGift = 'wisp_gift';
   static const placementPowerups = 'powerups';
   static const placementScrollWell = 'scroll_well';
+  static const placementQuestReroll = 'quest_reroll';
   static const placementWipeRetry = 'wipe_retry';
   static const placementWipeRevive = 'wipe_revive';
 

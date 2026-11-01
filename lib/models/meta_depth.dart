@@ -333,6 +333,8 @@ class MetaDepthState {
     this.adFreeDailyClaimUtc = '',
     this.scrollWellUtcDay = '',
     this.scrollWellBonusClaims = 0,
+    this.questRerollUtcDay = '',
+    this.questRerollsToday = 0,
     this.adFree = false,
     this.rewardedWatchCount = 0,
     this.adFreeNudgeShown = false,
@@ -659,6 +661,12 @@ class MetaDepthState {
   /// Daily SCROLLS bonus ladder: 0 = none yet, 3 = free + 2 ads done.
   final int scrollWellBonusClaims;
 
+  /// UTC day for [questRerollsToday] (yyyy-mm-dd).
+  final String questRerollUtcDay;
+
+  /// Quest rerolls used today (Daily / Side). Max 2 per UTC day.
+  final int questRerollsToday;
+
   /// Permanent SHOP ad-free purchase. Survives Ascend. Billing grants later.
   final bool adFree;
 
@@ -928,6 +936,8 @@ class MetaDepthState {
     String? adFreeDailyClaimUtc,
     String? scrollWellUtcDay,
     int? scrollWellBonusClaims,
+    String? questRerollUtcDay,
+    int? questRerollsToday,
     bool? adFree,
     int? rewardedWatchCount,
     bool? adFreeNudgeShown,
@@ -1115,6 +1125,8 @@ class MetaDepthState {
       scrollWellUtcDay: scrollWellUtcDay ?? this.scrollWellUtcDay,
       scrollWellBonusClaims:
           scrollWellBonusClaims ?? this.scrollWellBonusClaims,
+      questRerollUtcDay: questRerollUtcDay ?? this.questRerollUtcDay,
+      questRerollsToday: questRerollsToday ?? this.questRerollsToday,
       adFree: adFree ?? this.adFree,
       rewardedWatchCount: rewardedWatchCount ?? this.rewardedWatchCount,
       adFreeNudgeShown: adFreeNudgeShown ?? this.adFreeNudgeShown,
@@ -1296,6 +1308,8 @@ class MetaDepthState {
     'adFreeDailyClaimUtc': adFreeDailyClaimUtc,
     'scrollWellUtcDay': scrollWellUtcDay,
     'scrollWellBonusClaims': scrollWellBonusClaims,
+    'questRerollUtcDay': questRerollUtcDay,
+    'questRerollsToday': questRerollsToday,
     'adFree': adFree,
     'rewardedWatchCount': rewardedWatchCount,
     'adFreeNudgeShown': adFreeNudgeShown,
@@ -1548,6 +1562,9 @@ class MetaDepthState {
       scrollWellUtcDay: (json['scrollWellUtcDay'] as String?) ?? '',
       scrollWellBonusClaims:
           ((json['scrollWellBonusClaims'] as num?)?.toInt() ?? 0).clamp(0, 3),
+      questRerollUtcDay: (json['questRerollUtcDay'] as String?) ?? '',
+      questRerollsToday:
+          ((json['questRerollsToday'] as num?)?.toInt() ?? 0).clamp(0, 2),
       adFree: (json['adFree'] as bool?) ?? false,
       rewardedWatchCount: ((json['rewardedWatchCount'] as num?)?.toInt() ?? 0)
           .clamp(0, 9999),

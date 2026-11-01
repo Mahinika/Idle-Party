@@ -40,6 +40,7 @@ import 'gold_income.dart';
 import 'logic_notices.dart';
 import 'menu_alerts.dart';
 import 'meta_systems.dart';
+import 'mission_board.dart';
 import 'party_name_filter.dart';
 import 'pet_service.dart';
 import 'play_games_bridge.dart';
@@ -1866,6 +1867,62 @@ class GameDirector extends ChangeNotifier {
       case AdWatchResult.unavailable:
         showToast('Ads play on the Android app', life: 2.2);
     }
+  }
+
+  /// MORE → QUESTS: reroll Daily or Side (2/day UTC). F2P watches an ad.
+  Future<void> rerollQuestSlot(int slotIndex) async {
+    if (MissionBoard.questRerollsRemaining(_state) <= 0) {
+      showToast('No quest rerolls left today', life: 2.2);
+      return;
+    }
+    if (slotIndex < 0 || slotIndex >= _state.missions.length) return;
+    final mission = _state.missions[slotIndex];
+    if (!MissionBoard.canRerollMission(mission, slotIndex)) {
+      showToast('Finish or claim this quest first', life: 2.2);
+      return;
+    }
+    if (_state.metaDepth.adFree) {
+      _finishQuestReroll(slotIndex);
+      return;
+    }
+    if (!AdRewarded.realAdsAvailable) {
+      showToast('Ads play on the Android app', life: 2.2);
+      return;
+    }
+    showToast('Loading ad…', life: 1.4);
+    final result = await AdRewarded.showRewarded(
+      placement: AnalyticsEvents.placementQuestReroll,
+    );
+    switch (result) {
+      case AdWatchResult.rewarded:
+        noteCompletedRewardedWatch();
+        _finishQuestReroll(slotIndex);
+      case AdWatchResult.skipped:
+        showToast('Watch the whole ad to reroll this quest', life: 2.2);
+      case AdWatchResult.failed:
+        showToast('Ad not ready — try again in a bit', life: 2.2);
+      case AdWatchResult.unavailable:
+        showToast('Ads play on the Android app', life: 2.2);
+    }
+  }
+
+  void _finishQuestReroll(int slotIndex) {
+    final before = _state.metaDepth.questRerollsToday;
+    final next = MissionBoard.applyQuestReroll(_state, slotIndex);
+    if (identical(next, _state) ||
+        next.metaDepth.questRerollsToday <= before) {
+      return;
+    }
+    _applyUpgrade(next);
+    GameAudio.ui();
+    final left = MissionBoard.questRerollsRemaining(_state);
+    showToast('Quest rerolled · $left left today', life: 2.2);
+    unawaited(
+      AppAnalytics.logEvent(AnalyticsEvents.questReroll, {
+        'slot': slotIndex == MissionBoard.dailySlot ? 'daily' : 'side',
+        'left_today': left,
+      }),
+    );
   }
 
   void claimCodexReward(String tierId) {

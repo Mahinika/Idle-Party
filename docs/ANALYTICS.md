@@ -60,6 +60,8 @@ These were already in the app. Same consent gate.
 | `wipe_revive_ad` | Rewarded revive after wipe. `dungeon_id`, `floor`, `gauntlet` (bool). |
 | `scroll_well_free` | Free Well step. `step` (1). |
 | `scroll_well_ad` | Well ad step. `step` (2 or 3). |
+| `wipe_revive_cinders` | Cinder revive after wipe. `dungeon_id`, `floor`, `gauntlet`, `cost`. |
+| `quest_reroll` | Quest reroll after ad or Ad-free. `slot` (`daily`/`side`), `left_today`. |
 | `offline_gold` | Welcome Back paid gold. `gold`. The funnel mark is once; the event repeats. |
 | `offline_hold` | First Welcome Back with no gold. Once. |
 | `review_prompt` | Rating card. `source` is `card` or `settings`. |

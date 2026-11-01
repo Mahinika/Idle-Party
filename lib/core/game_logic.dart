@@ -1628,6 +1628,23 @@ class GameLogic {
     return true;
   }
 
+  static const wipeReviveCinderCost = 15;
+
+  static bool canWipeReviveWithCinders(GameState state) {
+    if (!canWipeReviveAd(state)) return false;
+    return state.metaDepth.cinders >= wipeReviveCinderCost;
+  }
+
+  static GameState spendCindersForWipeRevive(GameState state) {
+    if (!canWipeReviveWithCinders(state)) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        cinders: state.metaDepth.cinders - wipeReviveCinderCost,
+      ),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
   /// Undo the streak bump from the last [notePartyWipe] so a revive is not a wipe.
   static GameState revertLiveWipeStreak(GameState state) {
     final count = state.wipeStreakCount;

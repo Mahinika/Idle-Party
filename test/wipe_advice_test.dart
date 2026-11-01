@@ -24,6 +24,21 @@ void main() {
       WipeAdvice.scanLine(atkLack()),
       'Pack 70% left · 3000 dealt · 400 taken',
     );
+    expect(
+      WipeAdvice.scanLine(
+        const WipeFightSnapshot(
+          waveHp: 1000,
+          remainingHp: 500,
+          damageDealt: 100,
+          damageTaken: 200,
+          partyMaxHp: 400,
+          elapsedSec: 5,
+          meleeTaken: 150,
+          rangedOrSpellTaken: 50,
+        ),
+      ),
+      'Pack 50% left · 100 dealt · Taken: 75% melee · 25% ranged/tells',
+    );
   });
 
   test('GOLD tip after two wipes; floor gap on first wipe', () {

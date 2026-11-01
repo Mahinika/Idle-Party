@@ -82,12 +82,32 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.9';
+  static const String currentVersion = '1.13.10';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: currentVersion,
+      date: 'Nov 1, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. Wipes explain damage sources; revive with Cinders or reroll quests.',
+      added: <String>[
+        'PARTY WIPED · Why? shows melee vs ranged/tell damage taken on that floor.',
+        'REVIVE · 15 CINDERS on wipe (same rules as the ad revive). Ad-free can revive without ads when you have Cinders.',
+        'MORE · QUESTS: REROLL on Daily and Side (2 per UTC day). F2P watches an ad; Ad-free rerolls without ads.',
+      ],
+      changed: <String>[
+        'QUESTS intro says progress survives wipes.',
+        'Hub SCROLLS · THE WELL still grants 1 free ticket and 2 ad steps each UTC day.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.13.9',
       date: 'Nov 1, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. SCROLLS now has a daily Well for tickets.',

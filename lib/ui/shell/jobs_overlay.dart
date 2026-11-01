@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
+import '../../core/mission_board.dart';
 import '../../models/mission.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -60,7 +61,7 @@ class JobsOverlay extends StatelessWidget {
         if (claimable == 0) ...[
           const SizedBox(height: 4),
           Text(
-            'Clear floors to fill these. Claim when a bar is full.',
+            'Clear floors to fill these. Progress survives wipes.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         ],
@@ -77,12 +78,17 @@ class JobsOverlay extends StatelessWidget {
         ],
         const SizedBox(height: 8),
         for (var i = 0; i < state.missions.length; i++)
-          _questCard(state.missions[i], i),
+          _questCard(director, state.missions[i], i),
       ],
     );
   }
 
-  Widget _questCard(Mission mission, int index) {
+  Widget _questCard(GameDirector director, Mission mission, int index) {
+    final rerollsLeft = MissionBoard.questRerollsRemaining(director.state);
+    final showReroll =
+        (index == MissionBoard.dailySlot || index == MissionBoard.sideSlot) &&
+        MissionBoard.canRerollMission(mission, index) &&
+        rerollsLeft > 0;
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
@@ -174,6 +180,22 @@ class JobsOverlay extends StatelessWidget {
                     ? chainClaimLabel()
                     : 'CLAIM',
                 onPressed: () => director.claimMission(mission.id),
+                style: GameButtonStyle.grey,
+                dense: true,
+                expanded: false,
+              ),
+            ),
+          ],
+          if (showReroll) ...[
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerRight,
+              child: GameButton(
+                label: director.state.metaDepth.adFree
+                    ? 'REROLL ($rerollsLeft left)'
+                    : 'REROLL · WATCH AD',
+                tip: 'New Daily or Side goal · $rerollsLeft left today UTC',
+                onPressed: () => director.rerollQuestSlot(index),
                 style: GameButtonStyle.grey,
                 dense: true,
                 expanded: false,

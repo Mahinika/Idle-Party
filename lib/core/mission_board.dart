@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../models/mission.dart';
+import '../models/meta_depth.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'logic_notices.dart';
@@ -793,6 +794,67 @@ abstract final class MissionBoard {
         dailyQuestDate: nextDailyDate,
         questWeekKey: nextWeekKey,
       ),
+      lastUpdated: clock,
+    );
+  }
+
+  static const questRerollsPerUtcDay = 2;
+
+  static MetaDepthState rollQuestRerollDay(MetaDepthState md, {DateTime? now}) {
+    final day = MetaSystems.dailyDateKey((now ?? DateTime.now()).toUtc());
+    if (md.questRerollUtcDay == day) return md;
+    return md.copyWith(questRerollUtcDay: day, questRerollsToday: 0);
+  }
+
+  static int questRerollsRemaining(GameState state, {DateTime? now}) {
+    final md = rollQuestRerollDay(state.metaDepth, now: now);
+    return (questRerollsPerUtcDay - md.questRerollsToday)
+        .clamp(0, questRerollsPerUtcDay)
+        .toInt();
+  }
+
+  static bool canRerollMission(Mission mission, int slotIndex) {
+    if (slotIndex != dailySlot && slotIndex != sideSlot) return false;
+    if (mission.claimed || mission.canClaim) return false;
+    return true;
+  }
+
+  /// Reroll Daily or Side quest. Consumes one of today's reroll charges.
+  static GameState applyQuestReroll(
+    GameState state,
+    int slotIndex, {
+    DateTime? now,
+  }) {
+    final clock = (now ?? DateTime.now()).toUtc();
+    state = ensureDailyQuest(state, now: clock);
+    if (slotIndex < 0 || slotIndex >= state.missions.length) {
+      return state;
+    }
+    final mission = state.missions[slotIndex];
+    if (!canRerollMission(mission, slotIndex)) return state;
+    var md = rollQuestRerollDay(state.metaDepth, now: clock);
+    if (questRerollsPerUtcDay - md.questRerollsToday <= 0) return state;
+
+    final missions = List<Mission>.from(state.missions);
+    if (slotIndex == dailySlot) {
+      missions[slotIndex] = createDailyMission(
+        ascensionLevel: state.ascensionLevel,
+        highestDungeonCleared: state.highestDungeonCleared,
+        highestFloorCleared: state.highestFloorCleared,
+        hardmodeLevel: state.hardmodeLevel,
+        endgame: GameLogic.endgameUnlocked(state),
+      );
+    } else {
+      missions[slotIndex] = rollReplacementMission(
+        state,
+        avoid: mission.type,
+        slot: sideSlot,
+      );
+    }
+    md = md.copyWith(questRerollsToday: md.questRerollsToday + 1);
+    return state.copyWith(
+      missions: missions,
+      metaDepth: md,
       lastUpdated: clock,
     );
   }
