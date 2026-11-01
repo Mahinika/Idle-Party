@@ -620,6 +620,10 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(_state.copyWith(autoEquipUpgrades: enabled));
   }
 
+  void setAutoCaveOnLeave(bool enabled) {
+    _applyUpgrade(_state.copyWith(autoCaveOnLeave: enabled));
+  }
+
   /// Wear budget upgrades without rebuilding the floor.
   void _maybeAutoEquip() {
     if (!_state.autoEquipUpgrades ||

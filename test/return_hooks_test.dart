@@ -83,7 +83,9 @@ void main() {
   });
 
   test('14 days is one chest, 2 days is none, claim pays once', () {
-    final base = GameLogic.createInitialState(now: DateTime.utc(2026, 10, 1));
+    final base = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 10, 1),
+    ).copyWith(autoCaveOnLeave: false);
     expect(
       ComebackChest.noteAbsence(base, 2 * 86400).metaDepth.comebackTier,
       0,

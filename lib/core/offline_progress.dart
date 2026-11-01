@@ -53,6 +53,29 @@ abstract final class OfflineProgress {
         : min(away, GoldIncome.hubChestCapSecFor(state));
   }
 
+  /// Last cave for a hub absence. Already-in-cave saves stay put.
+  /// Floor progress is kept. A KEY dial on the hub does not start a key.
+  static GameState _awayFightState(GameState state) {
+    if (state.inDungeon || !state.autoCaveOnLeave) return state;
+    final id = state.dungeonId.trim().isEmpty
+        ? GameLogic.recommendedDungeonId(state)
+        : state.dungeonId;
+    final keepFloor = state.highestFloorCleared;
+    final entered = GameLogic.enterDungeon(
+      state.copyWith(hardmodeLevel: 0),
+      dungeonId: id,
+    );
+    if (!entered.inDungeon) return state;
+    if (entered.highestFloorCleared >= keepFloor) return entered;
+    var next = entered.copyWith(highestFloorCleared: keepFloor);
+    final dest = max(1, keepFloor);
+    if (next.currentRoom.floorNumber != dest) {
+      final traveled = GameLogic.travelToFloor(next, dest);
+      if (traveled.inDungeon) next = traveled;
+    }
+    return next;
+  }
+
   /// Result of crediting AFK time on boot / resume.
   /// Same credit as [applyOfflineProgress], but the dungeon replay runs in
   /// slices with the frame handed back between them — boot stays paintable
@@ -61,12 +84,14 @@ abstract final class OfflineProgress {
     GameState state,
     Duration elapsed,
   ) async {
+    final prepared = _awayFightState(state);
+    final autoEntered = !state.inDungeon && prepared.inDungeon;
     final away = elapsed.inSeconds;
-    final seconds = creditedAwaySec(state, away);
-    if (seconds == 0 || !state.inDungeon) {
+    final seconds = creditedAwaySec(prepared, away);
+    if (seconds == 0 || !prepared.inDungeon) {
       return applyOfflineProgress(state, elapsed);
     }
-    final timed = GameLogic.advanceKeystoneTimer(state, seconds * 1000);
+    final timed = GameLogic.advanceKeystoneTimer(prepared, seconds * 1000);
     final sim = OfflineSim(timed, seconds);
     while (!sim.done) {
       sim.runSlice(OfflineSim.sliceSteps);
@@ -84,6 +109,7 @@ abstract final class OfflineProgress {
       stoppedOnWipe: sim.stoppedOnWipe,
       farmedSafeFloor: sim.farmedSafeFloor,
       wasInDungeon: true,
+      autoEnteredCave: autoEntered,
       awayGoldMultiplied: _restMultipliedGold(state, raw, boosted),
     );
   }
@@ -108,17 +134,21 @@ abstract final class OfflineProgress {
         wasInDungeon: state.inDungeon,
       );
     }
-    final seconds = creditedAwaySec(state, away);
-    final hubCap = state.inDungeon ? 0 : GoldIncome.hubChestCapSecFor(state);
+    final prepared = _awayFightState(state);
+    final autoEntered = !state.inDungeon && prepared.inDungeon;
+    final seconds = creditedAwaySec(prepared, away);
+    final hubCap = prepared.inDungeon
+        ? 0
+        : GoldIncome.hubChestCapSecFor(state);
 
     var roomsCleared = 0;
     var kills = 0;
     var stoppedOnWipe = false;
     var farmedSafeFloor = false;
     late GameState progressed;
-    if (state.inDungeon) {
+    if (prepared.inDungeon) {
       // Idle-friendly keystone: AFK time counts on the timer.
-      final timed = GameLogic.advanceKeystoneTimer(state, seconds * 1000);
+      final timed = GameLogic.advanceKeystoneTimer(prepared, seconds * 1000);
       final sim = simulateSpatialOffline(timed, seconds);
       progressed = sim.state;
       roomsCleared = sim.roomsCleared;
@@ -140,7 +170,8 @@ abstract final class OfflineProgress {
       kills: kills,
       stoppedOnWipe: stoppedOnWipe,
       farmedSafeFloor: farmedSafeFloor,
-      wasInDungeon: state.inDungeon,
+      wasInDungeon: prepared.inDungeon,
+      autoEnteredCave: autoEntered,
       awayGoldMultiplied: _restMultipliedGold(state, progressed, boosted),
     );
   }
@@ -170,11 +201,17 @@ abstract final class OfflineProgress {
     bool stoppedOnWipe = false,
     bool farmedSafeFloor = false,
     required bool wasInDungeon,
+    bool autoEnteredCave = false,
     bool awayGoldMultiplied = false,
   }) {
     final awayForChest = secondsAway > 0 ? secondsAway : seconds;
     final noted = ComebackChest.noteAbsence(progressed, awayForChest);
-    final next = noted.copyWith(
+    // Entering the last cave clears the hub KEY dial so the absence is not
+    // a keystone. Put the dial back; the next manual enter starts the key.
+    final keptDial = autoEnteredCave
+        ? noted.copyWith(hardmodeLevel: before.hardmodeLevel)
+        : noted;
+    final next = keptDial.copyWith(
       offlineSecondsRecovered: noted.offlineSecondsRecovered + seconds,
       lastUpdated: DateTime.now(),
     );
@@ -190,6 +227,8 @@ abstract final class OfflineProgress {
       bestDrop: _bestNewGearName(before, next),
       stoppedOnWipe: stoppedOnWipe,
       farmedSafeFloor: farmedSafeFloor,
+      wasInDungeon: wasInDungeon,
+      autoEnteredCave: autoEnteredCave,
       highestFloorDelta: next.highestFloorCleared - before.highestFloorCleared,
       bossDelta: next.bossVictories - before.bossVictories,
       levelsGained: _partyLevelSum(next) - _partyLevelSum(before),
@@ -198,7 +237,6 @@ abstract final class OfflineProgress {
         999,
       ),
       rareFinds: (_rareGearCount(next) - _rareGearCount(before)).clamp(0, 999),
-      wasInDungeon: wasInDungeon,
       awayGoldMultiplied: awayGoldMultiplied,
     );
   }

@@ -259,7 +259,9 @@ void main() {
 
   test('welcome back offers a watch only after a boss and unpaid gold', () {
     final now = DateTime.utc(2026, 8, 21, 12);
-    final fresh = GameLogic.createInitialState(now: now);
+    final fresh = GameLogic.createInitialState(
+      now: now,
+    ).copyWith(autoCaveOnLeave: false);
     final early = OfflineProgress.applyOfflineProgress(
       fresh,
       const Duration(hours: 1),
