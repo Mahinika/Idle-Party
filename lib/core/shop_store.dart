@@ -12,6 +12,10 @@ abstract final class ShopStore {
   static String? storePriceLabel(String productId) =>
       impl.storePriceLabel(productId);
 
+  /// Play amount and ISO currency, or null if that SKU is not loaded.
+  static ({double value, String currency})? storePrice(String productId) =>
+      impl.storePrice(productId);
+
   /// True when Play returned this product. False while the catalog is still
   /// loading, or when this build cannot ask Play.
   static bool storeLists(String productId) => impl.storeLists(productId);

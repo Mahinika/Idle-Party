@@ -28,9 +28,10 @@ Outside the EU/EEA, Google may allow collection without a form. Web, Flutter
 tests, and a build with no `google-services.json` send nothing.
 
 No Idle Party user id is attached. Events do not include the save file.
-`store_purchase` carries `product_id` only. Purchase amount and currency
-come from the automatic `in_app_purchase` event after Google Play is linked
-in the Firebase console.
+`store_purchase` carries `product_id`, plus `value` and `currency` when Play
+has listed that pack. That is the funnel price. The automatic
+`in_app_purchase` event, after Google Play is linked in the Firebase console,
+is the Monetization row. Do not add those two amounts together.
 
 ## Event plan
 
@@ -54,7 +55,7 @@ of the chain has an install day.
 | Ad offered | `welcome_back_ad_offer` | The watch button is on that card. Hidden before the first boss, when gold is already ×3, and for ad-free or Forever Rest. |
 | Ad watched | `welcome_back_ad` | The watch finished and gold was granted. `gold` is the extra amount. |
 | SHOP viewed | `store_view` | Each time SHOP is opened. |
-| Purchase | `store_purchase` | A new Play grant. `product_id`. Restores are not purchases. |
+| Purchase | `store_purchase` | A new Play grant. `product_id`, plus `value` and `currency` when Play has listed that pack. Restores are not purchases. |
 | Ascend | `ascend` | `from_al`, `to_al`. |
 | Session length | `session_length` | App goes to the background after at least 15 seconds in the foreground. `seconds` is that stint. |
 

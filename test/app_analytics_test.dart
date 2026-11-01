@@ -121,4 +121,23 @@ void main() {
       AppAnalytics.debugSink = null;
     }
   });
+
+  test('store purchase keeps the Play price only with a currency', () async {
+    final hits = <Map<String, Object>?>[];
+    AppAnalytics.debugSink = (_, params) => hits.add(params);
+    try {
+      await AppAnalytics.storePurchase('ad_free', value: 2.99, currency: 'sek');
+      await AppAnalytics.storePurchase('long_away', value: 4, currency: 'EU');
+      await AppAnalytics.storePurchase('supporter');
+      expect(hits[0], {
+        'product_id': 'ad_free',
+        'value': 2.99,
+        'currency': 'SEK',
+      });
+      expect(hits[1], {'product_id': 'long_away'});
+      expect(hits[2], {'product_id': 'supporter'});
+    } finally {
+      AppAnalytics.debugSink = null;
+    }
+  });
 }

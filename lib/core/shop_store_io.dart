@@ -30,6 +30,14 @@ final Map<String, Future<void>> _settleTails = {};
 
 String? storePriceLabel(String productId) => _products[productId]?.price;
 
+({double value, String currency})? storePrice(String productId) {
+  final details = _products[productId];
+  if (details == null) return null;
+  final currency = details.currencyCode.trim().toUpperCase();
+  if (currency.length != 3) return null;
+  return (value: details.rawPrice, currency: currency);
+}
+
 bool storeLists(String productId) => _products.containsKey(productId);
 
 bool get _platformOk {
@@ -168,9 +176,9 @@ Future<void> _handlePurchases(
   for (final purchase in purchases) {
     final key = _settleKey(purchase);
     final prev = _settleTails[key] ?? Future<void>.value();
-    final next = prev.catchError((Object _) {}).then(
-      (_) => _settlePurchase(purchase, fromPastQuery: fromPastQuery),
-    );
+    final next = prev
+        .catchError((Object _) {})
+        .then((_) => _settlePurchase(purchase, fromPastQuery: fromPastQuery));
     _settleTails[key] = next;
     await next;
   }

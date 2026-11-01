@@ -3,6 +3,8 @@ bool productsReady = false;
 
 String? storePriceLabel(String productId) => null;
 
+({double value, String currency})? storePrice(String productId) => null;
+
 bool storeLists(String productId) => false;
 
 Future<void> warmup({

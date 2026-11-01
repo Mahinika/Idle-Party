@@ -133,8 +133,22 @@ abstract final class AppAnalytics {
       logEvent(AnalyticsEvents.storePurchaseCancel, {'product_id': productId});
 
   /// A new Play purchase granted. Restores are not purchases.
-  static Future<void> storePurchase(String productId) =>
-      logEvent('store_purchase', {'product_id': productId});
+  ///
+  /// [value] and [currency] come from Play when that SKU is loaded. A missing
+  /// price omits both, so the event is not a second `in_app_purchase`.
+  static Future<void> storePurchase(
+    String productId, {
+    double? value,
+    String? currency,
+  }) {
+    final params = <String, Object>{'product_id': productId};
+    final code = currency?.trim().toUpperCase();
+    if (value != null && code != null && code.length == 3) {
+      params['value'] = value;
+      params['currency'] = code;
+    }
+    return logEvent('store_purchase', params);
+  }
 
   static Future<void> notifyOpen({required String channel}) =>
       logEvent(AnalyticsEvents.notifyOpen, {'channel': channel});

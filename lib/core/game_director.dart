@@ -1563,10 +1563,14 @@ class GameDirector extends ChangeNotifier {
 
   void buyPetShipmentBonus() {
     if (!PetErrandStock.canBuyShipmentBonus(_state)) {
-      if (_state.metaDepth.petShipmentBonus >= PetErrandStock.maxShipmentBonus) {
+      if (_state.metaDepth.petShipmentBonus >=
+          PetErrandStock.maxShipmentBonus) {
         showToast('Bigger Shipment at cap', life: 2);
       } else {
-        showToast('Need ${PetErrandStock.cinderCostPerBonus} Cinders', life: 2.2);
+        showToast(
+          'Need ${PetErrandStock.cinderCostPerBonus} Cinders',
+          life: 2.2,
+        );
       }
       return;
     }
@@ -1755,7 +1759,14 @@ class GameDirector extends ChangeNotifier {
     if (restored) return true;
     GameAudio.ui();
     showToast('Purchased ${item.name}', life: 2.6);
-    unawaited(AppAnalytics.storePurchase(productId));
+    final price = ShopStore.storePrice(productId);
+    unawaited(
+      AppAnalytics.storePurchase(
+        productId,
+        value: price?.value,
+        currency: price?.currency,
+      ),
+    );
     return true;
   }
 
@@ -1884,9 +1895,7 @@ class GameDirector extends ChangeNotifier {
     GameAudio.ui();
     showToast('Free Ad Ticket · Well 1/3', life: 2.2);
     unawaited(
-      AppAnalytics.logEvent(AnalyticsEvents.scrollWellFree, {
-        'step': 1,
-      }),
+      AppAnalytics.logEvent(AnalyticsEvents.scrollWellFree, {'step': 1}),
     );
   }
 
@@ -1940,9 +1949,7 @@ class GameDirector extends ChangeNotifier {
           GameAudio.ui();
           showToast('Ad Ticket · Well $step/3', life: 2.2);
           unawaited(
-            AppAnalytics.logEvent(AnalyticsEvents.scrollWellAd, {
-              'step': step,
-            }),
+            AppAnalytics.logEvent(AnalyticsEvents.scrollWellAd, {'step': step}),
           );
         } else {
           grantPowerupHour();
@@ -1999,8 +2006,7 @@ class GameDirector extends ChangeNotifier {
   void _finishQuestReroll(int slotIndex) {
     final before = _state.metaDepth.questRerollsToday;
     final next = MissionBoard.applyQuestReroll(_state, slotIndex);
-    if (identical(next, _state) ||
-        next.metaDepth.questRerollsToday <= before) {
+    if (identical(next, _state) || next.metaDepth.questRerollsToday <= before) {
       return;
     }
     _applyUpgrade(next);
