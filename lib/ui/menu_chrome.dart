@@ -567,8 +567,10 @@ abstract final class MenuChrome {
     required String title,
     required Widget content,
     required List<Widget> actions,
+    bool scrollable = false,
   }) {
     return AlertDialog(
+      scrollable: scrollable,
       backgroundColor: sheet,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(

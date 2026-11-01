@@ -126,33 +126,34 @@ abstract final class Keystone {
   }) {
     if (key <= 0) return const <String>[];
     final out = <String>[];
+    void add(String id) {
+      if (id.isEmpty || out.contains(id)) return;
+      out.add(id);
+    }
+
     final weekHash = weeklyKey.hashCode & 0x7fffffff;
     final primary = weeklyModifier.isNotEmpty
         ? weeklyModifier
         : weeklyPool[weekHash % weeklyPool.length];
-    out.add(primary);
+    add(primary);
 
     if (key >= 4) {
-      out.add(weekHash.isEven ? 'fortified' : 'tyrannical');
+      add(weekHash.isEven ? 'fortified' : 'tyrannical');
     }
     if (key >= 7) {
       final secondary = weeklyPool[(weekHash ~/ 7) % weeklyPool.length];
       if (secondary != primary) {
-        out.add(secondary);
+        add(secondary);
       } else {
-        out.add(weeklyPool[(weekHash ~/ 7 + 1) % weeklyPool.length]);
+        add(weeklyPool[(weekHash ~/ 7 + 1) % weeklyPool.length]);
       }
     }
-    if (key >= 10) out.add('no_flask');
-    if (key >= 12) out.add('boss_rush');
-    if (key >= 15 && !out.contains('iron')) out.add('iron');
+    if (key >= 10) add('no_flask');
+    if (key >= 12) add('boss_rush');
+    if (key >= 15) add('iron');
 
-    if (personalBossRush && !out.contains('boss_rush')) {
-      out.add('boss_rush');
-    }
-    if (personalNoFlask && !out.contains('no_flask')) {
-      out.add('no_flask');
-    }
+    if (personalBossRush) add('boss_rush');
+    if (personalNoFlask) add('no_flask');
     return List<String>.unmodifiable(out);
   }
 
@@ -223,8 +224,7 @@ abstract final class Keystone {
   static String riskTier(String affix) {
     final b = blurb(affix).toLowerCase();
     // Glass executes low HP — not a soft week despite fragile packs.
-    if (affix == 'fortune' ||
-        b.contains('more gold')) {
+    if (affix == 'fortune' || b.contains('more gold')) {
       return 'Soft';
     }
     if (affix == 'tyrannical' ||

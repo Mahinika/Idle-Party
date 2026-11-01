@@ -178,6 +178,9 @@ class GameDirector extends ChangeNotifier {
   /// spend the same seconds twice.
   bool _awayCreditInFlight = false;
 
+  /// Away result already painted. The card and funnel still have to run.
+  OfflineProgressResult? _paintedAway;
+
   /// One Welcome Back card watches once. A new absence clears it.
   bool _welcomeBackAdBusy = false;
   bool _welcomeBackAdGranted = false;

@@ -440,4 +440,68 @@ void main() {
     expect(two.state.gold, lessThan(full.state.gold));
     expect(two.headline, startsWith('Gold while away'));
   });
+
+  testWidgets('Check-in stays on screen at 1080x1920 and on a short phone', (
+    tester,
+  ) async {
+    final state = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 8, 8),
+    ).copyWith(bossVictories: 1);
+    final summary = result(gold: 40, essence: 2, seconds: 3600);
+    final withBoss = OfflineProgressResult(
+      state: state,
+      secondsApplied: summary.secondsApplied,
+      goldGained: summary.goldGained,
+      essenceGained: summary.essenceGained,
+      roomsCleared: summary.roomsCleared,
+      highestFloorDelta: summary.highestFloorDelta,
+      bossDelta: summary.bossDelta,
+    );
+    expect(GameLogic.checkInWelcomeLine(state), contains('Check-in 1/7'));
+    final director = GameDirector.preview();
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    Future<void> openAt(Size size) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showOfflineProgressDialog(context, director),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      director.uiFeedback.presentOffline(withBoss);
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final line = find.textContaining('Check-in 1/7');
+      expect(line, findsWidgets);
+      final target = line.first;
+      final scrollable = find.byType(Scrollable);
+      if (scrollable.evaluate().isNotEmpty) {
+        await tester.scrollUntilVisible(
+          target,
+          80,
+          scrollable: scrollable.first,
+        );
+      }
+      await tester.pumpAndSettle();
+      final rect = tester.getRect(target);
+      expect(rect.top, greaterThanOrEqualTo(0));
+      expect(rect.bottom, lessThanOrEqualTo(size.height + 1));
+      await tester.tap(find.text('ENTER DUNGEON'));
+      await tester.pumpAndSettle();
+    }
+
+    // Logical size of a 1080×1920 phone at 3x, then the raw surface.
+    await openAt(const Size(360, 640));
+    await openAt(const Size(1080, 1920));
+  });
 }
