@@ -653,8 +653,8 @@ class DungeonTopHud extends StatelessWidget {
                           selected: FarmIntensity.effectiveMult(state) == mult,
                           expand: true,
                           tip: canPick
-                              ? 'FARM ${mult}× monster packs · ${mult}× gold and XP'
-                              : 'TRY ${mult}× this room · ${state.metaDepth.farmTryUsesLeft} left',
+                              ? 'FARM $mult× monster packs · $mult× gold and XP'
+                              : 'TRY $mult× this room · ${state.metaDepth.farmTryUsesLeft} left',
                           onTap: canPick
                               ? () => director.setFarmIntensity(mult)
                               : () => director.tryFarmIntensity(mult),

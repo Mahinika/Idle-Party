@@ -2180,7 +2180,7 @@ class GameDirector extends ChangeNotifier {
     }
 
     final before = _state;
-    _state = updated;
+    _state = GameLogic.ensureShopHubOffer(updated);
     final delta = DebugPlayLog.stateDelta(before, _state);
     if (delta != null) DebugPlayLog.event('state', delta);
     _syncDevicePrefs();

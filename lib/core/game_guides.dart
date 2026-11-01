@@ -504,6 +504,8 @@ abstract final class GameGuides {
           '• Styles trade damage vs radius — not a second talent tree.\n'
           '• Mastery under BLESSING: claim +12e and a title at Hand 5 (Hand of Embers), '
           'CD 4 (Swift Smash), and 100 smashes (Hundred Blows).\n'
+          '• Spellcraft (MORE → SETTINGS): lifetime ability casts add a small party-wide '
+          'bonus to ability damage.\n'
           '• Upgrades use essence and survive Ascend.',
     ),
     GuideTopic(
@@ -512,6 +514,8 @@ abstract final class GameGuides {
       body:
           'Toggle at the top of the dungeon view (FARM / PUSH).\n\n'
           '• FARM (loop): after clearing, stay on the same floor for more loot/gold.\n'
+          '• On a floor you already cleared, FARM can run 1×, 2×, or 4× packs with '
+          'matching gold and XP (TRY once if a tier is still locked).\n'
           '• PUSH (climb): after clearing, advance to the next floor toward the boss. '
           'PUSH floor clear pays +1 essence, boss +2 — FARM pays 0 essence.\n'
           '• Use Floor −1 / +1 in the floor menu to travel when allowed.',
@@ -542,6 +546,7 @@ abstract final class GameGuides {
           '• Upgrades stay in BAG until you equip them — GEAR badge shows how '
           'many are better; open BAG and tap EQUIP (or equip one by one).\n'
           '• BAG: view and equip stash gear. SELL JUNK sells gold then scraps essence using FILTERS.\n'
+          '• BAG: buy +5 slots with gold (twice) or +10 once with Cinders (kept on Ascend).\n'
           '• Stats: plate wants Strength, leather/mail damage wants Agility, '
           'casters want Intellect and Spell Power. Spirit is mana, not damage. '
           'Secondaries are Crit / Mastery / Haste / Mp5 — new drops keep ≤2 (no Move). '
@@ -801,7 +806,8 @@ abstract final class GameGuides {
       title: 'PETS',
       body:
           'ESSENCE → PETS.\n\n'
-          '• Hatch and level pets with essence (random species and rarity).\n'
+          '• Hatch with essence or EGG · 10 Cinders (same random species and rarity).\n'
+          '• Errands: limited sends per UTC day; Bigger Shipment adds daily cap (Cinders).\n'
           '• Merge two same-species pets of the same rarity into a higher rarity.\n'
           '• Favorite while ACTIVE: +1 AP; find passives (gold/loot/XP) get about '
           '+5% (at least +1 on small bonuses). Mitigate/heal bump too.\n'
@@ -839,6 +845,8 @@ abstract final class GameGuides {
           '• Bounty ladder climbs 100 → 500 → 1000 → 5k → 10k → 25k at endgame '
           '(smaller rungs earlier); top rung repeats.\n'
           '• Claim 3 in a row for a +5e chain bonus.\n'
+          '• REROLL on Daily and Side (2 per UTC day): F2P watches an ad; Ad-free is instant. '
+          'Progress on the slot survives wipes.\n'
           '• MORE · QUESTS (or the badge on MORE) when claims are ready.\n'
           '• Hub CLAIM QUESTS claims ready rewards from the hub hunt line.\n'
           '• The dungeon top CLAIM chip claims all ready quests at once '

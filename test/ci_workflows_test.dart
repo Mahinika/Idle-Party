@@ -30,7 +30,9 @@ void main() {
   });
 
   test('release Play workflow stays a default APK plus AAB', () {
-    final yaml = File('.github/workflows/build-apk.yml').readAsStringSync();
+    final yaml = File('.github/workflows/build-apk.yml')
+        .readAsStringSync()
+        .replaceAll('\r\n', '\n');
     expect(yaml, contains("flutter build appbundle --release"));
     expect(yaml, contains("tags:\n      - 'v*'"));
     expect(yaml, isNot(contains('android-x64')));

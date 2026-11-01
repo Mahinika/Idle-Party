@@ -4,6 +4,7 @@ import '../models/dungeon_mode.dart';
 import '../models/hero.dart';
 import '../models/vfx_quality.dart';
 import '../spatial/spatial_combat.dart';
+import 'farm_intensity.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'meta_systems.dart';
@@ -32,7 +33,7 @@ class OfflineSim {
         state.inWorldBoss && !state.worldBossPractice;
     _world = SpatialCombat.build(
       _current,
-      threatScale: _threatScale,
+      threatScale: _threatScaleFor(_current),
       afkAssist: ticketBoss ? false : _afkAssist,
     );
     _maxSteps = min(
@@ -44,9 +45,11 @@ class OfflineSim {
   /// Steps to run between yields — ~4 ms of work on a mid phone.
   static const int sliceSteps = 400;
 
-  static const double _threatScale = 1.0;
   static const bool _afkAssist = true;
   static const double _dt = 0.12;
+
+  double _threatScaleFor(GameState state) =>
+      GameLogic.overgearThreatScale(state) * FarmIntensity.threatMult(state);
 
   final VfxQuality _preferVfx;
   final int _maxFloors;
@@ -298,7 +301,7 @@ class OfflineSim {
         _current.inWorldBoss && !_current.worldBossPractice;
     _world = SpatialCombat.build(
       _current,
-      threatScale: _threatScale,
+      threatScale: _threatScaleFor(_current),
       afkAssist: ticketBoss ? false : _afkAssist,
     );
   }

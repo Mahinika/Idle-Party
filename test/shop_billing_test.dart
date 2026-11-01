@@ -185,6 +185,10 @@ void main() {
       ShopBilling.grantOnRestore(ShopCatalog.byId['cinder_pouch']!),
       isFalse,
     );
+    expect(
+      ShopBilling.grantOnRestore(ShopCatalog.byId['season_pass_premium']!),
+      isTrue,
+    );
     final bundle = ShopCatalog.byId['perm_scrolls_all']!;
     var state = GameLogic.createInitialState(now: now);
     state = ShopBilling.applyPurchase(state, bundle, now: now);
@@ -194,6 +198,16 @@ void main() {
     )) {
       expect(ShopBilling.isOwned(state, item), isTrue, reason: item.id);
     }
+  });
+
+  test('season pass premium is once and owned', () {
+    var state = GameLogic.createInitialState(now: now);
+    final item = ShopCatalog.byId['season_pass_premium']!;
+    state = ShopBilling.applyPurchase(state, item, now: now);
+    expect(state.metaDepth.paidSeasonPass, isTrue);
+    expect(ShopBilling.isOwned(state, item), isTrue);
+    final again = ShopBilling.applyPurchase(state, item, now: now);
+    expect(identical(again, state), isTrue);
   });
 
   test('cinder pouch grants once per purchase id', () {
@@ -214,7 +228,8 @@ void main() {
       purchaseId: 'GPA.1',
       now: now,
     );
-    expect(state.metaDepth.cinders, 8);
+    expect(state.metaDepth.cinders, 16);
+    expect(state.metaDepth.cinderPouchDoubled, isTrue);
     expect(state.metaDepth.grantedShopPurchaseIds, ['GPA.1']);
     expect(
       ShopBilling.shouldGrantPurchase(
@@ -238,10 +253,10 @@ void main() {
       purchaseId: 'GPA.2',
       now: now,
     );
-    expect(state.metaDepth.cinders, 16);
+    expect(state.metaDepth.cinders, 24);
     expect(state.metaDepth.grantedShopPurchaseIds, ['GPA.1', 'GPA.2']);
     final round = GameLogic.stateFromJson(state.toJson());
-    expect(round.metaDepth.cinders, 16);
+    expect(round.metaDepth.cinders, 24);
     expect(round.metaDepth.grantedShopPurchaseIds, ['GPA.1', 'GPA.2']);
     expect(MetaDepthState.fromJson(const {}).grantedShopPurchaseIds, isEmpty);
     expect(
@@ -257,7 +272,7 @@ void main() {
       state.copyWith(bossVictories: 1),
       now: now,
     );
-    expect(ascended.metaDepth.cinders, 16);
+    expect(ascended.metaDepth.cinders, 24);
     expect(ascended.metaDepth.grantedShopPurchaseIds, ['GPA.1', 'GPA.2']);
   });
 
@@ -319,7 +334,11 @@ void main() {
       expect(find.textContaining('\$'), findsNothing);
       expect(find.text('NOT ON PLAY'), findsNothing);
       expect(find.textContaining('Forever'), findsNothing);
-      expect(find.textContaining('Cinder'), findsNothing);
+      expect(find.text('Cinder pouch'), findsNothing);
+      expect(
+        find.textContaining('Cinders in GEAR'),
+        findsOneWidget,
+      );
       await tester.scrollUntilVisible(
         find.text('RESTORE'),
         160,
@@ -478,7 +497,7 @@ void main() {
         recovered: true,
       );
       expect(pouch, isTrue);
-      expect(director.state.metaDepth.cinders, 8);
+      expect(director.state.metaDepth.cinders, 16);
       expect(director.toast, 'Purchase restored');
       expect(events, ['store_purchase']);
     } finally {

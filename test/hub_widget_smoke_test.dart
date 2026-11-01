@@ -9,6 +9,7 @@ import 'package:idle_party/core/session_telemetry.dart';
 import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/ui/game_button.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
+import 'package:idle_party/core/scroll_well.dart';
 import 'package:idle_party/core/play_games_scores.dart';
 import 'package:idle_party/ui/hub/hub_powerups.dart';
 import 'package:idle_party/ui/hub/hub_ranks.dart';
@@ -281,7 +282,7 @@ void main() {
       ),
     );
 
-    expect(find.bySemanticsLabel('SCROLLS. SCROLLS'), findsOneWidget);
+    expect(find.bySemanticsLabel('SCROLLS. READY'), findsOneWidget);
     expect(find.text('SCROLLS'), findsWidgets);
   });
 
@@ -357,8 +358,15 @@ void main() {
   });
 
   testWidgets('HubPowerupsFab shows ticket count when banked', (tester) async {
-    var state = GameLogic.createInitialState(now: now);
-    state = state.copyWith(metaDepth: state.metaDepth.copyWith(adTickets: 3));
+    final utcNow = DateTime.now().toUtc();
+    var state = GameLogic.createInitialState(now: utcNow);
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        adTickets: 3,
+        scrollWellUtcDay: AdBoost.utcDayKey(utcNow),
+        scrollWellBonusClaims: ScrollWell.bonusSteps,
+      ),
+    );
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(

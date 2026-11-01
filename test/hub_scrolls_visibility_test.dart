@@ -102,9 +102,9 @@ void main() {
     expect(MenuTabs.showScrolls(bossed), isTrue);
     await pumpHub(tester, bossed);
 
-    final scrolls = find.bySemanticsLabel('SCROLLS. SCROLLS');
+    final scrolls = find.bySemanticsLabel('SCROLLS. READY');
     expect(scrolls, findsOneWidget);
-    expect(find.text('Watch an ad for 1 ticket'), findsOneWidget);
+    expect(find.text('Free ticket in SCROLLS'), findsOneWidget);
 
     final rect = tester.getRect(scrolls);
     final hubBottom = 780 - GameTheme.bottomNavHeight;
@@ -118,7 +118,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Scroll of Rest'), findsOneWidget);
     expect(find.text('WATCH AD · +1 TICKET'), findsNothing);
-    expect(find.text('PREVIEW +1 TICKET'), findsOneWidget);
+    expect(find.text('FREE · +1 TICKET'), findsOneWidget);
     expect(overflows, isEmpty);
   });
 
@@ -136,7 +136,7 @@ void main() {
     expect(ascended.bossVictories, 0);
     expect(MenuTabs.showScrolls(ascended), isTrue);
     await pumpHub(tester, ascended);
-    expect(find.bySemanticsLabel('SCROLLS. SCROLLS'), findsOneWidget);
-    expect(find.text('Watch an ad for 1 ticket'), findsOneWidget);
+    expect(find.bySemanticsLabel('SCROLLS. READY'), findsOneWidget);
+    expect(find.text('Free ticket in SCROLLS'), findsOneWidget);
   });
 }

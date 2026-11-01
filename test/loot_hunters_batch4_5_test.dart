@@ -2,10 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/ability_mastery.dart';
 import 'package:idle_party/core/farm_intensity.dart';
 import 'package:idle_party/core/game_logic.dart';
-import 'package:idle_party/core/shop_billing.dart';
-import 'package:idle_party/core/shop_catalog.dart';
 import 'package:idle_party/core/shop_hub_offer.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
+import 'package:idle_party/models/meta_depth.dart';
 
 void main() {
   test('spellcraft level scales with lifetime casts', () {
@@ -44,13 +43,18 @@ void main() {
     expect(ShopHubOffer.showHubBadge(state, now: DateTime.utc(2026, 11, 1)), isTrue);
   });
 
-  test('cinder pouch first buy doubles grant', () {
-    final item = ShopCatalog.byId['cinder_pouch']!;
-    var state = GameLogic.createInitialState();
-    state = ShopBilling.applyPurchase(state, item);
-    expect(state.metaDepth.cinders, 16);
-    expect(state.metaDepth.cinderPouchDoubled, isTrue);
-    final again = ShopBilling.applyPurchase(state, item);
-    expect(again.metaDepth.cinders, 24);
+  test('loot hunters meta fields round-trip json', () {
+    final md = MetaDepthState(
+      farmIntensity: 4,
+      farmTryUsesLeft: 1,
+      shopOfferStartedMs: 1234567890,
+      cinderPouchDoubled: true,
+      paidSeasonPass: true,
+      stashGoldBuys: 2,
+      petShipmentBonus: 1,
+    );
+    final loaded = MetaDepthState.fromJson(md.toJson());
+    expect(loaded.farmIntensity, 4);
+    expect(loaded.paidSeasonPass, isTrue);
   });
 }

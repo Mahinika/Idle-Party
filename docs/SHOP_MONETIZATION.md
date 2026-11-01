@@ -51,7 +51,12 @@ removed the ban on a whale ladder, gacha, and BiS-for-cash.
 | `perm_scroll_atk` (and gold/xp/move/loot/haste/rest) | Non-consumable | $0.99 | Forever that SCROLLS effect | Same % as tickets |
 | `perm_scrolls_all` | Non-consumable | $4.99 | All seven forever scrolls | Cheaper than 7×$0.99 |
 
+| `cinder_pouch` | Consumable | (Play) | 8 Cinders | First Play buy pays **×2** (16 total). Repeat buys grant 8. |
+| `season_pass_premium` | Non-consumable | (Play) | Month-pass bonus | +50% essence and +5 Cinders on each month-pass claim. Free track unchanged. |
+
 Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as tickets.
+
+**In-game (not SHOP tabs):** GEAR → BAG expands with gold or Cinders; ESSENCE → PETS uses essence hatch, Cinder eggs, errands, and Bigger Shipment. Hub **★ on SHOP** for 24h after first boss highlights **Prospector's Bundle** (`starter_boost_6h`) then **Delver's Kit** (`supporter_qol`) when the window is open.
 
 **New SKUs need Play Console create + Activate** before live prices show. Console has the five 2026-09-10 SKUs plus `long_away` (**activated 2026-10-05**, purchase option `long-away`, $4.99, legacy-compatible). SHOP lists the packs Play can charge: `ad_free`, `long_away`, `supporter_qol`. Hour packs stay in the catalog for restore and are not listed. The eight `perm_scroll_*` ids (`perm_scroll_atk` … `perm_scrolls_all`) and `cinder_pouch` are still not in Console. They stay in the catalog so a coupon (`FOREVERSCROLLS`) or a future Play product can grant them. A row for those appears only when Play returns that id. There is no **NOT ON PLAY** button. The row shows Play's price. If Play has not returned one, it says Unavailable and does not invent a price. Sideload does not grant a pack; Play has to acknowledge the purchase. Restore applies non-consumables once (Ad-free tickets, supporter bag slots, Long Away, the one-time starter boost). A finished consumable is not granted again. An unconsumed one — the app died after Play charged and before the grant was saved — is granted once per purchase id, then consumed. Prices can take hours to show on a Play-installed build.
 
