@@ -54,13 +54,13 @@ flowchart LR
 
 ## Hub entry (UX)
 
-- **Floating camera overlay** on the hub World Path (portrait, bottom-trailing
-  of the map, clear of the hunt card / ENTER and the header Settings cog).
-- FAB shows:
-  - Rolled-scroll glyph (`UiGlyph.scroll`) at 48dp.
+- **Row under the cave button** on the hub (portrait). One tap opens the sheet.
+  Hidden until the first boss, same gate as SHOP. The map corner keeps RANKS.
+- The row shows:
+  - Rolled-scroll glyph (`UiGlyph.scroll`).
   - Ticket count badge when tickets > 0.
-  - Short status under the icon: `WATCH` or `N TICKETS`.
-  - Dim when idle; torch-lit when tickets or a buff is active.
+  - Title `SCROLLS` and a short line (`Watch an ad for 1 ticket`, or the ticket / buff state).
+  - Torch edge so it reads on a 360px phone without a second brown primary.
 - Buff icons always stack **above** the FAB (and above FLASK in dungeon): sword
   (ATK), gold coin, tome (XP), boots (walk), chest (loot), wand (haste),
   campfire (rest). Gray when off, full color + remaining time when on.
