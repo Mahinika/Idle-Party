@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/chase_contract.dart';
 import 'package:idle_party/core/funnel_analytics.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
@@ -211,35 +212,67 @@ void main() {
       _afterFirstLoot().copyWith(bossVictories: 1),
       enabled: true,
     );
-    final pings = LocalReminders.plan(opted, now);
-    final prize = pings.where(
-      (p) => p.id == LocalPing.morningId || p.id == LocalPing.eveningId,
+    expect(
+      LocalReminders.appointmentBody(opted).toLowerCase(),
+      contains('one cave'),
     );
-    expect(prize, isNotEmpty);
-    expect(prize.first.body.toLowerCase(), contains('one cave'));
-    expect(prize.first.body.toLowerCase(), isNot(contains('check-in')));
-    expect(prize.first.body.toLowerCase(), isNot(contains('key')));
+    expect(
+      LocalReminders.appointmentBody(opted).toLowerCase(),
+      isNot(contains('check-in')),
+    );
+    expect(
+      LocalReminders.appointmentBody(opted).toLowerCase(),
+      isNot(contains('key')),
+    );
 
     final ready = opted.copyWith(
       metaDepth: opted.metaDepth.copyWith(
         dailyVaultClears: GameLogic.dailyVaultClearTarget,
       ),
     );
-    final readyPing = LocalReminders.plan(ready, now).firstWhere(
-      (p) => p.id == LocalPing.morningId || p.id == LocalPing.eveningId,
+    expect(
+      LocalReminders.appointmentBody(ready).toLowerCase(),
+      contains('before the day ends'),
     );
-    expect(readyPing.body.toLowerCase(), contains('claim'));
-    expect(readyPing.body.toLowerCase(), contains('before the day ends'));
-    expect(readyPing.body.toLowerCase(), contains('essence'));
+    expect(LocalReminders.appointmentBody(ready).toLowerCase(), contains('essence'));
 
     final claimed = opted.copyWith(
       metaDepth: opted.metaDepth.copyWith(dailyVaultClaimed: true),
     );
-    final claimedPing = LocalReminders.plan(claimed, now).firstWhere(
-      (p) => p.id == LocalPing.morningId || p.id == LocalPing.eveningId,
+    expect(LocalReminders.appointmentBody(claimed), contains('Check-in'));
+    expect(
+      LocalReminders.appointmentBody(claimed).toLowerCase(),
+      contains('tomorrow'),
     );
-    expect(claimedPing.body, contains('Check-in'));
-    expect(claimedPing.body.toLowerCase(), contains('tomorrow'));
+
+    for (final sample in [opted, ready, claimed]) {
+      for (final ping in LocalReminders.plan(sample, now)) {
+        if (ping.id == LocalPing.morningId) {
+          expect(ping.body, LocalReminders.morningChaseBody(sample));
+        }
+        if (ping.id == LocalPing.eveningId) {
+          expect(ping.body, LocalReminders.appointmentBody(sample));
+        }
+      }
+    }
+  });
+
+  test('the morning ping names today\'s chase', () {
+    final now = DateTime.utc(2026, 9, 12, 6);
+    final opted = LocalReminders.setOptIn(
+      _afterFirstLoot(inDungeon: true).copyWith(
+        bossVictories: 1,
+        highestFloorCleared: 2,
+      ),
+      enabled: true,
+    );
+    final morning = LocalReminders.plan(opted, now).firstWhere(
+      (p) => p.id == LocalPing.morningId,
+    );
+    final title = ChaseContract.fromState(opted).title;
+    expect(morning.body, 'Today: $title');
+    expect(morning.fireAt.hour, LocalReminders.morningHour);
+    expect(morning.body.toLowerCase(), contains('cave'));
   });
 
   test('a dungeon leave does not promise hub gold', () {

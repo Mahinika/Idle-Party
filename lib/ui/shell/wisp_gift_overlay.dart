@@ -30,6 +30,7 @@ class WispGiftOverlay extends StatelessWidget {
           alignment: const Alignment(0.84, -0.58),
           child: _WispTapTarget(
             minimal: minimal,
+            showTapHint: director.state.metaDepth.wispBossHold,
             onTap: () async {
               director.tapWispGift();
               if (!director.wispPendingChoice) return;
@@ -45,9 +46,14 @@ class WispGiftOverlay extends StatelessWidget {
 }
 
 class _WispTapTarget extends StatefulWidget {
-  const _WispTapTarget({required this.minimal, required this.onTap});
+  const _WispTapTarget({
+    required this.minimal,
+    required this.showTapHint,
+    required this.onTap,
+  });
 
   final bool minimal;
+  final bool showTapHint;
   final VoidCallback onTap;
 
   @override
@@ -119,15 +125,36 @@ class _WispTapTargetState extends State<_WispTapTarget>
                   final glow = widget.minimal ? 0.5 : 0.42 + t * 0.38;
                   return Transform.translate(
                     offset: Offset(0, dy),
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: CustomPaint(
-                        painter: _LanternPainter(
-                          glowStrength: glow,
-                          softGlow: !widget.minimal,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: CustomPaint(
+                            painter: _LanternPainter(
+                              glowStrength: glow,
+                              softGlow: !widget.minimal,
+                            ),
+                          ),
                         ),
-                      ),
+                        if (widget.showTapHint)
+                          Positioned(
+                            top: 46,
+                            left: -28,
+                            width: 104,
+                            child: IgnorePointer(
+                              child: Text(
+                                'Tap for gold',
+                                textAlign: TextAlign.center,
+                                style: GameTheme.pixel(
+                                  size: 8,
+                                  color: GameTheme.torchHot,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   );
                 },

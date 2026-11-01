@@ -80,6 +80,21 @@ abstract final class WispGift {
 
   static bool unlocked(MetaDepthState md) => md.wispUnlocked;
 
+  /// First boss of this install pulls the lantern forward and holds it
+  /// until the player taps it. A lantern they already tapped today stays
+  /// on the normal timer.
+  static MetaDepthState armAfterFirstBoss(MetaDepthState md, {int? nowMs}) {
+    final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    final unlocked = unlockOnFirstEnter(md, nowMs: now);
+    if (unlocked.wispGiftClaimsToday > 0) return unlocked;
+    if (hasPendingChoice(unlocked)) return unlocked;
+    if (!canTapToday(unlocked)) return unlocked;
+    return unlocked.copyWith(
+      wispBossHold: true,
+      wispNextSpawnMs: now,
+    );
+  }
+
   /// First dungeon enter arms the schedule.
   static MetaDepthState unlockOnFirstEnter(MetaDepthState md, {int? nowMs}) {
     if (md.wispUnlocked) return md;
@@ -215,6 +230,7 @@ abstract final class WispGift {
       wispGiftClaimsToday: nextClaims.clamp(0, dailyCap),
       wispPendingWatchGold: watch,
       wispPendingKeepGold: keep,
+      wispBossHold: false,
       wispNextSpawnMs: now + intervalMs,
     );
     return creditGold(state.copyWith(metaDepth: md), keep);
@@ -257,6 +273,9 @@ abstract final class WispGift {
       return null;
     }
     if (!state.metaDepth.wispUnlocked) return null;
+    if (state.metaDepth.wispBossHold) {
+      return 'Gold lantern is in the cave. Tap it.';
+    }
     final clock = now ?? DateTime.now().toUtc();
     if (!canTapToday(state.metaDepth, now: clock)) {
       return 'Gold lantern · 0 left today (UTC).';

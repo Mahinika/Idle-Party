@@ -354,6 +354,7 @@ class MetaDepthState {
     this.wispNextSpawnMs = 0,
     this.wispPendingWatchGold = 0,
     this.wispPendingKeepGold = 0,
+    this.wispBossHold = false,
     this.shopStarterClaimed = false,
     this.shopBagBonusSlots = 0,
     this.shopPermScrolls = 0,
@@ -734,6 +735,9 @@ class MetaDepthState {
   /// KEEP gold already granted when [wispPendingWatchGold] was set (UI copy).
   final int wispPendingKeepGold;
 
+  /// First boss of this install: the cave lantern stays up until it is tapped.
+  final bool wispBossHold;
+
   /// One-time starter_boost_6h claimed. Survives Ascend.
   final bool shopStarterClaimed;
 
@@ -997,6 +1001,7 @@ class MetaDepthState {
     int? wispNextSpawnMs,
     int? wispPendingWatchGold,
     int? wispPendingKeepGold,
+    bool? wispBossHold,
     bool? shopStarterClaimed,
     int? shopBagBonusSlots,
     int? shopPermScrolls,
@@ -1198,6 +1203,7 @@ class MetaDepthState {
       wispNextSpawnMs: wispNextSpawnMs ?? this.wispNextSpawnMs,
       wispPendingWatchGold: wispPendingWatchGold ?? this.wispPendingWatchGold,
       wispPendingKeepGold: wispPendingKeepGold ?? this.wispPendingKeepGold,
+      wispBossHold: wispBossHold ?? this.wispBossHold,
       shopStarterClaimed: shopStarterClaimed ?? this.shopStarterClaimed,
       shopBagBonusSlots: shopBagBonusSlots ?? this.shopBagBonusSlots,
       shopPermScrolls: shopPermScrolls ?? this.shopPermScrolls,
@@ -1391,6 +1397,7 @@ class MetaDepthState {
     'wispNextSpawnMs': wispNextSpawnMs,
     'wispPendingWatchGold': wispPendingWatchGold,
     'wispPendingKeepGold': wispPendingKeepGold,
+    'wispBossHold': wispBossHold,
     'shopStarterClaimed': shopStarterClaimed,
     'shopBagBonusSlots': shopBagBonusSlots,
     'shopPermScrolls': shopPermScrolls,
@@ -1674,6 +1681,7 @@ class MetaDepthState {
           ),
       wispPendingKeepGold: ((json['wispPendingKeepGold'] as num?)?.toInt() ?? 0)
           .clamp(0, 999999999),
+      wispBossHold: (json['wispBossHold'] as bool?) ?? false,
       shopStarterClaimed: (json['shopStarterClaimed'] as bool?) ?? false,
       shopBagBonusSlots: ((json['shopBagBonusSlots'] as num?)?.toInt() ?? 0)
           .clamp(0, 20),

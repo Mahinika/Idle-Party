@@ -333,7 +333,13 @@ extension GameDirectorCombatLoop on GameDirector {
           );
         }
         if (wasBoss) {
-          _applyFunnelTick(FunnelAnalytics.onFirstBoss(_state), persist: false);
+          final bossTick = FunnelAnalytics.onFirstBoss(_state);
+          _applyFunnelTick(bossTick, persist: false);
+          if (bossTick.events.isNotEmpty) {
+            _state = _state.copyWith(
+              metaDepth: WispGift.armAfterFirstBoss(_state.metaDepth),
+            );
+          }
         }
         // Floor gold / XP / drops stay in the bottom log. Toasts are unlocks.
         final leveledHeroes = <int>[];

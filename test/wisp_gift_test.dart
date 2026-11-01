@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/wisp_gift.dart';
 import 'package:idle_party/models/dungeon_room.dart';
@@ -91,6 +92,60 @@ void main() {
     expect(md.wispUnlocked, isFalse);
     expect(md.wispGiftClaimsToday, 0);
     expect(md.wispPendingWatchGold, 0);
+    expect(md.wispBossHold, isFalse);
+  });
+
+  test('first boss holds the lantern until the tap', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final now = 1_700_000_000_000;
+    var state = GameLogic.createInitialState();
+    state = state.copyWith(
+      inDungeon: true,
+      metaDepth: WispGift.armAfterFirstBoss(state.metaDepth, nowMs: now),
+    );
+    expect(state.metaDepth.wispBossHold, isTrue);
+    expect(state.metaDepth.wispUnlocked, isTrue);
+    expect(state.metaDepth.wispNextSpawnMs, now);
+    expect(
+      WispGift.wipeNextLanternLine(
+        state,
+        now: DateTime.fromMillisecondsSinceEpoch(now, isUtc: true),
+      ),
+      'Gold lantern is in the cave. Tap it.',
+    );
+
+    final director = GameDirector.preview(initialState: state);
+    await director.boot();
+    if (!director.state.inDungeon) {
+      director.enterDungeon();
+    }
+    expect(director.state.metaDepth.wispBossHold, isTrue);
+    director.tickWisp(deltaMs: 20000);
+    expect(director.isWispVisible, isTrue);
+    director.tickWisp(deltaMs: 60000);
+    expect(director.isWispVisible, isTrue);
+
+    director.tapWispGift();
+    expect(director.state.metaDepth.wispBossHold, isFalse);
+    expect(director.isWispVisible, isFalse);
+  });
+
+  test('a lantern already tapped today is not held after the boss', () {
+    final now = 1_700_000_000_000;
+    var state = GameLogic.createInitialState();
+    state = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        wispUnlocked: true,
+        wispGiftUtcDay: WispGift.utcDayKey(
+          DateTime.fromMillisecondsSinceEpoch(now, isUtc: true),
+        ),
+        wispGiftClaimsToday: 1,
+        wispNextSpawnMs: now + 600000,
+      ),
+    );
+    final armed = WispGift.armAfterFirstBoss(state.metaDepth, nowMs: now);
+    expect(armed.wispBossHold, isFalse);
+    expect(armed.wispNextSpawnMs, now + 600000);
   });
 
   test('watch button label is gold only', () {

@@ -85,6 +85,17 @@ extension GameDirectorPlatform on GameDirector {
     if (!_state.inDungeon) return;
     final schedule = _state.metaDepth;
     if (_wispChoiceOpen) return;
+    // First boss: stay on screen until the tap. The 10s window is too easy
+    // to miss in the middle of the next floor.
+    if (schedule.wispBossHold) {
+      if (_wispVisibleRemainingMs <= 0) {
+        _wispSpawnArmed = true;
+        _wispTappedThisWindow = false;
+        _wispVisibleRemainingMs = WispGift.visibleMs;
+        _directorNotify();
+      }
+      return;
+    }
     if (_wispVisibleRemainingMs > 0) {
       if (!_wispMenuPaused) {
         final next = _wispVisibleRemainingMs - deltaMs;

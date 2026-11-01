@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'chase_contract.dart';
 import 'funnel_analytics.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
@@ -55,7 +56,7 @@ abstract final class LocalReminders {
   static String get optInBody =>
       'A quiet chest line stays up while hub gold fills, and goes away when you open the game. '
       'Gold fills for ${GoldIncome.hubChestCapHours} hours, then stops. '
-      'At most a couple of pings a day: when the chest is full, and in the morning or evening when a prize is waiting. '
+      'At most a couple of pings a day: when the chest is full, in the morning for today\'s job, or in the evening when a prize is waiting. '
       'When the last cave keeps fighting while you are away, one ping lands '
       'near the ${OfflineProgress.dungeonAwayBaseSec ~/ 3600}h cap. '
       'Never between 10pm and 8am your time. Turn off anytime in SETTINGS.';
@@ -107,6 +108,13 @@ abstract final class LocalReminders {
       milestoneReached(state) ||
       state.metaDepth.notifyPrompted ||
       state.metaDepth.notifyOptIn;
+
+  /// Morning ping names the same job the hub TODAY card shows.
+  static String morningChaseBody(GameState state) {
+    final title = ChaseContract.fromState(state).title.trim();
+    if (title.isEmpty) return appointmentBody(state);
+    return 'Today: $title';
+  }
 
   static String appointmentBody(GameState state) {
     if (!GameLogic.showDailyChase(state)) return caveBodyNew;
@@ -195,19 +203,21 @@ abstract final class LocalReminders {
         rank: 1,
       ));
     }
-    final prize = appointmentBody(state);
     for (final slot in <(int, int)>[
       (morningHour, LocalPing.morningId),
       (eveningHour, LocalPing.eveningId),
     ]) {
       final at = nextClock(now, slot.$1);
       if (at.difference(now) < slotLead) continue;
+      final body = slot.$2 == LocalPing.morningId
+          ? morningChaseBody(state)
+          : appointmentBody(state);
       candidates.add((
         ping: LocalPing(
           id: slot.$2,
           fireAt: at,
           title: title,
-          body: prize,
+          body: body,
         ),
         rank: 2,
       ));

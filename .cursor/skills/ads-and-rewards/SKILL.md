@@ -41,6 +41,9 @@ follow `save-migrate`.
   Spot stays `Alignment(0.84, -0.58)`. New size or spot is still a big look
   change — show a before and after on the A56 first (`20-how-we-work`).
 - **Where the WISP shows:** dungeon only (never hub). Ad runs where tapped.
+  The first boss of an install pulls the next lantern to now and holds it
+  (`wispBossHold`) until that tap, with the line "Tap for gold". Later
+  lanterns stay on the 10 s window.
 - **SCROLLS:** never start an ad mid-fight. Hub FAB shows with SHOP
   (`MenuTabs.showScrolls`). One ad = +1 ticket. Magnitudes do not stack;
   time extends up to 24 h.
