@@ -51,7 +51,7 @@ removed the ban on a whale ladder, gacha, and BiS-for-cash.
 
 Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as tickets.
 
-**New SKUs need Play Console create + Activate** before live prices show. Console has the five 2026-09-10 SKUs plus `long_away` (**activated 2026-10-05**, purchase option `long-away`, $4.99, legacy-compatible). SHOP lists the packs Play can charge: `ad_free`, `long_away`, `supporter_qol`. Hour packs stay in the catalog for restore and are not listed. The eight `perm_scroll_*` ids (`perm_scroll_atk` … `perm_scrolls_all`) and `cinder_pouch` are still not in Console. They stay in the catalog so a coupon (`FOREVERSCROLLS`) or a future Play product can grant them. A row for those appears only when Play returns that id. There is no **NOT ON PLAY** button. Sideload BUY does not grant a pack; Play has to acknowledge the purchase. Restore applies non-consumables once (Ad-free tickets, supporter bag slots, Long Away, the one-time starter boost). A restored consumable is not granted again. Prices can take hours to show on a Play-installed build.
+**New SKUs need Play Console create + Activate** before live prices show. Console has the five 2026-09-10 SKUs plus `long_away` (**activated 2026-10-05**, purchase option `long-away`, $4.99, legacy-compatible). SHOP lists the packs Play can charge: `ad_free`, `long_away`, `supporter_qol`. Hour packs stay in the catalog for restore and are not listed. The eight `perm_scroll_*` ids (`perm_scroll_atk` … `perm_scrolls_all`) and `cinder_pouch` are still not in Console. They stay in the catalog so a coupon (`FOREVERSCROLLS`) or a future Play product can grant them. A row for those appears only when Play returns that id. There is no **NOT ON PLAY** button. The row shows Play's price. If Play has not returned one, it says Unavailable and does not invent a price. Sideload does not grant a pack; Play has to acknowledge the purchase. Restore applies non-consumables once (Ad-free tickets, supporter bag slots, Long Away, the one-time starter boost). A finished consumable is not granted again. An unconsumed one — the app died after Play charged and before the grant was saved — is granted once per purchase id, then consumed. Prices can take hours to show on a Play-installed build.
 
 ## Relation to existing systems
 
@@ -73,11 +73,12 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as t
    cannot finish a real purchase even when the sheet opens.
 5. After activating SKUs, Play catalog can take **hours** to propagate. Clear
    Play Store app cache, fully close Idle Party, reopen SHOP. Ready when prices
-   show local currency (e.g. SEK) instead of catalog `$0.99`.
+   show local currency (e.g. SEK). Until Play returns a price, the row says
+   Unavailable.
 6. Data safety / Privacy already mention IAP — keep Console form honest.
 7. **Price change (2026-09-12):** set `boost_12h` default to **$1.99** (was $1.49)
    so `day_boost_24h` is actually cheaper per hour. Phone SHOP shows Play’s
-   localized price, not the in-app fallback, until Console catches up.
+   localized price. Until Console catches up, the row says Unavailable.
 
 App code path: `ShopStore` → `ShopBilling.applyPurchase` → toast + save.
 SHOP UI: **BUY** / **OWNED** + **RESTORE PURCHASES**.

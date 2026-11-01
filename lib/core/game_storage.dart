@@ -101,7 +101,8 @@ abstract class GameStorage {
 
   Future<GameState?> load();
 
-  Future<void> save(GameState state);
+  /// False when the blob did not land. A thrown error is a failed write too.
+  Future<bool> save(GameState state);
 
   /// True when the active slot has a persisted blob.
   Future<bool> hasSave();
@@ -229,13 +230,14 @@ class SharedPreferencesGameStorage implements GameStorage {
   }
 
   @override
-  Future<void> save(GameState state) async {
+  Future<bool> save(GameState state) async {
     final prefs = await _prefs;
     await _prepare(prefs);
     final raw = jsonEncode(state.toJson());
-    await prefs.setString(_slotKey(_active), raw);
+    final slotOk = await prefs.setString(_slotKey(_active), raw);
     // Older builds still read the single v2 key — keep it as the last played slot.
-    await prefs.setString(_saveKey, raw);
+    final mirrorOk = await prefs.setString(_saveKey, raw);
+    return slotOk && mirrorOk;
   }
 
   @override
@@ -309,8 +311,9 @@ class InMemoryGameStorage implements GameStorage {
   Future<GameState?> loadSlot(int index) async => _slots[_clampSlot(index)];
 
   @override
-  Future<void> save(GameState state) async {
+  Future<bool> save(GameState state) async {
     _slots[_active] = state;
+    return true;
   }
 
   @override

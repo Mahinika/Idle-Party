@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/ad_boost.dart';
+import 'package:idle_party/core/app_analytics.dart';
+import 'package:idle_party/core/build_stamp.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/gear/gear_stash.dart';
 import 'package:idle_party/core/gold_income.dart';
 import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/core/shop_billing.dart';
 import 'package:idle_party/core/shop_catalog.dart';
+import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/ui/shell/shop_dock.dart';
 
@@ -58,15 +62,9 @@ void main() {
     expect(state.metaDepth.adTickets, 5);
   });
 
-  test('day pack beats 12h pack on dollars per Full Boost hour', () {
-    double usd(ShopCatalogItem item) =>
-        double.parse(item.priceLabel.replaceAll(r'$', ''));
-    double perHour(ShopCatalogItem item) => usd(item) / item.boostHours;
-    final mid = ShopCatalog.byId['boost_12h']!;
-    final day = ShopCatalog.byId['day_boost_24h']!;
-    expect(mid.boostHours, 12);
-    expect(day.boostHours, 24);
-    expect(perHour(day), lessThan(perHour(mid)));
+  test('day pack covers a full day and the 12h pack is shorter', () {
+    expect(ShopCatalog.byId['boost_12h']!.boostHours, 12);
+    expect(ShopCatalog.byId['day_boost_24h']!.boostHours, 24);
   });
 
   test('consumable boost packs are marked consumable', () {
@@ -119,13 +117,7 @@ void main() {
     expect(again.metaDepth.shopPermScrolls, state.metaDepth.shopPermScrolls);
   });
 
-  test('forever bundle is cheaper than seven singles and owns all', () {
-    double usd(ShopCatalogItem item) =>
-        double.parse(item.priceLabel.replaceAll(r'$', ''));
-    final singles = ShopCatalog.offered.where(
-      (e) =>
-          e.kind == ShopOfferKind.permScroll && e.permMask != AdBoost.permAll,
-    );
+  test('forever bundle owns all scrolls and stays off the shelf until Play lists it', () {
     expect(ShopCatalog.foreverSingles.length, 7);
     expect(ShopCatalog.foreverBundle.single.id, 'perm_scrolls_all');
     expect(ShopCatalog.timePacks.length, 3); // restore-only, not listed in SHOP
@@ -194,8 +186,6 @@ void main() {
       isFalse,
     );
     final bundle = ShopCatalog.byId['perm_scrolls_all']!;
-    final singleSum = singles.fold<double>(0, (n, e) => n + usd(e));
-    expect(usd(bundle), lessThan(singleSum));
     var state = GameLogic.createInitialState(now: now);
     state = ShopBilling.applyPurchase(state, bundle, now: now);
     expect(state.metaDepth.shopPermScrolls, AdBoost.permAll);
@@ -204,6 +194,71 @@ void main() {
     )) {
       expect(ShopBilling.isOwned(state, item), isTrue, reason: item.id);
     }
+  });
+
+  test('cinder pouch grants once per purchase id', () {
+    var state = GameLogic.createInitialState(now: now);
+    final item = ShopCatalog.byId['cinder_pouch']!;
+    expect(
+      ShopBilling.shouldGrantPurchase(
+        item: item,
+        restored: true,
+        purchaseId: 'GPA.1',
+        alreadyGranted: false,
+      ),
+      isTrue,
+    );
+    state = ShopBilling.applyTrackedPurchase(
+      state,
+      item,
+      purchaseId: 'GPA.1',
+      now: now,
+    );
+    expect(state.metaDepth.cinders, 8);
+    expect(state.metaDepth.grantedShopPurchaseIds, ['GPA.1']);
+    expect(
+      ShopBilling.shouldGrantPurchase(
+        item: item,
+        restored: true,
+        purchaseId: 'GPA.1',
+        alreadyGranted: ShopBilling.alreadyGranted(state, 'GPA.1'),
+      ),
+      isFalse,
+    );
+    final again = ShopBilling.applyTrackedPurchase(
+      state,
+      item,
+      purchaseId: 'GPA.1',
+      now: now,
+    );
+    expect(identical(again, state), isTrue);
+    state = ShopBilling.applyTrackedPurchase(
+      state,
+      item,
+      purchaseId: 'GPA.2',
+      now: now,
+    );
+    expect(state.metaDepth.cinders, 16);
+    expect(state.metaDepth.grantedShopPurchaseIds, ['GPA.1', 'GPA.2']);
+    final round = GameLogic.stateFromJson(state.toJson());
+    expect(round.metaDepth.cinders, 16);
+    expect(round.metaDepth.grantedShopPurchaseIds, ['GPA.1', 'GPA.2']);
+    expect(MetaDepthState.fromJson(const {}).grantedShopPurchaseIds, isEmpty);
+    expect(
+      ShopBilling.shouldGrantPurchase(
+        item: item,
+        restored: true,
+        purchaseId: '',
+        alreadyGranted: false,
+      ),
+      isFalse,
+    );
+    final ascended = GameLogic.ascend(
+      state.copyWith(bossVictories: 1),
+      now: now,
+    );
+    expect(ascended.metaDepth.cinders, 16);
+    expect(ascended.metaDepth.grantedShopPurchaseIds, ['GPA.1', 'GPA.2']);
   });
 
   test('old saves default shopPermScrolls to 0', () {
@@ -218,7 +273,6 @@ void main() {
     final item = ShopCatalog.byId['long_away']!;
     expect(item.oneTime, isTrue);
     expect(item.isConsumable, isFalse);
-    expect(item.priceLabel, '\$4.99');
     state = ShopBilling.applyPurchase(state, item, now: now);
     expect(state.metaDepth.shopLongAway, isTrue);
     expect(ShopBilling.isOwned(state, item), isTrue);
@@ -259,7 +313,10 @@ void main() {
       expect(find.text('Ad-free welcome'), findsOneWidget);
       expect(find.text('Long Away'), findsOneWidget);
       expect(find.text('Supporter pack'), findsOneWidget);
-      expect(find.text('BUY'), findsNWidgets(3));
+      expect(find.text('Unavailable'), findsNWidgets(3));
+      expect(find.text('UNAVAILABLE'), findsNWidgets(3));
+      expect(find.text('BUY'), findsNothing);
+      expect(find.textContaining('\$'), findsNothing);
       expect(find.text('NOT ON PLAY'), findsNothing);
       expect(find.textContaining('Forever'), findsNothing);
       expect(find.textContaining('Cinder'), findsNothing);
@@ -271,7 +328,7 @@ void main() {
       expect(find.text('RESTORE'), findsOneWidget);
       expect(find.text('REDEEM CODE'), findsOneWidget);
 
-      await tester.tap(find.text('BUY').first);
+      await tester.tap(find.text('UNAVAILABLE').first);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(director.state.metaDepth.adFree, isFalse);
@@ -289,4 +346,161 @@ void main() {
       director.dispose();
     }
   });
+
+  test('build stamp hides until a SHA is compiled in', () {
+    expect(BuildStamp.versionLabel('1.13.5'), '1.13.5');
+    expect(
+      BuildStamp.versionLabel('1.13.5', sha: '56b634e1abcd'),
+      '1.13.5 · 56b634e',
+    );
+    expect(BuildStamp.shortShaOf(''), isEmpty);
+  });
+
+  test('past query counts as existing even when Play status is purchased', () {
+    expect(
+      ShopBilling.countsAsExistingPurchase(
+        fromPastQuery: true,
+        statusRestored: false,
+      ),
+      isTrue,
+    );
+    expect(
+      ShopBilling.countsAsExistingPurchase(
+        fromPastQuery: false,
+        statusRestored: true,
+      ),
+      isTrue,
+    );
+    expect(
+      ShopBilling.countsAsExistingPurchase(
+        fromPastQuery: false,
+        statusRestored: false,
+      ),
+      isFalse,
+    );
+  });
+
+  test('a failed save does not keep the grant', () async {
+    final storage = _DenySaveStorage();
+    final director = GameDirector(storage, enableSpatialLoop: false);
+    await director.boot();
+    await director.startNewGame(HeroSpecs.starterUnlocked);
+    expect(director.hasExistingSave, isTrue);
+    final goldBefore = director.state.gold;
+    storage.duringSave = () => director.debugSetGold(director.state.gold + 40);
+
+    final events = <String>[];
+    final previous = AppAnalytics.debugSink;
+    AppAnalytics.debugSink = (name, _) {
+      if (name == 'store_purchase') events.add(name);
+    };
+    try {
+      director.clearToast();
+      final first = await director.debugGrantShopPurchase(
+        'ad_free',
+        purchaseId: 'GPA.fail',
+      );
+      expect(first, isFalse);
+      expect(director.state.metaDepth.adFree, isFalse);
+      expect(director.state.metaDepth.grantedShopPurchaseIds, isEmpty);
+      expect(director.state.gold, greaterThan(goldBefore));
+      expect(director.toast, isNot(contains('Purchased')));
+      expect(events, isEmpty);
+      expect(await storage.load(), isNull);
+
+      final again = await director.debugGrantShopPurchase(
+        'ad_free',
+        purchaseId: 'GPA.fail',
+      );
+      expect(again, isFalse);
+      expect(director.state.metaDepth.adFree, isFalse);
+    } finally {
+      AppAnalytics.debugSink = previous;
+      director.dispose();
+    }
+  });
+
+  test('a thrown save does not keep the grant', () async {
+    final storage = _ThrowSaveStorage();
+    final director = GameDirector(storage, enableSpatialLoop: false);
+    await director.boot();
+    await director.startNewGame(HeroSpecs.starterUnlocked);
+
+    final ok = await director.debugGrantShopPurchase(
+      'cinder_pouch',
+      purchaseId: 'GPA.throw',
+    );
+    expect(ok, isFalse);
+    expect(director.state.metaDepth.cinders, 0);
+    expect(director.state.metaDepth.grantedShopPurchaseIds, isEmpty);
+    director.dispose();
+  });
+
+  test('an existing purchase does not toast or log a buy', () async {
+    final storage = InMemoryGameStorage();
+    final director = GameDirector(storage, enableSpatialLoop: false);
+    await director.boot();
+    await director.startNewGame(HeroSpecs.starterUnlocked);
+
+    final events = <String>[];
+    final previous = AppAnalytics.debugSink;
+    AppAnalytics.debugSink = (name, _) {
+      if (name == 'store_purchase') events.add(name);
+    };
+    try {
+      director.clearToast();
+      final restored = await director.debugGrantShopPurchase(
+        'ad_free',
+        purchaseId: 'GPA.past',
+        restored: true,
+      );
+      expect(restored, isTrue);
+      expect(director.state.metaDepth.adFree, isTrue);
+      expect(director.toast, isNull);
+      expect(events, isEmpty);
+      expect((await storage.load())!.metaDepth.adFree, isTrue);
+
+      director.clearToast();
+      final live = await director.debugGrantShopPurchase(
+        'long_away',
+        purchaseId: 'GPA.live',
+      );
+      expect(live, isTrue);
+      expect(director.state.metaDepth.shopLongAway, isTrue);
+      expect(director.toast, 'Purchased Long Away');
+      expect(events, ['store_purchase']);
+
+      director.clearToast();
+      final pouch = await director.debugGrantShopPurchase(
+        'cinder_pouch',
+        purchaseId: 'GPA.pouch',
+        restored: true,
+        recovered: true,
+      );
+      expect(pouch, isTrue);
+      expect(director.state.metaDepth.cinders, 8);
+      expect(director.toast, 'Purchase restored');
+      expect(events, ['store_purchase']);
+    } finally {
+      AppAnalytics.debugSink = previous;
+      director.dispose();
+    }
+  });
+}
+
+class _DenySaveStorage extends InMemoryGameStorage {
+  void Function()? duringSave;
+
+  @override
+  Future<bool> save(GameState state) async {
+    duringSave?.call();
+    return false;
+  }
+}
+
+class _ThrowSaveStorage extends InMemoryGameStorage {
+  @override
+  Future<bool> save(GameState state) async {
+    throw StateError('disk full');
+  }
 }

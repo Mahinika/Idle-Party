@@ -94,8 +94,17 @@ class _ShopDockState extends State<ShopDock> {
     );
   }
 
-  String _priceLabel(ShopCatalogItem item) =>
-      ShopStore.storePriceLabel(item.id) ?? item.priceLabel;
+  /// Play's localized price. Never the catalog's hardcoded label.
+  String _priceLabel(ShopCatalogItem item) {
+    final live = ShopStore.storePriceLabel(item.id)?.trim();
+    if (live == null || live.isEmpty) return 'Unavailable';
+    return live;
+  }
+
+  bool _priceReady(ShopCatalogItem item) {
+    final live = ShopStore.storePriceLabel(item.id)?.trim();
+    return live != null && live.isNotEmpty;
+  }
 
   Widget _page({
     required String hint,
@@ -123,6 +132,7 @@ class _ShopDockState extends State<ShopDock> {
             item: items[i],
             owned: ShopBilling.isOwned(state, items[i]),
             priceLabel: _priceLabel(items[i]),
+            available: _priceReady(items[i]),
             compact:
                 items[i].kind == ShopOfferKind.permScroll &&
                 items[i].permMask != AdBoost.permAll,
@@ -164,6 +174,7 @@ class _ShopRow extends StatelessWidget {
     required this.item,
     required this.owned,
     required this.priceLabel,
+    required this.available,
     required this.onBuy,
     this.compact = false,
   });
@@ -171,6 +182,7 @@ class _ShopRow extends StatelessWidget {
   final ShopCatalogItem item;
   final bool owned;
   final String priceLabel;
+  final bool available;
   final VoidCallback? onBuy;
   final bool compact;
 
@@ -291,12 +303,20 @@ class _ShopRow extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: GameButton(
-              label: owned ? 'OWNED' : 'BUY',
-              tip: owned ? 'Already on this save' : null,
+              label: owned
+                  ? 'OWNED'
+                  : available
+                  ? 'BUY'
+                  : 'UNAVAILABLE',
+              tip: owned
+                  ? 'Already on this save'
+                  : available
+                  ? null
+                  : 'Google Play has not listed this pack',
               style: GameButtonStyle.grey,
               expanded: false,
               dense: true,
-              onPressed: owned ? null : onBuy,
+              onPressed: owned || !available ? null : onBuy,
             ),
           ),
         ],

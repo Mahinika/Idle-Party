@@ -370,14 +370,14 @@ void main() {
     expect(find.textContaining('UPGRADES'), findsWidgets);
   });
 
-  testWidgets('SHOP catalog includes forever scrolls and a cheaper bundle', (
+  testWidgets('SHOP catalog includes forever scrolls and the bundle', (
     tester,
   ) async {
     expect(
       ShopCatalog.offered.where((e) => e.kind == ShopOfferKind.permScroll).length,
       8,
     );
-    expect(ShopCatalog.byId['perm_scrolls_all']!.priceLabel, '\$4.99');
+    expect(ShopCatalog.byId['perm_scrolls_all']!.id, 'perm_scrolls_all');
     expect(ShopCatalog.byId['perm_scroll_atk']!.name, 'Forever Scroll of Damage');
   });
 

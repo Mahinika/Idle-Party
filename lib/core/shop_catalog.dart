@@ -30,7 +30,6 @@ class ShopCatalogItem {
     required this.id,
     required this.name,
     required this.description,
-    required this.priceLabel,
     required this.kind,
     this.boostHours = 0,
     this.oneTime = false,
@@ -43,9 +42,6 @@ class ShopCatalogItem {
   final String id;
   final String name;
   final String description;
-
-  /// Fallback price label when the store has not returned localized price yet.
-  final String priceLabel;
   final ShopOfferKind kind;
 
   /// Hours of Full Boost granted (both ATK + gold timers).
@@ -89,7 +85,6 @@ abstract final class ShopCatalog {
       name: 'Forever Scroll of Damage',
       description:
           'Always on: +${AdBoost.attackPercent}% ATK. Same as the SCROLLS ticket, forever.',
-      priceLabel: '\$0.99',
       kind: ShopOfferKind.permScroll,
       oneTime: true,
       permMask: AdBoost.permAtk,
@@ -99,7 +94,6 @@ abstract final class ShopCatalog {
       name: 'Forever Scroll of Gold',
       description:
           'Always on: ×${AdBoost.goldMul} gold. Same as the SCROLLS ticket, forever.',
-      priceLabel: '\$0.99',
       kind: ShopOfferKind.permScroll,
       oneTime: true,
       permMask: AdBoost.permGold,
@@ -109,7 +103,6 @@ abstract final class ShopCatalog {
       name: 'Forever Scroll of XP',
       description:
           'Always on: +${AdBoost.xpPercent}% party XP. Same as the SCROLLS ticket, forever.',
-      priceLabel: '\$0.99',
       kind: ShopOfferKind.permScroll,
       oneTime: true,
       permMask: AdBoost.permXp,
@@ -119,7 +112,6 @@ abstract final class ShopCatalog {
       name: 'Forever Scroll of Speed',
       description:
           'Always on: +${AdBoost.movePercent}% walk. Same as the SCROLLS ticket, forever.',
-      priceLabel: '\$0.99',
       kind: ShopOfferKind.permScroll,
       oneTime: true,
       permMask: AdBoost.permMove,
@@ -129,7 +121,6 @@ abstract final class ShopCatalog {
       name: 'Forever Scroll of Loot',
       description:
           'Always on: +${AdBoost.lootFindPercent}% item find. Same as the SCROLLS ticket, forever.',
-      priceLabel: '\$0.99',
       kind: ShopOfferKind.permScroll,
       oneTime: true,
       permMask: AdBoost.permLoot,
@@ -139,7 +130,6 @@ abstract final class ShopCatalog {
       name: 'Forever Scroll of Haste',
       description:
           'Always on: +${AdBoost.speedPercent}% dungeon speed. Same as the SCROLLS ticket, forever.',
-      priceLabel: '\$0.99',
       kind: ShopOfferKind.permScroll,
       oneTime: true,
       permMask: AdBoost.permSpeed,
@@ -149,7 +139,6 @@ abstract final class ShopCatalog {
       name: 'Forever Scroll of Rest',
       description:
           'Always on: every Welcome Back uses gold ×${AdBoost.awayGoldMul}. Not a one-shot ticket.',
-      priceLabel: '\$0.99',
       kind: ShopOfferKind.permScroll,
       oneTime: true,
       permMask: AdBoost.permRest,
@@ -160,7 +149,6 @@ abstract final class ShopCatalog {
       description:
           'All seven forever scrolls (Damage, Gold, XP, Speed, Loot, Haste, Rest). '
           'Same ticket power, cheaper than buying each.',
-      priceLabel: '\$4.99',
       kind: ShopOfferKind.permScroll,
       oneTime: true,
       permMask: AdBoost.permAll,
@@ -171,7 +159,6 @@ abstract final class ShopCatalog {
       description:
           '+6 hours Scroll of Battle (×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
           'Same as SCROLLS tickets — once per save.',
-      priceLabel: '\$0.99',
       kind: ShopOfferKind.boostHours,
       boostHours: 6,
       oneTime: true,
@@ -182,7 +169,6 @@ abstract final class ShopCatalog {
       description:
           '+12 hours Scroll of Battle (×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK). '
           'Stacks up to 24 hours, same as tickets.',
-      priceLabel: '\$1.99',
       kind: ShopOfferKind.boostHours,
       boostHours: 12,
     ),
@@ -193,7 +179,6 @@ abstract final class ShopCatalog {
           'Permanent — hide SCROLLS ads and remove WATCH AD earn. '
           '+2 Ad Tickets once, a free ticket claim once per UTC day, '
           'and WISP bonus gold without watching.',
-      priceLabel: '\$2.99',
       kind: ShopOfferKind.adFree,
       boostHours: 0,
       oneTime: true,
@@ -204,7 +189,6 @@ abstract final class ShopCatalog {
       description:
           '+24 hours Scroll of Battle (fills the stack from empty). '
           'Best boost value per hour — same ×${AdBoost.goldMul} gold · +${AdBoost.attackPercent}% ATK as tickets.',
-      priceLabel: '\$2.99',
       kind: ShopOfferKind.boostHours,
       boostHours: 24,
     ),
@@ -214,7 +198,6 @@ abstract final class ShopCatalog {
       description:
           'Story caves catch up for 16 hours instead of 8 and fight twice as far. '
           'Hub gold fills for 24 hours instead of 12. Gauntlet and rifts stay short. Once.',
-      priceLabel: '\$4.99',
       kind: ShopOfferKind.longAway,
       oneTime: true,
     ),
@@ -224,7 +207,6 @@ abstract final class ShopCatalog {
       description:
           '8 Cinders. Salvage a relic or trade a few for Embers. '
           'Same relics you earn by playing.',
-      priceLabel: '\$0.99',
       kind: ShopOfferKind.cinders,
       cinderGrant: 8,
     ),
@@ -234,7 +216,6 @@ abstract final class ShopCatalog {
       description:
           '+4 bag slots, +12 hours Scroll of Battle, and a thank-you. '
           'No extra combat power beyond the same boost tickets give.',
-      priceLabel: '\$4.99',
       kind: ShopOfferKind.supporterQol,
       bagSlots: 4,
       boostHours: 12,

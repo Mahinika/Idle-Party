@@ -12,23 +12,33 @@ extension GameDirectorSave on GameDirector {
       ),
     );
     _state = stamped;
-    _saveChain = _saveChain
-        .then((_) => _storage.save(_state))
-        .then((_) {
-          PlayGamesBridge.notePartyPower(
-            score: GameLogic.partyPowerScore(_state),
-            partyName: _state.partyName,
-          );
-          PlayGamesBridge.scheduleCloudUpload(_state);
-          unawaited(PlayGamesBridge.flushPendingScores());
-        })
-        .catchError((Object e, StackTrace st) {
-          DebugPlayLog.event('save', 'write failed: $e');
-          debugPrint('save failed: $e\n$st');
-        });
+    // A false or thrown write completes as false. The chain stays alive so
+    // the next save still runs. Callers that grant a purchase must see false.
+    _saveChain = _saveChain.then((_) async {
+      try {
+        final ok = await _storage.save(_state);
+        if (!ok) {
+          DebugPlayLog.event('save', 'write failed: setString returned false');
+          debugPrint('save failed: setString returned false');
+          return false;
+        }
+        PlayGamesBridge.notePartyPower(
+          score: GameLogic.partyPowerScore(_state),
+          partyName: _state.partyName,
+        );
+        PlayGamesBridge.scheduleCloudUpload(_state);
+        unawaited(PlayGamesBridge.flushPendingScores());
+        return true;
+      } catch (e, st) {
+        DebugPlayLog.event('save', 'write failed: $e');
+        debugPrint('save failed: $e\n$st');
+        return false;
+      }
+    });
   }
 
-  Future<void> _persistFlush() {
+  /// False when this write did not land.
+  Future<bool> _persistFlush() {
     _persist();
     return _saveChain;
   }

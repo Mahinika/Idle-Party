@@ -16,10 +16,17 @@ abstract final class ShopStore {
   /// loading, or when this build cannot ask Play.
   static bool storeLists(String productId) => impl.storeLists(productId);
 
-  /// Listen to [purchaseStream] and query product details.
-  /// [onGranted] receives whether Play marked the event a restore.
+  /// Listen to [purchaseStream], query past purchases, then product details.
+  /// [onGranted] finishes (and the save is flushed) before a consumable is
+  /// consumed. [purchaseId] is the Play order id or purchase token.
   static Future<void> warmup({
-    required void Function(String productId, bool restored) onGranted,
+    required Future<bool> Function({
+      required String productId,
+      required String purchaseId,
+      required bool restored,
+      bool recovered,
+    })
+    onGranted,
     void Function(String message)? onMessage,
   }) => impl.warmup(onGranted: onGranted, onMessage: onMessage);
 

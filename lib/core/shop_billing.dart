@@ -68,9 +68,70 @@ abstract final class ShopBilling {
     return state.copyWith(metaDepth: md);
   }
 
-  /// A Play restore re-applies a non-consumable once. A consumable was
-  /// spent on the original purchase and must not pay again.
+  /// A Play restore re-applies a non-consumable once. A finished consumable
+  /// is not paid again. An unfinished one is granted by [shouldGrantPurchase].
   static bool grantOnRestore(ShopCatalogItem item) => !item.isConsumable;
+
+  /// Startup [queryPastPurchases] reports [purchased] for packs the player
+  /// already owns. That row is an existing purchase, same as a restore.
+  /// A live buy is neither, so it can toast and log store_purchase.
+  static bool countsAsExistingPurchase({
+    required bool fromPastQuery,
+    required bool statusRestored,
+  }) => fromPastQuery || statusRestored;
+
+  static const int grantedPurchaseIdCap = 64;
+
+  static bool alreadyGranted(GameState state, String purchaseId) {
+    final id = purchaseId.trim();
+    if (id.isEmpty) return false;
+    return state.metaDepth.grantedShopPurchaseIds.contains(id);
+  }
+
+  /// Whether this Play event should add the pack.
+  ///
+  /// An unconsumed consumable is granted once per purchase id, including when
+  /// startup [queryPastPurchases] or RESTORE surfaces it. A repeat of that id
+  /// does not pay again. A consumable with no id is granted only on a fresh
+  /// buy, never on restore.
+  static bool shouldGrantPurchase({
+    required ShopCatalogItem item,
+    required bool restored,
+    required String purchaseId,
+    required bool alreadyGranted,
+  }) {
+    if (alreadyGranted) return false;
+    if (item.isConsumable) {
+      if (purchaseId.trim().isEmpty) return !restored;
+      return true;
+    }
+    if (restored && !grantOnRestore(item)) return false;
+    return true;
+  }
+
+  /// Grant [item] and remember [purchaseId] in the same state.
+  /// A known id returns [state] unchanged.
+  static GameState applyTrackedPurchase(
+    GameState state,
+    ShopCatalogItem item, {
+    required String purchaseId,
+    DateTime? now,
+  }) {
+    final id = purchaseId.trim();
+    if (id.isNotEmpty && alreadyGranted(state, id)) return state;
+    final granted = applyPurchase(state, item, now: now);
+    if (id.isEmpty) return granted;
+    final ids = <String>[...granted.metaDepth.grantedShopPurchaseIds];
+    if (!ids.contains(id)) ids.add(id);
+    final trimmed = ids.length > grantedPurchaseIdCap
+        ? ids.sublist(ids.length - grantedPurchaseIdCap)
+        : ids;
+    return granted.copyWith(
+      metaDepth: granted.metaDepth.copyWith(
+        grantedShopPurchaseIds: List<String>.unmodifiable(trimmed),
+      ),
+    );
+  }
 
   /// SKUs that should appear as owned / disabled after restore.
   static bool isOwned(GameState state, ShopCatalogItem item) {

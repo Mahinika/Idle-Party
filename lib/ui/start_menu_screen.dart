@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/ad_rewarded.dart';
+import '../core/build_stamp.dart';
 import '../core/community_links.dart';
 import '../core/game_storage.dart';
 import '../core/meta_systems.dart';
@@ -288,7 +289,9 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  MetaSystems.currentVersion,
+                                  BuildStamp.versionLabel(
+                                    MetaSystems.currentVersion,
+                                  ),
                                   textAlign: TextAlign.center,
                                   style: GameTheme.body(
                                     size: 11,
