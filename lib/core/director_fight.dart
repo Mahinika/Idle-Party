@@ -113,8 +113,8 @@ extension GameDirectorFight on GameDirector {
   }
 
   /// Opt-in wipe ad. Stops the 3s retry so the fight does not resume under
-  /// the ad. A finished watch stays on the wipe screen. A timeout arms the
-  /// countdown again.
+  /// the ad. A finished watch stays on the wipe screen. Skip and timeout arm
+  /// the countdown again.
   Future<void> watchWipeRewardAd() async {
     if (_state.metaDepth.adFree) return;
     _cancelWipeAuto();
@@ -141,12 +141,10 @@ extension GameDirectorFight on GameDirector {
     _rearmWipeAfterAd(result);
   }
 
-  /// Failed or missing ads are a timeout. The 3s retry comes back.
-  /// A finished watch leaves the choice on screen.
+  /// A finished watch leaves the choice on screen. Skip, timeout, and a
+  /// missing ad arm the 3s retry again.
   void _rearmWipeAfterAd(AdWatchResult result) {
-    if (result == AdWatchResult.rewarded || result == AdWatchResult.skipped) {
-      return;
-    }
+    if (result == AdWatchResult.rewarded) return;
     if (!_awaitingWipeChoice) return;
     _armWipeAutoContinue();
   }

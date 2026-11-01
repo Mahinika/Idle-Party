@@ -128,6 +128,8 @@ void main() {
     director.debugOpenWipeChoice();
     director.debugFinishWipeAd(AdWatchResult.rewarded);
     expect(director.wipeAutoSeconds.value, 0);
+    director.debugFinishWipeAd(AdWatchResult.skipped);
+    expect(director.wipeAutoSeconds.value, 3);
     director.debugFinishWipeAd(AdWatchResult.failed);
     expect(director.wipeAutoSeconds.value, 3);
     director.debugFinishWipeAd(AdWatchResult.unavailable);
