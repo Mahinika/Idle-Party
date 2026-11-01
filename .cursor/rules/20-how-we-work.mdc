@@ -97,7 +97,7 @@ blocks the next step. Otherwise pick the next batch and continue.
 
 ## Workflow
 
-Code work may be done by Cursor cloud agents via PRs or locally. Releases
-go straight to 100% on Play (few players). A test APK is emulator-smoke-
+Code work may be done by Cursor cloud agents via PRs or locally. The Play
+upload workflow sends production at 5%. A test APK is emulator-smoke-
 tested before the owner phone-tests. Nothing merges or releases before the
 owner's phone test. Priority is revenue.

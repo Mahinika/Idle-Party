@@ -91,7 +91,8 @@ GOLD = FORGE + MARKET. SHOP = ad-free, Long Away, and Supporter (hour
 packs restore only; forever scrolls and the Cinder pouch show only after
 Play lists them). ESSENCE = CAMP + BLESSING + relics + pets. MORE =
 QUESTS / CRAFT / SETTINGS / INFO. Redeem code is SHOP and MORE → SETTINGS.
-Hub POWERUPS stay on the hub.
+Hub SCROLLS stay on the hub (timed tickets and TIP A FRIEND). The sheet
+is `HubPowerups`.
 
 **SpatialCombat** is the current fight sim, including in-dungeon offline
 via `OfflineSim` → `GameLogic.simulateSpatialOffline` (same authority as
@@ -111,8 +112,11 @@ their own rules.
 Hero cap `maxHeroLevel` 100 (combat XP only). Ascend cap AL20.
 A new game starts with 3 heroes. The fourth joins at the first Ascend.
 A fifth slot unlocks at AL2 for 80 essence and stays on Ascend. The
-active party cap is 4 until that buy. Race locks after New Game START.
-Class can still change.
+active party cap is 4 until that buy. KEY → TINY fights with 3 of them.
+Race locks after New Game START. A hero keeps their specialization.
+Later specs join the roster and can replace someone in the active party.
+The first boss is on floor 2. Later climbs use 5 + Ascend.
+
 Endgame (KEY, Gauntlet, Rifts, Greater Rifts, Ashen, Craft Trial) unlocks
 when the **active party is all Lv100**, not at AL20 alone.
 
@@ -165,7 +169,7 @@ stamina is STA.
 
 | Area | Path |
 |------|------|
-| Orchestration | `lib/core/game_director.dart` (+ save / fight / platform parts) |
+| Orchestration | `lib/core/game_director.dart` (+ `combat_loop`, `director_forge`, `director_meta_actions`, `director_bag`, `director_save`, `director_fight`, `director_platform`) |
 | Rules | `lib/core/game_logic.dart` (+ ascend / endgame / ladders / meta-season / dungeon / party / forge parts) |
 | Offline dungeon | `lib/core/offline_sim.dart`, `lib/core/offline_progress.dart` |
 | State / meta | `lib/core/game_state.dart`, `lib/models/meta_depth.dart` |

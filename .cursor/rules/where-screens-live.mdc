@@ -29,7 +29,7 @@ needs it — still use `GameTheme` / `MenuChrome` / `GameButton` / `GameIcon`.
 | QUESTS / Craft / Settings / Info | **MORE** | `MoreSection` rows; monthly **Craft Trial** is CRAFT, not ENDGAME |
 | “What do I do now?” / enter | **Hub TODAY** | `ChaseContract` |
 | Pick a cave | **Hub PATH** | continent atlas (`hub_world_map`) — no scroll strip |
-| Rewarded boost tickets | **Hub POWERUPS** | not SHOP |
+| Rewarded boost tickets / TIP A FRIEND | **Hub SCROLLS** | under the cave button (`HubPowerups`); not SHOP |
 
 IA copy scopes (labels/guides, not colors): **RUN** · **TODAY** · **ACCOUNT**
 (`MenuChrome.scopeChip` / `sectionLabelScoped`).

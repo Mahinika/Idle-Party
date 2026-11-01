@@ -1,8 +1,8 @@
 # Manual Play production upload. workflow_dispatch only.
 # Do not run this unless the owner asks in that turn.
 # It sends the chosen GitHub Release AAB to production at 5%.
-# Release notes are the 1.13.6 text in .github/play/. Edit those files
-# before dispatching a later tag.
+# Release notes live in .github/play/. Edit those files before
+# dispatching a later tag.
 
 name: Upload AAB to Play
 

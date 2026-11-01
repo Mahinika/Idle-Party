@@ -84,7 +84,7 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Signed Production AAB **1.13.5+231** built locally (`app-release.aab`, 188.9 MB) and uploaded via Play API (one edit: 8 phone shots, icon, feature graphic, tablet slots cleared, bundle, production track). Commit edit `04887265008164011819`. Notes also cover unsent **1.13.3** and **1.13.4**. Public page can still name **1.13.2** until Google publishes.
 - [x] Tag `v1.13.6` (`ba67975e`, **1.13.6+232**) attached a signed AAB and APK to the GitHub Release. CI decoded the upload keystore and wrote the live AdMob ids. Not sent to Play.
 - [ ] Tag `v1.13.7` — cold-start fix; dispatch Play upload only when the owner asks.
-- [ ] Dispatch `.github/workflows/play-upload.yml` with tag `v1.13.6` only when the owner asks. That job uploads the release AAB to production at 5% with the en-US and sv-SE notes. It does not run on its own.
+- [ ] Dispatch `.github/workflows/play-upload.yml` with tag `v1.13.7` only when the owner asks. That job uploads the release AAB to production at 5% with the en-US and sv-SE notes. It does not run on its own.
 
 ### Production upload paste (en-US release notes)
 

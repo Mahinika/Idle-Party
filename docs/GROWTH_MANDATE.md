@@ -9,6 +9,9 @@ requires owner ask.**
 (`.cursor/rules/10-what-to-build.mdc`). Owner-named goals still win.
 **Updated:** 2026-10-14 — the active week file sits in that order, after
 open play notes and before the Play paste.
+**Updated:** 2026-11-01 — at session start, propose 2–3 concrete next
+ideas (at least one revenue), then pick one and build it. The evidence
+order is unchanged.
 History: [LEARNINGS.md](LEARNINGS.md) · [PLAY_GROWTH.md](PLAY_GROWTH.md).
 
 North star: **främlingar på Play blir spelare.**
@@ -23,11 +26,12 @@ Hard locks: [`.cursor/rules/00-locks.mdc`](../.cursor/rules/00-locks.mdc).
 
 ## Default work
 
-**2026-10-09:** a goal the owner names wins. Otherwise the agent picks one
-batch from checked facts and builds it (`.cursor/rules/10-what-to-build.mdc`):
-open play notes, then the active week file, then the Play paste, then
-these docs, then A-grade sources it opened. Vague “gör bättre / vad
-härnäst” is the same pick, not a question.
+**2026-11-01:** a goal the owner names wins. Otherwise propose 2–3
+concrete next ideas (at least one revenue), then pick one and build it
+(`.cursor/rules/10-what-to-build.mdc`): open play notes, then the active
+week file, then the Play paste, then these docs, then A-grade sources
+it opened. Vague “gör bättre / vad härnäst” is the same pick, not a
+question.
 Do not invent a numbered program; do not restore AL20 hub polish as the
 default.
 
