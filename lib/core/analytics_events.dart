@@ -19,6 +19,10 @@ abstract final class AnalyticsEvents {
   static const storePurchaseStart = 'store_purchase_start';
   static const storePurchaseCancel = 'store_purchase_cancel';
 
+  /// SCROLLS Ad-free line. Once per save. Not a buy sheet.
+  static const adFreeNudgeView = 'ad_free_nudge_view';
+  static const adFreeNudgeTap = 'ad_free_nudge_tap';
+
   static const notifyOpen = 'notify_open';
 
   /// Matches [FirstSessionTips.tips] ids (coach only, not boot intro).

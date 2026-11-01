@@ -21,6 +21,7 @@ import '../spatial/floor_blueprint.dart';
 import '../spatial/spatial_combat.dart';
 import 'game_audio.dart';
 import 'ad_boost.dart';
+import 'ad_free_nudge.dart';
 import 'ad_rewarded.dart';
 import 'analytics_events.dart';
 import 'app_analytics.dart';
@@ -1778,6 +1779,28 @@ class GameDirector extends ChangeNotifier {
     showToast('Daily Ad Ticket claimed', life: 2.2);
   }
 
+  /// A rewarded ad finished. Preview tickets do not count.
+  void noteCompletedRewardedWatch() {
+    final next = AdFreeNudge.noteWatch(_state);
+    if (identical(next, _state)) return;
+    _applyUpgrade(next);
+  }
+
+  /// SCROLLS showed the Ad-free line. Once per save. Logs the impression.
+  void markAdFreeNudgeShown() {
+    if (_state.metaDepth.adFreeNudgeShown) return;
+    final next = AdFreeNudge.markShown(_state);
+    if (identical(next, _state)) return;
+    _applyUpgrade(next);
+    unawaited(AppAnalytics.adFreeNudgeView());
+  }
+
+  /// Player tapped the SCROLLS line. The sheet opens SHOP after this.
+  void openAdFreeFromScrollsNudge() {
+    markAdFreeNudgeShown();
+    unawaited(AppAnalytics.adFreeNudgeTap());
+  }
+
   /// Android: show a rewarded ad, then +[AdBoost.ticketsPerAd] Ad Ticket.
   Future<void> watchPowerupAd() async {
     if (!AdRewarded.realAdsAvailable) {
@@ -1790,6 +1813,7 @@ class GameDirector extends ChangeNotifier {
     );
     switch (result) {
       case AdWatchResult.rewarded:
+        noteCompletedRewardedWatch();
         grantPowerupHour();
       case AdWatchResult.skipped:
         showToast(

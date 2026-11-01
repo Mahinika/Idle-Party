@@ -129,6 +129,7 @@ extension GameDirectorFight on GameDirector {
     );
     switch (result) {
       case AdWatchResult.rewarded:
+        noteCompletedRewardedWatch();
         grantPowerupHour();
       case AdWatchResult.skipped:
         showToast(
@@ -248,9 +249,8 @@ extension GameDirectorFight on GameDirector {
         _state.wipeStreakCount >= GameLogic.pushWipesBeforeFarm &&
         _state.dungeonMode == DungeonMode.push &&
         _state.currentRoom.floorNumber > _state.highestFloorCleared;
-    _state = GameLogic.continueAfterWipe(
-      _state,
-    ).copyWith(lastUpdated: DateTime.now());
+    _state = GameLogic.continueAfterWipe(_state)
+        .copyWith(lastUpdated: DateTime.now());
     if (MetaSystems.isActiveDailyRun(_state)) {
       showToast('Daily echo restarted — fight on', life: 2.5);
     } else if (farmingBack && _state.pushResumeFloor > 0) {

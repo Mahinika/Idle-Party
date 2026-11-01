@@ -61,6 +61,8 @@ Placements: `welcome_back`, `wisp_gift`, `powerups`, `wipe_retry`.
 |---|---|---|
 | `store_view` | — | SHOP tab opened. |
 | `store_product_view` | `product_id` | Each product row first shown that visit. |
+| `ad_free_nudge_view` | `product_id` (`ad_free`) | SCROLLS showed the one-time Ad-free line. Once per save. |
+| `ad_free_nudge_tap` | `product_id` (`ad_free`) | Player tapped that line. SHOP opens after. |
 | `store_purchase_start` | `product_id` | Buy sheet opened. |
 | `store_purchase` | `product_id` | New grant (not restore). |
 | `store_purchase_cancel` | `product_id` | Sheet error, cancel, or Play error. |
