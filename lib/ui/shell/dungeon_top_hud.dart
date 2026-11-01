@@ -20,6 +20,7 @@ import '../../spatial/tile_map.dart';
 import '../coach_pulse.dart';
 import 'shell_common.dart';
 import '../first_session_tips.dart';
+import '../dungeon_environment.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -557,6 +558,10 @@ class DungeonTopHud extends StatelessWidget {
     }
 
     final slots = showFightTools ? modeSlots() : const <Widget>[];
+    final showZoneAccent = !state.inGauntlet &&
+        !state.inRift &&
+        !state.inGreaterRift &&
+        !state.inWorldBoss;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(6, 2, 2, 2),
@@ -570,6 +575,12 @@ class DungeonTopHud extends StatelessWidget {
           ],
         ),
         border: Border(
+          left: showZoneAccent
+              ? BorderSide(
+                  color: DungeonEnvironment.hudZoneAccent(state.dungeonId),
+                  width: 3,
+                )
+              : BorderSide.none,
           bottom: BorderSide(color: GameTheme.border.withValues(alpha: 0.3)),
         ),
       ),
