@@ -3,6 +3,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/party_name_filter.dart';
+import '../../core/pet_errand_stock.dart';
 import '../../core/pet_service.dart';
 import '../../models/dungeon_def.dart';
 import '../../models/pet.dart';
@@ -132,9 +133,27 @@ class _BeastOverlayState extends State<BeastOverlay> {
           const SizedBox(height: 8),
         ] else if (state.ownedPets.isNotEmpty) ...[
           Text(
+            PetErrandStock.stockLine(state, now: DateTime.now()),
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 4),
+          Text(
             'Send one pet out for 4, 8, or 12 hours.',
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
+          if (state.metaDepth.petShipmentBonus <
+              PetErrandStock.maxShipmentBonus) ...[
+            const SizedBox(height: 6),
+            GameButton(
+              label:
+                  'BIGGER SHIPMENT · ${PetErrandStock.cinderCostPerBonus} CINDERS (+1/day)',
+              dense: true,
+              style: PetErrandStock.canBuyShipmentBonus(state)
+                  ? GameButtonStyle.brown
+                  : GameButtonStyle.grey,
+              onPressed: director.buyPetShipmentBonus,
+            ),
+          ],
           const SizedBox(height: 8),
         ],
         Text(
@@ -287,8 +306,15 @@ class _BeastOverlayState extends State<BeastOverlay> {
                                 label: '${hours}h',
                                 dense: true,
                                 style: GameButtonStyle.grey,
-                                onPressed: () =>
-                                    director.sendPetErrand(pet.id, hours),
+                                onPressed: PetErrandStock.canSend(
+                                  state,
+                                  now: DateTime.now(),
+                                )
+                                    ? () => director.sendPetErrand(
+                                          pet.id,
+                                          hours,
+                                        )
+                                    : null,
                               ),
                             ),
                           ],

@@ -27,7 +27,7 @@ class ShopDock extends StatefulWidget {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
     return 'Free tickets are SCROLLS on the hub. '
         'Ad-free, Long Away, and Supporter are here. '
-        'Gold is under GOLD.$essenceBit';
+        'Gold, bag space, and pet errands use gold or Cinders in GEAR and ESSENCE — not real money.$essenceBit';
   }
 
   @override

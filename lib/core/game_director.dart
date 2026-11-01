@@ -43,6 +43,8 @@ import 'meta_systems.dart';
 import 'mission_board.dart';
 import 'party_name_filter.dart';
 import 'pet_service.dart';
+import 'pet_errand_stock.dart';
+import 'run_stash_shop.dart';
 import 'play_games_bridge.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
@@ -1346,6 +1348,10 @@ class GameDirector extends ChangeNotifier {
       showToast('A pet is already out', life: 1.8);
       return;
     }
+    if (!PetErrandStock.canSend(_state)) {
+      showToast('No errand shipments left today', life: 2.2);
+      return;
+    }
     final next = GameLogic.sendPetErrand(_state, petId, hours);
     if (identical(next, _state)) return;
     // Apply even while boot is still loading, same as the ping card.
@@ -1521,6 +1527,54 @@ class GameDirector extends ChangeNotifier {
       };
       showToast('God Hand · $label', life: 1.8);
     }
+  }
+
+  void buyGoldBagExpansion() {
+    if (!RunStashShop.canBuyGold(_state)) {
+      if (RunStashShop.goldBuysAtCap(_state.metaDepth)) {
+        showToast('Gold bag upgrades at cap', life: 2);
+      } else {
+        showToast('Need ${RunStashShop.goldBuyCost(_state)} gold', life: 2.2);
+      }
+      return;
+    }
+    _applyUpgrade(GameLogic.buyGoldBagExpansion(_state));
+    GameAudio.ui();
+    showToast(
+      'Bag +${RunStashShop.slotsPerGoldBuy} slots (${RunStashShop.goldBuyLabel(_state)})',
+      life: 2.4,
+    );
+  }
+
+  void buyCinderBagExpansion() {
+    if (!RunStashShop.canBuyCinders(_state)) {
+      if (RunStashShop.cinderBuysAtCap(_state.metaDepth)) {
+        showToast('Cinder bag upgrade owned', life: 2);
+      } else {
+        showToast('Need ${RunStashShop.cinderBuyCost} Cinders', life: 2.2);
+      }
+      return;
+    }
+    _applyUpgrade(GameLogic.buyCinderBagExpansion(_state));
+    GameAudio.ui();
+    showToast('Bag +${RunStashShop.slotsPerCinderBuy} slots', life: 2.4);
+  }
+
+  void buyPetShipmentBonus() {
+    if (!PetErrandStock.canBuyShipmentBonus(_state)) {
+      if (_state.metaDepth.petShipmentBonus >= PetErrandStock.maxShipmentBonus) {
+        showToast('Bigger Shipment at cap', life: 2);
+      } else {
+        showToast('Need ${PetErrandStock.cinderCostPerBonus} Cinders', life: 2.2);
+      }
+      return;
+    }
+    _applyUpgrade(GameLogic.buyPetShipmentBonus(_state));
+    GameAudio.ui();
+    showToast(
+      '+1 errand shipment per day (${PetErrandStock.maxCredits(_state.metaDepth)}/day cap)',
+      life: 2.6,
+    );
   }
 
   void buyPrestigeShopItem(String id) {

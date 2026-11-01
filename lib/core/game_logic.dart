@@ -43,6 +43,8 @@ import 'mission_board.dart';
 import 'loot_pipeline.dart';
 import 'offline_progress.dart';
 import 'pet_service.dart';
+import 'pet_errand_stock.dart';
+import 'run_stash_shop.dart';
 import 'starter_gear.dart';
 import 'local_season.dart';
 import 'meta_systems.dart';
@@ -2742,6 +2744,15 @@ class GameLogic {
       PetService.errandReady(state, now ?? DateTime.now());
   static bool returnCardWaiting(GameState state, [DateTime? now]) =>
       ComebackChest.isPending(state) || petErrandReady(state, now);
+
+  static GameState buyGoldBagExpansion(GameState state) =>
+      RunStashShop.buyGoldExpansion(state);
+
+  static GameState buyCinderBagExpansion(GameState state) =>
+      RunStashShop.buyCinderExpansion(state);
+
+  static GameState buyPetShipmentBonus(GameState state, {DateTime? now}) =>
+      PetErrandStock.buyShipmentBonus(state, now: now);
 
   /// Pays a waiting comeback chest and a pet that is already home.
   static GameState claimReturnRewards(GameState state, {DateTime? now}) {

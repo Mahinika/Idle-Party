@@ -3,6 +3,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/gear/gear_scorer.dart';
 import '../../core/gear_service.dart';
+import '../../core/run_stash_shop.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
@@ -124,6 +125,7 @@ class _InventoryDockState extends State<InventoryDock>
   bool _longPressTipShown = false;
 
   GameState get state => widget.state;
+  GameDirector get director => widget.director;
   String? get selectedId => widget.selectedId;
   String? get combineA => widget.combineA;
   String? get combineB => widget.combineB;
@@ -441,6 +443,34 @@ class _InventoryDockState extends State<InventoryDock>
                 : GameTheme.mossLit,
           ),
         ),
+        if (!RunStashShop.goldBuysAtCap(state.metaDepth) ||
+            !RunStashShop.cinderBuysAtCap(state.metaDepth)) ...[
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              if (!RunStashShop.goldBuysAtCap(state.metaDepth))
+                GameButton(
+                  label: RunStashShop.goldBuyLabel(state),
+                  dense: true,
+                  style: RunStashShop.canBuyGold(state)
+                      ? GameButtonStyle.brown
+                      : GameButtonStyle.grey,
+                  onPressed: director.buyGoldBagExpansion,
+                ),
+              if (!RunStashShop.cinderBuysAtCap(state.metaDepth))
+                GameButton(
+                  label: RunStashShop.cinderBuyLabel(state),
+                  dense: true,
+                  style: RunStashShop.canBuyCinders(state)
+                      ? GameButtonStyle.brown
+                      : GameButtonStyle.grey,
+                  onPressed: director.buyCinderBagExpansion,
+                ),
+            ],
+          ),
+        ],
         const SizedBox(height: 4),
         Wrap(
           spacing: 6,

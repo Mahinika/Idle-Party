@@ -1,6 +1,7 @@
 import '../../models/loot.dart';
 import '../game_state.dart';
 import '../loot_pipeline.dart';
+import '../run_stash_shop.dart';
 
 /// Bag capacity, stash mutations, and gear lookup.
 abstract final class GearStash {
@@ -9,7 +10,9 @@ abstract final class GearStash {
   static int maxGearStashFor(GameState state) =>
       maxGearStash +
       state.metaDepth.stashBonusSlots +
-      state.metaDepth.shopBagBonusSlots;
+      state.metaDepth.shopBagBonusSlots +
+      RunStashShop.bonusSlotsFromGold(state.metaDepth) +
+      RunStashShop.bonusSlotsFromCinders(state.metaDepth);
 
   /// When the bag counts as "filling up" — the badge and the hint use this.
   static const double bagWarnFraction = 0.85;

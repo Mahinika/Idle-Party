@@ -6,6 +6,7 @@ import 'game_state.dart';
 import 'gold_income.dart';
 import 'meta_systems.dart';
 import 'party_name_filter.dart';
+import 'pet_errand_stock.dart';
 
 /// Hatching, bonding, merging and framing pets.
 ///
@@ -269,6 +270,8 @@ abstract final class PetService {
   }) {
     if (errandActive(state)) return state;
     if (!errandHours.contains(hours)) return state;
+    final clock = now ?? DateTime.now();
+    if (!PetErrandStock.canSend(state, now: clock)) return state;
     Pet? pet;
     for (final owned in state.ownedPets) {
       if (owned.id == petId) {
@@ -277,7 +280,6 @@ abstract final class PetService {
       }
     }
     if (pet == null) return state;
-    final clock = now ?? DateTime.now();
     final gold = GoldIncome.hubGoldPerMinute(state) * 15 * hours;
     final baseEssence = switch (hours) {
       4 => 15,
@@ -290,7 +292,7 @@ abstract final class PetService {
     );
     final embers = hours == 12 ? 2 : 0;
     final clearActive = state.activePet?.id == petId;
-    return state.copyWith(
+    var next = state.copyWith(
       clearActivePet: clearActive,
       metaDepth: state.metaDepth.copyWith(
         petErrandPetId: petId,
@@ -304,6 +306,7 @@ abstract final class PetService {
       ),
       lastUpdated: clock,
     );
+    return PetErrandStock.consumeCredit(next, now: clock);
   }
 
   static GameState claimErrand(GameState state, {DateTime? now}) {

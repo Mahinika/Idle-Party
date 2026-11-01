@@ -335,6 +335,11 @@ class MetaDepthState {
     this.scrollWellBonusClaims = 0,
     this.questRerollUtcDay = '',
     this.questRerollsToday = 0,
+    this.stashGoldBuys = 0,
+    this.stashCinderBuys = 0,
+    this.petErrandStockUtcDay = '',
+    this.petErrandStockRemaining = 3,
+    this.petShipmentBonus = 0,
     this.adFree = false,
     this.rewardedWatchCount = 0,
     this.adFreeNudgeShown = false,
@@ -667,6 +672,21 @@ class MetaDepthState {
   /// Quest rerolls used today (Daily / Side). Max 2 per UTC day.
   final int questRerollsToday;
 
+  /// Gold-bought bag expansions this Ascend meta (0–2, +5 slots each).
+  final int stashGoldBuys;
+
+  /// Cinder-bought bag expansion (0–1, +10 slots).
+  final int stashCinderBuys;
+
+  /// UTC day for [petErrandStockRemaining].
+  final String petErrandStockUtcDay;
+
+  /// Errand sends left today (refills to 3 + [petShipmentBonus]).
+  final int petErrandStockRemaining;
+
+  /// +1 daily errand cap per level (max 2), bought with Cinders.
+  final int petShipmentBonus;
+
   /// Permanent SHOP ad-free purchase. Survives Ascend. Billing grants later.
   final bool adFree;
 
@@ -938,6 +958,11 @@ class MetaDepthState {
     int? scrollWellBonusClaims,
     String? questRerollUtcDay,
     int? questRerollsToday,
+    int? stashGoldBuys,
+    int? stashCinderBuys,
+    String? petErrandStockUtcDay,
+    int? petErrandStockRemaining,
+    int? petShipmentBonus,
     bool? adFree,
     int? rewardedWatchCount,
     bool? adFreeNudgeShown,
@@ -1127,6 +1152,13 @@ class MetaDepthState {
           scrollWellBonusClaims ?? this.scrollWellBonusClaims,
       questRerollUtcDay: questRerollUtcDay ?? this.questRerollUtcDay,
       questRerollsToday: questRerollsToday ?? this.questRerollsToday,
+      stashGoldBuys: stashGoldBuys ?? this.stashGoldBuys,
+      stashCinderBuys: stashCinderBuys ?? this.stashCinderBuys,
+      petErrandStockUtcDay:
+          petErrandStockUtcDay ?? this.petErrandStockUtcDay,
+      petErrandStockRemaining:
+          petErrandStockRemaining ?? this.petErrandStockRemaining,
+      petShipmentBonus: petShipmentBonus ?? this.petShipmentBonus,
       adFree: adFree ?? this.adFree,
       rewardedWatchCount: rewardedWatchCount ?? this.rewardedWatchCount,
       adFreeNudgeShown: adFreeNudgeShown ?? this.adFreeNudgeShown,
@@ -1310,6 +1342,11 @@ class MetaDepthState {
     'scrollWellBonusClaims': scrollWellBonusClaims,
     'questRerollUtcDay': questRerollUtcDay,
     'questRerollsToday': questRerollsToday,
+    'stashGoldBuys': stashGoldBuys,
+    'stashCinderBuys': stashCinderBuys,
+    'petErrandStockUtcDay': petErrandStockUtcDay,
+    'petErrandStockRemaining': petErrandStockRemaining,
+    'petShipmentBonus': petShipmentBonus,
     'adFree': adFree,
     'rewardedWatchCount': rewardedWatchCount,
     'adFreeNudgeShown': adFreeNudgeShown,
@@ -1565,6 +1602,16 @@ class MetaDepthState {
       questRerollUtcDay: (json['questRerollUtcDay'] as String?) ?? '',
       questRerollsToday:
           ((json['questRerollsToday'] as num?)?.toInt() ?? 0).clamp(0, 2),
+      stashGoldBuys:
+          ((json['stashGoldBuys'] as num?)?.toInt() ?? 0).clamp(0, 2),
+      stashCinderBuys:
+          ((json['stashCinderBuys'] as num?)?.toInt() ?? 0).clamp(0, 1),
+      petErrandStockUtcDay: (json['petErrandStockUtcDay'] as String?) ?? '',
+      petErrandStockRemaining:
+          ((json['petErrandStockRemaining'] as num?)?.toInt() ?? 3)
+              .clamp(0, 5),
+      petShipmentBonus:
+          ((json['petShipmentBonus'] as num?)?.toInt() ?? 0).clamp(0, 2),
       adFree: (json['adFree'] as bool?) ?? false,
       rewardedWatchCount: ((json['rewardedWatchCount'] as num?)?.toInt() ?? 0)
           .clamp(0, 9999),

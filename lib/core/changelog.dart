@@ -82,12 +82,31 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.10';
+  static const String currentVersion = '1.13.11';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: currentVersion,
+      date: 'Nov 1, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. Expand your bag or send pets on daily errands.',
+      added: <String>[
+        'GEAR · BAG: buy +5 stash slots twice with gold, or +10 once with 25 Cinders (kept on Ascend).',
+        'ESSENCE · PETS: 3 errand shipments per UTC day; Bigger Shipment (+1/day, up to 5/day) costs 12 Cinders each.',
+      ],
+      changed: <String>[
+        'SHOP blurb says bag and pet errands are gold/Cinders in GEAR and ESSENCE — not real money here.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.13.10',
       date: 'Nov 1, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. Wipes explain damage sources; revive with Cinders or reroll quests.',
