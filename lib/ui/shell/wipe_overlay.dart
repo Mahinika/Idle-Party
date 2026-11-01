@@ -264,6 +264,8 @@ class DungeonWipePanel extends StatelessWidget {
                       ],
                     );
                   }(),
+                  const SizedBox(height: 16),
+                  _WipeWatchAd(director: director),
                   if (WipeAdvice.godHandHintFor(state) != null) ...[
                     const SizedBox(height: 10),
                     Text(
@@ -281,6 +283,52 @@ class DungeonWipePanel extends StatelessWidget {
           ),
         ),
         ),
+      ),
+    );
+  }
+}
+
+/// Opt-in ticket ad. Hidden for ad-free. Never starts by itself.
+class _WipeWatchAd extends StatefulWidget {
+  const _WipeWatchAd({required this.director});
+
+  final GameDirector director;
+
+  @override
+  State<_WipeWatchAd> createState() => _WipeWatchAdState();
+}
+
+class _WipeWatchAdState extends State<_WipeWatchAd> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.director.state.metaDepth.adFree) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Optional. The party goes again without an ad.',
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 8),
+          GameButton(
+            label: _busy ? 'LOADING AD…' : 'WATCH AD · +1 ticket',
+            style: GameButtonStyle.grey,
+            onPressed: _busy
+                ? null
+                : () async {
+                    setState(() => _busy = true);
+                    await widget.director.watchWipeRewardAd();
+                    if (mounted) setState(() => _busy = false);
+                  },
+          ),
+        ],
       ),
     );
   }

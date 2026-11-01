@@ -15,7 +15,29 @@ import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
 import 'meta/rift_tier_picker.dart';
+import 'shell/shell_common.dart';
 import 'web_click_bridge.dart';
+
+/// One Blessing stack. The ESSENCE keep panel uses the same phrase.
+String ascendBlessingStackPhrase() =>
+    '+${GameLogic.ascendBlessingAtk} AP, '
+    '+${GameLogic.ascendBlessingDef} Armor, '
+    '+${GameLogic.ascendBlessingVit} STA, '
+    '+${GameLogic.ascendBlessingGoldPct}% gold';
+
+/// Gain, lose, and essence for the Ascend confirm card.
+List<String> ascendWorthLines(GameState state) {
+  final nextAl = state.ascensionLevel + 1;
+  final reward =
+      GameLogic.ascendEssenceReward(nextAl) +
+      MetaSystems.ascendMilestoneReward(state.ascensionLevel, nextAl) +
+      MetaSystems.ascendStreakEssence(state);
+  return [
+    'Gain: AL$nextAl and Blessing ${ascendBlessingStackPhrase()}.',
+    'Lose: gold, regular gear, market listings, loadouts, GOLD tracks, and this run\'s floors.',
+    'Essence: +${formatCount(reward)}e. You keep ${formatCount(state.essence)}e.',
+  ];
+}
 
 Future<void> confirmAscend(BuildContext context, GameDirector director) async {
   final state = director.state;
@@ -28,12 +50,6 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
   final nav = Navigator.of(context);
   nav.popUntil((route) => route is! ModalBottomSheetRoute);
 
-  final nextAl = state.ascensionLevel + 1;
-  final baseReward = GameLogic.ascendEssenceReward(nextAl);
-  final milestone = MetaSystems.ascendMilestoneReward(
-    state.ascensionLevel,
-    nextAl,
-  );
   WebClickBridge.pushLayer();
   try {
     final ok = await showDialog<bool>(
@@ -53,19 +69,27 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
               }
             });
           }
+          final lines = ascendWorthLines(director.state);
           return MenuChrome.dialog(
             title: 'Ascend?',
-            content: Text(
-              StoryLore.ascendConfirmBody(
-                rewardEssence: baseReward + milestone + MetaSystems.ascendStreakEssence(state),
-                nextAl: nextAl,
-                milestoneBonus: milestone,
-                godHandLevel: state.godHandLevel,
-                blessingsAfter: state.metaDepth.ascendBlessings + 1,
-                unlockCombatRogue: state.ascensionLevel == 0,
-                emberGain: 4 + nextAl,
-              ),
-              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < lines.length; i++)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: i == lines.length - 1 ? 0 : 8,
+                    ),
+                    child: Text(
+                      lines[i],
+                      style: GameTheme.body(
+                        size: 15,
+                        color: GameTheme.parchment,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             actions: [
               GameButton(

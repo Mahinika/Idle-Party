@@ -13,7 +13,7 @@ import '../meta/prestige_shop.dart';
 import 'shell_common.dart';
 
 String _blessingLine(GameState state) {
-  const next = 'Next Ascend adds +5 AP, +20 Armor, +60 STA, +8% gold.';
+  final next = 'Next Ascend adds ${ascendBlessingStackPhrase()}.';
   final capped = GameLogic.isMaxAscension(state);
   if (state.metaDepth.ascendBlessings <= 0) {
     return capped
