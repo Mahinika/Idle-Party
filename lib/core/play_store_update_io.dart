@@ -4,12 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:in_app_update/in_app_update.dart';
 
 import 'flutter_test_env_io.dart' as test_env;
+import 'play_update_timeout.dart';
 
 /// Android Play Core probe. Tests / missing Play → null, never throws.
+/// A hung [InAppUpdate.checkForUpdate] gives up after [playUpdateCheckTimeout].
 Future<int?> probeAvailableVersionCode() async {
   if (test_env.inFlutterTestProcess()) return null;
   try {
-    final info = await InAppUpdate.checkForUpdate();
+    final info = await boundPlayUpdateCall(InAppUpdate.checkForUpdate());
     if (info.updateAvailability == UpdateAvailability.updateAvailable) {
       return info.availableVersionCode;
     }
@@ -23,7 +25,7 @@ Future<int?> probeAvailableVersionCode() async {
 Future<bool> startImmediatePlayUpdate() async {
   if (test_env.inFlutterTestProcess()) return false;
   try {
-    final info = await InAppUpdate.checkForUpdate();
+    final info = await boundPlayUpdateCall(InAppUpdate.checkForUpdate());
     if (info.updateAvailability != UpdateAvailability.updateAvailable) {
       return false;
     }
@@ -40,7 +42,7 @@ Future<bool> startImmediatePlayUpdate() async {
 Future<bool> startFlexiblePlayUpdate() async {
   if (test_env.inFlutterTestProcess()) return false;
   try {
-    final info = await InAppUpdate.checkForUpdate();
+    final info = await boundPlayUpdateCall(InAppUpdate.checkForUpdate());
     if (info.updateAvailability != UpdateAvailability.updateAvailable) {
       return false;
     }
