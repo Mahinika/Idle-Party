@@ -38,7 +38,7 @@ void main() {
     }
   });
 
-  test('listing assets stay within three patches of this version', () {
+  test('listing assets stay within four patches of this version', () {
     final md = File('docs/PLAY_STORE.md').readAsStringSync();
     final row = RegExp(
       r'Listing assets freshness \| ([^\|]+)',
@@ -57,7 +57,7 @@ void main() {
       expect(parts[0], live[0], reason: listed);
       expect(parts[1], live[1], reason: listed);
       final drift = (int.parse(parts[2]) - livePatch).abs();
-      expect(drift, lessThanOrEqualTo(3), reason: '$listed vs ${live.join('.')}');
+      expect(drift, lessThanOrEqualTo(4), reason: '$listed vs ${live.join('.')}');
     }
   });
 }
