@@ -43,6 +43,14 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />
+        <!-- GMA SDK 24 inits on a background thread when these are set.
+             Keeps Mobile Ads off the cold-start UI thread. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+            android:value="true" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
+            android:value="true" />
         <!-- Stay off until UMP says collection is allowed. Spark Analytics + Crashlytics only. -->
         <meta-data
             android:name="firebase_analytics_collection_enabled"

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/app_analytics.dart';
+import 'package:idle_party/core/boot_clock.dart';
 
 void main() {
   test('AppAnalytics no-ops safely under flutter test', () async {
@@ -14,6 +16,31 @@ void main() {
     await AppAnalytics.storeView();
     await AppAnalytics.storePurchase('ad_free');
     await AppAnalytics.sessionLength(40);
+  });
+
+  test('boot clock marks stay in order', () {
+    final before = BootClock.marks.length;
+    BootClock.mark('main');
+    BootClock.mark('runApp');
+    BootClock.mark('firstFrame');
+    final added = BootClock.marks.skip(before).toList();
+    expect(added[0], startsWith('main '));
+    expect(added[1], startsWith('runApp '));
+    expect(added[2], startsWith('firstFrame '));
+  });
+
+  test('early buffer keeps a Flutter error until Crashlytics attaches', () {
+    final previous = FlutterError.onError;
+    addTearDown(() {
+      FlutterError.onError = previous;
+      AppAnalytics.debugResetEarlyErrorBuffer();
+    });
+    FlutterError.onError = (FlutterErrorDetails details) {};
+    AppAnalytics.armEarlyErrorBuffer();
+    final handler = FlutterError.onError;
+    expect(handler, isNotNull);
+    handler!(FlutterErrorDetails(exception: StateError('boot')));
+    expect(AppAnalytics.debugBufferedErrorCount, 1);
   });
 
   test('measurement events keep the documented names', () async {
