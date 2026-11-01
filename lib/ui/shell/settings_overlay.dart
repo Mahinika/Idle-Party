@@ -508,6 +508,12 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           ),
           const SizedBox(height: 8),
           GameButton(
+            label: 'DEV: RETURN PING ~12s',
+            style: GameButtonStyle.grey,
+            onPressed: () => director.debugScheduleReturnPing(),
+          ),
+          const SizedBox(height: 8),
+          GameButton(
             label: 'DEV: GEAR LOOKBOOK',
             style: GameButtonStyle.grey,
             onPressed: () {
