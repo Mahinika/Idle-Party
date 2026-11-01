@@ -112,6 +112,14 @@ extension GameDirectorFight on GameDirector {
     if (wipeAutoSeconds.value != 0) wipeAutoSeconds.value = 0;
   }
 
+  /// Opt-in wipe ad. Stops the 3s retry so the fight does not resume under
+  /// the ad, and does not send the party back in when the ad ends.
+  Future<void> watchWipeRewardAd() async {
+    if (_state.metaDepth.adFree) return;
+    _cancelWipeAuto();
+    await watchPowerupAd();
+  }
+
   /// Normal caves retry themselves. Gauntlet, rifts, and Daily Run wait.
   void _armWipeAutoContinue() {
     _cancelWipeAuto();
