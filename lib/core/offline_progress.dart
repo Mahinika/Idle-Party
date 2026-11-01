@@ -234,7 +234,27 @@ abstract final class OfflineProgress {
         essence: next.essence + (chestEssence - essenceGained),
       );
     }
-    return next;
+    // The hub clock moves with the cave, or the next hub tick pays this
+    // essence again.
+    return next.copyWith(
+      metaDepth: next.metaDepth.copyWith(
+        hubAfkSec: accBefore + seconds,
+        hubIdleSubSec: _hubIdleLeftover(before, seconds),
+      ),
+    );
+  }
+
+  /// Same leftover [GoldIncome.applyHubIdle] would bank for [seconds].
+  static int _hubIdleLeftover(GameState before, int seconds) {
+    final perMinute = GoldIncome.hubRawPerMinute(before);
+    final total = before.metaDepth.hubIdleSubSec + seconds;
+    if (perMinute <= 0) return total;
+    final raw = max(0, (total * perMinute) ~/ 60);
+    if (raw <= 0) return total;
+    final consumed = (raw * 60 + perMinute - 1) ~/ perMinute;
+    var leftover = max(0, total - consumed);
+    if ((leftover * perMinute) ~/ 60 > 0) leftover = 0;
+    return leftover;
   }
 
   /// True when Scroll of Rest (or Forever Rest) added gold on top of [raw].

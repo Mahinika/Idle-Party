@@ -522,6 +522,33 @@ void main() {
     expect(r.state.highestFloorCleared, greaterThanOrEqualTo(4));
   });
 
+  test('cave away moves the hub clock so essence is not paid twice', () {
+    final base = GameLogic.leaveDungeon(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime.utc(2026, 10, 2)),
+        dungeonId: 'sandy',
+      ),
+    );
+    final hub = base.copyWith(
+      metaDepth: base.metaDepth.copyWith(hubAfkSec: 500, hubIdleSubSec: 20),
+    );
+    final away = OfflineProgress.applyOfflineProgress(
+      hub,
+      const Duration(minutes: 5),
+    );
+    final clock = OfflineProgress.applyHubIdleProgress(hub, 5 * 60);
+    expect(away.autoEnteredCave, isTrue);
+    expect(away.state.metaDepth.hubAfkSec, clock.metaDepth.hubAfkSec);
+    expect(away.state.metaDepth.hubIdleSubSec, clock.metaDepth.hubIdleSubSec);
+    final again = OfflineProgress.applyHubIdleProgress(away.state, 5 * 60);
+    final power = hub.sanctuaryPowerLevel;
+    final second =
+        GoldIncome.essenceDue(away.state.metaDepth.hubAfkSec + 5 * 60, power) -
+        GoldIncome.essenceDue(away.state.metaDepth.hubAfkSec, power);
+    expect(again.essence - away.state.essence, second);
+    expect(again.metaDepth.hubAfkSec, away.state.metaDepth.hubAfkSec + 5 * 60);
+  });
+
   test('hub away under 5 min stays on the chest', () {
     final hub = GameLogic.leaveDungeon(
       GameLogic.enterDungeon(
