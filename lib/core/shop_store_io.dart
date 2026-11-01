@@ -5,6 +5,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/billing_client_wrappers.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
+import 'app_analytics.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
@@ -198,10 +199,12 @@ Future<void> _settlePurchase(
       _onMessage?.call(
         purchase.error?.message ?? 'Purchase canceled or failed.',
       );
+      unawaited(AppAnalytics.storePurchaseCancel(purchase.productID));
       if (purchase.pendingCompletePurchase) {
         await InAppPurchase.instance.completePurchase(purchase);
       }
     case PurchaseStatus.canceled:
+      unawaited(AppAnalytics.storePurchaseCancel(purchase.productID));
       if (purchase.pendingCompletePurchase) {
         await InAppPurchase.instance.completePurchase(purchase);
       }

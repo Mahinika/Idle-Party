@@ -26,6 +26,7 @@ void main() {
         'first_boss',
         'd1_return',
         'time_to_combat',
+        'first_upgrade',
       ]),
     );
   });

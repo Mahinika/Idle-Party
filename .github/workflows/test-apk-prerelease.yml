@@ -56,6 +56,16 @@ jobs:
       - name: Dependencies
         run: flutter pub get
 
+      - name: Sync Firebase Android config (optional CI token)
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: bash tool/ci/firebase_sync_test_apk_config.sh
+
+      - name: Firebase config for test package
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: python3 tool/ci/ensure_google_services_test_apk.py
+
       - name: Patch Android for test package
         run: python3 tool/ci/patch_android_test_apk.py apply
 

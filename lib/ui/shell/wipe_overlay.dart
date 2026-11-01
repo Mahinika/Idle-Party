@@ -3,6 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 
 import '../../core/ad_rewarded.dart';
+import '../../core/analytics_events.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
@@ -308,7 +309,11 @@ class _WipeWatchAdState extends State<_WipeWatchAd> {
   void initState() {
     super.initState();
     if (!widget.director.state.metaDepth.adFree) {
-      unawaited(AdRewarded.prepareOffer());
+      unawaited(
+        AdRewarded.prepareOffer(
+          placement: AnalyticsEvents.placementWipeRetry,
+        ),
+      );
     }
   }
 

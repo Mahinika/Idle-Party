@@ -124,9 +124,12 @@ extension GameDirectorFight on GameDirector {
       return;
     }
     showToast('Loading ad…', life: 1.4);
-    final result = await AdRewarded.showRewarded();
+    final result = await AdRewarded.showRewarded(
+      placement: AnalyticsEvents.placementWipeRetry,
+    );
     switch (result) {
       case AdWatchResult.rewarded:
+        noteCompletedRewardedWatch();
         grantPowerupHour();
       case AdWatchResult.skipped:
         showToast(
@@ -246,9 +249,8 @@ extension GameDirectorFight on GameDirector {
         _state.wipeStreakCount >= GameLogic.pushWipesBeforeFarm &&
         _state.dungeonMode == DungeonMode.push &&
         _state.currentRoom.floorNumber > _state.highestFloorCleared;
-    _state = GameLogic.continueAfterWipe(
-      _state,
-    ).copyWith(lastUpdated: DateTime.now());
+    _state = GameLogic.continueAfterWipe(_state)
+        .copyWith(lastUpdated: DateTime.now());
     if (MetaSystems.isActiveDailyRun(_state)) {
       showToast('Daily echo restarted — fight on', life: 2.5);
     } else if (farmingBack && _state.pushResumeFloor > 0) {
@@ -542,6 +544,7 @@ extension GameDirectorFight on GameDirector {
         floor: _state.currentRoom.floorNumber,
       ),
     );
+    _syncMeasurementContext();
     _directorNotify();
     unawaited(_persistFlush());
     _syncSituationMusic();
@@ -568,6 +571,7 @@ extension GameDirectorFight on GameDirector {
     unawaited(
       AppAnalytics.leaveDungeon(dungeonId: leaveDungeonId, floor: leaveFloor),
     );
+    _syncMeasurementContext();
     _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {

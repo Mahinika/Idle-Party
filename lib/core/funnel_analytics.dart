@@ -42,6 +42,8 @@ abstract final class FunnelAnalytics {
   /// Welcome Back opened with no gold. Once per install.
   static const offlineHold = 'offline_hold';
 
+  static const firstUpgrade = 'first_upgrade';
+
   static const List<String> bootNames = <String>[
     bootIntroShown,
     startMenuShown,
@@ -58,6 +60,7 @@ abstract final class FunnelAnalytics {
     firstBoss,
     d1Return,
     timeToCombat,
+    firstUpgrade,
   ];
 
   /// Pre-funnel saves: stamp install and mark the chain done without emitting.
@@ -69,6 +72,7 @@ abstract final class FunnelAnalytics {
     firstBoss,
     d1Return,
     timeToCombat,
+    firstUpgrade,
   ];
 
   static bool has(GameState state, String name) =>
@@ -163,6 +167,14 @@ abstract final class FunnelAnalytics {
     return FunnelTick(_mark(state, firstBoss), const [FunnelHit(firstBoss)]);
   }
 
+  /// First forge gold spend this install.
+  static FunnelTick onFirstUpgrade(GameState state) {
+    if (has(state, firstUpgrade)) return FunnelTick.none(state);
+    return FunnelTick(_mark(state, firstUpgrade), const [
+      FunnelHit(firstUpgrade),
+    ]);
+  }
+
   /// Welcome Back gold. The funnel mark is once per install. The event
   /// fires on every return so the gold number stays readable.
   static FunnelTick onOfflineGold(GameState state, {int gold = 0}) {
@@ -197,6 +209,11 @@ abstract final class FunnelAnalytics {
     if (!has(next, firstBoss) &&
         (next.bossVictories > 0 || next.metaDepth.lifetimeBossKills > 0)) {
       final tick = onFirstBoss(next);
+      next = tick.state;
+      events.addAll(tick.events);
+    }
+    if (!has(next, firstUpgrade) && _hasAnyForgeSpend(next)) {
+      final tick = onFirstUpgrade(next);
       next = tick.state;
       events.addAll(tick.events);
     }
@@ -243,5 +260,15 @@ abstract final class FunnelAnalytics {
         funnelLogged: [...state.metaDepth.funnelLogged, name],
       ),
     );
+  }
+
+  static bool _hasAnyForgeSpend(GameState state) {
+    return state.attackBonus > 0 ||
+        state.defenseBonus > 0 ||
+        state.vitalityBonus > 0 ||
+        state.moveSpeedBonus > 0 ||
+        state.attackSpeedBonus > 0 ||
+        state.critBonus > 0 ||
+        state.masteryBonus > 0;
   }
 }

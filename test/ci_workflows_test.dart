@@ -12,6 +12,21 @@ void main() {
     expect(yaml, contains('idle-party-test-arm64.apk'));
     expect(yaml, contains('idle-party-test-x86_64.apk'));
     expect(yaml, contains('patch_android_test_apk.py'));
+    expect(yaml, contains('ensure_google_services_test_apk.py'));
+  });
+
+  test('test APK workflow validates Firebase config for .test package', () {
+    final yaml = File('.github/workflows/test-apk-prerelease.yml')
+        .readAsStringSync();
+    expect(yaml, contains('ensure_google_services_test_apk.py'));
+    expect(yaml, contains('firebase_sync_test_apk_config.sh'));
+  });
+
+  test('Android Gradle applies Firebase for Play and test package ids', () {
+    final gradle =
+        File('android/app/build.gradle.kts').readAsStringSync();
+    expect(gradle, contains('com.google.gms.google-services'));
+    expect(gradle, isNot(contains('!idleTestPackage')));
   });
 
   test('release Play workflow stays a default APK plus AAB', () {

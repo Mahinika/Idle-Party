@@ -21,8 +21,11 @@ import '../spatial/floor_blueprint.dart';
 import '../spatial/spatial_combat.dart';
 import 'game_audio.dart';
 import 'ad_boost.dart';
+import 'ad_free_nudge.dart';
 import 'ad_rewarded.dart';
+import 'analytics_events.dart';
 import 'app_analytics.dart';
+import 'build_stamp.dart';
 import 'debug_play_log.dart';
 import 'fight_frame_budget.dart';
 import 'funnel_analytics.dart';
@@ -153,6 +156,7 @@ class GameDirector extends ChangeNotifier {
 
   /// This process's clock for seconds-to-combat (set on New Game / continue).
   int _funnelSessionReadyMs = 0;
+  bool _appColdStartLogged = false;
 
   /// Combat map + corner HUD; bumps every spatial tick (~60 Hz).
   final ValueNotifier<int> combatFrame = ValueNotifier(0);
@@ -1212,6 +1216,9 @@ class GameDirector extends ChangeNotifier {
     final updated = GameLogic.dismissTip(_state, tipId);
     if (identical(updated, _state)) return;
     _state = updated;
+    if (AnalyticsEvents.coachTipIds.contains(tipId)) {
+      unawaited(AppAnalytics.coachStep(tipId));
+    }
     notifyListeners();
     unawaited(_persistFlush());
   }
@@ -1697,9 +1704,11 @@ class GameDirector extends ChangeNotifier {
       showToast('Already owned', life: 2.0);
       return;
     }
+    unawaited(AppAnalytics.storePurchaseStart(productId));
     final err = await ShopStore.buy(productId);
     notifyListeners();
     if (err != null) {
+      unawaited(AppAnalytics.storePurchaseCancel(productId));
       showToast(err, life: 3.2);
       return;
     }
@@ -1770,6 +1779,28 @@ class GameDirector extends ChangeNotifier {
     showToast('Daily Ad Ticket claimed', life: 2.2);
   }
 
+  /// A rewarded ad finished. Preview tickets do not count.
+  void noteCompletedRewardedWatch() {
+    final next = AdFreeNudge.noteWatch(_state);
+    if (identical(next, _state)) return;
+    _applyUpgrade(next);
+  }
+
+  /// SCROLLS showed the Ad-free line. Once per save. Logs the impression.
+  void markAdFreeNudgeShown() {
+    if (_state.metaDepth.adFreeNudgeShown) return;
+    final next = AdFreeNudge.markShown(_state);
+    if (identical(next, _state)) return;
+    _applyUpgrade(next);
+    unawaited(AppAnalytics.adFreeNudgeView());
+  }
+
+  /// Player tapped the SCROLLS line. The sheet opens SHOP after this.
+  void openAdFreeFromScrollsNudge() {
+    markAdFreeNudgeShown();
+    unawaited(AppAnalytics.adFreeNudgeTap());
+  }
+
   /// Android: show a rewarded ad, then +[AdBoost.ticketsPerAd] Ad Ticket.
   Future<void> watchPowerupAd() async {
     if (!AdRewarded.realAdsAvailable) {
@@ -1777,9 +1808,12 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     showToast('Loading ad…', life: 1.4);
-    final result = await AdRewarded.showRewarded();
+    final result = await AdRewarded.showRewarded(
+      placement: AnalyticsEvents.placementPowerups,
+    );
     switch (result) {
       case AdWatchResult.rewarded:
+        noteCompletedRewardedWatch();
         grantPowerupHour();
       case AdWatchResult.skipped:
         showToast(
