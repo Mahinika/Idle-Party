@@ -10,6 +10,7 @@ Future<void> warmup({
     required String productId,
     required String purchaseId,
     required bool restored,
+    bool recovered,
   })
   onGranted,
   void Function(String message)? onMessage,

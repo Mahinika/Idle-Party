@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/ad_rewarded.dart';
+import '../../core/build_stamp.dart';
 import '../../core/community_links.dart';
+import '../../core/meta_systems.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/local_reminders.dart';
@@ -478,6 +480,14 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           style: GameButtonStyle.grey,
           onPressed: () => WhatsNewOverlay.show(context, director),
         ),
+        if (BuildStamp.shortSha.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            BuildStamp.versionLabel(MetaSystems.currentVersion),
+            textAlign: TextAlign.center,
+            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ],
         if (kDebugMode) ...[
           const SizedBox(height: 8),
           GameButton(

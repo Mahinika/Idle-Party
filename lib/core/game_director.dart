@@ -383,6 +383,12 @@ class GameDirector extends ChangeNotifier {
     _state = _state.copyWith(gearStash: [...items, ..._state.gearStash]);
   }
 
+  /// Test helper: move wallet gold without touching meta.
+  @visibleForTesting
+  void debugSetGold(int gold) {
+    _state = _state.copyWith(gold: gold);
+  }
+
   bool get awaitingWipeChoice => _awaitingWipeChoice;
   bool get uiPaused => _uiPaused;
   bool get appPaused => _appPaused;
@@ -1562,10 +1568,12 @@ class GameDirector extends ChangeNotifier {
             required String productId,
             required String purchaseId,
             required bool restored,
+            bool recovered = false,
           }) => _onShopPurchaseGranted(
             productId,
             purchaseId: purchaseId,
             restored: restored,
+            recovered: recovered,
           ),
       onMessage: (msg) => showToast(msg, life: 2.4),
     );
@@ -1578,10 +1586,13 @@ class GameDirector extends ChangeNotifier {
   ///
   /// [restored] is a Play restore or a startup past-purchase query. Those
   /// must not toast "Purchased" or log a store_purchase event.
+  /// [recovered] is a startup past-purchase query. A pouch that actually
+  /// grants Cinders toasts "Purchase restored" and still does not log a buy.
   Future<bool> _onShopPurchaseGranted(
     String productId, {
     required String purchaseId,
     bool restored = false,
+    bool recovered = false,
   }) async {
     final item = ShopCatalog.byId[productId];
     if (item == null) return true;
@@ -1595,6 +1606,7 @@ class GameDirector extends ChangeNotifier {
       return true;
     }
     final beforeOwned = ShopBilling.isOwned(_state, item);
+    final beforeCinders = _state.metaDepth.cinders;
     final next = ShopBilling.applyTrackedPurchase(
       _state,
       item,
@@ -1608,12 +1620,20 @@ class GameDirector extends ChangeNotifier {
     }
     if (identical(next, _state)) return true;
     if (!_hasExistingSave) return false;
-    final before = _state;
+    final priorMeta = _state.metaDepth;
     _applyUpgrade(next);
     final saved = await _persistFlush();
     if (!saved) {
-      _applyUpgrade(before);
+      // Keep gold, fight progress, and the rest of the live state.
+      // Only the grant, which lives on meta, is undone.
+      _applyUpgrade(_state.copyWith(metaDepth: priorMeta));
       return false;
+    }
+    final paidCinders = _state.metaDepth.cinders > beforeCinders;
+    if (recovered && paidCinders) {
+      GameAudio.ui();
+      showToast('Purchase restored', life: 2.6);
+      return true;
     }
     if (restored) return true;
     GameAudio.ui();
@@ -1628,10 +1648,12 @@ class GameDirector extends ChangeNotifier {
     String productId, {
     required String purchaseId,
     bool restored = false,
+    bool recovered = false,
   }) => _onShopPurchaseGranted(
     productId,
     purchaseId: purchaseId,
     restored: restored,
+    recovered: recovered,
   );
 
   Future<void> buyShopItem(String productId) async {

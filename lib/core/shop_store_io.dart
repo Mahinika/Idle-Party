@@ -20,6 +20,7 @@ Future<bool> Function({
   required String productId,
   required String purchaseId,
   required bool restored,
+  bool recovered,
 })?
 _onGranted;
 void Function(String message)? _onMessage;
@@ -41,6 +42,7 @@ Future<void> warmup({
     required String productId,
     required String purchaseId,
     required bool restored,
+    bool recovered,
   })
   onGranted,
   void Function(String message)? onMessage,
@@ -217,6 +219,7 @@ Future<void> _settlePurchase(
               fromPastQuery: fromPastQuery,
               statusRestored: purchase.status == PurchaseStatus.restored,
             ),
+            recovered: fromPastQuery,
           );
         } catch (e, st) {
           debugPrint('ShopStore grant failed: $e\n$st');

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/ad_boost.dart';
 import 'package:idle_party/core/app_analytics.dart';
+import 'package:idle_party/core/build_stamp.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
@@ -346,6 +347,15 @@ void main() {
     }
   });
 
+  test('build stamp hides until a SHA is compiled in', () {
+    expect(BuildStamp.versionLabel('1.13.5'), '1.13.5');
+    expect(
+      BuildStamp.versionLabel('1.13.5', sha: '56b634e1abcd'),
+      '1.13.5 · 56b634e',
+    );
+    expect(BuildStamp.shortShaOf(''), isEmpty);
+  });
+
   test('past query counts as existing even when Play status is purchased', () {
     expect(
       ShopBilling.countsAsExistingPurchase(
@@ -376,6 +386,8 @@ void main() {
     await director.boot();
     await director.startNewGame(HeroSpecs.starterUnlocked);
     expect(director.hasExistingSave, isTrue);
+    final goldBefore = director.state.gold;
+    storage.duringSave = () => director.debugSetGold(director.state.gold + 40);
 
     final events = <String>[];
     final previous = AppAnalytics.debugSink;
@@ -391,6 +403,7 @@ void main() {
       expect(first, isFalse);
       expect(director.state.metaDepth.adFree, isFalse);
       expect(director.state.metaDepth.grantedShopPurchaseIds, isEmpty);
+      expect(director.state.gold, greaterThan(goldBefore));
       expect(director.toast, isNot(contains('Purchased')));
       expect(events, isEmpty);
       expect(await storage.load(), isNull);
@@ -456,6 +469,18 @@ void main() {
       expect(director.state.metaDepth.shopLongAway, isTrue);
       expect(director.toast, 'Purchased Long Away');
       expect(events, ['store_purchase']);
+
+      director.clearToast();
+      final pouch = await director.debugGrantShopPurchase(
+        'cinder_pouch',
+        purchaseId: 'GPA.pouch',
+        restored: true,
+        recovered: true,
+      );
+      expect(pouch, isTrue);
+      expect(director.state.metaDepth.cinders, 8);
+      expect(director.toast, 'Purchase restored');
+      expect(events, ['store_purchase']);
     } finally {
       AppAnalytics.debugSink = previous;
       director.dispose();
@@ -464,8 +489,13 @@ void main() {
 }
 
 class _DenySaveStorage extends InMemoryGameStorage {
+  void Function()? duringSave;
+
   @override
-  Future<bool> save(GameState state) async => false;
+  Future<bool> save(GameState state) async {
+    duringSave?.call();
+    return false;
+  }
 }
 
 class _ThrowSaveStorage extends InMemoryGameStorage {
