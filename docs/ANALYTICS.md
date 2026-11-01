@@ -66,6 +66,14 @@ Fatal Flutter errors and uncaught async errors are recorded. Collection uses
 the same on/off switch as Analytics. A crash report shows up after the next
 cold start. There is no crash button in the game.
 
+`FirebaseInitProvider` is removed in the Android manifest. That provider
+called `FirebaseApp.initializeApp` on the main thread before the first
+frame, and Crashlytics plus Firebase Sessions start inside that call. On
+1.13.6 that blocked cold start (Play icon, then “Idle Party svarar inte”).
+`Firebase.initializeApp` runs after the Cognifox frame, on the plugin
+background pool. Dart errors that happen before that attach are queued and
+sent once Crashlytics is up. Saves are unchanged.
+
 ## Already in this Firebase project
 
 Not added here. Do not grow them for measurement.

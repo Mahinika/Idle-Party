@@ -17,8 +17,47 @@ bool get _androidLive {
 }
 
 bool _ready = false;
+bool _handlersArmed = false;
 bool _crashHandlersInstalled = false;
 FirebaseAnalytics? _analytics;
+final List<FlutterErrorDetails> _flutterPending = <FlutterErrorDetails>[];
+final List<(Object, StackTrace?)> _platformPending = <(Object, StackTrace?)>[];
+
+/// Holds Dart errors until [init] attaches Crashlytics. No platform call.
+void armEarlyErrorBuffer() {
+  if (_handlersArmed) return;
+  _handlersArmed = true;
+  final previousFlutter = FlutterError.onError;
+  FlutterError.onError = (FlutterErrorDetails details) {
+    if (_crashHandlersInstalled) {
+      unawaited(FirebaseCrashlytics.instance.recordFlutterFatalError(details));
+      return;
+    }
+    previousFlutter?.call(details);
+    _flutterPending.add(details);
+  };
+  final previousPlatform = PlatformDispatcher.instance.onError;
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    if (_crashHandlersInstalled) {
+      unawaited(
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true),
+      );
+    } else {
+      _platformPending.add((error, stack));
+    }
+    return previousPlatform?.call(error, stack) ?? false;
+  };
+}
+
+int get debugBufferedErrorCount =>
+    _flutterPending.length + _platformPending.length;
+
+void debugResetEarlyErrorBuffer() {
+  _handlersArmed = false;
+  _crashHandlersInstalled = false;
+  _flutterPending.clear();
+  _platformPending.clear();
+}
 
 /// Firebase auto-collects these; logging them manually is rejected.
 const Set<String> _reservedEventNames = <String>{'first_open'};
@@ -73,18 +112,33 @@ Future<void> logEvent(String name, [Map<String, Object>? params]) async {
 
 void _installCrashHandlers() {
   if (_crashHandlersInstalled) return;
+  if (!_handlersArmed) {
+    armEarlyErrorBuffer();
+  }
   _crashHandlersInstalled = true;
-  // recordFlutterFatalError already presents the Flutter error.
-  FlutterError.onError = (details) {
-    unawaited(FirebaseCrashlytics.instance.recordFlutterFatalError(details));
-  };
-  final previousPlatform = PlatformDispatcher.instance.onError;
-  PlatformDispatcher.instance.onError = (error, stack) {
+  // Already presented while they waited. Record only, so the log is not doubled.
+  final flutterCopy = List<FlutterErrorDetails>.of(_flutterPending);
+  final platformCopy = List<(Object, StackTrace?)>.of(_platformPending);
+  _flutterPending.clear();
+  _platformPending.clear();
+  for (final details in flutterCopy) {
     unawaited(
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true),
+      FirebaseCrashlytics.instance.recordError(
+        details.exception,
+        details.stack,
+        fatal: true,
+      ),
     );
-    return previousPlatform?.call(error, stack) ?? false;
-  };
+  }
+  for (final pending in platformCopy) {
+    unawaited(
+      FirebaseCrashlytics.instance.recordError(
+        pending.$1,
+        pending.$2,
+        fatal: true,
+      ),
+    );
+  }
 }
 
 Future<void> _requestConsent() async {

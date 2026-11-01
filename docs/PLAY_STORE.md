@@ -18,7 +18,7 @@ Package id: **`com.idleparty.app`**
 | Store listing copy (EN + 9 locales) | ✅ live | Default locale **en-US** + 9 translations committed **2026-09-25** (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`). In-game UI stays English. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ✅ submitted | **8** phone shots, the 512 icon, and the feature graphic replaced **2026-10-28** in the same edit as **1.13.5 (231)** (1.13.3 party-line pack). Tablet shot slots cleared on all listing locales in that edit. The public page can lag until Google publishes. |
-| Listing assets freshness | shots 2026-10-28 @ 1.13.5 · video 2026-10-23 @ 1.13.3 · icon 2026-10-28 @ 1.13.5 · feature 2026-10-28 @ 1.13.5 | Phone shots, icon, and feature graphic uploaded with **1.13.5**. Local Sandy preview still **2026-10-23** (1.13.3). `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than three patches. Recapture the preview before 1.13.7. |
+| Listing assets freshness | shots 2026-10-28 @ 1.13.5 · video 2026-10-23 @ 1.13.3 · icon 2026-10-28 @ 1.13.5 · feature 2026-10-28 @ 1.13.5 | Phone shots, icon, and feature graphic uploaded with **1.13.5**. Local Sandy preview still **2026-10-23** (1.13.3). `store_listing_plan_test` allows four patches of drift on the video until it is recaptured. |
 | Preview video (YouTube) | ✅ sent | Every listing locale (11, including `pl-PL`) points at public Cognifox `cyBlN3HCR48` (`https://www.youtube.com/watch?v=cyBlN3HCR48`), committed **2026-10-04**. oEmbed works. Ads off, embed on, not for kids. YouTube filed the 9:16 film as a Short. Previous unlisted `UHLG28lHmPs`. `XfKog5CAiUs` stays unused (Play rejected that embed). |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
@@ -83,6 +83,7 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Owner said do the best next step (**2026-10-28**) — ship **1.13.5**.
 - [x] Signed Production AAB **1.13.5+231** built locally (`app-release.aab`, 188.9 MB) and uploaded via Play API (one edit: 8 phone shots, icon, feature graphic, tablet slots cleared, bundle, production track). Commit edit `04887265008164011819`. Notes also cover unsent **1.13.3** and **1.13.4**. Public page can still name **1.13.2** until Google publishes.
 - [x] Tag `v1.13.6` (`ba67975e`, **1.13.6+232**) attached a signed AAB and APK to the GitHub Release. CI decoded the upload keystore and wrote the live AdMob ids. Not sent to Play.
+- [ ] Tag `v1.13.7` — cold-start fix; dispatch Play upload only when the owner asks.
 - [ ] Dispatch `.github/workflows/play-upload.yml` with tag `v1.13.6` only when the owner asks. That job uploads the release AAB to production at 5% with the en-US and sv-SE notes. It does not run on its own.
 
 ### Production upload paste (en-US release notes)

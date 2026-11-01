@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/app_analytics.dart';
+import 'core/boot_clock.dart';
 import 'core/remote_tune_boot.dart';
 import 'core/boot_funnel.dart';
 import 'core/funnel_analytics.dart';
@@ -31,10 +32,13 @@ import 'ui/web_click_bridge.dart';
 
 Future<void> _bootFirebase() async {
   await AppAnalytics.init();
+  BootClock.mark('firebase');
   await RemoteTuneBoot.refresh();
+  BootClock.mark('remoteTune');
 }
 
 void main() {
+  BootClock.mark('main');
   WidgetsFlutterBinding.ensureInitialized();
   // Press Start 2P, VT323, and Cinzel are in assets/fonts/. No runtime fetch.
   GoogleFonts.config.allowRuntimeFetching = false;
@@ -49,10 +53,10 @@ void main() {
       yield LicenseEntryWithLineBreaks(entry.value, license);
     }
   });
-  // Fire-and-forget before first frame — phone product is edge-to-edge game UI.
-  unawaited(lockImmersiveUi());
-  // Android + google-services.json only; no-op elsewhere / missing config.
-  unawaited(_bootFirebase());
+  // Buffer Dart errors with no platform call. Crashlytics attaches after
+  // the first frame and drains this queue.
+  AppAnalytics.armEarlyErrorBuffer();
+  BootClock.mark('runApp');
   runApp(const MyApp());
   // Expose the semantics DOM overlay on web so browser automation / a11y
   // tools can click buttons (CanvasKit has no real DOM widgets otherwise).
@@ -61,6 +65,14 @@ void main() {
     SemanticsBinding.instance.ensureSemantics();
     WebClickBridge.install();
   }
+  // The native Firebase provider is removed, so this is the init. It runs
+  // on a background pool after the Cognifox frame. Save load stays behind
+  // that splash. Collection stays off until UMP.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    BootClock.mark('firstFrame');
+    unawaited(lockImmersiveUi());
+    unawaited(_bootFirebase());
+  });
 }
 
 class MyApp extends StatefulWidget {
@@ -90,7 +102,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     // Stable for the app lifetime — never recreate on MaterialApp rebuilds.
     _director = widget.director ?? GameDirector.persistent();
-    unawaited(lockImmersiveUi());
   }
 
   @override
