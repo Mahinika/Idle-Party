@@ -26,11 +26,10 @@ class WaypointCache {
     required (double, double)? Function() compute,
   }) {
     final gates = _gatesOf(openGateIds);
-    final mapId = identityHashCode(map);
-    final index = _index(mapId, gates, sx, sy, gx, gy);
+    final index = _index(gates, sx, sy, gx, gy);
     final slot = _slots[index];
     if (slot != null &&
-        slot.mapId == mapId &&
+        identical(slot.map, map) &&
         slot.sx == sx &&
         slot.sy == sy &&
         slot.gx == gx &&
@@ -40,19 +39,18 @@ class WaypointCache {
     }
     computes++;
     final point = compute();
-    _slots[index] = _Slot(mapId, gates, sx, sy, gx, gy, point);
+    _slots[index] = _Slot(map, gates, sx, sy, gx, gy, point);
     return point;
   }
 
   static int _index(
-    int mapId,
     List<int> gates,
     int sx,
     int sy,
     int gx,
     int gy,
   ) {
-    var h = mapId;
+    var h = 17;
     for (final id in gates) {
       h = 0x1fffffff & (h * 31 + id);
     }
@@ -78,9 +76,9 @@ class WaypointCache {
 }
 
 class _Slot {
-  _Slot(this.mapId, this.gates, this.sx, this.sy, this.gx, this.gy, this.point);
+  _Slot(this.map, this.gates, this.sx, this.sy, this.gx, this.gy, this.point);
 
-  final int mapId;
+  final TileMap map;
   final List<int> gates;
   final int sx;
   final int sy;

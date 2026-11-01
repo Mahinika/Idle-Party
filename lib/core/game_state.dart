@@ -109,6 +109,7 @@ class GameState {
     this.ambienceVolume = 0.20,
     this.musicVolume = 0.22,
     this.vfxQuality = VfxQuality.full,
+    this.vfxPinned = false,
     this.combatPace = 1,
     this.autoEquipUpgrades = true,
     this.autoSellMaxPower = 48,
@@ -357,6 +358,10 @@ class GameState {
 
   /// Combat VFX detail (full / lite / minimal).
   final VfxQuality vfxQuality;
+
+  /// Player chose a VFX setting. Auto-ease must not override it. Survives
+  /// restart and Ascend. Missing on old saves, which still auto-ease.
+  final bool vfxPinned;
 
   /// Live fight speed, 1 or 2. Wall-clock only — offline catch-up ignores it.
   final int combatPace;
@@ -1165,6 +1170,7 @@ class GameState {
     double? ambienceVolume,
     double? musicVolume,
     VfxQuality? vfxQuality,
+    bool? vfxPinned,
     int? combatPace,
     bool? reducedVfx,
     bool? autoEquipUpgrades,
@@ -1318,6 +1324,7 @@ class GameState {
           (reducedVfx == null
               ? this.vfxQuality
               : (reducedVfx ? VfxQuality.lite : VfxQuality.full)),
+      vfxPinned: vfxPinned ?? this.vfxPinned,
       combatPace: (combatPace ?? this.combatPace).clamp(1, 2),
       autoEquipUpgrades: autoEquipUpgrades ?? this.autoEquipUpgrades,
       autoSellMaxPower: autoSellMaxPower ?? this.autoSellMaxPower,
@@ -1495,6 +1502,7 @@ class GameState {
     'ambienceVolume': ambienceVolume,
     'musicVolume': musicVolume,
     'vfxQuality': vfxQuality.name,
+    'vfxPinned': vfxPinned,
     'combatPace': combatPace,
     'reducedVfx': reducedVfx,
     'autoEquipUpgrades': autoEquipUpgrades,
@@ -1771,6 +1779,7 @@ class GameState {
         json['vfxQuality'],
         legacyReduced: json['reducedVfx'] as bool?,
       ),
+      vfxPinned: (json['vfxPinned'] as bool?) ?? false,
       combatPace: _jsonInt(json['combatPace'], 1).clamp(1, 2),
       autoEquipUpgrades: (json['autoEquipUpgrades'] as bool?) ?? true,
       autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 48),

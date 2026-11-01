@@ -310,8 +310,6 @@ class GameDirector extends ChangeNotifier {
   double _debugTimeScale = 1;
   double get debugTimeScale => _debugTimeScale;
 
-  /// Player picked Full/Lite/Minimal. Auto-ease must not override that.
-  bool _vfxPinned = false;
   int _slowFightTicks = 0;
 
   /// Cheap phones: a few slow fight ticks drop Full to Lite once.
@@ -319,7 +317,7 @@ class GameDirector extends ChangeNotifier {
   void debugNoteFightBudget(int elapsedMs) => _noteFightBudget(elapsedMs);
 
   void _noteFightBudget(int elapsedMs) {
-    if (_vfxPinned || _state.vfxQuality != VfxQuality.full) return;
+    if (_state.vfxPinned || _state.vfxQuality != VfxQuality.full) return;
     if (!_state.inDungeon) return;
     if (elapsedMs > 48) {
       _slowFightTicks++;
@@ -643,8 +641,12 @@ class GameDirector extends ChangeNotifier {
   }
 
   void setVfxQuality(VfxQuality value, {bool fromUser = true}) {
-    if (fromUser) _vfxPinned = true;
-    _applyUpgrade(_state.copyWith(vfxQuality: value));
+    _applyUpgrade(
+      _state.copyWith(
+        vfxQuality: value,
+        vfxPinned: fromUser ? true : _state.vfxPinned,
+      ),
+    );
   }
 
   void cycleVfxQuality() {

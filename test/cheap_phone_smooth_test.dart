@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
+import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/gear_set.dart';
 import 'package:idle_party/models/loot.dart';
@@ -30,6 +31,32 @@ void main() {
       director.debugNoteFightBudget(80);
     }
     expect(director.state.vfxQuality, VfxQuality.full);
+    expect(director.state.vfxPinned, isTrue);
+
+    final saved = director.state.toJson();
+    expect(saved['vfxPinned'], isTrue);
+    final restored = GameLogic.stateFromJson(saved);
+    expect(restored.vfxPinned, isTrue);
+    final again = GameDirector.preview(initialState: restored);
+    await again.boot();
+    again.enterDungeon();
+    for (var i = 0; i < 20; i++) {
+      again.debugNoteFightBudget(80);
+    }
+    expect(again.state.vfxQuality, VfxQuality.full);
+    expect(again.state.vfxPinned, isTrue);
+    again.dispose();
+
+    final missing = Map<String, dynamic>.from(saved)..remove('vfxPinned');
+    expect(GameLogic.stateFromJson(missing).vfxPinned, isFalse);
+
+    final ascended = GameLogic.ascend(
+      restored.copyWith(
+        bossVictories: GameLogic.bossesRequiredForAscension(0),
+      ),
+    );
+    expect(ascended.vfxPinned, isTrue);
+    expect(ascended.vfxQuality, VfxQuality.full);
     director.dispose();
   });
 
@@ -102,6 +129,10 @@ void main() {
 
     SpatialCombat.debugNextWaypoint(map, {3}, 1.2, 2.2, 6.2, 2.2);
     expect(SpatialCombat.debugWaypointComputes, computes + 2);
+
+    final other = _gapMap();
+    SpatialCombat.debugNextWaypoint(other, {}, 1.2, 2.2, 6.2, 2.2);
+    expect(SpatialCombat.debugWaypointComputes, computes + 3);
     SpatialCombat.debugClearWaypointCache();
   });
 }
