@@ -124,7 +124,9 @@ extension GameDirectorFight on GameDirector {
       return;
     }
     showToast('Loading ad…', life: 1.4);
-    final result = await AdRewarded.showRewarded();
+    final result = await AdRewarded.showRewarded(
+      placement: AnalyticsEvents.placementWipeRetry,
+    );
     switch (result) {
       case AdWatchResult.rewarded:
         grantPowerupHour();
@@ -542,6 +544,7 @@ extension GameDirectorFight on GameDirector {
         floor: _state.currentRoom.floorNumber,
       ),
     );
+    _syncMeasurementContext();
     _directorNotify();
     unawaited(_persistFlush());
     _syncSituationMusic();
@@ -568,6 +571,7 @@ extension GameDirectorFight on GameDirector {
     unawaited(
       AppAnalytics.leaveDungeon(dungeonId: leaveDungeonId, floor: leaveFloor),
     );
+    _syncMeasurementContext();
     _syncHubIdleTimer();
     final payoffs = LogicNotices.takeMetaPayoffs();
     if (payoffs.isNotEmpty) {

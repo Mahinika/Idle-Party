@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:async' show unawaited;
 
 import '../../core/ad_rewarded.dart';
+import '../../core/analytics_events.dart';
 import '../../core/chase_contract.dart';
 import '../../core/chase_dispatcher.dart';
 import '../../core/comeback_chest.dart';
@@ -198,7 +199,11 @@ Future<void> showOfflineProgressDialog(
               builder: (context, setLocal) {
                 if (showWatch && !offerPrepared) {
                   offerPrepared = true;
-                  unawaited(AdRewarded.prepareOffer());
+                  unawaited(
+                    AdRewarded.prepareOffer(
+                      placement: AnalyticsEvents.placementWelcomeBack,
+                    ),
+                  );
                 }
                 if (adNote.isNotEmpty) {
                   return Padding(

@@ -35,6 +35,8 @@ class ShopDock extends StatefulWidget {
 }
 
 class _ShopDockState extends State<ShopDock> {
+  final Set<String> _productViewsLogged = {};
+
   @override
   void initState() {
     super.initState();
@@ -75,6 +77,11 @@ class _ShopDockState extends State<ShopDock> {
               }
             : null;
         final items = RemoteTune.pin(ShopCatalog.shelf(playListed: playListed));
+        for (final item in items) {
+          if (_productViewsLogged.add(item.id)) {
+            unawaited(AppAnalytics.storeProductView(item.id));
+          }
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

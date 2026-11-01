@@ -23,6 +23,8 @@ No Idle Party user id is attached. Events do not include the save file.
 
 ## Event plan
 
+Full catalog with params: [analytics_events.md](analytics_events.md).
+
 Firebase also auto-collects `first_open`, `session_start`, and engagement
 time when collection is on. The app does not log `first_open` itself
 (Firebase rejects that name). The local funnel still stamps it so the rest

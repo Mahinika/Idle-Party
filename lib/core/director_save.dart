@@ -67,6 +67,25 @@ extension GameDirectorSave on GameDirector {
     _applyFunnelTick(tick, persist: false);
   }
 
+  void _noteAppColdStart() {
+    if (_appColdStartLogged) return;
+    _appColdStartLogged = true;
+    final days = AnalyticsEvents.daysSinceInstallMs(
+      _state.metaDepth.funnelInstallMs,
+      DateTime.now(),
+    );
+    unawaited(AppAnalytics.appColdStart(daysSinceInstall: days));
+    _syncMeasurementContext();
+  }
+
+  void _syncMeasurementContext() {
+    final zone = _state.inDungeon ? _state.dungeonId : 'hub';
+    AppAnalytics.syncCrashContext(
+      zoneId: zone,
+      appVersion: BuildStamp.versionLabel(ChangelogCatalog.currentVersion),
+    );
+  }
+
   /// Title NEW GAME on an empty file. Ignored once [startNewGame] runs.
   void armNewGameSlot(int index) {
     _pendingNewGameSlot = index.clamp(0, GameStorage.slotCount - 1);
@@ -254,6 +273,7 @@ extension GameDirectorSave on GameDirector {
       // Only persist when continuing an existing save (offline catch-up).
       if (_hasExistingSave) {
         _notePlaySession();
+        _noteAppColdStart();
         _noteFunnelSession(newInstall: false);
         await _persistFlush();
       } else {
@@ -323,7 +343,11 @@ extension GameDirectorSave on GameDirector {
         );
         if (offline.welcomeBackAdOffer) {
           unawaited(AppAnalytics.welcomeBackAdOffer());
-          unawaited(AdRewarded.prepareOffer());
+          unawaited(
+            AdRewarded.prepareOffer(
+              placement: AnalyticsEvents.placementWelcomeBack,
+            ),
+          );
         }
         // The cave opens the same Welcome Back card. A toast would cover it.
       }
@@ -386,6 +410,7 @@ extension GameDirectorSave on GameDirector {
     final caught = await _catchUpSaved(saved);
     await _installCaughtUp(caught);
     _notePlaySession();
+    _noteAppColdStart();
     _noteFunnelSession(newInstall: false);
     await _persistFlush();
     _saveSlots = await _storage.listSlots();
@@ -444,6 +469,7 @@ extension GameDirectorSave on GameDirector {
     );
     _hasExistingSave = true;
     _notePlaySession(newGame: true);
+    _noteAppColdStart();
     _noteFunnelSession(newInstall: true);
     _syncDevicePrefs();
     _lastHighestDungeon = _state.highestDungeonCleared;

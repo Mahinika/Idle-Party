@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'app_analytics.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart' as test_env;
 import 'local_reminders.dart';
@@ -38,8 +41,31 @@ void _ensureTz() {
 Future<void> init() async {
   if (!_androidLive || _pluginReady) return;
   const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-  await _plugin.initialize(const InitializationSettings(android: android));
+  await _plugin.initialize(
+    const InitializationSettings(android: android),
+    onDidReceiveNotificationResponse: _onNotificationTap,
+    onDidReceiveBackgroundNotificationResponse: _onNotificationTapBackground,
+  );
   _pluginReady = true;
+}
+
+@pragma('vm:entry-point')
+void _onNotificationTapBackground(NotificationResponse response) {}
+
+void _onNotificationTap(NotificationResponse response) {
+  final channel = switch (response.notificationResponseType) {
+    NotificationResponseType.selectedNotification => _channelFromPayload(
+      response.payload,
+      response.id,
+    ),
+    _ => 'unknown',
+  };
+  unawaited(AppAnalytics.notifyOpen(channel: channel));
+}
+
+String _channelFromPayload(String? payload, int? id) {
+  if (id == ChestTray.id) return 'chest_tray';
+  return 'away_ping';
 }
 
 Future<bool> requestPermission() async {

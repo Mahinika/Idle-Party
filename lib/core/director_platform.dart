@@ -172,8 +172,11 @@ extension GameDirectorPlatform on GameDirector {
     }
     _welcomeBackAdBusy = true;
     showToast('Loading ad…', life: 1.4);
+    unawaited(AppAnalytics.welcomeBackAdTap());
     try {
-      final result = await AdRewarded.showRewarded();
+      final result = await AdRewarded.showRewarded(
+        placement: AnalyticsEvents.placementWelcomeBack,
+      );
       switch (result) {
         case AdWatchResult.rewarded:
           _welcomeBackAdGranted = true;
@@ -202,6 +205,7 @@ extension GameDirectorPlatform on GameDirector {
           );
           return true;
         case AdWatchResult.skipped:
+          unawaited(AppAnalytics.welcomeBackAdSkip());
           showToast(
             'Watch the whole ad to double this trip\'s loot',
             life: 2.2,
@@ -229,7 +233,9 @@ extension GameDirectorPlatform on GameDirector {
       return;
     }
     showToast('Loading ad…', life: 1.4);
-    final result = await AdRewarded.showRewarded();
+    final result = await AdRewarded.showRewarded(
+      placement: AnalyticsEvents.placementWispGift,
+    );
     _wispChoiceOpen = false;
     switch (result) {
       case AdWatchResult.rewarded:

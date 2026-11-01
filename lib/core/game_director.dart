@@ -22,7 +22,9 @@ import '../spatial/spatial_combat.dart';
 import 'game_audio.dart';
 import 'ad_boost.dart';
 import 'ad_rewarded.dart';
+import 'analytics_events.dart';
 import 'app_analytics.dart';
+import 'build_stamp.dart';
 import 'debug_play_log.dart';
 import 'fight_frame_budget.dart';
 import 'funnel_analytics.dart';
@@ -153,6 +155,7 @@ class GameDirector extends ChangeNotifier {
 
   /// This process's clock for seconds-to-combat (set on New Game / continue).
   int _funnelSessionReadyMs = 0;
+  bool _appColdStartLogged = false;
 
   /// Combat map + corner HUD; bumps every spatial tick (~60 Hz).
   final ValueNotifier<int> combatFrame = ValueNotifier(0);
@@ -1212,6 +1215,9 @@ class GameDirector extends ChangeNotifier {
     final updated = GameLogic.dismissTip(_state, tipId);
     if (identical(updated, _state)) return;
     _state = updated;
+    if (AnalyticsEvents.coachTipIds.contains(tipId)) {
+      unawaited(AppAnalytics.coachStep(tipId));
+    }
     notifyListeners();
     unawaited(_persistFlush());
   }
@@ -1697,9 +1703,11 @@ class GameDirector extends ChangeNotifier {
       showToast('Already owned', life: 2.0);
       return;
     }
+    unawaited(AppAnalytics.storePurchaseStart(productId));
     final err = await ShopStore.buy(productId);
     notifyListeners();
     if (err != null) {
+      unawaited(AppAnalytics.storePurchaseCancel(productId));
       showToast(err, life: 3.2);
       return;
     }
@@ -1777,7 +1785,9 @@ class GameDirector extends ChangeNotifier {
       return;
     }
     showToast('Loading ad…', life: 1.4);
-    final result = await AdRewarded.showRewarded();
+    final result = await AdRewarded.showRewarded(
+      placement: AnalyticsEvents.placementPowerups,
+    );
     switch (result) {
       case AdWatchResult.rewarded:
         grantPowerupHour();

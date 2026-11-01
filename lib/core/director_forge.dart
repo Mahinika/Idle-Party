@@ -46,6 +46,7 @@ extension GameDirectorForge on GameDirector {
       return;
     }
     _applyUpgrade(updated);
+    _applyFunnelTick(FunnelAnalytics.onFirstUpgrade(_state));
     GameAudio.forgeUp();
     final afterRec = GameLogic.recommendedForgeUpgrade(_state);
     if (afterRec != beforeRec) {
@@ -78,6 +79,7 @@ extension GameDirectorForge on GameDirector {
       return;
     }
     _applyUpgrade(updated);
+    _applyFunnelTick(FunnelAnalytics.onFirstUpgrade(_state));
     GameAudio.forgeUp();
     final afterRec = GameLogic.recommendedForgeUpgrade(_state);
     if (afterRec != beforeRec) {
