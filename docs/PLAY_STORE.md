@@ -255,7 +255,7 @@ Sideload and web stay quiet. Code: `PlayStoreUpdate`, `PlayReviewAsk`.
 
 - **Cold start:** if Play reports a newer versionCode, the app blocks on `PlayUpdateRequiredScreen` until the update starts (immediate, then flexible, then the listing).
 - **Hub:** a banner with **GET UPDATE** and **LATER**. LATER hides that versionCode (`dismissedPlayUpdateVersionCode`). SETTINGS shows **GET UPDATE** while the notice is up.
-- **Rating:** one hub card after the first boss or first Ascend. It waits if a hunt is READY. **RATE ON PLAY** opens Google's in-app review, or the listing if Play will not show the sheet. No loot and no tickets. `metaDepth.reviewPrompted` survives Ascend. SETTINGS has the same **RATE ON PLAY**.
+- **Rating:** the hub card waits for a later sitting (never the first) and a good moment: a boss this sitting, or a Welcome Back where the cave kept fighting, a boss fell, or the hub chest filled. It waits if a hunt is READY. **NOT NOW** hides it for 7 days, up to 3 times. **RATE ON PLAY** opens Google's in-app review (`in_app_review`), or the listing if Play will not show the sheet, and does not ask again. No loot and no tickets. `reviewPrompted`, `reviewAskCount`, `reviewSnoozeUntilMs`, and `sessionCount` survive Ascend and default when an old save lacks them. SETTINGS has the same **RATE ON PLAY**.
 
 ### Play Games setup (leaderboards + cloud)
 

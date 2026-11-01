@@ -3056,10 +3056,10 @@ class OfflineProgressResult {
     return bits.join(' · ');
   }
 
-  /// One honest line: hub sanctuary vs dungeon fight — not mixed up.
+  /// One honest line: the cave keeps fighting, the hub pays gold.
   String get afkWhereLine => wasInDungeon
-      ? 'Left mid-dungeon · party kept fighting (AFK assist)'
-      : 'Rested at the hub · gold fills for $hubChestHours hours, then stops · essence after 10 min · no combat';
+      ? 'Left mid-dungeon · your party kept fighting'
+      : 'Rested at the hub · gold fills for $hubChestHours hours, then stops · essence after 10 min · your party keeps fighting in a cave';
 
   /// Banner + Welcome Back share this gate.
   /// Gold / clears show even under 20s; other rewards need ≥20s away.
