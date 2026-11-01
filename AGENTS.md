@@ -49,6 +49,9 @@ flutter test test/changelog_sync_test.dart
 ```
 
 Tag `sim` is nightly (`.github/workflows/sim-nightly.yml`), not missing CI.
+Sideload test APKs: `.github/workflows/test-apk-prerelease.yml`
+(`workflow_dispatch` or a `test-*` tag). It publishes split arm64 and x86_64
+APKs for `com.idleparty.app.test`. Play release builds stay in `build-apk.yml`.
 Share-fast: `flutter test test/class_balance_share_fast_test.dart`.
 
 Skills live under `.cursor/skills/`. Slash: `/init` resyncs this file and
