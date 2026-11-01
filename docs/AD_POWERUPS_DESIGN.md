@@ -64,9 +64,11 @@ flowchart LR
 - Buff icons always stack **above** the FAB (and above FLASK in dungeon): sword
   (ATK), gold coin, tome (XP), boots (walk), chest (loot), wand (haste),
   campfire (rest). Gray when off, full color + remaining time when on.
-- Tap FAB → bottom sheet with two blocks:
-  1. **Earn** — WATCH AD · +1 Ticket (playtest: PREVIEW +1).
-  2. **Spend** — catalog rows (below).
+- Tap FAB → bottom sheet with blocks:
+  1. **THE WELL** — 1 free ticket + 2 ad steps per UTC day, then extra WATCH ads
+     still grant tickets (unlimited).
+  2. **WISP** — daily lantern cap in the cave (see [wisp_gift.dart](../lib/core/wisp_gift.dart)).
+  3. **Spend** — catalog rows (below).
 - After the third finished rewarded watch (SCROLLS, WISP, Welcome Back, or
   wipe — preview tickets do not count), Earn can show one quiet line:
   `Tired of ads? Ad-free is a one-time purchase`. It opens SHOP. Once per
@@ -87,7 +89,9 @@ Visibility gates:
 | Knob | Value |
 |------|-------|
 | Tickets per finished ad | **1** |
-| Soft earn cap | **None** per day in v1 (revisit if AL20 feels mandatory) |
+| Daily Well (F2P) | **1** free ticket + **2** ad steps per UTC day (`scrollWellBonusClaims` 0→3) |
+| Extra WATCH after Well | **Unlimited** (same +1 ticket ad) |
+| Soft earn cap | **None** on extra WATCH after Well (revisit if AL20 feels mandatory) |
 | Ticket persist | Survives Ascend / REBORN (with other meta) |
 | Max stack per buff | **24h** remaining (same as `AdBoost.maxStackMs`) |
 

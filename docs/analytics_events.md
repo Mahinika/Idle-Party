@@ -53,7 +53,12 @@ once-per-install funnel in [`lib/core/funnel_analytics.dart`](../lib/core/funnel
 | `rewarded_skip` | `placement` | Dismissed before reward. |
 | `rewarded_load_fail` | `placement` | SDK load/show failed. |
 
-Placements: `welcome_back`, `wisp_gift`, `powerups`, `wipe_retry`.
+Placements: `welcome_back`, `wisp_gift`, `powerups`, `scroll_well`, `wipe_retry`, `wipe_revive`.
+
+| Event | Params | When |
+|---|---|---|
+| `scroll_well_free` | — | SCROLLS Daily Well: free Ad Ticket claimed (UTC day). |
+| `scroll_well_ad` | `step` (1–2) | Well bonus ad finished (+1 ticket). |
 
 ## SHOP (Play Billing)
 

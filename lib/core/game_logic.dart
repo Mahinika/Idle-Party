@@ -17,6 +17,7 @@ import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
 import 'ad_boost.dart';
+import 'scroll_well.dart';
 import 'ad_offer.dart';
 import 'relic_ids.dart';
 import 'relics.dart';
@@ -819,6 +820,40 @@ class GameLogic {
     final withTicket = grantAdTicket(state);
     return withTicket.copyWith(
       metaDepth: withTicket.metaDepth.copyWith(adFreeDailyClaimUtc: day),
+    );
+  }
+
+  /// SCROLLS Well: first daily bonus step is a free ticket (F2P only).
+  static GameState claimScrollWellFree(GameState state, {DateTime? now}) {
+    final clock = now ?? DateTime.now().toUtc();
+    final md = ScrollWell.rollDay(state.metaDepth, now: clock);
+    if (!ScrollWell.canClaimFree(md, now: clock)) return state;
+    final day = AdBoost.utcDayKey(clock);
+    final withTicket = grantAdTicket(state);
+    final rolled = ScrollWell.rollDay(withTicket.metaDepth, now: clock);
+    return withTicket.copyWith(
+      metaDepth: rolled.copyWith(
+        scrollWellUtcDay: day,
+        scrollWellBonusClaims: 1,
+      ),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  /// SCROLLS Well: rewarded step 2 or 3 (+1 ticket).
+  static GameState advanceScrollWellBonusAd(GameState state, {DateTime? now}) {
+    final clock = now ?? DateTime.now().toUtc();
+    final md = ScrollWell.rollDay(state.metaDepth, now: clock);
+    if (!ScrollWell.canAdvanceWithAd(md, now: clock)) return state;
+    final day = AdBoost.utcDayKey(clock);
+    final nextClaims = (md.scrollWellBonusClaims + 1).clamp(0, ScrollWell.bonusSteps);
+    final withTicket = grantAdTicket(state);
+    return withTicket.copyWith(
+      metaDepth: withTicket.metaDepth.copyWith(
+        scrollWellUtcDay: day,
+        scrollWellBonusClaims: nextClaims,
+      ),
+      lastUpdated: DateTime.now(),
     );
   }
 

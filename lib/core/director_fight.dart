@@ -154,7 +154,9 @@ extension GameDirectorFight on GameDirector {
       return;
     }
     showToast('Loading ad…', life: 1.4);
-    final result = await AdRewarded.showRewarded();
+    final result = await AdRewarded.showRewarded(
+      placement: AnalyticsEvents.placementWipeRevive,
+    );
     if (result != AdWatchResult.rewarded) {
       switch (result) {
         case AdWatchResult.skipped:

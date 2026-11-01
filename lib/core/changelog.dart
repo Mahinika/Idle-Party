@@ -82,12 +82,31 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.8';
+  static const String currentVersion = '1.13.9';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: currentVersion,
+      date: 'Nov 1, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. SCROLLS now has a daily Well for tickets.',
+      added: <String>[
+        'Hub SCROLLS · THE WELL: 1 free Ad Ticket and 2 ad steps each UTC day, then extra WATCH ads still grant tickets. Ad-free keeps its separate daily claim.',
+        'SCROLLS shows WISP taps left today for the cave lantern.',
+      ],
+      changed: <String>[
+        'PARTY WIPED still offers REVIVE — WATCH AD once per cave run.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.13.8',
       date: 'Nov 1, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. After a wipe you can watch an ad to revive once per run.',

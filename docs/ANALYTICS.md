@@ -58,6 +58,8 @@ These were already in the app. Same consent gate.
 | `leave_dungeon` | Leave. `dungeon_id`, `floor`. |
 | `party_wipe` | Wipe. `dungeon_id`, `floor`, `streak`. |
 | `wipe_revive_ad` | Rewarded revive after wipe. `dungeon_id`, `floor`, `gauntlet` (bool). |
+| `scroll_well_free` | Free Well step. `step` (1). |
+| `scroll_well_ad` | Well ad step. `step` (2 or 3). |
 | `offline_gold` | Welcome Back paid gold. `gold`. The funnel mark is once; the event repeats. |
 | `offline_hold` | First Welcome Back with no gold. Once. |
 | `review_prompt` | Rating card. `source` is `card` or `settings`. |

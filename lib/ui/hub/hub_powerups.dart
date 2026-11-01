@@ -8,7 +8,9 @@ import '../../core/ad_rewarded.dart';
 import '../../core/build_stamp.dart';
 import '../../core/game_director.dart';
 import '../../core/menu_router.dart';
+import '../../core/scroll_well.dart';
 import '../../core/shop_store.dart';
+import '../../core/wisp_gift.dart';
 import 'friend_tip_block.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
@@ -35,6 +37,12 @@ class HubPowerupsFab extends StatelessWidget {
     final md = state.metaDepth;
     if (md.adFree && AdBoost.canClaimAdFreeDaily(md, now: now)) {
       return 'Free ticket is ready';
+    }
+    if (ScrollWell.canClaimFree(md, now: now)) {
+      return 'Free ticket in SCROLLS';
+    }
+    if (!md.adFree && !ScrollWell.ladderComplete(md, now: now)) {
+      return 'Daily Well · ${ScrollWell.progressLine(md, now: now)}';
     }
     if (md.adTickets > 0) return 'Spend a ticket on a scroll';
     if (AdBoost.anyBuffActive(md)) return 'A scroll is running';
@@ -354,19 +362,29 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           MenuChrome.sectionLabelScoped(
-                            'EARN',
+                            'THE WELL',
                             scope: MenuScope.today,
                           ),
-                          _EarnBlock(
+                          _ScrollWellBlock(
+                            state: state,
                             adFree: adFree,
                             canDaily: canDaily,
                             realAds: realAds,
                             onClaimDaily: director.claimAdFreeDailyTicket,
+                            onClaimWellFree: director.claimScrollWellFree,
                             onWatch: () {
                               unawaited(director.watchPowerupAd());
                             },
                             onPreview: director.grantPowerupHour,
                           ),
+                          if (WispGift.unlocked(md)) ...[
+                            const SizedBox(height: 8),
+                            MenuChrome.sectionLabelScoped(
+                              'WISP',
+                              scope: MenuScope.today,
+                            ),
+                            _WispDailyLine(state: state),
+                          ],
                           if (showNudge) ...[
                             const SizedBox(height: 8),
                             _AdFreeNudgeTile(onTap: _openShop),
@@ -451,20 +469,24 @@ class _AdFreeNudgeTile extends StatelessWidget {
   }
 }
 
-class _EarnBlock extends StatelessWidget {
-  const _EarnBlock({
+class _ScrollWellBlock extends StatelessWidget {
+  const _ScrollWellBlock({
+    required this.state,
     required this.adFree,
     required this.canDaily,
     required this.realAds,
     required this.onClaimDaily,
+    required this.onClaimWellFree,
     required this.onWatch,
     required this.onPreview,
   });
 
+  final GameState state;
   final bool adFree;
   final bool canDaily;
   final bool realAds;
   final VoidCallback onClaimDaily;
+  final VoidCallback onClaimWellFree;
   final VoidCallback onWatch;
   final VoidCallback onPreview;
 
@@ -484,29 +506,99 @@ class _EarnBlock extends StatelessWidget {
         style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
       );
     }
-    if (realAds) {
-      return GameButton(
-        label: 'WATCH AD · +1 TICKET',
-        style: GameButtonStyle.brown,
-        primary: true,
-        onPressed: onWatch,
-      );
-    }
+
+    final md = state.metaDepth;
+    final progress = ScrollWell.progressLine(md);
+    final ladderDone = ScrollWell.ladderComplete(md);
+    final canFree = ScrollWell.canClaimFree(md);
+    final canWellAd = ScrollWell.canAdvanceWithAd(md);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Ads play on the Android app. This playtest can preview a ticket.',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          progress,
+          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          ladderDone
+              ? 'Daily bonus done. Extra WATCH ads still grant tickets.'
+              : '1 free ticket, then 2 ad steps each UTC day.',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
-        GameButton(
-          label: 'PREVIEW +1 TICKET',
-          style: GameButtonStyle.brown,
-          primary: true,
-          onPressed: onPreview,
-        ),
+        if (canFree)
+          GameButton(
+            label: 'FREE · +1 TICKET',
+            style: GameButtonStyle.brown,
+            primary: true,
+            onPressed: onClaimWellFree,
+          ),
+        if (canWellAd && realAds) ...[
+          if (canFree) const SizedBox(height: 8),
+          GameButton(
+            label: 'WATCH AD · +1 TICKET',
+            style: GameButtonStyle.brown,
+            primary: !canFree,
+            onPressed: onWatch,
+          ),
+        ],
+        if (ladderDone) ...[
+          const SizedBox(height: 8),
+          if (realAds)
+            GameButton(
+              label: 'WATCH AD · +1 TICKET',
+              style: GameButtonStyle.grey,
+              onPressed: onWatch,
+            )
+          else ...[
+            Text(
+              'Ads play on the Android app. This playtest can preview a ticket.',
+              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            ),
+            const SizedBox(height: 8),
+            GameButton(
+              label: 'PREVIEW +1 TICKET',
+              style: GameButtonStyle.grey,
+              onPressed: onPreview,
+            ),
+          ],
+        ] else if (!canFree && !canWellAd && !realAds) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Ads play on the Android app. This playtest can preview a ticket.',
+            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ),
+          const SizedBox(height: 8),
+          GameButton(
+            label: 'PREVIEW +1 TICKET',
+            style: GameButtonStyle.brown,
+            primary: true,
+            onPressed: onPreview,
+          ),
+        ],
       ],
+    );
+  }
+}
+
+class _WispDailyLine extends StatelessWidget {
+  const _WispDailyLine({required this.state});
+
+  final GameState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final md = state.metaDepth;
+    final cap = WispGift.dailyCap;
+    final used = WispGift.claimsToday(md);
+    final left = (cap - used).clamp(0, cap);
+    return Text(
+      left <= 0
+          ? 'WISP · 0 LEFT TODAY · In the cave, tap the lantern for gold.'
+          : 'WISP · $left LEFT TODAY · In the cave, tap the lantern for gold.',
+      style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
     );
   }
 }

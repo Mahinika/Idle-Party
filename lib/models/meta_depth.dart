@@ -331,6 +331,8 @@ class MetaDepthState {
     this.adOfflineMulPending = false,
     this.adOfflineMulExpiresMs = 0,
     this.adFreeDailyClaimUtc = '',
+    this.scrollWellUtcDay = '',
+    this.scrollWellBonusClaims = 0,
     this.adFree = false,
     this.rewardedWatchCount = 0,
     this.adFreeNudgeShown = false,
@@ -651,6 +653,12 @@ class MetaDepthState {
   /// UTC day key (yyyy-mm-dd) of last ad-free daily ticket claim.
   final String adFreeDailyClaimUtc;
 
+  /// UTC day for [scrollWellBonusClaims] (yyyy-mm-dd).
+  final String scrollWellUtcDay;
+
+  /// Daily SCROLLS bonus ladder: 0 = none yet, 3 = free + 2 ads done.
+  final int scrollWellBonusClaims;
+
   /// Permanent SHOP ad-free purchase. Survives Ascend. Billing grants later.
   final bool adFree;
 
@@ -918,6 +926,8 @@ class MetaDepthState {
     bool? adOfflineMulPending,
     int? adOfflineMulExpiresMs,
     String? adFreeDailyClaimUtc,
+    String? scrollWellUtcDay,
+    int? scrollWellBonusClaims,
     bool? adFree,
     int? rewardedWatchCount,
     bool? adFreeNudgeShown,
@@ -1102,6 +1112,9 @@ class MetaDepthState {
       adOfflineMulExpiresMs:
           adOfflineMulExpiresMs ?? this.adOfflineMulExpiresMs,
       adFreeDailyClaimUtc: adFreeDailyClaimUtc ?? this.adFreeDailyClaimUtc,
+      scrollWellUtcDay: scrollWellUtcDay ?? this.scrollWellUtcDay,
+      scrollWellBonusClaims:
+          scrollWellBonusClaims ?? this.scrollWellBonusClaims,
       adFree: adFree ?? this.adFree,
       rewardedWatchCount: rewardedWatchCount ?? this.rewardedWatchCount,
       adFreeNudgeShown: adFreeNudgeShown ?? this.adFreeNudgeShown,
@@ -1281,6 +1294,8 @@ class MetaDepthState {
     'adOfflineMulPending': adOfflineMulPending,
     'adOfflineMulExpiresMs': adOfflineMulExpiresMs,
     'adFreeDailyClaimUtc': adFreeDailyClaimUtc,
+    'scrollWellUtcDay': scrollWellUtcDay,
+    'scrollWellBonusClaims': scrollWellBonusClaims,
     'adFree': adFree,
     'rewardedWatchCount': rewardedWatchCount,
     'adFreeNudgeShown': adFreeNudgeShown,
@@ -1530,6 +1545,9 @@ class MetaDepthState {
       adOfflineMulExpiresMs:
           (json['adOfflineMulExpiresMs'] as num?)?.toInt() ?? 0,
       adFreeDailyClaimUtc: (json['adFreeDailyClaimUtc'] as String?) ?? '',
+      scrollWellUtcDay: (json['scrollWellUtcDay'] as String?) ?? '',
+      scrollWellBonusClaims:
+          ((json['scrollWellBonusClaims'] as num?)?.toInt() ?? 0).clamp(0, 3),
       adFree: (json['adFree'] as bool?) ?? false,
       rewardedWatchCount: ((json['rewardedWatchCount'] as num?)?.toInt() ?? 0)
           .clamp(0, 9999),

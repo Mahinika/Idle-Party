@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../models/meta_depth.dart';
+import 'scroll_well.dart';
 
 /// POWERUPS: Ad Tickets from rewarded ads, spent on timed buffs.
 ///
@@ -162,6 +163,7 @@ abstract final class AdBoost {
     DateTime? now,
   }) {
     if (md.adFree && canClaimAdFreeDaily(md, now: now)) return 'READY';
+    if (!md.adFree && ScrollWell.canClaimFree(md, now: now)) return 'READY';
     final n = md.adTickets;
     if (n > 0) return n == 1 ? '1 TICKET' : '$n TICKETS';
     if (anyBuffActive(md, nowMs: nowMs)) return 'ON';
@@ -229,6 +231,7 @@ abstract final class AdBoost {
   static bool showHubFab(MetaDepthState md, {DateTime? now}) {
     if (anyBuffActive(md) || md.adTickets > 0) return true;
     if (md.adFree) return canClaimAdFreeDaily(md, now: now);
+    if (ScrollWell.canClaimFree(md, now: now)) return true;
     return true;
   }
 

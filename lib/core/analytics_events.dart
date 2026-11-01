@@ -23,6 +23,9 @@ abstract final class AnalyticsEvents {
   static const adFreeNudgeView = 'ad_free_nudge_view';
   static const adFreeNudgeTap = 'ad_free_nudge_tap';
 
+  static const scrollWellFree = 'scroll_well_free';
+  static const scrollWellAd = 'scroll_well_ad';
+
   static const notifyOpen = 'notify_open';
 
   /// Matches [FirstSessionTips.tips] ids (coach only, not boot intro).
@@ -40,7 +43,9 @@ abstract final class AnalyticsEvents {
   static const placementWelcomeBack = 'welcome_back';
   static const placementWispGift = 'wisp_gift';
   static const placementPowerups = 'powerups';
+  static const placementScrollWell = 'scroll_well';
   static const placementWipeRetry = 'wipe_retry';
+  static const placementWipeRevive = 'wipe_revive';
 
   /// Offline away time on Welcome Back (seconds).
   static String offlineSecondsBucket(int seconds) {

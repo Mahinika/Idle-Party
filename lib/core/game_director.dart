@@ -21,6 +21,7 @@ import '../spatial/floor_blueprint.dart';
 import '../spatial/spatial_combat.dart';
 import 'game_audio.dart';
 import 'ad_boost.dart';
+import 'scroll_well.dart';
 import 'ad_free_nudge.dart';
 import 'ad_rewarded.dart';
 import 'analytics_events.dart';
@@ -1779,6 +1780,25 @@ class GameDirector extends ChangeNotifier {
     showToast('Daily Ad Ticket claimed', life: 2.2);
   }
 
+  /// SCROLLS Well step 1: free ticket (F2P, UTC day).
+  void claimScrollWellFree({DateTime? now}) {
+    if (_state.metaDepth.adFree) return;
+    final before = _state.metaDepth.adTickets;
+    final next = GameLogic.claimScrollWellFree(_state, now: now);
+    if (next.metaDepth.adTickets <= before) {
+      showToast('Daily free ticket already claimed', life: 2.0);
+      return;
+    }
+    _applyUpgrade(next);
+    GameAudio.ui();
+    showToast('Free Ad Ticket · Well 1/3', life: 2.2);
+    unawaited(
+      AppAnalytics.logEvent(AnalyticsEvents.scrollWellFree, {
+        'step': 1,
+      }),
+    );
+  }
+
   /// A rewarded ad finished. Preview tickets do not count.
   void noteCompletedRewardedWatch() {
     final next = AdFreeNudge.noteWatch(_state);
@@ -1807,14 +1827,35 @@ class GameDirector extends ChangeNotifier {
       showToast('Ads play on the Android app', life: 2.2);
       return;
     }
+    final wellAd = ScrollWell.canAdvanceWithAd(_state.metaDepth);
     showToast('Loading ad…', life: 1.4);
     final result = await AdRewarded.showRewarded(
-      placement: AnalyticsEvents.placementPowerups,
+      placement: wellAd
+          ? AnalyticsEvents.placementScrollWell
+          : AnalyticsEvents.placementPowerups,
     );
     switch (result) {
       case AdWatchResult.rewarded:
         noteCompletedRewardedWatch();
-        grantPowerupHour();
+        if (wellAd) {
+          final before = _state.metaDepth.adTickets;
+          final step = ScrollWell.bonusClaims(_state.metaDepth) + 1;
+          final next = GameLogic.advanceScrollWellBonusAd(_state);
+          if (next.metaDepth.adTickets <= before) {
+            showToast('Well step already claimed', life: 2.0);
+            return;
+          }
+          _applyUpgrade(next);
+          GameAudio.ui();
+          showToast('Ad Ticket · Well $step/3', life: 2.2);
+          unawaited(
+            AppAnalytics.logEvent(AnalyticsEvents.scrollWellAd, {
+              'step': step,
+            }),
+          );
+        } else {
+          grantPowerupHour();
+        }
       case AdWatchResult.skipped:
         showToast(
           'Watch the whole ad to get ${AdBoost.ticketsPerAd} Ad Ticket',
