@@ -90,9 +90,13 @@ void main() {
       contains('assets/custom/char/healer/nightelf_f_body_tint_attack.png'),
     );
     expect(paths.toSet().length, paths.length);
+    expect(paths, isNot(contains('assets/custom/char/warrior/draenei_m_body_idle.png')));
+    expect(paths, isNot(contains('assets/custom/char/warrior/bloodelf_f_body_idle.png')));
+    expect(paths, isNot(contains('assets/custom/char/healer/forsaken_m_body_walk.png')));
     // 4 families × 3 anims × (body+tint) = 24
-    // + 12 races × 4 families × 2 sexes × 3 anims × 2 = 576
-    expect(paths.length, 24 + 576);
+    // 9 painted races × 4 families × 2 sexes × 3 anims × 2 = 432
+    // Starhorn, Ashborn, and Dawnsong keep their save ids and use the class body.
+    expect(paths.length, 24 + 432);
     for (final path in paths) {
       expect(File(path).existsSync(), isTrue, reason: path);
     }

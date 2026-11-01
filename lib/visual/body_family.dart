@@ -107,7 +107,15 @@ abstract final class BodyFamilyCatalog {
   }
 
   /// Race undertunic next to the family body, or null to use the family clip.
+  /// These three keeps their save id. The picture is the class body.
+  static const Set<HeroRace> neutralBodyRaces = {
+    HeroRace.draenei,
+    HeroRace.forsaken,
+    HeroRace.bloodElf,
+  };
+
   static String? raceBodyAsset(PartyHero hero, HeroAnimKind kind) {
+    if (neutralBodyRaces.contains(hero.race)) return null;
     if (!hasAuthoredRaceBody(hero)) return null;
     final fallback = defForHero(hero).assetFor(kind);
     const needle = '/body_';
@@ -142,6 +150,7 @@ abstract final class BodyFamilyCatalog {
       addClip(def.deathAsset);
     }
     for (final look in authoredRaceLooks) {
+      if (neutralBodyRaces.contains(look.race)) continue;
       for (final anim in const ['idle', 'walk', 'attack']) {
         addClip(
           'assets/custom/char/${look.family.name}/'

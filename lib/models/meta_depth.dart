@@ -1348,8 +1348,11 @@ class MetaDepthState {
       ascendBlessings: (json['ascendBlessings'] as num?)?.toInt() ?? 0,
       ascendStreak: (json['ascendStreak'] as num?)?.toInt() ?? 0,
       bestAscendStreak: (json['bestAscendStreak'] as num?)?.toInt() ?? 0,
-      titles: (json['titles'] as List<dynamic>?)?.cast<String>() ?? const [],
-      activeTitle: (json['activeTitle'] as String?) ?? '',
+      titles: [
+        for (final raw in (json['titles'] as List<dynamic>?) ?? const <dynamic>[])
+          _retiredTitle(raw as String),
+      ],
+      activeTitle: _retiredTitle((json['activeTitle'] as String?) ?? ''),
       relicTiers: tiers,
       embers: (json['embers'] as num?)?.toInt() ?? 0,
       cinders: (json['cinders'] as num?)?.toInt() ?? 0,
@@ -1637,3 +1640,7 @@ class MetaDepthState {
     return (atk: atk, gold: gold, legacy: legacy);
   }
 }
+
+/// Retired player title. The list key stays `titles`.
+String _retiredTitle(String raw) =>
+    raw == 'Infinity Bound' ? 'Spirebound' : raw;

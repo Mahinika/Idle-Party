@@ -128,7 +128,7 @@ abstract final class StoryLore {
     final kits = AscendRoadmap.kitUnlockSummary(nextAl, maxNames: 3);
     final String? neu;
     if (unlockCombatRogue) {
-      neu = 'New: Combat Rogue joins the roster.';
+      neu = 'New: Alleyblade joins the roster.';
     } else if (nextAl == 2 && kits != null) {
       neu =
           'New kits: $kits. 5th party slot — buy for '

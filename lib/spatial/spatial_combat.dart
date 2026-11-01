@@ -80,7 +80,7 @@ double _classCompanionAtkScale(HeroSpecId spec) {
 
 String _classCompanionLabel(HeroSpecId spec) {
   return switch (spec) {
-    HeroSpecId.beastMastery => 'Hunter Pet',
+    HeroSpecId.beastMastery => 'Packmate',
     HeroSpecId.demonology => 'Felguard',
     HeroSpecId.unholy => 'Ghoul',
     _ => 'Pet',

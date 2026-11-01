@@ -186,7 +186,7 @@ void main() {
     final blurb = EquipStatWeights.priorityBlurb(
       HeroSpecs.def(HeroSpecId.protection),
     );
-    expect(blurb, contains('PROT'));
+    expect(blurb, contains('WALL'));
     expect(blurb.toLowerCase(), contains('stamina'));
   });
 
