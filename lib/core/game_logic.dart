@@ -441,8 +441,10 @@ class GameLogic {
   static GameState maybeActivateGreaterRiftGuardian(GameState state) =>
       _maybeActivateGreaterRiftGuardian(state);
 
-  static GameState? tryResolveGreaterRift(GameState state) =>
-      _tryResolveGreaterRift(state);
+  static GameState? tryResolveGreaterRift(
+    GameState state, {
+    DateTime? now,
+  }) => _tryResolveGreaterRift(state, now: now);
 
   static int godHandUpgradeCost(int level) => 10 + level * 8;
 

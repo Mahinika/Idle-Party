@@ -421,7 +421,10 @@ void main() {
     );
     state = GameLogic.enterGreaterRift(state, tier: 1);
     state = _guardianDown(state, clearMs: 20000);
-    final resolved = GameLogic.tryResolveGreaterRift(state)!;
+    final resolved = GameLogic.tryResolveGreaterRift(
+      state,
+      now: DateTime.utc(2026, 10, 15),
+    )!;
     expect(resolved.metaDepth.seasonBestGrClearMs, 20000);
     expect(resolved.metaDepth.seasonBestGrTier, 1);
     final notes = LogicNotices.takeMetaPayoffs().join(' ');
@@ -441,7 +444,10 @@ void main() {
     );
     state = GameLogic.enterGreaterRift(state, tier: 2);
     state = _guardianDown(state, clearMs: 50000);
-    final resolved = GameLogic.tryResolveGreaterRift(state)!;
+    final resolved = GameLogic.tryResolveGreaterRift(
+      state,
+      now: DateTime.utc(2026, 10, 15),
+    )!;
     expect(resolved.metaDepth.grBestTier, greaterThanOrEqualTo(2));
     expect(resolved.metaDepth.seasonBestGrClearMs, 20000);
     expect(resolved.metaDepth.seasonBestGrTier, 1);

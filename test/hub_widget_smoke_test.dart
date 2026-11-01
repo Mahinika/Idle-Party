@@ -291,8 +291,15 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
+    // Board month is the save's season key. An empty key follows the wall
+    // clock, and a month with no Console ids hides this preview list.
+    final seeded = GameLogic.createInitialState(now: now);
     final director = GameDirector.preview(
-      initialState: GameLogic.createInitialState(now: now),
+      initialState: seeded.copyWith(
+        metaDepth: seeded.metaDepth.copyWith(
+          leaderboardSeasonKey: GameLogic.isoMonthKey(now),
+        ),
+      ),
     );
     addTearDown(director.dispose);
 

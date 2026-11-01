@@ -420,11 +420,11 @@ GameState _maybeActivateGreaterRiftGuardian(GameState state) {
   );
 }
 
-GameState? _tryResolveGreaterRift(GameState state) {
+GameState? _tryResolveGreaterRift(GameState state, {DateTime? now}) {
   if (!state.inGreaterRift || state.grOutcome.isNotEmpty) return null;
   // Last hit on the Guardian counts even if the clock ticked over this frame.
   if (state.grGuardianActive && _riftGuardianDown(state)) {
-    return _resolveGreaterRiftSuccess(state);
+    return _resolveGreaterRiftSuccess(state, now: now);
   }
   if (state.grTimerMs > state.grParMs) {
     return _resolveGreaterRiftFail(state);
@@ -432,9 +432,9 @@ GameState? _tryResolveGreaterRift(GameState state) {
   return null;
 }
 
-GameState _resolveGreaterRiftSuccess(GameState state) {
+GameState _resolveGreaterRiftSuccess(GameState state, {DateTime? now}) {
   if (!state.inGreaterRift) return state;
-  var next = GameLogic.ensureLeaderboardSeason(state);
+  var next = GameLogic.ensureLeaderboardSeason(state, now: now);
   final tier = GreaterRift.clampTier(next.grTier);
   final unlock = GreaterRift.unlockTierAfterSuccess(
     clearedTier: tier,
@@ -465,7 +465,7 @@ GameState _resolveGreaterRiftSuccess(GameState state) {
     PlayGamesBridge.noteGreaterRiftPb(
       monthKey: md.leaderboardSeasonKey.isNotEmpty
           ? md.leaderboardSeasonKey
-          : GameLogic.isoMonthKey(DateTime.now().toUtc()),
+          : GameLogic.isoMonthKey((now ?? DateTime.now()).toUtc()),
       tier: tier,
       clearMs: clearMs,
       partyName: next.partyName,
