@@ -2950,6 +2950,7 @@ class OfflineProgressResult {
     this.stoppedOnWipe = false,
     this.farmedSafeFloor = false,
     this.wasInDungeon = false,
+    this.autoEnteredCave = false,
     this.secondsAway = 0,
     this.hubChestCapSec = 0,
     this.awayGoldMultiplied = false,
@@ -2983,7 +2984,11 @@ class OfflineProgressResult {
   final bool farmedSafeFloor;
 
   /// True when AFK started mid-dungeon (SpatialCombat catch-up), not hub.
+  /// Also true when [autoEnteredCave] sent a hub absence into the last cave.
   final bool wasInDungeon;
+
+  /// Hub was closed with Fight the last cave on, so the sim entered that cave.
+  final bool autoEnteredCave;
 
   /// Real absence. [secondsApplied] is the credited slice (hub chest or 8h fight).
   final int secondsAway;
@@ -3057,9 +3062,15 @@ class OfflineProgressResult {
   }
 
   /// One honest line: the cave keeps fighting, the hub pays gold.
-  String get afkWhereLine => wasInDungeon
-      ? 'Left mid-dungeon · your party kept fighting'
-      : 'Rested at the hub · gold fills for $hubChestHours hours, then stops · essence after 10 min · your party keeps fighting in a cave';
+  String get afkWhereLine {
+    if (autoEnteredCave) {
+      return 'Left the hub · your party kept fighting in the last cave';
+    }
+    if (wasInDungeon) {
+      return 'Left mid-dungeon · your party kept fighting';
+    }
+    return 'Rested at the hub · gold fills for $hubChestHours hours, then stops · essence after 10 min · your party keeps fighting in a cave';
+  }
 
   /// Banner + Welcome Back share this gate.
   /// Gold / clears show even under 20s; other rewards need ≥20s away.

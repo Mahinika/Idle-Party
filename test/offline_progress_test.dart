@@ -142,7 +142,9 @@ void main() {
   });
 
   test('hub applyOfflineProgress sets wasInDungeon false', () {
-    final state = GameLogic.createInitialState(now: DateTime.utc(2026, 9, 10));
+    final state = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 9, 10),
+    ).copyWith(autoCaveOnLeave: false);
     expect(state.inDungeon, isFalse);
     final r = OfflineProgress.applyOfflineProgress(
       state,
@@ -388,7 +390,9 @@ void main() {
   });
 
   test('hub gold fills for 12 hours and then stops', () {
-    final state = GameLogic.createInitialState(now: DateTime.utc(2026, 9, 10));
+    final state = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 9, 10),
+    ).copyWith(autoCaveOnLeave: false);
     final full = OfflineProgress.applyOfflineProgress(
       state,
       const Duration(hours: 12),
@@ -439,6 +443,227 @@ void main() {
     expect(two.hubChestStopped, isFalse);
     expect(two.state.gold, lessThan(full.state.gold));
     expect(two.headline, startsWith('Gold while away'));
+  });
+
+  test('missing autoCaveOnLeave stays on', () {
+    final raw = GameLogic.createInitialState().toJson();
+    raw.remove('autoCaveOnLeave');
+    expect(GameLogic.stateFromJson(raw).autoCaveOnLeave, isTrue);
+    final off = GameLogic.createInitialState().copyWith(
+      autoCaveOnLeave: false,
+      bossVictories: GameLogic.bossesRequiredForAscension(0),
+      essence: 9999,
+    );
+    expect(GameLogic.stateFromJson(off.toJson()).autoCaveOnLeave, isFalse);
+    expect(GameLogic.ascend(off).autoCaveOnLeave, isFalse);
+  });
+
+  test('hub away keeps the KEY dial and does not start a key', () {
+    final hub = GameLogic.leaveDungeon(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime.utc(2026, 10, 2)),
+        dungeonId: 'sandy',
+      ),
+    ).copyWith(hardmodeLevel: 4);
+    final r = OfflineProgress.applyOfflineProgress(
+      hub,
+      const Duration(minutes: 5),
+    );
+    expect(r.autoEnteredCave, isTrue);
+    expect(r.state.hardmodeLevel, 4);
+    expect(r.state.keystoneRunActive, isFalse);
+  });
+
+  test('hub away fights the last cave and keeps the floor', () {
+    final hub = GameLogic.leaveDungeon(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime.utc(2026, 10, 2)),
+        dungeonId: 'sandy',
+      ),
+    );
+    expect(hub.inDungeon, isFalse);
+    expect(hub.autoCaveOnLeave, isTrue);
+    expect(hub.dungeonId, 'sandy');
+
+    final r = OfflineProgress.applyOfflineProgress(
+      hub,
+      const Duration(minutes: 5),
+    );
+    expect(r.autoEnteredCave, isTrue);
+    expect(r.wasInDungeon, isTrue);
+    expect(r.state.dungeonId, 'sandy');
+    expect(
+      r.state.highestFloorCleared,
+      greaterThanOrEqualTo(hub.highestFloorCleared),
+    );
+    expect(r.roomsCleared, greaterThan(0));
+    expect(r.kills, greaterThan(0));
+    expect(r.goldGained, greaterThan(0));
+    expect(r.afkWhereLine.toLowerCase(), contains('last cave'));
+    expect(r.afkWhereLine.toLowerCase(), isNot(contains('no combat')));
+  });
+
+  test('hub away keeps a climbed floor in the last cave', () {
+    final climbed = GameLogic.leaveDungeon(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(
+          now: DateTime.utc(2026, 10, 2),
+        ).copyWith(bossVictories: 1),
+        dungeonId: 'sandy',
+      ).copyWith(highestFloorCleared: 4),
+    );
+    final r = OfflineProgress.applyOfflineProgress(
+      climbed,
+      const Duration(minutes: 5),
+    );
+    expect(r.autoEnteredCave, isTrue);
+    expect(r.wasInDungeon, isTrue);
+    expect(r.state.dungeonId, 'sandy');
+    expect(r.state.highestFloorCleared, greaterThanOrEqualTo(4));
+  });
+
+  test('cave away moves the hub clock so essence is not paid twice', () {
+    final base = GameLogic.leaveDungeon(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime.utc(2026, 10, 2)),
+        dungeonId: 'sandy',
+      ),
+    );
+    final hub = base.copyWith(
+      metaDepth: base.metaDepth.copyWith(hubAfkSec: 500, hubIdleSubSec: 20),
+    );
+    final away = OfflineProgress.applyOfflineProgress(
+      hub,
+      const Duration(minutes: 5),
+    );
+    final clock = OfflineProgress.applyHubIdleProgress(hub, 5 * 60);
+    expect(away.autoEnteredCave, isTrue);
+    expect(away.state.metaDepth.hubAfkSec, clock.metaDepth.hubAfkSec);
+    expect(away.state.metaDepth.hubIdleSubSec, clock.metaDepth.hubIdleSubSec);
+    final again = OfflineProgress.applyHubIdleProgress(away.state, 5 * 60);
+    final power = hub.sanctuaryPowerLevel;
+    final second =
+        GoldIncome.essenceDue(away.state.metaDepth.hubAfkSec + 5 * 60, power) -
+        GoldIncome.essenceDue(away.state.metaDepth.hubAfkSec, power);
+    expect(again.essence - away.state.essence, second);
+    expect(again.metaDepth.hubAfkSec, away.state.metaDepth.hubAfkSec + 5 * 60);
+  });
+
+  test('hub away under 5 min stays on the chest', () {
+    final hub = GameLogic.leaveDungeon(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime.utc(2026, 10, 2)),
+        dungeonId: 'sandy',
+      ),
+    );
+    final r = OfflineProgress.applyOfflineProgress(
+      hub,
+      const Duration(minutes: 4),
+    );
+    expect(r.autoEnteredCave, isFalse);
+    expect(r.wasInDungeon, isFalse);
+    expect(r.state.inDungeon, isFalse);
+    final chest = OfflineProgress.applyHubIdleProgress(hub, 4 * 60);
+    expect(r.state.gold, chest.gold);
+    expect(r.afkWhereLine.toLowerCase(), contains('hub'));
+  });
+
+  test('a long hub away keeps the 12h and 24h chest cap in the cave', () {
+    final hub = GameLogic.leaveDungeon(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime.utc(2026, 10, 2)),
+        dungeonId: 'sandy',
+      ),
+    );
+    final r = OfflineProgress.applyOfflineProgress(
+      hub,
+      const Duration(hours: 13),
+    );
+    expect(r.autoEnteredCave, isTrue);
+    expect(r.secondsApplied, GoldIncome.hubChestCapSec);
+    expect(
+      r.goldGained,
+      greaterThanOrEqualTo(
+        GoldIncome.hubGoldForSeconds(hub, GoldIncome.hubChestCapSec),
+      ),
+    );
+
+    final owned = hub.copyWith(
+      metaDepth: hub.metaDepth.copyWith(shopLongAway: true),
+    );
+    final long = OfflineProgress.applyOfflineProgress(
+      owned,
+      const Duration(hours: 30),
+    );
+    expect(long.autoEnteredCave, isTrue);
+    expect(long.secondsApplied, GoldIncome.hubChestLongSec);
+    expect(
+      long.goldGained,
+      greaterThanOrEqualTo(
+        GoldIncome.hubGoldForSeconds(owned, GoldIncome.hubChestLongSec),
+      ),
+    );
+  });
+
+  test('claim all pays ready quests', () async {
+    final now = DateTime.now().toUtc();
+    final seeded = GameLogic.createInitialState(now: now);
+    final state = seeded.copyWith(
+      missions: [
+        for (final m in seeded.missions) m.copyWith(progress: m.target),
+      ],
+      metaDepth: seeded.metaDepth.copyWith(
+        questWeekKey: GameLogic.isoWeekKey(now),
+      ),
+    );
+    final director = GameDirector.preview(initialState: state);
+    await director.boot();
+    final gold = director.state.gold;
+    final essence = director.state.essence;
+    final n = director.claimAllReadyMissions();
+    expect(n, greaterThan(0));
+    expect(
+      director.state.gold > gold || director.state.essence > essence,
+      isTrue,
+    );
+    expect(director.state.missions.any((m) => m.canClaim), isFalse);
+    director.dispose();
+  });
+
+  testWidgets('Welcome Back collects ready quests', (tester) async {
+    final now = DateTime.now().toUtc();
+    final seeded = GameLogic.createInitialState(now: now);
+    final state = seeded.copyWith(
+      missions: [
+        for (final m in seeded.missions) m.copyWith(progress: m.target),
+      ],
+      metaDepth: seeded.metaDepth.copyWith(
+        questWeekKey: GameLogic.isoWeekKey(now),
+      ),
+    );
+    final director = GameDirector.preview(initialState: state);
+    await director.boot();
+    director.uiFeedback.presentOffline(result(gold: 40));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('COLLECT ALL'), findsOneWidget);
+    final gold = director.state.gold;
+    await tester.tap(find.text('COLLECT ALL'));
+    await tester.pumpAndSettle();
+    expect(director.state.gold, greaterThan(gold));
+    expect(director.state.missions.any((m) => m.canClaim), isFalse);
+    expect(find.text('COLLECT ALL'), findsNothing);
+    director.dispose();
   });
 
   testWidgets('Check-in stays on screen at 1080x1920 and on a short phone', (
@@ -564,66 +789,5 @@ void main() {
     expect(viewRect.bottom, lessThanOrEqualTo(buttonRect.top + 1));
     expect(visible.bottom, lessThanOrEqualTo(buttonRect.top + 1));
     expect(visible.bottom, lessThanOrEqualTo(640));
-  });
-
-  test('claim all pays ready quests', () async {
-    final now = DateTime.now().toUtc();
-    final seeded = GameLogic.createInitialState(now: now);
-    final state = seeded.copyWith(
-      missions: [
-        for (final m in seeded.missions) m.copyWith(progress: m.target),
-      ],
-      metaDepth: seeded.metaDepth.copyWith(
-        questWeekKey: GameLogic.isoWeekKey(now),
-      ),
-    );
-    final director = GameDirector.preview(initialState: state);
-    await director.boot();
-    final gold = director.state.gold;
-    final essence = director.state.essence;
-    final n = director.claimAllReadyMissions();
-    expect(n, greaterThan(0));
-    expect(
-      director.state.gold > gold || director.state.essence > essence,
-      isTrue,
-    );
-    expect(director.state.missions.any((m) => m.canClaim), isFalse);
-    director.dispose();
-  });
-
-  testWidgets('Welcome Back collects ready quests', (tester) async {
-    final now = DateTime.now().toUtc();
-    final seeded = GameLogic.createInitialState(now: now);
-    final state = seeded.copyWith(
-      missions: [
-        for (final m in seeded.missions) m.copyWith(progress: m.target),
-      ],
-      metaDepth: seeded.metaDepth.copyWith(
-        questWeekKey: GameLogic.isoWeekKey(now),
-      ),
-    );
-    final director = GameDirector.preview(initialState: state);
-    await director.boot();
-    director.uiFeedback.presentOffline(result(gold: 40));
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) => TextButton(
-            onPressed: () => showOfflineProgressDialog(context, director),
-            child: const Text('open'),
-          ),
-        ),
-      ),
-    );
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
-    expect(find.text('COLLECT ALL'), findsOneWidget);
-    final gold = director.state.gold;
-    await tester.tap(find.text('COLLECT ALL'));
-    await tester.pumpAndSettle();
-    expect(director.state.gold, greaterThan(gold));
-    expect(director.state.missions.any((m) => m.canClaim), isFalse);
-    expect(find.text('COLLECT ALL'), findsNothing);
-    director.dispose();
   });
 }

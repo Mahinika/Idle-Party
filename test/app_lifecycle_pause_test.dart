@@ -56,6 +56,7 @@ void main() {
     final director = GameDirector.preview();
     addTearDown(director.dispose);
     await director.boot();
+    director.setAutoCaveOnLeave(false);
     final before = director.state.gold;
     director.setAppPaused(true);
     director.debugStampAway(lastUpdatedAgo: const Duration(hours: 2));
@@ -81,6 +82,7 @@ void main() {
     final director = GameDirector.preview(initialState: seed);
     addTearDown(director.dispose);
     await director.boot();
+    director.setAutoCaveOnLeave(false);
     hits.clear();
     director.setAppPaused(true);
     director.debugStampAway(lastUpdatedAgo: const Duration(hours: 2));
@@ -116,6 +118,7 @@ void main() {
     final director = GameDirector.preview();
     addTearDown(director.dispose);
     await director.boot();
+    director.setAutoCaveOnLeave(false);
     final before = director.state.gold;
     director.setAppPaused(true);
     director.debugStampAway(lastUpdatedAgo: const Duration(seconds: 5));

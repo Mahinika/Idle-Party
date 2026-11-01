@@ -102,7 +102,9 @@ void main() {
   });
 
   test('hub offline earns gold without boss or floor combat', () {
-    final initial = GameLogic.createInitialState(now: DateTime(2026, 7, 26));
+    final initial = GameLogic.createInitialState(
+      now: DateTime(2026, 7, 26),
+    ).copyWith(autoCaveOnLeave: false);
     expect(initial.inDungeon, isFalse);
 
     final progressed = GameLogic.applyOfflineProgress(

@@ -307,6 +307,17 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         ),
         const SizedBox(height: 8),
         _SettingsToggle(
+          label: 'Fight the last cave while away',
+          value: state.autoCaveOnLeave,
+          onChanged: director.setAutoCaveOnLeave,
+        ),
+        Text(
+          'On: closing the app at the hub sends the party into the last cave. '
+          'Off: the hub pays gold only.',
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+        const SizedBox(height: 8),
+        _SettingsToggle(
           label: 'Colorblind-friendly combat numbers',
           value: state.colorblindMode,
           onChanged: director.setColorblindMode,

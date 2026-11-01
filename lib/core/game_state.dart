@@ -112,6 +112,7 @@ class GameState {
     this.vfxPinned = false,
     this.combatPace = 1,
     this.autoEquipUpgrades = true,
+    this.autoCaveOnLeave = true,
     this.autoSellMaxPower = 48,
     this.autoSellMaxRarity = 1,
     this.autoDisassembleMaxIlvl = 48,
@@ -375,6 +376,10 @@ class GameState {
   /// Wear budget upgrades during a fight and while the app is closed.
   /// Ranked GR stays manual. Kept across Ascend.
   final bool autoEquipUpgrades;
+
+  /// Hub absence fights the last cave through the offline sim.
+  /// Off: hub gold only. Kept across Ascend. Missing saves stay on.
+  final bool autoCaveOnLeave;
 
   /// Auto-sell *drops on pickup* / bag cleanup when itemLevel ≤ this (0 = off).
   /// Legacy field name — treat as auto-sell max item level. Pays **gold**.
@@ -1174,6 +1179,7 @@ class GameState {
     int? combatPace,
     bool? reducedVfx,
     bool? autoEquipUpgrades,
+    bool? autoCaveOnLeave,
     int? autoSellMaxPower,
     int? autoSellMaxRarity,
     int? autoDisassembleMaxIlvl,
@@ -1327,6 +1333,7 @@ class GameState {
       vfxPinned: vfxPinned ?? this.vfxPinned,
       combatPace: (combatPace ?? this.combatPace).clamp(1, 2),
       autoEquipUpgrades: autoEquipUpgrades ?? this.autoEquipUpgrades,
+      autoCaveOnLeave: autoCaveOnLeave ?? this.autoCaveOnLeave,
       autoSellMaxPower: autoSellMaxPower ?? this.autoSellMaxPower,
       autoSellMaxRarity: autoSellMaxRarity ?? this.autoSellMaxRarity,
       autoDisassembleMaxIlvl:
@@ -1506,6 +1513,7 @@ class GameState {
     'combatPace': combatPace,
     'reducedVfx': reducedVfx,
     'autoEquipUpgrades': autoEquipUpgrades,
+    'autoCaveOnLeave': autoCaveOnLeave,
     'autoSellMaxPower': autoSellMaxPower,
     'autoSellMaxRarity': autoSellMaxRarity,
     'autoDisassembleMaxIlvl': autoDisassembleMaxIlvl,
@@ -1782,6 +1790,7 @@ class GameState {
       vfxPinned: (json['vfxPinned'] as bool?) ?? false,
       combatPace: _jsonInt(json['combatPace'], 1).clamp(1, 2),
       autoEquipUpgrades: (json['autoEquipUpgrades'] as bool?) ?? true,
+      autoCaveOnLeave: (json['autoCaveOnLeave'] as bool?) ?? true,
       autoSellMaxPower: _jsonInt(json['autoSellMaxPower'], 48),
       autoSellMaxRarity: _jsonInt(json['autoSellMaxRarity'], 1).clamp(0, 4),
       autoDisassembleMaxIlvl: _jsonInt(json['autoDisassembleMaxIlvl'], 48),
