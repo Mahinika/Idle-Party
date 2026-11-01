@@ -259,13 +259,13 @@ class _PlayShellState extends State<PlayShell> {
     final noticeAlign = inDungeon
         ? (router.isOpen
               ? const Alignment(0, -0.28)
-              // Keep enter-lore and tips under FARM/PUSH — not over the pack.
-              : Alignment(0, director.celebrating ? -0.82 : -0.88))
+              // Under the place line and the action row, not across them.
+              : Alignment(0, director.celebrating ? -0.55 : -0.62))
         : const Alignment(0, -0.55);
     final tipsAndMenus = <Widget>[
       if (!router.isOpen || inDungeon) FirstSessionTips(director: director),
       MenuSurface(director: director, router: router),
-      if (director.toast != null)
+      if (director.toast != null && !(inDungeon && !router.isOpen))
         Positioned.fill(
           child: FeedbackToast(
             message: director.toast!,

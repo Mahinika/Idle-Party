@@ -8,8 +8,14 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Sideload builds set IDLE_TEST_PACKAGE=1 so the APK is com.idleparty.app.test
+// ("Idle Party Test") and can sit beside the Play install. Play builds leave
+// the variable unset. The .test id is not in google-services.json, so Firebase
+// stays off for that package (see docs/ANALYTICS.md).
+val idleTestPackage = System.getenv("IDLE_TEST_PACKAGE") == "1"
+
 // Only when Firebase Console config is present (see docs/PLAY_STORE.md).
-if (file("google-services.json").exists()) {
+if (file("google-services.json").exists() && !idleTestPackage) {
     apply(plugin = "com.google.gms.google-services")
     apply(plugin = "com.google.firebase.crashlytics")
 }
@@ -43,7 +49,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.idleparty.app"
+        applicationId = if (idleTestPackage) "com.idleparty.app.test" else "com.idleparty.app"
+        manifestPlaceholders["appLabel"] = if (idleTestPackage) "Idle Party Test" else "Idle Party"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -13,6 +13,7 @@ import 'confirm_dialogs.dart';
 import 'meta/notify_opt_in.dart';
 import 'cave_atmosphere.dart';
 import '../assets/custom_assets.dart';
+import 'feedback_toast.dart';
 import 'game_theme.dart';
 import 'menu_chrome.dart';
 import 'spatial_dungeon_view.dart';
@@ -48,6 +49,18 @@ class _Is2ShellState extends State<Is2Shell> {
   MenuRouter get router => widget.router;
   bool _dpsMeterOpen = false;
   bool _offeredPing = false;
+  final GlobalKey _topHudKey = GlobalKey();
+
+  /// Until the top HUD is measured. Two rows (place line + 44dp actions).
+  double _topChromePx = 96;
+
+  void _readTopChrome() {
+    final box = _topHudKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final next = box.size.height;
+    if ((next - _topChromePx).abs() < 1) return;
+    setState(() => _topChromePx = next);
+  }
 
   @override
   void initState() {
@@ -138,6 +151,9 @@ class _Is2ShellState extends State<Is2Shell> {
   }
 
   Widget _buildBody(GameDirector d) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _readTopChrome();
+    });
     final hudSide = GameTheme.edgeGap;
     final partyBottom = GameTheme.combatHudBottom(context);
     final textScale = MediaQuery.textScalerOf(
@@ -169,28 +185,53 @@ class _Is2ShellState extends State<Is2Shell> {
         // not the whole dungeon chrome tree (~60 Hz).
         Positioned.fill(
           child: MenuChrome.playSafeArea(
-            child: SpatialDungeonView(director: d),
+            child: SpatialDungeonView(
+              director: d,
+              cameraTopInset: _topChromePx,
+              cameraBottomInset: partyBottom + partyStrip + 8,
+            ),
           ),
         ),
         MenuChrome.playSafeArea(
           child: Column(
             children: [
-              if (!d.dungeonTilesReady)
-                const SizedBox.shrink()
-              else
-                DungeonTopHud(
-                  state: state,
-                  director: d,
-                  onOpenSettings: () =>
-                      router.open(MenuRoute.more, more: MoreSection.settings),
-                  onOpenMore: () => router.open(MenuRoute.more),
-                  onOpenKey: MenuTabs.showKey(state)
-                      ? () => router.open(MenuRoute.key)
-                      : null,
-                  onOpenContracts: () => router.apply(NavIntent.quests),
-                  onOpenForge: () => router.open(MenuRoute.gold),
-                  onOpenParty: () => router.toggleGear(GearPanel.gear),
+              KeyedSubtree(
+                key: _topHudKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!d.dungeonTilesReady)
+                      const SizedBox.shrink()
+                    else
+                      DungeonTopHud(
+                        state: state,
+                        director: d,
+                        onOpenSettings: () => router.open(
+                          MenuRoute.more,
+                          more: MoreSection.settings,
+                        ),
+                        onOpenMore: () => router.open(MenuRoute.more),
+                        onOpenKey: MenuTabs.showKey(state)
+                            ? () => router.open(MenuRoute.key)
+                            : null,
+                        onOpenContracts: () => router.apply(NavIntent.quests),
+                        onOpenForge: () => router.open(MenuRoute.gold),
+                        onOpenParty: () => router.toggleGear(GearPanel.gear),
+                      ),
+                    // Under the action row, inside the measured chrome, so
+                    // the camera keeps heroes below the line.
+                    if (d.dungeonTilesReady &&
+                        d.toast != null &&
+                        !router.isOpen)
+                      FeedbackToast(
+                        message: d.toast!,
+                        kind: d.noticeKind,
+                        maxLines: 2,
+                        docked: true,
+                      ),
+                  ],
                 ),
+              ),
               Expanded(
                 child: d.dungeonTilesReady
                     ? Stack(
