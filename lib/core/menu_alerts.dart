@@ -2,6 +2,7 @@ import '../models/loot.dart';
 import 'gear_service.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
+import 'shop_hub_offer.dart';
 import 'hub_chase.dart';
 import 'keystone.dart';
 import 'market_listings_service.dart';
@@ -57,16 +58,29 @@ class MenuAlerts {
     more: MenuAlert.quiet,
   );
 
-  static MenuAlerts forState(GameState state) => MenuAlerts(
-    gear: gearAlert(state),
-    gold: goldAlert(state),
-    shop: MenuAlert.quiet,
-    essence: essenceAlert(state),
-    key: keyAlert(state),
-    more: moreAlert(state),
-  );
+  static MenuAlerts forState(GameState state) {
+    final hubOffer = GameLogic.ensureShopHubOffer(state);
+    return MenuAlerts(
+    gear: gearAlert(hubOffer),
+    gold: goldAlert(hubOffer),
+    shop: shopAlert(hubOffer),
+    essence: essenceAlert(hubOffer),
+    key: keyAlert(hubOffer),
+    more: moreAlert(hubOffer),
+    );
+  }
 
-  /// Dungeon bottom-nav marks — badge only, no reason ticker (wipe/GEAR own copy).
+  static MenuAlert shopAlert(GameState state) {
+    if (ShopHubOffer.showHubBadge(state)) {
+      return MenuAlert(
+        star: true,
+        reason: ShopHubOffer.countdownLine(state),
+      );
+    }
+    return MenuAlert.quiet;
+  }
+
+  /// Dungeon bottom-nav marks
   static MenuAlerts forDungeon(GameState state) {
     final upgrades = bagUpgradeCount(state);
     if (upgrades <= 0) return none;

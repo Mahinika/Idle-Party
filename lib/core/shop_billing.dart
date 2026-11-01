@@ -54,7 +54,15 @@ abstract final class ShopBilling {
         }
       case ShopOfferKind.cinders:
         if (item.cinderGrant <= 0) return state;
-        md = md.copyWith(cinders: min(9999, md.cinders + item.cinderGrant));
+        var grant = item.cinderGrant;
+        if (item.id == 'cinder_pouch' && !md.cinderPouchDoubled) {
+          grant *= 2;
+          md = md.copyWith(cinderPouchDoubled: true);
+        }
+        md = md.copyWith(cinders: min(9999, md.cinders + grant));
+      case ShopOfferKind.seasonPass:
+        if (md.paidSeasonPass) return state;
+        md = md.copyWith(paidSeasonPass: true);
       case ShopOfferKind.permScroll:
         if (item.permMask == 0) return state;
         if ((md.shopPermScrolls & item.permMask) == item.permMask) {
@@ -145,6 +153,7 @@ abstract final class ShopBilling {
         item.permMask != 0 &&
             (md.shopPermScrolls & item.permMask) == item.permMask,
       ShopOfferKind.longAway => md.shopLongAway,
+      ShopOfferKind.seasonPass => md.paidSeasonPass,
     };
   }
 }

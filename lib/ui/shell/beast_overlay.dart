@@ -438,11 +438,22 @@ class _BeastOverlayState extends State<BeastOverlay> {
               ),
             ),
         ],
-        const SizedBox(height: 8),
         Row(
           children: [
-            const KenneySprite(asset: CustomAssets.petEgg, size: 32),
-            const SizedBox(width: 8),
+            Expanded(
+              child: GameButton(
+                label: 'EGG · ${PetService.cinderEggCost} CINDERS',
+                dense: true,
+                style: state.metaDepth.cinders >= PetService.cinderEggCost
+                    ? GameButtonStyle.brown
+                    : GameButtonStyle.grey,
+                onPressed: state.ownedPets.length < cap &&
+                        state.metaDepth.cinders >= PetService.cinderEggCost
+                    ? director.hatchPetEgg
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 6),
             Expanded(
               child: GameButton(
                 label: state.ownedPets.length >= cap

@@ -45,6 +45,8 @@ import 'offline_progress.dart';
 import 'pet_service.dart';
 import 'pet_errand_stock.dart';
 import 'run_stash_shop.dart';
+import 'shop_hub_offer.dart';
+import 'farm_intensity.dart';
 import 'starter_gear.dart';
 import 'local_season.dart';
 import 'meta_systems.dart';
@@ -1001,7 +1003,11 @@ class GameLogic {
             prestigeBonusLevel: state.metaDepth.gauntletGoldBonusLevel,
           )
         : 1.0;
-    final gained = applyGoldGain(state, (baseGold * mul).round());
+    final farmMul = FarmIntensity.rewardMult(state);
+    final gained = applyGoldGain(
+      state,
+      (baseGold * mul * farmMul).round(),
+    );
     if (gained <= 0) return state;
     final paid = state.copyWith(
       gold: state.gold + gained,
@@ -1812,7 +1818,7 @@ class GameLogic {
             room.floorNumber,
             prestigeBonusLevel: awarded.metaDepth.gauntletGoldBonusLevel,
           )
-        : 1.0;
+        : FarmIntensity.rewardMult(awarded);
     // Combat kill gold is credited live via [creditCombatGold]. Clear only
     // pays treasure/chest budgets (and any explicit leftover goldGain).
     final goldAwarded = applyGoldGain(awarded, (goldGain * goldMul).round());
@@ -2711,6 +2717,8 @@ class GameLogic {
   // —— Pets: moved to pet_service.dart ——
   static int hatchPetCost(GameState state) => PetService.hatchPetCost(state);
   static GameState hatchPet(GameState state) => PetService.hatchPet(state);
+  static GameState hatchPetWithCinders(GameState state) =>
+      PetService.hatchPetWithCinders(state);
   static bool canMergePets(GameState state, String petIdA, String petIdB) =>
       PetService.canMergePets(state, petIdA, petIdB);
   static GameState mergePets(GameState state, String petIdA, String petIdB) =>
@@ -2753,6 +2761,34 @@ class GameLogic {
 
   static GameState buyPetShipmentBonus(GameState state, {DateTime? now}) =>
       PetErrandStock.buyShipmentBonus(state, now: now);
+
+  static GameState setFarmIntensity(GameState state, int mult) {
+    if (!FarmIntensity.canPick(state, mult)) return state;
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(farmIntensity: mult),
+      farmTryMult: 0,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  static GameState startFarmTry(GameState state, int mult) {
+    if (!FarmIntensity.canTry(state, mult)) return state;
+    return state.copyWith(
+      farmTryMult: mult,
+      metaDepth: state.metaDepth.copyWith(
+        farmTryUsesLeft: state.metaDepth.farmTryUsesLeft - 1,
+      ),
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  static GameState clearFarmTry(GameState state) {
+    if (state.farmTryMult == 0) return state;
+    return state.copyWith(farmTryMult: 0, lastUpdated: DateTime.now());
+  }
+
+  static GameState ensureShopHubOffer(GameState state, {DateTime? now}) =>
+      ShopHubOffer.ensureWindow(state, now: now);
 
   /// Pays a waiting comeback chest and a pet that is already home.
   static GameState claimReturnRewards(GameState state, {DateTime? now}) {

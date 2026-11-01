@@ -324,6 +324,7 @@ extension GameDirectorCombatLoop on GameDirector {
               lastUpdated: DateTime.now(),
               lastFloorClearSec: _lastFloorClearSec ?? _state.lastFloorClearSec,
             );
+        _state = GameLogic.clearFarmTry(_state);
         _noteLifetimeGold(beforeClear, _state);
         if (_state.lifetimeGoldEarned > beforeClear.lifetimeGoldEarned) {
           _applyFunnelTick(

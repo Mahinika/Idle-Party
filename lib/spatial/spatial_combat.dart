@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../core/ability_mastery.dart';
 import '../core/audio_assets.dart';
 import '../core/blessing_constellation.dart';
 import '../core/combat_feel.dart';
@@ -3906,6 +3907,8 @@ abstract final class SpatialCombat {
             : null;
         final offHand = partyHero?.itemIn(EquipmentSlot.offHand);
         final hasShield = offHand?.offHandKind == OffHandKind.shield;
+        AbilityEffectRunner.spellcraftMul =
+            AbilityMastery.damageMul(nextState);
         AbilityEffectRunner.tick(
           world,
           hero,

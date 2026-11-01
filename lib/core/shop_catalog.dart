@@ -21,6 +21,9 @@ enum ShopOfferKind {
   /// Repeatable Cinder pack. Same relics a player can earn.
   cinders,
 
+  /// Paid month-pass premium track (bonus on season claim).
+  seasonPass,
+
   /// One-time longer away: 16h cave catch-up and a 24h hub gold chest.
   longAway,
 }
@@ -205,10 +208,17 @@ abstract final class ShopCatalog {
       id: 'cinder_pouch',
       name: 'Cinder pouch',
       description:
-          '8 Cinders. Salvage a relic or trade a few for Embers. '
-          'Same relics you earn by playing.',
+          '8 Cinders. First buy on Play pays ×2 (16 total). Salvage or Ember trade in-game.',
       kind: ShopOfferKind.cinders,
       cinderGrant: 8,
+    ),
+    ShopCatalogItem(
+      id: 'season_pass_premium',
+      name: 'Season pass premium',
+      description:
+          'Extra essence and +5 Cinders on each month-pass claim. Free track unchanged.',
+      kind: ShopOfferKind.seasonPass,
+      oneTime: true,
     ),
     ShopCatalogItem(
       id: 'supporter_qol',
@@ -269,7 +279,8 @@ abstract final class ShopCatalog {
     if (item.kind == ShopOfferKind.boostHours) return false;
     if (playChargeableIds.contains(item.id)) return true;
     if (item.kind == ShopOfferKind.permScroll ||
-        item.kind == ShopOfferKind.cinders) {
+        item.kind == ShopOfferKind.cinders ||
+        item.kind == ShopOfferKind.seasonPass) {
       return listed.contains(item.id);
     }
     return false;
@@ -282,7 +293,8 @@ abstract final class ShopCatalog {
     final item = byId[id];
     if (item == null || item.kind == ShopOfferKind.boostHours) return false;
     if (item.kind == ShopOfferKind.permScroll ||
-        item.kind == ShopOfferKind.cinders) {
+        item.kind == ShopOfferKind.cinders ||
+        item.kind == ShopOfferKind.seasonPass) {
       return playLists;
     }
     return false;

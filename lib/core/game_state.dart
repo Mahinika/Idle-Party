@@ -171,6 +171,7 @@ class GameState {
     this.wipeStreakCount = 0,
     this.wipeReviveUsed = false,
     this.pushResumeFloor = 0,
+    this.farmTryMult = 0,
     this.wipeAdviceLine = '',
     this.wipeScanLine = '',
     this.sessionTelemetryOptIn = false,
@@ -562,6 +563,9 @@ class GameState {
   /// Uncleared PUSH floor to return to after one clear of the floor below.
   /// 0 means the party is not farming back from a wipe.
   final int pushResumeFloor;
+
+  /// One-room FARM TRY multiplier (0 = use [MetaDepthState.farmIntensity]).
+  final int farmTryMult;
 
   /// Dungeon wipe-panel line after stacked wipes; empty if the sim is unsure.
   final String wipeAdviceLine;
@@ -1243,6 +1247,7 @@ class GameState {
     int? wipeStreakCount,
     bool? wipeReviveUsed,
     int? pushResumeFloor,
+    int? farmTryMult,
     String? wipeAdviceLine,
     String? wipeScanLine,
     bool? sessionTelemetryOptIn,
@@ -1401,6 +1406,7 @@ class GameState {
       wipeStreakCount: wipeStreakCount ?? this.wipeStreakCount,
       wipeReviveUsed: wipeReviveUsed ?? this.wipeReviveUsed,
       pushResumeFloor: pushResumeFloor ?? this.pushResumeFloor,
+      farmTryMult: farmTryMult ?? this.farmTryMult,
       wipeAdviceLine: wipeAdviceLine ?? this.wipeAdviceLine,
       wipeScanLine: wipeScanLine ?? this.wipeScanLine,
       sessionTelemetryOptIn:
@@ -1578,6 +1584,7 @@ class GameState {
     'wipeStreakCount': wipeStreakCount,
     'wipeReviveUsed': wipeReviveUsed,
     'pushResumeFloor': pushResumeFloor,
+    'farmTryMult': farmTryMult,
     'wipeAdviceLine': wipeAdviceLine,
     'wipeScanLine': wipeScanLine,
     'sessionTelemetryOptIn': sessionTelemetryOptIn,
@@ -1898,6 +1905,7 @@ class GameState {
       wipeStreakCount: _jsonInt(json['wipeStreakCount']),
       wipeReviveUsed: (json['wipeReviveUsed'] as bool?) ?? false,
       pushResumeFloor: _jsonInt(json['pushResumeFloor']),
+      farmTryMult: _jsonInt(json['farmTryMult']),
       wipeAdviceLine: (json['wipeAdviceLine'] as String?) ?? '',
       wipeScanLine: (json['wipeScanLine'] as String?) ?? '',
       sessionTelemetryOptIn: (json['sessionTelemetryOptIn'] as bool?) ?? false,

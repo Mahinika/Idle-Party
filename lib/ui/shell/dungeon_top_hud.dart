@@ -4,6 +4,7 @@ import '../../core/away_fight_tip.dart';
 import '../../core/enemy_flavor.dart';
 import '../../core/gauntlet_anomaly.dart';
 import '../../core/gauntlet_pact.dart';
+import '../../core/farm_intensity.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
@@ -634,6 +635,37 @@ class DungeonTopHud extends StatelessWidget {
                 ),
             ],
           ),
+          if (farm &&
+              FarmIntensity.applies(state) &&
+              showFightTools) ...[
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                for (var i = 0; i < FarmIntensity.allowed.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 4),
+                  Expanded(
+                    child: Builder(
+                      builder: (context) {
+                        final mult = FarmIntensity.allowed[i];
+                        final canPick = FarmIntensity.canPick(state, mult);
+                        return DungeonModeChip(
+                          label: '${mult}×',
+                          selected: FarmIntensity.effectiveMult(state) == mult,
+                          expand: true,
+                          tip: canPick
+                              ? 'FARM ${mult}× monster packs · ${mult}× gold and XP'
+                              : 'TRY ${mult}× this room · ${state.metaDepth.farmTryUsesLeft} left',
+                          onTap: canPick
+                              ? () => director.setFarmIntensity(mult)
+                              : () => director.tryFarmIntensity(mult),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
           const SizedBox(height: 2),
           SizedBox(
             height: GameTheme.minTouch,

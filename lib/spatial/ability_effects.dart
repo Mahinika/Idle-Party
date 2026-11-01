@@ -18,6 +18,7 @@ import 'spatial_combat.dart';
 abstract final class AbilityEffectRunner {
   static GameState? stateOut;
   static int goldOut = 0;
+  static double spellcraftMul = 1.0;
 
   /// Last [GameState] produced by ability kills (warrior legacy / spec kits).
   static GameState takeState(GameState fallback) {
@@ -1338,6 +1339,10 @@ abstract final class AbilityEffectRunner {
       2,
       (raw * SpecMastery.damageMul(masteryView(hero), def, masteryView(enemy)))
           .round(),
+    );
+    raw = math.max(
+      2,
+      (raw * spellcraftMul).round(),
     );
     final spellCrit = hero.spellCrit > 0 && rng.nextInt(100) < hero.spellCrit;
     if (spellCrit) raw = math.max(2, (raw * 1.5).round());

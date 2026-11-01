@@ -29,6 +29,40 @@ abstract final class PetService {
   static int hatchPetCost(GameState state) =>
       20 + (state.ownedPets.length * 15);
 
+  static const int cinderEggCost = 10;
+
+  static GameState hatchPetWithCinders(GameState state) {
+    if (state.ownedPets.length >= state.metaDepth.basePetRosterCap) {
+      return state;
+    }
+    if (state.metaDepth.cinders < cinderEggCost) return state;
+    final species =
+        PetCatalog.all[GameLogic.random.nextInt(PetCatalog.all.length)];
+    final rarity = _rollPetRarity();
+    final pet = Pet(
+      id: '${species.id}_${GameLogic.random.nextInt(100000)}',
+      name: species.name,
+      attackBonus: species.baseAttack + state.ascensionLevel,
+      speciesId: species.id,
+      rarity: rarity,
+      passive: species.passive,
+      affinityDungeonId: species.affinityDungeonId,
+      passivePerLevel: species.passivePerLevel,
+    );
+    final pets = List<Pet>.from(state.ownedPets)..add(pet);
+    return MetaSystems.evaluateAchievements(
+      state.copyWith(
+        ownedPets: pets,
+        activePet: state.activePet ?? pet,
+        metaDepth: state.metaDepth.copyWith(
+          cinders: state.metaDepth.cinders - cinderEggCost,
+          lifetimePetHatches: state.metaDepth.lifetimePetHatches + 1,
+        ),
+        lastUpdated: DateTime.now(),
+      ),
+    );
+  }
+
   static GameState hatchPet(GameState state) {
     if (state.ownedPets.length >= state.metaDepth.basePetRosterCap) {
       return state;

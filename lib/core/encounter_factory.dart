@@ -12,6 +12,7 @@ import 'enemy_flavor.dart';
 import 'game_logic.dart';
 import 'gauntlet_anomaly.dart';
 import 'game_state.dart';
+import 'farm_intensity.dart';
 import 'keystone.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
@@ -231,9 +232,10 @@ abstract final class EncounterFactory {
   }) {
     if (amount <= 0) return state;
     final adXp = AdBoost.xpActive(state.metaDepth) ? AdBoost.xpPercent : 0;
+    final farmMul = FarmIntensity.rewardMult(state);
     final boosted =
-        amount +
-        (amount *
+        ((amount * farmMul).round()) +
+        ((amount * farmMul).round() *
                 (state.sanctuaryXpBonusPercent +
                     state.petXpFindPercent +
                     adXp)) ~/

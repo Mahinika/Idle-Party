@@ -82,12 +82,33 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.11';
+  static const String currentVersion = '1.13.12';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: currentVersion,
+      date: 'Nov 1, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. Spellcraft, FARM 2×/4×, SHOP offers, and pet eggs.',
+      added: <String>[
+        'Spellcraft: ability casts raise party-wide ability damage (MORE → SETTINGS line).',
+        'FARM on cleared floors: 1× / 2× / 4× packs and matching gold and XP; TRY once if locked.',
+        'ESSENCE · PETS: EGG hatch for 10 Cinders (same gacha as essence hatch).',
+        'SHOP: 24h hub badge, Prospector\'s Bundle → Delver\'s Kit chain, Cinder pouch ×2 first buy, season pass premium row when Play lists it.',
+      ],
+      changed: <String>[
+        'Month-pass claim pays +50% essence and +5 Cinders when season pass premium is owned.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.13.11',
       date: 'Nov 1, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. Expand your bag or send pets on daily errands.',

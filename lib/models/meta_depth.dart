@@ -340,6 +340,11 @@ class MetaDepthState {
     this.petErrandStockUtcDay = '',
     this.petErrandStockRemaining = 3,
     this.petShipmentBonus = 0,
+    this.farmIntensity = 1,
+    this.farmTryUsesLeft = 2,
+    this.shopOfferStartedMs = 0,
+    this.cinderPouchDoubled = false,
+    this.paidSeasonPass = false,
     this.adFree = false,
     this.rewardedWatchCount = 0,
     this.adFreeNudgeShown = false,
@@ -687,6 +692,21 @@ class MetaDepthState {
   /// +1 daily errand cap per level (max 2), bought with Cinders.
   final int petShipmentBonus;
 
+  /// FARM loot/pack multiplier on cleared floors (1, 2, or 4).
+  final int farmIntensity;
+
+  /// One-room TRY at a locked FARM tier (2 uses per Ascend meta).
+  final int farmTryUsesLeft;
+
+  /// UTC ms when the 24h SHOP hub offer window started (0 = not started).
+  final int shopOfferStartedMs;
+
+  /// First real-money Cinder pouch buy paid double (×2 grant once).
+  final bool cinderPouchDoubled;
+
+  /// Paid season pass — bonus on month-pass claim.
+  final bool paidSeasonPass;
+
   /// Permanent SHOP ad-free purchase. Survives Ascend. Billing grants later.
   final bool adFree;
 
@@ -963,6 +983,11 @@ class MetaDepthState {
     String? petErrandStockUtcDay,
     int? petErrandStockRemaining,
     int? petShipmentBonus,
+    int? farmIntensity,
+    int? farmTryUsesLeft,
+    int? shopOfferStartedMs,
+    bool? cinderPouchDoubled,
+    bool? paidSeasonPass,
     bool? adFree,
     int? rewardedWatchCount,
     bool? adFreeNudgeShown,
@@ -1159,6 +1184,11 @@ class MetaDepthState {
       petErrandStockRemaining:
           petErrandStockRemaining ?? this.petErrandStockRemaining,
       petShipmentBonus: petShipmentBonus ?? this.petShipmentBonus,
+      farmIntensity: farmIntensity ?? this.farmIntensity,
+      farmTryUsesLeft: farmTryUsesLeft ?? this.farmTryUsesLeft,
+      shopOfferStartedMs: shopOfferStartedMs ?? this.shopOfferStartedMs,
+      cinderPouchDoubled: cinderPouchDoubled ?? this.cinderPouchDoubled,
+      paidSeasonPass: paidSeasonPass ?? this.paidSeasonPass,
       adFree: adFree ?? this.adFree,
       rewardedWatchCount: rewardedWatchCount ?? this.rewardedWatchCount,
       adFreeNudgeShown: adFreeNudgeShown ?? this.adFreeNudgeShown,
@@ -1347,6 +1377,11 @@ class MetaDepthState {
     'petErrandStockUtcDay': petErrandStockUtcDay,
     'petErrandStockRemaining': petErrandStockRemaining,
     'petShipmentBonus': petShipmentBonus,
+    'farmIntensity': farmIntensity,
+    'farmTryUsesLeft': farmTryUsesLeft,
+    'shopOfferStartedMs': shopOfferStartedMs,
+    'cinderPouchDoubled': cinderPouchDoubled,
+    'paidSeasonPass': paidSeasonPass,
     'adFree': adFree,
     'rewardedWatchCount': rewardedWatchCount,
     'adFreeNudgeShown': adFreeNudgeShown,
@@ -1612,6 +1647,17 @@ class MetaDepthState {
               .clamp(0, 5),
       petShipmentBonus:
           ((json['petShipmentBonus'] as num?)?.toInt() ?? 0).clamp(0, 2),
+      farmIntensity: switch ((json['farmIntensity'] as num?)?.toInt() ?? 1) {
+        2 => 2,
+        4 => 4,
+        _ => 1,
+      },
+      farmTryUsesLeft:
+          ((json['farmTryUsesLeft'] as num?)?.toInt() ?? 2).clamp(0, 9),
+      shopOfferStartedMs:
+          ((json['shopOfferStartedMs'] as num?)?.toInt() ?? 0).clamp(0, 999999999999),
+      cinderPouchDoubled: (json['cinderPouchDoubled'] as bool?) ?? false,
+      paidSeasonPass: (json['paidSeasonPass'] as bool?) ?? false,
       adFree: (json['adFree'] as bool?) ?? false,
       rewardedWatchCount: ((json['rewardedWatchCount'] as num?)?.toInt() ?? 0)
           .clamp(0, 9999),

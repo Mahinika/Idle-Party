@@ -19,10 +19,16 @@ GameState _claimMonthPass(GameState state, {DateTime? now}) {
     titles.add(title);
   }
   return next.copyWith(
-    essence: next.essence + month.essenceReward,
+    essence: next.essence +
+        (next.metaDepth.paidSeasonPass
+            ? (month.essenceReward * 1.5).round()
+            : month.essenceReward),
     metaDepth: next.metaDepth.copyWith(
       claimedMonthGoals: claims,
       titles: titles,
+      cinders: next.metaDepth.paidSeasonPass
+          ? min(9999, next.metaDepth.cinders + 5)
+          : next.metaDepth.cinders,
     ),
   );
 }

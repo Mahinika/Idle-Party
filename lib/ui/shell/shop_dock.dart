@@ -9,6 +9,7 @@ import '../../core/menu_alerts.dart';
 import '../../core/remote_tune.dart';
 import '../../core/shop_billing.dart';
 import '../../core/shop_catalog.dart';
+import '../../core/shop_hub_offer.dart';
 import '../../core/shop_store.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
@@ -82,6 +83,7 @@ class _ShopDockState extends State<ShopDock> {
             unawaited(AppAnalytics.storeProductView(item.id));
           }
         }
+        final featured = ShopHubOffer.featuredItem(state);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -92,6 +94,7 @@ class _ShopDockState extends State<ShopDock> {
                 ),
                 storeLine: storeLine,
                 items: items,
+                featured: featured,
                 showAccountActions: true,
               ),
             ),
@@ -117,6 +120,7 @@ class _ShopDockState extends State<ShopDock> {
     required String hint,
     required String storeLine,
     required List<ShopCatalogItem> items,
+    ShopCatalogItem? featured,
     bool showAccountActions = false,
   }) {
     final state = widget.director.state;
@@ -127,6 +131,25 @@ class _ShopDockState extends State<ShopDock> {
           hint,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
+        if (featured != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            ShopHubOffer.countdownLine(state),
+            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+          ),
+          const SizedBox(height: 6),
+          _ShopRow(
+            item: featured,
+            owned: ShopBilling.isOwned(state, featured),
+            priceLabel: _priceLabel(featured),
+            available: _priceReady(featured) ||
+                ShopCatalog.playChargeableIds.contains(featured.id),
+            compact: false,
+            titleOverride: ShopHubOffer.featuredTitle(featured),
+            onBuy: () => _buy(featured),
+          ),
+          const SizedBox(height: 10),
+        ],
         const SizedBox(height: 4),
         Text(
           storeLine,
@@ -184,6 +207,7 @@ class _ShopRow extends StatelessWidget {
     required this.available,
     required this.onBuy,
     this.compact = false,
+    this.titleOverride,
   });
 
   final ShopCatalogItem item;
@@ -192,6 +216,7 @@ class _ShopRow extends StatelessWidget {
   final bool available;
   final VoidCallback? onBuy;
   final bool compact;
+  final String? titleOverride;
 
   static String? assetFor(ShopCatalogItem item) {
     if (item.permMask == AdBoost.permAll) return UiIcon.star;
@@ -200,6 +225,7 @@ class _ShopRow extends StatelessWidget {
     if (item.kind == ShopOfferKind.supporterQol) return UiIcon.trophy;
     if (item.kind == ShopOfferKind.boostHours) return UiIcon.flask;
     if (item.kind == ShopOfferKind.cinders) return UiIcon.gold;
+    if (item.kind == ShopOfferKind.seasonPass) return UiIcon.star;
     return switch (item.permMask) {
       AdBoost.permAtk => UiIcon.sword,
       AdBoost.permGold => UiIcon.gold,
@@ -229,6 +255,7 @@ class _ShopRow extends StatelessWidget {
       ShopOfferKind.supporterQol =>
         '+${item.bagSlots} bag · +${item.boostHours}h · once',
       ShopOfferKind.cinders => '${item.cinderGrant} Cinders',
+      ShopOfferKind.seasonPass => 'month pass · once',
       ShopOfferKind.permScroll =>
         item.permMask == AdBoost.permAll
             ? 'permanent · all seven · cheaper than each'
@@ -272,7 +299,7 @@ class _ShopRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      shortTitle(item),
+                      titleOverride ?? shortTitle(item),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GameTheme.body(

@@ -43,6 +43,7 @@ import 'meta_systems.dart';
 import 'mission_board.dart';
 import 'party_name_filter.dart';
 import 'pet_service.dart';
+import 'farm_intensity.dart';
 import 'pet_errand_stock.dart';
 import 'run_stash_shop.dart';
 import 'play_games_bridge.dart';
@@ -1575,6 +1576,41 @@ class GameDirector extends ChangeNotifier {
       '+1 errand shipment per day (${PetErrandStock.maxCredits(_state.metaDepth)}/day cap)',
       life: 2.6,
     );
+  }
+
+  void setFarmIntensity(int mult) {
+    if (!FarmIntensity.canPick(_state, mult)) {
+      showToast('Unlock ${mult}× on FARM later', life: 2);
+      return;
+    }
+    _applyUpgrade(GameLogic.setFarmIntensity(_state, mult));
+    showToast('FARM ${mult}× packs · ${mult}× loot', life: 2.2);
+    if (_state.inDungeon) _rebuildSpatial();
+  }
+
+  void tryFarmIntensity(int mult) {
+    if (!FarmIntensity.canTry(_state, mult)) {
+      showToast('No TRY left or already unlocked', life: 2);
+      return;
+    }
+    _applyUpgrade(GameLogic.startFarmTry(_state, mult));
+    showToast('TRY FARM ${mult}× this room', life: 2.2);
+    if (_state.inDungeon) _rebuildSpatial();
+  }
+
+  void hatchPetEgg() {
+    if (_state.ownedPets.length >= _state.metaDepth.basePetRosterCap) {
+      showToast('Roster full', life: 1.8);
+      return;
+    }
+    final next = GameLogic.hatchPetWithCinders(_state);
+    if (identical(next, _state)) {
+      showToast('Need ${PetService.cinderEggCost} Cinders', life: 2);
+      return;
+    }
+    _applyUpgrade(next);
+    GameAudio.unlock();
+    showToast('Pet hatched from egg', life: 2.2);
   }
 
   void buyPrestigeShopItem(String id) {
