@@ -100,5 +100,5 @@ Placements: `welcome_back`, `wisp_gift`, `powerups`, `wipe_retry`.
 adb shell setprop debug.firebase.analytics.app com.idleparty.app.test
 ```
 
-Rebuild with repo `google-services.json` / Play app id if events do not appear;
+Rebuild with repo `google-services.json` that includes `com.idleparty.app.test`;
 see [ANALYTICS.md](ANALYTICS.md).

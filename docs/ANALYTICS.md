@@ -5,9 +5,10 @@ Firebase project in `android/app/google-services.json`: **`idle-party-4a2e9`**
 on the free Spark plan. Do not link BigQuery. Do not upgrade the project to
 Blaze for this.
 
-The sideload test package `com.idleparty.app.test` is not in that JSON, so
-a test APK built without the file does not send events. DebugView needs a
-build of `com.idleparty.app`.
+The sideload test package `com.idleparty.app.test` needs its own client in
+the same `google-services.json` (register it in Firebase; see below). Without
+that client, test APK builds fail in CI. Play release uses `com.idleparty.app`
+only.
 
 ## Consent
 
@@ -89,7 +90,7 @@ In the Firebase console for **`idle-party-4a2e9`**:
 
 1. Open **Crashlytics**. If it asks to get started, enable it. Stay on Spark. Do not link **BigQuery**. Do not upgrade to Blaze.
 2. Google Analytics is already the destination for the events above. Leave it linked. Do not add a second analytics product.
-3. Confirm the Android app is `com.idleparty.app`. The JSON in the repo is that app. Do not register the `.test` sideload package for Play measurement.
+3. Play Android app is `com.idleparty.app`. For sideload QA APKs, also register **`com.idleparty.app.test`** (nickname e.g. Idle Party Test), download `google-services.json`, and commit it when it lists **both** package names under `client[]`. That test app is not on Play; it only enables Analytics/Crashlytics on test APKs. Optional until committed: GitHub secret **`GOOGLE_SERVICES_JSON`** (full file) or **`FIREBASE_TOKEN`** from `firebase login:ci` so the test APK workflow can register the app and merge the test client automatically (`tool/ci/firebase_register_test_app.sh` locally).
 4. Play Data safety already lists Diagnostics. Crash stack traces are crash logs. If that row is off, turn **Crash logs** on (collected, shared with Google Firebase, purpose Analytics) before the next Play upload. This change does not upload an AAB.
 5. No new consent form. **SETTINGS → AD PRIVACY** remains the switch.
 
