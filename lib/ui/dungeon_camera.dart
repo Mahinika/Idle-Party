@@ -203,6 +203,45 @@ import 'dart:math' as math;
   );
 }
 
+/// Columns so the party and a goal can share one portrait phone.
+///
+/// Stays on [targetCols] when that view already clears the HUD. Widens
+/// toward [maxCols] when the gap is longer than the screen. Does not
+/// shrink a pinch-in.
+double dungeonFitCols({
+  required double partyX,
+  required double partyY,
+  required double goalX,
+  required double goalY,
+  required double viewWidth,
+  required double viewHeight,
+  required double targetCols,
+  double topInsetPx = 0,
+  double bottomInsetPx = 0,
+  double maxCols = 36,
+}) {
+  if (viewWidth <= 1 || viewHeight <= 1) return targetCols;
+  final start = targetCols.clamp(12.0, maxCols);
+  bool fits(double cols) {
+    final tile = viewWidth / cols;
+    if (tile <= 0) return false;
+    final rows = viewHeight / tile;
+    final top = topInsetPx <= 0 ? 5.0 : topInsetPx / tile + 1.2;
+    final bottom = bottomInsetPx <= 0 ? 6.0 : bottomInsetPx / tile + 1.2;
+    final needY = (partyY - goalY).abs() + top + bottom;
+    final needX = (partyX - goalX).abs() + 4;
+    return needY <= rows && needX <= cols;
+  }
+
+  if (fits(start)) return start;
+  var cols = start;
+  while (cols + 2 <= maxCols) {
+    cols += 2;
+    if (fits(cols)) return cols;
+  }
+  return maxCols.clamp(12.0, maxCols);
+}
+
 /// Party and pack can share one phone view, with room for sprites and HUD.
 bool dungeonSharesFrame({
   required double partyX,
@@ -264,8 +303,10 @@ bool _spans(double a, double b, double p, double pad) {
   required double visibleCols,
   required double visibleRows,
   double bottomInset = 6,
+  bool onlyWhenApart = true,
 }) {
-  if (dungeonSharesFrame(
+  if (onlyWhenApart &&
+      dungeonSharesFrame(
     partyX: partyX,
     partyY: partyY,
     packX: packX,
@@ -320,6 +361,7 @@ bool _spans(double a, double b, double p, double pad) {
   required double visibleCols,
   required double visibleRows,
   double bottomInset = 18,
+  bool onlyWhenApart = true,
 }) {
   return dungeonGateFocus(
         partyX: partyX,
@@ -330,6 +372,7 @@ bool _spans(double a, double b, double p, double pad) {
         visibleCols: visibleCols,
         visibleRows: visibleRows,
         bottomInset: bottomInset,
+        onlyWhenApart: onlyWhenApart,
       ) ??
       dungeonStairsFocus(
         partyX: partyX,
@@ -351,18 +394,27 @@ bool _spans(double a, double b, double p, double pad) {
   required double visibleRows,
   double marginX = 2.2,
   double marginY = 4.5,
+  double? marginTop,
+  double? marginBottom,
 }) {
   var x = focusX;
   var y = focusY;
   final halfX = math.max(1.0, visibleCols / 2);
   final halfY = math.max(1.0, visibleRows / 2);
+  final top = marginTop ?? marginY;
+  final bottom = marginBottom ?? marginY;
   for (final h in heroes) {
     final loX = h.x - halfX + marginX;
     final hiX = h.x + halfX - marginX;
     if (loX <= hiX) x = x.clamp(loX, hiX);
-    final loY = h.y - halfY + marginY;
-    final hiY = h.y + halfY - marginY;
-    if (loY <= hiY) y = y.clamp(loY, hiY);
+    // loY keeps the hero above the bottom card. hiY keeps it under the top HUD.
+    final loY = h.y - halfY + bottom;
+    final hiY = h.y + halfY - top;
+    if (loY <= hiY) {
+      y = y.clamp(loY, hiY);
+    } else {
+      y = loY;
+    }
   }
   return (x: x, y: y);
 }

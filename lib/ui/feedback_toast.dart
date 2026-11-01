@@ -13,12 +13,17 @@ class FeedbackToast extends StatelessWidget {
     this.kind = NoticeKind.tip,
     this.maxLines = 3,
     this.alignment = const Alignment(0, -0.42),
+    this.docked = false,
   });
 
   final String message;
   final NoticeKind kind;
   final int maxLines;
   final Alignment alignment;
+
+  /// Sit in the dungeon column under the action row. An [Align] would
+  /// expand and cover the fight.
+  final bool docked;
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +49,7 @@ class FeedbackToast extends StatelessWidget {
           ),
         };
 
-    return IgnorePointer(
-      child: Align(
-        alignment: alignment,
-        child: Semantics(
+    final card = Semantics(
           liveRegion: true,
           label: message,
           child: Container(
@@ -95,8 +97,17 @@ class FeedbackToast extends StatelessWidget {
               ),
             ),
           ),
+        );
+    if (docked) {
+      return IgnorePointer(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 2),
+          child: card,
         ),
-      ),
+      );
+    }
+    return IgnorePointer(
+      child: Align(alignment: alignment, child: card),
     );
   }
 }

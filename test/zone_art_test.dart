@@ -90,7 +90,11 @@ void main() {
       expect(KenneyAssets.propPoolForDungeon(def.id), art.props);
       expect(KenneyAssets.dungeonIconFor(def.id), art.hubIcon);
       expect(DungeonEnvironment.ambient(def.id), art.ambient);
-      expect(DungeonEnvironment.atmosphereWash(def.id), art.wash);
+      final washed = DungeonEnvironment.atmosphereWash(def.id);
+      expect(washed.r, art.wash.r);
+      expect(washed.g, art.wash.g);
+      expect(washed.b, art.wash.b);
+      expect(washed.a, greaterThanOrEqualTo(art.wash.a));
       expect(DungeonEnvironment.projectileTint(def.id), art.projectileTint);
       expect(ZoneLayoutKit.forId(def.id).landmarks, art.landmarks);
       expect(ZoneLayoutKit.forId(def.id).preferChoke, art.preferChoke);

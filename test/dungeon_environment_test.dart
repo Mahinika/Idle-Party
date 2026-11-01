@@ -37,6 +37,24 @@ void main() {
     expect(KenneyAssets.torchAlt, isNot(KenneyAssets.fountainSlime));
   });
 
+  test('early zone vignettes and HUD accents read apart', () {
+    final sandyV = DungeonEnvironment.vignetteColors('sandy').last;
+    final goblinV = DungeonEnvironment.vignetteColors('goblin').last;
+    final kingV = DungeonEnvironment.vignetteColors('king').last;
+    expect(sandyV.toARGB32(), isNot(goblinV.toARGB32()));
+    expect(goblinV.toARGB32(), isNot(kingV.toARGB32()));
+
+    int ch(Color c, int shift) => (c.toARGB32() >> shift) & 0xFF;
+    expect(ch(sandyV, 16), greaterThan(ch(sandyV, 0)));
+    expect(ch(goblinV, 8), greaterThan(ch(goblinV, 16)));
+    expect(ch(kingV, 0), greaterThan(ch(kingV, 16)));
+
+    expect(
+      DungeonEnvironment.hudZoneAccent('sandy').toARGB32(),
+      isNot(DungeonEnvironment.hudZoneAccent('goblin').toARGB32()),
+    );
+  });
+
   test('Sandy wash and prop shadow stay sand-brown and readable', () {
     final wash = DungeonEnvironment.atmosphereWash('sandy');
     expect((wash.toARGB32() >> 24) & 0xFF, lessThan(0x40));

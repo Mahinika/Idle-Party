@@ -55,9 +55,19 @@ part 'dungeon_ambient_particles.dart';
 
 /// Top-down tile dungeon — painted, not 100+ Image widgets.
 class SpatialDungeonView extends StatefulWidget {
-  const SpatialDungeonView({super.key, required this.director});
+  const SpatialDungeonView({
+    super.key,
+    required this.director,
+    this.cameraTopInset = 0,
+    this.cameraBottomInset = 0,
+  });
 
   final GameDirector director;
+
+  /// Pixels of HUD covering the top and bottom of the full-bleed map.
+  /// The camera keeps bodies in the clear band between them.
+  final double cameraTopInset;
+  final double cameraBottomInset;
 
   /// Map TalkBack. The first floor does not teach the fist.
   static String mapSemanticsLabel({required bool plain}) => plain
@@ -685,6 +695,9 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                     _pinchCols.value ??
                                     widget.director.state.viewCols,
                                 pinHeroIndex: widget.director.cameraHeroIndex,
+                                cameraTopInset: widget.cameraTopInset,
+                                cameraBottomInset: widget.cameraBottomInset,
+                                lockCols: _pinchCols.value != null,
                               );
                               final epoch = widget.director.floorEpoch;
                               final newFloor = epoch != _floorEpoch;
@@ -894,6 +907,7 @@ class DungeonModeChip extends StatelessWidget {
     this.prominent = false,
     this.tip,
     this.interactive = true,
+    this.expand = false,
     this.maxLabelWidth,
   });
 
@@ -908,6 +922,10 @@ class DungeonModeChip extends StatelessWidget {
   final String? tip;
   final bool interactive;
 
+  /// Fill the parent slot. The hit target stays 44dp; the label scales down
+  /// inside it and never shrinks the slot.
+  final bool expand;
+
   /// When set, long labels ellipsis instead of stretching the top HUD.
   final double? maxLabelWidth;
 
@@ -915,14 +933,30 @@ class DungeonModeChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final semanticsLabel = tip == null ? '$label dungeon mode' : '$label. $tip';
     final action = interactive ? onTap : null;
+    final labelText = Text(
+      label,
+      maxLines: 1,
+      softWrap: false,
+      overflow: expand ? TextOverflow.visible : TextOverflow.ellipsis,
+      style: GameTheme.pixel(
+        size: expand
+            ? GameTheme.hudPixelComfort
+            : (prominent ? 13 : GameTheme.hudPixel),
+        color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
+      ),
+    );
     final child = Container(
+      width: expand ? double.infinity : null,
+      height: expand ? GameTheme.minTouch : null,
       constraints: BoxConstraints(
-        minHeight: prominent ? 40 : (dense ? 30 : GameTheme.minTouch),
-        minWidth: prominent ? 76 : 0,
+        minHeight: expand
+            ? GameTheme.minTouch
+            : (prominent ? 40 : (dense ? 30 : GameTheme.minTouch)),
+        minWidth: expand ? 0 : (prominent ? 76 : 0),
       ),
       padding: EdgeInsets.symmetric(
         horizontal: prominent ? 8 : (dense ? 7 : 8),
-        vertical: dense ? 4 : 0,
+        vertical: expand ? 0 : (dense ? 4 : 0),
       ),
       alignment: Alignment.center,
       decoration: BoxDecoration(
@@ -935,18 +969,14 @@ class DungeonModeChip extends StatelessWidget {
           width: prominent && selected ? 2 : 1,
         ),
       ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxLabelWidth ?? double.infinity),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: GameTheme.pixel(
-            size: prominent ? 13 : GameTheme.hudPixel,
-            color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
-          ),
-        ),
-      ),
+      child: expand
+          ? FittedBox(fit: BoxFit.scaleDown, child: labelText)
+          : ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: maxLabelWidth ?? double.infinity,
+              ),
+              child: labelText,
+            ),
     );
     if (!interactive) {
       return Semantics(label: semanticsLabel, child: child);
@@ -1183,6 +1213,9 @@ class _TileCamera {
     double shake = 0,
     int visualFrame = 0,
     int? pinHeroIndex,
+    double cameraTopInset = 0,
+    double cameraBottomInset = 0,
+    bool lockCols = false,
   }) {
     if (world == null) {
       return const _TileCamera(
@@ -1193,10 +1226,6 @@ class _TileCamera {
         visibleRows: 1,
       );
     }
-    // Phone product: zoom setting picks how many tiles fit across the stage.
-    final cols = math.min(targetCols, world.cols.toDouble());
-    final tileSize = constraints.maxWidth / cols;
-    final visibleRows = constraints.maxHeight / tileSize;
     final heroRows = world.heroes
         .where((h) => !h.isPet)
         .map((h) => (x: h.x, y: h.y, alive: h.isAlive, index: h.assetIndex));
@@ -1210,6 +1239,17 @@ class _TileCamera {
       mapCenterY: world.rows / 2,
       pinIndex: pinHeroIndex,
     );
+    ({double x, double y})? awakePack;
+    var awakeD = double.infinity;
+    for (final e in awakeEnemies) {
+      final dx = e.x - party.x;
+      final dy = e.y - party.y;
+      final d = dx * dx + dy * dy;
+      if (d < awakeD) {
+        awakeD = d;
+        awakePack = (x: e.x, y: e.y);
+      }
+    }
     final exit = world.map.exitPoint;
     final living = world.enemies.where((e) => e.hp > 0).toList();
     ({double x, double y})? farPack;
@@ -1239,30 +1279,81 @@ class _TileCamera {
       return null;
     }();
     // A chest floor has no pack. The party card used to hide that chest
-    // and leave the opening on an empty hall.
-    final goal = farPack ?? chest;
+    // and leave the opening on an empty hall. A sleeping pack is not drawn,
+    // so it must not zoom the phone out onto an empty hall.
+    final visibleGoal = awakePack ?? chest;
+    final approach = farPack ?? chest;
+    var cols = math.min(targetCols, world.cols.toDouble());
+    // Widen a little when an awake pack or a chest almost fits. A pinch
+    // keeps the columns the fingers set. Tiles stay at least ~14px.
+    if (!lockCols &&
+        !world.awaitingExit &&
+        visibleGoal != null &&
+        constraints.maxWidth > 1 &&
+        constraints.maxHeight > 1) {
+      final readableMax = math.min(28.0, constraints.maxWidth / 14);
+      final widened = math.min(
+        world.cols.toDouble(),
+        dungeonFitCols(
+          partyX: party.x,
+          partyY: party.y,
+          goalX: visibleGoal.x,
+          goalY: visibleGoal.y,
+          viewWidth: constraints.maxWidth,
+          viewHeight: constraints.maxHeight,
+          targetCols: cols,
+          topInsetPx: cameraTopInset,
+          bottomInsetPx: cameraBottomInset,
+          maxCols: math.max(cols, readableMax),
+        ),
+      );
+      final tryTile = constraints.maxWidth / widened;
+      if (tryTile > 0) {
+        final tryRows = constraints.maxHeight / tryTile;
+        final top = cameraTopInset <= 0 ? 5.0 : cameraTopInset / tryTile + 1.2;
+        final bottom = cameraBottomInset <= 0
+            ? 6.0
+            : cameraBottomInset / tryTile + 1.2;
+        final fits =
+            (party.y - visibleGoal.y).abs() + top + bottom <= tryRows &&
+            (party.x - visibleGoal.x).abs() + 4 <= widened;
+        if (fits) cols = widened;
+      }
+    }
+    final tileSize = constraints.maxWidth / cols;
+    final visibleRows = constraints.maxHeight / tileSize;
+    final topTiles = tileSize <= 0 ? 0.0 : cameraTopInset / tileSize;
+    final bottomTiles = tileSize <= 0 ? 0.0 : cameraBottomInset / tileSize;
+    final marginTop = math.max(4.5, topTiles + 0.9);
+    final marginBottom = math.max(4.5, bottomTiles + 0.9);
     final clear =
-        goal != null &&
+        visibleGoal != null &&
         dungeonPackInClearView(
           partyX: party.x,
           partyY: party.y,
-          packX: goal.x,
-          packY: goal.y,
+          packX: visibleGoal.x,
+          packY: visibleGoal.y,
           visibleCols: cols,
           visibleRows: visibleRows,
+          cardRows: marginBottom,
+          topMargin: marginTop,
         );
     final closedGates = world.map.gates
         .where((g) => !world.openGateIds.contains(g.id))
         .map((g) => (x: g.x + 0.5, y: g.y + 0.5));
-    final gateFocus = !world.awaitingExit && goal != null && !clear
-        ? dungeonNextFocus(
+    // A far pack does not steal the frame. The closed gate stays with the
+    // party. Stairs-focus on that pack is what pushed the heroes off the phone.
+    final gateFocus = !world.awaitingExit && approach != null && !clear
+        ? dungeonGateFocus(
             partyX: party.x,
             partyY: party.y,
-            packX: goal.x,
-            packY: goal.y,
+            packX: approach.x,
+            packY: approach.y,
             closedGates: closedGates,
             visibleCols: cols,
             visibleRows: visibleRows,
+            bottomInset: marginBottom,
+            onlyWhenApart: false,
           )
         : null;
     final raw = world.awaitingExit
@@ -1273,6 +1364,17 @@ class _TileCamera {
             exitY: exit.$2 + 0.5,
             visibleCols: cols,
             visibleRows: visibleRows,
+          )
+        : visibleGoal != null && clear
+        ? dungeonStairsFocus(
+            partyX: party.x,
+            partyY: party.y,
+            exitX: visibleGoal.x,
+            exitY: visibleGoal.y,
+            visibleCols: cols,
+            visibleRows: visibleRows,
+            topInset: marginTop,
+            bottomInset: marginBottom,
           )
         : gateFocus ??
               (inFight
@@ -1287,7 +1389,7 @@ class _TileCamera {
                       maxShiftY: visibleRows * 0.14,
                     )
                   : party);
-    final focus = world.awaitingExit || gateFocus != null
+    final focus = world.awaitingExit
         ? raw
         : dungeonIncludeParty(
             focusX: raw.x,
@@ -1295,25 +1397,13 @@ class _TileCamera {
             heroes: heroRows.where((h) => h.alive).map((h) => (x: h.x, y: h.y)),
             visibleCols: cols,
             visibleRows: visibleRows,
+            marginTop: marginTop,
+            marginBottom: marginBottom,
           );
-    if (kDebugMode && goal != null) {
-      // dungeonNextFocus also frames the pack. The gate only wins when
-      // the full phone cannot hold both.
-      final gateWon =
-          !world.awaitingExit &&
-          !clear &&
-          dungeonGateFocus(
-                partyX: party.x,
-                partyY: party.y,
-                packX: goal.x,
-                packY: goal.y,
-                closedGates: closedGates,
-                visibleCols: cols,
-                visibleRows: visibleRows,
-              ) !=
-              null;
+    if (kDebugMode && approach != null) {
+      final gateWon = gateFocus != null;
       final key =
-          '${party.y.toStringAsFixed(0)}>${goal.x.toStringAsFixed(0)},${goal.y.toStringAsFixed(0)}:$clear:$gateWon';
+          '${party.y.toStringAsFixed(0)}>${approach.x.toStringAsFixed(0)},${approach.y.toStringAsFixed(0)}:$clear:$gateWon';
       if (key != _lastCamLog) {
         _lastCamLog = key;
         DebugPlayLog.event(
@@ -1321,7 +1411,7 @@ class _TileCamera {
           'rows=${visibleRows.toStringAsFixed(1)} '
               'cols=${cols.toStringAsFixed(1)} clear=$clear '
               'party=${party.x.toStringAsFixed(1)},${party.y.toStringAsFixed(1)} '
-              'goal=${goal.x.toStringAsFixed(1)},${goal.y.toStringAsFixed(1)} '
+              'goal=${approach.x.toStringAsFixed(1)},${approach.y.toStringAsFixed(1)} '
               'gate=$gateWon',
         );
       }

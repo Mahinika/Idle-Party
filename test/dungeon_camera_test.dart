@@ -295,6 +295,44 @@ void main() {
     expect((40 - focus.y).abs(), lessThanOrEqualTo(halfY - 6));
   });
 
+  test('a long Sandy gap widens the view until the party and pack share it', () {
+    final cols = dungeonFitCols(
+      partyX: 51,
+      partyY: 7,
+      goalX: 52,
+      goalY: 37,
+      viewWidth: 360,
+      viewHeight: 780,
+      targetCols: 20,
+      topInsetPx: 100,
+      bottomInsetPx: 200,
+    );
+    expect(cols, greaterThan(20));
+    expect(cols, lessThanOrEqualTo(36));
+    final tile = 360 / cols;
+    final rows = 780 / tile;
+    final top = 100 / tile + 1.2;
+    final bottom = 200 / tile + 1.2;
+    expect((7 - 37).abs() + top + bottom, lessThanOrEqualTo(rows + 0.2));
+  });
+
+  test('a short phone keeps the hero above the party card', () {
+    const rows = 640 / 18;
+    final framed = dungeonIncludeParty(
+      focusX: 10,
+      focusY: 40,
+      heroes: [(x: 10, y: 22)],
+      visibleCols: 20,
+      visibleRows: rows,
+      marginTop: 7,
+      marginBottom: 14,
+    );
+    final halfY = rows / 2;
+    final screen = 22 - framed.y + halfY;
+    expect(screen, greaterThanOrEqualTo(7));
+    expect(screen, lessThanOrEqualTo(rows - 14));
+  });
+
   test('a hero at the edge is pulled back inside the phone', () {
     final framed = dungeonIncludeParty(
       focusX: 10,

@@ -20,6 +20,7 @@ import '../../spatial/tile_map.dart';
 import '../coach_pulse.dart';
 import 'shell_common.dart';
 import '../first_session_tips.dart';
+import '../dungeon_environment.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -480,7 +481,7 @@ class DungeonTopHud extends StatelessWidget {
       director.setDungeonMode(mode);
     }
 
-    Widget modeRow() {
+    List<Widget> modeSlots() {
       if (state.inGauntlet) {
         final floor = state.currentRoom.floorNumber;
         final nextBoss = GauntletAnomalies.nextBossFloor(floor);
@@ -500,28 +501,31 @@ class DungeonTopHud extends StatelessWidget {
             : '';
         final nextBit = nextAnom != null ? ' Next anomaly F$nextAnom.' : '';
         final pbBit = pb > 0 ? ' PB F$pb.' : '';
-        return DungeonModeChip(
+        return [
+          Expanded(
+            child: DungeonModeChip(
           label: chip,
           selected: true,
-          dense: true,
+          expand: true,
           interactive: false,
           tip:
               'Next boss F$nextBoss.$nextBit$pbBit Wipe or leave returns to the hub.$extra',
           onTap: () {},
-        );
+            ),
+          ),
+        ];
       }
       if (state.inRift || state.inGreaterRift) {
-        return const SizedBox.shrink();
+        return const [];
       }
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CoachPulse(
+      return [
+        Expanded(
+          child: CoachPulse(
             active: coachFarm != null,
             child: DungeonModeChip(
               label: GameLogic.dungeonModeChipLabel(DungeonMode.farm, state),
               selected: farm,
-              dense: true,
+              expand: true,
               tip:
                   coachFarm ??
                   GameLogic.dungeonModeChipTip(DungeonMode.farm, state),
@@ -531,13 +535,15 @@ class DungeonTopHud extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(width: 4),
-          CoachPulse(
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: CoachPulse(
             active: coachFarm != null,
             child: DungeonModeChip(
               label: GameLogic.dungeonModeChipLabel(DungeonMode.push, state),
               selected: !farm,
-              dense: true,
+              expand: true,
               tip:
                   coachFarm ??
                   GameLogic.dungeonModeChipTip(DungeonMode.push, state),
@@ -547,9 +553,15 @@ class DungeonTopHud extends StatelessWidget {
               },
             ),
           ),
-        ],
-      );
+        ),
+      ];
     }
+
+    final slots = showFightTools ? modeSlots() : const <Widget>[];
+    final showZoneAccent = !state.inGauntlet &&
+        !state.inRift &&
+        !state.inGreaterRift &&
+        !state.inWorldBoss;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(6, 2, 2, 2),
@@ -563,6 +575,12 @@ class DungeonTopHud extends StatelessWidget {
           ],
         ),
         border: Border(
+          left: showZoneAccent
+              ? BorderSide(
+                  color: DungeonEnvironment.hudZoneAccent(state.dungeonId),
+                  width: 3,
+                )
+              : BorderSide.none,
           bottom: BorderSide(color: GameTheme.border.withValues(alpha: 0.3)),
         ),
       ),
@@ -570,7 +588,8 @@ class DungeonTopHud extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // One strip — do not Flexible-expand FARM/PUSH (that stretched them).
+          // Place line owns the width. Actions sit on the next row at 44dp
+          // so a FittedBox cannot shrink FARM, the fist, or SPEED away.
           Row(
             children: [
               Expanded(
@@ -601,91 +620,93 @@ class DungeonTopHud extends StatelessWidget {
                   ],
                 ),
               ),
-              if (showFightTools)
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (keyTimerLabel != null) ...[
-                          const SizedBox(width: 4),
-                          Text(
-                            keyTimerLabel,
-                            maxLines: 1,
-                            style: GameTheme.pixel(
-                              size: GameTheme.hudPixel,
-                              color: GameTheme.torchHot,
-                            ),
-                          ),
-                        ],
-                        modeRow(),
-                        if (world != null) ...[
-                          const SizedBox(width: 4),
-                          Semantics(
-                            button: true,
-                            label: plain
-                                ? 'Long-press the fight, or tap the fist'
-                                : 'God Hand — long-press the fight or tap the fist',
-                            child: CoachPulse(
-                              active: coachGod != null,
-                              child: GodHandRing(
-                                cooldown: world.godHandCooldown,
-                                maxCooldown: state.godHandCooldownSeconds,
-                                urgent: state.wipeStreakCount >= 2 && !plain,
-                                dense: true,
-                                readyLabel:
-                                    coachGod ??
-                                    (plain
-                                        ? 'Long-press the fight, or tap the fist'
-                                        : null),
-                                coolingLabel:
-                                    'Cooling ${formatCombatSeconds(world.godHandCooldown)}',
-                                onTap: () => director.godHandAtFocus(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+              if (keyTimerLabel != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: Text(
+                    keyTimerLabel,
+                    maxLines: 1,
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: GameTheme.torchHot,
                     ),
                   ),
                 ),
-              const SizedBox(width: 4),
-              DungeonModeChip(
-                label: state.combatPace >= 2 ? 'SPEED 2×' : 'SPEED 1×',
-                selected: state.combatPace >= 2,
-                prominent: true,
-                tip: 'Fight speed. 2× plays the cave faster. Loot and time away stay the same.',
-                onTap: director.cycleCombatPace,
-              ),
-              SizedBox(
-                width: 44,
-                height: 44,
-                child: Semantics(
-                  button: true,
-                  label: 'Floor menu',
-                  excludeSemantics: true,
-                  child: PopupMenuButton<String>(
-                    tooltip: 'Floor',
-                    padding: EdgeInsets.zero,
-                    color: GameTheme.stoneDeep,
-                    onSelected: (value) => _onFloorMenu(context, value, floor),
-                    itemBuilder: (context) =>
-                        _floorMenuItems(floor: floor, includeExtras: false),
-                    child: Center(
-                      child: Text(
-                        state.inGauntlet ? '...' : 'F$floor',
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: GameTheme.torchHot,
+            ],
+          ),
+          const SizedBox(height: 2),
+          SizedBox(
+            height: GameTheme.minTouch,
+            child: Row(
+              children: [
+                if (slots.isNotEmpty) ...[
+                  ...slots,
+                  const SizedBox(width: 4),
+                ],
+                if (showFightTools && world != null) ...[
+                    Semantics(
+                      button: true,
+                      label: plain
+                          ? 'Long-press the fight, or tap the fist'
+                          : 'God Hand — long-press the fight or tap the fist',
+                      child: CoachPulse(
+                        active: coachGod != null,
+                        child: GodHandRing(
+                          cooldown: world.godHandCooldown,
+                          maxCooldown: state.godHandCooldownSeconds,
+                          urgent: state.wipeStreakCount >= 2 && !plain,
+                          readyLabel:
+                              coachGod ??
+                              (plain
+                                  ? 'Long-press the fight, or tap the fist'
+                                  : null),
+                          coolingLabel:
+                              'Cooling ${formatCombatSeconds(world.godHandCooldown)}',
+                          onTap: () => director.godHandAtFocus(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                Expanded(
+                  child: DungeonModeChip(
+                    label: state.combatPace >= 2 ? 'SPEED 2×' : 'SPEED 1×',
+                    selected: state.combatPace >= 2,
+                    prominent: true,
+                    expand: true,
+                    tip: 'Fight speed. 2× plays the cave faster. Loot and time away stay the same.',
+                    onTap: director.cycleCombatPace,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: GameTheme.minTouch,
+                  height: GameTheme.minTouch,
+                  child: Semantics(
+                    button: true,
+                    label: 'Floor menu',
+                    excludeSemantics: true,
+                    child: PopupMenuButton<String>(
+                      tooltip: 'Floor',
+                      padding: EdgeInsets.zero,
+                      color: GameTheme.stoneDeep,
+                      onSelected: (value) => _onFloorMenu(context, value, floor),
+                      itemBuilder: (context) =>
+                          _floorMenuItems(floor: floor, includeExtras: false),
+                      child: Center(
+                        child: Text(
+                          state.inGauntlet ? '...' : 'F$floor',
+                          style: GameTheme.pixel(
+                            size: GameTheme.hudPixel,
+                            color: GameTheme.torchHot,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           if (partyLine != null && coachLine == null)
             Text(
