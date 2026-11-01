@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/ad_offer.dart';
 import '../../core/ad_rewarded.dart';
+import '../../core/analytics_events.dart';
 import '../../core/game_director.dart';
 import '../coach_pulse.dart';
 import '../game_button.dart';
@@ -51,7 +52,11 @@ class _BoostAdButtonState extends State<BoostAdButton> {
         }
         if (!_prepared) {
           _prepared = true;
-          unawaited(AdRewarded.prepareOffer());
+          unawaited(
+            AdRewarded.prepareOffer(
+              placement: AnalyticsEvents.placementPowerups,
+            ),
+          );
         }
         return CoachPulse(
           active: !director.state.reducedVfx,

@@ -9,3 +9,8 @@ void debugResetEarlyErrorBuffer() {}
 Future<void> syncConsent() async {}
 
 Future<void> logEvent(String name, [Map<String, Object>? params]) async {}
+
+void syncCrashContext({
+  required String zoneId,
+  required String appVersion,
+}) {}

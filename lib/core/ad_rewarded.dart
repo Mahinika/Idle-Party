@@ -13,14 +13,15 @@ abstract final class AdRewarded {
 
   /// Preload the one rewarded unit when a button is about to show.
   /// Does not show a consent form.
-  static Future<void> prepareOffer() {
+  static Future<void> prepareOffer({String? placement}) {
     prepareOfferCalls++;
-    return impl.prepareOffer();
+    return impl.prepareOffer(placement: placement);
   }
 
   static Future<void> warmup() => impl.warmup();
 
-  static Future<AdWatchResult> showRewarded() => impl.showRewarded();
+  static Future<AdWatchResult> showRewarded({required String placement}) =>
+      impl.showRewarded(placement: placement);
 
   /// SETTINGS → AD PRIVACY. Lets EU players change or withdraw AdMob consent.
   static Future<void> showPrivacyOptions() => impl.showPrivacyOptions();

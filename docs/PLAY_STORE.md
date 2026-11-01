@@ -193,7 +193,8 @@ Phone product only (`com.idleparty.app`). Config file is in-repo:
 `android/app/google-services.json` (project `idle-party-4a2e9`)
 
 Event names, the consent gate, and Crashlytics are in
-[ANALYTICS.md](ANALYTICS.md). UMP consent gates Analytics and Crashlytics
+[ANALYTICS.md](ANALYTICS.md). Full event/param catalog:
+[analytics_events.md](analytics_events.md). UMP consent gates Analytics and Crashlytics
 (SETTINGS → AD PRIVACY). Both stay off until that check. Spark only: do not
 link BigQuery and do not upgrade the project to Blaze for this. Rebuild
 Android after pull.

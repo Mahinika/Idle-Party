@@ -10,12 +10,13 @@ plugins {
 
 // Sideload builds set IDLE_TEST_PACKAGE=1 so the APK is com.idleparty.app.test
 // ("Idle Party Test") and can sit beside the Play install. Play builds leave
-// the variable unset. The .test id is not in google-services.json, so Firebase
-// stays off for that package (see docs/ANALYTICS.md).
+// the variable unset. Firebase needs a matching client in google-services.json
+// (see docs/ANALYTICS.md).
 val idleTestPackage = System.getenv("IDLE_TEST_PACKAGE") == "1"
 
-// Only when Firebase Console config is present (see docs/PLAY_STORE.md).
-if (file("google-services.json").exists() && !idleTestPackage) {
+// When Firebase Console config is present (see docs/PLAY_STORE.md). The Gradle
+// plugin picks the client whose package_name matches applicationId.
+if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
     apply(plugin = "com.google.firebase.crashlytics")
 }

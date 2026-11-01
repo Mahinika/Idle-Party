@@ -108,9 +108,9 @@ void main() {
     await director.boot();
     director.debugStampForeground(ago: const Duration(seconds: 40));
     director.setAppPaused(true);
-    expect(hits, ['session_length']);
+    expect(hits.where((h) => h == 'session_length').length, 1);
     director.setAppPaused(true);
-    expect(hits, ['session_length']);
+    expect(hits.where((h) => h == 'session_length').length, 1);
   });
 
   test('resume after 5s shows no Welcome Back and no offline_gold', () async {

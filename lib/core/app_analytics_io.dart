@@ -110,6 +110,21 @@ Future<void> logEvent(String name, [Map<String, Object>? params]) async {
   }
 }
 
+void syncCrashContext({
+  required String zoneId,
+  required String appVersion,
+}) {
+  if (!_androidLive || _analytics == null) return;
+  try {
+    unawaited(FirebaseCrashlytics.instance.setCustomKey('zone_id', zoneId));
+    unawaited(
+      FirebaseCrashlytics.instance.setCustomKey('app_version', appVersion),
+    );
+  } catch (e, st) {
+    debugPrint('Crashlytics setCustomKey failed: $e\n$st');
+  }
+}
+
 void _installCrashHandlers() {
   if (_crashHandlersInstalled) return;
   if (!_handlersArmed) {

@@ -29,11 +29,14 @@ Future<void> _serialized(Future<void> Function() body) {
 }
 
 /// Load the rewarded unit only. Does not show the UMP form.
-Future<void> prepareOffer() {
+Future<void> prepareOffer({String? placement}) {
   if (!realAdsAvailable) return Future<void>.value();
+  if (placement != null) {
+    unawaited(AppAnalytics.rewardedOffer(placement));
+  }
   return _serialized(() async {
     await _ensureSdk(askConsent: false);
-    if (_sdkReady) await _preload();
+    if (_sdkReady) await _preload(placement: placement);
   });
 }
 
@@ -61,18 +64,25 @@ Future<void> showPrivacyOptions() async {
 /// finishes. Without waiting for [FullScreenContentCallback], we used to
 /// dispose early and treat a full watch as [AdWatchResult.skipped] — so the
 /// ad played but POWERUPS never granted.
-Future<AdWatchResult> showRewarded() async {
+Future<AdWatchResult> showRewarded({required String placement}) async {
   if (!realAdsAvailable) return AdWatchResult.unavailable;
+  unawaited(AppAnalytics.rewardedTap(placement));
   // The tap is the one prompt: UMP only here, then the ad they asked for.
   await _serialized(() async {
     await _ensureSdk(askConsent: true);
-    if (_sdkReady && _ready == null) await _preload();
+    if (_sdkReady && _ready == null) await _preload(placement: placement);
   });
-  if (!_sdkReady) return AdWatchResult.failed;
+  if (!_sdkReady) {
+    unawaited(AppAnalytics.rewardedLoadFail(placement));
+    return AdWatchResult.failed;
+  }
   var ad = _ready;
   _ready = null;
-  ad ??= await _loadAd();
-  if (ad == null) return AdWatchResult.failed;
+  ad ??= await _loadAd(placement: placement);
+  if (ad == null) {
+    unawaited(AppAnalytics.rewardedLoadFail(placement));
+    return AdWatchResult.failed;
+  }
 
   final finished = Completer<AdWatchResult>();
   var earned = false;
@@ -90,6 +100,7 @@ Future<AdWatchResult> showRewarded() async {
       debugPrint('rewarded ad failed to show: $error');
       closed.dispose();
       if (!finished.isCompleted) {
+        unawaited(AppAnalytics.rewardedLoadFail(placement));
         finished.complete(AdWatchResult.failed);
       }
     },
@@ -107,12 +118,13 @@ Future<AdWatchResult> showRewarded() async {
   } catch (e, st) {
     debugPrint('rewarded ad show failed: $e\n$st');
     ad.dispose();
-    unawaited(_preload());
+    unawaited(AppAnalytics.rewardedLoadFail(placement));
+    unawaited(_preload(placement: placement));
     return AdWatchResult.failed;
   }
 
   try {
-    return await finished.future.timeout(
+    final result = await finished.future.timeout(
       const Duration(minutes: 5),
       onTimeout: () {
         debugPrint('rewarded ad dismiss timed out');
@@ -120,9 +132,19 @@ Future<AdWatchResult> showRewarded() async {
         return earned ? AdWatchResult.rewarded : AdWatchResult.failed;
       },
     );
+    switch (result) {
+      case AdWatchResult.rewarded:
+        unawaited(AppAnalytics.rewardedComplete(placement));
+      case AdWatchResult.skipped:
+        unawaited(AppAnalytics.rewardedSkip(placement));
+      case AdWatchResult.failed:
+      case AdWatchResult.unavailable:
+        break;
+    }
+    return result;
   } finally {
     unawaited(lockImmersiveUi());
-    unawaited(_preload());
+    unawaited(_preload(placement: placement));
   }
 }
 
@@ -170,12 +192,12 @@ Future<void> _requestConsent({required bool askConsent}) async {
   unawaited(lockImmersiveUi());
 }
 
-Future<void> _preload() async {
+Future<void> _preload({String? placement}) async {
   if (_ready != null || !_sdkReady) return;
-  _ready = await _loadAd();
+  _ready = await _loadAd(placement: placement);
 }
 
-Future<RewardedAd?> _loadAd() async {
+Future<RewardedAd?> _loadAd({String? placement}) async {
   final loaded = Completer<RewardedAd?>();
   await RewardedAd.load(
     adUnitId: AdConfig.rewardedUnitId,
@@ -186,6 +208,9 @@ Future<RewardedAd?> _loadAd() async {
       },
       onAdFailedToLoad: (error) {
         debugPrint('rewarded ad load failed: $error');
+        if (placement != null) {
+          unawaited(AppAnalytics.rewardedLoadFail(placement));
+        }
         if (!loaded.isCompleted) loaded.complete(null);
       },
     ),

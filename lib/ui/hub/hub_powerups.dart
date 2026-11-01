@@ -3,8 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/ad_boost.dart';
+import '../../core/ad_free_nudge.dart';
 import '../../core/ad_rewarded.dart';
+import '../../core/build_stamp.dart';
 import '../../core/game_director.dart';
+import '../../core/menu_router.dart';
+import '../../core/shop_store.dart';
 import 'friend_tip_block.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
@@ -12,6 +16,7 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/play_nav.dart';
 import '../shell/wallet_strip.dart';
 import '../web_click_bridge.dart';
 
@@ -173,6 +178,7 @@ Future<void> openPowerupsSheet(
 ) async {
   WebClickBridge.pushLayer();
   unawaited(director.syncFriendReferral());
+  final router = PlayNav.maybeOf(context)?.router;
   try {
     await showModalBottomSheet<void>(
       context: context,
@@ -191,147 +197,257 @@ Future<void> openPowerupsSheet(
         final bottomGap = GameTheme.bottomNavHeight + viewPad.bottom + keyboard;
         return Padding(
           padding: EdgeInsets.only(top: viewPad.top, bottom: bottomGap),
-          child: ListenableBuilder(
-            listenable: director,
-            builder: (ctx, _) {
-              final state = director.state;
-              final md = state.metaDepth;
-              final realAds = AdRewarded.realAdsAvailable;
-              final adFree = md.adFree;
-              final canDaily = AdBoost.canClaimAdFreeDaily(md);
-              return Material(
-                color: GameTheme.panel,
-                child: DecoratedBox(
-                  decoration: MenuChrome.panel(
-                    borderRadius: BorderRadius.zero,
-                    opaque: true,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text('SCROLLS', style: GameTheme.menuTitle(size: 18)),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            WalletStrip(
-                              gold: state.gold,
-                              essence: state.essence,
-                              showEssence: MenuTabs.showCamp(state),
-                            ),
-                            const Spacer(),
-                            GameButton(
-                              label: 'CLOSE',
-                              style: GameButtonStyle.grey,
-                              expanded: false,
-                              dense: true,
-                              onPressed: () => Navigator.of(ctx).pop(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          adFree
-                              ? 'Ad-free: no WATCH AD earn — claim one free daily ticket, then spend here.'
-                              : 'Watch for a ticket, then spend it here.',
-                          style: GameTheme.body(
-                            size: 12,
-                            color: GameTheme.parchmentDim,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Container(
-                          height: 1,
-                          color: GameTheme.borderLit.withValues(alpha: 0.22),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                          decoration: MenuChrome.listCard(selected: true),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Ad Tickets',
-                                  style: GameTheme.body(
-                                    size: 14,
-                                    color: GameTheme.parchmentDim,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                '${md.adTickets}',
-                                style: GameTheme.menuTitle(
-                                  size: 22,
-                                  color: GameTheme.torchHot,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Optional ads. Never mid-fight. '
-                          'Timed ticket scrolls live here.',
-                          style: GameTheme.body(
-                            size: 13,
-                            color: GameTheme.parchmentDim,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                MenuChrome.sectionLabelScoped(
-                                  'EARN',
-                                  scope: MenuScope.today,
-                                ),
-                                _EarnBlock(
-                                  adFree: adFree,
-                                  canDaily: canDaily,
-                                  realAds: realAds,
-                                  onClaimDaily: director.claimAdFreeDailyTicket,
-                                  onWatch: () {
-                                    unawaited(director.watchPowerupAd());
-                                  },
-                                  onPreview: director.grantPowerupHour,
-                                ),
-                                const SizedBox(height: 8),
-                                FriendTipBlock(director: director),
-                                const SizedBox(height: 10),
-                                MenuChrome.sectionLabelScoped(
-                                  'USE',
-                                  scope: MenuScope.today,
-                                ),
-                                for (final offer in AdBuffCatalog.offered) ...[
-                                  _BuffRow(
-                                    offer: offer,
-                                    tickets: md.adTickets,
-                                    timer: AdBoost.rowTimer(offer.id, md),
-                                    onUse: () =>
-                                        director.spendPowerupBuff(offer.id),
-                                  ),
-                                  const SizedBox(height: 6),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
+          child: _PowerupsSheet(director: director, router: router),
         );
       },
     );
   } finally {
     WebClickBridge.popLayer();
+  }
+}
+
+class _PowerupsSheet extends StatefulWidget {
+  const _PowerupsSheet({required this.director, required this.router});
+
+  final GameDirector director;
+  final MenuRouter? router;
+
+  @override
+  State<_PowerupsSheet> createState() => _PowerupsSheetState();
+}
+
+class _PowerupsSheetState extends State<_PowerupsSheet> {
+  bool _nudgeLatched = false;
+  bool _impressionQueued = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_refreshStore());
+  }
+
+  Future<void> _refreshStore() async {
+    await ShopStore.refreshProducts();
+    if (mounted) setState(() {});
+  }
+
+  void _queueImpression(bool live) {
+    if (!live || _impressionQueued) return;
+    _impressionQueued = true;
+    _nudgeLatched = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.director.markAdFreeNudgeShown();
+    });
+  }
+
+  void _openShop() {
+    widget.director.openAdFreeFromScrollsNudge();
+    final router = widget.router;
+    Navigator.of(context).pop();
+    router?.open(MenuRoute.shop);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: widget.director,
+      builder: (context, _) {
+        final director = widget.director;
+        final state = director.state;
+        final md = state.metaDepth;
+        final realAds = AdRewarded.realAdsAvailable;
+        final adFree = md.adFree;
+        final canDaily = AdBoost.canClaimAdFreeDaily(md);
+        final nudgeLive = AdFreeNudge.show(
+          meta: md,
+          playListsAdFree: AdFreeNudge.offerReady(
+            playListsAdFree: ShopStore.storeLists(AdFreeNudge.productId),
+            sideloadQaBuild: BuildStamp.gitSha.isNotEmpty,
+          ),
+        );
+        _queueImpression(nudgeLive);
+        final showNudge = nudgeLive || _nudgeLatched;
+        return Material(
+          color: GameTheme.panel,
+          child: DecoratedBox(
+            decoration: MenuChrome.panel(
+              borderRadius: BorderRadius.zero,
+              opaque: true,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('SCROLLS', style: GameTheme.menuTitle(size: 18)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      WalletStrip(
+                        gold: state.gold,
+                        essence: state.essence,
+                        showEssence: MenuTabs.showCamp(state),
+                      ),
+                      const Spacer(),
+                      GameButton(
+                        label: 'CLOSE',
+                        style: GameButtonStyle.grey,
+                        expanded: false,
+                        dense: true,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    adFree
+                        ? 'Ad-free: no WATCH AD earn — claim one free daily ticket, then spend here.'
+                        : 'Watch for a ticket, then spend it here.',
+                    style: GameTheme.body(
+                      size: 12,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    height: 1,
+                    color: GameTheme.borderLit.withValues(alpha: 0.22),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                    decoration: MenuChrome.listCard(selected: true),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Ad Tickets',
+                            style: GameTheme.body(
+                              size: 14,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${md.adTickets}',
+                          style: GameTheme.menuTitle(
+                            size: 22,
+                            color: GameTheme.torchHot,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Optional ads. Never mid-fight. '
+                    'Timed ticket scrolls live here.',
+                    style: GameTheme.body(
+                      size: 13,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          MenuChrome.sectionLabelScoped(
+                            'EARN',
+                            scope: MenuScope.today,
+                          ),
+                          _EarnBlock(
+                            adFree: adFree,
+                            canDaily: canDaily,
+                            realAds: realAds,
+                            onClaimDaily: director.claimAdFreeDailyTicket,
+                            onWatch: () {
+                              unawaited(director.watchPowerupAd());
+                            },
+                            onPreview: director.grantPowerupHour,
+                          ),
+                          if (showNudge) ...[
+                            const SizedBox(height: 8),
+                            _AdFreeNudgeTile(onTap: _openShop),
+                          ],
+                          const SizedBox(height: 8),
+                          FriendTipBlock(director: director),
+                          const SizedBox(height: 10),
+                          MenuChrome.sectionLabelScoped(
+                            'USE',
+                            scope: MenuScope.today,
+                          ),
+                          for (final offer in AdBuffCatalog.offered) ...[
+                            _BuffRow(
+                              offer: offer,
+                              tickets: md.adTickets,
+                              timer: AdBoost.rowTimer(offer.id, md),
+                              onUse: () => director.spendPowerupBuff(offer.id),
+                            ),
+                            const SizedBox(height: 6),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AdFreeNudgeTile extends StatelessWidget {
+  const _AdFreeNudgeTile({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return WebClickScope(
+      label: AdFreeNudge.line,
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        label: AdFreeNudge.line,
+        onTap: onTap,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+              child: DecoratedBox(
+                decoration: MenuChrome.listCard(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      AdFreeNudge.line,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 13,
+                        color: GameTheme.torchHot,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'funnel_analytics.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
@@ -18,6 +20,7 @@ class LocalPing {
   static const petId = 3;
   static const eveningId = 4;
   static const capId = 6;
+  static const debugId = 7;
 
   final int id;
   final DateTime fireAt;
@@ -43,6 +46,8 @@ abstract final class LocalReminders {
   static const Duration slotLead = Duration(minutes: 45);
   static const int morningHour = 8;
   static const int eveningHour = 20;
+  static const int quietStartHour = 22;
+  static const Duration capNearLead = Duration(minutes: 45);
   static const String title = 'Idle Party';
   static const String caveBodyNew = 'Your party is ready when you are.';
   static const String optInTitle = 'A quiet ping?';
@@ -51,8 +56,9 @@ abstract final class LocalReminders {
       'A quiet chest line stays up while hub gold fills, and goes away when you open the game. '
       'Gold fills for ${GoldIncome.hubChestCapHours} hours, then stops. '
       'At most a couple of pings a day: when the chest is full, and in the morning or evening when a prize is waiting. '
-      'A cave fight pings once if it hits the time cap. '
-      'Never during a fight. Turn off anytime in SETTINGS.';
+      'When the last cave keeps fighting while you are away, one ping lands '
+      'near the ${OfflineProgress.dungeonAwayBaseSec ~/ 3600}h cap. '
+      'Never between 10pm and 8am your time. Turn off anytime in SETTINGS.';
 
   static bool milestoneReached(GameState state) {
     final reward =
@@ -156,19 +162,24 @@ abstract final class LocalReminders {
         rank: 0,
       ));
     }
-    if (state.inDungeon) {
+    if (_schedulesFightCap(state)) {
       final capSec = OfflineProgress.dungeonAwayCapSec(state);
       final capAt = state.lastUpdated.add(Duration(seconds: capSec));
       final hours = capSec ~/ 3600;
-      candidates.add((
-        ping: LocalPing(
-          id: LocalPing.capId,
-          fireAt: capAt,
-          title: title,
-          body: 'Your party hit the ${hours}h cap.',
-        ),
-        rank: 0,
-      ));
+      var desired = capAt.subtract(capNearLead);
+      if (!desired.isAfter(now)) desired = capAt;
+      final fireAt = _deliverAt(desired, now);
+      if (fireAt != null) {
+        candidates.add((
+          ping: LocalPing(
+            id: LocalPing.capId,
+            fireAt: fireAt,
+            title: title,
+            body: 'Your party is near the ${hours}h cap.',
+          ),
+          rank: 0,
+        ));
+      }
     }
     if (!state.inDungeon) {
       final fullAt = now.add(
@@ -209,11 +220,18 @@ abstract final class LocalReminders {
     final counted = <int>[...fired];
     final accepted = <LocalPing>[];
     for (final candidate in candidates) {
-      final at = candidate.ping.fireAt;
-      if (!at.isAfter(now)) continue;
-      if (at.difference(now) > horizon) continue;
+      final at = _deliverAt(candidate.ping.fireAt, now);
+      if (at == null) continue;
       if (_countOnUtcDay(counted, at) >= maxPerUtcDay) continue;
-      accepted.add(candidate.ping);
+      final ping = at == candidate.ping.fireAt
+          ? candidate.ping
+          : LocalPing(
+              id: candidate.ping.id,
+              fireAt: at,
+              title: candidate.ping.title,
+              body: candidate.ping.body,
+            );
+      accepted.add(ping);
       counted.add(at.millisecondsSinceEpoch);
     }
     accepted.sort((a, b) => a.fireAt.compareTo(b.fireAt));
@@ -277,6 +295,40 @@ abstract final class LocalReminders {
   }
 
   /// Next [hour]:00 in the same zone as [now]. At least [slotLead] ahead.
+  /// Hub with auto cave: the fight sim runs while away even though the save
+  /// still says hub until the player returns.
+  static bool _schedulesFightCap(GameState state) {
+    if (state.inDungeon) return true;
+    if (!state.autoCaveOnLeave) return false;
+    return _playedAFloor(state);
+  }
+
+  /// Local wall clock — no pings between [quietStartHour] and [morningHour].
+  @visibleForTesting
+  static bool isQuietLocalHour(DateTime t) {
+    final h = t.hour;
+    return h >= quietStartHour || h < morningHour;
+  }
+
+  @visibleForTesting
+  static DateTime bumpOutOfQuietHours(DateTime t) {
+    if (!isQuietLocalHour(t)) return t;
+    if (t.hour >= quietStartHour) {
+      return DateTime(t.year, t.month, t.day + 1, morningHour);
+    }
+    return DateTime(t.year, t.month, t.day, morningHour);
+  }
+
+  static DateTime? _deliverAt(DateTime desired, DateTime now) {
+    var at = bumpOutOfQuietHours(desired);
+    if (!at.isAfter(now.add(slotLead))) {
+      at = bumpOutOfQuietHours(now.add(slotLead));
+    }
+    if (!at.isAfter(now)) return null;
+    if (at.difference(now) > horizon) return null;
+    return at;
+  }
+
   static DateTime nextClock(DateTime now, int hour) {
     final DateTime slot;
     if (now.isUtc) {
