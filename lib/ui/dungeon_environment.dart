@@ -10,8 +10,20 @@ abstract final class DungeonEnvironment {
   static Color ambient(String dungeonId) => ZoneArt.byId(dungeonId).ambient;
 
   /// Soft full-frame wash so each dungeon reads differently.
-  static Color atmosphereWash(String dungeonId) =>
-      _colorblindSplit(ZoneArt.byId(dungeonId).wash);
+  static Color atmosphereWash(String dungeonId) {
+    final base = _colorblindSplit(ZoneArt.byId(dungeonId).wash);
+    final a = base.a;
+    if (a <= 0) return base;
+    // Nudge alpha on phone so neighboring caves read apart at a glance.
+    final boost = dungeonId == 'sandy' ? 1.12 : 1.26;
+    return base.withValues(alpha: (a * boost).clamp(0.0, dungeonId == 'sandy' ? 0.38 : 0.62));
+  }
+
+  /// Fight HUD stripe — same hue family as the in-cave wash.
+  static Color hudZoneAccent(String dungeonId) {
+    final wash = atmosphereWash(dungeonId);
+    return wash.withValues(alpha: 0.92);
+  }
 
   /// Per-tile mute + zone tint so Kenney floors sit in the painted cave.
   static Color floorBlend(String dungeonId) =>
@@ -44,10 +56,28 @@ abstract final class DungeonEnvironment {
       ? const Color(0x66402814)
       : const Color(0x66000000);
 
-  /// Edge vignette; Sandy stays open so sandstone reads.
-  static List<Color> vignetteColors(String dungeonId) => dungeonId == 'sandy'
-      ? const [Color(0x00000000), Color(0x28080502), Color(0x66080502)]
-      : const [Color(0x00000000), Color(0x55000000), Color(0xBB000000)];
+  /// Edge vignette; Sandy stays open so sandstone reads. Other zones tint
+  /// the frame with their wash so a black rim does not flatten every cave.
+  static List<Color> vignetteColors(String dungeonId) {
+    if (dungeonId == 'sandy') {
+      return const [Color(0x00000000), Color(0x28080502), Color(0x66080502)];
+    }
+    final art = ZoneArt.byId(dungeonId);
+    final wash = atmosphereWash(dungeonId);
+    int ch(Color c, int shift) => (c.toARGB32() >> shift) & 0xFF;
+    int mix(int w, int a, double t) => (w * t + a * (1 - t)).round().clamp(0, 255);
+    final midR = mix(ch(wash, 16), ch(art.ambient, 16), 0.35);
+    final midG = mix(ch(wash, 8), ch(art.ambient, 8), 0.35);
+    final midB = mix(ch(wash, 0), ch(art.ambient, 0), 0.35);
+    final edgeR = mix(ch(wash, 16), ch(art.ambient, 16), 0.12);
+    final edgeG = mix(ch(wash, 8), ch(art.ambient, 8), 0.12);
+    final edgeB = mix(ch(wash, 0), ch(art.ambient, 0), 0.12);
+    return [
+      const Color(0x00000000),
+      Color.fromARGB(0x38, midR, midG, midB),
+      Color.fromARGB(0x90, edgeR, edgeG, edgeB),
+    ];
+  }
 
   static bool isTorchProp(MapPropKind kind) =>
       kind == MapPropKind.torch || kind == MapPropKind.torchAlt;
