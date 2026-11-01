@@ -563,11 +563,19 @@ abstract final class MenuChrome {
   }
 
   /// Themed AlertDialog shell for confirm/import flows.
-  static AlertDialog dialog({
+  ///
+  /// [scrollable] keeps the actions pinned and scrolls the body. AlertDialog's
+  /// own scrollable flag measures text at an unbounded width, so a wrapped
+  /// line paints under the buttons.
+  static Widget dialog({
     required String title,
     required Widget content,
     required List<Widget> actions,
+    bool scrollable = false,
   }) {
+    if (scrollable) {
+      return _scrollingDialog(title: title, content: content, actions: actions);
+    }
     return AlertDialog(
       backgroundColor: sheet,
       surfaceTintColor: Colors.transparent,
@@ -583,6 +591,51 @@ abstract final class MenuChrome {
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       actions: actions,
+    );
+  }
+
+  static Widget _scrollingDialog({
+    required String title,
+    required Widget content,
+    required List<Widget> actions,
+  }) {
+    return Dialog(
+      backgroundColor: sheet,
+      surfaceTintColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      clipBehavior: Clip.hardEdge,
+      shape: RoundedRectangleBorder(
+        borderRadius: panelRadius,
+        side: BorderSide(
+          color: GameTheme.borderLit.withValues(alpha: 0.55),
+          width: 1.2,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(title, style: GameTheme.menuTitle(size: 17)),
+            const SizedBox(height: 12),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                physics: const ClampingScrollPhysics(),
+                children: [content],
+              ),
+            ),
+            const SizedBox(height: 8),
+            OverflowBar(
+              alignment: MainAxisAlignment.spaceBetween,
+              spacing: 8,
+              overflowSpacing: 8,
+              children: actions,
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -467,7 +467,7 @@ void main() {
     ).copyWith(hardmodeLevel: 4);
     final r = OfflineProgress.applyOfflineProgress(
       hub,
-      const Duration(seconds: 5),
+      const Duration(minutes: 5),
     );
     expect(r.autoEnteredCave, isTrue);
     expect(r.state.hardmodeLevel, 4);
@@ -487,7 +487,7 @@ void main() {
 
     final r = OfflineProgress.applyOfflineProgress(
       hub,
-      const Duration(minutes: 3),
+      const Duration(minutes: 5),
     );
     expect(r.autoEnteredCave, isTrue);
     expect(r.wasInDungeon, isTrue);
@@ -514,12 +514,68 @@ void main() {
     );
     final r = OfflineProgress.applyOfflineProgress(
       climbed,
-      const Duration(seconds: 20),
+      const Duration(minutes: 5),
     );
     expect(r.autoEnteredCave, isTrue);
     expect(r.wasInDungeon, isTrue);
     expect(r.state.dungeonId, 'sandy');
     expect(r.state.highestFloorCleared, greaterThanOrEqualTo(4));
+  });
+
+  test('hub away under 5 min stays on the chest', () {
+    final hub = GameLogic.leaveDungeon(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime.utc(2026, 10, 2)),
+        dungeonId: 'sandy',
+      ),
+    );
+    final r = OfflineProgress.applyOfflineProgress(
+      hub,
+      const Duration(minutes: 4),
+    );
+    expect(r.autoEnteredCave, isFalse);
+    expect(r.wasInDungeon, isFalse);
+    expect(r.state.inDungeon, isFalse);
+    final chest = OfflineProgress.applyHubIdleProgress(hub, 4 * 60);
+    expect(r.state.gold, chest.gold);
+    expect(r.afkWhereLine.toLowerCase(), contains('hub'));
+  });
+
+  test('a long hub away keeps the 12h and 24h chest cap in the cave', () {
+    final hub = GameLogic.leaveDungeon(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime.utc(2026, 10, 2)),
+        dungeonId: 'sandy',
+      ),
+    );
+    final r = OfflineProgress.applyOfflineProgress(
+      hub,
+      const Duration(hours: 13),
+    );
+    expect(r.autoEnteredCave, isTrue);
+    expect(r.secondsApplied, GoldIncome.hubChestCapSec);
+    expect(
+      r.goldGained,
+      greaterThanOrEqualTo(
+        GoldIncome.hubGoldForSeconds(hub, GoldIncome.hubChestCapSec),
+      ),
+    );
+
+    final owned = hub.copyWith(
+      metaDepth: hub.metaDepth.copyWith(shopLongAway: true),
+    );
+    final long = OfflineProgress.applyOfflineProgress(
+      owned,
+      const Duration(hours: 30),
+    );
+    expect(long.autoEnteredCave, isTrue);
+    expect(long.secondsApplied, GoldIncome.hubChestLongSec);
+    expect(
+      long.goldGained,
+      greaterThanOrEqualTo(
+        GoldIncome.hubGoldForSeconds(owned, GoldIncome.hubChestLongSec),
+      ),
+    );
   });
 
   test('claim all pays ready quests', () async {
@@ -581,5 +637,66 @@ void main() {
     expect(director.state.missions.any((m) => m.canClaim), isFalse);
     expect(find.text('COLLECT ALL'), findsNothing);
     director.dispose();
+  });
+
+  testWidgets('a long best-item name stays above the Welcome Back buttons', (
+    tester,
+  ) async {
+    const longName =
+        'Ancient Veilglass Staff of the Mothveil Hollow Night Watch';
+    final state = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 8, 8),
+    ).copyWith(bossVictories: 1);
+    final summary = OfflineProgressResult(
+      state: state,
+      secondsApplied: 3600,
+      goldGained: 40,
+      essenceGained: 2,
+      roomsCleared: 4,
+      highestFloorDelta: 1,
+      bossDelta: 0,
+      levelsGained: 2,
+      kills: 18,
+      bestDrop: longName,
+      wasInDungeon: true,
+    );
+    expect(summary.awayReport, contains('Best $longName'));
+    final director = GameDirector.preview();
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    director.uiFeedback.presentOffline(summary);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    final line = find.textContaining(longName);
+    expect(line, findsOneWidget);
+    final scrollable = find.byType(Scrollable);
+    expect(scrollable, findsOneWidget);
+    await tester.scrollUntilVisible(line, 40, scrollable: scrollable.first);
+    await tester.pumpAndSettle();
+
+    final textRect = tester.getRect(line);
+    final viewRect = tester.getRect(scrollable.first);
+    final buttonRect = tester.getRect(find.text('ENTER DUNGEON'));
+    final visible = textRect.intersect(viewRect);
+    expect(visible.height, greaterThan(8));
+    expect(viewRect.bottom, lessThanOrEqualTo(buttonRect.top + 1));
+    expect(visible.bottom, lessThanOrEqualTo(buttonRect.top + 1));
+    expect(visible.bottom, lessThanOrEqualTo(640));
   });
 }

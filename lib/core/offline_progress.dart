@@ -45,18 +45,30 @@ abstract final class OfflineProgress {
   static int offlineStepCapFor(GameState state) =>
       longAwayOwned(state) ? offlineStepLongCap : offlineStepBaseCap;
 
+  /// Hub absences shorter than this stay on the chest.
+  static const int autoCaveMinSec = 5 * 60;
+
   /// Seconds this absence may credit. Hub and cave use different caps.
-  static int creditedAwaySec(GameState state, int away) {
+  /// A hub absence that moves into the last cave keeps the 12h / 24h chest
+  /// clock. The fight may pay more. It does not shrink the window to 8h / 16h.
+  static int creditedAwaySec(
+    GameState state,
+    int away, {
+    bool keepHubChestCap = false,
+  }) {
     if (away <= 0) return 0;
-    return state.inDungeon
-        ? min(away, dungeonAwayCapSec(state))
-        : min(away, GoldIncome.hubChestCapSecFor(state));
+    if (!state.inDungeon || keepHubChestCap) {
+      return min(away, GoldIncome.hubChestCapSecFor(state));
+    }
+    return min(away, dungeonAwayCapSec(state));
   }
 
   /// Last cave for a hub absence. Already-in-cave saves stay put.
   /// Floor progress is kept. A KEY dial on the hub does not start a key.
-  static GameState _awayFightState(GameState state) {
+  /// Under [autoCaveMinSec] the hub chest still pays and the cave stays closed.
+  static GameState _awayFightState(GameState state, int awaySec) {
     if (state.inDungeon || !state.autoCaveOnLeave) return state;
+    if (awaySec < autoCaveMinSec) return state;
     final id = state.dungeonId.trim().isEmpty
         ? GameLogic.recommendedDungeonId(state)
         : state.dungeonId;
@@ -84,10 +96,14 @@ abstract final class OfflineProgress {
     GameState state,
     Duration elapsed,
   ) async {
-    final prepared = _awayFightState(state);
-    final autoEntered = !state.inDungeon && prepared.inDungeon;
     final away = elapsed.inSeconds;
-    final seconds = creditedAwaySec(prepared, away);
+    final prepared = _awayFightState(state, away);
+    final autoEntered = !state.inDungeon && prepared.inDungeon;
+    final seconds = creditedAwaySec(
+      prepared,
+      away,
+      keepHubChestCap: autoEntered,
+    );
     if (seconds == 0 || !prepared.inDungeon) {
       return applyOfflineProgress(state, elapsed);
     }
@@ -97,7 +113,12 @@ abstract final class OfflineProgress {
       sim.runSlice(OfflineSim.sliceSteps);
       if (!sim.done) await Future<void>.delayed(Duration.zero);
     }
-    final raw = sim.state;
+    final raw = _atLeastHubChest(
+      before: state,
+      progressed: sim.state,
+      seconds: seconds,
+      autoEntered: autoEntered,
+    );
     final boosted = applyAwayBonus(state, raw);
     return _offlineResultFrom(
       before: state,
@@ -134,9 +155,13 @@ abstract final class OfflineProgress {
         wasInDungeon: state.inDungeon,
       );
     }
-    final prepared = _awayFightState(state);
+    final prepared = _awayFightState(state, away);
     final autoEntered = !state.inDungeon && prepared.inDungeon;
-    final seconds = creditedAwaySec(prepared, away);
+    final seconds = creditedAwaySec(
+      prepared,
+      away,
+      keepHubChestCap: autoEntered,
+    );
     final hubCap = prepared.inDungeon
         ? 0
         : GoldIncome.hubChestCapSecFor(state);
@@ -150,7 +175,12 @@ abstract final class OfflineProgress {
       // Idle-friendly keystone: AFK time counts on the timer.
       final timed = GameLogic.advanceKeystoneTimer(prepared, seconds * 1000);
       final sim = simulateSpatialOffline(timed, seconds);
-      progressed = sim.state;
+      progressed = _atLeastHubChest(
+        before: state,
+        progressed: sim.state,
+        seconds: seconds,
+        autoEntered: autoEntered,
+      );
       roomsCleared = sim.roomsCleared;
       kills = sim.kills;
       stoppedOnWipe = sim.stoppedOnWipe;
@@ -174,6 +204,37 @@ abstract final class OfflineProgress {
       autoEnteredCave: autoEntered,
       awayGoldMultiplied: _restMultipliedGold(state, progressed, boosted),
     );
+  }
+
+  /// Cave loot can beat the hub chest. The same window must not pay less.
+  static GameState _atLeastHubChest({
+    required GameState before,
+    required GameState progressed,
+    required int seconds,
+    required bool autoEntered,
+  }) {
+    if (!autoEntered || seconds <= 0) return progressed;
+    final chestGold = GoldIncome.hubGoldForSeconds(before, seconds);
+    final gained = progressed.gold - before.gold;
+    var next = progressed;
+    if (gained < chestGold) {
+      final extra = chestGold - gained;
+      next = next.copyWith(
+        gold: next.gold + extra,
+        lifetimeGoldEarned: next.lifetimeGoldEarned + extra,
+      );
+    }
+    final accBefore = before.metaDepth.hubAfkSec;
+    final chestEssence =
+        GoldIncome.essenceDue(accBefore + seconds, before.sanctuaryPowerLevel) -
+        GoldIncome.essenceDue(accBefore, before.sanctuaryPowerLevel);
+    final essenceGained = next.essence - before.essence;
+    if (essenceGained < chestEssence) {
+      next = next.copyWith(
+        essence: next.essence + (chestEssence - essenceGained),
+      );
+    }
+    return next;
   }
 
   /// True when Scroll of Rest (or Forever Rest) added gold on top of [raw].
