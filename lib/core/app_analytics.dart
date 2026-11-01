@@ -10,6 +10,15 @@ abstract final class AppAnalytics {
 
   static Future<void> init() => impl.init();
 
+  /// Capture Dart errors before Crashlytics is attached. No platform call.
+  static void armEarlyErrorBuffer() => impl.armEarlyErrorBuffer();
+
+  /// Flutter errors waiting for Crashlytics. Test hook.
+  static int get debugBufferedErrorCount => impl.debugBufferedErrorCount;
+
+  /// Drops the early buffer so a test can restore the framework handlers.
+  static void debugResetEarlyErrorBuffer() => impl.debugResetEarlyErrorBuffer();
+
   /// Re-read UMP after SETTINGS → AD PRIVACY.
   static Future<void> syncConsent() => impl.syncConsent();
 
