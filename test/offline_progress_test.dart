@@ -5,6 +5,7 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/hub_chase.dart';
 import 'package:idle_party/core/gold_income.dart';
+import 'package:idle_party/core/ad_offer.dart';
 import 'package:idle_party/core/offline_progress.dart';
 import 'package:idle_party/ui/meta/offline_welcome.dart';
 
@@ -189,7 +190,7 @@ void main() {
     expect(find.textContaining('Sanctuary'), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(find.text('CLAIM'), findsNothing);
-    expect(find.textContaining('WATCH AD'), findsNothing);
+    expect(find.text(AdOffer.welcomeLabel), findsNothing);
     expect(find.textContaining('40 gold'), findsWidgets);
   });
 
@@ -235,11 +236,11 @@ void main() {
     expect(find.textContaining('KEY'), findsNothing);
     expect(find.text('ENTER DUNGEON'), findsOneWidget);
     expect(find.text('CLAIM'), findsNothing);
-    expect(find.textContaining('WATCH AD'), findsOneWidget);
+    expect(find.text(AdOffer.welcomeLabel), findsOneWidget);
     expect(find.textContaining('Optional. Watch an ad'), findsOneWidget);
     expect(find.textContaining('40 gold'), findsWidgets);
     final gold = director.state.gold;
-    await tester.tap(find.textContaining('WATCH AD'));
+    await tester.tap(find.text(AdOffer.welcomeLabel));
     await tester.pump();
     expect(director.state.gold, gold);
     expect(find.text('WELCOME BACK'), findsOneWidget);

@@ -1,5 +1,8 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 
+import '../../core/ad_rewarded.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
@@ -300,6 +303,14 @@ class _WipeWatchAd extends StatefulWidget {
 
 class _WipeWatchAdState extends State<_WipeWatchAd> {
   bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.director.state.metaDepth.adFree) {
+      unawaited(AdRewarded.prepareOffer());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

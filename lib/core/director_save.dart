@@ -277,10 +277,10 @@ extension GameDirectorSave on GameDirector {
       unawaited(syncFriendReferral());
       unawaited(refreshPlayUpdateNotice());
       unawaited(LocalNotify.init());
-      // Ads / billing after first hub frames — Binder + Play Services hitch cold start.
+      // Billing after first hub frames — Binder + Play Services hitch cold start.
       _bootWarmup?.cancel();
+      // Shop only. A rewarded ad loads when its button is about to show.
       _bootWarmup = Timer(const Duration(seconds: 2), () {
-        unawaited(AdRewarded.warmup());
         unawaited(_warmupShopStore());
       });
     }
@@ -323,6 +323,7 @@ extension GameDirectorSave on GameDirector {
         );
         if (offline.welcomeBackAdOffer) {
           unawaited(AppAnalytics.welcomeBackAdOffer());
+          unawaited(AdRewarded.prepareOffer());
         }
         // The cave opens the same Welcome Back card. A toast would cover it.
       }

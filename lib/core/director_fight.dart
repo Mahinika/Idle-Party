@@ -152,6 +152,7 @@ extension GameDirectorFight on GameDirector {
   @visibleForTesting
   void debugOpenWipeChoice() {
     _awaitingWipeChoice = true;
+    _notifyShell();
   }
 
   @visibleForTesting

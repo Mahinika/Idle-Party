@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/ad_boost.dart';
+import 'package:idle_party/core/ad_offer.dart';
 import 'package:idle_party/core/encounter_factory.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/gold_income.dart';
@@ -227,24 +228,30 @@ void main() {
     expect(chips[3].timeLabel, '40m');
   });
 
-  test('welcome back watch adds the rest of ×3 and keeps the old save', () {
+  test('welcome back watch doubles gold and essence and keeps the old save', () {
     final fresh = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 21));
     expect(GameLogic.grantWelcomeBackWatchGold(fresh, 40).gold, fresh.gold);
 
     final state = fresh.copyWith(
       bossVictories: 1,
       gold: 100,
+      essence: 5,
       lifetimeGoldEarned: 100,
     );
-    final next = GameLogic.grantWelcomeBackWatchGold(state, 40);
-    expect(next.gold, 180);
-    expect(next.lifetimeGoldEarned, 180);
+    final next = GameLogic.grantWelcomeBackWatchGold(
+      state,
+      40,
+      baseEssence: 2,
+    );
+    expect(next.gold, 140);
+    expect(next.essence, 7);
+    expect(next.lifetimeGoldEarned, 140);
     expect(next.metaDepth.adTickets, 0);
     expect(next.metaDepth.adOfflineMulPending, isFalse);
     expect(next.metaDepth.toJson().containsKey('welcomeBackAd'), isFalse);
     final loaded = GameLogic.stateFromJson(next.toJson());
-    expect(loaded.gold, 180);
-    expect(loaded.lifetimeGoldEarned, 180);
+    expect(loaded.gold, 140);
+    expect(loaded.lifetimeGoldEarned, 140);
 
     final free = state.copyWith(
       metaDepth: state.metaDepth.copyWith(adFree: true),
@@ -278,7 +285,8 @@ void main() {
     expect(open.goldGained, greaterThan(0));
     expect(open.awayGoldMultiplied, isFalse);
     expect(open.welcomeBackAdOffer, isTrue);
-    expect(open.welcomeBackAdLabel, 'WATCH AD · gold ×${AdBoost.awayGoldMul}');
+    expect(open.welcomeBackAdLabel, AdOffer.welcomeLabel);
+    expect(open.welcomeBackAdLabel, 'Watch ad: 2× offline loot');
 
     final armed = GameLogic.spendAdBuff(
       GameLogic.grantAdTicket(played),

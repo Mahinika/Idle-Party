@@ -17,6 +17,7 @@ import '../models/meta_depth.dart';
 import '../models/mission.dart';
 import '../models/pet.dart';
 import 'ad_boost.dart';
+import 'ad_offer.dart';
 import 'relic_ids.dart';
 import 'relics.dart';
 import 'dungeon_generator.dart';
@@ -902,18 +903,24 @@ class GameLogic {
     );
   }
 
-  /// Welcome Back watch: add the rest of ×[AdBoost.awayGoldMul] on gold
-  /// already credited. No new save field. Ad-free and Forever Rest refuse.
-  static GameState grantWelcomeBackWatchGold(GameState state, int baseGold) {
-    if (baseGold <= 0) return state;
+  /// Welcome Back watch: double [baseGold] and [baseEssence] already credited.
+  /// No new save field. Ad-free and Forever Rest refuse.
+  static GameState grantWelcomeBackWatchGold(
+    GameState state,
+    int baseGold, {
+    int baseEssence = 0,
+  }) {
+    if (baseGold <= 0 && baseEssence <= 0) return state;
     final md = state.metaDepth;
     if (md.adFree || AdBoost.hasPerm(md, AdBoost.permRest)) return state;
     if (!showDailyChase(state)) return state;
-    final extra = baseGold * (AdBoost.awayGoldMul - 1);
-    if (extra <= 0) return state;
+    final extraGold = baseGold > 0 ? baseGold : 0;
+    final extraEssence = baseEssence > 0 ? baseEssence : 0;
+    if (extraGold <= 0 && extraEssence <= 0) return state;
     return state.copyWith(
-      gold: state.gold + extra,
-      lifetimeGoldEarned: state.lifetimeGoldEarned + extra,
+      gold: state.gold + extraGold,
+      essence: state.essence + extraEssence,
+      lifetimeGoldEarned: state.lifetimeGoldEarned + extraGold,
       lastUpdated: DateTime.now(),
     );
   }
@@ -2999,18 +3006,19 @@ class OfflineProgressResult {
   /// Scroll of Rest or Forever Rest already multiplied [goldGained].
   final bool awayGoldMultiplied;
 
-  /// Optional rewarded ad on this card. Same ×3 as Scroll of Rest.
-  /// Hidden before the first boss, when this gold is already ×3,
+  /// Optional rewarded ad on this card. Doubles this trip's gold and essence.
+  /// Hidden before the first boss, when Rest already multiplied the gold,
   /// and for ad-free or Forever Rest.
   bool get welcomeBackAdOffer {
-    if (goldGained <= 0 || awayGoldMultiplied) return false;
+    if ((goldGained <= 0 && essenceGained <= 0) || awayGoldMultiplied) {
+      return false;
+    }
     final md = state.metaDepth;
     if (md.adFree || AdBoost.hasPerm(md, AdBoost.permRest)) return false;
     return GameLogic.showDailyChase(state);
   }
 
-  String get welcomeBackAdLabel =>
-      'WATCH AD · gold ×${AdBoost.awayGoldMul}';
+  String get welcomeBackAdLabel => AdOffer.welcomeLabel;
 
   /// Clock shown on Welcome Back. The real absence when the chest stopped.
   int get awayForSeconds =>

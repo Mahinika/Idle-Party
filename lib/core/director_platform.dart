@@ -151,10 +151,15 @@ extension GameDirectorPlatform on GameDirector {
     unawaited(_persistFlush());
   }
 
-  /// Optional Welcome Back watch. Adds the rest of ×[AdBoost.awayGoldMul]
-  /// on [baseGold] already credited. Skip, fail, or ad-free grants nothing.
-  Future<bool> watchWelcomeBackGoldAd(int baseGold) async {
-    if (baseGold <= 0 || _welcomeBackAdGranted || _welcomeBackAdBusy) {
+  /// Optional Welcome Back watch. Doubles [baseGold] and [baseEssence]
+  /// already credited. Skip, fail, or ad-free grants nothing.
+  Future<bool> watchWelcomeBackGoldAd(
+    int baseGold, {
+    int baseEssence = 0,
+  }) async {
+    if ((baseGold <= 0 && baseEssence <= 0) ||
+        _welcomeBackAdGranted ||
+        _welcomeBackAdBusy) {
       return false;
     }
     if (_isLoading) return false;
@@ -173,19 +178,32 @@ extension GameDirectorPlatform on GameDirector {
         case AdWatchResult.rewarded:
           _welcomeBackAdGranted = true;
           final beforeGold = _state.gold;
-          _applyUpgrade(GameLogic.grantWelcomeBackWatchGold(_state, baseGold));
+          final beforeEssence = _state.essence;
+          _applyUpgrade(
+            GameLogic.grantWelcomeBackWatchGold(
+              _state,
+              baseGold,
+              baseEssence: baseEssence,
+            ),
+          );
           final gained = _state.gold - beforeGold;
-          if (gained <= 0) {
+          final essence = _state.essence - beforeEssence;
+          if (gained <= 0 && essence <= 0) {
             _welcomeBackAdGranted = false;
             return false;
           }
           GameAudio.gold();
-          showToast('Welcome Back · +$gained gold', life: 2.4);
-          unawaited(AppAnalytics.logEvent('welcome_back_ad', {'gold': gained}));
+          showToast('Welcome Back · loot doubled', life: 2.4);
+          unawaited(
+            AppAnalytics.logEvent('welcome_back_ad', {
+              'gold': gained,
+              'essence': essence,
+            }),
+          );
           return true;
         case AdWatchResult.skipped:
           showToast(
-            'Watch the whole ad for ×${AdBoost.awayGoldMul} gold',
+            'Watch the whole ad to double this trip\'s loot',
             life: 2.2,
           );
           return false;

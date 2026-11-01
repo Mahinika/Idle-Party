@@ -7,6 +7,17 @@ enum AdWatchResult { rewarded, skipped, failed, unavailable }
 abstract final class AdRewarded {
   static bool get realAdsAvailable => impl.realAdsAvailable;
 
+  /// Times a visible offer asked for a load. Tests read this. The SDK no-ops
+  /// off Android.
+  static int prepareOfferCalls = 0;
+
+  /// Preload the one rewarded unit when a button is about to show.
+  /// Does not show a consent form.
+  static Future<void> prepareOffer() {
+    prepareOfferCalls++;
+    return impl.prepareOffer();
+  }
+
   static Future<void> warmup() => impl.warmup();
 
   static Future<AdWatchResult> showRewarded() => impl.showRewarded();

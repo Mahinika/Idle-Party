@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../core/ad_boost.dart';
+import 'dart:async' show unawaited;
+
+import '../../core/ad_rewarded.dart';
 import '../../core/chase_contract.dart';
 import '../../core/chase_dispatcher.dart';
 import '../../core/comeback_chest.dart';
@@ -97,7 +99,8 @@ Future<void> showOfflineProgressDialog(
   final returnLabel = inCave ? 'CONTINUE' : 'ENTER DUNGEON';
   var showWatch = summary?.welcomeBackAdOffer == true;
   var watchBusy = false;
-  var adGoldAdded = 0;
+  var adNote = '';
+  var offerPrepared = false;
 
   WebClickBridge.pushLayer();
   await showDialog<void>(
@@ -193,11 +196,15 @@ Future<void> showOfflineProgressDialog(
           if (summary != null)
             StatefulBuilder(
               builder: (context, setLocal) {
-                if (adGoldAdded > 0) {
+                if (showWatch && !offerPrepared) {
+                  offerPrepared = true;
+                  unawaited(AdRewarded.prepareOffer());
+                }
+                if (adNote.isNotEmpty) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      'Ad added $adGoldAdded gold.',
+                      adNote,
                       style: GameTheme.body(
                         size: 14,
                         color: GameTheme.torchHot,
@@ -212,7 +219,7 @@ Future<void> showOfflineProgressDialog(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Optional. Watch an ad and this gold becomes ×${AdBoost.awayGoldMul}.',
+                        'Optional. Watch an ad and this trip\'s gold and essence are doubled.',
                         style: GameTheme.body(
                           size: 13,
                           color: GameTheme.parchment,
@@ -228,15 +235,28 @@ Future<void> showOfflineProgressDialog(
                             ? null
                             : () async {
                                 setLocal(() => watchBusy = true);
-                                final before = director.state.gold;
-                                final ok = await director
-                                    .watchWelcomeBackGoldAd(summary.goldGained);
+                                final beforeGold = director.state.gold;
+                                final beforeEssence = director.state.essence;
+                                final ok = await director.watchWelcomeBackGoldAd(
+                                  summary.goldGained,
+                                  baseEssence: summary.essenceGained,
+                                );
                                 if (!context.mounted) return;
                                 setLocal(() {
                                   watchBusy = false;
                                   if (ok) {
                                     showWatch = false;
-                                    adGoldAdded = director.state.gold - before;
+                                    final gold =
+                                        director.state.gold - beforeGold;
+                                    final essence =
+                                        director.state.essence - beforeEssence;
+                                    final parts = <String>[
+                                      if (gold > 0) '$gold gold',
+                                      if (essence > 0) '$essence essence',
+                                    ];
+                                    adNote = parts.isEmpty
+                                        ? 'Offline loot doubled.'
+                                        : 'Ad doubled ${parts.join(' and ')}.';
                                   }
                                 });
                               },

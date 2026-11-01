@@ -133,13 +133,17 @@ abstract final class AdBoost {
   static double combatDtMul(MetaDepthState md, {int? nowMs}) =>
       speedActive(md, nowMs: nowMs) ? (1 + speedPercent / 100) : 1.0;
 
-  static bool anyBuffActive(MetaDepthState md, {int? nowMs}) =>
+  /// A timed or forever combat scroll is running. Away Bonus is not one.
+  static bool combatBoostActive(MetaDepthState md, {int? nowMs}) =>
       atkActive(md, nowMs: nowMs) ||
       goldActive(md, nowMs: nowMs) ||
       xpActive(md, nowMs: nowMs) ||
       moveActive(md, nowMs: nowMs) ||
       lootActive(md, nowMs: nowMs) ||
-      speedActive(md, nowMs: nowMs) ||
+      speedActive(md, nowMs: nowMs);
+
+  static bool anyBuffActive(MetaDepthState md, {int? nowMs}) =>
+      combatBoostActive(md, nowMs: nowMs) ||
       awayBonusReady(md, nowMs: nowMs);
 
   static bool awayBonusReady(MetaDepthState md, {int? nowMs}) {

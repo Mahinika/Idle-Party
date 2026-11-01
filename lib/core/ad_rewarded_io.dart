@@ -18,25 +18,30 @@ bool get realAdsAvailable {
 }
 
 bool _sdkReady = false;
-bool _warming = false;
 RewardedAd? _ready;
+Future<void>? _chain;
 
-Future<void> warmup() async {
-  if (!realAdsAvailable || _warming) return;
-  _warming = true;
-  try {
-    await _ensureSdk();
-    if (_sdkReady) {
-      await _preload();
-    }
-  } finally {
-    _warming = false;
-  }
+/// One ad load at a time. A tap during preload waits for that load.
+Future<void> _serialized(Future<void> Function() body) {
+  final run = (_chain ?? Future<void>.value()).then((_) => body());
+  _chain = run.catchError((Object _) {});
+  return run;
 }
+
+/// Load the rewarded unit only. Does not show the UMP form.
+Future<void> prepareOffer() {
+  if (!realAdsAvailable) return Future<void>.value();
+  return _serialized(() async {
+    await _ensureSdk(askConsent: false);
+    if (_sdkReady) await _preload();
+  });
+}
+
+Future<void> warmup() => prepareOffer();
 
 Future<void> showPrivacyOptions() async {
   if (!realAdsAvailable) return;
-  await _requestConsent();
+  await _requestConsent(askConsent: true);
   final done = Completer<void>();
   ConsentForm.showPrivacyOptionsForm((FormError? error) {
     if (error != null) {
@@ -58,7 +63,11 @@ Future<void> showPrivacyOptions() async {
 /// ad played but POWERUPS never granted.
 Future<AdWatchResult> showRewarded() async {
   if (!realAdsAvailable) return AdWatchResult.unavailable;
-  await warmup();
+  // The tap is the one prompt: UMP only here, then the ad they asked for.
+  await _serialized(() async {
+    await _ensureSdk(askConsent: true);
+    if (_sdkReady && _ready == null) await _preload();
+  });
   if (!_sdkReady) return AdWatchResult.failed;
   var ad = _ready;
   _ready = null;
@@ -117,10 +126,10 @@ Future<AdWatchResult> showRewarded() async {
   }
 }
 
-Future<void> _ensureSdk() async {
+Future<void> _ensureSdk({required bool askConsent}) async {
   if (_sdkReady) return;
   try {
-    await _requestConsent();
+    await _requestConsent(askConsent: askConsent);
     final canAsk = await ConsentInformation.instance.canRequestAds();
     if (!canAsk) {
       debugPrint('AdMob: cannot request ads (consent)');
@@ -136,11 +145,15 @@ Future<void> _ensureSdk() async {
   }
 }
 
-Future<void> _requestConsent() async {
+Future<void> _requestConsent({required bool askConsent}) async {
   final done = Completer<void>();
   ConsentInformation.instance.requestConsentInfoUpdate(
     ConsentRequestParameters(),
     () {
+      if (!askConsent) {
+        if (!done.isCompleted) done.complete();
+        return;
+      }
       ConsentForm.loadAndShowConsentFormIfRequired((FormError? error) {
         if (error != null) {
           debugPrint('UMP form: ${error.message}');

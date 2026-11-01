@@ -20,6 +20,7 @@ import 'shell/dungeon_loot_log.dart';
 import 'shell/dungeon_party_hud.dart';
 import 'shell/dungeon_target_hud.dart';
 import 'shell/dungeon_top_hud.dart';
+import 'shell/boost_ad_button.dart';
 import 'shell/scroll_buff_stack.dart';
 
 /// Idle Party dungeon scene: full-bleed stage + corner HUD.
@@ -269,9 +270,16 @@ class _Is2ShellState extends State<Is2Shell> {
                             Positioned(
                               right: hudSide,
                               bottom: partyBottom + 44,
-                              child: ScrollBuffStack(
-                                meta: d.state.metaDepth,
-                                maxHeight: 168,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  BoostAdButton(director: d),
+                                  ScrollBuffStack(
+                                    meta: d.state.metaDepth,
+                                    maxHeight: 168,
+                                  ),
+                                ],
                               ),
                             ),
                           ],
