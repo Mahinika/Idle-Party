@@ -1585,6 +1585,51 @@ class GameLogic {
     );
   }
 
+  /// Wipe panel REVIVE ad — once per cave run; not Ranked GR / Rift / Daily Echo.
+  static bool canWipeReviveAd(GameState state) {
+    if (!state.inDungeon || state.wipeReviveUsed) return false;
+    if (state.inGreaterRift || state.inRift || state.inWorldBoss) return false;
+    if (MetaSystems.isActiveDailyRun(state)) return false;
+    return true;
+  }
+
+  /// Undo the streak bump from the last [notePartyWipe] so a revive is not a wipe.
+  static GameState revertLiveWipeStreak(GameState state) {
+    final count = state.wipeStreakCount;
+    if (count <= 0) return state;
+    if (count == 1) {
+      return state.copyWith(
+        wipeStreakKey: '',
+        wipeStreakCount: 0,
+        wipeAdviceLine: '',
+        wipeScanLine: '',
+      );
+    }
+    return state.copyWith(
+      wipeStreakCount: count - 1,
+      wipeAdviceLine: '',
+      wipeScanLine: '',
+    );
+  }
+
+  static GameState markWipeReviveUsed(GameState state) =>
+      state.copyWith(wipeReviveUsed: true, lastUpdated: DateTime.now());
+
+  static GameState healPartyHalfHp(GameState state) {
+    return state.copyWith(
+      heroes: [
+        for (final h in state.heroes)
+          h.copyWith(
+            currentHp: max(
+              1,
+              (state.effectiveHeroMaxHp(h) * 0.5).round(),
+            ),
+          ),
+      ],
+      lastUpdated: DateTime.now(),
+    );
+  }
+
   /// Before the first boss, Sandy's first floors ease off after repeat wipes.
   /// 1 means no change. Offline and live share it so a retry is the same fight.
   static double earlyWipeDamageMul(GameState state) {

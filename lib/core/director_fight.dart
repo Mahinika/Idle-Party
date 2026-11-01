@@ -141,6 +141,57 @@ extension GameDirectorFight on GameDirector {
     _rearmWipeAfterAd(result);
   }
 
+  /// One rewarded revive per cave run — party at 50% HP, same floor, streak unchanged.
+  Future<void> watchWipeReviveAd() async {
+    if (!GameLogic.canWipeReviveAd(_state)) return;
+    if (_state.metaDepth.adFree) return;
+    _cancelWipeAuto();
+    if (!AdRewarded.realAdsAvailable) {
+      showToast('Ads play on the Android app', life: 2.2);
+      return;
+    }
+    showToast('Loading ad…', life: 1.4);
+    final result = await AdRewarded.showRewarded();
+    if (result != AdWatchResult.rewarded) {
+      switch (result) {
+        case AdWatchResult.skipped:
+          showToast('Watch the whole ad to revive the party', life: 2.2);
+        case AdWatchResult.failed:
+          showToast('Ad not ready — try again in a bit', life: 2.2);
+        case AdWatchResult.unavailable:
+          showToast('Ads play on the Android app', life: 2.2);
+        case AdWatchResult.rewarded:
+          break;
+      }
+      return;
+    }
+    if (!_awaitingWipeChoice) return;
+    _state = GameLogic.revertLiveWipeStreak(_state);
+    _state = GameLogic.markWipeReviveUsed(_state);
+    final world = _spatial;
+    if (world != null) {
+      _state = SpatialCombat.revivePartyHalf(world, _state);
+    } else {
+      _state = GameLogic.healPartyHalfHp(_state);
+    }
+    _awaitingWipeChoice = false;
+    unawaited(
+      AppAnalytics.logEvent('wipe_revive_ad', {
+        'dungeon_id': _state.dungeonId,
+        'floor': _state.currentRoom.floorNumber,
+        'gauntlet': _state.inGauntlet,
+      }),
+    );
+    showToast('Party revived — fight on', life: 2.4);
+    GameAudio.uiConfirm();
+    if (enableSpatialLoop) {
+      _startSpatialLoop();
+    }
+    _beginFloorClock();
+    _directorNotify();
+    unawaited(_persistFlush());
+  }
+
   /// A finished watch leaves the choice on screen. Skip, timeout, and a
   /// missing ad arm the 3s retry again.
   void _rearmWipeAfterAd(AdWatchResult result) {

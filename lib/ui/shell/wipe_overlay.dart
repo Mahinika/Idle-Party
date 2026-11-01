@@ -268,6 +268,7 @@ class DungeonWipePanel extends StatelessWidget {
                     );
                   }(),
                   const SizedBox(height: 16),
+                  _WipeReviveAd(director: director),
                   _WipeWatchAd(director: director),
                   if (WipeAdvice.godHandHintFor(state) != null) ...[
                     const SizedBox(height: 10),
@@ -286,6 +287,53 @@ class DungeonWipePanel extends StatelessWidget {
           ),
         ),
         ),
+      ),
+    );
+  }
+}
+
+/// One revive per cave run. Ranked GR / Rift / Daily Echo hide via [GameLogic.canWipeReviveAd].
+class _WipeReviveAd extends StatefulWidget {
+  const _WipeReviveAd({required this.director});
+
+  final GameDirector director;
+
+  @override
+  State<_WipeReviveAd> createState() => _WipeReviveAdState();
+}
+
+class _WipeReviveAdState extends State<_WipeReviveAd> {
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (GameLogic.canWipeReviveAd(widget.director.state) &&
+        !widget.director.state.metaDepth.adFree) {
+      unawaited(AdRewarded.prepareOffer());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = widget.director.state;
+    if (!GameLogic.canWipeReviveAd(state) || state.metaDepth.adFree) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GameButton(
+        label: _busy ? 'LOADING AD…' : 'REVIVE — WATCH AD',
+        tip: '50% HP · same floor · once this run · wipe streak unchanged',
+        style: GameButtonStyle.brown,
+        primary: true,
+        onPressed: _busy
+            ? null
+            : () async {
+                setState(() => _busy = true);
+                await widget.director.watchWipeReviveAd();
+                if (mounted) setState(() => _busy = false);
+              },
       ),
     );
   }

@@ -169,6 +169,7 @@ class GameState {
     this.seenChangelogVersion = '',
     this.wipeStreakKey = '',
     this.wipeStreakCount = 0,
+    this.wipeReviveUsed = false,
     this.pushResumeFloor = 0,
     this.wipeAdviceLine = '',
     this.wipeScanLine = '',
@@ -554,6 +555,9 @@ class GameState {
 
   /// Consecutive live wipes on [wipeStreakKey]. Resets on a floor clear.
   final int wipeStreakCount;
+
+  /// One rewarded revive per cave run (Gauntlet or zone PUSH/FARM).
+  final bool wipeReviveUsed;
 
   /// Uncleared PUSH floor to return to after one clear of the floor below.
   /// 0 means the party is not farming back from a wipe.
@@ -1237,6 +1241,7 @@ class GameState {
     String? seenChangelogVersion,
     String? wipeStreakKey,
     int? wipeStreakCount,
+    bool? wipeReviveUsed,
     int? pushResumeFloor,
     String? wipeAdviceLine,
     String? wipeScanLine,
@@ -1394,6 +1399,7 @@ class GameState {
       seenChangelogVersion: seenChangelogVersion ?? this.seenChangelogVersion,
       wipeStreakKey: wipeStreakKey ?? this.wipeStreakKey,
       wipeStreakCount: wipeStreakCount ?? this.wipeStreakCount,
+      wipeReviveUsed: wipeReviveUsed ?? this.wipeReviveUsed,
       pushResumeFloor: pushResumeFloor ?? this.pushResumeFloor,
       wipeAdviceLine: wipeAdviceLine ?? this.wipeAdviceLine,
       wipeScanLine: wipeScanLine ?? this.wipeScanLine,
@@ -1570,6 +1576,7 @@ class GameState {
     'seenChangelogVersion': seenChangelogVersion,
     'wipeStreakKey': wipeStreakKey,
     'wipeStreakCount': wipeStreakCount,
+    'wipeReviveUsed': wipeReviveUsed,
     'pushResumeFloor': pushResumeFloor,
     'wipeAdviceLine': wipeAdviceLine,
     'wipeScanLine': wipeScanLine,
@@ -1889,6 +1896,7 @@ class GameState {
       seenChangelogVersion: (json['seenChangelogVersion'] as String?) ?? '',
       wipeStreakKey: (json['wipeStreakKey'] as String?) ?? '',
       wipeStreakCount: _jsonInt(json['wipeStreakCount']),
+      wipeReviveUsed: (json['wipeReviveUsed'] as bool?) ?? false,
       pushResumeFloor: _jsonInt(json['pushResumeFloor']),
       wipeAdviceLine: (json['wipeAdviceLine'] as String?) ?? '',
       wipeScanLine: (json['wipeScanLine'] as String?) ?? '',

@@ -4741,6 +4741,18 @@ abstract final class SpatialCombat {
     return _stepResult(world, synced, goldFromKills: gold);
   }
 
+  /// Live wipe revive: same floor, heroes at 50% max HP in world + state.
+  static GameState revivePartyHalf(SpatialWorld world, GameState state) {
+    final fighting = state.combatHeroes;
+    for (var i = 0; i < world.heroes.length && i < fighting.length; i++) {
+      if (world.heroes[i].isPet) continue;
+      final hero = fighting[i];
+      final cap = state.effectiveHeroMaxHp(hero);
+      world.heroes[i].hp = math.max(1, (cap * 0.5).round()).clamp(0, cap);
+    }
+    return _syncHp(state, world);
+  }
+
   static GameState _syncHp(GameState state, SpatialWorld world) {
     final fighting = state.combatHeroes;
     final hpById = <String, int>{};

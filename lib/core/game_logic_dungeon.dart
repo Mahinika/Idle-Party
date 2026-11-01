@@ -41,6 +41,7 @@ GameState _gameLogicEnterDungeon(GameState state, {String dungeonId = 'sandy'}) 
     dungeonFloor: floor,
     enemies: GameLogic.createEnemyGroup(room, dungeonId: dungeonId, fromState: primed),
     layoutSeed: layoutSeed,
+    wipeReviveUsed: false,
     heroes: primed.heroes
         .map(
           (hero) => hero.copyWith(currentHp: primed.effectiveHeroMaxHp(hero)),
@@ -164,6 +165,7 @@ GameState _gameLogicLeaveDungeon(GameState state) {
           worldBossPractice: false,
           apexTrialActive: false,
           pushResumeFloor: 0,
+          wipeReviveUsed: false,
           heroes: heroes,
           lastUpdated: DateTime.now(),
         ),

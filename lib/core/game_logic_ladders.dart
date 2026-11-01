@@ -71,6 +71,7 @@ GameState _enterGauntlet(GameState state, {GauntletPact? pact}) {
       ),
       layoutSeed: layoutSeed,
       gauntletPact: pact == null ? '' : pact.name,
+      wipeReviveUsed: false,
       heroes: cleared.heroes
           .map(
             (hero) =>

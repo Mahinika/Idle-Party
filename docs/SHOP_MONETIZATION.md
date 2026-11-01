@@ -32,6 +32,8 @@ removed the ban on a whale ladder, gacha, and BiS-for-cash.
    `$4.99`, gacha, and gear that free play cannot earn.
 3. **Clear IA:** GOLD = gold buys · ESSENCE = essence buys · SHOP = real money ·
    hub SCROLLS = optional ads → Ad Tickets → same scrolls.
+4. **Wipe REVIVE ad:** optional rewarded revive once per cave run (50% HP, same
+   floor, streak unchanged). Not in Ranked GR, Farm Rift, or Daily Echo.
 
 **Dev take-home:** Play Billing ~**15%** under $1M/yr (EEA/US/UK: 10% service +
 5% billing). A `$0.99` sale ≈ `$0.84` net — still far above one rewarded ad.
