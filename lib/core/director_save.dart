@@ -76,10 +76,16 @@ extension GameDirectorSave on GameDirector {
     if (_appPaused == paused) return;
     _appPaused = paused;
     if (paused) {
+      final seconds = DateTime.now().difference(_foregroundSince).inSeconds;
+      _foregroundSince = DateTime.now();
+      if (seconds >= 15) {
+        unawaited(AppAnalytics.sessionLength(seconds));
+      }
       _syncHubIdleTimer();
       unawaited(_persistFlush());
       unawaited(_syncAwayReminders(backgrounded: true));
     } else {
+      _foregroundSince = DateTime.now();
       unawaited(_resumeFromBackground());
     }
   }
@@ -117,6 +123,12 @@ extension GameDirectorSave on GameDirector {
     if (!_appPaused) {
       unawaited(_syncAwayReminders(backgrounded: false));
     }
+  }
+
+  /// Rewind the foreground clock in tests. Does not log by itself.
+  @visibleForTesting
+  void debugStampForeground({required Duration ago}) {
+    _foregroundSince = DateTime.now().subtract(ago);
   }
 
   /// Rewind clocks in tests. Does not credit gold.
@@ -298,6 +310,16 @@ extension GameDirectorSave on GameDirector {
       if (showCard) {
         uiFeedback.presentOffline(offline);
         noteReviewWelcome(offline);
+        unawaited(
+          AppAnalytics.welcomeBack(
+            where: offline.wasInDungeon ? 'dungeon' : 'hub',
+            seconds: offline.secondsApplied,
+            gold: offline.goldGained,
+          ),
+        );
+        if (offline.welcomeBackAdOffer) {
+          unawaited(AppAnalytics.welcomeBackAdOffer());
+        }
         // The cave opens the same Welcome Back card. A toast would cover it.
       }
       final tick = offline.goldGained > 0

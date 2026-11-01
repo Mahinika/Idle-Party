@@ -11,6 +11,7 @@ plugins {
 // Only when Firebase Console config is present (see docs/PLAY_STORE.md).
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
 }
 
 val keystorePropertiesFile = rootProject.file("key.properties")
