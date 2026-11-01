@@ -486,7 +486,11 @@ class DungeonTopHud extends StatelessWidget {
       if (state.inGauntlet) {
         final floor = state.currentRoom.floorNumber;
         final nextBoss = GauntletAnomalies.nextBossFloor(floor);
-        final anomaly = GauntletAnomalies.forFloor(floor, inGauntlet: true);
+        final anomaly = GauntletAnomalies.forFloor(
+          floor,
+          inGauntlet: true,
+          pact: GauntletPacts.parse(state.gauntletPact),
+        );
         final nextAnom = GauntletAnomalies.nextAnomalyFloor(floor);
         final pb = state.metaDepth.gauntletBestFloor;
         final treasure = GauntletAnomalies.isTreasureFloor(floor);

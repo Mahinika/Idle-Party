@@ -251,6 +251,29 @@ abstract final class WispGift {
     );
   }
 
+  /// One line on PARTY WIPED in story caves when the lantern schedule matters.
+  static String? wipeNextLanternLine(GameState state, {DateTime? now}) {
+    if (state.inGauntlet || state.inAnyRiftMode || state.inWorldBoss) {
+      return null;
+    }
+    if (!state.metaDepth.wispUnlocked) return null;
+    final clock = now ?? DateTime.now().toUtc();
+    if (!canTapToday(state.metaDepth, now: clock)) {
+      return 'Gold lantern · 0 left today (UTC).';
+    }
+    if (hasPendingChoice(state.metaDepth)) {
+      return 'Gold lantern · pending gold — tap the flame when the fight resumes.';
+    }
+    final nowMs = clock.millisecondsSinceEpoch;
+    final nextMs = state.metaDepth.wispNextSpawnMs;
+    final left = dailyCap - claimsToday(state.metaDepth, now: clock);
+    if (nextMs > nowMs) {
+      final min = ((nextMs - nowMs) / 60000).ceil().clamp(1, 120);
+      return 'Next gold lantern in ~$min min · $left left today.';
+    }
+    return 'Gold lantern may appear during the next fight.';
+  }
+
   static String watchButtonLabel(GameState state) {
     final watch = state.metaDepth.wispPendingWatchGold;
     return '${_formatGold(watch)} GOLD';

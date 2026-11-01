@@ -128,8 +128,9 @@ Update release notes when shipping a build that includes Play Billing SHOP buys
 ids exist in Console and were **activated 2026-09-10** (1 purchase option each).
 **`long_away` activated 2026-10-05** ($4.99, option `long-away`). This tree
 lists Ad-free, Long Away, and Supporter on the SHOP shelf. Hour packs stay
-restore-only. `perm_scroll_*` and `cinder_pouch` are not activated; a row
-appears only after Play returns that product. Smoke on a Play-installed
+restore-only. SHOP always lists `cinder_pouch` and `season_pass_premium`
+(Unavailable until Console **Activate** — see `docs/SHOP_MONETIZATION.md`).
+`perm_scroll_*` still appear only when Play returns that id. Smoke on a Play-installed
 build; restart the app so Billing refreshes. A sideload does not grant a buy.
 
 ### Production AAB upload checklist (agent + owner)
@@ -195,7 +196,9 @@ Phone product only (`com.idleparty.app`). Config file is in-repo:
 Event names, the consent gate, and Crashlytics are in
 [ANALYTICS.md](ANALYTICS.md). Full event/param catalog:
 [analytics_events.md](analytics_events.md). UMP consent gates Analytics and Crashlytics
-(SETTINGS → AD PRIVACY). Both stay off until that check. Spark only: do not
+(SETTINGS → AD PRIVACY). Nothing is sent until that check. A decline keeps
+crash reports off; Analytics may still send limited consent-mode pings.
+Spark only: do not
 link BigQuery and do not upgrade the project to Blaze for this. Rebuild
 Android after pull.
 

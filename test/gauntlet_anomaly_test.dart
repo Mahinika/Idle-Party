@@ -11,6 +11,22 @@ import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/spatial/tile_map.dart';
 
 void main() {
+  test('MIGHT pact earns RUSH instead of SWARM on the swarm slot', () {
+    expect(
+      GauntletAnomalies.forFloor(2, inGauntlet: true),
+      GauntletAnomaly.swarmUprising,
+    );
+    expect(
+      GauntletAnomalies.forFloor(
+        2,
+        inGauntlet: true,
+        pact: GauntletPact.might,
+      ),
+      GauntletAnomaly.bloodRush,
+    );
+    expect(GauntletAnomalies.chip(GauntletAnomaly.bloodRush), 'RUSH');
+  });
+
   test('Gauntlet opening night is four squeezes then a boss', () {
     expect(GauntletAnomalies.forFloor(1, inGauntlet: false), isNull);
     expect(

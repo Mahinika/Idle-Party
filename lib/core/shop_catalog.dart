@@ -72,14 +72,15 @@ class ShopCatalogItem {
 /// better $/hour than smaller ones. A stronger paid offer is allowed
 /// when the owner names it (see docs/SHOP_MONETIZATION.md).
 abstract final class ShopCatalog {
-  /// Play Console has these activated, and this build offers them for sale.
-  /// Hour packs stay in [offered] for restore only. Forever scrolls and the
-  /// cinder pouch stay in [offered] for a code or a restore, and join
-  /// [shelf] only after Play returns that product.
+  /// Play Console product ids this build sells on the SHOP shelf (Unavailable
+  /// until Billing returns a price). Hour packs stay restore-only. Forever
+  /// scrolls join [shelf] only after Play returns that product id.
   static const Set<String> playChargeableIds = {
     'ad_free',
     'long_away',
     'supporter_qol',
+    'cinder_pouch',
+    'season_pass_premium',
   };
 
   static const List<ShopCatalogItem> offered = [

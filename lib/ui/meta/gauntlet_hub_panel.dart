@@ -86,7 +86,7 @@ class _SpireTrophyGrid extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           'First clear of each cell pays ${GauntletTrophies.firstEssence} essence. '
-          'A full row grants a title. All 12 grant 1 STAR.',
+          'MIGHT earns RUSH instead of SWARM. A full row grants a title. All 12 grant 1 STAR.',
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
@@ -103,7 +103,7 @@ class _SpireTrophyGrid extends StatelessWidget {
                   ),
                 ),
               ),
-              for (final squeeze in GauntletTrophies.squeezes)
+              for (final squeeze in GauntletTrophies.squeezesFor(pact))
                 Expanded(
                   child: _TrophyCell(
                     pact: pact,

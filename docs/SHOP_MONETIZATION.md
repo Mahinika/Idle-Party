@@ -58,7 +58,16 @@ Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as t
 
 **In-game (not SHOP tabs):** GEAR → BAG expands with gold or Cinders; ESSENCE → PETS uses essence hatch, Cinder eggs, errands, and Bigger Shipment. Hub **★ on SHOP** for 24h after first boss highlights **Prospector's Bundle** (`starter_boost_6h`) then **Delver's Kit** (`supporter_qol`) when the window is open.
 
-**New SKUs need Play Console create + Activate** before live prices show. Console has the five 2026-09-10 SKUs plus `long_away` (**activated 2026-10-05**, purchase option `long-away`, $4.99, legacy-compatible). SHOP lists the packs Play can charge: `ad_free`, `long_away`, `supporter_qol`. Hour packs stay in the catalog for restore and are not listed. The eight `perm_scroll_*` ids (`perm_scroll_atk` … `perm_scrolls_all`) and `cinder_pouch` are still not in Console. They stay in the catalog so a coupon (`FOREVERSCROLLS`) or a future Play product can grant them. A row for those appears only when Play returns that id. There is no **NOT ON PLAY** button. The row shows Play's price. If Play has not returned one, it says Unavailable and does not invent a price. Sideload does not grant a pack; Play has to acknowledge the purchase. Restore applies non-consumables once (Ad-free tickets, supporter bag slots, Long Away, the one-time starter boost). A finished consumable is not granted again. An unconsumed one — the app died after Play charged and before the grant was saved — is granted once per purchase id, then consumed. Prices can take hours to show on a Play-installed build.
+**New SKUs need Play Console create + Activate** before live prices show. Console has the five 2026-09-10 SKUs plus `long_away` (**activated 2026-10-05**, purchase option `long-away`, $4.99, legacy-compatible). This build always shows five chargeable SHOP rows: `ad_free`, `long_away`, `supporter_qol`, `cinder_pouch`, `season_pass_premium`. Each says **Unavailable** until Play returns a price for that id. Hour packs stay restore-only and off the shelf. The eight `perm_scroll_*` ids stay in the catalog for coupons (`FOREVERSCROLLS`) and appear only when Play lists that id. Sideload does not grant a pack; Play has to acknowledge the purchase. Restore applies non-consumables once. A finished consumable is not granted again. An unconsumed one is granted once per purchase id, then consumed.
+
+### Activate `cinder_pouch` + `season_pass_premium` (owner, Console)
+
+1. **Monetize → Products → In-app products** (or one-time products per type):
+   - `cinder_pouch` — **Consumable** · purchase option id `cinder-pouch` · suggested tier **$1.99** (adjust to taste) · title **Cinder pouch** · description matches SHOP: *8 Cinders. First buy pays ×2 (16 total).*
+   - `season_pass_premium` — **Non-consumable** · purchase option id `season-pass-premium` · suggested **$4.99** · title **Season pass premium** · description: *+50% essence and +5 Cinders on each month-pass claim. Free track unchanged.*
+2. **Activate** each purchase option (same as the 2026-09-10 five-pack).
+3. Play-installed smoke: open SHOP → prices replace Unavailable → buy/restore once on a license tester account.
+4. Update **Operator status** in `docs/PLAY_STORE.md` when both show active.
 
 ## Relation to existing systems
 

@@ -1,4 +1,3 @@
-import '../models/meta_depth.dart';
 import 'blessing_constellation.dart';
 import 'game_state.dart';
 import 'gauntlet_anomaly.dart';
@@ -7,18 +6,14 @@ import 'logic_notices.dart';
 
 /// One Spire trophy per squeeze under each climb pact.
 ///
-/// Twelve cells: TIGHT, SWARM, ECHO, and GATES, each under MIGHT, WARD, and
-/// GREED. The first clear of a cell pays essence. A full pact row grants a
-/// title. All twelve grant one STAR point. Kept on Ascend with [MetaDepthState].
+/// Twelve cells: four squeezes under MIGHT, WARD, and GREED. MIGHT earns RUSH
+/// instead of SWARM. The first clear of a cell pays essence. A full pact row
+/// grants a title. All twelve grant one STAR point. Kept on Ascend.
 abstract final class GauntletTrophies {
   static const int firstEssence = 4;
 
-  static const List<GauntletAnomaly> squeezes = <GauntletAnomaly>[
-    GauntletAnomaly.tightCorridors,
-    GauntletAnomaly.swarmUprising,
-    GauntletAnomaly.bossEcho,
-    GauntletAnomaly.gateGauntlet,
-  ];
+  static List<GauntletAnomaly> squeezesFor(GauntletPact pact) =>
+      GauntletAnomalies.trophiesFor(pact);
 
   static String keyFor(GauntletPact pact, GauntletAnomaly squeeze) =>
       '${pact.name}:${squeeze.name}';
@@ -33,7 +28,7 @@ abstract final class GauntletTrophies {
       state.metaDepth.spireTrophies.contains(keyFor(pact, squeeze));
 
   static bool rowComplete(List<String> keys, GauntletPact pact) =>
-      squeezes.every((squeeze) => keys.contains(keyFor(pact, squeeze)));
+      squeezesFor(pact).every((squeeze) => keys.contains(keyFor(pact, squeeze)));
 
   /// Next empty cell, pact by pact. Null when the grid is full.
   static ({GauntletPact pact, GauntletAnomaly squeeze})? nextMissing(
@@ -41,7 +36,7 @@ abstract final class GauntletTrophies {
   ) {
     final keys = state.metaDepth.spireTrophies;
     for (final pact in GauntletPact.values) {
-      for (final squeeze in squeezes) {
+      for (final squeeze in squeezesFor(pact)) {
         if (!keys.contains(keyFor(pact, squeeze))) {
           return (pact: pact, squeeze: squeeze);
         }
@@ -53,7 +48,7 @@ abstract final class GauntletTrophies {
   /// One sentence when a pact row is a single squeeze short. Empty otherwise.
   static String oneShortLine(GameState state, GauntletPact pact) {
     final missing = <GauntletAnomaly>[
-      for (final squeeze in squeezes)
+      for (final squeeze in squeezesFor(pact))
         if (!owned(state, pact, squeeze)) squeeze,
     ];
     if (missing.length != 1) return '';
@@ -71,8 +66,12 @@ abstract final class GauntletTrophies {
   /// First clear of this floor's squeeze under the active pact.
   static GameState onSqueezeClear(GameState state, {required int floor}) {
     if (!state.inGauntlet) return state;
-    final squeeze = GauntletAnomalies.forFloor(floor, inGauntlet: true);
     final pact = GauntletPacts.parse(state.gauntletPact);
+    final squeeze = GauntletAnomalies.forFloor(
+      floor,
+      inGauntlet: true,
+      pact: pact,
+    );
     if (squeeze == null || pact == null) return state;
     final key = keyFor(pact, squeeze);
     final owned = state.metaDepth.spireTrophies;

@@ -8,6 +8,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/wipe_advice.dart';
+import '../../core/wisp_gift.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -113,6 +114,17 @@ class DungeonWipePanel extends StatelessWidget {
                       style: GameTheme.body(
                         size: 12,
                         color: GameTheme.parchmentDim,
+                      ),
+                    ),
+                  ],
+                  if (WispGift.wipeNextLanternLine(state) case final wispLine?) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      wispLine,
+                      textAlign: TextAlign.center,
+                      style: GameTheme.body(
+                        size: 12,
+                        color: GameTheme.torchHot,
                       ),
                     ),
                   ],

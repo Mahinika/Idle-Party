@@ -124,20 +124,23 @@ void main() {
     expect(ShopCatalog.shelf().map((e) => e.id), [
       'ad_free',
       'long_away',
+      'cinder_pouch',
+      'season_pass_premium',
       'supporter_qol',
     ]);
     expect(
       ShopCatalog.shelf().every(
         (e) =>
             e.kind != ShopOfferKind.boostHours &&
-            e.kind != ShopOfferKind.permScroll &&
-            e.kind != ShopOfferKind.cinders,
+            e.kind != ShopOfferKind.permScroll,
       ),
       isTrue,
     );
     expect(ShopCatalog.extraPacks.map((e) => e.id), [
       'ad_free',
       'long_away',
+      'cinder_pouch',
+      'season_pass_premium',
       'supporter_qol',
     ]);
     expect(
@@ -154,13 +157,15 @@ void main() {
         'ad_free',
         'long_away',
         'cinder_pouch',
+        'season_pass_premium',
         'supporter_qol',
       ],
     );
     expect(ShopCatalog.mayBuy('boost_12h', playLists: true), isFalse);
     expect(ShopCatalog.mayBuy('perm_scroll_atk', playLists: false), isFalse);
     expect(ShopCatalog.mayBuy('perm_scroll_atk', playLists: true), isTrue);
-    expect(ShopCatalog.mayBuy('cinder_pouch', playLists: false), isFalse);
+    expect(ShopCatalog.mayBuy('cinder_pouch', playLists: false), isTrue);
+    expect(ShopCatalog.mayBuy('season_pass_premium', playLists: false), isTrue);
     expect(ShopCatalog.mayBuy('ad_free', playLists: false), isTrue);
     expect(ShopBilling.grantOnRestore(ShopCatalog.byId['ad_free']!), isTrue);
     expect(ShopBilling.grantOnRestore(ShopCatalog.byId['long_away']!), isTrue);
@@ -308,7 +313,7 @@ void main() {
     expect(GameLogic.offlineFloorBudget(8 * 3600), lessThanOrEqualTo(120));
   });
 
-  testWidgets('SHOP shelf is the three Play packs and BUY does not grant', (
+  testWidgets('SHOP shelf lists chargeable packs and BUY does not grant', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 780);
@@ -325,20 +330,27 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Ad-free welcome'), findsOneWidget);
-      expect(find.text('Long Away'), findsOneWidget);
-      expect(find.text('Supporter pack'), findsOneWidget);
-      expect(find.text('Unavailable'), findsNWidgets(3));
-      expect(find.text('UNAVAILABLE'), findsNWidgets(3));
-      expect(find.text('BUY'), findsNothing);
-      expect(find.textContaining('\$'), findsNothing);
-      expect(find.text('NOT ON PLAY'), findsNothing);
-      expect(find.textContaining('Forever'), findsNothing);
-      expect(find.text('Cinder pouch'), findsNothing);
       expect(
         find.textContaining('Cinders in GEAR'),
         findsOneWidget,
       );
+
+      final scroll = find.byType(Scrollable).first;
+      for (final label in [
+        'Ad-free welcome',
+        'Long Away',
+        'Cinder pouch',
+        'Season pass premium',
+        'Supporter pack',
+      ]) {
+        await tester.scrollUntilVisible(find.text(label), 120, scrollable: scroll);
+        expect(find.text(label), findsOneWidget);
+      }
+      expect(find.text('UNAVAILABLE'), findsWidgets);
+      expect(find.text('BUY'), findsNothing);
+      expect(find.textContaining('\$'), findsNothing);
+      expect(find.text('NOT ON PLAY'), findsNothing);
+      expect(find.textContaining('Forever'), findsNothing);
       await tester.scrollUntilVisible(
         find.text('RESTORE'),
         160,

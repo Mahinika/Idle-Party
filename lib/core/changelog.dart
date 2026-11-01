@@ -82,12 +82,32 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.12';
+  static const String currentVersion = '1.13.13';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: currentVersion,
+      date: 'Nov 1, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. SHOP Cinder + season pass rows, wipe WISP hint, MIGHT RUSH.',
+      added: <String>[
+        'Gauntlet MIGHT: RUSH squeeze (denser swarms than SWARM) and its own Spire trophy cell.',
+        'PARTY WIPED in story caves: line for the next gold lantern when WISP is unlocked.',
+        'SHOP shelf: Cinder pouch and Season pass premium rows (Play price when Console lists them).',
+      ],
+      changed: <String>[
+        'Play Console checklist in docs for activating cinder_pouch and season_pass_premium.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.13.12',
       date: 'Nov 1, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. Spellcraft, FARM 2×/4×, SHOP offers, and pet eggs.',

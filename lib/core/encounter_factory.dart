@@ -11,6 +11,7 @@ import 'dungeon_generator.dart';
 import 'enemy_flavor.dart';
 import 'game_logic.dart';
 import 'gauntlet_anomaly.dart';
+import 'gauntlet_pact.dart';
 import 'game_state.dart';
 import 'farm_intensity.dart';
 import 'keystone.dart';
@@ -317,12 +318,13 @@ abstract final class EncounterFactory {
         affixes.contains('boss_rush');
     final glassWeek = affixes.contains('glass');
     final swarmWeek = affixes.contains('swarm');
-    final gauntletSwarm = GauntletAnomalies.swarmPacks(
-      GauntletAnomalies.forFloor(
-        room.floorNumber,
-        inGauntlet: fromState?.inGauntlet ?? false,
-      ),
+    final gauntletAnomaly = GauntletAnomalies.forFloor(
+      room.floorNumber,
+      inGauntlet: fromState?.inGauntlet ?? false,
+      pact: GauntletPacts.parse(fromState?.gauntletPact ?? ''),
     );
+    final gauntletSwarm = GauntletAnomalies.swarmPacks(gauntletAnomaly);
+    final swarmMul = GauntletAnomalies.swarmCountMul(gauntletAnomaly);
     final eliteWeek = affixes.contains('elite');
     final fortuneWeek = affixes.contains('fortune');
     final ironWeek = affixes.contains('iron');
@@ -384,7 +386,8 @@ abstract final class EncounterFactory {
     final crowd = isBossRoomEarly ? 1 : max(1, room.crowd);
     final baseCount = max(
       1,
-      (room.enemyCount * ((swarmWeek || gauntletSwarm) ? 1.35 : 1.0)).round(),
+      (room.enemyCount * ((swarmWeek || gauntletSwarm) ? swarmMul : 1.0))
+          .round(),
     );
     // Threat and payout are sized on budget slots (one slot = [crowd] bodies).
     final slotBase = max(1, (baseCount / crowd).round());

@@ -192,6 +192,36 @@ void main() {
     expect(WispGift.earnedReferenceFloor(late), 25);
   });
 
+  test('wipe line names next lantern when schedule is armed', () {
+    final now = DateTime.utc(2026, 11, 1, 12, 0);
+    final nowMs = now.millisecondsSinceEpoch;
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      inDungeon: true,
+      metaDepth: state.metaDepth.copyWith(
+        wispUnlocked: true,
+        wispNextSpawnMs: nowMs + 5 * 60 * 1000,
+        wispGiftUtcDay: WispGift.utcDayKey(now),
+        wispGiftClaimsToday: 1,
+      ),
+    );
+    expect(
+      WispGift.wipeNextLanternLine(state, now: now),
+      contains('Next gold lantern in ~5 min'),
+    );
+    expect(
+      WispGift.wipeNextLanternLine(state, now: now),
+      contains('left today'),
+    );
+    expect(
+      WispGift.wipeNextLanternLine(
+        state.copyWith(inGauntlet: true),
+        now: now,
+      ),
+      isNull,
+    );
+  });
+
   test('gauntlet floor does not raise the wisp pile', () {
     var state = GameLogic.createInitialState();
     state = state.copyWith(

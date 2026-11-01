@@ -7,6 +7,7 @@ import '../core/combat_feel.dart';
 import '../core/enemy_flavor.dart';
 import '../core/game_logic.dart';
 import '../core/gauntlet_anomaly.dart';
+import '../core/gauntlet_pact.dart';
 import '../core/game_state.dart';
 import '../core/keystone.dart';
 import '../core/loot_pipeline.dart';
@@ -1961,6 +1962,7 @@ abstract final class SpatialCombat {
     final anomaly = GauntletAnomalies.forFloor(
       room.floorNumber,
       inGauntlet: state.inGauntlet,
+      pact: GauntletPacts.parse(state.gauntletPact),
     );
     final fighting = state.combatHeroes;
     final map = RoomLayouts.forFloor(
