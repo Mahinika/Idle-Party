@@ -27,6 +27,7 @@ import 'hideout_stash.dart';
 import 'party_room_mark.dart';
 import 'room_happening.dart';
 import 'tile_map.dart';
+import 'waypoint_cache.dart';
 
 import 'ability_effects.dart';
 import 'enemy_specials.dart';
@@ -5485,6 +5486,46 @@ abstract final class SpatialCombat {
     final goal = _nearestWalkableTile(map, openGateIds, gx, gy);
     gx = goal.$1;
     gy = goal.$2;
+    return WaypointCache.take(
+      map: map,
+      openGateIds: openGateIds,
+      sx: sx.toInt(),
+      sy: sy.toInt(),
+      gx: gx.toInt(),
+      gy: gy.toInt(),
+      compute: () => _nextWaypointUncached(
+        map,
+        openGateIds,
+        sx.toInt(),
+        sy.toInt(),
+        gx.toInt(),
+        gy.toInt(),
+      ),
+    );
+  }
+
+  /// Tests the cached step. Same tiles and gates must not search again.
+  static (double, double)? debugNextWaypoint(
+    TileMap map,
+    Set<int> openGateIds,
+    double fx,
+    double fy,
+    double tx,
+    double ty,
+  ) => _nextWaypoint(map, openGateIds, fx, fy, tx, ty);
+
+  static int get debugWaypointComputes => WaypointCache.computes;
+
+  static void debugClearWaypointCache() => WaypointCache.clear();
+
+  static (double, double)? _nextWaypointUncached(
+    TileMap map,
+    Set<int> openGateIds,
+    int sx,
+    int sy,
+    int gx,
+    int gy,
+  ) {
     if (sx == gx && sy == gy) return (gx + 0.5, gy + 0.5);
 
     if (hasClearCorridor(map, openGateIds, sx, sy, gx, gy, tight: true)) {

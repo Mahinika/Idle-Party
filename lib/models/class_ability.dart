@@ -713,12 +713,16 @@ class ClassKits {
   ];
 
 
-  static ClassAbilityDef? defFor(AbilityId id) {
+  /// First def wins, same as the old scan. Built once; kits do not change.
+  static final Map<AbilityId, ClassAbilityDef> _byId = () {
+    final map = <AbilityId, ClassAbilityDef>{};
     for (final d in all) {
-      if (d.id == id) return d;
+      map.putIfAbsent(d.id, () => d);
     }
-    return null;
-  }
+    return map;
+  }();
+
+  static ClassAbilityDef? defFor(AbilityId id) => _byId[id];
 
   /// Legacy role kits (original four specs only).
   static List<ClassAbilityDef> forRole(HeroRole role) {

@@ -315,6 +315,9 @@ class GameDirector extends ChangeNotifier {
   int _slowFightTicks = 0;
 
   /// Cheap phones: a few slow fight ticks drop Full to Lite once.
+  @visibleForTesting
+  void debugNoteFightBudget(int elapsedMs) => _noteFightBudget(elapsedMs);
+
   void _noteFightBudget(int elapsedMs) {
     if (_vfxPinned || _state.vfxQuality != VfxQuality.full) return;
     if (!_state.inDungeon) return;

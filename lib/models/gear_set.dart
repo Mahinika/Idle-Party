@@ -57,16 +57,26 @@ abstract final class GearSets {
     return '$zone $armor';
   }
 
+  /// Counts stick to the map instance. Equip copies the map, so a worn
+  /// change is a new key. Do not mutate [equipped] in place after a read.
+  static final Expando<Map<String, int>> _wornByMap = Expando();
+
   /// Pieces of [setId] currently worn (set slots only).
   static int wornCount(
     Map<EquipmentSlot, EquipmentItem> equipped,
     String setId,
   ) {
+    final cached = _wornByMap[equipped];
+    final hit = cached?[setId];
+    if (hit != null) return hit;
     var n = 0;
     for (final slot in setSlots) {
       final item = equipped[slot];
       if (item?.setId == setId) n++;
     }
+    final next = cached ?? <String, int>{};
+    next[setId] = n;
+    _wornByMap[equipped] = next;
     return n;
   }
 
