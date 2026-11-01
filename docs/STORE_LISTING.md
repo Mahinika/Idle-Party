@@ -1,6 +1,6 @@
 # Idle Party — store listing (research + copy)
 
-**Updated:** 2026-10-17 · Target: Google Play (en-US) · Honesty first.  
+**Updated:** 2026-11-01 · Target: Google Play (en-US) · Honesty first.  
 Listing A/B (when Play traffic exists): keep screenshot 1–2 as **live SpatialCombat**, not menus. Do not upload a new AAB unless the owner asks.  
 Growth checklist / review templates: [`PLAY_GROWTH.md`](PLAY_GROWTH.md).  
 0 kr discovery pack: [`tool/store_listing/growth/`](../tool/store_listing/growth/).  
@@ -172,11 +172,18 @@ seconds of the preview video.
 
 Capture on the A56 (the phone is the product; web is only the fallback):
 
-1. `flutter test tool/store_listing/export_showcase_save_test.dart`
+1. `flutter test tool/store_listing/export_showcase_save_test.dart` — refreshes
+   `first_minute_save.json` for the current build (run before every shoot).
 2. `py -3 tool/store_listing/capture_a56_shots.py`
 3. `py -3 tool/store_listing/compose_shots.py`
 4. `py -3 tool/store_listing/make_listing_icon.py`
 5. `py -3 tool/store_listing/make_feature_graphic.py`
+6. `py -3 tool/store_listing/capture_preview_beats.py crawl` — Sandy crawl raw
+   (first ~20 s of the preview; no Gauntlet / GR / Hell in the lead).
+7. `py -3 tool/store_listing/build_preview_video.py`
+8. Update the **Listing assets freshness** row in `docs/PLAY_STORE.md` — each
+   `@` version must stay within **four patches** of
+   `ChangelogCatalog.currentVersion` (`test/store_listing_plan_test.dart`).
 
 `capture_first_minute.py` remains when no emulator is running. It is not
 the default.
@@ -234,7 +241,11 @@ Locales in `growth/LOCALES.md` stay gated until you say paste.
 | Preview video | `https://www.youtube.com/watch?v=cyBlN3HCR48` (public, Cognifox, ads off, embed on). File: `preview/idle_party_preview_9x16.mp4`. YouTube treats it as a Short. 16:9 stays the reserve if Play refuses the portrait embed. |
 | Store listing experiment | Deferred until listing traffic is large enough |
 
-Rebuild preview: `py -3 tool/store_listing/build_preview_video.py` (combat in first 10 s).
+Rebuild preview: re-export saves (step 1 in `docs/STORE_LISTING.md`), then
+`py -3 tool/store_listing/capture_preview_beats.py crawl` when the Sandy crawl
+UI changed, then `py -3 tool/store_listing/build_preview_video.py` (combat in
+first 10 s). Bump the freshness row in `docs/PLAY_STORE.md` when you ship a new
+preview file.
 
 ## Play Console status (2026-09-20)
 

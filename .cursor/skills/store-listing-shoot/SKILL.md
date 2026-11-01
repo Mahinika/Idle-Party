@@ -63,6 +63,10 @@ new URL in the Play preview field.
 ## After
 
 Update the freshness row in `docs/PLAY_STORE.md` to this version and date.
+Each tagged asset version must stay within **four patches** of
+`ChangelogCatalog.currentVersion`. Re-run
+`flutter test tool/store_listing/export_showcase_save_test.dart` before capture
+so `first_minute_save.json` matches the build.
 `flutter test test/store_listing_plan_test.dart` must pass.
 
 ## Done when
