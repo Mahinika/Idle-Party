@@ -104,6 +104,7 @@ abstract final class ChangelogCatalog {
         'Race still locks after New Game START.',
         'KEY waits until every active hero is Lv100.',
         'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
       ],
     ),
     ChangelogRelease(
