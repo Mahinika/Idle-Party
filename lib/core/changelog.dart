@@ -82,10 +82,37 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.5';
+  static const String currentVersion = '1.13.6';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
+    ChangelogRelease(
+      version: currentVersion,
+      date: 'Nov 1, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. Welcome Back scrolls, so a long drop name and Check-in stay on screen.',
+      added: <String>[
+        'Welcome Back can offer Watch ad: 2× offline loot. The ad doubles that trip\'s gold and essence. It stays optional.',
+        'Between fights, WATCH can grant 1 Ad Ticket when no Powerup scroll is active.',
+      ],
+      changed: <String>[
+        'After a wipe, WATCH AD · +1 ticket sits under HUB. A skip or a missed load arms the retry again.',
+        'Away from the hub for 5 minutes, the last cave can keep fighting. Hub essence for that absence is not paid twice. The 12h and 24h chest still caps.',
+        'A chosen Full VFX stays on after a restart. A slow fight can ease an unchosen Full down to Lite.',
+        'Ascend names what this run loses: gold, regular gear, market listings, loadouts, GOLD tracks, and this run\'s floors.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+      fixed: <String>[
+        'The keystone sheet lists each affix once.',
+        'The fight level is the loaded level on the first frame.',
+        'The mage spell on the bar reads Frost Rain.',
+      ],
+    ),
     ChangelogRelease(
       version: '1.13.5',
       date: 'Oct 25, 2026',

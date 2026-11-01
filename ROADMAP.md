@@ -47,9 +47,9 @@ isolate from the old ANR notes.
 5. **Then the phone.** Week 46 is “the fight fits the phone.” That is a
    look change and needs a before and after on the A56. Zone identity
    (so the next cave does not look like the last) is the fun after that.
-   Store shots are 1.13.5. The preview video is still 1.13.3, so the next
-   version bump has to stay within two patches of that video or the
-   listing test fails. Do not buy installs.
+   Store shots are 1.13.5. The preview video is still 1.13.3. 1.13.6 is
+   the last version within three patches of that film. The next bump
+   needs a new Sandy preview or the listing test fails. Do not buy installs.
 
 ## Not this
 
