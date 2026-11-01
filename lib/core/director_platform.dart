@@ -475,6 +475,28 @@ extension GameDirectorPlatform on GameDirector {
     _directorNotify();
   }
 
+  /// Test APK only (`kDebugMode`): one away ping in ~12s to verify notifications.
+  Future<void> debugScheduleReturnPing() async {
+    assert(() {
+      return true;
+    }());
+    final now = DateTime.now();
+    final fireAt = now.add(const Duration(seconds: 12));
+    final ping = LocalPing(
+      id: LocalPing.debugId,
+      fireAt: fireAt,
+      title: LocalReminders.title,
+      body: 'Debug ping — open Idle Party.',
+    );
+    final granted = await LocalNotify.requestPermission();
+    if (!granted) {
+      showToast('Allow notifications to test the ping', life: 2.4);
+      return;
+    }
+    await LocalNotify.present(pings: [ping], tray: null);
+    showToast('Return ping in ~12s — background the app', life: 3.2);
+  }
+
   /// Opt-in Play Games sign-in (leaderboards + cloud). Returns true when signed in.
   Future<bool> signInPlayGames() async {
     final ok = await PlayGamesBridge.signIn();

@@ -153,11 +153,56 @@ void main() {
     final pings = LocalReminders.plan(cave, now);
     final cap = pings.where((p) => p.id == LocalPing.capId);
     expect(cap, isNotEmpty);
-    expect(cap.first.body, 'Your party hit the 8h cap.');
+    expect(cap.first.body, 'Your party is near the 8h cap.');
     expect(
       cap.first.fireAt.difference(now),
-      Duration(seconds: OfflineProgress.dungeonAwayCapSec(cave)),
+      Duration(seconds: OfflineProgress.dungeonAwayCapSec(cave)) -
+          LocalReminders.capNearLead,
     );
+  });
+
+  test('hub with auto cave schedules the fight cap ping', () {
+    final now = DateTime.utc(2026, 9, 12, 10);
+    final hub = LocalReminders.setOptIn(
+      _afterFirstLoot().copyWith(
+        highestFloorCleared: 1,
+        lastUpdated: now,
+        autoCaveOnLeave: true,
+      ),
+      enabled: true,
+    );
+    final cap = LocalReminders.plan(hub, now).where((p) => p.id == LocalPing.capId);
+    expect(cap, isNotEmpty);
+    expect(cap.first.body, contains('near'));
+  });
+
+  test('auto cave off on the hub skips the fight cap ping', () {
+    final now = DateTime.utc(2026, 9, 12, 10);
+    final hub = LocalReminders.setOptIn(
+      _afterFirstLoot().copyWith(
+        highestFloorCleared: 1,
+        lastUpdated: now,
+        autoCaveOnLeave: false,
+      ),
+      enabled: true,
+    );
+    expect(
+      LocalReminders.plan(hub, now).map((p) => p.id),
+      isNot(contains(LocalPing.capId)),
+    );
+  });
+
+  test('quiet hours bump a late-night gold ping to morning', () {
+    final now = DateTime.utc(2026, 9, 12, 14);
+    final opted = LocalReminders.setOptIn(_afterFirstLoot(), enabled: true);
+    final rawFull = now.add(Duration(seconds: GoldIncome.hubChestCapSec));
+    expect(LocalReminders.isQuietLocalHour(rawFull), isTrue);
+    final gold = LocalReminders.plan(opted, now).firstWhere(
+      (p) => p.id == LocalPing.goldId,
+    );
+    expect(LocalReminders.isQuietLocalHour(gold.fireAt), isFalse);
+    expect(gold.fireAt.hour, LocalReminders.morningHour);
+    expect(gold.fireAt.day, greaterThan(now.day));
   });
 
   test('after the first boss the prize ping names the check-in', () {
@@ -241,12 +286,21 @@ void main() {
       ),
     );
     final pings = LocalReminders.plan(state, now);
-    expect(pings, hasLength(1));
-    expect(pings.single.id, LocalPing.morningId);
-    expect(
-      LocalReminders.utcDay(pings.single.fireAt),
-      isNot(LocalReminders.utcDay(now)),
-    );
+    expect(pings.map((p) => p.id), contains(LocalPing.morningId));
+    for (final ping in pings) {
+      if (ping.id == LocalPing.goldId) {
+        // Quiet hours moved chest-full off the capped UTC day.
+        expect(
+          LocalReminders.utcDay(ping.fireAt),
+          isNot(LocalReminders.utcDay(now)),
+        );
+      } else {
+        expect(
+          LocalReminders.utcDay(ping.fireAt),
+          isNot(LocalReminders.utcDay(now)),
+        );
+      }
+    }
   });
 
   test('legacy metaDepth omits reminder fields', () {
