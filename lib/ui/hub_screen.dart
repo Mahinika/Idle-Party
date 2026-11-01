@@ -594,6 +594,13 @@ class _HubScreenState extends State<HubScreen>
             );
           },
         ),
+        if (_showPowerupsFab()) ...[
+          const SizedBox(height: GameTheme.clusterGap),
+          HubPowerupsFab(
+            state: state,
+            onOpen: () => openPowerupsSheet(context, director),
+          ),
+        ],
         if (showMetaKeyLink ||
             (secondaryLabel != null && secondaryAction != null)) ...[
           const SizedBox(height: 4),
@@ -940,14 +947,6 @@ class _HubScreenState extends State<HubScreen>
                                               director,
                                             ),
                                           ),
-                                          if (_showPowerupsFab())
-                                            HubPowerupsFab(
-                                              state: state,
-                                              onOpen: () => openPowerupsSheet(
-                                                context,
-                                                director,
-                                              ),
-                                            ),
                                         ],
                                       ),
                                     ),

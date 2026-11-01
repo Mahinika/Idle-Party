@@ -427,7 +427,8 @@ abstract final class GameGuides {
       id: 'powerups',
       title: 'SCROLLS',
       body:
-          'Tap SCROLLS on the hub map. Optional. Watch a short ad '
+          'Tap SCROLLS on the hub, under the cave button. It shows after '
+          'the first boss. Optional. Watch a short ad '
           'for 1 Ad Ticket, then spend tickets on timed scrolls.\n\n'
           '• TIP A FRIEND: 10 Ad Tickets per friend who installs with your code (or enters it on SCROLLS), up to 30 friends.\n\n'
           '• Scroll of Damage: +${AdBoost.attackPercent}% attack for ${AdBoost.splitHours} hours (1 ticket).\n'

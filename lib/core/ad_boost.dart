@@ -224,7 +224,8 @@ abstract final class AdBoost {
   /// Hub SCROLLS overlay spend/claim readiness (ad-free quiet check).
   ///
   /// Hub also gates with [MenuTabs.showScrolls] (first boss / Ascend) so
-  /// day-one chrome stays quiet — see [HubScreen].
+  /// day-one chrome stays quiet. The row sits under the cave button — see
+  /// [HubScreen].
   static bool showHubFab(MetaDepthState md, {DateTime? now}) {
     if (anyBuffActive(md) || md.adTickets > 0) return true;
     if (md.adFree) return canClaimAdFreeDaily(md, now: now);

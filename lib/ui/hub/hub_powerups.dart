@@ -15,148 +15,123 @@ import '../menu_chrome.dart';
 import '../shell/wallet_strip.dart';
 import '../web_click_bridge.dart';
 
-/// Floating SCROLLS overlay — rolled-scroll glyph on the hub map, not in the header.
-class HubPowerupsFab extends StatefulWidget {
+/// One-tap SCROLLS row on the hub, under the cave button.
+///
+/// Hidden until the first boss (same gate as SHOP). The map corner stays
+/// for RANKS so this row is the rewarded offer players can actually see.
+class HubPowerupsFab extends StatelessWidget {
   const HubPowerupsFab({super.key, required this.state, required this.onOpen});
 
   final GameState state;
   final VoidCallback onOpen;
 
-  @override
-  State<HubPowerupsFab> createState() => _HubPowerupsFabState();
-}
-
-class _HubPowerupsFabState extends State<HubPowerupsFab>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pop;
-
-  @override
-  void initState() {
-    super.initState();
-    _pop = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1300),
-    );
-    _syncMotion();
-  }
-
-  @override
-  void didUpdateWidget(HubPowerupsFab oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.state.vfxQuality != widget.state.vfxQuality) {
-      _syncMotion();
+  /// Line under the title. Names the next rewarded step without opening SHOP.
+  static String hint(GameState state, {DateTime? now}) {
+    final md = state.metaDepth;
+    if (md.adFree && AdBoost.canClaimAdFreeDaily(md, now: now)) {
+      return 'Free ticket is ready';
     }
-  }
-
-  void _syncMotion() {
-    if (!widget.state.vfxQuality.showGuideAndPulse) {
-      _pop.stop();
-      _pop.value = 0.55;
-      return;
-    }
-    if (!_pop.isAnimating) {
-      unawaited(_pop.repeat(reverse: true));
-    }
-  }
-
-  @override
-  void dispose() {
-    _pop.dispose();
-    super.dispose();
+    if (md.adTickets > 0) return 'Spend a ticket on a scroll';
+    if (AdBoost.anyBuffActive(md)) return 'A scroll is running';
+    return 'Watch an ad for 1 ticket';
   }
 
   @override
   Widget build(BuildContext context) {
-    final md = widget.state.metaDepth;
+    final md = state.metaDepth;
     final status = AdBoost.fabStatus(md);
     final tickets = md.adTickets;
+    final showStatus = status != 'SCROLLS';
     return WebClickScope(
       label: 'SCROLLS',
-      onPressed: widget.onOpen,
+      onPressed: onOpen,
       child: Semantics(
         button: true,
         label: 'SCROLLS. $status',
-        onTap: widget.onOpen,
+        onTap: onOpen,
         excludeSemantics: true,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: widget.onOpen,
-            borderRadius: BorderRadius.circular(GameTheme.radiusMd),
+            onTap: onOpen,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
             child: ConstrainedBox(
               constraints: const BoxConstraints(
                 minWidth: GameTheme.minTouch,
                 minHeight: GameTheme.minTouch,
               ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(6, 8, 6, 2),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AnimatedBuilder(
-                      animation: _pop,
-                      builder: (context, child) {
-                        final t = Curves.easeInOut.transform(_pop.value);
-                        final scale = 1.0 + 0.1 * t;
-                        final glow = 0.28 + 0.42 * t;
-                        return Transform.scale(
-                          scale: scale,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(
-                                GameTheme.radiusSm,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: GameTheme.torch.withValues(
-                                    alpha: glow,
-                                  ),
-                                  blurRadius: 10 + 10 * t,
-                                  spreadRadius: 1 + 2 * t,
-                                ),
-                              ],
-                            ),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: SizedBox(
-                        width: GameTheme.primaryTouch,
-                        height: GameTheme.primaryTouch,
+              child: DecoratedBox(
+                decoration: MenuChrome.hubPanel(selected: true),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 32,
+                        height: 32,
                         child: Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            DecoratedBox(
-                              decoration: MenuChrome.hubPanel(selected: true),
-                              child: Center(
-                                child: GameIcon.glyph(
-                                  UiGlyph.scroll,
-                                  size: 26,
-                                  color: GameTheme.torchHot,
-                                ),
+                            Center(
+                              child: GameIcon.glyph(
+                                UiGlyph.scroll,
+                                size: 26,
+                                color: GameTheme.torchHot,
                               ),
                             ),
                             if (tickets > 0)
                               Positioned(
-                                right: -3,
-                                top: -3,
+                                right: 0,
+                                top: 0,
                                 child: _TicketBadge(count: tickets),
                               ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      status,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 10,
-                        color: GameTheme.torchHot,
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'SCROLLS',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GameTheme.body(
+                                size: 16,
+                                color: GameTheme.torchHot,
+                              ),
+                            ),
+                            Text(
+                              hint(state),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GameTheme.body(
+                                size: 12,
+                                color: GameTheme.parchmentDim,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      if (showStatus) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          status,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GameTheme.body(
+                            size: 13,
+                            color: GameTheme.torchHot,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),
