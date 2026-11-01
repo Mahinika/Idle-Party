@@ -173,6 +173,23 @@ Future<void> showOfflineProgressDialog(
               if (lead == null || !_lootAlreadySaid(row.$1))
                 MenuChrome.statRow(label: row.$1, value: row.$2),
           ],
+          if (director.state.missions.any((m) => m.canClaim)) ...[
+            const SizedBox(height: 8),
+            ListenableBuilder(
+              listenable: director,
+              builder: (context, _) {
+                final ready = director.state.missions
+                    .where((m) => m.canClaim)
+                    .length;
+                if (ready == 0) return const SizedBox.shrink();
+                return GameButton(
+                  label: 'COLLECT ALL',
+                  style: GameButtonStyle.grey,
+                  onPressed: director.claimAllReadyMissions,
+                );
+              },
+            ),
+          ],
           if (summary != null)
             StatefulBuilder(
               builder: (context, setLocal) {

@@ -183,6 +183,15 @@ void main() {
         seen.add(director.state.heroes.first.level);
       });
       director.setAppPaused(false);
+      expect(director.state.heroes.first.level, before);
+      expect(seen, isEmpty);
+      for (
+        var i = 0;
+        i < 80 && director.state.heroes.first.level == before;
+        i++
+      ) {
+        await Future<void>.delayed(Duration.zero);
+      }
       final level = director.state.heroes.first.level;
       expect(level, expected.state.heroes.first.level);
       expect(level, greaterThan(before));
@@ -190,6 +199,25 @@ void main() {
       expect(seen.every((shown) => shown == level), isTrue);
     },
   );
+
+  test('a new away credit clears the Welcome Back ad grant', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    await director.boot();
+    director.debugGrantWelcomeBackAd();
+    expect(director.debugWelcomeBackAdGranted, isTrue);
+    final blocked = await director.watchWelcomeBackGoldAd(40);
+    expect(blocked, isFalse);
+    director.setAppPaused(true);
+    director.debugStampAway(lastUpdatedAgo: const Duration(hours: 2));
+    director.setAppPaused(false);
+    expect(director.debugWelcomeBackAdGranted, isFalse);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(director.debugWelcomeBackAdGranted, isFalse);
+    expect(director.offlineSummary, isNotNull);
+  });
 
   test('boot does not publish the pre-away hero level', () async {
     TestWidgetsFlutterBinding.ensureInitialized();

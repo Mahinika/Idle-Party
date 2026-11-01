@@ -565,4 +565,65 @@ void main() {
     expect(visible.bottom, lessThanOrEqualTo(buttonRect.top + 1));
     expect(visible.bottom, lessThanOrEqualTo(640));
   });
+
+  test('claim all pays ready quests', () async {
+    final now = DateTime.now().toUtc();
+    final seeded = GameLogic.createInitialState(now: now);
+    final state = seeded.copyWith(
+      missions: [
+        for (final m in seeded.missions) m.copyWith(progress: m.target),
+      ],
+      metaDepth: seeded.metaDepth.copyWith(
+        questWeekKey: GameLogic.isoWeekKey(now),
+      ),
+    );
+    final director = GameDirector.preview(initialState: state);
+    await director.boot();
+    final gold = director.state.gold;
+    final essence = director.state.essence;
+    final n = director.claimAllReadyMissions();
+    expect(n, greaterThan(0));
+    expect(
+      director.state.gold > gold || director.state.essence > essence,
+      isTrue,
+    );
+    expect(director.state.missions.any((m) => m.canClaim), isFalse);
+    director.dispose();
+  });
+
+  testWidgets('Welcome Back collects ready quests', (tester) async {
+    final now = DateTime.now().toUtc();
+    final seeded = GameLogic.createInitialState(now: now);
+    final state = seeded.copyWith(
+      missions: [
+        for (final m in seeded.missions) m.copyWith(progress: m.target),
+      ],
+      metaDepth: seeded.metaDepth.copyWith(
+        questWeekKey: GameLogic.isoWeekKey(now),
+      ),
+    );
+    final director = GameDirector.preview(initialState: state);
+    await director.boot();
+    director.uiFeedback.presentOffline(result(gold: 40));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('COLLECT ALL'), findsOneWidget);
+    final gold = director.state.gold;
+    await tester.tap(find.text('COLLECT ALL'));
+    await tester.pumpAndSettle();
+    expect(director.state.gold, greaterThan(gold));
+    expect(director.state.missions.any((m) => m.canClaim), isFalse);
+    expect(find.text('COLLECT ALL'), findsNothing);
+    director.dispose();
+  });
 }

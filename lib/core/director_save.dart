@@ -96,49 +96,33 @@ extension GameDirectorSave on GameDirector {
       unawaited(_syncAwayReminders(backgrounded: true));
     } else {
       _foregroundSince = DateTime.now();
-      // Levels land before the next frame. The card and funnel follow.
-      _paintAwayCredit();
       unawaited(_resumeFromBackground());
     }
-  }
-
-  /// Apply the gap on the UI thread so the HUD does not flash the saved
-  /// level (L25) and then the caught-up level (L28).
-  void _paintAwayCredit() {
-    if (_isLoading) return;
-    final elapsed = DateTime.now().difference(_state.lastUpdated);
-    if (elapsed.inSeconds < GameDirector._awayCreditMinSec) return;
-    final offline = GameLogic.applyOfflineProgress(_state, elapsed);
-    _paintedAway = offline;
-    _awayCreditInFlight = true;
-    _state = offline.state;
-    if (_state.inDungeon) {
-      _rebuildSpatial();
-    } else {
-      _spatialTimer?.cancel();
-      _spatialTimer = null;
-      _spatial = null;
-    }
-    _directorNotify();
   }
 
   /// Credit time spent backgrounded, then note the day-2 funnel.
   ///
   /// Cold start already does this in [boot]. A process Android kept alive
   /// used to skip it, so Welcome Back, the ping ask, and `d1_return` never ran.
+  /// The replay is sliced ([GameLogic.applyOfflineProgressAsync]) so a long
+  /// cave does not freeze the frame. The saved level stays up until that
+  /// credit finishes, then one notify shows the caught-up party.
   Future<void> _resumeFromBackground() async {
-    final painted = _paintedAway;
-    _paintedAway = null;
-    if (!_isLoading && painted != null) {
-      try {
-        final credited = await _finishAwayCredit(painted, showCard: true);
-        _state = credited;
-        if (_state.inDungeon && _spatial == null) {
-          _rebuildSpatial();
+    if (!_isLoading) {
+      final elapsed = DateTime.now().difference(_state.lastUpdated);
+      if (elapsed.inSeconds >= GameDirector._awayCreditMinSec) {
+        _welcomeBackAdGranted = false;
+        _awayCreditInFlight = true;
+        try {
+          final credited = await _creditAway(_state, showCard: true);
+          _state = credited;
+          if (_state.inDungeon && _spatial == null) {
+            _rebuildSpatial();
+          }
+          _directorNotify();
+        } finally {
+          _awayCreditInFlight = false;
         }
-        _directorNotify();
-      } finally {
-        _awayCreditInFlight = false;
       }
     }
     if (!_isLoading && !_appPaused) {
