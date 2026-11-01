@@ -73,6 +73,16 @@ class ShopCatalogItem {
 /// better $/hour than smaller ones. A stronger paid offer is allowed
 /// when the owner names it (see docs/SHOP_MONETIZATION.md).
 abstract final class ShopCatalog {
+  /// Play Console has these activated, and this build offers them for sale.
+  /// Hour packs stay in [offered] for restore only. Forever scrolls and the
+  /// cinder pouch stay in [offered] for a code or a restore, and join
+  /// [shelf] only after Play returns that product.
+  static const Set<String> playChargeableIds = {
+    'ad_free',
+    'long_away',
+    'supporter_qol',
+  };
+
   static const List<ShopCatalogItem> offered = [
     ShopCatalogItem(
       id: 'perm_scroll_atk',
@@ -239,24 +249,61 @@ abstract final class ShopCatalog {
   static Set<String> get productIds => byId.keys.toSet();
 
   static List<ShopCatalogItem> get foreverBundle => offered
-      .where((e) => e.kind == ShopOfferKind.permScroll && e.permMask == AdBoost.permAll)
+      .where(
+        (e) =>
+            e.kind == ShopOfferKind.permScroll && e.permMask == AdBoost.permAll,
+      )
       .toList();
 
   static List<ShopCatalogItem> get foreverSingles => offered
-      .where((e) => e.kind == ShopOfferKind.permScroll && e.permMask != AdBoost.permAll)
+      .where(
+        (e) =>
+            e.kind == ShopOfferKind.permScroll && e.permMask != AdBoost.permAll,
+      )
       .toList();
 
   /// Timed hour packs — kept for restore / old Play SKUs, not listed in SHOP.
   static List<ShopCatalogItem> get timePacks =>
       offered.where((e) => e.kind == ShopOfferKind.boostHours).toList();
 
-  static List<ShopCatalogItem> get extraPacks => offered
-      .where(
-        (e) =>
-            e.kind == ShopOfferKind.adFree ||
-            e.kind == ShopOfferKind.longAway ||
-            e.kind == ShopOfferKind.supporterQol ||
-            e.kind == ShopOfferKind.cinders,
-      )
-      .toList();
+  /// Always on the SHOP shelf. Play can charge these.
+  static List<ShopCatalogItem> get extraPacks =>
+      offered.where((e) => playChargeableIds.contains(e.id)).toList();
+
+  /// Rows the player can see.
+  ///
+  /// [playListed] is the set Play returned. Null means Play has not answered
+  /// yet (sideload, or the catalog is still loading): the three chargeable
+  /// packs stay up, and anything Play has not activated stays hidden.
+  /// Hour packs are never shown.
+  static List<ShopCatalogItem> shelf({Set<String>? playListed}) {
+    final listed = playListed ?? const <String>{};
+    return [
+      for (final item in offered)
+        if (_onShelf(item, listed)) item,
+    ];
+  }
+
+  static bool _onShelf(ShopCatalogItem item, Set<String> listed) {
+    if (item.kind == ShopOfferKind.boostHours) return false;
+    if (playChargeableIds.contains(item.id)) return true;
+    if (item.kind == ShopOfferKind.permScroll ||
+        item.kind == ShopOfferKind.cinders) {
+      return listed.contains(item.id);
+    }
+    return false;
+  }
+
+  /// Hour packs never open a buy sheet. An unactivated scroll or pouch
+  /// opens one only after Play has returned that product.
+  static bool mayBuy(String id, {required bool playLists}) {
+    if (playChargeableIds.contains(id)) return true;
+    final item = byId[id];
+    if (item == null || item.kind == ShopOfferKind.boostHours) return false;
+    if (item.kind == ShopOfferKind.permScroll ||
+        item.kind == ShopOfferKind.cinders) {
+      return playLists;
+    }
+    return false;
+  }
 }

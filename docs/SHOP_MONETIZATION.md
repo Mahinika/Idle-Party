@@ -51,14 +51,14 @@ removed the ban on a whale ladder, gacha, and BiS-for-cash.
 
 Boost duration still caps at **24h** remaining (`AdBoost.maxStackMs`), same as tickets.
 
-**New SKUs need Play Console create + Activate** before live prices show. Console has the five 2026-09-10 SKUs plus `long_away` (**activated 2026-10-05**, purchase option `long-away`, $4.99, legacy-compatible). Until Play returns a product, SHOP shows **NOT ON PLAY** instead of a price and a buy. The eight `perm_scroll_*` ids (`perm_scroll_atk` … `perm_scrolls_all`) and `cinder_pouch` are still not in Console. Sideload BUY still grants in debug via the existing preview path. Prices can take hours to show on a Play-installed build, and the current production binary does not list `long_away` until a build that contains it ships.
+**New SKUs need Play Console create + Activate** before live prices show. Console has the five 2026-09-10 SKUs plus `long_away` (**activated 2026-10-05**, purchase option `long-away`, $4.99, legacy-compatible). SHOP lists the packs Play can charge: `ad_free`, `long_away`, `supporter_qol`. Hour packs stay in the catalog for restore and are not listed. The eight `perm_scroll_*` ids (`perm_scroll_atk` … `perm_scrolls_all`) and `cinder_pouch` are still not in Console. They stay in the catalog so a coupon (`FOREVERSCROLLS`) or a future Play product can grant them. A row for those appears only when Play returns that id. There is no **NOT ON PLAY** button. Sideload BUY does not grant a pack; Play has to acknowledge the purchase. Restore applies non-consumables once (Ad-free tickets, supporter bag slots, Long Away, the one-time starter boost). A restored consumable is not granted again. Prices can take hours to show on a Play-installed build.
 
 ## Relation to existing systems
 
 | Surface | Currency | Role |
 |---------|----------|------|
 | Hub SCROLLS | Ad Ticket (from ad / playtest / ad-free daily) | Free path to the same buffs |
-| Bottom SHOP | Real money | Forever SCROLLS / ad-free / small QoL |
+| Bottom SHOP | Real money | Ad-free / Long Away / Supporter. Forever SCROLLS only after Play lists them |
 | GOLD | Gold | Forge tracks + market |
 | ESSENCE → BLESSING | Essence | AL-gated lasting prestige buys |
 

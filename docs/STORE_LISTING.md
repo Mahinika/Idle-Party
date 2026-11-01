@@ -10,7 +10,7 @@ Play charts + idle/RPG listing peers: [`tool/store_listing/growth/PLAY_LISTING_P
 
 Sources: Play Console Help (preview assets), ASO / CRO guides 2025–2026
 (ASOMobile, AppDrift, InspiringApps), plus Idle Party prefs (phone-only,
-fairness, fair SHOP with SCROLLS / Cinder packs / ad-free).
+fairness, fair SHOP with ad-free / Long Away / Supporter).
 
 | Rank | Asset | Why it moves installs |
 |------|--------|------------------------|
@@ -113,7 +113,7 @@ KEEP GROWING
 FAIR PLAY
 • Single-player — no Idle Party account required.
 • Optional rewarded ads (hub SCROLLS) grant timed scrolls and never interrupt a fight.
-• Optional SHOP sells forever SCROLLS, ad-free, and Cinder packs — not pay-to-win gear.
+• Optional SHOP sells ad-free, Long Away, and a Supporter pack — not pay-to-win gear.
 • Privacy policy covers optional Play Games, ads, and analytics.
 • Designed for portrait phones.
 
@@ -139,10 +139,11 @@ Notes for **1.13.5 (231)**. These lines also cover the unsent **1.13.3** and **1
 
 ### Full description honesty (SHOP)
 
-SHOP forever SCROLLS / ad-free / Cinder packs are live in Console — the FAIR PLAY
-line above is accurate. Do **not** imply whale packs, gacha, or BiS-for-cash.
-SCROLLS ads remain the free path to the same boost power; Cinders also come
-from the Daily Vault and Ad Tickets.
+SHOP lists ad-free, Long Away, and Supporter. Those are the activated Play
+products. Forever scrolls and the Cinder pouch are not in Console, so they are
+not on the shelf. Do **not** imply whale packs, gacha, or BiS-for-cash.
+SCROLLS ads remain the free path to timed boosts. Cinders come from the Daily
+Vault and Ad Tickets.
 
 ### Screenshot plan (Play phone carousel)
 

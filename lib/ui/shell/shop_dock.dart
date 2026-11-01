@@ -25,7 +25,7 @@ class ShopDock extends StatefulWidget {
   static String convenienceLine({required bool showEssence}) {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
     return 'Free tickets are SCROLLS on the hub. '
-        'Forever scrolls and Cinder packs are here. '
+        'Ad-free, Long Away, and Supporter are here. '
         'Gold is under GOLD.$essenceBit';
   }
 
@@ -33,21 +33,11 @@ class ShopDock extends StatefulWidget {
   State<ShopDock> createState() => _ShopDockState();
 }
 
-class _ShopDockState extends State<ShopDock>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
-
+class _ShopDockState extends State<ShopDock> {
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 2, vsync: this);
     unawaited(_refresh());
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
   }
 
   Future<void> _refresh() async {
@@ -73,47 +63,27 @@ class _ShopDockState extends State<ShopDock>
         final catalogOk = ShopStore.productsReady;
         final storeLine = storeOk
             ? (catalogOk
-                ? 'Prices come from Google Play.'
-                : 'Waiting for Play catalog…')
+                  ? 'Prices come from Google Play.'
+                  : 'Waiting for Play catalog…')
             : 'Waiting for Play billing…';
+        final playListed = ShopStore.productsReady
+            ? {
+                for (final item in ShopCatalog.offered)
+                  if (ShopStore.storeLists(item.id)) item.id,
+              }
+            : null;
+        final items = RemoteTune.pin(ShopCatalog.shelf(playListed: playListed));
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            MenuChrome.tabRail(
-              controller: _tabs,
-              scrollable: false,
-              onTap: (_) => setState(() {}),
-              tabs: [
-                MenuChrome.bridgedTab('SCROLLS', onSelect: () => _tabs.animateTo(0)),
-                MenuChrome.bridgedTab('EXTRA', onSelect: () => _tabs.animateTo(1)),
-              ],
-            ),
-            const SizedBox(height: 8),
             Expanded(
-              child: TabBarView(
-                controller: _tabs,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _page(
-                    hint: ShopDock.convenienceLine(
-                      showEssence: MenuTabs.showCamp(state),
-                    ),
-                    storeLine: storeLine,
-                    items: [
-                      ...ShopCatalog.foreverBundle,
-                      ...ShopCatalog.foreverSingles,
-                    ],
-                    compact: true,
-                  ),
-                  _page(
-                    hint:
-                        'Ad-free, longer time away, and a small thank-you. No extra combat class.',
-                    storeLine: storeLine,
-                    items: ShopCatalog.extraPacks,
-                    compact: false,
-                    showAccountActions: true,
-                  ),
-                ],
+              child: _page(
+                hint: ShopDock.convenienceLine(
+                  showEssence: MenuTabs.showCamp(state),
+                ),
+                storeLine: storeLine,
+                items: items,
+                showAccountActions: true,
               ),
             ),
           ],
@@ -122,23 +92,16 @@ class _ShopDockState extends State<ShopDock>
     );
   }
 
-  bool _playLists(ShopCatalogItem item) =>
-      !ShopStore.productsReady || ShopStore.storeLists(item.id);
-
-  String _priceLabel(ShopCatalogItem item) {
-    if (!_playLists(item)) return 'Not on Play';
-    return ShopStore.storePriceLabel(item.id) ?? item.priceLabel;
-  }
+  String _priceLabel(ShopCatalogItem item) =>
+      ShopStore.storePriceLabel(item.id) ?? item.priceLabel;
 
   Widget _page({
     required String hint,
     required String storeLine,
     required List<ShopCatalogItem> items,
-    required bool compact,
     bool showAccountActions = false,
   }) {
     final state = widget.director.state;
-    final shown = RemoteTune.pin(items);
     return ListView(
       padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
       children: [
@@ -152,15 +115,16 @@ class _ShopDockState extends State<ShopDock>
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 10),
-        for (var i = 0; i < shown.length; i++) ...[
+        for (var i = 0; i < items.length; i++) ...[
           if (i > 0) const SizedBox(height: 8),
           _ShopRow(
-            item: shown[i],
-            owned: ShopBilling.isOwned(state, shown[i]),
-            priceLabel: _priceLabel(shown[i]),
-            listed: _playLists(shown[i]),
-            compact: compact && shown[i].permMask != AdBoost.permAll,
-            onBuy: _playLists(shown[i]) ? () => _buy(shown[i]) : null,
+            item: items[i],
+            owned: ShopBilling.isOwned(state, items[i]),
+            priceLabel: _priceLabel(items[i]),
+            compact:
+                items[i].kind == ShopOfferKind.permScroll &&
+                items[i].permMask != AdBoost.permAll,
+            onBuy: () => _buy(items[i]),
           ),
         ],
         if (showAccountActions) ...[
@@ -181,10 +145,8 @@ class _ShopDockState extends State<ShopDock>
                   label: 'REDEEM CODE',
                   style: GameButtonStyle.grey,
                   dense: true,
-                  onPressed: () => showRedeemCouponDialog(
-                    context,
-                    widget.director,
-                  ),
+                  onPressed: () =>
+                      showRedeemCouponDialog(context, widget.director),
                 ),
               ),
             ],
@@ -201,7 +163,6 @@ class _ShopRow extends StatelessWidget {
     required this.owned,
     required this.priceLabel,
     required this.onBuy,
-    this.listed = true,
     this.compact = false,
   });
 
@@ -209,7 +170,6 @@ class _ShopRow extends StatelessWidget {
   final bool owned;
   final String priceLabel;
   final VoidCallback? onBuy;
-  final bool listed;
   final bool compact;
 
   static String? assetFor(ShopCatalogItem item) {
@@ -248,22 +208,23 @@ class _ShopRow extends StatelessWidget {
       ShopOfferKind.supporterQol =>
         '+${item.bagSlots} bag · +${item.boostHours}h · once',
       ShopOfferKind.cinders => '${item.cinderGrant} Cinders',
-      ShopOfferKind.permScroll => item.permMask == AdBoost.permAll
-          ? 'permanent · all seven · cheaper than each'
-          : '${_permEffect(item.permMask)} · permanent',
+      ShopOfferKind.permScroll =>
+        item.permMask == AdBoost.permAll
+            ? 'permanent · all seven · cheaper than each'
+            : '${_permEffect(item.permMask)} · permanent',
     };
   }
 
   static String _permEffect(int mask) => switch (mask) {
-        AdBoost.permAtk => '+${AdBoost.attackPercent}% AP',
-        AdBoost.permGold => '×${AdBoost.goldMul} gold',
-        AdBoost.permXp => '+${AdBoost.xpPercent}% XP',
-        AdBoost.permMove => '+${AdBoost.movePercent}% walk',
-        AdBoost.permLoot => '+${AdBoost.lootFindPercent}% find',
-        AdBoost.permSpeed => '+${AdBoost.speedPercent}% haste',
-        AdBoost.permRest => 'Welcome Back ×${AdBoost.awayGoldMul}',
-        _ => 'always on',
-      };
+    AdBoost.permAtk => '+${AdBoost.attackPercent}% AP',
+    AdBoost.permGold => '×${AdBoost.goldMul} gold',
+    AdBoost.permXp => '+${AdBoost.xpPercent}% XP',
+    AdBoost.permMove => '+${AdBoost.movePercent}% walk',
+    AdBoost.permLoot => '+${AdBoost.lootFindPercent}% find',
+    AdBoost.permSpeed => '+${AdBoost.speedPercent}% haste',
+    AdBoost.permRest => 'Welcome Back ×${AdBoost.awayGoldMul}',
+    _ => 'always on',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -293,7 +254,10 @@ class _ShopRow extends StatelessWidget {
                       shortTitle(item),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(size: 15, color: GameTheme.torchHot),
+                      style: GameTheme.body(
+                        size: 15,
+                        color: GameTheme.torchHot,
+                      ),
                     ),
                     Text(
                       priceLabel,
@@ -325,20 +289,12 @@ class _ShopRow extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: GameButton(
-              label: owned
-                  ? 'OWNED'
-                  : listed
-                  ? 'BUY'
-                  : 'NOT ON PLAY',
-              tip: owned
-                  ? 'Already on this save'
-                  : listed
-                  ? null
-                  : 'Not sold in this Play build',
+              label: owned ? 'OWNED' : 'BUY',
+              tip: owned ? 'Already on this save' : null,
               style: GameButtonStyle.grey,
               expanded: false,
               dense: true,
-              onPressed: owned || !listed ? null : onBuy,
+              onPressed: owned ? null : onBuy,
             ),
           ),
         ],

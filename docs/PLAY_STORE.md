@@ -123,9 +123,11 @@ Notes sent with **1.13.1 (227)** on **2026-10-17**. These lines also cover the u
 Update release notes when shipping a build that includes Play Billing SHOP buys
 (see `docs/SHOP_MONETIZATION.md`). **IAP SKUs (2026-09-10):** five product
 ids exist in Console and were **activated 2026-09-10** (1 purchase option each).
-**`long_away` activated 2026-10-05** ($4.99, option `long-away`). The live
-binary does not offer it until a build that contains the row ships.
-Smoke on a Play-installed build; restart the app so Billing refreshes.
+**`long_away` activated 2026-10-05** ($4.99, option `long-away`). This tree
+lists Ad-free, Long Away, and Supporter on the SHOP shelf. Hour packs stay
+restore-only. `perm_scroll_*` and `cinder_pouch` are not activated; a row
+appears only after Play returns that product. Smoke on a Play-installed
+build; restart the app so Billing refreshes. A sideload does not grant a buy.
 
 ### Production AAB upload checklist (agent + owner)
 
@@ -209,7 +211,7 @@ Same Firebase project. The Android app fetches after the ads consent check. A mi
 | `wisp_visible_sec` | Number | 10 | 5–30 |
 | `shop_featured_id` | String | empty | a SHOP product id, such as `ad_free` |
 
-Empty `shop_featured_id` keeps the forever-scrolls bundle highlighted. Publish the template in Firebase for a change to ship. Debug `flutter run` keeps the fast lantern until a WISP number above actually differs. Release reads at most every 12 hours. A successful fetch logs `remote_tune`.
+Empty `shop_featured_id` lights the forever-scrolls bundle. That row stays off the SHOP shelf until Play returns the product, so no row is lit until then. Publish the template in Firebase for a change to ship. Debug `flutter run` keeps the fast lantern until a WISP number above actually differs. Release reads at most every 12 hours. A successful fetch logs `remote_tune`.
 
 ### Rewarded ads / AdMob (how money actually arrives)
 

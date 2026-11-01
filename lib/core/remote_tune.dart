@@ -36,12 +36,12 @@ abstract final class RemoteTune {
   static bool get wispFromRemote => _wispFromRemote;
 
   static Map<String, dynamic> get defaults => <String, dynamic>{
-        keyDailyCap: defaultDailyCap,
-        keyFirstDelaySec: defaultFirstDelaySec,
-        keyIntervalSec: defaultIntervalSec,
-        keyVisibleSec: defaultVisibleSec,
-        keyShopFeatured: '',
-      };
+    keyDailyCap: defaultDailyCap,
+    keyFirstDelaySec: defaultFirstDelaySec,
+    keyIntervalSec: defaultIntervalSec,
+    keyVisibleSec: defaultVisibleSec,
+    keyShopFeatured: '',
+  };
 
   /// [fromRemote] is true only after a fetch this process accepted.
   /// Out-of-range numbers and unknown shop ids fall back to shipped.
@@ -63,7 +63,8 @@ abstract final class RemoteTune {
     _intervalSec = interval;
     _visibleSec = visible;
     _shopFeaturedId = ShopCatalog.byId.containsKey(id) ? id : '';
-    _wispFromRemote = fromRemote &&
+    _wispFromRemote =
+        fromRemote &&
         (cap != defaultDailyCap ||
             first != defaultFirstDelaySec ||
             interval != defaultIntervalSec ||
@@ -72,7 +73,8 @@ abstract final class RemoteTune {
 
   static void reset() => apply();
 
-  /// Empty id keeps the forever-scrolls bundle as the lit row.
+  /// Empty id lights the forever-scrolls bundle. That row stays off the
+  /// SHOP shelf until Play returns the product, so nothing is lit until then.
   static bool highlights(ShopCatalogItem item) {
     if (_shopFeaturedId.isEmpty) return item.permMask == AdBoost.permAll;
     return item.id == _shopFeaturedId;

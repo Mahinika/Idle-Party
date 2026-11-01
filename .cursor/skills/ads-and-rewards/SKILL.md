@@ -55,8 +55,8 @@ follow `save-migrate`.
   10 s, max 6 taps per UTC day. Those are the shipped defaults. Firebase
   Remote Config can replace them inside the ranges in `RemoteTune` (gold
   piles stay in code). Debug builds stay on the 20 s loop until a published
-  WISP number differs. Empty `shop_featured_id` keeps the forever-scrolls
-  bundle lit.
+  WISP number differs. Empty `shop_featured_id` lights the forever-scrolls
+  bundle. That row stays off the SHOP shelf until Play returns the product.
 
 ## Test it
 
