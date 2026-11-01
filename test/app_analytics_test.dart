@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/app_analytics.dart';
 import 'package:idle_party/core/boot_clock.dart';
+import 'package:idle_party/core/measurement_consent.dart';
 
 void main() {
   test('AppAnalytics no-ops safely under flutter test', () async {
@@ -21,15 +22,59 @@ void main() {
   });
 
   test('FirebaseInitProvider is not installed on the main thread', () {
-    final manifest =
-        File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
-    expect(manifest, contains('xmlns:tools="http://schemas.android.com/tools"'));
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
     expect(
       manifest,
-      contains('android:name="com.google.firebase.provider.FirebaseInitProvider"'),
+      contains('xmlns:tools="http://schemas.android.com/tools"'),
+    );
+    expect(
+      manifest,
+      contains(
+        'android:name="com.google.firebase.provider.FirebaseInitProvider"',
+      ),
     );
     expect(manifest, contains('tools:node="remove"'));
+    for (final key in <String>[
+      'google_analytics_default_allow_analytics_storage',
+      'google_analytics_default_allow_ad_storage',
+      'google_analytics_default_allow_ad_user_data',
+      'google_analytics_default_allow_ad_personalization_signals',
+      'firebase_analytics_collection_enabled',
+      'firebase_crashlytics_collection_enabled',
+    ]) {
+      final nameAt = manifest.indexOf('android:name="$key"');
+      expect(nameAt, greaterThan(-1), reason: key);
+      final end = nameAt + 160;
+      final window = manifest.substring(
+        nameAt,
+        end > manifest.length ? manifest.length : end,
+      );
+      expect(window, contains('android:value="false"'), reason: key);
+    }
   });
+
+  test(
+    'consent mode grants all four signals, and a decline still measures',
+    () {
+      const yes = MeasurementConsent(granted: true);
+      expect(yes.analyticsStorage, isTrue);
+      expect(yes.adStorage, isTrue);
+      expect(yes.adUserData, isTrue);
+      expect(yes.adPersonalization, isTrue);
+      expect(yes.analyticsCollection, isTrue);
+      expect(yes.crashlytics, isTrue);
+
+      const no = MeasurementConsent(granted: false);
+      expect(no.analyticsStorage, isFalse);
+      expect(no.adStorage, isFalse);
+      expect(no.adUserData, isFalse);
+      expect(no.adPersonalization, isFalse);
+      expect(no.crashlytics, isFalse);
+      expect(no.analyticsCollection, isTrue);
+    },
+  );
 
   test('boot clock marks stay in order', () {
     final before = BootClock.marks.length;

@@ -2,7 +2,7 @@
 
 Idle Party is a single-player idle RPG. This document describes how the app handles data and is suitable for Google Play Data safety disclosures.
 
-**Last updated:** 2026-10-31.
+**Last updated:** 2026-11-01.
 
 ## Summary
 
@@ -10,7 +10,7 @@ Idle Party is a single-player idle RPG. This document describes how the app hand
 - **Optional Google Play Games.** You may sign in with Play Games for seasonal leaderboards and cloud save. This is opt-in and not required to play.
 - **Optional rewarded ads.** On the Android app you may choose to watch a short ad (hub **SCROLLS**) for an **Ad Ticket**. You spend tickets on timed scrolls (Scroll of Damage, Scroll of Gold, Scroll of XP, Scroll of Speed, Scroll of Loot, Scroll of Haste, Scroll of Battle, Scroll of Rest). Ads do not play unless you start them. Ad serving uses Google AdMob.
 - **Tip a friend (optional).** From hub **SCROLLS** you may share a Play Store link that contains a short code stored in your save. If a friend installs from that link and opens the app, or types your code, the Android app may send Google **Firebase** a hashed install id, that code, and the time. You get 10 Ad Tickets on your save. No name, no email, and no record of who you texted or emailed. The message itself is sent by the app you pick (Messages, mail, Discord, and so on).
-- **Analytics and crash reports (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, tutorial steps, first dungeon enter, first combat reward, first boss, Welcome Back, SHOP views and purchases, Ascend, session length, party wipe). It may also send crash stack traces to **Firebase Crashlytics**. This helps Cognifox Studio understand what works and what crashes. In the **EU/EEA**, both follow the Google UMP consent prompt (same path as ads; **SETTINGS → AD PRIVACY**). Collection stays off until that check. Outside regions where that form is required, Google may allow collection without a separate prompt. Web playtest and builds without Firebase config do not send analytics or crash reports.
+- **Analytics and crash reports (Firebase).** On Android builds that include Firebase configuration, the app may send anonymous usage events to **Google Firebase Analytics** (for example: app open, tutorial steps, first dungeon enter, first combat reward, first boss, Welcome Back, SHOP views and purchases, Ascend, session length, party wipe). It may also send crash stack traces to **Firebase Crashlytics**. This helps Cognifox Studio understand what works and what crashes. In the **EU/EEA**, both follow the Google UMP consent prompt (same path as ads; **SETTINGS → AD PRIVACY**). Nothing is sent until that check finishes. If you decline, crash reports stay off, and Analytics may still send limited consent-mode pings without an advertising ID so Google can model aggregated measurement. If you accept, or outside regions where that form is required, Analytics events and crash reports are collected. Web playtest and builds without Firebase config do not send analytics or crash reports.
 - **Remote settings (Firebase).** On those same Android builds, after the same consent check, the app may fetch a few game settings from **Google Firebase Remote Config** (how often the dungeon lantern appears, and which SHOP row is highlighted). The fetch does not include your save. If consent is off, or Firebase is missing, the game uses the settings shipped in the app.
 - **Local save by default.** Progress is stored on your device (e.g. SharedPreferences / platform equivalent).
 
@@ -55,8 +55,9 @@ On **Android**, if you tap hub **SCROLLS** and watch an ad, Google AdMob may loa
 On **Android** builds that include Firebase configuration (`google-services.json`):
 
 - Google **Firebase Analytics** may receive **anonymous** app events (device/app identifiers under Google’s policies; not an Idle Party login).
-- The SDK may initialize when the app starts (not only when you open SCROLLS). Collection stays off until the consent check. Typical events: session start, session length, first time the game is playable, the boot and new-game steps, first dungeon enter (including seconds until combat), first combat gold, first boss, Welcome Back (and whether a watch was offered or finished), SHOP opened and a purchase granted, first return on a later UTC day, enter/leave dungeon, Ascend, party wipe, and (if you answer the reminder card) whether away reminders were turned on or off. Events do **not** include your save file or clipboard backups.
-- The same consent check gates **Firebase Crashlytics**. A crash may send a stack trace and the app version. It does not send your save or a name.
+- The SDK may initialize when the app starts (not only when you open SCROLLS). Nothing is sent until the consent check finishes. If you accept, typical events include: session start, session length, first time the game is playable, the boot and new-game steps, first dungeon enter (including seconds until combat), first combat gold, first boss, Welcome Back (and whether a watch was offered or finished), SHOP opened and a purchase granted, first return on a later UTC day, enter/leave dungeon, Ascend, party wipe, and (if you answer the reminder card) whether away reminders were turned on or off. Events do **not** include your save file or clipboard backups.
+- If you decline in the **EU/EEA**, Analytics may still send limited consent-mode pings without an advertising ID so Google can model aggregated measurement. Those pings are not your save.
+- The same consent check gates **Firebase Crashlytics**. A crash may send a stack trace and the app version only if you accept, or if the form is not required. It does not send your save or a name. A decline keeps crash reports off.
 - In the **EU/EEA**, the Google consent form (UMP) gates analytics and crash reports. You can change or withdraw that consent later in **SETTINGS → AD PRIVACY**.
 - Analytics and crash reports are not sent from web playtest builds, Flutter tests, or Android builds that lack Firebase config.
 
@@ -98,7 +99,7 @@ Hub **SCROLLS** is opt-in:
 - You choose when to watch. Combat is never interrupted by an ad.
 - One finished ad grants **1 Ad Ticket**. Spend tickets on Scroll of Damage (+40% ATK 2h), Scroll of Gold (×2 gold 2h), Scroll of XP (+50% party XP 2h), Scroll of Speed (+30% walk 2h), Scroll of Loot (+40% item find 2h), Scroll of Haste (+25% dungeon speed 2h), Scroll of Battle (ATK+gold for 4h / 2 tickets), or Scroll of Rest (next offline gold ×3). Timers stack per buff up to 24h.
 - Google AdMob serves the ad. Idle Party does not run its own ad server.
-- In the **EU/EEA**, a Google consent form (UMP) may appear before ads can be requested (and the same consent path gates Firebase Analytics).
+- In the **EU/EEA**, a Google consent form (UMP) may appear before ads can be requested. The same form sets Analytics consent. A decline keeps crash reports off. Analytics may still send limited consent-mode pings without an advertising ID.
 - You can change or withdraw that consent later in **SETTINGS → AD PRIVACY** (Android).
 - AdMob may be **linked** to the same Firebase / Google Analytics project so Cognifox Studio can see aggregated ad performance and (when enabled) impression-level revenue alongside analytics. That sharing stays inside Google’s products under their policies.
 

@@ -52,7 +52,21 @@
         <meta-data
             android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
             android:value="true" />
-        <!-- Stay off until UMP says collection is allowed. Spark Analytics + Crashlytics only. -->
+        <!-- Collection stays off until Dart finishes the UMP check.
+             Consent Mode defaults are denied, so a decline sends no ad id.
+             Spark Analytics + Crashlytics only. -->
+        <meta-data
+            android:name="google_analytics_default_allow_analytics_storage"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_storage"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_user_data"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_personalization_signals"
+            android:value="false" />
         <meta-data
             android:name="firebase_analytics_collection_enabled"
             android:value="false" />
@@ -64,7 +78,8 @@
              are eager, so that call blocks the UI thread (ANR, Play icon
              stuck, Cognifox never paints). Dart initializes Firebase on a
              background pool after the first frame. Collection stays off
-             until UMP. -->
+             until UMP. After that check, Analytics collection turns on.
+             Crashlytics stays off when the player declines. -->
         <provider
             android:name="com.google.firebase.provider.FirebaseInitProvider"
             android:authorities="${applicationId}.firebaseinitprovider"

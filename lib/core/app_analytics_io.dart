@@ -9,6 +9,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'flutter_test_env_stub.dart'
     if (dart.library.io) 'flutter_test_env_io.dart'
     as test_env;
+import 'measurement_consent.dart';
 
 bool get _androidLive {
   if (test_env.inFlutterTestProcess()) return false;
@@ -67,7 +68,9 @@ Future<void> init() async {
   try {
     await Firebase.initializeApp();
     _analytics = FirebaseAnalytics.instance;
-    // Manifest keeps both off. Turn them on only after UMP.
+    // Manifest keeps both off until syncConsent returns. After UMP, Analytics
+    // collection turns on (a decline still sends consent-mode pings).
+    // Crashlytics turns on only when ads can be requested.
     await _analytics!.setAnalyticsCollectionEnabled(false);
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
     _installCrashHandlers();
@@ -88,12 +91,21 @@ Future<void> syncConsent() async {
   if (analytics == null) return;
   try {
     await _requestConsent();
-    final canCollect = await ConsentInformation.instance.canRequestAds();
-    await analytics.setAnalyticsCollectionEnabled(canCollect);
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
-      canCollect,
+    final canRequestAds = await ConsentInformation.instance.canRequestAds();
+    final consent = MeasurementConsent(granted: canRequestAds);
+    // One call sets all four, including ad_personalization. Google clears
+    // that signal when storage consent is withdrawn.
+    await analytics.setConsent(
+      analyticsStorageConsentGranted: consent.analyticsStorage,
+      adStorageConsentGranted: consent.adStorage,
+      adUserDataConsentGranted: consent.adUserData,
+      adPersonalizationSignalsConsentGranted: consent.adPersonalization,
     );
-    debugPrint('Firebase Analytics collection: $canCollect');
+    await analytics.setAnalyticsCollectionEnabled(consent.analyticsCollection);
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+      consent.crashlytics,
+    );
+    debugPrint('Firebase Analytics consent granted: ${consent.granted}');
   } catch (e, st) {
     debugPrint('Firebase Analytics consent sync failed: $e\n$st');
   }
@@ -110,10 +122,7 @@ Future<void> logEvent(String name, [Map<String, Object>? params]) async {
   }
 }
 
-void syncCrashContext({
-  required String zoneId,
-  required String appVersion,
-}) {
+void syncCrashContext({required String zoneId, required String appVersion}) {
   if (!_androidLive || _analytics == null) return;
   try {
     unawaited(FirebaseCrashlytics.instance.setCustomKey('zone_id', zoneId));
