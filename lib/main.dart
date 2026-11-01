@@ -65,9 +65,9 @@ void main() {
     SemanticsBinding.instance.ensureSemantics();
     WebClickBridge.install();
   }
-  // Firebase, UMP, and Crashlytics talk to Play services on the UI thread.
-  // Starting them before this frame keeps the Play icon up. The Cognifox
-  // splash is already the first paint; save load stays behind it.
+  // The native Firebase provider is removed, so this is the init. It runs
+  // on a background pool after the Cognifox frame. Save load stays behind
+  // that splash. Collection stays off until UMP.
   WidgetsBinding.instance.addPostFrameCallback((_) {
     BootClock.mark('firstFrame');
     unawaited(lockImmersiveUi());

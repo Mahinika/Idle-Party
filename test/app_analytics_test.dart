@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/app_analytics.dart';
@@ -16,6 +18,17 @@ void main() {
     await AppAnalytics.storeView();
     await AppAnalytics.storePurchase('ad_free');
     await AppAnalytics.sessionLength(40);
+  });
+
+  test('FirebaseInitProvider is not installed on the main thread', () {
+    final manifest =
+        File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
+    expect(manifest, contains('xmlns:tools="http://schemas.android.com/tools"'));
+    expect(
+      manifest,
+      contains('android:name="com.google.firebase.provider.FirebaseInitProvider"'),
+    );
+    expect(manifest, contains('tools:node="remove"'));
   });
 
   test('boot clock marks stay in order', () {
