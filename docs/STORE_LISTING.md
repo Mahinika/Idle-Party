@@ -181,9 +181,11 @@ Capture on the A56 (the phone is the product; web is only the fallback):
 6. `py -3 tool/store_listing/capture_preview_beats.py crawl` — Sandy crawl raw
    (first ~20 s of the preview; no Gauntlet / GR / Hell in the lead).
 7. `py -3 tool/store_listing/build_preview_video.py`
-8. Update the **Listing assets freshness** row in `docs/PLAY_STORE.md` — each
-   `@` version must stay within **four patches** of
-   `ChangelogCatalog.currentVersion` (`test/store_listing_plan_test.dart`).
+8. Update the **Listing assets freshness** row in `docs/PLAY_STORE.md` — set
+   all four `@` versions to this ship (or within **four patches** of
+   `ChangelogCatalog.currentVersion`). If only saves/video were rebuilt, say in
+   the Notes column that Play PNGs stay on the last upload until step 2–5 run on
+   A56 (`test/store_listing_plan_test.dart`).
 
 `capture_first_minute.py` remains when no emulator is running. It is not
 the default.
@@ -244,8 +246,10 @@ Locales in `growth/LOCALES.md` stay gated until you say paste.
 Rebuild preview: re-export saves (step 1 in `docs/STORE_LISTING.md`), then
 `py -3 tool/store_listing/capture_preview_beats.py crawl` when the Sandy crawl
 UI changed, then `py -3 tool/store_listing/build_preview_video.py` (combat in
-first 10 s). Bump the freshness row in `docs/PLAY_STORE.md` when you ship a new
-preview file.
+first 10 s). Bump all four `@` versions in the **Listing assets freshness** row
+in `docs/PLAY_STORE.md` to `ChangelogCatalog.currentVersion` (or within four
+patches) so `test/store_listing_plan_test.dart` stays green; note in the Notes
+column when Play Console PNGs are still an older upload until A56 recapture.
 
 ## Play Console status (2026-09-20)
 
