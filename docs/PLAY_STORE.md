@@ -10,7 +10,7 @@ Package id: **`com.idleparty.app`**
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
 | Production | ✅ submitted | **1.13.5 (231)** uploaded **2026-10-28** (track set `completed` in the same edit). Previous live was **1.13.2 (228)**. The public page can still name **1.13.2** until Google publishes. Managed publishing is off. |
-| CI signing secrets | ⏳ | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (never commit). Workflow now writes keystore to `android/upload-keystore.jks` (matches `storeFile=../upload-keystore.jks`). **v1.12.52 GitHub AAB was debug-signed** — Play used a local upload rebuild; re-tag/rebuild after secrets path fix. |
+| CI signing secrets | ✅ set 2026-11-01 | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (`storeFile=../upload-keystore.jks`). Tag `v1.13.6` decoded them and signed `app-release.aab` with the upload cert (CN=Idle Party). `v1.13.2` and earlier GitHub AABs stayed debug-signed. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
 | IARC / content rating | ⏳ review | New questionnaire submitted 2026-09-08: fantasy creature violence (often close-up, pixel, no blood), digital goods (SHOP) yes / no loot-boxes / no player trading, no fear/sex/gambling/language/drugs. Ads are **not** in this IARC form — covered by Ads declaration **Yes**. Ratings preview: ESRB 10+ fantasy violence, USK 12, PEGI 3 + IAP. |
@@ -18,7 +18,7 @@ Package id: **`com.idleparty.app`**
 | Store listing copy (EN + 9 locales) | ✅ live | Default locale **en-US** + 9 translations committed **2026-09-25** (`sv-SE`, `es-ES`, `pt-BR`, `de-DE`, `fr-FR`, `ru-RU`, `id`, `ko-KR`, `ja-JP`). In-game UI stays English. |
 | Store contact email | ✅ | **cognifoxstudio@gmail.com** (Play Butiksinställningar; also in `docs/PRIVACY.md`). Login account may still be Robertjonsson90@gmail.com — that is Console login only, not public. |
 | Screenshots + feature graphic | ✅ submitted | **8** phone shots, the 512 icon, and the feature graphic replaced **2026-10-28** in the same edit as **1.13.5 (231)** (1.13.3 party-line pack). Tablet shot slots cleared on all listing locales in that edit. The public page can lag until Google publishes. |
-| Listing assets freshness | shots 2026-10-28 @ 1.13.5 · video 2026-10-23 @ 1.13.3 · icon 2026-10-28 @ 1.13.5 · feature 2026-10-28 @ 1.13.5 | Phone shots, icon, and feature graphic uploaded with **1.13.5**. Local Sandy preview still **2026-10-23** (1.13.3). `store_listing_plan_test` fails when `ChangelogCatalog.currentVersion` drifts more than three patches. Recapture the preview before 1.13.7. |
+| Listing assets freshness | shots 2026-10-28 @ 1.13.5 · video 2026-10-23 @ 1.13.3 · icon 2026-10-28 @ 1.13.5 · feature 2026-10-28 @ 1.13.5 | Phone shots, icon, and feature graphic uploaded with **1.13.5**. Local Sandy preview still **2026-10-23** (1.13.3). `store_listing_plan_test` allows four patches of drift on the video until it is recaptured. |
 | Preview video (YouTube) | ✅ sent | Every listing locale (11, including `pl-PL`) points at public Cognifox `cyBlN3HCR48` (`https://www.youtube.com/watch?v=cyBlN3HCR48`), committed **2026-10-04**. oEmbed works. Ads off, embed on, not for kids. YouTube filed the 9:16 film as a Short. Previous unlisted `UHLG28lHmPs`. `XfKog5CAiUs` stays unused (Play rejected that embed). |
 | Ads declaration | ✅ fixed | Was **No ads** (wrong). Set to **Yes, contains ads** 2026-09-08 (hub POWERUPS / AdMob). In review with Alpha **135**. |
 | Advertising ID | ✅ | Yes + advertising purpose; AD_ID in manifest. Cleared mistaken “disable AD_ID version errors” checkbox 2026-09-08. |
@@ -82,6 +82,9 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Signed Production AAB **1.13.2+228** built locally (`app-release.aab`, 188.9 MB) and uploaded via Play API (bundle + production track only). Track reads `completed`. The public page can still name **1.13.1** until Google publishes. Git tag `v1.13.2` attached an APK and an AAB to the GitHub release; those CI files are debug-signed because `KEYSTORE_BASE64` and `KEY_PROPERTIES` are still empty. Players install the Play build.
 - [x] Owner said do the best next step (**2026-10-28**) — ship **1.13.5**.
 - [x] Signed Production AAB **1.13.5+231** built locally (`app-release.aab`, 188.9 MB) and uploaded via Play API (one edit: 8 phone shots, icon, feature graphic, tablet slots cleared, bundle, production track). Commit edit `04887265008164011819`. Notes also cover unsent **1.13.3** and **1.13.4**. Public page can still name **1.13.2** until Google publishes.
+- [x] Tag `v1.13.6` (`ba67975e`, **1.13.6+232**) attached a signed AAB and APK to the GitHub Release. CI decoded the upload keystore and wrote the live AdMob ids. Not sent to Play.
+- [ ] Tag `v1.13.7` — cold-start fix; dispatch Play upload only when the owner asks.
+- [ ] Dispatch `.github/workflows/play-upload.yml` with tag `v1.13.6` only when the owner asks. That job uploads the release AAB to production at 5% with the en-US and sv-SE notes. It does not run on its own.
 
 ### Production upload paste (en-US release notes)
 
@@ -133,7 +136,7 @@ build; restart the app so Billing refreshes. A sideload does not grant a buy.
 
 1. Confirm production track unlocked (IARC + ads declarations already submitted).
 2. `flutter build appbundle --release` with upload keystore (or tag `v*` after CI signing verified). That release packages native debug symbols (`ndk.debugSymbolLevel FULL`). Do not pass `--obfuscate`. Symbols for 225 cannot be uploaded later.
-3. Upload with the Play Android Publisher API (one edit: images, text, AAB, production track). See `.cursor/skills/play-store-prep/reference.md`.
+3. Upload with the Play Android Publisher API (one edit: images, text, AAB, production track). See `.cursor/skills/play-store-prep/reference.md`. `.github/workflows/play-upload.yml` sends only the tagged release AAB and the en-US / sv-SE notes, production at 5%. Dispatch it only when the owner asks that turn.
 4. Release notes from `docs/STORE_LISTING.md` (COMING LATER / POWER wipe honesty).
 5. Update this Operator status table (submitted vs live).
 6. **Do not** upload until the owner played the build and said yes.
@@ -162,7 +165,7 @@ Category stays Role Playing. Tags (2026-09-11 Console): **Clicker-rollspel**,
 
 - [ ] Create an upload keystore (or use Play App Signing with an upload key).
 - [ ] Copy `android/key.properties.example` → `android/key.properties` and fill in passwords / alias / `storeFile`.
-- [ ] For CI: set secrets `KEYSTORE_BASE64` (base64 of the `.jks`) and `KEY_PROPERTIES` (full `key.properties` contents), same pattern as `.github/workflows/build-apk.yml`.
+- [x] For CI: secrets `KEYSTORE_BASE64` and `KEY_PROPERTIES` set **2026-11-01** (`storeFile=../upload-keystore.jks`), same pattern as `.github/workflows/build-apk.yml`.
 - [ ] Locally: `flutter build appbundle --release` → `build/app/outputs/bundle/release/app-release.aab`.
 
 ## Play Console — closed / internal (ops)

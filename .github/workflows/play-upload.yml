@@ -1,0 +1,62 @@
+# Manual Play production upload. workflow_dispatch only.
+# Do not run this unless the owner asks in that turn.
+# It sends the chosen GitHub Release AAB to production at 5%.
+# Release notes are the 1.13.6 text in .github/play/. Edit those files
+# before dispatching a later tag.
+
+name: Upload AAB to Play
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'GitHub Release tag whose app-release.aab to upload (example v1.13.6)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require the Play service account
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "PLAY_SERVICE_ACCOUNT_JSON is empty."
+            exit 1
+          fi
+          echo "PLAY_SERVICE_ACCOUNT_JSON is set."
+
+      - name: Download the tagged release AAB
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ inputs.tag }}"
+          case "$tag" in
+            v*) ;;
+            *) echo "Tag must look like v1.13.6." >&2; exit 1 ;;
+          esac
+          gh release download "$tag" \
+            --repo "${{ github.repository }}" \
+            --pattern 'app-release.aab' \
+            --output app-release.aab
+          test -s app-release.aab
+          echo "Downloaded app-release.aab from $tag."
+
+      - name: Upload to Play production at 5 percent
+        uses: r0adkll/upload-google-play@v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.idleparty.app
+          releaseFiles: app-release.aab
+          track: production
+          status: inProgress
+          userFraction: '0.05'
+          whatsNewDirectory: .github/play

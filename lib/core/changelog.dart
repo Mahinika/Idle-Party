@@ -82,12 +82,30 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.6';
+  static const String currentVersion = '1.13.7';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: currentVersion,
+      date: 'Nov 1, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. Launch reaches the loading screen faster.',
+      fixed: <String>[
+        'Cold start no longer freezes with "not responding" before the loading screen.',
+        'Firebase and Crashlytics start after the first frame so the Play icon clears quickly.',
+      ],
+      changed: <String>[
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.13.6',
       date: 'Nov 1, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. Welcome Back scrolls, so a long drop name and Check-in stay on screen.',

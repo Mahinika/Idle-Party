@@ -19,7 +19,9 @@ matter). Web is Playwright / `WebClickBridge` only.
 
 **Distribution:** Google Play is the install path (`com.idleparty.app`,
 `docs/PLAY_STORE.md`). Do not link players to GitHub Releases. Never upload
-an AAB unless the owner asks that turn. A release AAB packages native debug
+an AAB unless the owner asks that turn. A manual 5% production upload is
+`.github/workflows/play-upload.yml` (`workflow_dispatch`, input `tag`). It
+does not run on a tag. A release AAB packages native debug
 symbols (`debugSymbolLevel FULL`). Do not pass `--obfuscate`. In-app update gate, hub **GET
 UPDATE**, and the rating ask are in `docs/PLAY_STORE.md`. Play
 Games and Firebase are there and in `docs/PRIVACY.md`. Event names
@@ -47,6 +49,9 @@ flutter test test/changelog_sync_test.dart
 ```
 
 Tag `sim` is nightly (`.github/workflows/sim-nightly.yml`), not missing CI.
+Sideload test APKs: `.github/workflows/test-apk-prerelease.yml`
+(`workflow_dispatch` or a `test-*` tag). It publishes split arm64 and x86_64
+APKs for `com.idleparty.app.test`. Play release builds stay in `build-apk.yml`.
 Share-fast: `flutter test test/class_balance_share_fast_test.dart`.
 
 Skills live under `.cursor/skills/`. Slash: `/init` resyncs this file and
