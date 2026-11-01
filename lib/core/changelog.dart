@@ -320,7 +320,7 @@ abstract final class ChangelogCatalog {
         'RANKS can show the whole season, not only the first 25. A month with no public boards still shows your party.',
         'CAMP keeps the essence levels you already bought.',
         'Kit names, quest pay, the vault, and enemy tells match what the game does.',
-        'Marksmanship and Frost Mage hit closer to the rest of the party.',
+        'Longshot and Glacecast hit closer to the rest of the party.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
         'Race still locks after New Game START.',
@@ -653,7 +653,7 @@ abstract final class ChangelogCatalog {
     ChangelogRelease(
       version: '1.12.158',
       bullets: <String>[
-        'Your party fights on its own. Pack kits share Cataclysm tools: Earthquake, Flamestrike, Death and Decay, Thrash. Combat Rogue Blade Flurry hits one extra foe; Fan of Knives waits for a big pack.',
+        'Your party fights on its own. Pack kits share the same pack tools: Earthquake, Flamestrike, Death and Decay, Thrash. Combat Rogue Blade Flurry hits one extra foe; Fan of Knives waits for a big pack.',
         'PATH still Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault). The hub hunt still owns Gauntlet / Ranked GR / KEY hunts. Ascend still Rebuild your bag; AL 20 BLESSING still has optional REBORN.',
       ],
     ),
@@ -1586,7 +1586,7 @@ abstract final class ChangelogCatalog {
     ChangelogRelease(
       version: '1.12.33',
       bullets: <String>[
-        'Spells look like the spell: Fireball flames, Frost shards, Lightning zigzags, Holy crosses, Shadow coils, nature drips, rain for Blizzard/Hurricane/Healing Rain, and Consecration/Bladestorm ground that matches the kit — not a generic colored ring.',
+        'Spells look like the spell: Fireball flames, Frost shards, Lightning zigzags, Holy crosses, Shadow coils, nature drips, rain for Frost Rain, Hurricane, and Healing Rain, and Consecration/Bladestorm ground that matches the kit — not a generic colored ring.',
         'Combat reads cleaner on phone: fewer hit/crit numbers (crits still pop), no cleave spam, and chamber doors shout OPEN once — not a stuck stack of labels.',
         'Dungeon pathing is lighter on phone: faster soft-lock unlocks, less frame hitching on big packs and busy bolt fights.',
         'PATH still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
@@ -1802,7 +1802,7 @@ abstract final class ChangelogCatalog {
       version: '1.12.7',
       bullets: <String>[
         'Kit fantasy pass: Blood Bone Shield, Guardian Lacerate, Fury Enraged Regeneration, Unholy Gargoyle actually summons, Subtlety Preparation resets CDs.',
-        'Pack tools: Elemental Flame Shock, Frost Mage Blizzard, Destruction Rain of Fire, Survival Multi-Shot — rain/fan AoEs aim at your focus pack.',
+        'Pack tools: rain and fan attacks aim at your focus pack.',
         'Healers unchanged — party heals already cover their fantasy.',
         'PATH still runs Sandy Caverns through Mothveil Hollow (Brassvault, Blightfen, Rimeglass, Stormwake, Grove, Tidehold, Ashen Vault on the road).',
       ],
@@ -1902,7 +1902,7 @@ abstract final class ChangelogCatalog {
         'Gear power tuned: caster Int/SP ROI matches melee; full rare sets matter in combat without stomping.',
         'Gear budget: iLvl→stats power only — UPGRADE/Auto Equip ignore affinity/armor/set ghost score; BEST matches real upgrades; 1H+off-hand can beat a lonely 2H.',
         'TODAY chase: hub and offline Up next share one ChaseContract (claim → READY → ALMOST → grind).',
-        'Offline welcome: one wow line, up to 3 highlights, then the same Up next chase as hub TODAY.',
+        'Offline welcome: one lead line, up to 3 highlights, then the same Up next chase as hub TODAY.',
         'Meet kits: TODAY/Ascend teasers include fantasy + a Watch… combat hook for each AL ladder unlock.',
         'Daily vault early: simple clear-and-claim copy; KEY jargon waits until mid progress (AL2+ / deeper zones).',
         'God Hand: steer-toy first (tap to pull + smash); Forge KEEP styles/CD stay soft power knobs.',
@@ -1962,7 +1962,7 @@ abstract final class ChangelogCatalog {
       bullets: <String>[
         'Ascend Blessing: each Ascend permanently stacks +2 ATK · +1 DEF · +4 STA · +3% gold (Forge → KEEP).',
         'Keep playing: Ascend shows next unlocks (Rogue / 5th slot / Gauntlet), TODAY flashes READY/ALMOST, stronger AFK welcome-back.',
-        'GEAR: WoW-style item tooltips with green/red compare vs equipped, hero arrows, fuller hero stats.',
+        'GEAR: item tooltips with green/red compare vs equipped, hero arrows, fuller hero stats.',
         'PATH: Sunken Tidehold and Ashen Vault remain the endgame gates.',
       ],
     ),
@@ -2064,8 +2064,8 @@ abstract final class ChangelogCatalog {
     ChangelogRelease(
       version: '1.9.0',
       bullets: <String>[
-        'Party: unlock WotLK-style specs and field 4–5 active heroes.',
-        'All talent-tree kits (~30) with abilities via the shared effect runner.',
+        'Party: unlock more specs and field 4–5 active heroes.',
+        'All spec kits (~30) with abilities via the shared effect runner.',
         'Gear Sets renamed (was Loadouts); 5th party slot for essence at AL 2+.',
         'Meta depth: prestige shop, sanctuary XP/prestige, relic tiers, weekly contracts.',
         'Expanded pet roster, codex milestones, ascend titles, zone trophies, Will ranks.',

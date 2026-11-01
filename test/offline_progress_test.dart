@@ -504,4 +504,65 @@ void main() {
     await openAt(const Size(360, 640));
     await openAt(const Size(1080, 1920));
   });
+
+  testWidgets('a long best-item name stays above the Welcome Back buttons', (
+    tester,
+  ) async {
+    const longName =
+        'Ancient Veilglass Staff of the Mothveil Hollow Night Watch';
+    final state = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 8, 8),
+    ).copyWith(bossVictories: 1);
+    final summary = OfflineProgressResult(
+      state: state,
+      secondsApplied: 3600,
+      goldGained: 40,
+      essenceGained: 2,
+      roomsCleared: 4,
+      highestFloorDelta: 1,
+      bossDelta: 0,
+      levelsGained: 2,
+      kills: 18,
+      bestDrop: longName,
+      wasInDungeon: true,
+    );
+    expect(summary.awayReport, contains('Best $longName'));
+    final director = GameDirector.preview();
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    director.uiFeedback.presentOffline(summary);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    final line = find.textContaining(longName);
+    expect(line, findsOneWidget);
+    final scrollable = find.byType(Scrollable);
+    expect(scrollable, findsOneWidget);
+    await tester.scrollUntilVisible(line, 40, scrollable: scrollable.first);
+    await tester.pumpAndSettle();
+
+    final textRect = tester.getRect(line);
+    final viewRect = tester.getRect(scrollable.first);
+    final buttonRect = tester.getRect(find.text('ENTER DUNGEON'));
+    final visible = textRect.intersect(viewRect);
+    expect(visible.height, greaterThan(8));
+    expect(viewRect.bottom, lessThanOrEqualTo(buttonRect.top + 1));
+    expect(visible.bottom, lessThanOrEqualTo(buttonRect.top + 1));
+    expect(visible.bottom, lessThanOrEqualTo(640));
+  });
 }
