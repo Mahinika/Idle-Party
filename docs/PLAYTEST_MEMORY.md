@@ -13,6 +13,9 @@ Baselines live in `tool/playtest_baseline/`.
 - 2026-10-04 · bag · mid · BAG FULL, EQUIP, and CLEAN say what to do · `tool/playtest_baseline/bag__mid.png`
 - 2026-10-04 · more · mid · Contract CLAIM sits whole above the bar · `tool/playtest_baseline/more__mid.png`
 - 2026-10-17 · hub · endgame · Gold, essence, AL 3, and Settings still share the row · `tool/playtest_baseline/hub__endgame.png`
+- 2026-11-01 · hub · early · One filled chase sits on the atlas · `tool/playtest_baseline/hub__early.png`
+- 2026-11-01 · gear · early · Doll and slots stay readable over the fight · `tool/playtest_baseline/gear__early.png`
+- 2026-11-01 · shop · early · Packs say UNAVAILABLE when Play has not listed them · `tool/playtest_baseline/shop__early.png`
 
 ## Lärt
 
@@ -29,6 +32,7 @@ Baselines live in `tool/playtest_baseline/`.
 - 2026-10-17 · A KEY affix line wider than the phone paints a yellow overflow stripe · rule: none
 - 2026-10-17 · A mid-fight FARM question stays on the hub after the party leaves · rule: none
 - 2026-10-17 · In melee the five heroes stand on the same spot, so one swing hides the others · rule: none
+- 2026-11-01 · A UI dump during a fight can press CLAIM and quest chips. A +2,000 gold line is tomorrow's prize, not the wallet. · rule: none
 
 ## OK
 
@@ -47,3 +51,6 @@ Baselines live in `tool/playtest_baseline/`.
 | bag | endgame | 2026-10-17 | 6e4b8825 | 1 |
 | essence | endgame | 2026-10-17 | 6e4b8825 | 1 |
 | hub | endgame | 2026-10-17 | fbaa5ba8 | 1 |
+| gold | early | 2026-11-01 | 7e0af18f | 1 |
+| essence | early | 2026-11-01 | 7e0af18f | 1 |
+| more | early | 2026-11-01 | 7e0af18f | 1 |

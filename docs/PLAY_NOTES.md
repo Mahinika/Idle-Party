@@ -7,6 +7,8 @@ with the commit hash. Read Open at the start of a batch.
 
 ## Open
 
+- 2026-11-01 · On a fresh fight the green CLAIM chip and two quest batches paid themselves while the screen was only being read (log 23:46:01 Claimed 1 quest, 23:46:02 Daily Vault claimed · Check-in 1/7, 23:46:04 Claimed 2 quests). The game only pays those from a tap. The playtest UI dump is the suspect, because Android can turn a semantics tap into a click. · kod · forvirrar · Leave the claim buttons. The next dump must not press them. (Flutter AccessibilityBridge ACTION_CLICK → SemanticsAction.tap, https://github.com/flutter/flutter/blob/master/engine/src/flutter/shell/platform/android/io/flutter/view/AccessibilityBridge.java)
+
 ## Done
 
 <!-- - 2026-11-01 · Cold start on the A56 stayed on the Play icon and Android said the app was not responding · Firebase starts after the Cognifox picture, off the main thread · fixed in 8b6d23ae -->

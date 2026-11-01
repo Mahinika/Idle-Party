@@ -1,0 +1,352 @@
+[
+  {
+    "label": "824g +13/m \u00b7 12h",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 24,
+    "x2": 332,
+    "y2": 171
+  },
+  {
+    "label": "Gold 824g, Essence 247 Gold 824g. +13/m \u00b7 12h 247",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 24,
+    "x2": 599,
+    "y2": 171
+  },
+  {
+    "label": "Settings",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 912,
+    "y1": 32,
+    "x2": 1044,
+    "y2": 164
+  },
+  {
+    "label": "Ascend, AL 0",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 647,
+    "y1": 54,
+    "x2": 881,
+    "y2": 141
+  },
+  {
+    "label": "The Party \u00b7 Boss on F5",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 177,
+    "x2": 799,
+    "y2": 219
+  },
+  {
+    "label": "\u00b7",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 823,
+    "y1": 177,
+    "x2": 838,
+    "y2": 219
+  },
+  {
+    "label": "Ascend ready",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 862,
+    "y1": 177,
+    "x2": 1044,
+    "y2": 219
+  },
+  {
+    "label": "Rimeglass Rift,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 428,
+    "y1": 282,
+    "x2": 572,
+    "y2": 426
+  },
+  {
+    "label": "Crystal Spire,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 246,
+    "y1": 301,
+    "x2": 390,
+    "y2": 445
+  },
+  {
+    "label": "Stormwake Hollow,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 710,
+    "y1": 340,
+    "x2": 854,
+    "y2": 484
+  },
+  {
+    "label": "Mothveil Hollow,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 831,
+    "y1": 496,
+    "x2": 975,
+    "y2": 640
+  },
+  {
+    "label": "Hollow Grove,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 549,
+    "y1": 515,
+    "x2": 693,
+    "y2": 659
+  },
+  {
+    "label": "King's Fort,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 166,
+    "y1": 535,
+    "x2": 310,
+    "y2": 679
+  },
+  {
+    "label": "Underworld,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 327,
+    "y1": 574,
+    "x2": 471,
+    "y2": 718
+  },
+  {
+    "label": "Sunken Tidehold,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 85,
+    "y1": 710,
+    "x2": 229,
+    "y2": 854
+  },
+  {
+    "label": "Brassvault Deep,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 770,
+    "y1": 710,
+    "x2": 914,
+    "y2": 854
+  },
+  {
+    "label": "City of Dead,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 387,
+    "y1": 729,
+    "x2": 531,
+    "y2": 873
+  },
+  {
+    "label": "Blightfen Mire,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 508,
+    "y1": 768,
+    "x2": 652,
+    "y2": 912
+  },
+  {
+    "label": "Goblin's Hideout, HERE, selected",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 307,
+    "y1": 837,
+    "x2": 451,
+    "y2": 1029
+  },
+  {
+    "label": "WATCH. Watch an ad for 1 Ad Ticket",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 875,
+    "y1": 866,
+    "x2": 1044,
+    "y2": 1006
+  },
+  {
+    "label": "Sandy Caverns,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 166,
+    "y1": 924,
+    "x2": 310,
+    "y2": 1068
+  },
+  {
+    "label": "Ashen Vault,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 710,
+    "y1": 924,
+    "x2": 854,
+    "y2": 1068
+  },
+  {
+    "label": "Hell's Gate,",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 549,
+    "y1": 962,
+    "x2": 693,
+    "y2": 1106
+  },
+  {
+    "label": "RANKS. Season boards",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 864,
+    "y1": 1006,
+    "x2": 1044,
+    "y2": 1210
+  },
+  {
+    "label": "Goblin's Hideout. Tap for zone details Goblin's Hideout",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 1222,
+    "x2": 1044,
+    "y2": 1354
+  },
+  {
+    "label": "Next job: Tomorrow: one cave. Tomorrow pays +2,000 gold. One cave fills the vault.. Next job Tomorrow: one cave Tomorrow pays +2,000 gold. One cave fills the vault.",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 1372,
+    "x2": 1044,
+    "y2": 1627
+  },
+  {
+    "label": "Tomorrow pays +2,000 gold. Your party keeps fighting.",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 1645,
+    "x2": 1044,
+    "y2": 1687
+  },
+  {
+    "label": "Tomorrow: one cave. Enter the selected dungeon",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 32,
+    "y1": 1698,
+    "x2": 1048,
+    "y2": 1850
+  },
+  {
+    "label": "SCROLLS. READY",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 1874,
+    "x2": 1044,
+    "y2": 2009
+  },
+  {
+    "label": "ASCEND +10e",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 36,
+    "y1": 2021,
+    "x2": 1044,
+    "y2": 2160
+  },
+  {
+    "label": "GEAR",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 6,
+    "y1": 2181,
+    "x2": 220,
+    "y2": 2334
+  },
+  {
+    "label": "GOLD 1 waiting",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 220,
+    "y1": 2181,
+    "x2": 433,
+    "y2": 2334
+  },
+  {
+    "label": "SHOP \u2605 waiting",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 433,
+    "y1": 2181,
+    "x2": 647,
+    "y2": 2334
+  },
+  {
+    "label": "ESSENCE 1 waiting",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 647,
+    "y1": 2181,
+    "x2": 860,
+    "y2": 2334
+  },
+  {
+    "label": "MORE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Semantics",
+    "x1": 860,
+    "y1": 2181,
+    "x2": 1074,
+    "y2": 2334
+  }
+]

@@ -1,0 +1,332 @@
+[
+  {
+    "label": "SHOP SCROLLS \u00b7 Cinders \u00b7 ad-free",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 0,
+    "y1": 0,
+    "x2": 1080,
+    "y2": 2184
+  },
+  {
+    "label": "Goblin \u00b7 F4 \u00b7 mixed \u00b7 4 next Tomorrow pays +2,000 gold. Your party keeps fighting. RANGED \u00b7 DART RASCAL 134 75% BOMB \u00b7 5.1s",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 0,
+    "y1": 0,
+    "x2": 1080,
+    "y2": 2340
+  },
+  {
+    "label": "Dungeon map \u2014 tap to pin target while fighting; long-press for God Hand; pinch with two fingers to zoom; fist button also works",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 0,
+    "y1": 0,
+    "x2": 1080,
+    "y2": 2340
+  },
+  {
+    "label": "1\u00d7. FARM 1\u00d7 monster packs \u00b7 1\u00d7 gold and XP",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 27,
+    "y1": 51,
+    "x2": 368,
+    "y2": 183
+  },
+  {
+    "label": "2\u00d7. FARM 2\u00d7 monster packs \u00b7 2\u00d7 gold and XP",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 380,
+    "y1": 51,
+    "x2": 721,
+    "y2": 183
+  },
+  {
+    "label": "4\u00d7. TRY 4\u00d7 this room \u00b7 2 left",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 733,
+    "y1": 51,
+    "x2": 1074,
+    "y2": 183
+  },
+  {
+    "label": "CLOSE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 871,
+    "y1": 151,
+    "x2": 1040,
+    "y2": 290
+  },
+  {
+    "label": "Gold 678g, Essence 247 678g 247",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 40,
+    "y1": 163,
+    "x2": 577,
+    "y2": 277
+  },
+  {
+    "label": "\u21bb FARM. FARM loops loot. PUSH climbs.",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 27,
+    "y1": 189,
+    "x2": 272,
+    "y2": 321
+  },
+  {
+    "label": "\u25b2 PUSH. FARM loops loot. PUSH climbs.",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 284,
+    "y1": 189,
+    "x2": 529,
+    "y2": 321
+  },
+  {
+    "label": "God Hand \u2014 long-press the fight or tap the fist",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 541,
+    "y1": 189,
+    "x2": 673,
+    "y2": 321
+  },
+  {
+    "label": "God Hand ready \u2014 long-press or fist to steer + smash",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 541,
+    "y1": 189,
+    "x2": 673,
+    "y2": 321
+  },
+  {
+    "label": "SPEED 1\u00d7. Fight speed. 2\u00d7 plays the cave faster. Loot and time away stay the same.",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 685,
+    "y1": 189,
+    "x2": 930,
+    "y2": 321
+  },
+  {
+    "label": "Floor menu",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 942,
+    "y1": 189,
+    "x2": 1074,
+    "y2": 321
+  },
+  {
+    "label": "Free tickets are SCROLLS on the hub. Ad-free, Long Away, and Supporter are here. Bag space and pet errands use gold or Cinders in GEAR and ESSENCE \u2014 not real money. Gold is under GOLD. Essence is under ESSENCE.",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 52,
+    "y1": 323,
+    "x2": 1028,
+    "y2": 491
+  },
+  {
+    "label": "Gold 678g, Essence 247 678g 247",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 27,
+    "y1": 372,
+    "x2": 471,
+    "y2": 468
+  },
+  {
+    "label": "Expand party meter 82 dps",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 36,
+    "y1": 483,
+    "x2": 251,
+    "y2": 558
+  },
+  {
+    "label": "SHOP offer \u00b7 24h left",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 52,
+    "y1": 509,
+    "x2": 1028,
+    "y2": 551
+  },
+  {
+    "label": "Prospector's Bundle Unavailable +6h \u00b7 once +6 hours Scroll of Battle (\u00d72 gold \u00b7 +40% ATK). Same as SCROLLS tickets \u2014 once per save. UNAVAILABLE. Google Play has not listed this pack",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "ImageView",
+    "x1": 52,
+    "y1": 569,
+    "x2": 1028,
+    "y2": 1053
+  },
+  {
+    "label": "75",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "ProgressBar",
+    "x1": 651,
+    "y1": 589,
+    "x2": 1023,
+    "y2": 598
+  },
+  {
+    "label": "Waiting for Play billing\u2026",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 52,
+    "y1": 1095,
+    "x2": 1028,
+    "y2": 1134
+  },
+  {
+    "label": "Ad-free welcome Unavailable permanent Permanent \u2014 hide SCROLLS ads and remove WATCH AD earn. +2 Ad Tickets once, a free ticket claim once per UTC day, and WISP bonus gold without watching. UNAVAILABLE. Google Play has not listed this pack",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "ImageView",
+    "x1": 52,
+    "y1": 1164,
+    "x2": 1028,
+    "y2": 1696
+  },
+  {
+    "label": "Recent loot. F4 CLEAR \u00b7 +44g \u00b7 +243 XP \u00b7 +19e",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "View",
+    "x1": 36,
+    "y1": 1386,
+    "x2": 1044,
+    "y2": 1440
+  },
+  {
+    "label": "Long Away Unavailable 16h cave \u00b7 24h chest \u00b7 once Story caves catch up for 16 hours instead of 8 and fight twice as far. Hub gold fills for 24 hours instead of 12. Gauntlet and rifts stay short. Once. UNAVAILABLE. Google Play has not listed this pack",
+    "clickable": false,
+    "scrollable": false,
+    "kind": "ImageView",
+    "x1": 52,
+    "y1": 1720,
+    "x2": 1028,
+    "y2": 2156
+  },
+  {
+    "label": "Aegis WALL \u2014 tap for abilities, long-press for gear",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 45,
+    "y1": 1797,
+    "x2": 465,
+    "y2": 1893
+  },
+  {
+    "label": "Vale WARD \u2014 tap for abilities, long-press for gear",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 45,
+    "y1": 1896,
+    "x2": 465,
+    "y2": 1992
+  },
+  {
+    "label": "Ember CINDER \u2014 tap for abilities, long-press for gear",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 45,
+    "y1": 1995,
+    "x2": 465,
+    "y2": 2091
+  },
+  {
+    "label": "GEAR 1 waiting",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 6,
+    "y1": 2190,
+    "x2": 184,
+    "y2": 2337
+  },
+  {
+    "label": "GOLD",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 184,
+    "y1": 2190,
+    "x2": 362,
+    "y2": 2337
+  },
+  {
+    "label": "SHOP",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 362,
+    "y1": 2190,
+    "x2": 540,
+    "y2": 2337
+  },
+  {
+    "label": "ESSENCE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 540,
+    "y1": 2190,
+    "x2": 718,
+    "y2": 2337
+  },
+  {
+    "label": "MORE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 718,
+    "y1": 2190,
+    "x2": 896,
+    "y2": 2337
+  },
+  {
+    "label": "LEAVE",
+    "clickable": true,
+    "scrollable": false,
+    "kind": "Button",
+    "x1": 896,
+    "y1": 2190,
+    "x2": 1074,
+    "y2": 2337
+  }
+]
