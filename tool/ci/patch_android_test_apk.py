@@ -28,9 +28,19 @@ def _backup(path: Path) -> None:
         dest.write_text("", encoding="utf-8")
 
 
+def _gradle_uses_idle_test_env(gradle: str) -> bool:
+    return "idleTestPackage" in gradle
+
+
 def apply() -> None:
     if BACKUP_DIR.exists():
         raise SystemExit("Patch backup already exists; run restore first.")
+
+    gradle = GRADLE.read_text(encoding="utf-8")
+    if _gradle_uses_idle_test_env(gradle):
+        # Gradle + manifest placeholders; CI sets IDLE_TEST_PACKAGE=1 at build time.
+        return
+
     _backup(GRADLE)
     _backup(MANIFEST)
     if GOOGLE_SERVICES.exists():
@@ -40,7 +50,6 @@ def apply() -> None:
         )
         GOOGLE_SERVICES.unlink()
 
-    gradle = GRADLE.read_text(encoding="utf-8")
     if gradle.count(APP_ID) != 1:
         raise SystemExit(f"Expected one {APP_ID}, found {gradle.count(APP_ID)}")
     if TEST_APP_ID in gradle:

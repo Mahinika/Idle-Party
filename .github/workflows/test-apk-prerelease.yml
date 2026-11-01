@@ -60,6 +60,8 @@ jobs:
         run: python3 tool/ci/patch_android_test_apk.py apply
 
       - name: Build test APKs (arm64 phone + x86_64 emulator)
+        env:
+          IDLE_TEST_PACKAGE: '1'
         run: |
           flutter build apk --release \
             --split-per-abi \
