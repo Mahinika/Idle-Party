@@ -27,8 +27,7 @@ abstract final class AppAnalytics {
   static void syncCrashContext({
     required String zoneId,
     required String appVersion,
-  }) =>
-      impl.syncCrashContext(zoneId: zoneId, appVersion: appVersion);
+  }) => impl.syncCrashContext(zoneId: zoneId, appVersion: appVersion);
 
   static Future<void> logEvent(
     String name, [
@@ -40,10 +39,10 @@ abstract final class AppAnalytics {
   }
 
   /// Process boot after a save is loaded (not each resume from background).
-  static Future<void> appColdStart({int? daysSinceInstall}) =>
-      logEvent(AnalyticsEvents.appColdStart, {
-        'days_since_install': ?daysSinceInstall,
-      });
+  static Future<void> appColdStart({int? daysSinceInstall}) => logEvent(
+    AnalyticsEvents.appColdStart,
+    {'days_since_install': ?daysSinceInstall},
+  );
 
   static Future<void> coachStep(String tipId) =>
       logEvent(AnalyticsEvents.coachStep, {'tip_id': tipId});
@@ -118,6 +117,14 @@ abstract final class AppAnalytics {
 
   static Future<void> storeProductView(String productId) =>
       logEvent(AnalyticsEvents.storeProductView, {'product_id': productId});
+
+  /// SCROLLS showed the one-time Ad-free line.
+  static Future<void> adFreeNudgeView() =>
+      logEvent(AnalyticsEvents.adFreeNudgeView, {'product_id': 'ad_free'});
+
+  /// Player tapped that line (opens SHOP).
+  static Future<void> adFreeNudgeTap() =>
+      logEvent(AnalyticsEvents.adFreeNudgeTap, {'product_id': 'ad_free'});
 
   static Future<void> storePurchaseStart(String productId) =>
       logEvent(AnalyticsEvents.storePurchaseStart, {'product_id': productId});

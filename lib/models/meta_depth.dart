@@ -103,8 +103,7 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'daily_essence',
       name: 'Dawn Tithe',
-      description:
-          '+5e per level on Daily Vault and Daily Run claims (Lv0 = +0 until bought).',
+      description: '+5e per level on Daily Vault and Daily Run claims (Lv0 = +0 until bought).',
       cost: 50,
       minAl: 8,
     ),
@@ -333,6 +332,8 @@ class MetaDepthState {
     this.adOfflineMulExpiresMs = 0,
     this.adFreeDailyClaimUtc = '',
     this.adFree = false,
+    this.rewardedWatchCount = 0,
+    this.adFreeNudgeShown = false,
     this.wispUnlocked = false,
     this.wispGiftUtcDay = '',
     this.wispGiftClaimsToday = 0,
@@ -653,6 +654,12 @@ class MetaDepthState {
   /// Permanent SHOP ad-free purchase. Survives Ascend. Billing grants later.
   final bool adFree;
 
+  /// Finished rewarded watches (SCROLLS, WISP, Welcome Back, wipe). Survives Ascend.
+  final int rewardedWatchCount;
+
+  /// SCROLLS Ad-free line already shown once. Survives Ascend.
+  final bool adFreeNudgeShown;
+
   /// WISP gift unlocked after first dungeon enter. Survives Ascend.
   final bool wispUnlocked;
 
@@ -912,6 +919,8 @@ class MetaDepthState {
     int? adOfflineMulExpiresMs,
     String? adFreeDailyClaimUtc,
     bool? adFree,
+    int? rewardedWatchCount,
+    bool? adFreeNudgeShown,
     bool? wispUnlocked,
     String? wispGiftUtcDay,
     int? wispGiftClaimsToday,
@@ -1094,6 +1103,8 @@ class MetaDepthState {
           adOfflineMulExpiresMs ?? this.adOfflineMulExpiresMs,
       adFreeDailyClaimUtc: adFreeDailyClaimUtc ?? this.adFreeDailyClaimUtc,
       adFree: adFree ?? this.adFree,
+      rewardedWatchCount: rewardedWatchCount ?? this.rewardedWatchCount,
+      adFreeNudgeShown: adFreeNudgeShown ?? this.adFreeNudgeShown,
       wispUnlocked: wispUnlocked ?? this.wispUnlocked,
       wispGiftUtcDay: wispGiftUtcDay ?? this.wispGiftUtcDay,
       wispGiftClaimsToday: wispGiftClaimsToday ?? this.wispGiftClaimsToday,
@@ -1271,6 +1282,8 @@ class MetaDepthState {
     'adOfflineMulExpiresMs': adOfflineMulExpiresMs,
     'adFreeDailyClaimUtc': adFreeDailyClaimUtc,
     'adFree': adFree,
+    'rewardedWatchCount': rewardedWatchCount,
+    'adFreeNudgeShown': adFreeNudgeShown,
     'wispUnlocked': wispUnlocked,
     'wispGiftUtcDay': wispGiftUtcDay,
     'wispGiftClaimsToday': wispGiftClaimsToday,
@@ -1358,7 +1371,8 @@ class MetaDepthState {
       ascendStreak: (json['ascendStreak'] as num?)?.toInt() ?? 0,
       bestAscendStreak: (json['bestAscendStreak'] as num?)?.toInt() ?? 0,
       titles: [
-        for (final raw in (json['titles'] as List<dynamic>?) ?? const <dynamic>[])
+        for (final raw
+            in (json['titles'] as List<dynamic>?) ?? const <dynamic>[])
           _retiredTitle(raw as String),
       ],
       activeTitle: _retiredTitle((json['activeTitle'] as String?) ?? ''),
@@ -1517,6 +1531,9 @@ class MetaDepthState {
           (json['adOfflineMulExpiresMs'] as num?)?.toInt() ?? 0,
       adFreeDailyClaimUtc: (json['adFreeDailyClaimUtc'] as String?) ?? '',
       adFree: (json['adFree'] as bool?) ?? false,
+      rewardedWatchCount: ((json['rewardedWatchCount'] as num?)?.toInt() ?? 0)
+          .clamp(0, 9999),
+      adFreeNudgeShown: (json['adFreeNudgeShown'] as bool?) ?? false,
       wispUnlocked: (json['wispUnlocked'] as bool?) ?? false,
       wispGiftUtcDay: (json['wispGiftUtcDay'] as String?) ?? '',
       wispGiftClaimsToday: ((json['wispGiftClaimsToday'] as num?)?.toInt() ?? 0)

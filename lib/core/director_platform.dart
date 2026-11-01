@@ -179,6 +179,7 @@ extension GameDirectorPlatform on GameDirector {
       );
       switch (result) {
         case AdWatchResult.rewarded:
+          noteCompletedRewardedWatch();
           _welcomeBackAdGranted = true;
           final beforeGold = _state.gold;
           final beforeEssence = _state.essence;
@@ -239,6 +240,7 @@ extension GameDirectorPlatform on GameDirector {
     _wispChoiceOpen = false;
     switch (result) {
       case AdWatchResult.rewarded:
+        noteCompletedRewardedWatch();
         _grantWispWatchReward();
       case AdWatchResult.skipped:
         showToast('Watch the whole ad for the WISP bonus', life: 2.2);

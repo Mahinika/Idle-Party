@@ -67,6 +67,14 @@ flowchart LR
 - Tap FAB → bottom sheet with two blocks:
   1. **Earn** — WATCH AD · +1 Ticket (playtest: PREVIEW +1).
   2. **Spend** — catalog rows (below).
+- After the third finished rewarded watch (SCROLLS, WISP, Welcome Back, or
+  wipe — preview tickets do not count), Earn can show one quiet line:
+  `Tired of ads? Ad-free is a one-time purchase`. It opens SHOP. Once per
+  save. Hidden on Welcome Back, hidden in a fight, hidden for Ad-free and
+  Forever Rest, and hidden until Play returns `ad_free`. A sideload QA APK
+  (git SHA compiled in, package `com.idleparty.app.test`) may show the line
+  without that product, because Billing cannot see the Play app's SKU.
+  Play builds omit the SHA. That APK also uses Google's sample rewarded unit.
 
 Visibility gates:
 
