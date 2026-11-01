@@ -54,6 +54,12 @@ abstract final class AwayFightTip {
     return godhand ?? away ?? farm;
   }
 
+  /// The hub card already says tomorrow. A second line under it repeats that.
+  static bool hubCardOwns(String title, String detail) {
+    if (!title.startsWith('Tomorrow')) return false;
+    return detail.toLowerCase().contains('tomorrow');
+  }
+
   /// Prize first, so a one-line hub clip still names what waits.
   /// [onHub] picks the gold line before check-in exists.
   ///

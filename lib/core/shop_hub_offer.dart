@@ -2,6 +2,7 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'shop_billing.dart';
 import 'shop_catalog.dart';
+import 'shop_store.dart';
 
 /// 24h hub SHOP highlight after first boss / Ascend unlock.
 abstract final class ShopHubOffer {
@@ -29,10 +30,14 @@ abstract final class ShopHubOffer {
   static bool showHubBadge(GameState state, {DateTime? now}) {
     if (!GameLogic.showDailyChase(state)) return false;
     if (!windowOpen(state, now: now)) return false;
-    if (!state.metaDepth.shopStarterClaimed) return true;
-    final delver = ShopCatalog.byId['supporter_qol'];
-    if (delver == null) return false;
-    return !ShopBilling.isOwned(state, delver);
+    final item = featuredItem(state, now: now);
+    if (item == null) return false;
+    // A dot on SHOP means Play will sell this pack. Sideload and a
+    // missing SKU stay quiet.
+    if (!ShopStore.storeAvailable || !ShopStore.storeLists(item.id)) {
+      return false;
+    }
+    return !ShopBilling.isOwned(state, item);
   }
 
   static String countdownLine(GameState state, {DateTime? now}) {

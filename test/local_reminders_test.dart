@@ -137,8 +137,8 @@ void main() {
     expect(blob, isNot(contains('essence')));
     expect(blob, isNot(contains('combat')));
     expect(LocalReminders.optInBody.toLowerCase(), contains('settings'));
-    expect(LocalReminders.optInBody.toLowerCase(), contains('12 hours'));
-    expect(LocalReminders.optInBody.toLowerCase(), contains('chest'));
+    expect(LocalReminders.optInBody.toLowerCase(), contains('today\'s job'));
+    expect(LocalReminders.optInBody.toLowerCase(), contains('evening'));
     expect(LocalReminders.optInBody.toLowerCase(), isNot(contains('key')));
   });
 

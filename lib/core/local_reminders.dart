@@ -54,12 +54,8 @@ abstract final class LocalReminders {
   static const String optInTitle = 'A quiet ping?';
 
   static String get optInBody =>
-      'A quiet chest line stays up while hub gold fills, and goes away when you open the game. '
-      'Gold fills for ${GoldIncome.hubChestCapHours} hours, then stops. '
-      'At most a couple of pings a day: when the chest is full, in the morning for today\'s job, or in the evening when a prize is waiting. '
-      'When the last cave keeps fighting while you are away, one ping lands '
-      'near the ${OfflineProgress.dungeonAwayBaseSec ~/ 3600}h cap. '
-      'Never between 10pm and 8am your time. Turn off anytime in SETTINGS.';
+      'Morning names today\'s job. Evening pings when a prize is waiting. '
+      'Never between 10pm and 8am. Turn off anytime in SETTINGS.';
 
   static bool milestoneReached(GameState state) {
     final reward =

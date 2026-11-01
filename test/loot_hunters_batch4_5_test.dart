@@ -40,7 +40,9 @@ void main() {
     expect(state.metaDepth.shopOfferStartedMs, 0);
     state = ShopHubOffer.ensureWindow(state, now: DateTime.utc(2026, 11, 1));
     expect(state.metaDepth.shopOfferStartedMs, greaterThan(0));
-    expect(ShopHubOffer.showHubBadge(state, now: DateTime.utc(2026, 11, 1)), isTrue);
+    expect(ShopHubOffer.windowOpen(state, now: DateTime.utc(2026, 11, 1)), isTrue);
+    // Tests have no Play catalog, so the hub dot stays off.
+    expect(ShopHubOffer.showHubBadge(state, now: DateTime.utc(2026, 11, 1)), isFalse);
   });
 
   test('loot hunters meta fields round-trip json', () {

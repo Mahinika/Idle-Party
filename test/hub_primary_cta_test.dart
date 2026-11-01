@@ -10,6 +10,42 @@ import 'package:idle_party/ui/hub/hub_today_card.dart';
 void main() {
   final now = DateTime.utc(2026, 8, 22);
 
+  test('tomorrow chase keeps the card and the button enters the cave', () {
+    const chase = HubChase(
+      kind: HubChaseKind.dailyVaultProgress,
+      title: 'Tomorrow: one cave',
+      detail: 'Tomorrow pays +2,000 gold. One cave fills the vault.',
+    );
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: 'ENTER',
+      hasChaseAction: true,
+      unlockedSelected: true,
+      hardmodeLevel: 0,
+      showKeystoneJargon: false,
+      endgameUnlocked: false,
+    );
+    expect(cta.primaryLabel, 'ENTER DUNGEON');
+  });
+
+  test('today vault chase still names the cave on the button', () {
+    const chase = HubChase(
+      kind: HubChaseKind.dailyVaultProgress,
+      title: 'Clear one cave today',
+      detail: 'One PUSH clear fills today\'s reward.',
+    );
+    final cta = HubPrimaryCta.resolve(
+      chase: chase,
+      chaseActionLabel: 'ENTER',
+      hasChaseAction: true,
+      unlockedSelected: true,
+      hardmodeLevel: 0,
+      showKeystoneJargon: false,
+      endgameUnlocked: false,
+    );
+    expect(cta.primaryLabel, 'Clear one cave today');
+  });
+
   test('endgame hunt owns primary — not ENTER DUNGEON', () {
     const chase = HubChase(
       kind: HubChaseKind.gauntletMilestone,

@@ -550,12 +550,17 @@ class _HubScreenState extends State<HubScreen>
               CoachTarget.enter,
               inDungeon: false,
             );
-            final awayLine = AwayFightTip.shouldShow(
+            final awayRaw = AwayFightTip.shouldShow(
               state,
               bossStairs: false,
             )
                 ? AwayFightTip.lineFor(state, onHub: true)
                 : null;
+            final awayLine =
+                awayRaw != null &&
+                    AwayFightTip.hubCardOwns(chase.title, chase.detail)
+                ? null
+                : awayRaw;
             final enterFamily = HubPrimaryCta.isEnterFamilyLabel(primaryLabel);
             final showCoach = coachEnter != null && enterFamily;
             final readyContract = ChaseContract(chase: chase);

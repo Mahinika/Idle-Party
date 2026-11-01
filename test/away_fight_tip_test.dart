@@ -58,6 +58,17 @@ void main() {
     expect(text, contains('essence'));
     expect(text, contains('keeps fighting'));
     expect(text, isNot(contains('on the hub')));
+    expect(
+      AwayFightTip.hubCardOwns(
+        'Tomorrow: one cave',
+        'Tomorrow pays +100 essence. One cave fills the vault.',
+      ),
+      isTrue,
+    );
+    expect(
+      AwayFightTip.hubCardOwns('Claim Daily Vault', 'Check-in 1/7'),
+      isFalse,
+    );
 
     final armed = AwayFightTip.arm(hub, now);
     expect(armed.metaDepth.awayPromiseUtc, '2026-10-07');

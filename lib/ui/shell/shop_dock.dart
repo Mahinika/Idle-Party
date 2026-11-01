@@ -86,6 +86,8 @@ class _ShopDockState extends State<ShopDock> {
           }
         }
         final featured = ShopHubOffer.featuredItem(state);
+        final showFeatured = featured != null &&
+            (_priceReady(featured) || ShopBilling.isOwned(state, featured));
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -96,7 +98,7 @@ class _ShopDockState extends State<ShopDock> {
                 ),
                 storeLine: storeLine,
                 items: items,
-                featured: featured,
+                featured: showFeatured ? featured : null,
                 showAccountActions: true,
               ),
             ),

@@ -239,6 +239,8 @@ class HubPrimaryCta {
       // First cave: the tip and What's New say ENTER DUNGEON. A truncated
       // "Grow the party —" does not match that button.
       if (title.startsWith('Grow the party')) return enterLabel;
+      // "Tomorrow: one cave" is the card. The tap still enters today's cave.
+      if (title.startsWith('Tomorrow')) return enterLabel;
       if (title.length <= 30) return title;
         return title.split(' ').take(4).join(' ');
       default:
