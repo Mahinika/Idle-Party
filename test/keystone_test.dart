@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/enemy_flavor.dart';
+import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/keystone.dart';
@@ -9,6 +11,7 @@ import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/loot.dart';
 import 'package:idle_party/models/meta_depth.dart';
+import 'package:idle_party/ui/meta/challenge_toggles.dart';
 
 void main() {
   test('affixes stack by key level and week', () {
@@ -37,6 +40,87 @@ void main() {
     );
     expect(high, contains('no_flask'));
     expect(high, contains('boss_rush'));
+  });
+
+  test('KEY +12 does not list Brutal · Tyrannical twice', () {
+    String? oddWeek;
+    String? evenWeek;
+    for (var n = 1; n <= 400; n++) {
+      final key = '2026-W${n.toString().padLeft(2, '0')}';
+      final hash = key.hashCode & 0x7fffffff;
+      if (hash.isOdd && oddWeek == null) oddWeek = key;
+      if (hash.isEven && evenWeek == null) evenWeek = key;
+      if (oddWeek != null && evenWeek != null) break;
+    }
+    expect(oddWeek, isNotNull);
+    expect(evenWeek, isNotNull);
+
+    final tyrannicalWeek = Keystone.affixesFor(
+      key: 12,
+      weeklyModifier: 'tyrannical',
+      weeklyKey: oddWeek!,
+    );
+    final lines = [
+      for (final a in tyrannicalWeek)
+        '${Keystone.riskTier(a)} · ${Keystone.label(a)}',
+    ];
+    expect(lines.where((line) => line == 'Brutal · Tyrannical'), [
+      'Brutal · Tyrannical',
+    ]);
+    expect(tyrannicalWeek.where((a) => a == 'tyrannical'), ['tyrannical']);
+
+    final live = Keystone.affixesFor(
+      key: 12,
+      weeklyModifier: 'tyrannical',
+      weeklyKey: '2026-W44',
+    );
+    expect(live.where((a) => a == 'tyrannical'), ['tyrannical']);
+
+    final fortifiedWeek = Keystone.affixesFor(
+      key: 12,
+      weeklyModifier: 'fortified',
+      weeklyKey: evenWeek!,
+    );
+    expect(fortifiedWeek.where((a) => a == 'fortified'), ['fortified']);
+
+    final rushWeek = Keystone.affixesFor(
+      key: 12,
+      weeklyModifier: 'boss_rush',
+      weeklyKey: '2026-W45',
+    );
+    expect(rushWeek.where((a) => a == 'boss_rush'), ['boss_rush']);
+  });
+
+  testWidgets('KEY sheet lists Tyrannical once at +12', (tester) async {
+    String? oddWeek;
+    for (var n = 1; n <= 400; n++) {
+      final key = '2026-W${n.toString().padLeft(2, '0')}';
+      if ((key.hashCode & 0x7fffffff).isOdd) {
+        oddWeek = key;
+        break;
+      }
+    }
+    final state = _withPartyMaxLevel(
+      GameLogic.createInitialState().copyWith(
+        hardmodeLevel: 12,
+        metaDepth: MetaDepthState(
+          weeklyKey: oddWeek!,
+          weeklyModifier: 'tyrannical',
+        ),
+      ),
+    );
+    final director = GameDirector.preview(initialState: state);
+    addTearDown(director.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: ChallengeToggles(director: director, lockExpanded: true),
+          ),
+        ),
+      ),
+    );
+    expect(find.textContaining('Tyrannical ·'), findsOneWidget);
   });
 
   test('KEY week cave is stable, not always Stormwake, and rotates', () {
@@ -286,9 +370,7 @@ void main() {
 
   test('ascend at AL20 keeps KEY preference when party is maxed', () {
     final ready = _withPartyMaxLevel(
-      GameLogic.createInitialState(
-        now: DateTime(2026, 8, 1),
-      ).copyWith(
+      GameLogic.createInitialState(now: DateTime(2026, 8, 1)).copyWith(
         ascensionLevel: GameLogic.maxAscensionLevel - 1,
         bossVictories: 99,
         hardmodeLevel: 5,
@@ -365,7 +447,10 @@ void main() {
     expect(Keystone.blurb('elite').length, greaterThan(12));
     expect(Keystone.blurb('fortune').toLowerCase(), contains('gold'));
     expect(Keystone.blurb('iron').toLowerCase(), contains('gold'));
-    expect(Keystone.blurb('swarm').toLowerCase(), isNot(equals('more enemies')));
+    expect(
+      Keystone.blurb('swarm').toLowerCase(),
+      isNot(equals('more enemies')),
+    );
   });
 
   test('No Flask blocks a healing flask', () {
@@ -404,8 +489,8 @@ void main() {
 }
 
 GameState _withPartyMaxLevel(GameState state) => state.copyWith(
-      heroRoster: [
-        for (final h in state.heroRoster)
-          h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
-      ],
-    );
+  heroRoster: [
+    for (final h in state.heroRoster)
+      h.copyWith(level: GameLogic.maxHeroLevel, xp: 0),
+  ],
+);

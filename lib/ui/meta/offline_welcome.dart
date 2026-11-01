@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../../core/ad_boost.dart';
@@ -82,7 +81,8 @@ Future<void> showOfflineProgressDialog(
     };
   }
 
-  final showChaseCta = readyAction != null &&
+  final showChaseCta =
+      readyAction != null &&
       plan.op != ChaseOp.enter &&
       (chase.urgency == HubChaseUrgency.ready ||
           chase.urgency == HubChaseUrgency.almost ||
@@ -106,161 +106,166 @@ Future<void> showOfflineProgressDialog(
     barrierColor: MenuChrome.scrim,
     builder: (ctx) => MenuChrome.dialog(
       title: 'WELCOME BACK',
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(ctx).height * 0.55,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (lead != null) ...[
-                Text(
-                  lead,
-                  style: GameTheme.body(size: 16, color: GameTheme.torchHot),
-                ),
-                const SizedBox(height: 6),
-              ],
-              if (summary != null) ...[
-                Text(
-                  'Away for ${OfflineProgressResult.formatOfflineDuration(summary.awayForSeconds)} · ${summary.welcomeLead}',
-                  style: GameTheme.body(size: 14, color: GameTheme.parchment),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  summary.afkWhereLine,
-                  style: GameTheme.body(size: 13, color: GameTheme.mossLit),
-                ),
-                if (summary.awayReport.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    summary.awayReport,
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchment,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 6),
-                Text(
-                  GoldIncome.awayPromise(
-                    summary.state,
-                    wasInDungeon: summary.wasInDungeon,
-                  ),
-                  style: GameTheme.body(size: 13, color: GameTheme.mossLit),
-                ),
-              ],
-              if (chestLine.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  chestLine,
-                  style: GameTheme.body(size: 14, color: GameTheme.torchHot),
-                ),
-              ],
-              if (petLine.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  petLine,
-                  style: GameTheme.body(size: 14, color: GameTheme.torchHot),
-                ),
-              ],
-              if (showCheckIn) ...[
-                const SizedBox(height: 6),
-                Text(
-                  checkInLine,
-                  style: GameTheme.body(size: 14, color: GameTheme.torchHot),
-                ),
-              ],
-              if (rows.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                for (final row in rows)
-                  if (lead == null || !_lootAlreadySaid(row.$1))
-                    MenuChrome.statRow(label: row.$1, value: row.$2),
-              ],
-              if (summary != null)
-                StatefulBuilder(
-                  builder: (context, setLocal) {
-                    if (adGoldAdded > 0) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          'Ad added $adGoldAdded gold.',
-                          style: GameTheme.body(
-                            size: 14,
-                            color: GameTheme.torchHot,
-                          ),
-                        ),
-                      );
-                    }
-                    if (!showWatch) return const SizedBox.shrink();
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Optional. Watch an ad and this gold becomes ×${AdBoost.awayGoldMul}.',
-                            style: GameTheme.body(
-                              size: 13,
-                              color: GameTheme.parchment,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          GameButton(
-                            label: watchBusy
-                                ? 'LOADING AD…'
-                                : summary.welcomeBackAdLabel,
-                            style: GameButtonStyle.grey,
-                            onPressed: watchBusy
-                                ? null
-                                : () async {
-                                    setLocal(() => watchBusy = true);
-                                    final before = director.state.gold;
-                                    final ok = await director
-                                        .watchWelcomeBackGoldAd(
-                                      summary.goldGained,
-                                    );
-                                    if (!context.mounted) return;
-                                    setLocal(() {
-                                      watchBusy = false;
-                                      if (ok) {
-                                        showWatch = false;
-                                        adGoldAdded = director.state.gold - before;
-                                      }
-                                    });
-                                  },
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              const SizedBox(height: 10),
+      // The dialog scrolls. A fixed 55% cap clipped Check-in on a
+      // 1080×1920 phone (360×640 logical).
+      scrollable: true,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (lead != null) ...[
+            Text(
+              lead,
+              style: GameTheme.body(size: 16, color: GameTheme.torchHot),
+            ),
+            const SizedBox(height: 6),
+          ],
+          if (summary != null) ...[
+            Text(
+              'Away for ${OfflineProgressResult.formatOfflineDuration(summary.awayForSeconds)} · ${summary.welcomeLead}',
+              style: GameTheme.body(size: 14, color: GameTheme.parchment),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              summary.afkWhereLine,
+              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+            ),
+            if (summary.awayReport.isNotEmpty) ...[
+              const SizedBox(height: 6),
               Text(
-                contract.upNextLine,
-                style: GameTheme.body(
-                  size: 14,
-                  color: chase.urgency == HubChaseUrgency.normal
-                      ? GameTheme.mossLit
-                      : GameTheme.accentWarn,
-                ),
+                summary.awayReport,
+                style: GameTheme.body(size: 13, color: GameTheme.parchment),
               ),
-              if (contract.detail.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  contract.detail,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
-              ],
             ],
+            const SizedBox(height: 6),
+            Text(
+              GoldIncome.awayPromise(
+                summary.state,
+                wasInDungeon: summary.wasInDungeon,
+              ),
+              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+            ),
+          ],
+          if (chestLine.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              chestLine,
+              style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+            ),
+          ],
+          if (petLine.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              petLine,
+              style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+            ),
+          ],
+          if (showCheckIn) ...[
+            const SizedBox(height: 6),
+            Text(
+              checkInLine,
+              style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+            ),
+          ],
+          if (rows.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            for (final row in rows)
+              if (lead == null || !_lootAlreadySaid(row.$1))
+                MenuChrome.statRow(label: row.$1, value: row.$2),
+          ],
+          if (director.state.missions.any((m) => m.canClaim)) ...[
+            const SizedBox(height: 8),
+            ListenableBuilder(
+              listenable: director,
+              builder: (context, _) {
+                final ready = director.state.missions
+                    .where((m) => m.canClaim)
+                    .length;
+                if (ready == 0) return const SizedBox.shrink();
+                return GameButton(
+                  label: 'COLLECT ALL',
+                  style: GameButtonStyle.grey,
+                  onPressed: director.claimAllReadyMissions,
+                );
+              },
+            ),
+          ],
+          if (summary != null)
+            StatefulBuilder(
+              builder: (context, setLocal) {
+                if (adGoldAdded > 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Ad added $adGoldAdded gold.',
+                      style: GameTheme.body(
+                        size: 14,
+                        color: GameTheme.torchHot,
+                      ),
+                    ),
+                  );
+                }
+                if (!showWatch) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Optional. Watch an ad and this gold becomes ×${AdBoost.awayGoldMul}.',
+                        style: GameTheme.body(
+                          size: 13,
+                          color: GameTheme.parchment,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      GameButton(
+                        label: watchBusy
+                            ? 'LOADING AD…'
+                            : summary.welcomeBackAdLabel,
+                        style: GameButtonStyle.grey,
+                        onPressed: watchBusy
+                            ? null
+                            : () async {
+                                setLocal(() => watchBusy = true);
+                                final before = director.state.gold;
+                                final ok = await director
+                                    .watchWelcomeBackGoldAd(summary.goldGained);
+                                if (!context.mounted) return;
+                                setLocal(() {
+                                  watchBusy = false;
+                                  if (ok) {
+                                    showWatch = false;
+                                    adGoldAdded = director.state.gold - before;
+                                  }
+                                });
+                              },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          const SizedBox(height: 10),
+          Text(
+            contract.upNextLine,
+            style: GameTheme.body(
+              size: 14,
+              color: chase.urgency == HubChaseUrgency.normal
+                  ? GameTheme.mossLit
+                  : GameTheme.accentWarn,
+            ),
           ),
-        ),
+          if (contract.detail.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              contract.detail,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            ),
+          ],
+        ],
       ),
       actions: [
         if (showChaseCta)

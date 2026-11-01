@@ -161,4 +161,82 @@ void main() {
     );
     expect(director.offlineSummary, isNull);
   });
+
+  test(
+    'resume paints the caught-up hero level before the next frame',
+    () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      final director = GameDirector.preview();
+      addTearDown(director.dispose);
+      await director.boot();
+      director.enterDungeon();
+      director.setAppPaused(true);
+      director.debugStampAway(lastUpdatedAgo: const Duration(hours: 2));
+      final before = director.state.heroes.first.level;
+      final expected = GameLogic.applyOfflineProgress(
+        director.state,
+        const Duration(hours: 2),
+      );
+      final seen = <int>[];
+      director.addListener(() {
+        if (director.state.heroes.isEmpty) return;
+        seen.add(director.state.heroes.first.level);
+      });
+      director.setAppPaused(false);
+      expect(director.state.heroes.first.level, before);
+      expect(seen, isEmpty);
+      for (
+        var i = 0;
+        i < 80 && director.state.heroes.first.level == before;
+        i++
+      ) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      final level = director.state.heroes.first.level;
+      expect(level, expected.state.heroes.first.level);
+      expect(level, greaterThan(before));
+      expect(seen, isNotEmpty);
+      expect(seen.every((shown) => shown == level), isTrue);
+    },
+  );
+
+  test('a new away credit clears the Welcome Back ad grant', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    await director.boot();
+    director.debugGrantWelcomeBackAd();
+    expect(director.debugWelcomeBackAdGranted, isTrue);
+    final blocked = await director.watchWelcomeBackGoldAd(40);
+    expect(blocked, isFalse);
+    director.setAppPaused(true);
+    director.debugStampAway(lastUpdatedAgo: const Duration(hours: 2));
+    director.setAppPaused(false);
+    expect(director.debugWelcomeBackAdGranted, isFalse);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(director.debugWelcomeBackAdGranted, isFalse);
+    expect(director.offlineSummary, isNotNull);
+  });
+
+  test('boot does not publish the pre-away hero level', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final away = DateTime.now().subtract(const Duration(hours: 2));
+    final seed = GameLogic.enterDungeon(GameLogic.createInitialState(now: away))
+        .copyWith(lastUpdated: away);
+    final savedLevel = seed.heroes.first.level;
+    final director = GameDirector.preview(initialState: seed);
+    addTearDown(director.dispose);
+    final seen = <int>[];
+    director.addListener(() {
+      if (director.state.heroes.isEmpty) return;
+      seen.add(director.state.heroes.first.level);
+    });
+    await director.boot(deferCombatLoop: false);
+    final level = director.state.heroes.first.level;
+    expect(level, greaterThan(savedLevel));
+    expect(seen, isNotEmpty);
+    expect(seen.every((shown) => shown == level), isTrue);
+    expect(seen, isNot(contains(savedLevel)));
+  });
 }

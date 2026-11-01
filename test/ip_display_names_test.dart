@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/core/changelog.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/local_season.dart';
+import 'package:idle_party/models/class_ability.dart';
 import 'package:idle_party/models/hero.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/meta_depth.dart';
@@ -49,5 +51,27 @@ void main() {
     expect(loaded.titles, ['Spirebound', 'Spire Climber']);
     expect(loaded.activeTitle, 'Spirebound');
     expect(loaded.toJson()['titles'], isNot(contains('Infinity Bound')));
+  });
+
+  test('Frost Rain keeps the blizzard save id', () {
+    final def = ClassKits.defFor(AbilityId.blizzard);
+    expect(def, isNotNull);
+    expect(AbilityId.blizzard.name, 'blizzard');
+    expect(def!.name, 'Frost Rain');
+    expect(def.shortLabel, 'Hail');
+    expect(def.name.toLowerCase(), isNot(contains('blizzard')));
+  });
+
+  test('patch notes do not name WoW, Blizzard, or Flame Shock', () {
+    final notes = ChangelogCatalog.releases
+        .map((release) => release.bullets.join('\n'))
+        .join('\n');
+    expect(notes, isNot(contains('WoW')));
+    expect(notes, isNot(contains('Blizzard')));
+    expect(notes, isNot(contains('Flame Shock')));
+    expect(notes, isNot(contains('Frost Mage')));
+    expect(notes, isNot(contains('WotLK')));
+    expect(notes, isNot(contains('Cataclysm')));
+    expect(notes.toLowerCase(), isNot(contains('warcraft')));
   });
 }

@@ -104,31 +104,31 @@ extension GameDirectorSave on GameDirector {
   ///
   /// Cold start already does this in [boot]. A process Android kept alive
   /// used to skip it, so Welcome Back, the ping ask, and `d1_return` never ran.
+  /// The replay is sliced ([GameLogic.applyOfflineProgressAsync]) so a long
+  /// cave does not freeze the frame. The saved level stays up until that
+  /// credit finishes, then one notify shows the caught-up party.
   Future<void> _resumeFromBackground() async {
     if (!_isLoading) {
       final elapsed = DateTime.now().difference(_state.lastUpdated);
       if (elapsed.inSeconds >= GameDirector._awayCreditMinSec) {
+        _welcomeBackAdGranted = false;
         _awayCreditInFlight = true;
         try {
           final credited = await _creditAway(_state, showCard: true);
           _state = credited;
-          if (_state.inDungeon) {
+          if (_state.inDungeon && _spatial == null) {
             _rebuildSpatial();
-          } else {
-            _spatialTimer?.cancel();
-            _spatialTimer = null;
-            _spatial = null;
           }
           _directorNotify();
         } finally {
           _awayCreditInFlight = false;
         }
       }
-      if (!_appPaused) {
-        _noteFunnelSession(newInstall: false);
-        _syncHubIdleTimer();
-        unawaited(_persistFlush());
-      }
+    }
+    if (!_isLoading && !_appPaused) {
+      _noteFunnelSession(newInstall: false);
+      _syncHubIdleTimer();
+      unawaited(_persistFlush());
     }
     if (!_appPaused) {
       unawaited(_syncAwayReminders(backgrounded: false));
@@ -223,7 +223,7 @@ extension GameDirectorSave on GameDirector {
       _hasExistingSave = saved != null;
       final loaded = saved == null
           ? GameLogic.createInitialState()
-          : await _catchUpSaved(saved, deferCombatLoop: deferCombatLoop);
+          : await _catchUpSaved(saved);
       _state = GameLogic.backfillCodexFromInventory(
         GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
       );
@@ -287,23 +287,9 @@ extension GameDirectorSave on GameDirector {
   }
 
   /// Offline catch-up for one slot. Does not write prefs.
-  Future<GameState> _catchUpSaved(
-    GameState saved, {
-    required bool deferCombatLoop,
-  }) async {
-    // Paint immediately — AFK spatial sim must not hold the spinner.
-    // Do NOT start the live spatial loop until after offline catch-up.
-    _state = GameLogic.ensureRogueHero(saved);
-    _lastHighestDungeon = _state.highestDungeonCleared;
-    _syncDevicePrefs();
-    _ensureUiTimer();
-    // Keep loading flag true until boot's finally{} when intro is deferred —
-    // early notify would flash hub/dungeon under the title card.
-    if (!deferCombatLoop) {
-      _isLoading = false;
-      _directorNotify();
-    }
-
+  ///
+  /// Does not publish [saved] first. That frame was the old party level.
+  Future<GameState> _catchUpSaved(GameState saved) {
     return _creditAway(saved, showCard: true);
   }
 
@@ -315,6 +301,14 @@ extension GameDirectorSave on GameDirector {
     final elapsed = DateTime.now().difference(saved.lastUpdated);
     _welcomeBackAdGranted = false;
     final offline = await GameLogic.applyOfflineProgressAsync(saved, elapsed);
+    return _finishAwayCredit(offline, showCard: showCard);
+  }
+
+  /// Welcome Back card and funnel for a result that is already simulated.
+  Future<GameState> _finishAwayCredit(
+    OfflineProgressResult offline, {
+    required bool showCard,
+  }) async {
     var caught = offline.state;
     if (offline.hasSummary) {
       if (showCard) {
@@ -388,7 +382,7 @@ extension GameDirectorSave on GameDirector {
     await _storage.setActiveSlot(slot);
     _activeSlot = slot;
     _hasExistingSave = true;
-    final caught = await _catchUpSaved(saved, deferCombatLoop: true);
+    final caught = await _catchUpSaved(saved);
     await _installCaughtUp(caught);
     _notePlaySession();
     _noteFunnelSession(newInstall: false);

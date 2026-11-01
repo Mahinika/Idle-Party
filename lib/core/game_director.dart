@@ -182,6 +182,15 @@ class GameDirector extends ChangeNotifier {
   bool _welcomeBackAdBusy = false;
   bool _welcomeBackAdGranted = false;
 
+  @visibleForTesting
+  bool get debugWelcomeBackAdGranted => _welcomeBackAdGranted;
+
+  /// Pretend this card already paid, so a later absence can prove the reset.
+  @visibleForTesting
+  void debugGrantWelcomeBackAd() {
+    _welcomeBackAdGranted = true;
+  }
+
   /// Cold starts already counted this process, per save slot.
   final Set<int> _sessionNotedSlots = <int>{};
 

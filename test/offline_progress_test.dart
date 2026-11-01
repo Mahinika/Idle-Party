@@ -440,4 +440,190 @@ void main() {
     expect(two.state.gold, lessThan(full.state.gold));
     expect(two.headline, startsWith('Gold while away'));
   });
+
+  testWidgets('Check-in stays on screen at 1080x1920 and on a short phone', (
+    tester,
+  ) async {
+    final state = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 8, 8),
+    ).copyWith(bossVictories: 1);
+    final summary = result(gold: 40, essence: 2, seconds: 3600);
+    final withBoss = OfflineProgressResult(
+      state: state,
+      secondsApplied: summary.secondsApplied,
+      goldGained: summary.goldGained,
+      essenceGained: summary.essenceGained,
+      roomsCleared: summary.roomsCleared,
+      highestFloorDelta: summary.highestFloorDelta,
+      bossDelta: summary.bossDelta,
+    );
+    expect(GameLogic.checkInWelcomeLine(state), contains('Check-in 1/7'));
+    final director = GameDirector.preview();
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    Future<void> openAt(Size size) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showOfflineProgressDialog(context, director),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      director.uiFeedback.presentOffline(withBoss);
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final line = find.textContaining('Check-in 1/7');
+      expect(line, findsWidgets);
+      final target = line.first;
+      final scrollable = find.byType(Scrollable);
+      if (scrollable.evaluate().isNotEmpty) {
+        await tester.scrollUntilVisible(
+          target,
+          80,
+          scrollable: scrollable.first,
+        );
+      }
+      await tester.pumpAndSettle();
+      final rect = tester.getRect(target);
+      expect(rect.top, greaterThanOrEqualTo(0));
+      expect(rect.bottom, lessThanOrEqualTo(size.height + 1));
+      await tester.tap(find.text('ENTER DUNGEON'));
+      await tester.pumpAndSettle();
+    }
+
+    // Logical size of a 1080×1920 phone at 3x, then the raw surface.
+    await openAt(const Size(360, 640));
+    await openAt(const Size(1080, 1920));
+  });
+
+  testWidgets('a long best-item name stays above the Welcome Back buttons', (
+    tester,
+  ) async {
+    const longName =
+        'Ancient Veilglass Staff of the Mothveil Hollow Night Watch';
+    final state = GameLogic.createInitialState(
+      now: DateTime.utc(2026, 8, 8),
+    ).copyWith(bossVictories: 1);
+    final summary = OfflineProgressResult(
+      state: state,
+      secondsApplied: 3600,
+      goldGained: 40,
+      essenceGained: 2,
+      roomsCleared: 4,
+      highestFloorDelta: 1,
+      bossDelta: 0,
+      levelsGained: 2,
+      kills: 18,
+      bestDrop: longName,
+      wasInDungeon: true,
+    );
+    expect(summary.awayReport, contains('Best $longName'));
+    final director = GameDirector.preview();
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    director.uiFeedback.presentOffline(summary);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    final line = find.textContaining(longName);
+    expect(line, findsOneWidget);
+    final scrollable = find.byType(Scrollable);
+    expect(scrollable, findsOneWidget);
+    await tester.scrollUntilVisible(line, 40, scrollable: scrollable.first);
+    await tester.pumpAndSettle();
+
+    final textRect = tester.getRect(line);
+    final viewRect = tester.getRect(scrollable.first);
+    final buttonRect = tester.getRect(find.text('ENTER DUNGEON'));
+    final visible = textRect.intersect(viewRect);
+    expect(visible.height, greaterThan(8));
+    expect(viewRect.bottom, lessThanOrEqualTo(buttonRect.top + 1));
+    expect(visible.bottom, lessThanOrEqualTo(buttonRect.top + 1));
+    expect(visible.bottom, lessThanOrEqualTo(640));
+  });
+
+  test('claim all pays ready quests', () async {
+    final now = DateTime.now().toUtc();
+    final seeded = GameLogic.createInitialState(now: now);
+    final state = seeded.copyWith(
+      missions: [
+        for (final m in seeded.missions) m.copyWith(progress: m.target),
+      ],
+      metaDepth: seeded.metaDepth.copyWith(
+        questWeekKey: GameLogic.isoWeekKey(now),
+      ),
+    );
+    final director = GameDirector.preview(initialState: state);
+    await director.boot();
+    final gold = director.state.gold;
+    final essence = director.state.essence;
+    final n = director.claimAllReadyMissions();
+    expect(n, greaterThan(0));
+    expect(
+      director.state.gold > gold || director.state.essence > essence,
+      isTrue,
+    );
+    expect(director.state.missions.any((m) => m.canClaim), isFalse);
+    director.dispose();
+  });
+
+  testWidgets('Welcome Back collects ready quests', (tester) async {
+    final now = DateTime.now().toUtc();
+    final seeded = GameLogic.createInitialState(now: now);
+    final state = seeded.copyWith(
+      missions: [
+        for (final m in seeded.missions) m.copyWith(progress: m.target),
+      ],
+      metaDepth: seeded.metaDepth.copyWith(
+        questWeekKey: GameLogic.isoWeekKey(now),
+      ),
+    );
+    final director = GameDirector.preview(initialState: state);
+    await director.boot();
+    director.uiFeedback.presentOffline(result(gold: 40));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showOfflineProgressDialog(context, director),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('COLLECT ALL'), findsOneWidget);
+    final gold = director.state.gold;
+    await tester.tap(find.text('COLLECT ALL'));
+    await tester.pumpAndSettle();
+    expect(director.state.gold, greaterThan(gold));
+    expect(director.state.missions.any((m) => m.canClaim), isFalse);
+    expect(find.text('COLLECT ALL'), findsNothing);
+    director.dispose();
+  });
 }
