@@ -599,6 +599,10 @@ class _HubScreenState extends State<HubScreen>
             );
           },
         ),
+        ReinstallPouchFab(
+          state: state,
+          onWatch: () => unawaited(director.watchReinstallPouchAd()),
+        ),
         if (_showPowerupsFab()) ...[
           const SizedBox(height: GameTheme.clusterGap),
           HubPowerupsFab(

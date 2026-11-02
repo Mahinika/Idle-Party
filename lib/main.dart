@@ -227,6 +227,7 @@ class _GameHomePageState extends State<GameHomePage>
   final MenuRouter _router = MenuRouter();
   _AppPhase _phase = _AppPhase.loading;
   bool _playUpdateTapBusy = false;
+  bool? _playGamesCloudFound;
   _AppPhase _menuBeforeNewGame = _AppPhase.startMenu;
 
   @override
@@ -347,7 +348,18 @@ class _GameHomePageState extends State<GameHomePage>
       unawaited(BootFunnel.note(FunnelAnalytics.bootIntroShown));
     } else if (_phase == _AppPhase.startMenu) {
       unawaited(BootFunnel.note(FunnelAnalytics.startMenuShown));
+      _refreshPlayGamesCloudPeek();
     }
+  }
+
+  void _refreshPlayGamesCloudPeek() {
+    if (_director.hasAnySave) return;
+    unawaited(
+      _director.peekPlayGamesCloudBackup().then((found) {
+        if (!mounted || _director.hasAnySave) return;
+        setState(() => _playGamesCloudFound = found);
+      }),
+    );
   }
 
   Future<void> _recheckMandatoryPlayUpdate() async {
@@ -669,6 +681,7 @@ class _GameHomePageState extends State<GameHomePage>
           onRestoreCloud: _director.hasAnySave
               ? null
               : () => unawaited(_restoreCloud()),
+          playGamesCloudFound: _playGamesCloudFound,
           onSettings: () {
             if (_director.hasExistingSave) {
               _continueGame();

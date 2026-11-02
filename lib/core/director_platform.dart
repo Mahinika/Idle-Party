@@ -657,4 +657,54 @@ extension GameDirectorPlatform on GameDirector {
       );
 
   Future<GameState?> loadPlayGamesCloud() => PlayGamesBridge.loadCloud();
+
+  /// Title hint only. Does not read or write local saves.
+  Future<bool> peekPlayGamesCloudBackup() async {
+    if (!PlayGamesBridge.isSupported) return false;
+    if (!await PlayGamesBridge.refreshSignedIn()) return false;
+    final cloud = await PlayGamesBridge.loadCloud();
+    return cloud != null && PlayGamesScores.localSaveHasProgress(cloud);
+  }
+
+  /// One rewarded starter pile after a fresh install with no prior save.
+  Future<bool> watchReinstallPouchAd() async {
+    if (!ReinstallPouch.showOffer(_state)) return false;
+    if (_isLoading) return false;
+    final md = _state.metaDepth;
+    if (md.adFree || AdBoost.hasPerm(md, AdBoost.permRest)) {
+      final gold = ReinstallPouch.goldAmount(_state);
+      _applyUpgrade(ReinstallPouch.grant(_state));
+      showToast('+$gold gold starter pouch', life: 2.4);
+      unawaited(_persistFlush());
+      return true;
+    }
+    if (!AdRewarded.realAdsAvailable) {
+      showToast('Ads play on the Android app', life: 2.2);
+      return false;
+    }
+    showToast('Loading ad…', life: 1.4);
+    try {
+      final result = await AdRewarded.showRewarded(
+        placement: AnalyticsEvents.placementWelcomeBack,
+      );
+      switch (result) {
+        case AdWatchResult.rewarded:
+          noteCompletedRewardedWatch();
+          final gold = ReinstallPouch.goldAmount(_state);
+          _applyUpgrade(ReinstallPouch.grant(_state));
+          showToast('+$gold gold', life: 2.4);
+          unawaited(_persistFlush());
+          return true;
+        case AdWatchResult.skipped:
+          showToast('Watch the full ad for gold', life: 2.2);
+          return false;
+        case AdWatchResult.failed:
+        case AdWatchResult.unavailable:
+          showToast('Ad not ready — try again', life: 2.2);
+          return false;
+      }
+    } finally {
+      _directorNotify();
+    }
+  }
 }

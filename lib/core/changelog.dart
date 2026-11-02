@@ -82,7 +82,7 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.15';
+  static const String currentVersion = '1.13.16';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
@@ -90,11 +90,16 @@ abstract final class ChangelogCatalog {
       version: currentVersion,
       date: 'Nov 2, 2026',
       summary:
-          'Your party fights on its own. Tap ENTER DUNGEON. Cold start opens the title instead of freezing on Loading.',
+          'Your party fights on its own. Tap ENTER DUNGEON. After reinstall, RESTORE CLOUD or a one-time starter pouch can bring you back.',
       fixed: <String>[
-        'Cold start no longer freezes on the Cognifox loading screen.',
+        'Playtest UI dumps no longer skip straight to semantics (fewer accidental CLAIM taps).',
+      ],
+      added: <String>[
+        'Empty title: RESTORE CLOUD pulls your Play Games backup. A line appears when that backup exists.',
+        'Fresh install: one WATCH AD starter gold pile on the hub when there was no save on the phone.',
       ],
       changed: <String>[
+        'Play Games sign-in on an empty phone restores cloud before uploading a new party.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
         'Race still locks after New Game START.',
@@ -104,7 +109,7 @@ abstract final class ChangelogCatalog {
       ],
     ),
     ChangelogRelease(
-      version: '1.13.14',
+      version: '1.13.15',
       date: 'Nov 2, 2026',
       bullets: <String>[
         'Your party fights on its own. Tap ENTER DUNGEON. After the first boss the gold lantern stays until you tap it.',

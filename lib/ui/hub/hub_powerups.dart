@@ -10,6 +10,7 @@ import '../../core/game_director.dart';
 import '../../core/menu_router.dart';
 import '../../core/scroll_well.dart';
 import '../../core/shop_store.dart';
+import '../../core/reinstall_pouch.dart';
 import '../../core/wisp_gift.dart';
 import 'friend_tip_block.dart';
 import '../../core/game_state.dart';
@@ -19,6 +20,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../shell/play_nav.dart';
+import '../shell/shell_common.dart';
 import '../shell/wallet_strip.dart';
 import '../web_click_bridge.dart';
 
@@ -667,6 +669,33 @@ class _BuffRow extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// One WATCH gold pile after a fresh install with no prior save file.
+class ReinstallPouchFab extends StatelessWidget {
+  const ReinstallPouchFab({
+    super.key,
+    required this.state,
+    required this.onWatch,
+  });
+
+  final GameState state;
+  final VoidCallback onWatch;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!ReinstallPouch.showOffer(state)) return const SizedBox.shrink();
+    final gold = ReinstallPouch.goldAmount(state);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: GameTheme.clusterGap),
+      child: GameButton(
+        label: 'WATCH AD · +${formatGold(gold)} STARTER',
+        style: GameButtonStyle.grey,
+        tip: 'One-time gold after a fresh install',
+        onPressed: onWatch,
       ),
     );
   }

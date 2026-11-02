@@ -27,6 +27,7 @@ class StartMenuScreen extends StatefulWidget {
     this.onSettings,
     this.canStartNewGame = true,
     this.onSavesFull,
+    this.playGamesCloudFound,
   });
 
   final bool canContinue;
@@ -48,6 +49,9 @@ class StartMenuScreen extends StatefulWidget {
   /// False when all five files are in use.
   final bool canStartNewGame;
   final VoidCallback? onSavesFull;
+
+  /// Signed-in Play Games profile has a progress snapshot.
+  final bool? playGamesCloudFound;
 
   @override
   State<StartMenuScreen> createState() => _StartMenuScreenState();
@@ -189,6 +193,21 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               ),
                             ),
                           ),
+                          if (!widget.canContinue &&
+                              widget.playGamesCloudFound == true) ...[
+                            const SizedBox(height: 6),
+                            Opacity(
+                              opacity: copyOpacity,
+                              child: Text(
+                                'Play Games backup found on this account.',
+                                textAlign: TextAlign.center,
+                                style: GameTheme.body(
+                                  size: 13,
+                                  color: GameTheme.mossLit,
+                                ),
+                              ),
+                            ),
+                          ],
                           const Spacer(flex: 3),
                           Opacity(
                             opacity: ctaOpacity,

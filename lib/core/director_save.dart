@@ -238,6 +238,7 @@ extension GameDirectorSave on GameDirector {
     try {
       _saveSlots = await _storage.listSlots();
       _activeSlot = _storage.activeSlotIndex;
+      _phoneHadNoSaveAtBoot = !_saveSlots.any((slot) => slot.occupied);
       final saved = await _storage.load();
       _hasExistingSave = saved != null;
       final loaded = saved == null
@@ -474,6 +475,9 @@ extension GameDirectorSave on GameDirector {
       partyRaces: partyRaces,
       partySexes: partySexes,
     );
+    if (_phoneHadNoSaveAtBoot) {
+      _state = ReinstallPouch.markDue(_state);
+    }
     _hasExistingSave = true;
     _notePlaySession(newGame: true);
     _noteAppColdStart();

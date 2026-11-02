@@ -51,6 +51,7 @@ import 'rift.dart';
 import 'greater_rift.dart';
 import 'play_games_scores.dart';
 import 'play_review_ask.dart';
+import 'reinstall_pouch.dart';
 import 'away_fight_tip.dart';
 import 'play_store_update.dart';
 import 'screen_awake.dart';
@@ -115,6 +116,7 @@ class GameDirector extends ChangeNotifier {
   bool _isLoading = true;
   bool _hasExistingSave = false;
   bool _signInRestoredCloud = false;
+  bool _phoneHadNoSaveAtBoot = false;
   int _activeSlot = 0;
   int? _pendingNewGameSlot;
   List<SaveSlotSummary> _saveSlots = List<SaveSlotSummary>.generate(
@@ -293,6 +295,9 @@ class GameDirector extends ChangeNotifier {
 
   /// Sign-in already replaced the empty party with the Play Games snapshot.
   bool get signInRestoredCloud => _signInRestoredCloud;
+
+  /// True when boot found no occupied save slot on this install.
+  bool get phoneHadNoSaveAtBoot => _phoneHadNoSaveAtBoot;
 
   /// Title-screen files. Always [GameStorage.slotCount] long.
   List<SaveSlotSummary> get saveSlots => _saveSlots;

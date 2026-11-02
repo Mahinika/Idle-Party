@@ -978,27 +978,19 @@ def _ws_rpc(serial: str, port: int, auth: str, method: str, params: dict) -> dic
 
 
 def _semantics_text(serial: str, folder: Path | None = None) -> str:
-    """Read the semantics tree while uiautomator is connected.
+    """Read the semantics tree via the VM service.
 
-    Flutter only builds that tree when something asks (a dump does). The dump
-    itself then gives up, because the hub and a fight never sit still.
+    Do not run uiautomator here — a parallel dump can activate hub buttons
+    (CLAIM chips) while the tree is built.
     """
     found = _vm_endpoint(serial, folder)
     if found is None:
         return ""
     port, auth = found
-    proc = subprocess.Popen(
-        [
-            "adb", "-s", serial, "shell", "timeout", "8",
-            "uiautomator", "dump", "--compressed", "/sdcard/idle_party_ui.xml",
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
     try:
-        time.sleep(2.2)
+        time.sleep(0.8)
         text = ""
-        for _ in range(3):
+        for _ in range(4):
             vm = _ws_rpc(serial, port, auth, "getVM", {})
             isolates = ((vm or {}).get("result") or {}).get("isolates") or []
             if not isolates:
@@ -1020,12 +1012,8 @@ def _semantics_text(serial: str, folder: Path | None = None) -> str:
                 break
             time.sleep(1.2)
         return text if isinstance(text, str) else ""
-    finally:
-        adb_see.adb(serial, "shell", "pkill", "-f", "uiautomator", check=False)
-        try:
-            proc.wait(timeout=3)
-        except subprocess.TimeoutExpired:
-            proc.kill()
+    except (OSError, json.JSONDecodeError, TimeoutError):
+        return ""
 
 
 def _uiautomator_nodes(serial: str, dest: Path) -> list[Node] | None:
@@ -1049,23 +1037,17 @@ def _uiautomator_nodes(serial: str, dest: Path) -> list[Node] | None:
 
 def capture_tree(serial: str, dest: Path) -> list[Node] | None:
     remember_vm(serial, dest.parent)
-    marker = dest.parent / "tree-mode.txt"
-    prefer_vm = marker.exists() and marker.read_text(encoding="utf-8").strip() == "vm"
-    if not prefer_vm:
-        nodes = _uiautomator_nodes(serial, dest)
-        if nodes is not None:
-            return nodes
+    nodes = _uiautomator_nodes(serial, dest)
+    if nodes is not None:
+        (dest.parent / "tree-mode.txt").unlink(missing_ok=True)
+        return nodes
     text = _semantics_text(serial, dest.parent)
     nodes = parse_semantics(text) if text else []
     if nodes:
         dest.parent.mkdir(parents=True, exist_ok=True)
-        marker.write_text("vm", encoding="utf-8")
+        marker = dest.parent / "tree-mode.txt"
+        marker.write_text("vm-fallback", encoding="utf-8")
         return nodes
-    if prefer_vm:
-        nodes = _uiautomator_nodes(serial, dest)
-        if nodes is not None:
-            marker.unlink(missing_ok=True)
-            return nodes
     return None
 
 

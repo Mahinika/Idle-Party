@@ -405,6 +405,8 @@ class MetaDepthState {
     this.petErrandEssence = 0,
     this.petErrandEmbers = 0,
     this.comebackTier = 0,
+    this.reinstallPouchDue = false,
+    this.reinstallPouchClaimed = false,
   });
 
   final int sanctuaryXpLevel;
@@ -860,6 +862,12 @@ class MetaDepthState {
   /// Survives Ascend. Old saves default to 0.
   final int comebackTier;
 
+  /// Fresh install with no save file — hub offers one WATCH gold pile.
+  final bool reinstallPouchDue;
+
+  /// That offer was taken or skipped after grant.
+  final bool reinstallPouchClaimed;
+
   static const empty = MetaDepthState();
 
   int get basePetRosterCap => 6 + petRosterCapBonus;
@@ -1051,6 +1059,8 @@ class MetaDepthState {
     int? petErrandEssence,
     int? petErrandEmbers,
     int? comebackTier,
+    bool? reinstallPouchDue,
+    bool? reinstallPouchClaimed,
   }) {
     return MetaDepthState(
       sanctuaryXpLevel: sanctuaryXpLevel ?? this.sanctuaryXpLevel,
@@ -1261,6 +1271,9 @@ class MetaDepthState {
       petErrandEssence: petErrandEssence ?? this.petErrandEssence,
       petErrandEmbers: petErrandEmbers ?? this.petErrandEmbers,
       comebackTier: comebackTier ?? this.comebackTier,
+      reinstallPouchDue: reinstallPouchDue ?? this.reinstallPouchDue,
+      reinstallPouchClaimed:
+          reinstallPouchClaimed ?? this.reinstallPouchClaimed,
     );
   }
 
@@ -1447,6 +1460,8 @@ class MetaDepthState {
     'petErrandEssence': petErrandEssence,
     'petErrandEmbers': petErrandEmbers,
     'comebackTier': comebackTier,
+    'reinstallPouchDue': reinstallPouchDue,
+    'reinstallPouchClaimed': reinstallPouchClaimed,
   };
 
   factory MetaDepthState.fromJson(Map<String, dynamic>? json) {
@@ -1772,6 +1787,8 @@ class MetaDepthState {
       petErrandEssence: (json['petErrandEssence'] as num?)?.toInt() ?? 0,
       petErrandEmbers: (json['petErrandEmbers'] as num?)?.toInt() ?? 0,
       comebackTier: (json['comebackTier'] as num?)?.toInt() ?? 0,
+      reinstallPouchDue: json['reinstallPouchDue'] as bool? ?? false,
+      reinstallPouchClaimed: json['reinstallPouchClaimed'] as bool? ?? false,
     );
   }
 
