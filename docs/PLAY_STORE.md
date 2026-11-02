@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ submitted | **1.13.5 (231)** uploaded **2026-10-28** (track set `completed` in the same edit). Previous live was **1.13.2 (228)**. The public page can still name **1.13.2** until Google publishes. Managed publishing is off. |
+| Production | ✅ completed | Read **2026-11-02**: track `completed` is **1.13.7 (233)**. Local tree is **1.13.13+239**, not uploaded. **1.13.8–1.13.13** never went to Play. Managed publishing is off. |
 | CI signing secrets | ✅ set 2026-11-01 | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (`storeFile=../upload-keystore.jks`). Tag `v1.13.6` decoded them and signed `app-release.aab` with the upload cert (CN=Idle Party). `v1.13.2` and earlier GitHub AABs stayed debug-signed. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -83,8 +83,8 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Owner said do the best next step (**2026-10-28**) — ship **1.13.5**.
 - [x] Signed Production AAB **1.13.5+231** built locally (`app-release.aab`, 188.9 MB) and uploaded via Play API (one edit: 8 phone shots, icon, feature graphic, tablet slots cleared, bundle, production track). Commit edit `04887265008164011819`. Notes also cover unsent **1.13.3** and **1.13.4**. Public page can still name **1.13.2** until Google publishes.
 - [x] Tag `v1.13.6` (`ba67975e`, **1.13.6+232**) attached a signed AAB and APK to the GitHub Release. CI decoded the upload keystore and wrote the live AdMob ids. Not sent to Play.
-- [ ] Tag `v1.13.7` — cold-start fix; dispatch Play upload only when the owner asks.
-- [ ] Dispatch `.github/workflows/play-upload.yml` with tag `v1.13.7` only when the owner asks. That job uploads the release AAB to production at 5% with the en-US and sv-SE notes. It does not run on its own.
+- [x] Production track read **2026-11-02** is `completed` **1.13.7 (233)**. The earlier “dispatch v1.13.7” line is done.
+- [ ] Next Play upload must use a versionCode above **233**. Current local code is **239** (`1.13.13+239`). Fold unsent **1.13.8–1.13.13** into What's New. Dispatch only when the owner asks.
 
 ### Production upload paste (en-US release notes)
 
