@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ completed | Read **2026-11-02**: track `completed` is **1.13.15 (241)** for everyone. The 5% rollout was raised the same evening. Previous full build was **1.13.14 (240)**. |
+| Production | ⏳ submitted | **2026-11-02:** **1.13.16 (242)** uploaded to production at **5%** (RESTORE CLOUD, Play Games guard, starter pouch, playtest dump fix). Previous live build **1.13.15 (241)** for everyone. Not `completed` on track until Console confirms. |
 | CI signing secrets | ✅ set 2026-11-01 | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (`storeFile=../upload-keystore.jks`). Tag `v1.13.6` decoded them and signed `app-release.aab` with the upload cert (CN=Idle Party). `v1.13.2` and earlier GitHub AABs stayed debug-signed. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
