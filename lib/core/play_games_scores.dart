@@ -1,3 +1,4 @@
+import 'game_state.dart';
 import 'keystone.dart';
 import 'party_name_filter.dart';
 
@@ -45,6 +46,23 @@ abstract final class PlayGamesScores {
     if (newKey < bestKey) return false;
     if (bestKey <= 0) return newKey > 0;
     return newClearMs < bestClearMs || bestClearMs <= 0;
+  }
+
+  /// A brand-new party has no gold, floors, or levels yet.
+  ///
+  /// A newer stamp on that party must not beat a Play Games snapshot.
+  static bool localSaveHasProgress(GameState state) {
+    if (state.ascensionLevel > 0) return true;
+    if (state.highestFloorCleared > 0) return true;
+    if (state.bossVictories > 0) return true;
+    if (state.highestDungeonCleared >= 0) return true;
+    if (state.lifetimeGoldEarned > 0) return true;
+    if (state.essence > 0) return true;
+    if (state.metaDepth.gauntletBestFloor > 0) return true;
+    for (final hero in state.heroRoster) {
+      if (hero.level > 1) return true;
+    }
+    return false;
   }
 
   /// Conflict helper: newer stamp wins when gap > [skewMs].

@@ -556,6 +556,42 @@ class _GameHomePageState extends State<GameHomePage>
     _continueGame();
   }
 
+  Future<void> _restoreCloud() async {
+    if (_phase != _AppPhase.startMenu || _director.hasAnySave) return;
+    WebClickBridge.pushLayer();
+    bool? ok;
+    try {
+      ok = await showDialog<bool>(
+        context: context,
+        barrierColor: MenuChrome.scrim,
+        builder: (ctx) => MenuChrome.dialog(
+          title: 'Restore cloud save?',
+          content: Text(
+            'This fills the empty phone with the Play Games backup on this Google account.',
+            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          ),
+          actions: [
+            MenuChrome.dialogCancel(
+              label: 'CANCEL',
+              onPressed: () => Navigator.pop(ctx, false),
+            ),
+            GameButton(
+              label: 'RESTORE',
+              expanded: false,
+              onPressed: () => Navigator.pop(ctx, true),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      WebClickBridge.popLayer();
+    }
+    if (ok != true || !mounted) return;
+    final restored = await _director.restoreCloudOnTitle();
+    if (!restored || !mounted) return;
+    _continueGame();
+  }
+
   Future<void> _confirmNewGame(
     List<HeroSpecId> specs,
     String partyName,
@@ -630,6 +666,9 @@ class _GameHomePageState extends State<GameHomePage>
               : () => unawaited(_playDefaultParty()),
           onSavesFull: _savesFull,
           onRestore: () => unawaited(_restoreSave()),
+          onRestoreCloud: _director.hasAnySave
+              ? null
+              : () => unawaited(_restoreCloud()),
           onSettings: () {
             if (_director.hasExistingSave) {
               _continueGame();

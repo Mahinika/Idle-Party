@@ -114,6 +114,7 @@ class GameDirector extends ChangeNotifier {
   GameState _state;
   bool _isLoading = true;
   bool _hasExistingSave = false;
+  bool _signInRestoredCloud = false;
   int _activeSlot = 0;
   int? _pendingNewGameSlot;
   List<SaveSlotSummary> _saveSlots = List<SaveSlotSummary>.generate(
@@ -289,6 +290,9 @@ class GameDirector extends ChangeNotifier {
 
   /// True after [boot] if the active slot was loaded (autosave may write).
   bool get hasExistingSave => _hasExistingSave;
+
+  /// Sign-in already replaced the empty party with the Play Games snapshot.
+  bool get signInRestoredCloud => _signInRestoredCloud;
 
   /// Title-screen files. Always [GameStorage.slotCount] long.
   List<SaveSlotSummary> get saveSlots => _saveSlots;

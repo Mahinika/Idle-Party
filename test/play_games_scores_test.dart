@@ -209,6 +209,25 @@ void main() {
   });
 
   group('cloud conflict', () {
+    test('a fresh party is not progress', () {
+      final fresh = GameLogic.createInitialState();
+      expect(PlayGamesScores.localSaveHasProgress(fresh), isFalse);
+      expect(
+        PlayGamesScores.localSaveHasProgress(fresh.copyWith(gold: 40)),
+        isFalse,
+      );
+      expect(
+        PlayGamesScores.localSaveHasProgress(
+          fresh.copyWith(lifetimeGoldEarned: 40),
+        ),
+        isTrue,
+      );
+      expect(
+        PlayGamesScores.localSaveHasProgress(fresh.copyWith(ascensionLevel: 2)),
+        isTrue,
+      );
+    });
+
     test('newer local wins beyond skew', () {
       expect(
         PlayGamesScores.resolveConflict(localMs: 200000, cloudMs: 100000),

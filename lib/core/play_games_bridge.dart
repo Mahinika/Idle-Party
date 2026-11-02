@@ -289,6 +289,9 @@ abstract final class PlayGamesBridge {
     Duration delay = const Duration(seconds: 8),
   }) {
     if (!isSupported) return;
+    // Opt-in lives in the save. A reinstall is signed in at Google and
+    // opted out here, so a new party must not replace the cloud snapshot.
+    if (!state.metaDepth.playGamesOptIn) return;
     _pendingUpload = state;
     _uploadDebounce?.cancel();
     _uploadDebounce = Timer(delay, () {

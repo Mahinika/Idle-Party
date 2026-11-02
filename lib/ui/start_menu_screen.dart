@@ -21,6 +21,7 @@ class StartMenuScreen extends StatefulWidget {
     required this.onContinue,
     required this.onNewGame,
     required this.onRestore,
+    this.onRestoreCloud,
     this.onPlay,
     this.saveSummary,
     this.onSettings,
@@ -32,6 +33,9 @@ class StartMenuScreen extends StatefulWidget {
   final VoidCallback onContinue;
   final VoidCallback onNewGame;
   final VoidCallback onRestore;
+
+  /// No local file yet. Pulls the Play Games snapshot and does not upload.
+  final VoidCallback? onRestoreCloud;
 
   /// First launch, no save: one tap starts the default party in the cave.
   /// [onNewGame] stays as CUSTOMIZE.
@@ -256,10 +260,22 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                 GameButton(
                                   label: 'RESTORE SAVE',
                                   style: GameButtonStyle.grey,
+                                  tip: 'Paste a save from the clipboard',
                                   onPressed: _inputUnlocked
                                       ? widget.onRestore
                                       : null,
                                 ),
+                                if (widget.onRestoreCloud != null) ...[
+                                  const SizedBox(height: 8),
+                                  GameButton(
+                                    label: 'RESTORE CLOUD',
+                                    style: GameButtonStyle.grey,
+                                    tip: 'Play Games backup on this Google account',
+                                    onPressed: _inputUnlocked
+                                        ? widget.onRestoreCloud
+                                        : null,
+                                  ),
+                                ],
                                 const SizedBox(height: 4),
                                 Wrap(
                                   alignment: WrapAlignment.center,

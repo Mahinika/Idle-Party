@@ -509,7 +509,12 @@ extension GameDirectorPlatform on GameDirector {
   }
 
   /// Opt-in Play Games sign-in (leaderboards + cloud). Returns true when signed in.
+  ///
+  /// An empty party is replaced by the cloud snapshot. A party that already
+  /// played is left alone so the caller can ask which file to keep. This
+  /// does not upload that party.
   Future<bool> signInPlayGames() async {
+    _signInRestoredCloud = false;
     final ok = await PlayGamesBridge.signIn();
     if (!ok) {
       showToast(
@@ -520,22 +525,67 @@ extension GameDirectorPlatform on GameDirector {
       );
       return false;
     }
+    final cloud = await PlayGamesBridge.loadCloud();
+    final keepLocal =
+        _hasExistingSave && PlayGamesScores.localSaveHasProgress(_state);
+    if (cloud != null && !keepLocal) {
+      await _installCloudSnapshot(cloud);
+      _signInRestoredCloud = true;
+      return true;
+    }
+    if (cloud == null) {
+      _state = _state.copyWith(
+        metaDepth: _state.metaDepth.copyWith(playGamesOptIn: true),
+      );
+      showToast(
+        _hasExistingSave
+            ? 'Signed in to Play Games'
+            : 'Signed in · no cloud save yet',
+        life: 2.2,
+      );
+      unawaited(PlayGamesBridge.saveCloud(_state));
+      unawaited(PlayGamesBridge.flushPendingScores());
+      unawaited(_persistFlush());
+      _saveSlots = await _storage.listSlots();
+      _directorNotify();
+      return true;
+    }
+    showToast('Signed in to Play Games', life: 2.0);
+    _directorNotify();
+    return true;
+  }
+
+  /// Title screen with no local file. Pulls the Play Games snapshot only.
+  Future<bool> restoreCloudOnTitle() async {
+    _signInRestoredCloud = false;
+    final ok = await PlayGamesBridge.signIn();
+    if (!ok) {
+      showToast(
+        PlayGamesBridge.isSupported
+            ? 'Play Games sign-in failed'
+            : 'Play Games unavailable on this build',
+        life: 2.4,
+      );
+      return false;
+    }
+    final cloud = await PlayGamesBridge.loadCloud();
+    if (cloud == null) {
+      showToast('No Play Games save found', life: 2.2);
+      return false;
+    }
+    await _installCloudSnapshot(cloud);
+    _signInRestoredCloud = true;
+    return true;
+  }
+
+  Future<void> _installCloudSnapshot(GameState cloud) async {
+    _applyCloudRestore(cloud, toast: 'Restored from Play Games');
     _state = _state.copyWith(
       metaDepth: _state.metaDepth.copyWith(playGamesOptIn: true),
     );
+    await _persistFlush();
+    _saveSlots = await _storage.listSlots();
     _directorNotify();
-    final cloud = await PlayGamesBridge.loadCloud();
-    if (cloud != null && !_hasExistingSave) {
-      _applyCloudRestore(cloud, toast: 'Restored from Play Games');
-    } else if (cloud == null && !_hasExistingSave) {
-      showToast('Signed in · no cloud save yet', life: 2.2);
-    } else {
-      showToast('Signed in to Play Games', life: 2.0);
-    }
-    unawaited(PlayGamesBridge.saveCloud(_state));
-    unawaited(PlayGamesBridge.flushPendingScores());
-    unawaited(_persistFlush());
-    return true;
   }
 
   void _applyCloudRestore(GameState cloud, {required String toast}) {
@@ -558,6 +608,12 @@ extension GameDirectorPlatform on GameDirector {
 
   Future<bool> backupToPlayGames() async {
     final ok = await PlayGamesBridge.saveCloud(_state);
+    if (ok) {
+      _state = _state.copyWith(
+        metaDepth: _state.metaDepth.copyWith(playGamesOptIn: true),
+      );
+      unawaited(_persistFlush());
+    }
     showToast(
       ok ? 'Backed up to Play Games' : 'Cloud backup failed',
       life: 2.2,
@@ -571,7 +627,9 @@ extension GameDirectorPlatform on GameDirector {
       showToast('No Play Games save found', life: 2.2);
       return false;
     }
-    if (!force) {
+    final placeholder =
+        !_hasExistingSave || !PlayGamesScores.localSaveHasProgress(_state);
+    if (!force && !placeholder) {
       final decision = PlayGamesScores.resolveConflict(
         localMs: _state.metaDepth.cloudSaveUpdatedMs,
         cloudMs: cloud.metaDepth.cloudSaveUpdatedMs,
@@ -585,8 +643,7 @@ extension GameDirectorPlatform on GameDirector {
         return false;
       }
     }
-    _applyCloudRestore(cloud, toast: 'Restored from Play Games');
-    unawaited(_persistFlush());
+    await _installCloudSnapshot(cloud);
     return true;
   }
 

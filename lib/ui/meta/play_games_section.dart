@@ -31,9 +31,18 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
     final director = playGamesDirector;
     final ok = await director.signInPlayGames();
     if (!ok || !mounted) return;
+    if (director.signInRestoredCloud) return;
     final cloud = await director.loadPlayGamesCloud();
     if (cloud == null || !mounted) return;
+    if (!PlayGamesScores.localSaveHasProgress(director.state)) {
+      await director.restoreFromPlayGames(force: true);
+      return;
+    }
     final conflict = director.peekCloudConflict(cloud);
+    if (conflict == CloudConflict.preferCloud) {
+      await director.restoreFromPlayGames(force: true);
+      return;
+    }
     if (conflict != CloudConflict.askUser) return;
     final useCloud = await showDialog<bool>(
       context: context,
