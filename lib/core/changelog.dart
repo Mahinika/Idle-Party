@@ -82,12 +82,33 @@ class ChangelogRelease {
 /// Patch notes catalog. A version bump edits this file and pubspec.yaml.
 abstract final class ChangelogCatalog {
   /// Current build's changelog version. Keep in sync with pubspec version.
-  static const String currentVersion = '1.13.13';
+  static const String currentVersion = '1.13.14';
 
   /// Structured releases, newest first. Older highlights are condensed.
   static const List<ChangelogRelease> releases = <ChangelogRelease>[
     ChangelogRelease(
       version: currentVersion,
+      date: 'Nov 2, 2026',
+      summary:
+          'Your party fights on its own. Tap ENTER DUNGEON. After the first boss the gold lantern stays until you tap it.',
+      added: <String>[
+        'After the first boss, the gold lantern stays in the cave with Tap for gold until you tap it.',
+        'The morning ping names today\'s job.',
+      ],
+      changed: <String>[
+        'The quiet ping ask is two lines: morning job, evening prize, and quiet hours. Turn it off in SETTINGS.',
+        'When today\'s vault is already claimed, the hub button says ENTER DUNGEON.',
+        'The SHOP dot shows only when Play lists a pack.',
+        'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
+        'At party Lv100, MORE → CRAFT still runs a monthly Craft Trial.',
+        'Race still locks after New Game START.',
+        'KEY waits until every active hero is Lv100.',
+        'Ranked GR packs still scale with rank only. GOLD → FORGE does not buff monsters.',
+        'Ascend still says Rebuild your bag. At AL 20, BLESSING still has optional REBORN.',
+      ],
+    ),
+    ChangelogRelease(
+      version: '1.13.13',
       date: 'Nov 1, 2026',
       summary:
           'Your party fights on its own. Tap ENTER DUNGEON. SHOP Cinder + season pass rows, wipe WISP hint, MIGHT RUSH.',
