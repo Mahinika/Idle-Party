@@ -76,8 +76,8 @@
         <!-- FirebaseInitProvider calls FirebaseApp.initializeApp on the main
              thread before the first frame. Crashlytics and Firebase Sessions
              are eager, so that call blocks the UI thread (ANR, Play icon
-             stuck, Cognifox never paints). Dart initializes Firebase on a
-             background pool after the first frame. Collection stays off
+             stuck, Cognifox never paints). Dart initializes Firebase only
+             after the loading splash is gone. Collection stays off
              until UMP. After that check, Analytics collection turns on.
              Crashlytics stays off when the player declines. -->
         <provider

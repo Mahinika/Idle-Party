@@ -43,6 +43,23 @@ void main() {
     expect(oneShot.roomsCleared, greaterThan(0), reason: 'sim must do work');
   });
 
+  test('one AFK slice stays inside the Android not-responding window', () {
+    final farm = GameLogic.setDungeonMode(
+      GameLogic.enterDungeon(
+        GameLogic.createInitialState(now: DateTime(2026, 8, 16)),
+        dungeonId: 'sandy',
+      ),
+      DungeonMode.farm,
+    );
+    final sim = OfflineSim(farm, 45 * 60);
+    final watch = Stopwatch()..start();
+    sim.runSlice(100000);
+    watch.stop();
+    expect(OfflineSim.sliceBudget.inMilliseconds, lessThan(100));
+    expect(watch.elapsed, lessThan(const Duration(seconds: 1)));
+    expect(sim.done, isFalse);
+  });
+
   test('async offline credit matches the sync path', () async {
     final farm = GameLogic.setDungeonMode(
       GameLogic.enterDungeon(

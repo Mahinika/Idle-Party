@@ -111,7 +111,11 @@ abstract final class OfflineProgress {
     final sim = OfflineSim(timed, seconds);
     while (!sim.done) {
       sim.runSlice(OfflineSim.sliceSteps);
-      if (!sim.done) await Future<void>.delayed(Duration.zero);
+      if (!sim.done) {
+        // A zero delay can run the next slice before the frame, so Loading
+        // hitches and a tap is not dispatched. One millisecond lets it paint.
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+      }
     }
     final raw = _atLeastHubChest(
       before: state,

@@ -294,16 +294,23 @@ extension GameDirectorSave on GameDirector {
       _syncHubIdleTimer();
       _directorNotify();
       DebugPlayLog.event('boot', DebugPlayLog.bootDetail(_state));
-      unawaited(syncFriendReferral());
-      unawaited(refreshPlayUpdateNotice());
-      unawaited(LocalNotify.init());
-      // Billing after first hub frames — Binder + Play Services hitch cold start.
-      _bootWarmup?.cancel();
-      // Shop only. A rewarded ad loads when its button is about to show.
-      _bootWarmup = Timer(const Duration(seconds: 2), () {
-        unawaited(_warmupShopStore());
-      });
     }
+  }
+
+  /// Friend list, reminders, the Play-update notice, and shop billing.
+  ///
+  /// Called once the loading splash has been replaced. Doing this inside
+  /// [boot] bound Play services while the spinner was still on screen.
+  void wakePlatformAfterSplash() {
+    unawaited(syncFriendReferral());
+    unawaited(refreshPlayUpdateNotice());
+    unawaited(LocalNotify.init());
+    // Billing after the splash — Binder + Play Services hitch cold start.
+    // Shop only. A rewarded ad loads when its button is about to show.
+    _bootWarmup?.cancel();
+    _bootWarmup = Timer(const Duration(seconds: 2), () {
+      unawaited(_warmupShopStore());
+    });
   }
 
   /// Offline catch-up for one slot. Does not write prefs.

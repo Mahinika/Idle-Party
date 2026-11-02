@@ -65,13 +65,13 @@ void main() {
     SemanticsBinding.instance.ensureSemantics();
     WebClickBridge.install();
   }
-  // The native Firebase provider is removed, so this is the init. It runs
-  // on a background pool after the Cognifox frame. Save load stays behind
-  // that splash. Collection stays off until UMP.
+  // The native Firebase provider is removed. Do not start Firebase, the
+  // consent WebView, or Play services on this first frame: that work runs
+  // on the Android main thread and was freezing the Loading spinner.
+  // GameHomePage starts it after the splash has been replaced.
   WidgetsBinding.instance.addPostFrameCallback((_) {
     BootClock.mark('firstFrame');
     unawaited(lockImmersiveUi());
-    unawaited(_bootFirebase());
   });
 }
 
@@ -279,6 +279,7 @@ class _GameHomePageState extends State<GameHomePage>
       setState(() => _phase = _AppPhase.playUpdateRequired);
       // Still warm audio in the background behind the update gate.
       unawaited(_initAudioAfterFirstPaint());
+      unawaited(_startPlatformAfterPaint());
       return;
     }
 
@@ -286,6 +287,19 @@ class _GameHomePageState extends State<GameHomePage>
     _enterAfterBootChecks();
     unawaited(_precacheScenes());
     unawaited(_initAudioAfterFirstPaint());
+    unawaited(_startPlatformAfterPaint());
+  }
+
+  /// Firebase, the consent form, friend sync, and reminders.
+  ///
+  /// They bind Play services on the Android main thread. Starting them while
+  /// the splash is still up hitches the spinner, then Android says the app
+  /// is not responding.
+  Future<void> _startPlatformAfterPaint() async {
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    unawaited(_bootFirebase());
+    _director.wakePlatformAfterSplash();
   }
 
   Future<void> _initAudioAfterFirstPaint() async {

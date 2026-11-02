@@ -42,8 +42,13 @@ class OfflineSim {
     );
   }
 
-  /// Steps to run between yields — ~4 ms of work on a mid phone.
+  /// Step cap between yields when a step is cheap.
   static const int sliceSteps = 400;
+
+  /// Wall-clock cap for one slice. Android treats a thread that ignores
+  /// input for about five seconds as not responding. A long catch-up used
+  /// to hitch the Loading spinner and then trip that dialog.
+  static const Duration sliceBudget = Duration(milliseconds: 12);
 
   static const bool _afkAssist = true;
   static const double _dt = 0.12;
@@ -108,8 +113,10 @@ class OfflineSim {
 
   /// Advances at most [budget] steps. Same math as [runAll], just paused.
   void runSlice(int budget) {
+    final started = Stopwatch()..start();
     var used = 0;
     while (!_done && used < budget) {
+      if (used > 0 && started.elapsed >= sliceBudget) return;
       used++;
       if (_step >= _maxSteps ||
           !_current.inDungeon ||
