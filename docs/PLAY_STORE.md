@@ -9,7 +9,7 @@ Package id: **`com.idleparty.app`**
 | Primary installs | ✅ Google Play | Store listing live; closed test for early builds |
 | Play Console app | ✅ Exists | `com.idleparty.app` — listing + closed Alpha + production |
 | Closed testing | ⏳ | Last Alpha upload **1.12.133 (163)** (2026-09-10). Production **187** was not mirrored to Alpha this round. |
-| Production | ✅ completed | Read **2026-11-02**: `completed` is still **1.13.14 (240)** for the other 95%. **1.13.15 (241)** is submitted `inProgress` at 5% (edit `02148351330964435416`). Not live for everyone until a later read says `completed`. |
+| Production | ✅ completed | Read **2026-11-02**: track `completed` is **1.13.15 (241)** for everyone. The 5% rollout was raised the same evening. Previous full build was **1.13.14 (240)**. |
 | CI signing secrets | ✅ set 2026-11-01 | `KEYSTORE_BASE64` + `KEY_PROPERTIES` (`storeFile=../upload-keystore.jks`). Tag `v1.13.6` decoded them and signed `app-release.aab` with the upload cert (CN=Idle Party). `v1.13.2` and earlier GitHub AABs stayed debug-signed. |
 | Privacy URL opens in browser | ✅ | Console: `https://github.com/Mahinika/Idle-Party/blob/main/docs/PRIVACY.md` (fixed 2026-09-08; was wrongly on old `cursor/keystone-habit-b46b` branch). |
 | Data safety form | ⏳ review | Device or other IDs: collected and shared, optional, stored. Purposes **App functionality** (friend invite), **Analytics**, and **Advertising**. In the same review as Production **221** (Publishing overview **2026-09-29**). Matches [PRIVACY.md](PRIVACY.md). |
@@ -85,7 +85,7 @@ Track closed testers who **install from Play** and stay opted in:
 - [x] Tag `v1.13.6` (`ba67975e`, **1.13.6+232**) attached a signed AAB and APK to the GitHub Release. CI decoded the upload keystore and wrote the live AdMob ids. Not sent to Play.
 - [x] Production track read **2026-11-02** is `completed` **1.13.7 (233)**. The earlier “dispatch v1.13.7” line is done.
 - [x] **1.13.14 (240)** is `completed` for everyone as of **2026-11-02**. What's New (en-US and sv-SE) folds the unsent builds since **1.13.7**.
-- [x] **1.13.15 (241)** submitted **2026-11-02** at 5% (`inProgress`, edit `02148351330964435416`). **1.13.14 (240)** stays `completed` for the rest. What's New is the cold-start fix only. Not live for everyone until a later read says `completed`.
+- [x] **1.13.15 (241)** is `completed` for everyone as of **2026-11-02**. The 5% rollout (edit `02148351330964435416`) was raised the same evening (edit `18207691785176285306`). What's New is the cold-start fix only. Previous full build was **1.13.14 (240)**.
 
 ### Production upload paste (en-US release notes)
 
