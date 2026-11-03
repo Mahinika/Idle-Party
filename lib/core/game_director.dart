@@ -36,6 +36,7 @@ import 'gauntlet_pact.dart';
 import 'game_storage.dart';
 import 'gear_service.dart';
 import 'hero_identity.dart';
+import 'home_layout.dart';
 import 'gold_income.dart';
 import 'logic_notices.dart';
 import 'menu_alerts.dart';
@@ -720,6 +721,16 @@ class GameDirector extends ChangeNotifier {
 
   void setColorblindMode(bool value) {
     _applyUpgrade(_state.copyWith(colorblindMode: value));
+  }
+
+  void setHomeLayout(HomeLayout layout) {
+    if (_state.homeLayout == layout) return;
+    _applyUpgrade(_state.copyWith(homeLayout: layout));
+  }
+
+  void setHomePanelFull(bool value) {
+    if (_state.homePanelFull == value) return;
+    _applyUpgrade(_state.copyWith(homePanelFull: value));
   }
 
   void setHideHealFloaters(bool value) {

@@ -33,12 +33,20 @@ class Is2Shell extends StatefulWidget {
     required this.router,
     required this.pulse,
     this.onLeaveDungeon,
+    this.homeChrome = false,
+    this.extraBottomInset = 0,
   });
 
   final GameDirector director;
   final MenuRouter router;
   final double pulse;
   final VoidCallback? onLeaveDungeon;
+
+  /// Fight-first shell draws its own top bar, party row, and rails.
+  final bool homeChrome;
+
+  /// Extra camera inset when [homeChrome] (usually 0; the panel is a sibling).
+  final double extraBottomInset;
 
   @override
   State<Is2Shell> createState() => _Is2ShellState();
@@ -187,8 +195,10 @@ class _Is2ShellState extends State<Is2Shell> {
           child: MenuChrome.playSafeArea(
             child: SpatialDungeonView(
               director: d,
-              cameraTopInset: _topChromePx,
-              cameraBottomInset: partyBottom + partyStrip + 8,
+              cameraTopInset: widget.homeChrome ? 8 : _topChromePx,
+              cameraBottomInset: widget.homeChrome
+                  ? widget.extraBottomInset
+                  : partyBottom + partyStrip + 8,
             ),
           ),
         ),
@@ -200,7 +210,7 @@ class _Is2ShellState extends State<Is2Shell> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (!d.dungeonTilesReady)
+                    if (widget.homeChrome || !d.dungeonTilesReady)
                       const SizedBox.shrink()
                     else
                       DungeonTopHud(
@@ -238,7 +248,7 @@ class _Is2ShellState extends State<Is2Shell> {
                         fit: StackFit.expand,
                         children: [
                           if (!d.awaitingWipeChoice) ...[
-                            if (_dpsMeterOpen)
+                            if (!widget.homeChrome && _dpsMeterOpen)
                               Positioned.fill(
                                 child: IgnorePointer(
                                   child: ColoredBox(
@@ -246,6 +256,7 @@ class _Is2ShellState extends State<Is2Shell> {
                                   ),
                                 ),
                               ),
+                            if (!widget.homeChrome)
                             Positioned(
                               left: hudSide,
                               top: 2,
@@ -287,6 +298,7 @@ class _Is2ShellState extends State<Is2Shell> {
                                 },
                               ),
                             ),
+                            if (!widget.homeChrome)
                             Positioned(
                               left: hudSide,
                               bottom: partyBottom,
@@ -302,12 +314,14 @@ class _Is2ShellState extends State<Is2Shell> {
                                     router.toggleGear(GearPanel.gear),
                               ),
                             ),
+                            if (!widget.homeChrome)
                             Positioned(
                               left: hudSide,
                               right: hudSide,
                               bottom: lootLogBottom,
                               child: DungeonLootLog(lines: d.lootLog),
                             ),
+                            if (!widget.homeChrome)
                             Positioned(
                               right: hudSide,
                               bottom: partyBottom + 44,

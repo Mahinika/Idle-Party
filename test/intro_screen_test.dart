@@ -337,14 +337,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('Overwrite save?'), findsNothing);
-    expect(find.text('ENTER DUNGEON'), findsWidgets);
+    expect(director.state.inDungeon, isTrue);
+    expect(director.state.dungeonId, 'sandy');
+    expect(find.text('HEROES'), findsOneWidget);
+    expect(find.text('FIGHT'), findsOneWidget);
     expect(director.state.partyName, 'The Ember Guard');
     expect(
       director.state.heroes.every((h) => h.race == HeroRace.human),
       isTrue,
     );
-    expect(find.textContaining('The Ember Guard · Boss on F'), findsOneWidget);
-    expect(find.text('Ascend 0/1'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 500));
   });
 

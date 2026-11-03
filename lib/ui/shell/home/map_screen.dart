@@ -1,0 +1,273 @@
+import 'package:flutter/material.dart';
+
+import '../../../core/ashen_crown.dart';
+import '../../../core/chase_dispatcher.dart';
+import '../../../core/game_director.dart';
+import '../../../core/game_logic.dart';
+import '../../../core/game_state.dart';
+import '../../../core/hub_endgame_act.dart';
+import '../../../core/menu_alerts.dart';
+import '../../../core/menu_router.dart';
+import '../../../models/dungeon_def.dart';
+import '../../confirm_dialogs.dart';
+import '../../game_theme.dart';
+import '../../hub/hub_ranks.dart';
+import '../../hub/hub_world_map.dart';
+import '../../kenney_button.dart';
+import '../../web_click_bridge.dart';
+
+/// Tap a cave or a hunt. ENTER in the footer starts it.
+class MapScreen extends StatefulWidget {
+  const MapScreen({super.key, required this.director, required this.router});
+
+  final GameDirector director;
+  final MenuRouter router;
+
+  @override
+  State<MapScreen> createState() => _MapScreenState();
+}
+
+class _MapScreenState extends State<MapScreen> {
+  bool _endgame = false;
+  String _zoneId = 'sandy';
+  HubEndgameHunt? _hunt;
+
+  GameDirector get director => widget.director;
+
+  @override
+  void initState() {
+    super.initState();
+    _zoneId = director.state.dungeonId;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = director.state;
+    final mean = GameLogic.partyMeanLevel(state);
+    return Column(
+      children: [
+        Expanded(
+          child: _endgame ? _hunts(state, mean) : _path(state, mean),
+        ),
+        _footer(state, mean),
+      ],
+    );
+  }
+
+  Widget _path(GameState state, int mean) {
+    final dungeons = DungeonCatalog.all;
+    return Column(
+      children: [
+        Expanded(
+          child: ZonePathMap(
+            dungeons: dungeons,
+            selectedId: _zoneId,
+            partyLevel: mean,
+            highestCleared: state.highestDungeonCleared,
+            onSelect: (id) => setState(() {
+              _zoneId = id;
+              _hunt = null;
+            }),
+          ),
+        ),
+        _reason(state, mean),
+      ],
+    );
+  }
+
+  Widget _reason(GameState state, int mean) {
+    final def = DungeonCatalog.byId(_zoneId);
+    final open = DungeonCatalog.isUnlocked(
+      _zoneId,
+      mean,
+      state.highestDungeonCleared,
+    );
+    final line = open
+        ? def.name
+        : '${def.name} · Party Lv${DungeonCatalog.unlockHeroLevel(def)} or clear the previous cave';
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Text(
+        line,
+        textAlign: TextAlign.center,
+        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+      ),
+    );
+  }
+
+  Widget _hunts(GameState state, int mean) {
+    final endgame = GameLogic.endgameUnlocked(state);
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        if (MenuTabs.showKey(state))
+          _card('KEY', 'Harder cave. Same floors.', () {
+            widget.router.open(MenuRoute.key);
+          }),
+        for (final node in HubEndgameAct.nodes)
+          _card(
+            node.shortLabel,
+            endgame ? node.blurb : 'Active party all Lv100.',
+            endgame
+                ? () => setState(() => _hunt = node.hunt)
+                : null,
+            selected: _hunt == node.hunt,
+            badge: node.hunt == HubEndgameHunt.ashen &&
+                    AshenCrown.canEnter(state)
+                ? '${state.metaDepth.worldBossTickets}'
+                : null,
+          ),
+        _card('DAILY', 'Today\'s cave.', () {
+          setState(() => _hunt = null);
+          confirmDailyRun(context, director);
+        }),
+        _card('RANKS', 'Season boards.', () {
+          openHubRanksSheet(context, director);
+        }),
+      ],
+    );
+  }
+
+  Widget _card(
+    String title,
+    String body,
+    VoidCallback? onTap, {
+    bool selected = false,
+    String? badge,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: WebClickScope(
+        label: title,
+        onPressed: onTap,
+        child: Semantics(
+          button: onTap != null,
+          label: title,
+          child: InkWell(
+            onTap: onTap,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: selected ? GameTheme.cardRaised : GameTheme.card,
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                border: Border.all(
+                  color: selected ? GameTheme.torch : GameTheme.borderLit,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(title, style: GameTheme.menuTitle(size: 14)),
+                          Text(
+                            body,
+                            style: GameTheme.body(
+                              size: 12,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (badge != null && badge.isNotEmpty)
+                      Text(
+                        badge,
+                        style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _footer(GameState state, int mean) {
+    final endgame = GameLogic.endgameUnlocked(state);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+      child: Row(
+        children: [
+          _foot('PATH', !_endgame, () => setState(() => _endgame = false)),
+          _foot('ENDGAME', _endgame, () => setState(() => _endgame = true)),
+          const Spacer(),
+          GameButton(
+            label: 'ENTER',
+            expanded: false,
+            onPressed: () => _enter(state, mean, endgame),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _enter(GameState state, int mean, bool endgame) {
+    if (_endgame) {
+      final hunt = _hunt;
+      if (hunt == null || !endgame) {
+        director.showToast(
+          endgame ? 'Tap a hunt first' : 'Active party all Lv100',
+          life: 2,
+        );
+        return;
+      }
+      switch (hunt) {
+        case HubEndgameHunt.gauntlet:
+          confirmGauntletRun(context, director);
+        case HubEndgameHunt.farmRift:
+          confirmRiftRun(context, director);
+        case HubEndgameHunt.rankedGr:
+          confirmGreaterRiftRun(context, director);
+        case HubEndgameHunt.ashen:
+          confirmAshenCrown(context, director, practice: false);
+      }
+      return;
+    }
+    final open = ChaseDispatcher.zoneUnlocked(state, _zoneId);
+    if (!open) {
+      final def = DungeonCatalog.byId(_zoneId);
+      director.showToast(
+        'Party Lv${DungeonCatalog.unlockHeroLevel(def)} or clear the previous cave',
+        life: 2.4,
+      );
+      return;
+    }
+    widget.router.close();
+    director.enterDungeon(dungeonId: _zoneId);
+  }
+
+  Widget _foot(String label, bool selected, VoidCallback onTap) {
+    return WebClickScope(
+      label: label,
+      onPressed: onTap,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: InkWell(
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: GameTheme.minTouch,
+              minHeight: GameTheme.minTouch,
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: GameTheme.menuTitle(
+                  size: 12,
+                  color: selected ? GameTheme.torchHot : GameTheme.parchment,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

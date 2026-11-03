@@ -335,6 +335,9 @@ typeof window.__idlePartyClick
 window.__idlePartyButtons()
 window.__idlePartyClick('CONTINUE') // or NEW GAME
 window.__idlePartyClick('SKIP ALL TIPS')
+window.__idlePartyClick('HEROES')
+window.__idlePartyClick('FIGHT')
+window.__idlePartyClick('MENU')
 window.__idlePartyClick('MORE')
 window.__idlePartyClick('MORE · NEW')
 window.__idlePartyClick('GUIDES')

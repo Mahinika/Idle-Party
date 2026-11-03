@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/game_guides.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/home_layout.dart';
+import '../core/nav_copy.dart';
 import 'game_theme.dart';
 import 'menu_chrome.dart';
 import 'web_click_bridge.dart';
@@ -56,15 +58,18 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
             separatorBuilder: (_, _) => const SizedBox(height: 6),
             itemBuilder: (context, i) {
               final topic = topics[i];
+              final layout = widget.state?.homeLayout ?? HomeLayout.classic;
+              final title = NavCopy.playerText(topic.title, layout);
+              final body = NavCopy.playerText(topic.body, layout);
               final open = _openId == topic.id;
               void toggle() => setState(() => _openId = open ? null : topic.id);
               return WebClickScope(
-                label: 'Guide ${topic.title}',
+                label: 'Guide $title',
                 onPressed: toggle,
                 child: Semantics(
                   button: true,
                   selected: open,
-                  label: 'Guide · ${topic.title}',
+                  label: 'Guide · $title',
                   onTap: toggle,
                   excludeSemantics: true,
                   child: Material(
@@ -87,7 +92,7 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    topic.title,
+                                    title,
                                     style: GameTheme.body(
                                       size: 17,
                                       color: open
@@ -108,7 +113,7 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
                             if (open) ...[
                               const SizedBox(height: 8),
                               Text(
-                                topic.body,
+                                body,
                                 style: GameTheme.body(
                                   size: 14,
                                   color: GameTheme.parchment,

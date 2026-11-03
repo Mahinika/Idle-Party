@@ -17,6 +17,7 @@ class OverlayScrim extends StatelessWidget {
     this.gold,
     this.essence,
     this.showEssence = true,
+    this.showClose = true,
   });
 
   final String title;
@@ -28,6 +29,7 @@ class OverlayScrim extends StatelessWidget {
   final int? gold;
   final int? essence;
   final bool showEssence;
+  final bool showClose;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +61,7 @@ class OverlayScrim extends StatelessWidget {
                 gold: gold,
                 essence: essence,
                 showEssence: showEssence,
+                showClose: showClose,
                 child: child,
               ),
             ],
@@ -104,6 +107,7 @@ class _MobileSheet extends StatelessWidget {
     this.gold,
     this.essence,
     this.showEssence = true,
+    this.showClose = true,
   });
 
   final String title;
@@ -114,6 +118,7 @@ class _MobileSheet extends StatelessWidget {
   final int? gold;
   final int? essence;
   final bool showEssence;
+  final bool showClose;
 
   @override
   Widget build(BuildContext context) {
@@ -134,6 +139,7 @@ class _MobileSheet extends StatelessWidget {
         gold: gold,
         essence: essence,
         showEssence: showEssence,
+        showClose: showClose,
         child: child,
       ),
     );
@@ -174,6 +180,7 @@ class _OverlayPanel extends StatelessWidget {
     this.gold,
     this.essence,
     this.showEssence = true,
+    this.showClose = true,
   });
 
   final String title;
@@ -186,6 +193,7 @@ class _OverlayPanel extends StatelessWidget {
   final int? gold;
   final int? essence;
   final bool showEssence;
+  final bool showClose;
 
   @override
   Widget build(BuildContext context) {
@@ -205,6 +213,7 @@ class _OverlayPanel extends StatelessWidget {
             gold: gold,
             essence: essence,
             showEssence: showEssence,
+            showClose: showClose,
           ),
           const SizedBox(height: 4),
           Container(
@@ -232,6 +241,7 @@ class _SheetHeader extends StatelessWidget {
     required this.gold,
     required this.essence,
     required this.showEssence,
+    required this.showClose,
   });
 
   final String title;
@@ -240,6 +250,7 @@ class _SheetHeader extends StatelessWidget {
   final int? gold;
   final int? essence;
   final bool showEssence;
+  final bool showClose;
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +308,7 @@ class _SheetHeader extends StatelessWidget {
             children: [
               wallet!,
               const Spacer(),
-              close,
+              if (showClose) close,
             ],
           ),
         ],
@@ -313,7 +324,7 @@ class _SheetHeader extends StatelessWidget {
           wallet,
           const SizedBox(width: 6),
         ],
-        close,
+        if (showClose) close,
       ],
     );
   }

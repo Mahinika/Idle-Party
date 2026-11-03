@@ -79,13 +79,21 @@ main.dart
  ├─ loading → playUpdateRequired? → boot intro → startMenu
  │    → pickSave? → newGamePicker? → play
  └─ PlayShell
-     ├─ Hub (!inDungeon) → HubScreen
-     └─ Dungeon → Is2Shell → SpatialDungeonView
-         + AppBottomBar GEAR / GOLD / SHOP / ESSENCE / MORE
-           (early: GEAR + MORE; GOLD/SHOP after first boss or Ascend;
-            ESSENCE when camp matters; endgame hub: KEY after MORE;
-            dungeon: + LEAVE)
+     ├─ home (default) → HomeShell
+     │    fight or camp · rails · FORGE/CAMP/MARKET under the fight
+     │    HEROES · ESSENCE · FIGHT · MAP · SHOP
+     │    MENU is the top button. Camp is the screen outside a cave.
+     └─ classic (SETTINGS on a test build, or a save that says classic)
+          ├─ Hub (!inDungeon) → HubScreen
+          └─ Dungeon → Is2Shell → SpatialDungeonView
+              + AppBottomBar GEAR / GOLD / SHOP / ESSENCE / MORE
 ```
+
+A new game on a fresh phone uses the home layout and starts in Sandy Caverns.
+A save with no layout field also opens on that shell. GOLD there is the panel
+under the fight (FORGE, CAMP, MARKET), not a bottom tab. ESSENCE tiles are
+BLESSING, RELICS, PETS, CODEX, and APEX. MAP holds PATH and ENDGAME.
+SHOP, redeem, and the shop rules below are unchanged.
 
 GOLD = FORGE + MARKET. SHOP = ad-free, Long Away, and Supporter (hour
 packs restore only; forever scrolls and the Cinder pouch show only after

@@ -8,7 +8,9 @@ import '../../core/hub_chase.dart';
 import '../../core/hub_primary_cta.dart';
 import '../../core/keystone.dart';
 import '../../core/menu_alerts.dart';
+import '../../core/home_layout.dart';
 import '../../core/menu_router.dart';
+import 'home/home_shell.dart';
 import '../confirm_dialogs.dart';
 import '../feedback_toast.dart';
 import '../first_session_tips.dart';
@@ -85,7 +87,9 @@ class _PlayShellState extends State<PlayShell> {
   }
 
   void _syncPause() {
-    director.setUiPaused(router.isOpen && director.state.inDungeon);
+    final home = director.state.homeLayout == HomeLayout.home;
+    final menuPauses = router.isOpen && !(home && router.route == MenuRoute.gold);
+    director.setUiPaused(menuPauses && director.state.inDungeon);
     director.setWispMenuPaused(router.isOpen);
   }
 
@@ -277,12 +281,39 @@ class _PlayShellState extends State<PlayShell> {
     ];
 
     return PopScope(
-      canPop: !router.isOpen,
+      canPop: !router.isOpen && router.homeDepth == 0,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        if (router.isOpen) router.close();
+        router.back();
       },
-      child: PlayNav(
+      child: director.state.homeLayout == HomeLayout.home
+          ? HomeShell(
+              director: director,
+              router: router,
+              onLeave: () {
+                if (director.state.isPartyDefeated) {
+                  director.hubAfterWipe();
+                  return;
+                }
+                if (director.spatial?.awaitingExit == true) {
+                  if (router.isOpen) router.close();
+                  _leaveDungeon();
+                  return;
+                }
+                if (router.isOpen) router.close();
+                confirmLeaveDungeon(
+                  context,
+                  _leaveDungeon,
+                  state: director.state,
+                  floorCleared: director.spatial?.awaitingExit == true,
+                  keystoneActive: director.state.keystoneRunActive,
+                  keyTimer: director.state.keystoneRunActive
+                      ? Keystone.formatTimer(director.state.keystoneTimerMs)
+                      : null,
+                );
+              },
+            )
+          : PlayNav(
         router: router,
         onEnterDungeon: (id) {
           router.close();

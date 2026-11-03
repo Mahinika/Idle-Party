@@ -14,14 +14,21 @@ import 'power_meta_pillars.dart';
 import 'shop_dock.dart';
 import '../meta/keystone_sheet.dart';
 import 'whats_new_overlay.dart';
+import 'home/home_menu_grid.dart';
 
 /// The one menu sheet, shared by hub and dungeon.
 /// All routes fill the stack above the shared [AppBottomBar] (full height).
 class MenuSurface extends StatefulWidget {
-  const MenuSurface({super.key, required this.director, required this.router});
+  const MenuSurface({
+    super.key,
+    required this.director,
+    required this.router,
+    this.home = false,
+  });
 
   final GameDirector director;
   final MenuRouter router;
+  final bool home;
 
   @override
   State<MenuSurface> createState() => _MenuSurfaceState();
@@ -105,6 +112,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
       panel: router.gearPanel,
       onPanelChanged: (panel) => router.gearPanel = panel,
       flatChrome: true,
+      showTabRail: !widget.home,
       onSelect: session.selectItem,
       onPutCombine: _putInCombinator,
       onEquip: () {
@@ -159,9 +167,10 @@ class _MenuSurfaceState extends State<MenuSurface> {
       title: router.title,
       subtitle: router.jobHintFor(state),
       heightFactor: 1,
-      gold: state.gold,
-      essence: state.essence,
+      gold: widget.home ? null : state.gold,
+      essence: widget.home ? null : state.essence,
       showEssence: MenuTabs.showCamp(state),
+      showClose: !widget.home,
       onClose: router.close,
       child: switch (router.route) {
         MenuRoute.gear => _inventoryDock(),
@@ -177,7 +186,10 @@ class _MenuSurfaceState extends State<MenuSurface> {
           onPanelChanged: (panel) => router.essencePanel = panel,
         ),
         MenuRoute.key => KeystoneSheet(director: d),
-        MenuRoute.more => MoreList(
+        MenuRoute.map => const SizedBox.shrink(),
+        MenuRoute.more => widget.home && !router.homeAtSub
+            ? HomeMenuGrid(director: d, router: router)
+            : MoreList(
           director: d,
           section: router.moreSection,
           initialInfoPane: router.moreInfoPane,

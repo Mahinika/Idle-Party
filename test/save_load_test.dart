@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
 import 'package:idle_party/models/hero.dart';
@@ -574,6 +575,34 @@ void main() {
     final storage = SharedPreferencesGameStorage(preferences: prefs);
     final state = GameLogic.createInitialState(now: DateTime(2026, 10, 31));
     await expectLater(storage.save(state), throwsA(isA<StateError>()));
+  });
+
+  test('home layout: missing JSON is home, classic round-trips, Ascend keeps it', () {
+    var state = GameLogic.createInitialState(now: DateTime(2026, 9, 20));
+    state = state.copyWith(
+      homeLayout: HomeLayout.home,
+      homePanelFull: true,
+      bossVictories: 1,
+    );
+    final loaded = GameLogic.stateFromJson(state.toJson());
+    expect(loaded.homeLayout, HomeLayout.home);
+    expect(loaded.homePanelFull, isTrue);
+
+    final missing = Map<String, dynamic>.from(state.toJson())
+      ..remove('homeLayout')
+      ..remove('homePanelFull');
+    final legacy = GameLogic.stateFromJson(missing);
+    expect(legacy.homeLayout, HomeLayout.home);
+    expect(legacy.homePanelFull, isFalse);
+
+    final classicJson = Map<String, dynamic>.from(state.toJson())
+      ..['homeLayout'] = 'classic';
+    final classic = GameLogic.stateFromJson(classicJson);
+    expect(classic.homeLayout, HomeLayout.classic);
+
+    final ascended = GameLogic.ascend(loaded, now: DateTime(2026, 9, 21));
+    expect(ascended.homeLayout, HomeLayout.home);
+    expect(ascended.homePanelFull, isTrue);
   });
 }
 

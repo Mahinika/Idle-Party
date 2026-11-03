@@ -3,6 +3,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
+import '../../core/nav_copy.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
@@ -280,9 +281,12 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           style: GameTheme.body(size: 12, color: GameTheme.parchment),
         ),
         Text(
-          ForgeOverlay.resetHint(
-            plain: plain,
-            showCamp: MenuTabs.showCamp(state),
+          NavCopy.playerText(
+            ForgeOverlay.resetHint(
+              plain: plain,
+              showCamp: MenuTabs.showCamp(state),
+            ),
+            state.homeLayout,
           ),
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),

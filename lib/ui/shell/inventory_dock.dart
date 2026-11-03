@@ -84,6 +84,7 @@ class InventoryDock extends StatefulWidget {
     required this.onAutoMerge,
     this.onOpenMarket,
     this.flatChrome = false,
+    this.showTabRail = true,
   });
 
   final GameState state;
@@ -94,6 +95,7 @@ class InventoryDock extends StatefulWidget {
   final GearPanel panel;
   final ValueChanged<GearPanel> onPanelChanged;
   final bool flatChrome;
+  final bool showTabRail;
   final void Function(String id) onSelect;
   final void Function(String id) onPutCombine;
   final VoidCallback onEquip;
@@ -959,6 +961,7 @@ class _InventoryDockState extends State<InventoryDock>
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (widget.showTabRail)
         MenuChrome.tabRail(
           controller: _tabs.controller,
           tabs: [
