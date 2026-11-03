@@ -51,3 +51,17 @@
 - **2026-11-03 15:46 UTC** — Cancel quit dialog
 - **2026-11-03 15:46 UTC** — second cancel attempt
 - **2026-11-03 15:53 UTC** — continue mapping from current screen
+- **2026-11-03 16:19 UTC** — current frame before remaining map
+- **2026-11-03 16:22 UTC** — tap (1027,180) → open hamburger
+- **2026-11-03 16:22 UTC** — tap (818,347) → hamburger News
+- **2026-11-03 16:22 UTC** — tap (540,2200) → tap outside news
+- **2026-11-03 16:29 UTC** — tap (1030,190) → hamburger retry
+- **2026-11-03 16:30 UTC** — tap (974,480) → bag icon center
+- **2026-11-03 16:31 UTC** — tap (80,900) → dismiss buff tray without pressing item X
+- **2026-11-03 16:37 UTC** — tap (796,291) → Info letter pixel
+- **2026-11-03 16:40 UTC** — after long-press wake
+- **2026-11-03 16:41 UTC** — tap (70,304) → left rail Booster
+- **2026-11-03 16:43 UTC** — tap (30,200) → tap outside membership
+- **2026-11-03 16:45 UTC** — tap (160,500) → Pass button from growth popup
+- **2026-11-03 16:46 UTC** — tap (150,610) → Growth Center Pass, view only
+- **2026-11-03 16:50 UTC** — tap (80,580) → toggle Growth popup closed

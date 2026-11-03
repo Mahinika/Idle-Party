@@ -31,6 +31,14 @@ Gem shop, Special Offer (`104_devteam.png`):
 
 Spellbook row sits under the gem grid (3/3, bonus badges). Prism Shop (`105_news.png`) sells a pass (shown Disabled), an attendance track, and a separate summon. Nothing on those screens was pressed.
 
+## Booster and membership (not bought)
+
+Booster (`179_rail_2.png`): three buffs, 50 points each, 30 minutes of time in the app. Point shop sells 100 points for an ad (5/5 used), 250 for 100 gems, 1,500 for 500 gems.
+
+Membership (`181_booster_closed.png`): no expiry, effects stack. Ad Removal is already Purchased on this save (remove ads and 1,000 gems). Booster Membership is the next row. Mileage is an ad currency for a separate exchange shop.
+
+Frontier's Pass (`189_pass2.png`) is a free-looking check-in plus rank goals. The Rank and Field tabs were not opened. Daily Mission (`193_mission.png`) pays stars toward a 20–100 track. Claim was not pressed.
+
 ## Gacha (soft currency + ads)
 
 - **Card** banner: 1× ad, 1× green ticket, 10× for **900 gems**

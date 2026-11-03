@@ -59,6 +59,36 @@ Useful shots only. Misses (battle when a menu was intended) stay in `screens/` b
 | `93_settings.png` | Language English. UID. Google Play already linked (Unlink). Apple / Facebook / Google Link. AutoSave on. Copy says cloud save is optional and local-only if unlinked |
 | `94_settings_game.png` | Notification, high resolution, BGM, SFX, scientific notation, display damage, resolution 100%, frame rate Low / High / Unlimited |
 
+## Menu
+
+| Shot | What it shows |
+|------|----------------|
+| `122_news.png` | **News** list: 2.7 update (v2.7.1), 2.5th Anniversary, Winter Fishing Festival, New World Schedule |
+| `126_before.png` `130_mailbox.png` | **Mailbox**. Tabs New Mail (empty), Purchase Storage (empty list), Past Mail. Footer: expired or checked mail is deleted after 30 days |
+| `134_past_mail_loaded.png` | Past mail rows, mostly Expired. One live row: **2.7.0 Update Celebration**, 22h 35m left, reward icons |
+| `148_bag.png` `149_bag_scroll.png` | **Bag**: a grid of currencies and tickets with counts. Header currencies match the top bar. Many slots are 0 |
+| `140_devteam.png` | **Dev Team**: Seasoning, a team of three. Copy says the game is single-player and progress is stored on the device |
+| `154_profile.png` | **Profile** cosmetics. Tabs Icon / Frame / Background and Special / Rank / Weapon. Selected icon set is Rank, item Dirt. Equip was not pressed |
+| `157_frame.png` | Frames. Selected Soil Class. Later frames include a wreath |
+| `158_background.png` | Backgrounds. Basic is owned. The rest show a lock |
+| `164_info.png` | **Info → General**. Power, Wall, and Altar slots read No Rank here. Max rank **Super God 9**, title Anu. Dimension rank **100**. Total Obtained lists the big currencies |
+| `165_info_content.png` | **Info → Content**. Science Rank 1310, Demon Cult 500, War AI 500, Golden Cube 250. Art: Enlightenment 1, Ascension locked, a seed count 297. Kardashev Device zones Alpha–Omicron all 0 |
+| `166_info_card.png` | **Info → Card**. Collection by rarity through Epic, each card shows a level |
+| `168_info_artifact.png` | **Info → Artifact**. Icon grid with level pips |
+| `169_info_gear.png` | **Info → Dimensional Gear**. Same grid, different frames |
+| `173_sleep.png` | **Sleep Mode**. Clock, gold, power, battery, Keep screen on. Hold to leave. Left with a long-press. The toggle was not changed |
+
+## Rails, pass, and shop (view only)
+
+| Shot | What it shows |
+|------|----------------|
+| `151_bag_closed.png` `176_after_sleep.png` | A status tray over the fight: wheat Closed, a 2.5 buff with 11d left, a fish with 57d, a fire with 1d, a skull marked X, a coin at 7. The X was not pressed |
+| `179_rail_2.png` `182_shop_closed.png` | **Booster**. Gold / Damage / Power, levels 292 / 275 / 327, each Enable costs 50 points. Lasts 30 minutes of active play. Point shop: x100 ad (5/5), x250 for 100 gems (3/3), x1,500 for 500 gems (1/1). 469 points on the header. Enable and the shop buttons were not pressed |
+| `181_booster_closed.png` | **Membership**. No expiry, effects stack. Ad Removal is Purchased (remove ads, gems x1000). Booster Membership sits under it. Tabs Recommended / Premium. Mileage tooltip: mileage comes from ads and is spent in an exchange shop. Nothing was bought |
+| `185_crop.png` | **Growth Center** opens a bubble: Pass and Step-Up Pack |
+| `189_pass2.png` | **Frontier's Pass**. Check-in track days 3–30. Below that, Max Rank Achieved rows (66/22 and up) with checks. Tabs also named Rank and Field. No row was claimed |
+| `193_mission.png` | **Mission**, 22h 12m left. Star track at 20/40/60/80/100. Tasks: Check In, Break Bricks, Activate Any Booster, Watch Ads, Obtain Mileage, Fire the Default Weapon. Claim was not pressed. Tabs Epic Mission and Achievements exist |
+
 ## Still not opened
 
-Hamburger pages other than Settings (News, Mailbox, Bag, Profile, Sleep Mode, Community, Daily Check-In, Coupon, Dev Team). Preset editor. Soul Upgrade and Soul Enhancement. Decay and Curse. Ragnarok, Warframe, Oracle, Nexus interiors. Garden sub-tabs. Wall and Altar runs. Left-rail Booster, Piggy Bank, Growth Center. Right-rail Mission and Event.
+Coupon, Daily Check-In, Community, Preset editor, Step-Up Pack, Piggy Bank interior, Event, Epic Mission, Achievements, Divine Beast info tab, Pass Rank and Field tabs, Soul Upgrade and Enhancement, Decay and Curse, War AI and Golden Cube, Ragnarok, Warframe, Oracle, Nexus, and the Garden sub-tabs. Wall and Altar runs stay closed on purpose. No Claim, Enable, Equip, or price button was pressed.

@@ -71,9 +71,19 @@ Details and shot names: [SCREENS.md](SCREENS.md).
 - **New World** rotating world with a difficulty and a move button.
 - **Settings** local save plus optional cloud link. AutoSave is on. Play Games is already linked on this emu.
 
-## Still closed (on purpose or missed)
+## Mapped after that
 
-Mission, Event, Booster, Piggy, Growth, Preset editor, Soul Upgrade / Enhancement, Decay, Curse, Ragnarok / Warframe / Oracle / Nexus, Garden sub-tabs, and hamburger pages other than Settings. Shop prices were only looked at.
+- **News, Mailbox, Bag, Profile, Dev Team, Sleep Mode.** Profile Info is an account sheet: rank, dimension rank, lifetime currencies, then Content / Card / Artifact / Dimensional Gear.
+- **Content sheet** names the science modes that were only icons before: Demon Cult, War AI, Golden Cube, plus Art Enlightenment / Ascension and a Kardashev Device of lettered zones (all 0 on this save).
+- **Booster** is three timed combat buffs (gold, damage, power) paid in points. Points come from an ad and from gems. A booster counts down only while the game is open.
+- **Membership** does not expire and the effects stack. Ad removal is already owned on this account.
+- **Growth Center** is a bubble with Frontier's Pass and a Step-Up Pack. The pass is a check-in track plus rank goals.
+- **Mission** is a daily star track (about 22h) with claimable tasks. Epic Mission and Achievements are sibling tabs.
+- A small **status tray** sits on the fight and shows long buff timers. It was left alone.
+
+## Still closed
+
+Coupon, Daily Check-In, Community, Preset, Step-Up Pack, Piggy interior, Event, Epic Mission, Achievements, Divine Beast, the other pass tabs, Soul Upgrade / Enhancement, Decay / Curse, War AI, Golden Cube, and the Dimension and Garden interiors. Runs that spend a ticket were not started.
 
 ## Idle Party rebuild prompts (ideas, not copy)
 
