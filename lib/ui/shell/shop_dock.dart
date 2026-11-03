@@ -10,6 +10,8 @@ import '../../core/remote_tune.dart';
 import '../../core/shop_billing.dart';
 import '../../core/shop_catalog.dart';
 import '../../core/shop_hub_offer.dart';
+import '../../core/home_layout.dart';
+import '../../core/nav_copy.dart';
 import '../../core/shop_store.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
@@ -24,13 +26,17 @@ class ShopDock extends StatefulWidget {
   final GameDirector director;
 
   /// SHOP blurb. ESSENCE is named only when that tab exists.
-  static String convenienceLine({required bool showEssence}) {
+  static String convenienceLine({
+    required bool showEssence,
+    HomeLayout layout = HomeLayout.classic,
+  }) {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
-    return 'Free tickets are SCROLLS on the hub. '
+    final raw = 'Free tickets are SCROLLS on the hub. '
         'Ad-free, Long Away, and Supporter are here. '
         'Bag space and pet errands use gold or Cinders in GEAR'
         '${showEssence ? ' and ESSENCE' : ''} — not real money. '
         'Gold is under GOLD.$essenceBit';
+    return NavCopy.playerText(raw, layout);
   }
 
   @override
@@ -95,6 +101,7 @@ class _ShopDockState extends State<ShopDock> {
               child: _page(
                 hint: ShopDock.convenienceLine(
                   showEssence: MenuTabs.showCamp(state),
+                  layout: state.homeLayout,
                 ),
                 storeLine: storeLine,
                 items: items,

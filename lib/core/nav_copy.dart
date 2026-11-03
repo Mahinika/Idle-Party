@@ -14,6 +14,9 @@ abstract final class NavCopy {
     next = next.replaceAll('GEAR → BAG', 'HEROES → BAG');
     next = next.replaceAll('GEAR →', 'HEROES →');
     next = next.replaceAll('MORE →', 'MENU →');
+    next = next.replaceAll('SCROLLS on the hub', 'SCROLLS on the fight rail');
+    next = next.replaceAll('in GEAR', 'in HEROES');
+    next = next.replaceAll('Gold is under GOLD', 'Gold and forge sit under the fight');
     next = next.replaceAll('The hub', 'Camp');
     next = next.replaceAll('the hub', 'camp');
     return next;

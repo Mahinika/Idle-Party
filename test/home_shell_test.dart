@@ -9,6 +9,7 @@ import 'package:idle_party/core/nav_copy.dart';
 import 'package:idle_party/ui/shell/home/home_catalog.dart';
 import 'package:idle_party/ui/shell/home/home_prompts.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
+import 'package:idle_party/ui/shell/shop_dock.dart';
 
 void main() {
   test('nav copy renames places only on the home layout', () {
@@ -25,6 +26,19 @@ void main() {
     expect(home.contains('HEROES → BAG'), isTrue);
     expect(home.contains('MENU →'), isTrue);
     expect(home.contains('camp'), isTrue);
+  });
+
+  test('SHOP blurb uses home place names on the fight shell', () {
+    const classic = HomeLayout.classic;
+    const home = HomeLayout.home;
+    final early = ShopDock.convenienceLine(showEssence: false, layout: classic);
+    expect(early.toLowerCase(), contains('hub'));
+    expect(early.toUpperCase(), contains('GEAR'));
+    final onHome = ShopDock.convenienceLine(showEssence: true, layout: home);
+    expect(onHome.toLowerCase(), contains('fight rail'));
+    expect(onHome.toUpperCase(), isNot(contains('HUB')));
+    expect(onHome.toUpperCase(), contains('HEROES'));
+    expect(onHome.toLowerCase(), contains('under the fight'));
   });
 
   test('guide text scrubbed for home has no old place names', () {

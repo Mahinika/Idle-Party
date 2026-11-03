@@ -441,6 +441,10 @@ class MenuRouter extends ChangeNotifier {
 
     }
 
+    if (route == MenuRoute.more && _route == MenuRoute.none && more == null) {
+      _moreSection = MoreSection.info;
+    }
+
     _route = route;
 
     _homeDepth = 0;

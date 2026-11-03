@@ -160,12 +160,14 @@ class _MenuSurfaceState extends State<MenuSurface> {
   Widget build(BuildContext context) {
     final d = widget.director;
     if (router.route == MenuRoute.none) return const SizedBox.shrink();
+    final homeMenuGrid =
+        widget.home && router.route == MenuRoute.more && !router.homeAtSub;
     // Full height above the shared bottom bar — same for every tab so GOLD /
     // SHOP / ESSENCE / KEY / MORE match GEAR (never cover the bar; OverlayScrim
     // lives only inside the Expanded scene stack).
     return OverlayScrim(
-      title: router.title,
-      subtitle: router.jobHintFor(state),
+      title: homeMenuGrid ? '' : router.title,
+      subtitle: homeMenuGrid ? '' : router.jobHintFor(state),
       heightFactor: 1,
       gold: widget.home ? null : state.gold,
       essence: widget.home ? null : state.essence,
@@ -187,7 +189,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
         ),
         MenuRoute.key => KeystoneSheet(director: d),
         MenuRoute.map => const SizedBox.shrink(),
-        MenuRoute.more => widget.home && !router.homeAtSub
+        MenuRoute.more => homeMenuGrid
             ? HomeMenuGrid(director: d, router: router)
             : MoreList(
           director: d,
