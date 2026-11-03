@@ -20,7 +20,8 @@ void main() {
     );
     final ready = fresh.copyWith(
       inDungeon: true,
-      lastUpdated: DateTime.now(),
+      // Boot credits the gap since lastUpdated. Keep lastUpdated on today.
+      lastUpdated: now,
       metaDepth: fresh.metaDepth.copyWith(
         dailyVaultDate: day,
         dailyVaultClears: GameLogic.dailyVaultClearTarget,
@@ -70,10 +71,7 @@ void main() {
 
     final fresh = GameLogic.createInitialState(now: now).copyWith(
       inDungeon: true,
-      lastUpdated: DateTime.now(),
-      metaDepth: GameLogic.createInitialState(now: now).metaDepth.copyWith(
-        dailyVaultDate: MetaSystems.dailyDateKey(now),
-      ),
+      lastUpdated: now,
     );
     final director = GameDirector.preview(initialState: fresh);
     await director.boot();
