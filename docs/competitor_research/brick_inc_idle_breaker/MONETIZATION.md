@@ -16,6 +16,21 @@ Documented from **UI observation** and **IAP product list in logcat** (Play Bill
 | Card summon **Watch ad** | Rewarded video → 1 pull | shop overlay |
 | Popups | Many `popup_*` SKUs (logcat) | not triggered |
 
+## Prices seen (SEK, not bought)
+
+Gem shop, Special Offer (`104_devteam.png`):
+
+| Pack | Price |
+|------|--------|
+| 30 gems | Free (ad badge) |
+| 100 | 13.00 kr |
+| 550 | 65.00 kr |
+| 1,150 | 129.00 kr |
+| 2,400 | 255.00 kr |
+| 6,250 | 639.00 kr |
+
+Spellbook row sits under the gem grid (3/3, bonus badges). Prism Shop (`105_news.png`) sells a pass (shown Disabled), an attendance track, and a separate summon. Nothing on those screens was pressed.
+
 ## Gacha (soft currency + ads)
 
 - **Card** banner: 1× ad, 1× green ticket, 10× for **900 gems**

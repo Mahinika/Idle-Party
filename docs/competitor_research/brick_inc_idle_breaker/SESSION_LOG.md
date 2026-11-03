@@ -18,3 +18,36 @@
 **Constraint:** From here on, no Buy / Summon / Play / Claim / Special Offer taps — documentation only.
 - **2026-11-03 15:40 UTC** — tap (540,2180) → Center nav: main battle (no spend)
 - **2026-11-03 15:40 UTC** — Battle tab upgrade list visible
+- Walkthrough — 15 battle home
+- Walkthrough — 16 battle upgrade scroll
+- Walkthrough — 17 cards tab
+- Walkthrough — 18 mythic card tab
+- Walkthrough — 19 meta hub
+- Walkthrough — 20_meta_epic.png Epic
+- Walkthrough — 21_meta_system_admin.png System Admin
+- Walkthrough — 22_meta_soul.png Soul
+- Walkthrough — 23_meta_science.png Science Foundation
+- Walkthrough — 24_meta_dimension.png Dimension
+- Walkthrough — 25_meta_art.png Art Society
+- Walkthrough — 26 challenge hub
+- Walkthrough — 15 battle home
+- Walkthrough — 16 battle upgrade scroll
+- Walkthrough — 17 cards tab
+- Walkthrough — 18 mythic card tab
+- Walkthrough — 19 meta hub
+- Walkthrough — 20_meta_epic.png Epic
+- Walkthrough — 21_meta_system_admin.png System Admin
+- Walkthrough — 22_meta_soul.png Soul
+- Walkthrough — 23_meta_science.png Science Foundation
+- Walkthrough — 24_meta_dimension.png Dimension
+- Walkthrough — 25_meta_art.png Art Society
+- Walkthrough — 26 challenge hub
+- Walkthrough — 27 new world tab
+- Walkthrough — 28 leaderboard
+- Walkthrough — 29 preset
+- Walkthrough — 30 shop summons tab
+- Walkthrough — 31 special offer tab (no taps on SKUs)
+- Walkthrough — 32 special offer scrolled
+- **2026-11-03 15:46 UTC** — Cancel quit dialog
+- **2026-11-03 15:46 UTC** — second cancel attempt
+- **2026-11-03 15:53 UTC** — continue mapping from current screen

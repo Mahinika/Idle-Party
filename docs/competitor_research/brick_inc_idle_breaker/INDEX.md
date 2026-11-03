@@ -15,6 +15,7 @@ Use this folder as reference for Idle Party rebuild ideas — **do not copy art,
 |------|----------|
 | [SESSION_LOG.md](SESSION_LOG.md) | Timestamped capture log |
 | [UI_SHELL.md](UI_SHELL.md) | Navigation, HUD, sheets |
+| [SCREENS.md](SCREENS.md) | Which PNG shows which system |
 | [SYSTEMS.md](SYSTEMS.md) | Progression, currencies, loops |
 | [MONETIZATION.md](MONETIZATION.md) | Ads, IAP, passes |
 | [TECH_STACK.md](TECH_STACK.md) | Unity, Firebase, ads, backend APIs |
