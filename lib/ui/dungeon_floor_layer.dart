@@ -5,7 +5,7 @@ part of 'spatial_dungeon_view.dart';
 abstract final class _SoftGlow {
   static const int _n = 128;
   static ui.Image? _disc;
-  static final Paint _blit = Paint()..filterQuality = FilterQuality.low;
+  static final Paint _blit = Paint()..filterQuality = FilterQuality.none;
 
   static ui.Image _image() {
     final cached = _disc;
@@ -55,7 +55,7 @@ abstract final class _StarShaft {
   static const int _w = 48;
   static const int _h = 96;
   static ui.Image? _shaft;
-  static final Paint _blit = Paint()..filterQuality = FilterQuality.low;
+  static final Paint _blit = Paint()..filterQuality = FilterQuality.none;
 
   static ui.Image _image() {
     final cached = _shaft;

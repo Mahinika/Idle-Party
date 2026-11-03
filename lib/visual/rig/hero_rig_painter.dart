@@ -148,7 +148,12 @@ abstract final class HeroRigPainter {
     for (final hero in heroes) {
       try {
         await warmHero(hero);
-      } catch (_) {}
+      } catch (e, st) {
+        assert(() {
+          debugPrint('HeroRigPainter.warmParty failed: $e\n$st');
+          return true;
+        }());
+      }
     }
   }
 
@@ -176,7 +181,12 @@ abstract final class HeroRigPainter {
     for (final path in paths) {
       try {
         images[path] = await DecodedImageCache.load(path, targetWidth: 128);
-      } catch (_) {}
+      } catch (e, st) {
+        assert(() {
+          debugPrint('HeroRigPainter.warmHero decode failed: $e\n$st');
+          return true;
+        }());
+      }
     }
     final bodyKey = rigBodyKey(pose, images);
     final body = bodyKey == null ? null : images[bodyKey];

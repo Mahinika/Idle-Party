@@ -885,7 +885,9 @@ abstract final class GameAudio {
       Future<void>.delayed(fade, () {
         try {
           SoLoud.instance.stop(handle);
-        } catch (_) {}
+        } catch (e, st) {
+          debugPrint('GameAudio fade stop failed: $e\n$st');
+        }
       });
     } catch (e, st) {
       debugPrint('GameAudio music release failed: $e\n$st');
