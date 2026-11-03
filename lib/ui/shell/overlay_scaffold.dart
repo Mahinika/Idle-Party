@@ -206,21 +206,24 @@ class _OverlayPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (handle) MenuChrome.sheetHandle(),
-          _SheetHeader(
-            title: title,
-            subtitle: subtitle,
-            onClose: onClose,
-            gold: gold,
-            essence: essence,
-            showEssence: showEssence,
-            showClose: showClose,
-          ),
-          const SizedBox(height: 4),
-          Container(
-            height: 1,
-            color: GameTheme.borderLit.withValues(alpha: 0.22),
-          ),
-          const SizedBox(height: 6),
+          if (title.isNotEmpty || showClose || gold != null)
+            _SheetHeader(
+              title: title,
+              subtitle: subtitle,
+              onClose: onClose,
+              gold: gold,
+              essence: essence,
+              showEssence: showEssence,
+              showClose: showClose,
+            ),
+          if (title.isNotEmpty || showClose || gold != null) ...[
+            const SizedBox(height: 4),
+            Container(
+              height: 1,
+              color: GameTheme.borderLit.withValues(alpha: 0.22),
+            ),
+            const SizedBox(height: 6),
+          ],
           Expanded(child: child),
         ],
       ),

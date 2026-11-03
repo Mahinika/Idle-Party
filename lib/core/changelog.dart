@@ -93,6 +93,7 @@ abstract final class ChangelogCatalog {
           'Your party fights on its own. Tap ENTER DUNGEON. The fight is the home screen.',
       changed: <String>[
         'Bottom bar is HEROES, ESSENCE, FIGHT, MAP, and SHOP. MENU is at the top.',
+        'MENU is the list only. SHOP says SCROLLS sit on the fight rail, and gold sits under the fight.',
         'FORGE, CAMP, and MARKET sit under the fight. A new game starts in Sandy Caverns.',
         'PATH still runs Sandy through Mothveil (Tidehold, Ashen Vault, Hollow Grove, Stormwake, Rimeglass, Blightfen, Brassvault).',
         'At party Lv100, MENU → CRAFT still runs a monthly Craft Trial.',

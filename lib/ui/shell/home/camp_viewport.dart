@@ -39,6 +39,12 @@ class CampViewport extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
+              'CAMP',
+              textAlign: TextAlign.center,
+              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            ),
+            const SizedBox(height: 4),
+            Text(
               state.partyName,
               textAlign: TextAlign.center,
               style: GameTheme.menuTitle(size: 18),

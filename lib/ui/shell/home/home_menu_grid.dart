@@ -25,10 +25,10 @@ class HomeMenuGrid extends StatelessWidget {
         .where((e) => e.visible(state, director))
         .toList();
     return ListView(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
       children: [
         Text('MENU', style: GameTheme.menuTitle(size: 18)),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         for (final entry in entries)
           WebClickScope(
             label: entry.label,
@@ -38,27 +38,52 @@ class HomeMenuGrid extends StatelessWidget {
               label: entry.label,
               child: InkWell(
                 onTap: () => entry.open(context, director, router),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
-                  child: Row(
-                    children: [
-                      GameIcon.asset(entry.icon, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          entry.label,
-                          style: GameTheme.body(size: 14, color: GameTheme.parchment),
-                        ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: GameTheme.borderLit.withValues(alpha: 0.28),
                       ),
-                      if (entry.badge(state)) const _Dot(),
-                    ],
+                    ),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minHeight: GameTheme.minTouch,
+                    ),
+                    child: Row(
+                      children: [
+                        GameIcon.asset(entry.icon, size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            entry.label,
+                            style: GameTheme.body(
+                              size: 15,
+                              color: GameTheme.parchment,
+                            ),
+                          ),
+                        ),
+                        if (entry.badge(state)) const _Dot(),
+                        const SizedBox(width: 4),
+                        Text(
+                          '›',
+                          style: GameTheme.body(
+                            size: 18,
+                            color: GameTheme.parchmentDim,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        const SizedBox(height: 12),
-        Text('TIP A FRIEND', style: GameTheme.menuTitle(size: 14)),
+        const SizedBox(height: 16),
+        Text(
+          'TIP A FRIEND',
+          style: GameTheme.menuTitle(size: 14, color: GameTheme.parchmentDim),
+        ),
         HomeFriendTip(director: director),
       ],
     );

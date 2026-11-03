@@ -7,6 +7,7 @@ import '../../core/run_stash_shop.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
+import '../../core/nav_copy.dart';
 import '../../models/hero.dart';
 import '../../models/loot.dart';
 import '../../models/proficiency.dart';
@@ -746,7 +747,10 @@ class _InventoryDockState extends State<InventoryDock>
         return 'Add one more item of the same slot from BAG.';
       }
       if (primary.isApex || secondary.isApex) {
-        return 'Apex gear cannot MERGE — upgrade it under MORE → CRAFT.';
+        return NavCopy.playerText(
+          'Apex gear cannot MERGE — upgrade it under MORE → CRAFT.',
+          state.homeLayout,
+        );
       }
       if (!canCombine) {
         return 'Slots must match — clear one and pick the same gear type.';

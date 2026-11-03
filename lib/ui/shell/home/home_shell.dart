@@ -76,8 +76,9 @@ class _HomeShellState extends State<HomeShell> {
       child: Column(
       children: [
         HomeTopBar(director: director, router: router),
-        if (FirstSessionTips.active(state, inDungeon: state.inDungeon)
-            case final hint?)
+        if (!sheet)
+          if (FirstSessionTips.active(state, inDungeon: state.inDungeon)
+              case final hint?)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             child: Text(

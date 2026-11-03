@@ -9,6 +9,7 @@ import '../core/blessing_constellation.dart';
 import '../core/meta_systems.dart';
 import '../core/rift.dart';
 import '../core/greater_rift.dart';
+import '../core/nav_copy.dart';
 import '../core/story_lore.dart';
 import '../models/dungeon_mode.dart';
 import 'game_theme.dart';
@@ -307,9 +308,12 @@ Future<void> confirmGauntletRun(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Pick how this climb plays. Boss every 5 floors. '
-              'Leave or a wipe returns you to the hub.\n\n'
-              'Best clear: F$best',
+              NavCopy.playerText(
+                'Pick how this climb plays. Boss every 5 floors. '
+                'Leave or a wipe returns you to the hub.\n\n'
+                'Best clear: F$best',
+                state.homeLayout,
+              ),
               style: GameTheme.body(size: 15, color: GameTheme.parchment),
             ),
             const SizedBox(height: 8),

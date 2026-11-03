@@ -12,6 +12,7 @@ import '../../core/greater_rift.dart';
 import '../../core/keystone.dart';
 import '../../core/rift.dart';
 import '../../core/menu_alerts.dart';
+import '../../core/nav_copy.dart';
 import '../../models/dungeon_mode.dart';
 import '../../models/dungeon_room.dart';
 import '../../models/enemy.dart';
@@ -513,8 +514,10 @@ class DungeonTopHud extends StatelessWidget {
           selected: true,
           expand: true,
           interactive: false,
-          tip:
-              'Next boss F$nextBoss.$nextBit$pbBit Wipe or leave returns to the hub.$extra',
+          tip: NavCopy.playerText(
+            'Next boss F$nextBoss.$nextBit$pbBit Wipe or leave returns to the hub.$extra',
+            state.homeLayout,
+          ),
           onTap: () {},
             ),
           ),
