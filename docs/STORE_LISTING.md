@@ -166,9 +166,11 @@ shots. High-res icon: `out/play_icon_512.png` (owned `app_icon`).
 | 8 | `out/08_08_ascend.png` | Ascend. Your party stays. |
 
 Shots **1–3** are phone UI from a **new-save** Sandy floor (starter Shield /
-Healer / Damage), not KEY / Gauntlet / AL20 chrome. Shots **4–8** are the
-AL3 showcase hub. Endgame hunts do not lead the carousel or the first 20
-seconds of the preview video.
+Healer / Damage). The party is already in the fight. The bottom bar reads
+HEROES and FIGHT. Shot 3 keeps the file `out/03_03_hub_today.png` and shows
+the chase line on that fight. Do not leave the cave for the lead. Shots
+**4–8** are the AL3 showcase hub. Endgame hunts do not lead the carousel
+or the first 20 seconds of the preview video.
 
 Capture on the A56 (the phone is the product; web is only the fallback):
 
