@@ -65,3 +65,7 @@
 - **2026-11-03 16:45 UTC** — tap (160,500) → Pass button from growth popup
 - **2026-11-03 16:46 UTC** — tap (150,610) → Growth Center Pass, view only
 - **2026-11-03 16:50 UTC** — tap (80,580) → toggle Growth popup closed
+- **2026-11-03 17:28 UTC** — before missing-screen pass
+- **2026-11-03 17:29 UTC** — tap (1020,460) → right rail Event
+- **2026-11-03 17:30 UTC** — tap (1035,444) → Event icon center
+- **2026-11-03 17:33 UTC** — tap (1047,432) → Event balloon while tray is closed

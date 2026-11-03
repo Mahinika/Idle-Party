@@ -15,8 +15,10 @@ Useful shots only. Misses (battle when a menu was intended) stay in `screens/` b
 
 | Shot | What it shows |
 |------|----------------|
-| `77_cards.png` | Collection by rarity: Common, Uncommon, Rare, Heroic. Level + shard counts (e.g. 23/40) |
+| `77_cards.png` `306_cards.png` | Collection by rarity: Common, Uncommon, Rare, Heroic. Level + shard counts (e.g. 23/40) |
 | `78_cards_mythic.png` | Card detail: **Hunter** 6/10, crit damage 1,891% → 3,606%, Level Up costs **1,250** gems (not pressed) |
+| `307_mythic_cards.png` | **Mythic Card** tab. Most slots say Not Obtained (2/10–8/10). One owned card, a trident, is 11/10 |
+| `308_mythic_detail.png` | That card is **Trishula**, All Weapons Damage x512. Crafting materials x10 / x2 / x5. Crafting was not pressed |
 
 ## Meta hub
 
@@ -76,7 +78,12 @@ Useful shots only. Misses (battle when a menu was intended) stay in `screens/` b
 | `166_info_card.png` | **Info → Card**. Collection by rarity through Epic, each card shows a level |
 | `168_info_artifact.png` | **Info → Artifact**. Icon grid with level pips |
 | `169_info_gear.png` | **Info → Dimensional Gear**. Same grid, different frames |
+| `303_info_beast.png` | **Info → Divine Beast**. Five columns of beasts, almost all Lv.5. The last slot is a silhouette. Tapping a beast did not open a detail |
 | `173_sleep.png` | **Sleep Mode**. Clock, gold, power, battery, Keep screen on. Hold to leave. Left with a long-press. The toggle was not changed |
+| `209_preset.png` | **Preset**. Tree of Truth presets 1–3, Dimensional Tech presets 1–5. None applied |
+| `213_checkin.png` | **Daily Check-In**. Prism Pass Disabled. Days 1–3 checked. Later days show gems, a ticket, a chest, a drill. No day was tapped |
+| `214_coupon.png` | **Coupon**. Field placeholder COUPON, yellow Confirm. Confirm was not pressed |
+| `215_community.png` | **(Unofficial) Discord** plus a disclaimer that Seasoning Games is not involved. The external arrow was not tapped |
 
 ## Rails, pass, and shop (view only)
 
@@ -87,8 +94,48 @@ Useful shots only. Misses (battle when a menu was intended) stay in `screens/` b
 | `181_booster_closed.png` | **Membership**. No expiry, effects stack. Ad Removal is Purchased (remove ads, gems x1000). Booster Membership sits under it. Tabs Recommended / Premium. Mileage tooltip: mileage comes from ads and is spent in an exchange shop. Nothing was bought |
 | `185_crop.png` | **Growth Center** opens a bubble: Pass and Step-Up Pack |
 | `189_pass2.png` | **Frontier's Pass**. Check-in track days 3–30. Below that, Max Rank Achieved rows (66/22 and up) with checks. Tabs also named Rank and Field. No row was claimed |
-| `193_mission.png` | **Mission**, 22h 12m left. Star track at 20/40/60/80/100. Tasks: Check In, Break Bricks, Activate Any Booster, Watch Ads, Obtain Mileage, Fire the Default Weapon. Claim was not pressed. Tabs Epic Mission and Achievements exist |
+| `193_mission.png` `224_mission.png` | **Mission**. Star track at 20/40/60/80/100. Tasks include Check In, Break Bricks, Activate Any Booster, Watch Ads, Obtain Mileage, Fire the Default Weapon. Claim was not pressed |
+| `225_epic_mission.png` | **Epic Mission**, plus a red Unlock Epic Missions banner (not tapped). Tasks include Clear Boards, Run Wheel of Life, Soul upgrades, card levels |
+| `226_achievements.png` `227_achievements_scroll.png` | **Achievements**. Lifetime counters (Check In, Break Bricks, Science Points, Meditation, Tachyon Fuel, cards, boosters). Claim All was not pressed |
+| `217_piggy.png` | **Piggy Bank**. Large: 20 gems per 10 mission points, 6,940/7,500, **65.00 kr**, “Maximum x15 Value!”. Mini: 5 gems per 10 points, 20/100. Neither button pressed |
+| `220_stepup.png` `221_stepup_scroll.png` `222_stepup_end.png` | **Beginner Step-Up Pack**, 8 steps. Seen prices 12.00 / 47.00 / 95.00 kr. Some steps are Free. Each locked step waits on the previous purchase. Nothing bought. Step 4 sat between two scrolls |
+| `232_pass_try.png` | **Frontier's Pass** main tab. Check-in to day 30. Max Rank Achieved rows already checked |
+| `233_pass_rank.png` | **Rank** tab, sub-tabs I–VI. Free column vs **189.00 kr**. Tooltip names Epic Rank Pass I. Not bought |
+| `234_pass_field.png` | **Field** tab, same I–VI and **189.00 kr**. Tooltip names Epic Field Pass I. Not bought |
+| `297_epic_shop.png` | **Epic Shop**. Tachyon, Dimensional Fuel, Dial, and Destiny packs for 2,500 or 5,000 gems. Two tiles locked at Super God 10 and Super God 13. Nothing bought |
+
+## Soul, science, dimension
+
+| Shot | What it shows |
+|------|----------------|
+| `239_soul_upgrade.png` | **Soul Upgrade**. Shown weapons are Lv.9999/9999 MAX. Assist percents were not tapped |
+| `240_soul_enhance.png` | **Soul Enhancement**. Damage Increase and Cost Reduction, both MAX |
+| `246_demon.png` `247_decay.png` `248_curse.png` | Demon Cult rank 500. Corruption, Decay, and Curse, each Lv.250/250 MAX |
+| `249_warai.png` `250_warai_research.png` `251_warai_soul.png` | **War AI** rank 500. Self-learning target was left as Weapon Damage. Research page 1 and a Soul Altar page, both MAX. Later research pages were not opened |
+| `253_cube.png` `254_cube_beast.png` `255_cube_innov.png` | **Golden Cube** rank 250. 3×3 Golden Power grid, Divine Beast, Innovation. Upgrade All was not pressed |
+| `258_ragnarok.png` `259_ragnarok_anvil.png` `260_ragnarok_system.png` | **Ragnarok** Doomfire, Forge of Ashes, Dimensional System. Input percents, Upgrade, and the x1 buttons were not pressed |
+| `263_warframe.png` `264_warframe_tab.png` | Warframe opens **Dimensional Gear**, then a Dimensional System loadout. Combine, Dismantle, Equip All, and Unequip All were not pressed |
+| `267_oracle.png` `268_oracle2.png` `269_oracle3.png` `270_oracle4.png` `271_oracle_vault.png` | Oracle: Blessing, Miracle, Revelation, Destiny (rank 147), Vault of Destiny. Skip cards, production status, and nodes were not pressed |
+| `273_nexus.png` `274_nexus2.png` | **Nexus** Quantum Core rank 485, then Network Hub on the Oracle chip. Nexus / Warframe / Ragnarok chips show ! and did not switch. Enable was not tapped |
+
+## Garden, archive, confidential, sanctum
+
+Bottom icons on this bar: leaf = Garden of Truth, globe = **Sanctum**, warning = **Confidential Area**, book = **Dimensional Archive**.
+
+| Shot | What it shows |
+|------|----------------|
+| `279_art.png` `280_fountain.png` `281_med_skill.png` `282_enlighten.png` | Garden tree, Wisdom Fountain (Meditation, Meditation Skill, Enlightenment). Reset costs 108 gems and was not pressed. Auto Progress was not toggled |
+| `283_path.png` `284_seeking.png` `285_ascension.png` `336_helmet.png` | Path of Truth, Seeking Truth, Ascension Level 0. Create (130) and Start were not pressed |
+| `289_mystical_cube.png` | Confidential **Dimensional Exploration**. Galaxies Alpha–Omicron with a percent and a bonus |
+| `334_ruler.png` | **Simulation Room**. Same lettered zones with a level (Alpha Lv.12/100) and a center chip ×2 Lv.1/8 |
+| `335_kardashev.png` | **Kardashev Device**. Same zones as light bulbs at ×1 |
+| `291_omega.png` `292_chaos.png` | **OMEGA** Tachyon Laboratory and Chaos Chamber Drop Enhancement. Production status and the 100,000 upgrade were not pressed |
+| `332_drop_control.png` `333_drop_scroll.png` | **Drop Control**. Artifact rows (Golden Duck through Infernal Drive), Max Drop Rate 1.25→1.5, 1/8, cost 25. Not bought |
+| `313_garden.png` `322_library_tab.png` `323_codex.png` `324_codex_scroll.png` | **Dimensional Archive**. Book Crafting 0/250. Library disciplines. Prohibited Codex level 1 (list continues, page 1/4). Volume and craft buttons were not pressed |
+| `314_library.png` `316_navigator.png` `317_carriage.png` `318_shiplog.png` | **Dimensional Train**. Voyage Monitor, Navigator wheel, Royal Carriage, Ship's Log (2.64M km). Upgrades cost 5 or 10 and were not pressed. Production and engine status were not toggled |
+| `319_tribunal.png` `320_the_tribunal.png` | **Spacetime Tribunal**. Cosmic Lab dial (4.94 ticks/sec) and The Tribunal zone board. The ??? tab was left alone |
+| `338_globe.png` `339_mystical_cube.png` `340_eternal_cube.png` `341_eternal_scroll.png` | **Sanctum**. Artifact inventory, Mystical Cube loadout, Eternal Cube sets (Ring of Cycles, Dice of Creation, Dominion Armor, Infernal Flame). Combine, Dismantle, Equip All, and Unequip All were not pressed |
 
 ## Still not opened
 
-Coupon, Daily Check-In, Community, Preset editor, Step-Up Pack, Piggy Bank interior, Event, Epic Mission, Achievements, Divine Beast info tab, Pass Rank and Field tabs, Soul Upgrade and Enhancement, Decay and Curse, War AI and Golden Cube, Ragnarok, Warframe, Oracle, Nexus, and the Garden sub-tabs. Wall and Altar runs stay closed on purpose. No Claim, Enable, Equip, or price button was pressed.
+The party hat, the Event label, and the Open pill all toggle the buff tray. No separate event page opened. The gift boxes under the hat were not tapped. Network Hub stays on the Oracle chip. War AI research after page 1, the locked ??? tribunal tab, and Wall of Eternity / Golden Altar runs were left closed. No Claim, Confirm, Enable, Equip, Reset, Create, or price button was pressed. Gems were still **1,619** at the end of this pass.

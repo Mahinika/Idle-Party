@@ -81,9 +81,18 @@ Details and shot names: [SCREENS.md](SCREENS.md).
 - **Mission** is a daily star track (about 22h) with claimable tasks. Epic Mission and Achievements are sibling tabs.
 - A small **status tray** sits on the fight and shows long buff timers. It was left alone.
 
-## Still closed
+## Mapped in the second pass
 
-Coupon, Daily Check-In, Community, Preset, Step-Up Pack, Piggy interior, Event, Epic Mission, Achievements, Divine Beast, the other pass tabs, Soul Upgrade / Enhancement, Decay / Curse, War AI, Golden Cube, and the Dimension and Garden interiors. Runs that spend a ticket were not started.
+View only. No price, claim, confirm, equip, reset, or create button was pressed. Gems stayed at 1,619.
+
+- **Menu:** Preset, Daily Check-In, Coupon (Confirm not pressed), Community (Discord arrow not pressed).
+- **Rails:** Piggy Bank (large and mini), Step-Up Pack (8 steps), Epic Mission, Achievements, Frontier's Pass Rank and Field (189.00 kr, not bought), Epic Shop (gem packs, Super God 10 and 13 locks).
+- **Soul** Upgrade and Enhancement are MAX on the weapons shown. **Decay** and **Curse** are MAX. **War AI** and **Golden Cube** have their own rank pages.
+- **Dimension interiors:** Ragnarok (Doomfire, forge, system), Warframe as gear plus a loadout, Oracle (Blessing through Vault), Nexus Quantum Core. Network Hub did not leave the Oracle chip.
+- **Art Society bar:** leaf is the Garden, the globe is **Sanctum**, the warning mark is **Confidential Area**, the book is the **Dimensional Archive** (crafting, a train, a tribunal).
+- **Garden** continues into Meditation, Path of Truth, Seeking Truth, and Ascension. **Sanctum** is artifacts plus Mystical Cube and Eternal Cube. **Confidential** is exploration, a simulation room, Kardashev, OMEGA, and Chaos Chamber drop control.
+- **Cards:** the Mythic tab is mostly unobtained. The owned card is Trishula. **Info → Divine Beast** is a level grid. A tap did not open a beast detail.
+- The **event hat** does not open its own page. Hat, Event, and Open all toggle the buff tray. Gifts were not tapped. Ticket runs (Wall, Altar) stay closed.
 
 ## Idle Party rebuild prompts (ideas, not copy)
 
