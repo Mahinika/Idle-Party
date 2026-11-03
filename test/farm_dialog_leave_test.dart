@@ -11,7 +11,7 @@ void main() {
     final now = DateTime.utc(2026, 10, 17);
     final state = GameLogic.createInitialState(
       now: now,
-    ).copyWith(inDungeon: true);
+    ).copyWith(inDungeon: true, lastUpdated: DateTime.now());
     final director = GameDirector.preview(initialState: state);
     await director.boot();
     director.enterDungeon();
@@ -41,11 +41,13 @@ void main() {
     );
 
     await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('SWITCH TO FARM?'), findsOneWidget);
 
     director.leaveDungeon();
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('SWITCH TO FARM?'), findsNothing);
     expect(director.state.inDungeon, isFalse);
     director.dispose();

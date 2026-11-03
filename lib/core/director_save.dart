@@ -123,9 +123,21 @@ extension GameDirectorSave on GameDirector {
   ///
   /// Cold start already does this in [boot]. A process Android kept alive
   /// used to skip it, so Welcome Back, the ping ask, and `d1_return` never ran.
-  /// The replay is sliced ([GameLogic.applyOfflineProgressAsync]) so a long
-  /// cave does not freeze the frame. The saved level stays up until that
-  /// credit finishes, then one notify shows the caught-up party.
+  /// Live play slices long cave catch-up ([GameLogic.applyOfflineProgressAsync])
+  /// so the frame stays paintable. The saved level stays up until that credit
+  /// finishes, then one notify shows the caught-up party.
+  ///
+  /// Preview / tests use the synchronous path via [_simulateAwayProgress].
+  Future<OfflineProgressResult> _simulateAwayProgress(
+    GameState saved,
+    Duration elapsed,
+  ) {
+    if (!enableSpatialLoop) {
+      return Future.value(GameLogic.applyOfflineProgress(saved, elapsed));
+    }
+    return GameLogic.applyOfflineProgressAsync(saved, elapsed);
+  }
+
   Future<void> _resumeFromBackground() async {
     if (!_isLoading) {
       final elapsed = DateTime.now().difference(_state.lastUpdated);
@@ -328,7 +340,7 @@ extension GameDirectorSave on GameDirector {
   }) async {
     final elapsed = DateTime.now().difference(saved.lastUpdated);
     _welcomeBackAdGranted = false;
-    final offline = await GameLogic.applyOfflineProgressAsync(saved, elapsed);
+    final offline = await _simulateAwayProgress(saved, elapsed);
     return _finishAwayCredit(offline, showCard: showCard);
   }
 

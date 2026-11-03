@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 
 import 'game_logic.dart';
 import 'game_state.dart';
@@ -270,7 +271,9 @@ class FriendReferralSync {
             );
           }
         }
-      } catch (_) {}
+      } catch (e, st) {
+        debugPrint('FriendReferral sync failed: $e\n$st');
+      }
     }
     return _maybeClaimReferrer(next, deviceId);
   }
@@ -289,7 +292,9 @@ class FriendReferralSync {
     if (deviceId != null) {
       try {
         await gateway.ensureCode(code: code, deviceId: deviceId);
-      } catch (_) {}
+      } catch (e, st) {
+        debugPrint('FriendReferral ensureCode failed: $e\n$st');
+      }
     }
     final send = share;
     if (send == null) {

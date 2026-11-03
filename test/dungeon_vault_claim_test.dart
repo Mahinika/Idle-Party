@@ -19,6 +19,7 @@ void main() {
     );
     final ready = fresh.copyWith(
       inDungeon: true,
+      lastUpdated: DateTime.now(),
       metaDepth: fresh.metaDepth.copyWith(
         dailyVaultClears: GameLogic.dailyVaultClearTarget,
         dailyVaultClaimed: false,
@@ -66,6 +67,7 @@ void main() {
 
     final fresh = GameLogic.createInitialState(now: now).copyWith(
       inDungeon: true,
+      lastUpdated: DateTime.now(),
     );
     final director = GameDirector.preview(initialState: fresh);
     await director.boot();
