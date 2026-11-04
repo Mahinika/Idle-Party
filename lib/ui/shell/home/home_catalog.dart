@@ -11,9 +11,7 @@ import '../../game_icon.dart';
 import '../../hub/friend_tip_block.dart';
 import '../../hub/hub_powerups.dart';
 import '../../redeem_coupon_dialog.dart';
-import '../jobs_overlay.dart';
 import '../whats_new_overlay.dart';
-import 'feature_sheet.dart';
 
 enum HomePlace { leftRail, rightRail, menuGrid }
 
@@ -100,13 +98,8 @@ abstract final class HomeCatalog {
       label: 'QUESTS',
       visible: (s, _) => MenuTabs.showQuests(s),
       badge: (s) => s.missions.any((m) => m.canClaim),
-      open: (context, director, _) {
-        showFeatureSheet(
-          context: context,
-          title: 'QUESTS',
-          body: JobsOverlay(director: director),
-          primaryLabel: 'CLOSE',
-        );
+      open: (context, director, router) {
+        router.open(MenuRoute.more, more: MoreSection.quests);
       },
     ),
     HomeEntry(
@@ -154,13 +147,9 @@ abstract final class HomeCatalog {
       label: 'QUESTS',
       visible: (_, _) => true,
       badge: (s) => s.missions.any((m) => m.canClaim),
-      open: (context, director, _) {
-        showFeatureSheet(
-          context: context,
-          title: 'QUESTS',
-          body: JobsOverlay(director: director),
-          primaryLabel: 'CLOSE',
-        );
+      open: (context, director, router) {
+        router.open(MenuRoute.more, more: MoreSection.quests);
+        router.pushSub();
       },
     ),
     HomeEntry(

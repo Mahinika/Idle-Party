@@ -495,6 +495,7 @@ class MenuRouter extends ChangeNotifier {
   bool back() {
     if (_homeDepth > 0) {
       _homeDepth = 0;
+      if (_route == MenuRoute.more) _moreSection = MoreSection.info;
       notifyListeners();
       return true;
     }

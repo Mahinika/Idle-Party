@@ -46,7 +46,9 @@ Future<void> showFeatureSheet({
                   ),
                 ],
                 const SizedBox(height: 8),
-                Expanded(child: body),
+                Expanded(
+                  child: SingleChildScrollView(child: body),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [

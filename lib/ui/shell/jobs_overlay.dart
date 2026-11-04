@@ -47,9 +47,17 @@ class JobsOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: director,
+      builder: (context, _) => _board(context),
+    );
+  }
+
+  Widget _board(BuildContext context) {
     final state = director.state;
     final claimable = state.missions.where((m) => m.canClaim).length;
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(

@@ -9,6 +9,7 @@ import '../../core/nav_intent.dart';
 import 'essence_dock.dart';
 import 'gold_dock.dart';
 import 'inventory_dock.dart';
+import 'jobs_overlay.dart';
 import 'overlay_scaffold.dart';
 import 'power_meta_pillars.dart';
 import 'shop_dock.dart';
@@ -160,8 +161,13 @@ class _MenuSurfaceState extends State<MenuSurface> {
   Widget build(BuildContext context) {
     final d = widget.director;
     if (router.route == MenuRoute.none) return const SizedBox.shrink();
-    final homeMenuGrid =
-        widget.home && router.route == MenuRoute.more && !router.homeAtSub;
+    final questBoard = widget.home &&
+        router.route == MenuRoute.more &&
+        router.moreSection == MoreSection.quests;
+    final homeMenuGrid = widget.home &&
+        router.route == MenuRoute.more &&
+        !router.homeAtSub &&
+        !questBoard;
     // Full height above the shared bottom bar — same for every tab so GOLD /
     // SHOP / ESSENCE / KEY / MORE match GEAR (never cover the bar; OverlayScrim
     // lives only inside the Expanded scene stack).
@@ -172,7 +178,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
       gold: widget.home ? null : state.gold,
       essence: widget.home ? null : state.essence,
       showEssence: MenuTabs.showCamp(state),
-      showClose: !widget.home,
+      showClose: !widget.home || questBoard,
       onClose: router.close,
       child: switch (router.route) {
         MenuRoute.gear => _inventoryDock(),
@@ -189,7 +195,12 @@ class _MenuSurfaceState extends State<MenuSurface> {
         ),
         MenuRoute.key => KeystoneSheet(director: d),
         MenuRoute.map => const SizedBox.shrink(),
-        MenuRoute.more => homeMenuGrid
+        MenuRoute.more => questBoard
+            ? SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                child: JobsOverlay(director: d),
+              )
+            : homeMenuGrid
             ? HomeMenuGrid(director: d, router: router)
             : MoreList(
           director: d,
