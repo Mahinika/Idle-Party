@@ -231,7 +231,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final spatial = _spatialFor(world, i);
     return SizedBox(
       height: rowHeight,
-      child: WebClickScope(
+      child: ClipRect(
+        child: WebClickScope(
         label: hero.name,
         onPressed: () => _onHeroTap(i),
         child: Semantics(
@@ -250,24 +251,17 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
               onTap: () => _onHeroTap(i),
               onLongPress: _onLongPressGear,
               borderRadius: BorderRadius.circular(3),
-              child: _PartyRow(
-                index: i,
-                hero: hero,
-                plainEnglish: plainEnglish,
+              child: _HomePartyChip(
+                name: hero.name,
+                level: hero.level,
+                hp: spatial?.hp ?? hero.currentHp,
+                maxHp: spatial?.effectiveMaxHp ??
+                    state.effectiveHeroMaxHp(hero),
                 selected: widget.selectedHeroIndex == i,
-                kitOpen: false,
-                compact: true,
-                phone: true,
-                stripOnly: true,
-                inCombat: world?.enemies.any((e) => e.isAlive) ?? false,
-                liveHp: spatial?.hp ?? hero.currentHp,
-                maxHp:
-                    spatial?.effectiveMaxHp ?? state.effectiveHeroMaxHp(hero),
-                spatial: spatial,
-                world: world,
               ),
             ),
           ),
+        ),
         ),
       ),
     );
@@ -356,7 +350,11 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                 ),
                 padding: const EdgeInsets.all(2),
                 child: SizedBox(
-                height: showFlask ? DungeonFlaskButton.stripReserve : rowHeight,
+                height: showFlask
+                    ? (rowHeight > DungeonFlaskButton.stripReserve
+                        ? rowHeight
+                        : DungeonFlaskButton.stripReserve)
+                    : rowHeight,
                 child: Row(
                   children: [
                     for (var i = 0; i < heroCount; i++)
@@ -369,7 +367,11 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                             plainEnglish: plainEnglish,
                             world: world,
                             state: state,
-                            rowHeight: rowHeight,
+                            rowHeight: showFlask
+                                ? (rowHeight > DungeonFlaskButton.stripReserve
+                                    ? rowHeight
+                                    : DungeonFlaskButton.stripReserve)
+                                : rowHeight,
                           ),
                         ),
                       ),
@@ -805,6 +807,63 @@ class _KitSidePanel extends StatelessWidget {
           ],
         ),
       ),
+      ),
+    );
+  }
+}
+
+/// One hero on the home fight's single party line. Names scale down.
+class _HomePartyChip extends StatelessWidget {
+  const _HomePartyChip({
+    required this.name,
+    required this.level,
+    required this.hp,
+    required this.maxHp,
+    required this.selected,
+  });
+
+  final String name;
+  final int level;
+  final num hp;
+  final num maxHp;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final frac = maxHp <= 0 ? 0.0 : (hp / maxHp).toDouble().clamp(0.0, 1.0);
+    final hpColor = hp <= 0
+        ? GameTheme.blood
+        : (frac <= 0.35 ? GameTheme.bloodLit : GameTheme.clear);
+    return Container(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      decoration: BoxDecoration(
+        color: selected ? GameTheme.hudRowSelected : Colors.transparent,
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '$name L$level',
+              maxLines: 1,
+              softWrap: false,
+              style: GameTheme.pixel(size: 8, color: GameTheme.parchment),
+            ),
+          ),
+          const SizedBox(height: 2),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(1),
+            child: LinearProgressIndicator(
+              value: frac,
+              minHeight: 3,
+              backgroundColor: GameTheme.hudHpFill,
+              color: hpColor,
+            ),
+          ),
+        ],
       ),
     );
   }
