@@ -103,6 +103,7 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
               GameButton(
                 label: 'CONFIRM ASCEND',
                 style: GameButtonStyle.red,
+                primary: true,
                 expanded: false,
                 onPressed: () =>
                     Navigator.of(ctx, rootNavigator: true).pop(true),

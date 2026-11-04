@@ -5,8 +5,8 @@ import '../../core/mission_board.dart';
 import '../../models/mission.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
-import '../menu_chrome.dart';
 import 'shell_common.dart';
+import 'shell_layout.dart';
 
 class JobsOverlay extends StatelessWidget {
   const JobsOverlay({super.key, required this.director});
@@ -70,25 +70,25 @@ class JobsOverlay extends StatelessWidget {
   Widget _board(BuildContext context) {
     final state = director.state;
     final claimable = state.missions.where((m) => m.canClaim).length;
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
+        ShellLayout.hint(
           introLine(chainCount: state.metaDepth.jobChainCount),
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
         ),
         if (claimable == 0) ...[
-          const SizedBox(height: 4),
-          Text(
+          ShellLayout.gap(4),
+          ShellLayout.hint(
             'Clear floors to fill these. Progress survives wipes.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            maxLines: 2,
           ),
         ],
         if (claimable > 0) ...[
-          const SizedBox(height: 8),
+          ShellLayout.gap(8),
           GameButton(
             label: claimable == 1
                 ? 'CLAIM QUESTS'
@@ -98,10 +98,14 @@ class JobsOverlay extends StatelessWidget {
             primary: true,
           ),
         ],
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         for (var i = 0; i < state.missions.length; i++)
-          _questCard(director, state.missions[i], i),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: _questCard(director, state.missions[i], i),
+          ),
       ],
+    ),
     );
   }
 
@@ -111,16 +115,8 @@ class JobsOverlay extends StatelessWidget {
         (index == MissionBoard.dailySlot || index == MissionBoard.sideSlot) &&
         MissionBoard.canRerollMission(mission, index) &&
         rerollsLeft > 0;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-      decoration: MenuChrome.listCard(
-        borderColor: switch (mission.tier) {
-          2 => GameTheme.bloodLit,
-          1 => GameTheme.torchHot,
-          _ => GameTheme.border.withValues(alpha: 0.9),
-        },
-      ),
+    return ShellLayout.card(
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -202,7 +198,8 @@ class JobsOverlay extends StatelessWidget {
                     ? chainClaimLabel()
                     : 'CLAIM',
                 onPressed: () => director.claimMission(mission.id),
-                style: GameButtonStyle.grey,
+                style: GameButtonStyle.brown,
+                primary: true,
                 dense: true,
                 expanded: false,
               ),

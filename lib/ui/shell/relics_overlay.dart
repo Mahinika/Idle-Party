@@ -8,6 +8,7 @@ import '../../assets/kenney_assets.dart';
 import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
+import 'shell_layout.dart';
 
 String _pile(int n, String one, String many) => '$n ${n == 1 ? one : many}';
 
@@ -24,59 +25,70 @@ class RelicsOverlay extends StatelessWidget {
     final next = nextId == null ? null : RelicCatalog.byId(nextId);
     final discoverCost = RelicCatalog.discoverCost(state.unlockedRelics.length);
     final trades = GameLogic.cinderExchangesUsed(state);
-    return Column(
+    final canDiscover = next != null && md.embers >= discoverCost;
+    final nextRelic = next;
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
+        ShellLayout.hint(
           '${_pile(md.embers, 'Ember', 'Embers')} · '
           '${_pile(md.cinders, 'Cinder', 'Cinders')} · survive Ascend',
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+          maxLines: 2,
         ),
-        const SizedBox(height: 8),
-        if (next != null)
+        ShellLayout.gap(8),
+        if (nextRelic != null)
           GameButton(
-            label: md.embers >= discoverCost
-                ? 'DISCOVER ${next.name} · ${_pile(discoverCost, 'Ember', 'Embers')}'
-                : 'DISCOVER ${next.name} · need ${discoverCost - md.embers} more Embers',
-            tip: md.embers >= discoverCost
+            label: canDiscover
+                ? 'DISCOVER ${nextRelic.name} · ${_pile(discoverCost, 'Ember', 'Embers')}'
+                : 'DISCOVER ${nextRelic.name} · need ${discoverCost - md.embers} more Embers',
+            tip: canDiscover
                 ? null
                 : 'Need ${discoverCost - md.embers} more Embers',
-            onPressed: md.embers >= discoverCost
-                ? () => director.unlockRelic(next.id)
+            style: canDiscover ? GameButtonStyle.brown : GameButtonStyle.grey,
+            primary: canDiscover,
+            onPressed: canDiscover
+                ? () => director.unlockRelic(nextRelic.id)
                 : null,
           ),
         if (state.unlockedRelics.isEmpty) ...[
-          const SizedBox(height: 8),
-          Text(
+          ShellLayout.gap(8),
+          ShellLayout.hint(
             'No relics yet. Embers from bosses, Ascend, and salvage. '
             'Cinders from Daily Vault — discover your first relic here.',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            maxLines: 3,
           ),
         ],
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         for (final id in state.unlockedRelics.reversed)
           _OwnedRelic(director: director, relicId: id),
-        GameButton(
-          label:
-              '4 Cinders → 1 Ember · $trades/${GameLogic.cinderExchangeWeeklyCap} this week',
-          style: GameButtonStyle.grey,
-          onPressed:
-              trades < GameLogic.cinderExchangeWeeklyCap &&
-                  md.cinders >= GameLogic.cinderExchangeCost
-              ? director.exchangeCinders
-              : null,
+        ShellLayout.secondaryActionRow(
+          children: [
+            GameButton(
+              label:
+                  '4 Cinders → 1 Ember · $trades/${GameLogic.cinderExchangeWeeklyCap} this week',
+              style: GameButtonStyle.grey,
+              dense: true,
+              onPressed:
+                  trades < GameLogic.cinderExchangeWeeklyCap &&
+                      md.cinders >= GameLogic.cinderExchangeCost
+                  ? director.exchangeCinders
+                  : null,
+            ),
+            GameButton(
+              label: '2 tickets → 1 Cinder',
+              style: GameButtonStyle.grey,
+              dense: true,
+              onPressed: md.adTickets >= GameLogic.ticketCostPerCinder
+                  ? director.buyCinderWithTickets
+                  : null,
+            ),
+          ],
         ),
-        const SizedBox(height: 6),
-        GameButton(
-          label: '2 tickets → 1 Cinder',
-          style: GameButtonStyle.grey,
-          onPressed: md.adTickets >= GameLogic.ticketCostPerCinder
-              ? director.buyCinderWithTickets
-              : null,
-        ),
-        const SizedBox(height: 12),
+        ShellLayout.gap(12),
       ],
+    ),
     );
   }
 }

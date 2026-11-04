@@ -5,6 +5,9 @@ import 'package:idle_party/ui/hub_screen.dart';
 import 'package:idle_party/ui/hub/hub_powerups.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
 import 'package:idle_party/ui/shell/forge_overlay.dart';
+import 'package:idle_party/ui/shell/jobs_overlay.dart';
+import 'package:idle_party/ui/shell/market_overlay.dart';
+import 'package:idle_party/ui/shell/settings_overlay.dart';
 import 'package:idle_party/ui/shell/home/home_menu_grid.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/menu_surface.dart';
@@ -256,6 +259,79 @@ void main() {
       find.byKey(key),
       'forge_inline_a56.png',
     );
+  });
+
+  testWidgets('GOLD MARKET tab golden A56', (tester) async {
+    bindA56View(tester);
+    final director = marketGoldenDirector();
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    router.open(MenuRoute.gold);
+    router.goldPanel = GoldPanel.market;
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        RepaintBoundary(
+          key: key,
+          child: SizedBox(
+            height: 720,
+            child: Stack(
+              children: [
+                MenuSurface(director: director, router: router),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester, ms: 600);
+    await expectShellGolden(tester, find.byKey(key), 'market_a56.png');
+  });
+
+  testWidgets('QUESTS overlay golden A56', (tester) async {
+    bindA56View(tester);
+    final director = questsGoldenDirector();
+    addTearDown(director.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        RepaintBoundary(
+          key: key,
+          child: SizedBox(
+            height: 680,
+            child: SingleChildScrollView(
+              child: JobsOverlay(director: director),
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester);
+    await expectShellGolden(tester, find.byKey(key), 'quests_a56.png');
+  });
+
+  testWidgets('SETTINGS overlay golden A56', (tester) async {
+    bindA56View(tester);
+    final director = settingsGoldenDirector();
+    addTearDown(director.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        RepaintBoundary(
+          key: key,
+          child: SizedBox(
+            height: 680,
+            child: SettingsOverlay(
+              director: director,
+              onClose: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester);
+    await expectShellGolden(tester, find.byKey(key), 'settings_a56.png');
   });
 
   testWidgets('ESSENCE sheet golden A56', (tester) async {

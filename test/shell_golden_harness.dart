@@ -124,11 +124,37 @@ GameDirector essenceSheetGoldenDirector() {
   return GameDirector.preview(
     initialState: _quietHubState().copyWith(
       ascensionLevel: 2,
-      essence: 120,
+      essence: 240,
       bossVictories: 2,
+      highestFloorCleared: 4,
     ),
   );
 }
+
+GameDirector marketGoldenDirector() {
+  final director = GameDirector.preview(
+    initialState: _quietHubState().copyWith(
+      ascensionLevel: 2,
+      bossVictories: 2,
+      highestFloorCleared: 4,
+      gold: 25000,
+    ),
+  );
+  director.ensureMarketListings();
+  return director;
+}
+
+GameDirector questsGoldenDirector() {
+  return GameDirector.preview(
+    initialState: _quietHubState().copyWith(
+      ascensionLevel: 1,
+      bossVictories: 2,
+      highestFloorCleared: 3,
+    ),
+  );
+}
+
+GameDirector settingsGoldenDirector() => hubGoldenDirector();
 
 Future<GameDirector> homeShellFightGoldenDirector() async {
   final director = homeShellGoldenDirector();
