@@ -8,9 +8,9 @@ import '../../core/nav_copy.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
-import '../web_click_bridge.dart';
 import 'power_upgrade_row.dart';
 import 'shell_common.dart';
+import 'shell_layout.dart';
 
 class ForgeOverlay extends StatefulWidget {
   const ForgeOverlay({
@@ -138,6 +138,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       buyLabel = '${preview.buys}× · ${formatGold(preview.spent)}';
     }
     final shortGold = cost > state.gold ? cost - state.gold : 0;
+    final primaryBuy = recommended && onPressed != null;
     return PowerUpgradeRow(
       accent: _forgeAccent(type),
       title: _forgeName(type),
@@ -153,10 +154,99 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
             : recommended
             ? 'BEST = cheapest track that still lifts party power'
             : _softTip(state, type),
+        style: primaryBuy ? GameButtonStyle.brown : GameButtonStyle.grey,
+        primary: primaryBuy,
         expanded: false,
         dense: true,
         onPressed: onPressed,
       ),
+    );
+  }
+
+  void _openBulkSpendSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewPaddingOf(ctx).bottom,
+        ),
+        child: Material(
+          color: GameTheme.sheet,
+          borderRadius: MenuChrome.sheetRadius,
+          child: Padding(
+            padding: ShellLayout.sheetPadding,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Bulk spend', style: GameTheme.menuTitle(size: 18)),
+                ShellLayout.gap(4),
+                ShellLayout.hint(
+                  'Spend that slice of your wallet on one GOLD track.',
+                  maxLines: 2,
+                ),
+                ShellLayout.gap(8),
+                for (final mode in [
+                  ForgeGoldSpendMode.pct5,
+                  ForgeGoldSpendMode.pct25,
+                  ForgeGoldSpendMode.pct50,
+                  ForgeGoldSpendMode.pct100,
+                ])
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: GameButton(
+                      label: mode.chipLabel,
+                      style: _spendMode == mode
+                          ? GameButtonStyle.brown
+                          : GameButtonStyle.grey,
+                      primary: _spendMode == mode,
+                      onPressed: () {
+                        setState(() => _spendMode = mode);
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _spendModeSegmented({required bool dense}) {
+    return MenuChrome.segmented(
+      dense: dense,
+      labels: const ['×1', 'Bulk'],
+      selectedIndex: _spendMode == ForgeGoldSpendMode.one ? 0 : 1,
+      onSelect: (i) {
+        if (i == 0) {
+          setState(() => _spendMode = ForgeGoldSpendMode.one);
+          return;
+        }
+        _openBulkSpendSheet();
+      },
+    );
+  }
+
+  Widget _spendAllButton(GameState state) {
+    return GameButton(
+      label: GameLogic.canForgeGoldSpendEven(state)
+          ? 'SPEND ALL · EVEN'
+          : 'SPEND ALL · EVEN · Need gold',
+      tip:
+          'Splits wallet gold round-robin across every track. '
+          'AP, Armor, STA, and MASTERY soften past 40 buys. '
+          'MOVE and HASTE soften past 40. CRIT softens past 25.',
+      style: GameButtonStyle.grey,
+      dense: true,
+      onPressed: GameLogic.canForgeGoldSpendEven(state)
+          ? () {
+              director.upgradeSpendAllEvenly();
+              setState(() {});
+            }
+          : null,
     );
   }
 
@@ -260,24 +350,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
         ),
         if (canBuyAny)
           Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: GameButton(
-              label: GameLogic.canForgeGoldSpendEven(state)
-                  ? 'SPEND ALL · EVEN'
-                  : 'SPEND ALL · EVEN · Need gold',
-              tip:
-                  'Splits wallet gold round-robin across every track. '
-                  'AP, Armor, STA, and MASTERY soften past 40 buys. '
-                  'MOVE and HASTE soften past 40. CRIT softens past 25.',
-              style: GameButtonStyle.grey,
-              dense: true,
-              onPressed: GameLogic.canForgeGoldSpendEven(state)
-                  ? () {
-                      director.upgradeSpendAllEvenly();
-                      setState(() {});
-                    }
-                  : null,
-            ),
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+            child: _spendAllButton(state),
           ),
       ],
     );
@@ -301,7 +375,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
         children: [
           for (final type in rows)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
               child: _upgradeRow(
                 state: state,
                 type: type,
@@ -322,101 +396,22 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       children: [
         if (canBuyAny)
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
-            child: MenuChrome.segmented(
-              dense: true,
-              labels: const ['×1', 'Bulk'],
-              selectedIndex: _spendMode == ForgeGoldSpendMode.one ? 0 : 1,
-              onSelect: (i) {
-                if (i == 0) {
-                  setState(() => _spendMode = ForgeGoldSpendMode.one);
-                  return;
-                }
-                showModalBottomSheet<void>(
-                  context: context,
-                  backgroundColor: GameTheme.ink,
-                  builder: (ctx) => SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Bulk spend',
-                            style: GameTheme.menuTitle(size: 18),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Spend that slice of your wallet on one GOLD track.',
-                            style: GameTheme.body(
-                              size: 13,
-                              color: GameTheme.parchmentDim,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          for (final mode in [
-                            ForgeGoldSpendMode.pct5,
-                            ForgeGoldSpendMode.pct25,
-                            ForgeGoldSpendMode.pct50,
-                            ForgeGoldSpendMode.pct100,
-                          ])
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: GameButton(
-                                label: mode.chipLabel,
-                                style: _spendMode == mode
-                                    ? GameButtonStyle.brown
-                                    : GameButtonStyle.grey,
-                                onPressed: () {
-                                  setState(() => _spendMode = mode);
-                                  Navigator.pop(ctx);
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+            padding: ShellLayout.seamPadding.copyWith(bottom: 2),
+            child: _spendModeSegmented(dense: true),
           )
         else
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
+            padding: ShellLayout.listPadding,
+            child: ShellLayout.hint(
               state.gold <= 0
                   ? 'Earn gold in the dungeon, then buy here.'
                   : 'Need a bit more gold for the next buy.',
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
             ),
           ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: WebClickScope(
-            label: _showAllTracks ? 'Show best only' : 'All tracks',
-            onPressed: () => setState(() => _showAllTracks = !_showAllTracks),
-            child: Semantics(
-              button: true,
-              label: _showAllTracks ? 'Show best only' : 'All tracks',
-              child: InkWell(
-                onTap: () => setState(() => _showAllTracks = !_showAllTracks),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
-                  child: Text(
-                    _showAllTracks ? 'Show best only' : 'All tracks',
-                    style: GameTheme.menuTitle(
-                      size: 11,
-                      color: GameTheme.torch,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+        ShellLayout.sheetLink(
+          label: _showAllTracks ? 'Show best only' : 'All tracks',
+          onTap: () => setState(() => _showAllTracks = !_showAllTracks),
         ),
         if (_showAllTracks)
           Expanded(
@@ -445,7 +440,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(8, homeFight ? 0 : 0, 8, homeFight ? 2 : 6),
+          padding: ShellLayout.listPadding.copyWith(bottom: homeFight ? 2 : 6),
           child: Align(
             alignment: Alignment.centerLeft,
             child: FittedBox(
@@ -466,8 +461,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Text(
+          padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+          child: ShellLayout.hint(
             NavCopy.playerText(
               ForgeOverlay.resetHint(
                 plain: plain,
@@ -475,97 +470,42 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
               ),
               state.homeLayout,
             ),
-            maxLines: homeFight ? 1 : null,
-            overflow: homeFight ? TextOverflow.ellipsis : null,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            maxLines: homeFight ? 2 : 4,
           ),
         ),
-        SizedBox(height: homeFight ? 2 : 4),
+        ShellLayout.gap(homeFight ? 2 : 4),
         if (canBuyAny) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: MenuChrome.segmented(
-              dense: homeFight,
-              labels: const ['×1', 'Bulk'],
-            selectedIndex: _spendMode == ForgeGoldSpendMode.one ? 0 : 1,
-            onSelect: (i) {
-              if (i == 0) {
-                setState(() => _spendMode = ForgeGoldSpendMode.one);
-                return;
-              }
-              // Bulk sheet: pick a wallet slice (#43).
-              showModalBottomSheet<void>(
-                context: context,
-                backgroundColor: GameTheme.ink,
-                builder: (ctx) => SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Bulk spend',
-                          style: GameTheme.menuTitle(size: 18),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Spend that slice of your wallet on one GOLD track.',
-                          style: GameTheme.body(
-                            size: 13,
-                            color: GameTheme.parchmentDim,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        for (final mode in [
-                          ForgeGoldSpendMode.pct5,
-                          ForgeGoldSpendMode.pct25,
-                          ForgeGoldSpendMode.pct50,
-                          ForgeGoldSpendMode.pct100,
-                        ])
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: GameButton(
-                              label: mode.chipLabel,
-                              style: _spendMode == mode
-                                  ? GameButtonStyle.brown
-                                  : GameButtonStyle.grey,
-                              onPressed: () {
-                                setState(() => _spendMode = mode);
-                                Navigator.pop(ctx);
-                              },
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+            child: _spendModeSegmented(dense: homeFight),
           ),
-          const SizedBox(height: 2),
+          ShellLayout.gap(2),
           if (!homeFight)
-            Text(
-              _spendMode == ForgeGoldSpendMode.one
-                  ? '×1 = one buy · Bulk opens wallet slices'
-                  : 'Bulk ${_spendMode.chipLabel} on each tap',
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+              child: ShellLayout.hint(
+                _spendMode == ForgeGoldSpendMode.one
+                    ? '×1 = one buy · Bulk opens wallet slices'
+                    : 'Bulk ${_spendMode.chipLabel} on each tap',
+                maxLines: 2,
+              ),
             ),
-          if (!homeFight) const SizedBox(height: 4),
-          if (homeFight) const SizedBox(height: 2),
+          if (!homeFight) ShellLayout.gap(4),
         ] else ...[
-          Text(
-            state.gold <= 0
-                ? 'Earn gold in the dungeon, then come back here to buy.'
-                : 'Need a bit more gold for the next buy — keep clearing floors.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          Padding(
+            padding: ShellLayout.listPadding,
+            child: ShellLayout.hint(
+              state.gold <= 0
+                  ? 'Earn gold in the dungeon, then come back here to buy.'
+                  : 'Need a bit more gold for the next buy — keep clearing floors.',
+              maxLines: 2,
+            ),
           ),
-          const SizedBox(height: 4),
+          ShellLayout.gap(4),
         ],
         for (final type in PartyUpgradeType.values)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
             child: _upgradeRow(
               state: state,
               type: type,
@@ -578,22 +518,13 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
             ),
           ),
         if (canBuyAny && pinSpendAll) ...[
-          const SizedBox(height: 2),
-          GameButton(
-            label: GameLogic.canForgeGoldSpendEven(state)
-                ? 'SPEND ALL · EVEN'
-                : 'SPEND ALL · EVEN · Need gold',
-            style: GameButtonStyle.grey,
-            dense: true,
-            onPressed: GameLogic.canForgeGoldSpendEven(state)
-                ? () {
-                    director.upgradeSpendAllEvenly();
-                    setState(() {});
-                  }
-                : null,
+          ShellLayout.gap(2),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+            child: _spendAllButton(state),
           ),
         ],
-        const SizedBox(height: 4),
+        ShellLayout.gap(4),
       ],
     );
   }

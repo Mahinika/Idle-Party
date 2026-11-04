@@ -4,6 +4,7 @@ import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/hub_screen.dart';
 import 'package:idle_party/ui/hub/hub_powerups.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
+import 'package:idle_party/ui/shell/forge_overlay.dart';
 import 'package:idle_party/ui/shell/home/home_menu_grid.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/menu_surface.dart';
@@ -227,6 +228,33 @@ void main() {
       tester,
       find.byType(OverlayScrim),
       'gold_a56.png',
+    );
+  });
+
+  testWidgets('FORGE inline SPLIT golden A56', (tester) async {
+    bindA56View(tester);
+    final director = forgeInlineGoldenDirector();
+    addTearDown(director.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        RepaintBoundary(
+          key: key,
+          child: SizedBox(
+            height: 280,
+            child: ForgeOverlay(
+              director: director,
+              inlineUnderFight: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester);
+    await expectShellGolden(
+      tester,
+      find.byKey(key),
+      'forge_inline_a56.png',
     );
   });
 

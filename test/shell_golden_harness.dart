@@ -101,8 +101,23 @@ GameDirector goldSheetGoldenDirector() {
       ascensionLevel: 3,
       bossVictories: 2,
       highestDungeonCleared: 2,
+      highestFloorCleared: 3,
+      gold: 18000,
     ),
   );
+}
+
+GameDirector forgeInlineGoldenDirector() {
+  final state = GameLogic.enterDungeon(
+    _quietHubState().copyWith(
+      homeLayout: HomeLayout.home,
+      homePanelFull: false,
+      gold: 12000,
+      highestFloorCleared: 4,
+      bossVictories: 2,
+    ),
+  );
+  return GameDirector.preview(initialState: state);
 }
 
 GameDirector essenceSheetGoldenDirector() {

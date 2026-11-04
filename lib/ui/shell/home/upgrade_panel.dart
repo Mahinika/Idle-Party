@@ -9,6 +9,7 @@ import '../../menu_chrome.dart';
 import '../forge_overlay.dart';
 import '../market_overlay.dart';
 import '../sanctuary_overlay.dart';
+import '../shell_layout.dart';
 
 enum HomeGoldPanel { forge, camp, market }
 
@@ -104,17 +105,17 @@ class _UpgradePanelState extends State<UpgradePanel> {
 
   Widget _locked(GameState state) {
     return ListView(
-      padding: const EdgeInsets.all(8),
+      padding: ShellLayout.listPadding,
       children: [
         for (final hero in state.heroes)
           Text(
             '${hero.name}  Lv${hero.level}',
             style: GameTheme.body(size: 13, color: GameTheme.parchment),
           ),
-        const SizedBox(height: 8),
-        Text(
+        ShellLayout.gap(8),
+        ShellLayout.hint(
           'FORGE opens after the first boss (F2).',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          maxLines: 2,
         ),
       ],
     );
