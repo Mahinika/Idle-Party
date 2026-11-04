@@ -4,6 +4,7 @@ import '../models/dungeon_def.dart';
 import '../models/hero_spec.dart';
 import '../models/loot.dart';
 import '../models/meta_depth.dart';
+import '../models/mission.dart';
 import 'ascend_roadmap.dart';
 import 'encounter_factory.dart';
 import 'game_logic.dart';
@@ -15,6 +16,7 @@ import 'local_season.dart';
 import 'market_listings_service.dart';
 import 'menu_alerts.dart';
 import 'meta_systems.dart';
+import 'mission_board.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
 import 'ashen_crown.dart';
@@ -33,6 +35,9 @@ enum HubChaseKind {
   /// Daily vault ready to claim ([GameLogic.claimDailyVault]).
   claimDailyVault,
   claimMissions,
+
+  /// Weekly Contract needs one step; Daily and Week already claimed.
+  contractAlmost,
 
   /// Month season pass ready to claim.
   monthGoal,
@@ -205,6 +210,9 @@ class HubChase {
 
     final bagEquip = _equipBagChase(state);
     if (bagEquip != null) return bagEquip;
+
+    final contractAlmost = _contractAlmostChase(state);
+    if (contractAlmost != null) return contractAlmost;
 
     if (GameLogic.canAscend(state)) {
       // AL0 first Ascend is optional — keep TODAY on Daily / farming; Ascend
@@ -1131,5 +1139,57 @@ class HubChase {
       );
     }
     return null;
+  }
+
+  static HubChase? _contractAlmostChase(GameState state) {
+    if (state.missions.length != MissionBoard.boardSize) return null;
+    if (state.missions.any((m) => m.canClaim)) return null;
+
+    final daily = state.missions[MissionBoard.dailySlot];
+    final week = state.missions[MissionBoard.weekSlot];
+    final contract = state.missions[MissionBoard.contractSlot];
+    if (!daily.claimed || !week.claimed) return null;
+    if (contract.claimed || contract.isComplete) return null;
+
+    final left = contract.target - contract.progress;
+    if (left != 1) return null;
+
+    for (var i = 0; i < MissionBoard.boardSize; i++) {
+      if (i == MissionBoard.contractSlot) continue;
+      final m = state.missions[i];
+      if (m.claimed || m.isComplete) continue;
+      if (m.progress > 0) return null;
+    }
+
+    return HubChase(
+      kind: HubChaseKind.contractAlmost,
+      title: _contractAlmostTitle(contract),
+      detail: _contractAlmostDetail(contract),
+      progressLabel: '${contract.progress}/${contract.target}',
+      urgency: HubChaseUrgency.almost,
+      zoneId: GameLogic.recommendedDungeonId(state),
+    );
+  }
+
+  static String _contractAlmostTitle(Mission contract) {
+    return switch (contract.type) {
+      MissionType.clearBosses => 'One boss left — Contract',
+      MissionType.clearFloors => 'One floor left — Contract',
+      MissionType.defeatEnemies => 'One kill left — Contract',
+      MissionType.defeatElites => 'One elite left — Contract',
+      MissionType.earnGold => 'Contract — one gold step left',
+      MissionType.timedKeys => 'One KEY left — Contract',
+      MissionType.gauntletFloors => 'One Gauntlet floor left — Contract',
+      MissionType.clearRifts => 'One Farm Rift left — Contract',
+      MissionType.clearGreaterRifts => 'One Ranked GR left — Contract',
+      MissionType.ashenCrown => 'Beat Ashen Crown — Contract',
+    };
+  }
+
+  static String _contractAlmostDetail(Mission contract) {
+    final pay =
+        '+${contract.goldReward}g +${contract.essenceReward}e on claim.';
+    return 'Finish on MORE · QUESTS ($pay). '
+        '${MissionBoard.goalTitle(type: contract.type, target: 1, prefix: 'Contract: ')}';
   }
 }

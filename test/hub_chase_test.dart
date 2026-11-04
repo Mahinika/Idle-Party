@@ -5,6 +5,8 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/core/hub_chase.dart';
+import 'package:idle_party/core/mission_board.dart';
+import 'package:idle_party/models/mission.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/chase_bind.dart';
 import 'package:idle_party/core/keystone.dart';
@@ -88,6 +90,37 @@ void main() {
     expect(chase.kind, HubChaseKind.claimMissions);
     expect(chase.detail.toLowerCase(), contains('claim quests'));
     expect(chase.detail.toLowerCase(), isNot(contains('wait under')));
+  });
+
+  test('contract one step left beats ascend when daily and week are claimed', () {
+    var state = GameLogic.createInitialState(now: now);
+    state = state.copyWith(
+      ascensionLevel: 1,
+      bossVictories: GameLogic.bossesRequiredForAscension(1),
+      metaDepth: state.metaDepth.copyWith(dailyVaultClaimed: true),
+    );
+    final missions = List<Mission>.from(state.missions);
+    missions[MissionBoard.dailySlot] = missions[MissionBoard.dailySlot]
+        .copyWith(claimed: true, progress: missions[MissionBoard.dailySlot].target);
+    missions[MissionBoard.weekSlot] =
+        missions[MissionBoard.weekSlot].copyWith(claimed: true);
+    missions[MissionBoard.contractSlot] = missions[MissionBoard.contractSlot]
+        .copyWith(
+      type: MissionType.clearBosses,
+      title: 'Contract: Clear 6 bosses',
+      target: 6,
+      progress: 5,
+      claimed: false,
+    );
+    state = state.copyWith(missions: missions);
+    expect(GameLogic.canAscend(state), isTrue);
+    final chase = HubChase.forState(state, now: now);
+    expect(chase.kind, HubChaseKind.contractAlmost);
+    expect(chase.title, 'One boss left — Contract');
+    expect(chase.urgency, HubChaseUrgency.almost);
+    final plan = ChaseDispatcher.plan(chase, state: state);
+    expect(plan.label, 'ENTER');
+    expect(plan.op, ChaseOp.enter);
   });
 
   testWidgets('CLAIM QUESTS opens the board with the bounty still claimable', (

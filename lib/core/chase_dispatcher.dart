@@ -1,4 +1,5 @@
 import '../models/dungeon_def.dart';
+import '../models/mission.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'hub_chase.dart';
@@ -7,6 +8,7 @@ import 'keystone.dart';
 import 'local_season.dart';
 import 'menu_alerts.dart';
 import 'menu_router.dart';
+import 'mission_board.dart';
 import 'nav_intent.dart';
 
 /// Destination-agnostic chase outcome. UI binds this to director / router.
@@ -65,6 +67,8 @@ abstract final class ChaseDispatcher {
           label: 'CLAIM QUESTS',
           op: ChaseOp.claimMissions,
         );
+      case HubChaseKind.contractAlmost:
+        return _contractAlmostPlan(state, chase, selectedZoneId);
       case HubChaseKind.monthGoal:
         if (chase.urgency == HubChaseUrgency.ready) {
           return const ChasePlan(label: 'CLAIM MONTH', op: ChaseOp.claimMonth);
@@ -188,6 +192,62 @@ abstract final class ChaseDispatcher {
       pickZone: pickZone,
       toast: Keystone.nightJobLine(key: key, affixes: affixes, clock: par),
     );
+  }
+
+  static ChasePlan _contractAlmostPlan(
+    GameState state,
+    HubChase chase,
+    String? selectedZoneId,
+  ) {
+    if (state.missions.length <= MissionBoard.contractSlot) {
+      return ChasePlan(
+        label: 'ENTER',
+        op: ChaseOp.enter,
+        zoneId: chase.zoneId ?? selectedZoneId,
+        pickZone: chase.zoneId != null,
+      );
+    }
+    final contract = state.missions[MissionBoard.contractSlot];
+    return switch (contract.type) {
+      MissionType.timedKeys => _enterKeyPlan(
+          state,
+          key: contract.target,
+          zoneId: chase.zoneId ?? selectedZoneId,
+          pickZone: chase.zoneId != null,
+        ),
+      MissionType.gauntletFloors => const ChasePlan(
+          label: 'GAUNTLET',
+          op: ChaseOp.confirmGauntlet,
+        ),
+      MissionType.clearRifts => const ChasePlan(
+          label: 'FARM RIFT',
+          op: ChaseOp.confirmRift,
+        ),
+      MissionType.clearGreaterRifts => ChasePlan(
+          label: HubEndgameAct.enterLabelFor(
+            HubEndgameHunt.rankedGr,
+            grBestTier: state.metaDepth.grBestTier,
+          ),
+          op: ChaseOp.confirmGreaterRift,
+        ),
+      MissionType.ashenCrown => const ChasePlan(
+          label: 'ASHEN CROWN',
+          op: ChaseOp.confirmAshen,
+        ),
+      MissionType.clearBosses ||
+      MissionType.clearFloors ||
+      MissionType.defeatEnemies ||
+      MissionType.defeatElites ||
+      MissionType.earnGold =>
+        ChasePlan(
+          label: 'ENTER',
+          op: ChaseOp.enter,
+          zoneId: chase.zoneId ??
+              selectedZoneId ??
+              GameLogic.recommendedDungeonId(state),
+          pickZone: chase.zoneId != null,
+        ),
+    };
   }
 
   static ChasePlan _monthAlmostPlan(
