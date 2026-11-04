@@ -79,9 +79,8 @@ class _HomeShellState extends State<HomeShell> {
       child: Column(
       children: [
         HomeTopBar(director: director, router: router),
-        if (!sheet &&
-            !(state.inDungeon && state.homePanelFull))
-          if (FirstSessionTips.active(state, inDungeon: state.inDungeon)
+        if (!sheet && !state.inDungeon)
+          if (FirstSessionTips.active(state, inDungeon: false)
               case final hint?)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -101,7 +100,7 @@ class _HomeShellState extends State<HomeShell> {
               Column(
                 children: [
                   Expanded(
-                    flex: showPanel ? (full ? 1 : 3) : 5,
+                    flex: showPanel ? (full ? 1 : 4) : 5,
                     child: RepaintBoundary(
                       child: state.inDungeon
                           ? FightViewport(

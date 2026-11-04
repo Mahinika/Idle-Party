@@ -50,9 +50,26 @@ Color partyCcChipColor(List<String> labels) {
 }
 
 /// CC suffix for compact party rows (home strip and classic strip).
-Widget partyCcChipSuffix(SpatialActor? actor, {double size = 6}) {
+Widget partyCcChipSuffix(
+  SpatialActor? actor, {
+  double size = 6,
+  bool dotOnly = false,
+}) {
   final labels = partyCcChipLabels(actor);
   if (labels.isEmpty) return const SizedBox.shrink();
+  if (dotOnly) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 2),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: partyCcChipColor(labels),
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
   return Padding(
     padding: const EdgeInsets.only(left: 2),
     child: Text(
@@ -1100,7 +1117,7 @@ class _HomePartyChip extends StatelessWidget {
                         ),
                       ),
                     ),
-                    partyCcChipSuffix(spatial, size: 5),
+                    partyCcChipSuffix(spatial, size: 5, dotOnly: dense),
                   ],
                 ),
               ],

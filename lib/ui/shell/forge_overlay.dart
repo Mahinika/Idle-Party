@@ -8,12 +8,20 @@ import '../../core/nav_copy.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../web_click_bridge.dart';
 import 'power_upgrade_row.dart';
 import 'shell_common.dart';
 
 class ForgeOverlay extends StatefulWidget {
-  const ForgeOverlay({super.key, required this.director});
+  const ForgeOverlay({
+    super.key,
+    required this.director,
+    this.inlineUnderFight = false,
+  });
   final GameDirector director;
+
+  /// SPLIT home: thin panel under the fight (BEST row + expand).
+  final bool inlineUnderFight;
 
   /// GOLD footer. ESSENCE waits until that tab exists.
   static String resetHint({required bool plain, required bool showCamp}) {
@@ -51,6 +59,7 @@ class ForgeOverlay extends StatefulWidget {
 
 class _ForgeOverlayState extends State<ForgeOverlay> {
   ForgeGoldSpendMode _spendMode = ForgeGoldSpendMode.one;
+  bool _showAllTracks = false;
 
   GameDirector get director => widget.director;
 
@@ -238,6 +247,9 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                     state,
                   )],
                 ));
+    if (widget.inlineUnderFight) {
+      return _inlineUnderFightBody(plain: plain, canBuyAny: canBuyAny);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -271,9 +283,155 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     );
   }
 
+  Widget _inlineUnderFightBody({
+    required bool plain,
+    required bool canBuyAny,
+  }) {
+    final state = director.state;
+    final recommended =
+        PartyUpgradeType.values[GameLogic.recommendedForgeUpgrade(state)];
+    final rows = _showAllTracks
+        ? PartyUpgradeType.values
+        : <PartyUpgradeType>[recommended];
+
+    Widget rowList() {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final type in rows)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: _upgradeRow(
+                state: state,
+                type: type,
+                onPressed: GameLogic.canForgeGoldSpend(state, type, _spendMode)
+                    ? () {
+                        director.upgradePartyTrack(type, mode: _spendMode);
+                        setState(() {});
+                      }
+                    : null,
+              ),
+            ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (canBuyAny)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+            child: MenuChrome.segmented(
+              dense: true,
+              labels: const ['×1', 'Bulk'],
+              selectedIndex: _spendMode == ForgeGoldSpendMode.one ? 0 : 1,
+              onSelect: (i) {
+                if (i == 0) {
+                  setState(() => _spendMode = ForgeGoldSpendMode.one);
+                  return;
+                }
+                showModalBottomSheet<void>(
+                  context: context,
+                  backgroundColor: GameTheme.ink,
+                  builder: (ctx) => SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Bulk spend',
+                            style: GameTheme.menuTitle(size: 18),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Spend that slice of your wallet on one GOLD track.',
+                            style: GameTheme.body(
+                              size: 13,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          for (final mode in [
+                            ForgeGoldSpendMode.pct5,
+                            ForgeGoldSpendMode.pct25,
+                            ForgeGoldSpendMode.pct50,
+                            ForgeGoldSpendMode.pct100,
+                          ])
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: GameButton(
+                                label: mode.chipLabel,
+                                style: _spendMode == mode
+                                    ? GameButtonStyle.brown
+                                    : GameButtonStyle.grey,
+                                onPressed: () {
+                                  setState(() => _spendMode = mode);
+                                  Navigator.pop(ctx);
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              state.gold <= 0
+                  ? 'Earn gold in the dungeon, then buy here.'
+                  : 'Need a bit more gold for the next buy.',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            ),
+          ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: WebClickScope(
+            label: _showAllTracks ? 'Show best only' : 'All tracks',
+            onPressed: () => setState(() => _showAllTracks = !_showAllTracks),
+            child: Semantics(
+              button: true,
+              label: _showAllTracks ? 'Show best only' : 'All tracks',
+              child: InkWell(
+                onTap: () => setState(() => _showAllTracks = !_showAllTracks),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+                  child: Text(
+                    _showAllTracks ? 'Show best only' : 'All tracks',
+                    style: GameTheme.menuTitle(
+                      size: 11,
+                      color: GameTheme.torch,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (_showAllTracks)
+          Expanded(
+            child: SingleChildScrollView(child: rowList()),
+          )
+        else
+          rowList(),
+      ],
+    );
+  }
+
   Widget _classicForgeBody({required bool plain, required bool pinSpendAll}) {
     final state = director.state;
-    final homeFight = state.homeLayout == HomeLayout.home;
+    final homeFight =
+        state.homeLayout == HomeLayout.home && !widget.inlineUnderFight;
     final canBuyAny =
         !(plain &&
             state.gold <

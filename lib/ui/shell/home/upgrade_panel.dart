@@ -91,7 +91,11 @@ class _UpgradePanelState extends State<UpgradePanel> {
           child: SanctuaryOverlay(director: widget.director),
         );
       case _Panel.forge:
-        return ForgeOverlay(director: widget.director);
+        return ForgeOverlay(
+          director: widget.director,
+          inlineUnderFight:
+              widget.sheetPanel == null && !state.homePanelFull,
+        );
     }
   }
 

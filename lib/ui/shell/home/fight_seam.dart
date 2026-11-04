@@ -83,16 +83,18 @@ class FightSeam extends StatelessWidget {
                     ),
                   ),
                   _tap(
-                    label: state.homePanelFull ? 'SPLIT' : 'FULL',
+                    label: state.homePanelFull
+                        ? 'Split forge under fight'
+                        : 'Full fight height',
                     onTap: () =>
                         director.setHomePanelFull(!state.homePanelFull),
                     minHeight: 32,
-                    child: Text(
-                      state.homePanelFull ? 'SPLIT' : 'FULL',
-                      style: GameTheme.body(
-                        size: 10,
-                        color: GameTheme.parchmentDim,
-                      ),
+                    child: Icon(
+                      state.homePanelFull
+                          ? Icons.view_agenda_outlined
+                          : Icons.fullscreen,
+                      size: 18,
+                      color: GameTheme.parchmentDim,
                     ),
                   ),
                 ],
