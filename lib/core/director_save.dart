@@ -490,7 +490,8 @@ extension GameDirectorSave on GameDirector {
       partySexes: partySexes,
     ).copyWith(
       homeLayout: layout,
-      homePanelFull: panelFull,
+      homePanelFull:
+          layout == HomeLayout.home ? true : panelFull,
     );
     if (_phoneHadNoSaveAtBoot) {
       _state = ReinstallPouch.markDue(_state);

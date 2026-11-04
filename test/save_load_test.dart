@@ -593,7 +593,7 @@ void main() {
       ..remove('homePanelFull');
     final legacy = GameLogic.stateFromJson(missing);
     expect(legacy.homeLayout, HomeLayout.home);
-    expect(legacy.homePanelFull, isFalse);
+    expect(legacy.homePanelFull, isTrue);
 
     final classicJson = Map<String, dynamic>.from(state.toJson())
       ..['homeLayout'] = 'classic';

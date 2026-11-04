@@ -76,7 +76,7 @@ void main() {
   testWidgets('home shell shows HEROES and FIGHT without overflow', (tester) async {
     final state = GameLogic.enterDungeon(
       GameLogic.createInitialState(now: DateTime(2026, 11, 3)),
-    ).copyWith(homeLayout: HomeLayout.home);
+    ).copyWith(homeLayout: HomeLayout.home, homePanelFull: true);
     final director = GameDirector.preview(initialState: state);
     final router = MenuRouter();
     addTearDown(director.dispose);

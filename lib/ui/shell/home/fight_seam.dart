@@ -38,9 +38,9 @@ class FightSeam extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(6, 4, 6, 2),
+            padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
             child: SizedBox(
-              height: 36,
+              height: 34,
               child: Row(
                 children: [
                   Expanded(
@@ -59,16 +59,23 @@ class FightSeam extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   if (world != null)
-                    GodHandRing(
-                      cooldown: world.godHandCooldown,
-                      maxCooldown: state.godHandCooldownSeconds,
-                      dense: true,
-                      onTap: director.godHandAtFocus,
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: FittedBox(
+                        child: GodHandRing(
+                          cooldown: world.godHandCooldown,
+                          maxCooldown: state.godHandCooldownSeconds,
+                          dense: true,
+                          onTap: director.godHandAtFocus,
+                        ),
+                      ),
                     ),
                   const Spacer(),
                   _tap(
                     label: 'LEAVE',
                     onTap: onLeave,
+                    minHeight: 32,
                     child: Text(
                       'LEAVE',
                       style: GameTheme.menuTitle(size: 11),
@@ -78,6 +85,7 @@ class FightSeam extends StatelessWidget {
                     label: state.homePanelFull ? 'SPLIT' : 'FULL',
                     onTap: () =>
                         director.setHomePanelFull(!state.homePanelFull),
+                    minHeight: 32,
                     child: Text(
                       state.homePanelFull ? 'SPLIT' : 'FULL',
                       style: GameTheme.body(
@@ -152,6 +160,7 @@ class FightSeam extends StatelessWidget {
     required String label,
     required VoidCallback onTap,
     required Widget child,
+    double minHeight = GameTheme.minTouch,
   }) {
     return WebClickScope(
       label: label,
@@ -162,9 +171,9 @@ class FightSeam extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
+            constraints: BoxConstraints(
               minWidth: GameTheme.minTouch,
-              minHeight: GameTheme.minTouch,
+              minHeight: minHeight,
             ),
             child: Center(child: child),
           ),

@@ -157,7 +157,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.72;
   static const _dimOpacityPhone = 0.72;
-  static const _homePartyRowHeight = 36.0;
+  static const _homePartyRowHeight = 32.0;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
@@ -268,6 +268,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     required SpatialWorld? world,
     required GameState state,
     required double rowHeight,
+    bool dense = false,
   }) {
     final hero = party[i];
     final spatial = _spatialFor(world, i);
@@ -303,6 +304,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                     state.effectiveHeroMaxHp(hero),
                 selected: widget.selectedHeroIndex == i,
                 spatial: spatial,
+                dense: dense,
                 demonForm: hero.specId == HeroSpecId.demonology &&
                     (spatial?.combustionTimer ?? 0) > 0,
               ),
@@ -326,6 +328,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     required bool showFlask,
   }) {
     const lineHeight = _homePartyRowHeight;
+    final denseParty = heroCount >= 5;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -360,6 +363,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                         world: world,
                         state: state,
                         rowHeight: lineHeight,
+                        dense: denseParty,
                       ),
                     ),
                   ],
@@ -1016,6 +1020,7 @@ class _HomePartyChip extends StatelessWidget {
     required this.maxHp,
     required this.selected,
     this.spatial,
+    this.dense = false,
     this.demonForm = false,
   });
 
@@ -1027,6 +1032,7 @@ class _HomePartyChip extends StatelessWidget {
   final num maxHp;
   final bool selected;
   final SpatialActor? spatial;
+  final bool dense;
   final bool demonForm;
 
   @override
@@ -1038,6 +1044,8 @@ class _HomePartyChip extends StatelessWidget {
     final who = name.trim().isEmpty
         ? hero.displayRoleLabel(plainEnglish: false)
         : name.trim();
+    final doll = dense ? 18.0 : 20.0;
+    final nameSize = dense ? 7.0 : 8.0;
     return Container(
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -1053,16 +1061,16 @@ class _HomePartyChip extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 22,
-            height: 22,
+            width: doll + 2,
+            height: doll + 2,
             child: HeroDollSprite(
               hero: hero,
               partyIndex: partyIndex,
-              size: 20,
+              size: doll,
               demonForm: demonForm,
             ),
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: 2),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1075,7 +1083,7 @@ class _HomePartyChip extends StatelessWidget {
                     '$who L$level',
                     maxLines: 1,
                     softWrap: false,
-                    style: GameTheme.pixel(size: 8, color: GameTheme.parchment),
+                    style: GameTheme.pixel(size: nameSize, color: GameTheme.parchment),
                   ),
                 ),
                 const SizedBox(height: 2),

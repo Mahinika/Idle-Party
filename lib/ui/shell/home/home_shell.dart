@@ -15,6 +15,7 @@ import 'director_select.dart';
 import 'essence_tiles_screen.dart';
 import 'fight_seam.dart';
 import 'fight_viewport.dart';
+import 'home_gold_dock.dart';
 import 'home_nav_bar.dart';
 import 'home_prompts.dart';
 import 'home_top_bar.dart';
@@ -77,7 +78,8 @@ class _HomeShellState extends State<HomeShell> {
       child: Column(
       children: [
         HomeTopBar(director: director, router: router),
-        if (!sheet)
+        if (!sheet &&
+            !(state.inDungeon && state.homePanelFull))
           if (FirstSessionTips.active(state, inDungeon: state.inDungeon)
               case final hint?)
           Padding(
@@ -90,13 +92,15 @@ class _HomeShellState extends State<HomeShell> {
             ),
           ),
         Expanded(
-          child: Stack(
+          child: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.3,
+            child: Stack(
             fit: StackFit.expand,
             children: [
               Column(
                 children: [
                   Expanded(
-                    flex: showPanel && !full ? 2 : 5,
+                    flex: showPanel ? (full ? 1 : 3) : 5,
                     child: RepaintBoundary(
                       child: state.inDungeon
                           ? FightViewport(
@@ -113,9 +117,9 @@ class _HomeShellState extends State<HomeShell> {
                       router: router,
                       onLeave: widget.onLeave,
                     ),
-                  if (showPanel)
+                  if (showPanel && !full)
                     Expanded(
-                      flex: full ? 1 : 3,
+                      flex: 2,
                       child: RepaintBoundary(
                         child: DirectorSelect<int>(
                           director: director,
@@ -127,12 +131,15 @@ class _HomeShellState extends State<HomeShell> {
                         ),
                       ),
                     ),
+                  if (showPanel && full)
+                    HomeGoldDock(director: director, router: router),
                 ],
               ),
               if (sheet) _sheet(),
               const IgnorePointer(child: SizedBox.shrink()),
               HomePromptHost(director: director, router: router),
             ],
+          ),
           ),
         ),
         if (_showBack)

@@ -10,16 +10,22 @@ import '../forge_overlay.dart';
 import '../market_overlay.dart';
 import '../sanctuary_overlay.dart';
 
+enum HomeGoldPanel { forge, camp, market }
+
 /// FORGE, CAMP, and MARKET under the fight. The fight keeps running.
 class UpgradePanel extends StatefulWidget {
   const UpgradePanel({
     super.key,
     required this.director,
     required this.router,
+    this.sheetPanel,
   });
 
   final GameDirector director;
   final MenuRouter router;
+
+  /// When set, only the body for this tab (sheet owns the segmented header).
+  final HomeGoldPanel? sheetPanel;
 
   @override
   State<UpgradePanel> createState() => _UpgradePanelState();
@@ -49,28 +55,33 @@ class _UpgradePanelState extends State<UpgradePanel> {
   Widget build(BuildContext context) {
     final state = widget.director.state;
     final open = MenuTabs.showGold(state);
+    final embedded = widget.sheetPanel != null;
+    final active = embedded
+        ? _Panel.values[widget.sheetPanel!.index]
+        : _mode;
     return Material(
-      color: GameTheme.panel,
+      color: embedded ? Colors.transparent : GameTheme.panel,
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
-            child: MenuChrome.segmented(
-              dense: true,
-              labels: const ['FORGE', 'CAMP', 'MARKET'],
-              selectedIndex: _mode.index,
-              onSelect: (i) => setState(() => _mode = _Panel.values[i]),
+          if (!embedded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
+              child: MenuChrome.segmented(
+                dense: true,
+                labels: const ['FORGE', 'CAMP', 'MARKET'],
+                selectedIndex: _mode.index,
+                onSelect: (i) => setState(() => _mode = _Panel.values[i]),
+              ),
             ),
-          ),
-          Expanded(child: _body(state, open)),
+          Expanded(child: _body(state, open, active)),
         ],
       ),
     );
   }
 
-  Widget _body(GameState state, bool open) {
+  Widget _body(GameState state, bool open, _Panel mode) {
     if (!open) return _locked(state);
-    switch (_mode) {
+    switch (mode) {
       case _Panel.market:
         return SingleChildScrollView(
           child: MarketOverlay(director: widget.director),

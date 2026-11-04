@@ -157,7 +157,7 @@ class GameState {
     this.grOutcome = '',
     this.colorblindMode = false,
     this.homeLayout = HomeLayout.classic,
-    this.homePanelFull = false,
+    this.homePanelFull = true,
     this.hideHealFloaters = false,
     this.compactCombatNumbers = false,
     this.alwaysShowEnemyHp = false,
@@ -1900,7 +1900,8 @@ class GameState {
       grOutcome: (json['grOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
       homeLayout: HomeLayout.fromJson(json['homeLayout']),
-      homePanelFull: (json['homePanelFull'] as bool?) ?? false,
+      homePanelFull: (json['homePanelFull'] as bool?) ??
+          (HomeLayout.fromJson(json['homeLayout']) == HomeLayout.home),
       hideHealFloaters: (json['hideHealFloaters'] as bool?) ?? false,
       compactCombatNumbers: (json['compactCombatNumbers'] as bool?) ?? false,
       alwaysShowEnemyHp: (json['alwaysShowEnemyHp'] as bool?) ?? false,
