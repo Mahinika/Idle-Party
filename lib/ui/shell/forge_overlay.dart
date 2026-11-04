@@ -3,6 +3,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
 import '../../core/menu_alerts.dart';
+import '../../core/home_layout.dart';
 import '../../core/nav_copy.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -272,6 +273,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
 
   Widget _classicForgeBody({required bool plain, required bool pinSpendAll}) {
     final state = director.state;
+    final homeFight = state.homeLayout == HomeLayout.home;
     final canBuyAny =
         !(plain &&
             state.gold <
@@ -284,34 +286,49 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
+        Padding(
+          padding: EdgeInsets.fromLTRB(8, homeFight ? 0 : 0, 8, homeFight ? 2 : 6),
+          child: Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              ForgeOverlay.boughtSummary(state, plain: plain),
-              maxLines: 1,
-              softWrap: false,
-              style: GameTheme.body(size: 12, color: GameTheme.parchment),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                ForgeOverlay.boughtSummary(state, plain: plain),
+                maxLines: 1,
+                softWrap: false,
+                style: GameTheme.body(
+                  size: homeFight ? 11 : 12,
+                  color: homeFight
+                      ? GameTheme.parchmentDim
+                      : GameTheme.parchment,
+                ),
+              ),
             ),
           ),
         ),
-        Text(
-          NavCopy.playerText(
-            ForgeOverlay.resetHint(
-              plain: plain,
-              showCamp: MenuTabs.showCamp(state),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            NavCopy.playerText(
+              ForgeOverlay.resetHint(
+                plain: plain,
+                showCamp: MenuTabs.showCamp(state),
+              ),
+              state.homeLayout,
             ),
-            state.homeLayout,
+            maxLines: homeFight ? 1 : null,
+            overflow: homeFight ? TextOverflow.ellipsis : null,
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: homeFight ? 2 : 4),
         if (canBuyAny) ...[
-          MenuChrome.segmented(
-            dense: false,
-            labels: const ['×1', 'Bulk'],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: MenuChrome.segmented(
+              dense: homeFight,
+              labels: const ['×1', 'Bulk'],
             selectedIndex: _spendMode == ForgeGoldSpendMode.one ? 0 : 1,
             onSelect: (i) {
               if (i == 0) {
@@ -367,15 +384,18 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                 ),
               );
             },
+            ),
           ),
           const SizedBox(height: 2),
-          Text(
-            _spendMode == ForgeGoldSpendMode.one
-                ? '×1 = one buy · Bulk opens wallet slices'
-                : 'Bulk ${_spendMode.chipLabel} on each tap',
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-          ),
-          const SizedBox(height: 4),
+          if (!homeFight)
+            Text(
+              _spendMode == ForgeGoldSpendMode.one
+                  ? '×1 = one buy · Bulk opens wallet slices'
+                  : 'Bulk ${_spendMode.chipLabel} on each tap',
+              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            ),
+          if (!homeFight) const SizedBox(height: 4),
+          if (homeFight) const SizedBox(height: 2),
         ] else ...[
           Text(
             state.gold <= 0
@@ -386,15 +406,18 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           const SizedBox(height: 4),
         ],
         for (final type in PartyUpgradeType.values)
-          _upgradeRow(
-            state: state,
-            type: type,
-            onPressed: GameLogic.canForgeGoldSpend(state, type, _spendMode)
-                ? () {
-                    director.upgradePartyTrack(type, mode: _spendMode);
-                    setState(() {});
-                  }
-                : null,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: _upgradeRow(
+              state: state,
+              type: type,
+              onPressed: GameLogic.canForgeGoldSpend(state, type, _spendMode)
+                  ? () {
+                      director.upgradePartyTrack(type, mode: _spendMode);
+                      setState(() {});
+                    }
+                  : null,
+            ),
           ),
         if (canBuyAny && pinSpendAll) ...[
           const SizedBox(height: 2),

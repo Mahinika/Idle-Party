@@ -33,29 +33,31 @@ class FightSeam extends StatelessWidget {
     final pushLabel = plain ? 'Next' : 'PUSH';
     return Material(
       color: GameTheme.panel,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(6, 2, 6, 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: GameTheme.minTouch,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 4, 6, 2),
+            child: SizedBox(
+              height: 36,
               child: Row(
                 children: [
-                  _mode(
-                    context,
-                    label: farmLabel,
-                    selected: state.dungeonMode == DungeonMode.farm,
-                    onTap: () => _setMode(context, DungeonMode.farm, plain),
+                  Expanded(
+                    flex: 3,
+                    child: MenuChrome.segmented(
+                      dense: true,
+                      labels: [farmLabel, pushLabel],
+                      selectedIndex:
+                          state.dungeonMode == DungeonMode.farm ? 0 : 1,
+                      onSelect: (i) => _setMode(
+                        context,
+                        i == 0 ? DungeonMode.farm : DungeonMode.push,
+                        plain,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 4),
-                  _mode(
-                    context,
-                    label: pushLabel,
-                    selected: state.dungeonMode == DungeonMode.push,
-                    onTap: () => _setMode(context, DungeonMode.push, plain),
-                  ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 6),
                   if (world != null)
                     GodHandRing(
                       cooldown: world.godHandCooldown,
@@ -69,7 +71,7 @@ class FightSeam extends StatelessWidget {
                     onTap: onLeave,
                     child: Text(
                       'LEAVE',
-                      style: GameTheme.menuTitle(size: 12),
+                      style: GameTheme.menuTitle(size: 11),
                     ),
                   ),
                   _tap(
@@ -79,7 +81,7 @@ class FightSeam extends StatelessWidget {
                     child: Text(
                       state.homePanelFull ? 'SPLIT' : 'FULL',
                       style: GameTheme.body(
-                        size: 11,
+                        size: 10,
                         color: GameTheme.parchmentDim,
                       ),
                     ),
@@ -87,7 +89,13 @@ class FightSeam extends StatelessWidget {
                 ],
               ),
             ),
-            PartyCornerHud(
+          ),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: GameTheme.border.withValues(alpha: 0.65),
+          ),
+          PartyCornerHud(
               director: director,
               homeRow: true,
               selectedHeroIndex: router.session.abilityHeroIndex,
@@ -97,8 +105,7 @@ class FightSeam extends StatelessWidget {
               },
               onOpenEquip: () => router.toggleGear(GearPanel.gear),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -139,25 +146,6 @@ class FightSeam extends StatelessWidget {
     ).then((ok) {
       if (ok == true) director.setDungeonMode(mode);
     });
-  }
-
-  Widget _mode(
-    BuildContext context, {
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return _tap(
-      label: label,
-      onTap: onTap,
-      child: Text(
-        label,
-        style: GameTheme.menuTitle(
-          size: 12,
-          color: selected ? GameTheme.torchHot : GameTheme.parchment,
-        ),
-      ),
-    );
   }
 
   Widget _tap({

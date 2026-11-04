@@ -301,31 +301,37 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
       children: [
         DecoratedBox(
           decoration: BoxDecoration(
-            color: GameTheme.panel.withValues(alpha: 0.96),
             border: Border(
-              top: BorderSide(color: GameTheme.border.withValues(alpha: 0.85)),
+              bottom: BorderSide(
+                color: GameTheme.border.withValues(alpha: 0.45),
+              ),
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(4, 3, 4, 3),
+            padding: const EdgeInsets.fromLTRB(4, 2, 4, 3),
             child: SizedBox(
               height: lineHeight,
               child: Row(
                 children: [
-                  for (var i = 0; i < heroCount; i++)
+                  for (var i = 0; i < heroCount; i++) ...[
+                    if (i > 0)
+                      Container(
+                        width: 1,
+                        height: lineHeight - 4,
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        color: GameTheme.border.withValues(alpha: 0.35),
+                      ),
                     Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(right: i < heroCount - 1 ? 3 : 0),
-                        child: _homeHeroTap(
-                          i: i,
-                          party: party,
-                          plainEnglish: plainEnglish,
-                          world: world,
-                          state: state,
-                          rowHeight: lineHeight,
-                        ),
+                      child: _homeHeroTap(
+                        i: i,
+                        party: party,
+                        plainEnglish: plainEnglish,
+                        world: world,
+                        state: state,
+                        rowHeight: lineHeight,
                       ),
                     ),
+                  ],
                   if (showFlask)
                     DungeonFlaskButton(
                       director: widget.director,
