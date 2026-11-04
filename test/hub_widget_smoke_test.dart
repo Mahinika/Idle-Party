@@ -65,10 +65,7 @@ void main() {
       ),
     );
     expect(find.text('ASCEND  +19e'), findsOneWidget);
-    expect(
-      tester.widget<GameButton>(find.byType(GameButton)).style,
-      GameButtonStyle.ghost,
-    );
+    expect(find.byType(GameButton), findsNothing);
   });
 
   testWidgets('HubTodayCard shows READY chip for claim chase', (tester) async {

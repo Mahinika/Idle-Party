@@ -22,6 +22,10 @@ import '../redeem_coupon_dialog.dart';
 class ShopDock extends StatefulWidget {
   const ShopDock({super.key, required this.director});
 
+  /// Widget/golden tests only — bypasses Play catalog when set.
+  @visibleForTesting
+  static String goldenTestPriceLabel = '';
+
   final GameDirector director;
 
   /// SHOP blurb. ESSENCE is named only when that tab exists.
@@ -111,12 +115,15 @@ class _ShopDockState extends State<ShopDock> {
 
   /// Play's localized price. Never the catalog's hardcoded label.
   String _priceLabel(ShopCatalogItem item) {
+    final test = ShopDock.goldenTestPriceLabel;
+    if (test.isNotEmpty) return test;
     final live = ShopStore.storePriceLabel(item.id)?.trim();
     if (live == null || live.isEmpty) return 'Unavailable';
     return live;
   }
 
   bool _priceReady(ShopCatalogItem item) {
+    if (ShopDock.goldenTestPriceLabel.isNotEmpty) return true;
     final live = ShopStore.storePriceLabel(item.id)?.trim();
     return live != null && live.isNotEmpty;
   }
@@ -137,12 +144,16 @@ class _ShopDockState extends State<ShopDock> {
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         if (featured != null) ...[
-          const SizedBox(height: 6),
+          ShellLayout.gap(6),
+          MenuChrome.sectionLabelScoped('FEATURED', scope: MenuScope.today),
+          ShellLayout.gap(4),
           Text(
             ShopHubOffer.countdownLine(state),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 12, color: GameTheme.torchHot),
           ),
-          const SizedBox(height: 6),
+          ShellLayout.gap(6),
           _ShopRow(
             item: featured,
             owned: ShopBilling.isOwned(state, featured),
@@ -150,10 +161,11 @@ class _ShopDockState extends State<ShopDock> {
             available: _priceReady(featured) ||
                 ShopCatalog.playChargeableIds.contains(featured.id),
             compact: false,
+            featuredPrimary: true,
             titleOverride: ShopHubOffer.featuredTitle(featured),
             onBuy: () => _buy(featured),
           ),
-          const SizedBox(height: 10),
+          ShellLayout.blockGapWidget(),
         ],
         const SizedBox(height: 4),
         Text(
@@ -208,6 +220,7 @@ class _ShopRow extends StatelessWidget {
     required this.onBuy,
     this.compact = false,
     this.titleOverride,
+    this.featuredPrimary = false,
   });
 
   final ShopCatalogItem item;
@@ -217,6 +230,7 @@ class _ShopRow extends StatelessWidget {
   final VoidCallback? onBuy;
   final bool compact;
   final String? titleOverride;
+  final bool featuredPrimary;
 
   static String? assetFor(ShopCatalogItem item) {
     if (item.permMask == AdBoost.permAll) return UiIcon.star;
@@ -277,22 +291,29 @@ class _ShopRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mark = assetFor(item);
-    final featured = RemoteTune.highlights(item);
+    final highlighted = featuredPrimary || RemoteTune.highlights(item);
+    final canBuy = !owned && available && onBuy != null;
+    final buyLabel = owned
+        ? 'OWNED'
+        : available
+        ? (featuredPrimary ? 'BUY NOW' : 'BUY')
+        : 'UNAVAILABLE';
     return Container(
       padding: EdgeInsets.all(compact ? 8 : 10),
-      decoration: MenuChrome.listCard(selected: owned || featured),
+      decoration: MenuChrome.listCard(selected: owned || highlighted),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (mark != null) ...[
                 GameIcon.asset(
                   mark,
-                  size: 22,
+                  size: ShellLayout.shellIconSize + 2,
                   color: owned ? GameTheme.torchHot : null,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: GameTheme.clusterGap),
               ],
               Expanded(
                 child: Column(
@@ -324,35 +345,43 @@ class _ShopRow extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             tag(item),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 11, color: GameTheme.mossLit),
           ),
           if (!compact) ...[
             const SizedBox(height: 4),
             Text(
               item.description,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
             ),
           ],
           const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: GameButton(
-              label: owned
-                  ? 'OWNED'
-                  : available
-                  ? 'BUY'
-                  : 'UNAVAILABLE',
-              tip: owned
-                  ? 'Already on this save'
-                  : available
-                  ? null
-                  : 'Google Play has not listed this pack',
-              style: GameButtonStyle.grey,
-              expanded: false,
-              dense: true,
-              onPressed: owned || !available ? null : onBuy,
+          if (featuredPrimary && canBuy)
+            GameButton(
+              label: buyLabel,
+              style: GameButtonStyle.brown,
+              primary: true,
+              onPressed: onBuy,
+            )
+          else
+            Align(
+              alignment: Alignment.centerRight,
+              child: GameButton(
+                label: buyLabel,
+                tip: owned
+                    ? 'Already on this save'
+                    : available
+                    ? null
+                    : 'Google Play has not listed this pack',
+                style: GameButtonStyle.grey,
+                expanded: false,
+                dense: true,
+                onPressed: canBuy ? onBuy : null,
+              ),
             ),
-          ),
         ],
       ),
     );

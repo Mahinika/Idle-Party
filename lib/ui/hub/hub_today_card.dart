@@ -345,61 +345,77 @@ class HubUrgentRow extends StatelessWidget {
     final showMissions = claimable > 0 && !hideMissionClaim;
     final showDaily = !hideDaily && !dailyClaimed;
 
-    final ascendButton = showAscend
-        ? GameButton(
-            label: ascendLabel!,
-            style: GameButtonStyle.ghost,
-            dense: true,
-            onPressed: onAscend,
-          )
-        : null;
+    final claims = <Widget>[];
+    if (showVault) {
+      claims.add(
+        GameButton(
+          label: 'CLAIM VAULT',
+          tip: '+${formatCount(vaultClaimEssence)} essence · +1 Cinder',
+          style: GameButtonStyle.ghost,
+          dense: true,
+          expanded: false,
+          onPressed: onClaimDailyVault,
+        ),
+      );
+    }
+    if (showMissions) {
+      claims.add(
+        GameButton(
+          label: claimable == 1
+              ? 'CLAIM QUESTS'
+              : 'CLAIM QUESTS ($claimable)',
+          style: GameButtonStyle.ghost,
+          dense: true,
+          expanded: false,
+          onPressed: onContracts,
+        ),
+      );
+    }
+    if (showDaily) {
+      claims.add(
+        MenuChrome.chip(
+          label: dailyClaimed ? 'DAILY RUN · done' : 'DAILY RUN',
+          selected: false,
+          onTap: dailyClaimed ? null : onDaily,
+        ),
+      );
+    }
 
-    final Widget? other = showVault
-        ? GameButton(
-            label: 'CLAIM VAULT',
-            tip:
-                '+${formatCount(vaultClaimEssence)} essence · +1 Cinder',
-            style: GameButtonStyle.ghost,
-            dense: true,
-            onPressed: onClaimDailyVault,
-          )
-        : showMissions
-        ? GameButton(
-            label: claimable == 1
-                ? 'CLAIM QUESTS'
-                : 'CLAIM QUESTS ($claimable)',
-            style: GameButtonStyle.ghost,
-            dense: true,
-            onPressed: onContracts,
-          )
-        : showDaily
-        ? Center(
-            child: MenuChrome.chip(
-              label: dailyClaimed ? 'DAILY RUN · done' : 'DAILY RUN',
-              selected: false,
-              onTap: dailyClaimed ? null : onDaily,
-            ),
-          )
-        : showVaultProgress
-        ? Text(
-            'Daily Vault · $weeklyProgress/${GameLogic.dailyVaultClearTarget}',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          )
-        : null;
-    return _withAscend(ascendButton, other);
-  }
+    if (claims.isEmpty && !showAscend && !showVaultProgress) {
+      return const SizedBox.shrink();
+    }
 
-  Widget _withAscend(Widget? ascend, Widget? other) {
-    if (ascend == null && other == null) return const SizedBox.shrink();
-    if (ascend == null) return other!;
-    if (other == null) return ascend;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ascend,
-        const SizedBox(height: 4),
-        other,
+        if (claims.isNotEmpty)
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: GameTheme.clusterGap,
+            runSpacing: 4,
+            children: claims,
+          ),
+        if (showVaultProgress)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Daily Vault · $weeklyProgress/${GameLogic.dailyVaultClearTarget}',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            ),
+          ),
+        if (showAscend)
+          Padding(
+            padding: EdgeInsets.only(top: claims.isNotEmpty ? 4 : 0),
+            child: Center(
+              child: MenuChrome.textLink(
+                label: ascendLabel!,
+                onPressed: onAscend,
+              ),
+            ),
+          ),
       ],
     );
   }

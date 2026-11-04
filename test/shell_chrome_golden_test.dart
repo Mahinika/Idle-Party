@@ -87,7 +87,7 @@ void main() {
 
     await expectLater(
       find.byType(Scaffold),
-      matchesGoldenFile('goldens/shell_chrome_a56.png'),
+      matchesGoldenFile('goldens/after/shell_chrome_a56.png'),
     );
   });
 }

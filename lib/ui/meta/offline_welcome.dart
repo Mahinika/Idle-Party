@@ -285,7 +285,7 @@ Future<void> showOfflineProgressDialog(
             const SizedBox(height: 4),
             Text(
               contract.detail,
-              maxLines: 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
             ),

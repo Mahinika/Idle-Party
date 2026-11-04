@@ -83,6 +83,8 @@ abstract final class ShellLayout {
   }
 
   /// Pair of grey secondary actions (SHOP restore · redeem, etc.).
+  static const double shellIconSize = 20;
+
   static Widget secondaryActionRow({required List<Widget> children}) {
     assert(children.isNotEmpty && children.length <= 3);
     return Row(

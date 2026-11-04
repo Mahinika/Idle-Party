@@ -652,6 +652,14 @@ class _BuffRow extends StatelessWidget {
   }
 }
 
+/// Widget tests / goldens — SCROLLS sheet body without opening a route.
+@visibleForTesting
+Widget scrollsSheetForTest({
+  required GameDirector director,
+  MenuRouter? router,
+}) =>
+    _PowerupsSheet(director: director, router: router);
+
 /// One WATCH gold pile after a fresh install with no prior save file.
 class ReinstallPouchFab extends StatelessWidget {
   const ReinstallPouchFab({
