@@ -374,6 +374,7 @@ Future<void> confirmRiftRun(
     preferred: state.metaDepth.riftPreferredTier,
     bestCleared: best,
   );
+  final recommended = GameLogic.recommendedRiftTier(state);
   WebClickBridge.pushLayer();
   try {
     final chosen = await showDialog<int>(
@@ -385,6 +386,7 @@ Future<void> confirmRiftRun(
         minusLabel: 'RIFT -',
         plusLabel: 'RIFT +',
         enterLabel: (t) => 'ENTER FARM R$t',
+        recommendedTier: recommended,
         initial: initial,
         minTier: Rift.minTier,
         maxTier: maxSel,
@@ -413,6 +415,7 @@ Future<void> confirmGreaterRiftRun(
     preferred: state.metaDepth.grPreferredTier,
     bestCleared: best,
   );
+  final recommended = GameLogic.recommendedGreaterRiftTier(state);
   WebClickBridge.pushLayer();
   try {
     final chosen = await showDialog<int>(
@@ -424,6 +427,7 @@ Future<void> confirmGreaterRiftRun(
         minusLabel: 'GR -',
         plusLabel: 'GR +',
         enterLabel: (t) => 'ENTER RANK GR$t',
+        recommendedTier: recommended,
         initial: initial,
         minTier: GreaterRift.minTier,
         maxTier: maxSel,

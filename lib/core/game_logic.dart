@@ -385,6 +385,17 @@ class GameLogic {
     return pick;
   }
 
+  static int recommendedRiftTier(GameState state) => Rift.pickerStart(
+        preferred: state.metaDepth.riftPreferredTier,
+        bestCleared: state.metaDepth.riftBestTier,
+      );
+
+  static int recommendedGreaterRiftTier(GameState state) =>
+      GreaterRift.pickerStart(
+        preferred: state.metaDepth.grPreferredTier,
+        bestCleared: state.metaDepth.grBestTier,
+      );
+
   static GameState claimMonthPass(GameState state, {DateTime? now}) =>
       _claimMonthPass(state, now: now);
 

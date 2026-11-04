@@ -6,6 +6,7 @@ import '../../core/greater_rift.dart';
 import '../confirm_dialogs.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
+import '../shell/shell_layout.dart';
 
 /// KEY tab: Greater Rift enter (tier picker on ENTER).
 class GreaterRiftHubPanel extends StatelessWidget {
@@ -16,11 +17,10 @@ class GreaterRiftHubPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = director.state;
     if (!GameLogic.endgameUnlocked(state)) {
-      return Text(
+      return ShellLayout.hint(
         'Ranked GR unlocks when every active hero is Lv${GameLogic.maxHeroLevel} — '
         'ranked Mothveil progress + Guardian under the timer (no mid-run gear).',
-        textAlign: TextAlign.center,
-        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        maxLines: 3,
       );
     }
     final month = state.metaDepth.leaderboardSeasonKey;
@@ -33,32 +33,30 @@ class GreaterRiftHubPanel extends StatelessWidget {
     final bestBit = bestMs > 0 && seasonTier > 0
         ? 'Best GR$seasonTier · $bestTime$monthBit.'
         : 'Best $bestTime$monthBit.';
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Ranked GR',
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-        ),
-        const SizedBox(height: 4),
-        Text(
+        ShellLayout.sectionHeader('Ranked GR'),
+        ShellLayout.gap(4),
+        ShellLayout.hint(
           'Clock · no gear mid-run. Endless after GR${GreaterRift.campaignCap}.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          maxLines: 2,
         ),
-        const SizedBox(height: 4),
-        Text(
-          bestBit,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 8),
+        ShellLayout.gap(4),
+        ShellLayout.hint(bestBit, maxLines: 2),
+        ShellLayout.gap(8),
         GameButton(
           label: 'ENTER RANKED GR',
-          style: GameButtonStyle.red,
+          style: GameButtonStyle.brown,
+          primary: true,
           onPressed: GameLogic.canEnterGreaterRift(state)
               ? () => confirmGreaterRiftRun(context, director)
               : null,
         ),
       ],
+    ),
     );
   }
 }

@@ -5,6 +5,7 @@ import '../../core/hub_chase.dart';
 import '../../core/hub_endgame_act.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_layout.dart';
 import 'ashen_crown_hub_panel.dart';
 import 'challenge_toggles.dart';
 import 'gauntlet_hub_panel.dart';
@@ -35,7 +36,9 @@ class KeystoneSheet extends StatelessWidget {
       _ => '',
     };
     final hunt = HubEndgameAct.huntForChase(chase.kind);
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (huntHint.isNotEmpty) ...[
@@ -45,17 +48,16 @@ class KeystoneSheet extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 12, color: GameTheme.torchHot),
           ),
-          const SizedBox(height: 4),
+          ShellLayout.gap(4),
         ],
-        Text(
+        ShellLayout.hint(
           'Turn the dial, then ENTER. The hunts below are separate from PATH caves.',
           maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         Expanded(
           child: SingleChildScrollView(
+            padding: ShellLayout.scrollBodyPadding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -114,6 +116,7 @@ class KeystoneSheet extends StatelessWidget {
           ),
         ),
       ],
+    ),
     );
   }
 }
