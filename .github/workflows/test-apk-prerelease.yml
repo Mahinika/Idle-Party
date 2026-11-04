@@ -65,7 +65,10 @@ jobs:
             ndk-28.2.13676358-${{ runner.os }}-
 
       - name: Install Android NDK (Flutter pin)
-        run: bash tool/ci/install_ndk_ci.sh 28.2.13676358
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip
+          bash tool/ci/install_ndk_ci.sh 28.2.13676358
 
       - name: Sync Firebase Android config (optional CI token)
         env:
