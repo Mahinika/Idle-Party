@@ -208,13 +208,14 @@ class _ShopDockState extends State<ShopDock> {
             onBuy: () => _buy(pick!),
           ),
         ],
-        const SizedBox(height: 6),
-        Text(
+        if (_showCompactStoreLine(
           storeLine,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
+          featured: featured,
+          pick: pick,
+        )) ...[
+          ShellLayout.gap(4),
+          ShellLayout.hint(storeLine, maxLines: 1),
+        ],
       ],
     );
   }
@@ -232,6 +233,19 @@ class _ShopDockState extends State<ShopDock> {
     if (ShopDock.goldenTestPriceLabel.isNotEmpty) return true;
     final live = ShopStore.storePriceLabel(item.id)?.trim();
     return live != null && live.isNotEmpty;
+  }
+
+  bool _showCompactStoreLine(
+    String storeLine, {
+    ShopCatalogItem? featured,
+    ShopCatalogItem? pick,
+  }) {
+    if (storeLine.isEmpty) return false;
+    if (!storeLine.startsWith('Waiting for')) return true;
+    if (ShopDock.goldenTestPriceLabel.isNotEmpty) return false;
+    if (featured != null && _priceReady(featured)) return false;
+    if (pick != null && _priceReady(pick)) return false;
+    return true;
   }
 
   Widget _page({

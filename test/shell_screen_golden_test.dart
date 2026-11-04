@@ -4,6 +4,7 @@ import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/hub_screen.dart';
 import 'package:idle_party/ui/hub/hub_powerups.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
+import 'package:idle_party/ui/shell/home/home_menu_grid.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/menu_surface.dart';
 import 'package:idle_party/ui/shell/overlay_scaffold.dart';
@@ -112,17 +113,64 @@ void main() {
         ),
       ),
     );
-    for (var i = 0; i < 30; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-      if (director.dungeonTilesReady) break;
-    }
-    director.clearToast();
-    await pumpGoldenFrames(tester, ms: 800);
+    await waitForFightChrome(tester, director);
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(tester.takeException(), isNull);
     await expectShellGolden(tester, find.byKey(key), 'home_shell_split_a56.png');
     director.dispose();
     live = false;
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
+  });
+
+  testWidgets('home shell FULL golden A56', (tester) async {
+    bindA56View(tester);
+    final director = await homeShellFullFightGoldenDirector();
+    var live = true;
+    addTearDown(() {
+      if (live) director.dispose();
+    });
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: shellGoldenScaffold(
+          HomeShell(director: director, router: router, onLeave: () {}),
+        ),
+      ),
+    );
+    await waitForFightChrome(tester, director);
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(tester.takeException(), isNull);
+    await expectShellGolden(tester, find.byKey(key), 'home_shell_full_a56.png');
+    director.dispose();
+    live = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 20));
+  });
+
+  testWidgets('home MENU grid golden A56', (tester) async {
+    bindA56View(tester);
+    final director = homeShellGoldenDirector();
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        SizedBox(
+          height: 640,
+          child: HomeMenuGrid(director: director, router: router),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester, ms: 500);
+    await expectShellGolden(
+      tester,
+      find.byType(HomeMenuGrid),
+      'home_menu_grid_a56.png',
+    );
   });
 
   testWidgets('home compact SHOP golden A56', (tester) async {
@@ -147,6 +195,7 @@ void main() {
       ),
     );
     await pumpGoldenFrames(tester, ms: 500);
+    expect(find.textContaining('Waiting for Play billing'), findsNothing);
     await expectShellGolden(
       tester,
       find.byType(OverlayScrim),

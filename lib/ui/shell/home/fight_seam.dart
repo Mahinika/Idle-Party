@@ -20,11 +20,15 @@ class FightSeam extends StatelessWidget {
     required this.director,
     required this.router,
     required this.onLeave,
+    this.hideRails = false,
   });
 
   final GameDirector director;
   final MenuRouter router;
   final VoidCallback onLeave;
+
+  /// FULL height: drop the horizontal chip rail — MENU / nav still reach extras.
+  final bool hideRails;
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +117,8 @@ class FightSeam extends StatelessWidget {
               },
               onOpenEquip: () => router.toggleGear(GearPanel.gear),
             ),
-          FightSeamRails(director: director, router: router),
+          if (!hideRails)
+            FightSeamRails(director: director, router: router),
         ],
       ),
     );

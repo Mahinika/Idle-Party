@@ -79,6 +79,22 @@ GameDirector homeShellGoldenDirector() {
   return GameDirector.preview(initialState: state);
 }
 
+GameDirector homeShellFullGoldenDirector() {
+  final state = GameLogic.enterDungeon(
+    _quietHubState().copyWith(
+      homeLayout: HomeLayout.home,
+      homePanelFull: true,
+    ),
+  );
+  return GameDirector.preview(initialState: state);
+}
+
+Future<GameDirector> homeShellFullFightGoldenDirector() async {
+  final director = homeShellFullGoldenDirector();
+  await director.boot();
+  return director;
+}
+
 GameDirector goldSheetGoldenDirector() {
   return GameDirector.preview(
     initialState: _quietHubState().copyWith(

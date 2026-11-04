@@ -116,6 +116,7 @@ class _HomeShellState extends State<HomeShell> {
                       director: director,
                       router: router,
                       onLeave: widget.onLeave,
+                      hideRails: full,
                     ),
                   if (showPanel && !full)
                     Expanded(
