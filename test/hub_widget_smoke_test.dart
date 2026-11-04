@@ -376,7 +376,7 @@ void main() {
     );
 
     expect(find.bySemanticsLabel('SCROLLS. 3 TICKETS'), findsOneWidget);
-    expect(find.text('3 TICKETS'), findsOneWidget);
+    expect(find.text('Spend a ticket on a scroll'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
   });
 

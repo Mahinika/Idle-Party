@@ -8,6 +8,7 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_layout.dart';
 import '../shell/shell_common.dart';
 
 class HubMetaPulse extends StatelessWidget {
@@ -179,13 +180,8 @@ class HubTodayCard extends StatelessWidget {
       button:
           chase.urgency == HubChaseUrgency.ready ||
           chase.urgency == HubChaseUrgency.almost,
-      child: Container(
-        decoration: BoxDecoration(
-          color: GameTheme.panel.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-          border: Border.all(color: GameTheme.border.withValues(alpha: 0.7)),
-        ),
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      child: ShellLayout.hubCard(
+        selected: ready || almost,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,

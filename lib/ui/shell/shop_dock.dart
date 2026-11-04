@@ -15,6 +15,7 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_layout.dart';
 import '../redeem_coupon_dialog.dart';
 
 /// Bottom-tab SHOP: real-money catalog via Play Billing.
@@ -129,7 +130,7 @@ class _ShopDockState extends State<ShopDock> {
   }) {
     final state = widget.director.state;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+      padding: ShellLayout.listPadding,
       children: [
         Text(
           hint,
@@ -174,26 +175,21 @@ class _ShopDockState extends State<ShopDock> {
           ),
         ],
         if (showAccountActions) ...[
-          const SizedBox(height: 12),
-          Row(
+          ShellLayout.blockGapWidget(),
+          ShellLayout.secondaryActionRow(
             children: [
-              Expanded(
-                child: GameButton(
-                  label: 'RESTORE',
-                  style: GameButtonStyle.grey,
-                  dense: true,
-                  onPressed: widget.director.restoreShopPurchases,
-                ),
+              GameButton(
+                label: 'RESTORE',
+                style: GameButtonStyle.grey,
+                dense: true,
+                onPressed: widget.director.restoreShopPurchases,
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: GameButton(
-                  label: 'REDEEM CODE',
-                  style: GameButtonStyle.grey,
-                  dense: true,
-                  onPressed: () =>
-                      showRedeemCouponDialog(context, widget.director),
-                ),
+              GameButton(
+                label: 'REDEEM CODE',
+                style: GameButtonStyle.grey,
+                dense: true,
+                onPressed: () =>
+                    showRedeemCouponDialog(context, widget.director),
               ),
             ],
           ),

@@ -4,6 +4,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
+import 'shell_layout.dart';
 import 'wallet_strip.dart';
 
 class OverlayScrim extends StatelessWidget {
@@ -192,7 +193,12 @@ class _OverlayPanel extends StatelessWidget {
     final handle = showHandle ?? borderRadius != null;
     final panel = Container(
       margin: margin,
-      padding: EdgeInsets.fromLTRB(12, handle ? 6 : 6, 12, 8),
+      padding: EdgeInsets.fromLTRB(
+        ShellLayout.sheetHorizontal,
+        handle ? 6 : ShellLayout.sheetVertical,
+        ShellLayout.sheetHorizontal,
+        ShellLayout.sheetVertical,
+      ),
       decoration: MenuChrome.panel(borderRadius: borderRadius),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -206,12 +212,9 @@ class _OverlayPanel extends StatelessWidget {
             essence: essence,
             showEssence: showEssence,
           ),
-          const SizedBox(height: 4),
-          Container(
-            height: 1,
-            color: GameTheme.borderLit.withValues(alpha: 0.22),
-          ),
-          const SizedBox(height: 6),
+          ShellLayout.gap(4),
+          ShellLayout.divider(),
+          ShellLayout.gap(6),
           Expanded(child: child),
         ],
       ),
