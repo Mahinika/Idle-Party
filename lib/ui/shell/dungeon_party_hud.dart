@@ -237,6 +237,19 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   void _onHeroTap(int i) {
     _bump();
     widget.director.dismissTip('kit_abilities');
+    if (widget.homeRow) {
+      if (widget.selectedHeroIndex == i && _kitOpen) {
+        setState(() => _kitOpen = false);
+        return;
+      }
+      if (widget.selectedHeroIndex == i && !_kitOpen) {
+        setState(() => _kitOpen = true);
+        return;
+      }
+      widget.onSelectHero(i);
+      setState(() => _kitOpen = false);
+      return;
+    }
     if (widget.selectedHeroIndex == i && _kitOpen) {
       setState(() => _kitOpen = false);
       return;

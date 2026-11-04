@@ -1108,6 +1108,10 @@ class GameLogic {
 
   static int forgeTrackTier(GameState state, PartyUpgradeType type) => _gameLogicForgeTrackTier(state, type);
 
+  /// Any bought forge track (used for home SPLIT default).
+  static bool hasForgePurchases(GameState state) =>
+      _gameLogicHasForgePurchases(state);
+
   static int upgradeCostFor(GameState state, PartyUpgradeType type) => _gameLogicUpgradeCostFor(state, type);
 
   /// Wallet gold budget for a FORGE GOLD spend mode (×1 uses next buy cost).

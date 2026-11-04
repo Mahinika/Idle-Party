@@ -187,7 +187,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
           panel: router.goldPanel,
           onPanelChanged: (panel) => router.goldPanel = panel,
         ),
-        MenuRoute.shop => ShopDock(director: d),
+        MenuRoute.shop => ShopDock(director: d, homeCompact: widget.home),
         MenuRoute.essence => EssenceDock(
           director: d,
           panel: router.essencePanel,

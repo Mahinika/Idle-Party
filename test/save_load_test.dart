@@ -595,6 +595,14 @@ void main() {
     expect(legacy.homeLayout, HomeLayout.home);
     expect(legacy.homePanelFull, isTrue);
 
+    final forgedJson = Map<String, dynamic>.from(state.toJson())
+      ..remove('homePanelFull')
+      ..['attackBonus'] = 2;
+    expect(
+      GameLogic.stateFromJson(forgedJson).homePanelFull,
+      isFalse,
+    );
+
     final classicJson = Map<String, dynamic>.from(state.toJson())
       ..['homeLayout'] = 'classic';
     final classic = GameLogic.stateFromJson(classicJson);

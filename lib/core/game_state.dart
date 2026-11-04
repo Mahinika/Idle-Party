@@ -1606,6 +1606,26 @@ class GameState {
     'sessionTelemetryLog': sessionTelemetryLog,
   };
 
+  static bool jsonHasForgePurchases(Map<String, dynamic> json) {
+    int n(Object? v) => _jsonInt(v);
+    return n(json['attackBonus']) > 0 ||
+        n(json['defenseBonus']) > 0 ||
+        n(json['vitalityBonus']) > 0 ||
+        n(json['moveSpeedBonus']) > 0 ||
+        n(json['attackSpeedBonus']) > 0 ||
+        n(json['critBonus']) > 0 ||
+        n(json['masteryBonus']) > 0;
+  }
+
+  /// Missing [homePanelFull]: home + any forge buy → SPLIT under fight.
+  static bool defaultHomePanelFullFromJson(Map<String, dynamic> json) {
+    if (HomeLayout.fromJson(json['homeLayout']) != HomeLayout.home) {
+      return true;
+    }
+    if (jsonHasForgePurchases(json)) return false;
+    return true;
+  }
+
   /// Parses a v2-v4 save. Legacy fields are migrated.
   factory GameState.fromJson(Map<String, dynamic> json) {
     final recentLootJson = json['recentLoot'] as List<dynamic>?;
@@ -1901,7 +1921,7 @@ class GameState {
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
       homeLayout: HomeLayout.fromJson(json['homeLayout']),
       homePanelFull: (json['homePanelFull'] as bool?) ??
-          (HomeLayout.fromJson(json['homeLayout']) == HomeLayout.home),
+          GameState.defaultHomePanelFullFromJson(json),
       hideHealFloaters: (json['hideHealFloaters'] as bool?) ?? false,
       compactCombatNumbers: (json['compactCombatNumbers'] as bool?) ?? false,
       alwaysShowEnemyHp: (json['alwaysShowEnemyHp'] as bool?) ?? false,
