@@ -12,6 +12,7 @@ import '../../core/wisp_gift.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_layout.dart';
 
 /// Wipe modal — scene is not the owner of this overlay chrome.
 class DungeonWipePanel extends StatelessWidget {
@@ -46,7 +47,7 @@ class DungeonWipePanel extends StatelessWidget {
           child: DecoratedBox(
             decoration: MenuChrome.hubPanel(),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              padding: ShellLayout.sheetPadding,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -57,8 +58,8 @@ class DungeonWipePanel extends StatelessWidget {
                       color: GameTheme.bloodLit,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
+                  ShellLayout.gap(8),
+                  ShellLayout.hint(
                     state.inGauntlet
                         ? 'Climb ends. PB F${state.metaDepth.gauntletBestFloor}.'
                         : state.inGreaterRift
@@ -89,36 +90,18 @@ class DungeonWipePanel extends StatelessWidget {
                             }
                             return 'RETRY restarts F$cur. HUB ends the run.';
                           }(),
-                    textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 15,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    maxLines: 4,
                   ),
                   if (dailyEcho) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Claim needs a clear',
-                      textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 12,
-                        color: GameTheme.parchmentDim,
-                      ),
-                    ),
+                    ShellLayout.gap(6),
+                    ShellLayout.hint('Claim needs a clear', maxLines: 1),
                   ],
                   if (modeLine != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      modeLine,
-                      textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 12,
-                        color: GameTheme.parchmentDim,
-                      ),
-                    ),
+                    ShellLayout.gap(6),
+                    ShellLayout.hint(modeLine, maxLines: 2),
                   ],
                   if (WispGift.wipeNextLanternLine(state) case final wispLine?) ...[
-                    const SizedBox(height: 6),
+                    ShellLayout.gap(6),
                     Text(
                       wispLine,
                       textAlign: TextAlign.center,
@@ -177,7 +160,7 @@ class DungeonWipePanel extends StatelessWidget {
                       ],
                     ),
                   ],
-                  const SizedBox(height: 14),
+                  ShellLayout.gap(14),
                   ValueListenableBuilder<int>(
                     valueListenable: director.wipeAutoSeconds,
                     builder: (context, seconds, _) {
@@ -414,12 +397,11 @@ class _WipeWatchAdState extends State<_WipeWatchAd> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          ShellLayout.hint(
             'Optional. The party goes again without an ad.',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            maxLines: 2,
           ),
-          const SizedBox(height: 8),
+          ShellLayout.gap(8),
           GameButton(
             label: _busy ? 'LOADING AD…' : 'WATCH AD · +1 ticket',
             style: GameButtonStyle.grey,
