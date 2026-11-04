@@ -16,6 +16,7 @@ class RailButton extends StatelessWidget {
     required this.state,
     required this.director,
     required this.router,
+    this.compact = false,
   });
 
   final HomeEntry entry;
@@ -23,11 +24,71 @@ class RailButton extends StatelessWidget {
   final GameDirector director;
   final MenuRouter router;
 
+  /// Horizontal chip on the fight seam — icon + short label, no vertical stack.
+  final bool compact;
+
   @override
   Widget build(BuildContext context) {
     if (!entry.visible(state, director)) return const SizedBox.shrink();
     final timer = entry.timer?.call(state);
     final badge = entry.badge(state);
+    if (compact) {
+      return WebClickScope(
+        label: entry.label,
+        onPressed: () => entry.open(context, director, router),
+        child: Semantics(
+          button: true,
+          label: entry.label,
+          child: Material(
+            color: GameTheme.panelInset.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: InkWell(
+              onTap: () => entry.open(context, director, router),
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        GameIcon.asset(entry.icon, size: 18),
+                        if (badge)
+                          Positioned(
+                            right: -3,
+                            top: -3,
+                            child: Container(
+                              width: 7,
+                              height: 7,
+                              decoration: const BoxDecoration(
+                                color: GameTheme.hudHpDamage,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      timer != null && timer.isNotEmpty
+                          ? '${entry.label} $timer'
+                          : entry.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.pixel(
+                        size: 7,
+                        color: GameTheme.parchment,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: WebClickScope(

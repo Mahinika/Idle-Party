@@ -10,6 +10,7 @@ import '../../menu_chrome.dart';
 import '../../spatial_dungeon_view.dart';
 import '../../web_click_bridge.dart';
 import '../dungeon_party_hud.dart';
+import 'fight_seam_rails.dart';
 
 /// FARM / PUSH, the fist, LEAVE, and the party row under the fight.
 class FightSeam extends StatelessWidget {
@@ -113,6 +114,7 @@ class FightSeam extends StatelessWidget {
               },
               onOpenEquip: () => router.toggleGear(GearPanel.gear),
             ),
+          FightSeamRails(director: director, router: router),
         ],
       ),
     );
