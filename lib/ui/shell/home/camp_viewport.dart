@@ -96,7 +96,7 @@ class CampViewport extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             WebClickScope(
-              label: 'ENTER',
+              label: label,
               onPressed: () => runChasePlan(
                 context: context,
                 director: director,
@@ -121,7 +121,8 @@ class CampViewport extends StatelessWidget {
                 ),
               ),
             ),
-            if (GameLogic.canAscend(state)) ...[
+            if (GameLogic.canAscend(state) &&
+                plan.op != ChaseOp.confirmAscend) ...[
               const SizedBox(height: 8),
               GameButton(
                 label: 'ASCEND',
