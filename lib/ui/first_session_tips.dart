@@ -191,7 +191,12 @@ class FirstSessionTips extends StatelessWidget {
         return tip.id;
       }
       if (tip.id == 'forge') {
-        if (inDungeon || !MenuTabs.showGold(s)) continue;
+        if (!MenuTabs.showGold(s)) continue;
+        if (s.homeLayout == HomeLayout.home) {
+          if (!inDungeon) continue;
+        } else if (inDungeon) {
+          continue;
+        }
         return tip.id;
       }
       if (tip.id == 'sanctuary') {
