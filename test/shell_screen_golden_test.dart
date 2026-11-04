@@ -6,9 +6,10 @@ import 'package:idle_party/ui/hub/hub_powerups.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
 import 'package:idle_party/ui/shell/forge_overlay.dart';
 import 'package:idle_party/ui/shell/jobs_overlay.dart';
-import 'package:idle_party/ui/shell/market_overlay.dart';
 import 'package:idle_party/ui/shell/settings_overlay.dart';
 import 'package:idle_party/ui/shell/home/home_menu_grid.dart';
+import 'package:idle_party/ui/shell/home/map_screen.dart';
+import 'package:idle_party/ui/meta/gauntlet_hub_panel.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/menu_surface.dart';
 import 'package:idle_party/ui/shell/overlay_scaffold.dart';
@@ -358,6 +359,74 @@ void main() {
       tester,
       find.byType(OverlayScrim),
       'essence_a56.png',
+    );
+  });
+
+  testWidgets('Gauntlet pact dialog golden A56', (tester) async {
+    bindA56View(tester);
+    final director = gauntletDialogGoldenDirector();
+    addTearDown(director.dispose);
+    await showGauntletDialogGolden(tester, director);
+    await expectShellGolden(
+      tester,
+      find.text('Gauntlet climb'),
+      'gauntlet_dialog_a56.png',
+    );
+    await tester.tap(find.text('CANCEL'));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Hub ENDGAME gauntlet panel golden A56', (tester) async {
+    bindA56View(tester);
+    final director = endgameHubGoldenDirector();
+    addTearDown(director.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        RepaintBoundary(
+          key: key,
+          child: SizedBox(
+            height: 520,
+            child: SingleChildScrollView(
+              child: GauntletHubPanel(director: director),
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester);
+    await expectShellGolden(
+      tester,
+      find.byKey(key),
+      'hub_gauntlet_a56.png',
+    );
+  });
+
+  testWidgets('MAP ENDGAME list golden A56', (tester) async {
+    bindA56View(tester);
+    final director = endgameHubGoldenDirector();
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        RepaintBoundary(
+          key: key,
+          child: SizedBox(
+            height: 640,
+            child: MapScreen(director: director, router: router),
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester);
+    await tester.tap(find.text('ENDGAME'));
+    await pumpGoldenFrames(tester);
+    await expectShellGolden(
+      tester,
+      find.byKey(key),
+      'map_endgame_a56.png',
     );
   });
 

@@ -8,6 +8,7 @@ import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/vfx_quality.dart';
 import 'package:idle_party/ui/meta/offline_welcome.dart';
+import 'package:idle_party/ui/confirm_dialogs.dart';
 import 'package:idle_party/ui/theme.dart';
 
 /// Fixed clock for stable goldens.
@@ -155,6 +156,43 @@ GameDirector questsGoldenDirector() {
 }
 
 GameDirector settingsGoldenDirector() => hubGoldenDirector();
+
+GameState endgamePartyGoldenState() {
+  final base = _quietHubState().copyWith(
+    ascensionLevel: 8,
+    bossVictories: 10,
+    highestFloorCleared: 24,
+  );
+  return base.copyWith(
+    heroes: [
+      for (final h in base.heroes) h.copyWith(level: GameLogic.maxHeroLevel),
+    ],
+    metaDepth: base.metaDepth.copyWith(gauntletBestFloor: 12),
+  );
+}
+
+GameDirector endgameHubGoldenDirector() =>
+    GameDirector.preview(initialState: endgamePartyGoldenState());
+
+GameDirector gauntletDialogGoldenDirector() => endgameHubGoldenDirector();
+
+Future<void> showGauntletDialogGolden(
+  WidgetTester tester,
+  GameDirector director,
+) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => confirmGauntletRun(context, director),
+          child: const Text('open gauntlet'),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('open gauntlet'));
+  await pumpGoldenFrames(tester);
+}
 
 Future<GameDirector> homeShellFightGoldenDirector() async {
   final director = homeShellGoldenDirector();
