@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
 import '../../../core/menu_router.dart';
-import '../../game_icon.dart';
 import '../../game_theme.dart';
-import '../../web_click_bridge.dart';
 import 'home_catalog.dart';
+import 'rail_button.dart';
 
-/// MENU grid. A row opens its sheet one level deeper.
+/// MENU grid. Compact chips match the fight seam rail family.
 class HomeMenuGrid extends StatelessWidget {
   const HomeMenuGrid({
     super.key,
@@ -25,83 +24,59 @@ class HomeMenuGrid extends StatelessWidget {
         .where((e) => e.visible(state, director))
         .toList();
     return ListView(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 12),
       children: [
-        Text('MENU', style: GameTheme.menuTitle(size: 18)),
-        const SizedBox(height: 4),
-        for (final entry in entries)
-          WebClickScope(
-            label: entry.label,
-            onPressed: () => entry.open(context, director, router),
-            child: Semantics(
-              button: true,
-              label: entry.label,
-              child: InkWell(
-                onTap: () => entry.open(context, director, router),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: GameTheme.borderLit.withValues(alpha: 0.28),
-                      ),
-                    ),
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minHeight: GameTheme.minTouch,
-                    ),
-                    child: Row(
-                      children: [
-                        GameIcon.asset(entry.icon, size: 22),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            entry.label,
-                            style: GameTheme.body(
-                              size: 15,
-                              color: GameTheme.parchment,
-                            ),
-                          ),
-                        ),
-                        if (entry.badge(state)) const _Dot(),
-                        const SizedBox(width: 4),
-                        Text(
-                          '›',
-                          style: GameTheme.body(
-                            size: 18,
-                            color: GameTheme.parchmentDim,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            'MENU',
+            style: GameTheme.menuTitle(size: 14, color: GameTheme.parchmentDim),
+          ),
+        ),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
+            childAspectRatio: 2.6,
+          ),
+          itemCount: entries.length,
+          itemBuilder: (context, i) => RailButton(
+            entry: entries[i],
+            state: state,
+            director: director,
+            router: router,
+            compact: true,
+          ),
+        ),
+        const SizedBox(height: 12),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: GameTheme.border.withValues(alpha: 0.45)),
             ),
           ),
-        const SizedBox(height: 16),
-        Text(
-          'TIP A FRIEND',
-          style: GameTheme.menuTitle(size: 14, color: GameTheme.parchmentDim),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'TIP A FRIEND',
+                  style: GameTheme.menuTitle(
+                    size: 12,
+                    color: GameTheme.parchmentDim,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                HomeFriendTip(director: director),
+              ],
+            ),
+          ),
         ),
-        HomeFriendTip(director: director),
       ],
-    );
-  }
-}
-
-class _Dot extends StatelessWidget {
-  const _Dot();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: const BoxDecoration(
-        color: GameTheme.hudHpDamage,
-        shape: BoxShape.circle,
-      ),
     );
   }
 }

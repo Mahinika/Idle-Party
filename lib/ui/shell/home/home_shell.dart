@@ -8,6 +8,7 @@ import '../../../core/menu_router.dart';
 import '../../first_session_tips.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
+import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
 import 'camp_viewport.dart';
@@ -155,29 +156,34 @@ class _HomeShellState extends State<HomeShell> {
       router.homeAtSub || router.route == MenuRoute.key;
 
   Widget _backRow() {
-    return Align(
-      alignment: Alignment.centerLeft,
+    return Material(
+      color: GameTheme.panel,
       child: WebClickScope(
         label: 'Back',
-        onPressed: () {
-          router.back();
-        },
+        onPressed: router.back,
         child: Semantics(
           button: true,
           label: 'Back',
           child: InkWell(
-            onTap: () {
-              router.back();
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GameIcon.glyph(UiGlyph.prev, size: 16),
-                  SizedBox(width: 4),
-                  Text('Back'),
-                ],
+            onTap: router.back,
+            child: SizedBox(
+              height: 40,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GameIcon.glyph(UiGlyph.prev, size: 14),
+                    const SizedBox(width: 6),
+                    Text(
+                      'BACK',
+                      style: GameTheme.menuTitle(
+                        size: 12,
+                        color: GameTheme.parchment,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -188,35 +194,19 @@ class _HomeShellState extends State<HomeShell> {
 
   Widget _gearThumb(GameState state) {
     final panels = MenuRouter.visibleGearPanels(state);
+    if (panels.isEmpty) return const SizedBox.shrink();
+    final labels = panels.map(_gearLabel).toList();
+    final selected = panels.indexOf(router.gearPanel).clamp(0, panels.length - 1);
     return Material(
-      color: GameTheme.stone,
-      child: SizedBox(
-      height: GameTheme.minTouch,
-      child: Row(
-        children: [
-          for (final panel in panels)
-            Expanded(
-              child: WebClickScope(
-                label: _gearLabel(panel),
-                onPressed: () => router.gearPanel = panel,
-                child: InkWell(
-                  onTap: () => router.gearPanel = panel,
-                  child: Center(
-                    child: Text(
-                      _gearLabel(panel),
-                      style: GameTheme.menuTitle(
-                        size: 11,
-                        color: router.gearPanel == panel
-                            ? GameTheme.torchHot
-                            : GameTheme.parchment,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+      color: GameTheme.panel,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+        child: MenuChrome.segmented(
+          dense: true,
+          labels: labels,
+          selectedIndex: selected,
+          onSelect: (i) => router.gearPanel = panels[i],
+        ),
       ),
     );
   }

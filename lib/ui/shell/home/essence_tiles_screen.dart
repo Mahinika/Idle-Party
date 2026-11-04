@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
-import '../../../core/gold_income.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
 import '../../apex_forge_panel.dart';
 import '../../confirm_dialogs.dart';
 import '../../game_theme.dart';
 import '../../kenney_button.dart';
+import '../../menu_chrome.dart';
 import '../../meta/codex_overlay.dart';
 import '../beast_overlay.dart';
 import '../essence_keep_panel.dart';
@@ -31,16 +31,16 @@ class EssenceTilesScreen extends StatelessWidget {
         Expanded(
           child: GridView.count(
             crossAxisCount: 2,
-            padding: const EdgeInsets.all(12),
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: 2.2,
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
+            childAspectRatio: 2.4,
             children: [
               _tile(
                 context,
                 'BLESSING',
                 MenuTabs.showKeep(state),
-                'Opens after the first hour.',
+                'After first hour',
                 () {
                   router.essencePanel = EssencePanel.keep;
                   router.pushSub();
@@ -50,7 +50,7 @@ class EssenceTilesScreen extends StatelessWidget {
                 context,
                 'RELICS',
                 MenuTabs.showRelics(state),
-                'Opens after the first hour.',
+                'After first hour',
                 () {
                   router.essencePanel = EssencePanel.relics;
                   router.pushSub();
@@ -60,7 +60,7 @@ class EssenceTilesScreen extends StatelessWidget {
                 context,
                 'PETS',
                 MenuTabs.showBeast(state),
-                'Opens at Ascend, or when you can hatch.',
+                'Ascend or hatch',
                 () {
                   router.essencePanel = EssencePanel.pets;
                   router.pushSub();
@@ -70,7 +70,7 @@ class EssenceTilesScreen extends StatelessWidget {
                 context,
                 'CODEX',
                 MenuTabs.showCodex(state),
-                'Clear a floor first.',
+                'Clear a floor',
                 () {
                   router.open(MenuRoute.more, more: MoreSection.info, infoPane: 1);
                   router.pushSub();
@@ -80,7 +80,7 @@ class EssenceTilesScreen extends StatelessWidget {
                 context,
                 'APEX',
                 MenuTabs.showCraft(state),
-                'Opens after the first hour.',
+                'After first hour',
                 () {
                   router.open(MenuRoute.more, more: MoreSection.craft);
                   router.pushSub();
@@ -113,28 +113,48 @@ class EssenceTilesScreen extends StatelessWidget {
     BuildContext context,
     String label,
     bool open,
-    String locked,
+    String lockedHint,
     VoidCallback onTap,
   ) {
     return Semantics(
       button: open,
-      label: open ? label : '$label. $locked',
+      label: open ? label : '$label. $lockedHint',
       child: InkWell(
         onTap: open ? onTap : null,
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
         child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: GameTheme.card,
-            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            border: Border.all(color: GameTheme.borderLit.withValues(alpha: 0.4)),
+          decoration: MenuChrome.listCard(
+            selected: false,
+            borderColor: open ? GameTheme.borderLit : GameTheme.border,
           ),
-          child: Center(
-            child: Text(
-              open ? label : '$label\n$locked',
-              textAlign: TextAlign.center,
-              style: GameTheme.body(
-                size: 12,
-                color: open ? GameTheme.parchment : GameTheme.parchmentDim,
-              ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GameTheme.menuTitle(
+                    size: 13,
+                    color: open ? GameTheme.parchment : GameTheme.parchmentDim,
+                  ),
+                ),
+                if (!open) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    lockedHint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.body(
+                      size: 10,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -143,27 +163,24 @@ class EssenceTilesScreen extends StatelessWidget {
   }
 
   Widget _summary(BuildContext context, GameState state) {
-    final gold = GoldIncome.perMinuteLabel(GoldIncome.hubGoldPerMinute(state));
-    final essence = GoldIncome.essenceDue(60, state.sanctuaryPowerLevel);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '$gold · essence $essence/min',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
-          Text(
             'Boss on F${GameLogic.bossFloorFor(state)}',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
-          if (GameLogic.canAscend(state))
+          if (GameLogic.canAscend(state)) ...[
+            const SizedBox(height: 6),
             GameButton(
               label: 'ASCEND',
               style: GameButtonStyle.brown,
+              dense: true,
               onPressed: () => confirmAscend(context, director),
             ),
+          ],
         ],
       ),
     );

@@ -14,6 +14,7 @@ import '../../game_theme.dart';
 import '../../hub/hub_ranks.dart';
 import '../../hub/hub_world_map.dart';
 import '../../kenney_button.dart';
+import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 
 /// Tap a cave or a hunt. ENTER in the footer starts it.
@@ -46,6 +47,15 @@ class _MapScreenState extends State<MapScreen> {
     final mean = GameLogic.partyMeanLevel(state);
     return Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
+          child: MenuChrome.segmented(
+            dense: true,
+            labels: const ['PATH', 'ENDGAME'],
+            selectedIndex: _endgame ? 1 : 0,
+            onSelect: (i) => setState(() => _endgame = i == 1),
+          ),
+        ),
         Expanded(
           child: _endgame ? _hunts(state, mean) : _path(state, mean),
         ),
@@ -146,12 +156,9 @@ class _MapScreenState extends State<MapScreen> {
           child: InkWell(
             onTap: onTap,
             child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: selected ? GameTheme.cardRaised : GameTheme.card,
-                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-                border: Border.all(
-                  color: selected ? GameTheme.torch : GameTheme.borderLit,
-                ),
+              decoration: MenuChrome.listCard(
+                selected: selected,
+                borderColor: selected ? GameTheme.torch : GameTheme.borderLit,
               ),
               child: Padding(
                 padding: const EdgeInsets.all(10),
@@ -190,18 +197,10 @@ class _MapScreenState extends State<MapScreen> {
   Widget _footer(GameState state, int mean) {
     final endgame = GameLogic.endgameUnlocked(state);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-      child: Row(
-        children: [
-          _foot('PATH', !_endgame, () => setState(() => _endgame = false)),
-          _foot('ENDGAME', _endgame, () => setState(() => _endgame = true)),
-          const Spacer(),
-          GameButton(
-            label: 'ENTER',
-            expanded: false,
-            onPressed: () => _enter(state, mean, endgame),
-          ),
-        ],
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+      child: GameButton(
+        label: 'ENTER',
+        onPressed: () => _enter(state, mean, endgame),
       ),
     );
   }
@@ -239,35 +238,5 @@ class _MapScreenState extends State<MapScreen> {
     }
     widget.router.close();
     director.enterDungeon(dungeonId: _zoneId);
-  }
-
-  Widget _foot(String label, bool selected, VoidCallback onTap) {
-    return WebClickScope(
-      label: label,
-      onPressed: onTap,
-      child: Semantics(
-        button: true,
-        selected: selected,
-        label: label,
-        child: InkWell(
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minWidth: GameTheme.minTouch,
-              minHeight: GameTheme.minTouch,
-            ),
-            child: Center(
-              child: Text(
-                label,
-                style: GameTheme.menuTitle(
-                  size: 12,
-                  color: selected ? GameTheme.torchHot : GameTheme.parchment,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

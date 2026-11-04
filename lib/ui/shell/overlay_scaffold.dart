@@ -198,15 +198,17 @@ class _OverlayPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final handle = showHandle ?? borderRadius != null;
+    final showHeader =
+        title.isNotEmpty || showClose || gold != null || essence != null;
     final panel = Container(
       margin: margin,
-      padding: EdgeInsets.fromLTRB(12, handle ? 6 : 6, 12, 8),
+      padding: EdgeInsets.fromLTRB(12, handle ? 6 : (showHeader ? 6 : 0), 12, 8),
       decoration: MenuChrome.panel(borderRadius: borderRadius),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (handle) MenuChrome.sheetHandle(),
-          if (title.isNotEmpty || showClose || gold != null)
+          if (showHeader)
             _SheetHeader(
               title: title,
               subtitle: subtitle,
@@ -216,7 +218,7 @@ class _OverlayPanel extends StatelessWidget {
               showEssence: showEssence,
               showClose: showClose,
             ),
-          if (title.isNotEmpty || showClose || gold != null) ...[
+          if (showHeader) ...[
             const SizedBox(height: 4),
             Container(
               height: 1,
