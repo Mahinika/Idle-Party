@@ -122,7 +122,9 @@ class CampViewport extends StatelessWidget {
               ),
             ),
             if (GameLogic.canAscend(state) &&
-                plan.op != ChaseOp.confirmAscend) ...[
+                plan.op != ChaseOp.confirmAscend &&
+                plan.op != ChaseOp.enter &&
+                plan.op != ChaseOp.enterKey) ...[
               const SizedBox(height: 8),
               GameButton(
                 label: 'ASCEND',
