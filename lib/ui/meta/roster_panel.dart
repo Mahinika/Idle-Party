@@ -9,6 +9,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../shell/shell_common.dart';
+import '../shell/shell_layout.dart';
 
 class TeamCompositionOverlay extends StatefulWidget {
   const TeamCompositionOverlay({super.key, required this.director});
@@ -33,27 +34,28 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
     final hasTank = active.any((h) => h.spec.isTank);
     final hasHeal = active.any((h) => h.spec.isHealer);
 
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
+        ShellLayout.hint(
           state.inDungeon
               ? 'Leave the dungeon to change your lineup.'
               : 'Pick up to $maxSlots active heroes from your roster.',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          maxLines: 2,
         ),
         if (!hasTank || !hasHeal) ...[
-          const SizedBox(height: 6),
+          ShellLayout.gap(6),
           Text(
             [if (!hasTank) 'No Tank', if (!hasHeal) 'No Healer'].join(' · '),
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.torchHot),
           ),
         ],
-        const SizedBox(height: 10),
+        ShellLayout.gap(10),
         MenuChrome.sectionLabelScoped('ACTIVE', scope: MenuScope.account),
-        const SizedBox(height: 6),
+        ShellLayout.gap(6),
         for (var i = 0; i < maxSlots; i++) ...[
           _ActiveSlotChip(
             index: i,
@@ -176,6 +178,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           const SizedBox(height: 8),
         ],
       ],
+    ),
     );
   }
 }

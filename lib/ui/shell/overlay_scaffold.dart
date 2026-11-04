@@ -278,16 +278,8 @@ class _SheetHeader extends StatelessWidget {
                 style: GameTheme.menuTitle(size: 18),
               ),
               if (subtitle.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
+                ShellLayout.gap(2),
+                ShellLayout.hint(subtitle, maxLines: 2),
               ],
             ],
           );
