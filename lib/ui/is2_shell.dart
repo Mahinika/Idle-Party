@@ -271,8 +271,8 @@ class _Is2ShellState extends State<Is2Shell> {
                                     ),
                             ),
                             Positioned(
-                              right: hudSide,
-                              top: 22,
+                              right: widget.homeChrome ? 58 : hudSide,
+                              top: widget.homeChrome ? 4 : 22,
                               child: TargetCornerHud(director: d),
                             ),
                             Positioned(

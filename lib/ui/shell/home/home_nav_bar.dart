@@ -100,19 +100,10 @@ class HomeNavBar extends StatelessWidget {
         }
       },
       child: selected
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GameIcon.glyph(
-                  UiGlyph.close,
-                  size: 18,
-                  color: GameTheme.hudHpDamage,
-                ),
-                Text(
-                  'Close',
-                  style: GameTheme.pixel(size: 8, color: GameTheme.hudHpDamage),
-                ),
-              ],
+          ? GameIcon.glyph(
+              UiGlyph.close,
+              size: 26,
+              color: GameTheme.hudHpDamage,
             )
           : Column(
               mainAxisAlignment: MainAxisAlignment.center,

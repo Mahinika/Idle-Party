@@ -87,7 +87,9 @@ class FightSeam extends StatelessWidget {
                 ],
               ),
             ),
-            PartyCornerHud(
+            Align(
+              alignment: Alignment.center,
+              child: PartyCornerHud(
               director: director,
               selectedHeroIndex: router.session.abilityHeroIndex,
               onSelectHero: (i) {
@@ -95,6 +97,7 @@ class FightSeam extends StatelessWidget {
                 director.cameraHeroIndex = i;
               },
               onOpenEquip: () => router.toggleGear(GearPanel.gear),
+              ),
             ),
           ],
         ),

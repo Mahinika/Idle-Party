@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import '../../../core/chase_dispatcher.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
-import '../../../core/home_layout.dart';
 import '../../../core/hub_chase.dart';
 import '../../../core/menu_router.dart';
-import '../../../core/nav_copy.dart';
+import '../../../models/dungeon_def.dart';
 import '../../chase_bind.dart';
 import '../../confirm_dialogs.dart';
 import '../../game_theme.dart';
+import '../../hero_doll_sprite.dart';
 import '../../kenney_button.dart';
 import '../../web_click_bridge.dart';
 
@@ -29,8 +29,9 @@ class CampViewport extends StatelessWidget {
     final state = director.state;
     final chase = HubChase.forState(state);
     final plan = ChaseDispatcher.plan(chase, state: state);
-    final title = NavCopy.playerText(chase.title, HomeLayout.home);
     final label = plan.label ?? 'ENTER';
+    final cave = DungeonCatalog.byId(state.dungeonId).name;
+    final heroes = state.heroes;
     return ColoredBox(
       color: GameTheme.stoneDeep,
       child: Padding(
@@ -49,19 +50,48 @@ class CampViewport extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GameTheme.menuTitle(size: 18),
             ),
-            const SizedBox(height: 8),
-            for (final hero in state.heroes)
-              Text(
-                '${hero.name}  Lv${hero.level}',
-                textAlign: TextAlign.center,
-                style: GameTheme.body(size: 14, color: GameTheme.parchment),
+            const SizedBox(height: 12),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < heroes.length; i++)
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          HeroDollSprite(
+                            hero: heroes[i],
+                            partyIndex: i,
+                            size: heroes.length > 4 ? 48 : 64,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            heroes[i].name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: GameTheme.body(
+                              size: 12,
+                              color: GameTheme.parchment,
+                            ),
+                          ),
+                          Text(
+                            'Lv${heroes[i].level}',
+                            style: GameTheme.body(
+                              size: 11,
+                              color: GameTheme.parchmentDim,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
-            const Spacer(),
+            ),
             Text(
-              title,
+              cave,
               textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
               style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
             ),
             const SizedBox(height: 8),

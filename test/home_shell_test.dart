@@ -26,6 +26,14 @@ void main() {
     expect(home.contains('HEROES → BAG'), isTrue);
     expect(home.contains('MENU →'), isTrue);
     expect(home.contains('camp'), isTrue);
+    expect(
+      NavCopy.playerText('Hub gold fills for 24 hours.', HomeLayout.home),
+      'Camp gold fills for 24 hours.',
+    );
+    expect(
+      NavCopy.playerText('Hub gold fills for 24 hours.', HomeLayout.classic),
+      'Hub gold fills for 24 hours.',
+    );
   });
 
   test('SHOP blurb uses home place names on the fight shell', () {
@@ -108,7 +116,8 @@ void main() {
 
     router.open(MenuRoute.gear);
     await tester.pump();
-    expect(find.text('Close'), findsWidgets);
+    expect(find.text('Close'), findsNothing);
+    expect(find.bySemanticsLabel('Close HEROES'), findsWidgets);
     expect(tester.takeException(), isNull);
 
     router.open(MenuRoute.gold);

@@ -4,9 +4,8 @@ import '../../../core/game_director.dart';
 import '../../../core/menu_router.dart';
 import '../../is2_shell.dart';
 import 'fight_rails.dart';
-import 'fight_seam.dart';
 
-/// The fight, with home chrome hidden and the seam under the picture.
+/// The cave picture. The seam sits under it, outside this flex.
 class FightViewport extends StatelessWidget {
   const FightViewport({
     super.key,
@@ -21,24 +20,17 @@ class FightViewport extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
+      fit: StackFit.expand,
       children: [
-        Expanded(
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Is2Shell(
-                director: director,
-                router: router,
-                pulse: 0.5,
-                onLeaveDungeon: onLeave,
-                homeChrome: true,
-              ),
-              FightRails(director: director, router: router),
-            ],
-          ),
+        Is2Shell(
+          director: director,
+          router: router,
+          pulse: 0.5,
+          onLeaveDungeon: onLeave,
+          homeChrome: true,
         ),
-        FightSeam(director: director, router: router, onLeave: onLeave),
+        FightRails(director: director, router: router),
       ],
     );
   }

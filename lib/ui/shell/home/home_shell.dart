@@ -13,6 +13,7 @@ import '../menu_surface.dart';
 import 'camp_viewport.dart';
 import 'director_select.dart';
 import 'essence_tiles_screen.dart';
+import 'fight_seam.dart';
 import 'fight_viewport.dart';
 import 'home_nav_bar.dart';
 import 'home_prompts.dart';
@@ -106,6 +107,12 @@ class _HomeShellState extends State<HomeShell> {
                           : CampViewport(director: director, router: router),
                     ),
                   ),
+                  if (showPanel)
+                    FightSeam(
+                      director: director,
+                      router: router,
+                      onLeave: widget.onLeave,
+                    ),
                   if (showPanel)
                     Expanded(
                       flex: full ? 1 : 1,

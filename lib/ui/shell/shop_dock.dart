@@ -157,6 +157,7 @@ class _ShopDockState extends State<ShopDock> {
                 ShopCatalog.playChargeableIds.contains(featured.id),
             compact: false,
             titleOverride: ShopHubOffer.featuredTitle(featured),
+            layout: state.homeLayout,
             onBuy: () => _buy(featured),
           ),
           const SizedBox(height: 10),
@@ -177,6 +178,7 @@ class _ShopDockState extends State<ShopDock> {
             compact:
                 items[i].kind == ShopOfferKind.permScroll &&
                 items[i].permMask != AdBoost.permAll,
+            layout: state.homeLayout,
             onBuy: () => _buy(items[i]),
           ),
         ],
@@ -219,6 +221,7 @@ class _ShopRow extends StatelessWidget {
     required this.onBuy,
     this.compact = false,
     this.titleOverride,
+    this.layout = HomeLayout.classic,
   });
 
   final ShopCatalogItem item;
@@ -228,6 +231,7 @@ class _ShopRow extends StatelessWidget {
   final VoidCallback? onBuy;
   final bool compact;
   final String? titleOverride;
+  final HomeLayout layout;
 
   static String? assetFor(ShopCatalogItem item) {
     if (item.permMask == AdBoost.permAll) return UiIcon.star;
@@ -340,7 +344,7 @@ class _ShopRow extends StatelessWidget {
           if (!compact) ...[
             const SizedBox(height: 4),
             Text(
-              item.description,
+              NavCopy.playerText(item.description, layout),
               style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
             ),
           ],
