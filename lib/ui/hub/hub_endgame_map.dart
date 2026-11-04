@@ -6,6 +6,7 @@ import '../../assets/custom_assets.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
 import '../web_click_bridge.dart';
+import '../shell/shell_layout.dart';
 import 'hub_world_map.dart';
 
 /// Hub-local PATH | ENDGAME switch — not a seventh bottom-bar tab.
@@ -203,21 +204,18 @@ class HubEndgameMap extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 8,
-                right: 8,
+                left: ShellLayout.sheetHorizontal,
+                right: ShellLayout.sheetHorizontal,
                 top: 6,
-                child: Text(
-                  locked
-                      ? 'Every hero at Lv${GameLogic.maxHeroLevel} unlocks these hunts'
-                      : HubEndgameAct.mapUnlockLine,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 11,
-                    color: locked ? GameTheme.torchHot : GameTheme.parchmentDim,
-                  ),
-                ),
+                child: locked
+                    ? ShellLayout.hint(
+                        'Every hero at Lv${GameLogic.maxHeroLevel} unlocks these hunts',
+                        maxLines: 2,
+                      )
+                    : ShellLayout.hint(
+                        HubEndgameAct.mapUnlockLine,
+                        maxLines: 2,
+                      ),
               ),
               for (final node in HubEndgameAct.nodes)
                 _placedMarker(

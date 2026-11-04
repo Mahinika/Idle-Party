@@ -16,6 +16,7 @@ import '../../hub/hub_world_map.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
+import '../shell_layout.dart';
 
 /// Tap a cave or a hunt. ENTER in the footer starts it.
 class MapScreen extends StatefulWidget {
@@ -48,7 +49,7 @@ class _MapScreenState extends State<MapScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
+          padding: ShellLayout.seamPadding,
           child: MenuChrome.segmented(
             dense: true,
             labels: const ['PATH', 'ENDGAME'],
@@ -108,7 +109,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget _hunts(GameState state, int mean) {
     final endgame = GameLogic.endgameUnlocked(state);
     return ListView(
-      padding: const EdgeInsets.all(12),
+      padding: ShellLayout.listPadding,
       children: [
         if (MenuTabs.showKey(state))
           _card('KEY', 'Harder cave. Same floors.', () {
@@ -147,7 +148,9 @@ class _MapScreenState extends State<MapScreen> {
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: WebClickScope(
+      child: ShellLayout.card(
+        selected: selected,
+        child: WebClickScope(
         label: title,
         onPressed: onTap,
         child: Semantics(
@@ -156,12 +159,9 @@ class _MapScreenState extends State<MapScreen> {
           child: InkWell(
             onTap: onTap,
             child: DecoratedBox(
-              decoration: MenuChrome.listCard(
-                selected: selected,
-                borderColor: selected ? GameTheme.torch : GameTheme.borderLit,
-              ),
+              decoration: const BoxDecoration(),
               child: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.zero,
                 child: Row(
                   children: [
                     Expanded(
@@ -191,15 +191,18 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 
   Widget _footer(GameState state, int mean) {
     final endgame = GameLogic.endgameUnlocked(state);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+      padding: ShellLayout.listPadding,
       child: GameButton(
         label: 'ENTER',
+        style: GameButtonStyle.brown,
+        primary: true,
         onPressed: () => _enter(state, mean, endgame),
       ),
     );
