@@ -13,12 +13,18 @@ import '../equipment_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../web_click_bridge.dart';
 import 'shell_common.dart';
 
 /// GOLD → MARKET — few controls: flask, upgrades/all, tap listing to buy.
 class MarketOverlay extends StatefulWidget {
-  const MarketOverlay({super.key, required this.director});
+  const MarketOverlay({
+    super.key,
+    required this.director,
+    this.inlineUnderFight = false,
+  });
   final GameDirector director;
+  final bool inlineUnderFight;
 
   @override
   State<MarketOverlay> createState() => _MarketOverlayState();
@@ -27,6 +33,7 @@ class MarketOverlay extends StatefulWidget {
 class _MarketOverlayState extends State<MarketOverlay> {
   /// Start on upgrades — the usual reason to open MARKET.
   bool _upgradesOnly = true;
+  bool _showAllListings = false;
 
   @override
   void initState() {
@@ -38,6 +45,84 @@ class _MarketOverlayState extends State<MarketOverlay> {
   Widget build(BuildContext context) {
     final director = widget.director;
     final state = director.state;
+    if (widget.inlineUnderFight && !_showAllListings) {
+      return _inlineUnderFightBody(context, state, director);
+    }
+    final body = _fullBody(context, state, director);
+    if (widget.inlineUnderFight) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: SingleChildScrollView(child: body),
+          ),
+        ],
+      );
+    }
+    return body;
+  }
+
+  Widget _inlineUnderFightBody(
+    BuildContext context,
+    GameState state,
+    GameDirector director,
+  ) {
+    final flaskCost = GameLogic.marketFlaskCost(state);
+    final listings = _sortedFilteredListings(state);
+    final best = listings.isNotEmpty ? listings.first : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+          child: GameButton(
+            label: state.gold >= flaskCost
+                ? 'FLASK · ${formatGold(flaskCost)}'
+                : 'FLASK · NEED ${formatGold(flaskCost)}',
+            dense: true,
+            onPressed:
+                state.gold >= flaskCost ? director.buyMarketFlask : null,
+          ),
+        ),
+        if (best != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: _listingCard(state, director, best),
+          ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: WebClickScope(
+            label: 'All listings',
+            onPressed: () => setState(() => _showAllListings = true),
+            child: Semantics(
+              button: true,
+              label: 'All listings',
+              child: InkWell(
+                onTap: () => setState(() => _showAllListings = true),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
+                  child: Text(
+                    'All listings',
+                    style: GameTheme.menuTitle(
+                      size: 11,
+                      color: GameTheme.torch,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _fullBody(
+    BuildContext context,
+    GameState state,
+    GameDirector director,
+  ) {
     final flaskCost = GameLogic.marketFlaskCost(state);
     final bandageCost = GameLogic.marketBandageCost(state);
     final refreshLabel = MarketListingsService.formatRefreshRemaining(state);
@@ -52,6 +137,31 @@ class _MarketOverlayState extends State<MarketOverlay> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (widget.inlineUnderFight)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: WebClickScope(
+              label: 'Show picks only',
+              onPressed: () => setState(() => _showAllListings = false),
+              child: Semantics(
+                button: true,
+                label: 'Show picks only',
+                child: InkWell(
+                  onTap: () => setState(() => _showAllListings = false),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                    child: Text(
+                      'Show picks only',
+                      style: GameTheme.menuTitle(
+                        size: 11,
+                        color: GameTheme.torch,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         if (freeReady)
           Text(
             'Listings fresh',

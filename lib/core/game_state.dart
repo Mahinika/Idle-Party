@@ -15,6 +15,7 @@ import '../models/mission.dart';
 import '../models/pet.dart';
 import '../models/vfx_quality.dart';
 import 'ad_boost.dart';
+import 'home_layout.dart';
 import 'blessing_constellation.dart';
 import 'gauntlet_pact.dart';
 import 'keystone.dart';
@@ -155,6 +156,8 @@ class GameState {
     this.grGuardianActive = false,
     this.grOutcome = '',
     this.colorblindMode = false,
+    this.homeLayout = HomeLayout.classic,
+    this.homePanelFull = true,
     this.hideHealFloaters = false,
     this.compactCombatNumbers = false,
     this.alwaysShowEnemyHp = false,
@@ -510,6 +513,12 @@ class GameState {
 
   /// Accessibility: colorblind-friendly combat floater palette.
   final bool colorblindMode;
+
+  /// Play shell. Classic keeps the hub. Home is the fight-first shell.
+  final HomeLayout homeLayout;
+
+  /// Home shell: the upgrade list is a strip instead of half the screen.
+  final bool homePanelFull;
 
   /// Skip green heal floaters.
   final bool hideHealFloaters;
@@ -1230,6 +1239,8 @@ class GameState {
     bool? grGuardianActive,
     String? grOutcome,
     bool? colorblindMode,
+    HomeLayout? homeLayout,
+    bool? homePanelFull,
     bool? hideHealFloaters,
     bool? compactCombatNumbers,
     bool? alwaysShowEnemyHp,
@@ -1388,6 +1399,8 @@ class GameState {
       grGuardianActive: grGuardianActive ?? this.grGuardianActive,
       grOutcome: grOutcome ?? this.grOutcome,
       colorblindMode: colorblindMode ?? this.colorblindMode,
+      homeLayout: homeLayout ?? this.homeLayout,
+      homePanelFull: homePanelFull ?? this.homePanelFull,
       hideHealFloaters: hideHealFloaters ?? this.hideHealFloaters,
       compactCombatNumbers: compactCombatNumbers ?? this.compactCombatNumbers,
       alwaysShowEnemyHp: alwaysShowEnemyHp ?? this.alwaysShowEnemyHp,
@@ -1568,6 +1581,8 @@ class GameState {
     'grGuardianActive': grGuardianActive,
     'grOutcome': grOutcome,
     'colorblindMode': colorblindMode,
+    'homeLayout': homeLayout.name,
+    'homePanelFull': homePanelFull,
     'hideHealFloaters': hideHealFloaters,
     'compactCombatNumbers': compactCombatNumbers,
     'alwaysShowEnemyHp': alwaysShowEnemyHp,
@@ -1590,6 +1605,26 @@ class GameState {
     'sessionTelemetryOptIn': sessionTelemetryOptIn,
     'sessionTelemetryLog': sessionTelemetryLog,
   };
+
+  static bool jsonHasForgePurchases(Map<String, dynamic> json) {
+    int n(Object? v) => _jsonInt(v);
+    return n(json['attackBonus']) > 0 ||
+        n(json['defenseBonus']) > 0 ||
+        n(json['vitalityBonus']) > 0 ||
+        n(json['moveSpeedBonus']) > 0 ||
+        n(json['attackSpeedBonus']) > 0 ||
+        n(json['critBonus']) > 0 ||
+        n(json['masteryBonus']) > 0;
+  }
+
+  /// Missing [homePanelFull]: home + any forge buy → SPLIT under fight.
+  static bool defaultHomePanelFullFromJson(Map<String, dynamic> json) {
+    if (HomeLayout.fromJson(json['homeLayout']) != HomeLayout.home) {
+      return true;
+    }
+    if (jsonHasForgePurchases(json)) return false;
+    return true;
+  }
 
   /// Parses a v2-v4 save. Legacy fields are migrated.
   factory GameState.fromJson(Map<String, dynamic> json) {
@@ -1884,6 +1919,9 @@ class GameState {
       grGuardianActive: (json['grGuardianActive'] as bool?) ?? false,
       grOutcome: (json['grOutcome'] as String?) ?? '',
       colorblindMode: (json['colorblindMode'] as bool?) ?? false,
+      homeLayout: HomeLayout.fromJson(json['homeLayout']),
+      homePanelFull: (json['homePanelFull'] as bool?) ??
+          GameState.defaultHomePanelFullFromJson(json),
       hideHealFloaters: (json['hideHealFloaters'] as bool?) ?? false,
       compactCombatNumbers: (json['compactCombatNumbers'] as bool?) ?? false,
       alwaysShowEnemyHp: (json['alwaysShowEnemyHp'] as bool?) ?? false,

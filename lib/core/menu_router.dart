@@ -20,7 +20,7 @@ import 'nav_intent.dart';
 
 /// Top-level menu destinations (flat tab nav). Hub and dungeon share these.
 
-enum MenuRoute { none, gear, gold, shop, essence, key, more }
+enum MenuRoute { none, gear, gold, shop, essence, key, more, map }
 
 
 
@@ -146,6 +146,9 @@ class MenuRouter extends ChangeNotifier {
 
   int _moreInfoPane = 0;
 
+  /// 1 when a home-shell tab is showing a sub-screen (BLESSING, QUESTS).
+  int _homeDepth = 0;
+
 
 
   MenuRoute get route => _route;
@@ -161,6 +164,10 @@ class MenuRouter extends ChangeNotifier {
   MoreSection get moreSection => _moreSection;
 
   int get moreInfoPane => _moreInfoPane;
+
+  int get homeDepth => _homeDepth;
+
+  bool get homeAtSub => _homeDepth > 0;
 
 
 
@@ -224,6 +231,8 @@ class MenuRouter extends ChangeNotifier {
 
     MenuRoute.more => 'MORE/${_moreSection.name}',
 
+    MenuRoute.map => 'MAP',
+
   };
 
 
@@ -281,6 +290,8 @@ class MenuRouter extends ChangeNotifier {
       MoreSection.quests => 'QUESTS',
 
     },
+
+    MenuRoute.map => 'MAP',
 
   };
 
@@ -341,6 +352,8 @@ class MenuRouter extends ChangeNotifier {
       MoreSection.quests => 'Daily · Bounty · Side · Week · Contract',
 
     },
+
+    MenuRoute.map => 'Pick a cave',
 
   };
 
@@ -428,7 +441,13 @@ class MenuRouter extends ChangeNotifier {
 
     }
 
+    if (route == MenuRoute.more && _route == MenuRoute.none && more == null) {
+      _moreSection = MoreSection.info;
+    }
+
     _route = route;
+
+    _homeDepth = 0;
 
     _emitNav(before);
 
@@ -472,6 +491,28 @@ class MenuRouter extends ChangeNotifier {
 
 
 
+  /// One step: leave a sub-screen, or close the tab.
+  bool back() {
+    if (_homeDepth > 0) {
+      _homeDepth = 0;
+      if (_route == MenuRoute.more) _moreSection = MoreSection.info;
+      notifyListeners();
+      return true;
+    }
+    if (_route != MenuRoute.none) {
+      close();
+      return true;
+    }
+    return false;
+  }
+
+  /// Home shell: the open tab grows a sub-screen. [back] returns to the tab.
+  void pushSub() {
+    if (_route == MenuRoute.none || _homeDepth > 0) return;
+    _homeDepth = 1;
+    notifyListeners();
+  }
+
   void close() {
 
     if (_route == MenuRoute.none) return;
@@ -479,6 +520,8 @@ class MenuRouter extends ChangeNotifier {
     final before = debugWhere;
 
     _route = MenuRoute.none;
+
+    _homeDepth = 0;
 
     session.clearBagSlotFilter();
 
@@ -627,6 +670,18 @@ class MenuRouter extends ChangeNotifier {
   /// Dungeon bar destinations (+ LEAVE in [AppBottomBar] = last slot).
 
   /// Same gated tabs as hub; KEY stays hub / top-HUD mid-fight.
+
+  /// Fight-first bar. FIGHT is [MenuRoute.none] and is not listed here.
+  /// GOLD lives in the upgrade panel. MORE is the top MENU.
+  static List<MenuRoute> visibleHomeTabs(GameState s) => <MenuRoute>[
+    MenuRoute.gear,
+    if (MenuTabs.showCamp(s)) MenuRoute.essence,
+    if (MenuTabs.showShop(s)) MenuRoute.shop,
+    if (MenuTabs.showGold(s)) MenuRoute.map,
+  ];
+
+  static DestinationGraph home(GameState s) =>
+      DestinationGraph(destinations: visibleHomeTabs(s));
 
   static List<MenuRoute> visibleDungeonTabs(GameState s) => <MenuRoute>[
 

@@ -10,6 +10,8 @@ import '../../core/remote_tune.dart';
 import '../../core/shop_billing.dart';
 import '../../core/shop_catalog.dart';
 import '../../core/shop_hub_offer.dart';
+import '../../core/home_layout.dart';
+import '../../core/nav_copy.dart';
 import '../../core/shop_store.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
@@ -17,10 +19,15 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../shell/shell_layout.dart';
 import '../redeem_coupon_dialog.dart';
+import '../web_click_bridge.dart';
 
 /// Bottom-tab SHOP: real-money catalog via Play Billing.
 class ShopDock extends StatefulWidget {
-  const ShopDock({super.key, required this.director});
+  const ShopDock({
+    super.key,
+    required this.director,
+    this.homeCompact = false,
+  });
 
   /// Widget/golden tests only — bypasses Play catalog when set.
   @visibleForTesting
@@ -28,14 +35,21 @@ class ShopDock extends StatefulWidget {
 
   final GameDirector director;
 
+  /// Home sheet: one pick + expand (matches SPLIT forge).
+  final bool homeCompact;
+
   /// SHOP blurb. ESSENCE is named only when that tab exists.
-  static String convenienceLine({required bool showEssence}) {
+  static String convenienceLine({
+    required bool showEssence,
+    HomeLayout layout = HomeLayout.classic,
+  }) {
     final essenceBit = showEssence ? ' Essence is under ESSENCE.' : '';
-    return 'Free tickets are SCROLLS on the hub. '
+    final raw = 'Free tickets are SCROLLS on the hub. '
         'Ad-free, Long Away, and Supporter are here. '
         'Bag space and pet errands use gold or Cinders in GEAR'
         '${showEssence ? ' and ESSENCE' : ''} — not real money. '
         'Gold is under GOLD.$essenceBit';
+    return NavCopy.playerText(raw, layout);
   }
 
   @override
@@ -44,6 +58,7 @@ class ShopDock extends StatefulWidget {
 
 class _ShopDockState extends State<ShopDock> {
   final Set<String> _productViewsLogged = {};
+  bool _showAllPacks = false;
 
   @override
   void initState() {
@@ -93,23 +108,132 @@ class _ShopDockState extends State<ShopDock> {
         final featured = ShopHubOffer.featuredItem(state);
         final showFeatured = featured != null &&
             (_priceReady(featured) || ShopBilling.isOwned(state, featured));
+        final hint = ShopDock.convenienceLine(
+          showEssence: MenuTabs.showCamp(state),
+          layout: state.homeLayout,
+        );
+        if (widget.homeCompact && !_showAllPacks) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _compactHomePage(
+                  hint: hint,
+                  storeLine: storeLine,
+                  items: items,
+                  featured: showFeatured ? featured : null,
+                ),
+              ),
+            ],
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: _page(
-                hint: ShopDock.convenienceLine(
-                  showEssence: MenuTabs.showCamp(state),
-                ),
+                hint: hint,
                 storeLine: storeLine,
                 items: items,
                 featured: showFeatured ? featured : null,
                 showAccountActions: true,
+                showAllPacksToggle: widget.homeCompact,
+                onToggleAllPacks: widget.homeCompact
+                    ? () => setState(() => _showAllPacks = false)
+                    : null,
               ),
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _compactHomePage({
+    required String hint,
+    required String storeLine,
+    required List<ShopCatalogItem> items,
+    ShopCatalogItem? featured,
+  }) {
+    final state = widget.director.state;
+    ShopCatalogItem? pick;
+    for (final item in items) {
+      if (featured != null && item.id == featured.id) continue;
+      if (!ShopBilling.isOwned(state, item)) {
+        pick = item;
+        break;
+      }
+    }
+    pick ??= items.isNotEmpty ? items.first : null;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: WebClickScope(
+            label: 'All packs',
+            onPressed: () => setState(() => _showAllPacks = true),
+            child: Semantics(
+              button: true,
+              label: 'All packs',
+              child: InkWell(
+                onTap: () => setState(() => _showAllPacks = true),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+                  child: Text(
+                    'All packs',
+                    style: GameTheme.menuTitle(
+                      size: 11,
+                      color: GameTheme.torch,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (featured != null) ...[
+          Text(
+            ShopHubOffer.countdownLine(state),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+          ),
+          const SizedBox(height: 4),
+          _ShopRow(
+            item: featured,
+            owned: ShopBilling.isOwned(state, featured),
+            priceLabel: _priceLabel(featured),
+            available: _priceReady(featured) ||
+                ShopCatalog.playChargeableIds.contains(featured.id),
+            compact: true,
+            titleOverride: ShopHubOffer.featuredTitle(featured),
+            layout: state.homeLayout,
+            onBuy: () => _buy(featured),
+          ),
+          const SizedBox(height: 6),
+        ],
+        if (pick != null &&
+            (featured == null || pick.id != featured.id)) ...[
+          _ShopRow(
+            item: pick,
+            owned: ShopBilling.isOwned(state, pick),
+            priceLabel: _priceLabel(pick),
+            available: _priceReady(pick),
+            compact: true,
+            layout: state.homeLayout,
+            onBuy: () => _buy(pick!),
+          ),
+        ],
+        const SizedBox(height: 6),
+        Text(
+          storeLine,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+      ],
     );
   }
 
@@ -134,11 +258,38 @@ class _ShopDockState extends State<ShopDock> {
     required List<ShopCatalogItem> items,
     ShopCatalogItem? featured,
     bool showAccountActions = false,
+    bool showAllPacksToggle = false,
+    VoidCallback? onToggleAllPacks,
   }) {
     final state = widget.director.state;
     return ListView(
       padding: ShellLayout.listPadding,
       children: [
+        if (showAllPacksToggle && onToggleAllPacks != null)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: WebClickScope(
+              label: 'Show picks only',
+              onPressed: onToggleAllPacks,
+              child: Semantics(
+                button: true,
+                label: 'Show picks only',
+                child: InkWell(
+                  onTap: onToggleAllPacks,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+                    child: Text(
+                      'Show picks only',
+                      style: GameTheme.menuTitle(
+                        size: 11,
+                        color: GameTheme.torch,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         Text(
           hint,
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
@@ -163,6 +314,7 @@ class _ShopDockState extends State<ShopDock> {
             compact: false,
             featuredPrimary: true,
             titleOverride: ShopHubOffer.featuredTitle(featured),
+            layout: state.homeLayout,
             onBuy: () => _buy(featured),
           ),
           ShellLayout.blockGapWidget(),
@@ -183,6 +335,7 @@ class _ShopDockState extends State<ShopDock> {
             compact:
                 items[i].kind == ShopOfferKind.permScroll &&
                 items[i].permMask != AdBoost.permAll,
+            layout: state.homeLayout,
             onBuy: () => _buy(items[i]),
           ),
         ],
@@ -221,6 +374,7 @@ class _ShopRow extends StatelessWidget {
     this.compact = false,
     this.titleOverride,
     this.featuredPrimary = false,
+    this.layout = HomeLayout.classic,
   });
 
   final ShopCatalogItem item;
@@ -231,6 +385,7 @@ class _ShopRow extends StatelessWidget {
   final bool compact;
   final String? titleOverride;
   final bool featuredPrimary;
+  final HomeLayout layout;
 
   static String? assetFor(ShopCatalogItem item) {
     if (item.permMask == AdBoost.permAll) return UiIcon.star;
@@ -352,7 +507,7 @@ class _ShopRow extends StatelessWidget {
           if (!compact) ...[
             const SizedBox(height: 4),
             Text(
-              item.description,
+              NavCopy.playerText(item.description, layout),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),

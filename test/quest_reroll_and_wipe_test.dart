@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/mission_board.dart';
+import 'package:idle_party/ui/shell/jobs_overlay.dart';
 import 'package:idle_party/core/wipe_advice.dart';
 import 'package:idle_party/models/meta_depth.dart';
 
@@ -33,6 +34,21 @@ void main() {
     expect(loaded.questRerollsToday, 1);
     final legacy = MetaDepthState.fromJson(<String, dynamic>{});
     expect(legacy.questRerollsToday, 0);
+  });
+
+  test('quest reroll button names rewarded ad like other placements', () {
+    expect(
+      JobsOverlay.rerollButtonLabel(adFree: false, rerollsLeft: 2),
+      'WATCH AD · REROLL',
+    );
+    expect(
+      JobsOverlay.rerollButtonLabel(adFree: true, rerollsLeft: 1),
+      'REROLL · FREE (1 left)',
+    );
+    expect(
+      JobsOverlay.rerollButtonTip(rerollsLeft: 2),
+      contains('Rewarded ad'),
+    );
   });
 
   test('quest reroll daily slot resets progress and caps at 2 per day', () {

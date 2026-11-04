@@ -182,7 +182,7 @@ abstract final class ShopCatalog {
       description:
           'Permanent — hide SCROLLS ads and remove WATCH AD earn. '
           '+2 Ad Tickets once, a free ticket claim once per UTC day, '
-          'and WISP bonus gold without watching.',
+          'WISP bonus gold without watching, and free Daily or Side quest rerolls.',
       kind: ShopOfferKind.adFree,
       boostHours: 0,
       oneTime: true,

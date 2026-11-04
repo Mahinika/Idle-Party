@@ -11,6 +11,8 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/local_reminders.dart';
 import '../../core/game_state.dart';
+import '../../core/home_layout.dart';
+import '../../core/nav_copy.dart';
 import '../../models/dungeon_zoom.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -164,9 +166,12 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         MenuChrome.sectionLabel('SOUND'),
         ShellLayout.gap(4),
         Text(
-          'Mute turns everything off. Music stays on in the hub and in a cave. '
-          'It rises for a boss and marks a cleared floor. '
-          'Ambience is the soft bed underneath. SFX is combat and UI.',
+          NavCopy.playerText(
+            'Mute turns everything off. Music stays on in the hub and in a cave. '
+            'It rises for a boss and marks a cleared floor. '
+            'Ambience is the soft bed underneath. SFX is combat and UI.',
+            state.homeLayout,
+          ),
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
@@ -319,8 +324,11 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           onChanged: director.setAutoCaveOnLeave,
         ),
         Text(
-          'On: closing the app at the hub sends the party into the last cave. '
-          'Off: the hub pays gold only.',
+          NavCopy.playerText(
+            'On: closing the app at the hub sends the party into the last cave. '
+            'Off: the hub pays gold only.',
+            state.homeLayout,
+          ),
           style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
@@ -504,6 +512,21 @@ class _SettingsOverlayState extends State<SettingsOverlay>
             BuildStamp.versionLabel(MetaSystems.currentVersion),
             textAlign: TextAlign.center,
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          ),
+        ],
+        if (kDebugMode || BuildStamp.gitSha.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _SettingsToggle(
+            label: 'NEW LAYOUT (BETA)',
+            value: state.homeLayout == HomeLayout.home,
+            onChanged: (on) {
+              director.setHomeLayout(on ? HomeLayout.home : HomeLayout.classic);
+            },
+          ),
+          _SettingsToggle(
+            label: 'FULL FIGHT PANEL',
+            value: state.homePanelFull,
+            onChanged: director.setHomePanelFull,
           ),
         ],
         if (kDebugMode) ...[

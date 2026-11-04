@@ -25,6 +25,20 @@ class JobsOverlay extends StatelessWidget {
 
   static String chainClaimLabel() => 'CLAIM · chain +5e';
 
+  static String rerollButtonLabel({
+    required bool adFree,
+    required int rerollsLeft,
+  }) {
+    if (adFree) return 'REROLL · FREE ($rerollsLeft left)';
+    return 'WATCH AD · REROLL';
+  }
+
+  static String rerollAdLine() =>
+      'Swap for a new goal after a short ad.';
+
+  static String rerollButtonTip({required int rerollsLeft}) =>
+      'Rewarded ad · new Daily or Side goal · $rerollsLeft left today (UTC)';
+
   static String _slotBadge(int index) => switch (index) {
     0 => 'DAILY',
     1 => 'BOUNTY',
@@ -47,9 +61,17 @@ class JobsOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: director,
+      builder: (context, _) => _board(context),
+    );
+  }
+
+  Widget _board(BuildContext context) {
     final state = director.state;
     final claimable = state.missions.where((m) => m.canClaim).length;
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
@@ -187,14 +209,23 @@ class JobsOverlay extends StatelessWidget {
             ),
           ],
           if (showReroll) ...[
+            if (!director.state.metaDepth.adFree) ...[
+              const SizedBox(height: 2),
+              Text(
+                rerollAdLine(),
+                textAlign: TextAlign.right,
+                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+              ),
+            ],
             const SizedBox(height: 4),
             Align(
               alignment: Alignment.centerRight,
               child: GameButton(
-                label: director.state.metaDepth.adFree
-                    ? 'REROLL ($rerollsLeft left)'
-                    : 'REROLL · WATCH AD',
-                tip: 'New Daily or Side goal · $rerollsLeft left today UTC',
+                label: rerollButtonLabel(
+                  adFree: director.state.metaDepth.adFree,
+                  rerollsLeft: rerollsLeft,
+                ),
+                tip: rerollButtonTip(rerollsLeft: rerollsLeft),
                 onPressed: () => director.rerollQuestSlot(index),
                 style: GameButtonStyle.grey,
                 dense: true,

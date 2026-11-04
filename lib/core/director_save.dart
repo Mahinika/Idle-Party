@@ -480,12 +480,18 @@ extension GameDirectorSave on GameDirector {
     uiFeedback.dismissOfflineSummary();
     _spatialTimer?.cancel();
     _spatial = null;
+    final layout = _phoneHadNoSaveAtBoot ? HomeLayout.home : _state.homeLayout;
+    final panelFull = _state.homePanelFull;
     _state = GameLogic.createInitialState(
       partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
       partyName: partyName,
       partyRace: partyRace,
       partyRaces: partyRaces,
       partySexes: partySexes,
+    ).copyWith(
+      homeLayout: layout,
+      homePanelFull:
+          layout == HomeLayout.home ? true : panelFull,
     );
     if (_phoneHadNoSaveAtBoot) {
       _state = ReinstallPouch.markDue(_state);
@@ -503,6 +509,9 @@ extension GameDirectorSave on GameDirector {
     await _persistFlush();
     _saveSlots = await _storage.listSlots();
     _directorNotify();
+    if (_state.homeLayout == HomeLayout.home) {
+      enterDungeon(dungeonId: 'sandy');
+    }
     unawaited(syncFriendReferral());
   }
 

@@ -1202,6 +1202,9 @@ def in_game(nodes: list[Node]) -> bool:
         return False
     return (
         find_label(nodes, "ENTER DUNGEON", exact=True) is not None
+        or find_label(nodes, "ENTER", exact=True) is not None
+        or find_label(nodes, "HEROES", exact=True) is not None
+        or find_label(nodes, "FIGHT", exact=True) is not None
         or find_label(nodes, "GEAR", exact=True) is not None
         or "welcome back" in joined(nodes).lower()
     )

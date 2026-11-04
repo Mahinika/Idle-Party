@@ -1,0 +1,71 @@
+# Session log
+
+- **2026-11-03 15:38 UTC** — Baseline gameplay (user save mid-run)
+- **2026-11-03 15:39 UTC** — tap (108,2280) → Bottom nav tab 1 (star/box)
+- **2026-11-03 15:39 UTC** — tap (324,2280) → Bottom nav tab 2 (hex/core)
+- **2026-11-03 15:39 UTC** — tap (540,2280) → Return to center battle tab
+- **2026-11-03 15:39 UTC** — tap (756,2280) → Bottom nav tab 4 (portal/dungeon)
+- **2026-11-03 15:39 UTC** — tap (972,2280) → Bottom nav tab 5 (shop)
+- **2026-11-03 15:39 UTC** — tap (1020,170) → Top-right menu
+- **2026-11-03 15:39 UTC** — tap (80,650) → Left rail Booster
+- **2026-11-03 15:39 UTC** — tap (80,910) → Left rail Growth Center
+- **2026-11-03 15:39 UTC** — tap (1000,650) → Right rail Mission
+- **2026-11-03 15:39 UTC** — tap (1000,780) → Right rail Event
+- **2026-11-03 15:39 UTC** — tap (540,2280) → Back to battle tab
+- **2026-11-03 15:40 UTC** — tap (540,2180) → Center nav: main battle (no spend)
+- **2026-11-03 15:40 UTC** — Battle tab upgrade list visible
+
+**Constraint:** From here on, no Buy / Summon / Play / Claim / Special Offer taps — documentation only.
+- **2026-11-03 15:40 UTC** — tap (540,2180) → Center nav: main battle (no spend)
+- **2026-11-03 15:40 UTC** — Battle tab upgrade list visible
+- Walkthrough — 15 battle home
+- Walkthrough — 16 battle upgrade scroll
+- Walkthrough — 17 cards tab
+- Walkthrough — 18 mythic card tab
+- Walkthrough — 19 meta hub
+- Walkthrough — 20_meta_epic.png Epic
+- Walkthrough — 21_meta_system_admin.png System Admin
+- Walkthrough — 22_meta_soul.png Soul
+- Walkthrough — 23_meta_science.png Science Foundation
+- Walkthrough — 24_meta_dimension.png Dimension
+- Walkthrough — 25_meta_art.png Art Society
+- Walkthrough — 26 challenge hub
+- Walkthrough — 15 battle home
+- Walkthrough — 16 battle upgrade scroll
+- Walkthrough — 17 cards tab
+- Walkthrough — 18 mythic card tab
+- Walkthrough — 19 meta hub
+- Walkthrough — 20_meta_epic.png Epic
+- Walkthrough — 21_meta_system_admin.png System Admin
+- Walkthrough — 22_meta_soul.png Soul
+- Walkthrough — 23_meta_science.png Science Foundation
+- Walkthrough — 24_meta_dimension.png Dimension
+- Walkthrough — 25_meta_art.png Art Society
+- Walkthrough — 26 challenge hub
+- Walkthrough — 27 new world tab
+- Walkthrough — 28 leaderboard
+- Walkthrough — 29 preset
+- Walkthrough — 30 shop summons tab
+- Walkthrough — 31 special offer tab (no taps on SKUs)
+- Walkthrough — 32 special offer scrolled
+- **2026-11-03 15:46 UTC** — Cancel quit dialog
+- **2026-11-03 15:46 UTC** — second cancel attempt
+- **2026-11-03 15:53 UTC** — continue mapping from current screen
+- **2026-11-03 16:19 UTC** — current frame before remaining map
+- **2026-11-03 16:22 UTC** — tap (1027,180) → open hamburger
+- **2026-11-03 16:22 UTC** — tap (818,347) → hamburger News
+- **2026-11-03 16:22 UTC** — tap (540,2200) → tap outside news
+- **2026-11-03 16:29 UTC** — tap (1030,190) → hamburger retry
+- **2026-11-03 16:30 UTC** — tap (974,480) → bag icon center
+- **2026-11-03 16:31 UTC** — tap (80,900) → dismiss buff tray without pressing item X
+- **2026-11-03 16:37 UTC** — tap (796,291) → Info letter pixel
+- **2026-11-03 16:40 UTC** — after long-press wake
+- **2026-11-03 16:41 UTC** — tap (70,304) → left rail Booster
+- **2026-11-03 16:43 UTC** — tap (30,200) → tap outside membership
+- **2026-11-03 16:45 UTC** — tap (160,500) → Pass button from growth popup
+- **2026-11-03 16:46 UTC** — tap (150,610) → Growth Center Pass, view only
+- **2026-11-03 16:50 UTC** — tap (80,580) → toggle Growth popup closed
+- **2026-11-03 17:28 UTC** — before missing-screen pass
+- **2026-11-03 17:29 UTC** — tap (1020,460) → right rail Event
+- **2026-11-03 17:30 UTC** — tap (1035,444) → Event icon center
+- **2026-11-03 17:33 UTC** — tap (1047,432) → Event balloon while tray is closed

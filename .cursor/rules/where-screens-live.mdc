@@ -19,26 +19,29 @@ needs it — still use `GameTheme` / `MenuChrome` / `GameButton` / `GameIcon`.
 
 ## Where features live (placement map)
 
-| Player job | Destination | Local focus |
-|------------|-------------|-------------|
-| Equip / BAG / MERGE / ROSTER | **GEAR** | `GearPanel` |
-| Forge (this-run gold) / gold market | **GOLD** | FORGE + MARKET |
-| Forever SCROLLS / ad-free / supporter / **REDEEM CODE** | **SHOP** | `ShopDock` (same redeem also MORE → SETTINGS) |
-| Camp / Blessing / relics / pets | **ESSENCE** | CAMP + BLESSING + RELICS + PETS |
-| KEYSTONE dial / KEY habit | **KEY** tab | prefer not burying under MORE |
-| QUESTS / Craft / Settings / Info | **MORE** | `MoreSection` rows; monthly **Craft Trial** is CRAFT, not ENDGAME |
-| “What do I do now?” / enter | **Hub TODAY** | `ChaseContract` |
-| Pick a cave | **Hub PATH** | continent atlas (`hub_world_map`) — no scroll strip |
-| Rewarded boost tickets / TIP A FRIEND | **Hub SCROLLS** | under the cave button (`HubPowerups`); not SHOP |
+Current bottom bar on the home layout: **HEROES · ESSENCE · FIGHT · MAP ·
+SHOP**. MENU is the top button. FORGE, CAMP, and MARKET sit under the fight.
+MAP is PATH and ENDGAME. ESSENCE tiles are BLESSING, RELICS, PETS, CODEX, and
+APEX. Camp is the screen when the party is outside a cave. A new game starts
+in Sandy. Early bar is HEROES and FIGHT. ESSENCE, MAP, and SHOP appear after
+the first boss.
 
-IA copy scopes (labels/guides, not colors): **RUN** · **TODAY** · **ACCOUNT**
-(`MenuChrome.scopeChip` / `sectionLabelScoped`).
+Classic bar, still available from SETTINGS on a test build: **GEAR · GOLD ·
+SHOP · ESSENCE · MORE** (+ **KEY** when endgame jargon unlocks; dungeon
+**LEAVE**).
 
-Current bottom bar family: **GEAR · GOLD · SHOP · ESSENCE · MORE** (+ **KEY**
-when endgame jargon unlocks; dungeon **LEAVE**). Early bar is **GEAR +
-MORE**; **GOLD/SHOP** after first boss or Ascend; **ESSENCE** when camp
-matters (see `MenuTabs.showCamp`). Prefer `MenuRouter` + `MenuSurface` +
-`AppBottomBar`.
+| Player job | Home layout | Classic |
+|------------|-------------|---------|
+| Equip / BAG / MERGE / ROSTER | **HEROES** | **GEAR** |
+| Forge / market / camp upgrades | Panel under the fight | **GOLD** and ESSENCE → CAMP |
+| Blessing / relics / pets / codex / apex | **ESSENCE** tiles | **ESSENCE** / MORE |
+| Pick a cave or a hunt | **MAP** | Hub PATH / ENDGAME |
+| Shop / redeem | **SHOP** and MENU → SETTINGS | **SHOP** and MORE → SETTINGS |
+| Quests / craft / settings / info | **MENU** | **MORE** |
+| What to do now | Top-bar chase line, ENTER in camp | Hub TODAY |
+
+Prefer `MenuRouter` + `MenuSurface` + `AppBottomBar` on the classic bar, and
+`HomeShell` on the home layout.
 
 ## Before shipping a UI feature
 

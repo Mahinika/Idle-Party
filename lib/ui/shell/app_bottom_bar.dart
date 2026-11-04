@@ -44,6 +44,7 @@ class AppBottomBar extends StatelessWidget {
     MenuRoute.essence => 'ESSENCE',
     MenuRoute.key => 'KEY',
     MenuRoute.more => 'MORE',
+    MenuRoute.map => 'MAP',
     MenuRoute.none => '',
   };
 
@@ -54,6 +55,7 @@ class AppBottomBar extends StatelessWidget {
     MenuRoute.essence => GameTheme.navEssence,
     MenuRoute.key => GameTheme.navKey,
     MenuRoute.more => GameTheme.navMore,
+    MenuRoute.map => GameTheme.navKey,
     MenuRoute.none => GameTheme.navMore,
   };
 
@@ -64,6 +66,7 @@ class AppBottomBar extends StatelessWidget {
     MenuRoute.essence => GameIcon.asset(UiIcon.essence, size: size),
     MenuRoute.key => GameIcon.asset(UiIcon.key, size: size),
     MenuRoute.more => GameIcon.asset(UiIcon.more, size: size),
+    MenuRoute.map => GameIcon.asset(UiIcon.boots, size: size),
     MenuRoute.none => GameIcon.asset(UiIcon.more, size: size),
   };
 
@@ -74,6 +77,7 @@ class AppBottomBar extends StatelessWidget {
     MenuRoute.essence => alerts.essence,
     MenuRoute.key => alerts.key,
     MenuRoute.more => alerts.more,
+    MenuRoute.map => alerts.more,
     MenuRoute.none => MenuAlert.quiet,
   };
 

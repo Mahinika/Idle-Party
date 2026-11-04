@@ -8,13 +8,19 @@ import '../../core/game_state.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../web_click_bridge.dart';
 import 'income_overlay.dart';
 import 'power_upgrade_row.dart';
 import 'shell_common.dart';
 
 class SanctuaryOverlay extends StatefulWidget {
-  const SanctuaryOverlay({super.key, required this.director});
+  const SanctuaryOverlay({
+    super.key,
+    required this.director,
+    this.inlineUnderFight = false,
+  });
   final GameDirector director;
+  final bool inlineUnderFight;
 
   @override
   State<SanctuaryOverlay> createState() => _SanctuaryOverlayState();
@@ -23,6 +29,7 @@ class SanctuaryOverlay extends StatefulWidget {
 class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
   /// Shared buy size for every CAMP row (#53): 1 / 3 / 5 / max.
   int _buyLevels = 1;
+  bool _showAllTracks = false;
 
   GameDirector get director => widget.director;
 
@@ -65,6 +72,9 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
   Widget build(BuildContext context) {
     final state = director.state;
     final campOpen = MenuTabs.showCamp(state);
+    if (widget.inlineUnderFight) {
+      return _inlineUnderFightBody(state, campOpen);
+    }
     final maxBulk = campOpen
         ? _tracks
             .map((t) => GameLogic.sanctuaryBulkAffordableLevels(state, t))
@@ -108,6 +118,81 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
             style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
           ),
         const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _inlineUnderFightBody(GameState state, bool campOpen) {
+    if (!campOpen) {
+      return Padding(
+        padding: const EdgeInsets.all(8),
+        child: Text(
+          'CAMP tracks unlock on ESSENCE after the first hour.',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ),
+      );
+    }
+    final maxBulk = _tracks
+        .map((t) => GameLogic.sanctuaryBulkAffordableLevels(state, t))
+        .fold<int>(1, (a, b) => a > b ? a : b);
+    final buyCap = maxBulk.clamp(1, 99);
+    final effectiveBuy = _buyLevels.clamp(1, buyCap);
+    final pick = GameLogic.recommendedSanctuaryTrack(state);
+    final tracks = _showAllTracks ? _tracks : <String>[pick];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (buyCap > 1)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+            child: _bulkChooser(buyCap, effectiveBuy),
+          ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: WebClickScope(
+            label: _showAllTracks ? 'Show best only' : 'All tracks',
+            onPressed: () => setState(() => _showAllTracks = !_showAllTracks),
+            child: Semantics(
+              button: true,
+              label: _showAllTracks ? 'Show best only' : 'All tracks',
+              child: InkWell(
+                onTap: () => setState(() => _showAllTracks = !_showAllTracks),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+                  child: Text(
+                    _showAllTracks ? 'Show best only' : 'All tracks',
+                    style: GameTheme.menuTitle(
+                      size: 11,
+                      color: GameTheme.torch,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (_showAllTracks)
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  for (final track in tracks)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: _campTrackCard(state, track, effectiveBuy),
+                    ),
+                ],
+              ),
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: _campTrackCard(state, pick, effectiveBuy),
+          ),
       ],
     );
   }

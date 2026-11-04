@@ -246,6 +246,7 @@ String _chaseIcon(HubChaseKind kind) => switch (kind) {
   HubChaseKind.claimDailyVault ||
   HubChaseKind.dailyVaultProgress => UiIcon.chest,
   HubChaseKind.claimMissions ||
+  HubChaseKind.contractAlmost ||
   HubChaseKind.weekGoal ||
   HubChaseKind.monthGoal => UiIcon.quests,
   HubChaseKind.meetHero => UiIcon.star,

@@ -4,9 +4,10 @@
 
 **IA + flat nav + feature placement** (Game UX Director): see
 [`.cursor/rules/where-screens-live.mdc`](../.cursor/rules/where-screens-live.mdc).
-Bottom destinations are **GEAR · GOLD · SHOP · ESSENCE · MORE · KEY** via
-`MenuRouter` — not a free-form submenu tree. RUN / TODAY / ACCOUNT below are
-**copy scopes**, not bottom tabs.
+Bottom destinations on the home layout are **HEROES · ESSENCE · FIGHT · MAP ·
+SHOP**. MENU is the top button. FORGE, CAMP, and MARKET sit under the fight.
+A test build can switch back to **GEAR · GOLD · SHOP · ESSENCE · MORE · KEY**
+in SETTINGS. RUN / TODAY / ACCOUNT below are **copy scopes**, not bottom tabs.
 
 ---
 

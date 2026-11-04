@@ -37,6 +37,7 @@ extension GameDirectorForge on GameDirector {
     if (_isLoading) {
       return;
     }
+    final hadForge = GameLogic.hasForgePurchases(_state);
     final beforeRec = GameLogic.recommendedForgeUpgrade(_state);
     final beforeAtk = _state.attackBonus;
     final beforeMove = _state.moveSpeedBonus;
@@ -45,7 +46,7 @@ extension GameDirectorForge on GameDirector {
     if (identical(updated, _state)) {
       return;
     }
-    _applyUpgrade(updated);
+    _applyUpgrade(_forgePanelAfterBuy(updated, hadForgeBefore: hadForge));
     _applyFunnelTick(FunnelAnalytics.onFirstUpgrade(_state));
     GameAudio.forgeUp();
     final afterRec = GameLogic.recommendedForgeUpgrade(_state);
@@ -66,6 +67,7 @@ extension GameDirectorForge on GameDirector {
     if (_isLoading) {
       return;
     }
+    final hadForge = GameLogic.hasForgePurchases(_state);
     final beforeRec = GameLogic.recommendedForgeUpgrade(_state);
     final beforeAtk = _state.attackBonus;
     final beforeMove = _state.moveSpeedBonus;
@@ -78,7 +80,7 @@ extension GameDirectorForge on GameDirector {
     if (identical(updated, _state)) {
       return;
     }
-    _applyUpgrade(updated);
+    _applyUpgrade(_forgePanelAfterBuy(updated, hadForgeBefore: hadForge));
     _applyFunnelTick(FunnelAnalytics.onFirstUpgrade(_state));
     GameAudio.forgeUp();
     final afterRec = GameLogic.recommendedForgeUpgrade(_state);
@@ -96,5 +98,17 @@ extension GameDirectorForge on GameDirector {
         _state.attackSpeedBonus > beforeHaste) {
       showToast(_forgeSpeedToast('HASTE'), life: 2.0);
     }
+  }
+
+  GameState _forgePanelAfterBuy(
+    GameState updated, {
+    required bool hadForgeBefore,
+  }) {
+    if (hadForgeBefore ||
+        _state.homeLayout != HomeLayout.home ||
+        !_state.homePanelFull) {
+      return updated;
+    }
+    return updated.copyWith(homePanelFull: false);
   }
 }

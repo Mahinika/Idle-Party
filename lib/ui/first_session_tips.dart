@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/game_director.dart';
 import '../core/game_logic.dart';
 import '../core/game_state.dart';
+import '../core/home_layout.dart';
 import '../core/menu_alerts.dart';
 
 /// Where a one-line coach hint lives (the real control, not a GOT IT card).
@@ -109,6 +110,20 @@ class FirstSessionTips extends StatelessWidget {
     return CoachHint(id: tip.id, line: line, target: target);
   }
 
+  /// Home layout names the real control. Classic copy stays.
+  static String displayLine(CoachHint hint, GameState state) {
+    if (state.homeLayout != HomeLayout.home) return hint.line;
+    return switch (hint.target) {
+      CoachTarget.gold => 'FORGE under the fight.',
+      CoachTarget.gear => 'Tap HEROES.',
+      CoachTarget.essence => 'Tap ESSENCE.',
+      CoachTarget.enter => 'Tap ENTER.',
+      CoachTarget.godhand => hint.line,
+      CoachTarget.farmPush => hint.line,
+      CoachTarget.kit => 'Tap a hero.',
+    };
+  }
+
   /// FARM/PUSH labels match the dungeon mode chips when jargon is on.
   static String _farmPushLine(GameState s) {
     if (GameLogic.plainPlayerChrome(s)) {
@@ -176,7 +191,12 @@ class FirstSessionTips extends StatelessWidget {
         return tip.id;
       }
       if (tip.id == 'forge') {
-        if (inDungeon || !MenuTabs.showGold(s)) continue;
+        if (!MenuTabs.showGold(s)) continue;
+        if (s.homeLayout == HomeLayout.home) {
+          if (!inDungeon) continue;
+        } else if (inDungeon) {
+          continue;
+        }
         return tip.id;
       }
       if (tip.id == 'sanctuary') {

@@ -9,19 +9,27 @@ import '../../core/nav_intent.dart';
 import 'essence_dock.dart';
 import 'gold_dock.dart';
 import 'inventory_dock.dart';
+import 'jobs_overlay.dart';
 import 'overlay_scaffold.dart';
 import 'power_meta_pillars.dart';
 import 'shop_dock.dart';
 import '../meta/keystone_sheet.dart';
 import 'whats_new_overlay.dart';
+import 'home/home_menu_grid.dart';
 
 /// The one menu sheet, shared by hub and dungeon.
 /// All routes fill the stack above the shared [AppBottomBar] (full height).
 class MenuSurface extends StatefulWidget {
-  const MenuSurface({super.key, required this.director, required this.router});
+  const MenuSurface({
+    super.key,
+    required this.director,
+    required this.router,
+    this.home = false,
+  });
 
   final GameDirector director;
   final MenuRouter router;
+  final bool home;
 
   @override
   State<MenuSurface> createState() => _MenuSurfaceState();
@@ -105,6 +113,7 @@ class _MenuSurfaceState extends State<MenuSurface> {
       panel: router.gearPanel,
       onPanelChanged: (panel) => router.gearPanel = panel,
       flatChrome: true,
+      showTabRail: !widget.home,
       onSelect: session.selectItem,
       onPutCombine: _putInCombinator,
       onEquip: () {
@@ -152,16 +161,24 @@ class _MenuSurfaceState extends State<MenuSurface> {
   Widget build(BuildContext context) {
     final d = widget.director;
     if (router.route == MenuRoute.none) return const SizedBox.shrink();
+    final questBoard = widget.home &&
+        router.route == MenuRoute.more &&
+        router.moreSection == MoreSection.quests;
+    final homeMenuGrid = widget.home &&
+        router.route == MenuRoute.more &&
+        !router.homeAtSub &&
+        !questBoard;
     // Full height above the shared bottom bar — same for every tab so GOLD /
     // SHOP / ESSENCE / KEY / MORE match GEAR (never cover the bar; OverlayScrim
     // lives only inside the Expanded scene stack).
     return OverlayScrim(
-      title: router.title,
-      subtitle: router.jobHintFor(state),
+      title: homeMenuGrid ? '' : router.title,
+      subtitle: homeMenuGrid ? '' : router.jobHintFor(state),
       heightFactor: 1,
-      gold: state.gold,
-      essence: state.essence,
+      gold: widget.home ? null : state.gold,
+      essence: widget.home ? null : state.essence,
       showEssence: MenuTabs.showCamp(state),
+      showClose: !widget.home || questBoard,
       onClose: router.close,
       child: switch (router.route) {
         MenuRoute.gear => _inventoryDock(),
@@ -170,14 +187,22 @@ class _MenuSurfaceState extends State<MenuSurface> {
           panel: router.goldPanel,
           onPanelChanged: (panel) => router.goldPanel = panel,
         ),
-        MenuRoute.shop => ShopDock(director: d),
+        MenuRoute.shop => ShopDock(director: d, homeCompact: widget.home),
         MenuRoute.essence => EssenceDock(
           director: d,
           panel: router.essencePanel,
           onPanelChanged: (panel) => router.essencePanel = panel,
         ),
         MenuRoute.key => KeystoneSheet(director: d),
-        MenuRoute.more => MoreList(
+        MenuRoute.map => const SizedBox.shrink(),
+        MenuRoute.more => questBoard
+            ? SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                child: JobsOverlay(director: d),
+              )
+            : homeMenuGrid
+            ? HomeMenuGrid(director: d, router: router)
+            : MoreList(
           director: d,
           section: router.moreSection,
           initialInfoPane: router.moreInfoPane,

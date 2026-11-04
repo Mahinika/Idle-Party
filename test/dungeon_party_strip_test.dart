@@ -82,6 +82,59 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('home party frame is a horizontal strip without overflow', (
+    tester,
+  ) async {
+    final director = GameDirector.preview();
+    addTearDown(director.dispose);
+    final entered = GameLogic.enterDungeon(director.state);
+    final world = SpatialCombat.build(entered);
+    director.debugAttachSpatial(world);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 360,
+            height: 120,
+            child: PartyCornerHud(
+              director: director,
+              selectedHeroIndex: 0,
+              onSelectHero: (_) {},
+              onOpenEquip: () {},
+              homeRow: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.textContaining(' L'), findsNWidgets(3));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  test('party CC chips list root slow and hex', () {
+    final actor = SpatialActor(
+      id: 'h0',
+      name: 'Test',
+      team: SpatialTeam.hero,
+      x: 0,
+      y: 0,
+      hp: 100,
+      maxHp: 100,
+      attack: 10,
+      defense: 5,
+      moveSpeed: 2,
+      attackRange: 1,
+      attackCooldown: 1,
+    )..rootTimer = 2
+      ..attackSlowTimer = 1;
+    expect(partyCcChipLabels(actor), ['ROOT', 'SLOW']);
+    actor.rootTimer = 0;
+    actor.demoShoutTimer = 3;
+    expect(partyCcChipLabels(actor), ['SLOW', 'HEX']);
+  });
+
   test('an empty hero name falls back to the role word', () {
     final hero = PartyHero.starting(
       name: '   ',

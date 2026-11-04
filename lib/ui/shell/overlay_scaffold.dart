@@ -18,6 +18,7 @@ class OverlayScrim extends StatelessWidget {
     this.gold,
     this.essence,
     this.showEssence = true,
+    this.showClose = true,
   });
 
   final String title;
@@ -29,6 +30,7 @@ class OverlayScrim extends StatelessWidget {
   final int? gold;
   final int? essence;
   final bool showEssence;
+  final bool showClose;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +62,7 @@ class OverlayScrim extends StatelessWidget {
                 gold: gold,
                 essence: essence,
                 showEssence: showEssence,
+                showClose: showClose,
                 child: child,
               ),
             ],
@@ -105,6 +108,7 @@ class _MobileSheet extends StatelessWidget {
     this.gold,
     this.essence,
     this.showEssence = true,
+    this.showClose = true,
   });
 
   final String title;
@@ -115,6 +119,7 @@ class _MobileSheet extends StatelessWidget {
   final int? gold;
   final int? essence;
   final bool showEssence;
+  final bool showClose;
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +140,7 @@ class _MobileSheet extends StatelessWidget {
         gold: gold,
         essence: essence,
         showEssence: showEssence,
+        showClose: showClose,
         child: child,
       ),
     );
@@ -175,6 +181,7 @@ class _OverlayPanel extends StatelessWidget {
     this.gold,
     this.essence,
     this.showEssence = true,
+    this.showClose = true,
   });
 
   final String title;
@@ -187,34 +194,41 @@ class _OverlayPanel extends StatelessWidget {
   final int? gold;
   final int? essence;
   final bool showEssence;
+  final bool showClose;
 
   @override
   Widget build(BuildContext context) {
     final handle = showHandle ?? borderRadius != null;
+    final showHeader =
+        title.isNotEmpty || showClose || gold != null || essence != null;
     final panel = Container(
       margin: margin,
       padding: EdgeInsets.fromLTRB(
-        ShellLayout.sheetHorizontal,
-        handle ? 6 : ShellLayout.sheetVertical,
-        ShellLayout.sheetHorizontal,
-        ShellLayout.sheetVertical,
+        12,
+        handle ? 6 : (showHeader ? 6 : 0),
+        12,
+        8,
       ),
       decoration: MenuChrome.panel(borderRadius: borderRadius),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (handle) MenuChrome.sheetHandle(),
-          _SheetHeader(
-            title: title,
-            subtitle: subtitle,
-            onClose: onClose,
-            gold: gold,
-            essence: essence,
-            showEssence: showEssence,
-          ),
-          ShellLayout.gap(4),
-          ShellLayout.divider(),
-          ShellLayout.gap(6),
+          if (showHeader)
+            _SheetHeader(
+              title: title,
+              subtitle: subtitle,
+              onClose: onClose,
+              gold: gold,
+              essence: essence,
+              showEssence: showEssence,
+              showClose: showClose,
+            ),
+          if (showHeader) ...[
+            ShellLayout.gap(4),
+            ShellLayout.divider(),
+            ShellLayout.gap(6),
+          ],
           Expanded(child: child),
         ],
       ),
@@ -235,6 +249,7 @@ class _SheetHeader extends StatelessWidget {
     required this.gold,
     required this.essence,
     required this.showEssence,
+    required this.showClose,
   });
 
   final String title;
@@ -243,6 +258,7 @@ class _SheetHeader extends StatelessWidget {
   final int? gold;
   final int? essence;
   final bool showEssence;
+  final bool showClose;
 
   @override
   Widget build(BuildContext context) {
@@ -300,7 +316,7 @@ class _SheetHeader extends StatelessWidget {
             children: [
               wallet!,
               const Spacer(),
-              close,
+              if (showClose) close,
             ],
           ),
         ],
@@ -316,7 +332,7 @@ class _SheetHeader extends StatelessWidget {
           wallet,
           const SizedBox(width: 6),
         ],
-        close,
+        if (showClose) close,
       ],
     );
   }

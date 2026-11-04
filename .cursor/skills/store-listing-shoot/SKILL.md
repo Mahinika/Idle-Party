@@ -20,7 +20,12 @@ fallback, not the default.
 2. AVD `Samsung_A56` booted, `com.idleparty.app` on the version in
    `ChangelogCatalog.currentVersion`.
 3. `py -3 tool/store_listing/capture_a56_shots.py`
-   - Shots 1–3: `first_minute_save.json` (new-save Sandy).
+   - Shots 1–3: `first_minute_save.json`. A new save is already in Sandy.
+     Stay on that fight. The bottom bar reads HEROES and FIGHT. Do not
+     tap LEAVE, and do not wait for ENTER DUNGEON or a hub. Shot 3 is
+     the chase line on that same fight. The file stays
+     `03_hub_today.png`. `shoot_first_minute` still leaves the cave and
+     looks for ENTER DUNGEON; take that leave out before this shoot.
    - Shots 4–8: `showcase_save.json` (AL3 hub).
    - Restores the emulator save when it finishes.
 4. `py -3 tool/store_listing/compose_shots.py`
@@ -37,8 +42,9 @@ fallback, not the default.
 
 ## What the page is
 
-- Shots 1–3 and the first 20 seconds of the video are the Sandy crawl a new
-  player sees. No Gauntlet, Greater Rift, Hell's Gate, or KEY in that lead.
+- Shots 1–3 and the first 20 seconds of the video are the Sandy fight a new
+  player is already standing in. No hub, no ENTER DUNGEON, no Gauntlet,
+  Greater Rift, Hell's Gate, or KEY in that lead.
 - Captions stay in the top band, under 20% of the frame.
 - Video music is owned `assets/custom/audio/music/bed_warm.ogg`. Never
   `hub.ogg` (that file is CC0 and can draw a Content ID claim).
@@ -73,5 +79,5 @@ so `first_minute_save.json` matches the build.
 ## Done when
 
 - `flutter test test/store_listing_plan_test.dart` is green.
-- The shots show this build's hub and hero (version matches PATCH NOTES).
+- The shots show this build's Sandy fight and hero (version matches PATCH NOTES).
 - No AAB was uploaded.

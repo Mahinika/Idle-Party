@@ -221,4 +221,13 @@ GameState _gameLogicForgeApplyUpgrade( GameState state, { required PartyUpgradeT
   }
 }
 
+bool _gameLogicHasForgePurchases(GameState state) {
+  return state.attackBonus > 0 ||
+      state.defenseBonus > 0 ||
+      state.vitalityBonus > 0 ||
+      state.moveSpeedBonus > 0 ||
+      state.attackSpeedBonus > 0 ||
+      state.critBonus > 0 ||
+      state.masteryBonus > 0;
+}
 

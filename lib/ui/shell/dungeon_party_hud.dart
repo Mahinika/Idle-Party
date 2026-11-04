@@ -33,6 +33,64 @@ String partyStripName(PartyHero hero, {required bool plainEnglish}) {
   return name;
 }
 
+/// Brief crowd-control chips when the hero is rooted, slowed, or hexed.
+List<String> partyCcChipLabels(SpatialActor? actor) {
+  if (actor == null || !actor.isAlive) return const [];
+  final out = <String>[];
+  if (actor.rootTimer > 0) out.add('ROOT');
+  if (actor.attackSlowTimer > 0) out.add('SLOW');
+  if (actor.demoShoutTimer > 0) out.add('HEX');
+  return out;
+}
+
+Color partyCcChipColor(List<String> labels) {
+  if (labels.contains('ROOT')) return GameTheme.mossLit;
+  if (labels.contains('HEX')) return GameTheme.bloodLit;
+  return GameTheme.torchHot;
+}
+
+/// CC suffix for compact party rows (home strip and classic strip).
+Widget partyCcChipSuffix(
+  SpatialActor? actor, {
+  double size = 6,
+  bool dotOnly = false,
+}) {
+  final labels = partyCcChipLabels(actor);
+  if (labels.isEmpty) return const SizedBox.shrink();
+  if (dotOnly) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 2),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: partyCcChipColor(labels),
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+  return Padding(
+    padding: const EdgeInsets.only(left: 2),
+    child: Text(
+      labels.join('·'),
+      maxLines: 1,
+      style: GameTheme.pixel(size: size, color: partyCcChipColor(labels)),
+    ),
+  );
+}
+
+bool _kitFocusBombUp(SpatialActor spatial, SpatialWorld? world) {
+  final id = spatial.focusEnemyId;
+  if (id == null || world == null) return false;
+  for (final e in world.enemies) {
+    if (e.id == id && e.hp > 0) {
+      return e.livingBombTimer >= 2;
+    }
+  }
+  return false;
+}
+
 /// Name + level on the crawl strip. A long name scales down; the level stays.
 class PartyHudSpecLine extends StatelessWidget {
   const PartyHudSpecLine({
@@ -96,11 +154,15 @@ class PartyCornerHud extends StatefulWidget {
     required this.selectedHeroIndex,
     required this.onSelectHero,
     required this.onOpenEquip,
+    this.homeRow = false,
   });
   final GameDirector director;
   final int selectedHeroIndex;
   final ValueChanged<int> onSelectHero;
   final VoidCallback onOpenEquip;
+
+  /// One line under the home fight, so the forge keeps its buy rows.
+  final bool homeRow;
 
   @override
   State<PartyCornerHud> createState() => _PartyCornerHudState();
@@ -112,6 +174,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.72;
   static const _dimOpacityPhone = 0.72;
+  static const _homePartyRowHeight = 32.0;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
@@ -174,6 +237,19 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   void _onHeroTap(int i) {
     _bump();
     widget.director.dismissTip('kit_abilities');
+    if (widget.homeRow) {
+      if (widget.selectedHeroIndex == i && _kitOpen) {
+        setState(() => _kitOpen = false);
+        return;
+      }
+      if (widget.selectedHeroIndex == i && !_kitOpen) {
+        setState(() => _kitOpen = true);
+        return;
+      }
+      widget.onSelectHero(i);
+      setState(() => _kitOpen = false);
+      return;
+    }
     if (widget.selectedHeroIndex == i && _kitOpen) {
       setState(() => _kitOpen = false);
       return;
@@ -213,6 +289,134 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
       ),
     );
     if (ok == true && mounted) widget.onOpenEquip();
+  }
+
+  Widget _homeHeroTap({
+    required int i,
+    required List<PartyHero> party,
+    required bool plainEnglish,
+    required SpatialWorld? world,
+    required GameState state,
+    required double rowHeight,
+    bool dense = false,
+  }) {
+    final hero = party[i];
+    final spatial = _spatialFor(world, i);
+    return SizedBox(
+      height: rowHeight,
+      child: ClipRect(
+        child: WebClickScope(
+        label: hero.name,
+        onPressed: () => _onHeroTap(i),
+        child: Semantics(
+          button: true,
+          selected: widget.selectedHeroIndex == i,
+          label:
+              '${hero.name} '
+              '${hero.displayRoleLabel(plainEnglish: plainEnglish)} — tap for abilities, '
+              'long-press for gear',
+          onTap: () => _onHeroTap(i),
+          onLongPress: _onLongPressGear,
+          excludeSemantics: true,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _onHeroTap(i),
+              onLongPress: _onLongPressGear,
+              borderRadius: BorderRadius.circular(3),
+              child: _HomePartyChip(
+                hero: hero,
+                partyIndex: i,
+                name: hero.name,
+                level: hero.level,
+                hp: spatial?.hp ?? hero.currentHp,
+                maxHp: spatial?.effectiveMaxHp ??
+                    state.effectiveHeroMaxHp(hero),
+                selected: widget.selectedHeroIndex == i,
+                spatial: spatial,
+                dense: dense,
+                demonForm: hero.specId == HeroSpecId.demonology &&
+                    (spatial?.combustionTimer ?? 0) > 0,
+              ),
+            ),
+          ),
+        ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHomePartyFrame({
+    required GameState state,
+    required SpatialWorld? world,
+    required bool plainEnglish,
+    required List<PartyHero> party,
+    required int heroCount,
+    required bool showSideKit,
+    required PartyHero? kitHero,
+    required SpatialActor? kitActor,
+    required bool showFlask,
+  }) {
+    const lineHeight = _homePartyRowHeight;
+    final denseParty = heroCount >= 5;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: GameTheme.border.withValues(alpha: 0.45),
+              ),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 2, 4, 3),
+            child: SizedBox(
+              height: lineHeight,
+              child: Row(
+                children: [
+                  for (var i = 0; i < heroCount; i++) ...[
+                    if (i > 0)
+                      Container(
+                        width: 1,
+                        height: lineHeight - 4,
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        color: GameTheme.border.withValues(alpha: 0.35),
+                      ),
+                    Expanded(
+                      child: _homeHeroTap(
+                        i: i,
+                        party: party,
+                        plainEnglish: plainEnglish,
+                        world: world,
+                        state: state,
+                        rowHeight: lineHeight,
+                        dense: denseParty,
+                      ),
+                    ),
+                  ],
+                  if (showFlask)
+                    DungeonFlaskButton(
+                      director: widget.director,
+                      onTap: widget.director.useConsumable,
+                      compact: true,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (showSideKit && kitHero != null && kitActor != null)
+          _HomeKitStrip(
+            hero: kitHero,
+            spatial: kitActor,
+            plainEnglish: plainEnglish,
+            world: world,
+          ),
+      ],
+    );
   }
 
   @override
@@ -278,7 +482,19 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
       inDungeon: true,
     );
 
-    final panel = SizedBox(
+    final panel = widget.homeRow
+        ? _buildHomePartyFrame(
+            state: state,
+            world: world,
+            plainEnglish: plainEnglish,
+            party: party,
+            heroCount: heroCount,
+            showSideKit: showSideKit,
+            kitHero: kitHero,
+            kitActor: kitActor,
+            showFlask: showFlask,
+          )
+        : SizedBox(
       width: fullWidth,
       child: Stack(
         clipBehavior: Clip.none,
@@ -402,10 +618,14 @@ class DungeonFlaskButton extends StatelessWidget {
     super.key,
     required this.director,
     required this.onTap,
+    this.compact = false,
   });
 
   final GameDirector director;
   final VoidCallback onTap;
+
+  /// Inline on the home party row — no extra strip height.
+  final bool compact;
 
   /// Gap + rule + tap row. Kit panel bottom inset matches this.
   static const double stripReserve = 40;
@@ -498,6 +718,53 @@ class DungeonFlaskButton extends StatelessWidget {
         ? 'Use healing $buttonWord$countLabel, party critical'
         : 'Use healing $buttonWord$countLabel';
     final labelColor = urgent ? GameTheme.torchHot : GameTheme.parchment;
+    if (compact) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: WebClickScope(
+          label: semanticsLabel,
+          onPressed: onTap,
+          child: Semantics(
+            button: true,
+            label: semanticsLabel,
+            onTap: onTap,
+            excludeSemantics: true,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(3),
+                child: Container(
+                  width: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: urgent
+                        ? GameTheme.hudFlaskUrgent
+                        : GameTheme.hudRowSelected,
+                    borderRadius: BorderRadius.circular(3),
+                    border: Border.all(
+                      color: urgent
+                          ? GameTheme.torchHot
+                          : GameTheme.border.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GameIcon.asset(UiIcon.flask, size: 14),
+                      Text(
+                        '$count',
+                        style: GameTheme.pixel(size: 7, color: labelColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return SizedBox(
       height: stripReserve,
       child: Column(
@@ -575,6 +842,77 @@ class DungeonFlaskButton extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Home shell: kit chips in one row under the party line (not a side tower).
+class _HomeKitStrip extends StatelessWidget {
+  const _HomeKitStrip({
+    required this.hero,
+    required this.spatial,
+    required this.plainEnglish,
+    this.world,
+  });
+
+  final PartyHero hero;
+  final SpatialActor spatial;
+  final bool plainEnglish;
+  final SpatialWorld? world;
+
+  @override
+  Widget build(BuildContext context) {
+    final off = hero.itemIn(EquipmentSlot.offHand);
+    final hasShield = off?.offHandKind == OffHandKind.shield;
+    final resource = spatial.rage.clamp(0.0, 100.0).toDouble();
+    final maxHp = spatial.effectiveMaxHp;
+    final frac = maxHp <= 0 ? 0.0 : (spatial.hp / maxHp).clamp(0.0, 1.0);
+    final abilities = ClassKits.hudAbilitiesAtSpec(hero.specId, hero.level);
+    final visible = KitHudChips.prioritize(
+      abilities,
+      spatial: spatial,
+      resource: resource,
+      hasShield: hasShield,
+      maxChips: 6,
+      world: world,
+      heroHpFrac: frac,
+      spec: hero.specId,
+    );
+    if (visible.isEmpty) return const SizedBox.shrink();
+    final isRunic = HeroSpecs.def(hero.specId).resource == SpecResource.runic;
+    final isHealer = hero.gearAffinity == HeroRole.healer;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: GameTheme.panelInset.withValues(alpha: 0.92),
+        border: Border(
+          top: BorderSide(color: GameTheme.border.withValues(alpha: 0.5)),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+        child: SizedBox(
+          height: 34,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: visible.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 4),
+            itemBuilder: (context, i) {
+              final ability = visible[i];
+              return _InlineAbilityChip(
+                ability: ability,
+                cdLeft: spatial.abilityCd[ability.id.name] ?? 0,
+                rage: resource,
+                hasShield: hasShield,
+                activeBuff: KitHudChips.buffActive(ability, spatial),
+                focusHpFrac: frac,
+                bombUp: _kitFocusBombUp(spatial, world),
+                isRunic: isRunic,
+                isHealer: isHealer,
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -701,6 +1039,109 @@ class _KitSidePanel extends StatelessWidget {
   }
 }
 
+/// One hero on the home fight's single party line. Doll + name scale down.
+class _HomePartyChip extends StatelessWidget {
+  const _HomePartyChip({
+    required this.hero,
+    required this.partyIndex,
+    required this.name,
+    required this.level,
+    required this.hp,
+    required this.maxHp,
+    required this.selected,
+    this.spatial,
+    this.dense = false,
+    this.demonForm = false,
+  });
+
+  final PartyHero hero;
+  final int partyIndex;
+  final String name;
+  final int level;
+  final num hp;
+  final num maxHp;
+  final bool selected;
+  final SpatialActor? spatial;
+  final bool dense;
+  final bool demonForm;
+
+  @override
+  Widget build(BuildContext context) {
+    final frac = maxHp <= 0 ? 0.0 : (hp / maxHp).toDouble().clamp(0.0, 1.0);
+    final hpColor = hp <= 0
+        ? GameTheme.blood
+        : (frac <= 0.35 ? GameTheme.bloodLit : GameTheme.clear);
+    final who = name.trim().isEmpty
+        ? hero.displayRoleLabel(plainEnglish: false)
+        : name.trim();
+    final doll = dense ? 18.0 : 20.0;
+    final nameSize = dense ? 7.0 : 8.0;
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      decoration: BoxDecoration(
+        color: selected ? GameTheme.hudRowSelected : Colors.transparent,
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(
+          color: selected
+              ? GameTheme.torch.withValues(alpha: 0.55)
+              : Colors.transparent,
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: doll + 2,
+            height: doll + 2,
+            child: HeroDollSprite(
+              hero: hero,
+              partyIndex: partyIndex,
+              size: doll,
+              demonForm: demonForm,
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '$who L$level',
+                    maxLines: 1,
+                    softWrap: false,
+                    style: GameTheme.pixel(size: nameSize, color: GameTheme.parchment),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(1),
+                        child: LinearProgressIndicator(
+                          value: frac,
+                          minHeight: 3,
+                          backgroundColor: GameTheme.hudHpFill,
+                          color: hpColor,
+                        ),
+                      ),
+                    ),
+                    partyCcChipSuffix(spatial, size: 5, dotOnly: dense),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _PartyRow extends StatelessWidget {
   const _PartyRow({
     required this.index,
@@ -800,34 +1241,10 @@ class _PartyRow extends StatelessWidget {
       KitHudChips.buffActive(ability, s);
 
   /// Brief crowd-control chips when the hero is rooted, slowed, or hexed.
-  List<String> _ccChipLabels(SpatialActor? s) {
-    if (s == null || !s.isAlive) return const [];
-    final out = <String>[];
-    if (s.rootTimer > 0) out.add('ROOT');
-    if (s.attackSlowTimer > 0) out.add('SLOW');
-    if (s.demoShoutTimer > 0) out.add('HEX');
-    return out;
-  }
-
-  Widget _ccChips(SpatialActor? s) {
-    final labels = _ccChipLabels(s);
-    if (labels.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(left: 3),
-      child: Text(
-        labels.join('·'),
-        maxLines: 1,
-        style: GameTheme.pixel(
-          size: GameTheme.hudPixel,
-          color: labels.contains('ROOT')
-              ? GameTheme.mossLit
-              : labels.contains('HEX')
-              ? GameTheme.bloodLit
-              : GameTheme.torchHot,
-        ),
-      ),
-    );
-  }
+  Widget _ccChips(SpatialActor? s) => partyCcChipSuffix(
+        s,
+        size: GameTheme.hudPixel,
+      );
 
   @override
   Widget build(BuildContext context) {

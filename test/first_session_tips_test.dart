@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/models/loot.dart';
@@ -201,6 +202,33 @@ void main() {
     expect(
       FirstSessionTips.nextTipId(afterBoss, inDungeon: false),
       'forge',
+    );
+  });
+
+  test('home layout FORGE coach only while the party is in the cave', () {
+    final afterBoss = GameLogic.createInitialState(now: now).copyWith(
+      highestFloorCleared: 1,
+      lifetimeGoldEarned: 20,
+      bossVictories: 1,
+      homeLayout: HomeLayout.home,
+      seenTips: const [
+        'first_run',
+        'hub_enter',
+        'godhand',
+        'farm_push',
+        'kit_abilities',
+        'bag',
+      ],
+    );
+    expect(MenuTabs.showGold(afterBoss), isTrue);
+    expect(FirstSessionTips.nextTipId(afterBoss, inDungeon: false), isNull);
+    expect(FirstSessionTips.nextTipId(afterBoss, inDungeon: true), 'forge');
+    expect(
+      FirstSessionTips.displayLine(
+        FirstSessionTips.active(afterBoss, inDungeon: true)!,
+        afterBoss,
+      ),
+      'FORGE under the fight.',
     );
   });
 

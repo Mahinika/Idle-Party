@@ -9,6 +9,7 @@ import '../core/blessing_constellation.dart';
 import '../core/meta_systems.dart';
 import '../core/rift.dart';
 import '../core/greater_rift.dart';
+import '../core/nav_copy.dart';
 import '../core/story_lore.dart';
 import '../models/dungeon_mode.dart';
 import 'game_theme.dart';
@@ -300,61 +301,46 @@ Future<void> confirmGauntletRun(
     final pact = await showDialog<GauntletPact>(
       context: context,
       barrierColor: MenuChrome.scrim,
-      builder: (ctx) {
-        var selected = GauntletPact.might;
-        return StatefulBuilder(
-          builder: (ctx, setState) {
-            final choices = GauntletPact.values;
-            return MenuChrome.dialog(
-              title: 'Gauntlet climb',
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Pick how this climb plays. Boss every 5 floors. '
-                    'Leave or a wipe returns you to the hub.\n\n'
-                    'Best clear: F$best',
-                    style: GameTheme.body(size: 15, color: GameTheme.parchment),
-                  ),
-                  const SizedBox(height: 10),
-                  MenuChrome.segmented(
-                    labels: [
-                      for (final choice in choices)
-                        GauntletPacts.title(choice),
-                    ],
-                    selectedIndex: choices.indexOf(selected),
-                    onSelect: (i) => setState(() => selected = choices[i]),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    GauntletPacts.blurb(selected),
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
-                    ),
-                  ),
-                ],
+      builder: (ctx) => MenuChrome.dialog(
+        title: 'Gauntlet climb',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              NavCopy.playerText(
+                'Pick how this climb plays. Boss every 5 floors. '
+                'Leave or a wipe returns you to the hub.\n\n'
+                'Best clear: F$best',
+                state.homeLayout,
               ),
-              actions: [
-                GameButton(
-                  label: 'CANCEL',
-                  style: GameButtonStyle.grey,
-                  expanded: false,
-                  onPressed: () => Navigator.pop(ctx),
-                ),
-                GameButton(
-                  label: 'START · ${GauntletPacts.title(selected)}',
-                  style: GameButtonStyle.brown,
-                  expanded: false,
-                  primary: true,
-                  onPressed: () => Navigator.pop(ctx, selected),
-                ),
-              ],
-            );
-          },
-        );
-      },
+              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            ),
+            const SizedBox(height: 8),
+            for (final choice in GauntletPact.values) ...[
+              Text(
+                GauntletPacts.blurb(choice),
+                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+              ),
+              const SizedBox(height: 2),
+              GameButton(
+                label: GauntletPacts.title(choice),
+                style: GameButtonStyle.brown,
+                onPressed: () => Navigator.pop(ctx, choice),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ],
+        ),
+        actions: [
+          GameButton(
+            label: 'CANCEL',
+            style: GameButtonStyle.grey,
+            expanded: false,
+            onPressed: () => Navigator.pop(ctx),
+          ),
+        ],
+      ),
     );
     if (pact != null && context.mounted) {
       director.enterGauntlet(pact: pact);

@@ -60,6 +60,7 @@ class ChaseContract {
     return switch (kind) {
       HubChaseKind.claimDailyVault => 'Why: vault ready — claim first.',
       HubChaseKind.claimMissions => 'Why: quests ready on MORE · QUESTS.',
+      HubChaseKind.contractAlmost => 'Why: one step left on the Contract.',
       HubChaseKind.monthGoal => 'Why: month pass ready.',
       HubChaseKind.weekGoal => 'Why: week goal ready.',
       HubChaseKind.meetHero => 'Why: new specialization on ROSTER.',

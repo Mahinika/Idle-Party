@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/assets/kenney_assets.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/models/mission.dart';
 import 'package:idle_party/ui/dungeon_art_warmup.dart';
 import 'package:idle_party/ui/game_button.dart';
@@ -50,6 +51,11 @@ void main() {
   testWidgets('a ready contract CLAIM fits above the bottom bar', (tester) async {
     final director = GameDirector.preview(
       initialState: GameLogic.createInitialState().copyWith(
+        metaDepth: GameLogic.createInitialState().metaDepth.copyWith(
+          questRerollUtcDay:
+              MetaSystems.dailyDateKey(DateTime.now().toUtc()),
+          questRerollsToday: 2,
+        ),
         missions: [
           _mission(
             id: 'daily',
