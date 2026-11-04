@@ -56,6 +56,17 @@ jobs:
       - name: Dependencies
         run: flutter pub get
 
+      - name: Cache Android NDK
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/lib/android/sdk/ndk
+          key: ndk-28.2.13676358-${{ runner.os }}-v1
+          restore-keys: |
+            ndk-28.2.13676358-${{ runner.os }}-
+
+      - name: Install Android NDK (Flutter pin)
+        run: bash tool/ci/install_ndk_ci.sh 28.2.13676358
+
       - name: Sync Firebase Android config (optional CI token)
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
