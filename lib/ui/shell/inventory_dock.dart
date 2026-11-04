@@ -22,6 +22,7 @@ import '../item_tooltip.dart';
 import '../web_click_bridge.dart';
 import 'bag_cleanup_filters.dart';
 import 'shell_common.dart';
+import 'shell_layout.dart';
 
 part 'bag_equip_hero_chip.dart';
 part 'bag_slot.dart';
@@ -882,15 +883,14 @@ class _InventoryDockState extends State<InventoryDock>
             onPressed: state.gearStash.length < 2 ? null : onAutoMerge,
             style: GameButtonStyle.grey,
           ),
-          const SizedBox(height: 4),
-          Text(
+          ShellLayout.gap(4),
+          ShellLayout.hint(
             InventoryDock.mergeFooterHint(
               plainEnglish: GameLogic.plainPlayerChrome(state),
               keptCount: GearService.autoMergeKeptCount(state),
               keptNames: GearService.autoMergeKeptNames(state),
             ),
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            maxLines: 4,
           ),
           if (primary == null || secondary == null) ...[
             const SizedBox(height: 6),
