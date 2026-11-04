@@ -362,6 +362,61 @@ void main() {
     );
   });
 
+  testWidgets('Farm Rift dialog golden A56', (tester) async {
+    bindA56View(tester);
+    final director = endgameHubGoldenDirector();
+    addTearDown(director.dispose);
+    await showRiftDialogGolden(tester, director);
+    await expectShellGolden(
+      tester,
+      find.text('Farm Rift'),
+      'rift_dialog_a56.png',
+    );
+    await tester.tap(find.text('CANCEL'));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Ranked GR dialog golden A56', (tester) async {
+    bindA56View(tester);
+    final director = endgameHubGoldenDirector();
+    addTearDown(director.dispose);
+    await showGreaterRiftDialogGolden(tester, director);
+    await expectShellGolden(
+      tester,
+      find.text('Ranked GR'),
+      'ranked_gr_dialog_a56.png',
+    );
+    await tester.tap(find.text('CANCEL'));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('KEY sheet golden A56', (tester) async {
+    bindA56View(tester);
+    final director = endgameHubGoldenDirector();
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    router.open(MenuRoute.key);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        RepaintBoundary(
+          key: key,
+          child: SizedBox(
+            height: 720,
+            child: Stack(
+              children: [
+                MenuSurface(director: director, router: router),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester, ms: 600);
+    await expectShellGolden(tester, find.byKey(key), 'key_sheet_a56.png');
+  });
+
   testWidgets('Gauntlet pact dialog golden A56', (tester) async {
     bindA56View(tester);
     final director = gauntletDialogGoldenDirector();

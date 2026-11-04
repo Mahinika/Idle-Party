@@ -194,6 +194,42 @@ Future<void> showGauntletDialogGolden(
   await pumpGoldenFrames(tester);
 }
 
+Future<void> showRiftDialogGolden(
+  WidgetTester tester,
+  GameDirector director,
+) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => confirmRiftRun(context, director),
+          child: const Text('open rift'),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('open rift'));
+  await pumpGoldenFrames(tester);
+}
+
+Future<void> showGreaterRiftDialogGolden(
+  WidgetTester tester,
+  GameDirector director,
+) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => confirmGreaterRiftRun(context, director),
+          child: const Text('open gr'),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('open gr'));
+  await pumpGoldenFrames(tester);
+}
+
 Future<GameDirector> homeShellFightGoldenDirector() async {
   final director = homeShellGoldenDirector();
   await director.boot();
