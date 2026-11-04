@@ -8,10 +8,10 @@ import '../../core/game_state.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
-import '../web_click_bridge.dart';
 import 'income_overlay.dart';
 import 'power_upgrade_row.dart';
 import 'shell_common.dart';
+import 'shell_layout.dart';
 
 class SanctuaryOverlay extends StatefulWidget {
   const SanctuaryOverlay({
@@ -83,11 +83,13 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     final buyCap = maxBulk.clamp(1, 99);
     final effectiveBuy = _buyLevels.clamp(1, buyCap);
 
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         CampRatesSection(director: director),
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         Wrap(
           spacing: 6,
           runSpacing: 4,
@@ -105,32 +107,36 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
           ],
         ),
         if (campOpen && buyCap > 1) ...[
-          const SizedBox(height: 8),
+          ShellLayout.gap(8),
           _bulkChooser(buyCap, effectiveBuy),
         ],
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         if (campOpen)
           for (final track in _tracks)
-            _campTrackCard(state, track, effectiveBuy)
+            _campTrackCard(
+              state,
+              track,
+              effectiveBuy,
+              recommended: track == GameLogic.recommendedSanctuaryTrack(state),
+            )
         else
-          Text(
+          ShellLayout.hint(
             'Gold Find, War Altar, Life Well, Aegis, and Lore Font appear here once Essence unlocks.',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            maxLines: 3,
           ),
-        const SizedBox(height: 12),
+        ShellLayout.gap(12),
       ],
+    ),
     );
   }
 
   Widget _inlineUnderFightBody(GameState state, bool campOpen) {
     if (!campOpen) {
       return Padding(
-        padding: const EdgeInsets.all(8),
-        child: Text(
+        padding: ShellLayout.listPadding,
+        child: ShellLayout.hint(
           'CAMP tracks unlock on ESSENCE after the first hour.',
           maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
         ),
       );
     }
@@ -147,32 +153,12 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       children: [
         if (buyCap > 1)
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
             child: _bulkChooser(buyCap, effectiveBuy),
           ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: WebClickScope(
-            label: _showAllTracks ? 'Show best only' : 'All tracks',
-            onPressed: () => setState(() => _showAllTracks = !_showAllTracks),
-            child: Semantics(
-              button: true,
-              label: _showAllTracks ? 'Show best only' : 'All tracks',
-              child: InkWell(
-                onTap: () => setState(() => _showAllTracks = !_showAllTracks),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
-                  child: Text(
-                    _showAllTracks ? 'Show best only' : 'All tracks',
-                    style: GameTheme.menuTitle(
-                      size: 11,
-                      color: GameTheme.torch,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+        ShellLayout.sheetLink(
+          label: _showAllTracks ? 'Show best only' : 'All tracks',
+          onTap: () => setState(() => _showAllTracks = !_showAllTracks),
         ),
         if (_showAllTracks)
           Expanded(
@@ -181,8 +167,15 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
                 children: [
                   for (final track in tracks)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: _campTrackCard(state, track, effectiveBuy),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: ShellLayout.sheetHorizontal,
+                      ),
+                      child: _campTrackCard(
+                        state,
+                        track,
+                        effectiveBuy,
+                        recommended: track == pick,
+                      ),
                     ),
                 ],
               ),
@@ -190,8 +183,13 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
           )
         else
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: _campTrackCard(state, pick, effectiveBuy),
+            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+            child: _campTrackCard(
+              state,
+              pick,
+              effectiveBuy,
+              recommended: true,
+            ),
           ),
       ],
     );
@@ -215,7 +213,12 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     );
   }
 
-  Widget _campTrackCard(GameState state, String track, int buyLevels) {
+  Widget _campTrackCard(
+    GameState state,
+    String track,
+    int buyLevels, {
+    bool recommended = false,
+  }) {
     final level = _levelOf(state, track);
     final prestige = _prestigeOf(state, track);
     final cost = GameLogic.sanctuaryCost(level);
@@ -288,9 +291,11 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     return PowerUpgradeRow(
       accent: _trackAccent(track),
       title: GameLogic.sanctuaryNames[track] ?? track,
+      tag: recommended ? 'BEST' : null,
       subtitle: 'Lv$level · $currentBonus'
           '${prestige > 0 ? ' · P$prestige' : ''}',
       detail: detail,
+      selected: recommended,
       dense: true,
       trailing: trailing,
     );
