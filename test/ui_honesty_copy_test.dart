@@ -12,6 +12,7 @@ import 'package:idle_party/models/achievement_def.dart';
 import 'package:idle_party/models/meta_depth.dart';
 import 'package:idle_party/ui/meta/prestige_shop.dart';
 import 'package:idle_party/ui/shell/beast_overlay.dart';
+import 'package:idle_party/ui/shell/forge_overlay.dart';
 import 'package:idle_party/ui/shell/essence_keep_panel.dart';
 
 void main() {
@@ -58,7 +59,17 @@ void main() {
     final item = ShopCatalog.offered.firstWhere((e) => e.id == 'ad_free');
     expect(item.description, contains('WATCH AD'));
     expect(item.description, contains('WISP'));
+    expect(item.description.toLowerCase(), contains('quest reroll'));
     expect(item.description, isNot(contains('Cgk')));
+  });
+
+  test('forge bought line uses middots and no double-space run', () {
+    final state = GameLogic.createInitialState(now: DateTime.utc(2026, 8, 8))
+        .copyWith(bossVictories: 1, attackBonus: 63);
+    final line = ForgeOverlay.boughtSummary(state, plain: false);
+    expect(line, startsWith('Bought:'));
+    expect(line, contains(' · MASTERY +'));
+    expect(line, isNot(contains('  ')));
   });
 
   test('friend tip cap is 30', () {

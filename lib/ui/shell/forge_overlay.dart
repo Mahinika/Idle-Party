@@ -25,6 +25,25 @@ class ForgeOverlay extends StatefulWidget {
     return 'GOLD → FORGE + bag gold wipe on Ascend. BLESSING stays.';
   }
 
+  /// One-line sheet totals for the FORGE header (fits narrow home panel).
+  static String boughtSummary(GameState state, {required bool plain}) {
+    if (plain) {
+      return 'Bought: AP +${state.forgeAttackSheet} · '
+          'Armor +${state.forgeDefenseSheet} · '
+          'STA +${state.forgeVitalitySheet}';
+    }
+    final parts = <String>[
+      'AP +${state.forgeAttackSheet}',
+      'Armor +${state.forgeDefenseSheet}',
+      'STA +${state.forgeVitalitySheet}',
+      'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%',
+      'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%',
+      'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%',
+      'MASTERY +${state.forgeMasterySheet}',
+    ];
+    return 'Bought: ${parts.join(' · ')}';
+  }
+
   @override
   State<ForgeOverlay> createState() => _ForgeOverlayState();
 }
@@ -265,20 +284,18 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          plain
-              ? 'Bought: AP +${state.forgeAttackSheet} · Armor +${state.forgeDefenseSheet} · '
-                    'STA +${state.forgeVitalitySheet}'
-              : 'Bought: AP +${state.forgeAttackSheet}  Armor +${state.forgeDefenseSheet}  '
-                    'STA +${state.forgeVitalitySheet}  '
-                    'MOVE +${GameState.softForgePercent(state.moveSpeedBonus).round()}%  '
-                    'HASTE +${GameState.softForgePercent(state.attackSpeedBonus).round()}%  '
-                    'CRIT +${GameState.softForgePercent(state.critBonus, softAt: 25).round()}%  '
-                    'MASTERY +${state.forgeMasterySheet}',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          softWrap: true,
-          style: GameTheme.body(size: 12, color: GameTheme.parchment),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              ForgeOverlay.boughtSummary(state, plain: plain),
+              maxLines: 1,
+              softWrap: false,
+              style: GameTheme.body(size: 12, color: GameTheme.parchment),
+            ),
+          ),
         ),
         Text(
           NavCopy.playerText(
