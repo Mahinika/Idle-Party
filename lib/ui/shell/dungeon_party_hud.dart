@@ -33,6 +33,36 @@ String partyStripName(PartyHero hero, {required bool plainEnglish}) {
   return name;
 }
 
+/// Brief crowd-control chips when the hero is rooted, slowed, or hexed.
+List<String> partyCcChipLabels(SpatialActor? actor) {
+  if (actor == null || !actor.isAlive) return const [];
+  final out = <String>[];
+  if (actor.rootTimer > 0) out.add('ROOT');
+  if (actor.attackSlowTimer > 0) out.add('SLOW');
+  if (actor.demoShoutTimer > 0) out.add('HEX');
+  return out;
+}
+
+Color partyCcChipColor(List<String> labels) {
+  if (labels.contains('ROOT')) return GameTheme.mossLit;
+  if (labels.contains('HEX')) return GameTheme.bloodLit;
+  return GameTheme.torchHot;
+}
+
+/// CC suffix for compact party rows (home strip and classic strip).
+Widget partyCcChipSuffix(SpatialActor? actor, {double size = 6}) {
+  final labels = partyCcChipLabels(actor);
+  if (labels.isEmpty) return const SizedBox.shrink();
+  return Padding(
+    padding: const EdgeInsets.only(left: 2),
+    child: Text(
+      labels.join('·'),
+      maxLines: 1,
+      style: GameTheme.pixel(size: size, color: partyCcChipColor(labels)),
+    ),
+  );
+}
+
 bool _kitFocusBombUp(SpatialActor spatial, SpatialWorld? world) {
   final id = spatial.focusEnemyId;
   if (id == null || world == null) return false;
@@ -272,6 +302,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
                 maxHp: spatial?.effectiveMaxHp ??
                     state.effectiveHeroMaxHp(hero),
                 selected: widget.selectedHeroIndex == i,
+                spatial: spatial,
                 demonForm: hero.specId == HeroSpecId.demonology &&
                     (spatial?.combustionTimer ?? 0) > 0,
               ),
@@ -984,6 +1015,7 @@ class _HomePartyChip extends StatelessWidget {
     required this.hp,
     required this.maxHp,
     required this.selected,
+    this.spatial,
     this.demonForm = false,
   });
 
@@ -994,6 +1026,7 @@ class _HomePartyChip extends StatelessWidget {
   final num hp;
   final num maxHp;
   final bool selected;
+  final SpatialActor? spatial;
   final bool demonForm;
 
   @override
@@ -1046,14 +1079,21 @@ class _HomePartyChip extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(1),
-                  child: LinearProgressIndicator(
-                    value: frac,
-                    minHeight: 3,
-                    backgroundColor: GameTheme.hudHpFill,
-                    color: hpColor,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(1),
+                        child: LinearProgressIndicator(
+                          value: frac,
+                          minHeight: 3,
+                          backgroundColor: GameTheme.hudHpFill,
+                          color: hpColor,
+                        ),
+                      ),
+                    ),
+                    partyCcChipSuffix(spatial, size: 5),
+                  ],
                 ),
               ],
             ),
@@ -1163,34 +1203,10 @@ class _PartyRow extends StatelessWidget {
       KitHudChips.buffActive(ability, s);
 
   /// Brief crowd-control chips when the hero is rooted, slowed, or hexed.
-  List<String> _ccChipLabels(SpatialActor? s) {
-    if (s == null || !s.isAlive) return const [];
-    final out = <String>[];
-    if (s.rootTimer > 0) out.add('ROOT');
-    if (s.attackSlowTimer > 0) out.add('SLOW');
-    if (s.demoShoutTimer > 0) out.add('HEX');
-    return out;
-  }
-
-  Widget _ccChips(SpatialActor? s) {
-    final labels = _ccChipLabels(s);
-    if (labels.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(left: 3),
-      child: Text(
-        labels.join('·'),
-        maxLines: 1,
-        style: GameTheme.pixel(
-          size: GameTheme.hudPixel,
-          color: labels.contains('ROOT')
-              ? GameTheme.mossLit
-              : labels.contains('HEX')
-              ? GameTheme.bloodLit
-              : GameTheme.torchHot,
-        ),
-      ),
-    );
-  }
+  Widget _ccChips(SpatialActor? s) => partyCcChipSuffix(
+        s,
+        size: GameTheme.hudPixel,
+      );
 
   @override
   Widget build(BuildContext context) {

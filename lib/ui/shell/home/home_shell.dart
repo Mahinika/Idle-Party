@@ -96,7 +96,7 @@ class _HomeShellState extends State<HomeShell> {
               Column(
                 children: [
                   Expanded(
-                    flex: showPanel && !full ? 1 : 5,
+                    flex: showPanel && !full ? 2 : 5,
                     child: RepaintBoundary(
                       child: state.inDungeon
                           ? FightViewport(
@@ -115,7 +115,7 @@ class _HomeShellState extends State<HomeShell> {
                     ),
                   if (showPanel)
                     Expanded(
-                      flex: full ? 1 : 1,
+                      flex: full ? 1 : 3,
                       child: RepaintBoundary(
                         child: DirectorSelect<int>(
                           director: director,

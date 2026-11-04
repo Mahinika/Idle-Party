@@ -113,6 +113,28 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  test('party CC chips list root slow and hex', () {
+    final actor = SpatialActor(
+      id: 'h0',
+      name: 'Test',
+      team: SpatialTeam.hero,
+      x: 0,
+      y: 0,
+      hp: 100,
+      maxHp: 100,
+      attack: 10,
+      defense: 5,
+      moveSpeed: 2,
+      attackRange: 1,
+      attackCooldown: 1,
+    )..rootTimer = 2
+      ..attackSlowTimer = 1;
+    expect(partyCcChipLabels(actor), ['ROOT', 'SLOW']);
+    actor.rootTimer = 0;
+    actor.demoShoutTimer = 3;
+    expect(partyCcChipLabels(actor), ['SLOW', 'HEX']);
+  });
+
   test('an empty hero name falls back to the role word', () {
     final hero = PartyHero.starting(
       name: '   ',
