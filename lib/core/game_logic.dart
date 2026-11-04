@@ -368,6 +368,23 @@ class GameLogic {
   static bool canEnterGauntlet(GameState state) =>
       endgameUnlocked(state) && !state.inDungeon;
 
+  /// WARD for first clear; later the Spire trophy row with the fewest cells.
+  static GauntletPact recommendedGauntletPact(GameState state) {
+    if (state.metaDepth.gauntletBestFloor <= 0) return GauntletPact.ward;
+    GauntletPact pick = GauntletPact.might;
+    var minOwned = 999;
+    for (final pact in GauntletPact.values) {
+      final owned = GauntletTrophies.squeezesFor(pact)
+          .where((s) => GauntletTrophies.owned(state, pact, s))
+          .length;
+      if (owned < minOwned) {
+        minOwned = owned;
+        pick = pact;
+      }
+    }
+    return pick;
+  }
+
   static GameState claimMonthPass(GameState state, {DateTime? now}) =>
       _claimMonthPass(state, now: now);
 

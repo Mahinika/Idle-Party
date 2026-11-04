@@ -16,6 +16,7 @@ import 'game_theme.dart';
 import 'kenney_button.dart';
 import 'menu_chrome.dart';
 import 'meta/rift_tier_picker.dart';
+import 'shell/shell_layout.dart';
 import 'shell/shell_common.dart';
 import 'web_click_bridge.dart';
 
@@ -299,6 +300,7 @@ Future<void> confirmGauntletRun(
   final best = state.metaDepth.gauntletBestFloor;
   WebClickBridge.pushLayer();
   try {
+    final recommended = GameLogic.recommendedGauntletPact(state);
     final pact = await showDialog<GauntletPact>(
       context: context,
       barrierColor: MenuChrome.scrim,
@@ -308,29 +310,38 @@ Future<void> confirmGauntletRun(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            ShellLayout.hint(
               NavCopy.playerText(
                 'Pick how this climb plays. Boss every 5 floors. '
-                'Leave or a wipe returns you to the hub.\n\n'
+                'Leave or a wipe returns you to the hub. '
                 'Best clear: F$best',
                 state.homeLayout,
               ),
-              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+              maxLines: 4,
             ),
-            const SizedBox(height: 8),
-            for (final choice in GauntletPact.values) ...[
-              Text(
-                GauntletPacts.blurb(choice),
-                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
-              ),
-              const SizedBox(height: 2),
-              GameButton(
-                label: GauntletPacts.title(choice),
-                style: GameButtonStyle.brown,
-                onPressed: () => Navigator.pop(ctx, choice),
-              ),
-              const SizedBox(height: 8),
-            ],
+            ShellLayout.gap(8),
+            GameButton(
+              label:
+                  'START · ${GauntletPacts.title(recommended)} · recommended',
+              style: GameButtonStyle.brown,
+              primary: true,
+              onPressed: () => Navigator.pop(ctx, recommended),
+            ),
+            ShellLayout.gap(8),
+            ShellLayout.hint('Or pick another pact', maxLines: 1),
+            ShellLayout.gap(4),
+            for (final choice in GauntletPact.values)
+              if (choice != recommended) ...[
+                ShellLayout.hint(GauntletPacts.blurb(choice), maxLines: 2),
+                ShellLayout.gap(2),
+                GameButton(
+                  label: GauntletPacts.title(choice),
+                  style: GameButtonStyle.grey,
+                  dense: true,
+                  onPressed: () => Navigator.pop(ctx, choice),
+                ),
+                ShellLayout.gap(6),
+              ],
           ],
         ),
         actions: [
