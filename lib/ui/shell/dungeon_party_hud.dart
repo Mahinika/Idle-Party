@@ -33,6 +33,17 @@ String partyStripName(PartyHero hero, {required bool plainEnglish}) {
   return name;
 }
 
+bool _kitFocusBombUp(SpatialActor spatial, SpatialWorld? world) {
+  final id = spatial.focusEnemyId;
+  if (id == null || world == null) return false;
+  for (final e in world.enemies) {
+    if (e.id == id && e.hp > 0) {
+      return e.livingBombTimer >= 2;
+    }
+  }
+  return false;
+}
+
 /// Name + level on the crawl strip. A long name scales down; the level stays.
 class PartyHudSpecLine extends StatelessWidget {
   const PartyHudSpecLine({
@@ -116,6 +127,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
   static const _fullOpacity = 1.0;
   static const _dimOpacity = 0.72;
   static const _dimOpacityPhone = 0.72;
+  static const _homePartyRowHeight = 36.0;
 
   Timer? _fadeTimer;
   double _opacity = _fullOpacity;
@@ -252,18 +264,87 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
               onLongPress: _onLongPressGear,
               borderRadius: BorderRadius.circular(3),
               child: _HomePartyChip(
+                hero: hero,
+                partyIndex: i,
                 name: hero.name,
                 level: hero.level,
                 hp: spatial?.hp ?? hero.currentHp,
                 maxHp: spatial?.effectiveMaxHp ??
                     state.effectiveHeroMaxHp(hero),
                 selected: widget.selectedHeroIndex == i,
+                demonForm: hero.specId == HeroSpecId.demonology &&
+                    (spatial?.combustionTimer ?? 0) > 0,
               ),
             ),
           ),
         ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHomePartyFrame({
+    required GameState state,
+    required SpatialWorld? world,
+    required bool plainEnglish,
+    required List<PartyHero> party,
+    required int heroCount,
+    required bool showSideKit,
+    required PartyHero? kitHero,
+    required SpatialActor? kitActor,
+    required bool showFlask,
+  }) {
+    const lineHeight = _homePartyRowHeight;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: GameTheme.panel.withValues(alpha: 0.96),
+            border: Border(
+              top: BorderSide(color: GameTheme.border.withValues(alpha: 0.85)),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 3, 4, 3),
+            child: SizedBox(
+              height: lineHeight,
+              child: Row(
+                children: [
+                  for (var i = 0; i < heroCount; i++)
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: i < heroCount - 1 ? 3 : 0),
+                        child: _homeHeroTap(
+                          i: i,
+                          party: party,
+                          plainEnglish: plainEnglish,
+                          world: world,
+                          state: state,
+                          rowHeight: lineHeight,
+                        ),
+                      ),
+                    ),
+                  if (showFlask)
+                    DungeonFlaskButton(
+                      director: widget.director,
+                      onTap: widget.director.useConsumable,
+                      compact: true,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (showSideKit && kitHero != null && kitActor != null)
+          _HomeKitStrip(
+            hero: kitHero,
+            spatial: kitActor,
+            plainEnglish: plainEnglish,
+            world: world,
+          ),
+      ],
     );
   }
 
@@ -331,63 +412,16 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     );
 
     final panel = widget.homeRow
-        ? Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (showSideKit)
-                _KitSidePanel(
-                  hero: kitHero,
-                  plainEnglish: plainEnglish,
-                  spatial: kitActor,
-                  world: world,
-                ),
-              Container(
-                decoration: BoxDecoration(
-                  color: GameTheme.hudWell.withValues(alpha: 0.82),
-                  borderRadius: BorderRadius.circular(GameTheme.radiusHud),
-                  border: Border.all(color: GameTheme.hudWellBorder),
-                ),
-                padding: const EdgeInsets.all(2),
-                child: SizedBox(
-                height: showFlask
-                    ? (rowHeight > DungeonFlaskButton.stripReserve
-                        ? rowHeight
-                        : DungeonFlaskButton.stripReserve)
-                    : rowHeight,
-                child: Row(
-                  children: [
-                    for (var i = 0; i < heroCount; i++)
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 2),
-                          child: _homeHeroTap(
-                            i: i,
-                            party: party,
-                            plainEnglish: plainEnglish,
-                            world: world,
-                            state: state,
-                            rowHeight: showFlask
-                                ? (rowHeight > DungeonFlaskButton.stripReserve
-                                    ? rowHeight
-                                    : DungeonFlaskButton.stripReserve)
-                                : rowHeight,
-                          ),
-                        ),
-                      ),
-                    if (showFlask)
-                      SizedBox(
-                        width: 72,
-                        child: DungeonFlaskButton(
-                          director: widget.director,
-                          onTap: widget.director.useConsumable,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              ),
-            ],
+        ? _buildHomePartyFrame(
+            state: state,
+            world: world,
+            plainEnglish: plainEnglish,
+            party: party,
+            heroCount: heroCount,
+            showSideKit: showSideKit,
+            kitHero: kitHero,
+            kitActor: kitActor,
+            showFlask: showFlask,
           )
         : SizedBox(
       width: fullWidth,
@@ -513,10 +547,14 @@ class DungeonFlaskButton extends StatelessWidget {
     super.key,
     required this.director,
     required this.onTap,
+    this.compact = false,
   });
 
   final GameDirector director;
   final VoidCallback onTap;
+
+  /// Inline on the home party row — no extra strip height.
+  final bool compact;
 
   /// Gap + rule + tap row. Kit panel bottom inset matches this.
   static const double stripReserve = 40;
@@ -609,6 +647,53 @@ class DungeonFlaskButton extends StatelessWidget {
         ? 'Use healing $buttonWord$countLabel, party critical'
         : 'Use healing $buttonWord$countLabel';
     final labelColor = urgent ? GameTheme.torchHot : GameTheme.parchment;
+    if (compact) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: WebClickScope(
+          label: semanticsLabel,
+          onPressed: onTap,
+          child: Semantics(
+            button: true,
+            label: semanticsLabel,
+            onTap: onTap,
+            excludeSemantics: true,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(3),
+                child: Container(
+                  width: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: urgent
+                        ? GameTheme.hudFlaskUrgent
+                        : GameTheme.hudRowSelected,
+                    borderRadius: BorderRadius.circular(3),
+                    border: Border.all(
+                      color: urgent
+                          ? GameTheme.torchHot
+                          : GameTheme.border.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GameIcon.asset(UiIcon.flask, size: 14),
+                      Text(
+                        '$count',
+                        style: GameTheme.pixel(size: 7, color: labelColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return SizedBox(
       height: stripReserve,
       child: Column(
@@ -686,6 +771,77 @@ class DungeonFlaskButton extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Home shell: kit chips in one row under the party line (not a side tower).
+class _HomeKitStrip extends StatelessWidget {
+  const _HomeKitStrip({
+    required this.hero,
+    required this.spatial,
+    required this.plainEnglish,
+    this.world,
+  });
+
+  final PartyHero hero;
+  final SpatialActor spatial;
+  final bool plainEnglish;
+  final SpatialWorld? world;
+
+  @override
+  Widget build(BuildContext context) {
+    final off = hero.itemIn(EquipmentSlot.offHand);
+    final hasShield = off?.offHandKind == OffHandKind.shield;
+    final resource = spatial.rage.clamp(0.0, 100.0).toDouble();
+    final maxHp = spatial.effectiveMaxHp;
+    final frac = maxHp <= 0 ? 0.0 : (spatial.hp / maxHp).clamp(0.0, 1.0);
+    final abilities = ClassKits.hudAbilitiesAtSpec(hero.specId, hero.level);
+    final visible = KitHudChips.prioritize(
+      abilities,
+      spatial: spatial,
+      resource: resource,
+      hasShield: hasShield,
+      maxChips: 6,
+      world: world,
+      heroHpFrac: frac,
+      spec: hero.specId,
+    );
+    if (visible.isEmpty) return const SizedBox.shrink();
+    final isRunic = HeroSpecs.def(hero.specId).resource == SpecResource.runic;
+    final isHealer = hero.gearAffinity == HeroRole.healer;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: GameTheme.panelInset.withValues(alpha: 0.92),
+        border: Border(
+          top: BorderSide(color: GameTheme.border.withValues(alpha: 0.5)),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+        child: SizedBox(
+          height: 34,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: visible.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 4),
+            itemBuilder: (context, i) {
+              final ability = visible[i];
+              return _InlineAbilityChip(
+                ability: ability,
+                cdLeft: spatial.abilityCd[ability.id.name] ?? 0,
+                rage: resource,
+                hasShield: hasShield,
+                activeBuff: KitHudChips.buffActive(ability, spatial),
+                focusHpFrac: frac,
+                bombUp: _kitFocusBombUp(spatial, world),
+                isRunic: isRunic,
+                isHealer: isHealer,
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -812,21 +968,27 @@ class _KitSidePanel extends StatelessWidget {
   }
 }
 
-/// One hero on the home fight's single party line. Names scale down.
+/// One hero on the home fight's single party line. Doll + name scale down.
 class _HomePartyChip extends StatelessWidget {
   const _HomePartyChip({
+    required this.hero,
+    required this.partyIndex,
     required this.name,
     required this.level,
     required this.hp,
     required this.maxHp,
     required this.selected,
+    this.demonForm = false,
   });
 
+  final PartyHero hero;
+  final int partyIndex;
   final String name;
   final int level;
   final num hp;
   final num maxHp;
   final bool selected;
+  final bool demonForm;
 
   @override
   Widget build(BuildContext context) {
@@ -834,33 +996,60 @@ class _HomePartyChip extends StatelessWidget {
     final hpColor = hp <= 0
         ? GameTheme.blood
         : (frac <= 0.35 ? GameTheme.bloodLit : GameTheme.clear);
+    final who = name.trim().isEmpty
+        ? hero.displayRoleLabel(plainEnglish: false)
+        : name.trim();
     return Container(
-      alignment: Alignment.center,
+      alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
         color: selected ? GameTheme.hudRowSelected : Colors.transparent,
         borderRadius: BorderRadius.circular(3),
+        border: Border.all(
+          color: selected
+              ? GameTheme.torch.withValues(alpha: 0.55)
+              : Colors.transparent,
+        ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              '$name L$level',
-              maxLines: 1,
-              softWrap: false,
-              style: GameTheme.pixel(size: 8, color: GameTheme.parchment),
+          SizedBox(
+            width: 22,
+            height: 22,
+            child: HeroDollSprite(
+              hero: hero,
+              partyIndex: partyIndex,
+              size: 20,
+              demonForm: demonForm,
             ),
           ),
-          const SizedBox(height: 2),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(1),
-            child: LinearProgressIndicator(
-              value: frac,
-              minHeight: 3,
-              backgroundColor: GameTheme.hudHpFill,
-              color: hpColor,
+          const SizedBox(width: 3),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '$who L$level',
+                    maxLines: 1,
+                    softWrap: false,
+                    style: GameTheme.pixel(size: 8, color: GameTheme.parchment),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(1),
+                  child: LinearProgressIndicator(
+                    value: frac,
+                    minHeight: 3,
+                    backgroundColor: GameTheme.hudHpFill,
+                    color: hpColor,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

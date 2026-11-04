@@ -32,7 +32,7 @@ class FightSeam extends StatelessWidget {
     final farmLabel = plain ? 'Repeat' : 'FARM';
     final pushLabel = plain ? 'Next' : 'PUSH';
     return Material(
-      color: GameTheme.stone.withValues(alpha: 0.92),
+      color: GameTheme.panel,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(6, 2, 6, 2),
         child: Column(
