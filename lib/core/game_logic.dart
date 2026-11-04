@@ -478,6 +478,38 @@ class GameLogic {
 
   static int sanctuaryCost(int level) => 15 + (level * 12);
 
+  static const List<String> sanctuaryTrackOrder = [
+    'gold',
+    'power',
+    'vitality',
+    'defense',
+    'xp',
+  ];
+
+  static int sanctuaryTrackLevel(GameState state, String track) =>
+      switch (track) {
+        'gold' => state.sanctuaryGoldLevel,
+        'power' => state.sanctuaryPowerLevel,
+        'vitality' => state.sanctuaryVitalityLevel,
+        'defense' => state.sanctuaryDefenseLevel,
+        'xp' => state.metaDepth.sanctuaryXpLevel,
+        _ => 0,
+      };
+
+  /// Lowest-level CAMP track — same pick as cheapest next essence cost.
+  static String recommendedSanctuaryTrack(GameState state) {
+    var pick = sanctuaryTrackOrder.first;
+    var pickLevel = sanctuaryTrackLevel(state, pick);
+    for (final track in sanctuaryTrackOrder) {
+      final level = sanctuaryTrackLevel(state, track);
+      if (level < pickLevel) {
+        pickLevel = level;
+        pick = track;
+      }
+    }
+    return pick;
+  }
+
   /// Cheapest next CAMP click. Daily Vault pays at least this so a claim
   /// still buys one upgrade after the tracks get expensive.
   static int cheapestSanctuaryNextCost(GameState state) {

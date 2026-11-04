@@ -163,25 +163,14 @@ class EssenceTilesScreen extends StatelessWidget {
   }
 
   Widget _summary(BuildContext context, GameState state) {
+    if (!GameLogic.canAscend(state)) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Boss on F${GameLogic.bossFloorFor(state)}',
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-          ),
-          if (GameLogic.canAscend(state)) ...[
-            const SizedBox(height: 6),
-            GameButton(
-              label: 'ASCEND',
-              style: GameButtonStyle.brown,
-              dense: true,
-              onPressed: () => confirmAscend(context, director),
-            ),
-          ],
-        ],
+      child: GameButton(
+        label: 'ASCEND',
+        style: GameButtonStyle.brown,
+        dense: true,
+        onPressed: () => confirmAscend(context, director),
       ),
     );
   }

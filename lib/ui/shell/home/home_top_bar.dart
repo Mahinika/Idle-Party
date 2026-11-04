@@ -58,10 +58,12 @@ class HomeTopBar extends StatelessWidget {
       HomeLayout.home,
     );
     final third = _third(context, state, route, essencePanel);
+    final compactTop =
+        state.homeLayout == HomeLayout.home && state.inDungeon;
     return Material(
       color: GameTheme.stoneDeep,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+        padding: EdgeInsets.fromLTRB(8, 4, 8, compactTop ? 2 : 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -70,18 +72,39 @@ class HomeTopBar extends StatelessWidget {
                 _chip('AL ${state.ascensionLevel}', UiIcon.ascend),
                 const SizedBox(width: 6),
                 _chip('${state.essence}', UiIcon.essence),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: _tap(
-                    label: 'Gold',
-                    onTap: () => _openGold(context, state),
-                    child: _chip(
-                      '${formatGold(state.gold)}  ${GoldIncome.perMinuteLabel(GoldIncome.hubGoldPerMinute(state))}',
-                      UiIcon.gold,
+                if (compactTop) ...[
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      chase,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 11,
+                        color: GameTheme.parchmentDim,
+                      ),
                     ),
                   ),
-                ),
-                if (third != null) ...[
+                ],
+                const SizedBox(width: 6),
+                if (compactTop)
+                  _tap(
+                    label: 'Gold',
+                    onTap: () => _openGold(context, state),
+                    child: _chip(formatGold(state.gold), UiIcon.gold),
+                  )
+                else
+                  Expanded(
+                    child: _tap(
+                      label: 'Gold',
+                      onTap: () => _openGold(context, state),
+                      child: _chip(
+                        '${formatGold(state.gold)}  ${GoldIncome.perMinuteLabel(GoldIncome.hubGoldPerMinute(state))}',
+                        UiIcon.gold,
+                      ),
+                    ),
+                  ),
+                if (third != null && !compactTop) ...[
                   const SizedBox(width: 6),
                   _tap(
                     label: third.$1,
@@ -106,23 +129,25 @@ class HomeTopBar extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 2),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    chase,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
+            if (!compactTop) ...[
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      chase,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.body(
+                        size: 11,
+                        color: GameTheme.parchmentDim,
+                      ),
                     ),
                   ),
-                ),
-                if (wide) DpsMeter(director: director, onOpenChanged: (_) {}),
-              ],
-            ),
+                  if (wide) DpsMeter(director: director, onOpenChanged: (_) {}),
+                ],
+              ),
+            ],
           ],
         ),
       ),

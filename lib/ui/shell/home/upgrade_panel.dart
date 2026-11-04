@@ -81,20 +81,23 @@ class _UpgradePanelState extends State<UpgradePanel> {
 
   Widget _body(GameState state, bool open, _Panel mode) {
     if (!open) return _locked(state);
+    final inline =
+        widget.sheetPanel == null && !state.homePanelFull;
     switch (mode) {
       case _Panel.market:
-        return SingleChildScrollView(
-          child: MarketOverlay(director: widget.director),
+        return MarketOverlay(
+          director: widget.director,
+          inlineUnderFight: inline,
         );
       case _Panel.camp:
-        return SingleChildScrollView(
-          child: SanctuaryOverlay(director: widget.director),
+        return SanctuaryOverlay(
+          director: widget.director,
+          inlineUnderFight: inline,
         );
       case _Panel.forge:
         return ForgeOverlay(
           director: widget.director,
-          inlineUnderFight:
-              widget.sheetPanel == null && !state.homePanelFull,
+          inlineUnderFight: inline,
         );
     }
   }
