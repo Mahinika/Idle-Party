@@ -9,6 +9,7 @@ import '../menu_chrome.dart';
 import 'forge_overlay.dart';
 import 'market_overlay.dart';
 import 'shell_common.dart';
+import 'shell_layout.dart';
 
 /// GOLD sheet: FORGE (this-run) + gold market (flasks / listings).
 class GoldDock extends StatefulWidget {
@@ -106,14 +107,13 @@ class _GoldDockState extends State<GoldDock> with TickerProviderStateMixin {
           ],
         ),
         if (showMarketIntro) ...[
-          const SizedBox(height: 6),
-          Text(
+          ShellLayout.gap(6),
+          ShellLayout.hint(
             'THIS RUN · MARKET — flasks and listings spend gold only',
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            maxLines: 2,
           ),
         ],
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         Expanded(
           child: IndexedStack(
             index: _visible.indexOf(safeTab).clamp(0, pages.length - 1),

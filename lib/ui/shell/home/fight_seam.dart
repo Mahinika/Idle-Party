@@ -9,6 +9,7 @@ import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
 import '../../spatial_dungeon_view.dart';
 import '../../web_click_bridge.dart';
+import '../shell_layout.dart';
 import '../dungeon_party_hud.dart';
 import 'fight_seam_rails.dart';
 
@@ -39,7 +40,7 @@ class FightSeam extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
+            padding: ShellLayout.seamPadding,
             child: SizedBox(
               height: 34,
               child: Row(
@@ -101,11 +102,7 @@ class FightSeam extends StatelessWidget {
               ),
             ),
           ),
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: GameTheme.border.withValues(alpha: 0.65),
-          ),
+          ShellLayout.divider(),
           PartyCornerHud(
               director: director,
               homeRow: true,

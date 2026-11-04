@@ -73,68 +73,55 @@ class HubPowerupsFab extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(
                 minWidth: GameTheme.minTouch,
-                minHeight: GameTheme.minTouch,
+                minHeight: 44,
               ),
-              child: DecoratedBox(
-                decoration: MenuChrome.hubPanel(selected: true),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Center(
-                              child: GameIcon.glyph(
-                                UiGlyph.scroll,
-                                size: 26,
-                                color: GameTheme.torchHot,
-                              ),
+              child: ShellLayout.hubCard(
+                selected: false,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Center(
+                            child: GameIcon.glyph(
+                              UiGlyph.scroll,
+                              size: 22,
+                              color: GameTheme.parchmentDim,
                             ),
-                            if (tickets > 0)
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                child: _TicketBadge(count: tickets),
-                              ),
-                          ],
+                          ),
+                          if (tickets > 0)
+                            Positioned(
+                              right: -2,
+                              top: -2,
+                              child: _TicketBadge(count: tickets),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        hint(state),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.body(
+                          size: 13,
+                          color: GameTheme.parchmentDim,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'SCROLLS',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GameTheme.body(
-                                size: 16,
-                                color: GameTheme.torchHot,
-                              ),
-                            ),
-                            Text(
-                              hint(state),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GameTheme.body(
-                                size: 12,
-                                color: GameTheme.parchmentDim,
-                              ),
-                            ),
-                          ],
-                        ),
+                    ),
+                    Text(
+                      'OPEN',
+                      style: GameTheme.menuTitle(
+                        size: 10,
+                        color: GameTheme.torch,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),

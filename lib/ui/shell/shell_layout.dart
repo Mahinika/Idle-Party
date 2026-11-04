@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../game_theme.dart';
 import '../menu_chrome.dart';
+import '../web_click_bridge.dart';
 
 /// Brick-style shell layout tokens and small wrappers.
 ///
@@ -81,6 +82,37 @@ abstract final class ShellLayout {
       child: child,
     );
   }
+
+  /// Secondary sheet control (All packs · Show picks only).
+  static Widget sheetLink({
+    required String label,
+    required VoidCallback onTap,
+    String? semanticsLabel,
+  }) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: WebClickScope(
+        label: semanticsLabel ?? label,
+        onPressed: onTap,
+        child: Semantics(
+          button: true,
+          label: semanticsLabel ?? label,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+              child: Text(
+                label,
+                style: GameTheme.menuTitle(size: 11, color: GameTheme.torch),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static const EdgeInsets seamPadding = EdgeInsets.fromLTRB(8, 4, 8, 0);
 
   /// Pair of grey secondary actions (SHOP restore · redeem, etc.).
   static const double shellIconSize = 20;

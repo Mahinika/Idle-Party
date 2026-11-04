@@ -167,40 +167,21 @@ class _ShopDockState extends State<ShopDock> {
     pick ??= items.isNotEmpty ? items.first : null;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+      padding: ShellLayout.listPadding,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: WebClickScope(
-            label: 'All packs',
-            onPressed: () => setState(() => _showAllPacks = true),
-            child: Semantics(
-              button: true,
-              label: 'All packs',
-              child: InkWell(
-                onTap: () => setState(() => _showAllPacks = true),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
-                  child: Text(
-                    'All packs',
-                    style: GameTheme.menuTitle(
-                      size: 11,
-                      color: GameTheme.torch,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+        ShellLayout.sheetLink(
+          label: 'All packs',
+          onTap: () => setState(() => _showAllPacks = true),
         ),
         if (featured != null) ...[
+          ShellLayout.gap(4),
           Text(
             ShopHubOffer.countdownLine(state),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 11, color: GameTheme.torchHot),
           ),
-          const SizedBox(height: 4),
+          ShellLayout.gap(4),
           _ShopRow(
             item: featured,
             owned: ShopBilling.isOwned(state, featured),
@@ -208,11 +189,12 @@ class _ShopDockState extends State<ShopDock> {
             available: _priceReady(featured) ||
                 ShopCatalog.playChargeableIds.contains(featured.id),
             compact: true,
+            featuredPrimary: true,
             titleOverride: ShopHubOffer.featuredTitle(featured),
             layout: state.homeLayout,
             onBuy: () => _buy(featured),
           ),
-          const SizedBox(height: 6),
+          ShellLayout.gap(6),
         ],
         if (pick != null &&
             (featured == null || pick.id != featured.id)) ...[
@@ -266,34 +248,11 @@ class _ShopDockState extends State<ShopDock> {
       padding: ShellLayout.listPadding,
       children: [
         if (showAllPacksToggle && onToggleAllPacks != null)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: WebClickScope(
-              label: 'Show picks only',
-              onPressed: onToggleAllPacks,
-              child: Semantics(
-                button: true,
-                label: 'Show picks only',
-                child: InkWell(
-                  onTap: onToggleAllPacks,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
-                    child: Text(
-                      'Show picks only',
-                      style: GameTheme.menuTitle(
-                        size: 11,
-                        color: GameTheme.torch,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          ShellLayout.sheetLink(
+            label: 'Show picks only',
+            onTap: onToggleAllPacks,
           ),
-        Text(
-          hint,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
+        ShellLayout.hint(hint, maxLines: 5),
         if (featured != null) ...[
           ShellLayout.gap(6),
           MenuChrome.sectionLabelScoped('FEATURED', scope: MenuScope.today),
@@ -319,26 +278,28 @@ class _ShopDockState extends State<ShopDock> {
           ),
           ShellLayout.blockGapWidget(),
         ],
-        const SizedBox(height: 4),
-        Text(
-          storeLine,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
+        ShellLayout.gap(4),
+        ShellLayout.hint(storeLine, maxLines: 1),
         const SizedBox(height: 10),
-        for (var i = 0; i < items.length; i++) ...[
-          if (i > 0) const SizedBox(height: 8),
-          _ShopRow(
-            item: items[i],
-            owned: ShopBilling.isOwned(state, items[i]),
-            priceLabel: _priceLabel(items[i]),
-            available: _priceReady(items[i]),
-            compact:
-                items[i].kind == ShopOfferKind.permScroll &&
-                items[i].permMask != AdBoost.permAll,
-            layout: state.homeLayout,
-            onBuy: () => _buy(items[i]),
-          ),
-        ],
+        ...() {
+          final catalog = _catalogItems(items, featured);
+          return [
+            for (var i = 0; i < catalog.length; i++) ...[
+              if (i > 0) const SizedBox(height: 8),
+              _ShopRow(
+                item: catalog[i],
+                owned: ShopBilling.isOwned(state, catalog[i]),
+                priceLabel: _priceLabel(catalog[i]),
+                available: _priceReady(catalog[i]),
+                compact:
+                    catalog[i].kind == ShopOfferKind.permScroll &&
+                    catalog[i].permMask != AdBoost.permAll,
+                layout: state.homeLayout,
+                onBuy: () => _buy(catalog[i]),
+              ),
+            ],
+          ];
+        }(),
         if (showAccountActions) ...[
           ShellLayout.blockGapWidget(),
           ShellLayout.secondaryActionRow(
@@ -361,6 +322,14 @@ class _ShopDockState extends State<ShopDock> {
         ],
       ],
     );
+  }
+
+  List<ShopCatalogItem> _catalogItems(
+    List<ShopCatalogItem> items,
+    ShopCatalogItem? featured,
+  ) {
+    if (featured == null) return items;
+    return items.where((i) => i.id != featured.id).toList(growable: false);
   }
 }
 

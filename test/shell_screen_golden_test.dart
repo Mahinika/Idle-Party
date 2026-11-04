@@ -4,6 +4,7 @@ import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/hub_screen.dart';
 import 'package:idle_party/ui/hub/hub_powerups.dart';
 import 'package:idle_party/ui/hub/hub_today_card.dart';
+import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/menu_surface.dart';
 import 'package:idle_party/ui/shell/overlay_scaffold.dart';
 import 'package:idle_party/ui/shell/play_shell.dart';
@@ -74,6 +75,139 @@ void main() {
     await expectShellGolden(tester, find.byType(Scaffold), 'hub_urgent_a56.png');
   });
 
+  testWidgets('hub SCROLLS row golden A56', (tester) async {
+    bindA56View(tester);
+    final director = scrollsGoldenDirector();
+    addTearDown(director.dispose);
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        Padding(
+          padding: ShellLayout.sheetPadding,
+          child: HubPowerupsFab(
+            state: director.state,
+            onOpen: () {},
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester);
+    await expectShellGolden(tester, find.byType(Scaffold), 'hub_scrolls_a56.png');
+  });
+
+  testWidgets('home shell SPLIT golden A56', (tester) async {
+    bindA56View(tester);
+    final director = await homeShellFightGoldenDirector();
+    var live = true;
+    addTearDown(() {
+      if (live) director.dispose();
+    });
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: shellGoldenScaffold(
+          HomeShell(director: director, router: router, onLeave: () {}),
+        ),
+      ),
+    );
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      if (director.dungeonTilesReady) break;
+    }
+    director.clearToast();
+    await pumpGoldenFrames(tester, ms: 800);
+    await expectShellGolden(tester, find.byKey(key), 'home_shell_split_a56.png');
+    director.dispose();
+    live = false;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('home compact SHOP golden A56', (tester) async {
+    bindA56View(tester);
+    final director = homeShellGoldenDirector();
+    addTearDown(director.dispose);
+    ShopDock.goldenTestPriceLabel = '\$4.99';
+    addTearDown(() => ShopDock.goldenTestPriceLabel = '');
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    router.open(MenuRoute.shop);
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        SizedBox(
+          height: 420,
+          child: Stack(
+            children: [
+              MenuSurface(director: director, router: router, home: true),
+            ],
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester, ms: 500);
+    await expectShellGolden(
+      tester,
+      find.byType(OverlayScrim),
+      'home_shop_compact_a56.png',
+    );
+  });
+
+  testWidgets('GOLD sheet golden A56', (tester) async {
+    bindA56View(tester);
+    final director = goldSheetGoldenDirector();
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    router.open(MenuRoute.gold);
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        SizedBox(
+          height: 720,
+          child: Stack(
+            children: [
+              MenuSurface(director: director, router: router),
+            ],
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester, ms: 600);
+    await expectShellGolden(
+      tester,
+      find.byType(OverlayScrim),
+      'gold_a56.png',
+    );
+  });
+
+  testWidgets('ESSENCE sheet golden A56', (tester) async {
+    bindA56View(tester);
+    final director = essenceSheetGoldenDirector();
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    router.open(MenuRoute.essence);
+    await tester.pumpWidget(
+      shellGoldenScaffold(
+        SizedBox(
+          height: 720,
+          child: Stack(
+            children: [
+              MenuSurface(director: director, router: router),
+            ],
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester, ms: 600);
+    await expectShellGolden(
+      tester,
+      find.byType(OverlayScrim),
+      'essence_a56.png',
+    );
+  });
+
   testWidgets('GEAR sheet golden A56', (tester) async {
     bindA56View(tester);
     final director = gearGoldenDirector();
@@ -123,6 +257,32 @@ void main() {
       tester,
       find.text('SCROLLS'),
       'scrolls_a56.png',
+    );
+  });
+
+  testWidgets('SHOP featured is not duplicated in catalog', (tester) async {
+    bindA56View(tester);
+    final director = shopGoldenDirector();
+    addTearDown(director.dispose);
+    ShopDock.goldenTestPriceLabel = '\$4.99';
+    addTearDown(() => ShopDock.goldenTestPriceLabel = '');
+    await tester.pumpWidget(
+      MediaQuery(
+        data: shellGoldenMedia,
+        child: MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              height: 720,
+              child: ShopDock(director: director),
+            ),
+          ),
+        ),
+      ),
+    );
+    await pumpGoldenFrames(tester);
+    expect(
+      find.text("Prospector's Bundle"),
+      findsOneWidget,
     );
   });
 

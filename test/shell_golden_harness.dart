@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
+import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/game_state.dart';
 import 'package:idle_party/models/vfx_quality.dart';
@@ -67,6 +68,42 @@ GameDirector gearGoldenDirector() {
 }
 
 GameDirector scrollsGoldenDirector() => hubGoldenDirector();
+
+GameDirector homeShellGoldenDirector() {
+  final state = GameLogic.enterDungeon(
+    _quietHubState().copyWith(
+      homeLayout: HomeLayout.home,
+      homePanelFull: false,
+    ),
+  );
+  return GameDirector.preview(initialState: state);
+}
+
+GameDirector goldSheetGoldenDirector() {
+  return GameDirector.preview(
+    initialState: _quietHubState().copyWith(
+      ascensionLevel: 3,
+      bossVictories: 2,
+      highestDungeonCleared: 2,
+    ),
+  );
+}
+
+GameDirector essenceSheetGoldenDirector() {
+  return GameDirector.preview(
+    initialState: _quietHubState().copyWith(
+      ascensionLevel: 2,
+      essence: 120,
+      bossVictories: 2,
+    ),
+  );
+}
+
+Future<GameDirector> homeShellFightGoldenDirector() async {
+  final director = homeShellGoldenDirector();
+  await director.boot();
+  return director;
+}
 
 Future<GameDirector> fightGoldenDirector() async {
   final base = GameLogic.createInitialState(now: shellGoldenNow);

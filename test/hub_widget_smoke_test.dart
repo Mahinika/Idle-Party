@@ -280,7 +280,8 @@ void main() {
     );
 
     expect(find.bySemanticsLabel('SCROLLS. READY'), findsOneWidget);
-    expect(find.text('SCROLLS'), findsWidgets);
+    expect(find.text('OPEN'), findsOneWidget);
+    expect(find.text('Free ticket in SCROLLS'), findsOneWidget);
   });
 
   testWidgets('Hub RANKS button opens the season list', (tester) async {
