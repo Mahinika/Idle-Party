@@ -87,17 +87,15 @@ class FightSeam extends StatelessWidget {
                 ],
               ),
             ),
-            Align(
-              alignment: Alignment.center,
-              child: PartyCornerHud(
+            PartyCornerHud(
               director: director,
+              homeRow: true,
               selectedHeroIndex: router.session.abilityHeroIndex,
               onSelectHero: (i) {
                 router.session.abilityHeroIndex = i;
                 director.cameraHeroIndex = i;
               },
               onOpenEquip: () => router.toggleGear(GearPanel.gear),
-              ),
             ),
           ],
         ),

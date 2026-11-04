@@ -96,11 +96,15 @@ class PartyCornerHud extends StatefulWidget {
     required this.selectedHeroIndex,
     required this.onSelectHero,
     required this.onOpenEquip,
+    this.homeRow = false,
   });
   final GameDirector director;
   final int selectedHeroIndex;
   final ValueChanged<int> onSelectHero;
   final VoidCallback onOpenEquip;
+
+  /// One line under the home fight, so the forge keeps its buy rows.
+  final bool homeRow;
 
   @override
   State<PartyCornerHud> createState() => _PartyCornerHudState();
@@ -215,6 +219,60 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     if (ok == true && mounted) widget.onOpenEquip();
   }
 
+  Widget _homeHeroTap({
+    required int i,
+    required List<PartyHero> party,
+    required bool plainEnglish,
+    required SpatialWorld? world,
+    required GameState state,
+    required double rowHeight,
+  }) {
+    final hero = party[i];
+    final spatial = _spatialFor(world, i);
+    return SizedBox(
+      height: rowHeight,
+      child: WebClickScope(
+        label: hero.name,
+        onPressed: () => _onHeroTap(i),
+        child: Semantics(
+          button: true,
+          selected: widget.selectedHeroIndex == i,
+          label:
+              '${hero.name} '
+              '${hero.displayRoleLabel(plainEnglish: plainEnglish)} — tap for abilities, '
+              'long-press for gear',
+          onTap: () => _onHeroTap(i),
+          onLongPress: _onLongPressGear,
+          excludeSemantics: true,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _onHeroTap(i),
+              onLongPress: _onLongPressGear,
+              borderRadius: BorderRadius.circular(3),
+              child: _PartyRow(
+                index: i,
+                hero: hero,
+                plainEnglish: plainEnglish,
+                selected: widget.selectedHeroIndex == i,
+                kitOpen: false,
+                compact: true,
+                phone: true,
+                stripOnly: true,
+                inCombat: world?.enemies.any((e) => e.isAlive) ?? false,
+                liveHp: spatial?.hp ?? hero.currentHp,
+                maxHp:
+                    spatial?.effectiveMaxHp ?? state.effectiveHeroMaxHp(hero),
+                spatial: spatial,
+                world: world,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = widget.director.state;
@@ -278,7 +336,58 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
       inDungeon: true,
     );
 
-    final panel = SizedBox(
+    final panel = widget.homeRow
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (showSideKit)
+                _KitSidePanel(
+                  hero: kitHero,
+                  plainEnglish: plainEnglish,
+                  spatial: kitActor,
+                  world: world,
+                ),
+              Container(
+                decoration: BoxDecoration(
+                  color: GameTheme.hudWell.withValues(alpha: 0.82),
+                  borderRadius: BorderRadius.circular(GameTheme.radiusHud),
+                  border: Border.all(color: GameTheme.hudWellBorder),
+                ),
+                padding: const EdgeInsets.all(2),
+                child: SizedBox(
+                height: showFlask ? DungeonFlaskButton.stripReserve : rowHeight,
+                child: Row(
+                  children: [
+                    for (var i = 0; i < heroCount; i++)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 2),
+                          child: _homeHeroTap(
+                            i: i,
+                            party: party,
+                            plainEnglish: plainEnglish,
+                            world: world,
+                            state: state,
+                            rowHeight: rowHeight,
+                          ),
+                        ),
+                      ),
+                    if (showFlask)
+                      SizedBox(
+                        width: 72,
+                        child: DungeonFlaskButton(
+                          director: widget.director,
+                          onTap: widget.director.useConsumable,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              ),
+            ],
+          )
+        : SizedBox(
       width: fullWidth,
       child: Stack(
         clipBehavior: Clip.none,
