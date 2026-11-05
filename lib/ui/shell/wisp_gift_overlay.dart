@@ -132,9 +132,15 @@ class _WispTapTargetState extends State<_WispTapTarget>
                           width: 48,
                           height: 48,
                           child: CustomPaint(
-                            painter: _LanternPainter(
+                            painter: _WispGlowPainter(
                               glowStrength: glow,
                               softGlow: !widget.minimal,
+                            ),
+                            child: Center(
+                              child: GameIcon.asset(
+                                UiIcon.wispLantern,
+                                size: 36,
+                              ),
                             ),
                           ),
                         ),
@@ -167,27 +173,15 @@ class _WispTapTargetState extends State<_WispTapTarget>
   }
 }
 
-/// Pixel lantern on a warm torch glow so it reads on cave walls. No black ring.
-class _LanternPainter extends CustomPainter {
-  const _LanternPainter({
+/// Warm torch glow behind the WISP lantern PNG.
+class _WispGlowPainter extends CustomPainter {
+  const _WispGlowPainter({
     required this.glowStrength,
     required this.softGlow,
   });
 
   final double glowStrength;
   final bool softGlow;
-
-  static const _rows = <String>[
-    '...#...',
-    '..#.#..',
-    '...#...',
-    '..###..',
-    '.#####.',
-    '#+*^*+#',
-    '#+***+#',
-    '.#####.',
-    '..#.#..',
-  ];
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -218,7 +212,6 @@ class _LanternPainter extends CustomPainter {
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
       );
     } else {
-      // Minimal VFX: hard warm disc instead of blur.
       canvas.drawCircle(
         Offset(cx, cy),
         size.shortestSide * 0.34,
@@ -227,47 +220,10 @@ class _LanternPainter extends CustomPainter {
           ..isAntiAlias = false,
       );
     }
-
-    const cols = 7;
-    const glyphRows = 9;
-    final glyphW = size.width * 0.72;
-    final px = glyphW / cols;
-    final ox = (size.width - cols * px) / 2;
-    final oy = (size.height - glyphRows * px) / 2;
-    final iron = Paint()
-      ..color = const Color(0xFF4A2C14)
-      ..isAntiAlias = false;
-    final glass = Paint()
-      ..color = const Color(0xFFE08A22)
-      ..isAntiAlias = false;
-    final flame = Paint()
-      ..color = const Color(0xFFFFE066)
-      ..isAntiAlias = false;
-    final tip = Paint()
-      ..color = const Color(0xFFFFFFFF)
-      ..isAntiAlias = false;
-
-    for (var y = 0; y < _rows.length; y++) {
-      final row = _rows[y];
-      for (var x = 0; x < row.length; x++) {
-        final paint = switch (row[x]) {
-          '#' => iron,
-          '+' => glass,
-          '*' => flame,
-          '^' => tip,
-          _ => null,
-        };
-        if (paint == null) continue;
-        canvas.drawRect(
-          Rect.fromLTWH(ox + x * px, oy + y * px, px, px),
-          paint,
-        );
-      }
-    }
   }
 
   @override
-  bool shouldRepaint(covariant _LanternPainter oldDelegate) =>
+  bool shouldRepaint(covariant _WispGlowPainter oldDelegate) =>
       oldDelegate.glowStrength != glowStrength ||
       oldDelegate.softGlow != softGlow;
 }
