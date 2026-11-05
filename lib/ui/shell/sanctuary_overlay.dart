@@ -1,12 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/ad_free_nudge.dart';
+import '../../core/build_stamp.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/gold_income.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/game_state.dart';
+import '../../core/shop_store.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
+import '../web_click_bridge.dart';
 import 'income_overlay.dart';
 import 'power_upgrade_row.dart';
 import 'shell_common.dart';
@@ -18,12 +23,16 @@ class SanctuaryOverlay extends StatefulWidget {
     required this.director,
     this.inlineUnderFight = false,
     this.expandedTrackList = false,
+    this.onOpenAdFree,
   });
   final GameDirector director;
   final bool inlineUnderFight;
 
   /// Bounded height (SPLIT panel or FORGE/CAMP sheet): scroll all tracks.
   final bool expandedTrackList;
+
+  /// Opens SHOP from the one-time Ad-free line. Null hides that line.
+  final VoidCallback? onOpenAdFree;
 
   @override
   State<SanctuaryOverlay> createState() => _SanctuaryOverlayState();
@@ -32,6 +41,8 @@ class SanctuaryOverlay extends StatefulWidget {
 class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
   /// Shared buy size for every CAMP row (#53): 1 / 3 / 5 / max.
   int _buyLevels = 1;
+  bool _nudgeLatched = false;
+  bool _impressionQueued = false;
 
   GameDirector get director => widget.director;
 
@@ -115,6 +126,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
             ShellLayout.gap(8),
             _bulkChooser(buyCap, effectiveBuy),
           ],
+          if (campOpen) _adFreeLine(state),
           ShellLayout.gap(8),
           if (campOpen)
             for (final track in _tracks)
@@ -159,20 +171,27 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
           padding: const EdgeInsets.symmetric(
             horizontal: ShellLayout.sheetHorizontal,
           ),
-          child: Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (buyCap > 1) _bulkChooserThin(buyCap, effectiveBuy),
-              if (GameLogic.campAdClaimsToday(state) < GameLogic.campAdDailyCap)
-                MenuChrome.chip(
-                  label: state.metaDepth.adFree
-                      ? 'Free level'
-                      : 'Watch · free level',
-                  selected: true,
-                  onTap: () => director.watchCampAd(),
-                ),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  if (buyCap > 1) _bulkChooserThin(buyCap, effectiveBuy),
+                  if (GameLogic.campAdClaimsToday(state) <
+                      GameLogic.campAdDailyCap)
+                    MenuChrome.chip(
+                      label: state.metaDepth.adFree
+                          ? 'Free level'
+                          : 'Watch · free level',
+                      selected: true,
+                      onTap: () => director.watchCampAd(),
+                    ),
+                ],
+              ),
+              _adFreeLine(state),
             ],
           ),
         ),
@@ -198,6 +217,71 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
           ),
         ),
       ],
+    );
+  }
+
+  void _queueImpression(bool live) {
+    if (!live || _impressionQueued) return;
+    _impressionQueued = true;
+    _nudgeLatched = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      director.markAdFreeNudgeShown();
+    });
+  }
+
+  bool _showAdFreeLine(GameState state) {
+    final openShop = widget.onOpenAdFree;
+    if (openShop == null) return false;
+    final live = AdFreeNudge.show(
+      meta: state.metaDepth,
+      playListsAdFree: AdFreeNudge.offerReady(
+        playListsAdFree: ShopStore.storeLists(AdFreeNudge.productId),
+        sideloadQaBuild: BuildStamp.gitSha.isNotEmpty,
+        debugBuild: kDebugMode,
+      ),
+      place: AdFreeNudgePlace.camp,
+      campCapSpent:
+          GameLogic.campAdClaimsToday(state) >= GameLogic.campAdDailyCap,
+    );
+    _queueImpression(live);
+    return live || _nudgeLatched;
+  }
+
+  Widget _adFreeLine(GameState state) {
+    if (!_showAdFreeLine(state)) return const SizedBox.shrink();
+    final onTap = widget.onOpenAdFree;
+    if (onTap == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: WebClickScope(
+        label: AdFreeNudge.line,
+        onPressed: onTap,
+        child: Semantics(
+          button: true,
+          label: AdFreeNudge.line,
+          onTap: onTap,
+          excludeSemantics: true,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    AdFreeNudge.line,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

@@ -1926,7 +1926,7 @@ class GameDirector extends ChangeNotifier {
     _applyUpgrade(next);
   }
 
-  /// SCROLLS showed the Ad-free line. Once per save. Logs the impression.
+  /// SCROLLS or CAMP showed the Ad-free line. Once per save. Logs the impression.
   void markAdFreeNudgeShown() {
     if (_state.metaDepth.adFreeNudgeShown) return;
     final next = AdFreeNudge.markShown(_state);
@@ -1935,7 +1935,7 @@ class GameDirector extends ChangeNotifier {
     unawaited(AppAnalytics.adFreeNudgeView());
   }
 
-  /// Player tapped the SCROLLS line. The sheet opens SHOP after this.
+  /// Player tapped the Ad-free line. The caller opens SHOP after this.
   void openAdFreeFromScrollsNudge() {
     markAdFreeNudgeShown();
     unawaited(AppAnalytics.adFreeNudgeTap());

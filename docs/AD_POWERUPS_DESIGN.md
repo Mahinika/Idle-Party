@@ -69,13 +69,15 @@ flowchart LR
      still grant tickets (unlimited).
   2. **WISP** — daily lantern cap in the cave (see [wisp_gift.dart](../lib/core/wisp_gift.dart)).
   3. **Spend** — catalog rows (below).
-- After the third finished rewarded watch (SCROLLS, WISP, Welcome Back, or
-  wipe — preview tickets do not count), Earn can show one quiet line:
+- After the third finished rewarded watch (SCROLLS, WISP, CAMP, Welcome
+  Back, or wipe — preview tickets do not count), one quiet line can show:
   `Tired of ads? Ad-free is a one-time purchase`. It opens SHOP. Once per
-  save. Hidden on Welcome Back, hidden in a fight, hidden for Ad-free and
-  Forever Rest, and hidden until Play returns `ad_free`. A sideload QA APK
-  (git SHA compiled in, package `com.idleparty.app.test`) may show the line
-  without that product, because Billing cannot see the Play app's SKU.
+  save, on SCROLLS or on CAMP after today's three free levels are used.
+  Hidden on Welcome Back, hidden over the fight itself, hidden for Ad-free
+  and Forever Rest, and hidden until Play returns `ad_free`. A sideload QA
+  APK (git SHA compiled in, package `com.idleparty.app.test`) may show the
+  line without that product, because Billing cannot see the Play app's SKU.
+  A debug build may show the CAMP row the same way, so a phone can prove it.
   Play builds omit the SHA. That APK also uses Google's sample rewarded unit.
 
 Visibility gates:

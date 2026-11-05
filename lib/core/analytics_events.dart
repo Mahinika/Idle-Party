@@ -19,7 +19,7 @@ abstract final class AnalyticsEvents {
   static const storePurchaseStart = 'store_purchase_start';
   static const storePurchaseCancel = 'store_purchase_cancel';
 
-  /// SCROLLS Ad-free line. Once per save. Not a buy sheet.
+  /// SCROLLS or CAMP Ad-free line. Once per save. Not a buy sheet.
   static const adFreeNudgeView = 'ad_free_nudge_view';
   static const adFreeNudgeTap = 'ad_free_nudge_tap';
 

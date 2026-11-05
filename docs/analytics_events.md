@@ -68,7 +68,7 @@ Placements: `welcome_back`, `wisp_gift`, `powerups`, `scroll_well`, `quest_rerol
 |---|---|---|
 | `store_view` | — | SHOP tab opened. |
 | `store_product_view` | `product_id` | Each product row first shown that visit. |
-| `ad_free_nudge_view` | `product_id` (`ad_free`) | SCROLLS showed the one-time Ad-free line. Once per save. |
+| `ad_free_nudge_view` | `product_id` (`ad_free`) | SCROLLS or CAMP showed the one-time Ad-free line. Once per save. |
 | `ad_free_nudge_tap` | `product_id` (`ad_free`) | Player tapped that line. SHOP opens after. |
 | `store_purchase_start` | `product_id` | Buy sheet opened. |
 | `store_purchase` | `product_id`, and `value` + `currency` when Play has listed that pack | New grant (not restore). |

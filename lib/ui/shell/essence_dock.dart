@@ -15,11 +15,13 @@ class EssenceDock extends StatefulWidget {
   const EssenceDock({
     super.key,
     required this.director,
+    required this.router,
     required this.panel,
     required this.onPanelChanged,
   });
 
   final GameDirector director;
+  final MenuRouter router;
   final EssencePanel panel;
   final ValueChanged<EssencePanel> onPanelChanged;
 
@@ -72,7 +74,13 @@ class _EssenceDockState extends State<EssenceDock>
           EssencePanel.tracks => (
             label: 'CAMP',
             body: SingleChildScrollView(
-              child: SanctuaryOverlay(director: widget.director),
+              child: SanctuaryOverlay(
+                director: widget.director,
+                onOpenAdFree: () {
+                  widget.director.openAdFreeFromScrollsNudge();
+                  widget.router.open(MenuRoute.shop);
+                },
+              ),
             ),
           ),
           EssencePanel.keep => (

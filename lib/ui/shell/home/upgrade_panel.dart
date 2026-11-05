@@ -114,6 +114,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
           director: widget.director,
           inlineUnderFight: inline,
           expandedTrackList: embedded,
+          onOpenAdFree: _openAdFreeShop,
         );
       case _Panel.forge:
         return ForgeOverlay(
@@ -122,6 +123,14 @@ class _UpgradePanelState extends State<UpgradePanel> {
           expandedTrackList: embedded,
         );
     }
+  }
+
+  void _openAdFreeShop() {
+    final router = widget.router;
+    final popSheet = widget.sheetPanel != null;
+    widget.director.openAdFreeFromScrollsNudge();
+    if (popSheet && context.mounted) Navigator.of(context).pop();
+    router.open(MenuRoute.shop);
   }
 
   Widget _locked(GameState state) {

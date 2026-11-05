@@ -88,6 +88,50 @@ void main() {
         ),
         isFalse,
       );
+      expect(
+        AdFreeNudge.show(
+          meta: ready,
+          playListsAdFree: true,
+          place: AdFreeNudgePlace.camp,
+          campCapSpent: false,
+        ),
+        isFalse,
+      );
+      expect(
+        AdFreeNudge.show(
+          meta: ready,
+          playListsAdFree: true,
+          place: AdFreeNudgePlace.camp,
+          campCapSpent: true,
+        ),
+        isTrue,
+      );
+      expect(
+        AdFreeNudge.show(
+          meta: meta(watches: 2),
+          playListsAdFree: true,
+          place: AdFreeNudgePlace.camp,
+          campCapSpent: true,
+        ),
+        isFalse,
+      );
+      expect(
+        AdFreeNudge.show(
+          meta: meta(shown: true),
+          playListsAdFree: true,
+          place: AdFreeNudgePlace.camp,
+          campCapSpent: true,
+        ),
+        isFalse,
+      );
+      expect(
+        AdFreeNudge.offerReady(
+          playListsAdFree: false,
+          sideloadQaBuild: false,
+          debugBuild: true,
+        ),
+        isTrue,
+      );
     },
   );
 

@@ -5,13 +5,15 @@ import 'shop_catalog.dart';
 
 /// Where the Ad-free line is allowed to sit.
 ///
-/// SCROLLS on the hub only. Welcome Back and the fight never qualify.
-enum AdFreeNudgePlace { scrolls, welcomeBack, fight }
+/// SCROLLS on the hub, and CAMP once today's three free levels are used.
+/// Welcome Back and the fight never qualify.
+enum AdFreeNudgePlace { scrolls, camp, welcomeBack, fight }
 
 /// One quiet Ad-free line after the player has finished three rewarded ads.
 ///
-/// Shown once, and only when Play has returned [productId]. Players who
-/// already own Ad-free or Forever Rest never see it.
+/// Shown once, and only when Play has returned [productId] (a debug build
+/// or a sideload QA APK may show the CAMP row without that product).
+/// Players who already own Ad-free or Forever Rest never see it.
 abstract final class AdFreeNudge {
   static const int watchThreshold = 3;
 
@@ -20,7 +22,8 @@ abstract final class AdFreeNudge {
 
   static const String line = 'Tired of ads? Ad-free is a one-time purchase';
 
-  /// Play returned [productId], or this binary is a sideload QA APK.
+  /// Play returned [productId], this binary is a sideload QA APK, or a
+  /// debug build is proving the CAMP row on a phone.
   ///
   /// Test APKs compile in a git SHA and ship as `com.idleparty.app.test`.
   /// Billing cannot return the Play app's SKU there. Play release builds
@@ -28,14 +31,19 @@ abstract final class AdFreeNudge {
   static bool offerReady({
     required bool playListsAdFree,
     required bool sideloadQaBuild,
-  }) => playListsAdFree || sideloadQaBuild;
+    bool debugBuild = false,
+  }) => playListsAdFree || sideloadQaBuild || debugBuild;
 
   static bool show({
     required MetaDepthState meta,
     required bool playListsAdFree,
     AdFreeNudgePlace place = AdFreeNudgePlace.scrolls,
+    bool campCapSpent = false,
   }) {
-    if (place != AdFreeNudgePlace.scrolls) return false;
+    final allowed =
+        place == AdFreeNudgePlace.scrolls || place == AdFreeNudgePlace.camp;
+    if (!allowed) return false;
+    if (place == AdFreeNudgePlace.camp && !campCapSpent) return false;
     if (meta.adFreeNudgeShown) return false;
     if (meta.rewardedWatchCount < watchThreshold) return false;
     if (meta.adFree) return false;

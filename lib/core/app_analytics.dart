@@ -118,7 +118,7 @@ abstract final class AppAnalytics {
   static Future<void> storeProductView(String productId) =>
       logEvent(AnalyticsEvents.storeProductView, {'product_id': productId});
 
-  /// SCROLLS showed the one-time Ad-free line.
+  /// SCROLLS or CAMP showed the one-time Ad-free line.
   static Future<void> adFreeNudgeView() =>
       logEvent(AnalyticsEvents.adFreeNudgeView, {'product_id': 'ad_free'});
 
