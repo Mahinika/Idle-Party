@@ -92,13 +92,13 @@ class _UpgradePanelState extends State<UpgradePanel> {
                 onSelect: (i) => setState(() => _mode = _Panel.values[i]),
               ),
             ),
-          Expanded(child: _body(state, open, active)),
+          Expanded(child: _body(state, open, active, embedded)),
         ],
       ),
     );
   }
 
-  Widget _body(GameState state, bool open, _Panel mode) {
+  Widget _body(GameState state, bool open, _Panel mode, bool embedded) {
     if (!open) return _locked(state);
     final inline =
         widget.sheetPanel == null && !state.homePanelFull;
@@ -107,16 +107,19 @@ class _UpgradePanelState extends State<UpgradePanel> {
         return MarketOverlay(
           director: widget.director,
           inlineUnderFight: inline,
+          expandedTrackList: embedded,
         );
       case _Panel.camp:
         return SanctuaryOverlay(
           director: widget.director,
           inlineUnderFight: inline,
+          expandedTrackList: embedded,
         );
       case _Panel.forge:
         return ForgeOverlay(
           director: widget.director,
           inlineUnderFight: inline,
+          expandedTrackList: embedded,
         );
     }
   }

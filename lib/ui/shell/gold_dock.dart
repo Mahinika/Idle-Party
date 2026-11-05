@@ -72,9 +72,7 @@ class _GoldDockState extends State<GoldDock> with TickerProviderStateMixin {
           ),
           GoldPanel.market => (
             label: 'MARKET',
-            body: SingleChildScrollView(
-              child: MarketOverlay(director: widget.director),
-            ),
+            body: MarketOverlay(director: widget.director),
           ),
         },
     ];

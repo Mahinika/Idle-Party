@@ -18,11 +18,15 @@ class ForgeOverlay extends StatefulWidget {
     super.key,
     required this.director,
     this.inlineUnderFight = false,
+    this.expandedTrackList = false,
   });
   final GameDirector director;
 
-  /// SPLIT home: thin panel under the fight (BEST row + expand).
+  /// SPLIT home: thin panel under the fight.
   final bool inlineUnderFight;
+
+  /// FORGE/CAMP/MARKET sheet under bounded height.
+  final bool expandedTrackList;
 
   /// GOLD footer. ESSENCE waits until that tab exists.
   static String resetHint({required bool plain, required bool showCamp}) {
@@ -60,9 +64,14 @@ class ForgeOverlay extends StatefulWidget {
 
 class _ForgeOverlayState extends State<ForgeOverlay> {
   ForgeGoldSpendMode _spendMode = ForgeGoldSpendMode.one;
-  bool _showAllTracks = false;
 
   GameDirector get director => widget.director;
+
+  bool get _compactPrice =>
+      widget.inlineUnderFight || widget.expandedTrackList;
+
+  bool get _scrollAllTracks =>
+      widget.inlineUnderFight || widget.expandedTrackList;
 
   Color _forgeAccent(PartyUpgradeType type) => switch (type) {
     PartyUpgradeType.attack => GameTheme.hudHpDamage,
@@ -140,6 +149,25 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     }
     final shortGold = cost > state.gold ? cost - state.gold : 0;
     final primaryBuy = recommended && onPressed != null;
+    final trailing = _compactPrice
+        ? PowerUpgradePriceChip(
+            label: buyLabel,
+            primary: primaryBuy,
+            onPressed: onPressed,
+          )
+        : GameButton(
+            label: buyLabel,
+            tip: onPressed == null && shortGold > 0
+                ? 'Need ${formatGold(shortGold)} more'
+                : recommended
+                ? 'BEST = cheapest track that still lifts party power'
+                : _softTip(state, type),
+            style: primaryBuy ? GameButtonStyle.brown : GameButtonStyle.grey,
+            primary: primaryBuy,
+            expanded: false,
+            dense: true,
+            onPressed: onPressed,
+          );
     return PowerUpgradeRow(
       accent: _forgeAccent(type),
       title: _forgeName(type),
@@ -148,19 +176,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           '${_forgeBonus(state, type)}${nextDelta == null ? '' : ' · $nextDelta'}',
       selected: recommended,
       dense: true,
-      trailing: GameButton(
-        label: buyLabel,
-        tip: onPressed == null && shortGold > 0
-            ? 'Need ${formatGold(shortGold)} more'
-            : recommended
-            ? 'BEST = cheapest track that still lifts party power'
-            : _softTip(state, type),
-        style: primaryBuy ? GameButtonStyle.brown : GameButtonStyle.grey,
-        primary: primaryBuy,
-        expanded: false,
-        dense: true,
-        onPressed: onPressed,
-      ),
+      trailing: trailing,
     );
   }
 
@@ -338,7 +354,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                     state,
                   )],
                 ));
-    final body = widget.inlineUnderFight
+    final body = _scrollAllTracks
         ? _inlineUnderFightBody(plain: plain, canBuyAny: canBuyAny)
         : Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -391,34 +407,6 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
     required bool canBuyAny,
   }) {
     final state = director.state;
-    final recommended =
-        PartyUpgradeType.values[GameLogic.recommendedForgeUpgrade(state)];
-    final rows = _showAllTracks
-        ? PartyUpgradeType.values
-        : <PartyUpgradeType>[recommended];
-
-    Widget rowList() {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final type in rows)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
-              child: _upgradeRow(
-                state: state,
-                type: type,
-                onPressed: GameLogic.canForgeGoldSpend(state, type, _spendMode)
-                    ? () {
-                        director.upgradePartyTrack(type, mode: _spendMode);
-                        setState(() {});
-                      }
-                    : null,
-              ),
-            ),
-        ],
-      );
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -438,16 +426,29 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
               maxLines: 1,
             ),
           ),
-        ShellLayout.sheetLink(
-          label: _showAllTracks ? 'Show best only' : 'All tracks',
-          onTap: () => setState(() => _showAllTracks = !_showAllTracks),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              ShellLayout.sheetHorizontal,
+              4,
+              ShellLayout.sheetHorizontal,
+              8,
+            ),
+            children: [
+              for (final type in PartyUpgradeType.values)
+                _upgradeRow(
+                  state: state,
+                  type: type,
+                  onPressed: GameLogic.canForgeGoldSpend(state, type, _spendMode)
+                      ? () {
+                          director.upgradePartyTrack(type, mode: _spendMode);
+                          setState(() {});
+                        }
+                      : null,
+                ),
+            ],
+          ),
         ),
-        if (_showAllTracks)
-          Expanded(
-            child: SingleChildScrollView(child: rowList()),
-          )
-        else
-          rowList(),
       ],
     );
   }

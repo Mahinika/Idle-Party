@@ -6,7 +6,7 @@ import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/ui/shell/forge_overlay.dart';
 
 void main() {
-  testWidgets('inline SPLIT forge shows BEST only until All tracks', (
+  testWidgets('inline SPLIT forge lists all tracks without All tracks link', (
     tester,
   ) async {
     var state = GameLogic.enterDungeon(
@@ -35,13 +35,13 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('All tracks'), findsOneWidget);
-    expect(find.text('MASTERY'), findsNothing);
-
-    await tester.tap(find.text('All tracks'));
-    await tester.pumpAndSettle();
-
+    expect(find.text('All tracks'), findsNothing);
+    expect(find.text('AP'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('MASTERY'),
+      80,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('MASTERY'), findsOneWidget);
-    expect(find.text('Show best only'), findsOneWidget);
   });
 }

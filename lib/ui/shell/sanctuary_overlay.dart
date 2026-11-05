@@ -6,7 +6,6 @@ import '../../core/gold_income.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/game_state.dart';
 import '../game_theme.dart';
-import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import 'income_overlay.dart';
 import 'power_upgrade_row.dart';
@@ -18,9 +17,13 @@ class SanctuaryOverlay extends StatefulWidget {
     super.key,
     required this.director,
     this.inlineUnderFight = false,
+    this.expandedTrackList = false,
   });
   final GameDirector director;
   final bool inlineUnderFight;
+
+  /// Bounded height (SPLIT panel or FORGE/CAMP sheet): scroll all tracks.
+  final bool expandedTrackList;
 
   @override
   State<SanctuaryOverlay> createState() => _SanctuaryOverlayState();
@@ -29,7 +32,6 @@ class SanctuaryOverlay extends StatefulWidget {
 class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
   /// Shared buy size for every CAMP row (#53): 1 / 3 / 5 / max.
   int _buyLevels = 1;
-  bool _showAllTracks = false;
 
   GameDirector get director => widget.director;
 
@@ -68,12 +70,15 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     'xp',
   ];
 
+  bool get _compactPrice =>
+      widget.inlineUnderFight || widget.expandedTrackList;
+
   @override
   Widget build(BuildContext context) {
     final state = director.state;
     final campOpen = MenuTabs.showCamp(state);
-    if (widget.inlineUnderFight) {
-      return _inlineUnderFightBody(state, campOpen);
+    if (widget.inlineUnderFight || widget.expandedTrackList) {
+      return _scrollableTrackBody(state, campOpen);
     }
     final maxBulk = campOpen
         ? _tracks
@@ -86,51 +91,51 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     return Padding(
       padding: ShellLayout.listPadding,
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        CampRatesSection(director: director),
-        ShellLayout.gap(8),
-        Wrap(
-          spacing: 6,
-          runSpacing: 4,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            MenuChrome.chip(
-              label: 'Ascend ${state.ascensionLevel}',
-              tone: GameTheme.torchHot,
-            ),
-            MenuChrome.chip(label: 'Camp tracks', selected: campOpen),
-            Text(
-              '${formatCount(state.essence)}e · survive Ascend',
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-            ),
-          ],
-        ),
-        if (campOpen && buyCap > 1) ...[
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          CampRatesSection(director: director),
           ShellLayout.gap(8),
-          _bulkChooser(buyCap, effectiveBuy),
-        ],
-        ShellLayout.gap(8),
-        if (campOpen)
-          for (final track in _tracks)
-            _campTrackCard(
-              state,
-              track,
-              effectiveBuy,
-              recommended: track == GameLogic.recommendedSanctuaryTrack(state),
-            )
-        else
-          ShellLayout.hint(
-            'Gold Find, War Altar, Life Well, Aegis, and Lore Font appear here once Essence unlocks.',
-            maxLines: 3,
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              MenuChrome.chip(
+                label: 'Ascend ${state.ascensionLevel}',
+                tone: GameTheme.torchHot,
+              ),
+              MenuChrome.chip(label: 'Camp tracks', selected: campOpen),
+              Text(
+                '${formatCount(state.essence)}e · survive Ascend',
+                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              ),
+            ],
           ),
-        ShellLayout.gap(12),
-      ],
-    ),
+          if (campOpen && buyCap > 1) ...[
+            ShellLayout.gap(8),
+            _bulkChooser(buyCap, effectiveBuy),
+          ],
+          ShellLayout.gap(8),
+          if (campOpen)
+            for (final track in _tracks)
+              _campTrackCard(
+                state,
+                track,
+                effectiveBuy,
+                recommended: track == GameLogic.recommendedSanctuaryTrack(state),
+              )
+          else
+            ShellLayout.hint(
+              'Gold Find, War Altar, Life Well, Aegis, and Lore Font appear here once Essence unlocks.',
+              maxLines: 3,
+            ),
+          ShellLayout.gap(12),
+        ],
+      ),
     );
   }
 
-  Widget _inlineUnderFightBody(GameState state, bool campOpen) {
+  Widget _scrollableTrackBody(GameState state, bool campOpen) {
     if (!campOpen) {
       return Padding(
         padding: ShellLayout.listPadding,
@@ -146,51 +151,36 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     final buyCap = maxBulk.clamp(1, 99);
     final effectiveBuy = _buyLevels.clamp(1, buyCap);
     final pick = GameLogic.recommendedSanctuaryTrack(state);
-    final tracks = _showAllTracks ? _tracks : <String>[pick];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (buyCap > 1)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
-            child: _bulkChooser(buyCap, effectiveBuy),
+            padding: const EdgeInsets.symmetric(
+              horizontal: ShellLayout.sheetHorizontal,
+            ),
+            child: _bulkChooserThin(buyCap, effectiveBuy),
           ),
-        ShellLayout.sheetLink(
-          label: _showAllTracks ? 'Show best only' : 'All tracks',
-          onTap: () => setState(() => _showAllTracks = !_showAllTracks),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              ShellLayout.sheetHorizontal,
+              4,
+              ShellLayout.sheetHorizontal,
+              8,
+            ),
+            children: [
+              for (final track in _tracks)
+                _campTrackCard(
+                  state,
+                  track,
+                  effectiveBuy,
+                  recommended: track == pick,
+                ),
+            ],
+          ),
         ),
-        if (_showAllTracks)
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  for (final track in tracks)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: ShellLayout.sheetHorizontal,
-                      ),
-                      child: _campTrackCard(
-                        state,
-                        track,
-                        effectiveBuy,
-                        recommended: track == pick,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
-            child: _campTrackCard(
-              state,
-              pick,
-              effectiveBuy,
-              recommended: true,
-            ),
-          ),
       ],
     );
   }
@@ -210,6 +200,25 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       labels: labels,
       selectedIndex: selected,
       onSelect: (i) => setState(() => _buyLevels = options[i]),
+    );
+  }
+
+  Widget _bulkChooserThin(int buyCap, int effectiveBuy) {
+    final options = <int>[1];
+    if (buyCap >= 3) options.add(3);
+    if (buyCap >= 5) options.add(5);
+    if (buyCap > 5 && !options.contains(buyCap)) options.add(buyCap);
+    return Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      children: [
+        for (final n in options)
+          MenuChrome.chip(
+            label: n == buyCap && n > 5 ? 'Max ×$n' : '×$n',
+            selected: effectiveBuy == n,
+            onTap: () => setState(() => _buyLevels = n),
+          ),
+      ],
     );
   }
 
@@ -244,14 +253,50 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
         state.sanctuaryGoldLevel,
       );
       final combatDelta = campPct - nowPct;
-      detail =
-          'Next +${hubDelta}g/min hub · +$combatDelta% find';
+      detail = 'Next +${hubDelta}g/min hub · +$combatDelta% find';
     } else if (track == 'power') {
       detail = 'Speeds hub AFK essence';
     }
 
+    if (_compactPrice) {
+      detail = null;
+    }
+
     late final Widget trailing;
-    if (buyN > 1) {
+    if (_compactPrice) {
+      if (buyN > 1 && maxForTrack >= buyN) {
+        final bulkCost = GameLogic.sanctuaryBulkCost(state, track, buyN);
+        final label = track == 'gold'
+            ? () {
+                final hubNow = GoldIncome.hubGoldPerMinute(state);
+                final hubAfter = GoldIncome.hubGoldPerMinuteAtGoldLevel(
+                  state,
+                  level + buyN,
+                );
+                return '+${hubAfter - hubNow}g · ${bulkCost}e';
+              }()
+            : '$buyN · ${bulkCost}e';
+        trailing = PowerUpgradePriceChip(
+          label: label,
+          primary: recommended,
+          onPressed: () {
+            director.upgradeSanctuaryBulk(track, maxLevels: buyN);
+            setState(() {});
+          },
+        );
+      } else {
+        trailing = PowerUpgradePriceChip(
+          label: '${cost}e',
+          primary: recommended && canAffordOne,
+          onPressed: canAffordOne
+              ? () {
+                  director.upgradeSanctuary(track);
+                  setState(() {});
+                }
+              : null,
+        );
+      }
+    } else if (buyN > 1) {
       final bulkCost = GameLogic.sanctuaryBulkCost(state, track, buyN);
       final target = level + buyN;
       final label = track == 'gold'
@@ -262,23 +307,18 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
               return '+${hubAfter - hubNow}g/min · ${bulkCost}e';
             }()
           : 'Buy $buyN · ${bulkCost}e';
-      trailing = GameButton(
+      trailing = PowerUpgradePriceChip(
         label: label,
-        style: GameButtonStyle.brown,
-        expanded: false,
-        dense: true,
+        primary: true,
         onPressed: () {
           director.upgradeSanctuaryBulk(track, maxLevels: buyN);
           setState(() {});
         },
       );
     } else {
-      // Same chrome as bulk rows — disabled grey when can't afford (#52).
-      trailing = GameButton(
+      trailing = PowerUpgradePriceChip(
         label: '${cost}e',
-        style: canAffordOne ? GameButtonStyle.brown : GameButtonStyle.grey,
-        expanded: false,
-        dense: true,
+        primary: canAffordOne && recommended,
         onPressed: canAffordOne
             ? () {
                 director.upgradeSanctuary(track);
@@ -288,12 +328,16 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
       );
     }
 
+    final subtitle = _compactPrice
+        ? 'Lv$level · $currentBonus'
+        : 'Lv$level · $currentBonus'
+            '${prestige > 0 ? ' · P$prestige' : ''}';
+
     return PowerUpgradeRow(
       accent: _trackAccent(track),
       title: GameLogic.sanctuaryNames[track] ?? track,
       tag: recommended ? 'BEST' : null,
-      subtitle: 'Lv$level · $currentBonus'
-          '${prestige > 0 ? ' · P$prestige' : ''}',
+      subtitle: subtitle,
       detail: detail,
       selected: recommended,
       dense: true,

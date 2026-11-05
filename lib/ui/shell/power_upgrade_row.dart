@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../game_theme.dart';
 import '../menu_chrome.dart';
+import '../web_click_bridge.dart';
 
 /// Dense POWER upgrade row — accent · title · bonus · trailing buy.
 ///
@@ -137,6 +138,81 @@ class PowerUpgradeRow extends StatelessWidget {
             below!,
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Short buy control for dense FORGE / CAMP lists (~32px, no glow).
+class PowerUpgradePriceChip extends StatelessWidget {
+  const PowerUpgradePriceChip({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.primary = false,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final bool primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    final bg = enabled
+        ? (primary
+              ? GameTheme.buttonBrownBottom
+              : GameTheme.panelInset)
+        : GameTheme.buttonDisabledBottom;
+    final border = enabled
+        ? (primary
+              ? GameTheme.torch.withValues(alpha: 0.65)
+              : GameTheme.border.withValues(alpha: 0.75))
+        : GameTheme.buttonDisabledBorder;
+    final textColor = enabled
+        ? (primary ? GameTheme.torchHot : GameTheme.parchment)
+        : GameTheme.buttonDisabledText;
+    return WebClickScope(
+      label: label,
+      onPressed: onPressed,
+      child: Semantics(
+        button: true,
+        enabled: enabled,
+        label: label,
+        onTap: onPressed,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+            child: Ink(
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                border: Border.all(color: border),
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minWidth: 44,
+                  minHeight: 32,
+                  maxHeight: 32,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Center(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.button(size: 12, color: textColor),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

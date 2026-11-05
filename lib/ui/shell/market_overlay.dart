@@ -22,9 +22,11 @@ class MarketOverlay extends StatefulWidget {
     super.key,
     required this.director,
     this.inlineUnderFight = false,
+    this.expandedTrackList = false,
   });
   final GameDirector director;
   final bool inlineUnderFight;
+  final bool expandedTrackList;
 
   @override
   State<MarketOverlay> createState() => _MarketOverlayState();
@@ -33,7 +35,6 @@ class MarketOverlay extends StatefulWidget {
 class _MarketOverlayState extends State<MarketOverlay> {
   /// Start on upgrades — the usual reason to open MARKET.
   bool _upgradesOnly = true;
-  bool _showAllListings = false;
 
   @override
   void initState() {
@@ -41,94 +42,143 @@ class _MarketOverlayState extends State<MarketOverlay> {
     widget.director.ensureMarketListings();
   }
 
+  bool get _boundedList =>
+      widget.inlineUnderFight || widget.expandedTrackList;
+
   @override
   Widget build(BuildContext context) {
     final director = widget.director;
     final state = director.state;
-    if (widget.inlineUnderFight && !_showAllListings) {
-      return _inlineUnderFightBody(context, state, director);
+    if (_boundedList) {
+      return _boundedMarketBody(context, state, director);
     }
-    final body = _fullBody(context, state, director);
-    if (widget.inlineUnderFight) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: SingleChildScrollView(child: body),
-          ),
-        ],
-      );
-    }
-    return body;
+    return SingleChildScrollView(
+      child: _fullBody(context, state, director, compactControls: true),
+    );
   }
 
-  Widget _inlineUnderFightBody(
+  Widget _boundedMarketBody(
     BuildContext context,
     GameState state,
     GameDirector director,
   ) {
-    final flaskCost = GameLogic.marketFlaskCost(state);
     final listings = _sortedFilteredListings(state);
-    final best = listings.isNotEmpty ? listings.first : null;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
-          child: GameButton(
-            label: state.gold >= flaskCost
-                ? 'FLASK · ${formatGold(flaskCost)}'
-                : 'FLASK · NEED ${formatGold(flaskCost)}',
-            dense: true,
-            style: state.gold >= flaskCost
-                ? GameButtonStyle.brown
-                : GameButtonStyle.grey,
-            primary: state.gold >= flaskCost,
-            onPressed:
-                state.gold >= flaskCost ? director.buyMarketFlask : null,
+          padding: const EdgeInsets.symmetric(
+            horizontal: ShellLayout.sheetHorizontal,
           ),
+          child: _marketTopControls(state, director, compact: true),
         ),
-        if (best != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
-            child: _listingCard(state, director, best),
+        ShellLayout.gap(4),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: ShellLayout.sheetHorizontal,
           ),
-        ShellLayout.sheetLink(
-          label: 'All listings',
-          onTap: () => setState(() => _showAllListings = true),
+          child: _filterChips(state),
+        ),
+        ShellLayout.gap(4),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              ShellLayout.sheetHorizontal,
+              0,
+              ShellLayout.sheetHorizontal,
+              8,
+            ),
+            children: listings.isEmpty
+                ? [
+                    ShellLayout.hint(
+                      _upgradesOnly
+                          ? 'No upgrades in stock.'
+                          : 'No listings yet.',
+                      maxLines: 2,
+                    ),
+                  ]
+                : [
+                    for (final listing in listings)
+                      _listingCard(state, director, listing),
+                  ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _fullBody(
-    BuildContext context,
-    GameState state,
-    GameDirector director,
-  ) {
-    final flaskCost = GameLogic.marketFlaskCost(state);
-    final bandageCost = GameLogic.marketBandageCost(state);
-    final refreshLabel = MarketListingsService.formatRefreshRemaining(state);
-    final refreshCost = GameLogic.marketListingsPaidRefreshCost(state);
-    final freeReady = MarketListingsService.refreshRemainingMs(state) <= 0;
-    final listings = _sortedFilteredListings(state);
+  Widget _filterChips(GameState state) {
     final upgradeCount = state.marketListings
         .where((l) => _upgradeHeroName(state, l) != null)
         .length;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      children: [
+        MenuChrome.chip(
+          label: upgradeCount > 0 ? 'UPGRADES · $upgradeCount' : 'UPGRADES',
+          selected: _upgradesOnly,
+          onTap: () => setState(() => _upgradesOnly = true),
+        ),
+        MenuChrome.chip(
+          label: 'ALL GEAR',
+          selected: !_upgradesOnly,
+          onTap: () => setState(() => _upgradesOnly = false),
+        ),
+      ],
+    );
+  }
 
+  Widget _marketTopControls(
+    GameState state,
+    GameDirector director, {
+    required bool compact,
+  }) {
+    final flaskCost = GameLogic.marketFlaskCost(state);
+    final bandageCost = GameLogic.marketBandageCost(state);
+    final refreshCost = GameLogic.marketListingsPaidRefreshCost(state);
+    final freeReady = MarketListingsService.refreshRemainingMs(state) <= 0;
     final canFlask = state.gold >= flaskCost;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
-      child: Column(
-      mainAxisSize: MainAxisSize.min,
+    final canBandage = state.gold >= bandageCost;
+    final canReroll = state.gold >= refreshCost;
+
+    if (compact) {
+      return Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          MenuChrome.chip(
+            label: canFlask
+                ? 'Flask ${formatGold(flaskCost)}'
+                : 'Flask need ${formatGold(flaskCost)}',
+            selected: canFlask,
+            onTap: canFlask ? director.buyMarketFlask : null,
+          ),
+          MenuChrome.chip(
+            label: '×3 ${formatGold(flaskCost * 3)}',
+            onTap: state.gold >= flaskCost * 3
+                ? () => director.buyMarketFlasks()
+                : null,
+          ),
+          MenuChrome.chip(
+            label: 'Bandage ${formatGold(bandageCost)}',
+            onTap: canBandage ? director.buyMarketBandage : null,
+          ),
+          if (!freeReady)
+            MenuChrome.chip(
+              label: 'Reroll ${formatGold(refreshCost)}',
+              onTap: canReroll ? director.refreshMarketListings : null,
+            )
+          else
+            MenuChrome.chip(label: 'Fresh stock', tone: GameTheme.mossLit),
+        ],
+      );
+    }
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (widget.inlineUnderFight)
-          ShellLayout.sheetLink(
-            label: 'Show picks only',
-            onTap: () => setState(() => _showAllListings = false),
-          ),
         if (freeReady)
           ShellLayout.hint('Listings fresh', maxLines: 1)
         else ...[
@@ -136,14 +186,14 @@ class _MarketOverlayState extends State<MarketOverlay> {
             label: 'REROLL · ${formatGold(refreshCost)}',
             style: GameButtonStyle.grey,
             dense: true,
-            onPressed: state.gold >= refreshCost
-                ? director.refreshMarketListings
-                : null,
+            onPressed: canReroll ? director.refreshMarketListings : null,
           ),
           ShellLayout.gap(4),
-          ShellLayout.hint('Free refresh in $refreshLabel', maxLines: 1),
+          ShellLayout.hint(
+            'Free refresh in ${MarketListingsService.formatRefreshRemaining(state)}',
+            maxLines: 1,
+          ),
         ],
-
         ShellLayout.gap(10),
         GameButton(
           label: canFlask
@@ -154,11 +204,6 @@ class _MarketOverlayState extends State<MarketOverlay> {
           style: canFlask ? GameButtonStyle.brown : GameButtonStyle.grey,
           primary: canFlask,
           onPressed: canFlask ? director.buyMarketFlask : null,
-        ),
-        ShellLayout.gap(6),
-        ShellLayout.hint(
-          '${_marketHealCount(state)} · Flask: party heal · Bandage: one hero most hurt',
-          maxLines: 2,
         ),
         ShellLayout.gap(6),
         ShellLayout.secondaryActionRow(
@@ -173,86 +218,110 @@ class _MarketOverlayState extends State<MarketOverlay> {
             ),
             GameButton(
               label: 'BANDAGE · ${formatGold(bandageCost)}',
-              tip: 'Heals the one hero who needs it most.',
               style: GameButtonStyle.grey,
               dense: true,
-              onPressed: state.gold >= bandageCost
-                  ? director.buyMarketBandage
-                  : null,
+              onPressed: canBandage ? director.buyMarketBandage : null,
             ),
           ],
-        ),
-
-        ShellLayout.gap(12),
-        Row(
-          children: [
-            MenuChrome.chip(
-              label: upgradeCount > 0
-                  ? 'UPGRADES · $upgradeCount'
-                  : 'UPGRADES',
-              selected: _upgradesOnly,
-              onTap: () => setState(() => _upgradesOnly = true),
-            ),
-            const SizedBox(width: 6),
-            MenuChrome.chip(
-              label: 'ALL GEAR',
-              selected: !_upgradesOnly,
-              onTap: () => setState(() => _upgradesOnly = false),
-            ),
-          ],
-        ),
-        ShellLayout.gap(8),
-
-        ShellLayout.hint(
-          'GAP FILL = empty slot piece (not a budget upgrade). UPGRADE = stronger than worn.',
-          maxLines: 2,
-        ),
-        ShellLayout.gap(6),
-
-        if (listings.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              children: [
-                Text(
-                  _upgradesOnly
-                      ? 'No upgrades in stock.'
-                      : 'No listings yet.',
-                  textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 14,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GameButton(
-                  label: _upgradesOnly ? 'ALL GEAR' : 'REROLL',
-                  style: GameButtonStyle.grey,
-                  dense: true,
-                  expanded: false,
-                  onPressed: _upgradesOnly
-                      ? () => setState(() => _upgradesOnly = false)
-                      : (state.gold >= refreshCost
-                            ? director.refreshMarketListings
-                            : null),
-                  tip: _upgradesOnly
-                      ? 'Show every listing, not only upgrades'
-                      : 'Pay gold for a new stock',
-                ),
-              ],
-            ),
-          )
-        else
-          for (final listing in listings)
-            _listingCard(state, director, listing),
-
-        ShellLayout.gap(8),
-        ShellLayout.hint(
-          'Tap a listing to buy · this-run gear only',
-          maxLines: 2,
         ),
       ],
-    ),
+    );
+  }
+
+  Widget _fullBody(
+    BuildContext context,
+    GameState state,
+    GameDirector director, {
+    required bool compactControls,
+  }) {
+    final listings = _sortedFilteredListings(state);
+    final upgradeCount = state.marketListings
+        .where((l) => _upgradeHeroName(state, l) != null)
+        .length;
+    final refreshCost = GameLogic.marketListingsPaidRefreshCost(state);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _marketTopControls(
+            state,
+            director,
+            compact: compactControls,
+          ),
+          if (!compactControls) ...[
+            ShellLayout.gap(6),
+            ShellLayout.hint(
+              '${_marketHealCount(state)} · Flask: party heal · Bandage: one hero most hurt',
+              maxLines: 2,
+            ),
+          ],
+          ShellLayout.gap(8),
+          Row(
+            children: [
+              MenuChrome.chip(
+                label: upgradeCount > 0
+                    ? 'UPGRADES · $upgradeCount'
+                    : 'UPGRADES',
+                selected: _upgradesOnly,
+                onTap: () => setState(() => _upgradesOnly = true),
+              ),
+              const SizedBox(width: 6),
+              MenuChrome.chip(
+                label: 'ALL GEAR',
+                selected: !_upgradesOnly,
+                onTap: () => setState(() => _upgradesOnly = false),
+              ),
+            ],
+          ),
+          ShellLayout.gap(8),
+          ShellLayout.hint(
+            'GAP FILL = empty slot piece (not a budget upgrade). UPGRADE = stronger than worn.',
+            maxLines: 2,
+          ),
+          ShellLayout.gap(6),
+          if (listings.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                children: [
+                  Text(
+                    _upgradesOnly
+                        ? 'No upgrades in stock.'
+                        : 'No listings yet.',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 14,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  GameButton(
+                    label: _upgradesOnly ? 'ALL GEAR' : 'REROLL',
+                    style: GameButtonStyle.grey,
+                    dense: true,
+                    expanded: false,
+                    onPressed: _upgradesOnly
+                        ? () => setState(() => _upgradesOnly = false)
+                        : (state.gold >= refreshCost
+                              ? director.refreshMarketListings
+                              : null),
+                  ),
+                ],
+              ),
+            )
+          else
+            for (final listing in listings)
+              _listingCard(state, director, listing),
+          ShellLayout.gap(8),
+          ShellLayout.hint(
+            'Tap a listing to buy · this-run gear only',
+            maxLines: 2,
+          ),
+        ],
+      ),
     );
   }
 
@@ -302,93 +371,93 @@ class _MarketOverlayState extends State<MarketOverlay> {
             ? 'Buy ${item.name}, ${formatGold(listing.priceGold)}'
             : '${item.name}, need ${formatGold(listing.priceGold)}',
         child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: canBuy
-            ? () => director.buyMarketListing(listing.id)
-            : () => director.showToast(
-                'Need ${formatGold(listing.priceGold)}',
-                life: 1.6,
-              ),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
-          decoration: MenuChrome.listCard(
-            selected: showUpgradeBadge || isGapFill,
-            borderColor: rarityBorderColor(item.rarity).withValues(alpha: 0.85),
-          ),
-          child: Row(
-            children: [
-              EquipmentIcon(item: item, size: 28),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        if (showUpgradeBadge) ...[
-                          Text(
-                            'UPGRADE',
-                            style: GameTheme.pixel(
-                              size: 6,
-                              color: GameTheme.mossLit,
+          behavior: HitTestBehavior.opaque,
+          onTap: canBuy
+              ? () => director.buyMarketListing(listing.id)
+              : () => director.showToast(
+                  'Need ${formatGold(listing.priceGold)}',
+                  life: 1.6,
+                ),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+            decoration: MenuChrome.listCard(
+              selected: showUpgradeBadge || isGapFill,
+              borderColor: rarityBorderColor(item.rarity).withValues(alpha: 0.85),
+            ),
+            child: Row(
+              children: [
+                EquipmentIcon(item: item, size: 26),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (showUpgradeBadge) ...[
+                            Text(
+                              'UPGRADE',
+                              style: GameTheme.pixel(
+                                size: 6,
+                                color: GameTheme.mossLit,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ] else if (isGapFill) ...[
+                            Text(
+                              'GAP FILL',
+                              style: GameTheme.pixel(
+                                size: 6,
+                                color: GameTheme.torchHot,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Expanded(
+                            child: Text(
+                              item.name,
+                              style: GameTheme.body(
+                                size: 13,
+                                color: canBuy
+                                    ? GameTheme.parchment
+                                    : GameTheme.parchmentDim,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                        ] else if (isGapFill) ...[
-                          Text(
-                            'GAP FILL',
-                            style: GameTheme.pixel(
-                              size: 6,
-                              color: GameTheme.torchHot,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
                         ],
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            style: GameTheme.body(
-                              size: 13,
-                              color: canBuy
-                                  ? GameTheme.parchment
-                                  : GameTheme.parchmentDim,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      subtitle,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: showUpgradeBadge
-                            ? GameTheme.mossLit
-                            : GameTheme.parchmentDim,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                      Text(
+                        subtitle,
+                        style: GameTheme.body(
+                          size: 11,
+                          color: showUpgradeBadge
+                              ? GameTheme.mossLit
+                              : GameTheme.parchmentDim,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                canBuy
-                    ? formatGold(listing.priceGold)
-                    : 'Need ${formatGold(listing.priceGold)}',
-                style: GameTheme.body(
-                  size: 13,
-                  color: canBuy && showUpgradeBadge
-                      ? GameTheme.torchHot
-                      : GameTheme.parchmentDim,
+                const SizedBox(width: 8),
+                Text(
+                  canBuy
+                      ? formatGold(listing.priceGold)
+                      : 'Need ${formatGold(listing.priceGold)}',
+                  style: GameTheme.body(
+                    size: 12,
+                    color: canBuy && showUpgradeBadge
+                        ? GameTheme.torchHot
+                        : GameTheme.parchmentDim,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
