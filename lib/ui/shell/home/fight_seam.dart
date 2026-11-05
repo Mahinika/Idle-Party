@@ -9,6 +9,7 @@ import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
 import '../../spatial_dungeon_view.dart';
 import '../../web_click_bridge.dart';
+import '../shell_layout.dart';
 import '../dungeon_party_hud.dart';
 import 'fight_seam_rails.dart';
 
@@ -19,11 +20,15 @@ class FightSeam extends StatelessWidget {
     required this.director,
     required this.router,
     required this.onLeave,
+    this.hideRails = false,
   });
 
   final GameDirector director;
   final MenuRouter router;
   final VoidCallback onLeave;
+
+  /// FULL height: drop the horizontal chip rail — MENU / nav still reach extras.
+  final bool hideRails;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +44,7 @@ class FightSeam extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(6, 2, 6, 0),
+            padding: ShellLayout.seamPadding,
             child: SizedBox(
               height: 34,
               child: Row(
@@ -89,23 +94,19 @@ class FightSeam extends StatelessWidget {
                     onTap: () =>
                         director.setHomePanelFull(!state.homePanelFull),
                     minHeight: 32,
-                    child: Icon(
-                      state.homePanelFull
-                          ? Icons.view_agenda_outlined
-                          : Icons.fullscreen,
-                      size: 18,
-                      color: GameTheme.parchmentDim,
+                    child: Text(
+                      state.homePanelFull ? 'SPLIT' : 'FULL',
+                      style: GameTheme.menuTitle(
+                        size: 10,
+                        color: GameTheme.parchmentDim,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: GameTheme.border.withValues(alpha: 0.65),
-          ),
+          ShellLayout.divider(),
           PartyCornerHud(
               director: director,
               homeRow: true,
@@ -116,7 +117,24 @@ class FightSeam extends StatelessWidget {
               },
               onOpenEquip: () => router.toggleGear(GearPanel.gear),
             ),
-          FightSeamRails(director: director, router: router),
+          if (world != null &&
+              world.awaitingExit &&
+              !state.isPartyDefeated &&
+              !director.exitHoldActive)
+            Align(
+              alignment: Alignment.centerRight,
+              child: _tap(
+                label: 'HOLD',
+                onTap: director.startExitHold,
+                minHeight: 32,
+                child: Text(
+                  'HOLD',
+                  style: GameTheme.menuTitle(size: 11, color: GameTheme.torchHot),
+                ),
+              ),
+            ),
+          if (!hideRails)
+            FightSeamRails(director: director, router: router),
         ],
       ),
     );

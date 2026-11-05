@@ -19,6 +19,7 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../meta/play_games_section.dart';
 import '../meta/save_transfer.dart';
+import '../shell/shell_layout.dart';
 import '../redeem_coupon_dialog.dart';
 import 'bag_cleanup_filters.dart';
 import 'dev_gear_lookbook.dart';
@@ -148,7 +149,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
   Widget _scrollPage(_SettingsPage page, Widget child) {
     return SingleChildScrollView(
       key: PageStorageKey<String>('settings-${page.name}'),
-      padding: const EdgeInsets.fromLTRB(2, 0, 2, 16),
+      padding: ShellLayout.scrollBodyPadding,
       child: child,
     );
   }
@@ -161,9 +162,9 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           'Music, ambience, combat sound, and vibration.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
-        const SizedBox(height: 8),
+        ShellLayout.gap(),
         MenuChrome.sectionLabel('SOUND'),
-        const SizedBox(height: 4),
+        ShellLayout.gap(4),
         Text(
           NavCopy.playerText(
             'Mute turns everything off. Music stays on in the hub and in a cave. '
@@ -466,7 +467,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         GameButton(
           label: 'REDEEM CODE',
           tip: 'Also in SHOP → EXTRA',
-          style: GameButtonStyle.brown,
+          style: GameButtonStyle.grey,
           onPressed: () => showRedeemCouponDialog(context, director),
         ),
         const SizedBox(height: 16),
@@ -475,7 +476,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         GameButton(
           label: 'JOIN DISCORD',
           tip: 'Opens Discord so you can join the Idle Party server',
-          style: GameButtonStyle.brown,
+          style: GameButtonStyle.grey,
           onPressed: () async {
             final ok = await CommunityLinks.openDiscord();
             if (!ok && mounted) {

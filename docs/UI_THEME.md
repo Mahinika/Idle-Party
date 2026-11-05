@@ -218,7 +218,7 @@ Helpers: `sectionLabelScoped(title, scope: …)` tints the header. Plain `sectio
 **Icons:** `GameIcon.asset(UiIcon.settings)` / `UiIcon.key` (PNG) or `GameIcon.glyph` for add/close/arrows/scroll — never Material `Icons` or emoji in chrome. TODAY buttons are plain English (`ENTER KEY`, `GAUNTLET`, `RIFT`). Hub SCROLLS is a row under the cave button after the first boss, and uses `UiGlyph.scroll`. Active buffs use owned `UiIcon` sprites (sword / coin / tome / boots / chest / wand / campfire) stacked above the FAB and above dungeon FLASK.  
 **Touch:** `minTouch` 44 · `primaryTouch` 48 · `edgeGap` 12 (screen edge) · `clusterGap` 8 (between taps). Do not invent a third gap. A target that meets 44 px but sits flush against its neighbor still mis-taps.
 
-**Helpers:** `sheetHandle` (grip on a sheet) · `stepperButton` (+/−) · `dialog` / `dialogCancel` (confirm) · `statRow` (`label … value`) · `toggleMark`, `slider`, `fold` (settings / Apex / What’s New). **`MenuChrome.playSafeArea`** — hub / dungeon / start / intro share the full-height GEAR top edge (no status-bar letterbox). Play bottom inset stays on `AppBottomBar`.
+**Helpers:** `sheetHandle` (grip on a sheet) · `stepperButton` (+/−) · `dialog` / `dialogCancel` (confirm) · `statRow` (`label … value`) · `toggleMark`, `slider`, `fold` (settings / Apex / What’s New). **`ShellLayout`** (`lib/ui/shell/shell_layout.dart`) — shared sheet/hub padding, `hint`, `card`, `hubCard`, `sheetLink`, `seamPadding`, `secondaryActionRow`. **`MenuChrome.playSafeArea`** — hub / dungeon / start / intro share the full-height GEAR top edge (no status-bar letterbox). Play bottom inset stays on `AppBottomBar`.
 
 ---
 

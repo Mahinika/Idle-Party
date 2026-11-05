@@ -18,3 +18,4 @@ export 'game_button.dart';
 export 'game_icon.dart';
 export 'game_theme.dart';
 export 'menu_chrome.dart';
+export 'shell/shell_layout.dart';

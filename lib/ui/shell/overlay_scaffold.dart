@@ -4,6 +4,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
+import 'shell_layout.dart';
 import 'wallet_strip.dart';
 
 class OverlayScrim extends StatelessWidget {
@@ -202,7 +203,12 @@ class _OverlayPanel extends StatelessWidget {
         title.isNotEmpty || showClose || gold != null || essence != null;
     final panel = Container(
       margin: margin,
-      padding: EdgeInsets.fromLTRB(12, handle ? 6 : (showHeader ? 6 : 0), 12, 8),
+      padding: EdgeInsets.fromLTRB(
+        12,
+        handle ? 6 : (showHeader ? 6 : 0),
+        12,
+        8,
+      ),
       decoration: MenuChrome.panel(borderRadius: borderRadius),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -219,12 +225,9 @@ class _OverlayPanel extends StatelessWidget {
               showClose: showClose,
             ),
           if (showHeader) ...[
-            const SizedBox(height: 4),
-            Container(
-              height: 1,
-              color: GameTheme.borderLit.withValues(alpha: 0.22),
-            ),
-            const SizedBox(height: 6),
+            ShellLayout.gap(4),
+            ShellLayout.divider(),
+            ShellLayout.gap(6),
           ],
           Expanded(child: child),
         ],
@@ -275,16 +278,8 @@ class _SheetHeader extends StatelessWidget {
                 style: GameTheme.menuTitle(size: 18),
               ),
               if (subtitle.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
+                ShellLayout.gap(2),
+                ShellLayout.hint(subtitle, maxLines: 2),
               ],
             ],
           );

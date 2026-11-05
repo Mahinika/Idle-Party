@@ -22,6 +22,7 @@ import '../item_tooltip.dart';
 import '../web_click_bridge.dart';
 import 'bag_cleanup_filters.dart';
 import 'shell_common.dart';
+import 'shell_layout.dart';
 
 part 'bag_equip_hero_chip.dart';
 part 'bag_slot.dart';
@@ -313,9 +314,19 @@ class _InventoryDockState extends State<InventoryDock>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(child: SingleChildScrollView(child: sheet())),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: ShellLayout.sheetHorizontal,
+            ),
+            child: sheet(),
+          ),
+        ),
         const SizedBox(height: 4),
-        actions(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+          child: actions(),
+        ),
       ],
     );
   }
@@ -504,11 +515,8 @@ class _InventoryDockState extends State<InventoryDock>
           ],
         ),
         if (filter == null && bagHint.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Text(
-            bagHint,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          ),
+          ShellLayout.gap(4),
+          ShellLayout.hint(bagHint, maxLines: 2),
         ],
         const SizedBox(height: 4),
         if (showMarketChip)
@@ -882,15 +890,14 @@ class _InventoryDockState extends State<InventoryDock>
             onPressed: state.gearStash.length < 2 ? null : onAutoMerge,
             style: GameButtonStyle.grey,
           ),
-          const SizedBox(height: 4),
-          Text(
+          ShellLayout.gap(4),
+          ShellLayout.hint(
             InventoryDock.mergeFooterHint(
               plainEnglish: GameLogic.plainPlayerChrome(state),
               keptCount: GearService.autoMergeKeptCount(state),
               keptNames: GearService.autoMergeKeptNames(state),
             ),
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            maxLines: 4,
           ),
           if (primary == null || secondary == null) ...[
             const SizedBox(height: 6),
@@ -956,6 +963,7 @@ class _InventoryDockState extends State<InventoryDock>
           GearPanel.roster => (
             label: 'ROSTER',
             body: SingleChildScrollView(
+              padding: ShellLayout.scrollBodyPadding,
               child: TeamCompositionOverlay(director: widget.director),
             ),
           ),
@@ -966,32 +974,27 @@ class _InventoryDockState extends State<InventoryDock>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (widget.showTabRail)
-        MenuChrome.tabRail(
-          controller: _tabs.controller,
-          tabs: [
-            for (var i = 0; i < pages.length; i++)
-              MenuChrome.bridgedTab(
-                pages[i].label,
-                onSelect: () {
-                  _tabs.controller.animateTo(i);
-                  widget.onPanelChanged(_visible[i]);
-                  setState(() {});
-                },
-              ),
-          ],
-        ),
+          MenuChrome.tabRail(
+            controller: _tabs.controller,
+            tabs: [
+              for (var i = 0; i < pages.length; i++)
+                MenuChrome.bridgedTab(
+                  pages[i].label,
+                  onSelect: () {
+                    _tabs.controller.animateTo(i);
+                    widget.onPanelChanged(_visible[i]);
+                    setState(() {});
+                  },
+                ),
+            ],
+          ),
         Builder(
           builder: (context) {
             final reason = _gearPanelReason(safeTab);
             if (reason.isEmpty) return const SizedBox.shrink();
             return Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                reason,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-              ),
+              padding: ShellLayout.listPadding.copyWith(top: 0, bottom: 4),
+              child: ShellLayout.hint(reason, maxLines: 2),
             );
           },
         ),

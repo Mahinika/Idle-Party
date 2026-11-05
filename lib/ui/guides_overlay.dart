@@ -7,6 +7,7 @@ import '../core/home_layout.dart';
 import '../core/nav_copy.dart';
 import 'game_theme.dart';
 import 'menu_chrome.dart';
+import 'shell/shell_layout.dart';
 import 'web_click_bridge.dart';
 
 /// Expandable how-to guide opened from MORE → INFO.
@@ -28,12 +29,14 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
     final topics = widget.state == null
         ? GameGuides.topics
         : GameGuides.topicsFor(widget.state!);
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
+        ShellLayout.hint(
           'How systems work and how to use them. Tap a topic to expand.',
-          style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          maxLines: 2,
         ),
         if (widget.state != null &&
             !GameLogic.showDailyRunOnHub(widget.state!)) ...[
@@ -131,6 +134,7 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
           ),
         ),
       ],
+    ),
     );
   }
 }

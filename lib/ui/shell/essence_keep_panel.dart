@@ -11,6 +11,7 @@ import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../meta/prestige_shop.dart';
 import 'shell_common.dart';
+import 'shell_layout.dart';
 
 String _blessingLine(GameState state) {
   final next = 'Next Ascend adds ${ascendBlessingStackPhrase()}.';
@@ -57,18 +58,22 @@ class EssenceKeepPanel extends StatelessWidget {
         .where((m) => !state.metaDepth.claimedGodHandMastery.contains(m.$1))
         .toList(growable: false);
 
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           '${formatCount(state.essence)}e · keeps on Ascend',
           style: GameTheme.body(size: 15, color: GameTheme.torchHot),
         ),
-        Text(
+        ShellLayout.gap(4),
+        ShellLayout.hint(
           'God Hand · Ascend Blessing · lasting buys. '
           'CAMP / Relics / Pets live on other ESSENCE tabs.',
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          maxLines: 2,
         ),
+        ShellLayout.gap(4),
         Text(
           _blessingLine(state),
           style: GameTheme.body(size: 12, color: GameTheme.mossLit),
@@ -255,8 +260,9 @@ class EssenceKeepPanel extends StatelessWidget {
             style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
           ),
         ],
-        const SizedBox(height: 12),
+        ShellLayout.gap(12),
       ],
+    ),
     );
   }
 }

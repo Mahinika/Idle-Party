@@ -4,8 +4,8 @@ import '../../core/ashen_crown.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../confirm_dialogs.dart';
-import '../game_theme.dart';
 import '../kenney_button.dart';
+import '../shell/shell_layout.dart';
 
 /// KEY tab: weekly Ashen Crown ticket + PRACTICE.
 class AshenCrownHubPanel extends StatelessWidget {
@@ -16,25 +16,23 @@ class AshenCrownHubPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = director.state;
     if (!GameLogic.endgameUnlocked(state)) {
-      return Text(
+      return ShellLayout.hint(
         '${AshenCrown.name} unlocks when every active hero is Lv${GameLogic.maxHeroLevel} — '
         'weekly ticket boss (enter from the hub ENDGAME tab too).',
-        textAlign: TextAlign.center,
-        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        maxLines: 3,
       );
     }
     final week = AshenCrown.ensureWeek(state);
     final tickets = week.metaDepth.worldBossTickets;
     final cleared = week.metaDepth.worldBossClearedWeek;
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'ASHEN CROWN · WEEKLY',
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-        ),
-        const SizedBox(height: 4),
-        Text(
+        ShellLayout.sectionHeader('ASHEN CROWN · WEEKLY'),
+        ShellLayout.gap(4),
+        ShellLayout.hint(
           cleared
               ? 'Paid clear done this week. PRACTICE is free — no ticket, no essence.\n'
                   '${AshenCrown.kitFor().weekLine}'
@@ -42,17 +40,18 @@ class AshenCrownHubPanel extends StatelessWidget {
                   '+${AshenCrown.essenceReward}e, title ${AshenCrown.titleReward}, '
                   '+1 STAR. Tickets left: $tickets. '
                   'Wipe or leave returns the ticket.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          maxLines: 5,
         ),
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         GameButton(
           label: 'ENTER ASHEN CROWN',
-          style: GameButtonStyle.red,
+          style: GameButtonStyle.brown,
+          primary: true,
           onPressed: !cleared && AshenCrown.ticketRunAllowed(week)
               ? () => confirmAshenCrown(context, director, practice: false)
               : null,
         ),
-        const SizedBox(height: 4),
+        ShellLayout.gap(4),
         GameButton(
           label: 'PRACTICE',
           style: GameButtonStyle.grey,
@@ -61,6 +60,7 @@ class AshenCrownHubPanel extends StatelessWidget {
               : null,
         ),
       ],
+    ),
     );
   }
 }

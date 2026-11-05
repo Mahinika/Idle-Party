@@ -45,7 +45,7 @@ class HubOfflineBanner extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onDismiss,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(GameTheme.radiusSm),
         child: Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(

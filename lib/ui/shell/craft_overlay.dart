@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/game_director.dart';
 import '../apex_forge_panel.dart';
+import 'shell_layout.dart';
 
 /// MORE → CRAFT — lasting Apex station.
 class CraftOverlay extends StatelessWidget {
@@ -11,10 +12,10 @@ class CraftOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: EdgeInsets.zero,
+      padding: ShellLayout.scrollBodyPadding,
       children: [
         ApexHubPanel(director: director),
-        const SizedBox(height: 12),
+        ShellLayout.gap(12),
       ],
     );
   }

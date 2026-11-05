@@ -13,8 +13,8 @@ import '../equipment_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
-import '../web_click_bridge.dart';
 import 'shell_common.dart';
+import 'shell_layout.dart';
 
 /// GOLD → MARKET — few controls: flask, upgrades/all, tap listing to buy.
 class MarketOverlay extends StatefulWidget {
@@ -75,44 +75,28 @@ class _MarketOverlayState extends State<MarketOverlay> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+          padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
           child: GameButton(
             label: state.gold >= flaskCost
                 ? 'FLASK · ${formatGold(flaskCost)}'
                 : 'FLASK · NEED ${formatGold(flaskCost)}',
             dense: true,
+            style: state.gold >= flaskCost
+                ? GameButtonStyle.brown
+                : GameButtonStyle.grey,
+            primary: state.gold >= flaskCost,
             onPressed:
                 state.gold >= flaskCost ? director.buyMarketFlask : null,
           ),
         ),
         if (best != null)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
             child: _listingCard(state, director, best),
           ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: WebClickScope(
-            label: 'All listings',
-            onPressed: () => setState(() => _showAllListings = true),
-            child: Semantics(
-              button: true,
-              label: 'All listings',
-              child: InkWell(
-                onTap: () => setState(() => _showAllListings = true),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
-                  child: Text(
-                    'All listings',
-                    style: GameTheme.menuTitle(
-                      size: 11,
-                      color: GameTheme.torch,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+        ShellLayout.sheetLink(
+          label: 'All listings',
+          onTap: () => setState(() => _showAllListings = true),
         ),
       ],
     );
@@ -133,40 +117,20 @@ class _MarketOverlayState extends State<MarketOverlay> {
         .where((l) => _upgradeHeroName(state, l) != null)
         .length;
 
-    return Column(
+    final canFlask = state.gold >= flaskCost;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: ShellLayout.sheetHorizontal),
+      child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (widget.inlineUnderFight)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: WebClickScope(
-              label: 'Show picks only',
-              onPressed: () => setState(() => _showAllListings = false),
-              child: Semantics(
-                button: true,
-                label: 'Show picks only',
-                child: InkWell(
-                  onTap: () => setState(() => _showAllListings = false),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-                    child: Text(
-                      'Show picks only',
-                      style: GameTheme.menuTitle(
-                        size: 11,
-                        color: GameTheme.torch,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          ShellLayout.sheetLink(
+            label: 'Show picks only',
+            onTap: () => setState(() => _showAllListings = false),
           ),
         if (freeReady)
-          Text(
-            'Listings fresh',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-          )
+          ShellLayout.hint('Listings fresh', maxLines: 1)
         else ...[
           GameButton(
             label: 'REROLL · ${formatGold(refreshCost)}',
@@ -176,61 +140,50 @@ class _MarketOverlayState extends State<MarketOverlay> {
                 ? director.refreshMarketListings
                 : null,
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Free refresh in $refreshLabel',
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-          ),
+          ShellLayout.gap(4),
+          ShellLayout.hint('Free refresh in $refreshLabel', maxLines: 1),
         ],
 
-        const SizedBox(height: 10),
+        ShellLayout.gap(10),
         GameButton(
-          label: state.gold >= flaskCost
+          label: canFlask
               ? 'BUY FLASK · ${formatGold(flaskCost)}'
               : 'FLASK · NEED ${formatGold(flaskCost)}',
           tip: 'Heals the whole party when HP is low (auto in AFK).',
           dense: true,
-          onPressed:
-              state.gold >= flaskCost ? director.buyMarketFlask : null,
+          style: canFlask ? GameButtonStyle.brown : GameButtonStyle.grey,
+          primary: canFlask,
+          onPressed: canFlask ? director.buyMarketFlask : null,
         ),
-        const SizedBox(height: 6),
-        Text(
-          _marketHealCount(state),
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+        ShellLayout.gap(6),
+        ShellLayout.hint(
+          '${_marketHealCount(state)} · Flask: party heal · Bandage: one hero most hurt',
+          maxLines: 2,
         ),
-        Text(
-          'Flask: party heal · Bandage: one hero most hurt',
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
-        const SizedBox(height: 6),
-        Row(
+        ShellLayout.gap(6),
+        ShellLayout.secondaryActionRow(
           children: [
-            Expanded(
-              child: GameButton(
-                label: 'BUY 3 · ${formatGold(flaskCost * 3)}',
-                style: GameButtonStyle.grey,
-                dense: true,
-                onPressed: state.gold >= flaskCost * 3
-                    ? () => director.buyMarketFlasks()
-                    : null,
-              ),
+            GameButton(
+              label: 'BUY 3 · ${formatGold(flaskCost * 3)}',
+              style: GameButtonStyle.grey,
+              dense: true,
+              onPressed: state.gold >= flaskCost * 3
+                  ? () => director.buyMarketFlasks()
+                  : null,
             ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: GameButton(
-                label: 'BANDAGE · ${formatGold(bandageCost)}',
-                tip: 'Heals the one hero who needs it most.',
-                style: GameButtonStyle.grey,
-                dense: true,
-                onPressed: state.gold >= bandageCost
-                    ? director.buyMarketBandage
-                    : null,
-              ),
+            GameButton(
+              label: 'BANDAGE · ${formatGold(bandageCost)}',
+              tip: 'Heals the one hero who needs it most.',
+              style: GameButtonStyle.grey,
+              dense: true,
+              onPressed: state.gold >= bandageCost
+                  ? director.buyMarketBandage
+                  : null,
             ),
           ],
         ),
 
-        const SizedBox(height: 12),
+        ShellLayout.gap(12),
         Row(
           children: [
             MenuChrome.chip(
@@ -248,13 +201,13 @@ class _MarketOverlayState extends State<MarketOverlay> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
 
-        Text(
+        ShellLayout.hint(
           'GAP FILL = empty slot piece (not a budget upgrade). UPGRADE = stronger than worn.',
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          maxLines: 2,
         ),
-        const SizedBox(height: 6),
+        ShellLayout.gap(6),
 
         if (listings.isEmpty)
           Padding(
@@ -293,13 +246,13 @@ class _MarketOverlayState extends State<MarketOverlay> {
           for (final listing in listings)
             _listingCard(state, director, listing),
 
-        const SizedBox(height: 8),
-        Text(
+        ShellLayout.gap(8),
+        ShellLayout.hint(
           'Tap a listing to buy · this-run gear only',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          maxLines: 2,
         ),
       ],
+    ),
     );
   }
 

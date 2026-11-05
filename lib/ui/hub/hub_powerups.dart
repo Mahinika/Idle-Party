@@ -21,6 +21,7 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../shell/play_nav.dart';
 import '../shell/shell_common.dart';
+import '../shell/shell_layout.dart';
 import '../shell/wallet_strip.dart';
 import '../web_click_bridge.dart';
 
@@ -56,7 +57,6 @@ class HubPowerupsFab extends StatelessWidget {
     final md = state.metaDepth;
     final status = AdBoost.fabStatus(md);
     final tickets = md.adTickets;
-    final showStatus = status != 'SCROLLS';
     return WebClickScope(
       label: 'SCROLLS',
       onPressed: onOpen,
@@ -73,80 +73,55 @@ class HubPowerupsFab extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(
                 minWidth: GameTheme.minTouch,
-                minHeight: GameTheme.minTouch,
+                minHeight: 44,
               ),
-              child: DecoratedBox(
-                decoration: MenuChrome.hubPanel(selected: true),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Center(
-                              child: GameIcon.glyph(
-                                UiGlyph.scroll,
-                                size: 26,
-                                color: GameTheme.torchHot,
-                              ),
+              child: ShellLayout.hubCard(
+                selected: false,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Center(
+                            child: GameIcon.glyph(
+                              UiGlyph.scroll,
+                              size: 22,
+                              color: GameTheme.parchmentDim,
                             ),
-                            if (tickets > 0)
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                child: _TicketBadge(count: tickets),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'SCROLLS',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GameTheme.body(
-                                size: 16,
-                                color: GameTheme.torchHot,
-                              ),
-                            ),
-                            Text(
-                              hint(state),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GameTheme.body(
-                                size: 12,
-                                color: GameTheme.parchmentDim,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (showStatus) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          status,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GameTheme.body(
-                            size: 13,
-                            color: GameTheme.torchHot,
                           ),
+                          if (tickets > 0)
+                            Positioned(
+                              right: -2,
+                              top: -2,
+                              child: _TicketBadge(count: tickets),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        hint(state),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.body(
+                          size: 13,
+                          color: GameTheme.parchmentDim,
                         ),
-                      ],
-                    ],
-                  ),
+                      ),
+                    ),
+                    Text(
+                      'OPEN',
+                      style: GameTheme.menuTitle(
+                        size: 10,
+                        color: GameTheme.torch,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -285,12 +260,12 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
               opaque: true,
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              padding: ShellLayout.sheetPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text('SCROLLS', style: GameTheme.menuTitle(size: 18)),
-                  const SizedBox(height: 6),
+                  ShellLayout.gap(6),
                   Row(
                     children: [
                       WalletStrip(
@@ -308,25 +283,18 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
+                  ShellLayout.gap(4),
+                  ShellLayout.hint(
                     adFree
                         ? 'Ad-free: no WATCH AD earn — claim one free daily ticket, then spend here.'
                         : 'Watch for a ticket, then spend it here.',
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.parchmentDim,
-                    ),
                   ),
-                  const SizedBox(height: 6),
-                  Container(
-                    height: 1,
-                    color: GameTheme.borderLit.withValues(alpha: 0.22),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
+                  ShellLayout.gap(6),
+                  ShellLayout.divider(),
+                  ShellLayout.gap(8),
+                  ShellLayout.card(
+                    selected: true,
                     padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                    decoration: MenuChrome.listCard(selected: true),
                     child: Row(
                       children: [
                         Expanded(
@@ -348,16 +316,13 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
+                  ShellLayout.gap(6),
+                  ShellLayout.hint(
                     'Optional ads. Never mid-fight. '
                     'Timed ticket scrolls live here.',
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    maxLines: 3,
                   ),
-                  const SizedBox(height: 10),
+                  ShellLayout.blockGapWidget(),
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
@@ -661,7 +626,7 @@ class _BuffRow extends StatelessWidget {
             const SizedBox(width: 8),
             GameButton(
               label: 'USE · ${offer.ticketCost}',
-              style: GameButtonStyle.brown,
+              style: GameButtonStyle.grey,
               primary: false,
               expanded: false,
               dense: true,
@@ -673,6 +638,14 @@ class _BuffRow extends StatelessWidget {
     );
   }
 }
+
+/// Widget tests / goldens — SCROLLS sheet body without opening a route.
+@visibleForTesting
+Widget scrollsSheetForTest({
+  required GameDirector director,
+  MenuRouter? router,
+}) =>
+    _PowerupsSheet(director: director, router: router);
 
 /// One WATCH gold pile after a fresh install with no prior save file.
 class ReinstallPouchFab extends StatelessWidget {

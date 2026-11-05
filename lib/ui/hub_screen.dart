@@ -48,6 +48,7 @@ import 'shell/boost_ad_button.dart';
 import 'shell/scroll_buff_stack.dart';
 import 'hub/hub_today_card.dart';
 import 'hub/hub_world_map.dart';
+import 'shell/shell_layout.dart';
 
 /// Idle Party hub: dungeon select / meta / ascend.
 class HubScreen extends StatefulWidget {
@@ -794,7 +795,7 @@ class _HubScreenState extends State<HubScreen>
                     children: [
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                          padding: ShellLayout.hubScenePadding,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [

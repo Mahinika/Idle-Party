@@ -5,6 +5,7 @@ import '../coach_pulse.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
 import '../web_click_bridge.dart';
+import 'shell_layout.dart';
 
 /// TT2-style flat tab bar: equal color blocks with icon + label.
 /// Hub: GEAR · GOLD · SHOP · ESSENCE · MORE · (KEY). First-hour hides GOLD /
@@ -62,11 +63,11 @@ class AppBottomBar extends StatelessWidget {
   static Widget iconFor(MenuRoute r, {double size = 18}) => switch (r) {
     MenuRoute.gear => GameIcon.asset(UiIcon.gear, size: size),
     MenuRoute.gold => GameIcon.asset(UiIcon.gold, size: size),
-    MenuRoute.shop => GameIcon.asset(UiIcon.star, size: size),
+    MenuRoute.shop => GameIcon.asset(UiIcon.shop, size: size),
     MenuRoute.essence => GameIcon.asset(UiIcon.essence, size: size),
     MenuRoute.key => GameIcon.asset(UiIcon.key, size: size),
-    MenuRoute.more => GameIcon.asset(UiIcon.more, size: size),
-    MenuRoute.map => GameIcon.asset(UiIcon.boots, size: size),
+    MenuRoute.more => GameIcon.asset(UiIcon.menu, size: size),
+    MenuRoute.map => GameIcon.asset(UiIcon.map, size: size),
     MenuRoute.none => GameIcon.asset(UiIcon.more, size: size),
   };
 
@@ -176,14 +177,8 @@ class AppBottomBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 3),
-            child: Text(
-              reason,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 11, color: GameTheme.torchHot),
-            ),
+            padding: ShellLayout.listPadding.copyWith(top: 0, bottom: 3),
+            child: ShellLayout.hint(reason, maxLines: 1),
           ),
           bar,
         ],

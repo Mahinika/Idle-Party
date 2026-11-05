@@ -340,8 +340,13 @@ abstract final class MenuChrome {
     required int selectedIndex,
     required ValueChanged<int> onSelect,
     bool dense = false,
+    List<String>? icons,
   }) {
     assert(labels.isNotEmpty);
+    if (icons != null) {
+      assert(icons.length == labels.length);
+    }
+    final iconSize = dense ? 14.0 : 16.0;
     return Container(
       height: dense ? 36 : GameTheme.minTouch,
       decoration: BoxDecoration(
@@ -375,15 +380,32 @@ abstract final class MenuChrome {
                     child: InkWell(
                       onTap: () => onSelect(i),
                       child: Center(
-                        child: Text(
-                          labels[i],
-                          style: GameTheme.pixel(
-                            size: GameTheme.hudPixel,
-                            color: i == selectedIndex
-                                ? GameTheme.torchHot
-                                : GameTheme.parchmentDim,
-                          ),
-                        ),
+                        child: icons == null
+                            ? Text(
+                                labels[i],
+                                style: GameTheme.pixel(
+                                  size: GameTheme.hudPixel,
+                                  color: i == selectedIndex
+                                      ? GameTheme.torchHot
+                                      : GameTheme.parchmentDim,
+                                ),
+                              )
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GameIcon.asset(icons[i], size: iconSize),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    labels[i],
+                                    style: GameTheme.pixel(
+                                      size: GameTheme.hudPixel,
+                                      color: i == selectedIndex
+                                          ? GameTheme.torchHot
+                                          : GameTheme.parchmentDim,
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
                   ),

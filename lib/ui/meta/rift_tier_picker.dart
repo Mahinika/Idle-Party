@@ -6,8 +6,9 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_layout.dart';
 
-/// Simple ENTER picker: left arrow · number · right arrow.
+/// Simple ENTER picker: recommended CTA, then step another tier.
 class RiftTierPickerDialog extends StatefulWidget {
   const RiftTierPickerDialog({
     super.key,
@@ -16,6 +17,7 @@ class RiftTierPickerDialog extends StatefulWidget {
     required this.minusLabel,
     required this.plusLabel,
     required this.enterLabel,
+    required this.recommendedTier,
     required this.initial,
     required this.minTier,
     required this.maxTier,
@@ -28,6 +30,7 @@ class RiftTierPickerDialog extends StatefulWidget {
   final String minusLabel;
   final String plusLabel;
   final String Function(int tier) enterLabel;
+  final int recommendedTier;
   final int initial;
   final int minTier;
   final int maxTier;
@@ -41,6 +44,9 @@ class RiftTierPickerDialog extends StatefulWidget {
 class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
   late int _tier;
   Timer? _hold;
+
+  int get _recommended =>
+      widget.recommendedTier.clamp(widget.minTier, widget.maxTier);
 
   @override
   void initState() {
@@ -83,13 +89,19 @@ class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
       title: widget.title,
       content: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            widget.blurb,
-            textAlign: TextAlign.center,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          ShellLayout.hint(widget.blurb, maxLines: 3),
+          ShellLayout.gap(8),
+          GameButton(
+            label: '${widget.enterLabel(_recommended)} · recommended',
+            style: GameButtonStyle.brown,
+            primary: true,
+            onPressed: () => Navigator.pop(context, _recommended),
           ),
-          const SizedBox(height: 12),
+          ShellLayout.gap(8),
+          ShellLayout.hint('Or pick another tier', maxLines: 1),
+          ShellLayout.gap(6),
           Row(
             children: [
               Listener(
@@ -140,6 +152,15 @@ class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
               ),
             ],
           ),
+          if (_tier != _recommended) ...[
+            ShellLayout.gap(8),
+            GameButton(
+              label: widget.enterLabel(_tier),
+              style: GameButtonStyle.grey,
+              dense: true,
+              onPressed: () => Navigator.pop(context, _tier),
+            ),
+          ],
         ],
       ),
       actions: [
@@ -148,12 +169,6 @@ class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
           style: GameButtonStyle.grey,
           expanded: false,
           onPressed: () => Navigator.pop(context),
-        ),
-        GameButton(
-          label: widget.enterLabel(_tier),
-          style: GameButtonStyle.brown,
-          expanded: false,
-          onPressed: () => Navigator.pop(context, _tier),
         ),
       ],
     );

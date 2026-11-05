@@ -10,6 +10,7 @@ import '../first_session_tips.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_layout.dart';
 
 /// One-time hub welcome: thanks + Discord invite.
 class DiscordThanksOverlay extends StatelessWidget {
@@ -90,7 +91,9 @@ class DiscordThanksOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -99,32 +102,33 @@ class DiscordThanksOverlay extends StatelessWidget {
           textAlign: TextAlign.center,
           style: GameTheme.menuTitle(size: 20),
         ),
-        const SizedBox(height: 10),
+        ShellLayout.gap(10),
         Text(
           'Thanks for playing Idle Party!',
           textAlign: TextAlign.center,
           style: GameTheme.body(size: 16, color: GameTheme.parchment),
         ),
-        const SizedBox(height: 8),
-        Text(
+        ShellLayout.gap(8),
+        ShellLayout.hint(
           'Join our Discord for updates, tips, and chat with other players.',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          maxLines: 3,
         ),
-        const SizedBox(height: 14),
+        ShellLayout.gap(14),
         GameButton(
           label: 'JOIN DISCORD',
           tip: 'Opens Discord so you can join the Idle Party server',
           style: GameButtonStyle.brown,
+          primary: true,
           onPressed: () => _joinDiscord(context),
         ),
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         GameButton(
           label: 'MAYBE LATER',
           style: GameButtonStyle.grey,
           onPressed: () => _dismiss(context),
         ),
       ],
+    ),
     );
   }
 }

@@ -4,11 +4,13 @@ import '../../../core/game_director.dart';
 import '../../../core/game_state.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
+import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../menu_chrome.dart';
 import '../forge_overlay.dart';
 import '../market_overlay.dart';
 import '../sanctuary_overlay.dart';
+import '../shell_layout.dart';
 
 enum HomeGoldPanel { forge, camp, market }
 
@@ -19,6 +21,8 @@ class UpgradePanel extends StatefulWidget {
     required this.director,
     required this.router,
     this.sheetPanel,
+    this.focusPanel,
+    this.focusGeneration = 0,
   });
 
   final GameDirector director;
@@ -26,6 +30,10 @@ class UpgradePanel extends StatefulWidget {
 
   /// When set, only the body for this tab (sheet owns the segmented header).
   final HomeGoldPanel? sheetPanel;
+
+  /// SPLIT fight: a GOLD / MARKET intent moves the segmented control here.
+  final HomeGoldPanel? focusPanel;
+  final int focusGeneration;
 
   @override
   State<UpgradePanel> createState() => _UpgradePanelState();
@@ -52,6 +60,16 @@ class _UpgradePanelState extends State<UpgradePanel> {
   }
 
   @override
+  void didUpdateWidget(covariant UpgradePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final focus = widget.focusPanel;
+    if (focus != null &&
+        widget.focusGeneration != oldWidget.focusGeneration) {
+      _mode = _Panel.values[focus.index];
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = widget.director.state;
     final open = MenuTabs.showGold(state);
@@ -69,6 +87,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
               child: MenuChrome.segmented(
                 dense: true,
                 labels: const ['FORGE', 'CAMP', 'MARKET'],
+                icons: UiIcon.goldDockSegment,
                 selectedIndex: _mode.index,
                 onSelect: (i) => setState(() => _mode = _Panel.values[i]),
               ),
@@ -104,17 +123,17 @@ class _UpgradePanelState extends State<UpgradePanel> {
 
   Widget _locked(GameState state) {
     return ListView(
-      padding: const EdgeInsets.all(8),
+      padding: ShellLayout.listPadding,
       children: [
         for (final hero in state.heroes)
           Text(
             '${hero.name}  Lv${hero.level}',
             style: GameTheme.body(size: 13, color: GameTheme.parchment),
           ),
-        const SizedBox(height: 8),
-        Text(
+        ShellLayout.gap(8),
+        ShellLayout.hint(
           'FORGE opens after the first boss (F2).',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          maxLines: 2,
         ),
       ],
     );

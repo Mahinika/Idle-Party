@@ -16,6 +16,7 @@ import '../chase_bind.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_layout.dart';
 import '../shell/play_nav.dart';
 import '../web_click_bridge.dart';
 
@@ -223,12 +224,9 @@ Future<void> showOfflineProgressDialog(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
+                      ShellLayout.hint(
                         'Optional. Watch an ad and this trip\'s gold and essence are doubled.',
-                        style: GameTheme.body(
-                          size: 13,
-                          color: GameTheme.parchment,
-                        ),
+                        maxLines: 2,
                       ),
                       const SizedBox(height: 6),
                       GameButton(
@@ -282,13 +280,8 @@ Future<void> showOfflineProgressDialog(
             ),
           ),
           if (contract.detail.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              contract.detail,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-            ),
+            ShellLayout.gap(4),
+            ShellLayout.hint(contract.detail, maxLines: 3),
           ],
         ],
       ),
@@ -309,6 +302,7 @@ Future<void> showOfflineProgressDialog(
           label: returnLabel,
           expanded: false,
           style: GameButtonStyle.brown,
+          primary: true,
           onPressed: () {
             director.claimReturnRewards();
             director.dismissOfflineSummary();

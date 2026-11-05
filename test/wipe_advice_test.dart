@@ -450,6 +450,12 @@ void main() {
       )?.route,
       MenuRoute.key,
     );
+    expect(
+      WipeAdvice.hubNavFor(
+        'Farm Rift R3 may be high — dial Farm Rift tier on ENDGAME',
+      ),
+      isNotNull,
+    );
   });
 
   test('every menu wipe line has a button that opens that menu', () {

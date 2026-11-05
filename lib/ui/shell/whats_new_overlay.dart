@@ -9,6 +9,7 @@ import '../../core/meta_systems.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_layout.dart';
 
 /// In-app patch notes — marks itself seen once shown.
 class WhatsNewOverlay extends StatelessWidget {
@@ -137,21 +138,22 @@ class WhatsNewOverlay extends StatelessWidget {
       );
     }
 
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
+        ShellLayout.hint(
           'MORE · INFO · PATCH NOTES',
-          textAlign: TextAlign.center,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          maxLines: 1,
         ),
-        const SizedBox(height: 4),
+        ShellLayout.gap(4),
         Text(
           'PATCH NOTES',
           textAlign: TextAlign.center,
           style: GameTheme.menuTitle(size: 20),
         ),
-        const SizedBox(height: 10),
+        ShellLayout.gap(10),
         Expanded(
           child: ListView(
             children: [
@@ -166,15 +168,17 @@ class WhatsNewOverlay extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         GameButton(
           label: 'GOT IT',
+          primary: true,
           onPressed: () {
             director.markChangelogSeen();
             Navigator.of(context).maybePop();
           },
         ),
       ],
+    ),
     );
   }
 }

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
 import '../../../core/menu_router.dart';
+import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
+import '../shell_layout.dart';
 import 'upgrade_panel.dart';
 
 /// Thin FORGE / CAMP / MARKET row when the fight uses FULL height.
@@ -24,12 +26,13 @@ class HomeGoldDock extends StatelessWidget {
     return Material(
       color: GameTheme.panel,
       child: SizedBox(
-        height: 40,
+        height: 32,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+          padding: ShellLayout.seamPadding.copyWith(top: 2, bottom: 2),
           child: MenuChrome.segmented(
             dense: true,
             labels: const ['FORGE', 'CAMP', 'MARKET'],
+            icons: UiIcon.goldDockSegment,
             selectedIndex: -1,
             onSelect: (i) => _openSheet(context, HomeGoldPanel.values[i]),
           ),
@@ -39,17 +42,32 @@ class HomeGoldDock extends StatelessWidget {
   }
 
   void _openSheet(BuildContext context, HomeGoldPanel mode) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => HomeGoldSheet(
-        director: director,
-        router: router,
-        initialPanel: mode,
-      ),
+    showHomeGoldSheet(
+      context,
+      director: director,
+      router: router,
+      initialPanel: mode,
     );
   }
+}
+
+/// FORGE / CAMP / MARKET sheet. Fight or camp stays behind it.
+void showHomeGoldSheet(
+  BuildContext context, {
+  required GameDirector director,
+  required MenuRouter router,
+  required HomeGoldPanel initialPanel,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => HomeGoldSheet(
+      director: director,
+      router: router,
+      initialPanel: initialPanel,
+    ),
+  );
 }
 
 /// Scrollable FORGE / CAMP / MARKET while the fight keeps running behind.
@@ -97,6 +115,7 @@ class _HomeGoldSheetState extends State<HomeGoldSheet> {
                       child: MenuChrome.segmented(
                         dense: true,
                         labels: const ['FORGE', 'CAMP', 'MARKET'],
+                        icons: UiIcon.goldDockSegment,
                         selectedIndex: _panel.index,
                         onSelect: (i) =>
                             setState(() => _panel = HomeGoldPanel.values[i]),
@@ -110,10 +129,11 @@ class _HomeGoldSheetState extends State<HomeGoldSheet> {
                         label: 'Close',
                         child: InkWell(
                           onTap: () => Navigator.pop(context),
-                          child: const Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Icon(
-                              Icons.keyboard_arrow_down,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: GameIcon.glyph(
+                              UiGlyph.close,
+                              size: 18,
                               color: GameTheme.parchmentDim,
                             ),
                           ),

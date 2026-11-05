@@ -43,6 +43,8 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   GameDirector get director => widget.director;
   MenuRouter get router => widget.router;
+  HomeGoldPanel _goldFocus = HomeGoldPanel.forge;
+  int _goldFocusGen = 0;
 
   @override
   void initState() {
@@ -58,7 +60,24 @@ class _HomeShellState extends State<HomeShell> {
 
   void _onRouter() {
     if (router.route == MenuRoute.gold) {
+      final panel = router.goldPanel == GoldPanel.market
+          ? HomeGoldPanel.market
+          : HomeGoldPanel.forge;
+      _goldFocus = panel;
+      _goldFocusGen++;
       router.close();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final state = director.state;
+        final split = state.inDungeon && !state.homePanelFull;
+        if (split || router.route != MenuRoute.none) return;
+        showHomeGoldSheet(
+          context,
+          director: director,
+          router: router,
+          initialPanel: panel,
+        );
+      });
     }
     if (mounted) setState(() {});
   }
@@ -116,6 +135,7 @@ class _HomeShellState extends State<HomeShell> {
                       director: director,
                       router: router,
                       onLeave: widget.onLeave,
+                      hideRails: full,
                     ),
                   if (showPanel && !full)
                     Expanded(
@@ -127,11 +147,15 @@ class _HomeShellState extends State<HomeShell> {
                           builder: (context, _) => UpgradePanel(
                             director: director,
                             router: router,
+                            focusPanel: _goldFocus,
+                            focusGeneration: _goldFocusGen,
                           ),
                         ),
                       ),
                     ),
                   if (showPanel && full)
+                    HomeGoldDock(director: director, router: router),
+                  if (!sheet && !state.inDungeon)
                     HomeGoldDock(director: director, router: router),
                 ],
               ),

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
 import '../../../core/menu_router.dart';
-import '../../game_theme.dart';
+import '../shell_layout.dart';
 import 'home_catalog.dart';
 import 'rail_button.dart';
 
-/// MENU grid. Compact chips match the fight seam rail family.
+/// MENU grid. List cards match sheet rows ([ShellLayout.card]).
 class HomeMenuGrid extends StatelessWidget {
   const HomeMenuGrid({
     super.key,
@@ -24,58 +24,45 @@ class HomeMenuGrid extends StatelessWidget {
         .where((e) => e.visible(state, director))
         .toList();
     return ListView(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 12),
+      padding: ShellLayout.listPadding,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            'MENU',
-            style: GameTheme.menuTitle(size: 14, color: GameTheme.parchmentDim),
-          ),
+        ShellLayout.sectionHeader('MENU'),
+        ShellLayout.gap(4),
+        ShellLayout.hint(
+          'Quests, codex, settings, and patch notes.',
+          maxLines: 2,
         ),
+        ShellLayout.gap(6),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 6,
-            crossAxisSpacing: 6,
-            childAspectRatio: 2.6,
+            mainAxisSpacing: ShellLayout.sectionGap,
+            crossAxisSpacing: ShellLayout.sectionGap,
+            childAspectRatio: 2.55,
           ),
           itemCount: entries.length,
-          itemBuilder: (context, i) => RailButton(
-            entry: entries[i],
-            state: state,
-            director: director,
-            router: router,
-            compact: true,
-          ),
-        ),
-        const SizedBox(height: 12),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: GameTheme.border.withValues(alpha: 0.45)),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'TIP A FRIEND',
-                  style: GameTheme.menuTitle(
-                    size: 12,
-                    color: GameTheme.parchmentDim,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                HomeFriendTip(director: director),
-              ],
+          itemBuilder: (context, i) => ShellLayout.card(
+            padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+            child: RailButton(
+              entry: entries[i],
+              state: state,
+              director: director,
+              router: router,
+              compact: true,
+              listCard: true,
             ),
           ),
         ),
+        ShellLayout.blockGapWidget(),
+        ShellLayout.divider(),
+        ShellLayout.gap(6),
+        ShellLayout.sectionHeader('TIP A FRIEND'),
+        ShellLayout.gap(4),
+        ShellLayout.hint('Share your Play link or paste a friend code.', maxLines: 2),
+        ShellLayout.gap(4),
+        HomeFriendTip(director: director),
       ],
     );
   }

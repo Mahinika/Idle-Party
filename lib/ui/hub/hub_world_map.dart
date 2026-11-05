@@ -5,6 +5,7 @@ import '../../models/dungeon_def.dart';
 import '../../assets/custom_assets.dart';
 import '../game_theme.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_layout.dart';
 import '../../assets/kenney_assets.dart';
 import '../kenney_sprite.dart';
 import '../web_click_bridge.dart';
@@ -165,36 +166,21 @@ class SelectedHuntCaption extends StatelessWidget {
   Widget build(BuildContext context) {
     final node = HubEndgameAct.nodeFor(hunt);
     final title = HubEndgameAct.titleFor(hunt, grBestTier: grBestTier);
-    return Semantics(
-      button: true,
-      label: '$title. ${node.blurb}',
-      child: GestureDetector(
-        onTap: () {
-          showDialog<void>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              backgroundColor: GameTheme.panel,
-              title: Text(title, style: GameTheme.menuTitle(size: 16)),
-              content: Text(
-                node.blurb,
-                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-              ),
-              actions: [
-                MenuChrome.dialogCancel(
-                  label: 'CLOSE',
-                  onPressed: () => Navigator.of(ctx).pop(),
-                ),
-              ],
-            ),
-          );
-        },
-        child: Text(
-          title,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-        ),
+    return Padding(
+      padding: ShellLayout.hubScenePadding.copyWith(top: 0, bottom: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+          ),
+          ShellLayout.gap(2),
+          ShellLayout.hint(node.blurb, maxLines: 2),
+        ],
       ),
     );
   }

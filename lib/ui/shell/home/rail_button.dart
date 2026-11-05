@@ -17,6 +17,7 @@ class RailButton extends StatelessWidget {
     required this.director,
     required this.router,
     this.compact = false,
+    this.listCard = false,
   });
 
   final HomeEntry entry;
@@ -27,12 +28,65 @@ class RailButton extends StatelessWidget {
   /// Horizontal chip on the fight seam — icon + short label, no vertical stack.
   final bool compact;
 
+  /// Inside [ShellLayout.card] on the MENU grid — skip outer fill.
+  final bool listCard;
+
   @override
   Widget build(BuildContext context) {
     if (!entry.visible(state, director)) return const SizedBox.shrink();
     final timer = entry.timer?.call(state);
     final badge = entry.badge(state);
     if (compact) {
+      final label = Text(
+        timer != null && timer.isNotEmpty
+            ? '${entry.label} $timer'
+            : entry.label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: listCard
+            ? GameTheme.body(size: 14, color: GameTheme.parchment)
+            : GameTheme.pixel(size: 7, color: GameTheme.parchment),
+      );
+      final row = Row(
+        mainAxisSize: listCard ? MainAxisSize.max : MainAxisSize.min,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              GameIcon.asset(entry.icon, size: listCard ? 20 : 18),
+              if (badge)
+                Positioned(
+                  right: -3,
+                  top: -3,
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: GameTheme.hudHpDamage,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          SizedBox(width: listCard ? 6 : 4),
+          if (listCard) Expanded(child: label) else label,
+        ],
+      );
+      if (listCard) {
+        return WebClickScope(
+          label: entry.label,
+          onPressed: () => entry.open(context, director, router),
+          child: Semantics(
+            button: true,
+            label: entry.label,
+            child: InkWell(
+              onTap: () => entry.open(context, director, router),
+              child: row,
+            ),
+          ),
+        );
+      }
       return WebClickScope(
         label: entry.label,
         onPressed: () => entry.open(context, director, router),
@@ -47,42 +101,7 @@ class RailButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        GameIcon.asset(entry.icon, size: 18),
-                        if (badge)
-                          Positioned(
-                            right: -3,
-                            top: -3,
-                            child: Container(
-                              width: 7,
-                              height: 7,
-                              decoration: const BoxDecoration(
-                                color: GameTheme.hudHpDamage,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      timer != null && timer.isNotEmpty
-                          ? '${entry.label} $timer'
-                          : entry.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GameTheme.pixel(
-                        size: 7,
-                        color: GameTheme.parchment,
-                      ),
-                    ),
-                  ],
-                ),
+                child: row,
               ),
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/game_director.dart';
+import '../../../core/keystone.dart';
 import '../../../core/game_state.dart';
 import '../../../core/gold_income.dart';
 import '../../../core/home_layout.dart';
@@ -37,7 +38,8 @@ class HomeTopBar extends StatelessWidget {
             final chase = HubChase.forState(s).title;
             return '${s.ascensionLevel}|${s.essence}|${s.gold}|${s.combatPace}|'
                 '${s.metaDepth.adTickets}|${s.metaDepth.cinders}|'
-                '${s.metaDepth.embers}|${s.hardmodeLevel}|$chase';
+                '${s.metaDepth.embers}|${s.hardmodeLevel}|$chase|'
+                '${s.keystoneRunActive}|${s.keystoneTimerMs}';
           },
           builder: (context, state) =>
               _bar(context, state, router.route, router.essencePanel),
@@ -72,6 +74,13 @@ class HomeTopBar extends StatelessWidget {
                 _chip('AL ${state.ascensionLevel}', UiIcon.ascend),
                 const SizedBox(width: 6),
                 _chip('${state.essence}', UiIcon.essence),
+                if (compactTop && state.keystoneRunActive) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    Keystone.formatTimer(state.keystoneTimerMs),
+                    style: GameTheme.pixel(size: 10, color: GameTheme.torchHot),
+                  ),
+                ],
                 if (compactTop) ...[
                   const SizedBox(width: 6),
                   Expanded(
@@ -125,7 +134,7 @@ class HomeTopBar extends StatelessWidget {
                 _tap(
                   label: 'MENU',
                   onTap: () => router.toggle(MenuRoute.more),
-                  child: GameIcon.asset(UiIcon.more, size: 22),
+                  child: GameIcon.asset(UiIcon.menu, size: 22),
                 ),
               ],
             ),
@@ -180,7 +189,7 @@ class HomeTopBar extends StatelessWidget {
         'Tickets',
         '${state.metaDepth.adTickets}',
         () => router.open(MenuRoute.shop),
-        UiIcon.star,
+        UiIcon.ticket,
       );
     }
     if (route == MenuRoute.essence) {
@@ -194,7 +203,7 @@ class HomeTopBar extends StatelessWidget {
               : EssencePanel.relics;
           if (!router.homeAtSub) router.pushSub();
         },
-        UiIcon.ring,
+        embers ? UiIcon.embers : UiIcon.cinders,
       );
     }
     if (route == MenuRoute.map) {

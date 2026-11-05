@@ -13,6 +13,7 @@ import '../kenney_button.dart';
 import '../kenney_sprite.dart';
 import '../menu_chrome.dart';
 import '../web_click_bridge.dart';
+import 'shell_layout.dart';
 
 class BeastOverlay extends StatefulWidget {
   const BeastOverlay({super.key, required this.director});
@@ -115,7 +116,9 @@ class _BeastOverlayState extends State<BeastOverlay> {
   Widget build(BuildContext context) {
     final cap = state.metaDepth.basePetRosterCap;
     final canMerge = _mergeA != null && _mergeB != null;
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (PetService.errandActive(state)) ...[
@@ -469,6 +472,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
           ],
         ),
       ],
+    ),
     );
   }
 }

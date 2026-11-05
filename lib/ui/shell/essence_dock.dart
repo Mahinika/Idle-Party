@@ -8,6 +8,7 @@ import 'essence_keep_panel.dart';
 import 'relics_overlay.dart';
 import 'sanctuary_overlay.dart';
 import 'shell_common.dart';
+import 'shell_layout.dart';
 
 /// ESSENCE sheet: CAMP, BLESSING (God Hand / lasting buys), relics, pets.
 class EssenceDock extends StatefulWidget {
@@ -112,7 +113,7 @@ class _EssenceDockState extends State<EssenceDock>
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         Expanded(
           child: IndexedStack(
             index: _visible.indexOf(safeTab).clamp(0, pages.length - 1),

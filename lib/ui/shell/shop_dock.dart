@@ -17,8 +17,8 @@ import '../game_icon.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
 import '../menu_chrome.dart';
+import '../shell/shell_layout.dart';
 import '../redeem_coupon_dialog.dart';
-import '../web_click_bridge.dart';
 
 /// Bottom-tab SHOP: real-money catalog via Play Billing.
 class ShopDock extends StatefulWidget {
@@ -27,6 +27,10 @@ class ShopDock extends StatefulWidget {
     required this.director,
     this.homeCompact = false,
   });
+
+  /// Widget/golden tests only — bypasses Play catalog when set.
+  @visibleForTesting
+  static String goldenTestPriceLabel = '';
 
   final GameDirector director;
 
@@ -162,40 +166,21 @@ class _ShopDockState extends State<ShopDock> {
     pick ??= items.isNotEmpty ? items.first : null;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+      padding: ShellLayout.listPadding,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: WebClickScope(
-            label: 'All packs',
-            onPressed: () => setState(() => _showAllPacks = true),
-            child: Semantics(
-              button: true,
-              label: 'All packs',
-              child: InkWell(
-                onTap: () => setState(() => _showAllPacks = true),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
-                  child: Text(
-                    'All packs',
-                    style: GameTheme.menuTitle(
-                      size: 11,
-                      color: GameTheme.torch,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+        ShellLayout.sheetLink(
+          label: 'All packs',
+          onTap: () => setState(() => _showAllPacks = true),
         ),
         if (featured != null) ...[
+          ShellLayout.gap(4),
           Text(
             ShopHubOffer.countdownLine(state),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 11, color: GameTheme.torchHot),
           ),
-          const SizedBox(height: 4),
+          ShellLayout.gap(4),
           _ShopRow(
             item: featured,
             owned: ShopBilling.isOwned(state, featured),
@@ -203,11 +188,12 @@ class _ShopDockState extends State<ShopDock> {
             available: _priceReady(featured) ||
                 ShopCatalog.playChargeableIds.contains(featured.id),
             compact: true,
+            featuredPrimary: true,
             titleOverride: ShopHubOffer.featuredTitle(featured),
             layout: state.homeLayout,
             onBuy: () => _buy(featured),
           ),
-          const SizedBox(height: 6),
+          ShellLayout.gap(6),
         ],
         if (pick != null &&
             (featured == null || pick.id != featured.id)) ...[
@@ -221,27 +207,44 @@ class _ShopDockState extends State<ShopDock> {
             onBuy: () => _buy(pick!),
           ),
         ],
-        const SizedBox(height: 6),
-        Text(
+        if (_showCompactStoreLine(
           storeLine,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
+          featured: featured,
+          pick: pick,
+        )) ...[
+          ShellLayout.gap(4),
+          ShellLayout.hint(storeLine, maxLines: 1),
+        ],
       ],
     );
   }
 
   /// Play's localized price. Never the catalog's hardcoded label.
   String _priceLabel(ShopCatalogItem item) {
+    final test = ShopDock.goldenTestPriceLabel;
+    if (test.isNotEmpty) return test;
     final live = ShopStore.storePriceLabel(item.id)?.trim();
     if (live == null || live.isEmpty) return 'Unavailable';
     return live;
   }
 
   bool _priceReady(ShopCatalogItem item) {
+    if (ShopDock.goldenTestPriceLabel.isNotEmpty) return true;
     final live = ShopStore.storePriceLabel(item.id)?.trim();
     return live != null && live.isNotEmpty;
+  }
+
+  bool _showCompactStoreLine(
+    String storeLine, {
+    ShopCatalogItem? featured,
+    ShopCatalogItem? pick,
+  }) {
+    if (storeLine.isEmpty) return false;
+    if (!storeLine.startsWith('Waiting for')) return true;
+    if (ShopDock.goldenTestPriceLabel.isNotEmpty) return false;
+    if (featured != null && _priceReady(featured)) return false;
+    if (pick != null && _priceReady(pick)) return false;
+    return true;
   }
 
   Widget _page({
@@ -255,44 +258,25 @@ class _ShopDockState extends State<ShopDock> {
   }) {
     final state = widget.director.state;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+      padding: ShellLayout.listPadding,
       children: [
         if (showAllPacksToggle && onToggleAllPacks != null)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: WebClickScope(
-              label: 'Show picks only',
-              onPressed: onToggleAllPacks,
-              child: Semantics(
-                button: true,
-                label: 'Show picks only',
-                child: InkWell(
-                  onTap: onToggleAllPacks,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
-                    child: Text(
-                      'Show picks only',
-                      style: GameTheme.menuTitle(
-                        size: 11,
-                        color: GameTheme.torch,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          ShellLayout.sheetLink(
+            label: 'Show picks only',
+            onTap: onToggleAllPacks,
           ),
-        Text(
-          hint,
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
-        ),
+        ShellLayout.hint(hint, maxLines: 5),
         if (featured != null) ...[
-          const SizedBox(height: 6),
+          ShellLayout.gap(6),
+          MenuChrome.sectionLabelScoped('FEATURED', scope: MenuScope.today),
+          ShellLayout.gap(4),
           Text(
             ShopHubOffer.countdownLine(state),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 12, color: GameTheme.torchHot),
           ),
-          const SizedBox(height: 6),
+          ShellLayout.gap(6),
           _ShopRow(
             item: featured,
             owned: ShopBilling.isOwned(state, featured),
@@ -300,59 +284,65 @@ class _ShopDockState extends State<ShopDock> {
             available: _priceReady(featured) ||
                 ShopCatalog.playChargeableIds.contains(featured.id),
             compact: false,
+            featuredPrimary: true,
             titleOverride: ShopHubOffer.featuredTitle(featured),
             layout: state.homeLayout,
             onBuy: () => _buy(featured),
           ),
-          const SizedBox(height: 10),
+          ShellLayout.blockGapWidget(),
         ],
-        const SizedBox(height: 4),
-        Text(
-          storeLine,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
-        ),
+        ShellLayout.gap(4),
+        ShellLayout.hint(storeLine, maxLines: 1),
         const SizedBox(height: 10),
-        for (var i = 0; i < items.length; i++) ...[
-          if (i > 0) const SizedBox(height: 8),
-          _ShopRow(
-            item: items[i],
-            owned: ShopBilling.isOwned(state, items[i]),
-            priceLabel: _priceLabel(items[i]),
-            available: _priceReady(items[i]),
-            compact:
-                items[i].kind == ShopOfferKind.permScroll &&
-                items[i].permMask != AdBoost.permAll,
-            layout: state.homeLayout,
-            onBuy: () => _buy(items[i]),
-          ),
-        ],
-        if (showAccountActions) ...[
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: GameButton(
-                  label: 'RESTORE',
-                  style: GameButtonStyle.grey,
-                  dense: true,
-                  onPressed: widget.director.restoreShopPurchases,
-                ),
+        ...() {
+          final catalog = _catalogItems(items, featured);
+          return [
+            for (var i = 0; i < catalog.length; i++) ...[
+              if (i > 0) const SizedBox(height: 8),
+              _ShopRow(
+                item: catalog[i],
+                owned: ShopBilling.isOwned(state, catalog[i]),
+                priceLabel: _priceLabel(catalog[i]),
+                available: _priceReady(catalog[i]),
+                compact:
+                    catalog[i].kind == ShopOfferKind.permScroll &&
+                    catalog[i].permMask != AdBoost.permAll,
+                layout: state.homeLayout,
+                onBuy: () => _buy(catalog[i]),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: GameButton(
-                  label: 'REDEEM CODE',
-                  style: GameButtonStyle.grey,
-                  dense: true,
-                  onPressed: () =>
-                      showRedeemCouponDialog(context, widget.director),
-                ),
+            ],
+          ];
+        }(),
+        if (showAccountActions) ...[
+          ShellLayout.blockGapWidget(),
+          ShellLayout.secondaryActionRow(
+            children: [
+              GameButton(
+                label: 'RESTORE',
+                style: GameButtonStyle.grey,
+                dense: true,
+                onPressed: widget.director.restoreShopPurchases,
+              ),
+              GameButton(
+                label: 'REDEEM CODE',
+                style: GameButtonStyle.grey,
+                dense: true,
+                onPressed: () =>
+                    showRedeemCouponDialog(context, widget.director),
               ),
             ],
           ),
         ],
       ],
     );
+  }
+
+  List<ShopCatalogItem> _catalogItems(
+    List<ShopCatalogItem> items,
+    ShopCatalogItem? featured,
+  ) {
+    if (featured == null) return items;
+    return items.where((i) => i.id != featured.id).toList(growable: false);
   }
 }
 
@@ -365,6 +355,7 @@ class _ShopRow extends StatelessWidget {
     required this.onBuy,
     this.compact = false,
     this.titleOverride,
+    this.featuredPrimary = false,
     this.layout = HomeLayout.classic,
   });
 
@@ -375,6 +366,7 @@ class _ShopRow extends StatelessWidget {
   final VoidCallback? onBuy;
   final bool compact;
   final String? titleOverride;
+  final bool featuredPrimary;
   final HomeLayout layout;
 
   static String? assetFor(ShopCatalogItem item) {
@@ -436,22 +428,29 @@ class _ShopRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mark = assetFor(item);
-    final featured = RemoteTune.highlights(item);
+    final highlighted = featuredPrimary || RemoteTune.highlights(item);
+    final canBuy = !owned && available && onBuy != null;
+    final buyLabel = owned
+        ? 'OWNED'
+        : available
+        ? (featuredPrimary ? 'BUY NOW' : 'BUY')
+        : 'UNAVAILABLE';
     return Container(
       padding: EdgeInsets.all(compact ? 8 : 10),
-      decoration: MenuChrome.listCard(selected: owned || featured),
+      decoration: MenuChrome.listCard(selected: owned || highlighted),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (mark != null) ...[
                 GameIcon.asset(
                   mark,
-                  size: 22,
+                  size: ShellLayout.shellIconSize + 2,
                   color: owned ? GameTheme.torchHot : null,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: GameTheme.clusterGap),
               ],
               Expanded(
                 child: Column(
@@ -483,35 +482,43 @@ class _ShopRow extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             tag(item),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: GameTheme.body(size: 11, color: GameTheme.mossLit),
           ),
           if (!compact) ...[
             const SizedBox(height: 4),
             Text(
               NavCopy.playerText(item.description, layout),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
             ),
           ],
           const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: GameButton(
-              label: owned
-                  ? 'OWNED'
-                  : available
-                  ? 'BUY'
-                  : 'UNAVAILABLE',
-              tip: owned
-                  ? 'Already on this save'
-                  : available
-                  ? null
-                  : 'Google Play has not listed this pack',
-              style: GameButtonStyle.grey,
-              expanded: false,
-              dense: true,
-              onPressed: owned || !available ? null : onBuy,
+          if (featuredPrimary && canBuy)
+            GameButton(
+              label: buyLabel,
+              style: GameButtonStyle.brown,
+              primary: true,
+              onPressed: onBuy,
+            )
+          else
+            Align(
+              alignment: Alignment.centerRight,
+              child: GameButton(
+                label: buyLabel,
+                tip: owned
+                    ? 'Already on this save'
+                    : available
+                    ? null
+                    : 'Google Play has not listed this pack',
+                style: GameButtonStyle.grey,
+                expanded: false,
+                dense: true,
+                onPressed: canBuy ? onBuy : null,
+              ),
             ),
-          ),
         ],
       ),
     );

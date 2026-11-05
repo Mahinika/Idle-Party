@@ -13,6 +13,7 @@ void main() {
             minusLabel: 'GR -',
             plusLabel: 'GR +',
             enterLabel: _enterLabel,
+            recommendedTier: 20,
             initial: 20,
             minTier: 1,
             maxTier: 21,

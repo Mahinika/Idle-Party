@@ -65,10 +65,7 @@ void main() {
       ),
     );
     expect(find.text('ASCEND  +19e'), findsOneWidget);
-    expect(
-      tester.widget<GameButton>(find.byType(GameButton)).style,
-      GameButtonStyle.ghost,
-    );
+    expect(find.byType(GameButton), findsNothing);
   });
 
   testWidgets('HubTodayCard shows READY chip for claim chase', (tester) async {
@@ -283,7 +280,8 @@ void main() {
     );
 
     expect(find.bySemanticsLabel('SCROLLS. READY'), findsOneWidget);
-    expect(find.text('SCROLLS'), findsWidgets);
+    expect(find.text('OPEN'), findsOneWidget);
+    expect(find.text('Free ticket in SCROLLS'), findsOneWidget);
   });
 
   testWidgets('Hub RANKS button opens the season list', (tester) async {
@@ -376,7 +374,7 @@ void main() {
     );
 
     expect(find.bySemanticsLabel('SCROLLS. 3 TICKETS'), findsOneWidget);
-    expect(find.text('3 TICKETS'), findsOneWidget);
+    expect(find.text('Spend a ticket on a scroll'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
   });
 

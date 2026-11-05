@@ -9,6 +9,7 @@ import '../../core/gauntlet_trophies.dart';
 import '../confirm_dialogs.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
+import '../shell/shell_layout.dart';
 
 /// KEY tab: Infinity Gauntlet enter (party max-level Spire climb).
 class GauntletHubPanel extends StatelessWidget {
@@ -19,51 +20,51 @@ class GauntletHubPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = director.state;
     if (!GameLogic.endgameUnlocked(state)) {
-      return Text(
+      return ShellLayout.hint(
         'GAUNTLET unlocks when every active hero is Lv${GameLogic.maxHeroLevel}. '
         'Boss every 5 floors.',
-        textAlign: TextAlign.center,
-        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        maxLines: 3,
       );
     }
     final best = state.metaDepth.gauntletBestFloor;
-    return Column(
+    return Padding(
+      padding: ShellLayout.listPadding,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'GAUNTLET · CLIMB',
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
-        ),
-        const SizedBox(height: 4),
-        Text(
+        ShellLayout.sectionHeader('GAUNTLET · CLIMB'),
+        ShellLayout.gap(4),
+        ShellLayout.hint(
           best <= 0
               ? 'Pick a climb. Boss every 5 floors.'
               : 'Best clear F$best. Pick a climb. Boss every 5 floors.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          maxLines: 2,
         ),
         if (_nextBossPayLine(best) case final pay?) ...[
-          const SizedBox(height: 4),
+          ShellLayout.gap(4),
           Text(
             pay,
             style: GameTheme.body(size: 12, color: GameTheme.torchHot),
           ),
         ],
-        const SizedBox(height: 4),
-        Text(
+        ShellLayout.gap(4),
+        ShellLayout.hint(
           'MIGHT hits harder. WARD takes less. GREED pays double essence and the party is softer.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          maxLines: 3,
         ),
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         _SpireTrophyGrid(state: state),
-        const SizedBox(height: 8),
+        ShellLayout.gap(8),
         GameButton(
           label: 'CHOOSE A CLIMB',
           style: GameButtonStyle.brown,
+          primary: true,
           onPressed: GameLogic.canEnterGauntlet(state)
               ? () => confirmGauntletRun(context, director)
               : null,
         ),
       ],
+    ),
     );
   }
 }
