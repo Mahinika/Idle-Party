@@ -4,6 +4,28 @@ Read-only audit **2026-11-05** on branch `cursor/ui-shell-polish-a824`.
 Evidence: `lib/ui/game_icon.dart`, `lib/assets/custom_assets.dart`,
 `lib/ui/shell/*`, `lib/ui/hub/*`, `docs/UI_THEME.md`.
 
+## Implementation status (2026-11-05)
+
+**Batch 1 wired (PR #50):**
+- `icon_shop.png`, `icon_map.png`, `icon_menu.png`, `icon_close_tab.png`
+- `icon_forge.png`, `icon_camp.png`, `icon_market.png`
+- `icon_watch_ad.png`, `icon_scroll.png`, `icon_daily.png`, `icon_ticket.png`
+- `icon_embers.png`, `icon_cinders.png`
+- 48px hi-res masters in `assets/custom/icons/48/`
+- `KenneySprite` picks 48px when `size >= 24 dp`
+
+**Batch 2 stubs (code ready, awaiting PNG art):**
+- `UiIcon.update` → `icon_update.png` (currently fallback to star)
+- `UiIcon.redeem` → `icon_redeem.png` (currently fallback to star)
+- `UiIcon.floors` → `icon_floors.png` (currently fallback to boots)
+- `UiIcon.wispLantern` → `icon_wisp_lantern.png` (currently fallback to flask)
+
+When Creative ships these icons, add them to `assets/custom/icons/` (and
+`icons/48/` for hi-res), then update `CustomAssets` and point the `UiIcon`
+constants at the new paths.
+
+---
+
 **Rule in code:** chrome uses `GameIcon` + `UiIcon` PNGs or `UiGlyph`
 CustomPaint marks. **No Material `Icons.*`** in `lib/` (grep clean). Emoji is
 also banned in chrome per `docs/UI_THEME.md`.
