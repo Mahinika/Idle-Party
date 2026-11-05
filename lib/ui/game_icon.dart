@@ -46,6 +46,7 @@ abstract final class UiIcon {
   static const String daily = CustomAssets.iconDaily;
   static const String ticket = CustomAssets.iconTicket;
   static const String embers = CustomAssets.iconEmbers;
+  static const String cinders = CustomAssets.iconCinders;
 
   /// Icons left of labels on the home FORGE / CAMP / MARKET row.
   static const List<String> goldDockSegment = [forge, camp, market];

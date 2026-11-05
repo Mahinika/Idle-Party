@@ -203,8 +203,7 @@ class HomeTopBar extends StatelessWidget {
               : EssencePanel.relics;
           if (!router.homeAtSub) router.pushSub();
         },
-        // icon_cinders.png batch 2 — same embers art until then.
-        UiIcon.embers,
+        embers ? UiIcon.embers : UiIcon.cinders,
       );
     }
     if (route == MenuRoute.map) {

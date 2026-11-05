@@ -207,7 +207,27 @@ abstract final class CustomAssets {
   static const String iconDaily = '$_root/icons/icon_daily.png';
   static const String iconTicket = '$_root/icons/icon_ticket.png';
   static const String iconEmbers = '$_root/icons/icon_embers.png';
-  // Batch 2: icon_cinders.png (48×48 master) for ESSENCE cinders chip.
+  static const String iconCinders = '$_root/icons/icon_cinders.png';
+
+  /// 48×48 shell masters (Creative brief); live chrome still loads 32×32 paths.
+  static const String _icons48 = '$_root/icons/48';
+  static const String iconShop48 = '$_icons48/icon_shop.png';
+  static const String iconMap48 = '$_icons48/icon_map.png';
+  static const String iconMenu48 = '$_icons48/icon_menu.png';
+  static const String iconCloseTab48 = '$_icons48/icon_close_tab.png';
+  static const String iconForge48 = '$_icons48/icon_forge.png';
+  static const String iconCamp48 = '$_icons48/icon_camp.png';
+  static const String iconMarket48 = '$_icons48/icon_market.png';
+  static const String iconWatchAd48 = '$_icons48/icon_watch_ad.png';
+  static const String iconScroll48 = '$_icons48/icon_scroll.png';
+  static const String iconDaily48 = '$_icons48/icon_daily.png';
+  static const String iconTicket48 = '$_icons48/icon_ticket.png';
+  static const String iconEmbers48 = '$_icons48/icon_embers.png';
+  static const String iconCinders48 = '$_icons48/icon_cinders.png';
+  static const String iconCoinGold48 = '$_icons48/coin_gold.png';
+  static const String iconFlaskPurple48 = '$_icons48/flask_purple.png';
+  static const String iconHelm48 = '$_icons48/helm.png';
+  static const String iconSword48 = '$_icons48/sword.png';
 
   // —— Hub dungeon portraits ——
   static const String portraitSandy = '$_root/portraits/sandy.png';

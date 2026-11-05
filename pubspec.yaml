@@ -84,6 +84,7 @@ flutter:
     - assets/custom/audio/sfx/
     - assets/custom/pets/
     - assets/custom/icons/
+    - assets/custom/icons/48/
     - assets/custom/portraits/
     - assets/custom/enemies/
     - assets/custom/heroes/
