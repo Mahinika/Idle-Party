@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../assets/custom_assets.dart';
+
 class KenneySprite extends StatelessWidget {
   const KenneySprite({
     super.key,
@@ -23,13 +25,14 @@ class KenneySprite extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final box = math.max(width ?? size, height ?? size);
+    final path = box >= 24 ? CustomAssets.hires(asset) : asset;
     // Decode no larger than we paint. Kenney tiles are already tiny (decoding
     // never upscales), but custom portraits are 1024px and show as ~32px discs.
     final decodeWidth = (box * MediaQuery.devicePixelRatioOf(context))
         .ceil()
         .clamp(16, 1024);
     return Image.asset(
-      asset,
+      path,
       width: width ?? size,
       height: height ?? size,
       fit: fit,

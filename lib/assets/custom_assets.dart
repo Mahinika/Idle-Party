@@ -209,7 +209,8 @@ abstract final class CustomAssets {
   static const String iconEmbers = '$_root/icons/icon_embers.png';
   static const String iconCinders = '$_root/icons/icon_cinders.png';
 
-  /// 48×48 shell masters (Creative brief); live chrome still loads 32×32 paths.
+  /// 48×48 shell masters (Creative brief). Use [hires] to pick the hi-res
+  /// version when painting at ≥24 dp (nav tabs, large chrome).
   static const String _icons48 = '$_root/icons/48';
   static const String iconShop48 = '$_icons48/icon_shop.png';
   static const String iconMap48 = '$_icons48/icon_map.png';
@@ -228,6 +229,31 @@ abstract final class CustomAssets {
   static const String iconFlaskPurple48 = '$_icons48/flask_purple.png';
   static const String iconHelm48 = '$_icons48/helm.png';
   static const String iconSword48 = '$_icons48/sword.png';
+
+  /// Map from standard 32×32 icon path to its 48×48 hi-res master.
+  /// Used by [KenneySprite] for large chrome (≥24 dp).
+  static const Map<String, String> _iconHiresMap = {
+    iconShop: iconShop48,
+    iconMap: iconMap48,
+    iconMenu: iconMenu48,
+    iconCloseTab: iconCloseTab48,
+    iconForge: iconForge48,
+    iconCamp: iconCamp48,
+    iconMarket: iconMarket48,
+    iconWatchAd: iconWatchAd48,
+    iconScroll: iconScroll48,
+    iconDaily: iconDaily48,
+    iconTicket: iconTicket48,
+    iconEmbers: iconEmbers48,
+    iconCinders: iconCinders48,
+    iconCoinGold: iconCoinGold48,
+    iconFlaskPurple: iconFlaskPurple48,
+    iconHelm: iconHelm48,
+    iconSword: iconSword48,
+  };
+
+  /// Return 48px master for [path] when one exists, else [path] unchanged.
+  static String hires(String path) => _iconHiresMap[path] ?? path;
 
   // —— Hub dungeon portraits ——
   static const String portraitSandy = '$_root/portraits/sandy.png';
