@@ -19,7 +19,6 @@ import '../kenney_button.dart';
 import '../menu_chrome.dart';
 import '../shell/shell_layout.dart';
 import '../redeem_coupon_dialog.dart';
-import '../web_click_bridge.dart';
 
 /// Bottom-tab SHOP: real-money catalog via Play Billing.
 class ShopDock extends StatefulWidget {

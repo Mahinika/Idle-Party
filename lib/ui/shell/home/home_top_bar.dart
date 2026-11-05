@@ -134,7 +134,7 @@ class HomeTopBar extends StatelessWidget {
                 _tap(
                   label: 'MENU',
                   onTap: () => router.toggle(MenuRoute.more),
-                  child: GameIcon.asset(UiIcon.more, size: 22),
+                  child: GameIcon.asset(UiIcon.menu, size: 22),
                 ),
               ],
             ),
@@ -189,7 +189,7 @@ class HomeTopBar extends StatelessWidget {
         'Tickets',
         '${state.metaDepth.adTickets}',
         () => router.open(MenuRoute.shop),
-        UiIcon.star,
+        UiIcon.ticket,
       );
     }
     if (route == MenuRoute.essence) {
@@ -203,7 +203,8 @@ class HomeTopBar extends StatelessWidget {
               : EssencePanel.relics;
           if (!router.homeAtSub) router.pushSub();
         },
-        UiIcon.ring,
+        // icon_cinders.png batch 2 — same embers art until then.
+        UiIcon.embers,
       );
     }
     if (route == MenuRoute.map) {

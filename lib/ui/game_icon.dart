@@ -34,6 +34,21 @@ abstract final class UiIcon {
   static const String tome = CustomAssets.iconTome;
   static const String campfire = CustomAssets.iconCampfire;
   static const String wand = CustomAssets.iconWand;
+  static const String shop = CustomAssets.iconShop;
+  static const String map = CustomAssets.iconMap;
+  static const String menu = CustomAssets.iconMenu;
+  static const String closeTab = CustomAssets.iconCloseTab;
+  static const String forge = CustomAssets.iconForge;
+  static const String camp = CustomAssets.iconCamp;
+  static const String market = CustomAssets.iconMarket;
+  static const String watchAd = CustomAssets.iconWatchAd;
+  static const String scroll = CustomAssets.iconScroll;
+  static const String daily = CustomAssets.iconDaily;
+  static const String ticket = CustomAssets.iconTicket;
+  static const String embers = CustomAssets.iconEmbers;
+
+  /// Icons left of labels on the home FORGE / CAMP / MARKET row.
+  static const List<String> goldDockSegment = [forge, camp, market];
 }
 
 enum UiGlyph { add, close, prev, next, scroll, wisp }

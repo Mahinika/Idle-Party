@@ -63,11 +63,11 @@ class AppBottomBar extends StatelessWidget {
   static Widget iconFor(MenuRoute r, {double size = 18}) => switch (r) {
     MenuRoute.gear => GameIcon.asset(UiIcon.gear, size: size),
     MenuRoute.gold => GameIcon.asset(UiIcon.gold, size: size),
-    MenuRoute.shop => GameIcon.asset(UiIcon.star, size: size),
+    MenuRoute.shop => GameIcon.asset(UiIcon.shop, size: size),
     MenuRoute.essence => GameIcon.asset(UiIcon.essence, size: size),
     MenuRoute.key => GameIcon.asset(UiIcon.key, size: size),
-    MenuRoute.more => GameIcon.asset(UiIcon.more, size: size),
-    MenuRoute.map => GameIcon.asset(UiIcon.boots, size: size),
+    MenuRoute.more => GameIcon.asset(UiIcon.menu, size: size),
+    MenuRoute.map => GameIcon.asset(UiIcon.map, size: size),
     MenuRoute.none => GameIcon.asset(UiIcon.more, size: size),
   };
 

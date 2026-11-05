@@ -8,7 +8,7 @@ import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../web_click_bridge.dart';
 
-/// HEROES · ESSENCE · FIGHT · MAP · SHOP. The open tab is a red X.
+/// HEROES · ESSENCE · FIGHT · MAP · SHOP. The open tab shows icon_close_tab.
 class HomeNavBar extends StatelessWidget {
   const HomeNavBar({
     super.key,
@@ -45,14 +45,14 @@ class HomeNavBar extends StatelessWidget {
                   ? _tab(
                       MenuRoute.map,
                       'MAP',
-                      UiIcon.boots,
+                      UiIcon.map,
                       timer: _mapTimer(),
                     )
                   : const SizedBox.shrink(),
             ),
             Expanded(
               child: shop
-                  ? _tab(MenuRoute.shop, 'SHOP', UiIcon.gold)
+                  ? _tab(MenuRoute.shop, 'SHOP', UiIcon.shop)
                   : const SizedBox.shrink(),
             ),
           ],
@@ -100,11 +100,7 @@ class HomeNavBar extends StatelessWidget {
         }
       },
       child: selected
-          ? GameIcon.glyph(
-              UiGlyph.close,
-              size: 26,
-              color: GameTheme.hudHpDamage,
-            )
+          ? GameIcon.asset(UiIcon.closeTab, size: 26)
           : Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

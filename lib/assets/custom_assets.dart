@@ -195,6 +195,19 @@ abstract final class CustomAssets {
   static const String iconSkull = '$_root/icons/skull.png';
   static const String iconSettings = '$_root/icons/settings.png';
   static const String iconKey = '$_root/icons/key.png';
+  static const String iconShop = '$_root/icons/icon_shop.png';
+  static const String iconMap = '$_root/icons/icon_map.png';
+  static const String iconMenu = '$_root/icons/icon_menu.png';
+  static const String iconCloseTab = '$_root/icons/icon_close_tab.png';
+  static const String iconForge = '$_root/icons/icon_forge.png';
+  static const String iconCamp = '$_root/icons/icon_camp.png';
+  static const String iconMarket = '$_root/icons/icon_market.png';
+  static const String iconWatchAd = '$_root/icons/icon_watch_ad.png';
+  static const String iconScroll = '$_root/icons/icon_scroll.png';
+  static const String iconDaily = '$_root/icons/icon_daily.png';
+  static const String iconTicket = '$_root/icons/icon_ticket.png';
+  static const String iconEmbers = '$_root/icons/icon_embers.png';
+  // Batch 2: icon_cinders.png (48×48 master) for ESSENCE cinders chip.
 
   // —— Hub dungeon portraits ——
   static const String portraitSandy = '$_root/portraits/sandy.png';

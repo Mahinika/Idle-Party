@@ -32,6 +32,7 @@ class HomeGoldDock extends StatelessWidget {
           child: MenuChrome.segmented(
             dense: true,
             labels: const ['FORGE', 'CAMP', 'MARKET'],
+            icons: UiIcon.goldDockSegment,
             selectedIndex: -1,
             onSelect: (i) => _openSheet(context, HomeGoldPanel.values[i]),
           ),
@@ -114,6 +115,7 @@ class _HomeGoldSheetState extends State<HomeGoldSheet> {
                       child: MenuChrome.segmented(
                         dense: true,
                         labels: const ['FORGE', 'CAMP', 'MARKET'],
+                        icons: UiIcon.goldDockSegment,
                         selectedIndex: _panel.index,
                         onSelect: (i) =>
                             setState(() => _panel = HomeGoldPanel.values[i]),

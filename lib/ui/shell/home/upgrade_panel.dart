@@ -4,6 +4,7 @@ import '../../../core/game_director.dart';
 import '../../../core/game_state.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
+import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../menu_chrome.dart';
 import '../forge_overlay.dart';
@@ -86,6 +87,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
               child: MenuChrome.segmented(
                 dense: true,
                 labels: const ['FORGE', 'CAMP', 'MARKET'],
+                icons: UiIcon.goldDockSegment,
                 selectedIndex: _mode.index,
                 onSelect: (i) => setState(() => _mode = _Panel.values[i]),
               ),
