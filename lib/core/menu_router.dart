@@ -149,6 +149,8 @@ class MenuRouter extends ChangeNotifier {
   /// 1 when a home-shell tab is showing a sub-screen (BLESSING, QUESTS).
   int _homeDepth = 0;
 
+  bool _mapEndgame = false;
+
 
 
   MenuRoute get route => _route;
@@ -168,6 +170,9 @@ class MenuRouter extends ChangeNotifier {
   int get homeDepth => _homeDepth;
 
   bool get homeAtSub => _homeDepth > 0;
+
+  /// Home MAP: open on ENDGAME when a wipe or chase asked for the hunts.
+  bool get mapEndgame => _mapEndgame;
 
 
 
@@ -206,6 +211,8 @@ class MenuRouter extends ChangeNotifier {
       essence: intent.essencePanel,
 
       more: intent.more,
+
+      mapEndgame: intent.mapEndgame,
 
     );
 
@@ -405,6 +412,8 @@ class MenuRouter extends ChangeNotifier {
 
     int? infoPane,
 
+    bool mapEndgame = false,
+
   }) {
 
     final before = debugWhere;
@@ -418,6 +427,8 @@ class MenuRouter extends ChangeNotifier {
     if (more != null) _moreSection = more;
 
     if (route == MenuRoute.more) _moreInfoPane = infoPane ?? 0;
+
+    _mapEndgame = route == MenuRoute.map && mapEndgame;
 
     if (route == MenuRoute.gear && _route != MenuRoute.gear) {
 

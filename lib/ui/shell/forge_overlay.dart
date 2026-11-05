@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/farm_intensity.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
@@ -337,10 +338,9 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
                     state,
                   )],
                 ));
-    if (widget.inlineUnderFight) {
-      return _inlineUnderFightBody(plain: plain, canBuyAny: canBuyAny);
-    }
-    return Column(
+    final body = widget.inlineUnderFight
+        ? _inlineUnderFightBody(plain: plain, canBuyAny: canBuyAny)
+        : Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
@@ -354,6 +354,35 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
             child: _spendAllButton(state),
           ),
       ],
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _farmIntensityRow(state),
+        Expanded(child: body),
+      ],
+    );
+  }
+
+  Widget _farmIntensityRow(GameState state) {
+    if (!FarmIntensity.applies(state)) return const SizedBox.shrink();
+    final current = FarmIntensity.effectiveMult(state);
+    final index = FarmIntensity.allowed.indexOf(current);
+    return Padding(
+      padding: ShellLayout.seamPadding.copyWith(bottom: 2),
+      child: MenuChrome.segmented(
+        dense: true,
+        labels: [for (final mult in FarmIntensity.allowed) '$mult×'],
+        selectedIndex: index < 0 ? 0 : index,
+        onSelect: (i) {
+          final mult = FarmIntensity.allowed[i];
+          if (FarmIntensity.canPick(state, mult)) {
+            director.setFarmIntensity(mult);
+          } else if (FarmIntensity.canTry(state, mult)) {
+            director.tryFarmIntensity(mult);
+          }
+        },
+      ),
     );
   }
 

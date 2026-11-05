@@ -12,6 +12,7 @@ import '../../hub/friend_tip_block.dart';
 import '../../hub/hub_powerups.dart';
 import '../../redeem_coupon_dialog.dart';
 import '../whats_new_overlay.dart';
+import 'floor_jump_sheet.dart';
 
 enum HomePlace { leftRail, rightRail, menuGrid }
 
@@ -112,12 +113,7 @@ abstract final class HomeCatalog {
           GameLogic.showDailyChase(s) && !s.metaDepth.dailyVaultClaimed,
       badge: (s) =>
           s.metaDepth.dailyVaultClears >= GameLogic.dailyVaultClearTarget,
-      open: (context, director, _) {
-        if (director.state.metaDepth.dailyVaultClears >=
-            GameLogic.dailyVaultClearTarget) {
-          director.claimDailyVault();
-        }
-      },
+      open: _openVault,
     ),
     HomeEntry(
       id: 'daily',
@@ -224,7 +220,110 @@ abstract final class HomeCatalog {
       badge: (_) => false,
       open: (context, director, _) => showRedeemCouponDialog(context, director),
     ),
+    HomeEntry(
+      id: 'menu_scrolls',
+      place: HomePlace.menuGrid,
+      order: 80,
+      icon: UiIcon.tome,
+      label: 'SCROLLS',
+      visible: (s, _) => MenuTabs.showScrolls(s),
+      badge: (s) => s.metaDepth.adTickets > 0,
+      open: (context, director, _) => openPowerupsSheet(context, director),
+    ),
+    HomeEntry(
+      id: 'menu_watch',
+      place: HomePlace.menuGrid,
+      order: 81,
+      icon: UiIcon.star,
+      label: 'WATCH',
+      visible: (s, _) => MenuTabs.showScrolls(s),
+      badge: (_) => false,
+      open: (context, director, _) => openPowerupsSheet(context, director),
+    ),
+    HomeEntry(
+      id: 'menu_vault',
+      place: HomePlace.menuGrid,
+      order: 82,
+      icon: UiIcon.chest,
+      label: 'VAULT',
+      visible: (s, _) =>
+          GameLogic.showDailyChase(s) && !s.metaDepth.dailyVaultClaimed,
+      badge: (s) =>
+          s.metaDepth.dailyVaultClears >= GameLogic.dailyVaultClearTarget,
+      open: _openVault,
+    ),
+    HomeEntry(
+      id: 'menu_daily',
+      place: HomePlace.menuGrid,
+      order: 83,
+      icon: UiIcon.boots,
+      label: 'DAILY',
+      visible: (s, _) => GameLogic.showDailyRunOnHub(s),
+      badge: (_) => false,
+      open: (context, director, _) => confirmDailyRun(context, director),
+    ),
+    HomeEntry(
+      id: 'menu_wisp',
+      place: HomePlace.menuGrid,
+      order: 84,
+      icon: UiIcon.flask,
+      label: 'WISP',
+      visible: (s, _) => s.metaDepth.wispUnlocked,
+      badge: (_) => false,
+      open: (context, director, _) => openPowerupsSheet(context, director),
+    ),
+    HomeEntry(
+      id: 'menu_pouch',
+      place: HomePlace.menuGrid,
+      order: 85,
+      icon: UiIcon.gold,
+      label: 'POUCH',
+      visible: (s, _) => ReinstallPouch.showOffer(s),
+      badge: (_) => true,
+      open: (context, director, _) => openPowerupsSheet(context, director),
+    ),
+    HomeEntry(
+      id: 'menu_update',
+      place: HomePlace.menuGrid,
+      order: 86,
+      icon: UiIcon.star,
+      label: 'UPDATE',
+      visible: (_, director) => director.showPlayUpdateNotice,
+      badge: (_) => true,
+      open: (context, director, _) => director.openPlayUpdate(),
+    ),
+    HomeEntry(
+      id: 'menu_floors',
+      place: HomePlace.menuGrid,
+      order: 90,
+      icon: UiIcon.boots,
+      label: 'FLOORS',
+      visible: (s, _) =>
+          s.inDungeon &&
+          !s.inGauntlet &&
+          !s.inAnyRiftMode &&
+          !s.inWorldBoss,
+      badge: (_) => false,
+      open: (context, director, _) => showFloorJumpSheet(context, director),
+    ),
   ];
+
+  static void _openVault(
+    BuildContext context,
+    GameDirector director,
+    MenuRouter router,
+  ) {
+    final state = director.state;
+    final clears = state.metaDepth.dailyVaultClears;
+    final target = GameLogic.dailyVaultClearTarget;
+    if (!state.metaDepth.dailyVaultClaimed && clears >= target) {
+      director.claimDailyVault();
+      return;
+    }
+    director.showToast('Daily Vault $clears/$target', life: 2.2);
+    router.open(MenuRoute.more, more: MoreSection.quests);
+    router.pushSub();
+  }
 
   static List<HomeEntry> of(HomePlace place) {
     final list = entries.where((e) => e.place == place).toList();

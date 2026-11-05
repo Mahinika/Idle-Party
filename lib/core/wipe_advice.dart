@@ -190,13 +190,13 @@ abstract final class WipeAdvice {
     }
     // Farm Rift / GR / Gauntlet: hub map only — no MenuRoute for ENDGAME.
     if (adviceLine.contains('Farm Rift') && adviceLine.contains('ENDGAME')) {
-      return null;
+      return NavIntent.endgame;
     }
     if (adviceLine.contains('GR') && adviceLine.contains('ENDGAME')) {
-      return null;
+      return NavIntent.endgame;
     }
     if (adviceLine.contains('Spire climb')) {
-      return null;
+      return NavIntent.endgame;
     }
     if (adviceLine.contains('dial down') ||
         adviceLine.contains('may be high')) {

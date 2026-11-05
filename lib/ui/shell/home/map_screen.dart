@@ -40,6 +40,7 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     _zoneId = director.state.dungeonId;
+    _endgame = widget.router.mapEndgame;
   }
 
   @override

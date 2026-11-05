@@ -20,6 +20,8 @@ class UpgradePanel extends StatefulWidget {
     required this.director,
     required this.router,
     this.sheetPanel,
+    this.focusPanel,
+    this.focusGeneration = 0,
   });
 
   final GameDirector director;
@@ -27,6 +29,10 @@ class UpgradePanel extends StatefulWidget {
 
   /// When set, only the body for this tab (sheet owns the segmented header).
   final HomeGoldPanel? sheetPanel;
+
+  /// SPLIT fight: a GOLD / MARKET intent moves the segmented control here.
+  final HomeGoldPanel? focusPanel;
+  final int focusGeneration;
 
   @override
   State<UpgradePanel> createState() => _UpgradePanelState();
@@ -50,6 +56,16 @@ class _UpgradePanelState extends State<UpgradePanel> {
   void _onRoute() {
     if (widget.router.route != MenuRoute.gold) return;
     if (_mode != _Panel.forge) setState(() => _mode = _Panel.forge);
+  }
+
+  @override
+  void didUpdateWidget(covariant UpgradePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final focus = widget.focusPanel;
+    if (focus != null &&
+        widget.focusGeneration != oldWidget.focusGeneration) {
+      _mode = _Panel.values[focus.index];
+    }
   }
 
   @override

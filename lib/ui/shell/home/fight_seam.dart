@@ -117,6 +117,22 @@ class FightSeam extends StatelessWidget {
               },
               onOpenEquip: () => router.toggleGear(GearPanel.gear),
             ),
+          if (world != null &&
+              world.awaitingExit &&
+              !state.isPartyDefeated &&
+              !director.exitHoldActive)
+            Align(
+              alignment: Alignment.centerRight,
+              child: _tap(
+                label: 'HOLD',
+                onTap: director.startExitHold,
+                minHeight: 32,
+                child: Text(
+                  'HOLD',
+                  style: GameTheme.menuTitle(size: 11, color: GameTheme.torchHot),
+                ),
+              ),
+            ),
           if (!hideRails)
             FightSeamRails(director: director, router: router),
         ],

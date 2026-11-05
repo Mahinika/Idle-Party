@@ -41,17 +41,32 @@ class HomeGoldDock extends StatelessWidget {
   }
 
   void _openSheet(BuildContext context, HomeGoldPanel mode) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => HomeGoldSheet(
-        director: director,
-        router: router,
-        initialPanel: mode,
-      ),
+    showHomeGoldSheet(
+      context,
+      director: director,
+      router: router,
+      initialPanel: mode,
     );
   }
+}
+
+/// FORGE / CAMP / MARKET sheet. Fight or camp stays behind it.
+void showHomeGoldSheet(
+  BuildContext context, {
+  required GameDirector director,
+  required MenuRouter router,
+  required HomeGoldPanel initialPanel,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => HomeGoldSheet(
+      director: director,
+      router: router,
+      initialPanel: initialPanel,
+    ),
+  );
 }
 
 /// Scrollable FORGE / CAMP / MARKET while the fight keeps running behind.
