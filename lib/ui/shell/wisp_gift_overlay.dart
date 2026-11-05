@@ -325,8 +325,8 @@ Future<void> openWispChoiceSheet(
                             MenuChrome.sheetHandle(),
                             Row(
                               children: [
-                                GameIcon.glyph(
-                                  UiGlyph.wisp,
+                                GameIcon.asset(
+                                  UiIcon.wispLantern,
                                   size: 18,
                                   color: GameTheme.torch,
                                 ),

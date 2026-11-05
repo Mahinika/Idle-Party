@@ -208,6 +208,10 @@ abstract final class CustomAssets {
   static const String iconTicket = '$_root/icons/icon_ticket.png';
   static const String iconEmbers = '$_root/icons/icon_embers.png';
   static const String iconCinders = '$_root/icons/icon_cinders.png';
+  static const String iconUpdate = '$_root/icons/icon_update.png';
+  static const String iconRedeem = '$_root/icons/icon_redeem.png';
+  static const String iconFloors = '$_root/icons/icon_floors.png';
+  static const String iconWispLantern = '$_root/icons/icon_wisp_lantern.png';
 
   /// 48×48 shell masters (Creative brief). Use [hires] to pick the hi-res
   /// version when painting at ≥24 dp (nav tabs, large chrome).
@@ -229,6 +233,10 @@ abstract final class CustomAssets {
   static const String iconFlaskPurple48 = '$_icons48/flask_purple.png';
   static const String iconHelm48 = '$_icons48/helm.png';
   static const String iconSword48 = '$_icons48/sword.png';
+  static const String iconUpdate48 = '$_icons48/icon_update.png';
+  static const String iconRedeem48 = '$_icons48/icon_redeem.png';
+  static const String iconFloors48 = '$_icons48/icon_floors.png';
+  static const String iconWispLantern48 = '$_icons48/icon_wisp_lantern.png';
 
   /// Map from standard 32×32 icon path to its 48×48 hi-res master.
   /// Used by [KenneySprite] for large chrome (≥24 dp).
@@ -250,6 +258,10 @@ abstract final class CustomAssets {
     iconFlaskPurple: iconFlaskPurple48,
     iconHelm: iconHelm48,
     iconSword: iconSword48,
+    iconUpdate: iconUpdate48,
+    iconRedeem: iconRedeem48,
+    iconFloors: iconFloors48,
+    iconWispLantern: iconWispLantern48,
   };
 
   /// Return 48px master for [path] when one exists, else [path] unchanged.

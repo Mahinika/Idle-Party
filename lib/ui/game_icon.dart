@@ -47,21 +47,10 @@ abstract final class UiIcon {
   static const String ticket = CustomAssets.iconTicket;
   static const String embers = CustomAssets.iconEmbers;
   static const String cinders = CustomAssets.iconCinders;
-
-  // TODO(batch-2): Replace with dedicated PNGs when Creative ships them.
-  // Until then these fall back to existing icons so the build compiles.
-
-  /// UPDATE rail / menu. Placeholder for `icon_update.png` (download arrow).
-  static const String update = CustomAssets.iconStar;
-
-  /// REDEEM menu. Placeholder for `icon_redeem.png` (gift tag / ticket).
-  static const String redeem = CustomAssets.iconStar;
-
-  /// FLOORS menu. Placeholder for `icon_floors.png` (stairs).
-  static const String floors = CustomAssets.iconBoots;
-
-  /// WISP lantern. Placeholder for `icon_wisp_lantern.png`.
-  static const String wispLantern = CustomAssets.iconFlask;
+  static const String update = CustomAssets.iconUpdate;
+  static const String redeem = CustomAssets.iconRedeem;
+  static const String floors = CustomAssets.iconFloors;
+  static const String wispLantern = CustomAssets.iconWispLantern;
 
   /// Icons left of labels on the home FORGE / CAMP / MARKET row.
   static const List<String> goldDockSegment = [forge, camp, market];
