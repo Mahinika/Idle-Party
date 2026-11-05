@@ -57,7 +57,6 @@ class ShopDock extends StatefulWidget {
 
 class _ShopDockState extends State<ShopDock> {
   final Set<String> _productViewsLogged = {};
-  bool _showAllPacks = false;
 
   @override
   void initState() {
@@ -111,21 +110,6 @@ class _ShopDockState extends State<ShopDock> {
           showEssence: MenuTabs.showCamp(state),
           layout: state.homeLayout,
         );
-        if (widget.homeCompact && !_showAllPacks) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _compactHomePage(
-                  hint: hint,
-                  storeLine: storeLine,
-                  items: items,
-                  featured: showFeatured ? featured : null,
-                ),
-              ),
-            ],
-          );
-        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -136,86 +120,11 @@ class _ShopDockState extends State<ShopDock> {
                 items: items,
                 featured: showFeatured ? featured : null,
                 showAccountActions: true,
-                showAllPacksToggle: widget.homeCompact,
-                onToggleAllPacks: widget.homeCompact
-                    ? () => setState(() => _showAllPacks = false)
-                    : null,
               ),
             ),
           ],
         );
       },
-    );
-  }
-
-  Widget _compactHomePage({
-    required String hint,
-    required String storeLine,
-    required List<ShopCatalogItem> items,
-    ShopCatalogItem? featured,
-  }) {
-    final state = widget.director.state;
-    ShopCatalogItem? pick;
-    for (final item in items) {
-      if (featured != null && item.id == featured.id) continue;
-      if (!ShopBilling.isOwned(state, item)) {
-        pick = item;
-        break;
-      }
-    }
-    pick ??= items.isNotEmpty ? items.first : null;
-
-    return ListView(
-      padding: ShellLayout.listPadding,
-      children: [
-        ShellLayout.sheetLink(
-          label: 'All packs',
-          onTap: () => setState(() => _showAllPacks = true),
-        ),
-        if (featured != null) ...[
-          ShellLayout.gap(4),
-          Text(
-            ShopHubOffer.countdownLine(state),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 11, color: GameTheme.torchHot),
-          ),
-          ShellLayout.gap(4),
-          _ShopRow(
-            item: featured,
-            owned: ShopBilling.isOwned(state, featured),
-            priceLabel: _priceLabel(featured),
-            available: _priceReady(featured) ||
-                ShopCatalog.playChargeableIds.contains(featured.id),
-            compact: true,
-            featuredPrimary: true,
-            titleOverride: ShopHubOffer.featuredTitle(featured),
-            layout: state.homeLayout,
-            onBuy: () => _buy(featured),
-          ),
-          ShellLayout.gap(6),
-        ],
-        if (pick != null &&
-            (featured == null || pick.id != featured.id)) ...[
-          _ShopRow(
-            item: pick,
-            owned: ShopBilling.isOwned(state, pick),
-            priceLabel: _priceLabel(pick),
-            available: _priceReady(pick),
-            compact: true,
-            layout: state.homeLayout,
-            onBuy: () => _buy(pick!),
-          ),
-        ],
-        if (_showCompactStoreLine(
-          storeLine,
-          featured: featured,
-          pick: pick,
-        )) ...[
-          ShellLayout.gap(4),
-          ShellLayout.hint(storeLine, maxLines: 1),
-        ],
-      ],
     );
   }
 
@@ -232,19 +141,6 @@ class _ShopDockState extends State<ShopDock> {
     if (ShopDock.goldenTestPriceLabel.isNotEmpty) return true;
     final live = ShopStore.storePriceLabel(item.id)?.trim();
     return live != null && live.isNotEmpty;
-  }
-
-  bool _showCompactStoreLine(
-    String storeLine, {
-    ShopCatalogItem? featured,
-    ShopCatalogItem? pick,
-  }) {
-    if (storeLine.isEmpty) return false;
-    if (!storeLine.startsWith('Waiting for')) return true;
-    if (ShopDock.goldenTestPriceLabel.isNotEmpty) return false;
-    if (featured != null && _priceReady(featured)) return false;
-    if (pick != null && _priceReady(pick)) return false;
-    return true;
   }
 
   Widget _page({
@@ -291,9 +187,13 @@ class _ShopDockState extends State<ShopDock> {
           ),
           ShellLayout.blockGapWidget(),
         ],
-        ShellLayout.gap(4),
-        ShellLayout.hint(storeLine, maxLines: 1),
-        const SizedBox(height: 10),
+        if (storeLine.isNotEmpty &&
+            !(storeLine.startsWith('Waiting for') &&
+                ShopDock.goldenTestPriceLabel.isNotEmpty)) ...[
+          ShellLayout.gap(4),
+          ShellLayout.hint(storeLine, maxLines: 1),
+          const SizedBox(height: 10),
+        ],
         ...() {
           final catalog = _catalogItems(items, featured);
           return [

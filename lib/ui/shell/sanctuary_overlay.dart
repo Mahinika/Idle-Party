@@ -155,15 +155,31 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (buyCap > 1)
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: ShellLayout.sheetHorizontal,
-            ),
-            child: _bulkChooserThin(buyCap, effectiveBuy),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: ShellLayout.sheetHorizontal,
           ),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (buyCap > 1) _bulkChooserThin(buyCap, effectiveBuy),
+              if (GameLogic.campAdClaimsToday(state) < GameLogic.campAdDailyCap)
+                MenuChrome.chip(
+                  label: state.metaDepth.adFree
+                      ? 'Free level'
+                      : 'Watch · free level',
+                  selected: true,
+                  onTap: () => director.watchCampAd(),
+                ),
+            ],
+          ),
+        ),
         Expanded(
           child: ListView(
+            primary: false,
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(
               ShellLayout.sheetHorizontal,
               4,

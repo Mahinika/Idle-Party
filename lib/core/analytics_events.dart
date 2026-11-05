@@ -45,6 +45,7 @@ abstract final class AnalyticsEvents {
   static const placementWelcomeBack = 'welcome_back';
   static const placementWispGift = 'wisp_gift';
   static const placementPowerups = 'powerups';
+  static const placementCampAd = 'camp_ad';
   static const placementScrollWell = 'scroll_well';
   static const placementQuestReroll = 'quest_reroll';
   static const placementWipeRetry = 'wipe_retry';

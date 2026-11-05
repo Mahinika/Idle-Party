@@ -664,6 +664,40 @@ class GameLogic {
     );
   }
 
+  /// Free CAMP levels from a rewarded ad, per UTC day.
+  static const int campAdDailyCap = 3;
+
+  static int campAdClaimsToday(GameState state, {DateTime? now}) {
+    final day = AdBoost.utcDayKey(now);
+    if (state.metaDepth.campAdUtc != day) return 0;
+    return state.metaDepth.campAdClaims;
+  }
+
+  /// One free level on the cheapest CAMP track. Does not spend essence.
+  static GameState grantCampAdLevel(GameState state, {DateTime? now}) {
+    final used = campAdClaimsToday(state, now: now);
+    if (used >= campAdDailyCap) return state;
+    final track = recommendedSanctuaryTrack(state);
+    final level = sanctuaryTrackLevel(state, track);
+    if (level < 0) return state;
+    var next = switch (track) {
+      'gold' => state.copyWith(sanctuaryGoldLevel: level + 1),
+      'power' => state.copyWith(sanctuaryPowerLevel: level + 1),
+      'vitality' => state.copyWith(sanctuaryVitalityLevel: level + 1),
+      'defense' => state.copyWith(sanctuaryDefenseLevel: level + 1),
+      'xp' => state.copyWith(
+        metaDepth: state.metaDepth.copyWith(sanctuaryXpLevel: level + 1),
+      ),
+      _ => state,
+    };
+    if (identical(next, state)) return state;
+    final depth = next.metaDepth.copyWith(
+      campAdUtc: AdBoost.utcDayKey(now),
+      campAdClaims: used + 1,
+    );
+    return next.copyWith(metaDepth: depth);
+  }
+
   /// How many consecutive [track] upgrades essence can afford (cap [maxLevels]).
   static int sanctuaryBulkAffordableLevels(
     GameState state,

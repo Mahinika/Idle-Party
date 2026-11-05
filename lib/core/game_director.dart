@@ -1941,6 +1941,52 @@ class GameDirector extends ChangeNotifier {
     unawaited(AppAnalytics.adFreeNudgeTap());
   }
 
+  /// Rewarded ad: one free level on the cheapest CAMP track. Three a day.
+  Future<void> watchCampAd() async {
+    if (GameLogic.campAdClaimsToday(_state) >= GameLogic.campAdDailyCap) {
+      showToast('Free CAMP level already used today', life: 2.0);
+      return;
+    }
+    if (_state.metaDepth.adFree) {
+      _grantCampAdLevel();
+      return;
+    }
+    if (!AdRewarded.realAdsAvailable) {
+      showToast('Ads play on the Android app', life: 2.2);
+      return;
+    }
+    showToast('Loading ad…', life: 1.4);
+    final result = await AdRewarded.showRewarded(
+      placement: AnalyticsEvents.placementCampAd,
+    );
+    switch (result) {
+      case AdWatchResult.rewarded:
+        noteCompletedRewardedWatch();
+        _grantCampAdLevel();
+      case AdWatchResult.skipped:
+        showToast('Watch the whole ad for a free CAMP level', life: 2.2);
+      case AdWatchResult.failed:
+      case AdWatchResult.unavailable:
+        showToast('Ad did not finish', life: 2.0);
+    }
+  }
+
+  void _grantCampAdLevel() {
+    final before = GameLogic.campAdClaimsToday(_state);
+    final next = GameLogic.grantCampAdLevel(_state);
+    if (GameLogic.campAdClaimsToday(next) <= before) {
+      showToast('Free CAMP level already used today', life: 2.0);
+      return;
+    }
+    _applyUpgrade(next);
+    GameAudio.ui();
+    final left = GameLogic.campAdDailyCap - GameLogic.campAdClaimsToday(next);
+    showToast(
+      left > 0 ? 'Free CAMP level · $left left today' : 'Free CAMP level',
+      life: 2.2,
+    );
+  }
+
   /// Android: show a rewarded ad, then +[AdBoost.ticketsPerAd] Ad Ticket.
   Future<void> watchPowerupAd() async {
     if (!AdRewarded.realAdsAvailable) {

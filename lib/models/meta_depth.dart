@@ -348,6 +348,8 @@ class MetaDepthState {
     this.adFree = false,
     this.rewardedWatchCount = 0,
     this.adFreeNudgeShown = false,
+    this.campAdUtc = '',
+    this.campAdClaims = 0,
     this.wispUnlocked = false,
     this.wispGiftUtcDay = '',
     this.wispGiftClaimsToday = 0,
@@ -719,6 +721,12 @@ class MetaDepthState {
   /// SCROLLS Ad-free line already shown once. Survives Ascend.
   final bool adFreeNudgeShown;
 
+  /// UTC day key for free CAMP levels from a rewarded ad.
+  final String campAdUtc;
+
+  /// How many free CAMP levels that day already granted.
+  final int campAdClaims;
+
   /// WISP gift unlocked after first dungeon enter. Survives Ascend.
   final bool wispUnlocked;
 
@@ -1003,6 +1011,8 @@ class MetaDepthState {
     bool? adFree,
     int? rewardedWatchCount,
     bool? adFreeNudgeShown,
+    String? campAdUtc,
+    int? campAdClaims,
     bool? wispUnlocked,
     String? wispGiftUtcDay,
     int? wispGiftClaimsToday,
@@ -1207,6 +1217,8 @@ class MetaDepthState {
       adFree: adFree ?? this.adFree,
       rewardedWatchCount: rewardedWatchCount ?? this.rewardedWatchCount,
       adFreeNudgeShown: adFreeNudgeShown ?? this.adFreeNudgeShown,
+      campAdUtc: campAdUtc ?? this.campAdUtc,
+      campAdClaims: campAdClaims ?? this.campAdClaims,
       wispUnlocked: wispUnlocked ?? this.wispUnlocked,
       wispGiftUtcDay: wispGiftUtcDay ?? this.wispGiftUtcDay,
       wispGiftClaimsToday: wispGiftClaimsToday ?? this.wispGiftClaimsToday,
@@ -1404,6 +1416,8 @@ class MetaDepthState {
     'adFree': adFree,
     'rewardedWatchCount': rewardedWatchCount,
     'adFreeNudgeShown': adFreeNudgeShown,
+    'campAdUtc': campAdUtc,
+    'campAdClaims': campAdClaims,
     'wispUnlocked': wispUnlocked,
     'wispGiftUtcDay': wispGiftUtcDay,
     'wispGiftClaimsToday': wispGiftClaimsToday,
@@ -1684,6 +1698,8 @@ class MetaDepthState {
       rewardedWatchCount: ((json['rewardedWatchCount'] as num?)?.toInt() ?? 0)
           .clamp(0, 9999),
       adFreeNudgeShown: (json['adFreeNudgeShown'] as bool?) ?? false,
+      campAdUtc: json['campAdUtc'] as String? ?? '',
+      campAdClaims: ((json['campAdClaims'] as num?)?.toInt() ?? 0).clamp(0, 9),
       wispUnlocked: (json['wispUnlocked'] as bool?) ?? false,
       wispGiftUtcDay: (json['wispGiftUtcDay'] as String?) ?? '',
       wispGiftClaimsToday: ((json['wispGiftClaimsToday'] as num?)?.toInt() ?? 0)

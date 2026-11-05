@@ -233,6 +233,24 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
   }
 
   Widget _spendModeSegmented({required bool dense}) {
+    if (_compactPrice) {
+      return Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        children: [
+          MenuChrome.chip(
+            label: '×1',
+            selected: _spendMode == ForgeGoldSpendMode.one,
+            onTap: () => setState(() => _spendMode = ForgeGoldSpendMode.one),
+          ),
+          MenuChrome.chip(
+            label: 'Bulk',
+            selected: _spendMode != ForgeGoldSpendMode.one,
+            onTap: _openBulkSpendSheet,
+          ),
+        ],
+      );
+    }
     return MenuChrome.segmented(
       dense: dense,
       labels: const ['×1', 'Bulk'],
@@ -428,6 +446,8 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
           ),
         Expanded(
           child: ListView(
+            primary: false,
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(
               ShellLayout.sheetHorizontal,
               4,

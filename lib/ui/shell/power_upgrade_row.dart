@@ -39,12 +39,12 @@ class PowerUpgradeRow extends StatelessWidget {
     final titleSize = dense ? 14.0 : 15.0;
     final subSize = dense ? 12.0 : 13.0;
     return Container(
-      margin: EdgeInsets.only(bottom: dense ? 3 : 6),
+      margin: EdgeInsets.only(bottom: dense ? 2 : 6),
       padding: EdgeInsets.fromLTRB(
         dense ? 8 : 10,
-        dense ? 5 : 8,
+        dense ? 3 : 8,
         dense ? 6 : 8,
-        dense ? 5 : 8,
+        dense ? 3 : 8,
       ),
       decoration: MenuChrome.listCard(selected: selected, borderColor: accent),
       child: Column(
