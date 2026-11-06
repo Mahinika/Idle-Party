@@ -39,10 +39,11 @@ abstract final class SaveSwap {
   ///
   /// The unsuffixed keys are slot 0's files, and an early build also used
   /// them for whichever slot was mid-copy. The selected slot is not the
-  /// owner. A unique match on slot 0 keeps those keys for recovery. A unique
-  /// match on another slot is copied there, and the global keys are removed
-  /// only after that slot's journal reads back. No match, or two matches,
-  /// keeps every byte and tells the caller to leave saving off.
+  /// owner. A journal this build writes names its slot. That name is the
+  /// owner, even when the pre-image is not one of the payloads and another
+  /// slot has a save. An older journal has no name. One present slot file
+  /// in the payloads is that owner. No present file, or two, keeps every
+  /// byte. A missing or quarantined slot is not proof that slot 0 owns it.
   static Future<bool> migrateLegacyGlobalJournal(GameStorage storage) async {
     try {
       return await _migrateLegacy(storage);
@@ -143,23 +144,30 @@ abstract final class SaveSwap {
       return !removed ||
           await storage.loadExtra(GameStorage.journalKey) != null;
     }
-    if (await _finishFinishedMigration(
-      storage,
-      staging: staging,
-      hold: hold,
-      displaced: displaced,
-    )) {
+    final mark = _JournalMark.parse(phase);
+    // This build named slot 0. The unsuffixed keys are already its file.
+    // Another occupied slot does not make the pre-image ambiguous.
+    if (mark.owner == 0) return false;
+    if (mark.owner == null &&
+        await _finishFinishedMigration(
+          storage,
+          staging: staging,
+          hold: hold,
+          displaced: displaced,
+        )) {
       return await storage.loadExtra(GameStorage.journalKey) != null;
     }
     final evidence = <String>{?staging, ?hold, ?displaced};
     final started = <int>[];
-    for (var slot = 1; slot < GameStorage.slotCount; slot++) {
-      final own = await storage.loadExtra(GameStorage.journalKeyFor(slot));
-      if (own != null) started.add(slot);
+    if (mark.owner == null) {
+      for (var slot = 1; slot < GameStorage.slotCount; slot++) {
+        final own = await storage.loadExtra(GameStorage.journalKeyFor(slot));
+        if (own != null) started.add(slot);
+      }
     }
     if (started.length > 1) return true;
-    int? target;
-    if (started.length == 1) {
+    int? target = mark.owner;
+    if (target == null && started.length == 1) {
       final slot = started.single;
       final raw = await storage.loadSlotRaw(slot);
       final belongs =
@@ -175,28 +183,18 @@ abstract final class SaveSwap {
       target = slot;
     }
     if (target == null) {
-      // The selected slot is not a vote. Two matches stay put. One match on
-      // another slot is copied there. One match on slot 0, or no match while
-      // no other slot has a save, keeps the unsuffixed keys so recovery can
-      // finish that journal in place. No match while another slot has a
-      // save stays put.
+      // Older journals have no slot name. One present file in the payloads
+      // is the owner. None, including a slot that was erased or quarantined,
+      // is not slot 0. Two present files stay put.
       final claims = await _payloadClaims(
         storage,
         staging: staging,
         hold: hold,
         displaced: displaced,
       );
-      if (claims.length > 1) return true;
-      if (claims.length == 1 && claims.single > 0) {
-        target = claims.single;
-      } else if (claims.isEmpty && await _otherSlotOccupied(storage)) {
-        // No saved file is in the payloads, and another slot exists. The
-        // journal may belong to that slot after its file changed. It is
-        // not finished on slot 0.
-        return true;
-      } else {
-        return false;
-      }
+      if (claims.length != 1) return true;
+      if (claims.single == 0) return false;
+      target = claims.single;
     }
     final copied =
         await _copyProven(
@@ -356,40 +354,31 @@ abstract final class SaveSwap {
     return matches;
   }
 
-  /// True when some slot other than 0 has a saved file.
-  static Future<bool> _otherSlotOccupied(GameStorage storage) async {
-    for (var slot = 1; slot < GameStorage.slotCount; slot++) {
-      if (await storage.loadSlotRaw(slot) != null) return true;
-    }
-    return false;
-  }
-
   /// Slot 0 shares its journal keys with an early build's journal for any
-  /// slot. Another slot's saved file in those payloads means the journal is
-  /// not slot 0's. No match while another slot has a save is also unproven.
-  /// An empty marker, a unique slot 0 match, or a journal while no other
-  /// slot exists may still finish in place.
+  /// slot. A journal this build wrote for slot 0 names that slot. An older
+  /// journal is slot 0's only when slot 0's saved file is the only present
+  /// match. No present match is not ownership, even when every other slot
+  /// file is missing.
   static Future<bool> _globalJournalIsForeign(
     GameStorage storage,
     int index,
   ) async {
     if (index > 0) return false;
+    final stored = await storage.loadExtra(GameStorage.journalKey);
+    final mark = _JournalMark.parse(stored);
+    if (mark.owner == 0) return false;
     final staging = await storage.loadExtra(GameStorage.stagingKey);
     final hold = await storage.loadExtra(GameStorage.holdKey);
     final displaced = await storage.loadExtra(GameStorage.displacedKey);
     if (staging == null && hold == null && displaced == null) return false;
+    if (mark.owner != null) return true;
     final claims = await _payloadClaims(
       storage,
       staging: staging,
       hold: hold,
       displaced: displaced,
     );
-    final slot0Claims = claims.contains(0);
-    final otherClaims = claims.any((slot) => slot != 0);
-    if (otherClaims && !slot0Claims) return true;
-    if (claims.length > 1) return true;
-    if (claims.isEmpty && await _otherSlotOccupied(storage)) return true;
-    return false;
+    return !(claims.length == 1 && claims.single == 0);
   }
 
   static Future<SaveSwapOutcome> _recover(
@@ -398,8 +387,11 @@ abstract final class SaveSwap {
   }) async {
     await storage.reloadDurable();
     final index = slot ?? storage.activeSlotIndex;
-    final phase = await storage.loadExtra(GameStorage.journalKeyFor(index));
-    if (phase == null) return SaveSwapOutcome.idle;
+    final storedPhase = await storage.loadExtra(
+      GameStorage.journalKeyFor(index),
+    );
+    if (storedPhase == null) return SaveSwapOutcome.idle;
+    final phase = _JournalMark.parse(storedPhase).phase;
     final staging = await storage.loadExtra(GameStorage.stagingKeyFor(index));
     final hold = await storage.loadExtra(GameStorage.holdKeyFor(index));
     final displaced = await storage.loadExtra(
@@ -530,14 +522,17 @@ abstract final class SaveSwap {
     // write is then the swap-commit path, which publishes the hold.
     // Leaving the phase on swap-stage made the next retry treat the new
     // active as an abort and delete the hold.
+    final commitPhase = _JournalMark.parse(
+      await storage.loadExtra(GameStorage.journalKeyFor(slot)),
+    ).encode('swap-commit');
     final marked = await storage.writeExtra(
       GameStorage.journalKeyFor(slot),
-      'swap-commit',
+      commitPhase,
     );
     await storage.reloadDurable();
     if (!marked ||
         await storage.loadExtra(GameStorage.journalKeyFor(slot)) !=
-            'swap-commit') {
+            commitPhase) {
       return SaveSwapOutcome.unresolved;
     }
     final wroteActive = await storage.writeActiveRaw(staging);
@@ -621,7 +616,7 @@ abstract final class SaveSwap {
     );
     final marked = await storage.writeExtra(
       GameStorage.journalKeyFor(slot),
-      'park',
+      _JournalMark.write(slot, 'park'),
     );
     if (!staged || !marked) {
       return _keepCommitted(await recover(storage, slot: slot));
@@ -642,7 +637,7 @@ abstract final class SaveSwap {
     }
     final commit = await storage.writeExtra(
       GameStorage.journalKeyFor(slot),
-      'commit',
+      _JournalMark.write(slot, 'commit'),
     );
     if (!commit) {
       return _keepCommitted(await recover(storage, slot: slot));
@@ -681,14 +676,14 @@ abstract final class SaveSwap {
     );
     final marked = await storage.writeExtra(
       GameStorage.journalKeyFor(slot),
-      'swap-stage',
+      _JournalMark.write(slot, 'swap-stage'),
     );
     if (!staged || !held || !marked) {
       return _keepCommitted(await recover(storage, slot: slot));
     }
     final committing = await storage.writeExtra(
       GameStorage.journalKeyFor(slot),
-      'swap-commit',
+      _JournalMark.write(slot, 'swap-commit'),
     );
     if (!committing) {
       return _keepCommitted(await recover(storage, slot: slot));
@@ -701,7 +696,7 @@ abstract final class SaveSwap {
     }
     final published = await storage.writeExtra(
       GameStorage.journalKeyFor(slot),
-      'swap-publish',
+      _JournalMark.write(slot, 'swap-publish'),
     );
     if (!published) {
       return _keepCommitted(await recover(storage, slot: slot));
@@ -789,4 +784,45 @@ abstract final class SaveSwap {
     final journal = await storage.loadExtra(journalKey);
     return staging == null && hold == null && journal == null;
   }
+}
+
+/// A journal value is `phase` for an early build, or `phase@slot` for a
+/// journal this build wrote. The slot name is the owner. Absence of other
+/// files is not.
+final class _JournalMark {
+  const _JournalMark({required this.phase, required this.owner});
+
+  final String phase;
+  final int? owner;
+
+  static const _phases = {
+    'park',
+    'commit',
+    'swap-stage',
+    'swap-commit',
+    'swap-publish',
+  };
+
+  static _JournalMark parse(String? raw) {
+    if (raw == null) return const _JournalMark(phase: '', owner: null);
+    final at = raw.lastIndexOf('@');
+    if (at > 0) {
+      final phase = raw.substring(0, at);
+      final owner = int.tryParse(raw.substring(at + 1));
+      if (_phases.contains(phase) &&
+          owner != null &&
+          owner >= 0 &&
+          owner < GameStorage.slotCount) {
+        return _JournalMark(phase: phase, owner: owner);
+      }
+    }
+    return _JournalMark(phase: raw, owner: null);
+  }
+
+  /// Keep [owner] when this journal already named a slot. An older journal
+  /// stays unnamed.
+  String encode(String nextPhase) =>
+      owner == null ? nextPhase : '$nextPhase@$owner';
+
+  static String write(int slot, String phase) => '$phase@$slot';
 }

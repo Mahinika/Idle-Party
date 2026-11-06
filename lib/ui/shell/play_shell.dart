@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/chase_dispatcher.dart';
 import '../../core/game_director.dart';
@@ -388,6 +389,18 @@ class _PlayShellState extends State<PlayShell> {
         SaveRecoveryGate(
           message: director.saveRecoveryMessage,
           onRetry: director.retrySaveRecovery,
+          onExport: director.saveRecoveryAmbiguous
+              ? () async {
+                  final text = await director.exportRecoveryRecords();
+                  await Clipboard.setData(ClipboardData(text: text));
+                  director.showToast(
+                    'Recovery records copied. Nothing was deleted.',
+                    life: 2.8,
+                  );
+                }
+              : null,
+          safeSlots: director.safeRecoverySlots,
+          onOpenSlot: (slot) => director.openSafeRecoverySlot(slot),
         ),
       ],
     );

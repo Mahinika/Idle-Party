@@ -103,8 +103,9 @@ abstract class GameStorage {
   /// Slot 0 keeps the original key so a file written before the keys were
   /// split still resolves. An early build also stored every slot's journal
   /// under these unsuffixed names. The selected slot is not the owner.
-  /// [SaveSwap] copies them onto another slot only when that slot's saved
-  /// bytes are the only match.
+  /// [SaveSwap] copies an older journal onto another slot only when that
+  /// slot's saved bytes are the only match. A journal this build writes
+  /// names its slot. A missing file is not that proof.
   static String displacedKeyFor(int slot) =>
       slot <= 0 ? displacedKey : '${displacedKey}_$slot';
 

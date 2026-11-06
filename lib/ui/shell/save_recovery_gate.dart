@@ -7,8 +7,9 @@ import '../game_theme.dart';
 ///
 /// Sits on the play shell, over both the home layout and the classic bar,
 /// because that is the screen a boot with an unfinished copy opens. The
-/// player finds it covering the fight, with RETRY, until both copies are
-/// durable. Purchases and combat stay off behind it.
+/// player finds it covering the fight until both copies are durable.
+/// RETRY finishes a copy whose owner is known. An unmatched older copy
+/// offers export and the other slots instead. Purchases and combat stay off.
 class SaveRecoveryGate extends StatelessWidget {
   const SaveRecoveryGate({
     super.key,
@@ -62,15 +63,25 @@ class SaveRecoveryGate extends StatelessWidget {
                 style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
               ),
               const SizedBox(height: 24),
-              GameButton(
-                label: 'RETRY',
-                primary: true,
-                onPressed: () => onRetry(),
-              ),
-              if (onExport != null) ...[
+              if (onExport == null)
+                GameButton(
+                  label: 'RETRY',
+                  primary: true,
+                  onPressed: () => onRetry(),
+                )
+              else ...[
+                Text(
+                  'Retry cannot choose an owner for this copy.',
+                  textAlign: TextAlign.center,
+                  style: GameTheme.body(
+                    size: 14,
+                    color: GameTheme.parchmentDim,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 GameButton(
                   label: 'EXPORT RECORDS',
+                  primary: true,
                   onPressed: () => onExport!(),
                 ),
               ],
