@@ -141,6 +141,8 @@ abstract final class PlayGamesScores {
     final meta = json['metaDepth'];
     if (meta is Map) {
       meta.remove('cloudSaveUpdatedMs');
+      meta.remove('cloudBackupSeal');
+      meta.remove('cloudBackupPreviousSeal');
     }
     return jsonEncode(json);
   }
@@ -175,11 +177,26 @@ abstract final class PlayGamesScores {
     }
 
     addIds(a.grantedShopPurchaseIds);
-    addIds(b.grantedShopPurchaseIds);
     const purchaseIdCap = 64;
-    if (ids.length > purchaseIdCap) {
-      ids.removeRange(0, ids.length - purchaseIdCap);
+    final chosenIds = ids.length > purchaseIdCap
+        ? ids.sublist(ids.length - purchaseIdCap)
+        : List<String>.from(ids);
+    final otherIds = <String>[];
+    for (final raw in b.grantedShopPurchaseIds) {
+      final id = raw.trim();
+      if (id.isEmpty || chosenIds.contains(id) || otherIds.contains(id)) {
+        continue;
+      }
+      otherIds.add(id);
     }
+    final room = purchaseIdCap - chosenIds.length;
+    final keptOther = otherIds.length > room
+        ? otherIds.sublist(otherIds.length - room)
+        : otherIds;
+    ids
+      ..clear()
+      ..addAll(keptOther)
+      ..addAll(chosenIds);
     final coupons = <String>[
       ...a.redeemedCoupons,
       for (final code in b.redeemedCoupons)

@@ -482,7 +482,8 @@ void main() {
       () async {
         var opened = 0;
         final read = await PlayGamesBridge.readSnapshot(
-          listNames: () async => const ['some-other-save'],
+          listNames: () async =>
+              const SnapshotNameList(names: ['some-other-save'], fresh: true),
           loadPayload: () async {
             opened++;
             throw PlatformException(
@@ -500,7 +501,10 @@ void main() {
       'open throwing SNAPSHOT_NOT_FOUND on a listed name stays failed',
       () async {
         final read = await PlayGamesBridge.readSnapshot(
-          listNames: () async => [PlayGamesBridge.snapshotName],
+          listNames: () async => SnapshotNameList(
+            names: [PlayGamesBridge.snapshotName],
+            fresh: true,
+          ),
           loadPayload: () async {
             throw PlatformException(
               code: 'failed_to_load_game',
@@ -529,12 +533,16 @@ void main() {
         expect(read.kind, CloudReadKind.failed);
         expect(opened, 0);
         final blank = await PlayGamesBridge.readSnapshot(
-          listNames: () async => [PlayGamesBridge.snapshotName],
+          listNames: () async => SnapshotNameList(
+            names: [PlayGamesBridge.snapshotName],
+            fresh: true,
+          ),
           loadPayload: () async => '',
         );
         expect(blank.kind, CloudReadKind.failed);
         final missingList = await PlayGamesBridge.readSnapshot(
-          listNames: () async => null,
+          listNames: () async =>
+              const SnapshotNameList(names: null, fresh: false),
           loadPayload: () async => null,
         );
         expect(missingList.kind, CloudReadKind.failed);

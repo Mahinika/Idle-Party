@@ -6,10 +6,15 @@ extension GameDirectorSave on GameDirector {
     // Title-screen placeholder and boot-failure empty state must not overwrite
     // a real save (hub idle used to write after 25s).
     if (!_hasExistingSave) return;
+    if (_durableSaveBlocked) {
+      _saveChain = _saveChain.then((_) async => false);
+      return;
+    }
     // Snapshot when this turn runs, not when it was queued, and write those
     // bytes. A later cloud install cannot be overwritten by a stale capture,
     // and a grant cannot change the bytes after this turn has read them.
     _saveChain = _saveChain.then((_) async {
+      if (_durableSaveBlocked) return false;
       final snapshot = _stampCloudClock(_state);
       _state = snapshot;
       try {
@@ -179,8 +184,18 @@ extension GameDirectorSave on GameDirector {
             showCard: true,
             stillCurrent: () => epoch == _saveEpoch && !_directorClosed,
           );
-          if (epoch != _saveEpoch || _directorClosed) return;
-          _state = credited;
+          if (_directorClosed) return;
+          if (epoch != _saveEpoch) {
+            final again = await _creditAway(
+              _state,
+              showCard: false,
+              stillCurrent: () => !_directorClosed,
+            );
+            if (_directorClosed) return;
+            _state = again;
+          } else {
+            _state = credited;
+          }
           if (_state.inDungeon && _spatial == null) {
             _rebuildSpatial();
           }
@@ -286,7 +301,9 @@ extension GameDirectorSave on GameDirector {
   Future<void> boot({bool deferCombatLoop = false}) async {
     _funnelSessionReadyMs = DateTime.now().millisecondsSinceEpoch;
     try {
-      await SaveSwap.recover(_storage);
+      await _storage.listSlots();
+      final recovered = await SaveSwap.recover(_storage);
+      _durableSaveBlocked = recovered == SaveSwapOutcome.unresolved;
       _saveSlots = await _storage.listSlots();
       _activeSlot = _storage.activeSlotIndex;
       _phoneHadNoSaveAtBoot = !_saveSlots.any((slot) => slot.occupied);
@@ -294,6 +311,8 @@ extension GameDirectorSave on GameDirector {
       _hasExistingSave = saved != null;
       final loaded = saved == null
           ? GameLogic.createInitialState()
+          : _durableSaveBlocked
+          ? saved
           : await _catchUpSaved(saved);
       _state = GameLogic.backfillCodexFromInventory(
         GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
@@ -323,7 +342,8 @@ extension GameDirectorSave on GameDirector {
         _spatial = null;
       }
       // Only persist when continuing an existing save (offline catch-up).
-      if (_hasExistingSave) {
+      // An unresolved journal must stay byte-for-byte until the next launch.
+      if (_hasExistingSave && !_durableSaveBlocked) {
         _notePlaySession();
         _noteAppColdStart();
         _noteFunnelSession(newInstall: false);
@@ -357,6 +377,7 @@ extension GameDirectorSave on GameDirector {
     unawaited(syncFriendReferral());
     unawaited(refreshPlayUpdateNotice());
     unawaited(LocalNotify.init());
+    unawaited(rebindOptedInCloudBackup());
     // Billing after the splash — Binder + Play Services hitch cold start.
     // Shop only. A rewarded ad loads when its button is about to show.
     _bootWarmup?.cancel();
@@ -453,7 +474,12 @@ extension GameDirectorSave on GameDirector {
   }
 
   /// Load [index] and make it the autosave target. No-op success if already active.
-  Future<bool> openSaveSlot(int index) async {
+  Future<bool> openSaveSlot(int index) {
+    if (_durableSaveBlocked) return Future<bool>.value(false);
+    return _enqueueSave(() => _openSaveSlotTurn(index));
+  }
+
+  Future<bool> _openSaveSlotTurn(int index) async {
     final slot = index.clamp(0, GameStorage.slotCount - 1);
     if (slot == _activeSlot && _hasExistingSave) return true;
     final saved = await _storage.loadSlot(slot);
@@ -462,6 +488,13 @@ extension GameDirectorSave on GameDirector {
       _directorNotify();
       return false;
     }
+    final pending = await SaveSwap.recover(_storage, slot: slot);
+    if (pending == SaveSwapOutcome.unresolved) {
+      _directorNotify();
+      return false;
+    }
+    _saveEpoch++;
+    PlayGamesBridge.invalidateUploads();
     _friendEpoch++;
     _spatialTimer?.cancel();
     _spatialTimer = null;
@@ -476,7 +509,10 @@ extension GameDirectorSave on GameDirector {
     _notePlaySession();
     _noteAppColdStart();
     _noteFunnelSession(newInstall: false);
-    await _persistFlush();
+    final snapshot = _stampCloudClock(_state);
+    _state = snapshot;
+    if (!await _storage.save(snapshot)) return false;
+    PlayGamesBridge.scheduleCloudUpload(snapshot);
     _saveSlots = await _storage.listSlots();
     _syncHubIdleTimer();
     _directorNotify();

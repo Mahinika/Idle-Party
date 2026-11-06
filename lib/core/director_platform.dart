@@ -605,12 +605,16 @@ extension GameDirectorPlatform on GameDirector {
     );
     final nextJson = GameLogic.exportSaveJson(next);
     _saveEpoch++;
-    final committed = await SaveSwap.commitReplacement(
+    final outcome = await SaveSwap.commitReplacement(
       storage: _storage,
       nextJson: nextJson,
       previousJson: previousJson,
     );
-    if (!committed) {
+    if (outcome == SaveSwapOutcome.unresolved) {
+      await _freezeUnresolvedSave(nextJson);
+      return false;
+    }
+    if (outcome != SaveSwapOutcome.committed) {
       showToast(
         'Could not keep a device copy. Cloud restore cancelled.',
         life: 2.6,
@@ -625,6 +629,7 @@ extension GameDirectorPlatform on GameDirector {
   }
 
   void _applyCommittedRestore(GameState committed, {required String toast}) {
+    PlayGamesBridge.invalidateUploads();
     _awaitingWipeChoice = false;
     _hasExistingSave = true;
     _state = committed;
@@ -643,22 +648,163 @@ extension GameDirectorPlatform on GameDirector {
   }
 
   Future<bool> backupToPlayGames() async {
-    if (PlayGamesBridge.cloudWriteBlocked) {
+    if (_durableSaveBlocked) {
+      showToast(
+        'Save recovery is unfinished. Backup stays off until the next launch.',
+        life: 2.6,
+      );
+      return false;
+    }
+    final read = await PlayGamesBridge.loadCloud();
+    _lastCloudRead = read;
+    if (read.kind != CloudReadKind.empty && read.kind != CloudReadKind.ready) {
       showToast('Could not read Play Games save. Kept this device.', life: 2.4);
+      return false;
+    }
+    final cloud = read.state;
+    final prepared = await _enqueueSave(() async {
+      var next = _state;
+      if (cloud != null) {
+        next = PlayGamesScores.withKeptOwnership(chosen: next, other: cloud);
+      }
+      next = _stampCloudClock(
+        next.copyWith(metaDepth: next.metaDepth.copyWith(playGamesOptIn: true)),
+      );
+      final saved = await _storage.save(next);
+      if (!saved) return false;
+      _state = next;
+      return true;
+    });
+    if (!prepared) {
+      showToast('Cloud backup failed', life: 2.2);
       return false;
     }
     final ok = await PlayGamesBridge.saveCloud(_state, explicit: true);
     if (ok) {
-      _state = _state.copyWith(
-        metaDepth: _state.metaDepth.copyWith(playGamesOptIn: true),
+      await _rememberBackupLineage(
+        _state,
+        replacedCloudSeal: cloud == null
+            ? ''
+            : PlayGamesScores.progressSeal(cloud),
       );
-      unawaited(_persistFlush());
     }
     showToast(
       ok ? 'Backed up to Play Games' : 'Cloud backup failed',
       life: 2.2,
     );
     return ok;
+  }
+
+  /// KEEP DEVICE. Local gold and materials stay. Paid ownership on [cloud]
+  /// is written onto this device before any later backup.
+  Future<bool> keepDeviceAndCloudOwnership(GameState cloud) {
+    if (_durableSaveBlocked) return Future<bool>.value(false);
+    return _enqueueSave(() async {
+      final merged = PlayGamesScores.withKeptOwnership(
+        chosen: _state,
+        other: cloud,
+      );
+      final next = _stampCloudClock(
+        merged.copyWith(
+          metaDepth: merged.metaDepth.copyWith(playGamesOptIn: true),
+        ),
+      );
+      final saved = await _storage.save(next);
+      if (!saved) return false;
+      _state = next;
+      _saveEpoch++;
+      PlayGamesBridge.invalidateUploads();
+      _directorNotify();
+      return true;
+    });
+  }
+
+  /// Opted-in cold start. A fresh read resumes automatic backup when this
+  /// device still owns the snapshot lineage. A different cloud stays put
+  /// until the player taps BACKUP NOW.
+  Future<void> rebindOptedInCloudBackup() async {
+    if (_durableSaveBlocked || !_state.metaDepth.playGamesOptIn) return;
+    final read = await PlayGamesBridge.loadCloud();
+    _lastCloudRead = read;
+    if (read.kind != CloudReadKind.empty && read.kind != CloudReadKind.ready) {
+      return;
+    }
+    if (read.kind == CloudReadKind.ready &&
+        read.state != null &&
+        !_automaticCloudContinue(read)) {
+      showToast(
+        'Play Games backup is paused. BACKUP NOW keeps this device and your paid unlocks.',
+        life: 3.4,
+      );
+      return;
+    }
+    PlayGamesBridge.scheduleCloudUpload(_state);
+  }
+
+  bool _automaticCloudContinue(CloudRead read) {
+    final cloud = read.state;
+    if (cloud == null) return read.kind == CloudReadKind.empty;
+    final cloudSeal = PlayGamesScores.progressSeal(cloud);
+    final localSeal = PlayGamesScores.progressSeal(_state);
+    if (cloudSeal == localSeal) return true;
+    final known = _state.metaDepth.cloudBackupSeal;
+    if (known.isNotEmpty && cloudSeal == known) return true;
+    final previous = _state.metaDepth.cloudBackupPreviousSeal;
+    return previous.isNotEmpty && cloudSeal == previous;
+  }
+
+  Future<void> _rememberBackupLineage(
+    GameState uploaded, {
+    required String replacedCloudSeal,
+  }) async {
+    final seal = PlayGamesScores.progressSeal(uploaded);
+    final previous = replacedCloudSeal == seal ? '' : replacedCloudSeal;
+    if (_state.metaDepth.cloudBackupSeal == seal &&
+        _state.metaDepth.cloudBackupPreviousSeal == previous) {
+      return;
+    }
+    await _enqueueSave(() async {
+      if (_durableSaveBlocked) return false;
+      final next = _stampCloudClock(
+        _state.copyWith(
+          metaDepth: _state.metaDepth.copyWith(
+            playGamesOptIn: true,
+            cloudBackupSeal: seal,
+            cloudBackupPreviousSeal: previous,
+          ),
+        ),
+      );
+      final saved = await _storage.save(next);
+      if (!saved) return false;
+      _state = next;
+      return true;
+    });
+  }
+
+  void _noteUploadedLineage(GameState uploaded) {
+    if (_directorClosed || _durableSaveBlocked) return;
+    final seal = PlayGamesScores.progressSeal(uploaded);
+    if (_state.metaDepth.cloudBackupSeal == seal) return;
+    final replaced = _lastCloudRead.state == null
+        ? ''
+        : PlayGamesScores.progressSeal(_lastCloudRead.state!);
+    unawaited(_rememberBackupLineage(uploaded, replacedCloudSeal: replaced));
+  }
+
+  Future<void> _freezeUnresolvedSave(String committedJson) async {
+    _durableSaveBlocked = true;
+    PlayGamesBridge.invalidateUploads();
+    await _storage.reloadDurable();
+    final raw = await _storage.loadActiveRaw();
+    if (raw != null && raw == committedJson) {
+      final parsed = GameLogic.importSaveJson(raw);
+      if (parsed != null) _state = parsed;
+    }
+    showToast(
+      'Could not finish saving both copies. This device will not overwrite them.',
+      life: 3.2,
+    );
+    _directorNotify();
   }
 
   Future<bool> restoreFromPlayGames({
@@ -748,12 +894,16 @@ extension GameDirectorPlatform on GameDirector {
     next = _stampCloudClock(next);
     final nextJson = GameLogic.exportSaveJson(next);
     _saveEpoch++;
-    final committed = await SaveSwap.commitSwap(
+    final outcome = await SaveSwap.commitSwap(
       storage: _storage,
       newActiveJson: nextJson,
       newDisplacedJson: currentJson,
     );
-    if (!committed) {
+    if (outcome == SaveSwapOutcome.unresolved) {
+      await _freezeUnresolvedSave(nextJson);
+      return false;
+    }
+    if (outcome != SaveSwapOutcome.committed) {
       showToast('Could not swap the device copy. Kept this device.', life: 2.4);
       return false;
     }

@@ -100,6 +100,20 @@ abstract class GameStorage {
   static const String holdKey = 'idle_party_save_hold';
   static const String journalKey = 'idle_party_save_journal';
 
+  /// Slot 0 keeps the original key so a file written before the keys were
+  /// split still resolves. Other slots never share that journal.
+  static String displacedKeyFor(int slot) =>
+      slot <= 0 ? displacedKey : '${displacedKey}_$slot';
+
+  static String stagingKeyFor(int slot) =>
+      slot <= 0 ? stagingKey : '${stagingKey}_$slot';
+
+  static String holdKeyFor(int slot) =>
+      slot <= 0 ? holdKey : '${holdKey}_$slot';
+
+  static String journalKeyFor(int slot) =>
+      slot <= 0 ? journalKey : '${journalKey}_$slot';
+
   /// Active slot (the save Continue / autosave uses).
   int get activeSlotIndex;
 
@@ -130,6 +144,9 @@ abstract class GameStorage {
   /// Raw active-slot JSON, without migrating it into a [GameState].
   Future<String?> loadActiveRaw();
 
+  /// Raw JSON for one slot. Recovery of a slot that is not active uses this.
+  Future<String?> loadSlotRaw(int index);
+
   /// Writes [json] as the active slot. False when the bytes did not land.
   Future<bool> writeActiveRaw(String json);
 
@@ -137,6 +154,17 @@ abstract class GameStorage {
   Future<String?> loadExtra(String key);
 
   Future<bool> writeExtra(String key, String? json);
+
+  /// Drop a cache that may already show a write the platform rejected.
+  /// SharedPreferences updates its map before the platform returns.
+  Future<void> reloadDurable();
+}
+
+/// Thrown by the in-memory store to simulate a process death after durable
+/// bytes changed and before the caller observed success. This is not a real
+/// process kill.
+class SimulatedSaveKill implements Exception {
+  const SimulatedSaveKill();
 }
 
 class SharedPreferencesGameStorage implements GameStorage {
@@ -309,17 +337,23 @@ class SharedPreferencesGameStorage implements GameStorage {
   }
 
   @override
-  Future<bool> keepDisplacedSave(String json) =>
-      writeExtra(GameStorage.displacedKey, json.isEmpty ? null : json);
+  Future<bool> keepDisplacedSave(String json) => writeExtra(
+    GameStorage.displacedKeyFor(_active),
+    json.isEmpty ? null : json,
+  );
 
   @override
-  Future<String?> loadDisplacedSave() => loadExtra(GameStorage.displacedKey);
+  Future<String?> loadDisplacedSave() =>
+      loadExtra(GameStorage.displacedKeyFor(_active));
 
   @override
-  Future<String?> loadActiveRaw() async {
+  Future<String?> loadActiveRaw() => loadSlotRaw(_active);
+
+  @override
+  Future<String?> loadSlotRaw(int index) async {
     final prefs = await _prefs;
     await _prepare(prefs);
-    final raw = prefs.getString(_slotKey(_active));
+    final raw = prefs.getString(_slotKey(_clampSlot(index)));
     if (raw == null || raw.isEmpty) return null;
     return raw;
   }
@@ -330,7 +364,10 @@ class SharedPreferencesGameStorage implements GameStorage {
     await _prepare(prefs);
     final slotOk = await prefs.setString(_slotKey(_active), json);
     final mirrorOk = await prefs.setString(_saveKey, json);
-    return slotOk && mirrorOk;
+    if (!slotOk || !mirrorOk) return false;
+    await prefs.reload();
+    return prefs.getString(_slotKey(_active)) == json &&
+        prefs.getString(_saveKey) == json;
   }
 
   @override
@@ -345,10 +382,22 @@ class SharedPreferencesGameStorage implements GameStorage {
   Future<bool> writeExtra(String key, String? json) async {
     final prefs = await _prefs;
     if (json == null || json.isEmpty) {
-      await prefs.remove(key);
-      return true;
+      final removed = await prefs.remove(key);
+      if (!removed) return false;
+      await prefs.reload();
+      return prefs.getString(key) == null;
     }
-    return prefs.setString(key, json);
+    final wrote = await prefs.setString(key, json);
+    if (!wrote) return false;
+    await prefs.reload();
+    return prefs.getString(key) == json;
+  }
+
+  @override
+  Future<void> reloadDurable() async {
+    final prefs = await _prefs;
+    await prefs.reload();
+    await _prepare(prefs);
   }
 }
 
@@ -377,8 +426,56 @@ class InMemoryGameStorage implements GameStorage {
   /// Test seam. The next N side-file writes fail and do not change bytes.
   int failNextExtraWrites = 0;
 
+  /// Test seam. When this returns true the side-file write fails once.
+  bool Function(String key, String? value)? failExtraWhen;
+
+  /// Test seam. A failed write updates the cache and leaves durable bytes.
+  /// Models shared_preferences, which updates its map before the platform
+  /// returns. This is a simulation of that cache, not a device.
+  bool cacheAheadOnFailedWrite = false;
+
+  /// Test seam. The slot bytes land and the legacy mirror does not.
+  /// [writeActiveRaw] returns false. A durable reload still sees the slot.
+  bool failNextMirrorWrite = false;
+
+  /// Test seam. Durable active bytes land, then this throws
+  /// [SimulatedSaveKill]. Not a real process kill.
+  bool killAfterNextActiveDurableWrite = false;
+
   /// Test seam. Set when a write is entered, including one that then waits.
   bool writeEntered = false;
+
+  final Map<String, String> _disk = <String, String>{};
+  bool _diskSplit = false;
+
+  void _captureDisk() {
+    _disk
+      ..clear()
+      ..addAll(_extras);
+    if (_activeRaw != null) _disk['\u0000active'] = _activeRaw!;
+  }
+
+  /// Bytes that would survive a process death. The cache is not included
+  /// once a failed write has split it from this map.
+  Map<String, String> durableBytes() {
+    if (_diskSplit) return Map<String, String>.from(_disk);
+    final out = Map<String, String>.from(_extras);
+    if (_activeRaw != null) out['\u0000active'] = _activeRaw!;
+    return out;
+  }
+
+  /// Loads [bytes] from [durableBytes] as a new process would.
+  void restoreDurableBytes(Map<String, String> bytes) {
+    _diskSplit = false;
+    _disk.clear();
+    _extras
+      ..clear()
+      ..addAll(bytes)
+      ..remove('\u0000active');
+    _activeRaw = bytes['\u0000active'];
+    final raw = _activeRaw;
+    _slots[_active] = raw == null ? null : GameLogic.importSaveJson(raw);
+  }
 
   Future<void> _awaitPause() async {
     writeEntered = true;
@@ -408,6 +505,7 @@ class InMemoryGameStorage implements GameStorage {
     }
     _slots[_active] = state;
     _activeRaw = GameLogic.exportSaveJson(state);
+    if (_diskSplit && _activeRaw != null) _disk['\u0000active'] = _activeRaw!;
     return true;
   }
 
@@ -437,26 +535,76 @@ class InMemoryGameStorage implements GameStorage {
   ];
 
   @override
-  Future<bool> keepDisplacedSave(String json) =>
-      writeExtra(GameStorage.displacedKey, json.isEmpty ? null : json);
+  Future<bool> keepDisplacedSave(String json) => writeExtra(
+    GameStorage.displacedKeyFor(_active),
+    json.isEmpty ? null : json,
+  );
 
   @override
-  Future<String?> loadDisplacedSave() => loadExtra(GameStorage.displacedKey);
+  Future<String?> loadDisplacedSave() =>
+      loadExtra(GameStorage.displacedKeyFor(_active));
 
   @override
   Future<String?> loadActiveRaw() async => _activeRaw;
+
+  @override
+  Future<String?> loadSlotRaw(int index) async {
+    final slot = _clampSlot(index);
+    if (slot == _active) return _activeRaw;
+    final state = _slots[slot];
+    if (state == null) return null;
+    return GameLogic.exportSaveJson(state);
+  }
+
+  @override
+  Future<void> reloadDurable() async {
+    if (!_diskSplit) return;
+    _activeRaw = _disk['\u0000active'];
+    _extras
+      ..clear()
+      ..addAll(_disk)
+      ..remove('\u0000active');
+    final raw = _activeRaw;
+    _slots[_active] = raw == null ? null : GameLogic.importSaveJson(raw);
+  }
+
+  void _splitBeforeLie() {
+    if (_diskSplit) return;
+    _captureDisk();
+    _diskSplit = true;
+  }
 
   @override
   Future<bool> writeActiveRaw(String json) async {
     await _awaitPause();
     if (failNextActiveWrite) {
       failNextActiveWrite = false;
+      if (cacheAheadOnFailedWrite) {
+        _splitBeforeLie();
+        _activeRaw = json;
+        final parsed = GameLogic.importSaveJson(json);
+        if (parsed != null) _slots[_active] = parsed;
+      }
       return false;
     }
     final parsed = GameLogic.importSaveJson(json);
     if (parsed == null) return false;
     _activeRaw = json;
     _slots[_active] = parsed;
+    if (_diskSplit) _disk['\u0000active'] = json;
+    if (killAfterNextActiveDurableWrite) {
+      killAfterNextActiveDurableWrite = false;
+      if (!_diskSplit) {
+        _captureDisk();
+        _diskSplit = true;
+      }
+      _disk['\u0000active'] = json;
+      throw const SimulatedSaveKill();
+    }
+    if (failNextMirrorWrite) {
+      failNextMirrorWrite = false;
+      return false;
+    }
     return true;
   }
 
@@ -470,15 +618,27 @@ class InMemoryGameStorage implements GameStorage {
   @override
   Future<bool> writeExtra(String key, String? json) async {
     await _awaitPause();
-    if (failNextExtraWrites > 0) {
-      failNextExtraWrites--;
+    final failWhen = failExtraWhen;
+    final targeted = failWhen != null && failWhen(key, json);
+    if (failNextExtraWrites > 0 || targeted) {
+      if (failNextExtraWrites > 0) failNextExtraWrites--;
+      if (cacheAheadOnFailedWrite) {
+        _splitBeforeLie();
+        if (json == null || json.isEmpty) {
+          _extras.remove(key);
+        } else {
+          _extras[key] = json;
+        }
+      }
       return false;
     }
     if (json == null || json.isEmpty) {
       _extras.remove(key);
+      if (_diskSplit) _disk.remove(key);
       return true;
     }
     _extras[key] = json;
+    if (_diskSplit) _disk[key] = json;
     return true;
   }
 }

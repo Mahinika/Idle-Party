@@ -48,7 +48,10 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
       await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
       return;
     }
-    if (conflict != CloudConflict.askUser) return;
+    if (conflict != CloudConflict.askUser) {
+      await director.keepDeviceAndCloudOwnership(cloud);
+      return;
+    }
     final useCloud = await showDialog<bool>(
       context: context,
       barrierColor: MenuChrome.scrim,
@@ -77,6 +80,8 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
     );
     if (useCloud == true) {
       await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
+    } else if (useCloud == false) {
+      await director.keepDeviceAndCloudOwnership(cloud);
     }
   });
 

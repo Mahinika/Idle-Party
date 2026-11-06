@@ -9,6 +9,37 @@ third free level, every SHOP pack, compact FORGE/CAMP/MARKET). UI PR
 https://github.com/Mahinika/Idle-Party/pull/50 (`cursor/icon-hires-polish-3edc`,
 head `456d7a4a`) is a separate phone-test. Do not edit that branch.
 
+## Second QA on the same save PR
+
+A recovered swap used to return failure after the bytes had already moved,
+and boot would then save over the unresolved copy. Those outcomes are now
+explicit.
+
+- `committed` means both parties are durable. Memory adopts that active file.
+- `aborted` means the active slot never changed.
+- `unresolved` means the journal still holds a party. Boot, autosave, grants,
+  and cloud upload do not write over it. The next launch retries.
+- KEEP DEVICE and BACKUP NOW keep paid ownership from both files. Gold,
+  Cinders, and tickets are not added together. Chosen purchase ids are kept
+  ahead of the other file when the 64-id cap fills.
+- An opted-in restart reads Play again. Automatic backup continues when the
+  snapshot is missing, identical, or still this device's last upload.
+  A different snapshot stays put until BACKUP NOW, which does that read
+  itself. The button is not dead on a cold start.
+- A shop grant bumps the save epoch, so a warm resume cannot write the
+  pre-grant party after the purchase has been saved.
+- Snapshot absence requires a fresh list. games_services 5.3.0 drops
+  `isStale()`, so the app reads that bit on its own Android channel. A stale
+  list is a failed read.
+- SharedPreferences updates its cache before the platform returns. A failed
+  setter is not treated as durable. `reload()` is the check. The unit test
+  uses the real plugin cache. Process-kill coverage is a simulated throw
+  after the durable map changes, not a killed OS process.
+
+Play's `RESOLUTION_POLICY_MOST_RECENTLY_MODIFIED` can still replace another
+device's snapshot after our re-read. `commitAndClose` does not prove the
+server stored the file. Those limits stay inside the SDK.
+
 ## QA follow-up on the same save PR
 
 Independent review found six holes in the first patch. They are fixed in

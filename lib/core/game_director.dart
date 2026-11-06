@@ -97,6 +97,7 @@ class GameDirector extends ChangeNotifier {
     this.enableSpatialLoop = true,
   }) : _state = initialState ?? GameLogic.createInitialState() {
     _syncDevicePrefs();
+    PlayGamesBridge.onUploadCommitted = _noteUploadedLineage;
   }
 
   factory GameDirector.persistent() {
@@ -122,9 +123,18 @@ class GameDirector extends ChangeNotifier {
   CloudRead _lastCloudRead = const CloudRead.unavailable();
   bool _hasDisplacedDeviceSave = false;
 
-  /// Bumps when a cloud or device-copy restore replaces [_state], so an
-  /// in-flight offline credit cannot write the pre-restore party back.
+  /// Bumps when a cloud or device-copy restore replaces [_state], and when a
+  /// shop grant commits, so an in-flight offline credit cannot write the
+  /// pre-grant party back.
   int _saveEpoch = 0;
+
+  /// A journal still holds a party that is not in the active slot. Autosave
+  /// and cloud upload stay off until recovery finishes.
+  bool _durableSaveBlocked = false;
+
+  /// Test seam. True while recovery must not be overwritten.
+  @visibleForTesting
+  bool get debugSaveRecoveryBlocked => _durableSaveBlocked;
   bool _directorClosed = false;
   bool _safeNotifyQueued = false;
 
@@ -1781,6 +1791,7 @@ class GameDirector extends ChangeNotifier {
     bool recovered = false,
   }) {
     return _enqueueSave(() async {
+      if (_durableSaveBlocked) return false;
       final item = ShopCatalog.byId[productId];
       if (item == null) return true;
       final known = ShopBilling.alreadyGranted(_state, purchaseId);
@@ -1809,6 +1820,7 @@ class GameDirector extends ChangeNotifier {
       if (!_hasExistingSave) return false;
       final priorMeta = _state.metaDepth;
       _applyUpgrade(next, persist: false);
+      _saveEpoch++;
       final snapshot = _stampCloudClock(_state);
       _state = snapshot;
       var saved = false;
@@ -2439,6 +2451,9 @@ class GameDirector extends ChangeNotifier {
     _bootWarmup?.cancel();
     _hubIdleTimer?.cancel();
     combatFrame.dispose();
+    if (PlayGamesBridge.onUploadCommitted == _noteUploadedLineage) {
+      PlayGamesBridge.onUploadCommitted = null;
+    }
     PlayGamesBridge.cancelPendingUpload();
     unawaited(ShopStore.dispose());
     super.dispose();
