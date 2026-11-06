@@ -768,9 +768,15 @@ class _GameHomePageState extends State<GameHomePage>
             onRetry: () async {
               final ok = await _director.retrySaveRecovery();
               if (!mounted) return ok;
-              if (ok) {
+              if (ok && _director.hasExistingSave) {
                 setState(() => _phase = _AppPhase.play);
                 _director.ensureCombatLoop();
+              } else if (ok) {
+                setState(() {
+                  _phase = widget.showIntro
+                      ? _AppPhase.startMenu
+                      : _AppPhase.play;
+                });
               }
               return ok;
             },

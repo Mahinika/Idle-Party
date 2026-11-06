@@ -571,6 +571,7 @@ extension GameDirectorPlatform on GameDirector {
   /// Title screen with no local file. Pulls the Play Games snapshot only.
   Future<bool> restoreCloudOnTitle() async {
     if (_durableSaveBlocked) return false;
+    if (await localReadBlocksMutation()) return false;
     _signInRestoredCloud = false;
     final ok = await PlayGamesBridge.signIn();
     if (!ok) {
@@ -605,6 +606,7 @@ extension GameDirectorPlatform on GameDirector {
 
   Future<bool> _installCloudSnapshotTurn(GameState cloud) async {
     if (_durableSaveBlocked) return false;
+    if (await localReadBlocksMutation()) return false;
     final previous = _state;
     final previousJson = GameLogic.exportSaveJson(previous);
     final merged = PlayGamesScores.withKeptOwnership(
@@ -680,6 +682,7 @@ extension GameDirectorPlatform on GameDirector {
       );
       return false;
     }
+    if (await localReadBlocksMutation()) return false;
     final read = await PlayGamesBridge.loadCloud();
     _lastCloudRead = read;
     if (read.kind != CloudReadKind.empty && read.kind != CloudReadKind.ready) {
@@ -731,6 +734,8 @@ extension GameDirectorPlatform on GameDirector {
   Future<bool> keepDeviceAndCloudOwnership(GameState cloud) {
     if (_durableSaveBlocked) return Future<bool>.value(false);
     return _enqueueSave(() async {
+      if (_durableSaveBlocked) return false;
+      if (await localReadBlocksMutation()) return false;
       final merged = PlayGamesScores.withKeptOwnership(
         chosen: _state,
         other: cloud,

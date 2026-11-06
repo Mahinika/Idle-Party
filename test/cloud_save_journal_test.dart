@@ -1010,6 +1010,411 @@ void main() {
       await storage.reloadDurable();
       expect(await storage.loadActiveRaw(), 'OLD');
     });
+
+    test(
+      'title, picker, and recovery START ignore a cache-only write',
+      () async {
+        final harness = await _installRejectingPrefs();
+        final store = harness.store;
+        final prefs = harness.prefs;
+        final storage = SharedPreferencesGameStorage(preferences: prefs);
+        final director = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(director.dispose);
+        await director.boot();
+
+        for (final mode in ['false', 'throw']) {
+          director.armNewGameSlot(0);
+          store.rejectWrites = mode == 'false';
+          store.throwWrites = mode == 'throw';
+          expect(
+            await director.startNewGame(
+              HeroSpecs.starterUnlocked,
+              partyName: 'Cave Company',
+            ),
+            isFalse,
+            reason: mode,
+          );
+          expect(director.hasExistingSave, isFalse, reason: mode);
+          expect(director.state.inDungeon, isFalse, reason: mode);
+          await prefs.reload();
+          expect(
+            prefs.getString('idle_party_save_slot_0'),
+            isNull,
+            reason: mode,
+          );
+        }
+        store.rejectWrites = false;
+        store.throwWrites = false;
+        director.armNewGameSlot(0);
+        expect(
+          await director.startNewGame(
+            HeroSpecs.starterUnlocked,
+            partyName: 'Cave Company',
+          ),
+          isTrue,
+        );
+        await prefs.reload();
+        expect(
+          GameLogic.importSaveJson(
+            prefs.getString('idle_party_save_slot_0')!,
+          )!.partyName,
+          'Cave Company',
+        );
+
+        store.rejectMirror = true;
+        final mirrorDirector = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(mirrorDirector.dispose);
+        await mirrorDirector.boot();
+        mirrorDirector.armNewGameSlot(1);
+        expect(
+          await mirrorDirector.startNewGame(
+            HeroSpecs.starterUnlocked,
+            partyName: 'Mirror Split',
+          ),
+          isTrue,
+        );
+        await prefs.reload();
+        expect(
+          GameLogic.importSaveJson(
+            prefs.getString('idle_party_save_slot_1')!,
+          )!.partyName,
+          'Mirror Split',
+        );
+        expect(
+          prefs.getString('idle_party_save_v2'),
+          isNot(contains('Mirror Split')),
+        );
+      },
+    );
+
+    test(
+      'recovery START ignores a cache-only write and a later retry lands',
+      () async {
+        final harness = await _installRejectingPrefs();
+        final store = harness.store;
+        final prefs = harness.prefs;
+        final kept = GameLogic.exportSaveJson(
+          _party(life: 40, adFree: true, purchaseIds: const ['slot2-keep']),
+        );
+        await prefs.setBool('idle_party_slots_ready', true);
+        await prefs.setInt('idle_party_active_slot', 2);
+        await prefs.setString('idle_party_save_slot_2', kept);
+        await prefs.setString('idle_party_save_journal', 'swap-stage');
+        await prefs.setString(
+          'idle_party_save_staging',
+          GameLogic.exportSaveJson(_party(life: 1)),
+        );
+        await prefs.setString(
+          'idle_party_save_hold',
+          GameLogic.exportSaveJson(_party(life: 2)),
+        );
+        final director = GameDirector(
+          SharedPreferencesGameStorage(preferences: prefs),
+          enableSpatialLoop: false,
+        );
+        addTearDown(director.dispose);
+        await director.boot();
+        expect(director.saveRecoveryBlocked, isTrue);
+        expect(
+          await director.openSafeRecoverySlot(4),
+          RecoverySlotOpen.needsNewGame,
+        );
+        for (final mode in ['false', 'throw']) {
+          store.rejectWrites = mode == 'false';
+          store.throwWrites = mode == 'throw';
+          expect(
+            await director.startNewGame(
+              HeroSpecs.starterUnlocked,
+              partyName: 'Ember',
+            ),
+            isFalse,
+            reason: mode,
+          );
+          expect(director.saveRecoveryBlocked, isTrue, reason: mode);
+          await prefs.reload();
+          expect(
+            prefs.getString('idle_party_save_slot_4'),
+            isNull,
+            reason: mode,
+          );
+          expect(prefs.getString('idle_party_save_slot_2'), kept, reason: mode);
+          expect(prefs.getString('idle_party_save_journal'), 'swap-stage');
+        }
+        store.rejectWrites = false;
+        store.throwWrites = false;
+        expect(
+          await director.startNewGame(
+            HeroSpecs.starterUnlocked,
+            partyName: 'Ember',
+          ),
+          isTrue,
+        );
+        await prefs.reload();
+        expect(
+          GameLogic.importSaveJson(
+            prefs.getString('idle_party_save_slot_4')!,
+          )!.partyName,
+          'Ember',
+        );
+        expect(prefs.getString('idle_party_save_slot_2'), kept);
+        SharedPreferences.resetStatic();
+        final reboot = GameDirector(
+          SharedPreferencesGameStorage(),
+          enableSpatialLoop: false,
+        );
+        addTearDown(reboot.dispose);
+        await reboot.boot();
+        final again = await SharedPreferences.getInstance();
+        expect(
+          GameLogic.importSaveJson(
+            again.getString('idle_party_save_slot_4')!,
+          )!.partyName,
+          'Ember',
+        );
+        expect(again.getString('idle_party_save_slot_2'), kept);
+        expect(again.getString('idle_party_save_journal'), 'swap-stage');
+      },
+    );
+
+    test(
+      'a failed boot read keeps the local party out of cloud restore',
+      () async {
+        final harness = await _installRejectingPrefs();
+        final store = harness.store;
+        final prefs = harness.prefs;
+        final local = _party(
+          life: 4242,
+          adFree: true,
+          purchaseIds: const ['GPA.local'],
+        );
+        final json = GameLogic.exportSaveJson(local);
+        await prefs.setBool('idle_party_slots_ready', true);
+        await prefs.setInt('idle_party_active_slot', 0);
+        await prefs.setString('idle_party_save_slot_0', json);
+        store.failGets = 1;
+        SharedPreferences.resetStatic();
+        final director = GameDirector(
+          SharedPreferencesGameStorage(),
+          enableSpatialLoop: false,
+        );
+        addTearDown(director.dispose);
+        await director.boot();
+        expect(director.saveRecoveryBlocked, isTrue);
+        expect(director.hasExistingSave, isFalse);
+        PlayGamesBridge.debugSignIn = () async => true;
+        PlayGamesBridge.debugLoadCloud = () async =>
+            CloudRead.ready(_party(life: 9, purchaseIds: const ['GPA.cloud']));
+        expect(await director.restoreCloudOnTitle(), isFalse);
+        expect(await director.backupToPlayGames(), isFalse);
+        expect(await director.keepDeviceAndCloudOwnership(local), isFalse);
+        SharedPreferences.resetStatic();
+        final mid = await SharedPreferences.getInstance();
+        expect(mid.getString('idle_party_save_slot_0'), json);
+        expect(mid.getString('idle_party_displaced_save'), isNull);
+        expect(await director.retrySaveRecovery(), isTrue);
+        expect(director.saveRecoveryBlocked, isFalse);
+        expect(director.state.lifetimeGoldEarned, 4242);
+        expect(director.state.metaDepth.adFree, isTrue);
+        expect(
+          director.state.metaDepth.grantedShopPurchaseIds,
+          contains('GPA.local'),
+        );
+        SharedPreferences.resetStatic();
+        final reboot = GameDirector(
+          SharedPreferencesGameStorage(),
+          enableSpatialLoop: false,
+        );
+        addTearDown(reboot.dispose);
+        await reboot.boot();
+        expect(reboot.saveRecoveryBlocked, isFalse);
+        expect(reboot.state.lifetimeGoldEarned, 4242);
+        expect(reboot.state.metaDepth.adFree, isTrue);
+        expect(
+          reboot.state.metaDepth.grantedShopPurchaseIds,
+          contains('GPA.local'),
+        );
+      },
+    );
+
+    test(
+      'an unreadable file stays put and an empty phone can restore',
+      () async {
+        final harness = await _installRejectingPrefs();
+        final prefs = harness.prefs;
+        await prefs.setBool('idle_party_slots_ready', true);
+        await prefs.setInt('idle_party_active_slot', 0);
+        await prefs.setString('idle_party_save_slot_0', '{not-json');
+        final director = GameDirector(
+          SharedPreferencesGameStorage(preferences: prefs),
+          enableSpatialLoop: false,
+        );
+        addTearDown(director.dispose);
+        await director.boot();
+        expect(director.saveRecoveryBlocked, isTrue);
+        PlayGamesBridge.debugSignIn = () async => true;
+        PlayGamesBridge.debugLoadCloud = () async =>
+            CloudRead.ready(_party(life: 9, purchaseIds: const ['GPA.cloud']));
+        expect(await director.restoreCloudOnTitle(), isFalse);
+        expect(prefs.getString('idle_party_save_slot_0'), '{not-json');
+        expect(prefs.getString('idle_party_save_v2_corrupt'), isNull);
+        expect(await director.retrySaveRecovery(), isFalse);
+        expect(prefs.getString('idle_party_save_slot_0'), '{not-json');
+
+        final empty = _RejectingPrefsStore();
+        final previous = SharedPreferencesStorePlatform.instance;
+        SharedPreferencesStorePlatform.instance = empty;
+        SharedPreferences.resetStatic();
+        addTearDown(() {
+          SharedPreferencesStorePlatform.instance = previous;
+        });
+        empty.failGets = 1;
+        final fresh = GameDirector(
+          SharedPreferencesGameStorage(),
+          enableSpatialLoop: false,
+        );
+        addTearDown(fresh.dispose);
+        await fresh.boot();
+        expect(fresh.saveRecoveryBlocked, isTrue);
+        expect(await fresh.restoreCloudOnTitle(), isFalse);
+        expect(await fresh.retrySaveRecovery(), isTrue);
+        expect(fresh.hasExistingSave, isFalse);
+        expect(fresh.saveRecoveryBlocked, isFalse);
+        PlayGamesBridge.debugSignIn = () async => true;
+        PlayGamesBridge.debugLoadCloud = () async =>
+            CloudRead.ready(_party(life: 9, purchaseIds: const ['GPA.cloud']));
+        expect(await fresh.restoreCloudOnTitle(), isTrue);
+        expect(
+          fresh.state.metaDepth.grantedShopPurchaseIds,
+          contains('GPA.cloud'),
+        );
+      },
+    );
+
+    testWidgets('title PLAY and CUSTOMIZE stay on setup when the cache lies', (
+      tester,
+    ) async {
+      final harness = await _installRejectingPrefs();
+      final store = harness.store;
+      final director = GameDirector(
+        SharedPreferencesGameStorage(preferences: harness.prefs),
+        enableSpatialLoop: false,
+      );
+      await _pumpRecoveryApp(tester, director, showIntro: true);
+      expect(find.text('PLAY'), findsOneWidget);
+      store.rejectWrites = true;
+      await tester.tap(find.text('PLAY'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('PLAY'), findsOneWidget);
+      expect(find.text('ENTER DUNGEON'), findsNothing);
+      await harness.prefs.reload();
+      expect(harness.prefs.getString('idle_party_save_slot_0'), isNull);
+      store.rejectWrites = false;
+      store.throwWrites = true;
+      await tester.tap(find.text('PLAY'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('PLAY'), findsOneWidget);
+      await harness.prefs.reload();
+      expect(harness.prefs.getString('idle_party_save_slot_0'), isNull);
+      store.throwWrites = false;
+      await tester.tap(find.text('CUSTOMIZE'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.enterText(find.byType(TextField), 'Ember Test');
+      await tester.pump();
+      store.rejectWrites = true;
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('START'), findsOneWidget);
+      await harness.prefs.reload();
+      expect(harness.prefs.getString('idle_party_save_slot_0'), isNull);
+      store.rejectWrites = false;
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
+      expect(director.hasExistingSave, isTrue);
+      await _disposeRecoveryApp(tester);
+    });
+
+    testWidgets('recovery START stays on setup when the cache lies', (
+      tester,
+    ) async {
+      final harness = await _installRejectingPrefs();
+      final store = harness.store;
+      final prefs = harness.prefs;
+      final kept = GameLogic.exportSaveJson(
+        _party(life: 40, adFree: true, purchaseIds: const ['slot2-keep']),
+      );
+      await prefs.setBool('idle_party_slots_ready', true);
+      await prefs.setInt('idle_party_active_slot', 2);
+      await prefs.setString('idle_party_save_slot_2', kept);
+      await prefs.setString('idle_party_save_journal', 'swap-stage');
+      await prefs.setString(
+        'idle_party_save_staging',
+        GameLogic.exportSaveJson(_party(life: 1)),
+      );
+      await prefs.setString(
+        'idle_party_save_hold',
+        GameLogic.exportSaveJson(_party(life: 2)),
+      );
+      final director = GameDirector(
+        SharedPreferencesGameStorage(preferences: prefs),
+        enableSpatialLoop: false,
+      );
+      await _pumpRecoveryApp(tester, director);
+      expect(find.text('SAVE RECOVERY'), findsOneWidget);
+      expect(find.text('RESTORE'), findsNothing);
+      await tester.ensureVisible(find.text('OPEN SLOT 5'));
+      await tester.tap(find.text('OPEN SLOT 5'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.enterText(find.byType(TextField), 'Ember Test');
+      await tester.pump();
+      store.rejectWrites = true;
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('START'), findsOneWidget);
+      expect(find.text('ENTER DUNGEON'), findsNothing);
+      await prefs.reload();
+      expect(prefs.getString('idle_party_save_slot_4'), isNull);
+      expect(prefs.getString('idle_party_save_slot_2'), kept);
+      store.rejectWrites = false;
+      store.throwWrites = true;
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('START'), findsOneWidget);
+      await prefs.reload();
+      expect(prefs.getString('idle_party_save_slot_4'), isNull);
+      store.throwWrites = false;
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
+      expect(director.hasExistingSave, isTrue);
+      expect(director.state.partyName, 'Ember Test');
+      await _disposeRecoveryApp(tester);
+      SharedPreferences.resetStatic();
+      final reboot = GameDirector(
+        SharedPreferencesGameStorage(),
+        enableSpatialLoop: false,
+      );
+      try {
+        await reboot.boot();
+        final again = await SharedPreferences.getInstance();
+        expect(
+          GameLogic.importSaveJson(
+            again.getString('idle_party_save_slot_4')!,
+          )!.partyName,
+          'Ember Test',
+        );
+        expect(again.getString('idle_party_save_slot_2'), kept);
+      } finally {
+        reboot.dispose();
+      }
+    });
   });
 
   group('swap-stage live party and migration', () {
@@ -3032,13 +3437,45 @@ GameDirector _hold(GameState state) {
   return director;
 }
 
+Future<({_RejectingPrefsStore store, SharedPreferences prefs})>
+_installRejectingPrefs() async {
+  final store = _RejectingPrefsStore();
+  final previous = SharedPreferencesStorePlatform.instance;
+  SharedPreferencesStorePlatform.instance = store;
+  SharedPreferences.resetStatic();
+  addTearDown(() {
+    SharedPreferencesStorePlatform.instance = previous;
+    SharedPreferences.resetStatic();
+  });
+  final prefs = await SharedPreferences.getInstance();
+  return (store: store, prefs: prefs);
+}
+
 class _RejectingPrefsStore extends InMemorySharedPreferencesStore {
   _RejectingPrefsStore() : super.empty();
 
   bool rejectWrites = false;
+  bool throwWrites = false;
+  bool rejectMirror = false;
+
+  /// The next N [getAll] calls throw. Later reads see the backing map.
+  int failGets = 0;
+
+  @override
+  Future<Map<String, Object>> getAll() async {
+    if (failGets > 0) {
+      failGets--;
+      throw StateError('prefs unavailable');
+    }
+    return super.getAll();
+  }
 
   @override
   Future<bool> setValue(String valueType, String key, Object value) async {
+    if (throwWrites && valueType == 'String') {
+      throw StateError('disk full');
+    }
+    if (rejectMirror && key.endsWith('idle_party_save_v2')) return false;
     if (rejectWrites) return false;
     return super.setValue(valueType, key, value);
   }

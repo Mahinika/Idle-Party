@@ -354,6 +354,68 @@ class GameDirector extends ChangeNotifier {
   /// Player-picked enemy for the target corner HUD (runtime only).
   String? hudFocusEnemyId;
 
+  /// Disk has progress or a paid flag that [memory] does not.
+  bool _memoryDroppedDisk(GameState memory, GameState disk) {
+    if (disk.lifetimeGoldEarned > memory.lifetimeGoldEarned) return true;
+    if (disk.metaDepth.adFree && !memory.metaDepth.adFree) return true;
+    if (disk.metaDepth.paidSeasonPass && !memory.metaDepth.paidSeasonPass) {
+      return true;
+    }
+    if (disk.metaDepth.shopLongAway && !memory.metaDepth.shopLongAway) {
+      return true;
+    }
+    final seen = memory.metaDepth.grantedShopPurchaseIds.toSet();
+    for (final id in disk.metaDepth.grantedShopPurchaseIds) {
+      if (!seen.contains(id)) return true;
+    }
+    if (disk.partyName != memory.partyName &&
+        (disk.lifetimeGoldEarned > 0 || disk.metaDepth.adFree)) {
+      return true;
+    }
+    return false;
+  }
+
+  /// True when this device's file could not be read, or memory is not that
+  /// file. Sets the recovery block and does not write. A readable empty
+  /// phone returns false so a cloud restore may fill it.
+  Future<bool> localReadBlocksMutation() async {
+    try {
+      await _storage.reloadDurable();
+      final slots = await _storage.listSlots();
+      _saveSlots = slots;
+      if (slots.any((slot) => slot.corrupt)) {
+        _blockSaveRecovery(
+          'Saving is paused. A save file could not be read. It was left untouched.',
+        );
+        return true;
+      }
+      final raw = await _storage.loadActiveRaw();
+      if (raw != null && raw.isNotEmpty) {
+        final parsed = GameLogic.importSaveJson(raw);
+        if (parsed == null || _memoryDroppedDisk(_state, parsed)) {
+          _blockSaveRecovery(
+            'Saving is paused. This device has a save that was not loaded. Retry leaves it untouched.',
+          );
+          return true;
+        }
+      } else if (_hasExistingSave || slots.any((slot) => slot.occupied)) {
+        // Memory already adopted a party, or another slot still has one.
+        // An empty active read is not proof the phone has no save.
+        _blockSaveRecovery(
+          'Saving is paused. This device has a save that was not loaded. Retry leaves it untouched.',
+        );
+        return true;
+      }
+      return false;
+    } catch (error, stack) {
+      debugPrint('local read failed: $error\n$stack');
+      _blockSaveRecovery(
+        'Saving is paused. This device could not be read. Retry leaves it untouched.',
+      );
+      return true;
+    }
+  }
+
   /// Test hook: attempt a persist (no-op unless a real save exists).
   /// False when the write did not land.
   @visibleForTesting

@@ -87,8 +87,13 @@ An empty file opens party setup and does not enter a fight until that
 new game is saved. The same is true for a title PLAY or START: a false or
 thrown initial save stays on setup, and a second START does not enter the
 queue. Back leaves setup. A save that returns false before any byte lands
-leaves the slot empty so START can be tried again. Retry does not guess
-an owner.
+leaves the slot empty so START can be tried again. The plugin cache is
+not that proof: the new game reloads before it accepts the file. A boot
+read that throws is not an empty phone. Restore, backup, a new game,
+erase, and opening a slot stay off until a later read can see the file,
+or can see that the phone really is empty and no party was already
+loaded. An unreadable file is left in place. Deleting it does not clear
+the pause. Retry does not guess an owner.
 
 A slot with no journal of its own is a finished migration only when every
 global payload already matches that slot's active file or its parked file.
