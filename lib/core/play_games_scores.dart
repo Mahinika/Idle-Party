@@ -65,8 +65,44 @@ abstract final class PlayGamesScores {
     return false;
   }
 
-  /// Conflict helper: newer stamp wins when gap > [skewMs].
+  /// Conflict helper. Stamps break a tie. They never hide a rollback.
+  ///
+  /// Without [local] and [cloud], only the stamps are compared (older callers
+  /// and tests). With both saves, durable progress wins over a wall clock
+  /// that jumped or rolled back. Spendable essence is not progress.
   static CloudConflict resolveConflict({
+    required int localMs,
+    required int cloudMs,
+    int skewMs = 60000,
+    GameState? local,
+    GameState? cloud,
+  }) {
+    final clock = clockConflict(
+      localMs: localMs,
+      cloudMs: cloudMs,
+      skewMs: skewMs,
+    );
+    if (local == null || cloud == null) return clock;
+    final localPlay = localSaveHasProgress(local);
+    final cloudPlay = localSaveHasProgress(cloud);
+    if (!localPlay && cloudPlay) return CloudConflict.preferCloud;
+    if (localPlay && !cloudPlay) return CloudConflict.preferLocal;
+    switch (compareSaveProgress(local, cloud)) {
+      case SaveProgressRelation.localAhead:
+        return CloudConflict.preferLocal;
+      case SaveProgressRelation.cloudAhead:
+        if (clock == CloudConflict.preferCloud) return CloudConflict.preferCloud;
+        return CloudConflict.askUser;
+      case SaveProgressRelation.tie:
+        if (clock == CloudConflict.preferLocal) return CloudConflict.preferLocal;
+        return CloudConflict.askUser;
+      case SaveProgressRelation.diverged:
+        return CloudConflict.askUser;
+    }
+  }
+
+  /// Stamp comparison only. A gap inside [skewMs] asks the player.
+  static CloudConflict clockConflict({
     required int localMs,
     required int cloudMs,
     int skewMs = 60000,
@@ -78,9 +114,230 @@ abstract final class PlayGamesScores {
     if (delta < -skewMs) return CloudConflict.preferCloud;
     return CloudConflict.askUser;
   }
+
+  /// Never move a cloud stamp backwards when the phone clock does.
+  static int monotonicCloudStamp({
+    required int previousMs,
+    required int nowMs,
+  }) {
+    if (nowMs > previousMs && nowMs > 0) return nowMs;
+    return previousMs < 0 ? 0 : previousMs;
+  }
+
+  /// Higher durable progress on one side, or a mix the player must see.
+  static SaveProgressRelation compareSaveProgress(
+    GameState local,
+    GameState cloud,
+  ) {
+    var localWins = 0;
+    var cloudWins = 0;
+    void axis(int left, int right) {
+      if (left > right) {
+        localWins++;
+      } else if (right > left) {
+        cloudWins++;
+      }
+    }
+
+    axis(local.ascensionLevel, cloud.ascensionLevel);
+    axis(local.lifetimeGoldEarned, cloud.lifetimeGoldEarned);
+    axis(local.highestDungeonCleared, cloud.highestDungeonCleared);
+    axis(local.highestFloorCleared, cloud.highestFloorCleared);
+    axis(local.bossVictories, cloud.bossVictories);
+    axis(_heroLevels(local), _heroLevels(cloud));
+    axis(_heroXp(local), _heroXp(cloud));
+    axis(local.metaDepth.gauntletBestFloor, cloud.metaDepth.gauntletBestFloor);
+    axis(local.metaDepth.riftBestTier, cloud.metaDepth.riftBestTier);
+    axis(local.metaDepth.grBestTier, cloud.metaDepth.grBestTier);
+    axis(local.metaDepth.adFree ? 1 : 0, cloud.metaDepth.adFree ? 1 : 0);
+    axis(
+      local.metaDepth.shopLongAway ? 1 : 0,
+      cloud.metaDepth.shopLongAway ? 1 : 0,
+    );
+    final purchases = _purchaseAxis(local, cloud);
+    if (purchases == 2) return SaveProgressRelation.diverged;
+    if (purchases < 0) localWins++;
+    if (purchases > 0) cloudWins++;
+    if (localWins > 0 && cloudWins > 0) return SaveProgressRelation.diverged;
+    if (localWins > 0) return SaveProgressRelation.localAhead;
+    if (cloudWins > 0) return SaveProgressRelation.cloudAhead;
+    return SaveProgressRelation.tie;
+  }
+
+  static int _heroLevels(GameState state) {
+    var n = 0;
+    for (final hero in state.heroRoster) {
+      n += hero.level;
+    }
+    return n;
+  }
+
+  static int _heroXp(GameState state) {
+    var n = 0;
+    for (final hero in state.heroRoster) {
+      n += hero.xp;
+    }
+    return n;
+  }
+
+  /// -1 local superset, 1 cloud superset, 0 same set, 2 neither contains the other.
+  static int _purchaseAxis(GameState local, GameState cloud) {
+    final left = local.metaDepth.grantedShopPurchaseIds.toSet();
+    final right = cloud.metaDepth.grantedShopPurchaseIds.toSet();
+    if (left.length == right.length && left.containsAll(right)) return 0;
+    final leftSup = left.containsAll(right);
+    final rightSup = right.containsAll(left);
+    if (leftSup && !rightSup) return -1;
+    if (rightSup && !leftSup) return 1;
+    return 2;
+  }
+
+  /// What sign-in may do after a cloud read. Upload only when Play confirmed
+  /// the snapshot is missing.
+  static CloudSignInPlan planSignIn({
+    required CloudRead read,
+    required bool hasExistingSave,
+    required GameState local,
+  }) {
+    final keepLocal = hasExistingSave && localSaveHasProgress(local);
+    switch (read.kind) {
+      case CloudReadKind.ready:
+        final cloud = read.state;
+        if (cloud != null && !keepLocal) {
+          return const CloudSignInPlan(install: true, upload: false);
+        }
+        return const CloudSignInPlan(
+          install: false,
+          upload: false,
+          toast: 'Signed in to Play Games',
+        );
+      case CloudReadKind.empty:
+        return CloudSignInPlan(
+          install: false,
+          upload: true,
+          optIn: true,
+          toast: hasExistingSave
+              ? 'Signed in to Play Games'
+              : 'Signed in · no cloud save yet',
+        );
+      case CloudReadKind.failed:
+      case CloudReadKind.unavailable:
+      case CloudReadKind.signedOut:
+        return const CloudSignInPlan(
+          install: false,
+          upload: false,
+          toast: 'Could not read Play Games save. Kept this device.',
+        );
+    }
+  }
+
+  /// Restore choice. [force] is the player's USE CLOUD / RESTORE tap.
+  static CloudRestorePlan planRestore({
+    required CloudRead read,
+    required GameState local,
+    required bool hasExistingSave,
+    required bool force,
+  }) {
+    switch (read.kind) {
+      case CloudReadKind.ready:
+        break;
+      case CloudReadKind.empty:
+        return const CloudRestorePlan(
+          CloudRestoreChoice.missing,
+          toast: 'No Play Games save found',
+        );
+      case CloudReadKind.failed:
+      case CloudReadKind.unavailable:
+      case CloudReadKind.signedOut:
+        return const CloudRestorePlan(
+          CloudRestoreChoice.unreadable,
+          toast: 'Could not read Play Games save. Kept this device.',
+        );
+    }
+    final cloud = read.state;
+    if (cloud == null) {
+      return const CloudRestorePlan(
+        CloudRestoreChoice.unreadable,
+        toast: 'Could not read Play Games save. Kept this device.',
+      );
+    }
+    final placeholder = !hasExistingSave || !localSaveHasProgress(local);
+    if (force || placeholder) {
+      return const CloudRestorePlan(CloudRestoreChoice.installed);
+    }
+    final decision = resolveConflict(
+      localMs: local.metaDepth.cloudSaveUpdatedMs,
+      cloudMs: cloud.metaDepth.cloudSaveUpdatedMs,
+      local: local,
+      cloud: cloud,
+    );
+    switch (decision) {
+      case CloudConflict.preferLocal:
+        return const CloudRestorePlan(
+          CloudRestoreChoice.keptLocal,
+          toast: 'This device is newer — kept local save',
+        );
+      case CloudConflict.askUser:
+        return const CloudRestorePlan(CloudRestoreChoice.needChoice);
+      case CloudConflict.preferCloud:
+        return const CloudRestorePlan(CloudRestoreChoice.installed);
+    }
+  }
 }
 
 enum CloudConflict { preferLocal, preferCloud, askUser }
+
+/// How two saves compare when the wall clock is not trusted.
+enum SaveProgressRelation { localAhead, cloudAhead, tie, diverged }
+
+/// Outcome of one Play Games snapshot read. A failure is not an empty file.
+enum CloudReadKind { unavailable, signedOut, empty, failed, ready }
+
+class CloudRead {
+  const CloudRead._(this.kind, this.state);
+
+  const CloudRead.unavailable() : this._(CloudReadKind.unavailable, null);
+
+  const CloudRead.signedOut() : this._(CloudReadKind.signedOut, null);
+
+  const CloudRead.empty() : this._(CloudReadKind.empty, null);
+
+  const CloudRead.failed() : this._(CloudReadKind.failed, null);
+
+  const CloudRead.ready(GameState state) : this._(CloudReadKind.ready, state);
+
+  final CloudReadKind kind;
+  final GameState? state;
+
+  bool get blocksAutomaticUpload =>
+      kind == CloudReadKind.failed ||
+      kind == CloudReadKind.unavailable ||
+      kind == CloudReadKind.signedOut;
+}
+
+/// Sign-in policy after [CloudRead]. [optIn] null leaves the save flag as it is.
+class CloudSignInPlan {
+  const CloudSignInPlan({
+    required this.install,
+    required this.upload,
+    this.optIn,
+    this.toast,
+  });
+
+  final bool install;
+  final bool upload;
+  final bool? optIn;
+  final String? toast;
+}
+
+enum CloudRestoreChoice { installed, keptLocal, needChoice, unreadable, missing }
+
+class CloudRestorePlan {
+  const CloudRestorePlan(this.choice, {this.toast});
+
+  final CloudRestoreChoice choice;
+  final String? toast;
+}
 
 /// Which seasonal board the KEY list is showing.
 enum PlayBoardKind { timedKey, gauntlet, greaterRift, partyPower }

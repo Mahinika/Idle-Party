@@ -8,7 +8,10 @@ extension GameDirectorSave on GameDirector {
     if (!_hasExistingSave) return;
     final stamped = _state.copyWith(
       metaDepth: _state.metaDepth.copyWith(
-        cloudSaveUpdatedMs: DateTime.now().toUtc().millisecondsSinceEpoch,
+        cloudSaveUpdatedMs: PlayGamesScores.monotonicCloudStamp(
+          previousMs: _state.metaDepth.cloudSaveUpdatedMs,
+          nowMs: DateTime.now().toUtc().millisecondsSinceEpoch,
+        ),
       ),
     );
     _state = stamped;
@@ -142,18 +145,25 @@ extension GameDirectorSave on GameDirector {
     if (!_isLoading) {
       final elapsed = DateTime.now().difference(_state.lastUpdated);
       if (elapsed.inSeconds >= GameDirector._awayCreditMinSec) {
-        _welcomeBackAdGranted = false;
-        _awayCreditInFlight = true;
-        try {
-          final credited = await _creditAway(_state, showCard: true);
-          _state = credited;
-          if (_state.inDungeon && _spatial == null) {
-            _rebuildSpatial();
-          }
-          _directorNotify();
-        } finally {
-          _awayCreditInFlight = false;
+      _welcomeBackAdGranted = false;
+      _awayCreditInFlight = true;
+      final epoch = _saveEpoch;
+      final base = _state;
+      try {
+        final credited = await _creditAway(
+          base,
+          showCard: true,
+          stillCurrent: () => epoch == _saveEpoch && !_directorClosed,
+        );
+        if (epoch != _saveEpoch || _directorClosed) return;
+        _state = credited;
+        if (_state.inDungeon && _spatial == null) {
+          _rebuildSpatial();
         }
+        _directorNotify();
+      } finally {
+        _awayCreditInFlight = false;
+      }
       }
     }
     if (!_isLoading && !_appPaused) {
@@ -236,7 +246,11 @@ extension GameDirectorSave on GameDirector {
     final now = DateTime.now();
     final seconds = now.difference(_state.lastUpdated).inSeconds;
     if (seconds < 1) {
-      _state = _state.copyWith(lastUpdated: now);
+      // A clock behind the save must not rewind [lastUpdated]. The next
+      // honest tick would otherwise treat the whole gap as time away.
+      if (seconds >= 0) {
+        _state = _state.copyWith(lastUpdated: now);
+      }
       return;
     }
     _state = GoldIncome.applyHubIdle(
@@ -337,10 +351,15 @@ extension GameDirectorSave on GameDirector {
   Future<GameState> _creditAway(
     GameState saved, {
     required bool showCard,
+    bool Function()? stillCurrent,
   }) async {
     final elapsed = DateTime.now().difference(saved.lastUpdated);
+    final pause = debugAwayCreditPause;
+    if (pause != null) await pause;
+    if (stillCurrent != null && !stillCurrent()) return saved;
     _welcomeBackAdGranted = false;
     final offline = await _simulateAwayProgress(saved, elapsed);
+    if (stillCurrent != null && !stillCurrent()) return saved;
     return _finishAwayCredit(offline, showCard: showCard);
   }
 

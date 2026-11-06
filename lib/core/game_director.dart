@@ -117,6 +117,23 @@ class GameDirector extends ChangeNotifier {
   bool _isLoading = true;
   bool _hasExistingSave = false;
   bool _signInRestoredCloud = false;
+  CloudRead _lastCloudRead = const CloudRead.unavailable();
+  bool _hasDisplacedDeviceSave = false;
+
+  /// Bumps when a cloud or device-copy restore replaces [_state], so an
+  /// in-flight offline credit cannot write the pre-restore party back.
+  int _saveEpoch = 0;
+  bool _directorClosed = false;
+  bool _safeNotifyQueued = false;
+
+  /// Test seam. [_creditAway] awaits this before simulating the gap.
+  @visibleForTesting
+  Future<void>? debugAwayCreditPause;
+
+  CloudRead get lastCloudRead => _lastCloudRead;
+
+  /// True when a cloud restore kept the previous device file.
+  bool get hasDisplacedDeviceSave => _hasDisplacedDeviceSave;
   bool _phoneHadNoSaveAtBoot = false;
   int _activeSlot = 0;
   int? _pendingNewGameSlot;
@@ -263,7 +280,29 @@ class GameDirector extends ChangeNotifier {
   void setDungeonTilesReady(bool ready, {bool notify = true}) {
     if (_dungeonTilesReady == ready) return;
     _dungeonTilesReady = ready;
-    if (notify) notifyListeners();
+    if (notify) _notifyUnlessBuilding();
+  }
+
+  /// [notifyListeners] during build is the setState-during-build FlutterError
+  /// Crashlytics recorded on these two calls. The flag or toast updates
+  /// immediately; the rebuild waits until this frame finishes.
+  void _notifyUnlessBuilding() {
+    if (_directorClosed) return;
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    final building =
+        phase == SchedulerPhase.persistentCallbacks ||
+        phase == SchedulerPhase.midFrameMicrotasks;
+    if (!building) {
+      notifyListeners();
+      return;
+    }
+    if (_safeNotifyQueued) return;
+    _safeNotifyQueued = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _safeNotifyQueued = false;
+      if (_directorClosed) return;
+      notifyListeners();
+    });
   }
 
   static const double _autosaveIntervalSec = 25;
@@ -523,7 +562,7 @@ class GameDirector extends ChangeNotifier {
   void clearToast() {
     if (!uiFeedback.toastWasShowing) return;
     uiFeedback.clearToast();
-    notifyListeners();
+    _notifyUnlessBuilding();
   }
 
   void dismissOfflineSummary() {
@@ -2361,8 +2400,20 @@ class GameDirector extends ChangeNotifier {
     );
   }
 
+  /// Point this preview at [state] without a boot catch-up.
+  @visibleForTesting
+  void debugHoldSave(GameState state) {
+    _state = state;
+    _hasExistingSave = true;
+    _isLoading = false;
+  }
+
+  @visibleForTesting
+  Future<void> debugResumeFromBackground() => _resumeFromBackground();
+
   @override
   void dispose() {
+    _directorClosed = true;
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _combatFrameQueued = false;

@@ -525,32 +525,29 @@ extension GameDirectorPlatform on GameDirector {
       );
       return false;
     }
-    final cloud = await PlayGamesBridge.loadCloud();
-    final keepLocal =
-        _hasExistingSave && PlayGamesScores.localSaveHasProgress(_state);
-    if (cloud != null && !keepLocal) {
-      await _installCloudSnapshot(cloud);
-      _signInRestoredCloud = true;
+    final read = await PlayGamesBridge.loadCloud();
+    _lastCloudRead = read;
+    final plan = PlayGamesScores.planSignIn(
+      read: read,
+      hasExistingSave: _hasExistingSave,
+      local: _state,
+    );
+    if (plan.install && read.state != null) {
+      _signInRestoredCloud = await _installCloudSnapshot(read.state!);
       return true;
     }
-    if (cloud == null) {
+    if (plan.optIn == true) {
       _state = _state.copyWith(
         metaDepth: _state.metaDepth.copyWith(playGamesOptIn: true),
       );
-      showToast(
-        _hasExistingSave
-            ? 'Signed in to Play Games'
-            : 'Signed in · no cloud save yet',
-        life: 2.2,
-      );
+    }
+    if (plan.toast != null) showToast(plan.toast!, life: 2.2);
+    if (plan.upload) {
       unawaited(PlayGamesBridge.saveCloud(_state));
       unawaited(PlayGamesBridge.flushPendingScores());
       unawaited(_persistFlush());
       _saveSlots = await _storage.listSlots();
-      _directorNotify();
-      return true;
     }
-    showToast('Signed in to Play Games', life: 2.0);
     _directorNotify();
     return true;
   }
@@ -568,17 +565,36 @@ extension GameDirectorPlatform on GameDirector {
       );
       return false;
     }
-    final cloud = await PlayGamesBridge.loadCloud();
-    if (cloud == null) {
-      showToast('No Play Games save found', life: 2.2);
+    final read = await PlayGamesBridge.loadCloud();
+    _lastCloudRead = read;
+    if (read.kind != CloudReadKind.ready || read.state == null) {
+      showToast(
+        read.kind == CloudReadKind.empty
+            ? 'No Play Games save found'
+            : 'Could not read Play Games save. Kept this device.',
+        life: 2.2,
+      );
       return false;
     }
-    await _installCloudSnapshot(cloud);
-    _signInRestoredCloud = true;
-    return true;
+    _signInRestoredCloud = await _installCloudSnapshot(read.state!);
+    return _signInRestoredCloud;
   }
 
-  Future<void> _installCloudSnapshot(GameState cloud) async {
+  /// False when the device copy could not be stored and local progress was kept.
+  Future<bool> _installCloudSnapshot(GameState cloud) async {
+    if (PlayGamesScores.localSaveHasProgress(_state)) {
+      final ok = await _storage.keepDisplacedSave(
+        GameLogic.exportSaveJson(_state),
+      );
+      if (!ok) {
+        showToast(
+          'Could not keep a device copy. Cloud restore cancelled.',
+          life: 2.6,
+        );
+        return false;
+      }
+      _hasDisplacedDeviceSave = true;
+    }
     _applyCloudRestore(cloud, toast: 'Restored from Play Games');
     _state = _state.copyWith(
       metaDepth: _state.metaDepth.copyWith(playGamesOptIn: true),
@@ -586,9 +602,11 @@ extension GameDirectorPlatform on GameDirector {
     await _persistFlush();
     _saveSlots = await _storage.listSlots();
     _directorNotify();
+    return true;
   }
 
   void _applyCloudRestore(GameState cloud, {required String toast}) {
+    _saveEpoch++;
     _awaitingWipeChoice = false;
     _hasExistingSave = true;
     _state = GameLogic.ensureRogueHero(GameLogic.ensureWeeklyContract(cloud));
@@ -607,6 +625,13 @@ extension GameDirectorPlatform on GameDirector {
   }
 
   Future<bool> backupToPlayGames() async {
+    if (PlayGamesBridge.cloudWriteBlocked) {
+      showToast(
+        'Could not read Play Games save. Kept this device.',
+        life: 2.4,
+      );
+      return false;
+    }
     final ok = await PlayGamesBridge.saveCloud(_state);
     if (ok) {
       _state = _state.copyWith(
@@ -621,30 +646,34 @@ extension GameDirectorPlatform on GameDirector {
     return ok;
   }
 
-  Future<bool> restoreFromPlayGames({bool force = false}) async {
-    final cloud = await PlayGamesBridge.loadCloud();
-    if (cloud == null) {
-      showToast('No Play Games save found', life: 2.2);
-      return false;
-    }
-    final placeholder =
-        !_hasExistingSave || !PlayGamesScores.localSaveHasProgress(_state);
-    if (!force && !placeholder) {
-      final decision = PlayGamesScores.resolveConflict(
-        localMs: _state.metaDepth.cloudSaveUpdatedMs,
-        cloudMs: cloud.metaDepth.cloudSaveUpdatedMs,
-      );
-      if (decision == CloudConflict.preferLocal) {
-        showToast('This device is newer — kept local save', life: 2.4);
+  Future<bool> restoreFromPlayGames({
+    bool force = false,
+    GameState? alreadyRead,
+  }) async {
+    final read = alreadyRead != null
+        ? CloudRead.ready(alreadyRead)
+        : await PlayGamesBridge.loadCloud();
+    if (alreadyRead != null) PlayGamesBridge.noteConfirmedCloudRead(read);
+    _lastCloudRead = read;
+    final plan = PlayGamesScores.planRestore(
+      read: read,
+      local: _state,
+      hasExistingSave: _hasExistingSave,
+      force: force,
+    );
+    switch (plan.choice) {
+      case CloudRestoreChoice.installed:
+        final cloud = read.state;
+        if (cloud == null) return false;
+        return _installCloudSnapshot(cloud);
+      case CloudRestoreChoice.needChoice:
         return false;
-      }
-      if (decision == CloudConflict.askUser) {
-        // Caller should show confirm; force=true after confirm.
+      case CloudRestoreChoice.keptLocal:
+      case CloudRestoreChoice.unreadable:
+      case CloudRestoreChoice.missing:
+        if (plan.toast != null) showToast(plan.toast!, life: 2.4);
         return false;
-      }
     }
-    await _installCloudSnapshot(cloud);
-    return true;
   }
 
   /// Hint lines for cloud conflict dialogs.
@@ -654,16 +683,58 @@ extension GameDirectorPlatform on GameDirector {
       PlayGamesScores.resolveConflict(
         localMs: _state.metaDepth.cloudSaveUpdatedMs,
         cloudMs: cloud.metaDepth.cloudSaveUpdatedMs,
+        local: _state,
+        cloud: cloud,
       );
 
-  Future<GameState?> loadPlayGamesCloud() => PlayGamesBridge.loadCloud();
+  Future<CloudRead> loadPlayGamesCloud() => PlayGamesBridge.loadCloud();
+
+  Future<void> refreshDisplacedDeviceSave() async {
+    final raw = await _storage.loadDisplacedSave();
+    final next = raw != null && raw.isNotEmpty;
+    if (next == _hasDisplacedDeviceSave) return;
+    _hasDisplacedDeviceSave = next;
+    if (!_directorClosed) _directorNotify();
+  }
+
+  /// Puts back the file kept before the last cloud restore, and keeps the
+  /// current file in that same slot so the player can swap again.
+  Future<bool> restoreDisplacedDeviceSave() async {
+    final raw = await _storage.loadDisplacedSave();
+    if (raw == null || raw.isEmpty) {
+      _hasDisplacedDeviceSave = false;
+      showToast('No device copy saved', life: 2.0);
+      return false;
+    }
+    final saved = GameLogic.importSaveJson(raw);
+    if (saved == null) {
+      showToast('Device copy could not be read. Kept this device.', life: 2.4);
+      return false;
+    }
+    final kept = await _storage.keepDisplacedSave(
+      GameLogic.exportSaveJson(_state),
+    );
+    if (!kept) {
+      showToast('Could not swap the device copy. Kept this device.', life: 2.4);
+      return false;
+    }
+    _hasDisplacedDeviceSave = true;
+    _applyCloudRestore(saved, toast: 'Restored the save from this device');
+    await _persistFlush();
+    _saveSlots = await _storage.listSlots();
+    _directorNotify();
+    return true;
+  }
 
   /// Title hint only. Does not read or write local saves.
   Future<bool> peekPlayGamesCloudBackup() async {
     if (!PlayGamesBridge.isSupported) return false;
     if (!await PlayGamesBridge.refreshSignedIn()) return false;
-    final cloud = await PlayGamesBridge.loadCloud();
-    return cloud != null && PlayGamesScores.localSaveHasProgress(cloud);
+    final read = await PlayGamesBridge.loadCloud();
+    final cloud = read.state;
+    return read.kind == CloudReadKind.ready &&
+        cloud != null &&
+        PlayGamesScores.localSaveHasProgress(cloud);
   }
 
   /// One rewarded starter pile after a fresh install with no prior save.

@@ -1,4 +1,6 @@
 
+import 'dart:async' show unawaited;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -32,15 +34,18 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
     final ok = await director.signInPlayGames();
     if (!ok || !mounted) return;
     if (director.signInRestoredCloud) return;
-    final cloud = await director.loadPlayGamesCloud();
-    if (cloud == null || !mounted) return;
+    final read = director.lastCloudRead;
+    final cloud = read.state;
+    if (read.kind != CloudReadKind.ready || cloud == null || !mounted) {
+      return;
+    }
     if (!PlayGamesScores.localSaveHasProgress(director.state)) {
-      await director.restoreFromPlayGames(force: true);
+      await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
       return;
     }
     final conflict = director.peekCloudConflict(cloud);
     if (conflict == CloudConflict.preferCloud) {
-      await director.restoreFromPlayGames(force: true);
+      await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
       return;
     }
     if (conflict != CloudConflict.askUser) return;
@@ -70,15 +75,22 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
       ),
     );
     if (useCloud == true) {
-      await director.restoreFromPlayGames(force: true);
+      await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
     }
   });
 
   Future<void> restorePlayGamesFlow() => runPlayGames(() async {
     final director = playGamesDirector;
-    final cloud = await director.loadPlayGamesCloud();
-    if (cloud == null) {
-      director.showToast('No Play Games save found', life: 2.2);
+    final read = await director.loadPlayGamesCloud();
+    if (!mounted) return;
+    final cloud = read.state;
+    if (read.kind != CloudReadKind.ready || cloud == null) {
+      director.showToast(
+        read.kind == CloudReadKind.empty
+            ? 'No Play Games save found'
+            : 'Could not read Play Games save. Kept this device.',
+        life: 2.2,
+      );
       return;
     }
     final conflict = director.peekCloudConflict(cloud);
@@ -108,11 +120,12 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
         ),
       );
       if (useCloud != true) return;
-      await director.restoreFromPlayGames(force: true);
+      await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
       return;
     }
     await director.restoreFromPlayGames(
       force: conflict == CloudConflict.preferCloud,
+      alreadyRead: cloud,
     );
   });
 }
@@ -490,6 +503,17 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
   GameDirector get playGamesDirector => widget.director;
 
   @override
+  void initState() {
+    super.initState();
+    unawaited(_refreshDeviceCopy());
+  }
+
+  Future<void> _refreshDeviceCopy() async {
+    await widget.director.refreshDisplacedDeviceSave();
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final md = widget.director.state.metaDepth;
     final month = md.leaderboardSeasonKey.isNotEmpty
@@ -550,6 +574,20 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
             ),
           ],
         ),
+        if (widget.director.hasDisplacedDeviceSave) ...[
+          const SizedBox(height: 6),
+          GameButton(
+            label: 'DEVICE COPY',
+            tip: 'Puts back the save this phone had before the last cloud restore',
+            style: GameButtonStyle.grey,
+            onPressed: playGamesBusy
+                ? null
+                : () => runPlayGames(() async {
+                    await widget.director.restoreDisplacedDeviceSave();
+                    await _refreshDeviceCopy();
+                  }),
+          ),
+        ],
       ],
     );
   }

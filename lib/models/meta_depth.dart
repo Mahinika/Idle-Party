@@ -1690,8 +1690,7 @@ class MetaDepthState {
       },
       farmTryUsesLeft:
           ((json['farmTryUsesLeft'] as num?)?.toInt() ?? 2).clamp(0, 9),
-      shopOfferStartedMs:
-          ((json['shopOfferStartedMs'] as num?)?.toInt() ?? 0).clamp(0, 999999999999),
+      shopOfferStartedMs: _nonNegativeMs(json['shopOfferStartedMs']),
       cinderPouchDoubled: (json['cinderPouchDoubled'] as bool?) ?? false,
       paidSeasonPass: (json['paidSeasonPass'] as bool?) ?? false,
       adFree: (json['adFree'] as bool?) ?? false,
@@ -1840,6 +1839,16 @@ class MetaDepthState {
 /// Retired player title. The list key stays `titles`.
 String _retiredTitle(String raw) =>
     raw == 'Infinity Bound' ? 'Spirebound' : raw;
+
+/// Epoch milliseconds. Missing or negative becomes 0.
+///
+/// Do not cap this near 999999999999. That instant is September 2001, so every
+/// modern SHOP-window stamp was rewritten into the past on load and the 24h
+/// offer looked already finished.
+int _nonNegativeMs(Object? raw) {
+  final n = (raw as num?)?.toInt() ?? 0;
+  return n < 0 ? 0 : n;
+}
 
 /// Play purchase ids already granted. Missing or junk → empty. Capped.
 List<String> _shopPurchaseIds(Object? raw) {

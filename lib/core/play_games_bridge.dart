@@ -24,6 +24,33 @@ abstract final class PlayGamesBridge {
   static Timer? _uploadDebounce;
   static GameState? _pendingUpload;
 
+  /// Set after a failed or unknown snapshot read. Automatic uploads stay off
+  /// until a later read is confirmed empty or a real save.
+  static bool _cloudWriteBlocked = false;
+
+  static bool get cloudWriteBlocked => _cloudWriteBlocked;
+
+  /// Test seam. Production leaves these null and uses games_services.
+  @visibleForTesting
+  static Future<bool> Function()? debugSignIn;
+
+  @visibleForTesting
+  static Future<CloudRead> Function()? debugLoadCloud;
+
+  @visibleForTesting
+  static Future<bool> Function(GameState state)? debugSaveCloud;
+
+  @visibleForTesting
+  static void debugResetCloudHooks() {
+    debugSignIn = null;
+    debugLoadCloud = null;
+    debugSaveCloud = null;
+    _cloudWriteBlocked = false;
+    _signedInCache = false;
+    _lastCloudUploadAt = null;
+    cancelPendingUpload();
+  }
+
   static int? _pendingTimedScore;
   static String? _pendingTimedBoard;
   static int? _pendingGauntletScore;
@@ -64,6 +91,12 @@ abstract final class PlayGamesBridge {
   }
 
   static Future<bool> signIn() async {
+    final hooked = debugSignIn;
+    if (hooked != null) {
+      final ok = await hooked();
+      _signedInCache = ok;
+      return ok;
+    }
     if (!isSupported) return false;
     try {
       await GameAuth.signIn();
@@ -147,6 +180,7 @@ abstract final class PlayGamesBridge {
   }
 
   static Future<void> flushPendingScores() async {
+    if (!isSupported) return;
     if (!_signedInCache && !await refreshSignedIn()) return;
     final timed = _pendingTimedScore;
     final timedBoard = _pendingTimedBoard;
@@ -288,6 +322,9 @@ abstract final class PlayGamesBridge {
     GameState state, {
     Duration delay = const Duration(seconds: 8),
   }) {
+    if (_cloudWriteBlocked) return;
+    // `flutter test` must not arm this Timer. Callers that need an upload
+    // in a test invoke [saveCloud] through [debugSaveCloud].
     if (!isSupported) return;
     // Opt-in lives in the save. A reinstall is signed in at Google and
     // opted out here, so a new party must not replace the cloud snapshot.
@@ -311,14 +348,20 @@ abstract final class PlayGamesBridge {
   }
 
   static Future<bool> saveCloud(GameState state) async {
+    if (_cloudWriteBlocked) return false;
+    final stamped = state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        cloudSaveUpdatedMs: PlayGamesScores.monotonicCloudStamp(
+          previousMs: state.metaDepth.cloudSaveUpdatedMs,
+          nowMs: DateTime.now().toUtc().millisecondsSinceEpoch,
+        ),
+      ),
+    );
+    final hooked = debugSaveCloud;
+    if (hooked != null) return hooked(stamped);
     if (!isSupported) return false;
     if (!_signedInCache && !await refreshSignedIn()) return false;
     try {
-      final stamped = state.copyWith(
-        metaDepth: state.metaDepth.copyWith(
-          cloudSaveUpdatedMs: DateTime.now().toUtc().millisecondsSinceEpoch,
-        ),
-      );
       final data = GameLogic.exportSaveJson(stamped);
       await SaveGame.saveGame(
         data: data,
@@ -335,16 +378,49 @@ abstract final class PlayGamesBridge {
     }
   }
 
-  static Future<GameState?> loadCloud() async {
-    if (!isSupported) return null;
-    if (!_signedInCache && !await refreshSignedIn()) return null;
+  static Future<CloudRead> loadCloud() async {
+    final hooked = debugLoadCloud;
+    if (hooked != null) {
+      final read = await hooked();
+      _noteCloudRead(read);
+      return read;
+    }
+    if (!isSupported) return const CloudRead.unavailable();
+    if (!_signedInCache && !await refreshSignedIn()) {
+      return const CloudRead.signedOut();
+    }
     try {
       final raw = await SaveGame.loadGame(name: snapshotName);
-      if (raw == null || raw.isEmpty) return null;
-      return GameLogic.importSaveJson(raw);
+      final read = decodeCloudPayload(raw);
+      _noteCloudRead(read);
+      return read;
     } catch (e, st) {
       debugPrint('PlayGames loadCloud failed: $e\n$st');
-      return null;
+      const read = CloudRead.failed();
+      _noteCloudRead(read);
+      return read;
+    }
+  }
+
+  /// Empty string and null are a confirmed missing snapshot. Anything that
+  /// does not decode is a failed read, not permission to upload over it.
+  static CloudRead decodeCloudPayload(String? raw) {
+    if (raw == null || raw.isEmpty) return const CloudRead.empty();
+    final state = GameLogic.importSaveJson(raw);
+    if (state == null) return const CloudRead.failed();
+    return CloudRead.ready(state);
+  }
+
+  /// A caller that already holds a decoded snapshot (no second network read).
+  static void noteConfirmedCloudRead(CloudRead read) => _noteCloudRead(read);
+
+  static void _noteCloudRead(CloudRead read) {
+    if (read.kind == CloudReadKind.failed) {
+      _cloudWriteBlocked = true;
+      return;
+    }
+    if (read.kind == CloudReadKind.empty || read.kind == CloudReadKind.ready) {
+      _cloudWriteBlocked = false;
     }
   }
 

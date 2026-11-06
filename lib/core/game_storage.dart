@@ -116,6 +116,12 @@ abstract class GameStorage {
   Future<GameState?> loadSlot(int index);
 
   Future<void> clearSlot(int index);
+
+  /// JSON kept when a cloud restore replaces the active slot. Not a sixth slot.
+  /// An empty string clears it.
+  Future<bool> keepDisplacedSave(String json);
+
+  Future<String?> loadDisplacedSave();
 }
 
 class SharedPreferencesGameStorage implements GameStorage {
@@ -127,6 +133,7 @@ class SharedPreferencesGameStorage implements GameStorage {
   static const String _corruptSaveKey = 'idle_party_save_v2_corrupt';
   static const String _activeKey = 'idle_party_active_slot';
   static const String _slotsReadyKey = 'idle_party_slots_ready';
+  static const String _displacedKey = 'idle_party_displaced_save';
 
   final SharedPreferences? _preferences;
   int _active = 0;
@@ -286,6 +293,24 @@ class SharedPreferencesGameStorage implements GameStorage {
     if (raw == null || raw.isEmpty) return SaveSlotSummary.empty(index);
     return SaveSlotSummary.fromBlob(index, raw);
   }
+
+  @override
+  Future<bool> keepDisplacedSave(String json) async {
+    final prefs = await _prefs;
+    if (json.isEmpty) {
+      await prefs.remove(_displacedKey);
+      return true;
+    }
+    return prefs.setString(_displacedKey, json);
+  }
+
+  @override
+  Future<String?> loadDisplacedSave() async {
+    final prefs = await _prefs;
+    final raw = prefs.getString(_displacedKey);
+    if (raw == null || raw.isEmpty) return null;
+    return raw;
+  }
 }
 
 class InMemoryGameStorage implements GameStorage {
@@ -339,4 +364,15 @@ class InMemoryGameStorage implements GameStorage {
     for (var i = 0; i < GameStorage.slotCount; i++)
       SaveSlotSummary.fromState(i, _slots[i]),
   ];
+
+  String? _displaced;
+
+  @override
+  Future<bool> keepDisplacedSave(String json) async {
+    _displaced = json.isEmpty ? null : json;
+    return true;
+  }
+
+  @override
+  Future<String?> loadDisplacedSave() async => _displaced;
 }

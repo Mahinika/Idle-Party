@@ -145,7 +145,21 @@ abstract final class OfflineProgress {
   ) {
     // Dungeon catch-up is an 8h fight, 16h with Long Away. Hub gold is its
     // own chest: 12h, or 24h with Long Away, then it stops.
-    final away = max(0, elapsed.inSeconds);
+    if (elapsed.isNegative) {
+      // Clock rolled back. Leave the save clock where it is so a later
+      // correction does not pay the gap as time away.
+      return OfflineProgressResult(
+        state: state,
+        secondsApplied: 0,
+        goldGained: 0,
+        essenceGained: 0,
+        roomsCleared: 0,
+        highestFloorDelta: 0,
+        bossDelta: 0,
+        wasInDungeon: state.inDungeon,
+      );
+    }
+    final away = elapsed.inSeconds;
     if (away == 0) {
       final next = state.copyWith(lastUpdated: DateTime.now());
       return OfflineProgressResult(
