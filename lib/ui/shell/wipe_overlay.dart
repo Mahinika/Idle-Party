@@ -46,7 +46,9 @@ class DungeonWipePanel extends StatelessWidget {
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: 320,
-                maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+                maxHeight: MediaQuery.sizeOf(context).height -
+                    MediaQuery.paddingOf(context).vertical -
+                    32,
               ),
               child: DecoratedBox(
                 decoration: MenuChrome.hubPanel(),
@@ -62,7 +64,7 @@ class DungeonWipePanel extends StatelessWidget {
                           color: GameTheme.bloodLit,
                         ),
                       ),
-                      ShellLayout.gap(8),
+                      ShellLayout.gap(6),
                       Flexible(
                         child: SingleChildScrollView(
                           child: Column(
@@ -102,15 +104,15 @@ class DungeonWipePanel extends StatelessWidget {
                                 maxLines: 4,
                               ),
                               if (dailyEcho) ...[
-                                ShellLayout.gap(6),
+                                ShellLayout.gap(4),
                                 ShellLayout.hint('Claim needs a clear', maxLines: 1),
                               ],
                               if (modeLine != null) ...[
-                                ShellLayout.gap(6),
+                                ShellLayout.gap(4),
                                 ShellLayout.hint(modeLine, maxLines: 2),
                               ],
                               if (WispGift.wipeNextLanternLine(state) case final wispLine?) ...[
-                                ShellLayout.gap(6),
+                                ShellLayout.gap(4),
                                 Text(
                                   wispLine,
                                   textAlign: TextAlign.center,
@@ -121,7 +123,7 @@ class DungeonWipePanel extends StatelessWidget {
                                 ),
                               ],
                               if (state.wipeAdviceLine.isNotEmpty) ...[
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 4),
                                 MenuChrome.fold(
                                   title: 'Why?',
                                   initiallyExpanded: false,
@@ -144,7 +146,7 @@ class DungeonWipePanel extends StatelessWidget {
                                                   ),
                                           )
                                           case final scan?) ...[
-                                        const SizedBox(height: 6),
+                                        const SizedBox(height: 4),
                                         Text(
                                           scan,
                                           textAlign: TextAlign.center,
@@ -156,7 +158,7 @@ class DungeonWipePanel extends StatelessWidget {
                                       ],
                                     if (WipeAdvice.hubHintFor(state.wipeAdviceLine)
                                         case final hint?) ...[
-                                      const SizedBox(height: 6),
+                                      const SizedBox(height: 4),
                                       Text(
                                         hint,
                                         textAlign: TextAlign.center,
@@ -170,7 +172,7 @@ class DungeonWipePanel extends StatelessWidget {
                                 ),
                               ],
                               if (WipeAdvice.godHandHintFor(state) != null) ...[
-                                const SizedBox(height: 10),
+                                const SizedBox(height: 6),
                                 Text(
                                   'After RETRY: ${WipeAdvice.godHandHintFor(state)!}',
                                   textAlign: TextAlign.center,
@@ -180,115 +182,84 @@ class DungeonWipePanel extends StatelessWidget {
                                   ),
                                 ),
                               ],
+                              const SizedBox(height: 10),
+                              ValueListenableBuilder<int>(
+                                valueListenable: director.wipeAutoSeconds,
+                                builder: (context, seconds, _) {
+                                  if (seconds <= 0) return const SizedBox.shrink();
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: Text(
+                                      'Fighting again in $seconds',
+                                      textAlign: TextAlign.center,
+                                      style: GameTheme.body(
+                                        size: 13,
+                                        color: GameTheme.torchHot,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              if (!state.inGauntlet && !state.inAnyRiftMode)
+                                GameButton(
+                                  label: (farm || dailyEcho)
+                                      ? 'RETRY FLOOR'
+                                      : () {
+                                          final safe = state.highestFloorCleared.clamp(
+                                            1,
+                                            999,
+                                          );
+                                          final cur = state.currentRoom.floorNumber;
+                                          return safe < cur
+                                              ? 'RETRY → F$safe'
+                                              : 'RETRY FLOOR';
+                                        }(),
+                                  tip: plain
+                                      ? 'Sends them in again'
+                                      : (farm || dailyEcho)
+                                      ? 'Restarts this floor'
+                                      : () {
+                                          final safe = state.highestFloorCleared.clamp(
+                                            1,
+                                            999,
+                                          );
+                                          final cur = state.currentRoom.floorNumber;
+                                          return safe < cur
+                                              ? 'Retreats to last cleared floor (PUSH)'
+                                              : 'Restarts this floor (still PUSH)';
+                                        }(),
+                                  primary: true,
+                                  dense: true,
+                                  onPressed: director.retryAfterWipe,
+                                ),
+                              if (!state.inGauntlet &&
+                                  !state.inAnyRiftMode &&
+                                  bagNearlyFull(state)) ...[
+                                const SizedBox(height: 6),
+                                GameButton(
+                                  label:
+                                      state.gearStash.length >=
+                                          GameLogic.maxGearStashFor(state)
+                                      ? 'SELL JUNK'
+                                      : 'SELL JUNK (near full)',
+                                  tip:
+                                      'Clears weak drops so new loot can fit',
+                                  style: GameButtonStyle.grey,
+                                  dense: true,
+                                  onPressed: director.cleanBagJunk,
+                                ),
+                              ],
+                              if (!state.inGauntlet && !state.inAnyRiftMode)
+                                const SizedBox(height: 6),
+                              _buildHubSection(state),
+                              const SizedBox(height: 8),
+                              _WipeReviveAd(director: director),
+                              _WipeReviveCinders(director: director),
+                              _WipeWatchAd(director: director),
                             ],
                           ),
                         ),
                       ),
-                      ShellLayout.gap(10),
-                      ValueListenableBuilder<int>(
-                        valueListenable: director.wipeAutoSeconds,
-                        builder: (context, seconds, _) {
-                          if (seconds <= 0) return const SizedBox.shrink();
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Text(
-                              'Fighting again in $seconds',
-                              textAlign: TextAlign.center,
-                              style: GameTheme.body(
-                                size: 13,
-                                color: GameTheme.torchHot,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      if (!state.inGauntlet && !state.inAnyRiftMode)
-                        GameButton(
-                          label: (farm || dailyEcho)
-                              ? 'RETRY FLOOR'
-                              : () {
-                                  final safe = state.highestFloorCleared.clamp(
-                                    1,
-                                    999,
-                                  );
-                                  final cur = state.currentRoom.floorNumber;
-                                  return safe < cur
-                                      ? 'RETRY → F$safe'
-                                      : 'RETRY FLOOR';
-                                }(),
-                          tip: plain
-                              ? 'Sends them in again'
-                              : (farm || dailyEcho)
-                              ? 'Restarts this floor'
-                              : () {
-                                  final safe = state.highestFloorCleared.clamp(
-                                    1,
-                                    999,
-                                  );
-                                  final cur = state.currentRoom.floorNumber;
-                                  return safe < cur
-                                      ? 'Retreats to last cleared floor (PUSH)'
-                                      : 'Restarts this floor (still PUSH)';
-                                }(),
-                          primary: true,
-                          onPressed: director.retryAfterWipe,
-                        ),
-                      if (!state.inGauntlet &&
-                          !state.inAnyRiftMode &&
-                          bagNearlyFull(state)) ...[
-                        const SizedBox(height: 8),
-                        GameButton(
-                          label:
-                              state.gearStash.length >=
-                                  GameLogic.maxGearStashFor(state)
-                              ? 'SELL JUNK'
-                              : 'SELL JUNK (near full)',
-                          tip:
-                              'Clears weak drops so new loot can fit',
-                          style: GameButtonStyle.grey,
-                          onPressed: director.cleanBagJunk,
-                        ),
-                      ],
-                      if (!state.inGauntlet && !state.inAnyRiftMode)
-                        const SizedBox(height: 8),
-                      () {
-                        final fixLabel =
-                            WipeAdvice.hubCtaLabelFor(state.wipeAdviceLine);
-                        final fixNav =
-                            WipeAdvice.hubNavFor(state.wipeAdviceLine);
-                        if (fixLabel == null) {
-                          return GameButton(
-                            label: 'HUB',
-                            style: GameButtonStyle.grey,
-                            primary: state.inGauntlet || state.inAnyRiftMode,
-                            onPressed: director.hubAfterWipe,
-                          );
-                        }
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GameButton(
-                              label: fixLabel,
-                              tip: WipeAdvice.hubHintFor(state.wipeAdviceLine),
-                              style: GameButtonStyle.brown,
-                              primary: true,
-                              onPressed: () => director.hubAfterWipe(
-                                openMenu: fixNav,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            GameButton(
-                              label: 'HUB',
-                              style: GameButtonStyle.grey,
-                              onPressed: director.hubAfterWipe,
-                            ),
-                          ],
-                        );
-                      }(),
-                      const SizedBox(height: 12),
-                      _WipeReviveAd(director: director),
-                      _WipeReviveCinders(director: director),
-                      _WipeWatchAd(director: director),
                     ],
                   ),
                 ),
@@ -297,6 +268,40 @@ class DungeonWipePanel extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHubSection(GameState state) {
+    final fixLabel = WipeAdvice.hubCtaLabelFor(state.wipeAdviceLine);
+    final fixNav = WipeAdvice.hubNavFor(state.wipeAdviceLine);
+    if (fixLabel == null) {
+      return GameButton(
+        label: 'HUB',
+        style: GameButtonStyle.grey,
+        primary: state.inGauntlet || state.inAnyRiftMode,
+        dense: true,
+        onPressed: director.hubAfterWipe,
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GameButton(
+          label: fixLabel,
+          tip: WipeAdvice.hubHintFor(state.wipeAdviceLine),
+          style: GameButtonStyle.brown,
+          primary: true,
+          dense: true,
+          onPressed: () => director.hubAfterWipe(openMenu: fixNav),
+        ),
+        const SizedBox(height: 6),
+        GameButton(
+          label: 'HUB',
+          style: GameButtonStyle.grey,
+          dense: true,
+          onPressed: director.hubAfterWipe,
+        ),
+      ],
     );
   }
 }
