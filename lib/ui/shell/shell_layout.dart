@@ -37,9 +37,20 @@ abstract final class ShellLayout {
 
   static Widget blockGapWidget() => const SizedBox(height: blockGap);
 
-  static Widget divider() => Container(
+  static Widget divider({double indent = 0}) => Container(
     height: 1,
-    color: GameTheme.borderLit.withValues(alpha: 0.22),
+    margin: EdgeInsets.symmetric(horizontal: indent),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [
+          Colors.transparent,
+          GameTheme.borderLit.withValues(alpha: 0.28),
+          GameTheme.borderLit.withValues(alpha: 0.28),
+          Colors.transparent,
+        ],
+        stops: const [0, 0.08, 0.92, 1],
+      ),
+    ),
   );
 
   /// Muted intro copy under a sheet title.
