@@ -1,4 +1,3 @@
-
 import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
@@ -8,6 +7,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/play_games_bridge.dart';
 import '../../core/play_games_scores.dart';
+import '../../core/save_progress.dart';
 import '../../core/play_leaderboard_ids.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -39,7 +39,7 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
     if (read.kind != CloudReadKind.ready || cloud == null || !mounted) {
       return;
     }
-    if (!PlayGamesScores.localSaveHasProgress(director.state)) {
+    if (SaveProgress.isReplaceable(director.state)) {
       await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
       return;
     }
@@ -57,7 +57,8 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
         content: Text(
           'This device:\n${director.playGamesConflictHint(director.state)}\n\n'
           'Play Games:\n${director.playGamesConflictHint(cloud)}\n\n'
-          'Which save should we keep?',
+          'Which save should we keep?\n\n'
+          'Paid unlocks on either save are kept. Gold and materials stay with the file you pick.',
           style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
         actions: [
@@ -215,7 +216,8 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
     final signedInLive = PlayGamesBridge.isSignedInCached;
     final showLiveBoards = boardsReady && signedInLive;
     // All-time party power stays up when the new month has no Console ids.
-    final partyLive = playSupported &&
+    final partyLive =
+        playSupported &&
         signedInLive &&
         PlayLeaderboardIds.hasPartyPowerBoard &&
         !monthBoards;
@@ -275,22 +277,26 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
     final shownRows = preview ? PlayBoardPreview.rows(kind) : _rows;
 
     final yours = switch (kind) {
-      PlayBoardKind.timedKey => md.seasonBestTimedKey > 0
-          ? PlayGamesScores.formatTimedLabel(
-              md.seasonBestTimedKey,
-              md.seasonBestTimedClearMs,
-            )
-          : 'No timed KEY yet',
-      PlayBoardKind.gauntlet => md.seasonBestGauntletFloor > 0
-          ? 'F${md.seasonBestGauntletFloor}'
-          : 'No Gauntlet floor yet',
-      PlayBoardKind.greaterRift => md.seasonBestGrTier > 0
-          ? PlayGamesScores.formatGreaterRiftLabel(
-              md.seasonBestGrTier,
-              md.seasonBestGrClearMs,
-            )
-          : 'No Ranked GR yet',
-      PlayBoardKind.partyPower => '${GameLogic.partyPowerScore(director.state)}',
+      PlayBoardKind.timedKey =>
+        md.seasonBestTimedKey > 0
+            ? PlayGamesScores.formatTimedLabel(
+                md.seasonBestTimedKey,
+                md.seasonBestTimedClearMs,
+              )
+            : 'No timed KEY yet',
+      PlayBoardKind.gauntlet =>
+        md.seasonBestGauntletFloor > 0
+            ? 'F${md.seasonBestGauntletFloor}'
+            : 'No Gauntlet floor yet',
+      PlayBoardKind.greaterRift =>
+        md.seasonBestGrTier > 0
+            ? PlayGamesScores.formatGreaterRiftLabel(
+                md.seasonBestGrTier,
+                md.seasonBestGrClearMs,
+              )
+            : 'No Ranked GR yet',
+      PlayBoardKind.partyPower =>
+        '${GameLogic.partyPowerScore(director.state)}',
     };
     final yoursLine = '${director.state.partyName} · $yours';
 
@@ -533,7 +539,7 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
         Text(
           GameLogic.showKeystoneJargon(widget.director.state)
               ? 'Season $month · cloud backup. Boards: KEY, Gauntlet, Ranked GR '
-                  '(Oct reuses Aug KEY/Gauntlet + Sep GR Console ids).'
+                    '(Oct reuses Aug KEY/Gauntlet + Sep GR Console ids).'
               : 'Season $month · cloud backup.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -578,7 +584,8 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
           const SizedBox(height: 6),
           GameButton(
             label: 'DEVICE COPY',
-            tip: 'Puts back the save this phone had before the last cloud restore',
+            tip:
+                'Puts back the save this phone had before the last cloud restore',
             style: GameButtonStyle.grey,
             onPressed: playGamesBusy
                 ? null

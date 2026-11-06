@@ -24,11 +24,15 @@ abstract final class PlayGamesBridge {
   static Timer? _uploadDebounce;
   static GameState? _pendingUpload;
 
-  /// Set after a failed or unknown snapshot read. Automatic uploads stay off
-  /// until a later read is confirmed empty or a real save.
-  static bool _cloudWriteBlocked = false;
+  /// Fail closed. A write is allowed only after this process has bound a Play
+  /// account to a confirmed empty snapshot or a decoded save. A restart clears
+  /// it, so a cold start cannot upload.
+  static bool _explicitWriteOk = false;
+  static String? _boundAccount;
+  static int _readGeneration = 0;
+  static String? _lastUploadedSeal;
 
-  static bool get cloudWriteBlocked => _cloudWriteBlocked;
+  static bool get cloudWriteBlocked => !_explicitWriteOk;
 
   /// Test seam. Production leaves these null and uses games_services.
   @visibleForTesting
@@ -40,12 +44,26 @@ abstract final class PlayGamesBridge {
   @visibleForTesting
   static Future<bool> Function(GameState state)? debugSaveCloud;
 
+  /// Play account for this session. Null means the id could not be read.
+  @visibleForTesting
+  static Future<String?> Function()? debugAccountId;
+
+  /// Runs after the commit-time read and before the upload, so a test can
+  /// switch accounts or fail the read while the write is in flight.
+  @visibleForTesting
+  static Future<void> Function()? debugBeforeCloudCommit;
+
   @visibleForTesting
   static void debugResetCloudHooks() {
     debugSignIn = null;
     debugLoadCloud = null;
     debugSaveCloud = null;
-    _cloudWriteBlocked = false;
+    debugAccountId = null;
+    debugBeforeCloudCommit = null;
+    _explicitWriteOk = false;
+    _boundAccount = null;
+    _readGeneration = 0;
+    _lastUploadedSeal = null;
     _signedInCache = false;
     _lastCloudUploadAt = null;
     cancelPendingUpload();
@@ -164,10 +182,7 @@ abstract final class PlayGamesBridge {
   }
 
   /// Current party power. Play keeps the higher score.
-  static void notePartyPower({
-    required int score,
-    String? partyName,
-  }) {
+  static void notePartyPower({required int score, String? partyName}) {
     _rememberParty(partyName);
     final id = PlayLeaderboardIds.partyPowerId;
     if (!PlayLeaderboardIds.hasPartyPowerBoard) return;
@@ -322,7 +337,7 @@ abstract final class PlayGamesBridge {
     GameState state, {
     Duration delay = const Duration(seconds: 8),
   }) {
-    if (_cloudWriteBlocked) return;
+    if (cloudWriteBlocked) return;
     // `flutter test` must not arm this Timer. Callers that need an upload
     // in a test invoke [saveCloud] through [debugSaveCloud].
     if (!isSupported) return;
@@ -347,8 +362,13 @@ abstract final class PlayGamesBridge {
     _pendingUpload = null;
   }
 
-  static Future<bool> saveCloud(GameState state) async {
-    if (_cloudWriteBlocked) return false;
+  /// [explicit] is the player's BACKUP tap. Automatic uploads re-read at
+  /// commit and refuse a snapshot this device did not last write, unless the
+  /// file is confirmed missing or the progress is identical.
+  static Future<bool> saveCloud(
+    GameState state, {
+    bool explicit = false,
+  }) async {
     final stamped = state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         cloudSaveUpdatedMs: PlayGamesScores.monotonicCloudStamp(
@@ -357,10 +377,37 @@ abstract final class PlayGamesBridge {
         ),
       ),
     );
+    final read = await loadCloud();
+    final generation = _readGeneration;
+    final account = _boundAccount;
+    if (!_commitAllowed(read, explicit: explicit, local: stamped)) return false;
+    final pending = debugBeforeCloudCommit;
+    if (pending != null) await pending();
+    final nowAccount = await _currentAccount();
+    if (account == null ||
+        nowAccount != account ||
+        _readGeneration != generation ||
+        _boundAccount != account) {
+      _denyWrites();
+      return false;
+    }
+    if (!_commitAllowed(read, explicit: explicit, local: stamped)) return false;
     final hooked = debugSaveCloud;
-    if (hooked != null) return hooked(stamped);
+    if (hooked != null) {
+      final ok = await hooked(stamped);
+      if (ok) _rememberUpload(stamped);
+      return ok;
+    }
     if (!isSupported) return false;
-    if (!_signedInCache && !await refreshSignedIn()) return false;
+    if (!_signedInCache && !await refreshSignedIn()) {
+      _denyWrites();
+      return false;
+    }
+    final afterAuth = await _currentAccount();
+    if (afterAuth != account || _readGeneration != generation) {
+      _denyWrites();
+      return false;
+    }
     try {
       final data = GameLogic.exportSaveJson(stamped);
       await SaveGame.saveGame(
@@ -370,6 +417,7 @@ abstract final class PlayGamesBridge {
             'AL${stamped.ascensionLevel} · Gauntlet F${stamped.metaDepth.gauntletBestFloor}',
       );
       _lastCloudUploadAt = DateTime.now();
+      _rememberUpload(stamped);
       unawaited(flushPendingScores());
       return true;
     } catch (e, st) {
@@ -378,32 +426,134 @@ abstract final class PlayGamesBridge {
     }
   }
 
+  static bool _commitAllowed(
+    CloudRead read, {
+    required bool explicit,
+    required GameState local,
+  }) {
+    if (_boundAccount == null) return false;
+    if (read.kind == CloudReadKind.empty) return true;
+    if (read.kind != CloudReadKind.ready || read.state == null) return false;
+    if (explicit) return true;
+    final cloudSeal = PlayGamesScores.progressSeal(read.state!);
+    if (cloudSeal == PlayGamesScores.progressSeal(local)) return true;
+    return _lastUploadedSeal != null && cloudSeal == _lastUploadedSeal;
+  }
+
+  static void _rememberUpload(GameState state) {
+    _lastUploadedSeal = PlayGamesScores.progressSeal(state);
+  }
+
+  static void _denyWrites() {
+    _explicitWriteOk = false;
+    _boundAccount = null;
+    _lastUploadedSeal = null;
+    _readGeneration++;
+  }
+
   static Future<CloudRead> loadCloud() async {
     final hooked = debugLoadCloud;
     if (hooked != null) {
+      final account = await _currentAccount();
+      if (account == null || account.isEmpty) {
+        const read = CloudRead.failed();
+        _noteCloudRead(read, account: null);
+        return read;
+      }
       final read = await hooked();
-      _noteCloudRead(read);
+      _noteCloudRead(read, account: account);
       return read;
     }
-    if (!isSupported) return const CloudRead.unavailable();
+    if (!isSupported) {
+      const read = CloudRead.unavailable();
+      _noteCloudRead(read, account: null);
+      return read;
+    }
     if (!_signedInCache && !await refreshSignedIn()) {
-      return const CloudRead.signedOut();
+      const read = CloudRead.signedOut();
+      _noteCloudRead(read, account: null);
+      return read;
+    }
+    final account = await _currentAccount();
+    if (account == null || account.isEmpty) {
+      const read = CloudRead.failed();
+      _noteCloudRead(read, account: null);
+      return read;
     }
     try {
-      final raw = await SaveGame.loadGame(name: snapshotName);
-      final read = decodeCloudPayload(raw);
-      _noteCloudRead(read);
+      final read = await readSnapshot(
+        listNames: _listSnapshotNames,
+        loadPayload: () => SaveGame.loadGame(name: snapshotName),
+      );
+      _noteCloudRead(read, account: account);
       return read;
     } catch (e, st) {
       debugPrint('PlayGames loadCloud failed: $e\n$st');
       const read = CloudRead.failed();
-      _noteCloudRead(read);
+      _noteCloudRead(read, account: null);
       return read;
     }
   }
 
-  /// Empty string and null are a confirmed missing snapshot. Anything that
-  /// does not decode is a failed read, not permission to upload over it.
+  /// games_services 5.3.0 opens with `createIfNotFound = false`. Android then
+  /// fails the task for a missing snapshot and for a network or auth error,
+  /// and the plugin reports both as `failed_to_load_game` plus the exception
+  /// text. That string is not a not-found signal. Absence is only a successful
+  /// snapshot list that does not contain [snapshotName]. A listed name whose
+  /// open throws, or whose body is blank, stays a failed read.
+  @visibleForTesting
+  static Future<CloudRead> readSnapshot({
+    required Future<List<String>?> Function() listNames,
+    required Future<String?> Function() loadPayload,
+  }) async {
+    final List<String>? names;
+    try {
+      names = await listNames();
+    } catch (e, st) {
+      debugPrint('PlayGames list snapshots failed: $e\n$st');
+      return const CloudRead.failed();
+    }
+    if (names == null) return const CloudRead.failed();
+    if (!names.contains(snapshotName)) return const CloudRead.empty();
+    try {
+      final raw = await loadPayload();
+      final decoded = decodeCloudPayload(raw);
+      if (decoded.kind == CloudReadKind.empty) return const CloudRead.failed();
+      return decoded;
+    } catch (e, st) {
+      debugPrint('PlayGames open snapshot failed: $e\n$st');
+      return const CloudRead.failed();
+    }
+  }
+
+  static Future<List<String>?> _listSnapshotNames() async {
+    final games = await SaveGame.getSavedGames(
+      forceRefresh: true,
+      ignoreImages: true,
+    );
+    if (games == null) return null;
+    return [for (final game in games) game.name];
+  }
+
+  static Future<String?> _currentAccount() async {
+    final hooked = debugAccountId;
+    if (hooked != null) return hooked();
+    if (debugLoadCloud != null || debugSaveCloud != null) {
+      return 'debug-account';
+    }
+    if (!isSupported) return null;
+    try {
+      final id = await Player.getPlayerID();
+      if (id == null || id.isEmpty) return null;
+      return id;
+    } catch (e, st) {
+      debugPrint('PlayGames player id failed: $e\n$st');
+      return null;
+    }
+  }
+
+  /// Empty string and null are a confirmed missing body only when no snapshot
+  /// was listed. [readSnapshot] turns that into a failed read if the name exists.
   static CloudRead decodeCloudPayload(String? raw) {
     if (raw == null || raw.isEmpty) return const CloudRead.empty();
     final state = GameLogic.importSaveJson(raw);
@@ -412,16 +562,24 @@ abstract final class PlayGamesBridge {
   }
 
   /// A caller that already holds a decoded snapshot (no second network read).
-  static void noteConfirmedCloudRead(CloudRead read) => _noteCloudRead(read);
+  static void noteConfirmedCloudRead(CloudRead read) {
+    final account =
+        _boundAccount ??
+        ((debugLoadCloud != null || debugSaveCloud != null)
+            ? 'debug-account'
+            : null);
+    _noteCloudRead(read, account: account);
+  }
 
-  static void _noteCloudRead(CloudRead read) {
-    if (read.kind == CloudReadKind.failed) {
-      _cloudWriteBlocked = true;
-      return;
-    }
-    if (read.kind == CloudReadKind.empty || read.kind == CloudReadKind.ready) {
-      _cloudWriteBlocked = false;
-    }
+  static void _noteCloudRead(CloudRead read, {required String? account}) {
+    _readGeneration++;
+    final bound = account != null && account.isNotEmpty;
+    final trusted =
+        bound &&
+        (read.kind == CloudReadKind.empty || read.kind == CloudReadKind.ready);
+    _explicitWriteOk = trusted;
+    _boundAccount = trusted ? account : null;
+    if (!trusted) _lastUploadedSeal = null;
   }
 
   static String conflictHint(GameState s) {

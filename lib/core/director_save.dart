@@ -6,30 +6,24 @@ extension GameDirectorSave on GameDirector {
     // Title-screen placeholder and boot-failure empty state must not overwrite
     // a real save (hub idle used to write after 25s).
     if (!_hasExistingSave) return;
-    final stamped = _state.copyWith(
-      metaDepth: _state.metaDepth.copyWith(
-        cloudSaveUpdatedMs: PlayGamesScores.monotonicCloudStamp(
-          previousMs: _state.metaDepth.cloudSaveUpdatedMs,
-          nowMs: DateTime.now().toUtc().millisecondsSinceEpoch,
-        ),
-      ),
-    );
-    _state = stamped;
-    // A false or thrown write completes as false. The chain stays alive so
-    // the next save still runs. Callers that grant a purchase must see false.
+    // Snapshot when this turn runs, not when it was queued, and write those
+    // bytes. A later cloud install cannot be overwritten by a stale capture,
+    // and a grant cannot change the bytes after this turn has read them.
     _saveChain = _saveChain.then((_) async {
+      final snapshot = _stampCloudClock(_state);
+      _state = snapshot;
       try {
-        final ok = await _storage.save(_state);
+        final ok = await _storage.save(snapshot);
         if (!ok) {
           DebugPlayLog.event('save', 'write failed: setString returned false');
           debugPrint('save failed: setString returned false');
           return false;
         }
         PlayGamesBridge.notePartyPower(
-          score: GameLogic.partyPowerScore(_state),
-          partyName: _state.partyName,
+          score: GameLogic.partyPowerScore(snapshot),
+          partyName: snapshot.partyName,
         );
-        PlayGamesBridge.scheduleCloudUpload(_state);
+        PlayGamesBridge.scheduleCloudUpload(snapshot);
         unawaited(PlayGamesBridge.flushPendingScores());
         return true;
       } catch (e, st) {
@@ -38,6 +32,36 @@ extension GameDirectorSave on GameDirector {
         return false;
       }
     });
+  }
+
+  GameState _stampCloudClock(GameState state) {
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        cloudSaveUpdatedMs: PlayGamesScores.monotonicCloudStamp(
+          previousMs: state.metaDepth.cloudSaveUpdatedMs,
+          nowMs: DateTime.now().toUtc().millisecondsSinceEpoch,
+        ),
+      ),
+    );
+  }
+
+  /// One save mutation at a time. The action reads [_state] when it starts,
+  /// after every earlier persist, grant, and cloud install has finished.
+  Future<T> _enqueueSave<T>(Future<T> Function() action) {
+    final done = Completer<T>();
+    _saveChain = _saveChain.then((_) async {
+      try {
+        final value = await action();
+        if (!done.isCompleted) done.complete(value);
+        if (value is bool) return value;
+        return true;
+      } catch (e, st) {
+        if (!done.isCompleted) done.completeError(e, st);
+        debugPrint('save turn failed: $e\n$st');
+        return false;
+      }
+    });
+    return done.future;
   }
 
   /// False when this write did not land.
@@ -145,25 +169,25 @@ extension GameDirectorSave on GameDirector {
     if (!_isLoading) {
       final elapsed = DateTime.now().difference(_state.lastUpdated);
       if (elapsed.inSeconds >= GameDirector._awayCreditMinSec) {
-      _welcomeBackAdGranted = false;
-      _awayCreditInFlight = true;
-      final epoch = _saveEpoch;
-      final base = _state;
-      try {
-        final credited = await _creditAway(
-          base,
-          showCard: true,
-          stillCurrent: () => epoch == _saveEpoch && !_directorClosed,
-        );
-        if (epoch != _saveEpoch || _directorClosed) return;
-        _state = credited;
-        if (_state.inDungeon && _spatial == null) {
-          _rebuildSpatial();
+        _welcomeBackAdGranted = false;
+        _awayCreditInFlight = true;
+        final epoch = _saveEpoch;
+        final base = _state;
+        try {
+          final credited = await _creditAway(
+            base,
+            showCard: true,
+            stillCurrent: () => epoch == _saveEpoch && !_directorClosed,
+          );
+          if (epoch != _saveEpoch || _directorClosed) return;
+          _state = credited;
+          if (_state.inDungeon && _spatial == null) {
+            _rebuildSpatial();
+          }
+          _directorNotify();
+        } finally {
+          _awayCreditInFlight = false;
         }
-        _directorNotify();
-      } finally {
-        _awayCreditInFlight = false;
-      }
       }
     }
     if (!_isLoading && !_appPaused) {
@@ -262,6 +286,7 @@ extension GameDirectorSave on GameDirector {
   Future<void> boot({bool deferCombatLoop = false}) async {
     _funnelSessionReadyMs = DateTime.now().millisecondsSinceEpoch;
     try {
+      await SaveSwap.recover(_storage);
       _saveSlots = await _storage.listSlots();
       _activeSlot = _storage.activeSlotIndex;
       _phoneHadNoSaveAtBoot = !_saveSlots.any((slot) => slot.occupied);
@@ -501,17 +526,17 @@ extension GameDirectorSave on GameDirector {
     _spatial = null;
     final layout = _phoneHadNoSaveAtBoot ? HomeLayout.home : _state.homeLayout;
     final panelFull = _state.homePanelFull;
-    _state = GameLogic.createInitialState(
-      partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
-      partyName: partyName,
-      partyRace: partyRace,
-      partyRaces: partyRaces,
-      partySexes: partySexes,
-    ).copyWith(
-      homeLayout: layout,
-      homePanelFull:
-          layout == HomeLayout.home ? true : panelFull,
-    );
+    _state =
+        GameLogic.createInitialState(
+          partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
+          partyName: partyName,
+          partyRace: partyRace,
+          partyRaces: partyRaces,
+          partySexes: partySexes,
+        ).copyWith(
+          homeLayout: layout,
+          homePanelFull: layout == HomeLayout.home ? true : panelFull,
+        );
     if (_phoneHadNoSaveAtBoot) {
       _state = ReinstallPouch.markDue(_state);
     }

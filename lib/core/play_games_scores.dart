@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'game_state.dart';
 import 'keystone.dart';
 import 'party_name_filter.dart';
@@ -83,20 +86,14 @@ abstract final class PlayGamesScores {
       skewMs: skewMs,
     );
     if (local == null || cloud == null) return clock;
-    final localPlay = localSaveHasProgress(local);
-    final cloudPlay = localSaveHasProgress(cloud);
-    if (!localPlay && cloudPlay) return CloudConflict.preferCloud;
-    if (localPlay && !cloudPlay) return CloudConflict.preferLocal;
+    // Stamps and a partial scoreboard are not proof that one file contains
+    // the other. Two real saves always ask. An untouched starter party is
+    // handled by [planSignIn] / [planRestore], not here.
     switch (compareSaveProgress(local, cloud)) {
-      case SaveProgressRelation.localAhead:
-        return CloudConflict.preferLocal;
-      case SaveProgressRelation.cloudAhead:
-        if (clock == CloudConflict.preferCloud) return CloudConflict.preferCloud;
-        return CloudConflict.askUser;
       case SaveProgressRelation.tie:
-        if (clock == CloudConflict.preferLocal) return CloudConflict.preferLocal;
-        return CloudConflict.askUser;
       case SaveProgressRelation.diverged:
+      case SaveProgressRelation.localAhead:
+      case SaveProgressRelation.cloudAhead:
         return CloudConflict.askUser;
     }
   }
@@ -124,72 +121,83 @@ abstract final class PlayGamesScores {
     return previousMs < 0 ? 0 : previousMs;
   }
 
-  /// Higher durable progress on one side, or a mix the player must see.
+  /// Tie only when every saved leaf matches except the wall clock and the
+  /// cloud bookkeeping stamp. Anything else diverges. This does not rank one
+  /// file above the other: a missing permanent upgrade must not look "behind".
   static SaveProgressRelation compareSaveProgress(
     GameState local,
     GameState cloud,
   ) {
-    var localWins = 0;
-    var cloudWins = 0;
-    void axis(int left, int right) {
-      if (left > right) {
-        localWins++;
-      } else if (right > left) {
-        cloudWins++;
+    if (progressSeal(local) == progressSeal(cloud)) {
+      return SaveProgressRelation.tie;
+    }
+    return SaveProgressRelation.diverged;
+  }
+
+  /// Stable identity of a save, ignoring clocks that move without play.
+  static String progressSeal(GameState state) {
+    final json = state.toJson();
+    json.remove('lastUpdated');
+    final meta = json['metaDepth'];
+    if (meta is Map) {
+      meta.remove('cloudSaveUpdatedMs');
+    }
+    return jsonEncode(json);
+  }
+
+  /// Paid ownership is not gold, tickets, or Cinders.
+  static bool hasPaidOwnership(GameState state) {
+    final md = state.metaDepth;
+    if (md.adFree || md.paidSeasonPass || md.shopLongAway) return true;
+    if (md.shopStarterClaimed || md.cinderPouchDoubled) return true;
+    if (md.shopBagBonusSlots > 0 || md.shopPermScrolls != 0) return true;
+    if (md.grantedShopPurchaseIds.isNotEmpty) return true;
+    if (md.redeemedCoupons.isNotEmpty) return true;
+    return false;
+  }
+
+  /// [chosen] keeps its gold and materials. Ownership that exists on either
+  /// file is kept, so a cloud replace cannot drop Ad-free or a season pass.
+  /// Consumable stacks are not added together.
+  static GameState withKeptOwnership({
+    required GameState chosen,
+    required GameState other,
+  }) {
+    final a = chosen.metaDepth;
+    final b = other.metaDepth;
+    final ids = <String>[];
+    void addIds(List<String> src) {
+      for (final raw in src) {
+        final id = raw.trim();
+        if (id.isEmpty || ids.contains(id)) continue;
+        ids.add(id);
       }
     }
 
-    axis(local.ascensionLevel, cloud.ascensionLevel);
-    axis(local.lifetimeGoldEarned, cloud.lifetimeGoldEarned);
-    axis(local.highestDungeonCleared, cloud.highestDungeonCleared);
-    axis(local.highestFloorCleared, cloud.highestFloorCleared);
-    axis(local.bossVictories, cloud.bossVictories);
-    axis(_heroLevels(local), _heroLevels(cloud));
-    axis(_heroXp(local), _heroXp(cloud));
-    axis(local.metaDepth.gauntletBestFloor, cloud.metaDepth.gauntletBestFloor);
-    axis(local.metaDepth.riftBestTier, cloud.metaDepth.riftBestTier);
-    axis(local.metaDepth.grBestTier, cloud.metaDepth.grBestTier);
-    axis(local.metaDepth.adFree ? 1 : 0, cloud.metaDepth.adFree ? 1 : 0);
-    axis(
-      local.metaDepth.shopLongAway ? 1 : 0,
-      cloud.metaDepth.shopLongAway ? 1 : 0,
+    addIds(a.grantedShopPurchaseIds);
+    addIds(b.grantedShopPurchaseIds);
+    const purchaseIdCap = 64;
+    if (ids.length > purchaseIdCap) {
+      ids.removeRange(0, ids.length - purchaseIdCap);
+    }
+    final coupons = <String>[
+      ...a.redeemedCoupons,
+      for (final code in b.redeemedCoupons)
+        if (!a.redeemedCoupons.contains(code)) code,
+    ];
+    return chosen.copyWith(
+      metaDepth: a.copyWith(
+        adFree: a.adFree || b.adFree,
+        paidSeasonPass: a.paidSeasonPass || b.paidSeasonPass,
+        shopLongAway: a.shopLongAway || b.shopLongAway,
+        shopStarterClaimed: a.shopStarterClaimed || b.shopStarterClaimed,
+        cinderPouchDoubled: a.cinderPouchDoubled || b.cinderPouchDoubled,
+        shopBagBonusSlots: max(a.shopBagBonusSlots, b.shopBagBonusSlots),
+        shopPermScrolls: (a.shopPermScrolls | b.shopPermScrolls).clamp(0, 127),
+        grantedShopPurchaseIds: List<String>.unmodifiable(ids),
+        redeemedCoupons: List<String>.unmodifiable(coupons),
+      ),
     );
-    final purchases = _purchaseAxis(local, cloud);
-    if (purchases == 2) return SaveProgressRelation.diverged;
-    if (purchases < 0) localWins++;
-    if (purchases > 0) cloudWins++;
-    if (localWins > 0 && cloudWins > 0) return SaveProgressRelation.diverged;
-    if (localWins > 0) return SaveProgressRelation.localAhead;
-    if (cloudWins > 0) return SaveProgressRelation.cloudAhead;
-    return SaveProgressRelation.tie;
-  }
-
-  static int _heroLevels(GameState state) {
-    var n = 0;
-    for (final hero in state.heroRoster) {
-      n += hero.level;
-    }
-    return n;
-  }
-
-  static int _heroXp(GameState state) {
-    var n = 0;
-    for (final hero in state.heroRoster) {
-      n += hero.xp;
-    }
-    return n;
-  }
-
-  /// -1 local superset, 1 cloud superset, 0 same set, 2 neither contains the other.
-  static int _purchaseAxis(GameState local, GameState cloud) {
-    final left = local.metaDepth.grantedShopPurchaseIds.toSet();
-    final right = cloud.metaDepth.grantedShopPurchaseIds.toSet();
-    if (left.length == right.length && left.containsAll(right)) return 0;
-    final leftSup = left.containsAll(right);
-    final rightSup = right.containsAll(left);
-    if (leftSup && !rightSup) return -1;
-    if (rightSup && !leftSup) return 1;
-    return 2;
   }
 
   /// What sign-in may do after a cloud read. Upload only when Play confirmed
@@ -198,8 +206,9 @@ abstract final class PlayGamesScores {
     required CloudRead read,
     required bool hasExistingSave,
     required GameState local,
+    required bool localIsReplaceable,
   }) {
-    final keepLocal = hasExistingSave && localSaveHasProgress(local);
+    final keepLocal = hasExistingSave && !localIsReplaceable;
     switch (read.kind) {
       case CloudReadKind.ready:
         final cloud = read.state;
@@ -236,6 +245,7 @@ abstract final class PlayGamesScores {
     required CloudRead read,
     required GameState local,
     required bool hasExistingSave,
+    required bool localIsReplaceable,
     required bool force,
   }) {
     switch (read.kind) {
@@ -261,27 +271,10 @@ abstract final class PlayGamesScores {
         toast: 'Could not read Play Games save. Kept this device.',
       );
     }
-    final placeholder = !hasExistingSave || !localSaveHasProgress(local);
-    if (force || placeholder) {
+    if (force || !hasExistingSave || localIsReplaceable) {
       return const CloudRestorePlan(CloudRestoreChoice.installed);
     }
-    final decision = resolveConflict(
-      localMs: local.metaDepth.cloudSaveUpdatedMs,
-      cloudMs: cloud.metaDepth.cloudSaveUpdatedMs,
-      local: local,
-      cloud: cloud,
-    );
-    switch (decision) {
-      case CloudConflict.preferLocal:
-        return const CloudRestorePlan(
-          CloudRestoreChoice.keptLocal,
-          toast: 'This device is newer — kept local save',
-        );
-      case CloudConflict.askUser:
-        return const CloudRestorePlan(CloudRestoreChoice.needChoice);
-      case CloudConflict.preferCloud:
-        return const CloudRestorePlan(CloudRestoreChoice.installed);
-    }
+    return const CloudRestorePlan(CloudRestoreChoice.needChoice);
   }
 }
 
@@ -330,7 +323,13 @@ class CloudSignInPlan {
   final String? toast;
 }
 
-enum CloudRestoreChoice { installed, keptLocal, needChoice, unreadable, missing }
+enum CloudRestoreChoice {
+  installed,
+  keptLocal,
+  needChoice,
+  unreadable,
+  missing,
+}
 
 class CloudRestorePlan {
   const CloudRestorePlan(this.choice, {this.toast});
@@ -500,41 +499,34 @@ abstract final class PlayBoardList {
 
 /// Sample ranks for a debug playtest. Never shown on a release build.
 abstract final class PlayBoardPreview {
-  static const String notice =
-      'Preview on this device. Not live players.';
+  static const String notice = 'Preview on this device. Not live players.';
 
   static List<PlayBoardRow> rows(PlayBoardKind kind) {
     final you = switch (kind) {
       PlayBoardKind.timedKey => PlayBoardRaw(
-          rank: 4,
-          name: 'You',
-          rawScore: PlayGamesScores.encodeTimedKey(
-            keyLevel: 12,
-            clearMs: 125000,
-          ),
-          playerId: 'preview-you',
-        ),
+        rank: 4,
+        name: 'You',
+        rawScore: PlayGamesScores.encodeTimedKey(keyLevel: 12, clearMs: 125000),
+        playerId: 'preview-you',
+      ),
       PlayBoardKind.gauntlet => const PlayBoardRaw(
-          rank: 18,
-          name: 'You',
-          rawScore: 22,
-          playerId: 'preview-you',
-        ),
+        rank: 18,
+        name: 'You',
+        rawScore: 22,
+        playerId: 'preview-you',
+      ),
       PlayBoardKind.greaterRift => PlayBoardRaw(
-          rank: 6,
-          name: 'You',
-          rawScore: PlayGamesScores.encodeGreaterRift(
-            tier: 8,
-            clearMs: 90000,
-          ),
-          playerId: 'preview-you',
-        ),
+        rank: 6,
+        name: 'You',
+        rawScore: PlayGamesScores.encodeGreaterRift(tier: 8, clearMs: 90000),
+        playerId: 'preview-you',
+      ),
       PlayBoardKind.partyPower => const PlayBoardRaw(
-          rank: 11,
-          name: 'You',
-          rawScore: 2100,
-          playerId: 'preview-you',
-        ),
+        rank: 11,
+        name: 'You',
+        rawScore: 2100,
+        playerId: 'preview-you',
+      ),
     };
     final scores = switch (kind) {
       PlayBoardKind.timedKey => [
@@ -576,28 +568,19 @@ abstract final class PlayBoardPreview {
         PlayBoardRaw(
           rank: 1,
           name: 'Lantern',
-          rawScore: PlayGamesScores.encodeGreaterRift(
-            tier: 20,
-            clearMs: 70000,
-          ),
+          rawScore: PlayGamesScores.encodeGreaterRift(tier: 20, clearMs: 70000),
           playerId: 'preview-1',
         ),
         PlayBoardRaw(
           rank: 2,
           name: 'Moth',
-          rawScore: PlayGamesScores.encodeGreaterRift(
-            tier: 14,
-            clearMs: 80000,
-          ),
+          rawScore: PlayGamesScores.encodeGreaterRift(tier: 14, clearMs: 80000),
           playerId: 'preview-2',
         ),
         PlayBoardRaw(
           rank: 3,
           name: 'Brass',
-          rawScore: PlayGamesScores.encodeGreaterRift(
-            tier: 11,
-            clearMs: 60000,
-          ),
+          rawScore: PlayGamesScores.encodeGreaterRift(tier: 11, clearMs: 60000),
           playerId: 'preview-3',
         ),
       ],

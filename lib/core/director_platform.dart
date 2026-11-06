@@ -531,6 +531,7 @@ extension GameDirectorPlatform on GameDirector {
       read: read,
       hasExistingSave: _hasExistingSave,
       local: _state,
+      localIsReplaceable: SaveProgress.isReplaceable(_state),
     );
     if (plan.install && read.state != null) {
       _signInRestoredCloud = await _installCloudSnapshot(read.state!);
@@ -543,9 +544,12 @@ extension GameDirectorPlatform on GameDirector {
     }
     if (plan.toast != null) showToast(plan.toast!, life: 2.2);
     if (plan.upload) {
-      unawaited(PlayGamesBridge.saveCloud(_state));
+      final uploaded = await PlayGamesBridge.saveCloud(_state);
+      if (!uploaded) {
+        showToast('Cloud backup failed', life: 2.2);
+      }
       unawaited(PlayGamesBridge.flushPendingScores());
-      unawaited(_persistFlush());
+      await _persistFlush();
       _saveSlots = await _storage.listSlots();
     }
     _directorNotify();
@@ -580,36 +584,50 @@ extension GameDirectorPlatform on GameDirector {
     return _signInRestoredCloud;
   }
 
-  /// False when the device copy could not be stored and local progress was kept.
-  Future<bool> _installCloudSnapshot(GameState cloud) async {
-    if (PlayGamesScores.localSaveHasProgress(_state)) {
-      final ok = await _storage.keepDisplacedSave(
-        GameLogic.exportSaveJson(_state),
-      );
-      if (!ok) {
-        showToast(
-          'Could not keep a device copy. Cloud restore cancelled.',
-          life: 2.6,
-        );
-        return false;
-      }
-      _hasDisplacedDeviceSave = true;
-    }
-    _applyCloudRestore(cloud, toast: 'Restored from Play Games');
-    _state = _state.copyWith(
-      metaDepth: _state.metaDepth.copyWith(playGamesOptIn: true),
+  /// False when the device copy or the new active file did not land.
+  /// Memory stays on the pre-restore party in that case.
+  Future<bool> _installCloudSnapshot(GameState cloud) {
+    return _enqueueSave(() => _installCloudSnapshotTurn(cloud));
+  }
+
+  Future<bool> _installCloudSnapshotTurn(GameState cloud) async {
+    final previous = _state;
+    final previousJson = GameLogic.exportSaveJson(previous);
+    final merged = PlayGamesScores.withKeptOwnership(
+      chosen: cloud,
+      other: previous,
     );
-    await _persistFlush();
+    var next = GameLogic.ensureShopHubOffer(
+      GameLogic.ensureRogueHero(GameLogic.ensureWeeklyContract(merged)),
+    );
+    next = _stampCloudClock(
+      next.copyWith(metaDepth: next.metaDepth.copyWith(playGamesOptIn: true)),
+    );
+    final nextJson = GameLogic.exportSaveJson(next);
+    _saveEpoch++;
+    final committed = await SaveSwap.commitReplacement(
+      storage: _storage,
+      nextJson: nextJson,
+      previousJson: previousJson,
+    );
+    if (!committed) {
+      showToast(
+        'Could not keep a device copy. Cloud restore cancelled.',
+        life: 2.6,
+      );
+      return false;
+    }
+    _applyCommittedRestore(next, toast: 'Restored from Play Games');
+    _hasDisplacedDeviceSave = previousJson.isNotEmpty;
     _saveSlots = await _storage.listSlots();
     _directorNotify();
     return true;
   }
 
-  void _applyCloudRestore(GameState cloud, {required String toast}) {
-    _saveEpoch++;
+  void _applyCommittedRestore(GameState committed, {required String toast}) {
     _awaitingWipeChoice = false;
     _hasExistingSave = true;
-    _state = GameLogic.ensureRogueHero(GameLogic.ensureWeeklyContract(cloud));
+    _state = committed;
     _syncDevicePrefs();
     if (_state.inDungeon) {
       _rebuildSpatial();
@@ -626,13 +644,10 @@ extension GameDirectorPlatform on GameDirector {
 
   Future<bool> backupToPlayGames() async {
     if (PlayGamesBridge.cloudWriteBlocked) {
-      showToast(
-        'Could not read Play Games save. Kept this device.',
-        life: 2.4,
-      );
+      showToast('Could not read Play Games save. Kept this device.', life: 2.4);
       return false;
     }
-    final ok = await PlayGamesBridge.saveCloud(_state);
+    final ok = await PlayGamesBridge.saveCloud(_state, explicit: true);
     if (ok) {
       _state = _state.copyWith(
         metaDepth: _state.metaDepth.copyWith(playGamesOptIn: true),
@@ -659,6 +674,7 @@ extension GameDirectorPlatform on GameDirector {
       read: read,
       local: _state,
       hasExistingSave: _hasExistingSave,
+      localIsReplaceable: SaveProgress.isReplaceable(_state),
       force: force,
     );
     switch (plan.choice) {
@@ -699,28 +715,50 @@ extension GameDirectorPlatform on GameDirector {
 
   /// Puts back the file kept before the last cloud restore, and keeps the
   /// current file in that same slot so the player can swap again.
-  Future<bool> restoreDisplacedDeviceSave() async {
-    final raw = await _storage.loadDisplacedSave();
-    if (raw == null || raw.isEmpty) {
-      _hasDisplacedDeviceSave = false;
-      showToast('No device copy saved', life: 2.0);
-      return false;
-    }
-    final saved = GameLogic.importSaveJson(raw);
-    if (saved == null) {
-      showToast('Device copy could not be read. Kept this device.', life: 2.4);
-      return false;
-    }
-    final kept = await _storage.keepDisplacedSave(
-      GameLogic.exportSaveJson(_state),
+  Future<bool> restoreDisplacedDeviceSave() {
+    return _enqueueSave(() async {
+      final raw = await _storage.loadDisplacedSave();
+      if (raw == null || raw.isEmpty) {
+        _hasDisplacedDeviceSave = false;
+        showToast('No device copy saved', life: 2.0);
+        return false;
+      }
+      final saved = GameLogic.importSaveJson(raw);
+      if (saved == null) {
+        showToast(
+          'Device copy could not be read. Kept this device.',
+          life: 2.4,
+        );
+        return false;
+      }
+      return _swapDisplacedTurn(saved);
+    });
+  }
+
+  Future<bool> _swapDisplacedTurn(GameState saved) async {
+    final current = _state;
+    final currentJson = GameLogic.exportSaveJson(current);
+    final merged = PlayGamesScores.withKeptOwnership(
+      chosen: saved,
+      other: current,
     );
-    if (!kept) {
+    var next = GameLogic.ensureShopHubOffer(
+      GameLogic.ensureRogueHero(GameLogic.ensureWeeklyContract(merged)),
+    );
+    next = _stampCloudClock(next);
+    final nextJson = GameLogic.exportSaveJson(next);
+    _saveEpoch++;
+    final committed = await SaveSwap.commitSwap(
+      storage: _storage,
+      newActiveJson: nextJson,
+      newDisplacedJson: currentJson,
+    );
+    if (!committed) {
       showToast('Could not swap the device copy. Kept this device.', life: 2.4);
       return false;
     }
     _hasDisplacedDeviceSave = true;
-    _applyCloudRestore(saved, toast: 'Restored the save from this device');
-    await _persistFlush();
+    _applyCommittedRestore(next, toast: 'Restored the save from this device');
     _saveSlots = await _storage.listSlots();
     _directorNotify();
     return true;

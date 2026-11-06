@@ -75,7 +75,10 @@ void main() {
 
   group('cloud payload', () {
     test('empty is missing and junk is a failed read', () {
-      expect(PlayGamesBridge.decodeCloudPayload(null).kind, CloudReadKind.empty);
+      expect(
+        PlayGamesBridge.decodeCloudPayload(null).kind,
+        CloudReadKind.empty,
+      );
       expect(PlayGamesBridge.decodeCloudPayload('').kind, CloudReadKind.empty);
       expect(
         PlayGamesBridge.decodeCloudPayload('{').kind,
@@ -94,22 +97,25 @@ void main() {
       expect(ready.state!.metaDepth.adFree, isFalse);
     });
 
-    test('a failed read blocks a later upload until a confirmed read', () async {
-      addTearDown(PlayGamesBridge.debugResetCloudHooks);
-      PlayGamesBridge.debugLoadCloud = () async => const CloudRead.failed();
-      expect((await PlayGamesBridge.loadCloud()).kind, CloudReadKind.failed);
-      expect(PlayGamesBridge.cloudWriteBlocked, isTrue);
-      var uploads = 0;
-      PlayGamesBridge.debugSaveCloud = (state) async {
-        uploads++;
-        return true;
-      };
-      expect(await PlayGamesBridge.saveCloud(_progress(life: 9)), isFalse);
-      expect(uploads, 0);
-      PlayGamesBridge.debugLoadCloud = () async => const CloudRead.empty();
-      expect((await PlayGamesBridge.loadCloud()).kind, CloudReadKind.empty);
-      expect(PlayGamesBridge.cloudWriteBlocked, isFalse);
-    });
+    test(
+      'a failed read blocks a later upload until a confirmed read',
+      () async {
+        addTearDown(PlayGamesBridge.debugResetCloudHooks);
+        PlayGamesBridge.debugLoadCloud = () async => const CloudRead.failed();
+        expect((await PlayGamesBridge.loadCloud()).kind, CloudReadKind.failed);
+        expect(PlayGamesBridge.cloudWriteBlocked, isTrue);
+        var uploads = 0;
+        PlayGamesBridge.debugSaveCloud = (state) async {
+          uploads++;
+          return true;
+        };
+        expect(await PlayGamesBridge.saveCloud(_progress(life: 9)), isFalse);
+        expect(uploads, 0);
+        PlayGamesBridge.debugLoadCloud = () async => const CloudRead.empty();
+        expect((await PlayGamesBridge.loadCloud()).kind, CloudReadKind.empty);
+        expect(PlayGamesBridge.cloudWriteBlocked, isFalse);
+      },
+    );
   });
 
   group('conflict', () {
@@ -138,11 +144,11 @@ void main() {
           local: local,
           cloud: cloud,
         ),
-        CloudConflict.preferLocal,
+        CloudConflict.askUser,
       );
     });
 
-    test('a further cloud save with a newer stamp is preferred', () {
+    test('a further cloud save is not installed from a partial scoreboard', () {
       final local = _progress(life: 80, floor: 2, stamp: 1000);
       final cloud = _progress(life: 400, floor: 9, level: 5, stamp: 200000);
       expect(
@@ -152,11 +158,11 @@ void main() {
           local: local,
           cloud: cloud,
         ),
-        CloudConflict.preferCloud,
+        CloudConflict.askUser,
       );
     });
 
-    test('an older cloud save stays off this device', () {
+    test('an older cloud save is not auto-kept or auto-installed', () {
       final local = _progress(life: 400, floor: 9, stamp: 300000);
       final cloud = _progress(life: 80, floor: 2, stamp: 1000);
       expect(
@@ -166,7 +172,7 @@ void main() {
           local: local,
           cloud: cloud,
         ),
-        CloudConflict.preferLocal,
+        CloudConflict.askUser,
       );
     });
 
@@ -182,7 +188,12 @@ void main() {
         ),
         CloudConflict.askUser,
       );
-      final aheadClock = _progress(life: 200, floor: 4, level: 3, stamp: 800000);
+      final aheadClock = _progress(
+        life: 200,
+        floor: 4,
+        level: 3,
+        stamp: 800000,
+      );
       expect(
         PlayGamesScores.resolveConflict(
           localMs: 100000,
@@ -194,30 +205,38 @@ void main() {
       );
     });
 
-    test('spent essence is not progress and ad-free is not dropped silently', () {
-      final local = _progress(life: 200, floor: 4, stamp: 1000, essence: 3);
-      final cloud = _progress(life: 200, floor: 4, stamp: 900000, essence: 40);
-      expect(
-        PlayGamesScores.resolveConflict(
-          localMs: 1000,
-          cloudMs: 900000,
-          local: local,
-          cloud: cloud,
-        ),
-        CloudConflict.askUser,
-      );
-      final owned = _progress(life: 50, floor: 2, stamp: 1000, adFree: true);
-      final richer = _progress(life: 900, floor: 12, stamp: 900000);
-      expect(
-        PlayGamesScores.resolveConflict(
-          localMs: 1000,
-          cloudMs: 900000,
-          local: owned,
-          cloud: richer,
-        ),
-        CloudConflict.askUser,
-      );
-    });
+    test(
+      'spent essence is not progress and ad-free is not dropped silently',
+      () {
+        final local = _progress(life: 200, floor: 4, stamp: 1000, essence: 3);
+        final cloud = _progress(
+          life: 200,
+          floor: 4,
+          stamp: 900000,
+          essence: 40,
+        );
+        expect(
+          PlayGamesScores.resolveConflict(
+            localMs: 1000,
+            cloudMs: 900000,
+            local: local,
+            cloud: cloud,
+          ),
+          CloudConflict.askUser,
+        );
+        final owned = _progress(life: 50, floor: 2, stamp: 1000, adFree: true);
+        final richer = _progress(life: 900, floor: 12, stamp: 900000);
+        expect(
+          PlayGamesScores.resolveConflict(
+            localMs: 1000,
+            cloudMs: 900000,
+            local: owned,
+            cloud: richer,
+          ),
+          CloudConflict.askUser,
+        );
+      },
+    );
   });
 
   group('director cloud', () {
@@ -228,10 +247,7 @@ void main() {
       final director = _hold(local);
       addTearDown(director.dispose);
       var uploads = 0;
-      _hook(
-        read: () => const CloudRead.failed(),
-        onSave: (_) => uploads++,
-      );
+      _hook(read: () => const CloudRead.failed(), onSave: (_) => uploads++);
       expect(await director.signInPlayGames(), isTrue);
       expect(uploads, 0);
       expect(director.state.lifetimeGoldEarned, 320);
@@ -249,7 +265,10 @@ void main() {
       final director = _hold(local);
       addTearDown(director.dispose);
       GameState? uploaded;
-      _hook(read: () => const CloudRead.empty(), onSave: (state) => uploaded = state);
+      _hook(
+        read: () => const CloudRead.empty(),
+        onSave: (state) => uploaded = state,
+      );
       expect(await director.signInPlayGames(), isTrue);
       final sent = uploaded;
       expect(sent, isNotNull);
@@ -276,11 +295,7 @@ void main() {
 
     test('rollback keeps local and a newer cloud can replace it', () async {
       final local = _progress(life: 500, floor: 8, level: 6, stamp: 1000);
-      final olderLookingCloud = _progress(
-        life: 90,
-        floor: 2,
-        stamp: 900000,
-      );
+      final olderLookingCloud = _progress(life: 90, floor: 2, stamp: 900000);
       final director = _hold(local);
       addTearDown(director.dispose);
       var uploads = 0;
@@ -294,14 +309,16 @@ void main() {
       expect(director.state.lifetimeGoldEarned, 500);
       expect(
         director.peekCloudConflict(olderLookingCloud),
-        CloudConflict.preferLocal,
+        CloudConflict.askUser,
       );
       expect(await director.restoreFromPlayGames(), isFalse);
       expect(director.state.lifetimeGoldEarned, 500);
 
       final newer = _progress(life: 800, floor: 11, level: 8, stamp: 200000);
       PlayGamesBridge.debugLoadCloud = () async => CloudRead.ready(newer);
-      expect(await director.restoreFromPlayGames(), isTrue);
+      expect(await director.restoreFromPlayGames(), isFalse);
+      expect(director.state.lifetimeGoldEarned, 500);
+      expect(await director.restoreFromPlayGames(force: true), isTrue);
       expect(director.state.lifetimeGoldEarned, 800);
       expect(director.hasDisplacedDeviceSave, isTrue);
       expect(await director.restoreDisplacedDeviceSave(), isTrue);
@@ -311,45 +328,51 @@ void main() {
       expect(director.state.lifetimeGoldEarned, 800);
     });
 
-    test('equal stamps ask and do not install until the player says so', () async {
-      final local = _progress(life: 200, floor: 4, level: 3, stamp: 100000);
-      final cloud = _progress(
-        life: 200,
-        floor: 4,
-        level: 3,
-        stamp: 100040,
-      ).copyWith(partyName: 'Cloud Party');
-      final director = _hold(local);
-      addTearDown(director.dispose);
-      _hook(read: () => CloudRead.ready(cloud), onSave: (_) {});
-      expect(await director.restoreFromPlayGames(), isFalse);
-      expect(director.state.lifetimeGoldEarned, 200);
-      expect(director.state.partyName, isNot('Cloud Party'));
-      expect(
-        await director.restoreFromPlayGames(force: true, alreadyRead: cloud),
-        isTrue,
-      );
-      expect(director.state.partyName, 'Cloud Party');
-      expect(
-        director.state.metaDepth.cloudSaveUpdatedMs,
-        greaterThan(100040),
-      );
-      expect(director.hasDisplacedDeviceSave, isTrue);
-    });
+    test(
+      'equal stamps ask and do not install until the player says so',
+      () async {
+        final local = _progress(life: 200, floor: 4, level: 3, stamp: 100000);
+        final cloud = _progress(
+          life: 200,
+          floor: 4,
+          level: 3,
+          stamp: 100040,
+        ).copyWith(partyName: 'Cloud Party');
+        final director = _hold(local);
+        addTearDown(director.dispose);
+        _hook(read: () => CloudRead.ready(cloud), onSave: (_) {});
+        expect(await director.restoreFromPlayGames(), isFalse);
+        expect(director.state.lifetimeGoldEarned, 200);
+        expect(director.state.partyName, isNot('Cloud Party'));
+        expect(
+          await director.restoreFromPlayGames(force: true, alreadyRead: cloud),
+          isTrue,
+        );
+        expect(director.state.partyName, 'Cloud Party');
+        expect(
+          director.state.metaDepth.cloudSaveUpdatedMs,
+          greaterThan(100040),
+        );
+        expect(director.hasDisplacedDeviceSave, isTrue);
+      },
+    );
 
-    test('a fresh device takes a real cloud save and does not upload over it', () async {
-      final fresh = GameLogic.createInitialState();
-      final cloud = _progress(life: 70, floor: 3, level: 4, stamp: 5000);
-      final director = _hold(fresh);
-      addTearDown(director.dispose);
-      var uploads = 0;
-      _hook(read: () => CloudRead.ready(cloud), onSave: (_) => uploads++);
-      expect(await director.signInPlayGames(), isTrue);
-      expect(director.signInRestoredCloud, isTrue);
-      expect(uploads, 0);
-      expect(director.state.lifetimeGoldEarned, 70);
-      expect(director.state.highestFloorCleared, 3);
-    });
+    test(
+      'a fresh device takes a real cloud save and does not upload over it',
+      () async {
+        final fresh = GameLogic.createInitialState();
+        final cloud = _progress(life: 70, floor: 3, level: 4, stamp: 5000);
+        final director = _hold(fresh);
+        addTearDown(director.dispose);
+        var uploads = 0;
+        _hook(read: () => CloudRead.ready(cloud), onSave: (_) => uploads++);
+        expect(await director.signInPlayGames(), isTrue);
+        expect(director.signInRestoredCloud, isTrue);
+        expect(uploads, 0);
+        expect(director.state.lifetimeGoldEarned, 70);
+        expect(director.state.highestFloorCleared, 3);
+      },
+    );
 
     test('a future stamp is not rewound by a later save', () async {
       final future = DateTime.utc(2090).millisecondsSinceEpoch;
@@ -372,7 +395,7 @@ void main() {
       final resume = director.debugResumeFromBackground();
       _hook(read: () => CloudRead.ready(cloud), onSave: (_) {});
       try {
-        expect(await director.restoreFromPlayGames(), isTrue);
+        expect(await director.restoreFromPlayGames(force: true), isTrue);
         expect(director.state.lifetimeGoldEarned, 900);
       } finally {
         if (!gate.isCompleted) gate.complete();

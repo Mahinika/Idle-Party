@@ -95,6 +95,10 @@ class SaveSlotSummary {
 /// Persist / load [GameState] blobs (SharedPreferences or in-memory for tests).
 abstract class GameStorage {
   static const int slotCount = 5;
+  static const String displacedKey = 'idle_party_displaced_save';
+  static const String stagingKey = 'idle_party_save_staging';
+  static const String holdKey = 'idle_party_save_hold';
+  static const String journalKey = 'idle_party_save_journal';
 
   /// Active slot (the save Continue / autosave uses).
   int get activeSlotIndex;
@@ -122,6 +126,17 @@ abstract class GameStorage {
   Future<bool> keepDisplacedSave(String json);
 
   Future<String?> loadDisplacedSave();
+
+  /// Raw active-slot JSON, without migrating it into a [GameState].
+  Future<String?> loadActiveRaw();
+
+  /// Writes [json] as the active slot. False when the bytes did not land.
+  Future<bool> writeActiveRaw(String json);
+
+  /// Side file (device copy, staging, journal). Null [json] deletes it.
+  Future<String?> loadExtra(String key);
+
+  Future<bool> writeExtra(String key, String? json);
 }
 
 class SharedPreferencesGameStorage implements GameStorage {
@@ -133,7 +148,6 @@ class SharedPreferencesGameStorage implements GameStorage {
   static const String _corruptSaveKey = 'idle_party_save_v2_corrupt';
   static const String _activeKey = 'idle_party_active_slot';
   static const String _slotsReadyKey = 'idle_party_slots_ready';
-  static const String _displacedKey = 'idle_party_displaced_save';
 
   final SharedPreferences? _preferences;
   int _active = 0;
@@ -295,27 +309,55 @@ class SharedPreferencesGameStorage implements GameStorage {
   }
 
   @override
-  Future<bool> keepDisplacedSave(String json) async {
+  Future<bool> keepDisplacedSave(String json) =>
+      writeExtra(GameStorage.displacedKey, json.isEmpty ? null : json);
+
+  @override
+  Future<String?> loadDisplacedSave() => loadExtra(GameStorage.displacedKey);
+
+  @override
+  Future<String?> loadActiveRaw() async {
     final prefs = await _prefs;
-    if (json.isEmpty) {
-      await prefs.remove(_displacedKey);
-      return true;
-    }
-    return prefs.setString(_displacedKey, json);
+    await _prepare(prefs);
+    final raw = prefs.getString(_slotKey(_active));
+    if (raw == null || raw.isEmpty) return null;
+    return raw;
   }
 
   @override
-  Future<String?> loadDisplacedSave() async {
+  Future<bool> writeActiveRaw(String json) async {
     final prefs = await _prefs;
-    final raw = prefs.getString(_displacedKey);
+    await _prepare(prefs);
+    final slotOk = await prefs.setString(_slotKey(_active), json);
+    final mirrorOk = await prefs.setString(_saveKey, json);
+    return slotOk && mirrorOk;
+  }
+
+  @override
+  Future<String?> loadExtra(String key) async {
+    final prefs = await _prefs;
+    final raw = prefs.getString(key);
     if (raw == null || raw.isEmpty) return null;
     return raw;
+  }
+
+  @override
+  Future<bool> writeExtra(String key, String? json) async {
+    final prefs = await _prefs;
+    if (json == null || json.isEmpty) {
+      await prefs.remove(key);
+      return true;
+    }
+    return prefs.setString(key, json);
   }
 }
 
 class InMemoryGameStorage implements GameStorage {
   InMemoryGameStorage([GameState? state]) {
-    if (state != null) _slots[0] = state;
+    if (state != null) {
+      _slots[0] = state;
+      _activeRaw = GameLogic.exportSaveJson(state);
+    }
   }
 
   final List<GameState?> _slots = List<GameState?>.filled(
@@ -323,6 +365,28 @@ class InMemoryGameStorage implements GameStorage {
     null,
   );
   int _active = 0;
+  String? _activeRaw;
+  final Map<String, String> _extras = <String, String>{};
+
+  /// Test seam. The next raw or active write waits on this, once.
+  Future<void>? pauseBeforeNextWrite;
+
+  /// Test seam. The next active-slot write fails and does not change bytes.
+  bool failNextActiveWrite = false;
+
+  /// Test seam. The next N side-file writes fail and do not change bytes.
+  int failNextExtraWrites = 0;
+
+  /// Test seam. Set when a write is entered, including one that then waits.
+  bool writeEntered = false;
+
+  Future<void> _awaitPause() async {
+    writeEntered = true;
+    final pause = pauseBeforeNextWrite;
+    if (pause == null) return;
+    pauseBeforeNextWrite = null;
+    await pause;
+  }
 
   int _clampSlot(int index) => index.clamp(0, GameStorage.slotCount - 1);
 
@@ -337,7 +401,13 @@ class InMemoryGameStorage implements GameStorage {
 
   @override
   Future<bool> save(GameState state) async {
+    await _awaitPause();
+    if (failNextActiveWrite) {
+      failNextActiveWrite = false;
+      return false;
+    }
     _slots[_active] = state;
+    _activeRaw = GameLogic.exportSaveJson(state);
     return true;
   }
 
@@ -347,6 +417,7 @@ class InMemoryGameStorage implements GameStorage {
   @override
   Future<void> clear() async {
     _slots[_active] = null;
+    _activeRaw = null;
   }
 
   @override
@@ -365,14 +436,49 @@ class InMemoryGameStorage implements GameStorage {
       SaveSlotSummary.fromState(i, _slots[i]),
   ];
 
-  String? _displaced;
+  @override
+  Future<bool> keepDisplacedSave(String json) =>
+      writeExtra(GameStorage.displacedKey, json.isEmpty ? null : json);
 
   @override
-  Future<bool> keepDisplacedSave(String json) async {
-    _displaced = json.isEmpty ? null : json;
+  Future<String?> loadDisplacedSave() => loadExtra(GameStorage.displacedKey);
+
+  @override
+  Future<String?> loadActiveRaw() async => _activeRaw;
+
+  @override
+  Future<bool> writeActiveRaw(String json) async {
+    await _awaitPause();
+    if (failNextActiveWrite) {
+      failNextActiveWrite = false;
+      return false;
+    }
+    final parsed = GameLogic.importSaveJson(json);
+    if (parsed == null) return false;
+    _activeRaw = json;
+    _slots[_active] = parsed;
     return true;
   }
 
   @override
-  Future<String?> loadDisplacedSave() async => _displaced;
+  Future<String?> loadExtra(String key) async {
+    final raw = _extras[key];
+    if (raw == null || raw.isEmpty) return null;
+    return raw;
+  }
+
+  @override
+  Future<bool> writeExtra(String key, String? json) async {
+    await _awaitPause();
+    if (failNextExtraWrites > 0) {
+      failNextExtraWrites--;
+      return false;
+    }
+    if (json == null || json.isEmpty) {
+      _extras.remove(key);
+      return true;
+    }
+    _extras[key] = json;
+    return true;
+  }
 }

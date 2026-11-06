@@ -51,6 +51,8 @@ import 'play_games_bridge.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
 import 'play_games_scores.dart';
+import 'save_progress.dart';
+import 'save_swap.dart';
 import 'play_review_ask.dart';
 import 'reinstall_pouch.dart';
 import 'away_fight_tip.dart';
@@ -325,6 +327,10 @@ class GameDirector extends ChangeNotifier {
     _persist();
     return _saveChain;
   }
+
+  /// Test hook for crash and interleaving cases.
+  @visibleForTesting
+  GameStorage get debugStorage => _storage;
 
   GameState get state => _state;
 
@@ -1773,60 +1779,70 @@ class GameDirector extends ChangeNotifier {
     required String purchaseId,
     bool restored = false,
     bool recovered = false,
-  }) async {
-    final item = ShopCatalog.byId[productId];
-    if (item == null) return true;
-    final known = ShopBilling.alreadyGranted(_state, purchaseId);
-    if (!ShopBilling.shouldGrantPurchase(
-      item: item,
-      restored: restored,
-      purchaseId: purchaseId,
-      alreadyGranted: known,
-    )) {
-      return true;
-    }
-    final beforeOwned = ShopBilling.isOwned(_state, item);
-    final beforeCinders = _state.metaDepth.cinders;
-    final next = ShopBilling.applyTrackedPurchase(
-      _state,
-      item,
-      purchaseId: purchaseId,
-    );
-    if (identical(next, _state) && beforeOwned) {
-      if (!restored) {
-        showToast('${item.name} restored', life: 2.2);
+  }) {
+    return _enqueueSave(() async {
+      final item = ShopCatalog.byId[productId];
+      if (item == null) return true;
+      final known = ShopBilling.alreadyGranted(_state, purchaseId);
+      if (!ShopBilling.shouldGrantPurchase(
+        item: item,
+        restored: restored,
+        purchaseId: purchaseId,
+        alreadyGranted: known,
+      )) {
+        return true;
       }
-      return true;
-    }
-    if (identical(next, _state)) return true;
-    if (!_hasExistingSave) return false;
-    final priorMeta = _state.metaDepth;
-    _applyUpgrade(next);
-    final saved = await _persistFlush();
-    if (!saved) {
-      // Keep gold, fight progress, and the rest of the live state.
-      // Only the grant, which lives on meta, is undone.
-      _applyUpgrade(_state.copyWith(metaDepth: priorMeta));
-      return false;
-    }
-    final paidCinders = _state.metaDepth.cinders > beforeCinders;
-    if (recovered && paidCinders) {
+      final beforeOwned = ShopBilling.isOwned(_state, item);
+      final beforeCinders = _state.metaDepth.cinders;
+      final next = ShopBilling.applyTrackedPurchase(
+        _state,
+        item,
+        purchaseId: purchaseId,
+      );
+      if (identical(next, _state) && beforeOwned) {
+        if (!restored) {
+          showToast('${item.name} restored', life: 2.2);
+        }
+        return true;
+      }
+      if (identical(next, _state)) return true;
+      if (!_hasExistingSave) return false;
+      final priorMeta = _state.metaDepth;
+      _applyUpgrade(next, persist: false);
+      final snapshot = _stampCloudClock(_state);
+      _state = snapshot;
+      var saved = false;
+      try {
+        saved = await _storage.save(snapshot);
+      } catch (e, st) {
+        debugPrint('save failed: $e\n$st');
+        saved = false;
+      }
+      if (!saved) {
+        // Keep gold, fight progress, and the rest of the live state.
+        // Only the grant, which lives on meta, is undone.
+        _applyUpgrade(_state.copyWith(metaDepth: priorMeta), persist: false);
+        return false;
+      }
+      final paidCinders = _state.metaDepth.cinders > beforeCinders;
+      if (recovered && paidCinders) {
+        GameAudio.ui();
+        showToast('Purchase restored', life: 2.6);
+        return true;
+      }
+      if (restored) return true;
       GameAudio.ui();
-      showToast('Purchase restored', life: 2.6);
+      showToast('Purchased ${item.name}', life: 2.6);
+      final price = ShopStore.storePrice(productId);
+      unawaited(
+        AppAnalytics.storePurchase(
+          productId,
+          value: price?.value,
+          currency: price?.currency,
+        ),
+      );
       return true;
-    }
-    if (restored) return true;
-    GameAudio.ui();
-    showToast('Purchased ${item.name}', life: 2.6);
-    final price = ShopStore.storePrice(productId);
-    unawaited(
-      AppAnalytics.storePurchase(
-        productId,
-        value: price?.value,
-        currency: price?.currency,
-      ),
-    );
-    return true;
+    });
   }
 
   /// Test hook for the Play grant path, including a failed save.
@@ -2285,7 +2301,7 @@ class GameDirector extends ChangeNotifier {
   /// Part extensions call this; [notifyListeners] is @protected on [ChangeNotifier].
   void _directorNotify() => notifyListeners();
 
-  void _applyUpgrade(GameState updated) {
+  void _applyUpgrade(GameState updated, {bool persist = true}) {
     if (_isLoading || identical(updated, _state)) {
       return;
     }
@@ -2310,7 +2326,7 @@ class GameDirector extends ChangeNotifier {
       _rebuildSpatial();
     }
     notifyListeners();
-    unawaited(_persistFlush());
+    if (persist) unawaited(_persistFlush());
   }
 
   void _syncDevicePrefs() {

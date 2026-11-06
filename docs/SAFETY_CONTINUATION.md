@@ -9,6 +9,31 @@ third free level, every SHOP pack, compact FORGE/CAMP/MARKET). UI PR
 https://github.com/Mahinika/Idle-Party/pull/50 (`cursor/icon-hires-polish-3edc`,
 head `456d7a4a`) is a separate phone-test. Do not edit that branch.
 
+## QA follow-up on the same save PR
+
+Independent review found six holes in the first patch. They are fixed in
+this PR, still without a Play release or a Firestore deploy.
+
+- Device copy and cloud install write a journal. The previous file is copied
+  aside before the active slot changes, and the incoming file is not treated
+  as saved until the active slot reads back. A failed write returns false.
+- Ad-free, the season pass, Long Away, bag slots, scroll bits, and purchase
+  ids are kept from both files. Gold, Cinders, and tickets are not added
+  together. A level-1 paid file is not an empty party.
+- Cloud writes start blocked. Signed-out, unavailable, and failed reads
+  block. Every upload re-reads at commit and aborts if the Play account
+  changed. Automatic upload does not overwrite a different snapshot.
+- A shop grant and a cloud install take the same save turn. The grant's
+  bytes are the ones written, and a restore cannot drop a grant that already
+  returned success.
+- Two real saves ask the player. A higher floor does not outrank a CAMP
+  upgrade that the other file lacks. Only an untouched starter party is
+  replaced on its own.
+- games_services 5.3.0 reports a missing snapshot and a network error as the
+  same `failed_to_load_game`. A first backup is allowed only when the snapshot
+  list succeeds and does not contain this save. An exception from open is
+  never treated as empty.
+
 ## Done in the safety batch
 
 - `shopOfferStartedMs` reloads without the year-2001 cap. Ad-free, Long Away,
