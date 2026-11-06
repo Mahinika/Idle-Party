@@ -21,15 +21,12 @@ import 'app_bottom_bar.dart';
 import 'menu_surface.dart';
 import 'wisp_gift_overlay.dart';
 import 'play_nav.dart';
+import 'save_recovery_gate.dart';
 
 /// Single play-phase owner: hub or dungeon scene, one [MenuSurface], toast,
 /// and one shared bottom nav (TT2-style — bar always visible above home).
 class PlayShell extends StatefulWidget {
-  const PlayShell({
-    super.key,
-    required this.director,
-    required this.router,
-  });
+  const PlayShell({super.key, required this.director, required this.router});
 
   final GameDirector director;
   final MenuRouter router;
@@ -88,7 +85,8 @@ class _PlayShellState extends State<PlayShell> {
 
   void _syncPause() {
     final home = director.state.homeLayout == HomeLayout.home;
-    final menuPauses = router.isOpen && !(home && router.route == MenuRoute.gold);
+    final menuPauses =
+        router.isOpen && !(home && router.route == MenuRoute.gold);
     director.setUiPaused(menuPauses && director.state.inDungeon);
     director.setWispMenuPaused(router.isOpen);
   }
@@ -106,10 +104,7 @@ class _PlayShellState extends State<PlayShell> {
         router.isOpen &&
         state.inDungeon &&
         !state.isPartyDefeated) {
-      director.showToast(
-        'Fight paused in menu — close to resume',
-        life: 1.6,
-      );
+      director.showToast('Fight paused in menu — close to resume', life: 1.6);
     }
   }
 
@@ -136,9 +131,7 @@ class _PlayShellState extends State<PlayShell> {
       CoachTarget.gear || CoachTarget.kit => MenuRoute.gear,
       CoachTarget.gold => MenuRoute.gold,
       CoachTarget.essence => MenuRoute.essence,
-      CoachTarget.enter ||
-      CoachTarget.godhand ||
-      CoachTarget.farmPush => null,
+      CoachTarget.enter || CoachTarget.godhand || CoachTarget.farmPush => null,
     };
     if (route == null) return (null, null);
     return (route, hint.line);
@@ -215,7 +208,8 @@ class _PlayShellState extends State<PlayShell> {
     }
     final chase = HubChase.forState(state);
     final chasePlan = ChaseDispatcher.plan(chase, state: state);
-    final enterPrimary = chase.urgency != HubChaseUrgency.ready &&
+    final enterPrimary =
+        chase.urgency != HubChaseUrgency.ready &&
         (chasePlan.op == ChaseOp.enter ||
             chasePlan.op == ChaseOp.enterKey ||
             HubPrimaryCta.isEnterFamilyLabel(chasePlan.label));
@@ -280,104 +274,122 @@ class _PlayShellState extends State<PlayShell> {
         ),
     ];
 
-    return PopScope(
-      canPop: !router.isOpen && router.homeDepth == 0,
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        router.back();
-      },
-      child: director.state.homeLayout == HomeLayout.home
-          ? HomeShell(
-              director: director,
-              router: router,
-              onLeave: () {
-                if (director.state.isPartyDefeated) {
-                  director.hubAfterWipe();
-                  return;
-                }
-                if (director.spatial?.awaitingExit == true) {
-                  if (router.isOpen) router.close();
-                  _leaveDungeon();
-                  return;
-                }
-                if (router.isOpen) router.close();
-                confirmLeaveDungeon(
-                  context,
-                  _leaveDungeon,
-                  state: director.state,
-                  floorCleared: director.spatial?.awaitingExit == true,
-                  keystoneActive: director.state.keystoneRunActive,
-                  keyTimer: director.state.keystoneRunActive
-                      ? Keystone.formatTimer(director.state.keystoneTimerMs)
-                      : null,
-                );
-              },
-            )
-          : PlayNav(
-        router: router,
-        onEnterDungeon: (id) {
-          router.close();
-          director.enterDungeon(dungeonId: id);
+    return _withRecoveryGate(
+      PopScope(
+        canPop: !router.isOpen && router.homeDepth == 0,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          router.back();
         },
-        // Dungeon: map full-bleed under the bottom bar; menus stay above it.
-        // Hub: bar sits below the scene (World Path must not hide under tabs).
-        child: inDungeon
-            ? Stack(
-                fit: StackFit.expand,
-                children: [
-                  Is2Shell(
-                    director: director,
-                    router: router,
-                    pulse: 0.5,
-                    onLeaveDungeon: _leaveDungeon,
-                  ),
-                  Column(
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            ...tipsAndMenus,
-                            WispGiftOverlay(director: director),
-                          ],
-                        ),
-                      ),
-                      ListenableBuilder(
-                        listenable: router,
-                        builder: (context, _) => _bottomBar(),
-                      ),
-                    ],
-                  ),
-                ],
+        child: director.state.homeLayout == HomeLayout.home
+            ? HomeShell(
+                director: director,
+                router: router,
+                onLeave: () {
+                  if (director.state.isPartyDefeated) {
+                    director.hubAfterWipe();
+                    return;
+                  }
+                  if (director.spatial?.awaitingExit == true) {
+                    if (router.isOpen) router.close();
+                    _leaveDungeon();
+                    return;
+                  }
+                  if (router.isOpen) router.close();
+                  confirmLeaveDungeon(
+                    context,
+                    _leaveDungeon,
+                    state: director.state,
+                    floorCleared: director.spatial?.awaitingExit == true,
+                    keystoneActive: director.state.keystoneRunActive,
+                    keyTimer: director.state.keystoneRunActive
+                        ? Keystone.formatTimer(director.state.keystoneTimerMs)
+                        : null,
+                  );
+                },
               )
-            : Column(
-                children: [
-                  Expanded(
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        IgnorePointer(
-                          ignoring: router.isOpen,
-                          child: HubScreen(
+            : PlayNav(
+                router: router,
+                onEnterDungeon: (id) {
+                  router.close();
+                  director.enterDungeon(dungeonId: id);
+                },
+                // Dungeon: map full-bleed under the bottom bar; menus stay above it.
+                // Hub: bar sits below the scene (World Path must not hide under tabs).
+                child: inDungeon
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Is2Shell(
                             director: director,
                             router: router,
-                            onEnterDungeon: (id) {
-                              router.close();
-                              director.enterDungeon(dungeonId: id);
-                            },
+                            pulse: 0.5,
+                            onLeaveDungeon: _leaveDungeon,
                           ),
-                        ),
-                        ...tipsAndMenus,
-                      ],
-                    ),
-                  ),
-                  ListenableBuilder(
-                    listenable: router,
-                    builder: (context, _) => _bottomBar(),
-                  ),
-                ],
+                          Column(
+                            children: [
+                              Expanded(
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    ...tipsAndMenus,
+                                    WispGiftOverlay(director: director),
+                                  ],
+                                ),
+                              ),
+                              ListenableBuilder(
+                                listenable: router,
+                                builder: (context, _) => _bottomBar(),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Expanded(
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                IgnorePointer(
+                                  ignoring: router.isOpen,
+                                  child: HubScreen(
+                                    director: director,
+                                    router: router,
+                                    onEnterDungeon: (id) {
+                                      router.close();
+                                      director.enterDungeon(dungeonId: id);
+                                    },
+                                  ),
+                                ),
+                                ...tipsAndMenus,
+                              ],
+                            ),
+                          ),
+                          ListenableBuilder(
+                            listenable: router,
+                            builder: (context, _) => _bottomBar(),
+                          ),
+                        ],
+                      ),
               ),
       ),
+    );
+  }
+
+  /// Why here: play is the only screen after boot, for both layouts.
+  /// How the player finds it: it covers that screen until RETRY finishes.
+  Widget _withRecoveryGate(Widget child) {
+    if (!director.saveRecoveryBlocked) return child;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        IgnorePointer(child: child),
+        SaveRecoveryGate(
+          message: director.saveRecoveryMessage,
+          onRetry: director.retrySaveRecovery,
+        ),
+      ],
     );
   }
 }

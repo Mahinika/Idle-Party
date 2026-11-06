@@ -61,8 +61,17 @@ extension GameDirectorSave on GameDirector {
         if (value is bool) return value;
         return true;
       } catch (e, st) {
-        if (!done.isCompleted) done.completeError(e, st);
         debugPrint('save turn failed: $e\n$st');
+        _blockSaveRecovery(
+          'Saving is paused. The last save was interrupted before it could be confirmed.',
+        );
+        if (!done.isCompleted) {
+          if (false is T) {
+            done.complete(false as T);
+          } else {
+            done.completeError(e, st);
+          }
+        }
         return false;
       }
     });
@@ -124,13 +133,88 @@ extension GameDirectorSave on GameDirector {
   }
 
   /// Point the next import / cloud write at [index] without loading it yet.
-  Future<void> armImportSlot(int index) async {
-    final slot = index.clamp(0, GameStorage.slotCount - 1);
-    await _storage.setActiveSlot(slot);
-    _activeSlot = slot;
-    if (!_saveSlots[slot].occupied) {
-      _hasExistingSave = false;
-    }
+  ///
+  /// Queued with grants and restores. Refused while recovery is unfinished
+  /// so the import cannot land on a different file than the grant.
+  Future<void> armImportSlot(int index) {
+    return _enqueueSave<void>(() async {
+      if (_durableSaveBlocked) return;
+      final slot = index.clamp(0, GameStorage.slotCount - 1);
+      if (await _slotJournalOpen(slot) || await _slotJournalOpen(_activeSlot)) {
+        _blockSaveRecovery(
+          'Saving is paused. An unfinished copy is still on this device.',
+        );
+        return;
+      }
+      await _storage.setActiveSlot(slot);
+      _activeSlot = slot;
+      if (!_saveSlots[slot].occupied) {
+        _hasExistingSave = false;
+      }
+    });
+  }
+
+  Future<bool> _slotJournalOpen(int slot) async {
+    final phase = await _storage.loadExtra(GameStorage.journalKeyFor(slot));
+    return phase != null;
+  }
+
+  void _blockSaveRecovery(String message) {
+    _durableSaveBlocked = true;
+    _saveRecoveryMessage = message;
+    PlayGamesBridge.invalidateUploads();
+    _spatialTimer?.cancel();
+    _spatialTimer = null;
+    _hubIdleTimer?.cancel();
+    _hubIdleTimer = null;
+    if (!_directorClosed) _directorNotify();
+  }
+
+  /// Read the durable file again and resume only when the journal is gone.
+  Future<bool> retrySaveRecovery() {
+    return _enqueueSave(() async {
+      if (!_durableSaveBlocked) return true;
+      final legacyUnassigned = await SaveSwap.migrateLegacyGlobalJournal(
+        _storage,
+      );
+      if (legacyUnassigned) {
+        _blockSaveRecovery(
+          'Saving is paused. An unfinished copy could not be matched to one file. It was left untouched.',
+        );
+        return false;
+      }
+      final outcome = await SaveSwap.recover(_storage);
+      if (outcome == SaveSwapOutcome.unresolved) {
+        _blockSaveRecovery(
+          'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
+        );
+        return false;
+      }
+      try {
+        await _storage.reloadDurable();
+      } catch (error, stack) {
+        debugPrint('save recovery retry could not reload: $error\n$stack');
+        _blockSaveRecovery(
+          'Saving is paused. The device copy could not be read back.',
+        );
+        return false;
+      }
+      final raw = await _storage.loadActiveRaw();
+      final parsed = raw == null ? null : GameLogic.importSaveJson(raw);
+      if (parsed != null) {
+        _state = GameLogic.backfillCodexFromInventory(
+          GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(parsed)),
+        );
+        _hasExistingSave = true;
+      }
+      _durableSaveBlocked = false;
+      _saveRecoveryMessage = '';
+      _saveSlots = await _storage.listSlots();
+      final displaced = await _storage.loadDisplacedSave();
+      _hasDisplacedDeviceSave = displaced != null && displaced.isNotEmpty;
+      _directorNotify();
+      return true;
+    });
   }
 
   void setAppPaused(bool paused) {
@@ -171,6 +255,10 @@ extension GameDirectorSave on GameDirector {
   }
 
   Future<void> _resumeFromBackground() async {
+    if (_durableSaveBlocked) {
+      _syncHubIdleTimer();
+      return;
+    }
     if (!_isLoading) {
       final elapsed = DateTime.now().difference(_state.lastUpdated);
       if (elapsed.inSeconds >= GameDirector._awayCreditMinSec) {
@@ -221,6 +309,10 @@ extension GameDirectorSave on GameDirector {
     _foregroundSince = DateTime.now().subtract(ago);
   }
 
+  /// One hub-idle tick. Tests use this while the recovery gate is up.
+  @visibleForTesting
+  void debugTickHubIdle() => _tickHubIdle();
+
   /// Rewind clocks in tests. Does not credit gold.
   @visibleForTesting
   void debugStampAway({Duration? lastUpdatedAgo, int? funnelInstallMs}) {
@@ -244,6 +336,7 @@ extension GameDirectorSave on GameDirector {
         !_isLoading &&
         !_appPaused &&
         !_awayCreditInFlight &&
+        !_durableSaveBlocked &&
         !_state.inDungeon;
     if (!want) {
       _hubIdleTimer?.cancel();
@@ -257,7 +350,11 @@ extension GameDirectorSave on GameDirector {
   }
 
   void _tickHubIdle() {
-    if (_isLoading || _state.inDungeon || _appPaused || _awayCreditInFlight) {
+    if (_isLoading ||
+        _state.inDungeon ||
+        _appPaused ||
+        _awayCreditInFlight ||
+        _durableSaveBlocked) {
       _syncHubIdleTimer();
       return;
     }
@@ -281,7 +378,7 @@ extension GameDirectorSave on GameDirector {
   }
 
   void _flushHubIdle() {
-    if (_isLoading || _state.inDungeon) return;
+    if (_isLoading || _state.inDungeon || _durableSaveBlocked) return;
     final now = DateTime.now();
     final seconds = now.difference(_state.lastUpdated).inSeconds;
     if (seconds < 1) {
@@ -302,8 +399,22 @@ extension GameDirectorSave on GameDirector {
     _funnelSessionReadyMs = DateTime.now().millisecondsSinceEpoch;
     try {
       await _storage.listSlots();
+      final legacyUnassigned = await SaveSwap.migrateLegacyGlobalJournal(
+        _storage,
+      );
       final recovered = await SaveSwap.recover(_storage);
-      _durableSaveBlocked = recovered == SaveSwapOutcome.unresolved;
+      if (legacyUnassigned) {
+        _blockSaveRecovery(
+          'Saving is paused. An unfinished copy could not be matched to one file. It was left untouched.',
+        );
+      } else if (recovered == SaveSwapOutcome.unresolved) {
+        _blockSaveRecovery(
+          'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
+        );
+      } else {
+        _durableSaveBlocked = false;
+        _saveRecoveryMessage = '';
+      }
       _saveSlots = await _storage.listSlots();
       _activeSlot = _storage.activeSlotIndex;
       _phoneHadNoSaveAtBoot = !_saveSlots.any((slot) => slot.occupied);
@@ -325,7 +436,7 @@ extension GameDirectorSave on GameDirector {
       _ensureUiTimer();
       if (_state.inDungeon) {
         _rebuildSpatial();
-        if (enableSpatialLoop && !deferCombatLoop) {
+        if (enableSpatialLoop && !deferCombatLoop && !_durableSaveBlocked) {
           // First dungeon paint before 60 Hz sim — cold mid-dungeon resume.
           scheduleMicrotask(() {
             if (_state.inDungeon && enableSpatialLoop) {
@@ -343,7 +454,9 @@ extension GameDirectorSave on GameDirector {
       }
       // Only persist when continuing an existing save (offline catch-up).
       // An unresolved journal must stay byte-for-byte until the next launch.
-      if (_hasExistingSave && !_durableSaveBlocked) {
+      if (_durableSaveBlocked) {
+        // Leave the loaded bytes alone. Play stays behind the recovery gate.
+      } else if (_hasExistingSave) {
         _notePlaySession();
         _noteAppColdStart();
         _noteFunnelSession(newInstall: false);
@@ -521,8 +634,22 @@ extension GameDirectorSave on GameDirector {
   }
 
   /// Delete one file. Other slots stay. Active slot becomes a blank title state.
-  Future<void> eraseSaveSlot(int index) async {
-    final slot = index.clamp(0, GameStorage.slotCount - 1);
+  /// Refused while a journal still holds a party.
+  Future<void> eraseSaveSlot(int index) {
+    return _enqueueSave<void>(() async {
+      if (_durableSaveBlocked) return;
+      final slot = index.clamp(0, GameStorage.slotCount - 1);
+      if (await _slotJournalOpen(slot)) {
+        _blockSaveRecovery(
+          'Saving is paused. This file still has an unfinished copy, so it was not erased.',
+        );
+        return;
+      }
+      await _eraseSaveSlotTurn(slot);
+    });
+  }
+
+  Future<void> _eraseSaveSlotTurn(int slot) async {
     await _storage.clearSlot(slot);
     if (slot == _activeSlot) {
       _friendEpoch++;
@@ -541,18 +668,46 @@ extension GameDirectorSave on GameDirector {
   }
 
   /// Hard start: create a fresh party in the armed slot (or the active one).
+  /// Queued, and refused while recovery is unfinished.
   Future<void> startNewGame(
     List<HeroSpecId> partySpecs, {
     String? partyName,
     HeroRace partyRace = HeroRace.human,
     List<HeroRace>? partyRaces,
     List<HeroSex>? partySexes,
+  }) {
+    return _enqueueSave<void>(() async {
+      if (_durableSaveBlocked) return;
+      final slot = (_pendingNewGameSlot ?? _activeSlot).clamp(
+        0,
+        GameStorage.slotCount - 1,
+      );
+      if (await _slotJournalOpen(slot)) {
+        _blockSaveRecovery(
+          'Saving is paused. This file still has an unfinished copy, so a new game was not started.',
+        );
+        return;
+      }
+      await _startNewGameTurn(
+        partySpecs,
+        partyName: partyName,
+        partyRace: partyRace,
+        partyRaces: partyRaces,
+        partySexes: partySexes,
+        slot: slot,
+      );
+    });
+  }
+
+  Future<void> _startNewGameTurn(
+    List<HeroSpecId> partySpecs, {
+    String? partyName,
+    HeroRace partyRace = HeroRace.human,
+    List<HeroRace>? partyRaces,
+    List<HeroSex>? partySexes,
+    required int slot,
   }) async {
     _friendEpoch++;
-    final slot = (_pendingNewGameSlot ?? _activeSlot).clamp(
-      0,
-      GameStorage.slotCount - 1,
-    );
     _pendingNewGameSlot = null;
     await _storage.setActiveSlot(slot);
     _activeSlot = slot;
@@ -586,7 +741,16 @@ extension GameDirectorSave on GameDirector {
     _syncHubIdleTimer();
     _directorNotify();
     DebugPlayLog.event('new_game', DebugPlayLog.bootDetail(_state));
-    await _persistFlush();
+    final snapshot = _stampCloudClock(_state);
+    _state = snapshot;
+    var saved = false;
+    try {
+      saved = await _storage.save(snapshot);
+    } catch (error, stack) {
+      debugPrint('new game save failed: $error\n$stack');
+      saved = false;
+    }
+    if (saved) PlayGamesBridge.scheduleCloudUpload(snapshot);
     _saveSlots = await _storage.listSlots();
     _directorNotify();
     if (_state.homeLayout == HomeLayout.home) {
@@ -626,7 +790,7 @@ extension GameDirectorSave on GameDirector {
 
   /// Continue from the loaded save into play (no-op if already ready).
   void continueGame() {
-    if (!_hasExistingSave) return;
+    if (!_hasExistingSave || _durableSaveBlocked) return;
     DebugPlayLog.event('continue', DebugPlayLog.bootDetail(_state));
     ensureCombatLoop();
     _syncHubIdleTimer();

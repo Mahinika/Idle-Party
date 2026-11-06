@@ -558,6 +558,7 @@ extension GameDirectorPlatform on GameDirector {
 
   /// Title screen with no local file. Pulls the Play Games snapshot only.
   Future<bool> restoreCloudOnTitle() async {
+    if (_durableSaveBlocked) return false;
     _signInRestoredCloud = false;
     final ok = await PlayGamesBridge.signIn();
     if (!ok) {
@@ -591,6 +592,7 @@ extension GameDirectorPlatform on GameDirector {
   }
 
   Future<bool> _installCloudSnapshotTurn(GameState cloud) async {
+    if (_durableSaveBlocked) return false;
     final previous = _state;
     final previousJson = GameLogic.exportSaveJson(previous);
     final merged = PlayGamesScores.withKeptOwnership(
@@ -650,7 +652,7 @@ extension GameDirectorPlatform on GameDirector {
   Future<bool> backupToPlayGames() async {
     if (_durableSaveBlocked) {
       showToast(
-        'Save recovery is unfinished. Backup stays off until the next launch.',
+        'Saving is paused. Retry recovery before backing up.',
         life: 2.6,
       );
       return false;
@@ -759,15 +761,21 @@ extension GameDirectorPlatform on GameDirector {
   }) async {
     final seal = PlayGamesScores.progressSeal(uploaded);
     final previous = replacedCloudSeal == seal ? '' : replacedCloudSeal;
-    if (_state.metaDepth.cloudBackupSeal == seal &&
-        _state.metaDepth.cloudBackupPreviousSeal == previous) {
-      return;
-    }
     await _enqueueSave(() async {
       if (_durableSaveBlocked) return false;
+      final merged = PlayGamesScores.withKeptOwnership(
+        chosen: _state,
+        other: uploaded,
+      );
+      if (merged.metaDepth.cloudBackupSeal == seal &&
+          merged.metaDepth.cloudBackupPreviousSeal == previous &&
+          PlayGamesScores.progressSeal(merged) ==
+              PlayGamesScores.progressSeal(_state)) {
+        return true;
+      }
       final next = _stampCloudClock(
-        _state.copyWith(
-          metaDepth: _state.metaDepth.copyWith(
+        merged.copyWith(
+          metaDepth: merged.metaDepth.copyWith(
             playGamesOptIn: true,
             cloudBackupSeal: seal,
             cloudBackupPreviousSeal: previous,
@@ -781,36 +789,50 @@ extension GameDirectorPlatform on GameDirector {
     });
   }
 
-  void _noteUploadedLineage(GameState uploaded) {
+  Future<void> _noteUploadedLineage(GameState uploaded) async {
     if (_directorClosed || _durableSaveBlocked) return;
     final seal = PlayGamesScores.progressSeal(uploaded);
-    if (_state.metaDepth.cloudBackupSeal == seal) return;
+    if (_state.metaDepth.cloudBackupSeal == seal &&
+        PlayGamesScores.progressSeal(_state) == seal) {
+      return;
+    }
     final replaced = _lastCloudRead.state == null
         ? ''
         : PlayGamesScores.progressSeal(_lastCloudRead.state!);
-    unawaited(_rememberBackupLineage(uploaded, replacedCloudSeal: replaced));
+    await _rememberBackupLineage(uploaded, replacedCloudSeal: replaced);
   }
 
   Future<void> _freezeUnresolvedSave(String committedJson) async {
-    _durableSaveBlocked = true;
-    PlayGamesBridge.invalidateUploads();
-    await _storage.reloadDurable();
-    final raw = await _storage.loadActiveRaw();
-    if (raw != null && raw == committedJson) {
-      final parsed = GameLogic.importSaveJson(raw);
-      if (parsed != null) _state = parsed;
+    _blockSaveRecovery(
+      'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
+    );
+    try {
+      await _storage.reloadDurable();
+      final raw = await _storage.loadActiveRaw();
+      if (raw != null && raw == committedJson) {
+        final parsed = GameLogic.importSaveJson(raw);
+        if (parsed != null) _state = parsed;
+      }
+    } catch (error, stack) {
+      debugPrint('save freeze could not read the durable file: $error\n$stack');
     }
     showToast(
       'Could not finish saving both copies. This device will not overwrite them.',
       life: 3.2,
     );
-    _directorNotify();
   }
 
   Future<bool> restoreFromPlayGames({
     bool force = false,
     GameState? alreadyRead,
   }) async {
+    if (_durableSaveBlocked) {
+      showToast(
+        'Saving is paused. Retry recovery before restoring.',
+        life: 2.6,
+      );
+      return false;
+    }
     final read = alreadyRead != null
         ? CloudRead.ready(alreadyRead)
         : await PlayGamesBridge.loadCloud();
@@ -863,6 +885,19 @@ extension GameDirectorPlatform on GameDirector {
   /// current file in that same slot so the player can swap again.
   Future<bool> restoreDisplacedDeviceSave() {
     return _enqueueSave(() async {
+      if (_durableSaveBlocked) {
+        showToast(
+          'Saving is paused. Finish recovery before swapping copies.',
+          life: 2.4,
+        );
+        return false;
+      }
+      if (await _slotJournalOpen(_storage.activeSlotIndex)) {
+        _blockSaveRecovery(
+          'Saving is paused. An unfinished copy is still on this device.',
+        );
+        return false;
+      }
       final raw = await _storage.loadDisplacedSave();
       if (raw == null || raw.isEmpty) {
         _hasDisplacedDeviceSave = false;

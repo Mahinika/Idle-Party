@@ -128,9 +128,19 @@ class GameDirector extends ChangeNotifier {
   /// pre-grant party back.
   int _saveEpoch = 0;
 
-  /// A journal still holds a party that is not in the active slot. Autosave
-  /// and cloud upload stay off until recovery finishes.
+  /// A journal still holds a party that is not in the active slot, or a
+  /// finished swap could not be read back. Autosave, combat, and purchases
+  /// stay off until [retrySaveRecovery] adopts the durable file.
   bool _durableSaveBlocked = false;
+
+  /// Shown on the recovery gate. Empty when saving is allowed.
+  String _saveRecoveryMessage = '';
+
+  /// True while this session must not overwrite the durable copies.
+  bool get saveRecoveryBlocked => _durableSaveBlocked;
+
+  /// Why saving is paused. Empty when it is not.
+  String get saveRecoveryMessage => _saveRecoveryMessage;
 
   /// Test seam. True while recovery must not be overwritten.
   @visibleForTesting
@@ -1831,6 +1841,22 @@ class GameDirector extends ChangeNotifier {
         saved = false;
       }
       if (!saved) {
+        try {
+          await _storage.reloadDurable();
+          final raw = await _storage.loadActiveRaw();
+          final parsed = raw == null ? null : GameLogic.importSaveJson(raw);
+          if (parsed != null &&
+              ShopBilling.alreadyGranted(parsed, purchaseId)) {
+            _state = parsed;
+            return true;
+          }
+        } catch (error, stack) {
+          debugPrint('grant readback failed: $error\n$stack');
+          _blockSaveRecovery(
+            'Saving is paused. A purchase could not be confirmed on this device.',
+          );
+          return false;
+        }
         // Keep gold, fight progress, and the rest of the live state.
         // Only the grant, which lives on meta, is undone.
         _applyUpgrade(_state.copyWith(metaDepth: priorMeta), persist: false);
@@ -1872,6 +1898,10 @@ class GameDirector extends ChangeNotifier {
   );
 
   Future<void> buyShopItem(String productId) async {
+    if (_durableSaveBlocked) {
+      showToast('Purchases stay off until save recovery finishes.', life: 2.6);
+      return;
+    }
     if (!ShopBilling.billingReady) {
       showToast('Shop buys coming later.', life: 2.2);
       return;

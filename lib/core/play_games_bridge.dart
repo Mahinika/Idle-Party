@@ -47,7 +47,7 @@ abstract final class PlayGamesBridge {
 
   /// Set by the director so a successful upload can store its lineage on the
   /// save. Automatic backup after a restart uses that seal.
-  static void Function(GameState uploaded)? onUploadCommitted;
+  static Future<void> Function(GameState uploaded)? onUploadCommitted;
 
   static bool get cloudWriteBlocked => !_explicitWriteOk;
 
@@ -424,6 +424,12 @@ abstract final class PlayGamesBridge {
     final generation = _readGeneration;
     final account = _boundAccount;
     if (!_commitAllowed(read, explicit: explicit, local: stamped)) return false;
+    final outgoing = read.state == null
+        ? stamped
+        : PlayGamesScores.withKeptOwnership(
+            chosen: stamped,
+            other: read.state!,
+          );
     final pending = debugBeforeCloudCommit;
     if (pending != null) await pending();
     final nowAccount = await _currentAccount();
@@ -441,8 +447,8 @@ abstract final class PlayGamesBridge {
     if (!_commitAllowed(read, explicit: explicit, local: stamped)) return false;
     final hooked = debugSaveCloud;
     if (hooked != null) {
-      final ok = await hooked(stamped);
-      if (ok) _rememberUpload(stamped);
+      final ok = await hooked(outgoing);
+      if (ok) await _rememberUpload(outgoing);
       return ok;
     }
     if (!isSupported) return false;
@@ -460,15 +466,15 @@ abstract final class PlayGamesBridge {
       return false;
     }
     try {
-      final data = GameLogic.exportSaveJson(stamped);
+      final data = GameLogic.exportSaveJson(outgoing);
       await SaveGame.saveGame(
         data: data,
         name: snapshotName,
         description:
-            'AL${stamped.ascensionLevel} · Gauntlet F${stamped.metaDepth.gauntletBestFloor}',
+            'AL${outgoing.ascensionLevel} · Gauntlet F${outgoing.metaDepth.gauntletBestFloor}',
       );
       _lastCloudUploadAt = DateTime.now();
-      _rememberUpload(stamped);
+      await _rememberUpload(outgoing);
       unawaited(flushPendingScores());
       return true;
     } catch (e, st) {
@@ -498,9 +504,10 @@ abstract final class PlayGamesBridge {
     return previous.isNotEmpty && cloudSeal == previous;
   }
 
-  static void _rememberUpload(GameState state) {
+  static Future<void> _rememberUpload(GameState state) async {
     _lastUploadedSeal = PlayGamesScores.progressSeal(state);
-    onUploadCommitted?.call(state);
+    final hook = onUploadCommitted;
+    if (hook != null) await hook(state);
   }
 
   static void _denyWrites() {
@@ -590,6 +597,24 @@ abstract final class PlayGamesBridge {
     'idle_party/snapshots',
   );
 
+  /// A missing or non-bool `stale` field is not a fresh list.
+  @visibleForTesting
+  static SnapshotNameList snapshotListFromChannel(
+    Map<Object?, Object?> raw, {
+    List<String>? names,
+  }) {
+    final listed =
+        names ??
+        (raw['names'] is List
+            ? [for (final name in raw['names'] as List) name.toString()]
+            : null);
+    final stale = raw['stale'];
+    if (listed == null || stale is! bool) {
+      return SnapshotNameList(names: listed, fresh: false);
+    }
+    return SnapshotNameList(names: listed, fresh: !stale);
+  }
+
   /// Android channel reads `AnnotatedData.isStale()`. The games_services list
   /// does not. `load(true)` only requests a server fetch; a successful result
   /// can still be stale, and a stale empty list is not a missing snapshot.
@@ -609,8 +634,7 @@ abstract final class PlayGamesBridge {
         return const SnapshotNameList(names: null, fresh: false);
       }
       final names = [for (final name in namesRaw) name.toString()];
-      final stale = raw['stale'] == true;
-      return SnapshotNameList(names: names, fresh: !stale);
+      return snapshotListFromChannel(raw, names: names);
     } catch (e, st) {
       debugPrint('PlayGames snapshot list failed: $e\n$st');
       return const SnapshotNameList(names: null, fresh: false);

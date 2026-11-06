@@ -18,7 +18,8 @@ explicit.
 - `committed` means both parties are durable. Memory adopts that active file.
 - `aborted` means the active slot never changed.
 - `unresolved` means the journal still holds a party. Boot, autosave, grants,
-  and cloud upload do not write over it. The next launch retries.
+  and cloud upload do not write over it. Play stays on the recovery gate
+  until RETRY can finish the journal. A second device copy is refused.
 - KEEP DEVICE and BACKUP NOW keep paid ownership from both files. Gold,
   Cinders, and tickets are not added together. Chosen purchase ids are kept
   ahead of the other file when the 64-id cap fills.
@@ -38,7 +39,37 @@ explicit.
 
 Play's `RESOLUTION_POLICY_MOST_RECENTLY_MODIFIED` can still replace another
 device's snapshot after our re-read. `commitAndClose` does not prove the
-server stored the file. Those limits stay inside the SDK.
+server stored the file. Those limits stay inside the SDK. That unobserved
+race is separate from the final read this app already has: BACKUP unions
+paid ownership from that read into the uploaded file and into the local save.
+
+## Third QA on the same save PR
+
+The previous patch still lost a party when an exception landed after the
+files were already in place, when a second device copy ran during recovery,
+when cleanup deleted the proof before the journal, and when the final cloud
+read was ignored. Those are closed here.
+
+- An in-process throw after cleanup is reconciled. If both parties read back,
+  the swap is committed. If they cannot be read, saving stays off so the next
+  autosave cannot replace them. RETRY adopts the durable file.
+- A journal that already exists is not overwritten. Device copy, erase, new
+  game, and import wait on the save queue and refuse while recovery is open.
+- Cleanup can finish after staging and the hold are already gone, and a live
+  party that differs from the last autosave is written into the device copy
+  instead of staying unresolved forever.
+- The play screen shows SAVE RECOVERY with RETRY. Combat, hub idle, and BUY
+  stay off. A grant that already started is still not consumed.
+- An r1/r2 global journal is copied onto the slot whose bytes match it.
+  If no slot can be proven, the bytes stay and saving stays off.
+- A snapshot list with a missing or non-bool `stale` field is not fresh.
+- The 64-id cap still drops an unconsumed receipt that does not fit. A
+  receipt that fits is kept so Play does not grant it again. Consumed
+  receipts are not redelivered by Play. Non-consumable flags still block a
+  second grant of the same pack.
+
+An Android compile of this head is the evidence for the snapshot channel.
+No APK was uploaded and no device was installed.
 
 ## QA follow-up on the same save PR
 

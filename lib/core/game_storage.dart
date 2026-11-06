@@ -439,8 +439,26 @@ class InMemoryGameStorage implements GameStorage {
   bool failNextMirrorWrite = false;
 
   /// Test seam. Durable active bytes land, then this throws
-  /// [SimulatedSaveKill]. Not a real process kill.
+  /// [SimulatedSaveKill]. Not a real process kill. [bytesAtKill] keeps the
+  /// durable map from the moment of the throw, before recovery continues
+  /// in this process.
   bool killAfterNextActiveDurableWrite = false;
+
+  /// Durable bytes at the simulated kill, if one was thrown.
+  Map<String, String>? bytesAtKill;
+
+  /// Test seam. The next N [reloadDurable] calls throw after the bytes
+  /// have already landed. An in-process failure, not a process kill.
+  int reloadThrowsRemaining = 0;
+
+  /// Test seam. This many reloads succeed before [reloadThrowsRemaining]
+  /// starts. A swap reloads before cleanup; the throw has to land after
+  /// the parties are already in place.
+  int skipReloadsBeforeThrow = 0;
+
+  /// Test seam. Deleting this extra key succeeds, then throws.
+  /// Models an interrupted cleanup cut.
+  String? throwAfterDeletingKey;
 
   /// Test seam. Set when a write is entered, including one that then waits.
   bool writeEntered = false;
@@ -558,6 +576,12 @@ class InMemoryGameStorage implements GameStorage {
 
   @override
   Future<void> reloadDurable() async {
+    if (skipReloadsBeforeThrow > 0) {
+      skipReloadsBeforeThrow--;
+    } else if (reloadThrowsRemaining > 0) {
+      reloadThrowsRemaining--;
+      throw StateError('simulated reload failure');
+    }
     if (!_diskSplit) return;
     _activeRaw = _disk['\u0000active'];
     _extras
@@ -599,6 +623,7 @@ class InMemoryGameStorage implements GameStorage {
         _diskSplit = true;
       }
       _disk['\u0000active'] = json;
+      bytesAtKill = Map<String, String>.from(_disk);
       throw const SimulatedSaveKill();
     }
     if (failNextMirrorWrite) {
@@ -635,6 +660,10 @@ class InMemoryGameStorage implements GameStorage {
     if (json == null || json.isEmpty) {
       _extras.remove(key);
       if (_diskSplit) _disk.remove(key);
+      if (throwAfterDeletingKey == key) {
+        throwAfterDeletingKey = null;
+        throw StateError('simulated cleanup cut');
+      }
       return true;
     }
     _extras[key] = json;
