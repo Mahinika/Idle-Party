@@ -1044,7 +1044,9 @@ void main() {
         final live = _party(life: 80, adFree: true, cinders: 4);
         final incoming = _party(life: 500);
         final liveJson = GameLogic.exportSaveJson(live);
-        await storage.writeActiveRaw(GameLogic.exportSaveJson(_party(life: 10)));
+        await storage.writeActiveRaw(
+          GameLogic.exportSaveJson(_party(life: 10)),
+        );
         await storage.writeExtra(
           GameStorage.stagingKey,
           GameLogic.exportSaveJson(incoming),
@@ -1175,58 +1177,69 @@ void main() {
       },
     );
 
-    test('a leftover global marker is cleared once the slot has the party', () async {
-      final storage = InMemoryGameStorage();
-      final live = _party(life: 80, adFree: true);
-      final liveJson = GameLogic.exportSaveJson(live);
-      await storage.setActiveSlot(2);
-      await storage.writeActiveRaw(GameLogic.exportSaveJson(_party(life: 500)));
-      await storage.writeExtra(GameStorage.displacedKeyFor(2), liveJson);
-      await storage.writeExtra(GameStorage.displacedKey, liveJson);
-      await storage.writeExtra(GameStorage.journalKey, 'swap-publish');
-      final director = GameDirector(storage, enableSpatialLoop: false);
-      addTearDown(director.dispose);
-      await director.boot();
-      expect(director.saveRecoveryBlocked, isFalse);
-      expect(await storage.loadExtra(GameStorage.journalKey), isNull);
-      expect(await storage.loadExtra(GameStorage.displacedKeyFor(2)), liveJson);
-    });
+    test(
+      'a leftover global marker is cleared once the slot has the party',
+      () async {
+        final storage = InMemoryGameStorage();
+        final live = _party(life: 80, adFree: true);
+        final liveJson = GameLogic.exportSaveJson(live);
+        await storage.setActiveSlot(2);
+        await storage.writeActiveRaw(
+          GameLogic.exportSaveJson(_party(life: 500)),
+        );
+        await storage.writeExtra(GameStorage.displacedKeyFor(2), liveJson);
+        await storage.writeExtra(GameStorage.displacedKey, liveJson);
+        await storage.writeExtra(GameStorage.journalKey, 'swap-publish');
+        final director = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(director.dispose);
+        await director.boot();
+        expect(director.saveRecoveryBlocked, isFalse);
+        expect(await storage.loadExtra(GameStorage.journalKey), isNull);
+        expect(
+          await storage.loadExtra(GameStorage.displacedKeyFor(2)),
+          liveJson,
+        );
+      },
+    );
 
-    test('two matching slots are not guessed and other slots still open', () async {
-      final storage = InMemoryGameStorage();
-      final shared = GameLogic.exportSaveJson(_party(life: 80, adFree: true));
-      final other = GameLogic.exportSaveJson(_party(life: 3));
-      await storage.setActiveSlot(1);
-      await storage.writeActiveRaw(shared);
-      await storage.setActiveSlot(2);
-      await storage.writeActiveRaw(shared);
-      await storage.writeExtra(GameStorage.stagingKey, shared);
-      await storage.writeExtra(GameStorage.holdKey, other);
-      await storage.writeExtra(GameStorage.journalKey, 'swap-stage');
-      final director = GameDirector(storage, enableSpatialLoop: false);
-      addTearDown(director.dispose);
-      await director.boot();
-      expect(director.saveRecoveryBlocked, isTrue);
-      expect(director.saveRecoveryAmbiguous, isTrue);
-      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
-      expect(await storage.loadExtra(GameStorage.journalKeyFor(2)), isNull);
-      expect(await storage.loadExtra(GameStorage.holdKey), other);
-      expect(director.safeRecoverySlots, contains(3));
-      expect(director.safeRecoverySlots, isNot(contains(0)));
-      expect(director.safeRecoverySlots, isNot(contains(1)));
-      expect(director.safeRecoverySlots, isNot(contains(2)));
-      final exported = await director.exportRecoveryRecords();
-      expect(exported, contains('swap-stage'));
-      expect(exported, contains(other));
-      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
-      expect(await director.retrySaveRecovery(), isFalse);
-      expect(await director.openSafeRecoverySlot(0), isFalse);
-      expect(await director.openSafeRecoverySlot(2), isFalse);
-      expect(await director.openSafeRecoverySlot(3), isTrue);
-      expect(director.saveRecoveryBlocked, isFalse);
-      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
-      expect(await storage.loadExtra(GameStorage.holdKey), other);
-    });
+    test(
+      'two matching slots are not guessed and other slots still open',
+      () async {
+        final storage = InMemoryGameStorage();
+        final shared = GameLogic.exportSaveJson(_party(life: 80, adFree: true));
+        final other = GameLogic.exportSaveJson(_party(life: 3));
+        await storage.setActiveSlot(1);
+        await storage.writeActiveRaw(shared);
+        await storage.setActiveSlot(2);
+        await storage.writeActiveRaw(shared);
+        await storage.writeExtra(GameStorage.stagingKey, shared);
+        await storage.writeExtra(GameStorage.holdKey, other);
+        await storage.writeExtra(GameStorage.journalKey, 'swap-stage');
+        final director = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(director.dispose);
+        await director.boot();
+        expect(director.saveRecoveryBlocked, isTrue);
+        expect(director.saveRecoveryAmbiguous, isTrue);
+        expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
+        expect(await storage.loadExtra(GameStorage.journalKeyFor(2)), isNull);
+        expect(await storage.loadExtra(GameStorage.holdKey), other);
+        expect(director.safeRecoverySlots, contains(3));
+        expect(director.safeRecoverySlots, isNot(contains(0)));
+        expect(director.safeRecoverySlots, isNot(contains(1)));
+        expect(director.safeRecoverySlots, isNot(contains(2)));
+        final exported = await director.exportRecoveryRecords();
+        expect(exported, contains('swap-stage'));
+        expect(exported, contains(other));
+        expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
+        expect(await director.retrySaveRecovery(), isFalse);
+        expect(await director.openSafeRecoverySlot(0), isFalse);
+        expect(await director.openSafeRecoverySlot(2), isFalse);
+        expect(await director.openSafeRecoverySlot(3), isTrue);
+        expect(director.saveRecoveryBlocked, isFalse);
+        expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
+        expect(await storage.loadExtra(GameStorage.holdKey), other);
+      },
+    );
 
     test('a unique slot 0 journal does not block another slot', () async {
       final storage = InMemoryGameStorage();
@@ -1246,41 +1259,235 @@ void main() {
       expect(await storage.loadExtra(GameStorage.holdKey), owned);
     });
 
-    test('migration cuts keep the source until a later retry can finish', () async {
+    test(
+      'migration cuts keep the source until a later retry can finish',
+      () async {
+        final incoming = _party(life: 500);
+        final live = _party(life: 80, adFree: true, cinders: 4);
+        final previous = _party(life: 1);
+        final incomingJson = GameLogic.exportSaveJson(incoming);
+        final liveJson = GameLogic.exportSaveJson(live);
+        final previousJson = GameLogic.exportSaveJson(previous);
+        // Eight side-file writes: staging, hold, displaced, journal, then the
+        // four source deletes. Each cut is that one write, not the first N.
+        // The throw is in-process. It is not an operating-system kill.
+        const writes = 8;
+        for (var n = 1; n <= writes; n++) {
+          for (final kind in ['fail', 'throw-before', 'throw-after']) {
+            final storage = InMemoryGameStorage();
+            await _plantGlobalSwap(
+              storage,
+              active: incomingJson,
+              staging: incomingJson,
+              hold: liveJson,
+              displaced: previousJson,
+            );
+            storage.armExtraWriteCut(
+              failAt: kind == 'fail' ? n : null,
+              throwBefore: kind == 'throw-before' ? n : null,
+              throwAfter: kind == 'throw-after' ? n : null,
+            );
+            final stuck = await SaveSwap.migrateLegacyGlobalJournal(storage);
+            expect(
+              storage.failNthExtraWrite,
+              isNull,
+              reason: '$kind $n did not reach that write',
+            );
+            expect(storage.throwBeforeNthExtraWrite, isNull, reason: kind);
+            expect(storage.throwAfterNthExtraWrite, isNull, reason: kind);
+            storage.clearExtraWriteCut();
+            await _expectOwnerMarkerIfHoldIsOnlyCopy(
+              storage,
+              liveJson,
+              reason: '$kind $n',
+            );
+            expect(
+              await _durableHas(storage, liveJson),
+              isTrue,
+              reason: '$kind $n dropped the held party before retry',
+            );
+            expect(
+              await _durableHas(storage, incomingJson),
+              isTrue,
+              reason: '$kind $n',
+            );
+            expect(
+              await _durableHas(storage, previousJson),
+              isTrue,
+              reason: '$kind $n',
+            );
+            if (stuck) {
+              expect(
+                await storage.loadExtra(GameStorage.journalKey) != null ||
+                    await storage.loadExtra(GameStorage.journalKeyFor(2)) !=
+                        null,
+                isTrue,
+                reason: '$kind $n',
+              );
+            }
+            final director = GameDirector(storage, enableSpatialLoop: false);
+            addTearDown(director.dispose);
+            await director.boot();
+            expect(director.saveRecoveryBlocked, isFalse, reason: '$kind $n');
+            expect(
+              await director.debugTryPersist(),
+              isTrue,
+              reason: '$kind $n',
+            );
+            expect(
+              await _finalHasCinders(storage, 4),
+              isTrue,
+              reason: '$kind $n',
+            );
+            expect(await director.restoreDisplacedDeviceSave(), isTrue);
+            expect(
+              await _finalHasCinders(storage, 4),
+              isTrue,
+              reason: '$kind $n device copy',
+            );
+            expect(await director.restoreDisplacedDeviceSave(), isTrue);
+            expect(
+              await _finalHasCinders(storage, 4),
+              isTrue,
+              reason: '$kind $n second device copy',
+            );
+          }
+        }
+      },
+    );
+
+    test('a cut before the scoped journal does not orphan the hold', () async {
       final incoming = _party(life: 500);
       final live = _party(life: 80, adFree: true, cinders: 4);
+      final previous = _party(life: 1);
       final incomingJson = GameLogic.exportSaveJson(incoming);
       final liveJson = GameLogic.exportSaveJson(live);
-      for (var cuts = 1; cuts <= 6; cuts++) {
-        final storage = InMemoryGameStorage();
-        await storage.setActiveSlot(2);
-        await storage.writeActiveRaw(incomingJson);
-        await storage.writeExtra(GameStorage.stagingKey, incomingJson);
-        await storage.writeExtra(GameStorage.holdKey, liveJson);
-        await storage.writeExtra(
-          GameStorage.displacedKey,
-          GameLogic.exportSaveJson(_party(life: 1)),
-        );
-        await storage.writeExtra(GameStorage.journalKey, 'swap-publish');
-        storage.failNextExtraWrites = cuts;
-        final stuck = await SaveSwap.migrateLegacyGlobalJournal(storage);
-        storage.failNextExtraWrites = 0;
-        if (stuck) {
-          final global = await storage.loadExtra(GameStorage.journalKey);
-          final scoped = await storage.loadExtra(GameStorage.journalKeyFor(2));
-          expect(global != null || scoped != null, isTrue, reason: 'cut $cuts');
-          expect(await storage.loadExtra(GameStorage.holdKey) ?? await storage.loadExtra(GameStorage.holdKeyFor(2)), liveJson);
-        }
-        expect(await SaveSwap.migrateLegacyGlobalJournal(storage), isFalse);
-        expect(await SaveSwap.recover(storage), isNot(SaveSwapOutcome.unresolved));
-        expect(
-          GameLogic.importSaveJson(
-            (await storage.loadExtra(GameStorage.displacedKeyFor(2)))!,
-          )!.metaDepth.cinders,
-          4,
-        );
-      }
+      final previousJson = GameLogic.exportSaveJson(previous);
+      final storage = InMemoryGameStorage();
+      await _plantGlobalSwap(
+        storage,
+        active: incomingJson,
+        staging: incomingJson,
+        hold: liveJson,
+        displaced: previousJson,
+      );
+      storage.failExtraWhen = (key, value) =>
+          key == GameStorage.journalKeyFor(2) && value == 'swap-publish';
+      expect(await SaveSwap.migrateLegacyGlobalJournal(storage), isTrue);
+      storage.failExtraWhen = null;
+      expect(await storage.loadExtra(GameStorage.journalKeyFor(2)), isNull);
+      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-publish');
+      expect(await storage.loadExtra(GameStorage.holdKeyFor(2)), liveJson);
+      expect(await storage.loadExtra(GameStorage.holdKey), liveJson);
+      final director = GameDirector(storage, enableSpatialLoop: false);
+      addTearDown(director.dispose);
+      await director.boot();
+      expect(director.saveRecoveryBlocked, isFalse);
+      expect(await storage.loadExtra(GameStorage.journalKey), isNull);
+      expect(await storage.loadExtra(GameStorage.journalKeyFor(2)), isNull);
+      expect(await _finalHasCinders(storage, 4), isTrue);
+      expect(await director.debugTryPersist(), isTrue);
+      expect(await director.restoreDisplacedDeviceSave(), isTrue);
+      expect(await _finalHasCinders(storage, 4), isTrue);
+      expect(
+        await storage.loadExtra(GameStorage.holdKeyFor(2)),
+        isNot(liveJson),
+      );
     });
+
+    test(
+      'boot does not recover a colliding migration over a parked party',
+      () async {
+        final incoming = _party(life: 500);
+        final live = _party(life: 80, adFree: true, cinders: 4);
+        final previous = _party(life: 1);
+        final parked = _party(life: 77, cinders: 9);
+        final incomingJson = GameLogic.exportSaveJson(incoming);
+        final liveJson = GameLogic.exportSaveJson(live);
+        final previousJson = GameLogic.exportSaveJson(previous);
+        final parkedJson = GameLogic.exportSaveJson(parked);
+        Future<InMemoryGameStorage> plant() async {
+          final storage = InMemoryGameStorage();
+          await _plantGlobalSwap(
+            storage,
+            active: incomingJson,
+            staging: incomingJson,
+            hold: liveJson,
+            displaced: previousJson,
+          );
+          await storage.writeExtra(
+            GameStorage.journalKeyFor(2),
+            'swap-publish',
+          );
+          await storage.writeExtra(GameStorage.displacedKeyFor(2), parkedJson);
+          return storage;
+        }
+
+        final storage = await plant();
+        final director = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(director.dispose);
+        await director.boot();
+        expect(director.saveRecoveryBlocked, isTrue);
+        expect(director.saveRecoveryAmbiguous, isTrue);
+        expect(
+          await storage.loadExtra(GameStorage.displacedKeyFor(2)),
+          parkedJson,
+        );
+        expect(await storage.loadExtra(GameStorage.journalKey), 'swap-publish');
+        expect(await storage.loadExtra(GameStorage.holdKey), liveJson);
+        expect(await storage.loadExtra(GameStorage.displacedKey), previousJson);
+        expect(await director.retrySaveRecovery(), isFalse);
+        expect(
+          await storage.loadExtra(GameStorage.displacedKeyFor(2)),
+          parkedJson,
+        );
+        expect(await SaveSwap.recover(storage), SaveSwapOutcome.unresolved);
+        expect(
+          await storage.loadExtra(GameStorage.displacedKeyFor(2)),
+          parkedJson,
+        );
+        expect(await director.debugTryPersist(), isFalse);
+
+        // The collision itself is the third field. Cuts land on the two
+        // copies that precede it. Each fault is in-process, not an OS kill.
+        for (var n = 1; n <= 2; n++) {
+          for (final kind in ['fail', 'throw-before', 'throw-after']) {
+            final cut = await plant();
+            cut.armExtraWriteCut(
+              failAt: kind == 'fail' ? n : null,
+              throwBefore: kind == 'throw-before' ? n : null,
+              throwAfter: kind == 'throw-after' ? n : null,
+            );
+            expect(await SaveSwap.migrateLegacyGlobalJournal(cut), isTrue);
+            expect(cut.failNthExtraWrite, isNull, reason: '$kind $n');
+            cut.clearExtraWriteCut();
+            expect(
+              await cut.loadExtra(GameStorage.displacedKeyFor(2)),
+              parkedJson,
+            );
+            final again = GameDirector(cut, enableSpatialLoop: false);
+            addTearDown(again.dispose);
+            await again.boot();
+            expect(again.saveRecoveryBlocked, isTrue, reason: '$kind $n');
+            expect(
+              await cut.loadExtra(GameStorage.displacedKeyFor(2)),
+              parkedJson,
+            );
+            expect(
+              await again.retrySaveRecovery(),
+              isFalse,
+              reason: '$kind $n',
+            );
+            expect(
+              await cut.loadExtra(GameStorage.displacedKeyFor(2)),
+              parkedJson,
+            );
+            expect(await cut.loadExtra(GameStorage.journalKey), 'swap-publish');
+            expect(await cut.loadExtra(GameStorage.holdKey), liveJson);
+          }
+        }
+      },
+    );
 
     test('device-copy cuts keep both parties', () async {
       final current = _party(life: 80, adFree: true, cinders: 4);
@@ -1306,14 +1513,30 @@ void main() {
           newDisplacedJson: currentJson,
         );
         final durable = storage.durableBytes();
-        expect(hasParty(durable, currentJson), isTrue, reason: 'bool cut $cuts current');
-        expect(hasParty(durable, parkedJson), isTrue, reason: 'bool cut $cuts parked');
+        expect(
+          hasParty(durable, currentJson),
+          isTrue,
+          reason: 'bool cut $cuts current',
+        );
+        expect(
+          hasParty(durable, parkedJson),
+          isTrue,
+          reason: 'bool cut $cuts parked',
+        );
         final fresh = InMemoryGameStorage();
         fresh.restoreDurableBytes(durable);
         await SaveSwap.recover(fresh);
         final after = fresh.durableBytes();
-        expect(hasParty(after, currentJson), isTrue, reason: 'replay $cuts current');
-        expect(hasParty(after, parkedJson), isTrue, reason: 'replay $cuts parked');
+        expect(
+          hasParty(after, currentJson),
+          isTrue,
+          reason: 'replay $cuts current',
+        );
+        expect(
+          hasParty(after, parkedJson),
+          isTrue,
+          reason: 'replay $cuts parked',
+        );
       }
 
       final killed = InMemoryGameStorage();
@@ -1330,10 +1553,7 @@ void main() {
       expect(hasParty(snapshot, parkedJson), isTrue);
       final replay = InMemoryGameStorage();
       replay.restoreDurableBytes(snapshot);
-      expect(
-        await SaveSwap.recover(replay),
-        isNot(SaveSwapOutcome.unresolved),
-      );
+      expect(await SaveSwap.recover(replay), isNot(SaveSwapOutcome.unresolved));
       expect(hasParty(replay.durableBytes(), currentJson), isTrue);
       expect(hasParty(replay.durableBytes(), parkedJson), isTrue);
     });
@@ -1397,31 +1617,38 @@ void main() {
       );
     });
 
-    test('a failed local ownership save does not report backup success', () async {
-      final local = _party(life: 80, cinders: 3, adFree: true);
-      final first = _party(life: 10);
-      final observed = _party(life: 12, pass: true, purchaseIds: const ['paid-observed']);
-      final director = _hold(local);
-      addTearDown(director.dispose);
-      final storage = director.debugStorage as InMemoryGameStorage;
-      var reads = 0;
-      GameState? uploaded;
-      PlayGamesBridge.debugAccountId = () async => 'player-1';
-      PlayGamesBridge.debugLoadCloud = () async {
-        reads++;
-        return CloudRead.ready(reads == 1 ? first : observed);
-      };
-      PlayGamesBridge.debugSaveCloud = (state) async {
-        uploaded = state;
-        return true;
-      };
-      storage.armFailAfterSuccessfulSaves(1);
-      expect(await director.backupToPlayGames(), isFalse);
-      expect(uploaded!.metaDepth.paidSeasonPass, isTrue);
-      expect(uploaded!.metaDepth.adFree, isTrue);
-      expect(director.state.metaDepth.paidSeasonPass, isFalse);
-      expect(director.toast, contains('could not store'));
-    });
+    test(
+      'a failed local ownership save does not report backup success',
+      () async {
+        final local = _party(life: 80, cinders: 3, adFree: true);
+        final first = _party(life: 10);
+        final observed = _party(
+          life: 12,
+          pass: true,
+          purchaseIds: const ['paid-observed'],
+        );
+        final director = _hold(local);
+        addTearDown(director.dispose);
+        final storage = director.debugStorage as InMemoryGameStorage;
+        var reads = 0;
+        GameState? uploaded;
+        PlayGamesBridge.debugAccountId = () async => 'player-1';
+        PlayGamesBridge.debugLoadCloud = () async {
+          reads++;
+          return CloudRead.ready(reads == 1 ? first : observed);
+        };
+        PlayGamesBridge.debugSaveCloud = (state) async {
+          uploaded = state;
+          return true;
+        };
+        storage.armFailAfterSuccessfulSaves(1);
+        expect(await director.backupToPlayGames(), isFalse);
+        expect(uploaded!.metaDepth.paidSeasonPass, isTrue);
+        expect(uploaded!.metaDepth.adFree, isTrue);
+        expect(director.state.metaDepth.paidSeasonPass, isFalse);
+        expect(director.toast, contains('could not store'));
+      },
+    );
 
     test('a settings import waits for an in-flight grant', () async {
       final director = _hold(_party(life: 15));
@@ -1480,6 +1707,62 @@ void main() {
       expect(director.saveRecoveryBlocked, isFalse);
     });
   });
+}
+
+Future<void> _plantGlobalSwap(
+  InMemoryGameStorage storage, {
+  required String active,
+  required String staging,
+  required String hold,
+  required String displaced,
+}) async {
+  await storage.setActiveSlot(2);
+  await storage.writeActiveRaw(active);
+  await storage.writeExtra(GameStorage.stagingKey, staging);
+  await storage.writeExtra(GameStorage.holdKey, hold);
+  await storage.writeExtra(GameStorage.displacedKey, displaced);
+  await storage.writeExtra(GameStorage.journalKey, 'swap-publish');
+}
+
+Future<bool> _durableHas(InMemoryGameStorage storage, String json) async {
+  const keys = <String>[
+    GameStorage.stagingKey,
+    GameStorage.holdKey,
+    GameStorage.displacedKey,
+  ];
+  if (await storage.loadActiveRaw() == json) return true;
+  if (await storage.loadSlotRaw(2) == json) return true;
+  for (final key in keys) {
+    if (await storage.loadExtra(key) == json) return true;
+    if (await storage.loadExtra('${key}_2') == json) return true;
+  }
+  return false;
+}
+
+/// A party that is not yet in the active file or the parked file still needs
+/// a journal. Deleting the last marker is the loss the next device copy hits.
+Future<void> _expectOwnerMarkerIfHoldIsOnlyCopy(
+  InMemoryGameStorage storage,
+  String json, {
+  required String reason,
+}) async {
+  final active = await storage.loadSlotRaw(2);
+  final parked = await storage.loadExtra(GameStorage.displacedKeyFor(2));
+  if (active == json || parked == json) return;
+  final global = await storage.loadExtra(GameStorage.journalKey);
+  final scoped = await storage.loadExtra(GameStorage.journalKeyFor(2));
+  expect(global != null || scoped != null, isTrue, reason: reason);
+}
+
+Future<bool> _finalHasCinders(InMemoryGameStorage storage, int cinders) async {
+  for (final raw in [
+    await storage.loadSlotRaw(2),
+    await storage.loadExtra(GameStorage.displacedKeyFor(2)),
+  ]) {
+    final imported = raw == null ? null : GameLogic.importSaveJson(raw);
+    if (imported?.metaDepth.cinders == cinders) return true;
+  }
+  return false;
 }
 
 GameState _party({

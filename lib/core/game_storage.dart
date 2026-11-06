@@ -449,10 +449,41 @@ class InMemoryGameStorage implements GameStorage {
   }
 
   /// Test seam. The next N side-file writes fail and do not change bytes.
+  /// This counts attempts from now, not the Nth successful write.
   int failNextExtraWrites = 0;
 
   /// Test seam. When this returns true the side-file write fails once.
   bool Function(String key, String? value)? failExtraWhen;
+
+  /// Test seam. 1-based. That side-file attempt returns false and does not
+  /// change bytes. An in-process fault, not an operating-system kill.
+  int? failNthExtraWrite;
+
+  /// Test seam. 1-based. That side-file attempt throws before the bytes change.
+  /// An in-process fault, not an operating-system kill.
+  int? throwBeforeNthExtraWrite;
+
+  /// Test seam. 1-based. That side-file attempt lands, then throws.
+  /// An in-process fault, not an operating-system kill.
+  int? throwAfterNthExtraWrite;
+
+  int _extraWriteOrdinal = 0;
+
+  /// Arms one simulated side-file cut and starts the count at the next write.
+  /// At most one of [failAt], [throwBefore], and [throwAfter] should be set.
+  void armExtraWriteCut({int? failAt, int? throwBefore, int? throwAfter}) {
+    _extraWriteOrdinal = 0;
+    failNthExtraWrite = failAt;
+    throwBeforeNthExtraWrite = throwBefore;
+    throwAfterNthExtraWrite = throwAfter;
+  }
+
+  /// Drops a cut armed by [armExtraWriteCut] so the next write is honest.
+  void clearExtraWriteCut() {
+    failNthExtraWrite = null;
+    throwBeforeNthExtraWrite = null;
+    throwAfterNthExtraWrite = null;
+  }
 
   /// Test seam. A failed write updates the cache and leaves durable bytes.
   /// Models shared_preferences, which updates its map before the platform
@@ -678,6 +709,17 @@ class InMemoryGameStorage implements GameStorage {
   @override
   Future<bool> writeExtra(String key, String? json) async {
     await _awaitPause();
+    _extraWriteOrdinal++;
+    final ordinal = _extraWriteOrdinal;
+    if (throwBeforeNthExtraWrite != null &&
+        ordinal == throwBeforeNthExtraWrite) {
+      throwBeforeNthExtraWrite = null;
+      throw StateError('simulated extra-write cut before bytes');
+    }
+    if (failNthExtraWrite != null && ordinal == failNthExtraWrite) {
+      failNthExtraWrite = null;
+      return false;
+    }
     final failWhen = failExtraWhen;
     final targeted = failWhen != null && failWhen(key, json);
     if (failNextExtraWrites > 0 || targeted) {
@@ -699,10 +741,20 @@ class InMemoryGameStorage implements GameStorage {
         throwAfterDeletingKey = null;
         throw StateError('simulated cleanup cut');
       }
+      _throwIfNthExtraWriteLanded(ordinal);
       return true;
     }
     _extras[key] = json;
     if (_diskSplit) _disk[key] = json;
+    _throwIfNthExtraWriteLanded(ordinal);
     return true;
+  }
+
+  void _throwIfNthExtraWriteLanded(int ordinal) {
+    if (throwAfterNthExtraWrite == null || ordinal != throwAfterNthExtraWrite) {
+      return;
+    }
+    throwAfterNthExtraWrite = null;
+    throw StateError('simulated extra-write cut after bytes');
   }
 }

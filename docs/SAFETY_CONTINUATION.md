@@ -76,6 +76,15 @@ read was ignored. Those are closed here.
 An Android compile of this head is the evidence for the snapshot channel.
 No APK was uploaded and no device was installed.
 
+A slot with no journal of its own is a finished migration only when every
+global payload already matches that slot's active file or its parked file.
+A temporary hold is not that copy. The global journal stays until the
+scoped journal has landed, so a later device copy cannot overwrite the only
+remaining party. Boot and RETRY do not recover while the migration is still
+unmatched or collided. A parked file that differs from the party being
+copied is left as it is. The cut coverage fails or throws on one chosen
+side-file write. That fault is in-process. It is not an operating-system kill.
+
 ## QA follow-up on the same save PR
 
 Independent review found six holes in the first patch. They are fixed in

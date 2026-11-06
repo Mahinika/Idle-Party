@@ -178,6 +178,8 @@ extension GameDirectorSave on GameDirector {
         _storage,
       );
       if (legacyUnassigned) {
+        // Same rule as boot. Recovery would finish the destination journal
+        // and can replace a parked party the copy just refused.
         _saveRecoveryAmbiguous = true;
         await _refreshSafeRecoverySlots();
         _blockSaveRecovery(
@@ -506,7 +508,12 @@ extension GameDirectorSave on GameDirector {
       final legacyUnassigned = await SaveSwap.migrateLegacyGlobalJournal(
         _storage,
       );
-      final recovered = await SaveSwap.recover(_storage);
+      // An unmatched or colliding migration still owns its global journal.
+      // Recovering the destination now would publish that partial copy and
+      // replace a parked party the copy refused to overwrite.
+      final recovered = legacyUnassigned
+          ? SaveSwapOutcome.unresolved
+          : await SaveSwap.recover(_storage);
       if (legacyUnassigned) {
         _saveRecoveryAmbiguous = true;
         await _refreshSafeRecoverySlots();

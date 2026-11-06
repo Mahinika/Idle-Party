@@ -226,9 +226,11 @@ abstract final class SaveSwap {
     return await storage.loadExtra(GameStorage.journalKey) != null;
   }
 
-  /// A slot that already holds every remaining global payload finished the
-  /// copy. The leftover marker can go. A payload that is not on that slot
-  /// stays, so this does not guess.
+  /// A slot with no journal of its own finished the copy only when every
+  /// remaining global payload already equals that slot's active file or its
+  /// parked file. Staging and the temporary hold do not count. Deleting the
+  /// global journal while a party lives only in the hold leaves it unmarked,
+  /// and the next device copy overwrites that hold.
   static Future<bool> _finishFinishedMigration(
     GameStorage storage, {
     required String? staging,
@@ -239,7 +241,7 @@ abstract final class SaveSwap {
       if (await storage.loadExtra(GameStorage.journalKeyFor(slot)) != null) {
         continue;
       }
-      if (!await _slotHoldsPayload(
+      if (!await _slotHoldsFinalCopy(
         storage,
         slot,
         staging: staging,
@@ -284,6 +286,28 @@ abstract final class SaveSwap {
         covered(staging, staged) &&
         covered(hold, held) &&
         covered(displaced, parked);
+    return saw && ok;
+  }
+
+  /// True when every non-null global payload already equals the slot file
+  /// or the parked file. A matching temporary hold is not a finished copy.
+  static Future<bool> _slotHoldsFinalCopy(
+    GameStorage storage,
+    int slot, {
+    required String? staging,
+    required String? hold,
+    required String? displaced,
+  }) async {
+    final raw = await storage.loadSlotRaw(slot);
+    final parked = await storage.loadExtra(GameStorage.displacedKeyFor(slot));
+    var saw = false;
+    bool covered(String? global) {
+      if (global == null) return true;
+      saw = true;
+      return raw == global || parked == global;
+    }
+
+    final ok = covered(staging) && covered(hold) && covered(displaced);
     return saw && ok;
   }
 
@@ -340,10 +364,7 @@ abstract final class SaveSwap {
           active == staging) {
         return _publishHeldParty(storage, index, hold);
       }
-      if (staging != null &&
-          hold != null &&
-          active != null &&
-          active != hold) {
+      if (staging != null && hold != null && active != null && active != hold) {
         return _completeOpenSwap(storage, index, staging: staging, hold: hold);
       }
       return _finishClear(storage, index, SaveSwapOutcome.aborted);
@@ -395,12 +416,16 @@ abstract final class SaveSwap {
   /// the next session. The hold becomes the device copy and staging becomes
   /// active. A failed write deletes nothing.
   /// Write the held party into the parked copy, then drop the journal.
-  /// A failed publish leaves the hold in place.
+  /// A failed publish leaves the hold in place. A parked file that migration
+  /// already refused to replace is left alone while the global journal remains.
   static Future<SaveSwapOutcome> _publishHeldParty(
     GameStorage storage,
     int index,
     String hold,
   ) async {
+    if (await _migrationRefusedThisParkedFile(storage, index, hold)) {
+      return SaveSwapOutcome.unresolved;
+    }
     final parked = await storage.loadExtra(GameStorage.displacedKeyFor(index));
     if (parked != hold) {
       final published = await storage.writeExtra(
@@ -423,6 +448,9 @@ abstract final class SaveSwap {
     required String hold,
   }) async {
     if (storage.activeSlotIndex != slot) return SaveSwapOutcome.unresolved;
+    if (await _migrationRefusedThisParkedFile(storage, slot, hold)) {
+      return SaveSwapOutcome.unresolved;
+    }
     // Name the commit before replacing active. A kill after the active
     // write is then the swap-commit path, which publishes the hold.
     // Leaving the phase on swap-stage made the next retry treat the new
@@ -452,6 +480,24 @@ abstract final class SaveSwap {
       return SaveSwapOutcome.unresolved;
     }
     return _finishClear(storage, slot, SaveSwapOutcome.committed);
+  }
+
+  /// The global journal still owns this transaction. The parked file is a
+  /// third party: it is not the hold, and it is not the displaced payload
+  /// migration was allowed to copy. Publishing would replace the file the
+  /// copy just refused.
+  static Future<bool> _migrationRefusedThisParkedFile(
+    GameStorage storage,
+    int index,
+    String hold,
+  ) async {
+    if (index <= 0) return false;
+    if (await storage.loadExtra(GameStorage.journalKey) == null) return false;
+    final source = await storage.loadExtra(GameStorage.displacedKey);
+    if (source == null) return false;
+    final parked = await storage.loadExtra(GameStorage.displacedKeyFor(index));
+    if (parked == null || parked == hold || parked == source) return false;
+    return true;
   }
 
   /// A recovery that finished the swap is the result. Anything else that is
