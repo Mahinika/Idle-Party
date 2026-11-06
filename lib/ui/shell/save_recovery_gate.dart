@@ -9,7 +9,9 @@ import '../game_theme.dart';
 /// because that is the screen a boot with an unfinished copy opens. The
 /// player finds it covering the fight until both copies are durable.
 /// RETRY finishes a copy whose owner is known. An unmatched older copy
-/// offers export and the other slots instead. Purchases and combat stay off.
+/// offers export and the other slots instead. An empty slot opens party
+/// setup and does not start a fight until that game is saved. Purchases
+/// and combat stay off.
 class SaveRecoveryGate extends StatelessWidget {
   const SaveRecoveryGate({
     super.key,

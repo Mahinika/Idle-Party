@@ -82,7 +82,10 @@ names its slot. That name is enough to finish a slot 0 swap while another
 save exists. An older journal has no name. One present slot file in the
 payloads is the owner. No present file, including a slot that was erased
 or quarantined, keeps every byte. Saving stays off. Export and an
-unaffected slot are the way out. Retry does not guess an owner.
+unaffected slot are the way out. An existing file loads with saving on.
+An empty file opens party setup and does not enter a fight until that
+new game is saved. Back stays on recovery. A save that returns false or
+throws leaves the slot empty. Retry does not guess an owner.
 
 A slot with no journal of its own is a finished migration only when every
 global payload already matches that slot's active file or its parked file.

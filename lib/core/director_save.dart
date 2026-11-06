@@ -1,5 +1,17 @@
 part of 'game_director.dart';
 
+/// Opening another file while an unmatched copy is still on this device.
+enum RecoverySlotOpen {
+  /// Not a safe choice. Recovery stays up.
+  refused,
+
+  /// An existing file was loaded and saving is on.
+  ready,
+
+  /// Empty file. Party setup must save before any fight.
+  needsNewGame,
+}
+
 /// Save — extracted from GameDirector.
 extension GameDirectorSave on GameDirector {
   void _persist() {
@@ -270,35 +282,50 @@ extension GameDirectorSave on GameDirector {
 
   /// Open a slot that is not part of an unmatched journal.
   ///
-  /// The global bytes stay. The next launch still shows recovery if that
-  /// journal is still unassigned. Slot 0 is refused while it exists.
-  Future<bool> openSafeRecoverySlot(int index) {
+  /// An existing file loads and saving turns on. An empty file only arms
+  /// party setup. The global bytes stay, and play stays behind recovery
+  /// until that new game has been saved. Slot 0 is refused while the
+  /// journal exists.
+  Future<RecoverySlotOpen> openSafeRecoverySlot(int index) {
     return _enqueueSave(() async {
-      if (!_saveRecoveryAmbiguous || index <= 0) return false;
+      if (!_saveRecoveryAmbiguous || index <= 0) {
+        return RecoverySlotOpen.refused;
+      }
       await _refreshSafeRecoverySlots();
-      if (!_safeRecoverySlots.contains(index)) return false;
+      if (!_safeRecoverySlots.contains(index)) {
+        return RecoverySlotOpen.refused;
+      }
+      final raw = await _storage.loadSlotRaw(index);
+      if (raw == null) {
+        _pendingNewGameSlot = index;
+        _pendingRecoveryNewGame = true;
+        if (!_directorClosed) _directorNotify();
+        return RecoverySlotOpen.needsNewGame;
+      }
+      final loaded = await _storage.loadSlot(index);
+      if (loaded == null) return RecoverySlotOpen.refused;
       await _storage.setActiveSlot(index);
       _activeSlot = index;
-      final loaded = await _storage.load();
-      if (loaded == null) {
-        _state = GameLogic.createInitialState();
-        _hasExistingSave = false;
-        _spatialTimer?.cancel();
-        _spatialTimer = null;
-        _spatial = null;
-      } else {
-        _hasExistingSave = true;
-        await _installCaughtUp(loaded);
-      }
+      _hasExistingSave = true;
+      await _installCaughtUp(loaded);
       _durableSaveBlocked = false;
       _saveRecoveryMessage = '';
       _saveRecoveryAmbiguous = false;
       _safeRecoverySlots = const [];
+      _pendingRecoveryNewGame = false;
+      _pendingNewGameSlot = null;
+      _saveSlots = await _storage.listSlots();
       _syncHubIdleTimer();
       ensureCombatLoop();
       _directorNotify();
-      return true;
+      return RecoverySlotOpen.ready;
     });
+  }
+
+  /// Leave party setup without writing the empty recovery slot.
+  void cancelRecoveryNewGame() {
+    _pendingRecoveryNewGame = false;
+    if (_durableSaveBlocked) _pendingNewGameSlot = null;
   }
 
   Future<void> _refreshSafeRecoverySlots() async {
@@ -785,95 +812,179 @@ extension GameDirectorSave on GameDirector {
   }
 
   /// Hard start: create a fresh party in the armed slot (or the active one).
-  /// Queued, and refused while recovery is unfinished.
-  Future<void> startNewGame(
+  ///
+  /// Returns false when the game was not saved. A recovery escape into an
+  /// empty slot is the one case that may run while saving is paused, and
+  /// only after its own file is durable. False or a thrown write rolls that
+  /// attempt back and leaves the blocked journal alone.
+  Future<bool> startNewGame(
     List<HeroSpecId> partySpecs, {
     String? partyName,
     HeroRace partyRace = HeroRace.human,
     List<HeroRace>? partyRaces,
     List<HeroSex>? partySexes,
   }) {
-    return _enqueueSave<void>(() async {
-      if (_durableSaveBlocked) return;
+    return _enqueueSave<bool>(() async {
       final slot = (_pendingNewGameSlot ?? _activeSlot).clamp(
         0,
         GameStorage.slotCount - 1,
       );
+      final fromRecovery = _durableSaveBlocked && _pendingNewGameSlot == slot;
+      if (_durableSaveBlocked && !fromRecovery) return false;
+      if (fromRecovery) {
+        await _refreshSafeRecoverySlots();
+        if (!_safeRecoverySlots.contains(slot)) return false;
+        if (await _storage.loadSlotRaw(slot) != null) return false;
+      }
       if (await _slotJournalOpen(slot)) {
         _blockSaveRecovery(
           'Saving is paused. This file still has an unfinished copy, so a new game was not started.',
         );
-        return;
+        return false;
       }
-      await _startNewGameTurn(
+      return _startNewGameTurn(
         partySpecs,
         partyName: partyName,
         partyRace: partyRace,
         partyRaces: partyRaces,
         partySexes: partySexes,
         slot: slot,
+        requireDurable: fromRecovery,
       );
     });
   }
 
-  Future<void> _startNewGameTurn(
+  Future<bool> _startNewGameTurn(
     List<HeroSpecId> partySpecs, {
     String? partyName,
     HeroRace partyRace = HeroRace.human,
     List<HeroRace>? partyRaces,
     List<HeroSex>? partySexes,
     required int slot,
+    required bool requireDurable,
   }) async {
+    final previous = _state;
+    final previousHas = _hasExistingSave;
+    final previousSlot = _activeSlot;
+    final previousEpoch = _friendEpoch;
     _friendEpoch++;
     _pendingNewGameSlot = null;
-    await _storage.setActiveSlot(slot);
-    _activeSlot = slot;
-    _awaitingWipeChoice = false;
-    uiFeedback.dismissOfflineSummary();
-    _spatialTimer?.cancel();
-    _spatial = null;
-    final layout = _phoneHadNoSaveAtBoot ? HomeLayout.home : _state.homeLayout;
-    final panelFull = _state.homePanelFull;
-    _state =
-        GameLogic.createInitialState(
-          partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
-          partyName: partyName,
-          partyRace: partyRace,
-          partyRaces: partyRaces,
-          partySexes: partySexes,
-        ).copyWith(
-          homeLayout: layout,
-          homePanelFull: layout == HomeLayout.home ? true : panelFull,
-        );
-    if (_phoneHadNoSaveAtBoot) {
-      _state = ReinstallPouch.markDue(_state);
-    }
-    _hasExistingSave = true;
-    _notePlaySession(newGame: true);
-    _noteAppColdStart();
-    _noteFunnelSession(newInstall: true);
-    _syncDevicePrefs();
-    _lastHighestDungeon = _state.highestDungeonCleared;
-    _ensureUiTimer();
-    _syncHubIdleTimer();
-    _directorNotify();
-    DebugPlayLog.event('new_game', DebugPlayLog.bootDetail(_state));
-    final snapshot = _stampCloudClock(_state);
-    _state = snapshot;
+    var switched = false;
     var saved = false;
     try {
-      saved = await _storage.save(snapshot);
+      await _storage.setActiveSlot(slot);
+      switched = true;
+      _activeSlot = slot;
+      _awaitingWipeChoice = false;
+      uiFeedback.dismissOfflineSummary();
+      _spatialTimer?.cancel();
+      _spatial = null;
+      final layout = _phoneHadNoSaveAtBoot
+          ? HomeLayout.home
+          : previous.homeLayout;
+      final panelFull = previous.homePanelFull;
+      _state =
+          GameLogic.createInitialState(
+            partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
+            partyName: partyName,
+            partyRace: partyRace,
+            partyRaces: partyRaces,
+            partySexes: partySexes,
+          ).copyWith(
+            homeLayout: layout,
+            homePanelFull: layout == HomeLayout.home ? true : panelFull,
+          );
+      if (_phoneHadNoSaveAtBoot) {
+        _state = ReinstallPouch.markDue(_state);
+      }
+      if (!requireDurable) _hasExistingSave = true;
+      _notePlaySession(newGame: true);
+      _noteAppColdStart();
+      _noteFunnelSession(newInstall: true);
+      _syncDevicePrefs();
+      _lastHighestDungeon = _state.highestDungeonCleared;
+      _ensureUiTimer();
+      _syncHubIdleTimer();
+      _directorNotify();
+      DebugPlayLog.event('new_game', DebugPlayLog.bootDetail(_state));
+      final snapshot = _stampCloudClock(_state);
+      _state = snapshot;
+      try {
+        saved = await _storage.save(snapshot);
+      } catch (error, stack) {
+        debugPrint('new game save failed: $error\n$stack');
+        saved = false;
+      }
+      if (requireDurable && !saved) {
+        await _rollbackRecoveryNewGame(
+          previous: previous,
+          previousHas: previousHas,
+          previousSlot: previousSlot,
+          previousEpoch: previousEpoch,
+          armedSlot: slot,
+        );
+        return false;
+      }
+      _hasExistingSave = true;
+      if (requireDurable) {
+        _durableSaveBlocked = false;
+        _saveRecoveryMessage = '';
+        _saveRecoveryAmbiguous = false;
+        _safeRecoverySlots = const [];
+        _pendingRecoveryNewGame = false;
+      }
+      if (saved) PlayGamesBridge.scheduleCloudUpload(snapshot);
+      _saveSlots = await _storage.listSlots();
+      _directorNotify();
+      if (_state.homeLayout == HomeLayout.home) {
+        enterDungeon(dungeonId: 'sandy');
+      }
+      unawaited(syncFriendReferral());
+      return true;
     } catch (error, stack) {
-      debugPrint('new game save failed: $error\n$stack');
-      saved = false;
+      debugPrint('new game setup failed: $error\n$stack');
+      if (requireDurable && !saved) {
+        await _rollbackRecoveryNewGame(
+          previous: previous,
+          previousHas: previousHas,
+          previousSlot: previousSlot,
+          previousEpoch: previousEpoch,
+          armedSlot: slot,
+          switched: switched,
+        );
+        return false;
+      }
+      rethrow;
     }
-    if (saved) PlayGamesBridge.scheduleCloudUpload(snapshot);
+  }
+
+  Future<void> _rollbackRecoveryNewGame({
+    required GameState previous,
+    required bool previousHas,
+    required int previousSlot,
+    required int previousEpoch,
+    required int armedSlot,
+    bool switched = true,
+  }) async {
+    if (switched) {
+      try {
+        await _storage.setActiveSlot(previousSlot);
+      } catch (error, stack) {
+        debugPrint(
+          'new game rollback could not restore the slot: $error\n$stack',
+        );
+      }
+    }
+    _activeSlot = previousSlot;
+    _state = previous;
+    _hasExistingSave = previousHas;
+    _friendEpoch = previousEpoch;
+    _pendingNewGameSlot = armedSlot;
+    _spatialTimer?.cancel();
+    _spatialTimer = null;
+    _spatial = null;
     _saveSlots = await _storage.listSlots();
-    _directorNotify();
-    if (_state.homeLayout == HomeLayout.home) {
-      enterDungeon(dungeonId: 'sandy');
-    }
-    unawaited(syncFriendReferral());
+    if (!_directorClosed) _directorNotify();
   }
 
   /// One count per cold start. A new game is sitting 1.

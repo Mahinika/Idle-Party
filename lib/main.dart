@@ -447,11 +447,11 @@ class _GameHomePageState extends State<GameHomePage>
       return;
     }
     _director.armNewGameSlot(empty);
-    await _director.startNewGame(
+    final saved = await _director.startNewGame(
       HeroSpecs.starterUnlocked,
       partyName: 'The Party',
     );
-    if (!mounted) return;
+    if (!mounted || !saved) return;
     unawaited(BootFunnel.note(FunnelAnalytics.newGameConfirmed));
     _director.clearPendingStartMenu();
     _director.enterDungeon();
@@ -625,13 +625,13 @@ class _GameHomePageState extends State<GameHomePage>
     List<HeroRace> races, {
     List<HeroSex>? sexes,
   }) async {
-    await _director.startNewGame(
+    final saved = await _director.startNewGame(
       specs,
       partyName: partyName,
       partyRaces: races,
       partySexes: sexes,
     );
-    if (!mounted) return;
+    if (!mounted || !saved) return;
     unawaited(BootFunnel.note(FunnelAnalytics.newGameConfirmed));
     _director.clearPendingStartMenu();
     setState(() => _phase = _AppPhase.play);
@@ -751,7 +751,10 @@ class _GameHomePageState extends State<GameHomePage>
     if (_phase == _AppPhase.newGamePicker) {
       return NewGamePartyPicker(
         key: const ValueKey('new-game-picker'),
-        onBack: () => setState(() => _phase = _menuBeforeNewGame),
+        onBack: () {
+          _director.cancelRecoveryNewGame();
+          setState(() => _phase = _menuBeforeNewGame);
+        },
         onConfirm: _confirmNewGame,
       );
     }
@@ -783,14 +786,16 @@ class _GameHomePageState extends State<GameHomePage>
                 : null,
             safeSlots: _director.safeRecoverySlots,
             onOpenSlot: (slot) async {
-              final ok = await _director.openSafeRecoverySlot(slot);
-              if (!mounted || !ok) return;
-              setState(() {
-                _phase = _director.hasExistingSave
-                    ? _AppPhase.play
-                    : _AppPhase.newGamePicker;
-              });
-              if (_phase == _AppPhase.play) _director.ensureCombatLoop();
+              final opened = await _director.openSafeRecoverySlot(slot);
+              if (!mounted || opened == RecoverySlotOpen.refused) return;
+              if (opened == RecoverySlotOpen.needsNewGame) {
+                _director.takePendingRecoveryNewGame();
+                _menuBeforeNewGame = _AppPhase.saveRecovery;
+                setState(() => _phase = _AppPhase.newGamePicker);
+                return;
+              }
+              setState(() => _phase = _AppPhase.play);
+              _director.ensureCombatLoop();
             },
           ),
         ),
@@ -800,7 +805,13 @@ class _GameHomePageState extends State<GameHomePage>
     return AnimatedBuilder(
       animation: _director,
       builder: (context, _) {
-        if (_director.pendingStartMenu && _phase == _AppPhase.play) {
+        if (_director.pendingRecoveryNewGame && _phase == _AppPhase.play) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted || !_director.takePendingRecoveryNewGame()) return;
+            _menuBeforeNewGame = _AppPhase.play;
+            setState(() => _phase = _AppPhase.newGamePicker);
+          });
+        } else if (_director.pendingStartMenu && _phase == _AppPhase.play) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             if (!_director.pendingStartMenu) return;

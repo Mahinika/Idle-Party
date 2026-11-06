@@ -432,6 +432,10 @@ class InMemoryGameStorage implements GameStorage {
   /// Test seam. The next active-slot write fails and does not change bytes.
   bool failNextActiveWrite = false;
 
+  /// In-process test seam. The next [save] throws before any byte changes.
+  /// This is not an operating-system kill.
+  bool throwNextActiveWrite = false;
+
   /// Test seam. After this many successful [save] calls, later saves return
   /// false and do not change bytes. Armed by [armFailAfterSuccessfulSaves].
   int? failAfterSuccessfulSaves;
@@ -578,6 +582,10 @@ class InMemoryGameStorage implements GameStorage {
   @override
   Future<bool> save(GameState state) async {
     await _awaitPause();
+    if (throwNextActiveWrite) {
+      throwNextActiveWrite = false;
+      throw StateError('simulated active write failure');
+    }
     if (failNextActiveWrite) {
       failNextActiveWrite = false;
       return false;

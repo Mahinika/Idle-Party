@@ -2323,9 +2323,20 @@ class GameDirector extends ChangeNotifier {
   }
 
   bool _pendingStartMenu = false;
+  bool _pendingRecoveryNewGame = false;
   NavIntent? _pendingHubNav;
 
   bool get pendingStartMenu => _pendingStartMenu;
+
+  /// Play is up and an empty recovery slot is waiting for party setup.
+  bool get pendingRecoveryNewGame => _pendingRecoveryNewGame;
+
+  /// One-shot. The shell that handles the tap consumes this.
+  bool takePendingRecoveryNewGame() {
+    final pending = _pendingRecoveryNewGame;
+    _pendingRecoveryNewGame = false;
+    return pending;
+  }
 
   /// Consume a one-shot menu open after wipe → hub (POWER / BAG / Shop).
   NavIntent? takePendingHubNav() {

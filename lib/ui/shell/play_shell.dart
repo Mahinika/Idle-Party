@@ -400,7 +400,12 @@ class _PlayShellState extends State<PlayShell> {
                 }
               : null,
           safeSlots: director.safeRecoverySlots,
-          onOpenSlot: (slot) => director.openSafeRecoverySlot(slot),
+          onOpenSlot: (slot) async {
+            final opened = await director.openSafeRecoverySlot(slot);
+            if (opened == RecoverySlotOpen.ready) {
+              director.ensureCombatLoop();
+            }
+          },
         ),
       ],
     );

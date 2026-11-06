@@ -1254,10 +1254,20 @@ void main() {
         expect(exported, contains(other));
         expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
         expect(await director.retrySaveRecovery(), isFalse);
-        expect(await director.openSafeRecoverySlot(0), isFalse);
-        expect(await director.openSafeRecoverySlot(2), isFalse);
-        expect(await director.openSafeRecoverySlot(3), isTrue);
-        expect(director.saveRecoveryBlocked, isFalse);
+        expect(
+          await director.openSafeRecoverySlot(0),
+          RecoverySlotOpen.refused,
+        );
+        expect(
+          await director.openSafeRecoverySlot(2),
+          RecoverySlotOpen.refused,
+        );
+        expect(
+          await director.openSafeRecoverySlot(3),
+          RecoverySlotOpen.needsNewGame,
+        );
+        expect(director.saveRecoveryBlocked, isTrue);
+        expect(await storage.loadSlotRaw(3), isNull);
         expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
         expect(await storage.loadExtra(GameStorage.holdKey), other);
       },
@@ -1440,10 +1450,18 @@ void main() {
         expect(await storage.loadSlotRaw(0), planted.slot0);
         expect(await storage.loadSlotRaw(1), selected);
         expect(await director.retrySaveRecovery(), isFalse);
-        expect(await director.openSafeRecoverySlot(0), isFalse);
+        expect(
+          await director.openSafeRecoverySlot(0),
+          RecoverySlotOpen.refused,
+        );
         expect(director.safeRecoverySlots, contains(4));
         expect(director.safeRecoverySlots, isNot(contains(0)));
-        expect(await director.openSafeRecoverySlot(4), isTrue);
+        expect(
+          await director.openSafeRecoverySlot(4),
+          RecoverySlotOpen.needsNewGame,
+        );
+        expect(director.saveRecoveryBlocked, isTrue);
+        expect(await storage.loadSlotRaw(4), isNull);
         expect(await storage.loadSlotRaw(0), planted.slot0);
         expect(await storage.loadExtra(GameStorage.journalKey), 'swap-commit');
       },
@@ -1474,9 +1492,14 @@ void main() {
       expect(await director.retrySaveRecovery(), isFalse);
       expect(await director.debugTryPersist(), isFalse);
       expect(await storage.loadSlotRaw(0), planted.slot0);
-      expect(await director.openSafeRecoverySlot(0), isFalse);
+      expect(await director.openSafeRecoverySlot(0), RecoverySlotOpen.refused);
       expect(director.safeRecoverySlots, contains(4));
-      expect(await director.openSafeRecoverySlot(4), isTrue);
+      expect(
+        await director.openSafeRecoverySlot(4),
+        RecoverySlotOpen.needsNewGame,
+      );
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(await storage.loadSlotRaw(4), isNull);
       expect(await storage.loadSlotRaw(0), planted.slot0);
       expect(await storage.loadExtra(GameStorage.journalKey), 'swap-commit');
       expect(await storage.loadExtra(GameStorage.holdKey), planted.held);
@@ -2154,6 +2177,289 @@ void main() {
       expect(disk.metaDepth.grantedShopPurchaseIds, contains('import-grant'));
     });
 
+    testWidgets(
+      'recovery overlay saves an empty slot before play and reads it back',
+      (tester) async {
+        final planted = await _ambiguousEscape();
+        final director = GameDirector(
+          planted.storage,
+          enableSpatialLoop: false,
+        );
+        await _pumpRecoveryApp(tester, director);
+        expect(find.text('SAVE RECOVERY'), findsOneWidget);
+        expect(find.text('ENTER DUNGEON'), findsNothing);
+        expect(find.text('OPEN SLOT 3'), findsOneWidget);
+        expect(find.text('OPEN SLOT 5'), findsOneWidget);
+
+        await tester.ensureVisible(find.text('OPEN SLOT 3'));
+        await tester.tap(find.text('OPEN SLOT 3'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.text('SAVE RECOVERY'), findsNothing);
+        expect(director.saveRecoveryBlocked, isFalse);
+        expect(director.hasExistingSave, isTrue);
+        expect(director.state.lifetimeGoldEarned, 40);
+        expect(
+          director.state.metaDepth.grantedShopPurchaseIds,
+          contains('slot2-keep'),
+        );
+        expect(
+          await planted.storage.loadExtra(GameStorage.journalKey),
+          'swap-stage',
+        );
+        _expectParty(
+          await planted.storage.loadSlotRaw(2),
+          life: 40,
+          purchase: 'slot2-keep',
+        );
+        expect(
+          await planted.storage.loadExtra(GameStorage.holdKey),
+          planted.held,
+        );
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        final cold = GameDirector(planted.storage, enableSpatialLoop: false);
+        await _pumpRecoveryApp(tester, cold);
+        expect(find.text('SAVE RECOVERY'), findsOneWidget);
+        expect(find.text('ENTER DUNGEON'), findsNothing);
+        await tester.ensureVisible(find.text('OPEN SLOT 5'));
+        await tester.tap(find.text('OPEN SLOT 5'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.text('START'), findsOneWidget);
+        expect(find.text('ENTER DUNGEON'), findsNothing);
+        expect(cold.saveRecoveryBlocked, isTrue);
+        expect(await planted.storage.loadSlotRaw(4), isNull);
+
+        await tester.enterText(find.byType(TextField), 'Ember Test');
+        await tester.pump();
+        await tester.tap(find.text('START'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 800));
+        expect(cold.saveRecoveryBlocked, isFalse);
+        expect(cold.hasExistingSave, isTrue);
+        expect(cold.state.partyName, 'Ember Test');
+        cold.debugSetGold(4242);
+        expect(await cold.debugTryPersist(), isTrue);
+        expect(
+          GameLogic.importSaveJson(
+            (await planted.storage.loadSlotRaw(4))!,
+          )!.gold,
+          4242,
+        );
+        _expectParty(
+          await planted.storage.loadSlotRaw(2),
+          life: 40,
+          purchase: 'slot2-keep',
+        );
+        expect(
+          await planted.storage.loadExtra(GameStorage.journalKey),
+          'swap-stage',
+        );
+        expect(
+          await planted.storage.loadExtra(GameStorage.holdKey),
+          planted.held,
+        );
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+        final reboot = GameDirector(planted.storage, enableSpatialLoop: false);
+        await _pumpRecoveryApp(tester, reboot);
+        expect(find.text('SAVE RECOVERY'), findsOneWidget);
+        expect(find.text('ENTER DUNGEON'), findsNothing);
+        expect(
+          GameLogic.importSaveJson(
+            (await planted.storage.loadSlotRaw(4))!,
+          )!.gold,
+          4242,
+        );
+        await tester.ensureVisible(find.text('OPEN SLOT 5'));
+        await tester.tap(find.text('OPEN SLOT 5'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(reboot.saveRecoveryBlocked, isFalse);
+        expect(reboot.hasExistingSave, isTrue);
+        expect(reboot.state.gold, 4242);
+        expect(reboot.state.partyName, 'Ember Test');
+        _expectParty(
+          await planted.storage.loadSlotRaw(2),
+          life: 40,
+          purchase: 'slot2-keep',
+        );
+        expect(
+          await planted.storage.loadExtra(GameStorage.journalKey),
+          'swap-stage',
+        );
+        expect(
+          await planted.storage.loadExtra(GameStorage.holdKey),
+          planted.held,
+        );
+        await _disposeRecoveryApp(tester);
+      },
+    );
+
+    testWidgets('recovery back and a failed new game stay off the empty slot', (
+      tester,
+    ) async {
+      final planted = await _ambiguousEscape();
+      final director = GameDirector(planted.storage, enableSpatialLoop: false);
+      await _pumpRecoveryApp(tester, director);
+      await tester.ensureVisible(find.text('OPEN SLOT 5'));
+      await tester.tap(find.text('OPEN SLOT 5'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('START'), findsOneWidget);
+      await tester.tap(find.text('BACK'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(find.text('SAVE RECOVERY'), findsOneWidget);
+      expect(find.text('ENTER DUNGEON'), findsNothing);
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(await planted.storage.loadSlotRaw(4), isNull);
+      expect(await planted.storage.loadSlotRaw(2), planted.slot2);
+      expect(
+        await planted.storage.loadExtra(GameStorage.journalKey),
+        'swap-stage',
+      );
+
+      await tester.ensureVisible(find.text('OPEN SLOT 5'));
+      await tester.tap(find.text('OPEN SLOT 5'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      planted.storage.failNextActiveWrite = true;
+      await tester.enterText(find.byType(TextField), 'Ember Test');
+      await tester.pump();
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('START'), findsOneWidget);
+      expect(find.text('ENTER DUNGEON'), findsNothing);
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(director.hasExistingSave, isTrue);
+      expect(await planted.storage.loadSlotRaw(4), isNull);
+      expect(await planted.storage.loadSlotRaw(2), planted.slot2);
+      expect(
+        await planted.storage.loadExtra(GameStorage.journalKey),
+        'swap-stage',
+      );
+      expect(
+        await planted.storage.loadExtra(GameStorage.holdKey),
+        planted.held,
+      );
+
+      planted.storage.throwNextActiveWrite = true;
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('START'), findsOneWidget);
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(await planted.storage.loadSlotRaw(4), isNull);
+      expect(await planted.storage.loadSlotRaw(2), planted.slot2);
+      expect(
+        await planted.storage.loadExtra(GameStorage.journalKey),
+        'swap-stage',
+      );
+      await tester.tap(find.text('BACK'));
+      await tester.pump();
+      expect(find.text('SAVE RECOVERY'), findsOneWidget);
+      expect(find.text('OPEN SLOT 5'), findsOneWidget);
+    });
+
+    testWidgets('in-play recovery opens an empty slot through party setup', (
+      tester,
+    ) async {
+      final storage = InMemoryGameStorage();
+      final slot0 = GameLogic.exportSaveJson(
+        _party(life: 11, purchaseIds: const ['slot0-keep']),
+      );
+      await storage.writeActiveRaw(slot0);
+      expect(await storage.loadSlotRaw(0), slot0);
+      final director = GameDirector(storage, enableSpatialLoop: false);
+      await _pumpRecoveryApp(tester, director);
+      expect(find.text('SAVE RECOVERY'), findsNothing);
+      expect(director.hasExistingSave, isTrue);
+      final kept = await storage.loadSlotRaw(0);
+
+      final held = GameLogic.exportSaveJson(
+        _party(life: 500, purchaseIds: const ['held-only']),
+      );
+      await storage.writeExtra(GameStorage.journalKey, 'swap-stage');
+      await storage.writeExtra(GameStorage.stagingKey, held);
+      await storage.writeExtra(GameStorage.holdKey, held);
+      expect(await director.restoreDisplacedDeviceSave(), isFalse);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(find.text('SAVE RECOVERY'), findsOneWidget);
+      expect(find.text('RETRY'), findsOneWidget);
+      expect(director.saveRecoveryAmbiguous, isFalse);
+      await tester.tap(find.text('RETRY'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('RETRY'), findsNothing);
+      expect(find.text('OPEN SLOT 2'), findsOneWidget);
+      expect(await storage.loadSlotRaw(0), kept);
+      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
+
+      await tester.ensureVisible(find.text('OPEN SLOT 2'));
+      await tester.tap(find.text('OPEN SLOT 2'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('START'), findsOneWidget);
+      expect(find.text('ENTER DUNGEON'), findsNothing);
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(await storage.loadSlotRaw(1), isNull);
+      expect(await storage.loadSlotRaw(0), kept);
+
+      await tester.tap(find.text('BACK'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(find.text('SAVE RECOVERY'), findsOneWidget);
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(await storage.loadSlotRaw(0), kept);
+      expect(await storage.loadExtra(GameStorage.holdKey), held);
+
+      await tester.ensureVisible(find.text('OPEN SLOT 2'));
+      await tester.tap(find.text('OPEN SLOT 2'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.enterText(find.byType(TextField), 'Ember Test');
+      await tester.pump();
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
+      expect(director.saveRecoveryBlocked, isFalse);
+      expect(director.hasExistingSave, isTrue);
+      expect(director.state.partyName, 'Ember Test');
+      director.debugSetGold(4242);
+      expect(await director.debugTryPersist(), isTrue);
+      expect(await storage.loadSlotRaw(0), kept);
+      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
+      expect(await storage.loadExtra(GameStorage.holdKey), held);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      final reboot = GameDirector(storage, enableSpatialLoop: false);
+      await _pumpRecoveryApp(tester, reboot);
+      expect(find.text('SAVE RECOVERY'), findsOneWidget);
+      expect(
+        GameLogic.importSaveJson((await storage.loadSlotRaw(1))!)!.gold,
+        4242,
+      );
+      expect(await storage.loadSlotRaw(0), kept);
+      await tester.ensureVisible(find.text('OPEN SLOT 2'));
+      await tester.tap(find.text('OPEN SLOT 2'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(reboot.hasExistingSave, isTrue);
+      expect(reboot.state.gold, 4242);
+      expect(reboot.state.partyName, 'Ember Test');
+      expect(await storage.loadSlotRaw(0), kept);
+      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-stage');
+      expect(await storage.loadExtra(GameStorage.holdKey), held);
+      await _disposeRecoveryApp(tester);
+    });
+
     testWidgets('cold boot with the intro shows recovery before play', (
       tester,
     ) async {
@@ -2305,6 +2611,51 @@ Future<bool> _finalHasCinders(InMemoryGameStorage storage, int cinders) async {
     if (imported?.metaDepth.cinders == cinders) return true;
   }
   return false;
+}
+
+Future<({InMemoryGameStorage storage, String slot2, String held})>
+_ambiguousEscape() async {
+  final storage = InMemoryGameStorage();
+  final slot2 = GameLogic.exportSaveJson(
+    _party(life: 40, purchaseIds: const ['slot2-keep']),
+  );
+  final held = GameLogic.exportSaveJson(
+    _party(life: 500, purchaseIds: const ['held-only']),
+  );
+  await storage.setActiveSlot(2);
+  await storage.writeActiveRaw(slot2);
+  await storage.writeExtra(GameStorage.journalKey, 'swap-stage');
+  await storage.writeExtra(GameStorage.stagingKey, held);
+  await storage.writeExtra(GameStorage.holdKey, held);
+  return (storage: storage, slot2: slot2, held: held);
+}
+
+void _expectParty(String? raw, {required int life, required String purchase}) {
+  final parsed = GameLogic.importSaveJson(raw!);
+  expect(parsed, isNotNull);
+  expect(parsed!.lifetimeGoldEarned, life);
+  expect(parsed.metaDepth.grantedShopPurchaseIds, contains(purchase));
+  expect(parsed.metaDepth.grantedShopPurchaseIds, isNot(contains('held-only')));
+}
+
+Future<void> _disposeRecoveryApp(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pump(const Duration(milliseconds: 500));
+}
+
+Future<void> _pumpRecoveryApp(
+  WidgetTester tester,
+  GameDirector director,
+) async {
+  tester.view.physicalSize = const Size(400, 900);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(
+    MyApp(director: director, autoStartLoop: false, showIntro: false),
+  );
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
 }
 
 GameState _party({
