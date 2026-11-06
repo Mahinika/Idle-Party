@@ -59,13 +59,15 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Android platform
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
+          sdk="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          sm="$sdk/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$sm"
+          yes | "$sm" --sdk_root="$sdk" --licenses >/dev/null || true
+          "$sm" --sdk_root="$sdk" --install "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
+          echo "ANDROID_SDK_ROOT=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
 
       - name: Dependencies
         run: flutter pub get
