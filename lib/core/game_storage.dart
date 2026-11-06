@@ -101,7 +101,10 @@ abstract class GameStorage {
   static const String journalKey = 'idle_party_save_journal';
 
   /// Slot 0 keeps the original key so a file written before the keys were
-  /// split still resolves. Other slots never share that journal.
+  /// split still resolves. An early build also stored every slot's journal
+  /// under these unsuffixed names. The selected slot is not the owner.
+  /// [SaveSwap] copies them onto another slot only when that slot's saved
+  /// bytes are the only match.
   static String displacedKeyFor(int slot) =>
       slot <= 0 ? displacedKey : '${displacedKey}_$slot';
 

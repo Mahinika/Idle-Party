@@ -76,6 +76,14 @@ read was ignored. Those are closed here.
 An Android compile of this head is the evidence for the snapshot channel.
 No APK was uploaded and no device was installed.
 
+The unsuffixed journal is slot 0's file and also where an early build
+stored a copy for whichever slot was selected. The selected slot does not
+own it. One other slot's saved bytes in the payloads moves the journal
+there, and slot 0 is not overwritten. Two matches, or no match while
+another slot has a save, keep every byte and leave saving off, with
+export and the other slots. A journal that no other slot has a save for
+stays on the unsuffixed keys, and recovery may finish it there.
+
 A slot with no journal of its own is a finished migration only when every
 global payload already matches that slot's active file or its parked file.
 A temporary hold is not that copy. The global journal stays until the

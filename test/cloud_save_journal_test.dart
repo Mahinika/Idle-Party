@@ -1259,6 +1259,288 @@ void main() {
       expect(await storage.loadExtra(GameStorage.holdKey), owned);
     });
 
+    test('a proven slot 0 journal still publishes its own hold', () async {
+      final storage = InMemoryGameStorage();
+      final live = _party(life: 80, adFree: true, cinders: 4);
+      final incoming = _party(life: 500);
+      final liveJson = GameLogic.exportSaveJson(live);
+      final incomingJson = GameLogic.exportSaveJson(incoming);
+      await storage.setActiveSlot(0);
+      await storage.writeActiveRaw(incomingJson);
+      await storage.writeExtra(GameStorage.stagingKey, incomingJson);
+      await storage.writeExtra(GameStorage.holdKey, liveJson);
+      await storage.writeExtra(
+        GameStorage.displacedKey,
+        GameLogic.exportSaveJson(_party(life: 1)),
+      );
+      await storage.writeExtra(GameStorage.journalKey, 'swap-publish');
+      final director = GameDirector(storage, enableSpatialLoop: false);
+      addTearDown(director.dispose);
+      await director.boot();
+      expect(director.saveRecoveryBlocked, isFalse);
+      expect(await storage.loadExtra(GameStorage.journalKey), isNull);
+      expect(await _finalHasCinders(storage, 4), isFalse);
+      expect(
+        GameLogic.importSaveJson(
+          (await storage.loadExtra(GameStorage.displacedKey))!,
+        )!.metaDepth.cinders,
+        4,
+      );
+      expect(await director.debugTryPersist(), isTrue);
+      expect(
+        GameLogic.importSaveJson(
+          (await storage.loadSlotRaw(0))!,
+        )!.metaDepth.adFree,
+        isFalse,
+      );
+    });
+
+    test('selecting slot 0 does not apply a slot 2 journal', () async {
+      for (final phase in ['swap-commit', 'swap-publish']) {
+        final planted = await _plantSlot0Selection(phase: phase);
+        final storage = planted.storage;
+        expect(await SaveSwap.recover(storage), SaveSwapOutcome.unresolved);
+        expect(await storage.loadSlotRaw(0), planted.slot0);
+        expect(await storage.loadSlotRaw(2), planted.owner);
+        expect(await storage.loadExtra(GameStorage.journalKey), phase);
+        expect(await storage.loadExtra(GameStorage.holdKey), planted.held);
+        final director = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(director.dispose);
+        await director.boot();
+        expect(director.saveRecoveryBlocked, isFalse, reason: phase);
+        expect(await storage.loadExtra(GameStorage.journalKey), isNull);
+        expect(_rawHas(await storage.loadSlotRaw(0), 'd0-only'), isTrue);
+        expect(await storage.loadSlotRaw(2), planted.owner);
+        expect(
+          await storage.loadExtra(GameStorage.holdKeyFor(2)),
+          planted.held,
+        );
+        expect(await director.debugTryPersist(), isTrue, reason: phase);
+        expect(_rawHas(await storage.loadSlotRaw(0), 'd0-only'), isTrue);
+        expect(await storage.loadSlotRaw(2), planted.owner);
+        expect(await director.openSaveSlot(2), isTrue, reason: phase);
+        expect(_rawHas(await storage.loadSlotRaw(0), 'd0-only'), isTrue);
+        expect(await _slotFinalHasCinders(storage, 2, 4), isTrue);
+        expect(await director.restoreDisplacedDeviceSave(), isTrue);
+        expect(await _slotFinalHasCinders(storage, 2, 4), isTrue);
+        expect(_rawHas(await storage.loadSlotRaw(0), 'd0-only'), isTrue);
+      }
+    });
+
+    test('slot 0 selection cuts keep both parties for a later boot', () async {
+      const writes = 8;
+      for (var n = 1; n <= writes; n++) {
+        for (final kind in ['fail', 'throw-before', 'throw-after']) {
+          final planted = await _plantSlot0Selection(phase: 'swap-commit');
+          final storage = planted.storage;
+          storage.armExtraWriteCut(
+            failAt: kind == 'fail' ? n : null,
+            throwBefore: kind == 'throw-before' ? n : null,
+            throwAfter: kind == 'throw-after' ? n : null,
+          );
+          await SaveSwap.migrateLegacyGlobalJournal(storage);
+          expect(storage.failNthExtraWrite, isNull, reason: '$kind $n');
+          expect(storage.throwBeforeNthExtraWrite, isNull, reason: kind);
+          expect(storage.throwAfterNthExtraWrite, isNull, reason: kind);
+          storage.clearExtraWriteCut();
+          expect(await storage.loadSlotRaw(0), planted.slot0, reason: kind);
+          expect(await storage.loadSlotRaw(2), planted.owner, reason: kind);
+          await SaveSwap.recover(storage);
+          expect(await storage.loadSlotRaw(0), planted.slot0, reason: kind);
+          expect(
+            await _durableHas(storage, planted.held),
+            isTrue,
+            reason: '$kind $n',
+          );
+          final director = GameDirector(storage, enableSpatialLoop: false);
+          addTearDown(director.dispose);
+          await director.boot();
+          if (director.saveRecoveryBlocked) {
+            expect(await director.retrySaveRecovery(), isTrue, reason: kind);
+          }
+          expect(director.saveRecoveryBlocked, isFalse, reason: '$kind $n');
+          expect(
+            _rawHas(await storage.loadSlotRaw(0), 'd0-only'),
+            isTrue,
+            reason: '$kind $n',
+          );
+          expect(await director.debugTryPersist(), isTrue, reason: kind);
+          expect(
+            _rawHas(await storage.loadSlotRaw(0), 'd0-only'),
+            isTrue,
+            reason: '$kind $n save',
+          );
+          expect(
+            await _durableHas(storage, planted.held) ||
+                await _slotFinalHasCinders(storage, 2, 4),
+            isTrue,
+            reason: '$kind $n held party',
+          );
+          expect(await storage.loadSlotRaw(2), planted.owner, reason: kind);
+        }
+      }
+    });
+
+    test(
+      'a journal nobody matches is not given to the selected slot',
+      () async {
+        final planted = await _plantSlot0Selection(phase: 'swap-commit');
+        final storage = planted.storage;
+        final selected = GameLogic.exportSaveJson(
+          _party(life: 15, purchaseIds: const ['slot1-only']),
+        );
+        await _writeSlot(
+          storage,
+          2,
+          GameLogic.exportSaveJson(
+            _party(life: 9, purchaseIds: const ['other']),
+          ),
+        );
+        await _writeSlot(storage, 1, selected);
+        await storage.setActiveSlot(1);
+        final director = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(director.dispose);
+        await director.boot();
+        expect(director.saveRecoveryBlocked, isTrue);
+        expect(director.saveRecoveryAmbiguous, isTrue);
+        expect(await storage.loadSlotRaw(0), planted.slot0);
+        expect(await storage.loadSlotRaw(1), selected);
+        expect(await storage.loadExtra(GameStorage.journalKey), 'swap-commit');
+        expect(await storage.loadExtra(GameStorage.holdKey), planted.held);
+        final exported = await director.exportRecoveryRecords();
+        expect(exported, contains('d0-only'));
+        expect(exported, contains('swap-commit'));
+        expect(exported, contains(planted.held));
+        expect(
+          await SaveSwap.recover(storage, slot: 0),
+          SaveSwapOutcome.unresolved,
+        );
+        expect(await storage.loadSlotRaw(0), planted.slot0);
+        expect(await storage.loadSlotRaw(1), selected);
+        expect(await director.retrySaveRecovery(), isFalse);
+        expect(await director.openSafeRecoverySlot(0), isFalse);
+        expect(director.safeRecoverySlots, contains(4));
+        expect(director.safeRecoverySlots, isNot(contains(0)));
+        expect(await director.openSafeRecoverySlot(4), isTrue);
+        expect(await storage.loadSlotRaw(0), planted.slot0);
+        expect(await storage.loadExtra(GameStorage.journalKey), 'swap-commit');
+      },
+    );
+
+    test('a journal nobody matches is not applied to slot 0', () async {
+      final planted = await _plantSlot0Selection(phase: 'swap-commit');
+      final storage = planted.storage;
+      await _writeSlot(
+        storage,
+        2,
+        GameLogic.exportSaveJson(_party(life: 9, purchaseIds: const ['other'])),
+      );
+      await storage.setActiveSlot(0);
+      expect(await SaveSwap.recover(storage), SaveSwapOutcome.unresolved);
+      expect(await storage.loadSlotRaw(0), planted.slot0);
+      final director = GameDirector(storage, enableSpatialLoop: false);
+      addTearDown(director.dispose);
+      await director.boot();
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(director.saveRecoveryAmbiguous, isTrue);
+      expect(await storage.loadSlotRaw(0), planted.slot0);
+      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-commit');
+      expect(await storage.loadExtra(GameStorage.holdKey), planted.held);
+      final exported = await director.exportRecoveryRecords();
+      expect(exported, contains('d0-only'));
+      expect(exported, contains(planted.held));
+      expect(await director.retrySaveRecovery(), isFalse);
+      expect(await director.debugTryPersist(), isFalse);
+      expect(await storage.loadSlotRaw(0), planted.slot0);
+      expect(await director.openSafeRecoverySlot(0), isFalse);
+      expect(director.safeRecoverySlots, contains(4));
+      expect(await director.openSafeRecoverySlot(4), isTrue);
+      expect(await storage.loadSlotRaw(0), planted.slot0);
+      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-commit');
+      expect(await storage.loadExtra(GameStorage.holdKey), planted.held);
+    });
+
+    test('two owners are not resolved onto the selected slot', () async {
+      final planted = await _plantSlot0Selection(phase: 'swap-publish');
+      final storage = planted.storage;
+      await _writeSlot(storage, 3, planted.owner);
+      await storage.setActiveSlot(0);
+      final director = GameDirector(storage, enableSpatialLoop: false);
+      addTearDown(director.dispose);
+      await director.boot();
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(director.saveRecoveryAmbiguous, isTrue);
+      expect(await storage.loadSlotRaw(0), planted.slot0);
+      expect(await storage.loadSlotRaw(2), planted.owner);
+      expect(await storage.loadSlotRaw(3), planted.owner);
+      expect(await storage.loadExtra(GameStorage.holdKey), planted.held);
+      expect(director.safeRecoverySlots, contains(4));
+      expect(director.safeRecoverySlots, isNot(contains(0)));
+      expect(director.safeRecoverySlots, isNot(contains(2)));
+      expect(director.safeRecoverySlots, isNot(contains(3)));
+      expect(await director.retrySaveRecovery(), isFalse);
+      expect(await storage.loadSlotRaw(0), planted.slot0);
+    });
+
+    test(
+      'a nonzero selection does not receive another slot\'s journal',
+      () async {
+        final planted = await _plantSlot0Selection(phase: 'swap-commit');
+        final storage = planted.storage;
+        final selected = GameLogic.exportSaveJson(
+          _party(life: 15, purchaseIds: const ['slot1-only']),
+        );
+        await _writeSlot(storage, 1, selected);
+        await storage.setActiveSlot(1);
+        final director = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(director.dispose);
+        await director.boot();
+        expect(director.saveRecoveryBlocked, isFalse);
+        expect(_rawHas(await storage.loadSlotRaw(1), 'slot1-only'), isTrue);
+        expect(await storage.loadSlotRaw(0), planted.slot0);
+        expect(await storage.loadSlotRaw(2), planted.owner);
+        expect(await storage.loadExtra(GameStorage.journalKey), isNull);
+        expect(
+          await storage.loadExtra(GameStorage.holdKeyFor(2)),
+          planted.held,
+        );
+        expect(await director.debugTryPersist(), isTrue);
+        expect(_rawHas(await storage.loadSlotRaw(1), 'slot1-only'), isTrue);
+        expect(await storage.loadSlotRaw(0), planted.slot0);
+      },
+    );
+
+    test('an unrelated scoped journal does not consume slot 0', () async {
+      final planted = await _plantSlot0Selection(phase: 'swap-commit');
+      final storage = planted.storage;
+      final other = GameLogic.exportSaveJson(
+        _party(life: 7, purchaseIds: const ['scoped-other']),
+      );
+      await _writeSlot(storage, 2, other);
+      await storage.writeExtra(GameStorage.journalKeyFor(2), 'swap-stage');
+      await storage.writeExtra(GameStorage.stagingKeyFor(2), other);
+      await _writeSlot(storage, 3, planted.owner);
+      await storage.setActiveSlot(0);
+      final director = GameDirector(storage, enableSpatialLoop: false);
+      addTearDown(director.dispose);
+      await director.boot();
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(await storage.loadSlotRaw(0), planted.slot0);
+      expect(await storage.loadSlotRaw(2), other);
+      expect(await storage.loadSlotRaw(3), planted.owner);
+      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-commit');
+      expect(await storage.loadExtra(GameStorage.holdKey), planted.held);
+      expect(
+        await storage.loadExtra(GameStorage.journalKeyFor(2)),
+        'swap-stage',
+      );
+      expect(await SaveSwap.recover(storage), SaveSwapOutcome.unresolved);
+      expect(await storage.loadSlotRaw(0), planted.slot0);
+      final exported = await director.exportRecoveryRecords();
+      expect(exported, contains('d0-only'));
+      expect(exported, contains(planted.held));
+    });
+
     test(
       'migration cuts keep the source until a later retry can finish',
       () async {
@@ -1707,6 +1989,74 @@ void main() {
       expect(director.saveRecoveryBlocked, isFalse);
     });
   });
+}
+
+class _Slot0Selection {
+  _Slot0Selection({
+    required this.storage,
+    required this.slot0,
+    required this.owner,
+    required this.held,
+  });
+
+  final InMemoryGameStorage storage;
+  final String slot0;
+  final String owner;
+  final String held;
+}
+
+/// Active selection is slot 0. The global journal's bytes belong to slot 2.
+Future<_Slot0Selection> _plantSlot0Selection({required String phase}) async {
+  final storage = InMemoryGameStorage();
+  final slot0 = GameLogic.exportSaveJson(
+    _party(life: 42, adFree: true, cinders: 11, purchaseIds: const ['d0-only']),
+  );
+  final owner = GameLogic.exportSaveJson(_party(life: 500));
+  final held = GameLogic.exportSaveJson(
+    _party(life: 80, adFree: true, cinders: 4),
+  );
+  await _writeSlot(storage, 2, owner);
+  await _writeSlot(storage, 0, slot0);
+  await storage.setActiveSlot(0);
+  await storage.writeExtra(GameStorage.stagingKey, owner);
+  await storage.writeExtra(GameStorage.holdKey, held);
+  await storage.writeExtra(
+    GameStorage.displacedKey,
+    GameLogic.exportSaveJson(_party(life: 1)),
+  );
+  await storage.writeExtra(GameStorage.journalKey, phase);
+  return _Slot0Selection(
+    storage: storage,
+    slot0: slot0,
+    owner: owner,
+    held: held,
+  );
+}
+
+Future<void> _writeSlot(
+  InMemoryGameStorage storage,
+  int slot,
+  String json,
+) async {
+  await storage.setActiveSlot(slot);
+  await storage.writeActiveRaw(json);
+}
+
+bool _rawHas(String? raw, String marker) => raw != null && raw.contains(marker);
+
+Future<bool> _slotFinalHasCinders(
+  InMemoryGameStorage storage,
+  int slot,
+  int cinders,
+) async {
+  for (final raw in [
+    await storage.loadSlotRaw(slot),
+    await storage.loadExtra(GameStorage.displacedKeyFor(slot)),
+  ]) {
+    final imported = raw == null ? null : GameLogic.importSaveJson(raw);
+    if (imported?.metaDepth.cinders == cinders) return true;
+  }
+  return false;
 }
 
 Future<void> _plantGlobalSwap(

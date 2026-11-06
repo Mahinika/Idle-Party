@@ -35,14 +35,14 @@ abstract final class SaveSwap {
     }
   }
 
-  /// Move an r1/r2 global journal onto the slot whose bytes prove it.
+  /// Move a global journal onto the one slot whose saved bytes are in it.
   ///
-  /// Slot 0 still uses the unsuffixed keys, so it needs no move. Slots 1–4
-  /// written by those test builds used the global journal while the party
-  /// lived in the slot. Returns true when a global journal remains and no
-  /// single slot can be proven, so the caller keeps saving off. Never
-  /// deletes those bytes and never assigns them to a slot that does not
-  /// match.
+  /// The unsuffixed keys are slot 0's files, and an early build also used
+  /// them for whichever slot was mid-copy. The selected slot is not the
+  /// owner. A unique match on slot 0 keeps those keys for recovery. A unique
+  /// match on another slot is copied there, and the global keys are removed
+  /// only after that slot's journal reads back. No match, or two matches,
+  /// keeps every byte and tells the caller to leave saving off.
   static Future<bool> migrateLegacyGlobalJournal(GameStorage storage) async {
     try {
       return await _migrateLegacy(storage);
@@ -134,8 +134,6 @@ abstract final class SaveSwap {
   static Future<bool> _migrateLegacy(GameStorage storage) async {
     final phase = await storage.loadExtra(GameStorage.journalKey);
     if (phase == null) return false;
-    // Slot 0 already uses these unsuffixed keys. Recover owns that journal.
-    if (storage.activeSlotIndex <= 0) return false;
     final staging = await storage.loadExtra(GameStorage.stagingKey);
     final hold = await storage.loadExtra(GameStorage.holdKey);
     final displaced = await storage.loadExtra(GameStorage.displacedKey);
@@ -154,11 +152,6 @@ abstract final class SaveSwap {
       return await storage.loadExtra(GameStorage.journalKey) != null;
     }
     final evidence = <String>{?staging, ?hold, ?displaced};
-    final matches = <int>[];
-    for (var slot = 0; slot < GameStorage.slotCount; slot++) {
-      final raw = await storage.loadSlotRaw(slot);
-      if (raw != null && evidence.contains(raw)) matches.add(slot);
-    }
     final started = <int>[];
     for (var slot = 1; slot < GameStorage.slotCount; slot++) {
       final own = await storage.loadExtra(GameStorage.journalKeyFor(slot));
@@ -182,11 +175,28 @@ abstract final class SaveSwap {
       target = slot;
     }
     if (target == null) {
-      // Two slots with the same bytes are not a unique owner. The current
-      // slot is not a tie-break. Slot 0 already owns the unsuffixed keys.
-      if (matches.length != 1) return true;
-      if (matches.single <= 0) return false;
-      target = matches.single;
+      // The selected slot is not a vote. Two matches stay put. One match on
+      // another slot is copied there. One match on slot 0, or no match while
+      // no other slot has a save, keeps the unsuffixed keys so recovery can
+      // finish that journal in place. No match while another slot has a
+      // save stays put.
+      final claims = await _payloadClaims(
+        storage,
+        staging: staging,
+        hold: hold,
+        displaced: displaced,
+      );
+      if (claims.length > 1) return true;
+      if (claims.length == 1 && claims.single > 0) {
+        target = claims.single;
+      } else if (claims.isEmpty && await _otherSlotOccupied(storage)) {
+        // No saved file is in the payloads, and another slot exists. The
+        // journal may belong to that slot after its file changed. It is
+        // not finished on slot 0.
+        return true;
+      } else {
+        return false;
+      }
     }
     final copied =
         await _copyProven(
@@ -328,6 +338,60 @@ abstract final class SaveSwap {
     return await storage.loadExtra(to) == value;
   }
 
+  /// Slots whose saved file is one of the global payloads. The selected
+  /// slot is not included unless its bytes are actually there.
+  static Future<List<int>> _payloadClaims(
+    GameStorage storage, {
+    required String? staging,
+    required String? hold,
+    required String? displaced,
+  }) async {
+    final evidence = <String>{?staging, ?hold, ?displaced};
+    if (evidence.isEmpty) return const [];
+    final matches = <int>[];
+    for (var slot = 0; slot < GameStorage.slotCount; slot++) {
+      final raw = await storage.loadSlotRaw(slot);
+      if (raw != null && evidence.contains(raw)) matches.add(slot);
+    }
+    return matches;
+  }
+
+  /// True when some slot other than 0 has a saved file.
+  static Future<bool> _otherSlotOccupied(GameStorage storage) async {
+    for (var slot = 1; slot < GameStorage.slotCount; slot++) {
+      if (await storage.loadSlotRaw(slot) != null) return true;
+    }
+    return false;
+  }
+
+  /// Slot 0 shares its journal keys with an early build's journal for any
+  /// slot. Another slot's saved file in those payloads means the journal is
+  /// not slot 0's. No match while another slot has a save is also unproven.
+  /// An empty marker, a unique slot 0 match, or a journal while no other
+  /// slot exists may still finish in place.
+  static Future<bool> _globalJournalIsForeign(
+    GameStorage storage,
+    int index,
+  ) async {
+    if (index > 0) return false;
+    final staging = await storage.loadExtra(GameStorage.stagingKey);
+    final hold = await storage.loadExtra(GameStorage.holdKey);
+    final displaced = await storage.loadExtra(GameStorage.displacedKey);
+    if (staging == null && hold == null && displaced == null) return false;
+    final claims = await _payloadClaims(
+      storage,
+      staging: staging,
+      hold: hold,
+      displaced: displaced,
+    );
+    final slot0Claims = claims.contains(0);
+    final otherClaims = claims.any((slot) => slot != 0);
+    if (otherClaims && !slot0Claims) return true;
+    if (claims.length > 1) return true;
+    if (claims.isEmpty && await _otherSlotOccupied(storage)) return true;
+    return false;
+  }
+
   static Future<SaveSwapOutcome> _recover(
     GameStorage storage, {
     int? slot,
@@ -342,6 +406,11 @@ abstract final class SaveSwap {
       GameStorage.displacedKeyFor(index),
     );
     final active = await storage.loadSlotRaw(index);
+    if (index <= 0 &&
+        (staging != null || hold != null || displaced != null) &&
+        await _globalJournalIsForeign(storage, index)) {
+      return SaveSwapOutcome.unresolved;
+    }
 
     if (phase == 'commit') {
       if (active != null && staging != null && active == staging) {
@@ -423,6 +492,9 @@ abstract final class SaveSwap {
     int index,
     String hold,
   ) async {
+    if (await _globalJournalIsForeign(storage, index)) {
+      return SaveSwapOutcome.unresolved;
+    }
     if (await _migrationRefusedThisParkedFile(storage, index, hold)) {
       return SaveSwapOutcome.unresolved;
     }
@@ -448,6 +520,9 @@ abstract final class SaveSwap {
     required String hold,
   }) async {
     if (storage.activeSlotIndex != slot) return SaveSwapOutcome.unresolved;
+    if (await _globalJournalIsForeign(storage, slot)) {
+      return SaveSwapOutcome.unresolved;
+    }
     if (await _migrationRefusedThisParkedFile(storage, slot, hold)) {
       return SaveSwapOutcome.unresolved;
     }
