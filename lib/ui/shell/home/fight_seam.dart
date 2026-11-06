@@ -81,24 +81,56 @@ class FightSeam extends StatelessWidget {
                   _tap(
                     label: 'LEAVE',
                     onTap: onLeave,
-                    minHeight: 32,
-                    child: Text(
-                      'LEAVE',
-                      style: GameTheme.menuTitle(size: 11),
+                    minHeight: 34,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: GameTheme.blood.withValues(alpha: 0.25),
+                        borderRadius:
+                            BorderRadius.circular(GameTheme.radiusSm),
+                        border: Border.all(
+                          color: GameTheme.bloodLit.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        'LEAVE',
+                        style: GameTheme.menuTitle(
+                          size: 11,
+                          color: GameTheme.bloodLit,
+                        ),
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 4),
                   _tap(
                     label: state.homePanelFull
                         ? 'Split forge under fight'
                         : 'Full fight height',
                     onTap: () =>
                         director.setHomePanelFull(!state.homePanelFull),
-                    minHeight: 32,
-                    child: Text(
-                      state.homePanelFull ? 'SPLIT' : 'FULL',
-                      style: GameTheme.menuTitle(
-                        size: 10,
-                        color: GameTheme.parchmentDim,
+                    minHeight: 34,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: GameTheme.panelInset.withValues(alpha: 0.6),
+                        borderRadius:
+                            BorderRadius.circular(GameTheme.radiusSm),
+                        border: Border.all(
+                          color: GameTheme.border.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        state.homePanelFull ? 'SPLIT' : 'FULL',
+                        style: GameTheme.menuTitle(
+                          size: 10,
+                          color: GameTheme.parchmentDim,
+                        ),
                       ),
                     ),
                   ),
@@ -121,15 +153,34 @@ class FightSeam extends StatelessWidget {
               world.awaitingExit &&
               !state.isPartyDefeated &&
               !director.exitHoldActive)
-            Align(
-              alignment: Alignment.centerRight,
-              child: _tap(
-                label: 'HOLD',
-                onTap: director.startExitHold,
-                minHeight: 32,
-                child: Text(
-                  'HOLD',
-                  style: GameTheme.menuTitle(size: 11, color: GameTheme.torchHot),
+            Padding(
+              padding: const EdgeInsets.only(right: 8, bottom: 4),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: _tap(
+                  label: 'HOLD',
+                  onTap: director.startExitHold,
+                  minHeight: 34,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: GameTheme.torch.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+                      border: Border.all(
+                        color: GameTheme.torchHot.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    child: Text(
+                      'HOLD',
+                      style: GameTheme.menuTitle(
+                        size: 11,
+                        color: GameTheme.torchHot,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

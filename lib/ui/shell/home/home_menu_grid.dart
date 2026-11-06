@@ -32,7 +32,7 @@ class HomeMenuGrid extends StatelessWidget {
           'Quests, codex, settings, and patch notes.',
           maxLines: 2,
         ),
-        ShellLayout.gap(6),
+        ShellLayout.gap(8),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -40,11 +40,11 @@ class HomeMenuGrid extends StatelessWidget {
             crossAxisCount: 2,
             mainAxisSpacing: ShellLayout.sectionGap,
             crossAxisSpacing: ShellLayout.sectionGap,
-            childAspectRatio: 2.55,
+            childAspectRatio: 2.4,
           ),
           itemCount: entries.length,
           itemBuilder: (context, i) => ShellLayout.card(
-            padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
             child: RailButton(
               entry: entries[i],
               state: state,
@@ -57,11 +57,11 @@ class HomeMenuGrid extends StatelessWidget {
         ),
         ShellLayout.blockGapWidget(),
         ShellLayout.divider(),
-        ShellLayout.gap(6),
+        ShellLayout.gap(8),
         ShellLayout.sectionHeader('TIP A FRIEND'),
         ShellLayout.gap(4),
         ShellLayout.hint('Share your Play link or paste a friend code.', maxLines: 2),
-        ShellLayout.gap(4),
+        ShellLayout.gap(6),
         HomeFriendTip(director: director),
       ],
     );

@@ -220,9 +220,10 @@ class HomeTopBar extends StatelessWidget {
   Widget _chip(String text, String icon) {
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         GameIcon.asset(icon, size: 14),
-        const SizedBox(width: 3),
+        const SizedBox(width: 4),
         Flexible(
           child: Text(
             text,

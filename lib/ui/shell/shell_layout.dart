@@ -62,10 +62,11 @@ abstract final class ShellLayout {
     required Widget child,
     bool selected = false,
     EdgeInsets padding = const EdgeInsets.fromLTRB(10, 8, 10, 8),
+    bool elevated = false,
   }) {
     return Container(
       padding: padding,
-      decoration: MenuChrome.listCard(selected: selected),
+      decoration: MenuChrome.listCard(selected: selected, elevated: elevated),
       child: child,
     );
   }

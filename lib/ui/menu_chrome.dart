@@ -422,12 +422,28 @@ abstract final class MenuChrome {
   static BoxDecoration listCard({
     bool selected = false,
     bool inset = false,
+    bool elevated = false,
     Color? borderColor,
   }) {
     final base = cardBox(selected: selected, inset: inset);
-    if (borderColor == null) return base;
+    if (!elevated && borderColor == null) return base;
     return base.copyWith(
-      border: Border.all(color: borderColor, width: selected ? 1.5 : 1.1),
+      border: Border.all(
+        color: borderColor ??
+            (elevated
+                ? GameTheme.borderLit.withValues(alpha: 0.35)
+                : GameTheme.border.withValues(alpha: 0.85)),
+        width: selected ? 1.5 : 1.1,
+      ),
+      boxShadow: elevated
+          ? [
+              BoxShadow(
+                color: GameTheme.torch.withValues(alpha: 0.06),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ]
+          : base.boxShadow,
     );
   }
 

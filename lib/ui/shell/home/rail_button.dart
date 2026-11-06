@@ -82,7 +82,14 @@ class RailButton extends StatelessWidget {
             label: entry.label,
             child: InkWell(
               onTap: () => entry.open(context, director, router),
-              child: row,
+              borderRadius: BorderRadius.circular(GameTheme.radiusSm),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 36),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: row,
+                ),
+              ),
             ),
           ),
         );
