@@ -42,12 +42,12 @@ class FightSeamRails extends StatelessWidget {
         ),
       ),
       child: SizedBox(
-        height: 34,
+        height: 38,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           itemCount: entries.length,
-          separatorBuilder: (context, index) => const SizedBox(width: 4),
+          separatorBuilder: (context, index) => const SizedBox(width: 6),
           itemBuilder: (context, i) => RailButton(
             entry: entries[i],
             state: state,

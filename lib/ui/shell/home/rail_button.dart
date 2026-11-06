@@ -106,8 +106,10 @@ class RailButton extends StatelessWidget {
             child: InkWell(
               onTap: () => entry.open(context, director, router),
               borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                constraints: const BoxConstraints(minHeight: 32),
+                alignment: Alignment.center,
                 child: row,
               ),
             ),
