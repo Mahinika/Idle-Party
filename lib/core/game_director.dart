@@ -2324,7 +2324,13 @@ class GameDirector extends ChangeNotifier {
 
   bool _pendingStartMenu = false;
   bool _pendingRecoveryNewGame = false;
+  bool _newGameBusy = false;
+  int _newGameEpoch = 0;
   NavIntent? _pendingHubNav;
+
+  /// Bumps when party setup is abandoned, so an in-flight START cannot
+  /// continue into play after BACK.
+  int get newGameEpoch => _newGameEpoch;
 
   bool get pendingStartMenu => _pendingStartMenu;
 

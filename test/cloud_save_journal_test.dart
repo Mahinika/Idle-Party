@@ -2460,6 +2460,348 @@ void main() {
       await _disposeRecoveryApp(tester);
     });
 
+    test(
+      'a failed or thrown title new game stays unstarted until a retry',
+      () async {
+        final storage = InMemoryGameStorage();
+        final director = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(director.dispose);
+        await director.boot();
+        storage.failNextActiveWrite = true;
+        expect(
+          await director.startNewGame(
+            HeroSpecs.starterUnlocked,
+            partyName: 'Cave Company',
+          ),
+          isFalse,
+        );
+        expect(director.hasExistingSave, isFalse);
+        expect(director.state.inDungeon, isFalse);
+        expect(await storage.loadSlotRaw(0), isNull);
+        storage.throwNextActiveWrite = true;
+        expect(
+          await director.startNewGame(
+            HeroSpecs.starterUnlocked,
+            partyName: 'Cave Company',
+          ),
+          isFalse,
+        );
+        expect(await storage.loadSlotRaw(0), isNull);
+        expect(
+          await director.startNewGame(
+            HeroSpecs.starterUnlocked,
+            partyName: 'Cave Company',
+          ),
+          isTrue,
+        );
+        expect(director.hasExistingSave, isTrue);
+        expect((await storage.load())!.partyName, 'Cave Company');
+      },
+    );
+
+    test('recovery START retries after a failed or thrown save', () async {
+      final planted = await _ambiguousEscape();
+      final director = GameDirector(planted.storage, enableSpatialLoop: false);
+      addTearDown(director.dispose);
+      await director.boot();
+      expect(
+        await director.openSafeRecoverySlot(4),
+        RecoverySlotOpen.needsNewGame,
+      );
+      planted.storage.failNextActiveWrite = true;
+      expect(
+        await director.startNewGame(
+          HeroSpecs.starterUnlocked,
+          partyName: 'Retry',
+        ),
+        isFalse,
+      );
+      expect(await planted.storage.loadSlotRaw(4), isNull);
+      planted.storage.throwNextActiveWrite = true;
+      expect(
+        await director.startNewGame(
+          HeroSpecs.starterUnlocked,
+          partyName: 'Retry',
+        ),
+        isFalse,
+      );
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(await planted.storage.loadSlotRaw(4), isNull);
+      expect(await planted.storage.loadSlotRaw(2), planted.slot2);
+      expect(
+        await director.startNewGame(
+          HeroSpecs.starterUnlocked,
+          partyName: 'Retry',
+        ),
+        isTrue,
+      );
+      expect(director.saveRecoveryBlocked, isFalse);
+      expect(director.hasExistingSave, isTrue);
+      expect((await planted.storage.loadSlot(4))!.partyName, 'Retry');
+      expect(await planted.storage.loadSlotRaw(2), planted.slot2);
+      expect(
+        await planted.storage.loadExtra(GameStorage.journalKey),
+        'swap-stage',
+      );
+      expect(
+        await planted.storage.loadExtra(GameStorage.holdKey),
+        planted.held,
+      );
+    });
+
+    test(
+      'a save that lands and then returns false is still the new game',
+      () async {
+        final storage = InMemoryGameStorage();
+        final director = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(director.dispose);
+        await director.boot();
+        storage.landThenFailSave = true;
+        expect(
+          await director.startNewGame(
+            HeroSpecs.starterUnlocked,
+            partyName: 'Landed',
+          ),
+          isTrue,
+        );
+        expect(director.hasExistingSave, isTrue);
+        expect((await storage.load())!.partyName, 'Landed');
+        expect(director.state.inDungeon, isTrue);
+      },
+    );
+
+    test(
+      'a second START does not run after a grant on the new party',
+      () async {
+        final planted = await _ambiguousEscape();
+        final director = GameDirector(
+          planted.storage,
+          enableSpatialLoop: false,
+        );
+        addTearDown(director.dispose);
+        await director.boot();
+        expect(
+          await director.openSafeRecoverySlot(4),
+          RecoverySlotOpen.needsNewGame,
+        );
+        final release = Completer<void>();
+        planted.storage.pauseBeforeNextWrite = release.future;
+        final first = director.startNewGame(
+          HeroSpecs.starterUnlocked,
+          partyName: 'Ember',
+        );
+        await pumpEventQueue();
+        expect(planted.storage.writeEntered, isTrue);
+        final second = director.startNewGame(
+          HeroSpecs.starterUnlocked,
+          partyName: 'Stale',
+        );
+        final third = director.startNewGame(
+          HeroSpecs.starterUnlocked,
+          partyName: 'Stale Two',
+        );
+        final grant = director.debugGrantShopPurchase(
+          'cinder_pouch',
+          purchaseId: 'GPA.once',
+        );
+        expect(await second, isFalse);
+        expect(await third, isFalse);
+        release.complete();
+        expect(await first, isTrue);
+        expect(await grant, isTrue);
+        expect(director.state.partyName, 'Ember');
+        expect(
+          director.state.metaDepth.grantedShopPurchaseIds,
+          contains('GPA.once'),
+        );
+        expect(director.state.metaDepth.cinders, greaterThan(0));
+        final cinders = director.state.metaDepth.cinders;
+        expect(await planted.storage.loadSlotRaw(2), planted.slot2);
+        expect(
+          await planted.storage.loadExtra(GameStorage.journalKey),
+          'swap-stage',
+        );
+        expect(
+          await planted.storage.loadExtra(GameStorage.holdKey),
+          planted.held,
+        );
+        final reboot = GameDirector(planted.storage, enableSpatialLoop: false);
+        addTearDown(reboot.dispose);
+        await reboot.boot();
+        final parsed = GameLogic.importSaveJson(
+          (await planted.storage.loadSlotRaw(4))!,
+        )!;
+        expect(parsed.partyName, 'Ember');
+        expect(parsed.metaDepth.grantedShopPurchaseIds, contains('GPA.once'));
+        expect(parsed.metaDepth.cinders, cinders);
+        expect(await planted.storage.loadSlotRaw(2), planted.slot2);
+        expect(
+          await planted.storage.loadExtra(GameStorage.journalKey),
+          'swap-stage',
+        );
+      },
+    );
+
+    testWidgets('title PLAY stays on the menu when the first save fails', (
+      tester,
+    ) async {
+      final storage = InMemoryGameStorage();
+      final director = GameDirector(storage, enableSpatialLoop: false);
+      await _pumpRecoveryApp(tester, director, showIntro: true);
+      expect(find.text('PLAY'), findsOneWidget);
+      storage.failNextActiveWrite = true;
+      await tester.tap(find.text('PLAY'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('PLAY'), findsOneWidget);
+      expect(find.text('ENTER DUNGEON'), findsNothing);
+      expect(director.hasExistingSave, isFalse);
+      expect(director.state.inDungeon, isFalse);
+      expect(await storage.loadSlotRaw(0), isNull);
+      storage.throwNextActiveWrite = true;
+      await tester.tap(find.text('PLAY'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('PLAY'), findsOneWidget);
+      expect(await storage.loadSlotRaw(0), isNull);
+      await tester.tap(find.text('PLAY'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
+      expect(director.hasExistingSave, isTrue);
+      expect((await storage.load())!.partyName, 'The Party');
+      await _disposeRecoveryApp(tester);
+      final reboot = GameDirector(storage, enableSpatialLoop: false);
+      try {
+        await reboot.boot();
+        expect((await storage.load())!.partyName, 'The Party');
+      } finally {
+        reboot.dispose();
+      }
+    });
+
+    testWidgets('recovery START taps do not queue a second game over a grant', (
+      tester,
+    ) async {
+      final planted = await _ambiguousEscape();
+      final director = GameDirector(planted.storage, enableSpatialLoop: false);
+      await _pumpRecoveryApp(tester, director);
+      await tester.ensureVisible(find.text('OPEN SLOT 5'));
+      await tester.tap(find.text('OPEN SLOT 5'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.enterText(find.byType(TextField), 'Ember Test');
+      await tester.pump();
+      final release = Completer<void>();
+      planted.storage.pauseBeforeNextWrite = release.future;
+      await tester.ensureVisible(find.text('START'));
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      for (var i = 0; i < 20 && !planted.storage.writeEntered; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(planted.storage.writeEntered, isTrue);
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      final second = director.startNewGame(
+        HeroSpecs.starterUnlocked,
+        partyName: 'Stale',
+      );
+      final third = director.startNewGame(
+        HeroSpecs.starterUnlocked,
+        partyName: 'Stale Two',
+      );
+      final grant = director.debugGrantShopPurchase(
+        'cinder_pouch',
+        purchaseId: 'GPA.ui',
+      );
+      expect(await second, isFalse);
+      expect(await third, isFalse);
+      release.complete();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
+      expect(await grant, isTrue);
+      expect(director.state.partyName, 'Ember Test');
+      expect(
+        director.state.metaDepth.grantedShopPurchaseIds,
+        contains('GPA.ui'),
+      );
+      expect(director.state.metaDepth.cinders, greaterThan(0));
+      final cinders = director.state.metaDepth.cinders;
+      expect(await planted.storage.loadSlotRaw(2), planted.slot2);
+      expect(
+        await planted.storage.loadExtra(GameStorage.journalKey),
+        'swap-stage',
+      );
+      expect(
+        await planted.storage.loadExtra(GameStorage.holdKey),
+        planted.held,
+      );
+      await _disposeRecoveryApp(tester);
+      final reboot = GameDirector(planted.storage, enableSpatialLoop: false);
+      try {
+        await reboot.boot();
+        final parsed = GameLogic.importSaveJson(
+          (await planted.storage.loadSlotRaw(4))!,
+        )!;
+        expect(parsed.partyName, 'Ember Test');
+        expect(parsed.metaDepth.grantedShopPurchaseIds, contains('GPA.ui'));
+        expect(parsed.metaDepth.cinders, cinders);
+        expect(await planted.storage.loadSlotRaw(2), planted.slot2);
+        expect(
+          await planted.storage.loadExtra(GameStorage.journalKey),
+          'swap-stage',
+        );
+      } finally {
+        reboot.dispose();
+      }
+    });
+
+    testWidgets('BACK during a held new-game save does not enter play', (
+      tester,
+    ) async {
+      final planted = await _ambiguousEscape();
+      final director = GameDirector(planted.storage, enableSpatialLoop: false);
+      await _pumpRecoveryApp(tester, director);
+      await tester.ensureVisible(find.text('OPEN SLOT 5'));
+      await tester.tap(find.text('OPEN SLOT 5'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.enterText(find.byType(TextField), 'Ember Test');
+      await tester.pump();
+      final release = Completer<void>();
+      planted.storage.pauseBeforeNextWrite = release.future;
+      await tester.tap(find.text('START'));
+      await tester.pump();
+      for (var i = 0; i < 20 && !planted.storage.writeEntered; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(planted.storage.writeEntered, isTrue);
+      await tester.tap(find.text('BACK'));
+      await tester.pump();
+      release.complete();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('SAVE RECOVERY'), findsOneWidget);
+      expect(find.text('ENTER DUNGEON'), findsNothing);
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(await planted.storage.loadSlotRaw(2), planted.slot2);
+      expect(
+        await planted.storage.loadExtra(GameStorage.journalKey),
+        'swap-stage',
+      );
+      expect(
+        await planted.storage.loadExtra(GameStorage.holdKey),
+        planted.held,
+      );
+      final started = await planted.storage.loadSlotRaw(4);
+      if (started != null) {
+        expect(GameLogic.importSaveJson(started)!.partyName, 'Ember Test');
+      }
+      await _disposeRecoveryApp(tester);
+    });
+
     testWidgets('cold boot with the intro shows recovery before play', (
       tester,
     ) async {
@@ -2645,14 +2987,15 @@ Future<void> _disposeRecoveryApp(WidgetTester tester) async {
 
 Future<void> _pumpRecoveryApp(
   WidgetTester tester,
-  GameDirector director,
-) async {
+  GameDirector director, {
+  bool showIntro = false,
+}) async {
   tester.view.physicalSize = const Size(400, 900);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    MyApp(director: director, autoStartLoop: false, showIntro: false),
+    MyApp(director: director, autoStartLoop: false, showIntro: showIntro),
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 400));

@@ -436,6 +436,10 @@ class InMemoryGameStorage implements GameStorage {
   /// This is not an operating-system kill.
   bool throwNextActiveWrite = false;
 
+  /// In-process test seam. The next [save] writes the bytes, then returns
+  /// false. This is a landed-but-rejected setter, not an OS kill.
+  bool landThenFailSave = false;
+
   /// Test seam. After this many successful [save] calls, later saves return
   /// false and do not change bytes. Armed by [armFailAfterSuccessfulSaves].
   int? failAfterSuccessfulSaves;
@@ -599,6 +603,10 @@ class InMemoryGameStorage implements GameStorage {
     _slotRaw[_active] = _activeRaw;
     if (_diskSplit && _activeRaw != null) _disk['\u0000active'] = _activeRaw!;
     if (failAfterSuccessfulSaves != null) _savesSinceArm++;
+    if (landThenFailSave) {
+      landThenFailSave = false;
+      return false;
+    }
     return true;
   }
 

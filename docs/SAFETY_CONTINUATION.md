@@ -84,8 +84,11 @@ payloads is the owner. No present file, including a slot that was erased
 or quarantined, keeps every byte. Saving stays off. Export and an
 unaffected slot are the way out. An existing file loads with saving on.
 An empty file opens party setup and does not enter a fight until that
-new game is saved. Back stays on recovery. A save that returns false or
-throws leaves the slot empty. Retry does not guess an owner.
+new game is saved. The same is true for a title PLAY or START: a false or
+thrown initial save stays on setup, and a second START does not enter the
+queue. Back leaves setup. A save that returns false before any byte lands
+leaves the slot empty so START can be tried again. Retry does not guess
+an owner.
 
 A slot with no journal of its own is a finished migration only when every
 global payload already matches that slot's active file or its parked file.

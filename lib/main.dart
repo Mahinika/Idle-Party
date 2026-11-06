@@ -451,7 +451,7 @@ class _GameHomePageState extends State<GameHomePage>
       HeroSpecs.starterUnlocked,
       partyName: 'The Party',
     );
-    if (!mounted || !saved) return;
+    if (!mounted || !saved || _phase != _AppPhase.startMenu) return;
     unawaited(BootFunnel.note(FunnelAnalytics.newGameConfirmed));
     _director.clearPendingStartMenu();
     _director.enterDungeon();
@@ -625,13 +625,15 @@ class _GameHomePageState extends State<GameHomePage>
     List<HeroRace> races, {
     List<HeroSex>? sexes,
   }) async {
+    final epoch = _director.newGameEpoch;
     final saved = await _director.startNewGame(
       specs,
       partyName: partyName,
       partyRaces: races,
       partySexes: sexes,
     );
-    if (!mounted || !saved) return;
+    if (!mounted || !saved || _phase != _AppPhase.newGamePicker) return;
+    if (_director.newGameEpoch != epoch) return;
     unawaited(BootFunnel.note(FunnelAnalytics.newGameConfirmed));
     _director.clearPendingStartMenu();
     setState(() => _phase = _AppPhase.play);
@@ -688,9 +690,7 @@ class _GameHomePageState extends State<GameHomePage>
           canStartNewGame: _director.saveSlots.any((slot) => !slot.occupied),
           onContinue: _openSavePicker,
           onNewGame: _openNewGamePicker,
-          onPlay: _director.hasAnySave
-              ? null
-              : () => unawaited(_playDefaultParty()),
+          onPlay: _director.hasAnySave ? null : _playDefaultParty,
           onSavesFull: _savesFull,
           onRestore: () => unawaited(_restoreSave()),
           onRestoreCloud: _director.hasAnySave

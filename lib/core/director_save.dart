@@ -322,8 +322,9 @@ extension GameDirectorSave on GameDirector {
     });
   }
 
-  /// Leave party setup without writing the empty recovery slot.
+  /// Leave party setup. An in-flight START cannot continue into play.
   void cancelRecoveryNewGame() {
+    _newGameEpoch++;
     _pendingRecoveryNewGame = false;
     if (_durableSaveBlocked) _pendingNewGameSlot = null;
   }
@@ -813,10 +814,10 @@ extension GameDirectorSave on GameDirector {
 
   /// Hard start: create a fresh party in the armed slot (or the active one).
   ///
-  /// Returns false when the game was not saved. A recovery escape into an
-  /// empty slot is the one case that may run while saving is paused, and
-  /// only after its own file is durable. False or a thrown write rolls that
-  /// attempt back and leaves the blocked journal alone.
+  /// Returns false when the initial save did not land, when this call is a
+  /// duplicate of a setup already in flight, or when the player left setup.
+  /// Play stays closed until that save is on disk. A second START does not
+  /// enter the queue, so it cannot reset a party a grant just saved.
   Future<bool> startNewGame(
     List<HeroSpecId> partySpecs, {
     String? partyName,
@@ -824,33 +825,45 @@ extension GameDirectorSave on GameDirector {
     List<HeroRace>? partyRaces,
     List<HeroSex>? partySexes,
   }) {
+    if (_newGameBusy) return Future<bool>.value(false);
+    _newGameBusy = true;
+    final epoch = _newGameEpoch;
+    final pending = _pendingNewGameSlot;
+    final slot = (pending ?? _activeSlot).clamp(0, GameStorage.slotCount - 1);
+    final fromRecovery = _durableSaveBlocked && pending == slot;
+    // An armed slot must still be empty when the turn runs. A call with no
+    // armed slot may replace the active file (preview tests do this).
+    final expectEmpty = pending != null;
     return _enqueueSave<bool>(() async {
-      final slot = (_pendingNewGameSlot ?? _activeSlot).clamp(
-        0,
-        GameStorage.slotCount - 1,
-      );
-      final fromRecovery = _durableSaveBlocked && _pendingNewGameSlot == slot;
-      if (_durableSaveBlocked && !fromRecovery) return false;
-      if (fromRecovery) {
-        await _refreshSafeRecoverySlots();
-        if (!_safeRecoverySlots.contains(slot)) return false;
-        if (await _storage.loadSlotRaw(slot) != null) return false;
-      }
-      if (await _slotJournalOpen(slot)) {
-        _blockSaveRecovery(
-          'Saving is paused. This file still has an unfinished copy, so a new game was not started.',
+      try {
+        if (epoch != _newGameEpoch) return false;
+        if (_durableSaveBlocked && !fromRecovery) return false;
+        if (fromRecovery) {
+          await _refreshSafeRecoverySlots();
+          if (!_safeRecoverySlots.contains(slot)) return false;
+        }
+        if (expectEmpty && await _storage.loadSlotRaw(slot) != null) {
+          return false;
+        }
+        if (await _slotJournalOpen(slot)) {
+          _blockSaveRecovery(
+            'Saving is paused. This file still has an unfinished copy, so a new game was not started.',
+          );
+          return false;
+        }
+        return await _startNewGameTurn(
+          partySpecs,
+          partyName: partyName,
+          partyRace: partyRace,
+          partyRaces: partyRaces,
+          partySexes: partySexes,
+          slot: slot,
+          fromRecovery: fromRecovery,
+          epoch: epoch,
         );
-        return false;
+      } finally {
+        _newGameBusy = false;
       }
-      return _startNewGameTurn(
-        partySpecs,
-        partyName: partyName,
-        partyRace: partyRace,
-        partyRaces: partyRaces,
-        partySexes: partySexes,
-        slot: slot,
-        requireDurable: fromRecovery,
-      );
     });
   }
 
@@ -861,12 +874,15 @@ extension GameDirectorSave on GameDirector {
     List<HeroRace>? partyRaces,
     List<HeroSex>? partySexes,
     required int slot,
-    required bool requireDurable,
+    required bool fromRecovery,
+    required int epoch,
   }) async {
     final previous = _state;
     final previousHas = _hasExistingSave;
     final previousSlot = _activeSlot;
     final previousEpoch = _friendEpoch;
+    final beforeRaw = await _storage.loadSlotRaw(slot);
+    if (epoch != _newGameEpoch) return false;
     _friendEpoch++;
     _pendingNewGameSlot = null;
     var switched = false;
@@ -897,7 +913,6 @@ extension GameDirectorSave on GameDirector {
       if (_phoneHadNoSaveAtBoot) {
         _state = ReinstallPouch.markDue(_state);
       }
-      if (!requireDurable) _hasExistingSave = true;
       _notePlaySession(newGame: true);
       _noteAppColdStart();
       _noteFunnelSession(newInstall: true);
@@ -915,25 +930,37 @@ extension GameDirectorSave on GameDirector {
         debugPrint('new game save failed: $error\n$stack');
         saved = false;
       }
-      if (requireDurable && !saved) {
+      if (!saved) {
+        final landed = await _storage.loadSlotRaw(slot);
+        final parsed = landed == null ? null : GameLogic.importSaveJson(landed);
+        if (parsed != null &&
+            landed != beforeRaw &&
+            parsed.partyName == snapshot.partyName) {
+          saved = true;
+        }
+      }
+      final cancelled = epoch != _newGameEpoch;
+      if (!saved || cancelled) {
         await _rollbackRecoveryNewGame(
           previous: previous,
           previousHas: previousHas,
           previousSlot: previousSlot,
           previousEpoch: previousEpoch,
           armedSlot: slot,
+          switched: switched,
+          restorePending: !cancelled,
         );
         return false;
       }
       _hasExistingSave = true;
-      if (requireDurable) {
+      if (fromRecovery) {
         _durableSaveBlocked = false;
         _saveRecoveryMessage = '';
         _saveRecoveryAmbiguous = false;
         _safeRecoverySlots = const [];
         _pendingRecoveryNewGame = false;
       }
-      if (saved) PlayGamesBridge.scheduleCloudUpload(snapshot);
+      PlayGamesBridge.scheduleCloudUpload(snapshot);
       _saveSlots = await _storage.listSlots();
       _directorNotify();
       if (_state.homeLayout == HomeLayout.home) {
@@ -943,18 +970,16 @@ extension GameDirectorSave on GameDirector {
       return true;
     } catch (error, stack) {
       debugPrint('new game setup failed: $error\n$stack');
-      if (requireDurable && !saved) {
-        await _rollbackRecoveryNewGame(
-          previous: previous,
-          previousHas: previousHas,
-          previousSlot: previousSlot,
-          previousEpoch: previousEpoch,
-          armedSlot: slot,
-          switched: switched,
-        );
-        return false;
-      }
-      rethrow;
+      await _rollbackRecoveryNewGame(
+        previous: previous,
+        previousHas: previousHas,
+        previousSlot: previousSlot,
+        previousEpoch: previousEpoch,
+        armedSlot: slot,
+        switched: switched,
+        restorePending: epoch == _newGameEpoch,
+      );
+      return false;
     }
   }
 
@@ -965,6 +990,7 @@ extension GameDirectorSave on GameDirector {
     required int previousEpoch,
     required int armedSlot,
     bool switched = true,
+    bool restorePending = true,
   }) async {
     if (switched) {
       try {
@@ -979,7 +1005,7 @@ extension GameDirectorSave on GameDirector {
     _state = previous;
     _hasExistingSave = previousHas;
     _friendEpoch = previousEpoch;
-    _pendingNewGameSlot = armedSlot;
+    if (restorePending) _pendingNewGameSlot = armedSlot;
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _spatial = null;
