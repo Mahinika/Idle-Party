@@ -134,35 +134,61 @@ abstract final class SaveSwap {
   static Future<bool> _migrateLegacy(GameStorage storage) async {
     final phase = await storage.loadExtra(GameStorage.journalKey);
     if (phase == null) return false;
-    final active = storage.activeSlotIndex;
-    if (active <= 0) return false;
+    // Slot 0 already uses these unsuffixed keys. Recover owns that journal.
+    if (storage.activeSlotIndex <= 0) return false;
     final staging = await storage.loadExtra(GameStorage.stagingKey);
     final hold = await storage.loadExtra(GameStorage.holdKey);
+    final displaced = await storage.loadExtra(GameStorage.displacedKey);
+    if (staging == null && hold == null && displaced == null) {
+      final removed = await storage.writeExtra(GameStorage.journalKey, null);
+      await storage.reloadDurable();
+      return !removed ||
+          await storage.loadExtra(GameStorage.journalKey) != null;
+    }
+    if (await _finishFinishedMigration(
+      storage,
+      staging: staging,
+      hold: hold,
+      displaced: displaced,
+    )) {
+      return await storage.loadExtra(GameStorage.journalKey) != null;
+    }
+    final evidence = <String>{?staging, ?hold, ?displaced};
     final matches = <int>[];
     for (var slot = 0; slot < GameStorage.slotCount; slot++) {
       final raw = await storage.loadSlotRaw(slot);
-      if (raw == null) continue;
-      if ((staging != null && raw == staging) ||
-          (hold != null && raw == hold)) {
-        matches.add(slot);
-      }
+      if (raw != null && evidence.contains(raw)) matches.add(slot);
     }
-    final int? target;
-    if (matches.contains(active)) {
-      target = active;
-    } else if (matches.length == 1 && matches.single > 0) {
+    final started = <int>[];
+    for (var slot = 1; slot < GameStorage.slotCount; slot++) {
+      final own = await storage.loadExtra(GameStorage.journalKeyFor(slot));
+      if (own != null) started.add(slot);
+    }
+    if (started.length > 1) return true;
+    int? target;
+    if (started.length == 1) {
+      final slot = started.single;
+      final raw = await storage.loadSlotRaw(slot);
+      final belongs =
+          (raw != null && evidence.contains(raw)) ||
+          await _slotHoldsPayload(
+            storage,
+            slot,
+            staging: staging,
+            hold: hold,
+            displaced: displaced,
+          );
+      if (!belongs) return true;
+      target = slot;
+    }
+    if (target == null) {
+      // Two slots with the same bytes are not a unique owner. The current
+      // slot is not a tie-break. Slot 0 already owns the unsuffixed keys.
+      if (matches.length != 1) return true;
+      if (matches.single <= 0) return false;
       target = matches.single;
-    } else {
-      return true;
     }
-    final own = await storage.loadExtra(GameStorage.journalKeyFor(target));
-    if (own != null) return true;
     final copied =
-        await _copyProven(
-          storage,
-          GameStorage.journalKey,
-          GameStorage.journalKeyFor(target),
-        ) &&
         await _copyProven(
           storage,
           GameStorage.stagingKey,
@@ -177,18 +203,88 @@ abstract final class SaveSwap {
           storage,
           GameStorage.displacedKey,
           GameStorage.displacedKeyFor(target),
+        ) &&
+        await _copyProven(
+          storage,
+          GameStorage.journalKey,
+          GameStorage.journalKeyFor(target),
         );
     if (!copied) return true;
+    await storage.reloadDurable();
+    if (await storage.loadExtra(GameStorage.journalKeyFor(target)) == null) {
+      return true;
+    }
     for (final key in [
       GameStorage.stagingKey,
       GameStorage.holdKey,
-      GameStorage.journalKey,
       GameStorage.displacedKey,
+      GameStorage.journalKey,
     ]) {
       if (!await storage.writeExtra(key, null)) return true;
     }
     await storage.reloadDurable();
     return await storage.loadExtra(GameStorage.journalKey) != null;
+  }
+
+  /// A slot that already holds every remaining global payload finished the
+  /// copy. The leftover marker can go. A payload that is not on that slot
+  /// stays, so this does not guess.
+  static Future<bool> _finishFinishedMigration(
+    GameStorage storage, {
+    required String? staging,
+    required String? hold,
+    required String? displaced,
+  }) async {
+    for (var slot = 1; slot < GameStorage.slotCount; slot++) {
+      if (await storage.loadExtra(GameStorage.journalKeyFor(slot)) != null) {
+        continue;
+      }
+      if (!await _slotHoldsPayload(
+        storage,
+        slot,
+        staging: staging,
+        hold: hold,
+        displaced: displaced,
+      )) {
+        continue;
+      }
+      for (final key in [
+        GameStorage.stagingKey,
+        GameStorage.holdKey,
+        GameStorage.displacedKey,
+        GameStorage.journalKey,
+      ]) {
+        if (!await storage.writeExtra(key, null)) return false;
+      }
+      await storage.reloadDurable();
+      return true;
+    }
+    return false;
+  }
+
+  static Future<bool> _slotHoldsPayload(
+    GameStorage storage,
+    int slot, {
+    required String? staging,
+    required String? hold,
+    required String? displaced,
+  }) async {
+    final raw = await storage.loadSlotRaw(slot);
+    final staged = await storage.loadExtra(GameStorage.stagingKeyFor(slot));
+    final held = await storage.loadExtra(GameStorage.holdKeyFor(slot));
+    final parked = await storage.loadExtra(GameStorage.displacedKeyFor(slot));
+    var saw = false;
+    bool covered(String? global, String? local) {
+      if (global == null) return true;
+      saw = true;
+      return local == global || raw == global;
+    }
+
+    final ok =
+        covered(staging, staged) &&
+        covered(hold, held) &&
+        covered(displaced, parked);
+    return saw && ok;
   }
 
   /// Copy [from] to [to] when [to] is empty or already the same bytes.
@@ -212,6 +308,7 @@ abstract final class SaveSwap {
     GameStorage storage, {
     int? slot,
   }) async {
+    await storage.reloadDurable();
     final index = slot ?? storage.activeSlotIndex;
     final phase = await storage.loadExtra(GameStorage.journalKeyFor(index));
     if (phase == null) return SaveSwapOutcome.idle;
@@ -234,12 +331,18 @@ abstract final class SaveSwap {
     }
 
     if (phase == 'swap-stage') {
-      // The hold is the live party. When the active file is only an older
-      // autosave, finishing the swap is what keeps that live party.
+      // Active already equals staging: the forward write landed and the
+      // hold is the only remaining copy of the live party. Publishing that
+      // hold is the retry. Clearing it as an abort deletes that party.
       if (staging != null &&
           hold != null &&
           active != null &&
-          active != staging &&
+          active == staging) {
+        return _publishHeldParty(storage, index, hold);
+      }
+      if (staging != null &&
+          hold != null &&
+          active != null &&
           active != hold) {
         return _completeOpenSwap(storage, index, staging: staging, hold: hold);
       }
@@ -269,18 +372,7 @@ abstract final class SaveSwap {
         return _finishClear(storage, index, SaveSwapOutcome.aborted);
       }
       if (staging != null && active == staging && hold != null) {
-        if (displaced != hold) {
-          final published = await storage.writeExtra(
-            GameStorage.displacedKeyFor(index),
-            hold,
-          );
-          await storage.reloadDurable();
-          final parked = await storage.loadExtra(
-            GameStorage.displacedKeyFor(index),
-          );
-          if (!published || parked != hold) return SaveSwapOutcome.unresolved;
-        }
-        return _finishClear(storage, index, SaveSwapOutcome.committed);
+        return _publishHeldParty(storage, index, hold);
       }
       if (hold != null && active == hold && active != staging) {
         return _finishClear(storage, index, SaveSwapOutcome.aborted);
@@ -302,6 +394,28 @@ abstract final class SaveSwap {
   /// (active). Leaving this unresolved forever dropped the live party on
   /// the next session. The hold becomes the device copy and staging becomes
   /// active. A failed write deletes nothing.
+  /// Write the held party into the parked copy, then drop the journal.
+  /// A failed publish leaves the hold in place.
+  static Future<SaveSwapOutcome> _publishHeldParty(
+    GameStorage storage,
+    int index,
+    String hold,
+  ) async {
+    final parked = await storage.loadExtra(GameStorage.displacedKeyFor(index));
+    if (parked != hold) {
+      final published = await storage.writeExtra(
+        GameStorage.displacedKeyFor(index),
+        hold,
+      );
+      await storage.reloadDurable();
+      final durable = await storage.loadExtra(
+        GameStorage.displacedKeyFor(index),
+      );
+      if (!published || durable != hold) return SaveSwapOutcome.unresolved;
+    }
+    return _finishClear(storage, index, SaveSwapOutcome.committed);
+  }
+
   static Future<SaveSwapOutcome> _completeOpenSwap(
     GameStorage storage,
     int slot, {
@@ -309,6 +423,20 @@ abstract final class SaveSwap {
     required String hold,
   }) async {
     if (storage.activeSlotIndex != slot) return SaveSwapOutcome.unresolved;
+    // Name the commit before replacing active. A kill after the active
+    // write is then the swap-commit path, which publishes the hold.
+    // Leaving the phase on swap-stage made the next retry treat the new
+    // active as an abort and delete the hold.
+    final marked = await storage.writeExtra(
+      GameStorage.journalKeyFor(slot),
+      'swap-commit',
+    );
+    await storage.reloadDurable();
+    if (!marked ||
+        await storage.loadExtra(GameStorage.journalKeyFor(slot)) !=
+            'swap-commit') {
+      return SaveSwapOutcome.unresolved;
+    }
     final wroteActive = await storage.writeActiveRaw(staging);
     await storage.reloadDurable();
     if (!wroteActive || await storage.loadActiveRaw() != staging) {
@@ -354,6 +482,17 @@ abstract final class SaveSwap {
     if (!_sameSlot(storage, slot)) return SaveSwapOutcome.aborted;
     if (await storage.loadExtra(GameStorage.journalKeyFor(slot)) != null) {
       return SaveSwapOutcome.unresolved;
+    }
+    // A parked party that is neither the current file nor the incoming
+    // file is a third party. Replacing it would destroy that copy. Refuse
+    // before any write so a crash cannot lose it either.
+    final existingParked = await storage.loadExtra(
+      GameStorage.displacedKeyFor(slot),
+    );
+    if (existingParked != null &&
+        existingParked != activeJson &&
+        existingParked != displacedJson) {
+      return SaveSwapOutcome.aborted;
     }
     final staged = await storage.writeExtra(
       GameStorage.stagingKeyFor(slot),

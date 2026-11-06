@@ -55,13 +55,18 @@ read was ignored. Those are closed here.
   autosave cannot replace them. RETRY adopts the durable file.
 - A journal that already exists is not overwritten. Device copy, erase, new
   game, and import wait on the save queue and refuse while recovery is open.
-- Cleanup can finish after staging and the hold are already gone, and a live
-  party that differs from the last autosave is written into the device copy
-  instead of staying unresolved forever.
-- The play screen shows SAVE RECOVERY with RETRY. Combat, hub idle, and BUY
-  stay off. A grant that already started is still not consumed.
-- An r1/r2 global journal is copied onto the slot whose bytes match it.
-  If no slot can be proven, the bytes stay and saving stays off.
+- Cleanup can finish after staging and the hold are already gone. A live
+  party that differs from the last autosave is published into the device
+  copy. The swap is marked commit before that active write, so a later
+  retry publishes the hold instead of deleting it.
+- Cold boot with the title card shows SAVE RECOVERY before play. Combat,
+  hub idle, and BUY stay off. A grant that already started is still not
+  consumed.
+- An r1/r2 global journal is copied payload-first onto the one slot whose
+  bytes match it, and the source marker is deleted last. Two matching
+  slots are not guessed. The bytes stay. Export and the other slots stay
+  available. A second cloud restore does not replace a parked party that
+  is neither the current file nor the incoming file.
 - A snapshot list with a missing or non-bool `stale` field is not fresh.
 - The 64-id cap still drops an unconsumed receipt that does not fit. A
   receipt that fits is kept so Play does not grant it again. Consumed

@@ -14,10 +14,22 @@ class SaveRecoveryGate extends StatelessWidget {
     super.key,
     required this.message,
     required this.onRetry,
+    this.onExport,
+    this.safeSlots = const [],
+    this.onOpenSlot,
   });
 
   final String message;
   final Future<bool> Function() onRetry;
+
+  /// Copies the raw journal and slot bytes. Null when the journal has one
+  /// owner and RETRY is enough.
+  final Future<void> Function()? onExport;
+
+  /// Slots that are not part of an unmatched journal.
+  final List<int> safeSlots;
+
+  final Future<void> Function(int slot)? onOpenSlot;
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +42,7 @@ class SaveRecoveryGate extends StatelessWidget {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: ListView(
             children: [
               Text(
                 'SAVE RECOVERY',
@@ -56,6 +67,22 @@ class SaveRecoveryGate extends StatelessWidget {
                 primary: true,
                 onPressed: () => onRetry(),
               ),
+              if (onExport != null) ...[
+                const SizedBox(height: 12),
+                GameButton(
+                  label: 'EXPORT RECORDS',
+                  onPressed: () => onExport!(),
+                ),
+              ],
+              for (final slot in safeSlots) ...[
+                const SizedBox(height: 12),
+                GameButton(
+                  label: 'OPEN SLOT ${slot + 1}',
+                  onPressed: onOpenSlot == null
+                      ? null
+                      : () => onOpenSlot!(slot),
+                ),
+              ],
             ],
           ),
         ),

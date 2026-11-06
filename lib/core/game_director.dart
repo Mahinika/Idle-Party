@@ -136,11 +136,25 @@ class GameDirector extends ChangeNotifier {
   /// Shown on the recovery gate. Empty when saving is allowed.
   String _saveRecoveryMessage = '';
 
+  /// A global journal matches more than one slot, or none. RETRY cannot
+  /// invent an owner. Export and unaffected slots stay available.
+  bool _saveRecoveryAmbiguous = false;
+
+  /// Slots that are not byte-matches and have no journal of their own.
+  /// Slot 0 is never listed while a global journal exists.
+  List<int> _safeRecoverySlots = const [];
+
   /// True while this session must not overwrite the durable copies.
   bool get saveRecoveryBlocked => _durableSaveBlocked;
 
   /// Why saving is paused. Empty when it is not.
   String get saveRecoveryMessage => _saveRecoveryMessage;
+
+  /// True when RETRY cannot assign a legacy journal without guessing.
+  bool get saveRecoveryAmbiguous => _saveRecoveryAmbiguous;
+
+  /// Slots the recovery screen may open without touching the journal.
+  List<int> get safeRecoverySlots => _safeRecoverySlots;
 
   /// Test seam. True while recovery must not be overwritten.
   @visibleForTesting

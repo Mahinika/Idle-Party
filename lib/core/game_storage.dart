@@ -406,10 +406,15 @@ class InMemoryGameStorage implements GameStorage {
     if (state != null) {
       _slots[0] = state;
       _activeRaw = GameLogic.exportSaveJson(state);
+      _slotRaw[0] = _activeRaw;
     }
   }
 
   final List<GameState?> _slots = List<GameState?>.filled(
+    GameStorage.slotCount,
+    null,
+  );
+  final List<String?> _slotRaw = List<String?>.filled(
     GameStorage.slotCount,
     null,
   );
@@ -422,6 +427,26 @@ class InMemoryGameStorage implements GameStorage {
 
   /// Test seam. The next active-slot write fails and does not change bytes.
   bool failNextActiveWrite = false;
+
+  /// Test seam. After this many successful [save] calls, later saves return
+  /// false and do not change bytes. Armed by [armFailAfterSuccessfulSaves].
+  int? failAfterSuccessfulSaves;
+
+  int _savesSinceArm = 0;
+
+  void armFailAfterSuccessfulSaves(int successes) {
+    failAfterSuccessfulSaves = successes;
+    _savesSinceArm = 0;
+  }
+
+  /// Test seam. Plants active bytes without parsing. A malformed plant
+  /// leaves the slot unreadable so recovery can fail closed.
+  void debugPlantActiveRaw(String raw) {
+    _activeRaw = raw;
+    _slotRaw[_active] = raw;
+    _slots[_active] = GameLogic.importSaveJson(raw);
+    if (_diskSplit) _disk['\u0000active'] = raw;
+  }
 
   /// Test seam. The next N side-file writes fail and do not change bytes.
   int failNextExtraWrites = 0;
@@ -491,6 +516,7 @@ class InMemoryGameStorage implements GameStorage {
       ..addAll(bytes)
       ..remove('\u0000active');
     _activeRaw = bytes['\u0000active'];
+    _slotRaw[_active] = _activeRaw;
     final raw = _activeRaw;
     _slots[_active] = raw == null ? null : GameLogic.importSaveJson(raw);
   }
@@ -521,9 +547,15 @@ class InMemoryGameStorage implements GameStorage {
       failNextActiveWrite = false;
       return false;
     }
+    if (failAfterSuccessfulSaves != null &&
+        _savesSinceArm >= failAfterSuccessfulSaves!) {
+      return false;
+    }
     _slots[_active] = state;
     _activeRaw = GameLogic.exportSaveJson(state);
+    _slotRaw[_active] = _activeRaw;
     if (_diskSplit && _activeRaw != null) _disk['\u0000active'] = _activeRaw!;
+    if (failAfterSuccessfulSaves != null) _savesSinceArm++;
     return true;
   }
 
@@ -534,16 +566,21 @@ class InMemoryGameStorage implements GameStorage {
   Future<void> clear() async {
     _slots[_active] = null;
     _activeRaw = null;
+    _slotRaw[_active] = null;
   }
 
   @override
   Future<void> clearSlot(int index) async {
-    _slots[_clampSlot(index)] = null;
+    final slot = _clampSlot(index);
+    _slots[slot] = null;
+    _slotRaw[slot] = null;
+    if (slot == _active) _activeRaw = null;
   }
 
   @override
   Future<void> setActiveSlot(int index) async {
     _active = _clampSlot(index);
+    _activeRaw = _slotRaw[_active];
   }
 
   @override
@@ -567,11 +604,7 @@ class InMemoryGameStorage implements GameStorage {
 
   @override
   Future<String?> loadSlotRaw(int index) async {
-    final slot = _clampSlot(index);
-    if (slot == _active) return _activeRaw;
-    final state = _slots[slot];
-    if (state == null) return null;
-    return GameLogic.exportSaveJson(state);
+    return _slotRaw[_clampSlot(index)];
   }
 
   @override
@@ -584,6 +617,7 @@ class InMemoryGameStorage implements GameStorage {
     }
     if (!_diskSplit) return;
     _activeRaw = _disk['\u0000active'];
+    _slotRaw[_active] = _activeRaw;
     _extras
       ..clear()
       ..addAll(_disk)
@@ -614,6 +648,7 @@ class InMemoryGameStorage implements GameStorage {
     final parsed = GameLogic.importSaveJson(json);
     if (parsed == null) return false;
     _activeRaw = json;
+    _slotRaw[_active] = json;
     _slots[_active] = parsed;
     if (_diskSplit) _disk['\u0000active'] = json;
     if (killAfterNextActiveDurableWrite) {

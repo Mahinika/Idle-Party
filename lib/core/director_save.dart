@@ -178,6 +178,8 @@ extension GameDirectorSave on GameDirector {
         _storage,
       );
       if (legacyUnassigned) {
+        _saveRecoveryAmbiguous = true;
+        await _refreshSafeRecoverySlots();
         _blockSaveRecovery(
           'Saving is paused. An unfinished copy could not be matched to one file. It was left untouched.',
         );
@@ -185,6 +187,8 @@ extension GameDirectorSave on GameDirector {
       }
       final outcome = await SaveSwap.recover(_storage);
       if (outcome == SaveSwapOutcome.unresolved) {
+        _saveRecoveryAmbiguous = false;
+        _safeRecoverySlots = const [];
         _blockSaveRecovery(
           'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
         );
@@ -201,20 +205,120 @@ extension GameDirectorSave on GameDirector {
       }
       final raw = await _storage.loadActiveRaw();
       final parsed = raw == null ? null : GameLogic.importSaveJson(raw);
-      if (parsed != null) {
-        _state = GameLogic.backfillCodexFromInventory(
-          GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(parsed)),
+      if (parsed == null) {
+        _blockSaveRecovery(
+          'Saving is paused. The active file could not be read. Retry leaves it untouched.',
         );
-        _hasExistingSave = true;
+        return false;
       }
       _durableSaveBlocked = false;
       _saveRecoveryMessage = '';
+      _saveRecoveryAmbiguous = false;
+      _safeRecoverySlots = const [];
+      _hasExistingSave = true;
+      await _installCaughtUp(parsed);
       _saveSlots = await _storage.listSlots();
       final displaced = await _storage.loadDisplacedSave();
       _hasDisplacedDeviceSave = displaced != null && displaced.isNotEmpty;
+      _syncHubIdleTimer();
+      ensureCombatLoop();
       _directorNotify();
       return true;
     });
+  }
+
+  /// Copy of the journal and every slot. Does not delete anything.
+  Future<String> exportRecoveryRecords() async {
+    final lines = StringBuffer();
+    Future<void> put(String key, String? value) async {
+      lines.writeln('--- $key ---');
+      lines.writeln(value ?? '');
+    }
+
+    for (final key in [
+      GameStorage.journalKey,
+      GameStorage.stagingKey,
+      GameStorage.holdKey,
+      GameStorage.displacedKey,
+    ]) {
+      await put(key, await _storage.loadExtra(key));
+    }
+    for (var slot = 0; slot < GameStorage.slotCount; slot++) {
+      await put('slot_$slot', await _storage.loadSlotRaw(slot));
+      if (slot == 0) continue;
+      await put(
+        'journal_$slot',
+        await _storage.loadExtra(GameStorage.journalKeyFor(slot)),
+      );
+      await put(
+        'staging_$slot',
+        await _storage.loadExtra(GameStorage.stagingKeyFor(slot)),
+      );
+      await put(
+        'hold_$slot',
+        await _storage.loadExtra(GameStorage.holdKeyFor(slot)),
+      );
+      await put(
+        'displaced_$slot',
+        await _storage.loadExtra(GameStorage.displacedKeyFor(slot)),
+      );
+    }
+    return lines.toString();
+  }
+
+  /// Open a slot that is not part of an unmatched journal.
+  ///
+  /// The global bytes stay. The next launch still shows recovery if that
+  /// journal is still unassigned. Slot 0 is refused while it exists.
+  Future<bool> openSafeRecoverySlot(int index) {
+    return _enqueueSave(() async {
+      if (!_saveRecoveryAmbiguous || index <= 0) return false;
+      await _refreshSafeRecoverySlots();
+      if (!_safeRecoverySlots.contains(index)) return false;
+      await _storage.setActiveSlot(index);
+      _activeSlot = index;
+      final loaded = await _storage.load();
+      if (loaded == null) {
+        _state = GameLogic.createInitialState();
+        _hasExistingSave = false;
+        _spatialTimer?.cancel();
+        _spatialTimer = null;
+        _spatial = null;
+      } else {
+        _hasExistingSave = true;
+        await _installCaughtUp(loaded);
+      }
+      _durableSaveBlocked = false;
+      _saveRecoveryMessage = '';
+      _saveRecoveryAmbiguous = false;
+      _safeRecoverySlots = const [];
+      _syncHubIdleTimer();
+      ensureCombatLoop();
+      _directorNotify();
+      return true;
+    });
+  }
+
+  Future<void> _refreshSafeRecoverySlots() async {
+    final evidence = <String>{};
+    for (final key in [
+      GameStorage.stagingKey,
+      GameStorage.holdKey,
+      GameStorage.displacedKey,
+    ]) {
+      final value = await _storage.loadExtra(key);
+      if (value != null && value.isNotEmpty) evidence.add(value);
+    }
+    final safe = <int>[];
+    for (var slot = 1; slot < GameStorage.slotCount; slot++) {
+      if (await _storage.loadExtra(GameStorage.journalKeyFor(slot)) != null) {
+        continue;
+      }
+      final raw = await _storage.loadSlotRaw(slot);
+      if (raw != null && evidence.contains(raw)) continue;
+      safe.add(slot);
+    }
+    _safeRecoverySlots = safe;
   }
 
   void setAppPaused(bool paused) {
@@ -404,16 +508,22 @@ extension GameDirectorSave on GameDirector {
       );
       final recovered = await SaveSwap.recover(_storage);
       if (legacyUnassigned) {
+        _saveRecoveryAmbiguous = true;
+        await _refreshSafeRecoverySlots();
         _blockSaveRecovery(
           'Saving is paused. An unfinished copy could not be matched to one file. It was left untouched.',
         );
       } else if (recovered == SaveSwapOutcome.unresolved) {
+        _saveRecoveryAmbiguous = false;
+        _safeRecoverySlots = const [];
         _blockSaveRecovery(
           'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
         );
       } else {
         _durableSaveBlocked = false;
         _saveRecoveryMessage = '';
+        _saveRecoveryAmbiguous = false;
+        _safeRecoverySlots = const [];
       }
       _saveSlots = await _storage.listSlots();
       _activeSlot = _storage.activeSlotIndex;

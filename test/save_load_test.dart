@@ -358,7 +358,7 @@ void main() {
         now: DateTime(2026, 8, 21),
       ).copyWith(gold: 999),
     );
-    expect(director.importSaveJson(raw), isTrue);
+    expect(await director.importSaveJson(raw), isTrue);
     expect(director.hasExistingSave, isTrue);
     await director.debugTryPersist();
     expect((await storage.load())?.gold, 999);

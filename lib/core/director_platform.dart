@@ -341,27 +341,39 @@ extension GameDirectorPlatform on GameDirector {
   String exportSaveJson() => GameLogic.exportSaveJson(_state);
 
   /// Returns true on success. On failure the current state is untouched.
-  bool importSaveJson(String raw) {
-    final imported = GameLogic.importSaveJson(raw);
-    if (imported == null) return false;
-    _awaitingWipeChoice = false;
-    _state = GameLogic.ensureRogueHero(imported);
-    _hasExistingSave = true;
-    _syncDevicePrefs();
-    if (_state.inDungeon) {
-      _rebuildSpatial();
-      if (enableSpatialLoop) {
-        _startSpatialLoop();
+  ///
+  /// Queued behind grants and other saves. Paid flags already on this device
+  /// are kept, so a grant that landed first is not replaced by the clipboard.
+  Future<bool> importSaveJson(String raw) {
+    return _enqueueSave(() async {
+      if (_durableSaveBlocked) return false;
+      final imported = GameLogic.importSaveJson(raw);
+      if (imported == null) return false;
+      final kept = PlayGamesScores.withKeptOwnership(
+        chosen: imported,
+        other: _state,
+      );
+      final next = _stampCloudClock(GameLogic.ensureRogueHero(kept));
+      final saved = await _storage.save(next);
+      if (!saved) return false;
+      _awaitingWipeChoice = false;
+      _state = next;
+      _hasExistingSave = true;
+      _syncDevicePrefs();
+      if (_state.inDungeon) {
+        _rebuildSpatial();
+        if (enableSpatialLoop) {
+          _startSpatialLoop();
+        }
+      } else {
+        _spatialTimer?.cancel();
+        _spatialTimer = null;
+        _spatial = null;
       }
-    } else {
-      _spatialTimer?.cancel();
-      _spatialTimer = null;
-      _spatial = null;
-    }
-    _rememberActiveSummary();
-    _directorNotify();
-    unawaited(_persistFlush());
-    return true;
+      _rememberActiveSummary();
+      _directorNotify();
+      return true;
+    });
   }
 
   void _rememberActiveSummary() {
@@ -606,6 +618,17 @@ extension GameDirectorPlatform on GameDirector {
       next.copyWith(metaDepth: next.metaDepth.copyWith(playGamesOptIn: true)),
     );
     final nextJson = GameLogic.exportSaveJson(next);
+    final parked = await _storage.loadDisplacedSave();
+    if (parked != null &&
+        parked.isNotEmpty &&
+        parked != previousJson &&
+        parked != nextJson) {
+      showToast(
+        'A device copy is already saved. Swap it back before restoring another cloud save.',
+        life: 3.4,
+      );
+      return false;
+    }
     _saveEpoch++;
     final outcome = await SaveSwap.commitReplacement(
       storage: _storage,
@@ -682,19 +705,25 @@ extension GameDirectorPlatform on GameDirector {
       return false;
     }
     final ok = await PlayGamesBridge.saveCloud(_state, explicit: true);
-    if (ok) {
-      await _rememberBackupLineage(
-        _state,
-        replacedCloudSeal: cloud == null
-            ? ''
-            : PlayGamesScores.progressSeal(cloud),
-      );
+    if (!ok) {
+      showToast('Cloud backup failed', life: 2.2);
+      return false;
     }
-    showToast(
-      ok ? 'Backed up to Play Games' : 'Cloud backup failed',
-      life: 2.2,
+    final stored = await _rememberBackupLineage(
+      _state,
+      replacedCloudSeal: cloud == null
+          ? ''
+          : PlayGamesScores.progressSeal(cloud),
     );
-    return ok;
+    if (!stored) {
+      showToast(
+        'Play has the backup. This device could not store that ownership. Retry BACKUP.',
+        life: 3.2,
+      );
+      return false;
+    }
+    showToast('Backed up to Play Games', life: 2.2);
+    return true;
   }
 
   /// KEEP DEVICE. Local gold and materials stay. Paid ownership on [cloud]
@@ -755,13 +784,13 @@ extension GameDirectorPlatform on GameDirector {
     return previous.isNotEmpty && cloudSeal == previous;
   }
 
-  Future<void> _rememberBackupLineage(
+  Future<bool> _rememberBackupLineage(
     GameState uploaded, {
     required String replacedCloudSeal,
-  }) async {
+  }) {
     final seal = PlayGamesScores.progressSeal(uploaded);
     final previous = replacedCloudSeal == seal ? '' : replacedCloudSeal;
-    await _enqueueSave(() async {
+    return _enqueueSave(() async {
       if (_durableSaveBlocked) return false;
       final merged = PlayGamesScores.withKeptOwnership(
         chosen: _state,

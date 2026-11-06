@@ -27,6 +27,7 @@ import 'ui/new_game_party_picker.dart';
 import 'ui/play_update_required_screen.dart';
 import 'ui/save_import_flow.dart';
 import 'ui/shell/play_shell.dart';
+import 'ui/shell/save_recovery_gate.dart';
 import 'ui/start_menu_screen.dart';
 import 'ui/web_click_bridge.dart';
 
@@ -200,6 +201,7 @@ enum _AppPhase {
   startMenu,
   pickSave,
   newGamePicker,
+  saveRecovery,
   play,
 }
 
@@ -334,6 +336,10 @@ class _GameHomePageState extends State<GameHomePage>
   }
 
   void _enterAfterBootChecks() {
+    if (_director.saveRecoveryBlocked) {
+      setState(() => _phase = _AppPhase.saveRecovery);
+      return;
+    }
     final firstRun = widget.showIntro && !_director.hasAnySave;
     setState(() {
       _phase = !widget.showIntro
@@ -408,6 +414,10 @@ class _GameHomePageState extends State<GameHomePage>
 
   void _continueGame() {
     if (_phase != _AppPhase.startMenu && _phase != _AppPhase.pickSave) return;
+    if (_director.saveRecoveryBlocked) {
+      setState(() => _phase = _AppPhase.saveRecovery);
+      return;
+    }
     _director.continueGame();
     setState(() => _phase = _AppPhase.play);
     _director.ensureCombatLoop();
@@ -504,7 +514,12 @@ class _GameHomePageState extends State<GameHomePage>
       return;
     }
     final ok = await _director.openSaveSlot(index);
-    if (!ok || !mounted) return;
+    if (!ok || !mounted) {
+      if (mounted && _director.saveRecoveryBlocked) {
+        setState(() => _phase = _AppPhase.saveRecovery);
+      }
+      return;
+    }
     _continueGame();
   }
 
@@ -738,6 +753,47 @@ class _GameHomePageState extends State<GameHomePage>
         key: const ValueKey('new-game-picker'),
         onBack: () => setState(() => _phase = _menuBeforeNewGame),
         onConfirm: _confirmNewGame,
+      );
+    }
+
+    if (_phase == _AppPhase.saveRecovery) {
+      return AnimatedBuilder(
+        animation: _director,
+        builder: (context, _) => Scaffold(
+          body: SaveRecoveryGate(
+            message: _director.saveRecoveryMessage,
+            onRetry: () async {
+              final ok = await _director.retrySaveRecovery();
+              if (!mounted) return ok;
+              if (ok) {
+                setState(() => _phase = _AppPhase.play);
+                _director.ensureCombatLoop();
+              }
+              return ok;
+            },
+            onExport: _director.saveRecoveryAmbiguous
+                ? () async {
+                    final text = await _director.exportRecoveryRecords();
+                    await Clipboard.setData(ClipboardData(text: text));
+                    _director.showToast(
+                      'Recovery records copied. Nothing was deleted.',
+                      life: 2.8,
+                    );
+                  }
+                : null,
+            safeSlots: _director.safeRecoverySlots,
+            onOpenSlot: (slot) async {
+              final ok = await _director.openSafeRecoverySlot(slot);
+              if (!mounted || !ok) return;
+              setState(() {
+                _phase = _director.hasExistingSave
+                    ? _AppPhase.play
+                    : _AppPhase.newGamePicker;
+              });
+              if (_phase == _AppPhase.play) _director.ensureCombatLoop();
+            },
+          ),
+        ),
       );
     }
 
