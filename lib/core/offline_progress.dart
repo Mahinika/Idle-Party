@@ -337,6 +337,7 @@ abstract final class OfflineProgress {
       ),
       rareFinds: (_rareGearCount(next) - _rareGearCount(before)).clamp(0, 999),
       awayGoldMultiplied: awayGoldMultiplied,
+      materialsGained: GameLogic.apexMaterialGain(before, progressed),
     );
   }
 

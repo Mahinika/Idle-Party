@@ -252,6 +252,36 @@ abstract final class ApexCraft {
     for (final m in materials) m.id: m,
   };
 
+  /// One loot-log line for a boss drop. Empty when nothing was granted.
+  static String lootLineForGrants(Iterable<String> ids) {
+    final counts = <String, int>{};
+    final order = <String>[];
+    for (final id in ids) {
+      if (id.isEmpty) continue;
+      if (!counts.containsKey(id)) order.add(id);
+      counts[id] = (counts[id] ?? 0) + 1;
+    }
+    if (order.isEmpty) return '';
+    return '+${[
+      for (final id in order) _countName(id, counts[id]!),
+    ].join(' · ')}';
+  }
+
+  /// Welcome Back line. Empty when [gained] is empty.
+  static String gainedLine(Map<String, int> gained) {
+    if (gained.isEmpty) return '';
+    final ids = gained.keys.toList()..sort();
+    return 'Craft materials · ${[
+      for (final id in ids)
+        if ((gained[id] ?? 0) > 0) _countName(id, gained[id]!),
+    ].join(' · ')}';
+  }
+
+  static String _countName(String id, int count) {
+    final name = materialsById[id]?.name ?? id;
+    return count == 1 ? name : '$count $name';
+  }
+
   static String shardIdForDungeon(String dungeonId) => 'shard_$dungeonId';
 
   static bool isZoneShardId(String matId) {

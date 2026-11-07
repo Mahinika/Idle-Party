@@ -215,7 +215,9 @@ abstract final class ApexForge {
   static GameState _tickTargetMeter(GameState state, {required bool farm}) {
     final targetId = resolveTargetMatId(state);
     if (targetId == null || targetId.isEmpty) return state;
-    final tick = farm ? ApexCraft.targetMeterFarmTick : ApexCraft.targetMeterPushTick;
+    final tick = farm
+        ? ApexCraft.targetMeterFarmTick
+        : ApexCraft.targetMeterPushTick;
     var progress = state.metaDepth.apexTargetProgress + tick;
     var next = state;
     if (progress >= ApexCraft.targetMeterRequired) {
@@ -259,8 +261,16 @@ abstract final class ApexForge {
   }) {
     if (!ApexCraft.isValidPair(classId, role)) return state;
     if (!ApexCraft.craftSlotsFor(classId, role).contains(slot)) return state;
+    final md = state.metaDepth;
+    // Retapping the hero or slot the sheet already shows must not wipe
+    // the meter or a material the player pinned.
+    if (md.apexCraftClassId == classId.name &&
+        md.apexCraftRoleTag == role.name &&
+        md.apexCraftSlot == slot.name) {
+      return state;
+    }
     return state.copyWith(
-      metaDepth: state.metaDepth.copyWith(
+      metaDepth: md.copyWith(
         apexCraftClassId: classId.name,
         apexCraftRoleTag: role.name,
         apexCraftSlot: slot.name,
@@ -274,6 +284,15 @@ abstract final class ApexForge {
   static GameState setApexTargetMat(GameState state, String matId) {
     if (!ApexCraft.materialsById.containsKey(matId)) return state;
     if (state.metaDepth.apexTargetMatId == matId) return state;
+    // Pinning the mat the meter is already filling keeps the bar.
+    // A different mat still starts over.
+    if (state.metaDepth.apexTargetMatId.isEmpty &&
+        resolveTargetMatId(state) == matId) {
+      return state.copyWith(
+        metaDepth: state.metaDepth.copyWith(apexTargetMatId: matId),
+        lastUpdated: DateTime.now(),
+      );
+    }
     return state.copyWith(
       metaDepth: state.metaDepth.copyWith(
         apexTargetMatId: matId,
@@ -361,9 +380,12 @@ abstract final class ApexForge {
 
   static int bossesUntilTargetGrant(GameState state) {
     final farm = state.dungeonMode == DungeonMode.farm;
-    final tick = farm ? ApexCraft.targetMeterFarmTick : ApexCraft.targetMeterPushTick;
+    final tick = farm
+        ? ApexCraft.targetMeterFarmTick
+        : ApexCraft.targetMeterPushTick;
     if (tick <= 0) return 0;
-    final left = ApexCraft.targetMeterRequired - state.metaDepth.apexTargetProgress;
+    final left =
+        ApexCraft.targetMeterRequired - state.metaDepth.apexTargetProgress;
     return (left / tick).ceil();
   }
 
@@ -456,9 +478,8 @@ abstract final class ApexForge {
       if (next.apexVault.isEmpty) break;
       final vault = [...next.apexVault]
         ..sort(
-          (a, b) => _slotEquipPriority(a.slot).compareTo(
-            _slotEquipPriority(b.slot),
-          ),
+          (a, b) =>
+              _slotEquipPriority(a.slot).compareTo(_slotEquipPriority(b.slot)),
         );
       var passEquipped = 0;
       for (final item in vault) {
@@ -474,13 +495,14 @@ abstract final class ApexForge {
       }
       if (passEquipped == 0) break;
     }
-    return ApexAutoEquipResult(state: next, equipped: equipped, skipped: skipped);
+    return ApexAutoEquipResult(
+      state: next,
+      equipped: equipped,
+      skipped: skipped,
+    );
   }
 
-  static GameState _updateHeroRosterGear(
-    GameState state,
-    PartyHero updated,
-  ) {
+  static GameState _updateHeroRosterGear(GameState state, PartyHero updated) {
     final roster = [...state.heroRoster];
     final ri = roster.indexWhere((h) => h.id == updated.id);
     if (ri < 0) return state;
@@ -501,6 +523,10 @@ abstract final class ApexForge {
     return _findApexItem(state, id) != null;
   }
 
+  /// Equipped first, then vault, then bag. The upgrade prices this copy.
+  static EquipmentItem? findOwnedApex(GameState state, String itemId) =>
+      _findApexItem(state, itemId);
+
   static EquipmentItem? _findApexItem(GameState state, String itemId) {
     for (final h in state.heroRoster) {
       for (final item in h.equipped.values) {
@@ -508,13 +534,33 @@ abstract final class ApexForge {
       }
     }
     for (final item in state.apexVault) {
-      if (item.id == itemId) return item;
+      if (item.id == itemId && item.isApex) return item;
     }
     for (final item in state.gearStash) {
       if (item.id == itemId && item.isApex) return item;
     }
     return null;
   }
+
+  /// Positive craft-material counts gained between two saves.
+  ///
+  /// A spend while away is not shown as a drop. Hub rest changes nothing.
+  static Map<String, int> materialGain(GameState before, GameState after) {
+    final ids = <String>{
+      ...before.craftMaterials.keys,
+      ...after.craftMaterials.keys,
+    }.toList()..sort();
+    final gained = <String, int>{};
+    for (final id in ids) {
+      final delta =
+          (after.craftMaterials[id] ?? 0) - (before.craftMaterials[id] ?? 0);
+      if (delta > 0) gained[id] = delta;
+    }
+    return gained;
+  }
+
+  static String materialGainLine(Map<String, int> gained) =>
+      ApexCraft.gainedLine(gained);
 
   static bool canCraftApex(
     GameState state, {
@@ -550,8 +596,9 @@ abstract final class ApexForge {
     required SpecRoleTag role,
     required EquipmentSlot slot,
   }) {
-    if (!canCraftApex(state, classId: classId, role: role, slot: slot)) {
-      return state;
+    final normalized = normalizeApexDuplicates(state);
+    if (!canCraftApex(normalized, classId: classId, role: role, slot: slot)) {
+      return normalized;
     }
     final costs = ApexCraft.absoluteCost(
       classId: classId,
@@ -559,13 +606,13 @@ abstract final class ApexForge {
       slot: slot,
       rank: 1,
     );
-    var next = _spendCraftMats(state, costs);
+    var next = _spendCraftMats(normalized, costs);
     final item = ApexCraft.buildItem(
       classId: classId,
       role: role,
       slot: slot,
       rank: 1,
-      ascensionLevel: state.ascensionLevel,
+      ascensionLevel: normalized.ascensionLevel,
     );
     next = next.copyWith(
       apexVault: [...next.apexVault, item],
@@ -599,8 +646,9 @@ abstract final class ApexForge {
   }
 
   static GameState upgradeApex(GameState state, String itemId) {
-    if (!canUpgradeApex(state, itemId)) return state;
-    final item = _findApexItem(state, itemId)!;
+    final normalized = normalizeApexDuplicates(state);
+    if (!canUpgradeApex(normalized, itemId)) return normalized;
+    final item = _findApexItem(normalized, itemId)!;
     final classId = HeroClassId.values.byName(item.apexClassId!);
     final role = SpecRoleTag.values.byName(item.apexRoleTag!);
     final nextRank = item.apexRank + 1;
@@ -611,28 +659,21 @@ abstract final class ApexForge {
       fromRank: item.apexRank,
       toRank: nextRank,
     );
-    var next = _spendCraftMats(state, costs);
+    var next = _spendCraftMats(normalized, costs);
     final upgraded = ApexCraft.buildItem(
       classId: classId,
       role: role,
       slot: item.slot,
       rank: nextRank,
-      ascensionLevel: state.ascensionLevel,
+      ascensionLevel: normalized.ascensionLevel,
     ).copyWith(id: item.id);
 
-    // Replace in vault / equipped / stash
-    final vaultIdx = next.apexVault.indexWhere((e) => e.id == itemId);
-    if (vaultIdx >= 0) {
-      final vault = [...next.apexVault];
-      vault[vaultIdx] = upgraded;
-      return MetaSystems.evaluateAchievements(
-        next.copyWith(apexVault: vault, lastUpdated: DateTime.now()),
-      );
-    }
+    // Price and replace the copy the player is wearing. A vault twin is
+    // not the piece the meter and the sheet just quoted.
     for (var i = 0; i < next.heroRoster.length; i++) {
       final hero = next.heroRoster[i];
       for (final e in hero.equipped.entries) {
-        if (e.value.id == itemId) {
+        if (e.value.id == itemId && e.value.apexRank == item.apexRank) {
           final gear = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped);
           gear[e.key] = upgraded;
           final roster = [...next.heroRoster];
@@ -643,7 +684,9 @@ abstract final class ApexForge {
         }
       }
     }
-    final stashIdx = next.gearStash.indexWhere((e) => e.id == itemId);
+    final stashIdx = next.gearStash.indexWhere(
+      (e) => e.id == itemId && e.isApex && e.apexRank == item.apexRank,
+    );
     if (stashIdx >= 0) {
       final stash = [...next.gearStash];
       stash[stashIdx] = upgraded;
@@ -651,7 +694,17 @@ abstract final class ApexForge {
         next.copyWith(gearStash: stash, lastUpdated: DateTime.now()),
       );
     }
-    return state;
+    final vaultIdx = next.apexVault.indexWhere(
+      (e) => e.id == itemId && e.isApex && e.apexRank == item.apexRank,
+    );
+    if (vaultIdx >= 0) {
+      final vault = [...next.apexVault];
+      vault[vaultIdx] = upgraded;
+      return MetaSystems.evaluateAchievements(
+        next.copyWith(apexVault: vault, lastUpdated: DateTime.now()),
+      );
+    }
+    return normalized;
   }
 
   static GameState equipFromApexVault(
@@ -660,35 +713,39 @@ abstract final class ApexForge {
     int? heroIndex,
     EquipmentSlot? intoSlot,
   }) {
+    final normalized = normalizeApexDuplicates(state);
     EquipmentItem? item;
-    for (final candidate in state.apexVault) {
-      if (candidate.id == itemId) {
+    for (final candidate in normalized.apexVault) {
+      if (candidate.id == itemId && candidate.isApex) {
         item = candidate;
         break;
       }
     }
-    if (item == null) return state;
+    if (item == null) return normalized;
 
-    final resolvedHero = heroIndex ?? bestHeroIndexForApex(state, item);
+    final resolvedHero = heroIndex ?? bestHeroIndexForApex(normalized, item);
     if (resolvedHero == null ||
         resolvedHero < 0 ||
-        resolvedHero >= state.heroes.length) {
-      return state;
+        resolvedHero >= normalized.heroes.length) {
+      return normalized;
     }
 
     final targetSlot = intoSlot ?? item.slot;
-    if (!GearService.equipTargetsFor(item).contains(targetSlot)) return state;
-    final heroCheck = state.heroes[resolvedHero];
+    if (!GearService.equipTargetsFor(item).contains(targetSlot)) {
+      return normalized;
+    }
+    final heroCheck = normalized.heroes[resolvedHero];
     if (!GearService.canHeroReceive(heroCheck, item, slot: targetSlot)) {
-      return state;
+      return normalized;
     }
 
     final equippedItem = item.slot == targetSlot
         ? item
         : item.copyWith(slot: targetSlot);
-    var next = state.copyWith(
-      apexVault: state.apexVault.where((g) => g.id != itemId).toList(),
-    );
+    final vault = [...normalized.apexVault];
+    final taken = vault.indexWhere((g) => identical(g, item));
+    if (taken >= 0) vault.removeAt(taken);
+    var next = normalized.copyWith(apexVault: vault);
     final hero = next.heroes[resolvedHero];
     final prev = hero.itemIn(targetSlot);
     final gear = Map<EquipmentSlot, EquipmentItem>.from(hero.equipped);
@@ -696,28 +753,235 @@ abstract final class ApexForge {
     if (targetSlot == EquipmentSlot.weapon &&
         ClassProficiency.weaponBlocksOffHand(equippedItem)) {
       final off = gear.remove(EquipmentSlot.offHand);
-      if (off != null) {
-        if (off.isApex) {
-          next = next.copyWith(apexVault: [...next.apexVault, off]);
-        } else {
-          next = next.copyWith(gearStash: [...next.gearStash, off]);
+      next = _holdDisplaced(next, off);
+    }
+    next = _holdDisplaced(next, prev);
+    final updatedHero = hero.copyWith(equipped: gear);
+    next = _updateHeroRosterGear(next, updatedHero);
+    return next.copyWith(lastUpdated: DateTime.now());
+  }
+
+  /// Taken-off gear uses the bag cap. Apex still goes to the vault.
+  static GameState _holdDisplaced(GameState state, EquipmentItem? item) {
+    if (item == null) return state;
+    if (item.isApex) {
+      return state.copyWith(apexVault: [...state.apexVault, item]);
+    }
+    return GearService.stashEquipment(state, item);
+  }
+
+  /// Collapses only a copy that is strictly worse, or an exact duplicate.
+  ///
+  /// A higher rank, a higher item level, or a better stat keeps its item.
+  /// Same rank and item level with different stats are left alone. The
+  /// equipped copy wins an exact tie. Running this twice changes nothing.
+  static GameState normalizeApexDuplicates(GameState state) {
+    final located = <_ApexLoc>[];
+    for (var hi = 0; hi < state.heroRoster.length; hi++) {
+      for (final e in state.heroRoster[hi].equipped.entries) {
+        final item = e.value;
+        if (item.isApex && item.id.isNotEmpty) {
+          located.add(
+            _ApexLoc(item, _ApexPlace.equipped, hi, e.key, located.length),
+          );
         }
       }
     }
-    var vault = List<EquipmentItem>.from(next.apexVault);
-    if (prev != null) {
-      if (prev.isApex) {
-        vault = [...vault, prev];
-      } else {
-        next = next.copyWith(gearStash: [...next.gearStash, prev]);
+    for (var i = 0; i < state.apexVault.length; i++) {
+      final item = state.apexVault[i];
+      if (item.isApex && item.id.isNotEmpty) {
+        located.add(_ApexLoc(item, _ApexPlace.vault, -1, null, i));
       }
     }
-    final updatedHero = hero.copyWith(equipped: gear);
-    next = _updateHeroRosterGear(next, updatedHero);
-    return next.copyWith(
+    for (var i = 0; i < state.gearStash.length; i++) {
+      final item = state.gearStash[i];
+      if (item.isApex && item.id.isNotEmpty) {
+        located.add(_ApexLoc(item, _ApexPlace.stash, -1, null, i));
+      }
+    }
+    final byId = <String, List<_ApexLoc>>{};
+    for (final loc in located) {
+      byId.putIfAbsent(loc.item.id, () => []).add(loc);
+    }
+
+    final drop = <_ApexLoc>{};
+    final wear = <_ApexLoc, _ApexLoc>{};
+    for (final group in byId.values) {
+      if (group.length < 2) continue;
+      final losers = <_ApexLoc>[
+        for (final candidate in group)
+          if (_apexShouldDrop(candidate, group)) candidate,
+      ];
+      if (losers.isEmpty) continue;
+      drop.addAll(losers);
+      final survivors = [
+        for (final loc in group)
+          if (!drop.contains(loc)) loc,
+      ];
+      final stillWorn = survivors.any((s) => s.place == _ApexPlace.equipped);
+      if (stillWorn || survivors.isEmpty) continue;
+      final hosts = [
+        for (final loc in group)
+          if (loc.place == _ApexPlace.equipped) loc,
+      ]..sort((a, b) => a.hero.compareTo(b.hero));
+      if (hosts.isEmpty) continue;
+      var best = survivors.first;
+      for (final loc in survivors.skip(1)) {
+        if (_apexKeepOrder(loc, best) < 0) best = loc;
+      }
+      wear[best] = hosts.first;
+    }
+    if (drop.isEmpty && wear.isEmpty) return state;
+
+    final moved = wear.keys.toSet();
+    final heroGear = [
+      for (final hero in state.heroRoster)
+        Map<EquipmentSlot, EquipmentItem>.from(hero.equipped),
+    ];
+    for (final loc in drop) {
+      if (loc.place == _ApexPlace.equipped && loc.slot != null) {
+        final worn = heroGear[loc.hero][loc.slot!];
+        if (identical(worn, loc.item)) heroGear[loc.hero].remove(loc.slot);
+      }
+    }
+    for (final entry in wear.entries) {
+      final keeper = entry.key;
+      final host = entry.value;
+      final slot = host.slot;
+      if (slot == null) continue;
+      heroGear[host.hero][slot] = keeper.item;
+      if (keeper.place == _ApexPlace.equipped &&
+          keeper.slot != null &&
+          (keeper.hero != host.hero || keeper.slot != slot)) {
+        final worn = heroGear[keeper.hero][keeper.slot!];
+        if (identical(worn, keeper.item)) {
+          heroGear[keeper.hero].remove(keeper.slot);
+        }
+      }
+    }
+
+    final vault = <EquipmentItem>[];
+    for (var i = 0; i < state.apexVault.length; i++) {
+      final item = state.apexVault[i];
+      final loc = located.cast<_ApexLoc?>().firstWhere(
+        (loc) => loc!.place == _ApexPlace.vault && loc.index == i,
+        orElse: () => null,
+      );
+      if (loc != null && (drop.contains(loc) || moved.contains(loc))) continue;
+      vault.add(item);
+    }
+    final stash = <EquipmentItem>[];
+    for (var i = 0; i < state.gearStash.length; i++) {
+      final item = state.gearStash[i];
+      final loc = located.cast<_ApexLoc?>().firstWhere(
+        (loc) => loc!.place == _ApexPlace.stash && loc.index == i,
+        orElse: () => null,
+      );
+      if (loc != null && (drop.contains(loc) || moved.contains(loc))) continue;
+      stash.add(item);
+    }
+
+    final roster = <PartyHero>[];
+    var heroesChanged = false;
+    for (var i = 0; i < state.heroRoster.length; i++) {
+      final hero = state.heroRoster[i];
+      if (_sameGear(hero.equipped, heroGear[i])) {
+        roster.add(hero);
+      } else {
+        heroesChanged = true;
+        roster.add(hero.copyWith(equipped: heroGear[i]));
+      }
+    }
+    if (!heroesChanged &&
+        vault.length == state.apexVault.length &&
+        stash.length == state.gearStash.length) {
+      return state;
+    }
+    return state.copyWith(
+      heroRoster: roster,
       apexVault: vault,
+      gearStash: stash,
       lastUpdated: DateTime.now(),
     );
+  }
+
+  static bool _sameGear(
+    Map<EquipmentSlot, EquipmentItem> a,
+    Map<EquipmentSlot, EquipmentItem> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (final e in a.entries) {
+      if (!identical(b[e.key], e.value)) return false;
+    }
+    return true;
+  }
+
+  static bool _apexShouldDrop(_ApexLoc candidate, List<_ApexLoc> group) {
+    for (final other in group) {
+      if (identical(other, candidate)) continue;
+      if (_apexDominates(other.item, candidate.item)) return true;
+      if (_apexSameInvestment(other.item, candidate.item) &&
+          _apexKeepOrder(other, candidate) < 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// True when [a] is at least as invested as [b] and better on one axis.
+  static bool _apexDominates(EquipmentItem a, EquipmentItem b) {
+    if (a.apexRank < b.apexRank || a.itemLevel < b.itemLevel) return false;
+    final left = _apexAxes(a);
+    final right = _apexAxes(b);
+    var better = a.apexRank > b.apexRank || a.itemLevel > b.itemLevel;
+    for (var i = 0; i < left.length; i++) {
+      if (left[i] < right[i]) return false;
+      if (left[i] > right[i]) better = true;
+    }
+    return better;
+  }
+
+  static bool _apexSameInvestment(EquipmentItem a, EquipmentItem b) {
+    if (a.apexRank != b.apexRank || a.itemLevel != b.itemLevel) return false;
+    if (a.name != b.name || a.effectId != b.effectId) return false;
+    if (a.effectValue != b.effectValue || a.setId != b.setId) return false;
+    final left = _apexAxes(a);
+    final right = _apexAxes(b);
+    for (var i = 0; i < left.length; i++) {
+      if (left[i] != right[i]) return false;
+    }
+    return true;
+  }
+
+  static List<int> _apexAxes(EquipmentItem item) => [
+    item.strengthBonus,
+    item.agilityBonus,
+    item.staminaBonus,
+    item.intellectBonus,
+    item.spiritBonus,
+    item.spellPowerBonus,
+    item.armorBonus,
+    item.mp5Bonus,
+    item.attackBonus,
+    item.defenseBonus,
+    item.vitalityBonus,
+    item.critChanceBonus,
+    item.masteryBonus,
+    item.attackSpeedBonus,
+    item.moveSpeedBonus,
+  ];
+
+  /// Lower sorts first: higher rank, higher item level, then equipped.
+  static int _apexKeepOrder(_ApexLoc a, _ApexLoc b) {
+    final rank = b.item.apexRank.compareTo(a.item.apexRank);
+    if (rank != 0) return rank;
+    final ilvl = b.item.itemLevel.compareTo(a.item.itemLevel);
+    if (ilvl != 0) return ilvl;
+    final place = a.place.index.compareTo(b.place.index);
+    if (place != 0) return place;
+    final hero = a.hero.compareTo(b.hero);
+    if (hero != 0) return hero;
+    return a.index.compareTo(b.index);
   }
 
   static Map<EquipmentSlot, EquipmentItem> keepApexOnly(PartyHero h) => {
@@ -736,26 +1000,20 @@ abstract final class ApexForge {
     for (final slot in ApexCraft.craftSlotsFor(classId, role)) {
       if (slot == EquipmentSlot.weapon) continue;
       final id = ApexCraft.pieceId(classId: classId, role: role, slot: slot);
-      var found = false;
-      for (final i in state.apexVault) {
-        if (i.id == id) {
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        for (final hero in state.heroRoster) {
-          for (final i in hero.equipped.values) {
-            if (i.id == id) {
-              found = true;
-              break;
-            }
-          }
-          if (found) break;
-        }
-      }
-      if (!found) return slot;
+      if (_findApexItem(state, id) == null) return slot;
     }
     return EquipmentSlot.weapon;
   }
+}
+
+enum _ApexPlace { equipped, vault, stash }
+
+class _ApexLoc {
+  const _ApexLoc(this.item, this.place, this.hero, this.slot, this.index);
+
+  final EquipmentItem item;
+  final _ApexPlace place;
+  final int hero;
+  final EquipmentSlot? slot;
+  final int index;
 }

@@ -142,6 +142,13 @@ Future<void> showOfflineProgressDialog(
                 style: GameTheme.body(size: 13, color: GameTheme.parchment),
               ),
             ],
+            if (summary.materialsLine.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                summary.materialsLine,
+                style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+              ),
+            ],
             const SizedBox(height: 6),
             Text(
               GoldIncome.awayPromise(
