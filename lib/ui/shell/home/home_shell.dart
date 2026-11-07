@@ -100,7 +100,7 @@ class _HomeShellState extends State<HomeShell> {
       child: Column(
       children: [
         HomeTopBar(director: director, router: router),
-        if (!sheet) _climbRow(state),
+        _climbRow(state, sheet: sheet),
         Expanded(
           child: MediaQuery.withClampedTextScaling(
             maxScaleFactor: 1.3,
@@ -168,8 +168,11 @@ class _HomeShellState extends State<HomeShell> {
 
   /// First fight and first vault claim. One line, and CLAIM while the
   /// party is still in the cave. Camp already has CLAIM VAULT.
-  Widget _climbRow(GameState state) {
+  Widget _climbRow(GameState state, {required bool sheet}) {
     final climb = FirstClimbCoach.line(state, inDungeon: state.inDungeon);
+    // Keep this row mounted while the first climb is on screen. Removing it
+    // in the same build that opens HEROES marks the top bar dirty.
+    if (sheet && climb == null) return const SizedBox.shrink();
     final tip = !state.inDungeon && climb == null
         ? FirstSessionTips.active(state, inDungeon: false)
         : null;
