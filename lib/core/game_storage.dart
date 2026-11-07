@@ -173,6 +173,20 @@ abstract class GameStorage {
   /// Writes [json] as the active slot. False when the bytes did not land.
   Future<bool> writeActiveRaw(String json);
 
+  /// Writes [json] into [index] without changing which slot is selected.
+  ///
+  /// A journal replay uses this so the selected slot is not the owner.
+  /// False when the bytes did not land. While a slot commit is unproven
+  /// this returns false and writes nothing: a successful commit of any
+  /// key would flush the rejected party.
+  Future<bool> writeSlotRaw(int index, String json);
+
+  /// Try again to put back the bytes from a slot commit that returned
+  /// false. True when nothing is unproven, or when that restore commit
+  /// returns true. Does not move the selected slot and does not treat a
+  /// rejected party as saved.
+  Future<bool> retryUnprovenRestore();
+
   /// Side file (device copy, staging, journal). Null [json] deletes it.
   Future<String?> loadExtra(String key);
 
@@ -204,6 +218,23 @@ class SharedPreferencesGameStorage implements GameStorage {
   final SharedPreferences? _preferences;
   int _active = 0;
   bool _unprovenWrite = false;
+  int? _unprovenSlot;
+  String? _unprovenPrevious;
+  bool _unprovenMissing = false;
+
+  void _noteUnproven(int slot, String? previous) {
+    _unprovenWrite = true;
+    _unprovenSlot = slot;
+    _unprovenPrevious = previous;
+    _unprovenMissing = previous == null;
+  }
+
+  void _clearUnproven() {
+    _unprovenWrite = false;
+    _unprovenSlot = null;
+    _unprovenPrevious = null;
+    _unprovenMissing = false;
+  }
 
   @override
   bool get hasUnprovenWrite => _unprovenWrite;
@@ -350,12 +381,12 @@ class SharedPreferencesGameStorage implements GameStorage {
     try {
       slotOk = await prefs.setString(slotKey, raw);
     } catch (error, stack) {
-      _unprovenWrite = true;
+      _noteUnproven(_active, previous);
       debugPrint('save slot commit threw: $error\n$stack');
       rethrow;
     }
     if (!slotOk) {
-      _unprovenWrite = true;
+      _noteUnproven(_active, previous);
       // Put the previous bytes back into the map before any later commit.
       // Android writes the whole map, so a later successful key would
       // otherwise flush the rejected party.
@@ -363,7 +394,7 @@ class SharedPreferencesGameStorage implements GameStorage {
         final restored = previous == null
             ? await prefs.remove(slotKey)
             : await prefs.setString(slotKey, previous);
-        if (restored) _unprovenWrite = false;
+        if (restored) _clearUnproven();
       } catch (error, stack) {
         debugPrint('save restore after a false commit failed: $error\n$stack');
       }
@@ -377,7 +408,22 @@ class SharedPreferencesGameStorage implements GameStorage {
     } catch (error, stack) {
       debugPrint('save mirror failed: $error\n$stack');
     }
-    _unprovenWrite = false;
+    _clearUnproven();
+    return true;
+  }
+
+  @override
+  Future<bool> retryUnprovenRestore() async {
+    if (!_unprovenWrite) return true;
+    final slot = _unprovenSlot;
+    if (slot == null) return false;
+    final prefs = await _prefs;
+    final key = _slotKey(slot);
+    final restored = _unprovenMissing
+        ? await prefs.remove(key)
+        : await prefs.setString(key, _unprovenPrevious!);
+    if (!restored) return false;
+    _clearUnproven();
     return true;
   }
 
@@ -491,6 +537,20 @@ class SharedPreferencesGameStorage implements GameStorage {
     await prefs.reload();
     return prefs.getString(_slotKey(_active)) == json &&
         prefs.getString(_saveKey) == json;
+  }
+
+  @override
+  Future<bool> writeSlotRaw(int index, String json) async {
+    final slot = _clampSlot(index);
+    if (slot == _active) return writeActiveRaw(json);
+    if (_unprovenWrite) return false;
+    final prefs = await _prefs;
+    await _prepare(prefs);
+    final key = _slotKey(slot);
+    final wrote = await prefs.setString(key, json);
+    if (!wrote) return false;
+    await prefs.reload();
+    return prefs.getString(key) == json;
   }
 
   @override
@@ -699,6 +759,21 @@ class InMemoryGameStorage implements GameStorage {
 
   @override
   bool get hasUnprovenWrite => _unprovenWrite;
+
+  @override
+  Future<bool> retryUnprovenRestore() async => !_unprovenWrite;
+
+  @override
+  Future<bool> writeSlotRaw(int index, String json) async {
+    final slot = _clampSlot(index);
+    if (_unprovenWrite) return false;
+    if (slot == _active) return writeActiveRaw(json);
+    final parsed = GameLogic.importSaveJson(json);
+    if (parsed == null) return false;
+    _slotRaw[slot] = json;
+    _slots[slot] = parsed;
+    return true;
+  }
 
   @override
   Future<GameState?> load() async => _slots[_active];

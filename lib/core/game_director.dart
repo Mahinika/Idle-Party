@@ -155,6 +155,11 @@ class GameDirector extends ChangeNotifier {
   /// choosing an owner. Includes slot 0.
   bool _healthySlotRecovery = false;
 
+  /// The selected slot moved and the rollback could not move it back.
+  /// RETRY keeps this director's slot until that index commits. It does
+  /// not adopt the selected file in the meantime.
+  bool _holdDirectorSlot = false;
+
   /// True while this session must not overwrite the durable copies.
   bool get saveRecoveryBlocked => _durableSaveBlocked;
 

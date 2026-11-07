@@ -206,16 +206,25 @@ extension GameDirectorSave on GameDirector {
   /// unreadable and another file is still there.
   Future<void> _offerHealthySlots() async {
     if (_saveRecoveryAmbiguous) return;
-    final open = <int>[];
+    final plain = <int>[];
+    final replay = <int>[];
     for (var slot = 0; slot < GameStorage.slotCount; slot++) {
-      if (await _slotJournalOpen(slot)) continue;
       final raw = await _storage.loadSlotRaw(slot);
       if (raw == null || raw.isEmpty) continue;
       if (GameLogic.importSaveJson(raw, keepCombatRandom: true) == null) {
         continue;
       }
-      open.add(slot);
+      if (await _slotJournalOpen(slot)) {
+        replay.add(slot);
+      } else {
+        plain.add(slot);
+      }
     }
+    // A parsable file with no journal is the safe adopt. A journal is
+    // offered only when that is the only readable file, and opening it
+    // replays before any grant. Offering it beside a healthy file let a
+    // later replay erase a receipt written after the pre-image was opened.
+    final open = plain.isNotEmpty ? plain : replay;
     _healthySlotRecovery = open.isNotEmpty;
     _safeRecoverySlots = open;
     if (!_directorClosed) _directorNotify();
@@ -282,13 +291,30 @@ extension GameDirectorSave on GameDirector {
       }
       // A commit that returned false can still be the value reload() sees.
       // Confirm the live party with a commit that returns true. Do not
-      // adopt the cached bytes in its place.
-      if (_storage.hasUnprovenWrite) {
+      // adopt the cached bytes in its place. When the selected slot is
+      // not this director's slot, put the previous bytes back first.
+      // Only then can the index commit, because a successful commit
+      // writes the whole map.
+      if (_storage.hasUnprovenWrite || _holdDirectorSlot) {
         if (_storage.activeSlotIndex != _activeSlot) {
-          _blockSaveRecovery(
-            'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
-          );
-          return false;
+          if (_storage.hasUnprovenWrite) {
+            final restored = await _storage.retryUnprovenRestore();
+            if (!restored || _storage.hasUnprovenWrite) {
+              _blockSaveRecovery(
+                'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+              );
+              return false;
+            }
+          }
+          await _storage.setActiveSlot(_activeSlot);
+          if (_storage.activeSlotIndex != _activeSlot ||
+              _storage.hasUnprovenWrite) {
+            _holdDirectorSlot = true;
+            _blockSaveRecovery(
+              'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+            );
+            return false;
+          }
         }
         var confirmed = false;
         try {
@@ -296,12 +322,15 @@ extension GameDirectorSave on GameDirector {
         } catch (error, stack) {
           debugPrint('unproven retry save failed: $error\n$stack');
         }
-        if (!confirmed || _storage.hasUnprovenWrite) {
+        if (!confirmed ||
+            _storage.hasUnprovenWrite ||
+            _storage.activeSlotIndex != _activeSlot) {
           _blockSaveRecovery(
             'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
           );
           return false;
         }
+        _holdDirectorSlot = false;
         _durableSaveBlocked = false;
         _saveRecoveryMessage = '';
         _saveRecoveryAmbiguous = false;
@@ -338,6 +367,7 @@ extension GameDirectorSave on GameDirector {
           await _offerHealthySlots();
           return false;
         }
+        _holdDirectorSlot = false;
         _durableSaveBlocked = false;
         _saveRecoveryMessage = '';
         _saveRecoveryAmbiguous = false;
@@ -350,6 +380,7 @@ extension GameDirectorSave on GameDirector {
         _directorNotify();
         return true;
       }
+      _holdDirectorSlot = false;
       _durableSaveBlocked = false;
       _saveRecoveryMessage = '';
       _saveRecoveryAmbiguous = false;
@@ -432,7 +463,14 @@ extension GameDirectorSave on GameDirector {
         }
       }
       if (await _slotJournalOpen(index)) {
-        return RecoverySlotOpen.refused;
+        // Finish the journal before this slot can be played. Adopting the
+        // pre-image and then replaying later would drop a grant that
+        // landed in between. A journal that is still open stays closed.
+        final outcome = await SaveSwap.recover(_storage, slot: index);
+        if (outcome == SaveSwapOutcome.unresolved ||
+            await _slotJournalOpen(index)) {
+          return RecoverySlotOpen.refused;
+        }
       }
       final raw = await _storage.loadSlotRaw(index);
       if (raw == null) {
@@ -458,6 +496,7 @@ extension GameDirectorSave on GameDirector {
       _activeSlot = index;
       _hasExistingSave = true;
       await _installCaughtUp(loaded);
+      _holdDirectorSlot = false;
       _durableSaveBlocked = false;
       _saveRecoveryMessage = '';
       _saveRecoveryAmbiguous = false;
@@ -706,6 +745,7 @@ extension GameDirectorSave on GameDirector {
           'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
         );
       } else {
+        _holdDirectorSlot = false;
         _durableSaveBlocked = false;
         _saveRecoveryMessage = '';
         _saveRecoveryAmbiguous = false;
@@ -951,6 +991,20 @@ extension GameDirectorSave on GameDirector {
       _directorNotify();
       return false;
     }
+    // A committed replay replaced this file. The party loaded above is
+    // the pre-image. Saving it now would undo the journal.
+    var adopted = saved;
+    if (pending == SaveSwapOutcome.committed) {
+      final raw = await _storage.loadSlotRaw(slot);
+      final parsed = raw == null ? null : GameLogic.importSaveJson(raw);
+      if (parsed == null) {
+        _blockSaveRecovery(
+          'Saving is paused. A save file could not be read. It was left untouched.',
+        );
+        return false;
+      }
+      adopted = parsed;
+    }
     _saveEpoch++;
     PlayGamesBridge.invalidateUploads();
     _friendEpoch++;
@@ -963,7 +1017,7 @@ extension GameDirectorSave on GameDirector {
     if (_storage.activeSlotIndex != slot) return false;
     _activeSlot = slot;
     _hasExistingSave = true;
-    final caught = await _catchUpSaved(saved);
+    final caught = await _catchUpSaved(adopted);
     await _installCaughtUp(caught);
     _notePlaySession();
     _noteAppColdStart();
@@ -1097,12 +1151,23 @@ extension GameDirectorSave on GameDirector {
     final previousEpoch = _friendEpoch;
     if (epoch != _newGameEpoch) return false;
     _friendEpoch++;
-    _pendingNewGameSlot = null;
     var switched = false;
     var saved = false;
     try {
       await _storage.setActiveSlot(slot);
+      if (_storage.activeSlotIndex != slot &&
+          _storage.activeSlotIndex == previousSlot) {
+        // The armed slot did not become the selection. Confirm the party
+        // already on that selection so a rejected string can be replaced
+        // by a commit that returns true, then try the armed slot again.
+        // This write is the existing party, not the new game.
+        final confirmed = await _storage.save(previous);
+        if (confirmed && !_storage.hasUnprovenWrite) {
+          await _storage.setActiveSlot(slot);
+        }
+      }
       if (_storage.activeSlotIndex != slot) return false;
+      _pendingNewGameSlot = null;
       switched = true;
       _activeSlot = slot;
       _awaitingWipeChoice = false;
@@ -1161,6 +1226,7 @@ extension GameDirectorSave on GameDirector {
       }
       _hasExistingSave = true;
       if (fromRecovery) {
+        _holdDirectorSlot = false;
         _durableSaveBlocked = false;
         _saveRecoveryMessage = '';
         _saveRecoveryAmbiguous = false;
@@ -1209,7 +1275,8 @@ extension GameDirectorSave on GameDirector {
       }
     }
     _activeSlot = previousSlot;
-    if (_storage.activeSlotIndex != previousSlot) {
+    _holdDirectorSlot = _storage.activeSlotIndex != previousSlot;
+    if (_holdDirectorSlot) {
       _blockSaveRecovery(
         'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
       );

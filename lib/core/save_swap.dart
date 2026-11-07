@@ -511,17 +511,18 @@ abstract final class SaveSwap {
     required String staging,
     required String hold,
   }) async {
-    if (storage.activeSlotIndex != slot) return SaveSwapOutcome.unresolved;
     if (await _globalJournalIsForeign(storage, slot)) {
       return SaveSwapOutcome.unresolved;
     }
     if (await _migrationRefusedThisParkedFile(storage, slot, hold)) {
       return SaveSwapOutcome.unresolved;
     }
-    // Name the commit before replacing active. A kill after the active
+    // Name the commit before replacing the slot file. A kill after that
     // write is then the swap-commit path, which publishes the hold.
     // Leaving the phase on swap-stage made the next retry treat the new
-    // active as an abort and delete the hold.
+    // file as an abort and delete the hold. The selected slot is not
+    // the owner: the bytes go into this slot even when another file is
+    // the one autosave would write.
     final commitPhase = _JournalMark.parse(
       await storage.loadExtra(GameStorage.journalKeyFor(slot)),
     ).encode('swap-commit');
@@ -535,9 +536,9 @@ abstract final class SaveSwap {
             commitPhase) {
       return SaveSwapOutcome.unresolved;
     }
-    final wroteActive = await storage.writeActiveRaw(staging);
+    final wroteSlot = await storage.writeSlotRaw(slot, staging);
     await storage.reloadDurable();
-    if (!wroteActive || await storage.loadActiveRaw() != staging) {
+    if (!wroteSlot || await storage.loadSlotRaw(slot) != staging) {
       return SaveSwapOutcome.unresolved;
     }
     final wroteHold = await storage.writeExtra(
