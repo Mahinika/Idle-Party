@@ -3949,6 +3949,317 @@ void main() {
       }
     });
   });
+
+  testWidgets('a known swap-commit with no hold still opens the other file', (
+    tester,
+  ) async {
+    _keepSuiteRandom();
+    final storage = InMemoryGameStorage();
+    final owned = GameLogic.exportSaveJson(
+      _party(life: 30, purchaseIds: const ['GPA.c0']).copyWith(partyName: 'C0'),
+    );
+    final healthy = GameLogic.exportSaveJson(
+      _party(life: 70, purchaseIds: const ['GPA.d0']).copyWith(partyName: 'D0'),
+    );
+    final staged = GameLogic.exportSaveJson(
+      _party(
+        life: 4,
+        purchaseIds: const ['GPA.staged'],
+      ).copyWith(partyName: 'Staged'),
+    );
+    await _writeSlot(storage, 2, owned);
+    await _writeSlot(storage, 0, healthy);
+    await storage.setActiveSlot(2);
+    await storage.writeExtra(GameStorage.journalKeyFor(2), 'swap-commit@2');
+    await storage.writeExtra(GameStorage.stagingKeyFor(2), staged);
+    final director = GameDirector(storage, enableSpatialLoop: false);
+    await _pumpRecoveryApp(tester, director);
+    expect(find.text('SAVE RECOVERY'), findsOneWidget);
+    expect(find.text('EXPORT RECORDS'), findsNothing);
+    expect(find.text('OPEN SLOT 1'), findsOneWidget);
+    expect(find.text('OPEN SLOT 3'), findsNothing);
+    await tester.tap(find.text('RETRY'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('RETRY'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('SAVE RECOVERY'), findsOneWidget);
+    expect(find.text('OPEN SLOT 1'), findsOneWidget);
+    expect(
+      await storage.loadExtra(GameStorage.journalKeyFor(2)),
+      'swap-commit@2',
+    );
+    expect(await storage.loadExtra(GameStorage.stagingKeyFor(2)), staged);
+    expect(await storage.loadExtra(GameStorage.holdKeyFor(2)), isNull);
+    expect(await storage.loadExtra(GameStorage.displacedKeyFor(2)), isNull);
+    expect(await storage.loadSlotRaw(2), owned);
+    expect(await storage.loadSlotRaw(0), healthy);
+    await tester.ensureVisible(find.text('OPEN SLOT 1'));
+    await tester.tap(find.text('OPEN SLOT 1'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('SAVE RECOVERY'), findsNothing);
+    expect(director.saveRecoveryBlocked, isFalse);
+    expect(director.activeSaveSlot, 0);
+    expect(director.state.partyName, 'D0');
+    expect(
+      await director.debugGrantShopPurchase(
+        'cinder_pouch',
+        purchaseId: 'GPA.fresh',
+      ),
+      isTrue,
+    );
+    expect(await storage.loadSlotRaw(2), owned);
+    expect(
+      await storage.loadExtra(GameStorage.journalKeyFor(2)),
+      'swap-commit@2',
+    );
+    expect(await storage.loadExtra(GameStorage.stagingKeyFor(2)), staged);
+    expect(await storage.loadExtra(GameStorage.holdKeyFor(2)), isNull);
+    expect(_rawHas(await storage.loadSlotRaw(2), 'GPA.fresh'), isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    final playing = GameDirector(storage, enableSpatialLoop: false);
+    await _pumpRecoveryApp(tester, playing);
+    expect(find.text('SAVE RECOVERY'), findsNothing);
+    expect(playing.saveRecoveryBlocked, isFalse);
+    expect(playing.activeSaveSlot, 0);
+    expect(playing.state.partyName, 'D0');
+    expect(
+      playing.state.metaDepth.grantedShopPurchaseIds,
+      containsAll(['GPA.d0', 'GPA.fresh']),
+    );
+    expect(
+      await storage.loadExtra(GameStorage.journalKeyFor(2)),
+      'swap-commit@2',
+    );
+    expect(await storage.loadExtra(GameStorage.stagingKeyFor(2)), staged);
+    expect(await storage.loadSlotRaw(2), owned);
+    await _disposeRecoveryApp(tester);
+  });
+
+  testWidgets('an unknown journal on slot 2 opens slot 1 from the gate', (
+    tester,
+  ) async {
+    _keepSuiteRandom();
+    final storage = InMemoryGameStorage();
+    final owned = GameLogic.exportSaveJson(
+      _party(
+        life: 30,
+        purchaseIds: const ['GPA.owned'],
+      ).copyWith(partyName: 'Owned'),
+    );
+    final healthy = GameLogic.exportSaveJson(
+      _party(
+        life: 70,
+        purchaseIds: const ['GPA.keep'],
+      ).copyWith(partyName: 'Healthy'),
+    );
+    final staged = GameLogic.exportSaveJson(
+      _party(
+        life: 4,
+        purchaseIds: const ['GPA.staged'],
+      ).copyWith(partyName: 'Staged'),
+    );
+    final held = GameLogic.exportSaveJson(
+      _party(
+        life: 8,
+        purchaseIds: const ['GPA.held'],
+      ).copyWith(partyName: 'Held'),
+    );
+    await _writeSlot(storage, 2, owned);
+    await _writeSlot(storage, 0, healthy);
+    await storage.setActiveSlot(2);
+    await storage.writeExtra(GameStorage.journalKeyFor(2), 'nope@2');
+    await storage.writeExtra(GameStorage.stagingKeyFor(2), staged);
+    await storage.writeExtra(GameStorage.holdKeyFor(2), held);
+    final director = GameDirector(storage, enableSpatialLoop: false);
+    await _pumpRecoveryApp(tester, director);
+    expect(find.text('SAVE RECOVERY'), findsOneWidget);
+    expect(find.text('OPEN SLOT 1'), findsOneWidget);
+    expect(find.text('OPEN SLOT 3'), findsNothing);
+    await tester.tap(find.text('RETRY'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('RETRY'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('OPEN SLOT 1'), findsOneWidget);
+    await tester.ensureVisible(find.text('OPEN SLOT 1'));
+    await tester.tap(find.text('OPEN SLOT 1'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('SAVE RECOVERY'), findsNothing);
+    expect(director.activeSaveSlot, 0);
+    expect(
+      await director.debugGrantShopPurchase(
+        'cinder_pouch',
+        purchaseId: 'GPA.fresh',
+      ),
+      isTrue,
+    );
+    expect(await storage.loadExtra(GameStorage.journalKeyFor(2)), 'nope@2');
+    expect(await storage.loadExtra(GameStorage.stagingKeyFor(2)), staged);
+    expect(await storage.loadExtra(GameStorage.holdKeyFor(2)), held);
+    expect(await storage.loadSlotRaw(2), owned);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    final playing = GameDirector(storage, enableSpatialLoop: false);
+    await _pumpRecoveryApp(tester, playing);
+    expect(find.text('SAVE RECOVERY'), findsNothing);
+    expect(playing.saveRecoveryBlocked, isFalse);
+    expect(playing.activeSaveSlot, 0);
+    expect(
+      playing.state.metaDepth.grantedShopPurchaseIds,
+      containsAll(['GPA.keep', 'GPA.fresh']),
+    );
+    expect(await storage.loadExtra(GameStorage.journalKeyFor(2)), 'nope@2');
+    expect(await storage.loadSlotRaw(2), owned);
+    await _disposeRecoveryApp(tester);
+  });
+
+  testWidgets('an unmatched journal still continues on the third file', (
+    tester,
+  ) async {
+    _keepSuiteRandom();
+    final storage = InMemoryGameStorage();
+    final shared = GameLogic.exportSaveJson(
+      _party(
+        life: 11,
+        purchaseIds: const ['GPA.shared'],
+      ).copyWith(partyName: 'Shared'),
+    );
+    final held = GameLogic.exportSaveJson(
+      _party(
+        life: 13,
+        purchaseIds: const ['GPA.held'],
+      ).copyWith(partyName: 'Held'),
+    );
+    final free = GameLogic.exportSaveJson(
+      _party(
+        life: 14,
+        purchaseIds: const ['GPA.free'],
+      ).copyWith(partyName: 'Free'),
+    );
+    await _writeSlot(storage, 0, shared);
+    await _writeSlot(storage, 2, shared);
+    await _writeSlot(storage, 4, free);
+    await storage.setActiveSlot(0);
+    await storage.writeExtra(GameStorage.stagingKey, shared);
+    await storage.writeExtra(GameStorage.holdKey, held);
+    await storage.writeExtra(GameStorage.journalKey, 'nope');
+    final director = GameDirector(storage, enableSpatialLoop: false);
+    await _pumpRecoveryApp(tester, director);
+    expect(find.text('SAVE RECOVERY'), findsOneWidget);
+    expect(find.text('RETRY'), findsNothing);
+    expect(find.text('EXPORT RECORDS'), findsOneWidget);
+    expect(find.text('OPEN SLOT 1'), findsNothing);
+    expect(find.text('OPEN SLOT 3'), findsNothing);
+    expect(find.text('OPEN SLOT 5'), findsOneWidget);
+    expect(await director.retrySaveRecovery(), isFalse);
+    await tester.pump();
+    expect(find.text('OPEN SLOT 5'), findsOneWidget);
+    expect(await storage.loadExtra(GameStorage.journalKey), 'nope');
+    await tester.ensureVisible(find.text('OPEN SLOT 5'));
+    await tester.tap(find.text('OPEN SLOT 5'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('SAVE RECOVERY'), findsNothing);
+    expect(director.activeSaveSlot, 4);
+    expect(director.state.partyName, 'Free');
+    expect(
+      await director.debugGrantShopPurchase(
+        'cinder_pouch',
+        purchaseId: 'GPA.fresh',
+      ),
+      isTrue,
+    );
+    expect(await storage.loadExtra(GameStorage.journalKey), 'nope');
+    expect(await storage.loadExtra(GameStorage.stagingKey), shared);
+    expect(await storage.loadExtra(GameStorage.holdKey), held);
+    expect(await storage.loadSlotRaw(0), shared);
+    expect(await storage.loadSlotRaw(2), shared);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    final playing = GameDirector(storage, enableSpatialLoop: false);
+    await _pumpRecoveryApp(tester, playing);
+    expect(playing.saveRecoveryBlocked, isTrue);
+    expect(find.text('SAVE RECOVERY'), findsOneWidget);
+    expect(find.text('OPEN SLOT 1'), findsNothing);
+    expect(find.text('OPEN SLOT 3'), findsNothing);
+    expect(find.text('OPEN SLOT 5'), findsOneWidget);
+    expect(await storage.loadExtra(GameStorage.journalKey), 'nope');
+    expect(_rawHas(await storage.loadSlotRaw(4), 'GPA.fresh'), isTrue);
+    expect(_rawHas(await storage.loadSlotRaw(4), 'GPA.free'), isTrue);
+    await tester.ensureVisible(find.text('OPEN SLOT 5'));
+    await tester.tap(find.text('OPEN SLOT 5'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('SAVE RECOVERY'), findsNothing);
+    expect(playing.saveRecoveryBlocked, isFalse);
+    expect(playing.activeSaveSlot, 4);
+    expect(
+      playing.state.metaDepth.grantedShopPurchaseIds,
+      containsAll(['GPA.free', 'GPA.fresh']),
+    );
+    expect(await storage.loadExtra(GameStorage.journalKey), 'nope');
+    expect(await storage.loadSlotRaw(0), shared);
+    expect(await storage.loadSlotRaw(2), shared);
+    await _disposeRecoveryApp(tester);
+  });
+
+  test(
+    'a publish that cannot write yet does not offer the other file',
+    () async {
+      _keepSuiteRandom();
+      final storage = InMemoryGameStorage();
+      final active = GameLogic.exportSaveJson(
+        _party(
+          life: 500,
+          purchaseIds: const ['GPA.active'],
+        ).copyWith(partyName: 'Active'),
+      );
+      final hold = GameLogic.exportSaveJson(
+        _party(
+          life: 80,
+          adFree: true,
+          purchaseIds: const ['GPA.hold'],
+        ).copyWith(partyName: 'Hold'),
+      );
+      final other = GameLogic.exportSaveJson(
+        _party(
+          life: 9,
+          purchaseIds: const ['GPA.other'],
+        ).copyWith(partyName: 'Other'),
+      );
+      await _writeSlot(storage, 0, active);
+      await _writeSlot(storage, 2, other);
+      await storage.setActiveSlot(0);
+      await storage.writeExtra(GameStorage.stagingKey, active);
+      await storage.writeExtra(GameStorage.holdKey, hold);
+      await storage.writeExtra(GameStorage.journalKey, 'swap-publish');
+      storage.failExtraWhen = (key, value) => key == GameStorage.displacedKey;
+      final director = GameDirector(storage, enableSpatialLoop: false);
+      addTearDown(director.dispose);
+      await director.boot();
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(director.safeRecoverySlots, isEmpty);
+      expect(await director.retrySaveRecovery(), isFalse);
+      expect(director.safeRecoverySlots, isEmpty);
+      expect(await storage.loadSlotRaw(0), active);
+      expect(await storage.loadSlotRaw(2), other);
+      expect(await storage.loadExtra(GameStorage.journalKey), 'swap-publish');
+      expect(await storage.loadExtra(GameStorage.holdKey), hold);
+      storage.failExtraWhen = null;
+      expect(await director.retrySaveRecovery(), isTrue);
+      expect(director.saveRecoveryBlocked, isFalse);
+      expect(director.activeSaveSlot, 0);
+      expect(await storage.loadExtra(GameStorage.journalKey), isNull);
+      expect(await storage.loadSlotRaw(2), other);
+      expect(_rawHas(await storage.loadSlotRaw(0), 'GPA.other'), isFalse);
+    },
+  );
 }
 
 class _Slot0Selection {
@@ -4181,7 +4492,10 @@ Future<void> _sequenceRefusedStart() async {
     expect(director.state.partyName, 'Slot Zero');
     expect(director.state.metaDepth.grantedShopPurchaseIds, ['GPA.slot0']);
     expect(store.durable['flutter.idle_party_save_slot_1'], isNull);
-    expect(store.durable['flutter.idle_party_save_slot_0'], isNot(contains('Fresh')));
+    expect(
+      store.durable['flutter.idle_party_save_slot_0'],
+      isNot(contains('Fresh')),
+    );
     expect(
       store.durable['flutter.idle_party_save_slot_0'],
       isNot(contains('GPA.stuck')),
@@ -4205,8 +4519,14 @@ Future<void> _sequenceRefusedStart() async {
     );
     expect(director.activeSaveSlot, 1);
     expect(director.state.partyName, 'Fresh');
-    expect(store.durable['flutter.idle_party_save_slot_0'], contains('GPA.slot0'));
-    expect(store.durable['flutter.idle_party_save_slot_0'], isNot(contains('Fresh')));
+    expect(
+      store.durable['flutter.idle_party_save_slot_0'],
+      contains('GPA.slot0'),
+    );
+    expect(
+      store.durable['flutter.idle_party_save_slot_0'],
+      isNot(contains('Fresh')),
+    );
     expect(
       store.durable['flutter.idle_party_save_slot_0'],
       isNot(contains('GPA.stuck')),
@@ -4255,8 +4575,14 @@ Future<void> _sequenceRolledBackStart() async {
     expect(director.activeSaveSlot, 0);
     final parked = store.durable['flutter.idle_party_save_slot_1'];
     expect(parked == null || !parked.toString().contains('Fresh'), isTrue);
-    expect(store.durable['flutter.idle_party_save_slot_0'], contains('GPA.slot0'));
-    expect(store.durable['flutter.idle_party_save_slot_0'], isNot(contains('Fresh')));
+    expect(
+      store.durable['flutter.idle_party_save_slot_0'],
+      contains('GPA.slot0'),
+    );
+    expect(
+      store.durable['flutter.idle_party_save_slot_0'],
+      isNot(contains('Fresh')),
+    );
     store.holdRejectedString = false;
     expect(await director.retrySaveRecovery(), isTrue);
     expect(director.saveRecoveryBlocked, isFalse);
@@ -4264,8 +4590,14 @@ Future<void> _sequenceRolledBackStart() async {
     expect(director.state.partyName, 'Slot Zero');
     expect(director.state.metaDepth.grantedShopPurchaseIds, ['GPA.slot0']);
     expect(store.durable['flutter.idle_party_active_slot'], 0);
-    expect(store.durable['flutter.idle_party_save_slot_0'], contains('GPA.slot0'));
-    expect(store.durable['flutter.idle_party_save_slot_0'], isNot(contains('Fresh')));
+    expect(
+      store.durable['flutter.idle_party_save_slot_0'],
+      contains('GPA.slot0'),
+    );
+    expect(
+      store.durable['flutter.idle_party_save_slot_0'],
+      isNot(contains('Fresh')),
+    );
     expect(
       store.durable['flutter.idle_party_save_slot_0'],
       isNot(contains('GPA.during')),

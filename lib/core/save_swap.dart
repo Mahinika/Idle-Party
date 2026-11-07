@@ -23,14 +23,6 @@ enum SaveSwapOutcome { idle, committed, aborted, unresolved }
 /// bytes needed to finish it. [recover] is safe to call on every boot: with
 /// no journal it returns [SaveSwapOutcome.idle].
 abstract final class SaveSwap {
-  /// True when [raw] is a phase this build can finish. An unknown phase,
-  /// including a known name with a slot this build does not accept, parses
-  /// as the whole string and is not finishable.
-  static bool knownJournalPhase(String? raw) {
-    final phase = _JournalMark.parse(raw).phase;
-    return _JournalMark._phases.contains(phase);
-  }
-
   static Future<SaveSwapOutcome> recover(
     GameStorage storage, {
     int? slot,
@@ -399,6 +391,51 @@ abstract final class SaveSwap {
       GameStorage.journalKeyFor(index),
     );
     if (storedPhase == null) return SaveSwapOutcome.idle;
+    final choice = await _chooseRecover(storage, index, storedPhase);
+    switch (choice.step) {
+      case _RecoverStep.clearCommitted:
+        return _finishClear(storage, index, SaveSwapOutcome.committed);
+      case _RecoverStep.clearAborted:
+        return _finishClear(storage, index, SaveSwapOutcome.aborted);
+      case _RecoverStep.publish:
+        return _publishHeldParty(storage, index, choice.hold!);
+      case _RecoverStep.complete:
+        return _completeOpenSwap(
+          storage,
+          index,
+          staging: choice.staging!,
+          hold: choice.hold!,
+        );
+      case _RecoverStep.unresolved:
+        return SaveSwapOutcome.unresolved;
+    }
+  }
+
+  /// True when another attempt can still write this journal to a finished
+  /// state. A recognized phase name is not enough: a partial record whose
+  /// predicates never write stays false, and a write that failed stays true.
+  static Future<bool> retryCouldFinish(GameStorage storage, {int? slot}) async {
+    try {
+      await storage.reloadDurable();
+      final index = slot ?? storage.activeSlotIndex;
+      final storedPhase = await storage.loadExtra(
+        GameStorage.journalKeyFor(index),
+      );
+      if (storedPhase == null) return false;
+      final choice = await _chooseRecover(storage, index, storedPhase);
+      return choice.step != _RecoverStep.unresolved;
+    } catch (error, stack) {
+      debugPrint('SaveSwap retryCouldFinish failed: $error\n$stack');
+      // A read that throws is not proof the record can never finish.
+      return true;
+    }
+  }
+
+  static Future<_RecoverChoice> _chooseRecover(
+    GameStorage storage,
+    int index,
+    String storedPhase,
+  ) async {
     final phase = _JournalMark.parse(storedPhase).phase;
     final staging = await storage.loadExtra(GameStorage.stagingKeyFor(index));
     final hold = await storage.loadExtra(GameStorage.holdKeyFor(index));
@@ -406,21 +443,23 @@ abstract final class SaveSwap {
       GameStorage.displacedKeyFor(index),
     );
     final active = await storage.loadSlotRaw(index);
+    _RecoverChoice unresolved() =>
+        const _RecoverChoice(_RecoverStep.unresolved);
     if (index <= 0 &&
         (staging != null || hold != null || displaced != null) &&
         await _globalJournalIsForeign(storage, index)) {
-      return SaveSwapOutcome.unresolved;
+      return unresolved();
     }
 
     if (phase == 'commit') {
       if (active != null && staging != null && active == staging) {
-        return _finishClear(storage, index, SaveSwapOutcome.committed);
+        return const _RecoverChoice(_RecoverStep.clearCommitted);
       }
-      return _finishClear(storage, index, SaveSwapOutcome.aborted);
+      return const _RecoverChoice(_RecoverStep.clearAborted);
     }
 
     if (phase == 'park') {
-      return _finishClear(storage, index, SaveSwapOutcome.aborted);
+      return const _RecoverChoice(_RecoverStep.clearAborted);
     }
 
     if (phase == 'swap-stage') {
@@ -431,12 +470,22 @@ abstract final class SaveSwap {
           hold != null &&
           active != null &&
           active == staging) {
-        return _publishHeldParty(storage, index, hold);
+        if (!await _publishWouldWrite(storage, index, hold)) {
+          return unresolved();
+        }
+        return _RecoverChoice(_RecoverStep.publish, hold: hold);
       }
       if (staging != null && hold != null && active != null && active != hold) {
-        return _completeOpenSwap(storage, index, staging: staging, hold: hold);
+        if (!await _publishWouldWrite(storage, index, hold)) {
+          return unresolved();
+        }
+        return _RecoverChoice(
+          _RecoverStep.complete,
+          staging: staging,
+          hold: hold,
+        );
       }
-      return _finishClear(storage, index, SaveSwapOutcome.aborted);
+      return const _RecoverChoice(_RecoverStep.clearAborted);
     }
 
     if (phase == 'swap-commit' || phase == 'swap-publish') {
@@ -445,7 +494,7 @@ abstract final class SaveSwap {
           active != null &&
           active != hold) {
         // Staging can already be gone. Both finals are on disk.
-        return _finishClear(storage, index, SaveSwapOutcome.committed);
+        return const _RecoverChoice(_RecoverStep.clearCommitted);
       }
       if (staging == null &&
           hold == null &&
@@ -455,29 +504,53 @@ abstract final class SaveSwap {
           phase == 'swap-publish') {
         // Cleanup deleted staging and hold after the publish. The journal
         // is the only leftover. The two parties are already in place.
-        return _finishClear(storage, index, SaveSwapOutcome.committed);
+        return const _RecoverChoice(_RecoverStep.clearCommitted);
       }
       if (staging == null && hold == null && phase == 'swap-commit') {
         // Cleanup started before the active write. Active is the pre-image.
-        return _finishClear(storage, index, SaveSwapOutcome.aborted);
+        return const _RecoverChoice(_RecoverStep.clearAborted);
       }
       if (staging != null && active == staging && hold != null) {
-        return _publishHeldParty(storage, index, hold);
+        if (!await _publishWouldWrite(storage, index, hold)) {
+          return unresolved();
+        }
+        return _RecoverChoice(_RecoverStep.publish, hold: hold);
       }
       if (hold != null && active == hold && active != staging) {
-        return _finishClear(storage, index, SaveSwapOutcome.aborted);
+        return const _RecoverChoice(_RecoverStep.clearAborted);
       }
       if (staging != null &&
           hold != null &&
           active != null &&
           active != staging &&
           active != hold) {
-        return _completeOpenSwap(storage, index, staging: staging, hold: hold);
+        if (!await _publishWouldWrite(storage, index, hold)) {
+          return unresolved();
+        }
+        return _RecoverChoice(
+          _RecoverStep.complete,
+          staging: staging,
+          hold: hold,
+        );
       }
-      return SaveSwapOutcome.unresolved;
+      return unresolved();
     }
 
-    return SaveSwapOutcome.unresolved;
+    return unresolved();
+  }
+
+  /// Publish and the open swap refuse before any write when the parked file
+  /// is not theirs. That refusal does not clear on a later retry.
+  static Future<bool> _publishWouldWrite(
+    GameStorage storage,
+    int index,
+    String hold,
+  ) async {
+    if (await _globalJournalIsForeign(storage, index)) return false;
+    if (await _migrationRefusedThisParkedFile(storage, index, hold)) {
+      return false;
+    }
+    return true;
   }
 
   /// Finish a swap whose live party (hold) differs from the last autosave
@@ -798,6 +871,22 @@ abstract final class SaveSwap {
 /// A journal value is `phase` for an early build, or `phase@slot` for a
 /// journal this build wrote. The slot name is the owner. Absence of other
 /// files is not.
+enum _RecoverStep {
+  clearCommitted,
+  clearAborted,
+  publish,
+  complete,
+  unresolved,
+}
+
+class _RecoverChoice {
+  const _RecoverChoice(this.step, {this.staging, this.hold});
+
+  final _RecoverStep step;
+  final String? staging;
+  final String? hold;
+}
+
 final class _JournalMark {
   const _JournalMark({required this.phase, required this.owner});
 

@@ -205,8 +205,8 @@ extension GameDirectorSave on GameDirector {
   /// Slots whose bytes parse. Used when the active selection is empty or
   /// unreadable and another file is still there.
   ///
-  /// [plainOnly] skips every journal. An unknown phase cannot be replayed,
-  /// so the selected owner is not a recovery target beside a healthy file.
+  /// [plainOnly] skips every journal. A record this build cannot finish
+  /// is not a recovery target beside a healthy file.
   Future<void> _offerHealthySlots({bool plainOnly = false}) async {
     if (_saveRecoveryAmbiguous) return;
     final plain = <int>[];
@@ -241,29 +241,21 @@ extension GameDirectorSave on GameDirector {
     return phase != null;
   }
 
-  Future<bool> _slotJournalCanFinish(int slot) async {
-    final phase = await _storage.loadExtra(GameStorage.journalKeyFor(slot));
-    return SaveSwap.knownJournalPhase(phase);
+  Future<bool> _slotJournalCanFinish(int slot) {
+    return SaveSwap.retryCouldFinish(_storage, slot: slot);
   }
 
-  /// The selected slot's journal is a phase this build will not finish.
-  Future<bool> _selectedJournalIsUnknown() async {
-    final raw = await _storage.loadExtra(
-      GameStorage.journalKeyFor(_storage.activeSlotIndex),
-    );
-    return raw != null && !SaveSwap.knownJournalPhase(raw);
-  }
-
-  /// Stay blocked. A known phase keeps an empty escape list so a later
-  /// retry can still finish it. An unknown phase cannot, so a readable
-  /// file with no journal of its own stays openable. The owner is not
-  /// offered, and neither path writes the journal, staging, or hold.
+  /// Stay blocked. A journal that can still be written keeps an empty
+  /// escape list so the next retry can finish that write. A record this
+  /// build cannot finish, known phase or not, leaves a readable file
+  /// with no journal of its own openable. The owner is not offered, and
+  /// neither path writes the journal, staging, or hold.
   Future<void> _pauseForUnresolvedJournal() async {
     _saveRecoveryAmbiguous = false;
     _blockSaveRecovery(
       'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
     );
-    if (await _selectedJournalIsUnknown()) {
+    if (!await SaveSwap.retryCouldFinish(_storage)) {
       await _offerHealthySlots(plainOnly: true);
       return;
     }
