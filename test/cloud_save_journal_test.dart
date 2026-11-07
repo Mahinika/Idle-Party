@@ -1625,6 +1625,104 @@ void main() {
       },
     );
 
+    test(
+      'an unproven slot change does not overwrite the other party',
+      () async {
+        final previous = SharedPreferencesStorePlatform.instance;
+        final store = _NativeCommitStore();
+        SharedPreferencesStorePlatform.instance = store;
+        SharedPreferences.resetStatic();
+        addTearDown(() {
+          SharedPreferencesStorePlatform.instance = previous;
+          SharedPreferences.resetStatic();
+        });
+        final prefs = await SharedPreferences.getInstance();
+        final slot0 = _party(
+          life: 80,
+          adFree: true,
+          purchaseIds: const ['GPA.slot0'],
+        ).copyWith(partyName: 'Slot Zero');
+        final slot1 = _party(
+          life: 11,
+          purchaseIds: const ['GPA.slot1'],
+        ).copyWith(partyName: 'Slot One');
+        final slot0Json = GameLogic.exportSaveJson(slot0);
+        final slot1Json = GameLogic.exportSaveJson(slot1);
+        await prefs.setBool('idle_party_slots_ready', true);
+        await prefs.setInt('idle_party_active_slot', 0);
+        await prefs.setString('idle_party_save_slot_0', slot0Json);
+        await prefs.setString('idle_party_save_slot_1', slot1Json);
+        await prefs.setString('idle_party_save_v2', slot0Json);
+        final storage = SharedPreferencesGameStorage(preferences: prefs);
+        final director = GameDirector(storage, enableSpatialLoop: false);
+        addTearDown(director.dispose);
+        await director.boot();
+        final kept0 = prefs.getString('idle_party_save_slot_0');
+        final kept1 = prefs.getString('idle_party_save_slot_1');
+        store.stickFailedString = true;
+        expect(
+          await director.debugGrantShopPurchase(
+            'cinder_pouch',
+            purchaseId: 'GPA.stuck',
+          ),
+          isFalse,
+        );
+        expect(storage.hasUnprovenWrite, isTrue);
+        expect(storage.activeSlotIndex, 0);
+        expect(director.activeSaveSlot, 0);
+        await storage.setActiveSlot(1);
+        expect(storage.activeSlotIndex, 0);
+        expect(prefs.getInt('idle_party_active_slot'), 0);
+        expect(director.activeSaveSlot, 0);
+        final imported = GameLogic.exportSaveJson(
+          _party(
+            life: 3,
+            purchaseIds: const ['GPA.import'],
+          ).copyWith(partyName: 'Imported'),
+        );
+        await director.armImportSlot(1);
+        expect(director.activeSaveSlot, 0);
+        expect(storage.activeSlotIndex, 0);
+        expect(await director.importSaveJson(imported), isFalse);
+        expect(director.activeSaveSlot, 0);
+        expect(
+          prefs.getString('idle_party_save_slot_0'),
+          isNot(contains('Imported')),
+        );
+        expect(prefs.getString('idle_party_save_slot_1'), kept1);
+        expect(await director.openSaveSlot(1), isFalse);
+        expect(director.activeSaveSlot, 0);
+        expect(storage.activeSlotIndex, 0);
+        expect(prefs.getString('idle_party_save_slot_1'), kept1);
+        expect(await director.localReadBlocksMutation(), isTrue);
+        expect(director.activeSaveSlot, 0);
+        expect(storage.activeSlotIndex, 0);
+        expect(await director.retrySaveRecovery(), isFalse);
+        expect(director.saveRecoveryBlocked, isTrue);
+        store.stickFailedString = false;
+        store.releaseStuckString();
+        expect(await director.retrySaveRecovery(), isTrue);
+        expect(director.activeSaveSlot, 0);
+        expect(storage.activeSlotIndex, 0);
+        expect(director.state.metaDepth.grantedShopPurchaseIds, ['GPA.slot0']);
+        await store.restartFromDisk();
+        SharedPreferences.resetStatic();
+        final disk = await SharedPreferences.getInstance();
+        expect(disk.getInt('idle_party_active_slot'), 0);
+        expect(disk.getString('idle_party_save_slot_1'), kept1);
+        expect(
+          disk.getString('idle_party_save_slot_0'),
+          isNot(contains('GPA.stuck')),
+        );
+        expect(
+          disk.getString('idle_party_save_slot_0'),
+          isNot(contains('Imported')),
+        );
+        expect(disk.getString('idle_party_save_slot_0'), contains('GPA.slot0'));
+        expect(kept0, isNotNull);
+      },
+    );
+
     test('a failed title import restores the selected slot', () async {
       final harness = await _installRejectingPrefs();
       final prefs = harness.prefs;
@@ -1702,6 +1800,97 @@ void main() {
       await again.boot();
       expect(again.saveRecoveryBlocked, isFalse);
       expect(again.state.partyName, 'Kept Party');
+    });
+
+    test('a journaled slot is not a healthy recovery target', () async {
+      final harness = await _installRejectingPrefs();
+      final prefs = harness.prefs;
+      final kept = _party(
+        life: 22,
+        purchaseIds: const ['GPA.keep'],
+      ).copyWith(partyName: 'Kept Party');
+      final owned = _party(
+        life: 30,
+        purchaseIds: const ['GPA.owned'],
+      ).copyWith(partyName: 'Owned Party');
+      final incoming = _party(
+        life: 4,
+        purchaseIds: const ['GPA.incoming'],
+      ).copyWith(partyName: 'Incoming');
+      final held = _party(
+        life: 8,
+        purchaseIds: const ['GPA.held'],
+      ).copyWith(partyName: 'Held');
+      final keptJson = GameLogic.exportSaveJson(kept);
+      final ownedJson = GameLogic.exportSaveJson(owned);
+      await prefs.setBool('idle_party_slots_ready', true);
+      await prefs.setInt('idle_party_active_slot', 1);
+      await prefs.setString('idle_party_save_slot_0', keptJson);
+      await prefs.setString('idle_party_save_v2', keptJson);
+      await prefs.setString('idle_party_save_slot_2', ownedJson);
+      await prefs.setString(GameStorage.journalKeyFor(2), 'swap-stage@2');
+      await prefs.setString(
+        GameStorage.stagingKeyFor(2),
+        GameLogic.exportSaveJson(incoming),
+      );
+      await prefs.setString(
+        GameStorage.holdKeyFor(2),
+        GameLogic.exportSaveJson(held),
+      );
+      final director = GameDirector(
+        SharedPreferencesGameStorage(preferences: prefs),
+        enableSpatialLoop: false,
+      );
+      addTearDown(director.dispose);
+      await director.boot();
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(director.safeRecoverySlots, contains(0));
+      expect(director.safeRecoverySlots, isNot(contains(2)));
+      expect(await director.openSafeRecoverySlot(2), RecoverySlotOpen.refused);
+      expect(director.saveRecoveryBlocked, isTrue);
+      expect(
+        await director.debugGrantShopPurchase(
+          'cinder_pouch',
+          purchaseId: 'GPA.fresh',
+        ),
+        isFalse,
+      );
+      expect(prefs.getString('idle_party_save_slot_2'), ownedJson);
+      expect(prefs.getString(GameStorage.journalKeyFor(2)), 'swap-stage@2');
+      expect(await director.openSafeRecoverySlot(0), RecoverySlotOpen.ready);
+      expect(
+        await director.debugGrantShopPurchase(
+          'cinder_pouch',
+          purchaseId: 'GPA.fresh',
+        ),
+        isTrue,
+      );
+      final again = GameDirector(
+        SharedPreferencesGameStorage(preferences: prefs),
+        enableSpatialLoop: false,
+      );
+      addTearDown(again.dispose);
+      await again.boot();
+      expect(again.saveRecoveryBlocked, isFalse);
+      expect(again.activeSaveSlot, 0);
+      expect(
+        again.state.metaDepth.grantedShopPurchaseIds,
+        contains('GPA.keep'),
+      );
+      expect(
+        again.state.metaDepth.grantedShopPurchaseIds,
+        contains('GPA.fresh'),
+      );
+      expect(prefs.getString('idle_party_save_slot_2'), ownedJson);
+      expect(prefs.getString(GameStorage.journalKeyFor(2)), 'swap-stage@2');
+      expect(
+        prefs.getString('idle_party_save_slot_2'),
+        isNot(contains('GPA.fresh')),
+      );
+      expect(
+        prefs.getString('idle_party_save_slot_2'),
+        isNot(contains('GPA.incoming')),
+      );
     });
 
     test(

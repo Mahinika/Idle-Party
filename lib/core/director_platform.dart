@@ -347,6 +347,10 @@ extension GameDirectorPlatform on GameDirector {
   Future<bool> importSaveJson(String raw) {
     return _enqueueSave(() async {
       if (_durableSaveBlocked) return false;
+      if (_importArmRejected) {
+        _importArmRejected = false;
+        return false;
+      }
       final imported = GameLogic.importSaveJson(raw);
       if (imported == null) {
         await _undoImportArm();

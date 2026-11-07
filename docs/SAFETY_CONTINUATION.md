@@ -92,7 +92,9 @@ returns false is not accepted from a later read. The platform map can
 already show the new value after that false result. Retry does not
 adopt that cached copy, and a duplicate purchase is not acknowledged
 while the commit is still unproven. A failed title import puts the
-previous slot back. A quarantine copy that returns false or throws
+previous slot back. While a commit is still unproven the selected slot
+stays the durable one, so the next save cannot land on a different file.
+A slot that still has a journal is not offered as a healthy file. A quarantine copy that returns false or throws
 does not delete the original. A parse that only checks a file borrows
 another random, so the combat generator stays where it was. A boot read that
 throws is not an empty phone. A file that is JSON but does not parse

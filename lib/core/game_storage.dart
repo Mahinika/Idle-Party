@@ -409,12 +409,15 @@ class SharedPreferencesGameStorage implements GameStorage {
   Future<void> setActiveSlot(int index) async {
     final prefs = await _prefs;
     await _prepare(prefs);
-    _active = _clampSlot(index);
+    final slot = _clampSlot(index);
     // A successful commit writes every key. Skip it while a rejected
-    // string may still be the only copy in the map.
+    // string may still be the only copy in the map. Leave the index on
+    // the durable slot: the next prepare would undo a memory-only change
+    // and the following save would write this party over the other file.
     if (_unprovenWrite) {
       return;
     }
+    _active = slot;
     await prefs.setInt(_activeKey, _active);
   }
 

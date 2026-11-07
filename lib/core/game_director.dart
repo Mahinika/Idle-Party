@@ -147,6 +147,10 @@ class GameDirector extends ChangeNotifier {
   /// Slot to restore when a title import does not parse or does not commit.
   int? _slotBeforeImportArm;
 
+  /// The armed import slot did not become the durable selection. The
+  /// following import must not write.
+  bool _importArmRejected = false;
+
   /// A healthy file can be opened while recovery is up and no journal is
   /// choosing an owner. Includes slot 0.
   bool _healthySlotRecovery = false;

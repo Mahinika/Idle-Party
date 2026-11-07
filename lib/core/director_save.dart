@@ -166,6 +166,12 @@ extension GameDirectorSave on GameDirector {
       }
       _slotBeforeImportArm = _activeSlot;
       await _storage.setActiveSlot(slot);
+      if (_storage.activeSlotIndex != slot) {
+        _slotBeforeImportArm = null;
+        _importArmRejected = true;
+        return;
+      }
+      _importArmRejected = false;
       _activeSlot = slot;
       if (!_saveSlots[slot].occupied) {
         _hasExistingSave = false;
@@ -179,6 +185,13 @@ extension GameDirectorSave on GameDirector {
     _slotBeforeImportArm = null;
     if (previous == null || previous == _activeSlot) return;
     await _storage.setActiveSlot(previous);
+    if (_storage.activeSlotIndex != previous) {
+      _activeSlot = previous;
+      _blockSaveRecovery(
+        'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+      );
+      return;
+    }
     _activeSlot = previous;
     final raw = await _storage.loadActiveRaw();
     _hasExistingSave =
@@ -195,6 +208,7 @@ extension GameDirectorSave on GameDirector {
     if (_saveRecoveryAmbiguous) return;
     final open = <int>[];
     for (var slot = 0; slot < GameStorage.slotCount; slot++) {
+      if (await _slotJournalOpen(slot)) continue;
       final raw = await _storage.loadSlotRaw(slot);
       if (raw == null || raw.isEmpty) continue;
       if (GameLogic.importSaveJson(raw, keepCombatRandom: true) == null) {
@@ -270,6 +284,12 @@ extension GameDirectorSave on GameDirector {
       // Confirm the live party with a commit that returns true. Do not
       // adopt the cached bytes in its place.
       if (_storage.hasUnprovenWrite) {
+        if (_storage.activeSlotIndex != _activeSlot) {
+          _blockSaveRecovery(
+            'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+          );
+          return false;
+        }
         var confirmed = false;
         try {
           confirmed = await _storage.save(_state);
@@ -411,6 +431,9 @@ extension GameDirectorSave on GameDirector {
           return RecoverySlotOpen.refused;
         }
       }
+      if (await _slotJournalOpen(index)) {
+        return RecoverySlotOpen.refused;
+      }
       final raw = await _storage.loadSlotRaw(index);
       if (raw == null) {
         _pendingNewGameSlot = index;
@@ -426,6 +449,12 @@ extension GameDirectorSave on GameDirector {
         return RecoverySlotOpen.refused;
       }
       await _storage.setActiveSlot(index);
+      if (_storage.activeSlotIndex != index) {
+        _blockSaveRecovery(
+          'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+        );
+        return RecoverySlotOpen.refused;
+      }
       _activeSlot = index;
       _hasExistingSave = true;
       await _installCaughtUp(loaded);
@@ -931,6 +960,7 @@ extension GameDirectorSave on GameDirector {
     _awaitingWipeChoice = false;
     uiFeedback.dismissOfflineSummary();
     await _storage.setActiveSlot(slot);
+    if (_storage.activeSlotIndex != slot) return false;
     _activeSlot = slot;
     _hasExistingSave = true;
     final caught = await _catchUpSaved(saved);
@@ -1072,6 +1102,7 @@ extension GameDirectorSave on GameDirector {
     var saved = false;
     try {
       await _storage.setActiveSlot(slot);
+      if (_storage.activeSlotIndex != slot) return false;
       switched = true;
       _activeSlot = slot;
       _awaitingWipeChoice = false;
@@ -1178,6 +1209,11 @@ extension GameDirectorSave on GameDirector {
       }
     }
     _activeSlot = previousSlot;
+    if (_storage.activeSlotIndex != previousSlot) {
+      _blockSaveRecovery(
+        'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+      );
+    }
     _state = previous;
     _hasExistingSave = previousHas;
     _friendEpoch = previousEpoch;
