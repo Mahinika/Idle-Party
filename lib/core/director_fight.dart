@@ -67,6 +67,7 @@ extension GameDirectorFight on GameDirector {
           GameLogic.overgearThreatScale(_state) *
           FarmIntensity.threatMult(_state),
       afkAssist: ticketAshenCrown ? false : null,
+      roleCover: true,
     );
     _battleToken = _state.battleNumber;
     if (kDebugMode && _debugHoldNextRebuild) {

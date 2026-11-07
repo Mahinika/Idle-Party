@@ -119,10 +119,7 @@ Future<void> showOfflineProgressDialog(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (lead != null) ...[
-            Text(
-              lead,
-              style: GameTheme.readable(color: GameTheme.torchHot),
-            ),
+            Text(lead, style: GameTheme.readable(color: GameTheme.torchHot)),
             const SizedBox(height: 6),
           ],
           if (summary != null) ...[
@@ -167,10 +164,7 @@ Future<void> showOfflineProgressDialog(
           ],
           if (petLine.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(
-              petLine,
-              style: GameTheme.readable(color: GameTheme.torchHot),
-            ),
+            Text(petLine, style: GameTheme.readable(color: GameTheme.torchHot)),
           ],
           if (showCheckIn) ...[
             const SizedBox(height: 6),
@@ -244,10 +238,11 @@ Future<void> showOfflineProgressDialog(
                                 setLocal(() => watchBusy = true);
                                 final beforeGold = director.state.gold;
                                 final beforeEssence = director.state.essence;
-                                final ok = await director.watchWelcomeBackGoldAd(
-                                  summary.goldGained,
-                                  baseEssence: summary.essenceGained,
-                                );
+                                final ok = await director
+                                    .watchWelcomeBackGoldAd(
+                                      summary.goldGained,
+                                      baseEssence: summary.essenceGained,
+                                    );
                                 if (!context.mounted) return;
                                 setLocal(() {
                                   watchBusy = false;
@@ -276,10 +271,10 @@ Future<void> showOfflineProgressDialog(
           const SizedBox(height: 10),
           Text(
             contract.upNextLine,
-            style: GameTheme.readable(color: chase.urgency == HubChaseUrgency.normal
-                  ? GameTheme.mossLit
-                  : GameTheme.accentWarn),
+            style: GameTheme.readable(color: GameTheme.parchment),
           ),
+          ShellLayout.gap(4),
+          ShellLayout.hint(contract.whyLine, maxLines: 2),
           if (contract.detail.isNotEmpty) ...[
             ShellLayout.gap(4),
             ShellLayout.hint(contract.detail, maxLines: 3),

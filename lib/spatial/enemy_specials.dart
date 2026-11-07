@@ -68,7 +68,11 @@ void showAffixBanners(SpatialWorld world, {required bool reducedVfx}) {
   }
 
   if (world.gauntletAnomaly != null) {
-    banner(GauntletAnomalies.chip(world.gauntletAnomaly!), 0xFFE8D090, life: 1.15);
+    banner(
+      GauntletAnomalies.chip(world.gauntletAnomaly!),
+      0xFFE8D090,
+      life: 1.15,
+    );
   }
   // Fortified = tougher trash packs (HP/damage), not armor.
   if (_worldHasAffix(world, 'fortified')) {
@@ -104,7 +108,9 @@ void shoutAwakePacks(SpatialWorld world, {required bool reducedVfx}) {
   for (final enemy in world.enemies) {
     if (enemy.hp <= 0 || enemy.dormant) continue;
     if (enemy.role == EnemyRole.boss) continue;
-    byChamber.putIfAbsent(enemy.chamberIndex, () => <SpatialActor>[]).add(enemy);
+    byChamber
+        .putIfAbsent(enemy.chamberIndex, () => <SpatialActor>[])
+        .add(enemy);
   }
   final flavor = _flavorId(world);
   for (final entry in byChamber.entries) {
@@ -201,24 +207,12 @@ void tickEnemySpecials(
   }
 
   if (enemy.role == EnemyRole.boss) {
-    _tickBossKit(
-      world,
-      enemy,
-      focus,
-      rng: rng,
-      reducedVfx: reducedVfx,
-    );
+    _tickBossKit(world, enemy, focus, rng: rng, reducedVfx: reducedVfx);
     return;
   }
 
   if (enemy.bossEcho) {
-    _tickBossKit(
-      world,
-      enemy,
-      focus,
-      rng: rng,
-      reducedVfx: reducedVfx,
-    );
+    _tickBossKit(world, enemy, focus, rng: rng, reducedVfx: reducedVfx);
     return;
   }
 
@@ -235,12 +229,7 @@ void tickEnemySpecials(
         reducedVfx: reducedVfx,
       );
     } else if (enemy.archetype == EnemyArchetype.swarm) {
-      _resolveSwarmPile(
-        world,
-        enemy,
-        rng: rng,
-        reducedVfx: reducedVfx,
-      );
+      _resolveSwarmPile(world, enemy, rng: rng, reducedVfx: reducedVfx);
     }
     return;
   }
@@ -282,7 +271,10 @@ void tickEnemySpecials(
     for (final ally in world.enemies) {
       if (!ally.isAlive || ally.dormant) continue;
       if (SpatialCombat.actorDist(enemy, ally) > 3.4) continue;
-      ally.enrageTimer = math.max(ally.enrageTimer, world.afkAssist ? 2.2 : 3.0);
+      ally.enrageTimer = math.max(
+        ally.enrageTimer,
+        world.afkAssist ? 2.2 : 3.0,
+      );
       buffed = true;
     }
     if (buffed) {
@@ -548,7 +540,10 @@ void _tickSupportSpecial(
     for (final ally in world.enemies) {
       if (!ally.isAlive || ally.dormant) continue;
       if (SpatialCombat.actorDist(enemy, ally) > 5.0) continue;
-      ally.enrageTimer = math.max(ally.enrageTimer, world.afkAssist ? 2.0 : 2.6);
+      ally.enrageTimer = math.max(
+        ally.enrageTimer,
+        world.afkAssist ? 2.0 : 2.6,
+      );
       buffed = true;
     }
     if (!buffed) return;
@@ -696,13 +691,7 @@ void _tickBossKit(
   required bool reducedVfx,
 }) {
   if (world.inWorldBoss) {
-    _tickAshenBossKit(
-      world,
-      enemy,
-      focus,
-      rng: rng,
-      reducedVfx: reducedVfx,
-    );
+    _tickAshenBossKit(world, enemy, focus, rng: rng, reducedVfx: reducedVfx);
     return;
   }
 
@@ -865,12 +854,7 @@ void _resolveBossTelegraph(
   }
   switch (id) {
     case 'sandy':
-      _sandyBossSlam(
-        world,
-        enemy,
-        rng: rng,
-        reducedVfx: reducedVfx,
-      );
+      _sandyBossSlam(world, enemy, rng: rng, reducedVfx: reducedVfx);
       return;
     case 'storm':
       _bossChipHero(
@@ -971,6 +955,70 @@ void _resolveBossTelegraph(
   }
 }
 
+/// Sandy SLAM. A tank standing in the ring takes a lighter chip (cover).
+/// Everyone else in the ring takes the full chip. A party with no tank
+/// still clears; they just do not get the cover.
+void debugSandySlamForTest(SpatialWorld world, SpatialActor enemy) {
+  _sandyBossSlam(world, enemy, rng: math.Random(1), reducedVfx: true);
+}
+
+void debugGoblinRallyForTest(SpatialWorld world, SpatialActor enemy) {
+  _bossRally(world, enemy, reducedVfx: true);
+}
+
+void debugBossTelegraphForTest(SpatialWorld world, SpatialActor enemy) {
+  SpatialActor? focus;
+  for (final h in world.heroes) {
+    if (h.isAlive) {
+      focus = h;
+      break;
+    }
+  }
+  if (focus == null) return;
+  _resolveBossTelegraph(
+    world,
+    enemy,
+    focus,
+    rng: math.Random(1),
+    reducedVfx: true,
+  );
+}
+
+bool _sandyCoverChip(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  required double radius,
+  required math.Random rng,
+  required bool reducedVfx,
+}) {
+  SpatialActor? cover;
+  var coverD = double.infinity;
+  for (final h in world.heroes) {
+    if (!h.isAlive || !actorIsTank(h)) continue;
+    final d = SpatialCombat.actorDist(enemy, h);
+    if (d <= radius && d < coverD) {
+      coverD = d;
+      cover = h;
+    }
+  }
+  var hit = false;
+  for (final h in world.heroes) {
+    if (!h.isAlive) continue;
+    if (SpatialCombat.actorDist(enemy, h) > radius) continue;
+    if (!SpatialCombat.canShoot(world, enemy.x, enemy.y, h.x, h.y)) continue;
+    _bossChipHero(
+      world,
+      enemy,
+      h,
+      atkMul: cover != null && h.id == cover.id ? 0.32 : 0.65,
+      rng: rng,
+      reducedVfx: reducedVfx,
+    );
+    hit = true;
+  }
+  return hit;
+}
+
 void _sandyBossSlam(
   SpatialWorld world,
   SpatialActor enemy, {
@@ -978,14 +1026,22 @@ void _sandyBossSlam(
   required bool reducedVfx,
 }) {
   const radius = 2.8;
-  final hit = _bossChipInRadius(
-    world,
-    enemy,
-    radius: radius,
-    atkMul: 0.65,
-    rng: rng,
-    reducedVfx: reducedVfx,
-  );
+  final hit = world.afkAssist
+      ? _bossChipInRadius(
+          world,
+          enemy,
+          radius: radius,
+          atkMul: 0.65,
+          rng: rng,
+          reducedVfx: reducedVfx,
+        )
+      : _sandyCoverChip(
+          world,
+          enemy,
+          radius: radius,
+          rng: rng,
+          reducedVfx: reducedVfx,
+        );
   if (!hit) {
     enemy.specialCd = 1.2;
     return;

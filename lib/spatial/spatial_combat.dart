@@ -803,6 +803,7 @@ class SpatialWorld {
     this.bossBannerTimer = 0,
     this.bossBannerName = '',
     this.afkAssist = false,
+    this.roleCover = false,
     this.dungeonId = 'sandy',
     this.keystoneRunAffixes = const <String>[],
     this.keystoneWeekDungeonId = '',
@@ -858,6 +859,10 @@ class SpatialWorld {
 
   /// When true, enemy outgoing damage is softened (offline AFK sim).
   final bool afkAssist;
+
+  /// Live fights only. Casters shoot an exposed non-tank. Offline stays
+  /// on the melee leash so a long away does not change credited loot.
+  final bool roleCover;
 
   /// Zone id for unique boss tells (Sandy SLAM, Tide WAVE, Brass WIND-UP then SLAM).
   final String dungeonId;
@@ -1826,7 +1831,7 @@ abstract final class SpatialCombat {
           attackerAttack: owner?.attack ?? g.tickDamage,
         );
         final wasAlive = e.hp > 0;
-        hurtEnemy(world,e, dealt);
+        hurtEnemy(world, e, dealt);
         if (owner != null) recordHeroDamage(owner, dealt);
         if (wasAlive && e.hp <= 0) {
           final killed = onEnemyKilled(world, state, e, rng);
@@ -1870,7 +1875,7 @@ abstract final class SpatialCombat {
             defense: foe.effectiveDefense,
             attackerAttack: hero.attack,
           );
-          hurtEnemy(world,foe, dealt);
+          hurtEnemy(world, foe, dealt);
           recordHeroDamage(hero, dealt);
           if (wasAlive && foe.hp <= 0) {
             final killed = onEnemyKilled(world, state, foe, rng);
@@ -1970,6 +1975,7 @@ abstract final class SpatialCombat {
     GameState state, {
     double threatScale = 1.0,
     bool? afkAssist,
+    bool roleCover = false,
   }) {
     final room = state.currentRoom;
     final anomaly = GauntletAnomalies.forFloor(
@@ -2308,6 +2314,7 @@ abstract final class SpatialCombat {
       },
       pets: pets,
       afkAssist: afkAssist ?? false,
+      roleCover: roleCover,
       dungeonId: state.dungeonId,
       keystoneRunAffixes: state.keystoneRunActive
           ? List<String>.from(state.keystoneRunAffixes)
@@ -2571,6 +2578,7 @@ abstract final class SpatialCombat {
         bossBannerTimer: world.bossBannerTimer,
         bossBannerName: world.bossBannerName,
         afkAssist: world.afkAssist,
+        roleCover: world.roleCover,
         dungeonId: world.dungeonId,
         keystoneRunAffixes: world.keystoneRunAffixes,
         keystoneWeekDungeonId: world.keystoneWeekDungeonId,
@@ -2978,8 +2986,7 @@ abstract final class SpatialCombat {
     SpatialActor enemy,
     int dealt, {
     bool soft = false,
-  }) =>
-      combatHurtEnemy(world, enemy, dealt, soft: soft);
+  }) => combatHurtEnemy(world, enemy, dealt, soft: soft);
 
   /// Spawn floater when Full VFX, or priority (crit/heal/block) on Lite.
   static bool _allowFloater(VfxQuality quality, {required int priority}) {
@@ -2998,7 +3005,11 @@ abstract final class SpatialCombat {
     healer.healingDone += gained;
   }
 
-  static void _recordHeroTaken(SpatialActor hero, int taken, {required bool isMelee}) {
+  static void _recordHeroTaken(
+    SpatialActor hero,
+    int taken, {
+    required bool isMelee,
+  }) {
     if (taken <= 0 || hero.isPet || hero.team != SpatialTeam.hero) return;
     hero.damageTaken += taken;
     if (isMelee) {
@@ -3464,7 +3475,7 @@ abstract final class SpatialCombat {
             );
           }
           final wasAlive = enemy.hp > 0;
-          hurtEnemy(world,enemy, tickDmg, soft: true);
+          hurtEnemy(world, enemy, tickDmg, soft: true);
           if (caster != null) recordHeroDamage(caster, tickDmg);
           if (!reducedVfx) {
             spawnFloater(
@@ -3495,7 +3506,7 @@ abstract final class SpatialCombat {
               defense: e.effectiveDefense,
               attackerAttack: caster?.attack ?? boom,
             );
-            hurtEnemy(world,e, dealt);
+            hurtEnemy(world, e, dealt);
             if (caster != null) recordHeroDamage(caster, dealt);
             if (!reducedVfx) {
               spawnFloater(
@@ -3548,7 +3559,7 @@ abstract final class SpatialCombat {
             );
           }
           final wasAlive = enemy.hp > 0;
-          hurtEnemy(world,enemy, tickDmg, soft: true);
+          hurtEnemy(world, enemy, tickDmg, soft: true);
           if (caster != null) recordHeroDamage(caster, tickDmg);
           if (!reducedVfx) {
             spawnFloater(
@@ -3567,7 +3578,12 @@ abstract final class SpatialCombat {
           }
         }
       }
-      final target = _focusHero(enemy, world.heroes, pets: world.pets);
+      final target = _focusHero(
+        enemy,
+        world.heroes,
+        pets: world.pets,
+        casterCover: world.roleCover,
+      );
       if (target == null) continue;
 
       if (enemy.stunTimer > 0) {
@@ -3922,8 +3938,7 @@ abstract final class SpatialCombat {
             : null;
         final offHand = partyHero?.itemIn(EquipmentSlot.offHand);
         final hasShield = offHand?.offHandKind == OffHandKind.shield;
-        AbilityEffectRunner.spellcraftMul =
-            AbilityMastery.damageMul(nextState);
+        AbilityEffectRunner.spellcraftMul = AbilityMastery.damageMul(nextState);
         AbilityEffectRunner.tick(
           world,
           hero,
@@ -3996,7 +4011,7 @@ abstract final class SpatialCombat {
             defense: target.effectiveDefense,
             attackerAttack: hero.attack,
           );
-          hurtEnemy(world,target, dealt);
+          hurtEnemy(world, target, dealt);
           recordHeroDamage(hero, dealt);
           if (dealt > 0) {
             final hitStyle = abilityTag != null
@@ -4052,7 +4067,7 @@ abstract final class SpatialCombat {
                 _ => 0.30,
               };
               final cleave = math.max(1, (dealt * frac).round());
-              hurtEnemy(world,e, cleave, soft: true);
+              hurtEnemy(world, e, cleave, soft: true);
               recordHeroDamage(hero, cleave);
               extras++;
               if (extras >= maxExtras) break;
@@ -4389,7 +4404,7 @@ abstract final class SpatialCombat {
                 defense: v.effectiveDefense,
                 attackerAttack: caster?.attack ?? hitDmg,
               );
-              hurtEnemy(world,v, dealt);
+              hurtEnemy(world, v, dealt);
               if (caster != null) {
                 recordHeroDamage(caster, dealt);
                 applyTankSoftThreat(caster, v);
@@ -4639,7 +4654,7 @@ abstract final class SpatialCombat {
           defense: target.effectiveDefense,
           attackerAttack: pet.attack,
         );
-        hurtEnemy(world,target, petHit);
+        hurtEnemy(world, target, petHit);
         pet.attackFlash = 0.14;
         final owner =
             _heroById(world, pet.petOwnerId) ??
@@ -4744,7 +4759,7 @@ abstract final class SpatialCombat {
       if (distPoint(tileX, tileY, enemy.x, enemy.y) <= radius &&
           canShoot(world, tileX, tileY, enemy.x, enemy.y)) {
         final wasAlive = enemy.hp > 0;
-        hurtEnemy(world,enemy, damage);
+        hurtEnemy(world, enemy, damage);
         if (state.vfxQuality != VfxQuality.minimal) {
           spawnFloater(
             world,
@@ -5129,6 +5144,13 @@ abstract final class SpatialCombat {
     SpatialWorld world,
   ) => HeroFocus.pickSmartFocus(self, world);
 
+  /// Who [enemy] would strike. Melee prefers a tank; casters shoot an
+  /// exposed non-tank.
+  static SpatialActor? enemyFocusForTest(
+    SpatialActor enemy,
+    List<SpatialActor> heroes,
+  ) => _focusHero(enemy, heroes, casterCover: true);
+
   /// Test hook: tank taunt + CombatPresence bark path.
   static bool testTauntForPresence(SpatialWorld world, SpatialActor tank) {
     return tauntLooseEnemies(world, tank, reducedVfx: false);
@@ -5167,7 +5189,12 @@ abstract final class SpatialCombat {
     for (final e in world.enemies) {
       if (e.hp <= 0 || e.dormant) continue;
       if (e.forcedTargetTimer > 0) continue;
-      final focus = _focusHero(e, world.heroes, pets: world.pets);
+      final focus = _focusHero(
+        e,
+        world.heroes,
+        pets: world.pets,
+        casterCover: world.roleCover,
+      );
       if (focus == null || focus.id == tank.id) continue;
       final d = actorDist(tank, e);
       if (d < best && d <= 5.5) {
@@ -5197,6 +5224,7 @@ abstract final class SpatialCombat {
     SpatialActor enemy,
     List<SpatialActor> heroes, {
     List<SpatialActor> pets = const [],
+    bool casterCover = false,
   }) {
     if (enemy.forcedTargetTimer > 0 && enemy.forcedTargetId != null) {
       for (final h in heroes) {
@@ -5215,11 +5243,34 @@ abstract final class SpatialCombat {
         nearest = h;
       }
     }
-    // Tanks hold a wider soft-taunt leash so packs stick to them.
-    final leash = tank != null ? 4.0 : 2.5;
-    final hero = tank != null && actorDist(enemy, tank) < bestD + leash
-        ? tank
-        : nearest;
+    // Melee sticks to a tank inside a soft leash. Casters and supports
+    // shoot whoever is not standing behind that tank, so a healer or
+    // damage hero in front is a real target and one kept back is covered.
+    final melee =
+        !casterCover ||
+        (enemy.archetype != EnemyArchetype.ranged &&
+            enemy.archetype != EnemyArchetype.support);
+    final SpatialActor? hero;
+    if (!melee) {
+      final tankD = tank == null ? double.infinity : actorDist(enemy, tank);
+      SpatialActor? exposed;
+      var exposedD = double.infinity;
+      for (final h in heroes) {
+        if (!h.isAlive || h.vanishTimer > 0 || actorIsTank(h)) continue;
+        final d = actorDist(enemy, h);
+        if (tank != null && d > tankD + 1.6) continue;
+        if (d < exposedD) {
+          exposedD = d;
+          exposed = h;
+        }
+      }
+      hero = exposed ?? tank ?? nearest;
+    } else {
+      final leash = tank != null ? 4.0 : 2.5;
+      hero = tank != null && actorDist(enemy, tank) < bestD + leash
+          ? tank
+          : nearest;
+    }
     if (hero == null) return null;
     for (final p in pets) {
       if (p.hp <= 0 || p.dormant || p.vanishTimer > 0) continue;
@@ -5255,7 +5306,8 @@ abstract final class SpatialCombat {
       }
     }
     final inFight = nearest <= 2.2;
-    final hadShot = foe != null &&
+    final hadShot =
+        foe != null &&
         hasClearCorridor(
           world.map,
           world.openGateIds,
