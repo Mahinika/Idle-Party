@@ -164,12 +164,47 @@ extension GameDirectorSave on GameDirector {
         );
         return;
       }
+      _slotBeforeImportArm = _activeSlot;
       await _storage.setActiveSlot(slot);
       _activeSlot = slot;
       if (!_saveSlots[slot].occupied) {
         _hasExistingSave = false;
       }
     });
+  }
+
+  /// Put the selection back when the clipboard import does not land.
+  Future<void> _undoImportArm() async {
+    final previous = _slotBeforeImportArm;
+    _slotBeforeImportArm = null;
+    if (previous == null || previous == _activeSlot) return;
+    await _storage.setActiveSlot(previous);
+    _activeSlot = previous;
+    final raw = await _storage.loadActiveRaw();
+    _hasExistingSave =
+        raw != null &&
+        raw.isNotEmpty &&
+        GameLogic.importSaveJson(raw, keepCombatRandom: true) != null;
+    _saveSlots = await _storage.listSlots();
+    if (!_directorClosed) _directorNotify();
+  }
+
+  /// Slots whose bytes parse. Used when the active selection is empty or
+  /// unreadable and another file is still there.
+  Future<void> _offerHealthySlots() async {
+    if (_saveRecoveryAmbiguous) return;
+    final open = <int>[];
+    for (var slot = 0; slot < GameStorage.slotCount; slot++) {
+      final raw = await _storage.loadSlotRaw(slot);
+      if (raw == null || raw.isEmpty) continue;
+      if (GameLogic.importSaveJson(raw, keepCombatRandom: true) == null) {
+        continue;
+      }
+      open.add(slot);
+    }
+    _healthySlotRecovery = open.isNotEmpty;
+    _safeRecoverySlots = open;
+    if (!_directorClosed) _directorNotify();
   }
 
   Future<bool> _slotJournalOpen(int slot) async {
@@ -231,6 +266,34 @@ extension GameDirectorSave on GameDirector {
         );
         return false;
       }
+      // A commit that returned false can still be the value reload() sees.
+      // Confirm the live party with a commit that returns true. Do not
+      // adopt the cached bytes in its place.
+      if (_storage.hasUnprovenWrite) {
+        var confirmed = false;
+        try {
+          confirmed = await _storage.save(_state);
+        } catch (error, stack) {
+          debugPrint('unproven retry save failed: $error\n$stack');
+        }
+        if (!confirmed || _storage.hasUnprovenWrite) {
+          _blockSaveRecovery(
+            'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+          );
+          return false;
+        }
+        _durableSaveBlocked = false;
+        _saveRecoveryMessage = '';
+        _saveRecoveryAmbiguous = false;
+        _healthySlotRecovery = false;
+        _safeRecoverySlots = const [];
+        _hasExistingSave = true;
+        _saveSlots = await _storage.listSlots();
+        _syncHubIdleTimer();
+        ensureCombatLoop();
+        _directorNotify();
+        return true;
+      }
       // The preference names the slot. Adopting its party without this
       // leaves the director on the constructor default.
       _activeSlot = _storage.activeSlotIndex;
@@ -252,6 +315,7 @@ extension GameDirectorSave on GameDirector {
           _blockSaveRecovery(
             'Saving is paused. This device has a save that was not loaded. Retry leaves it untouched.',
           );
+          await _offerHealthySlots();
           return false;
         }
         _durableSaveBlocked = false;
@@ -336,12 +400,16 @@ extension GameDirectorSave on GameDirector {
   /// journal exists.
   Future<RecoverySlotOpen> openSafeRecoverySlot(int index) {
     return _enqueueSave(() async {
-      if (!_saveRecoveryAmbiguous || index <= 0) {
-        return RecoverySlotOpen.refused;
-      }
-      await _refreshSafeRecoverySlots();
-      if (!_safeRecoverySlots.contains(index)) {
-        return RecoverySlotOpen.refused;
+      final healthy =
+          _healthySlotRecovery && _safeRecoverySlots.contains(index);
+      if (!healthy) {
+        if (!_saveRecoveryAmbiguous || index <= 0) {
+          return RecoverySlotOpen.refused;
+        }
+        await _refreshSafeRecoverySlots();
+        if (!_safeRecoverySlots.contains(index)) {
+          return RecoverySlotOpen.refused;
+        }
       }
       final raw = await _storage.loadSlotRaw(index);
       if (raw == null) {
@@ -364,6 +432,7 @@ extension GameDirectorSave on GameDirector {
       _durableSaveBlocked = false;
       _saveRecoveryMessage = '';
       _saveRecoveryAmbiguous = false;
+      _healthySlotRecovery = false;
       _safeRecoverySlots = const [];
       _pendingRecoveryNewGame = false;
       _pendingNewGameSlot = null;
@@ -627,6 +696,7 @@ extension GameDirectorSave on GameDirector {
         _blockSaveRecovery(
           'Saving is paused. A save file could not be read. It was left untouched.',
         );
+        await _offerHealthySlots();
       } else {
         _phoneHadNoSaveAtBoot = !_saveSlots.any((slot) => slot.occupied);
         final raw = await _storage.loadActiveRaw();

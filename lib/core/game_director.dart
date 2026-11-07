@@ -144,6 +144,13 @@ class GameDirector extends ChangeNotifier {
   /// Slot 0 is never listed while a global journal exists.
   List<int> _safeRecoverySlots = const [];
 
+  /// Slot to restore when a title import does not parse or does not commit.
+  int? _slotBeforeImportArm;
+
+  /// A healthy file can be opened while recovery is up and no journal is
+  /// choosing an owner. Includes slot 0.
+  bool _healthySlotRecovery = false;
+
   /// True while this session must not overwrite the durable copies.
   bool get saveRecoveryBlocked => _durableSaveBlocked;
 
@@ -1889,6 +1896,9 @@ class GameDirector extends ChangeNotifier {
         purchaseId: purchaseId,
         alreadyGranted: known,
       )) {
+        // A cached reload can contain a receipt whose commit returned
+        // false. That is not a reason to tell Play the grant is saved.
+        if (_storage.hasUnprovenWrite) return false;
         return true;
       }
       final beforeOwned = ShopBilling.isOwned(_state, item);

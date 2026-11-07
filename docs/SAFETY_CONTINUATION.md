@@ -89,7 +89,12 @@ thrown initial save stays on setup, and a second START does not enter the
 queue. Back leaves setup. A save that returns false before any byte lands
 leaves the slot empty so START can be tried again. A commit that
 returns false is not accepted from a later read. The platform map can
-already show the new value after that false result. A boot read that
+already show the new value after that false result. Retry does not
+adopt that cached copy, and a duplicate purchase is not acknowledged
+while the commit is still unproven. A failed title import puts the
+previous slot back. A quarantine copy that returns false or throws
+does not delete the original. A parse that only checks a file borrows
+another random, so the combat generator stays where it was. A boot read that
 throws is not an empty phone. A file that is JSON but does not parse
 as a save is not an empty phone either. Boot probes that parse and does
 not call the loader that moves the file aside when the probe fails. A

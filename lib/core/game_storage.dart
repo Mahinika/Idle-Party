@@ -127,6 +127,12 @@ abstract class GameStorage {
   /// Active slot (the save Continue / autosave uses).
   int get activeSlotIndex;
 
+  /// True after a slot commit returned false or threw. The platform map may
+  /// already show the rejected bytes. A later read of that map is not a
+  /// successful save, and a duplicate purchase must not be acknowledged
+  /// while this is set. Cleared only by a slot commit that returns true.
+  bool get hasUnprovenWrite;
+
   Future<GameState?> load();
 
   /// False when the active-slot commit did not return true. A thrown error
@@ -197,6 +203,10 @@ class SharedPreferencesGameStorage implements GameStorage {
 
   final SharedPreferences? _preferences;
   int _active = 0;
+  bool _unprovenWrite = false;
+
+  @override
+  bool get hasUnprovenWrite => _unprovenWrite;
 
   Future<SharedPreferences> get _prefs async =>
       _preferences ?? SharedPreferences.getInstance();
@@ -254,13 +264,15 @@ class SharedPreferencesGameStorage implements GameStorage {
           final recovered = GameLogic.stateFromJson(
             jsonDecode(rawV1) as Map<String, dynamic>,
           );
-          final parked = await prefs.setString(_corruptSaveKey, raw);
+          if (!await _copyAside(prefs, _corruptSaveKey, raw)) {
+            throw StateError('unreadable save was left in place');
+          }
           final dropped = await prefs.remove(_saveKey);
           final replaced = await prefs.setString(
             key,
             jsonEncode(recovered.toJson()),
           );
-          if (!parked || !dropped || !replaced) {
+          if (!dropped || !replaced) {
             throw StateError('legacy recovery did not commit');
           }
           DebugPlayLog.event('save', 'recovered from legacy v1');
@@ -272,13 +284,17 @@ class SharedPreferencesGameStorage implements GameStorage {
         }
       }
       final corruptKey = raw == rawV2 ? _corruptSaveKey : '${key}_corrupt';
-      final parked = await prefs.setString(corruptKey, raw);
+      // The original stays until the protective copy has committed.
+      // A false or thrown copy must not reach remove().
+      if (!await _copyAside(prefs, corruptKey, raw)) {
+        throw StateError('unreadable save was left in place');
+      }
       final dropped = await prefs.remove(key);
       final mirrorDropped = raw == rawV2 ? await prefs.remove(_saveKey) : true;
       final legacyDropped = raw == rawV1
           ? await prefs.remove(_legacySaveKey)
           : true;
-      if (!parked || !dropped || !mirrorDropped || !legacyDropped) {
+      if (!dropped || !mirrorDropped || !legacyDropped) {
         throw StateError('unreadable save was left in place');
       }
       return null;
@@ -306,15 +322,53 @@ class SharedPreferencesGameStorage implements GameStorage {
     return _readSlot(prefs, index);
   }
 
+  /// False when the copy did not commit, including a throw. Does not remove
+  /// the original.
+  Future<bool> _copyAside(
+    SharedPreferences prefs,
+    String key,
+    String raw,
+  ) async {
+    try {
+      return await prefs.setString(key, raw);
+    } catch (error, stack) {
+      debugPrint('quarantine copy failed: $error\n$stack');
+      return false;
+    }
+  }
+
   @override
   Future<bool> save(GameState state) async {
     final prefs = await _prefs;
     await _prepare(prefs);
     final raw = jsonEncode(state.toJson());
+    final slotKey = _slotKey(_active);
+    final previous = prefs.getString(slotKey);
     // commit() updates the native map before it reports the disk result.
     // A false return is not retried by reading that map back.
-    final slotOk = await prefs.setString(_slotKey(_active), raw);
-    if (!slotOk) return false;
+    bool slotOk;
+    try {
+      slotOk = await prefs.setString(slotKey, raw);
+    } catch (error, stack) {
+      _unprovenWrite = true;
+      debugPrint('save slot commit threw: $error\n$stack');
+      rethrow;
+    }
+    if (!slotOk) {
+      _unprovenWrite = true;
+      // Put the previous bytes back into the map before any later commit.
+      // Android writes the whole map, so a later successful key would
+      // otherwise flush the rejected party.
+      try {
+        final restored = previous == null
+            ? await prefs.remove(slotKey)
+            : await prefs.setString(slotKey, previous);
+        if (restored) _unprovenWrite = false;
+      } catch (error, stack) {
+        debugPrint('save restore after a false commit failed: $error\n$stack');
+      }
+      return false;
+    }
     try {
       final mirrorOk = await prefs.setString(_saveKey, raw);
       if (!mirrorOk) {
@@ -323,6 +377,7 @@ class SharedPreferencesGameStorage implements GameStorage {
     } catch (error, stack) {
       debugPrint('save mirror failed: $error\n$stack');
     }
+    _unprovenWrite = false;
     return true;
   }
 
@@ -355,6 +410,11 @@ class SharedPreferencesGameStorage implements GameStorage {
     final prefs = await _prefs;
     await _prepare(prefs);
     _active = _clampSlot(index);
+    // A successful commit writes every key. Skip it while a rejected
+    // string may still be the only copy in the map.
+    if (_unprovenWrite) {
+      return;
+    }
     await prefs.setInt(_activeKey, _active);
   }
 
@@ -479,6 +539,7 @@ class InMemoryGameStorage implements GameStorage {
     null,
   );
   int _active = 0;
+  bool _unprovenWrite = false;
   String? _activeRaw;
   final Map<String, String> _extras = <String, String>{};
 
@@ -634,6 +695,9 @@ class InMemoryGameStorage implements GameStorage {
   int get activeSlotIndex => _active;
 
   @override
+  bool get hasUnprovenWrite => _unprovenWrite;
+
+  @override
   Future<GameState?> load() async => _slots[_active];
 
   @override
@@ -661,8 +725,10 @@ class InMemoryGameStorage implements GameStorage {
     if (failAfterSuccessfulSaves != null) _savesSinceArm++;
     if (landThenFailSave) {
       landThenFailSave = false;
+      _unprovenWrite = true;
       return false;
     }
+    _unprovenWrite = false;
     return true;
   }
 

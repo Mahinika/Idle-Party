@@ -348,14 +348,21 @@ extension GameDirectorPlatform on GameDirector {
     return _enqueueSave(() async {
       if (_durableSaveBlocked) return false;
       final imported = GameLogic.importSaveJson(raw);
-      if (imported == null) return false;
+      if (imported == null) {
+        await _undoImportArm();
+        return false;
+      }
       final kept = PlayGamesScores.withKeptOwnership(
         chosen: imported,
         other: _state,
       );
       final next = _stampCloudClock(GameLogic.ensureRogueHero(kept));
       final saved = await _storage.save(next);
-      if (!saved) return false;
+      if (!saved) {
+        await _undoImportArm();
+        return false;
+      }
+      _slotBeforeImportArm = null;
       _awaitingWipeChoice = false;
       _state = next;
       _hasExistingSave = true;
