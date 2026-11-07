@@ -85,18 +85,13 @@ void main() {
     Future<void> pumpSize(Size size, {double scale = 1}) async {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
       await tester.pumpWidget(
-        MediaQuery(
-          data: MediaQueryData(
-            size: size,
-            textScaler: TextScaler.linear(scale),
-          ),
-          child: MaterialApp(
-            home: HomeShell(
-              director: director,
-              router: router,
-              onLeave: () {},
-            ),
+        MaterialApp(
+          home: HomeShell(
+            director: director,
+            router: router,
+            onLeave: () {},
           ),
         ),
       );
@@ -113,6 +108,7 @@ void main() {
     await pumpSize(const Size(360, 780), scale: 1.4);
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
     router.open(MenuRoute.gear);
     await tester.pump();

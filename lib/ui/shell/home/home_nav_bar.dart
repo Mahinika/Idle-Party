@@ -191,7 +191,12 @@ class HomeNavBar extends StatelessWidget {
                 ),
               ),
             ),
-            child: Center(child: child),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: child,
+              ),
+            ),
           ),
         ),
       ),
