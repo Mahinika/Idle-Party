@@ -686,6 +686,13 @@ extension _DungeonPaintActors on _TileRoomPainter {
         );
       }
       if (hero.isAlive &&
+          AbilityVfxPaint.showCastGlint(
+            quality: vfxQuality,
+            castFlash: hero.castFlash,
+          )) {
+        AbilityVfxPaint.paintCastGlint(canvas, c, tile, hero.castFlash);
+      }
+      if (hero.isAlive &&
           hero.castingTimer > 0.02 &&
           hero.pendingCastDef != null &&
           castLabelsPainted < maxCastLabels) {

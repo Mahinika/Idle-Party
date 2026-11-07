@@ -158,10 +158,7 @@ extension _DungeonPaintProjectiles on _TileRoomPainter {
             ..lineTo(-len * 0.05, 0)
             ..lineTo(-len * 0.15, thick * 1.15)
             ..close();
-          canvas.drawPath(
-            flame,
-            Paint()..color = const Color(0xCCFF5010),
-          );
+          canvas.drawPath(flame, Paint()..color = const Color(0xCCFF5010));
         case SpellBoltStyle.holy:
           drawOrb(core: 1.1, glow: const Color(0xFFFFF8D0));
           canvas.drawLine(
@@ -313,6 +310,11 @@ extension _DungeonPaintProjectiles on _TileRoomPainter {
         case SpellBoltStyle.weapon:
           drawTrailBolt();
       }
+      AbilityVfxPaint.paintBoltAllegiance(
+        canvas,
+        hero: p.team == SpatialTeam.hero,
+        thick: thick,
+      );
       canvas.restore();
     }
 

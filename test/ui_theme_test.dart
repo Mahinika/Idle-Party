@@ -20,6 +20,7 @@ void main() {
     'dungeon_paint_actors.dart',
     'dungeon_paint_floaters.dart',
     'dungeon_paint_projectiles.dart',
+    'ability_vfx_paint.dart',
     'dungeon_paint_spell_fx.dart',
     'hero_doll_sprite.dart',
     'dungeon_tile_painter.dart',
