@@ -69,7 +69,9 @@ class PowerUpgradeRow extends StatelessWidget {
                         Flexible(
                           child: Text(
                             title,
-                            style: GameTheme.readable(color: GameTheme.parchment),
+                            style: (dense ? GameTheme.readable : GameTheme.section)(
+                              color: GameTheme.parchment,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -101,14 +103,14 @@ class PowerUpgradeRow extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: GameTheme.readable(color: GameTheme.parchmentDim),
-                      maxLines: 1,
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (detail != null)
                       Text(
                         detail!,
-                        style: GameTheme.readable(color: GameTheme.mossLit),
+                        style: GameTheme.hint(color: GameTheme.torchHot),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -129,7 +131,10 @@ class PowerUpgradeRow extends StatelessWidget {
   }
 }
 
-/// Short buy control for dense FORGE / CAMP lists (~32px, no glow).
+/// Buy control for dense FORGE / CAMP lists.
+///
+/// Width stays at least [GameTheme.minTouch]. Height stays with the row so
+/// the next upgrade remains on the split screen.
 class PowerUpgradePriceChip extends StatelessWidget {
   const PowerUpgradePriceChip({
     super.key,
@@ -180,9 +185,8 @@ class PowerUpgradePriceChip extends StatelessWidget {
               ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
-                  minWidth: 44,
+                  minWidth: GameTheme.minTouch,
                   minHeight: 32,
-                  maxHeight: 32,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),

@@ -6,11 +6,15 @@ Branch `cursor/ui-ux-consistency-sweep-3edc`, based on `origin/main`
 Each row is one canonical item. A shared change is named once and
 cross-referenced. “Verified” means the code path and a test (or a measured
 color) were checked. Rendered phone frames are the shell goldens plus
-`test/ui_menu_scale_test.dart` (360×780 and 360×640, OS 1 / 1.4 / 2, game M
-and max, plus a raw OS-2 stress that does not go through the cap).
+`test/ui_app_scale_test.dart` drives `MyApp` (a live `setUiTextScale` and a
+reloaded save, start SKIP and NEW GAME, camp and fight, every dock) at
+360×780 and 360×640. `test/ui_menu_scale_test.dart` still pumps `HomeShell`
+at OS 1 / 1.4 / 2. A raw scale of 2 is a separate stress and is not capped.
 
-Ramp: `title` Cinzel 18, `section` VT323 13, `readable` VT323 14, `hint`
-VT323 12, `button` 19 / dense 15, `combat` Press Start 9 (comfort 11).
+Ramp: `title` Cinzel 18, `section` VT323 16, `readable` VT323 14, `hint`
+VT323 12. Order is title, then section, then body, then hint. `button` 19 /
+dense 15 is the action role (not a second title). `combat` is Press Start 9
+(comfort 11).
 Ceiling `typeScaleMax` 1.45 equals `kUiTextScaleMax`. OS scale still
 multiplies, then the product clamps. The slider max was not lowered.
 
@@ -18,10 +22,10 @@ multiplies, then the product clamps. The slider max was not lowered.
 |---|-------------|----------|
 | 1 | Changed | `GameTheme.title/section/readable/hint/combat`. Menu call sites use those roles. `test/ui_type_ramp_test.dart` rejects a new free `size:` on the old helpers. |
 | 2 | Changed | `composeTextScaler` clamps to `typeScaleMax` (1.45), same constant as the slider max. Test locks OS 2 × game 1 and game max. |
-| 3 | Changed | `MaterialApp.builder` in `lib/main.dart` applies one composed scaler to start and play. The play phase no longer wraps a second scaler. |
+| 3 | Changed | `_LiveTextScale` in `lib/main.dart` listens to the director and rebuilds the `MaterialApp` scaler when `uiTextScale` changes. Start (SKIP and NEW GAME) and play share that scaler. `test/ui_app_scale_test.dart` calls `setUiTextScale(1.45)` on a live `MyApp` and pumps a second `MyApp` whose save already stores 1.45. |
 | 4 | Changed | Home nav and classic bar dropped `FittedBox`. Labels use `readable` and ellipsis. `navBarExtent` grows the bar with scale. |
-| 5 | Changed | `MenuChrome.segmented` height is `minTouch` times the actual text scale (never below 44). FARM/PUSH and the text presets use it. |
-| 6 | Changed | Local `clamp(1.0, 1.35)` removed from the party HUD, world map, endgame map, and IS2 shell. They use the composed scaler. |
+| 5 | Changed | `MenuChrome.segmented` height is `minTouch` times the actual text scale (never below 44). The icon stays beside the label (`iconList`) and the label ellipsizes instead of overflowing the row. FARM/PUSH and the text presets use it. Camp and fight both lay out at slider max and at raw scale 2 (`test/ui_app_scale_test.dart`). |
+| 6 | Changed | `HomeShell` no longer wraps the cave, camp, and docks in `withClampedTextScaling(maxScaleFactor: 1.3)`. The older 1.35 clamps are gone from the party HUD, world map, endgame map, and IS2 shell. `test/ui_app_scale_test.dart` reads the same scaler on FIGHT (outside the old clamp) and on FARM and FORGE (inside it). |
 | 7 | Changed | `MenuChrome.tabRail` sets `labelStyle` and `unselectedLabelStyle` to `readable`. Settings, gear, and the other rails go through it. |
 | 8 | Changed | `pixelCached` no longer promotes a sub-9 request to 9. It asserts `size >= hudPixel`. The free-size test rejects digit sizes outside the theme and the three world-space painters. |
 | 9 | Changed | Menu copy is VT323 or Cinzel. Press Start is `combat` and the dungeon painters. Documented in `docs/UI_THEME.md`. |
@@ -35,27 +39,27 @@ multiplies, then the product clamps. The slider max was not lowered.
 | 17 | Changed | Rail buttons and the MENU grid both use `GameTheme.readable`. |
 | 18 | Changed | MENU grid `childAspectRatio` is 3.2 so a tile is a row, not a tall card. |
 | 19 | Changed | Grid icons use `iconNav` (24). Rail icons use `iconList` (18). Contrast is parchment on the panel, measured in item 77. |
-| 20 | Already satisfied | Sheet close is the dense `GameButton` labeled CLOSE, top end, min height 44. Tests look for that word. The gold-dock and bag-slot glyphs are dismiss chips inside a row, not a second sheet chrome. |
+| 20 | Already satisfied | `OverlayScaffold` close is a dense `GameButton` labeled CLOSE (`lib/ui/shell/overlay_scaffold.dart`). `GameButton` min height is `minTouch` (44). `test/widget_test.dart` finds the word CLOSE. `UiGlyph.close` is only the in-row dismiss on the gold dock and a bag combine slot, not a second sheet header. |
 | 21 | Changed | `ShellLayout.listPadding` uses `edgeGap` (12). |
 | 22 | Changed | Dialog and scrolling dialog both use inset 20×24. |
 | 23 | Changed | Actions align end, spacing 8. Cancel is `dialogCancel` (ghost) before the confirm `GameButton`. |
 | 24 | Changed | Comparable rows use `MenuChrome.listCard` / `cardBox` / `PowerUpgradeRow`. New sheets are told to use those in the checklist. |
 | 25 | Changed | `iconList` 18, `iconNav` 24, `iconShowcase` 32. Segmented and rails use the first two. |
 | 26 | Changed | List body is `readable` (14) or `hint` (12). Nothing in menu code requests 7 or 8. |
-| 27 | Changed | Card title is `title` or `section`, body is `readable`, meta is `hint`. |
+| 27 | Changed | Card title is `title` or `section` (16). Body is `readable` (14). Meta is `hint` (12). A dense forge row keeps the track name at `readable` so the next upgrade stays on the split screen. “Bulk spend” stays `section`. The current/next line is `hint`. `test/ui_type_ramp_test.dart` locks title > section > body > hint. |
 | 28 | Changed | Home sheets pass gold and essence into the same `WalletStrip` the classic sheets use. |
-| 29 | Already satisfied | `MenuChrome.playSafeArea` drops the top inset on purpose so play and start share the full-bleed top. Dialogs keep the 24 vertical inset. Recovery stays a raw `SafeArea` because it must clear the status bar when the shell is not up. Documented on the helper. |
+| 29 | Changed | The top stays full-bleed (`MenuChrome.playSafeArea` drops the top inset; `SaveRecoveryGate` still uses a raw `SafeArea`). The home nav keeps `MenuChrome.systemBottomInset` (the larger of padding and viewPadding) under the labels, inside the bar when the bar is already tall. `test/ui_app_scale_test.dart` puts FIGHT at least 34 above the bottom on a 780-tall phone and on a 640-tall phone with a 44 top inset. `test/small_screen_dialogs_test.dart` still fits 360×640 and 360×780 at raw scale 2 with a notch. |
 | 30 | Changed | Settings labels say “Dungeon view · Close/Normal/Wide”. HUD chips stay NEAR/MID/FAR. `docs/TRAILER.md` and the capture note use the same words. |
 | 31 | Changed | The FARM/PUSH row is the segmented control. Its height is the control height, so the container cannot be shorter than the control. |
 | 32 | Changed | God Hand slot is `minTouch` by `minTouch` (44). The ring no longer sits in a `FittedBox`. |
 | 33 | Changed | The 2× farm chip and the row under it both use `DungeonModeChip` with `combat` comfort, ellipsis, no scale-down. |
-| 34 | Changed | Party names ellipsize and the level stays full size (`dungeon_party_strip_test`). The home strip uses `readable`, so starter names such as Aegis L1 stay whole beside the flask. The corner strip stays `combat`. |
+| 34 | Changed | The home party row height follows the text scale (floor 32). Party names ellipsize and the level stays full size (`dungeon_party_strip_test`). The home strip uses `readable`, so starter names such as Aegis L1 stay whole beside the flask. The corner strip stays `combat`. |
 | 35 | Changed | Boss and elite titles ellipsize inside the plate. The full string is the `Text` data and a long-press `Tooltip`. |
 | 36 | Changed | The buff stack scrolls inside its max height instead of scaling the whole row down. |
 | 37 | Changed | The gold dock is a segmented row at least 44 tall, not a 32-tall strip. |
 | 38 | Changed | TODAY title keeps two lines at every scale. The old `textScale > 1.2` one-line branch is gone. |
 | 39 | Changed | Coach and daily goal copy use `hint`. Primary actions stay `GameButton`. |
-| 40 | Already satisfied | Hero selection is the warm row fill (`hudRowSelected`). Combat mode is the FARM/PUSH segmented control. They are different widgets and different fills. |
+| 40 | Already satisfied | Selected hero fill is `GameTheme.hudRowSelected` on `_HomePartyChip`. FARM/PUSH is a separate `MenuChrome.segmented` in `FightSeam`. The two markers do not share a widget. |
 | 41 | Changed | DPS and the rest of the combat plate use `combat`. |
 | 42 | Changed | Loot lines and toasts use `readable` / `hint` on the toast colors. `GameButton` long-press shows `FeedbackToast`, not a snackbar. |
 | 43 | Changed | Wipe copy uses the menu ramp and keeps its existing wrap. `test/integration_layout_fit_test.dart` still pumps it at 360×640. |
@@ -64,18 +68,18 @@ multiplies, then the product clamps. The slider max was not lowered.
 | 46 | Changed | Bag name, stats, and hint use `readable` and `hint`. |
 | 47 | Changed | Gear stat lines that asked for 9 or 10 now use `hint` (12) or `readable` (14). |
 | 48 | Changed | Bag rows and the item tooltip both use `readable` for the name and `hint` for the secondary line. |
-| 49 | Already satisfied | `GameTheme.isPhoneWidth` is always true, so the compact gear-name branch never runs. The name style is the one phone style. |
+| 49 | Changed | `GameTheme.isPhoneWidth` returns true for every width, so there is no second phone layout. The doll heading is the spec at `title` and the level at `hint` (`character_equip_panel.dart`). The selector chip uses `readable` whether or not the small doll is shown. |
 | 50 | Changed | Roster and gear hero chips use `hint` for the name and a shared min height from the chip, not a second font. |
 | 51 | Changed | Apex recipe name is `section`, cost is `readable`, meta is `hint`. |
 | 52 | Changed | Craft inherits the ramp. Its overflow protection stays a scroll, not a `FittedBox`. Layout-fit still covers it. |
 | 53 | Changed | “Bulk spend” is `section`, not `title`. |
 | 54 | Changed | Camp and forge upgrades both use `PowerUpgradeRow`. |
-| 55 | Already satisfied | `PowerUpgradeRow` keeps the current bonus and the next delta on one subtitle (`bonus · next`). Columns are the row’s title and trailing action, which stay aligned in a `Row`. |
-| 56 | Already satisfied | A forge or camp buy that cannot run keeps the row and the cost. Disabled styling is `buttonDisabled*`. The theme rule is: say why on the row or in a toast. Missing gold stays on the cost line. |
+| 55 | Changed | `ForgeOverlay._upgradeRow` puts the current bonus and the next delta in `subtitle` (`bonus · next`). `PowerUpgradeRow` paints that line at `hint`, max two lines, so the next number is not clipped to one ellipsis. The buy chip stays in the trailing column. |
+| 56 | Changed | When a forge buy cannot run, the row’s subtitle becomes `Need … more` (`ForgeOverlay`) so the shortfall sits on the row without covering the next upgrade. Gold 0 also shows “Earn gold in the dungeon, then buy here.” `test/forge_inline_test.dart` finds both. |
 | 57 | Changed | Merge slots use the same card padding and rarity colors as the bag (`rarity*` / `cardBox`). |
-| 58 | Already satisfied | Equipped state is the shared equip-chip colors (`equipChipBlocked` / `Upgrade` / `Neutral`) on the list, the detail, and the doll slots. |
+| 58 | Already satisfied | Worn gear on the doll says “Equipped · UNEQUIP below · long-press for tip” (`character_equip_panel.dart`). Bag compare uses the same `equipChip*` colors for blocked, upgrade, and neutral. MERGE copy says worn gear stays. |
 | 59 | Changed | `MenuChrome.dollWellDecoration` is the radial well. GEAR already used those colors; CAMP party dolls now use the same decoration. |
-| 60 | Already satisfied | Locked craft and locked market rows use `hint` for the unlock line next to the action. The action stays visible. |
+| 60 | Already satisfied | `ApexForgePanel._farmMeter` titles a locked target `Farm locked: <mat>` in `section`, and `_farmSources` (same file) prints the drop cave and the next level gate under it in `hint`. The craft chips stay tappable. |
 | 61 | Changed | Shop description is `hint`. The buy control is a `GameButton` at `typeButton`, so the button is the louder line. |
 | 62 | Changed | Market no longer requests a sub-9 pixel size. Prices and names are `readable` / `hint`. |
 | 63 | Changed | Blessing name and cost use the same `section` / `readable` pair as upgrade rows. |
@@ -88,7 +92,7 @@ multiplies, then the product clamps. The slider max was not lowered.
 | 70 | Changed | Rift tier figures use `section` or `readable`, not a display heading. |
 | 71 | Changed | The floors sheet height is 0.45 of the screen and the list scrolls. The fixed 280 is gone. |
 | 72 | Changed | The grotto name on CAMP and on the map uses `title`. |
-| 73 | Already satisfied | Keystone cards use `cardBox` and the ramp, the same building blocks as settings cards. |
+| 73 | Already satisfied | `KeystoneSheet` is a scroll of `MenuChrome.fold` rows (title + subtitle), the same fold settings uses. The hunt line above them is `hint`. No second card chrome. |
 | 74 | Changed | Relic and pet rows are icon, name (`readable`), status (`hint`), action (`GameButton`). |
 | 75 | Changed | Achievements and Codex use `section` headings and `readable` / `hint` rows. Codex empty copy says to fight or clear floors. |
 | 76 | Changed | Challenge toggle labels use `readable`, like settings rows. The KEY stepper is 44, not 36. |
@@ -104,10 +108,10 @@ multiplies, then the product clamps. The slider max was not lowered.
 | 86 | Changed | New-party labels are `section`, helpers are `hint`, fields use the theme input. |
 | 87 | Changed | Recovery and the required-update screen use `title`, `readable`, and a `GameButton`. |
 | 88 | Changed | The notification opt-in and the review ask use `MenuChrome.dialog` and `readable` body. Consent behavior is unchanged. |
-| 89 | Already satisfied | Vault claim, redeem, and the Wisp gift use the dialog or sheet title plus `readable` body and a `GameButton`. Redeem’s CLOSE is the same dense button as other sheets. |
+| 89 | Already satisfied | `redeem_coupon_dialog.dart` uses `MenuChrome.dialog` and a dense CLOSE `GameButton`. `wisp_gift_overlay.dart` and the vault claim use the sheet title plus `readable` body and a `GameButton`. No separate dialog chrome. |
 | 90 | Changed | Empty bag, market, and codex say what is missing and where to go next. Test pumps empty market and empty codex at OS 2 on 360×640. |
-| 91 | Changed | `test/ui_menu_scale_test.dart` pumps `HomeShell` through `composeTextScaler` at OS 1 / 1.4 / 2 and game 1 / 1.45, on 360×780 and 360×640. |
-| 92 | Changed | The same file pumps raw OS 2 with `compose: false`. That case is not capped and must still lay out. |
+| 91 | Changed | `test/ui_app_scale_test.dart` pumps `MyApp`, not a `HomeShell` wrapper. It checks a live `setUiTextScale(1.45)`, a reloaded save at 1.45, SKIP and NEW GAME at 1.45, OS 2 × game 1 clamped to 1.45, and camp plus fight plus FORGE/CAMP/MARKET on 360×780 and 360×640. HEROES and FIGHT stay findable as the full words. |
+| 92 | Changed | The same file pumps `HomeShell` at `TextScaler.linear(2)` on 360×640 for camp and fight. The FIGHT scaler stays 2, so this stress is not the app cap. Camp dolls scroll instead of overflowing. `test/ui_menu_scale_test.dart` still pumps the older HomeShell matrix. |
 | 93 | Changed | The home shell pump above is the A56 logical size (360×780) at one scale set. Shell goldens are the pixel frames for the same phone class. |
 | 94 | Changed | The same pump runs at 360×640. |
 | 95 | Changed | Long party names ellipsize (`dungeon_party_strip_test`). A long `GameButton` label keeps `typeButton` and two lines (`ui_menu_scale_test`). |
@@ -117,9 +121,12 @@ multiplies, then the product clamps. The slider max was not lowered.
 | 99 | Changed | `showFeatureSheet` and `lib/ui/shell/home/feature_sheet.dart` are deleted. No remaining references. |
 | 100 | Changed | `docs/UI_THEME.md` menu checklist is text, margin, contrast, touch, and scale, plus empty copy and dialog action order. |
 
-## Left alone on purpose
+## Not applicable
 
-- Economy, drops, costs, monetization, save format, cloud ownership, billing, and consent behavior.
-- CRAFT, wipe, Welcome Back, and onboarding still wrap or scroll. `test/integration_layout_fit_test.dart` covers the first three at 360×640.
-- Web letterbox and the boot cinematic still use `FittedBox` to frame a whole scene.
-- Cognifox mark has no font size and was not restyled.
+These are outside the sweep because the owner forbade the change, or the
+widget is a frame rather than a menu.
+
+- Economy, drops, costs, monetization, save format, cloud ownership, billing, and consent behavior. No files under `lib/core/game_logic.dart`, `lib/core/game_state.dart`, or the shop billing path were edited for those rules. Consent copy in the review and notification dialogs was restyled only.
+- Web letterbox (`lib/main.dart`) and the boot cinematic (`lib/ui/boot_cinematic_layer.dart`) still use `FittedBox` to frame a whole scene. `test/ui_type_ramp_test.dart` allows only those two files.
+- The Cognifox mark has no font size. It was not restyled.
+- CRAFT, wipe, and Welcome Back still wrap or scroll. `test/integration_layout_fit_test.dart` pumps them at 360×640.

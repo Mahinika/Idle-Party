@@ -102,9 +102,7 @@ class _HomeShellState extends State<HomeShell> {
         HomeTopBar(director: director, router: router),
         _climbRow(state, sheet: sheet),
         Expanded(
-          child: MediaQuery.withClampedTextScaling(
-            maxScaleFactor: 1.3,
-            child: Stack(
+          child: Stack(
             fit: StackFit.expand,
             children: [
               Column(
@@ -154,7 +152,6 @@ class _HomeShellState extends State<HomeShell> {
               const IgnorePointer(child: SizedBox.shrink()),
               HomePromptHost(director: director, router: router),
             ],
-          ),
           ),
         ),
         if (_showBack)

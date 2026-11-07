@@ -4,6 +4,7 @@ import '../../../core/ashen_crown.dart';
 import '../../../core/game_state.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
+import '../../menu_chrome.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../web_click_bridge.dart';
@@ -28,11 +29,18 @@ class HomeNavBar extends StatelessWidget {
     final map = tabs.contains(MenuRoute.map);
     final shop = tabs.contains(MenuRoute.shop);
     final scale = MediaQuery.textScalerOf(context).scale(1);
-    final barH = GameTheme.navBarExtent(scale);
+    final inset = MenuChrome.systemBottomInset(context);
+    final grown = GameTheme.navBarExtent(scale);
+    // Keep the labels above the gesture inset without stacking a full extra
+    // bar on a short phone. A tall bar already has room for the inset.
+    final labelH = grown - inset > 40 ? grown - inset : 40.0;
     return Material(
       color: GameTheme.stoneDeep,
-      child: SizedBox(
-        height: barH,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+        height: labelH,
         child: Row(
           children: [
             Expanded(child: _tab(MenuRoute.gear, 'HEROES', UiIcon.gear)),
@@ -59,6 +67,9 @@ class HomeNavBar extends StatelessWidget {
             ),
           ],
         ),
+          ),
+          SizedBox(height: inset),
+        ],
       ),
     );
   }
@@ -82,9 +93,14 @@ class HomeNavBar extends StatelessWidget {
         children: [
           GameIcon.asset(UiIcon.sword, size: 24),
           const SizedBox(height: 2),
-          Text(
-            'FIGHT',
-            style: GameTheme.readable(color: open ? GameTheme.parchment : GameTheme.torchHot),
+          Flexible(
+            child: Text(
+              'FIGHT',
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.readable(color: open ? GameTheme.parchment : GameTheme.torchHot),
+            ),
           ),
         ],
       ),
@@ -111,12 +127,14 @@ class HomeNavBar extends StatelessWidget {
               children: [
                 GameIcon.asset(UiIcon.closeTab, size: 24),
                 const SizedBox(height: 2),
-                ExcludeSemantics(
-                  child: Text(
-                    'CLOSE',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GameTheme.readable(color: GameTheme.torchHot),
+                Flexible(
+                  child: ExcludeSemantics(
+                    child: Text(
+                      'CLOSE',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.readable(color: GameTheme.torchHot),
+                    ),
                   ),
                 ),
               ],
@@ -137,11 +155,14 @@ class HomeNavBar extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GameTheme.readable(color: GameTheme.parchment),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.readable(color: GameTheme.parchment),
+                  ),
                 ),
                 if (timer != null)
                   Text(

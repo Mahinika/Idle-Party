@@ -172,8 +172,9 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       accent: _forgeAccent(type),
       title: _forgeName(type),
       tag: recommended ? 'BEST' : null,
-      subtitle:
-          '${_forgeBonus(state, type)}${nextDelta == null ? '' : ' · $nextDelta'}',
+      subtitle: onPressed == null && shortGold > 0
+          ? 'Need ${formatGold(shortGold)} more'
+          : '${_forgeBonus(state, type)}${nextDelta == null ? '' : ' · $nextDelta'}',
       selected: recommended,
       dense: true,
       trailing: trailing,

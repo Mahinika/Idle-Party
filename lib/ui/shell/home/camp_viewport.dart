@@ -56,12 +56,14 @@ class CampViewport extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Expanded(
-                        child: Row(
+                        child: SingleChildScrollView(
+                          child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             for (var i = 0; i < heroes.length; i++)
                               Expanded(
                                 child: Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Container(
@@ -91,6 +93,7 @@ class CampViewport extends StatelessWidget {
                                 ),
                               ),
                           ],
+                          ),
                         ),
                       ),
                       WebClickScope(

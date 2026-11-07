@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/menu_alerts.dart';
 import '../../core/menu_router.dart';
+import '../menu_chrome.dart';
 import '../coach_pulse.dart';
 import '../game_icon.dart';
 import '../game_theme.dart';
@@ -162,7 +163,7 @@ class AppBottomBar extends StatelessWidget {
         ),
       ),
     );
-    final inset = MediaQuery.paddingOf(context).bottom;
+    final inset = MenuChrome.systemBottomInset(context);
     if (!showReason || reason.isEmpty) {
       return Padding(
         padding: EdgeInsets.only(bottom: inset),

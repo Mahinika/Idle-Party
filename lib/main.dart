@@ -141,11 +141,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ),
       builder: (context, child) {
         final content = child ?? const SizedBox.shrink();
+        return _LiveTextScale(
+          director: _director,
+          builder: (context, scaler) {
         final platform = MediaQuery.of(context);
-        final scaler = GameTheme.composeTextScaler(
-          platform: platform.textScaler,
-          gameScale: _director.state.uiTextScale,
-        );
         if (!kIsWeb) {
           return MediaQuery(
             data: platform.copyWith(textScaler: scaler),
@@ -193,6 +192,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             );
           },
         );
+          },
+        );
       },
       home: GameHomePage(
         key: const ValueKey('game-home'),
@@ -201,6 +202,66 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         showIntro: widget.showIntro,
       ),
     );
+  }
+}
+
+/// Rebuilds the app text scaler only when the saved slider changes.
+///
+/// [MaterialApp.builder] does not listen to [GameDirector]. The play
+/// [AnimatedBuilder] sits under this [MediaQuery], so a slider move has to
+/// update the scaler here or the percent and the menus disagree.
+class _LiveTextScale extends StatefulWidget {
+  const _LiveTextScale({
+    required this.director,
+    required this.builder,
+  });
+
+  final GameDirector director;
+  final Widget Function(BuildContext context, TextScaler scaler) builder;
+
+  @override
+  State<_LiveTextScale> createState() => _LiveTextScaleState();
+}
+
+class _LiveTextScaleState extends State<_LiveTextScale> {
+  late double _gameScale;
+
+  @override
+  void initState() {
+    super.initState();
+    _gameScale = widget.director.state.uiTextScale;
+    widget.director.addListener(_onDirector);
+  }
+
+  @override
+  void didUpdateWidget(_LiveTextScale oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.director != widget.director) {
+      oldWidget.director.removeListener(_onDirector);
+      widget.director.addListener(_onDirector);
+      _gameScale = widget.director.state.uiTextScale;
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.director.removeListener(_onDirector);
+    super.dispose();
+  }
+
+  void _onDirector() {
+    final next = widget.director.state.uiTextScale;
+    if (!mounted || next == _gameScale) return;
+    setState(() => _gameScale = next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scaler = GameTheme.composeTextScaler(
+      platform: MediaQuery.textScalerOf(context),
+      gameScale: _gameScale,
+    );
+    return widget.builder(context, scaler);
   }
 }
 

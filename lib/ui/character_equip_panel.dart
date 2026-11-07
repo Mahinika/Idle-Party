@@ -293,7 +293,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   Text(
                     'L${hero.level}',
                     textAlign: TextAlign.center,
-                    style: GameTheme.title(),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                   const SizedBox(height: 2),
                   Text(

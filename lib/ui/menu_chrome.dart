@@ -25,6 +25,15 @@ abstract final class MenuChrome {
 
   /// Same top edge as full-height GEAR sheets. Hub used a status-bar
   /// [SafeArea] that left a black strip on immersive phones.
+  /// Gesture / status inset. Honors [MediaQueryData.viewPadding] and a test
+  /// harness that only sets [MediaQueryData.padding].
+  static double systemBottomInset(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final pad = mq.padding.bottom;
+    final view = mq.viewPadding.bottom;
+    return pad > view ? pad : view;
+  }
+
   static Widget playSafeArea({
     required Widget child,
     bool bottom = false,
@@ -363,16 +372,20 @@ abstract final class MenuChrome {
     required ValueChanged<int> onSelect,
     bool dense = false,
     List<String>? icons,
+    double? maxHeight,
   }) {
     assert(labels.isNotEmpty);
     if (icons != null) {
       assert(icons.length == labels.length);
     }
-    final iconSize = dense ? GameTheme.iconList : GameTheme.iconNav;
     return Builder(
       builder: (context) {
         final scale = MediaQuery.textScalerOf(context).scale(1);
-        final height = GameTheme.minTouch * (scale < 1 ? 1.0 : scale);
+        final wanted = GameTheme.minTouch * (scale < 1 ? 1.0 : scale);
+        final cap = maxHeight;
+        final height = cap == null || cap >= wanted
+            ? wanted
+            : (cap < 36 ? 36.0 : cap);
         return Container(
       height: height,
       decoration: BoxDecoration(
@@ -405,28 +418,39 @@ abstract final class MenuChrome {
                         : Colors.transparent,
                     child: InkWell(
                       onTap: () => onSelect(i),
-                      child: Center(
-                        child: icons == null
-                            ? Text(
+                      child: icons == null
+                          ? Center(
+                              child: Text(
                                 labels[i],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: GameTheme.readable(color: i == selectedIndex
                                       ? GameTheme.torchHot
                                       : GameTheme.parchmentDim),
-                              )
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
+                              ),
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Row(
                                 children: [
-                                  GameIcon.asset(icons[i], size: iconSize),
+                                  GameIcon.asset(
+                                    icons[i],
+                                    size: dense ? 16 : GameTheme.iconList,
+                                  ),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    labels[i],
-                                    style: GameTheme.readable(color: i == selectedIndex
-                                          ? GameTheme.torchHot
-                                          : GameTheme.parchmentDim),
+                                  Flexible(
+                                    child: Text(
+                                      labels[i],
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GameTheme.readable(color: i == selectedIndex
+                                            ? GameTheme.torchHot
+                                            : GameTheme.parchmentDim),
+                                    ),
                                   ),
                                 ],
                               ),
-                      ),
+                            ),
                     ),
                   ),
                 ),

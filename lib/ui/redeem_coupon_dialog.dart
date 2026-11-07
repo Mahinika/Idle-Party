@@ -53,12 +53,8 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: GameTheme.sheet,
-      title: Text(
-        'REDEEM CODE',
-        style: GameTheme.readable(color: GameTheme.parchment),
-      ),
+    return MenuChrome.dialog(
+      title: 'REDEEM CODE',
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,

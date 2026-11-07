@@ -16,6 +16,14 @@ void main() {
     'dungeon_tile_painter.dart',
   };
 
+  test('reading roles stay in order and the action role is not a title', () {
+    expect(GameTheme.typeTitle, greaterThan(GameTheme.typeSection));
+    expect(GameTheme.typeSection, greaterThan(GameTheme.typeBody));
+    expect(GameTheme.typeBody, greaterThan(GameTheme.typeHint));
+    expect(GameTheme.typeButton, lessThanOrEqualTo(GameTheme.typeTitle + 2));
+    expect(GameTheme.typeButtonDense, lessThanOrEqualTo(GameTheme.typeSection));
+  });
+
   test('slider ceiling and rendered ceiling are the same', () {
     expect(GameTheme.typeScaleMax, kUiTextScaleMax);
     expect(kUiTextScaleMax, greaterThanOrEqualTo(1.45));

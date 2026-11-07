@@ -351,7 +351,8 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     required SpatialActor? kitActor,
     required bool showFlask,
   }) {
-    const lineHeight = _homePartyRowHeight;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final lineHeight = _homePartyRowHeight * (textScale < 1 ? 1 : textScale);
     final denseParty = heroCount >= 5;
     return Column(
       mainAxisSize: MainAxisSize.min,

@@ -299,7 +299,8 @@ abstract final class GameTheme {
 
   /// Semantic ramp. Menus use these. Do not pass a free size.
   static const double typeTitle = 18;
-  static const double typeSection = 13;
+  /// Between the page title and body. Must stay above [typeBody].
+  static const double typeSection = 16;
   static const double typeBody = 14;
   static const double typeHint = 12;
   static const double typeButton = 19;
