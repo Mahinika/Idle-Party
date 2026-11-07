@@ -75,7 +75,7 @@ Widget partyCcChipSuffix(
     child: Text(
       labels.join('·'),
       maxLines: 1,
-      style: GameTheme.pixel(size: size, color: partyCcChipColor(labels)),
+      style: GameTheme.combat(color: partyCcChipColor(labels)),
     ),
   );
 }
@@ -91,7 +91,7 @@ bool _kitFocusBombUp(SpatialActor spatial, SpatialWorld? world) {
   return false;
 }
 
-/// Name + level on the crawl strip. A long name scales down; the level stays.
+/// Name + level on the crawl strip. A long name ellipsizes; the level stays.
 class PartyHudSpecLine extends StatelessWidget {
   const PartyHudSpecLine({
     super.key,
@@ -111,22 +111,19 @@ class PartyHudSpecLine extends StatelessWidget {
     return Row(
       children: [
         Flexible(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              spec,
-              maxLines: 1,
-              softWrap: false,
-              style: GameTheme.pixel(size: GameTheme.hudPixel, color: color),
-            ),
+          child: Text(
+            spec,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.combat(color: color),
           ),
         ),
         const SizedBox(width: 4),
         Text(
           'L$level',
           maxLines: 1,
-          style: GameTheme.pixel(size: GameTheme.hudPixel, color: color),
+          style: GameTheme.combat(color: color),
         ),
         if (extra.isNotEmpty) ...[
           const SizedBox(width: 4),
@@ -135,10 +132,7 @@ class PartyHudSpecLine extends StatelessWidget {
               extra,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.pixel(
-                size: GameTheme.hudPixel,
-                color: GameTheme.parchmentDim,
-              ),
+              style: GameTheme.combat(color: GameTheme.parchmentDim),
             ),
           ),
         ],
@@ -273,7 +267,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
         title: 'Open gear?',
         content: Text(
           'You are mid-fight. Open GEAR anyway?',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          style: GameTheme.readable(color: GameTheme.parchment),
         ),
         actions: [
           MenuChrome.dialogCancel(
@@ -426,7 +420,7 @@ class _PartyCornerHudState extends State<PartyCornerHud> {
     final plainEnglish = GameLogic.plainPlayerChrome(state);
     // Thin strip: reclaim map; kit opens beside the strip (not expanding rows).
     const fullWidth = 146.0;
-    final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
     // Name line + gap + bar/CC line. 26px overflowed by 4 on the boss.
     // Name line + gap + bar/CC line. 26px overflowed by 4 on the boss.
     final rowHeight = 32.0 * textScale;
@@ -754,7 +748,7 @@ class DungeonFlaskButton extends StatelessWidget {
                       GameIcon.asset(UiIcon.flask, size: 14),
                       Text(
                         '$count',
-                        style: GameTheme.pixel(size: 7, color: labelColor),
+                        style: GameTheme.combat(color: labelColor),
                       ),
                     ],
                   ),
@@ -810,28 +804,19 @@ class DungeonFlaskButton extends StatelessWidget {
                           GameIcon.asset(UiIcon.flask, size: 16),
                           const SizedBox(width: 4),
                           Expanded(
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                buttonWord,
-                                maxLines: 1,
-                                softWrap: false,
-                                style: GameTheme.pixel(
-                                  size: GameTheme.hudPixel,
-                                  color: labelColor,
-                                ),
-                              ),
+                            child: Text(
+                              buttonWord,
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
+                              style: GameTheme.combat(color: labelColor),
                             ),
                           ),
                           Text(
                             '$count',
-                            style: GameTheme.pixel(
-                              size: GameTheme.hudPixelComfort,
-                              color: urgent
+                            style: GameTheme.combat(comfort: true, color: urgent
                                   ? GameTheme.torchHot
-                                  : GameTheme.torch,
-                            ),
+                                  : GameTheme.torch),
                           ),
                         ],
                       ),
@@ -974,10 +959,7 @@ class _KitSidePanel extends StatelessWidget {
                 hero.spec.roleTag.plainJob,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(
-                  size: 9,
-                  color: GameTheme.parchmentDim,
-                ),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             ],
             const SizedBox(height: 3),
@@ -988,10 +970,7 @@ class _KitSidePanel extends StatelessWidget {
                     ClassKits.resourceLabelForSpec(hero.specId),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 10,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -1075,10 +1054,9 @@ class _HomePartyChip extends StatelessWidget {
         ? hero.displayRoleLabel(plainEnglish: false)
         : name.trim();
     final doll = dense ? 18.0 : 20.0;
-    final nameSize = dense ? 7.0 : 8.0;
     return Container(
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 1),
       decoration: BoxDecoration(
         color: selected ? GameTheme.hudRowSelected : Colors.transparent,
         borderRadius: BorderRadius.circular(3),
@@ -1091,8 +1069,8 @@ class _HomePartyChip extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: doll + 2,
-            height: doll + 2,
+            width: doll,
+            height: doll,
             child: HeroDollSprite(
               hero: hero,
               partyIndex: partyIndex,
@@ -1106,15 +1084,24 @@ class _HomePartyChip extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '$who L$level',
-                    maxLines: 1,
-                    softWrap: false,
-                    style: GameTheme.pixel(size: nameSize, color: GameTheme.parchment),
-                  ),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        who,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                        style: GameTheme.readable(color: GameTheme.parchment),
+                      ),
+                    ),
+                    Text(
+                      ' L$level',
+                      maxLines: 1,
+                      softWrap: false,
+                      style: GameTheme.readable(color: GameTheme.parchment),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Row(
@@ -1445,10 +1432,7 @@ class _PartyRow extends StatelessWidget {
                         companionLine,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GameTheme.body(
-                          size: 10,
-                          color: GameTheme.parchmentDim,
-                        ),
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
                       ),
                     ],
                     if (showKit) ...[
@@ -1460,10 +1444,7 @@ class _PartyRow extends StatelessWidget {
                           HeroIdentity.fantasyLine(hero.specId),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GameTheme.body(
-                            size: 10,
-                            color: GameTheme.mossLit,
-                          ),
+                          style: GameTheme.hint(color: GameTheme.mossLit),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -1474,10 +1455,7 @@ class _PartyRow extends StatelessWidget {
                               ClassKits.resourceLabelForSpec(hero.specId),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: GameTheme.body(
-                                size: 11,
-                                color: GameTheme.parchmentDim,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.parchmentDim),
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -1486,12 +1464,9 @@ class _PartyRow extends StatelessWidget {
                               child: Text(
                                 _runicPipLabel(resource),
                                 maxLines: 1,
-                                style: GameTheme.pixel(
-                                  size: 7,
-                                  color: Color(
+                                style: GameTheme.combat(color: Color(
                                     ClassKits.resourceColorForSpec(hero.specId),
-                                  ),
-                                ),
+                                  )),
                               ),
                             ),
                           ] else ...[
@@ -1513,10 +1488,7 @@ class _PartyRow extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text(
                               '${resource.round()}',
-                              style: GameTheme.body(
-                                size: 11,
-                                color: GameTheme.parchmentDim,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.parchmentDim),
                             ),
                           ],
                           if (_showsComboPoints(hero.specId) &&
@@ -1524,20 +1496,14 @@ class _PartyRow extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text(
                               'CP${kitActor.comboPoints}',
-                              style: GameTheme.pixel(
-                                size: 6,
-                                color: GameTheme.torchHot,
-                              ),
+                              style: GameTheme.combat(color: GameTheme.torchHot),
                             ),
                           ],
                           if (kitActor.hotStreakReady) ...[
                             const SizedBox(width: 4),
                             Text(
                               'STREAK',
-                              style: GameTheme.pixel(
-                                size: 6,
-                                color: GameTheme.torchHot,
-                              ),
+                              style: GameTheme.combat(color: GameTheme.torchHot),
                             ),
                           ],
                           if (kitActor.bladeFlurryTimer > 0) ...[
@@ -1546,30 +1512,21 @@ class _PartyRow extends StatelessWidget {
                               hero.gearAffinity == HeroRole.rogue
                                   ? 'FLURRY'
                                   : 'SWEEP',
-                              style: GameTheme.pixel(
-                                size: 6,
-                                color: GameTheme.torchHot,
-                              ),
+                              style: GameTheme.combat(color: GameTheme.torchHot),
                             ),
                           ],
                           if (kitActor.beaconTimer > 0) ...[
                             const SizedBox(width: 4),
                             Text(
                               'BEACON',
-                              style: GameTheme.pixel(
-                                size: 6,
-                                color: GameTheme.hudSpiritText,
-                              ),
+                              style: GameTheme.combat(color: GameTheme.hudSpiritText),
                             ),
                           ],
                           if (kitActor.absorbShield > 0) ...[
                             const SizedBox(width: 4),
                             Text(
                               'ABS${kitActor.absorbShield}',
-                              style: GameTheme.pixel(
-                                size: 6,
-                                color: GameTheme.hudManaText,
-                              ),
+                              style: GameTheme.combat(color: GameTheme.hudManaText),
                             ),
                           ],
                         ],
@@ -1581,10 +1538,7 @@ class _PartyRow extends StatelessWidget {
               SizedBox(width: phone ? 4 : 5),
               Text(
                 '$liveHp/$maxHp',
-                style: GameTheme.body(
-                  size: phone ? 10 : 12,
-                  color: GameTheme.parchmentDim,
-                ),
+                style: GameTheme.readable(color: GameTheme.parchmentDim),
               ),
             ],
           ),
@@ -1722,9 +1676,7 @@ class _InlineAbilityChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: GameTheme.body(
-            size: isHealer ? 14 : 13,
-            color: gated
+          style: GameTheme.readable(color: gated
                 ? GameTheme.bloodLit
                 : softGated
                 ? GameTheme.parchmentDim
@@ -1734,8 +1686,7 @@ class _InlineAbilityChip extends StatelessWidget {
                 ? GameTheme.parchmentDim
                 : isHealer
                 ? GameTheme.hudSpiritText
-                : GameTheme.parchment,
-          ),
+                : GameTheme.parchment),
         ),
       ),
     );
@@ -1754,7 +1705,7 @@ class _InlineAbilityChip extends StatelessWidget {
               title: ability.name,
               content: Text(
                 tip,
-                style: GameTheme.body(size: 15, color: GameTheme.parchment),
+                style: GameTheme.readable(color: GameTheme.parchment),
               ),
               actions: [
                 GameButton(
@@ -1810,10 +1761,7 @@ class _DpsMeterState extends State<DpsMeter> {
         decoration: MenuChrome.hudWell(),
         child: Text(
           '0 DPS',
-          style: GameTheme.pixel(
-            size: GameTheme.hudPixel,
-            color: GameTheme.parchmentDim,
-          ),
+          style: GameTheme.combat(color: GameTheme.parchmentDim),
         ),
       );
     }
@@ -1823,10 +1771,7 @@ class _DpsMeterState extends State<DpsMeter> {
       decoration: MenuChrome.hudWell(),
       child: Text(
         _open ? 'METER' : snap.chipLabel,
-        style: GameTheme.pixel(
-          size: GameTheme.hudPixel,
-          color: GameTheme.parchment,
-        ),
+        style: GameTheme.combat(color: GameTheme.parchment),
       ),
     );
 
@@ -1841,15 +1786,12 @@ class _DpsMeterState extends State<DpsMeter> {
           children: [
             Text(
               'METER',
-              style: GameTheme.pixel(
-                size: GameTheme.hudPixel,
-                color: GameTheme.parchmentDim,
-              ),
+              style: GameTheme.combat(color: GameTheme.parchmentDim),
             ),
             const SizedBox(height: 3),
             Text(
               'Bars match unit. Tank/healer also show damage.',
-              style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
             const SizedBox(height: 3),
             for (final row in snap.rows) ...[
@@ -1862,12 +1804,9 @@ class _DpsMeterState extends State<DpsMeter> {
                       maxLines: 1,
                       softWrap: false,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.pixel(
-                        size: GameTheme.hudPixel,
-                        color: row.highlight
+                      style: GameTheme.combat(color: row.highlight
                             ? GameTheme.torchHot
-                            : GameTheme.parchment,
-                      ),
+                            : GameTheme.parchment),
                     ),
                   ),
                   Expanded(
@@ -1877,7 +1816,7 @@ class _DpsMeterState extends State<DpsMeter> {
                       maxLines: 1,
                       softWrap: false,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.pixel(size: GameTheme.hudPixel),
+                      style: GameTheme.combat(),
                     ),
                   ),
                 ],

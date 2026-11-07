@@ -55,18 +55,12 @@ class _DungeonOfflineChromeState extends State<DungeonOfflineChrome> {
               Text(
                 summary.headline,
                 textAlign: TextAlign.center,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: GameTheme.mossLit,
-                ),
+                style: GameTheme.hint(color: GameTheme.mossLit),
               ),
               const SizedBox(height: 4),
               Text(
                 'Tap for details',
-                style: GameTheme.body(
-                  size: 12,
-                  color: GameTheme.parchmentDim,
-                ),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             ],
           ),

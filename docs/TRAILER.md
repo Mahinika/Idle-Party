@@ -91,7 +91,7 @@ clip or the music file is missing. Raw clips and preview MP4s are gitignored
 — regenerate locally before Console upload.
 
 Capture on A56 at 1080×2340 with `adb shell screenrecord` (~30 fps). Saves
-come from `export_showcase_save_test.dart` (Zoom · Close). Record with
+come from `export_showcase_save_test.dart` (Dungeon view · Close). Record with
 `py -3 tool/store_listing/capture_preview_beats.py`, then restore the
 emulator save. Do not reuse the 2026-09-20 combat raw (~13 fps).
 The 9:16 film fills the frame (no blurred border). 16:9 keeps its soft
@@ -151,7 +151,7 @@ Do not put a store CTA on the Play listing trailer.
 | Music | owned `bed_warm.ogg` | owned `dungeon.mp3` |
 
 ```powershell
-# A56: three showcase combat saves (hell / crystal / mothveil), Zoom · Close
+# A56: three showcase combat saves (hell / crystal / mothveil), Dungeon view · Close
 # py -3 tool/store_listing/capture_shorts_shots.py
 # → preview/gameplay_shorts_{hell,crystal,veil}_raw.mp4  (gitignored)
 # Restore the emulator save afterward.

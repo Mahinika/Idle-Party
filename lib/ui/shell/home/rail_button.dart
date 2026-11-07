@@ -43,9 +43,7 @@ class RailButton extends StatelessWidget {
             : entry.label,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: listCard
-            ? GameTheme.body(size: 14, color: GameTheme.parchment)
-            : GameTheme.pixel(size: 7, color: GameTheme.parchment),
+        style: GameTheme.readable(color: GameTheme.parchment),
       );
       final row = Row(
         mainAxisSize: listCard ? MainAxisSize.max : MainAxisSize.min,
@@ -53,7 +51,10 @@ class RailButton extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              GameIcon.asset(entry.icon, size: listCard ? 20 : 18),
+              GameIcon.asset(
+                entry.icon,
+                size: listCard ? GameTheme.iconNav : GameTheme.iconList,
+              ),
               if (badge)
                 Positioned(
                   right: -3,
@@ -158,20 +159,14 @@ class RailButton extends StatelessWidget {
                     entry.label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.pixel(
-                      size: 8,
-                      color: GameTheme.parchment,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchment),
                   ),
                   if (timer != null && timer.isNotEmpty)
                     Text(
                       timer,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.pixel(
-                        size: 7,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.torchHot),
                     ),
                 ],
               ),

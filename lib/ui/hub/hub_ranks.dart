@@ -54,10 +54,7 @@ class HubRanksFab extends StatelessWidget {
                       'RANKS',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 10,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.torchHot),
                     ),
                   ],
                 ),
@@ -119,7 +116,7 @@ Future<void> openHubRanksSheet(
                                 Expanded(
                                   child: Text(
                                     'RANKS',
-                                    style: GameTheme.menuTitle(size: 18),
+                                    style: GameTheme.title(),
                                   ),
                                 ),
                               ],
@@ -127,10 +124,7 @@ Future<void> openHubRanksSheet(
                             const SizedBox(height: 4),
                             Text(
                               'KEY, Gauntlet, Ranked GR, or party power.',
-                              style: GameTheme.body(
-                                size: 12,
-                                color: GameTheme.parchmentDim,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.parchmentDim),
                             ),
                             const SizedBox(height: 8),
                             Expanded(

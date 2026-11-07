@@ -34,6 +34,14 @@ class SettingsOverlay extends StatefulWidget {
   final GameDirector director;
   final VoidCallback onClose;
 
+  /// S / M / L / XL. The ends are the slider's min and max.
+  static const List<(String, double)> textPresets = <(String, double)>[
+    ('S', kUiTextScaleMin),
+    ('M', 1.0),
+    ('L', 1.20),
+    ('XL', kUiTextScaleMax),
+  ];
+
   /// ACCOUNT session-log hint. God Hand waits until first-hour chrome lifts.
   static String sessionLogHint({required bool plain}) => plain
       ? 'Optional session log on this device only — chase and wipes. '
@@ -52,13 +60,6 @@ class _SettingsOverlayState extends State<SettingsOverlay>
   GameDirector get director => widget.director;
   GameState get state => director.state;
   late final TabController _tabs;
-
-  static const List<(String, double)> _textPresets = <(String, double)>[
-    ('S', 0.85),
-    ('M', 1.0),
-    ('L', 1.15),
-    ('XL', 1.30),
-  ];
 
   @override
   void initState() {
@@ -88,7 +89,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         content: Text(
           'Export this save first (ACCOUNT below) if you want a backup. '
           'This save slot will be wiped. Your other saves stay.',
-          style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
+          style: GameTheme.readable(color: GameTheme.parchmentDim),
         ),
         actions: [
           MenuChrome.dialogCancel(
@@ -160,7 +161,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
       children: [
         Text(
           'Music, ambience, combat sound, and vibration.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         ShellLayout.gap(),
         MenuChrome.sectionLabel('SOUND'),
@@ -172,7 +173,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
             'Ambience is the soft bed underneath. SFX is combat and UI.',
             state.homeLayout,
           ),
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _SettingsToggle(
@@ -230,26 +231,27 @@ class _SettingsOverlayState extends State<SettingsOverlay>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Text, dungeon framing, and combat readability. OS display size '
-          'still applies on top.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          'Text size is this slider times the phone’s own text size, '
+          'then capped at the slider’s maximum. Dungeon view is the cave camera, '
+          'not this text size.',
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         MenuChrome.sectionLabel('DISPLAY'),
         const SizedBox(height: 6),
         Text(
           'UI text scale',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          style: GameTheme.section(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         () {
-          final scaleIdx = _textPresets.indexWhere(
+          final scaleIdx = SettingsOverlay.textPresets.indexWhere(
             (p) => (state.uiTextScale - p.$2).abs() < 0.02,
           );
           return MenuChrome.segmented(
-            labels: [for (final preset in _textPresets) preset.$1],
-            selectedIndex: scaleIdx < 0 ? 1 : scaleIdx,
-            onSelect: (i) => director.setUiTextScale(_textPresets[i].$2),
+            labels: [for (final preset in SettingsOverlay.textPresets) preset.$1],
+            selectedIndex: scaleIdx,
+            onSelect: (i) => director.setUiTextScale(SettingsOverlay.textPresets[i].$2),
           );
         }(),
         const SizedBox(height: 6),
@@ -272,14 +274,13 @@ class _SettingsOverlayState extends State<SettingsOverlay>
                 ),
               ),
               SizedBox(
-                width: 46,
+                width: 40 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0) + 12,
                 child: Text(
                   '${(state.uiTextScale * 100).round()}%',
                   textAlign: TextAlign.right,
-                  style: GameTheme.body(
-                    size: 15,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  maxLines: 1,
+                  softWrap: false,
+                  style: GameTheme.readable(color: GameTheme.parchmentDim),
                 ),
               ),
             ],
@@ -308,7 +309,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         const SizedBox(height: 8),
         Text(
           AbilityMastery.progressLine(state),
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _SettingsCycle(
@@ -329,7 +330,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
             'Off: the hub pays gold only.',
             state.homeLayout,
           ),
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _SettingsToggle(
@@ -341,7 +342,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           'Combat floaters and bark colors shift. Map wash may also shift '
           'slightly so green caves stay apart from red. Chamber dots already '
           'use shape (square / diamond / circle).',
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _SettingsToggle(
@@ -380,7 +381,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
       children: [
         Text(
           'Automatic cleanup when the run bag gets crowded.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         BagCleanupFilters(director: director),
@@ -394,7 +395,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
       children: [
         Text(
           'Save, Play Games, privacy, community, updates, and device data.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         MenuChrome.sectionLabelScoped(
@@ -406,7 +407,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           SettingsOverlay.sessionLogHint(
             plain: GameLogic.plainPlayerChrome(state),
           ),
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         _SettingsToggle(
@@ -421,7 +422,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           Text(
             'A quiet chest line while hub gold fills, plus at most a couple of pings a day. '
             'Never during a fight.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 8),
           _SettingsToggle(
@@ -511,7 +512,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
           Text(
             BuildStamp.versionLabel(MetaSystems.currentVersion),
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
         if (kDebugMode || BuildStamp.gitSha.isNotEmpty) ...[
@@ -612,7 +613,7 @@ class _SettingsOverlayState extends State<SettingsOverlay>
         const SizedBox(height: 6),
         Text(
           'Deletes this save on device — separate from Play Games cloud.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         GameButton(
@@ -649,10 +650,10 @@ class _VolumeSlider extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text(label, style: GameTheme.body(size: 14))),
+              Expanded(child: Text(label, style: GameTheme.readable())),
               Text(
                 valueLabel,
-                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+                style: GameTheme.section(color: GameTheme.parchmentDim),
               ),
             ],
           ),
@@ -697,7 +698,7 @@ class _SettingsToggle extends StatelessWidget {
           decoration: MenuChrome.cardBox(),
           child: Row(
             children: [
-              Expanded(child: Text(label, style: GameTheme.body(size: 16))),
+              Expanded(child: Text(label, style: GameTheme.readable())),
               ExcludeSemantics(child: MenuChrome.toggleMark(value: value)),
             ],
           ),
@@ -737,21 +738,18 @@ class _SettingsCycle extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label, style: GameTheme.body(size: 16)),
+                    Text(label, style: GameTheme.readable()),
                     const SizedBox(height: 2),
                     Text(
                       hint,
-                      style: GameTheme.body(
-                        size: 12,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                   ],
                 ),
               ),
               Text(
                 'TAP',
-                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             ],
           ),

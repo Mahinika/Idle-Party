@@ -85,10 +85,7 @@ Future<void> confirmAscend(BuildContext context, GameDirector director) async {
                     ),
                     child: Text(
                       lines[i],
-                      style: GameTheme.body(
-                        size: 15,
-                        color: GameTheme.parchment,
-                      ),
+                      style: GameTheme.readable(color: GameTheme.parchment),
                     ),
                   ),
               ],
@@ -165,7 +162,7 @@ Future<void> confirmRebornAtCap(
                 godHandLevel: state.godHandLevel,
                 blessings: state.metaDepth.ascendBlessings,
               ),
-              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+              style: GameTheme.readable(color: GameTheme.parchment),
             ),
             actions: [
               GameButton(
@@ -264,7 +261,7 @@ Future<void> confirmLeaveDungeon(
           title: 'Return to hub?',
           content: Text(
             body,
-            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            style: GameTheme.readable(color: GameTheme.parchment),
           ),
           actions: [
             GameButton(
@@ -470,12 +467,12 @@ Future<void> confirmDailyRun(
                 floor: echoFloor,
                 rewardEssence: rewardE,
               ),
-              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+              style: GameTheme.readable(color: GameTheme.parchment),
             ),
             const SizedBox(height: 8),
             Text(
               'Reward: $rewardLabel',
-              style: GameTheme.body(size: 15, color: GameTheme.torchHot),
+              style: GameTheme.readable(color: GameTheme.torchHot),
             ),
             const SizedBox(height: 8),
             Text(
@@ -483,7 +480,7 @@ Future<void> confirmDailyRun(
               'PUSH peak (F$echoFloor) — separate from Daily Vault and Quests. '
               'Clear it, then return to hub. Leave from the dungeon bar if you '
               'need out.',
-              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+              style: GameTheme.section(color: GameTheme.parchmentDim),
             ),
           ],
         ),
@@ -545,7 +542,7 @@ Future<void> confirmAshenCrown(
                   'returns the ticket. After the paid clear, use PRACTICE '
                   '(free) instead of spending more tickets.\n\n'
                   'Returns to hub on wipe or leave.',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          style: GameTheme.readable(color: GameTheme.parchment),
         ),
         actions: [
           GameButton(

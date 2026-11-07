@@ -40,7 +40,7 @@ class HomeMenuGrid extends StatelessWidget {
             crossAxisCount: 2,
             mainAxisSpacing: ShellLayout.sectionGap,
             crossAxisSpacing: ShellLayout.sectionGap,
-            childAspectRatio: 2.4,
+            childAspectRatio: 3.2,
           ),
           itemCount: entries.length,
           itemBuilder: (context, i) => ShellLayout.card(

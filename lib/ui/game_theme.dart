@@ -150,6 +150,12 @@ abstract final class GameTheme {
   /// Dense so GEAR / dungeon keep room above the bar.
   static const double bottomNavHeight = minTouch + 8;
 
+  /// Home and classic bars share this height so the label is not clipped.
+  static double navBarExtent(double textScale) {
+    final scale = textScale < 1 ? 1.0 : textScale;
+    return 64 * scale;
+  }
+
   // —— Bottom nav slot fills (TT2-style color blocks) ————————————————
   static const Color navGear = Color(0xFF7A342C);
   static const Color navGold = Color(0xFF7A5528);
@@ -196,7 +202,7 @@ abstract final class GameTheme {
     final gap = hudAboveNav + (scale > 1.05 ? 4.0 : 0.0);
     final inset = MediaQuery.paddingOf(context).bottom;
     // Tip line above tabs (~14) + tab row + OS inset.
-    return gap + bottomNavHeight + inset + 14;
+    return gap + navBarExtent(scale) + inset + 14;
   }
 
   /// Compose OS Dynamic Type with in-game slider (do not replace OS alone).
@@ -205,9 +211,14 @@ abstract final class GameTheme {
     required double gameScale,
   }) {
     final os = platform.scale(1.0);
-    final combined = (os * gameScale).clamp(0.80, 1.40);
+    // Match the settings slider (kUiTextScaleMax). Do not cap below it.
+    final combined = (os * gameScale).clamp(0.80, typeScaleMax);
     return TextScaler.linear(combined);
   }
+
+  /// Highest combined text scale the slider can ask for. OS scale still
+  /// multiplies; this is the ceiling, not a replacement for the OS scaler.
+  static const double typeScaleMax = 1.45;
 
   /// Headers / titles (pixel — combat HUD + tiny tags).
   static final Map<int, TextStyle> _pixelCache = <int, TextStyle>{};
@@ -227,13 +238,17 @@ abstract final class GameTheme {
     Color color = torchHot,
     double height = 1.4,
   }) {
-    // Press Start below hudPixel turns to glitter on phone DPI.
-    final clamped = size < hudPixel ? hudPixel : size;
-    final key = Object.hash(clamped, color.toARGB32(), height);
+    // Callers pass hudPixel or hudPixelComfort. Sub-9 requests are not
+    // promoted; the type-ramp test rejects them in menu code.
+    assert(
+      size >= hudPixel,
+      'Pixel size $size is below hudPixel $hudPixel',
+    );
+    final key = Object.hash(size, color.toARGB32(), height);
     return _pixelCache.putIfAbsent(
       key,
       () => GoogleFonts.pressStart2p(
-        fontSize: clamped,
+        fontSize: size,
         color: color,
         height: height,
         shadows: const [
@@ -281,4 +296,40 @@ abstract final class GameTheme {
       ),
     );
   }
+
+  /// Semantic ramp. Menus use these. Do not pass a free size.
+  static const double typeTitle = 18;
+  static const double typeSection = 13;
+  static const double typeBody = 14;
+  static const double typeHint = 12;
+  static const double typeButton = 19;
+  static const double typeButtonDense = 15;
+
+  /// Icon steps: row, navigation, hero/showcase.
+  static const double iconList = 18;
+  static const double iconNav = 24;
+  static const double iconShowcase = 32;
+
+  static TextStyle title({Color color = parchment}) =>
+      menuTitle(size: typeTitle, color: color);
+
+  static TextStyle section({Color color = parchment}) =>
+      body(size: typeSection, color: color);
+
+  static TextStyle readable({Color color = parchment}) =>
+      body(size: typeBody, color: color);
+
+  static TextStyle hint({Color color = parchmentDim}) =>
+      body(size: typeHint, color: color);
+
+  /// Brief combat labels. [comfort] is the only larger combat step.
+  static TextStyle combat({
+    Color color = torchHot,
+    bool comfort = false,
+    double height = 1.4,
+  }) => pixel(
+    size: comfort ? hudPixelComfort : hudPixel,
+    color: color,
+    height: height,
+  );
 }

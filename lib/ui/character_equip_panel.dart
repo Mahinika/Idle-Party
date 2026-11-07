@@ -253,10 +253,7 @@ class CharacterEquipPanel extends StatelessWidget {
                           ],
                           Text(
                             '${h.displayRoleLabel(plainEnglish: GameLogic.plainPlayerChrome(state))} · Lv${h.level}',
-                            style: GameTheme.body(
-                              size: compact ? 10 : 11,
-                              color: GameTheme.torchHot,
-                            ),
+                            style: GameTheme.readable(color: GameTheme.torchHot),
                           ),
                         ],
                       ),
@@ -291,12 +288,12 @@ class CharacterEquipPanel extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: GameTheme.menuTitle(size: compact ? 16 : 18),
+                    style: GameTheme.title(),
                   ),
                   Text(
                     'L${hero.level}',
                     textAlign: TextAlign.center,
-                    style: GameTheme.menuTitle(size: compact ? 14 : 16),
+                    style: GameTheme.title(),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -315,10 +312,7 @@ class CharacterEquipPanel extends StatelessWidget {
                               .replaceFirst(' ·  ·', ' ·');
                     }(),
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.section(color: GameTheme.parchmentDim),
                   ),
                 ],
               ),
@@ -351,28 +345,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   Container(
                     width: dollSize + 28,
                     height: dollSize + 28,
-                    decoration: BoxDecoration(
-                      gradient: const RadialGradient(
-                        center: Alignment(0, 0.55),
-                        radius: 0.85,
-                        colors: [
-                          GameTheme.dollGlow,
-                          GameTheme.dollBackdropTop,
-                          GameTheme.dollBackdropBottom,
-                        ],
-                        stops: [0.0, 0.45, 1.0],
-                      ),
-                      borderRadius: BorderRadius.circular(GameTheme.radiusMd),
-                      border: Border.all(
-                        color: GameTheme.borderLit.withValues(alpha: 0.55),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: GameTheme.torch.withValues(alpha: 0.12),
-                          blurRadius: 16,
-                        ),
-                      ],
-                    ),
+                    decoration: MenuChrome.dollWellDecoration(),
                     alignment: Alignment.center,
                     child: HeroDollSprite(
                       hero: hero,
@@ -388,7 +361,7 @@ class CharacterEquipPanel extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+                      style: GameTheme.hint(color: GameTheme.mossLit),
                     ),
                   ],
                   SizedBox(height: slotGap + 2),
@@ -412,10 +385,7 @@ class CharacterEquipPanel extends StatelessWidget {
                           child: Text(
                             'Two-hand — swap 1H + off-hand from BAG',
                             textAlign: TextAlign.center,
-                            style: GameTheme.body(
-                              size: 11,
-                              color: GameTheme.parchmentDim,
-                            ),
+                            style: GameTheme.hint(color: GameTheme.parchmentDim),
                           ),
                         );
                       }
@@ -432,10 +402,7 @@ class CharacterEquipPanel extends StatelessWidget {
                           child: Text(
                             'Off-hand needs a shield',
                             textAlign: TextAlign.center,
-                            style: GameTheme.body(
-                              size: 11,
-                              color: GameTheme.torchHot,
-                            ),
+                            style: GameTheme.hint(color: GameTheme.torchHot),
                           ),
                         );
                       }
@@ -448,10 +415,7 @@ class CharacterEquipPanel extends StatelessWidget {
                           child: Text(
                             'Off-hand needs a dual-wield weapon',
                             textAlign: TextAlign.center,
-                            style: GameTheme.body(
-                              size: 11,
-                              color: GameTheme.torchHot,
-                            ),
+                            style: GameTheme.hint(color: GameTheme.torchHot),
                           ),
                         );
                       }
@@ -477,10 +441,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   Text(
                     'Main · Off · Ranged · Charms · Flask',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: compact ? 10 : 11,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.readable(color: GameTheme.parchmentDim),
                   ),
                 ],
               ),
@@ -509,10 +470,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   selected.name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 14,
-                    color: itemRarityColor(selected.rarity),
-                  ),
+                  style: GameTheme.readable(color: itemRarityColor(selected.rarity)),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -521,7 +479,7 @@ class CharacterEquipPanel extends StatelessWidget {
                   ' · ${selected.statsLine}',
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 12, color: GameTheme.parchment),
+                  style: GameTheme.hint(color: GameTheme.parchment),
                 ),
                 if (selected.setId != null && selected.setId!.isNotEmpty)
                   Text(
@@ -534,10 +492,7 @@ class CharacterEquipPanel extends StatelessWidget {
                     }(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 if (compare != null) ...[
                   const SizedBox(height: 4),
@@ -546,29 +501,20 @@ class CharacterEquipPanel extends StatelessWidget {
                     '  Armor${GameLogic.formatDelta(compare.defDelta)}'
                     '  STA${GameLogic.formatDelta(compare.vitDelta)}'
                     '${autoWear ? '  UPGRADE' : ''}',
-                    style: GameTheme.body(
-                      size: 12,
-                      color: autoWear
+                    style: GameTheme.hint(color: autoWear
                           ? GameTheme.clear
                           : (compare.powerDelta < 0
                                 ? GameTheme.bloodLit
-                                : GameTheme.parchmentDim),
-                    ),
+                                : GameTheme.parchmentDim)),
                   ),
                   Text(
                     'Score ${GameLogic.formatDelta(compare.powerDelta)}',
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ] else if (selectedWornHere)
                   Text(
                     'Equipped · UNEQUIP below · long-press for tip',
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
               ],
             ),
@@ -579,7 +525,7 @@ class CharacterEquipPanel extends StatelessWidget {
           Text(
             'Tip: tap an empty gear slot to filter BAG to that slot.',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
         SizedBox(height: compact ? 6 : 10),
@@ -621,7 +567,7 @@ class CharacterEquipPanel extends StatelessWidget {
           Text(
             'HERO STATS',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
           Wrap(
@@ -652,7 +598,7 @@ class CharacterEquipPanel extends StatelessWidget {
             Text(
               'iLvl past 100 soft-caps — shown value is the budget size.',
               textAlign: TextAlign.center,
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
         ],
       ],
@@ -847,7 +793,7 @@ class PaperDollSlot extends StatelessWidget {
               bottom: 1,
               child: Text(
                 '${gearDisplayIlvl(item!)}',
-                style: GameTheme.body(size: 9, color: GameTheme.parchment),
+                style: GameTheme.hint(color: GameTheme.parchment),
               ),
             ),
         ],
@@ -868,7 +814,7 @@ class PaperDollSlot extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ),
         ],
@@ -886,7 +832,7 @@ class PaperDollSlot extends StatelessWidget {
         child: Text(
           short.length <= 4 ? short : short.substring(0, 3),
           textAlign: TextAlign.center,
-          style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
       );
     }

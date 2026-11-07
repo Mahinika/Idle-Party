@@ -257,16 +257,13 @@ class _BootIntroScreenState extends State<BootIntroScreen>
                               Text(
                                 beat.title,
                                 textAlign: TextAlign.center,
-                                style: GameTheme.menuTitle(size: 22),
+                                style: GameTheme.title(),
                               ),
                               const SizedBox(height: 12),
                               Text(
                                 beat.body,
                                 textAlign: TextAlign.center,
-                                style: GameTheme.body(
-                                  size: 16,
-                                  color: GameTheme.parchment,
-                                ),
+                                style: GameTheme.readable(color: GameTheme.parchment),
                               ),
                             ],
                           ),
@@ -299,14 +296,11 @@ class _BootIntroScreenState extends State<BootIntroScreen>
                 return Text(
                   'Tap to continue',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 13,
-                    color: GameTheme.parchmentDim.withValues(
+                  style: GameTheme.section(color: GameTheme.parchmentDim.withValues(
                       alpha: dimHint
                           ? 0.35 + _glow.value * 0.25
                           : 0.45 + _glow.value * 0.35,
-                    ),
-                  ),
+                    )),
                 );
               },
             ),

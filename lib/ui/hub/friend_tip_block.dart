@@ -42,13 +42,13 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
       children: [
         Text(
           'Share your code. You get ${FriendReferral.ticketsPerFriend} Ad Tickets per friend, up to ${FriendReferral.maxFriends}.',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          style: GameTheme.section(color: GameTheme.parchmentDim),
         ),
         if (md.friendClaimsPaid > 0) ...[
           const SizedBox(height: 4),
           Text(
             'Friends ${md.friendClaimsPaid} · ${md.friendClaimsPaid * FriendReferral.ticketsPerFriend} Ad Tickets',
-            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+            style: GameTheme.section(color: GameTheme.torchHot),
           ),
         ],
         const SizedBox(height: 6),
@@ -62,14 +62,14 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
           const SizedBox(height: 4),
           Text(
             'Your code $own',
-            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+            style: GameTheme.section(color: GameTheme.torchHot),
           ),
         ],
         const SizedBox(height: 6),
         if (used)
           Text(
             'Friend code already applied.',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           )
         else
           Row(
@@ -107,7 +107,7 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
       textInputAction: TextInputAction.done,
       autocorrect: false,
       enableSuggestions: false,
-      style: GameTheme.body(size: 14, color: GameTheme.parchment),
+      style: GameTheme.readable(color: GameTheme.parchment),
       cursorColor: GameTheme.torchHot,
       onSubmitted: (raw) {
         _code.clear();
@@ -116,7 +116,7 @@ class _FriendTipBlockState extends State<FriendTipBlock> {
       decoration: InputDecoration(
         isDense: true,
         hintText: 'Friend code',
-        hintStyle: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        hintStyle: GameTheme.section(color: GameTheme.parchmentDim),
         filled: true,
         fillColor: GameTheme.panelInset,
         contentPadding: const EdgeInsets.symmetric(

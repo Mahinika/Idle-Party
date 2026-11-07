@@ -46,10 +46,7 @@ class BossIntroBanner extends StatelessWidget {
               softWrap: false,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: GameTheme.pixel(
-                size: GameTheme.hudPixelComfort,
-                color: GameTheme.torchHot,
-              ),
+              style: GameTheme.combat(comfort: true, color: GameTheme.torchHot),
             ),
           ),
         ),
@@ -146,14 +143,11 @@ class TargetCornerHud extends StatelessWidget {
                 maxLines: 1,
                 softWrap: false,
                 overflow: TextOverflow.ellipsis,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: GameTheme.clear,
-                ),
+                style: GameTheme.combat(color: GameTheme.clear),
               ),
               Text(
                 _stairsHint(world),
-                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             ],
           ),
@@ -187,7 +181,7 @@ class TargetCornerHud extends StatelessWidget {
         : (role == 'ELITE' ? GameTheme.torch : GameTheme.parchment);
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 160.0),
+      constraints: const BoxConstraints(maxWidth: 240.0),
       child: Container(
         padding: const EdgeInsets.fromLTRB(6, 2, 6, 3),
         decoration: MenuChrome.hudWell(
@@ -201,17 +195,13 @@ class TargetCornerHud extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
+            Tooltip(
+              message: role.isEmpty ? label : '$role · $label',
               child: Text(
                 role.isEmpty ? label : '$role · $label',
                 maxLines: 1,
-                softWrap: false,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: titleColor,
-                ),
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.combat(color: titleColor),
               ),
             ),
             if (enemy != null) ...[
@@ -248,18 +238,12 @@ class TargetCornerHud extends StatelessWidget {
                               SpatialCombat.compactNumbers
                                   ? SpatialCombat.compactCount(enemy.hp)
                                   : '${enemy.hp}',
-                              style: GameTheme.body(
-                                size: 11,
-                                color: GameTheme.parchmentDim,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.parchmentDim),
                             ),
                             const Spacer(),
                             Text(
                               '${(hpFrac * 100).round()}%',
-                              style: GameTheme.body(
-                                size: 11,
-                                color: GameTheme.parchmentDim,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.parchmentDim),
                             ),
                           ],
                         ),
@@ -272,10 +256,7 @@ class TargetCornerHud extends StatelessWidget {
                 Text(
                   'BOMB · ${formatCombatSeconds(enemy.livingBombTimer)}',
                   maxLines: 1,
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
-                    color: GameTheme.torchHot,
-                  ),
+                  style: GameTheme.combat(color: GameTheme.torchHot),
                 ),
             ] else
               Text(
@@ -284,19 +265,19 @@ class TargetCornerHud extends StatelessWidget {
                         ? 'End → hub'
                         : 'Retry / Hub')
                     : _stairsHint(world),
-                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
                       if (_gateLocked(world))
               Text(
                 GameLogic.plainPlayerChrome(state)
                     ? 'Finish this room to go deeper'
                     : 'Clear this room to open the door',
-                style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             if (_hasDormantAhead(world))
               Text(
                 'More rooms ahead',
-                style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
           ],
         ),

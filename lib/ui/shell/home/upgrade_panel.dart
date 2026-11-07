@@ -140,7 +140,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
         for (final hero in state.heroes)
           Text(
             '${hero.name}  Lv${hero.level}',
-            style: GameTheme.body(size: 13, color: GameTheme.parchment),
+            style: GameTheme.section(color: GameTheme.parchment),
           ),
         ShellLayout.gap(8),
         ShellLayout.hint(

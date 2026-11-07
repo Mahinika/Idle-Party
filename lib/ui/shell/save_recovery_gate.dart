@@ -50,19 +50,19 @@ class SaveRecoveryGate extends StatelessWidget {
               Text(
                 'SAVE RECOVERY',
                 textAlign: TextAlign.center,
-                style: GameTheme.menuTitle(size: 22),
+                style: GameTheme.title(),
               ),
               const SizedBox(height: 16),
               Text(
                 line,
                 textAlign: TextAlign.center,
-                style: GameTheme.body(size: 16, color: GameTheme.parchment),
+                style: GameTheme.readable(color: GameTheme.parchment),
               ),
               const SizedBox(height: 12),
               Text(
                 'Play and purchases stay off so nothing from this sitting is lost.',
                 textAlign: TextAlign.center,
-                style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+                style: GameTheme.readable(color: GameTheme.parchmentDim),
               ),
               const SizedBox(height: 24),
               if (onExport == null)
@@ -75,10 +75,7 @@ class SaveRecoveryGate extends StatelessWidget {
                 Text(
                   'Retry cannot choose an owner for this copy.',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 14,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.readable(color: GameTheme.parchmentDim),
                 ),
                 const SizedBox(height: 12),
                 GameButton(

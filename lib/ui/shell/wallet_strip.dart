@@ -36,40 +36,57 @@ class WalletStrip extends StatelessWidget {
     // Match bottom-tab / button weight — thin body next to IDLE PARTY reads
     // as "pyttelite" on phone even when the logical size is fine.
     final gap = dense ? 6.0 : 8.0;
-    final iconSize = dense ? 20.0 : 24.0;
-    final textSize = dense ? 18.0 : 22.0;
+    final iconSize = dense ? GameTheme.iconList : GameTheme.iconNav;
+    final textSize = dense ? GameTheme.typeButtonDense : GameTheme.typeButton;
     final goldLabel = 'Gold ${formatGold(gold)}';
     final label = showEssence
         ? '$goldLabel, Essence ${formatCount(essence)}'
         : goldLabel;
+    Widget goldChip({required bool flex}) {
+      final chip = _WalletChip(
+        icon: UiIcon.gold,
+        label: formatGold(gold),
+        suffix: goldRateSuffix,
+        onTap: onGoldRateTap,
+        tone: GameTheme.torchHot,
+        iconSize: iconSize,
+        textSize: textSize,
+        dense: dense,
+        bounded: flex,
+      );
+      return flex ? Flexible(child: chip) : chip;
+    }
+
+    Widget essenceChip({required bool flex}) {
+      final chip = _WalletChip(
+        icon: UiIcon.essence,
+        label: formatCount(essence),
+        tone: GameTheme.borderLit,
+        iconSize: iconSize,
+        textSize: textSize,
+        dense: dense,
+        bounded: flex,
+      );
+      return flex ? Flexible(child: chip) : chip;
+    }
+
     return Semantics(
       container: true,
       label: label,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _WalletChip(
-            icon: UiIcon.gold,
-            label: formatGold(gold),
-            suffix: goldRateSuffix,
-            onTap: onGoldRateTap,
-            tone: GameTheme.torchHot,
-            iconSize: iconSize,
-            textSize: textSize,
-            dense: dense,
-          ),
-          if (showEssence) ...[
-            SizedBox(width: gap),
-            _WalletChip(
-              icon: UiIcon.essence,
-              label: formatCount(essence),
-              tone: GameTheme.borderLit,
-              iconSize: iconSize,
-              textSize: textSize,
-              dense: dense,
-            ),
-          ],
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final flex = constraints.maxWidth.isFinite;
+          return Row(
+            mainAxisSize: flex ? MainAxisSize.max : MainAxisSize.min,
+            children: [
+              goldChip(flex: flex),
+              if (showEssence) ...[
+                SizedBox(width: gap),
+                essenceChip(flex: flex),
+              ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -83,6 +100,7 @@ class _WalletChip extends StatelessWidget {
     required this.iconSize,
     required this.textSize,
     required this.dense,
+    required this.bounded,
     this.suffix,
     this.onTap,
   });
@@ -93,8 +111,32 @@ class _WalletChip extends StatelessWidget {
   final double iconSize;
   final double textSize;
   final bool dense;
+  final bool bounded;
   final String? suffix;
   final VoidCallback? onTap;
+
+  Widget _amount(bool flex) {
+    final column = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GameTheme.button(size: textSize, color: tone),
+        ),
+        if (suffix != null && suffix!.isNotEmpty)
+          Text(
+            suffix!,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.hint(color: GameTheme.mossLit),
+          ),
+      ],
+    );
+    return flex ? Flexible(child: column) : column;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,28 +147,11 @@ class _WalletChip extends StatelessWidget {
       ),
       decoration: MenuChrome.cardBox(inset: true),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: bounded ? MainAxisSize.max : MainAxisSize.min,
         children: [
           GameIcon.asset(icon, size: iconSize),
           SizedBox(width: dense ? 5 : 6),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: GameTheme.button(size: textSize, color: tone),
-              ),
-              if (suffix != null && suffix!.isNotEmpty)
-                Text(
-                  suffix!,
-                  style: GameTheme.body(
-                    size: dense ? 9 : 10,
-                    color: GameTheme.mossLit,
-                  ),
-                ),
-            ],
-          ),
+          _amount(bounded),
         ],
       ),
     );

@@ -190,7 +190,7 @@ class _HomeShellState extends State<HomeShell> {
                 text,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                style: GameTheme.hint(color: GameTheme.torchHot),
               ),
             ),
           if (showClaim) ...[
@@ -227,10 +227,7 @@ class _HomeShellState extends State<HomeShell> {
                 child: Center(
                   child: Text(
                     'CLAIM',
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
-                      color: GameTheme.clear,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.clear),
                   ),
                 ),
               ),
@@ -266,10 +263,7 @@ class _HomeShellState extends State<HomeShell> {
                     const SizedBox(width: 6),
                     Text(
                       'BACK',
-                      style: GameTheme.menuTitle(
-                        size: 12,
-                        color: GameTheme.parchment,
-                      ),
+                      style: GameTheme.readable(color: GameTheme.parchment),
                     ),
                   ],
                 ),

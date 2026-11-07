@@ -62,7 +62,7 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
           'Play Games:\n${director.playGamesConflictHint(cloud)}\n\n'
           'Which save should we keep?\n\n'
           'Paid unlocks on either save are kept. Gold and materials stay with the file you pick.',
-          style: GameTheme.body(size: 14, color: GameTheme.parchment),
+          style: GameTheme.readable(color: GameTheme.parchment),
         ),
         actions: [
           MenuChrome.dialogCancel(
@@ -109,7 +109,7 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
           content: Text(
             'This device:\n${director.playGamesConflictHint(director.state)}\n\n'
             'Play Games:\n${director.playGamesConflictHint(cloud)}',
-            style: GameTheme.body(size: 14, color: GameTheme.parchment),
+            style: GameTheme.readable(color: GameTheme.parchment),
           ),
           actions: [
             MenuChrome.dialogCancel(
@@ -238,7 +238,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         children: [
           Text(
             'Season $month',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
           Text(
@@ -246,7 +246,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
               playGamesSupported: playSupported,
               monthKey: month,
             ),
-            style: GameTheme.body(size: 13, color: GameTheme.parchment),
+            style: GameTheme.section(color: GameTheme.parchment),
           ),
           if (playSupported && !signedInLive) ...[
             const SizedBox(height: 8),
@@ -258,7 +258,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
             const SizedBox(height: 6),
             Text(
               'Cloud save stays under SETTINGS.',
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ],
         ],
@@ -310,7 +310,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
       children: [
         Text(
           'Season $month',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         if (partyLive)
@@ -318,7 +318,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               PlayLeaderboardIds.monthBoardsPendingMessage,
-              style: GameTheme.body(size: 13, color: GameTheme.parchment),
+              style: GameTheme.section(color: GameTheme.parchment),
             ),
           ),
         Wrap(
@@ -353,14 +353,14 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         const SizedBox(height: 8),
         Text(
           yoursLine,
-          style: GameTheme.body(size: 13, color: GameTheme.parchment),
+          style: GameTheme.section(color: GameTheme.parchment),
         ),
         if (kind == PlayBoardKind.partyPower) ...[
           const SizedBox(height: 4),
           Text(
             'Levels, worn gear, Ascend, blessings, Apex vault/worn, '
             'and an endgame unlock bonus.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
         const SizedBox(height: 6),
@@ -369,24 +369,24 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
         else if (kind == PlayBoardKind.partyPower && !partyBoardReady)
           Text(
             'A public party list is not on Play yet.',
-            style: GameTheme.body(size: 13, color: GameTheme.parchment),
+            style: GameTheme.section(color: GameTheme.parchment),
           )
         else if (_loading && (_rows == null || _rows!.isEmpty))
           Text(
             'Loading ranks…',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           )
         else if (_failed && (_rows == null || _rows!.isEmpty))
           Text(
             'Could not load ranks.',
-            style: GameTheme.body(size: 13, color: GameTheme.parchment),
+            style: GameTheme.section(color: GameTheme.parchment),
           )
         else if (_rows != null && _rows!.isEmpty)
           Text(
             kind == PlayBoardKind.partyPower
                 ? 'No party scores yet.'
                 : 'No scores yet this season.',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           )
         else if (_rows != null)
           ..._rankRows(_rows!),
@@ -395,7 +395,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               'Updating…',
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ),
         if (!preview &&
@@ -415,7 +415,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
               : kind == PlayBoardKind.partyPower && !partyBoardReady
               ? 'Your party power stays on this device.'
               : 'A new record sends itself while you are signed in. Cloud save: SETTINGS.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         if (!preview &&
             kind != PlayBoardKind.partyPower &&
@@ -423,7 +423,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
           const SizedBox(height: 4),
           Text(
             PlayLeaderboardIds.reusedBoardNotice(month)!,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
       ],
@@ -452,7 +452,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
             child: Text(
               '·',
               textAlign: TextAlign.center,
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ),
         );
@@ -469,7 +469,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
                 width: 36,
                 child: Text(
                   '#${row.rank}',
-                  style: GameTheme.body(size: 13, color: tone),
+                  style: GameTheme.section(color: tone),
                 ),
               ),
               Expanded(
@@ -477,7 +477,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
                   row.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 13, color: tone),
+                  style: GameTheme.section(color: tone),
                 ),
               ),
               const SizedBox(width: 6),
@@ -487,7 +487,7 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.end,
-                  style: GameTheme.body(size: 12, color: tone),
+                  style: GameTheme.hint(color: tone),
                 ),
               ),
             ],
@@ -538,7 +538,7 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
       children: [
         Text(
           'PLAY GAMES',
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+          style: GameTheme.section(color: GameTheme.torchHot),
         ),
         const SizedBox(height: 4),
         Text(
@@ -546,13 +546,13 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
               ? 'Season $month · cloud backup. Boards: KEY, Gauntlet, Ranked GR '
                     '(Oct reuses Aug KEY/Gauntlet + Sep GR Console ids).'
               : 'Season $month · cloud backup.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         if (lastBackup != null) ...[
           const SizedBox(height: 4),
           Text(
             'Last cloud backup · ${lastBackup.toLocal()}',
-            style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+            style: GameTheme.hint(color: GameTheme.mossLit),
           ),
         ],
         const SizedBox(height: 8),

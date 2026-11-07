@@ -383,7 +383,7 @@ class _InventoryDockState extends State<InventoryDock>
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               '${entry.value.join(', ')} ${entry.key}.',
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ),
       ],
@@ -426,20 +426,14 @@ class _InventoryDockState extends State<InventoryDock>
                     : nearFull
                     ? 'NEARLY FULL'
                     : 'CAPACITY',
-                style: GameTheme.body(
-                  size: 14,
-                  color: nearFull
+                style: GameTheme.readable(color: nearFull
                       ? GameTheme.accentWarn
-                      : GameTheme.parchmentDim,
-                ),
+                      : GameTheme.parchmentDim),
               ),
             ),
             Text(
               '$filled / $cap',
-              style: GameTheme.body(
-                size: 15,
-                color: nearFull ? GameTheme.accentWarn : GameTheme.parchment,
-              ),
+              style: GameTheme.readable(color: nearFull ? GameTheme.accentWarn : GameTheme.parchment),
             ),
           ],
         ),
@@ -508,7 +502,7 @@ class _InventoryDockState extends State<InventoryDock>
                 filteredSlots.isEmpty
                     ? 'none in bag'
                     : '${filteredSlots.length} in bag',
-                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
               MenuChrome.chip(label: 'ALL SLOTS', onTap: onClearBagSlotFilter),
             ],
@@ -542,10 +536,7 @@ class _InventoryDockState extends State<InventoryDock>
                         ? 'No pieces in this filter.'
                         : 'Bag empty — farm for loot or try GOLD → MARKET.',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.section(color: GameTheme.parchmentDim),
                   ),
                 )
               : LayoutBuilder(
@@ -669,24 +660,18 @@ class _InventoryDockState extends State<InventoryDock>
                     selected.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 14,
-                      color: itemRarityColor(selected.rarity),
-                    ),
+                    style: GameTheme.readable(color: itemRarityColor(selected.rarity)),
                   ),
                   Text(
                     selected.statsLine,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                    style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Equip on:',
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                   const SizedBox(height: 3),
                   _equipHeroChipsFor(selected),
@@ -701,14 +686,14 @@ class _InventoryDockState extends State<InventoryDock>
                 : 'Tap item to select · long-press for tip.',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         if (state.gearStash.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 6),
             child: Text(
               'Bag empty — clear floors for loot, or open GOLD → MARKET.',
-              style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+              style: GameTheme.hint(color: GameTheme.mossLit),
             ),
           ),
       ],
@@ -778,13 +763,13 @@ class _InventoryDockState extends State<InventoryDock>
           Text(
             'Two bag items, same slot. MERGE spends them for one stronger piece. Worn gear stays.'
             '${state.metaDepth.combinatorLuck > 0 ? ' Charm luck ${state.metaDepth.combinatorLuck}/5 · −${state.metaDepth.combinatorLuck * 3}g on MERGE.' : ''}',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           ),
           if (slotLabel != null) ...[
             const SizedBox(height: 4),
             Text(
               'Slot filter: $slotLabel',
-              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+              style: GameTheme.hint(color: GameTheme.torchHot),
             ),
           ],
           const SizedBox(height: 8),
@@ -799,7 +784,7 @@ class _InventoryDockState extends State<InventoryDock>
             child: Text(
               '+',
               textAlign: TextAlign.center,
-              style: GameTheme.body(size: 16, color: GameTheme.parchmentDim),
+              style: GameTheme.readable(color: GameTheme.parchmentDim),
             ),
           ),
           _CombineSlot(
@@ -829,12 +814,9 @@ class _InventoryDockState extends State<InventoryDock>
                               '  SCORE $score$jump';
                         }(),
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: preview == null
+                  style: GameTheme.hint(color: preview == null
                         ? GameTheme.parchmentDim
-                        : GameTheme.torchHot,
-                  ),
+                        : GameTheme.torchHot),
                 ),
                 if (preview != null) ...[
                   const SizedBox(height: 4),
@@ -843,7 +825,7 @@ class _InventoryDockState extends State<InventoryDock>
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(size: 12, color: GameTheme.parchment),
+                    style: GameTheme.hint(color: GameTheme.parchment),
                   ),
                   if (primary != null && secondary != null) ...[
                     const SizedBox(height: 4),
@@ -853,17 +835,14 @@ class _InventoryDockState extends State<InventoryDock>
                       '${GameLogic.rarityNames[secondary.rarity]} i${secondary.effectiveItemLevel}'
                       ' → ${GameLogic.rarityNames[preview.rarity]} i${preview.effectiveItemLevel}',
                       textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.torchHot),
                     ),
                   ],
                   if (preview.effectLabel.isNotEmpty)
                     Text(
                       preview.effectLabel,
                       textAlign: TextAlign.center,
-                      style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+                      style: GameTheme.hint(color: GameTheme.mossLit),
                     ),
                 ],
               ],
@@ -873,7 +852,7 @@ class _InventoryDockState extends State<InventoryDock>
           Text(
             status,
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 8),
           GameButton(

@@ -84,10 +84,10 @@ class WhatsNewOverlay extends StatelessWidget {
           children: [
             Text(
               '•  ',
-              style: GameTheme.body(size: 16, color: GameTheme.torch),
+              style: GameTheme.readable(color: GameTheme.torch),
             ),
             Expanded(
-              child: Text(entry, style: GameTheme.body(size: 15)),
+              child: Text(entry, style: GameTheme.readable()),
             ),
           ],
         ),
@@ -103,7 +103,7 @@ class WhatsNewOverlay extends StatelessWidget {
           children: [
             Text(
               title,
-              style: GameTheme.menuTitle(size: 13, color: GameTheme.torch),
+              style: GameTheme.readable(color: GameTheme.torch),
             ),
             const SizedBox(height: 4),
             for (final entry in lines) noteLine(entry),
@@ -119,11 +119,11 @@ class WhatsNewOverlay extends StatelessWidget {
         children: [
           Text(
             release.versionLine,
-            style: GameTheme.menuTitle(size: 14, color: GameTheme.torch),
+            style: GameTheme.readable(color: GameTheme.torch),
           ),
           if (summary != null && summary.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(summary, style: GameTheme.body(size: 15)),
+            Text(summary, style: GameTheme.readable()),
           ],
           if (release.notes.isNotEmpty) ...[
             const SizedBox(height: 6),
@@ -151,7 +151,7 @@ class WhatsNewOverlay extends StatelessWidget {
         Text(
           'PATCH NOTES',
           textAlign: TextAlign.center,
-          style: GameTheme.menuTitle(size: 20),
+          style: GameTheme.title(),
         ),
         ShellLayout.gap(10),
         Expanded(

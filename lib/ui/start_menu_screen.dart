@@ -154,7 +154,6 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final tight = constraints.maxHeight < 580;
-                    final titleSize = tight ? 22.0 : 28.0;
 
                     return Padding(
                       padding: EdgeInsets.fromLTRB(
@@ -174,10 +173,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               child: Text(
                                 'IDLE PARTY',
                                 textAlign: TextAlign.center,
-                                style: GameTheme.pixel(
-                                  size: titleSize,
-                                  color: GameTheme.torchHot,
-                                ),
+                                style: GameTheme.hint(color: GameTheme.torchHot),
                               ),
                             ),
                           ),
@@ -187,10 +183,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                             child: Text(
                               StoryLore.introTagline,
                               textAlign: TextAlign.center,
-                              style: GameTheme.body(
-                                size: tight ? 14 : 16,
-                                color: GameTheme.parchment,
-                              ),
+                              style: GameTheme.readable(color: GameTheme.parchment),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -199,10 +192,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                             child: Text(
                               StoryLore.introSubline,
                               textAlign: TextAlign.center,
-                              style: GameTheme.body(
-                                size: 13,
-                                color: GameTheme.parchmentDim,
-                              ),
+                              style: GameTheme.section(color: GameTheme.parchmentDim),
                             ),
                           ),
                           if (!widget.canContinue &&
@@ -213,10 +203,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                               child: Text(
                                 'Play Games backup found on this account.',
                                 textAlign: TextAlign.center,
-                                style: GameTheme.body(
-                                  size: 13,
-                                  color: GameTheme.mossLit,
-                                ),
+                                style: GameTheme.section(color: GameTheme.mossLit),
                               ),
                             ),
                           ],
@@ -243,10 +230,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                       textAlign: TextAlign.center,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: GameTheme.body(
-                                        size: 13,
-                                        color: GameTheme.torchHot,
-                                      ),
+                                      style: GameTheme.section(color: GameTheme.torchHot),
                                     ),
                                   ],
                                   const SizedBox(height: 8),
@@ -340,12 +324,9 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                     MetaSystems.currentVersion,
                                   ),
                                   textAlign: TextAlign.center,
-                                  style: GameTheme.body(
-                                    size: 11,
-                                    color: GameTheme.parchmentDim.withValues(
+                                  style: GameTheme.hint(color: GameTheme.parchmentDim.withValues(
                                       alpha: 0.7,
-                                    ),
-                                  ),
+                                    )),
                                 ),
                               ],
                             ),
@@ -395,11 +376,11 @@ class SaveSlotPicker extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('CHOOSE SAVE', style: GameTheme.menuTitle(size: 18)),
+              Text('CHOOSE SAVE', style: GameTheme.title()),
               const SizedBox(height: 4),
               Text(
                 'Five files on this phone. Tap one to play.',
-                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
               const SizedBox(height: 8),
               Container(
@@ -494,31 +475,22 @@ class _SaveSlotRow extends StatelessWidget {
                         children: [
                           Text(
                             slot.label,
-                            style: GameTheme.pixel(
-                              size: 11,
-                              color: GameTheme.torchHot,
-                            ),
+                            style: GameTheme.hint(color: GameTheme.torchHot),
                           ),
                           Text(
                             headline,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GameTheme.body(
-                              size: 14,
-                              color: slot.occupied
+                            style: GameTheme.readable(color: slot.occupied
                                   ? GameTheme.parchment
-                                  : GameTheme.parchmentDim,
-                            ),
+                                  : GameTheme.parchmentDim),
                           ),
                           if (slot.detail != null)
                             Text(
                               slot.detail!,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: GameTheme.body(
-                                size: 12,
-                                color: GameTheme.parchmentDim,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.parchmentDim),
                             ),
                         ],
                       ),

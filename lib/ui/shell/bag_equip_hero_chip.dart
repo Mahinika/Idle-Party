@@ -72,16 +72,13 @@ class _EquipHeroChip extends StatelessWidget {
                 children: [
                   Text(
                     hero.displayRoleLabel(plainEnglish: plainEnglish),
-                    style: GameTheme.body(size: 11, color: GameTheme.parchment),
+                    style: GameTheme.hint(color: GameTheme.parchment),
                   ),
                   if (isBest) ...[
                     const SizedBox(width: 3),
                     Text(
                       'BEST',
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.torchHot),
                     ),
                   ],
                 ],
@@ -92,26 +89,23 @@ class _EquipHeroChip extends StatelessWidget {
                   reject ?? 'Cannot use',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 10, color: GameTheme.accentWarn),
+                  style: GameTheme.hint(color: GameTheme.accentWarn),
                 )
               else ...[
                 Text(
                   'AP${GameLogic.formatDelta(cmp.atkDelta)} '
                   'Armor${GameLogic.formatDelta(cmp.defDelta)} '
                   'STA${GameLogic.formatDelta(cmp.vitDelta)}',
-                  style: GameTheme.body(size: 11, color: deltaColor),
+                  style: GameTheme.hint(color: deltaColor),
                 ),
                 Text(
                   'Score ${GameLogic.formatDelta(cmp.powerDelta)}',
-                  style: GameTheme.body(
-                    size: 10,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
                 if (plannedUpgrade)
                   Text(
                     'UPGRADE',
-                    style: GameTheme.body(size: 10, color: GameTheme.clear),
+                    style: GameTheme.hint(color: GameTheme.clear),
                   ),
               ],
             ],

@@ -38,14 +38,14 @@ class AchievementsOverlay extends StatelessWidget {
         Text(
           '${state.willRankTitle}  ·  score ${state.collectionScore}',
           textAlign: TextAlign.center,
-          style: GameTheme.menuTitle(size: 14, color: GameTheme.torchHot),
+          style: GameTheme.readable(color: GameTheme.torchHot),
         ),
         if (state.metaDepth.titles.isNotEmpty) ...[
           const SizedBox(height: 6),
           Text(
             'Titles',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 4),
           Wrap(
@@ -69,7 +69,7 @@ class AchievementsOverlay extends StatelessWidget {
         Text(
           '${unlocked.length}/${AchievementCatalog.all.length} UNLOCKED',
           textAlign: TextAlign.center,
-          style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          style: GameTheme.readable(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 10),
         Expanded(
@@ -110,22 +110,16 @@ class AchievementsOverlay extends StatelessWidget {
                                 children: [
                                   Text(
                                     hide ? 'Hidden' : def.title,
-                                    style: GameTheme.body(
-                                      size: 15,
-                                      color: done
+                                    style: GameTheme.readable(color: done
                                           ? GameTheme.torchHot
-                                          : GameTheme.parchment,
-                                    ),
+                                          : GameTheme.parchment),
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
                                     hide
                                         ? 'Hidden achievement'
                                         : def.description,
-                                    style: GameTheme.body(
-                                      size: 14,
-                                      color: GameTheme.parchmentDim,
-                                    ),
+                                    style: GameTheme.readable(color: GameTheme.parchmentDim),
                                   ),
                                 ],
                               ),
@@ -136,12 +130,9 @@ class AchievementsOverlay extends StatelessWidget {
                                   : done
                                   ? 'AWARDED'
                                   : '+${def.essenceReward}e',
-                              style: GameTheme.body(
-                                size: 11,
-                                color: done
+                              style: GameTheme.hint(color: done
                                     ? GameTheme.clear
-                                    : GameTheme.parchmentDim,
-                              ),
+                                    : GameTheme.parchmentDim),
                             ),
                           ],
                         ),

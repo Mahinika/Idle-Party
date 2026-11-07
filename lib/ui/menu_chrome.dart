@@ -137,6 +137,32 @@ abstract final class MenuChrome {
     );
   }
 
+  /// Portrait well shared by the GEAR doll and the CAMP party.
+  static BoxDecoration dollWellDecoration() {
+    return BoxDecoration(
+      gradient: const RadialGradient(
+        center: Alignment(0, 0.55),
+        radius: 0.85,
+        colors: [
+          GameTheme.dollGlow,
+          GameTheme.dollBackdropTop,
+          GameTheme.dollBackdropBottom,
+        ],
+        stops: [0.0, 0.45, 1.0],
+      ),
+      borderRadius: BorderRadius.circular(GameTheme.radiusMd),
+      border: Border.all(
+        color: GameTheme.borderLit.withValues(alpha: 0.55),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: GameTheme.torch.withValues(alpha: 0.12),
+          blurRadius: 16,
+        ),
+      ],
+    );
+  }
+
   static Widget sheetHandle() {
     return Center(
       child: Container(
@@ -157,10 +183,7 @@ abstract final class MenuChrome {
       padding: const EdgeInsets.only(left: 6, bottom: 6, top: 2),
       child: Text(
         text.toUpperCase(),
-        style: GameTheme.body(
-          size: 13,
-          color: GameTheme.scopeAccount.withValues(alpha: 0.9),
-        ),
+        style: GameTheme.section(color: GameTheme.scopeAccount.withValues(alpha: 0.9)),
       ),
     );
   }
@@ -181,10 +204,7 @@ abstract final class MenuChrome {
       padding: const EdgeInsets.only(left: 6, bottom: 6, top: 2),
       child: Text(
         title.toUpperCase(),
-        style: GameTheme.body(
-          size: 13,
-          color: tone.withValues(alpha: 0.9),
-        ),
+        style: GameTheme.section(color: tone.withValues(alpha: 0.9)),
       ),
     );
   }
@@ -218,7 +238,13 @@ abstract final class MenuChrome {
                 height: size,
                 alignment: Alignment.center,
                 decoration: cardBox(inset: true),
-                child: Text(sign, style: GameTheme.pixel(size: 10)),
+                child: GameIcon.glyph(
+                  sign == '-' ? UiGlyph.remove : UiGlyph.add,
+                  size: GameTheme.iconList,
+                  color: enabled
+                      ? GameTheme.parchment
+                      : GameTheme.parchmentDim,
+                ),
               ),
             ),
           ),
@@ -262,17 +288,14 @@ abstract final class MenuChrome {
           onTap: onSelect,
           excludeSemantics: true,
           child: scope == null
-              ? Text(label)
+              ? Text(label, style: GameTheme.readable())
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(label),
+                    Text(label, style: GameTheme.readable()),
                     Text(
                       scope,
-                      style: GameTheme.pixel(
-                        size: 8,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(),
                     ),
                   ],
                 ),
@@ -294,7 +317,6 @@ abstract final class MenuChrome {
       builder: (context, constraints) {
         // Always scroll on the shipping phone chrome so labels stay readable.
         final scroll = scrollable ?? true;
-        const labelSize = 13.0;
         return Material(
           color: Colors.transparent,
           child: Container(
@@ -313,8 +335,8 @@ abstract final class MenuChrome {
               labelPadding: EdgeInsets.symmetric(
                 horizontal: scroll ? 10 : 2,
               ),
-              labelStyle: GameTheme.body(size: labelSize),
-              unselectedLabelStyle: GameTheme.body(size: labelSize),
+              labelStyle: GameTheme.readable(),
+              unselectedLabelStyle: GameTheme.readable(),
               indicatorSize: TabBarIndicatorSize.tab,
               indicator: BoxDecoration(
                 color: GameTheme.torch.withValues(alpha: 0.18),
@@ -346,9 +368,13 @@ abstract final class MenuChrome {
     if (icons != null) {
       assert(icons.length == labels.length);
     }
-    final iconSize = dense ? 14.0 : 16.0;
-    return Container(
-      height: dense ? 36 : GameTheme.minTouch,
+    final iconSize = dense ? GameTheme.iconList : GameTheme.iconNav;
+    return Builder(
+      builder: (context) {
+        final scale = MediaQuery.textScalerOf(context).scale(1);
+        final height = GameTheme.minTouch * (scale < 1 ? 1.0 : scale);
+        return Container(
+      height: height,
       decoration: BoxDecoration(
         color: GameTheme.panelInset.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(GameTheme.radiusSm),
@@ -383,12 +409,9 @@ abstract final class MenuChrome {
                         child: icons == null
                             ? Text(
                                 labels[i],
-                                style: GameTheme.pixel(
-                                  size: GameTheme.hudPixel,
-                                  color: i == selectedIndex
+                                style: GameTheme.readable(color: i == selectedIndex
                                       ? GameTheme.torchHot
-                                      : GameTheme.parchmentDim,
-                                ),
+                                      : GameTheme.parchmentDim),
                               )
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -397,12 +420,9 @@ abstract final class MenuChrome {
                                   const SizedBox(width: 4),
                                   Text(
                                     labels[i],
-                                    style: GameTheme.pixel(
-                                      size: GameTheme.hudPixel,
-                                      color: i == selectedIndex
+                                    style: GameTheme.readable(color: i == selectedIndex
                                           ? GameTheme.torchHot
-                                          : GameTheme.parchmentDim,
-                                    ),
+                                          : GameTheme.parchmentDim),
                                   ),
                                 ],
                               ),
@@ -415,6 +435,8 @@ abstract final class MenuChrome {
           ],
         ],
       ),
+    );
+      },
     );
   }
 
@@ -461,14 +483,8 @@ abstract final class MenuChrome {
     VoidCallback? onTap,
     double minWidth = 0,
   }) {
-    final labelStyle = GameTheme.pixel(
-      size: GameTheme.hudPixel,
-      color: stacked ? GameTheme.parchmentDim : (tone ?? GameTheme.torchHot),
-    );
-    final valueStyle = GameTheme.body(
-      size: stacked ? 18 : 14,
-      color: tone ?? GameTheme.torchHot,
-    );
+    final labelStyle = GameTheme.hint(color: stacked ? GameTheme.parchmentDim : (tone ?? GameTheme.torchHot));
+    final valueStyle = GameTheme.readable(color: tone ?? GameTheme.torchHot);
     final parts = <Widget>[
       if (icon != null) ...[
         GameIcon.asset(icon, size: 14),
@@ -529,7 +545,7 @@ abstract final class MenuChrome {
         textAlign: TextAlign.center,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+        style: GameTheme.hint(color: GameTheme.torchHot),
       ),
     );
   }
@@ -554,14 +570,20 @@ abstract final class MenuChrome {
           child: InkWell(
             onTap: onPressed,
             borderRadius: BorderRadius.circular(GameTheme.radiusSm),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: GameTheme.body(
-                  size: 13,
-                  color: enabled ? GameTheme.torchHot : GameTheme.parchmentDim,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: GameTheme.minTouch),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                child: Center(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: GameTheme.readable(
+                      color: enabled
+                          ? GameTheme.torchHot
+                          : GameTheme.parchmentDim,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -576,7 +598,6 @@ abstract final class MenuChrome {
     required String label,
     required String value,
     Color? tone,
-    double size = 15,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -585,15 +606,12 @@ abstract final class MenuChrome {
           Expanded(
             child: Text(
               label,
-              style: GameTheme.body(size: size, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(),
             ),
           ),
           Text(
             value,
-            style: GameTheme.body(
-              size: size + 1,
-              color: tone ?? GameTheme.torchHot,
-            ),
+            style: GameTheme.readable(color: tone ?? GameTheme.torchHot),
           ),
         ],
       ),
@@ -615,6 +633,7 @@ abstract final class MenuChrome {
       return _scrollingDialog(title: title, content: content, actions: actions);
     }
     return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       backgroundColor: sheet,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
@@ -624,9 +643,9 @@ abstract final class MenuChrome {
           width: 1.2,
         ),
       ),
-      title: Text(title, style: GameTheme.menuTitle(size: 17)),
+      title: Text(title, style: GameTheme.title()),
       content: content,
-      actionsAlignment: MainAxisAlignment.spaceBetween,
+      actionsAlignment: MainAxisAlignment.end,
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       actions: actions,
     );
@@ -655,7 +674,7 @@ abstract final class MenuChrome {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(title, style: GameTheme.menuTitle(size: 17)),
+            Text(title, style: GameTheme.title()),
             const SizedBox(height: 12),
             Flexible(
               child: ListView(
@@ -666,7 +685,7 @@ abstract final class MenuChrome {
             ),
             const SizedBox(height: 8),
             OverflowBar(
-              alignment: MainAxisAlignment.spaceBetween,
+              alignment: MainAxisAlignment.end,
               spacing: 8,
               overflowSpacing: 8,
               children: actions,
@@ -868,19 +887,13 @@ class _MenuFoldState extends State<_MenuFold> {
                       children: [
                         Text(
                           widget.title,
-                          style: GameTheme.body(
-                            size: 13,
-                            color: GameTheme.torchHot,
-                          ),
+                          style: GameTheme.section(color: GameTheme.torchHot),
                         ),
                         if (widget.subtitle != null) ...[
                           const SizedBox(height: 2),
                           Text(
                             widget.subtitle!,
-                            style: GameTheme.body(
-                              size: 11,
-                              color: GameTheme.parchmentDim,
-                            ),
+                            style: GameTheme.hint(color: GameTheme.parchmentDim),
                           ),
                         ],
                       ],
@@ -888,10 +901,7 @@ class _MenuFoldState extends State<_MenuFold> {
                   ),
                   Text(
                     _open ? widget.collapseLabel : widget.expandLabel,
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
               ),

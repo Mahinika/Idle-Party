@@ -38,10 +38,7 @@ class LoadingSplash extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     'Loading…',
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.section(color: GameTheme.parchmentDim),
                   ),
                 ],
               ),

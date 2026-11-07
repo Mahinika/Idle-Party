@@ -57,7 +57,7 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
       backgroundColor: GameTheme.sheet,
       title: Text(
         'REDEEM CODE',
-        style: GameTheme.body(size: 16, color: GameTheme.parchment),
+        style: GameTheme.readable(color: GameTheme.parchment),
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -67,7 +67,7 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
             Text(
               'Try FOREVERSCROLLS for all forever scrolls. '
               'Already owned forever scrolls will not burn the code.',
-              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+              style: GameTheme.section(color: GameTheme.parchmentDim),
             ),
             const SizedBox(height: 10),
             TextField(
@@ -77,15 +77,12 @@ class _RedeemCouponDialogState extends State<_RedeemCouponDialog> {
               textInputAction: TextInputAction.done,
               autocorrect: false,
               enableSuggestions: false,
-              style: GameTheme.body(size: 15, color: GameTheme.parchment),
+              style: GameTheme.readable(color: GameTheme.parchment),
               cursorColor: GameTheme.torchHot,
               onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
                 hintText: 'Enter code',
-                hintStyle: GameTheme.body(
-                  size: 14,
-                  color: GameTheme.parchmentDim,
-                ),
+                hintStyle: GameTheme.readable(color: GameTheme.parchmentDim),
                 filled: true,
                 fillColor: GameTheme.panelInset,
                 contentPadding: const EdgeInsets.symmetric(

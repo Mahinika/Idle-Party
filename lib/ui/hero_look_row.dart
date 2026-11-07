@@ -42,10 +42,7 @@ class HeroLookRow extends StatelessWidget {
         Text(
           title ?? 'LOOK',
           textAlign: TextAlign.center,
-          style: GameTheme.body(
-            size: compact ? 11 : 12,
-            color: GameTheme.parchmentDim,
-          ),
+          style: GameTheme.readable(color: GameTheme.parchmentDim),
         ),
         SizedBox(height: compact ? 6 : 8),
         if (columns > 0)
@@ -101,10 +98,7 @@ class HeroLookRow extends StatelessWidget {
           Text(
             hint!,
             textAlign: TextAlign.center,
-            style: GameTheme.body(
-              size: compact ? 11 : 12,
-              color: GameTheme.parchmentDim,
-            ),
+            style: GameTheme.readable(color: GameTheme.parchmentDim),
           ),
         ],
       ],
@@ -144,17 +138,16 @@ class _RaceCell extends StatelessWidget {
               children: [
                 if (doll != null)
                   HeroDollSprite(hero: doll!, size: dollSize),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
+                SizedBox(
+                  width: constraints.maxWidth,
                   child: Text(
                     label,
                     maxLines: 1,
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
-                      color: selected
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: GameTheme.hint(color: selected
                           ? GameTheme.torchHot
-                          : GameTheme.parchmentDim,
-                    ),
+                          : GameTheme.parchmentDim),
                   ),
                 ),
               ],

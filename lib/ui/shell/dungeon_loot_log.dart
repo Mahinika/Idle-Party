@@ -26,10 +26,7 @@ class DungeonLootLog extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style:
-                      GameTheme.body(
-                        size: 15,
-                        color: _color(i, lines.length),
-                      ).copyWith(
+                      GameTheme.readable(color: _color(i, lines.length)).copyWith(
                         shadows: const [
                           Shadow(
                             color: GameTheme.lootInkShadow,

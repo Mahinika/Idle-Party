@@ -213,7 +213,7 @@ Helpers: `sectionLabelScoped(title, scope: …)` tints the header. Plain `sectio
 
 **Surfaces:** `MenuChrome.panel`, `scrim`, `cardBox`, `listCard`, `hubPanel` (hub banners), `hudWell` (party / target HUD), `sheetRadius`  
 **Radii:** `GameTheme.radiusSm` (8) / `radiusMd` (12) / `radiusLg` (18) / `radiusHud` (4)  
-**Type:** `menuTitle` 18 (Cinzel) · `body` 17 (VT323) · `button` 20 · `sectionLabel` / `sectionLabelScoped` · `pixel` (HUD/tags only, never under `hudPixel` 9). In-game text scale multiplies the phone’s own scale (`composeTextScaler`, clamped 0.80–1.40). Do not replace the OS scaler.  
+**Type:** `title` 18 (Cinzel) · `section` 13 · `readable` 14 · `hint` 12 (VT323) · `button` 19 / dense 15 · `combat` Press Start 9 (`hudPixelComfort` 11 only for a louder combat mark). Menus do not pass a free size. World-space floater labels in the dungeon painters may scale with the tile. In-game text scale multiplies the phone’s own scale (`composeTextScaler`, ceiling `typeScaleMax` 1.45, same as the settings slider). Do not replace the OS scaler. Dungeon view (Close / Normal / Wide) is the cave camera, not text size.  
 **Color:** `parchment` / `parchmentDim` · `torch` / `torchHot` · `mossLit` · `scopeRun/Today/Account` · `rarity*` · `tooltip*` (item tips) · `buttonBrown*` / `buttonGrey*` / `buttonRed*` · `hudWell*` / `hudFlask*` · `riftBar*` (Farm / Ranked GR D3-style fill) · `navGear` / `navGold` / `navShop` / `navEssence` / `navKey` / `navMore` / `navLeave` (one fill per bottom-bar slot)  
 **Icons:** `GameIcon.asset(UiIcon.settings)` / `UiIcon.key` (PNG) or `GameIcon.glyph` for add/close/arrows/scroll — never Material `Icons` or emoji in chrome. TODAY buttons are plain English (`ENTER KEY`, `GAUNTLET`, `RIFT`). Hub SCROLLS is a row under the cave button after the first boss, and uses `UiGlyph.scroll`. Active buffs use owned `UiIcon` sprites (sword / coin / tome / boots / chest / wand / campfire) stacked above the FAB and above dungeon FLASK.  
 **Touch:** `minTouch` 44 · `primaryTouch` 48 · `edgeGap` 12 (screen edge) · `clusterGap` 8 (between taps). Do not invent a third gap. A target that meets 44 px but sits flush against its neighbor still mis-taps.
@@ -252,12 +252,20 @@ Overflow stripes = layout bug, not “theme says no.”
 
 ## Menu sheet checklist (new overlay)
 
+Check every UI batch against the rendered phone, not the source size alone.
+
 1. Shell: `OverlayScrim` / `MenuChrome.panel` pattern in [`menu_surface.dart`](../lib/ui/shell/menu_surface.dart).
-2. Title: `GameTheme.menuTitle` or router title.
-3. Multi-page → `MenuChrome.tabRail` + `MenuChrome.bridgedTab`.
-4. Lists → `listCard` / `cardBox`.
-5. Actions → hierarchy table above.
-6. Tab-specific status → `tabBanner` on that tab only.
+2. Text: `GameTheme.title` / `section` / `readable` / `hint` / `button`. No free `fontSize`. Combat uses `combat` only.
+3. Margin: outer inset is `edgeGap` (12). Dialog inset is 20×24. Gaps between taps are `clusterGap` (8).
+4. Contrast: body on `panel` stays parchment or parchmentDim. Do not invent a dimmer grey. Measure a new pair before shipping it.
+5. Touch: interactive controls are at least `minTouch` (44). Primary CTAs are `primaryTouch` (48).
+6. Scale: pump the screen at OS 1, 1.4, and 2, and at game M and max. Text may ellipsize or scroll. It does not scale down with `FittedBox`.
+7. Multi-page → `MenuChrome.tabRail` + `MenuChrome.bridgedTab`.
+8. Lists → `listCard` / `cardBox`. Empty lists say what is missing and the next step.
+9. Actions → hierarchy table above. Cancel then confirm, aligned end.
+10. Tab-specific status → `tabBanner` on that tab only.
+
+**Compact combat is not a menu.** Party strip, target plate, mode chips, and world-space floater labels may use `combat` (Press Start 9 or comfort 11) and a shorter row. They still ellipsize instead of shrinking the type size. The web letterbox and the boot cinematic may use `FittedBox` to frame a whole scene. Menu sheets do not.
 
 ---
 

@@ -141,7 +141,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ),
       builder: (context, child) {
         final content = child ?? const SizedBox.shrink();
-        if (!kIsWeb) return content;
+        final platform = MediaQuery.of(context);
+        final scaler = GameTheme.composeTextScaler(
+          platform: platform.textScaler,
+          gameScale: _director.state.uiTextScale,
+        );
+        if (!kIsWeb) {
+          return MediaQuery(
+            data: platform.copyWith(textScaler: scaler),
+            child: content,
+          );
+        }
         return LayoutBuilder(
           builder: (context, constraints) {
             // Samsung Galaxy A56: 1080×2340 @ DPR 3 → 360×780 CSS.
@@ -152,7 +162,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             // Approx status bar + gesture home indicator (logical / CSS px).
             const padTop = 28.0;
             const padBottom = 20.0;
-            final mq = MediaQuery.of(context);
+            final mq = platform.copyWith(textScaler: scaler);
             return ColoredBox(
               color: const Color(0xFF05070A),
               child: Center(
@@ -490,7 +500,7 @@ class _GameHomePageState extends State<GameHomePage>
         title: 'Saves full',
         content: Text(
           'All five saves are in use. Continue, then erase one.',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          style: GameTheme.readable(color: GameTheme.parchment),
         ),
         actions: [
           GameButton(
@@ -539,7 +549,7 @@ class _GameHomePageState extends State<GameHomePage>
           title: 'Erase ${slot.label}?',
           content: Text(
             '$who will be deleted. Your other saves stay.',
-            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            style: GameTheme.readable(color: GameTheme.parchment),
           ),
           actions: [
             GameButton(
@@ -595,7 +605,7 @@ class _GameHomePageState extends State<GameHomePage>
           title: 'Restore cloud save?',
           content: Text(
             'This fills the empty phone with the Play Games backup on this Google account.',
-            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            style: GameTheme.readable(color: GameTheme.parchment),
           ),
           actions: [
             MenuChrome.dialogCancel(
@@ -710,21 +720,18 @@ class _GameHomePageState extends State<GameHomePage>
               context: context,
               builder: (ctx) => AlertDialog(
                 backgroundColor: GameTheme.ink,
-                title: Text('Settings', style: GameTheme.menuTitle(size: 18)),
+                title: Text('Settings', style: GameTheme.title()),
                 content: Text(
                   'Start or continue a save, then open MORE → SETTINGS for sound, zoom, and save tools.\n\n'
                   'Privacy options are on PRIVACY below.',
-                  style: GameTheme.body(size: 14, color: GameTheme.parchment),
+                  style: GameTheme.readable(color: GameTheme.parchment),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
                     child: Text(
                       'OK',
-                      style: GameTheme.body(
-                        size: 14,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.readable(color: GameTheme.torchHot),
                     ),
                   ),
                 ],
@@ -826,19 +833,9 @@ class _GameHomePageState extends State<GameHomePage>
           });
         }
 
-        final body = PlayShell(director: _director, router: _router);
-
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: GameTheme.composeTextScaler(
-              platform: MediaQuery.textScalerOf(context),
-              gameScale: _director.state.uiTextScale,
-            ),
-          ),
-          child: Scaffold(
-            // Shells apply SafeArea around chrome so dungeon art can full-bleed.
-            body: body,
-          ),
+        return Scaffold(
+          // Shells apply SafeArea around chrome so dungeon art can full-bleed.
+          body: PlayShell(director: _director, router: _router),
         );
       },
     );

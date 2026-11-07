@@ -136,10 +136,7 @@ class JobsOverlay extends StatelessWidget {
                 ),
                 child: Text(
                   _slotBadge(index),
-                  style: GameTheme.pixel(
-                    size: 9,
-                    color: GameTheme.torchHot,
-                  ),
+                  style: GameTheme.hint(color: GameTheme.torchHot),
                 ),
               ),
               const SizedBox(width: 6),
@@ -148,8 +145,7 @@ class JobsOverlay extends StatelessWidget {
                   displayTitle(mission, index),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 16,
+                  style: GameTheme.readable(
                     color: switch (mission.tier) {
                       2 => GameTheme.bloodLit,
                       1 => GameTheme.torchHot,
@@ -166,7 +162,7 @@ class JobsOverlay extends StatelessWidget {
             ' · ${rewardLine(gold: mission.goldReward, essence: mission.essenceReward)}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 13),
+            style: GameTheme.section(),
           ),
           const SizedBox(height: 4),
           ClipRRect(
@@ -187,7 +183,7 @@ class JobsOverlay extends StatelessWidget {
             Text(
               'CLAIMED',
               textAlign: TextAlign.right,
-              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+              style: GameTheme.section(color: GameTheme.mossLit),
             ),
           ] else if (mission.canClaim) ...[
             const SizedBox(height: 4),
@@ -211,7 +207,7 @@ class JobsOverlay extends StatelessWidget {
               Text(
                 rerollAdLine(),
                 textAlign: TextAlign.right,
-                style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             ],
             const SizedBox(height: 4),

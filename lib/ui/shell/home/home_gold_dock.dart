@@ -25,9 +25,7 @@ class HomeGoldDock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: GameTheme.panel,
-      child: SizedBox(
-        height: 32,
-        child: Padding(
+      child: Padding(
           padding: ShellLayout.seamPadding.copyWith(top: 2, bottom: 2),
           child: MenuChrome.segmented(
             dense: true,
@@ -36,7 +34,6 @@ class HomeGoldDock extends StatelessWidget {
             selectedIndex: -1,
             onSelect: (i) => _openSheet(context, HomeGoldPanel.values[i]),
           ),
-        ),
       ),
     );
   }

@@ -36,8 +36,6 @@ class PowerUpgradeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleSize = dense ? 14.0 : 15.0;
-    final subSize = dense ? 12.0 : 13.0;
     return Container(
       margin: EdgeInsets.only(bottom: dense ? 2 : 6),
       padding: EdgeInsets.fromLTRB(
@@ -71,10 +69,7 @@ class PowerUpgradeRow extends StatelessWidget {
                         Flexible(
                           child: Text(
                             title,
-                            style: GameTheme.body(
-                              size: titleSize,
-                              color: GameTheme.parchment,
-                            ),
+                            style: GameTheme.readable(color: GameTheme.parchment),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -97,10 +92,7 @@ class PowerUpgradeRow extends StatelessWidget {
                             ),
                             child: Text(
                               tag!,
-                              style: GameTheme.pixel(
-                                size: 8,
-                                color: GameTheme.torchHot,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.torchHot),
                             ),
                           ),
                         ],
@@ -109,20 +101,14 @@ class PowerUpgradeRow extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: GameTheme.body(
-                        size: subSize,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.readable(color: GameTheme.parchmentDim),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (detail != null)
                       Text(
                         detail!,
-                        style: GameTheme.body(
-                          size: dense ? 11 : 12,
-                          color: GameTheme.mossLit,
-                        ),
+                        style: GameTheme.readable(color: GameTheme.mossLit),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -205,7 +191,7 @@ class PowerUpgradePriceChip extends StatelessWidget {
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.button(size: 12, color: textColor),
+                      style: GameTheme.button(size: GameTheme.typeButtonDense, color: textColor),
                     ),
                   ),
                 ),

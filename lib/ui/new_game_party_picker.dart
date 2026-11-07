@@ -107,7 +107,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
           content: Text(
             'Race is the hero\'s look and locks after START. '
             'You can still change specialization later.',
-            style: GameTheme.body(size: 15, color: GameTheme.parchmentDim),
+            style: GameTheme.readable(color: GameTheme.parchmentDim),
           ),
           actions: [
             MenuChrome.dialogCancel(
@@ -260,7 +260,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
               Text(
                 'NEW PARTY',
                 textAlign: TextAlign.center,
-                style: GameTheme.menuTitle(size: 18),
+                style: GameTheme.title(),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -270,7 +270,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                 textInputAction: TextInputAction.done,
                 autocorrect: false,
                 enableSuggestions: false,
-                style: GameTheme.body(size: 15, color: GameTheme.parchment),
+                style: GameTheme.readable(color: GameTheme.parchment),
                 cursorColor: GameTheme.torchHot,
                 onChanged: (_) {
                   if (_nameError) setState(() => _nameError = false);
@@ -280,18 +280,9 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                   labelText: 'Party name',
                   hintText: 'The Ember Guard',
                   helperText: 'Shows on season ranks',
-                  helperStyle: GameTheme.body(
-                    size: 11,
-                    color: GameTheme.parchmentDim,
-                  ),
-                  labelStyle: GameTheme.body(
-                    size: 13,
-                    color: GameTheme.parchmentDim,
-                  ),
-                  hintStyle: GameTheme.body(
-                    size: 14,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  helperStyle: GameTheme.hint(color: GameTheme.parchmentDim),
+                  labelStyle: GameTheme.section(color: GameTheme.parchmentDim),
+                  hintStyle: GameTheme.readable(color: GameTheme.parchmentDim),
                   filled: true,
                   fillColor: GameTheme.panelInset,
                   isDense: true,
@@ -314,7 +305,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                 Text(
                   'Choose another party name',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(size: 12, color: GameTheme.bloodLit),
+                  style: GameTheme.hint(color: GameTheme.bloodLit),
                 ),
               ],
               const SizedBox(height: 8),
@@ -356,14 +347,14 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                     ? 'Specialization for $_activeKitLabel — Tank / Healer / DPS'
                     : 'Race for $_activeKitLabel · ${_looks[_activeSlot].label}',
                 textAlign: TextAlign.center,
-                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
               if (statusLine != null) ...[
                 const SizedBox(height: 4),
                 Text(
                   statusLine,
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                  style: GameTheme.hint(color: GameTheme.torchHot),
                 ),
               ],
               const SizedBox(height: 8),
@@ -469,10 +460,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                                   Text(
                                     'More specializations unlock as you grow.',
                                     textAlign: TextAlign.center,
-                                    style: GameTheme.body(
-                                      size: 12,
-                                      color: GameTheme.parchmentDim,
-                                    ),
+                                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                                   ),
                                 ],
                               ),
@@ -486,10 +474,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                 Text(
                   blockReason,
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
                 const SizedBox(height: 6),
               ],
@@ -565,17 +550,14 @@ class _SlotCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 12, color: GameTheme.parchment),
+                  style: GameTheme.hint(color: GameTheme.parchment),
                 ),
                 Text(
                   def?.roleTag.plainLabel ?? 'Tank / Healer / DPS',
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 10,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -583,12 +565,9 @@ class _SlotCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
-                    color: look == HeroRace.human
+                  style: GameTheme.hint(color: look == HeroRace.human
                         ? GameTheme.parchmentDim
-                        : GameTheme.mossLit,
-                  ),
+                        : GameTheme.mossLit),
                 ),
               ],
             ),
@@ -635,27 +614,18 @@ class _SpecPickRow extends StatelessWidget {
                       children: [
                         Text(
                           def.plainRoleLine,
-                          style: GameTheme.body(
-                            size: 14,
-                            color: GameTheme.torchHot,
-                          ),
+                          style: GameTheme.readable(color: GameTheme.torchHot),
                         ),
                         Text(
                           '${def.shortLabel} · ${def.name}',
-                          style: GameTheme.body(
-                            size: 11,
-                            color: GameTheme.parchmentDim,
-                          ),
+                          style: GameTheme.hint(color: GameTheme.parchmentDim),
                         ),
                       ],
                     ),
                   ),
                   Text(
                     taken ? 'SET' : 'PICK',
-                    style: GameTheme.body(
-                      size: 13,
-                      color: taken ? GameTheme.mossLit : GameTheme.torchHot,
-                    ),
+                    style: GameTheme.section(color: taken ? GameTheme.mossLit : GameTheme.torchHot),
                   ),
                 ],
               ),

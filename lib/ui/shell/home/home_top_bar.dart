@@ -78,7 +78,7 @@ class HomeTopBar extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     Keystone.formatTimer(state.keystoneTimerMs),
-                    style: GameTheme.pixel(size: 10, color: GameTheme.torchHot),
+                    style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
                 ],
                 if (compactTop) ...[
@@ -88,10 +88,7 @@ class HomeTopBar extends StatelessWidget {
                       chase,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                   ),
                 ],
@@ -127,7 +124,7 @@ class HomeTopBar extends StatelessWidget {
                   onTap: director.cycleCombatPace,
                   child: Text(
                     state.combatPace >= 2 ? '2×' : '1×',
-                    style: GameTheme.menuTitle(size: 14),
+                    style: GameTheme.readable(),
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -147,10 +144,7 @@ class HomeTopBar extends StatelessWidget {
                       chase,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                   ),
                   if (wide) DpsMeter(director: director, onOpenChanged: (_) {}),
@@ -229,7 +223,7 @@ class HomeTopBar extends StatelessWidget {
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 12, color: GameTheme.parchment),
+            style: GameTheme.hint(color: GameTheme.parchment),
           ),
         ),
       ],

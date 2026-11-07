@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'feedback_toast.dart';
 import 'game_theme.dart';
 import 'web_click_bridge.dart';
 
@@ -72,9 +73,7 @@ class GameButton extends StatelessWidget {
     final radius = BorderRadius.circular(GameTheme.radiusSm);
     final padH = dense ? 10.0 : 14.0;
     final padV = dense ? 6.0 : 11.0;
-    final fontSize = dense
-        ? (label.length > 14 ? 14.0 : 15.0)
-        : (label.length > 14 ? 17.0 : 19.0);
+    final fontSize = dense ? GameTheme.typeButtonDense : GameTheme.typeButton;
     final child = Padding(
       padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
       child: Text(
@@ -96,15 +95,16 @@ class GameButton extends StatelessWidget {
         onLongPress: tip == null || !enabled
             ? null
             : () {
-                final messenger = ScaffoldMessenger.maybeOf(context);
-                messenger?.hideCurrentSnackBar();
-                messenger?.showSnackBar(
-                  SnackBar(
-                    content: Text(tip!),
-                    duration: const Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating,
-                  ),
+                final overlay = Overlay.maybeOf(context);
+                if (overlay == null) return;
+                late OverlayEntry entry;
+                entry = OverlayEntry(
+                  builder: (ctx) => FeedbackToast(message: tip!),
                 );
+                overlay.insert(entry);
+                Future<void>.delayed(const Duration(seconds: 2), () {
+                  if (entry.mounted) entry.remove();
+                });
               },
         borderRadius: radius,
         child: Ink(
@@ -167,9 +167,7 @@ class GameButton extends StatelessWidget {
         label: tip == null ? label : '$label. $tip',
         onTap: onPressed,
         excludeSemantics: true,
-        child: tip == null
-            ? button
-            : Tooltip(message: tip!, preferBelow: false, child: button),
+        child: button,
       ),
     );
   }

@@ -24,7 +24,7 @@ class CampRatesSection extends StatelessWidget {
       children: [
         Text(
           'Hub ${GoldIncome.perMinuteLabel(hub)}',
-          style: GameTheme.body(size: 14, color: GameTheme.mossLit),
+          style: GameTheme.readable(color: GameTheme.mossLit),
         ),
         ShellLayout.gap(4),
         ShellLayout.hint(

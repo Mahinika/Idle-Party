@@ -46,7 +46,7 @@ class KeystoneSheet extends StatelessWidget {
             huntHint,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            style: GameTheme.hint(color: GameTheme.torchHot),
           ),
           ShellLayout.gap(4),
         ],

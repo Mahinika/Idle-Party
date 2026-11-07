@@ -166,7 +166,7 @@ class _Is2ShellState extends State<Is2Shell> {
     final partyBottom = GameTheme.combatHudBottom(context);
     final textScale = MediaQuery.textScalerOf(
       context,
-    ).scale(1).clamp(1.0, 1.35);
+    ).scale(1);
     // Party strip (and the buff column beside it). Log sits just above both.
     final partyRows = d.state.combatHeroes.length.clamp(1, 5);
     final partyStrip =

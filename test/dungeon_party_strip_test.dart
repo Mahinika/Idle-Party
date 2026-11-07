@@ -43,7 +43,7 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('a long party name scales down and the level stays full size', (
+  testWidgets('a long party name ellipsizes and the level stays full size', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -64,13 +64,14 @@ void main() {
     expect(find.text('Shadeveil'), findsOneWidget);
     expect(find.text('L100'), findsOneWidget);
     final name = tester.widget<Text>(find.text('Shadeveil'));
-    expect(name.overflow, isNot(TextOverflow.ellipsis));
+    expect(name.data, 'Shadeveil');
+    expect(name.overflow, TextOverflow.ellipsis);
     expect(
       find.ancestor(
         of: find.text('Shadeveil'),
         matching: find.byType(FittedBox),
       ),
-      findsOneWidget,
+      findsNothing,
     );
     expect(
       find.ancestor(

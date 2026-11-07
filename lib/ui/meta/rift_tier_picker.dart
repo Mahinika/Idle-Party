@@ -128,7 +128,7 @@ class _RiftTierPickerDialogState extends State<RiftTierPickerDialog> {
                 child: Text(
                   '${widget.prefix}$_tier',
                   textAlign: TextAlign.center,
-                  style: GameTheme.menuTitle(size: 28),
+                  style: GameTheme.title(),
                 ),
               ),
               Listener(

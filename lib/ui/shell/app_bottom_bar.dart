@@ -109,12 +109,11 @@ class AppBottomBar extends StatelessWidget {
     if (suppressReason != null && reason.isNotEmpty && suppressReason!(reason)) {
       reason = '';
     }
+    final scale = MediaQuery.textScalerOf(context).scale(1);
     final bar = Material(
       color: Colors.transparent,
       child: Container(
-        height: dense
-            ? GameTheme.bottomNavHeight
-            : GameTheme.bottomNavHeight + 4,
+        height: GameTheme.navBarExtent(scale),
         decoration: BoxDecoration(
           color: GameTheme.ink,
           border: Border(
@@ -215,7 +214,6 @@ class AppBottomBarItem extends StatelessWidget {
         ? GameTheme.accentWarn
         : (selected ? GameTheme.torchHot : GameTheme.parchment);
     final semanticsLabel = badge.isEmpty ? label : '$label $badge waiting';
-    final labelSize = dense ? 10.0 : 11.0;
     return WebClickScope(
       label: label,
       onPressed: onTap,
@@ -264,16 +262,12 @@ class AppBottomBarItem extends StatelessWidget {
                         children: [
                           icon,
                           SizedBox(height: dense ? 2 : 3),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              label,
-                              maxLines: 1,
-                              style: GameTheme.body(
-                                size: dense ? 11 : labelSize,
-                                color: labelColor,
-                              ),
-                            ),
+                          Text(
+                            label,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: GameTheme.readable(color: labelColor),
                           ),
                         ],
                       ),
@@ -315,7 +309,7 @@ class NavBadge extends StatelessWidget {
           : Text(
               text,
               textAlign: TextAlign.center,
-              style: GameTheme.body(size: 10, color: GameTheme.parchment),
+              style: GameTheme.hint(color: GameTheme.parchment),
             ),
     );
   }

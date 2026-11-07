@@ -197,7 +197,7 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Bulk spend', style: GameTheme.menuTitle(size: 18)),
+                Text('Bulk spend', style: GameTheme.section()),
                 ShellLayout.gap(4),
                 ShellLayout.hint(
                   'Spend that slice of your wallet on one GOLD track.',
@@ -491,23 +491,14 @@ class _ForgeOverlayState extends State<ForgeOverlay> {
       children: [
         Padding(
           padding: ShellLayout.listPadding.copyWith(bottom: homeFight ? 2 : 6),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                ForgeOverlay.boughtSummary(state, plain: plain),
-                maxLines: 1,
-                softWrap: false,
-                style: GameTheme.body(
-                  size: homeFight ? 11 : 12,
-                  color: homeFight
-                      ? GameTheme.parchmentDim
-                      : GameTheme.parchment,
-                ),
-              ),
-            ),
+          child: Text(
+            ForgeOverlay.boughtSummary(state, plain: plain),
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.readable(color: homeFight
+                  ? GameTheme.parchmentDim
+                  : GameTheme.parchment),
           ),
         ),
         Padding(
