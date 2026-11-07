@@ -410,7 +410,10 @@ class SharedPreferencesGameStorage implements GameStorage {
     for (var i = 0; i < GameStorage.slotCount; i++) {
       if (filled(prefs.getString(GameStorage.slotCorruptKey(i)))) return true;
       final raw = prefs.getString(_slotKey(i));
-      if (filled(raw) && GameLogic.importSaveJson(raw!) == null) return true;
+      if (filled(raw) &&
+          GameLogic.importSaveJson(raw!, keepCombatRandom: true) == null) {
+        return true;
+      }
     }
     return false;
   }
@@ -723,7 +726,10 @@ class InMemoryGameStorage implements GameStorage {
     for (var i = 0; i < GameStorage.slotCount; i++) {
       if (filled(_extras[GameStorage.slotCorruptKey(i)])) return true;
       final raw = _slotRaw[i];
-      if (filled(raw) && GameLogic.importSaveJson(raw!) == null) return true;
+      if (filled(raw) &&
+          GameLogic.importSaveJson(raw!, keepCombatRandom: true) == null) {
+        return true;
+      }
     }
     return false;
   }

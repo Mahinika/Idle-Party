@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/main.dart';
+import 'package:idle_party/core/equipment_factory.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
@@ -1414,6 +1416,25 @@ void main() {
         expect(again.getString('idle_party_save_slot_2'), kept);
       } finally {
         reboot.dispose();
+      }
+    });
+
+    test('a parse probe does not move the combat random', () {
+      final raw = GameLogic.exportSaveJson(GameLogic.createInitialState());
+      final saved = GameLogic.random;
+      final gear = EquipmentFactory.random;
+      GameLogic.random = Random(123);
+      EquipmentFactory.random = GameLogic.random;
+      final expected = Random(123).nextInt(1000000);
+      try {
+        expect(
+          GameLogic.importSaveJson(raw, keepCombatRandom: true),
+          isNotNull,
+        );
+        expect(GameLogic.random.nextInt(1000000), expected);
+      } finally {
+        GameLogic.random = saved;
+        EquipmentFactory.random = gear;
       }
     });
 

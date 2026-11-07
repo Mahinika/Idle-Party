@@ -638,7 +638,7 @@ extension GameDirectorSave on GameDirector {
         final unreadableRaw =
             raw != null &&
             raw.isNotEmpty &&
-            GameLogic.importSaveJson(raw) == null;
+            GameLogic.importSaveJson(raw, keepCombatRandom: true) == null;
         if (unreadableRaw) {
           _phoneHadNoSaveAtBoot = false;
           _hasExistingSave = false;
