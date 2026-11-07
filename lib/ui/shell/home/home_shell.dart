@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/first_climb_coach.dart';
 import '../../../core/game_director.dart';
+import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
 import '../../../core/hub_chase.dart';
 import '../../../core/menu_alerts.dart';
@@ -98,18 +100,7 @@ class _HomeShellState extends State<HomeShell> {
       child: Column(
       children: [
         HomeTopBar(director: director, router: router),
-        if (!sheet && !state.inDungeon)
-          if (FirstSessionTips.active(state, inDungeon: false)
-              case final hint?)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            child: Text(
-              FirstSessionTips.displayLine(hint, state),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
-            ),
-          ),
+        if (!sheet) _climbRow(state),
         Expanded(
           child: MediaQuery.withClampedTextScaling(
             maxScaleFactor: 1.3,
@@ -171,6 +162,78 @@ class _HomeShellState extends State<HomeShell> {
         if (route == MenuRoute.gear) _gearThumb(state),
         HomeNavBar(state: state, router: router, alerts: alerts),
       ],
+      ),
+    );
+  }
+
+  /// First fight and first vault claim. One line, and CLAIM while the
+  /// party is still in the cave. Camp already has CLAIM VAULT.
+  Widget _climbRow(GameState state) {
+    final climb = FirstClimbCoach.line(state, inDungeon: state.inDungeon);
+    final tip = !state.inDungeon && climb == null
+        ? FirstSessionTips.active(state, inDungeon: false)
+        : null;
+    final text = climb ??
+        (tip == null ? null : FirstSessionTips.displayLine(tip, state));
+    final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);
+    if (text == null && !showClaim) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
+      child: Row(
+        children: [
+          if (text != null)
+            Expanded(
+              child: Text(
+                text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+              ),
+            ),
+          if (showClaim) ...[
+            if (text != null) const SizedBox(width: 6),
+            _claimChip(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _claimChip() {
+    return WebClickScope(
+      label: 'CLAIM',
+      onPressed: director.claimDailyVault,
+      child: Semantics(
+        button: true,
+        label: 'Claim the vault before the day ends',
+        child: InkWell(
+          onTap: director.claimDailyVault,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: GameTheme.minTouch,
+              minHeight: 28,
+            ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: GameTheme.hudFarmGreen,
+                borderRadius: BorderRadius.circular(3),
+                border: Border.all(color: GameTheme.clear),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Center(
+                  child: Text(
+                    'CLAIM',
+                    style: GameTheme.pixel(
+                      size: GameTheme.hudPixel,
+                      color: GameTheme.clear,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

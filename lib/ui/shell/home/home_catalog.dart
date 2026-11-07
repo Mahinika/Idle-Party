@@ -110,7 +110,7 @@ abstract final class HomeCatalog {
       icon: UiIcon.chest,
       label: 'VAULT',
       visible: (s, _) =>
-          GameLogic.showDailyChase(s) && !s.metaDepth.dailyVaultClaimed,
+          GameLogic.showDailyVault(s) && !s.metaDepth.dailyVaultClaimed,
       badge: (s) =>
           s.metaDepth.dailyVaultClears >= GameLogic.dailyVaultClearTarget,
       open: _openVault,
@@ -247,7 +247,7 @@ abstract final class HomeCatalog {
       icon: UiIcon.chest,
       label: 'VAULT',
       visible: (s, _) =>
-          GameLogic.showDailyChase(s) && !s.metaDepth.dailyVaultClaimed,
+          GameLogic.showDailyVault(s) && !s.metaDepth.dailyVaultClaimed,
       badge: (s) =>
           s.metaDepth.dailyVaultClears >= GameLogic.dailyVaultClearTarget,
       open: _openVault,

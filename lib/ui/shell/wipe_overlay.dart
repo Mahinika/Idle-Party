@@ -7,6 +7,7 @@ import '../../core/analytics_events.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/game_state.dart';
+import '../../core/first_climb_coach.dart';
 import '../../core/wipe_advice.dart';
 import '../../core/wisp_gift.dart';
 import '../game_theme.dart';
@@ -103,6 +104,10 @@ class DungeonWipePanel extends StatelessWidget {
                                       }(),
                                 maxLines: 4,
                               ),
+                              if (FirstClimbCoach.wipeLine(state) case final climb?) ...[
+                                ShellLayout.gap(4),
+                                ShellLayout.hint(climb, maxLines: 2),
+                              ],
                               if (dailyEcho) ...[
                                 ShellLayout.gap(4),
                                 ShellLayout.hint('Claim needs a clear', maxLines: 1),
