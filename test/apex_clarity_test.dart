@@ -4,7 +4,9 @@ import 'package:idle_party/core/apex_forge.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/game_storage.dart';
 import 'package:idle_party/core/offline_progress.dart';
+import 'package:idle_party/core/save_swap.dart';
 import 'package:idle_party/models/apex_craft.dart';
 import 'package:idle_party/models/dungeon_room.dart';
 import 'package:idle_party/models/hero_spec.dart';
@@ -464,6 +466,146 @@ void main() {
       director.dispose();
     }
   });
+
+  test('load keeps the away clock when an exact Apex duplicate collapses', () {
+    final away = DateTime.utc(2026, 11, 7, 8);
+    final blade = _blade();
+    final duplicate = _awaySave(away, vault: [blade, blade]);
+    final single = _awaySave(away, vault: [blade]);
+    final loaded = GameLogic.importSaveJson(
+      GameLogic.exportSaveJson(duplicate),
+    )!;
+    final probe = GameLogic.importSaveJson(GameLogic.exportSaveJson(single))!;
+
+    expect(loaded.lastUpdated, away);
+    expect(probe.lastUpdated, away);
+    expect(loaded.gold, duplicate.gold);
+    expect(loaded.metaDepth.adFree, isTrue);
+    expect(loaded.apexVault.where((g) => g.id == blade.id), hasLength(1));
+
+    const elapsed = Duration(hours: 2);
+    final dupAway = OfflineProgress.applyOfflineProgress(loaded, elapsed);
+    final oneAway = OfflineProgress.applyOfflineProgress(probe, elapsed);
+    expect(dupAway.secondsApplied, 7200);
+    expect(oneAway.secondsApplied, 7200);
+    expect(dupAway.goldGained, oneAway.goldGained);
+    expect(dupAway.goldGained, greaterThan(0));
+    expect(dupAway.essenceGained, oneAway.essenceGained);
+
+    final again = GameLogic.stateFromJson(loaded.toJson());
+    expect(again.lastUpdated, loaded.lastUpdated);
+    expect(again.apexVault.length, loaded.apexVault.length);
+    expect(again.gold, loaded.gold);
+    expect(again.metaDepth.adFree, isTrue);
+  });
+
+  test(
+    'a lower rank with a proc or affix is not replaced by a plain higher rank',
+    () {
+      final plain = _blade(rank: 3);
+      final legacy = _blade(rank: 1).copyWith(
+        effectId: GearEffectId.lifesteal,
+        effectValue: 40,
+        affixPrefixId: 'of_the_leech',
+        affixSuffixId: 'warded',
+      );
+      final loaded = GameLogic.stateFromJson(
+        _fresh().copyWith(apexVault: [plain, legacy]).toJson(),
+      );
+      final copies = loaded.apexVault.where((g) => g.id == plain.id).toList();
+      expect(copies, hasLength(2));
+      expect(
+        copies.any(
+          (g) =>
+              g.apexRank == 1 &&
+              g.effectId == GearEffectId.lifesteal &&
+              g.effectValue == 40 &&
+              g.affixPrefixId == 'of_the_leech' &&
+              g.affixSuffixId == 'warded',
+        ),
+        isTrue,
+      );
+      expect(
+        copies.any((g) => g.apexRank == 3 && g.effectId == GearEffectId.none),
+        isTrue,
+      );
+
+      final sameRank = _blade();
+      final affixed = sameRank.copyWith(affixSuffixId: 'warded');
+      final kept = GameLogic.stateFromJson(
+        _fresh().copyWith(apexVault: [sameRank, affixed]).toJson(),
+      );
+      expect(kept.apexVault.where((g) => g.id == sameRank.id), hasLength(2));
+
+      final covered = _blade(
+        rank: 1,
+      ).copyWith(effectId: GearEffectId.lifesteal, effectValue: 40);
+      final newer = _blade(
+        rank: 3,
+      ).copyWith(effectId: GearEffectId.lifesteal, effectValue: 40);
+      final collapsed = GameLogic.stateFromJson(
+        _fresh().copyWith(apexVault: [covered, newer]).toJson(),
+      );
+      final left = collapsed.apexVault.where((g) => g.id == newer.id).toList();
+      expect(left, hasLength(1));
+      expect(left.single.apexRank, 3);
+      expect(left.single.effectValue, 40);
+    },
+  );
+
+  test(
+    'journal restore loads the duplicate save without eating the away clock',
+    () async {
+      final away = DateTime.now().toUtc().subtract(const Duration(hours: 2));
+      final blade = _blade();
+      final duplicate = _awaySave(away, vault: [blade, blade]);
+      final single = _awaySave(away, vault: [blade]);
+      final storage = InMemoryGameStorage();
+      final json = GameLogic.exportSaveJson(duplicate);
+      await storage.writeActiveRaw(json);
+      await storage.writeExtra(GameStorage.stagingKey, json);
+      await storage.writeExtra(GameStorage.holdKey, json);
+      await storage.writeExtra(GameStorage.journalKey, 'swap-publish');
+      expect(await SaveSwap.recover(storage), SaveSwapOutcome.committed);
+
+      final restored = GameLogic.importSaveJson(
+        (await storage.loadActiveRaw())!,
+      )!;
+      expect(restored.lastUpdated, away);
+      expect(restored.gold, duplicate.gold);
+      expect(restored.metaDepth.adFree, isTrue);
+      expect(restored.apexVault.where((g) => g.id == blade.id), hasLength(1));
+
+      final director = GameDirector(storage, enableSpatialLoop: false);
+      addTearDown(director.dispose);
+      await director.boot(deferCombatLoop: true);
+      final summary = director.offlineSummary;
+      expect(summary, isNotNull);
+      expect(summary!.secondsApplied, greaterThan(3600));
+      expect(summary.goldGained, greaterThan(0));
+
+      final probe = InMemoryGameStorage();
+      await probe.writeActiveRaw(GameLogic.exportSaveJson(single));
+      final other = GameDirector(probe, enableSpatialLoop: false);
+      addTearDown(other.dispose);
+      await other.boot(deferCombatLoop: true);
+      expect(other.offlineSummary!.secondsApplied, summary.secondsApplied);
+      expect(other.offlineSummary!.goldGained, summary.goldGained);
+      expect(director.state.metaDepth.adFree, isTrue);
+      expect(director.state.gold, greaterThan(duplicate.gold));
+    },
+  );
+}
+
+GameState _awaySave(DateTime away, {required List<EquipmentItem> vault}) {
+  return _fresh().copyWith(
+    lastUpdated: away,
+    gold: 40,
+    autoCaveOnLeave: false,
+    inDungeon: false,
+    apexVault: vault,
+    metaDepth: const MetaDepthState(adFree: true),
+  );
 }
 
 GameState _fresh() => GameLogic.createInitialState(now: DateTime.now());

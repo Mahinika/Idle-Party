@@ -773,8 +773,12 @@ abstract final class ApexForge {
   /// Collapses only a copy that is strictly worse, or an exact duplicate.
   ///
   /// A higher rank, a higher item level, or a better stat keeps its item.
-  /// Same rank and item level with different stats are left alone. The
+  /// A proc or affix the other copy does not carry is kept, even at a lower
+  /// rank. Same rank and item level with different stats are left alone. The
   /// equipped copy wins an exact tie. Running this twice changes nothing.
+  ///
+  /// The save clock is not moved. Load and journal restore call this before
+  /// offline catch-up reads [GameState.lastUpdated].
   static GameState normalizeApexDuplicates(GameState state) {
     final located = <_ApexLoc>[];
     for (var hi = 0; hi < state.heroRoster.length; hi++) {
@@ -901,7 +905,6 @@ abstract final class ApexForge {
       heroRoster: roster,
       apexVault: vault,
       gearStash: stash,
-      lastUpdated: DateTime.now(),
     );
   }
 
@@ -929,8 +932,11 @@ abstract final class ApexForge {
   }
 
   /// True when [a] is at least as invested as [b] and better on one axis.
+  ///
+  /// [b] is not worse when it carries a proc or affix [a] does not.
   static bool _apexDominates(EquipmentItem a, EquipmentItem b) {
     if (a.apexRank < b.apexRank || a.itemLevel < b.itemLevel) return false;
+    if (!_apexLegacyCovered(a, b)) return false;
     final left = _apexAxes(a);
     final right = _apexAxes(b);
     var better = a.apexRank > b.apexRank || a.itemLevel > b.itemLevel;
@@ -941,10 +947,32 @@ abstract final class ApexForge {
     return better;
   }
 
+  /// [other]'s proc and affixes are already on [keeper], or [other] has none.
+  static bool _apexLegacyCovered(EquipmentItem keeper, EquipmentItem other) {
+    if (other.effectId != GearEffectId.none &&
+        (keeper.effectId != other.effectId ||
+            keeper.effectValue != other.effectValue)) {
+      return false;
+    }
+    final prefix = other.affixPrefixId;
+    if (prefix != null && prefix.isNotEmpty && prefix != keeper.affixPrefixId) {
+      return false;
+    }
+    final suffix = other.affixSuffixId;
+    if (suffix != null && suffix.isNotEmpty && suffix != keeper.affixSuffixId) {
+      return false;
+    }
+    return true;
+  }
+
   static bool _apexSameInvestment(EquipmentItem a, EquipmentItem b) {
     if (a.apexRank != b.apexRank || a.itemLevel != b.itemLevel) return false;
     if (a.name != b.name || a.effectId != b.effectId) return false;
     if (a.effectValue != b.effectValue || a.setId != b.setId) return false;
+    if (a.affixPrefixId != b.affixPrefixId ||
+        a.affixSuffixId != b.affixSuffixId) {
+      return false;
+    }
     final left = _apexAxes(a);
     final right = _apexAxes(b);
     for (var i = 0; i < left.length; i++) {
