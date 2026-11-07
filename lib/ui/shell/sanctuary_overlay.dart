@@ -118,7 +118,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
               MenuChrome.chip(label: 'Camp tracks', selected: campOpen),
               Text(
                 '${formatCount(state.essence)}e · survive Ascend',
-                style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                style: GameTheme.hint(color: GameTheme.parchmentDim),
               ),
             ],
           ),
@@ -274,7 +274,7 @@ class _SanctuaryOverlayState extends State<SanctuaryOverlay> {
                     AdFreeNudge.line,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                    style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
                 ),
               ),

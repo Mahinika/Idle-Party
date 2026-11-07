@@ -20,6 +20,7 @@ class LoadingSplash extends StatelessWidget {
         label: 'Loading Idle Party',
         liveRegion: true,
         child: MenuChrome.playSafeArea(
+          top: true,
           bottom: true,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
@@ -38,10 +39,7 @@ class LoadingSplash extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     'Loading…',
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.section(color: GameTheme.parchmentDim),
                   ),
                 ],
               ),

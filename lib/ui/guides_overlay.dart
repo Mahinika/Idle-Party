@@ -48,7 +48,7 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   line,
-                  style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+                  style: GameTheme.hint(color: GameTheme.mossLit),
                 ),
               );
             },
@@ -96,20 +96,14 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
                                 Expanded(
                                   child: Text(
                                     title,
-                                    style: GameTheme.body(
-                                      size: 17,
-                                      color: open
+                                    style: GameTheme.readable(color: open
                                           ? GameTheme.torchHot
-                                          : GameTheme.parchment,
-                                    ),
+                                          : GameTheme.parchment),
                                   ),
                                 ),
                                 Text(
                                   open ? '▾' : '▸',
-                                  style: GameTheme.body(
-                                    size: 16,
-                                    color: GameTheme.parchmentDim,
-                                  ),
+                                  style: GameTheme.readable(color: GameTheme.parchmentDim),
                                 ),
                               ],
                             ),
@@ -117,10 +111,7 @@ class _GuidesOverlayState extends State<GuidesOverlay> {
                               const SizedBox(height: 8),
                               Text(
                                 body,
-                                style: GameTheme.body(
-                                  size: 14,
-                                  color: GameTheme.parchment,
-                                ),
+                                style: GameTheme.readable(color: GameTheme.parchment),
                               ),
                             ],
                           ],

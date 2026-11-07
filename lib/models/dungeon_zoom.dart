@@ -16,9 +16,9 @@ enum DungeonZoom {
   };
 
   String get settingsLabel => switch (this) {
-    DungeonZoom.close => 'Zoom · Close',
-    DungeonZoom.normal => 'Zoom · Normal',
-    DungeonZoom.wide => 'Zoom · Wide',
+    DungeonZoom.close => 'Dungeon view · Close',
+    DungeonZoom.normal => 'Dungeon view · Normal',
+    DungeonZoom.wide => 'Dungeon view · Wide',
   };
 
   String get settingsHint => switch (this) {
@@ -45,7 +45,7 @@ enum DungeonZoom {
     for (final zoom in DungeonZoom.values) {
       if ((cols - zoom.targetCols).abs() < 0.35) return zoom.settingsLabel;
     }
-    return 'Zoom · ${cols.round()}';
+    return 'Dungeon view · ${cols.round()}';
   }
 
   static const String pinchHint =

@@ -145,10 +145,7 @@ class DungeonTopHud extends StatelessWidget {
               ? 'Gauntlet — no floor jump'
               : 'Floor · F$floor'
                     '${GameLogic.showKeystoneJargon(state) && state.keystoneRunActive ? ' · KEY+${state.keystoneRunLevel}' : ''}',
-          style: GameTheme.pixel(
-            size: GameTheme.hudPixel,
-            color: GameTheme.torchHot,
-          ),
+          style: GameTheme.combat(color: GameTheme.torchHot),
         ),
       ),
     ];
@@ -165,14 +162,11 @@ class DungeonTopHud extends StatelessWidget {
                 : unlocked
                 ? 'F$f'
                 : 'F$f · locked',
-            style: GameTheme.pixel(
-              size: GameTheme.hudPixel,
-              color: here
+            style: GameTheme.combat(color: here
                   ? GameTheme.torchHot
                   : unlocked
                   ? GameTheme.parchment
-                  : GameTheme.parchmentDim,
-            ),
+                  : GameTheme.parchmentDim),
           ),
         ),
       );
@@ -186,7 +180,7 @@ class DungeonTopHud extends StatelessWidget {
         enabled: canDown,
         child: Text(
           canDown ? 'FLOOR −1' : 'FLOOR −1 · locked',
-          style: GameTheme.pixel(size: GameTheme.hudPixel),
+          style: GameTheme.combat(),
         ),
       ),
     );
@@ -196,7 +190,7 @@ class DungeonTopHud extends StatelessWidget {
         enabled: canUp,
         child: Text(
           canUp ? 'FLOOR +1' : 'FLOOR +1 · locked',
-          style: GameTheme.pixel(size: GameTheme.hudPixel),
+          style: GameTheme.combat(),
         ),
       ),
     );
@@ -208,7 +202,7 @@ class DungeonTopHud extends StatelessWidget {
             value: 'quests',
             child: Text(
               'QUESTS ($claimable)',
-              style: GameTheme.pixel(size: GameTheme.hudPixel),
+              style: GameTheme.combat(),
             ),
           ),
         );
@@ -220,7 +214,7 @@ class DungeonTopHud extends StatelessWidget {
             value: 'key',
             child: Text(
               'KEY',
-              style: GameTheme.pixel(size: GameTheme.hudPixel),
+              style: GameTheme.combat(),
             ),
           ),
         );
@@ -228,7 +222,7 @@ class DungeonTopHud extends StatelessWidget {
       items.add(
         PopupMenuItem(
           value: 'more',
-          child: Text('MORE', style: GameTheme.pixel(size: GameTheme.hudPixel)),
+          child: Text('MORE', style: GameTheme.combat()),
         ),
       );
       items.add(
@@ -236,7 +230,7 @@ class DungeonTopHud extends StatelessWidget {
           value: 'settings',
           child: Text(
             'SETTINGS',
-            style: GameTheme.pixel(size: GameTheme.hudPixel),
+            style: GameTheme.combat(),
           ),
         ),
       );
@@ -280,7 +274,7 @@ class DungeonTopHud extends StatelessWidget {
                       'Jump to F$target anyway? Loot still on the ground is lost '
                       'and chamber progress resets.'
                       '$keyNote',
-            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            style: GameTheme.readable(color: GameTheme.parchment),
           ),
           actions: [
             GameButton(
@@ -459,7 +453,7 @@ class DungeonTopHud extends StatelessWidget {
                                 'You are mid-fight — switch anyway?'
                           : 'PUSH advances toward the boss after each clear. +1 essence a clear, +2 on a boss.\n\n'
                                 'You are mid-fight — switch anyway?'),
-                style: GameTheme.body(size: 15, color: GameTheme.parchment),
+                style: GameTheme.readable(color: GameTheme.parchment),
               ),
               actions: [
                 GameButton(
@@ -610,22 +604,16 @@ class DungeonTopHud extends StatelessWidget {
                       placeLine,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: awaitingExit || state.isPartyDefeated
+                      style: GameTheme.hint(color: awaitingExit || state.isPartyDefeated
                             ? GameTheme.clear
-                            : GameTheme.parchment,
-                      ),
+                            : GameTheme.parchment),
                     ),
                     if (affixLine.isNotEmpty)
                       Text(
                         affixLine,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GameTheme.body(
-                          size: 11,
-                          color: GameTheme.parchmentDim,
-                        ),
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
                       ),
                   ],
                 ),
@@ -636,10 +624,7 @@ class DungeonTopHud extends StatelessWidget {
                   child: Text(
                     keyTimerLabel,
                     maxLines: 1,
-                    style: GameTheme.pixel(
-                      size: GameTheme.hudPixel,
-                      color: GameTheme.torchHot,
-                    ),
+                    style: GameTheme.combat(color: GameTheme.torchHot),
                   ),
                 ),
             ],
@@ -658,7 +643,7 @@ class DungeonTopHud extends StatelessWidget {
                         final mult = FarmIntensity.allowed[i];
                         final canPick = FarmIntensity.canPick(state, mult);
                         return DungeonModeChip(
-                          label: '${mult}×',
+                          label: '$mult×',
                           selected: FarmIntensity.effectiveMult(state) == mult,
                           expand: true,
                           tip: canPick
@@ -737,10 +722,7 @@ class DungeonTopHud extends StatelessWidget {
                       child: Center(
                         child: Text(
                           state.inGauntlet ? '...' : 'F$floor',
-                          style: GameTheme.pixel(
-                            size: GameTheme.hudPixel,
-                            color: GameTheme.torchHot,
-                          ),
+                          style: GameTheme.combat(color: GameTheme.torchHot),
                         ),
                       ),
                     ),
@@ -754,7 +736,7 @@ class DungeonTopHud extends StatelessWidget {
               partyLine,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           if (coachLine != null)
             Padding(
@@ -764,7 +746,7 @@ class DungeonTopHud extends StatelessWidget {
                 textAlign: TextAlign.right,
                 maxLines: awayLine != null ? 2 : 1,
                 overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+                style: GameTheme.hint(color: GameTheme.torchHot),
               ),
             ),
           if (state.inRift)
@@ -789,15 +771,11 @@ class DungeonTopHud extends StatelessWidget {
             child: Row(
               children: [
                 Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: WalletStrip(
-                      gold: state.gold,
-                      essence: state.essence,
-                      dense: true,
-                      showEssence: MenuTabs.showCamp(state),
-                    ),
+                  child: WalletStrip(
+                    gold: state.gold,
+                    essence: state.essence,
+                    dense: true,
+                    showEssence: MenuTabs.showCamp(state),
                   ),
                 ),
                 if (GameLogic.canClaimDailyVault(state))
@@ -828,10 +806,7 @@ class DungeonTopHud extends StatelessWidget {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 10,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                   ),
                   if (!(director.exitHoldActive))
@@ -862,10 +837,7 @@ class DungeonTopHud extends StatelessWidget {
                           ? 'Too weak · buy power or better gear'
                           : 'Underleveled · ~$softcap lvl or gear',
                       textAlign: TextAlign.center,
-                      style: GameTheme.body(
-                        size: 10,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.torchHot),
                     ),
                   ),
                   if (onOpenForge != null) ...[
@@ -874,10 +846,7 @@ class DungeonTopHud extends StatelessWidget {
                       onTap: onOpenForge,
                       child: Text(
                         'GOLD',
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: GameTheme.clear,
-                        ),
+                        style: GameTheme.combat(color: GameTheme.clear),
                       ),
                     ),
                   ],
@@ -887,10 +856,7 @@ class DungeonTopHud extends StatelessWidget {
                       onTap: onOpenParty,
                       child: Text(
                         'GEAR',
-                        style: GameTheme.pixel(
-                          size: GameTheme.hudPixel,
-                          color: GameTheme.clear,
-                        ),
+                        style: GameTheme.combat(color: GameTheme.clear),
                       ),
                     ),
                   ],
@@ -931,10 +897,7 @@ class _VaultClaimChip extends StatelessWidget {
               ),
               child: Text(
                 'CLAIM',
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: GameTheme.clear,
-                ),
+                style: GameTheme.combat(color: GameTheme.clear),
               ),
             ),
           ),
@@ -984,10 +947,7 @@ class MissionClaimChip extends StatelessWidget {
               ),
               child: Text(
                 dense ? 'QUESTS · $count' : 'QUESTS · $count',
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: GameTheme.clear,
-                ),
+                style: GameTheme.combat(color: GameTheme.clear),
               ),
             ),
           ),

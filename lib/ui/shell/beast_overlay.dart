@@ -124,7 +124,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
         if (PetService.errandActive(state)) ...[
           Text(
             PetService.statusLine(state, DateTime.now()),
-            style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+            style: GameTheme.readable(color: GameTheme.torchHot),
           ),
           if (PetService.errandReady(state, DateTime.now())) ...[
             const SizedBox(height: 6),
@@ -137,12 +137,12 @@ class _BeastOverlayState extends State<BeastOverlay> {
         ] else if (state.ownedPets.isNotEmpty) ...[
           Text(
             PetErrandStock.stockLine(state, now: DateTime.now()),
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 4),
           Text(
             'Send one pet out for 4, 8, or 12 hours.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           if (state.metaDepth.petShipmentBonus <
               PetErrandStock.maxShipmentBonus) ...[
@@ -162,7 +162,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
         Text(
           'Roster ${state.ownedPets.length}/$cap',
           textAlign: TextAlign.center,
-          style: GameTheme.menuTitle(size: 16, color: GameTheme.torchHot),
+          style: GameTheme.title(color: GameTheme.torchHot),
         ),
         if (state.ownedPets.isNotEmpty) ...[
           const SizedBox(height: 4),
@@ -171,7 +171,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
             'FAVORITE boosts that species while it is ACTIVE.\n'
             'Affinity +25% in its cave. Bond +1 AP every 5 ranks.',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
         if (state.metaDepth.favoritePetSpecies.isNotEmpty) ...[
@@ -179,7 +179,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
           Text(
             'Favorite: ${PetCatalog.byId(state.metaDepth.favoritePetSpecies)?.name ?? state.metaDepth.favoritePetSpecies}',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           ),
         ],
         const SizedBox(height: 8),
@@ -190,14 +190,14 @@ class _BeastOverlayState extends State<BeastOverlay> {
           Text(
             'No pets yet',
             textAlign: TextAlign.center,
-            style: GameTheme.menuTitle(size: 16, color: GameTheme.torchHot),
+            style: GameTheme.title(color: GameTheme.torchHot),
           ),
           const SizedBox(height: 6),
           Text(
             'Hatch an egg with essence — random species and rarity. '
             'Companions fight beside the party and grant passives (gold, loot, mitigate…).',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+            style: GameTheme.readable(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 12),
         ] else ...[
@@ -208,7 +208,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                       : 'Need the same species and same rarity (legendary cannot merge)')
                 : 'Pick two same-species pets, then CONFIRM MERGE',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
           if (canMerge)
@@ -259,10 +259,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                                   Text(
                                     '${pet.name}  |  ${pet.rarity.name}'
                                     '${pet.frame != PetFrame.none ? '  [${pet.frame.name}]' : ''}',
-                                    style: GameTheme.body(
-                                      size: 15,
-                                      color: GameTheme.parchment,
-                                    ),
+                                    style: GameTheme.readable(color: GameTheme.parchment),
                                   ),
                                   Text(
                                     '${pet.hasNickname ? '${pet.speciesName}  ' : ''}'
@@ -270,10 +267,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                                     '${passive.isEmpty ? '' : '  $passive'}'
                                     '  · ${_affinityLabel(pet.affinityDungeonId)} +25%'
                                     '${pet.bondLevel > 0 ? '  bond${pet.bondLevel}' : ''}',
-                                    style: GameTheme.body(
-                                      size: 13,
-                                      color: GameTheme.parchmentDim,
-                                    ),
+                                    style: GameTheme.section(color: GameTheme.parchmentDim),
                                   ),
                                 ],
                               );
@@ -283,10 +277,7 @@ class _BeastOverlayState extends State<BeastOverlay> {
                         if (state.activePet?.id == pet.id)
                           Text(
                             'ACTIVE',
-                            style: GameTheme.body(
-                              size: 12,
-                              color: GameTheme.torchHot,
-                            ),
+                            style: GameTheme.hint(color: GameTheme.torchHot),
                           ),
                       ],
                     ),
@@ -528,7 +519,7 @@ class _RenamePetDialogState extends State<_RenamePetDialog> {
       backgroundColor: GameTheme.sheet,
       title: Text(
         'RENAME',
-        style: GameTheme.body(size: 16, color: GameTheme.parchment),
+        style: GameTheme.readable(color: GameTheme.parchment),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -536,7 +527,7 @@ class _RenamePetDialogState extends State<_RenamePetDialog> {
         children: [
           Text(
             widget.speciesName,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 8),
           TextField(
@@ -547,7 +538,7 @@ class _RenamePetDialogState extends State<_RenamePetDialog> {
             textInputAction: TextInputAction.done,
             autocorrect: false,
             enableSuggestions: false,
-            style: GameTheme.body(size: 15, color: GameTheme.parchment),
+            style: GameTheme.readable(color: GameTheme.parchment),
             cursorColor: GameTheme.torchHot,
             onChanged: (_) {
               if (_error) setState(() => _error = false);
@@ -556,10 +547,7 @@ class _RenamePetDialogState extends State<_RenamePetDialog> {
             decoration: InputDecoration(
               counterText: '',
               hintText: 'Grubby',
-              hintStyle: GameTheme.body(
-                size: 14,
-                color: GameTheme.parchmentDim,
-              ),
+              hintStyle: GameTheme.readable(color: GameTheme.parchmentDim),
               filled: true,
               fillColor: GameTheme.panelInset,
               contentPadding: const EdgeInsets.symmetric(
@@ -579,7 +567,7 @@ class _RenamePetDialogState extends State<_RenamePetDialog> {
           const SizedBox(height: 6),
           Text(
             _error ? 'Choose another name' : 'Blank uses ${widget.speciesName}',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
       ),

@@ -27,12 +27,9 @@ class _CombineSlot extends StatelessWidget {
               width: 44,
               child: Text(
                 label,
-                style: GameTheme.body(
-                  size: 12,
-                  color: item != null
+                style: GameTheme.hint(color: item != null
                       ? GameTheme.torchHot
-                      : GameTheme.parchmentDim,
-                ),
+                      : GameTheme.parchmentDim),
               ),
             ),
             if (item != null) ...[
@@ -47,15 +44,12 @@ class _CombineSlot extends StatelessWidget {
                       item!.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(size: 14),
+                      style: GameTheme.readable(),
                     ),
                     Text(
                       '${GameLogic.rarityNames[item!.rarity]}'
                       '  i${item!.effectiveItemLevel}',
-                      style: GameTheme.body(
-                        size: 12,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                   ],
                 ),
@@ -73,10 +67,7 @@ class _CombineSlot extends StatelessWidget {
               Expanded(
                 child: Text(
                   emptyHint,
-                  style: GameTheme.body(
-                    size: 14,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.readable(color: GameTheme.parchmentDim),
                 ),
               ),
           ],

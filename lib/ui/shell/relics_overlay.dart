@@ -124,11 +124,11 @@ class _OwnedRelic extends StatelessWidget {
                   children: [
                     Text(
                       '$name · T$tier',
-                      style: GameTheme.body(size: 16, color: GameTheme.parchment),
+                      style: GameTheme.readable(color: GameTheme.parchment),
                     ),
                     Text(
                       pay,
-                      style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+                      style: GameTheme.section(color: GameTheme.mossLit),
                     ),
                   ],
                 ),

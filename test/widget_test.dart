@@ -16,6 +16,11 @@ import 'package:idle_party/ui/shell/app_bottom_bar.dart';
 Future<void> pumpSheet(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 400));
+  // A taller nav can start a floor-band bake. Let that image future finish.
+  await tester.runAsync(
+    () => Future<void>.delayed(const Duration(milliseconds: 30)),
+  );
+  await tester.pump(const Duration(milliseconds: 50));
 }
 
 /// Hub cards (thanks / reminders / what's new) sit on a scrim. Dismiss so

@@ -108,7 +108,7 @@ class _FamilyPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: Text(
               entry.key.toUpperCase(),
-              style: GameTheme.body(size: 12, color: GameTheme.torch),
+              style: GameTheme.hint(color: GameTheme.torch),
             ),
           ),
           SizedBox(

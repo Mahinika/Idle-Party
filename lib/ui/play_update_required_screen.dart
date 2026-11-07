@@ -32,6 +32,7 @@ class PlayUpdateRequiredScreen extends StatelessWidget {
           ),
           CaveAtmosphere.readabilityScrim(top: 0.7, bottom: 0.55),
           MenuChrome.playSafeArea(
+            top: true,
             bottom: true,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
@@ -50,17 +51,14 @@ class PlayUpdateRequiredScreen extends StatelessWidget {
                         Text(
                           'UPDATE REQUIRED',
                           textAlign: TextAlign.center,
-                          style: GameTheme.menuTitle(size: 20),
+                          style: GameTheme.title(),
                         ),
                         const SizedBox(height: 12),
                         Text(
                           'A newer Idle Party is on Google Play.\n'
                           'Update to keep playing.',
                           textAlign: TextAlign.center,
-                          style: GameTheme.body(
-                            size: 15,
-                            color: GameTheme.parchment,
-                          ),
+                          style: GameTheme.readable(color: GameTheme.parchment),
                         ),
                       ],
                     ),
@@ -77,10 +75,7 @@ class PlayUpdateRequiredScreen extends StatelessWidget {
                   Text(
                     MetaSystems.currentVersion,
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim.withValues(alpha: 0.7),
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim.withValues(alpha: 0.7)),
                   ),
                 ],
               ),

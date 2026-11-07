@@ -108,18 +108,12 @@ class HubPowerupsFab extends StatelessWidget {
                         hint(state),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GameTheme.body(
-                          size: 13,
-                          color: GameTheme.parchmentDim,
-                        ),
+                        style: GameTheme.section(color: GameTheme.parchmentDim),
                       ),
                     ),
                     Text(
                       'OPEN',
-                      style: GameTheme.menuTitle(
-                        size: 10,
-                        color: GameTheme.torch,
-                      ),
+                      style: GameTheme.readable(color: GameTheme.torch),
                     ),
                   ],
                 ),
@@ -150,7 +144,7 @@ class _TicketBadge extends StatelessWidget {
       child: Text(
         count > 9 ? '9+' : '$count',
         textAlign: TextAlign.center,
-        style: GameTheme.pixel(size: 8, color: GameTheme.stone),
+        style: GameTheme.hint(color: GameTheme.stone),
       ),
     );
   }
@@ -264,7 +258,7 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('SCROLLS', style: GameTheme.menuTitle(size: 18)),
+                  Text('SCROLLS', style: GameTheme.title()),
                   ShellLayout.gap(6),
                   Row(
                     children: [
@@ -300,18 +294,12 @@ class _PowerupsSheetState extends State<_PowerupsSheet> {
                         Expanded(
                           child: Text(
                             'Ad Tickets',
-                            style: GameTheme.body(
-                              size: 14,
-                              color: GameTheme.parchmentDim,
-                            ),
+                            style: GameTheme.readable(color: GameTheme.parchmentDim),
                           ),
                         ),
                         Text(
                           '${md.adTickets}',
-                          style: GameTheme.menuTitle(
-                            size: 22,
-                            color: GameTheme.torchHot,
-                          ),
+                          style: GameTheme.title(color: GameTheme.torchHot),
                         ),
                       ],
                     ),
@@ -420,10 +408,7 @@ class _AdFreeNudgeTile extends StatelessWidget {
                       AdFreeNudge.line,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 13,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.section(color: GameTheme.torchHot),
                     ),
                   ),
                 ),
@@ -470,7 +455,7 @@ class _ScrollWellBlock extends StatelessWidget {
       }
       return Text(
         'Daily ticket already claimed (UTC day).',
-        style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        style: GameTheme.section(color: GameTheme.parchmentDim),
       );
     }
 
@@ -485,14 +470,14 @@ class _ScrollWellBlock extends StatelessWidget {
       children: [
         Text(
           progress,
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+          style: GameTheme.section(color: GameTheme.torchHot),
         ),
         const SizedBox(height: 4),
         Text(
           ladderDone
               ? 'Daily bonus done. Extra WATCH ads still grant tickets.'
               : '1 free ticket, then 2 ad steps each UTC day.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         if (canFree)
@@ -522,7 +507,7 @@ class _ScrollWellBlock extends StatelessWidget {
           else ...[
             Text(
               'Ads play on the Android app. This playtest can preview a ticket.',
-              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+              style: GameTheme.section(color: GameTheme.parchmentDim),
             ),
             const SizedBox(height: 8),
             GameButton(
@@ -535,7 +520,7 @@ class _ScrollWellBlock extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Ads play on the Android app. This playtest can preview a ticket.',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 8),
           GameButton(
@@ -565,7 +550,7 @@ class _WispDailyLine extends StatelessWidget {
       left <= 0
           ? 'WISP · 0 LEFT TODAY · In the cave, tap the lantern for gold.'
           : 'WISP · $left LEFT TODAY · In the cave, tap the lantern for gold.',
-      style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+      style: GameTheme.section(color: GameTheme.parchmentDim),
     );
   }
 }
@@ -606,10 +591,7 @@ class _BuffRow extends StatelessWidget {
                       Expanded(
                         child: Text(
                           offer.label,
-                          style: GameTheme.body(
-                            size: 15,
-                            color: GameTheme.torchHot,
-                          ),
+                          style: GameTheme.readable(color: GameTheme.torchHot),
                         ),
                       ),
                       if (on) MenuChrome.chip(label: timer!, selected: true),
@@ -618,7 +600,7 @@ class _BuffRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     offer.effect,
-                    style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+                    style: GameTheme.hint(color: GameTheme.mossLit),
                   ),
                 ],
               ),

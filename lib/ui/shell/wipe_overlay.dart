@@ -60,10 +60,7 @@ class DungeonWipePanel extends StatelessWidget {
                     children: [
                       Text(
                         'PARTY WIPED',
-                        style: GameTheme.pixel(
-                          size: 12,
-                          color: GameTheme.bloodLit,
-                        ),
+                        style: GameTheme.hint(color: GameTheme.bloodLit),
                       ),
                       ShellLayout.gap(6),
                       Flexible(
@@ -121,10 +118,7 @@ class DungeonWipePanel extends StatelessWidget {
                                 Text(
                                   wispLine,
                                   textAlign: TextAlign.center,
-                                  style: GameTheme.body(
-                                    size: 12,
-                                    color: GameTheme.torchHot,
-                                  ),
+                                  style: GameTheme.hint(color: GameTheme.torchHot),
                                 ),
                               ],
                               if (state.wipeAdviceLine.isNotEmpty) ...[
@@ -136,10 +130,7 @@ class DungeonWipePanel extends StatelessWidget {
                                     Text(
                                       state.wipeAdviceLine,
                                       textAlign: TextAlign.center,
-                                      style: GameTheme.body(
-                                        size: 14,
-                                        color: GameTheme.torchHot,
-                                      ),
+                                      style: GameTheme.readable(color: GameTheme.torchHot),
                                     ),
                                     if (!plain)
                                       if (WipeAdvice.shownScanLine(
@@ -155,10 +146,7 @@ class DungeonWipePanel extends StatelessWidget {
                                         Text(
                                           scan,
                                           textAlign: TextAlign.center,
-                                          style: GameTheme.body(
-                                            size: 12,
-                                            color: GameTheme.parchmentDim,
-                                          ),
+                                          style: GameTheme.hint(color: GameTheme.parchmentDim),
                                         ),
                                       ],
                                     if (WipeAdvice.hubHintFor(state.wipeAdviceLine)
@@ -167,10 +155,7 @@ class DungeonWipePanel extends StatelessWidget {
                                       Text(
                                         hint,
                                         textAlign: TextAlign.center,
-                                        style: GameTheme.body(
-                                          size: 13,
-                                          color: GameTheme.parchmentDim,
-                                        ),
+                                        style: GameTheme.section(color: GameTheme.parchmentDim),
                                       ),
                                     ],
                                   ],
@@ -181,10 +166,7 @@ class DungeonWipePanel extends StatelessWidget {
                                 Text(
                                   'After RETRY: ${WipeAdvice.godHandHintFor(state)!}',
                                   textAlign: TextAlign.center,
-                                  style: GameTheme.body(
-                                    size: 13,
-                                    color: GameTheme.mossLit,
-                                  ),
+                                  style: GameTheme.section(color: GameTheme.mossLit),
                                 ),
                               ],
                               const SizedBox(height: 10),
@@ -197,10 +179,7 @@ class DungeonWipePanel extends StatelessWidget {
                                     child: Text(
                                       'Fighting again in $seconds',
                                       textAlign: TextAlign.center,
-                                      style: GameTheme.body(
-                                        size: 13,
-                                        color: GameTheme.torchHot,
-                                      ),
+                                      style: GameTheme.section(color: GameTheme.torchHot),
                                     ),
                                   );
                                 },

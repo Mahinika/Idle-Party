@@ -1,5 +1,10 @@
 part of 'spatial_dungeon_view.dart';
 
+/// Tests skip the async floor bake so disposing the tree cannot leave a
+/// pending image timer. Live play never calls this.
+@visibleForTesting
+void debugHoldFloorBake() => _FloorLayerCache.debugHoldBake();
+
 /// One soft white disc, tinted and blitted. A fresh radial shader every torch
 /// every frame used to stall the fight on the phone GPU.
 abstract final class _SoftGlow {
@@ -117,6 +122,13 @@ abstract final class _FloorLayerCache {
   static int _gen = 0;
   static int _flightTicket = 0;
   static bool _failed = false;
+
+  /// Tests opt out of the async band bake so a disposed tree cannot leave a
+  /// pending image future. Live play never sets this.
+  static bool _holdBake = false;
+
+  @visibleForTesting
+  static void debugHoldBake() => _holdBake = true;
   static List<ui.Image?> _bands = [];
   static Future<void>? _bandFlight;
   static bool _bandQueued = false;
@@ -168,11 +180,16 @@ abstract final class _FloorLayerCache {
     int y1,
   ) {
     if (!_fresh(p)) _reset(p);
-    if (_failed || _map == null || x1 <= x0 || y1 <= y0 || !_covers(y0, y1)) {
-      if (!_failed && _map != null && x1 > x0 && y1 > y0) {
+    if (_holdBake ||
+        _failed ||
+        _map == null ||
+        x1 <= x0 ||
+        y1 <= y0 ||
+        !_covers(y0, y1)) {
+      if (!_holdBake && !_failed && _map != null && x1 > x0 && y1 > y0) {
         _kickBand(p, y0, y1);
       }
-      if (_failed || _map == null) {
+      if (_holdBake || _failed || _map == null) {
         p.paintStaticTerrain(
           canvas,
           tile: tile,

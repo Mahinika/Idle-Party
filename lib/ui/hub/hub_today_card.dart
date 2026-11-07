@@ -132,7 +132,7 @@ class HubMetaPulse extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
       ),
     );
@@ -173,8 +173,7 @@ class HubTodayCard extends StatelessWidget {
         : null;
     final showDetail = !hideDetail && chase.detail.isNotEmpty;
     final why = hideWhy ? '' : ChaseContract(chase: chase).whyLine;
-    final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final titleMaxLines = textScale > 1.2 ? 1 : 2;
+    const titleMaxLines = 2;
     return Semantics(
       label: 'Next job: ${chase.title}. ${chase.detail}. $why',
       button:
@@ -195,7 +194,7 @@ class HubTodayCard extends StatelessWidget {
                 ),
                 if (chip != null) ...[
                   const SizedBox(width: 8),
-                  Text(chip, style: GameTheme.body(size: 13, color: accent)),
+                  Text(chip, style: GameTheme.section(color: accent)),
                 ],
               ],
             ),
@@ -204,7 +203,7 @@ class HubTodayCard extends StatelessWidget {
               _todayHeadline(chase, ready: ready),
               maxLines: titleMaxLines,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 16, color: GameTheme.parchment),
+              style: GameTheme.readable(color: GameTheme.parchment),
             ),
             if (showDetail) ...[
               const SizedBox(height: 6),
@@ -212,7 +211,7 @@ class HubTodayCard extends StatelessWidget {
                 chase.detail,
                 maxLines: 4,
                 overflow: TextOverflow.ellipsis,
-                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+                style: GameTheme.section(color: GameTheme.parchmentDim),
               ),
               const SizedBox(height: 4),
               if (why.isNotEmpty)
@@ -220,7 +219,7 @@ class HubTodayCard extends StatelessWidget {
                   why,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
             ],
             if (actionLabel != null && onAction != null) ...[
@@ -404,7 +403,7 @@ class HubUrgentRow extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ),
         if (showAscend)

@@ -56,7 +56,7 @@ abstract final class UiIcon {
   static const List<String> goldDockSegment = [forge, camp, market];
 }
 
-enum UiGlyph { add, close, prev, next, scroll, wisp }
+enum UiGlyph { add, remove, close, prev, next, scroll, wisp }
 
 /// Pixel mark: a [UiIcon] sprite or a [UiGlyph] painted in-theme.
 class GameIcon extends StatelessWidget {
@@ -99,6 +99,7 @@ class GameIcon extends StatelessWidget {
 
   static List<String> _rowsFor(UiGlyph g) => switch (g) {
         UiGlyph.add => _kAdd,
+        UiGlyph.remove => _kRemove,
         UiGlyph.close => _kClose,
         UiGlyph.prev => _kPrev,
         UiGlyph.next => _kNext,
@@ -210,6 +211,18 @@ const _kAdd = <String>[
   '....#....',
   '....#....',
   '....#....',
+];
+
+const _kRemove = <String>[
+  '.........',
+  '.........',
+  '.........',
+  '.........',
+  '#########',
+  '.........',
+  '.........',
+  '.........',
+  '.........',
 ];
 
 const _kClose = <String>[

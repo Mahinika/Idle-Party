@@ -107,10 +107,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                         widget.lockExpanded
                             ? 'KEY'
                             : (_expanded ? '▾ KEY' : '▸ KEY'),
-                        style: GameTheme.body(
-                          size: 12,
-                          color: GameTheme.torchHot,
-                        ),
+                        style: GameTheme.hint(color: GameTheme.torchHot),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -118,10 +115,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                           activeBits.isEmpty ? 'off' : activeBits.join(' · '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GameTheme.body(
-                            size: 13,
-                            color: GameTheme.parchmentDim,
-                          ),
+                          style: GameTheme.section(color: GameTheme.parchmentDim),
                         ),
                       ),
                     ],
@@ -143,7 +137,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 ? 'Normal caves. Loot bonus starts at KEY +1.'
                 : 'Loot +${Keystone.lootItemLevelBonus(state.hardmodeLevel)} iLvl · ${Keystone.goldMulLabel(state.hardmodeLevel)}',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           if (GameLogic.endgameUnlocked(state)) ...[
             const SizedBox(height: 4),
@@ -152,7 +146,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+              style: GameTheme.hint(color: GameTheme.torchHot),
             ),
           ],
           if (affixes.isNotEmpty) ...[
@@ -185,18 +179,15 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                         ? 'WEEK GOAL ALMOST'
                         : 'WEEK GOAL',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 12,
-                      color: weekReady || weekAlmost
+                    style: GameTheme.hint(color: weekReady || weekAlmost
                           ? GameTheme.torchHot
-                          : GameTheme.parchmentDim,
-                    ),
+                          : GameTheme.parchmentDim),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     week.name,
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(size: 13, color: GameTheme.parchment),
+                    style: GameTheme.section(color: GameTheme.parchment),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -206,10 +197,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                               '${LocalSeasonCatalog.weekProgressLabel(state, week)}'
                               '${weekReady ? ' · auto-claims on hub sync' : ''}',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
               ),
@@ -243,7 +231,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
               'Boss Rush: tougher elite packs (not extra bosses) · +2e on clear · '
               'No Flask: healing flasks disabled · +2e on clear',
               textAlign: TextAlign.center,
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ),
           const SizedBox(height: 6),
@@ -257,7 +245,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
             child: Text(
               'Tiny: 3 heroes max · +2e on clear (not a harder threat)',
               textAlign: TextAlign.center,
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ),
           if (state.metaDepth.challengeBestBossRushKey > 0 ||
@@ -269,14 +257,14 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
               'No Flask +${state.metaDepth.challengeBestNoFlaskKey} · '
               'Tiny +${state.metaDepth.challengeBestTinyKey}',
               textAlign: TextAlign.center,
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ],
           Text(
             'Party power ${GameLogic.partyPowerScore(state)} · '
             'levels, worn gear, Ascend, blessings, Apex, Full Bench, endgame unlock',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+            style: GameTheme.hint(color: GameTheme.mossLit),
           ),
           const SizedBox(height: 6),
           Container(
@@ -287,12 +275,9 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                 Text(
                   'DAILY VAULT',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: vaultReady
+                  style: GameTheme.hint(color: vaultReady
                         ? GameTheme.torchHot
-                        : GameTheme.parchmentDim,
-                  ),
+                        : GameTheme.parchmentDim),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -303,10 +288,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                             ' · best timed KEY +${md.dailyBestTimedKey}'
                             '${vaultReady ? ' · ready' : ''}',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -316,17 +298,14 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                             '+${GameLogic.seasonWeeklyBonusEssence}e '
                             'first vault claim',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 11,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
                 if (GameLogic.checkInActive(state)) ...[
                   const SizedBox(height: 2),
                   Text(
                     GameLogic.checkInWelcomeLine(state),
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+                    style: GameTheme.hint(color: GameTheme.mossLit),
                   ),
                 ],
                 if (vaultReady) ...[
@@ -346,7 +325,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+              style: GameTheme.hint(color: GameTheme.torchHot),
             ),
           ],
           const SizedBox(height: 2),
@@ -356,7 +335,7 @@ class _ChallengeTogglesState extends State<ChallengeToggles> {
                       'with Gauntlet, Ranked GR, Farm Rift, Ashen, and Craft Trial.'
                 : 'Timed boss under par upgrades KEY. Vault: 1 clear or timed KEY+2. Keys keep going past +${Keystone.campaignCap}.',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
       ],
@@ -385,7 +364,6 @@ class _HardmodeStepper extends StatelessWidget {
             label: 'KEY -',
             sign: '-',
             onPressed: level > 0 ? () => onChanged(level - 1) : null,
-            size: 36,
           ),
           Expanded(
             child: Column(
@@ -393,12 +371,9 @@ class _HardmodeStepper extends StatelessWidget {
                 Text(
                   level <= 0 ? 'OFF' : '+$level',
                   textAlign: TextAlign.center,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: level > 0
+                  style: GameTheme.hint(color: level > 0
                         ? GameTheme.torchHot
-                        : GameTheme.parchmentDim,
-                  ),
+                        : GameTheme.parchmentDim),
                 ),
                 if (level > 0) ...[
                   const SizedBox(height: 2),
@@ -407,10 +382,7 @@ class _HardmodeStepper extends StatelessWidget {
                         ? 'Higher keys stay open'
                         : 'Clear this key to unlock +${level + 1}',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
               ],
@@ -420,7 +392,6 @@ class _HardmodeStepper extends StatelessWidget {
             label: 'KEY +',
             sign: '+',
             onPressed: level < maxLevel ? () => onChanged(level + 1) : null,
-            size: 36,
           ),
         ],
       ),
@@ -484,7 +455,7 @@ class _KeyAffixChip extends StatelessWidget {
             ),
             child: Text(
               risk,
-              style: GameTheme.pixel(size: 8, color: _riskColor),
+              style: GameTheme.hint(color: _riskColor),
             ),
           ),
           const SizedBox(width: 6),
@@ -493,7 +464,7 @@ class _KeyAffixChip extends StatelessWidget {
               '$label · $blurb',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 11, color: GameTheme.parchment),
+              style: GameTheme.hint(color: GameTheme.parchment),
             ),
           ),
         ],
@@ -533,10 +504,7 @@ class _ChallengeChip extends StatelessWidget {
               decoration: MenuChrome.listCard(selected: active),
               child: Text(
                 label,
-                style: GameTheme.body(
-                  size: 14,
-                  color: active ? GameTheme.torchHot : GameTheme.parchmentDim,
-                ),
+                style: GameTheme.readable(color: active ? GameTheme.torchHot : GameTheme.parchmentDim),
               ),
             ),
           ),

@@ -121,10 +121,7 @@ class _BagSlot extends StatelessWidget {
                         child: ExcludeSemantics(
                           child: Text(
                             _slotHint(item!.slot),
-                            style: GameTheme.body(
-                              size: 10,
-                              color: GameTheme.parchmentDim,
-                            ),
+                            style: GameTheme.hint(color: GameTheme.parchmentDim),
                           ),
                         ),
                       ),
@@ -135,10 +132,7 @@ class _BagSlot extends StatelessWidget {
                           child: ExcludeSemantics(
                             child: Text(
                               ilLabel,
-                              style: GameTheme.body(
-                                size: 12,
-                                color: GameTheme.parchment,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.parchment),
                             ),
                           ),
                         ),
@@ -157,10 +151,7 @@ class _BagSlot extends StatelessWidget {
                             ),
                             child: Text(
                               'UP',
-                              style: GameTheme.body(
-                                size: 10,
-                                color: GameTheme.clear,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.clear),
                             ),
                           ),
                         ),
@@ -179,10 +170,7 @@ class _BagSlot extends StatelessWidget {
                             ),
                             child: Text(
                               'BEST',
-                              style: GameTheme.body(
-                                size: 10,
-                                color: GameTheme.clear,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.clear),
                             ),
                           ),
                         ),
@@ -192,10 +180,7 @@ class _BagSlot extends StatelessWidget {
                           right: 3,
                           child: Text(
                             'SB',
-                            style: GameTheme.body(
-                              size: 10,
-                              color: GameTheme.torchHot,
-                            ),
+                            style: GameTheme.hint(color: GameTheme.torchHot),
                           ),
                         ),
                     ],

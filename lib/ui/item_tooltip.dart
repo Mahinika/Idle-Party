@@ -212,17 +212,14 @@ class ItemTooltipCard extends StatelessWidget {
             ],
           ),
           child: DefaultTextStyle(
-            style: GameTheme.body(size: 12, color: GameTheme.parchment),
+            style: GameTheme.hint(color: GameTheme.parchment),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   item.name,
-                  style: GameTheme.body(
-                    size: 15,
-                    color: itemRarityColor(item.rarity),
-                  ),
+                  style: GameTheme.readable(color: itemRarityColor(item.rarity)),
                 ),
                 const SizedBox(height: 2),
                 _StatCompareRow(
@@ -234,19 +231,19 @@ class ItemTooltipCard extends StatelessWidget {
                 if (binding != null)
                   Text(
                     binding,
-                    style: GameTheme.body(size: 12, color: GameTheme.parchment),
+                    style: GameTheme.hint(color: GameTheme.parchment),
                   ),
                 if (item.isApex)
                   Text(
                     'Apex Rank ${item.apexRank}'
                     '${item.apexClassId != null ? ' · ${_apexClassLabel(item.apexClassId!)}' : ''}',
-                    style: GameTheme.body(size: 12, color: _gold),
+                    style: GameTheme.hint(color: _gold),
                   ),
                 if (alreadyEquipped) ...[
                   const SizedBox(height: 4),
                   Text(
                     'Currently equipped',
-                    style: GameTheme.body(size: 12, color: _gold),
+                    style: GameTheme.hint(color: _gold),
                   ),
                 ],
                 if (comparing) ...[
@@ -257,10 +254,7 @@ class ItemTooltipCard extends StatelessWidget {
                         : 'vs ${worn.name}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
                 const SizedBox(height: 4),
@@ -269,19 +263,13 @@ class ItemTooltipCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         _titleCase(slotLabel),
-                        style: GameTheme.body(
-                          size: 12,
-                          color: GameTheme.parchment,
-                        ),
+                        style: GameTheme.hint(color: GameTheme.parchment),
                       ),
                     ),
                     if (type != null)
                       Text(
                         type,
-                        style: GameTheme.body(
-                          size: 12,
-                          color: GameTheme.parchment,
-                        ),
+                        style: GameTheme.hint(color: GameTheme.parchment),
                       ),
                   ],
                 ),
@@ -289,7 +277,7 @@ class ItemTooltipCard extends StatelessWidget {
                     item.weaponType != null) ...[
                   Text(
                     _weaponSwingLine(item),
-                    style: GameTheme.body(size: 12, color: GameTheme.parchment),
+                    style: GameTheme.hint(color: GameTheme.parchment),
                   ),
                 ],
                 if (statRows.isNotEmpty) ...[
@@ -297,10 +285,7 @@ class ItemTooltipCard extends StatelessWidget {
                   if (statRows.any((r) => r.primary)) ...[
                     Text(
                       'Primary',
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                     for (final row in statRows.where((r) => r.primary))
                       _StatCompareRow(
@@ -318,10 +303,7 @@ class ItemTooltipCard extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       'Secondary',
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                     for (final row in statRows.where((r) => !r.primary))
                       _StatCompareRow(
@@ -344,30 +326,24 @@ class ItemTooltipCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     EquipStatWeights.priorityBlurb(hero!.spec),
-                    style: GameTheme.body(size: 11, color: _gold),
+                    style: GameTheme.hint(color: _gold),
                   ),
                 ],
                 if (item.affinity != null && item.affinity!.isNotEmpty)
                   Text(
                     _affinityLine(item.affinity!, hero),
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 if (setHeader != null) ...[
                   const SizedBox(height: 6),
                   Text(
                     setHeader,
-                    style: GameTheme.body(size: 12, color: _gold),
+                    style: GameTheme.hint(color: _gold),
                   ),
                   for (final line in setLines)
                     Text(
                       line.text,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: line.active ? _green : GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(color: line.active ? _green : GameTheme.parchmentDim),
                     ),
                 ],
                 if (comparing) ...[
@@ -410,22 +386,16 @@ class ItemTooltipCard extends StatelessWidget {
                                           ? 'WEAKER  AP ${GameLogic.formatDelta(atkDelta)}  Armor ${GameLogic.formatDelta(defDelta)}  STA ${GameLogic.formatDelta(vitDelta)}'
                                           : 'SAME FIGHT STATS')),
                           textAlign: TextAlign.center,
-                          style: GameTheme.body(
-                            size: 12,
-                            color: isUpgrade
+                          style: GameTheme.hint(color: isUpgrade
                                 ? _green
                                 : (powerDelta < 0
                                       ? _red
-                                      : GameTheme.parchmentDim),
-                          ),
+                                      : GameTheme.parchmentDim)),
                         ),
                         Text(
                           'Score ${GameLogic.formatDelta(powerDelta)}',
                           textAlign: TextAlign.center,
-                          style: GameTheme.body(
-                            size: 11,
-                            color: GameTheme.parchmentDim,
-                          ),
+                          style: GameTheme.hint(color: GameTheme.parchmentDim),
                         ),
                       ],
                     ),
@@ -435,10 +405,7 @@ class ItemTooltipCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     'BAG → SELL JUNK or FILTERS clears junk',
-                    style: GameTheme.body(
-                      size: 11,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
               ],
@@ -474,11 +441,11 @@ class ItemTooltipCard extends StatelessWidget {
         Expanded(
           child: Text(
             'Equip: $neu',
-            style: GameTheme.body(size: 12, color: _green),
+            style: GameTheme.hint(color: _green),
           ),
         ),
         if (deltaText != null)
-          Text(deltaText, style: GameTheme.body(size: 11, color: deltaColor!)),
+          Text(deltaText, style: GameTheme.hint(color: deltaColor!)),
       ],
     );
   }
@@ -641,16 +608,13 @@ class _StatCompareRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: GameTheme.body(size: 12, color: labelColor),
+              style: GameTheme.hint(color: labelColor),
             ),
           ),
           if (d != null && d != 0)
             Text(
               GameLogic.formatDelta(d),
-              style: GameTheme.body(
-                size: emphasizeDelta ? 13 : 12,
-                color: d > 0 ? _green : _red,
-              ),
+              style: GameTheme.readable(color: d > 0 ? _green : _red),
             ),
         ],
       ),

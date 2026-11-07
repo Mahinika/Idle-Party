@@ -121,32 +121,32 @@ Future<void> showOfflineProgressDialog(
           if (lead != null) ...[
             Text(
               lead,
-              style: GameTheme.body(size: 16, color: GameTheme.torchHot),
+              style: GameTheme.readable(color: GameTheme.torchHot),
             ),
             const SizedBox(height: 6),
           ],
           if (summary != null) ...[
             Text(
               'Away for ${OfflineProgressResult.formatOfflineDuration(summary.awayForSeconds)} · ${summary.welcomeLead}',
-              style: GameTheme.body(size: 14, color: GameTheme.parchment),
+              style: GameTheme.readable(color: GameTheme.parchment),
             ),
             const SizedBox(height: 6),
             Text(
               summary.afkWhereLine,
-              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+              style: GameTheme.section(color: GameTheme.mossLit),
             ),
             if (summary.awayReport.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
                 summary.awayReport,
-                style: GameTheme.body(size: 13, color: GameTheme.parchment),
+                style: GameTheme.section(color: GameTheme.parchment),
               ),
             ],
             if (summary.materialsLine.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
                 summary.materialsLine,
-                style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+                style: GameTheme.section(color: GameTheme.torchHot),
               ),
             ],
             const SizedBox(height: 6),
@@ -155,28 +155,28 @@ Future<void> showOfflineProgressDialog(
                 summary.state,
                 wasInDungeon: summary.wasInDungeon,
               ),
-              style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+              style: GameTheme.section(color: GameTheme.mossLit),
             ),
           ],
           if (chestLine.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
               chestLine,
-              style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+              style: GameTheme.readable(color: GameTheme.torchHot),
             ),
           ],
           if (petLine.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
               petLine,
-              style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+              style: GameTheme.readable(color: GameTheme.torchHot),
             ),
           ],
           if (showCheckIn) ...[
             const SizedBox(height: 6),
             Text(
               checkInLine,
-              style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+              style: GameTheme.readable(color: GameTheme.torchHot),
             ),
           ],
           if (rows.isNotEmpty) ...[
@@ -218,10 +218,7 @@ Future<void> showOfflineProgressDialog(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       adNote,
-                      style: GameTheme.body(
-                        size: 14,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.readable(color: GameTheme.torchHot),
                     ),
                   );
                 }
@@ -279,12 +276,9 @@ Future<void> showOfflineProgressDialog(
           const SizedBox(height: 10),
           Text(
             contract.upNextLine,
-            style: GameTheme.body(
-              size: 14,
-              color: chase.urgency == HubChaseUrgency.normal
+            style: GameTheme.readable(color: chase.urgency == HubChaseUrgency.normal
                   ? GameTheme.mossLit
-                  : GameTheme.accentWarn,
-            ),
+                  : GameTheme.accentWarn),
           ),
           if (contract.detail.isNotEmpty) ...[
             ShellLayout.gap(4),

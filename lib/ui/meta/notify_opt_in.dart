@@ -72,13 +72,13 @@ class NotifyOptInOverlay extends StatelessWidget {
         Text(
           LocalReminders.optInTitle,
           textAlign: TextAlign.center,
-          style: GameTheme.menuTitle(size: 20),
+          style: GameTheme.title(),
         ),
         const SizedBox(height: 10),
         Text(
           LocalReminders.optInBody,
           textAlign: TextAlign.center,
-          style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+          style: GameTheme.readable(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 14),
         GameButton(

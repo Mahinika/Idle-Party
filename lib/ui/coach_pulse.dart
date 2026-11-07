@@ -91,7 +91,7 @@ class CoachLine extends StatelessWidget {
         textAlign: TextAlign.center,
         maxLines: maxLines,
         overflow: TextOverflow.ellipsis,
-        style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+        style: GameTheme.hint(color: GameTheme.torchHot),
       ),
     );
   }

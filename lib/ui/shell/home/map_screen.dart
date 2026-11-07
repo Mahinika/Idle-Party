@@ -102,7 +102,7 @@ class _MapScreenState extends State<MapScreen> {
       child: Text(
         line,
         textAlign: TextAlign.center,
-        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        style: GameTheme.hint(color: GameTheme.parchmentDim),
       ),
     );
   }
@@ -169,13 +169,10 @@ class _MapScreenState extends State<MapScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: GameTheme.menuTitle(size: 14)),
+                          Text(title, style: GameTheme.readable()),
                           Text(
                             body,
-                            style: GameTheme.body(
-                              size: 12,
-                              color: GameTheme.parchmentDim,
-                            ),
+                            style: GameTheme.hint(color: GameTheme.parchmentDim),
                           ),
                         ],
                       ),
@@ -183,7 +180,7 @@ class _MapScreenState extends State<MapScreen> {
                     if (badge != null && badge.isNotEmpty)
                       Text(
                         badge,
-                        style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                        style: GameTheme.hint(color: GameTheme.torchHot),
                       ),
                   ],
                 ),

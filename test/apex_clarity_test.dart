@@ -306,7 +306,7 @@ void main() {
       await tester.pump();
       expect(director.state.metaDepth.apexTargetProgress, 40);
 
-      await tester.drag(find.byType(ListView).first, const Offset(0, -280));
+      await tester.ensureVisible(find.text('CRAFT R1'));
       await tester.pump();
       await tester.tap(find.text('CRAFT R1'));
       await tester.pump();
@@ -315,7 +315,7 @@ void main() {
       expect(find.textContaining('Now ·'), findsOneWidget);
       expect(find.textContaining('Next ·'), findsOneWidget);
 
-      await tester.drag(find.byType(ListView).first, const Offset(0, -80));
+      await tester.ensureVisible(find.text('UPGRADE → R2'));
       await tester.pump();
       await tester.tap(find.text('UPGRADE → R2'));
       await tester.pump();
@@ -366,7 +366,7 @@ void main() {
       await tester.pump();
       expect(find.text('No matching hero in party'), findsOneWidget);
 
-      await tester.drag(find.byType(ListView).first, const Offset(0, 400));
+      await tester.ensureVisible(find.text('UPGRADE → R2'));
       await tester.pump();
       await tester.tap(find.text('UPGRADE → R2'));
       await tester.pump();

@@ -137,10 +137,7 @@ class EssenceTilesScreen extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.menuTitle(
-                    size: 13,
-                    color: open ? GameTheme.parchment : GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.readable(color: open ? GameTheme.parchment : GameTheme.parchmentDim),
                 ),
                 if (!open) ...[
                   const SizedBox(height: 2),
@@ -148,10 +145,7 @@ class EssenceTilesScreen extends StatelessWidget {
                     lockedHint,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GameTheme.body(
-                      size: 10,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                 ],
               ],

@@ -24,7 +24,12 @@ abstract final class ShellLayout {
 
   static const EdgeInsets scrollBodyPadding = EdgeInsets.fromLTRB(2, 0, 2, 16);
 
-  static const EdgeInsets listPadding = EdgeInsets.fromLTRB(4, 0, 4, 8);
+  static const EdgeInsets listPadding = EdgeInsets.fromLTRB(
+    GameTheme.edgeGap,
+    0,
+    GameTheme.edgeGap,
+    8,
+  );
 
   static const EdgeInsets hubScenePadding = EdgeInsets.fromLTRB(
     GameTheme.edgeGap,
@@ -59,7 +64,7 @@ abstract final class ShellLayout {
       text,
       maxLines: maxLines,
       overflow: TextOverflow.ellipsis,
-      style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+      style: GameTheme.hint(color: GameTheme.parchmentDim),
     );
   }
 
@@ -115,7 +120,7 @@ abstract final class ShellLayout {
               padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
               child: Text(
                 label,
-                style: GameTheme.menuTitle(size: 11, color: GameTheme.torch),
+                style: GameTheme.readable(color: GameTheme.torch),
               ),
             ),
           ),

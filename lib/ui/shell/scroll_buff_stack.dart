@@ -74,9 +74,7 @@ class _ScrollBuffStackState extends State<ScrollBuffStack> {
     if (cap != null) {
       column = ConstrainedBox(
         constraints: BoxConstraints(maxHeight: cap),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.bottomRight,
+        child: SingleChildScrollView(
           child: column,
         ),
       );
@@ -147,10 +145,7 @@ class _ScrollBuffPip extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.clip,
                   textAlign: TextAlign.center,
-                  style: GameTheme.pixel(
-                    size: GameTheme.hudPixel,
-                    color: tint,
-                  ),
+                  style: GameTheme.combat(color: tint),
                 ),
               ],
             ],

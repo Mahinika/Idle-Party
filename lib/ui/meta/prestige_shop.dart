@@ -77,7 +77,7 @@ class PrestigeShopOverlay extends StatelessWidget {
             Text(
               'Buying unlocks at AL3+.',
               textAlign: TextAlign.center,
-              style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+              style: GameTheme.readable(color: GameTheme.torchHot),
             ),
             const SizedBox(height: 8),
           ],
@@ -85,14 +85,14 @@ class PrestigeShopOverlay extends StatelessWidget {
             'Permanent upgrades · ${state.essence}e · AL${state.ascensionLevel}\n'
             'Not the bottom-tab SHOP (real-money convenience).',
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 10),
         ],
         if (shown.isEmpty)
           Text(
             compact ? 'All permanent buys maxed.' : 'Nothing listed.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         for (var i = 0; i < shown.length; i++) ...[
           if (i > 0) SizedBox(height: compact ? 4 : 8),
@@ -107,7 +107,7 @@ class PrestigeShopOverlay extends StatelessWidget {
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               '${maxed.length} maxed hidden',
-              style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
           ),
       ],
@@ -147,12 +147,9 @@ class _PrestigeRow extends StatelessWidget {
                 children: [
                   Text(
                     item.name,
-                    style: GameTheme.body(
-                      size: 13,
-                      color: locked
+                    style: GameTheme.section(color: locked
                           ? GameTheme.parchmentDim
-                          : GameTheme.parchment,
-                    ),
+                          : GameTheme.parchment),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -160,12 +157,9 @@ class _PrestigeRow extends StatelessWidget {
                     locked
                         ? 'AL${item.minAl}+'
                         : (have.isNotEmpty ? have : item.description),
-                    style: GameTheme.body(
-                      size: 11,
-                      color: locked
+                    style: GameTheme.hint(color: locked
                           ? GameTheme.parchmentDim
-                          : GameTheme.mossLit,
-                    ),
+                          : GameTheme.mossLit),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -198,20 +192,17 @@ class _PrestigeRow extends StatelessWidget {
         children: [
           Text(
             item.name,
-            style: GameTheme.body(
-              size: 15,
-              color: locked ? GameTheme.parchmentDim : GameTheme.torchHot,
-            ),
+            style: GameTheme.readable(color: locked ? GameTheme.parchmentDim : GameTheme.torchHot),
           ),
           const SizedBox(height: 4),
           Text(
             item.description,
-            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+            style: GameTheme.readable(color: GameTheme.parchmentDim),
           ),
           if (have.isNotEmpty)
             Text(
               have,
-              style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+              style: GameTheme.hint(color: GameTheme.mossLit),
             ),
           const SizedBox(height: 6),
           Row(
@@ -224,10 +215,7 @@ class _PrestigeRow extends StatelessWidget {
                       ? 'MAX'
                       : '${item.cost}e'
                             '${ownedCount > 0 ? ' · x$ownedCount' : ''}',
-                  style: GameTheme.body(
-                    size: 13,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.section(color: GameTheme.parchmentDim),
                 ),
               ),
               GameButton(

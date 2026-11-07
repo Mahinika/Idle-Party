@@ -130,7 +130,7 @@ class _MoreListState extends State<MoreList> with TickerProviderStateMixin {
         padding: const EdgeInsets.all(8),
         child: Text(
           MoreList.creditsBody,
-          style: GameTheme.body(size: 14, color: GameTheme.parchment),
+          style: GameTheme.readable(color: GameTheme.parchment),
         ),
       ),
       MoreSection.craft => CraftOverlay(director: d),

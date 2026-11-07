@@ -50,7 +50,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
           Text(
             [if (!hasTank) 'No Tank', if (!hasHeal) 'No Healer'].join(' · '),
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            style: GameTheme.hint(color: GameTheme.torchHot),
           ),
         ],
         ShellLayout.gap(10),
@@ -131,7 +131,7 @@ class _TeamCompositionOverlayState extends State<TeamCompositionOverlay> {
         for (final classId in HeroClassId.values) ...[
           Text(
             HeroSpecs.classLabel(classId),
-            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            style: GameTheme.hint(color: GameTheme.torchHot),
           ),
           const SizedBox(height: 4),
           for (final specId in HeroSpecs.forClass(classId))
@@ -264,10 +264,7 @@ class _RosterSpecRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   def.name,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: unlocked ? GameTheme.parchment : GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.hint(color: unlocked ? GameTheme.parchment : GameTheme.parchmentDim),
                 ),
               ),
               if (!unlocked)
@@ -294,12 +291,9 @@ class _RosterSpecRow extends StatelessWidget {
                 : onRoster
                 ? def.plainRoleLine
                 : 'READY',
-            style: GameTheme.body(
-              size: 11,
-              color: inActive
+            style: GameTheme.hint(color: inActive
                   ? GameTheme.mossLit
-                  : (unlocked ? GameTheme.parchmentDim : GameTheme.parchmentDim),
-            ),
+                  : (unlocked ? GameTheme.parchmentDim : GameTheme.parchmentDim)),
           ),
         ],
       ),

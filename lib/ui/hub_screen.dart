@@ -540,7 +540,7 @@ class _HubScreenState extends State<HubScreen>
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            style: GameTheme.hint(color: GameTheme.torchHot),
           ),
         ],
         SizedBox(height: short ? 4 : 6),
@@ -699,7 +699,7 @@ class _HubScreenState extends State<HubScreen>
     final track = GameLogic.ascendTrackLabel(state);
     final place =
         '${state.partyName} · Boss on F${GameLogic.bossFloorFor(state)}';
-    final placeStyle = GameTheme.body(size: 12, color: GameTheme.parchmentDim);
+    final placeStyle = GameTheme.hint(color: GameTheme.parchmentDim);
     if (track.isEmpty) {
       return Text(
         place,
@@ -729,7 +729,7 @@ class _HubScreenState extends State<HubScreen>
         Text(
           track,
           maxLines: 1,
-          style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+          style: GameTheme.hint(color: GameTheme.torchHot),
         ),
       ],
     );
@@ -769,6 +769,7 @@ class _HubScreenState extends State<HubScreen>
       children: [
         RepaintBoundary(child: const HubSceneBackdrop()),
         MenuChrome.playSafeArea(
+          top: true,
           child: Builder(
             builder: (context) {
               return Stack(

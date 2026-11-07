@@ -44,7 +44,7 @@ class GauntletHubPanel extends StatelessWidget {
           ShellLayout.gap(4),
           Text(
             pay,
-            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            style: GameTheme.hint(color: GameTheme.torchHot),
           ),
         ],
         ShellLayout.gap(4),
@@ -82,13 +82,13 @@ class _SpireTrophyGrid extends StatelessWidget {
       children: [
         Text(
           'SPIRE TROPHIES · $earned/12',
-          style: GameTheme.body(size: 12, color: GameTheme.parchment),
+          style: GameTheme.hint(color: GameTheme.parchment),
         ),
         const SizedBox(height: 2),
         Text(
           'First clear of each cell pays ${GauntletTrophies.firstEssence} essence. '
           'MIGHT earns RUSH instead of SWARM. A full row grants a title. All 12 grant 1 STAR.',
-          style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         for (final pact in GauntletPact.values) ...[
@@ -98,10 +98,7 @@ class _SpireTrophyGrid extends StatelessWidget {
                 width: 58,
                 child: Text(
                   GauntletPacts.title(pact),
-                  style: GameTheme.pixel(
-                    size: 9,
-                    color: GameTheme.parchmentDim,
-                  ),
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
               ),
               for (final squeeze in GauntletTrophies.squeezesFor(pact))
@@ -119,7 +116,7 @@ class _SpireTrophyGrid extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               short,
-              style: GameTheme.body(size: 11, color: GameTheme.torchHot),
+              style: GameTheme.hint(color: GameTheme.torchHot),
             ),
           ],
           const SizedBox(height: 4),
@@ -171,10 +168,7 @@ class _TrophyCell extends StatelessWidget {
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: GameTheme.pixel(
-            size: 8,
-            color: earned ? GameTheme.torchHot : GameTheme.parchmentDim,
-          ),
+          style: GameTheme.hint(color: earned ? GameTheme.torchHot : GameTheme.parchmentDim),
         ),
       ),
     );

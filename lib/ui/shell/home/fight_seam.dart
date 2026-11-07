@@ -45,9 +45,7 @@ class FightSeam extends StatelessWidget {
         children: [
           Padding(
             padding: ShellLayout.seamPadding,
-            child: SizedBox(
-              height: 34,
-              child: Row(
+            child: Row(
                 children: [
                   Expanded(
                     flex: 3,
@@ -66,22 +64,20 @@ class FightSeam extends StatelessWidget {
                   const SizedBox(width: 6),
                   if (world != null)
                     SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: FittedBox(
-                        child: GodHandRing(
-                          cooldown: world.godHandCooldown,
-                          maxCooldown: state.godHandCooldownSeconds,
-                          dense: true,
-                          onTap: director.godHandAtFocus,
-                        ),
+                      width: GameTheme.minTouch,
+                      height: GameTheme.minTouch,
+                      child: GodHandRing(
+                        cooldown: world.godHandCooldown,
+                        maxCooldown: state.godHandCooldownSeconds,
+                        dense: true,
+                        onTap: director.godHandAtFocus,
                       ),
                     ),
                   const Spacer(),
                   _tap(
                     label: 'LEAVE',
                     onTap: onLeave,
-                    minHeight: 34,
+                    minHeight: GameTheme.minTouch,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -97,10 +93,7 @@ class FightSeam extends StatelessWidget {
                       ),
                       child: Text(
                         'LEAVE',
-                        style: GameTheme.menuTitle(
-                          size: 11,
-                          color: GameTheme.bloodLit,
-                        ),
+                        style: GameTheme.readable(color: GameTheme.bloodLit),
                       ),
                     ),
                   ),
@@ -111,7 +104,7 @@ class FightSeam extends StatelessWidget {
                         : 'Full fight height',
                     onTap: () =>
                         director.setHomePanelFull(!state.homePanelFull),
-                    minHeight: 34,
+                    minHeight: GameTheme.minTouch,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
@@ -127,16 +120,12 @@ class FightSeam extends StatelessWidget {
                       ),
                       child: Text(
                         state.homePanelFull ? 'SPLIT' : 'FULL',
-                        style: GameTheme.menuTitle(
-                          size: 10,
-                          color: GameTheme.parchmentDim,
-                        ),
+                        style: GameTheme.readable(color: GameTheme.parchmentDim),
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
           ),
           ShellLayout.divider(),
           PartyCornerHud(
@@ -175,10 +164,7 @@ class FightSeam extends StatelessWidget {
                     ),
                     child: Text(
                       'HOLD',
-                      style: GameTheme.menuTitle(
-                        size: 11,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.readable(color: GameTheme.torchHot),
                     ),
                   ),
                 ),
@@ -208,7 +194,7 @@ class FightSeam extends StatelessWidget {
             : (plain ? 'Switch to Next?' : 'Switch to PUSH?'),
         content: Text(
           'You are mid-fight. Switch anyway?',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          style: GameTheme.readable(color: GameTheme.parchment),
         ),
         actions: [
           GameButton(
