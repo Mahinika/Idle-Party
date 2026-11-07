@@ -3936,6 +3936,9 @@ void main() {
         'journal reopen': _sequenceJournalReopen,
         'unresolved journal': _sequenceUnresolvedJournal,
         'only journaled file': _sequenceOnlyJournal,
+        'unknown phase keeps a healthy file': _sequenceUnknownPhaseEscape,
+        'unknown phase alone stays closed': _sequenceUnknownPhaseAlone,
+        'ambiguous owner stays unrecoverable': _sequenceAmbiguousStays,
       };
       for (final row in rows.entries) {
         try {
@@ -4504,6 +4507,219 @@ Future<void> _sequenceOnlyJournal() async {
     director?.dispose();
     SharedPreferencesStorePlatform.instance = previous;
     SharedPreferences.resetStatic();
+  }
+}
+
+/// Selected slot 0 owns an unknown phase. Slot 2 parses and has no journal.
+/// Before the fix, boot and every RETRY clear the escape list.
+Future<void> _sequenceUnknownPhaseEscape() async {
+  final storage = InMemoryGameStorage();
+  final owned = GameLogic.exportSaveJson(
+    _party(
+      life: 30,
+      purchaseIds: const ['GPA.owned'],
+    ).copyWith(partyName: 'Owned'),
+  );
+  final healthy = GameLogic.exportSaveJson(
+    _party(
+      life: 70,
+      purchaseIds: const ['GPA.keep'],
+    ).copyWith(partyName: 'Healthy'),
+  );
+  final held = GameLogic.exportSaveJson(
+    _party(
+      life: 8,
+      purchaseIds: const ['GPA.held'],
+    ).copyWith(partyName: 'Held'),
+  );
+  await _writeSlot(storage, 0, owned);
+  await _writeSlot(storage, 2, healthy);
+  await storage.setActiveSlot(0);
+  await storage.writeExtra(GameStorage.journalKey, 'nope@0');
+  await storage.writeExtra(GameStorage.stagingKey, owned);
+  await storage.writeExtra(GameStorage.holdKey, held);
+  final director = GameDirector(storage, enableSpatialLoop: false);
+  try {
+    await director.boot();
+    expect(director.saveRecoveryBlocked, isTrue);
+    expect(director.activeSaveSlot, 0);
+    expect(director.safeRecoverySlots, [2]);
+    expect(director.safeRecoverySlots, isNot(contains(0)));
+    expect(await storage.loadExtra(GameStorage.journalKey), 'nope@0');
+    expect(await storage.loadExtra(GameStorage.stagingKey), owned);
+    expect(await storage.loadExtra(GameStorage.holdKey), held);
+    expect(await storage.loadSlotRaw(0), owned);
+    expect(await storage.loadSlotRaw(2), healthy);
+    expect(
+      await director.debugGrantShopPurchase(
+        'cinder_pouch',
+        purchaseId: 'GPA.during',
+      ),
+      isFalse,
+    );
+    expect(await director.openSafeRecoverySlot(0), RecoverySlotOpen.refused);
+    expect(await director.retrySaveRecovery(), isFalse);
+    expect(await director.retrySaveRecovery(), isFalse);
+    expect(director.saveRecoveryBlocked, isTrue);
+    expect(director.safeRecoverySlots, [2]);
+    expect(await storage.loadExtra(GameStorage.journalKey), 'nope@0');
+    expect(await storage.loadExtra(GameStorage.stagingKey), owned);
+    expect(await storage.loadExtra(GameStorage.holdKey), held);
+    expect(await storage.loadSlotRaw(0), owned);
+    expect(await director.openSafeRecoverySlot(2), RecoverySlotOpen.ready);
+    expect(director.saveRecoveryBlocked, isFalse);
+    expect(director.activeSaveSlot, 2);
+    expect(director.state.partyName, 'Healthy');
+    expect(
+      director.state.metaDepth.grantedShopPurchaseIds,
+      contains('GPA.keep'),
+    );
+    expect(
+      await director.debugGrantShopPurchase(
+        'cinder_pouch',
+        purchaseId: 'GPA.fresh',
+      ),
+      isTrue,
+    );
+    expect(await storage.loadSlotRaw(0), owned);
+    expect(await storage.loadExtra(GameStorage.journalKey), 'nope@0');
+    expect(await storage.loadExtra(GameStorage.stagingKey), owned);
+    expect(await storage.loadExtra(GameStorage.holdKey), held);
+    expect(await director.openSaveSlot(0), isFalse);
+    expect(director.activeSaveSlot, 2);
+    expect(await storage.loadSlotRaw(0), owned);
+    expect(_rawHas(await storage.loadSlotRaw(2), 'GPA.fresh'), isTrue);
+    expect(_rawHas(await storage.loadSlotRaw(2), 'GPA.keep'), isTrue);
+    expect(_rawHas(await storage.loadSlotRaw(0), 'GPA.fresh'), isFalse);
+    final playing = GameDirector(storage, enableSpatialLoop: false);
+    try {
+      await playing.boot();
+      expect(playing.saveRecoveryBlocked, isFalse);
+      expect(playing.activeSaveSlot, 2);
+      expect(playing.state.partyName, 'Healthy');
+      expect(
+        playing.state.metaDepth.grantedShopPurchaseIds,
+        containsAll(['GPA.keep', 'GPA.fresh']),
+      );
+      expect(await storage.loadExtra(GameStorage.journalKey), 'nope@0');
+      expect(await storage.loadExtra(GameStorage.stagingKey), owned);
+      expect(await storage.loadExtra(GameStorage.holdKey), held);
+      expect(await storage.loadSlotRaw(0), owned);
+      expect(_rawHas(await storage.loadSlotRaw(0), 'GPA.fresh'), isFalse);
+    } finally {
+      playing.dispose();
+    }
+  } finally {
+    director.dispose();
+  }
+}
+
+/// An unknown phase with no other readable file stays closed. The owner
+/// is not offered as if this build could finish the phase.
+Future<void> _sequenceUnknownPhaseAlone() async {
+  final storage = InMemoryGameStorage();
+  final owned = GameLogic.exportSaveJson(
+    _party(
+      life: 30,
+      purchaseIds: const ['GPA.owned'],
+    ).copyWith(partyName: 'Owned'),
+  );
+  final held = GameLogic.exportSaveJson(
+    _party(
+      life: 8,
+      purchaseIds: const ['GPA.held'],
+    ).copyWith(partyName: 'Held'),
+  );
+  await _writeSlot(storage, 0, owned);
+  await storage.setActiveSlot(0);
+  await storage.writeExtra(GameStorage.journalKey, 'nope@0');
+  await storage.writeExtra(GameStorage.stagingKey, owned);
+  await storage.writeExtra(GameStorage.holdKey, held);
+  final director = GameDirector(storage, enableSpatialLoop: false);
+  try {
+    await director.boot();
+    expect(director.saveRecoveryBlocked, isTrue);
+    expect(director.safeRecoverySlots, isEmpty);
+    expect(await director.retrySaveRecovery(), isFalse);
+    expect(await director.retrySaveRecovery(), isFalse);
+    expect(director.saveRecoveryBlocked, isTrue);
+    expect(director.safeRecoverySlots, isEmpty);
+    expect(await director.openSafeRecoverySlot(0), RecoverySlotOpen.refused);
+    expect(
+      await director.debugGrantShopPurchase(
+        'cinder_pouch',
+        purchaseId: 'GPA.fresh',
+      ),
+      isFalse,
+    );
+    expect(await storage.loadExtra(GameStorage.journalKey), 'nope@0');
+    expect(await storage.loadExtra(GameStorage.stagingKey), owned);
+    expect(await storage.loadExtra(GameStorage.holdKey), held);
+    expect(await storage.loadSlotRaw(0), owned);
+    expect(_rawHas(await storage.loadSlotRaw(0), 'GPA.fresh'), isFalse);
+  } finally {
+    director.dispose();
+  }
+}
+
+/// Two files match one unnamed journal. RETRY does not finish it, and the
+/// matching files are not offered as a recovered party.
+Future<void> _sequenceAmbiguousStays() async {
+  final storage = InMemoryGameStorage();
+  final shared = GameLogic.exportSaveJson(
+    _party(
+      life: 11,
+      purchaseIds: const ['GPA.shared'],
+    ).copyWith(partyName: 'Shared'),
+  );
+  final held = GameLogic.exportSaveJson(
+    _party(
+      life: 13,
+      purchaseIds: const ['GPA.held'],
+    ).copyWith(partyName: 'Held'),
+  );
+  final free = GameLogic.exportSaveJson(
+    _party(
+      life: 14,
+      purchaseIds: const ['GPA.free'],
+    ).copyWith(partyName: 'Free'),
+  );
+  await _writeSlot(storage, 0, shared);
+  await _writeSlot(storage, 2, shared);
+  await _writeSlot(storage, 4, free);
+  await storage.setActiveSlot(0);
+  await storage.writeExtra(GameStorage.stagingKey, shared);
+  await storage.writeExtra(GameStorage.holdKey, held);
+  await storage.writeExtra(GameStorage.journalKey, 'nope');
+  final director = GameDirector(storage, enableSpatialLoop: false);
+  try {
+    await director.boot();
+    expect(director.saveRecoveryBlocked, isTrue);
+    expect(director.safeRecoverySlots, isNot(contains(0)));
+    expect(director.safeRecoverySlots, isNot(contains(2)));
+    expect(director.safeRecoverySlots, contains(4));
+    expect(await director.retrySaveRecovery(), isFalse);
+    expect(director.saveRecoveryBlocked, isTrue);
+    expect(director.safeRecoverySlots, isNot(contains(0)));
+    expect(director.safeRecoverySlots, isNot(contains(2)));
+    expect(await storage.loadExtra(GameStorage.journalKey), 'nope');
+    expect(await storage.loadExtra(GameStorage.stagingKey), shared);
+    expect(await storage.loadExtra(GameStorage.holdKey), held);
+    expect(await storage.loadSlotRaw(0), shared);
+    expect(await storage.loadSlotRaw(2), shared);
+    expect(
+      await director.debugGrantShopPurchase(
+        'cinder_pouch',
+        purchaseId: 'GPA.fresh',
+      ),
+      isFalse,
+    );
+    expect(await director.openSafeRecoverySlot(0), RecoverySlotOpen.refused);
+    expect(await director.openSafeRecoverySlot(2), RecoverySlotOpen.refused);
+    expect(_rawHas(await storage.loadSlotRaw(0), 'GPA.fresh'), isFalse);
+    expect(_rawHas(await storage.loadSlotRaw(2), 'GPA.fresh'), isFalse);
+  } finally {
+    director.dispose();
   }
 }
 

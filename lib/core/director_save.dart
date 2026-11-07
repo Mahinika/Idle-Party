@@ -204,18 +204,24 @@ extension GameDirectorSave on GameDirector {
 
   /// Slots whose bytes parse. Used when the active selection is empty or
   /// unreadable and another file is still there.
-  Future<void> _offerHealthySlots() async {
+  ///
+  /// [plainOnly] skips every journal. An unknown phase cannot be replayed,
+  /// so the selected owner is not a recovery target beside a healthy file.
+  Future<void> _offerHealthySlots({bool plainOnly = false}) async {
     if (_saveRecoveryAmbiguous) return;
     final plain = <int>[];
     final replay = <int>[];
     for (var slot = 0; slot < GameStorage.slotCount; slot++) {
+      if (plainOnly && slot == _storage.activeSlotIndex) continue;
       final raw = await _storage.loadSlotRaw(slot);
       if (raw == null || raw.isEmpty) continue;
       if (GameLogic.importSaveJson(raw, keepCombatRandom: true) == null) {
         continue;
       }
       if (await _slotJournalOpen(slot)) {
-        replay.add(slot);
+        if (!plainOnly && await _slotJournalCanFinish(slot)) {
+          replay.add(slot);
+        }
       } else {
         plain.add(slot);
       }
@@ -233,6 +239,36 @@ extension GameDirectorSave on GameDirector {
   Future<bool> _slotJournalOpen(int slot) async {
     final phase = await _storage.loadExtra(GameStorage.journalKeyFor(slot));
     return phase != null;
+  }
+
+  Future<bool> _slotJournalCanFinish(int slot) async {
+    final phase = await _storage.loadExtra(GameStorage.journalKeyFor(slot));
+    return SaveSwap.knownJournalPhase(phase);
+  }
+
+  /// The selected slot's journal is a phase this build will not finish.
+  Future<bool> _selectedJournalIsUnknown() async {
+    final raw = await _storage.loadExtra(
+      GameStorage.journalKeyFor(_storage.activeSlotIndex),
+    );
+    return raw != null && !SaveSwap.knownJournalPhase(raw);
+  }
+
+  /// Stay blocked. A known phase keeps an empty escape list so a later
+  /// retry can still finish it. An unknown phase cannot, so a readable
+  /// file with no journal of its own stays openable. The owner is not
+  /// offered, and neither path writes the journal, staging, or hold.
+  Future<void> _pauseForUnresolvedJournal() async {
+    _saveRecoveryAmbiguous = false;
+    _blockSaveRecovery(
+      'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
+    );
+    if (await _selectedJournalIsUnknown()) {
+      await _offerHealthySlots(plainOnly: true);
+      return;
+    }
+    _healthySlotRecovery = false;
+    _safeRecoverySlots = const [];
   }
 
   /// True when [slot] has bytes that do not parse. Does not delete them.
@@ -273,11 +309,7 @@ extension GameDirectorSave on GameDirector {
       }
       final outcome = await SaveSwap.recover(_storage);
       if (outcome == SaveSwapOutcome.unresolved) {
-        _saveRecoveryAmbiguous = false;
-        _safeRecoverySlots = const [];
-        _blockSaveRecovery(
-          'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
-        );
+        await _pauseForUnresolvedJournal();
         return false;
       }
       try {
@@ -739,11 +771,7 @@ extension GameDirectorSave on GameDirector {
           'Saving is paused. An unfinished copy could not be matched to one file. It was left untouched.',
         );
       } else if (recovered == SaveSwapOutcome.unresolved) {
-        _saveRecoveryAmbiguous = false;
-        _safeRecoverySlots = const [];
-        _blockSaveRecovery(
-          'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
-        );
+        await _pauseForUnresolvedJournal();
       } else {
         _holdDirectorSlot = false;
         _durableSaveBlocked = false;

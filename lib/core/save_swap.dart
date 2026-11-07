@@ -23,6 +23,14 @@ enum SaveSwapOutcome { idle, committed, aborted, unresolved }
 /// bytes needed to finish it. [recover] is safe to call on every boot: with
 /// no journal it returns [SaveSwapOutcome.idle].
 abstract final class SaveSwap {
+  /// True when [raw] is a phase this build can finish. An unknown phase,
+  /// including a known name with a slot this build does not accept, parses
+  /// as the whole string and is not finishable.
+  static bool knownJournalPhase(String? raw) {
+    final phase = _JournalMark.parse(raw).phase;
+    return _JournalMark._phases.contains(phase);
+  }
+
   static Future<SaveSwapOutcome> recover(
     GameStorage storage, {
     int? slot,
