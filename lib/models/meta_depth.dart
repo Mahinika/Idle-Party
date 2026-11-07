@@ -103,7 +103,8 @@ abstract final class PrestigeShopCatalog {
     PrestigeShopItem(
       id: 'daily_essence',
       name: 'Dawn Tithe',
-      description: '+5e per level on Daily Vault and Daily Run claims (Lv0 = +0 until bought).',
+      description:
+          '+5e per level on Daily Vault and Daily Run claims (Lv0 = +0 until bought).',
       cost: 50,
       minAl: 8,
     ),
@@ -312,6 +313,8 @@ class MetaDepthState {
     this.seasonBestGrClearMs = 0,
     this.cloudSaveUpdatedMs = 0,
     this.playGamesOptIn = false,
+    this.cloudBackupSeal = '',
+    this.cloudBackupPreviousSeal = '',
     this.dismissedPlayUpdateVersionCode = 0,
     this.hubIdleSubSec = 0,
     this.hubAfkSec = 0,
@@ -615,6 +618,14 @@ class MetaDepthState {
 
   /// Player opted into Play Games (sign-in succeeded at least once).
   final bool playGamesOptIn;
+
+  /// Progress seal of the last snapshot this device uploaded.
+  /// Empty until a backup from this save succeeds. Ignored by the progress seal.
+  final String cloudBackupSeal;
+
+  /// Progress seal of the snapshot that upload replaced, so a stale read of
+  /// that snapshot still counts as this device's lineage. Empty when unknown.
+  final String cloudBackupPreviousSeal;
 
   /// Play versionCode the player tapped LATER on (hub update notice).
   final int dismissedPlayUpdateVersionCode;
@@ -975,6 +986,8 @@ class MetaDepthState {
     int? seasonBestGrClearMs,
     int? cloudSaveUpdatedMs,
     bool? playGamesOptIn,
+    String? cloudBackupSeal,
+    String? cloudBackupPreviousSeal,
     int? dismissedPlayUpdateVersionCode,
     int? hubIdleSubSec,
     int? hubAfkSec,
@@ -1176,6 +1189,9 @@ class MetaDepthState {
       seasonBestGrClearMs: seasonBestGrClearMs ?? this.seasonBestGrClearMs,
       cloudSaveUpdatedMs: cloudSaveUpdatedMs ?? this.cloudSaveUpdatedMs,
       playGamesOptIn: playGamesOptIn ?? this.playGamesOptIn,
+      cloudBackupSeal: cloudBackupSeal ?? this.cloudBackupSeal,
+      cloudBackupPreviousSeal:
+          cloudBackupPreviousSeal ?? this.cloudBackupPreviousSeal,
       dismissedPlayUpdateVersionCode:
           dismissedPlayUpdateVersionCode ?? this.dismissedPlayUpdateVersionCode,
       hubIdleSubSec: hubIdleSubSec ?? this.hubIdleSubSec,
@@ -1204,8 +1220,7 @@ class MetaDepthState {
       questRerollsToday: questRerollsToday ?? this.questRerollsToday,
       stashGoldBuys: stashGoldBuys ?? this.stashGoldBuys,
       stashCinderBuys: stashCinderBuys ?? this.stashCinderBuys,
-      petErrandStockUtcDay:
-          petErrandStockUtcDay ?? this.petErrandStockUtcDay,
+      petErrandStockUtcDay: petErrandStockUtcDay ?? this.petErrandStockUtcDay,
       petErrandStockRemaining:
           petErrandStockRemaining ?? this.petErrandStockRemaining,
       petShipmentBonus: petShipmentBonus ?? this.petShipmentBonus,
@@ -1380,6 +1395,8 @@ class MetaDepthState {
     'seasonBestGrClearMs': seasonBestGrClearMs,
     'cloudSaveUpdatedMs': cloudSaveUpdatedMs,
     'playGamesOptIn': playGamesOptIn,
+    'cloudBackupSeal': cloudBackupSeal,
+    'cloudBackupPreviousSeal': cloudBackupPreviousSeal,
     'dismissedPlayUpdateVersionCode': dismissedPlayUpdateVersionCode,
     'hubIdleSubSec': hubIdleSubSec,
     'hubAfkSec': hubAfkSec,
@@ -1646,6 +1663,9 @@ class MetaDepthState {
       seasonBestGrClearMs: (json['seasonBestGrClearMs'] as num?)?.toInt() ?? 0,
       cloudSaveUpdatedMs: (json['cloudSaveUpdatedMs'] as num?)?.toInt() ?? 0,
       playGamesOptIn: (json['playGamesOptIn'] as bool?) ?? false,
+      cloudBackupSeal: (json['cloudBackupSeal'] as String?) ?? '',
+      cloudBackupPreviousSeal:
+          (json['cloudBackupPreviousSeal'] as String?) ?? '',
       dismissedPlayUpdateVersionCode:
           (json['dismissedPlayUpdateVersionCode'] as num?)?.toInt() ?? 0,
       hubIdleSubSec: (json['hubIdleSubSec'] as num?)?.toInt() ?? 0,
@@ -1671,27 +1691,31 @@ class MetaDepthState {
       scrollWellBonusClaims:
           ((json['scrollWellBonusClaims'] as num?)?.toInt() ?? 0).clamp(0, 3),
       questRerollUtcDay: (json['questRerollUtcDay'] as String?) ?? '',
-      questRerollsToday:
-          ((json['questRerollsToday'] as num?)?.toInt() ?? 0).clamp(0, 2),
-      stashGoldBuys:
-          ((json['stashGoldBuys'] as num?)?.toInt() ?? 0).clamp(0, 2),
-      stashCinderBuys:
-          ((json['stashCinderBuys'] as num?)?.toInt() ?? 0).clamp(0, 1),
+      questRerollsToday: ((json['questRerollsToday'] as num?)?.toInt() ?? 0)
+          .clamp(0, 2),
+      stashGoldBuys: ((json['stashGoldBuys'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        2,
+      ),
+      stashCinderBuys: ((json['stashCinderBuys'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        1,
+      ),
       petErrandStockUtcDay: (json['petErrandStockUtcDay'] as String?) ?? '',
       petErrandStockRemaining:
-          ((json['petErrandStockRemaining'] as num?)?.toInt() ?? 3)
-              .clamp(0, 5),
-      petShipmentBonus:
-          ((json['petShipmentBonus'] as num?)?.toInt() ?? 0).clamp(0, 2),
+          ((json['petErrandStockRemaining'] as num?)?.toInt() ?? 3).clamp(0, 5),
+      petShipmentBonus: ((json['petShipmentBonus'] as num?)?.toInt() ?? 0)
+          .clamp(0, 2),
       farmIntensity: switch ((json['farmIntensity'] as num?)?.toInt() ?? 1) {
         2 => 2,
         4 => 4,
         _ => 1,
       },
-      farmTryUsesLeft:
-          ((json['farmTryUsesLeft'] as num?)?.toInt() ?? 2).clamp(0, 9),
-      shopOfferStartedMs:
-          ((json['shopOfferStartedMs'] as num?)?.toInt() ?? 0).clamp(0, 999999999999),
+      farmTryUsesLeft: ((json['farmTryUsesLeft'] as num?)?.toInt() ?? 2).clamp(
+        0,
+        9,
+      ),
+      shopOfferStartedMs: _nonNegativeMs(json['shopOfferStartedMs']),
       cinderPouchDoubled: (json['cinderPouchDoubled'] as bool?) ?? false,
       paidSeasonPass: (json['paidSeasonPass'] as bool?) ?? false,
       adFree: (json['adFree'] as bool?) ?? false,
@@ -1840,6 +1864,16 @@ class MetaDepthState {
 /// Retired player title. The list key stays `titles`.
 String _retiredTitle(String raw) =>
     raw == 'Infinity Bound' ? 'Spirebound' : raw;
+
+/// Epoch milliseconds. Missing or negative becomes 0.
+///
+/// Do not cap this near 999999999999. That instant is September 2001, so every
+/// modern SHOP-window stamp was rewritten into the past on load and the 24h
+/// offer looked already finished.
+int _nonNegativeMs(Object? raw) {
+  final n = (raw as num?)?.toInt() ?? 0;
+  return n < 0 ? 0 : n;
+}
 
 /// Play purchase ids already granted. Missing or junk → empty. Capped.
 List<String> _shopPurchaseIds(Object? raw) {

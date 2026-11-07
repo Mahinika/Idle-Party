@@ -1,32 +1,46 @@
 part of 'game_director.dart';
 
+/// Opening another file while an unmatched copy is still on this device.
+enum RecoverySlotOpen {
+  /// Not a safe choice. Recovery stays up.
+  refused,
+
+  /// An existing file was loaded and saving is on.
+  ready,
+
+  /// Empty file. Party setup must save before any fight.
+  needsNewGame,
+}
+
 /// Save — extracted from GameDirector.
 extension GameDirectorSave on GameDirector {
   void _persist() {
     // Title-screen placeholder and boot-failure empty state must not overwrite
     // a real save (hub idle used to write after 25s).
     if (!_hasExistingSave) return;
-    final stamped = _state.copyWith(
-      metaDepth: _state.metaDepth.copyWith(
-        cloudSaveUpdatedMs: DateTime.now().toUtc().millisecondsSinceEpoch,
-      ),
-    );
-    _state = stamped;
-    // A false or thrown write completes as false. The chain stays alive so
-    // the next save still runs. Callers that grant a purchase must see false.
+    if (_durableSaveBlocked) {
+      _saveChain = _saveChain.then((_) async => false);
+      return;
+    }
+    // Snapshot when this turn runs, not when it was queued, and write those
+    // bytes. A later cloud install cannot be overwritten by a stale capture,
+    // and a grant cannot change the bytes after this turn has read them.
     _saveChain = _saveChain.then((_) async {
+      if (_durableSaveBlocked) return false;
+      final snapshot = _stampCloudClock(_state);
+      _state = snapshot;
       try {
-        final ok = await _storage.save(_state);
+        final ok = await _storage.save(snapshot);
         if (!ok) {
           DebugPlayLog.event('save', 'write failed: setString returned false');
           debugPrint('save failed: setString returned false');
           return false;
         }
         PlayGamesBridge.notePartyPower(
-          score: GameLogic.partyPowerScore(_state),
-          partyName: _state.partyName,
+          score: GameLogic.partyPowerScore(snapshot),
+          partyName: snapshot.partyName,
         );
-        PlayGamesBridge.scheduleCloudUpload(_state);
+        PlayGamesBridge.scheduleCloudUpload(snapshot);
         unawaited(PlayGamesBridge.flushPendingScores());
         return true;
       } catch (e, st) {
@@ -35,6 +49,45 @@ extension GameDirectorSave on GameDirector {
         return false;
       }
     });
+  }
+
+  GameState _stampCloudClock(GameState state) {
+    return state.copyWith(
+      metaDepth: state.metaDepth.copyWith(
+        cloudSaveUpdatedMs: PlayGamesScores.monotonicCloudStamp(
+          previousMs: state.metaDepth.cloudSaveUpdatedMs,
+          nowMs: DateTime.now().toUtc().millisecondsSinceEpoch,
+        ),
+      ),
+    );
+  }
+
+  /// One save mutation at a time. The action reads [_state] when it starts,
+  /// after every earlier persist, grant, and cloud install has finished.
+  Future<T> _enqueueSave<T>(Future<T> Function() action) {
+    final done = Completer<T>();
+    _saveChain = _saveChain.then((_) async {
+      try {
+        final value = await action();
+        if (!done.isCompleted) done.complete(value);
+        if (value is bool) return value;
+        return true;
+      } catch (e, st) {
+        debugPrint('save turn failed: $e\n$st');
+        _blockSaveRecovery(
+          'Saving is paused. The last save was interrupted before it could be confirmed.',
+        );
+        if (!done.isCompleted) {
+          if (false is T) {
+            done.complete(false as T);
+          } else {
+            done.completeError(e, st);
+          }
+        }
+        return false;
+      }
+    });
+    return done.future;
   }
 
   /// False when this write did not land.
@@ -92,13 +145,424 @@ extension GameDirectorSave on GameDirector {
   }
 
   /// Point the next import / cloud write at [index] without loading it yet.
-  Future<void> armImportSlot(int index) async {
-    final slot = index.clamp(0, GameStorage.slotCount - 1);
-    await _storage.setActiveSlot(slot);
-    _activeSlot = slot;
-    if (!_saveSlots[slot].occupied) {
-      _hasExistingSave = false;
+  ///
+  /// Queued with grants and restores. Refused while recovery is unfinished
+  /// so the import cannot land on a different file than the grant.
+  Future<void> armImportSlot(int index) {
+    return _enqueueSave<void>(() async {
+      if (_durableSaveBlocked) return;
+      final slot = index.clamp(0, GameStorage.slotCount - 1);
+      if (await _slotBytesUnreadable(slot)) {
+        _blockSaveRecovery(
+          'Saving is paused. A save file could not be read. It was left untouched.',
+        );
+        return;
+      }
+      if (await _slotJournalOpen(slot) || await _slotJournalOpen(_activeSlot)) {
+        _blockSaveRecovery(
+          'Saving is paused. An unfinished copy is still on this device.',
+        );
+        return;
+      }
+      _slotBeforeImportArm = _activeSlot;
+      await _storage.setActiveSlot(slot);
+      if (_storage.activeSlotIndex != slot) {
+        _slotBeforeImportArm = null;
+        _importArmRejected = true;
+        return;
+      }
+      _importArmRejected = false;
+      _activeSlot = slot;
+      if (!_saveSlots[slot].occupied) {
+        _hasExistingSave = false;
+      }
+    });
+  }
+
+  /// Put the selection back when the clipboard import does not land.
+  Future<void> _undoImportArm() async {
+    final previous = _slotBeforeImportArm;
+    _slotBeforeImportArm = null;
+    if (previous == null || previous == _activeSlot) return;
+    await _storage.setActiveSlot(previous);
+    if (_storage.activeSlotIndex != previous) {
+      _activeSlot = previous;
+      _blockSaveRecovery(
+        'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+      );
+      return;
     }
+    _activeSlot = previous;
+    final raw = await _storage.loadActiveRaw();
+    _hasExistingSave =
+        raw != null &&
+        raw.isNotEmpty &&
+        GameLogic.importSaveJson(raw, keepCombatRandom: true) != null;
+    _saveSlots = await _storage.listSlots();
+    if (!_directorClosed) _directorNotify();
+  }
+
+  /// Slots whose bytes parse. Used when the active selection is empty or
+  /// unreadable and another file is still there.
+  ///
+  /// [plainOnly] skips every journal. A record this build cannot finish
+  /// is not a recovery target beside a healthy file.
+  Future<void> _offerHealthySlots({bool plainOnly = false}) async {
+    if (_saveRecoveryAmbiguous) return;
+    final plain = <int>[];
+    final replay = <int>[];
+    for (var slot = 0; slot < GameStorage.slotCount; slot++) {
+      if (plainOnly && slot == _storage.activeSlotIndex) continue;
+      final raw = await _storage.loadSlotRaw(slot);
+      if (raw == null || raw.isEmpty) continue;
+      if (GameLogic.importSaveJson(raw, keepCombatRandom: true) == null) {
+        continue;
+      }
+      if (await _slotJournalOpen(slot)) {
+        if (!plainOnly && await _slotJournalCanFinish(slot)) {
+          replay.add(slot);
+        }
+      } else {
+        plain.add(slot);
+      }
+    }
+    // A parsable file with no journal is the safe adopt. A journal is
+    // offered only when that is the only readable file, and opening it
+    // replays before any grant. Offering it beside a healthy file let a
+    // later replay erase a receipt written after the pre-image was opened.
+    final open = plain.isNotEmpty ? plain : replay;
+    _healthySlotRecovery = open.isNotEmpty;
+    _safeRecoverySlots = open;
+    if (!_directorClosed) _directorNotify();
+  }
+
+  Future<bool> _slotJournalOpen(int slot) async {
+    final phase = await _storage.loadExtra(GameStorage.journalKeyFor(slot));
+    return phase != null;
+  }
+
+  Future<bool> _slotJournalCanFinish(int slot) {
+    return SaveSwap.retryCouldFinish(_storage, slot: slot);
+  }
+
+  /// Stay blocked. A journal that can still be written keeps an empty
+  /// escape list so the next retry can finish that write. A record this
+  /// build cannot finish, known phase or not, leaves a readable file
+  /// with no journal of its own openable. The owner is not offered, and
+  /// neither path writes the journal, staging, or hold.
+  Future<void> _pauseForUnresolvedJournal() async {
+    _saveRecoveryAmbiguous = false;
+    _blockSaveRecovery(
+      'Saving is paused. An unfinished copy is still on this device. Retry keeps both copies.',
+    );
+    if (!await SaveSwap.retryCouldFinish(_storage)) {
+      await _offerHealthySlots(plainOnly: true);
+      return;
+    }
+    _healthySlotRecovery = false;
+    _safeRecoverySlots = const [];
+  }
+
+  /// True when [slot] has bytes that do not parse. Does not delete them.
+  Future<bool> _slotBytesUnreadable(int slot) async {
+    final raw = await _storage.loadSlotRaw(slot);
+    return raw != null &&
+        raw.isNotEmpty &&
+        GameLogic.importSaveJson(raw) == null;
+  }
+
+  void _blockSaveRecovery(String message) {
+    _durableSaveBlocked = true;
+    _saveRecoveryMessage = message;
+    PlayGamesBridge.invalidateUploads();
+    _spatialTimer?.cancel();
+    _spatialTimer = null;
+    _hubIdleTimer?.cancel();
+    _hubIdleTimer = null;
+    if (!_directorClosed) _directorNotify();
+  }
+
+  /// Read the durable file again and resume only when the journal is gone.
+  Future<bool> retrySaveRecovery() {
+    return _enqueueSave(() async {
+      if (!_durableSaveBlocked) return true;
+      final legacyUnassigned = await SaveSwap.migrateLegacyGlobalJournal(
+        _storage,
+      );
+      if (legacyUnassigned) {
+        // Same rule as boot. Recovery would finish the destination journal
+        // and can replace a parked party the copy just refused.
+        _saveRecoveryAmbiguous = true;
+        await _refreshSafeRecoverySlots();
+        _blockSaveRecovery(
+          'Saving is paused. An unfinished copy could not be matched to one file. It was left untouched.',
+        );
+        return false;
+      }
+      final outcome = await SaveSwap.recover(_storage);
+      if (outcome == SaveSwapOutcome.unresolved) {
+        await _pauseForUnresolvedJournal();
+        return false;
+      }
+      try {
+        await _storage.reloadDurable();
+      } catch (error, stack) {
+        debugPrint('save recovery retry could not reload: $error\n$stack');
+        _blockSaveRecovery(
+          'Saving is paused. The device copy could not be read back.',
+        );
+        return false;
+      }
+      // A commit that returned false can still be the value reload() sees.
+      // Confirm the live party with a commit that returns true. Do not
+      // adopt the cached bytes in its place. When the selected slot is
+      // not this director's slot, put the previous bytes back first.
+      // Only then can the index commit, because a successful commit
+      // writes the whole map.
+      if (_storage.hasUnprovenWrite || _holdDirectorSlot) {
+        if (_storage.activeSlotIndex != _activeSlot) {
+          if (_storage.hasUnprovenWrite) {
+            final restored = await _storage.retryUnprovenRestore();
+            if (!restored || _storage.hasUnprovenWrite) {
+              _blockSaveRecovery(
+                'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+              );
+              return false;
+            }
+          }
+          await _storage.setActiveSlot(_activeSlot);
+          if (_storage.activeSlotIndex != _activeSlot ||
+              _storage.hasUnprovenWrite) {
+            _holdDirectorSlot = true;
+            _blockSaveRecovery(
+              'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+            );
+            return false;
+          }
+        }
+        var confirmed = false;
+        try {
+          confirmed = await _storage.save(_state);
+        } catch (error, stack) {
+          debugPrint('unproven retry save failed: $error\n$stack');
+        }
+        if (!confirmed ||
+            _storage.hasUnprovenWrite ||
+            _storage.activeSlotIndex != _activeSlot) {
+          _blockSaveRecovery(
+            'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+          );
+          return false;
+        }
+        _holdDirectorSlot = false;
+        _durableSaveBlocked = false;
+        _saveRecoveryMessage = '';
+        _saveRecoveryAmbiguous = false;
+        _healthySlotRecovery = false;
+        _safeRecoverySlots = const [];
+        _hasExistingSave = true;
+        _saveSlots = await _storage.listSlots();
+        _syncHubIdleTimer();
+        ensureCombatLoop();
+        _directorNotify();
+        return true;
+      }
+      // The preference names the slot. Adopting its party without this
+      // leaves the director on the constructor default.
+      _activeSlot = _storage.activeSlotIndex;
+      final raw = await _storage.loadActiveRaw();
+      final parsed = raw == null ? null : GameLogic.importSaveJson(raw);
+      if (parsed == null) {
+        if (raw != null) {
+          _blockSaveRecovery(
+            'Saving is paused. A save file could not be read. It was left untouched.',
+          );
+          return false;
+        }
+        final slots = await _storage.listSlots();
+        // A party already loaded, a file that does not parse, or a mirror
+        // left beside an empty slot is not an empty phone.
+        if (_hasExistingSave ||
+            slots.any((slot) => slot.occupied) ||
+            await _storage.hasUnadoptedCopy()) {
+          _blockSaveRecovery(
+            'Saving is paused. This device has a save that was not loaded. Retry leaves it untouched.',
+          );
+          await _offerHealthySlots();
+          return false;
+        }
+        _holdDirectorSlot = false;
+        _durableSaveBlocked = false;
+        _saveRecoveryMessage = '';
+        _saveRecoveryAmbiguous = false;
+        _safeRecoverySlots = const [];
+        _hasExistingSave = false;
+        _phoneHadNoSaveAtBoot = true;
+        _state = GameLogic.createInitialState();
+        _saveSlots = slots;
+        _syncHubIdleTimer();
+        _directorNotify();
+        return true;
+      }
+      _holdDirectorSlot = false;
+      _durableSaveBlocked = false;
+      _saveRecoveryMessage = '';
+      _saveRecoveryAmbiguous = false;
+      _safeRecoverySlots = const [];
+      _hasExistingSave = true;
+      await _installCaughtUp(parsed);
+      _saveSlots = await _storage.listSlots();
+      final displaced = await _storage.loadDisplacedSave();
+      _hasDisplacedDeviceSave = displaced != null && displaced.isNotEmpty;
+      _syncHubIdleTimer();
+      ensureCombatLoop();
+      _directorNotify();
+      return true;
+    });
+  }
+
+  /// Copy of the journal and every slot. Does not delete anything.
+  Future<String> exportRecoveryRecords() async {
+    final lines = StringBuffer();
+    Future<void> put(String key, String? value) async {
+      lines.writeln('--- $key ---');
+      lines.writeln(value ?? '');
+    }
+
+    for (final key in [
+      GameStorage.journalKey,
+      GameStorage.stagingKey,
+      GameStorage.holdKey,
+      GameStorage.displacedKey,
+      GameStorage.mirrorKey,
+      GameStorage.legacyMirrorKey,
+      GameStorage.mirrorCorruptKey,
+    ]) {
+      await put(key, await _storage.loadExtra(key));
+    }
+    for (var slot = 0; slot < GameStorage.slotCount; slot++) {
+      await put('slot_$slot', await _storage.loadSlotRaw(slot));
+      await put(
+        'slot_${slot}_corrupt',
+        await _storage.loadExtra(GameStorage.slotCorruptKey(slot)),
+      );
+      if (slot == 0) continue;
+      await put(
+        'journal_$slot',
+        await _storage.loadExtra(GameStorage.journalKeyFor(slot)),
+      );
+      await put(
+        'staging_$slot',
+        await _storage.loadExtra(GameStorage.stagingKeyFor(slot)),
+      );
+      await put(
+        'hold_$slot',
+        await _storage.loadExtra(GameStorage.holdKeyFor(slot)),
+      );
+      await put(
+        'displaced_$slot',
+        await _storage.loadExtra(GameStorage.displacedKeyFor(slot)),
+      );
+    }
+    return lines.toString();
+  }
+
+  /// Open a slot that is not part of an unmatched journal.
+  ///
+  /// An existing file loads and saving turns on. An empty file only arms
+  /// party setup. The global bytes stay, and play stays behind recovery
+  /// until that new game has been saved. Slot 0 is refused while the
+  /// journal exists.
+  Future<RecoverySlotOpen> openSafeRecoverySlot(int index) {
+    return _enqueueSave(() async {
+      final healthy =
+          _healthySlotRecovery && _safeRecoverySlots.contains(index);
+      if (!healthy) {
+        if (!_saveRecoveryAmbiguous || index <= 0) {
+          return RecoverySlotOpen.refused;
+        }
+        await _refreshSafeRecoverySlots();
+        if (!_safeRecoverySlots.contains(index)) {
+          return RecoverySlotOpen.refused;
+        }
+      }
+      if (await _slotJournalOpen(index)) {
+        // Finish the journal before this slot can be played. Adopting the
+        // pre-image and then replaying later would drop a grant that
+        // landed in between. A journal that is still open stays closed.
+        final outcome = await SaveSwap.recover(_storage, slot: index);
+        if (outcome == SaveSwapOutcome.unresolved ||
+            await _slotJournalOpen(index)) {
+          return RecoverySlotOpen.refused;
+        }
+      }
+      final raw = await _storage.loadSlotRaw(index);
+      if (raw == null) {
+        _pendingNewGameSlot = index;
+        _pendingRecoveryNewGame = true;
+        if (!_directorClosed) _directorNotify();
+        return RecoverySlotOpen.needsNewGame;
+      }
+      final loaded = GameLogic.importSaveJson(raw);
+      if (loaded == null) {
+        _blockSaveRecovery(
+          'Saving is paused. A save file could not be read. It was left untouched.',
+        );
+        return RecoverySlotOpen.refused;
+      }
+      await _storage.setActiveSlot(index);
+      if (_storage.activeSlotIndex != index) {
+        _blockSaveRecovery(
+          'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+        );
+        return RecoverySlotOpen.refused;
+      }
+      _activeSlot = index;
+      _hasExistingSave = true;
+      await _installCaughtUp(loaded);
+      _holdDirectorSlot = false;
+      _durableSaveBlocked = false;
+      _saveRecoveryMessage = '';
+      _saveRecoveryAmbiguous = false;
+      _healthySlotRecovery = false;
+      _safeRecoverySlots = const [];
+      _pendingRecoveryNewGame = false;
+      _pendingNewGameSlot = null;
+      _saveSlots = await _storage.listSlots();
+      _syncHubIdleTimer();
+      ensureCombatLoop();
+      _directorNotify();
+      return RecoverySlotOpen.ready;
+    });
+  }
+
+  /// Leave party setup. An in-flight START cannot continue into play.
+  void cancelRecoveryNewGame() {
+    _newGameEpoch++;
+    _pendingRecoveryNewGame = false;
+    if (_durableSaveBlocked) _pendingNewGameSlot = null;
+  }
+
+  Future<void> _refreshSafeRecoverySlots() async {
+    final evidence = <String>{};
+    for (final key in [
+      GameStorage.stagingKey,
+      GameStorage.holdKey,
+      GameStorage.displacedKey,
+    ]) {
+      final value = await _storage.loadExtra(key);
+      if (value != null && value.isNotEmpty) evidence.add(value);
+    }
+    final safe = <int>[];
+    for (var slot = 1; slot < GameStorage.slotCount; slot++) {
+      if (await _storage.loadExtra(GameStorage.journalKeyFor(slot)) != null) {
+        continue;
+      }
+      final raw = await _storage.loadSlotRaw(slot);
+      if (raw != null && evidence.contains(raw)) continue;
+      safe.add(slot);
+    }
+    _safeRecoverySlots = safe;
   }
 
   void setAppPaused(bool paused) {
@@ -139,14 +603,35 @@ extension GameDirectorSave on GameDirector {
   }
 
   Future<void> _resumeFromBackground() async {
+    if (_durableSaveBlocked) {
+      _syncHubIdleTimer();
+      return;
+    }
     if (!_isLoading) {
       final elapsed = DateTime.now().difference(_state.lastUpdated);
       if (elapsed.inSeconds >= GameDirector._awayCreditMinSec) {
         _welcomeBackAdGranted = false;
         _awayCreditInFlight = true;
+        final epoch = _saveEpoch;
+        final base = _state;
         try {
-          final credited = await _creditAway(_state, showCard: true);
-          _state = credited;
+          final credited = await _creditAway(
+            base,
+            showCard: true,
+            stillCurrent: () => epoch == _saveEpoch && !_directorClosed,
+          );
+          if (_directorClosed) return;
+          if (epoch != _saveEpoch) {
+            final again = await _creditAway(
+              _state,
+              showCard: false,
+              stillCurrent: () => !_directorClosed,
+            );
+            if (_directorClosed) return;
+            _state = again;
+          } else {
+            _state = credited;
+          }
           if (_state.inDungeon && _spatial == null) {
             _rebuildSpatial();
           }
@@ -172,6 +657,10 @@ extension GameDirectorSave on GameDirector {
     _foregroundSince = DateTime.now().subtract(ago);
   }
 
+  /// One hub-idle tick. Tests use this while the recovery gate is up.
+  @visibleForTesting
+  void debugTickHubIdle() => _tickHubIdle();
+
   /// Rewind clocks in tests. Does not credit gold.
   @visibleForTesting
   void debugStampAway({Duration? lastUpdatedAgo, int? funnelInstallMs}) {
@@ -195,6 +684,7 @@ extension GameDirectorSave on GameDirector {
         !_isLoading &&
         !_appPaused &&
         !_awayCreditInFlight &&
+        !_durableSaveBlocked &&
         !_state.inDungeon;
     if (!want) {
       _hubIdleTimer?.cancel();
@@ -208,7 +698,11 @@ extension GameDirectorSave on GameDirector {
   }
 
   void _tickHubIdle() {
-    if (_isLoading || _state.inDungeon || _appPaused || _awayCreditInFlight) {
+    if (_isLoading ||
+        _state.inDungeon ||
+        _appPaused ||
+        _awayCreditInFlight ||
+        _durableSaveBlocked) {
       _syncHubIdleTimer();
       return;
     }
@@ -232,11 +726,15 @@ extension GameDirectorSave on GameDirector {
   }
 
   void _flushHubIdle() {
-    if (_isLoading || _state.inDungeon) return;
+    if (_isLoading || _state.inDungeon || _durableSaveBlocked) return;
     final now = DateTime.now();
     final seconds = now.difference(_state.lastUpdated).inSeconds;
     if (seconds < 1) {
-      _state = _state.copyWith(lastUpdated: now);
+      // A clock behind the save must not rewind [lastUpdated]. The next
+      // honest tick would otherwise treat the whole gap as time away.
+      if (seconds >= 0) {
+        _state = _state.copyWith(lastUpdated: now);
+      }
       return;
     }
     _state = GoldIncome.applyHubIdle(
@@ -248,60 +746,129 @@ extension GameDirectorSave on GameDirector {
   Future<void> boot({bool deferCombatLoop = false}) async {
     _funnelSessionReadyMs = DateTime.now().millisecondsSinceEpoch;
     try {
-      _saveSlots = await _storage.listSlots();
-      _activeSlot = _storage.activeSlotIndex;
-      _phoneHadNoSaveAtBoot = !_saveSlots.any((slot) => slot.occupied);
-      final saved = await _storage.load();
-      _hasExistingSave = saved != null;
-      final loaded = saved == null
-          ? GameLogic.createInitialState()
-          : await _catchUpSaved(saved);
-      _state = GameLogic.backfillCodexFromInventory(
-        GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
+      await _storage.listSlots();
+      final legacyUnassigned = await SaveSwap.migrateLegacyGlobalJournal(
+        _storage,
       );
-      _lastHighestDungeon = _state.highestDungeonCleared;
-      if (_state.lastFloorClearSec > 0) {
-        _lastFloorClearSec = _state.lastFloorClearSec;
-      }
-      _syncDevicePrefs();
-      _ensureUiTimer();
-      if (_state.inDungeon) {
-        _rebuildSpatial();
-        if (enableSpatialLoop && !deferCombatLoop) {
-          // First dungeon paint before 60 Hz sim — cold mid-dungeon resume.
-          scheduleMicrotask(() {
-            if (_state.inDungeon && enableSpatialLoop) {
-              _startSpatialLoop();
-            }
-          });
-        }
-        if (!deferCombatLoop) {
-          showToast('Floor combat restarted (positions reset)', life: 3.2);
-        }
+      // An unmatched or colliding migration still owns its global journal.
+      // Recovering the destination now would publish that partial copy and
+      // replace a parked party the copy refused to overwrite.
+      final recovered = legacyUnassigned
+          ? SaveSwapOutcome.unresolved
+          : await SaveSwap.recover(_storage);
+      if (legacyUnassigned) {
+        _saveRecoveryAmbiguous = true;
+        await _refreshSafeRecoverySlots();
+        _blockSaveRecovery(
+          'Saving is paused. An unfinished copy could not be matched to one file. It was left untouched.',
+        );
+      } else if (recovered == SaveSwapOutcome.unresolved) {
+        await _pauseForUnresolvedJournal();
       } else {
-        _spatialTimer?.cancel();
-        _spatialTimer = null;
-        _spatial = null;
-      }
-      // Only persist when continuing an existing save (offline catch-up).
-      if (_hasExistingSave) {
-        _notePlaySession();
-        _noteAppColdStart();
-        _noteFunnelSession(newInstall: false);
-        await _persistFlush();
-      } else {
-        _notePlaySession();
+        _holdDirectorSlot = false;
+        _durableSaveBlocked = false;
+        _saveRecoveryMessage = '';
+        _saveRecoveryAmbiguous = false;
+        _safeRecoverySlots = const [];
       }
       _saveSlots = await _storage.listSlots();
       _activeSlot = _storage.activeSlotIndex;
+      // The slot summary only checks that the blob is a map. A later field
+      // can still fail the full parse. load() would move that blob aside.
+      final unreadable =
+          _saveSlots.any((slot) => slot.corrupt) ||
+          await _storage.hasUnadoptedCopy();
+      if (unreadable) {
+        _phoneHadNoSaveAtBoot = false;
+        _hasExistingSave = false;
+        _state = GameLogic.createInitialState();
+        _blockSaveRecovery(
+          'Saving is paused. A save file could not be read. It was left untouched.',
+        );
+        await _offerHealthySlots();
+      } else {
+        _phoneHadNoSaveAtBoot = !_saveSlots.any((slot) => slot.occupied);
+        final raw = await _storage.loadActiveRaw();
+        // Probe the full parse first. load() moves a blob it cannot parse,
+        // so a field that fails after the summary check must not reach it.
+        // A probe that succeeds still loads through storage: that read is
+        // the same object an in-memory slot already holds, and it does not
+        // quarantine a file it can parse.
+        final unreadableRaw =
+            raw != null &&
+            raw.isNotEmpty &&
+            GameLogic.importSaveJson(raw, keepCombatRandom: true) == null;
+        if (unreadableRaw) {
+          _phoneHadNoSaveAtBoot = false;
+          _hasExistingSave = false;
+          _state = GameLogic.createInitialState();
+          _blockSaveRecovery(
+            'Saving is paused. A save file could not be read. It was left untouched.',
+          );
+        } else {
+          final saved = await _storage.load();
+          _hasExistingSave = saved != null;
+          final loaded = saved == null
+              ? GameLogic.createInitialState()
+              : _durableSaveBlocked
+              ? saved
+              : await _catchUpSaved(saved);
+          _state = GameLogic.backfillCodexFromInventory(
+            GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
+          );
+          _lastHighestDungeon = _state.highestDungeonCleared;
+          if (_state.lastFloorClearSec > 0) {
+            _lastFloorClearSec = _state.lastFloorClearSec;
+          }
+          _syncDevicePrefs();
+          _ensureUiTimer();
+          if (_state.inDungeon) {
+            _rebuildSpatial();
+            if (enableSpatialLoop && !deferCombatLoop && !_durableSaveBlocked) {
+              // First dungeon paint before 60 Hz sim — cold mid-dungeon resume.
+              scheduleMicrotask(() {
+                if (_state.inDungeon && enableSpatialLoop) {
+                  _startSpatialLoop();
+                }
+              });
+            }
+            if (!deferCombatLoop) {
+              showToast('Floor combat restarted (positions reset)', life: 3.2);
+            }
+          } else {
+            _spatialTimer?.cancel();
+            _spatialTimer = null;
+            _spatial = null;
+          }
+          // Only persist when continuing an existing save (offline catch-up).
+          // An unresolved journal must stay byte-for-byte until the next launch.
+          if (_durableSaveBlocked) {
+            // Leave the loaded bytes alone. Play stays behind the recovery gate.
+          } else if (_hasExistingSave) {
+            _notePlaySession();
+            _noteAppColdStart();
+            _noteFunnelSession(newInstall: false);
+            await _persistFlush();
+          } else {
+            _notePlaySession();
+          }
+          _saveSlots = await _storage.listSlots();
+          _activeSlot = _storage.activeSlotIndex;
+        }
+      }
     } catch (e, st) {
       DebugPlayLog.event('boot', 'failed: $e');
       debugPrint('boot failed: $e\n$st');
+      // A thrown inventory read is not proof the phone is empty.
+      _phoneHadNoSaveAtBoot = false;
       _hasExistingSave = false;
       _state = GameLogic.createInitialState();
       _spatialTimer?.cancel();
       _spatialTimer = null;
       _spatial = null;
+      _blockSaveRecovery(
+        'Saving is paused. This device could not be read. Retry leaves it untouched.',
+      );
     } finally {
       _isLoading = false;
       _syncHubIdleTimer();
@@ -318,6 +885,7 @@ extension GameDirectorSave on GameDirector {
     unawaited(syncFriendReferral());
     unawaited(refreshPlayUpdateNotice());
     unawaited(LocalNotify.init());
+    unawaited(rebindOptedInCloudBackup());
     // Billing after the splash — Binder + Play Services hitch cold start.
     // Shop only. A rewarded ad loads when its button is about to show.
     _bootWarmup?.cancel();
@@ -337,10 +905,15 @@ extension GameDirectorSave on GameDirector {
   Future<GameState> _creditAway(
     GameState saved, {
     required bool showCard,
+    bool Function()? stillCurrent,
   }) async {
     final elapsed = DateTime.now().difference(saved.lastUpdated);
+    final pause = debugAwayCreditPause;
+    if (pause != null) await pause;
+    if (stillCurrent != null && !stillCurrent()) return saved;
     _welcomeBackAdGranted = false;
     final offline = await _simulateAwayProgress(saved, elapsed);
+    if (stillCurrent != null && !stillCurrent()) return saved;
     return _finishAwayCredit(offline, showCard: showCard);
   }
 
@@ -409,15 +982,51 @@ extension GameDirectorSave on GameDirector {
   }
 
   /// Load [index] and make it the autosave target. No-op success if already active.
-  Future<bool> openSaveSlot(int index) async {
+  Future<bool> openSaveSlot(int index) {
+    if (_durableSaveBlocked) return Future<bool>.value(false);
+    return _enqueueSave(() => _openSaveSlotTurn(index));
+  }
+
+  Future<bool> _openSaveSlotTurn(int index) async {
     final slot = index.clamp(0, GameStorage.slotCount - 1);
-    if (slot == _activeSlot && _hasExistingSave) return true;
+    if (slot == _activeSlot &&
+        _storage.activeSlotIndex == slot &&
+        _hasExistingSave) {
+      return true;
+    }
+    if (await _slotBytesUnreadable(slot)) {
+      _blockSaveRecovery(
+        'Saving is paused. A save file could not be read. It was left untouched.',
+      );
+      return false;
+    }
     final saved = await _storage.loadSlot(slot);
     if (saved == null) {
       _saveSlots = await _storage.listSlots();
       _directorNotify();
       return false;
     }
+    final pending = await SaveSwap.recover(_storage, slot: slot);
+    if (pending == SaveSwapOutcome.unresolved) {
+      _directorNotify();
+      return false;
+    }
+    // A committed replay replaced this file. The party loaded above is
+    // the pre-image. Saving it now would undo the journal.
+    var adopted = saved;
+    if (pending == SaveSwapOutcome.committed) {
+      final raw = await _storage.loadSlotRaw(slot);
+      final parsed = raw == null ? null : GameLogic.importSaveJson(raw);
+      if (parsed == null) {
+        _blockSaveRecovery(
+          'Saving is paused. A save file could not be read. It was left untouched.',
+        );
+        return false;
+      }
+      adopted = parsed;
+    }
+    _saveEpoch++;
+    PlayGamesBridge.invalidateUploads();
     _friendEpoch++;
     _spatialTimer?.cancel();
     _spatialTimer = null;
@@ -425,14 +1034,18 @@ extension GameDirectorSave on GameDirector {
     _awaitingWipeChoice = false;
     uiFeedback.dismissOfflineSummary();
     await _storage.setActiveSlot(slot);
+    if (_storage.activeSlotIndex != slot) return false;
     _activeSlot = slot;
     _hasExistingSave = true;
-    final caught = await _catchUpSaved(saved);
+    final caught = await _catchUpSaved(adopted);
     await _installCaughtUp(caught);
     _notePlaySession();
     _noteAppColdStart();
     _noteFunnelSession(newInstall: false);
-    await _persistFlush();
+    final snapshot = _stampCloudClock(_state);
+    _state = snapshot;
+    if (!await _storage.save(snapshot)) return false;
+    PlayGamesBridge.scheduleCloudUpload(snapshot);
     _saveSlots = await _storage.listSlots();
     _syncHubIdleTimer();
     _directorNotify();
@@ -441,8 +1054,28 @@ extension GameDirectorSave on GameDirector {
   }
 
   /// Delete one file. Other slots stay. Active slot becomes a blank title state.
-  Future<void> eraseSaveSlot(int index) async {
-    final slot = index.clamp(0, GameStorage.slotCount - 1);
+  /// Refused while a journal still holds a party.
+  Future<void> eraseSaveSlot(int index) {
+    return _enqueueSave<void>(() async {
+      if (_durableSaveBlocked) return;
+      final slot = index.clamp(0, GameStorage.slotCount - 1);
+      if (await _slotBytesUnreadable(slot)) {
+        _blockSaveRecovery(
+          'Saving is paused. A save file could not be read. It was left untouched.',
+        );
+        return;
+      }
+      if (await _slotJournalOpen(slot)) {
+        _blockSaveRecovery(
+          'Saving is paused. This file still has an unfinished copy, so it was not erased.',
+        );
+        return;
+      }
+      await _eraseSaveSlotTurn(slot);
+    });
+  }
+
+  Future<void> _eraseSaveSlotTurn(int slot) async {
     await _storage.clearSlot(slot);
     if (slot == _activeSlot) {
       _friendEpoch++;
@@ -461,58 +1094,222 @@ extension GameDirectorSave on GameDirector {
   }
 
   /// Hard start: create a fresh party in the armed slot (or the active one).
-  Future<void> startNewGame(
+  ///
+  /// Returns false when the initial save did not land, when this call is a
+  /// duplicate of a setup already in flight, or when the player left setup.
+  /// Play stays closed until that save is on disk. A second START does not
+  /// enter the queue, so it cannot reset a party a grant just saved.
+  Future<bool> startNewGame(
     List<HeroSpecId> partySpecs, {
     String? partyName,
     HeroRace partyRace = HeroRace.human,
     List<HeroRace>? partyRaces,
     List<HeroSex>? partySexes,
+  }) {
+    if (_newGameBusy) return Future<bool>.value(false);
+    _newGameBusy = true;
+    final epoch = _newGameEpoch;
+    final pending = _pendingNewGameSlot;
+    final slot = (pending ?? _activeSlot).clamp(0, GameStorage.slotCount - 1);
+    final fromRecovery = _durableSaveBlocked && pending == slot;
+    // An armed slot must still be empty when the turn runs. A call with no
+    // armed slot may replace the active file (preview tests do this).
+    final expectEmpty = pending != null;
+    return _enqueueSave<bool>(() async {
+      try {
+        if (epoch != _newGameEpoch) return false;
+        if (_durableSaveBlocked && !fromRecovery) return false;
+        if (fromRecovery) {
+          await _refreshSafeRecoverySlots();
+          if (!_safeRecoverySlots.contains(slot)) return false;
+        }
+        final existing = await _storage.loadSlotRaw(slot);
+        if (await _slotBytesUnreadable(slot)) {
+          _blockSaveRecovery(
+            'Saving is paused. A save file could not be read. It was left untouched.',
+          );
+          return false;
+        }
+        if (expectEmpty && existing != null) {
+          return false;
+        }
+        if (await _slotJournalOpen(slot)) {
+          _blockSaveRecovery(
+            'Saving is paused. This file still has an unfinished copy, so a new game was not started.',
+          );
+          return false;
+        }
+        return await _startNewGameTurn(
+          partySpecs,
+          partyName: partyName,
+          partyRace: partyRace,
+          partyRaces: partyRaces,
+          partySexes: partySexes,
+          slot: slot,
+          fromRecovery: fromRecovery,
+          epoch: epoch,
+        );
+      } finally {
+        _newGameBusy = false;
+      }
+    });
+  }
+
+  Future<bool> _startNewGameTurn(
+    List<HeroSpecId> partySpecs, {
+    String? partyName,
+    HeroRace partyRace = HeroRace.human,
+    List<HeroRace>? partyRaces,
+    List<HeroSex>? partySexes,
+    required int slot,
+    required bool fromRecovery,
+    required int epoch,
   }) async {
+    final previous = _state;
+    final previousHas = _hasExistingSave;
+    final previousSlot = _activeSlot;
+    final previousEpoch = _friendEpoch;
+    if (epoch != _newGameEpoch) return false;
     _friendEpoch++;
-    final slot = (_pendingNewGameSlot ?? _activeSlot).clamp(
-      0,
-      GameStorage.slotCount - 1,
-    );
-    _pendingNewGameSlot = null;
-    await _storage.setActiveSlot(slot);
-    _activeSlot = slot;
-    _awaitingWipeChoice = false;
-    uiFeedback.dismissOfflineSummary();
+    var switched = false;
+    var saved = false;
+    try {
+      await _storage.setActiveSlot(slot);
+      if (_storage.activeSlotIndex != slot &&
+          _storage.activeSlotIndex == previousSlot) {
+        // The armed slot did not become the selection. Confirm the party
+        // already on that selection so a rejected string can be replaced
+        // by a commit that returns true, then try the armed slot again.
+        // This write is the existing party, not the new game.
+        final confirmed = await _storage.save(previous);
+        if (confirmed && !_storage.hasUnprovenWrite) {
+          await _storage.setActiveSlot(slot);
+        }
+      }
+      if (_storage.activeSlotIndex != slot) return false;
+      _pendingNewGameSlot = null;
+      switched = true;
+      _activeSlot = slot;
+      _awaitingWipeChoice = false;
+      uiFeedback.dismissOfflineSummary();
+      _spatialTimer?.cancel();
+      _spatial = null;
+      final layout = _phoneHadNoSaveAtBoot
+          ? HomeLayout.home
+          : previous.homeLayout;
+      final panelFull = previous.homePanelFull;
+      _state =
+          GameLogic.createInitialState(
+            partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
+            partyName: partyName,
+            partyRace: partyRace,
+            partyRaces: partyRaces,
+            partySexes: partySexes,
+          ).copyWith(
+            homeLayout: layout,
+            homePanelFull: layout == HomeLayout.home ? true : panelFull,
+          );
+      if (_phoneHadNoSaveAtBoot) {
+        _state = ReinstallPouch.markDue(_state);
+      }
+      _notePlaySession(newGame: true);
+      _noteAppColdStart();
+      _noteFunnelSession(newInstall: true);
+      _syncDevicePrefs();
+      _lastHighestDungeon = _state.highestDungeonCleared;
+      _ensureUiTimer();
+      _syncHubIdleTimer();
+      _directorNotify();
+      DebugPlayLog.event('new_game', DebugPlayLog.bootDetail(_state));
+      final snapshot = _stampCloudClock(_state);
+      _state = snapshot;
+      try {
+        saved = await _storage.save(snapshot);
+      } catch (error, stack) {
+        debugPrint('new game save failed: $error\n$stack');
+        saved = false;
+      }
+      // A false or thrown commit is not accepted from a later read.
+      // Android can show the new value in memory after commit() returns false.
+      final cancelled = epoch != _newGameEpoch;
+      if (!saved || cancelled) {
+        await _rollbackRecoveryNewGame(
+          previous: previous,
+          previousHas: previousHas,
+          previousSlot: previousSlot,
+          previousEpoch: previousEpoch,
+          armedSlot: slot,
+          switched: switched,
+          restorePending: !cancelled,
+        );
+        return false;
+      }
+      _hasExistingSave = true;
+      if (fromRecovery) {
+        _holdDirectorSlot = false;
+        _durableSaveBlocked = false;
+        _saveRecoveryMessage = '';
+        _saveRecoveryAmbiguous = false;
+        _safeRecoverySlots = const [];
+        _pendingRecoveryNewGame = false;
+      }
+      PlayGamesBridge.scheduleCloudUpload(snapshot);
+      _saveSlots = await _storage.listSlots();
+      _directorNotify();
+      if (_state.homeLayout == HomeLayout.home) {
+        enterDungeon(dungeonId: 'sandy');
+      }
+      unawaited(syncFriendReferral());
+      return true;
+    } catch (error, stack) {
+      debugPrint('new game setup failed: $error\n$stack');
+      await _rollbackRecoveryNewGame(
+        previous: previous,
+        previousHas: previousHas,
+        previousSlot: previousSlot,
+        previousEpoch: previousEpoch,
+        armedSlot: slot,
+        switched: switched,
+        restorePending: epoch == _newGameEpoch,
+      );
+      return false;
+    }
+  }
+
+  Future<void> _rollbackRecoveryNewGame({
+    required GameState previous,
+    required bool previousHas,
+    required int previousSlot,
+    required int previousEpoch,
+    required int armedSlot,
+    bool switched = true,
+    bool restorePending = true,
+  }) async {
+    if (switched) {
+      try {
+        await _storage.setActiveSlot(previousSlot);
+      } catch (error, stack) {
+        debugPrint(
+          'new game rollback could not restore the slot: $error\n$stack',
+        );
+      }
+    }
+    _activeSlot = previousSlot;
+    _holdDirectorSlot = _storage.activeSlotIndex != previousSlot;
+    if (_holdDirectorSlot) {
+      _blockSaveRecovery(
+        'Saving is paused. A save was not confirmed. Retry will not use the cached copy.',
+      );
+    }
+    _state = previous;
+    _hasExistingSave = previousHas;
+    _friendEpoch = previousEpoch;
+    if (restorePending) _pendingNewGameSlot = armedSlot;
     _spatialTimer?.cancel();
+    _spatialTimer = null;
     _spatial = null;
-    final layout = _phoneHadNoSaveAtBoot ? HomeLayout.home : _state.homeLayout;
-    final panelFull = _state.homePanelFull;
-    _state = GameLogic.createInitialState(
-      partySpecs: GameLogic.normalizeNewGameParty(partySpecs),
-      partyName: partyName,
-      partyRace: partyRace,
-      partyRaces: partyRaces,
-      partySexes: partySexes,
-    ).copyWith(
-      homeLayout: layout,
-      homePanelFull:
-          layout == HomeLayout.home ? true : panelFull,
-    );
-    if (_phoneHadNoSaveAtBoot) {
-      _state = ReinstallPouch.markDue(_state);
-    }
-    _hasExistingSave = true;
-    _notePlaySession(newGame: true);
-    _noteAppColdStart();
-    _noteFunnelSession(newInstall: true);
-    _syncDevicePrefs();
-    _lastHighestDungeon = _state.highestDungeonCleared;
-    _ensureUiTimer();
-    _syncHubIdleTimer();
-    _directorNotify();
-    DebugPlayLog.event('new_game', DebugPlayLog.bootDetail(_state));
-    await _persistFlush();
     _saveSlots = await _storage.listSlots();
-    _directorNotify();
-    if (_state.homeLayout == HomeLayout.home) {
-      enterDungeon(dungeonId: 'sandy');
-    }
-    unawaited(syncFriendReferral());
+    if (!_directorClosed) _directorNotify();
   }
 
   /// One count per cold start. A new game is sitting 1.
@@ -546,7 +1343,7 @@ extension GameDirectorSave on GameDirector {
 
   /// Continue from the loaded save into play (no-op if already ready).
   void continueGame() {
-    if (!_hasExistingSave) return;
+    if (!_hasExistingSave || _durableSaveBlocked) return;
     DebugPlayLog.event('continue', DebugPlayLog.bootDetail(_state));
     ensureCombatLoop();
     _syncHubIdleTimer();

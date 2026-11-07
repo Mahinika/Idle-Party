@@ -36,6 +36,7 @@ import 'greater_rift.dart';
 import 'rift_progress.dart';
 import 'apex_forge.dart';
 import 'encounter_factory.dart';
+import 'equipment_factory.dart';
 import 'market_service.dart';
 import 'market_listings_service.dart';
 import 'gear_service.dart';
@@ -297,16 +298,21 @@ class GameLogic {
     return bossFloorFor(state);
   }
 
-  static GameState enterDungeon(GameState state, {String dungeonId = 'sandy'}) =>
-      _gameLogicEnterDungeon(state, dungeonId: dungeonId);
+  static GameState enterDungeon(
+    GameState state, {
+    String dungeonId = 'sandy',
+  }) => _gameLogicEnterDungeon(state, dungeonId: dungeonId);
 
   /// Advances keystone timer (live ticks or offline). Stops after resolve.
-  static GameState advanceKeystoneTimer(GameState state, int deltaMs) => _gameLogicAdvanceKeystoneTimer(state, deltaMs);
+  static GameState advanceKeystoneTimer(GameState state, int deltaMs) =>
+      _gameLogicAdvanceKeystoneTimer(state, deltaMs);
 
-  static GameState leaveDungeon(GameState state) => _gameLogicLeaveDungeon(state);
+  static GameState leaveDungeon(GameState state) =>
+      _gameLogicLeaveDungeon(state);
 
   /// Leave dungeon/Gauntlet and restore party HP (wipe / hub exit).
-  static GameState exitToHubHealed(GameState state) => _gameLogicExitToHubHealed(state);
+  static GameState exitToHubHealed(GameState state) =>
+      _gameLogicExitToHubHealed(state);
 
   /// Hard Ascend cap (Blessing / kit roadmap). Endgame content uses
   /// [endgameUnlocked] (party at [maxHeroLevel]), not this AL gate.
@@ -374,9 +380,9 @@ class GameLogic {
     GauntletPact pick = GauntletPact.might;
     var minOwned = 999;
     for (final pact in GauntletPact.values) {
-      final owned = GauntletTrophies.squeezesFor(pact)
-          .where((s) => GauntletTrophies.owned(state, pact, s))
-          .length;
+      final owned = GauntletTrophies.squeezesFor(
+        pact,
+      ).where((s) => GauntletTrophies.owned(state, pact, s)).length;
       if (owned < minOwned) {
         minOwned = owned;
         pick = pact;
@@ -386,9 +392,9 @@ class GameLogic {
   }
 
   static int recommendedRiftTier(GameState state) => Rift.pickerStart(
-        preferred: state.metaDepth.riftPreferredTier,
-        bestCleared: state.metaDepth.riftBestTier,
-      );
+    preferred: state.metaDepth.riftPreferredTier,
+    bestCleared: state.metaDepth.riftBestTier,
+  );
 
   static int recommendedGreaterRiftTier(GameState state) =>
       GreaterRift.pickerStart(
@@ -475,10 +481,8 @@ class GameLogic {
   static GameState maybeActivateGreaterRiftGuardian(GameState state) =>
       _maybeActivateGreaterRiftGuardian(state);
 
-  static GameState? tryResolveGreaterRift(
-    GameState state, {
-    DateTime? now,
-  }) => _tryResolveGreaterRift(state, now: now);
+  static GameState? tryResolveGreaterRift(GameState state, {DateTime? now}) =>
+      _tryResolveGreaterRift(state, now: now);
 
   static int godHandUpgradeCost(int level) => 10 + level * 8;
 
@@ -768,28 +772,34 @@ class GameLogic {
     );
   }
 
-  static GameState setDungeonMode(GameState state, DungeonMode mode) => _gameLogicSetDungeonMode(state, mode);
+  static GameState setDungeonMode(GameState state, DungeonMode mode) =>
+      _gameLogicSetDungeonMode(state, mode);
 
-  static bool canTravelToFloor(GameState state, int floorNumber) => _gameLogicCanTravelToFloor(state, floorNumber);
+  static bool canTravelToFloor(GameState state, int floorNumber) =>
+      _gameLogicCanTravelToFloor(state, floorNumber);
 
   /// Jump to an unlocked floor wave (farm/push zone select).
-  static GameState travelToFloor(GameState state, int floorNumber) => _gameLogicTravelToFloor(state, floorNumber);
+  static GameState travelToFloor(GameState state, int floorNumber) =>
+      _gameLogicTravelToFloor(state, floorNumber);
 
   /// Wipes on one new PUSH floor before the party farms the floor below.
   static const int pushWipesBeforeFarm = 2;
 
   /// Failed push: retreat to the highest cleared floor (or floor 1).
   /// Keeps PUSH mode so a caller can still choose to push.
-  static GameState retreatFromFailedPush(GameState state) => _gameLogicRetreatFromFailedPush(state);
+  static GameState retreatFromFailedPush(GameState state) =>
+      _gameLogicRetreatFromFailedPush(state);
 
   /// Offline wipe tally. Live wipes already go through [notePartyWipe].
-  static GameState noteOfflineWipe(GameState state) => _gameLogicNoteOfflineWipe(state);
+  static GameState noteOfflineWipe(GameState state) =>
+      _gameLogicNoteOfflineWipe(state);
 
   /// Keep fighting after a wipe.
   /// One miss on a new floor retries it. Two misses farm the floor below
   /// until that floor clears once, then PUSH returns to the missed floor.
   /// Gauntlet and rifts still end. Daily Run still restarts its floor.
-  static GameState continueAfterWipe(GameState state) => _gameLogicContinueAfterWipe(state);
+  static GameState continueAfterWipe(GameState state) =>
+      _gameLogicContinueAfterWipe(state);
 
   /// Bosses needed this run before Ascend unlocks.
   /// AL 0 → 1 boss, AL 1 → 2 bosses, etc.
@@ -944,7 +954,10 @@ class GameLogic {
     final md = ScrollWell.rollDay(state.metaDepth, now: clock);
     if (!ScrollWell.canAdvanceWithAd(md, now: clock)) return state;
     final day = AdBoost.utcDayKey(clock);
-    final nextClaims = (md.scrollWellBonusClaims + 1).clamp(0, ScrollWell.bonusSteps);
+    final nextClaims = (md.scrollWellBonusClaims + 1).clamp(
+      0,
+      ScrollWell.bonusSteps,
+    );
     final withTicket = grantAdTicket(state);
     return withTicket.copyWith(
       metaDepth: withTicket.metaDepth.copyWith(
@@ -1098,10 +1111,7 @@ class GameLogic {
           )
         : 1.0;
     final farmMul = FarmIntensity.rewardMult(state);
-    final gained = applyGoldGain(
-      state,
-      (baseGold * mul * farmMul).round(),
-    );
+    final gained = applyGoldGain(state, (baseGold * mul * farmMul).round());
     if (gained <= 0) return state;
     final paid = state.copyWith(
       gold: state.gold + gained,
@@ -1138,25 +1148,31 @@ class GameLogic {
   }
 
   /// Unlocks Shade (Combat) on the roster when [rogueUnlocked].
-  static GameState ensureRogueHero(GameState state) => _gameLogicEnsureRogueHero(state);
+  static GameState ensureRogueHero(GameState state) =>
+      _gameLogicEnsureRogueHero(state);
 
   static const int partySlot5EssenceCost = 80;
   static const int partySlot5MinAscension = 2;
 
   /// Unlocks the 5th active party slot (80e, AL ≥ 2).
-  static GameState unlockPartySlot5(GameState state) => _gameLogicUnlockPartySlot5(state);
+  static GameState unlockPartySlot5(GameState state) =>
+      _gameLogicUnlockPartySlot5(state);
 
   /// Sets the active party lineup by roster hero ids (hub / out of dungeon).
-  static GameState setActiveParty(GameState state, List<String> heroIds) => _gameLogicSetActiveParty(state, heroIds);
+  static GameState setActiveParty(GameState state, List<String> heroIds) =>
+      _gameLogicSetActiveParty(state, heroIds);
 
   /// Whether the player has met the meta gate for [specId].
-  static bool canUnlockSpec(GameState state, HeroSpecId specId) => _gameLogicCanUnlockSpec(state, specId);
+  static bool canUnlockSpec(GameState state, HeroSpecId specId) =>
+      _gameLogicCanUnlockSpec(state, specId);
 
   /// Auto-unlock every eligible spec into the roster (after clear / ascend).
-  static GameState syncSpecUnlocks(GameState state) => _gameLogicSyncSpecUnlocks(state);
+  static GameState syncSpecUnlocks(GameState state) =>
+      _gameLogicSyncSpecUnlocks(state);
 
   /// Unlocks [specId] into meta + adds a starting hero to the roster.
-  static GameState unlockSpec(GameState state, HeroSpecId specId) => _gameLogicUnlockSpec(state, specId);
+  static GameState unlockSpec(GameState state, HeroSpecId specId) =>
+      _gameLogicUnlockSpec(state, specId);
 
   /// Race stamped on new roster entries so a Night Elf party stays Night Elf.
   static HeroRace _rosterRace(GameState state) =>
@@ -1194,55 +1210,75 @@ class GameLogic {
   }
 
   /// Clears hub “Meet new hero” queue (player opened PARTY / acknowledged).
-  static GameState ackPendingHeroReveals(GameState state) => _gameLogicAckPendingHeroReveals(state);
+  static GameState ackPendingHeroReveals(GameState state) =>
+      _gameLogicAckPendingHeroReveals(state);
 
   /// Restarts the current floor wave with a healed party.
   /// Daily echo keeps today's layout seed so claim + wipe-retry stay valid.
-  static GameState restartFloor(GameState state) => _gameLogicRestartFloor(state);
+  static GameState restartFloor(GameState state) =>
+      _gameLogicRestartFloor(state);
 
-  static int forgeTrackTier(GameState state, PartyUpgradeType type) => _gameLogicForgeTrackTier(state, type);
+  static int forgeTrackTier(GameState state, PartyUpgradeType type) =>
+      _gameLogicForgeTrackTier(state, type);
 
   /// Any bought forge track (used for home SPLIT default).
   static bool hasForgePurchases(GameState state) =>
       _gameLogicHasForgePurchases(state);
 
-  static int upgradeCostFor(GameState state, PartyUpgradeType type) => _gameLogicUpgradeCostFor(state, type);
+  static int upgradeCostFor(GameState state, PartyUpgradeType type) =>
+      _gameLogicUpgradeCostFor(state, type);
 
   /// Wallet gold budget for a FORGE GOLD spend mode (×1 uses next buy cost).
-  static int forgeGoldBudget(GameState state, ForgeGoldSpendMode mode) => _gameLogicForgeGoldBudget(state, mode);
+  static int forgeGoldBudget(GameState state, ForgeGoldSpendMode mode) =>
+      _gameLogicForgeGoldBudget(state, mode);
 
-  static bool canForgeGoldSpend( GameState state, PartyUpgradeType type, ForgeGoldSpendMode mode, ) => _gameLogicCanForgeGoldSpend(state, type, mode);
+  static bool canForgeGoldSpend(
+    GameState state,
+    PartyUpgradeType type,
+    ForgeGoldSpendMode mode,
+  ) => _gameLogicCanForgeGoldSpend(state, type, mode);
 
-  static bool canForgeGoldSpendEven(GameState state) => _gameLogicCanForgeGoldSpendEven(state);
+  static bool canForgeGoldSpendEven(GameState state) =>
+      _gameLogicCanForgeGoldSpendEven(state);
 
   /// How many buys / gold a spend mode would use on [type] from [state].
-  static ({int buys, int spent}) previewForgeGoldSpend( GameState state, PartyUpgradeType type, ForgeGoldSpendMode mode, ) => _gameLogicPreviewForgeGoldSpend(state, type, mode);
+  static ({int buys, int spent}) previewForgeGoldSpend(
+    GameState state,
+    PartyUpgradeType type,
+    ForgeGoldSpendMode mode,
+  ) => _gameLogicPreviewForgeGoldSpend(state, type, mode);
 
   /// Buy one track once, or dump a % of wallet gold into that track.
   static GameState upgradeWithSpendMode(
     GameState state, {
     required PartyUpgradeType type,
     required ForgeGoldSpendMode mode,
-  }) =>
-      _gameLogicUpgradeWithSpendMode(state, type: type, mode: mode);
+  }) => _gameLogicUpgradeWithSpendMode(state, type: type, mode: mode);
 
   /// Spend wallet gold round-robin across ATK/DEF/STA/MOVE/HASTE/CRIT/MASTERY.
-  static GameState upgradeSpendAllEvenly(GameState state) => _gameLogicUpgradeSpendAllEvenly(state);
+  static GameState upgradeSpendAllEvenly(GameState state) =>
+      _gameLogicUpgradeSpendAllEvenly(state);
 
   /// Gold Train (+1 Lv party-wide) is retired — levels come from combat XP only.
-  static GameState upgradeAttack(GameState state) => _gameLogicUpgradeAttack(state);
+  static GameState upgradeAttack(GameState state) =>
+      _gameLogicUpgradeAttack(state);
 
-  static GameState upgradeDefense(GameState state) => _gameLogicUpgradeDefense(state);
+  static GameState upgradeDefense(GameState state) =>
+      _gameLogicUpgradeDefense(state);
 
-  static GameState upgradeVitality(GameState state) => _gameLogicUpgradeVitality(state);
+  static GameState upgradeVitality(GameState state) =>
+      _gameLogicUpgradeVitality(state);
 
-  static GameState upgradeMoveSpeed(GameState state) => _gameLogicUpgradeMoveSpeed(state);
+  static GameState upgradeMoveSpeed(GameState state) =>
+      _gameLogicUpgradeMoveSpeed(state);
 
-  static GameState upgradeAttackSpeed(GameState state) => _gameLogicUpgradeAttackSpeed(state);
+  static GameState upgradeAttackSpeed(GameState state) =>
+      _gameLogicUpgradeAttackSpeed(state);
 
   static GameState upgradeCrit(GameState state) => _gameLogicUpgradeCrit(state);
 
-  static GameState upgradeMastery(GameState state) => _gameLogicUpgradeMastery(state);
+  static GameState upgradeMastery(GameState state) =>
+      _gameLogicUpgradeMastery(state);
 
   /// Hearth at the Stairs — a percent of max HP when the exit opens.
   static GameState healPartyAtStairs(GameState state) {
@@ -1778,10 +1814,7 @@ class GameLogic {
       heroes: [
         for (final h in state.heroes)
           h.copyWith(
-            currentHp: max(
-              1,
-              (state.effectiveHeroMaxHp(h) * 0.5).round(),
-            ),
+            currentHp: max(1, (state.effectiveHeroMaxHp(h) * 0.5).round()),
           ),
       ],
       lastUpdated: DateTime.now(),
@@ -2384,7 +2417,20 @@ class GameLogic {
 
   /// Parses a previously-exported save string. Returns null on any parse
   /// failure so the caller can show a friendly error instead of crashing.
-  static GameState? importSaveJson(String raw) {
+  static GameState? importSaveJson(
+    String raw, {
+    bool keepCombatRandom = false,
+  }) {
+    // A probe parse can roll quests and loot. That must not move the
+    // generator the next fight uses. Dart's Random cannot be rewound,
+    // so the probe borrows a separate one and puts the originals back.
+    final logic = keepCombatRandom ? random : null;
+    final gear = keepCombatRandom ? EquipmentFactory.random : null;
+    if (keepCombatRandom) {
+      final probe = Random(0x51A7E);
+      random = probe;
+      EquipmentFactory.random = probe;
+    }
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! Map<String, dynamic>) return null;
@@ -2392,6 +2438,11 @@ class GameLogic {
     } catch (e, st) {
       debugPrint('GameLogic.importSaveJson failed: $e\n$st');
       return null;
+    } finally {
+      if (logic != null) {
+        random = logic;
+        EquipmentFactory.random = gear!;
+      }
     }
   }
 
@@ -2800,7 +2851,8 @@ class GameLogic {
 
   /// Welcome Back: a new PUSH floor they already failed is not this sitting.
   /// Farm the highest cleared floor so the return can finish a floor.
-  static GameState returnToClearableFloor(GameState state) => _gameLogicReturnToClearableFloor(state);
+  static GameState returnToClearableFloor(GameState state) =>
+      _gameLogicReturnToClearableFloor(state);
 
   static ({
     GameState state,

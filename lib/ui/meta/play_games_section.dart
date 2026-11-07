@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
 import '../../core/play_games_bridge.dart';
 import '../../core/play_games_scores.dart';
+import '../../core/save_progress.dart';
 import '../../core/play_leaderboard_ids.dart';
 import '../game_theme.dart';
 import '../kenney_button.dart';
@@ -32,18 +34,24 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
     final ok = await director.signInPlayGames();
     if (!ok || !mounted) return;
     if (director.signInRestoredCloud) return;
-    final cloud = await director.loadPlayGamesCloud();
-    if (cloud == null || !mounted) return;
-    if (!PlayGamesScores.localSaveHasProgress(director.state)) {
-      await director.restoreFromPlayGames(force: true);
+    final read = director.lastCloudRead;
+    final cloud = read.state;
+    if (read.kind != CloudReadKind.ready || cloud == null || !mounted) {
+      return;
+    }
+    if (SaveProgress.isReplaceable(director.state)) {
+      await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
       return;
     }
     final conflict = director.peekCloudConflict(cloud);
     if (conflict == CloudConflict.preferCloud) {
-      await director.restoreFromPlayGames(force: true);
+      await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
       return;
     }
-    if (conflict != CloudConflict.askUser) return;
+    if (conflict != CloudConflict.askUser) {
+      await director.keepDeviceAndCloudOwnership(cloud);
+      return;
+    }
     final useCloud = await showDialog<bool>(
       context: context,
       barrierColor: MenuChrome.scrim,
@@ -52,7 +60,8 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
         content: Text(
           'This device:\n${director.playGamesConflictHint(director.state)}\n\n'
           'Play Games:\n${director.playGamesConflictHint(cloud)}\n\n'
-          'Which save should we keep?',
+          'Which save should we keep?\n\n'
+          'Paid unlocks on either save are kept. Gold and materials stay with the file you pick.',
           style: GameTheme.body(size: 14, color: GameTheme.parchment),
         ),
         actions: [
@@ -70,15 +79,24 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
       ),
     );
     if (useCloud == true) {
-      await director.restoreFromPlayGames(force: true);
+      await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
+    } else if (useCloud == false) {
+      await director.keepDeviceAndCloudOwnership(cloud);
     }
   });
 
   Future<void> restorePlayGamesFlow() => runPlayGames(() async {
     final director = playGamesDirector;
-    final cloud = await director.loadPlayGamesCloud();
-    if (cloud == null) {
-      director.showToast('No Play Games save found', life: 2.2);
+    final read = await director.loadPlayGamesCloud();
+    if (!mounted) return;
+    final cloud = read.state;
+    if (read.kind != CloudReadKind.ready || cloud == null) {
+      director.showToast(
+        read.kind == CloudReadKind.empty
+            ? 'No Play Games save found'
+            : 'Could not read Play Games save. Kept this device.',
+        life: 2.2,
+      );
       return;
     }
     final conflict = director.peekCloudConflict(cloud);
@@ -108,11 +126,12 @@ mixin _PlayGamesActions<T extends StatefulWidget> on State<T> {
         ),
       );
       if (useCloud != true) return;
-      await director.restoreFromPlayGames(force: true);
+      await director.restoreFromPlayGames(force: true, alreadyRead: cloud);
       return;
     }
     await director.restoreFromPlayGames(
       force: conflict == CloudConflict.preferCloud,
+      alreadyRead: cloud,
     );
   });
 }
@@ -202,7 +221,8 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
     final signedInLive = PlayGamesBridge.isSignedInCached;
     final showLiveBoards = boardsReady && signedInLive;
     // All-time party power stays up when the new month has no Console ids.
-    final partyLive = playSupported &&
+    final partyLive =
+        playSupported &&
         signedInLive &&
         PlayLeaderboardIds.hasPartyPowerBoard &&
         !monthBoards;
@@ -262,22 +282,26 @@ class _PlayGamesBoardsSectionState extends State<PlayGamesBoardsSection>
     final shownRows = preview ? PlayBoardPreview.rows(kind) : _rows;
 
     final yours = switch (kind) {
-      PlayBoardKind.timedKey => md.seasonBestTimedKey > 0
-          ? PlayGamesScores.formatTimedLabel(
-              md.seasonBestTimedKey,
-              md.seasonBestTimedClearMs,
-            )
-          : 'No timed KEY yet',
-      PlayBoardKind.gauntlet => md.seasonBestGauntletFloor > 0
-          ? 'F${md.seasonBestGauntletFloor}'
-          : 'No Gauntlet floor yet',
-      PlayBoardKind.greaterRift => md.seasonBestGrTier > 0
-          ? PlayGamesScores.formatGreaterRiftLabel(
-              md.seasonBestGrTier,
-              md.seasonBestGrClearMs,
-            )
-          : 'No Ranked GR yet',
-      PlayBoardKind.partyPower => '${GameLogic.partyPowerScore(director.state)}',
+      PlayBoardKind.timedKey =>
+        md.seasonBestTimedKey > 0
+            ? PlayGamesScores.formatTimedLabel(
+                md.seasonBestTimedKey,
+                md.seasonBestTimedClearMs,
+              )
+            : 'No timed KEY yet',
+      PlayBoardKind.gauntlet =>
+        md.seasonBestGauntletFloor > 0
+            ? 'F${md.seasonBestGauntletFloor}'
+            : 'No Gauntlet floor yet',
+      PlayBoardKind.greaterRift =>
+        md.seasonBestGrTier > 0
+            ? PlayGamesScores.formatGreaterRiftLabel(
+                md.seasonBestGrTier,
+                md.seasonBestGrClearMs,
+              )
+            : 'No Ranked GR yet',
+      PlayBoardKind.partyPower =>
+        '${GameLogic.partyPowerScore(director.state)}',
     };
     final yoursLine = '${director.state.partyName} · $yours';
 
@@ -490,6 +514,17 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
   GameDirector get playGamesDirector => widget.director;
 
   @override
+  void initState() {
+    super.initState();
+    unawaited(_refreshDeviceCopy());
+  }
+
+  Future<void> _refreshDeviceCopy() async {
+    await widget.director.refreshDisplacedDeviceSave();
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final md = widget.director.state.metaDepth;
     final month = md.leaderboardSeasonKey.isNotEmpty
@@ -509,7 +544,7 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
         Text(
           GameLogic.showKeystoneJargon(widget.director.state)
               ? 'Season $month · cloud backup. Boards: KEY, Gauntlet, Ranked GR '
-                  '(Oct reuses Aug KEY/Gauntlet + Sep GR Console ids).'
+                    '(Oct reuses Aug KEY/Gauntlet + Sep GR Console ids).'
               : 'Season $month · cloud backup.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -550,6 +585,21 @@ class _PlayGamesSectionState extends State<PlayGamesSection>
             ),
           ],
         ),
+        if (widget.director.hasDisplacedDeviceSave) ...[
+          const SizedBox(height: 6),
+          GameButton(
+            label: 'DEVICE COPY',
+            tip:
+                'Puts back the save this phone had before the last cloud restore',
+            style: GameButtonStyle.grey,
+            onPressed: playGamesBusy
+                ? null
+                : () => runPlayGames(() async {
+                    await widget.director.restoreDisplacedDeviceSave();
+                    await _refreshDeviceCopy();
+                  }),
+          ),
+        ],
       ],
     );
   }

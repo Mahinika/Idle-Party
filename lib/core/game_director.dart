@@ -51,6 +51,8 @@ import 'play_games_bridge.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
 import 'play_games_scores.dart';
+import 'save_progress.dart';
+import 'save_swap.dart';
 import 'play_review_ask.dart';
 import 'reinstall_pouch.dart';
 import 'away_fight_tip.dart';
@@ -95,6 +97,7 @@ class GameDirector extends ChangeNotifier {
     this.enableSpatialLoop = true,
   }) : _state = initialState ?? GameLogic.createInitialState() {
     _syncDevicePrefs();
+    PlayGamesBridge.onUploadCommitted = _noteUploadedLineage;
   }
 
   factory GameDirector.persistent() {
@@ -117,6 +120,72 @@ class GameDirector extends ChangeNotifier {
   bool _isLoading = true;
   bool _hasExistingSave = false;
   bool _signInRestoredCloud = false;
+  CloudRead _lastCloudRead = const CloudRead.unavailable();
+  bool _hasDisplacedDeviceSave = false;
+
+  /// Bumps when a cloud or device-copy restore replaces [_state], and when a
+  /// shop grant commits, so an in-flight offline credit cannot write the
+  /// pre-grant party back.
+  int _saveEpoch = 0;
+
+  /// A journal still holds a party that is not in the active slot, or a
+  /// finished swap could not be read back. Autosave, combat, and purchases
+  /// stay off until [retrySaveRecovery] adopts the durable file.
+  bool _durableSaveBlocked = false;
+
+  /// Shown on the recovery gate. Empty when saving is allowed.
+  String _saveRecoveryMessage = '';
+
+  /// A global journal matches more than one slot, or none. RETRY cannot
+  /// invent an owner. Export and unaffected slots stay available.
+  bool _saveRecoveryAmbiguous = false;
+
+  /// Slots that are not byte-matches and have no journal of their own.
+  /// Slot 0 is never listed while a global journal exists.
+  List<int> _safeRecoverySlots = const [];
+
+  /// Slot to restore when a title import does not parse or does not commit.
+  int? _slotBeforeImportArm;
+
+  /// The armed import slot did not become the durable selection. The
+  /// following import must not write.
+  bool _importArmRejected = false;
+
+  /// A healthy file can be opened while recovery is up and no journal is
+  /// choosing an owner. Includes slot 0.
+  bool _healthySlotRecovery = false;
+
+  /// The selected slot moved and the rollback could not move it back.
+  /// RETRY keeps this director's slot until that index commits. It does
+  /// not adopt the selected file in the meantime.
+  bool _holdDirectorSlot = false;
+
+  /// True while this session must not overwrite the durable copies.
+  bool get saveRecoveryBlocked => _durableSaveBlocked;
+
+  /// Why saving is paused. Empty when it is not.
+  String get saveRecoveryMessage => _saveRecoveryMessage;
+
+  /// True when RETRY cannot assign a legacy journal without guessing.
+  bool get saveRecoveryAmbiguous => _saveRecoveryAmbiguous;
+
+  /// Slots the recovery screen may open without touching the journal.
+  List<int> get safeRecoverySlots => _safeRecoverySlots;
+
+  /// Test seam. True while recovery must not be overwritten.
+  @visibleForTesting
+  bool get debugSaveRecoveryBlocked => _durableSaveBlocked;
+  bool _directorClosed = false;
+  bool _safeNotifyQueued = false;
+
+  /// Test seam. [_creditAway] awaits this before simulating the gap.
+  @visibleForTesting
+  Future<void>? debugAwayCreditPause;
+
+  CloudRead get lastCloudRead => _lastCloudRead;
+
+  /// True when a cloud restore kept the previous device file.
+  bool get hasDisplacedDeviceSave => _hasDisplacedDeviceSave;
   bool _phoneHadNoSaveAtBoot = false;
   int _activeSlot = 0;
   int? _pendingNewGameSlot;
@@ -263,7 +332,29 @@ class GameDirector extends ChangeNotifier {
   void setDungeonTilesReady(bool ready, {bool notify = true}) {
     if (_dungeonTilesReady == ready) return;
     _dungeonTilesReady = ready;
-    if (notify) notifyListeners();
+    if (notify) _notifyUnlessBuilding();
+  }
+
+  /// [notifyListeners] during build is the setState-during-build FlutterError
+  /// Crashlytics recorded on these two calls. The flag or toast updates
+  /// immediately; the rebuild waits until this frame finishes.
+  void _notifyUnlessBuilding() {
+    if (_directorClosed) return;
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    final building =
+        phase == SchedulerPhase.persistentCallbacks ||
+        phase == SchedulerPhase.midFrameMicrotasks;
+    if (!building) {
+      notifyListeners();
+      return;
+    }
+    if (_safeNotifyQueued) return;
+    _safeNotifyQueued = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _safeNotifyQueued = false;
+      if (_directorClosed) return;
+      notifyListeners();
+    });
   }
 
   static const double _autosaveIntervalSec = 25;
@@ -279,6 +370,70 @@ class GameDirector extends ChangeNotifier {
   /// Player-picked enemy for the target corner HUD (runtime only).
   String? hudFocusEnemyId;
 
+  /// Disk has progress or a paid flag that [memory] does not.
+  bool _memoryDroppedDisk(GameState memory, GameState disk) {
+    if (disk.lifetimeGoldEarned > memory.lifetimeGoldEarned) return true;
+    if (disk.metaDepth.adFree && !memory.metaDepth.adFree) return true;
+    if (disk.metaDepth.paidSeasonPass && !memory.metaDepth.paidSeasonPass) {
+      return true;
+    }
+    if (disk.metaDepth.shopLongAway && !memory.metaDepth.shopLongAway) {
+      return true;
+    }
+    final seen = memory.metaDepth.grantedShopPurchaseIds.toSet();
+    for (final id in disk.metaDepth.grantedShopPurchaseIds) {
+      if (!seen.contains(id)) return true;
+    }
+    if (disk.partyName != memory.partyName &&
+        (disk.lifetimeGoldEarned > 0 || disk.metaDepth.adFree)) {
+      return true;
+    }
+    return false;
+  }
+
+  /// True when this device's file could not be read, or memory is not that
+  /// file. Sets the recovery block and does not write. A readable empty
+  /// phone returns false so a cloud restore may fill it.
+  Future<bool> localReadBlocksMutation() async {
+    try {
+      await _storage.reloadDurable();
+      final slots = await _storage.listSlots();
+      _saveSlots = slots;
+      if (slots.any((slot) => slot.corrupt)) {
+        _blockSaveRecovery(
+          'Saving is paused. A save file could not be read. It was left untouched.',
+        );
+        return true;
+      }
+      final raw = await _storage.loadActiveRaw();
+      if (raw != null && raw.isNotEmpty) {
+        final parsed = GameLogic.importSaveJson(raw);
+        if (parsed == null || _memoryDroppedDisk(_state, parsed)) {
+          _blockSaveRecovery(
+            'Saving is paused. This device has a save that was not loaded. Retry leaves it untouched.',
+          );
+          return true;
+        }
+      } else if (_hasExistingSave ||
+          slots.any((slot) => slot.occupied) ||
+          await _storage.hasUnadoptedCopy()) {
+        // Memory already adopted a party, or another slot still has one.
+        // An empty active read is not proof the phone has no save.
+        _blockSaveRecovery(
+          'Saving is paused. This device has a save that was not loaded. Retry leaves it untouched.',
+        );
+        return true;
+      }
+      return false;
+    } catch (error, stack) {
+      debugPrint('local read failed: $error\n$stack');
+      _blockSaveRecovery(
+        'Saving is paused. This device could not be read. Retry leaves it untouched.',
+      );
+      return true;
+    }
+  }
+
   /// Test hook: attempt a persist (no-op unless a real save exists).
   /// False when the write did not land.
   @visibleForTesting
@@ -286,6 +441,10 @@ class GameDirector extends ChangeNotifier {
     _persist();
     return _saveChain;
   }
+
+  /// Test hook for crash and interleaving cases.
+  @visibleForTesting
+  GameStorage get debugStorage => _storage;
 
   GameState get state => _state;
 
@@ -523,7 +682,7 @@ class GameDirector extends ChangeNotifier {
   void clearToast() {
     if (!uiFeedback.toastWasShowing) return;
     uiFeedback.clearToast();
-    notifyListeners();
+    _notifyUnlessBuilding();
   }
 
   void dismissOfflineSummary() {
@@ -1734,60 +1893,80 @@ class GameDirector extends ChangeNotifier {
     required String purchaseId,
     bool restored = false,
     bool recovered = false,
-  }) async {
-    final item = ShopCatalog.byId[productId];
-    if (item == null) return true;
-    final known = ShopBilling.alreadyGranted(_state, purchaseId);
-    if (!ShopBilling.shouldGrantPurchase(
-      item: item,
-      restored: restored,
-      purchaseId: purchaseId,
-      alreadyGranted: known,
-    )) {
-      return true;
-    }
-    final beforeOwned = ShopBilling.isOwned(_state, item);
-    final beforeCinders = _state.metaDepth.cinders;
-    final next = ShopBilling.applyTrackedPurchase(
-      _state,
-      item,
-      purchaseId: purchaseId,
-    );
-    if (identical(next, _state) && beforeOwned) {
-      if (!restored) {
-        showToast('${item.name} restored', life: 2.2);
+  }) {
+    return _enqueueSave(() async {
+      if (_durableSaveBlocked) return false;
+      final item = ShopCatalog.byId[productId];
+      if (item == null) return true;
+      final known = ShopBilling.alreadyGranted(_state, purchaseId);
+      if (!ShopBilling.shouldGrantPurchase(
+        item: item,
+        restored: restored,
+        purchaseId: purchaseId,
+        alreadyGranted: known,
+      )) {
+        // A cached reload can contain a receipt whose commit returned
+        // false. That is not a reason to tell Play the grant is saved.
+        if (_storage.hasUnprovenWrite) return false;
+        return true;
       }
-      return true;
-    }
-    if (identical(next, _state)) return true;
-    if (!_hasExistingSave) return false;
-    final priorMeta = _state.metaDepth;
-    _applyUpgrade(next);
-    final saved = await _persistFlush();
-    if (!saved) {
-      // Keep gold, fight progress, and the rest of the live state.
-      // Only the grant, which lives on meta, is undone.
-      _applyUpgrade(_state.copyWith(metaDepth: priorMeta));
-      return false;
-    }
-    final paidCinders = _state.metaDepth.cinders > beforeCinders;
-    if (recovered && paidCinders) {
+      final beforeOwned = ShopBilling.isOwned(_state, item);
+      final beforeCinders = _state.metaDepth.cinders;
+      final next = ShopBilling.applyTrackedPurchase(
+        _state,
+        item,
+        purchaseId: purchaseId,
+      );
+      if (identical(next, _state) && beforeOwned) {
+        if (!restored) {
+          showToast('${item.name} restored', life: 2.2);
+        }
+        return true;
+      }
+      if (identical(next, _state)) return true;
+      if (!_hasExistingSave) return false;
+      final priorMeta = _state.metaDepth;
+      _applyUpgrade(next, persist: false);
+      _saveEpoch++;
+      final snapshot = _stampCloudClock(_state);
+      _state = snapshot;
+      var saved = false;
+      try {
+        saved = await _storage.save(snapshot);
+      } catch (e, st) {
+        debugPrint('save failed: $e\n$st');
+        _applyUpgrade(_state.copyWith(metaDepth: priorMeta), persist: false);
+        _blockSaveRecovery(
+          'Saving is paused. A purchase could not be confirmed on this device.',
+        );
+        return false;
+      }
+      if (!saved) {
+        // Keep gold, fight progress, and the rest of the live state.
+        // Only the grant, which lives on meta, is undone. The purchase
+        // stays unconsumed. A reload is not a durable receipt.
+        _applyUpgrade(_state.copyWith(metaDepth: priorMeta), persist: false);
+        return false;
+      }
+      final paidCinders = _state.metaDepth.cinders > beforeCinders;
+      if (recovered && paidCinders) {
+        GameAudio.ui();
+        showToast('Purchase restored', life: 2.6);
+        return true;
+      }
+      if (restored) return true;
       GameAudio.ui();
-      showToast('Purchase restored', life: 2.6);
+      showToast('Purchased ${item.name}', life: 2.6);
+      final price = ShopStore.storePrice(productId);
+      unawaited(
+        AppAnalytics.storePurchase(
+          productId,
+          value: price?.value,
+          currency: price?.currency,
+        ),
+      );
       return true;
-    }
-    if (restored) return true;
-    GameAudio.ui();
-    showToast('Purchased ${item.name}', life: 2.6);
-    final price = ShopStore.storePrice(productId);
-    unawaited(
-      AppAnalytics.storePurchase(
-        productId,
-        value: price?.value,
-        currency: price?.currency,
-      ),
-    );
-    return true;
+    });
   }
 
   /// Test hook for the Play grant path, including a failed save.
@@ -1805,6 +1984,10 @@ class GameDirector extends ChangeNotifier {
   );
 
   Future<void> buyShopItem(String productId) async {
+    if (_durableSaveBlocked) {
+      showToast('Purchases stay off until save recovery finishes.', life: 2.6);
+      return;
+    }
     if (!ShopBilling.billingReady) {
       showToast('Shop buys coming later.', life: 2.2);
       return;
@@ -2212,9 +2395,26 @@ class GameDirector extends ChangeNotifier {
   }
 
   bool _pendingStartMenu = false;
+  bool _pendingRecoveryNewGame = false;
+  bool _newGameBusy = false;
+  int _newGameEpoch = 0;
   NavIntent? _pendingHubNav;
 
+  /// Bumps when party setup is abandoned, so an in-flight START cannot
+  /// continue into play after BACK.
+  int get newGameEpoch => _newGameEpoch;
+
   bool get pendingStartMenu => _pendingStartMenu;
+
+  /// Play is up and an empty recovery slot is waiting for party setup.
+  bool get pendingRecoveryNewGame => _pendingRecoveryNewGame;
+
+  /// One-shot. The shell that handles the tap consumes this.
+  bool takePendingRecoveryNewGame() {
+    final pending = _pendingRecoveryNewGame;
+    _pendingRecoveryNewGame = false;
+    return pending;
+  }
 
   /// Consume a one-shot menu open after wipe → hub (POWER / BAG / Shop).
   NavIntent? takePendingHubNav() {
@@ -2246,7 +2446,7 @@ class GameDirector extends ChangeNotifier {
   /// Part extensions call this; [notifyListeners] is @protected on [ChangeNotifier].
   void _directorNotify() => notifyListeners();
 
-  void _applyUpgrade(GameState updated) {
+  void _applyUpgrade(GameState updated, {bool persist = true}) {
     if (_isLoading || identical(updated, _state)) {
       return;
     }
@@ -2271,7 +2471,7 @@ class GameDirector extends ChangeNotifier {
       _rebuildSpatial();
     }
     notifyListeners();
-    unawaited(_persistFlush());
+    if (persist) unawaited(_persistFlush());
   }
 
   void _syncDevicePrefs() {
@@ -2361,8 +2561,20 @@ class GameDirector extends ChangeNotifier {
     );
   }
 
+  /// Point this preview at [state] without a boot catch-up.
+  @visibleForTesting
+  void debugHoldSave(GameState state) {
+    _state = state;
+    _hasExistingSave = true;
+    _isLoading = false;
+  }
+
+  @visibleForTesting
+  Future<void> debugResumeFromBackground() => _resumeFromBackground();
+
   @override
   void dispose() {
+    _directorClosed = true;
     _spatialTimer?.cancel();
     _spatialTimer = null;
     _combatFrameQueued = false;
@@ -2372,6 +2584,9 @@ class GameDirector extends ChangeNotifier {
     _bootWarmup?.cancel();
     _hubIdleTimer?.cancel();
     combatFrame.dispose();
+    if (PlayGamesBridge.onUploadCommitted == _noteUploadedLineage) {
+      PlayGamesBridge.onUploadCommitted = null;
+    }
     PlayGamesBridge.cancelPendingUpload();
     unawaited(ShopStore.dispose());
     super.dispose();
