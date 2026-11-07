@@ -930,6 +930,115 @@ void main() {
     await pending;
   });
 
+  testWidgets('MyApp home warm resume shows Welcome Back once', (tester) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState(now: DateTime.now()),
+    );
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: false),
+    );
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      if (find.text('ENTER DUNGEON').evaluate().isNotEmpty) break;
+    }
+    expect(find.text('ENTER DUNGEON'), findsWidgets);
+    director.setHomeLayout(HomeLayout.home);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.byType(HomeShell), findsOneWidget);
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      for (final label in ['GOT IT', 'MAYBE LATER', 'NOT NOW']) {
+        final hit = find.text(label);
+        if (hit.evaluate().isNotEmpty) {
+          await tester.tap(hit.last);
+          await tester.pump();
+        }
+      }
+    }
+    expect(find.text('WELCOME BACK'), findsNothing);
+
+    final idleGold = director.state.gold;
+    final idleEssence = director.state.essence;
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.text('WELCOME BACK'), findsNothing);
+    expect(director.state.gold, idleGold);
+    expect(director.state.essence, idleEssence);
+
+    Future<void> resume() async {
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+
+    for (final gap in [
+      Duration.zero,
+      const Duration(seconds: -45),
+      const Duration(seconds: 30),
+    ]) {
+      final gold = director.state.gold;
+      final essence = director.state.essence;
+      director.debugStampAway(lastUpdatedAgo: gap);
+      await resume();
+      expect(find.text('WELCOME BACK'), findsNothing);
+      expect(director.state.gold, gold);
+      expect(director.state.essence, essence);
+      expect(director.offlineSummary, isNull);
+    }
+
+    final awayAt = DateTime.now().subtract(const Duration(seconds: 90));
+    final rich = GameLogic.createInitialState(now: awayAt).copyWith(
+      gold: 50000,
+      bossVictories: 1,
+      homeLayout: HomeLayout.home,
+    );
+    director.debugHoldSave(rich);
+    final beforeGold = director.state.gold;
+    final beforeEssence = director.state.essence;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    var saw = false;
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      if (find.text('WELCOME BACK').evaluate().isNotEmpty) {
+        saw = true;
+        break;
+      }
+    }
+    expect(saw, isTrue);
+    expect(find.text('WELCOME BACK'), findsOneWidget);
+    final summary = director.offlineSummary;
+    expect(summary, isNotNull);
+    expect(summary!.secondsApplied, greaterThanOrEqualTo(60));
+    expect(summary.goldGained, greaterThan(0));
+    expect(director.state.gold, beforeGold + summary.goldGained);
+    expect(director.state.essence, beforeEssence + summary.essenceGained);
+    final creditedGold = director.state.gold;
+    final creditedEssence = director.state.essence;
+
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('WELCOME BACK'), findsOneWidget);
+    await director.debugResumeFromBackground();
+    await tester.pump();
+    expect(find.text('WELCOME BACK'), findsOneWidget);
+    expect(director.state.gold, creditedGold);
+    expect(director.state.essence, creditedEssence);
+
+    expect(find.text('OPEN GOLD'), findsOneWidget);
+    await tester.tap(find.text('OPEN GOLD'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('WELCOME BACK'), findsNothing);
+    expect(find.text('AP'), findsWidgets);
+    expect(director.state.gold, creditedGold);
+    expect(director.state.essence, creditedEssence);
+  });
+
   testWidgets('a short wallet on home has no spend button', (tester) async {
     final poor = GameLogic.createInitialState(
       now: DateTime(2026, 11, 7),
