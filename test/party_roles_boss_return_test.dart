@@ -7,6 +7,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/models/dungeon_mode.dart';
+import 'package:idle_party/ui/shell/play_nav.dart';
+import 'helpers/seeded.dart';
 import 'package:idle_party/models/enemy.dart';
 import 'package:idle_party/models/hero_spec.dart';
 import 'package:idle_party/spatial/enemy_specials.dart';
@@ -87,6 +91,30 @@ TileMap _openMap() {
     spawnPoints: const [(2, 2)],
     exitPoint: (cols - 3, rows - 3),
     enemySpawns: const [(8, 5)],
+  );
+}
+
+SpatialWorld _walled() {
+  final map = _openMap();
+  final tiles = List<TileKind>.from(map.tiles);
+  for (var y = 4; y <= 6; y++) {
+    tiles[y * map.cols + 7] = TileKind.wall;
+  }
+  final walled = TileMap(
+    cols: map.cols,
+    rows: map.rows,
+    tiles: tiles,
+    spawnPoints: map.spawnPoints,
+    exitPoint: map.exitPoint,
+    enemySpawns: map.enemySpawns,
+  );
+  return SpatialWorld(
+    map: walled,
+    heroes: [],
+    enemies: [],
+    projectiles: <SpatialProjectile>[],
+    groundLoot: [],
+    isTreasure: false,
   );
 }
 
@@ -288,6 +316,8 @@ void main() {
     final next = tester.widget<Text>(find.textContaining('Up next:'));
     expect(next.style?.color, isNot(GameTheme.accentWarn));
     expect(find.textContaining('Why:'), findsOneWidget);
+    expect(find.textContaining('No gold or essence this time'), findsOneWidget);
+    expect(find.text('OPEN GOLD'), findsNothing);
     expect(find.textContaining('missed'), findsNothing);
     expect(find.textContaining('hurry'), findsNothing);
     await _writeWelcomeShot(tester, 'welcome_back_360x780.png');
@@ -333,12 +363,56 @@ void main() {
           ),
         );
         director.uiFeedback.presentOffline(card());
+        tester.view.viewPadding = FakeViewPadding.zero;
+        tester.view.padding = FakeViewPadding.zero;
         await tester.tap(find.text('open'));
         await tester.pumpAndSettle();
         expect(find.text('WELCOME BACK'), findsOneWidget);
         expect(tester.takeException(), isNull);
         if (size == const Size(360, 640) && scale == 1.45) {
-          await _writeWelcomeShot(tester, 'welcome_back_360x640_145.png');
+          final leaveFirst = find.text('ENTER DUNGEON').evaluate().isNotEmpty
+              ? find.text('ENTER DUNGEON')
+              : find.text('CONTINUE');
+          await tester.tap(leaveFirst);
+          await tester.pumpAndSettle();
+          tester.view.viewPadding = const FakeViewPadding(top: 44, bottom: 34);
+          tester.view.padding = const FakeViewPadding(top: 44, bottom: 34);
+          await tester.pumpWidget(
+            MediaQuery(
+              data: MediaQueryData(
+                size: size,
+                textScaler: TextScaler.linear(scale),
+                padding: const EdgeInsets.only(top: 44, bottom: 34),
+                viewPadding: const EdgeInsets.only(top: 44, bottom: 34),
+              ),
+              child: MaterialApp(
+                home: Builder(
+                  builder: (context) => TextButton(
+                    onPressed: () =>
+                        showOfflineProgressDialog(context, director),
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+          );
+          director.uiFeedback.presentOffline(card());
+          await tester.tap(find.text('open'), warnIfMissed: false);
+          await tester.pumpAndSettle();
+          if (find.text('WELCOME BACK').evaluate().isEmpty) {
+            await tester.tap(find.text('open'));
+            await tester.pumpAndSettle();
+          }
+          expect(tester.takeException(), isNull);
+          expect(find.textContaining('Up next'), findsOneWidget);
+          expect(
+            tester.getRect(find.text('WELCOME BACK')).top,
+            greaterThanOrEqualTo(44),
+          );
+          await _writeWelcomeShot(
+            tester,
+            'welcome_back_360x640_145_cutout.png',
+          );
         }
         final leave = find.text('ENTER DUNGEON').evaluate().isNotEmpty
             ? find.text('ENTER DUNGEON')
@@ -348,6 +422,303 @@ void main() {
       }
     }
     await tester.binding.setSurfaceSize(null);
+  });
+
+  test('live focus uses a clear shot and the nearest tank', () {
+    final world = _walled();
+    final enemy = _enemy(
+      id: 'shot',
+      x: 6.8,
+      y: 5,
+      archetype: EnemyArchetype.ranged,
+    );
+    final behind = _hero(id: 'back', spec: HeroSpecId.fire, x: 8.2, y: 5);
+    final tank = _hero(id: 'tank', spec: HeroSpecId.protection, x: 6.8, y: 2);
+    expect(
+      SpatialCombat.canShoot(world, enemy.x, enemy.y, behind.x, behind.y),
+      isFalse,
+    );
+    expect(
+      SpatialCombat.canShoot(world, enemy.x, enemy.y, tank.x, tank.y),
+      isTrue,
+    );
+    expect(
+      SpatialCombat.enemyFocusForTest(enemy, [behind, tank], world: world)?.id,
+      'tank',
+      reason: 'a nearer hero behind a wall loses to an open tank',
+    );
+    final walledTank = _hero(
+      id: 'nearw',
+      spec: HeroSpecId.protection,
+      x: 8.2,
+      y: 5,
+    );
+    final openTank = _hero(
+      id: 'openf',
+      spec: HeroSpecId.guardian,
+      x: 6.8,
+      y: 2,
+    );
+    expect(
+      SpatialCombat.enemyFocusForTest(enemy, [
+        walledTank,
+        openTank,
+      ], world: world)?.id,
+      'openf',
+      reason:
+          'the nearer tank is behind the wall, so the open tank is the anchor',
+    );
+
+    final open = _world(
+      heroes: [
+        _hero(id: 'far', spec: HeroSpecId.protection, x: 2, y: 5),
+        _hero(id: 'near', spec: HeroSpecId.guardian, x: 6, y: 5),
+      ],
+      enemies: [_enemy(id: 'm', x: 8, y: 5)],
+    );
+    final melee = open.enemies.first;
+    expect(
+      SpatialCombat.enemyFocusForTest(melee, open.heroes, world: open)?.id,
+      'near',
+    );
+
+    final dead = _hero(
+      id: 'dead',
+      spec: HeroSpecId.protection,
+      x: 6,
+      y: 5,
+      hp: 0,
+    );
+    final dps = _hero(id: 'dps', spec: HeroSpecId.arms, x: 4, y: 5);
+    expect(
+      SpatialCombat.enemyFocusForTest(melee, [dead, dps], world: open)?.id,
+      'dps',
+    );
+
+    final marked = _hero(id: 'mark', spec: HeroSpecId.fire, x: 2, y: 5);
+    melee.forcedTargetId = marked.id;
+    melee.forcedTargetTimer = 3;
+    expect(
+      SpatialCombat.enemyFocusForTest(melee, [tank, marked], world: open)?.id,
+      'mark',
+    );
+
+    final caster = _enemy(
+      id: 'bow',
+      x: 8,
+      y: 5,
+      archetype: EnemyArchetype.ranged,
+    );
+    final coverTank = _hero(id: 'ct', spec: HeroSpecId.protection, x: 5, y: 5);
+    final farHeal = _hero(id: 'fh', spec: HeroSpecId.discipline, x: 2, y: 5);
+    final plain = _world(heroes: [coverTank, farHeal], enemies: [caster]);
+    expect(
+      SpatialCombat.enemyFocusForTest(caster, plain.heroes, world: plain)?.id,
+      'ct',
+      reason: 'distance cover, both shots open',
+    );
+  });
+
+  test('Sandy lighter chip is the nearest tank in the ring', () {
+    final far = _hero(id: 'far', spec: HeroSpecId.protection, x: 6.4, y: 5);
+    final near = _hero(id: 'near', spec: HeroSpecId.guardian, x: 5.3, y: 5);
+    final dps = _hero(id: 'dps', spec: HeroSpecId.arms, x: 5.6, y: 5);
+    final boss = _enemy(
+      id: 'sandy',
+      x: 5,
+      y: 5,
+      attack: 100,
+      role: EnemyRole.boss,
+    );
+    final world = _world(heroes: [far, near, dps], enemies: [boss]);
+    debugSandySlamForTest(world, boss);
+    expect(400 - near.hp, lessThan(400 - far.hp));
+    expect(400 - near.hp, lessThan(400 - dps.hp));
+  });
+
+  test('Goblin mark can slip and King decree can be answered', () {
+    final far = _hero(id: 'far', spec: HeroSpecId.arms, x: 1.2, y: 5);
+    final boss = _enemy(id: 'goblin', x: 8, y: 5, role: EnemyRole.boss);
+    final add = _enemy(id: 'add', x: 7.2, y: 5);
+    add.hp = 40;
+    final slipped = _world(
+      heroes: [far],
+      enemies: [boss, add],
+      dungeonId: 'goblin',
+    );
+    debugGoblinRallyForTest(slipped, boss, focus: far);
+    expect(add.hp, 40);
+    expect(slipped.floaters.any((f) => f.text == 'SLIP'), isTrue);
+
+    final close = _hero(id: 'close', spec: HeroSpecId.fire, x: 7.2, y: 5);
+    final boss2 = _enemy(id: 'goblin2', x: 8, y: 5, role: EnemyRole.boss);
+    final add2 = _enemy(id: 'add2', x: 7.4, y: 5);
+    add2.hp = 40;
+    final held = _world(
+      heroes: [close],
+      enemies: [boss2, add2],
+      dungeonId: 'goblin',
+    );
+    debugGoblinRallyForTest(held, boss2, focus: close);
+    expect(add2.hp, greaterThan(40));
+    expect(held.floaters.any((f) => f.text == 'HEAL'), isTrue);
+
+    final answered = _hero(id: 'in', spec: HeroSpecId.arms, x: 6.2, y: 5);
+    final back = _hero(id: 'out', spec: HeroSpecId.fire, x: 2, y: 5);
+    final king = _enemy(id: 'king', x: 5, y: 5, role: EnemyRole.boss);
+    final kingWorld = _world(
+      heroes: [answered, back],
+      enemies: [king],
+      dungeonId: 'king',
+    );
+    debugBossTelegraphForTest(kingWorld, king);
+    expect(answered.attackSlowTimer, 0);
+    expect(back.attackSlowTimer, greaterThanOrEqualTo(2.5));
+    expect(kingWorld.floaters.any((f) => f.text == 'DECREE'), isTrue);
+  });
+
+  test('four Sandy seeds clear floor 1 and the floor 2 boss in 75s', () {
+    const specs = <List<HeroSpecId>?>[
+      null,
+      [HeroSpecId.arms, HeroSpecId.fire, HeroSpecId.combat],
+      [HeroSpecId.protection, HeroSpecId.arms, HeroSpecId.fire],
+      [HeroSpecId.protection, HeroSpecId.guardian, HeroSpecId.arms],
+    ];
+    for (final seed in const [1, 2, 3, 4]) {
+      for (final party in specs) {
+        seedAll(seed);
+        var state = GameLogic.enterDungeon(
+          GameLogic.createInitialState(
+            now: DateTime(2026, 11, 7),
+          ).copyWith(dungeonMode: DungeonMode.push),
+          dungeonId: 'sandy',
+        );
+        if (party != null) {
+          state = state.copyWith(
+            heroes: [
+              for (var i = 0; i < party.length; i++)
+                state.heroes[i].copyWith(specId: party[i]),
+            ],
+          );
+        }
+        var world = SpatialCombat.build(state, roleCover: true);
+        var wiped = false;
+        for (var i = 0; i < 1500; i++) {
+          final step = SpatialCombat.step(world, state, dt: 0.05);
+          world = step.world;
+          state = step.state;
+          if (step.goldFromKills > 0) {
+            state = GameLogic.creditCombatGold(state, step.goldFromKills);
+          }
+          if (step.partyWiped) {
+            wiped = true;
+            break;
+          }
+          if (step.roomCleared) {
+            state = GameLogic.completeCurrentRoom(
+              state,
+              goldGain: 0,
+              skipLootRoll: true,
+            );
+            if (!state.inDungeon || state.highestFloorCleared >= 2) break;
+            world = SpatialCombat.build(state, roleCover: true);
+          }
+        }
+        expect(
+          wiped,
+          isFalse,
+          reason: 'seed $seed ${party ?? 'starter'} wiped',
+        );
+        expect(
+          state.highestFloorCleared,
+          greaterThanOrEqualTo(2),
+          reason:
+              'seed $seed ${party ?? 'starter'} floor ${state.currentRoom.floorNumber}',
+        );
+        expect(state.bossVictories, greaterThanOrEqualTo(1));
+      }
+    }
+    unseedAll();
+  }, timeout: const Timeout(Duration(minutes: 4)));
+
+  test('return line names a real buy and does not invent gold', () {
+    final poor = GameLogic.createInitialState(now: DateTime(2026, 11, 7));
+    final none = GameLogic.returnGainLine(
+      poor,
+      goldGained: 0,
+      essenceGained: 0,
+      canOpenGold: true,
+    );
+    expect(none, contains('No gold or essence'));
+    expect(none, isNot(contains('Open GOLD')));
+
+    final rich = poor.copyWith(gold: 50000);
+    final covered = GameLogic.returnGainLine(
+      rich,
+      goldGained: 100,
+      essenceGained: 0,
+      canOpenGold: true,
+    );
+    expect(covered, contains('brought back 100 gold'));
+    expect(covered, contains('wallet covers'));
+    expect(covered, contains('Open GOLD'));
+    final short = poor.copyWith(gold: 1);
+    final gap = GameLogic.returnGainLine(
+      short,
+      goldGained: 1,
+      essenceGained: 0,
+      canOpenGold: true,
+    );
+    expect(gap, contains('still needs'));
+    expect(gap, isNot(contains('Open GOLD')));
+    final noButton = GameLogic.returnGainLine(
+      rich,
+      goldGained: 100,
+      essenceGained: 0,
+    );
+    expect(noButton, isNot(contains('Open GOLD')));
+  });
+
+  testWidgets('OPEN GOLD is the forge and does not pay again', (tester) async {
+    final rich = GameLogic.createInitialState(
+      now: DateTime(2026, 11, 7),
+    ).copyWith(gold: 50000);
+    final director = GameDirector.preview(initialState: rich);
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    director.uiFeedback.presentOffline(
+      OfflineProgressResult(
+        state: rich,
+        secondsApplied: 60,
+        goldGained: 100,
+        essenceGained: 0,
+        roomsCleared: 1,
+        highestFloorDelta: 0,
+        bossDelta: 0,
+        wasInDungeon: false,
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PlayNav(
+          router: router,
+          onEnterDungeon: (_) {},
+          child: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showOfflineProgressDialog(context, director),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('OPEN GOLD'), findsOneWidget);
+    await tester.tap(find.text('OPEN GOLD'));
+    await tester.pumpAndSettle();
+    expect(router.route, MenuRoute.gold);
+    expect(director.state.gold, 50000);
   });
 }
 

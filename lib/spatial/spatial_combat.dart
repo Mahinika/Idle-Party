@@ -3583,6 +3583,7 @@ abstract final class SpatialCombat {
         world.heroes,
         pets: world.pets,
         casterCover: world.roleCover,
+        world: world,
       );
       if (target == null) continue;
 
@@ -5144,12 +5145,14 @@ abstract final class SpatialCombat {
     SpatialWorld world,
   ) => HeroFocus.pickSmartFocus(self, world);
 
-  /// Who [enemy] would strike. Melee prefers a tank; casters shoot an
-  /// exposed non-tank.
+  /// Who [enemy] would strike. Pass [world] so a wall blocks the shot.
+  /// Distance cover is not a wall: it only compares distances.
   static SpatialActor? enemyFocusForTest(
     SpatialActor enemy,
-    List<SpatialActor> heroes,
-  ) => _focusHero(enemy, heroes, casterCover: true);
+    List<SpatialActor> heroes, {
+    SpatialWorld? world,
+    bool casterCover = true,
+  }) => _focusHero(enemy, heroes, casterCover: casterCover, world: world);
 
   /// Test hook: tank taunt + CombatPresence bark path.
   static bool testTauntForPresence(SpatialWorld world, SpatialActor tank) {
@@ -5194,6 +5197,7 @@ abstract final class SpatialCombat {
         world.heroes,
         pets: world.pets,
         casterCover: world.roleCover,
+        world: world,
       );
       if (focus == null || focus.id == tank.id) continue;
       final d = actorDist(tank, e);
@@ -5219,61 +5223,114 @@ abstract final class SpatialCombat {
     return true;
   }
 
-  /// Enemies focus the tank when possible (aggro toward frontliner).
+  /// Who this enemy walks toward and swings at.
+  ///
+  /// A live fight ([casterCover]) uses a clear shot. The anchor is the
+  /// nearest living tank the swing can reach, not the last tank in the
+  /// list. A hero behind a wall is not chosen while a tank has a clear
+  /// shot. Distance cover is separate: a caster skips a non-tank who is
+  /// simply farther than that tank, even when both shots are open.
+  ///
+  /// Away fights leave this on the older leash. That keeps a long return
+  /// on the same credited kills.
   static SpatialActor? _focusHero(
     SpatialActor enemy,
     List<SpatialActor> heroes, {
     List<SpatialActor> pets = const [],
     bool casterCover = false,
+    SpatialWorld? world,
   }) {
     if (enemy.forcedTargetTimer > 0 && enemy.forcedTargetId != null) {
       for (final h in heroes) {
         if (h.isAlive && h.id == enemy.forcedTargetId) return h;
       }
     }
-    SpatialActor? tank;
-    SpatialActor? nearest;
-    var bestD = double.infinity;
-    for (final h in heroes) {
-      if (!h.isAlive || h.vanishTimer > 0) continue;
-      final d = actorDist(enemy, h);
-      if (actorIsTank(h)) tank = h;
-      if (d < bestD) {
-        bestD = d;
-        nearest = h;
-      }
-    }
-    // Melee sticks to a tank inside a soft leash. Casters and supports
-    // shoot whoever is not standing behind that tank, so a healer or
-    // damage hero in front is a real target and one kept back is covered.
-    final melee =
-        !casterCover ||
-        (enemy.archetype != EnemyArchetype.ranged &&
-            enemy.archetype != EnemyArchetype.support);
-    final SpatialActor? hero;
-    if (!melee) {
-      final tankD = tank == null ? double.infinity : actorDist(enemy, tank);
-      SpatialActor? exposed;
-      var exposedD = double.infinity;
+    if (!casterCover) {
+      SpatialActor? tank;
+      SpatialActor? nearest;
+      var bestD = double.infinity;
       for (final h in heroes) {
-        if (!h.isAlive || h.vanishTimer > 0 || actorIsTank(h)) continue;
+        if (!h.isAlive || h.vanishTimer > 0) continue;
         final d = actorDist(enemy, h);
-        if (tank != null && d > tankD + 1.6) continue;
-        if (d < exposedD) {
-          exposedD = d;
-          exposed = h;
+        if (actorIsTank(h)) tank = h;
+        if (d < bestD) {
+          bestD = d;
+          nearest = h;
         }
       }
-      hero = exposed ?? tank ?? nearest;
-    } else {
       final leash = tank != null ? 4.0 : 2.5;
-      hero = tank != null && actorDist(enemy, tank) < bestD + leash
+      final hero = tank != null && actorDist(enemy, tank) < bestD + leash
           ? tank
           : nearest;
+      if (hero == null) return null;
+      for (final p in pets) {
+        if (p.hp <= 0 || p.dormant || p.vanishTimer > 0) continue;
+        if (actorDist(enemy, p) + 0.2 < actorDist(enemy, hero)) return p;
+      }
+      return hero;
+    }
+
+    bool legal(SpatialActor h) => h.isAlive && h.vanishTimer <= 0;
+
+    bool clearShot(SpatialActor h) {
+      if (world == null) return true;
+      return canShoot(world, enemy.x, enemy.y, h.x, h.y);
+    }
+
+    SpatialActor? nearestWhere(bool Function(SpatialActor h) ok) {
+      SpatialActor? best;
+      var bestD = double.infinity;
+      for (final h in heroes) {
+        if (!legal(h) || !ok(h)) continue;
+        final d = actorDist(enemy, h);
+        final closer = best == null || d < bestD - 0.0001;
+        final tie = best != null && (d - bestD).abs() <= 0.0001;
+        if (closer || (tie && h.id.compareTo(best.id) < 0)) {
+          best = h;
+          bestD = d;
+        }
+      }
+      return best;
+    }
+
+    final openTank = nearestWhere((h) => actorIsTank(h) && clearShot(h));
+    final anyTank = nearestWhere(actorIsTank);
+    final anchor = openTank ?? anyTank;
+    final ranged =
+        enemy.archetype == EnemyArchetype.ranged ||
+        enemy.archetype == EnemyArchetype.support;
+    final SpatialActor? hero;
+    if (!ranged) {
+      final open = nearestWhere(clearShot);
+      if (anchor != null &&
+          clearShot(anchor) &&
+          (open == null ||
+              actorDist(enemy, anchor) < actorDist(enemy, open) + 4.0)) {
+        hero = anchor;
+      } else {
+        hero = open ?? anchor ?? nearestWhere((h) => true);
+      }
+    } else {
+      final tankD = anchor == null ? double.infinity : actorDist(enemy, anchor);
+      final exposed = nearestWhere((h) {
+        if (actorIsTank(h) || !clearShot(h)) return false;
+        if (anchor != null &&
+            clearShot(anchor) &&
+            actorDist(enemy, h) > tankD + 1.6) {
+          return false;
+        }
+        return true;
+      });
+      hero =
+          exposed ??
+          (anchor != null && clearShot(anchor) ? anchor : null) ??
+          nearestWhere(clearShot) ??
+          nearestWhere((h) => true);
     }
     if (hero == null) return null;
     for (final p in pets) {
       if (p.hp <= 0 || p.dormant || p.vanishTimer > 0) continue;
+      if (!clearShot(p) && world != null) continue;
       if (actorDist(enemy, p) + 0.2 < actorDist(enemy, hero)) return p;
     }
     return hero;

@@ -1559,6 +1559,65 @@ class GameLogic {
     );
   }
 
+  /// What this return's gold or essence can actually pay for.
+  ///
+  /// Uses the wallet after the credit and the next forge or CAMP price.
+  /// Does not spend anything. [canOpenGold] / [canOpenEssence] are true
+  /// only when the screen can open that existing panel.
+  static String returnGainLine(
+    GameState state, {
+    required int goldGained,
+    required int essenceGained,
+    bool canOpenGold = false,
+    bool canOpenEssence = false,
+  }) {
+    if (goldGained <= 0 && essenceGained <= 0) {
+      return 'No gold or essence this time. The button below is the next fight.';
+    }
+    PartyUpgradeType? cheapest;
+    var cost = 1 << 30;
+    for (final type in PartyUpgradeType.values) {
+      final next = upgradeCostFor(state, type);
+      if (next < cost) {
+        cost = next;
+        cheapest = type;
+      }
+    }
+    final name = _returnForgeName(cheapest ?? PartyUpgradeType.attack);
+    final camp = cheapestSanctuaryNextCost(state);
+    if (goldGained > 0 && state.gold >= cost) {
+      final open = canOpenGold ? ' Open GOLD to spend it.' : '';
+      return 'You brought back $goldGained gold. The wallet covers the next '
+          '$name buy ($cost g).$open';
+    }
+    if (essenceGained > 0 && state.essence >= camp) {
+      final brought = goldGained > 0
+          ? 'You brought back $goldGained gold and $essenceGained essence. '
+          : 'You brought back $essenceGained essence. ';
+      final open = canOpenEssence ? 'Open ESSENCE to spend it.' : '';
+      return '${brought}The wallet covers the next CAMP buy ($camp). $open'
+          .trim();
+    }
+    if (goldGained > 0) {
+      final short = cost - state.gold;
+      return 'You brought back $goldGained gold. The next $name buy still '
+          'needs $short g. The fight earns the rest.';
+    }
+    final short = camp - state.essence;
+    return 'You brought back $essenceGained essence. The next CAMP buy still '
+        'needs $short. The fight earns the rest.';
+  }
+
+  static String _returnForgeName(PartyUpgradeType type) => switch (type) {
+    PartyUpgradeType.attack => 'AP',
+    PartyUpgradeType.defense => 'Armor',
+    PartyUpgradeType.vitality => 'STA',
+    PartyUpgradeType.moveSpeed => 'MOVE',
+    PartyUpgradeType.attackSpeed => 'HASTE',
+    PartyUpgradeType.crit => 'CRIT',
+    PartyUpgradeType.mastery => 'MASTERY',
+  };
+
   /// Welcome Back line. Empty in the first hour.
   /// A prize waits on the vault only when it can be claimed now.
   /// An empty vault needs one cave. After the claim, names tomorrow.

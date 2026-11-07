@@ -9,6 +9,7 @@ import '../../core/chase_dispatcher.dart';
 import '../../core/comeback_chest.dart';
 import '../../core/game_director.dart';
 import '../../core/game_logic.dart';
+import '../../core/menu_router.dart';
 import '../../core/gold_income.dart';
 import '../../core/hub_chase.dart';
 import '../../core/pet_service.dart';
@@ -99,6 +100,15 @@ Future<void> showOfflineProgressDialog(
   // prize is still one tap, and the next press is the fight.
   final inCave = director.state.inDungeon;
   final returnLabel = inCave ? 'CONTINUE' : 'ENTER DUNGEON';
+  final gainLine = GameLogic.returnGainLine(
+    rewardState,
+    goldGained: summary?.goldGained ?? 0,
+    essenceGained: summary?.essenceGained ?? 0,
+    canOpenGold: nav != null,
+    canOpenEssence: nav != null,
+  );
+  final openGold = nav != null && gainLine.contains('Open GOLD');
+  final openEssence = nav != null && gainLine.contains('Open ESSENCE');
   var showWatch = summary?.welcomeBackAdOffer == true;
   var watchBusy = false;
   var adNote = '';
@@ -269,6 +279,8 @@ Future<void> showOfflineProgressDialog(
               },
             ),
           const SizedBox(height: 10),
+          Text(gainLine, style: GameTheme.readable(color: GameTheme.parchment)),
+          const SizedBox(height: 6),
           Text(
             contract.upNextLine,
             style: GameTheme.readable(color: GameTheme.parchment),
@@ -282,6 +294,30 @@ Future<void> showOfflineProgressDialog(
         ],
       ),
       actions: [
+        if (openGold)
+          GameButton(
+            label: 'OPEN GOLD',
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () {
+              director.claimReturnRewards();
+              director.dismissOfflineSummary();
+              Navigator.pop(ctx);
+              nav.router.open(MenuRoute.gold);
+            },
+          ),
+        if (openEssence)
+          GameButton(
+            label: 'OPEN ESSENCE',
+            expanded: false,
+            style: GameButtonStyle.grey,
+            onPressed: () {
+              director.claimReturnRewards();
+              director.dismissOfflineSummary();
+              Navigator.pop(ctx);
+              nav.router.open(MenuRoute.essence);
+            },
+          ),
         if (showChaseCta)
           GameButton(
             label: readyLabel,

@@ -809,7 +809,13 @@ void _applyRecordedBossTell(
       );
     }
     if (def.slowSeconds > 0) {
-      h.attackSlowTimer = math.max(h.attackSlowTimer, def.slowSeconds);
+      // King: any hero who steps into 1.6 answers the decree and skips
+      // the slow. Everyone else, and a party that all stands back, still
+      // takes it. The tell stays DECREE.
+      final answered = id == 'king' && SpatialCombat.actorDist(enemy, h) <= 1.6;
+      if (!answered) {
+        h.attackSlowTimer = math.max(h.attackSlowTimer, def.slowSeconds);
+      }
     }
     if (def.rootSeconds > 0) {
       h.rootTimer = math.max(h.rootTimer, def.rootSeconds);
@@ -913,7 +919,7 @@ void _resolveBossTelegraph(
       );
       return;
     case 'goblin':
-      _bossRally(world, enemy, reducedVfx: reducedVfx);
+      _bossRally(world, enemy, focus: focus, reducedVfx: reducedVfx);
       return;
     case 'dead':
       final healMul = world.afkAssist ? 0.4 : 1.0;
@@ -962,8 +968,22 @@ void debugSandySlamForTest(SpatialWorld world, SpatialActor enemy) {
   _sandyBossSlam(world, enemy, rng: math.Random(1), reducedVfx: true);
 }
 
-void debugGoblinRallyForTest(SpatialWorld world, SpatialActor enemy) {
-  _bossRally(world, enemy, reducedVfx: true);
+void debugGoblinRallyForTest(
+  SpatialWorld world,
+  SpatialActor enemy, {
+  SpatialActor? focus,
+}) {
+  SpatialActor? marked = focus;
+  if (marked == null) {
+    for (final h in world.heroes) {
+      if (h.isAlive) {
+        marked = h;
+        break;
+      }
+    }
+  }
+  if (marked == null) return;
+  _bossRally(world, enemy, focus: marked, reducedVfx: true);
 }
 
 void debugBossTelegraphForTest(SpatialWorld world, SpatialActor enemy) {
@@ -991,6 +1011,8 @@ bool _sandyCoverChip(
   required math.Random rng,
   required bool reducedVfx,
 }) {
+  // Nearest tank inside the ring, by distance. Not the aggro anchor:
+  // that one is the nearest tank with a clear shot.
   SpatialActor? cover;
   var coverD = double.infinity;
   for (final h in world.heroes) {
@@ -1263,10 +1285,15 @@ void _bossChipHero(
 void _bossRally(
   SpatialWorld world,
   SpatialActor enemy, {
+  required SpatialActor focus,
   required bool reducedVfx,
 }) {
   final healMul = world.afkAssist ? 0.4 : 1.0;
-  final heal = math.max(8, (enemy.attack * 0.9 * healMul).round());
+  var heal = math.max(8, (enemy.attack * 0.9 * healMul).round());
+  // The marked hero can step past 3.4 and the chant misses the adds.
+  // Standing in keeps the old heal. Any hero can be the mark.
+  final slipped = SpatialCombat.actorDist(enemy, focus) > 3.4;
+  if (slipped) heal = 0;
   var any = false;
   for (final ally in world.enemies) {
     if (!ally.isAlive || ally.dormant) continue;
@@ -1275,17 +1302,18 @@ void _bossRally(
     ally.hp = math.min(ally.effectiveMaxHp, ally.hp + heal);
     any = true;
   }
-  if (!any) {
+  if (!any && !slipped) {
     enemy.hp = math.min(enemy.effectiveMaxHp, enemy.hp + heal);
   }
   enemy.specialCd = world.afkAssist ? 8.0 : 7.0;
   _bossTell(
     world,
     enemy,
-    text: EnemyFlavor.bossTell('goblin'),
+    text: slipped ? 'SLIP' : EnemyFlavor.bossTell('goblin'),
     argb: 0xFFE0B040,
     radius: 1.3,
     reducedVfx: reducedVfx,
+    at: slipped ? focus : null,
   );
 }
 
