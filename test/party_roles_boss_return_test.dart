@@ -7,8 +7,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/game_state.dart';
+import 'package:idle_party/core/home_layout.dart';
+import 'package:idle_party/core/menu_alerts.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/main.dart';
 import 'package:idle_party/models/dungeon_mode.dart';
+import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/shell/play_nav.dart';
 import 'helpers/seeded.dart';
 import 'package:idle_party/models/enemy.dart';
@@ -122,6 +126,7 @@ SpatialWorld _world({
   required List<SpatialActor> heroes,
   required List<SpatialActor> enemies,
   String dungeonId = 'sandy',
+  bool roleCover = false,
 }) {
   return SpatialWorld(
     map: _openMap(),
@@ -131,6 +136,7 @@ SpatialWorld _world({
     groundLoot: [],
     isTreasure: false,
     dungeonId: dungeonId,
+    roleCover: roleCover,
   );
 }
 
@@ -545,6 +551,7 @@ void main() {
       heroes: [far],
       enemies: [boss, add],
       dungeonId: 'goblin',
+      roleCover: true,
     );
     debugGoblinRallyForTest(slipped, boss, focus: far);
     expect(add.hp, 40);
@@ -558,6 +565,7 @@ void main() {
       heroes: [close],
       enemies: [boss2, add2],
       dungeonId: 'goblin',
+      roleCover: true,
     );
     debugGoblinRallyForTest(held, boss2, focus: close);
     expect(add2.hp, greaterThan(40));
@@ -570,10 +578,39 @@ void main() {
       heroes: [answered, back],
       enemies: [king],
       dungeonId: 'king',
+      roleCover: true,
     );
     debugBossTelegraphForTest(kingWorld, king);
     expect(answered.attackSlowTimer, 0);
     expect(back.attackSlowTimer, greaterThanOrEqualTo(2.5));
+    expect(kingWorld.floaters.any((f) => f.text == 'DECREE'), isTrue);
+  });
+
+  test('away Goblin and King keep the old heal and slow', () {
+    final far = _hero(id: 'far', spec: HeroSpecId.arms, x: 1.2, y: 5);
+    final boss = _enemy(id: 'goblin', x: 8, y: 5, role: EnemyRole.boss);
+    final add = _enemy(id: 'add', x: 7.2, y: 5);
+    add.hp = 40;
+    final away = _world(
+      heroes: [far],
+      enemies: [boss, add],
+      dungeonId: 'goblin',
+    );
+    expect(away.roleCover, isFalse);
+    debugGoblinRallyForTest(away, boss, focus: far);
+    expect(add.hp, greaterThan(40));
+    expect(away.floaters.any((f) => f.text == 'HEAL'), isTrue);
+    expect(away.floaters.any((f) => f.text == 'SLIP'), isFalse);
+
+    final close = _hero(id: 'in', spec: HeroSpecId.arms, x: 6.2, y: 5);
+    final king = _enemy(id: 'king', x: 5, y: 5, role: EnemyRole.boss);
+    final kingWorld = _world(
+      heroes: [close],
+      enemies: [king],
+      dungeonId: 'king',
+    );
+    debugBossTelegraphForTest(kingWorld, king);
+    expect(close.attackSlowTimer, greaterThanOrEqualTo(2.5));
     expect(kingWorld.floaters.any((f) => f.text == 'DECREE'), isTrue);
   });
 
@@ -679,10 +716,12 @@ void main() {
     expect(noButton, isNot(contains('Open GOLD')));
   });
 
-  testWidgets('OPEN GOLD is the forge and does not pay again', (tester) async {
+  testWidgets('classic OPEN GOLD is the forge and does not pay again', (
+    tester,
+  ) async {
     final rich = GameLogic.createInitialState(
       now: DateTime(2026, 11, 7),
-    ).copyWith(gold: 50000);
+    ).copyWith(gold: 50000, bossVictories: 1, homeLayout: HomeLayout.classic);
     final director = GameDirector.preview(initialState: rich);
     addTearDown(director.dispose);
     final router = MenuRouter();
@@ -715,10 +754,213 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('OPEN GOLD'), findsOneWidget);
+    await _writeWelcomeShot(tester, 'welcome_classic_forge.png');
     await tester.tap(find.text('OPEN GOLD'));
     await tester.pumpAndSettle();
     expect(router.route, MenuRoute.gold);
     expect(director.state.gold, 50000);
+    expect(director.state.essence, rich.essence);
+  });
+
+  testWidgets('default home opens the forge and CAMP sheets', (tester) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final forgeState = GameLogic.createInitialState(
+      now: DateTime(2026, 11, 7),
+    ).copyWith(gold: 50000, bossVictories: 1, homeLayout: HomeLayout.home);
+    final director = GameDirector.preview(initialState: forgeState);
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    director.uiFeedback.presentOffline(
+      OfflineProgressResult(
+        state: forgeState,
+        secondsApplied: 60,
+        goldGained: 100,
+        essenceGained: 0,
+        roomsCleared: 1,
+        highestFloorDelta: 0,
+        bossDelta: 0,
+        wasInDungeon: false,
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(director: director, router: router, onLeave: () {}),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('OPEN GOLD'), findsOneWidget);
+    expect(find.text('OPEN ESSENCE'), findsNothing);
+    await _writeWelcomeShot(tester, 'welcome_home_forge.png');
+    final goldBefore = director.state.gold;
+    final essenceBefore = director.state.essence;
+    await tester.tap(find.text('OPEN GOLD'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('AP'), findsWidgets);
+    expect(find.text('Gold Find'), findsNothing);
+    expect(director.state.gold, goldBefore);
+    expect(director.state.essence, essenceBefore);
+  });
+
+  testWidgets('default home OPEN ESSENCE opens CAMP and does not pay again', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final campState = GameLogic.createInitialState(now: DateTime(2026, 11, 7))
+        .copyWith(
+          gold: 0,
+          essence: 5000,
+          bossVictories: 1,
+          homeLayout: HomeLayout.home,
+        );
+    expect(MenuTabs.showCamp(campState), isTrue);
+    expect(
+      GameLogic.returnGainLine(
+        campState,
+        goldGained: 0,
+        essenceGained: 12,
+        canOpenEssence: true,
+      ),
+      contains('Open ESSENCE'),
+    );
+    final campDirector = GameDirector.preview(initialState: campState);
+    addTearDown(campDirector.dispose);
+    final campRouter = MenuRouter();
+    addTearDown(campRouter.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(
+          director: campDirector,
+          router: campRouter,
+          onLeave: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+    campDirector.uiFeedback.presentOffline(
+      OfflineProgressResult(
+        state: campState,
+        secondsApplied: 60,
+        goldGained: 0,
+        essenceGained: 12,
+        roomsCleared: 1,
+        highestFloorDelta: 0,
+        bossDelta: 0,
+        wasInDungeon: false,
+      ),
+    );
+    final pending = showOfflineProgressDialog(
+      tester.element(find.byType(HomeShell)),
+      campDirector,
+      router: campRouter,
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('OPEN ESSENCE'), findsOneWidget);
+    expect(find.text('OPEN GOLD'), findsNothing);
+    await tester.tap(find.text('OPEN ESSENCE'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Gold Find'), findsOneWidget);
+    expect(campDirector.state.gold, 0);
+    expect(campDirector.state.essence, 5000);
+    await pending;
+  });
+
+  testWidgets('MyApp home Welcome Back opens the forge without extra gold', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final state = GameLogic.createInitialState(
+      now: DateTime(2026, 11, 7),
+    ).copyWith(gold: 50000, bossVictories: 1, homeLayout: HomeLayout.home);
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState(now: DateTime.now()),
+    );
+    await tester.pumpWidget(
+      MyApp(director: director, autoStartLoop: false, showIntro: false),
+    );
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      if (find.text('ENTER DUNGEON').evaluate().isNotEmpty) break;
+    }
+    expect(find.text('ENTER DUNGEON'), findsWidgets);
+    director.setHomeLayout(HomeLayout.home);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.byType(HomeShell), findsOneWidget);
+    expect(find.byType(PlayNav), findsOneWidget);
+    director.debugHoldSave(state);
+    director.uiFeedback.presentOffline(
+      OfflineProgressResult(
+        state: state,
+        secondsApplied: 60,
+        goldGained: 80,
+        essenceGained: 0,
+        roomsCleared: 1,
+        highestFloorDelta: 0,
+        bossDelta: 0,
+        wasInDungeon: false,
+      ),
+    );
+    final shell = tester.element(find.byType(HomeShell));
+    final pending = showOfflineProgressDialog(shell, director);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('OPEN GOLD'), findsOneWidget);
+    expect(find.textContaining('Open GOLD'), findsOneWidget);
+    final goldBefore = director.state.gold;
+    await tester.tap(find.text('OPEN GOLD'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('AP'), findsWidgets);
+    expect(director.state.gold, goldBefore);
+    await pending;
+  });
+
+  testWidgets('a short wallet on home has no spend button', (tester) async {
+    final poor = GameLogic.createInitialState(
+      now: DateTime(2026, 11, 7),
+    ).copyWith(gold: 1, bossVictories: 1, homeLayout: HomeLayout.home);
+    final director = GameDirector.preview(initialState: poor);
+    addTearDown(director.dispose);
+    final router = MenuRouter();
+    addTearDown(router.dispose);
+    director.uiFeedback.presentOffline(
+      OfflineProgressResult(
+        state: poor,
+        secondsApplied: 60,
+        goldGained: 1,
+        essenceGained: 0,
+        roomsCleared: 1,
+        highestFloorDelta: 0,
+        bossDelta: 0,
+        wasInDungeon: false,
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(director: director, router: router, onLeave: () {}),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.textContaining('still needs'), findsOneWidget);
+    expect(find.text('OPEN GOLD'), findsNothing);
+    expect(find.text('OPEN ESSENCE'), findsNothing);
+    await _writeWelcomeShot(tester, 'welcome_home_short.png');
   });
 }
 

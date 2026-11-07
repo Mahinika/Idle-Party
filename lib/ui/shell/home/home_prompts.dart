@@ -101,7 +101,7 @@ class _HomePromptHostState extends State<HomePromptHost> {
       return;
     }
     _offline = true;
-    await showOfflineProgressDialog(context, director);
+    await showOfflineProgressDialog(context, director, router: router);
   }
 
   Future<void> _offer() async {

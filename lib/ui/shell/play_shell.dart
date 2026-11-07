@@ -283,31 +283,38 @@ class _PlayShellState extends State<PlayShell> {
           router.back();
         },
         child: director.state.homeLayout == HomeLayout.home
-            ? HomeShell(
-                director: director,
+            ? PlayNav(
                 router: router,
-                onLeave: () {
-                  if (director.state.isPartyDefeated) {
-                    director.hubAfterWipe();
-                    return;
-                  }
-                  if (director.spatial?.awaitingExit == true) {
-                    if (router.isOpen) router.close();
-                    _leaveDungeon();
-                    return;
-                  }
-                  if (router.isOpen) router.close();
-                  confirmLeaveDungeon(
-                    context,
-                    _leaveDungeon,
-                    state: director.state,
-                    floorCleared: director.spatial?.awaitingExit == true,
-                    keystoneActive: director.state.keystoneRunActive,
-                    keyTimer: director.state.keystoneRunActive
-                        ? Keystone.formatTimer(director.state.keystoneTimerMs)
-                        : null,
-                  );
+                onEnterDungeon: (id) {
+                  router.close();
+                  director.enterDungeon(dungeonId: id);
                 },
+                child: HomeShell(
+                  director: director,
+                  router: router,
+                  onLeave: () {
+                    if (director.state.isPartyDefeated) {
+                      director.hubAfterWipe();
+                      return;
+                    }
+                    if (director.spatial?.awaitingExit == true) {
+                      if (router.isOpen) router.close();
+                      _leaveDungeon();
+                      return;
+                    }
+                    if (router.isOpen) router.close();
+                    confirmLeaveDungeon(
+                      context,
+                      _leaveDungeon,
+                      state: director.state,
+                      floorCleared: director.spatial?.awaitingExit == true,
+                      keystoneActive: director.state.keystoneRunActive,
+                      keyTimer: director.state.keystoneRunActive
+                          ? Keystone.formatTimer(director.state.keystoneTimerMs)
+                          : null,
+                    );
+                  },
+                ),
               )
             : PlayNav(
                 router: router,

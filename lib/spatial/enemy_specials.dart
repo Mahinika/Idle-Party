@@ -809,10 +809,13 @@ void _applyRecordedBossTell(
       );
     }
     if (def.slowSeconds > 0) {
-      // King: any hero who steps into 1.6 answers the decree and skips
-      // the slow. Everyone else, and a party that all stands back, still
-      // takes it. The tell stays DECREE.
-      final answered = id == 'king' && SpatialCombat.actorDist(enemy, h) <= 1.6;
+      // King, live only: a hero within 1.6 answers the decree and skips
+      // the slow. Away keeps the old party slow so every cave's catch-up
+      // stays on the previous numbers. The tell stays DECREE.
+      final answered =
+          world.roleCover &&
+          id == 'king' &&
+          SpatialCombat.actorDist(enemy, h) <= 1.6;
       if (!answered) {
         h.attackSlowTimer = math.max(h.attackSlowTimer, def.slowSeconds);
       }
@@ -1290,9 +1293,11 @@ void _bossRally(
 }) {
   final healMul = world.afkAssist ? 0.4 : 1.0;
   var heal = math.max(8, (enemy.attack * 0.9 * healMul).round());
+  // Live only. Away keeps the old heal on every cave, not just Sandy.
   // The marked hero can step past 3.4 and the chant misses the adds.
-  // Standing in keeps the old heal. Any hero can be the mark.
-  final slipped = SpatialCombat.actorDist(enemy, focus) > 3.4;
+  // Standing in keeps HEAL. Any hero can be the mark.
+  final slipped =
+      world.roleCover && SpatialCombat.actorDist(enemy, focus) > 3.4;
   if (slipped) heal = 0;
   var any = false;
   for (final ally in world.enemies) {
