@@ -488,7 +488,7 @@ void main() {
     return SpatialCombat.step(world, state, dt: 0.01).world;
   }
 
-  test('big spells punch harder and leave sparks on Full', () {
+  test('signature impacts stay one short crisp burst on Full', () {
     final world = fxWorld();
     world.reducedVfx = false;
     world.spawnPersistentVfx = true;
@@ -504,8 +504,10 @@ void main() {
     );
     expect(SpellVfx.isBig(AbilityId.pyroblast), isTrue);
     expect(SpellVfx.isBig(AbilityId.fireball), isFalse);
-    expect(world.bursts.any((b) => b.life >= 0.7), isTrue);
-    expect(world.bursts.any((b) => b.argb == 0xFFFFFFFF), isTrue);
+    expect(world.bursts, hasLength(1));
+    expect(world.bursts.single.crisp, isTrue);
+    expect(world.bursts.single.life, SpellVfx.bigImpactLife);
+    expect(world.bursts.any((b) => b.argb == 0xFFFFFFFF), isFalse);
     expect(world.spellSparks, isNotEmpty);
     expect(world.spellSparks.length, lessThanOrEqualTo(SpellSparks.capFull));
   });

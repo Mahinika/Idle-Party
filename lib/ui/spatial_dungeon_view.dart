@@ -10,6 +10,7 @@ import '../core/debug_play_log.dart';
 import '../core/game_director.dart';
 import 'dungeon_bar_layout.dart';
 import 'shell/shell_common.dart';
+import 'ability_vfx_paint.dart';
 import 'dungeon_camera.dart';
 import '../core/game_logic.dart';
 import '../core/hero_identity.dart';

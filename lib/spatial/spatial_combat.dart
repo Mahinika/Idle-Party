@@ -665,6 +665,7 @@ class SpatialBurst {
     this.angle,
     this.slash = false,
     this.kind = SpatialBurstKind.blast,
+    this.crisp = false,
     this.x2,
     this.y2,
   });
@@ -679,6 +680,9 @@ class SpatialBurst {
   final double? angle;
   final bool slash;
   final SpatialBurstKind kind;
+
+  /// Tight core on a signature impact. Paint only; combat does not read it.
+  final bool crisp;
 
   /// Optional beam end (Lightning Bolt, Chain Lightning, Holy Shock).
   final double? x2;
@@ -1283,6 +1287,7 @@ abstract final class SpatialCombat {
     bool slash = false,
     double life = 0.48,
     SpatialBurstKind kind = SpatialBurstKind.blast,
+    bool crisp = false,
     double? x2,
     double? y2,
   }) {
@@ -1299,6 +1304,7 @@ abstract final class SpatialCombat {
         slash: slash || kind == SpatialBurstKind.slash,
         life: life,
         kind: slash ? SpatialBurstKind.slash : kind,
+        crisp: crisp,
         x2: x2,
         y2: y2,
       ),
@@ -1931,6 +1937,13 @@ abstract final class SpatialCombat {
       world.bossBannerTimer = math.max(0, world.bossBannerTimer - dt);
     }
     SpellSparks.tick(world, dt);
+  }
+
+  /// Presentation clock only: burst life, cast flash, sparks. Combat stats
+  /// stay on [step]. Tests use this so a paused frame and a 2× step are
+  /// deterministic.
+  static void agePresentationForTest(SpatialWorld world, double dt) {
+    _tickFloaters(world, dt);
   }
 
   /// Fresh-floor mana so a healer's first spell is not a 10s wait from 0.
