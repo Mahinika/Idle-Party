@@ -231,6 +231,9 @@ extension GameDirectorSave on GameDirector {
         );
         return false;
       }
+      // The preference names the slot. Adopting its party without this
+      // leaves the director on the constructor default.
+      _activeSlot = _storage.activeSlotIndex;
       final raw = await _storage.loadActiveRaw();
       final parsed = raw == null ? null : GameLogic.importSaveJson(raw);
       if (parsed == null) {
@@ -241,9 +244,11 @@ extension GameDirectorSave on GameDirector {
           return false;
         }
         final slots = await _storage.listSlots();
-        // A party already loaded, or any other occupied file, is not an
-        // empty phone. Deleting the unreadable bytes does not lift the block.
-        if (_hasExistingSave || slots.any((slot) => slot.occupied)) {
+        // A party already loaded, a file that does not parse, or a mirror
+        // left beside an empty slot is not an empty phone.
+        if (_hasExistingSave ||
+            slots.any((slot) => slot.occupied) ||
+            await _storage.hasUnadoptedCopy()) {
           _blockSaveRecovery(
             'Saving is paused. This device has a save that was not loaded. Retry leaves it untouched.',
           );
@@ -290,11 +295,18 @@ extension GameDirectorSave on GameDirector {
       GameStorage.stagingKey,
       GameStorage.holdKey,
       GameStorage.displacedKey,
+      GameStorage.mirrorKey,
+      GameStorage.legacyMirrorKey,
+      GameStorage.mirrorCorruptKey,
     ]) {
       await put(key, await _storage.loadExtra(key));
     }
     for (var slot = 0; slot < GameStorage.slotCount; slot++) {
       await put('slot_$slot', await _storage.loadSlotRaw(slot));
+      await put(
+        'slot_${slot}_corrupt',
+        await _storage.loadExtra(GameStorage.slotCorruptKey(slot)),
+      );
       if (slot == 0) continue;
       await put(
         'journal_$slot',
@@ -338,8 +350,13 @@ extension GameDirectorSave on GameDirector {
         if (!_directorClosed) _directorNotify();
         return RecoverySlotOpen.needsNewGame;
       }
-      final loaded = await _storage.loadSlot(index);
-      if (loaded == null) return RecoverySlotOpen.refused;
+      final loaded = GameLogic.importSaveJson(raw);
+      if (loaded == null) {
+        _blockSaveRecovery(
+          'Saving is paused. A save file could not be read. It was left untouched.',
+        );
+        return RecoverySlotOpen.refused;
+      }
       await _storage.setActiveSlot(index);
       _activeSlot = index;
       _hasExistingSave = true;
@@ -598,9 +615,12 @@ extension GameDirectorSave on GameDirector {
       }
       _saveSlots = await _storage.listSlots();
       _activeSlot = _storage.activeSlotIndex;
-      if (_saveSlots.any((slot) => slot.corrupt)) {
-        // A blob that does not parse is not an empty phone. Leave the bytes
-        // where they are. load() would quarantine them.
+      // The slot summary only checks that the blob is a map. A later field
+      // can still fail the full parse. load() would move that blob aside.
+      final unreadable =
+          _saveSlots.any((slot) => slot.corrupt) ||
+          await _storage.hasUnadoptedCopy();
+      if (unreadable) {
         _phoneHadNoSaveAtBoot = false;
         _hasExistingSave = false;
         _state = GameLogic.createInitialState();
@@ -609,54 +629,73 @@ extension GameDirectorSave on GameDirector {
         );
       } else {
         _phoneHadNoSaveAtBoot = !_saveSlots.any((slot) => slot.occupied);
-        final saved = await _storage.load();
-        _hasExistingSave = saved != null;
-        final loaded = saved == null
-            ? GameLogic.createInitialState()
-            : _durableSaveBlocked
-            ? saved
-            : await _catchUpSaved(saved);
-        _state = GameLogic.backfillCodexFromInventory(
-          GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
-        );
-        _lastHighestDungeon = _state.highestDungeonCleared;
-        if (_state.lastFloorClearSec > 0) {
-          _lastFloorClearSec = _state.lastFloorClearSec;
-        }
-        _syncDevicePrefs();
-        _ensureUiTimer();
-        if (_state.inDungeon) {
-          _rebuildSpatial();
-          if (enableSpatialLoop && !deferCombatLoop && !_durableSaveBlocked) {
-            // First dungeon paint before 60 Hz sim — cold mid-dungeon resume.
-            scheduleMicrotask(() {
-              if (_state.inDungeon && enableSpatialLoop) {
-                _startSpatialLoop();
-              }
-            });
-          }
-          if (!deferCombatLoop) {
-            showToast('Floor combat restarted (positions reset)', life: 3.2);
-          }
+        final raw = await _storage.loadActiveRaw();
+        // Probe the full parse first. load() moves a blob it cannot parse,
+        // so a field that fails after the summary check must not reach it.
+        // A probe that succeeds still loads through storage: that read is
+        // the same object an in-memory slot already holds, and it does not
+        // quarantine a file it can parse.
+        final unreadableRaw =
+            raw != null &&
+            raw.isNotEmpty &&
+            GameLogic.importSaveJson(raw) == null;
+        if (unreadableRaw) {
+          _phoneHadNoSaveAtBoot = false;
+          _hasExistingSave = false;
+          _state = GameLogic.createInitialState();
+          _blockSaveRecovery(
+            'Saving is paused. A save file could not be read. It was left untouched.',
+          );
         } else {
-          _spatialTimer?.cancel();
-          _spatialTimer = null;
-          _spatial = null;
+          final saved = await _storage.load();
+          _hasExistingSave = saved != null;
+          final loaded = saved == null
+              ? GameLogic.createInitialState()
+              : _durableSaveBlocked
+              ? saved
+              : await _catchUpSaved(saved);
+          _state = GameLogic.backfillCodexFromInventory(
+            GameLogic.ensureWeeklyContract(GameLogic.ensureRogueHero(loaded)),
+          );
+          _lastHighestDungeon = _state.highestDungeonCleared;
+          if (_state.lastFloorClearSec > 0) {
+            _lastFloorClearSec = _state.lastFloorClearSec;
+          }
+          _syncDevicePrefs();
+          _ensureUiTimer();
+          if (_state.inDungeon) {
+            _rebuildSpatial();
+            if (enableSpatialLoop && !deferCombatLoop && !_durableSaveBlocked) {
+              // First dungeon paint before 60 Hz sim — cold mid-dungeon resume.
+              scheduleMicrotask(() {
+                if (_state.inDungeon && enableSpatialLoop) {
+                  _startSpatialLoop();
+                }
+              });
+            }
+            if (!deferCombatLoop) {
+              showToast('Floor combat restarted (positions reset)', life: 3.2);
+            }
+          } else {
+            _spatialTimer?.cancel();
+            _spatialTimer = null;
+            _spatial = null;
+          }
+          // Only persist when continuing an existing save (offline catch-up).
+          // An unresolved journal must stay byte-for-byte until the next launch.
+          if (_durableSaveBlocked) {
+            // Leave the loaded bytes alone. Play stays behind the recovery gate.
+          } else if (_hasExistingSave) {
+            _notePlaySession();
+            _noteAppColdStart();
+            _noteFunnelSession(newInstall: false);
+            await _persistFlush();
+          } else {
+            _notePlaySession();
+          }
+          _saveSlots = await _storage.listSlots();
+          _activeSlot = _storage.activeSlotIndex;
         }
-        // Only persist when continuing an existing save (offline catch-up).
-        // An unresolved journal must stay byte-for-byte until the next launch.
-        if (_durableSaveBlocked) {
-          // Leave the loaded bytes alone. Play stays behind the recovery gate.
-        } else if (_hasExistingSave) {
-          _notePlaySession();
-          _noteAppColdStart();
-          _noteFunnelSession(newInstall: false);
-          await _persistFlush();
-        } else {
-          _notePlaySession();
-        }
-        _saveSlots = await _storage.listSlots();
-        _activeSlot = _storage.activeSlotIndex;
       }
     } catch (e, st) {
       DebugPlayLog.event('boot', 'failed: $e');
@@ -791,7 +830,11 @@ extension GameDirectorSave on GameDirector {
 
   Future<bool> _openSaveSlotTurn(int index) async {
     final slot = index.clamp(0, GameStorage.slotCount - 1);
-    if (slot == _activeSlot && _hasExistingSave) return true;
+    if (slot == _activeSlot &&
+        _storage.activeSlotIndex == slot &&
+        _hasExistingSave) {
+      return true;
+    }
     if (await _slotBytesUnreadable(slot)) {
       _blockSaveRecovery(
         'Saving is paused. A save file could not be read. It was left untouched.',
@@ -952,7 +995,6 @@ extension GameDirectorSave on GameDirector {
     final previousHas = _hasExistingSave;
     final previousSlot = _activeSlot;
     final previousEpoch = _friendEpoch;
-    final beforeRaw = await _storage.loadSlotRaw(slot);
     if (epoch != _newGameEpoch) return false;
     _friendEpoch++;
     _pendingNewGameSlot = null;
@@ -1001,25 +1043,8 @@ extension GameDirectorSave on GameDirector {
         debugPrint('new game save failed: $error\n$stack');
         saved = false;
       }
-      if (!saved) {
-        // The plugin cache already shows a write the platform rejected.
-        // Only bytes that survive reload count.
-        try {
-          await _storage.reloadDurable();
-          final landed = await _storage.loadSlotRaw(slot);
-          final parsed = landed == null
-              ? null
-              : GameLogic.importSaveJson(landed);
-          if (parsed != null &&
-              landed != beforeRaw &&
-              parsed.partyName == snapshot.partyName) {
-            saved = true;
-          }
-        } catch (error, stack) {
-          debugPrint('new game readback failed: $error\n$stack');
-          saved = false;
-        }
-      }
+      // A false or thrown commit is not accepted from a later read.
+      // Android can show the new value in memory after commit() returns false.
       final cancelled = epoch != _newGameEpoch;
       if (!saved || cancelled) {
         await _rollbackRecoveryNewGame(

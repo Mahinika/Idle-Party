@@ -99,6 +99,12 @@ abstract class GameStorage {
   static const String stagingKey = 'idle_party_save_staging';
   static const String holdKey = 'idle_party_save_hold';
   static const String journalKey = 'idle_party_save_journal';
+  static const String mirrorKey = 'idle_party_save_v2';
+  static const String legacyMirrorKey = 'idle_party_save_v1';
+  static const String mirrorCorruptKey = 'idle_party_save_v2_corrupt';
+
+  static String slotCorruptKey(int slot) =>
+      'idle_party_save_slot_${slot}_corrupt';
 
   /// Slot 0 keeps the original key so a file written before the keys were
   /// split still resolves. An early build also stored every slot's journal
@@ -123,7 +129,10 @@ abstract class GameStorage {
 
   Future<GameState?> load();
 
-  /// False when the blob did not land. A thrown error is a failed write too.
+  /// False when the active-slot commit did not return true. A thrown error
+  /// is a failed write too. A later reload is not proof: the platform map
+  /// can already show a commit that returned false. A mirror write that
+  /// fails after the slot commit returned true does not fail this call.
   Future<bool> save(GameState state);
 
   /// True when the active slot has a persisted blob.
@@ -151,6 +160,10 @@ abstract class GameStorage {
   /// Raw JSON for one slot. Recovery of a slot that is not active uses this.
   Future<String?> loadSlotRaw(int index);
 
+  /// True when a slot does not parse, or an empty active file still has a
+  /// mirror or a quarantined copy. Does not delete anything.
+  Future<bool> hasUnadoptedCopy();
+
   /// Writes [json] as the active slot. False when the bytes did not land.
   Future<bool> writeActiveRaw(String json);
 
@@ -159,8 +172,9 @@ abstract class GameStorage {
 
   Future<bool> writeExtra(String key, String? json);
 
-  /// Drop a cache that may already show a write the platform rejected.
-  /// SharedPreferences updates its map before the platform returns.
+  /// Replace the Dart cache from the platform map. That map is not the
+  /// file: a commit can update it and still return false. Callers must
+  /// not treat a matching reload as a durable write.
   Future<void> reloadDurable();
 }
 
@@ -175,9 +189,9 @@ class SharedPreferencesGameStorage implements GameStorage {
   SharedPreferencesGameStorage({SharedPreferences? preferences})
     : _preferences = preferences;
 
-  static const String _saveKey = 'idle_party_save_v2';
-  static const String _legacySaveKey = 'idle_party_save_v1';
-  static const String _corruptSaveKey = 'idle_party_save_v2_corrupt';
+  static const String _saveKey = GameStorage.mirrorKey;
+  static const String _legacySaveKey = GameStorage.legacyMirrorKey;
+  static const String _corruptSaveKey = GameStorage.mirrorCorruptKey;
   static const String _activeKey = 'idle_party_active_slot';
   static const String _slotsReadyKey = 'idle_party_slots_ready';
 
@@ -240,23 +254,33 @@ class SharedPreferencesGameStorage implements GameStorage {
           final recovered = GameLogic.stateFromJson(
             jsonDecode(rawV1) as Map<String, dynamic>,
           );
-          await prefs.setString(_corruptSaveKey, raw);
-          await prefs.remove(_saveKey);
-          await prefs.setString(key, jsonEncode(recovered.toJson()));
+          final parked = await prefs.setString(_corruptSaveKey, raw);
+          final dropped = await prefs.remove(_saveKey);
+          final replaced = await prefs.setString(
+            key,
+            jsonEncode(recovered.toJson()),
+          );
+          if (!parked || !dropped || !replaced) {
+            throw StateError('legacy recovery did not commit');
+          }
           DebugPlayLog.event('save', 'recovered from legacy v1');
           debugPrint('save load recovered from legacy v1 after corrupt v2');
           return recovered;
         } catch (e2, st2) {
+          if (e2 is StateError) rethrow;
           debugPrint('legacy v1 also failed: $e2\n$st2');
         }
       }
-      await prefs.setString(
-        raw == rawV2 ? _corruptSaveKey : '${key}_corrupt',
-        raw,
-      );
-      await prefs.remove(key);
-      if (raw == rawV2) await prefs.remove(_saveKey);
-      if (raw == rawV1) await prefs.remove(_legacySaveKey);
+      final corruptKey = raw == rawV2 ? _corruptSaveKey : '${key}_corrupt';
+      final parked = await prefs.setString(corruptKey, raw);
+      final dropped = await prefs.remove(key);
+      final mirrorDropped = raw == rawV2 ? await prefs.remove(_saveKey) : true;
+      final legacyDropped = raw == rawV1
+          ? await prefs.remove(_legacySaveKey)
+          : true;
+      if (!parked || !dropped || !mirrorDropped || !legacyDropped) {
+        throw StateError('unreadable save was left in place');
+      }
       return null;
     }
   }
@@ -287,10 +311,19 @@ class SharedPreferencesGameStorage implements GameStorage {
     final prefs = await _prefs;
     await _prepare(prefs);
     final raw = jsonEncode(state.toJson());
+    // commit() updates the native map before it reports the disk result.
+    // A false return is not retried by reading that map back.
     final slotOk = await prefs.setString(_slotKey(_active), raw);
-    // Older builds still read the single v2 key — keep it as the last played slot.
-    final mirrorOk = await prefs.setString(_saveKey, raw);
-    return slotOk && mirrorOk;
+    if (!slotOk) return false;
+    try {
+      final mirrorOk = await prefs.setString(_saveKey, raw);
+      if (!mirrorOk) {
+        debugPrint('save mirror was not committed');
+      }
+    } catch (error, stack) {
+      debugPrint('save mirror failed: $error\n$stack');
+    }
+    return true;
   }
 
   @override
@@ -360,6 +393,26 @@ class SharedPreferencesGameStorage implements GameStorage {
     final raw = prefs.getString(_slotKey(_clampSlot(index)));
     if (raw == null || raw.isEmpty) return null;
     return raw;
+  }
+
+  @override
+  Future<bool> hasUnadoptedCopy() async {
+    final prefs = await _prefs;
+    await _prepare(prefs);
+    bool filled(String? raw) => raw != null && raw.isNotEmpty;
+    final activeRaw = prefs.getString(_slotKey(_active));
+    if (!filled(activeRaw) &&
+        (filled(prefs.getString(_saveKey)) ||
+            filled(prefs.getString(_legacySaveKey)))) {
+      return true;
+    }
+    if (filled(prefs.getString(_corruptSaveKey))) return true;
+    for (var i = 0; i < GameStorage.slotCount; i++) {
+      if (filled(prefs.getString(GameStorage.slotCorruptKey(i)))) return true;
+      final raw = prefs.getString(_slotKey(i));
+      if (filled(raw) && GameLogic.importSaveJson(raw!) == null) return true;
+    }
+    return false;
   }
 
   @override
@@ -656,6 +709,23 @@ class InMemoryGameStorage implements GameStorage {
   @override
   Future<String?> loadSlotRaw(int index) async {
     return _slotRaw[_clampSlot(index)];
+  }
+
+  @override
+  Future<bool> hasUnadoptedCopy() async {
+    bool filled(String? raw) => raw != null && raw.isNotEmpty;
+    if (!filled(_activeRaw) &&
+        (filled(_extras[GameStorage.mirrorKey]) ||
+            filled(_extras[GameStorage.legacyMirrorKey]))) {
+      return true;
+    }
+    if (filled(_extras[GameStorage.mirrorCorruptKey])) return true;
+    for (var i = 0; i < GameStorage.slotCount; i++) {
+      if (filled(_extras[GameStorage.slotCorruptKey(i)])) return true;
+      final raw = _slotRaw[i];
+      if (filled(raw) && GameLogic.importSaveJson(raw!) == null) return true;
+    }
+    return false;
   }
 
   @override

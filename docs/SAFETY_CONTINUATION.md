@@ -87,13 +87,20 @@ An empty file opens party setup and does not enter a fight until that
 new game is saved. The same is true for a title PLAY or START: a false or
 thrown initial save stays on setup, and a second START does not enter the
 queue. Back leaves setup. A save that returns false before any byte lands
-leaves the slot empty so START can be tried again. The plugin cache is
-not that proof: the new game reloads before it accepts the file. A boot
-read that throws is not an empty phone. Restore, backup, a new game,
-erase, and opening a slot stay off until a later read can see the file,
-or can see that the phone really is empty and no party was already
-loaded. An unreadable file is left in place. Deleting it does not clear
-the pause. Retry does not guess an owner.
+leaves the slot empty so START can be tried again. A commit that
+returns false is not accepted from a later read. The platform map can
+already show the new value after that false result. A boot read that
+throws is not an empty phone. A file that is JSON but does not parse
+as a save is not an empty phone either. Boot probes that parse and does
+not call the loader that moves the file aside when the probe fails. A
+probe that succeeds still loads through storage. That load does not
+quarantine a file it can parse. Restore, backup, a new game, erase, and
+opening a slot stay off until a later read can see the file, or can
+see that the phone really is empty and no party was already loaded.
+An unreadable file, its mirror, and a quarantined copy are left in
+place. Deleting the active file does not clear the pause. Retry adopts
+the slot the preference names, not the constructor default. Retry does
+not guess an owner.
 
 A slot with no journal of its own is a finished migration only when every
 global payload already matches that slot's active file or its parked file.

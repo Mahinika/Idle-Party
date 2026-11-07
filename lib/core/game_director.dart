@@ -398,7 +398,9 @@ class GameDirector extends ChangeNotifier {
           );
           return true;
         }
-      } else if (_hasExistingSave || slots.any((slot) => slot.occupied)) {
+      } else if (_hasExistingSave ||
+          slots.any((slot) => slot.occupied) ||
+          await _storage.hasUnadoptedCopy()) {
         // Memory already adopted a party, or another slot still has one.
         // An empty active read is not proof the phone has no save.
         _blockSaveRecovery(
@@ -1914,27 +1916,16 @@ class GameDirector extends ChangeNotifier {
         saved = await _storage.save(snapshot);
       } catch (e, st) {
         debugPrint('save failed: $e\n$st');
-        saved = false;
+        _applyUpgrade(_state.copyWith(metaDepth: priorMeta), persist: false);
+        _blockSaveRecovery(
+          'Saving is paused. A purchase could not be confirmed on this device.',
+        );
+        return false;
       }
       if (!saved) {
-        try {
-          await _storage.reloadDurable();
-          final raw = await _storage.loadActiveRaw();
-          final parsed = raw == null ? null : GameLogic.importSaveJson(raw);
-          if (parsed != null &&
-              ShopBilling.alreadyGranted(parsed, purchaseId)) {
-            _state = parsed;
-            return true;
-          }
-        } catch (error, stack) {
-          debugPrint('grant readback failed: $error\n$stack');
-          _blockSaveRecovery(
-            'Saving is paused. A purchase could not be confirmed on this device.',
-          );
-          return false;
-        }
         // Keep gold, fight progress, and the rest of the live state.
-        // Only the grant, which lives on meta, is undone.
+        // Only the grant, which lives on meta, is undone. The purchase
+        // stays unconsumed. A reload is not a durable receipt.
         _applyUpgrade(_state.copyWith(metaDepth: priorMeta), persist: false);
         return false;
       }
