@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../core/ad_boost.dart';
 import '../core/debug_play_log.dart';
 import '../core/game_director.dart';
 import 'dungeon_bar_layout.dart';
@@ -120,6 +121,12 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
   int? _floorEpoch;
   double? _easeCamX;
   double? _easeCamY;
+
+  /// Unsmoothed origin from the previous sample, so a walk is copied and a
+  /// retarget still glides. Sim-step counter for the same sample.
+  double? _aimCamX;
+  double? _aimCamY;
+  int? _easeVisualFrame;
   late final AnimationController _floorFade;
 
   /// 1 = the new floor is still dark. Read by the map overlay.
@@ -728,15 +735,36 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                   1.0,
                                 );
                               }
+                              final frame = widget.director.visualFrame;
+                              final advanced = _easeVisualFrame == null
+                                  ? 0
+                                  : frame - _easeVisualFrame!;
+                              final simDt = advanced <= 0
+                                  ? 0.0
+                                  : advanced.clamp(0, 20) *
+                                        dungeonCamSimStep *
+                                        AdBoost.combatDtMul(
+                                          widget.director.state.metaDepth,
+                                        );
                               final eased = dungeonCamEase(
                                 prevX: _easeCamX,
                                 prevY: _easeCamY,
+                                prevTargetX: _aimCamX,
+                                prevTargetY: _aimCamY,
                                 targetX: target.camX,
                                 targetY: target.camY,
                                 newWorld: newFloor,
+                                dt: simDt,
                               );
-                              _easeCamX = eased.x;
-                              _easeCamY = eased.y;
+                              if (_easeCamX == null || newFloor || simDt > 0) {
+                                _easeCamX = eased.x;
+                                _easeCamY = eased.y;
+                                _aimCamX = target.camX;
+                                _aimCamY = target.camY;
+                                _easeVisualFrame = frame;
+                              }
+                              // One punch, after the ease. forWorld leaves shake at 0 so a
+                              // 2× sample cannot stack a second copy.
                               final shaken = dungeonCamShake(
                                 x: eased.x,
                                 y: eased.y,
