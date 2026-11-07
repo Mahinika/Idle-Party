@@ -196,6 +196,7 @@ class _BootIntroScreenState extends State<BootIntroScreen>
       child: ColoredBox(
         color: GameTheme.ink,
         child: MenuChrome.playSafeArea(
+          top: true,
           bottom: true,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
@@ -236,6 +237,7 @@ class _BootIntroScreenState extends State<BootIntroScreen>
                 sizeFactor: 0.35,
               ),
               MenuChrome.playSafeArea(
+                top: true,
                 bottom: true,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),

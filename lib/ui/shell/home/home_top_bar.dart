@@ -11,6 +11,7 @@ import '../../../core/nav_copy.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../hub/hub_header.dart';
+import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../dungeon_party_hud.dart';
 import '../shell_common.dart';
@@ -62,10 +63,12 @@ class HomeTopBar extends StatelessWidget {
     final third = _third(context, state, route, essencePanel);
     final compactTop =
         state.homeLayout == HomeLayout.home && state.inDungeon;
+    // Stone fills the cutout. The words start below it.
+    final topInset = MenuChrome.systemTopInset(context);
     return Material(
       color: GameTheme.stoneDeep,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(8, 4, 8, compactTop ? 2 : 4),
+        padding: EdgeInsets.fromLTRB(8, 4 + topInset, 8, compactTop ? 2 : 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

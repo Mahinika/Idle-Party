@@ -34,16 +34,33 @@ abstract final class MenuChrome {
     return pad > view ? pad : view;
   }
 
+  /// Status bar and camera cutout. [MediaQueryData.padding] drops to 0 while
+  /// the immersive bar is hidden; [MediaQueryData.viewPadding] keeps the
+  /// cutout. Use the larger one.
+  static double systemTopInset(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final pad = mq.padding.top;
+    final view = mq.viewPadding.top;
+    return pad > view ? pad : view;
+  }
+
+  /// [top] pushes text and buttons below the cutout. The caller paints the
+  /// scene behind this widget, so the cave still reaches the screen edge.
   static Widget playSafeArea({
     required Widget child,
     bool bottom = false,
+    bool top = false,
   }) {
     return Builder(
       builder: (context) {
+        final topInset = top ? systemTopInset(context) : 0.0;
         return MediaQuery.removePadding(
           context: context,
           removeTop: true,
-          child: SafeArea(top: false, bottom: bottom, child: child),
+          child: Padding(
+            padding: EdgeInsets.only(top: topInset),
+            child: SafeArea(top: false, bottom: bottom, child: child),
+          ),
         );
       },
     );
@@ -656,8 +673,12 @@ abstract final class MenuChrome {
     if (scrollable) {
       return _scrollingDialog(title: title, content: content, actions: actions);
     }
-    return AlertDialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+    return Builder(
+      builder: (context) {
+        final cutout = systemTopInset(context);
+        final top = cutout > 24 ? cutout : 24.0;
+        return AlertDialog(
+      insetPadding: EdgeInsets.fromLTRB(20, top, 20, 24),
       backgroundColor: sheet,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
@@ -673,6 +694,8 @@ abstract final class MenuChrome {
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       actions: actions,
     );
+      },
+    );
   }
 
   static Widget _scrollingDialog({
@@ -680,10 +703,14 @@ abstract final class MenuChrome {
     required Widget content,
     required List<Widget> actions,
   }) {
-    return Dialog(
+    return Builder(
+      builder: (context) {
+        final cutout = systemTopInset(context);
+        final top = cutout > 24 ? cutout : 24.0;
+        return Dialog(
       backgroundColor: sheet,
       surfaceTintColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      insetPadding: EdgeInsets.fromLTRB(20, top, 20, 24),
       clipBehavior: Clip.hardEdge,
       shape: RoundedRectangleBorder(
         borderRadius: panelRadius,
@@ -717,6 +744,8 @@ abstract final class MenuChrome {
           ],
         ),
       ),
+    );
+      },
     );
   }
 

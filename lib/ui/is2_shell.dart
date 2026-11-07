@@ -203,6 +203,7 @@ class _Is2ShellState extends State<Is2Shell> {
           ),
         ),
         MenuChrome.playSafeArea(
+          top: true,
           child: Column(
             children: [
               KeyedSubtree(

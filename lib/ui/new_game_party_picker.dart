@@ -251,6 +251,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     return Scaffold(
       backgroundColor: GameTheme.ink,
       body: MenuChrome.playSafeArea(
+        top: true,
         bottom: true,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),

@@ -48,7 +48,7 @@ multiplies, then the product clamps. The slider max was not lowered.
 | 26 | Changed | List body is `readable` (14) or `hint` (12). Nothing in menu code requests 7 or 8. |
 | 27 | Changed | Card title is `title` or `section` (16). Body is `readable` (14). Meta is `hint` (12). A dense forge row keeps the track name at `readable` so the next upgrade stays on the split screen. “Bulk spend” stays `section`. The current/next line is `hint`. `test/ui_type_ramp_test.dart` locks title > section > body > hint. |
 | 28 | Changed | Home sheets pass gold and essence into the same `WalletStrip` the classic sheets use. |
-| 29 | Changed | The top stays full-bleed (`MenuChrome.playSafeArea` drops the top inset; `SaveRecoveryGate` still uses a raw `SafeArea`). The home nav keeps `MenuChrome.systemBottomInset` (the larger of padding and viewPadding) under the labels, inside the bar when the bar is already tall. `test/ui_app_scale_test.dart` puts FIGHT at least 34 above the bottom on a 780-tall phone and on a 640-tall phone with a 44 top inset. `test/small_screen_dialogs_test.dart` still fits 360×640 and 360×780 at raw scale 2 with a notch. |
+| 29 | Changed | Immersive sticky hides the status-bar icons (`lib/core/immersive_ui.dart`) and the window draws into the cutout (`android:windowLayoutInDisplayCutoutMode` shortEdges). `viewPadding` still reports that cutout after the icons hide, so a header at y 15 sits in it. The header bar, hub backdrop, and cave scene still paint from the screen edge. `HomeTopBar` and full-screen titles (`playSafeArea(top: true)`, dialog inset) start their words at `systemTopInset`. `test/ui_app_scale_test.dart` requires AL and MENU, IDLE PARTY, and a dialog title to start at or below a 44 top inset, and FIGHT at least 34 above the bottom. `test/small_screen_dialogs_test.dart` still fits 360×640 and 360×780 at raw scale 2 with a notch. |
 | 30 | Changed | Settings labels say “Dungeon view · Close/Normal/Wide”. HUD chips stay NEAR/MID/FAR. `docs/TRAILER.md` and the capture note use the same words. |
 | 31 | Changed | The FARM/PUSH row is the segmented control. Its height is the control height, so the container cannot be shorter than the control. |
 | 32 | Changed | God Hand slot is `minTouch` by `minTouch` (44). The ring no longer sits in a `FittedBox`. |
@@ -118,7 +118,7 @@ multiplies, then the product clamps. The slider max was not lowered.
 | 96 | Changed | Empty market and empty codex are pumped at scale 2. A fresh party is the full-enough list on the home shell pump. Locked rows stay on screen with `hint` (item 60). |
 | 97 | Changed | `docs/UI_THEME.md` “Compact combat is not a menu.” World-space painters may size from the tile. Menu sheets may not use `FittedBox`. |
 | 98 | Changed | `test/ui_type_ramp_test.dart` fails if menu code adds `GameTheme.body/menuTitle/pixel/button(..., size: <digit>)` or a `FittedBox(`. Allowed `FittedBox` files are `main.dart` (web letterbox) and `boot_cinematic_layer.dart`. |
-| 99 | Changed | `showFeatureSheet` and `lib/ui/shell/home/feature_sheet.dart` are deleted. No remaining references. |
+| 99 | Changed | `showFeatureSheet` and `lib/ui/shell/home/feature_sheet.dart` are deleted. No Dart references remain. Three audit notes under `docs/game-intelligence/` still name the old helper and are labeled historical. |
 | 100 | Changed | `docs/UI_THEME.md` menu checklist is text, margin, contrast, touch, and scale, plus empty copy and dialog action order. |
 
 ## Not applicable

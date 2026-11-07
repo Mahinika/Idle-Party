@@ -150,6 +150,7 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                 sizeFactor: 0.35,
               ),
               MenuChrome.playSafeArea(
+                top: true,
                 bottom: true,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -370,6 +371,7 @@ class SaveSlotPicker extends StatelessWidget {
         opaque: true,
       ),
       child: MenuChrome.playSafeArea(
+        top: true,
         bottom: true,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),

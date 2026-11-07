@@ -769,6 +769,7 @@ class _HubScreenState extends State<HubScreen>
       children: [
         RepaintBoundary(child: const HubSceneBackdrop()),
         MenuChrome.playSafeArea(
+          top: true,
           child: Builder(
             builder: (context) {
               return Stack(

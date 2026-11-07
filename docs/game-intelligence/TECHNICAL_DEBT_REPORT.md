@@ -41,8 +41,9 @@ was not given those entries.
 
 ## Empty and unused UI
 
-- `showFeatureSheet` (`feature_sheet.dart`) — comment says QUESTS is the
-  caller. Nothing calls it. QUESTS uses `JobsOverlay`.
+- Historical: `showFeatureSheet` (`feature_sheet.dart`) — the comment said
+  QUESTS was the caller. Nothing called it. QUESTS uses `JobsOverlay`. The
+  helper and the file were later deleted.
 - `MenuSurface` `MenuRoute.map` returns `SizedBox.shrink()`.
 - LOADOUTS tab stays hidden. Save fields remain on purpose (`AGENTS.md`).
 

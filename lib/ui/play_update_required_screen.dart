@@ -32,6 +32,7 @@ class PlayUpdateRequiredScreen extends StatelessWidget {
           ),
           CaveAtmosphere.readabilityScrim(top: 0.7, bottom: 0.55),
           MenuChrome.playSafeArea(
+            top: true,
             bottom: true,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),

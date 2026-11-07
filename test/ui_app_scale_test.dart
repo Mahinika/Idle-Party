@@ -7,6 +7,7 @@ import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/main.dart';
 import 'package:idle_party/ui/game_theme.dart';
+import 'package:idle_party/ui/menu_chrome.dart';
 import 'package:idle_party/ui/shell/home/home_shell.dart';
 import 'package:idle_party/ui/spatial_dungeon_view.dart';
 
@@ -240,5 +241,57 @@ void main() {
     await shell(dungeon: false);
     await shell(dungeon: true);
     expect(find.text('FARM'), findsOneWidget);
+  });
+
+  testWidgets('top 44 keeps the home header below the cutout', (tester) async {
+    phone(tester, logical: const Size(360, 780), top: 44);
+    await pumpApp(tester, game: 1, dungeon: true);
+    expect(tester.takeException(), isNull);
+    final header = tester.getRect(find.text('AL 0'));
+    expect(header.top, greaterThanOrEqualTo(44));
+    final menu = tester.getRect(find.bySemanticsLabel('MENU'));
+    expect(menu.top, greaterThanOrEqualTo(44));
+  });
+
+  testWidgets('top 44 keeps the start title below the cutout', (tester) async {
+    phone(tester, logical: const Size(360, 780), top: 44);
+    await pumpApp(
+      tester,
+      game: 1,
+      dungeon: false,
+      showIntro: true,
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.text('SKIP'), findsOneWidget);
+    await tester.tap(find.text('SKIP'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.takeException(), isNull);
+    final title = tester.getRect(find.text('IDLE PARTY'));
+    expect(title.top, greaterThanOrEqualTo(44));
+    final start = tester.getRect(find.text('NEW GAME'));
+    expect(start.top, greaterThanOrEqualTo(44));
+  });
+
+  testWidgets('top 44 keeps a dialog title below the cutout', (tester) async {
+    phone(tester, logical: const Size(360, 640), top: 44, bottom: 34);
+    await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
+    final context = tester.element(find.byType(SizedBox));
+    showDialog<void>(
+      context: context,
+      builder: (context) => MenuChrome.dialog(
+        title: 'REDEEM CODE',
+        content: const Text('Paste a code from a friend.'),
+        actions: [
+          TextButton(onPressed: () {}, child: const Text('CLOSE')),
+        ],
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
+    final title = tester.getRect(find.text('REDEEM CODE'));
+    expect(title.top, greaterThanOrEqualTo(44));
+    expect(find.text('CLOSE'), findsOneWidget);
   });
 }

@@ -103,6 +103,7 @@ Future<void> openHubRanksSheet(
                       opaque: true,
                     ),
                     child: MenuChrome.playSafeArea(
+                      top: true,
                       bottom: true,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
