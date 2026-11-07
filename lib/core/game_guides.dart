@@ -353,8 +353,9 @@ abstract final class GameGuides {
         '• Tap a recipe mat to lock the farm target (meter sits on the recipe).\n'
         '• Zone Shards are a pool: any dungeon boss shard pays the recipe.\n'
         '• Materials and vault stay collapsed. Other classes is only for specializations not in the party.\n'
-        '• Target meter: every boss clear builds toward a guaranteed mat '
-        '(PUSH faster than FARM). Farm any zone — the meter grants what you need.\n'
+        '• Opening CRAFT saves the party goal so the meter runs. Every boss fills it '
+        '(PUSH faster than FARM) and grants the target, from any cave.\n'
+        '• Apex Slag drops from Crystal Spire bosses. The meter can still grant slag once it is the target.\n'
         '• Craft weapon R1 first, then armor; the button shows CRAFT R1 or the real upgrade rank.\n'
         '• Apex secondaries: DPS Crit + Haste; healers Mp5 + Crit + Haste.\n'
         '• Crafted gear and materials survive Ascend.',
@@ -777,14 +778,15 @@ abstract final class GameGuides {
           '• Zone Shards are a pool: any dungeon boss shard pays the recipe '
           '(KEY / Rift / late zones count).\n'
           '• Materials and vault stay collapsed. Other classes is only for specializations not in the party.\n'
-          '• Target meter: every boss clear builds toward a guaranteed mat '
-          '(PUSH faster than FARM). Farm any zone — the meter grants what you need.\n'
+          '• Opening CRAFT saves the party goal so the meter runs. Every boss fills it '
+          '(PUSH faster than FARM) and grants the target, from any cave.\n'
+          '• Apex Slag drops from Crystal Spire and Gauntlet bosses. The meter can still grant slag once it is the target.\n'
           '• Craft weapon R1 first, then armor; the button shows CRAFT R1 or the real upgrade rank.\n'
           '• Apex secondaries: DPS Crit + Haste; healers Mp5 + Crit + Haste '
           '(three lines). Primaries use the same loot split as dungeon drops.\n'
           '• Crafted gear and materials survive Ascend.\n'
           '• At every active hero Lv${GameLogic.maxHeroLevel}, START CRAFT TRIAL (once per ISO month) '
-          'uses Apex-crafted gear only — bag stays untouched. Not a hub ENDGAME hunt.',
+          'counts only Apex pieces on the body. Forge and blessings still apply. Not a hub ENDGAME hunt.',
     ),
     GuideTopic(
       id: 'market',

@@ -35,7 +35,7 @@ GameState _applyPrestigeRunWipe(GameState state) {
   for (final item in state.gearStash) {
     if (item.isApex) apexVault.add(item);
   }
-  return state.copyWith(
+  return ApexForge.normalizeApexDuplicates(state.copyWith(
     gold: 0,
     attackBonus: 0,
     defenseBonus: 0,
@@ -57,7 +57,7 @@ GameState _applyPrestigeRunWipe(GameState state) {
     ],
     apexVault: apexVault,
     clearEquipped: true,
-  );
+  ));
 }
 
 Map<EquipmentSlot, EquipmentItem> _starterKeepingApex(PartyHero hero) {

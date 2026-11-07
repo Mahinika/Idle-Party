@@ -80,7 +80,7 @@ class EssenceTilesScreen extends StatelessWidget {
                 context,
                 'APEX',
                 MenuTabs.showCraft(state),
-                'After first hour',
+                'After the first boss or Ascend',
                 () {
                   router.open(MenuRoute.more, more: MoreSection.craft);
                   router.pushSub();

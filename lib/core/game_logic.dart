@@ -2330,7 +2330,9 @@ class GameLogic {
       syncSpecUnlocks(
         ensureRogueHero(
           GearService.normalizeVisualSetIds(
-            GearService.clampStashToCap(unequipIllegalGear(next)),
+            GearService.clampStashToCap(
+              unequipIllegalGear(ApexForge.normalizeApexDuplicates(next)),
+            ),
           ),
         ),
       ),
@@ -3086,6 +3088,12 @@ class GameLogic {
   }) => ApexForge.craftApex(state, classId: classId, role: role, slot: slot);
   static bool canUpgradeApex(GameState state, String itemId) =>
       ApexForge.canUpgradeApex(state, itemId);
+  static GameState normalizeApexDuplicates(GameState state) =>
+      ApexForge.normalizeApexDuplicates(state);
+  static EquipmentItem? ownedApexPiece(GameState state, String pieceId) =>
+      ApexForge.findOwnedApex(state, pieceId);
+  static Map<String, int> apexMaterialGain(GameState before, GameState after) =>
+      ApexForge.materialGain(before, after);
   static GameState upgradeApex(GameState state, String itemId) =>
       ApexForge.upgradeApex(state, itemId);
   static GameState equipFromApexVault(
@@ -3203,6 +3211,7 @@ class OfflineProgressResult {
     this.secondsAway = 0,
     this.hubChestCapSec = 0,
     this.awayGoldMultiplied = false,
+    this.materialsGained = const <String, int>{},
   });
 
   static const int maxHighlightRows = 3;
@@ -3247,6 +3256,12 @@ class OfflineProgressResult {
 
   /// Scroll of Rest or Forever Rest already multiplied [goldGained].
   final bool awayGoldMultiplied;
+
+  /// Craft materials gained while away, keyed by material id. Empty on a hub rest.
+  final Map<String, int> materialsGained;
+
+  /// Welcome Back line for [materialsGained]. Empty when nothing dropped.
+  String get materialsLine => ApexForge.materialGainLine(materialsGained);
 
   /// Optional rewarded ad on this card. Doubles this trip's gold and essence.
   /// Hidden before the first boss, when Rest already multiplied the gold,
@@ -3334,12 +3349,14 @@ class OfflineProgressResult {
         highestFloorDelta > 0 ||
         bossDelta > 0 ||
         levelsGained > 0 ||
-        gearFinds > 0;
+        gearFinds > 0 ||
+        materialsGained.isNotEmpty;
     if (!earned) return wasInDungeon && secondsApplied >= 60;
     if (goldGained > 0 ||
         roomsCleared > 0 ||
         bossDelta > 0 ||
-        highestFloorDelta > 0) {
+        highestFloorDelta > 0 ||
+        materialsGained.isNotEmpty) {
       return true;
     }
     return secondsApplied >= 20;

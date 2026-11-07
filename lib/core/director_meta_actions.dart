@@ -8,13 +8,30 @@ extension GameDirectorMetaActions on GameDirector {
     required EquipmentSlot slot,
   }) {
     if (_isLoading) return;
+    final normalized = GameLogic.normalizeApexDuplicates(_state);
+    if (!identical(normalized, _state)) _applyUpgrade(normalized);
     if (!GameLogic.canCraftApex(
       _state,
       classId: classId,
       role: role,
       slot: slot,
     )) {
-      showToast('Missing mats or unlock gate', life: 1.8);
+      final pieceId = ApexCraft.pieceId(
+        classId: classId,
+        role: role,
+        slot: slot,
+      );
+      // A second tap after a successful craft must leave the success toast.
+      if (GameLogic.ownedApexPiece(_state, pieceId) != null) return;
+      final weaponGate =
+          slot != EquipmentSlot.weapon &&
+          !GameLogic.hasApexWeaponRank1(_state, classId, role);
+      showToast(
+        weaponGate
+            ? 'Craft weapon R1 first for this class/role.'
+            : 'Missing mats or unlock gate',
+        life: 1.8,
+      );
       return;
     }
     final pieceId = ApexCraft.pieceId(classId: classId, role: role, slot: slot);
@@ -42,10 +59,9 @@ extension GameDirectorMetaActions on GameDirector {
 
   void upgradeApex(String itemId) {
     if (_isLoading) return;
-    if (!GameLogic.canUpgradeApex(_state, itemId)) {
-      showToast('Cannot upgrade yet', life: 1.8);
-      return;
-    }
+    final normalized = GameLogic.normalizeApexDuplicates(_state);
+    if (!identical(normalized, _state)) _applyUpgrade(normalized);
+    if (!GameLogic.canUpgradeApex(_state, itemId)) return;
     final before = GameLogic.canUpgradeApex(_state, itemId);
     _applyUpgrade(GameLogic.upgradeApex(_state, itemId));
     if (before) {
@@ -215,10 +231,7 @@ extension GameDirectorMetaActions on GameDirector {
     if (_state.metaDepth.embers != before || !_state.hasRelic(relicId)) {
       GameAudio.uiConfirm();
       final back = _state.metaDepth.embers - before;
-      showToast(
-        back > 0 ? 'Salvaged · +$back Embers' : 'Salvaged',
-        life: 2.2,
-      );
+      showToast(back > 0 ? 'Salvaged · +$back Embers' : 'Salvaged', life: 2.2);
     }
   }
 
