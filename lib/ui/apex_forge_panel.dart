@@ -35,6 +35,17 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
   void initState() {
     super.initState();
     _loadCraftGoalFromState();
+    if (ApexForge.craftGoalFromState(director.state) != null) return;
+    if (director.state.heroes.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (ApexForge.craftGoalFromState(director.state) != null) return;
+      director.setApexCraftGoal(
+        classId: _apexClass,
+        role: _apexRole,
+        slot: _apexSlot,
+      );
+    });
   }
 
   void _loadCraftGoalFromState() {
@@ -54,11 +65,8 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     final h = heroes.first;
     _apexClass = h.spec.classId;
     _apexRole = h.spec.roleTag;
-    _apexSlot = ApexForge.nextSlotForPair(
-          director.state,
-          _apexClass,
-          _apexRole,
-        ) ??
+    _apexSlot =
+        ApexForge.nextSlotForPair(director.state, _apexClass, _apexRole) ??
         EquipmentSlot.weapon;
     _syncApexRole();
   }
@@ -75,7 +83,11 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     }
   }
 
-  void _setCraftGoal(HeroClassId classId, SpecRoleTag role, EquipmentSlot slot) {
+  void _setCraftGoal(
+    HeroClassId classId,
+    SpecRoleTag role,
+    EquipmentSlot slot,
+  ) {
     setState(() {
       _apexClass = classId;
       _apexRole = role;
@@ -92,27 +104,29 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     CraftMatFamily.slag => UiIcon.gold,
   };
 
-  /// Honest farm line — don't point at Gauntlet before party max level.
+  /// Drop line plus the meter. Slag drops are not the same as the meter.
   static String _farmSources(GameState state, String matId) {
     final def = ApexCraft.materialsById[matId];
     if (def == null) return 'boss drop';
+    const meter = 'Any boss fills the meter once this is the target.';
     if (matId == ApexCraft.shardAnyId) {
-      return 'Any dungeon boss · meter grants the zone you clear';
+      return 'Any boss fills the meter. It grants this cave\'s shard.';
     }
-    if (matId != ApexCraft.slagId) return def.bossSources;
+    if (matId != ApexCraft.slagId) return '${def.bossSources}. $meter';
     final crystalOpen = DungeonCatalog.isUnlocked(
       'crystal',
       GameLogic.partyMeanLevel(state),
       state.highestDungeonCleared,
     );
     if (GameLogic.endgameUnlocked(state)) {
-      return 'Gauntlet bosses · Crystal Spire boss';
+      return 'Drops: Gauntlet and Crystal Spire bosses. $meter';
     }
     if (crystalOpen) {
-      return 'Crystal Spire boss · Gauntlet after party '
-          'Lv${GameLogic.maxHeroLevel}';
+      return 'Drops: Crystal Spire bosses. Gauntlet after party '
+          'Lv${GameLogic.maxHeroLevel}. $meter';
     }
-    return 'Unlock Crystal Spire for slag · Gauntlet later';
+    final need = DungeonCatalog.unlockHeroLevel(DungeonCatalog.byId('crystal'));
+    return 'Drops after Crystal Spire (party mean Lv$need). $meter';
   }
 
   static int _haveForMat(GameState state, String matId) {
@@ -128,20 +142,10 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     SpecRoleTag role,
     EquipmentSlot slot,
   ) {
-    final pieceId = ApexCraft.pieceId(
-      classId: classId,
-      role: role,
-      slot: slot,
+    return ApexForge.findOwnedApex(
+      state,
+      ApexCraft.pieceId(classId: classId, role: role, slot: slot),
     );
-    for (final i in state.apexVault) {
-      if (i.id == pieceId) return i;
-    }
-    for (final h in state.heroRoster) {
-      for (final i in h.equipped.values) {
-        if (i.id == pieceId) return i;
-      }
-    }
-    return null;
   }
 
   @override
@@ -239,7 +243,8 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Tap a hero, pick a slot, then CRAFT. Weapon R1 first. Keeps through Ascend. '
+          'Tap a hero, pick a slot, then CRAFT. Opening this sheet saves that goal '
+          'so bosses fill the meter. Weapon R1 first. Keeps through Ascend. '
           'DPS roll Crit + Haste; healers Mp5 + Crit + Haste.',
           style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
         ),
@@ -252,7 +257,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         const SizedBox(height: 10),
         MenuChrome.sectionLabelScoped('RECIPE'),
         Text(
-          goalLabel,
+          '$goalLabel${_pieceWhere(state, existingItem)}',
           style: GameTheme.body(size: 14, color: GameTheme.torchHot),
         ),
         if (existingItem != null && ownedRank < ApexCraft.maxRank) ...[
@@ -262,6 +267,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
             style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
           ),
         ],
+        ..._rankPreview(state, existingItem, pricingRank),
         const SizedBox(height: 6),
         for (final e in recipeCosts.entries)
           _matProgressRow(
@@ -294,6 +300,19 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         ],
         const SizedBox(height: 8),
         GameButton(label: primaryLabel, onPressed: primaryAction),
+        if (_craftBlockReason(
+              existing: existingItem,
+              ownedRank: ownedRank,
+              canAct: primaryAction != null,
+              weaponGate: weaponGate,
+            )
+            case final reason?) ...[
+          const SizedBox(height: 4),
+          Text(
+            reason,
+            style: GameTheme.body(size: 12, color: GameTheme.bloodLit),
+          ),
+        ],
         const SizedBox(height: 8),
         _materialsBag(state),
         const SizedBox(height: 4),
@@ -324,11 +343,20 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                     textAlign: TextAlign.center,
                     style: GameTheme.body(size: 12, color: GameTheme.torchHot),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Worn gear that is not Apex counts as empty. Forge and blessings still apply.',
+                    textAlign: TextAlign.center,
+                    style: GameTheme.body(
+                      size: 12,
+                      color: GameTheme.parchmentDim,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   GameButton(
                     label: clearedThisMonth
                         ? 'CRAFT TRIAL · cleared this month'
-                        : 'START CRAFT TRIAL (craft gear only)',
+                        : 'START CRAFT TRIAL',
                     style: GameButtonStyle.grey,
                     onPressed: clearedThisMonth || state.inDungeon
                         ? null
@@ -341,6 +369,108 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         ],
       ],
     );
+  }
+
+  static String _pieceWhere(GameState state, EquipmentItem? item) {
+    if (item == null) return '';
+    for (final hero in state.heroRoster) {
+      for (final worn in hero.equipped.values) {
+        if (worn.id == item.id && worn.isApex) return ' · worn';
+      }
+    }
+    if (state.gearStash.any((g) => g.id == item.id && g.isApex)) {
+      return ' · in bag';
+    }
+    if (state.apexVault.any((g) => g.id == item.id && g.isApex)) {
+      return ' · in vault';
+    }
+    return '';
+  }
+
+  List<Widget> _rankPreview(
+    GameState state,
+    EquipmentItem? existing,
+    int pricingRank,
+  ) {
+    if (existing != null && existing.apexRank >= ApexCraft.maxRank) {
+      return [
+        const SizedBox(height: 4),
+        Text(
+          existing.statsLine,
+          style: GameTheme.body(size: 12, color: GameTheme.parchment),
+        ),
+      ];
+    }
+    final next = ApexCraft.buildItem(
+      classId: _apexClass,
+      role: _apexRole,
+      slot: _apexSlot,
+      rank: pricingRank,
+      ascensionLevel: state.ascensionLevel,
+    );
+    if (existing == null) {
+      return [
+        const SizedBox(height: 4),
+        Text(
+          'Crafts at AL${state.ascensionLevel}',
+          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        ),
+        Text(
+          next.statsLine,
+          style: GameTheme.body(size: 12, color: GameTheme.parchment),
+        ),
+      ];
+    }
+    return [
+      const SizedBox(height: 4),
+      Text(
+        'Now · ${existing.statsLine}',
+        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+      ),
+      Text(
+        'Next · ${_statDelta(existing, next)}',
+        style: GameTheme.body(size: 12, color: GameTheme.parchment),
+      ),
+    ];
+  }
+
+  static String _statDelta(EquipmentItem from, EquipmentItem to) {
+    final bits = <String>[];
+    if (from.itemLevel != to.itemLevel) {
+      bits.add('i${from.itemLevel}→i${to.itemLevel}');
+    } else {
+      bits.add('i${to.itemLevel}');
+    }
+    void add(String name, int before, int after) {
+      final delta = after - before;
+      if (delta == 0) return;
+      bits.add('${delta > 0 ? '+' : ''}$delta $name');
+    }
+
+    add('Str', from.strengthBonus, to.strengthBonus);
+    add('Agi', from.agilityBonus, to.agilityBonus);
+    add('Sta', from.staminaBonus, to.staminaBonus);
+    add('Int', from.intellectBonus, to.intellectBonus);
+    add('Spi', from.spiritBonus, to.spiritBonus);
+    add('SP', from.spellPowerBonus, to.spellPowerBonus);
+    add('Armor', from.armorBonus, to.armorBonus);
+    add('AP', from.attackBonus, to.attackBonus);
+    add('Mp5', from.mp5Bonus, to.mp5Bonus);
+    add('CRIT', from.critChanceBonus, to.critChanceBonus);
+    add('Mastery', from.masteryBonus, to.masteryBonus);
+    add('Haste', from.attackSpeedBonus, to.attackSpeedBonus);
+    return bits.join(' · ');
+  }
+
+  static String? _craftBlockReason({
+    required EquipmentItem? existing,
+    required int ownedRank,
+    required bool canAct,
+    required bool weaponGate,
+  }) {
+    if (canAct || weaponGate) return null;
+    if (existing != null && ownedRank >= ApexCraft.maxRank) return null;
+    return 'Need the materials above.';
   }
 
   Widget _heroPicker(GameState state) {
@@ -369,12 +499,13 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
             label: h.roleLabel,
             selected: selected,
             onTap: () {
-              final keepSlot = selected &&
+              final keepSlot =
+                  selected &&
                   ApexCraft.craftSlotsFor(classId, role).contains(_apexSlot);
               final slot = keepSlot
                   ? _apexSlot
                   : (ApexForge.nextSlotForPair(state, classId, role) ??
-                      EquipmentSlot.weapon);
+                        EquipmentSlot.weapon);
               _setCraftGoal(classId, role, slot);
             },
           );
@@ -393,18 +524,9 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         separatorBuilder: (_, _) => const SizedBox(width: 6),
         itemBuilder: (context, i) {
           final slot = slots[i];
-          final rank = _existingPiece(
-                state,
-                _apexClass,
-                _apexRole,
-                slot,
-              )?.apexRank ??
-              0;
-          final next = ApexForge.nextSlotForPair(
-            state,
-            _apexClass,
-            _apexRole,
-          );
+          final rank =
+              _existingPiece(state, _apexClass, _apexRole, slot)?.apexRank ?? 0;
+          final next = ApexForge.nextSlotForPair(state, _apexClass, _apexRole);
           return MenuChrome.chip(
             label: _slotLabel(slot, _apexClass, _apexRole),
             value: rank > 0 ? 'R$rank' : (slot == next ? 'NEXT' : null),
@@ -513,7 +635,8 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     final top = owned.isEmpty
         ? null
         : owned.reduce(
-            (a, b) => (state.craftMaterials[a.id] ?? 0) >=
+            (a, b) =>
+                (state.craftMaterials[a.id] ?? 0) >=
                     (state.craftMaterials[b.id] ?? 0)
                 ? a
                 : b,
@@ -521,7 +644,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     final subtitle = owned.isEmpty
         ? 'Empty — clear bosses in PUSH'
         : '${owned.length} type${owned.length == 1 ? '' : 's'}'
-            '${top == null ? '' : ' · ${top.name} ×${state.craftMaterials[top.id] ?? 0}'}';
+              '${top == null ? '' : ' · ${top.name} ×${state.craftMaterials[top.id] ?? 0}'}';
 
     return MenuChrome.fold(
       title: 'MATERIALS (${owned.length})',
@@ -553,10 +676,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                   ),
                   Text(
                     '×${state.craftMaterials[m.id] ?? 0}',
-                    style: GameTheme.body(
-                      size: 13,
-                      color: GameTheme.torchHot,
-                    ),
+                    style: GameTheme.body(size: 13, color: GameTheme.torchHot),
                   ),
                 ],
               ),
@@ -655,8 +775,9 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                       '$label  $have/$need',
                       style: GameTheme.body(
                         size: 13,
-                        color:
-                            have >= need ? GameTheme.clear : GameTheme.bloodLit,
+                        color: have >= need
+                            ? GameTheme.clear
+                            : GameTheme.bloodLit,
                       ),
                     ),
                     if (have < need)
@@ -714,13 +835,11 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
             GameButton(
               label: bestHero != null
                   ? 'Equip on ${state.heroes[bestHero].roleLabel}'
-                  : 'Equip best hero',
+                  : (GameLogic.apexEquipBlockReason(state, item.id) ??
+                        'No matching hero in party'),
               onPressed: bestHero != null
                   ? () {
-                      director.equipFromApexVault(
-                        item.id,
-                        heroIndex: bestHero,
-                      );
+                      director.equipFromApexVault(item.id, heroIndex: bestHero);
                       setState(() {});
                     }
                   : null,

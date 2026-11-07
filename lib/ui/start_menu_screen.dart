@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/ad_rewarded.dart';
@@ -39,8 +41,8 @@ class StartMenuScreen extends StatefulWidget {
   final VoidCallback? onRestoreCloud;
 
   /// First launch, no save: one tap starts the default party in the cave.
-  /// [onNewGame] stays as CUSTOMIZE.
-  final VoidCallback? onPlay;
+  /// The future finishes after the initial save. [onNewGame] stays as CUSTOMIZE.
+  final Future<void> Function()? onPlay;
   final VoidCallback? onSettings;
 
   /// Party name + zone when a save exists, e.g. "The Ember Guard · Sandy Caverns".
@@ -89,6 +91,16 @@ class _StartMenuScreenState extends State<StartMenuScreen>
     _glow.dispose();
     _exit.dispose();
     super.dispose();
+  }
+
+  Future<void> _pressPlay() async {
+    if (!_inputUnlocked || _finishing || !mounted) return;
+    setState(() => _finishing = true);
+    try {
+      await widget.onPlay?.call();
+    } finally {
+      if (mounted) setState(() => _finishing = false);
+    }
   }
 
   Future<void> _choose(VoidCallback action, {bool instant = false}) async {
@@ -250,11 +262,10 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                     label: 'PLAY',
                                     style: GameButtonStyle.brown,
                                     primary: true,
-                                    onPressed: _inputUnlocked
-                                        ? () => _choose(
-                                            widget.onPlay!,
-                                            instant: true,
-                                          )
+                                    onPressed: _inputUnlocked && !_finishing
+                                        ? () {
+                                            unawaited(_pressPlay());
+                                          }
                                         : null,
                                   ),
                                   const SizedBox(height: 8),
@@ -289,7 +300,8 @@ class _StartMenuScreenState extends State<StartMenuScreen>
                                   GameButton(
                                     label: 'RESTORE CLOUD',
                                     style: GameButtonStyle.grey,
-                                    tip: 'Play Games backup on this Google account',
+                                    tip:
+                                        'Play Games backup on this Google account',
                                     onPressed: _inputUnlocked
                                         ? widget.onRestoreCloud
                                         : null,

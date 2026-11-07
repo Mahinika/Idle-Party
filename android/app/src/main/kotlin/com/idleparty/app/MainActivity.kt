@@ -16,6 +16,7 @@ class MainActivity : FlutterActivity() {
 
     private val screenChannel = "idle_party/screen"
     private val ranksChannel = "idle_party/ranks"
+    private val snapshotsChannel = "idle_party/snapshots"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -47,6 +48,13 @@ class MainActivity : FlutterActivity() {
                         val id = call.argument<String>("id") ?: ""
                         PlayRankBoard.loadAll(this, id, result)
                     }
+                    else -> result.notImplemented()
+                }
+            }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, snapshotsChannel)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "list" -> PlaySnapshotList.list(this, result)
                     else -> result.notImplemented()
                 }
             }

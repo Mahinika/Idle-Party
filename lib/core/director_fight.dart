@@ -4,6 +4,7 @@ part of 'game_director.dart';
 extension GameDirectorFight on GameDirector {
   /// Start spatial combat after the cold-start intro (if already in a dungeon).
   void ensureCombatLoop() {
+    if (_durableSaveBlocked) return;
     if (!enableSpatialLoop || !_state.inDungeon) return;
     if (_spatial == null) {
       _rebuildSpatial();
@@ -16,7 +17,12 @@ extension GameDirectorFight on GameDirector {
 
   /// Fight should advance. A pause does not ask the screen for another frame.
   bool get _combatClockShouldPump {
-    if (_isLoading || !_state.inDungeon || _spatial == null) return false;
+    if (_isLoading ||
+        _durableSaveBlocked ||
+        !_state.inDungeon ||
+        _spatial == null) {
+      return false;
+    }
     if (_awaitingWipeChoice || _uiPaused || _appPaused || _awayCreditInFlight) {
       return false;
     }
@@ -57,7 +63,8 @@ extension GameDirectorFight on GameDirector {
     _spatial = SpatialCombat.build(
       _state,
       // Soft HP when party >> zone unlock so pack tells stay readable (#64).
-      threatScale: GameLogic.overgearThreatScale(_state) *
+      threatScale:
+          GameLogic.overgearThreatScale(_state) *
           FarmIntensity.threatMult(_state),
       afkAssist: ticketAshenCrown ? false : null,
     );
@@ -336,8 +343,9 @@ extension GameDirectorFight on GameDirector {
         _state.wipeStreakCount >= GameLogic.pushWipesBeforeFarm &&
         _state.dungeonMode == DungeonMode.push &&
         _state.currentRoom.floorNumber > _state.highestFloorCleared;
-    _state = GameLogic.continueAfterWipe(_state)
-        .copyWith(lastUpdated: DateTime.now());
+    _state = GameLogic.continueAfterWipe(
+      _state,
+    ).copyWith(lastUpdated: DateTime.now());
     if (MetaSystems.isActiveDailyRun(_state)) {
       showToast('Daily echo restarted — fight on', life: 2.5);
     } else if (farmingBack && _state.pushResumeFloor > 0) {
@@ -585,7 +593,7 @@ extension GameDirectorFight on GameDirector {
   }
 
   void enterDungeon({String dungeonId = 'sandy'}) {
-    if (_isLoading) return;
+    if (_isLoading || _durableSaveBlocked) return;
     clearLootLog();
     _awaitingWipeChoice = false;
     _flushHubIdle();
@@ -638,6 +646,7 @@ extension GameDirectorFight on GameDirector {
   }
 
   void leaveDungeon() {
+    if (_durableSaveBlocked) return;
     clearLootLog();
     hudFocusEnemyId = null;
     cameraHeroIndex = null;

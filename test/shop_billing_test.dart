@@ -117,93 +117,108 @@ void main() {
     expect(again.metaDepth.shopPermScrolls, state.metaDepth.shopPermScrolls);
   });
 
-  test('forever bundle owns all scrolls and stays off the shelf until Play lists it', () {
-    expect(ShopCatalog.foreverSingles.length, 7);
-    expect(ShopCatalog.foreverBundle.single.id, 'perm_scrolls_all');
-    expect(ShopCatalog.timePacks.length, 3); // restore-only, not listed in SHOP
-    expect(ShopCatalog.shelf().map((e) => e.id), [
-      'ad_free',
-      'long_away',
-      'cinder_pouch',
-      'season_pass_premium',
-      'supporter_qol',
-    ]);
-    expect(
-      ShopCatalog.shelf().every(
-        (e) =>
-            e.kind != ShopOfferKind.boostHours &&
-            e.kind != ShopOfferKind.permScroll,
-      ),
-      isTrue,
-    );
-    expect(ShopCatalog.extraPacks.map((e) => e.id), [
-      'ad_free',
-      'long_away',
-      'cinder_pouch',
-      'season_pass_premium',
-      'supporter_qol',
-    ]);
-    expect(
-      ShopCatalog.shelf(
-        playListed: {
-          'perm_scroll_atk',
-          'starter_boost_6h',
-          'cinder_pouch',
-          'ad_free',
-        },
-      ).map((e) => e.id),
-      [
-        'perm_scroll_atk',
+  test(
+    'forever bundle owns all scrolls and stays off the shelf until Play lists it',
+    () {
+      expect(ShopCatalog.foreverSingles.length, 7);
+      expect(ShopCatalog.foreverBundle.single.id, 'perm_scrolls_all');
+      expect(
+        ShopCatalog.timePacks.length,
+        3,
+      ); // restore-only, not listed in SHOP
+      expect(ShopCatalog.shelf().map((e) => e.id), [
         'ad_free',
         'long_away',
         'cinder_pouch',
         'season_pass_premium',
         'supporter_qol',
-      ],
-    );
-    expect(ShopCatalog.mayBuy('boost_12h', playLists: true), isFalse);
-    expect(ShopCatalog.mayBuy('perm_scroll_atk', playLists: false), isFalse);
-    expect(ShopCatalog.mayBuy('perm_scroll_atk', playLists: true), isTrue);
-    expect(ShopCatalog.mayBuy('cinder_pouch', playLists: false), isTrue);
-    expect(ShopCatalog.mayBuy('season_pass_premium', playLists: false), isTrue);
-    expect(ShopCatalog.mayBuy('ad_free', playLists: false), isTrue);
-    expect(ShopBilling.grantOnRestore(ShopCatalog.byId['ad_free']!), isTrue);
-    expect(ShopBilling.grantOnRestore(ShopCatalog.byId['long_away']!), isTrue);
-    expect(
-      ShopBilling.grantOnRestore(ShopCatalog.byId['supporter_qol']!),
-      isTrue,
-    );
-    expect(
-      ShopBilling.grantOnRestore(ShopCatalog.byId['starter_boost_6h']!),
-      isTrue,
-    );
-    expect(
-      ShopBilling.grantOnRestore(ShopCatalog.byId['perm_scrolls_all']!),
-      isTrue,
-    );
-    expect(ShopBilling.grantOnRestore(ShopCatalog.byId['boost_12h']!), isFalse);
-    expect(
-      ShopBilling.grantOnRestore(ShopCatalog.byId['day_boost_24h']!),
-      isFalse,
-    );
-    expect(
-      ShopBilling.grantOnRestore(ShopCatalog.byId['cinder_pouch']!),
-      isFalse,
-    );
-    expect(
-      ShopBilling.grantOnRestore(ShopCatalog.byId['season_pass_premium']!),
-      isTrue,
-    );
-    final bundle = ShopCatalog.byId['perm_scrolls_all']!;
-    var state = GameLogic.createInitialState(now: now);
-    state = ShopBilling.applyPurchase(state, bundle, now: now);
-    expect(state.metaDepth.shopPermScrolls, AdBoost.permAll);
-    for (final item in ShopCatalog.offered.where(
-      (e) => e.kind == ShopOfferKind.permScroll,
-    )) {
-      expect(ShopBilling.isOwned(state, item), isTrue, reason: item.id);
-    }
-  });
+      ]);
+      expect(
+        ShopCatalog.shelf().every(
+          (e) =>
+              e.kind != ShopOfferKind.boostHours &&
+              e.kind != ShopOfferKind.permScroll,
+        ),
+        isTrue,
+      );
+      expect(ShopCatalog.extraPacks.map((e) => e.id), [
+        'ad_free',
+        'long_away',
+        'cinder_pouch',
+        'season_pass_premium',
+        'supporter_qol',
+      ]);
+      expect(
+        ShopCatalog.shelf(
+          playListed: {
+            'perm_scroll_atk',
+            'starter_boost_6h',
+            'cinder_pouch',
+            'ad_free',
+          },
+        ).map((e) => e.id),
+        [
+          'perm_scroll_atk',
+          'ad_free',
+          'long_away',
+          'cinder_pouch',
+          'season_pass_premium',
+          'supporter_qol',
+        ],
+      );
+      expect(ShopCatalog.mayBuy('boost_12h', playLists: true), isFalse);
+      expect(ShopCatalog.mayBuy('perm_scroll_atk', playLists: false), isFalse);
+      expect(ShopCatalog.mayBuy('perm_scroll_atk', playLists: true), isTrue);
+      expect(ShopCatalog.mayBuy('cinder_pouch', playLists: false), isTrue);
+      expect(
+        ShopCatalog.mayBuy('season_pass_premium', playLists: false),
+        isTrue,
+      );
+      expect(ShopCatalog.mayBuy('ad_free', playLists: false), isTrue);
+      expect(ShopBilling.grantOnRestore(ShopCatalog.byId['ad_free']!), isTrue);
+      expect(
+        ShopBilling.grantOnRestore(ShopCatalog.byId['long_away']!),
+        isTrue,
+      );
+      expect(
+        ShopBilling.grantOnRestore(ShopCatalog.byId['supporter_qol']!),
+        isTrue,
+      );
+      expect(
+        ShopBilling.grantOnRestore(ShopCatalog.byId['starter_boost_6h']!),
+        isTrue,
+      );
+      expect(
+        ShopBilling.grantOnRestore(ShopCatalog.byId['perm_scrolls_all']!),
+        isTrue,
+      );
+      expect(
+        ShopBilling.grantOnRestore(ShopCatalog.byId['boost_12h']!),
+        isFalse,
+      );
+      expect(
+        ShopBilling.grantOnRestore(ShopCatalog.byId['day_boost_24h']!),
+        isFalse,
+      );
+      expect(
+        ShopBilling.grantOnRestore(ShopCatalog.byId['cinder_pouch']!),
+        isFalse,
+      );
+      expect(
+        ShopBilling.grantOnRestore(ShopCatalog.byId['season_pass_premium']!),
+        isTrue,
+      );
+      final bundle = ShopCatalog.byId['perm_scrolls_all']!;
+      var state = GameLogic.createInitialState(now: now);
+      state = ShopBilling.applyPurchase(state, bundle, now: now);
+      expect(state.metaDepth.shopPermScrolls, AdBoost.permAll);
+      for (final item in ShopCatalog.offered.where(
+        (e) => e.kind == ShopOfferKind.permScroll,
+      )) {
+        expect(ShopBilling.isOwned(state, item), isTrue, reason: item.id);
+      }
+    },
+  );
 
   test('season pass premium is once and owned', () {
     var state = GameLogic.createInitialState(now: now);
@@ -330,10 +345,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(
-        find.textContaining('Cinders in GEAR'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Cinders in GEAR'), findsOneWidget);
 
       final scroll = find.byType(Scrollable).first;
       for (final label in [
@@ -343,7 +355,11 @@ void main() {
         'Season pass premium',
         'Supporter pack',
       ]) {
-        await tester.scrollUntilVisible(find.text(label), 120, scrollable: scroll);
+        await tester.scrollUntilVisible(
+          find.text(label),
+          120,
+          scrollable: scroll,
+        );
         expect(find.text(label), findsOneWidget);
       }
       expect(find.text('UNAVAILABLE'), findsWidgets);
@@ -437,7 +453,9 @@ void main() {
       expect(director.state.gold, greaterThan(goldBefore));
       expect(director.toast, isNot(contains('Purchased')));
       expect(events, isEmpty);
-      expect(await storage.load(), isNull);
+      final disk = await storage.load();
+      expect(disk, isNotNull);
+      expect(disk!.metaDepth.adFree, isFalse);
 
       final again = await director.debugGrantShopPurchase(
         'ad_free',
@@ -452,10 +470,13 @@ void main() {
   });
 
   test('a thrown save does not keep the grant', () async {
-    final storage = _ThrowSaveStorage();
+    final storage = InMemoryGameStorage();
     final director = GameDirector(storage, enableSpatialLoop: false);
     await director.boot();
     await director.startNewGame(HeroSpecs.starterUnlocked);
+    expect(director.hasExistingSave, isTrue);
+    await director.debugTryPersist();
+    storage.throwNextActiveWrite = true;
 
     final ok = await director.debugGrantShopPurchase(
       'cinder_pouch',
@@ -524,14 +545,10 @@ class _DenySaveStorage extends InMemoryGameStorage {
 
   @override
   Future<bool> save(GameState state) async {
-    duringSave?.call();
-    return false;
-  }
-}
-
-class _ThrowSaveStorage extends InMemoryGameStorage {
-  @override
-  Future<bool> save(GameState state) async {
-    throw StateError('disk full');
+    if (duringSave != null) {
+      duringSave!.call();
+      return false;
+    }
+    return super.save(state);
   }
 }

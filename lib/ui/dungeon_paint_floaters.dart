@@ -198,6 +198,18 @@ extension _DungeonPaintFloaters on _TileRoomPainter {
             fill(Colors.white.withValues(alpha: alpha * 0.9)),
           );
         }
+        if (burst.crisp) {
+          final crispAlpha = (burst.life / SpellVfx.bigImpactLife).clamp(
+            0.0,
+            1.0,
+          );
+          AbilityVfxPaint.paintCrispCore(
+            canvas,
+            center(burst.x, burst.y),
+            tile * burst.radius * 0.42,
+            crispAlpha,
+          );
+        }
       }
     }
 

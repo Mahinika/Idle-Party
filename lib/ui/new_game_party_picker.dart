@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/game_logic.dart';
@@ -25,7 +27,7 @@ class NewGamePartyPicker extends StatefulWidget {
     this.initialSpecs,
   });
 
-  final void Function(
+  final Future<void> Function(
     List<HeroSpecId> specs,
     String partyName,
     List<HeroRace> races, {
@@ -48,6 +50,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   int _activeSlot = 0;
   _PartyEditTab _tab = _PartyEditTab.classTab;
   bool _nameError = false;
+  bool _starting = false;
   String? _pickHint;
   late final List<HeroRace> _looks;
   late final List<HeroSex> _sexes;
@@ -57,14 +60,8 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     super.initState();
     final seed = widget.initialSpecs ?? HeroSpecs.starterUnlocked;
     _slots = List<HeroSpecId?>.filled(GameLogic.starterPartySize, null);
-    _looks = List<HeroRace>.filled(
-      GameLogic.starterPartySize,
-      HeroRace.human,
-    );
-    _sexes = List<HeroSex>.filled(
-      GameLogic.starterPartySize,
-      HeroSex.male,
-    );
+    _looks = List<HeroRace>.filled(GameLogic.starterPartySize, HeroRace.human);
+    _sexes = List<HeroSex>.filled(GameLogic.starterPartySize, HeroSex.male);
     for (var i = 0; i < _slots.length && i < seed.length; i++) {
       _slots[i] = seed[i];
       _sexes[i] = HeroSex.defaultFor(HeroSpecs.def(seed[i]).gearAffinity);
@@ -94,7 +91,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
   }
 
   Future<void> _tryStart() async {
-    if (!_ready) return;
+    if (!_ready || _starting) return;
     final name = PartyNameFilter.sanitize(_nameCtrl.text);
     if (name == null) {
       setState(() => _nameError = true);
@@ -128,12 +125,17 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
       );
       if (ok != true || !mounted) return;
     }
-    widget.onConfirm(
-      [for (final s in _slots) s!],
-      name,
-      List.of(_looks),
-      sexes: List.of(_sexes),
-    );
+    setState(() => _starting = true);
+    try {
+      await widget.onConfirm(
+        [for (final s in _slots) s!],
+        name,
+        List.of(_looks),
+        sexes: List.of(_sexes),
+      );
+    } finally {
+      if (mounted) setState(() => _starting = false);
+    }
   }
 
   bool get _ready =>
@@ -203,9 +205,7 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
     setState(() {
       _pickHint = null;
       _slots[_activeSlot] = id;
-      _sexes[_activeSlot] = HeroSex.defaultFor(
-        HeroSpecs.def(id).gearAffinity,
-      );
+      _sexes[_activeSlot] = HeroSex.defaultFor(HeroSpecs.def(id).gearAffinity);
       final next = _nextEmptySlot(after: _activeSlot);
       if (next != null) {
         _activeSlot = next;
@@ -435,16 +435,16 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                                           right: 6,
                                         ),
                                         child: GameButton(
-                                          label: HeroSpecs.classLabel(classId)
-                                              .toUpperCase(),
+                                          label: HeroSpecs.classLabel(
+                                            classId,
+                                          ).toUpperCase(),
                                           expanded: false,
                                           dense: true,
                                           style: _filter == classId
                                               ? GameButtonStyle.brown
                                               : GameButtonStyle.grey,
-                                          onPressed: () => setState(
-                                            () => _filter = classId,
-                                          ),
+                                          onPressed: () =>
+                                              setState(() => _filter = classId),
                                         ),
                                       ),
                                   ],
@@ -507,7 +507,11 @@ class _NewGamePartyPickerState extends State<NewGamePartyPicker> {
                     child: GameButton(
                       label: 'START',
                       style: GameButtonStyle.brown,
-                      onPressed: _ready ? _tryStart : null,
+                      onPressed: (_ready && !_starting)
+                          ? () {
+                              unawaited(_tryStart());
+                            }
+                          : null,
                     ),
                   ),
                 ],
@@ -552,16 +556,9 @@ class _SlotCard extends StatelessWidget {
             child: Column(
               children: [
                 if (hero == null)
-                  KenneySprite(
-                    asset: CustomAssets.heroKnight,
-                    size: 48,
-                  )
+                  KenneySprite(asset: CustomAssets.heroKnight, size: 48)
                 else
-                  HeroDollSprite(
-                    hero: hero!,
-                    partyIndex: index,
-                    size: 48,
-                  ),
+                  HeroDollSprite(hero: hero!, partyIndex: index, size: 48),
                 const SizedBox(height: 4),
                 Text(
                   def?.shortLabel ?? 'Pick spec',
@@ -630,11 +627,7 @@ class _SpecPickRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               child: Row(
                 children: [
-                  HeroDollSprite(
-                    hero: preview,
-                    partyIndex: 0,
-                    size: 40,
-                  ),
+                  HeroDollSprite(hero: preview, partyIndex: 0, size: 40),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(

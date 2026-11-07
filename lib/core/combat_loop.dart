@@ -392,22 +392,19 @@ extension GameDirectorCombatLoop on GameDirector {
         if (clearExtra != null && (clearLine.length + clearExtra.length) < 70) {
           clearLine = '$clearLine · $clearExtra';
         }
-        if (matGrants.isNotEmpty) {
-          final labels = [
-            for (final id in matGrants) ApexCraft.materialsById[id]?.name ?? id,
-          ];
-          final matBit = '+${labels.take(2).join(', ')}';
-          if ((clearLine.length + matBit.length) < 70) {
-            clearLine = '$clearLine · $matBit';
-          }
-        }
         final payoffNotices = LogicNotices.takeMetaPayoffs();
         final questReady = _questReadyLine();
         if (questReady != null && (clearLine.length + questReady.length) < 72) {
           clearLine = '$clearLine · $questReady';
         }
         // Floor payoff is the bottom log. KEY still uses the one toast slot.
-        noteLoot(clearLine);
+        // Materials get their own line so a long clear cannot hide the drop.
+        for (final line in floorClearPayoffLines(
+          clearLine: clearLine,
+          matGrants: matGrants,
+        )) {
+          noteLoot(line);
+        }
         final keyBanner = payoffNotices.cast<String?>().firstWhere(
           (n) =>
               n != null &&
@@ -573,6 +570,20 @@ int partyXpBank(GameState state) {
     sum += bank;
   }
   return sum;
+}
+
+/// Clear line, then every craft material on its own line.
+///
+/// The loot log ellipsizes one row. A long clear used to drop the material
+/// names entirely once the joined text passed 70 characters.
+List<String> floorClearPayoffLines({
+  required String clearLine,
+  required List<String> matGrants,
+}) {
+  final lines = <String>[clearLine];
+  final mats = ApexCraft.lootLineForGrants(matGrants);
+  if (mats.isNotEmpty) lines.add(mats);
+  return lines;
 }
 
 /// Short floor-clear line: gold, XP, and the best new drop.

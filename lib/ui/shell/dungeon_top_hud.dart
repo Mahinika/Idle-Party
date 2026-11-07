@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/ashen_crown.dart';
 import '../../core/away_fight_tip.dart';
+import '../../core/first_climb_coach.dart';
 import '../../core/enemy_flavor.dart';
 import '../../core/gauntlet_anomaly.dart';
 import '../../core/gauntlet_pact.dart';
@@ -376,6 +377,7 @@ class DungeonTopHud extends StatelessWidget {
       away: awayLine,
       farm: coachFarm,
       firstBoss: firstBoss,
+      climb: FirstClimbCoach.line(state, inDungeon: true),
     );
     final keyBit = !jargon
         ? ''

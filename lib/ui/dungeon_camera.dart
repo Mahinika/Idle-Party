@@ -1,5 +1,21 @@
 import 'dart:math' as math;
 
+/// One live sim step. Matches [GameDirector]'s dungeon clock.
+const double dungeonCamSimStep = 1 / 60;
+
+/// Seconds to bleed a leftover aim error. Constant-speed travel does not use
+/// this: the camera takes the focus step itself, so lag does not grow with
+/// move speed or with 2× pace.
+const double dungeonCamFollowTau = 0.05;
+
+/// Seconds to glide a real retarget (pin, death, pack bias) of a tile or more.
+const double dungeonCamRetargetTau = 0.09;
+
+/// Shake in sim time, about 4.5 Hz and 6 Hz. Indexing the sine by the raw
+/// frame made a 2× pace sample jump ~195° and strobe.
+const double dungeonCamShakeOmega = 28;
+const double dungeonCamShakeOmegaY = 38;
+
 /// Viewport origin in tile space so the focus stays at screen center.
 ///
 /// Does **not** clamp to the map — short floors used to pin camY at 0 and the
@@ -14,54 +30,95 @@ import 'dart:math' as math;
 }) {
   var camX = focusX - visibleCols / 2;
   var camY = focusY - visibleRows / 2;
-  if (shakeAmp > 0.02) {
-    camX += math.sin(visualFrame * 1.7) * shakeAmp;
-    camY += math.cos(visualFrame * 2.3) * shakeAmp * 0.85;
-  }
+  final punch = dungeonCamShakeOffset(
+    shakeAmp: shakeAmp,
+    visualFrame: visualFrame,
+  );
+  camX += punch.x;
+  camY += punch.y;
   return (camX: camX, camY: camY);
 }
 
 /// Glide the camera toward [targetX]/[targetY].
 ///
-/// A walk (gap at most [followSlack]) snaps, so the party does not lag.
-/// A pack waking up is a medium jump and eases in. A new floor or a huge
-/// jump snaps. The step is always a fraction of the remaining gap, so the
-/// camera never passes the target.
+/// A new floor or a jump of [snapDistance] snaps. Anything smaller keeps the
+/// focus step when the aim only walked, and glides when the aim itself jumped
+/// by [retargetDistance] (another hero, a death, a pack bias). The old slack
+/// snap followed tiny steps exactly, then a single late frame at high speed
+/// and 2× dropped the camera into a 12% catch it could not leave while the
+/// party was still moving. This never passes the target.
 ({double x, double y}) dungeonCamEase({
   required double? prevX,
   required double? prevY,
+  double? prevTargetX,
+  double? prevTargetY,
   required double targetX,
   required double targetY,
   required bool newWorld,
-  double followSlack = 0.35,
+  double dt = dungeonCamSimStep,
   double snapDistance = 10,
-  double catchFraction = 0.12,
+  double retargetDistance = 1,
+  double followTau = dungeonCamFollowTau,
+  double retargetTau = dungeonCamRetargetTau,
 }) {
   if (newWorld || prevX == null || prevY == null) {
     return (x: targetX, y: targetY);
   }
-  final dx = targetX - prevX;
-  final dy = targetY - prevY;
-  final dist = math.sqrt(dx * dx + dy * dy);
-  if (dist <= followSlack || dist >= snapDistance) {
+  if (dt <= 0) return (x: prevX, y: prevY);
+  final gx = targetX - prevX;
+  final gy = targetY - prevY;
+  final gap = math.sqrt(gx * gx + gy * gy);
+  if (gap >= snapDistance || gap == 0) {
     return (x: targetX, y: targetY);
   }
-  final step = dist * catchFraction.clamp(0.01, 0.95);
-  return (x: prevX + dx / dist * step, y: prevY + dy / dist * step);
+  final aimX = prevTargetX;
+  final aimY = prevTargetY;
+  final hasAim = aimX != null && aimY != null;
+  final motion = hasAim
+      ? math.sqrt(math.pow(targetX - aimX, 2) + math.pow(targetY - aimY, 2))
+      : 0.0;
+  final retarget =
+      gap >= retargetDistance || (hasAim && motion >= retargetDistance);
+  if (!hasAim || retarget) {
+    final tau = math.max(0.001, retarget ? retargetTau : followTau);
+    final alpha = (1 - math.exp(-dt / tau)).clamp(0.0, 1.0);
+    return (x: prevX + gx * alpha, y: prevY + gy * alpha);
+  }
+  final keep = (1 - math.exp(-dt / math.max(0.001, followTau))).clamp(0.0, 1.0);
+  final errX = aimX - prevX;
+  final errY = aimY - prevY;
+  return (x: targetX - errX * (1 - keep), y: targetY - errY * (1 - keep));
+}
+
+/// Punch offset in tiles. [visualFrame] is a sim-step counter, so the phase
+/// advances in sim seconds and a 2× sample does not alias.
+({double x, double y}) dungeonCamShakeOffset({
+  required double shakeAmp,
+  required int visualFrame,
+}) {
+  if (shakeAmp <= 0.02) return (x: 0, y: 0);
+  final t = visualFrame * dungeonCamSimStep;
+  return (
+    x: math.sin(t * dungeonCamShakeOmega) * shakeAmp,
+    y: math.cos(t * dungeonCamShakeOmegaY) * shakeAmp * 0.85,
+  );
 }
 
 /// Punch applied after the eased camera, so a glide is not shaken early.
+///
+/// The live view calls this once. [dungeonCamOrigin] can add the same offset
+/// when a caller passes [shakeAmp]; do not stack both on one frame.
 ({double x, double y}) dungeonCamShake({
   required double x,
   required double y,
   required double shakeAmp,
   required int visualFrame,
 }) {
-  if (shakeAmp <= 0.02) return (x: x, y: y);
-  return (
-    x: x + math.sin(visualFrame * 1.7) * shakeAmp,
-    y: y + math.cos(visualFrame * 2.3) * shakeAmp * 0.85,
+  final punch = dungeonCamShakeOffset(
+    shakeAmp: shakeAmp,
+    visualFrame: visualFrame,
   );
+  return (x: x + punch.x, y: y + punch.y);
 }
 
 ({double x, double y}) dungeonPartyFocus({
@@ -307,13 +364,13 @@ bool _spans(double a, double b, double p, double pad) {
 }) {
   if (onlyWhenApart &&
       dungeonSharesFrame(
-    partyX: partyX,
-    partyY: partyY,
-    packX: packX,
-    packY: packY,
-    visibleCols: visibleCols,
-    visibleRows: visibleRows,
-  )) {
+        partyX: partyX,
+        partyY: partyY,
+        packX: packX,
+        packY: packY,
+        visibleCols: visibleCols,
+        visibleRows: visibleRows,
+      )) {
     return null;
   }
   ({double x, double y})? best;

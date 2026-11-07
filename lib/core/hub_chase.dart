@@ -815,7 +815,7 @@ class HubChase {
                 : 'Floor $floorsDone paid out. Enter again and push floor $nextFloor — '
                       'the boss is on floor $bossFloor.')
           : firstHour
-          ? 'Enter the cave. Your party fights on its own. Get stronger and beat the boss.'
+          ? 'Enter the cave. Your party fights on its own. The boss is on floor ${GameLogic.firstBossFloor}.'
           : bossesLeft > 0
           ? (almost
                 ? '1 boss left · then Ascend. $teaser'

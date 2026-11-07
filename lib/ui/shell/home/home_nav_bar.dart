@@ -78,8 +78,15 @@ class HomeNavBar extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          GameIcon.asset(UiIcon.sword, size: 26),
-          Text('FIGHT', style: GameTheme.pixel(size: 9, color: GameTheme.torchHot)),
+          GameIcon.asset(UiIcon.sword, size: 24),
+          const SizedBox(height: 2),
+          Text(
+            'FIGHT',
+            style: GameTheme.pixel(
+              size: 9,
+              color: open ? GameTheme.parchment : GameTheme.torchHot,
+            ),
+          ),
         ],
       ),
     );
@@ -100,7 +107,19 @@ class HomeNavBar extends StatelessWidget {
         }
       },
       child: selected
-          ? GameIcon.asset(UiIcon.closeTab, size: 26)
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GameIcon.asset(UiIcon.closeTab, size: 24),
+                const SizedBox(height: 2),
+                ExcludeSemantics(
+                  child: Text(
+                    'CLOSE',
+                    style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
+                  ),
+                ),
+              ],
+            )
           : Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -116,6 +135,7 @@ class HomeNavBar extends StatelessWidget {
                       ),
                   ],
                 ),
+                const SizedBox(height: 2),
                 Text(label, style: GameTheme.pixel(size: 8, color: GameTheme.parchment)),
                 if (timer != null)
                   Text(
@@ -156,7 +176,28 @@ class HomeNavBar extends StatelessWidget {
         label: semantics,
         child: InkWell(
           onTap: onTap,
-          child: Center(child: child),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            decoration: BoxDecoration(
+              color: selected
+                  ? GameTheme.torch.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              border: Border(
+                top: BorderSide(
+                  color: selected
+                      ? GameTheme.torchHot
+                      : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+            ),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: child,
+              ),
+            ),
+          ),
         ),
       ),
     );

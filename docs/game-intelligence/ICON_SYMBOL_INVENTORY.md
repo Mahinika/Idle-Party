@@ -4,6 +4,21 @@ Read-only audit **2026-11-05** on branch `cursor/ui-shell-polish-a824`.
 Evidence: `lib/ui/game_icon.dart`, `lib/assets/custom_assets.dart`,
 `lib/ui/shell/*`, `lib/ui/hub/*`, `docs/UI_THEME.md`.
 
+## Implementation status (2026-11-05)
+
+**Batch 1 + 2 wired (PR #50):**
+- `icon_shop.png`, `icon_map.png`, `icon_menu.png`, `icon_close_tab.png`
+- `icon_forge.png`, `icon_camp.png`, `icon_market.png`
+- `icon_watch_ad.png`, `icon_scroll.png`, `icon_daily.png`, `icon_ticket.png`
+- `icon_embers.png`, `icon_cinders.png`
+- `icon_update.png`, `icon_redeem.png`, `icon_floors.png`, `icon_wisp_lantern.png`
+- 48px hi-res masters in `assets/custom/icons/48/`
+- `KenneySprite` picks 48px when `size >= 24 dp`
+
+All batch-1 and batch-2 icons are now wired. No star/boots/flask placeholders remain in the MENU grid or rails.
+
+---
+
 **Rule in code:** chrome uses `GameIcon` + `UiIcon` PNGs or `UiGlyph`
 CustomPaint marks. **No Material `Icons.*`** in `lib/` (grep clean). Emoji is
 also banned in chrome per `docs/UI_THEME.md`.

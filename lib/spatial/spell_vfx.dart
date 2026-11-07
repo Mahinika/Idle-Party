@@ -62,6 +62,20 @@ abstract final class SpellVfx {
         SpellBoltStyle.arcane => SpatialGroundFxKind.disc,
       };
 
+  /// How long a signature impact stays up. Shorter than a routine hit so a
+  /// 2× fight does not stack soft discs. The school shape is unchanged.
+  static const double bigImpactLife = 0.34;
+
+  /// Cast flash above this still draws the opening glint. The sim starts the
+  /// lockout and the bolt together, so the glint is that opening and then
+  /// stops. It is paint only: no second burst.
+  static const double castGlintFloor = 0.2;
+
+  static bool castGlintVisible({
+    required bool reduceMotion,
+    required double castFlash,
+  }) => !reduceMotion && castFlash > castGlintFloor;
+
   /// Signature nukes read bigger than a routine hit.
   static bool isBig(AbilityId? id) => switch (id) {
     AbilityId.pyroblast ||
@@ -79,23 +93,6 @@ abstract final class SpellVfx {
   /// Full and Lite. Minimal (and offline, which forces Minimal) stays still.
   static bool _showSparks(SpatialWorld world) =>
       !world.reducedVfx || world.spawnPersistentVfx;
-
-  static void _punch(
-    SpatialWorld world, {
-    required double x,
-    required double y,
-    required double radius,
-  }) {
-    SpatialCombat.spawnBurst(
-      world,
-      x: x,
-      y: y,
-      argb: 0xFFFFFFFF,
-      radius: radius * 0.4,
-      life: 0.2,
-      kind: SpatialBurstKind.spark,
-    );
-  }
 
   /// Caster pop when a spell goes off.
   static void spawnCast(
@@ -134,7 +131,6 @@ abstract final class SpellVfx {
           life: punch ? 0.42 : 0.32,
         );
       }
-      if (punch) _punch(world, x: hero.x, y: hero.y, radius: r);
     }
     SpellSparks.puff(
       world,
@@ -160,7 +156,7 @@ abstract final class SpellVfx {
     if (!_showSparks(world)) return;
     final punch = isBig(id);
     final r = punch ? radius * 1.5 : radius;
-    final life = punch ? 0.72 : 0.52;
+    final life = punch ? bigImpactLife : 0.52;
     if (_showBursts(world)) {
       final argb = SpatialCombat.burstArgbForStyle(style);
       final kind = burstKindFor(style: style, shape: shape, id: id);
@@ -172,10 +168,10 @@ abstract final class SpellVfx {
         radius: r,
         kind: kind,
         life: life,
+        crisp: punch,
         x2: x2,
         y2: y2,
       );
-      if (punch) _punch(world, x: x, y: y, radius: r);
     }
     SpellSparks.puff(world, x: x, y: y, style: style, count: punch ? 9 : 6);
   }

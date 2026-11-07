@@ -89,7 +89,10 @@ void main() {
 
   test('ascend keeps the away appointment', () {
     final fresh = GameLogic.createInitialState(now: now);
-    final armed = AwayFightTip.arm(fresh.copyWith(bossVictories: 1, essence: 40), now);
+    final armed = AwayFightTip.arm(
+      fresh.copyWith(bossVictories: 1, essence: 40),
+      now,
+    );
     final ascended = GameLogic.ascend(
       armed,
       now: now.add(const Duration(days: 1)),
@@ -135,6 +138,27 @@ void main() {
         farm: 'Switch',
       ),
       'Long-press the fight.',
+    );
+    expect(
+      AwayFightTip.caveCoach(
+        wiped: false,
+        godhand: 'Long-press the fight.',
+        away: AwayFightTip.line,
+        farm: 'Switch',
+        firstBoss: true,
+        climb: 'Your party fights on its own. Boss on floor 2.',
+      ),
+      'Your party fights on its own. Boss on floor 2.',
+    );
+    expect(
+      AwayFightTip.caveCoach(
+        wiped: true,
+        godhand: null,
+        away: AwayFightTip.line,
+        farm: null,
+        climb: 'The boss is still on floor 2.',
+      ),
+      isNull,
     );
     expect(AwayFightTip.line.toLowerCase(), contains('close the app'));
     expect(AwayFightTip.line.toLowerCase(), contains('keeps fighting'));
