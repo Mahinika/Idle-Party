@@ -60,7 +60,7 @@ classic bar. Evidence is the call site. Status words:
 | DPS meter during a fight | `DpsMeter` | Hidden while `home && inDungeon` (`HomeTopBar.compactTop`) and hidden in `Is2Shell` home chrome | IMPLEMENTED_BUT_NOT_CONNECTED |
 | Party abilities | kit chips | Second tap on a home party chip opens `_HomeKitStrip` | IMPLEMENTED_AND_ACCESSIBLE |
 | Loadouts | save fields may remain | LOADOUTS tab hidden (`AGENTS.md`) | UNUSED_OR_ABANDONED |
-| Feature-sheet template | none | `showFeatureSheet` in `feature_sheet.dart` has no caller | UI_ONLY_PLACEHOLDER |
+| Feature-sheet template | none | Historical: `showFeatureSheet` in `feature_sheet.dart` had no caller. The helper and the file were later deleted | UI_ONLY_PLACEHOLDER |
 | `MenuSurface` MAP route | `MapScreen` is separate | `MenuSurface` returns an empty box for `MenuRoute.map` | UI_ONLY_PLACEHOLDER |
 | Classic GEAR/GOLD/SHOP/ESSENCE/MORE | same directors | `PlayShell` when `HomeLayout.classic` | IMPLEMENTED_AND_ACCESSIBLE |
 

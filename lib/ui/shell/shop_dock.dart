@@ -170,7 +170,7 @@ class _ShopDockState extends State<ShopDock> {
             ShopHubOffer.countdownLine(state),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+            style: GameTheme.hint(color: GameTheme.torchHot),
           ),
           ShellLayout.gap(6),
           _ShopRow(
@@ -360,19 +360,13 @@ class _ShopRow extends StatelessWidget {
                       titleOverride ?? shortTitle(item),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 15,
-                        color: GameTheme.torchHot,
-                      ),
+                      style: GameTheme.readable(color: GameTheme.torchHot),
                     ),
                     Text(
                       priceLabel,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 13,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.section(color: GameTheme.parchmentDim),
                     ),
                   ],
                 ),
@@ -384,7 +378,7 @@ class _ShopRow extends StatelessWidget {
             tag(item),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+            style: GameTheme.hint(color: GameTheme.mossLit),
           ),
           if (!compact) ...[
             const SizedBox(height: 4),
@@ -392,7 +386,7 @@ class _ShopRow extends StatelessWidget {
               NavCopy.playerText(item.description, layout),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+              style: GameTheme.section(color: GameTheme.parchmentDim),
             ),
           ],
           const SizedBox(height: 8),

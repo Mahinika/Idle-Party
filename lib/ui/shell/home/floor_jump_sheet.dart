@@ -29,7 +29,7 @@ Future<void> showFloorJumpSheet(
       title: 'FLOORS',
       content: SizedBox(
         width: 280,
-        height: 280,
+        height: MediaQuery.sizeOf(ctx).height * 0.45,
         child: ListView(
           children: [
             ShellLayout.hint('Now F$here. Jump keeps the KEY clock running.', maxLines: 2),
@@ -43,12 +43,9 @@ Future<void> showFloorJumpSheet(
                       : GameLogic.canTravelToFloor(state, f)
                       ? 'F$f'
                       : 'F$f · locked',
-                  style: GameTheme.body(
-                    size: 14,
-                    color: f == here
+                  style: GameTheme.readable(color: f == here
                         ? GameTheme.torchHot
-                        : GameTheme.parchment,
-                  ),
+                        : GameTheme.parchment),
                 ),
                 onTap: f != here && GameLogic.canTravelToFloor(state, f)
                     ? () => Navigator.pop(ctx, f)
@@ -91,7 +88,7 @@ Future<void> showFloorJumpSheet(
                 'Loot on the ground is lost.'
             : 'This floor is mid-run. Jump to F$picked anyway? '
                 'Loot on the ground is lost.',
-        style: GameTheme.body(size: 15, color: GameTheme.parchment),
+        style: GameTheme.readable(color: GameTheme.parchment),
       ),
       actions: [
         GameButton(

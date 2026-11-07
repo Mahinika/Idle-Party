@@ -41,7 +41,7 @@ class EssenceKeepPanel extends StatelessWidget {
       padding: const EdgeInsets.only(top: 10, bottom: 4),
       child: Text(
         title,
-        style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+        style: GameTheme.hint(color: GameTheme.torchHot),
       ),
     );
   }
@@ -65,7 +65,7 @@ class EssenceKeepPanel extends StatelessWidget {
       children: [
         Text(
           '${formatCount(state.essence)}e · keeps on Ascend',
-          style: GameTheme.body(size: 15, color: GameTheme.torchHot),
+          style: GameTheme.readable(color: GameTheme.torchHot),
         ),
         ShellLayout.gap(4),
         ShellLayout.hint(
@@ -76,7 +76,7 @@ class EssenceKeepPanel extends StatelessWidget {
         ShellLayout.gap(4),
         Text(
           _blessingLine(state),
-          style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+          style: GameTheme.hint(color: GameTheme.mossLit),
         ),
         if (GameLogic.canAscend(state))
           Text(
@@ -84,14 +84,14 @@ class EssenceKeepPanel extends StatelessWidget {
                 ? 'Ascend is optional — today\'s job is KEY / ENDGAME. '
                     'The hub button says ASCEND — not a buy here.'
                 : 'The hub button says ASCEND — not a buy here.',
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
 
         _label('GOD HAND'),
         Text(
           'Lv${state.godHandLevel} · smash ${state.godHandSmashDamage()} · '
           'CD ${state.godHandCooldownSeconds.toStringAsFixed(1)}s',
-          style: GameTheme.body(size: 13, color: GameTheme.parchment),
+          style: GameTheme.section(color: GameTheme.parchment),
         ),
         const SizedBox(height: 4),
         Row(
@@ -172,7 +172,7 @@ class EssenceKeepPanel extends StatelessWidget {
           _label('PERMANENT BUYS'),
           Text(
             'These stay after Ascend.',
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 4),
           PrestigeShopOverlay(director: director, compact: true),
@@ -184,14 +184,14 @@ class EssenceKeepPanel extends StatelessWidget {
             'Spend points · not the same as Ascend Blessing stacks\n'
             '${BlessingConstellation.pointsAvailable(state)} pts · '
             '${state.metaDepth.constellationNodes.length}/${BlessingConstellation.maxLit} lit',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           if (BlessingConstellation.pointsAvailable(state) > 0 &&
               state.metaDepth.constellationNodes.length <
                   BlessingConstellation.maxLit)
             Text(
               'Unspent Star points — optional forever nodes (not a hub hunt).',
-              style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+              style: GameTheme.hint(color: GameTheme.mossLit),
             ),
           for (final n in BlessingConstellation.nodes)
             if (BlessingConstellation.isLit(state, n.$1))
@@ -199,7 +199,7 @@ class EssenceKeepPanel extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 3),
                 child: Text(
                   'LIT ${n.$2} — ${BlessingConstellation.effectLabel(n.$1)}',
-                  style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+                  style: GameTheme.hint(color: GameTheme.mossLit),
                 ),
               )
             else
@@ -232,12 +232,12 @@ class EssenceKeepPanel extends StatelessWidget {
           _label('HEIRLOOM (legacy)'),
           Text(
             'Old-save keep piece · new keep-gear is Apex under Craft',
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           Text(
             '${state.soulboundItem!.name}'
             '${state.metaDepth.soulboundRefine > 0 ? ' · refine ${state.metaDepth.soulboundRefine} (+${state.soulboundRefineAttackBonus} AP · +${state.soulboundRefineDefenseBonus} Armor)' : ''}',
-            style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+            style: GameTheme.section(color: GameTheme.mossLit),
           ),
         ],
 
@@ -257,7 +257,7 @@ class EssenceKeepPanel extends StatelessWidget {
           ),
           Text(
             'Empty-bag climb at AL20 — AL and Blessing stay. Not Ascend.',
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
         ShellLayout.gap(12),

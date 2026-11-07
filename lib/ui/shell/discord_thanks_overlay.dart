@@ -100,13 +100,13 @@ class DiscordThanksOverlay extends StatelessWidget {
         Text(
           'THANK YOU',
           textAlign: TextAlign.center,
-          style: GameTheme.menuTitle(size: 20),
+          style: GameTheme.title(),
         ),
         ShellLayout.gap(10),
         Text(
           'Thanks for playing Idle Party!',
           textAlign: TextAlign.center,
-          style: GameTheme.body(size: 16, color: GameTheme.parchment),
+          style: GameTheme.readable(color: GameTheme.parchment),
         ),
         ShellLayout.gap(8),
         ShellLayout.hint(

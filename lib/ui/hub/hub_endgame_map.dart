@@ -93,14 +93,11 @@ class HubMapModeTabs extends StatelessWidget {
             child: Center(
               child: Text(
                 label,
-                style: GameTheme.body(
-                  size: textSize,
-                  color: selected
+                style: GameTheme.readable(color: selected
                       ? GameTheme.torchHot
                       : (dimmed
                             ? GameTheme.parchmentDim.withValues(alpha: 0.72)
-                            : GameTheme.parchment),
-                ),
+                            : GameTheme.parchment)),
               ),
             ),
           ),
@@ -149,7 +146,7 @@ class HubEndgameMap extends StatelessWidget {
         if (mapW < 8 || mapH < 8) return const SizedBox.shrink();
         final discSize = (mapW * 0.16).clamp(40.0, 52.0);
         final hitSize = math.max(discSize + 6, GameTheme.minTouch + 4);
-        final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
         final statusH = 16.0 * textScale;
 
         return ClipRRect(

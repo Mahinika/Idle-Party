@@ -89,11 +89,8 @@ class FeedbackToast extends StatelessWidget {
                 maxLines: maxLines,
                 overflow: TextOverflow.ellipsis,
                 style: kind == NoticeKind.celebrate
-                    ? GameTheme.pixel(
-                        size: GameTheme.hudPixelComfort,
-                        color: text,
-                      )
-                    : GameTheme.body(size: 16, color: text),
+                    ? GameTheme.hint(color: text)
+                    : GameTheme.readable(color: text),
               ),
             ),
           ),

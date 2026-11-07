@@ -44,4 +44,26 @@ void main() {
     );
     expect(find.text('MASTERY'), findsOneWidget);
   });
+
+  testWidgets('a forge row says how much gold is missing', (tester) async {
+    final state = GameLogic.enterDungeon(
+      GameLogic.createInitialState(now: DateTime(2026, 11, 7)),
+    ).copyWith(homeLayout: HomeLayout.home, gold: 0);
+    final director = GameDirector.preview(initialState: state);
+    addTearDown(director.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            height: 420,
+            width: 360,
+            child: ForgeOverlay(director: director, inlineUnderFight: true),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.textContaining('Need'), findsWidgets);
+    expect(find.text('Earn gold in the dungeon, then buy here.'), findsOneWidget);
+  });
 }

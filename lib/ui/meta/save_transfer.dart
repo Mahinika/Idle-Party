@@ -29,7 +29,7 @@ class SaveTransferSection extends StatelessWidget {
       children: [
         Text(
           'Save transfer (clipboard)',
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          style: GameTheme.section(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         Row(
@@ -54,7 +54,7 @@ class SaveTransferSection extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           'Export copies JSON to clipboard — paste somewhere safe as a backup.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
       ],
     );

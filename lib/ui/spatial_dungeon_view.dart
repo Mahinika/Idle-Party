@@ -837,10 +837,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                                           child: Center(
                                             child: Text(
                                               'Loading floor…',
-                                              style: GameTheme.body(
-                                                size: 15,
-                                                color: GameTheme.parchmentDim,
-                                              ),
+                                              style: GameTheme.readable(color: GameTheme.parchmentDim),
                                             ),
                                           ),
                                         )
@@ -914,7 +911,7 @@ class _SpatialDungeonViewState extends State<SpatialDungeonView>
                         ? 'WIPED — End Run returns to hub'
                         : 'WIPED — use the Retry / Hub panel',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(size: 15, color: GameTheme.torchHot),
+                    style: GameTheme.readable(color: GameTheme.torchHot),
                   ),
                 ),
               ),
@@ -951,8 +948,8 @@ class DungeonModeChip extends StatelessWidget {
   final String? tip;
   final bool interactive;
 
-  /// Fill the parent slot. The hit target stays 44dp; the label scales down
-  /// inside it and never shrinks the slot.
+  /// Fill the parent slot. The hit target stays 44dp; a long label ellipsizes
+  /// and never shrinks the slot or the type size.
   final bool expand;
 
   /// When set, long labels ellipsis instead of stretching the top HUD.
@@ -966,13 +963,8 @@ class DungeonModeChip extends StatelessWidget {
       label,
       maxLines: 1,
       softWrap: false,
-      overflow: expand ? TextOverflow.visible : TextOverflow.ellipsis,
-      style: GameTheme.pixel(
-        size: expand
-            ? GameTheme.hudPixelComfort
-            : (prominent ? 13 : GameTheme.hudPixel),
-        color: selected ? GameTheme.torchHot : GameTheme.parchmentDim,
-      ),
+      overflow: TextOverflow.ellipsis,
+      style: GameTheme.combat(comfort: true, color: selected ? GameTheme.torchHot : GameTheme.parchmentDim),
     );
     final child = Container(
       width: expand ? double.infinity : null,
@@ -998,14 +990,14 @@ class DungeonModeChip extends StatelessWidget {
           width: prominent && selected ? 2 : 1,
         ),
       ),
-      child: expand
-          ? FittedBox(fit: BoxFit.scaleDown, child: labelText)
-          : ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: maxLabelWidth ?? double.infinity,
-              ),
-              child: labelText,
-            ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: expand
+              ? double.infinity
+              : (maxLabelWidth ?? double.infinity),
+        ),
+        child: labelText,
+      ),
     );
     if (!interactive) {
       return Semantics(label: semanticsLabel, child: child);
@@ -1125,10 +1117,7 @@ class GodHandRing extends StatelessWidget {
                                     cooldown < 10
                                         ? cooldown.toStringAsFixed(1)
                                         : '${cooldown.round()}',
-                                    style: GameTheme.pixel(
-                                      size: dense ? GameTheme.hudPixel : 6,
-                                      color: color,
-                                    ),
+                                    style: GameTheme.combat(color: color),
                                   ),
                           ),
                         ),
@@ -1138,10 +1127,7 @@ class GodHandRing extends StatelessWidget {
                             top: -4,
                             child: Text(
                               '!',
-                              style: GameTheme.pixel(
-                                size: 8,
-                                color: GameTheme.accentWarn,
-                              ),
+                              style: GameTheme.combat(color: GameTheme.accentWarn),
                             ),
                           ),
                       ],

@@ -262,9 +262,7 @@ class _SheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scale = MediaQuery.textScalerOf(context).scale(1);
     final showWallet = gold != null && essence != null;
-    final stackTitle = showWallet && scale >= 0.95;
     final titleBlock = title.isEmpty
         ? null
         : Column(
@@ -275,7 +273,7 @@ class _SheetHeader extends StatelessWidget {
                 maxLines: 1,
                 softWrap: false,
                 overflow: TextOverflow.fade,
-                style: GameTheme.menuTitle(size: 18),
+                style: GameTheme.title(),
               ),
               if (subtitle.isNotEmpty) ...[
                 ShellLayout.gap(2),
@@ -298,34 +296,52 @@ class _SheetHeader extends StatelessWidget {
           )
         : null;
 
-    if (stackTitle) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ?titleBlock,
-          const SizedBox(height: 6),
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final titleWidth = _textWidth(title, GameTheme.title());
+        final walletWidth = showWallet ? _textWidth('888.8k', GameTheme.button(size: GameTheme.typeButton)) * (showEssence ? 2.4 : 1.2) : 0.0;
+        final closeWidth = showClose ? 96.0 : 0.0;
+        final stack = showWallet &&
+            titleWidth + walletWidth + closeWidth + 24 > constraints.maxWidth;
+        if (stack) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              wallet!,
-              const Spacer(),
-              if (showClose) close,
+              ?titleBlock,
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  wallet!,
+                  const Spacer(),
+                  if (showClose) close,
+                ],
+              ),
             ],
-          ),
-        ],
-      );
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (titleBlock != null) Expanded(child: titleBlock) else const Spacer(),
-        if (wallet != null) ...[
-          const SizedBox(width: 6),
-          wallet,
-          const SizedBox(width: 6),
-        ],
-        if (showClose) close,
-      ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (titleBlock != null) Expanded(child: titleBlock) else const Spacer(),
+            if (wallet != null) ...[
+              const SizedBox(width: 6),
+              wallet,
+              const SizedBox(width: 6),
+            ],
+            if (showClose) close,
+          ],
+        );
+      },
     );
+  }
+
+  static double _textWidth(String text, TextStyle style) {
+    if (text.isEmpty) return 0;
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    return painter.width;
   }
 }

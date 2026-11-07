@@ -292,10 +292,7 @@ class _MarketOverlayState extends State<MarketOverlay> {
                         ? 'No upgrades in stock.'
                         : 'No listings yet.',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 14,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.readable(color: GameTheme.parchmentDim),
                   ),
                   const SizedBox(height: 8),
                   GameButton(
@@ -397,31 +394,22 @@ class _MarketOverlayState extends State<MarketOverlay> {
                           if (showUpgradeBadge) ...[
                             Text(
                               'UPGRADE',
-                              style: GameTheme.pixel(
-                                size: 6,
-                                color: GameTheme.mossLit,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.mossLit),
                             ),
                             const SizedBox(width: 6),
                           ] else if (isGapFill) ...[
                             Text(
                               'GAP FILL',
-                              style: GameTheme.pixel(
-                                size: 6,
-                                color: GameTheme.torchHot,
-                              ),
+                              style: GameTheme.hint(color: GameTheme.torchHot),
                             ),
                             const SizedBox(width: 6),
                           ],
                           Expanded(
                             child: Text(
                               item.name,
-                              style: GameTheme.body(
-                                size: 13,
-                                color: canBuy
+                              style: GameTheme.section(color: canBuy
                                     ? GameTheme.parchment
-                                    : GameTheme.parchmentDim,
-                              ),
+                                    : GameTheme.parchmentDim),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -430,12 +418,9 @@ class _MarketOverlayState extends State<MarketOverlay> {
                       ),
                       Text(
                         subtitle,
-                        style: GameTheme.body(
-                          size: 11,
-                          color: showUpgradeBadge
+                        style: GameTheme.hint(color: showUpgradeBadge
                               ? GameTheme.mossLit
-                              : GameTheme.parchmentDim,
-                        ),
+                              : GameTheme.parchmentDim),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -447,12 +432,9 @@ class _MarketOverlayState extends State<MarketOverlay> {
                   canBuy
                       ? formatGold(listing.priceGold)
                       : 'Need ${formatGold(listing.priceGold)}',
-                  style: GameTheme.body(
-                    size: 12,
-                    color: canBuy && showUpgradeBadge
+                  style: GameTheme.hint(color: canBuy && showUpgradeBadge
                         ? GameTheme.torchHot
-                        : GameTheme.parchmentDim,
-                  ),
+                        : GameTheme.parchmentDim),
                 ),
               ],
             ),

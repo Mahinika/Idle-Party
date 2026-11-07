@@ -30,7 +30,7 @@ abstract final class SaveImportFlow {
           message ??
               'This replaces your current save with the clipboard contents. '
                   'This cannot be undone.',
-          style: GameTheme.body(size: 15, color: GameTheme.parchment),
+          style: GameTheme.readable(color: GameTheme.parchment),
         ),
         actions: [
           MenuChrome.dialogCancel(

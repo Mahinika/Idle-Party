@@ -153,10 +153,7 @@ class _WispTapTargetState extends State<_WispTapTarget>
                               child: Text(
                                 'Tap for gold',
                                 textAlign: TextAlign.center,
-                                style: GameTheme.pixel(
-                                  size: 8,
-                                  color: GameTheme.torchHot,
-                                ),
+                                style: GameTheme.hint(color: GameTheme.torchHot),
                               ),
                             ),
                           ),
@@ -290,7 +287,7 @@ Future<void> openWispChoiceSheet(
                                 Expanded(
                                   child: Text(
                                     'WISP GIFT',
-                                    style: GameTheme.menuTitle(size: 18),
+                                    style: GameTheme.title(),
                                   ),
                                 ),
                               ],
@@ -299,7 +296,7 @@ Future<void> openWispChoiceSheet(
                             Text(
                               'Watch a short ad for a bigger gold pile? '
                               'NO THANKS keeps the smaller gift.',
-                              style: GameTheme.body(size: 14),
+                              style: GameTheme.readable(),
                             ),
                             const SizedBox(height: 12),
                             GameButton(

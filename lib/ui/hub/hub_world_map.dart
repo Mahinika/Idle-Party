@@ -44,7 +44,7 @@ class SelectedZoneCaption extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: GameTheme.panel,
-        title: Text(dungeon.name, style: GameTheme.menuTitle(size: 16)),
+        title: Text(dungeon.name, style: GameTheme.title()),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +52,7 @@ class SelectedZoneCaption extends StatelessWidget {
             children: [
               Text(
                 'Boss: ${dungeon.bossName}',
-                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+                style: GameTheme.section(color: GameTheme.parchmentDim),
               ),
               if (keyLevel > 0) ...[
                 const SizedBox(height: 6),
@@ -60,14 +60,14 @@ class SelectedZoneCaption extends StatelessWidget {
                   keyAffixLine != null && keyAffixLine!.isNotEmpty
                       ? 'KEY +$keyLevel · $keyAffixLine'
                       : 'KEY +$keyLevel',
-                  style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                  style: GameTheme.hint(color: GameTheme.torchHot),
                 ),
               ],
               if (dungeon.blurb.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   dungeon.blurb,
-                  style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                  style: GameTheme.hint(color: GameTheme.parchmentDim),
                 ),
               ],
             ],
@@ -101,7 +101,7 @@ class SelectedZoneCaption extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+                  style: GameTheme.section(color: GameTheme.parchmentDim),
                 ),
               ),
             ),
@@ -115,7 +115,7 @@ class SelectedZoneCaption extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           ),
           if (keyLevel > 0)
             Text(
@@ -125,7 +125,7 @@ class SelectedZoneCaption extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+              style: GameTheme.hint(color: GameTheme.torchHot),
             )
           else if (!hideBlurb && dungeon.blurb.isNotEmpty)
             Text(
@@ -133,7 +133,7 @@ class SelectedZoneCaption extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
         ],
       );
@@ -147,7 +147,7 @@ class SelectedZoneCaption extends StatelessWidget {
       textAlign: TextAlign.center,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
-      style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+      style: GameTheme.section(color: GameTheme.parchmentDim),
     );
   }
 }
@@ -176,7 +176,7 @@ class SelectedHuntCaption extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+            style: GameTheme.section(color: GameTheme.torchHot),
           ),
           ShellLayout.gap(2),
           ShellLayout.hint(node.blurb, maxLines: 2),
@@ -247,7 +247,7 @@ class ZonePathMap extends StatelessWidget {
         if (mapW < 8 || mapH < 8) return const SizedBox.shrink();
         final discSize = (mapW * 0.082).clamp(30.0, 38.0);
         final hitSize = math.max(discSize + 6, GameTheme.minTouch + 4);
-        final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.35);
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
         final statusH = 16.0 * textScale;
 
         final dungeons = this.dungeons;
@@ -450,7 +450,7 @@ class MapZoneMarker extends StatelessWidget {
                   statusWord,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(size: 11, color: _statusColor),
+                  style: GameTheme.hint(color: _statusColor),
                 ),
               SizedBox(
                 width: hitSize,

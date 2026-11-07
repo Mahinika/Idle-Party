@@ -60,15 +60,12 @@ class HubOfflineBanner extends StatelessWidget {
                   text,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GameTheme.body(
-                    size: 12,
-                    color: GameTheme.mossLit,
-                  ),
+                  style: GameTheme.hint(color: GameTheme.mossLit),
                 ),
               ),
               Text(
                 'OPEN SUMMARY',
-                style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+                style: GameTheme.section(color: GameTheme.parchmentDim),
               ),
             ],
           ),
@@ -111,16 +108,13 @@ class HubPlayUpdateBanner extends StatelessWidget {
             Text(
               'UPDATE ON GOOGLE PLAY',
               textAlign: TextAlign.center,
-              style: GameTheme.body(
-                size: 12,
-                color: GameTheme.mossLit,
-              ),
+              style: GameTheme.hint(color: GameTheme.mossLit),
             ),
             const SizedBox(height: 4),
             Text(
               'A newer Idle Party is ready.',
               textAlign: TextAlign.center,
-              style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
             ),
             const SizedBox(height: 8),
             Row(
@@ -184,18 +178,18 @@ Future<void> showHubIncomeSheet(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     MenuChrome.sheetHandle(),
-                    Text('INCOME', style: GameTheme.menuTitle(size: 18)),
+                    Text('INCOME', style: GameTheme.title()),
                     const SizedBox(height: 8),
                     Text(
                       incomeLine,
                       textAlign: TextAlign.center,
-                      style: GameTheme.body(size: 14, color: GameTheme.mossLit),
+                      style: GameTheme.readable(color: GameTheme.mossLit),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       multiplierLine,
                       textAlign: TextAlign.center,
-                      style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                     if (displayTitle.isNotEmpty || collectionScore > 0) ...[
                       const SizedBox(height: 6),
@@ -204,10 +198,7 @@ Future<void> showHubIncomeSheet(
                             ? '$willRank · $collectionScore'
                             : '$willRank · $displayTitle',
                         textAlign: TextAlign.center,
-                        style: GameTheme.body(
-                          size: 12,
-                          color: GameTheme.parchmentDim,
-                        ),
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
                       ),
                     ],
                     const SizedBox(height: 12),
@@ -332,29 +323,17 @@ class HubHeader extends StatelessWidget {
   }
 
   /// Gold, essence, the AL pill, and Settings share one phone row.
-  /// A six-digit wallet plus the pill used to paint RIGHT OVERFLOWED over
-  /// Settings. Each side keeps a slot and scales down inside it.
-  Widget _scaled(Widget child, {required double maxWidth}) {
+  /// A narrow slot uses the dense wallet instead of shrinking the glyphs.
+  Widget _slot(Widget child, {required double maxWidth}) {
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: 64),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.centerLeft,
-        child: child,
-      ),
+      child: Align(alignment: Alignment.centerLeft, child: child),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final rateSuffix = !dimIncome ? hubGoldRate : null;
-    final wallet = WalletStrip(
-      gold: gold,
-      essence: essence,
-      showEssence: showEssence,
-      goldRateSuffix: rateSuffix,
-      onGoldRateTap: rateSuffix != null ? () => _openIncome(context) : null,
-    );
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -367,18 +346,24 @@ class HubHeader extends StatelessWidget {
         final walletMax = bounded
             ? (width - reserve).clamp(0.0, width)
             : width;
+        final wallet = WalletStrip(
+          gold: gold,
+          essence: essence,
+          dense: bounded && walletMax < 220,
+          showEssence: showEssence,
+          goldRateSuffix: rateSuffix,
+          onGoldRateTap: rateSuffix != null ? () => _openIncome(context) : null,
+        );
         return Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            if (bounded) _scaled(wallet, maxWidth: walletMax) else wallet,
+            if (bounded) _slot(wallet, maxWidth: walletMax) else wallet,
             if (!plainChrome) ...[
               const SizedBox(width: gap),
               Expanded(
                 child: SizedBox(
                   height: 44,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Semantics(
+                  child: Semantics(
                       label: _alPillSemantics(),
                       button: onOpenAscend != null,
                       excludeSemantics: true,
@@ -398,7 +383,6 @@ class HubHeader extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ),
                 ),
               ),
             ] else
@@ -430,21 +414,27 @@ class HubStatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
         GameIcon.asset(icon, size: 14),
         const SizedBox(width: 4),
         if (caption != null) ...[
-          Text(
-            caption!,
-            style: GameTheme.body(size: 10, color: GameTheme.parchmentDim),
+          Flexible(
+            child: Text(
+              caption!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.hint(color: GameTheme.parchmentDim),
+            ),
           ),
           const SizedBox(width: 3),
         ],
-        Text(
-          label,
-          maxLines: 1,
-          style: GameTheme.body(size: 14, color: GameTheme.parchment),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GameTheme.readable(color: GameTheme.parchment),
+          ),
         ),
       ],
     );

@@ -52,22 +52,30 @@ class CampViewport extends StatelessWidget {
                       Text(
                         cave,
                         textAlign: TextAlign.center,
-                        style: GameTheme.menuTitle(size: 16),
+                        style: GameTheme.title(),
                       ),
                       const SizedBox(height: 8),
                       Expanded(
-                        child: Row(
+                        child: SingleChildScrollView(
+                          child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             for (var i = 0; i < heroes.length; i++)
                               Expanded(
                                 child: Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    HeroDollSprite(
-                                      hero: heroes[i],
-                                      partyIndex: i,
-                                      size: heroes.length > 4 ? 44 : 56,
+                                    Container(
+                                      width: (heroes.length > 4 ? 44 : 56) + 12,
+                                      height: (heroes.length > 4 ? 44 : 56) + 12,
+                                      alignment: Alignment.center,
+                                      decoration: MenuChrome.dollWellDecoration(),
+                                      child: HeroDollSprite(
+                                        hero: heroes[i],
+                                        partyIndex: i,
+                                        size: heroes.length > 4 ? 44 : 56,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -75,22 +83,17 @@ class CampViewport extends StatelessWidget {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       textAlign: TextAlign.center,
-                                      style: GameTheme.body(
-                                        size: 11,
-                                        color: GameTheme.parchment,
-                                      ),
+                                      style: GameTheme.hint(color: GameTheme.parchment),
                                     ),
                                     Text(
                                       'Lv${heroes[i].level}',
-                                      style: GameTheme.body(
-                                        size: 10,
-                                        color: GameTheme.parchmentDim,
-                                      ),
+                                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                                     ),
                                   ],
                                 ),
                               ),
                           ],
+                          ),
                         ),
                       ),
                       WebClickScope(

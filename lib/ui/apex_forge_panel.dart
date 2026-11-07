@@ -246,7 +246,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           'Tap a hero, pick a slot, then CRAFT. Opening this sheet saves that goal '
           'so bosses fill the meter. Weapon R1 first. Keeps through Ascend. '
           'DPS roll Crit + Haste; healers Mp5 + Crit + Haste.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 8),
         MenuChrome.sectionLabelScoped('HERO'),
@@ -258,13 +258,13 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         MenuChrome.sectionLabelScoped('RECIPE'),
         Text(
           '$goalLabel${_pieceWhere(state, existingItem)}',
-          style: GameTheme.body(size: 14, color: GameTheme.torchHot),
+          style: GameTheme.readable(color: GameTheme.torchHot),
         ),
         if (existingItem != null && ownedRank < ApexCraft.maxRank) ...[
           const SizedBox(height: 2),
           Text(
             'Upgrade cost → R$pricingRank',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
         ],
         ..._rankPreview(state, existingItem, pricingRank),
@@ -284,7 +284,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           const SizedBox(height: 4),
           Text(
             'Craft weapon R1 first for this class/role.',
-            style: GameTheme.body(size: 12, color: GameTheme.bloodLit),
+            style: GameTheme.hint(color: GameTheme.bloodLit),
           ),
         ],
         if (shortages.isNotEmpty && targetDef != null) ...[
@@ -310,7 +310,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           const SizedBox(height: 4),
           Text(
             reason,
-            style: GameTheme.body(size: 12, color: GameTheme.bloodLit),
+            style: GameTheme.hint(color: GameTheme.bloodLit),
           ),
         ],
         const SizedBox(height: 8),
@@ -341,16 +341,13 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                   Text(
                     apexLine,
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+                    style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Worn gear that is not Apex counts as empty. Forge and blessings still apply.',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 12,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.hint(color: GameTheme.parchmentDim),
                   ),
                   const SizedBox(height: 6),
                   GameButton(
@@ -397,7 +394,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         const SizedBox(height: 4),
         Text(
           existing.statsLine,
-          style: GameTheme.body(size: 12, color: GameTheme.parchment),
+          style: GameTheme.hint(color: GameTheme.parchment),
         ),
       ];
     }
@@ -413,11 +410,11 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         const SizedBox(height: 4),
         Text(
           'Crafts at AL${state.ascensionLevel}',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         Text(
           next.statsLine,
-          style: GameTheme.body(size: 12, color: GameTheme.parchment),
+          style: GameTheme.hint(color: GameTheme.parchment),
         ),
       ];
     }
@@ -425,11 +422,11 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       const SizedBox(height: 4),
       Text(
         'Now · ${existing.statsLine}',
-        style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+        style: GameTheme.hint(color: GameTheme.parchmentDim),
       ),
       Text(
         'Next · ${_statDelta(existing, next)}',
-        style: GameTheme.body(size: 12, color: GameTheme.parchment),
+        style: GameTheme.hint(color: GameTheme.parchment),
       ),
     ];
   }
@@ -481,7 +478,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
     if (heroes.isEmpty) {
       return Text(
         'No active heroes for craft. Open Other classes below.',
-        style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+        style: GameTheme.section(color: GameTheme.parchmentDim),
       );
     }
     return SizedBox(
@@ -556,11 +553,11 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
             manualTarget
                 ? 'Farm locked: ${targetDef.name}'
                 : 'Farm: ${targetDef.name}',
-            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+            style: GameTheme.section(color: GameTheme.torchHot),
           ),
           Text(
             _farmSources(state, targetDef.id),
-            style: GameTheme.body(size: 11, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 4),
           ClipRRect(
@@ -578,7 +575,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
           Text(
             '$targetProgress / $targetRequired · '
             '${bossesLeft <= 0 ? 'READY on next boss' : '~$bossesLeft boss${bossesLeft == 1 ? '' : 'es'}'}',
-            style: GameTheme.body(size: 11, color: GameTheme.mossLit),
+            style: GameTheme.hint(color: GameTheme.mossLit),
           ),
           if (manualTarget) ...[
             const SizedBox(height: 4),
@@ -606,7 +603,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         if (state.apexVault.isEmpty)
           Text(
             'Empty — craft to fill. Auto-equip runs after craft when a hero matches.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           )
         else ...[
           GameButton(
@@ -653,7 +650,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         if (owned.isEmpty)
           Text(
             'No materials yet — clear bosses in PUSH.',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           )
         else
           for (final m in owned)
@@ -668,15 +665,12 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                   Expanded(
                     child: Text(
                       m.name,
-                      style: GameTheme.body(
-                        size: 13,
-                        color: GameTheme.parchment,
-                      ),
+                      style: GameTheme.section(color: GameTheme.parchment),
                     ),
                   ),
                   Text(
                     '×${state.craftMaterials[m.id] ?? 0}',
-                    style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+                    style: GameTheme.section(color: GameTheme.torchHot),
                   ),
                 ],
               ),
@@ -693,7 +687,7 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
       children: [
         Text(
           'Craft for a class that is not in the active party. Slots stay in the row above.',
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         Align(
@@ -773,20 +767,14 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
                   children: [
                     Text(
                       '$label  $have/$need',
-                      style: GameTheme.body(
-                        size: 13,
-                        color: have >= need
+                      style: GameTheme.section(color: have >= need
                             ? GameTheme.clear
-                            : GameTheme.bloodLit,
-                      ),
+                            : GameTheme.bloodLit),
                     ),
                     if (have < need)
                       Text(
                         _farmSources(state, matId),
-                        style: GameTheme.body(
-                          size: 11,
-                          color: GameTheme.parchmentDim,
-                        ),
+                        style: GameTheme.hint(color: GameTheme.parchmentDim),
                       ),
                   ],
                 ),
@@ -824,11 +812,11 @@ class _ApexHubPanelState extends State<ApexHubPanel> {
         children: [
           Text(
             '${item.name}  R${item.apexRank}',
-            style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+            style: GameTheme.section(color: GameTheme.torchHot),
           ),
           Text(
             status,
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           if (inVault) ...[
             const SizedBox(height: 4),

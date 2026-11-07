@@ -79,21 +79,29 @@ class _UpgradePanelState extends State<UpgradePanel> {
         : _mode;
     return Material(
       color: embedded ? Colors.transparent : GameTheme.panel,
-      child: Column(
-        children: [
-          if (!embedded)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
-              child: MenuChrome.segmented(
-                dense: true,
-                labels: const ['FORGE', 'CAMP', 'MARKET'],
-                icons: UiIcon.goldDockSegment,
-                selectedIndex: _mode.index,
-                onSelect: (i) => setState(() => _mode = _Panel.values[i]),
-              ),
-            ),
-          Expanded(child: _body(state, open, active, embedded)),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final headerCap = constraints.maxHeight.isFinite
+              ? constraints.maxHeight * 0.42
+              : null;
+          return Column(
+            children: [
+              if (!embedded)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
+                  child: MenuChrome.segmented(
+                    dense: true,
+                    labels: const ['FORGE', 'CAMP', 'MARKET'],
+                    icons: UiIcon.goldDockSegment,
+                    selectedIndex: _mode.index,
+                    onSelect: (i) => setState(() => _mode = _Panel.values[i]),
+                    maxHeight: headerCap == null ? null : headerCap - 10,
+                  ),
+                ),
+              Expanded(child: _body(state, open, active, embedded)),
+            ],
+          );
+        },
       ),
     );
   }
@@ -140,7 +148,7 @@ class _UpgradePanelState extends State<UpgradePanel> {
         for (final hero in state.heroes)
           Text(
             '${hero.name}  Lv${hero.level}',
-            style: GameTheme.body(size: 13, color: GameTheme.parchment),
+            style: GameTheme.section(color: GameTheme.parchment),
           ),
         ShellLayout.gap(8),
         ShellLayout.hint(

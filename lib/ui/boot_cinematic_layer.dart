@@ -115,6 +115,7 @@ class _BootCinematicLayerState extends State<BootCinematicLayer> {
             ),
           ),
         MenuChrome.playSafeArea(
+          top: true,
           bottom: true,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),

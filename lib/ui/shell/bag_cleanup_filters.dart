@@ -34,7 +34,7 @@ class BagCleanupFilters extends StatelessWidget {
         if (compact) ...[
           Text(
             'SELL JUNK uses these rules. $keepLine',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 10),
         ] else ...[
@@ -49,7 +49,7 @@ class BagCleanupFilters extends StatelessWidget {
                       'Auto-sell = gold · auto-scrap = essence. $keepLine'
                 : 'Near-full bag auto-rules (also BAG → FILTERS). '
                       'Auto-sell = gold. $keepLine',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 10),
         ],
@@ -60,12 +60,12 @@ class BagCleanupFilters extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           _sellRule(state),
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 6),
         Text(
           'Max iLvl to sell',
-          style: GameTheme.body(size: 13, color: GameTheme.torchHot),
+          style: GameTheme.section(color: GameTheme.torchHot),
         ),
         _IlvlFilterRow(
           value: state.autoSellMaxPower,
@@ -83,7 +83,7 @@ class BagCleanupFilters extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'SELL JUNK would sell ${GearCleanup.cleanSellPreviewCount(state)} stash items',
-            style: GameTheme.body(size: 12, color: GameTheme.mossLit),
+            style: GameTheme.hint(color: GameTheme.mossLit),
           ),
         ],
         if (showScrap) ...[
@@ -96,12 +96,12 @@ class BagCleanupFilters extends StatelessWidget {
           Text(
             'Leftovers broken for essence after sell pass — not the same as sell. '
             '${state.autoDisassembleMaxIlvl <= 0 ? 'Off = never auto-scraps.' : 'Scraps iLvl 1–${state.autoDisassembleMaxIlvl} at or below the rarity cap.'}',
-            style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+            style: GameTheme.hint(color: GameTheme.parchmentDim),
           ),
           const SizedBox(height: 6),
           Text(
             'Max iLvl to scrap',
-            style: GameTheme.body(size: 13, color: GameTheme.mossLit),
+            style: GameTheme.section(color: GameTheme.mossLit),
           ),
           _IlvlFilterRow(
             value: state.autoDisassembleMaxIlvl,
@@ -123,7 +123,7 @@ class BagCleanupFilters extends StatelessWidget {
             showScrap: showScrap,
             showMarket: showMarket,
           ),
-          style: GameTheme.body(size: 12, color: GameTheme.parchmentDim),
+          style: GameTheme.hint(color: GameTheme.parchmentDim),
         ),
       ],
     );
@@ -209,7 +209,7 @@ class _IlvlFilterRow extends StatelessWidget {
           child: Text(
             value <= 0 ? offLabel : 'i$value',
             textAlign: TextAlign.right,
-            style: GameTheme.body(size: 14, color: GameTheme.parchmentDim),
+            style: GameTheme.readable(color: GameTheme.parchmentDim),
           ),
         ),
       ],
@@ -237,7 +237,7 @@ class _RarityFilterRow extends StatelessWidget {
         children: [
           Text(
             'Max rarity',
-            style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+            style: GameTheme.section(color: GameTheme.parchmentDim),
           ),
           const Spacer(),
           MenuChrome.stepperButton(
@@ -250,7 +250,7 @@ class _RarityFilterRow extends StatelessWidget {
             child: Text(
               label,
               textAlign: TextAlign.center,
-              style: GameTheme.body(size: 12, color: GameTheme.torchHot),
+              style: GameTheme.hint(color: GameTheme.torchHot),
             ),
           ),
           MenuChrome.stepperButton(

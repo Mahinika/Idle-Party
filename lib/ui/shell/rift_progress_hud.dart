@@ -69,10 +69,7 @@ class RiftProgressHud extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GameTheme.pixel(
-                  size: GameTheme.hudPixel,
-                  color: GameTheme.torchHot,
-                ),
+                style: GameTheme.combat(color: GameTheme.torchHot),
               ),
             ),
             const SizedBox(width: 4),
@@ -96,12 +93,9 @@ class RiftProgressHud extends StatelessWidget {
                     Text(
                       pct,
                       maxLines: 1,
-                      style: GameTheme.pixel(
-                        size: GameTheme.hudPixel,
-                        color: guardianActive
+                      style: GameTheme.combat(color: guardianActive
                             ? GameTheme.torchHot
-                            : GameTheme.parchment,
-                      ),
+                            : GameTheme.parchment),
                     ),
                   ],
                 ),
@@ -119,12 +113,9 @@ class RiftProgressHud extends StatelessWidget {
             Text(
               clock,
               maxLines: 1,
-              style: GameTheme.pixel(
-                size: farm ? GameTheme.hudPixel : 12,
-                color: !farm && (pace == 'BEHIND' || overPar)
+              style: GameTheme.combat(color: !farm && (pace == 'BEHIND' || overPar)
                     ? GameTheme.bloodLit
-                    : (farm ? GameTheme.parchmentDim : GameTheme.parchment),
-              ),
+                    : (farm ? GameTheme.parchmentDim : GameTheme.parchment)),
             ),
           ],
         ),

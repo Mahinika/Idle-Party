@@ -11,6 +11,7 @@ import '../../../core/nav_copy.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../hub/hub_header.dart';
+import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../dungeon_party_hud.dart';
 import '../shell_common.dart';
@@ -62,10 +63,12 @@ class HomeTopBar extends StatelessWidget {
     final third = _third(context, state, route, essencePanel);
     final compactTop =
         state.homeLayout == HomeLayout.home && state.inDungeon;
+    // Stone fills the cutout. The words start below it.
+    final topInset = MenuChrome.systemTopInset(context);
     return Material(
       color: GameTheme.stoneDeep,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(8, 4, 8, compactTop ? 2 : 4),
+        padding: EdgeInsets.fromLTRB(8, 4 + topInset, 8, compactTop ? 2 : 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -78,7 +81,7 @@ class HomeTopBar extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     Keystone.formatTimer(state.keystoneTimerMs),
-                    style: GameTheme.pixel(size: 10, color: GameTheme.torchHot),
+                    style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
                 ],
                 if (compactTop) ...[
@@ -88,10 +91,7 @@ class HomeTopBar extends StatelessWidget {
                       chase,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                   ),
                 ],
@@ -127,7 +127,7 @@ class HomeTopBar extends StatelessWidget {
                   onTap: director.cycleCombatPace,
                   child: Text(
                     state.combatPace >= 2 ? '2×' : '1×',
-                    style: GameTheme.menuTitle(size: 14),
+                    style: GameTheme.readable(),
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -147,10 +147,7 @@ class HomeTopBar extends StatelessWidget {
                       chase,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GameTheme.body(
-                        size: 11,
-                        color: GameTheme.parchmentDim,
-                      ),
+                      style: GameTheme.hint(color: GameTheme.parchmentDim),
                     ),
                   ),
                   if (wide) DpsMeter(director: director, onOpenChanged: (_) {}),
@@ -229,7 +226,7 @@ class HomeTopBar extends StatelessWidget {
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GameTheme.body(size: 12, color: GameTheme.parchment),
+            style: GameTheme.hint(color: GameTheme.parchment),
           ),
         ),
       ],

@@ -58,7 +58,7 @@ class _CodexOverlayState extends State<CodexOverlay> {
           '${state.codexEnemies.length + state.codexItems.length} discovered '
           '(goal ${GameLogic.expectedCodexEntries} entries)',
           textAlign: TextAlign.center,
-          style: GameTheme.body(size: 13, color: GameTheme.parchmentDim),
+          style: GameTheme.section(color: GameTheme.parchmentDim),
         ),
         const SizedBox(height: 4),
         SizedBox(
@@ -99,10 +99,7 @@ class _CodexOverlayState extends State<CodexOverlay> {
                         ? 'No monsters discovered yet. Fight your way through a dungeon.'
                         : 'No items discovered yet. Clear floors for gear drops.',
                     textAlign: TextAlign.center,
-                    style: GameTheme.body(
-                      size: 15,
-                      color: GameTheme.parchmentDim,
-                    ),
+                    style: GameTheme.readable(color: GameTheme.parchmentDim),
                   ),
                 )
               : ListView.builder(
@@ -129,7 +126,7 @@ class _CodexOverlayState extends State<CodexOverlay> {
                             Expanded(
                               child: Text(
                                 name,
-                                style: GameTheme.body(size: 15),
+                                style: GameTheme.readable(),
                               ),
                             ),
                           ],

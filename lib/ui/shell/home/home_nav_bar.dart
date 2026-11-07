@@ -4,6 +4,7 @@ import '../../../core/ashen_crown.dart';
 import '../../../core/game_state.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
+import '../../menu_chrome.dart';
 import '../../game_icon.dart';
 import '../../game_theme.dart';
 import '../../web_click_bridge.dart';
@@ -27,10 +28,19 @@ class HomeNavBar extends StatelessWidget {
     final essence = tabs.contains(MenuRoute.essence);
     final map = tabs.contains(MenuRoute.map);
     final shop = tabs.contains(MenuRoute.shop);
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    final inset = MenuChrome.systemBottomInset(context);
+    final grown = GameTheme.navBarExtent(scale);
+    // Keep the labels above the gesture inset without stacking a full extra
+    // bar on a short phone. A tall bar already has room for the inset.
+    final labelH = grown - inset > 40 ? grown - inset : 40.0;
     return Material(
       color: GameTheme.stoneDeep,
-      child: SizedBox(
-        height: 64,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+        height: labelH,
         child: Row(
           children: [
             Expanded(child: _tab(MenuRoute.gear, 'HEROES', UiIcon.gear)),
@@ -57,6 +67,9 @@ class HomeNavBar extends StatelessWidget {
             ),
           ],
         ),
+          ),
+          SizedBox(height: inset),
+        ],
       ),
     );
   }
@@ -80,11 +93,13 @@ class HomeNavBar extends StatelessWidget {
         children: [
           GameIcon.asset(UiIcon.sword, size: 24),
           const SizedBox(height: 2),
-          Text(
-            'FIGHT',
-            style: GameTheme.pixel(
-              size: 9,
-              color: open ? GameTheme.parchment : GameTheme.torchHot,
+          Flexible(
+            child: Text(
+              'FIGHT',
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: GameTheme.readable(color: open ? GameTheme.parchment : GameTheme.torchHot),
             ),
           ),
         ],
@@ -112,10 +127,14 @@ class HomeNavBar extends StatelessWidget {
               children: [
                 GameIcon.asset(UiIcon.closeTab, size: 24),
                 const SizedBox(height: 2),
-                ExcludeSemantics(
-                  child: Text(
-                    'CLOSE',
-                    style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
+                Flexible(
+                  child: ExcludeSemantics(
+                    child: Text(
+                      'CLOSE',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GameTheme.readable(color: GameTheme.torchHot),
+                    ),
                   ),
                 ),
               ],
@@ -126,7 +145,7 @@ class HomeNavBar extends StatelessWidget {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    GameIcon.asset(icon, size: 20),
+                    GameIcon.asset(icon, size: GameTheme.iconNav),
                     if (alert)
                       const Positioned(
                         right: -3,
@@ -136,11 +155,19 @@ class HomeNavBar extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(label, style: GameTheme.pixel(size: 8, color: GameTheme.parchment)),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: GameTheme.readable(color: GameTheme.parchment),
+                  ),
+                ),
                 if (timer != null)
                   Text(
                     timer,
-                    style: GameTheme.pixel(size: 7, color: GameTheme.torchHot),
+                    style: GameTheme.hint(color: GameTheme.torchHot),
                   ),
               ],
             ),
@@ -192,8 +219,8 @@ class HomeNavBar extends StatelessWidget {
               ),
             ),
             child: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
                 child: child,
               ),
             ),

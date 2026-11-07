@@ -20,7 +20,8 @@ already named there:
 - `WipeAdvice.hubNavFor` returns `NavIntent.endgame` (`MenuRoute.map`).
 
 P2 (chase line, DPS meter, empty `showFeatureSheet`, empty `MenuSurface` map)
-stays as written.
+stays as written. `showFeatureSheet` is a historical note: the helper and
+`feature_sheet.dart` were later deleted, and nothing calls that name now.
 
 Priority is what a home-layout player cannot reach even though the method
 exists. Gates (first boss, Lv100) are listed last. They are working locks,
@@ -94,7 +95,8 @@ calls the same method.
     Leave the line as text so the top bar Robert liked stays one row.
 16. DPS meter is hidden in a home fight (`HomeTopBar` compact row and
     `Is2Shell`). Leave it off the fight picture.
-17. `showFeatureSheet` has no caller. Do not build a feature on it.
+17. Historical: `showFeatureSheet` had no caller, so no feature was built on it.
+    The helper and `feature_sheet.dart` were later deleted.
 18. `MenuSurface` MAP child is an empty box. Home uses `MapScreen`. Leave the
     empty branch so classic never shows a second map.
 
