@@ -225,7 +225,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('WELCOME BACK'), findsOneWidget);
     expect(
-      find.textContaining('Up next: Clear one cave today'),
+      find.textContaining('Up next: Sandy Caverns · CAMP'),
       findsOneWidget,
     );
     expect(

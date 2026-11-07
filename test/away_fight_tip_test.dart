@@ -69,6 +69,13 @@ void main() {
       AwayFightTip.hubCardOwns('Claim Daily Vault', 'Check-in 1/7'),
       isFalse,
     );
+    expect(
+      AwayFightTip.hubCardOwns(
+        'Sandy Caverns · CAMP',
+        'Spend the essence in CAMP. Your party keeps fighting while closed.',
+      ),
+      isTrue,
+    );
 
     final armed = AwayFightTip.arm(hub, now);
     expect(armed.metaDepth.awayPromiseUtc, '2026-10-07');
@@ -146,9 +153,10 @@ void main() {
         away: AwayFightTip.line,
         farm: 'Switch',
         firstBoss: true,
-        climb: 'Your party fights on its own. Boss on floor 2.',
+        climb:
+            'Your party keeps fighting if you close the app. Boss on floor 2.',
       ),
-      'Your party fights on its own. Boss on floor 2.',
+      'Your party keeps fighting if you close the app. Boss on floor 2.',
     );
     expect(
       AwayFightTip.caveCoach(

@@ -161,11 +161,12 @@ abstract final class GameGuides {
     body:
         'Come back each day and clear one cave.\n\n'
         '• Tap ENTER DUNGEON and beat a floor.\n'
-        '• The hub hunt says Clear one cave today until the vault fills.\n'
+        '• The hunt names that cave and where the prize is spent: CAMP, FORGE, RELICS, or SCROLLS.\n'
         '• Then CLAIM VAULT for essence + 1 Cinder.\n'
         '• That claim also pays Check-in. Days 1–6 are a large prize. '
         'Day 7 is a jackpot. A missed day does not reset the row.\n'
-        '• Daily Vault progress resets at UTC midnight. That is the daily job.',
+        '• After the claim, the hunt names tomorrow\'s cave. '
+        'The party keeps fighting while the app is closed.',
   );
 
   static const GuideTopic _dayTwoWeekly = GuideTopic(
@@ -406,7 +407,7 @@ abstract final class GameGuides {
           '• In a cave, they keep fighting while the app is closed.\n'
           '• On the hub, gold gathers while you are away.\n'
           '• Come back and you will see Welcome back.\n'
-          '• After the first boss, the hub names tomorrow\'s prize.',
+          '• After the first boss, the hub names tomorrow\'s cave and where to spend the prize: CAMP, FORGE, or SCROLLS.',
     ),
     GuideTopic(
       id: 'dailies',

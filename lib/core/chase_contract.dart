@@ -67,7 +67,12 @@ class ChaseContract {
       HubChaseKind.equipBag => 'Why: stronger gear in BAG.',
       HubChaseKind.marketUpgrade => 'Why: affordable MARKET upgrade.',
       HubChaseKind.ascend => 'Why: Ascend ready — Blessing stacks.',
-      HubChaseKind.dailyVaultProgress => 'Why: one clear fills vault.',
+      HubChaseKind.dailyVaultProgress =>
+        chase.title.startsWith('Tomorrow')
+            ? 'Why: reopen for that cave.'
+            : chase.title.contains('·')
+            ? 'Why: one clear, then spend the prize.'
+            : 'Why: one clear fills vault.',
       HubChaseKind.dailyRun => 'Why: free Daily Run open.',
       HubChaseKind.keystone => 'Why: KEY is the next climb.',
       HubChaseKind.gauntletMilestone => 'Why: Gauntlet is next.',

@@ -28,6 +28,7 @@ import 'game_state.dart';
 import 'gauntlet_pact.dart';
 import 'gauntlet_trophies.dart';
 import 'check_in.dart';
+import 'return_week.dart';
 import 'comeback_chest.dart';
 import 'keystone.dart';
 import 'logic_notices.dart';
@@ -1564,6 +1565,7 @@ class GameLogic {
   /// An empty vault needs one cave. After the claim, names tomorrow.
   static String checkInWelcomeLine(GameState state) {
     if (!checkInActive(state)) return '';
+    if (ReturnWeek.active(state)) return ReturnWeek.welcomeLine(state);
     final pay = checkInPayout(state);
     if (state.metaDepth.dailyVaultClaimed) return pay.tomorrowLine;
     if (canClaimDailyVault(state)) return pay.waitingLine;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/first_climb_coach.dart';
+import '../../../core/return_week.dart';
 import '../../../core/game_director.dart';
 import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
@@ -170,10 +171,14 @@ class _HomeShellState extends State<HomeShell> {
     // Keep this row mounted while the first climb is on screen. Removing it
     // in the same build that opens HEROES marks the top bar dirty.
     if (sheet && climb == null) return const SizedBox.shrink();
-    final tip = !state.inDungeon && climb == null
+    final back = climb == null && ReturnWeek.active(state)
+        ? ReturnWeek.coachLine(state)
+        : null;
+    final tip = !state.inDungeon && climb == null && back == null
         ? FirstSessionTips.active(state, inDungeon: false)
         : null;
     final text = climb ??
+        back ??
         (tip == null ? null : FirstSessionTips.displayLine(tip, state));
     final showClaim = state.inDungeon && GameLogic.canClaimDailyVault(state);
     if (text == null && !showClaim) return const SizedBox.shrink();
