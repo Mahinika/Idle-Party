@@ -1,9 +1,8 @@
 /// Town navigation policy for hub shortcuts that currently share one sheet.
 ///
-/// Live [HomeCatalog] still lists WATCH and WISP as their own rail/MENU
-/// entries; they all open `openPowerupsSheet`. Applying this filter to
-/// `HomeCatalog.entries` is **pending integration** (goldens + PR58
-/// `home_shell`). Town tests lock the intended map.
+/// [HomeCatalog.entries] still *defines* WATCH and WISP (tests lock the
+/// catalog). [HomeCatalog.of] drops them so rails and MENU show SCROLLS
+/// as the one powerups home. POUCH stays while the reinstall offer is due.
 abstract final class TownNavPolicy {
   /// Duplicate shortcuts that open the SCROLLS / powerups sheet.
   static const Set<String> duplicatePowerupIds = {

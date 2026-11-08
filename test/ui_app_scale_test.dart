@@ -143,13 +143,16 @@ void main() {
         await pumpApp(tester, game: kUiTextScaleMax, dungeon: dungeon);
         expect(tester.takeException(), isNull);
         expect(find.text('FORGE'), findsWidgets);
-        expect(find.text('CAMP'), findsWidgets);
         expect(find.text('MARKET'), findsWidgets);
         expect(find.text('HEROES'), findsOneWidget);
         expect(find.text('FIGHT'), findsOneWidget);
         if (dungeon) {
+          expect(find.text('CAMP'), findsWidgets);
           expect(find.text('FARM'), findsOneWidget);
           expect(find.text('PUSH'), findsOneWidget);
+        } else {
+          expect(find.text('INN'), findsWidgets);
+          expect(find.text('GUILD'), findsWidgets);
         }
         expect(
           tester.getSize(find.text('FORGE').first).height,
@@ -195,7 +198,8 @@ void main() {
     final label = tester.getRect(find.text('FIGHT'));
     expect(640 - label.bottom, greaterThanOrEqualTo(34));
     expect(find.text('HEROES'), findsOneWidget);
-    expect(find.text('CAMP'), findsWidgets);
+    expect(find.text('FORGE'), findsWidgets);
+    expect(find.text('INN'), findsWidgets);
   });
 
   testWidgets('raw scale 2 camp and fight docks lay out without the app cap', (
@@ -234,8 +238,12 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(scaleOf(tester, find.text('FIGHT')), closeTo(2, 0.001));
       expect(find.text('FORGE'), findsWidgets);
-      expect(find.text('CAMP'), findsWidgets);
       expect(find.text('MARKET'), findsWidgets);
+      if (dungeon) {
+        expect(find.text('CAMP'), findsWidgets);
+      } else {
+        expect(find.text('INN'), findsWidgets);
+      }
     }
 
     await shell(dungeon: false);

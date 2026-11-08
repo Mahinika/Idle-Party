@@ -8,7 +8,8 @@ When the party is **not in a dungeon**, they rest in a town between
 climbs. The town is a place: Guild Hall and Vault on the back row,
 FORGE / MARKET / INN on the square, a well, heroes in front, one ENTER.
 
-This slice lives in `TownPreview`. It is **not** the live home shell.
+Live home layout: `HomeShell` → `TownViewport`. `TownPreview` is the
+isolated harness. In the cave, FORGE / CAMP / MARKET stay under the fight.
 
 ---
 
@@ -23,24 +24,21 @@ This slice lives in `TownPreview`. It is **not** the live home shell.
 | **VAULT** | `director.claimDailyVault()` when ready | Season after first boss | Progress copy, or "claimed today" |
 
 FORGE is the Apex craft/upgrade station, **not** GOLD run-power tracks
-(those stay labeled FORGE under the fight after live wiring). MARKET is
-`MarketOverlay` listings. INN is party composition, not the GEAR tab.
+(those stay labeled FORGE under the fight). MARKET is `MarketOverlay`
+listings. INN is party composition, not the GEAR tab.
 
 No new currency, save field, energy, chore timer, or ad gate. Offline
 gold, auto combat, SHOP, and WISP-in-the-cave are untouched.
 
-### Not wired into the live home shell
-
-PR58 edits `home_shell.dart`. This branch **does not**. Camp stays
-the live out-of-dungeon view until merge:
-
 ```
-HomeShell  →  CampViewport     (live, unchanged)
-TownPreview → TownViewport     (this slice, tests + review)
+HomeShell  →  TownViewport     (live, out of the cave)
+TownPreview → TownViewport     (harness)
+Fight      → FightViewport + HomeGoldDock (FORGE tracks / CAMP / MARKET)
 ```
 
-**Pending integration (one-line swap):** in `home_shell.dart`, replace
-`CampViewport(...)` with `TownViewport(...)`. Do not copy camp logic.
+Out-of-dungeon `HomeGoldDock` is gone. Town buildings own FORGE and MARKET.
+CAMP stays on ESSENCE. GOLD opened from town is a real `GoldDock` overlay
+(listings). In the cave, GOLD still intercepts to the fight dock.
 
 ---
 
@@ -53,7 +51,9 @@ TownPreview → TownViewport     (this slice, tests + review)
 | **WISP** | In-cave lantern for gold | Duplicate of SCROLLS | Drop as a hub chip. Lantern stays in the dungeon. |
 | **POUCH** | One-time reinstall gold | Shown only when due | **Keep while due.** |
 
-`TownNavPolicy` is **not** applied to live `HomeCatalog` on this branch.
+`HomeCatalog.entries` still defines WATCH / WISP. `HomeCatalog.of`
+applies `TownNavPolicy`, so rails and MENU drop those chips. SCROLLS
+opens `openPowerupsSheet` (WATCH AD lives there). POUCH stays while due.
 
 ---
 
@@ -110,29 +110,41 @@ Flutter golden `test/goldens/town/town_preview_a56.png`.
 
 ## Layout (A56)
 
-Portrait 360×780. Guild + Vault on the back row, FORGE / MARKET / INN
-large on the cobble, well in the square, party in front, ENTER in the
-dock. Short height (`<720`, 360×640) shrinks facades. Labels
-`GameTheme.hint`; hit targets ≥44px. Text scale 1.45 and 2.0 still
-show ENTER.
+Portrait 360×780. Facades scale from the square's own height (not the
+full screen). Cobble covers ~72% of the square so Guild, Vault, well,
+and the front row share one plaza instead of a dirt courtyard. Guild is
+the tall back building; Vault sits inward on the cobble; well in the
+court; FORGE / MARKET / INN in front; party on the stone; SCROLLS rail
+and ENTER in the dock. Labels `GameTheme.hint`; hit targets ≥44px. Text
+scale 1.45 and 2.0 still show ENTER. 360×640 uses the compact pack.
 
 ---
 
-## Integration seam
+## Sibling PR overlap (do not import those branches)
 
-| File | This PR | Merge later |
-|------|---------|-------------|
-| `lib/ui/shell/home/town_viewport.dart` | new | keep |
-| `lib/core/town_nav.dart` / `town_access.dart` | new | apply nav filter to catalog |
-| `lib/models/town_building.dart` | new | keep |
-| `lib/assets/custom_assets.dart` | register `town*` | keep |
-| `pubspec.yaml` | `assets/custom/town/` | keep |
-| `lib/ui/shell/home/home_shell.dart` | **untouched** | swap Camp → Town |
-| `lib/ui/shell/home/home_catalog.dart` | **untouched** | filter with `TownNavPolicy` |
-| `lib/core/game_logic.dart` | **untouched** | none |
-| Shared goldens | **untouched** | retake after the swap |
-| PR57 combat / camera / welcome-back | **untouched** | none |
-| Save JSON | **untouched** | none |
+Heads read this turn. This PR does not cherry-pick, merge, or rewrite
+them. Compatibility can be proved in a disposable worktree.
+
+| PR | Head | Overlap | Resolution |
+|----|------|---------|------------|
+| **57 camera** | `ed5b9024` | **None on `home_shell.dart`.** Camera / combat / `offline_welcome` / `home_prompts` / `play_shell` + fight and Welcome Back goldens. | Leave camera files, `fight_a56`, Welcome Back, and `home_shell_full_a56` alone. `home_shell_split_a56` on this PR is a justified rail-chip update (WATCH/WISP gone via `HomeCatalog.of`, ~1.28%), not a camera retake. |
+| **58 return-week** | `fa0fa46e` | **`home_shell.dart` `_climbRow` only** (plus `return_week.dart`, `game_logic` check-in line, hub goldens). | This PR **does not edit `_climbRow`**. Their patch is: import `return_week.dart`; `back = climb == null && ReturnWeek.active(state) ? ReturnWeek.coachLine(state) : null`; tip only when `back == null`; `text = climb ?? back ?? tip`. Preserve both: ReturnWeek line when active, else first-session tip, else climb coach. Do not drop their hub goldens. Pending PR58 does not block this town swap. |
+| **59 workflow** | `752d1c9` | Workflows only. | No overlap. This PR does not touch workflows / APK / tags. |
+
+Exact `_climbRow` region this PR leaves untouched so PR58 still applies:
+
+```
+final climb = FirstClimbCoach.line(state, inDungeon: state.inDungeon);
+if (sheet && climb == null) return const SizedBox.shrink();
+final tip = !state.inDungeon && climb == null
+    ? FirstSessionTips.active(state, inDungeon: false)
+    : null;
+final text = climb ??
+    (tip == null ? null : FirstSessionTips.displayLine(tip, state));
+```
+
+This PR's `home_shell.dart` edits: `CampViewport` → `TownViewport`; GOLD
+intercept only while `inDungeon`; drop out-of-dungeon `HomeGoldDock`.
 
 ---
 
@@ -140,4 +152,5 @@ show ENTER.
 
 - `test/town_viewport_test.dart` — catalog, unlocks, locked/unlocked taps, dismiss, repeat, text scale, short 360×640
 - `test/town_nav_test.dart` — SCROLLS home, WATCH/WISP drop, POUCH keep
-- `test/town_preview_golden_test.dart` — town-only A56 golden
+- `test/home_shell_town_test.dart` — live HomeShell routes, hub↔dungeon, Welcome Back, ads chips, vault credit, 1.45 / 2.0 / 360×640
+- `test/town_preview_golden_test.dart` — town preview + HomeShell town goldens under `goldens/town/` (≤0.02% doll AA comparator so parallel doll loads do not flake 4px)

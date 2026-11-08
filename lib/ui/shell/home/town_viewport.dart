@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../assets/custom_assets.dart';
 import '../../../core/chase_dispatcher.dart';
 import '../../../core/game_director.dart';
+import '../../../core/game_logic.dart';
 import '../../../core/game_state.dart';
 import '../../../core/hub_chase.dart';
 import '../../../core/menu_alerts.dart';
@@ -12,17 +13,17 @@ import '../../../models/dungeon_def.dart';
 import '../../../models/hero.dart';
 import '../../../models/town_building.dart';
 import '../../chase_bind.dart';
+import '../../confirm_dialogs.dart';
 import '../../game_theme.dart';
 import '../../hero_doll_sprite.dart';
 import '../../kenney_button.dart';
 import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
+import 'fight_seam_rails.dart';
 
-/// Out-of-dungeon town: party on the square, distinct buildings, one ENTER.
-///
-/// Not wired into [HomeShell] on this branch (PR58 owns that file). Pump
-/// [TownPreview] or swap `CampViewport` → this widget on merge.
+/// Out-of-dungeon town on [HomeShell]: party on the square, distinct
+/// buildings, one ENTER. [TownPreview] is the isolated harness.
 class TownViewport extends StatefulWidget {
   const TownViewport({
     super.key,
@@ -70,6 +71,7 @@ class _TownViewportState extends State<TownViewport> {
         }
         _clearLocked();
         router.open(MenuRoute.more, more: MoreSection.craft);
+        router.pushSub();
       case TownBuildingId.market:
         if (!TownAccess.marketOpen(state)) {
           _showLocked(building.label, TownAccess.lockedCopy(building.id, state));
@@ -84,6 +86,7 @@ class _TownViewportState extends State<TownViewport> {
         }
         _clearLocked();
         router.open(MenuRoute.gear, gear: GearPanel.roster);
+        router.pushSub();
       case TownBuildingId.guild:
         if (!TownAccess.guildOpen(state)) {
           _showLocked(building.label, TownAccess.lockedCopy(building.id, state));
@@ -125,7 +128,6 @@ class _TownViewportState extends State<TownViewport> {
     final plan = ChaseDispatcher.plan(chase, state: state);
     final label = plan.label ?? 'ENTER';
     final cave = DungeonCatalog.byId(state.dungeonId).name;
-    final short = GameTheme.isShortHeight(context);
     final al = state.ascensionLevel;
     final tier = TownTier.paintedIndex(al);
 
@@ -150,7 +152,6 @@ class _TownViewportState extends State<TownViewport> {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     return _TownSquare(
-                      short: short,
                       size: Size(constraints.maxWidth, constraints.maxHeight),
                       state: state,
                       tier: tier,
@@ -170,6 +171,7 @@ class _TownViewportState extends State<TownViewport> {
               ],
             ),
           ),
+          FightSeamRails(director: director, router: router),
           DecoratedBox(
             decoration: MenuChrome.panel(opaque: true),
             child: Padding(
@@ -219,6 +221,18 @@ class _TownViewportState extends State<TownViewport> {
                       ),
                     ),
                   ),
+                  if (GameLogic.canAscend(state) &&
+                      plan.op != ChaseOp.confirmAscend &&
+                      plan.op != ChaseOp.enter &&
+                      plan.op != ChaseOp.enterKey) ...[
+                    const SizedBox(height: 6),
+                    GameButton(
+                      label: 'ASCEND',
+                      style: GameButtonStyle.brown,
+                      dense: true,
+                      onPressed: () => confirmAscend(context, director),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -231,7 +245,6 @@ class _TownViewportState extends State<TownViewport> {
 
 class _TownSquare extends StatelessWidget {
   const _TownSquare({
-    required this.short,
     required this.size,
     required this.state,
     required this.tier,
@@ -239,7 +252,6 @@ class _TownSquare extends StatelessWidget {
     required this.badgeOf,
   });
 
-  final bool short;
   final Size size;
   final GameState state;
   final int tier;
@@ -250,17 +262,20 @@ class _TownSquare extends StatelessWidget {
   Widget build(BuildContext context) {
     final h = size.height;
     final w = size.width;
+    final compact = h < 420;
     final guild = TownBuilding.byId(TownBuildingId.guild);
     final vault = TownBuilding.byId(TownBuildingId.vault);
-    final partyH = short ? 48.0 : 60.0;
-    final cobbleH = short ? 40.0 : 52.0;
-    final frontW = short ? 100.0 : 118.0;
-    final frontH = short ? 138.0 : 168.0;
-    final guildW = short ? 124.0 : 152.0;
-    final guildH = short ? 164.0 : 204.0;
-    final vaultW = short ? 72.0 : 88.0;
-    final vaultH = short ? 92.0 : 112.0;
-    final well = short ? 40.0 : 52.0;
+    final partyH = compact ? 44.0 : 56.0;
+    final frontW = (w / 3.15).clamp(compact ? 92.0 : 104.0, 124.0);
+    final frontH = (h * 0.54).clamp(120.0, 250.0);
+    final guildW = (w * 0.46).clamp(124.0, 176.0);
+    final guildH = (h * 0.55).clamp(140.0, 268.0);
+    final vaultW = (w * 0.26).clamp(68.0, 100.0);
+    final vaultH = (h * 0.34).clamp(84.0, 132.0);
+    final well = compact ? 42.0 : 56.0;
+    // Plaza stone up to the guild door so the square is a court, not a dirt gap.
+    final cobbleH = (h * 0.72).clamp(partyH + frontH * 0.55, h * 0.80);
+    final backTop = compact ? 6.0 : h * 0.05;
     final vaultPath = TownAccess.vaultClaimedToday(state)
         ? CustomAssets.townVaultOpen
         : CustomAssets.townVaultShut;
@@ -289,8 +304,8 @@ class _TownSquare extends StatelessWidget {
             child: const IgnorePointer(child: _TownArcade()),
           ),
         Positioned(
-          left: w * 0.08,
-          top: h * (short ? 0.04 : 0.06),
+          left: w * 0.04,
+          top: backTop,
           width: guildW,
           height: guildH,
           child: _TownBuildingButton(
@@ -304,7 +319,7 @@ class _TownSquare extends StatelessWidget {
         ),
         Positioned(
           right: w * 0.08,
-          top: h * (short ? 0.12 : 0.16),
+          top: backTop + guildH * 0.08,
           width: vaultW,
           height: vaultH,
           child: _TownBuildingButton(
@@ -318,7 +333,7 @@ class _TownSquare extends StatelessWidget {
         ),
         Positioned(
           left: (w - well) / 2,
-          top: h * (short ? 0.28 : 0.32),
+          top: backTop + guildH * 0.28,
           width: well,
           height: well + 8,
           child: IgnorePointer(
@@ -332,7 +347,7 @@ class _TownSquare extends StatelessWidget {
         for (var i = 0; i < TownBuilding.frontRow.length; i++)
           Positioned(
             left: _frontLeft(w, frontW, i),
-            bottom: partyH + (short ? 2 : 6),
+            bottom: partyH + 2,
             width: frontW,
             height: frontH,
             child: _TownBuildingButton(
@@ -347,9 +362,9 @@ class _TownSquare extends StatelessWidget {
         Positioned(
           left: GameTheme.edgeGap,
           right: GameTheme.edgeGap,
-          bottom: short ? 2 : 4,
+          bottom: compact ? 2 : 4,
           height: partyH,
-          child: _PartyRow(heroes: state.heroes, short: short),
+          child: _PartyRow(heroes: state.heroes, compact: compact),
         ),
       ],
     );
@@ -391,14 +406,14 @@ class _PennantPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final line = Paint()
-      ..color = const Color(0xFF3A2A18)
+      ..color = GameTheme.equipChipNeutral
       ..strokeWidth = 2;
     canvas.drawLine(Offset(0, 6), Offset(size.width, 6), line);
     const colors = [
-      Color(0xFFB43C2C),
-      Color(0xFFC9A24A),
-      Color(0xFF2F4A3C),
-      Color(0xFF7A342C),
+      GameTheme.blood,
+      GameTheme.borderLit,
+      GameTheme.moss,
+      GameTheme.navGear,
     ];
     final n = 7;
     for (var i = 0; i < n; i++) {
@@ -439,14 +454,14 @@ class _TownArcade extends StatelessWidget {
 }
 
 class _PartyRow extends StatelessWidget {
-  const _PartyRow({required this.heroes, required this.short});
+  const _PartyRow({required this.heroes, required this.compact});
 
   final List<PartyHero> heroes;
-  final bool short;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final size = short
+    final size = compact
         ? 40.0
         : (heroes.length > 4 ? 44.0 : 52.0);
     return Semantics(

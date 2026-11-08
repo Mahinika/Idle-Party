@@ -15,7 +15,7 @@ import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import 'fight_seam_rails.dart';
 
-/// Out of the cave. The party rests here after a wipe or an Ascend.
+/// Legacy out-of-cave rest scene. Live home layout uses [TownViewport].
 class CampViewport extends StatelessWidget {
   const CampViewport({
     super.key,

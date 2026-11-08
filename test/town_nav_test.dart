@@ -4,10 +4,20 @@ import 'package:idle_party/ui/shell/home/home_catalog.dart';
 
 void main() {
   group('TownNavPolicy', () {
-    test('live HomeCatalog still lists WATCH and WISP (pending integration)', () {
+    test('HomeCatalog still defines WATCH and WISP; of() drops them', () {
       final ids = HomeCatalog.entries.map((e) => e.id).toSet();
       expect(ids, containsAll(['watch', 'wisp', 'menu_watch', 'menu_wisp']));
       expect(ids, containsAll(['scrolls', 'menu_scrolls', 'starter_pouch']));
+      final shown = {
+        ...HomeCatalog.of(HomePlace.leftRail),
+        ...HomeCatalog.of(HomePlace.rightRail),
+        ...HomeCatalog.of(HomePlace.menuGrid),
+      }.map((e) => e.id).toSet();
+      expect(shown.contains('watch'), isFalse);
+      expect(shown.contains('wisp'), isFalse);
+      expect(shown.contains('menu_watch'), isFalse);
+      expect(shown.contains('menu_wisp'), isFalse);
+      expect(shown, containsAll(['scrolls', 'menu_scrolls', 'starter_pouch']));
     });
 
     test('town filter drops duplicate powerup chips and keeps SCROLLS + POUCH', () {
