@@ -6,6 +6,7 @@ import 'game_logic.dart';
 import 'game_state.dart';
 import 'gold_income.dart';
 import 'offline_progress.dart';
+import 'return_week.dart';
 
 /// One scheduled away ping (id is stable so each kind overwrites itself).
 class LocalPing {
@@ -116,10 +117,17 @@ abstract final class LocalReminders {
     if (!GameLogic.showDailyChase(state)) return caveBodyNew;
     final pay = GameLogic.checkInPayout(state);
     if (state.metaDepth.dailyVaultClaimed) {
+      if (ReturnWeek.active(state)) {
+        return 'Tomorrow: ${ReturnWeek.caveName(state)}. '
+            '${pay.name}, ${pay.hookPrize}.';
+      }
       return 'Tomorrow: ${pay.name}, ${pay.hookPrize}.';
     }
     if (GameLogic.canClaimDailyVault(state)) {
       return 'Claim ${pay.hookPrize} before the day ends.';
+    }
+    if (ReturnWeek.active(state)) {
+      return 'One cave, ${ReturnWeek.caveName(state)}, fills today\'s vault.';
     }
     return 'One cave fills today\'s vault.';
   }
@@ -209,12 +217,7 @@ abstract final class LocalReminders {
           ? morningChaseBody(state)
           : appointmentBody(state);
       candidates.add((
-        ping: LocalPing(
-          id: slot.$2,
-          fireAt: at,
-          title: title,
-          body: body,
-        ),
+        ping: LocalPing(id: slot.$2, fireAt: at, title: title, body: body),
         rank: 2,
       ));
     }
@@ -346,10 +349,8 @@ abstract final class LocalReminders {
     return slot.add(const Duration(days: 1));
   }
 
-  static int _chestGold(GameState state) => GoldIncome.hubGoldForSeconds(
-    state,
-    GoldIncome.hubChestCapSecFor(state),
-  );
+  static int _chestGold(GameState state) =>
+      GoldIncome.hubGoldForSeconds(state, GoldIncome.hubChestCapSecFor(state));
 
   static DateTime? _petFireAt(GameState state, DateTime now) {
     final endsMs = state.metaDepth.petErrandEndsMs;

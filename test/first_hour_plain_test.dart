@@ -58,7 +58,7 @@ void main() {
     expect(chase.kind, isNot(HubChaseKind.keystone));
     expect(GameLogic.showKeystoneJargon(state), isFalse);
     expect(chase.detail.toLowerCase(), contains('cave'));
-    expect(chase.detail.toLowerCase(), contains('fights'));
+    expect(chase.detail.toLowerCase(), contains('keeps fighting'));
     expect(chase.detail, isNot(contains('Combat Rogue')));
     expect(chase.detail, isNot(contains('AL1')));
     expect(chase.detail, isNot(contains('Arms')));
@@ -191,7 +191,7 @@ void main() {
         GameLogic.createInitialState(now: now),
         now: now,
       ).detail,
-      contains('Your party fights on its own'),
+      contains('keeps fighting if you close the app'),
     );
 
     var state = GameLogic.enterDungeon(
@@ -437,7 +437,9 @@ void main() {
     expect(GameLogic.showDailyRunOnHub(state), isFalse);
     final chase = HubChase.forState(state, now: now);
     expect(chase.kind, HubChaseKind.dailyVaultProgress);
-    expect(chase.title, 'Clear one cave today');
+    expect(chase.title, 'Sandy Caverns · CAMP');
+    expect(chase.detail.toLowerCase(), contains('keeps fighting'));
+    expect(chase.detail, contains('CAMP'));
     expect(chase.title.toUpperCase(), isNot(contains('DAILY RUN')));
     final upNext = ChaseContract.fromState(state, now: now).upNextLine;
     expect(upNext, 'Up next: ${chase.title}');

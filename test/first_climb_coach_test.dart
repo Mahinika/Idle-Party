@@ -40,7 +40,10 @@ void main() {
       expect(director.state.dungeonId, 'sandy');
       expect(director.state.currentRoom.floorNumber, 1);
       final fight = FirstClimbCoach.line(director.state, inDungeon: true);
-      expect(fight, 'Your party fights on its own. Boss on floor 2.');
+      expect(
+        fight,
+        'Your party keeps fighting if you close the app. Boss on floor 2.',
+      );
       expect(
         FirstClimbCoach.wipeLine(director.state),
         'The boss is still on floor 2.',
@@ -48,7 +51,7 @@ void main() {
 
       final chase = HubChase.forState(director.state, now: now);
       expect(chase.title, contains('Grow the party'));
-      expect(chase.detail, contains('fights on its own'));
+      expect(chase.detail, contains('keeps fighting if you close the app'));
       expect(chase.detail, contains('floor 2'));
       director.dispose();
     },
@@ -109,7 +112,7 @@ void main() {
       expect(GameLogic.checkInActive(director.state), isFalse);
       expect(
         FirstClimbCoach.line(director.state, inDungeon: true),
-        'Floor 1 paid out. Boss on floor 2.',
+        'Floor 1 paid out. They keep fighting if you close the app. Boss on floor 2.',
       );
       expect(
         FirstClimbCoach.wipeLine(director.state),
@@ -144,7 +147,7 @@ void main() {
     expect(bossFloor.currentRoom.floorNumber, 2);
     expect(
       FirstClimbCoach.line(bossFloor, inDungeon: true),
-      'This is the boss. Your party fights on its own.',
+      'This is the boss. They keep fighting if you close the app.',
     );
   });
 
@@ -165,7 +168,9 @@ void main() {
     await tester.pumpWidget(_home(director, router));
     await tester.pump();
     expect(
-      find.text('Your party fights on its own. Boss on floor 2.'),
+      find.text(
+        'Your party keeps fighting if you close the app. Boss on floor 2.',
+      ),
       findsOneWidget,
     );
     expect(find.text('CLAIM'), findsNothing);
@@ -203,7 +208,12 @@ void main() {
     expect(director.state.metaDepth.dailyVaultClaimed, isTrue);
     expect(director.state.essence, greaterThan(before));
     expect(director.state.inDungeon, isTrue);
-    expect(find.text('Floor 1 paid out. Boss on floor 2.'), findsOneWidget);
+    expect(
+      find.text(
+        'Floor 1 paid out. They keep fighting if you close the app. Boss on floor 2.',
+      ),
+      findsOneWidget,
+    );
     expect(find.text('CLAIM'), findsNothing);
     expect(tester.takeException(), isNull);
 

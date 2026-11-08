@@ -2,6 +2,7 @@ import 'funnel_analytics.dart';
 import 'game_logic.dart';
 import 'game_state.dart';
 import 'meta_systems.dart';
+import 'return_week.dart';
 
 /// The appointment to open again tomorrow.
 ///
@@ -59,8 +60,14 @@ abstract final class AwayFightTip {
 
   /// The hub card already says tomorrow. A second line under it repeats that.
   static bool hubCardOwns(String title, String detail) {
-    if (!title.startsWith('Tomorrow')) return false;
-    return detail.toLowerCase().contains('tomorrow');
+    final lower = detail.toLowerCase();
+    if (title.startsWith('Tomorrow') && lower.contains('tomorrow')) return true;
+    // The return-week card already names the cave, the shelf, and the away.
+    return lower.contains('keeps fighting') &&
+        (lower.contains('camp') ||
+            lower.contains('forge') ||
+            lower.contains('scrolls') ||
+            lower.contains('relics'));
   }
 
   /// Prize first, so a one-line hub clip still names what waits.
@@ -70,10 +77,24 @@ abstract final class AwayFightTip {
   /// today or it is gone. Tomorrow is named only after the claim.
   static String lineFor(GameState state, {bool onHub = false}) {
     if (GameLogic.canClaimDailyVault(state)) {
+      if (ReturnWeek.active(state)) {
+        final pay = GameLogic.checkInPayout(state);
+        return 'Tap CLAIM before the day ends. ${ReturnWeek.spendSentence(pay)} '
+            'Your party keeps fighting.';
+      }
       return 'Tap CLAIM before the day ends. Your party keeps fighting.';
     }
     if (!GameLogic.checkInActive(state)) return onHub ? hubLine : line;
     final pay = GameLogic.checkInPayout(state);
+    if (ReturnWeek.active(state)) {
+      final cave = ReturnWeek.caveName(state);
+      if (state.metaDepth.dailyVaultClaimed) {
+        return 'Tomorrow: $cave pays ${pay.hookPrize}. '
+            '${ReturnWeek.spendSentence(pay)} Your party keeps fighting.';
+      }
+      return 'One cave, $cave, fills the vault. '
+          '${ReturnWeek.spendSentence(pay)} Your party keeps fighting.';
+    }
     if (state.metaDepth.dailyVaultClaimed) {
       return 'Tomorrow pays ${pay.hookPrize}. Your party keeps fighting.';
     }

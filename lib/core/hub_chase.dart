@@ -17,6 +17,7 @@ import 'market_listings_service.dart';
 import 'menu_alerts.dart';
 import 'meta_systems.dart';
 import 'mission_board.dart';
+import 'return_week.dart';
 import 'rift.dart';
 import 'greater_rift.dart';
 import 'ashen_crown.dart';
@@ -811,11 +812,11 @@ class HubChase {
           : 'Push ${dungeon.name}',
       detail: firstHourAfterFloor
           ? (nextFloor >= bossFloor
-                ? 'Floor $floorsDone paid out. The boss is next, on floor $bossFloor.'
-                : 'Floor $floorsDone paid out. Enter again and push floor $nextFloor — '
+                ? 'Floor $floorsDone paid out. They keep fighting if you close the app. The boss is next, on floor $bossFloor.'
+                : 'Floor $floorsDone paid out. They keep fighting if you close the app. Enter again and push floor $nextFloor — '
                       'the boss is on floor $bossFloor.')
           : firstHour
-          ? 'Enter the cave. Your party fights on its own. The boss is on floor ${GameLogic.firstBossFloor}.'
+          ? 'Enter the cave. Your party keeps fighting if you close the app. The boss is on floor ${GameLogic.firstBossFloor}.'
           : bossesLeft > 0
           ? (almost
                 ? '1 boss left · then Ascend. $teaser'
@@ -841,11 +842,20 @@ class HubChase {
     if (!state.metaDepth.dailyVaultClaimed) return null;
     if (!GameLogic.checkInActive(state)) return null;
     if (state.heroes.isEmpty) return null;
-    final pay = GameLogic.checkInPayout(state);
+    if (!ReturnWeek.active(state)) {
+      final pay = GameLogic.checkInPayout(state);
+      return HubChase(
+        kind: HubChaseKind.dailyVaultProgress,
+        title: 'Tomorrow: one cave',
+        detail: 'Tomorrow pays ${pay.hookPrize}. One cave fills the vault.',
+        progressLabel: 'Tomorrow',
+        zoneId: GameLogic.recommendedDungeonId(state),
+      );
+    }
     return HubChase(
       kind: HubChaseKind.dailyVaultProgress,
-      title: 'Tomorrow: one cave',
-      detail: 'Tomorrow pays ${pay.hookPrize}. One cave fills the vault.',
+      title: ReturnWeek.tomorrowTitle(state),
+      detail: ReturnWeek.tomorrowDetail(state),
       progressLabel: 'Tomorrow',
       zoneId: GameLogic.recommendedDungeonId(state),
     );
@@ -853,6 +863,15 @@ class HubChase {
 
   /// One player-facing daily habit: clear a cave, then claim on the hub.
   static HubChase _dailyVaultStartChase(GameState state) {
+    if (ReturnWeek.active(state)) {
+      return HubChase(
+        kind: HubChaseKind.dailyVaultProgress,
+        title: ReturnWeek.todayTitle(state),
+        detail: ReturnWeek.todayDetail(state),
+        progressLabel: '0/${GameLogic.dailyVaultClearTarget}',
+        zoneId: GameLogic.recommendedDungeonId(state),
+      );
+    }
     final keyTalk = GameLogic.showKeystoneJargon(state);
     final vaultLine = keyTalk
         ? 'One PUSH floor for Daily Vault essence '
@@ -946,7 +965,8 @@ class HubChase {
             : (best <= 0
                   ? 'First Gauntlet boss'
                   : 'Gauntlet boss on floor $target'),
-        detail: (onMilestone
+        detail:
+            (onMilestone
                 ? 'Best F$best — $need floors to milestone F$floor (+${pay}e). '
                       'Boss every 5; wipe → hub. Floors also pay small essence.'
                 : (best <= 0

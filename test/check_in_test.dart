@@ -113,7 +113,10 @@ void main() {
     expect(GameLogic.checkInWelcomeLine(state), contains('waits on the vault'));
 
     final claimed = GameLogic.claimDailyVault(state, now: now);
-    expect(GameLogic.checkInWelcomeLine(claimed), startsWith('Tomorrow · Check-in 1/7'));
+    expect(
+      GameLogic.checkInWelcomeLine(claimed),
+      contains('Tomorrow: Goblin\'s Hideout · Check-in 1/7'),
+    );
     expect(
       GameLogic.dailyVaultClaimPreviewEssence(state, now: now),
       GameLogic.dailyVaultClaimEssence(state) + CheckIn.payout(

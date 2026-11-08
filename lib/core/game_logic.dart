@@ -28,6 +28,7 @@ import 'game_state.dart';
 import 'gauntlet_pact.dart';
 import 'gauntlet_trophies.dart';
 import 'check_in.dart';
+import 'return_week.dart';
 import 'comeback_chest.dart';
 import 'keystone.dart';
 import 'logic_notices.dart';
@@ -1586,22 +1587,21 @@ class GameLogic {
     final name = _returnForgeName(cheapest ?? PartyUpgradeType.attack);
     final camp = cheapestSanctuaryNextCost(state);
     if (goldGained > 0 && state.gold >= cost) {
-      final open = canOpenGold ? ' Open GOLD to spend it.' : '';
-      return 'You brought back $goldGained gold. The wallet covers the next '
-          '$name buy ($cost g).$open';
+      final open = canOpenGold ? ' Open GOLD.' : '';
+      return 'You brought back $goldGained gold. The wallet covers '
+          '$name ($cost g).$open';
     }
     if (essenceGained > 0 && state.essence >= camp) {
       final brought = goldGained > 0
           ? 'You brought back $goldGained gold and $essenceGained essence. '
           : 'You brought back $essenceGained essence. ';
-      final open = canOpenEssence ? 'Open ESSENCE to spend it.' : '';
-      return '${brought}The wallet covers the next CAMP buy ($camp). $open'
-          .trim();
+      final open = canOpenEssence ? 'Open ESSENCE.' : '';
+      return '${brought}The wallet covers CAMP ($camp). $open'.trim();
     }
     if (goldGained > 0) {
       final short = cost - state.gold;
-      return 'You brought back $goldGained gold. The next $name buy still '
-          'needs $short g. The fight earns the rest.';
+      return 'You brought back $goldGained gold. The next $name still '
+          'needs $short g.';
     }
     final short = camp - state.essence;
     return 'You brought back $essenceGained essence. The next CAMP buy still '
@@ -1623,6 +1623,7 @@ class GameLogic {
   /// An empty vault needs one cave. After the claim, names tomorrow.
   static String checkInWelcomeLine(GameState state) {
     if (!checkInActive(state)) return '';
+    if (ReturnWeek.active(state)) return ReturnWeek.welcomeLine(state);
     final pay = checkInPayout(state);
     if (state.metaDepth.dailyVaultClaimed) return pay.tomorrowLine;
     if (canClaimDailyVault(state)) return pay.waitingLine;

@@ -1060,9 +1060,10 @@ void main() {
         );
         final chase = HubChase.forState(state, now: now);
         expect(chase.kind, HubChaseKind.dailyVaultProgress);
-        expect(chase.title, 'Tomorrow: one cave');
+        expect(chase.title, 'Tomorrow: Sandy Caverns');
         expect(chase.detail.toLowerCase(), contains('tomorrow'));
-        expect(chase.detail.toLowerCase(), contains('one cave'));
+        expect(chase.detail.toLowerCase(), contains('keeps fighting'));
+        expect(chase.detail, contains('CAMP'));
         expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
         expect(chase.detail.toUpperCase(), isNot(contains('GAUNTLET')));
         expect(chase.kind, isNot(HubChaseKind.dailyRun));
@@ -1081,7 +1082,8 @@ void main() {
         9,
       );
       final chase = HubChase.forState(state, now: now);
-      expect(chase.title, 'Tomorrow: one cave');
+      expect(chase.title, 'Tomorrow: Sandy Caverns');
+      expect(chase.detail.toLowerCase(), contains('keeps fighting'));
       expect(chase.detail.toUpperCase(), isNot(contains('KEY')));
       expect(chase.detail.toUpperCase(), isNot(contains('GAUNTLET')));
       expect(chase.kind, isNot(HubChaseKind.clearFloors));
