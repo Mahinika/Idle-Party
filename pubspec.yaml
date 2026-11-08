@@ -149,6 +149,7 @@ flutter:
     - assets/custom/dungeon/veil/tiles/
     - assets/custom/dungeon/veil/props/
     - assets/custom/dungeon/veil/hub_icon.png
+    - assets/custom/town/
     - assets/data/
     - assets/fonts/
 

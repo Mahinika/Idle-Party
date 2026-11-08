@@ -303,6 +303,22 @@ abstract final class CustomAssets {
     _ => portraitSandy,
   };
 
+  // —— Town hub assets ——
+  static const String _townRoot = '$_root/town';
+  static const String townBackdrop = '$_townRoot/backdrop.png';
+  static const String townBuildingForge = '$_townRoot/building_forge.png';
+  static const String townBuildingMarket = '$_townRoot/building_market.png';
+  static const String townBuildingInn = '$_townRoot/building_inn.png';
+  static const String townGround = '$_townRoot/ground.png';
+
+  static List<String> get townAssetPaths => const [
+    townBackdrop,
+    townBuildingForge,
+    townBuildingMarket,
+    townBuildingInn,
+    townGround,
+  ];
+
   // —— Intro / hub / dungeon painted scenes ——
   static const String introLogo = '$_root/ui/intro_logo.png';
 
