@@ -28,5 +28,29 @@ void main() {
         {'watch', 'wisp', 'menu_watch', 'menu_wisp'},
       );
     });
+
+    test('WATCH/WISP never stay as town chips; POUCH stays while due', () {
+      expect(TownNavPolicy.keepOnTownRails('scrolls'), isTrue);
+      expect(TownNavPolicy.keepOnTownRails('menu_scrolls'), isTrue);
+      expect(TownNavPolicy.keepOnTownRails('starter_pouch'), isTrue);
+      expect(TownNavPolicy.keepOnTownRails('menu_pouch'), isTrue);
+      expect(TownNavPolicy.keepOnTownRails('watch'), isFalse);
+      expect(TownNavPolicy.keepOnTownRails('wisp'), isFalse);
+      expect(TownNavPolicy.isDuplicatePowerupShortcut('menu_watch'), isTrue);
+      expect(TownNavPolicy.isDuplicatePowerupShortcut('menu_wisp'), isTrue);
+    });
+
+    test('live catalog still badges WATCH/WISP as SCROLLS duplicates', () {
+      final watch = HomeCatalog.entries.where((e) => e.id == 'watch').single;
+      final wisp = HomeCatalog.entries.where((e) => e.id == 'wisp').single;
+      final scrolls = HomeCatalog.entries.where((e) => e.id == 'scrolls').single;
+      expect(watch.label, 'WATCH');
+      expect(wisp.label, 'WISP');
+      expect(scrolls.label, 'SCROLLS');
+      expect(TownNavPolicy.filterEntries(HomeCatalog.entries, (e) => e.id)
+          .map((e) => e.id),
+        contains('scrolls'),
+      );
+    });
   });
 }

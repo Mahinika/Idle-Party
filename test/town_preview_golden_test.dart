@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_party/assets/custom_assets.dart';
+import 'package:idle_party/core/game_director.dart';
+import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/menu_router.dart';
 import 'package:idle_party/ui/hero_doll_sprite.dart';
 import 'package:idle_party/ui/shell/home/town_viewport.dart';
@@ -18,7 +20,15 @@ void main() {
 
   testWidgets('town preview golden A56', (tester) async {
     bindA56View(tester);
-    final director = hubGoldenDirector();
+    final director = GameDirector.preview(
+      initialState: GameLogic.createInitialState(now: shellGoldenNow)
+          .copyWith(
+            inDungeon: false,
+            bossVictories: 1,
+            highestFloorCleared: 2,
+            ascensionLevel: 1,
+          ),
+    );
     final router = MenuRouter();
     addTearDown(router.dispose);
     addTearDown(director.dispose);
@@ -45,6 +55,7 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 16)),
       );
     }
+    await tester.pump();
     await pumpGoldenFrames(tester, ms: 800);
     await expectLater(
       find.byKey(key),

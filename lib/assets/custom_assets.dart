@@ -306,17 +306,32 @@ abstract final class CustomAssets {
   // —— Town hub assets ——
   static const String _townRoot = '$_root/town';
   static const String townBackdrop = '$_townRoot/backdrop.png';
-  static const String townBuildingForge = '$_townRoot/building_forge.png';
-  static const String townBuildingMarket = '$_townRoot/building_market.png';
-  static const String townBuildingInn = '$_townRoot/building_inn.png';
   static const String townGround = '$_townRoot/ground.png';
+  static const String townWell = '$_townRoot/well.png';
+  static const String townVaultShut = '$_townRoot/vault_shut.png';
+  static const String townVaultOpen = '$_townRoot/vault_open.png';
 
-  static List<String> get townAssetPaths => const [
+  static String townForge(int tier) =>
+      '$_townRoot/forge_t${tier.clamp(0, 2)}.png';
+  static String townMarket(int tier) =>
+      '$_townRoot/market_t${tier.clamp(0, 2)}.png';
+  static String townInn(int tier) =>
+      '$_townRoot/inn_t${tier.clamp(0, 2)}.png';
+  static String townGuild(int tier) =>
+      '$_townRoot/guild_t${tier.clamp(0, 2)}.png';
+
+  static List<String> get townAssetPaths => [
     townBackdrop,
-    townBuildingForge,
-    townBuildingMarket,
-    townBuildingInn,
     townGround,
+    townWell,
+    townVaultShut,
+    townVaultOpen,
+    for (var t = 0; t < 3; t++) ...[
+      townForge(t),
+      townMarket(t),
+      townInn(t),
+      townGuild(t),
+    ],
   ];
 
   // —— Intro / hub / dungeon painted scenes ——
