@@ -25,6 +25,9 @@ scope: same round, about half the time on that part.
   good gear unless the scope says so. You may open the screen up to the
   confirm step, then back out. The tool refuses Overwrite, Erase, Reborn,
   Redeem, and Delete.
+- A signature mismatch is a stop. Do not `adb uninstall` or wipe the AVD
+  to replace the installed package. A fresh test AVD needs the owner to
+  ask for that device in this turn. The existing save stays.
 - Ads: only a playtest or preview button, never a real ad.
 - If the save is damaged: `py -3 tool/playtest_run.py restore`
 

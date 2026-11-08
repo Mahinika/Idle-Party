@@ -90,5 +90,6 @@ Spatial change:
 ## Done when
 
 - `flutter analyze lib test --no-fatal-infos` is clean and the kit tests above are green.
+- A camera follow or a picture slide also follows `camera-follow`.
 - Kit numbers moved: `flutter test test/class_balance_share_fast_test.dart` and `flutter test test/class_balance_gate_test.dart` are green (no HIGH).
-- HUD, guides, and PATCH NOTES still say what the kit does.
+- HUD, guides, and PATCH NOTES still say what the kit does.

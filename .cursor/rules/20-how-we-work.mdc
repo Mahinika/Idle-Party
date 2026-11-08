@@ -10,7 +10,7 @@ This is the only always-on rule. `00-locks`, `10-what-to-build`,
 `30-done`, `play-words`, and `hero-draw` are the full record. Open them
 when their description matches. If they disagree, this page wins.
 
-**Now:** At the start of each session, propose 2–3 concrete next ideas (at least one revenue: shop/IAP/rewarded ads/retention), then pick one and build it. A goal the owner names wins. Never Play AAB without owner ask.
+**Now:** Do the job named this turn, including the related fixes that make it true. A roadmap or week batch already taken on stays that whole batch. Do not start an unrelated feature; name it in the handoff. Commit locally when the checks are green. Cloud handoff is a branch and a PR. Do not merge, do not push a `test-*` or `v*` tag, and do not upload an AAB unless the owner asks in that turn.
 
 ## Chase
 
@@ -31,36 +31,28 @@ Never weaken these. Dated history: `00-locks.mdc`.
 | Fight | SpatialCombat is the current sim. A second sim is allowed |
 | SHOP | Gacha, BiS-for-cash, and whale packs are allowed |
 | Play | Players install through Play. Do not point them at GitHub Releases |
-| Upload | Never upload an AAB or publish unless the owner asks in that turn |
+| Upload | Never upload an AAB, push a `test-*` or `v*` tag, or start an APK workflow unless the owner asks in that turn. A source PR is not that ask |
 | Cursor safety | No exploits and no foreign dumps |
 
 ## Next job
 
-A goal the owner names wins. Otherwise propose 2–3 concrete next ideas
-(at least one revenue: shop/IAP/rewarded ads/retention), then pick one
-and build it. Do not ask what to build.
+A job named this turn is the batch. Related fixes that make that job true
+are part of it. A week file or year-plan slice already taken on stays the
+whole batch. When this turn names no job, pick one the way
+`10-what-to-build.mdc` says and build it. Do not open an unrelated feature
+when the batch is green. Name that idea in the handoff.
 
-Evidence, in order: open notes in `docs/PLAY_NOTES.md`; the active week
-file in `docs/weeks/`; this game's Play paste in `docs/PLAY_GROWTH.md`;
-`docs/GROWTH_MANDATE.md`, `docs/LEARNINGS.md`, and
-`docs/YEAR_ROADMAP_SOURCES.md`; competitor games and owner play notes
-from other games are valid idea sources; A-grade external facts from
-developers only if you opened the page in this chat and can name the URL.
-Never invent Console percentages. If the paste is older than 14 days, ask
-once for a new one and keep building from play notes.
-
-Player text may say what the code already does. Do not wait for a play
-note. Do not write a sentence the code does not do. Write owner notes into
-`docs/PLAY_NOTES.md` under Open, and move them to Done with the fix.
+The evidence order, grades, and “do not ask what to build” live in
+`10-what-to-build.mdc`. Never invent Console percentages. Player text may
+say what the code already does. Do not write a sentence the code does not
+do. Write owner notes into `docs/PLAY_NOTES.md` under Open, and move them
+to Done with the fix.
 
 "Mer endgame" deepens KEY, Gauntlet, Rift, Greater Rift, and Ashen. Craft
-Trial stays under MORE → CRAFT. Proposing and building a new zone, class,
-hunt, God Hand direction, second sim, IAP, or gacha is allowed when they
-serve revenue/retention; flag them in the handoff.
-
-One decision on a fork. No chairs. `decide-a-fork.mdc` is that sentence.
-Do not run `/init` or clean the repo unasked. Do not create PROJECT_INDEX,
-ARCHITECTURE, ROADMAP, DEVELOPMENT_STATUS, or a second changelog.
+Trial stays under MORE → CRAFT. One decision on a fork. No chairs.
+`decide-a-fork.mdc` is that sentence. Do not run `/init` or clean the repo
+unasked. Do not create PROJECT_INDEX, ARCHITECTURE, ROADMAP,
+DEVELOPMENT_STATUS, or a second changelog.
 
 ## Done
 
@@ -78,26 +70,28 @@ and an after on the A56. The owner picks. Small tweaks ship.
 Say session (ett sittande), daily (dagens jobb), and run (ett varv). The
 live hero is the cutout skeleton.
 
-Talk in plain, short Swedish. In-game text stays English. Do not explain
-tools unless they ask how.
+Talk in the owner's language, plain and short. In-game text stays English.
+Do not explain tools unless they ask how.
 
-When analyze and tests are green, commit locally without asking. Push, PR,
-or tag when the batch needs it. Never force-push or skip hooks unless they
-say so in that turn. Daily work stays on `main`. Do not stage
-`windows/flutter/generated_*` unless plugins changed. Split a giant file
-instead of growing `game_logic`, `spatial_combat`, or a fat shell. New HUD
-goes under `lib/ui/shell/`. Delete unused code that saves do not need.
-Keep JSON fields old saves may still have.
+When analyze and the matching tests are green, commit locally. A cloud or
+local agent hands off on a branch and a PR. Do not merge unless the owner
+asks. That push is not a `test-*` tag, a `v*` tag, or an APK workflow.
+Never force-push or skip hooks unless they say so in that turn. Do not
+stage `windows/flutter/generated_*` unless plugins changed. Split a giant
+file instead of growing `game_logic`, `spatial_combat`, or a fat shell.
+New HUD goes under `lib/ui/shell/`. Delete unused code that saves do not
+need. Keep JSON fields old saves may still have.
 
-Hand off in short Swedish: what you chose, why, what changed, and what to
-try on a new save. Always end with 2–3 next-idea suggestions with one-line
-reasons (at least one revenue). Wait when they should look at the phone, a
-whole screen or floor needs a before-and-after, or a lock or missing fact
-blocks the next step. Otherwise pick the next batch and continue.
+Hand off in the owner's language: what you chose, why, what changed, and
+what to try on a new save. End with 2–3 next ideas and one-line reasons
+(at least one revenue). Do not start those ideas in this turn. Wait when
+they should look at the phone, a whole screen or floor needs a
+before-and-after, or a lock or missing fact blocks the next step.
 
 ## Workflow
 
-Code work may be done by Cursor cloud agents via PRs or locally. The Play
-upload workflow sends production at 5%. A test APK is emulator-smoke-
-tested before the owner phone-tests. Nothing merges or releases before the
-owner's phone test. Priority is revenue.
+Source work is a branch and a PR, in the cloud or locally. Do not put
+ordinary agent work on `main`. Nothing merges unless the owner asks. A
+test APK and a Play AAB stay where their workflows already are, and
+neither starts unless the owner asks in that turn. Check the workflow
+`on:` before a push. Priority is revenue.

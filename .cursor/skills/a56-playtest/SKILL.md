@@ -119,9 +119,12 @@ edits still has the old isolate — that is not “the new build”.
    list. If `flutter run` already exited or “Lost connection”, relaunch
    first — an idle emulator with an old APK is not “the new build”.
 5. **“Installera om” / up to date:** stop the old `flutter run`, then one new
-   `flutter run -d emulator-5554` (keeps the emu save). Prefer keep-save
-   reinstall; `adb uninstall` wipes that save — OK when the batch needs a
-   clean Play-style install. Do not stack a second `flutter run`.
+   `flutter run -d emulator-5554`. That keeps the emulator save. Do not
+   stack a second `flutter run`.
+6. **Signature mismatch:** stop. Do not `adb uninstall` and do not wipe the
+   AVD or its saves to make the package install. A fresh test AVD is a
+   separate device, and only when the owner asks for that device in this
+   turn. The existing Samsung A56 save stays.
 
 ## Related
 
