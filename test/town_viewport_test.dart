@@ -94,7 +94,12 @@ void main() {
 
   group('CustomAssets town files', () {
     test('every town asset exists on disk', () {
-      expect(CustomAssets.townAssetPaths.length, 17);
+      expect(CustomAssets.townAssetPaths.length, 30);
+      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townPath));
+      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townFolk));
+      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townTreeRound));
+      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townTreeTall));
+      expect(CustomAssets.townAssetPaths, contains(CustomAssets.townFlowers));
       for (final path in CustomAssets.townAssetPaths) {
         expect(File(path).existsSync(), isTrue, reason: path);
       }
