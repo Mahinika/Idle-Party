@@ -80,9 +80,9 @@ main.dart
  │    → pickSave? → newGamePicker? → play
  └─ PlayShell
      ├─ home (default) → HomeShell
-     │    fight or camp · rails · FORGE/CAMP/MARKET under the fight
+     │    fight or town · rails · FORGE/CAMP/MARKET under the fight
      │    HEROES · ESSENCE · FIGHT · MAP · SHOP
-     │    MENU is the top button. Camp is the screen outside a cave.
+     │    MENU is the top button. Town is the screen outside a cave.
      └─ classic (SETTINGS on a test build, or a save that says classic)
           ├─ Hub (!inDungeon) → HubScreen
           └─ Dungeon → Is2Shell → SpatialDungeonView
@@ -90,8 +90,10 @@ main.dart
 ```
 
 A new game on a fresh phone uses the home layout and starts in Sandy Caverns.
-A save with no layout field also opens on that shell. GOLD there is the panel
-under the fight (FORGE, CAMP, MARKET), not a bottom tab. ESSENCE tiles are
+A save with no layout field also opens on that shell. Out of the cave the
+party rests in town (Forge CRAFT, Market listings, Inn ROSTER, Guild quests,
+Vault claim). GOLD under the fight is still FORGE tracks + CAMP + MARKET,
+not a bottom tab. ESSENCE tiles are
 BLESSING, RELICS, PETS, CODEX, and APEX. MAP holds PATH and ENDGAME.
 SHOP, redeem, and the shop rules below are unchanged.
 

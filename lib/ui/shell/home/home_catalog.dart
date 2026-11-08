@@ -6,6 +6,7 @@ import '../../../core/game_state.dart';
 import '../../../core/menu_alerts.dart';
 import '../../../core/menu_router.dart';
 import '../../../core/reinstall_pouch.dart';
+import '../../../core/town_nav.dart';
 import '../../confirm_dialogs.dart';
 import '../../game_icon.dart';
 import '../../hub/friend_tip_block.dart';
@@ -328,7 +329,7 @@ abstract final class HomeCatalog {
   static List<HomeEntry> of(HomePlace place) {
     final list = entries.where((e) => e.place == place).toList();
     list.sort((a, b) => a.order.compareTo(b.order));
-    return list;
+    return TownNavPolicy.filterEntries(list, (e) => e.id);
   }
 }
 

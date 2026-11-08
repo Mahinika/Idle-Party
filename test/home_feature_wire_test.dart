@@ -4,6 +4,7 @@ import 'package:idle_party/core/game_director.dart';
 import 'package:idle_party/core/game_logic.dart';
 import 'package:idle_party/core/home_layout.dart';
 import 'package:idle_party/core/menu_router.dart';
+import 'package:idle_party/core/meta_systems.dart';
 import 'package:idle_party/core/nav_intent.dart';
 import 'package:idle_party/core/wipe_advice.dart';
 import 'package:idle_party/ui/shell/home/home_catalog.dart';
@@ -35,12 +36,22 @@ void main() {
     );
   });
 
-  testWidgets('camp shows the forge dock and a gold intent opens it', (
+  testWidgets('town shows FORGE; gold intent opens MARKET listings', (
     tester,
   ) async {
-    final state = GameLogic.createInitialState(
-      now: DateTime(2026, 11, 5),
-    ).copyWith(homeLayout: HomeLayout.home);
+    final now = DateTime(2026, 11, 5);
+    final base = GameLogic.createInitialState(now: now);
+    final state = base.copyWith(
+      homeLayout: HomeLayout.home,
+      bossVictories: 1,
+      highestFloorCleared: 2,
+      seenChangelogVersion: MetaSystems.currentVersion,
+      seenTips: const ['first_run', 'discord_thanks'],
+      metaDepth: base.metaDepth.copyWith(
+        reviewPrompted: true,
+        notifyPrompted: true,
+      ),
+    );
     final director = GameDirector.preview(initialState: state);
     final router = MenuRouter();
     addTearDown(director.dispose);
@@ -56,17 +67,16 @@ void main() {
       ),
     );
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('FORGE'), findsWidgets);
     expect(tester.takeException(), isNull);
 
     router.open(MenuRoute.gold, gold: GoldPanel.market);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-    expect(router.route, MenuRoute.none);
+    expect(router.route, MenuRoute.gold);
+    expect(router.goldPanel, GoldPanel.market);
     expect(
       find.text('FORGE opens after the first boss (F2).'),
-      findsOneWidget,
+      findsNothing,
     );
-    expect(tester.takeException(), isNull);
   });
 }

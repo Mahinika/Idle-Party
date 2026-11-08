@@ -178,7 +178,9 @@ class _MenuSurfaceState extends State<MenuSurface> {
       gold: state.gold,
       essence: state.essence,
       showEssence: MenuTabs.showCamp(state),
-      showClose: !widget.home || questBoard,
+      showClose: !widget.home ||
+          questBoard ||
+          router.route == MenuRoute.gold,
       onClose: router.close,
       child: switch (router.route) {
         MenuRoute.gear => _inventoryDock(),

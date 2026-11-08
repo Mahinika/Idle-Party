@@ -13,7 +13,6 @@ import '../../game_theme.dart';
 import '../../menu_chrome.dart';
 import '../../web_click_bridge.dart';
 import '../menu_surface.dart';
-import 'camp_viewport.dart';
 import 'director_select.dart';
 import 'essence_tiles_screen.dart';
 import 'fight_seam.dart';
@@ -23,9 +22,10 @@ import 'home_nav_bar.dart';
 import 'home_prompts.dart';
 import 'home_top_bar.dart';
 import 'map_screen.dart';
+import 'town_viewport.dart';
 import 'upgrade_panel.dart';
 
-/// Fight-first shell. The hub is the camp viewport when the party is out.
+/// Fight-first shell. Out of the cave the party rests in town.
 class HomeShell extends StatefulWidget {
   const HomeShell({
     super.key,
@@ -61,7 +61,9 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   void _onRouter() {
-    if (router.route == MenuRoute.gold) {
+    // In the cave GOLD is the dock under the fight, not a destination.
+    // In town MARKET is a real GoldDock overlay (listings), so leave it open.
+    if (router.route == MenuRoute.gold && director.state.inDungeon) {
       final panel = router.goldPanel == GoldPanel.market
           ? HomeGoldPanel.market
           : HomeGoldPanel.forge;
@@ -88,7 +90,8 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     final state = director.state;
     final route = router.route;
-    final sheet = route != MenuRoute.none && route != MenuRoute.gold;
+    final interceptGold = state.inDungeon && route == MenuRoute.gold;
+    final sheet = route != MenuRoute.none && !interceptGold;
     final showPanel = !sheet && state.inDungeon;
     final full = state.homePanelFull;
     final alerts = MenuAlerts.forHub(
@@ -116,7 +119,7 @@ class _HomeShellState extends State<HomeShell> {
                               router: router,
                               onLeave: widget.onLeave,
                             )
-                          : CampViewport(director: director, router: router),
+                          : TownViewport(director: director, router: router),
                     ),
                   ),
                   if (showPanel)
@@ -143,8 +146,6 @@ class _HomeShellState extends State<HomeShell> {
                       ),
                     ),
                   if (showPanel && full)
-                    HomeGoldDock(director: director, router: router),
-                  if (!sheet && !state.inDungeon)
                     HomeGoldDock(director: director, router: router),
                 ],
               ),
