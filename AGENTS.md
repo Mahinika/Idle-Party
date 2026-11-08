@@ -39,19 +39,16 @@ clips are owned PNGs. Enemies are a separate art pass.
 
 ## Build and verify
 
-```bash
-flutter pub get
-flutter analyze lib test --no-fatal-infos
-flutter test --exclude-tags sim
-flutter test test/ship_smoke_test.dart
-flutter test test/class_balance_gate_test.dart
-flutter test test/changelog_sync_test.dart
-```
+A batch runs `flutter analyze lib test --no-fatal-infos` and the matching
+tests in `.cursor/rules/30-done.mdc`. CI runs `flutter test --exclude-tags sim`
+plus the Android compile on main. Do not treat that list as a command to
+build an APK.
 
 Tag `sim` is nightly (`.github/workflows/sim-nightly.yml`), not missing CI.
-Sideload test APKs: `.github/workflows/test-apk-prerelease.yml`
-(`workflow_dispatch` or a `test-*` tag). It publishes split arm64 and x86_64
-APKs for `com.idleparty.app.test`. Play release builds stay in `build-apk.yml`.
+Sideload test APKs stay in `.github/workflows/test-apk-prerelease.yml`
+(`workflow_dispatch` or a `test-*` tag) and Play AABs stay in `build-apk.yml`
+(`v*` or `workflow_dispatch`). Do not start either unless the owner asks in
+that turn. A source push of `cursor/**` runs CI only.
 Share-fast: `flutter test test/class_balance_share_fast_test.dart`.
 
 Skills live under `.cursor/skills/`. Slash: `/init` resyncs this file and
@@ -59,8 +56,8 @@ the rules; `/repo auditandcleaning` is analysis only. `/playtest` continues
 the emulator save for about 10 minutes and writes what it finds.
 
 Hooks (`.cursor/hooks.json`): **sessionStart** injects the owner **Now:**
-line plus the Play-upload lock, and deletes `playshots/` images older than
-3 days (the folder is git-ignored). **afterFileEdit** marks verify-dirty.
+line plus the Play and test-APK lock, and deletes `playshots/` images older
+than 3 days (the folder is git-ignored). **afterFileEdit** marks verify-dirty.
 **stop** runs analyze, plus changelog, ship-smoke, or share-fast tests when
 those files moved, then nudges once in that same chat if its files are still
 uncommitted. Edits from another chat do not land here.
