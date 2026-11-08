@@ -80,7 +80,7 @@ abstract final class ReturnWeek {
     final pay = GameLogic.checkInPayout(state);
     return _withReady(
       state,
-      '${pay.name}. ${shelf(pay)}. $keepsFighting',
+      'Tomorrow. ${pay.name}. ${shelf(pay)}. $keepsFighting',
     );
   }
 

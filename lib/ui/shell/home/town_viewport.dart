@@ -385,24 +385,22 @@ class _TownSquare extends StatelessWidget {
 
   /// One authored course. It is not repeated into a ruled strip.
   Widget _yardPath(Rect rect) {
+    const nativeW = 360.0;
     const nativeH = 40.0;
-    final height = rect.height < nativeH ? rect.height : nativeH;
+    final scale = rect.width / nativeW;
+    final scaled = nativeH * scale;
+    final height = rect.height < scaled ? rect.height : scaled;
     return Positioned(
       left: rect.left,
       width: rect.width,
       top: rect.bottom - height,
       height: height,
       child: IgnorePointer(
-        child: FittedBox(
-          fit: BoxFit.fitWidth,
-          alignment: Alignment.bottomCenter,
-          child: Image.asset(
-            CustomAssets.townPath,
-            width: 360,
-            height: nativeH,
-            filterQuality: FilterQuality.none,
-            excludeFromSemantics: true,
-          ),
+        child: Image.asset(
+          CustomAssets.townPath,
+          fit: BoxFit.fill,
+          filterQuality: FilterQuality.none,
+          excludeFromSemantics: true,
         ),
       ),
     );
