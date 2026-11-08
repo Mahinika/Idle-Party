@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_party/spatial/spatial_combat.dart';
 import 'package:idle_party/ui/dungeon_camera.dart';
 
 /// The pre-fix ease: a gap of 0.35 tiles or less snapped, and anything
@@ -673,6 +674,79 @@ void main() {
     final screen = 22 - framed.y + halfY;
     expect(screen, greaterThanOrEqualTo(7));
     expect(screen, lessThanOrEqualTo(rows - 14));
+  });
+
+  test('a one-frame charge hop lags and the slide at 1× and 2× does not', () {
+    final jumped = _Follow()
+      ..x = 0
+      ..y = 0
+      ..aimX = 0
+      ..aimY = 0;
+    jumped.sample(2.2, 0, 1 / 60, legacy: false);
+    expect((2.2 - jumped.x!).abs(), greaterThan(1));
+
+    double followLag(double dt) {
+      final cam = _Follow()
+        ..x = 0
+        ..y = 0
+        ..aimX = 0
+        ..aimY = 0;
+      var shown = 0.0;
+      const travel = 6.6;
+      final speed = SpatialActor.pictureRushTilesPerSec;
+      var worst = 0.0;
+      for (var i = 0; i < 90; i++) {
+        shown = math.min(travel, shown + speed * dt);
+        cam.sample(shown, 0, dt, legacy: false);
+        worst = math.max(worst, (shown - cam.x!).abs());
+        if (shown >= travel) break;
+      }
+      expect(shown, travel);
+      return worst;
+    }
+
+    expect(followLag(1 / 60), lessThan(1e-6));
+    expect(followLag(2 / 60), lessThan(1e-6));
+    expect(followLag(3 / 60), lessThan(1e-6));
+    expect(followLag(1 / 30), lessThan(1e-6));
+  });
+
+  test('an in-room step does not change zoom, and a new floor still snaps', () {
+    final wide = dungeonFitCols(
+      partyX: 51,
+      partyY: 10,
+      goalX: 51,
+      goalY: 16,
+      viewWidth: 360,
+      viewHeight: 780,
+      targetCols: 20,
+      topInsetPx: 8,
+      bottomInsetPx: 220,
+    );
+    final stepped = dungeonFitCols(
+      partyX: 51,
+      partyY: 10.4,
+      goalX: 51,
+      goalY: 16,
+      viewWidth: 360,
+      viewHeight: 780,
+      targetCols: 20,
+      topInsetPx: 8,
+      bottomInsetPx: 220,
+    );
+    expect(stepped, wide);
+    final fresh = dungeonCamEase(
+      prevX: 10,
+      prevY: 10,
+      prevTargetX: 10,
+      prevTargetY: 10,
+      targetX: 40,
+      targetY: 12,
+      newWorld: true,
+      dt: 2 / 60,
+    );
+    expect(fresh.x, 40);
+    expect(fresh.y, 12);
   });
 
   test('a hero at the edge is pulled back inside the phone', () {

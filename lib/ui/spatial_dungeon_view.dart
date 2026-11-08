@@ -1241,9 +1241,10 @@ class _TileCamera {
         visibleRows: 1,
       );
     }
-    final heroRows = world.heroes
-        .where((h) => !h.isPet)
-        .map((h) => (x: h.x, y: h.y, alive: h.isAlive, index: h.assetIndex));
+    final heroRows = world.heroes.where((h) => !h.isPet).map((h) {
+      final shown = h.picturePoint();
+      return (x: shown.x, y: shown.y, alive: h.isAlive, index: h.assetIndex);
+    });
     final awakeEnemies = world.enemies
         .where((e) => e.hp > 0 && !e.dormant)
         .map((e) => (x: e.x, y: e.y, alive: true));

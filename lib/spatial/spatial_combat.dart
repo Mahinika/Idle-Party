@@ -234,6 +234,17 @@ class SpatialActor {
   double masteryPoints;
   bool uncrittable;
   double moveSpeed;
+
+  /// Tiles per second for the drawn charge. Gameplay [x]/[y] is already the
+  /// landing. Three sim steps (2× pace plus one catch-up step) stay under a
+  /// tile, which is the camera's follow band, so the view copies the slide
+  /// instead of dropping into the retarget glide.
+  static const double pictureRushTilesPerSec = 18;
+  double pictureRushFromX = 0;
+  double pictureRushFromY = 0;
+  double pictureRushLeft = 0;
+  double pictureRushSpan = 0;
+
   final double attackRange;
   double attackCooldown;
   final int assetIndex;
@@ -246,6 +257,36 @@ class SpatialActor {
 
   /// Index into [GameState.heroes] when this is a party member.
   final int? partyIndex;
+
+  /// Where the body is drawn. A charge keeps combat on [x]/[y] and slides
+  /// the picture from the takeoff so the camera can stay with it.
+  ({double x, double y}) picturePoint() {
+    if (pictureRushLeft <= 0 || pictureRushSpan <= 0) return (x: x, y: y);
+    final t = (pictureRushLeft / pictureRushSpan).clamp(0.0, 1.0);
+    return (
+      x: x + (pictureRushFromX - x) * t,
+      y: y + (pictureRushFromY - y) * t,
+    );
+  }
+
+  void beginPictureRush(double fromX, double fromY) {
+    final dx = x - fromX;
+    final dy = y - fromY;
+    final dist = math.sqrt(dx * dx + dy * dy);
+    if (dist < 0.75) {
+      pictureRushLeft = 0;
+      return;
+    }
+    pictureRushFromX = fromX;
+    pictureRushFromY = fromY;
+    pictureRushSpan = dist / pictureRushTilesPerSec;
+    pictureRushLeft = pictureRushSpan;
+  }
+
+  void tickPictureRush(double dt) {
+    if (pictureRushLeft <= 0 || dt <= 0) return;
+    pictureRushLeft = math.max(0, pictureRushLeft - dt);
+  }
 
   /// Snapshot of hero level for ability unlock checks.
   int heroLevel;
@@ -1508,6 +1549,7 @@ abstract final class SpatialCombat {
   }
 
   static void _tickActorBuffs(SpatialWorld world, SpatialActor a, double dt) {
+    a.tickPictureRush(dt);
     if (a.shieldBlockTimer > 0) {
       a.shieldBlockTimer = math.max(0, a.shieldBlockTimer - dt);
     }
